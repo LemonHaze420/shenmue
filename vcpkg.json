@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "shenmue-recovery",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "jsoncpp",
+    "stb",
+    "zlib",
+    {
+      "name": "directxtex",
+      "features": ["dx11"],
+      "platform": "windows"
+    }
+  ]
+}

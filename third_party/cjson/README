@@ -1,0 +1,11 @@
+cJSON (classic), MIT licence (see LICENSE).
+
+Source: https://github.com/DaveGamble/cJSON, commit 28691956a607ccec14b1f31756c7f179d50a0d17
+("fix \u parser", 2013-08-19). cJSON.c, cJSON.h and LICENSE are unmodified copies of that commit.
+
+This is the cJSON both PC games link for their D3T .ui and settings readers: enumerated types
+(cJSON_False 0 ... cJSON_Object 6), the inline parse_hex4 string parser, and a cJSON_Delete without
+cJSON_StringIsConst. Its parse code is unchanged through 70984d4 (2015-02-09); later revisions add
+StringIsConst (d9fc81e) and bit-flag types (ce546b5), which the games do not have. The literal parent of
+v1.0.0 already has the bit-flag types, so it is not used. Among the revisions whose parse code matches,
+this is the newest without the print `escapable` table (575724a), which the S1 binary also lacks.

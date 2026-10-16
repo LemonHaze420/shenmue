@@ -1,0 +1,28 @@
+BasedOnStyle: LLVM
+Language: Cpp
+
+SortIncludes: Never
+SortUsingDeclarations: false
+ReflowComments: false
+
+IndentWidth: 4
+ColumnLimit: 160
+
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+BinPackArguments: true
+BinPackParameters: true
+
+AlignAfterOpenBracket: DontAlign
+AlignOperands: DontAlign
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: false
+
+Cpp11BracedListStyle: true
+SpaceBeforeParens: ControlStatements

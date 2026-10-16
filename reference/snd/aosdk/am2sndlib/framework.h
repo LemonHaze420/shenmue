@@ -1,0 +1,5 @@
+// Copyright 2021 - Wulinshu.com Team
+
+#pragma once
+
+#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers

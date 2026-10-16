@@ -1,0 +1,571 @@
+#include "s2/title.hpp"
+
+#include "s2/date_time.hpp"
+#include "s2/conversation.hpp"
+#include "s2/d3t_renderer.hpp"
+#include "s2/map_control.hpp"
+#include "s2/pak.hpp"
+#include "s2/legacy_sprite.hpp"
+#include "d3t/ui_renderer.hpp"
+
+#include "s2/hlib.hpp"
+#include "s2/input.hpp"
+#include "s2/save.hpp"
+#include "s2/screen_film.hpp"
+#include "s2/frame_pacing.hpp"
+#include "s2/renderer_initialization.hpp"
+#include "s2/sound_program.hpp"
+#include "s2/system_modules.hpp"
+#include "s2/ui.hpp"
+
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <bit>
+#include <limits>
+#include "s2/area_names.hpp"
+
+namespace shenmue::s2 {
+std::uint16_t g_previousTitleInputUserHandle = 0;
+std::int32_t g_titleFlagShouldRun = 0;
+std::uint32_t g_titleVersionOverride{};
+std::uint32_t GetTitleVersionOverride() noexcept {
+    return g_titleVersionOverride;
+}
+void SetTitleVersionOverride(std::uint32_t value) noexcept {
+    g_titleVersionOverride = value;
+}
+std::int32_t g_titleMenuSelection = -1;
+std::int32_t g_previousTitleMenuSelection = -1;
+std::int32_t g_titleMenuUIState{};
+std::int64_t (*g_titleMenuTransitionCallback)(){};
+std::int32_t g_titleMenuTransitionRequested{};
+
+// @verified - p
+void SetTitleMenuUIState(std::int32_t state) noexcept {
+    g_titleMenuUIState = state;
+}
+// @verified - p
+void SetTitleMenuTransitionCallback(std::int64_t (*callback)()) noexcept {
+    g_titleMenuTransitionCallback = callback;
+}
+// @verified - p
+void RequestTitleMenuTransition() noexcept {
+    g_titleMenuTransitionRequested = 1;
+}
+
+bool shenIsInIntro() noexcept {
+    // shenIsInIntro reads a DWORD at Version+0xdc, not a byte at +0x37.
+    return GetS2AudioSettings().dialogueMode != 3 || (g_actNumber == 1 && g_currentMap == AREA_OP02);
+}
+
+namespace {
+
+constexpr std::uint32_t kHasCurrentLogo = 0x4;
+constexpr std::uint32_t kFadeInProgress = 0x80;
+constexpr std::uint32_t kLeaving = 0x40;
+constexpr std::uint32_t kTimerMask = 0x1c0;
+constexpr std::uint32_t kTimerPattern = 0x140;
+constexpr std::uint32_t kQueueYsMark = 0x200;
+constexpr std::uint32_t kQueueAm2Logo = 0x400;
+
+HLib::Task *titleControlTask = nullptr;
+TitleSequence titleLoopSequence = TitleSequence::PressStart;
+std::uint32_t logoFlags = 0;
+std::int32_t needsTitleSequenceDraw = 0;
+std::int32_t setPressStartPending = 0;
+std::int32_t pressStartSelected = 0;
+float titleSequenceTime = 0.0f;
+ConversationBuffer *currentTitleLogo = nullptr;
+std::int32_t titleMenuDialogueMode = 0;
+std::int32_t titleMenuControlMode = 0;
+std::int32_t titleMenuTriggerSwap = 0;
+std::int32_t titleOptionsSelection = 0;
+std::array<std::int32_t, 4> titleOptionItems{};
+std::int32_t titleOptionItemCount = 0;
+std::int16_t titleSelectedAct = -1;
+std::int32_t titleDebugAct = 0;
+std::array<std::uint8_t, 10> titleSceneIndices{};
+std::int32_t titleCurrentAreaIndex = 0;
+std::int32_t titleDebugSelection = 0;
+std::int32_t titlePreviousDebugSelection = 0;
+std::int32_t titleCurrentCoreModule = 0;
+
+void NativeTitleNoOp(void *) {
+}
+
+void TitleMenuControl(void *) {
+    padcCheckControllerConnection();
+    ProcessTitleMenuInput();
+    g_previousTitleInputUserHandle = FrontendControllerUserHandle();
+}
+
+void TitleMenuDisplay(void *) {
+    EnableElement(UIElement::MainMenu);
+}
+
+void TitleOptionsControl(void *) {
+    padcCheckControllerConnection();
+    ProcessTitleOptionsInput();
+    g_previousTitleInputUserHandle = FrontendControllerUserHandle();
+}
+
+void TitleOptionsDisplay(void *) {
+    ShowElementByIndex(UIElement::SubMenuOptions);
+    EnableElement(UIElement::SubMenuOptions);
+}
+
+bool AssignTitleCallbacks(HLib::TaskCallback controlCallback, HLib::TaskCallback displayCallback) {
+    auto *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
+    if (!control || !controlCallback || !control->titleSequenceTask || !displayCallback) {
+        return false;
+    }
+    HLib::AssignCallbackForTask(control->titleSequenceTask, displayCallback);
+    HLib::AssignCallbackForTask(titleControlTask, controlCallback);
+    return true;
+}
+
+std::uint32_t TitleAlphaColour(float alpha) {
+    const float scaled = alpha * 255.0f;
+    const std::int64_t truncated =
+        scaled >= -9223372036854775808.0f && scaled < 9223372036854775808.0f ? static_cast<std::int64_t>(scaled) : std::numeric_limits<std::int64_t>::min();
+    return (static_cast<std::uint32_t>(truncated) << 24) | 0x00ffffffU;
+}
+
+} // namespace
+
+// @verified - p
+void SubmitTitleScreenQuad(std::int32_t texture, float alpha) {
+    d3t::SetSceneClearColour(0xffffffffU);
+    LegacySpritePacket packet{.quad = {.flags = 0x400}, .colour = TitleAlphaColour(alpha), .uv = {0.0f, 0.0f, 1.0f, 1.0f}};
+    const std::array<std::int16_t, 2> &dimensions = TITLE_LOGO_DIMENSIONS[texture - 2];
+    AdjustScreenAspectRatio(packet.quad, ScreenAlignment::HorizontalStretch, 320, 240, dimensions[0], dimensions[1], ScreenMode::Centered);
+    LegacySpriteNullsub(packet, static_cast<std::uint32_t>(titleSpriteTextures[texture]), -2.9f);
+}
+
+// @verified - p
+void SetPressStart(void *) {
+    if (!SplashSequenceComplete())
+        return;
+    if (setPressStartPending != 0) {
+        titleLoopSequence = TitleSequence::MoveToAm2Logos5;
+        setPressStartPending = 0;
+    } else if (GetDebugForceUIEnabled(UIElement::PressStart)) {
+        EnableElement(UIElement::PressStart);
+    }
+}
+
+// @verified - p
+void DrawTitleDisc(void *data) {
+    SubmitTitleScreenQuad(4, static_cast<TitleDisplayData *>(data)->currentStateFrame);
+}
+// @verified - p
+void DrawTitleYsMark(void *data) {
+    SubmitTitleScreenQuad(5, static_cast<TitleDisplayData *>(data)->currentStateFrame);
+}
+// @verified - p
+void DrawTitleSegaLogo(void *data) {
+    SubmitTitleScreenQuad(3, static_cast<TitleDisplayData *>(data)->currentStateFrame);
+}
+// @verified - p
+void DrawTitleAm2Logo(void *data) {
+    SubmitTitleScreenQuad(2, static_cast<TitleDisplayData *>(data)->currentStateFrame);
+}
+// @verified - p
+void DrawTitleAdditionalLogo(void *data) {
+    SubmitTitleScreenQuad(6, static_cast<TitleDisplayData *>(data)->currentStateFrame);
+}
+// @verified - p
+void DrawTitleWarning41(void *) {
+    SetTitleWarningLogo(41, nullptr);
+}
+// @verified - p
+void DrawTitleWarning40(void *) {
+    SetTitleWarningLogo(40, nullptr);
+}
+// @verified - p
+void DrawTitleWarning1(void *) {
+    SetTitleWarningLogo(1, nullptr);
+}
+// @verified - p
+void TitleDisplayNullsub(void *) {
+}
+
+// @verified - p
+void DrawTitleEsrb(void *data) {
+    logoFlags &= ~kFadeInProgress;
+    const std::uint32_t frames = static_cast<TitleDisplayData *>(data)->frameCount;
+    float alpha = 1.0f;
+    if (frames < 30)
+        alpha = static_cast<float>(std::bit_cast<std::int32_t>(frames)) * 0.033333335f;
+    else if (frames > 90) {
+        const float remaining = 120.0f - static_cast<float>(std::bit_cast<std::int32_t>(frames));
+        alpha = (remaining > 0.0f ? remaining : 0.0f) * 0.033333335f;
+    }
+    d3t::SetSceneClearColour(0xff000000U);
+    LegacySpritePacket packet{.quad = {.flags = 0x400}, .colour = TitleAlphaColour(alpha), .uv = {0.0f, 0.0f, 1.0f, 1.0f}};
+    AdjustScreenAspectRatio(packet.quad, ScreenAlignment::HorizontalStretch, 320, 240, 256, 128, ScreenMode::Centered);
+    LegacySpriteNullsub(packet, static_cast<std::uint32_t>(titleEsrbTexture), -2.9f);
+}
+
+// @verified - p
+void SetTitleLogoPresent() {
+    logoFlags |= kHasCurrentLogo;
+}
+
+// @verified - p
+void ResetTitleMenuState() {
+    titleMenuDialogueMode = static_cast<std::uint8_t>(GetS2DialogueMode());
+    titleMenuTriggerSwap = AreS2TriggersSwapped();
+    titleMenuControlMode = GetS2ControlMode();
+    titleOptionsSelection = 0;
+    SetTitleLogoPresent();
+    titleOptionItems = TITLE_OPTION_ITEMS;
+    titleOptionItemCount = 4;
+}
+
+// @verified - p
+void SetTitleMenuSelection(std::int32_t selection) {
+    g_titleMenuSelection = selection;
+    g_previousTitleMenuSelection = selection;
+}
+
+// @verified - p
+std::int32_t SetTitleSceneInfo(const TitleSceneEntry &scene) {
+    if (scene.act == 255) {
+        g_currentMap = TITLE_AREA_0000;
+        g_actNumber = 0;
+        g_entryPoint = 0;
+        titleCurrentAreaIndex = -2;
+        return 0;
+    }
+    g_actNumber = scene.act;
+    g_currentMap = scene.area;
+    g_entryPoint = scene.entry;
+    return scene.entry;
+}
+
+namespace {
+
+// @verified - p
+void TitleAudioControl(std::int32_t sceneIndex) {
+    LoadSoundProgram("0002S000.sbt", static_cast<std::uint32_t>(sceneIndex >> 31), 0xffffffffU);
+    if (currentTitleLogo) {
+        scenCvsCtrlFree(currentTitleLogo);
+        currentTitleLogo = nullptr;
+    }
+}
+
+} // namespace
+
+// @verified - p
+void CheckTitleDebugInput(void *data) {
+    TitleControlData *const control = static_cast<TitleControlData *>(data);
+    if (control->display->currentStateFrame >= 1.0f && (g_inputBuffer[0].pressedPriority & 0x0fffU)) {
+        ResetTitleMenuState();
+        control->state = 1;
+    }
+}
+
+// @verified - p
+void AcceptTitlePressStart(void *data) {
+    if (pressStartSelected != 1)
+        return;
+    pressStartSelected = 0;
+    SelectInputDeviceForButtons(0x0c00);
+    ResetTitleMenuState();
+    static_cast<TitleControlData *>(data)->state = 2;
+    g_bPaused = false;
+    LoadSoundProgram("0002S000.sbt", 0, 0xffffffffU);
+    if (currentTitleLogo) {
+        scenCvsCtrlFree(currentTitleLogo);
+        currentTitleLogo = nullptr;
+    }
+}
+
+// @verified - p
+void LoadTitleIntroArea(void *) {
+    g_actNumber = 1;
+    g_currentMap = AREA_0001;
+    g_entryPoint = 1;
+    ExecuteAicaCommand(0x1200a0, 5, 0);
+    ChangeSystemModule(SystemModule::Game, 0);
+}
+
+// @verified - p
+void LoadTitleAttractArea(void *) {
+    g_actNumber = 1;
+    g_currentMap = AREA_OP02;
+    g_entryPoint = 1;
+    d3t::SetSceneClearColour(0xff000000U);
+    ExecuteAicaCommand(0x1200a0, 5, 0);
+    ChangeSystemModule(SystemModule::Game, 0);
+}
+
+// @verified - p
+void SkipTitleWarning(void *data) {
+    if ((g_inputBuffer[0].pressedPriority & 0x0e01U) == 0)
+        return;
+    TitleControlData *const control = static_cast<TitleControlData *>(data);
+    logoFlags &= ~kFadeInProgress;
+    titleSequenceTime = 0.0f;
+    control->display->currentStateFrame = 1.0f;
+    control->display->stateFrame = -0.062745102f;
+}
+
+// @verified - p
+void MoveToAm2LogoOrYsMark(void *taskData) {
+    if (!HasUnlockedRenderHandle())
+        return;
+    TitleControlData *const control = static_cast<TitleControlData *>(taskData);
+    if ((g_inputBuffer[0].pressedPriority & 0x0edeU) || (g_previousTitleInputUserHandle == 0 && g_inputBuffer[0].connectionState != 0)) {
+        SetupAllShaders();
+        TitleDisplayData *const display = static_cast<TitleDisplayData *>(HLib::GetTaskParameter(control->titleSequenceTask));
+        logoFlags |= kFadeInProgress;
+        titleLoopSequence = TitleSequence::MoveToAm2Logos5;
+        titleSequenceTime = static_cast<float>(TITLE_SEQUENCE_TABLE[5].duration);
+        d3t::SetSceneClearColour(0xff000000U);
+        display->currentStateFrame = 0.0f;
+        display->stateFrame = 0.062745102f;
+        if (currentTitleLogo) {
+            scenCvsCtrlFree(currentTitleLogo);
+            currentTitleLogo = nullptr;
+        }
+        logoFlags &= ~(kQueueYsMark | kQueueAm2Logo);
+        HLib::AssignCallbackForTask(control->titleSequenceTask, TITLE_SEQUENCE_TABLE[static_cast<std::size_t>(titleLoopSequence)].display);
+        needsTitleSequenceDraw = 0;
+    } else {
+        if (logoFlags & kQueueYsMark) {
+            currentTitleLogo = shenPlayAudioWithFlags("YSMARK", 17);
+            logoFlags &= ~(kQueueYsMark | kQueueAm2Logo);
+        }
+        if (logoFlags & kQueueAm2Logo) {
+            ConversationBuffer *const logo = shenPlayAudioWithFlags("AM2LOGO", 17);
+            logoFlags &= ~(kQueueYsMark | kQueueAm2Logo);
+            currentTitleLogo = logo;
+        }
+    }
+}
+
+void TitleControl(void *taskData) {
+    TitleControlData *const control = static_cast<TitleControlData *>(taskData);
+    TitleDisplayData *const display = static_cast<TitleDisplayData *>(HLib::GetTaskParameter(control->titleSequenceTask));
+    std::size_t sequence = static_cast<std::size_t>(titleLoopSequence);
+    if (control->state > 0) {
+        if (control->state == 2) {
+            HLib::SetCurrentTaskTo(TitleMenuControl);
+            HLib::AssignCallbackForTask(control->titleSequenceTask, TitleMenuDisplay);
+        }
+        control->state = 0;
+        return;
+    }
+
+    const std::uint32_t flags = logoFlags;
+    ++display->frameCount;
+    if ((flags & kTimerMask) == kTimerPattern) {
+        if (SplashSequenceComplete())
+            titleSequenceTime -= shenGetScaledDeltaTickTime(1.0f);
+        if (titleSequenceTime < 0.0f) {
+            SetTitleWarningLogo(0, nullptr);
+            (void)GetLocalBackupInfo();
+            if (titleLoopSequence == TitleSequence::MoveToAm2Logos6) {
+                if (currentTitleLogo) {
+                    scenCvsCtrlFree(currentTitleLogo);
+                    currentTitleLogo = nullptr;
+                }
+                TitleAudioControl(0);
+            } else {
+                TitleAudioControl(-1);
+                if (titleLoopSequence == TitleSequence::MoveToAm2Logos8)
+                    logoFlags |= kQueueYsMark;
+                else if (titleLoopSequence == TitleSequence::MoveToAm2Logos3)
+                    logoFlags |= kQueueAm2Logo;
+                else if (currentTitleLogo) {
+                    scenCvsCtrlFree(currentTitleLogo);
+                    currentTitleLogo = nullptr;
+                }
+            }
+            titleLoopSequence = static_cast<TitleSequence>(static_cast<std::int32_t>(titleLoopSequence) + 1);
+            sequence = static_cast<std::size_t>(titleLoopSequence);
+            titleSequenceTime = static_cast<float>(TITLE_SEQUENCE_TABLE[sequence].duration);
+            display->frameCount = 0;
+            d3t::SetSceneClearColour(0xff000000U);
+            HLib::AssignCallbackForTask(control->titleSequenceTask, TITLE_SEQUENCE_TABLE[sequence].display);
+            logoFlags |= kFadeInProgress;
+            display->currentStateFrame = 0.0f;
+            display->stateFrame = 0.062745102f;
+            return;
+        }
+    } else {
+        display->currentStateFrame += 0.015686275f;
+        if (display->currentStateFrame > 1.0f) {
+            display->currentStateFrame = 1.0f;
+            logoFlags = flags & ~kFadeInProgress;
+            display->stateFrame = -0.062745102f;
+        }
+    }
+    TITLE_SEQUENCE_TABLE[sequence].control(control);
+    g_previousTitleInputUserHandle = g_inputBuffer[0].connectionState;
+}
+
+bool SelectTitlePressStart() {
+    auto *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
+    if (!control) {
+        return false;
+    }
+    pressStartSelected = 1;
+    return true;
+}
+
+bool BeginTitleOptionsTask() {
+    return AssignTitleCallbacks(TitleOptionsControl, TitleOptionsDisplay);
+}
+
+bool BeginTitlePlatformTask(void (*callback)(void *)) {
+    return AssignTitleCallbacks(callback, NativeTitleNoOp);
+}
+
+bool ReturnToTitleMenuTask() {
+    if (!AssignTitleCallbacks(TitleMenuControl, TitleMenuDisplay)) {
+        return false;
+    }
+    ReturnToTitleWheel();
+    return true;
+}
+
+bool ReturnToTitlePressStartTask() {
+    if (!AssignTitleCallbacks(TitleControl, SetPressStart)) {
+        return false;
+    }
+    auto *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
+    control->display->frameCount = 0;
+    titleSequenceTime = static_cast<float>(TITLE_SEQUENCE_TABLE[static_cast<std::size_t>(titleLoopSequence)].duration);
+    logoFlags |= kLeaving;
+    DestroyElementByIndex(UIElement::MainMenu);
+    DestroyElementByIndex(UIElement::MainMenuWheel);
+    ShowElementByIndex(UIElement::PressStart);
+    return true;
+}
+
+void TitleModule(void *taskData) {
+    SystemModuleTaskData *const module = static_cast<SystemModuleTaskData *>(taskData);
+    DispatchPostFxFilterRender(0);
+    ResetLegacySpriteSlotDrawState();
+    g_bPaused = true;
+    const shen_name previousMap = g_currentMap;
+    g_currentMap = titleAreaName;
+    ReloadSpriteResources();
+    g_currentMap = previousMap;
+
+    pressStartSelected = 0;
+    HLib::Task *const task = HLib::EnqueueTaskWithParameter(TitleControl, 8, 0, sizeof(TitleControlData), TITLE_CONTROL_TASK);
+    TitleControlData *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(task));
+    std::memset(control, 0, sizeof(*control));
+    titleControlTask = task;
+    TitleModuleWork *const work = static_cast<TitleModuleWork *>(module->work);
+    g_previousTitleInputUserHandle = g_inputBuffer[0].connectionState;
+    work->frames = 300;
+    work->screenFilmTask = Queue_SCF_Callback_ScreenFilmTaskEntry(15);
+    control->screenFilmTask = work->screenFilmTask;
+    InitCalendar();
+    LoadAreaSpriteImages();
+    RenewLocalBackupInfo();
+
+    bool resumedIntro = false;
+    logoFlags = (logoFlags & 4U) | 0x80U;
+    if (module->previousModule == SystemModule::Hot) {
+        titleLoopSequence = needsTitleSequenceDraw == 1 ? TitleSequence::MoveToAm2Logos2 : TitleSequence::MoveToAm2Logos5;
+    } else if (module->previousModule == SystemModule::Logo) {
+        needsTitleSequenceDraw = 1;
+        if (!SplashSequenceComplete()) {
+            ShowElementByIndex(UIElement::Splash);
+        }
+        titleLoopSequence = TitleSequence::MoveToAm2Logos6;
+        setPressStartPending = 1;
+    } else if (module->previousModule == SystemModule::Title) {
+        titleLoopSequence = needsTitleSequenceDraw == 1 ? TitleSequence::MoveToAm2Logos6 : TitleSequence::MoveToAm2Logos5;
+    } else if (g_entryPoint == 49 && titleLoopSequence == TitleSequence::MoveToAm2Logos5) {
+        titleLoopSequence = TitleSequence::MoveToAm2Logos6;
+        ResetTitleMenuState();
+        resumedIntro = true;
+        logoFlags &= ~0xc0U;
+        control->state = 2;
+        needsTitleSequenceDraw = 0;
+        g_bPaused = false;
+    } else if (g_entryPoint == 49 && titleLoopSequence == TitleSequence::MoveToAm2Logos7) {
+        titleLoopSequence = TitleSequence::MoveToAm2Logos6;
+        needsTitleSequenceDraw = 0;
+    } else if (g_entryPoint != 49 && g_entryPoint == 0 && titleLoopSequence == TitleSequence::MoveToAm2Logos5) {
+        titleLoopSequence = TitleSequence::MoveToAm2Logos7;
+    } else if (g_entryPoint != 49 && titleLoopSequence == TitleSequence::MoveToAm2Logos7) {
+        titleLoopSequence = needsTitleSequenceDraw != 1 ? TitleSequence::MoveToAm2Logos6 : TitleSequence::MoveToAm2Logos5;
+    } else {
+        titleLoopSequence = TitleSequence::MoveToAm2Logos5;
+    }
+
+    logoFlags |= 0x140U;
+    if (g_titleFlagShouldRun != 0) {
+        ResetTitleMenuState();
+        logoFlags &= ~0x80U;
+        control->state = 2;
+        g_bPaused = false;
+        if (g_titleFlagShouldRun == 1)
+            SetTitleMenuSelection(static_cast<std::int32_t>(SystemModule::Hot));
+        else if (g_titleFlagShouldRun == 10 || g_titleFlagShouldRun == 11)
+            SetTitleMenuSelection(static_cast<std::int32_t>(SystemModule::Logo));
+        else if (g_titleFlagShouldRun == 20)
+            SetTitleMenuSelection(static_cast<std::int32_t>(SystemModule::Option));
+        titleLoopSequence = TitleSequence::MoveToAm2Logos6;
+    }
+    if (module->previousModule == SystemModule::Hot && (g_inputBuffer[0].held & 0x40U)) {
+        if (g_inputBuffer[0].held & 0x80U)
+            titleLoopSequence = TitleSequence::PressStart;
+    }
+    titleSequenceTime = static_cast<float>(TITLE_SEQUENCE_TABLE[static_cast<std::size_t>(titleLoopSequence)].duration);
+    Queue_KeyRepeat(0);
+    HLib::SetCurrentTaskTo(NativeTitleNoOp);
+
+    HLib::Task *const displayTask = HLib::EnqueueTaskWithParameter(
+        TITLE_SEQUENCE_TABLE[static_cast<std::size_t>(titleLoopSequence)].display, 9, 0, sizeof(TitleDisplayData), TITLE_DISPLAY_TASK);
+    control->titleSequenceTask = displayTask;
+    control->display = static_cast<TitleDisplayData *>(HLib::GetTaskParameter(displayTask));
+    control->display->frameCount = 0;
+    if (g_titleFlagShouldRun != 0) {
+        control->display->currentStateFrame = 1.0f;
+    } else if (titleLoopSequence != TitleSequence::PressStart) {
+        control->display->currentStateFrame = 0.0f;
+        control->display->stateFrame = 0.062745102f;
+    } else {
+        control->display->currentStateFrame = 1.0f;
+        control->display->stateFrame = -0.062745102f;
+    }
+    d3t::SetSceneClearColour(0xff000000U);
+    titleDebugAct = titleSelectedAct == -1 ? g_loadedActNumber : titleSelectedAct;
+    titleCurrentAreaIndex = titleSceneIndices[titleDebugAct];
+    SetTitleSceneInfo(TITLE_SCENE_TABLES[titleDebugAct][titleCurrentAreaIndex]);
+    titleDebugSelection = 0;
+    titlePreviousDebugSelection = -1;
+    titleCurrentCoreModule = 0;
+    const bool titleSoundMainScene = resumedIntro || g_titleFlagShouldRun != 0;
+    g_titleFlagShouldRun = 0;
+    SM_Init_Enqueue(1);
+    CVS_CtrlConversTask_Enqueue(true);
+    currentTitleLogo = nullptr;
+    QueueSoundProgramControl();
+    std::uint32_t soundDataSize{};
+    if (void *const soundData = LoadLegacySceneFile("MISC", "tit_snd.bin", TITLE_SOUND_DATA_TASK, &soundDataSize)) {
+        shenAssignSoundProgramByPtr({static_cast<const std::byte *>(soundData), soundDataSize});
+        shenAssignActiveSmp("0002S000.smp");
+    }
+    LoadSoundProgram("0002S000.sbt", titleSoundMainScene ? 0 : 0xffffffffU, 0xffffffffU);
+    if (titleLoopSequence == TitleSequence::MoveToAm2Logos3)
+        logoFlags |= kQueueAm2Logo;
+    else if (titleLoopSequence == TitleSequence::MoveToAm2Logos8)
+        logoFlags |= kQueueYsMark;
+    if (resumedIntro) {
+        control->display->currentStateFrame = 1.0f;
+        control->display->stateFrame = -0.062745102f;
+    }
+}
+
+} // namespace shenmue::s2

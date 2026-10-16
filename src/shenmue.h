@@ -1,0 +1,165 @@
+#pragma once
+
+// resolve '/' to ghidra and non-'/' starting paths to ida
+// ordered by first public/retail appearance
+
+#define SHENMUE_DEBUG
+
+#define SHENMUE_TITLE_WHATS 1
+#define SHENMUE_TITLE_S1 2
+#define SHENMUE_TITLE_S2 3
+
+#define SHENMUE_PLATFORM_DC 1
+#define SHENMUE_PLATFORM_XBOX 2
+#define SHENMUE_PLATFORM_PC 3
+
+#define SHENMUE_REGION_UNKNOWN 0
+#define SHENMUE_REGION_JP 1
+#define SHENMUE_REGION_US 2
+#define SHENMUE_REGION_PAL 3
+
+#define SHENMUE_KIND_UNKNOWN 0
+#define SHENMUE_KIND_RETAIL 1
+#define SHENMUE_KIND_DEV 2 /* event_sdk non-RETAIL: physical SH-4 RAM */
+#define SHENMUE_KIND_GAMEJAM 3
+
+/*
+	Compiler:         Upstream GCC 2.95
+	Assembler/linker: GNU 2.9-sh4-980812
+	Compiler flags:  -O1 -fno-omit-frame-pointer -m4-single -ml
+	-fno-builtin
+
+	
+   S2 DC scenFreeEvent + wrapper:
+     Upstream GCC 2.95 / 2.95.2
+     -O1 -fno-omit-frame-pointer -m4-single -ml -fno-builtin
+
+   EV**
+     Upstream GCC 2.95.2 19991024
+     -O1 -fno-omit-frame-pointer -m4-single-only -ml
+
+   Assembler/linker: GNU 2.9-sh4-980812
+*/
+
+#if defined(SHENMUE_TARGET_WHATS_DC)
+/* JP promotional disc, 1999-08-05. Not the full S1 retail. */
+#define SHENMUE_TITLE SHENMUE_TITLE_WHATS
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_DC
+#define SHENMUE_REGION SHENMUE_REGION_JP
+#define SHENMUE_KIND SHENMUE_KIND_UNKNOWN
+#define SHENMUE_TAKE "Shenmue ver. 0.50  "
+#define SHENMUE_TAKE_ADDR 0x0c0200e0u
+#define SHENMUE_DB_NAME "/Whats Shenmue/Whats Shenmue (AM2; DC).1"
+#elif defined(SHENMUE_TARGET_S1_DC_JP)
+/* JP retail 1999-12-29. */
+#define SHENMUE_TITLE SHENMUE_TITLE_S1
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_DC
+#define SHENMUE_REGION SHENMUE_REGION_JP
+#define SHENMUE_KIND SHENMUE_KIND_RETAIL
+#define SHENMUE_TAKE "Shenmue ver. 1.00  "
+#define SHENMUE_DATE "Oct 15 1999"
+#define SHENMUE_TIME "17:39:37"
+#define SHENMUE_DB_NAME "/Shenmue I/S1_D1_JP.BIN"
+#define SHENMUE_TAKE_ADDR 0x0c0200c8u
+#elif defined(SHENMUE_TARGET_S1_DC) || defined(SHENMUE_TARGET_S1_DC_US)
+/* NA 2000-11-07. */
+#define SHENMUE_TITLE SHENMUE_TITLE_S1
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_DC
+#define SHENMUE_REGION SHENMUE_REGION_US
+#define SHENMUE_KIND SHENMUE_KIND_RETAIL
+#define SHENMUE_TAKE "Shenmue ver. 1.00  "
+#define SHENMUE_DB_NAME "/US Shenmue I/US Shenmue I (AM2; DC) - Latest"
+#define SHENMUE_TAKE_ADDR 0x0c0200c8u
+#elif defined(SHENMUE_TARGET_S1_DC_EU)
+/* PAL 2000-12-01. */
+#define SHENMUE_TITLE SHENMUE_TITLE_S1
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_DC
+#define SHENMUE_REGION SHENMUE_REGION_PAL
+#define SHENMUE_KIND SHENMUE_KIND_RETAIL
+#define SHENMUE_TAKE "Shenmue ver. 1.00  "
+#define SHENMUE_DATE "Oct 15 1999"
+#define SHENMUE_TIME "17:39:37"
+#define SHENMUE_DB_NAME "/Shenmue I/S1_D1_EU.BIN"
+#define SHENMUE_TAKE_ADDR 0x0c0200c8u
+#elif defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+/* Prototype. TAKE/date from Latest GameJam.1; not a retail SKU. */
+#define SHENMUE_TITLE SHENMUE_TITLE_S2
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_DC
+#define SHENMUE_REGION SHENMUE_REGION_JP
+#define SHENMUE_KIND SHENMUE_KIND_GAMEJAM
+#define SHENMUE_TAKE "SHENMUE2J  0.10"
+#define SHENMUE_DATE "Nov  6 2000"
+#define SHENMUE_TIME "13:05:30"
+#define SHENMUE_DB_NAME "/Shenmue II/DC/JP/GameJam/Latest GameJam.1"
+#define SHENMUE_EV_SCRIPT_FUNC_TBL 0x0c020200u
+#define SHENMUE_TAKE_ADDR 0x0c020100u
+#elif defined(SHENMUE_TARGET_S2_DC_JP_1001)
+/* JP retail 2001-09-06. DATE/TIME are the resident compiler strings. */
+#define SHENMUE_TITLE SHENMUE_TITLE_S2
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_DC
+#define SHENMUE_REGION SHENMUE_REGION_JP
+#define SHENMUE_KIND SHENMUE_KIND_RETAIL
+#define SHENMUE_DATE "Jul 11 2001"
+#define SHENMUE_TIME "22:40:13"
+#define SHENMUE_DB_NAME "/Shenmue II/DC/JP/Shenmue II JP v1.001 (AM2; DC)"
+#define SHENMUE_EV_SCRIPT_FUNC_TBL 0x0c020200u
+#define SHENMUE_TAKE_ADDR 0x0c020100u
+#elif defined(SHENMUE_TARGET_S2_DC_US)
+/* NA DC never shipped. Preserved US v0.991 prototype (~2001-09-14). */
+#define SHENMUE_TITLE SHENMUE_TITLE_S2
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_DC
+#define SHENMUE_REGION SHENMUE_REGION_US
+#define SHENMUE_KIND SHENMUE_KIND_UNKNOWN
+#define SHENMUE_DB_NAME "/Shenmue II/DC/Shenmue II US (AM2; DC, Unreleased).1"
+#define SHENMUE_EV_SCRIPT_FUNC_TBL 0x0c020200u
+#define SHENMUE_TAKE_ADDR 0x0c020100u
+#elif defined(SHENMUE_TARGET_S2_DC_EU)
+/* PAL retail 2001-11-23. Ghidra listing is the 8c cached map. */
+#define SHENMUE_TITLE SHENMUE_TITLE_S2
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_DC
+#define SHENMUE_REGION SHENMUE_REGION_PAL
+#define SHENMUE_KIND SHENMUE_KIND_RETAIL
+#define SHENMUE_TAKE "SHENMUE2J  0.10"
+#define SHENMUE_DATE "Oct 24 2001"
+#define SHENMUE_TIME "16:35:57"
+#define SHENMUE_DB_NAME "/Shenmue II/DC/S2_D1_EU.BIN"
+#define SHENMUE_EV_SCRIPT_FUNC_TBL 0x8c020200u
+#define SHENMUE_TAKE_ADDR 0x8c020100u
+#elif defined(SHENMUE_TARGET_S2_XBOX)
+/* NA 2002-10-29; EU 2003-03-21. */
+#define SHENMUE_TITLE SHENMUE_TITLE_S2
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_XBOX
+#define SHENMUE_KIND SHENMUE_KIND_RETAIL
+#define SHENMUE_DB_NAME "/Shenmue II/Xbox/Shenmue II (AM2; Xbox)"
+#elif defined(SHENMUE_TARGET_S1_PC)
+/* D3T port, WW 2018-08-21. */
+#define SHENMUE_TITLE SHENMUE_TITLE_S1
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_PC
+#define SHENMUE_KIND SHENMUE_KIND_RETAIL
+#define SHENMUE_DB_NAME "Shenmue_v1.07_06-06-26"
+#define SHENMUE_D3T_JP 0
+#elif defined(SHENMUE_TARGET_S2_PC)
+/* D3T port, WW 2018-08-21. */
+#define SHENMUE_TITLE SHENMUE_TITLE_S2
+#define SHENMUE_PLATFORM SHENMUE_PLATFORM_PC
+#define SHENMUE_KIND SHENMUE_KIND_RETAIL
+#define SHENMUE_DB_NAME "Shenmue2_v1.07_unsure23"
+#define SHENMUE_D3T_JP 0
+#endif
+
+
+#define SHENMUE_IS_DEMO (SHENMUE_TITLE == SHENMUE_TITLE_WHATS)
+#define SHENMUE_IS_S1 (SHENMUE_TITLE == SHENMUE_TITLE_S1)
+#define SHENMUE_IS_S2 (SHENMUE_TITLE == SHENMUE_TITLE_S2)
+#define SHENMUE_IS_DC (SHENMUE_PLATFORM == SHENMUE_PLATFORM_DC)
+#define SHENMUE_IS_PC (SHENMUE_PLATFORM == SHENMUE_PLATFORM_PC)
+#define SHENMUE_IS_XBOX (SHENMUE_PLATFORM == SHENMUE_PLATFORM_XBOX)
+
+
+
+#if SHENMUE_IS_PC
+//#define SHENMUE_RT_ARCADE 1
+#define IS_IDA 1
+#else
+#define IS_IDA 0
+#endif

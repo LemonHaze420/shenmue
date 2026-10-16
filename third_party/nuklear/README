@@ -1,0 +1,42 @@
+Nuklear v1.156, public domain (or, per the LICENSE section at the top of nuklear.h, a perpetual licence to copy, modify,
+publish and distribute). It embeds stb_textedit, stb_truetype and stb_rect_pack (public domain) and the ProggyClean font (MIT).
+
+Source: https://github.com/vurtun/nuklear, commit 867b3359b92b07e85b687b0fe0c4b533a9c85ed1 ("Added functions to manually set
+edit widget focus", 2016-10-18). nuklear.h is that copy (git blob 47a5225669c5db6db363f0457f42f237d606723e) with the
+games' local changes below applied; each is marked "Shenmue:" in the source.
+
+Why that revision (the S1 PC v1.07 binary; S2's decomp has the same layout):
+- nk_style_from_table sets the progress padding to (4,4): 3d3e631 (2016-09-13) or later.
+- nk_begin_titled rejects a null name: ea47c24 (2016-09-20) or later.
+- nk_convert's inlined nk_draw_list_add_clip skips the push when the last command is empty: 4e26fb0 (2016-09-29) or later.
+- nk_draw_scrollbar draws its borders as two filled rectangles: before 4020b1b (2016-10-21).
+- nk_begin_titled still takes the panel: before bd3fd83 (2016-10-29).
+4e26fb0 through 867b335 differ only by the NK_ZERO_COMMAND_MEMORY option (26d77f8), the added nk_edit_focus (867b335) and
+comment and formatting changes, so the newest of them is used.
+
+The games' local changes (applied):
+- struct nk_image has two more 4-byte fields after region (0x20 bytes on x64): a rotate flag and an angle in radians.
+  nk_draw_list_push_rect_uv takes them as extra arguments (nk_draw_list_add_image passes the image's, text glyphs 0) and, when
+  the flag is 1, turns the quad's corners about its centre with cosf/sinf. With this change the header reproduces both games'
+  nk_context offsets (size 0x4590, memory 0x2308, draw_list 0x2EE0, use_pool 0x4514, pool 0x4518, current 0x4578, style.font
+  0x150, style.window.tooltip_padding 0x2300); src/d3t/ui_nuklear.hpp asserts them.
+- struct nk_command_image carries a 32-byte block after col (+0x40; the command is 0x60 bytes). nk_draw_image copies the
+  armed nk_armed_image_block into it while nk_image_block_armed is 1, else sets its handle id to -1, and disarms the flag.
+  nk_convert passes the block's handle to nk_draw_list_add_image, which passes it with the texture to
+  nk_draw_list_push_image; struct nk_draw_command keeps it at +0x20 (0x28 bytes) through nk_draw_list_push_command's fourth
+  argument. Clips, text and untextured shapes push a handle id of -1 (the native leaves the handle's upper four bytes
+  uninitialized; here they are zero). The games' code that arms the block is not traced yet.
+- struct nk_baked_font has an int range_count after ranges (0x28 bytes on x64, so nk_font is 0x88 with scale at +0x58, glyphs at
+  +0x60, fallback at +0x68, fallback_codepoint at +0x70 and texture at +0x78), and nk_font_find_glyph walks that many (from/to) pairs
+  instead of counting the ranges. The games' .fontdef files store it in each pre-baked font; nothing in the games bakes TrueType at
+  runtime, so the vendored bakers leave it 0.
+- nk_image_color is the games' coloured image: it takes the next layout space through nk_panel_alloc_space (no nk_widget
+  visibility test) and draws the image at its bounds truncated to whole pixels.
+- nk_draw_button, nk_draw_button_image and nk_do_button_image take a colour: an image background and a button's image draw
+  in it (nk_white elsewhere). nk_button_color takes the next layout space through nk_panel_alloc_space (no nk_widget visibility
+  test) at whole-pixel bounds, and nk_button_image_color is the games' coloured image button, laid out the same way.
+- Configuration (src/d3t/ui_nuklear.hpp): NK_INCLUDE_FIXED_TYPES, NK_INCLUDE_DEFAULT_ALLOCATOR, NK_INCLUDE_VERTEX_BUFFER_OUTPUT,
+  NK_INCLUDE_FONT_BAKING, NK_INCLUDE_DEFAULT_FONT, a 32 KiB NK_DEFAULT_COMMAND_BUFFER_SIZE and a 16 KiB
+  NK_BUFFER_DEFAULT_INITIAL_SIZE (nk_buffer_init_default); NK_INCLUDE_COMMAND_USERDATA, NK_ZERO_COMMAND_MEMORY and
+  NK_BUTTON_TRIGGER_ON_RELEASE are off, NK_ASSERT checks nothing (the games are release builds) and NK_MEMSET keeps Nuklear's
+  own. NK_MEMCPY, NK_INCLUDE_STANDARD_IO and NK_INCLUDE_STANDARD_VARARGS are not established.

@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\aosdk">
+      <UniqueIdentifier>{d3c6b989-e714-46db-af02-a17735659dcc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\aosdk">
+      <UniqueIdentifier>{2c4350e7-dfb6-489d-a224-907f2cce715f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="am2sndlib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\eng_dsf\aica.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ao.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\eng_dsf\arm7.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\eng_dsf\arm7i.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\corlett.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cpuintrf.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\crc32.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\crypt.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\eng_dsf\dc_hw.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\deflate.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\eng_protos.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\inffast.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\inffixed.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\inflate.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\inftrees.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\ioapi.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mem.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mididump.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\osd_cpu.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\eng_qsf\qsound.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\sampledump.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\trees.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\unzip.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utils.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wavedump.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\eng_qsf\z80.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\eng_qsf\z80dasm.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\zconf.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\zlib.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zlib\zutil.h">
+      <Filter>Header Files\aosdk</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\adler32.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_dsf\aica.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_dsf\aicadsp.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_dsf\arm7.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_dsf\arm7i.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\compress.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\crc32.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_dsf\dc_hw.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\deflate.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\gzio.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\infback.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\inffast.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\inflate.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\inftrees.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\ioapi.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_qsf\kabuki.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mididump.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_qsf\qsound.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sampledump.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\trees.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\uncompr.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\unzip.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wavedump.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_qsf\z80.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_qsf\z80dasm.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zlib\zutil.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ao.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_dsf\eng_dsf.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\eng_qsf\eng_qsf.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\corlett.c">
+      <Filter>Source Files\aosdk</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

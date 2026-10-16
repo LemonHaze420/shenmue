@@ -1,0 +1,22 @@
+#pragma once
+
+#include "s2/area_event.hpp"
+#include "s2/street_fight_event.hpp"
+
+namespace shenmue::s2 {
+inline constexpr shen_name SFJF_BASE{SHEN_NAME(BASE)}, SFJF_FUY{SHEN_NAME(FUY_)}, SFJF_AW3{SHEN_NAME(AW3_)};
+inline constexpr shen_name SFJF_SFA{SHEN_NAME(SFA_)}, SFJF_RE1{SHEN_NAME(RE1_)}, SFJF_CHN{SHEN_NAME(CHN_)};
+inline constexpr shen_name SFJF_DEBUG_CHARACTERS[]{STREET_FIGHT_RYO, SFJF_FUY, STREET_FIGHT_INVALID};
+inline constexpr shen_name SFJF_CHARACTERS[]{STREET_FIGHT_RYO, SFJF_AW3, SFJF_CHN, SFJF_SFA, SFJF_RE1, STREET_FIGHT_INVALID};
+inline constexpr shen_name SFJF_AUTHOR_CHARACTERS[]{SFJF_AW3, SFJF_SFA, SFJF_RE1, SFJF_CHN, STREET_FIGHT_INVALID};
+inline constexpr Vector3 SFJF_STAGE_ORIGIN{267.29998779296875f, 86.0999984741211f, 233.10000610351562f};
+inline constexpr Vector3 SFJF_DEBUG_OPPONENT_ORIGIN{267.29998779296875f, 85.5999984741211f, 233.10000610351562f};
+inline constexpr Vector3 SFJF_DEBUG_PLAYER_POSITION{-9.199999809265137f, -0.5f, -10.399999618530273f};
+inline constexpr Vector3 SFJF_DEBUG_BATTLE_BOOKIE_POSITION{-3.3f, -0.5f, -5.5f};
+inline constexpr Vector3 SFJF_DEBUG_EXIT_POSITION{279.2699890136719f, 85.5999984741211f, 235.6699981689453f};
+inline constexpr Vector3i SFJF_DEBUG_EXIT_ROTATION{0, 33132, 0};
+inline constexpr std::int8_t SFJF_DEBUG_WIN_INCREMENTS[]{0, 1, 2, 4, 6, 8, 8, 8, 8, 8, 8};
+inline constexpr Vector3 SFJF_DEBUG_CONVERSATION_PLAYER_POSITION{0, -0.05000000074505806f, -1.2999999523162842f};
+inline constexpr Vector3 SFJF_DEBUG_HIDDEN_FIGHTER_POSITION{0, -10000, -1.2999999523162842f};
+extern const ScriptAreaDefinition areaSfjfScriptDefinition;
+} // namespace shenmue::s2

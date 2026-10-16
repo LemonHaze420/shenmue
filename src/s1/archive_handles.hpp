@@ -1,0 +1,34 @@
+#pragma once
+#include "d3t/archive_handles.hpp"
+namespace shenmue::s1 {
+using d3t::ArchiveHandleEntry;
+using d3t::ArchiveHandleTable;
+using d3t::AsyncArchiveRequest;
+using d3t::LargeFileDataEntry;
+using d3t::LargeFileHandle;
+using d3t::LargeFileTocEntry;
+using d3t::PlatformFileHandle;
+using d3t::Archive_AllocateHandle;
+using d3t::Archive_BindBuffer;
+using d3t::Archive_ClosePlatformHandle;
+using d3t::Archive_DetachBuffer;
+using d3t::Archive_DoesHandleExist;
+using d3t::Archive_GetHandle;
+using d3t::Archive_HasPendingRead;
+using d3t::Archive_QueueRead;
+using d3t::CheckFileInfo;
+using d3t::GetFileFromCachedBuffer;
+using d3t::g_archiveHandleReaders;
+using d3t::g_archiveHandles;
+using d3t::g_archiveHandleWriter;
+using d3t::g_asyncArchiveRequests;
+using d3t::g_invalidArchiveHandle;
+using d3t::g_largeFileData;
+using d3t::LargeFile_GetSizeInBlocks;
+using d3t::LargeFile_LoadADFSArchiveToc;
+using d3t::LargeFile_OpenTocEntryHandle;
+using d3t::LargeFile_OpenPathHandle;
+using d3t::LoadContent;
+using d3t::ReadCachedFile;
+using d3t::ReadFile_0;
+}

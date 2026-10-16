@@ -1,0 +1,90 @@
+#pragma once
+#include "s2/areas/area_khin.hpp"
+
+namespace shenmue::s2 {
+inline constexpr std::uint32_t khinItems[]{4151, 4151, 4151, 4151, 4151, 4151, 4147, 4147, 4152, 4152, 4255, 4254, 4148, 4149, 4245, 4244, 4246, 4247, 4255,
+    4254, 4148, 4149, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 7, 12, 5, 0};
+inline constexpr std::uint32_t khinMotions[8][3]{
+    {11149, 11150, 0}, {11155, 11156, 11148}, {11153, 11154, 0}, {11151, 11152, 11147}, {11158, 11157, 0}, {11155, 11141, 0}, {11151, 11138, 0}, {0, 61475, 0}};
+inline constexpr const char *khinTdyVoices[]{"0185D001", "0185A001", "0185A002", "0185A003", "0185D002", "0185A004"}; // @text 0185D001 EN: "You're very skilled.\nThat's some score." | JA: "あら、すごいですね。\nとってもいいスコア…" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185D002 EN: "I have a prize for you." | JA: "記念にこれをどうぞ。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinRriVoices[]{"0185B001", "0185A001", "0185A002", "0185A003", "0185B002", "0185A004"}; // @text 0185B001 EN: "Great score!\nYou did it!" | JA: "すごいスコアね！\nやったじゃない。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185B002 EN: "Take this with you." | JA: "記念にこれをあげる。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinYhgVoices[]{"0185C001", "0185A001", "0185A002", "0185A003", "0185C002", "0185A004"}; // @text 0185C001 EN: "Wow, that's great.\nThat's a good score." | JA: "へえ、やるじゃない。\nいいスコアだわ。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185C002 EN: "I'll give you a prize.\nHere." | JA: "記念品をあげるわ。どうぞ。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinSmuVoices[]{"0185E001", "0185A001", "0185A002", "0185A003", "0185E002", "0185A004"}; // @text 0185E001 EN: "Hey, great job!\nA really good score." | JA: "いい腕してますね。\nたいしたスコアですよ。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185E002 EN: "Take this prize." | JA: "記念品をあげましょう。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinSegVoices[]{"0185F001", "0185A001", "0185A002", "0185A003", "0185F002", "0185A004", "0185F004"}; // @text 0185F001 EN: "Wow, you play really well." | JA: "ほう。やるじゃないか、\n兄ちゃん。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185F002 EN: "I'll give you a prize." | JA: "ほら、記念品をあげるよ。" ; 0185A004 EN: "Thanks." | JA: "どうも。" ; 0185F004 EN: "Cleared it with a single token too.\nHere." | JA: "１コインクリアだから、これも。"
+inline constexpr const char *khinSegPrizeVoices[]{"0185F007", "0185A001", "0185A002", "0185A003", "0185F008", "0185A004"}; // @text 0185F007 EN: "You've got some skill.\nThat's a great score." | JA: "いい腕してるじゃないか。\nたいしたスコアだ。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185F008 EN: "How about a prize?" | JA: "そうだ。記念品をあげるよ。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinKukVoices[]{"0185G001", "0185A005", "0185A002", "0185A006", "0185G002", "0185A007"}; // @text 0185G001 EN: "Wow, you're cool!" | JA: "うわーっ、\nお兄ちゃん、スゴーイ！" ; 0185A005 EN: "Not really." | JA: "あ、ああ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A006 EN: "I'm not that good." | JA: "別にたいしたことじゃ…" ; 0185G002 EN: "I'll give you this." | JA: "んーとね、これ、あげる。" ; 0185A007 EN: "Thanks." | JA: "ありがとう。"
+inline constexpr const char *khinOd5Voices[]{"0185H001", "0185A001", "0185A002", "0185A003", "0185H006", "0185A004"}; // @text 0185H001 EN: "Really impressive score." | JA: "すげえスコアだな、兄ちゃん。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185H006 EN: "Here's a prize.\nKeep it." | JA: "こいつは記念品だ。\nとっときな。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinOm2Voices[]{"0185I001", "0185A001", "0185A002", "0185A003", "0185I004", "0185A004"}; // @text 0185I001 EN: "Good score. I always wanted\nto see a guy like you play." | JA: "いいスコアだ。\nあんたみたいな男を待ってたぜ。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185I004 EN: "I have been dreaming of this day=@" | JA: "こいつを渡せる日を\n夢見てたぜ。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinSegScrollVoices[]{"0185F005", "0185A001", "0185A002", "0185A003", "0185F006", "0185A004"}; // @text 0185F005 EN: "Wow, that's great.\nCleared it with a single token." | JA: "ほう。スゴイじゃないか。\n１コインクリアだ。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185F006 EN: "I'll give you a prize.\nHere." | JA: "記念品をあげるよ。\nほら、これだ。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinOd5ScrollVoices[]{"0185H003", "0185A001", "0185A002", "0185A003", "0185H006", "0185A004"}; // @text 0185H003 EN: "You're not just anybody.\nThat's some skill." | JA: "あんた、タダ者じゃねえな。\nいい腕だぜ。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185H006 EN: "Here's a prize.\nKeep it." | JA: "こいつは記念品だ。\nとっときな。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinOm2ScrollVoices[]{"0185I006", "0185A001", "0185A002", "0185A003", "0185I007", "0185A004"}; // @text 0185I006 EN: "Cleared it with a single token.\nI'm glad I met you." | JA: "１コインクリアか。\nあんたに会えてよかったぜ。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185I007 EN: "This is a prize.\nKeep it." | JA: "こいつは記念品だ。\nとっときな。" ; 0185A004 EN: "Thanks." | JA: "どうも。"
+inline constexpr const char *khinOd5PairVoices[]{"0185H003", "0185A001", "0185A002", "0185A003", "0185H002", "0185A004", "0185H004"}; // @text 0185H003 EN: "You're not just anybody.\nThat's some skill." | JA: "あんた、タダ者じゃねえな。\nいい腕だぜ。" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185H002 EN: "Here you go.\nA prize of glory." | JA: "ほらよ。栄光の記念品だ。" ; 0185A004 EN: "Thanks." | JA: "どうも。" ; 0185H004 EN: "You cleared it with a single token.\nHere!" | JA: "１コインクリアだから、\nこいつも。"
+inline constexpr const char *khinOm2PairVoices[]{"0185I003", "0185A001", "0185A002", "0185A003", "0185I002", "0185A004", "0185I005"}; // @text 0185I003 EN: "Wonderful!\nYou are a true champion!" | JA: "すばらしい！　あんたこそ\n真のチャンピオンだ！" ; 0185A001 EN: "Yeah." | JA: "あ、ええ。" ; 0185A002 EN: "It's not that great." | JA: "いや、それほどでも。" ; 0185A003 EN: "It's nothing, really." | JA: "いえ、たいしたことじゃ…" ; 0185I002 EN: "Now=@it's time for me\nto hand out the prize." | JA: "記念品を渡せる日が\nやっときたぜ。" ; 0185A004 EN: "Thanks." | JA: "どうも。" ; 0185I005 EN: "Cleared it with a single token.\nTake this too." | JA: "１コインクリアだから、\nこいつも。"
+inline constexpr const char *khinMeyVoices[]{"0185J001", "0185A008", "0185A008", "0185A008", "0185J002", "0185A009", "0185J003"}; // @text 0185J001 EN: "Please wait.\nTake this with you." | JA: "ちょっと待って…\nせめて、お返しにこれを…" ; 0185A008 EN: "For me?" | JA: "お返しって？" ; 0185J002 EN: "This is a lucky bronze medal. I heard\nthat there are gold and silver ones too." | JA: "これ…幸運の銅メダル。\n他に金や銀もあるらしいけど…" ; 0185A009 EN: "Really=@thanks." | JA: "そうか…ありがとう。" ; 0185J003 EN: "Bye, then." | JA: "じゃあ。"
+inline constexpr const char *khinXhgDepositVoices[]{"0112A033", "0112B004", "0112B005", "0112B008", "0112B013", "0112B010", "0112B015", "0112A035"}; // @text 0112A033 EN: "Excuse me." | JA: "すいません。" ; 0112B004 EN: "Quitting so soon? I'll hold\nyour leftover tokens then." | JA: "もう終わりかい。\nじゃあコインを預かるよ。" ; 0112B005 EN: "Thank you very much." | JA: "ありがとうございました。" ; 0112B008 EN: "You've won more than\n10,000 tokens now." | JA: "ついに１万枚突破しちまったか。" ; 0112B013 EN: "A tremendous amount of tokens." | JA: "とんでもない枚数だな。" ; 0112B010 EN: "Congratulations." | JA: "おめでとう。ほい。" ; 0112B015 EN: "Here, another one." | JA: "ほい、もうひとつ。" ; 0112A035 EN: "Yeah." | JA: "あ、ええ。"
+inline constexpr const char *khinXhgWithdrawalVoices[]{"0112B001", "0185A007", "0112B002"}; // @text 0112B001 EN: "Welcome.\nI have your tokens." | JA: "いらっしゃい。\nコイン、預かってるよ。" ; 0185A007 EN: "Thanks." | JA: "ありがとう。" ; 0112B002 EN: "Have fun." | JA: "楽しんでいってくれ。"
+inline constexpr const char *khinXhgLeaveVoices[]{"0112B005"}; // @text EN: "Thank you very much." | JA: "ありがとうございました。"
+inline constexpr const char *khinCancelVoices[]{"0112A030"}; // @text EN: "I should leave my tokens at the counter." | JA: "カウンターにコインを預けるか。"
+inline constexpr const char *khinGreetingVoices[]{"0112A025"}; // @text EN: "I think I should stop." | JA: "そろそろ、やめるか。"
+inline constexpr const char *khinGstDepositVoices[]{"0112A033", "0112C004", "0112C005", "0112C008", "0112C013", "0112C010", "0112C015", "0112A035"}; // @text 0112A033 EN: "Excuse me." | JA: "すいません。" ; 0112C004 EN: "Did you have fun?\nI'll hold your leftover tokens." | JA: "どう、楽しめたかい？\nじゃあコインを預かるよ。" ; 0112C005 EN: "Thank you!" | JA: "ありがとうございました。" ; 0112C008 EN: "Wow!" | JA: "ついに１万枚突破だよ。" ; 0112C013 EN: "A tremendous record!" | JA: "すげえ大記録だよ！\n兄ちゃん。" ; 0112C010 EN: "Great." | JA: "おめでとさん。" ; 0112C015 EN: "Here's another." | JA: "ほい、もうひとつ。" ; 0112A035 EN: "Yeah." | JA: "あ、ええ。"
+inline constexpr const char *khinGstWithdrawalVoices[]{"0112C001", "0185A007", "0112C002"}; // @text 0112C001 EN: "Hi.\nI have your tokens." | JA: "よ、いらっしゃい。\nコイン預かってるよ。" ; 0185A007 EN: "Thanks." | JA: "ありがとう。" ; 0112C002 EN: "Well, have fun." | JA: "ま、楽しんでってくれよ。"
+inline constexpr const char *khinGstLeaveVoices[]{"0112C005"}; // @text EN: "Thank you!" | JA: "ありがとうございました。"
+inline constexpr const char *khinAgnDepositVoices[]{"0112A033", "0112D005", "0112D006", "0112D009", "0112D013", "0112D011", "0112D014", "0112A035"}; // @text 0112A033 EN: "Excuse me." | JA: "すいません。" ; 0112D005 EN: "Thank you.\nI'll hold your leftover tokens." | JA: "ありがとうございます。\nコインを預かりますよ。" ; 0112D006 EN: "Thanks." | JA: "ありがとうございました。" ; 0112D009 EN: "You've won more than 10,000 tokens." | JA: "おや、コインが１万枚以上に\nなりましたね。" ; 0112D013 EN: "No one has ever won so many tokens." | JA: "驚きましたね。\nこんな枚数初めてですよ。" ; 0112D011 EN: "Congratulations.\nHere." | JA: "おめでとうございます。\nどうぞ、これを。" ; 0112D014 EN: "And one more=@Here." | JA: "はい、もう１枚ですね。\nどうぞ。" ; 0112A035 EN: "Yeah." | JA: "あ、ええ。"
+inline constexpr const char *khinAgnWithdrawalVoices[]{"0112D001", "0185A007", "0112D002"}; // @text 0112D001 EN: "Hi.\nI've kept your tokens." | JA: "ご来店ありがとうこざいます。\nコイン預かってますよ。" ; 0185A007 EN: "Thanks." | JA: "ありがとう。" ; 0112D002 EN: "Have fun." | JA: "どうぞ、ごゆっくり。"
+inline constexpr const char *khinAgnLeaveVoices[]{"0112D006"}; // @text EN: "Thanks." | JA: "ありがとうございました。"
+inline constexpr shen_name KHIN_TDY{SHEN_NAME(TDY_)}, KHIN_RRI{SHEN_NAME(RRI_)}, KHIN_YHG{SHEN_NAME(YHG_)}, KHIN_SMU{SHEN_NAME(SMU_)};
+inline constexpr shen_name KHIN_SEG{SHEN_NAME(SEG_)}, KHIN_KUK{SHEN_NAME(KUK_)}, KHIN_OD5{SHEN_NAME(OD5_)}, KHIN_OM2{SHEN_NAME(OM2_)};
+inline constexpr shen_name KHIN_MEY{SHEN_NAME(MEY_)}, KHIN_XHG{SHEN_NAME(XHG_)}, KHIN_GST{SHEN_NAME(GST_)}, KHIN_AGN{SHEN_NAME(AGN_)};
+inline constexpr shen_name KHIN_PURCHASE_ITEM{SHEN_NAME(KH06)}, KHIN_FIRST_PRIZE{SHEN_NAME(KH03)}, KHIN_SECOND_PRIZE{SHEN_NAME(KH07)};
+inline constexpr shen_name KHIN_SCROLL_FIRST{SHEN_NAME(KH13)}, KHIN_SCROLL_SECOND{SHEN_NAME(KH12)}, KHIN_SCROLL_THIRD{SHEN_NAME(KH04)};
+inline constexpr shen_name KHIN_SCROLL_FOURTH{SHEN_NAME(KH05)}, KHIN_SCROLL_FIRST_EXTRA{SHEN_NAME(KH16)}, KHIN_SCROLL_SECOND_EXTRA{SHEN_NAME(KH14)};
+inline constexpr shen_name KHIN_SCROLL_THIRD_EXTRA{SHEN_NAME(KH17)}, KHIN_SCROLL_FOURTH_EXTRA{SHEN_NAME(KH15)}, KHIN_MEY_ITEM{SHEN_NAME(KH11)};
+inline constexpr KhinCharacterRow khinCharacters[]{
+    {.character = KHIN_TDY, .motion = 0, .voices = khinTdyVoices, .firstItem = KHIN_PURCHASE_ITEM, .secondItem = KHIN_NONE},
+    {.character = KHIN_RRI, .motion = 1, .voices = khinRriVoices, .firstItem = KHIN_PURCHASE_ITEM, .secondItem = KHIN_NONE},
+    {.character = KHIN_RRI, .motion = 2, .voices = khinRriVoices, .firstItem = KHIN_PURCHASE_ITEM, .secondItem = KHIN_NONE},
+    {.character = KHIN_YHG, .motion = 2, .voices = khinYhgVoices, .firstItem = KHIN_PURCHASE_ITEM, .secondItem = KHIN_NONE},
+    {.character = KHIN_SMU, .motion = 1, .voices = khinSmuVoices, .firstItem = KHIN_PURCHASE_ITEM, .secondItem = KHIN_NONE},
+    {.character = KHIN_SEG, .motion = 3, .voices = khinSegVoices, .firstItem = KHIN_PURCHASE_ITEM, .secondItem = KHIN_NONE},
+    {.character = KHIN_SEG, .motion = 3, .voices = khinSegPrizeVoices, .firstItem = KHIN_FIRST_PRIZE, .secondItem = KHIN_NONE},
+    {.character = KHIN_KUK, .motion = 4, .voices = khinKukVoices, .firstItem = KHIN_FIRST_PRIZE, .secondItem = KHIN_NONE},
+    {.character = KHIN_SEG, .motion = 3, .voices = khinSegPrizeVoices, .firstItem = KHIN_SECOND_PRIZE, .secondItem = KHIN_NONE},
+    {.character = KHIN_KUK, .motion = 4, .voices = khinKukVoices, .firstItem = KHIN_SECOND_PRIZE, .secondItem = KHIN_NONE},
+    {.character = KHIN_SEG, .motion = 3, .voices = khinSegVoices, .firstItem = KHIN_SCROLL_FIRST, .secondItem = KHIN_NONE},
+    {.character = KHIN_OD5, .motion = 3, .voices = khinOd5Voices, .firstItem = KHIN_SCROLL_SECOND, .secondItem = KHIN_NONE},
+    {.character = KHIN_SEG, .motion = 3, .voices = khinSegVoices, .firstItem = KHIN_SCROLL_THIRD, .secondItem = KHIN_NONE},
+    {.character = KHIN_OM2, .motion = 3, .voices = khinOm2Voices, .firstItem = KHIN_SCROLL_FOURTH, .secondItem = KHIN_NONE},
+    {.character = KHIN_SEG, .motion = 3, .voices = khinSegScrollVoices, .firstItem = KHIN_SCROLL_FIRST_EXTRA, .secondItem = KHIN_NONE},
+    {.character = KHIN_OD5, .motion = 3, .voices = khinOd5ScrollVoices, .firstItem = KHIN_SCROLL_SECOND_EXTRA, .secondItem = KHIN_NONE},
+    {.character = KHIN_SEG, .motion = 3, .voices = khinSegScrollVoices, .firstItem = KHIN_SCROLL_THIRD_EXTRA, .secondItem = KHIN_NONE},
+    {.character = KHIN_OM2, .motion = 3, .voices = khinOm2ScrollVoices, .firstItem = KHIN_SCROLL_FOURTH_EXTRA, .secondItem = KHIN_NONE},
+    {.character = KHIN_SEG, .motion = 3, .voices = khinSegVoices, .firstItem = KHIN_SCROLL_FIRST, .secondItem = KHIN_SCROLL_FIRST_EXTRA},
+    {.character = KHIN_OD5, .motion = 3, .voices = khinOd5PairVoices, .firstItem = KHIN_SCROLL_SECOND, .secondItem = KHIN_SCROLL_SECOND_EXTRA},
+    {.character = KHIN_SEG, .motion = 3, .voices = khinSegVoices, .firstItem = KHIN_SCROLL_THIRD, .secondItem = KHIN_SCROLL_THIRD_EXTRA},
+    {.character = KHIN_OM2, .motion = 3, .voices = khinOm2PairVoices, .firstItem = KHIN_SCROLL_FOURTH, .secondItem = KHIN_SCROLL_FOURTH_EXTRA},
+    {.character = KHIN_MEY, .motion = 2, .voices = khinMeyVoices, .firstItem = KHIN_MEY_ITEM, .secondItem = KHIN_NONE},
+    {.character = KHIN_XHG, .motion = 1, .voices = khinXhgDepositVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_XHG, .motion = 5, .voices = khinXhgWithdrawalVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_XHG, .motion = 0, .voices = khinXhgLeaveVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_XHG, .motion = 7, .voices = khinCancelVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_XHG, .motion = 0, .voices = khinGreetingVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_GST, .motion = 3, .voices = khinGstDepositVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_GST, .motion = 6, .voices = khinGstWithdrawalVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_GST, .motion = 0, .voices = khinGstLeaveVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_GST, .motion = 7, .voices = khinCancelVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_GST, .motion = 6, .voices = khinGreetingVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_AGN, .motion = 1, .voices = khinAgnDepositVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_AGN, .motion = 5, .voices = khinAgnWithdrawalVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_AGN, .motion = 0, .voices = khinAgnLeaveVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_AGN, .motion = 7, .voices = khinCancelVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE},
+    {.character = KHIN_AGN, .motion = 0, .voices = khinGreetingVoices, .firstItem = KHIN_NONE, .secondItem = KHIN_NONE}};
+inline constexpr Vector4 khinReflector{1.0f, .3f, .3f, .3f};
+inline constexpr Vector3 khinItemOffset{.158f, -.12f, -.425f};
+inline std::int32_t khinHandCommand[19][3]{{0, 726, 61167}, {0, 0, 64444}, {0, 62623, 3639}, {0, 0, 59530}, {0, 0, 60440}, {0, 0, 63352}, {0, 546, 1820},
+    {0, 0, 58801}, {0, 0, 55161}, {0, 0, 62988}, {0, 546, 1638}, {0, 0, 56071}, {0, 0, 56982}, {0, 0, 63352}, {0, 546, 1091}, {0, 0, 52796}, {0, 0, 56435},
+    {0, 0, 61349}, {0, 546, 1091}};
+inline constexpr shen_name khinMedalModels[]{SHEN_NAME(KH20), SHEN_NAME(KH21), SHEN_NAME(KH22), SHEN_NAME(KH23), SHEN_NAME(KH24), SHEN_NAME(KH25)};
+inline constexpr std::int32_t khinMedalThresholds[]{3000, 10000, 50000, 200000, 500000, 1000000};
+inline constexpr HLib::TaskCallback khinMedalCallbacks[]{KhinTokenReward3000Callback, KhinTokenReward10000Callback, KhinTokenReward50000Callback,
+    KhinTokenReward200000Callback, KhinTokenReward500000Callback, KhinTokenReward1000000Callback};
+} // namespace shenmue::s2

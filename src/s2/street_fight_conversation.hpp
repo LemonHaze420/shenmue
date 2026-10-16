@@ -1,0 +1,85 @@
+#pragma once
+#include "s2/hlib.hpp"
+#include "common/math.hpp"
+#include <cstdint>
+namespace shenmue::s2 {
+inline constexpr shen_name STREET_FIGHT_CONVERSATION_TASK{SHEN_NAME(suev)};
+inline constexpr shen_name STREET_FIGHT_CONVERSATION_BASE{SHEN_NAME(BASE)};
+inline constexpr Vector3 STREET_FIGHT_VICTORY_FIGHTER_POSITION{-0.5879999995F, 0.0F, -1.899999976F};
+using StreetFightConversationProcedure = std::int32_t (*)(void *);
+using StreetFightConversationSkipCallback = void (*)();
+struct StreetFightConversationWork {
+    std::int8_t state;
+    std::uint8_t firstSkipPress;
+    std::uint16_t reserved02;
+    std::uint32_t remainingFrames;
+    std::uint32_t skipPressFrames;
+    std::int32_t skipped;
+    StreetFightConversationProcedure procedure;
+    void *arguments;
+};
+static_assert(sizeof(StreetFightConversationWork) == 0x20);
+static_assert(offsetof(StreetFightConversationWork, remainingFrames) == 4);
+static_assert(offsetof(StreetFightConversationWork, procedure) == 0x10);
+static_assert(offsetof(StreetFightConversationWork, arguments) == 0x18);
+extern std::int32_t scmnConversationSkipEnabled;
+extern StreetFightConversationSkipCallback scmnConversationSkipCallback;
+void QueueScmnStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void ScmnStreetFightConversationCallback(void *);
+extern std::int32_t sfbrConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sfbrConversationSkipCallback;
+void QueueSfbrStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void SfbrStreetFightConversationCallback(void *);
+extern std::int32_t sfjfConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sfjfConversationSkipCallback;
+void QueueSfjfStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void SfjfStreetFightConversationCallback(void *);
+extern std::int32_t sfkkConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sfkkConversationSkipCallback;
+void QueueSfkkStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void SfkkStreetFightConversationCallback(void *);
+extern std::int32_t sfkmConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sfkmConversationSkipCallback;
+void QueueSfkmStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void SfkmStreetFightConversationCallback(void *);
+extern std::int32_t sfluConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sfluConversationSkipCallback;
+void QueueSfluStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void SfluStreetFightConversationCallback(void *);
+extern std::int32_t sfm2ConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sfm2ConversationSkipCallback;
+void QueueSfm2StreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void Sfm2StreetFightConversationCallback(void *);
+extern std::int32_t sfs2ConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sfs2ConversationSkipCallback;
+void QueueSfs2StreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void Sfs2StreetFightConversationCallback(void *);
+extern std::int32_t sfsrConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sfsrConversationSkipCallback;
+void QueueSfsrStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void SfsrStreetFightConversationCallback(void *);
+extern std::int32_t sftcConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sftcConversationSkipCallback;
+void QueueSftcStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void SftcStreetFightConversationCallback(void *);
+extern std::int32_t sftsConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sftsConversationSkipCallback;
+void QueueSftsStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void SftsStreetFightConversationCallback(void *);
+extern std::int32_t sfwfConversationSkipEnabled;
+extern StreetFightConversationSkipCallback sfwfConversationSkipCallback;
+void QueueSfwfStreetFightConversation(StreetFightConversationProcedure procedure, void *arguments);
+void SfwfStreetFightConversationCallback(void *);
+std::int32_t StartStreetFightBookieConversation(void *arguments);
+std::int32_t AcceptStreetFightConversation(void *arguments);
+std::int32_t DeclineStreetFightConversation(void *arguments);
+std::int32_t InsufficientStreetFightFundsConversation(void *arguments);
+std::int32_t StreetFightVictoryConversation(void *arguments);
+std::int32_t StreetFightNextOpponentConversation(void *arguments);
+std::int32_t StreetFightDefeatConversation(void *arguments);
+std::int32_t StreetFightWithdrawalConversation(void *arguments);
+std::int32_t StreetFightContinueConversation(void *arguments);
+std::int32_t StreetFightCompletedConversation(void *arguments);
+std::int32_t StreetFightNextMatchConversation(void *arguments);
+std::int32_t StreetFightStopConversation(void *arguments);
+} // namespace shenmue::s2

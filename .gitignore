@@ -1,0 +1,16 @@
+/build*/
+/out/
+/.cache/
+/.vs/
+**/.vs/
+**/x64/
+/.vscode/
+*.user
+*.suo
+*.ipch
+*.VC.db
+compile_commands.json
+/*.zip
+/nul
+/decomp/*.i64
+/src/s1/temp/

@@ -1,0 +1,185 @@
+#pragma once
+#include "s2/areas/area_elevator_event.hpp"
+namespace shenmue::s2::elevator_event {
+inline constexpr ElevatorEventFloorTable elvtQA[]{
+    {shen_name{960050514U},
+        {{{1, 0, shen_name{827801937U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {10, 0, shen_name{808468817U}, 0}}}},
+    {shen_name{943273298U},
+        {{{1, 0, shen_name{826622289U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {5, 0, shen_name{808468817U}, 0}, {6, 0, shen_name{910508369U}, 0}, {7, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {9, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0}}}},
+    {shen_name{926496082U},
+        {{{-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808468817U}, 0}, {4, 0, shen_name{808468817U}, 0},
+            {5, 0, shen_name{808468817U}, 0}, {6, 0, shen_name{910508369U}, 0}, {7, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {11, 4, shen_name{825311569U}, 0}}}},
+    {shen_name{909718866U},
+        {{{1, 0, shen_name{826622289U}, 0}, {2, 0, shen_name{808468817U}, 0}, {3, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {7, 0, shen_name{808468817U}, 0}, {8, 0, shen_name{808468817U}, 0},
+            {9, 0, shen_name{808468817U}, 0}, {10, 0, shen_name{808468817U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elvtQC[]{
+    {shen_name{960050514U},
+        {{{0, 0, shen_name{808469329U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {3, 0, shen_name{808469329U}, 0}, {6, 0, shen_name{909132625U}, 0}, {-100, 0, shen_name{0U}, 0}, {9, 0, shen_name{808469329U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {12, 0, shen_name{808469329U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elvtQD[]{
+    {shen_name{943273298U},
+        {{{1, 0, shen_name{825246801U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808469585U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elvtQE[]{
+    {shen_name{842610002U},
+        {{{1, 0, shen_name{825247057U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {5, 0, shen_name{808469841U}, 0}, {7, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}, {9, 0, shen_name{808469841U}, 0},
+            {11, 0, shen_name{808469841U}, 0}, {13, 0, shen_name{808469841U}, 0}}}},
+    {shen_name{859387218U},
+        {{{1, 0, shen_name{825247057U}, 0}, {2, 0, shen_name{808469841U}, 0}, {3, 0, shen_name{808469841U}, 0}, {4, 0, shen_name{808469841U}, 0},
+            {5, 0, shen_name{808469841U}, 0}, {6, 0, shen_name{909133137U}, 0}, {7, 0, shen_name{808469841U}, 0}, {8, 0, shen_name{808469841U}, 0},
+            {9, 0, shen_name{808469841U}, 0}, {10, 0, shen_name{808469841U}, 0}}}},
+    {shen_name{876164434U},
+        {{{1, 0, shen_name{825247057U}, 0}, {2, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}, {4, 0, shen_name{808469841U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {6, 0, shen_name{909133137U}, 0}, {-100, 0, shen_name{0U}, 0}, {8, 0, shen_name{808469841U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {10, 0, shen_name{808469841U}, 0}}}},
+    {shen_name{892941650U},
+        {{{1, 0, shen_name{825247057U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {5, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}, {7, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {9, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}}}},
+    {shen_name{909718866U},
+        {{{1, 0, shen_name{825247057U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {5, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {10, 0, shen_name{808469841U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elvtQF[]{
+    {shen_name{960050514U},
+        {{{0, 0, shen_name{809981265U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {18, 0, shen_name{808470097U}, 0}}}},
+    {shen_name{943273298U},
+        {{{-4, 0, shen_name{1413630801U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {40, 0, shen_name{959661649U}, 0}}}},
+    {shen_name{926496082U},
+        {{{-2, 0, shen_name{1413630801U}, 0}, {-100, 0, shen_name{0U}, 0}, {0, 0, shen_name{809981265U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}}}},
+    {shen_name{909718866U},
+        {{{-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0},
+            {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}}}},
+    {shen_name{892941650U},
+        {{{-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0},
+            {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elvtQJ[]{
+    {shen_name{892941650U},
+        {{{0, 0, shen_name{1413630545U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {4, 0, shen_name{1413630545U}, 0}}}},
+    {},
+};
+inline std::array<std::int32_t, 58> elvtpressedHand{0, 725, 63535, 0, 0, 65354, 0, 62624, 3821, 0, 0, 1092, 0, 0, 63171, 0, 0, 61168, 0, 546, 1820, 0, 0, 58802,
+    0, 0, 54253, 0, 0, 59894, 0, 546, 1456, 0, 0, 56436, 0, 0, 56072, 0, 0, 59167, 0, 546, 908, 0, 0, 52979, 0, 0, 56801, 0, 0, 59349, 0, 546, 1091, 0};
+inline std::array<std::int32_t, 58> elvtrestHand{0, 725, 63535, 0, 0, 65354, 0, 62624, 3821, 0, 0, 64627, 0, 0, 63171, 0, 0, 61168, 0, 546, 1820, 0, 0, 58802,
+    0, 0, 54253, 0, 0, 59894, 0, 546, 1456, 0, 0, 56436, 0, 0, 56072, 0, 0, 59167, 0, 546, 908, 0, 0, 52979, 0, 0, 56801, 0, 0, 59349, 0, 546, 1091, 0};
+inline constexpr Vector3i elvtupRotation{52793, 64626, 3640};
+inline constexpr Vector3i elvtfloorRotation{52793, 64626, 5461};
+inline constexpr ElevatorEventFloorTable elv2QA[]{
+    {shen_name{960050514U},
+        {{{1, 0, shen_name{827801937U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {10, 0, shen_name{808468817U}, 0}}}},
+    {shen_name{943273298U},
+        {{{1, 0, shen_name{826622289U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {5, 0, shen_name{808468817U}, 0}, {6, 0, shen_name{910508369U}, 0}, {7, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {9, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0}}}},
+    {shen_name{926496082U},
+        {{{-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808468817U}, 0}, {4, 0, shen_name{808468817U}, 0},
+            {5, 0, shen_name{808468817U}, 0}, {6, 0, shen_name{910508369U}, 0}, {7, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {11, 4, shen_name{825311569U}, 0}}}},
+    {shen_name{909718866U},
+        {{{1, 0, shen_name{826622289U}, 0}, {2, 0, shen_name{808468817U}, 0}, {3, 0, shen_name{808468817U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {7, 0, shen_name{808468817U}, 0}, {8, 0, shen_name{808468817U}, 0},
+            {9, 0, shen_name{808468817U}, 0}, {10, 0, shen_name{808468817U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elv2QC[]{
+    {shen_name{960050514U},
+        {{{0, 0, shen_name{808469329U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {3, 0, shen_name{808469329U}, 0}, {6, 0, shen_name{909132625U}, 0}, {-100, 0, shen_name{0U}, 0}, {9, 0, shen_name{808469329U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {12, 0, shen_name{808469329U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elv2QD[]{
+    {shen_name{943273298U},
+        {{{1, 0, shen_name{825246801U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808469585U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elv2QE[]{
+    {shen_name{842610002U},
+        {{{1, 0, shen_name{825247057U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {5, 0, shen_name{808469841U}, 0}, {7, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}, {9, 0, shen_name{808469841U}, 0},
+            {11, 0, shen_name{808469841U}, 0}, {13, 0, shen_name{808469841U}, 0}}}},
+    {shen_name{859387218U},
+        {{{1, 0, shen_name{825247057U}, 0}, {2, 0, shen_name{808469841U}, 0}, {3, 0, shen_name{808469841U}, 0}, {4, 0, shen_name{808469841U}, 0},
+            {5, 0, shen_name{808469841U}, 0}, {6, 0, shen_name{909133137U}, 0}, {7, 0, shen_name{808469841U}, 0}, {8, 0, shen_name{808469841U}, 0},
+            {9, 0, shen_name{808469841U}, 0}, {10, 0, shen_name{808469841U}, 0}}}},
+    {shen_name{876164434U},
+        {{{1, 0, shen_name{825247057U}, 0}, {2, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}, {4, 0, shen_name{808469841U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {6, 0, shen_name{909133137U}, 0}, {-100, 0, shen_name{0U}, 0}, {8, 0, shen_name{808469841U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {10, 0, shen_name{808469841U}, 0}}}},
+    {shen_name{892941650U},
+        {{{1, 0, shen_name{825247057U}, 0}, {-100, 0, shen_name{0U}, 0}, {3, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {5, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}, {7, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {9, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}}}},
+    {shen_name{909718866U},
+        {{{1, 0, shen_name{825247057U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {5, 0, shen_name{808469841U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {10, 0, shen_name{808469841U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elv2QF[]{
+    {shen_name{960050514U},
+        {{{0, 0, shen_name{809981265U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {18, 0, shen_name{808470097U}, 0}}}},
+    {shen_name{943273298U},
+        {{{-4, 0, shen_name{1413630801U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {40, 0, shen_name{959661649U}, 0}}}},
+    {shen_name{926496082U},
+        {{{-2, 0, shen_name{1413630801U}, 0}, {-100, 0, shen_name{0U}, 0}, {0, 0, shen_name{809981265U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}}}},
+    {shen_name{909718866U},
+        {{{-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0},
+            {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}}}},
+    {shen_name{892941650U},
+        {{{-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0},
+            {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}, {-100, 1, shen_name{0U}, 0}}}},
+    {},
+};
+inline constexpr ElevatorEventFloorTable elv2QJ[]{
+    {shen_name{892941650U},
+        {{{0, 0, shen_name{1413630545U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0}, {-100, 0, shen_name{0U}, 0},
+            {4, 0, shen_name{1413630545U}, 0}}}},
+    {},
+};
+inline std::array<std::int32_t, 58> elv2pressedHand{0, 725, 63535, 0, 0, 65354, 0, 62624, 3821, 0, 0, 1092, 0, 0, 63171, 0, 0, 61168, 0, 546, 1820, 0, 0, 58802,
+    0, 0, 54253, 0, 0, 59894, 0, 546, 1456, 0, 0, 56436, 0, 0, 56072, 0, 0, 59167, 0, 546, 908, 0, 0, 52979, 0, 0, 56801, 0, 0, 59349, 0, 546, 1091, 808530224};
+inline std::array<std::int32_t, 58> elv2restHand{0, 725, 63535, 0, 0, 65354, 0, 62624, 3821, 0, 0, 64627, 0, 0, 63171, 0, 0, 61168, 0, 546, 1820, 0, 0, 58802,
+    0, 0, 54253, 0, 0, 59894, 0, 546, 1456, 0, 0, 56436, 0, 0, 56072, 0, 0, 59167, 0, 546, 908, 0, 0, 52979, 0, 0, 56801, 0, 0, 59349, 0, 546, 1091,
+    1065353216};
+inline constexpr Vector3i elv2upRotation{52793, 64626, 3640};
+inline constexpr Vector3i elv2floorRotation{52793, 64626, 5461};
+} // namespace shenmue::s2::elevator_event

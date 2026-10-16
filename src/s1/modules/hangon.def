@@ -1,0 +1,6 @@
+LIBRARY GameHangon_Winx64_Release.dll
+EXPORTS
+    HangOn_ComputeMemoryRequired
+    HangOn_Create
+    HangOn_Update
+    HangOn_Destroy

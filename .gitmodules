@@ -1,0 +1,3 @@
+[submodule "libs/ShenmueDK"]
+	path = libs/ShenmueDK
+	url = https://github.com/Shenmue-Mods/ShenmueDK.git
