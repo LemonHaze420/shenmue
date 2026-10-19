@@ -71,6 +71,7 @@ bool UpdateRenQteEvent(RenQteWork *work) {
         return false;
     case SHEN_NAME(SUCC):
         renQteSuccessCallbacks[work->entry->type](work);
+
         PlayRenQteCameras(work->entry->successCameras);
         PlayRenQteVoices(work->entry->successVoices);
         camCtrlToggleSmoothing(0);

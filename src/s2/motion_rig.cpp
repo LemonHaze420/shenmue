@@ -275,8 +275,10 @@ float EvaluateMotionRigChannelValue(const MotionRigChannel &channel) {
 float SampleMotionRigChannelAdvance(MotionRigChannel &channel) {
     if (channel.current.timeSeconds >= g_motionCurrentAnimTime)
         return channel.current.value;
+
     if (channel.next.timeSeconds > g_motionCurrentAnimTime)
         return EvaluateMotionRigChannelValue(channel);
+
     while (!(std::fabs(channel.next.timeSeconds - g_motionCurrentAnimTime) < 0.000001f) && channel.keysRemaining != 0) {
         channel.current = channel.next;
         const std::uint16_t rawValue = *channel.frameCursor++;
@@ -2196,9 +2198,11 @@ void IK_BuildAndSolve(IKRig &rig, std::uint32_t interpolationMode) {
         Matrix4x4_Push();
     SolveBase(rig.lowerBody, interpolationMode);
     SolveChestLookAt(rig.chest, interpolationMode);
+
     Matrix4x4_Push();
     SolveHeadLookAt(rig.head, interpolationMode);
     Matrix4x4::Pop(1);
+
     Matrix4x4_Push();
     if (g_customMotionOverride && (g_customMotionOverride->flags & 1U))
         g_customMotionOverride->evaluate(1, static_cast<std::int32_t>(interpolationMode));

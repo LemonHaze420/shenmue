@@ -3419,7 +3419,7 @@ std::uint64_t CreateFallingParticleEffect(const Vector3 &position, const Vector3
     fallingEffects[index] = effect;
     effect->slot = AllocateEffectSlot(emitterSlots, -1, nullptr, nullptr, effectToken);
     effect->count = count;
-    effect->particles = static_cast<ParticleRecord *>(HLib::AllocateTaskData(96ULL * static_cast<std::uint64_t>(count), effectToken));
+    effect->particles = static_cast<ParticleRecord *>(HLib::AllocateTaskData(sizeof(ParticleRecord) * static_cast<std::uint64_t>(count), effectToken));
     for (std::int32_t particle = 0; particle < count; ++particle)
         effect->particles[particle].stepX = index;
     effect->position = position;
@@ -3698,20 +3698,26 @@ std::uint64_t CreateFireEffect(const Vector3 &position, float width, float heigh
     if (!effect || !fireFft[index])
         return invalidEffect;
     if (flags & 1U) {
-        effect->trail = static_cast<FireTrailEntry *>(HLib::AllocateTaskData(0x2000, SHEN_NAME(FIRB)));
+        constexpr std::size_t numTrails = 512;
+        constexpr std::size_t fireTrailInstancesSize = sizeof(FireTrailEntry) * numTrails;
+
+        effect->trail = static_cast<FireTrailEntry *>(HLib::AllocateTaskData(fireTrailInstancesSize, SHEN_NAME(FIRB)));
         if (effect->trail) {
-            std::memset(effect->trail, 0, 0x2000);
-            for (std::size_t i = 0; i != 512; ++i) {
+            std::memset(effect->trail, 0, fireTrailInstancesSize);
+            for (std::size_t i = 0; i != numTrails; ++i) {
                 effect->trail[i].age = -1;
                 effect->trail[i].position = position;
             }
         }
     }
     if (flags & 4U) {
-        effect->instances = static_cast<FireInstance *>(HLib::AllocateTaskData(0x700, SHEN_NAME(FIRC)));
+        constexpr std::size_t numInstances = 32;
+        constexpr std::size_t fireInstancesSize = sizeof(FireInstance) * numInstances;
+
+        effect->instances = static_cast<FireInstance *>(HLib::AllocateTaskData(fireInstancesSize, SHEN_NAME(FIRC)));
         if (effect->instances) {
-            std::memset(effect->instances, 0, 0x700);
-            for (std::size_t i = 0; i != 32; ++i) {
+            std::memset(effect->instances, 0, fireInstancesSize);
+            for (std::size_t i = 0; i != numInstances; ++i) {
                 FireInstance &instance = effect->instances[i];
                 instance.localPosition = position;
                 instance.width = width;

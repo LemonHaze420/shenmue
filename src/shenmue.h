@@ -38,7 +38,9 @@
      Upstream GCC 2.95.2 19991024
      -O1 -fno-omit-frame-pointer -m4-single-only -ml
 
-   Assembler/linker: GNU 2.9-sh4-980812
+	  GNU 2.9-sh4-980812 ^
+
+   Assembler/linker
 */
 
 #if defined(SHENMUE_TARGET_WHATS_DC)
