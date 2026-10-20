@@ -1008,7 +1008,7 @@ void ReleaseModelFormat7(MT7Model &model) {
 
 void ReleaseModelFormat7Storage(MT7Model &model) {
     FlushQueuedLegacyDrawPasses();
-    while (d3t::ProcessObjectStore()) {
+    while (d3t::ProcessObjectStore(true, -1)) {
     }
 #if defined(SHENMUE_ENHANCEMENT_S2_MAP_SEAMS) && SHENMUE_ENHANCEMENT_S2_MAP_SEAMS
     ReleaseMapSeamResources(model);

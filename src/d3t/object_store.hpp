@@ -99,9 +99,7 @@ bool RegisterObjectPlacement(const void *source, const void *placement, std::uin
 bool RegisterObjectAlias(const void *publicKey, const void *placement);
 void RetireObjectPlacement(const void *placement);
 
-
-
-bool ProcessObjectStore(std::int32_t maximumOperations = -1);
+bool ProcessObjectStore(bool checkShaders, std::int32_t maximumOperations);
 
 // Map admission retires every placement, preserves flag-0x40 sources and clears both alias maps.
 void ResetObjectStoreForMap();

@@ -337,7 +337,7 @@ void ReleaseMT7ModelNodeTreeClone(MT7Model *model) {
         return;
     FlushQueuedLegacyDrawPasses();
     d3t::RetireObjectPlacement(GetMT7ReaderData(model));
-    while (d3t::ProcessObjectStore()) {
+    while (d3t::ProcessObjectStore(true, -1)) {
     }
     if (g_componentTeardownNodes)
         g_componentTeardownNodes->push_back(std::move(model->nodes));

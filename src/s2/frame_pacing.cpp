@@ -134,10 +134,7 @@ void WaitForNextFrameWithCallback(const std::uint32_t *handles, std::int32_t cou
         d3t::ExecuteADynamicFunctionOnce();
         d3t::ProcessRemappings();
 
-
-
-
-        const bool objectStorePending = d3t::ProcessObjectStore(-1);
+        const bool objectStorePending = d3t::ProcessObjectStore(true, -1);
         const bool textureSourcesPending = PumpEffectTextureSources();
         d3t::ProcessRemappings();
         const bool contentRemappingPending = HasPendingContentRemappings();

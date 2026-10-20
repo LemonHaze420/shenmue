@@ -212,6 +212,9 @@ std::array<std::uint32_t, 1024> slotFlags{};
 std::uint32_t nextSlot{};
 bool dirty{};
 
+#if SHENMUE_IS_S2
+std::uint32_t objectStoreResetWord{};
+#endif
 std::uint32_t FoldKey(std::uintptr_t key) {
     return static_cast<std::uint32_t>(key + key / 0xffffffffULL);
 }
@@ -494,6 +497,26 @@ bool ResolveSource(ObjectSource &source, bool checkShaders) {
     return source.resolveState == 1;
 }
 #endif
+bool RetireSource(ObjectSource &source) {
+    if (source.placements.count) {
+        for (std::uint32_t placement = 0; placement < source.placements.count; ++placement)
+            if (source.placements.data[placement])
+                source.placements.data[placement]->update = UpdateState::Retire;
+        return false;
+    }
+#if SHENMUE_IS_S2
+    ReleaseModelHandle(source.renderHandle);
+    for (std::size_t alias = 0; alias < publicAliases.keys.size(); ++alias)
+        if (publicAliases.keys[alias] && publicAliases.values[alias] == source.key)
+            publicAliases.erase(publicAliases.keys[alias]);
+#endif
+    for (std::size_t alias = 0; alias < sourceAliases.keys.size(); ++alias)
+        if (sourceAliases.keys[alias] && sourceAliases.values[alias] == source.key)
+            sourceAliases.erase(sourceAliases.keys[alias]);
+    std::free(source.placements.data);
+    sources.erase(FoldKey(source.key));
+    return true;
+}
 void AppendPlacement(ObjectSource &source, ObjectEntry *entry) {
     auto &list = source.placements;
     if (list.count == list.capacity) {
@@ -1132,7 +1155,7 @@ std::int16_t SetObjectSourceActiveFlag(const void *sourceKey, std::int32_t activ
     return std::bit_cast<std::int16_t>(static_cast<std::uint16_t>(source->flags));
 }
 
-bool ProcessObjectStore(std::int32_t maximumOperations) {
+bool ProcessObjectStore(bool checkShaders, std::int32_t maximumOperations) {
     if (!dirty)
         return false;
     bool settled = true;
@@ -1193,13 +1216,18 @@ bool ProcessObjectStore(std::int32_t maximumOperations) {
         }
     }
     for (std::size_t index = 0; index < sources.keys.size(); ++index) {
+#if SHENMUE_IS_S2
+        if (maximumOperations != -1 && operations >= maximumOperations)
+            break;
+#endif
         if (!sources.keys[index])
             continue;
         ObjectSource &source = sources.values[index];
 #if SHENMUE_IS_S2
         if (source.resolveState == 0) {
             if (maximumOperations == -1 || operations < maximumOperations) {
-                if (ResolveSource(source, true))
+                ResolveSource(source, checkShaders);
+                if (source.resolveState == 1)
                     ++operations;
                     }
 
@@ -1212,26 +1240,17 @@ bool ProcessObjectStore(std::int32_t maximumOperations) {
             settled = false;
             continue;
         }
-        if (source.placements.count) {
-            for (std::uint32_t placement = 0; placement < source.placements.count; ++placement)
-                source.placements.data[placement]->update = UpdateState::Retire;
-            settled = false;
-            continue;
-        }
-        for (std::size_t alias = 0; alias < sourceAliases.keys.size(); ++alias)
-            if (sourceAliases.keys[alias] && sourceAliases.values[alias] == source.key)
-                sourceAliases.erase(sourceAliases.keys[alias]);
+
 #if SHENMUE_IS_S2
         if (source.resolveState == 0) {
             settled = false;
             continue;
         }
-        if (source.renderHandle)
-            ReleaseModelHandle(source.renderHandle);
+
 #endif
-        std::free(source.placements.data);
-        sources.erase(sources.keys[index]);
-        ++operations;
+        if (RetireSource(source))
+            ++operations;
+        settled &= source.retiring == 0;
     }
     dirty = !settled;
     return dirty;
@@ -1253,12 +1272,19 @@ void ResetObjectStoreForMap() {
                     source.placements.data[placement]->update = UpdateState::Retire;
         }
     }
+#if SHENMUE_IS_S2
+    const std::uint32_t previousResetWord = objectStoreResetWord;
+    objectStoreResetWord = 0;
+#endif
     dirty = true;
-    while (ProcessObjectStore()) {
+    while (ProcessObjectStore(false, -1)) {
 #if SHENMUE_IS_S2
         ProcessRemappings();
 #endif
     }
+#if SHENMUE_IS_S2
+    objectStoreResetWord = previousResetWord;
+#endif
     for (std::size_t index = 0; index < sources.keys.size(); ++index)
         if (sources.keys[index] && !(sources.values[index].flags & 0x40U))
             sources.erase(sources.keys[index]);

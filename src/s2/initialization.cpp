@@ -98,7 +98,7 @@ void RootTask_Callback(void *) {
 
 
         ExecuteCurrentCommandList();
-        d3t::ProcessObjectStore(-1);
+        d3t::ProcessObjectStore(true, -1);
         if (!BeginD3TRenderPass(false)) {
             frameOpen = false;
             runtimeActive = false;

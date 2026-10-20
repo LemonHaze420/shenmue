@@ -331,7 +331,7 @@ void RetireMotionBankTracks(const std::byte *data, std::uint64_t size) {
                 work->runtime.leftArmTrack = nullptr;
         },
         &allocation);
-    while (d3t::ProcessObjectStore()) {
+    while (d3t::ProcessObjectStore(true, -1)) {
     }
 }
 
@@ -1453,7 +1453,7 @@ void RegisterAuthorMotionBanks(std::span<const MotnFile> banks) {
         const std::uint32_t base = previous.animationIdEnd > previous.animationIdBase + 1 ? previous.animationIdBase : 0;
         RetireMotionRange(static_cast<std::uint16_t>(base + 1), static_cast<std::uint16_t>(base + last));
     }
-    while (d3t::ProcessObjectStore()) {
+    while (d3t::ProcessObjectStore(true, -1)) {
     }
     authorMotionBanks = banks;
 }

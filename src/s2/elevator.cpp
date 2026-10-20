@@ -784,7 +784,7 @@ void ReleaseElevatorRuntime() {
                 d3t::RetireObjectPlacement(&payload->placementTokens[source]);
         }
     }
-    while (d3t::ProcessObjectStore(-1)) {
+    while (d3t::ProcessObjectStore(true, -1)) {
     }
     for (std::size_t index = 0; index < elevatorCount; ++index) {
         if (elevatorTasks[index])
