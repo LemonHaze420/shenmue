@@ -3611,15 +3611,83 @@ void SetTitleWarningLogo(std::int32_t logoIndex,
     }
 }
 
-void SubmitTitleWarningLogo(void*) {
-    (void)HLib::GetTaskParameter(titleWarningTask);
-    const std::int16_t category = TITLE_WARNING_LOGOS[titleWarningLogo][0];
-    if (category < 0) return;
-    // Indexed TEMP ownership and sprite/digit slot primitives require the excluded legacy_sprite interface.
-    if (titleWarningUsesLogoParameters && category == 3)
-        DrawTitleSelection(320, 162, 90, std::to_integer<std::uint8_t>(titleWarningLogoParameters[1]));
+// @verified - p
+void LoadTitleWarningLogo(TitleWarningTaskData *data, std::int32_t texture, std::int32_t x, std::int32_t y) {
+    if (data->textureIndex != texture) {
+        if (data->textureIndex >= 0) {
+            FreeTempSprites(data->textureIndex);
+            data->textureIndex = -1;
+            return;
+        }
+        if (AllocateTempSprites(texture) != 1)
+            return;
+        BindTempSprite(texture, 1, 34, TITLE_WARNING_DECORATION_RECTANGLES[0].data());
+    }
+    data->textureIndex = texture;
+    DrawTempSpriteSlot(static_cast<std::uint32_t>(texture) << 16U, (static_cast<std::uint32_t>(x) << 16U) | static_cast<std::uint16_t>(y), 13.0f, 0);
 }
 
+void DrawTitleWarningDecorations(std::int32_t logo, const std::byte *parameters) {
+    if (logo == 1 || logo == 4) {
+        std::int32_t number;
+        std::memcpy(&number, parameters + 4, sizeof(number));
+        if (number > 999)
+            return;
+        std::int32_t digits[3];
+        std::int32_t count = 0;
+        if (number / 100 > 0) {
+            count = 3;
+            digits[2] = number / 100;
+            number %= 100;
+        }
+        if (number / 10 > 0) {
+            digits[1] = number / 10;
+            if (!count)
+                count = 2;
+            number %= 10;
+        } else if (count == 3)
+            digits[1] = 0;
+        if (!count)
+            count = 1;
+        digits[0] = number % 10;
+        std::uint32_t position = static_cast<std::uint32_t>(TITLE_WARNING_DIGIT_X[count - 1]) << 16U;
+        for (std::int32_t digit = 0; digit < count; ++digit) {
+            DrawTempSpriteDigit(
+                (static_cast<std::uint32_t>(TITLE_WARNING_LOGOS[logo][1]) << 16U) | 1U, position | (logo == 1 ? 236U : 264U), 14.0f, digits[digit]);
+            position -= 18U << 16U;
+        }
+    } else if (logo == 28) {
+        DrawTempSpriteSlot(0x220000U | (std::to_integer<std::uint8_t>(parameters[2]) + 10U), 0x12e00dcU, 14.0f, 0);
+        DrawTempSpriteSlot(0x220000U | (std::to_integer<std::uint8_t>(parameters[3]) + 1U), 0x1d900dcU, 14.0f, 0);
+    } else if (logo == 33) {
+        DrawTempSpriteSlot(0x220000U | std::to_integer<std::uint8_t>(parameters[8]), 0x0e10134U, 14.0f, 0);
+    } else if (logo == 36) {
+        DrawTempSpriteSlot(0x220000U | std::to_integer<std::uint8_t>(parameters[8]), 0x13100bfU, 14.0f, 0);
+        DrawTempSpriteSlot(0x220000U | std::to_integer<std::uint8_t>(parameters[9]), 0x0ee0110U, 14.0f, 0);
+    }
+}
+// @verified - p
+void FreeTitleWarningResources() {
+    ReleaseBorrowedLegacySpriteSlot(37);
+    ReleaseBorrowedLegacySpriteSlot(36);
+    FreeTempSprites(0);
+}
+
+void SubmitTitleWarningLogo(void *) {
+    TitleWarningTaskData *const data = static_cast<TitleWarningTaskData *>(HLib::GetTaskParameter(titleWarningTask));
+    const std::int16_t category = TITLE_WARNING_LOGOS[titleWarningLogo][0];
+    if (titleWarningUsesLogoParameters) {
+        if (category >= 0) {
+            LoadTitleWarningLogo(data, TITLE_WARNING_LOGOS[titleWarningLogo][1], 320, TITLE_WARNING_LOGO_Y[category]);
+            DrawTitleWarningDecorations(titleWarningLogo, titleWarningLogoParameters.data());
+            // Indexed TEMP ownership and sprite/digit slot primitives require the excluded legacy_sprite interface.
+            if (category == 3)
+                DrawTitleSelection(320, 162, 90, std::to_integer<std::uint8_t>(titleWarningLogoParameters[1]));
+        }
+
+    } else if (category >= 0)
+        LoadTitleWarningLogo(data, TITLE_WARNING_LOGOS[titleWarningLogo][1], 320, TITLE_WARNING_LOGO_Y[category]);
+}
 void AdvanceTitleWarningColour() noexcept {
     constexpr std::uint32_t maximumStep = 0xff000000U;
     if (titleWarningCurrentColour <= titleWarningDesiredColour) {

@@ -28,12 +28,26 @@ struct TempTextureEntry {
 static_assert(sizeof(TempTextureEntry) == 8);
 static_assert(offsetof(TempTextureEntry, width) == 4);
 static_assert(offsetof(TempTextureEntry, height) == 6);
+struct TempTextureDefinition {
+    const char *file;
+    std::int32_t textureCount;
+    std::int32_t reserved0c;
+};
+static_assert(sizeof(TempTextureDefinition) == 0x10);
+inline constexpr std::array<TempTextureDefinition, 39> TEMP_TEXTURE_DEFINITIONS{{{"TCOMMON.GZ", 2, 0}, {"ABG01", 2, 0}, {"ABG02", 2, 0}, {"A01", 2, 0},
+    {"A02", 2, 0}, {"A03", 2, 0}, {"A04", 2, 0}, {"A05", 2, 0}, {"A06", 2, 0}, {"A07", 2, 0}, {"A08", 2, 0}, {"A09", 2, 0}, {"A10", 2, 0}, {"A11", 2, 0},
+    {"A12", 2, 0}, {"A26", 2, 0}, {"A27", 2, 0}, {"A28", 2, 0}, {"A30", 2, 0}, {"A31", 2, 0}, {"A32", 2, 0}, {"A33", 2, 0}, {"A34", 2, 0}, {"A35", 2, 0},
+    {"A36", 2, 0}, {"A38", 2, 0}, {"A39", 2, 0}, {"A40", 2, 0}, {"A41", 2, 0}, {"A42", 2, 0}, {"A43", 2, 0}, {"A45", 2, 0}, {nullptr, 0, 0}, {nullptr, 0, 0},
+    {nullptr, 0, 0}, {nullptr, 0, 0}, {nullptr, 0, 0}, {nullptr, 0, 0}, {nullptr, 0, 0}}};
+enum TempTextureFlag : std::uint16_t { TTF_Loaded = 1, TTF_Region = 2 };
 struct TempTextureWork {
     std::uint16_t flags;
     std::int16_t texture;
     std::uint16_t width, height;
+    std::array<float, 4> uv;
 };
-static_assert(sizeof(TempTextureWork) == 8);
+static_assert(sizeof(TempTextureWork) == 0x18);
+static_assert(offsetof(TempTextureWork, uv) == 8);
 static_assert(offsetof(TempTextureWork, texture) == 2);
 inline constexpr std::array<std::uint16_t, 8> TITLE_COMMON_TEMP_RECTANGLES{0, 0, 255, 128, 0, 128, 255, 128};
 inline constexpr std::array<std::array<std::uint32_t, 4>, 2> TITLE_CONFIRM_CHOICES{{{37, 0, 36, 1}, {36, 0, 37, 1}}};
@@ -44,7 +58,13 @@ extern const std::uint32_t *titleConfirmChoice;
 std::int64_t ResetLegacySpriteSlotDrawState();
 void DrawTitleSelection(std::int32_t x, std::int32_t y, std::int32_t separation, std::int32_t choice);
 std::int32_t InitializeTitleCommonTempSprites();
-void FreeTitleCommonTempSprites();
+extern std::array<TempTextureEntry *, 39> g_tempTextures;
+void FreeTempSprites(std::int32_t index);
+std::int32_t AllocateTempSprites(std::int32_t index);
+const TempTextureWork &GetTempSpriteTexture(std::int32_t index, std::int32_t texture);
+bool BindTempSprite(std::int32_t index, std::int32_t texture, std::uint16_t slot, const std::uint16_t *rectangles);
+void DrawTempSpriteSlot(std::uint32_t icon, std::uint32_t position, float depth, std::uint8_t flags);
+void DrawTempSpriteDigit(std::uint32_t icon, std::uint32_t position, float depth, std::int32_t digit);
 
 enum class ScreenAlignment : std::int32_t {
     VerticalCenter = 1,

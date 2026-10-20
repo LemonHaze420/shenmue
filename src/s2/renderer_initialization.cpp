@@ -1,4 +1,5 @@
 #include "s2/renderer_initialization.hpp"
+#include "s2/sd_light.hpp"
 #include "s2/legacy_draw.hpp"
 #include "s2/legacy_sprite.hpp"
 #include "s2/ui.hpp"
@@ -28,7 +29,7 @@
 #include <cstring>
 #include <initializer_list>
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 
 namespace {
 std::uint32_t legacyEffectTextureStateDirty{};
@@ -437,6 +438,7 @@ bool InitRenderer() {
         return false;
     }
 
+    InitializeSDLightMetadata();
     std::uint32_t simpleRenderHandle = d3t::d3t_AllocateRenderHandle();
     simpleShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/simple", simpleRenderHandle);
     if (!simpleShaderLoad) {
@@ -475,6 +477,7 @@ void ShutdownRendererContent() {
         d3t::InitTexture2DResource(g_legacyDefaultEffectTexture);
         g_legacyDefaultEffectTexture = 0;
     }
+    ReleaseSDLightMetadata();
     d3t::ReleaseSceneFrameTargets();
     d3t::ShutdownThreads();
     FreeRendererScratch();

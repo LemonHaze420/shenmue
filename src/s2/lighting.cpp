@@ -1,5 +1,7 @@
 #include "s2/lighting.hpp"
 
+#include "s2/sd_light.hpp"
+
 #include "d3t/buffer.hpp"
 #include "d3t/object_store.hpp"
 #include "s2/camera.hpp"
@@ -35,7 +37,34 @@
 #include <cstdint>
 #include <cstring>
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
+    std::array<SDSceneLight, 256> g_sdSceneLights{};
+    SDLightConstants g_sdLightConstants{};
+    Vector2 g_sdShadowAtlasSize{};
+    Vector3 g_sdCameraPosition{};
+    Vector3 g_sdSunDirection{0.0f, -1.0f, 0.0f};
+    std::int32_t g_sdNightTime{};
+    std::int32_t g_sdFillLightFlag = 1;
+
+    // @verified - p
+    void PublishSDLights(const std::array<SDSceneLight, 256> &lights, const Vector3 &camera, std::uint8_t hour) {
+        g_sdLightConstants.shadowAtlasSize = g_sdShadowAtlasSize;
+        g_sdCameraPosition = camera;
+        g_sdLightConstants.environmentStrength = 1.0f;
+        g_sdLightConstants.irradianceStrength = 1.0f;
+        g_sdNightTime = static_cast<std::uint8_t>(hour - 2) > 16;
+        const float multiplier = GetLegacyParticleLightIntensity();
+        const float red = (multiplier * lights[0].colour.x) * SD_AMBIENT_SCALE + SD_AMBIENT_OFFSET;
+        const float green = (multiplier * lights[0].colour.y) * SD_AMBIENT_SCALE + SD_AMBIENT_OFFSET;
+        const float blue = (multiplier * lights[0].colour.z) * SD_AMBIENT_SCALE + SD_AMBIENT_OFFSET;
+        g_sdLightConstants.fillLightOffsetScaler = g_sdFillLightFlag == 0;
+        g_sdLightConstants.ambient[0] = {red, green, blue, 1.0f};
+        g_sdLightConstants.ambient[1] = {red, green, blue, 1.0f};
+        g_sdLightConstants.lightIntensity = 1.0f;
+        g_sdLightConstants.ambient[2] = {red, green, blue, 1.0f};
+        g_sdSunDirection = lights[0].direction;
+        g_sdSceneLights = lights;
+    }
 WeatherSunState g_weatherSunState{};
 Vector3 &g_sunDirectionVector = g_weatherSunState.direction;
 float &g_flareIntensity = g_weatherSunState.sourceIntensity;
@@ -689,8 +718,39 @@ void LightTask_Callback(void *) {
                 characterLightCandidates[characterLightCandidateCount++] = index;
         }
     }
-    HLib::ExecuteCallbackNow(ImmediateLightWork, nullptr);
     priorityLightCount = 0;
+    HLib::ExecuteCallbackNow(ImmediateLightWork, nullptr);
+    std::array<SDSceneLight, 256> lights{};
+    for (std::size_t index = 0; index < 255; ++index) {
+        const LightRuntimeEntry &source = lightRuntimeEntries[index];
+        SDSceneLight &light = lights[index];
+        light.enabled = source.indexes[0] == 1;
+        light.colour = {source.vectors[0].y, source.vectors[0].z, source.vectors[1].x};
+        light.position = {lightRootPosition.x + source.vector20.x, lightRootPosition.y + source.vector20.y, lightRootPosition.z + source.vector20.z};
+        light.range = source.vectors[1].z;
+        const std::uint32_t kind = static_cast<std::uint32_t>(static_cast<std::int8_t>(source.indexes[1])) & ~8U;
+        if (kind == 0 || kind == 2) {
+            light.direction = {source.values2c[0], source.values2c[1], source.value34};
+            light.type = SDLT_Directional;
+            if (index == 0) {
+                DateTime date;
+                GetCurrentDateTime(date);
+                UpdateSunForDateTime(date, 35.0f, light.direction, 1.0f);
+                light.direction = {-light.direction.x, -light.direction.y, -light.direction.z};
+            }
+        } else if (kind == 3)
+            light.type = SDLT_Point;
+        else if (kind == 4) {
+            light.direction = {source.values2c[0], source.values2c[1], source.value34};
+            light.type = SDLT_Spot;
+            light.cone = FixedAngleCos(static_cast<std::uint16_t>(source.unknown02));
+        }
+    }
+    DateTime date;
+    GetCurrentDateTime(date);
+    Vector3 camera;
+    camCtrlGetNextCamPos(&camera);
+    PublishSDLights(lights, camera, static_cast<std::uint8_t>(date.hour));
 }
 void ApplyWeatherLightStateInternal(std::uint32_t index, const Vector4 *colour, const float *sceneIntensity, const Vector3 *sunDirection) {
     if (colour)
@@ -1796,6 +1856,8 @@ std::int64_t LightTask_Enqueue() {
     lightRuntimeEntries.fill(defaultLight);
 
     const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    LoadSDLightMetadata(g_actNumber, g_currentMap);
+    InitializeSDLightFlags();
     const MapInfoChunk *const chunk = control ? FindMapInfoChunk("LGHT", control->mapInfo) : nullptr;
     if (chunk) {
         BuildDefinitionTable(chunk);

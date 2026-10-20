@@ -1,6 +1,7 @@
 #include "s2/legacy_sprite.hpp"
 
 #include "s2/d3t_renderer.hpp"
+#include "s2/title_warning.hpp"
 #include <bit>
 #include "s2/pak.hpp"
 #include "s2/legacy_draw.hpp"
@@ -30,9 +31,10 @@ float legacySpriteSlotScaleX{}, legacySpriteSlotScaleY{}, legacySpriteSlotPulse{
 std::uint32_t legacySpriteSlotColour{}, legacySpriteSlotSecondaryColour{};
 std::int32_t legacySpriteSlotWidthOffset{}, legacySpriteSlotHeightOffset{}, legacySpriteSlotRotation{};
 const std::uint32_t *titleConfirmChoice{};
+std::array<TempTextureEntry *, 39> g_tempTextures{};
 namespace {
 std::array<BorrowedLegacySpriteSlot, 8> borrowedSpriteSlots{};
-TempTextureEntry *titleCommonTempTextures{};
+
 TempTextureWork titleCommonTempWork{};
 LegacySpritePacket titleSpritePacket{};
 std::array<LegacyIconSprite, 4> itemWindowEdges;
@@ -637,50 +639,58 @@ std::int64_t ResetLegacySpriteSlotDrawState() {
     legacySpriteSlotColour = 0xffffffffU;
     return 0;
 }
-namespace {
+
 // @verified - p
-void DrawTitleSelectionSprite(std::uint32_t icon, std::int32_t x, std::uint16_t y, float depth, std::uint8_t flags) {
-    for (const BorrowedLegacySpriteSlot &entry : borrowedSpriteSlots) {
-        if (!entry.rectangles || entry.slot != (icon >> 16U) || entry.texture < 0)
-            continue;
-        const std::uint16_t *const rectangle = entry.rectangles + static_cast<std::uint16_t>(icon) * 4;
-        std::uint32_t colour = 0xffffffffU, secondary = 0;
-        if (flags & 0x10U) {
-            const std::uint32_t pulse = static_cast<std::uint32_t>(static_cast<std::int64_t>(legacySpriteSlotPulse));
-            const std::uint32_t rgb = pulse | ((pulse | (pulse << 8U)) << 8U);
-            if (flags & 0x20U) {
-                colour = 0xffcc808dU;
-                secondary = rgb - 0x780000U;
-            } else
-                secondary = rgb - 0x1000000U;
-        }
-        if (legacySpriteSlotColour != 0xffffffffU)
-            colour = legacySpriteSlotColour;
-        if (legacySpriteSlotSecondaryColour)
-            secondary = legacySpriteSlotSecondaryColour;
-        LegacySpritePacket packet{.quad = {.flags = 1024},
-            .colour = colour,
-            .secondaryColour = secondary,
-            .uv = {rectangle[0] * entry.inverseWidth, 1.0f - (rectangle[1] + rectangle[3]) * entry.inverseHeight,
-                (rectangle[0] + rectangle[2]) * entry.inverseWidth, 1.0f - rectangle[1] * entry.inverseHeight},
-            .reservedTail = 0};
-        if (legacySpriteSlotScaleX == 1.0f && legacySpriteSlotScaleY == 1.0f && !legacySpriteSlotRotation)
-            AdjustScreenAspectRatio(packet.quad, ScreenAlignment::HorizontalStretch, x, y, legacySpriteSlotWidthOffset + rectangle[2],
-                legacySpriteSlotHeightOffset + rectangle[3], ScreenMode::Centered);
-        else
-            TransformScreenSpace(packet.quad, ScreenAlignment::HorizontalStretch, x, y, legacySpriteSlotWidthOffset + rectangle[2],
-                legacySpriteSlotHeightOffset + rectangle[3], legacySpriteSlotScaleX, legacySpriteSlotScaleY, legacySpriteSlotRotation, ScreenMode::Centered);
-        LegacySpriteNullsub(packet, static_cast<std::uint32_t>(entry.texture), depth);
+void DrawTempSpriteSlot(std::uint32_t icon, std::uint32_t position, float depth, std::uint8_t flags) {
+    const TempTextureWork &work = GetTempSpriteTexture(std::bit_cast<std::int32_t>(icon) >> 16, static_cast<std::uint16_t>(icon));
+    if (!(work.flags & TTF_Loaded))
         return;
+    const std::int32_t x = std::bit_cast<std::int32_t>(position) >> 16;
+    const std::uint16_t y = static_cast<std::uint16_t>(position);
+    std::uint32_t colour = 0xffffffffU, secondary = 0;
+    if (flags & 0x10U) {
+        const std::uint32_t pulse = static_cast<std::uint32_t>(static_cast<std::int64_t>(legacySpriteSlotPulse));
+        const std::uint32_t rgb = pulse | ((pulse | (pulse << 8U)) << 8U);
+        if (flags & 0x20U) {
+            colour = 0xffcc808dU;
+            secondary = rgb - 0x780000U;
+        } else
+            secondary = rgb - 0x1000000U;
     }
+    if (legacySpriteSlotColour != 0xffffffffU)
+        colour = legacySpriteSlotColour;
+    if (legacySpriteSlotSecondaryColour)
+        secondary = legacySpriteSlotSecondaryColour;
+    LegacySpritePacket packet{.quad = {.flags = 1024}, .colour = colour, .secondaryColour = secondary, .uv = {0.0f, 0.0f, 1.0f, 1.0f}, .reservedTail = 0};
+    if (work.flags & TTF_Region)
+        packet.uv = work.uv;
+    if (legacySpriteSlotScaleX == 1.0f && legacySpriteSlotScaleY == 1.0f && !legacySpriteSlotRotation)
+        AdjustScreenAspectRatio(packet.quad, ScreenAlignment::HorizontalStretch, x, y, legacySpriteSlotWidthOffset + work.width,
+            legacySpriteSlotHeightOffset + work.height, ScreenMode::Centered);
+    else
+        TransformScreenSpace(packet.quad, ScreenAlignment::HorizontalStretch, x, y, legacySpriteSlotWidthOffset + work.width,
+            legacySpriteSlotHeightOffset + work.height, legacySpriteSlotScaleX, legacySpriteSlotScaleY, legacySpriteSlotRotation, ScreenMode::Centered);
+    LegacySpriteNullsub(packet, static_cast<std::uint32_t>(work.texture), depth);
 }
+// @verified - p
+void DrawTempSpriteDigit(std::uint32_t icon, std::uint32_t position, float depth, std::int32_t digit) {
+    const TempTextureWork &work = GetTempSpriteTexture(std::bit_cast<std::int32_t>(icon) >> 16, static_cast<std::uint16_t>(icon));
+    if (!(work.flags & TTF_Loaded))
+        return;
+    LegacySpritePacket packet{.quad = {.flags = 1024}, .colour = 0xffffffffU, .secondaryColour = 0, .uv = TITLE_WARNING_DIGIT_UV[digit]};
+    AdjustScreenAspectRatio(packet.quad, static_cast<ScreenAlignment>(0), std::bit_cast<std::int32_t>(position) >> 16, static_cast<std::uint16_t>(position), 18,
+        24, ScreenMode::Centered);
+    LegacySpriteNullsub(packet, static_cast<std::uint32_t>(work.texture), depth);
 }
+
 // @verified - p
 void DrawTitleSelection(std::int32_t x, std::int32_t y, std::int32_t separation, std::int32_t choice) {
     titleConfirmChoice = TITLE_CONFIRM_CHOICES[choice].data();
-    DrawTitleSelectionSprite((titleConfirmChoice[0] << 16U) | titleConfirmChoice[1], x - separation, static_cast<std::uint16_t>(y), 13.0f, 16);
+    DrawTempSpriteSlot(
+        (titleConfirmChoice[0] << 16U) | titleConfirmChoice[1], (static_cast<std::uint32_t>(x - separation) << 16U) | static_cast<std::uint16_t>(y), 13.0f, 16);
     titleConfirmChoice += 2;
-    DrawTitleSelectionSprite((titleConfirmChoice[0] << 16U) | titleConfirmChoice[1], x + separation, static_cast<std::uint16_t>(y), 13.0f, 16);
+    DrawTempSpriteSlot(
+        (titleConfirmChoice[0] << 16U) | titleConfirmChoice[1], (static_cast<std::uint32_t>(x + separation) << 16U) | static_cast<std::uint16_t>(y), 13.0f, 16);
 }
 
 void SetSpriteTexturePath(const char *path) noexcept {
@@ -786,23 +796,61 @@ void ReleaseLegacyCollectionSprites(shen_name owner) {
     }
 }
 
-void FreeTitleCommonTempSprites() {
-    if (!titleCommonTempTextures)
+void FreeTempSprites(std::int32_t index) {
+    TempTextureEntry *&entries = g_tempTextures[index];
+    if (!entries)
         return;
-    for (std::int32_t index = 1; index >= 0; --index)
-        ReleaseNamedTexture(titleCommonTempTextures[index].texture);
-    HLib::FreeTaskData(titleCommonTempTextures);
-    titleCommonTempTextures = nullptr;
+    for (std::int64_t texture = TEMP_TEXTURE_DEFINITIONS[index].textureCount - 1; texture >= 0; --texture)
+        ReleaseNamedTexture(entries[texture].texture);
+    HLib::FreeTaskData(entries);
+    entries = nullptr;
 }
-namespace {
-const TempTextureWork &GetTitleCommonTempTexture(std::int32_t index) {
-    if (titleCommonTempTextures) {
-        const TempTextureEntry &entry = titleCommonTempTextures[index];
-        titleCommonTempWork = {.flags = 1, .texture = static_cast<std::int16_t>(entry.texture), .width = entry.width, .height = entry.height};
-    } else
-        titleCommonTempWork = {.flags = 0, .texture = -1, .width = 0, .height = 0};
+
+const TempTextureWork &GetTempSpriteTexture(std::int32_t index, std::int32_t texture) {
+    if (index >= 32) {
+        const BorrowedLegacySpriteSlot *slot = nullptr;
+        for (const BorrowedLegacySpriteSlot &entry : borrowedSpriteSlots) {
+            if (entry.rectangles && entry.slot == index) {
+                slot = &entry;
+                break;
+            }
+        }
+        if (slot && slot->texture >= 0) {
+            const std::uint16_t *const rect = slot->rectangles + 4 * texture;
+            titleCommonTempWork.width = rect[2];
+            titleCommonTempWork.height = rect[3];
+            titleCommonTempWork.texture = slot->texture;
+            titleCommonTempWork.uv = {rect[0] * slot->inverseWidth, 1.0f - ((rect[1] + rect[3]) * slot->inverseHeight),
+                (rect[0] + rect[2]) * slot->inverseWidth, 1.0f - (rect[1] * slot->inverseHeight)};
+            titleCommonTempWork.flags = TTF_Loaded | TTF_Region;
+            return titleCommonTempWork;
+        }
+        titleCommonTempWork.width = titleCommonTempWork.height = 0;
+        titleCommonTempWork.texture = -1;
+        titleCommonTempWork.flags = 0;
+    }
+    if (g_tempTextures[index]) {
+        const TempTextureEntry &entry = g_tempTextures[index][texture];
+        titleCommonTempWork.width = entry.width;
+        titleCommonTempWork.height = entry.height;
+        titleCommonTempWork.texture = static_cast<std::int16_t>(entry.texture);
+        titleCommonTempWork.flags = TTF_Loaded;
+    } else {
+        titleCommonTempWork.width = titleCommonTempWork.height = 0;
+        titleCommonTempWork.texture = -1;
+        titleCommonTempWork.flags = 0;
+    }
     return titleCommonTempWork;
 }
+
+// @verified - p
+bool BindTempSprite(std::int32_t index, std::int32_t texture, std::uint16_t slot, const std::uint16_t *rectangles) {
+    if (!g_tempTextures[index])
+        return false;
+    const TempTextureWork &work = GetTempSpriteTexture(index, texture);
+    return RegisterBorrowedLegacySpriteSlot(work.texture, work.width, work.height, slot, rectangles);
+}
+namespace {
 std::int32_t ReadTempTextureEntries(const void *source, TempTextureEntry *entries) {
     const std::byte *bytes = static_cast<const std::byte *>(source);
     std::uint32_t signature;
@@ -820,30 +868,39 @@ std::int32_t ReadTempTextureEntries(const void *source, TempTextureEntry *entrie
     }
     return count;
 }
-std::int32_t AllocateTitleCommonTempTextures() {
-    FreeTitleCommonTempSprites();
-    titleCommonTempTextures = static_cast<TempTextureEntry *>(HLib::AllocateTaskData(2 * sizeof(TempTextureEntry), TITLE_COMMON_TEMP_TASK));
-    if (!titleCommonTempTextures)
+} // namespace
+std::int32_t AllocateTempSprites(std::int32_t index) {
+    if (g_tempTextures[index])
+        FreeTempSprites(index);
+    TempTextureEntry *&entries = g_tempTextures[index];
+    entries = static_cast<TempTextureEntry *>(HLib::AllocateTaskData(8LL * TEMP_TEXTURE_DEFINITIONS[index].textureCount, TITLE_COMMON_TEMP_TASK));
+    if (!entries)
         return 0;
+    char file[32]{};
+    const char *const source = TEMP_TEXTURE_DEFINITIONS[index].file;
+    if (std::strstr(source, ".GZ"))
+        std::strcpy(file, source);
+    else
+        std::snprintf(file, sizeof(file), "VM_%s.GZ", source);
     void *allocation = nullptr;
     std::size_t size = 0;
-    LoadLegacySprite("sprite", "TCOMMON.GZ", TITLE_COMMON_TEMP_TASK, allocation, size);
-    if (ReadTempTextureEntries(allocation, titleCommonTempTextures) <= 0) {
-        HLib::FreeTaskData(titleCommonTempTextures);
-        titleCommonTempTextures = nullptr;
+    LoadLegacySprite("sprite", file, TITLE_COMMON_TEMP_TASK, allocation, size);
+    if (ReadTempTextureEntries(allocation, entries) <= 0) {
+        HLib::FreeTaskData(entries);
+        entries = nullptr;
         return 0;
     }
     HLib::FreeTaskData(allocation);
     return 1;
 }
-}
+
+// @verified - p
 std::int32_t InitializeTitleCommonTempSprites() {
-    if (AllocateTitleCommonTempTextures() != 1)
+    if (AllocateTempSprites(0) != 1)
         return 0;
-    const TempTextureWork &first = GetTitleCommonTempTexture(0);
-    RegisterBorrowedLegacySpriteSlot(first.texture, first.width, first.height, 36, TITLE_COMMON_TEMP_RECTANGLES.data());
-    const TempTextureWork &second = GetTitleCommonTempTexture(1);
-    return RegisterBorrowedLegacySpriteSlot(second.texture, second.width, second.height, 37, TITLE_COMMON_TEMP_RECTANGLES.data()) ? 1 : 0;
+    BindTempSprite(0, 0, 36, TITLE_COMMON_TEMP_RECTANGLES.data());
+
+    return BindTempSprite(0, 1, 37, TITLE_COMMON_TEMP_RECTANGLES.data()) ? 1 : 0;
 }
 
 void InitShotsImages() {
