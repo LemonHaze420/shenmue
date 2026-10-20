@@ -5307,18 +5307,34 @@ void SetupLoadingScreen(shen_name area, shen_name subarea, const DateTime &dateT
     UpdateLoadingScreenLabels();
 }
 
+std::int32_t g_shouldShowLoading{};
+
+// @verified - p
+void InstallLoadingScreenCallbacks() noexcept {
+    g_updateLoadingScreen = UpdateLoadingScreenEnable;
+    g_toggleLoadingScreen = ToggleLoadingScreen;
+}
+
+// @verified - p
+void UpdateLoadingScreenEnable() {
+    if (GetNumFramesProcessed() != 0 || GetIsLoadScreenActive())
+        EnableElement(UIElement::LoadingScreen);
+}
+// @verified - p
 void ToggleLoadingScreen(std::int32_t vSyncCount, std::int32_t mode) {
     if (vSyncCount != 0) {
-        if (mode == 0)
+        if (mode == 0) {
             DestroyElementByIndex(UIElement::LoadingScreen);
+            g_shouldShowLoading = 0;
+        }
         return;
     }
     ShowElementByIndex(UIElement::LoadingScreen);
 }
 
+// @verified - p
 bool GetIsLoadScreenActive() noexcept {
-    if (IsHelpOverlayVisible(UIElement::LoadingScreen))
-        return true;
+
     for (const LoadingWindow index : LOADING_ACTIVE_ORDER) {
         const std::uint32_t animation = static_cast<std::uint32_t>(loadingScreen.animations[index]);
         if (animation < g_uiWidgetBindings.size() && g_uiWidgetBindings[animation].animating)

@@ -5,6 +5,10 @@
 namespace shenmue::s2 {
 
 using FramePacingDecision = std::int32_t (*)() noexcept;
+using LoadingScreenUpdate = void (*)();
+using LoadingScreenToggle = void (*)(std::int32_t vSyncCount, std::int32_t mode);
+extern LoadingScreenUpdate g_updateLoadingScreen;
+extern LoadingScreenToggle g_toggleLoadingScreen;
 extern bool framePacingTimerUpdated;
 extern std::int32_t g_skipArchiveReadWait;
 

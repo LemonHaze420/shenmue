@@ -229,6 +229,7 @@ bool Initialization(int, char **) {
     ResetRunningMovieRender();
     (void)ResetSceneFolderReadiness();
     SetSceneFolderReadiness(0);
+    InstallLoadingScreenCallbacks();
     runtimeActive = true;
     return true;
 }

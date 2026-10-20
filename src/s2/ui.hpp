@@ -498,6 +498,9 @@ void SetupLoadingScreen(shen_name area, shen_name subarea, const DateTime &dateT
     std::int32_t fadeMode, std::int32_t entry);
 bool GetIsLoadScreenActive() noexcept;
 void ToggleLoadingScreen(std::int32_t vSyncCount, std::int32_t mode);
+void UpdateLoadingScreenEnable();
+void InstallLoadingScreenCallbacks() noexcept;
+extern std::int32_t g_shouldShowLoading;
 void SetFrontendRoute(FrontendRoute route);
 void ReturnToTitleWheel();
 void RenderUIContents();

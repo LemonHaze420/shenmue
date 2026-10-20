@@ -20,33 +20,35 @@
 #include <cstdio>
 
     namespace shenmue::s2 {
-bool framePacingTimerUpdated{};
-std::int32_t g_skipArchiveReadWait{};
-std::uint8_t g_stabilizeFps{};
-float g_stabilizedFrameTime{};
-double measuredFrameMilliseconds{};
-char framePerformanceText[64]{};
-std::int32_t framePerformanceSampleState{};
-std::int32_t minimumUnlockedWaitSeconds{};
-std::int32_t maximumUnlockedWaitSeconds{};
-bool waitForRendererReadiness{};
-namespace {
+    LoadingScreenUpdate g_updateLoadingScreen{};
+    LoadingScreenToggle g_toggleLoadingScreen{};
+    bool framePacingTimerUpdated{};
+    std::int32_t g_skipArchiveReadWait{};
+    std::uint8_t g_stabilizeFps{};
+    float g_stabilizedFrameTime{};
+    double measuredFrameMilliseconds{};
+    char framePerformanceText[64]{};
+    std::int32_t framePerformanceSampleState{};
+    std::int32_t minimumUnlockedWaitSeconds{};
+    std::int32_t maximumUnlockedWaitSeconds{};
+    bool waitForRendererReadiness{};
+    namespace {
 
-std::int32_t numFramesProcessed{};
-std::int32_t numFramesWaited{};
-// normalized by SetupBuffers
-bool rendererInitialized{};
-bool retireFramePacingImmediately{};
-bool forceFramePacingWait{};
-std::chrono::steady_clock::time_point framePacingStart{};
+    std::int32_t numFramesProcessed{};
+    std::uint32_t numFramesWaited{};
+    // normalized by SetupBuffers
+    bool rendererInitialized{};
+    bool retireFramePacingImmediately{};
+    bool forceFramePacingWait{};
+    std::chrono::steady_clock::time_point framePacingStart{};
 
-bool HasPendingContentRemappings() noexcept {
-    for (const d3t::D3TContentSlot &slot : d3t::g_d3tContentSlots) {
-        const std::int32_t state = slot.state.load(std::memory_order_seq_cst);
-        if (state != 0 && state != 12 && state != 13)
-            return true;
-    }
-    return false;
+    bool HasPendingContentRemappings() noexcept {
+        for (const d3t::D3TContentSlot &slot : d3t::g_d3tContentSlots) {
+            const std::int32_t state = slot.state.load(std::memory_order_seq_cst);
+            if (state != 0 && state != 12 && state != 13)
+                return true;
+        }
+        return false;
 }
 
 } // namespace
@@ -74,7 +76,8 @@ void UpdateFramePacing() {
         return;
     framePacingTimerUpdated = true;
     framePacingStart = std::chrono::steady_clock::now();
-    ToggleLoadingScreen(numFramesProcessed, 1);
+    if (g_toggleLoadingScreen)
+        g_toggleLoadingScreen(numFramesProcessed, 1);
     numFramesProcessed = 1;
     numFramesWaited = 0;
     FlushFramePacingRenderQueue();
@@ -84,13 +87,15 @@ void UpdateCurrentFramesRendered(std::uint32_t updateUi) {
     if (numFramesProcessed == 0)
         return;
     if (retireFramePacingImmediately || updateUi == 0) {
-        ToggleLoadingScreen(numFramesProcessed, 0);
+        if (g_toggleLoadingScreen)
+            g_toggleLoadingScreen(numFramesProcessed, 0);
         numFramesProcessed = 0;
         numFramesWaited = 0;
         framePacingTimerUpdated = false;
         return;
     }
-    ToggleLoadingScreen(numFramesProcessed, 3);
+    if (g_toggleLoadingScreen)
+        g_toggleLoadingScreen(numFramesProcessed, 3);
     numFramesProcessed = 3;
     numFramesWaited = 0;
     framePacingTimerUpdated = false;
@@ -100,14 +105,18 @@ std::int32_t GetNumFramesProcessed() noexcept {
     return numFramesProcessed;
 }
 
+// @verified - p
 std::int32_t ConsumeFrames() {
+    if (g_updateLoadingScreen)
+        g_updateLoadingScreen();
     const std::int32_t current = numFramesProcessed;
     if (current == 0)
         return 0;
-    EnableElement(UIElement::LoadingScreen);
+
     ++numFramesWaited;
-    if (current == 3 && numFramesWaited >= 6 * g_sdProbeCount) {
-        ToggleLoadingScreen(3, 0);
+    if (current == 3 && numFramesWaited >= 6U * static_cast<std::uint32_t>(g_sdProbeCount)) {
+        if (g_toggleLoadingScreen)
+            g_toggleLoadingScreen(3, 0);
         numFramesProcessed = 0;
         numFramesWaited = 0;
         return 0;
@@ -118,7 +127,8 @@ std::int32_t ConsumeFrames() {
 void WaitForNextFrameWithCallback(const std::uint32_t *handles, std::int32_t count, FramePacingDecision getTotalFramesToRender) {
     if (numFramesProcessed == 0)
         return;
-    ToggleLoadingScreen(numFramesProcessed, 2);
+    if (g_toggleLoadingScreen)
+        g_toggleLoadingScreen(numFramesProcessed, 2);
     numFramesProcessed = 2;
     numFramesWaited = 0;
 
