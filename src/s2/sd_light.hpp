@@ -49,6 +49,77 @@ std::uint64_t ResolveSDLightOwner(std::uint64_t handle);
 void AddSDLightOverride(std::uint64_t owner);
 enum SDLightType : std::uint32_t { SDLT_Point = 0, SDLT_Directional = 1, SDLT_Spot = 2 };
 
+struct SDLightRecord {
+    std::byte transformData[192];
+    Vector3 colour;
+    std::uint32_t type;
+    Vector3 position;
+    float range;
+    Vector3 direction;
+    float coneCosine;
+    std::uint32_t shadowMode;
+    float shadowBias;
+    std::uint32_t shadowIndex;
+    std::uint32_t textureHandle;
+    std::uint32_t parameterEnabled;
+    float parameter104;
+    float parameter108;
+    std::uint32_t ownerCache;
+    std::uint32_t ownerNode;
+    std::uint32_t nodeCache;
+    std::uint32_t nodeHash;
+    Vector3 localRotationDegrees;
+    std::uint32_t parameter128;
+    std::uint32_t state;
+    const char *textureName;
+};
+struct SDShadowMappingNode {
+    SDShadowMappingNode *children[2];
+    std::uint32_t x, y, width, height;
+    std::uint32_t slot;
+    std::uint32_t reserved24;
+    Vector2 *output;
+};
+struct SDShadowMappingRequest {
+    std::uint32_t x, y, width, height;
+    std::uint8_t processed;
+    std::byte reserved11[3];
+    std::uint32_t slot;
+    Vector2 *output;
+};
+struct SDShadowMapping {
+    std::uint64_t reserved00;
+    SDShadowMappingNode *nodes;
+    std::uint32_t nodeCount, nodeCapacity;
+    SDShadowMappingRequest *requests;
+    std::uint32_t requestCount, requestCapacity;
+};
+static_assert(sizeof(SDLightRecord) == 312);
+static_assert(offsetof(SDLightRecord, colour) == 192);
+static_assert(offsetof(SDLightRecord, shadowMode) == 240);
+static_assert(offsetof(SDLightRecord, parameterEnabled) == 256);
+static_assert(offsetof(SDLightRecord, ownerCache) == 268);
+static_assert(offsetof(SDLightRecord, nodeCache) == 276);
+static_assert(offsetof(SDLightRecord, localRotationDegrees) == 284);
+static_assert(offsetof(SDLightRecord, state) == 300);
+static_assert(offsetof(SDLightRecord, textureName) == 304);
+static_assert(sizeof(SDShadowMappingNode) == 48);
+static_assert(offsetof(SDShadowMappingNode, slot) == 32);
+static_assert(offsetof(SDShadowMappingNode, output) == 40);
+static_assert(sizeof(SDShadowMappingRequest) == 32);
+static_assert(offsetof(SDShadowMappingRequest, slot) == 20);
+static_assert(sizeof(SDShadowMapping) == 40);
+extern std::array<SDLightRecord, 512> g_sdLights;
+extern std::array<std::uint8_t, 32> g_sdShadowSlots;
+extern std::array<std::uint8_t, 32> g_sdShadowDirty;
+extern SDShadowMapping g_sdShadowMapping;
+void InitializeSDLightNodes();
+std::uint32_t AllocateSDShadowSlots(std::uint32_t count);
+void ReleaseSDLightShadowSlots(SDLightRecord &light);
+void RemoveSDShadowMappingRequest(std::uint32_t slot);
+void RemoveSDLightBinding(std::uint32_t index);
+void RemoveSDLightOwner(std::uint64_t owner);
+
 struct SDSceneLight {
     Vector3 colour;
     std::uint32_t type;

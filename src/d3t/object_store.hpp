@@ -6,7 +6,7 @@
 
 namespace shenmue::d3t {
 
-enum ObjectSourceFlag : std::uint32_t { OSF_DedicatedShadow = 0x4, OSF_CopyMaterials = 0x400 };
+enum ObjectSourceFlag : std::uint32_t { OSF_DedicatedShadow = 0x4, OSF_HasLightBindings = 0x200, OSF_CopyMaterials = 0x400 };
 enum ModelCacheNodeFlag : std::uint16_t { MCF_Day = 0x40, MCF_Night = 0x80 };
 struct ModelCacheIndexTable;
 extern std::int32_t g_hashModelRequireAssignedNodes;

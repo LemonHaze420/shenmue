@@ -48,14 +48,29 @@ struct D3TModelNode {
 
 
 struct D3TModelSprite {
-    std::byte reserved_00[0x20];
+    Vector3 colour;
+    float parameter0c;
+    float range;
+    float coneAngle;
+    std::uint32_t type;
+    std::uint8_t shadowMode;
+    std::byte reserved1d[3];
     std::uint32_t textureHandle;
     std::uint32_t texture;
-    std::byte reserved_28[0x14];
+    float shadowBias;
+    float parameter2c;
+    std::uint32_t parameter30;
+    std::uint32_t parameter34;
+    std::uint32_t parameter38;
 };
 
 // Cube probe: the 52-byte records CreateDXBuffer_Wrapper appends to a skinning buffer's probe table. SetupOwnerProbes names a node
 // "Probe <n>" for each and ConfigureEffectSlotAndUpdateFrustums copies the fields into the probe's effect slot.
+static_assert(offsetof(D3TModelSprite, type) == 0x18);
+static_assert(offsetof(D3TModelSprite, shadowMode) == 0x1c);
+static_assert(offsetof(D3TModelSprite, textureHandle) == 0x20);
+static_assert(offsetof(D3TModelSprite, shadowBias) == 0x28);
+static_assert(offsetof(D3TModelSprite, parameter34) == 0x34);
 #pragma pack(push, 4)
 struct D3TModelProbe {
     float parameter00;

@@ -17,6 +17,143 @@ std::int32_t g_sdLightSceneId{};
 shen_name g_sdLightArea{};
 std::uint32_t g_sdLightCount{};
 
+std::array<SDLightRecord, 512> g_sdLights{};
+std::array<std::uint8_t, 32> g_sdShadowSlots{};
+std::array<std::uint8_t, 32> g_sdShadowDirty{};
+SDShadowMapping g_sdShadowMapping{};
+
+void InitializeSDLightNodes() {
+    g_sdShadowSlots.fill(0);
+    g_sdShadowDirty.fill(0);
+    SDLightRecord &sun = g_sdLights[0];
+    sun.colour = {1.0f, 1.0f, 1.0f};
+    sun.position = {};
+    sun.direction = {-g_sdSunDirection.x, -g_sdSunDirection.y, -g_sdSunDirection.z};
+    SDLightRecord &fill = g_sdLights[1];
+    fill.colour = sun.colour;
+    fill.position = sun.position;
+    fill.direction = g_sdSunDirection;
+    sun.type = fill.type = SDLT_Directional;
+    sun.shadowMode = 0;
+    fill.shadowMode = 1;
+    sun.shadowBias = fill.shadowBias = 0.002f;
+    sun.parameter104 = 0.25f;
+    fill.parameter104 = 3.5f;
+    sun.parameter108 = fill.parameter108 = 0.0f;
+    sun.parameter128 = fill.parameter128 = 0;
+    g_sdLightCount = 2;
+    for (SDLightRecord &light : g_sdLights)
+        light.parameterEnabled = 1;
+}
+
+// @verified - p
+std::uint32_t AllocateSDShadowSlots(std::uint32_t count) {
+    std::uint32_t freeCount = 0;
+    for (std::uint32_t index = 0; index < 32; ++index) {
+        if (g_sdShadowSlots[index])
+            freeCount = 0;
+        else if (++freeCount == count) {
+            const std::uint32_t first = index - count + 1;
+            for (std::uint32_t slot = first; slot < first + count; ++slot) {
+                g_sdShadowSlots[slot] = 1;
+                g_sdShadowDirty[slot] = 1;
+            }
+            return first;
+        }
+    }
+    return 32;
+}
+
+namespace {
+// @verified - p
+void ClearSDShadowMappingNode(SDShadowMapping &mapping, SDShadowMappingNode &node, std::uint32_t slot) {
+    if (node.children[0])
+        ClearSDShadowMappingNode(mapping, *node.children[0], slot);
+    if (node.children[1])
+        ClearSDShadowMappingNode(mapping, *node.children[1], slot);
+    if (node.slot == slot)
+        for (std::uint32_t index = 0; index < mapping.nodeCount; ++index)
+            if (mapping.nodes[index].slot == slot)
+                node.output = nullptr;
+}
+} // namespace
+
+// @verified - p
+void RemoveSDShadowMappingRequest(std::uint32_t slot) {
+    SDShadowMapping &mapping = g_sdShadowMapping;
+    for (std::uint32_t index = 0; index < mapping.requestCount; ++index) {
+        if (mapping.requests[index].slot != slot)
+            continue;
+        SDShadowMappingNode &root = *mapping.nodes;
+        if (root.children[0])
+            ClearSDShadowMappingNode(mapping, *root.children[0], slot);
+        if (root.children[1])
+            ClearSDShadowMappingNode(mapping, *root.children[1], slot);
+        if (root.slot == slot) {
+            for (std::uint32_t node = 0; node < mapping.nodeCount; ++node)
+                if (mapping.nodes[node].slot == slot)
+                    root.output = nullptr;
+        }
+        std::memmove(mapping.requests + index, mapping.requests + mapping.requestCount - 1, sizeof(SDShadowMappingRequest));
+        --mapping.requestCount;
+        return;
+    }
+}
+
+// @verified - p
+void ReleaseSDLightShadowSlots(SDLightRecord &light) {
+    std::uint32_t count;
+    switch (light.type) {
+    case SDLT_Directional:
+        count = 4;
+        break;
+    case SDLT_Spot:
+        count = light.textureHandle ? 0 : 1;
+        break;
+    case SDLT_Point:
+        count = 6;
+        break;
+    default:
+        return;
+    }
+    const std::uint32_t end = light.shadowIndex + count;
+    for (std::uint32_t index = light.shadowIndex; index < end; ++index) {
+        if (index >= 32)
+            std::abort();
+        g_sdShadowSlots[index] = 0;
+    }
+    if (light.type == SDLT_Spot)
+        RemoveSDShadowMappingRequest(light.shadowIndex);
+    else
+        for (std::uint32_t index = 0; index < count; ++index)
+            RemoveSDShadowMappingRequest(light.shadowIndex + index);
+}
+
+// @verified - p
+void RemoveSDLightBinding(std::uint32_t index) {
+    if (index < 2 || index >= g_sdLightCount)
+        return;
+    SDLightRecord &light = g_sdLights[index];
+    if (light.shadowMode)
+        ReleaseSDLightShadowSlots(light);
+    d3t::RemoveModelCacheSubtree(static_cast<std::uint64_t>(light.nodeHash) << 32U | light.nodeCache);
+    light.ownerCache = light.ownerNode = light.nodeCache = light.nodeHash = 0;
+    if (index < g_sdLightCount - 1)
+        std::memmove(&light, &g_sdLights[index + 1], sizeof(SDLightRecord) * (g_sdLightCount - index - 1));
+    --g_sdLightCount;
+}
+
+// @verified - p
+void RemoveSDLightOwner(std::uint64_t owner) {
+    std::uint32_t index = 0;
+    while (index < g_sdLightCount) {
+        const SDLightRecord &light = g_sdLights[index];
+        if (light.ownerCache == static_cast<std::uint32_t>(owner) && light.ownerNode == static_cast<std::uint32_t>(owner >> 32U))
+            RemoveSDLightBinding(index);
+        else
+            ++index;
+    }
+}
 namespace {
 std::atomic<std::int32_t> sdLightReaderCount{};
 std::atomic<std::uint8_t> sdLightWriteLock{};

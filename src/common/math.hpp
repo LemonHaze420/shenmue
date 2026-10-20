@@ -176,6 +176,7 @@ struct Matrix4x4 {
     static void MultiplyWithPrePassMatrix(const Matrix4x4 *lhs);
     static void Multiply(const Matrix4x4 *lhs);
     static void ComputeColumnNorms(const Matrix4x4 *matrix, Vector4 *output);
+    static Vector4 *ExtractEulerAnglesFromMatrix(const Matrix4x4 *matrix, Vector4 *output);
     static bool invertMatrix(const Matrix4x4 *source, Matrix4x4 *output);
     static Matrix4x4 *MakeFromQuat(Matrix4x4 *output, const Vector4 *first, const Vector4 *second);
     static void InvertInPlace(Matrix4x4 *matrix);

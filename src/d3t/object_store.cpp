@@ -13,6 +13,7 @@
 #include "s2/renderer_initialization.hpp"
 #include "s2/frame_pacing.hpp"
 #include "s2/game_runtime.hpp"
+#include "s2/sd_light.hpp"
 #include "s2/matrix_stack.hpp"
 #endif
 
@@ -30,7 +31,7 @@
 #include <limits>
 #include <stdexcept>
 
-namespace shenmue::d3t {
+    namespace shenmue::d3t {
 
 std::int32_t g_hashModelRequireAssignedNodes = 1;
 std::int32_t g_hashModelRestrictCharacterPaths = -1;
@@ -425,9 +426,79 @@ void MarkPlacementDayNight(std::uint64_t handle) {
     for (std::uint32_t index = 0; index < nights.count; ++index)
         UpdateModelCacheFlags(nights.data[index], MCF_Night, ModelCacheFlagMode::Enable);
 }
+
+// @verified - p
+void RegisterPlacementLight(ObjectEntry &entry, const D3TModelSprite &sprite, std::uint64_t node, const char *textureName) {
+    entry.source->flags |= OSF_HasLightBindings;
+    const Matrix4x4 world = ComputeModelCacheGlobalTransform(node);
+    const std::uint32_t index = s2::g_sdLightCount;
+    s2::SDLightRecord &light = s2::g_sdLights[index];
+    light.colour = sprite.colour;
+    light.type = sprite.type;
+    const float reciprocalW = 1.0f / (((world.rows[3].y * 0.0f + world.rows[3].x * 0.0f) + world.rows[3].z * 0.0f) + world.rows[3].w);
+    light.position.x = reciprocalW * (((world.rows[0].y * 0.0f + world.rows[0].x * 0.0f) + world.rows[0].z * 0.0f) + world.rows[0].w);
+    light.position.y = reciprocalW * (((world.rows[1].y * 0.0f + world.rows[1].x * 0.0f) + world.rows[1].z * 0.0f) + world.rows[1].w);
+    light.position.z = reciprocalW * (((world.rows[2].y * 0.0f + world.rows[2].x * 0.0f) + world.rows[2].z * 0.0f) + world.rows[2].w);
+    light.direction = {world.rows[0].z, world.rows[1].z, world.rows[2].z};
+    const ModelCacheSlot &cache = *ResolveModelCache(static_cast<std::uint32_t>(node));
+    const Matrix4x4 local = cache.matrices[LookupModelCacheIndex(cache.indexTable, static_cast<std::uint32_t>(node >> 32U))];
+    Vector4 angles;
+    Matrix4x4::ExtractEulerAnglesFromMatrix(&local, &angles);
+    light.localRotationDegrees = {angles.x * 180.0f / 3.1415901f, angles.y * 180.0f / 3.1415901f, angles.z * 180.0f / 3.1415901f};
+    light.range = sprite.range;
+    light.coneCosine = std::cos(sprite.coneAngle * 0.5f);
+    light.textureHandle = sprite.textureHandle;
+    light.textureName = textureName;
+    light.shadowMode = sprite.shadowMode;
+    light.shadowBias = sprite.shadowBias;
+    light.shadowIndex = 0;
+    light.parameter104 = sprite.parameter0c;
+    light.parameter108 = sprite.parameter2c;
+    light.parameterEnabled = sprite.parameter0c != 0.0f;
+    light.parameter128 = sprite.parameter34;
+    light.nodeCache = static_cast<std::uint32_t>(node);
+    light.nodeHash = static_cast<std::uint32_t>(node >> 32U);
+    const std::uint64_t owner = s2::ResolveSDLightOwner(node);
+    light.ownerCache = static_cast<std::uint32_t>(owner);
+    light.ownerNode = static_cast<std::uint32_t>(owner >> 32U);
+    s2::g_sdLightCount = index + 1;
+    light.state = 0;
+    s2::AddSDLightOverride(owner);
+}
+std::uint32_t RegisterPlacementLights(ObjectEntry &entry) {
+    const std::uint64_t root = entry.expressionTarget;
+    ModelCacheSlot *const cache = ResolveModelCache(static_cast<std::uint32_t>(root));
+    if (!cache)
+        return 0;
+    std::uint32_t index = LookupModelCacheIndex(cache->indexTable, static_cast<std::uint32_t>(root >> 32U));
+    std::uint32_t count = 0;
+    std::int32_t pending = 0;
+    do {
+        const D3TModelNode &node = cache->nodes[index];
+        if (node.sprite) {
+            const D3TModelSprite &sprite = cache->sprites[node.sprite - 1U];
+            const char *textureName = nullptr;
+            if (sprite.texture) {
+                const D3TModelRecord &model = *ResolveModel(cache->modelHandles[index]);
+                const std::uint32_t offset = model.textures[sprite.texture - 1U].pathOffset;
+                if (offset < model.stringsSize)
+                    textureName = model.strings + offset;
+            }
+            RegisterPlacementLight(entry, sprite, static_cast<std::uint64_t>(cache->nodeHashes[index]) << 32U | static_cast<std::uint32_t>(root), textureName);
+            ++count;
+        }
+        ++index;
+        pending += static_cast<std::int32_t>(node.childCount) - 1;
+    } while (pending >= 0);
+    return count;
+}
 #endif
 void BindPlacement(ObjectEntry &entry, const void *placement) {
 
+#if SHENMUE_IS_S2
+    if (entry.placement && entry.kind == EntryKind::ModelRuntime)
+        s2::RemoveSDLightOwner(entry.expressionTarget);
+#endif
     entry.modelRuntime = {};
     if (entry.placement) {
         const std::uintptr_t oldPlacement = reinterpret_cast<std::uintptr_t>(entry.placement);
@@ -442,6 +513,7 @@ void BindPlacement(ObjectEntry &entry, const void *placement) {
 #if SHENMUE_IS_S2
         if (entry.kind == EntryKind::ModelRuntime) {
             MarkPlacementDayNight(entry.expressionTarget);
+            RegisterPlacementLights(entry);
             if (entry.source->modelKind == 1)
                 InitializeObjectStoreExpressions(entry);
             UpdateModelCacheFlags(entry.expressionTarget, 1, ModelCacheFlagMode::Clear);
@@ -1191,8 +1263,10 @@ bool ProcessObjectStore(bool checkShaders, std::int32_t maximumOperations) {
                         std::strcpy(entry.modelRuntime.modelName, name ? name + 1 : entry.source->path);
                         if (char *const dot = std::strchr(entry.modelRuntime.modelName, '.'))
                             *dot = '\0';
-                        if (entry.placement)
+                        if (entry.placement) {
                             MarkPlacementDayNight(entry.expressionTarget);
+                            RegisterPlacementLights(entry);
+                        }
                         if (entry.placement && entry.source->modelKind == 1)
                             InitializeObjectStoreExpressions(entry);
                         UpdateModelCacheFlags(entry.expressionTarget, 1, entry.placement ? ModelCacheFlagMode::Clear : ModelCacheFlagMode::Enable);

@@ -439,6 +439,7 @@ bool InitRenderer() {
     }
 
     InitializeSDLightMetadata();
+    InitializeSDLightNodes();
     std::uint32_t simpleRenderHandle = d3t::d3t_AllocateRenderHandle();
     simpleShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/simple", simpleRenderHandle);
     if (!simpleShaderLoad) {

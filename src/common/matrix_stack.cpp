@@ -550,17 +550,30 @@ void Matrix4x4::Multiply(const Matrix4x4 *lhs) {
     Matrix4x4::MultiplyWithPrePassMatrix(lhs);
 }
 
+// @verified - p
 void Matrix4x4::ComputeColumnNorms(const Matrix4x4 *matrix, Vector4 *output) {
-    for (std::size_t column = 0; column < 3; ++column) {
-        const float a = matrix->rows[0][column];
-        const float b = matrix->rows[1][column];
-        const float c = matrix->rows[2][column];
-        const float d = matrix->rows[3][column];
-        (*output)[column] = std::sqrt(a * a + b * b + c * c + d * d);
-    }
+
+    const float y0 = matrix->rows[0].y, y2 = matrix->rows[2].y, y3 = matrix->rows[3].y, y1 = matrix->rows[1].y;
+    const float z0 = matrix->rows[0].z, z2 = matrix->rows[2].z, z3 = matrix->rows[3].z, z1 = matrix->rows[1].z;
+    output->x = std::sqrt(((matrix->rows[1].x * matrix->rows[1].x + matrix->rows[0].x * matrix->rows[0].x) + matrix->rows[2].x * matrix->rows[2].x) +
+        matrix->rows[3].x * matrix->rows[3].x);
+    output->y = std::sqrt(((y1 * y1 + y0 * y0) + y2 * y2) + y3 * y3);
+    output->z = std::sqrt(((z1 * z1 + z0 * z0) + z2 * z2) + z3 * z3);
+
     output->w = 1.0f;
 }
 
+// @verified - p
+Vector4 *Matrix4x4::ExtractEulerAnglesFromMatrix(const Matrix4x4 *matrix, Vector4 *output) {
+    Vector4 norms;
+    ComputeColumnNorms(matrix, &norms);
+    const float y2 = matrix->rows[2].y / norms.y, z2 = matrix->rows[2].z / norms.z;
+    const float x0 = matrix->rows[0].x / norms.x, x1 = matrix->rows[1].x / norms.x, x2 = matrix->rows[2].x / norms.x;
+    output->x = std::atan2(y2, z2);
+    output->y = std::atan2(-x2, std::sqrt(z2 * z2 + y2 * y2));
+    output->z = std::atan2(x1, x0);
+    return output;
+}
 bool Matrix4x4::invertMatrix(const Matrix4x4 *source, Matrix4x4 *output) {
     const float *m = &source->rows[0].x;
     float inverse[16];
