@@ -355,6 +355,74 @@ bool AuthoredAssetExists(const char *path) {
 
 namespace {
 
+#if SHENMUE_IS_S2
+std::uint64_t *AppendPlacementNodeMatch(D3TRawArray<std::uint64_t> &matches) {
+    if (matches.count >= matches.capacity) {
+        const std::uint32_t capacity = 2U * matches.capacity >= 16U ? 2U * matches.capacity : 16U;
+        if (capacity > matches.capacity) {
+            void *const allocation = std::realloc(matches.data, sizeof(std::uint64_t) * capacity);
+            if (!allocation)
+                return nullptr;
+            matches.data = static_cast<std::uint64_t *>(allocation);
+            matches.capacity = capacity;
+        }
+    }
+    return matches.data + matches.count++;
+}
+
+void CollectPlacementNodeMatch(void *data, std::uint64_t handle) {
+    D3TRawArray<std::uint64_t> &matches = *static_cast<D3TRawArray<std::uint64_t> *>(data);
+    *AppendPlacementNodeMatch(matches) = handle;
+}
+
+void VisitModelCacheNodeNames(std::uint64_t handle, const char *text, void *data, void (*callback)(void *, std::uint64_t)) {
+    if (std::strstr(GetModelCacheNodeName(handle), text))
+        callback(data, handle);
+    if (static_cast<std::uint32_t>(handle) && static_cast<std::uint32_t>(handle >> 32U)) {
+        const ModelCacheSlot &cache = *ResolveModelCache(static_cast<std::uint32_t>(handle));
+        const std::uint32_t index = LookupModelCacheIndex(cache.indexTable, static_cast<std::uint32_t>(handle >> 32U));
+        const std::uint32_t count = cache.nodes[index].childCount;
+        for (std::uint32_t child = 0; child < count; ++child) {
+            const std::uint64_t next = GetModelCacheChild(handle, child);
+            if (next != handle)
+                VisitModelCacheNodeNames(next, text, data, callback);
+        }
+    }
+}
+
+void MarkPlacementDayNight(std::uint64_t handle) {
+    D3TRawArray<std::uint64_t> days{};
+    if (std::strstr(GetModelCacheNodeName(handle), "_day"))
+        *AppendPlacementNodeMatch(days) = handle;
+    if (static_cast<std::uint32_t>(handle) && static_cast<std::uint32_t>(handle >> 32U)) {
+        const ModelCacheSlot &cache = *ResolveModelCache(static_cast<std::uint32_t>(handle));
+        const std::uint32_t index = LookupModelCacheIndex(cache.indexTable, static_cast<std::uint32_t>(handle >> 32U));
+        const std::uint32_t count = cache.nodes[index].childCount;
+        for (std::uint32_t child = 0; child < count; ++child) {
+            const std::uint64_t next = GetModelCacheChild(handle, child);
+            if (next != handle)
+                VisitModelCacheNodeNames(next, "_day", &days, CollectPlacementNodeMatch);
+        }
+    }
+    for (std::uint32_t index = 0; index < days.count; ++index)
+        UpdateModelCacheFlags(days.data[index], MCF_Day, ModelCacheFlagMode::Enable);
+    D3TRawArray<std::uint64_t> nights{};
+    if (std::strstr(GetModelCacheNodeName(handle), "_night"))
+        *AppendPlacementNodeMatch(nights) = handle;
+    if (static_cast<std::uint32_t>(handle) && static_cast<std::uint32_t>(handle >> 32U)) {
+        const ModelCacheSlot &cache = *ResolveModelCache(static_cast<std::uint32_t>(handle));
+        const std::uint32_t index = LookupModelCacheIndex(cache.indexTable, static_cast<std::uint32_t>(handle >> 32U));
+        const std::uint32_t count = cache.nodes[index].childCount;
+        for (std::uint32_t child = 0; child < count; ++child) {
+            const std::uint64_t next = GetModelCacheChild(handle, child);
+            if (next != handle)
+                VisitModelCacheNodeNames(next, "_night", &nights, CollectPlacementNodeMatch);
+        }
+    }
+    for (std::uint32_t index = 0; index < nights.count; ++index)
+        UpdateModelCacheFlags(nights.data[index], MCF_Night, ModelCacheFlagMode::Enable);
+}
+#endif
 void BindPlacement(ObjectEntry &entry, const void *placement) {
 
     entry.modelRuntime = {};
@@ -369,12 +437,63 @@ void BindPlacement(ObjectEntry &entry, const void *placement) {
     if (placement) {
         placementIndex.insert(FoldKey(reinterpret_cast<std::uintptr_t>(placement)), entry.handle);
 #if SHENMUE_IS_S2
-        if (entry.kind == EntryKind::ModelRuntime && entry.source->modelKind == 1)
-            InitializeObjectStoreExpressions(entry);
+        if (entry.kind == EntryKind::ModelRuntime) {
+            MarkPlacementDayNight(entry.expressionTarget);
+            if (entry.source->modelKind == 1)
+                InitializeObjectStoreExpressions(entry);
+            UpdateModelCacheFlags(entry.expressionTarget, 1, ModelCacheFlagMode::Clear);
+        }
 #endif
     }
+#if SHENMUE_IS_S2
+    else if (
+
+        entry.kind == EntryKind::ModelRuntime) {
+        UpdateModelCacheFlags(entry.expressionTarget, 1, ModelCacheFlagMode::Enable);
+    }
+#endif
 }
 
+#if SHENMUE_IS_S2
+bool ResolveSource(ObjectSource &source, bool checkShaders) {
+    if (source.resolveState != 0)
+        return source.resolveState == 1;
+    if (d3t_IsRenderHandlePending(source.threadHandle))
+        return false;
+    const D3TModelLoad *const load = static_cast<const D3TModelLoad *>(d3t_GetAsyncLoadRecord(source.loadHandle));
+    const std::uint32_t model = load && ResolveModel(load->modelHandle) ? load->modelHandle : 0;
+    if (source.flags & OSF_CopyMaterials)
+        CopyModelMaterials(source.renderHandle, model);
+    else
+        source.renderHandle = model;
+    if (checkShaders && !SetupShaderReferences(source.renderHandle))
+        return source.resolveState == 1;
+    d3t_CloseRenderHandle(source.threadHandle);
+    source.loadHandle = 0;
+    if (!source.renderHandle) {
+        source.resolveState = 2;
+        if (source.callback)
+            source.callback(source.callbackData, &source);
+        return false;
+    }
+    source.resolveState = 1;
+    if (source.callback)
+        source.callback(source.callbackData, &source);
+    const char *const settings = GetModelSettings(source.renderHandle);
+    if (settings) {
+        cJSON *const root = cJSON_Parse(settings);
+        if (root) {
+            const cJSON *const shadow = cJSON_GetObjectItem(root, "DedicatedShadow");
+
+            if (shadow && shadow->valueint == 1)
+                source.flags |= OSF_DedicatedShadow;
+            cJSON_Delete(root);
+        }
+    }
+
+    return source.resolveState == 1;
+}
+#endif
 void AppendPlacement(ObjectSource &source, ObjectEntry *entry) {
     auto &list = source.placements;
     if (list.count == list.capacity) {
@@ -1042,15 +1161,18 @@ bool ProcessObjectStore(std::int32_t maximumOperations) {
                         if (entry.source->flags & 0x1000U)
                             UpdateModelCacheFlags(entry.expressionTarget, 256, ModelCacheFlagMode::Enable);
                         BuildModelExpressionRig(entry);
-                        UpdateModelCacheFlags(entry.expressionTarget, 1, entry.placement ? ModelCacheFlagMode::Clear : ModelCacheFlagMode::Enable);
+
                         entry.modelRuntime.cacheHandle = static_cast<std::uint32_t>(entry.expressionTarget);
                         entry.modelRuntime.rootHash = static_cast<std::uint32_t>(entry.expressionTarget >> 32);
                         const char *const name = std::strrchr(entry.source->path, '/');
                         std::strcpy(entry.modelRuntime.modelName, name ? name + 1 : entry.source->path);
                         if (char *const dot = std::strchr(entry.modelRuntime.modelName, '.'))
                             *dot = '\0';
+                        if (entry.placement)
+                            MarkPlacementDayNight(entry.expressionTarget);
                         if (entry.placement && entry.source->modelKind == 1)
                             InitializeObjectStoreExpressions(entry);
+                        UpdateModelCacheFlags(entry.expressionTarget, 1, entry.placement ? ModelCacheFlagMode::Clear : ModelCacheFlagMode::Enable);
                         ++operations;
                     } else {
                         entry.kind = EntryKind::Legacy;
@@ -1077,18 +1199,10 @@ bool ProcessObjectStore(std::int32_t maximumOperations) {
 #if SHENMUE_IS_S2
         if (source.resolveState == 0) {
             if (maximumOperations == -1 || operations < maximumOperations) {
-                if (!d3t_IsRenderHandlePending(source.threadHandle)) {
-                    const auto *const load = static_cast<const D3TModelLoad *>(d3t_GetAsyncLoadRecord(source.loadHandle));
-                    source.renderHandle = load && ResolveModel(load->modelHandle) ? load->modelHandle : 0;
-                    if (!source.renderHandle || SetupShaderReferences(source.renderHandle)) {
-                        d3t_CloseRenderHandle(source.threadHandle);
-                        source.loadHandle = 0;
-                        source.resolveState = source.renderHandle ? 1 : 2;
-                        if (source.resolveState == 1)
-                            ++operations;
+                if (ResolveSource(source, true))
+                    ++operations;
                     }
-                }
-            }
+
             settled &= source.resolveState != 0;
         }
 #endif
