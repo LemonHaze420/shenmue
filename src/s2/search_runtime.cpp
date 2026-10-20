@@ -134,6 +134,7 @@ void UpdateFollowPositions() {
     }
 }
 float FindBestFollowCandidate(const LegacyInputSlot &input) {
+    using enum CameraState;
     float best = 1000000.0f;
     lastSearchCone = -1;
     currentFollowCharacter = {};
@@ -151,8 +152,8 @@ float FindBestFollowCandidate(const LegacyInputSlot &input) {
         SetScenarioFollowGraceFrames(remaining);
         if (remaining <= 0)
             SetScenarioFollowCharacter({});
-        if (camCtrlGetState() == CameraState::Conversation)
-            camCtrlSetState(CameraState::Init);
+        if (camCtrlGetState() == Conversation)
+            camCtrlSetState(Init);
     }
     if (focusObject.name && plymIsSearchable()) {
         currentFollowCharacter = focusObject;
@@ -160,8 +161,7 @@ float FindBestFollowCandidate(const LegacyInputSlot &input) {
         return 0.0f;
     }
     focusObject = {};
-    if (!plymIsSearchable() || (input.held & 0x200U) || ctrlGetLookOverlayWeight() >= .05f || camCtrlGetState() != CameraState::LookAround ||
-        plymGetLookZoomScale() <= 120)
+    if (!plymIsSearchable() || (input.held & 0x200U) || ctrlGetLookOverlayWeight() >= .05f || camCtrlGetState() != LookAround || plymGetLookZoomScale() <= 120)
         return best;
     const float width = static_cast<float>(d3t::g_originalScreenWidth), height = static_cast<float>(d3t::g_originalScreenHeight);
     PushProjectionPrePass(width, height);
@@ -218,6 +218,7 @@ void SwitchDetectedTarget() {
     camCtrlSwitchToLockedOn(style);
 }
 void DetectTargetFromView(const LegacyInputSlot &input) {
+    using enum CameraState;
     const shen_name old = currentFollowCharacter;
     shen_name name = old;
     Vector3 point = currentFollowPosition;
@@ -230,13 +231,13 @@ void DetectTargetFromView(const LegacyInputSlot &input) {
         currentFollowPosition = followPosition;
         return;
     }
-    if (focusObject.name && camCtrlGetState() == CameraState::LockedOn && plymIsSearchable()) {
+    if (focusObject.name && camCtrlGetState() == LockedOn && plymIsSearchable()) {
         currentFollowCharacter = focusObject;
         currentFollowPosition = focusPosition;
         return;
     }
     focusObject = {};
-    if ((input.pressedPriority & 0x200U) || camCtrlGetState() != CameraState::LockedOn || !plymIsSearchable()) {
+    if ((input.pressedPriority & 0x200U) || camCtrlGetState() != LockedOn || !plymIsSearchable()) {
         currentFollowCharacter = {};
         lastSearchCone = -1;
         return;

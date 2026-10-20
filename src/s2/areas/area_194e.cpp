@@ -79,6 +79,7 @@ void Update194E(void *taskData) {
 
 // @verified - p
 void Cleanup194E(Area194EParameter *parent) {
+    using enum CameraState;
     const shen_name *character = g_currentMap.name == AREA_194E.name ? AREA_194E_CHARACTERS : AREA_194E_VARIANTS[parent->selection];
     for (; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
         if (FindCharacterByScenarioName(*character)) {
@@ -127,7 +128,7 @@ void Cleanup194E(Area194EParameter *parent) {
         }
         HLib::DestroyTask(parent->self);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         EV_spmBeginSampleExecute();

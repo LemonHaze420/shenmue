@@ -371,7 +371,7 @@ bool PublishExistingNpcCharacter(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord
     }
     const bool startHidden = (streamFlags & (NpcRouteAbstractActive | NpcRouteStreamForceHidden)) == 0 && (streamFlags & NpcRouteStreamStartHidden) != 0;
     if ((streamFlags & NpcRouteStreamForceHidden) != 0 || startHidden) {
-        character->renderFlags &= ~0x3fU;
+        character->renderFlags &= ~CRF_All;
         if (CharacterControlModel *const control = FindCharacterControlModel(character)) {
             control->flags &= ~CharacterControlVoxelSweep;
         }
@@ -674,7 +674,7 @@ void UpdateNpcFrameCulling(NpcRouteLiveEntry &entry) {
         if (CheckNpcCachedVisibility(entry, GetCharacterWorldPosition(entry.node), 0.60000002f))
             return;
         SetMotionWorkCulled(entry.motionWork, true);
-        entry.node->renderFlags &= ~0x10U;
+        entry.node->renderFlags &= ~CRF_InRange;
         entry.node->position = {};
         return;
     }
@@ -683,7 +683,7 @@ void UpdateNpcFrameCulling(NpcRouteLiveEntry &entry) {
     Vector3 position = GetCharacterWorldPosition(entry.node);
     if (!CheckNpcCachedVisibility(entry, position, 0.40000001f)) {
         SetMotionWorkCulled(entry.motionWork, true);
-        entry.node->renderFlags &= ~0x10U;
+        entry.node->renderFlags &= ~CRF_InRange;
         entry.node->position = {};
     } else {
         if (!GetMotionAnimationId(entry.motionWork, MotionRegion::LowerBody))
@@ -692,7 +692,7 @@ void UpdateNpcFrameCulling(NpcRouteLiveEntry &entry) {
         if (position.x * position.x + position.y * position.y + position.z * position.z <= 729.0f)
             return;
         SetMotionWorkCulled(entry.motionWork, true);
-        entry.node->renderFlags |= 0x10U;
+        entry.node->renderFlags |= CRF_InRange;
     }
     const std::uint16_t counter = static_cast<std::uint16_t>((entry.field2d8 >> 16) + 1);
     entry.field2d8 = (entry.field2d8 & ~0xffff0000ULL) | (static_cast<std::uint64_t>(counter) << 16);

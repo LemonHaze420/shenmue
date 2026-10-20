@@ -123,6 +123,7 @@ void Beep_Callback(void *data) {
 }
 
 void UpdateCamera(ShopWork *work) {
+    using CameraState::Callback;
     if (!work || !work->board)
         return;
     Vector3 eye;
@@ -144,7 +145,7 @@ void UpdateCamera(ShopWork *work) {
             }
         }
     }
-    camCtrlSetState(CameraState::Callback);
+    camCtrlSetState(Callback);
     camCtrlSetTargetPosition(target);
     Vector3 offset = work->camera >= 1 && work->camera <= 4 ? work->board->cameraOffsets[work->camera - 1] : Vector3{0, 0, .5f};
     for (auto &axis : offset)
@@ -551,6 +552,7 @@ void StartPackage_Callback(void *data) {
 }
 
 void Done_Callback(void *data) {
+    using enum CameraState;
     auto *work = static_cast<ShopWork *>(data);
     HLib::Task *parent = nullptr;
     if (work) {
@@ -595,7 +597,7 @@ void Done_Callback(void *data) {
         if (work->package[0] && EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work->package), 0))
             EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
     }
     SetPlayerControlEnabled(1);
     HLib::MarkCurrentTaskForCleanup();

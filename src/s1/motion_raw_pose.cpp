@@ -37,13 +37,13 @@ bool IsRawSingleChannelNode(std::uint8_t nodeId);
 
 bool IsRawBindEulerNode(std::uint8_t nodeId);
 
-void SampleRawEuler(const MotionNodeRuntime &row, const MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next,
+void SampleRawEuler(const MotionNodeRuntime &motionNode, const MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next,
     std::int32_t channel, std::uint32_t mirror, std::int32_t (&euler)[3]);
 
-void MOTN_EvaluateRawRow(MotionNodeRuntime &row, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next);
+void MOTN_EvaluateRawNode(MotionNodeRuntime &motionNode, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next);
 
-void MOTN_EvaluateRawBlendRow(
-    MotionNodeRuntime &source, MotionNodeRuntime &row, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next);
+void MOTN_EvaluateRawBlendNode(
+    MotionNodeRuntime &source, MotionNodeRuntime &motionNode, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next);
 
 bool MOTN_EvaluateRawPose(MotionInformationWork &motion, MotionNodeRuntime &root, std::int8_t stage);
 
@@ -52,7 +52,7 @@ void ApplyBoneTransformWithLerp(
 
 bool MOTN_EvaluateRawBlendPose(MotionInformationWork &motion, MotionNodeRuntime &blend, MotionNodeRuntime &active, std::int8_t stage);
 
-void MOTN_EvaluateRawSecondaryRow(MotionNodeRuntime &row, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next);
+void MOTN_EvaluateRawSecondaryNode(MotionNodeRuntime &motionNode, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next);
 
 // ResolvingMOTNPtrs / MOTN_ResolveRawRecords / MOTN_ResolveRawReferenceRecords / MOTN_ResolveRawPreviousWords: fixed-record frame
 // pointers. Records start 0x0e bytes into the motion; each carries three half-float root words followed by the euler words. The frame
@@ -337,47 +337,47 @@ bool IsRawBindEulerNode(std::uint8_t nodeId) {
 }
 
 // Samples a row's frame euler (the three channel words, or the single Z word) and applies the mirror remap.
-void SampleRawEuler(const MotionNodeRuntime &row, const MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next,
+void SampleRawEuler(const MotionNodeRuntime &motionNode, const MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next,
     std::int32_t channel, std::uint32_t mirror, std::int32_t (&euler)[3]) {
     const float t = context.fraction;
-    if (IsRawSingleChannelNode(row.nodeId)) {
+    if (IsRawSingleChannelNode(motionNode.nodeId)) {
         euler[0] = 0;
         euler[1] = 0;
         euler[2] = RawSingleChannel(current, next, channel, t);
     } else {
-        if (row.nodeId == 36)
+        if (motionNode.nodeId == 36)
             g_motnRawIKFlag = 1;
         euler[2] = RawChannel(current, next, channel + 2, t);
         euler[1] = RawChannel(current, next, channel + 1, t);
         euler[0] = RawChannel(current, next, channel, t);
     }
-    if (!mirror || row.nodeKind == 4)
+    if (!mirror || motionNode.nodeKind == 4)
         return;
-    if (row.nodeId == 4) {
+    if (motionNode.nodeId == 4) {
         euler[0] = static_cast<std::int32_t>(static_cast<float>(euler[0]) * -1.0f - 32768.0f);
         euler[1] = static_cast<std::int32_t>(static_cast<float>(euler[1]) * -1.0f);
         euler[2] = static_cast<std::int32_t>(static_cast<float>(euler[2]));
         return;
     }
-    euler[0] = MirrorRawAxis(euler[0], row.nodeKind, 0);
-    euler[1] = MirrorRawAxis(euler[1], row.nodeKind, 1);
-    euler[2] = MirrorRawAxis(euler[2], row.nodeKind, 2);
+    euler[0] = MirrorRawAxis(euler[0], motionNode.nodeKind, 0);
+    euler[1] = MirrorRawAxis(euler[1], motionNode.nodeKind, 1);
+    euler[2] = MirrorRawAxis(euler[2], motionNode.nodeKind, 2);
 }
 
-// EvaluateBoneHierarchyAndTransformNode (MOTN_EvaluateRawRow): places one fixed-record row from its frame euler words.
-void MOTN_EvaluateRawRow(MotionNodeRuntime &row, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next) {
+// EvaluateBoneHierarchyAndTransformNode (MOTN_EvaluateRawNode): places one fixed-record row from its frame euler words.
+void MOTN_EvaluateRawNode(MotionNodeRuntime &motionNode, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next) {
     MotionInformationWork &motion = *g_pMotion;
     std::uint32_t mirror = g_motnMirror;
     const std::int16_t secondaryNodeId = motion.secondaryNodeId;
-    if (static_cast<std::int8_t>(row.nodeId) == secondaryNodeId && secondaryNodeId) {
+    if (static_cast<std::int8_t>(motionNode.nodeId) == secondaryNodeId && secondaryNodeId) {
         auto *const source = static_cast<MotionNodeRuntime *>(motion.sourceNodes);
         const float amount = source->interpolationAmount;
         if (0x1p-23f > amount && !MOTN_GetAnimationFlag(motion.secondaryAnimId)) {
-            MOTN_ApplyBoneHierarchyTransform(row, row);
+            MOTN_ApplyBoneHierarchyTransform(motionNode, motionNode);
             return;
         }
         if (amount != 0.0f) {
-            MOTN_EvaluateRawBlendRow(*source, row, context, current, next);
+            MOTN_EvaluateRawBlendNode(*source, motionNode, context, current, next);
             return;
         }
         current = context.currentWords[1];
@@ -385,34 +385,34 @@ void MOTN_EvaluateRawRow(MotionNodeRuntime &row, MotnRawFrameContext &context, c
         mirror = (motion.motionFlags >> 20U) & 1U;
         g_motnMirror = mirror;
     }
-    row.effectorPosition.x = row.bindPosition->x;
-    row.effectorPosition.y = row.bindPosition->y;
-    row.effectorPosition.z = row.bindPosition->z;
-    row.bindEuler = *row.bindEulerSource;
-    if ((row.bindPositionPacked[1] & 1U) != 0)
+    motionNode.effectorPosition.x = motionNode.bindPosition->x;
+    motionNode.effectorPosition.y = motionNode.bindPosition->y;
+    motionNode.effectorPosition.z = motionNode.bindPosition->z;
+    motionNode.bindEuler = *motionNode.bindEulerSource;
+    if ((motionNode.bindPositionPacked[1] & 1U) != 0)
         Matrix4x4_Push();
-    Matrix4x4::preTranslate(row.bindPosition->x, row.bindPosition->y, row.bindPosition->z);
-    if (row.flags) {
+    Matrix4x4::preTranslate(motionNode.bindPosition->x, motionNode.bindPosition->y, motionNode.bindPosition->z);
+    if (motionNode.flags) {
         const Vector3 position{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         workTransformMatrix = transformMatrix_prePass;
         Matrix4x4::preTranslate(position.x, position.y, position.z);
         if (g_motnEntityEuler)
             Matrix4x4::SetViewMatrixFromEuler(g_motnEntityEuler->y, g_motnEntityEuler->x, g_motnEntityEuler->z);
     }
-    const auto channel = static_cast<std::int8_t>(mirror ? row.bindPositionPacked[0] : row.reserved07);
+    const auto channel = static_cast<std::int8_t>(mirror ? motionNode.bindPositionPacked[0] : motionNode.reserved07);
     if (!channel) {
-        if (IsRawBindEulerNode(row.nodeId)) {
-            Matrix4x4::SetViewMatrixFromEuler(row.bindEulerSource->y, row.bindEulerSource->x, row.bindEulerSource->z);
-        } else if (row.nodeId == 20) {
-            Matrix4x4::SetViewMatrixFromEuler(row.bindEulerSource->y, row.bindEulerSource->x, row.bindEulerSource->z);
+        if (IsRawBindEulerNode(motionNode.nodeId)) {
+            Matrix4x4::SetViewMatrixFromEuler(motionNode.bindEulerSource->y, motionNode.bindEulerSource->x, motionNode.bindEulerSource->z);
+        } else if (motionNode.nodeId == 20) {
+            Matrix4x4::SetViewMatrixFromEuler(motionNode.bindEulerSource->y, motionNode.bindEulerSource->x, motionNode.bindEulerSource->z);
             if (!g_motnRawIKFlag)
                 MOTI_RotateX();
         }
     } else {
         std::int32_t euler[3]{};
-        SampleRawEuler(row, context, current, next, channel, mirror, euler);
-        row.bindEuler = {static_cast<std::int16_t>(euler[0]), static_cast<std::int16_t>(euler[1]), static_cast<std::int16_t>(euler[2])};
-        if (row.nodeId == 4 && !g_motnRawIKFlag) {
+        SampleRawEuler(motionNode, context, current, next, channel, mirror, euler);
+        motionNode.bindEuler = {static_cast<std::int16_t>(euler[0]), static_cast<std::int16_t>(euler[1]), static_cast<std::int16_t>(euler[2])};
+        if (motionNode.nodeId == 4 && !g_motnRawIKFlag) {
             g_skinningTransformMatrix = workTransformMatrix;
             Matrix4x4_Push();
             Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(-motion.currentTurnAngle));
@@ -425,7 +425,7 @@ void MOTN_EvaluateRawRow(MotionNodeRuntime &row, MotnRawFrameContext &context, c
             } else {
                 Matrix4x4_Push();
                 workTransformMatrix = transformMatrix_prePass;
-                Matrix4x4::SetViewMatrixFromEuler(row.bindEulerSource->y, row.bindEulerSource->x, row.bindEulerSource->z);
+                Matrix4x4::SetViewMatrixFromEuler(motionNode.bindEulerSource->y, motionNode.bindEulerSource->x, motionNode.bindEulerSource->z);
                 g_motnRawLookEnd = workTransformMatrix;
                 workTransformMatrix = transformMatrix_prePass;
                 Matrix4x4::SetViewMatrixFromEuler(euler[1], euler[0], euler[2]);
@@ -437,27 +437,27 @@ void MOTN_EvaluateRawRow(MotionNodeRuntime &row, MotnRawFrameContext &context, c
             MOTN_ApplyRawHeadLook();
         } else {
             Matrix4x4::SetViewMatrixFromEuler(euler[1], euler[0], euler[2]);
-            if (row.nodeId == 1 && !g_motnRawIKFlag)
+            if (motionNode.nodeId == 1 && !g_motnRawIKFlag)
                 MOTN_RotateX();
         }
     }
-    *MotionRowMatrix(row) = workTransformMatrix;
-    row.bindPositionPacked[1] |= 2U;
-    if (row.nodeId == 2 && context.visible == 1 && (context.flags & 2U) != 0) {
-        if ((row.bindPositionPacked[1] & 1U) != 0)
+    *MotionNodeMatrix(motionNode) = workTransformMatrix;
+    motionNode.bindPositionPacked[1] |= 2U;
+    if (motionNode.nodeId == 2 && context.visible == 1 && (context.flags & 2U) != 0) {
+        if ((motionNode.bindPositionPacked[1] & 1U) != 0)
             Matrix4x4::Pop(1);
         return;
     }
-    for (std::uint8_t child = 0; child < row.childCount; ++child)
-        MOTN_EvaluateRawRow(*row.children[child], context, current, next);
-    if ((row.bindPositionPacked[1] & 1U) != 0)
+    for (std::uint8_t child = 0; child < motionNode.childCount; ++child)
+        MOTN_EvaluateRawNode(*motionNode.children[child], context, current, next);
+    if ((motionNode.bindPositionPacked[1] & 1U) != 0)
         Matrix4x4::Pop(1);
     g_motnMirror = (g_pMotion->motionFlags >> 17U) & 1U;
 }
 
-// EvaluateNodeEulerAndBlendPose (MOTN_EvaluateRawBlendRow): the fixed-record row blended from the source row's euler.
-void MOTN_EvaluateRawBlendRow(
-    MotionNodeRuntime &source, MotionNodeRuntime &row, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next) {
+// EvaluateNodeEulerAndBlendPose (MOTN_EvaluateRawBlendNode): the fixed-record row blended from the source row's euler.
+void MOTN_EvaluateRawBlendNode(
+    MotionNodeRuntime &source, MotionNodeRuntime &motionNode, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next) {
     MotionInformationWork &motion = *g_pMotion;
     MotionNodeRuntime *blendSource = &source;
     std::uint32_t mirror = g_motnMirror;
@@ -467,47 +467,47 @@ void MOTN_EvaluateRawBlendRow(
         const float amount = blendSource->interpolationAmount;
         if (0x1p-23f > amount) {
             if (!MOTN_GetAnimationFlag(motion.secondaryAnimId)) {
-                MOTN_ApplyBoneHierarchyTransform(row, *blendSource);
+                MOTN_ApplyBoneHierarchyTransform(motionNode, *blendSource);
                 return;
             }
-            MOTN_EvaluateRawRow(*blendSource, context, current, next);
+            MOTN_EvaluateRawNode(*blendSource, context, current, next);
             return;
         }
         mirror = (motion.motionFlags >> 17U) & 1U;
         g_motnMirror = mirror;
     }
     const float t = blendSource->interpolationAmount;
-    row.effectorPosition.x = row.bindPosition->x;
-    row.effectorPosition.y = row.bindPosition->y;
-    row.effectorPosition.z = row.bindPosition->z;
-    row.bindEuler = *row.bindEulerSource;
-    if ((row.bindPositionPacked[1] & 1U) != 0)
+    motionNode.effectorPosition.x = motionNode.bindPosition->x;
+    motionNode.effectorPosition.y = motionNode.bindPosition->y;
+    motionNode.effectorPosition.z = motionNode.bindPosition->z;
+    motionNode.bindEuler = *motionNode.bindEulerSource;
+    if ((motionNode.bindPositionPacked[1] & 1U) != 0)
         Matrix4x4_Push();
-    Matrix4x4::preTranslate(row.bindPosition->x, row.bindPosition->y, row.bindPosition->z);
+    Matrix4x4::preTranslate(motionNode.bindPosition->x, motionNode.bindPosition->y, motionNode.bindPosition->z);
     if (g_motnRawParentUnrotated) {
         const Vector3 position{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         workTransformMatrix = transformMatrix_prePass;
         Matrix4x4::preTranslate(position.x, position.y, position.z);
     }
-    const auto channel = static_cast<std::int8_t>(mirror ? row.bindPositionPacked[0] : row.reserved07);
+    const auto channel = static_cast<std::int8_t>(mirror ? motionNode.bindPositionPacked[0] : motionNode.reserved07);
     if (!channel) {
-        if (IsRawBindEulerNode(row.nodeId)) {
-            Matrix4x4::SetViewMatrixFromEuler(row.bindEulerSource->y, row.bindEulerSource->x, row.bindEulerSource->z);
-        } else if (row.nodeId == 20) {
-            Matrix4x4::SetViewMatrixFromEuler(row.bindEulerSource->y, row.bindEulerSource->x, row.bindEulerSource->z);
+        if (IsRawBindEulerNode(motionNode.nodeId)) {
+            Matrix4x4::SetViewMatrixFromEuler(motionNode.bindEulerSource->y, motionNode.bindEulerSource->x, motionNode.bindEulerSource->z);
+        } else if (motionNode.nodeId == 20) {
+            Matrix4x4::SetViewMatrixFromEuler(motionNode.bindEulerSource->y, motionNode.bindEulerSource->x, motionNode.bindEulerSource->z);
             if (!g_motnRawIKFlag)
                 MOTI_RotateX();
         }
     } else {
         std::int32_t euler[3]{};
-        SampleRawEuler(row, context, current, next, channel, mirror, euler);
-        row.bindEuler = {static_cast<std::int16_t>(euler[0]), static_cast<std::int16_t>(euler[1]), static_cast<std::int16_t>(euler[2])};
+        SampleRawEuler(motionNode, context, current, next, channel, mirror, euler);
+        motionNode.bindEuler = {static_cast<std::int16_t>(euler[0]), static_cast<std::int16_t>(euler[1]), static_cast<std::int16_t>(euler[2])};
         Matrix4x4_Push();
         const std::uint32_t unrotated = g_motnRawParentUnrotated;
         workTransformMatrix = transformMatrix_prePass;
         if (unrotated && g_motnEntityEuler)
             Matrix4x4::SetViewMatrixFromEuler(g_motnEntityEuler->y, g_motnEntityEuler->x, g_motnEntityEuler->z);
-        Matrix4x4::SetViewMatrixFromEuler(row.bindEuler.y, row.bindEuler.x, row.bindEuler.z);
+        Matrix4x4::SetViewMatrixFromEuler(motionNode.bindEuler.y, motionNode.bindEuler.x, motionNode.bindEuler.z);
         g_motnBlendEnd = workTransformMatrix;
         workTransformMatrix = transformMatrix_prePass;
         if (unrotated && g_motnNextEntityEuler)
@@ -516,9 +516,9 @@ void MOTN_EvaluateRawBlendRow(
         g_motnBlendStart = workTransformMatrix;
         Matrix4x4::Pop(1);
         Matrix4x4 blended{};
-        if (row.nodeId != 4) {
+        if (motionNode.nodeId != 4) {
             Matrix4x4::Multiply(Matrix4x4_Lerp(blended, t, g_motnBlendStart, g_motnBlendEnd) ? &blended : &g_motnBlendEnd);
-            if (row.nodeId == 1 && !g_motnRawIKFlag)
+            if (motionNode.nodeId == 1 && !g_motnRawIKFlag)
                 MOTN_RotateX();
         } else {
             g_skinningTransformMatrix = workTransformMatrix;
@@ -537,7 +537,7 @@ void MOTN_EvaluateRawBlendRow(
                     g_motnBlendEnd = blended;
                 Matrix4x4_Push();
                 workTransformMatrix = transformMatrix_prePass;
-                Matrix4x4::SetViewMatrixFromEuler(row.bindEulerSource->y, row.bindEulerSource->x, row.bindEulerSource->z);
+                Matrix4x4::SetViewMatrixFromEuler(motionNode.bindEulerSource->y, motionNode.bindEulerSource->x, motionNode.bindEulerSource->z);
                 g_motnBlendStart = workTransformMatrix;
                 Matrix4x4::Pop(1);
                 Matrix4x4::Multiply(Matrix4x4_Lerp(blended, motion.blendScratch[3], g_motnBlendEnd, g_motnBlendStart) ? &blended : &g_motnBlendStart);
@@ -546,17 +546,17 @@ void MOTN_EvaluateRawBlendRow(
                 MOTN_ApplyRawHeadLook();
         }
     }
-    *MotionRowMatrix(row) = workTransformMatrix;
-    row.bindPositionPacked[1] |= 2U;
-    if (row.nodeId == 2 && context.visible == 1 && (context.flags & 2U) != 0) {
-        if ((row.bindPositionPacked[1] & 1U) != 0)
+    *MotionNodeMatrix(motionNode) = workTransformMatrix;
+    motionNode.bindPositionPacked[1] |= 2U;
+    if (motionNode.nodeId == 2 && context.visible == 1 && (context.flags & 2U) != 0) {
+        if ((motionNode.bindPositionPacked[1] & 1U) != 0)
             Matrix4x4::Pop(1);
         return;
     }
-    g_motnRawParentUnrotated = row.flags != 0 ? 1U : 0U;
-    for (std::uint8_t child = 0; child < row.childCount; ++child)
-        MOTN_EvaluateRawBlendRow(*blendSource->children[child], *row.children[child], context, current, next);
-    if ((row.bindPositionPacked[1] & 1U) != 0)
+    g_motnRawParentUnrotated = motionNode.flags != 0 ? 1U : 0U;
+    for (std::uint8_t child = 0; child < motionNode.childCount; ++child)
+        MOTN_EvaluateRawBlendNode(*blendSource->children[child], *motionNode.children[child], context, current, next);
+    if ((motionNode.bindPositionPacked[1] & 1U) != 0)
         Matrix4x4::Pop(1);
 }
 
@@ -580,10 +580,10 @@ bool MOTN_EvaluateRawPose(MotionInformationWork &motion, MotionNodeRuntime &root
     root.effectorPosition.x = workTransformMatrix.rows[3].x;
     root.effectorPosition.y = workTransformMatrix.rows[3].y;
     root.effectorPosition.z = workTransformMatrix.rows[3].z;
-    *MotionRowMatrix(root) = workTransformMatrix;
+    *MotionNodeMatrix(root) = workTransformMatrix;
     root.bindPositionPacked[1] |= 2U;
     for (std::uint8_t child = stage == 1 && (context.flags & 2U) != 0 ? 1 : 0; child < root.childCount; ++child)
-        MOTN_EvaluateRawRow(*root.children[child], context, context.currentWords[0], context.nextWords[0]);
+        MOTN_EvaluateRawNode(*root.children[child], context, context.currentWords[0], context.nextWords[0]);
     Matrix4x4::Pop(1);
     return context.visible != 0;
 }
@@ -617,7 +617,7 @@ void ApplyBoneTransformWithLerp(
     Matrix4x4::Pop(1);
     Matrix4x4 blended{};
     Matrix4x4::Multiply(Matrix4x4_Lerp(blended, t, g_motnBlendStart, g_motnBlendEnd) ? &blended : &g_motnBlendEnd);
-    *MotionRowMatrix(active) = workTransformMatrix;
+    *MotionNodeMatrix(active) = workTransformMatrix;
 }
 
 // EvaluateAndTransformBone (MOTN_EvaluateRawBlendPose): the fixed-record pose blended from the previous rows.
@@ -647,7 +647,7 @@ bool MOTN_EvaluateRawBlendPose(MotionInformationWork &motion, MotionNodeRuntime 
     ApplyBoneTransformWithLerp(motion, blend, active, context);
     active.bindPositionPacked[1] |= 2U;
     for (std::uint8_t child = stage == 1 && (context.flags & 2U) != 0 ? 1 : 0; child < blend.childCount; ++child)
-        MOTN_EvaluateRawBlendRow(*blend.children[child], *active.children[child], context, context.currentWords[0], context.nextWords[0]);
+        MOTN_EvaluateRawBlendNode(*blend.children[child], *active.children[child], context, context.currentWords[0], context.nextWords[0]);
     Matrix4x4::Pop(1);
     return context.visible != 0;
 }
@@ -655,11 +655,11 @@ bool MOTN_EvaluateRawBlendPose(MotionInformationWork &motion, MotionNodeRuntime 
 // EvaluateMotionFrameAndDispatch (MOTN_EvaluateRawMotion): the fixed-record evaluator mainMotionUpdate runs instead of the mode switch.
 bool MOTN_EvaluateRawMotion(MotionInformationWork &motion) {
     bool visible = false;
-    auto *const blendRows = static_cast<MotionNodeRuntime *>(motion.blendTargetNodes);
-    if ((motion.motionFlags & 0x10000U) == 0 || blendRows->nodeId == 0xff) {
+    auto *const blendMotionNodes = static_cast<MotionNodeRuntime *>(motion.blendTargetNodes);
+    if ((motion.motionFlags & 0x10000U) == 0 || blendMotionNodes->nodeId == 0xff) {
         motion.motionFlags &= ~0x10000U;
-        for (MotionNodeRuntime *row = blendRows; row && row->nodeId != 0xff; ++row)
-            row->interpolationAmount = 0.0f;
+        for (MotionNodeRuntime *motionNode = blendMotionNodes; motionNode && motionNode->nodeId != 0xff; ++motionNode)
+            motionNode->interpolationAmount = 0.0f;
         g_motnEntityEuler = &motion.entityEuler;
         visible = MOTN_EvaluateRawPose(motion, *static_cast<MotionNodeRuntime *>(motion.activeNodes), static_cast<std::int8_t>(motion.poseEvaluationStage));
         motion.interpolationMode = 0;
@@ -667,8 +667,8 @@ bool MOTN_EvaluateRawMotion(MotionInformationWork &motion) {
         if (motion.blendFramesRemaining)
             --motion.blendFramesRemaining;
         const float ramp = ComputeLinearRamp01(motion.blendFramesTotal - motion.blendFramesRemaining, motion.blendFramesTotal);
-        for (MotionNodeRuntime *row = blendRows; row && row->nodeId != 0xff; ++row)
-            row->interpolationAmount = ramp;
+        for (MotionNodeRuntime *motionNode = blendMotionNodes; motionNode && motionNode->nodeId != 0xff; ++motionNode)
+            motionNode->interpolationAmount = ramp;
         if (!motion.blendFramesRemaining)
             motion.motionFlags &= ~0x10000U;
         g_motnNextEntityEuler = &motion.nextEntityEuler;
@@ -683,73 +683,73 @@ bool MOTN_EvaluateRawMotion(MotionInformationWork &motion) {
     return visible;
 }
 
-// MOTN_EvaluateRawSecondaryRow.
-void MOTN_EvaluateRawSecondaryRow(MotionNodeRuntime &row, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next) {
-    if (row.nodeId == g_pMotion->secondaryNodeId) {
+// MOTN_EvaluateRawSecondaryNode.
+void MOTN_EvaluateRawSecondaryNode(MotionNodeRuntime &motionNode, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next) {
+    if (motionNode.nodeId == g_pMotion->secondaryNodeId) {
         g_motnSecondaryAnchor = workTransformMatrix;
-        g_pMotion->sourceNodes = &row;
+        g_pMotion->sourceNodes = &motionNode;
     }
-    row.effectorPosition.x = row.bindPosition->x;
-    row.effectorPosition.y = row.bindPosition->y;
-    row.effectorPosition.z = row.bindPosition->z;
-    row.bindEuler = *row.bindEulerSource;
-    if ((row.bindPositionPacked[1] & 1U) != 0)
+    motionNode.effectorPosition.x = motionNode.bindPosition->x;
+    motionNode.effectorPosition.y = motionNode.bindPosition->y;
+    motionNode.effectorPosition.z = motionNode.bindPosition->z;
+    motionNode.bindEuler = *motionNode.bindEulerSource;
+    if ((motionNode.bindPositionPacked[1] & 1U) != 0)
         Matrix4x4_Push();
-    Matrix4x4::preTranslate(row.bindPosition->x, row.bindPosition->y, row.bindPosition->z);
-    if (row.flags) {
+    Matrix4x4::preTranslate(motionNode.bindPosition->x, motionNode.bindPosition->y, motionNode.bindPosition->z);
+    if (motionNode.flags) {
         const Vector3 position{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         workTransformMatrix = transformMatrix_prePass;
         Matrix4x4::preTranslate(position.x, position.y, position.z);
     }
     const std::uint32_t mirror = g_motnMirror;
-    const auto channel = static_cast<std::int8_t>(mirror ? row.bindPositionPacked[0] : row.reserved07);
+    const auto channel = static_cast<std::int8_t>(mirror ? motionNode.bindPositionPacked[0] : motionNode.reserved07);
     if (channel) {
         std::int32_t euler[3]{};
         const float t = context.fraction;
-        if (IsRawSingleChannelNode(row.nodeId)) {
+        if (IsRawSingleChannelNode(motionNode.nodeId)) {
             euler[2] = RawSingleChannel(current, next, channel, t);
         } else {
             euler[2] = RawChannel(current, next, channel + 2, t);
             euler[1] = RawChannel(current, next, channel + 1, t);
             euler[0] = RawChannel(current, next, channel, t);
         }
-        if (mirror && row.nodeKind != 4) {
-            if (row.nodeId == 4) {
+        if (mirror && motionNode.nodeKind != 4) {
+            if (motionNode.nodeId == 4) {
                 euler[0] = static_cast<std::int32_t>(static_cast<float>(euler[0]) * -1.0f - 32768.0f);
                 euler[1] = static_cast<std::int32_t>(static_cast<float>(euler[1]) * -1.0f);
             } else {
-                euler[0] = MirrorRawAxis(euler[0], row.nodeKind, 0);
-                euler[1] = MirrorRawAxis(euler[1], row.nodeKind, 1);
-                euler[2] = MirrorRawAxis(euler[2], row.nodeKind, 2);
+                euler[0] = MirrorRawAxis(euler[0], motionNode.nodeKind, 0);
+                euler[1] = MirrorRawAxis(euler[1], motionNode.nodeKind, 1);
+                euler[2] = MirrorRawAxis(euler[2], motionNode.nodeKind, 2);
             }
         }
-        row.bindEuler = {static_cast<std::int16_t>(euler[0]), static_cast<std::int16_t>(euler[1]), static_cast<std::int16_t>(euler[2])};
+        motionNode.bindEuler = {static_cast<std::int16_t>(euler[0]), static_cast<std::int16_t>(euler[1]), static_cast<std::int16_t>(euler[2])};
         Matrix4x4::SetViewMatrixFromEuler(euler[1], euler[0], euler[2]);
-    } else if (row.nodeId <= 37U && ((0x2020500000ULL >> row.nodeId) & 1U) != 0) {
-        Matrix4x4::SetViewMatrixFromEuler(row.bindEulerSource->y, row.bindEulerSource->x, row.bindEulerSource->z);
+    } else if (motionNode.nodeId <= 37U && ((0x2020500000ULL >> motionNode.nodeId) & 1U) != 0) {
+        Matrix4x4::SetViewMatrixFromEuler(motionNode.bindEulerSource->y, motionNode.bindEulerSource->x, motionNode.bindEulerSource->z);
     }
-    *MotionRowMatrix(row) = workTransformMatrix;
-    row.bindPositionPacked[1] |= 2U;
-    for (std::uint8_t child = 0; child < row.childCount; ++child)
-        MOTN_EvaluateRawSecondaryRow(*row.children[child], context, current, next);
-    if ((row.bindPositionPacked[1] & 1U) != 0)
+    *MotionNodeMatrix(motionNode) = workTransformMatrix;
+    motionNode.bindPositionPacked[1] |= 2U;
+    for (std::uint8_t child = 0; child < motionNode.childCount; ++child)
+        MOTN_EvaluateRawSecondaryNode(*motionNode.children[child], context, current, next);
+    if ((motionNode.bindPositionPacked[1] & 1U) != 0)
         Matrix4x4::Pop(1);
 }
 
 // MOTN_UpdateRawSecondaryPose: the fixed-record secondary overlay pose.
-void MOTN_UpdateRawSecondaryPose(MotionInformationWork &motion, MotionNodeRuntime &rows) {
+void MOTN_UpdateRawSecondaryPose(MotionInformationWork &motion, MotionNodeRuntime &motionNodes) {
     g_motnMirror = (g_pMotion->motionFlags >> 20U) & 1U;
     MotnRawFrameContext context{};
     MOTN_ResolveRawSecondaryPointers(motion, context);
     MOTN_ReadRawRootPosition(motion, context);
-    rows.effectorPosition.x = context.rootPosition.x;
-    rows.effectorPosition.z = context.rootPosition.z;
-    rows.effectorPosition.y = context.rootPosition.y;
-    std::memcpy(&rows.bindEuler, context.currentWords[0], sizeof(rows.bindEuler));
-    MOTN_ApplyTranslationRotation(motion, context, rows);
-    *MotionRowMatrix(rows) = workTransformMatrix;
-    rows.bindPositionPacked[1] |= 2U;
-    for (std::uint8_t child = 0; child < rows.childCount; ++child)
-        MOTN_EvaluateRawSecondaryRow(*rows.children[child], context, context.currentWords[0], context.nextWords[0]);
+    motionNodes.effectorPosition.x = context.rootPosition.x;
+    motionNodes.effectorPosition.z = context.rootPosition.z;
+    motionNodes.effectorPosition.y = context.rootPosition.y;
+    std::memcpy(&motionNodes.bindEuler, context.currentWords[0], sizeof(motionNodes.bindEuler));
+    MOTN_ApplyTranslationRotation(motion, context, motionNodes);
+    *MotionNodeMatrix(motionNodes) = workTransformMatrix;
+    motionNodes.bindPositionPacked[1] |= 2U;
+    for (std::uint8_t child = 0; child < motionNodes.childCount; ++child)
+        MOTN_EvaluateRawSecondaryNode(*motionNodes.children[child], context, context.currentWords[0], context.nextWords[0]);
 }
 }

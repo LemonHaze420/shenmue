@@ -158,6 +158,7 @@ std::int32_t MakiCollectFirewood() {
 }
 
 std::int32_t MakiReturnToCampfire() {
+    using enum CameraState;
     switch (makiRuntime.phase) {
     case 0:
         EVT_AT_SetMot(MAKI_RYO, 0xf003, 0, 1, 0, 0);
@@ -178,7 +179,7 @@ std::int32_t MakiReturnToCampfire() {
     case 2:
         MakiRefreshHeldLogs();
         SetScreenFilmFade(0, 255, 0, 0, 0, 0, 0, 0, 0);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         MakiRestorePlayerAfterSequence();
         EVT_AT_SetPos(MAKI_RYO, EVENT_CHARACTER_INVALID, {.x = 157.1f, .y = 100, .z = 389.4f}, 0);

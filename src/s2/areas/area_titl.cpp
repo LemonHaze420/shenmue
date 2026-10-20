@@ -218,6 +218,7 @@ void TitleOmakeExitCallback(void *) {
     }
 }
 void ExitTitle(TitleWork *work) {
+    using enum CameraState;
     for (std::uint32_t i = 0; i < 3; ++i)
         HLib::DestroyTaskInternal(work->mitts[i]->task);
     hndlSetFlags(ctrlGetCharaByName(TITL_RYO));
@@ -237,7 +238,7 @@ void ExitTitle(TitleWork *work) {
     else {
         EVS_LoopCamera(0, shen_name{}, shen_name{});
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         if (work->score < 300000 || (work->flags & 0x10)) {
             HLib::MarkCurrentTaskForCleanup();
             SetPlayerControlEnabled(1);

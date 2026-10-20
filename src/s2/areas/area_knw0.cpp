@@ -51,6 +51,7 @@ void Knw0LoadResources(Knw0Work &work) {
     SetRenderClockAndCompassTo(1);
 }
 void Knw0Cleanup(Knw0Work &work) {
+    using enum CameraState;
     EV_stepSetFlags(0, 0xc4);
     hndlSetFlags(FindCharacterByScenarioName(KNW0_RYO));
     hndlSetFlags(FindCharacterByScenarioName(KNW0_KNK));
@@ -69,7 +70,7 @@ void Knw0Cleanup(Knw0Work &work) {
     EV_NPC_NewLoadSw(1);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
 }
 void Knw0RootCallback(void *data) {

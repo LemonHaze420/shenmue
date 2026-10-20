@@ -513,13 +513,14 @@ HLib::Task *nextStartupFadeTask = nullptr;
 void EVT_PreAreaInit();
 
 void ApplyPlayerEntryLocation(Character *character, const Vector3 &position, std::int32_t yaw) {
+    using enum CameraState;
     shenApplyTranslationToAll(&character->entity.node, position);
     character->entity.node.rotation[0] = 0;
     character->entity.node.rotation[2] = 0;
     shenDecrementRotYAllNodes(&character->entity.node, static_cast<std::int16_t>(yaw));
     if (MotionWork *const motion = FindMotionWork(character))
         SetMotionEntityRotation(motion, Vector3i{0, yaw, 0});
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
 }
 
@@ -1322,6 +1323,7 @@ void QueueImmediateNextFadeTask(HLib::Task *task) {
 }
 
 void EVT_NightAuthor_Callback(void *) {
+    using enum CameraState;
     constexpr shen_name ryo{SHEN_NAME(RYO_)};
     if (nightAuthorState == 0) {
         if (DoesScreenFilmColourExist(GetCurrentAreaScreenFilmTask()))
@@ -1362,7 +1364,7 @@ void EVT_NightAuthor_Callback(void *) {
             SetTemporaryDoorAuthor({});
         EV_EnableCharacterDisplay(ryo);
         EV_EnsureCharacterDraw(ryo);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         WaitForNextTask_0(GetCurrentAreaScreenFilmTask(), 0, 30);
         nightAuthorState = 2;
@@ -1376,12 +1378,13 @@ void EVT_NightAuthor_Callback(void *) {
 }
 
 void EVT_NightChange_Callback(void *) {
+    using enum CameraState;
     if (nightAuthorState == 0) {
         if (DoesScreenFilmColourExist(GetCurrentAreaScreenFilmTask()))
             return;
         ExecuteGameplayAreaCleanup(true);
         (void)EV_spmBeginSampleExecute();
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         WaitForNextTask_0(GetCurrentAreaScreenFilmTask(), 0, 30);
         terminalMediaState.sampleExecutionActive = true;

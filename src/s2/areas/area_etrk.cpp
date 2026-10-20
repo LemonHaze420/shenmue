@@ -119,6 +119,7 @@ void EtrkIntroduction(EtrkWork &work) {
 }
 // @verified - p
 void EtrkPrepareExit(EtrkWork &work) {
+    using enum CameraState;
     ExecuteCleanupFuncForAreaWithCachedScene();
     Vector3 position{.2f, 0, .079999998f};
     Vector3i rotation{};
@@ -130,7 +131,7 @@ void EtrkPrepareExit(EtrkWork &work) {
     EV_EnableCharacterDisplay(ETRK_RYO);
     EVT_AT_SetMot(ETRK_RYO, ETRK_IDLE_MOTION, 0, 1, ETRK_MOTION_FLAGS, 0);
     GetMotionFrameCount(ETRK_IDLE_MOTION);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     EV_EventSetUpHelpIcon_0(0, 0);
     EV_DisableCharacterDisplay(ETRK_HAND);

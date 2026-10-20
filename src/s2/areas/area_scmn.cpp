@@ -301,6 +301,7 @@ void ScmnEyeControlCallback(void *) {
     ++scmnEyeFrame;
 }
 void ScmnCleanupCallback(void *parameter) {
+    using enum CameraState;
     ScmnEventWork *const work = static_cast<ScmnEventWork *>(parameter);
     ET_AT_KillWork(work->characters);
     SetPlayerControlEnabled(0);
@@ -330,7 +331,7 @@ void ScmnCleanupCallback(void *parameter) {
         (void)LoadCutsceneAndSoundProgramForArea();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         SetPlayerControlEnabled(1);
-        (void)camCtrlSetState(CameraState::Init);
+        (void)camCtrlSetState(Init);
         (void)camCtrlSetFovTransitionTo(true);
     }
 }

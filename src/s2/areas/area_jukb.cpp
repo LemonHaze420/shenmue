@@ -293,12 +293,13 @@ void JUKBSelectInitCallback(void *data) {
 }
 // @verified - p
 void JUKBSelectLoopCallback(void *data) {
+    using enum CameraState;
     JukbTaskData &work = *static_cast<JukbTaskData *>(data);
     const std::int32_t stickX = GetCurrentControlInput(5), stickY = GetCurrentControlInput(6);
     GetBattleDataConfig(0, JUKB_INPUT);
     ++work.selectFrame;
     if (work.selectFrame == 30) {
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
         SetTargetPosition(JUKB_TARGETS[7], {std::bit_cast<float>(0x3dfcb924U), std::bit_cast<float>(0x3ebb573fU), .17739999f});
         SetTargetPosition(JUKB_TARGETS[8], {0, -.0015f, -.0255f});
         camCtrlSetPerspective(0x1555);
@@ -523,6 +524,7 @@ void JUKBStopRecordCallback(void *data) {
 }
 // @verified - p
 void JUKBExitCallback(void *data) {
+    using enum CameraState;
     JukbTaskData &work = *static_cast<JukbTaskData *>(data);
     EV_EventSetUpHelpIcon_0(0, 0);
     EventCling cling{0, JUKB_COIN, {}, 0, {}, {}, 1, 0};
@@ -539,7 +541,7 @@ void JUKBExitCallback(void *data) {
     SetAllMapFieldDepthSlotsEnabled(1);
     camCtrlCacheUtil(3);
     EV_NPC_NewLoadSw(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     Vector3i zeroRotation{0, 0, 0};
     EV_scenApplyPosOrRotToPartOf(JUKB_BOX, 0x9f, nullptr, &zeroRotation, EventCharacterPartTransformMode::Absolute);
     EV_scenApplyPosOrRotToPartOf(JUKB_BOX, 0xa0, nullptr, &zeroRotation, EventCharacterPartTransformMode::Absolute);

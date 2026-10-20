@@ -136,6 +136,7 @@ void RestoreE0007Characters(std::int16_t selection) {
 }
 // @verified - p
 void CleanupE0007(AreaAuthorTaskParameter *parent) {
+    using enum CameraState;
     for (const shen_name *character = AREA_0007_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
         if (FindCharacterByScenarioName(*character)) {
             EV_npcLockUnlock(*character);
@@ -155,7 +156,7 @@ void CleanupE0007(AreaAuthorTaskParameter *parent) {
         EVT_AT_SetAng_Callback(&angle);
         LoadCutsceneAndSoundProgramForArea();
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

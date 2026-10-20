@@ -46,6 +46,7 @@ void Update0297(void *taskData) {
 
 // @verified - p
 void Cleanup0297(AuthorViewerTaskParameter *parent) {
+    using enum CameraState;
     EventSetPosition position{0, AREA_0297_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {242.14999389648438f, 110.80000305175781f, 125.0f}, 0.0f};
     EVT_AT_SetPosRot(&position);
     EventSetRawAngle angle{0, AREA_0297_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {0, 0x4000, 0}, 0.0f};
@@ -63,7 +64,7 @@ void Cleanup0297(AuthorViewerTaskParameter *parent) {
     if (g_currentMap.name == AREA_0297_RETURN.name) {
         LoadCutsceneAndSoundProgramForArea();
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

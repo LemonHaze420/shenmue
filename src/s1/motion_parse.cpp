@@ -444,7 +444,7 @@ void MOTN_IncrementDataOffsets(MotionNodeRuntime *rows) {
 }
 
 // doMotionUpdate: loads the lookup motion into the transition rows, paired to the rows ApplyBasePose is about to make active.
-std::int32_t MOTN_LoadTransitionRows(MotionInformationWork &motion, std::uint16_t animationId) {
+std::int32_t MOTN_LoadTransitionNodes(MotionInformationWork &motion, std::uint16_t animationId) {
     std::uint16_t lookupAnimId = animationId;
     const MotnAnimationHeader *animation = MOTN_GetDataForAnimId(animationId);
     if (!animation) {

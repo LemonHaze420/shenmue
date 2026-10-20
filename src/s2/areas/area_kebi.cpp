@@ -126,6 +126,7 @@ void KEBIMainCallback(void *data) {
 }
 // @verified - p
 void KEBIExitCallback(void *data) {
+    using enum CameraState;
     KebiTaskData &work = *static_cast<KebiTaskData *>(data);
     EV_SetRefBoardParamsFor(KEBI_PLAYER, 0);
     EV_SetRefBoardParamsFor(KEBI_GUARD, 0);
@@ -135,7 +136,7 @@ void KEBIExitCallback(void *data) {
     DeleteMotion(work.motionBank);
     EVS_LoopCamera(0, {}, {});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_PLAYER), nullptr, 0);
     UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_GUARD), nullptr, 0);

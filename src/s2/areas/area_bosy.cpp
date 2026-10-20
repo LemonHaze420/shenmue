@@ -322,6 +322,7 @@ void Sequence_Callback(void *data) {
 }
 
 void Exit(BoutWork *work) {
+    using enum CameraState;
     ET_AT_KillWork(work->characters);
     SetPlayerControlEnabled(0);
     SetCharaKill(base, 1);
@@ -340,7 +341,7 @@ void Exit(BoutWork *work) {
     EV_NPC_NewLoadSw(1);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
 }
 

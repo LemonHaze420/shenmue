@@ -166,9 +166,10 @@ void eAR01_SleepData_StartWakeAuthor(void *) {
 
 
 void eAR01_SleepData_PlaceAfterWake(void *) {
+    using enum CameraState;
     SetPlayerGameFlags(PlayerGameFlagMode::Bit5, reinterpret_cast<void *>(1));
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);

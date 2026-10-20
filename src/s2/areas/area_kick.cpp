@@ -105,6 +105,7 @@ void BattleAuthor_Callback(void *) {
 }
 
 void Exit() {
+    using enum CameraState;
     FinishLoading();
     EV_authSceneCtrl(AuthSceneCtrl::ShowFilmBars);
     qteBattleUtil(BattleQteMode::RetireAndFree);
@@ -114,7 +115,7 @@ void Exit() {
     EventSetMotion motion{0, ryo, 0xf003, 0.0f, 1.0f, 0, 0.0f};
     EVT_AT_SetMot_Callback(&motion);
     EV_FreeAuthorPak(0, "0236");
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     for (const shen_name *name = characters; name->name != 0xffffffffU; ++name) {
         if (FindCharacterByScenarioName(*name)) {

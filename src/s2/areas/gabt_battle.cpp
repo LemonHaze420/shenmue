@@ -44,6 +44,7 @@ std::int64_t GabtCycleBattleAdviceKey(void *data) {
 } // namespace
 // @verified - p: native107360 complete SEQP graph; scratch offsets1d0/248 verified in live x64 instructions.
 void GabtBattleSequenceCallback(void *data) {
+    using enum CameraState;
     CompiledSequenceWork &work = *static_cast<CompiledSequenceWork *>(data);
     work.callbackFlag = 0;
     do {
@@ -79,7 +80,7 @@ void GabtBattleSequenceCallback(void *data) {
         case 100: {
             const std::uint64_t camera[]{9025, 0, 0};
             camCtrlToggleSplineRebuildFlag(3, camera);
-            camCtrlSetState(CameraState::Scripted);
+            camCtrlSetState(Scripted);
             SetScreenFilmFade(30, 255, 0, 0, 0, 70, 0, 0, 0);
             shenStartFGST(10, 10, 0, 0);
             vfmDispatchControl(FightControlOp::Package, shen_name{}, reinterpret_cast<std::uintptr_t>("GABT"), 1);

@@ -653,9 +653,9 @@ void clmdSolveRows(ClothObject &object, const Vector3 &firstForce, const Vector3
 // @verified - p
 void clmdLiftBelowAnkles(ClothObject &object) {
     Vector3 position;
-    GetMotionBonePosition(object.owner->motionWork, 26, &position);
+    GetMotionBonePosition(object.owner->motionWork, MB_LeftAnkle, &position);
     const float firstHeight = position.y;
-    GetMotionBonePosition(object.owner->motionWork, 31, &position);
+    GetMotionBonePosition(object.owner->motionWork, MB_RightAnkle, &position);
     const float height = (position.y < firstHeight ? position.y : firstHeight) + clothAnkleOffset;
     ClothVertexState *vertex = object.vertices + object.columns;
     for (std::uint8_t row = 1; row < object.rows; ++row) {
@@ -678,24 +678,24 @@ void clmdUpdateDynamics(ClothObject &object) {
     if (firstKind == 2 || firstKind == 5) {
         if (firstKind == 5)
             referenceBone = 3;
-        GetMotionBonePosition(work, 23, &clothRootPosition);
-        GetMotionBonePosition(work, 28, &clothPairedBonePosition);
+        GetMotionBonePosition(work, MB_LeftThigh, &clothRootPosition);
+        GetMotionBonePosition(work, MB_RightThigh, &clothPairedBonePosition);
     } else if (firstKind == 3) {
-        GetMotionBonePosition(work, 24, &clothRootPosition);
-        GetMotionBonePosition(work, 29, &clothPairedBonePosition);
+        GetMotionBonePosition(work, MB_LeftShin, &clothRootPosition);
+        GetMotionBonePosition(work, MB_RightShin, &clothPairedBonePosition);
     } else if (firstKind == 4) {
-        GetMotionBonePosition(work, 0, &clothRootPosition);
+        GetMotionBonePosition(work, MB_Pelvis, &clothRootPosition);
         clothPairedBonePosition = {clothRootPosition.x, clothRootPosition.y - 2.0f, clothRootPosition.z};
         clothRootPosition.y = clothPairedBonePosition.y;
     } else {
-        GetMotionBonePosition(work, 26, &clothRootPosition);
-        GetMotionBonePosition(work, 31, &clothPairedBonePosition);
+        GetMotionBonePosition(work, MB_LeftAnkle, &clothRootPosition);
+        GetMotionBonePosition(work, MB_RightAnkle, &clothPairedBonePosition);
     }
     clothRootPosition.x += (clothPairedBonePosition.x - clothRootPosition.x) * 0.5f;
     clothRootPosition.y += (clothPairedBonePosition.y - clothRootPosition.y) * 0.5f;
     clothRootPosition.z += (clothPairedBonePosition.z - clothRootPosition.z) * 0.5f;
     Vector3 reference;
-    GetMotionBonePosition(work, referenceBone, &reference);
+    GetMotionBonePosition(work, static_cast<MotionBoneId>(referenceBone), &reference);
     const float firstLength = std::sqrt(clmdDistanceSquared(clothRootPosition, reference));
     Vector3 firstForce{};
     if (!(std::fabs(firstLength) < 0.00000011920929f)) {
@@ -708,19 +708,19 @@ void clmdUpdateDynamics(ClothObject &object) {
         Vector3 first, second;
         switch (secondKind) {
         case 1:
-            GetMotionBonePosition(work, 26, &first);
-            GetMotionBonePosition(work, 31, &second);
+            GetMotionBonePosition(work, MB_LeftAnkle, &first);
+            GetMotionBonePosition(work, MB_RightAnkle, &second);
             break;
         case 2:
-            GetMotionBonePosition(work, 23, &first);
-            GetMotionBonePosition(work, 28, &second);
+            GetMotionBonePosition(work, MB_LeftThigh, &first);
+            GetMotionBonePosition(work, MB_RightThigh, &second);
             break;
         case 3:
-            GetMotionBonePosition(work, 24, &first);
-            GetMotionBonePosition(work, 29, &second);
+            GetMotionBonePosition(work, MB_LeftShin, &first);
+            GetMotionBonePosition(work, MB_RightShin, &second);
             break;
         case 4:
-            GetMotionBonePosition(work, 0, &first);
+            GetMotionBonePosition(work, MB_Pelvis, &first);
             second = {first.x, first.y - 2.0f, first.z};
             first.y = second.y;
             break;

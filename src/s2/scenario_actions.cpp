@@ -284,7 +284,7 @@ void RetireScenarioTalkParticipants(shen_name character) {
             charaSetFlags(letter, 0);
             if (task)
                 HLib::SetupTimedTask(task, 0);
-            EV_SetCharDisplay(letter, 3, 0);
+            EV_SetCharDisplay(letter, CVM_DisplayEnabled, 0);
         }
         talk.letterVisible = 0;
     }
@@ -380,7 +380,7 @@ void scenProcessCharacterActionQueue() {
                 charaSetFlags(letter, 1);
                 if (task)
                     HLib::ResolveDeferredCallback(task);
-                EV_SetCharDisplay(letter, 3, 1);
+                EV_SetCharDisplay(letter, CVM_DisplayEnabled, 1);
                 talk.letterVisible = 1;
                 if (IsOfThisVisibilityType(letter, 3))
                     SetFixoDataForMotionWork(letter, ryo, 14, {0.17f, 0.050000001f, -0.029999999f}, {16384, 25486, 16384});
@@ -395,7 +395,7 @@ void scenProcessCharacterActionQueue() {
             charaSetFlags(letter, 0);
             if (task)
                 HLib::SetupTimedTask(task, 0);
-            EV_SetCharDisplay(letter, 3, 0);
+            EV_SetCharDisplay(letter, CVM_DisplayEnabled, 0);
             talk.letterVisible = 0;
         }
     }

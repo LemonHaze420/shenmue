@@ -335,7 +335,7 @@ void CharCollisionSort(Character *character, void *) {
 
 void GatherCharacterControl(Character *character, void *context) {
     CharacterControlGatherContext &gather = *static_cast<CharacterControlGatherContext *>(context);
-    if (gather.full || (character->flags & CharacterActive) == 0)
+    if (gather.full || (character->flags & CF_Active) == 0)
         return;
 
     CharacterControlModel *const control = FindCharacterControlModel(character);

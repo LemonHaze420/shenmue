@@ -175,6 +175,7 @@ void FinishBookSession() {
 }
 } // namespace
 void BookMainCallback(void *) {
+    using enum CameraState;
     ++bookEventPhase.frame;
     switch (bookEventState) {
     case 0:
@@ -250,7 +251,7 @@ void BookMainCallback(void *) {
             EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
             EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             ++bookEventPhase.phase;
             break;
         case 1:

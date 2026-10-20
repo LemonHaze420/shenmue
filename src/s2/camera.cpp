@@ -246,6 +246,7 @@ void AppendMotionCameraWaypoint(const Vector3 &point) {
         fightMotionCameraWaypoints[fightMotionCameraWaypointCount++] = point;
 }
 void BeginMotionInterpolationCamera(Character *target) {
+    using enum CameraState;
     fightMotionCameraTarget = target;
     if (target) {
         GetCharacterMotionWorldPosition(target, 5, &fightMotionCameraWaypoints[fightMotionCameraWaypointCount]);
@@ -255,7 +256,7 @@ void BeginMotionInterpolationCamera(Character *target) {
     camCtrlSetInterpModeTo(CameraMotionMode::MotionInterp);
     resetIntersectionAndTest();
     camCtrlSetFovTransitionTo(false);
-    camCtrlSetState(CameraState::ChaseGoal);
+    camCtrlSetState(ChaseGoal);
     fightMotionCameraSavedEye = fightCameraEye;
     fightMotionCameraSavedTarget = fightCameraTarget;
     fightMotionCameraState = 0;
@@ -265,6 +266,7 @@ void BeginMotionInterpolationCamera(Character *target) {
 
 // 526070: the real player MTWK receives F01B; no synthetic camera actor.
 bool BeginMotionUpdateCamera(Character *target) {
+    using enum CameraState;
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     auto *const motion = FindMotionWork(static_cast<Character *>(control->ryo));
     fightMotionCameraTarget = target;
@@ -272,7 +274,7 @@ bool BeginMotionUpdateCamera(Character *target) {
     camCtrlSetInterpModeTo(CameraMotionMode::MotionUpdate);
     resetIntersectionAndTest();
     camCtrlSetFovTransitionTo(false);
-    camCtrlSetState(CameraState::ChaseGoal);
+    camCtrlSetState(ChaseGoal);
     fightMotionCameraSavedEye = fightCameraEye;
     fightMotionCameraSavedTarget = fightCameraTarget;
     const bool result = mtwkRequestMotion(motion, 0xf01b, MotionRegion::LowerBody);
@@ -806,6 +808,7 @@ void UpdateQuadraticFightCamera(VFMA_t *game, VFActor *self, VFActor *other) {
 
 
 void UpdateMotionInterpolationFightCamera() {
+    using enum CameraState;
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     auto *const player = static_cast<Character *>(control->ryo);
     Vector3 playerBone{};
@@ -860,7 +863,7 @@ void UpdateMotionInterpolationFightCamera() {
         camCtrlSetPerspective(fightMotionCameraPreviousPerspective);
         camCtrlSetInterpModeTo(CameraMotionMode::Default);
         camCtrlSetFovTransitionTo(false);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         cpamSetFlag(player, 0);
     }
     const float distance = FightCameraLength({fightCameraEye.x - playerBone.x, fightCameraEye.y - playerBone.y, fightCameraEye.z - playerBone.z}) - 0.2f;
@@ -870,6 +873,7 @@ void UpdateMotionInterpolationFightCamera() {
 // 522470: player F01B/F01A camera transaction, bound to real input mediation,
 // help-icon masks, player MTWK and the saved field camera.
 void UpdateMotionFightCamera(VFActor *self, VFActor *other) {
+    using enum CameraState;
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     auto *const player = static_cast<Character *>(control->ryo);
     auto *const motion = FindMotionWork(player);
@@ -938,7 +942,7 @@ void UpdateMotionFightCamera(VFActor *self, VFActor *other) {
         if (GetMotionAnimationId(motion, MotionRegion::LowerBody) == 0xf01a && SetMotionRegionFlag(motion, 65, 1, MotionRegion::LowerBody)) {
             camCtrlSetInterpModeTo(CameraMotionMode::Default);
             camCtrlSetFovTransitionTo(false);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             cpamSetFlag(player, 0);
             SetPlayerControlEnabled(1);
             g_combatCameraFlags &= ~4U;
@@ -3140,13 +3144,14 @@ void UpdateConversationCamera(CameraRuntime &camera) {
 
 // @verified - p
 void TickConversationActivation(CameraRuntime &) {
+    using enum CameraState;
     ConversationCameraState &state = conversationCamera;
     if (state.activationFrames <= 0)
         return;
     state.flags |= 0x01000000U;
     if (--state.activationFrames == 0) {
         state.flags &= ~0x01000000U;
-        camCtrlSetState(CameraState::Conversation);
+        camCtrlSetState(Conversation);
         camCtrlGetNextCamPos(&state.previousEye);
         camCtrlGetTargetPosition(&state.previousTarget);
         state.previousFieldOfView = camCtrlGetPerspective();
@@ -3225,8 +3230,9 @@ void camCtrlInterpolateApplyCameraAngY(CameraRuntime &camera) {
 }
 
 void camCtrlUpdateFollowCamera(CameraRuntime &camera) {
+    using enum CameraState;
     if (camera.flags & CameraAutoFovActive) {
-        if (camera.previousState != CameraState::Conversation) {
+        if (camera.previousState != Conversation) {
             camera.flags &= ~CameraAutoFovActive;
         } else if (!camCtrlIsTransitionActive()) {
             camera.flags &= ~CameraAutoFovActive;
@@ -3235,7 +3241,7 @@ void camCtrlUpdateFollowCamera(CameraRuntime &camera) {
             camera.flags &= ~CameraAutoFovActive;
         }
     }
-    if (camera.previousState == CameraState::Conversation && camCtrlIsTransitionActive() && !plymIsLookAllowed(1))
+    if (camera.previousState == Conversation && camCtrlIsTransitionActive() && !plymIsLookAllowed(1))
         camCtrlSetInterpEaseFactor(-1.0f);
     camCtrlSetFloats(camera, 0.23f, 0.30000001f);
     camera.currentFovAngle = (camera.flags & CameraDisableFovInterpolation) ?
@@ -3294,10 +3300,11 @@ void camCtrlUpdateFollowCamera(CameraRuntime &camera) {
 }
 
 void camCtrlAutoCenterTargetInView(CameraRuntime &camera) {
+    using enum CameraState;
     if (!CameraRootCharacter())
         return;
     if (camera.flags & CameraAutoFovActive) {
-        if (camera.previousState != CameraState::Conversation) {
+        if (camera.previousState != Conversation) {
             camera.flags &= ~CameraAutoFovActive;
         } else if (!camCtrlIsTransitionActive()) {
             camera.flags &= ~CameraAutoFovActive;
@@ -3306,7 +3313,7 @@ void camCtrlAutoCenterTargetInView(CameraRuntime &camera) {
             camera.flags &= ~CameraAutoFovActive;
         }
     }
-    if (camera.previousState == CameraState::Conversation && camCtrlIsTransitionActive() && !plymIsLookAllowed(1))
+    if (camera.previousState == Conversation && camCtrlIsTransitionActive() && !plymIsLookAllowed(1))
         camCtrlSetInterpEaseFactor(-1.0f);
     if (Abs16(static_cast<std::int32_t>(plymGetAngY()) - camera.nextRotation.yaw) >= 16384U) {
         camera.collisionPhase = 2;
@@ -3419,6 +3426,7 @@ void camCtrlApplyJitterAdjustment(CameraRuntime &camera) {
 
 
 void camCtrlHandleLookAroundCam(CameraRuntime &camera) {
+    using enum CameraState;
     float zoomOrbit = 0.0f;
     bool transitionToTarget = false;
     if (!CameraRootCharacter())
@@ -3429,7 +3437,7 @@ void camCtrlHandleLookAroundCam(CameraRuntime &camera) {
         if (camera.collisionPhase != 2) {
             camera.lookPitchDelta = 0;
             camera.lookYawDelta = 0;
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             camCtrlResetTransition(CameraInterpolationMode::RestorePrevious);
             return;
         }
@@ -3443,7 +3451,7 @@ void camCtrlHandleLookAroundCam(CameraRuntime &camera) {
     if (inputState == -1) {
         camera.lookPitchDelta = 0;
         camera.lookYawDelta = 0;
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         return;
     }
     if (inputState <= 0) {
@@ -3459,7 +3467,7 @@ void camCtrlHandleLookAroundCam(CameraRuntime &camera) {
         if ((std::abs(pitchDelta) < 64 && std::abs(yawDelta) < 64) || !plymIsLookAllowed(1)) {
             camera.lookPitchDelta = 0;
             camera.lookYawDelta = 0;
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             transitionToTarget = true;
         }
     } else {
@@ -4084,7 +4092,8 @@ CameraSplineState *camCtrlInitSplines() noexcept {
 
 // @verified - p
 bool camCtrlCheckIsEventCam() noexcept {
-    return (g_currentCameraSplines->state & SplineRecompute) && camCtrlGetState() == CameraState::Scripted;
+    using enum CameraState;
+    return (g_currentCameraSplines->state & SplineRecompute) && camCtrlGetState() == Scripted;
 }
 
 // @verified - p
@@ -4157,6 +4166,7 @@ void camCtrlSetCamSnapAngY(CameraRuntime &camera) {
 }
 
 void camCtrlCallback(void *) {
+    using enum CameraState;
     CameraRuntime &camera = *g_cameraControl;
     camera.flags &= ~0x00000588U;
     camera.position = camera.nextPosition;
@@ -4178,39 +4188,39 @@ void camCtrlCallback(void *) {
     // camCtrlHandleStates leaves the film-bar publication
     // unchanged for unhandled states, including CS_LOCKED.
     switch (camera.state) {
-    case CameraState::SplineInterpolation:
-    case CameraState::InterpolationFollow:
+    case SplineInterpolation:
+    case InterpolationFollow:
         g_cameraFilmBarsEnabled = camera.showFilmBars != 0;
         break;
-    case CameraState::Conversation:
+    case Conversation:
         g_cameraFilmBarsEnabled = 0;
         break;
-    case CameraState::Init:
-    case CameraState::Scripted:
-    case CameraState::Event:
-    case CameraState::ChaseGoal:
-    case CameraState::Unknown15:
-    case CameraState::LookAround:
-    case CameraState::Unknown23:
-    case CameraState::LockedOn:
-    case CameraState::InterpolationFlagOnly:
-    case CameraState::Callback:
-    case CameraState::SnapYawTarget:
+    case Init:
+    case Scripted:
+    case Event:
+    case ChaseGoal:
+    case Unknown15:
+    case LookAround:
+    case Unknown23:
+    case LockedOn:
+    case InterpolationFlagOnly:
+    case Callback:
+    case SnapYawTarget:
         g_cameraFilmBarsEnabled = 0;
         break;
     default:
         break;
     }
-    if (camera.state == CameraState::Conversation) {
+    if (camera.state == Conversation) {
         UpdateConversationCamera(camera);
-    } else if (camera.state == CameraState::Init) {
+    } else if (camera.state == Init) {
         camCtrlSwitchColiPhase(camera);
-    } else if (camera.state == CameraState::Scripted) {
+    } else if (camera.state == Scripted) {
         if (rebuild)
             camCtrlBuildScriptCamSpline(static_cast<std::int32_t>(camera.cameraId.name), reinterpret_cast<void *>(camera.splineBoundary),
                 reinterpret_cast<void *>(camera.splineCoefficients));
         camCtrlHandleQueuedSpline();
-    } else if (camera.state == CameraState::SplineInterpolation) {
+    } else if (camera.state == SplineInterpolation) {
         if (rebuild) {
             std::uint32_t *record = nullptr;
             std::memcpy(&record, &camera.cameraId, sizeof(record));
@@ -4220,25 +4230,25 @@ void camCtrlCallback(void *) {
         }
         if ((camera.flags & CameraSkipInterpolationOnce) == 0)
             camCtrlHandleQueuedSpline();
-    } else if (camera.state == CameraState::InterpolationFollow) {
+    } else if (camera.state == InterpolationFollow) {
         camCtrlHandleQueuedSpline();
-    } else if (camera.state == CameraState::ChaseGoal) {
+    } else if (camera.state == ChaseGoal) {
         camera.flags |= CameraRaycastEnabled;
         if (rebuild)
             resetCharaPosYandIntersection();
         camCtrlEvaluateGoal();
-    } else if (camera.state == CameraState::LookAround) {
+    } else if (camera.state == LookAround) {
         camCtrlHandleLookAroundCam(camera);
-    } else if (camera.state == CameraState::Callback && camera.stateCallback) {
+    } else if (camera.state == Callback && camera.stateCallback) {
         camera.stateCallback(&camera);
-    } else if (camera.state == CameraState::LockedOn) {
+    } else if (camera.state == LockedOn) {
         UpdateLockedOnCamera(camera);
-    } else if (camera.state == CameraState::InterpolationFlagOnly) {
+    } else if (camera.state == InterpolationFlagOnly) {
         camera.flags |= CameraInterpolationSnap;
-    } else if (camera.state == CameraState::SnapYawTarget) {
+    } else if (camera.state == SnapYawTarget) {
         camCtrlSetCamSnapAngY(camera);
     }
-    if (camera.state == CameraState::SplineInterpolation && (camera.flags & 0x00400000U)) {
+    if (camera.state == SplineInterpolation && (camera.flags & 0x00400000U)) {
         Matrix4x4_Push(&camera.finalTransform);
         camera.previousPosition = TransformFieldDepthPoint(camera.previousPosition);
         camera.targetPosition = TransformFieldDepthPoint(camera.targetPosition);
@@ -4415,6 +4425,7 @@ void camCtrlToggleSplineRebuildFlag(std::int32_t count, const void *source) {
 
 // @verified - p
 std::uint64_t EVS_LoopCamera(std::int64_t cameraId, shen_name eye, shen_name target) {
+    using enum CameraState;
     struct CameraRequest {
         std::int64_t id;
         void *eyeNode;
@@ -4426,7 +4437,7 @@ std::uint64_t EVS_LoopCamera(std::int64_t cameraId, shen_name eye, shen_name tar
     if (target.name != 0)
         request.targetNode = FindCharacterByScenarioName(target);
     camCtrlToggleSplineRebuildFlag(3, &request);
-    return camCtrlSetState(CameraState::Scripted);
+    return camCtrlSetState(Scripted);
 }
 
 
@@ -4723,10 +4734,11 @@ void PauseConversationCameraClock(bool paused) noexcept {
 
 // @verified - p
 std::int64_t ActivateConversationCameraStream(const CameraDialogueRecord *stream) {
+    using enum CameraState;
     if (!stream || !g_cameraControl)
         return 0;
     const auto stateValue = static_cast<std::int32_t>(g_cameraControl->state);
-    const std::int32_t guard = stateValue - static_cast<std::int32_t>(CameraState::Scripted);
+    const std::int32_t guard = stateValue - static_cast<std::int32_t>(Scripted);
     if ((guard & static_cast<std::int32_t>(0xfffffffdU)) == 0)
         return guard;
 
@@ -4786,6 +4798,7 @@ std::int64_t ActivateConversationCameraStream(const CameraDialogueRecord *stream
 
 // @verified - p
 void RetireConversationCamera() {
+    using enum CameraState;
     ConversationCameraState &state = conversationCamera;
     state.flags &= ~0x82U;
     state.forcedCandidate = -1;
@@ -4798,7 +4811,7 @@ void RetireConversationCamera() {
             state.history[index].shotType = -1;
         }
     }
-    if (!g_cameraControl || g_cameraControl->state != CameraState::Conversation) {
+    if (!g_cameraControl || g_cameraControl->state != Conversation) {
         return;
     }
     const bool hasFollow = srchGetCurrentFollowCharacter().name != 0;
@@ -4806,7 +4819,7 @@ void RetireConversationCamera() {
         if (!(state.flags & 0x20U))
             return;
     } else {
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         if (!(state.flags & 0x20U)) {
             camCtrlResetTransition(CameraInterpolationMode::RestorePrevious);
             g_cameraControl->interpolationEaseFactor = 0.02f;
@@ -4817,7 +4830,8 @@ void RetireConversationCamera() {
 }
 
 void ResumeConversationCamera() {
-    if (g_cameraControl && g_cameraControl->state == CameraState::Conversation) {
+    using enum CameraState;
+    if (g_cameraControl && g_cameraControl->state == Conversation) {
         conversationCamera.flags |= 0x82U;
         if (conversationCamera.shotType)
             conversationCamera.flags |= 0x2000U;
@@ -4973,6 +4987,7 @@ std::uint64_t camCtrlHandleContextSwitch(std::uint8_t newContextMode) {
 }
 
 std::int32_t camCtrlSetContext(std::int32_t allowSwitch, std::int32_t firstPerson) {
+    using enum CameraState;
     CameraRuntime &camera = *g_cameraControl;
     camera.flags &= ~CameraAllowContextSwitch;
     const std::int32_t contextMode = camera.contextMode;
@@ -4993,7 +5008,7 @@ std::int32_t camCtrlSetContext(std::int32_t allowSwitch, std::int32_t firstPerso
         camera.targetHeightDistance = cameraContextSettings[5].distanceFromPlayer;
         camera.basePitchBias = cameraContextSettings[5].basePitchBias;
     }
-    if (camera.state == CameraState::Init) {
+    if (camera.state == Init) {
         camCtrlResetTransition(CameraInterpolationMode::PreviousToCurrent);
         camera.transitionStepCount = 30;
     }
@@ -5119,6 +5134,7 @@ void camCtrlSetNextPosition(const Vector3 &position) noexcept {
 
 // @verified - p
 std::uint64_t camCtrlSetState(CameraState state) {
+    using enum CameraState;
     CameraRuntime &camera = *g_cameraControl;
     camera.showFilmBars = 1;
     if (camera.state == state)
@@ -5126,12 +5142,12 @@ std::uint64_t camCtrlSetState(CameraState state) {
     camera.previousState = camera.state;
     camera.state = state;
     camera.flags = (camera.flags & ~0x00800000U) | CameraRebuildPositionSpline;
-    if (state == CameraState::Init) {
+    if (state == Init) {
         if (camera.collisionPhase == 1)
             camera.collisionPhase = 2;
-        if (camera.previousState == CameraState::Conversation)
+        if (camera.previousState == Conversation)
             camera.flags |= 0x00800000U;
-    } else if (state != CameraState::LookAround && state != CameraState::LockedOn) {
+    } else if (state != LookAround && state != LockedOn) {
         MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
         static_cast<Character *>(control->ryo)->alpha = 1.0f;
     }
@@ -5221,30 +5237,32 @@ std::uint32_t shenApplyLockonFlag(std::uint32_t flags) {
 }
 
 bool camCtrlSwitchToLockedOn(std::int32_t fovStyle) {
+    using enum CameraState;
     if (!g_cameraControl)
         return false;
     const CameraState previous = g_cameraControl->state;
-    if (previous != CameraState::LockedOn) {
+    if (previous != LockedOn) {
         searchCamera.zoomScale = -1.0f;
         searchCamera.pitch = searchCamera.yaw = 0;
         searchCamera.fov = 10922;
         searchCamera.zoomFov = 5461;
     }
-    camCtrlSetState(CameraState::LockedOn);
+    camCtrlSetState(LockedOn);
     searchCamera.phase = 1;
     searchCamera.fovStyle = fovStyle;
-    searchCamera.flags = previous == CameraState::Conversation && (g_cameraControl->flags & CameraDisableFovInterpolation) ? 2U : 0U;
+    searchCamera.flags = previous == Conversation && (g_cameraControl->flags & CameraDisableFovInterpolation) ? 2U : 0U;
     return true;
 }
 
 bool camCtrlSetLookAroundMode() {
+    using enum CameraState;
     searchCamera.zoomScale = -1.0f;
     searchCamera.pitch = searchCamera.yaw = 0;
     searchCamera.fov = 10922;
     searchCamera.zoomFov = 5461;
-    if (!g_cameraControl || g_cameraControl->state != CameraState::LockedOn)
+    if (!g_cameraControl || g_cameraControl->state != LockedOn)
         return false;
-    camCtrlSetState(CameraState::LookAround);
+    camCtrlSetState(LookAround);
     camCtrlResetTransition(CameraInterpolationMode::RestorePrevious);
     searchCamera.fovStyle = searchCamera.phase = 0;
     searchCamera.lookBase = {};
@@ -5775,12 +5793,13 @@ void camCtrlCreatePerspectiveMatrix(CameraRuntime &camera) {
 }
 
 void camCtrlInitialize(CameraRuntime &camera) {
+    using enum CameraState;
     std::memset(static_cast<void *>(&camera), 0, sizeof(camera));
 
 
     camera.orbitDistance = 3.0999999f;
-    camera.state = CameraState::Init;
-    camera.previousState = CameraState::Init;
+    camera.state = Init;
+    camera.previousState = Init;
     camera.stateField0e = -1;
     camera.stateField0f = -1;
     camera.targetFovAngle = 0x2aaa;
@@ -6150,6 +6169,7 @@ bool camCtrlAcquireSequenceLease(CameraSequenceLease &lease) {
 
 bool camCtrlSetSequenceView(CameraSequenceLease &lease, std::int32_t cameraId, shen_name eyeAttachment, shen_name targetAttachment, const Vector3 &eye,
     const Vector3 &target, std::int16_t roll, std::uint16_t fieldOfView, std::uint16_t transitionFrames, bool cut) {
+    using enum CameraState;
     if (!lease.active || !g_cameraControl)
         return false;
 
@@ -6165,7 +6185,7 @@ bool camCtrlSetSequenceView(CameraSequenceLease &lease, std::int32_t cameraId, s
     camera.transitionStepCount = static_cast<std::int16_t>(transitioning ? transitionFrames : 0);
 
     camera.previousState = camera.state;
-    camera.state = CameraState::Scripted;
+    camera.state = Scripted;
     camera.flags = (camera.flags & ~CameraAutomaticDistanceFov) | CameraRebuildPositionSpline | CameraRebuildRotationSpline;
     camera.cameraId.name = static_cast<std::uint32_t>(cameraId);
     camera.fieldC4 = 0;

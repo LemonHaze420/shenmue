@@ -53,6 +53,7 @@ void Cleanup(AreaAuthorTaskParameter *parent) {
 }
 // @verified - p
 void LoopCallback(void *data) {
+    using enum CameraState;
     auto *parent = *static_cast<AreaAuthorTaskParameter **>(data);
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         if (GetAuthorFlags())
@@ -77,7 +78,7 @@ void LoopCallback(void *data) {
             EV_EnableCharacterDisplay(SHEN_NAME(ttt1));
         }
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         HLib::DestroyCurrentTask();
     }
 }

@@ -157,7 +157,7 @@ void MBST_ResetActiveMotionRows(MBST_t *mbst) {
         if (!manager || (manager->flags & kMotionBudgetCandidate) == 0U || !manager->motion.activeNodes) {
             return;
         }
-        MOTI_TransferPrimaryRows(&manager->motion, nullptr);
+        MOTI_TransferPrimaryNodes(&manager->motion, nullptr);
         --mbst->state;
     });
 }
@@ -256,10 +256,10 @@ bool MBST_CommitMotionCandidates(MBST_t *mbst, const MBSTSelectionEntry *entries
             continue;
         if (!manager->motion.activeNodes) {
             if (reusableIndex < reusableCount) {
-                MOTI_TransferPrimaryRows(&reusable[reusableIndex]->motion, &manager->motion);
+                MOTI_TransferPrimaryNodes(&reusable[reusableIndex]->motion, &manager->motion);
                 ++reusableIndex;
             } else {
-                MOTI_TransferPrimaryRows(nullptr, &manager->motion);
+                MOTI_TransferPrimaryNodes(nullptr, &manager->motion);
                 ++mbst->state;
             }
         }
@@ -268,7 +268,7 @@ bool MBST_CommitMotionCandidates(MBST_t *mbst, const MBSTSelectionEntry *entries
 
     if (releaseUnselected) {
         for (std::int32_t index = reusableIndex; index < reusableCount; ++index) {
-            MOTI_TransferPrimaryRows(&reusable[index]->motion, nullptr);
+            MOTI_TransferPrimaryNodes(&reusable[index]->motion, nullptr);
             --mbst->state;
         }
     }

@@ -1640,6 +1640,7 @@ std::int32_t shenUpdateFlagEvaluation(std::int32_t mode) {
 }
 
 std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
+    using enum CameraState;
     std::uint32_t flags = shenPlayerData.flags;
     FlagRecord *record = shenPlayerData.record;
     if ((flags & ShenPlayerFlag_FadeHold) != 0)
@@ -2303,7 +2304,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
                     flagCameraFrame = 1;
                     Vector3 position{};
                     camCtrlGetNextCamPos(&position);
-                    camCtrlSetState(CameraState::Event);
+                    camCtrlSetState(Event);
                     camCtrlSetNextPosition(position);
                 }
             }
@@ -2352,6 +2353,7 @@ void Queue_FLAG_CheckTask() {
 }
 
 void FLAG_CheckTask_Callback(void *) {
+    using enum CameraState;
     flagCameraPosition = previousCameraPosition;
     previousCameraPosition = currentCameraPosition;
     camCtrlGetNextCamPos(&currentCameraPosition);
@@ -2361,7 +2363,7 @@ void FLAG_CheckTask_Callback(void *) {
             camCtrlSetContext(1, 0);
             Vector3 position{};
             camCtrlGetNextCamPos(&position);
-            camCtrlSetState(CameraState::Event);
+            camCtrlSetState(Event);
             camCtrlSetNextPosition(position);
         }
     } else if (flagCameraFrame != 0) {

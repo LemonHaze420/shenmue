@@ -215,6 +215,7 @@ void PlaceStreetProps() {
         CwonSetPositionAnglesDegrees(entry.character, entry.position, {0, entry.yaw, 0});
 }
 void InitializeBattle(CwonEventWork *work) {
+    using enum CameraState;
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("BATLPACK"));
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
@@ -251,7 +252,7 @@ void InitializeBattle(CwonEventWork *work) {
     }
     EVS_LoopCamera(0, shen_name{}, shen_name{});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_vfBattleUtil(FightBattleUtilOp::FightModeFlags, shen_name{2}, 1);
 }
 std::int32_t UpdateStreetWin(CwonEventWork *) {
@@ -383,6 +384,7 @@ void BattleAuthorMarket(void *data) {
     }
 }
 void BattleAuthorWarehouse(void *data) {
+    using enum CameraState;
     auto *work = static_cast<CwonEventWork *>(data);
     switch (work->authorState) {
     case 0:
@@ -417,7 +419,7 @@ void BattleAuthorWarehouse(void *data) {
             AT_SetLocalBaseChara(name, CWON_INVALID);
         for (int i = 0; i < 3; ++i)
             Place(fighters[i], CWON_INVALID, warehouseFightPositions[i]);
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
         camCtrlSetNextPosition({224.88999938964844f, 102.58000183105469f, 401.8599853515625f});
         camCtrlSetTargetPosition({220.44000244140625f, 100.2699966430664f, 401.2099914550781f});
         vfCopyPosFromEntity(0, nullptr, 220.2100067138672f, 398.6099853515625f, 6);

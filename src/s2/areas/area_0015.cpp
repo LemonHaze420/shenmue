@@ -129,6 +129,7 @@ void QueueLoop(AreaImmediateAuthorTaskParameter *parent) {
 }
 // @verified - p
 void Cleanup(AreaImmediateAuthorTaskParameter *parent) {
+    using enum CameraState;
     for (const shen_name *name = characters[parent->selection]; name->name != AREA_AUTHOR_INVALID.name; ++name)
         if (FindCharacterByScenarioName(*name)) {
             EV_npcLockUnlock(*name);
@@ -176,7 +177,7 @@ void Cleanup(AreaImmediateAuthorTaskParameter *parent) {
         SetRenderClockAndCompassTo(0);
     }
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     EV_spmBeginSampleExecute();
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

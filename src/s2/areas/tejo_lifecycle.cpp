@@ -23,6 +23,7 @@
 namespace shenmue::s2 {
 // @verified - p
 void PrepareTejoQteResources() {
+    using enum CameraState;
     SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
     tejoQteWork.lives = 4;
     tejoQteIndex = 0;
@@ -57,7 +58,7 @@ void PrepareTejoQteResources() {
     PushGlobalLightingProgram();
     EV_AT_SetPos(REN_QTE_DOOR, EventTransformFlags::World | EventTransformFlags::AllAxes, doorPosition);
     EV_AT_SetPos(REN_QTE_BROKEN_DOOR, EventTransformFlags::World | EventTransformFlags::AllAxes, doorPosition);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     EV_PlayDialogue(firstQte ? "0209B046" : "0209B047");
     Loop3DSoundEffect(0x8eb);
@@ -109,6 +110,7 @@ void HideTejoPursuers() {
 }
 // @verified - p
 void CleanupTejoQte() {
+    using enum CameraState;
     tejoQteWork.hidePursuers = (tejoQteWork.hidePursuers & 0xffffffff00000000ULL) | 1;
     tejoQteWork.state = REN_QTE_INIT;
     SetNaviDisplayOverride(false);
@@ -124,7 +126,7 @@ void CleanupTejoQte() {
     AT_SetLocalBaseChara(REN_QTE_REN, REN_QTE_INVALID);
     mtwkRequestMotion(scenFindMotionwork(REN_QTE_PLAYER), 0xf003, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(REN_QTE_REN), 0xf003, MotionRegion::LowerBody);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     if (DoesScenarioCharacterExist(REN_QTE_BASE))
         SetScenarioCharacterKillMode(REN_QTE_BASE, 1);
@@ -176,6 +178,7 @@ void PrepareTejoEvent() {
 }
 // @verified - p
 void CleanupTejoEvent() {
+    using enum CameraState;
     SelectPostFxBank(1, 0);
     SelectPostFxBank(3, 0);
     UploadBlurStrength(1);
@@ -188,7 +191,7 @@ void CleanupTejoEvent() {
         EV_npcFree(*character);
     }
     EV_SetRefBoardParamsFor(REN_QTE_PLAYER, 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     SetPlayerControlEnabled(1);
     EV_CleanupMapControlTask();

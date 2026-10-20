@@ -170,7 +170,7 @@ void AreaLoopLookAtCallback(void *parameter) {
         if (work->bone < 0)
             EV_GetCharaPosition(work->target, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         else
-            GetMotionBonePosition(scenFindMotionwork(work->target), work->bone, &position);
+            GetMotionBonePosition(scenFindMotionwork(work->target), static_cast<MotionBoneId>(work->bone), &position);
     } else
         position = work->position;
     UpdateMotionWorkWithPosition(scenFindMotionwork(work->character), &position, 3);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "s2/fight.hpp"
+#include "s2/fight_flags.hpp"
 #include <array>
 
 namespace shenmue::s2 {
@@ -168,6 +169,46 @@ static_assert(sizeof(VFReactionCounterOperands) == 0x310);
 static_assert(sizeof(VFReactionState) == 0x230 && offsetof(VFReactionState, contexts) == 0x20);
 static_assert(offsetof(VFReactionState, conditionFlags) == 0x220 && offsetof(VFReactionState, counters) == 0x229);
 
+#pragma pack(push, 4)
+struct VFActorContactState {
+    union {
+        struct {
+            std::uint32_t priorityMasks[2];
+            std::uint32_t excludedMask, pendingMask;
+        };
+        struct {
+            std::uint32_t priorityResetPrefix;
+            std::uint64_t priorityResetPair;
+            std::uint32_t priorityResetSuffix;
+        };
+    };
+    union {
+        std::uint16_t flags;
+        struct {
+            std::uint8_t processed, linked;
+        };
+    };
+    std::uint16_t reserved12;
+    Vector3 previousSamples[10];
+    union {
+        std::uint32_t shapeMasks[10];
+        std::uint64_t shapeMaskPairs[5];
+    };
+    std::uint32_t activeShapeMask, reservedB8;
+    float averageGround;
+    union {
+        float groundSamples[4];
+        std::uint64_t groundSamplePairs[2];
+    };
+};
+#pragma pack(pop)
+static_assert(sizeof(VFActorContactState) == 0xd0);
+static_assert(offsetof(VFActorContactState, priorityResetPair) == 4);
+static_assert(offsetof(VFActorContactState, previousSamples) == 0x14);
+static_assert(offsetof(VFActorContactState, shapeMasks) == 0x8c);
+static_assert(offsetof(VFActorContactState, activeShapeMask) == 0xb4);
+static_assert(offsetof(VFActorContactState, averageGround) == 0xbc);
+static_assert(offsetof(VFActorContactState, groundSamples) == 0xc0);
 struct VFActor {
     std::uint8_t groupIndex;
     std::int8_t actionIndex;
@@ -250,7 +291,14 @@ struct VFActor {
     std::uint64_t parameter370, parameter378;
     std::uint64_t action;
     std::uint64_t deferredReaction;
-    std::uint64_t queuedAction;
+    union {
+        std::uint64_t queuedAction;
+        struct {
+            std::uint16_t queuedActionId;
+            std::uint8_t queuedActionState;
+            std::byte queuedActionReserved[5];
+        };
+    };
     std::uint32_t hitStateFlags;
     std::uint32_t savedHitStateFlags, previousHitStateFlags, copiedHitStateFlags, activeMotionFlags;
     std::uint32_t savedMotionFlags, savedSecondaryMotionFlags, reserved3b4;
@@ -271,11 +319,13 @@ struct VFActor {
     union {
         std::uint32_t parameter40c;
         std::int16_t hitPhaseCounters[2];
+        std::uint16_t hitPhaseWords[2];
     };
     std::byte reserved410;
     std::int8_t guardLevel;
     std::uint16_t parameter412;
-    std::byte reserved414[4];
+    std::uint16_t pendingGuardDamage;
+    std::byte reserved416[2];
     float forwardIntersectionDistance, backwardIntersectionDistance;
     float leftIntersectionDistance, rightIntersectionDistance, hitFacingTimer;
     std::uint16_t predictedKnockbackFrames;
@@ -284,13 +334,20 @@ struct VFActor {
     float hitTimeout, tickFrameTime;
     std::uint16_t hitReaction, parameter43e;
     std::uint64_t parameter440;
-    std::uint16_t lastHitMove, activeContactCount, parameter44c, parameter44e, parameter450;
+    std::uint16_t lastHitMove, activeContactCount, parameter44c, parameter44e;
+    union {
+        std::uint16_t parameter450;
+        struct {
+            std::uint8_t contactState, repeatedHitCount;
+        };
+    };
     std::uint16_t footContactState, previousFootContactState;
     std::byte reserved456[4];
     std::uint16_t parameter45a;
-    std::byte reserved45c[4];
+    std::uint16_t groundSnapMask, groundOutsideMask;
     std::uint16_t groundFlags;
-    std::byte reserved462[0xe];
+    std::uint16_t groundContactMask, previousGroundContactMask;
+    std::byte reserved466[0xa];
     float minimumGroundY;
     std::uint32_t groundParameter;
     float groundY, targetGroundY;
@@ -332,28 +389,53 @@ struct VFActor {
         std::uint64_t pendingHitAction;
         const std::uint8_t *pendingReactionProgram;
     };
-    std::uint64_t currentHitAction, savedHitAction;
+    union {
+        std::uint64_t currentHitAction;
+        std::uint8_t currentHitActionBytes[8];
+    };
+    union {
+        std::uint64_t savedHitAction;
+        const std::uint8_t *savedHitReactionProgram;
+    };
     union {
         struct {
             VFReactionState reactions;
             std::uint8_t reactionRank;
             std::byte reserved8a1[3];
             VFReactionMask reactionOverrideFlags, reactionMaskA, reactionMaskB;
-            std::byte reserved8b0[0xd0];
+            VFActorContactState contact;
         };
         VFReactionCounterOperands counterOperands;
     };
-    float parameter980, reactionDepth, parameter988;
-    std::byte reserved98c[0x10];
+    float parameter980;
+    union {
+        float reactionDepth;
+        std::uint32_t reactionDepthBits;
+    };
+    union {
+        float parameter988;
+        std::uint32_t hitReactionSelection;
+    };
+    std::byte reservedImpulse[4];
+    float hitImpulseMultiplier, hitImpulseAngle, hitImpulseMagnitude;
     union {
         float reactionPower;
         std::uint8_t reactionVariantBytes[4];
+        std::uint16_t reactionVariantWords[2];
+        struct {
+            std::int16_t hitImpulsePitch;
+            std::uint8_t hitImpulseSuppressed;
+            std::int8_t hitImpulseMove;
+        };
     };
     union {
         std::uint32_t packedHitImpulse;
         std::uint8_t reactionImpulseBytes[4];
     };
-    std::int16_t knockbackAngle;
+    union {
+        std::int16_t knockbackAngle;
+        std::uint8_t knockbackAngleBytes[2];
+    };
     std::int8_t suppressKnockback;
     std::uint8_t fighterRank;
     float groundHeights[7];
@@ -368,7 +450,10 @@ struct VFActor {
     std::uint32_t formationRuntimeFlags;
     std::uint16_t formationEntry;
     std::int16_t formationHpFloor;
-    float formationCameraTimer;
+    union {
+        float formationCameraTimer;
+        std::int16_t formationCameraTimerWords[2];
+    };
     std::uint16_t spawnYaw[2], sfxPeriod, reservedA5e;
     union {
         float moveAngleTableIndex;
@@ -383,14 +468,23 @@ struct VFActor {
     };
     std::uint8_t followupState, forcedTurnState;
     std::uint8_t selectionPriority;
-    std::uint8_t nearestSpawnPoint, parameterA6c, parameterA6d;
+    std::uint8_t nearestSpawnPoint;
+    union {
+        struct {
+            std::uint8_t parameterA6c, parameterA6d;
+        };
+        std::int16_t reactionFacingAngleDelta;
+    };
     union {
         std::uint16_t previousCameraControlFlags;
         std::uint8_t relativeInputSectors[2];
     };
     std::uint8_t cameraMotionFlags;
-    std::byte reservedA71;
-    std::uint16_t previousReactionInput;
+    std::uint8_t previousCameraMotionFlags;
+    union {
+        std::uint16_t previousReactionInput;
+        std::uint8_t previousReactionInputBytes[2];
+    };
     union {
         float parameterA74;
         VFReactionMovement reactionMovement;
@@ -423,7 +517,10 @@ struct VFActor {
     std::byte pairedSlotReserved;
     Character *pairedCharacter;
     VFActor *pairedActor;
-    std::byte reservedB08[8];
+    union {
+        std::byte reservedB08[8];
+        VFActor *hitSourceActor;
+    };
     Character *reactionCharacter;
     VFGW_t *gauge;
     union {
@@ -471,6 +568,25 @@ static_assert(offsetof(VFActor, runningInputFrames) == 0xb20);
 static_assert(offsetof(VFActor, runningCooldownFrames) == 0xb24);
 static_assert(offsetof(VFActor, counterOperands) + offsetof(VFReactionCounterOperands, value) + VF_REACTION_COUNTER_BIAS == 0x899);
 static_assert(sizeof(VFActor) == 0xb48);
+static_assert(offsetof(VFActor, queuedActionState) == 0x392);
+static_assert(offsetof(VFActor, pendingGuardDamage) == 0x414);
+static_assert(offsetof(VFActor, repeatedHitCount) == 0x451);
+static_assert(offsetof(VFActor, groundSnapMask) == 0x45c);
+static_assert(offsetof(VFActor, groundOutsideMask) == 0x45e);
+static_assert(offsetof(VFActor, groundContactMask) == 0x462);
+static_assert(offsetof(VFActor, previousGroundContactMask) == 0x464);
+static_assert(offsetof(VFActor, contact) == 0x8b0);
+static_assert(offsetof(VFActor, reactionDepthBits) == 0x984);
+static_assert(offsetof(VFActor, hitReactionSelection) == 0x988);
+static_assert(offsetof(VFActor, hitImpulseMultiplier) == 0x990);
+static_assert(offsetof(VFActor, hitImpulseAngle) == 0x994);
+static_assert(offsetof(VFActor, hitImpulseMagnitude) == 0x998);
+static_assert(offsetof(VFActor, hitImpulsePitch) == 0x99c);
+static_assert(offsetof(VFActor, hitImpulseSuppressed) == 0x99e);
+static_assert(offsetof(VFActor, hitImpulseMove) == 0x99f);
+static_assert(offsetof(VFActor, reactionFacingAngleDelta) == 0xa6c);
+static_assert(offsetof(VFActor, previousCameraMotionFlags) == 0xa71);
+static_assert(offsetof(VFActor, hitSourceActor) == 0xb08);
 static_assert(offsetof(VFActor, actor) == 0x38);
 static_assert(offsetof(VFActor, animationScale) == 0x2a0);
 static_assert(offsetof(VFActor, previousAnimation) == 0x4a4);
@@ -654,8 +770,13 @@ struct VFCL_t {
     VFMA_t *game;
     VFActor *defender;
     VFActor *attacker;
-    std::uint8_t flags;
-    std::byte reserved21[3];
+    union {
+        std::uint32_t flagsWord;
+        struct {
+            std::uint8_t flags;
+            std::byte reserved21[3];
+        };
+    };
     std::uint32_t contactType, maskA, maskB;
     float slideScale, stickScale;
     std::uint32_t attackerMask, defenderMask;

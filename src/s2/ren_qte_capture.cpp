@@ -11,7 +11,8 @@
 namespace shenmue::s2 {
 // @verified - p
 void CaptureRenQtePursuers(RenQteWork *work) {
-    camCtrlSetState(CameraState::Init);
+    using enum CameraState;
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     EV_EnableCharacterDisplay(REN_QTE_KD7);
     EV_EnableCharacterDisplay(REN_QTE_KK1);

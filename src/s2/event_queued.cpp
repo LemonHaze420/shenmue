@@ -169,6 +169,7 @@ void EVT_AT_SetMot_Callback(void *data) {
     Complete(p.cleanup);
 }
 void EVT_AT_SetCam_Callback(void *data) {
+    using enum CameraState;
     auto &p = *static_cast<EventSetCamera *>(data);
     if (Waiting(p.delay))
         return;
@@ -181,7 +182,7 @@ void EVT_AT_SetCam_Callback(void *data) {
         if (p.camera == -2)
             camCtrlSetFovTransitionTo(true);
         camCtrlHandleContextSwitch(p.context);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
     }
     camCtrlDisableFilmBars();
     Complete(p.cleanup);

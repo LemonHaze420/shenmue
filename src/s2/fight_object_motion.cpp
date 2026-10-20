@@ -457,19 +457,20 @@ void vfProcessStageObjectHitOutcome(VOBJ_t *owner, VFActor *self, std::int8_t gu
 void vfclFilterObjectHit(VFActor *actor, VOBJ_t *owner) {
     if (g_vf_hit_object_handled & (std::uint32_t{1} << actor->groupIndex))
         return;
-    if ((actor->hitStateFlags & 0x10064000) || (actor->moveFlags & 0x40000))
+    if ((actor->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_Unknown20000 | VFHSF_MidAirRecovery | VFHSF_ForcedReaction)) ||
+        (actor->moveFlags & VFMF_NoContactPairing))
         return;
-    if ((actor->hitStateFlags & 0x80000) && (actor->secondActor->hitStateFlags & 0x40000))
+    if ((actor->hitStateFlags & VFHSF_AirborneOrDowned) && (actor->secondActor->hitStateFlags & 0x40000))
         return;
     FightStageObjectRuntime &object = owner->object;
     if (object.reactingCharacter == actor->character)
         return;
     const FightStageObjectDefinition *const definition = object.definition;
     if ((object.reactionFlags & 1) && (object.motionFlags & 0x4000)) {
-        if (!IsOfThisVisibilityType(object.model, 3) || (actor->activeMotionFlags & 0x2000000))
+        if (!IsOfThisVisibilityType(object.model, 3) || (actor->activeMotionFlags & VFSMF_Unknown2000000))
             return;
         VFActor *const source = ObjectActor(actor->game, object.reactingCharacter);
-        if (!source || (source->hitStateFlags & 0x102) != 0x100)
+        if (!source || (source->hitStateFlags & (VFHSF_HitTimeout | VFHSF_AttackActive)) != 0x100)
             return;
         const std::uint32_t mask = vfGetMoveCategoryMaskFor(source);
         if (definition->attachmentBone == 14) {
@@ -496,7 +497,7 @@ void vfclFilterObjectHit(VFActor *actor, VOBJ_t *owner) {
 void vfUpdateRotationAnglesFromStageObject(VOBJ_t *owner, VFMA_t *game) {
     FightStageObjectRuntime &object = owner->object;
     VFActor *const actor = ObjectActor(game, object.reactingCharacter);
-    if (actor && (((actor->hitStateFlags & 0x4000) && !(object.motionFlags & 0x400000)) || (actor->moveFlags & 0x20))) {
+    if (actor && (((actor->hitStateFlags & VFHSF_SpecialGuardOrParry) && !(object.motionFlags & 0x400000)) || (actor->moveFlags & VFMF_ForceDefeat))) {
         vfStageObjectReset(static_cast<std::uint8_t>(object.index), nullptr);
         return;
     }
@@ -730,8 +731,8 @@ void vfBreakStageObject(VOBJ_t *owner) {
     if (object.reactionFlags & 1)
         vfStageObjectReset(static_cast<std::uint8_t>(object.index), nullptr);
     Character *const broken = owner->object.brokenModel;
-    EV_SetCharDisplay(broken, 3, 1);
-    EV_SetCharDisplay(object.controlCharacter, 3, 0);
+    EV_SetCharDisplay(broken, CVM_DisplayEnabled, 1);
+    EV_SetCharDisplay(object.controlCharacter, CVM_DisplayEnabled, 0);
     object.model = broken;
     shenApplyTranslationToAll(GetCharacterNode(object.model), object.contactPosition);
     SetCharacterWorldRotation(object.model, object.rotation);
@@ -755,7 +756,9 @@ bool ObjectContactAdmitted(const FightStageObjectRuntime &object) {
 }
 bool ObjectActorCanBreak(const FightStageObjectRuntime &object, const VFActor &actor) {
     return (object.motionFlags & 0x20) || ((object.motionFlags & 0x10) && ObjectHasHitSpeed(object.velocity)) ||
-        ((object.motionFlags & 0x200) && ((actor.hitStateFlags & 0x80000) || (actor.activeMotionFlags & 0x2000) || (actor.hitStateFlags & 0x4010) == 0x4010));
+        ((object.motionFlags & 0x200) &&
+            ((actor.hitStateFlags & VFHSF_AirborneOrDowned) || (actor.activeMotionFlags & VFSMF_Unknown2000) ||
+                (actor.hitStateFlags & (VFHSF_FallLandingRequired | VFHSF_SpecialGuardOrParry)) == 0x4010));
 }
 void ClearObjectRotationImpulse(VOBJ_t *owner) {
     owner->object.reactionFlags &= 0xffffff9d;
@@ -899,7 +902,7 @@ void ResolveStageObjectCollisionResponse(VOBJ_t *owner, VFMA_t *game, StageObjec
         }
         if (ObjectContactAdmitted(object)) {
             object.contactSlotMask |= std::uint64_t{1} << actor->groupIndex;
-            actor->stateFlags |= 0x20;
+            actor->stateFlags |= VFSF_Unknown20;
         }
         ClearObjectRotationImpulse(owner);
         object.contactPosition.x = probe.previousPosition.x;
@@ -950,7 +953,9 @@ void vfclProcessCollisionAndSound(VFMA_t *game) {
             FightStageObjectRuntime &object = owner->object;
             if (!ObjectContactAdmitted(object))
                 continue;
-            if ((object.reactionFlags & 1) && (object.reactingCharacter == actor->character || (actor->hitStateFlags & 0xc4000)))
+            if ((object.reactionFlags & 1) &&
+                (object.reactingCharacter == actor->character ||
+                    (actor->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_MidAirRecovery | VFHSF_AirborneOrDowned))))
                 continue;
             if (!vfStageObjectOverlapsActor(owner, actor, 0))
                 continue;
@@ -960,7 +965,8 @@ void vfclProcessCollisionAndSound(VFMA_t *game) {
                     (actor->contactPosition.x - object.contactPosition.x) * object.velocity.x;
                 const bool breaks = (object.motionFlags & 0x20) || ((object.motionFlags & 0x10) && ObjectHasHitSpeed(object.velocity) && approach > 0) ||
                     ((object.motionFlags & 0x200) &&
-                        ((actor->hitStateFlags & 0x80000) || (actor->activeMotionFlags & 0x2000) || (actor->hitStateFlags & 0x4010) == 0x4010));
+                        ((actor->hitStateFlags & VFHSF_AirborneOrDowned) || (actor->activeMotionFlags & VFSMF_Unknown2000) ||
+                            (actor->hitStateFlags & (VFHSF_FallLandingRequired | VFHSF_SpecialGuardOrParry)) == 0x4010));
                 if (breaks) {
                     vfBreakStageObject(owner);
                     if (!(object.definition->flags & (object.state ? 0x4U : 0x2U)))
@@ -968,7 +974,7 @@ void vfclProcessCollisionAndSound(VFMA_t *game) {
                 }
             }
             object.contactSlotMask |= std::uint64_t{1} << actor->groupIndex;
-            actor->stateFlags |= 0x20;
+            actor->stateFlags |= VFSF_Unknown20;
             vfResolveActorStageObjectPenetration(actor, owner);
             float pushX, pushZ;
             if (!(object.motionFlags & 1) || (object.reactionFlags & 1)) {

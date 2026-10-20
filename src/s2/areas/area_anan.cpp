@@ -132,7 +132,7 @@ void AnanTrackRyo(void *data) {
     }
     Vector3 point;
     if (work->targets[0].name)
-        GetMotionBonePosition(scenFindMotionwork(work->targets[0]), 5, &point);
+        GetMotionBonePosition(scenFindMotionwork(work->targets[0]), MB_Head, &point);
     else
         point = work->positions[0];
     UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_RYO), &point, static_cast<std::uint16_t>(work->positionModes[0]));
@@ -164,7 +164,7 @@ void AnanTrackMan(void *data) {
     }
     Vector3 point;
     if (work->targets[1].name)
-        GetMotionBonePosition(scenFindMotionwork(work->targets[1]), 5, &point);
+        GetMotionBonePosition(scenFindMotionwork(work->targets[1]), MB_Head, &point);
     else
         point = work->positions[1];
     UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_MAN), &point, static_cast<std::uint16_t>(work->positionModes[1]));

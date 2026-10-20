@@ -12,6 +12,7 @@
 #include "s2/math.hpp"
 #include "s2/camera.hpp"
 
+#include <bit>
 #include <cstring>
 #include <cmath>
 #include <algorithm>
@@ -23,14 +24,12 @@
 namespace shenmue::s2 {
 std::int32_t g_vfSelectedReactionAnimation{};
 namespace {
-template <class T> T Value(const void *owner, std::size_t offset) {
+template <class T> T ReadFightData(const void *owner, std::size_t offset) {
     T result;
     std::memcpy(&result, static_cast<const std::byte *>(owner) + offset, sizeof(result));
     return result;
 }
-template <class T> void Store(void *owner, std::size_t offset, T value) {
-    std::memcpy(static_cast<std::byte *>(owner) + offset, &value, sizeof(value));
-}
+
 constexpr VFCollisionShape bodyShapes[10]{
     {{-.055f,.015f,.005f},.295f,3,0,2}, {{.025f,0,.05f},.156f,5,0,4},
     {{.135f,.02f,-.01f},.18f,9,0,8}, {{.23f,-.005f,-.04f},.173f,12,0,16},
@@ -91,21 +90,21 @@ std::int32_t StyleAnimation(const VFActor &actor, std::size_t offset) {
 
 // Matching FBMOTTBL records retain their borrowed seven-word layout.
 void vfSetupHitReactionAnim(VFActor *self, VFActor *other, std::uint16_t animation) {
-    if (!animation || !(self->stateFlags & 0xc))
+    if (!animation || !(self->stateFlags & (VFSF_Unknown4 | VFSF_Unknown8)))
         return;
     const auto category = vfSelectHitReactionSequence(self);
     const auto *record = reinterpret_cast<const std::byte *>(g_fallbackMotionSections[3]);
     for (;;) {
-        const auto first = Value<std::uint16_t>(record, 0);
+        const auto first = ReadFightData<std::uint16_t>(record, 0);
         if (!first)
             return;
-        if (animation == first || animation == Value<std::uint16_t>(record, 2))
+        if (animation == first || animation == ReadFightData<std::uint16_t>(record, 2))
             break;
         record += 14;
     }
-    std::size_t selection = ((self->secondaryMotionFlags & 0x4000008) || (category & 0x33)) ? 10 : 8;
+    std::size_t selection = ((self->secondaryMotionFlags & (VFSMF_Unknown8 | VFSMF_Unknown4000000)) || (category & 0x33)) ? 10 : 8;
     if (float(static_cast<std::uint16_t>(other->parameter2d0)) >= other->animationTime) {
-        other->stateFlags |= 0x800;
+        other->stateFlags |= VFSF_Unknown800;
         selection += 2;
         const auto guard = static_cast<std::uint8_t>(self->guardState);
         const bool specialGuard = guard == 2 || std::uint32_t(guard - 5) <= 1;
@@ -133,24 +132,24 @@ void vfSetupHitReactionAnim(VFActor *self, VFActor *other, std::uint16_t animati
             EmitFightSmoke(particle, other);
         }
     }
-    auto response = Value<std::uint16_t>(record, selection);
+    auto response = ReadFightData<std::uint16_t>(record, selection);
     if (!response)
-        response = Value<std::uint16_t>(record, 10);
+        response = ReadFightData<std::uint16_t>(record, 10);
     if (self->parameter412)
         response = self->parameter412;
-    if (self->stateFlags & 8)
-        animation = Value<std::uint16_t>(record, 4);
-    else if ((self->stateFlags & 4) && !(self->secondaryMotionFlags & 0x4000008) && (category & 0xc))
-        animation = Value<std::uint16_t>(record, 2);
+    if (self->stateFlags & VFSF_Unknown8)
+        animation = ReadFightData<std::uint16_t>(record, 4);
+    else if ((self->stateFlags & VFSF_Unknown4) && !(self->secondaryMotionFlags & (VFSMF_Unknown8 | VFSMF_Unknown4000000)) && (category & 0xc))
+        animation = ReadFightData<std::uint16_t>(record, 2);
     g_vfSelectedReactionAnimation = animation;
     if (int(static_cast<std::uint8_t>(other->guardLevel)) - int(static_cast<std::uint8_t>(self->guardLevel)) < 50 || !(category & 0xc) ||
-        (self->secondaryMotionFlags & 0x4000008) || (other->stateFlags & 0x800) || self->parameter34d == 3) {
-        self->moveFlags &= 0xfffffbbf;
-        self->hitStateFlags &= ~0x200000u;
+        (self->secondaryMotionFlags & (VFSMF_Unknown8 | VFSMF_Unknown4000000)) || (other->stateFlags & VFSF_Unknown800) || self->parameter34d == 3) {
+        self->moveFlags &= ~(VFMF_MirrorReactionAngle | VFMF_MirroredStance);
+        self->hitStateFlags &= ~VFHSF_MirroredReactionAngle;
         self->queuedReactionEvent = 30;
         self->parameter43e = response;
-        self->moveFlags |= other->moveFlags & 0x440;
-        self->hitStateFlags |= other->hitStateFlags & 0x200000;
+        self->moveFlags |= other->moveFlags & (VFMF_MirrorReactionAngle | VFMF_MirroredStance);
+        self->hitStateFlags |= other->hitStateFlags & VFHSF_MirroredReactionAngle;
     }
 }
 
@@ -164,7 +163,7 @@ void vfclChooseReactionAnim(VFActor *source, VFActor *destination) {
         parameter = 0;
         g_vfSelectedReactionAnimation = 7;
     }
-    const auto offset = Value<std::uint32_t>(g_fallbackMotionSections[0], 4 * static_cast<std::uint8_t>(parameter));
+    const auto offset = ReadFightData<std::uint32_t>(g_fallbackMotionSections[0], 4 * static_cast<std::uint8_t>(parameter));
     const auto *table = g_fallbackMotionTable + offset;
     const auto reactionClass = g_vfSelectedReactionAnimation;
     if (reactionClass == 9) {
@@ -182,13 +181,13 @@ void vfclChooseReactionAnim(VFActor *source, VFActor *destination) {
     if ((hit & 0x1010) == 0x1010)
         table = reinterpret_cast<const std::byte *>(g_fallbackMotionSections[2]);
     auto side = parameter >> 15;
-    if (source->moveFlags & 0x40)
+    if (source->moveFlags & VFMF_MirrorReactionAngle)
         side ^= 1;
     if (destination->moveFlags & 0x400)
         side ^= 1;
     auto angle = static_cast<std::int16_t>(source->hitDirection + source->facingAngle - destination->temporaryFacingAngle + 0x4000);
     if (destination->activeMotionFlags & 0x1000000)
-        angle = static_cast<std::int16_t>(angle + Value<std::uint16_t>(source, 0xa6c));
+        angle = static_cast<std::int16_t>(angle + std::bit_cast<std::uint16_t>(source->reactionFacingAngleDelta));
     if ((hit & 0x4800) == 0x4800)
         angle = static_cast<std::int16_t>(static_cast<std::uint16_t>(angle) ^ 0x8000);
     const auto facingSide = angle < 0 ? side : side + 2;
@@ -205,10 +204,10 @@ void vfclChooseReactionAnim(VFActor *source, VFActor *destination) {
 
         constexpr std::uint16_t alternatives[18]{565, 0, 566, 0, 566, 0, 565, 0, 309, 0, 33077, 0, 0, 0, 968, 0, 29, 0};
         animation = source->parameter34d ? alternatives[4 * source->parameter34d - 4 + ((source->groundContactFlags >> 2) & 4) / 2] :
-                                           Value<std::uint16_t>(g_fallbackMotionTable + offset, 2 * index);
+                                           ReadFightData<std::uint16_t>(g_fallbackMotionTable + offset, 2 * index);
         g_vfSelectedReactionAnimation = animation;
     } else {
-        animation = Value<std::uint16_t>(table, 2 * index);
+        animation = ReadFightData<std::uint16_t>(table, 2 * index);
         g_vfSelectedReactionAnimation = animation;
         if (source->someAnimation[1] && (index & 7) < 2) {
             animation = source->someAnimation[1];
@@ -256,11 +255,13 @@ void vfInitializeActorCollision(VFMA_t *game, std::uint8_t index) {
     Matrix4x4_Push();
     vfclTransformContactShapes(self);
     Matrix4x4::Pop(1);
-    constexpr std::size_t qwords[]{0x93c, 0x944, 0x94c, 0x954, 0x95c, 0x970, 0x978, 0x8b4};
-    for (const auto offset : qwords)
-        Store(self, offset, std::uint64_t{0});
-    Store(self, 0x8c0, std::uint16_t{0});
-    Store(self, 0x964, std::uint32_t{0});
+    for (std::uint64_t &pair : self->contact.shapeMaskPairs)
+        pair = 0;
+    self->contact.groundSamplePairs[0] = 0;
+    self->contact.groundSamplePairs[1] = 0;
+    self->contact.priorityResetPair = 0;
+    self->contact.flags = std::uint16_t{0};
+    self->contact.activeShapeMask = std::uint32_t{0};
     game->collision->ringMasks[index] = 0;
     game->collision->runtimeFlags = 0;
 }
@@ -305,9 +306,9 @@ void vfclAdjustToGroundOrSlope(VFCL_t *collision) {
         if (!game->characters[i])
             continue;
         VFActor *const self = game->actors[i];
-        if (!self || self->fightStyle == 1 || game->type == 8 || !(self->stateFlags & 0x40))
+        if (!self || self->fightStyle == 1 || game->type == 8 || !(self->stateFlags & VFSF_Unknown40))
             continue;
-        self->stateFlags &= ~0x40u;
+        self->stateFlags &= ~VFSF_Unknown40;
         const auto *const shapes = PushShapes(self);
         float best = 0, x = 0, z = 0;
         bool collided = false;
@@ -329,11 +330,11 @@ void vfclAdjustToGroundOrSlope(VFCL_t *collision) {
                 x = dx;
                 z = dz;
                 collided = true;
-                Store(self, 0x964, Value<std::uint32_t>(self, 0x964) | shapes[j].tag);
+                self->contact.activeShapeMask = self->contact.activeShapeMask | shapes[j].tag;
             }
         }
         if (collided) {
-            self->moveFlags |= 0x8000;
+            self->moveFlags |= VFMF_AirborneOrFalling;
             vfclMoveEntityWithContactHistory(self, x, z);
         }
     }
@@ -374,14 +375,14 @@ void vfclUpdateHeightFlagsForGrid(VFActor *self) {
             inside |= tag;
         }
     }
-    const auto previous = Value<std::uint16_t>(self, 0x462);
-    Store(self, 0x45e, outside);
-    Store(self, 0x45c, static_cast<std::uint16_t>(snap & outside));
-    Store(self, 0x462, static_cast<std::uint16_t>((floor & inside) | (snap & outside)));
+    const auto previous = self->groundContactMask;
+    self->groundOutsideMask = outside;
+    self->groundSnapMask = static_cast<std::uint16_t>(snap & outside);
+    self->groundContactMask = static_cast<std::uint16_t>((floor & inside) | (snap & outside));
     self->footContactState = floor & inside;
     self->groundFlags = inside;
     self->parameter45a = local;
-    Store(self, 0x464, previous);
+    self->previousGroundContactMask = previous;
 }
 
 // Publish accumulated collision displacement into the solved MTWK rig.
@@ -406,11 +407,11 @@ void vfclEnforceRingBoundary(VFCL_t *collision) {
         if (!game->characters[i])
             continue;
         VFActor *const self = game->actors[i];
-        self->stateFlags &= ~1u;
+        self->stateFlags &= ~VFSF_Unknown1;
         const auto offset = std::size_t(self->nearestSpawnPoint) * 12;
-        const float centreX = Value<float>(game, 0x2f4 + offset);
-        const float centreZ = Value<float>(game, 0x2f8 + offset);
-        const float radius = Value<float>(game, 0x2f0 + offset);
+        const float centreX = ReadFightData<float>(game, 0x2f4 + offset);
+        const float centreZ = ReadFightData<float>(game, 0x2f8 + offset);
+        const float radius = ReadFightData<float>(game, 0x2f0 + offset);
         const auto *const shapes = PushShapes(self);
         auto &mask = collision->ringMasks[i];
         mask = 0;
@@ -431,7 +432,7 @@ void vfclEnforceRingBoundary(VFCL_t *collision) {
             }
         }
         if (largest < 0.00000011920929f) {
-            self->stateFlags &= ~0x400u;
+            self->stateFlags &= ~VFSF_Unknown400;
             continue;
         }
         if (game->type == 8 && !(g_pFightStage->battleFlags & 0x402)) {
@@ -441,10 +442,11 @@ void vfclEnforceRingBoundary(VFCL_t *collision) {
                     break;
                 }
             const std::uint32_t timeout = g_currentMap == AREA_QSFD ? 450 : 900;
-            if ((self->stateFlags & 0x4000) || (self->savedMarkerMask & 1) || otherEscaping ||
+            if ((self->stateFlags & VFSF_Unknown4000) || (self->savedMarkerMask & 1) || otherEscaping ||
                 (static_cast<std::uint32_t>(int(game->frame)) > timeout &&
-                    (((self->hitStateFlags & 0x24000) && (self->hitStateFlags & 0x10)) || (self->activeMotionFlags & 0x80) || (self->stateFlags & 0x200)))) {
-                self->stateFlags |= 0x400;
+                    (((self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_Unknown20000)) && (self->hitStateFlags & VFHSF_FallLandingRequired)) ||
+                        (self->activeMotionFlags & VFSMF_Unknown80) || (self->stateFlags & VFSF_Unknown200)))) {
+                self->stateFlags |= VFSF_Unknown400;
                 continue;
             }
         }
@@ -454,7 +456,7 @@ void vfclEnforceRingBoundary(VFCL_t *collision) {
         const auto &point = collision->samples[i].points[selected];
         const auto delta = ScaleToMagnitude({centreX - point.x, 0, centreZ - point.z}, penetration);
         vfclMoveEntityWithContactHistory(self, delta.x, delta.z);
-        self->stateFlags |= 1;
+        self->stateFlags |= VFSF_Unknown1;
     }
 }
 
@@ -466,25 +468,26 @@ void vfclResolvePairedContactDrift(VFMA_t *game) {
         if (!game->characters[i])
             continue;
         VFActor *const self = game->actors[i];
-        if (!(self->hitStateFlags & 0x80000) || (self->activeMotionFlags & 0x80))
+        if (!(self->hitStateFlags & VFHSF_AirborneOrDowned) || (self->activeMotionFlags & VFSMF_Unknown80))
             continue;
         VFActor *const other = self->secondActor;
-        if (!other || !(other->hitStateFlags & 0x40000))
+        if (!other || !(other->hitStateFlags & VFHSF_MidAirRecovery))
             continue;
         const auto index = static_cast<std::int8_t>(other->groupIndex);
         const auto &a = collision.contactDeltas[i];
         const auto &b = collision.contactDeltas[index];
-        const auto selfHit = Value<std::uint32_t>(self, 0x964);
-        const auto otherHit = Value<std::uint32_t>(other, 0x964);
+        const auto selfHit = self->contact.activeShapeMask;
+        const auto otherHit = other->contact.activeShapeMask;
         const auto moveSelf = [&] {
             vfclMoveEntityWithContactHistory(self, b.x - a.x, b.y - a.y);
-            self->stateFlags |= 0x40;
+            self->stateFlags |= VFSF_Unknown40;
         };
         const auto moveOther = [&] {
             vfclMoveEntityWithContactHistory(other, a.x - b.x, a.y - b.y);
-            other->stateFlags |= 0x40;
+            other->stateFlags |= VFSF_Unknown40;
         };
-        if (collision.ringMasks[i] && collision.ringMasks[index] && !selfHit && !(self->stateFlags & 0x20) && !otherHit && !(other->stateFlags & 0x20)) {
+        if (collision.ringMasks[i] && collision.ringMasks[index] && !selfHit && !(self->stateFlags & VFSF_Unknown20) && !otherHit &&
+            !(other->stateFlags & VFSF_Unknown20)) {
             if (std::fabs(a.x) < 0.00000011920929f && std::fabs(a.y) < 0.00000011920929f && std::fabs(b.x) < 0.00000011920929f &&
                 std::fabs(b.y) < 0.00000011920929f)
                 continue;
@@ -492,9 +495,9 @@ void vfclResolvePairedContactDrift(VFMA_t *game) {
                 moveSelf();
             else
                 moveOther();
-        } else if (!selfHit && !collision.ringMasks[i] && !(self->stateFlags & 0x20))
+        } else if (!selfHit && !collision.ringMasks[i] && !(self->stateFlags & VFSF_Unknown20))
             moveSelf();
-        else if (!otherHit && !collision.ringMasks[index] && !(other->stateFlags & 0x20))
+        else if (!otherHit && !collision.ringMasks[index] && !(other->stateFlags & VFSF_Unknown20))
             moveOther();
     }
 }
@@ -514,7 +517,7 @@ void vfClRaycastInWorldGrid() {
                 group.offsetZ = point.z;
                 group.setPosition = 1;
             }
-        } else if (group.state == 1 && (!group.group || Value<std::uint8_t>(group.group, 0x50) != 3)) {
+        } else if (group.state == 1 && (!group.group || static_cast<std::uint8_t>(group.group->activationState) != 3)) {
             const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
             const bool togyu = scenGetCharaName(control->scenarioTask, group.character).name == SHEN_NAME(TGY_);
             const auto &shape = togyu ? togyuPushShapes[0] : pushShapes[0];
@@ -565,8 +568,8 @@ void vfclComputePenetrationAndOverlap(VFCL_t *collision, VFActor *defender, VFAc
             float fraction = 0;
             bool swept = false;
             if (!special) {
-                const auto previousA = Value<Vector3>(defender, 0x8c4 + 12 * i);
-                const auto previousB = Value<Vector3>(attacker, 0x8c4 + 12 * j);
+                const auto previousA = defender->contact.previousSamples[i];
+                const auto previousB = attacker->contact.previousSamples[j];
                 const Vector3 previous{previousB.x - previousA.x, previousB.y - previousA.y, previousB.z - previousA.z};
                 const Vector3 movement{current.x - previous.x, current.y - previous.y, current.z - previous.z};
                 const float dot = (movement.y * previous.y + movement.x * previous.x) + movement.z * previous.z;
@@ -584,8 +587,8 @@ void vfclComputePenetrationAndOverlap(VFCL_t *collision, VFActor *defender, VFAc
             const bool overlaps = special ? (distance = std::sqrt(distanceSquared), !(distance >= radius)) : !(distanceSquared >= radius * radius);
             if (!overlaps)
                 continue;
-            Store(defender, 0x93c + 4 * i, Value<std::uint32_t>(defender, 0x93c + 4 * i) | b[j].tag);
-            Store(attacker, 0x93c + 4 * j, Value<std::uint32_t>(attacker, 0x93c + 4 * j) | a[i].tag);
+            defender->contact.shapeMasks[i] = defender->contact.shapeMasks[i] | b[j].tag;
+            attacker->contact.shapeMasks[j] = attacker->contact.shapeMasks[j] | a[i].tag;
             if (special) {
                 penetration = std::fmax(radius - distance, penetration);
             } else if (!excluded && (collision->attackerMask == collision->maskA || (!(a[i].tag & collision->attackerMask) && (a[i].tag & collision->maskA)))) {
@@ -611,8 +614,8 @@ void vfclAdjustForSlideAndStick(VFCL_t *collision) {
     auto *const defender = collision->defender;
     auto *const attacker = collision->attacker;
     if (std::uint32_t(collision->contactType - 5) <= 1) {
-        const float ground = defender->targetGroundY + 0.2f, adjusted = Value<float>(defender, 0x96c) + collision->penetrationSpecial;
-        Store(defender, 0x970, ground > adjusted ? ground : adjusted);
+        const float ground = defender->targetGroundY + 0.2f, adjusted = defender->contact.averageGround + collision->penetrationSpecial;
+        defender->contact.groundSamples[0] = ground > adjusted ? ground : adjusted;
     } else {
         const auto &a = collision->samples[defender->groupIndex].points[0];
         const auto &b = collision->samples[attacker->groupIndex].points[0];
@@ -635,7 +638,7 @@ void vfclAdjustForSlideAndStick(VFCL_t *collision) {
         vfclMoveEntityWithContactHistory(attacker, bx, bz);
     }
     if (double(collision->penetrationSpecial) < 0.05)
-        Store(defender, 0x970, 0u);
+        defender->contact.groundSamples[0] = 0.0f;
 }
 
 
@@ -669,12 +672,12 @@ void vfclSetContactCategory(VFActor *a, VFActor *b, VFCL_t *collision) {
         if (!(flags & 5)) {
             if (either & 0x10000) {
                 if (!(first & 0x10000))
-                    type = !(second & 0x8000) && (first & 0x400000) && (a->motionFlags & 0x1010) ? 6 : 2;
+                    type = !(second & 0x8000) && (first & 0x400000) && (a->motionFlags & (VFMOF_Unknown10 | VFMOF_Unknown1000)) ? 6 : 2;
                 else
-                    type = !(first & 0x8000) && (second & 0x400000) && (b->motionFlags & 0x1010) ? 5 : 1;
-            } else if (Value<std::uint8_t>(a, 0x8c1) || Value<std::uint8_t>(b, 0x8c1) || Value<std::uint32_t>(a, 0x964))
+                    type = !(first & 0x8000) && (second & 0x400000) && (b->motionFlags & (VFMOF_Unknown10 | VFMOF_Unknown1000)) ? 5 : 1;
+            } else if (a->contact.linked || b->contact.linked || a->contact.activeShapeMask)
                 type = 1;
-            else if (Value<std::uint32_t>(b, 0x964))
+            else if (b->contact.activeShapeMask)
                 type = 2;
             else if (first & 0xc0000)
                 type = 1;
@@ -682,12 +685,12 @@ void vfclSetContactCategory(VFActor *a, VFActor *b, VFCL_t *collision) {
                 type = 2;
             else if (flags & 2) {
                 type = 3;
-                if ((first & 0x100) && ((second & 0x10002000) == 0x10002000 || (b->activeMotionFlags & 0x200000)))
+                if ((first & 0x100) && ((second & 0x10002000) == 0x10002000 || (b->activeMotionFlags & VFSMF_Unknown200000)))
                     type = 2;
             }
         }
     }
-    Store(collision, 0x20, flags);
+    collision->flagsWord = flags;
     collision->contactType = type;
     collision->maskA = entries[type].first;
     collision->maskB = entries[type].second;
@@ -709,17 +712,17 @@ void vfclPrepareContact(VFCL_t *collision, std::uint8_t first, std::uint8_t seco
     vfclSetContactCategory(a, b, collision);
     if (collision->flags & 1)
         return;
-    collision->attackerMask = (a->hitStateFlags & 0x102) == 0x102 && a->moveId != 41 ? vfGetMoveCategoryMaskFor(a) : 0;
-    collision->defenderMask = (b->hitStateFlags & 0x102) == 0x102 && b->moveId != 41 ? vfGetMoveCategoryMaskFor(b) : 0;
+    collision->attackerMask = (a->hitStateFlags & (VFHSF_HitTimeout | VFHSF_AttackActive)) == 0x102 && a->moveId != 41 ? vfGetMoveCategoryMaskFor(a) : 0;
+    collision->defenderMask = (b->hitStateFlags & (VFHSF_HitTimeout | VFHSF_AttackActive)) == 0x102 && b->moveId != 41 ? vfGetMoveCategoryMaskFor(b) : 0;
     vfclComputePenetrationAndOverlap(collision, a, b);
-    const float oldest = Value<float>(a, 0x97c);
-    const float previous = Value<float>(a, 0x978);
-    const float recent = Value<float>(a, 0x974);
-    const float current = Value<float>(a, 0x970);
-    Store(a, 0x97c, previous);
-    Store(a, 0x978, recent);
-    Store(a, 0x974, current);
-    Store(a, 0x96c, ((current + recent) + previous + oldest) * 0.25f);
+    const float oldest = a->contact.groundSamples[3];
+    const float previous = a->contact.groundSamples[2];
+    const float recent = a->contact.groundSamples[1];
+    const float current = a->contact.groundSamples[0];
+    a->contact.groundSamples[3] = previous;
+    a->contact.groundSamples[2] = recent;
+    a->contact.groundSamples[1] = current;
+    a->contact.averageGround = ((current + recent) + previous + oldest) * 0.25f;
     if (collision->penetrationSpecial + collision->penetrationCharacter + oldest != 0)
         vfclAdjustForSlideAndStick(collision);
 }
@@ -729,23 +732,25 @@ void vfclPrepareContact(VFCL_t *collision, std::uint8_t first, std::uint8_t seco
 void vfClGetBonePos(std::uint8_t index, VFActor *first, VFActor *second) {
     VFActor *const self = index ? first : second;
     VFActor *const source = index ? second : first;
-    Store(self, 0x8b8, 0u);
-    if ((source->hitStateFlags & 0x102) != 0x100)
+    self->contact.excludedMask = 0u;
+    if ((source->hitStateFlags & (VFHSF_HitTimeout | VFHSF_AttackActive)) != 0x100)
         return;
     const auto guard = static_cast<std::uint8_t>(source->guardState);
-    if ((self->hitStateFlags & 0x4000) && guard != 4) {
+    if ((self->hitStateFlags & VFHSF_SpecialGuardOrParry) && guard != 4) {
         const float height = 0.4f + self->targetGroundY;
         const auto *const shapes = reinterpret_cast<const VFCollisionShape *>(self->parameterAd8);
         std::uint32_t mask = 0;
         Vector3 position;
         for (std::size_t i = 0; i != 10; ++i) {
-            (void)GetMotionBonePosition(self->motion, shapes[i].bone, &position);
+            (void)GetMotionBonePosition(self->motion, static_cast<MotionBoneId>(shapes[i].bone), &position);
             if (height > position.y)
                 mask |= shapes[i].tag;
         }
-        Store(self, 0x8b8, mask);
-    } else if (self->footContactState && (((self->hitStateFlags & 0x1c000) && guard != 4) || (!(self->hitStateFlags & 0x1c000) && guard == 4))) {
-        Store(self, 0x8b8, 0xffffffffu);
+        self->contact.excludedMask = mask;
+    } else if (self->footContactState &&
+        (((self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) && guard != 4) ||
+            (!(self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) && guard == 4))) {
+        self->contact.excludedMask = 0xffffffffu;
     }
 }
 
@@ -755,17 +760,19 @@ bool vfClGetBoneStates(std::uint8_t first, std::uint8_t second, VFCL_t *collisio
     auto *const a = collision->game->actors[first];
     auto *const b = collision->game->actors[second];
     const auto bit = static_cast<std::uint8_t>(1u << second);
-    auto latch = Value<std::uint8_t>(a, 0x8c0);
-    if ((!(b->activeMotionFlags & 0x204000) && ((b->activeMotionFlags & 0x200) || (b->moveFlags & 0x40000))) || !(a->hitStateFlags & 0x100) ||
-        (b->hitStateFlags & 0x840000) || ((b->hitStateFlags & 0x80000) && (!b->secondActor || (b->secondActor->hitStateFlags & 0x40000)))) {
-        Store(a, 0x8c0, static_cast<std::uint8_t>(latch & ~bit));
+    auto latch = a->contact.processed;
+    if ((!(b->activeMotionFlags & (VFSMF_Unknown4000 | VFSMF_Unknown200000)) &&
+            ((b->activeMotionFlags & VFSMF_Unknown200) || (b->moveFlags & VFMF_NoContactPairing))) ||
+        !(a->hitStateFlags & VFHSF_AttackActive) || (b->hitStateFlags & (VFHSF_MidAirRecovery | VFHSF_AlignedToGround)) ||
+        ((b->hitStateFlags & VFHSF_AirborneOrDowned) && (!b->secondActor || (b->secondActor->hitStateFlags & 0x40000)))) {
+        a->contact.processed = static_cast<std::uint8_t>(latch & ~bit);
         return false;
     }
     if (a->currentAnimation != a->previousAnimation) {
         latch &= ~bit;
-        Store(a, 0x8c0, latch);
+        a->contact.processed = latch;
     }
-    if ((latch & bit) || (a->hitStateFlags & 2))
+    if ((latch & bit) || (a->hitStateFlags & VFHSF_HitTimeout))
         return false;
     const auto *const shapesA = reinterpret_cast<const VFCollisionShape *>(a->parameterAd8);
     const auto *const shapesB = reinterpret_cast<const VFCollisionShape *>(b->parameterAd8);
@@ -775,52 +782,52 @@ bool vfClGetBoneStates(std::uint8_t first, std::uint8_t second, VFCL_t *collisio
         if (!(shapesA[i].tag & categories))
             continue;
         for (std::size_t j = 0; j != 10; ++j)
-            if (shapesA[i].tag & Value<std::uint32_t>(b, 0x93c + 4 * j))
+            if (shapesA[i].tag & b->contact.shapeMasks[j])
                 mask |= shapesB[j].tag;
     }
-    mask &= ~Value<std::uint32_t>(b, 0x8b8);
-    Store(b, 0x8bc, mask);
+    mask &= ~b->contact.excludedMask;
+    b->contact.pendingMask = mask;
     if (!mask)
         return false;
-    Store(a, 0x8c0, static_cast<std::uint8_t>(latch | bit));
-    const auto move = Value<std::int8_t>(a, 0x99f);
-    if ((a->formationFlags & 2) && move == Value<std::int16_t>(a, 0xa54))
+    a->contact.processed = static_cast<std::uint8_t>(latch | bit);
+    const auto move = a->hitImpulseMove;
+    if ((a->formationFlags & 2) && move == a->formationCameraTimerWords[0])
         a->formationRuntimeFlags |= 2;
-    Store(b, 0x9a2, static_cast<std::uint8_t>(move));
+    b->reactionImpulseBytes[2] = static_cast<std::uint8_t>(move);
     return true;
 }
 
 
 float vfResolveHitOutcomeAndImpulse(VFActor *self, VFActor *other, float impact) {
     const auto hit = other->hitStateFlags;
-    if (other->moveFlags & 0x20000000) {
+    if (other->moveFlags & VFMF_Unknown20000000) {
         if (!(hit & 0x14000))
-            other->moveFlags &= ~0x20000000u;
+            other->moveFlags &= ~VFMF_Unknown20000000;
         return impact * 1.2f;
     }
     if (hit & 0x100) {
-        Store(self, 0x988, 6u);
+        self->hitReactionSelection = 6u;
         self->action = 0x0c000004;
         return impact * 1.05f;
     }
     if ((hit & 0x4010) == 0x10)
         return impact * 1.1f;
-    if ((other->motionFlags & 0x100) && (hit & 1)) {
-        Store(self, 0x988, 37u);
+    if ((other->motionFlags & VFMOF_Unknown100) && (hit & 1)) {
+        self->hitReactionSelection = 37u;
         return impact * 1.03f + 2;
     }
-    if (other->activeMotionFlags & 4) {
+    if (other->activeMotionFlags & VFSMF_Unknown4) {
         if (other->slot->parameter1a5 != 1)
             return impact * 1.3f;
         other->parameterB2c = 25;
         return impact;
     }
-    if ((self->motionFlags & 0x100000) && (other->motionFlags & 0x80000)) {
+    if ((self->motionFlags & VFMOF_ReverseFacingOnHit) && (other->motionFlags & VFMOF_Unknown80000)) {
         if (other->slot->parameter1a5 == 2)
             other->parameterB2c = 20;
         return impact;
     }
-    if (other->secondaryMotionFlags & 0x10) {
+    if (other->secondaryMotionFlags & VFSMF_Unknown10) {
         if (other->slot->parameter1a5 == 3) {
             constexpr float values[]{6, 6.4f, 6.8f, 7.2f, 7.6f, 8, 8.4f, 8.8f, 9.2f, 9.6f, 10, 10.4f, 10.8f, 11.2f, 11.6f, 12};
             other->parameterB2c = values[vfMotnNibbleGet(67)];
@@ -831,13 +838,13 @@ float vfResolveHitOutcomeAndImpulse(VFActor *self, VFActor *other, float impact)
         return float(double(impact) * 1.25);
     if ((hit & 0x14000) || static_cast<std::int16_t>(self->facingAngle + self->hitDirection - other->temporaryFacingAngle + 0x4000) < 0)
         return impact;
-    Store(self, 0x988, 37u);
+    self->hitReactionSelection = 37u;
     return impact * 1.1f;
 }
 
 
 void vfApplyEnvAudio(float impact, VFActor *self) {
-    if (impact == 0 || (self->hitStateFlags & 0x40100) == 0x40000)
+    if (impact == 0 || (self->hitStateFlags & (VFHSF_AttackActive | VFHSF_MidAirRecovery)) == 0x40000)
         return;
     const auto parameter = self->parameter2eb;
     std::uint32_t sound;
@@ -854,21 +861,21 @@ void vfApplyEnvAudio(float impact, VFActor *self) {
 void vfSetReactionKnockbackFromProfile(VFActor *self, VFActor *other, float impulse) {
     const auto entry = FindLoadedMotionSecondaryEntry(std::uint32_t(g_vfSelectedReactionAnimation) & 0xfff, 17);
     if (!entry.empty()) {
-        Store(self, 0x99c, Value<std::uint16_t>(entry.data(), 2));
+        self->reactionVariantWords[0] = ReadFightData<std::uint16_t>(entry.data(), 2);
         const auto low = (std::uint32_t(std::to_integer<std::uint8_t>(entry[6])) << 8) | std::to_integer<std::uint8_t>(entry[7]);
         const auto high = (std::uint32_t(std::to_integer<std::uint8_t>(entry[4])) << 8) | std::to_integer<std::uint8_t>(entry[5]);
         const auto fixed = static_cast<std::int32_t>((high << 16) | low);
-        Store(self, 0x998, (float(fixed) * 0.000015258789f) * impulse);
+        self->hitImpulseMagnitude = (float(fixed) * 0.000015258789f) * impulse;
         return;
     }
     const auto &profile = hitProfiles[self->parameter30e];
-    const auto index = ((other->hitStateFlags & 0x4000) ? 2u : 0u) + (Value<std::uint32_t>(self, 0x988) == 6 ? 1u : 0u);
+    const auto index = ((other->hitStateFlags & VFHSF_SpecialGuardOrParry) ? 2u : 0u) + (self->hitReactionSelection == 6 ? 1u : 0u);
     std::int16_t angle = profile.angles[index];
-    Store(self, 0x994, float(angle));
-    Store(self, 0x990, profile.impulseScale[index]);
-    Store(self, 0x99c, angle);
-    Store(self, 0x998, impulse * profile.impulseScale[index]);
-    const auto repetitions = Value<std::uint8_t>(other, 0x451);
+    self->hitImpulseAngle = float(angle);
+    self->hitImpulseMultiplier = profile.impulseScale[index];
+    self->reactionVariantWords[0] = angle;
+    self->hitImpulseMagnitude = impulse * profile.impulseScale[index];
+    const auto repetitions = other->repeatedHitCount;
     if (repetitions > 1) {
         const std::int16_t minimum = std::uint32_t(std::int32_t(angle)) > 0x1000 ? 4096 : 0;
         angle = static_cast<std::int16_t>(angle - 1408 * repetitions + 1408);
@@ -876,7 +883,7 @@ void vfSetReactionKnockbackFromProfile(VFActor *self, VFActor *other, float impu
             angle = minimum;
         if (angle > 13824)
             angle = 13824;
-        Store(self, 0x99c, angle);
+        self->reactionVariantWords[0] = angle;
     }
 }
 
@@ -898,16 +905,16 @@ void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFAct
     if (self->someAnimation[0]) {
         const auto metadata = FindLoadedMotionMetadata(self->someAnimation[0]);
         if (!metadata.empty())
-            authoredFlags = Value<std::uint32_t>(metadata.data(), 0);
+            authoredFlags = ReadFightData<std::uint32_t>(metadata.data(), 0);
     }
     std::uint32_t type;
-    if ((received & 0x18000) && !(other->moveFlags & 0x20000000))
+    if ((received & 0x18000) && !(other->moveFlags & VFMF_Unknown20000000))
         type = 0;
     else if ((received & 0x4010) == 0x4000 && (hit & 0x400000))
         type = 0;
     else if (authoredFlags & 0x4000)
         type = 2;
-    else if (other->motionFlags & 0x4000)
+    else if (other->motionFlags & VFMOF_Unknown4000)
         type = 2 - ((hit & 0x400000) != 0);
     else if (parameter & 0x4000)
         type = 2;
@@ -923,8 +930,8 @@ void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFAct
     if (active & 0x1000000)
         type = 2;
     if (type == 2) {
-        if (!(other->motionFlags & 0x4000) && (other->stateFlags & 2) && !(other->moveFlags & 0x20000000) && !(other->hitStateFlags & 0x1c000) &&
-            !(parameter & 0x200))
+        if (!(other->motionFlags & VFMOF_Unknown4000) && (other->stateFlags & VFSF_Unknown2) && !(other->moveFlags & VFMF_Unknown20000000) &&
+            !(other->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) && !(parameter & 0x200))
             type = 3;
         else if (other->knockbackBaseParameter > 150)
             type = 3;
@@ -940,18 +947,19 @@ void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFAct
 #endif
         }
         damage *= other->parameterB2c;
-        const auto flags = Value<std::uint32_t>(game.groups[other->groupIndex], 0x24);
-        if ((((flags & 0x80) && (self->secondaryMotionFlags & 0x4000008)) || ((flags & 0x20) && (self->secondaryMotionFlags & 0x4000000))) &&
+        const auto flags = game.groups[other->groupIndex]->selectFlags;
+        if ((((flags & 0x80) && (self->secondaryMotionFlags & (VFSMF_Unknown8 | VFSMF_Unknown4000000))) ||
+                ((flags & 0x20) && (self->secondaryMotionFlags & VFSMF_Unknown4000000))) &&
             !(g_pFightStage->battleFlags & 0x20))
             damage = other->hp;
-        if (damage >= other->hp && (self->secondaryMotionFlags & 0x40000))
+        if (damage >= other->hp && (self->secondaryMotionFlags & VFSMF_Unknown40000))
             damage = other->hp - 1;
         if (damage >= other->hp) {
-            other->stateFlags |= 0x40000;
+            other->stateFlags |= VFSF_Unknown40000;
             type = 4;
         }
         if (damage >= other->hp || !((type - 2) & 0xfffffffdu) || damage >= 40)
-            other->stateFlags |= 0x200;
+            other->stateFlags |= VFSF_Unknown200;
     }
     if (active & 0x800000) {
         if (type == 3) {
@@ -967,17 +975,17 @@ void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFAct
         vfclChooseReactionAnim(self, other);
         other->parameter370 = std::uint32_t(g_vfSelectedReactionAnimation) + 0x05000000;
         vfSetReactionKnockbackFromProfile(self, other, impulse);
-        if (other->activeMotionFlags & 0x800)
+        if (other->activeMotionFlags & VFSMF_Unknown800)
             other->secondActor->parameter370 = 0x01000000;
         return;
     }
     if (type == 3) {
-        g_vfSelectedReactionAnimation = Value<std::uint32_t>(self, 0x988) & 0x1f;
+        g_vfSelectedReactionAnimation = self->hitReactionSelection & 0x1f;
         if (static_cast<std::int8_t>(other->guardLevel - self->guardLevel) > 10)
             g_vfSelectedReactionAnimation = 4;
         vfclChooseReactionAnim(self, other);
         other->parameter370 = std::uint32_t(g_vfSelectedReactionAnimation) + 0x07000000;
-        std::uint32_t frames = Value<std::uint32_t>(self, 0x988) == 6 ? self->parameter32e : self->parameter32d;
+        std::uint32_t frames = self->hitReactionSelection == 6 ? self->parameter32e : self->parameter32d;
         const float duration = frames ? float(frames) : .4f * impact + 3;
 #if SHENMUE_IS_PC
         frames = static_cast<std::uint32_t>(_mm_cvttsd_si64(_mm_set_sd(double(duration * other->inverseScale) + .5)));
@@ -986,24 +994,24 @@ void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFAct
 #endif
         if (frames > 15)
             frames = 15;
-        Store(other, 0x40c, static_cast<std::uint16_t>(frames));
-        const auto kind = Value<std::uint32_t>(self, 0x988);
+        other->hitPhaseWords[0] = static_cast<std::uint16_t>(frames);
+        const auto kind = self->hitReactionSelection;
         const std::uint32_t stop = frames + (kind == 37 || kind == 6 ? 2 : 4);
         game.hitStopFrames = static_cast<std::uint8_t>(static_cast<std::int32_t>(float(stop) * self->inverseScale) + 1);
-        Store(self, 0x99c, std::uint16_t{0});
-        Store(self, 0x998, impulse);
+        self->reactionVariantWords[0] = std::uint16_t{0};
+        self->hitImpulseMagnitude = impulse;
         return;
     }
     if (type == 1)
-        Store(other, 0x451, std::uint8_t{1});
+        other->repeatedHitCount = std::uint8_t{1};
     if (type == 0 || ((hit & 0x400000) && (received & 0x810) == 0x800)) {
         g_vfSelectedReactionAnimation = 9;
         vfclChooseReactionAnim(self, other);
-        Store(other, 0xb08, self);
+        other->hitSourceActor = self;
         other->parameter370 = std::uint32_t(g_vfSelectedReactionAnimation) + 0x05010000;
-        Store(other, 0x40c, std::uint16_t{0});
+        other->hitPhaseWords[0] = std::uint16_t{0};
         vfHandleImpactSfxAndDefeat(other, static_cast<std::int16_t>(static_cast<std::int32_t>(double(impact) + .5)), 1);
-        Store(self, 0x99e, std::uint8_t{1});
+        self->hitImpulseSuppressed = std::uint8_t{1};
         return;
     }
     g_vfSelectedReactionAnimation = 7;
@@ -1018,8 +1026,8 @@ void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFAct
         if (frames > 30)
             frames = 30;
     }
-    Store(other, 0x8b0, Value<std::uint32_t>(other, 0x8b0) | 2u);
-    Store(other, 0x40c, static_cast<std::uint16_t>(static_cast<std::int32_t>(float(frames) * other->inverseScale)));
+    other->contact.priorityMasks[0] = other->contact.priorityMasks[0] | 2u;
+    other->hitPhaseWords[0] = static_cast<std::uint16_t>(static_cast<std::int32_t>(float(frames) * other->inverseScale));
     vfSetReactionKnockbackFromProfile(self, other, impulse);
 }
 
@@ -1039,7 +1047,7 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
         return;
     }
     if (guard <= 1 &&
-        (((other->moveFlags & 4) && double(other->targetGroundY) + .5 > double(other->position.y)) ||
+        (((other->moveFlags & VFMF_Airborne) && double(other->targetGroundY) + .5 > double(other->position.y)) ||
             ((active & 1) && other->animationTime > float(static_cast<std::uint16_t>(other->reactionMiddleFrame)))))
         return;
     const std::uint16_t direction = self->facingAngle + self->hitDirection;
@@ -1047,7 +1055,7 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
     const float acceleration = std::sqrt(impact * .033333335f);
     const auto &profile = hitProfiles[self->parameter30e];
     const float multiplier = profile.attackScale[(hit & 0x100) != 0];
-    Store(self, 0x990, multiplier);
+    self->hitImpulseMultiplier = multiplier;
     float impulse = ((acceleration * 30) * .0098000001f) * multiplier;
     if ((selfHit & 0x1010) == 0x1010 && static_cast<std::int16_t>(self->parameter1b4 - direction + 0x4000) >= 0) {
         self->knockbackVelocity.x *= .5f;
@@ -1075,7 +1083,7 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
                 type = 0;
         }
     }
-    if (self->activeMotionFlags & 0x20000)
+    if (self->activeMotionFlags & VFSMF_Unknown20000)
         type = 1;
     bool guarded = false;
     switch (type) {
@@ -1088,10 +1096,10 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
     case 1:
         if (self->formationFlags & 8)
             self->formationRuntimeFlags |= 8;
-        Store(self, 0x988, 5u);
+        self->hitReactionSelection = 5u;
         break;
     case 2:
-        Store(self, 0x988, 5u);
+        self->hitReactionSelection = 5u;
         impact = float(double(impact) * .75);
         impulse = float(double(impulse) * .75);
         break;
@@ -1103,32 +1111,33 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
         const auto action = self->reactionEntryMask;
         other->parameter370 = action;
         const auto entry = FindLoadedMotionSecondaryEntry(action & 0xfff, 5);
-        self->parameter370 = std::uint32_t(std::int32_t(Value<std::int16_t>(entry.data(), 2)) + 0x09000000);
+        self->parameter370 = std::uint32_t(std::int32_t(ReadFightData<std::int16_t>(entry.data(), 2)) + 0x09000000);
         self->guardStrength = std::to_integer<std::int8_t>(entry[1]);
         return;
     }
     default:
         break;
     }
-    Store(self, 0x998, impulse);
-    Store(self, 0x99e, std::uint8_t{0});
-    Store(other, 0xb08, self);
+    self->hitImpulseMagnitude = impulse;
+    self->hitImpulseSuppressed = std::uint8_t{0};
+    other->hitSourceActor = self;
     const auto restoreProgram = [self](std::uint8_t flag) {
-        if (!(Value<std::uint8_t>(self, 0x660) & flag))
+        if (!(self->currentHitActionBytes[0] & flag))
             return;
-        Store(self, 0x648, Value<const std::byte *>(self, 0x668));
-        Store(self, 0x650, Value<std::uint16_t>(self, 0x654));
+        self->savedRootReaction.program = reinterpret_cast<const std::uint8_t *>(self->savedHitReactionProgram);
+        self->savedRootReaction.words[0] = self->pendingReactionTicks;
     };
     if (!guarded) {
-        if (self->motionFlags & 0x80000)
-            other->activeMotionFlags |= 0x1000000;
+        if (self->motionFlags & VFMOF_Unknown80000)
+            other->activeMotionFlags |= VFSMF_Unknown1000000;
         self->action = 0x0c000001;
         restoreProgram(1);
         if (self->fightStyle == 0) {
-            auto move = Value<std::int8_t>(self, 0x99f);
-            const std::uint16_t encoded = move == 103 ? static_cast<std::int16_t>(Value<std::int8_t>(self, 0x9a0)) : static_cast<std::int16_t>(move);
+            auto move = self->hitImpulseMove;
+            const std::uint16_t encoded =
+                move == 103 ? static_cast<std::int16_t>(std::bit_cast<std::int8_t>(self->reactionImpulseBytes[0])) : static_cast<std::int16_t>(move);
             vfmaUpdateCollisionCounter(&game, VFCollisionCounterEvent::HitConfirmed, encoded);
-            Store(self, 0x99f, std::uint8_t{96});
+            self->hitImpulseMove = std::uint8_t{96};
         }
         impact *= vfclCalculateGuardKnockbackFactor(self);
         impact = vfResolveHitOutcomeAndImpulse(self, other, impact);
@@ -1138,9 +1147,9 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
                 impact = 0;
             else {
                 --game.strikesLeft;
-                const auto selected = Value<std::uint8_t>(self, 0x61d);
-                Store(self, 0x61a, selected);
-                Store(self, 0x61b, selected);
+                const auto selected = self->reactionCursors.deferred[0];
+                self->reactionCursors.tracked[0] = selected;
+                self->reactionCursors.tracked[1] = selected;
                 vfResetReactionProgram(self);
                 if (!game.strikesLeft) {
                     game.guardTimer = 30;
@@ -1158,23 +1167,24 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
         bool resetSlots = false;
         const auto firstLevel = static_cast<std::uint8_t>(self->guardLevel);
         const auto secondLevel = static_cast<std::uint8_t>(other->guardLevel);
-        if ((other->stateFlags & 0xc) || (firstLevel <= secondLevel && (firstLevel != secondLevel || (self->secondaryMotionFlags & 0x4000008)))) {
-            Store(self, 0x988, 2u);
+        if ((other->stateFlags & (VFSF_Unknown4 | VFSF_Unknown8)) ||
+            (firstLevel <= secondLevel && (firstLevel != secondLevel || (self->secondaryMotionFlags & (VFSMF_Unknown8 | VFSMF_Unknown4000000))))) {
+            self->hitReactionSelection = 2u;
             g_vfSelectedReactionAnimation = 2;
             vfclChooseReactionAnim(self, other);
             other->parameter370 = std::uint32_t(g_vfSelectedReactionAnimation) + 0x21000000;
             resetSlots = (vfSelectHitReactionSequence(self) & 0x33) || self->parameter34d == 3;
         } else {
-            Store(self, 0x988, 0u);
+            self->hitReactionSelection = 0u;
             self->action = 0x0c000002;
             vfclChooseReactionAnim(self, other);
             other->parameter370 = std::uint32_t(g_vfSelectedReactionAnimation) + 0x04000000;
-            resetSlots = (self->activeMotionFlags & 0x10000000) != 0;
+            resetSlots = (self->activeMotionFlags & VFSMF_Unknown10000000) != 0;
         }
         if (resetSlots) {
-            const auto selected = Value<std::uint8_t>(self, 0x61d);
-            Store(self, 0x61a, selected);
-            Store(self, 0x61b, selected);
+            const auto selected = self->reactionCursors.deferred[0];
+            self->reactionCursors.tracked[0] = selected;
+            self->reactionCursors.tracked[1] = selected;
             vfResetReactionProgram(self);
         }
         other->parameter44e = self->lastHitMove;
@@ -1189,16 +1199,16 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
                 frames = static_cast<std::uint8_t>(vfScaleFrameCount(self->inverseScale, 10));
         }
         impact = 0;
-        Store(other, 0x40c, std::uint16_t{frames});
+        other->hitPhaseWords[0] = std::uint16_t{frames};
         game.hitStopFrames = static_cast<std::uint8_t>(static_cast<std::int32_t>(float(static_cast<std::uint8_t>(frames + 4)) * other->inverseScale));
-        Store(self, 0x99c, std::uint16_t{0});
+        self->reactionVariantWords[0] = std::uint16_t{0};
         other->hitResolutionFlags |= 1u;
     }
     other->pendingKnockback = {};
-    if (Value<std::uint8_t>(self, 0x99e))
+    if (self->hitImpulseSuppressed)
         return;
-    const float magnitude = std::sqrt(Value<float>(self, 0x998) / ((other->knockbackBaseParameter - 60) * .5f + 60));
-    const auto pitch = Value<std::int16_t>(self, 0x99c);
+    const float magnitude = std::sqrt(self->hitImpulseMagnitude / ((other->knockbackBaseParameter - 60) * .5f + 60));
+    const auto pitch = std::bit_cast<std::int16_t>(self->reactionVariantWords[0]);
     const float vertical = sin_fixed16(pitch) * magnitude, horizontal = cos_fixed16(pitch) * magnitude;
     if (self->game->type != 9 && other->fightStyle != 32) {
         const auto scale = other->game->knockbackAmount;
@@ -1206,8 +1216,10 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
         other->pendingKnockback.x = (scale * scale) * (sin_fixed16(static_cast<std::int16_t>(-direction)) * horizontal);
         other->pendingKnockback.z = (scale * scale) * -(cos_fixed16(static_cast<std::uint16_t>(-direction)) * horizontal);
     }
-    const auto flags = Value<std::uint32_t>(game.groups[other->groupIndex], 0x24);
-    if (!guarded && (((flags & 0x80) && (self->secondaryMotionFlags & 0x4000008)) || ((flags & 0x20) && (self->secondaryMotionFlags & 0x4000000))) &&
+    const auto flags = game.groups[other->groupIndex]->selectFlags;
+    if (!guarded &&
+        (((flags & 0x80) && (self->secondaryMotionFlags & (VFSMF_Unknown8 | VFSMF_Unknown4000000))) ||
+            ((flags & 0x20) && (self->secondaryMotionFlags & VFSMF_Unknown4000000))) &&
         !(g_pFightStage->battleFlags & 0x20))
         impact = other->hp + 1;
     vfHandleImpactSfxAndDefeat(other, static_cast<std::int16_t>(static_cast<std::int32_t>(impact + .5f)), 1);
@@ -1227,7 +1239,7 @@ void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t s
         result = 2;
         if (secondHit) {
             if ((a->motionFlags ^ b->motionFlags) & 0x8000) {
-                if (b->motionFlags & 0x8000)
+                if (b->motionFlags & VFMOF_Unknown8000)
                     result = 1;
             } else {
                 const auto strengthA = static_cast<std::uint8_t>(a->guardStrength);
@@ -1275,12 +1287,12 @@ template <bool ActiveOpponent> Vector3 ReadyContactDisplacement(Vector3 separati
 void ResolveReadyActive(VFCLParticipantTmp &ready, VFCLParticipantTmp &active) {
     auto *const group = static_cast<FCMG_t *>(ready.owner);
     auto *const actor = static_cast<VFActor *>(active.owner);
-    if (actor->hitStateFlags & 0xc0000)
+    if (actor->hitStateFlags & (VFHSF_MidAirRecovery | VFHSF_AirborneOrDowned))
         return;
     unsigned coefficient = 0;
-    if (group->group && std::uint8_t(Value<std::uint8_t>(group->group, 0x50) - 3) <= 2)
+    if (group->group && std::uint8_t(static_cast<std::uint8_t>(group->group->activationState) - 3) <= 2)
         coefficient = 1;
-    else if ((actor->hitStateFlags & 0x10000) || Value<std::uint32_t>(actor, 0x964) || (actor->activeMotionFlags & 0xc00))
+    else if ((actor->hitStateFlags & VFHSF_GuardState) || actor->contact.activeShapeMask || (actor->activeMotionFlags & (VFSMF_Unknown400 | VFSMF_Unknown800)))
         coefficient = 2;
     const Vector3 separation{group->position.x - actor->contactPosition.x, 0, group->position.z - actor->contactPosition.z};
     if (separation.z * separation.z + separation.x * separation.x >= .8f * .8f)
@@ -1295,8 +1307,8 @@ void ResolveReadyActive(VFCLParticipantTmp &ready, VFCLParticipantTmp &active) {
 void ResolveReadyReady(VFCLParticipantTmp &first, VFCLParticipantTmp &second) {
     auto *const a = static_cast<FCMG_t *>(first.owner);
     auto *const b = static_cast<FCMG_t *>(second.owner);
-    unsigned coefficient = a->group && std::uint8_t(Value<std::uint8_t>(a->group, 0x50) - 3) <= 2 ? 1 : 0;
-    if (!b->group && std::uint8_t(Value<std::uint8_t>(reinterpret_cast<const void *>(0x50), 0) - 3) <= 2) {
+    unsigned coefficient = a->group && std::uint8_t(static_cast<std::uint8_t>(a->group->activationState) - 3) <= 2 ? 1 : 0;
+    if (!b->group && std::uint8_t(ReadFightData<std::uint8_t>(reinterpret_cast<const void *>(0x50), 0) - 3) <= 2) {
         if (coefficient == 1)
             return;
         coefficient = 2;
@@ -1353,10 +1365,11 @@ void vfBuildContactsAndResolvePushOrHit(VFCL_t *collision, VFCLParticipantTmp *p
                 auto *const other = game.actors[second.index];
                 const bool opponents = game.slotTeams[first.index] != game.slotTeams[second.index] ||
                     static_cast<std::int32_t>(self->activeMotionFlags | other->activeMotionFlags) < 0;
-                Store(self, 0x9a4, static_cast<std::uint8_t>((opponents ? 2 : 0) | (other->fightStyle == 0)));
-                Store(other, 0x9a4, static_cast<std::uint8_t>((opponents ? 2 : 0) | (self->fightStyle == 0)));
+                self->knockbackAngleBytes[0] = static_cast<std::uint8_t>((opponents ? 2 : 0) | (other->fightStyle == 0));
+                other->knockbackAngleBytes[0] = static_cast<std::uint8_t>((opponents ? 2 : 0) | (self->fightStyle == 0));
                 if (opponents && !((self->activeMotionFlags | other->activeMotionFlags) & 0x800) && !PairBlockedByWorld(self, other) &&
-                    (!(self->hitStateFlags & 0x80000) || self->secondActor != other) && (!(other->hitStateFlags & 0x80000) || other->secondActor != self))
+                    (!(self->hitStateFlags & VFHSF_AirborneOrDowned) || self->secondActor != other) &&
+                    (!(other->hitStateFlags & VFHSF_AirborneOrDowned) || other->secondActor != self))
                     vfRob_ResolveHitClash(collision, first.index, second.index);
             }
         }
@@ -1374,18 +1387,18 @@ void vfc_VF_RobCollision_Callback(void *parameter) {
         if (!game->characters[i])
             continue;
         auto *const actor = game->actors[i];
-        const bool resetHistory = (actor->moveFlags & 0x10000000) != 0;
+        const bool resetHistory = (actor->moveFlags & VFMF_RefreshContactHistory) != 0;
         if (resetHistory) {
-            actor->moveFlags &= 0xefffffff;
+            actor->moveFlags &= ~VFMF_RefreshContactHistory;
             vfclTransformContactShapes(actor);
         }
-        std::memcpy(reinterpret_cast<std::byte *>(actor) + 0x8c4, actor->motionContactSamples, sizeof(actor->motionContactSamples));
+        std::memcpy(actor->contact.previousSamples, actor->motionContactSamples, sizeof(actor->motionContactSamples));
         collision->previousSamples[i] = collision->samples[i];
         if (!resetHistory)
             vfclTransformContactShapes(actor);
-        for (const auto offset : {0x93c, 0x944, 0x94c, 0x954, 0x95c})
-            Store(actor, offset, std::uint64_t{0});
-        actor->stateFlags = (actor->stateFlags & ~0x20u) | 0x40;
+        for (std::uint64_t &pair : actor->contact.shapeMaskPairs)
+            pair = 0;
+        actor->stateFlags = (actor->stateFlags & ~VFSF_Unknown20) | 0x40;
     }
     VFCLParticipantTmp participants[16];
     std::int32_t count = 0;
@@ -1407,7 +1420,7 @@ void vfc_VF_RobCollision_Callback(void *parameter) {
             auto &participant = participants[count++];
             participant.type = 1;
             participant.index = actor->groupIndex;
-            participant.link = Value<std::uint32_t>(actor, 0x964) != 0;
+            participant.link = actor->contact.activeShapeMask != 0;
             participant.owner = actor;
             participant.x = actor->contactPosition.x;
             participant.z = actor->contactPosition.z;
@@ -1424,9 +1437,9 @@ void vfc_VF_RobCollision_Callback(void *parameter) {
             if (!game->characters[i])
                 continue;
             auto *const actor = game->actors[i];
-            actor->moveFlags &= ~0x8000u;
-            Store(actor, 0x8c1, std::uint8_t{0});
-            Store(actor, 0x964, std::uint32_t{0});
+            actor->moveFlags &= ~VFMF_AirborneOrFalling;
+            actor->contact.linked = std::uint8_t{0};
+            actor->contact.activeShapeMask = std::uint32_t{0};
         }
         vfclAdjustToGroundOrSlope(collision);
         for (std::size_t i = 0; i != 6; ++i)

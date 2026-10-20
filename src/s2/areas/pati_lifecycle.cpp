@@ -166,6 +166,7 @@ void BeginPatiExit(PatiEventWork *work) {
 }
 // @verified - p
 bool RestorePatiEvent(PatiEventWork *work) {
+    using enum CameraState;
     if (g_currentMap.name == PATI_CHALLENGE_MAP.name || work->challengeComplete) {
         if (filmCheckFadeTrackColour())
             return false;
@@ -185,7 +186,7 @@ bool RestorePatiEvent(PatiEventWork *work) {
         EV_EventSetUpHelpIcon_0(0, 0);
         EVS_LoopCamera(0, {}, {});
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
     }
     SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(PATI_PLAYER), 0, 10.0f, 1.0f);
     SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(work->dealer), 0, 10.0f, 1.0f);

@@ -47,6 +47,7 @@ void PvsjSetOverlay(PvsjEventWork *work, std::int32_t mode) {
 }
 
 void PvsjUpdateOverlay(PvsjEventWork *work, std::int32_t mode) {
+    using enum CameraState;
     Matrix4x4_Push();
     Vector3 position;
     Vector3i rotation;
@@ -81,7 +82,7 @@ void PvsjUpdateOverlay(PvsjEventWork *work, std::int32_t mode) {
     work->cameraId = 0;
     work->cameraEye = {};
     work->cameraTarget = {};
-    camCtrlSetState(CameraState::Callback);
+    camCtrlSetState(Callback);
     camCtrlSetNextPosition(pvsjFilteredEye);
     camCtrlSetTargetPosition(pvsjFilteredTarget);
     float trigger = 0;

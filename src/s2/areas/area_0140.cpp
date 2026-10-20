@@ -89,6 +89,7 @@ void RestoreE0140Characters() {
 }
 
 void CleanupE0140(AreaAuthorTaskParameter *parent) {
+    using enum CameraState;
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 0x8b4, 0);
     for (const shen_name *character = AREA_0140_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
         if (FindCharacterByScenarioName(*character)) {
@@ -106,7 +107,7 @@ void CleanupE0140(AreaAuthorTaskParameter *parent) {
         EVT_AT_SetAng_Callback(&angle);
         LoadCutsceneAndSoundProgramForArea();
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         BeginSecondarySampleExecution(0);
         SetRenderClockAndCompassTo(0);

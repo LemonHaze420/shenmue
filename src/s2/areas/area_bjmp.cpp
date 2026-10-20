@@ -228,6 +228,7 @@ void Main_Callback(void *data) {
 }
 
 void Exit_Callback(void *data) {
+    using enum CameraState;
     auto *work = static_cast<JumpWork *>(data);
     hndlSetFlags(FindCharacterByScenarioName(tgy));
     qteBattleUtil(BattleQteMode::RetireAndFree);
@@ -242,7 +243,7 @@ void Exit_Callback(void *data) {
         EV_npcLockUnlock(name);
     }
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetCharaKill(dummy, 1);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QJMP"), 0);
     SetPlayerControlEnabled(1);

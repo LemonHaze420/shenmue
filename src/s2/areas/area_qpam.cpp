@@ -375,6 +375,7 @@ void QpamCallback(void *data) {
 }
 
 void QpamExitCallback(void *data) {
+    using enum CameraState;
     MapStandEventWork &work = *static_cast<MapStandEventWork *>(data);
     LoadCutsceneAndSoundProgramForArea();
     EventFilmControl film{.cleanup = 0,
@@ -401,7 +402,7 @@ void QpamExitCallback(void *data) {
     EV_FreeAuthorPak(0, "0099");
     EVS_LoopCamera(0, {}, {});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
     EV_CleanupMapControlTask();

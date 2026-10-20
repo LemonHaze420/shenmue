@@ -115,9 +115,10 @@ void AssignAbsoluteEvent(std::int32_t state, Vector3 position, std::uint32_t yaw
     eventParameters.yaw = yaw;
 }
 void ResumeMazeControl() {
+    using enum CameraState;
     camCtrlUtil(static_cast<CameraUtilityMode>(0), 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     InitiateCleanupForSceneChara(shenhua);
     shenToggleAreaFlags(2);
     SetPlayerControlEnabled(1);

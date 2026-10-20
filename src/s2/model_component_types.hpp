@@ -52,6 +52,7 @@ struct ModelComponentHeader {
 #pragma pack(pop)
 
 #pragma pack(push, 4)
+enum ModelImageEntryFlag : std::uint32_t { MIEF_InUse = 1, MIEF_SelectionDirty = 2 };
 struct ModelManagerEntry {
     std::uint32_t flags;
 #if SHENMUE_IS_PC

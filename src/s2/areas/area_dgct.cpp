@@ -71,6 +71,7 @@ void InitializeGameCenterQte(ExciteState &state) {
     state.game.motion = ReadMotiFromDirectory(1, DGCT_AREA, "0116E.MOT");
 }
 bool UpdateGameCenterQte(ExciteState &state) {
+    using enum CameraState;
     ExciteGameState &game = state.game;
     ExciteInput &input = state.controls.arcade.input;
     UpdateGameCenterDisplay(state);
@@ -240,7 +241,7 @@ bool UpdateGameCenterQte(ExciteState &state) {
         SetPlayerControlEnabled(1);
         EVS_LoopCamera(0, shen_name{0}, shen_name{0});
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         game.state = 0;
         return true;
     case 19:

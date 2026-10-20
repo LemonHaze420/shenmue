@@ -39,6 +39,7 @@ void AreaPVSJInit() {
 }
 
 void AreaPVSJMain(std::uintptr_t argument) {
+    using enum CameraState;
     auto *task = HLib::EnqueueTaskWithParameter(PvsjMainCallback, 5, 11, sizeof(PvsjEventWork), PVSJ_TASK);
     auto *work = static_cast<PvsjEventWork *>(HLib::GetTaskParameter(task));
     work->parent = HLib::GetCurrentTask();
@@ -82,7 +83,7 @@ void AreaPVSJMain(std::uintptr_t argument) {
     shenLoadEventFrom("PATI.EV3", EventFunctionType::Event3);
     PvsjInitializeBoards(work);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_EventSetUpHelpIcon_0(145, 0);
     HLib::SetupTaskDelay(0);
 }

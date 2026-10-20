@@ -11,6 +11,14 @@ namespace shenmue::s1 {
 struct Character;
 struct CharacterIdTransform;
 struct ScenarioContext;
+enum MapEventKind : std::uint32_t {
+    MEK_OnEnter = 0,
+    MEK_OnAction = 1,
+    MEK_OnEnterOnce = 2,
+    MEK_OnActionOnce = 3,
+    MEK_WhileInside = 4,
+};
+
 enum IntersectionTestType {
     IsPointInLineIntersection = 0x0,
     CalculateLineIntersection_0 = 0x1,

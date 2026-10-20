@@ -221,6 +221,7 @@ void QdmrEndInitialAuthor(void *parameter) {
     }
 }
 void QdmrExitInitialAuthor(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -257,7 +258,7 @@ void QdmrExitInitialAuthor(void *parameter) {
     mtwkSetExtraFlag(scenFindMotionwork(QDMR_PLAYER), 17, 0);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
     work->flags &= ~1U;
 }
@@ -705,6 +706,7 @@ void QdmrMoveToTransition(void *parameter) {
     QueueAreaLoopVoice("0266A012", 0, -1, ResolveAreaLoopParent, 541);
 }
 void QdmrEndTransition(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -744,7 +746,7 @@ void QdmrEndTransition(void *parameter) {
     HLib::SetCurrentTaskTo(QdmrInFree);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
 }
 void QdmrOpenFirstRoom(void *parameter) {
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
@@ -2125,6 +2127,7 @@ void QdmrNormalRoomPresentation(void *parameter) {
     work->doorQteButtons = 0;
 }
 void QdmrBeginFirstRoomFight(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2140,7 +2143,7 @@ void QdmrBeginFirstRoomFight(void *parameter) {
     EV_FreeAuthorPak(0, "0266");
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     flddSetPointFlagOnGrid(QDMR_DEFAULT_LIGHT, 0);
     flddSetPointFlagOnGrid(QDMR_QF0X, 0);
@@ -2160,6 +2163,7 @@ void QdmrBeginFirstRoomFight(void *parameter) {
     HLib::SetCurrentTaskTo(QdmrFirstRoomFight);
 }
 void QdmrFirstRoomFight(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2219,7 +2223,7 @@ void QdmrFirstRoomFight(void *parameter) {
         HLib::SetCurrentTaskTo(QdmrInFree);
         camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
     } else {
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
                                 .character = QDMR_PLAYER,
@@ -2241,6 +2245,7 @@ void QdmrFirstRoomFight(void *parameter) {
     }
 }
 void QdmrEndFirstRepeat(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2268,7 +2273,7 @@ void QdmrEndFirstRepeat(void *parameter) {
     EV_FreeAuthorPak(0, "0266");
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     doorLoopRigidMotion(work->door, 7234, -1, 1);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     MarkQdmrRoomVisited(work->door, work->roomFlags);
@@ -2293,6 +2298,7 @@ void QdmrEndFirstRepeat(void *parameter) {
     EV_LoadAudio("0266A000", 2);
 }
 void QdmrBeginSecondRoomFight(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2308,7 +2314,7 @@ void QdmrBeginSecondRoomFight(void *parameter) {
     EV_FreeAuthorPak(0, "0266");
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     flddSetPointFlagOnGrid(QDMR_DEFAULT_LIGHT, 0);
     flddSetPointFlagOnGrid(QDMR_QF0X, 0);
@@ -2328,6 +2334,7 @@ void QdmrBeginSecondRoomFight(void *parameter) {
     HLib::SetCurrentTaskTo(QdmrSecondRoomFight);
 }
 void QdmrSecondRoomFight(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2390,7 +2397,7 @@ void QdmrSecondRoomFight(void *parameter) {
         HLib::SetCurrentTaskTo(QdmrInFree);
         camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
     } else {
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
                                 .character = QDMR_PLAYER,
@@ -2412,6 +2419,7 @@ void QdmrSecondRoomFight(void *parameter) {
     }
 }
 void QdmrEndSecondRepeat(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2439,7 +2447,7 @@ void QdmrEndSecondRepeat(void *parameter) {
     EV_FreeAuthorPak(0, "0266");
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     doorLoopRigidMotion(work->door, 7234, -1, 1);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     MarkQdmrRoomVisited(work->door, work->roomFlags);
@@ -2464,6 +2472,7 @@ void QdmrEndSecondRepeat(void *parameter) {
     EV_LoadAudio("0266A000", 2);
 }
 void QdmrBeginThirdRoomFight(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2479,7 +2488,7 @@ void QdmrBeginThirdRoomFight(void *parameter) {
     EV_FreeAuthorPak(0, "0266");
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     flddSetPointFlagOnGrid(QDMR_DEFAULT_LIGHT, 0);
     flddSetPointFlagOnGrid(QDMR_QF0X, 0);
@@ -2499,6 +2508,7 @@ void QdmrBeginThirdRoomFight(void *parameter) {
     HLib::SetCurrentTaskTo(QdmrThirdRoomFight);
 }
 void QdmrThirdRoomFight(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2561,7 +2571,7 @@ void QdmrThirdRoomFight(void *parameter) {
         HLib::SetCurrentTaskTo(QdmrInFree);
         camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
     } else {
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
                                 .character = QDMR_PLAYER,
@@ -2583,6 +2593,7 @@ void QdmrThirdRoomFight(void *parameter) {
     }
 }
 void QdmrEndThirdRepeat(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2610,7 +2621,7 @@ void QdmrEndThirdRepeat(void *parameter) {
     EV_FreeAuthorPak(0, "0266");
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     doorLoopRigidMotion(work->door, 7234, -1, 1);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     MarkQdmrRoomVisited(work->door, work->roomFlags);
@@ -2635,6 +2646,7 @@ void QdmrEndThirdRepeat(void *parameter) {
     EV_LoadAudio("0266A000", 2);
 }
 void QdmrEndNormalRoom(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2657,7 +2669,7 @@ void QdmrEndNormalRoom(void *parameter) {
     EV_FreeAuthorPak(0, "0266");
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     LeaveMagicRoom();
     doorLoopRigidMotion(work->door, 7234, -1, 1);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
@@ -2705,6 +2717,7 @@ void QdmrWaitBingoNpcs(void *parameter) {
     QueueAreaLoopAuthor("QDMRBGNB", QDMR_BINGO_OPEN_AUTHOR, QdmrBingoOpeningAuthorCompletion);
 }
 void QdmrEndBingoOpening(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (!work) {
         HLib::SetCurrentTaskTo(QdmrDoneCallback);
@@ -2720,7 +2733,7 @@ void QdmrEndBingoOpening(void *parameter) {
     }
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDMR"), 0);
     flddSetPointFlagOnGrid(QDMR_DEFAULT_LIGHT, 0);
     flddSetPointFlagOnGrid(QDMR_QF0X, 0);
@@ -2779,6 +2792,7 @@ void QdmrBingoFight(void *parameter) {
     }
 }
 void QdmrBingoWin(void *parameter) {
+    using enum CameraState;
     RestoreAreaLoopCharacters(QDMR_BINGO_NPCS);
     if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0))
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0);
@@ -2790,7 +2804,7 @@ void QdmrBingoWin(void *parameter) {
     }
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     if (parameter)
         ExecuteCleanupFuncForAreaWithCachedScene();
     QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),

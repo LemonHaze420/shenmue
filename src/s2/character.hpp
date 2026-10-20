@@ -144,18 +144,39 @@ static_assert(offsetof(CharacterDrawTaskParameters, allCharacters) == 0x5a0);
 static_assert(offsetof(CharacterDrawTaskParameters, allCharacterCount) == 0x8c0);
 static_assert(sizeof(CharacterDrawTaskParameters) == 0x8c8);
 
+enum CharaVisibilityMode : std::int32_t {
+    CVM_All = 0,
+    CVM_FrustumResult = 1,
+    CVM_CameraOcclusionResult = 2,
+    CVM_DisplayEnabled = 3,
+    CVM_Unknown4 = 4,
+    CVM_MotionworkDisplayCheck = 5,
+    CVM_Unknown6 = 6,
+    CVM_Count = 7,
+};
+
+enum CharacterRenderFlag : std::uint8_t {
+    CRF_Unknown01 = 0x01,
+    CRF_Unknown02 = 0x02,
+    CRF_DisplayEnabled = 0x04,
+    CRF_Unknown08 = 0x08,
+    CRF_InRange = 0x10,
+    CRF_Unknown20 = 0x20,
+    CRF_All = 0x3f,
+};
+
 enum CharacterFlags : std::uint32_t {
-    CharacterValid = 0x01,
-    CharacterFlag02 = 0x02,
-    CharacterActive = 0x04,
-    CharacterDisplayCheckEnabled = 0x08,
-    CharacterVisibleThisCheck = 0x10,
-    CharacterHandlerDisabled = 0x20,
-    CharacterFlag40 = 0x40,
-    CharacterDrawMirrored = 0x80,
-    CharacterUseStoredShadowY = 0x100,
-    CharacterForceVisibleCheck = 0x200,
-    CharacterNpcLoggerTarget = 0x400,
+    CF_Valid = 0x01,
+    CF_Unknown02 = 0x02,
+    CF_Active = 0x04,
+    CF_DisplayCheckEnabled = 0x08,
+    CF_VisibleThisCheck = 0x10,
+    CF_HandlerDisabled = 0x20,
+    CF_Unknown40 = 0x40,
+    CF_DrawMirrored = 0x80,
+    CF_UseStoredShadowY = 0x100,
+    CF_ForceVisibleCheck = 0x200,
+    CF_NpcLoggerTarget = 0x400,
 };
 
 using CharacterCoreCallback = void (*)(Character *);
@@ -263,8 +284,7 @@ std::uint32_t ExecuteCharacterCoreDraw(Character *character);
 
 bool IsOfThisVisibilityType(const Character *character, std::uint32_t mode);
 
-
-std::uint8_t EV_SetCharDisplay(Character *character, std::int32_t visibilityType, std::int32_t enabled);
+std::uint8_t EV_SetCharDisplay(Character *character, CharaVisibilityMode visibilityType, std::int32_t enabled);
 void charaSetVisibilityFlagTo(Character *character, std::uint32_t set);
 extern std::int32_t g_npcLoggerEnabled;
 

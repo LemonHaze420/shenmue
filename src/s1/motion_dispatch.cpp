@@ -489,7 +489,7 @@ void ManageStateEndAnimations(Character *character, CharacterMoveRequestWork *wo
     if (static_cast<double>(std::fabs(local.x)) >= 0.001 || static_cast<double>(std::fabs(local.z)) >= 0.001)
         localYaw = static_cast<std::int16_t>(Shenmue_Atan2Fixed(-local.x, -local.z));
 
-    const auto *const activeRows = static_cast<const MotionNodeRuntime *>(motion->activeNodes);
+    const auto *const activeMotionNodes = static_cast<const MotionNodeRuntime *>(motion->activeNodes);
     const auto endTransition = [&]() {
         work->state = 11;
         motion->previousEntityEuler.y = static_cast<std::int32_t>(
@@ -506,7 +506,7 @@ void ManageStateEndAnimations(Character *character, CharacterMoveRequestWork *wo
             work->state = 3;
         return;
     case 1: {
-        if (activeRows->nodeId == 0xff || (motion->motionFlags & 0x10000U) != 0)
+        if (activeMotionNodes->nodeId == 0xff || (motion->motionFlags & 0x10000U) != 0)
             return;
         MOTI_ApplyMoveRequestRate(*motion, *work);
         float distance = std::sqrt(local.z * local.z + local.x * local.x);
@@ -551,7 +551,7 @@ void ManageStateEndAnimations(Character *character, CharacterMoveRequestWork *wo
         g_initializeCubicSequence = false;
         return;
     case 3: {
-        if (activeRows->nodeId == 0xff || (motion->motionFlags & 0x10000U) != 0)
+        if (activeMotionNodes->nodeId == 0xff || (motion->motionFlags & 0x10000U) != 0)
             return;
         MOTI_ApplyMoveRequestRate(*motion, *work);
         work->yawDelta = static_cast<std::int16_t>(static_cast<std::uint16_t>(work->targetYaw) - static_cast<std::uint16_t>(motion->entityEuler.y));
@@ -669,15 +669,15 @@ void ManageStateEndAnimations(Character *character, CharacterMoveRequestWork *wo
         return;
     }
     case 6:
-        if (activeRows->nodeId != 0xff && (motion->motionFlags & 0x10000U) == 0) {
+        if (activeMotionNodes->nodeId != 0xff && (motion->motionFlags & 0x10000U) == 0) {
             MOTI_ApplyMoveRequestRate(*motion, *work);
             work->state = 7;
         }
         return;
     case 7: {
-        auto *const rows = static_cast<MotionNodeRuntime *>(motion->activeNodes);
-        const MotionNodeRuntime *const rightArm = MOTN_FindNodeRow(rows, 0x1a);
-        const MotionNodeRuntime *const leftHandTarget = MOTN_FindNodeRow(rows, 0x21);
+        auto *const motionNodes = static_cast<MotionNodeRuntime *>(motion->activeNodes);
+        const MotionNodeRuntime *const rightArm = MOTN_FindNode(motionNodes, 0x1a);
+        const MotionNodeRuntime *const leftHandTarget = MOTN_FindNode(motionNodes, 0x21);
         if (rightArm && leftHandTarget)
             work->directionBit = leftHandTarget->effectorPosition.y > rightArm->effectorPosition.y ? 1U : 0U;
         const std::int16_t yawDelta = static_cast<std::int16_t>(static_cast<std::uint16_t>(motion->entityEuler.y) - targetYaw);

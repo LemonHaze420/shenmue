@@ -244,6 +244,7 @@ std::int32_t DeclineIzumiBattle(IzumiEventWork *work) {
 }
 
 std::int32_t IzumiDemonstration(IzumiEventWork *work) {
+    using enum CameraState;
     const std::int16_t frame = work->frame;
     if (!frame) {
         const Vector3 eye{206.89999389648438f, 107.9000015258789f, 93.5999984741211f};
@@ -284,7 +285,7 @@ std::int32_t IzumiDemonstration(IzumiEventWork *work) {
         vfmQueueFightStart(2, 99, 1.0f, 0, -1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         demonstrationCameraTarget = {.x = 206.80000305175781f, .y = 108.0999984741211f, .z = 89.69999694824219f};
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
         camCtrlSetTargetPosition(demonstrationCameraTarget);
         camCtrlSetNextPosition(eye);
         camCtrlSetFov(0x2aaa);
@@ -368,6 +369,7 @@ void IzumiBattleQte(IzumiEventWork *work) {
 }
 
 std::int32_t FightIzumi(IzumiEventWork *work) {
+    using enum CameraState;
     if (!work->frame) {
         HideIzumiActors();
         SetupIzumiMap(0);
@@ -380,7 +382,7 @@ std::int32_t FightIzumi(IzumiEventWork *work) {
             EV_LoadAudio("0187E010", 1);
             streetMotion = ReadMotiFromDirectory(g_actNumber, g_currentMap, "STREET.MOT");
         }
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
         camCtrlSetNextPosition(SFIZ_BATTLE_CAMERA);
         camCtrlSetTargetPosition(SFIZ_BATTLE_TARGET);
         shenStartFGST(10, 10, 0, 0);

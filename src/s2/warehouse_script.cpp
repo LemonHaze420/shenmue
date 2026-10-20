@@ -85,6 +85,7 @@ void SeekWarehouseScriptLabel(std::uint32_t *script, std::uint16_t label) {
 }
 // @verified - p
 std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
+    using enum CameraState;
     std::int64_t result = 0;
     for (;;) {
         const std::uint32_t cursor = script[1], op = script[cursor];
@@ -127,7 +128,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             break;
         case 0x80000025:
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             EnableWarehouseController(ryo, true);
             break;
         case 0x8000002b:
@@ -528,6 +529,7 @@ void WarehouseReturnToTemple(void *) {
 }
 // @verified - p
 void WarehouseLockonFirst(void *) {
+    using enum CameraState;
     switch (++lockonTicks) {
     case 1: {
         EV_PlayDialogue("0031A067");
@@ -552,7 +554,7 @@ void WarehouseLockonFirst(void *) {
     case 270:
         UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         HLib::DestroyCurrentTask();
         break;
@@ -562,6 +564,7 @@ void WarehouseLockonFirst(void *) {
 }
 // @verified - p
 void WarehouseLockonSecond(void *) {
+    using enum CameraState;
     if (++lockonTicks == 1) {
         EV_PlayDialogue("0031A066");
         const Vector3 position{337.16f, 127.88f, 239.66f},
@@ -574,7 +577,7 @@ void WarehouseLockonSecond(void *) {
     } else if (lockonTicks == 120) {
         UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         HLib::DestroyCurrentTask();
     }
@@ -586,6 +589,7 @@ void ResetWarehouseLockonSequence() {
 }
 // @verified - p
 std::int64_t StartWarehouseLockonSequence() {
+    using enum CameraState;
     const shen_name target = srchGetTargetName(0);
     if (target.name != SHEN_NAME(MA01) && target.name != SHEN_NAME(MA02))
         return target.name;
@@ -598,7 +602,7 @@ std::int64_t StartWarehouseLockonSequence() {
     EV_EnableCharacterDisplay(ryo);
     SetPlayerControlEnabled(0);
     EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     return EVS_LoopCamera(target.name == SHEN_NAME(MA01) ? 1038 : 1039, shen_name{0}, shen_name{0});
 }
 }

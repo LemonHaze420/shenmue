@@ -191,6 +191,7 @@ void KhinSlotCallback(void *data) {
     }
 }
 void KhinPurchaseExitCallback(void *data) {
+    using enum CameraState;
     KhinWork &work = *static_cast<KhinWork *>(data);
     if (g_currentMap.name == KHIN_QJBT.name)
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1233, 1);
@@ -241,7 +242,7 @@ void KhinPurchaseExitCallback(void *data) {
     EV_FreeAuthorPak(0, "0112");
     EVS_LoopCamera(0, KHIN_NONE, KHIN_NONE);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
@@ -249,6 +250,7 @@ void KhinPurchaseExitCallback(void *data) {
     HLib::EV_HLKillOtherHierarchyTask(work.task);
 }
 void KhinSlotExitCallback(void *data) {
+    using enum CameraState;
     KhinWork &work = *static_cast<KhinWork *>(data);
     EV_EnableCharacterDisplay(KHIN_RYO);
     EV_SetCharaControllerFlags(KHIN_RYO, 1, NpcCharacterControllerState::Enabled);
@@ -269,7 +271,7 @@ void KhinSlotExitCallback(void *data) {
     EV_FreeAuthorPak(0, "0185");
     EVS_LoopCamera(0, KHIN_NONE, KHIN_NONE);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     switch (khinSelector) {
     case 23:
     case 39:
@@ -298,7 +300,7 @@ void KhinSlotExitCallback(void *data) {
         EVT_AT_SetMot(KHIN_RYO, 0xf003, 0, 1, 0x40000000U, 0);
         EVS_LoopCamera(0, KHIN_NONE, KHIN_NONE);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         break;
     case 33:
     case 41:
@@ -317,6 +319,7 @@ void KhinSlotExitCallback(void *data) {
     HLib::EV_HLKillOtherHierarchyTask(work.task);
 }
 void KhinReturnToMenuCallback(void *data) {
+    using enum CameraState;
     KhinWork &work = *static_cast<KhinWork *>(data);
     if (work.state == 0) {
         EVT_AT_SetCam(5000, KHIN_INVALID, KHIN_INVALID, 0, 0, 0);
@@ -351,7 +354,7 @@ void KhinReturnToMenuCallback(void *data) {
             EV_SetCharaControllerFlags(KHIN_RYO, 3, NpcCharacterControllerState::Enabled);
         }
         EV_NPC_NewLoadSw(1);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KHIN"), 0);

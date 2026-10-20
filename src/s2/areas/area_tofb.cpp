@@ -129,6 +129,7 @@ void TofbOpeningAuthorCallback(void *) {
 }
 // @verified - p
 void TofbBattleStartCallback(void *) {
+    using enum CameraState;
     flddSetPointFlagOnGrid(TOFB_GRID, 1);
     flddSetPointFlagOnGrid(TOFB_DEFAULT_GRID, 0);
     EV_DisableCharacterDisplay(TOFB_CHO);
@@ -144,7 +145,7 @@ void TofbBattleStartCallback(void *) {
     }
     for (const shen_name character : TOFB_BATTLE_CHARACTERS)
         EVT_AT_SetMot(character, 13, 0, 1, 0x40000000U, 0);
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
     camCtrlSetTargetPosition(TOFB_CAMERA_TARGET);
     camCtrlSetNextPosition(TOFB_CAMERA_POSITION);
     EVT_AT_SetPos(TOFB_TABLE, TOFB_A021, Vector3{}, 0);

@@ -193,6 +193,7 @@ void Detach() {
     AT_SetLocalBaseChara(secondary, invalid);
 }
 void Cleanup(GateEventWork &work) {
+    using enum CameraState;
     EV_FreeAuthorPak(0, "0253");
     ctrlSetKillAndIncrementCounter(ctrlGetCharaByName(keep), 1);
     ctrlSetKillAndIncrementCounter(ctrlGetCharaByName(keep2), 1);
@@ -203,7 +204,7 @@ void Cleanup(GateEventWork &work) {
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GATE"), 0);
     SetRenderClockAndCompassTo(0);

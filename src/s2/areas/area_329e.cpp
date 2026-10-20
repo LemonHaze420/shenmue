@@ -85,6 +85,7 @@ void Cleanup329E(Area329EParameter *parent) {
 }
 
 std::int64_t Update329EAuthor(Area329EAuthorParameter *child) {
+    using enum CameraState;
     const std::int64_t result = EV_authSceneCtrl(AuthSceneCtrl::IsLoaded);
     if (result == 0) {
         if (g_currentMap.name == AREA_329E_RETURN_MAP.name) {
@@ -94,7 +95,7 @@ std::int64_t Update329EAuthor(Area329EAuthorParameter *child) {
             EventSetRawAngle angle{0, AREA_329E_RYO, shen_name{0xffffffffU}, {0, 49978, 0}, 0.0f};
             EVT_AT_SetAng_Callback(&angle);
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
             InitiateCleanupForSceneChara(AREA_329E_GAI);
             HLib::SetupTimedTask(child->parent->self, 30);

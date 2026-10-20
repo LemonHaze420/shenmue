@@ -669,6 +669,7 @@ void ICSU_InitItemLook_Callback(void *) {
 }
 
 void ICSU_CtrlItemLook_Callback(void *) {
+    using enum CameraState;
     if (g_loadingFlag & 2U) {
         icsuRenderItem();
         return;
@@ -694,10 +695,10 @@ void ICSU_CtrlItemLook_Callback(void *) {
             if (ryo) {
                 previousItemPlayerDisplay = IsOfThisVisibilityType(ryo, 3);
                 previousItemPlayerVisible = charaGetWasVisible(ryo);
-                EV_SetCharDisplay(ryo, 3, 0);
+                EV_SetCharDisplay(ryo, CVM_DisplayEnabled, 0);
                 charaSetVisibilityFlagTo(ryo, 0);
             }
-            camCtrlSetState(CameraState::Event);
+            camCtrlSetState(Event);
             camCtrlSetPerspective(8192);
             EV_EventSetUpHelpIcon_0(0x12, 0);
             previousItemUiMode = static_cast<std::uint16_t>(GetUiFlag(2));
@@ -789,7 +790,7 @@ void CloseItemLook() {
         MapControlData *control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
         Character *ryo = static_cast<Character *>(control->ryo);
         if (ryo) {
-            EV_SetCharDisplay(ryo, 3, previousItemPlayerDisplay);
+            EV_SetCharDisplay(ryo, CVM_DisplayEnabled, previousItemPlayerDisplay);
             charaSetVisibilityFlagTo(ryo, previousItemPlayerVisible);
         }
         if (itemLookPadControl && (itemLookPadControl->flags & 2U))

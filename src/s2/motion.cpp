@@ -685,7 +685,7 @@ void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable) 
                 if (!(begin & 0x8000U))
                     continue;
                 const float frame = GetMotionFrame(&work, static_cast<MotionRegion>(region));
-                const bool transitioning = (state.regionFlags[region] & 0x10U) != 0;
+                const bool transitioning = (state.regionFlags[region] & MRF_Transition) != 0;
                 const float time =
                     previous ? state.regionPreviousTicksTime[region] : (transitioning && blend ? std::fmax(0.0f, state.layerSampleFrame[region]) : frame);
                 const float alpha = character.alpha *
@@ -724,10 +724,10 @@ void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable) 
     };
     try {
         for (std::uint32_t region = 0; region < 5; ++region) {
-            if (work.runtime.regionFlags[region] & 0x40U)
+            if (work.runtime.regionFlags[region] & MRF_Mirrored)
                 continue;
             drawTrack(region, false);
-            if (work.runtime.regionFlags[region] & 0x10U)
+            if (work.runtime.regionFlags[region] & MRF_Transition)
                 drawTrack(region, true);
         }
     } catch (...) {
@@ -1199,7 +1199,7 @@ std::int32_t CaptureMotionSnapshot(shen_name name) {
         snapshot->defaultStepFrames[region] = state.defaultRegionStepFrames[region];
         snapshot->regionFlags[region] = state.regionFlags[region];
         snapshot->playbackSpeed[region] = clocks[region]->playbackSpeed;
-        if ((state.regionFlags[region] & 0x10U) == 0 || state.currentRootMode == 2) {
+        if ((state.regionFlags[region] & MRF_Transition) == 0 || state.currentRootMode == 2) {
             snapshot->splitFrames[region] = clocks[region]->current.splitTimeFrames;
             snapshot->ticksTime[region] = clocks[region]->current.ticksTime;
             snapshot->maxTime[region] = clocks[region]->current.maxTime;
@@ -1227,7 +1227,7 @@ std::uint32_t RestoreMotionWorkConfiguration(MotionWork &work, const MotionSnaps
     state.projectionCotangentFar = snapshot.projectionCotangents[2];
     state.callbackFlags = snapshot.callbackFlags;
     constexpr std::uint32_t motionMask = 0x18249;
-    constexpr std::uint32_t sequenceMask = MotionSequenceLimitConstraintStep | MotionSequenceLinearInterpolation;
+    constexpr std::uint32_t sequenceMask = MSF_LimitConstraintStep | MSF_LinearInterpolation;
     state.motnFlags = (state.motnFlags & ~motionMask) | (snapshot.motionFlags & motionMask);
     state.seqFlags = (state.seqFlags & ~sequenceMask) | (snapshot.sequenceFlags & sequenceMask);
     for (std::size_t region = 0; region < clocks.size(); ++region) {
@@ -1268,27 +1268,27 @@ bool RestoreMotionSnapshotPlacement(shen_name name, std::uint32_t slot) {
     SetCharacterWorldRotation(character, snapshot->worldRotation);
     MotionRuntimeState &state = work->runtime;
     state.motnFlags = (state.motnFlags & 0xfffd9fffU) | 0x2000U;
-    state.regionFlags[0] = (state.regionFlags[0] & 0xf97fU) | 0x80U;
+    state.regionFlags[0] = (state.regionFlags[0] & ~(MRF_Reinitialize | MRF_FollowLowerBody | MRF_ReturnToLowerBody)) | 0x80U;
     state.queuedMotionId[0] = snapshot->motionIds[0];
     state.layerLoopStartTime[0] = snapshot->splitFrames[0];
     state.pendingLayerStartFrame[0] = snapshot->ticksTime[0];
     state.layerEndFrame[0] = snapshot->maxTime[0];
-    if (snapshot->regionFlags[0] & 4U)
-        state.regionFlags[0] |= 0x1000U;
+    if (snapshot->regionFlags[0] & MRF_Loop)
+        state.regionFlags[0] |= MRF_Unknown1000;
     if (SetMotionRegionFlag(work, 70, 1, MotionRegion::LowerBody))
-        state.regionFlags[0] |= 0x20U;
+        state.regionFlags[0] |= MRF_LeadFoot;
     for (std::uint32_t region = 1; region < 5; ++region) {
-        if (!(snapshot->regionFlags[region] & 0x100U))
+        if (!(snapshot->regionFlags[region] & MRF_Independent))
             continue;
-        state.regionFlags[region] = (state.regionFlags[region] & 0xf97fU) | 0x80U;
+        state.regionFlags[region] = (state.regionFlags[region] & ~(MRF_Reinitialize | MRF_FollowLowerBody | MRF_ReturnToLowerBody)) | 0x80U;
         state.queuedMotionId[region] = snapshot->motionIds[region];
         state.layerLoopStartTime[region] = snapshot->splitFrames[region];
         state.pendingLayerStartFrame[region] = snapshot->ticksTime[region];
         state.layerEndFrame[region] = snapshot->maxTime[region];
-        if (snapshot->regionFlags[region] & 4U)
-            state.regionFlags[region] |= 0x1000U;
+        if (snapshot->regionFlags[region] & MRF_Loop)
+            state.regionFlags[region] |= MRF_Unknown1000;
         if (SetMotionRegionFlag(work, 70, 1, static_cast<MotionRegion>(region)))
-            state.regionFlags[region] |= 0x20U;
+            state.regionFlags[region] |= MRF_LeadFoot;
     }
     return true;
 }

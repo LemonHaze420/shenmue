@@ -140,6 +140,7 @@ void MainCallback(void *data) {
 }
 // @verified - p
 void LoopCallback(void *data) {
+    using enum CameraState;
     if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded))
         return;
     auto *parent = static_cast<AreaAuthorLoopTaskParameter *>(data)->parent;
@@ -153,7 +154,7 @@ void LoopCallback(void *data) {
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 41870, 0}, 0};
         EVT_AT_SetAng_Callback(&angle);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         HLib::DestroyCurrentTask();
     } else {
         ++parent->selection;

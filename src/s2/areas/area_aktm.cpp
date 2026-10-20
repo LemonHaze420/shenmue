@@ -125,6 +125,7 @@ void InitializeFight(BattleWork *work) {
 }
 
 void Battle_Callback(void *data) {
+    using enum CameraState;
     auto *work = static_cast<BattleWork *>(data);
     std::int32_t delay = 0;
     switch (work->phase) {
@@ -147,7 +148,7 @@ void Battle_Callback(void *data) {
         EV_lightLoad(SHEN_NAME(0000));
         PushGlobalLightingProgram();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
         camCtrlSetNextPosition(Vector3{270.909912109375f, 100.92680358886719f, 235.43089294433594f});
         camCtrlSetTargetPosition(Vector3{268.4183044433594f, 100.7426986694336f, 232.3896026611328f});
         EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x800}, 1);

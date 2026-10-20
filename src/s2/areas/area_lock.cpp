@@ -209,6 +209,7 @@ std::int32_t LOCKSf8Conversation(LockEventWork *work) {
 }
 // @verified - p
 void LOCKReleaseEvent(LockEventWork *work) {
+    using enum CameraState;
     ET_AT_KillWork(work->admission);
     SetPlayerControlEnabled(0);
     SetCharaKill(LOCK_BASE, 1);
@@ -219,7 +220,7 @@ void LOCKReleaseEvent(LockEventWork *work) {
     CleanupMapControlCharacters();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
 }
 // @verified - p

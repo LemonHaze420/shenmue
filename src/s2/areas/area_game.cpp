@@ -402,6 +402,7 @@ void GameAuthorCallback(void *data) {
         HLib::SetupTaskDelay(delay);
 }
 void GameExitCallback(void *data) {
+    using enum CameraState;
     auto *work = static_cast<GameWork *>(data);
     SetScenarioCharacterKillMode(machine, 1);
     LoadCutsceneAndSoundProgramForArea();
@@ -411,7 +412,7 @@ void GameExitCallback(void *data) {
     Gravity(true);
     EVS_LoopCamera(0, shen_name{}, shen_name{});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GAME"), 0);

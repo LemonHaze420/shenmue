@@ -49,6 +49,7 @@ void InitializeMakiEvent() {
     makiLighterPhase = 0;
 }
 void MakiExit() {
+    using enum CameraState;
     *makiRuntime.result = -1;
     if (mtwkSetExtraFlag(scenFindMotionwork(MAKI_RYO), 59, 1))
         UpdateMotionWorkWithPosition(scenFindMotionwork(MAKI_RYO), nullptr, 0);
@@ -73,7 +74,7 @@ void MakiExit() {
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(0, "0518");
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MAKI"), 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     const CameraUtilityParameters parameters{.first = 0, .second = 0};
     camCtrlUtil(CameraUtilityMode::ForceSearchCam, reinterpret_cast<std::intptr_t>(&parameters));
@@ -84,6 +85,7 @@ void MakiExit() {
     EV_SetCanDoAreaJumpTo(1);
 }
 void MakiBeginWalk() {
+    using enum CameraState;
     switch (makiRuntime.phase) {
     case 0:
         EVT_AT_SetPos(MAKI_RYO, EVENT_CHARACTER_INVALID, {.x = 157.1f, .y = 100, .z = 389.4f}, 0);
@@ -95,7 +97,7 @@ void MakiBeginWalk() {
         mtwkRequestMotion(scenFindMotionwork(MAKI_RYO), 0x4004, MotionRegion::RightArm);
         MakiAttachLighter(0);
         SetMotionSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         ++makiRuntime.phase;
@@ -120,8 +122,9 @@ void MakiBeginWalk() {
     }
 }
 void MakiFindFirewood() {
+    using enum CameraState;
     if (makiRuntime.phase == 1) {
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         makiRuntime.phase = 0;
     }
@@ -276,10 +279,11 @@ void MakiLockPlayerForSequence() {
     SetMotionRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::RightArm);
 }
 void MakiRestorePlayerAfterSequence() {
+    using enum CameraState;
     const CameraUtilityParameters parameters{.first = 1, .second = static_cast<std::uint32_t>(makiSavedCameraContext)};
     camCtrlUtil(CameraUtilityMode::ForceSearchCam, reinterpret_cast<std::intptr_t>(&parameters));
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     mtwkSetRequestedRootMode(scenFindMotionwork(MAKI_RYO), makiSavedRootMode);
     SetMotionFrameTime(scenFindMotionwork(MAKI_RYO), makiSavedBlendFrames, MotionRegion::LowerBody);
     SetMotionSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::RightArm);

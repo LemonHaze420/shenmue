@@ -13,9 +13,10 @@
 #include "s2/scene_data.hpp"
 namespace shenmue::s2::areas {
 void RestoreMazeCompanionControl() {
+    using enum CameraState;
     camCtrlUtil(static_cast<CameraUtilityMode>(0), 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetFaceFlagsForChara_0(FindCharacterByScenarioName(MAZE_EVENT_RYO), FacialNodeOriginal);
     SetHighModelXYZ(FindCharacterByScenarioName(MAZE_EVENT_RYO), 0, 0, 0);
     SetHighModelXYZ(FindCharacterByScenarioName(MAZE_EVENT_RYO), 0, 1, 0);

@@ -59,6 +59,7 @@ void Update0307(void *taskData) {
 
 // @verified - p
 void Cleanup0307(Area0307Parameter *parent) {
+    using enum CameraState;
     for (const shen_name *character = AREA_0307_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
         if (FindCharacterByScenarioName(*character)) {
             EV_npcLockUnlock(*character);
@@ -79,7 +80,7 @@ void Cleanup0307(Area0307Parameter *parent) {
         EV_EnableCharacterDisplay(AREA_0307_BIKE);
         LoadCutsceneAndSoundProgramForArea();
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         EV_spmBeginSampleExecute();

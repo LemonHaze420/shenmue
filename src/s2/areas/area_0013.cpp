@@ -113,6 +113,7 @@ void QueueE0013Loop(AreaImmediateAuthorTaskParameter *parent) {
     parent->state = 2;
 }
 void CleanupE0013(AreaImmediateAuthorTaskParameter *parent) {
+    using enum CameraState;
     EV_FreeAuthorPak(0, "0013");
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0013A"), 0);
     npcSetAreaName(AREA_0013_ANP1, nullptr, 0.0f, 0);
@@ -131,7 +132,7 @@ void CleanupE0013(AreaImmediateAuthorTaskParameter *parent) {
         EV_NPC_NewLoadSw(1);
         mtwkRequestMotion(scenFindMotionwork(AREA_AUTHOR_RYO), 0xf003, MotionRegion::LowerBody);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         parent->state = 4;

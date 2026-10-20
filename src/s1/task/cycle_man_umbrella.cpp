@@ -85,13 +85,13 @@ void UNFO_InitWrapper(MotionInformationWork &motion) {
     const std::int64_t activeNodesCookie = motion.activeNodesCookie;
     const std::int64_t blendTargetNodesCookie = motion.blendTargetNodesCookie;
     if (motion.transitionNodes) {
-        g_motnRowBytesInUse -= 0x26bc;
+        g_motnNodeBytesInUse -= 0x26bc;
         HLib_FreeTaskData(static_cast<HLib::TaskData *>(motion.transitionNodes), 0);
     }
     motion.transitionNodes = nullptr;
     motion.transitionNodesCookie = 0;
     if (motion.secondaryNodes) {
-        g_motnRowBytesInUse -= 0x26bc;
+        g_motnNodeBytesInUse -= 0x26bc;
         HLib_FreeTaskData(static_cast<HLib::TaskData *>(motion.secondaryNodes), 0);
     }
     motion.secondaryNodes = nullptr;
@@ -109,7 +109,7 @@ void UNFO_InitWrapper(MotionInformationWork &motion) {
 
 
 bool MOTI_GetBlendedEffectorPosition(const MotionInformationWork &motion, std::int32_t nodeId, Vector3 &position) {
-    const MotionNodeRuntime *const active = MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(motion.activeNodes), nodeId);
+    const MotionNodeRuntime *const active = MOTN_FindNode(static_cast<MotionNodeRuntime *>(motion.activeNodes), nodeId);
     if (!motion.interpolationMode) {
         if (!active)
             return false;
@@ -117,7 +117,7 @@ bool MOTI_GetBlendedEffectorPosition(const MotionInformationWork &motion, std::i
         return true;
     }
     void *const blendRows = motion.interpolationMode == 4U ? motion.transitionNodes : motion.blendTargetNodes;
-    const MotionNodeRuntime *const blend = MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(blendRows), nodeId);
+    const MotionNodeRuntime *const blend = MOTN_FindNode(static_cast<MotionNodeRuntime *>(blendRows), nodeId);
     if (!active || !blend)
         return false;
     const float amount = blend->interpolationAmount;
@@ -130,8 +130,8 @@ bool MOTI_GetBlendedEffectorPosition(const MotionInformationWork &motion, std::i
 
 
 void cyclCopySecondaryNodeEuler(const MotionInformationWork &motion, std::int32_t nodeId) {
-    const MotionNodeRuntime *const source = MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(motion.secondaryNodes), nodeId);
-    MotionNodeRuntime *const target = MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(motion.activeNodes), nodeId);
+    const MotionNodeRuntime *const source = MOTN_FindNode(static_cast<MotionNodeRuntime *>(motion.secondaryNodes), nodeId);
+    MotionNodeRuntime *const target = MOTN_FindNode(static_cast<MotionNodeRuntime *>(motion.activeNodes), nodeId);
     if (source && target)
         target->bindEuler = source->bindEuler;
 }
@@ -147,10 +147,10 @@ void cyclUmbrellaHandCallback(MotionInformationWork *motion, void *user) {
         return;
     MotionManagerWork *const manager = MOTM_GetWork(character);
     MotionNodeRuntime *const previousRows = manager ? static_cast<MotionNodeRuntime *>(manager->motion.previousNodes) : nullptr;
-    const MotionNodeRuntime *const hand = MOTN_FindNodeRow(previousRows, 17);
+    const MotionNodeRuntime *const hand = MOTN_FindNode(previousRows, 17);
     const Vector3 handPos =
         hand ? Vector3{hand->transform->rows[3].x, hand->transform->rows[3].y, hand->transform->rows[3].z} : GetPositionForEntity(character->entity.node);
-    const MotionNodeRuntime *const root = MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(motion->secondaryNodes), 0);
+    const MotionNodeRuntime *const root = MOTN_FindNode(static_cast<MotionNodeRuntime *>(motion->secondaryNodes), 0);
     if (!root)
         return;
     float x = handPos.x - root->effectorPosition.x;
@@ -165,9 +165,9 @@ void cyclUmbrellaHandCallback(MotionInformationWork *motion, void *user) {
         if (!MOTI_GetBlendedEffectorPosition(*motion, 0, pivot) || !MOTI_GetBlendedEffectorPosition(*motion, 3, reach))
             return;
     } else {
-        if (const MotionNodeRuntime *const row = MOTN_FindNodeRow(previousRows, 0))
+        if (const MotionNodeRuntime *const row = MOTN_FindNode(previousRows, 0))
             pivot = WorldToEntityLocalPoint(character->entity.node, {row->transform->rows[3].x, row->transform->rows[3].y, row->transform->rows[3].z});
-        if (const MotionNodeRuntime *const row = MOTN_FindNodeRow(previousRows, 4))
+        if (const MotionNodeRuntime *const row = MOTN_FindNode(previousRows, 4))
             reach = WorldToEntityLocalPoint(character->entity.node, {row->transform->rows[3].x, row->transform->rows[3].y, row->transform->rows[3].z});
     }
     const float dx = reach.x - pivot.x;

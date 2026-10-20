@@ -38,6 +38,7 @@ shen_name ReadCleanupPlacementCharacter(std::int32_t index) {
 } // namespace
 
 void ChawCleanup(ChawEventWork *work, bool restoreMedia) {
+    using enum CameraState;
     DateTime date;
     GetCurrentDateTime(date);
     if (work->advanceTime)
@@ -101,7 +102,7 @@ void ChawCleanup(ChawEventWork *work, bool restoreMedia) {
     EV_SetRefBoardParamsFor(CHAW_RYO, 1);
     EV_SetCharaControllerFlags(CHAW_RYO, 2, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(CHAW_RYO, 3, NpcCharacterControllerState::Enabled);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     SetPlayerControlEnabled(1);
     FinishLoading();

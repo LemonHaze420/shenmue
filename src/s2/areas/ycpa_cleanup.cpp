@@ -232,8 +232,9 @@ void YcpaEndChaseCallback(void *data) {
 }
 
 void YcpaEndAdviceCallback(void *) {
+    using enum CameraState;
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     for (shen_name character : {YCPA_BASE, YCPA_RYOD, YCPA_YUAB, YCPA_RENB})
         SetCharaKill(character, 1);
     npcSetAreaName(SHEN_NAME(aera), nullptr, 0, 0);
@@ -248,7 +249,8 @@ void YcpaEndAdviceCallback(void *) {
 }
 
 void YcpaChangeAreaAfterAdvice(void *) {
-    camCtrlSetState(CameraState::Init);
+    using enum CameraState;
+    camCtrlSetState(Init);
     spmFadeOut();
     npcSetAreaName(SHEN_NAME(aera), nullptr, 0, 0);
     for (shen_name character : {YCPA_BASE, YCPA_RYOD, YCPA_YUAB, YCPA_RENB})

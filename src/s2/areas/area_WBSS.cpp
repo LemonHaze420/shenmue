@@ -510,6 +510,7 @@ void StartWipeScript(WipeWork &work) {
 }
 // @verified - p
 void FinishWipe(WipeWork &work) {
+    using enum CameraState;
     SetSmokeEffectFalloff(smoke, 31);
     switch (work.phase) {
     case 0:
@@ -586,7 +587,7 @@ void FinishWipe(WipeWork &work) {
         if (work.finished)
             work.state = 8;
         else {
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             if (work.kind < 8 || previouslyWiped) {
                 EV_EnableCharacterDisplay(records[work.area].character);
                 camCtrlSetFovTransitionTo(false);
@@ -658,6 +659,7 @@ void ScenarioInit(void *data) {
 }
 // @verified - p
 void Scenario(void *data) {
+    using enum CameraState;
     auto &work = *static_cast<WipeWork *>(data);
     UpdateScale();
     ++work.frame;
@@ -726,7 +728,7 @@ void Scenario(void *data) {
                 EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, Vector3i{0, 49152, 0});
             mtwkRequestMotion(scenFindMotionwork(ryo), 0xf002, MotionRegion::LowerBody);
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             PrepareCloth();
             QueueDoor(doorOpen);
             ++work.phase;
@@ -815,7 +817,7 @@ void Scenario(void *data) {
             ++work.phase;
         } else if (work.phase == 2 && !EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             work.state = 7;
             work.phase = work.frame = 0;
             EV_AT_SetPos(siz, EventTransformFlags::AllAxes, Vector3{});

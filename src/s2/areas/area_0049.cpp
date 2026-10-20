@@ -75,6 +75,7 @@ void SetupE0049Characters() {
 
 // @verified - p
 void CleanupE0049(AreaImmediateAuthorTaskParameter *parent) {
+    using enum CameraState;
     FreeParticleEffect(3, e0049Leaves);
     for (const shen_name *character = AREA_0049_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
         if (FindCharacterByScenarioName(*character)) {
@@ -96,7 +97,7 @@ void CleanupE0049(AreaImmediateAuthorTaskParameter *parent) {
         EventSetRawAngle rotation{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 17021, 0}, 0.0f};
         EVT_AT_SetAng_Callback(&rotation);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         BeginSecondarySampleExecution(0);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

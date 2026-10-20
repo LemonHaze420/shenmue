@@ -1470,11 +1470,11 @@ void DrawShenmueEntity(void *parameter) {
     const std::int32_t previousLight = GetPreviousActiveLight();
     if (model) {
         MotionWork *const work = FindMotionWork(character);
-        if (!work || (work->runtime.seqFlags & MotionSequenceSearchHand))
+        if (!work || (work->runtime.seqFlags & MSF_SearchHand))
             return;
         const Vector3 position = work->runtime.drawOverrideData ? GetCharacterWorldPosition(character) : work->runtime.rootPosition;
         float ground = charaGetShadowY(character);
-        if (!(character->flags & CharacterUseStoredShadowY)) {
+        if (!(character->flags & CF_UseStoredShadowY)) {
             Vector3 probe = position;
             probe.y += 0.5f;
             ground = shenFindIntersectionWithScene(probe, position.z);

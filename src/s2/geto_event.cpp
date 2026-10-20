@@ -39,6 +39,7 @@ void GetoMain(std::uintptr_t argument) {
 
 // @verified - p
 void GetoLoop(void *taskData) {
+    using enum CameraState;
     GetoEventWork *const work = static_cast<GetoEventWork *>(taskData);
     if (work && !filmCheckFadeTrackColour()) {
         SetDisplayFlagForProp(shen_name{static_cast<std::uint32_t>(work->prop)}, static_cast<std::uint32_t>(work->enabled));
@@ -49,7 +50,7 @@ void GetoLoop(void *taskData) {
         HLib::ResolveDeferredCallback(work->caller);
         HLib::SetupTimedTask(work->caller, 1);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         HLib::MarkCurrentTaskForCleanup();
     }

@@ -142,13 +142,14 @@ void WoncDormantNullsub() {
 }
 // @verified - p
 void WoncCompleteAuthorCallback(void *) {
+    using enum CameraState;
     WoncDormantNullsub();
     (void)EV_ResetFreeTalkFlags();
     (void)EV_NPC_NewLoadSw(0);
     SetScenarioFollowCharacter(WONC_WONG);
     RestoreWoncCharacters();
     (void)camCtrlSetFovTransitionTo(true);
-    (void)camCtrlSetState(CameraState::Init);
+    (void)camCtrlSetState(Init);
     (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(woncCurrentAuthor->package), 0);
     (void)EV_FreeAuthorPak(0, woncCurrentAuthor->authorBank);
     (void)EV_ForceLoadNpc(WONC_WONG);

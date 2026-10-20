@@ -1241,6 +1241,7 @@ void SetItemSelectorCameraSteps(ItemSelectorCamera &camera, float frames) {
 }
 
 void PrepareItemSelectorCamera() {
+    using enum CameraState;
     Character *const player = ItemSelectorPlayer();
     if (!player)
         return;
@@ -1251,7 +1252,7 @@ void PrepareItemSelectorCamera() {
     camCtrlGetNextCamPos(&camera.savedEye);
     camCtrlGetTargetPosition(&camera.savedTarget);
     camera.savedAlpha = player->alpha;
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
     camera.eye = camera.savedEye;
     camera.target = camera.savedTarget;
     UpdateItemSelectorCameraGoal(camera, *player);
@@ -1320,7 +1321,7 @@ void RestoreItemSelectorContext() {
         return;
     const ItemSelectorContext &context = *itemSelectorSelection.context;
     if (Character *const player = ItemSelectorPlayer()) {
-        EV_SetCharDisplay(player, 3, context.playerDisplay);
+        EV_SetCharDisplay(player, CVM_DisplayEnabled, context.playerDisplay);
         charaSetVisibilityFlagTo(player, context.playerVisible);
     }
     camCtrlSetState(context.cameraState);
@@ -3876,6 +3877,7 @@ void padcRefreshCurrentInputs(bool bind) {
 }
 
 static std::int64_t RetireIconInputSlot(std::uint32_t slot, std::int32_t force) {
+    using enum CameraState;
     if (slot >= 8)
         return 0;
     if (slot == 0) {
@@ -3901,7 +3903,7 @@ static std::int64_t RetireIconInputSlot(std::uint32_t slot, std::int32_t force) 
             CloseWristwatch(1);
             itemSelectorDelayedResult = 0;
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             itemSelectorCameraActive = false;
             SelectPostFxBank(1, mainIconPostFxBank);
             mainIconPhase = 5;

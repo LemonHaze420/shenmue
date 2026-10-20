@@ -1419,6 +1419,7 @@ std::int32_t drGetEntryKind(shen_name region) {
 
 
 std::int64_t manage_alpha(std::int32_t nextState, std::int32_t scriptBits) {
+    using enum CameraState;
     Character *const ryo = ctrlGetRootNode();
     if (drEntryState != 0) {
         if (drEntryState == 1 && plymGetSpecialFlag() == 1) {
@@ -1437,7 +1438,7 @@ std::int64_t manage_alpha(std::int32_t nextState, std::int32_t scriptBits) {
     drEntryCameraContext = camCtrlGetContextVal();
     camCtrlSetContext(0, 0);
     shenToggleAreaFlags(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     ++drEntryState;
     const DoorAreaMetadata *const metadata = GetDataForCurrentMapAndScene(doorSearchRegion);
     const std::int32_t side = metadata ? metadata->flags & 3 : 0;
@@ -1460,6 +1461,7 @@ std::int64_t manage_alpha(std::int32_t nextState, std::int32_t scriptBits) {
 
 
 std::int64_t drWalkThroughDoor(std::int32_t nextState, std::int32_t scriptBits) {
+    using enum CameraState;
     Character *const ryo = ctrlGetRootNode();
     if (drEntryState == 16) {
         drEntryNpcLoadState = GetNpcNewLoadState();
@@ -1529,7 +1531,7 @@ std::int64_t drWalkThroughDoor(std::int32_t nextState, std::int32_t scriptBits) 
         if (drEntryWaitFrames++ > 120) {
             if (drEntryKind != 2)
                 LeaveMagicRoom();
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             ResetDoorInteraction();
             EV_NPC_NewLoadSw(1);
             (void)SetPlayerControlEnabled(1);
@@ -1574,6 +1576,7 @@ std::int64_t drWalkThroughDoor(std::int32_t nextState, std::int32_t scriptBits) 
 
 
 std::int64_t drTryDoor(std::int32_t nextState, std::int32_t scriptBits) {
+    using enum CameraState;
     Character *const ryo = ctrlGetRootNode();
     switch (drEntryState) {
     case 32: {
@@ -1631,7 +1634,7 @@ std::int64_t drTryDoor(std::int32_t nextState, std::int32_t scriptBits) {
             break;
         }
         if (drEntryWaitFrames++ > 120) {
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             ResetDoorInteraction();
             EV_NPC_NewLoadSw(1);
             (void)SetPlayerControlEnabled(1);
@@ -1662,6 +1665,7 @@ std::int64_t drTryDoor(std::int32_t nextState, std::int32_t scriptBits) {
 
 
 std::int64_t drKnockOnDoor(std::int32_t nextState, std::int32_t variant, std::int32_t scriptBits) {
+    using enum CameraState;
     Character *const ryo = ctrlGetRootNode();
     if (drEntryState == 48) {
         drEntryNpcLoadState = GetNpcNewLoadState();
@@ -1712,7 +1716,7 @@ std::int64_t drKnockOnDoor(std::int32_t nextState, std::int32_t variant, std::in
         (void)npcReleaseStreamsNearDoor(&task->origin, 1.5f);
     if (mtwkSetExtraFlag(FindMotionWork(ryo), 0x3a, 1) != 0) {
         if (drEntryWaitFrames++ > 120) {
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             ResetDoorInteraction();
             EV_NPC_NewLoadSw(1);
             (void)SetPlayerControlEnabled(1);
@@ -1889,9 +1893,9 @@ std::int64_t drOccupantAnswers(std::int32_t nextState) {
             return 0;
         (void)StartScenarioFreeTalkRecord(drAnswerNpc, -1);
         Vector3 position{};
-        (void)GetMotionBonePosition(work, 5, &position);
+        (void)GetMotionBonePosition(work, MB_Head, &position);
         (void)UpdateMotionWorkWithPosition(FindMotionWork(ryo), &position, 0);
-        (void)GetMotionBonePosition(FindMotionWork(ryo), 5, &position);
+        (void)GetMotionBonePosition(FindMotionWork(ryo), MB_Head, &position);
         (void)UpdateMotionWorkWithPosition(work, &position, 0);
         (void)mtwkRequestMotion(work, static_cast<std::uint16_t>(drAnswerDoorMotion), MotionRegion::LowerBody);
         (void)doorLoopRigidMotion(doorSearchRegion, npcGetRemappedAnimId(drAnswerMotion), drAnswerFrame, 0.0f);
@@ -2518,6 +2522,7 @@ bool AcquireAutomaticDoorControl(shen_name subject) {
 }
 
 void UpdateDoorAuthorController() {
+    using enum CameraState;
     switch (doorRuntime.authorPhase) {
     case 0:
     case 38:
@@ -2527,10 +2532,10 @@ void UpdateDoorAuthorController() {
         if (!AcquireAutomaticDoorControl(doorRuntime.authorDoor))
             return;
         doorRuntime.authorCameraState = camCtrlGetState();
-        if (doorRuntime.authorCameraState == CameraState::LockedOn)
-            doorRuntime.authorCameraState = CameraState::Init;
+        if (doorRuntime.authorCameraState == LockedOn)
+            doorRuntime.authorCameraState = Init;
         camCtrlGetNextCamPos(&doorRuntime.authorCameraPosition);
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
         camCtrlSetNextPosition(doorRuntime.authorCameraPosition);
         if (doorRuntime.authorPhase == 1)
             doorLightingReaderMask = static_cast<std::uint32_t>(GetMapModelReaderMask());
@@ -2632,13 +2637,14 @@ void UpdateDoorAuthorController() {
 }
 
 void UpdateDoorDestinationController() {
+    using enum CameraState;
     switch (doorRuntime.destinationPhase) {
     case 1: {
         if (!AcquireAutomaticDoorControl(doorRuntime.destinationDoor))
             return;
         Vector3 position{};
         camCtrlGetNextCamPos(&position);
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
         camCtrlSetNextPosition(position);
         spmFadeOut();
         StartScreenFilmFade(GetCurrentAreaScreenFilmTask(), 30, 0, 255);
@@ -2750,6 +2756,7 @@ void TransformPropObject() {
 }
 
 bool camCtrlSwitchToEventCam(std::int32_t frames, const Vector3 *target, std::int16_t yaw) {
+    using enum CameraState;
     if (!g_cameraControl || !camCtrlComputeOrbitCameraFromTarget(target, yaw, &doorRuntime.cameraEndPosition, &doorRuntime.cameraEndTarget)) {
         return false;
     }
@@ -2757,9 +2764,9 @@ bool camCtrlSwitchToEventCam(std::int32_t frames, const Vector3 *target, std::in
     doorRuntime.cameraFrame = 0;
     camCtrlGetNextCamPos(&doorRuntime.cameraStartPosition);
     doorRuntime.cameraStartTarget = g_cameraControl->targetPosition;
-    doorRuntime.previousCameraState = g_cameraControl->state == CameraState::LockedOn ? CameraState::Init : g_cameraControl->state;
+    doorRuntime.previousCameraState = g_cameraControl->state == LockedOn ? Init : g_cameraControl->state;
     doorRuntime.cameraActive = true;
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
     return true;
 }
 
@@ -3311,8 +3318,9 @@ void InitializeDoorRuntime(const MapInfoChunk *doorChunk) {
 }
 
 void ResetDoorRuntime() {
+    using enum CameraState;
     if (doorRuntime.cameraActive)
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
     if (IsDoorInteractionActive())
         ResetDoorInteraction();
     if (doorRuntime.task) {

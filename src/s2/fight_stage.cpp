@@ -216,16 +216,21 @@ void AdjustActiveGroundTarget(std::uint32_t controller, Vector3 *position, Motio
     const auto index = indices[controller];
     if (actor->previousGroundSamples[index] < -9999.9f)
         actor->previousGroundSamples[index] = position->y;
-    const bool addNearby = static_cast<std::uint32_t>(actor->game->state) < 4U || (actor->moveFlags & 0x20U) != 0;
+    const bool addNearby = static_cast<std::uint32_t>(actor->game->state) < 4U || (actor->moveFlags & VFMF_ForceDefeat) != 0;
     const bool query = controller != 0 && controller != 6;
-    if (query || actor->game->type == 8 || (actor->hitStateFlags & 0x81d010U) != 0) {
+    if (query || actor->game->type == 8 ||
+        (actor->hitStateFlags &
+            (VFHSF_FallLandingRequired | VFHSF_LightReaction | VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState | VFHSF_AlignedToGround)) !=
+            0) {
         actor->groundHeights[index] = vfFieldGetIntersection(actor, *position);
         if (addNearby)
             actor->groundHeights[index] += vfAccumEnemyGroundOffsetAndMask(position, &actor->nearbyGroundActors[index]);
     }
     if (actor->game->type == 8)
         return;
-    if ((actor->hitStateFlags & 0x81d010U) != 0) {
+    if ((actor->hitStateFlags &
+            (VFHSF_FallLandingRequired | VFHSF_LightReaction | VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState | VFHSF_AlignedToGround)) !=
+        0) {
         actor->previousGroundSamples[index] = position->y;
         return;
     }
@@ -240,7 +245,7 @@ void AdjustActiveGroundTarget(std::uint32_t controller, Vector3 *position, Motio
         if (addNearby)
             actor->groundHeights[2] += vfAccumEnemyGroundOffsetAndMask(&actor->contactPosition, &actor->nearbyGroundActors[2]);
         std::uint32_t primary = actor->groundHeights[1] <= actor->groundHeights[0] ? 1U : 0U;
-        if ((actor->motionFlags & 0x100U) != 0) {
+        if ((actor->motionFlags & VFMOF_Unknown100) != 0) {
             if (primary == 0 && (category & 0x1c00U) != 0)
                 primary = 1;
             else if ((category & 0xe000U) != 0)
@@ -259,17 +264,19 @@ void AdjustActiveGroundTarget(std::uint32_t controller, Vector3 *position, Motio
             actor->targetGroundSamples[0] = difference + position->y;
             actor->targetGroundSamples[1] = (actor->groundHeights[1] - actor->groundHeights[0] + otherFoot.y) + difference;
         }
-        if ((actor->stateFlags & 0x80000U) != 0) {
+        if ((actor->stateFlags & VFSF_Unknown80000) != 0) {
             for (std::uint8_t i = 0; i < 7; ++i)
                 actor->previousGroundSamples[i] = actor->targetGroundSamples[i];
         }
-        if (((actor->motionFlags & 0x100U) == 0 || (category & 0x1c00U) == 0) && std::fabs(actor->targetGroundSamples[0] - position->y) > 0.0024999999f)
+        if (((actor->motionFlags & VFMOF_Unknown100) == 0 || (category & 0x1c00U) == 0) &&
+            std::fabs(actor->targetGroundSamples[0] - position->y) > 0.0024999999f)
             position->y = (actor->previousGroundSamples[0] + actor->targetGroundSamples[0]) * 0.5f;
-    } else if (controller == 0 || (controller == 6 && ((actor->motionFlags & 0x100U) == 0 || (category & 0xe000U) == 0))) {
+    } else if (controller == 0 || (controller == 6 && ((actor->motionFlags & VFMOF_Unknown100) == 0 || (category & 0xe000U) == 0))) {
         if (std::fabs(actor->targetGroundSamples[index] - position->y) > 0.0024999999f)
             position->y = (actor->previousGroundSamples[index] + actor->targetGroundSamples[index]) * 0.5f;
     }
-    if ((actor->motionFlags & 0x100U) != 0 && (actor->moveFlags & 4U) == 0 && (actor->actor->secondaryMotionFlags & 0x2000000U) == 0) {
+    if ((actor->motionFlags & VFMOF_Unknown100) != 0 && (actor->moveFlags & VFMF_Airborne) == 0 &&
+        (actor->actor->secondaryMotionFlags & VFSMF_Unknown2000000) == 0) {
         float limit = 0.0f;
         if ((controller == 3 && (category & 0x20U) != 0) || (controller == 4 && (category & 0x100U) != 0))
             limit = 0.2f;
@@ -376,7 +383,7 @@ void vfApplyKnockbackPhysics(VFActor *self) {
     const float knockbackDrag = self->scale * drag;
     const float slideDrag = self->scale * (drag * game.slideDragScale);
     bool movingKnockback = false;
-    if ((self->hitStateFlags & 0x10U) == 0) {
+    if ((self->hitStateFlags & VFHSF_FallLandingRequired) == 0) {
         const float length = std::sqrt(self->knockbackVelocity.x * self->knockbackVelocity.x + self->knockbackVelocity.z * self->knockbackVelocity.z);
         if (length <= knockbackDrag)
             self->knockbackVelocity.x = self->knockbackVelocity.z = 0.0f;
@@ -397,7 +404,7 @@ void vfApplyKnockbackPhysics(VFActor *self) {
         self->slideVelocity.x *= scale;
         self->slideVelocity.z *= scale;
     }
-    if ((self->moveFlags & 4U) != 0)
+    if ((self->moveFlags & VFMF_Airborne) != 0)
         self->knockbackVelocity.y = (self->knockbackVelocity.y - self->scale * self->scale * game.gravityScale) + self->slideVelocity.y;
     self->position.x = (self->position.x + self->knockbackVelocity.x) + self->slideVelocity.x;
     self->position.z = (self->position.z + self->knockbackVelocity.z) + self->slideVelocity.z;
@@ -408,7 +415,7 @@ void vfApplyKnockbackPhysics(VFActor *self) {
 // @verified - p
 void vfUpdatePositionXZ(VFActor *self) {
     if (self->game->type != 4 || self->fightStyle != 0 || self->animationTime != 0.0f ||
-        ((self->secondaryMotionFlags & 0x8000000U) == 0 && (self->motionFlags & 0x1010U) == 0))
+        ((self->secondaryMotionFlags & VFSMF_Unknown8000000) == 0 && (self->motionFlags & (VFMOF_Unknown10 | VFMOF_Unknown1000)) == 0))
         return;
     const auto angle = static_cast<std::uint16_t>(-self->facingAngle);
     self->actor->position.x = sin_fixed16(static_cast<std::int16_t>(angle)) * 3.0f + self->position.x;
@@ -417,7 +424,7 @@ void vfUpdatePositionXZ(VFActor *self) {
 
 // @verified - p
 void vfResolveKnockbackLanding(VFActor *self) {
-    if ((self->moveFlags & 4U) == 0)
+    if ((self->moveFlags & VFMF_Airborne) == 0)
         return;
     if ((self->motionContactFlags & 1U) == 0) {
         const auto angle = static_cast<std::uint16_t>(-self->facingAngle);
@@ -427,49 +434,49 @@ void vfResolveKnockbackLanding(VFActor *self) {
         self->position.z -= z;
     }
     self->moveDelta.y = self->contactPosition.y - self->position.y;
-    self->moveFlags &= ~4U;
-    self->hitStateFlags &= ~0x10U;
+    self->moveFlags &= ~VFMF_Airborne;
+    self->hitStateFlags &= ~VFHSF_FallLandingRequired;
     mtwkSetExtraFlag(self->motion, 3, 2);
 }
 
 // @verified - p
 void vfUpdateAutoAdvanceLanding(VFActor *self) {
-    if ((self->game->gameFlags & 0x20U) != 0 || (self->moveFlags & 0x80U) == 0)
+    if ((self->game->gameFlags & 0x20U) != 0 || (self->moveFlags & VFMF_AutoAdvanceMotion) == 0)
         return;
-    self->moveFlags &= ~0x2000U;
-    if ((self->moveFlags & 4U) != 0) {
-        if ((self->moveFlags & 8U) == 0) {
+    self->moveFlags &= ~VFMF_AnimationClamp;
+    if ((self->moveFlags & VFMF_Airborne) != 0) {
+        if ((self->moveFlags & VFMF_Ascending) == 0) {
             const float velocity = self->knockbackVelocity.y - self->scale * self->scale * self->game->gravityScale;
             if (self->targetGroundY + self->groundOffset > velocity + self->contactPosition.y || self->targetGroundY > velocity + self->position.y)
-                self->moveFlags |= 0x2000U;
+                self->moveFlags |= VFMF_AnimationClamp;
         }
     } else {
         if (self->targetGroundY != self->position.y && self->targetGroundY + 0.5f >= self->position.y)
             self->position.y = self->targetGroundY;
-        if ((self->motionFlags & 0x10U) != 0) {
+        if ((self->motionFlags & VFMOF_Unknown10) != 0) {
             if (self->animationTime < static_cast<float>(self->parameter2d6) || static_cast<float>(self->parameter2e0) <= self->animationTime)
-                self->hitStateFlags &= ~0x10U;
+                self->hitStateFlags &= ~VFHSF_FallLandingRequired;
             else
-                self->hitStateFlags |= 0x10U;
+                self->hitStateFlags |= VFHSF_FallLandingRequired;
         }
     }
 }
 
 // @verified - p
 void vfUpdateAirborneAnimationTiming(VFActor *self) {
-    if ((self->moveFlags & 0x2000U) != 0) {
-        if ((self->moveFlags & 4U) != 0) {
+    if ((self->moveFlags & VFMF_AnimationClamp) != 0) {
+        if ((self->moveFlags & VFMF_Airborne) != 0) {
             self->knockbackVelocity.y = 0.0f;
             self->position.y = self->targetGroundY;
             if (self->targetGroundY > self->minimumGroundY)
                 self->knockbackVelocity.x = self->knockbackVelocity.z = 0.0f;
             vfResolveKnockbackLanding(self);
         }
-        if (self->parameter2e0 != 0 && static_cast<float>(self->parameter2e0) > self->animationTime && (self->activeMotionFlags & 1U) == 0)
+        if (self->parameter2e0 != 0 && static_cast<float>(self->parameter2e0) > self->animationTime && (self->activeMotionFlags & VFSMF_Unknown1) == 0)
             self->animationTime = self->parameter4c8 = static_cast<float>(self->parameter2e0);
-    } else if ((self->moveFlags & 4U) != 0) {
+    } else if ((self->moveFlags & VFMF_Airborne) != 0) {
         if (self->knockbackVelocity.y < 0.0f)
-            self->moveFlags &= ~8U;
+            self->moveFlags &= ~VFMF_Ascending;
         if (self->animationTime > static_cast<float>(self->parameter2de)) {
             const std::int32_t frame = self->parameter2e0 - static_cast<std::int16_t>(self->predictedKnockbackFrames) + 1;
             if (frame <= 0 || static_cast<float>(frame) < self->animationTime)
@@ -485,7 +492,7 @@ void vfUpdateGroundHeightAndEnemyContacts(VFActor *self) {
     if (ground == self->groundY) {
         if (self->targetGroundY > self->groundY) {
             self->targetGroundY = self->groundY;
-            if ((self->moveFlags & 4U) == 0) {
+            if ((self->moveFlags & VFMF_Airborne) == 0) {
                 self->position.y = self->groundY;
                 shenApplyTranslationToAll(&self->character->entity.node, self->position);
             }
@@ -493,7 +500,7 @@ void vfUpdateGroundHeightAndEnemyContacts(VFActor *self) {
         return;
     }
     self->targetGroundY = ground;
-    if ((self->moveFlags & 4U) != 0)
+    if ((self->moveFlags & VFMF_Airborne) != 0)
         return;
     self->position.y = ground;
     shenApplyTranslationToAll(&self->character->entity.node, self->position);
@@ -519,7 +526,7 @@ void vfUpdateGroundHeightAndEnemyContacts(VFActor *self) {
 namespace {
 
 float FightIntersectionDistance(const VFActor &actor, std::uint16_t angle, float length) {
-    const Vector3 &origin = (actor.moveFlags & 0x10000000U) != 0 ? actor.contactPosition : actor.motionContactSamples[0];
+    const Vector3 &origin = (actor.moveFlags & VFMF_RefreshContactHistory) != 0 ? actor.contactPosition : actor.motionContactSamples[0];
     const Vector3 destination{origin.x - sin_fixed16(static_cast<std::int16_t>(angle)) * length, origin.y, origin.z - cos_fixed16(angle) * length};
     Vector3 intersection;
     RaycastForCollision(&intersection, &destination, &origin);
@@ -528,7 +535,7 @@ float FightIntersectionDistance(const VFActor &actor, std::uint16_t angle, float
 }
 
 std::uint16_t PredictFightKnockbackFrames(const VFActor &actor, float height) {
-    if ((actor.moveFlags & 4U) == 0)
+    if ((actor.moveFlags & VFMF_Airborne) == 0)
         return 0;
     float y = actor.contactPosition.y, velocity = actor.knockbackVelocity.y;
     const float acceleration = actor.scale * actor.scale * actor.game->gravityScale - actor.slideVelocity.y;
@@ -601,16 +608,17 @@ void vfUpdateHitFacingAndKnockback(VFActor *self) {
         readPosition(bones[i], self->contactSamples[i]);
     const float height = self->contactSamples[1].y - (self->targetGroundY + 1.5f);
     std::memcpy(&self->actorRuntimeFlags, &height, sizeof(height));
-    self->temporaryFacingAngle = static_cast<std::uint16_t>(self->facingAngle + ((self->hitStateFlags & 0x40U) != 0 ? self->facingAngleDelta : 0));
+    self->temporaryFacingAngle =
+        static_cast<std::uint16_t>(self->facingAngle + ((self->hitStateFlags & VFHSF_FacingStepOnTransition) != 0 ? self->facingAngleDelta : 0));
     if (self->actionTriggerPhase == 4) {
         self->actionTriggerPhase = 0;
-        if ((self->hitStateFlags & 0x8000U) != 0) {
-            self->hitStateFlags &= ~0x8000U;
+        if ((self->hitStateFlags & VFHSF_SpecialThrow) != 0) {
+            self->hitStateFlags &= ~VFHSF_SpecialThrow;
             self->game->hitStopFrames = static_cast<std::uint8_t>(static_cast<std::int32_t>(self->inverseScale * 6.0f));
         }
     }
     self->previousFootContactState = self->footContactState;
-    if ((self->hitStateFlags & 0x14040U) == 0)
+    if ((self->hitStateFlags & (VFHSF_FacingStepOnTransition | VFHSF_SpecialGuardOrParry | VFHSF_GuardState)) == 0)
         self->facingYaw = self->facingAngle;
     else {
         Matrix4x4_Push();
@@ -628,12 +636,12 @@ void vfUpdateHitFacingAndKnockback(VFActor *self) {
         CaptureFightHitTransform(self->character, 26, self->rightLegHitTransform);
         self->footFacingAngles[1] = FightFootFacingAngle();
         Matrix4x4::Pop();
-        if ((self->hitStateFlags & 0x14000U) != 0) {
-            const float threshold = (self->motionFlags & 0x800U) != 0 ? 0.4f : -0.4f;
+        if ((self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_GuardState)) != 0) {
+            const float threshold = (self->motionFlags & VFMOF_ContactCategoryB) != 0 ? 0.4f : -0.4f;
             if (threshold < self->hitYaw.x)
-                self->hitStateFlags &= ~0x800U;
+                self->hitStateFlags &= ~VFHSF_ReversedFacing;
             else
-                self->hitStateFlags |= 0x800U;
+                self->hitStateFlags |= VFHSF_ReversedFacing;
         }
         Vector3 left = FightBoneLocalPosition(self->character, 26);
         const Vector3 rightFoot = FightBoneLocalPosition(self->character, 31);
@@ -652,7 +660,7 @@ void vfUpdateHitFacingAndKnockback(VFActor *self) {
             left.z = (left.z + rightFoot.z) * 0.5f;
             self->footFacingMode = static_cast<std::uint16_t>((self->footFacingMode & 0xff00U) | 2U);
             fromRoot = true;
-        } else if (self->pendingAnimation != 0 && (self->hitStateFlags & 0x14000U) != 0) {
+        } else if (self->pendingAnimation != 0 && (self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_GuardState)) != 0) {
             if (self->pendingAnimation == 1) {
                 left.x = rightFoot.x;
                 left.z = rightFoot.z;
@@ -674,19 +682,19 @@ void vfUpdateHitFacingAndKnockback(VFActor *self) {
             std::uint16_t reverse = self->hitYaw.x < 0.0f ? 0x8000U : 0U;
             if ((left.z - root.z) * self->hitBasisZ + (left.x - root.x) * self->hitYaw.z >= 0.0f)
                 reverse ^= 0x8000U;
-            if ((self->hitStateFlags & 0x14000U) != 0) {
+            if ((self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_GuardState)) != 0) {
                 if ((reverse & 0x8000U) != 0)
-                    self->hitStateFlags |= 0x800U;
+                    self->hitStateFlags |= VFHSF_ReversedFacing;
                 else
-                    self->hitStateFlags &= ~0x800U;
+                    self->hitStateFlags &= ~VFHSF_ReversedFacing;
             }
             self->facingYaw = static_cast<std::uint16_t>(facing + reverse);
         }
     }
-    if (((self->hitStateFlags & 0x200000U) != 0) != ((self->moveFlags & 0x40U) != 0))
-        self->moveFlags |= 0x400U;
+    if (((self->hitStateFlags & VFHSF_MirroredReactionAngle) != 0) != ((self->moveFlags & VFMF_MirrorReactionAngle) != 0))
+        self->moveFlags |= VFMF_MirroredStance;
     else
-        self->moveFlags &= ~0x400U;
+        self->moveFlags &= ~VFMF_MirroredStance;
     float lowest = 32000.0f;
     for (const Vector3 &sample : self->motionContactSamples)
         lowest = std::fmin(sample.y, lowest);
@@ -702,11 +710,11 @@ void vfUpdateHitFacingAndKnockback(VFActor *self) {
         self->backwardIntersectionTag = 0;
     }
     if (((self->temporaryFacingAngle - static_cast<std::uint16_t>(camCtrlGetNextRotY())) & 0x8000U) != 0)
-        self->moveFlags &= ~2U;
+        self->moveFlags &= ~VFMF_Unknown02;
     else
-        self->moveFlags |= 2U;
+        self->moveFlags |= VFMF_Unknown02;
     std::uint32_t guard = 0;
-    if ((self->hitStateFlags & 0x100U) != 0) {
+    if ((self->hitStateFlags & VFHSF_AttackActive) != 0) {
         switch (self->guardState) {
         case 0:
             guard = 4;
@@ -731,7 +739,7 @@ void vfUpdateHitFacingAndKnockback(VFActor *self) {
     }
     self->guardContactFlags = guard;
     if ((self->game->gameFlags & 0x20U) == 0) {
-        if ((self->hitStateFlags & 0x20000800U) == 0x20000800U)
+        if ((self->hitStateFlags & (VFHSF_ReversedFacing | VFHSF_CameraFocusTarget)) == 0x20000800U)
             self->hitFacingTimer = 30.0f;
         else if (self->hitFacingTimer > 0.0f) {
             self->hitFacingTimer -= shenGetScaledDeltaTickTime(1.0f);
@@ -739,11 +747,12 @@ void vfUpdateHitFacingAndKnockback(VFActor *self) {
                 self->hitFacingTimer = 0.0f;
         }
         const bool secondHalf = static_cast<std::int16_t>(static_cast<double>(self->currentAnimationEndFrame) * 0.5) < self->animationTime;
-        const bool turning = (self->hitStateFlags & 8U) != 0 ? self->animationHalfPhase < 0 || secondHalf : self->animationHalfPhase < 0 && !secondHalf;
+        const bool turning =
+            (self->hitStateFlags & VFHSF_Unknown8) != 0 ? self->animationHalfPhase < 0 || secondHalf : self->animationHalfPhase < 0 && !secondHalf;
         if (turning)
-            self->moveFlags |= 0x100U;
+            self->moveFlags |= VFMF_Unknown100;
         else
-            self->moveFlags &= ~0x100U;
+            self->moveFlags &= ~VFMF_Unknown100;
         float groundParameter;
         std::memcpy(&groundParameter, &self->groundParameter, sizeof(groundParameter));
         self->predictedKnockbackFrames = PredictFightKnockbackFrames(*self, groundParameter + self->groundOffset);
@@ -811,11 +820,11 @@ void vfUpdateContactSlotsAndGroundFlags(VFActor *self) {
         return static_cast<std::uint16_t>(angleValue + offset) <= extent;
     };
     const bool pairedGuardEligible = (pairedHit & 0x4000U) == 0 || (paired.activeMotionFlags & 0x100000U) != 0;
-    if ((self->moveFlags & 0x40000000U) != 0 && (self->stateFlags & 0x80U) == 0 && (paired.stateFlags & 0x80U) == 0 && (selfHit & 0x8dc100U) == 0 &&
-        (self->activeMotionFlags & 0x800000U) == 0 && (pairedHit & 0x8d8110U) == 0 && (paired.activeMotionFlags & 0x800020U) == 0 &&
-        !(std::fabs(self->hp) < 0.00000011920929f) && !(std::fabs(paired.hp) < 0.00000011920929f) && pairedGuardEligible && paired.fightStyle != 1 &&
-        (std::to_integer<std::uint8_t>(paired.motionParameters[2][25]) & 2U) == 0 && static_cast<std::uint16_t>((paired.currentAnimation & 0xfffU) - 58) > 1U &&
-        game.guardTimer > 0.0f) {
+    if ((self->moveFlags & VFMF_Unknown40000000) != 0 && (self->stateFlags & VFSF_Unknown80) == 0 && (paired.stateFlags & 0x80U) == 0 &&
+        (selfHit & 0x8dc100U) == 0 && (self->activeMotionFlags & VFSMF_Unknown800000) == 0 && (pairedHit & 0x8d8110U) == 0 &&
+        (paired.activeMotionFlags & 0x800020U) == 0 && !(std::fabs(self->hp) < 0.00000011920929f) && !(std::fabs(paired.hp) < 0.00000011920929f) &&
+        pairedGuardEligible && paired.fightStyle != 1 && (std::to_integer<std::uint8_t>(paired.motionParameters[2][25]) & 2U) == 0 &&
+        static_cast<std::uint16_t>((paired.currentAnimation & 0xfffU) - 58) > 1U && game.guardTimer > 0.0f) {
         const bool selfFront = inAngleRange(selfAngle, 8190, 0x3ffc);
         const bool selfBack = inAngleRange(selfAngle ^ 0x8000, 8190, 0x3ffc);
         const bool pairedFront = inAngleRange(otherAngle, 8190, 0x3ffc);
@@ -849,7 +858,7 @@ void vfUpdateContactSlotsAndGroundFlags(VFActor *self) {
     if (opponentGuard)
         ground |= 0x20U;
     std::uint32_t mask = 0;
-    if ((self->moveFlags & 0x40000000U) != 0 && (pairedHit & 0x102U) == 0x102U && inAngleRange(selfAngle, 5460, 0x2aa8) &&
+    if ((self->moveFlags & VFMF_Unknown40000000) != 0 && (pairedHit & 0x102U) == 0x102U && inAngleRange(selfAngle, 5460, 0x2aa8) &&
         (inAngleRange(otherAngle ^ 0x8000, 5460, 0x2aa8) || (paired.currentAnimation & 0xfffU) == 0xc5cU)) {
         mask = distance > 2.0f ? 0x733f00U : 0x7fff00U;
         if (static_cast<double>(distance) > 1.8)
@@ -867,7 +876,7 @@ void vfUpdateContactSlotsAndGroundFlags(VFActor *self) {
         paired.pairContactPriority = 0;
     }
     std::uint32_t orientation = (opponent.reactionEntryFlags & 1U) != 0 ? 0x48U : 0U;
-    if ((self->moveFlags & 0x400U) != 0)
+    if ((self->moveFlags & VFMF_MirroredStance) != 0)
         orientation ^= 8U;
     if ((opponent.moveFlags & 0x400U) != 0)
         orientation ^= 0x40U;
@@ -913,46 +922,46 @@ void vfUpdateSlotRuntimeMetricsAndTimers(VFActor *self) {
                 timer = 0.0f;
         }
     };
-    if ((self->hitStateFlags & 0x40000U) != 0)
+    if ((self->hitStateFlags & VFHSF_MidAirRecovery) != 0)
         slot.hitTimer = static_cast<float>(slot.hitTimerMaximum);
     else
         decrement(slot.hitTimer);
-    if ((self->hitStateFlags & 0x100U) != 0)
+    if ((self->hitStateFlags & VFHSF_AttackActive) != 0)
         slot.guardTimer = static_cast<float>(slot.guardTimerMaximum);
     else
         decrement(slot.guardTimer);
-    if ((self->hitStateFlags & 0x1c000U) != 0)
+    if ((self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) != 0)
         slot.guardTicks += delta;
     else {
         slot.guardTicks = 0.0f;
         slot.guardPhase = 0;
     }
-    if ((actor->hitStateFlags & 0x1c000U) != 0)
+    if ((actor->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) != 0)
         slot.opponentGuardTicks += delta;
     else
         slot.opponentGuardTicks = 0.0f;
-    if ((actor->hitStateFlags & 0x1000U) != 0) {
+    if ((actor->hitStateFlags & VFHSF_LightReaction) != 0) {
         if (static_cast<std::int32_t>(slot.opponentAttackTimer) < 255)
             slot.opponentAttackTimer += delta;
     } else
         decrement(slot.opponentAttackTimer);
-    if ((self->hitStateFlags & 0x80000U) != 0) {
+    if ((self->hitStateFlags & VFHSF_AirborneOrDowned) != 0) {
         if (slot.pressure < 240)
             slot.pressure += 3;
     } else if (slot.pressure != 0)
         --slot.pressure;
     decrement(slot.parameterBc);
-    if ((actor->hitStateFlags & 0x10000000U) != 0) {
+    if ((actor->hitStateFlags & VFHSF_ForcedReaction) != 0) {
         if (static_cast<std::int32_t>(slot.opponentMotionTimer) < 240)
             slot.opponentMotionTimer += 8.0f;
     } else
         decrement(slot.opponentMotionTimer);
     slot.parameterE4 = 0;
-    if ((self->activeMotionFlags & 0x800000U) != 0 && slot.motionTicks < 60000.0f)
+    if ((self->activeMotionFlags & VFSMF_Unknown800000) != 0 && slot.motionTicks < 60000.0f)
         slot.motionTicks += delta;
     decrement(slot.hpPhaseTimer);
     if (!(slot.motionTimer > 0.0f)) {
-        if ((self->motionFlags & 0x80000000U) != 0)
+        if ((self->motionFlags & VFMOF_Unknown80000000) != 0)
             slot.motionTimer = 90.0f;
     } else
         decrement(slot.motionTimer);
@@ -962,8 +971,8 @@ void vfUpdateSlotRuntimeMetricsAndTimers(VFActor *self) {
 void vfUpdateSlotReactionHistory(VFActor *self) {
     VFSlotRuntimeState &slot = *g_pFightMain->actorSlots[self->groupIndex];
     const VFActor &opponent = *g_pFightMain->actors[self->actionIndex];
-    if ((opponent.motionFlags & 0x100U) != 0 && (self->hitStateFlags & 0x24000U) != 0 && self->currentAnimation != self->previousAnimation &&
-        (opponent.motionFlags & 2U) == 0 && (self->hitStateFlags & 0x10000U) == 0) {
+    if ((opponent.motionFlags & 0x100U) != 0 && (self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_Unknown20000)) != 0 &&
+        self->currentAnimation != self->previousAnimation && (opponent.motionFlags & 2U) == 0 && (self->hitStateFlags & VFHSF_GuardState) == 0) {
         auto index = static_cast<std::uint8_t>(slot.parameterA3);
         slot.animationHistory[index++] = opponent.currentAnimation & 0xfffU;
         slot.parameterA3 = static_cast<std::int8_t>(index > 3 ? 0 : index);
@@ -988,8 +997,8 @@ void vfUpdateSlotReactionHistory(VFActor *self) {
         std::memcpy(&bits, &actor.reactionPower, sizeof(bits));
         return static_cast<std::int8_t>(bits >> 24);
     };
-    if ((self->previousHitStateFlags & 0x80000U) == 0 && (self->hitStateFlags & 0x80000U) != 0 && second && second->fightStyle == 0 &&
-        second->pairContactPriority != 0) {
+    if ((self->previousHitStateFlags & VFHSF_AirborneOrDowned) == 0 && (self->hitStateFlags & VFHSF_AirborneOrDowned) != 0 && second &&
+        second->fightStyle == 0 && second->pairContactPriority != 0) {
         auto index = static_cast<std::uint8_t>(slot.parameterA4);
         slot.reactionHistory[index++] = static_cast<std::uint16_t>(static_cast<std::int16_t>(reactionByte(*second)));
         slot.parameterA4 = static_cast<std::int8_t>(index == 3 ? 0 : index);
@@ -1018,11 +1027,11 @@ void vfUpdateSlotRankParameters(VFActor *self) {
 void vfUpdateCurrentAssistWindow(VFActor *self) {
     const VFActor &actor = *self->actor;
     VFSlotRuntimeState &slot = *self->slot;
-    if ((actor.hitStateFlags & 0x1c000U) != 0)
+    if ((actor.hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) != 0)
         slot.assistWindowCurrent = slot.assistWindowGuard;
     else if ((actor.groundContactFlags & 1U) != 0)
         slot.assistWindowCurrent = (static_cast<std::uint8_t>(g_pFightMain->type - 2U) & 0xfdU) != 0 ? 1.2f : 1.5f;
-    else if ((actor.hitStateFlags & 0x104U) != 0)
+    else if ((actor.hitStateFlags & (VFHSF_Unknown4 | VFHSF_AttackActive)) != 0)
         slot.assistWindowCurrent = 2.5f;
     else
         slot.assistWindowCurrent = slot.assistWindowDefault;
@@ -1116,7 +1125,7 @@ void vfUpdateGuardLevel(VFMA_t *game, std::uint8_t index) {
     slot->parameter1a5 = static_cast<std::int8_t>(parameters[23]);
     slot->secondaryMotionTimer = slot->motionTimer = 0.0f;
     if ((parameters[25] & 1U) != 0)
-        actor->moveFlags |= 0x40000U;
+        actor->moveFlags |= VFMF_NoContactPairing;
     vfInitializeSlotPhaseConfigurations(actor);
 }
 
@@ -1208,7 +1217,7 @@ void vfSelectDefaultReactionAndGuardAnims(VFActor *actor) {
         const std::uint16_t offset = indices[row][i];
         actor->defaultAnimations[i] = static_cast<std::uint16_t>((static_cast<std::uint16_t>(ids[offset]) << 8) | ids[offset + 1]);
     }
-    actor->stateFlags &= ~0x80000U;
+    actor->stateFlags &= ~VFSF_Unknown80000;
 }
 
 // @verified - p
@@ -1231,7 +1240,7 @@ std::uint8_t vfSelectOpponentSlotByPriority(VFMA_t *game, std::uint8_t minimumPr
         if (!game->characters[i] || i == game->playerSlot)
             continue;
         if (game->slotTeams[i] == game->slotTeams[game->playerSlot] || static_cast<std::int32_t>(game->enemySlots[i]->runningTicks) < 15 ||
-            (actor->moveFlags & 0x20U) != 0 || ((actor->motionFlags | actor->hitStateFlags) & 0xdd110U) != 0 ||
+            (actor->moveFlags & VFMF_ForceDefeat) != 0 || ((actor->motionFlags | actor->hitStateFlags) & 0xdd110U) != 0 ||
             ((actor->secondaryMotionFlags | actor->activeMotionFlags) & 0x900c80U) != 0)
             continue;
         if (actor->selectionPriority > minimumPriority) {
@@ -1276,7 +1285,7 @@ void vfUpdateEnemySlotFormationAndYaw(VFMA_t *) {
 // @verified - p
 void vfRemoveCharaFromGroup(VFMA_t *game, FCMG_t *group) {
     if (group->character)
-        group->character->flags &= ~CharacterFlag40;
+        group->character->flags &= ~CF_Unknown40;
     game->characters[group->actorIndex] = nullptr;
     group->actorIndex = 0;
 }
@@ -1421,16 +1430,16 @@ bool vfTransitionEnemySlotToCooldown(VFMA_t *game, FCMG_t *group) {
         for (float &sample : group->groundSamples)
             sample = -10000.0f;
         std::uint32_t flags = 0;
-        if ((actor->hitStateFlags & 0x4000U) != 0) {
+        if ((actor->hitStateFlags & VFHSF_SpecialGuardOrParry) != 0) {
             flags = 1;
-            if ((actor->motionFlags & 0x4000000U) != 0)
-                flags = (actor->motionFlags & 0x800U) != 0 ? 65U : 33U;
-            else if ((actor->hitStateFlags & 0x800U) != 0)
+            if ((actor->motionFlags & VFMOF_Unknown4000000) != 0)
+                flags = (actor->motionFlags & VFMOF_ContactCategoryB) != 0 ? 65U : 33U;
+            else if ((actor->hitStateFlags & VFHSF_ReversedFacing) != 0)
                 flags = 3;
         }
-        if ((actor->moveFlags & 0x40U) != 0)
+        if ((actor->moveFlags & VFMF_MirrorReactionAngle) != 0)
             flags |= 0x80U;
-        if ((actor->hitStateFlags & 0x800000U) != 0)
+        if ((actor->hitStateFlags & VFHSF_AlignedToGround) != 0)
             flags |= 0x200U;
         if ((group->group->selectFlags & 0xa0U) != 0)
             flags |= 0x100U;
@@ -1725,14 +1734,15 @@ void vfUpdatePairingsAndDistances(VFMA_t *game) {
         VFActor *const self = game->actors[i];
         if (self->targetingCharacter && self->targetingCharacter == game->characters[self->actionIndex]) {
             const auto otherFlags = self->actor->moveFlags;
-            if (((otherFlags & 0x40000U) == 0 && (self->motionFlags & 0x100U) != 0 && (self->actor->hitStateFlags & 0x10000U) == 0 &&
-                    (self->moveFlags & 4U) == 0) ||
-                ((self->motionFlags & 0x10000000U) != 0 && (otherFlags & 0x20U) == 0)) {
+            if (((otherFlags & 0x40000U) == 0 && (self->motionFlags & VFMOF_Unknown100) != 0 && (self->actor->hitStateFlags & VFHSF_GuardState) == 0 &&
+                    (self->moveFlags & VFMF_Airborne) == 0) ||
+                ((self->motionFlags & VFMOF_DelayGuardResolution) != 0 && (otherFlags & 0x20U) == 0)) {
                 targets[i] = self->actionIndex;
                 continue;
             }
         }
-        if ((self->activeMotionFlags & 0x2000000U) != 0 && self->targetingCharacter && self->actor && (self->actor->moveFlags & 0x20U) == 0) {
+        if ((self->activeMotionFlags & VFSMF_Unknown2000000) != 0 && self->targetingCharacter && self->actor &&
+            (self->actor->moveFlags & VFMF_ForceDefeat) == 0) {
             targets[i] = self->actionIndex;
             continue;
         }
@@ -1759,11 +1769,12 @@ void vfUpdatePairingsAndDistances(VFMA_t *game) {
             if (!game->characters[j] || j == player)
                 continue;
             VFActor *const other = game->actors[j];
-            if ((other->moveFlags & 0x20U) != 0)
+            if ((other->moveFlags & VFMF_ForceDefeat) != 0)
                 continue;
             const float distance = distances[i][j];
             const float fromPlayer = distances[player][j];
-            if (game->slotTeams[j] == 1 && playerDistance > fromPlayer && (other->motionFlags & 0x80000U) == 0 && (other->secondaryMotionFlags & 0x800U) == 0) {
+            if (game->slotTeams[j] == 1 && playerDistance > fromPlayer && (other->motionFlags & VFMOF_Unknown80000) == 0 &&
+                (other->secondaryMotionFlags & VFSMF_Unknown800) == 0) {
                 playerEnemy = static_cast<std::int8_t>(j);
                 playerDistance = fromPlayer;
             }
@@ -2047,7 +2058,7 @@ FightStageObjectDefinition *vfAllocateVOBJ(std::int32_t slot, Character *charact
     object->object.definition = g_fightStageObjectDefinitions[definition];
     object->object.model = character;
     object->object.controlCharacter = character;
-    EV_SetCharDisplay(character, 3, 1);
+    EV_SetCharDisplay(character, CVM_DisplayEnabled, 1);
     object->object.contactPosition = GetCharacterWorldPosition(character);
     object->object.rotation = GetCharacterWorldRotation(character);
     const Vector3 &offset = object->object.definition->positionOffset;
@@ -2071,7 +2082,7 @@ std::uint8_t vfStageObjectSetBrokenModel(std::int32_t slot, Character *character
     if (CharacterControlModel *const control = FindCharacterControlModel(character))
         control->flags &= ~0xdU;
     object.brokenModel = character;
-    return EV_SetCharDisplay(character, 3, 0);
+    return EV_SetCharDisplay(character, CVM_DisplayEnabled, 0);
 }
 
 // Initialize the real live root in insertion order.
@@ -2139,7 +2150,7 @@ void vfToggleAttachedStageObjectDisplay(VFActor *actor) {
     for (VOBJ_t *entry = g_fightStageObjectRoot; entry; entry = entry->next) {
         FightStageObjectRuntime &object = entry->object;
         if ((object.reactionFlags & 1) && object.reactingCharacter == actor->character)
-            EV_SetCharDisplay(object.model, 3, !IsOfThisVisibilityType(object.model, 3));
+            EV_SetCharDisplay(object.model, CVM_DisplayEnabled, !IsOfThisVisibilityType(object.model, 3));
     }
 }
 
@@ -2609,7 +2620,7 @@ std::int32_t ResumeFight(std::int32_t resetActors) {
             actor.position = GetCharacterWorldPosition(actor.character);
             actor.facingAngle = static_cast<std::uint16_t>(GetAllAngYForNode(&actor.character->entity.node));
             vfResetReactionProgram(&actor);
-            actor.moveFlags &= ~0x410U;
+            actor.moveFlags &= ~(VFMF_HitReactionLock | VFMF_MirroredStance);
             actor.facingYaw = actor.facingAngle;
             actor.contactPosition = actor.position;
             actor.queuedAction = 0;
@@ -2621,14 +2632,14 @@ std::int32_t ResumeFight(std::int32_t resetActors) {
             actor.markerMask = 0;
             actor.motionFlags = 0;
             if (SetMotionRegionFlag(motion, 70, 1, MotionRegion::LowerBody))
-                actor.moveFlags |= 0x40U;
+                actor.moveFlags |= VFMF_MirrorReactionAngle;
             else
-                actor.moveFlags &= ~0x40U;
+                actor.moveFlags &= ~VFMF_MirrorReactionAngle;
             const float frame = GetMotionFrame(motion, MotionRegion::LowerBody);
             if (actor.currentAnimation != GetMotionAnimationId(motion, MotionRegion::LowerBody))
                 vfSelectDefaultMotion(&actor, 0);
             result = static_cast<std::int32_t>(mtwkSetExtraFlag(motion, 1, 2));
-            actor.stateFlags |= 0x80000U;
+            actor.stateFlags |= VFSF_Unknown80000;
             actor.animationTime = frame;
         }
     }

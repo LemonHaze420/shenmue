@@ -32,6 +32,7 @@ std::int32_t g_fightCombatCounterSnapshot{};
 
 
 void vfSetupFightCameraState(VFMA_t *game) {
+    using enum CameraState;
     const auto map = g_currentMap.name;
     if (((map - SHEN_NAME(QJBT)) & 0xfffffcffU) == 0 && map != SHEN_NAME(QMBT))
         game->cameraParameter = 13;
@@ -94,7 +95,7 @@ void vfSetupFightCameraState(VFMA_t *game) {
     if ((flags & 2) == 0 && game->type != 9) {
         camCtrlSetPerspective(static_cast<std::uint16_t>(fov));
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::ChaseGoal);
+        camCtrlSetState(ChaseGoal);
     }
 }
 
@@ -237,15 +238,15 @@ void UpdateFightCameraDialogue(VFMA_t *game) {
             break;
         case 4:
             match = actorMatches([&](VFActor *actor) {
-                return (actor->hitStateFlags & 0x4000) && actor->actor && record->character.name == actor->actor->slot->id && accepts(actor);
+                return (actor->hitStateFlags & VFHSF_SpecialGuardOrParry) && actor->actor && record->character.name == actor->actor->slot->id && accepts(actor);
             });
             break;
         case 5:
             if (!self)
                 continue;
             match = actorMatches([&](VFActor *actor) {
-                return (actor->hitStateFlags & 0x84000) && (actor->hitStateFlags & 0x100) && actor->actor && record->character.name == actor->actor->slot->id &&
-                    accepts(actor);
+                return (actor->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_AirborneOrDowned)) && (actor->hitStateFlags & VFHSF_AttackActive) &&
+                    actor->actor && record->character.name == actor->actor->slot->id && accepts(actor);
             });
             break;
         case 6: {
@@ -320,7 +321,8 @@ void UpdateFightCameraDialogue(VFMA_t *game) {
                 continue;
             match = actorMatches([&](VFActor *actor) {
                 auto *paired = actor->secondActor;
-                return (self->hitStateFlags & 0x40000) && (actor->hitStateFlags & 0x80000) && !(self->hitStateFlags & 0x100000) && paired &&
+                return (self->hitStateFlags & VFHSF_MidAirRecovery) && (actor->hitStateFlags & VFHSF_AirborneOrDowned) &&
+                    !(self->hitStateFlags & VFHSF_Unknown100000) && paired &&
                     static_cast<std::uint16_t>(paired->animationTime) == paired->parameter33c[1] + 1 && record->character.name == paired->slot->id &&
                     accepts(actor);
             });
@@ -328,7 +330,7 @@ void UpdateFightCameraDialogue(VFMA_t *game) {
         case 11:
             if (!self)
                 continue;
-            if ((self->previousHitStateFlags & 0x100000) || !(self->hitStateFlags & 0x100000) || !self->secondActor)
+            if ((self->previousHitStateFlags & VFHSF_Unknown100000) || !(self->hitStateFlags & VFHSF_Unknown100000) || !self->secondActor)
                 break;
             if (record->otherCharacter.name) {
                 if (record->otherCharacter.name != self->secondActor->slot->id)
@@ -341,13 +343,13 @@ void UpdateFightCameraDialogue(VFMA_t *game) {
         case 12:
             if (!self)
                 continue;
-            match = (self->hitStateFlags & 0x80100) == 0x100 && self->currentAnimation != self->previousAnimation &&
+            match = (self->hitStateFlags & (VFHSF_AttackActive | VFHSF_AirborneOrDowned)) == 0x100 && self->currentAnimation != self->previousAnimation &&
                 (!record->otherCharacter.name || (self->actor && record->otherCharacter.name == self->actor->slot->id));
             break;
         case 13:
             if (!self)
                 continue;
-            if ((self->activeMotionFlags & 0x200000) && accepts(self)) {
+            if ((self->activeMotionFlags & VFSMF_Unknown200000) && accepts(self)) {
                 match = true;
                 break;
             }
@@ -355,14 +357,14 @@ void UpdateFightCameraDialogue(VFMA_t *game) {
         case 16:
             if (!self)
                 continue;
-            if ((self->previousHitStateFlags & 0x10000000) || !(self->hitStateFlags & 0x10000000))
+            if ((self->previousHitStateFlags & VFHSF_ForcedReaction) || !(self->hitStateFlags & VFHSF_ForcedReaction))
                 break;
             if (record->otherCharacter.name) {
                 if (!self->actor || record->otherCharacter.name != self->actor->slot->id)
                     break;
                 if (!other)
                     continue;
-                if (!(other->hitStateFlags & 0x100))
+                if (!(other->hitStateFlags & VFHSF_AttackActive))
                     break;
             }
             match = true;
@@ -638,15 +640,15 @@ void UpdateDefeatAndRespawn(VFMA_t *game) {
         if (!game->characters[i])
             continue;
         auto *const actor = game->actors[i];
-        if ((actor->moveFlags & 0x24) == 0x20 && SetMotionRegionFlag(actor->motion, 65, 1, MotionRegion::LowerBody)) {
+        if ((actor->moveFlags & (VFMF_Airborne | VFMF_ForceDefeat)) == 0x20 && SetMotionRegionFlag(actor->motion, 65, 1, MotionRegion::LowerBody)) {
             auto *const slot = game->enemySlots[i];
             vfTransitionEnemySlotToCooldown(game, slot);
             if (static_cast<std::uint8_t>(g_pFightStage->groupCounters[0] + g_pFightStage->groupCounters[1]) > game->maximumActiveEnemies)
                 vfUpdateEnemySlotCooldowns(game);
             ActivateBlockedFormations(game, slot);
         }
-        if (std::fabs(actor->hp) < 0.00000011920929f && !(actor->moveFlags & 0x20)) {
-            actor->moveFlags |= 0x20;
+        if (std::fabs(actor->hp) < 0.00000011920929f && !(actor->moveFlags & VFMF_ForceDefeat)) {
+            actor->moveFlags |= VFMF_ForceDefeat;
             if (g_pFightStage->battleFlags & 0x40000) {
                 const std::uint8_t player = actor->groupIndex == static_cast<std::uint8_t>(game->playerSlot);
                 vfAddRoundResults(player ^ 1, player);
@@ -722,9 +724,9 @@ void UpdateFormationRuntimeFlags(VFMA_t *game) {
             actor.formationRuntimeFlags |= 0x10;
         if ((flags & 4) && paired == FightValue<std::int16_t>(&actor, 0xa54))
             actor.formationRuntimeFlags |= 4;
-        if ((flags & 0x40) && (actor.hitStateFlags & 0x2000))
+        if ((flags & 0x40) && (actor.hitStateFlags & VFHSF_HeavyReaction))
             actor.formationRuntimeFlags |= 0x40;
-        if ((flags & 0x80) && (actor.hitStateFlags & 0x4000))
+        if ((flags & 0x80) && (actor.hitStateFlags & VFHSF_SpecialGuardOrParry))
             actor.formationRuntimeFlags |= 0x80;
         if ((flags & 0x100) && static_cast<std::int32_t>(actor.moveAngleTableIndex) >= actor.spawnYaw[1]) {
             actor.formationRuntimeFlags |= 0x100;
@@ -746,21 +748,22 @@ void SetOtherFightCharaAlphas(VFActor *actor, float alpha) {
 // The remaining time is published only after the camera, CPAM and alpha writes.
 // @verified - p
 void UpdateFightCharaAlphas(VFMA_t *game) {
+    using enum CameraState;
     if (!(game->targetTime > 0))
         return;
     float remaining = game->targetTime - shenGetScaledDeltaTickTime(2);
     if (remaining <= 0) {
         remaining = 0;
-        camCtrlSetState(CameraState::ChaseGoal);
+        camCtrlSetState(ChaseGoal);
         for (std::uint8_t i = 0; i < 6; ++i) {
             if (!game->characters[i])
                 continue;
             auto &actor = *game->actors[i];
             cpamSetFlag(actor.character, 1);
             if (!(std::to_integer<std::uint8_t>(actor.motionParameters[2][25]) & 1))
-                actor.moveFlags &= ~0x40000U;
-            if (actor.moveFlags & 0x10000) {
-                actor.moveFlags &= ~0x10000U;
+                actor.moveFlags &= ~VFMF_NoContactPairing;
+            if (actor.moveFlags & VFMF_Unknown10000) {
+                actor.moveFlags &= ~VFMF_Unknown10000;
                 SetOtherFightCharaAlphas(&actor, 1);
             }
         }
@@ -1439,6 +1442,7 @@ std::intptr_t vfmQueueFightStart(std::uint8_t startSlot, std::uint8_t maximumEne
 
 // @verified - p
 void vfm_Callback_FightTaskEntry_Callback(void *parameter) {
+    using enum CameraState;
     auto *game = static_cast<VFMA_t *>(parameter);
     if (ReturnZero() != 0)
         return;
@@ -1455,7 +1459,7 @@ void vfm_Callback_FightTaskEntry_Callback(void *parameter) {
         if (game->characters[i]) {
             auto *actor = game->actors[i];
             actor->formationRuntimeFlags &= 0xfffff0ff;
-            actor->stateFlags &= ~0x40000U;
+            actor->stateFlags &= ~VFSF_Unknown40000;
             actor->hitResolutionFlags = 0;
         }
     game->reserved2c = 0;
@@ -1519,7 +1523,7 @@ void vfm_Callback_FightTaskEntry_Callback(void *parameter) {
             if (!(stage->battleFlags & 2) && !game->cameraSet && game->type != 9) {
                 resetCharaPosYandIntersection();
                 camCtrlSetFovTransitionTo(false);
-                camCtrlSetState(CameraState::ChaseGoal);
+                camCtrlSetState(ChaseGoal);
                 game->cameraSet = 1;
             }
         }
@@ -1565,7 +1569,10 @@ void vfm_Callback_FightTaskEntry_Callback(void *parameter) {
             if (entry.character == game->playerCharacter) {
                 if (entry.status == 3 && game->playerSlot != -1) {
                     auto *actor = game->actors[game->playerSlot];
-                    if (!(actor->hitStateFlags & 0x81d010) && actor->parameter2dc != 4)
+                    if (!(actor->hitStateFlags &
+                            (VFHSF_FallLandingRequired | VFHSF_LightReaction | VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState |
+                                VFHSF_AlignedToGround)) &&
+                        actor->parameter2dc != 4)
                         actor->queuedAction = 0x24000000;
                 }
                 break;
@@ -1595,7 +1602,8 @@ void vfm_Callback_FightTaskEntry_Callback(void *parameter) {
             auto *actor = game->actors[i];
             auto *motion = FindMotionWork(game->characters[i]);
             if (!mtwkSetExtraFlag(motion, 3, 1) &&
-                (!(actor->hitStateFlags & 0x40000) || GetMotionEndFrame(motion, MotionRegion::LowerBody) <= GetMotionFrame(motion, MotionRegion::LowerBody)))
+                (!(actor->hitStateFlags & VFHSF_MidAirRecovery) ||
+                    GetMotionEndFrame(motion, MotionRegion::LowerBody) <= GetMotionFrame(motion, MotionRegion::LowerBody)))
                 ++settled;
         }
         if (settled == 6 || ++postBattleWaitFrames > 90) {

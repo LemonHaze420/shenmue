@@ -567,8 +567,8 @@ void UpdateReachedFloorStairCollision(PlayerMovementState &movement) {
         Vector3 leftFootBone{};
         GetMotionControllerTargetPosition(motionWork, 6, rightFoot);
         GetMotionControllerTargetPosition(motionWork, 5, leftFoot);
-        GetMotionBonePosition(motionWork, 0x20, &rightFootBone);
-        GetMotionBonePosition(motionWork, 0x1b, &leftFootBone);
+        GetMotionBonePosition(motionWork, MB_RightFoot, &rightFootBone);
+        GetMotionBonePosition(motionWork, MB_LeftFoot, &leftFootBone);
         const Vector3 &probeFoot = GetIsRHandAboveShoulder(motionWork) ? leftFoot : rightFoot;
         Vector3 footProbe{probeFoot.x, static_cast<float>(static_cast<double>(probeFoot.y) + 1.0), probeFoot.z};
         footProbe.y = shenFindIntersectionWithScene(footProbe, footProbe.y);

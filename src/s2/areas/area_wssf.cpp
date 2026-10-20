@@ -201,6 +201,7 @@ void HideSpectators() {
         Hide(people[i]);
 }
 void Finish(WssfMainWork &w) {
+    using enum CameraState;
     (void)AT_SetLocalBaseChara(ryo, invalid);
     HLib::DestroyTask(w.player);
     HLib::DestroyTask(w.stone);
@@ -238,7 +239,7 @@ void Finish(WssfMainWork &w) {
     Controllers(ryo, true);
     SetPlayerControlEnabled(1);
     camCtrlSetFovTransitionTo(true);
-    (void)camCtrlSetState(CameraState::Init);
+    (void)camCtrlSetState(Init);
 }
 void FinishChallenge(WssfMainWork &w) {
     std::int32_t flag = -1;

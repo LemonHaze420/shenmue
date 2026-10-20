@@ -290,7 +290,7 @@ void RunInstructionProgram(VFActor *actor, VFHD_t *owner, InstructionState &stat
                 state.motion = command.argument;
                 if (state.motion == -1) {
                     state.chosenDirection = LastInstructionDirection(owner);
-                    if (actor->actor->moveFlags & 0x40) {
+                    if (actor->actor->moveFlags & VFMF_MirrorReactionAngle) {
                         if (state.chosenDirection & 0x20)
                             state.motion = 603;
                         else if (state.chosenDirection & 0x10)
@@ -861,7 +861,8 @@ void ConvergeInstructionYaw(Character *character, const Vector3 &target, std::in
     SetCharacterWorldRotation(character, rotation);
 }
 void AdjustInstructionPairPosition(VFActor *actor, const Vector3 &start, const Vector3 &otherStart) {
-    if ((actor->motionFlags & 0x4200) != 0x200 && !((actor->motionFlags & 0x100) && (actor->hitStateFlags & 4) && !(actor->motionFlags & 0x80000)))
+    if ((actor->motionFlags & (VFMOF_Unknown200 | VFMOF_Unknown4000)) != 0x200 &&
+        !((actor->motionFlags & VFMOF_Unknown100) && (actor->hitStateFlags & VFHSF_Unknown4) && !(actor->motionFlags & VFMOF_Unknown80000)))
         return;
     const auto position = GetCharacterWorldPosition(actor->character);
     const float dx = position.x - otherStart.x, dz = position.z - otherStart.z;
@@ -1070,6 +1071,7 @@ bool vfHasDialoguePlayerFocus() {
 // The real dialogue clock, actor readiness gate and CAMT request owner.
 // @verified - p
 void vfmaSetupDialogueReactionsEtc(VFMA_t *game) {
+    using enum CameraState;
     auto index = DialogueIndex(*game);
     if (game->mode & 4) {
         game->frameDelta = 0;
@@ -1086,12 +1088,12 @@ void vfmaSetupDialogueReactionsEtc(VFMA_t *game) {
     if (index == -2) {
         game->mode &= ~1U;
         SetDialogueIndex(*game, -1);
-        camCtrlSetState(CameraState::ChaseGoal);
+        camCtrlSetState(ChaseGoal);
         dialoguePlayerFocus = 0;
         for (std::uint8_t i = 0; i < 6; ++i) {
             if (!game->characters[i])
                 continue;
-            EV_SetCharDisplay(game->characters[i], 3, 1);
+            EV_SetCharDisplay(game->characters[i], CVM_DisplayEnabled, 1);
             auto &slot = *game->enemySlots[i];
             if (slot.savedControlFlags & 0x40000000) {
                 cpamSetFlag(game->characters[i], 1);
@@ -1108,7 +1110,7 @@ void vfmaSetupDialogueReactionsEtc(VFMA_t *game) {
             if (!game->characters[i])
                 continue;
             auto &actor = *game->actors[i];
-            if ((actor.hitStateFlags & 0x4200) != 0x200 || actor.motionTimer || actor.animationTime < 2)
+            if ((actor.hitStateFlags & (VFHSF_AttackGuardWindow | VFHSF_SpecialGuardOrParry)) != 0x200 || actor.motionTimer || actor.animationTime < 2)
                 return;
         }
         const auto &camera = dialogueCameras[record.camera];
@@ -1130,7 +1132,7 @@ void vfmaSetupDialogueReactionsEtc(VFMA_t *game) {
             const std::uintptr_t request[3]{
                 camera.camera, reinterpret_cast<std::uintptr_t>(speaker->character), reinterpret_cast<std::uintptr_t>(speaker->character)};
             camCtrlToggleSplineRebuildFlag(3, request);
-            camCtrlSetState(CameraState::Scripted);
+            camCtrlSetState(Scripted);
             camCtrlSetFovTransitionTo(true);
             camCtrlDisableFilmBars();
             if (camera.isolate) {
@@ -1138,7 +1140,7 @@ void vfmaSetupDialogueReactionsEtc(VFMA_t *game) {
                     if (!game->characters[i])
                         continue;
                     const bool isSpeaker = game->actors[i] == speaker;
-                    EV_SetCharDisplay(game->characters[i], 3, isSpeaker);
+                    EV_SetCharDisplay(game->characters[i], CVM_DisplayEnabled, isSpeaker);
                     if (isSpeaker) {
                         if (shenCheckCharaHasAlphaManager(game->characters[i]))
                             game->enemySlots[i]->savedControlFlags |= 0x40000000;

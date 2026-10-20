@@ -151,6 +151,7 @@ void Pose(shen_name character, std::uint32_t animation, const Vector3 &position,
     EVT_AT_SetAngY_Callback(&angle);
 }
 void SetupBattle(AlleyBattleWork &work) {
+    using enum CameraState;
     for (auto name : authoredCharacters) {
         if (name.name == 0xffffffffU)
             break;
@@ -172,7 +173,7 @@ void SetupBattle(AlleyBattleWork &work) {
     Pose(enemies[3], 3644, {252.0800018310547f, 96.8499984741211f, 490.9800109863281f}, 140.9600067138672f);
     Pose(enemies[4], 3648, {247.75999450683594f, 96.8499984741211f, 492.92999267578125f}, 295.9200134277344f);
     Pose(enemies[5], 3632, {248.72000122070312f, 96.8499984741211f, 489.739990234375f}, 265.92999267578125f);
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
     camCtrlSetNextPosition({251.15961f, 98.82f, 487.0921f});
     camCtrlSetTargetPosition({250.2169952392578f, 98.05000305175781f, 491.5154113769531f});
     EV_LoadAudio("0138A020", 1);

@@ -406,7 +406,7 @@ bool ResumeNpcTimedMotion(NpcRouteLiveEntry &entry) {
     slot.character = FindCharacterByScenarioName(slot.name);
     if (!slot.character)
         return false;
-    slot.character->renderFlags |= 0x04U;
+    slot.character->renderFlags |= CRF_DisplayEnabled;
     Vector3 position = slot.offset;
     Matrix4x4_PushActiveTransform();
     Matrix4x4::SetViewMatrixFromEuler(ReadNpcEulerYaw(entry.euler), 0, 0);
@@ -1082,7 +1082,7 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
         entry.flags |= NpcRouteStreamForceHidden;
         entry.currentCommand = next;
         if (entry.node) {
-            EV_SetCharDisplay(entry.node, 0, 0);
+            EV_SetCharDisplay(entry.node, CVM_All, 0);
             if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
                 control->flags &= ~CharacterControlVoxelSweep;
         }

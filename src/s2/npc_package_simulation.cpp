@@ -253,7 +253,7 @@ void TickNpcRouteLiveEntries() {
         if (entry->flags & 4U)
             UpdateNpcStreamFade(*entry);
         if ((entry->flags & 0x80000002U) == 0x80000002U && CanRevealNpcStream(*entry)) {
-            entry->node->renderFlags |= 0x3fU;
+            entry->node->renderFlags |= CRF_All;
             if ((entry->flags & 0x8000000U) || entry->streamCost != 1) {
                 if (CharacterControlModel *const control = FindCharacterControlModel(entry->node))
                     control->flags |= CharacterControlVoxelSweep;

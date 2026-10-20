@@ -58,7 +58,8 @@ float MoleCharacterDistance() {
     return std::sqrt(z * z + x * x);
 }
 void StartMoleCamera() {
-    camCtrlSetState(CameraState::Event);
+    using enum CameraState;
+    camCtrlSetState(Event);
     gabtCameraTargetHeight = 118.1f;
     gabtCameraEyeHeight = 120.7f;
     camCtrlSetTargetPosition(Vector3{.x = 287.70001f, .y = 118.1f, .z = 75.800003f});

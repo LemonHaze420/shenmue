@@ -54,6 +54,7 @@ void E0173Main(std::uintptr_t) {
 }
 
 void CleanupE0173(AreaImmediateAuthorTaskParameter *parent) {
+    using enum CameraState;
     for (const shen_name *character = AREA_0173_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
         if (FindCharacterByScenarioName(*character)) {
             EV_npcLockUnlock(*character);
@@ -72,7 +73,7 @@ void CleanupE0173(AreaImmediateAuthorTaskParameter *parent) {
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 17021, 0}, 0.0f};
         EVT_AT_SetAng_Callback(&angle);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         BeginSecondarySampleExecution(0);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

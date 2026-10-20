@@ -462,6 +462,7 @@ void MapStandEventCallback(void *parameter) {
         HLib::SetupTaskDelay(delay);
 }
 void MapStandExitCallback(void *parameter) {
+    using enum CameraState;
     using namespace map_stand;
     auto &work = *static_cast<MapStandEventWork *>(parameter);
     LoadCutsceneAndSoundProgramForArea();
@@ -477,7 +478,7 @@ void MapStandExitCallback(void *parameter) {
     EV_FreeAuthorPak(0, "0099");
     EVS_LoopCamera(0, {}, {});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
     EV_CleanupMapControlTask();

@@ -81,6 +81,7 @@ void KesaResetSwordEffects() {
 }
 
 void KesaSwordActivationLoop(void *) {
+    using enum CameraState;
     const auto frame = static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     KesaUpdateAuthorPostEffects(frame);
     KesaUpdateTorchLights(kesaAuthors[6].playerLight, kesaAuthors[6].companionLight);
@@ -422,7 +423,7 @@ void KesaSwordActivationLoop(void *) {
             SuspendParticleEffect(4, fire);
             FreeParticleEffect(4, fire);
         }
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
         for (shen_name name : {SHEN_NAME(aa39), SHEN_NAME(aa75), SHEN_NAME(aa20), SHEN_NAME(TAMA), SHEN_NAME(aa36), SHEN_NAME(a636), SHEN_NAME(aa85),

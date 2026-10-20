@@ -518,6 +518,7 @@ void plymUpdateScriptedPlacementTarget(PlayerModelState &state) {
 
 // @verified - p
 void plymUpdateLockOnCharacter(PlayerModelState &state) {
+    using enum CameraState;
     const CameraState camera = camCtrlGetState();
     const shen_name previous = state.lockOnCharacterName;
     const std::uint32_t previousFlags = state.flags;
@@ -532,11 +533,11 @@ void plymUpdateLockOnCharacter(PlayerModelState &state) {
         }
     }
     if (state.flags & plymControlLockOnMovement) {
-        if (camera != CameraState::LockedOn)
+        if (camera != LockedOn)
             state.flags &= ~plymControlLockOnMovement;
         if (!target.name || !IsNpcRouteActive(target))
             state.flags &= ~plymControlLockOnMovement;
-    } else if (camera == CameraState::LockedOn && target.name && IsNpcRouteActive(target))
+    } else if (camera == LockedOn && target.name && IsNpcRouteActive(target))
         state.flags |= plymControlLockOnMovement;
     if (state.flags & plymControlLockOnMovement) {
         if (!(GetCharacterControlModelFlags(state.characterNode) & 0x800U))
@@ -1148,6 +1149,7 @@ bool plymHasScenarioSelectedLocationRoot() {
 }
 
 void plymUpdateSpecialMode(PlayerModelState &state) {
+    using enum CameraState;
     const std::uint32_t entryFlags = state.specialModeFlags;
     PlayerMovementState &movement = *state.movementState;
     if (state.rootYawState != 9U) {
@@ -1160,7 +1162,7 @@ void plymUpdateSpecialMode(PlayerModelState &state) {
         state.specialModeFlags &= ~0x1000U;
         if (state.specialModeAuthorName.name && plymIsSpecialAuthorMotion(state.specialModeAuthorName))
             state.specialModeState = 8;
-        if (camCtrlGetState() == CameraState::LockedOn)
+        if (camCtrlGetState() == LockedOn)
             state.lookAroundState = 0;
         state.padFlags &= ~0x01000000U;
     }

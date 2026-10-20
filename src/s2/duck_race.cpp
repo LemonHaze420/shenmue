@@ -744,6 +744,7 @@ void SetDuckRacePreviewCameraTarget(std::int32_t actor) {
     SnapDuckRaceCameraTarget();
 }
 void UpdateDuckRaceFollowCamera() {
+    using enum CameraState;
     const auto name = duckRaceRuntime.names[duckRaceRuntime.followedActor];
     Vector3 position{}, offset{0.0f, 1.0f, 1.0f};
     Vector3i rotation{};
@@ -763,7 +764,7 @@ void UpdateDuckRaceFollowCamera() {
     const auto height = shenFindIntersectionWithScene(probe, probe.y);
     if (height > 0.0f && probe.y - height < 0.3f)
         probe.y = height + 0.3f;
-    camCtrlSetState(CameraState::Callback);
+    camCtrlSetState(Callback);
     camCtrlSetNextPosition(probe);
     camCtrlSetTargetPosition(target);
     camCtrlSetFov(18204);

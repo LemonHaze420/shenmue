@@ -255,7 +255,7 @@ void ReleaseNpcTimedMotion(NpcRouteLiveEntry &entry) {
     if (!slot)
         return;
     if (slot->character)
-        slot->character->renderFlags &= ~0x04U;
+        slot->character->renderFlags &= ~CRF_DisplayEnabled;
     slot->character = nullptr;
     entry.flags &= ~0x400U;
     --npcTimedMotionCount;

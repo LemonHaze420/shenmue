@@ -122,7 +122,7 @@ void IMGM_ReleaseImages(ImageModuleWork *image) {
     image->imageCount = 0;
     image->requestedImage = 0;
     image->displayedImage = 0;
-    image->cycleMode = 0;
+    image->cycleMode = ICM_Stopped;
     image->cycleFlags = 0;
     image->repeatCount = 0;
     image->frameDelay = 0;
@@ -153,26 +153,26 @@ void *imgmCreateHandlerForWithPos(Character *character, ImageModuleWork *image, 
         const std::uint8_t imageCount = image->imageCount;
         if (imageCount > 1 && ++image->frameCounter >= image->frameDelay) {
             image->frameCounter = 0;
-            if (image->cycleMode == 1) {
+            if (image->cycleMode == ICM_Forward) {
                 if (++image->requestedImage >= imageCount) {
                     if (image->repeatCount-- == 1) {
                         --image->requestedImage;
-                        image->cycleFlags = static_cast<std::int8_t>(image->cycleFlags | 0x80);
+                        image->cycleFlags = static_cast<std::int8_t>(image->cycleFlags | ICF_Finished);
                     } else {
                         image->requestedImage = 0;
                     }
                 }
-            } else if (image->cycleMode == 2) {
-                if ((image->cycleFlags & 1) == 0) {
+            } else if (image->cycleMode == ICM_PingPong) {
+                if ((image->cycleFlags & ICF_Reverse) == 0) {
                     if (++image->requestedImage >= imageCount) {
-                        image->cycleFlags = static_cast<std::int8_t>(image->cycleFlags | 1);
+                        image->cycleFlags = static_cast<std::int8_t>(image->cycleFlags | ICF_Reverse);
                         image->requestedImage = static_cast<std::uint8_t>(image->requestedImage - 2);
                     }
                 } else if (image->requestedImage-- == 0) {
                     image->requestedImage = 1;
-                    image->cycleFlags = static_cast<std::int8_t>(image->cycleFlags & ~1);
+                    image->cycleFlags = static_cast<std::int8_t>(image->cycleFlags & ~ICF_Reverse);
                     if (image->repeatCount-- == 1) {
-                        image->cycleFlags = static_cast<std::int8_t>(image->cycleFlags | 0x80);
+                        image->cycleFlags = static_cast<std::int8_t>(image->cycleFlags | ICF_Finished);
                         image->requestedImage = 0;
                     }
                 }

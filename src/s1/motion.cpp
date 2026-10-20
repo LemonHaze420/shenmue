@@ -39,7 +39,7 @@ namespace shenmue::s1 {
 Vector3 g_RootMotionVector{};
 std::int32_t g_motnHasYValue{};
 
-std::int32_t g_motnRowBytesInUse{};
+std::int32_t g_motnNodeBytesInUse{};
 
 namespace motion_detail {
 
@@ -96,7 +96,7 @@ bool MaintainFrameRate(float &timer, float &timerReference, float &residualTime,
 }
 
 void AllocateMotionNodes(MotionNodeRuntime *&nodes, std::int64_t &cookie, Matrix4x4 **matrixPool);
-void MOTN_FreeNodeRowsAndMatrixPool(void *&rows, std::int64_t &cookie, void **matrixPool);
+void MOTN_FreeNodesAndMatrixPool(void *&motionNodes, std::int64_t &cookie, void **matrixPool);
 void FreeMotionBlock(void *block);
 
 Vector3 SampleNodePosition(MotionNodeRuntime &node, float frame, std::int32_t frameCount, bool mirrored) {
@@ -483,10 +483,10 @@ float g_motnAnkleReach = 0.0f;
 const Vector3 *g_motnAnkleRelease = nullptr; // g_tmp_mot_vec3
 std::int32_t g_motnAnkleReleaseValid = 0;    // g_motn_dirty_flag
 // ApplyArmTargetsAndLengthClamp_MOTN scratch.
-MotionNodeRuntime *g_motnRightAnkleRow = nullptr;       // g_arm_one_mot
-MotionNodeRuntime *g_motnLeftAnkleRow = nullptr;        // g_arm_two_mot
-MotionNodeRuntime *g_motnRightAnkleSourceRow = nullptr; // g_motion_struct_0
-MotionNodeRuntime *g_motnLeftAnkleSourceRow = nullptr;  // g_motion_struct_2
+MotionNodeRuntime *g_motnRightAnkleNode = nullptr;       // g_arm_one_mot
+MotionNodeRuntime *g_motnLeftAnkleNode = nullptr;        // g_arm_two_mot
+MotionNodeRuntime *g_motnRightAnkleSourceNode = nullptr; // g_motion_struct_0
+MotionNodeRuntime *g_motnLeftAnkleSourceNode = nullptr;  // g_motion_struct_2
 Vector3 g_motnRightAnkleSampled{};                      // g_arm_one
 Vector3 g_motnLeftAnkleSampled{};                       // g_arm_two
 Vector3 g_motnRightAnkleSourceSampled{};
@@ -507,7 +507,7 @@ namespace motion_detail {
 
 void MOTN_ApplyBoneHierarchyTransform(MotionNodeRuntime &node, MotionNodeRuntime &source);
 
-void MOTN_UpdateRawSecondaryPose(MotionInformationWork &motion, MotionNodeRuntime &rows);
+void MOTN_UpdateRawSecondaryPose(MotionInformationWork &motion, MotionNodeRuntime &motionNodes);
 
 bool MOTN_EvaluateCubicSequenceBlend(MotionInformationWork &motion);
 bool MOTN_EvaluateRawMotion(MotionInformationWork &motion);
@@ -523,12 +523,12 @@ std::int32_t PlayMotionForRyo(MotionInformationWork &motion, std::uint16_t anima
     if (!animationId)
         return static_cast<std::int32_t>((motion.motionFlags >> 12U) & 1U);
     if ((motion.rootAngleFlags & 0x800000U) == 0 && IsRyoWalkLoopAnimation(animationId) && (motion.motionFlags & 0x100U) != 0) {
-        MOTN_LoadTransitionRows(motion, motion.walkBlendAnimId);
+        MOTN_LoadTransitionNodes(motion, motion.walkBlendAnimId);
     } else if (motion.queuedBlendAnimId) {
-        MOTN_LoadTransitionRows(motion, motion.queuedBlendAnimId);
+        MOTN_LoadTransitionNodes(motion, motion.queuedBlendAnimId);
         motion.queuedBlendAnimId = 0;
     } else if (motion.transitionNodes) {
-        MOTN_FreeNodeRowsAndMatrixPool(motion.transitionNodes, motion.transitionNodesCookie, nullptr);
+        MOTN_FreeNodesAndMatrixPool(motion.transitionNodes, motion.transitionNodesCookie, nullptr);
         motion.lookupAnimId = 0;
     }
     bool deferred = false;
@@ -683,8 +683,8 @@ std::uint32_t g_motnRawParentUnrotated = 0;
 Matrix4x4 g_motnRawLookEnd{};   // g_tmp_lerped_end_xform
 Matrix4x4 g_motnRawLookBlend{}; // g_tmp_xform_0
 
-void MOTN_EvaluateRawBlendRow(
-    MotionNodeRuntime &source, MotionNodeRuntime &row, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next);
+void MOTN_EvaluateRawBlendNode(
+    MotionNodeRuntime &source, MotionNodeRuntime &motionNode, MotnRawFrameContext &context, const std::int16_t *current, const std::int16_t *next);
 
 } // namespace
 
@@ -721,9 +721,9 @@ void MOTN_FootPlantingCallback(MotionInformationWork *motion, void *) {
     Vector3 leftTarget{activeLeft->effectorPosition.x, activeLeft->effectorPosition.y, activeLeft->effectorPosition.z};
     Vector3 rightTarget{activeRight->effectorPosition.x, activeRight->effectorPosition.y, activeRight->effectorPosition.z};
     if (!activeOnly) {
-        auto *const blendRows = static_cast<MotionNodeRuntime *>(mode == 4 ? motion->transitionNodes : motion->blendTargetNodes);
-        blendLeft = FindRuntimeNode(blendRows, 26U);
-        blendRight = FindRuntimeNode(blendRows, 33U);
+        auto *const blendMotionNodes = static_cast<MotionNodeRuntime *>(mode == 4 ? motion->transitionNodes : motion->blendTargetNodes);
+        blendLeft = FindRuntimeNode(blendMotionNodes, 26U);
+        blendRight = FindRuntimeNode(blendMotionNodes, 33U);
         if (!blendLeft || !blendRight)
             return;
         leftTarget = BlendFootPlantingTarget(*blendLeft, *activeLeft);
@@ -809,10 +809,10 @@ std::int32_t mainMotionUpdate(MotionInformationWork &motion) {
     g_motnRightKneeValid = 0;
     g_motnLeftAnkleValid = 0;
     g_motnRightAnkleValid = 0;
-    if (auto *const activeRows = static_cast<MotionNodeRuntime *>(motion.activeNodes)) {
-        if (MotionNodeRuntime *const knee = CaptureAnkleScratch(activeRows, 15, g_motnRightKneeValid, g_motnRightKnee))
+    if (auto *const activeMotionNodes = static_cast<MotionNodeRuntime *>(motion.activeNodes)) {
+        if (MotionNodeRuntime *const knee = CaptureAnkleScratch(activeMotionNodes, 15, g_motnRightKneeValid, g_motnRightKnee))
             CaptureAnkleScratch(knee, 17, g_motnRightAnkleValid, g_motnRightAnkle);
-        if (MotionNodeRuntime *const knee = CaptureAnkleScratch(activeRows, 9, g_motnLeftKneeValid, g_motnLeftKnee))
+        if (MotionNodeRuntime *const knee = CaptureAnkleScratch(activeMotionNodes, 9, g_motnLeftKneeValid, g_motnLeftKnee))
             CaptureAnkleScratch(knee, 11, g_motnLeftAnkleValid, g_motnLeftAnkle);
     }
     const std::int32_t playResult = PlayMotionForRyo(motion, motion.pendingAnimId);
@@ -912,7 +912,7 @@ std::int32_t mainMotionUpdate(MotionInformationWork &motion) {
             evaluated = MOTN_EvaluateFrameCarryBlend(motion);
             break;
         case 4:
-            evaluated = MOTN_EvaluateTransitionRowsBlend(motion);
+            evaluated = MOTN_EvaluateTransitionNodesBlend(motion);
             break;
         case 7:
         case 10:
@@ -969,16 +969,16 @@ std::int32_t mainMotionUpdate(MotionInformationWork &motion) {
         motion.rightHandRotationAngle = 0;
         motion.leftHandRotationAngle = 0;
     } else {
-        MotionNodeRuntime *const rightWrist = FindRowFrom(root, 7);
+        MotionNodeRuntime *const rightWrist = FindMotionNodeFrom(root, 7);
         if (rightWrist && (rightWrist->bindPositionPacked[1] & 2U) != 0)
             motion.rightHandRotationAngle = AdjustBoneRotation(*rightWrist, blend, static_cast<std::int16_t>(motion.rightHandRotationAngle));
-        MotionNodeRuntime *const leftWrist = FindRowFrom(static_cast<MotionNodeRuntime *>(motion.activeNodes), 13);
+        MotionNodeRuntime *const leftWrist = FindMotionNodeFrom(static_cast<MotionNodeRuntime *>(motion.activeNodes), 13);
         if (leftWrist && (leftWrist->bindPositionPacked[1] & 2U) != 0)
             motion.leftHandRotationAngle = AdjustBoneRotation(*leftWrist, motion.handRotationBlend, static_cast<std::int16_t>(motion.leftHandRotationAngle));
     }
     bool allEvaluated = true;
-    for (MotionNodeRuntime *row = static_cast<MotionNodeRuntime *>(motion.activeNodes); row->nodeId != 0xff; ++row) {
-        if ((row->bindPositionPacked[1] & 2U) == 0)
+    for (MotionNodeRuntime *motionNode = static_cast<MotionNodeRuntime *>(motion.activeNodes); motionNode->nodeId != 0xff; ++motionNode) {
+        if ((motionNode->bindPositionPacked[1] & 2U) == 0)
             allEvaluated = false;
     }
     if (allEvaluated) {
@@ -992,17 +992,17 @@ std::int32_t mainMotionUpdate(MotionInformationWork &motion) {
             const Matrix4x4 scaledFrame = workTransformMatrix;
             Matrix4x4::Pop(1);
             Matrix4x4::InvertInPlace(nullptr);
-            for (MotionNodeRuntime *row = static_cast<MotionNodeRuntime *>(motion.activeNodes); row->nodeId != 0xff; ++row) {
+            for (MotionNodeRuntime *motionNode = static_cast<MotionNodeRuntime *>(motion.activeNodes); motionNode->nodeId != 0xff; ++motionNode) {
                 Matrix4x4_Push();
-                Matrix4x4::Multiply(row->transform);
-                *MotionRowMatrix(*row) = workTransformMatrix;
+                Matrix4x4::Multiply(motionNode->transform);
+                *MotionNodeMatrix(*motionNode) = workTransformMatrix;
                 Matrix4x4::Pop(1);
             }
             workTransformMatrix = scaledFrame;
-            for (MotionNodeRuntime *row = static_cast<MotionNodeRuntime *>(motion.activeNodes); row->nodeId != 0xff; ++row) {
+            for (MotionNodeRuntime *motionNode = static_cast<MotionNodeRuntime *>(motion.activeNodes); motionNode->nodeId != 0xff; ++motionNode) {
                 Matrix4x4_Push();
-                Matrix4x4::Multiply(row->transform);
-                *MotionRowMatrix(*row) = workTransformMatrix;
+                Matrix4x4::Multiply(motionNode->transform);
+                *MotionNodeMatrix(*motionNode) = workTransformMatrix;
                 Matrix4x4::Pop(1);
             }
             Matrix4x4::Pop(1);
@@ -1011,9 +1011,9 @@ std::int32_t mainMotionUpdate(MotionInformationWork &motion) {
         const float targetScale = motion.targetMotionScale;
         if (std::fabs(currentScale - targetScale) > 0x1p-23f && std::fabs(currentScale) > 0x1p-23f) {
             const float ratio = targetScale / currentScale;
-            if (MotionNodeRuntime *const head = FindRowFrom(static_cast<MotionNodeRuntime *>(motion.activeNodes), 4)) {
+            if (MotionNodeRuntime *const head = FindMotionNodeFrom(static_cast<MotionNodeRuntime *>(motion.activeNodes), 4)) {
                 Matrix4x4_Push();
-                workTransformMatrix = *MotionRowMatrix(*head);
+                workTransformMatrix = *MotionNodeMatrix(*head);
                 Matrix4x4_Push();
                 Matrix4x4::Scale(ratio, ratio, ratio);
                 const Matrix4x4 scaledHead = workTransformMatrix;
@@ -1037,27 +1037,27 @@ std::int32_t mainMotionUpdate(MotionInformationWork &motion) {
     motion.spineYaw = MOTN_ExtractSpineYaw(motion);
     motion.trackedNodeIndex = 10;
     if (Matrix4x4 *const external = motion.externalTransform) {
-        auto *const rows = static_cast<MotionNodeRuntime *>(motion.activeNodes);
+        auto *const motionNodes = static_cast<MotionNodeRuntime *>(motion.activeNodes);
         if (motion.externalTransformAnchorNodeId == -1) {
             const Vector3 translation{external->rows[3].x, external->rows[3].y, external->rows[3].z};
             Matrix4x4_Push();
             workTransformMatrix = transformMatrix_prePass;
             Matrix4x4::preTranslate(translation.x, translation.y, translation.z);
             Matrix4x4::InvertInPlace(nullptr);
-            for (MotionNodeRuntime *row = rows; row->nodeId != 0xff; ++row) {
+            for (MotionNodeRuntime *motionNode = motionNodes; motionNode->nodeId != 0xff; ++motionNode) {
                 Matrix4x4_Push();
-                Matrix4x4::Multiply(row->transform);
-                *MotionRowMatrix(*row) = workTransformMatrix;
+                Matrix4x4::Multiply(motionNode->transform);
+                *MotionNodeMatrix(*motionNode) = workTransformMatrix;
                 Matrix4x4::Pop(1);
             }
             Matrix4x4::Pop(1);
         } else {
-            MotionNodeRuntime *anchor = FindTrackedRow(rows, static_cast<std::uint32_t>(motion.externalTransformAnchorNodeId));
+            MotionNodeRuntime *anchor = FindTrackedNode(motionNodes, static_cast<std::uint32_t>(motion.externalTransformAnchorNodeId));
             if (!anchor)
-                anchor = rows;
-            AddFloatToIntArray(*rows, {-anchor->transform->rows[3].x, -anchor->transform->rows[3].y, -anchor->transform->rows[3].z});
+                anchor = motionNodes;
+            AddFloatToIntArray(*motionNodes, {-anchor->transform->rows[3].x, -anchor->transform->rows[3].y, -anchor->transform->rows[3].z});
         }
-        ApplyBoneTransformRecursive(*rows, motion.externalTransform);
+        ApplyBoneTransformRecursive(*motionNodes, motion.externalTransform);
         motion.poseEvaluationStage = savedStage;
         motion.poseEvaluationSucceeded = 1;
     }
@@ -1108,9 +1108,9 @@ void UNFO_Init(MotionInformationWork &motion) {
 namespace motion_detail {
 
 void AllocateMotionNodes(MotionNodeRuntime *&nodes, std::int64_t &cookie, Matrix4x4 **matrixPool) {
-    g_motnRowBytesInUse += 0x26bc;
+    g_motnNodeBytesInUse += 0x26bc;
     if (matrixPool) {
-        g_motnRowBytesInUse += 0xb40;
+        g_motnNodeBytesInUse += 0xb40;
         *matrixPool = static_cast<Matrix4x4 *>(HLib_AllocMemBlock(0xb40, SHEN_NAME(UNFO)));
         std::memset(*matrixPool, 0, 0xb40);
     }
@@ -1119,17 +1119,17 @@ void AllocateMotionNodes(MotionNodeRuntime *&nodes, std::int64_t &cookie, Matrix
     cookie = reinterpret_cast<std::int64_t>(reinterpret_cast<std::byte *>(nodes) + 0x13b4);
 }
 
-void MOTN_FreeNodeRowsAndMatrixPool(void *&rows, std::int64_t &cookie, void **matrixPool) {
+void MOTN_FreeNodesAndMatrixPool(void *&motionNodes, std::int64_t &cookie, void **matrixPool) {
     if (matrixPool && *matrixPool) {
-        g_motnRowBytesInUse -= 0xb40;
+        g_motnNodeBytesInUse -= 0xb40;
         HLib_FreeTaskData(static_cast<HLib::TaskData *>(*matrixPool), 0);
         *matrixPool = nullptr;
     }
-    if (rows) {
-        g_motnRowBytesInUse -= 0x26bc;
-        HLib_FreeTaskData(static_cast<HLib::TaskData *>(rows), 0);
+    if (motionNodes) {
+        g_motnNodeBytesInUse -= 0x26bc;
+        HLib_FreeTaskData(static_cast<HLib::TaskData *>(motionNodes), 0);
     }
-    rows = nullptr;
+    motionNodes = nullptr;
     cookie = 0;
 }
 
@@ -1275,7 +1275,7 @@ void MOTM_UpdateSequenceNodeConstraints(const void *records, std::uint32_t count
 void MOTN_ClearSecondaryMotion(MotionInformationWork &motion) {
     motion.secondaryAnimId = 0;
     motion.secondaryNodeId = 0;
-    MOTN_FreeNodeRowsAndMatrixPool(motion.secondaryNodes, motion.secondaryNodesCookie, nullptr);
+    MOTN_FreeNodesAndMatrixPool(motion.secondaryNodes, motion.secondaryNodesCookie, nullptr);
     motion.sourceNodes = nullptr;
 }
 
@@ -1410,12 +1410,12 @@ std::int32_t EstimateLookPointSecondaryBlendFrames(MotionInformationWork &motion
     return frames;
 }
 
-MotionNodeRuntime *FindLookPointRuntimeRow(MotionInformationWork &motion, std::uint8_t nodeId) {
-    auto *row = static_cast<MotionNodeRuntime *>(motion.activeNodes);
-    while (row && row->nodeId != 0xffU && row->nodeId != nodeId) {
-        ++row;
+MotionNodeRuntime *FindLookPointRuntimeNode(MotionInformationWork &motion, std::uint8_t nodeId) {
+    auto *motionNode = static_cast<MotionNodeRuntime *>(motion.activeNodes);
+    while (motionNode && motionNode->nodeId != 0xffU && motionNode->nodeId != nodeId) {
+        ++motionNode;
     }
-    return row && row->nodeId == nodeId ? row : nullptr;
+    return motionNode && motionNode->nodeId == nodeId ? motionNode : nullptr;
 }
 
 Vector3 LookPointWorldDeltaToLocal(const Matrix4x4 &matrix, const Vector3 &delta) {
@@ -1480,8 +1480,8 @@ std::uint32_t motCalculateAnimationToPlay(Character *character, const Vector3 *t
         animationId = direction < 0x1000 ? 0x05d0U : direction < 0x3000 ? 0x05d1U : 0x05d2U;
     } else {
         PushMotionMatrix();
-        MotionNodeRuntime *const limb = FindLookPointRuntimeRow(motion, leftSide != 0 ? 11U : 17U);
-        MotionNodeRuntime *const spine = FindLookPointRuntimeRow(motion, 2U);
+        MotionNodeRuntime *const limb = FindLookPointRuntimeNode(motion, leftSide != 0 ? 11U : 17U);
+        MotionNodeRuntime *const spine = FindLookPointRuntimeNode(motion, 2U);
         bool useNewAnimations = false;
         if (limb && limb->transform && spine && spine->transform) {
             const Vector3 limbDelta{
@@ -1554,14 +1554,14 @@ void MOTI_StopLookPointAnimation(Character *character) {
     }
 }
 
-MotionNodeRuntime *MOTN_FindNodeRow(MotionNodeRuntime *row, std::int32_t nodeId) {
-    if (!row)
+MotionNodeRuntime *MOTN_FindNode(MotionNodeRuntime *motionNode, std::int32_t nodeId) {
+    if (!motionNode)
         return nullptr;
 
-    for (;; ++row) {
-        if (nodeId == static_cast<std::int8_t>(row->nodeId))
-            return row;
-        if (row->nodeId == 0xffU)
+    for (;; ++motionNode) {
+        if (nodeId == static_cast<std::int8_t>(motionNode->nodeId))
+            return motionNode;
+        if (motionNode->nodeId == 0xffU)
             return nullptr;
     }
 }
@@ -1570,10 +1570,10 @@ Vector3 motGetEntityPos_Or_RotateEntity(Character *character, std::int32_t nodeI
     if (!character)
         return {};
     MotionManagerWork *const manager = MOTM_GetWork(character);
-    const MotionNodeRuntime *const row = manager ? MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(manager->motion.activeNodes), nodeId) : nullptr;
-    if (!row)
+    const MotionNodeRuntime *const motionNode = manager ? MOTN_FindNode(static_cast<MotionNodeRuntime *>(manager->motion.activeNodes), nodeId) : nullptr;
+    if (!motionNode)
         return GetPositionForEntity(character->entity.node);
-    return TransformPointByEntity(character->entity.node, {row->effectorPosition.x, row->effectorPosition.y, row->effectorPosition.z});
+    return TransformPointByEntity(character->entity.node, {motionNode->effectorPosition.x, motionNode->effectorPosition.y, motionNode->effectorPosition.z});
 }
 
 void MOTI_InitAndAllocPrimaryBuffers(MotionInformationWork &motion) {
@@ -1593,10 +1593,10 @@ void MOTI_InitAndAllocPrimaryBuffers(MotionInformationWork &motion) {
 
 
 void MOTI_Cleanup(MotionInformationWork &motion) {
-    MOTN_FreeNodeRowsAndMatrixPool(motion.activeNodes, motion.activeNodesCookie, &motion.nodeMatrixPool);
-    MOTN_FreeNodeRowsAndMatrixPool(motion.blendTargetNodes, motion.blendTargetNodesCookie, nullptr);
-    MOTN_FreeNodeRowsAndMatrixPool(motion.transitionNodes, motion.transitionNodesCookie, nullptr);
-    MOTN_FreeNodeRowsAndMatrixPool(motion.secondaryNodes, motion.secondaryNodesCookie, nullptr);
+    MOTN_FreeNodesAndMatrixPool(motion.activeNodes, motion.activeNodesCookie, &motion.nodeMatrixPool);
+    MOTN_FreeNodesAndMatrixPool(motion.blendTargetNodes, motion.blendTargetNodesCookie, nullptr);
+    MOTN_FreeNodesAndMatrixPool(motion.transitionNodes, motion.transitionNodesCookie, nullptr);
+    MOTN_FreeNodesAndMatrixPool(motion.secondaryNodes, motion.secondaryNodesCookie, nullptr);
 }
 
 
@@ -1607,9 +1607,7 @@ void MOTI_Free(MotionInformationWork &motion) {
     MOTI_InitAndAllocPrimaryBuffers(motion);
 }
 
-
-
-void MOTI_TransferPrimaryRows(MotionInformationWork *source, MotionInformationWork *destination) {
+void MOTI_TransferPrimaryNodes(MotionInformationWork *source, MotionInformationWork *destination) {
     if (!source) {
         AllocateMotionNodes(reinterpret_cast<MotionNodeRuntime *&>(destination->activeNodes), destination->activeNodesCookie,
             reinterpret_cast<Matrix4x4 **>(&destination->nodeMatrixPool));
@@ -1626,9 +1624,9 @@ void MOTI_TransferPrimaryRows(MotionInformationWork *source, MotionInformationWo
     }
     source->secondaryAnimId = 0;
     source->secondaryNodeId = 0;
-    MOTN_FreeNodeRowsAndMatrixPool(source->secondaryNodes, source->secondaryNodesCookie, nullptr);
+    MOTN_FreeNodesAndMatrixPool(source->secondaryNodes, source->secondaryNodesCookie, nullptr);
     source->sourceNodes = nullptr;
-    MOTN_FreeNodeRowsAndMatrixPool(source->transitionNodes, source->transitionNodesCookie, nullptr);
+    MOTN_FreeNodesAndMatrixPool(source->transitionNodes, source->transitionNodesCookie, nullptr);
     if (destination) {
         destination->nodeMatrixPool = source->nodeMatrixPool;
         destination->activeNodesCookie = source->activeNodesCookie;
@@ -1641,8 +1639,8 @@ void MOTI_TransferPrimaryRows(MotionInformationWork *source, MotionInformationWo
         if (!destination->pendingAnimId)
             destination->pendingAnimId = destination->currentAnimId ? destination->currentAnimId : 89;
     } else {
-        MOTN_FreeNodeRowsAndMatrixPool(source->activeNodes, source->activeNodesCookie, &source->nodeMatrixPool);
-        MOTN_FreeNodeRowsAndMatrixPool(source->blendTargetNodes, source->blendTargetNodesCookie, nullptr);
+        MOTN_FreeNodesAndMatrixPool(source->activeNodes, source->activeNodesCookie, &source->nodeMatrixPool);
+        MOTN_FreeNodesAndMatrixPool(source->blendTargetNodes, source->blendTargetNodesCookie, nullptr);
     }
     source->activeNodesCookie = 0;
     source->nodeMatrixPool = nullptr;

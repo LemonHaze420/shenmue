@@ -57,6 +57,7 @@ void RemoveShrineItems(QdssWork &work) {
         RemoveInventoryItem(10, 1);
 }
 void PrepareShrineReturn(QdssWork &work) {
+    using enum CameraState;
     for (std::int32_t index = 0; index < 4; ++index) {
         QdssKey &key = work.keys[index];
         if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, static_cast<std::int16_t>(key.flag))) {
@@ -99,7 +100,7 @@ void PrepareShrineReturn(QdssWork &work) {
     SetHighModelXYZ(ctrlGetCharaByName(QDSS_HAND), 0, 0, 0);
     ClaimDoor(SHEN_NAME(R140), QDSS_REN);
     srchSetLookMode();
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     HLib::SetupTaskDelay(30);

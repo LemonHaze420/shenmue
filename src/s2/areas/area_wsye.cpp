@@ -94,12 +94,13 @@ void PlaceWsyePlayer(const Vector3 &position) {
 }
 // @verified - p
 void WsyeCompleteAuthorCallback(void *) {
+    using enum CameraState;
     constexpr Vector3 position{61.16F, 101.35F, 121.58F};
     (void)SetDoorSubjectEnabled(WSYE_DOOR, 1);
     SetDisplayFlagForProp(WSYE_PROP_SECOND, 1);
     SetDisplayFlagForProp(WSYE_PROP_FIRST, 1);
     (void)camCtrlSetFovTransitionTo(true);
-    (void)camCtrlSetState(CameraState::Init);
+    (void)camCtrlSetState(Init);
     PlaceWsyePlayer(position);
     EV_SetCharaControllerFlags(WSYE_PLAYER, ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(WSYE_PLAYER, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);

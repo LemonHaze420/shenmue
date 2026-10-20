@@ -84,6 +84,7 @@ void RestoreE0077Characters() {
 
 // @verified - p
 void CleanupE0077(AreaAuthorTaskParameter *parent) {
+    using enum CameraState;
     SetNpcColdResetMode(1);
     for (const shen_name *character = AREA_0077_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
         if (FindCharacterByScenarioName(*character)) {
@@ -112,7 +113,7 @@ void CleanupE0077(AreaAuthorTaskParameter *parent) {
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, Vector3i{0, 15564, 0}, 0};
         EVT_AT_SetAng_Callback(&angle);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

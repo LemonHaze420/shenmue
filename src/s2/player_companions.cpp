@@ -78,7 +78,7 @@ std::int64_t plymCreateRyoBagCharacter(PlayerModelState &state, std::int32_t mod
         return 0;
     character->model = &bag->model;
     modelSetCharaAlpha(character, 1.0f);
-    EV_SetCharDisplay(character, 3, 0);
+    EV_SetCharDisplay(character, CVM_DisplayEnabled, 0);
     imgmAssignUpdateCallback(character, charaPrepareNodesForDraw);
     RyoBagModel *const shadow = LoadRyoBagModel("SYD_KAB.MT7", SHEN_NAME(SVKB), 0);
     if (shadow)
@@ -178,7 +178,7 @@ void plymApplyPendingRyoBagMode(PlayerModelState &state) {
         mtwkRequestMotion(motionWork, 0xf007, MotionRegion::LeftArm);
         plymCreateRyoBagCharacter(state, 1);
         SetFixoDataForMotionWork(state.helperCharacter, state.characterNode, 15, {-0.092499994f, 0.19f, -0.067000002f}, {58892, 44638, 51628});
-        EV_SetCharDisplay(state.helperCharacter, 3, 1);
+        EV_SetCharDisplay(state.helperCharacter, CVM_DisplayEnabled, 1);
         charaSetDisplayEnabledFlag(state.helperCharacter, 1);
         charaSetVisibilityFlagTo(state.helperCharacter, 1);
         SetCharacterType(state.helperCharacter, CharacterTypeStencilShadow);
@@ -187,7 +187,7 @@ void plymApplyPendingRyoBagMode(PlayerModelState &state) {
         state.activeHelperMode = 1;
     } else if (pending == 2) {
         plymCreateRyoBagCharacter(state, 2);
-        EV_SetCharDisplay(state.helperCharacter, 3, 1);
+        EV_SetCharDisplay(state.helperCharacter, CVM_DisplayEnabled, 1);
         SetFixoDataForMotionWork(state.helperCharacter, state.characterNode, 15, {-0.13177f, 0.18569f, -0.074680001f}, {60823, 44637, 51623});
         state.helperFlags |= 2U;
         state.activeHelperMode = 2;

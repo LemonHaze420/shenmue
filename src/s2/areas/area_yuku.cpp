@@ -66,6 +66,7 @@ void YukuDormantNullsub(void *) {
 
 // @verified - p
 void YukuEventCallback(void *) {
+    using enum CameraState;
     const std::uint32_t frame = static_cast<std::uint32_t>(yukuFrameCounter) + 1U;
     yukuFrameCounter = (yukuFrameCounter & 0xffffffff00000000ULL) | frame;
     EV_set_debug_text_pos(2, 10);
@@ -97,7 +98,7 @@ void YukuEventCallback(void *) {
         break;
     case 3:
         (void)camCtrlSetFovTransitionTo(true);
-        (void)camCtrlSetState(CameraState::Init);
+        (void)camCtrlSetState(Init);
         (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YUKU"), 0);
         (void)EV_FreeAuthorPak(0, "0503");
         SetPlayerControlEnabled(1);
@@ -110,6 +111,7 @@ void YukuEventCallback(void *) {
 
 // @verified - p
 void YukuStopCallback(void *) {
+    using enum CameraState;
     const std::uint32_t frame = static_cast<std::uint32_t>(yukuFrameCounter) + 1U;
     yukuFrameCounter = (yukuFrameCounter & 0xffffffff00000000ULL) | frame;
     EV_set_debug_text_pos(2, 10);
@@ -146,7 +148,7 @@ void YukuStopCallback(void *) {
     case 3:
         if (SetMotionRegionFlag(scenFindMotionwork(YUKU_RYO), 65, 1, MotionRegion::LowerBody)) {
             (void)camCtrlSetFovTransitionTo(false);
-            (void)camCtrlSetState(CameraState::Init);
+            (void)camCtrlSetState(Init);
             (void)CopyMotionTransition(scenFindMotionwork(YUKU_RYO), &YUKU_RETURN_POSITION, 10686, 5, 1);
             ++yukuState;
         }

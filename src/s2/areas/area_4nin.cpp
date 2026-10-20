@@ -645,6 +645,7 @@ void SetupCoolJAuthor() {
     EV_SetCharacterAlphaEnabled(clj, false);
 }
 void UpdateCoolJAuthor(void *) {
+    using enum CameraState;
     switch (cljChase.phase) {
     case 0:
         if (!filmCheckFadeTrackColour()) {
@@ -684,7 +685,7 @@ void UpdateCoolJAuthor(void *) {
             Place(ryo, p9cc138, p9cc688);
             Play(ryo, 0xf003);
             Play(clj, 0xf003);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             SetCharaKill(dummy, 1);
             Package(6, "0062A");
             EV_FreeAuthorPak(0, "0062");

@@ -90,7 +90,7 @@ void UpdateCharacterAlpha(Character *character, void *payload) {
                 }
             }
         }
-        fallback = !GetMotionBonePosition(motion, 1, &origin) || empty;
+        fallback = !GetMotionBonePosition(motion, MB_Chest, &origin) || empty;
     }
     if (fallback)
         origin = GetCharacterWorldPosition(character);

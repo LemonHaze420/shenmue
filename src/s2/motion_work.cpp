@@ -54,7 +54,7 @@ void mtwkGetArmHandPoseChanges(MotionWork *work, std::int32_t *shapes, std::int3
         frames[side] = 0;
         const std::uint32_t region = side + 3;
         const std::uint16_t flags = state.regionFlags[region];
-        const bool mirrored = (flags & 0x100U) ? (flags & 0x40U) != 0 : (state.regionFlags[0] & 0x40U) != 0;
+        const bool mirrored = (flags & 0x100U) ? (flags & 0x40U) != 0 : (state.regionFlags[0] & MRF_Mirrored) != 0;
         const MotionRigClock &clock = side ? work->rig.leftArm.clock : work->rig.rightArm.clock;
         float time = (flags & 0x10U) ? state.layerSampleFrame[region] : clock.current.ticksTime;
         if ((flags & 0x10U) && time < 0.0f)
@@ -167,12 +167,6 @@ std::uint8_t ClassifyCurrentLocomotionPhase(const MotionWork &work) {
     return 0;
 }
 
-float Cotangent(std::uint16_t angle) {
-    const float sine = sin_fixed16(static_cast<std::int16_t>(angle));
-    const float cosine = sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(angle)));
-    return cosine / sine;
-}
-
 template <typename Work> auto RigClock(Work *work, MotionRegion region) -> decltype(&work->rig.lowerBody.clock) {
     if (!work)
         return nullptr;
@@ -192,36 +186,32 @@ template <typename Work> auto RigClock(Work *work, MotionRegion region) -> declt
     }
 }
 
-constexpr std::uint32_t motionControllerIndices[9]{0, 1, 2, 3, 4, 5, 6, 7, 8};
-
-// @verified-s2: 0x7ff6185def00. The slot's output pointer precedes its three
-// channels; the callback and user fields remain at the existing accessor offsets.
+// @verified - p
 void InitializeMotionTargetOverrides(MotionWork &work) {
-    auto *const bytes = reinterpret_cast<std::byte *>(&work);
-    const auto bind = [&](std::uint32_t controller, std::size_t channels, std::size_t pva) {
+
+    const auto bind = [&](MotionController controller, MotionRigAxis(&axes)[3], Vector4 *pva) {
         MotionTargetParameters &slot = work.targets[motionControllerTargets[controller]];
         for (std::size_t axis = 0; axis < 3; ++axis)
-            slot.channels[axis] = reinterpret_cast<MotionRigChannel *>(bytes + channels + axis * 0x50);
-        slot.pva = reinterpret_cast<Vector4 *>(bytes + pva);
+            slot.channels[axis] = &axes[axis].channel;
+        slot.pva = pva;
         slot.controller = &motionControllerIndices[controller];
         slot.callback = nullptr;
         slot.user = nullptr;
     };
-    bind(0, 0xb0, 0x320);
-    bind(5, 0x610, 0x718);
-    bind(6, 0xbe8, 0xcf0);
-    bind(1, 0x1200, 0x1308);
-    bind(2, 0x17b8, 0x18c0);
-    bind(3, 0x1c48, 0x1d50);
-    bind(4, 0x22b0, 0x23b8);
+    bind(MC_Pelvis, work.rig.lowerBody.pelvisPosition, work.rig.lowerBody.pelvisPva);
+    bind(MC_LeftFoot, work.rig.lowerBody.leftFoot.axes, work.rig.lowerBody.leftFoot.pva);
+    bind(MC_RightFoot, work.rig.lowerBody.rightFoot.axes, work.rig.lowerBody.rightFoot.pva);
+    bind(MC_Chest, work.rig.chest.target.axes, work.rig.chest.target.pva);
+    bind(MC_Head, work.rig.head.target.axes, work.rig.head.target.pva);
+    bind(MC_RightArm, work.rig.rightArm.target.axes, work.rig.rightArm.target.pva);
+    bind(MC_LeftArm, work.rig.leftArm.target.axes, work.rig.leftArm.target.pva);
     if (work.rig.useOverride != 0) {
-        for (const auto controller : {7U, 8U}) {
-            std::byte *node{};
-            std::memcpy(&node, bytes + (controller == 7U ? 0x488 : 0x1948), sizeof(node));
+        for (const MotionController controller : {MC_PelvisOverride, MC_HeadAim}) {
+            MotionRigTarget *const node = controller == MC_PelvisOverride ? work.rig.lowerBody.overridePelvisTarget : work.rig.head.aimTargetNode;
             MotionTargetParameters &slot = work.targets[motionControllerTargets[controller]];
             for (std::size_t axis = 0; axis < 3; ++axis)
-                slot.channels[axis] = reinterpret_cast<MotionRigChannel *>(node + axis * 0x50);
-            slot.pva = reinterpret_cast<Vector4 *>(node + 0x108);
+                slot.channels[axis] = &node->axes[axis].channel;
+            slot.pva = node->pva;
             slot.controller = &motionControllerIndices[controller];
             slot.callback = nullptr;
             slot.user = nullptr;
@@ -361,12 +351,12 @@ void InitializeMotionRuntime(MotionWork &work, std::int32_t entityType) {
     InitializeMotionTargetOverrides(work);
     InitializeMotionRotationPointers(work);
 
-    state.projectionCotangentNear = Cotangent(9102);
-    state.projectionCotangentMiddle = Cotangent(5461);
-    state.projectionCotangentFar = -Cotangent(3640);
+    state.projectionCotangentNear = cot_fixed16(DEG_TO_ANG(49.998779296875f));
+    state.projectionCotangentMiddle = cot_fixed16(DEG_TO_ANG(29.9981689453125f));
+    state.projectionCotangentFar = -cot_fixed16(DEG_TO_ANG(19.9951171875f));
     state.motnFlags |= 1U;
     state.enableEnvironmentMotion = 1;
-    state.pelvisYawClamp = 10012;
+    state.pelvisYawClamp = DEG_TO_ANG(54.99755859375f);
     state.pelvisYawStep = 384;
     state.entityRotation.y = 0x8000;
     state.overrideBlendTime = -1.0f;
@@ -393,8 +383,6 @@ void InitializeMotionRuntime(MotionWork &work, std::int32_t entityType) {
 }
 
 constexpr std::size_t motionRegionCount = 5;
-constexpr std::uint16_t regionTransition = 0x0010;
-constexpr std::uint16_t regionMirrored = 0x0040;
 
 void SubmitPendingFootstepCue(Character &character, MotionRuntimeState &state) {
     const std::uint32_t cue = state.pendingFootstepCue;
@@ -471,11 +459,11 @@ void CopyMoveForward(Vector3 &position, std::int16_t yaw, float distance) {
 }
 
 std::uint16_t CopyGaitMotion(const MotionRuntimeState &state) {
-    return state.extraMotionIds[(state.copyFlags & 0x8000U) ? 4 : 1];
+    return state.extraMotionIds[(state.copyFlags & MCF_AlternateLocomotion) ? 4 : 1];
 }
 
 float CopyStride(const MotionWork &work) {
-    return GetMotionRigScale(work.rig.boneId, 8, 0) * ((work.runtime.copyFlags & 0x200U) ? 1.2f : 0.55000001f);
+    return GetMotionRigScale(work.rig.boneId, 8, 0) * ((work.runtime.copyFlags & MCF_Running) ? 1.2f : 0.55000001f);
 }
 
 
@@ -493,7 +481,7 @@ void CopySetLeadFoot(MotionWork &work, std::uint16_t motion, bool splitWindow) {
     state.motnFlags |= 0x8000U;
     if (splitWindow)
         state.gaitSplitFraction = 0.64999998f;
-    if (state.copyFlags & 4U) {
+    if (state.copyFlags & MCF_LeadFoot) {
         state.motnFlags &= ~0x10000U;
         if (motion)
             SetMotionRegionEvalTime(&work, static_cast<float>(GetMotionFrameCount(motion)) * 0.5f, MotionRegion::LowerBody);
@@ -516,7 +504,7 @@ void CopyPlayAt(CopyMotionContext &context, const Vector3 &position, std::int16_
 }
 
 void CopyReleaseLook(MotionWork &work) {
-    if (!(work.runtime.copyFlags & 0x100000U))
+    if (!(work.runtime.copyFlags & MCF_LookSuppressed))
         return;
     UpdateMotionWorkWithPosition(&work, nullptr, 0);
     UpdateMotionWorkWithPosition(&work, nullptr, 0x304);
@@ -526,14 +514,14 @@ void CopyReleaseLook(MotionWork &work) {
 // @verified - p
 void CommitCopyMotionTransition(MotionWork &work) {
     MotionRuntimeState &state = work.runtime;
-    state.motnFlags = (state.motnFlags & ~0x18000U) | ((state.copyFlags & 3U) << 15U);
+    state.motnFlags = (state.motnFlags & ~0x18000U) | ((state.copyFlags & (MCF_Unknown01 | MCF_Unknown02)) << 15U);
     state.requestedRootMode = state.copyRegionSelector;
     state.defaultRegionStepFrames[0] = state.transitionFrameTime;
     state.copyScaleCountdown = state.copyStepsRemaining = state.copyStepState = 0;
     state.insideRectangleScale = 1.0f;
     CopyReleaseLook(work);
-    state.copyFlags &= 0x20U;
-    state.seqFlags &= ~MotionSequencePositionTransition;
+    state.copyFlags &= MCF_Persistent;
+    state.seqFlags &= ~MSF_PositionTransition;
     state.copyLayerStartFrame = 0.0f;
     state.copyOperationState = state.copyPhase = 0;
     state.copyDelayFrames = 0;
@@ -554,22 +542,22 @@ void CopyAdvanceScale(MotionWork &work) {
 bool CopyReachedStepWindow(MotionWork &work, std::uint16_t motion) {
     MotionRuntimeState &state = work.runtime;
     const std::uint16_t regionFlags = state.regionFlags[0];
-    if (regionFlags & regionTransition) {
-        const bool secondFoot = (state.motnFlags & 0x8000U) ? (state.motnFlags & 0x10000U) != 0 : (state.copyFlags & 4U) != 0;
-        state.copyFlags = (state.copyFlags & ~8U) | (secondFoot ? 8U : 0U);
-        return GetMotionTransitionFramesRemaining(&work, MotionRegion::LowerBody) < ((state.copyFlags & 0x200U) ? 1.1f : 2.0999999f);
+    if (regionFlags & MRF_Transition) {
+        const bool secondFoot = (state.motnFlags & 0x8000U) ? (state.motnFlags & 0x10000U) != 0 : (state.copyFlags & MCF_LeadFoot) != 0;
+        state.copyFlags = (state.copyFlags & ~MCF_SampledLeadFoot) | (secondFoot ? MCF_SampledLeadFoot : 0U);
+        return GetMotionTransitionFramesRemaining(&work, MotionRegion::LowerBody) < ((state.copyFlags & MCF_Running) ? 1.1f : 2.0999999f);
     }
-    if (!(regionFlags & 4U) && (regionFlags & 2U))
+    if (!(regionFlags & MRF_Loop) && (regionFlags & MRF_Unknown02))
         return true;
     const float frame = GetMotionFrame(&work, MotionRegion::LowerBody);
     const float speed = GetMotionSpeed(&work, MotionRegion::LowerBody);
     const int frames = static_cast<int>(GetMotionFrameCount(motion));
-    const int margin = (state.copyFlags & 0x200U) ? 2 : 3;
+    const int margin = (state.copyFlags & MCF_Running) ? 2 : 3;
     const float halfWindow = static_cast<float>(frames / 2 - margin);
     const float end = static_cast<float>(frames) - 1.0f;
     const bool outside = frame < end * 0.5f * 0.5f || end * 0.5f * 1.5f <= frame;
-    const bool secondFoot = outside != ((regionFlags & 0x40U) != 0);
-    state.copyFlags = (state.copyFlags & ~8U) | (secondFoot ? 8U : 0U);
+    const bool secondFoot = outside != ((regionFlags & MRF_Mirrored) != 0);
+    state.copyFlags = (state.copyFlags & ~MCF_SampledLeadFoot) | (secondFoot ? MCF_SampledLeadFoot : 0U);
     const float previous = frame - speed;
     const float endWindow = static_cast<float>(frames - margin);
     if (previous > 0.0f)
@@ -585,18 +573,18 @@ void CopyChooseFinalFoot(MotionRuntimeState &state, std::int16_t yaw) {
     bool firstFoot;
     if (travel > 0) {
         if (final <= 0)
-            firstFoot = travel > 24576 && travel + final > 0;
-        else if (travel < 16384)
+            firstFoot = travel > DEG_TO_ANG(135.0f) && travel + final > 0;
+        else if (travel < DEG_TO_ANG(90.0f))
             firstFoot = travel < final;
         else
             firstFoot = false;
     } else {
         if (final > 0)
-            firstFoot = travel >= -24576 || travel + final >= 0;
+            firstFoot = travel >= -DEG_TO_ANG(135.0f) || travel + final >= 0;
         else
-            firstFoot = travel <= -16384 || travel <= final;
+            firstFoot = travel <= -DEG_TO_ANG(90.0f) || travel <= final;
     }
-    state.copyFlags = (state.copyFlags & ~4U) | (firstFoot ? 4U : 0U);
+    state.copyFlags = (state.copyFlags & ~MCF_LeadFoot) | (firstFoot ? MCF_LeadFoot : 0U);
 }
 
 
@@ -621,7 +609,7 @@ std::uint8_t CopyRequestLook(CopyMotionContext &context, const Vector3 &destinat
             if (distance > 0.30000001f) {
                 const std::int16_t direction = CopyHeading(location, destination);
                 const int delta = direction - targetYaw;
-                if (std::abs(delta) <= 28672)
+                if (std::abs(delta) <= DEG_TO_ANG(157.5f))
                     facing = static_cast<std::int16_t>(targetYaw + delta / 2);
                 else if (std::abs(direction - rotation) < std::abs(targetYaw - rotation))
                     facing = direction;
@@ -643,11 +631,11 @@ std::uint8_t CopyRequestLook(CopyMotionContext &context, const Vector3 &destinat
     default:
         break;
     }
-    if (static_cast<std::uint16_t>(difference + 28672) > 0xe000U)
+    if (static_cast<std::uint16_t>(difference + DEG_TO_ANG(157.5f)) > 0xe000U)
         return 0;
     UpdateMotionWorkWithPosition(&context.work, &target, 0x501);
     state.motnFlags |= 0x40000U;
-    state.copyFlags |= 0x100000U;
+    state.copyFlags |= MCF_LookSuppressed;
     return static_cast<std::uint8_t>(std::abs(static_cast<int>(difference)) >> 11U);
 }
 
@@ -655,9 +643,9 @@ std::uint8_t CopyRequestLook(CopyMotionContext &context, const Vector3 &destinat
 bool CopyUpdateLook(CopyMotionContext &context, bool pending) {
     MotionRuntimeState &state = context.state();
     if (pending) {
-        if (!(state.seqFlags & MotionSequenceLookAt) || (state.copyFlags & 0x100000U)) {
+        if (!(state.seqFlags & MSF_LookAt) || (state.copyFlags & MCF_LookSuppressed)) {
             Vector3 destination = state.copyDestinationPosition;
-            if (state.copyFlags & 0x20000U) {
+            if (state.copyFlags & MCF_Unknown20000) {
                 const Vector3 location = context.position();
                 destination.x += location.x;
                 destination.y += location.y;
@@ -665,7 +653,7 @@ bool CopyUpdateLook(CopyMotionContext &context, bool pending) {
             }
             CopyRequestLook(context, destination, static_cast<std::int16_t>(state.transitionEndFrame));
         }
-    } else if (!(state.seqFlags & MotionSequenceLookAt) && !state.copyDelayFrames) {
+    } else if (!(state.seqFlags & MSF_LookAt) && !state.copyDelayFrames) {
         state.copyDelayFrames = CopyRequestLook(context, state.copySourcePosition, static_cast<std::int16_t>(state.transitionStartFrame));
         return state.copyDelayFrames == 0;
     } else if (state.copyDelayFrames) {
@@ -679,14 +667,14 @@ void CopyLatchDestination(CopyMotionContext &context, bool clearRequest) {
     MotionRuntimeState &state = context.state();
     state.transitionStartFrame = state.transitionEndFrame;
     state.copySourcePosition = state.copyDestinationPosition;
-    if (state.copyFlags & 0x20000U) {
+    if (state.copyFlags & MCF_Unknown20000) {
         const Vector3 position = context.position();
         state.copySourcePosition.x += position.x;
         state.copySourcePosition.y += position.y;
         state.copySourcePosition.z += position.z;
     }
     if (clearRequest)
-        state.copyFlags &= ~0x100U;
+        state.copyFlags &= ~MCF_LookPending;
 }
 
 // CopyPrepareSpline lays out the five control points of the curved approach, or marks the status
@@ -751,18 +739,18 @@ void CopyPrepareSpline(MotionRuntimeState &state, const Vector3 &position, bool 
 // @verified - p
 bool CopyBuildSpline(CopyMotionContext &context, bool preserveYaw) {
     MotionRuntimeState &state = context.state();
-    if (!(state.copyFlags & 0x400U))
+    if (!(state.copyFlags & MCF_ExtraStepRequested))
         return false;
     const Vector3 position = context.position();
     const std::int16_t yaw = context.yaw();
     state.copyTravelYaw = preserveYaw ? yaw : CopyDirection(position, state.copySourcePosition, yaw);
     CopyPrepareSpline(state, position, preserveYaw, CopyStride(context.work));
     if (state.copySplineStatus == 1U) {
-        state.copyFlags &= ~0xc00U;
+        state.copyFlags &= ~(MCF_ExtraStepRequested | MCF_ExtraStepComplete);
     } else {
         state.copySplineFrame = 4;
         InterpolateNpcSplineNormalized(state.copySplinePoints, 5, 4, &state.copySplinePosition);
-        state.copyFlags |= 0x800U;
+        state.copyFlags |= MCF_ExtraStepComplete;
     }
     return true;
 }
@@ -772,7 +760,7 @@ bool CopyBuildSpline(CopyMotionContext &context, bool preserveYaw) {
 // @verified - p
 void CopyAdjustStride(CopyMotionContext &context, const Vector3 &position, std::int16_t yaw, std::uint16_t motion, float stride) {
     MotionRuntimeState &state = context.state();
-    if ((state.copyFlags & 0x40000U) || (state.copyFlags & 0xc00U) == 0xc00U)
+    if ((state.copyFlags & MCF_Unknown40000) || (state.copyFlags & (MCF_ExtraStepRequested | MCF_ExtraStepComplete)) == 0xc00U)
         return;
     const Vector3 offset{state.copySourcePosition.x - position.x, 0.0f, state.copySourcePosition.z - position.z};
     const float distance = Vector3::CalcMagnitude(offset);
@@ -787,10 +775,10 @@ void CopyAdjustStride(CopyMotionContext &context, const Vector3 &position, std::
         directional = false;
         break;
     case 1:
-        if (!(state.copyFlags & 0x80U))
+        if (!(state.copyFlags & MCF_Unknown80))
             return;
         heading = CopyYawDifference(state.transitionStartFrame, yaw);
-        if (std::abs(static_cast<int>(heading)) < 4096)
+        if (std::abs(static_cast<int>(heading)) < DEG_TO_ANG(22.5f))
             return;
         directional = true;
         break;
@@ -800,13 +788,13 @@ void CopyAdjustStride(CopyMotionContext &context, const Vector3 &position, std::
     const auto chooseFoot = [&] {
         if (directional) {
             state.copyTravelYaw = static_cast<std::int16_t>(state.transitionStartFrame);
-            state.copyFlags = heading <= 0 ? state.copyFlags | 4U : state.copyFlags & ~4U;
+            state.copyFlags = heading <= 0 ? state.copyFlags | MCF_LeadFoot : state.copyFlags & ~MCF_LeadFoot;
         } else {
             state.copyTravelYaw = static_cast<std::int16_t>(FixedAtan2(-offset.x, -offset.z));
             CopyChooseFinalFoot(state, yaw);
         }
     };
-    const bool wide = std::abs(static_cast<int>(heading)) >= 8192;
+    const bool wide = std::abs(static_cast<int>(heading)) >= DEG_TO_ANG(45.0f);
     if (state.copyOperationState == 5U) {
         const float approach = directional ? (wide ? stride * 0.60000002f * 0.60000002f : 0.0f) : stride;
         chooseFoot();
@@ -814,7 +802,7 @@ void CopyAdjustStride(CopyMotionContext &context, const Vector3 &position, std::
             return;
         const float adjustedDistance = distance - (directional ? approach : stride * 0.5f);
         const int frames = static_cast<int>(GetMotionFrameCount(motion));
-        const bool feetMatch = ((state.copyFlags & 4U) != 0) == ((state.copyFlags & 8U) != 0);
+        const bool feetMatch = ((state.copyFlags & MCF_LeadFoot) != 0) == ((state.copyFlags & MCF_SampledLeadFoot) != 0);
         const bool fiveSteps = directional ? feetMatch : !feetMatch;
         state.copyStepsRemaining = fiveSteps ? 5U : 4U;
         const int totalFrames = fiveSteps ? static_cast<int>(static_cast<float>(frames) * 2.5f) : frames * 2;
@@ -833,10 +821,10 @@ void CopyAdjustStride(CopyMotionContext &context, const Vector3 &position, std::
         return;
     const float halfTravel = travel * 0.5f;
     const float adjustedDistance = distance - (directional ? approach : stride * 0.5f);
-    const bool oldFoot = (state.copyFlags & 4U) != 0;
+    const bool oldFoot = (state.copyFlags & MCF_LeadFoot) != 0;
     const int minimumSteps = static_cast<int>(adjustedDistance / halfTravel) + 1;
     chooseFoot();
-    const bool feetMatch = oldFoot == ((state.copyFlags & 4U) != 0);
+    const bool feetMatch = oldFoot == ((state.copyFlags & MCF_LeadFoot) != 0);
     const bool increase = directional ? ((minimumSteps & 1) != 0) == feetMatch : ((minimumSteps & 1) != 0) != feetMatch;
     const int steps = increase ? static_cast<int>(adjustedDistance / halfTravel) + 2 : minimumSteps;
     state.copyStepsRemaining = static_cast<std::uint8_t>(steps);
@@ -885,16 +873,16 @@ bool CopyBeginStep(CopyMotionContext &context, bool directional) {
         return true;
     }
     const float stride = CopyStride(context.work);
-    const bool running = (state.copyFlags & 0x200U) != 0;
+    const bool running = (state.copyFlags & MCF_Running) != 0;
     const std::uint16_t motion = CopyGaitMotion(state);
     const std::int16_t turn = CopyYawDifference(state.copyTravelYaw, yaw);
-    state.copyFlags = (state.copyFlags & ~4U) | (turn <= 0 ? 4U : 0U);
+    state.copyFlags = (state.copyFlags & ~MCF_LeadFoot) | (turn <= 0 ? MCF_LeadFoot : 0U);
     const int angle = std::abs(static_cast<int>(turn));
     const std::uint32_t frames = running ? 8U : 16U;
     if (angle >= 20480) {
-        const int direction = state.copyFlags & 4U ? -1 : 1;
+        const int direction = state.copyFlags & MCF_LeadFoot ? -1 : 1;
         if (context.hadMotion)
-            CopyMoveForward(position, static_cast<std::int16_t>(state.copyTravelYaw + direction * 4096), stride * 0.5f);
+            CopyMoveForward(position, static_cast<std::int16_t>(state.copyTravelYaw + direction * DEG_TO_ANG(22.5f)), stride * 0.5f);
         CopySetLeadFoot(context.work, motion, running);
         CopyPlayAt(context, position, static_cast<std::int16_t>(yaw + direction * 20480), motion, 1, frames);
         CopySetState(state, 4, 5);
@@ -920,7 +908,7 @@ bool CopyBeginStep(CopyMotionContext &context, bool directional) {
 bool CopyFinishStep(CopyMotionContext &context, bool continueWalking) {
     MotionRuntimeState &state = context.state();
     if (state.copyPhase == 3U) {
-        if (!(state.regionFlags[0] & regionTransition)) {
+        if (!(state.regionFlags[0] & MRF_Transition)) {
             state.copyOperationState = 6;
             return true;
         }
@@ -934,9 +922,9 @@ bool CopyFinishStep(CopyMotionContext &context, bool continueWalking) {
     const std::int16_t yaw = context.yaw();
     std::int16_t destinationYaw = static_cast<std::int16_t>(state.transitionStartFrame);
     if (state.copyPhase == 2U) {
-        state.copyFlags ^= 4U;
+        state.copyFlags ^= MCF_LeadFoot;
         state.motnFlags = (state.motnFlags | 0x8000U) & ~0x10000U;
-        if (!(state.copyFlags & 4U))
+        if (!(state.copyFlags & MCF_LeadFoot))
             state.motnFlags |= 0x10000U;
     } else {
         state.copyScaleCountdown = state.copyStepsRemaining = state.copyStepState = 0;
@@ -945,26 +933,26 @@ bool CopyFinishStep(CopyMotionContext &context, bool continueWalking) {
         const std::int16_t difference = CopyYawDifference(destinationYaw, yaw);
         bool intermediate = false;
         state.motnFlags = (state.motnFlags | 0x8000U) & ~0x10000U;
-        if (state.copyFlags & 4U) {
-            if (difference > 8192) {
-                destinationYaw = static_cast<std::int16_t>(yaw + 8192);
+        if (state.copyFlags & MCF_LeadFoot) {
+            if (difference > DEG_TO_ANG(45.0f)) {
+                destinationYaw = static_cast<std::int16_t>(yaw + DEG_TO_ANG(45.0f));
                 intermediate = true;
-            } else if (difference < -24576) {
-                destinationYaw = static_cast<std::int16_t>(yaw - 24576);
+            } else if (difference < -DEG_TO_ANG(135.0f)) {
+                destinationYaw = static_cast<std::int16_t>(yaw - DEG_TO_ANG(135.0f));
                 intermediate = true;
             }
         } else {
             state.motnFlags |= 0x10000U;
-            if (difference > 24576) {
-                destinationYaw = static_cast<std::int16_t>(yaw + 24576);
+            if (difference > DEG_TO_ANG(135.0f)) {
+                destinationYaw = static_cast<std::int16_t>(yaw + DEG_TO_ANG(135.0f));
                 intermediate = true;
-            } else if (difference < -8192) {
-                destinationYaw = static_cast<std::int16_t>(yaw - 8192);
+            } else if (difference < -DEG_TO_ANG(45.0f)) {
+                destinationYaw = static_cast<std::int16_t>(yaw - DEG_TO_ANG(45.0f));
                 intermediate = true;
             }
         }
         if (intermediate) {
-            const float factor = (state.copyFlags & 0x200U) ? 0.69999999f : 1.0f;
+            const float factor = (state.copyFlags & MCF_Running) ? 0.69999999f : 1.0f;
             state.copyDelayFrames = static_cast<std::uint8_t>(factor * 0.69999999f * 16.0f);
         }
         state.copyDelayFrames = CopyScaledDelay(state, state.copyDelayFrames);
@@ -979,24 +967,24 @@ bool CopyFinishStep(CopyMotionContext &context, bool continueWalking) {
     if (continueWalking) {
         state.copyTravelYaw = static_cast<std::int16_t>(state.transitionStartFrame);
         const std::uint16_t motion = CopyGaitMotion(state);
-        CopySetLeadFoot(context.work, motion, (state.copyFlags & 0x200U) != 0);
-        CopyPlayAt(context, position, state.copyTravelYaw, motion, 1, (state.copyFlags & 0x200U) ? 8 : 16);
+        CopySetLeadFoot(context.work, motion, (state.copyFlags & MCF_Running) != 0);
+        CopyPlayAt(context, position, state.copyTravelYaw, motion, 1, (state.copyFlags & MCF_Running) ? 8 : 16);
         CopySetState(state, 5, 1);
     } else {
         std::uint16_t motion = state.extraMotionIds[0];
-        if (state.copyFlags & 0x1000U) {
-            const bool leadFoot = state.copyFlags & 0x2000U ? (state.copyFlags & 4U) != 0 : (state.copyFlags & 0x80000U) != 0;
+        if (state.copyFlags & MCF_Unknown1000) {
+            const bool leadFoot = state.copyFlags & MCF_Unknown2000 ? (state.copyFlags & MCF_LeadFoot) != 0 : (state.copyFlags & MCF_Unknown80000) != 0;
             if (leadFoot)
-                state.regionFlags[0] |= 0x20U;
-            else if (state.copyFlags & 0x2000U)
-                state.regionFlags[0] &= ~0x20U;
+                state.regionFlags[0] |= MRF_LeadFoot;
+            else if (state.copyFlags & MCF_Unknown2000)
+                state.regionFlags[0] &= ~MRF_LeadFoot;
             motion = state.extraMotionIds[5];
         }
         CopyPlayAt(context, position, destinationYaw, motion, 1, 16);
-        if (state.copyFlags & 0x1000U) {
+        if (state.copyFlags & MCF_Unknown1000) {
             if (state.copyLayerStartFrame > 0.0f)
                 state.pendingLayerStartFrame[0] = state.copyLayerStartFrame;
-            state.copyFlags |= 0x400000U;
+            state.copyFlags |= MCF_Unknown400000;
         }
         state.copyPhase = 3;
     }
@@ -1014,12 +1002,12 @@ bool CopyTurnStep(CopyMotionContext &context, bool towardPosition) {
         state.copyScaleCountdown = state.copyStepsRemaining = state.copyStepState = 0;
         if (towardPosition)
             state.copyTravelYaw = CopyDirection(position, state.copySourcePosition, yaw);
-        if (std::abs(static_cast<int>(CopyYawDifference(state.copyTravelYaw, yaw))) < 4096 && state.insideRectangleScale >= 1.0f) {
+        if (std::abs(static_cast<int>(CopyYawDifference(state.copyTravelYaw, yaw))) < DEG_TO_ANG(22.5f) && state.insideRectangleScale >= 1.0f) {
             const std::uint8_t gait = ClassifyCurrentLocomotionPhase(context.work);
-            const bool requestedRun = (state.copyFlags & 0x8000U) != 0;
+            const bool requestedRun = (state.copyFlags & MCF_AlternateLocomotion) != 0;
             if (gait && ((gait == 2U) == requestedRun)) {
                 state.copyPhase = 2;
-                state.copyDelayFrames = CopyScaledDelay(state, (state.copyFlags & 0x200U) ? 3.0f : 6.0f);
+                state.copyDelayFrames = CopyScaledDelay(state, (state.copyFlags & MCF_Running) ? 3.0f : 6.0f);
             } else
                 state.copyPhase = 3;
         } else
@@ -1040,21 +1028,21 @@ bool CopyTurnStep(CopyMotionContext &context, bool towardPosition) {
         --state.copyDelayFrames;
         return false;
     }
-    const bool running = (state.copyFlags & 0x200U) != 0;
-    const std::uint32_t frames = state.copyFlags & 0x8200U ? 8U : 16U;
+    const bool running = (state.copyFlags & MCF_Running) != 0;
+    const std::uint32_t frames = state.copyFlags & (MCF_Running | MCF_AlternateLocomotion) ? MCF_SampledLeadFoot : 16U;
     const float stride = CopyStride(context.work);
     const std::uint16_t motion = CopyGaitMotion(state);
     if (state.copyPhase == 4U || state.copyPhase == 5U) {
         const std::int16_t oldDifference = CopyYawDifference(state.copyTravelYaw, yaw);
-        state.copyFlags ^= 4U;
+        state.copyFlags ^= MCF_LeadFoot;
         if (towardPosition)
             state.copyTravelYaw = CopyDirection(position, state.copySourcePosition, yaw);
         CopySetLeadFoot(context.work, motion, running);
         if (state.copyPhase == 4U) {
-            const int direction = state.copyFlags & 4U ? 1 : -1;
+            const int direction = state.copyFlags & MCF_LeadFoot ? 1 : -1;
             if (context.hadMotion)
                 CopyMoveForward(position, static_cast<std::int16_t>(state.copyTravelYaw + direction * 6144), stride * 0.2f);
-            CopyPlayAt(context, position, static_cast<std::int16_t>(yaw + direction * 8192), motion, 1, frames);
+            CopyPlayAt(context, position, static_cast<std::int16_t>(yaw + direction * DEG_TO_ANG(45.0f)), motion, 1, frames);
             state.copyPhase = 5;
             state.copyDelayFrames = CopyScaledDelay(state, static_cast<std::uint8_t>(static_cast<float>(frames) * 0.30000001f));
             return false;
@@ -1062,17 +1050,18 @@ bool CopyTurnStep(CopyMotionContext &context, bool towardPosition) {
         if (context.hadMotion)
             CopyMoveForward(position, state.copyTravelYaw, (1.0f - std::abs(static_cast<int>(oldDifference)) * 0.30000001f / 24576.0f) * stride);
     } else {
-        state.copyFlags = (state.copyFlags & ~4U) | (CopyYawDifference(state.copyTravelYaw, yaw) <= 0 ? 4U : 0U);
+        state.copyFlags = (state.copyFlags & ~MCF_LeadFoot) | (CopyYawDifference(state.copyTravelYaw, yaw) <= 0 ? MCF_LeadFoot : 0U);
         const std::int16_t difference = CopyYawDifference(state.copyTravelYaw, yaw);
         const int angle = std::abs(static_cast<int>(difference));
-        const bool feetMatch = ((state.copyFlags & 4U) != 0) == ((state.copyFlags & 8U) != 0);
+        const bool feetMatch = ((state.copyFlags & MCF_LeadFoot) != 0) == ((state.copyFlags & MCF_SampledLeadFoot) != 0);
         if (!feetMatch)
-            state.copyFlags ^= 4U;
+            state.copyFlags ^= MCF_LeadFoot;
         CopySetLeadFoot(context.work, motion, running);
-        if (!feetMatch && angle >= 8192) {
+        if (!feetMatch && angle >= DEG_TO_ANG(45.0f)) {
             if (context.hadMotion)
                 CopyMoveForward(position, yaw, stride * 0.60000002f);
-            CopyPlayAt(context, position, static_cast<std::int16_t>(yaw + ((state.copyFlags & 4U) ? 8192 : -8192)), motion, 1, frames);
+            CopyPlayAt(context, position, static_cast<std::int16_t>(yaw + ((state.copyFlags & MCF_LeadFoot) ? DEG_TO_ANG(45.0f) : -DEG_TO_ANG(45.0f))), motion,
+                1, frames);
             state.copyPhase = 5;
             state.copyDelayFrames = CopyScaledDelay(state, static_cast<std::uint8_t>(static_cast<float>(frames) * 0.60000002f));
             return false;
@@ -1084,9 +1073,9 @@ bool CopyTurnStep(CopyMotionContext &context, bool towardPosition) {
                 CopyPlayAt(context, position, yaw, motion, 1, frames);
                 state.copyPhase = 4;
             } else {
-                const int direction = state.copyFlags & 4U ? -1 : 1;
+                const int direction = state.copyFlags & MCF_LeadFoot ? -1 : 1;
                 if (context.hadMotion)
-                    CopyMoveForward(position, static_cast<std::int16_t>(state.copyTravelYaw + direction * 4096), stride * 0.5f);
+                    CopyMoveForward(position, static_cast<std::int16_t>(state.copyTravelYaw + direction * DEG_TO_ANG(22.5f)), stride * 0.5f);
                 CopyPlayAt(context, position, static_cast<std::int16_t>(yaw + direction * 20480), motion, 1, frames);
                 state.copyPhase = 5;
             }
@@ -1116,31 +1105,31 @@ bool CopyTranslateStep(CopyMotionContext &context) {
     const std::int16_t yaw = context.yaw();
     Vector3 delta{state.copySourcePosition.x - position.x, 0.0f, state.copySourcePosition.z - position.z};
     const float distance = CopyDistance(position, state.copySourcePosition);
-    const bool running = (state.copyFlags & 0x200U) != 0;
+    const bool running = (state.copyFlags & MCF_Running) != 0;
     const float stride = CopyStride(context.work);
     const std::uint32_t frames = running ? 8U : 16U;
     if (state.copyPhase == 2U) {
-        state.copyFlags ^= 4U;
+        state.copyFlags ^= MCF_LeadFoot;
         const std::uint16_t motion = state.extraMotionIds[1];
         CopySetLeadFoot(context.work, motion, false);
         const float fraction = distance <= stride * 2.0f ? 0.5f : stride / distance;
         position.x += delta.x * fraction;
         position.z += delta.z * fraction;
-        state.copyFlags |= 0x200000U;
+        state.copyFlags |= MCF_TurnStepPending;
         state.copyDelayFrames = CopyScaledDelay(state, static_cast<std::uint8_t>(static_cast<float>(frames) * 0.60000002f));
         CopyPlayAt(context, position, state.copyTravelYaw, motion, 1, frames);
         state.copyPhase = 3;
         return false;
     }
     if (state.copyPhase == 3U) {
-        state.copyFlags ^= 4U;
+        state.copyFlags ^= MCF_LeadFoot;
         const std::uint16_t motion = CopyGaitMotion(state);
         CopySetLeadFoot(context.work, motion, running);
         if (distance > stride) {
             delta.x *= stride / distance;
             delta.z *= stride / distance;
         }
-        if (state.copyFlags & 0x200000U)
+        if (state.copyFlags & MCF_TurnStepPending)
             CopyMoveForward(delta, static_cast<std::int16_t>(state.transitionStartFrame), 0.2f);
         const float moved = std::sqrt(delta.x * delta.x + delta.z * delta.z);
         const float fraction = moved <= stride ? 1.0f : stride / moved;
@@ -1148,14 +1137,14 @@ bool CopyTranslateStep(CopyMotionContext &context) {
         position.z += delta.z * fraction;
         CopyPlayAt(context, position, static_cast<std::int16_t>(state.transitionStartFrame), motion, 1, frames);
         CopyReleaseLook(context.work);
-        state.copyFlags &= ~0x200000U;
+        state.copyFlags &= ~MCF_TurnStepPending;
         CopySetState(state, 5, 1);
         return false;
     }
     state.transitionStartFrame = static_cast<std::uint16_t>(yaw);
     state.copyTravelYaw = CopyDirection(position, state.copySourcePosition, yaw);
-    state.copyFlags = (state.copyFlags & ~4U) | (CopyYawDifference(state.copyTravelYaw, yaw) <= 0 ? 4U : 0U);
-    const bool feetMatch = ((state.copyFlags & 4U) != 0) == ((state.copyFlags & 8U) != 0);
+    state.copyFlags = (state.copyFlags & ~MCF_LeadFoot) | (CopyYawDifference(state.copyTravelYaw, yaw) <= 0 ? MCF_LeadFoot : 0U);
+    const bool feetMatch = ((state.copyFlags & MCF_LeadFoot) != 0) == ((state.copyFlags & MCF_SampledLeadFoot) != 0);
     const bool facing = static_cast<std::uint16_t>(CopyYawDifference(state.copyTravelYaw, yaw) + 20480) <= 0xa000U;
     std::int16_t nextYaw = yaw;
     if (feetMatch) {
@@ -1167,7 +1156,7 @@ bool CopyTranslateStep(CopyMotionContext &context) {
             position.z += delta.z * fraction;
             nextYaw = state.copyTravelYaw;
             motion = state.extraMotionIds[1];
-            state.copyFlags |= 0x200000U;
+            state.copyFlags |= MCF_TurnStepPending;
             state.copyPhase = 3;
             state.copyDelayFrames = CopyScaledDelay(state, static_cast<std::uint8_t>(static_cast<float>(frames) * 0.60000002f));
         } else {
@@ -1179,7 +1168,7 @@ bool CopyTranslateStep(CopyMotionContext &context) {
         CopyPlayAt(context, position, nextYaw, motion, 1, frames);
         CopyReleaseLook(context.work);
     } else {
-        state.copyFlags ^= 4U;
+        state.copyFlags ^= MCF_LeadFoot;
         const std::uint16_t motion = state.extraMotionIds[1];
         CopySetLeadFoot(context.work, motion, false);
         if (facing && distance > stride) {
@@ -1211,11 +1200,13 @@ Vector3 CopyLocalOffset(const Vector3 &offset, std::int32_t yaw) {
 bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) {
     MotionRuntimeState &state = context.state();
     if (state.copyPhase != 2U && state.copyPhase != 3U && state.copyPhase != 4U) {
-        if (state.regionFlags[0] & regionTransition) {
+        if (state.regionFlags[0] & MRF_Transition) {
             if (!(state.motnFlags & 0x8000U))
-                GetParentBoneWrapper(&context.work, (state.copyFlags & 4U) ? 0x6000001e : 0x60000019);
+                GetParentBoneWrapper(&context.work,
+                    (state.copyFlags & MCF_LeadFoot) ? (MB_RightFootTarget | motionTargetIgnoreX | motionTargetIgnoreY) :
+                                                       (MB_LeftFootTarget | motionTargetIgnoreX | motionTargetIgnoreY));
         } else {
-            state.copyPhase = (state.copyFlags & 0xc00U) == 0xc00U ? 3U : 2U;
+            state.copyPhase = (state.copyFlags & (MCF_ExtraStepRequested | MCF_ExtraStepComplete)) == 0xc00U ? 3U : 2U;
         }
     }
     if (state.copyPhase != 4U) {
@@ -1226,10 +1217,10 @@ bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) 
             Vector3i rotation = GetCharacterWorldRotation(&context.character);
             const Vector3 offset{state.copySplinePosition.x - position.x, 0.0f, state.copySplinePosition.z - position.z};
             if (CopyLocalOffset(offset, rotation.y).z > 0.050000001f) {
-                state.copySplineFrame = static_cast<std::int16_t>(state.copySplineFrame + ((state.copyFlags & 0x200U) ? 4 : 2));
+                state.copySplineFrame = static_cast<std::int16_t>(state.copySplineFrame + ((state.copyFlags & MCF_Running) ? 4 : 2));
                 if (state.copySplineFrame > 123) {
                     state.copyPhase = 2;
-                    state.copyFlags &= ~0x400U;
+                    state.copyFlags &= ~MCF_ExtraStepRequested;
                 } else {
                     const Vector3 previous = state.copySplinePosition;
                     InterpolateNpcSplineNormalized(state.copySplinePoints, 5, state.copySplineFrame, &state.copySplinePosition);
@@ -1241,7 +1232,7 @@ bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) 
                 }
             }
         }
-        if (!CopyReachedStepWindow(context.work, state.extraMotionIds[(state.copyFlags & 0x200U) ? 4 : 1]))
+        if (!CopyReachedStepWindow(context.work, state.extraMotionIds[(state.copyFlags & MCF_Running) ? 4 : 1]))
             return false;
         state.copyPhase = 4;
         return true;
@@ -1254,11 +1245,11 @@ bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) 
     const float stride = CopyStride(context.work);
     state.copyPhase = 1;
     if (state.copyStepState == 2U) {
-        state.copyFlags = (state.copyFlags & ~4U) | ((state.copyFlags & 8U) ? 4U : 0U);
+        state.copyFlags = (state.copyFlags & ~MCF_LeadFoot) | ((state.copyFlags & MCF_SampledLeadFoot) ? MCF_LeadFoot : 0U);
         const std::uint16_t motion = CopyGaitMotion(state);
-        CopySetLeadFoot(context.work, motion, (state.copyFlags & 0x200U) != 0);
+        CopySetLeadFoot(context.work, motion, (state.copyFlags & MCF_Running) != 0);
         CopyMoveForward(position, yaw, state.copyExtraStepDistance);
-        const std::uint32_t frames = static_cast<std::uint32_t>(((state.copyFlags & 0x200U) ? 8.0f : 16.0f) * 0.69999999f);
+        const std::uint32_t frames = static_cast<std::uint32_t>(((state.copyFlags & MCF_Running) ? 8.0f : 16.0f) * 0.69999999f);
         CopyPlayAt(context, position, yaw, motion, 1, frames);
         if (state.insideRectangleScale < 1.0f) {
             SetMotionRigScale(&context.work, state.insideRectangleScale);
@@ -1269,12 +1260,12 @@ bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) 
     }
     if (!state.copyStepState)
         CopyAdjustStride(context, position, yaw, state.currentMotionId[0], stride);
-    else if (state.copyStepsRemaining && !(state.regionFlags[0] & regionTransition))
+    else if (state.copyStepsRemaining && !(state.regionFlags[0] & MRF_Transition))
         --state.copyStepsRemaining;
-    if ((state.copyFlags & 0xc00U) == 0xc00U)
+    if ((state.copyFlags & (MCF_ExtraStepRequested | MCF_ExtraStepComplete)) == 0xc00U)
         return false;
     if (stride > distance && !state.copyStepsRemaining) {
-        if (!(state.seqFlags & MotionSequenceLookAt) && !(state.copyFlags & 0x100000U))
+        if (!(state.seqFlags & MSF_LookAt) && !(state.copyFlags & MCF_LookSuppressed))
             CopyUpdateLook(context, false);
         if (stopAtYaw) {
             state.copyTravelYaw = static_cast<std::int16_t>(state.transitionStartFrame);
@@ -1283,18 +1274,18 @@ bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) 
         }
         state.copyTravelYaw = CopyDirection(position, state.copySourcePosition, yaw);
         CopyChooseFinalFoot(state, yaw);
-        const bool feetMatch = ((state.copyFlags & 4U) != 0) == ((state.copyFlags & 8U) != 0);
+        const bool feetMatch = ((state.copyFlags & MCF_LeadFoot) != 0) == ((state.copyFlags & MCF_SampledLeadFoot) != 0);
         if (!feetMatch) {
-            state.copyFlags ^= 4U;
+            state.copyFlags ^= MCF_LeadFoot;
             state.motnFlags = (state.motnFlags | 0x8000U) & ~0x10000U;
-            if (!(state.copyFlags & 4U))
+            if (!(state.copyFlags & MCF_LeadFoot))
                 state.motnFlags |= 0x10000U;
             position.x = (position.x + state.copySourcePosition.x) * 0.5f;
             position.z = (position.z + state.copySourcePosition.z) * 0.5f;
-            const std::uint32_t frames = state.copyFlags & 0x200U ? 8U : 16U;
+            const std::uint32_t frames = state.copyFlags & MCF_Running ? MCF_SampledLeadFoot : 16U;
             CopyPlayAt(context, position, yaw, state.extraMotionIds[0], 1, frames);
             state.copyDelayFrames = CopyScaledDelay(state, static_cast<std::uint8_t>(frames - 1U));
-            state.copyFlags ^= 4U;
+            state.copyFlags ^= MCF_LeadFoot;
         } else
             state.copyDelayFrames = 0;
         CopySetState(state, 2, 1);
@@ -1305,11 +1296,11 @@ bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) 
             state.copyTravelYaw = static_cast<std::int16_t>(state.transitionStartFrame);
             CopySetState(state, 4, 1);
         } else {
-            state.copyFlags = (state.copyFlags & ~4U) | ((state.copyFlags & 8U) ? 4U : 0U);
+            state.copyFlags = (state.copyFlags & ~MCF_LeadFoot) | ((state.copyFlags & MCF_SampledLeadFoot) ? MCF_LeadFoot : 0U);
             state.motnFlags = (state.motnFlags | 0x8000U) & ~0x10000U;
-            if (!(state.copyFlags & 4U))
+            if (!(state.copyFlags & MCF_LeadFoot))
                 state.motnFlags |= 0x10000U;
-            CopyPlayAt(context, position, yaw, state.extraMotionIds[0], 1, state.copyFlags & 0x200U ? 8 : 16);
+            CopyPlayAt(context, position, yaw, state.extraMotionIds[0], 1, state.copyFlags & MCF_Running ? 8 : 16);
             state.copyDelayFrames = 0;
             CopySetState(state, 2, 3);
         }
@@ -1339,10 +1330,10 @@ bool CopyCanStart(CopyMotionContext &context) {
 // @verified - p
 bool CopyRetryUnlessArrived(CopyMotionContext &context) {
     MotionRuntimeState &state = context.state();
-    if (!(state.copyFlags & 0x100U)) {
+    if (!(state.copyFlags & MCF_LookPending)) {
         if (CopyDistance(context.position(), state.copySourcePosition) <= 0.1f)
             return false;
-        state.copyFlags |= 0x20U;
+        state.copyFlags |= MCF_Persistent;
         if (state.copyFlags & 0x10U)
             return false;
     }
@@ -1364,11 +1355,11 @@ bool UpdateCopyToPosition(CopyMotionContext &context) {
                 state.transitionClass = state.transitionVariant;
                 return true;
             }
-            if (state.copyFlags & 0x100U) {
+            if (state.copyFlags & MCF_LookPending) {
                 CopyLatchDestination(context, true);
                 state.copyDelayFrames = 0;
             }
-            if (!(state.copyFlags & 0x401000U) && (!CopyCanStart(context) || !CopyUpdateLook(context, false)))
+            if (!(state.copyFlags & (MCF_Unknown1000 | MCF_Unknown400000)) && (!CopyCanStart(context) || !CopyUpdateLook(context, false)))
                 return false;
             if (state.transitionSubstate == 1U)
                 state.transitionStartFrame = static_cast<std::uint16_t>(context.yaw());
@@ -1376,7 +1367,7 @@ bool UpdateCopyToPosition(CopyMotionContext &context) {
                 state.copySourcePosition = context.position();
             else if (!state.transitionSubstate)
                 CopyBuildSpline(context, true);
-            const bool spline = (state.copyFlags & 0xc00U) == 0xc00U;
+            const bool spline = (state.copyFlags & (MCF_ExtraStepRequested | MCF_ExtraStepComplete)) == 0xc00U;
             if (spline)
                 state.copyTravelYaw = context.yaw();
             next = CopyBeginStep(context, spline);
@@ -1395,7 +1386,7 @@ bool UpdateCopyToPosition(CopyMotionContext &context) {
             }
             if (!CopyContinueStep(context, false, false))
                 return false;
-            const bool pending = (state.copyFlags & 0x100U) != 0;
+            const bool pending = (state.copyFlags & MCF_LookPending) != 0;
             if (pending)
                 CopyLatchDestination(context, false);
             if (state.transitionSubstate == 1U) {
@@ -1410,8 +1401,8 @@ bool UpdateCopyToPosition(CopyMotionContext &context) {
                 next = CopyContinueStep(context, false, false);
                 break;
             }
-            state.copyFlags &= ~0x100U;
-            if ((state.copyFlags & 0xc00U) == 0xc00U) {
+            state.copyFlags &= ~MCF_LookPending;
+            if ((state.copyFlags & (MCF_ExtraStepRequested | MCF_ExtraStepComplete)) == 0xc00U) {
                 state.copyPhase = 1;
                 return false;
             }
@@ -1439,7 +1430,7 @@ bool UpdateCopyAlongHeading(CopyMotionContext &context) {
     MotionRuntimeState &state = context.state();
     const auto latch = [&] {
         CopyLatchDestination(context, true);
-        state.copyFlags = state.transitionSubstate ? state.copyFlags & ~0x80U : state.copyFlags | 0x80U;
+        state.copyFlags = state.transitionSubstate ? state.copyFlags & ~MCF_Unknown80 : state.copyFlags | MCF_Unknown80;
     };
     for (;;) {
         bool next = true;
@@ -1450,7 +1441,7 @@ bool UpdateCopyAlongHeading(CopyMotionContext &context) {
                 state.transitionClass = state.transitionVariant;
                 return true;
             }
-            if (state.copyFlags & 0x100U)
+            if (state.copyFlags & MCF_LookPending)
                 latch();
             if (!CopyUpdateLook(context, false))
                 return false;
@@ -1468,23 +1459,23 @@ bool UpdateCopyAlongHeading(CopyMotionContext &context) {
         case 2:
             next = CopyFinishStep(context, true);
             if (state.copyOperationState != 2U)
-                state.copyFlags &= ~0x80U;
+                state.copyFlags &= ~MCF_Unknown80;
             break;
         case 4:
-            next = CopyTurnStep(context, (state.copyFlags & 0x80U) != 0);
+            next = CopyTurnStep(context, (state.copyFlags & MCF_Unknown80) != 0);
             break;
         case 5:
             if (state.transitionVariant != state.transitionClass) {
                 state.transitionClass = state.transitionVariant;
                 return true;
             }
-            if (!(state.copyFlags & 0x80U) && !(state.copyFlags & 0x100U) && !(state.regionFlags[0] & regionTransition)) {
+            if (!(state.copyFlags & MCF_Unknown80) && !(state.copyFlags & MCF_LookPending) && !(state.regionFlags[0] & MRF_Transition)) {
                 state.copyOperationState = 6;
                 break;
             }
             if (!CopyContinueStep(context, false, true))
                 return false;
-            if (state.copyFlags & 0x100U) {
+            if (state.copyFlags & MCF_LookPending) {
                 latch();
                 if (state.transitionSubstate == 1U) {
                     state.copyTravelYaw = CopyHeading(context.position(), state.copySourcePosition);
@@ -1501,16 +1492,16 @@ bool UpdateCopyAlongHeading(CopyMotionContext &context) {
                 }
                 break;
             }
-            if (!(state.copyFlags & 0x80U)) {
+            if (!(state.copyFlags & MCF_Unknown80)) {
                 state.copyPhase = 1;
                 return false;
             }
             next = CopyContinueStep(context, false, true);
             if (next)
-                state.copyFlags &= ~0x80U;
-            if ((state.copyFlags & 0x800U) && !(state.copyFlags & 0x400U)) {
+                state.copyFlags &= ~MCF_Unknown80;
+            if ((state.copyFlags & MCF_ExtraStepComplete) && !(state.copyFlags & MCF_ExtraStepRequested)) {
                 next = true;
-                state.copyFlags &= ~0x80U;
+                state.copyFlags &= ~MCF_Unknown80;
             }
             break;
         default:
@@ -1550,7 +1541,7 @@ bool UpdateCopySideStep(CopyMotionContext &context) {
                 state.transitionClass = state.transitionVariant;
                 return true;
             }
-            if (state.copyFlags & 0x100U)
+            if (state.copyFlags & MCF_LookPending)
                 CopyLatchDestination(context, true);
             if (!CopyUpdateLook(context, false))
                 return false;
@@ -1568,13 +1559,13 @@ bool UpdateCopySideStep(CopyMotionContext &context) {
                 state.transitionClass = state.transitionVariant;
                 return true;
             }
-            if (!(state.copyFlags & 0x100U) && !(state.regionFlags[0] & regionTransition)) {
+            if (!(state.copyFlags & MCF_LookPending) && !(state.regionFlags[0] & MRF_Transition)) {
                 state.copyOperationState = 6;
                 break;
             }
             if (!CopyContinueStep(context, false, true))
                 return false;
-            if (!(state.copyFlags & 0x100U)) {
+            if (!(state.copyFlags & MCF_LookPending)) {
                 state.copyPhase = 1;
                 return false;
             }
@@ -1604,9 +1595,9 @@ void UpdateCopyMotionTransition(Character &character, MotionWork &work, bool had
     if (state.pendingLayerStartFrame[0] > 0.0f)
         state.copyLayerStartFrame = state.pendingLayerStartFrame[0];
     state.pendingLayerStartFrame[0] = -1.0f;
-    if (state.regionFlags[0] & 0x20U) {
-        state.copyFlags |= 0x80000U;
-        state.regionFlags[0] &= ~0x20U;
+    if (state.regionFlags[0] & MRF_LeadFoot) {
+        state.copyFlags |= MCF_Unknown80000;
+        state.regionFlags[0] &= ~MRF_LeadFoot;
     }
     state.layerLoopStartTime[0] = state.layerEndFrame[0] = -1.0f;
     state.requestedRootYawOffset = 0;
@@ -1617,24 +1608,24 @@ void UpdateCopyMotionTransition(Character &character, MotionWork &work, bool had
     }
     const std::uint8_t gait = ClassifyCurrentLocomotionPhase(work);
     if (gait == 2U)
-        state.copyFlags |= 0x200U;
+        state.copyFlags |= MCF_Running;
     else if (gait == 1U)
-        state.copyFlags &= ~0x200U;
-    if (state.copyOperationState == 5U && !(state.copyFlags & 0x100U) &&
-        ((gait == 2U && !(state.copyFlags & 0x8000U)) || (gait == 1U && (state.copyFlags & 0x8000U)))) {
+        state.copyFlags &= ~MCF_Running;
+    if (state.copyOperationState == 5U && !(state.copyFlags & MCF_LookPending) &&
+        ((gait == 2U && !(state.copyFlags & MCF_AlternateLocomotion)) || (gait == 1U && (state.copyFlags & MCF_AlternateLocomotion)))) {
         state.copyDestinationPosition = state.copySourcePosition;
         state.transitionEndFrame = state.transitionStartFrame;
-        state.copyFlags |= 0x100U;
+        state.copyFlags |= MCF_LookPending;
     }
-    if ((state.copyFlags & 0x10000U) && !(state.copyFlags & 0x20000U)) {
+    if ((state.copyFlags & MCF_Unknown10000) && !(state.copyFlags & MCF_Unknown20000)) {
         const Vector3 position = context.position();
         state.copyDestinationPosition.x -= position.x;
         state.copyDestinationPosition.y -= position.y;
         state.copyDestinationPosition.z -= position.z;
-        state.copyFlags |= 0x20000U;
+        state.copyFlags |= MCF_Unknown20000;
     }
-    state.copyFlags &= ~0x20U;
-    if (state.copyFlags & 0x100U)
+    state.copyFlags &= ~MCF_Persistent;
+    if (state.copyFlags & MCF_LookPending)
         CopyUpdateLook(context, true);
     for (;;) {
         bool next = true;
@@ -1681,12 +1672,12 @@ void UpdateCopyLookTransition(MotionWork &work) {
     if (state.transitionState == 1U) {
         if (state.motnFlags & 0x40U)
             flags |= 1U;
-        if (state.seqFlags & MotionSequenceLimitConstraintStep)
+        if (state.seqFlags & MSF_LimitConstraintStep)
             flags |= 2U;
         state.motnFlags |= 0x40U;
         const auto angle = [](float cotangent) {
             const auto fixed = static_cast<std::int16_t>((std::atan(std::fabs(cotangent)) * 65536.0f / 6.2831855f) + 0.5f);
-            const auto expanded = static_cast<std::uint16_t>(16384 - static_cast<int>(static_cast<float>(16384 - fixed) * 0.7f));
+            const auto expanded = static_cast<std::uint16_t>(DEG_TO_ANG(90.0f) - static_cast<int>(static_cast<float>(DEG_TO_ANG(90.0f) - fixed) * 0.7f));
             const float result = std::tan(static_cast<float>(expanded) * 6.2831855f * 0.000015258789f);
             return cotangent < 0.0f ? -result : result;
         };
@@ -1696,11 +1687,11 @@ void UpdateCopyLookTransition(MotionWork &work) {
     }
     if (state.transitionState == 2U) {
         if (flags & 0x10U) {
-            state.seqFlags &= ~MotionSequenceLimitConstraintStep;
+            state.seqFlags &= ~MSF_LimitConstraintStep;
             state.lookAtBlendTime = 1.0f;
         } else
-            state.seqFlags |= MotionSequenceLimitConstraintStep;
-        if (!starting && !(state.seqFlags & MotionSequenceTargetFacing)) {
+            state.seqFlags |= MSF_LimitConstraintStep;
+        if (!starting && !(state.seqFlags & MSF_TargetFacing)) {
             if (!(flags & 4U))
                 state.pelvisYawTarget = 0;
             else if (state.extraMotionMask & 8U)
@@ -1714,22 +1705,22 @@ void UpdateCopyLookTransition(MotionWork &work) {
         LatchMotionControllerTarget(work, 2, &state.lookAtTarget);
     } else if (state.transitionState == 3U) {
         if (flags & 0x10U) {
-            state.seqFlags &= ~MotionSequenceLimitConstraintStep;
+            state.seqFlags &= ~MSF_LimitConstraintStep;
             state.lookAtBlendTime = 0.0f;
             state.pelvisYawCurrent = state.pelvisYawHalf = 0;
         } else
-            state.seqFlags |= MotionSequenceLimitConstraintStep;
-        if (!(state.seqFlags & MotionSequenceTargetFacing))
+            state.seqFlags |= MSF_LimitConstraintStep;
+        if (!(state.seqFlags & MSF_TargetFacing))
             state.pelvisYawTarget = 0;
-        if (!(state.constraintStateBits & 0x1c0U) && ((state.seqFlags & MotionSequenceTargetFacing) || !state.lookAtYaw) && state.extraBlendTime == 0.0f) {
+        if (!(state.constraintStateBits & 0x1c0U) && ((state.seqFlags & MSF_TargetFacing) || !state.lookAtYaw) && state.extraBlendTime == 0.0f) {
             if (!(flags & 1U))
                 state.motnFlags &= ~0x40U;
             if (flags & 2U)
-                state.seqFlags |= MotionSequenceLimitConstraintStep;
+                state.seqFlags |= MSF_LimitConstraintStep;
             else
-                state.seqFlags &= ~MotionSequenceLimitConstraintStep;
+                state.seqFlags &= ~MSF_LimitConstraintStep;
             state.transitionState = state.extraMotionSpeed = 0;
-            state.seqFlags &= ~MotionSequenceLookAt;
+            state.seqFlags &= ~MSF_LookAt;
             flags &= 0xfe13U;
         }
     }
@@ -1754,23 +1745,23 @@ void PlayTargetFacingTurn(MotionWork &work, bool moving, bool left, std::int16_t
     int remainder = std::abs(static_cast<int>(yaw));
     int index;
     bool sideDependent = true;
-    if (remainder > 24576) {
+    if (remainder > DEG_TO_ANG(135.0f)) {
         index = 5;
         remainder = 0;
     } else if (state.targetFacingFlags & 0x40U) {
         if (remainder > 12743) {
             index = 9;
-            remainder -= 16384;
+            remainder -= DEG_TO_ANG(90.0f);
         } else {
             index = 7;
             sideDependent = false;
         }
-    } else if (remainder > 16384) {
+    } else if (remainder > DEG_TO_ANG(90.0f)) {
         index = 3;
-        remainder -= 16384;
-    } else if (remainder > 8192) {
+        remainder -= DEG_TO_ANG(90.0f);
+    } else if (remainder > DEG_TO_ANG(45.0f)) {
         index = 1;
-        remainder -= 8192;
+        remainder -= DEG_TO_ANG(45.0f);
     } else {
         index = 6;
         sideDependent = false;
@@ -1813,9 +1804,9 @@ void PlayTargetFacingTurn(MotionWork &work, bool moving, bool left, std::int16_t
     mtwkRequestMotion(&work, motion, arm);
     SetMotionFrameTime(&work, static_cast<std::uint32_t>(frames), arm);
     if (left) {
-        state.regionFlags[1] |= 0x20U;
-        state.regionFlags[2] |= 0x20U;
-        state.regionFlags[4] |= 0x20U;
+        state.regionFlags[1] |= MRF_LeadFoot;
+        state.regionFlags[2] |= MRF_LeadFoot;
+        state.regionFlags[4] |= MRF_LeadFoot;
     }
     mtwkSetRequestedRootMode(&work, 3);
     state.chestRotationOverrideBlendTime = 1.0f / static_cast<float>(frames);
@@ -1825,7 +1816,7 @@ void PlayTargetFacingTurn(MotionWork &work, bool moving, bool left, std::int16_t
 // @verified - p
 void UpdateTargetFacingTransition(Character &character, MotionWork &work) {
     auto &state = work.runtime;
-    if (!(state.seqFlags & MotionSequenceTargetFacing))
+    if (!(state.seqFlags & MSF_TargetFacing))
         return;
     auto &flags = state.targetFacingFlags;
     const auto setSpeeds = [&](float speed, bool both) {
@@ -1845,14 +1836,13 @@ void UpdateTargetFacingTransition(Character &character, MotionWork &work) {
             CopyMotionTransition(&work, nullptr, static_cast<std::uint16_t>(state.targetFacingYaw), 0, 2);
             CopyMotionTransition(&work, nullptr, 0, 2, 0);
             state.targetFacingYawDelta = 0;
-        } else if (state.seqFlags & MotionSequencePositionTransition)
+        } else if (state.seqFlags & MSF_PositionTransition)
             CopyMotionTransition(&work, nullptr, yaw, 0, 2);
         state.targetFacingState = 2;
         return;
     }
     case 2:
-        if ((state.seqFlags & MotionSequencePositionTransition) &&
-            ((static_cast<std::uint16_t>(state.entityRotation.y) - state.targetFacingYaw) & 0x7fffU) >= 0x71cU)
+        if ((state.seqFlags & MSF_PositionTransition) && ((static_cast<std::uint16_t>(state.entityRotation.y) - state.targetFacingYaw) & 0x7fffU) >= 0x71cU)
             return;
         state.targetFacingState = 3;
         [[fallthrough]];
@@ -1895,7 +1885,7 @@ void UpdateTargetFacingTransition(Character &character, MotionWork &work) {
         for (std::uint32_t region = 1; region < 5; ++region) {
             if (region >= 3U && !(flags & 0x20U) && region != ((flags & 4U) ? 4U : 3U))
                 continue;
-            state.regionFlags[region] |= 0x400U;
+            state.regionFlags[region] |= MRF_ReturnToLowerBody;
             SetMotionFrameTime(&work, static_cast<std::uint32_t>(static_cast<int>(remaining)), static_cast<MotionRegion>(region));
         }
         state.targetFacingState = 7;
@@ -1903,11 +1893,11 @@ void UpdateTargetFacingTransition(Character &character, MotionWork &work) {
         return;
     }
     case 7:
-        if (state.regionFlags[1] & 0x800U)
+        if (state.regionFlags[1] & MRF_BlendToLowerBody)
             return;
         setSpeeds(work.rig.lowerBody.clock.playbackSpeed, (flags & 0x20U) != 0);
         state.targetFacingState = 0;
-        state.seqFlags &= ~MotionSequenceTargetFacing;
+        state.seqFlags &= ~MSF_TargetFacing;
         flags &= ~1U;
         return;
     default:
@@ -1957,11 +1947,11 @@ void CopyCharacterSourceTransform(const Character *source, std::uint32_t selecto
 // @verified - p
 void UpdateMotionTransitionControllers(Character &character, MotionWork &work) {
     const bool hadMotion = work.runtime.currentMotionId[0] != 0;
-    if ((work.runtime.seqFlags & MotionSequenceTargetFacing) && !work.rig.useOverride)
+    if ((work.runtime.seqFlags & MSF_TargetFacing) && !work.rig.useOverride)
         UpdateTargetFacingTransition(character, work);
-    if (work.runtime.seqFlags & MotionSequencePositionTransition)
+    if (work.runtime.seqFlags & MSF_PositionTransition)
         UpdateCopyMotionTransition(character, work, hadMotion);
-    if (work.runtime.seqFlags & MotionSequenceLookAt)
+    if (work.runtime.seqFlags & MSF_LookAt)
         UpdateCopyLookTransition(work);
 }
 
@@ -2009,7 +1999,7 @@ void MotionWorkUpdate(Character *character, void *payload) {
         work.runtime.depthScale = GetCharacterDisplayRadius(character);
         visible = mtwkEvaluateMotionFrame(&work);
     }
-    EV_SetCharDisplay(character, 5, visible != 0);
+    EV_SetCharDisplay(character, CVM_MotionworkDisplayCheck, visible != 0);
     figpToggleMotionworkFlag(character, &work);
     if ((work.runtime.callbackFlags & 1U) != 0) {
         Vector4 delta;
@@ -2028,7 +2018,7 @@ void MotionWorkUpdate(Character *character, void *payload) {
             break;
         ++handCommand;
         const std::int32_t side =
-            (work.runtime.regionFlags[0] & 0x40U) ? std::to_integer<std::int8_t>(command[3]) : 1 - std::to_integer<std::int8_t>(command[3]);
+            (work.runtime.regionFlags[0] & MRF_Mirrored) ? std::to_integer<std::int8_t>(command[3]) : 1 - std::to_integer<std::int8_t>(command[3]);
         const std::uint8_t shape = std::to_integer<std::uint8_t>(command[4]);
         const std::int32_t frames = std::to_integer<std::int8_t>(command[6]) + std::to_integer<std::int8_t>(command[7]) * 256;
         hmdlSetPoseFor(character, side, motionAuxiliaryHandPoses[shape][side], frames);
@@ -2082,10 +2072,10 @@ void SetMotionEnvironmentEnabled(std::int32_t enabled) noexcept {
 
 // @verified - p
 void BindMotionControllerMatricesToModelNodes(Character *, MotionWork *work, MT7Model *model) {
-    if ((work->runtime.seqFlags & MotionSequenceModelMatricesBound) != 0)
+    if ((work->runtime.seqFlags & MSF_ModelMatricesBound) != 0)
         return;
     if (!model) {
-        work->runtime.seqFlags |= MotionSequenceModelMatricesBound;
+        work->runtime.seqFlags |= MSF_ModelMatricesBound;
         return;
     }
     ClearMT7NodeTransformOverrides(model->nodes.data());
@@ -2109,7 +2099,7 @@ void BindMotionControllerMatricesToModelNodes(Character *, MotionWork *work, MT7
             if (MT7Node *const node = GetChildObjectByIndex(*model, model->nodes.data(), motionNormalModelNodeIds[index]))
                 SetMT7NodeTransformOverride(*node, normal[index]);
     }
-    work->runtime.seqFlags |= MotionSequenceModelMatricesBound;
+    work->runtime.seqFlags |= MSF_ModelMatricesBound;
 }
 
 MotionWork *AllocateMotionWork(Character *character) {
@@ -2140,7 +2130,7 @@ bool mtwkSetSequenceFlags(Character *character) {
     MotionWork *const work = FindMotionWork(character);
     if (!work)
         return false;
-    work->runtime.seqFlags &= ~MotionSequenceModelMatricesBound;
+    work->runtime.seqFlags &= ~MSF_ModelMatricesBound;
     return true;
 }
 
@@ -2389,14 +2379,14 @@ bool vfClsampleCurrentMotion(MotionWork *work, float frame, Vector3 &output) {
         if (frame != 0.0f)
             state.pendingLayerStartFrame[0] = std::fmax(0.0f, frame);
         const MotnSequence *const sequence = FindLoadedMotionSequence(animation);
-        mirrored = (state.regionFlags[0] & 0x20U) != (sequence && sequence->hasLeadFootCommand ? 0x20U : 0U);
+        mirrored = (state.regionFlags[0] & MRF_LeadFoot) != (sequence && sequence->hasLeadFootCommand ? 0x20U : 0U);
     } else {
         float previousFrame = state.layerPreviousTicks[0];
         animation = state.currentMotionId[0];
         if (previousFrame > frame)
             previousFrame = -1.0f;
         state.pendingLayerStartFrame[0] = std::fmax(0.0f, frame);
-        mirrored = (state.regionFlags[0] & 0x40U) != 0;
+        mirrored = (state.regionFlags[0] & MRF_Mirrored) != 0;
         if (previousFrame >= 0.0f) {
             Vector3 previous;
             SampleNativeMotionRoot(animation, boneId, previousFrame, previous);
@@ -2417,10 +2407,10 @@ void RequestMotionRegionDetach(MotionWork *motionWork, MotionRegion region) {
         return;
     if (!region) {
         for (std::uint32_t secondary = 1; secondary < motionRegionCount; ++secondary) {
-            motionWork->runtime.regionFlags[secondary] |= 0x0400U;
+            motionWork->runtime.regionFlags[secondary] |= MRF_ReturnToLowerBody;
         }
     } else if (region < motionRegionCount) {
-        motionWork->runtime.regionFlags[region] |= 0x0400U;
+        motionWork->runtime.regionFlags[region] |= MRF_ReturnToLowerBody;
     }
 }
 
@@ -2430,81 +2420,81 @@ Matrix4x4 *charaGetBoneTransform(MotionWork *motion, std::int32_t boneId) {
         return nullptr;
     IKRig &rig = motion->rig;
     switch (boneId) {
-    case 0:
+    case MB_Pelvis:
         return &rig.lowerBody.pelvisWorld;
-    case 3:
+    case MB_UpperChest:
         return &rig.chest.upperChestWorld;
-    case 4:
+    case MB_Neck:
         return &rig.head.neckWorld;
-    case 5:
+    case MB_Head:
         return &rig.head.headWorld;
-    case 8:
+    case MB_RightShoulder:
         return &rig.rightArm.shoulderWorld;
-    case 9:
+    case MB_RightUpperArm:
         return &rig.rightArm.upperArmWorld;
-    case 12:
+    case MB_RightForearm:
         return &rig.rightArm.forearmWorld;
-    case 14:
+    case MB_RightHand:
         return &rig.rightArm.handWorld;
-    case 15:
+    case MB_LeftShoulder:
         return &rig.leftArm.shoulderWorld;
-    case 16:
+    case MB_LeftUpperArm:
         return &rig.leftArm.upperArmWorld;
-    case 19:
+    case MB_LeftForearm:
         return &rig.leftArm.forearmWorld;
-    case 21:
+    case MB_LeftHand:
         return &rig.leftArm.handWorld;
-    case 22:
+    case MB_Hips:
         return &rig.lowerBody.hipsWorld;
-    case 23:
+    case MB_LeftThigh:
         return &rig.lowerBody.leftThighWorld;
-    case 24:
+    case MB_LeftShin:
         return &rig.lowerBody.leftShinWorld;
-    case 26:
+    case MB_LeftAnkle:
         return &rig.lowerBody.leftAnkleWorld;
-    case 28:
+    case MB_RightThigh:
         return &rig.lowerBody.rightThighWorld;
-    case 29:
+    case MB_RightShin:
         return &rig.lowerBody.rightShinWorld;
-    case 31:
+    case MB_RightAnkle:
         return &rig.lowerBody.rightAnkleWorld;
     default:
         break;
     }
     if (rig.useOverride) {
         switch (boneId) {
-        case 33:
+        case MB_HeadAimSource:
             return rig.head.aimSourceWorld;
-        case 35:
+        case MB_HeadOverrideA:
             return rig.head.nodeAWorld;
-        case 36:
+        case MB_HeadOverrideB:
             return rig.head.nodeBWorld;
-        case 37:
+        case MB_HeadOverrideC:
             return rig.head.nodeCWorld;
-        case 39:
+        case MB_LeftHipOverride:
             return rig.lowerBody.leftHipWorld;
-        case 40:
+        case MB_RightHipOverride:
             return rig.lowerBody.rightHipWorld;
-        case 41:
+        case MB_RightToe1:
             return rig.lowerBody.rightToe1World;
-        case 42:
+        case MB_RightToe2:
             return rig.lowerBody.rightToe2World;
-        case 43:
+        case MB_RightToe3:
             return rig.lowerBody.rightToe3World;
         default:
             return nullptr;
         }
     }
     switch (boneId) {
-    case 1:
+    case MB_Chest:
         return &rig.chest.chestWorld;
-    case 13:
+    case MB_RightWrist:
         return &rig.rightArm.wristWorld;
-    case 20:
+    case MB_LeftWrist:
         return &rig.leftArm.wristWorld;
-    case 27:
+    case MB_LeftFoot:
         return &rig.lowerBody.leftFootWorld;
-    case 32:
+    case MB_RightFoot:
         return &rig.lowerBody.rightFootWorld;
     default:
         return nullptr;
@@ -2523,31 +2513,31 @@ bool CopyMotionBoneTransform(MotionWork *motion, std::int32_t boneId, Matrix4x4 
 }
 
 // @verified - p
-bool GetMotionBonePosition(MotionWork *motion, std::int32_t boneId, Vector3 *position) {
+bool GetMotionBonePosition(MotionWork *motion, MotionBoneId boneId, Vector3 *position) {
     if (!motion)
         return false;
     switch (boneId) {
-    case 2:
-    case 7:
-    case 10:
-    case 17:
-    case 25:
-    case 30:
-    case 34:
-    case 38: {
+    case MB_ChestTarget:
+    case MB_HeadTarget:
+    case MB_RightArmTarget:
+    case MB_LeftArmTarget:
+    case MB_LeftFootTarget:
+    case MB_RightFootTarget:
+    case MB_HeadAimTarget:
+    case MB_PelvisOverrideTarget: {
         const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(boneId));
         return controller != -1 && GetMotionControllerTargetPosition(motion, static_cast<std::uint32_t>(controller), *position);
     }
-    case 6: {
+    case MB_Eyes: {
         Matrix4x4 eye;
         Matrix4x4_PushMatrixAndTranslate(motion->rig.head, &eye);
         *position = {eye.rows[3].x, eye.rows[3].y, eye.rows[3].z};
         return true;
     }
-    case 11:
-        return GetMotionBonePosition(motion, 13, position);
-    case 18:
-        return GetMotionBonePosition(motion, 20, position);
+    case MB_RightForearmTarget:
+        return GetMotionBonePosition(motion, MB_RightWrist, position);
+    case MB_LeftForearmTarget:
+        return GetMotionBonePosition(motion, MB_LeftWrist, position);
     default:
         break;
     }
@@ -2563,9 +2553,9 @@ bool GetIsRHandAboveShoulder(MotionWork *motion) {
     Vector3 root{};
     Vector3 shoulder{};
     Vector3 hand{};
-    GetMotionBonePosition(motion, 0, &root);
-    GetMotionBonePosition(motion, 0x19, &shoulder);
-    GetMotionBonePosition(motion, 0x1e, &hand);
+    GetMotionBonePosition(motion, MB_Pelvis, &root);
+    GetMotionBonePosition(motion, MB_LeftFootTarget, &shoulder);
+    GetMotionBonePosition(motion, MB_RightFootTarget, &hand);
     shoulder.x -= root.x;
     shoulder.z -= root.z;
     hand.x -= root.x;
@@ -2582,8 +2572,8 @@ bool GetIsRHandAboveShoulder(MotionWork *motion) {
 bool GetIsRHandBelowShoulder(MotionWork *motion) {
     Vector3 shoulder{};
     Vector3 hand{};
-    GetMotionBonePosition(motion, 0x19, &shoulder);
-    GetMotionBonePosition(motion, 0x1e, &hand);
+    GetMotionBonePosition(motion, MB_LeftFootTarget, &shoulder);
+    GetMotionBonePosition(motion, MB_RightFootTarget, &hand);
     return shoulder.y > hand.y;
 }
 
@@ -2597,7 +2587,7 @@ void TransformScenarioMotionBonePose(shen_name character, std::int32_t boneId, V
 // @verified - p
 void GetCharacterMotionLocalPosition(Character *character, std::int32_t bone, Vector3 *position) {
     MotionWork *const work = FindMotionWork(character);
-    if (work && GetMotionBonePosition(work, bone, position)) {
+    if (work && GetMotionBonePosition(work, static_cast<MotionBoneId>(bone), position)) {
         CharacterNode *const child = GetCharacterNode(character)->child;
         if (child)
             TransformPointToCharacterNodeSpace(child, position);
@@ -2609,7 +2599,7 @@ void GetCharacterMotionLocalPosition(Character *character, std::int32_t bone, Ve
 // @verified - p
 void GetCharacterMotionNodePosition(Character *character, std::int32_t bone, Vector3 *position) {
     MotionWork *const work = FindMotionWork(character);
-    if (work && GetMotionBonePosition(work, bone, position))
+    if (work && GetMotionBonePosition(work, static_cast<MotionBoneId>(bone), position))
         TransformPointToCharacterNodeSpace(GetCharacterNode(character), position);
     else
         GetCharacterLocalPosition(character, position);
@@ -2618,7 +2608,7 @@ void GetCharacterMotionNodePosition(Character *character, std::int32_t bone, Vec
 // @verified - p
 void GetCharacterMotionWorldPosition(Character *character, std::int32_t bone, Vector3 *position) {
     MotionWork *const work = FindMotionWork(character);
-    if (!work || !GetMotionBonePosition(work, bone, position))
+    if (!work || !GetMotionBonePosition(work, static_cast<MotionBoneId>(bone), position))
         *position = GetCharacterWorldPosition(character);
 }
 
@@ -2832,14 +2822,14 @@ const MotionTimePair *GetMotionLayerTimePair(const MotionWork *motionWork, Motio
 // @verified - p
 std::uint32_t GetMotionTrackedRootMode(const MotionWork *work) {
     for (std::size_t region = 0; region < 5; ++region)
-        if (work->runtime.regionFlags[region] & 0x10U)
+        if (work->runtime.regionFlags[region] & MRF_Transition)
             return work->runtime.currentRootMode;
     return 0;
 }
 
 // @verified - p
 float GetMotionTransitionFramesRemaining(const MotionWork *work, MotionRegion region) {
-    if (!work || !(work->runtime.regionFlags[region] & 0x10U))
+    if (!work || !(work->runtime.regionFlags[region] & MRF_Transition))
         return 0.0f;
     const MotionRuntimeState &state = work->runtime;
     if (state.currentRootMode == 2)
@@ -2877,7 +2867,7 @@ float GetMotionFrame(const MotionWork *motionWork, MotionRegion region) {
         return -1.0f;
     const MotionRuntimeState &state = motionWork->runtime;
     float frame = pair->ticksTime;
-    if ((state.regionFlags[region] & regionTransition) == 0)
+    if ((state.regionFlags[region] & MRF_Transition) == 0)
         return frame;
     const float remaining = (state.blendTotalFrames[region] - frame) * shenGetScaledDeltaTickTime(GetMotionSpeed(motionWork, region));
     if (state.currentRootMode == 3U) {
@@ -2897,7 +2887,7 @@ float GetMotionPoseFrame(const MotionWork *motionWork, MotionRegion region) {
     if (!pair)
         return -1.0f;
     const MotionRuntimeState &state = motionWork->runtime;
-    if ((state.regionFlags[region] & regionTransition) != 0 && state.currentRootMode != 2U) {
+    if ((state.regionFlags[region] & MRF_Transition) != 0 && state.currentRootMode != 2U) {
         return std::max(0.0f, state.layerSampleFrame[region]);
     }
     return pair->ticksTime;
@@ -2949,8 +2939,8 @@ bool GetParentBoneWrapper(MotionWork *motionWork, std::int32_t selector) {
     std::uint8_t flags = selector < 0 ? 0x80U : 0U;
     if (selector >= 0 && (absolute & 0x70000000U) != 0) {
         const std::uint8_t bit30 = static_cast<std::uint8_t>((absolute >> 23U) & 0x80U);
-        flags = (absolute & 0x20000000U) != 0 ? static_cast<std::uint8_t>(bit30 | 0x40U) : bit30;
-        if ((absolute & 0x10000000U) != 0)
+        flags = (absolute & motionTargetIgnoreX) != 0 ? static_cast<std::uint8_t>(bit30 | 0x40U) : bit30;
+        if ((absolute & motionTargetIgnoreZ) != 0)
             flags |= 0x20U;
     }
     const std::int32_t parent = ParentBoneId(absolute & 0xffU);
@@ -3306,7 +3296,7 @@ bool UpdateMotionWorkWithPosition(MotionWork *work, const Vector3 *target, std::
     if (!work)
         return false;
     auto &state = work->runtime;
-    state.copyFlags &= ~0x100000U;
+    state.copyFlags &= ~MCF_LookSuppressed;
     state.motnFlags &= ~0x40000U;
     const std::uint8_t mode = static_cast<std::uint8_t>(operation);
     const std::uint8_t speed = static_cast<std::uint8_t>(operation >> 8U ? operation >> 8U : 3U);
@@ -3341,20 +3331,20 @@ bool UpdateMotionWorkWithPosition(MotionWork *work, const Vector3 *target, std::
         state.pelvisYawStep = static_cast<std::uint16_t>(scale * 384.0f);
         if (mode == 4U)
             return true;
-        if (state.seqFlags & MotionSequenceTargetFacing)
+        if (state.seqFlags & MSF_TargetFacing)
             state.locomotionMotionSet &= 0xfff3U;
         if (target) {
-            state.transitionState = (state.seqFlags & MotionSequenceLookAt) && state.transitionState != 1U ? 2U : 1U;
-            state.seqFlags |= MotionSequenceLookAt;
+            state.transitionState = (state.seqFlags & MSF_LookAt) && state.transitionState != 1U ? 2U : 1U;
+            state.seqFlags |= MSF_LookAt;
             state.lookAtTarget = *target;
-        } else if (state.seqFlags & MotionSequenceLookAt) {
+        } else if (state.seqFlags & MSF_LookAt) {
             state.transitionState = 3;
         } else {
             state.extraMotionSpeed = 0;
         }
         return true;
     }
-    if (!(state.seqFlags & MotionSequenceLookAt))
+    if (!(state.seqFlags & MSF_LookAt))
         return false;
     switch (mode) {
     case 3:
@@ -3402,11 +3392,11 @@ bool RequestMotionTargetFacing(MotionWork *work, const Vector3 *target, std::uin
         return false;
     auto &state = work->runtime;
     if (!target) {
-        if ((state.seqFlags & MotionSequenceTargetFacing) && static_cast<std::uint8_t>(state.targetFacingState - 6U) > 1U)
+        if ((state.seqFlags & MSF_TargetFacing) && static_cast<std::uint8_t>(state.targetFacingState - 6U) > 1U)
             state.targetFacingState = 5;
         return true;
     }
-    if ((state.seqFlags & MotionSequenceTargetFacing) && state.targetFacingState > 3U) {
+    if ((state.seqFlags & MSF_TargetFacing) && state.targetFacingState > 3U) {
         if (state.targetFacingState == 4U)
             PlayTargetFacingTurn(*work, false, (state.targetFacingFlags & 4U) != 0, state.targetFacingYawDelta);
         state.targetFacingFlags |= 8U;
@@ -3429,7 +3419,7 @@ bool RequestMotionTargetFacing(MotionWork *work, const Vector3 *target, std::uin
         state.targetFacingFlags &= ~2U;
     state.targetFacingMotionClass = static_cast<std::uint8_t>(flags >> 16U);
     state.targetFacingPosition = *target;
-    state.seqFlags |= MotionSequenceTargetFacing;
+    state.seqFlags |= MSF_TargetFacing;
     state.targetFacingState = 1;
     return true;
 }
@@ -3489,7 +3479,7 @@ bool HasMotionTrackCommand(const MotionWork *work, MotionRegion region) {
     if (!work || region >= 5U)
         return false;
     const auto &state = work->runtime;
-    const auto *stream = static_cast<const std::byte *>(state.regionTrack[region && (state.regionFlags[region] & 0x100U) ? region : 0]);
+    const auto *stream = static_cast<const std::byte *>(state.regionTrack[region && (state.regionFlags[region] & MRF_Independent) ? region : 0]);
     if (!stream)
         return false;
     std::uint16_t count{};
@@ -3508,7 +3498,7 @@ bool HasMotionDependentTrack(const MotionWork *work) {
     if (!work)
         return false;
     for (std::size_t region = 0; region < 5; ++region)
-        if (!(work->runtime.regionFlags[region] & 0x100U) && work->runtime.regionTrack[region])
+        if (!(work->runtime.regionFlags[region] & MRF_Independent) && work->runtime.regionTrack[region])
             return true;
     return false;
 }
@@ -3518,9 +3508,9 @@ std::uint16_t SetMotionRegionFlag(MotionWork *motionWork, std::uint32_t mode, st
         return 0;
 
     if (mode == 70U) {
-        std::uint16_t result = motionWork->runtime.regionFlags[region] & regionMirrored;
+        std::uint16_t result = motionWork->runtime.regionFlags[region] & MRF_Mirrored;
         if (const MotnSequence *sequence = FindLoadedMotionSequence(motionWork->runtime.currentMotionId[region]); sequence && sequence->hasLeadFootCommand) {
-            result ^= regionMirrored;
+            result ^= MRF_Mirrored;
         }
         return result;
     }
@@ -3584,11 +3574,11 @@ std::uint64_t SetMotionTimeRelated(MotionWork *work, std::uint32_t mode, std::ui
             if (slot != 5U)
                 return false;
             state.extraMotionIds[5] = state.extraMotionIds[0];
-            state.copyFlags &= ~0x1000U;
+            state.copyFlags &= ~MCF_Unknown1000;
         } else {
             state.extraMotionIds[slot] = motionId;
             if (slot == 5U)
-                state.copyFlags |= 0x1000U;
+                state.copyFlags |= MCF_Unknown1000;
         }
         return true;
     }
@@ -3610,7 +3600,7 @@ bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::
         return false;
     EnsureDefaultMotionSet(*motionWork);
     MotionRuntimeState &state = motionWork->runtime;
-    const bool active = (state.seqFlags & MotionSequencePositionTransition) != 0;
+    const bool active = (state.seqFlags & MSF_PositionTransition) != 0;
     switch (operation) {
     case 1:
         if (!active)
@@ -3623,35 +3613,35 @@ bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::
         state.copyFlags |= 0x10U;
         return true;
     case 3:
-        return (state.copyFlags & 0x20U) != 0;
+        return (state.copyFlags & MCF_Persistent) != 0;
     case 8:
         if (!active)
             return false;
-        state.copyFlags |= 0x8000U;
+        state.copyFlags |= MCF_AlternateLocomotion;
         return true;
     case 9:
     case 10:
     case 11:
         if (!active)
             return false;
-        state.copyFlags |= 0x400U;
+        state.copyFlags |= MCF_ExtraStepRequested;
         return true;
     case 12:
         if (!active)
             return false;
-        state.copyFlags |= 0x2000U;
+        state.copyFlags |= MCF_Unknown2000;
         return true;
     case 14:
         if (!active)
             return false;
-        state.copyFlags &= ~0x8000U;
+        state.copyFlags &= ~MCF_AlternateLocomotion;
         return true;
     case 15:
-        return (state.copyFlags & 0x200U) != 0;
+        return (state.copyFlags & MCF_Running) != 0;
     case 16:
         if (!active)
             return false;
-        state.copyFlags |= 0x40000U;
+        state.copyFlags |= MCF_Unknown40000;
         return true;
     case 0:
     case 4:
@@ -3665,7 +3655,7 @@ bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::
     }
     const std::uint8_t variant = operation == 13 ? 2U : operation >= 5 ? static_cast<std::uint8_t>(operation - 4) : 0U;
     if (!variant)
-        state.copyFlags |= 0x80U;
+        state.copyFlags |= MCF_Unknown80;
     state.transitionVariant = variant;
     if (!active)
         state.transitionClass = variant;
@@ -3677,7 +3667,7 @@ bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::
         if (operation == 13) {
             state.transitionSubstate = 2;
             state.transitionEndFrame = yaw;
-            state.copyFlags = (state.copyFlags & 0xfffcbeffU) | 0x4100U;
+            state.copyFlags = (state.copyFlags & ~(MCF_LookPending | MCF_Unknown4000 | MCF_Unknown10000 | MCF_Unknown20000)) | 0x4100U;
             return true;
         }
         if (position && copyType != 2)
@@ -3688,7 +3678,7 @@ bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::
         state.copyFlags = (state.copyFlags & (variant == 3 ? 0xfffcbfffU : 0xfffcbeffU)) | 0x100U;
         state.transitionSubstate = copyType == 3 ? 0U : static_cast<std::uint8_t>(copyType);
         if (((variant == 1 || variant == 2) && copyType == 3) || (variant == 3 && copyType == 1))
-            state.copyFlags |= 0x10000U;
+            state.copyFlags |= MCF_Unknown10000;
         return true;
     }
     if (position && copyType != 2 && operation != 13) {
@@ -3698,14 +3688,14 @@ bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::
     }
     if (variant == 1) {
         if (copyType == 1 || copyType == 2)
-            state.copyFlags &= ~0x80U;
+            state.copyFlags &= ~MCF_Unknown80;
         else
-            state.copyFlags |= 0x80U;
+            state.copyFlags |= MCF_Unknown80;
     }
     if (state.motnFlags & 0x8000U)
-        state.copyFlags |= 1U;
+        state.copyFlags |= MCF_Unknown01;
     if (state.motnFlags & 0x10000U)
-        state.copyFlags |= 2U;
+        state.copyFlags |= MCF_Unknown02;
     state.copyRegionSelector = state.requestedRootMode;
     state.transitionFrameTime = state.defaultRegionStepFrames[0];
     state.transitionStartFrame = yaw;
@@ -3713,29 +3703,29 @@ bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::
         state.transitionEndFrame = yaw;
     state.copyFlags &= (variant == 0 || variant == 3) ? 0xfffcf7ffU : 0xfffcffffU;
     if (operation == 13)
-        state.copyFlags = (state.copyFlags & 0xfffcbeffU) | 0x4100U;
+        state.copyFlags = (state.copyFlags & ~(MCF_LookPending | MCF_Unknown4000 | MCF_Unknown10000 | MCF_Unknown20000)) | 0x4100U;
     else if (((variant == 1 || variant == 2) && copyType == 3) || (variant == 3 && copyType == 1))
-        state.copyFlags |= 0x10000U;
+        state.copyFlags |= MCF_Unknown10000;
     state.transitionSubstate = operation == 13 ? 2U : copyType == 3 ? 0U : static_cast<std::uint8_t>(copyType);
     if (ClassifyCurrentLocomotionPhase(*motionWork)) {
         if (!variant) {
             state.copyDestinationPosition = state.copySourcePosition;
             state.transitionEndFrame = yaw;
         }
-        state.copyFlags |= 0x100U;
+        state.copyFlags |= MCF_LookPending;
         state.copyOperationState = 5;
         state.copyPhase = 1;
     } else {
         state.copyOperationState = 1;
     }
     if (variant == 2 || variant == 3)
-        state.copyFlags |= 0x100U;
+        state.copyFlags |= MCF_LookPending;
     state.motionScale = GetMotionSpeed(motionWork, MotionRegion::LowerBody);
     if (state.motionScale < 0.5f) {
         state.motionScale = 0.5f;
         SetMotionSpeed(motionWork, 0.5f, MotionRegion::LowerBody);
     }
-    state.seqFlags |= MotionSequencePositionTransition;
+    state.seqFlags |= MSF_PositionTransition;
     if (operation != 13)
         state.queuedMotionId[0] = 0;
     return true;
@@ -3771,15 +3761,15 @@ bool RequestMotionPositionTransition(MotionWork *work, const Vector3 *position, 
     EnsureDefaultMotionSet(*work);
     if (animation != 0 && !FindLoadedMotionData(animation).empty()) {
         work->runtime.extraMotionIds[5] = animation;
-        work->runtime.copyFlags |= 0x1000U;
+        work->runtime.copyFlags |= MCF_Unknown1000;
     } else {
         work->runtime.extraMotionIds[5] = work->runtime.extraMotionIds[0];
-        work->runtime.copyFlags &= ~0x1000U;
+        work->runtime.copyFlags &= ~MCF_Unknown1000;
     }
     if (startFrame >= 0.0f)
         SetMotionRegionEvalTime(work, startFrame, MotionRegion::LowerBody);
     if (mirrored)
-        work->runtime.regionFlags[0] |= 0x20U;
+        work->runtime.regionFlags[0] |= MRF_LeadFoot;
     return true;
 }
 
@@ -3788,11 +3778,11 @@ bool BeginMotionPositionTransition(MotionWork *motionWork, const Vector3 &target
 }
 
 bool CompleteMotionPositionTransitionRequest(MotionWork *motionWork) {
-    if (!motionWork || !(motionWork->runtime.seqFlags & MotionSequencePositionTransition)) {
+    if (!motionWork || !(motionWork->runtime.seqFlags & MSF_PositionTransition)) {
         return false;
     }
     // mtwkCopyCurrent op 14 precedes mtwkSetTimeRelated mode 1/slot 5.
-    motionWork->runtime.copyFlags &= ~0x00008000U;
+    motionWork->runtime.copyFlags &= ~MCF_AlternateLocomotion;
     return SetMotionExtraMotion(motionWork, 5U, 0xf002U);
 }
 

@@ -191,11 +191,12 @@ void WaitLecture(void *data) {
     }
 }
 void EndLecture(void *) {
+    using enum CameraState;
     EV_LoadAudio("0263A000", 1);
     Film(10, 255, 0);
     FinishLoading();
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EVT_AT_SetMot(ryo, 0xf002, 2, 1, 0x40000000U, 0);
     Gravity(true);
     SetPlayerControlEnabled(1);

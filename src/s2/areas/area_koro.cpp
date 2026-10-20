@@ -104,10 +104,11 @@ void DoorDone_Callback(void *) {
     HLib::DestroyCurrentTask();
 }
 void Door_Callback(void *) {
+    using enum CameraState;
     srchReset();
     SetPlayerControlEnabled(0);
     camCtrlSetFovTransitionTo(false);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     HLib::SetCurrentTaskTo(DoorDone_Callback);
     mtwkSetRequestedRootMode(RyoMotion(), 1);
     SetMotionFrameTime(RyoMotion(), 15, MotionRegion::LowerBody);
@@ -131,8 +132,9 @@ void SwitchReveal_Callback(void *) {
     HLib::DestroyCurrentTask();
 }
 void SwitchDone_Callback(void *) {
+    using enum CameraState;
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 962, 1);
     SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
     RestoreControls();
@@ -262,6 +264,7 @@ void DarkFree_Callback(void *) {
         HLib::DestroyCurrentTask();
 }
 void SearchStart_Callback(void *) {
+    using enum CameraState;
     ++age;
     switch (phase) {
     case 0: {
@@ -312,7 +315,7 @@ void SearchStart_Callback(void *) {
         break;
     case 3:
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetMotionRegionFlag(RyoMotion(), 73, 0, MotionRegion::LeftArm);
         SetMotionRegionFlag(RyoMotion(), 73, 0, MotionRegion::RightArm);
         PlayRyo(0xf002);

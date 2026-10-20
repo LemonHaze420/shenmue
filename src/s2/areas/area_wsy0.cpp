@@ -229,9 +229,10 @@ void WakeAuthorCallback(void *) {
         snapAssignFrmCntFlags(136, 120);
 }
 void WakeAfterAuthorCallback(void *) {
+    using enum CameraState;
     UpdateGlobalLighting(wakeLighting);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
@@ -272,11 +273,12 @@ void MoveCompleteCallback(void *) {
     HLib::DestroyCurrentTask();
 }
 void MoveRyoCallback(void *) {
+    using enum CameraState;
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, {64.900002f, 98.199997f, 120.2f});
     EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, {0, 14563, 0});
     mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(ryo)), 17, 0);
     SetMotionRegionFlag(FindMotionWork(FindCharacterByScenarioName(ryo)), 71, 0, MotionRegion::LowerBody);
     SetScreenFilmFade(20, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -334,6 +336,7 @@ void SwitchToggleCallback(void *) {
     HLib::SetupTaskDelay(60);
 }
 void SwitchRestoreCallback(void *) {
+    using enum CameraState;
     Vector3 position;
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     position.y = switchPreviousPosition.y;
@@ -345,7 +348,7 @@ void SwitchRestoreCallback(void *) {
     EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     UpdateMotionWorkWithPosition(FindMotionWork(FindCharacterByScenarioName(ryo)), nullptr, 0);
     SetPlayerControlEnabled(1);
     HLib::DestroyCurrentTask();

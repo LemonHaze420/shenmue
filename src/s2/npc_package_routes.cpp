@@ -1686,7 +1686,7 @@ void UpdateNpcAmbientLook(NpcRouteStateContext &context) {
     Vector3 target;
     std::memcpy(&target, areaPoint + 0x34, sizeof(target));
     Vector3 head{};
-    GetMotionBonePosition(context.motionWork, 6, &head);
+    GetMotionBonePosition(context.motionWork, MB_Eyes, &head);
     if (!std::isnormal(head.y) && head.y != 0.0f)
         head.y = 0.0f;
     target.y = static_cast<float>(point % 25) * 0.0099999998f + head.y - static_cast<float>(static_cast<std::int8_t>(context.owner->recordBase[8]) - 1) * 0.1f;
@@ -2045,7 +2045,7 @@ void TickNpcPausedRoute(NpcRouteStateContext &context) {
             wait = ++context.owner->counter416 <= 8;
         if (!wait && g_playerRuntime.character) {
             Vector3 head{};
-            GetMotionBonePosition(FindMotionWork(g_playerRuntime.character), 6, &head);
+            GetMotionBonePosition(FindMotionWork(g_playerRuntime.character), MB_Eyes, &head);
             UpdateMotionWorkWithPosition(context.motionWork, &head, 1);
             context.flags |= 0x20U;
         }
@@ -2604,14 +2604,14 @@ void UpdateLinkedNpcRoute(NpcRouteStateContext &context) {
         context.routeFlags |= 0x2000800U;
         if (context.owner->node && leader.node) {
             Vector3 head{};
-            GetMotionBonePosition(leader.motionWork, 6, &head);
+            GetMotionBonePosition(leader.motionWork, MB_Eyes, &head);
             UpdateMotionWorkWithPosition(context.motionWork, &head, 0);
         }
     } else if (request == 2) {
         leader.stateContext.routeFlags |= 0x2000800U;
         if (context.owner->node && leader.node) {
             Vector3 head{};
-            GetMotionBonePosition(context.motionWork, 6, &head);
+            GetMotionBonePosition(context.motionWork, MB_Eyes, &head);
             UpdateMotionWorkWithPosition(leader.motionWork, &head, 0);
         }
     } else if (context.linkedRoute.leashDistance * 0.5f <= distance)
@@ -2831,7 +2831,7 @@ void TickNpcMotionClip(NpcRouteLiveEntry &entry) {
     if (!entry.node)
         return;
     const bool visible = camCtrlIsInsideDepthScaledRect(entry.localPosition, entry.node->radius);
-    entry.node->renderFlags = static_cast<std::uint8_t>((entry.node->renderFlags & ~0x10U) | (visible ? 0x10U : 0U));
+    entry.node->renderFlags = static_cast<std::uint8_t>((entry.node->renderFlags & ~CRF_InRange) | (visible ? 0x10U : 0U));
     const Vector3 viewPosition = TransformNpcPoint(entry.localPosition);
     entry.node->viewPosition = viewPosition;
     const float magnitude = std::sqrt(viewPosition.x * viewPosition.x + viewPosition.y * viewPosition.y + viewPosition.z * viewPosition.z);

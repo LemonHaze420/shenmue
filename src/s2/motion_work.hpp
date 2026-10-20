@@ -31,16 +31,120 @@ void SetActiveMTWK(MotionWork *work);
 void mtwkGetArmHandPoseChanges(MotionWork *work, std::int32_t *shapes, std::int32_t *frames);
 std::int64_t mtwkSetOverridesEnabled(std::int32_t enabled);
 
+enum MotionBoneId : std::int32_t {
+    MB_Pelvis = 0x0U,
+    MB_Chest = 0x1U,
+    MB_ChestTarget = 0x2U,
+    MB_UpperChest = 0x3U,
+    MB_Neck = 0x4U,
+    MB_Head = 0x5U,
+    MB_Eyes = 0x6U,
+    MB_HeadTarget = 0x7U,
+    MB_RightShoulder = 0x8U,
+    MB_RightUpperArm = 0x9U,
+    MB_RightArmTarget = 0xaU,
+    MB_RightForearmTarget = 0xbU,
+    MB_RightForearm = 0xcU,
+    MB_RightWrist = 0xdU,
+    MB_RightHand = 0xeU,
+    MB_LeftShoulder = 0xfU,
+    MB_LeftUpperArm = 0x10U,
+    MB_LeftArmTarget = 0x11U,
+    MB_LeftForearmTarget = 0x12U,
+    MB_LeftForearm = 0x13U,
+    MB_LeftWrist = 0x14U,
+    MB_LeftHand = 0x15U,
+    MB_Hips = 0x16U,
+    MB_LeftThigh = 0x17U,
+    MB_LeftShin = 0x18U,
+    MB_LeftFootTarget = 0x19U,
+    MB_LeftAnkle = 0x1aU,
+    MB_LeftFoot = 0x1bU,
+    MB_RightThigh = 0x1cU,
+    MB_RightShin = 0x1dU,
+    MB_RightFootTarget = 0x1eU,
+    MB_RightAnkle = 0x1fU,
+    MB_RightFoot = 0x20U,
+    MB_HeadAimSource = 0x21U,
+    MB_HeadAimTarget = 0x22U,
+    MB_HeadOverrideA = 0x23U,
+    MB_HeadOverrideB = 0x24U,
+    MB_HeadOverrideC = 0x25U,
+    MB_PelvisOverrideTarget = 0x26U,
+    MB_LeftHipOverride = 0x27U,
+    MB_RightHipOverride = 0x28U,
+    MB_RightToe1 = 0x29U,
+    MB_RightToe2 = 0x2aU,
+    MB_RightToe3 = 0x2bU,
+};
+
+enum MotionController : std::uint32_t {
+    MC_Pelvis = 0x0U,
+    MC_Chest = 0x1U,
+    MC_Head = 0x2U,
+    MC_RightArm = 0x3U,
+    MC_LeftArm = 0x4U,
+    MC_LeftFoot = 0x5U,
+    MC_RightFoot = 0x6U,
+    MC_PelvisOverride = 0x7U,
+    MC_HeadAim = 0x8U,
+};
+
+enum MotionRegionFlag : std::uint16_t {
+    MRF_Unknown01 = 0x1U,
+    MRF_Unknown02 = 0x2U,
+    MRF_Loop = 0x4U,
+    MRF_ExcludeEndFrame = 0x8U,
+    MRF_Transition = 0x10U,
+    MRF_LeadFoot = 0x20U,
+    MRF_Mirrored = 0x40U,
+    MRF_Reinitialize = 0x80U,
+    MRF_Independent = 0x100U,
+    MRF_FollowLowerBody = 0x200U,
+    MRF_ReturnToLowerBody = 0x400U,
+    MRF_BlendToLowerBody = 0x800U,
+    MRF_Unknown1000 = 0x1000U,
+};
+
+enum MotionCopyFlag : std::uint32_t {
+    MCF_Unknown01 = 0x1U,
+    MCF_Unknown02 = 0x2U,
+    MCF_LeadFoot = 0x4U,
+    MCF_SampledLeadFoot = 0x8U,
+    MCF_Persistent = 0x20U,
+    MCF_Unknown80 = 0x80U,
+    MCF_LookPending = 0x100U,
+    MCF_Running = 0x200U,
+    MCF_ExtraStepRequested = 0x400U,
+    MCF_ExtraStepComplete = 0x800U,
+    MCF_Unknown1000 = 0x1000U,
+    MCF_Unknown2000 = 0x2000U,
+    MCF_Unknown4000 = 0x4000U,
+    MCF_AlternateLocomotion = 0x8000U,
+    MCF_Unknown10000 = 0x10000U,
+    MCF_Unknown20000 = 0x20000U,
+    MCF_Unknown40000 = 0x40000U,
+    MCF_Unknown80000 = 0x80000U,
+    MCF_LookSuppressed = 0x100000U,
+    MCF_TurnStepPending = 0x200000U,
+    MCF_Unknown400000 = 0x400000U,
+};
+
+inline constexpr std::uint32_t motionControllerIndices[9]{0, 1, 2, 3, 4, 5, 6, 7, 8};
+
+inline constexpr std::int32_t motionTargetIgnoreZ = 0x10000000;
+inline constexpr std::int32_t motionTargetIgnoreX = 0x20000000;
+inline constexpr std::int32_t motionTargetIgnoreY = 0x40000000;
 inline constexpr std::uint32_t motionSequenceInterpolationShift = 24;
 
 enum MotionSequenceFlag : std::uint32_t {
-    MotionSequenceLimitConstraintStep = 0x800000U,
-    MotionSequenceLinearInterpolation = 0x1000000U,
-    MotionSequenceModelMatricesBound = 0x2000000U,
-    MotionSequencePositionTransition = 0x4000000U,
-    MotionSequenceLookAt = 0x8000000U,
-    MotionSequenceTargetFacing = 0x10000000U,
-    MotionSequenceSearchHand = 0x20000000U,
+    MSF_LimitConstraintStep = 0x800000U,
+    MSF_LinearInterpolation = 0x1000000U,
+    MSF_ModelMatricesBound = 0x2000000U,
+    MSF_PositionTransition = 0x4000000U,
+    MSF_LookAt = 0x8000000U,
+    MSF_TargetFacing = 0x10000000U,
+    MSF_SearchHand = 0x20000000U,
 };
 
 struct MotionCollisionCluster {
@@ -364,8 +468,7 @@ bool EvaluateCurrentMotionPose(const MotionWork *motionWork, MotionPose &pose);
 Matrix4x4 *charaGetBoneTransform(MotionWork *motion, std::int32_t boneId);
 void RebaseMotionSolvedMatrices(MotionWork *work);
 bool CopyMotionBoneTransform(MotionWork *motion, std::int32_t boneId, Matrix4x4 *transform);
-bool GetMotionBonePosition(MotionWork *motion, std::int32_t boneId, Vector3 *position);
-
+bool GetMotionBonePosition(MotionWork *motion, MotionBoneId boneId, Vector3 *position);
 
 bool GetIsRHandAboveShoulder(MotionWork *motion);
 // Whether the right shoulder (0x19) sits higher than the right hand (0x1e).

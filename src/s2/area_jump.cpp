@@ -660,6 +660,7 @@ std::uint64_t EV_CanDoAreaJump() {
 
 // @verified - p
 void EV_ApplyTranslationClockVisibility(std::uint32_t) {
+    using enum CameraState;
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *const character = static_cast<Character *>(control->ryo);
     if (!character)
@@ -668,7 +669,7 @@ void EV_ApplyTranslationClockVisibility(std::uint32_t) {
     shenDecrementRotYAllNodes(&character->entity.node, static_cast<std::int16_t>(savedAreaJumpLocation.yaw));
     SetCharacterInternalState(character, savedAreaJumpLocation.internalState);
     const CameraState state = camCtrlGetState();
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
     camCtrlSetState(state);
     camCtrlSetFovTransitionTo(true);
     savedAreaJumpLocationActive = false;

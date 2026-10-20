@@ -52,12 +52,13 @@ std::uint8_t plymTriggerHistoryValue(std::uint8_t trigger) {
 
 // @verified - p
 void plymSampleInput(PlayerModelState &state) {
+    using enum CameraState;
     state.padFlags &= ~0x1000U;
     state.isLookAround = 0;
     if ((ctrlGetPadData()->flags & 2U) != 0) {
         state.padFlags |= 0x1000U;
         state.isLookAround = 0;
-    } else if (camCtrlGetState() == CameraState::LookAround && HasScenarioCharacterControl()) {
+    } else if (camCtrlGetState() == LookAround && HasScenarioCharacterControl()) {
         state.isLookAround = 1;
     }
     if ((state.padFlags & 0x1000U) != 0 || state.isLookAround != 0) {
@@ -258,16 +259,17 @@ bool IsLookMovingRootState(std::uint32_t rootYawState) {
 
 
 void plymUpdateLookAround(PlayerModelState &state) {
+    using enum CameraState;
     const LegacyInputSlot *const input = state.inputSnapshot;
     std::int32_t request = 0;
     std::int32_t lookKind = 0;
     std::int32_t movementRequests = 0;
     bool publish = false;
     const CameraState cameraState = camCtrlGetState();
-    if (camCtrlGetState() == CameraState::LockedOn)
+    if (camCtrlGetState() == LockedOn)
         return;
     const std::uint32_t controlFlags = state.flags;
-    if ((controlFlags & 2U) == 0 || (controlFlags & 0x40000U) != 0 || (cameraState != CameraState::Init && cameraState != CameraState::LookAround))
+    if ((controlFlags & 2U) == 0 || (controlFlags & 0x40000U) != 0 || (cameraState != Init && cameraState != LookAround))
         return;
     std::int8_t stickX = state.smoothedStickX;
     auto directions = static_cast<std::uint16_t>(input->held & 0xf000U);
@@ -300,10 +302,10 @@ void plymUpdateLookAround(PlayerModelState &state) {
             lookKind = 2;
         if (!lookKind)
             request = directions;
-        if ((state.lookAroundState || cameraState == CameraState::LookAround) && (pad & 0x4000U) == 0)
+        if ((state.lookAroundState || cameraState == LookAround) && (pad & 0x4000U) == 0)
             state.lookBaseYaw = LerpFixedAngle(static_cast<std::int16_t>(state.yaw), state.lookBaseYaw, ScaledDelta(1.0f));
         directions = static_cast<std::uint16_t>(request);
-        if (g_cameraControl->state == CameraState::Init && g_cameraControl->collisionPhase == 1)
+        if (g_cameraControl->state == Init && g_cameraControl->collisionPhase == 1)
             lookKind = 0;
         request = 0;
     }
@@ -334,8 +336,8 @@ void plymUpdateLookAround(PlayerModelState &state) {
         state.lookYawDelta = static_cast<std::int16_t>(cameraRotation.yaw - state.lookBaseYaw);
         [[fallthrough]];
     case lookAroundEntering:
-        if (camCtrlGetState() != CameraState::LookAround) {
-            camCtrlSetState(CameraState::LookAround);
+        if (camCtrlGetState() != LookAround) {
+            camCtrlSetState(LookAround);
             camCtrlResetTransition(CameraInterpolationMode::ToTargetContinuous);
             camCtrlSetInterpEaseFactor(0.30000001f);
         }
@@ -469,7 +471,7 @@ clearState:
 finishState:
     if ((state.padFlags & 0x200U) && (state.movementSelectionFlags & 1U) == 0)
         publish = true;
-    if (camCtrlGetState() != CameraState::LookAround && state.lookAroundState)
+    if (camCtrlGetState() != LookAround && state.lookAroundState)
         state.lookAroundState = lookAroundInactive;
     if (publish) {
         std::int16_t yaw = static_cast<std::int16_t>(state.lookYawDelta + state.lookBaseYaw);
@@ -501,6 +503,7 @@ finishState:
 }
 
 void plymUpdateCameraInput(PlayerModelState &state) {
+    using enum CameraState;
     state.padFlags &= ~plymPadForceMotionState2;
     state.previousInputMovementMode = state.movementMode;
     state.movementMode = 1;
@@ -527,7 +530,7 @@ void plymUpdateCameraInput(PlayerModelState &state) {
     }
     plymComputeTurnInput(state);
     const CameraState cameraState = camCtrlGetState();
-    if (cameraState == CameraState::LockedOn && state.lookAroundState == 2U) {
+    if (cameraState == LockedOn && state.lookAroundState == 2U) {
         std::uint16_t adjustedPitch[2];
         camCtrlGetAdjustedPitchOrYaw(nullptr, adjustedPitch);
         const std::int16_t resolvedYaw = static_cast<std::int16_t>(state.yaw);
@@ -536,7 +539,7 @@ void plymUpdateCameraInput(PlayerModelState &state) {
         state.lookYawDelta = static_cast<std::int16_t>(camCtrlGetNextRotY() - resolvedYaw);
         state.lookBasePitch = 0;
     }
-    if (cameraState == CameraState::LockedOn && (state.flags & plymControlLockOnMovement) == 0)
+    if (cameraState == LockedOn && (state.flags & plymControlLockOnMovement) == 0)
         return;
     if ((state.flags & plymControlLockOnMovement) == 0)
         plymUpdateLookAround(state);
@@ -825,8 +828,8 @@ void plymUpdateLookTarget(PlayerModelState &state) {
         if (state.lookTargetFlags & 8U) {
             Vector3 hip{};
             Vector3 knee{};
-            GetMotionBonePosition(motionWork, 5, &hip);
-            GetMotionBonePosition(motionWork, 7, &knee);
+            GetMotionBonePosition(motionWork, MB_Head, &hip);
+            GetMotionBonePosition(motionWork, MB_HeadTarget, &knee);
             const std::int16_t legYaw = PlymAngleXZ({knee.x - hip.x, knee.y - hip.y, knee.z - hip.z});
             const std::int16_t targetYaw = PlymAngleXZ({state.lookAtPosition.x - hip.x, state.lookAtPosition.y - hip.y, state.lookAtPosition.z - hip.z});
             const auto difference = static_cast<std::int16_t>(std::abs(targetYaw - legYaw));

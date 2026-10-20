@@ -82,6 +82,7 @@ void ChawPlaySuccessAuthorCallback(void *data) {
     HLib::SetCurrentTaskTo(ChawFinishSuccessAuthorCallback);
 }
 void ChawFinishSuccessAuthorCallback(void *) {
+    using enum CameraState;
     if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded))
         return;
     SetDoorSubjectEnabled(SHEN_NAME(R129), 1);
@@ -92,7 +93,7 @@ void ChawFinishSuccessAuthorCallback(void *) {
     RestoreCharacter(CHAW_RYO);
     RestoreCharacter(SHEN_NAME(CHO_));
     ReleasePack("TOSHOKEN");
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0xf003, MotionRegion::LowerBody);
     doorLoadAuthorSilently(shen_name{});
     EV_AT_SetPos(CHAW_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, {213.85f, 104.5f, 209.2f});
@@ -168,10 +169,11 @@ void ChawPlayYamiutiCallback(void *data) {
     HLib::SetCurrentTaskTo(ChawFinishYamiutiCallback);
 }
 void ChawFinishYamiutiCallback(void *) {
+    using enum CameraState;
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         RestoreCharacter(CHAW_RYO);
         FreeCharacters(chawAmbushCharacters);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0xf003, MotionRegion::LowerBody);
         HLib::SetCurrentTaskTo(ChawFinishCallback);
         EV_FreeAuthorPak(0, "0039");
@@ -239,10 +241,11 @@ void ChawPlayKunCallback(void *data) {
     HLib::SetCurrentTaskTo(ChawFinishKunCallback);
 }
 void ChawFinishKunCallback(void *) {
+    using enum CameraState;
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         RestoreCharacter(CHAW_RYO);
         FreeCharacters(CHAW_KUN_CHARACTERS);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0xf003, MotionRegion::LowerBody);
         HLib::SetCurrentTaskTo(ChawFinishCallback);
         EV_FreeAuthorPak(0, "0194");
@@ -270,10 +273,11 @@ void ChawPlayHyakusiCallback(void *data) {
     HLib::SetCurrentTaskTo(ChawFinishHyakusiCallback);
 }
 void ChawFinishHyakusiCallback(void *) {
+    using enum CameraState;
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         RestoreCharacter(CHAW_RYO);
         FreeCharacters(CHAW_HYAKUSI_CHARACTERS);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0xf003, MotionRegion::LowerBody);
         EV_AT_SetPos(CHAW_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, {263.3f, 100.09f, 195.6f});
         EV_AT_SetAngY(CHAW_RYO, EventTransformFlags::AllAxes, {});

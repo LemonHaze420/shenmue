@@ -249,7 +249,7 @@ void SetupPropHandCamera(SearchPropIKSlot &slot) {
     srchSetLookTarget(&target);
     srchSetRotY(static_cast<std::int16_t>(rotation.y + 0x8000));
     camCtrlSwitchToLockedOn(6);
-    EV_SetCharDisplay(player, 3, 0);
+    EV_SetCharDisplay(player, CVM_DisplayEnabled, 0);
 }
 void UpdatePropChestAndCamera(SearchPropIKSlot &slot) {
     SearchPropIKConfig &config = Config(slot);
@@ -818,7 +818,7 @@ bool srchUpdatePropIK(SearchTaskData &search) {
     case 0: {
         if (shenCheckCurrentFoVModeIs2())
             return true;
-        EV_SetCharDisplay(Player(), 3, 1);
+        EV_SetCharDisplay(Player(), CVM_DisplayEnabled, 1);
         mtwkSetOverridesEnabled(0);
         ApplyStagePose(*slot, (slot->active & 0x20U) ? 2 : 0);
         for (std::uint8_t side = 0; side < 2; ++side)
@@ -915,7 +915,7 @@ bool srchUpdatePropIK(SearchTaskData &search) {
         if (slot->active & 0x200U) {
             slot->active = (slot->active & 0xffffffceU) | 0x30U;
             mtwkResetBlends();
-            EV_SetCharDisplay(Player(), 3, 0);
+            EV_SetCharDisplay(Player(), CVM_DisplayEnabled, 0);
             if (!srchPushPropIK(search) && (type == 0 || type == 6 || type == 7 || type == 15))
                 camCtrlSwitchToLockedOn(7);
         }
@@ -944,7 +944,7 @@ bool srchUpdatePropIK(SearchTaskData &search) {
         break;
     case 6:
         mtwkResetBlends();
-        EV_SetCharDisplay(Player(), 3, 0);
+        EV_SetCharDisplay(Player(), CVM_DisplayEnabled, 0);
         SetMT7NodeTransformOverride(*MeshNode(slot->node), nullptr);
         SetMarkerVisible(*slot->node, true);
         if (!(search.context->flags & 1U)) {
@@ -971,7 +971,7 @@ bool srchUpdatePropIK(SearchTaskData &search) {
         break;
     case 7: {
         mtwkResetBlends();
-        EV_SetCharDisplay(Player(), 3, 0);
+        EV_SetCharDisplay(Player(), CVM_DisplayEnabled, 0);
         const bool root = searchPropIKIndex == 0;
         if (root) {
             search.fovStyle = 1;

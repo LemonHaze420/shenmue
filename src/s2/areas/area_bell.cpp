@@ -70,13 +70,14 @@ void ResetEye(void *) {
     SetEyeToChara(ctrlGetCharaByName(ryo), nullptr, 16, 0);
 }
 void RestoreControl(void *parameter) {
+    using enum CameraState;
     auto *state = static_cast<BellEventWork *>(parameter);
     state->busy = 0;
     SetPlayerControlEnabled(1);
     UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
     EVS_LoopCamera(0, {}, {});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
 }
 void QueuePoint(shen_name character, shen_name target, int bone, std::uint32_t flags, int delay) {
     auto *task = HLib::EnqueueTaskWithParameter(EVT_AT_SetPoint_Callback, 6, 0x0b, sizeof(EventSetPoint), AREA_EVENT_TASK);
@@ -210,6 +211,7 @@ void BellLoadNpcCallback(void *parameter) {
     QueueSkAuthorStart(static_cast<BellEventWork *>(parameter)->task, SHEN_NAME(BEL0), nullptr, nullptr, 0);
 }
 void BellInteractionInitCallback(void *parameter) {
+    using enum CameraState;
     using namespace bell_event;
     auto *state = static_cast<BellEventWork *>(parameter);
     Pose(ren, {207.64999f, 103.6f, 195.10001f}, 58982);
@@ -227,7 +229,7 @@ void BellInteractionInitCallback(void *parameter) {
     DisableScenarioCharacterDisplay(SHEN_NAME(a047));
     EVS_LoopCamera(0, {}, {});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     state->renRouteCompletion = static_cast<std::uint32_t>(GetNpcScriptRouteCompletion(ren));
     EV_npcUnknownFunc(ren);
     Gravity(ryo, true);
@@ -413,6 +415,7 @@ void BellRingCallback(void *parameter) {
     }
 }
 void BellExitCallback(void *parameter) {
+    using enum CameraState;
     using namespace bell_event;
     auto *state = static_cast<BellEventWork *>(parameter);
     EV_setHoldStatesFlags(1);
@@ -437,7 +440,7 @@ void BellExitCallback(void *parameter) {
     DeleteMotion(state->motion);
     EVS_LoopCamera(0, {}, {});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BELL"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(state->task);

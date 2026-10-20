@@ -215,6 +215,7 @@ void RestoreHasiStages() {
     }
 }
 void HasiAuthCallback(void *data) {
+    using enum CameraState;
     HasiEventWork *const work = static_cast<HasiEventWork *>(data);
     switch (work->state) {
     case 0:
@@ -232,7 +233,7 @@ void HasiAuthCallback(void *data) {
         }
         break;
     case 3:
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         LoadCutsceneAndSoundProgramForArea();
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -324,6 +325,7 @@ void InitializeHasiEvent(HLib::Task *task, std::int32_t entry) {
     StartHasiAuthor(work);
 }
 void HasiEventCallback(void *data) {
+    using enum CameraState;
     HasiEventWork *const work = static_cast<HasiEventWork *>(data);
     switch (work->state) {
     case 0:
@@ -445,7 +447,7 @@ void HasiEventCallback(void *data) {
         SetGlobalShadowLightingEnabled(true);
         if (EV_GetShenmueFlag(0x1a8) && work->definition->character.name == HASI_STAGE_6.name)
             EV_stepSetFlags(0, 0x1a8);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         LoadCutsceneAndSoundProgramForArea();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         EV_spmBeginSampleExecute();

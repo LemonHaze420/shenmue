@@ -37,14 +37,15 @@ Vector3 publishedPlayerSearchLocation{};
 std::int16_t movingFrames{}, stationaryFrames{}, turningFrames{};
 
 void UpdatePlayerDisplayAlpha(PlayerModelState &state) {
+    using enum CameraState;
     const bool useSavedAlpha = (state.padFlags & 0x8000U) != 0;
     state.padFlags &= ~0x8000U;
     if ((state.flags & 0x04000000U) == 0 || !state.characterNode)
         return;
 
     float alpha = state.characterNode->alpha;
-    const CameraState cameraState = g_cameraControl ? g_cameraControl->state : CameraState::Init;
-    if ((cameraState == CameraState::LookAround || cameraState == CameraState::LockedOn || cameraState == CameraState::Init) && useSavedAlpha) {
+    const CameraState cameraState = g_cameraControl ? g_cameraControl->state : Init;
+    if ((cameraState == LookAround || cameraState == LockedOn || cameraState == Init) && useSavedAlpha) {
         alpha = state.field7c4;
     }
     modelSetCharaAlpha(state.characterNode, std::clamp(alpha, 0.0f, 1.0f));
@@ -400,7 +401,7 @@ bool SetPlayerRootPosition(const Vector3 &position) {
 
 bool IsPlayerPositionTransitionActive() {
     const PlayerModelState *const state = g_playerRuntime.model;
-    return state && state->motionWork && (state->motionWork->runtime.seqFlags & MotionSequencePositionTransition) != 0;
+    return state && state->motionWork && (state->motionWork->runtime.seqFlags & MSF_PositionTransition) != 0;
 }
 
 std::uint32_t plymGetCurrentFlags() {

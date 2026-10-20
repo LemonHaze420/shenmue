@@ -1940,7 +1940,7 @@ bool TickAreaOwnerAnimation(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) 
                     UpdateMotionWorkWithPosition(entry.motionWork, nullptr, 0);
                 else {
                     Vector3 leg{};
-                    GetMotionBonePosition(FindMotionWork(g_playerRuntime.character), 5, &leg);
+                    GetMotionBonePosition(FindMotionWork(g_playerRuntime.character), MB_Head, &leg);
                     UpdateMotionWorkWithPosition(entry.motionWork, &leg, 0);
                 }
                 return false;

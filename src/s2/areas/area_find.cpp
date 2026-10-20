@@ -96,6 +96,7 @@ void FINDWaitChoiceCallback(void *) {
 
 // @verified - p
 void FINDFinishChoiceCallback(void *) {
+    using enum CameraState;
     if (cvsHasValidConverseData(nullptr))
         return;
     SetCharaKill(FIND_BASE, 1);
@@ -109,7 +110,7 @@ void FINDFinishChoiceCallback(void *) {
         EV_NPC_NewLoadSw(1);
         EV_EnableCharacterDisplay(FIND_PLAYER);
         SetPlayerControlEnabled(1);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         HLib::DestroyCurrentTask();
     }

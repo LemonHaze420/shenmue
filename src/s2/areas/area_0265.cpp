@@ -80,6 +80,7 @@ void RestoreE0265Characters() {
 
 // @verified - p
 void CleanupE0265(AreaImmediateAuthorTaskParameter *parent) {
+    using enum CameraState;
     for (const shen_name *character = AREA_0265_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
         if (FindCharacterByScenarioName(*character)) {
             EV_npcLockUnlock(*character);
@@ -105,7 +106,7 @@ void CleanupE0265(AreaImmediateAuthorTaskParameter *parent) {
         EV_NPC_NewLoadSw(1);
         LoadCutsceneAndSoundProgramForArea();
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         BeginSecondarySampleExecution(0);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

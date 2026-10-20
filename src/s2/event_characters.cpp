@@ -68,7 +68,7 @@ shen_name EV_SCEN_FindChar_Wrapper(shen_name name) {
         return shen_name{static_cast<std::uint32_t>((address - slots) / sizeof(CharacterControlSlot))};
     }
     Character *const parentCharacter = reinterpret_cast<Character *>(reinterpret_cast<std::byte *>(parent) - offsetof(Character, entity.node));
-    if (parentCharacter->entity.name.name != EVENT_CHARACTER_COMPONENT.name || !(parentCharacter->flags & CharacterValid))
+    if (parentCharacter->entity.name.name != EVENT_CHARACTER_COMPONENT.name || !(parentCharacter->flags & CF_Valid))
         return EVENT_CHARACTER_INVALID;
     return scenGetCharaName(control->scenarioTask, parentCharacter);
 }
@@ -199,6 +199,7 @@ std::int64_t RestoreEventCharacter(EventReadCharactersWork *work) {
 }
 
 void ET_AT_KillWork(EventReadCharactersWork *work) {
+    using enum CameraState;
     while (work->characterIndex > 0)
         RestoreEventCharacter(work);
     if (work->delayFrames > 0) {
@@ -213,7 +214,7 @@ void ET_AT_KillWork(EventReadCharactersWork *work) {
     camCtrlCacheUtil(3);
     camCtrlHandleContextSwitch(0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     g_cameraControl->showFilmBars = 0;
     SetPlayerControlEnabled(1);
     HLib::DestroyTask(work->task);

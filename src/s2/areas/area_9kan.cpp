@@ -223,13 +223,14 @@ void NineKanCleanupTasks() {
     nineKanCloseBoxTask = nullptr;
 }
 void NineKanLoop(void *data) {
+    using enum CameraState;
     NineKanWork &work = *static_cast<NineKanWork *>(data);
     DateTime now;
     CameraUtilityParameters camera;
     switch (work.state) {
     case 1:
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         NineKanInitialPlacement();
         NineKanSetAuthoredControl(0);
         camera = {.first = 1, .second = 0};
@@ -280,7 +281,7 @@ void NineKanLoop(void *data) {
         return;
     case 6:
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         NineKanRepeatFinish();
         NineKanSetAuthoredControl(0);
         camera = {.first = 1, .second = 0};
@@ -354,7 +355,7 @@ void NineKanLoop(void *data) {
         camera = {.first = 0, .second = 0};
         camCtrlUtil(CameraUtilityMode::ForceSearchCam, reinterpret_cast<std::intptr_t>(&camera));
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         for (const shen_name *name = NINE_KAN_SEARCH_TARGETS; name->name; ++name)
             srchSetTargetEnabled(*name, 0);
         srchClearTarget(2);

@@ -269,6 +269,7 @@ void KeikaSequenceCallback(void *data) {
     } while (work->continueLoop);
 }
 void KeikaBattleCallback(void *data) {
+    using enum CameraState;
     CompiledSequenceWork *const work = static_cast<CompiledSequenceWork *>(data);
     Kew0EventWork *const event = static_cast<Kew0EventWork *>(work->event);
     work->callbackFlag = 0;
@@ -276,7 +277,7 @@ void KeikaBattleCallback(void *data) {
         work->continueLoop = 0;
         switch (work->mode) {
         case 0:
-            camCtrlSetState(CameraState::Event);
+            camCtrlSetState(Event);
             camCtrlSetNextPosition(KEW0_CAMERA_POSITION);
             camCtrlSetTargetPosition(KEW0_CAMERA_TARGET);
             EV_LoadAudio("0067A000", 1);
@@ -478,6 +479,7 @@ void KeikaBattleCallback(void *data) {
     } while (work->continueLoop);
 }
 void CleanupKeikaEvent(Kew0EventWork *work) {
+    using enum CameraState;
     flddSetPointFlagOnGrid(KEW0_LIGHT, 1);
     flddSetPointFlagOnGrid(AREA_KEW0, 0);
     ET_AT_KillWork(work->characters);
@@ -496,7 +498,7 @@ void CleanupKeikaEvent(Kew0EventWork *work) {
     EV_NPC_NewLoadSw(1);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
 }
 void KeikaMainCallback(void *data) {

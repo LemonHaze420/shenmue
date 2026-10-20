@@ -100,6 +100,7 @@ void E0151MainCallback(void *taskData) {
 
 // @verified - p
 void E0151LoopCallback(void *taskData) {
+    using enum CameraState;
     if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) != 0)
         return;
     mtwkSetExtraFlag(scenFindMotionwork(AREA_AUTHOR_RYO), 6, 0);
@@ -112,7 +113,7 @@ void E0151LoopCallback(void *taskData) {
     EventSetRawAngle rotation{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 64747, 0}, 0.0f};
     EVT_AT_SetAng_Callback(&rotation);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     HLib::DestroyCurrentTask();
 }
 

@@ -40,6 +40,7 @@ void Mfw0LoadResources(Mfw0Work &work) {
     SetRenderClockAndCompassTo(1);
 }
 void Mfw0Cleanup(Mfw0Work &work) {
+    using enum CameraState;
     EV_stepSetFlags(0, 153);
     hndlSetFlags(FindCharacterByScenarioName(MFW0_TKR));
     ET_AT_KillWork(work.characters);
@@ -61,7 +62,7 @@ void Mfw0Cleanup(Mfw0Work &work) {
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     EV_spmBeginSampleExecute();
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
 }
 void Mfw0RootCallback(void *data) {

@@ -62,11 +62,12 @@ void Message(const char *text, std::int32_t delay) {
 }
 
 void Reload(ApartmentWork *work) {
+    using enum CameraState;
     EV_NPC_NewLoadSw(1);
     LoadCutsceneAndSoundProgramForArea();
     SetCharaKill(target, 1);
     UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("APA0"), 0);
     scenFreeEvent("APA0.EV3");
@@ -222,6 +223,7 @@ void SayNext_Callback(void *) {
 }
 
 void FinishSay_Callback(void *) {
+    using enum CameraState;
     EVT_AT_SetMot(ryo, 0xf003, 0, 1, 0x40000000U, 0);
     EV_FreeAuthorPak(0, "0022");
     SetCharaKill(dummy, 1);
@@ -229,7 +231,7 @@ void FinishSay_Callback(void *) {
     EV_DisableCharacterDisplay(object);
     EVS_LoopCamera(0, shen_name{}, shen_name{});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     hndlSetFlags(FindCharacterByScenarioName(ryo));
     HLib::SetCurrentTaskTo(Loop_Callback);
 }

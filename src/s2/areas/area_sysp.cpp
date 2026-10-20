@@ -42,6 +42,7 @@ void SyspInitNullsub() {
 
 void SyspStartEvent(SyspEventType type, std::uintptr_t, const char *voice, const Vector3 *target, std::uint32_t yaw, shen_name npc, std::uint32_t fovPercent,
     const char *item) {
+    using enum CameraState;
     if (!syspPackageLoaded)
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SYSP"), 0);
     syspPackageLoaded = 1;
@@ -73,7 +74,7 @@ void SyspStartEvent(SyspEventType type, std::uintptr_t, const char *voice, const
         if (!npc.name) {
             task = HLib::EnqueueTaskWithoutParameter(SyspNpcCallback, 3, 0x0b, static_cast<std::int32_t>(SYSP_TASK.name));
             SyspNpcCallback(nullptr);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             if (!task)
                 SetPlayerControlEnabled(1);
             return;
@@ -176,6 +177,7 @@ void SyspStartEvent(SyspEventType type, std::uintptr_t, const char *voice, const
 }
 
 void SyspSimpleCallback(void *) {
+    using enum CameraState;
     switch (syspEventMode) {
     case SyspFinished:
         if (syspNpc.name) {
@@ -184,7 +186,7 @@ void SyspSimpleCallback(void *) {
                 EV_npcLockUnlock(syspNpc);
             EV_PTYCUtils(syspNpc, 3, 0);
         }
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
         SyspEndCallback(nullptr);
         return;
@@ -231,7 +233,7 @@ void SyspSimpleCallback(void *) {
                 EV_AT_SetPos(syspNpc, SYSP_RELATIVE_XYZ_RECURSIVE, *syspTargetNpcPosition);
             EV_GetCharaPosition(syspNpc, CHARACTER_TRANSLATION_ROOT, &syspSavedNpcPosition, EventTransformFlags::World);
             GetScenarioCharacterEulerAngles(syspNpc, &syspSavedNpcRotation, EventTransformFlags::World);
-            GetMotionBonePosition(scenFindMotionwork(SYSP_RYO_), 6, &position);
+            GetMotionBonePosition(scenFindMotionwork(SYSP_RYO_), MB_Eyes, &position);
             const std::int16_t difference =
                 static_cast<std::int16_t>(InverseFixedAtan2(position.x - syspSavedNpcPosition.x, position.z - syspSavedNpcPosition.z) - syspSavedNpcRotation.y);
             const std::int32_t turn =
@@ -381,6 +383,7 @@ void SyspNpcCallback(void *) {
 }
 
 void SyspNpcCharacterCallback(void *) {
+    using enum CameraState;
     EV_debug_log("SYSP\\eSYSP_et_sys.c", 605, "eSYSP_mode : %d\n", syspEventMode);
     switch (syspEventMode) {
     case SyspFinished:
@@ -429,7 +432,7 @@ void SyspNpcCharacterCallback(void *) {
         syspSavedMotion = GetMotionAnimationId(scenFindMotionwork(syspNpc), MotionRegion::LowerBody);
         syspSavedMotionFrame = GetMotionFrame(scenFindMotionwork(syspNpc), MotionRegion::LowerBody);
         Vector3 position;
-        GetMotionBonePosition(scenFindMotionwork(SYSP_RYO_), 6, &position);
+        GetMotionBonePosition(scenFindMotionwork(SYSP_RYO_), MB_Eyes, &position);
         const std::int16_t difference =
             static_cast<std::int16_t>(InverseFixedAtan2(position.x - syspSavedNpcPosition.x, position.z - syspSavedNpcPosition.z) - syspSavedNpcRotation.y);
         const std::int32_t turn = difference < 0 ? (difference + 0x2000 < 0 ? difference + 0x2000 : 0) : (difference - 0x2000 > 0 ? difference - 0x2000 : 0);
@@ -444,7 +447,7 @@ void SyspNpcCharacterCallback(void *) {
             return;
         Vector3 target, position;
         Vector3i rotation;
-        GetMotionBonePosition(scenFindMotionwork(syspNpc), 6, &target);
+        GetMotionBonePosition(scenFindMotionwork(syspNpc), MB_Eyes, &target);
         EV_GetCharaPosition(SYSP_RYO_, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(SYSP_RYO_, &rotation, EventTransformFlags::World);
         const std::int16_t difference = static_cast<std::int16_t>(InverseFixedAtan2(target.x - position.x, target.z - position.z) - rotation.y);
@@ -471,10 +474,10 @@ void SyspNpcCharacterCallback(void *) {
         const shen_name speaker = cvsFindVoiceDataFor(syspConversation);
         if (speaker.name) {
             const shen_name other = speaker.name == SYSP_RYO_.name ? syspNpc : SYSP_RYO_;
-            camCtrlSetState(CameraState::Event);
+            camCtrlSetState(Event);
             Vector3 position, target;
-            GetMotionBonePosition(scenFindMotionwork(other), SYSP_RIGHT_UPPER_LEG, &position);
-            GetMotionBonePosition(scenFindMotionwork(speaker), 6, &target);
+            GetMotionBonePosition(scenFindMotionwork(other), static_cast<MotionBoneId>(SYSP_RIGHT_UPPER_LEG), &position);
+            GetMotionBonePosition(scenFindMotionwork(speaker), MB_Eyes, &target);
             Vector3 direction{.x = position.x - target.x, .y = position.y - target.y, .z = position.z - target.z};
             const float dz = direction.z;
             Vector3::NormalizeInPlace(direction);
@@ -493,7 +496,7 @@ void SyspNpcCharacterCallback(void *) {
     case SyspWaitOrBranch:
         CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
         UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         syspEventMode = SyspCheckBattle;
         return;
     case SyspCheckBattle:
@@ -572,6 +575,7 @@ void SyspNpcCharacterCallback(void *) {
 }
 
 void SyspItemCallback(void *) {
+    using enum CameraState;
     switch (syspEventMode) {
     case SyspFinished:
         SyspEndCallback(nullptr);
@@ -643,7 +647,7 @@ void SyspItemCallback(void *) {
             mtwkSetRequestedRootMode(scenFindMotionwork(SYSP_RYO_), 1);
             SetMotionFrameTime(scenFindMotionwork(SYSP_RYO_), 4, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(SYSP_RYO_), SYSP_ITEM_END_MOTION, MotionRegion::LowerBody);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             ++syspEventMode;
         } else {
             GetBattleDataConfig(0, SYSP_CANCEL_BUTTON);
@@ -710,6 +714,7 @@ void SyspItemCallback(void *) {
 }
 
 void SyspRyoCallback(void *) {
+    using enum CameraState;
     switch (syspEventMode) {
     case SyspFinished:
         UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
@@ -763,7 +768,7 @@ void SyspRyoCallback(void *) {
                 EV_npcLockUnlock(syspNpc);
             EV_PTYCUtils(syspNpc, 3, 0);
         }
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
         CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
         syspEventMode = SyspCheckBattle;
@@ -821,12 +826,12 @@ void SyspRyoCallback(void *) {
             const shen_name speaker = cvsFindVoiceDataFor(syspConversation);
             if (speaker.name) {
                 const shen_name other = speaker.name == SYSP_RYO_.name ? syspNpc : SYSP_RYO_;
-                camCtrlSetState(CameraState::Event);
+                camCtrlSetState(Event);
                 Vector3 position;
-                GetMotionBonePosition(scenFindMotionwork(other), SYSP_RIGHT_UPPER_LEG, &position);
+                GetMotionBonePosition(scenFindMotionwork(other), static_cast<MotionBoneId>(SYSP_RIGHT_UPPER_LEG), &position);
                 camCtrlSetNextPosition(position);
                 modelSetCharaAlpha(ctrlGetCharaByName(other), 0.0f);
-                GetMotionBonePosition(scenFindMotionwork(speaker), 6, &position);
+                GetMotionBonePosition(scenFindMotionwork(speaker), MB_Eyes, &position);
                 camCtrlSetTargetPosition(position);
                 modelSetCharaAlpha(ctrlGetCharaByName(speaker), 1.0f);
             }
@@ -853,7 +858,8 @@ void SyspOtherCallback(void *) {
 }
 
 std::int16_t SyspSwitchToEventCamera() {
-    camCtrlSetState(CameraState::Event);
+    using enum CameraState;
+    camCtrlSetState(Event);
     camCtrlGetTargetPosition(&syspPreviousCameraPosition);
     camCtrlGetNextCamPos(&syspPreviousNextCameraPosition);
     const std::int16_t perspective = static_cast<std::int16_t>(camCtrlGetPerspective());
@@ -879,7 +885,7 @@ bool SyspUpdateCameraBlendAndRyoFade(std::int32_t skipRyoFade) {
     camCtrlSetPerspective(static_cast<std::uint16_t>(TruncateToInt32(perspective)));
     if (syspFovPercent < 900) {
         if (!skipRyoFade)
-            GetMotionBonePosition(scenFindMotionwork(SYSP_RYO_), 6, &syspRyoTargetPosition);
+            GetMotionBonePosition(scenFindMotionwork(SYSP_RYO_), MB_Eyes, &syspRyoTargetPosition);
         const float relativePhase = static_cast<float>(std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(syspCameraPhase) - 16384U));
         const float secondaryPhase = relativePhase * syspSecondaryPhaseScale + 16384.0f;
         const std::uint16_t angle = secondaryPhase < 49152.0f ? static_cast<std::uint16_t>(TruncateToInt32(secondaryPhase)) : 49152U;

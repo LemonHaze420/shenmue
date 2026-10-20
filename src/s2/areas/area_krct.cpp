@@ -32,9 +32,10 @@ std::int32_t krctFire, krctHandFire, krctFirePhase, krctFireTicks, krctFirePhase
 namespace {
 inline constexpr shen_name house{SHEN_NAME(a016)}, photo{SHEN_NAME(a436)}, fhTitle{SHEN_NAME(FHL1)}, morningTitle{SHEN_NAME(NDAY)};
 void ResetCamera() {
+    using enum CameraState;
     camCtrlSetFovTransitionTo(true);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
 }
 void RestoreMotion(shen_name character) {
     mtwkSetExtraFlag(scenFindMotionwork(character), 17, 0);
@@ -97,6 +98,7 @@ void AreaKRCTMain(std::uintptr_t argument) {
     krct.admitted = 1;
 }
 void KrctMainLoop(void *) {
+    using enum CameraState;
     if (krct.authorSelection != -1)
         return;
     DateTime time{};
@@ -410,7 +412,7 @@ void KrctMainLoop(void *) {
         krct.state = 33;
         break;
     case 33:
-        camCtrlSetState(CameraState::SnapYawTarget);
+        camCtrlSetState(SnapYawTarget);
         SetRenderClockAndCompassTo(0);
         FinishLoading();
         if (StartScenarioFreeTalkRecord(KRCT_SHENHUA, -1) == 1) {

@@ -113,6 +113,7 @@ void Syw0StartDemonstration(bool second, CompiledSequenceWork &sequence) {
     sequence.continueLoop = 0;
 }
 void Syw0FinishDemonstration(bool second) {
+    using enum CameraState;
     EV_SetCinemaBarVisibility(FilmControlFlag::Hide, 5);
     Vector3i rotation;
     GetScenarioCharacterEulerAngles(SYW0_RYO, &rotation, EventTransformFlags::World);
@@ -129,7 +130,7 @@ void Syw0FinishDemonstration(bool second) {
     EV_vfBattleUtil(FightBattleUtilOp::FightModeFlags, shen_name{1}, 0);
     mtwkSetRequestedRootMode(scenFindMotionwork(SYW0_RYO), 2);
     mtwkSetRequestedRootMode(scenFindMotionwork(SYW0_SYE), 2);
-    camCtrlSetState(CameraState::ChaseGoal);
+    camCtrlSetState(ChaseGoal);
     Syw0QueueAlphaOff();
 }
 } // namespace
@@ -224,6 +225,7 @@ void Syw0SecondDemonstrationSequence(void *data) {
     Syw0Value(&sequence, 0x1d0, Syw0Value<std::int32_t>(&sequence, 0x1d0) + 1);
 }
 void Syw0SparringSequence(void *data) {
+    using enum CameraState;
     CompiledSequenceWork &sequence = *static_cast<CompiledSequenceWork *>(data);
     sequence.callbackFlag = 0;
     do {
@@ -231,7 +233,7 @@ void Syw0SparringSequence(void *data) {
         switch (sequence.mode) {
         case 0: {
             const Vector3 eye{.x = 335.39011f, .y = 128.05009f, .z = 235.29111f}, target{.x = 331.73181f, .y = 127.8009f, .z = 233.3663f};
-            camCtrlSetState(CameraState::Event);
+            camCtrlSetState(Event);
             camCtrlSetNextPosition(eye);
             camCtrlSetTargetPosition(target);
             EV_EnableCharacterDisplay(SYW0_RYO);

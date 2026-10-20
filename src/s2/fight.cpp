@@ -347,7 +347,7 @@ std::uint32_t EV_vfBattleUtil(FightBattleUtilOp operation, shen_name name, std::
         break;
     case FightBattleUtilOp::ForceActorDefeat:
         if (VFActor *const actor = btlGetActorByScenarioName(game, name)) {
-            actor->moveFlags |= 0x20U;
+            actor->moveFlags |= VFMF_ForceDefeat;
             actor->hp = 0.0f;
         }
         break;

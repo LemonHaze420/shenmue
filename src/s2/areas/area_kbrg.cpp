@@ -81,6 +81,7 @@ void KBRGPrepareCharacter(shen_name character) {
 }
 // @verified - p
 void KBRGStoryCallback(void *) {
+    using enum CameraState;
     switch (bridgeState) {
     case 0:
         KBRGPrepareCharacter(KBRG_PLAYER);
@@ -107,7 +108,7 @@ void KBRGStoryCallback(void *) {
             EV_SetCharaControllerFlags(KBRG_PLAYER, ApplyGravity, NpcCharacterControllerState::Enabled);
             EV_SetCharaControllerFlags(KBRG_PLAYER, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             EV_DisableCharacterDisplay(KBRG_SHENHUA);
             RevealBridgeScene();
             HLib::SetupTaskDelay(30);

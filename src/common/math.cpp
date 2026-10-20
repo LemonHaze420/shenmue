@@ -38,6 +38,11 @@ std::uint16_t atan2_fixed16(float y, float x) {
     return x == 0.0f ? 0x8000 : static_cast<std::uint16_t>(fixed(y / x) - 0x8000);
 }
 
+float cot_fixed16(std::uint16_t angle) {
+    const float sine = sin_fixed16(static_cast<std::int16_t>(angle));
+    const float cosine = sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(angle)));
+    return cosine / sine;
+}
 std::int16_t asin_fixed16(float value) {
     if (std::fabs(value) <= 1.0f) {
         const float norm = std::sqrt(1.0f - value * value);

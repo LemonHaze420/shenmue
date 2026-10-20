@@ -81,7 +81,7 @@ std::int32_t ResolveFootstepGroundToken(Character *character) {
     if (!footstep || !footstep->enabled)
         return -1;
     Vector3 position{};
-    GetMotionBonePosition(FindMotionWork(character), 0, &position);
+    GetMotionBonePosition(FindMotionWork(character), MB_Pelvis, &position);
     const std::uint32_t result = QueryGroundMaterialToken(position, position.y);
     if ((result & 0xffffU) != 0)
         return static_cast<std::int32_t>(result);

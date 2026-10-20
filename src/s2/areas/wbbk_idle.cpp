@@ -14,6 +14,7 @@
 namespace shenmue::s2::areas {
 std::uint8_t bookAvailableStacks[14];
 void BookIdleInput() {
+    using enum CameraState;
     std::int32_t selected = -1;
     Vector3 position;
     Vector3i rotation;
@@ -91,7 +92,7 @@ void BookIdleInput() {
         if (srchGetTargetName(0).name) {
             srchReset();
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             bookPlayerAlpha = 0;
             HLib::EnqueueTaskWithoutParameter(BookPlayerAlphaCallback, 6, 0x0d, static_cast<std::int32_t>(BOOK_TASK.name));
             EV_SetCharacterAlphaEnabled(BOOK_RYO, true);

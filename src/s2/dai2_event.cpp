@@ -31,8 +31,9 @@ void DAI2Main(std::uintptr_t argument) {
 
 // @verified - p
 void DAI2WaitAuthor(void *) {
+    using enum CameraState;
     if (static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) == 0) {
-        (void)camCtrlSetState(CameraState::Init);
+        (void)camCtrlSetState(Init);
         (void)camCtrlSetFovTransitionTo(true);
         (void)SetPlayerControlEnabled(1);
         (void)EV_SetCharaControllerFlags(STEP_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);

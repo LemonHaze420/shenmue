@@ -680,7 +680,7 @@ void MdtpInitializeFlagsCallback(void *data) {
     QueueCamera(work->package, 3000);
     EV_LoadCutsceneFromCurrentScene(work->media);
     EV_LoadAudio(work->media, 1);
-    GetMotionBonePosition(scenFindMotionwork(MDTP_PLAYER), 14, &work->handPosition);
+    GetMotionBonePosition(scenFindMotionwork(MDTP_PLAYER), MB_RightHand, &work->handPosition);
     work->button = 156;
     for (std::int32_t &frame : work->buttonFrames)
         frame = 0;
@@ -889,6 +889,7 @@ void MdtpFinishExitCallback(void *data) {
     }
 }
 void MdtpQuitCallback(void *data) {
+    using enum CameraState;
     if (filmCheckFadeTrackColour())
         return;
     MdtpWork *const work = static_cast<MdtpWork *>(data);
@@ -938,7 +939,7 @@ void MdtpQuitCallback(void *data) {
     EV_scenApplyPosOrRotToPartOf(MDTP_RECORDER, 0xa6, nullptr, &rotation, EventCharacterPartTransformMode::Absolute);
     SetPlayerGameFlags(PlayerGameFlagMode::Bit2, reinterpret_cast<void *>(static_cast<std::uintptr_t>((work->flags & 0x40000000U) != 0)));
     camCtrlSetFovTransitionTo(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     if (!shenIsGamePaused())
         FinishLoading();
     SetPlayerControlEnabled(1);

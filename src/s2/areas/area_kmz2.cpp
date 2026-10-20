@@ -82,6 +82,7 @@ void AfterQteSetupCallback(void *) {
     HLib::SetCurrentTaskTo(AfterQteExitCallback);
 }
 void AfterQteExitCallback(void *) {
+    using enum CameraState;
     if (eventParameters.state != -1)
         return;
     Vector3 companionPosition{-501.8299865722656f, 500.0f, -302.9551086425781f};
@@ -104,7 +105,7 @@ void AfterQteExitCallback(void *) {
     SetHighModelXYZ(FindCharacterByScenarioName(shenhua), 0, 1, 0);
     camCtrlUtil(static_cast<CameraUtilityMode>(0), 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     InitiateCleanupForSceneChara(shenhua);
     shenToggleAreaFlags(2);
     SetPlayerControlEnabled(1);

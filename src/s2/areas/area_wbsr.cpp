@@ -88,6 +88,7 @@ void RefusedAuthorDone() {
     StartTomorrow();
 }
 void Choose(std::int32_t choice) {
+    using enum CameraState;
     if (choice == 1) {
         EV_stepSetFlags(0, 0x46);
         ExecuteBase();
@@ -100,7 +101,7 @@ void Choose(std::int32_t choice) {
         SetPlayerControlEnabled(1);
         InitiateCleanupForSceneChara(sai);
         camCtrlSetFovTransitionTo(true);
-        (void)camCtrlSetState(CameraState::Init);
+        (void)camCtrlSetState(Init);
         EV_stepSetFlags(2, 0x46);
         ExecuteBase();
         mtwkRequestMotion(RyoMotion(), 0xf002, MotionRegion::LowerBody);
@@ -134,13 +135,14 @@ void PositionRyo(const Vector3 &position) {
     (void)EV_AT_SetAngY(ryo, localXYZ, {0, 0x8000, 0});
 }
 void PackageReady() {
+    using enum CameraState;
     (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SUS1"), 0);
     (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS1"), 0);
     EV_SetCharacterAlphaEnabled(sai, false);
     EV_SetCharaControllerFlags(sai, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     if (entry[0] == 1) {
         camCtrlSetFovTransitionTo(true);
-        (void)camCtrlSetState(CameraState::Init);
+        (void)camCtrlSetState(Init);
         state.timer = 450;
         PositionRyo({336.45001f, 126.97f, 263.59f});
         SetPlayerControlEnabled(1);
@@ -177,10 +179,11 @@ void QueueScenarioA() {
     ResetCounters(4);
 }
 void StartTomorrow() {
+    using enum CameraState;
     EV_stepSetFlags(1, 0x46);
     ExecuteBase();
     camCtrlSetFovTransitionTo(true);
-    (void)camCtrlSetState(CameraState::Init);
+    (void)camCtrlSetState(Init);
     mtwkSetExtraFlag(RyoMotion(), 17, 0);
     SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(ryo, localXYZ, {337.67001f, 126.97f, 280.07001f});
@@ -296,6 +299,7 @@ void WbsrScenarioBCallback(void *) {
 }
 // @verified - p
 void WbsrScenarioACallback(void *) {
+    using enum CameraState;
     ++state.frames;
     if (state.phase == 4) {
         switch (state.counter) {
@@ -305,7 +309,7 @@ void WbsrScenarioACallback(void *) {
             break;
         case 1:
             camCtrlSetFovTransitionTo(false);
-            (void)camCtrlSetState(CameraState::Init);
+            (void)camCtrlSetState(Init);
             SetPlayerControlEnabled(1);
             state.timer = 1800;
             ++state.counter;

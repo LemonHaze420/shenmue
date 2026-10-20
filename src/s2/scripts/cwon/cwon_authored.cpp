@@ -972,6 +972,7 @@ void SignPass(void *data) {
     }
 }
 void SignFail(void *data) {
+    using enum CameraState;
     auto *w = static_cast<CwonEventWork *>(data);
     if (w->authorState == 0) {
         w->authorState = 1;
@@ -999,7 +1000,7 @@ void SignFail(void *data) {
             Motion(4137, 1, 1, 0x22000000U);
             EVT_AT_SetVoice("0011A061", 1, 10);
             mtwkSetRequestedRootMode(scenFindMotionwork(CWON_RYO), 0);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             Next(RunEnd);
             w->battleResult = 0;
         }
@@ -1221,6 +1222,7 @@ void WaitFade(void *data) {
 } // namespace
 // f1550: admission, package teardown, host restoration, then task teardown.
 void CwonEndChaseCallback(void *data) {
+    using enum CameraState;
     auto *w = static_cast<CwonEventWork *>(data);
     if (!g_usingCustomAuthorCharacterList)
         return;
@@ -1252,7 +1254,7 @@ void CwonEndChaseCallback(void *data) {
     if (retailHost) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 2228, 0);
         CwonRestoreMarketProps(0);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CWONBATL"), 0);
         if (w->entry == 7)
@@ -1268,7 +1270,7 @@ void CwonEndChaseCallback(void *data) {
             CwonRestoreGravity(CWON_RYO);
             FinishLoading();
             SetPlayerControlEnabled(1);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             camCtrlSetFovTransitionTo(true);
             SetRenderClockAndCompassTo(0);
             LoadCutsceneAndSoundProgramForArea();

@@ -117,10 +117,11 @@ void YmqbWaitAuthorCallback(void *data) {
 }
 
 void YmqbStartBattleCallback(void *data) {
+    using enum CameraState;
     YmqbWork *const work = static_cast<YmqbWork *>(data);
     DisableScenarioCharacterDisplay(YMQB_A128);
     DisableScenarioCharacterDisplay(YMQB_ANC);
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
     camCtrlSetNextPosition(YMQB_BATTLE_EYE);
     camCtrlSetTargetPosition(YMQB_BATTLE_TARGET);
     shenStartFGST(10, 10, 0, 0);

@@ -395,6 +395,7 @@ void QdmrFadeOutSoundCallback(void *) {
     HLib::DestroyCurrentTask();
 }
 void QdmrDoneCallback(void *parameter) {
+    using enum CameraState;
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (work) {
         for (std::size_t index = 0; QDMR_ROOMS[index].door.name; ++index)
@@ -438,7 +439,7 @@ void QdmrDoneCallback(void *parameter) {
     SetPlayerControlEnabled(1);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_CleanupMapControlTask();
     HLib::MarkCurrentTaskForCleanup();
 }

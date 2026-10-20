@@ -114,6 +114,7 @@ void Reset(SlotRootWork *work) {
 }
 // @verified - p
 void Exit(SlotRootWork *work) {
+    using enum CameraState;
     SetScenarioCharacterKillMode(playerModel, 1);
     auto *machine = Work<SlotMachineWork>(work->machine);
     for (int i = 0; i < 5; ++i)
@@ -133,7 +134,7 @@ void Exit(SlotRootWork *work) {
     HLib::MarkCurrentTaskForCleanup();
     EVS_LoopCamera(0, shen_name{}, shen_name{});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_EnableCharacterDisplay(ryo);
     SetPlayerControlEnabled(1);
     if (g_currentMap.name == slot.name) {

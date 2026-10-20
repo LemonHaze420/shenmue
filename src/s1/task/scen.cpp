@@ -586,7 +586,7 @@ void charaGetPosForNode(Character *character, std::int32_t nodeId, Vector3 *outp
         return;
     }
     MotionManagerWork *const manager = MOTM_GetWork(character);
-    const MotionNodeRuntime *const row = manager ? MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(manager->motion.previousNodes), nodeId) : nullptr;
+    const MotionNodeRuntime *const row = manager ? MOTN_FindNode(static_cast<MotionNodeRuntime *>(manager->motion.previousNodes), nodeId) : nullptr;
     if (!row) {
         *output = character->entity.node.position;
         return;

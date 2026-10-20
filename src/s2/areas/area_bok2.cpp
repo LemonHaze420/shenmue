@@ -57,9 +57,10 @@ void Move(shen_name name, const Vector3 &pos, std::int32_t yaw) {
 }
 
 void Restore() {
+    using enum CameraState;
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_SetCharaControllerFlags(ryo, 1, NpcCharacterControllerState::Enabled);
     EV_SetCharacterAlphaEnabled(ryo, true);
     EV_SetCharaControllerFlags(ryo, 2, NpcCharacterControllerState::Enabled);

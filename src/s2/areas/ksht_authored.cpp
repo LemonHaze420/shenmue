@@ -102,8 +102,9 @@ void ResetKshtMotion(shen_name actor) {
     mtwkSetExtraFlag(scenFindMotionwork(actor), 13, 0);
 }
 void ResetKshtCamera() {
+    using enum CameraState;
     camCtrlSetFovTransitionTo(true);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
 }
 } // namespace shenmue::s2::areas

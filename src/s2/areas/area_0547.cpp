@@ -35,9 +35,10 @@ float DistanceSquared0547(const Vector3 &first, const Vector3 &second) {
     return ((first.y - second.y) * (first.y - second.y) + (first.x - second.x) * (first.x - second.x)) + (first.z - second.z) * (first.z - second.z);
 }
 void Reset0547Camera() {
+    using enum CameraState;
     camCtrlSetFovTransitionTo(true);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
 }
 void Restore0547Motion(shen_name character, std::uint16_t motionId, const Vector3 &position, const Vector3i &rotation) {
     MotionWork *const motion = FindMotionWork(FindCharacterByScenarioName(character));

@@ -188,6 +188,7 @@ void PlaceDebugCharacters(StreetFightEventWork *work) {
 
 // @verified - p
 void CleanupDebug(StreetFightEventWork *work) {
+    using enum CameraState;
     StreetFightStartParameters *const parameters = work->startParameters;
     ReleaseStreetFightCharacter(work->fighters[work->fighterIndex]);
     ET_AT_KillWork(work->characterReadTask);
@@ -209,7 +210,7 @@ void CleanupDebug(StreetFightEventWork *work) {
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     if (parameters->signal)
         *parameters->signal = 0;
@@ -834,6 +835,7 @@ void RetryChoiceCallback(void *parameter) {
 }
 
 void CleanupNormalCallback(void *parameter) {
+    using enum CameraState;
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     StreetFightStartParameters *const start = work.startParameters;
     const std::int32_t result = work.battleStatus;
@@ -888,7 +890,7 @@ void CleanupNormalCallback(void *parameter) {
     else if (returnToQron)
         EV_scenQueueLoad(g_actNumber, SHEN_NAME(QR00), 81);
     else {
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
     }
     EV_EventSetUpHelpIcon_0(STREET_FIGHT_HELP_FREE, 0);

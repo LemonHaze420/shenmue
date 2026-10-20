@@ -80,6 +80,7 @@ void TomaGoRace(void *) {
     EV_scenQueueLoad(g_actNumber, TOMA_RACE_AREA, tomaRaceEntry);
 }
 void TomaExitPlus(void *) {
+    using enum CameraState;
     if (filmCheckFadeTrackColour())
         return;
     SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -90,10 +91,10 @@ void TomaExitPlus(void *) {
     RestoreAreaLoopCharacters(characters);
     EV_NPC_NewLoadSw(1);
     EV_FreeAuthorPak(0, "0122");
-    camCtrlSetState(CameraState::SnapYawTarget);
+    camCtrlSetState(SnapYawTarget);
     SetScenarioFollowCharacter({});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_CleanupMapControlTask();
     HLib::MarkCurrentTaskForCleanup();
     if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0))

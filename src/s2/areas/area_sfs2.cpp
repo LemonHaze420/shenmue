@@ -212,6 +212,7 @@ void PlaceDebugCharacters(StreetFightEventWork *work) {
 }
 
 void CleanupDebug(StreetFightEventWork *work) {
+    using enum CameraState;
     StreetFightStartParameters *const parameters = work->startParameters;
     ReleaseStreetFightCharacter(work->fighters[work->fighterIndex]);
     ET_AT_KillWork(work->characterReadTask);
@@ -233,7 +234,7 @@ void CleanupDebug(StreetFightEventWork *work) {
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     if (parameters->signal)
         *parameters->signal = 0;
@@ -1463,6 +1464,7 @@ void RetryChoiceCallback(void *parameter) {
         HLib::SetCurrentTaskTo(CleanupNormalCallback);
 }
 void CleanupNormalCallback(void *parameter) {
+    using enum CameraState;
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     StreetFightStartParameters *const start = work.startParameters;
     AT_SetLocalBaseChara(SFS2_STAG, STREET_FIGHT_INVALID);
@@ -1497,7 +1499,7 @@ void CleanupNormalCallback(void *parameter) {
     else if (work.reserved178)
         EV_scenQueueLoad(g_actNumber, SFS2_RETURN_AREA, 81);
     else {
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
     }
     flddSetPointFlagOnGrid(SFS2_GRID_ORIGIN, 1);

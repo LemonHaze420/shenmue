@@ -835,8 +835,8 @@ void StrandSpringTransform(OsageNode &node) {
     if (directional) {
         MotionWork *const motion = FindMotionWork(work.owner);
         Vector3 start{}, end{};
-        GetMotionBonePosition(motion, directional == 1 ? 3 : 22, &start);
-        GetMotionBonePosition(motion, directional == 1 ? 5 : 3, &end);
+        GetMotionBonePosition(motion, static_cast<MotionBoneId>(directional == 1 ? 3 : 22), &start);
+        GetMotionBonePosition(motion, static_cast<MotionBoneId>(directional == 1 ? 5 : 3), &end);
         direction = {start.x - end.x, start.y - end.y, start.z - end.z};
         Vector3::NormalizeInPlace(direction);
     }
@@ -1152,7 +1152,7 @@ void UpdateCharacterOsage(MT7Node *model, Character *character) {
         return;
     if (authGetLoaded())
         hairDistance = 0;
-    else if (character->entity.name.name == SHEN_NAME(CEWP) && (character->flags & CharacterValid) && IsOfThisVisibilityType(character, 0) &&
+    else if (character->entity.name.name == SHEN_NAME(CEWP) && (character->flags & CF_Valid) && IsOfThisVisibilityType(character, 0) &&
         charaGetAlphaDraw(character) >= 0.01f) {
         const Vector3 position = GetCharacterWorldPosition(character);
         Vector3 camera;

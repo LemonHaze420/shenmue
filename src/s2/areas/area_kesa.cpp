@@ -204,6 +204,7 @@ void KesaRestoreCharacter(shen_name character) {
     SetScenarioCharacterRadius(character, 1.8f);
 }
 void KesaFinishAuthor() {
+    using enum CameraState;
     const auto &author = kesaAuthors[kesaAuthorSelection];
     if (kesaAuthorSelection < 6) {
         KesaSetupLighting();
@@ -230,7 +231,7 @@ void KesaFinishAuthor() {
         HLib::SetupTaskDelay(210);
     } else {
         SetPlayerControlEnabled(1);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         EV_LoadCutsceneFromCurrentScene("KES1");
         EV_LoadAudio("KES1_000", EV_GetShenmueFlag(690) != 0);

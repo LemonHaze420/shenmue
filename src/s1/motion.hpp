@@ -15,7 +15,7 @@ std::uint16_t Shenmue_Atan2Fixed(float first, float direction);
 void MOTI_ApplyPositionOffset(MotionInformationWork &motion, const Vector3 &offset);
 struct ScenarioContext;
 extern std::int32_t g_motnHasYValue;
-extern std::int32_t g_motnRowBytesInUse;
+extern std::int32_t g_motnNodeBytesInUse;
 
 #pragma pack(push, 1)
 struct MotnAnimationHeader {
@@ -323,7 +323,7 @@ void UNFO_Init(MotionInformationWork &motion);
 void MOTI_InitAndAllocPrimaryBuffers(MotionInformationWork &motion);
 void MOTI_Cleanup(MotionInformationWork &motion);
 void MOTI_Free(MotionInformationWork &motion);
-void MOTI_TransferPrimaryRows(MotionInformationWork *source, MotionInformationWork *destination);
+void MOTI_TransferPrimaryNodes(MotionInformationWork *source, MotionInformationWork *destination);
 void MOTI_BeginSecondaryBlend(Character *character);
 void MOTI_SetBaseMotionScale(Character *character, float scale);
 void MOTI_SetBlendFrameCount(Character *character, std::uint16_t frames);
@@ -358,7 +358,7 @@ bool MOTN_PlaySecondaryMotion(
     MotionInformationWork &motion, std::uint16_t animationId, std::int16_t nodeId, float frameStart, float frameEnd, std::uint32_t flags);
 std::int32_t FIGP_PlayFightAnim_Wrapper(Character *character, std::uint16_t animationId, std::int16_t nodeId, float startFrame, std::uint32_t flags);
 std::uint32_t motCalculateAnimationToPlay(Character *character, const Vector3 *target, bool sinusRig);
-MotionNodeRuntime *MOTN_FindNodeRow(MotionNodeRuntime *row, std::int32_t nodeId);
+MotionNodeRuntime *MOTN_FindNode(MotionNodeRuntime *motionNode, std::int32_t nodeId);
 Vector3 motGetEntityPos_Or_RotateEntity(Character *character, std::int32_t nodeId);
 void MOTN_RequestSecondaryMotionStop(MotionInformationWork &motion);
 

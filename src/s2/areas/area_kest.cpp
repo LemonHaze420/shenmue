@@ -43,9 +43,10 @@ void RevealScene() {
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
 }
 void ResetCamera() {
+    using enum CameraState;
     camCtrlSetFovTransitionTo(true);
     camCtrlUtil(static_cast<CameraUtilityMode>(0), 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
 }
 void SetSceneObjects(bool later) {
     if (later) {

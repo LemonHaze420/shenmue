@@ -56,12 +56,13 @@ void StartQfebAuthorLoop(QfebAuthorWork *parent) {
     parent->state = 2;
 }
 void FinishQfebAuthor(QfebAuthorWork *work) {
+    using enum CameraState;
     HLib::DestroyTask(work->task);
     SetPlayerControlEnabled(1);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     const Vector3i &rotation = work->author.name == QFEB_AUTHORS[2].name ? qfebAuthorReturnRotation : QFEB_AUTHOR_DEFAULT_ROTATION;
     EV_AT_SetAngY(QFEB_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
 }
@@ -128,6 +129,7 @@ void PrepareQfebBattleChoreography(QfebEventWork *work) {
     EVT_AT_SetCam(work->entry + 2049, QFEB_BASE, QFEB_BASE, 0, 0, 170);
 }
 void PrepareQfebBattleStances(QfebEventWork *work) {
+    using enum CameraState;
     if (work->entry >= 1 && work->entry <= 3) {
         const std::int32_t entry = work->entry - 1;
         for (std::int32_t index = 0; index < 7; ++index) {
@@ -142,7 +144,7 @@ void PrepareQfebBattleStances(QfebEventWork *work) {
             EventSetAngle angle{.cleanup = 0, .character = name, .parent = EVENT_CHARACTER_INVALID, .degrees = QFEB_BATTLE_YAWS[entry][index], .delay = 0};
             EVT_AT_SetAngY_Callback(&angle);
         }
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
         camCtrlSetNextPosition(QFEB_CAMERA_EYES[entry]);
         camCtrlSetTargetPosition(QFEB_CAMERA_TARGETS[entry]);
     }

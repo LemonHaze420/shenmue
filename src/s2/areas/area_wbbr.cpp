@@ -51,8 +51,9 @@ void StartWbbrAuthor(shen_name author) {
 }
 // @verified - p
 void WbbrCompleteAuthorCallback(void *) {
+    using enum CameraState;
     camCtrlSetFovTransitionTo(true);
-    (void)camCtrlSetState(CameraState::Init);
+    (void)camCtrlSetState(Init);
     EV_SetCharaControllerFlags(SAP_PLAYER, ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(SAP_PLAYER, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

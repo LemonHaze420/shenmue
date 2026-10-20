@@ -213,6 +213,7 @@ void PlaceDebugCharacters(StreetFightEventWork *work) {
 }
 
 void CleanupDebug(StreetFightEventWork *work) {
+    using enum CameraState;
     StreetFightStartParameters *const parameters = work->startParameters;
     ReleaseStreetFightCharacter(work->fighters[work->fighterIndex]);
     ET_AT_KillWork(work->characterReadTask);
@@ -234,7 +235,7 @@ void CleanupDebug(StreetFightEventWork *work) {
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     if (parameters->signal)
         *parameters->signal = 0;
@@ -1149,6 +1150,7 @@ void UpdateBattleQte() {
 }
 
 void MainCallback(void *parameter) {
+    using enum CameraState;
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
     switch (work.state) {
@@ -1308,7 +1310,7 @@ void MainCallback(void *parameter) {
         EVT_AT_SetAngY(fighter, SFSR_BASE, 0, 0);
         SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STREET_FIGHT_RYO), FacialExpressionId::Angry, 1, 1);
         SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(SFSR_SF3), FacialExpressionId::Angry, 1, 1);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetTargetPosition(SFSR_CAMERA_TARGET);
         camCtrlSetNextPosition(SFSR_CAMERA_POSITION);
         EV_SetRefBoardParamsFor(STREET_FIGHT_RYO, 0);
@@ -1776,6 +1778,7 @@ void CleanupNormalCallback(void *parameter) {
     HLib::SetCurrentTaskTo(CleanupWaitCallback);
 }
 void CleanupWaitCallback(void *parameter) {
+    using enum CameraState;
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     StreetFightStartParameters *const start = work.startParameters;
     const std::int32_t status = work.battleStatus, returnToArea = work.reserved178;
@@ -1787,7 +1790,7 @@ void CleanupWaitCallback(void *parameter) {
     else if (returnToArea)
         EV_scenQueueLoad(g_actNumber, SFSR_RETURN_AREA, 81);
     else {
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
     }
     if (status == 3 || entry == 99)

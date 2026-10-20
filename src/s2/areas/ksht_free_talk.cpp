@@ -17,6 +17,7 @@ extern std::int32_t kshtFreeTalkSelection, kshtNextPhase, kshtFreeTalkIndicator;
 void PrepareKshtFreeTalkActors();
 void KshtSetHighHands(void *);
 void KshtFreeTalkCallback(void *) {
+    using enum CameraState;
     if (kshtFreeTalkSelection != -1)
         return;
     switch (kshtPhase) {
@@ -63,7 +64,7 @@ void KshtFreeTalkCallback(void *) {
         kshtPhase = 6;
         camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         FreeKshtCharacters(kshtCompanionList);
         EV_npcLockUnlock(KSHT_DUMMY);
         EV_NPC_NewLoadSw(1);
@@ -100,7 +101,7 @@ void KshtFreeTalkCallback(void *) {
         break;
     }
     case 8:
-        camCtrlSetState(CameraState::SnapYawTarget);
+        camCtrlSetState(SnapYawTarget);
         if (StartScenarioFreeTalkRecord(KSHT_SIN, -1) == 1) {
             kshtFreeTalkSelection = -1;
             kshtPhase = 9;

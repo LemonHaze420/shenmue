@@ -528,7 +528,7 @@ void EV_EnsureCharacterDraw(shen_name name) {
 
 // @verified - p
 void EV_EnableCharacterDisplay(shen_name name) {
-    EV_SetCharDisplay(ctrlGetCharaByName(name), 3, 1);
+    EV_SetCharDisplay(ctrlGetCharaByName(name), CVM_DisplayEnabled, 1);
 }
 
 // @verified - p
@@ -542,7 +542,7 @@ void EV_ToggleCharacterFlag(shen_name name) {
 
 // @verified - p
 void EV_DisableCharacterDisplay(shen_name name) {
-    EV_SetCharDisplay(ctrlGetCharaByName(name), 3, 0);
+    EV_SetCharDisplay(ctrlGetCharaByName(name), CVM_DisplayEnabled, 0);
 }
 
 // @verified - p

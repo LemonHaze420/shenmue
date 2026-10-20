@@ -61,6 +61,7 @@ void E0139Main(std::uintptr_t) {
 
 // @verified - p
 void CleanupE0139(AreaImmediateAuthorTaskParameter *parent) {
+    using enum CameraState;
     for (const shen_name *character = AREA_0139_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
         if (FindCharacterByScenarioName(*character)) {
             EV_npcLockUnlock(*character);
@@ -81,7 +82,7 @@ void CleanupE0139(AreaImmediateAuthorTaskParameter *parent) {
         EVT_AT_SetAng_Callback(&rotation);
         doorLoadAuthorWithAudio(shen_name{});
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         BeginSecondarySampleExecution(0);
         SetPlayerControlEnabled(1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

@@ -1911,6 +1911,7 @@ void DartsRetireCoinAndArrows(DartsEventWork *work) {
     }
 }
 void DartsExit(void *data) {
+    using enum CameraState;
     DartsEventWork *const work = static_cast<DartsEventWork *>(data);
     if (!work->gameState) {
         work->gameState = 1;
@@ -1936,7 +1937,7 @@ void DartsExit(void *data) {
         SetRenderClockAndCompassTo(0);
         EVS_LoopCamera(0, {}, {});
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         EVT_AT_SetCam(-1, {}, {}, 0, 0, 0);
         camCtrlDisableFilmBars();
         if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014))

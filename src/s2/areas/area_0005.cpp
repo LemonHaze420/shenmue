@@ -402,6 +402,7 @@ void e0005_EVT_Exit_NpcChara2_Callback(void *) {
 
 
 void CompleteEvent(EventTaskParameter *event) {
+    using enum CameraState;
     mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(ryo)), 6, 0);
     EV_SetCharacterAlphaEnabled(ryo, true);
     EV_EnableCharacterDisplay(ryo);
@@ -434,7 +435,7 @@ void CompleteEvent(EventTaskParameter *event) {
     EV_CleanupMapControlTask();
     HLib::DestroyTask(event->task);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     SetRenderClockAndCompassTo(0);
     WaitForNextTask_0(GetCurrentAreaScreenFilmTask(), 0, 30);

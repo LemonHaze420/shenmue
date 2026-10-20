@@ -862,7 +862,7 @@ void mtwkGetCharaBonePosition(Character *character, std::int32_t nodeId, Vector3
         return;
     }
     MotionManagerWork *const manager = MOTM_GetWork(character);
-    const MotionNodeRuntime *const row = manager ? MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(manager->motion.previousNodes), nodeId) : nullptr;
+    const MotionNodeRuntime *const row = manager ? MOTN_FindNode(static_cast<MotionNodeRuntime *>(manager->motion.previousNodes), nodeId) : nullptr;
     if (!row) {
         *position = GetPositionForEntity(character->entity.node);
         return;
@@ -3854,7 +3854,7 @@ void Script_motnUtils(ScenarioContext *context, void *rawParams) {
             if ((manager->flags & 2U) == 0)
                 return;
             if (!manager->motion.activeNodes) {
-                MOTI_TransferPrimaryRows(nullptr, &manager->motion);
+                MOTI_TransferPrimaryNodes(nullptr, &manager->motion);
                 manager->flags &= ~2U;
                 return;
             }

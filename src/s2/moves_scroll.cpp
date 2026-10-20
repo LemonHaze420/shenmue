@@ -365,7 +365,7 @@ void LoadRyoSceneForMovesScreen() {
     AllocateMotionWork(wazamakiPreviewCharacter);
     AttachReflectorBoardComponent(wazamakiPreviewCharacter, 1);
     modelSetCharaAlpha(wazamakiPreviewCharacter, 1.0f);
-    EV_SetCharDisplay(wazamakiPreviewCharacter, 3, 0);
+    EV_SetCharDisplay(wazamakiPreviewCharacter, CVM_DisplayEnabled, 0);
     mtwkSetExtraFlag(FindMotionWork(wazamakiPreviewCharacter), 6, 2);
     SetMotionEnvironmentEnabled(0);
     charaToggleFlag(wazamakiPreviewCharacter, 0);
@@ -458,7 +458,7 @@ void UpdateWazamakiPreviewFrame() {
     if (!wazamakiPreviewCharacter)
         return;
     if (wazamakiPreviewFrameDelay >= 0 && --wazamakiPreviewFrameDelay < 0)
-        EV_SetCharDisplay(wazamakiPreviewCharacter, 3, 0);
+        EV_SetCharDisplay(wazamakiPreviewCharacter, CVM_DisplayEnabled, 0);
     wazamakiPreviewScale = wazamakiPreviewDefaultScale;
     if (!(g_loadingFlag & 2U))
         UpdateLegacyPreviewTransform();
@@ -518,7 +518,7 @@ void ReleaseWazamakiPreviewModels() {
     g_worldDrawingEnabled = true;
     SetMotionEnvironmentEnabled(1);
     if (wazamakiPreviewCharacter) {
-        EV_SetCharDisplay(wazamakiPreviewCharacter, 3, 0);
+        EV_SetCharDisplay(wazamakiPreviewCharacter, CVM_DisplayEnabled, 0);
         ctrlSetKillAndIncrementCounter(wazamakiPreviewCharacter, 1);
     }
     wazamakiPreviewCharacter = nullptr;
@@ -1303,10 +1303,11 @@ bool ExecuteLegacyWazamaki() {
 
 void SetupModernMovesCamera() {
 
+    using enum CameraState;
     wazamakiSavedCameraState = camCtrlGetState();
     camCtrlGetNextCamPos(&wazamakiSavedCameraEye);
     camCtrlGetTargetPosition(&wazamakiSavedCameraTarget);
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
     wazamakiSavedPerspective = camCtrlGetPerspective();
     camCtrlSetPerspective(10922);
     camCtrlSetNextRoll(0);
@@ -1330,7 +1331,7 @@ bool ExecuteModernWazamaki() {
         SetupModernMovesCamera();
         const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
         Character *const ryo = static_cast<Character *>(control->ryo);
-        EV_SetCharDisplay(ryo, 3, 0);
+        EV_SetCharDisplay(ryo, CVM_DisplayEnabled, 0);
         charaSetVisibilityFlagTo(ryo, 0);
         if (ryo) {
             MotionWork *const motion = FindMotionWork(ryo);

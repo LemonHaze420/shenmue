@@ -145,7 +145,8 @@ void SpeakPrize(GachTaskWork *work) {
 }
 // @verified - p
 void BeginExit(GachTaskWork *work) {
-    camCtrlSetState(CameraState::Init);
+    using enum CameraState;
+    camCtrlSetState(Init);
     UpdateMotionWorkWithPosition(scenFindMotionwork(GACH_RYO), nullptr, 0);
     work->state = 12;
 }
@@ -413,6 +414,7 @@ void QueueGachPurchase(GachTaskWork *work) {
         HLib::SetupTaskDelay(static_cast<std::uint16_t>(330 - motionStartFrame));
 }
 void BeginPrizeView(GachTaskWork *work) {
+    using enum CameraState;
     Uncling(gachColours[work->capsule], 0);
     Uncling(Prize(work).object, 0);
     SpeakPrize(work);
@@ -446,7 +448,7 @@ void BeginPrizeView(GachTaskWork *work) {
     EV_AT_SetPos(GACH_CAMERA, EventTransformFlags::AllAxes, {0.1785f, 1.1422f, 0.55379999f});
     EV_GetCharaPosition(GACH_CAMERA, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     camCtrlSetNextPosition(position);
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
     work->savedFov = camCtrlGetPerspective();
     work->currentFov = 9102;
     work->state = 11;
@@ -596,6 +598,7 @@ void LoadGachPrizeHand(GachTaskWork *work) {
 }
 // @verified - p
 void GachMainCallback(void *data) {
+    using enum CameraState;
     GachTaskWork *const work = static_cast<GachTaskWork *>(data);
     Vector3 position;
     Vector3i rotation;
@@ -683,7 +686,7 @@ void GachMainCallback(void *data) {
             } else {
                 Queue(GachFadeInCallback);
                 camCtrlSetFovTransitionTo(false);
-                camCtrlSetState(CameraState::Init);
+                camCtrlSetState(Init);
                 camCtrlResetTransition(CameraInterpolationMode::RestorePrevious);
                 camCtrlSetInterpEaseFactor(0.1f);
                 HLib::SetupTaskDelay(40);
@@ -865,6 +868,7 @@ void GachHandReturnCallback(void *data) {
 }
 // @verified - p
 void GachExitCallback(void *data) {
+    using enum CameraState;
     GachTaskWork *const work = static_cast<GachTaskWork *>(data);
     if (!EV_ForceLoadNpc(GACH_EXIT_ROUTE))
         return;
@@ -882,7 +886,7 @@ void GachExitCallback(void *data) {
         SetScenarioCharacterKillMode(name, 1);
     EV_SetCharaControllerFlags(GACH_RYO, 1, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(GACH_RYO, 3, NpcCharacterControllerState::Enabled);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     UpdateMotionWorkWithPosition(scenFindMotionwork(GACH_RYO), nullptr, 0);
     EV_EventSetUpHelpIcon_0(0, 0);

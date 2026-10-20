@@ -367,6 +367,7 @@ void Ro10EnterItems(void *parameter) {
     HLib::SetCurrentTaskTo(ShopMain);
 }
 void Ro10Quit(void *parameter) {
+    using enum CameraState;
     if (filmCheckFadeTrackColour())
         return;
     Ro10Work *work = static_cast<Ro10Work *>(parameter);
@@ -415,11 +416,11 @@ void Ro10Quit(void *parameter) {
         alternate = work->flags & 0x20000U;
         EV_EventSetUpHelpIcon_0(0, 0);
     }
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     SetAreaLoopCharacterControl(RO10_RYO, 0);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     QueueRo10Motion(RO10_RYO, 0xf002, 0, 2);
     HLib::Task *fadeTask = alternate ? HLib::EnqueueTaskWithParameter(ExitAfterFade, 4, 0x0b, sizeof(Ro10ExitWork), RO10_EVENT) : nullptr;
     if (fadeTask) {

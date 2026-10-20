@@ -269,6 +269,7 @@ void BribRenStart(void *data) {
     SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
 }
 void BribRenLoop(void *data) {
+    using enum CameraState;
     if (filmCheckFadeTrackColour())
         return;
     BribWork &work = *static_cast<BribWork *>(data);
@@ -278,7 +279,7 @@ void BribRenLoop(void *data) {
     }
     camCtrlSetFovTransitionTo(1);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     mtwkRequestMotion(scenFindMotionwork(BRIB_RYO), 0xf003, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(BRIB_REN), 0xf003, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(BRIB_KUK), 0xf09f, MotionRegion::LowerBody);
@@ -400,6 +401,7 @@ void BribSenseStart(void *data) {
     }
 }
 void BribSenseLoop(void *data) {
+    using enum CameraState;
     if (filmCheckFadeTrackColour())
         return;
     BribWork &work = *static_cast<BribWork *>(data);
@@ -409,7 +411,7 @@ void BribSenseLoop(void *data) {
     }
     camCtrlSetFovTransitionTo(1);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     mtwkRequestMotion(scenFindMotionwork(BRIB_RYO), 0xf003, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(BRIB_REN), 0xf003, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(BRIB_RYO), 17, 0);

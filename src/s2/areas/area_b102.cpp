@@ -209,6 +209,7 @@ void BayItemShopWaitItemEffectCallback(void *parameter) {
     static_cast<BayItemShopWork *>(parameter)->flags |= 1;
 }
 void BayItemShopDoneCallback(void *parameter) {
+    using enum CameraState;
     using namespace bay_item_shop;
     if (GetShouldRenderIcons(RenderIconSlot::ItemEffectMessage))
         return;
@@ -223,7 +224,7 @@ void BayItemShopDoneCallback(void *parameter) {
         EV_FreeAuthorPak(0, "0110");
     }
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_CleanupMapControlTask();
     HLib::MarkCurrentTaskForCleanup();
     hndlSetFlags(ctrlGetCharaByName(ryo));

@@ -217,6 +217,7 @@ void JIAGFinishCallback(void *) {
 }
 // @verified - p
 void JIAGReleaseEvent() {
+    using enum CameraState;
     FinishLoading();
     for (const shen_name character : JIAG_CHARACTERS) {
         if (character.name == JIAG_INVALID.name)
@@ -233,7 +234,7 @@ void JIAGReleaseEvent() {
     EV_AT_SetPos(JIAG_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3{67.41999816894531f, 102.4800033569336f, 300.25f});
     EV_AT_SetAngY(JIAG_PLAYER, EventTransformFlags::AllAxes, Vector3i{0, 6342, 0});
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     EV_LoadCutsceneFromCurrentScene(savedBgm.data());
     EV_LoadAudio(savedSbt.data(), savedSoundProgramIndex);

@@ -12,6 +12,8 @@ struct ImageModuleWork;
 struct MdlmImageSlot;
 struct PackModel;
 
+enum ImageCycleMode : std::uint8_t { ICM_Stopped = 0, ICM_Forward = 1, ICM_PingPong = 2 };
+enum ImageCycleFlag : std::int32_t { ICF_Reverse = 1, ICF_Finished = 0x80 };
 #pragma pack(push, 1)
 
 

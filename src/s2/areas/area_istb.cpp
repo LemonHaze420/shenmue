@@ -209,6 +209,7 @@ void Main_Callback(void *data) {
     }
 }
 void Exit_Callback(void *data) {
+    using enum CameraState;
     auto *work = static_cast<StoneWork *>(data);
     DateTime time{};
     GetCurrentDateTime(time);
@@ -227,7 +228,7 @@ void Exit_Callback(void *data) {
     EV_NPC_NewLoadSw(1);
     EVS_LoopCamera(0, shen_name{}, shen_name{});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ISTB"), 0);
     const int selection = work->selection;

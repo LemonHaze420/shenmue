@@ -566,6 +566,7 @@ std::string_view AuthString(std::int32_t index) {
 }
 
 bool AuthCameraCommand(std::int32_t phase, const std::int32_t *args, AuthActorContext &) {
+    using enum CameraState;
     if (phase == 0) {
         author.activeCamera = args[1];
 
@@ -577,7 +578,7 @@ bool AuthCameraCommand(std::int32_t phase, const std::int32_t *args, AuthActorCo
             const std::array<void *, 3> request{spline.record, nullptr, nullptr};
             camCtrlToggleSplineRebuildFlag(3, request.data());
         }
-        camCtrlSetState(CameraState::SplineInterpolation);
+        camCtrlSetState(SplineInterpolation);
     }
     return false;
 }
@@ -720,7 +721,7 @@ void CaptureAuthCharacterState(Character *character, shen_name subject) {
     state.subject = subject;
     state.noMotion = FindMotionWork(character) == nullptr;
     state.pluralControl = SetPluralControlFor(character, 0);
-    state.displayEnabled = (character->renderFlags & 4U) != 0;
+    state.displayEnabled = (character->renderFlags & CRF_DisplayEnabled) != 0;
     // sctlAuthorApplyKeyframesForObject saves the old EAX returned by
     // ccmSetFlagsFor, not the cleared value.
     if (CharacterControlModel *const control = FindCharacterControlModel(character)) {
@@ -777,9 +778,9 @@ void RestoreAuthCharacterStates() {
             continue;
         SetPluralControlFor(character, static_cast<std::int16_t>(state.pluralControl));
         if (state.displayEnabled)
-            character->renderFlags |= 4U;
+            character->renderFlags |= CRF_DisplayEnabled;
         else
-            character->renderFlags &= ~4U;
+            character->renderFlags &= ~CRF_DisplayEnabled;
         // FindCCM_OR_flags assigns the captured flags, despite its name.
         SetCharacterControlModelFlags(character, state.controlFlags);
         SetHighModelAndFaceFlagsForChara(character, 0, 10.0f, 1.0f);

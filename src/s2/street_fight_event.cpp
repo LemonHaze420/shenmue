@@ -165,7 +165,8 @@ void StreetFightReactionNullsub(void *) {
 }
 
 void StreetFightRestoreChaseCamera(void *) {
-    camCtrlSetState(CameraState::ChaseGoal);
+    using enum CameraState;
+    camCtrlSetState(ChaseGoal);
 }
 
 void QueueStreetFightPlayerReaction(shen_name fighter, bool playerWon) {

@@ -130,8 +130,8 @@ void Handcuffs_Render(void *taskData) {
     const Matrix4x4 *const firstBone = charaGetBoneTransform(firstMotion, data.first.bone == 17 ? 21 : 14);
     const Matrix4x4 *const secondBone = charaGetBoneTransform(secondMotion, data.second.bone == 17 ? 21 : 14);
     Vector3 firstWrist{}, secondWrist{};
-    GetMotionBonePosition(firstMotion, data.first.bone, &firstWrist);
-    GetMotionBonePosition(secondMotion, data.second.bone, &secondWrist);
+    GetMotionBonePosition(firstMotion, static_cast<MotionBoneId>(data.first.bone), &firstWrist);
+    GetMotionBonePosition(secondMotion, static_cast<MotionBoneId>(data.second.bone), &secondWrist);
     const Vector3 midpoint{(firstWrist.x + secondWrist.x) * 0.5f, (firstWrist.y + secondWrist.y) * 0.5f, (firstWrist.z + secondWrist.z) * 0.5f};
     Vector3 viewMidpoint{};
     Matrix4x4::TransformPoint(midpoint, viewMidpoint);
@@ -189,7 +189,7 @@ void Handcuffs_Callback(void *taskData) {
 void Handcuffs_ConstrainWrist(std::uint32_t, Vector3 *position, MotionWork *, void *parameter) {
     const HandcuffConstraint &constraint = *static_cast<const HandcuffConstraint *>(parameter);
     Vector3 peerPosition{};
-    GetMotionBonePosition(FindMotionWork(constraint.peer->character), constraint.peer->bone, &peerPosition);
+    GetMotionBonePosition(FindMotionWork(constraint.peer->character), static_cast<MotionBoneId>(constraint.peer->bone), &peerPosition);
     const Vector3 delta = Vector3::Subtract(*position, peerPosition);
     const float distance = Vector3::CalcMagnitude(delta);
     if (distance > constraint.maximumDistance && distance < 3.0f) {
@@ -229,8 +229,8 @@ std::int32_t Handcuffs_Attach(shen_name firstCharacter, std::int32_t firstHand, 
     AssignMotionTargetCallback(firstMotion, Handcuffs_ConstrainWrist, data->first.bone);
     AssignMotionTargetCallback(secondMotion, Handcuffs_ConstrainWrist, data->second.bone);
     Vector3 firstPosition{}, secondPosition{};
-    GetMotionBonePosition(firstMotion, data->first.bone, &firstPosition);
-    GetMotionBonePosition(secondMotion, data->second.bone, &secondPosition);
+    GetMotionBonePosition(firstMotion, static_cast<MotionBoneId>(data->first.bone), &firstPosition);
+    GetMotionBonePosition(secondMotion, static_cast<MotionBoneId>(data->second.bone), &secondPosition);
     chainMidpoint = {(firstPosition.x + secondPosition.x) * 0.5f, (firstPosition.y + secondPosition.y) * 0.5f, (firstPosition.z + secondPosition.z) * 0.5f};
     chainAnchor = chainMidpoint;
     chainAnchor.y -= 2.0f;

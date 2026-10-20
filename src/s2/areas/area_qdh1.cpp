@@ -297,6 +297,7 @@ void InitializeQdh1Event(HLib::Task *task, std::int32_t entry) {
     Queue_EVT_UTL_LoadNPCChara_3(QDH_CHARACTERS, work->task);
 }
 void Qdh1EventCallback(void *data) {
+    using enum CameraState;
     QdhEventWork *const work = static_cast<QdhEventWork *>(data);
     switch (work->state) {
     case 0:
@@ -453,7 +454,7 @@ void Qdh1EventCallback(void *data) {
         if (DoesScenarioCharacterExist(QDH_BRIDGE_2))
             EVT_AT_ObjectDisp_1(QDH_BRIDGE_2, 0, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         LoadCutsceneAndSoundProgramForArea();
         EV_spmBeginSampleExecute();
         ExecuteCleanupFuncForAreaWithCachedScene();

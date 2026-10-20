@@ -37,6 +37,7 @@ void WaitBookOpening() {
 }
 } // namespace
 void BookIntroduction() {
+    using enum CameraState;
     switch (bookEventPhase.phase) {
     case 0:
         bookEventPhase.phase = 1;
@@ -80,7 +81,7 @@ void BookIntroduction() {
         EV_LoadAudio("0035A000", 1);
         EV_spmBeginSampleExecute();
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         EVT_AT_SetCam(2008, shen_name{0xffffffffU}, shen_name{0xffffffffU}, 0, 6, 0);
         camCtrlDisableFilmBars();
         SetBookActorPose(BOOK_RYO, {.x = 349.10001f, .y = 127.42f, .z = 232.59f}, 8192);

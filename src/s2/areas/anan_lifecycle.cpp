@@ -23,6 +23,7 @@
 #include <bit>
 namespace shenmue::s2::areas {
 void AnanFinish(void *data) {
+    using enum CameraState;
     AnanWork *work = static_cast<AnanWork *>(data);
     HLib::Task *caller = nullptr;
     if (work) {
@@ -96,7 +97,7 @@ void AnanFinish(void *data) {
             FinishLoading();
         }
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
     } else
         AnanFilm(0, 255, 0);
     SetPlayerControlEnabled(1);

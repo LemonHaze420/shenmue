@@ -13,6 +13,7 @@
 namespace shenmue::s2::areas {
 void SelectKshtCloudPackage(std::int32_t);
 void ExitKshtCloudAuthor(KshtAuthorController *parent) {
+    using enum CameraState;
     LoadCutsceneAndSoundProgramForArea();
     if (parent->selection != 7)
         clmdUtil(FindCharacterByScenarioName(KSHT_SIN), 0);
@@ -34,7 +35,7 @@ void ExitKshtCloudAuthor(KshtAuthorController *parent) {
         ResetKshtMotion(KSHT_RYO);
         camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         *parent->result = -1;
         HLib::DestroyTask(parent->task);
         SetScenarioCharacterTransparency(KSHT_RYO, 1);

@@ -296,13 +296,13 @@ extern const Vector3 *g_motnAnkleRelease;
 
 extern std::int32_t g_motnAnkleReleaseValid;
 
-extern MotionNodeRuntime *g_motnRightAnkleRow;
+extern MotionNodeRuntime *g_motnRightAnkleNode;
 
-extern MotionNodeRuntime *g_motnLeftAnkleRow;
+extern MotionNodeRuntime *g_motnLeftAnkleNode;
 
-extern MotionNodeRuntime *g_motnRightAnkleSourceRow;
+extern MotionNodeRuntime *g_motnRightAnkleSourceNode;
 
-extern MotionNodeRuntime *g_motnLeftAnkleSourceRow;
+extern MotionNodeRuntime *g_motnLeftAnkleSourceNode;
 
 extern Vector3 g_motnRightAnkleSampled;
 
@@ -387,9 +387,9 @@ namespace shenmue::s1 {
 bool MOTN_LoadAnimation(MotionInformationWork &motion, MotionNodeRuntime *nodes, std::uint16_t animationId, std::uint16_t targetRigIndex,
     MotnKeyframeTriplet *&keyStorage, MotionNodeRuntime *pairedNodes);
 
-void MOTN_IncrementDataOffsets(MotionNodeRuntime *rows);
+void MOTN_IncrementDataOffsets(MotionNodeRuntime *motionNodes);
 
-std::int32_t MOTN_LoadTransitionRows(MotionInformationWork &motion, std::uint16_t animationId);
+std::int32_t MOTN_LoadTransitionNodes(MotionInformationWork &motion, std::uint16_t animationId);
 }
 
 namespace shenmue::s1::motion_detail {
@@ -405,7 +405,7 @@ std::int16_t AdjustBoneRotation(MotionNodeRuntime &node, float blend, std::int16
 
 bool IsFootPlantingExcludedAnimation(std::uint16_t animationId);
 
-Vector3 BlendFootPlantingTarget(const MotionNodeRuntime &blendRow, const MotionNodeRuntime &activeRow);
+Vector3 BlendFootPlantingTarget(const MotionNodeRuntime &blendMotionNode, const MotionNodeRuntime &activeMotionNode);
 
 float SolveRyoFootPlantHeight(float targetY, float groundY, bool previousApplied, float &solvedY, float &previousRawY);
 
@@ -413,7 +413,7 @@ void motnUpdate(MotionInformationWork &motion, HeadAngleUpdateRefs refs, std::in
 
 void MOTN_ClampAnimationAngles(MotionInformationWork &motion, std::int16_t &yaw, std::int16_t &pitch);
 
-Matrix4x4 *MotionRowMatrix(MotionNodeRuntime &node);
+Matrix4x4 *MotionNodeMatrix(MotionNodeRuntime &node);
 
 std::int16_t Fixed16(float value);
 
@@ -427,11 +427,11 @@ float MOTN_CalculateKeyframeForTime(MotnKeyframeChannel &channel, float currentT
 namespace shenmue::s1::motion_detail {
 bool IsVectorWithinRadius(const Vector3 &point, float radius);
 
-MotionNodeRuntime *FindTrackedRow(MotionNodeRuntime *rows, std::uint32_t nodeId);
+MotionNodeRuntime *FindTrackedNode(MotionNodeRuntime *motionNodes, std::uint32_t nodeId);
 
 void MOTN_CaptureTrackedNodePosition(MotionInformationWork &motion);
 
-MotionNodeRuntime *FindRowFrom(MotionNodeRuntime *row, std::uint8_t nodeId);
+MotionNodeRuntime *FindMotionNodeFrom(MotionNodeRuntime *motionNode, std::uint8_t nodeId);
 
 Vector3 WorkLocalPoint(const Vector3 &point);
 
@@ -455,7 +455,7 @@ bool MOTN_EvaluatePreviousPoseBlend(MotionInformationWork &motion);
 
 bool MOTN_EvaluateFrameCarryBlend(MotionInformationWork &motion);
 
-bool MOTN_EvaluateTransitionRowsBlend(MotionInformationWork &motion);
+bool MOTN_EvaluateTransitionNodesBlend(MotionInformationWork &motion);
 
 std::int32_t ApplyBasePose(MotionInformationWork &motion, std::uint16_t animationId);
 
@@ -465,9 +465,9 @@ void ApplyBoneTransformRecursive(MotionNodeRuntime &node, const Matrix4x4 *trans
 
 void AddFloatToIntArray(MotionNodeRuntime &node, const Vector3 &offset);
 
-MotionNodeRuntime *CaptureAnkleScratch(MotionNodeRuntime *row, std::uint8_t nodeId, std::int32_t &valid, Vector3 &position);
+MotionNodeRuntime *CaptureAnkleScratch(MotionNodeRuntime *motionNode, std::uint8_t nodeId, std::int32_t &valid, Vector3 &position);
 
-void ClearEvaluatedFlags(MotionNodeRuntime *rows);
+void ClearEvaluatedFlags(MotionNodeRuntime *motionNodes);
 
 float MOTN_EvaluateKeyframeSlope(MotnKeyframeChannel &channel, float time);
 
@@ -475,7 +475,7 @@ bool MOTN_EvaluateCubicSequenceBlend(MotionInformationWork &motion);
 
 bool MOTN_EvaluateRawMotion(MotionInformationWork &motion);
 
-void MOTN_UpdateRawSecondaryPose(MotionInformationWork &motion, MotionNodeRuntime &rows);
+void MOTN_UpdateRawSecondaryPose(MotionInformationWork &motion, MotionNodeRuntime &motionNodes);
 }
 
 namespace shenmue::s1 {
@@ -497,7 +497,7 @@ void AllocateMotionNodes(MotionNodeRuntime *&nodes, std::int64_t &cookie, Matrix
 }
 
 namespace shenmue::s1 {
-MotionNodeRuntime *MOTN_FindNodeRow(MotionNodeRuntime *row, std::int32_t nodeId);
+MotionNodeRuntime *MOTN_FindNode(MotionNodeRuntime *motionNode, std::int32_t nodeId);
 }
 
 namespace shenmue::s1::motion_detail {

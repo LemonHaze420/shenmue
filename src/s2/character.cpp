@@ -427,31 +427,31 @@ void SetCharacterShadowY(Character *character, float height) {
 }
 void SetCharacterStoredShadowYEnabled(Character *character, std::int32_t enabled) {
     if (character)
-        character->flags = enabled ? character->flags | CharacterUseStoredShadowY : character->flags & ~CharacterUseStoredShadowY;
+        character->flags = enabled ? character->flags | CF_UseStoredShadowY : character->flags & ~CF_UseStoredShadowY;
 }
 std::int32_t GetEntityType(const Character *character) {
     return character ? character->type : -1;
 }
 bool charaCheckFlags(const Character *character) {
-    return character && (character->flags & CharacterFlag40) != 0;
+    return character && (character->flags & CF_Unknown40) != 0;
 }
 bool charaIsDisplayCheckEnabled(const Character *character) {
-    return character && (character->flags & CharacterDisplayCheckEnabled) != 0;
+    return character && (character->flags & CF_DisplayCheckEnabled) != 0;
 }
 bool charaGetWasVisible(const Character *character) {
-    return character && (character->flags & CharacterVisibleThisCheck) != 0;
+    return character && (character->flags & CF_VisibleThisCheck) != 0;
 }
 bool charaForceVisibleCheck(const Character *character) {
-    return character && (character->flags & CharacterForceVisibleCheck) != 0;
+    return character && (character->flags & CF_ForceVisibleCheck) != 0;
 }
 std::uint32_t charaHasMirroredFlags(const Character *character) {
-    return character ? character->flags & CharacterDrawMirrored : 0;
+    return character ? character->flags & CF_DrawMirrored : 0;
 }
 bool IsCharacterActive(const Character *character) {
-    return character && (character->flags & CharacterActive) != 0;
+    return character && (character->flags & CF_Active) != 0;
 }
 bool IsCharacterUsingStoredShadowY(const Character *character) {
-    return character && (character->flags & CharacterUseStoredShadowY) != 0;
+    return character && (character->flags & CF_UseStoredShadowY) != 0;
 }
 bool HasCharacterFacialModel(const Character *character) {
     return character && character->facialModel != nullptr;
@@ -462,19 +462,19 @@ void ClearCharacterFacialModel(Character *character) {
 }
 void charaSetDisplayEnabledFlag(Character *character, std::int32_t enabled) {
     if (character)
-        character->flags = enabled ? character->flags | CharacterDisplayCheckEnabled : character->flags & ~CharacterDisplayCheckEnabled;
+        character->flags = enabled ? character->flags | CF_DisplayCheckEnabled : character->flags & ~CF_DisplayCheckEnabled;
 }
 void charaSetFlags(Character *character, std::int32_t enabled) {
     if (character)
-        character->flags = enabled ? character->flags | CharacterActive : character->flags & ~CharacterActive;
+        character->flags = enabled ? character->flags | CF_Active : character->flags & ~CF_Active;
 }
 void charaToggleFlag(Character *character, std::int32_t enabled) {
     if (character)
-        character->flags = enabled ? character->flags | CharacterFlag40 : character->flags & ~CharacterFlag40;
+        character->flags = enabled ? character->flags | CF_Unknown40 : character->flags & ~CF_Unknown40;
 }
 void SetMirrored(Character *character, std::int32_t enabled) {
     if (character)
-        character->flags = enabled ? character->flags | CharacterDrawMirrored : character->flags & ~CharacterDrawMirrored;
+        character->flags = enabled ? character->flags | CF_DrawMirrored : character->flags & ~CF_DrawMirrored;
 }
 void charaSetFlagFor(Character *character, std::int32_t flag) {
     if (character)
@@ -1043,7 +1043,7 @@ void mtwkDrawCharacterCore(Character *character) {
                 context->entityTransform = &mirroredEntity;
             if (motionWork) {
                 BindMirroredMotionControllerMatricesToModelNodes(motionWork, const_cast<MT7Model *>(context->model));
-                motionWork->runtime.seqFlags &= ~MotionSequenceModelMatricesBound;
+                motionWork->runtime.seqFlags &= ~MSF_ModelMatricesBound;
                 Matrix4x4::SetActiveTransform(context->drawBase);
             }
             SetLegacyMirroredDrawMode(1);
@@ -1213,7 +1213,7 @@ void CharacterHandler_Callback(void *taskData) {
     auto *const character = static_cast<Character *>(taskData);
     if (!character || character->entity.name.name != CHARACTER_ENTITY.name)
         return;
-    if ((character->flags & 0x24U) == CharacterActive) {
+    if ((character->flags & 0x24U) == CF_Active) {
         for (std::int16_t &angle : g_characterHandWristAngles)
             angle = 0;
         UpdateModelComponents(character);
@@ -1250,7 +1250,7 @@ Character *EnqueueCharacterHandler(std::uint8_t nextFunctionIndex, HLib::Task *&
     character->field80 = 1.0f;
     character->field84 = 1.0f;
     character->radius = 1.8f;
-    character->flags = CharacterValid | CharacterActive | CharacterFlag40 | CharacterDrawMirrored;
+    character->flags = CF_Valid | CF_Active | CF_Unknown40 | CF_DrawMirrored;
     character->model = nullptr;
     character->shadowModel = nullptr;
     character->drawDistance = 0.0f;
@@ -1279,8 +1279,8 @@ Character *EnqueueCharacterHandler(std::uint8_t nextFunctionIndex, HLib::Task *&
     character->facialModel = nullptr;
     character->useUnknownFlag = 0;
     character->data2 = nullptr;
-    EV_SetCharDisplay(character, 0, 1);
-    EV_SetCharDisplay(character, 3, 0);
+    EV_SetCharDisplay(character, CVM_All, 1);
+    EV_SetCharDisplay(character, CVM_DisplayEnabled, 0);
     return character;
 }
 CharacterResource *AddCharacterHandler(std::int32_t type) {
@@ -1452,7 +1452,7 @@ void ApplyCharacterTableFlags(Character *character, const Record &record) {
             continue;
         const char *const value = argument.string;
         if (EqualCharacterToken(value, "DISP"))
-            EV_SetCharDisplay(character, 3, 1);
+            EV_SetCharDisplay(character, CVM_DisplayEnabled, 1);
         else if (EqualCharacterToken(value, "KILL"))
             ctrlSetKillAndIncrementCounter(character, 1);
         else if (EqualCharacterToken(value, "MAPEV"))
@@ -1473,15 +1473,15 @@ void ApplyCharacterTableFlags(Character *character, const Record &record) {
 
 void ApplyAuthoredCharacterDisplay(Character &character, bool motionOnly, bool shadowOff, const Record *flags) {
     if (!motionOnly) {
-        character.flags |= CharacterDisplayCheckEnabled;
+        character.flags |= CF_DisplayCheckEnabled;
         if (shadowOff)
-            character.flags &= ~CharacterDisplayCheckEnabled;
+            character.flags &= ~CF_DisplayCheckEnabled;
     }
     if (!flags)
         return;
     for (const Argument &argument : flags->arguments) {
         if (argument.type == ArgumentType::String && EqualCharacterToken(argument.string, "DISP"))
-            character.renderFlags |= 0x04U;
+            character.renderFlags |= CRF_DisplayEnabled;
     }
 }
 
@@ -1933,7 +1933,7 @@ bool ApplyCharacterTableComponents(CharacterResource *resource, const std::vecto
             }
         }
         AllocateScenarioFreeTalkCharacter(&character);
-        character.flags |= CharacterNpcLoggerTarget;
+        character.flags |= CF_NpcLoggerTarget;
     } else if (!motionOnly && FindRecord(*components, "Object")) {
         if (!AttachObjectXFormsComponent(&character)) {
             FreeCharacter(&character);
@@ -2335,7 +2335,7 @@ void ForEachLiveCharacterInMapOrder(CharacterMapVisitor visitor, void *context) 
     for (void *const head : control->characterTable) {
         for (auto *entry = static_cast<CharacterMapEntry *>(head); entry; entry = entry->next) {
             Character *const character = entry->character;
-            if (!character || character->entity.name.name != SHEN_NAME(CEWP) || (character->flags & CharacterValid) == 0) {
+            if (!character || character->entity.name.name != SHEN_NAME(CEWP) || (character->flags & CF_Valid) == 0) {
                 continue;
             }
             visitor(character, context);
@@ -2454,7 +2454,7 @@ std::int32_t g_npcLoggerEnabled{};
 
 namespace {
 
-constexpr std::array<std::uint8_t, 7> visibilityModes{0x3f, 1, 2, 4, 8, 0x10, 0x20};
+constexpr std::array<std::uint8_t, 7> visibilityModes{CRF_All, CRF_Unknown01, CRF_Unknown02, CRF_DisplayEnabled, CRF_Unknown08, CRF_InRange, CRF_Unknown20};
 std::FILE *npcLogFile{};
 
 
@@ -2474,7 +2474,7 @@ std::int32_t npcLogDisplayChange(Character *character, std::int32_t visible) {
     std::array<char, 5> areaId{};
     std::memcpy(areaId.data(), &g_currentMap.name, 4);
     const std::int32_t result =
-        d3t_debug_log("Src\\character.c", 1808, "CW_EnableDisplay %s [%02d:%s:%02d]", charaId.data(), g_actNumber, areaId.data(), g_entryPoint);
+        d3t::debug_log("Src\\character.c", 1808, "CW_EnableDisplay %s [%02d:%s:%02d]", charaId.data(), g_actNumber, areaId.data(), g_entryPoint);
     if (!npcLogFile)
         return result;
     DateTime dateTime{};
@@ -2491,14 +2491,14 @@ std::int32_t npcLogDisplayChange(Character *character, std::int32_t visible) {
 
 } // namespace
 
-std::uint8_t EV_SetCharDisplay(Character *character, std::int32_t visibilityType, std::int32_t enabled) {
-    if (!character || visibilityType >= 7)
+std::uint8_t EV_SetCharDisplay(Character *character, CharaVisibilityMode visibilityType, std::int32_t enabled) {
+    if (!character || visibilityType >= CVM_Count)
         return 0;
     const std::uint8_t mask = visibilityModes[static_cast<std::size_t>(visibilityType)];
     const std::uint8_t previous = character->renderFlags;
     character->renderFlags = static_cast<std::uint8_t>(enabled != 0 ? previous | mask : previous & ~mask);
     const std::uint8_t result = enabled != 0 ? static_cast<std::uint8_t>(visibilityType) : character->renderFlags;
-    if (g_npcLoggerEnabled == 0 || (character->flags & CharacterNpcLoggerTarget) == 0)
+    if (g_npcLoggerEnabled == 0 || (character->flags & CF_NpcLoggerTarget) == 0)
         return result;
     const std::int32_t visible = (mask & character->renderFlags) != 0;
     if (visible != ((previous & mask) != 0))
@@ -2510,13 +2510,13 @@ void charaSetVisibilityFlagTo(Character *character, std::uint32_t set) {
     if (!character)
         return;
     if (set != 0)
-        character->flags |= CharacterVisibleThisCheck;
+        character->flags |= CF_VisibleThisCheck;
     else
-        character->flags &= ~CharacterVisibleThisCheck;
+        character->flags &= ~CF_VisibleThisCheck;
 }
 
 bool IsOfThisVisibilityType(const Character *character, std::uint32_t mode) {
-    constexpr std::uint8_t masks[]{0x3f, 1, 2, 4, 8, 0x10, 0x20};
+    constexpr std::uint8_t masks[]{CRF_All, CRF_Unknown01, CRF_Unknown02, CRF_DisplayEnabled, CRF_Unknown08, CRF_InRange, CRF_Unknown20};
     return character && mode < std::size(masks) && (character->renderFlags & masks[mode]) == masks[mode];
 }
 
@@ -2799,7 +2799,7 @@ void charaCollisionDistanceChecks(void *parameter) {
         Vector3 position = GetCharacterWorldPosition(character);
         Vector3i rotation = GetCharacterWorldRotation(character);
         float ground = charaGetShadowY(character);
-        if ((character->flags & CharacterUseStoredShadowY) == 0) {
+        if ((character->flags & CF_UseStoredShadowY) == 0) {
             Vector3 probe = position;
             probe.y += 0.5f;
             ground = shenFindIntersectionWithScene(probe, position.z);
@@ -2861,7 +2861,7 @@ void charaCollisionDistanceChecks(void *parameter) {
 }
 
 void shenExecuteCharaDrawCallbacks(Character *character) {
-    if (character && (character->flags & CharacterVisibleThisCheck) != 0 && character->collisionCheck)
+    if (character && (character->flags & CF_VisibleThisCheck) != 0 && character->collisionCheck)
         HLib::ExecuteCallbackNow(character->collisionCheck, character);
 }
 
@@ -3036,8 +3036,8 @@ void charaHandlerDrawObjectInternal(void *parameter) {
 std::uint32_t charaHandlerDrawHuman(Character *character) {
     if (!character)
         return 0;
-    const std::uint32_t mask = character->renderFlags & 0x3fU;
-    if (mask != 0x3fU)
+    const std::uint32_t mask = character->renderFlags & CRF_All;
+    if (mask != CRF_All)
         return mask;
     return static_cast<std::uint32_t>(HLib::ExecuteCallbackNow(charaHandlerDrawHumanInternal, character));
 }
@@ -3046,8 +3046,8 @@ std::uint32_t charaHandlerDrawHuman(Character *character) {
 std::uint32_t charaHandlerDrawObject(Character *character) {
     if (!character)
         return 0;
-    const std::uint32_t mask = character->renderFlags & 0x3fU;
-    if (mask != 0x3fU)
+    const std::uint32_t mask = character->renderFlags & CRF_All;
+    if (mask != CRF_All)
         return mask;
     return static_cast<std::uint32_t>(HLib::ExecuteCallbackNow(charaHandlerDrawObjectInternal, character));
 }
@@ -3107,11 +3107,11 @@ void TestCharacterVisibility(Character *character, void *) {
     const std::uint8_t visibilityOverride = GetCharaFlag(character);
     SetCharaFlag(character, 0);
     bool shouldBeVisible = false;
-    if ((character->renderFlags & 0x04U) != 0) {
+    if ((character->renderFlags & CRF_DisplayEnabled) != 0) {
         bool cameraVisible = true;
         if (const MotionWork *const work = FindMotionWork(character)) {
-            if ((character->renderFlags & 0x10U) != 0) {
-                if (pointCount != 0 && (character->flags & CharacterFlag40) != 0) {
+            if ((character->renderFlags & CRF_InRange) != 0) {
+                if (pointCount != 0 && (character->flags & CF_Unknown40) != 0) {
                     const Vector4 &root = work->rig.lowerBody.pelvisWorld.rows[3];
                     cameraVisible = visibilityOverride != 0 ? (visibilityOverride & 1U) != 0 : camCtrlCheckPosition({root.x, root.y, root.z}, 0.4f);
                 }
@@ -3128,9 +3128,9 @@ void TestCharacterVisibility(Character *character, void *) {
                 if (frustumVisible && pointCount != 0 && charaCheckFlags(character))
                     cameraVisible = camCtrlCheckPosition(root, radius);
             }
-            EV_SetCharDisplay(character, 1, frustumVisible);
+            EV_SetCharDisplay(character, CVM_FrustumResult, frustumVisible);
         }
-        EV_SetCharDisplay(character, 2, cameraVisible);
+        EV_SetCharDisplay(character, CVM_CameraOcclusionResult, cameraVisible);
     }
     const bool visible = charaIsDisplayCheckEnabled(character) && (shouldBeVisible || charaForceVisibleCheck(character));
     charaSetVisibilityFlagTo(character, visible);
@@ -3293,6 +3293,7 @@ float g_characterDebugCameraRotation{};
 shen_name g_characterDebugSelectedName{};
 
 void DrawRegisteredCharacterDebug() {
+    using enum CameraState;
     if (!g_mapControlTask || !HLib::GetTaskParameter(g_mapControlTask) || !ImGui::CollapsingHeader("Registered Characters") || !ImGui::TreeNode("Displayed"))
         return;
     bool logging = (g_npcLoggerEnabled & 0xff) != 0;
@@ -3304,11 +3305,11 @@ void DrawRegisteredCharacterDebug() {
             g_characterDebugSnapCamera = (g_characterDebugSnapCamera & ~0xff) | static_cast<std::int32_t>(snapCamera);
         ImGui::SliderFloat("Camera Rotation", &g_characterDebugCameraRotation, 0.0f, 360.0f, nullptr);
         if (g_characterDebugSnapCamera) {
-            if (camCtrlGetState() != CameraState::Snap)
-                camCtrlSetState(CameraState::Snap);
+            if (camCtrlGetState() != Snap)
+                camCtrlSetState(Snap);
         } else {
-            if (camCtrlGetState() == CameraState::Snap)
-                camCtrlSetState(CameraState::Init);
+            if (camCtrlGetState() == Snap)
+                camCtrlSetState(Init);
             g_characterDebugSelectedName = {};
         }
         Character *selected = nullptr;
@@ -3317,7 +3318,7 @@ void DrawRegisteredCharacterDebug() {
             for (CharacterMapEntry *entry = static_cast<CharacterMapEntry *>(head); entry; entry = entry->next) {
                 Character *const character = entry->character;
                 const shen_name name = scenGetCharaName(control->scenarioTask, character);
-                if ((character->flags & CharacterNpcLoggerTarget) && IsOfThisVisibilityType(character, 0)) {
+                if ((character->flags & CF_NpcLoggerTarget) && IsOfThisVisibilityType(character, 0)) {
                     char label[5]{};
                     std::memcpy(label, &name.name, 4);
                     if (ImGui::TreeNodeEx(label, ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_Leaf)) {

@@ -494,17 +494,19 @@ void QrdkWrongRoomCallback(void *data) {
 }
 
 void QrdkReturnToRouteCallback(void *data) {
+    using enum CameraState;
     if (!data) {
         HLib::SetCurrentTaskTo(QrdkExitCallback);
         return;
     }
     QrdkPlaceOnRoute(static_cast<QrdkWork *>(data));
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     HLib::SetCurrentTaskTo(QrdkRunCallback);
 }
 
 void QrdkFoundCallback(void *data) {
+    using enum CameraState;
     QrdkWork *const work = static_cast<QrdkWork *>(data);
     if (!work) {
         HLib::SetCurrentTaskTo(QrdkExitCallback);
@@ -515,7 +517,7 @@ void QrdkFoundCallback(void *data) {
     work->action &= ~2U;
     QrdkQueueSerif("発見　イベント終了", 1, 100, QrdkResumeOnSerifFinished);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     mtwkRequestMotion(scenFindMotionwork(QRDK_RYO), 0xf003, MotionRegion::LowerBody);
     HLib::SetCurrentTaskTo(QrdkExitCallback);
     HLib::SetupTaskDelay(-1);

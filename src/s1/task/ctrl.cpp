@@ -280,7 +280,7 @@ static_assert(sizeof(MapQuerySet) == 0x68);
 struct MapEventWork {
     std::uint32_t flags;
     std::int32_t eventId;
-    std::uint32_t reserved_008;
+    std::uint32_t kind;
     std::uint8_t eventFlags[32];
 };
 #pragma pack(pop)
@@ -340,7 +340,7 @@ void MapEV_Callback(Character *character, MapEventWork *work) {
     const std::uint32_t oldFlags = work->flags;
     work->flags = ((oldFlags & 2U) != 0U || eventId == 0xffU) ? oldFlags & ~1U : oldFlags | 1U;
     work->eventId = static_cast<std::int32_t>(eventId);
-    work->reserved_008 = packed >> 16U;
+    work->kind = packed >> 16U;
 }
 
 void MapEV_ComponentCallback(Character *character, void *rawWork) {
@@ -387,13 +387,13 @@ void MapEventScenario_Parse(Character *character, HLib::Task *scenarioTask) {
         return;
 
     auto *const event = reinterpret_cast<MapEventWork *>(const_cast<CharacterComponentNode *>(component) + 1);
-    if ((event->flags & 1U) != 0U && event->reserved_008 != 4U) {
+    if ((event->flags & 1U) != 0U && event->kind != MEK_WhileInside) {
         return;
     }
 
     const std::uint32_t eventId = static_cast<std::uint32_t>(event->eventId);
     if (eventId == 0xffU) {
-        character->eventGroup = event->reserved_008;
+        character->eventGroup = event->kind;
         event->flags |= 1U;
         return;
     }
@@ -420,22 +420,22 @@ void MapEventScenario_Parse(Character *character, HLib::Task *scenarioTask) {
         return (pad->pressedPriority & kActionButton) != 0U;
     };
 
-    switch (event->reserved_008) {
-    case 0:
-    case 4:
+    switch (event->kind) {
+    case MEK_OnEnter:
+    case MEK_WhileInside:
         parseEvent();
         event->flags |= 1U;
         return;
-    case 1:
+    case MEK_OnAction:
         if (actionPressed())
             parseEvent();
         return;
-    case 2:
+    case MEK_OnEnterOnce:
         eventByte = static_cast<std::uint8_t>(eventByte & static_cast<std::uint8_t>(~mask));
         parseEvent();
         event->flags |= 1U;
         return;
-    case 3:
+    case MEK_OnActionOnce:
         if (!actionPressed())
             return;
         eventByte = static_cast<std::uint8_t>(eventByte & static_cast<std::uint8_t>(~mask));

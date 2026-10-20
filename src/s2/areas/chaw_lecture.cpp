@@ -91,6 +91,7 @@ bool ChawLectureAllowsInput(ChawEventWork *work) {
 }
 
 void ChawEndLectureCallback(void *data) {
+    using enum CameraState;
     ChawEventWork *work = static_cast<ChawEventWork *>(data);
     switch (work->lecturePhase) {
     case 11:
@@ -153,7 +154,7 @@ void ChawEndLectureCallback(void *data) {
             EV_AT_SetPos(CHAW_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, {59.6f, 103.4f, 308.7f});
             EV_AT_SetAngY(CHAW_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, {0, 57344, 0});
             mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0xf003, MotionRegion::LowerBody);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             camCtrlSetFovTransitionTo(true);
             SetRenderClockAndCompassTo(0);
             work->state = 1;

@@ -2093,14 +2093,15 @@ void GameMovesSceneCallback() {
 }
 
 std::int64_t DestroyGameMoves() {
+    using enum CameraState;
     if (!g_uiElements[static_cast<std::size_t>(UIElement::GameMenu)].isVisible) {
         MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
         if (control && control->ryo) {
             Character *const player = static_cast<Character *>(control->ryo);
-            EV_SetCharDisplay(player, 3, 1);
+            EV_SetCharDisplay(player, CVM_DisplayEnabled, 1);
             charaToggleFlag(player, 1);
         }
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
     }
     SetUISceneCallback(nullptr);
     ReleaseWazamakiPreviewModels();
@@ -2897,12 +2898,13 @@ std::int64_t GameMenuInput() {
 }
 
 std::int64_t TickGameMenu() {
+    using enum CameraState;
     const auto *control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *const player = control ? static_cast<Character *>(control->ryo) : nullptr;
     if (player) {
-        EV_SetCharDisplay(player, 3, 0);
+        EV_SetCharDisplay(player, CVM_DisplayEnabled, 0);
         charaSetVisibilityFlagTo(player, 0);
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
         camCtrlSetPerspective(0x2666);
         Vector3 target = GetCharacterWorldPosition(player);
         target.y += 1.6f;
@@ -4914,6 +4916,7 @@ void vfPostFightLoadingNullsub(VFMA_t *) {
 }
 
 void vfRestorePostFightUIState(VFMA_t *game) {
+    using enum CameraState;
     const std::uint32_t saved = game->savedUiState;
     if (saved & 0x400)
         plymSetSpecialMode(1);
@@ -4943,10 +4946,10 @@ void vfRestorePostFightUIState(VFMA_t *game) {
         HLib::Task *const task = HLib::FindNextTaskInQueueByIndexWithDepth(9, 1);
         if (task)
             HLib::GetTaskParameter(task);
-        if (EV_camCtrlToggleCombatCamera(2, -1) == 0 && camCtrlGetState() == CameraState::ChaseGoal) {
+        if (EV_camCtrlToggleCombatCamera(2, -1) == 0 && camCtrlGetState() == ChaseGoal) {
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Event);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Event);
+            camCtrlSetState(Init);
             camCtrlSetPerspective(static_cast<std::uint16_t>(game->savedPerspective));
         }
     }

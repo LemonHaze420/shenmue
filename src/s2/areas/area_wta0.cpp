@@ -109,6 +109,7 @@ void WakeAuthorCallback(void *) {
         snapAssignFrmCntFlags(136, 120);
 }
 void WakeAfterAuthorCallback(void *) {
+    using enum CameraState;
     EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
@@ -136,7 +137,7 @@ void WakeAfterAuthorCallback(void *) {
         HLib::DestroyCurrentTask();
     } else {
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         sleepEventData.flags = 1;
         sleepEventData.continuation = SleepCompleteCallback;
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

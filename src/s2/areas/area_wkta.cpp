@@ -38,7 +38,8 @@ void WktaMain(std::uintptr_t argument) {
 }
 // @verified - p
 void FinishWkta(WktaWork *work) {
-    (void)camCtrlSetState(CameraState::Init);
+    using enum CameraState;
+    (void)camCtrlSetState(Init);
     (void)LoadCutsceneAndSoundProgramForArea();
     SetPlayerControlEnabled(1);
     (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WKTA"), 0);
@@ -48,6 +49,7 @@ void FinishWkta(WktaWork *work) {
 }
 // @verified - p
 void WktaOpeningCallback(void *data) {
+    using enum CameraState;
     auto &work = *static_cast<WktaWork *>(data);
     switch (work.phase) {
     case 1:
@@ -91,7 +93,7 @@ void WktaOpeningCallback(void *data) {
         break;
     case 4:
         (void)EVT_AT_SetMot(WKTA_KKI, 0x1303, 0, 1, 0, 0);
-        (void)camCtrlSetState(CameraState::Init);
+        (void)camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         (void)EV_npcUpdateFlags(WKTA_KKI);
         HLib::SetCurrentTaskTo(WktaClosingCallback);

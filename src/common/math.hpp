@@ -233,6 +233,7 @@ static_assert(sin_fixed16(0) == 0.0f && cos_fixed16(0) > 0.99999f);
 
 std::uint16_t atan2_fixed16(float y, float x);
 std::int16_t asin_fixed16(float value);
+float cot_fixed16(std::uint16_t angle);
 float ceil_float(float value);
 std::int32_t TruncateToInt32(float value);
 float fast_logf_approx(float value);

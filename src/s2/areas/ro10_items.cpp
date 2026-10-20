@@ -127,6 +127,7 @@ void RefreshRo10Items(Ro10Work &work) {
     }
 }
 void UpdateRo10ItemCamera(const Ro10Shop &shop, std::int32_t column, std::int32_t row, float distance, std::int32_t frames) {
+    using enum CameraState;
     Vector3 target;
     Vector3i rotation;
     GetRo10ItemTransform(shop, column, row, &target, &rotation, nullptr, false);
@@ -146,7 +147,7 @@ void UpdateRo10ItemCamera(const Ro10Shop &shop, std::int32_t column, std::int32_
         target.y = Ro10FlushSmall(target.y + Ro10FlushSmall(Ro10FlushSmall(previousTarget.y - target.y) * blend));
         target.z = Ro10FlushSmall(target.z + Ro10FlushSmall(Ro10FlushSmall(previousTarget.z - target.z) * blend));
     }
-    camCtrlSetState(CameraState::Callback);
+    camCtrlSetState(Callback);
     camCtrlSetNextPosition(position);
     camCtrlSetTargetPosition(target);
     camCtrlSetFov(7281);

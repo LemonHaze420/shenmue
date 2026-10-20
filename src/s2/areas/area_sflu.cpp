@@ -213,6 +213,7 @@ void PlaceDebugCharacters(StreetFightEventWork *work) {
     SetScenarioCharacterType(fighter, CharacterTypeStencilShadow);
 }
 void CleanupDebug(StreetFightEventWork *work) {
+    using enum CameraState;
     StreetFightStartParameters *const parameters = work->startParameters;
     ReleaseStreetFightCharacter(work->fighters[work->fighterIndex]);
     ET_AT_KillWork(work->characterReadTask);
@@ -234,7 +235,7 @@ void CleanupDebug(StreetFightEventWork *work) {
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     if (parameters->signal)
         *parameters->signal = 0;
@@ -1749,6 +1750,7 @@ void ConfigureVictoryHands() {
     Queue_EVT_AT_CtrlHandUp_1(STREET_FIGHT_RYO, 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 16, 100);
 }
 void MainCallback(void *parameter) {
+    using enum CameraState;
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     switch (work.state) {
     case 8:
@@ -2131,7 +2133,7 @@ void MainCallback(void *parameter) {
         SetHighModelXYZ(FindCharacterByScenarioName(SFLU_SF4), 1, 1, 0);
         ConfigureTrainingHands();
         if (cameraManualMode) {
-            camCtrlSetState(CameraState::Event);
+            camCtrlSetState(Event);
             camCtrlSetNextPosition({241.81500244140625f, 84.55899810791016f, 129.4429931640625f});
             camCtrlSetTargetPosition({237.87210083007812f, 82.35199737548828f, 125.6709976196289f});
         } else {
@@ -2513,6 +2515,7 @@ std::int32_t DefeatConversation(void *parameter) {
     return 180;
 }
 void CleanupNormalCallback(void *parameter) {
+    using enum CameraState;
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     StreetFightStartParameters *const start = work.startParameters;
     const std::int32_t result = work.battleStatus;
@@ -2534,7 +2537,7 @@ void CleanupNormalCallback(void *parameter) {
         EV_AT_SetAngY(STREET_FIGHT_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, SFLU_STORY_EXIT_ROTATION);
         mtwkRequestMotion(scenFindMotionwork(STREET_FIGHT_RYO), 0xf003, MotionRegion::LowerBody);
         SetMotionRegionFlag(scenFindMotionwork(STREET_FIGHT_RYO), 71, 0, MotionRegion::LowerBody);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
     } else if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014))
         EV_scenQueueLoad(4, SHEN_NAME(OMAK), 1);

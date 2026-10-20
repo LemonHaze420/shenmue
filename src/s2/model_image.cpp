@@ -134,7 +134,7 @@ ModelManagerEntry *AllocateImageEntry(HLib::Task *task, const char *name) {
     ModelManagerTaskData &manager = *ManagerData(task);
     ModelManagerEntry *entry = nullptr;
     for (ModelManagerEntry &candidate : manager.entries)
-        if (!(candidate.flags & 1U)) {
+        if (!(candidate.flags & MIEF_InUse)) {
             entry = &candidate;
             break;
         }
@@ -146,7 +146,7 @@ ModelManagerEntry *AllocateImageEntry(HLib::Task *task, const char *name) {
     if (!image)
         return nullptr;
     entry->image = image;
-    entry->flags = 1;
+    entry->flags = MIEF_InUse;
     entry->distancePriority = 0;
     ++image->referenceCount;
     entry->instance = nullptr;
@@ -216,14 +216,14 @@ MT7Model *ResolveImageEntry(ModelManagerEntry &entry, std::uint8_t flags) {
         }
         source = selected->model;
     }
-    if ((entry.flags & 2U) || source != entry.source) {
+    if ((entry.flags & MIEF_SelectionDirty) || source != entry.source) {
         if (entry.instance)
             ReleaseMT7ModelNodeTreeClone(entry.instance);
         entry.instance = nullptr;
         entry.source = nullptr;
         if (source)
             entry.instance = CloneImageSelection(*source, entry, flags);
-        entry.flags &= ~2U;
+        entry.flags &= ~MIEF_SelectionDirty;
         entry.source = source;
     }
     return entry.instance;
@@ -533,7 +533,7 @@ void SetupImageModuleVariants(Character *character, HLib::Task *manager, const c
         ModelManagerEntry &entry = *image.entries[index];
         const std::uint32_t childIndex = count ? index + 1U : 0U;
         if (entry.childIndex != childIndex || entry.groupId != 63 || entry.variant != 0) {
-            entry.flags |= 2U;
+            entry.flags |= MIEF_SelectionDirty;
             entry.childIndex = childIndex;
             entry.groupId = 63;
             entry.variant = 0;

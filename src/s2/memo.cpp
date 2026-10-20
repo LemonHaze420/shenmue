@@ -445,12 +445,13 @@ void ReleaseMemoResources() {
 }
 
 bool SetupMemoCamera() {
+    using enum CameraState;
     MapControlData *const control = MemoMapControl();
     auto *const player = control ? static_cast<Character *>(control->ryo) : nullptr;
     if (!player)
         return false;
     memoCamera.playerDisplay = IsOfThisVisibilityType(player, 3);
-    memoCamera.playerVisibility = (player->flags & CharacterVisibleThisCheck) != 0;
+    memoCamera.playerVisibility = (player->flags & CF_VisibleThisCheck) != 0;
     memoCamera.playerAlpha = player->alpha;
     memoCamera.state = camCtrlGetState();
     memoCamera.perspective = camCtrlGetPerspective();
@@ -460,8 +461,8 @@ bool SetupMemoCamera() {
     memoCamera.selectedHelp = static_cast<std::uint16_t>(GetUiFlag(1));
     cameraSaved = true;
     player->renderFlags &= static_cast<std::uint8_t>(~4U);
-    player->flags &= ~CharacterVisibleThisCheck;
-    camCtrlSetState(CameraState::Event);
+    player->flags &= ~CF_VisibleThisCheck;
+    camCtrlSetState(Event);
     camCtrlSetPerspective(9830);
     notebookTranslation = 0.0f;
     memoNodes[3]->scale = {};
@@ -493,8 +494,8 @@ void RestoreMemoCamera() {
     camCtrlSetTargetPosition(memoCamera.target);
     camCtrlSetFovTransitionTo(true);
     if (player) {
-        player->renderFlags = static_cast<std::uint8_t>((player->renderFlags & ~4U) | (memoCamera.playerDisplay ? 4U : 0U));
-        player->flags = (player->flags & ~CharacterVisibleThisCheck) | (memoCamera.playerVisibility ? CharacterVisibleThisCheck : 0U);
+        player->renderFlags = static_cast<std::uint8_t>((player->renderFlags & ~CRF_DisplayEnabled) | (memoCamera.playerDisplay ? 4U : 0U));
+        player->flags = (player->flags & ~CF_VisibleThisCheck) | (memoCamera.playerVisibility ? CF_VisibleThisCheck : 0U);
         modelSetCharaAlpha(player, memoCamera.playerAlpha);
     }
     if (control && control->windowTask)

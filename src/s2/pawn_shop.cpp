@@ -100,7 +100,7 @@ void CleanupPawnSale() {
     if ((pawnSelection.flags & 0x20001U) == 0x20000U)
         ResetHelpIconsToItemPrompt();
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    EV_SetCharDisplay(static_cast<Character *>(control->ryo), 3, pawnPreviousDisplay);
+    EV_SetCharDisplay(static_cast<Character *>(control->ryo), CVM_DisplayEnabled, pawnPreviousDisplay);
     EV_NPC_NewLoadSw(pawnPreviousNpcLoadState);
     pawnSelection.flags &= ~0x80000000U;
 }

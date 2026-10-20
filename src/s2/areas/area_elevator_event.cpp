@@ -345,6 +345,7 @@ template <bool Alternate> void SetRanges(float ryoStart, float ryoEnd, float ren
     }
 }
 template <bool Alternate> void EventCallback(void *) {
+    using enum CameraState;
     ElevatorEventState &state = State<Alternate>();
     switch (state.phase) {
     case 0: {
@@ -395,6 +396,7 @@ template <bool Alternate> void EventCallback(void *) {
         SetElevatorIndicatorFlag(state.elevator, 1, 0);
         SetElevatorIndicatorFlag(state.elevator, 0, 0);
         if constexpr (Alternate) {
+            using enum CameraState;
             DisableScenarioCharacterDisplay(cursor);
             if (EV_GetShenmueFlag(0x164)) {
                 LoadCutsceneAndSoundProgramForArea();
@@ -404,7 +406,7 @@ template <bool Alternate> void EventCallback(void *) {
                 ReleaseActors<Alternate>();
                 scenFreeEvent("ELV2");
                 EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ELV2"), 0);
-                camCtrlSetState(CameraState::Init);
+                camCtrlSetState(Init);
                 EV_EventSetUpHelpIcon_0(0, 0);
                 FinishLoading();
                 HLib::DestroyCurrentTask();
@@ -541,7 +543,7 @@ template <bool Alternate> void EventCallback(void *) {
     case 16:
         ReleaseActors<Alternate>();
         camCtrlSetFovTransitionTo((state.flags & 0x40) != 0);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         Cleanup<Alternate>();
         HLib::DestroyCurrentTask();
         return;
@@ -708,6 +710,7 @@ template <bool Alternate> const ElevatorEventFloorTable *SelectTable() {
     }
 }
 template <bool Alternate> void Main(shen_name elevator) {
+    using enum CameraState;
     SetPlayerControlEnabled(0);
     nullsub();
     EV_EventSetUpHelpIcon_0(85, 0);
@@ -722,7 +725,7 @@ template <bool Alternate> void Main(shen_name elevator) {
     const auto status = GetElevatorTransform(elevator, position, yaw) - 1;
     if (!status) {
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         Cleanup<Alternate>();
         return;
     }

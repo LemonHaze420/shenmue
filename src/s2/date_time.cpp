@@ -134,6 +134,7 @@ bool LoadRyoTimeArm() {
 }
 
 bool SetupHandWatchCamera() {
+    using enum CameraState;
     MapControlData* const control = static_cast<MapControlData*>(HLib::GetTaskParameter(g_mapControlTask));
     Character* const player = control
         ? static_cast<Character*>(control->ryo) : nullptr;
@@ -158,7 +159,7 @@ bool SetupHandWatchCamera() {
     cameraPosition.x = position.x;
     cameraPosition.y += 0.12f;
     cameraPosition.z = position.z;
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
     camCtrlSetNextPosition(cameraPosition);
     const std::int32_t inverseYaw = -GetAllAngYForNode(&player->entity.node);
     Vector3 hip{};
@@ -299,6 +300,7 @@ std::int32_t CurrentCompassHeading() {
 }
 
 std::int32_t UpdateCompassAdmission(TimeCompassContext& context) {
+    using enum CameraState;
     constexpr float epsilon = 0.00000011920929f;
     Vector3 position;
     camCtrlGetNextCamPos(&position);
@@ -306,7 +308,7 @@ std::int32_t UpdateCompassAdmission(TimeCompassContext& context) {
     const std::uint32_t frame = static_cast<std::uint32_t>(spliGetCurrentFrmCnt());
     const std::int32_t searchRequested = plymIsSearchStartRequested();
     const CameraState state = camCtrlGetState();
-    if ((!searchRequested || state == CameraState::InterpolationFollow || HasScenarioCharacterControl()) && !IsModeBitActive(64)) {
+    if ((!searchRequested || state == InterpolationFollow || HasScenarioCharacterControl()) && !IsModeBitActive(64)) {
         if (counter <= 0) {
             context.enabled = 0;
         } else {
@@ -318,10 +320,9 @@ std::int32_t UpdateCompassAdmission(TimeCompassContext& context) {
             if (position.x < epsilon) position.x = 0.0f;
             if (position.y < epsilon) position.y = 0.0f;
             if (position.z < epsilon) position.z = 0.0f;
-            if (state == CameraState::Event || state == CameraState::InterpolationFollow || authGetLoaded() ||
-                std::fabs(position.x - context.previousCameraPosition.x) > epsilon ||
-                std::fabs(position.y - context.previousCameraPosition.y) > epsilon ||
-                std::fabs(position.z - context.previousCameraPosition.z) > epsilon) --counter;
+            if (state == Event || state == InterpolationFollow || authGetLoaded() || std::fabs(position.x - context.previousCameraPosition.x) > epsilon ||
+                std::fabs(position.y - context.previousCameraPosition.y) > epsilon || std::fabs(position.z - context.previousCameraPosition.z) > epsilon)
+                --counter;
         }
     } else if (counter >= 45) {
         context.enabled = 1;
@@ -1137,7 +1138,8 @@ void CloseWristwatch(std::int32_t immediate) {
             camCtrlSetFov(static_cast<std::int16_t>(handWatch.savedFov));
             camCtrlSetState(handWatch.savedCameraState);
             if (player) {
-                if (handWatch.savedPlayerDisplay) player->renderFlags |= 4U;
+                if (handWatch.savedPlayerDisplay)
+                    player->renderFlags |= CRF_DisplayEnabled;
                 else player->renderFlags &= static_cast<std::uint8_t>(~4U);
                 if (handWatch.savedPlayerVisibility) player->flags |= 0x10U;
                 else player->flags &= ~0x10U;

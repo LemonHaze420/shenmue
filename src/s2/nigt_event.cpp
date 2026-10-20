@@ -37,6 +37,7 @@ void NIGTMain(std::uintptr_t argument) {
 
 // @verified - p
 void NIGTMainCallback(void *taskData) {
+    using enum CameraState;
     NIGTTaskParameter *const params = static_cast<NIGTTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
@@ -70,7 +71,7 @@ void NIGTMainCallback(void *taskData) {
             EV_EnableCharacterDisplay(NIGT_RYO);
             (void)EVS_LoopCamera(0, shen_name{}, shen_name{});
             (void)camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             HLib::SetupTaskDelay(50);
             params->state = 4;
         }
@@ -79,7 +80,7 @@ void NIGTMainCallback(void *taskData) {
         if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) == 0) {
             EV_EnsureCharacterDraw(NIGT_RYO);
             EV_EnableCharacterDisplay(NIGT_RYO);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             HLib::SetupTaskDelay(50);
             params->state = 4;
         }

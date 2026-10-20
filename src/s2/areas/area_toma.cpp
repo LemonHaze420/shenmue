@@ -201,6 +201,7 @@ std::int64_t TomaRewardCompletion(std::int32_t phase, std::int64_t, HLib::Task *
     return 1;
 }
 void TomaDone(void *parameter) {
+    using enum CameraState;
     if (GetShouldRenderIcons(RenderIconSlot::ItemEffectMessage))
         return;
     TomaWork *const work = static_cast<TomaWork *>(parameter);
@@ -228,7 +229,7 @@ void TomaDone(void *parameter) {
     hndlSetFlags(ctrlGetCharaByName(TOMA_PLAYER));
     EV_FreeAuthorPak(0, "0110");
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     FinishLoading();
     EV_CleanupMapControlTask();
     HLib::MarkCurrentTaskForCleanup();

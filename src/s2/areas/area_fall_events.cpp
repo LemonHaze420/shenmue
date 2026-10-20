@@ -214,6 +214,7 @@ void FallCameraCallback(void *parameter) {
     --work.frames;
 }
 void QueueFallLookCamera() {
+    using enum CameraState;
     auto *task = HLib::EnqueueTaskWithParameter(FallCameraCallback, 4, 0xb, sizeof(FallCameraWork), eventToken);
     auto &work = *static_cast<FallCameraWork *>(HLib::GetTaskParameter(task));
     work.frames = work.totalFrames = 60;
@@ -227,7 +228,7 @@ void QueueFallLookCamera() {
     ApplyScenarioTranslationAndRotation(&position, &rotation, &work.target);
     camCtrlGetNextCamPos(&work.startEye);
     camCtrlGetTargetPosition(&work.startTarget);
-    camCtrlSetState(CameraState::Event);
+    camCtrlSetState(Event);
 }
 void MoveFallLookTarget() {
     float perspective = static_cast<std::int16_t>(camCtrlGetPerspective()) / 182.04445f;
@@ -321,6 +322,7 @@ void UpdateRockyCompanion() {
     }
 }
 void RockyFallCallback(void *) {
+    using enum CameraState;
     UpdateRockyCompanion();
     if (ryoNotBusy())
         CheckHelpIcon(1, 0, CheckHelpIconOp::FrameOverlay);
@@ -395,7 +397,7 @@ void RockyFallCallback(void *) {
     case 3: {
         figpAssignModeFor(ryo, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         Vector3 position;
         if (rockyFall.direction) {
             Vector3 origin = rockyFall.savedPosition;
@@ -483,6 +485,7 @@ void RockyFallCallback(void *) {
     }
 }
 void RoomFallCallback(void *) {
+    using enum CameraState;
     const auto *config = roomFall.configuration;
     switch (roomFall.state) {
     case 0: {
@@ -570,7 +573,7 @@ void RoomFallCallback(void *) {
         EV_SetRefBoardParamsFor(ryo, 0);
         figpAssignModeFor(ryo, 0);
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         Vector3 position;
         if (roomFall.direction) {
             Vector3 origin = roomFall.savedPosition;
@@ -643,7 +646,7 @@ void RoomFallCallback(void *) {
             EVT_AT_SetMot(ryo, 0xf01a, 0, 1, 0x40000000U, 0);
             camCtrlToggleSmoothing(0);
             camCtrlSetFovTransitionTo(false);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             roomFall.state = 9;
             HLib::SetupTaskDelay(35);
         } else
@@ -707,9 +710,9 @@ void UpdateShenhuaOcclusionAlpha() {
     SetFlagForToken(character, SHEN_NAME(MAPC), 0);
     Matrix4x4_Push(&g_cameraControl->projectionMatrix);
     Vector3 playerPosition, companionPosition;
-    GetMotionBonePosition(scenFindMotionwork(ryo), 1, &playerPosition);
+    GetMotionBonePosition(scenFindMotionwork(ryo), MB_Chest, &playerPosition);
     Matrix4x4::TransformPoint(playerPosition, playerPosition);
-    GetMotionBonePosition(scenFindMotionwork(shenhua), 1, &companionPosition);
+    GetMotionBonePosition(scenFindMotionwork(shenhua), MB_Chest, &companionPosition);
     Matrix4x4::TransformPoint(companionPosition, companionPosition);
     character->alpha = std::min(1.0f, std::max(0.0f, character->alpha + (-playerPosition.z > -companionPosition.z ? -.1f : .1f)));
     Matrix4x4::Pop(1);

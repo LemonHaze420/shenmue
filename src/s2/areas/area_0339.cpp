@@ -48,6 +48,7 @@ void Update0339(void *taskData) {
 
 // @verified - p
 void Cleanup0339(AuthorViewerTaskParameter *parent) {
+    using enum CameraState;
     npcSetAreaName(AREA_0339_NPC_AREA, nullptr, 0.0f, 0);
     EV_stepSetFlags(0, 0x392);
     SetNpcColdResetMode(1);
@@ -68,7 +69,7 @@ void Cleanup0339(AuthorViewerTaskParameter *parent) {
         EVT_AT_SetAng_Callback(&angle);
         LoadCutsceneAndSoundProgramForArea();
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

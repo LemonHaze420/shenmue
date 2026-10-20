@@ -47,6 +47,7 @@ void ExciteExitToOmake(void *) {
     }
 }
 void ExitExcite(ExciteState &state) {
+    using enum CameraState;
     if (state.game.score >= state.game.best)
         SetSavedMinigameScore(SavedScoreType::ExciteQTE_BestScore, state.game.score);
     SetSavedMinigameScore(SavedScoreType::ExciteQTE_ContinuedScore, state.game.score);
@@ -68,7 +69,7 @@ void ExitExcite(ExciteState &state) {
     else {
         EVS_LoopCamera(0, shen_name{0}, shen_name{0});
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         if (state.game.score < 200000 || (state.game.flags & 16)) {
             HLib::MarkCurrentTaskForCleanup();
             scenFreeEvent("EXQT.EV3");

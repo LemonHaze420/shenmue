@@ -380,7 +380,7 @@ void CreateHiddenFreeTalkCharacter(ScenarioEventRuntime &scenario) {
         return;
     }
 
-    character->flags &= ~CharacterActive;
+    character->flags &= ~CF_Active;
     HLib::SetupTimedTask(handlerTask, 0);
 }
 
@@ -850,7 +850,7 @@ void scenUpdateCandidateAvailability() {
         Character *const character = candidate->character;
         const ScenarioFreeTalkRecord *const record = candidate->record;
         candidate->availability = 0;
-        if (!character || !record || authGetLoaded() || character->entity.name.name != CHARACTER_ENTITY.name || !(character->flags & CharacterValid) ||
+        if (!character || !record || authGetLoaded() || character->entity.name.name != CHARACTER_ENTITY.name || !(character->flags & CF_Valid) ||
             !IsOfThisVisibilityType(character, 3) || !record->name.name || !record->sourceRecord || !record->script)
             continue;
         if (HasNpcRuntimeEntry(record->name))
@@ -929,6 +929,7 @@ void scenActivateCandidate(ScenarioFreeTalkCandidate &candidate) {
 
 
 void scenUpdateFreeTalkInteraction() {
+    using enum CameraState;
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     if (!GetParentMenu() && !(scenario.flags & 0x40U))
         return;
@@ -999,7 +1000,7 @@ void scenUpdateFreeTalkInteraction() {
         if (QueryNpcRouteLiveState(selectedName) == 11)
             return;
         SetScenarioFollowCharacter({});
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         talk.followRouteWait = 0;
         return;
     }

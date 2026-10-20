@@ -459,6 +459,7 @@ void ChallengeSequence(void *parameter) {
     } while (w.continueLoop);
 }
 void Exit(Bt40BoutWork &w) {
+    using enum CameraState;
     const auto mode = w.mode;
     const auto result = w.result;
     ET_AT_KillWork(w.characters);
@@ -490,7 +491,7 @@ void Exit(Bt40BoutWork &w) {
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         SetPlayerControlEnabled(1);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         EV_NPC_NewLoadSw(1);
     } else

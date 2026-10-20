@@ -1406,6 +1406,7 @@ void AuthorExit(void *data) {
 }
 // @verified - p
 void Exit(void *data) {
+    using enum CameraState;
     auto *work = static_cast<Slt1Work *>(data);
     for (auto name : lamps)
         AT_SetLocalBaseChara(name, invalid);
@@ -1436,7 +1437,7 @@ void Exit(void *data) {
     EV_NPC_NewLoadSw(1);
     EVS_LoopCamera(0, shen_name{}, shen_name{});
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SLT1"), 0);
     HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());

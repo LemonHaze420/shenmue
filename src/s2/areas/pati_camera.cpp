@@ -16,6 +16,7 @@ Vector3i g_patiBoardRotation;
 char g_patiBoardSize;
 // @verified - p
 void SetupPatiBoardSize(std::int32_t mode) {
+    using enum CameraState;
     const float cx = sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(g_patiBoardRotation.x))));
     const float sx = sin_fixed16(static_cast<std::int16_t>(g_patiBoardRotation.x));
     const float cy = sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(g_patiBoardRotation.y))));
@@ -150,7 +151,7 @@ void SetupPatiBoardSize(std::int32_t mode) {
         g_patiFilteredTarget.x += (g_patiDesiredTarget.x - g_patiFilteredTarget.x) * 0.25f;
         g_patiFilteredTarget.z += (g_patiDesiredTarget.z - g_patiFilteredTarget.z) * 0.25f;
     }
-    camCtrlSetState(CameraState::Callback);
+    camCtrlSetState(Callback);
     g_patiCameraId = 0;
     g_patiCameraEye = {};
     g_patiCameraTarget = {};

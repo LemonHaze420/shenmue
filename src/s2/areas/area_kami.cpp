@@ -276,6 +276,7 @@ void KAMIBeginRazorIntroduction() {
 }
 // @verified - p
 void KAMIRestoreSuccessfulGameplay() {
+    using enum CameraState;
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
     ResetFaceModels();
     EnablePlayerControllers();
@@ -299,7 +300,7 @@ void KAMIRestoreSuccessfulGameplay() {
     RevealScene();
     HLib::SetupTaskDelay(30);
     EV_NPC_NewLoadSw(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
 }
 // @verified - p
@@ -325,13 +326,14 @@ void KAMIRestoreFailedGameplay() {
 }
 // @verified - p
 void KAMIFinish() {
+    using enum CameraState;
     RevealScene();
     ST_LoadTitleFade();
     SetPlayerControlEnabled(1);
     FinishLoading();
     SetRenderClockAndCompassTo(0);
     SetPluralControlFor(FindCharacterByScenarioName(KAMI_PLAYER), 1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     HLib::DestroyTask(kami.self);
 }

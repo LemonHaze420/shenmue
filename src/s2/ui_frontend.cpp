@@ -680,6 +680,7 @@ std::int64_t LoadSaveInput() {
 }
 
 std::int64_t LoadSaveTick() {
+    using enum CameraState;
     LoadSaveRuntime &runtime = loadSaveRuntime;
     if (!runtime.bound)
         return 0;
@@ -696,7 +697,7 @@ std::int64_t LoadSaveTick() {
     SetLoadSaveTheme();
     if (IsCameraIconHidden() == 1 && g_saveScreenAdmission != 0) {
         loadSaveSavedCameraState = camCtrlGetState();
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
     }
     return 0;
 }

@@ -902,7 +902,7 @@ CharacterMapEntry *&CharacterBucket(MapControlData &control, std::size_t index) 
 }
 
 bool IsValidCEWP(const Character *character) {
-    return character && character->entity.name.name == SHEN_NAME(CEWP) && (character->flags & CharacterValid) != 0;
+    return character && character->entity.name.name == SHEN_NAME(CEWP) && (character->flags & CF_Valid) != 0;
 }
 
 MapControlData *ctrlIncrementCounter() {
@@ -1326,13 +1326,13 @@ Character *ctrlGetRootNode() {
 // @verified - p
 std::uint8_t EnableScenarioCharacterDisplay(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return EV_SetCharDisplay(FindScenarioCharacter(control->scenarioTask, name), 3, 1);
+    return EV_SetCharDisplay(FindScenarioCharacter(control->scenarioTask, name), CVM_DisplayEnabled, 1);
 }
 
 // @verified - p
 std::uint8_t DisableScenarioCharacterDisplay(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return EV_SetCharDisplay(FindScenarioCharacter(control->scenarioTask, name), 3, 0);
+    return EV_SetCharDisplay(FindScenarioCharacter(control->scenarioTask, name), CVM_DisplayEnabled, 0);
 }
 
 // @verified - p
@@ -1435,9 +1435,9 @@ void ctrlSetKillAndIncrementCounter(Character *character, std::uint32_t mode) {
     if (!character)
         return;
     if (mode == 0) {
-        character->flags |= CharacterFlag02;
+        character->flags |= CF_Unknown02;
     }
-    character->flags &= ~CharacterValid;
+    character->flags &= ~CF_Valid;
     ctrlIncrementCounter();
 }
 

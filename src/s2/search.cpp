@@ -147,7 +147,7 @@ void GetScenarioSearchPosition(const ScenarioFreeTalkCandidate &candidate, Vecto
         Matrix4x4::MultiplyWithPrePassMatrix(&matrices[candidate.flags]);
         position = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         Matrix4x4::Pop(1);
-    } else if (!motion || !GetMotionBonePosition(motion, 5, &position)) {
+    } else if (!motion || !GetMotionBonePosition(motion, MB_Head, &position)) {
         position = GetCharacterWorldPosition(candidate.character);
     }
 }
@@ -374,7 +374,7 @@ void SearchControlTask_Callback(void *taskData) {
             if (player && !search->savedState) {
                 savedPlayerState.playerFlags = plymGetCurrentFlags();
                 savedPlayerState.characterDisplay = IsOfThisVisibilityType(player, 3);
-                EV_SetCharDisplay(player, 3, 0);
+                EV_SetCharDisplay(player, CVM_DisplayEnabled, 0);
                 savedPlayerState.characterFlags = charaGetWasVisible(player);
                 charaSetVisibilityFlagTo(player, 0);
                 search->savedState = &savedPlayerState;
@@ -846,7 +846,7 @@ std::int32_t srchRestoreRyoNpcStates(SearchTaskData &search) {
     if (!saved)
         return 0;
     plymSetFlags(saved->playerFlags);
-    EV_SetCharDisplay(player, 3, saved->characterDisplay);
+    EV_SetCharDisplay(player, CVM_DisplayEnabled, saved->characterDisplay);
     charaSetVisibilityFlagTo(player, saved->characterFlags);
     search.savedState = nullptr;
     saved->used = 0;
@@ -919,7 +919,7 @@ void srchResetIK() {
 // @verified - p
 std::int64_t srchSetLookMode() {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    EV_SetCharDisplay(static_cast<Character *>(control->ryo), 3, 1);
+    EV_SetCharDisplay(static_cast<Character *>(control->ryo), CVM_DisplayEnabled, 1);
     shenFreeTempModel();
     MT7Node *const root = GetPropRoot();
     if (root) {

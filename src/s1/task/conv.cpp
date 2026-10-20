@@ -789,7 +789,7 @@ void convLoadCueStream() {
                 manager->flags &= ~2U;
                 MBST_Refresh(true);
             } else {
-                MOTI_TransferPrimaryRows(nullptr, &manager->motion);
+                MOTI_TransferPrimaryNodes(nullptr, &manager->motion);
                 manager->flags &= ~2U;
             }
         }

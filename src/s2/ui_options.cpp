@@ -1061,6 +1061,7 @@ void SelectOptionsTab(std::int32_t next) {
     AicaExecuteWrapper(3);
 }
 std::int64_t TickOptions() {
+    using enum CameraState;
     ShowElementByIndex(UIElement::GameInfoBar);
     ResetUIGridTabSelector();
     options.current = -1;
@@ -1070,7 +1071,7 @@ std::int64_t TickOptions() {
     options.hoveredTab = 0;
     if (IsCameraIconHidden() == 1 && options.cameraRequested) {
         options.savedCamera = camCtrlGetState();
-        camCtrlSetState(CameraState::Event);
+        camCtrlSetState(Event);
     }
     SnapshotUserConfiguration();
     SelectOptionsTab(options.requested);

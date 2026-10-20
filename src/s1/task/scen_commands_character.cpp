@@ -201,13 +201,13 @@ void Script_EVT_SetPosition(ScenarioContext *context, void *rawParams) {
 }
 void Script_motnGetEffectorPos(Character *character, std::int32_t nodeId, Vector3 *output) {
     MotionManagerWork *const manager = MOTM_GetWork(character);
-    const MotionNodeRuntime *const row = manager ? MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(manager->motion.activeNodes), nodeId) : nullptr;
+    const MotionNodeRuntime *const row = manager ? MOTN_FindNode(static_cast<MotionNodeRuntime *>(manager->motion.activeNodes), nodeId) : nullptr;
     *output = row ? Vector3{row->effectorPosition.x, row->effectorPosition.y, row->effectorPosition.z} : Vector3{};
 }
 
 void Script_motnGetLocalPos(Character *character, std::int32_t nodeId, Vector3 *output) {
     MotionManagerWork *const manager = character ? MOTM_GetWork(character) : nullptr;
-    const MotionNodeRuntime *const row = manager ? MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(manager->motion.previousNodes), nodeId) : nullptr;
+    const MotionNodeRuntime *const row = manager ? MOTN_FindNode(static_cast<MotionNodeRuntime *>(manager->motion.previousNodes), nodeId) : nullptr;
     if (!row) {
         *output = {};
         return;
@@ -217,7 +217,7 @@ void Script_motnGetLocalPos(Character *character, std::int32_t nodeId, Vector3 *
 
 void Script_ApplyMatrixTransformationWithRotation(Character *character, std::int32_t nodeId, Vector3 *output) {
     MotionManagerWork *const manager = MOTM_GetWork(character);
-    const MotionNodeRuntime *const row = manager ? MOTN_FindNodeRow(static_cast<MotionNodeRuntime *>(manager->motion.activeNodes), nodeId) : nullptr;
+    const MotionNodeRuntime *const row = manager ? MOTN_FindNode(static_cast<MotionNodeRuntime *>(manager->motion.activeNodes), nodeId) : nullptr;
     if (!row) {
         *output = character ? character->entity.node.position : Vector3{};
         return;

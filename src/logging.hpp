@@ -90,7 +90,8 @@ inline int FormatAndEmitLogLine(const int mode, const char *source, const int li
     return AppendLogLineToFile(message.data());
 }
 
-inline int d3t_debug_log(const char *source, const int line, const char *format, ...) {
+namespace shenmue::d3t {
+inline int debug_log(const char *source, const int line, const char *format, ...) {
     std::va_list arguments;
     va_start(arguments, format);
     std::vsprintf(g_d3tDebugLogBuffer.data(), format, arguments);
@@ -98,6 +99,7 @@ inline int d3t_debug_log(const char *source, const int line, const char *format,
     return FormatAndEmitLogLine(0xff, source, line, g_d3tDebugLogBuffer.data());
 }
 
+} // namespace shenmue::d3t
 inline void D3T_DebugLog(const char *format, ...) {
     if (!g_d3tDebugLogEnabled)
         return;

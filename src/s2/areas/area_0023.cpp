@@ -66,6 +66,7 @@ void InitializeSmoke(LoopParameter *child) {
 }
 // @verified - p
 void Cleanup(AreaAuthorTaskParameter *parent) {
+    using enum CameraState;
     for (const shen_name *name = characters; name->name != AREA_AUTHOR_INVALID.name; ++name)
         if (FindCharacterByScenarioName(*name)) {
             EV_npcLockUnlock(*name);
@@ -87,7 +88,7 @@ void Cleanup(AreaAuthorTaskParameter *parent) {
         EV_lightLoad(SHEN_NAME(0000));
         PushGlobalLightingProgram();
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         EV_spmBeginSampleExecute();

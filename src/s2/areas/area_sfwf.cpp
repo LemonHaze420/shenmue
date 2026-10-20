@@ -396,6 +396,7 @@ void RetryChoice(void *argument) {
         HLib::SetCurrentTaskTo(CleanupNormal);
 }
 void CleanupNormal(void *argument) {
+    using enum CameraState;
     StreetFightEventWork *const work = static_cast<StreetFightEventWork *>(argument);
     StreetFightStartParameters *const parameters = work->startParameters;
     const std::int32_t exitRequested = work->reserved178;
@@ -442,7 +443,7 @@ void CleanupNormal(void *argument) {
     else if (exitRequested)
         EV_scenQueueLoad(g_actNumber, SFWF_EXIT_AREA, 81);
     else {
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
     }
     EV_EventSetUpHelpIcon_0(STREET_FIGHT_HELP_FREE, 0);
@@ -1036,6 +1037,7 @@ void PlaceDebugCharacters(StreetFightEventWork *work) {
 }
 
 void CleanupDebug(StreetFightEventWork *work) {
+    using enum CameraState;
     StreetFightStartParameters *const parameters = work->startParameters;
     ReleaseStreetFightCharacter(work->fighters[work->fighterIndex]);
     ET_AT_KillWork(work->characterReadTask);
@@ -1057,7 +1059,7 @@ void CleanupDebug(StreetFightEventWork *work) {
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     if (parameters->signal)
         *parameters->signal = 0;

@@ -76,6 +76,7 @@ void ConfigureEnvironment() {
 }
 // @verified - p
 void LoopCallback(void *data) {
+    using enum CameraState;
     const std::uint32_t frame = static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     if (frame == 1)
         savedRootRenderMode = GetRootRenderDeferredMode();
@@ -94,7 +95,7 @@ void LoopCallback(void *data) {
     EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 4523, 0}, 0};
     EVT_AT_SetAng_Callback(&angle);
     camCtrlSetFovTransitionTo(true);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0014A"), 0);
     auto *parent = *static_cast<AreaImmediateAuthorTaskParameter **>(data);
     if (g_currentMap.name == SHEN_NAME(AR02)) {

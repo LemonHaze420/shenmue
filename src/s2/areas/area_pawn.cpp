@@ -38,6 +38,7 @@ void SetPawnFlag(std::int16_t flag, std::int32_t value) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, flag, value);
 }
 void PawnTalkCallback(void *parameter) {
+    using enum CameraState;
     PawnTalkWork *work = static_cast<PawnTalkWork *>(parameter);
     if (!work) {
         HLib::DestroyCurrentTask();
@@ -57,7 +58,7 @@ void PawnTalkCallback(void *parameter) {
         if (static_cast<std::uint32_t>(work->flag - 1224) <= 1U) {
             srchReset();
             camCtrlSetFovTransitionTo(true);
-            camCtrlSetState(CameraState::Init);
+            camCtrlSetState(Init);
             InitiateCleanupForSceneChara(work->character);
         } else
             SetScenarioFollowCharacter(work->character);
@@ -66,6 +67,7 @@ void PawnTalkCallback(void *parameter) {
         work->started = static_cast<std::int32_t>(StartScenarioFreeTalkRecord(work->character, -1));
 }
 void QueuePawnTalk(HLib::Task *parent, shen_name character, std::int32_t flag) {
+    using enum CameraState;
     if (!character.name || !flag)
         return;
     HLib::Task *task = HLib::EnqueueTaskWithParameter(PawnTalkCallback, 4, 0x0b, sizeof(PawnTalkWork), PAWN_EVENT);
@@ -81,7 +83,7 @@ void QueuePawnTalk(HLib::Task *parent, shen_name character, std::int32_t flag) {
     work->character = character;
     SetPawnFlag(static_cast<std::int16_t>(flag), 1);
     EVS_LoopCamera(3000, PAWN_BASE, PAWN_BASE);
-    camCtrlSetState(CameraState::SnapYawTarget);
+    camCtrlSetState(SnapYawTarget);
     camCtrlDisableFilmBars();
     SetScenarioFollowCharacter(character);
     work->started = static_cast<std::int32_t>(StartScenarioFreeTalkRecord(character, -1));
@@ -186,6 +188,7 @@ void PawnBegin(void *parameter) {
     }
 }
 void PawnDone(void *parameter) {
+    using enum CameraState;
     PawnEventWork *work = static_cast<PawnEventWork *>(parameter);
     if (filmCheckFadeTrackColour() || !work || IsScenarioBusy())
         return;
@@ -201,11 +204,11 @@ void PawnDone(void *parameter) {
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
     const shen_name characters[]{scene.owner, shen_name{0}};
     RestoreAreaLoopCharacters(characters);
-    camCtrlSetState(CameraState::SnapYawTarget);
+    camCtrlSetState(SnapYawTarget);
     SetScenarioFollowCharacter(shen_name{0});
     camCtrlSetFovTransitionTo(true);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     mtwkRequestMotion(scenFindMotionwork(PAWN_RYO), 0xf003, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(PAWN_RYO), 0);
     HLib::ResolveDeferredCallback(work->parent);
@@ -325,6 +328,7 @@ void PawnSaleDialogue(void *parameter) {
 void InitializePawn() {
 }
 void RunPawn(std::uintptr_t argument) {
+    using enum CameraState;
     const shen_name shop{static_cast<std::uint32_t>(argument)};
     if (!FindPawnShopScene(shop).owner.name)
         return;
@@ -345,7 +349,7 @@ void RunPawn(std::uintptr_t argument) {
     work->package[8] = 0;
     EV_setHoldStatesFlags(0);
     srchReset();
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     camCtrlDisableFilmBars();
     HLib::SetupTimedTask(work->parent, -1);
     SetPlayerControlEnabled(0);

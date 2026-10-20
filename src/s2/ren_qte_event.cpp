@@ -29,10 +29,11 @@ std::int32_t PlayRenQteMotion(shen_name character, std::uint16_t animation, floa
 }
 // @verified - p
 void PlayRenQteCameras(const RenQteCamera *cameras) {
+    using enum CameraState;
     if (!cameras)
         return;
     if (!cameras->camera) {
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
     }
     for (const RenQteCamera *camera = cameras; camera->camera; ++camera)

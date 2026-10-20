@@ -572,14 +572,14 @@ bool BeginSearchHand(Character *character, std::int32_t handSelection, std::uint
         handCharacter = nullptr;
         return false;
     }
-    if (handWork->runtime.seqFlags & MotionSequenceSearchHand)
+    if (handWork->runtime.seqFlags & MSF_SearchHand)
         return true;
     for (auto flags : handWork->runtime.regionFlags)
         if (flags & 0x10U)
             return false;
     if (jointTable > 3)
         jointTable = 0;
-    handWork->runtime.seqFlags |= MotionSequenceSearchHand;
+    handWork->runtime.seqFlags |= MSF_SearchHand;
     g_searchHandMotionOverride = {.flags = static_cast<std::uint32_t>(handSelection + 1), .reserved04 = 0, .evaluate = MotionCommonCallback};
     std::memset(configurations, 0, sizeof(configurations));
     const bool models = SetLowQualityHands(character) != 0;
@@ -796,7 +796,7 @@ void SetSearchHandChestTransform(const Vector3 *position, const Vector3i *rotati
 }
 void mtwkResetBlends() {
     if (handWork) {
-        handWork->runtime.seqFlags &= ~MotionSequenceSearchHand;
+        handWork->runtime.seqFlags &= ~MSF_SearchHand;
         SetBlend(1);
     }
     if (handCharacter)
@@ -837,16 +837,16 @@ void MotionCommonCallback(std::int64_t mode, std::int32_t interpolationMode) {
 }
 // @verified - p
 void AssignMotionCallbacks(MotionWork *work) {
-    if (work == handWork && (work->runtime.seqFlags & MotionSequenceSearchHand))
+    if (work == handWork && (work->runtime.seqFlags & MSF_SearchHand))
         SetCustomMotionOverride(&g_searchHandMotionOverride);
     previousSolveStatus = currentSolveStatus;
     currentSolveStatus = 0;
 }
 std::uint32_t GetCustomMotionOverrideFlags(const MotionWork *work) {
-    return work && work == handWork && (work->runtime.seqFlags & MotionSequenceSearchHand) && overrideEnabled ? g_searchHandMotionOverride.flags : 0;
+    return work && work == handWork && (work->runtime.seqFlags & MSF_SearchHand) && overrideEnabled ? g_searchHandMotionOverride.flags : 0;
 }
 bool ClearSearchHandMotionRequests(MotionWork *work) {
-    if (!work || work != handWork || !(work->runtime.seqFlags & MotionSequenceSearchHand))
+    if (!work || work != handWork || !(work->runtime.seqFlags & MSF_SearchHand))
         return false;
     auto &state = work->runtime;
     for (std::size_t region = 0; region < 5; ++region) {

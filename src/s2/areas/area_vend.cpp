@@ -855,6 +855,7 @@ void ReleaseVendingResources(VendingMachineWork &work) {
 }
 
 void VendingKillCallback(void *data) {
+    using enum CameraState;
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     EV_debug_log("VEND\\eVEND_et_vend.c", 1162, "@@@     EV_KillVend( ) \n");
     if (vendingState != 1) {
@@ -871,7 +872,7 @@ void VendingKillCallback(void *data) {
             vendingArchive = -1;
         }
         camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         SetHighModelXYZ(ctrlGetCharaByName(VEND_HAND), 0, 0, 0);
         EV_DisableCharacterDisplay(VEND_HAND);
         hndlSetFlags(ctrlGetCharaByName(VEND_HAND));

@@ -207,6 +207,7 @@ void Update0502Splash(void *) {
         splashAge0502 += g_stabilizeFps ? g_stabilizedFrameTime * 30.0f : 1.0f;
 }
 void Cleanup0502(Area0502Parameter *parent) {
+    using enum CameraState;
     EV_CleanupMapControlTask();
     if (g_currentMap.name != AREA_0502_MAP.name) {
         HLib::DestroyTask(parent->self);
@@ -231,7 +232,7 @@ void Cleanup0502(Area0502Parameter *parent) {
     SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
     camCtrlSetFovTransitionTo(true);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     HLib::DestroyTask(parent->self);
     SetPlayerControlEnabled(1);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

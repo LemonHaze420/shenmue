@@ -711,13 +711,14 @@ void MainLoop(void *) {
     }
 }
 void MainInit2(void *) {
+    using enum CameraState;
     FinishLoading();
     CheckHelpIcon(1, 0, CheckHelpIconOp::Set);
     work.alphaMode = 0;
     HLib::ResolveDeferredCallback(work.moveTask);
     EV_LoadAudio(shenGetCurrentSbt(), GetSelectedSoundSceneIndex());
     camCtrlSetUpdateCallback(InitializeCamera);
-    camCtrlSetState(CameraState::Callback);
+    camCtrlSetState(Callback);
     Continue(MainLoop);
 }
 void MainInit(void *) {
@@ -806,6 +807,7 @@ void PreExit2(void *) {
     }
 }
 void Exit(void *) {
+    using enum CameraState;
     EV_debug_log("WB88\\eWB88_et_WB88.c", 929, "EXIT come on!!\n");
     EV_DisableCharacterDisplay(rude);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
@@ -846,7 +848,7 @@ void Exit(void *) {
     Continue(Exit2);
     camCtrlSetFovTransitionTo(true);
     camCtrlUtil(static_cast<CameraUtilityMode>(0), 0);
-    camCtrlSetState(CameraState::Init);
+    camCtrlSetState(Init);
     Fade(30, false);
     HLib::SetupTaskDelay(30);
 }
@@ -923,6 +925,7 @@ void BeginAuthor() {
     SetupAllLeaves();
 }
 void ReturnAuthor() {
+    using enum CameraState;
     HLib::SetCurrentTaskTo(work.returnCallback);
     if (work.scene == 2) {
         EventSetPosition position{0, ryo, invalid, Vector3{340.79999f, 127, 231.8f}, 0};
@@ -932,7 +935,7 @@ void ReturnAuthor() {
         ConfigureMotion(61573);
     } else if (work.scene == 3) {
         SetPlayerControlEnabled(1);
-        camCtrlSetState(CameraState::Init);
+        camCtrlSetState(Init);
         Fade(30, false);
     }
 }

@@ -17,14 +17,7 @@
 
 namespace shenmue::s2 {
 namespace {
-template <class T> T Read(const void *self, std::size_t offset) {
-    T result;
-    std::memcpy(&result, reinterpret_cast<const std::byte *>(self) + offset, sizeof(result));
-    return result;
-}
-template <class T> void Store(VFActor *self, std::size_t offset, T value) {
-    std::memcpy(reinterpret_cast<std::byte *>(self) + offset, &value, sizeof(value));
-}
+
 std::int32_t Animation(const VFActor *self, std::size_t offset) {
     const auto *data = self->motionParameters[4] + offset;
     return int(static_cast<std::int16_t>(std::uint16_t(std::to_integer<std::uint8_t>(data[0])) << 8)) | std::to_integer<std::uint8_t>(data[1]);
@@ -55,24 +48,27 @@ void UpdateInstallMotion(VFActor *self) {
 
 // @verified - p
 void UpdateDefaultReaction(VFActor *self) {
-    if ((self->hitStateFlags & 0x80000) && self->secondActor && (self->secondActor->moveFlags & 0x80)) {
+    if ((self->hitStateFlags & VFHSF_AirborneOrDowned) && self->secondActor && (self->secondActor->moveFlags & VFMF_AutoAdvanceMotion)) {
         vfSelectDefaultMotion(self, 0);
         return;
     }
-    if ((self->hitStateFlags & 0x200) && (self->currentAnimation & 0xfff) == self->defaultAnimations[0]) {
+    if ((self->hitStateFlags & VFHSF_AttackGuardWindow) && (self->currentAnimation & 0xfff) == self->defaultAnimations[0]) {
         vfResetScriptedFormationMotion(self);
-        if ((self->savedSecondaryMotionFlags & 0x100) && static_cast<std::uint16_t>(self->motionTimer))
-            GetParentBoneWrapper(self->motion, ((self->stateFlags & 0x10000) ? 25 : 30) | 0x40000000);
+        if ((self->savedSecondaryMotionFlags & VFSMF_AlternateFootTarget) && static_cast<std::uint16_t>(self->motionTimer))
+            GetParentBoneWrapper(self->motion, ((self->stateFlags & VFSF_UseLeftFootTarget) ? MB_LeftFootTarget : MB_RightFootTarget) | motionTargetIgnoreY);
         return;
     }
-    if ((!self->requestedAnimation && (self->moveFlags & 1)) ||
-        ((!(self->secondaryMotionFlags & 0x8000000) || !(self->motionFlags & 4) || float(self->reactionEndFrame) <= self->animationTime) &&
-            ((self->motionFlags & 0x2000) || (self->secondaryMotionFlags & 0x48000100) || (self->hitStateFlags & 4)) &&
-            !(self->secondaryMotionFlags & 0x200000))) {
+    if ((!self->requestedAnimation && (self->moveFlags & VFMF_NeedsAnimationStep)) ||
+        ((!(self->secondaryMotionFlags & VFSMF_Unknown8000000) || !(self->motionFlags & VFMOF_Unknown4) ||
+             float(self->reactionEndFrame) <= self->animationTime) &&
+            ((self->motionFlags & VFMOF_Unknown2000) ||
+                (self->secondaryMotionFlags & (VFSMF_AlternateFootTarget | VFSMF_Unknown8000000 | VFSMF_Unknown40000000)) ||
+                (self->hitStateFlags & VFHSF_Unknown4)) &&
+            !(self->secondaryMotionFlags & VFSMF_Unknown200000))) {
         vfResetScriptedFormationMotion(self);
-        if (self->secondaryMotionFlags & 0x100) {
-            self->stateFlags ^= 0x10000;
-            GetParentBoneWrapper(self->motion, ((self->stateFlags & 0x10000) ? 25 : 30) | 0x40000000);
+        if (self->secondaryMotionFlags & VFSMF_AlternateFootTarget) {
+            self->stateFlags ^= VFSF_UseLeftFootTarget;
+            GetParentBoneWrapper(self->motion, ((self->stateFlags & VFSF_UseLeftFootTarget) ? MB_LeftFootTarget : MB_RightFootTarget) | motionTargetIgnoreY);
         }
         vfSelectDefaultMotion(self, 0);
     }
@@ -80,46 +76,46 @@ void UpdateDefaultReaction(VFActor *self) {
 
 // @verified - p
 void UpdateRecovery(VFActor *self) {
-    const auto orientation = Read<std::uint8_t>(self, 0x409);
+    const auto orientation = self->footFacingBytes[1];
     const auto action = self->queuedAction;
     switch (self->hitPhase) {
     case 0:
-        self->hitStateFlags |= 0x10000;
-        Store(self, 0x638, std::uint64_t{});
+        self->hitStateFlags |= VFHSF_GuardState;
+        self->reactionContinuation = nullptr;
         self->hitPhase = 1;
         [[fallthrough]];
     case 1: {
         if (self->animationTime <= float(self->reactionEndFrame))
             return;
-        const auto animation = (self->motionFlags & 0x4000000) ? std::uint16_t(((self->motionFlags & 0x800) ? 0 : 1) | 0x1c4) :
-                                                                 static_cast<std::uint16_t>(Animation(self, (orientation & 1) ? 66 : 68));
+        const auto animation = (self->motionFlags & VFMOF_Unknown4000000) ? std::uint16_t(((self->motionFlags & VFMOF_ContactCategoryB) ? 0 : 1) | 0x1c4) :
+                                                                            static_cast<std::uint16_t>(Animation(self, (orientation & 1) ? 66 : 68));
         Install(self, animation);
-        if ((self->moveFlags & 0x20) || self->hp <= 0) {
+        if ((self->moveFlags & VFMF_ForceDefeat) || self->hp <= 0) {
             self->hitPhase = 5;
             return;
         }
-        self->knockbackAcceleration = 1 - float(Read<std::int16_t>(self, 0x40c)) * 0.03f;
+        self->knockbackAcceleration = 1 - float(std::bit_cast<std::int16_t>(self->hitPhaseWords[0])) * 0.03f;
         if (self->knockbackAcceleration < 0.5f)
             self->knockbackAcceleration = 0.5f;
         ++self->hitPhase;
-        Store(self, 0x40a, std::uint16_t{});
+        self->hitPhaseWaitFrames = std::uint16_t{};
         [[fallthrough]];
     }
     case 2: {
-        const auto hold = Read<std::int16_t>(self, 0x40c);
-        Store(self, 0x40c, static_cast<std::uint16_t>(hold - 1));
-        if (hold > int(float(4 * Read<std::uint16_t>(self, 0x40a)) * self->inverseScale))
+        const auto hold = std::bit_cast<std::int16_t>(self->hitPhaseWords[0]);
+        self->hitPhaseWords[0] = static_cast<std::uint16_t>(hold - 1);
+        if (hold > int(float(4 * self->hitPhaseWaitFrames) * self->inverseScale))
             return;
-        self->moveFlags &= ~0x10u;
-        self->stateFlags &= ~0x200u;
+        self->moveFlags &= ~VFMF_HitReactionLock;
+        self->stateFlags &= ~VFSF_Unknown200;
         ++self->hitPhase;
-        Store(self, 0x40c, std::uint16_t{});
+        self->hitPhaseWords[0] = std::uint16_t{};
         self->tickFrameTime = 0;
         self->parameter450 = 0;
         [[fallthrough]];
     }
     case 3: {
-        self->moveFlags &= 0xdfffffbf;
+        self->moveFlags &= ~(VFMF_MirrorReactionAngle | VFMF_Unknown20000000);
         auto next = action & 0xfffffffffffffe0fULL;
         std::uint16_t index = 0;
         if (!(orientation & 1)) {
@@ -137,7 +133,7 @@ void UpdateRecovery(VFActor *self) {
         [[fallthrough]];
     }
     case 4:
-        if (self->hitStateFlags & 4)
+        if (self->hitStateFlags & VFHSF_Unknown4)
             self->queuedAction = 0;
         break;
     default:
@@ -152,8 +148,8 @@ void UpdateLandingHold(VFActor *self) {
     const float middle = float(static_cast<std::uint16_t>(self->reactionMiddleFrame)) - self->scale;
     switch (self->hitPhase) {
     case 0: {
-        self->moveFlags |= 0x10;
-        if (Read<std::uint8_t>(self, 0x392) != 1) {
+        self->moveFlags |= VFMF_HitReactionLock;
+        if (self->queuedActionState != 1) {
             self->knockbackVelocity.x = self->pendingKnockback.x * 1.5f;
             self->knockbackVelocity.z = self->pendingKnockback.z * 1.5f;
             self->slideVelocity.x = self->pendingKnockback.x * 4;
@@ -166,7 +162,7 @@ void UpdateLandingHold(VFActor *self) {
             vfApplyHitReactionAndStartMotion(self);
             mtwkSetExtraFlag(self->motion, 0, 2);
         }
-        if (self->motionFlags & 0x10) {
+        if (self->motionFlags & VFMOF_Unknown10) {
             vfSnapActorToContact(self);
             self->knockbackVelocity.x += self->pendingKnockback.x;
             self->knockbackVelocity.y += self->pendingKnockback.y;
@@ -182,19 +178,19 @@ void UpdateLandingHold(VFActor *self) {
         ++self->hitPhase;
         [[fallthrough]];
     case 2:
-        if (!(self->moveFlags & 4) && timer > self->reactionEndFrame) {
+        if (!(self->moveFlags & VFMF_Airborne) && timer > self->reactionEndFrame) {
             self->animationTime = self->parameter4c8 = middle;
             return;
         }
         ++self->hitPhase;
-        self->moveFlags &= ~0x10u;
+        self->moveFlags &= ~VFMF_HitReactionLock;
         [[fallthrough]];
     case 3:
         if (timer <= 0) {
-            self->stateFlags &= ~0x200u;
+            self->stateFlags &= ~VFSF_Unknown200;
             self->queuedAction = 0;
-            if (!(self->hitStateFlags & 0x1000000))
-                self->hitStateFlags &= ~1u;
+            if (!(self->hitStateFlags & VFHSF_Unknown1000000))
+                self->hitStateFlags &= ~VFHSF_ReactionActive;
             mtwkSetExtraFlag(self->motion, 0, 0);
         }
         break;
@@ -208,17 +204,17 @@ void UpdateLandingHold(VFActor *self) {
 void UpdateApproachContact(VFActor *self) {
     if (self->hitPhase != 1 && self->hitPhase != 2) {
         Install(self, static_cast<std::int16_t>(self->queuedAction));
-        Store(self, 0x184, self->actor->contactPosition);
+        self->contactVectors[1] = self->actor->contactPosition;
         ++self->hitPhase;
     }
     if (self->hitPhase != 2) {
         if (float(static_cast<std::uint16_t>(self->parameter2e2)) > self->animationTime)
             return;
-        const auto point = Read<Vector3>(self, 0x184);
+        const auto point = self->contactVectors[1];
         float x = point.x - self->contactPosition.x;
         const float z = point.z - self->contactPosition.z;
         const auto angle = self->contactAngles[self->actionIndex];
-        self->moveFlags |= 0x200;
+        self->moveFlags |= VFMF_Unknown200;
         self->parameter1b6 = static_cast<std::uint16_t>(angle);
         const float distance = std::sqrt(x * x + z * z);
         if (distance > self->impulseMagnitude)
@@ -242,20 +238,20 @@ void UpdateLinkedAttackWait(VFActor *self) {
     if (self->hitPhase != 1) {
         self->hitReaction = linked->currentAnimation;
         self->hitPhase = 1;
-        self->hitStateFlags &= ~1u;
+        self->hitStateFlags &= ~VFHSF_ReactionActive;
         self->queuedAction = 0;
     } else if (!(linked->hitStateFlags & 0x100) || !linked->currentAnimation) {
-        self->hitStateFlags &= ~1u;
+        self->hitStateFlags &= ~VFHSF_ReactionActive;
         self->queuedAction = 0;
     } else {
-        self->moveFlags |= 0x1000;
+        self->moveFlags |= VFMF_Unknown1000;
         UpdateDefaultReaction(self);
     }
 }
 
 // @verified - p
 void UpdateContactAttackAdmission(VFActor *self) {
-    self->hitStateFlags &= ~0x100u;
+    self->hitStateFlags &= ~VFHSF_AttackActive;
     if (float(static_cast<std::uint16_t>(self->parameter2d0)) > self->animationTime)
         return;
     if (self->contactDistances[self->actionIndex] <= self->impulseMagnitude) {
@@ -281,7 +277,7 @@ void UpdatePairedTiming(VFActor *self) {
         if (!vfCheckAnimTimeWithin(self, float(self->eventFrame318)))
             return;
     }
-    self->hitStateFlags |= 0x40000;
+    self->hitStateFlags |= VFHSF_MidAirRecovery;
     self->queuedAction = 0x08000000;
     self->knockbackVelocity = {};
     self->hitPhase = 1;
@@ -292,11 +288,11 @@ void UpdateReverseRecovery(VFActor *self) {
     if (self->hitPhase == 1) {
         if (self->animationTime >= 9)
             return;
-        self->hitStateFlags |= 4;
+        self->hitStateFlags |= VFHSF_Unknown4;
         self->hitPhase = 2;
     } else if (self->hitPhase != 2) {
         vfApplyHitReactionAndStartMotion(self);
-        self->hitStateFlags &= ~0x40000u;
+        self->hitStateFlags &= ~VFHSF_MidAirRecovery;
         ++self->hitPhase;
         return;
     }
@@ -305,7 +301,7 @@ void UpdateReverseRecovery(VFActor *self) {
         self->animationTime = 0;
     self->parameter4c8 = self->animationTime;
     if (self->animationTime <= 0) {
-        self->hitStateFlags &= ~1u;
+        self->hitStateFlags &= ~VFHSF_ReactionActive;
         self->queuedAction = 0;
         self->currentAnimationEndFrame = 1;
     }
@@ -324,7 +320,7 @@ void UpdateTimedGuard(VFActor *self) {
         vfPlayFightSfx(35, self, 0);
         ++self->hitPhase;
     } else if (self->hitPhase == 1 && self->animationTime >= float(static_cast<std::uint16_t>(self->reactionMiddleFrame))) {
-        if ((other->hitStateFlags & 4) || !(other->hitStateFlags & 0x100))
+        if ((other->hitStateFlags & VFHSF_Unknown4) || !(other->hitStateFlags & VFHSF_AttackActive))
             ++self->hitPhase;
         else
             self->animationTime -= self->scale;
@@ -341,7 +337,7 @@ void UpdateReactionHold(VFActor *self) {
         self->knockbackAcceleration = self->timeScale;
         self->knockbackVelocity.x = self->knockbackVelocity.z = self->slideVelocity.x = self->slideVelocity.z = 0;
         vfApplyHitReactionAndStartMotion(self);
-        self->hitStateFlags |= 1;
+        self->hitStateFlags |= VFHSF_ReactionActive;
         if (!self->actionTriggerPhase) {
             self->parameter2d0 = 0;
             self->reactionMiddleFrame = static_cast<std::int16_t>(int(self->animationTimeParameter));
@@ -350,20 +346,20 @@ void UpdateReactionHold(VFActor *self) {
         ++self->hitPhase;
     } else if (self->hitPhase == 3) {
         self->queuedAction = 0;
-        self->hitStateFlags &= ~1u;
+        self->hitStateFlags &= ~VFHSF_ReactionActive;
     } else if (self->hitPhase == 1 || self->hitPhase == 2) {
         if (self->hitPhase == 1) {
             if (float(static_cast<std::uint16_t>(self->reactionMiddleFrame)) > self->animationTime)
                 return;
             ++self->hitPhase;
         }
-        if (self->stateFlags & 0x800) {
+        if (self->stateFlags & VFSF_Unknown800) {
             self->queuedAction = 0;
-            self->hitStateFlags &= ~1u;
-            self->stateFlags &= ~0x800u;
+            self->hitStateFlags &= ~VFHSF_ReactionActive;
+            self->stateFlags &= ~VFSF_Unknown800;
         } else if (float(self->reactionEndFrame) <= self->animationTime) {
             self->queuedAction = 0;
-            self->hitStateFlags &= ~1u;
+            self->hitStateFlags &= ~VFHSF_ReactionActive;
         }
     }
 }
@@ -371,10 +367,10 @@ void UpdateReactionHold(VFActor *self) {
 // @verified - p
 void UpdateAuthoredDefeat(VFActor *self) {
     if (!self->hitPhase) {
-        self->moveFlags |= 0x10;
+        self->moveFlags |= VFMF_HitReactionLock;
         if (self->hp <= 0)
             self->hitPhase = 2;
-        if ((self->hitStateFlags & 0x814200) == 0x200) {
+        if ((self->hitStateFlags & (VFHSF_AttackGuardWindow | VFHSF_SpecialGuardOrParry | VFHSF_GuardState | VFHSF_AlignedToGround)) == 0x200) {
             mtwkSetExtraFlag(self->motion, 0, 0);
             motRemoveCallback(self->motion);
             SetMotionSpeed(self->motion, 1, MotionRegion::LowerBody);
@@ -389,12 +385,12 @@ void UpdateAuthoredDefeat(VFActor *self) {
 
 // @verified - p
 void UpdateLocomotion(VFActor *self) {
-    auto previous = Read<std::uint8_t>(self, 0xa6e);
-    auto mode = Read<std::uint8_t>(self, 0xa74);
+    auto previous = self->relativeInputSectors[0];
+    auto mode = self->reactionMovement.state.mode;
     bool keepMotion = false, stationary = false;
     if (self->fightStyle == 1) {
         mode = 1;
-        Store(self, 0xa74, mode);
+        self->reactionMovement.state.mode = mode;
     }
     if (mode == 3) {
         if (!(self->cameraControlFlags & 0xf0)) {
@@ -405,15 +401,15 @@ void UpdateLocomotion(VFActor *self) {
         const auto &input = g_inputBuffer[(game.gameFlags & 0x40000) ? self->groupIndex : 0];
         if (((game.gameFlags & 0x40000) || !game.slotPoolModes[self->groupIndex]) && input.analog0d < 250 && input.analog0c < 250) {
             mode = 1;
-            Store(self, 0xa74, mode);
+            self->reactionMovement.state.mode = mode;
         }
     }
     if (mode == 2)
         self->cameraControlFlags = 0;
     std::int32_t animation;
     if (self->cameraControlFlags & 0xf0) {
-        if ((self->activeMotionFlags & 0x8000000) && (Read<std::uint8_t>(self, 0xaf4) != 1 || (self->motionFlags & 4)) &&
-            (mode != 3 || (self->motionFlags & 0x20000000))) {
+        if ((self->activeMotionFlags & VFSMF_Unknown8000000) && (self->reactionEvaluationPhase != 1 || (self->motionFlags & VFMOF_Unknown4)) &&
+            (mode != 3 || (self->motionFlags & VFMOF_Unknown20000000))) {
             const auto id = self->currentAnimation & 0xfff;
             if (id != 61 && id != 286) {
                 constexpr std::int16_t turns[8]{0, 1024, 2048, 3072, 4096, -3072, -2048, -1024};
@@ -422,7 +418,7 @@ void UpdateLocomotion(VFActor *self) {
             animation = Animation(self, mode == 1 ? 314 : 316);
             if (SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody))
                 keepMotion = self->requestedAnimation == -1;
-            else if (!(self->motionFlags & 4))
+            else if (!(self->motionFlags & VFMOF_Unknown4))
                 return;
         } else if (self->fightStyle == 0 && previous == 4)
             animation = mode == 1 ? 61 : 286;
@@ -430,22 +426,23 @@ void UpdateLocomotion(VFActor *self) {
             animation = Animation(self, mode == 1 ? 314 : 316);
     } else {
         stationary = true;
-        if ((self->motionFlags & 4) || ((self->motionFlags & 2) && !SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody)))
+        if ((self->motionFlags & VFMOF_Unknown4) ||
+            ((self->motionFlags & VFMOF_Unknown2) && !SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody)))
             return;
         if (self->fightStyle == 0 && (float(self->initialHp) * 0.5f > self->hp || self->parameterB24 > 0))
-            animation = (self->moveFlags & 0x400) ? 32826 : 59;
+            animation = (self->moveFlags & VFMF_MirroredStance) ? 32826 : 59;
         else
-            animation = Animation(self, (self->moveFlags & 0x400) ? 320 : 318);
-        if (Read<std::uint8_t>(self, 0xa74) == 1)
+            animation = Animation(self, (self->moveFlags & VFMF_MirroredStance) ? 320 : 318);
+        if (self->reactionMovement.state.mode == 1)
             animation = self->defaultAnimations[0];
     }
-    self->moveFlags &= ~0x40u;
+    self->moveFlags &= ~VFMF_MirrorReactionAngle;
     self->knockbackAcceleration = self->timeScale;
     self->pendingAnimation = animation;
     self->knockbackAcceleration = self->timeScale * self->contactParameter;
     if (!stationary) {
-        self->motionFlags &= ~0x200000u;
-        self->hitStateFlags &= ~0x200000u;
+        self->motionFlags &= ~VFMOF_Unknown200000;
+        self->hitStateFlags &= ~VFHSF_MirroredReactionAngle;
     }
     if (!keepMotion)
         vfApplyHitReactionAndStartMotion(self);
@@ -458,9 +455,9 @@ void UpdateTargetLocomotion(VFActor *self) {
     const auto direction =
         static_cast<std::int16_t>(FixedAtan2(self->contactPosition.x - self->parameterA78, self->contactPosition.z - std::bit_cast<float>(self->parameterA80)));
     if (self->targetCache != -1)
-        Store(self, 0xa75, std::uint8_t{});
+        self->reactionMovement.state.phase = std::uint8_t{};
     const auto difference = static_cast<std::int16_t>(direction - self->facingAngle);
-    auto turn = Read<std::uint8_t>(self, 0xa75);
+    auto turn = self->reactionMovement.state.phase;
     if (turn) {
         if (std::fabs(float(difference)) <= 4096)
             turn = 0;
@@ -468,20 +465,21 @@ void UpdateTargetLocomotion(VFActor *self) {
         turn = 1;
     else if (difference < -4096)
         turn = 2;
-    Store(self, 0xa75, turn);
+    self->reactionMovement.state.phase = turn;
     if (turn == 1)
         self->facingAngle = static_cast<std::uint16_t>(self->facingAngle + 4096);
     if (turn == 2)
         self->facingAngle = static_cast<std::uint16_t>(self->facingAngle - 4096);
-    const bool alternate = Read<std::uint8_t>(self, 0xa74) != 1;
+    const bool alternate = self->reactionMovement.state.mode != 1;
     const auto animation = Animation(self, alternate ? 316 : 314);
-    if (!(self->activeMotionFlags & 0x8000000) || (self->motionFlags & 4) || SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody) ||
-        (!(self->motionFlags & 0x400) != alternate)) {
-        self->moveFlags &= ~0x40u;
+    if (!(self->activeMotionFlags & VFSMF_Unknown8000000) || (self->motionFlags & VFMOF_Unknown4) ||
+        SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody) || (!(self->motionFlags & VFMOF_ContactCategoryA) != alternate)) {
+        self->moveFlags &= ~VFMF_MirrorReactionAngle;
         self->pendingAnimation = animation;
         if (alternate)
             self->knockbackAcceleration = self->timeScale *
-                (((target->hitStateFlags & 0x20000000) && (target->groundContactFlags & 1) && !(self->groundContactFlags & 1)) ? 1.2f : 0.85000002f);
+                (((target->hitStateFlags & VFHSF_CameraFocusTarget) && (target->groundContactFlags & 1) && !(self->groundContactFlags & 1)) ? 1.2f :
+                                                                                                                                              0.85000002f);
         vfApplyHitReactionAndStartMotion(self);
         self->queuedAction = 0;
     }
@@ -496,7 +494,7 @@ void UpdateContactFacingMotion(VFActor *self) {
     }
     std::uint16_t slot;
     std::uint8_t direction;
-    const bool mirrored = (self->moveFlags & 0x400) != 0;
+    const bool mirrored = (self->moveFlags & VFMF_MirroredStance) != 0;
     switch (static_cast<std::uint8_t>(self->packedHitImpulse >> 24)) {
     case 0:
     case 1:
@@ -521,18 +519,18 @@ void UpdateContactFacingMotion(VFActor *self) {
     default:
         return;
     }
-    if ((self->hitStateFlags & 0x400) && float(static_cast<std::uint16_t>(self->reactionMiddleFrame)) >= self->animationTime) {
+    if ((self->hitStateFlags & VFHSF_CameraAssistLock) && float(static_cast<std::uint16_t>(self->reactionMiddleFrame)) >= self->animationTime) {
         const auto intersection = direction & self->cameraMotionFlags;
         if (intersection & 8)
             slot = 286;
         else if (intersection & 16)
             slot = 290;
     }
-    Store(self, 0xa71, self->cameraMotionFlags);
+    self->previousCameraMotionFlags = self->cameraMotionFlags;
     self->cameraMotionFlags = direction;
     Install(self, Animation(self, slot));
     ++self->hitPhase;
-    Store(self, 0x984, std::uint32_t{1});
+    self->reactionDepthBits = std::uint32_t{1};
 }
 
 // @verified - p
@@ -542,16 +540,16 @@ void UpdateGuardImpactHold(VFActor *self) {
     VFActor *const other = self->actor;
     switch (self->hitPhase) {
     case 0:
-        self->moveFlags |= 0x10;
+        self->moveFlags |= VFMF_HitReactionLock;
         self->knockbackVelocity.x = self->pendingKnockback.x * 1.5f;
         self->knockbackVelocity.z = self->pendingKnockback.z * 1.5f;
         self->slideVelocity.x = self->pendingKnockback.x * 4;
         self->slideVelocity.z = self->pendingKnockback.z * 4;
         self->pendingAnimation = static_cast<std::uint16_t>(self->queuedAction);
         if (!self->pendingAnimation)
-            self->pendingAnimation = Animation(self, (self->hitStateFlags & 8) ? 20 : 16);
+            self->pendingAnimation = Animation(self, (self->hitStateFlags & VFHSF_Unknown8) ? 20 : 16);
         vfApplyHitReactionAndStartMotion(self);
-        self->hitStateFlags |= 1;
+        self->hitStateFlags |= VFHSF_ReactionActive;
         if (self->actionTriggerPhase) {
             if (self->reactionEndFrame > self->currentAnimationEndFrame)
                 self->reactionEndFrame = self->currentAnimationEndFrame;
@@ -579,8 +577,8 @@ void UpdateGuardImpactHold(VFActor *self) {
     }
     case 3:
         if (timer <= 0) {
-            self->hitStateFlags &= ~1u;
-            self->moveFlags &= ~0x10u;
+            self->hitStateFlags &= ~VFHSF_ReactionActive;
+            self->moveFlags &= ~VFMF_HitReactionLock;
             self->queuedAction = 0;
         }
         break;
@@ -590,7 +588,7 @@ void UpdateGuardImpactHold(VFActor *self) {
     if (other->lastHitMove != self->parameter44e && (other->groundContactFlags & 3)) {
         self->pendingAnimation = vfTryGuardReactionSwap(self, other);
         if (self->pendingAnimation) {
-            Store(self, 0x392, std::uint8_t{1});
+            self->queuedActionState = std::uint8_t{1};
             self->hitPhase = 3;
         }
     }
@@ -599,22 +597,22 @@ void UpdateGuardImpactHold(VFActor *self) {
 // @verified - p
 void UpdatePairedMotion(VFActor *self) {
     VFMA_t *const game = self->game;
-    if (self->secondaryMotionFlags & 0x400)
-        self->moveFlags |= 0x10;
+    if (self->secondaryMotionFlags & VFSMF_Unknown400)
+        self->moveFlags |= VFMF_HitReactionLock;
     if (!self->hitPhase) {
         VFMA_t *const current = vfmaGetTaskParam();
         if (current && (current->mode & 0x80000)) {
             std::memcpy(&self->targetPosition, game->reserved560, sizeof(Vector3));
             std::memcpy(&self->targetFacingAngle, game->reserved560 + 12, sizeof(std::uint16_t));
-            self->moveFlags |= 0x10000000;
+            self->moveFlags |= VFMF_RefreshContactHistory;
         } else if (((self->queuedAction >> 24) & 0xff) == 8) {
             std::memcpy(game->reserved560, &self->targetPosition, sizeof(Vector3));
             std::memcpy(game->reserved560 + 12, &self->targetFacingAngle, sizeof(std::uint16_t));
             const auto animation = static_cast<std::uint16_t>(self->queuedAction);
             std::memcpy(game->reserved560 + 14, &animation, sizeof(animation));
         }
-        self->moveFlags &= ~0x10u;
-        self->stateFlags |= 0x200;
+        self->moveFlags &= ~VFMF_HitReactionLock;
+        self->stateFlags |= VFSF_Unknown200;
         self->pendingAnimation = static_cast<std::int16_t>(self->queuedAction);
         self->knockbackAcceleration = game->knockbackAmount;
         vfApplyHitReactionAndStartMotion(self);
@@ -638,21 +636,21 @@ void UpdatePairedMotion(VFActor *self) {
         ++self->hitPhase;
     }
     if (self->hitPhase == 2) {
-        if (self->activeMotionFlags & 0xc00)
+        if (self->activeMotionFlags & (VFSMF_Unknown400 | VFSMF_Unknown800))
             ++self->hitPhase;
         else if (self->animationTime >= float(self->reactionEndFrame)) {
             mtwkSetExtraFlag(self->motion, 1, 2);
-            self->moveFlags &= ~0x200u;
+            self->moveFlags &= ~VFMF_Unknown200;
             self->queuedAction = 0;
             return;
         }
     }
     if ((self->hitPhase == 2 || self->hitPhase == 3) && float(self->reactionEndFrame) <= self->animationTime && self->requestedAnimation &&
-        (self->secondaryMotionFlags & 0xc00)) {
+        (self->secondaryMotionFlags & (VFSMF_Unknown400 | VFSMF_Unknown800))) {
         const auto animation = self->requestedAnimation == -1 ? self->currentAnimation : static_cast<std::uint16_t>(self->requestedAnimation);
         self->parameter370 = std::uint64_t(animation) + 0x08000000;
         mtwkSetExtraFlag(self->motion, 1, 2);
-        self->moveFlags &= ~0x10u;
+        self->moveFlags &= ~VFMF_HitReactionLock;
         self->queuedAction = 0;
     }
 }
@@ -663,18 +661,18 @@ void UpdatePairedDamage(VFActor *self) {
     VFMA_t *const game = self->game;
     if (!self->hitPhase) {
         self->pendingAnimation = static_cast<std::int16_t>(self->queuedAction);
-        self->stateFlags |= 0x200;
+        self->stateFlags |= VFSF_Unknown200;
         self->knockbackAcceleration = game->knockbackAmount;
         vfApplyHitReactionAndStartMotion(self);
-        self->moveFlags |= 0x10;
+        self->moveFlags |= VFMF_HitReactionLock;
         ++self->hitPhase;
-        Store(self, 0xa6c, source->facingAngleDelta);
+        self->reactionFacingAngleDelta = source->facingAngleDelta;
         self->knockbackVelocity = self->pendingKnockback = self->slideVelocity = {};
         VFMA_t *const current = vfmaGetTaskParam();
         if (current && (current->mode & 0x80000)) {
             std::memcpy(&source->targetPosition, game->reserved560, sizeof(Vector3));
             std::memcpy(&source->targetFacingAngle, game->reserved560 + 12, sizeof(std::uint16_t));
-            self->moveFlags |= 0x10000000;
+            self->moveFlags |= VFMF_RefreshContactHistory;
         }
         self->position = self->contactPosition = source->targetPosition;
         self->facingAngle = static_cast<std::uint16_t>(source->targetFacingAngle);
@@ -685,28 +683,29 @@ void UpdatePairedDamage(VFActor *self) {
     if (self->hitPhase == 1) {
         if (self->animationTime < float(self->parameter2e0))
             return;
-        if (self->motionFlags & 0x4000)
-            self->hitStateFlags |= 0x4000;
-        const auto strength =
-            (source->secondaryMotionFlags & 0x400) ? static_cast<std::uint8_t>(source->guardHitParameter) : static_cast<std::uint8_t>(source->guardStrength);
+        if (self->motionFlags & VFMOF_Unknown4000)
+            self->hitStateFlags |= VFHSF_SpecialGuardOrParry;
+        const auto strength = (source->secondaryMotionFlags & VFSMF_Unknown400) ? static_cast<std::uint8_t>(source->guardHitParameter) :
+                                                                                  static_cast<std::uint8_t>(source->guardStrength);
         auto damage = static_cast<std::int16_t>(strength + source->parameter350);
         const auto flags = game->groups[self->groupIndex]->selectFlags;
-        if ((((flags & 0x80) && (source->secondaryMotionFlags & 0x4000008)) || ((flags & 0x20) && (source->secondaryMotionFlags & 0x4000000))) &&
+        if ((((flags & 0x80) && (source->secondaryMotionFlags & (VFSMF_Unknown8 | VFSMF_Unknown4000000))) ||
+                ((flags & 0x20) && (source->secondaryMotionFlags & VFSMF_Unknown4000000))) &&
             !(g_pFightStage->battleFlags & 0x20))
             damage = static_cast<std::int16_t>(int(self->hp) + 1);
-        if (self->fightStyle == 18 && Read<std::uint8_t>(self->slot, 0x128) > 1)
+        if (self->fightStyle == 18 && self->slot->parameter128 > 1)
             damage = static_cast<std::int16_t>(int(self->hp) + 1);
-        const auto slot = Read<std::uint8_t>(self->slot, 0x1a5);
+        const auto slot = static_cast<std::uint8_t>(self->slot->parameter1a5);
         if (slot == 2) {
-            if ((self->savedMotionFlags & 0x40000) && (source->motionFlags & 0x100000))
+            if ((self->savedMotionFlags & VFMOF_Unknown40000) && (source->motionFlags & VFMOF_ReverseFacingOnHit))
                 self->parameterB2c = 20;
-        } else if (slot == 3 && ((self->secondaryMotionFlags & 0x10) || std::uint16_t((self->currentAnimation & 0xfff) - 67) <= 1)) {
+        } else if (slot == 3 && ((self->secondaryMotionFlags & VFSMF_Unknown10) || std::uint16_t((self->currentAnimation & 0xfff) - 67) <= 1)) {
             constexpr float multipliers[16]{6, 6.4f, 6.8f, 7.2f, 7.6f, 8, 8.4f, 8.8f, 9.2f, 9.6f, 10, 10.4f, 10.8f, 11.2f, 11.6f, 12};
             self->parameterB2c = multipliers[vfMotnNibbleGet(67)];
         }
-        Store(self, 0x414,
-            (self->savedMotionFlags & 0x80000) ? static_cast<std::uint16_t>(Read<std::uint16_t>(self, 0x414) + damage) : static_cast<std::uint16_t>(damage));
-        if (self->secondaryMotionFlags & 0xc00)
+        self->pendingGuardDamage =
+            (self->savedMotionFlags & VFMOF_Unknown80000) ? static_cast<std::uint16_t>(self->pendingGuardDamage + damage) : static_cast<std::uint16_t>(damage);
+        if (self->secondaryMotionFlags & (VFSMF_Unknown400 | VFSMF_Unknown800))
             ++self->hitPhase;
         else
             self->hitPhase = 3;
@@ -717,7 +716,7 @@ void UpdatePairedDamage(VFActor *self) {
         if (float(self->currentAnimationEndFrame) > self->animationTime)
             return;
         const auto animation = static_cast<std::uint16_t>(self->requestedAnimation);
-        if (std::uint16_t(animation - 1) <= 0xfffd && (self->secondaryMotionFlags & 0xc00))
+        if (std::uint16_t(animation - 1) <= 0xfffd && (self->secondaryMotionFlags & (VFSMF_Unknown400 | VFSMF_Unknown800)))
             self->parameter370 = std::uint64_t(animation) + 0x08000000;
     } else if (self->hitPhase != 3)
         return;
@@ -728,22 +727,22 @@ void UpdatePairedDamage(VFActor *self) {
         camCtrlSetInterpModeTo(savedPairCameraMode);
     }
     VFMA_t *const current = vfmaGetTaskParam();
-    if (current && (current->mode & 0x80000) && !(self->moveFlags & 0x20) && !(self->stateFlags & 0x80))
+    if (current && (current->mode & 0x80000) && !(self->moveFlags & VFMF_ForceDefeat) && !(self->stateFlags & VFSF_Unknown80))
         vfHandleImpactSfxAndDefeat(self, 10000, 0);
     figpAssignModeForCharacter(self->character, 0);
-    if ((self->moveFlags & 0x20) || self->hp <= 0)
-        self->hitStateFlags = (self->hitStateFlags & ~0x80000u) | 0x14000;
-    else if (self->parameter2dc == 4 || (self->hitStateFlags & 0x4000)) {
-        const auto amount = Read<std::uint16_t>(self, 0x414);
+    if ((self->moveFlags & VFMF_ForceDefeat) || self->hp <= 0)
+        self->hitStateFlags = (self->hitStateFlags & ~VFHSF_AirborneOrDowned) | 0x14000;
+    else if (self->parameter2dc == 4 || (self->hitStateFlags & VFHSF_SpecialGuardOrParry)) {
+        const auto amount = self->pendingGuardDamage;
         auto frames = amount <= 14 ? std::uint8_t{1} : static_cast<std::uint8_t>(int((float(amount) - 14 + 0.5f) * 0.25f));
         if (frames > 30)
             frames = 30;
         self->parameter370 = 0x06000000;
-        Store(self, 0x40c, static_cast<std::uint16_t>(int(float(frames) * self->inverseScale)));
+        self->hitPhaseWords[0] = static_cast<std::uint16_t>(int(float(frames) * self->inverseScale));
     } else {
-        self->stateFlags &= ~0x200u;
+        self->stateFlags &= ~VFSF_Unknown200;
         self->queuedAction = 0;
-        self->moveFlags &= ~0x10u;
+        self->moveFlags &= ~VFMF_HitReactionLock;
     }
 }
 
@@ -751,7 +750,7 @@ void UpdatePairedDamage(VFActor *self) {
 // @verified - p
 void UpdateAirborneReaction(VFActor *self) {
     if (!self->hitPhase) {
-        self->moveFlags |= 0x10;
+        self->moveFlags |= VFMF_HitReactionLock;
         const auto animation = static_cast<std::uint16_t>(self->queuedAction);
         self->pendingAnimation = animation;
         self->knockbackAcceleration = self->timeScale;
@@ -770,7 +769,7 @@ void UpdateAirborneReaction(VFActor *self) {
         vfApplyHitReactionAndStartMotion(self);
         mtwkSetExtraFlag(self->motion, 0, 2);
         if (camCtrlGetInterpMode() == CameraMotionMode::AutoQuadratic)
-            self->hitStateFlags &= ~0x100u;
+            self->hitStateFlags &= ~VFHSF_AttackActive;
         if (!FindLoadedMotionSecondaryEntry(animation & 0xfff, 3).empty()) {
             ++self->hitPhase;
             self->knockbackVelocity = {};
@@ -793,11 +792,11 @@ void UpdateAirborneReaction(VFActor *self) {
         vfPredictLandingGround(self);
         ++self->hitPhase;
     } else if (self->hitPhase == 2) {
-        if (!(self->moveFlags & 8))
+        if (!(self->moveFlags & VFMF_Ascending))
             self->knockbackVelocity.y -= self->scale * self->scale * self->game->gravityScale;
         vfUpdateGroundImpactReaction(self);
-        if (!(self->moveFlags & 4)) {
-            if (!(self->activeMotionFlags & 1))
+        if (!(self->moveFlags & VFMF_Airborne)) {
+            if (!(self->activeMotionFlags & VFSMF_Unknown1))
                 self->animationTime = self->parameter4c8 = float(self->parameter2e0);
             self->hitPhase = 4;
         }
@@ -806,9 +805,9 @@ void UpdateAirborneReaction(VFActor *self) {
             figpAssignModeForCharacter(self->character, 0);
         mtwkSetExtraFlag(self->motion, 0, 0);
         if (SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody)) {
-            if (!(self->hitStateFlags & 0x8000) && !(self->moveFlags & 0x20))
+            if (!(self->hitStateFlags & VFHSF_SpecialThrow) && !(self->moveFlags & VFMF_ForceDefeat))
                 self->parameter370 = 0x06000000;
-            self->moveFlags &= ~0x10u;
+            self->moveFlags &= ~VFMF_HitReactionLock;
             self->queuedAction = 0;
         }
     }
@@ -823,10 +822,10 @@ void UpdateTerrainDrop(VFActor *self) {
     }
     switch (self->hitPhase) {
     case 0:
-        self->moveFlags |= 0x10;
+        self->moveFlags |= VFMF_HitReactionLock;
         if (self->animationTime >= float(self->reactionEndFrame)) {
             figpAssignModeForCharacter(self->character, 0);
-            self->hitStateFlags &= ~0x80000u;
+            self->hitStateFlags &= ~VFHSF_AirborneOrDowned;
             if (!((self->hitStateFlags | self->motionFlags) & 0x1c000))
                 Install(self, 198);
         }
@@ -835,7 +834,7 @@ void UpdateTerrainDrop(VFActor *self) {
             vfSetupLinkedFightCamera(self, 3);
         }
         self->hitPhase = 1;
-        if (self->hitStateFlags & 0x800000) {
+        if (self->hitStateFlags & VFHSF_AlignedToGround) {
             self->knockbackVelocity = self->pendingKnockback = self->slideVelocity = {};
             if (g_currentMap.name != SHEN_NAME(QLBT))
                 self->hitPhase = 3;
@@ -864,19 +863,19 @@ void UpdateTerrainDrop(VFActor *self) {
         self->hitPhase = 2;
         break;
     case 2:
-        if (!(self->moveFlags & 4)) {
+        if (!(self->moveFlags & VFMF_Airborne)) {
             self->animationTime = self->parameter4c8 = float(self->parameter2e0);
-            if ((self->motionFlags & 0x84000) == 0x84000)
-                self->hitStateFlags |= 0x4000;
+            if ((self->motionFlags & (VFMOF_Unknown4000 | VFMOF_Unknown80000)) == 0x84000)
+                self->hitStateFlags |= VFHSF_SpecialGuardOrParry;
             self->hitPhase = 3;
         }
         break;
     case 3:
         if (self->animationTime > float(self->reactionEndFrame)) {
             figpAssignModeForCharacter(self->character, 0);
-            const auto animation = !(self->hitStateFlags & 0x4000) ? self->defaultAnimations[0] :
-                (self->motionFlags & 0x4000000)                    ? ((self->motionFlags & 0x800) ? 452 : 453) :
-                                                                     Animation(self, (self->motionFlags & 0x800) ? 68 : 66);
+            const auto animation = !(self->hitStateFlags & VFHSF_SpecialGuardOrParry) ? self->defaultAnimations[0] :
+                (self->motionFlags & VFMOF_Unknown4000000)                            ? ((self->motionFlags & VFMOF_ContactCategoryB) ? 452 : 453) :
+                                                                                        Animation(self, (self->motionFlags & VFMOF_ContactCategoryB) ? 68 : 66);
             Install(self, animation);
             self->hitPhase = 4;
         }
@@ -890,10 +889,10 @@ void UpdateTerrainDrop(VFActor *self) {
 // @verified - p
 void UpdateDirectionalMotion(VFActor *self) {
     const auto oldFlags = self->cameraMotionFlags;
-    const auto sector = Read<std::uint8_t>(self, 0xa6e);
-    const bool changed = sector != Read<std::uint8_t>(self, 0xa6f);
-    const bool mirrored = (self->moveFlags & 0x400) != 0;
-    const bool motionTwo = (self->motionFlags & 2) != 0;
+    const auto sector = self->relativeInputSectors[0];
+    const bool changed = sector != self->relativeInputSectors[1];
+    const bool mirrored = (self->moveFlags & VFMF_MirroredStance) != 0;
+    const bool motionTwo = (self->motionFlags & VFMOF_Unknown2) != 0;
     std::uint16_t slot = 0;
     std::uint8_t direction = 0;
     bool flip = false;
@@ -903,8 +902,8 @@ void UpdateDirectionalMotion(VFActor *self) {
         direction = 8;
         flip = mirrored && changed;
         if (mirrored) {
-            self->hitStateFlags &= ~0x200000u;
-            self->moveFlags &= 0xfffffbbf;
+            self->hitStateFlags &= ~VFHSF_MirroredReactionAngle;
+            self->moveFlags &= ~(VFMF_MirrorReactionAngle | VFMF_MirroredStance);
             SetMotionRegionFlag(self->motion, 69, 2, MotionRegion::LowerBody);
         }
         break;
@@ -928,8 +927,8 @@ void UpdateDirectionalMotion(VFActor *self) {
         direction = 16;
         flip = !mirrored && changed;
         if (mirrored) {
-            self->hitStateFlags &= ~0x200000u;
-            self->moveFlags &= 0xfffffbbf;
+            self->hitStateFlags &= ~VFHSF_MirroredReactionAngle;
+            self->moveFlags &= ~(VFMF_MirrorReactionAngle | VFMF_MirroredStance);
             SetMotionRegionFlag(self->motion, 69, 2, MotionRegion::LowerBody);
         }
         break;
@@ -952,22 +951,22 @@ void UpdateDirectionalMotion(VFActor *self) {
     }
     if (changed) {
         if (flip)
-            self->stateFlags |= 0x10000;
+            self->stateFlags |= VFSF_UseLeftFootTarget;
         else
-            self->stateFlags &= ~0x10000u;
+            self->stateFlags &= ~VFSF_UseLeftFootTarget;
     }
-    if ((self->hitStateFlags & 0x400) && self->animationTime <= float(self->reactionEndFrame)) {
-        if (sector == Read<std::uint8_t>(self, 0xa6f) || !((self->cameraControlFlags ^ Read<std::uint8_t>(self, 0xa72)) & 0xf0))
+    if ((self->hitStateFlags & VFHSF_CameraAssistLock) && self->animationTime <= float(self->reactionEndFrame)) {
+        if (sector == self->relativeInputSectors[1] || !((self->cameraControlFlags ^ self->previousReactionInputBytes[0]) & 0xf0))
             return;
-        Store(self, 0xa6f, sector);
-        Store(self, 0xa71, self->cameraMotionFlags);
+        self->relativeInputSectors[1] = sector;
+        self->previousCameraMotionFlags = self->cameraMotionFlags;
         self->cameraMotionFlags = direction | (oldFlags & 0x87);
         self->queuedAction = 0;
         Install(self, Animation(self, slot));
     } else {
         Install(self, Animation(self, slot));
-        Store(self, 0xa71, self->cameraMotionFlags);
-        Store(self, 0xa6f, Read<std::uint8_t>(self, 0xa6e));
+        self->previousCameraMotionFlags = self->cameraMotionFlags;
+        self->relativeInputSectors[1] = self->relativeInputSectors[0];
         self->cameraMotionFlags = direction | (oldFlags & 0x87);
         self->queuedAction = 0;
     }
@@ -1014,7 +1013,7 @@ void vfCopyActionToQueuedActionAndResetHitPhase(VFActor *self) {
 // @verified - p
 void vfQueueStepAnimationIfDue(VFActor *self) {
     if ((self->animationTime > 9 || static_cast<std::uint8_t>(self->action >> 24) != static_cast<std::uint8_t>(self->queuedAction >> 24)) &&
-        !(self->hitStateFlags & 0x10000000)) {
+        !(self->hitStateFlags & VFHSF_ForcedReaction)) {
         self->pendingAnimation = static_cast<std::int16_t>(ReactionAnimation(self, 286));
         vfApplyHitReactionAndStartMotion(self);
         self->queuedAction = self->action;
@@ -1024,7 +1023,7 @@ void vfQueueStepAnimationIfDue(VFActor *self) {
 // @verified - p
 void VF_SetKnockbackAnimationVariablesAndTriggerReaction(VFActor *self) {
     if ((self->animationTime > 9 || static_cast<std::uint8_t>(self->action >> 24) != static_cast<std::uint8_t>(self->queuedAction >> 24)) &&
-        !(self->hitStateFlags & 0x10000000)) {
+        !(self->hitStateFlags & VFHSF_ForcedReaction)) {
         self->pendingAnimation = static_cast<std::int16_t>(ReactionAnimation(self, 290));
         vfApplyHitReactionAndStartMotion(self);
         self->queuedAction = self->action;
@@ -1040,11 +1039,11 @@ void vfQueueReactionEventFromEntryTable(VFActor *self) {
 
 // @verified - p
 void vfApplyCameraRelativeDodgeOrStep(VFActor *self) {
-    if (static_cast<std::uint8_t>(self->action >> 24) == static_cast<std::uint8_t>(self->queuedAction >> 24) || (self->hitStateFlags & 0x10000000))
+    if (static_cast<std::uint8_t>(self->action >> 24) == static_cast<std::uint8_t>(self->queuedAction >> 24) || (self->hitStateFlags & VFHSF_ForcedReaction))
         return;
     constexpr std::uint16_t offsets[8]{30, 32, 236, 238, 12, 14, 236, 238};
     const VFActor *other = self->actor;
-    const bool airborne = (self->moveFlags & 0x400) != 0;
+    const bool airborne = (self->moveFlags & VFMF_MirroredStance) != 0;
     const bool player = self->groupIndex == static_cast<std::uint8_t>(self->game->playerSlot) && !(self->game->gameFlags & 0x400000);
     const std::int16_t facing = player ? self->alternateContactFacing : self->contactFacing;
     const auto close = [](std::int16_t angle, std::int16_t target) { return std::fabs(float(static_cast<std::int16_t>(angle - target))) <= 8192; };
@@ -1058,8 +1057,8 @@ void vfApplyCameraRelativeDodgeOrStep(VFActor *self) {
         index = !airborne;
     else
         index = airborne;
-    if (((other->hitStateFlags & 0x100) && float(static_cast<std::uint16_t>(other->parameter2d0)) - other->animationTime > 5) ||
-        (other->secondaryMotionFlags & 2))
+    if (((other->hitStateFlags & VFHSF_AttackActive) && float(static_cast<std::uint16_t>(other->parameter2d0)) - other->animationTime > 5) ||
+        (other->secondaryMotionFlags & VFSMF_Unknown2))
         index += 4;
     std::uint16_t id = ReactionAnimation(self, offsets[index]);
     if (!id && index >= 4)
