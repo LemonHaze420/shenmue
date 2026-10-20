@@ -264,7 +264,7 @@ void DebugMainCallback(void *parameter) {
         stage.y -= 0.5f;
         if (work.audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-            audience->stagePosition = stage;
+            audience->soundCentre = stage;
             audience->state = 2;
         }
         Vector3 savedPlayer, savedBookie, player, bookie;
@@ -578,7 +578,7 @@ void DebugBattleEndCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
     EV_LoadAudio("0100E000", 0);
-    BeginPrimarySampleExecution(0);
+    BeginSecondarySampleExecution(0);
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFTC_BASE);
     AT_SetLocalBaseChara(fighter, SFTC_BASE);
     EV_SetCharacterAlphaEnabled(STREET_FIGHT_RYO, false);
@@ -800,7 +800,7 @@ void MainCallback(void *parameter) {
         origin.y -= .5f;
         if (work.audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-            audience->stagePosition = origin;
+            audience->soundCentre = origin;
             audience->state = 2;
         }
         EV_GetCharaPosition(STREET_FIGHT_RYO, CHARACTER_TRANSLATION_ROOT, &playerPosition, EventTransformFlags::Local);
@@ -1023,7 +1023,7 @@ void BattleEntryCallback(void *parameter) {
 }
 void BattlePreEventCallback(void *) {
     EV_LoadAudio("0100E000", 1);
-    BeginPrimarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     EVT_AT_MenCtrl(EventFilmControl{.cleanup = 1,
         .frames = 30,
         .startAlpha = 255,
@@ -1215,7 +1215,7 @@ void BattleEndCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
     EV_LoadAudio("0100E000", 0);
-    BeginPrimarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFTC_BASE);
     AT_SetLocalBaseChara(fighter, SFTC_BASE);
     EV_SetCharacterAlphaEnabled(STREET_FIGHT_RYO, false);
@@ -1335,7 +1335,7 @@ std::int32_t AcceptConversation(void *parameter) {
     EVT_AT_SetPoint(fighter, STREET_FIGHT_RYO, 5, 1, 0, 70, frames, 0);
     SetHighModelXYZ(FindCharacterByScenarioName(STREET_FIGHT_RYO), 1, 1, 0);
     SetHighModelXYZ(FindCharacterByScenarioName(STREET_FIGHT_RYO), 1, 0, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(STREET_FIGHT_RYO), 1, reinterpret_cast<std::byte *>(greetingHandPoseCommand), 30);
+    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(STREET_FIGHT_RYO), 0, reinterpret_cast<std::byte *>(greetingHandPoseCommand), 30);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(StreetFightHighModelCallback, 6, 0x0b, sizeof(StreetFightHighModelWork), STREET_FIGHT_EVENT_TASK);
     StreetFightHighModelWork *const display = static_cast<StreetFightHighModelWork *>(HLib::GetTaskParameter(task));
     display->task = task;
@@ -1505,7 +1505,7 @@ void ResetToMain(StreetFightEventWork &work) {
             audience->mode &= ~2U;
     }
     EV_LoadAudio("0100E000", 0);
-    BeginPrimarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     work.state = work.battleStatus = 0;
     work.audienceResultPublished = 0;
     work.auxiliaryState = 0;
@@ -1547,9 +1547,9 @@ void CleanupNormalCallback(void *parameter) {
         DeleteMotion(*motion);
     EV_FreeAuthorPak(0, "0100");
     if (!(start->flags & 1U))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QSFB"), 0);
+        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QSFD"), 0);
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014))
-        BeginPrimarySampleExecution(0);
+        EV_spmBeginSampleExecute();
     else
         LoadCutsceneAndSoundProgramForArea();
     SetRenderClockAndCompassTo(0);
@@ -1603,7 +1603,7 @@ void LoadNormalResources(StreetFightEventWork &work) {
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0100E000");
     EV_LoadAudio("0100E000", 0);
-    BeginPrimarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     if (EV_GetShenmueFlag(FLAG_NIGHT_TIME_ENFORCED))
         SetNewNpcBatchCountOverride(NpcFillType::BackFill, 12);
     FinishLoading();

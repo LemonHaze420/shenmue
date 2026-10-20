@@ -23,7 +23,7 @@ struct D3TTaskRecord {
     D3TTaskDescriptor descriptor;
     std::atomic<std::int32_t> state;
     std::array<std::byte, 0xc00> data;
-    std::int32_t schedule;
+    std::atomic<std::int32_t> schedule;
     std::uint16_t generation;
     std::uint16_t reserved_c2a;
     std::int32_t result;

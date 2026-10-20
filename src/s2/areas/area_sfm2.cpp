@@ -267,7 +267,7 @@ void DebugMainCallback(void *parameter) {
         stage.y -= 0.5f;
         if (work.audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-            audience->stagePosition = stage;
+            audience->soundCentre = stage;
             audience->state = 2;
         }
         Vector3 savedPlayer, savedBookie, player, bookie;
@@ -581,7 +581,7 @@ void DebugBattleEndCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
     EV_LoadAudio("0100E000", 0);
-    EV_spmBeginSampleExecute();
+    BeginSecondarySampleExecution(0);
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFM2_BASE);
     AT_SetLocalBaseChara(fighter, SFM2_BASE);
     EV_SetCharacterAlphaEnabled(STREET_FIGHT_RYO, false);
@@ -820,7 +820,7 @@ void MainCallback(void *parameter) {
         centre.y -= .5f;
         if (work.audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-            audience->stagePosition = centre;
+            audience->soundCentre = centre;
             audience->state = 2;
         }
         EV_GetCharaPosition(STREET_FIGHT_RYO, CHARACTER_TRANSLATION_ROOT, &savedPlayer, EventTransformFlags::Relative);

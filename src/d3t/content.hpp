@@ -25,6 +25,11 @@ struct D3TShaderLoadTask {
     std::byte reserved_31[7];
 };
 
+enum ContentSlotFlag : std::uint32_t {
+    CSF_Allocated = 0x01,
+    CSF_ReleaseRequested = 0x04,
+    CSF_SkipBufferDetach = 0x08,
+};
 struct D3TContentSlot {
     std::uint16_t generation;
     std::uint16_t reserved_02;
@@ -54,6 +59,7 @@ struct D3TContentSlot {
 
 static_assert(sizeof(D3TContentThreadDescriptor) == 0x10);
 static_assert(sizeof(D3TShaderLoadTask) == 0x38);
+static_assert(offsetof(D3TContentSlot, flags) == 0x04);
 static_assert(offsetof(D3TContentSlot, sourcePath) == 0x10);
 static_assert(offsetof(D3TContentSlot, loadedData) == 0x110);
 static_assert(offsetof(D3TContentSlot, callback) == 0x128);

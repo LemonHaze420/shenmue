@@ -265,7 +265,7 @@ void DebugMainCallback(void *parameter) {
         stage.y -= 0.5f;
         if (work.audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-            audience->stagePosition = stage;
+            audience->soundCentre = stage;
             audience->state = 2;
         }
         Vector3 savedPlayer, savedBookie, player, bookie;
@@ -570,7 +570,7 @@ void DebugBattleEndCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
     EV_LoadAudio("0260A000", 0);
-    BeginPrimarySampleExecution(0);
+    BeginSecondarySampleExecution(0);
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFLU_BASE);
     AT_SetLocalBaseChara(fighter, SFLU_BASE);
     EV_SetCharacterAlphaEnabled(STREET_FIGHT_RYO, false);
@@ -784,7 +784,7 @@ void DebugCharacterLoadCallback(void *parameter) {
 std::int32_t DebugIntroConversation(void *parameter) {
     const StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
-    BeginPrimarySampleExecution(0);
+    BeginSecondarySampleExecution(0);
     EVT_AT_SetPos(STREET_FIGHT_RYO, SFLU_BASE, work.playerPosition, 0);
     EVT_AT_SetPos(STREET_FIGHT_RYO, SFLU_BASE, work.playerPosition, 200);
     EVT_AT_SetAngY(STREET_FIGHT_RYO, SFLU_BASE, 225, 0);
@@ -1099,7 +1099,7 @@ Vector3 savedPlayerPosition{}, savedFighterPosition{};
 Vector3i savedPlayerRotation{}, savedFighterRotation{};
 std::uint8_t qtePhase{};
 std::int32_t trainingLevel{}, trainingFrames{}, battleLevel{};
-std::int32_t lostFrames{}, failedInput{-1}, cameraManualMode{-1};
+std::int32_t lostFrames{}, failedInput{-1}, cameraManualMode{};
 float authoredFarClip{};
 shen_name elevatorCharacters[9]{};
 HLib::Task *elevatorPanelTask{};
@@ -1230,7 +1230,7 @@ void UpdateBattleQte(StreetFightEventWork &work) {
                     second = first;
                     third = 512;
                 }
-                qteBattleUtil(BattleQteMode::SetLastCommands, first, second, third, 0);
+                qteBattleUtil(BattleQteMode::SetFirstCommands, first, second, third, 0);
                 qteBattleUtil(BattleQteMode::ResetStates);
                 qteBattleUtil(BattleQteMode::Queue);
                 EV_vfBattleUtil(FightBattleUtilOp::FightModeFlags, shen_name{0x1000}, 1);
@@ -2059,10 +2059,10 @@ void MainCallback(void *parameter) {
         } else {
             work.battleStatus = GetBtlStatus(FindCharacterByScenarioName(STREET_FIGHT_RYO));
             if (work.battleStatus == 3) {
-                CommitStreetFightStoryRank(work.stage);
+                RecordStreetFightVictory(work.stage);
                 work.state = 19;
             } else {
-                ResetStreetFightStoryFlag(work.stage);
+                RecordStreetFightDefeat(work.stage);
                 spmFadeOut();
                 work.state = 39;
             }
@@ -2570,9 +2570,9 @@ void ResetMain(StreetFightEventWork &work) {
 void RetryBeginCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     if (work.battleStatus == 3)
-        CommitStreetFightStoryRank(work.stage);
+        RecordStreetFightVictory(work.stage);
     else
-        ResetStreetFightStoryFlag(work.stage);
+        RecordStreetFightDefeat(work.stage);
     dbgPrintEventMessage(GetLocalizedSceneText("UISMRETRY").data()); // @text EN: "Retry?" | JA: "もう一度？"
     EVT_AT_KsIcon_Enqueue(-1, 82, 83, -1, 0x7fff, 0xffff, 2, 0);
     if (work.audienceTask) {

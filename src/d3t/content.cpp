@@ -283,12 +283,12 @@ bool processContentSlots() {
                 setState(slot, 10);
                 slot.taskHandle = d3t_QueueTask(&descriptor, sizeof(slotPointer));
             } else {
-                slot.flags.fetch_or(4U, std::memory_order_seq_cst);
+                slot.flags.fetch_or(CSF_ReleaseRequested, std::memory_order_seq_cst);
                 completeContentSlot(slot);
             }
         }
-        if (slot.state.load(std::memory_order_seq_cst) == 12 && (slot.flags.load(std::memory_order_seq_cst) & 4U) != 0) {
-            if ((slot.flags.load(std::memory_order_seq_cst) & 8U) == 0) {
+        if (slot.state.load(std::memory_order_seq_cst) == 12 && (slot.flags.load(std::memory_order_seq_cst) & CSF_ReleaseRequested) != 0) {
+            if ((slot.flags.load(std::memory_order_seq_cst) & CSF_SkipBufferDetach) == 0) {
                 Archive_DetachBuffer(slot.archiveHandle);
             }
             ReadFile_0(0, &slot.archiveHandle);
@@ -316,7 +316,7 @@ std::int64_t PushShaderLoadToThreadQueue(const D3TShaderLoadTask *task) {
             continue;
         }
         ++slot.generation;
-        slot.flags.fetch_or(1, std::memory_order_seq_cst);
+        slot.flags.fetch_or(CSF_Allocated, std::memory_order_seq_cst);
         slot.reserved_08 = 0;
         std::memcpy(slot.sourcePath, path.c_str(), path.size() + 1);
         slot.renderHandle = task->renderHandle;
@@ -338,12 +338,11 @@ void ProcessThreadStates(std::uint32_t contentHandle, std::int32_t type) {
     if (!validContentHandle(contentHandle, slot)) {
         return;
     }
-    setState(*slot, type ? 4 : 12);
+    slot->flags.store(type ? CSF_ReleaseRequested : CSF_ReleaseRequested | CSF_SkipBufferDetach, std::memory_order_seq_cst);
     if (type) {
         Archive_DetachBuffer(slot->archiveHandle);
     } else {
         slot->loadedData = nullptr;
-        slot->loadedSize = 0;
     }
     ReadFile_0(0, &slot->archiveHandle);
     g_contentCondition.notify_one();

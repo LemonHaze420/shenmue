@@ -34,12 +34,15 @@ struct TadEntry {
     fs::path tacPath;
     std::uint32_t offset;
     std::uint32_t size;
+    std::uint32_t sourceIndex;
+    std::uint32_t flags;
 };
 
 struct TadArchive {
     fs::path tadPath;
     fs::path tacPath;
     std::uint64_t order;
+    std::uint32_t sourceIndex;
 };
 
 std::mutex g_indexMutex;
@@ -353,7 +356,7 @@ bool indexTad(const TadArchive &archive, std::uint32_t &entryCount, std::uint64_
         if (entry[0] == 0) {
             continue;
         }
-        if (g_tadEntries.emplace(hashKey(entry[0], entry[1]), TadEntry{archive.tacPath, entry[4], entry[6]}).second) {
+        if (g_tadEntries.emplace(hashKey(entry[0], entry[1]), TadEntry{archive.tacPath, entry[4], entry[6], archive.sourceIndex, entry[7]}).second) {
             ++entryCount;
         }
     }
@@ -388,7 +391,9 @@ bool indexTad(const TadArchive &archive, std::uint32_t &entryCount, std::uint64_
             return false;
         if (!entry.hash1)
             continue;
-        if (g_tadEntries.emplace(hashKey(entry.hash1, entry.hash2), TadEntry{archive.tacPath, entry.fileOffset, entry.fileSize}).second)
+        if (g_tadEntries
+                .emplace(hashKey(entry.hash1, entry.hash2), TadEntry{archive.tacPath, entry.fileOffset, entry.fileSize, archive.sourceIndex, entry.reserved1c})
+                .second)
             ++entryCount;
     }
     packedSize += tacSize;
@@ -420,6 +425,29 @@ std::optional<fs::path> looseFilePath(const char *path) {
         }
     }
     return std::nullopt;
+}
+
+void findArchiveSources(const fs::path &root, const char *backend, std::uint32_t type, std::vector<TadArchive> &archives) {
+    std::error_code error;
+    for (fs::directory_iterator cursor(root, error), end; !error && cursor != end; cursor.increment(error)) {
+        if (!cursor->is_regular_file(error) || lower(cursor->path().extension().string()) != ".tad")
+            continue;
+        TadArchive archive{cursor->path(), cursor->path(), 0, static_cast<std::uint32_t>(archives.size())};
+        archive.tacPath.replace_extension(".tac");
+        if (!fs::is_regular_file(archive.tacPath, error)) {
+            archive.tacPath = cursor->path();
+            archive.tacPath.replace_extension(".TAC");
+        }
+        if (fs::is_regular_file(archive.tacPath, error) && readTadHeader(archive.tadPath, backend, type, archive))
+            archives.push_back(std::move(archive));
+        error.clear();
+    }
+    error.clear();
+    for (fs::directory_iterator cursor(root, error), end; !error && cursor != end; cursor.increment(error)) {
+        if (cursor->is_directory(error))
+            findArchiveSources(cursor->path(), backend, type, archives);
+        error.clear();
+    }
 }
 
 } // namespace
@@ -470,21 +498,7 @@ bool ArchiveData_LoadArchives(const char *root, const char *backend, std::uint32
     }
 
     std::vector<TadArchive> archives;
-    for (fs::recursive_directory_iterator cursor(*archiveRoot, error), end; !error && cursor != end; cursor.increment(error)) {
-        if (!cursor->is_regular_file(error) || lower(cursor->path().extension().string()) != ".tad") {
-            continue;
-        }
-        TadArchive archive{cursor->path(), cursor->path(), 0};
-        archive.tacPath.replace_extension(".tac");
-        if (!fs::is_regular_file(archive.tacPath, error)) {
-            archive.tacPath = cursor->path();
-            archive.tacPath.replace_extension(".TAC");
-        }
-        if (fs::is_regular_file(archive.tacPath, error) && readTadHeader(archive.tadPath, backend, type, archive)) {
-            archives.push_back(std::move(archive));
-        }
-        error.clear();
-    }
+    findArchiveSources(*archiveRoot, backend, type, archives);
     std::sort(archives.begin(), archives.end(), [](const TadArchive &left, const TadArchive &right) { return left.order > right.order; });
     for (const TadArchive &archive : archives) {
         if (indexTad(archive, loaded.entryCount, loaded.packedSize)) {
@@ -551,6 +565,29 @@ bool ArchiveData_IsPackedFile(const char *path) {
         return named->second.size != 0;
     const std::unordered_map<std::uint64_t, TadEntry>::const_iterator found = g_tadEntries.find(normalHash(path));
     return found != g_tadEntries.end() && found->second.size != 0;
+}
+
+void ArchiveData_GetSourceDesc(const char *path, ArchiveSourceDesc &source) {
+    ensureIndex();
+    const TadEntry *entry = nullptr;
+    const std::unordered_map<std::string, TadEntry>::const_iterator named = g_namedEntries.find(cleanFilePath(path));
+    if (named != g_namedEntries.end())
+        entry = &named->second;
+    else {
+        const std::unordered_map<std::uint64_t, TadEntry>::const_iterator found = g_tadEntries.find(normalHash(path));
+        if (found != g_tadEntries.end())
+            entry = &found->second;
+    }
+    if (!entry || (entry->flags & 0x10000U)) {
+        source = {};
+        return;
+    }
+    source.sourceIndex = entry->sourceIndex;
+    source.sourceOffset = entry->offset;
+    source.fileSize = entry->size;
+    source.flags = static_cast<std::uint16_t>(entry->flags);
+    source.reserved16 = static_cast<std::uint16_t>(entry->flags >> 16U);
+    source.remapEntry = entry;
 }
 
 bool ArchiveData_Read(const char *path, std::uint64_t offset, void *destination, std::uint64_t size) {

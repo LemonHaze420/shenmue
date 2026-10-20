@@ -241,7 +241,7 @@ void DebugMainCallback(void *parameter) {
         stage.y -= 0.5f;
         if (work.audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-            audience->stagePosition = stage;
+            audience->soundCentre = stage;
             audience->state = 2;
         }
         Vector3 savedPlayer, savedBookie, player, bookie;
@@ -539,12 +539,11 @@ void DebugBattleWaitFadeCallback(void *parameter) {
     work.frameCounter = 0;
 }
 
-// @verified - p
 void DebugBattleEndCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
     EV_LoadAudio("0100E000", 0);
-    BeginPrimarySampleExecution(0);
+    BeginSecondarySampleExecution(0);
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFJF_BASE);
     AT_SetLocalBaseChara(fighter, SFJF_BASE);
     EV_SetCharacterAlphaEnabled(STREET_FIGHT_RYO, false);
@@ -811,7 +810,6 @@ void RetryBeginCallback(void *parameter) {
     HLib::SetCurrentTaskTo(RetryChoiceCallback);
 }
 
-// @verified - p
 void RetryChoiceCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const std::uint16_t choice = static_cast<std::uint16_t>(ControlChoice(1));
@@ -831,7 +829,7 @@ void RetryChoiceCallback(void *parameter) {
             audience->mode &= ~2U;
     }
     EV_LoadAudio("0256A000", 1);
-    BeginPrimarySampleExecution(0);
+    EV_spmBeginSampleExecute();
 }
 
 void CleanupNormalCallback(void *parameter) {
@@ -875,7 +873,7 @@ void CleanupNormalCallback(void *parameter) {
     if (!(start->flags & 1))
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014))
-        BeginPrimarySampleExecution(0);
+        EV_spmBeginSampleExecute();
     else
         LoadCutsceneAndSoundProgramForArea();
     SetRenderClockAndCompassTo(0);

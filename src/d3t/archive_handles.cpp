@@ -39,12 +39,13 @@ namespace {
 
 std::atomic<std::int32_t> g_openFileSizeReaders{0};
 std::atomic<std::uint8_t> g_openFileSizeWriter{0};
-std::uint64_t g_openFileSizes = 0;
+std::atomic<std::uint64_t> g_openFileSizes{0};
+ArchiveSourceDesc g_currentArchiveSource{};
 std::mutex g_archiveWorkerMutex;
 std::condition_variable_any g_archiveWorkerCondition;
 
 bool readArchiveBackingFile(ArchiveHandleEntry &handle, const AsyncArchiveRequest &request) {
-    const std::uint64_t offset = static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(request.fileState));
+    const std::uint64_t offset = request.offset;
     handle.accessMode = request.flags | 1U;
 #if defined(_WIN32)
     const char *path = request.path;
@@ -97,7 +98,7 @@ bool readArchiveBackingFile(ArchiveHandleEntry &handle, const AsyncArchiveReques
 bool writeArchiveBackingFile(ArchiveHandleEntry &handle, const AsyncArchiveRequest &request) {
     if (!handle.bufferedData || (!(handle.archiveLookupFlag & 1U) && ArchiveData_IsPackedFile(request.path)))
         return false;
-    const std::uint64_t offset = static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(request.fileState));
+    const std::uint64_t offset = request.offset;
     const std::uint32_t size = static_cast<std::uint32_t>(handle.bufferedDataSize);
     handle.accessMode = request.flags | 2U;
 #if defined(_WIN32)
@@ -134,24 +135,22 @@ bool writeArchiveBackingFile(ArchiveHandleEntry &handle, const AsyncArchiveReque
     return succeeded;
 }
 
-bool hasPublishedRead() {
-    return std::any_of(
-        g_asyncArchiveRequests.begin(), g_asyncArchiveRequests.end(), [](const AsyncArchiveRequest &request) { return request.state.load() == 2; });
-}
+bool processPublishedReads() {
+    bool processed = false;
+    for (;;) {
 
-void processPublishedReads() {
-    for (AsyncArchiveRequest &request : g_asyncArchiveRequests) {
-        if (request.state.load() != 2) {
-            continue;
-        }
         std::lock_guard lock(g_archiveWorkerMutex);
-        if (request.state.load() != 2)
-            continue;
+        AsyncArchiveRequest *const selected = GetBestArchiveIoJob(g_currentArchiveSource);
+        if (!selected)
+            break;
+        AsyncArchiveRequest &request = *selected;
         ArchiveHandleEntry *const handle = Archive_GetHandle(request.archiveHandle);
         bool succeeded = false;
+        if (handle && Archive_DoesHandleExist(request.archiveHandle))
+            g_currentArchiveSource = request.source;
         if (handle && request.operation == 0 && handle->bufferedData) {
             if (!(handle->archiveLookupFlag & 1U) && ArchiveData_IsPackedFile(request.path)) {
-                const std::uint64_t offset = static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(request.fileState));
+                const std::uint64_t offset = request.offset;
                 const std::uint64_t fileSize = ArchiveData_GetFileSize(request.path);
                 const std::uint64_t readSize = offset <= fileSize ? (std::min)(request.size, fileSize - offset) : 0;
                 handle->accessMode = request.flags | 1U;
@@ -165,7 +164,9 @@ void processPublishedReads() {
             handle->readSucceeded = succeeded ? 1 : 0;
         }
         request.state.store(0);
+        processed = true;
     }
+    return processed;
 }
 
 class ArchiveReadGuard {
@@ -221,18 +222,42 @@ void releaseBufferedData(std::uint32_t handle) {
 
 } // namespace
 
+AsyncArchiveRequest *GetBestArchiveIoJob(const ArchiveSourceDesc &source) {
+    AsyncArchiveRequest *selected = nullptr;
+    std::uint64_t bestScore = UINT64_MAX;
+    for (AsyncArchiveRequest &request : g_asyncArchiveRequests) {
+        if (request.state.load() != 2)
+            continue;
+        const std::uint64_t sourceDistance = source.sourceIndex >= request.source.sourceIndex ?
+            static_cast<std::uint64_t>(source.sourceIndex) - request.source.sourceIndex :
+            static_cast<std::uint64_t>(request.source.sourceIndex) - source.sourceIndex;
+        const std::uint64_t seek = source.sourceOffset <= request.source.sourceOffset ? request.source.sourceOffset - source.sourceOffset :
+                                                                                        10U * (source.sourceOffset - request.source.sourceOffset);
+        const std::uint64_t score = (request.flags & AIF_Urgent) ? 0 : kArchiveSourceDistanceCost * sourceDistance + 1U + seek;
+        if (g_openFileSizes.load(std::memory_order_relaxed) > kArchiveBufferBudget && !(request.flags & AIF_Urgent) && request.operation != 1) {
+            if (!request.source.fileSize)
+                continue;
+            ArchiveHandleEntry *const handle = Archive_DoesHandleExist(request.archiveHandle) ? Archive_GetHandle(request.archiveHandle) : nullptr;
+            if (!handle || handle->bufferedDataSize < request.source.fileSize)
+                continue;
+        }
+        if (score < bestScore) {
+            selected = &request;
+            bestScore = score;
+            if (!score)
+                break;
+        }
+    }
+    std::int32_t expected = 2;
+    return selected && selected->state.compare_exchange_strong(expected, 3) ? selected : nullptr;
+}
+
 void LoadContent(std::uint16_t threadIndex) {
-    bool processed = false;
-    while (hasPublishedRead()) {
-        processPublishedReads();
-        processed = true;
-    }
-    if (!processed && !g_d3tShutdownThreadFlag.load() && threadIndex < g_workerThreadCount) {
+    if (g_d3tShutdownThreadFlag.load())
+        return;
+    if (!processPublishedReads() && threadIndex < g_workerThreadCount) {
         std::unique_lock lock(g_archiveWorkerMutex);
-        g_archiveWorkerCondition.wait_for(lock, std::chrono::milliseconds(100), [] { return hasPublishedRead() || g_d3tShutdownThreadFlag.load(); });
-    }
-    if (g_d3tShutdownThreadFlag.load()) {
-        processPublishedReads();
+        g_archiveWorkerCondition.wait_for(lock, std::chrono::milliseconds(100));
     }
 }
 
@@ -358,14 +383,12 @@ void Archive_QueueRead(std::uint32_t handle, std::int32_t operation, const char 
 
     request->archiveHandle = handle;
     request->operation = operation;
-    request->fileState = reinterpret_cast<void *>(offset);
+    request->offset = offset;
     request->size = size;
     request->flags = flags;
     std::strcpy(request->path, path);
 
-
-
-    std::memset(request->lookupMetadata, 0, sizeof(request->lookupMetadata));
+    ArchiveData_GetSourceDesc(path, request->source);
     request->state.store(2);
     g_archiveWorkerCondition.notify_one();
 }

@@ -3,6 +3,7 @@
 #include "d3t/content.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <condition_variable>
 #include <cstring>
 #include <limits>
@@ -32,6 +33,8 @@ void LoadContent(std::uint16_t threadIndex);
 namespace {
 
 std::mutex g_taskMutex;
+std::thread::id g_taskOwnerThread;
+std::atomic<bool> g_scheduleAging{false};
 std::condition_variable_any g_highPriorityWake;
 std::condition_variable_any g_lowPriorityWake;
 std::vector<std::jthread> g_threads;
@@ -79,10 +82,13 @@ D3TTaskRecord *ClaimScheduledTask(std::uint32_t minimumPriority) {
         if (task.state.load(std::memory_order_seq_cst) != 2 || static_cast<std::uint32_t>(task.descriptor.priority) < minimumPriority) {
             continue;
         }
-        const bool wins = task.schedule < selectedSchedule || task.descriptor.priority == 0;
+        if (selected && selected->descriptor.priority == 0)
+            continue;
+        const std::int32_t schedule = task.schedule.load(std::memory_order_relaxed);
+        const bool wins = schedule < selectedSchedule || task.descriptor.priority == 0;
         if (wins) {
             selected = &task;
-            selectedSchedule = task.schedule;
+            selectedSchedule = schedule;
         }
     }
     if (!selected) {
@@ -100,7 +106,9 @@ bool ExecuteClaimedTask(D3TTaskRecord &task) {
     void *data = task.descriptor.data ? task.data.data() : nullptr;
     task.result = task.descriptor.callback ? task.descriptor.callback(data) : 0;
     if (task.result == 1) {
-        task.schedule += 100 * static_cast<std::int32_t>(task.descriptor.priority) + 100;
+        const std::uint32_t schedule = std::bit_cast<std::uint32_t>(task.schedule.load(std::memory_order_relaxed));
+        const std::uint32_t increment = 100U * static_cast<std::uint32_t>(task.descriptor.priority) + 100U;
+        task.schedule.store(std::bit_cast<std::int32_t>(schedule + increment), std::memory_order_relaxed);
         task.state.store(2, std::memory_order_seq_cst);
     } else {
         CompleteTask(task);
@@ -111,8 +119,8 @@ bool ExecuteClaimedTask(D3TTaskRecord &task) {
 void TaskWorker(std::stop_token stopToken, std::uint32_t minimumPriority, std::wstring name) {
     SetCurrentThreadName(name.c_str());
     while (!stopToken.stop_requested()) {
-        if (D3TTaskRecord *task = ClaimScheduledTask(minimumPriority)) {
-            ExecuteClaimedTask(*task);
+        if (RunTask(minimumPriority)) {
+
             continue;
         }
         std::unique_lock lock(g_taskMutex);
@@ -161,6 +169,8 @@ void d3t_CreateThreads() {
     if (g_d3tThreadsInitialized.exchange(true, std::memory_order_seq_cst)) {
         return;
     }
+    g_taskOwnerThread = std::this_thread::get_id();
+    SetCurrentThreadName(L"Main");
     g_d3tShutdownThreadFlag.store(false, std::memory_order_seq_cst);
 
     const std::uint32_t hardwareThreads = std::thread::hardware_concurrency();
@@ -237,6 +247,8 @@ std::uint32_t d3t_QueueTask(const D3TTaskDescriptor *descriptor, std::size_t dat
 }
 
 bool RunTask(std::uint32_t minimumPriority, const std::uint32_t *handles, std::uint32_t handleCount) {
+    if (g_d3tTaskCount.load(std::memory_order_seq_cst) <= 0)
+        return false;
     if (handles) {
         for (std::uint32_t index = 0; index < handleCount; ++index) {
             D3TTaskRecord *task = ResolveTaskHandle(handles[index]);
@@ -249,6 +261,18 @@ bool RunTask(std::uint32_t minimumPriority, const std::uint32_t *handles, std::u
             }
         }
         return false;
+    }
+    if (std::this_thread::get_id() != g_taskOwnerThread) {
+        bool expected = false;
+        if (g_scheduleAging.compare_exchange_strong(expected, true, std::memory_order_seq_cst)) {
+            for (D3TTaskRecord &queued : g_d3tTasks) {
+                if (queued.state.load(std::memory_order_seq_cst) == 2) {
+                    const std::uint32_t schedule = std::bit_cast<std::uint32_t>(queued.schedule.load(std::memory_order_relaxed));
+                    queued.schedule.store(std::bit_cast<std::int32_t>(schedule - 1U), std::memory_order_relaxed);
+                }
+            }
+            g_scheduleAging.store(false, std::memory_order_seq_cst);
+        }
     }
     D3TTaskRecord *task = ClaimScheduledTask(minimumPriority);
     return task && ExecuteClaimedTask(*task);

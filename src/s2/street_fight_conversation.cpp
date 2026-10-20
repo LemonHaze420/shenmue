@@ -777,7 +777,7 @@ void SfwfStreetFightConversationCallback(void *parameter) {
 std::int32_t StartStreetFightBookieConversation(void *arguments) {
     StreetFightEventWork *const work = static_cast<StreetFightEventWork *>(arguments);
     const shen_name fighter = work->fighters[work->fighterIndex];
-    (void)BeginPrimarySampleExecution(0);
+    (void)BeginSecondarySampleExecution(0);
     EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_CONVERSATION_BASE, work->playerPosition, 0);
     EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_CONVERSATION_BASE, work->playerPosition, 200);
     EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_CONVERSATION_BASE, 225.0F, 0);

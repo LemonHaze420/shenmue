@@ -1,5 +1,6 @@
 #pragma once
 
+#include "d3t/archive_data.hpp"
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -9,6 +10,9 @@ namespace shenmue::d3t {
 
 using PlatformFileHandle = std::intptr_t;
 
+inline constexpr std::uint8_t AIF_Urgent = 0x20;
+inline constexpr std::uint64_t kArchiveBufferBudget = 150U * 1024U * 1024U;
+inline constexpr std::uint64_t kArchiveSourceDistanceCost = 0xa00000000ULL;
 struct ArchiveHandleEntry {
     std::byte data[0x128];
     std::uint8_t accessMode;
@@ -34,8 +38,8 @@ struct AsyncArchiveRequest {
     std::uint32_t archiveHandle;
     std::uint8_t flags;
     char path[0x107];
-    std::byte lookupMetadata[0x20];
-    void *fileState;
+    ArchiveSourceDesc source;
+    std::uint64_t offset;
     std::uint64_t size;
     std::int32_t operation;
     std::byte reserved_144[4];
@@ -79,8 +83,8 @@ static_assert(offsetof(ArchiveHandleEntry, platformHandle) == 0x150);
 static_assert(sizeof(ArchiveHandleEntry) == 0x178);
 static_assert(offsetof(ArchiveHandleTable, handleIds) == 0xbc000);
 static_assert(offsetof(AsyncArchiveRequest, path) == 9);
-static_assert(offsetof(AsyncArchiveRequest, lookupMetadata) == 0x110);
-static_assert(offsetof(AsyncArchiveRequest, fileState) == 0x130);
+static_assert(offsetof(AsyncArchiveRequest, source) == 0x110);
+static_assert(offsetof(AsyncArchiveRequest, offset) == 0x130);
 static_assert(offsetof(AsyncArchiveRequest, operation) == 0x140);
 static_assert(sizeof(AsyncArchiveRequest) == 0x148);
 static_assert(sizeof(LargeFileHandle) == 0x18);
@@ -97,6 +101,7 @@ extern std::array<AsyncArchiveRequest, 2048> g_asyncArchiveRequests;
 extern std::array<LargeFileDataEntry, 2048> g_largeFileData;
 
 void LoadContent(std::uint16_t threadIndex);
+AsyncArchiveRequest *GetBestArchiveIoJob(const ArchiveSourceDesc &source);
 ArchiveHandleEntry *Archive_GetHandle(std::uint32_t handle);
 bool Archive_DoesHandleExist(std::uint32_t handle);
 std::uint32_t Archive_AllocateHandle(std::uint8_t archiveLookupFlag);

@@ -212,7 +212,7 @@ void DebugMainCallback(void *parameter) {
         base.y -= 0.5f;
         if (work->audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work->audienceTask));
-            audience->stagePosition = base;
+            audience->soundCentre = base;
             audience->state = 2;
         }
         Vector3 player, bookie, playerWorld, bookieWorld;
@@ -626,7 +626,7 @@ void MainCallback(void *parameter) {
         base.y -= 0.5f;
         if (work->audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work->audienceTask));
-            audience->stagePosition = base;
+            audience->soundCentre = base;
             audience->state = 2;
         }
         EV_GetCharaPosition(STREET_FIGHT_RYO, CHARACTER_TRANSLATION_ROOT, &player, EventTransformFlags::Local);

@@ -263,7 +263,7 @@ void DebugMainCallback(void *parameter) {
         stage.y -= 0.5f;
         if (work.audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-            audience->stagePosition = stage;
+            audience->soundCentre = stage;
             audience->state = 2;
         }
         Vector3 savedPlayer, savedBookie, player, bookie;
@@ -577,7 +577,7 @@ void DebugBattleEndCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
     EV_LoadAudio("0100E000", 0);
-    BeginPrimarySampleExecution(0);
+    BeginSecondarySampleExecution(0);
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFTS_BASE);
     AT_SetLocalBaseChara(fighter, SFTS_BASE);
     EV_SetCharacterAlphaEnabled(STREET_FIGHT_RYO, false);
@@ -970,7 +970,7 @@ void MainCallback(void *parameter) {
         centre.y -= .5f;
         if (work.audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-            audience->stagePosition = centre;
+            audience->soundCentre = centre;
             audience->state = 2;
         }
         EV_GetCharaPosition(STREET_FIGHT_RYO, CHARACTER_TRANSLATION_ROOT, &savedPlayer, EventTransformFlags::Relative);
@@ -1144,7 +1144,7 @@ void BattlePreEventCallback(void *parameter) {
         .targetGreen = 0,
         .targetBlue = 0,
         .delay = 5});
-    BeginPrimarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     EVT_AT_SetMot(STREET_FIGHT_RYO, 13, 0, 1, 0, 0);
     EVT_AT_SetMot(fighter, 3130, 0, 1, 0, 0);
     EVT_AT_SetVoice("0100H015", 1, 10); // @text EN: "Take your stance!" | JA: "それじゃあ、かまえて。"
@@ -1223,7 +1223,7 @@ void BattleEndCallback(void *parameter) {
     SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STREET_FIGHT_RYO), FacialExpressionId::Angry, 1, 1);
     SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(fighter), FacialExpressionId::Angry, 1, 1);
     EV_LoadAudio("0100E000", 0);
-    BeginPrimarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFTS_BASE);
     AT_SetLocalBaseChara(fighter, SFTS_BASE);
     SetScenarioCharacterTransparency(SFTS_VCN, 1);
@@ -1333,7 +1333,7 @@ std::int32_t FirstIntroConversation(void *parameter) {
     highWork6->character = SFTS_VCN;
     highWork6->selector = 1;
     highWork6->state = 1;
-    HLib::SetupTimedTask(highTask6, 730);
+    HLib::SetupTimedTask(highTask6, 550);
     HLib::Task *const highTask7 =
         HLib::EnqueueTaskWithParameter(StreetFightHighModelCallback, 6, 0x0b, sizeof(StreetFightHighModelWork), STREET_FIGHT_EVENT_TASK);
     StreetFightHighModelWork *const highWork7 = static_cast<StreetFightHighModelWork *>(HLib::GetTaskParameter(highTask7));
@@ -1341,7 +1341,7 @@ std::int32_t FirstIntroConversation(void *parameter) {
     highWork7->character = SFTS_VCN;
     highWork7->selector = 0;
     highWork7->state = 1;
-    HLib::SetupTimedTask(highTask7, 730);
+    HLib::SetupTimedTask(highTask7, 550);
     HLib::Task *const highTask8 =
         HLib::EnqueueTaskWithParameter(StreetFightHighModelCallback, 6, 0x0b, sizeof(StreetFightHighModelWork), STREET_FIGHT_EVENT_TASK);
     StreetFightHighModelWork *const highWork8 = static_cast<StreetFightHighModelWork *>(HLib::GetTaskParameter(highTask8));
@@ -1349,7 +1349,7 @@ std::int32_t FirstIntroConversation(void *parameter) {
     highWork8->character = fighter;
     highWork8->selector = 1;
     highWork8->state = 0;
-    HLib::SetupTimedTask(highTask8, 730);
+    HLib::SetupTimedTask(highTask8, 550);
     HLib::Task *const highTask9 =
         HLib::EnqueueTaskWithParameter(StreetFightHighModelCallback, 6, 0x0b, sizeof(StreetFightHighModelWork), STREET_FIGHT_EVENT_TASK);
     StreetFightHighModelWork *const highWork9 = static_cast<StreetFightHighModelWork *>(HLib::GetTaskParameter(highTask9));
@@ -1357,7 +1357,7 @@ std::int32_t FirstIntroConversation(void *parameter) {
     highWork9->character = fighter;
     highWork9->selector = 0;
     highWork9->state = 0;
-    HLib::SetupTimedTask(highTask9, 730);
+    HLib::SetupTimedTask(highTask9, 550);
     HLib::Task *const highTask10 =
         HLib::EnqueueTaskWithParameter(StreetFightHighModelCallback, 6, 0x0b, sizeof(StreetFightHighModelWork), STREET_FIGHT_EVENT_TASK);
     StreetFightHighModelWork *const highWork10 = static_cast<StreetFightHighModelWork *>(HLib::GetTaskParameter(highTask10));
@@ -1365,7 +1365,7 @@ std::int32_t FirstIntroConversation(void *parameter) {
     highWork10->character = SFTS_VCN;
     highWork10->selector = 1;
     highWork10->state = 0;
-    HLib::SetupTimedTask(highTask10, 550);
+    HLib::SetupTimedTask(highTask10, 730);
     HLib::Task *const highTask11 =
         HLib::EnqueueTaskWithParameter(StreetFightHighModelCallback, 6, 0x0b, sizeof(StreetFightHighModelWork), STREET_FIGHT_EVENT_TASK);
     StreetFightHighModelWork *const highWork11 = static_cast<StreetFightHighModelWork *>(HLib::GetTaskParameter(highTask11));
@@ -1373,7 +1373,7 @@ std::int32_t FirstIntroConversation(void *parameter) {
     highWork11->character = SFTS_VCN;
     highWork11->selector = 0;
     highWork11->state = 0;
-    HLib::SetupTimedTask(highTask11, 550);
+    HLib::SetupTimedTask(highTask11, 730);
     HLib::Task *const highTask12 =
         HLib::EnqueueTaskWithParameter(StreetFightHighModelCallback, 6, 0x0b, sizeof(StreetFightHighModelWork), STREET_FIGHT_EVENT_TASK);
     StreetFightHighModelWork *const highWork12 = static_cast<StreetFightHighModelWork *>(HLib::GetTaskParameter(highTask12));
@@ -1381,7 +1381,7 @@ std::int32_t FirstIntroConversation(void *parameter) {
     highWork12->character = fighter;
     highWork12->selector = 1;
     highWork12->state = 1;
-    HLib::SetupTimedTask(highTask12, 550);
+    HLib::SetupTimedTask(highTask12, 730);
     HLib::Task *const highTask13 =
         HLib::EnqueueTaskWithParameter(StreetFightHighModelCallback, 6, 0x0b, sizeof(StreetFightHighModelWork), STREET_FIGHT_EVENT_TASK);
     StreetFightHighModelWork *const highWork13 = static_cast<StreetFightHighModelWork *>(HLib::GetTaskParameter(highTask13));
@@ -1389,7 +1389,7 @@ std::int32_t FirstIntroConversation(void *parameter) {
     highWork13->character = fighter;
     highWork13->selector = 0;
     highWork13->state = 1;
-    HLib::SetupTimedTask(highTask13, 550);
+    HLib::SetupTimedTask(highTask13, 730);
     EVT_AT_MenCtrl(EventFilmControl{.cleanup = 1,
         .frames = 30,
         .startAlpha = 255,
@@ -1409,9 +1409,9 @@ std::int32_t FirstIntroConversation(void *parameter) {
     EVT_AT_SetVoice(fee == 10 ? "0100H008" : fee == 20 ? "0100H009" : fee == 30 ? "0100H010" : fee == 40 ? "0100H011" : "0100H005", 1, 560); // @text 0100H008 EN: "One match for a bet of $10!" | JA: "賭け金１０ドルの１本勝負だ！" ; 0100H009 EN: "One match for a bet of $20!" | JA: "賭け金２０ドルの１本勝負だ！" ; 0100H010 EN: "One match for a bet of $30!" | JA: "賭け金３０ドルの１本勝負だ！" ; 0100H011 EN: "One match for a bet of $40!" | JA: "賭け金４０ドルの１本勝負だ！" ; 0100H005 EN: "One match for a bet of $50!" | JA: "賭け金５０ドルの１本勝負だ！"
     EVT_AT_SetVoice("0100H006", 1, 670); // @text EN: "The time limit is thirty seconds." | JA: "制限時間は３０秒。"
     EVT_AT_SetVoice("0100H007", 1, 730); // @text EN: "Anyone brave enough to challenge this man?" | JA: "さあ、誰か勇気ある\n挑戦者はいねえか？"
-    EVT_AT_SetSound(1078955, 334);
+    EVT_AT_SetSound(1078955, 330);
     QueueCameraShake(.015f, 0, .80000001f, 334);
-    EVT_AT_SetSound(1078955, 364);
+    EVT_AT_SetSound(1078955, 360);
     QueueCameraShake(.015f, 0, .80000001f, 364);
     EVT_AT_SetSound(1078955, 398);
     EVT_AT_SetSound(1078955, 400);
@@ -1671,7 +1671,17 @@ std::int32_t VictoryConversation(void *parameter) {
     return 320;
 }
 std::int32_t VictoryAppearanceConversation(void *) {
-    return static_cast<std::int32_t>(PlayStreetFightVictoryAppearance());
+    EV_EnableCharacterDisplay(SFTS_CHN);
+    EV_EnsureCharacterDraw(SFTS_CHN);
+    EV_SetCharacterAlphaEnabled(SFTS_CHN, false);
+    EVT_AT_SetPos(SFTS_CHN, STREET_FIGHT_INVALID, SFTS_VICTORY_APPEARANCE_POSITION, 0);
+    EVT_AT_SetAngY(SFTS_CHN, STREET_FIGHT_INVALID, 315, 0);
+    EVT_AT_SetMot(SFTS_CHN, 9666, 0, 1, 0x40000000U, 0);
+    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QSFE"), 0);
+    EventSetCamera camera{.cleanup = 0, .camera = 9901, .eye = SFTS_CHN, .target = SFTS_CHN, .context = 0, .reserved11 = {}, .angle = 0, .delay = 0};
+    EVT_AT_SetCam_Callback(&camera);
+    camCtrlDisableFilmBars();
+    return 60;
 }
 std::int32_t DefeatConversation(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
@@ -1741,7 +1751,7 @@ void ResetToMain(StreetFightEventWork &work) {
             audience->mode &= ~2U;
     }
     EV_LoadAudio("0100E000", 0);
-    BeginPrimarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     work.state = 0;
     work.auxiliaryState = 0;
     HLib::SetCurrentTaskTo(MainCallback);
@@ -1793,7 +1803,7 @@ void CleanupNormalCallback(void *parameter) {
     if (!(start->flags & 1U))
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QSFE"), 0);
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014))
-        BeginPrimarySampleExecution(0);
+        EV_spmBeginSampleExecute();
     else
         LoadCutsceneAndSoundProgramForArea();
     SetRenderClockAndCompassTo(0);
@@ -1845,7 +1855,7 @@ void LoadNormalResources(StreetFightEventWork &work) {
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0100E000");
     EV_LoadAudio("0100E000", 0);
-    BeginPrimarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     FinishLoading();
     SetRenderClockAndCompassTo(1);
 }

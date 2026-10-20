@@ -17,6 +17,7 @@
 #include "s2/moves_scroll.hpp"
 #include "s2/pak.hpp"
 #include "s2/ship_spray.hpp"
+#include "s2/daku_spray.hpp"
 #include "s2/renderer_initialization.hpp"
 #include "s2/weather.hpp"
 #include "s2/window.hpp"
@@ -41,38 +42,42 @@
 #include <d3d11.h>
 #endif
 
-namespace shenmue::s2 {
-ShipSprayEmitter *g_shipSprayParameters{};
-Vector3 g_shipSprayPosition{};
-Vector3 g_shipSprayLocalPosition{};
-std::int32_t g_shipSprayYaw{};
-float g_shipSprayFadeRate{};
-std::uint32_t g_shipSprayColour{};
-float weatherRippleLifetimeScale = 0.5f;
-float weatherRippleLifetimeStep = 0.025f;
-std::array<WeatherClipSet, 2> weatherClipSets{};
+    namespace shenmue::s2 {
+    std::array<std::int32_t, 3> g_dakuSpraySlots{};
+    std::array<Vector3, 3> g_dakuSprayPositions{};
+    std::array<std::uint32_t, 3> g_dakuSprayColours{};
+    std::array<Vector2, 3> g_dakuSpraySizes{};
+    ShipSprayEmitter *g_shipSprayParameters{};
+    Vector3 g_shipSprayPosition{};
+    Vector3 g_shipSprayLocalPosition{};
+    std::int32_t g_shipSprayYaw{};
+    float g_shipSprayFadeRate{};
+    std::uint32_t g_shipSprayColour{};
+    float weatherRippleLifetimeScale = 0.5f;
+    float weatherRippleLifetimeStep = 0.025f;
+    std::array<WeatherClipSet, 2> weatherClipSets{};
 
-namespace {
+    namespace {
 
-struct ParticleRecord;
-using ParticleCallback = void (*)(ParticleRecord &);
+    struct ParticleRecord;
+    using ParticleCallback = void (*)(ParticleRecord &);
 
-// BirthParticle copies this complete 96-byte template to every particle. Its
-// callbacks at +0x20 run under the currently selected emitter, not a task.
-struct ParticleRecord {
-    std::uint32_t flags;
-    Vector3 position;
-    Vector3 velocity;
-    std::uint32_t reserved1c;
-    ParticleCallback callback;
-    std::uint64_t phaseX;
-    std::uint64_t phaseY;
-    std::uint64_t phaseZ;
-    std::uint64_t stepX;
-    std::uint64_t stepY;
-    std::uint64_t stepZ;
-    std::uint32_t colour;
-    float scale;
+    // BirthParticle copies this complete 96-byte template to every particle. Its
+    // callbacks at +0x20 run under the currently selected emitter, not a task.
+    struct ParticleRecord {
+        std::uint32_t flags;
+        Vector3 position;
+        Vector3 velocity;
+        std::uint32_t reserved1c;
+        ParticleCallback callback;
+        std::uint64_t phaseX;
+        std::uint64_t phaseY;
+        std::uint64_t phaseZ;
+        std::uint64_t stepX;
+        std::uint64_t stepY;
+        std::uint64_t stepZ;
+        std::uint32_t colour;
+        float scale;
 };
 
 
@@ -2000,10 +2005,10 @@ void WriteSmokeDdsHeader(std::byte *data) {
 }
 
 void CreateAuthoredParticleTexture(
-    SmokeEffect &effect, std::uint32_t width, std::uint32_t height, std::uint16_t format, const std::byte *pixels, std::size_t size, bool rawDds = false);
+    std::int32_t emitterIndex, std::uint32_t width, std::uint32_t height, std::uint16_t format, const std::byte *pixels, std::size_t size, bool rawDds = false);
 
 void UploadSmokeTexture(SmokeEffect &effect) {
-    CreateAuthoredParticleTexture(effect, 16, 16, 0x8083U, effect.texture->pixels, 0x480, true);
+    CreateAuthoredParticleTexture(effect.slot, 16, 16, 0x8083U, effect.texture->pixels, 0x480, true);
 }
 
 void CreateSmokeTexture(SmokeEffect &effect) {
@@ -2074,14 +2079,14 @@ void EnableEmitter(ParticleEmitter &emitter) {
 }
 
 void CreateAuthoredParticleTexture(
-    SmokeEffect &effect, std::uint32_t width, std::uint32_t height, std::uint16_t format, const std::byte *pixels, std::size_t size, bool rawDds) {
-    ParticleEmitter &emitter = emitters[effect.slot];
+    std::int32_t emitterIndex, std::uint32_t width, std::uint32_t height, std::uint16_t format, const std::byte *pixels, std::size_t size, bool rawDds) {
+    ParticleEmitter &emitter = emitters[emitterIndex];
     if (emitter.textureHandle) {
         d3t::InitTexture2DResource(emitter.textureHandle);
-        smokeTextureRecords[effect.slot].handle = 0;
+        smokeTextureRecords[emitterIndex].handle = 0;
         --g_legacyEffectTextureCount;
     }
-    LegacyEffectTexture &texture = smokeTextureRecords[effect.slot];
+    LegacyEffectTexture &texture = smokeTextureRecords[emitterIndex];
     emitter.textureRecord = &texture;
     if (InitializeLegacyEffectTexture(texture, width, height, format) != 0)
         return;
@@ -2089,7 +2094,7 @@ void CreateAuthoredParticleTexture(
                  UploadLegacyEffectPvr(texture, {pixels, size}) != 0)
         return;
     emitter.textureHandle = static_cast<std::uint32_t>(texture.handle);
-    smokeTextureHandles[effect.slot] = emitter.textureHandle;
+    smokeTextureHandles[emitterIndex] = emitter.textureHandle;
     std::uint32_t widthBits = 0, heightBits = 0;
     for (std::uint32_t value = width; value; value >>= 1U)
         ++widthBits;
@@ -2652,6 +2657,58 @@ void EffectControlCallback(void *) {
     HLib::ExecuteCallbackNow(QueueEmitterDraws, nullptr);
 }
 // @verified - p
+void MoveDakuSprayParticle(ParticleRecord &particle) {
+
+    particle.scale -= EffectDelta(0.05f);
+    if (static_cast<double>(particle.scale) < 0.1) {
+        particle.flags &= ~activeFlag;
+        particle.callback = BirthParticle;
+    }
+    const float alpha = static_cast<float>(particle.colour >> 24U) / 255.0f - EffectDelta(0.01f);
+    if (alpha < 0.05f) {
+        particle.flags &= ~activeFlag;
+        particle.callback = BirthParticle;
+    }
+    SetParticleAlpha(particle, alpha * 255.0f);
+}
+
+// @verified - p
+void InitializeDakuSprayParticle0(ParticleRecord &particle) {
+    particle.flags |= activeFlag;
+    particle.callback = MoveDakuSprayParticle;
+    particle.colour = g_dakuSprayColours[0];
+    particle.scale = 1.0f;
+}
+
+// @verified - p
+void InitializeDakuSprayParticle1(ParticleRecord &particle) {
+    particle.flags |= activeFlag;
+    particle.callback = MoveDakuSprayParticle;
+    particle.colour = g_dakuSprayColours[1];
+    particle.scale = 1.0f;
+}
+
+// @verified - p
+void InitializeDakuSprayParticle2(ParticleRecord &particle) {
+    particle.flags |= activeFlag;
+    particle.callback = MoveDakuSprayParticle;
+    particle.colour = g_dakuSprayColours[2];
+    particle.scale = 1.0f;
+}
+void AssignStandardParticleEmitterBuffer(std::int32_t slot, std::int32_t count, ParticleRecord *particles) {
+    ParticleEmitter &emitter = emitters[slot];
+    emitter.count = count;
+    emitter.particles = particles;
+    emitter.flags &= ~0x20000000U;
+    emitter.textureFlags = 0x80000002U;
+    ParticleRecord initial{};
+    initial.callback = BirthParticle;
+    initial.colour = 0xffffffffU;
+    initial.scale = 1.0f;
+    for (std::int32_t index = 0; index < count; ++index)
+        particles[index] = initial;
+    emitter.samplerControl = 0x88800000U;
+}
 void MoveShipSprayParticle(ParticleRecord &particle) {
     IntegrateParticle(particle);
     particle.velocity.y -= EffectDelta(0.005f);
@@ -2689,13 +2746,14 @@ void DropParticleControlCallback(void *) {
         AssignParticleEmitterReferences(slot, dropParticlePosition, dropParticleLocalPosition, 0);
     Vector3 root{};
     GetLightRootPosition(&root);
+
     for (std::size_t index = 0; index < dropLightIndices.size(); ++index) {
         const std::int32_t lightIndex = dropLightIndices[index];
         if (lightIndex < 0) {
             dropLightEnabled[index] = 0;
             continue;
         }
-        const std::uint32_t slot = static_cast<std::uint32_t>(lightIndex);
+        const std::uint32_t slot = static_cast<std ::uint32_t>(lightIndex);
         dropLightEnabled[index] = static_cast<std::int32_t>(GetLightEntryIndex(slot));
         dropLightKinds[index] = static_cast<std::uint32_t>(GetLegacySelectedLightKind(slot));
         const LightRuntimeEntry *const light = GetLightRuntimeEntry(slot);
@@ -2747,7 +2805,6 @@ void InitializeDropParticle(ParticleRecord &particle) {
     particle.flags = activeFlag;
     particle.callback = MoveDropParticle;
 }
-
 void MoveCompactDropParticle(CompactParticleRecord &particle) {
     particle.position.x = EffectDelta(particle.velocity.x) + particle.position.x;
     particle.position.y = EffectDelta(particle.velocity.y) + particle.position.y;
@@ -2791,7 +2848,9 @@ void InitializeDropParticles() {
             CompactParticleRecord *const particles = index == 2 ? dropParticles2.data() : index == 3 ? dropParticles3.data() : dropParticles4.data();
             emitter.particles = reinterpret_cast<ParticleRecord *>(particles);
             emitter.textureFlags = 0xa0000002U;
-            const CompactParticleRecord initial{.flags = 0x00ffffffU, .position = {}, .velocity = {}, .reserved1c = 0, .callback = BirthParticle};
+            const CompactParticleRecord initial{.flags = 0x00ffffffU, .position = {}, .velocity = {}, .reserved1c = 0, .callback = BirthParticle}
+
+            ;
             for (std::int32_t particle = 0; particle < settings.count; ++particle)
                 particles[particle] = initial;
         } else {
@@ -2799,7 +2858,13 @@ void InitializeDropParticles() {
             emitter.particles = index == 0 ? dropParticles0.data() : dropParticles1.data();
             emitter.textureFlags = 0x80000002U;
             const ParticleRecord initial{.flags = 0,
-                .position = {},
+                .position =
+                    {
+
+                    }
+
+                // @verified - p
+                ,
                 .velocity = {},
                 .reserved1c = 0,
                 .callback = BirthParticle,
@@ -2810,7 +2875,10 @@ void InitializeDropParticles() {
                 .stepY = 0,
                 .stepZ = 0,
                 .colour = 0xffffffffU,
-                .scale = 1.0f};
+                .scale = 1.0f}
+
+            // @verified - p
+            ;
             for (std::int32_t particle = 0; particle < settings.count; ++particle)
                 emitter.particles[particle] = initial;
         }
@@ -2830,7 +2898,7 @@ void InitializeDropParticles() {
         AssignParticleEmitterReferences(dropEmitterSlots[index], dropParticlePosition, dropParticleLocalPosition, 0);
     }
     HLib::FreeTaskData(image);
-}
+    }
 
 void ReleaseDropParticles() {
     const std::int32_t first = dropEmitterSlots[0];
@@ -2855,14 +2923,12 @@ void UpdateWeatherClipCameraPosition() {
     camCtrlGetNextCamPos(&weatherClipCameraPosition);
 }
 
-// @verified - p
 void ApplyWeatherRainAndRippleClip(const Vector2 *clip) {
     const std::array<Vector2, 4> points{{clip[0], clip[1], clip[2], clip[3]}};
     Weather_ApplyWCCPClipSet0ToRainGroups(points, clip[4].x, clip[4].y);
     Weather_ApplyWCCPClipSet0ToRippleGroups(points, clip[4].x, clip[4].y);
 }
 
-// @verified - p
 void ApplyWeatherParticleClip(const Vector2 *clip) {
     const std::array<Vector2, 4> points{{clip[0], clip[1], clip[2], clip[3]}};
     Weather_ApplyWCCPClipSet1ToParticleGroups(points, clip[4].x, clip[4].y);
@@ -2874,7 +2940,7 @@ void Weather_LoadWCCPEntries(const void *entries, std::int32_t count, std::int32
     set.count = count;
     if (set.entries)
         HLib::FreeTaskData(set.entries);
-    set.entries = static_cast<WeatherClipEntry *>(HLib::AllocateStaticOrDynamicBlock(static_cast<std::uint64_t>(60LL * count), weatherClipEntryName));
+    set.entries = static_cast<WeatherClipEntry *>(HLib ::AllocateStaticOrDynamicBlock(static_cast<std::uint64_t>(60LL * count), weatherClipEntryName));
     const std::byte *source = static_cast<const std::byte *>(entries);
     for (std::int32_t index = 0; index < count; ++index) {
         set.entries[index].enabled = 1;
@@ -2892,11 +2958,17 @@ void Weather_ResetWCCPClipSet0() {
 }
 
 void Weather_ResetWCCPClipSet1() {
-    const std::array<Vector2, 4> points{};
+    const std ::array<Vector2, 4> points{
+
+    }
+
+    ;
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next) {
         ApplyWeatherClipToRain(static_cast<WeatherFixcOwner *>(node->payload.pointer), 1, points, -0.1f, -99999.898f);
         ApplyWeatherClipToRipple(static_cast<WeatherFixcOwner *>(node->payload.pointer), 1, points, -0.1f, -99999.898f);
     }
+
+    // @verified - p
 }
 
 void Weather_UpdateWCCPClipSet0() {
@@ -2911,7 +2983,6 @@ void Weather_UpdateWCCPClipSet0() {
         Weather_ResetWCCPClipSet0();
     }
 }
-
 void Weather_UpdateWCCPClipSet1() {
     const WeatherClipSet &set = weatherClipSets[1];
     if (!set.entries || set.enabled == 0)
@@ -2965,18 +3036,17 @@ void EnsureWeatherFixcRegistered() {
         weatherFixcData = AllocateWeatherFixc(14563U);
     Weather_RegisterActiveFIXCAndInitEffects();
 }
-
 void Weather_RegisterActiveFIXCAndInitEffects() {
     ModulateWeatherFixc(weatherFixcData);
     weatherRegisteredFixc = 1;
+
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         EnsureWeatherRainForFixc(static_cast<WeatherFixcOwner *>(node->payload.pointer), 1.5f, -1.0f, -1.0f);
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         EnsureWeatherRippleForFixc(static_cast<WeatherFixcOwner *>(node->payload.pointer), 0.95f);
 }
 
-// @verified - p
-HLib::Task *AllocateICAR(float rainSpawnLimit, float secondaryRainParam, float rippleSpawnLimit, float unused) {
+HLib ::Task *AllocateICAR(float rainSpawnLimit, float secondaryRainParam, float rippleSpawnLimit, float unused) {
     WeatherInteractionCamera *const camera =
         static_cast<WeatherInteractionCamera *>(HLib::AllocateTaskData(sizeof(WeatherInteractionCamera), weatherInteractionCameraName));
     camCtrlGetNextCamPos(&camera->position);
@@ -3031,7 +3101,6 @@ std::int64_t Weather_FreeActiveFIXC() {
     }
     return 0;
 }
-
 std::int32_t SetWeatherRainPressureImmediate(float pressure) {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next) {
         WeatherFixcOwner *const fixc = static_cast<WeatherFixcOwner *>(node->payload.pointer);
@@ -3229,7 +3298,10 @@ void InitializeShipSpray() {
             .stepY = 0,
             .stepZ = 0,
             .colour = 0xffffffffU,
-            .scale = 1.0f};
+            .scale = 1.0f}
+
+        // @verified - p
+        ;
         for (std::int32_t particle = 0; particle < parameters.count; ++particle)
             emitter.particles[particle] = initial;
         emitter.position = parameters.position;
@@ -3243,6 +3315,7 @@ void InitializeShipSpray() {
             d3t::InitTexture2DResource(emitter.textureHandle);
         LegacyEffectTexture &texture = smokeTextureRecords[parameters.slot];
         emitter.textureRecord = &texture;
+
         if (InitializeLegacyEffectTexture(texture, width, height, static_cast<std::uint16_t>(pvr[5])) == 0 &&
             UploadLegacyEffectPvr(texture, {static_cast<const std::byte *>(image), size}) == 0) {
             emitter.textureHandle = static_cast<std::uint32_t>(texture.handle);
@@ -3270,6 +3343,83 @@ void InitializeShipSpray() {
     HLib::FreeTaskData(image);
 }
 
+// @verified - p
+void ResetDakuSpray() {
+    g_dakuSpraySlots[0] = -1;
+}
+// @verified - p
+void DakuSprayControlCallback(void *) {
+    const Vector3 local{};
+    for (std::uint32_t index = 0; index < 3; ++index)
+        AssignParticleEmitterReferences(g_dakuSpraySlots[index], g_dakuSprayPositions[index], local, 0);
+}
+
+// @verified - p
+void SetDakuSprayColour(std::uint32_t emitter, std::uint32_t colour) {
+    if (emitter <= 2)
+        g_dakuSprayColours[emitter] = colour;
+}
+
+// @verified - p
+void SetDakuSprayPosition(std::uint32_t emitter, const Vector3 &position) {
+    if (emitter <= 2)
+        g_dakuSprayPositions[emitter] = position;
+}
+
+void SetDakuSpraySize(std::uint32_t emitter, float width, float height) {
+    if (emitter <= 2) {
+        g_dakuSpraySizes[emitter] = {.x = width, .y = height};
+        const std::int32_t slot = g_dakuSpraySlots[emitter];
+        if (slot >= 0)
+            SetEmitterSize(emitters[slot], width, height);
+    }
+}
+
+// @verified - p
+void InitializeDakuSpray() {
+    if (g_dakuSpraySlots[0] >= 0)
+        return;
+    std::uint32_t size = 0;
+    void *const image = LoadLegacySceneFile("MISC", "SHIBU.PVR", TASK_DAKU, &size);
+    if (!image)
+        return;
+    const std::uint32_t *const pvr = static_cast<const std::uint32_t *>(image);
+    const std::uint32_t width = pvr[6] & 0xffffU;
+    const std::uint32_t height = pvr[6] >> 16U;
+    for (std::uint32_t index = 0; index < 3; ++index) {
+        g_dakuSprayPositions[index] = {};
+        const std::int32_t slot = AllocateEffectSlot(emitterSlots, -1, index == 0 ? DakuSprayControlCallback : nullptr, nullptr, TASK_DAKU);
+        g_dakuSpraySlots[index] = slot;
+        if (slot < 0)
+            continue;
+        ParticleRecord *const particles = static_cast<ParticleRecord *>(HLib::AllocateTaskData(0x3c0, TASK_DAKU));
+        if (!particles)
+            continue;
+        AssignStandardParticleEmitterBuffer(slot, 10, particles);
+        ParticleEmitter &emitter = emitters[slot];
+        emitter.position = {};
+        emitter.spawnVariance = {};
+        emitter.initializer = index == 0 ? InitializeDakuSprayParticle0 : index == 1 ? InitializeDakuSprayParticle1 : InitializeDakuSprayParticle2;
+        emitter.velocity = {};
+        emitter.velocityVariance = {};
+        SetEmitterBirthRate(emitter, 0.6f);
+        g_dakuSpraySizes[index] = {.x = 1.1f, .y = 0.86f};
+        SetEmitterSize(emitter, 1.1f, 0.86f);
+        CreateAuthoredParticleTexture(slot, width, height, static_cast<std::uint16_t>(pvr[5]), static_cast<const std::byte *>(image), size);
+        EnableEmitter(emitter);
+
+        emitter.gpuFlags = (emitter.gpuFlags & ~0x4000U) | 0x2000U;
+        emitter.flags |= activeFlag;
+        g_dakuSprayColours[index] = DAKU_SPRAY_DEFAULT_COLOUR;
+        emitter.colour = DAKU_SPRAY_DEFAULT_COLOUR;
+        if (emitterSlots[slot].state == 1) {
+            emitterSlots[slot].state = 2;
+            emitter.flags |= activeFlag;
+        }
+    }
+    HLib::FreeTaskData(image);
+}
+
 void InitializeEffectControl() {
     effectController = nullptr;
     effectTaskReferences = 0;
@@ -3287,6 +3437,7 @@ void InitializeEffectControl() {
     ResetHikiTextures();
     ResetShipSprayParameters();
     ResetHikiTaskData();
+    ResetDakuSpray();
     ResetDropParticleAdmission();
     for (ParticleEmitterReference &reference : emitterReferences)
         reference.active = 0;
@@ -3391,14 +3542,14 @@ std::uint64_t CreateSplashEffect(const Vector3 &position, const Vector3 &spawnVo
     if (textureArchive && textureName) {
         std::uint32_t size = 0;
         void *image = LoadLegacySceneFile(textureArchive, textureName, effectToken, &size);
-        CreateAuthoredParticleTexture(*effect, 32, 32, 0x8083U, static_cast<const std::byte *>(image), size);
+        CreateAuthoredParticleTexture(effect->slot, 32, 32, 0x8083U, static_cast<const std::byte *>(image), size);
         HLib::FreeTaskData(image);
     } else {
         auto *const image = static_cast<std::byte *>(HLib::AllocateTaskData(0x480, effectToken));
         WriteSmokeDdsHeader(image);
         auto *const pixels = reinterpret_cast<std::uint32_t *>(image + 0x80);
         std::fill_n(pixels, 256, 0x6fffffffU);
-        CreateAuthoredParticleTexture(*effect, 16, 16, 0x8083U, image, 0x480, true);
+        CreateAuthoredParticleTexture(effect->slot, 16, 16, 0x8083U, image, 0x480, true);
         HLib::FreeTaskData(image);
     }
     SuspendParticleEffect(1, index);
@@ -3462,7 +3613,7 @@ std::uint64_t CreateFallingParticleEffect(const Vector3 &position, const Vector3
     std::uint32_t size = 0;
     void *image = LoadLegacySceneFile(textureArchive, textureName, effectToken, &size);
     if (image)
-        CreateAuthoredParticleTexture(*effect, 64, 128, 0x8001U, static_cast<const std::byte *>(image), size);
+        CreateAuthoredParticleTexture(effect->slot, 64, 128, 0x8001U, static_cast<const std::byte *>(image), size);
     HLib::FreeTaskData(image);
     SuspendParticleEffect(3, index);
     fallingParticleFloor = floorHeight;

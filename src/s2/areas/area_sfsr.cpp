@@ -266,7 +266,7 @@ void DebugMainCallback(void *parameter) {
         stage.y -= 0.5f;
         if (work.audienceTask) {
             StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-            audience->stagePosition = stage;
+            audience->soundCentre = stage;
             audience->state = 2;
         }
         Vector3 savedPlayer, savedBookie, player, bookie;
@@ -580,7 +580,7 @@ void DebugBattleEndCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
     EV_LoadAudio("0100E000", 0);
-    EV_spmBeginSampleExecute();
+    BeginSecondarySampleExecution(0);
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFSR_BASE);
     AT_SetLocalBaseChara(fighter, SFSR_BASE);
     EV_SetCharacterAlphaEnabled(STREET_FIGHT_RYO, false);
@@ -789,7 +789,7 @@ void QueueAuthorLoop(AuthorWork *owner) {
         break;
     }
     PushGlobalLightingProgram();
-    SetCurrentActiveLight(0);
+    AssignLightProgram(0);
     SetDefaultVSByIndex(1);
     if (owner->command.name == SFSR_AUTH_INTRO.name)
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -1054,7 +1054,7 @@ void SetAudienceState(StreetFightEventWork &work, std::uint8_t state, std::int16
     }
 }
 void PlaceNormal(StreetFightEventWork &work) {
-    EVT_AT_SetPos(SFSR_BASE, STREET_FIGHT_INVALID, SFSR_STAGE_ORIGIN, 0);
+    EVT_AT_SetPos(SFSR_BASE, STREET_FIGHT_INVALID, SFSR_NORMAL_STAGE_ORIGIN, 0);
     EVT_AT_SetAngY(SFSR_BASE, STREET_FIGHT_INVALID, 0, 0);
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFSR_BASE);
     AT_SetLocalBaseChara(SFSR_SF3, SFSR_BASE);
@@ -1105,11 +1105,11 @@ void UpdateBattleQte() {
     switch (qtePhase) {
     case 0:
         if ((GetFightCharacterFlag(1, FindCharacterByScenarioName(STREET_FIGHT_RYO), 0) < 15 &&
-                GetFightCharacterFlag(1, FindCharacterByScenarioName(SFSR_SF3), 0) < 50 && GetBtlStatus(FindCharacterByScenarioName(STREET_FIGHT_RYO)) == 3) ||
+                GetFightCharacterFlag(1, FindCharacterByScenarioName(SFSR_SF3), 0) < 50 && GetBtlStatus(FindCharacterByScenarioName(STREET_FIGHT_RYO)) == 1) ||
             GetFightCharacterFlag(1, FindCharacterByScenarioName(SFSR_SF3), 0) < 15) {
             if (!(GetFightTaskFlags() & 0x10) && (EV_vfBattleUtil(FightBattleUtilOp::ActorField, STREET_FIGHT_RYO, 13) & 1)) {
                 qteBattleUtil(BattleQteMode::SetWait, 30, 7, 45, 0);
-                qteBattleUtil(BattleQteMode::SetLastCommands, 64, 512, 0, 0);
+                qteBattleUtil(BattleQteMode::SetFirstCommands, 64, 512, 0, 0);
                 qteBattleUtil(BattleQteMode::ResetStates, 0, 0, 0, 0);
                 qteBattleUtil(BattleQteMode::Queue, 0, 0, 0, 0);
                 EV_vfBattleUtil(FightBattleUtilOp::FightModeFlags, shen_name{0x1000}, 1);
@@ -1164,7 +1164,7 @@ void MainCallback(void *parameter) {
             work.audienceTask = QueueStreetFightAudienceCount(30);
             if (work.audienceTask) {
                 StreetFightAudienceWork *const audience = static_cast<StreetFightAudienceWork *>(HLib::GetTaskParameter(work.audienceTask));
-                audience->stagePosition = SFSR_STAGE_ORIGIN;
+                audience->soundCentre = SFSR_NORMAL_STAGE_ORIGIN;
                 audience->state = 2;
                 audience->radius = 5;
                 audience->radiusRange = 2;
@@ -1401,12 +1401,12 @@ void MainCallback(void *parameter) {
         if (IsFightActive())
             break;
         if (GetBtlStatus(FindCharacterByScenarioName(SFSR_SF3)) == 10) {
-            CommitStreetFightStoryRank(work.stage);
+            RecordStreetFightVictory(work.stage);
             work.battleStatus = 3;
         } else {
             work.battleStatus = GetBtlStatus(FindCharacterByScenarioName(STREET_FIGHT_RYO));
             if (work.battleStatus != 3) {
-                ResetStreetFightStoryFlag(work.stage);
+                RecordStreetFightDefeat(work.stage);
                 work.state = 31;
                 SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
                 spmFadeOut();
@@ -1506,7 +1506,7 @@ void MainCallback(void *parameter) {
         if (GetShouldRenderIcons(RenderIconSlot::MoneyMessage))
             break;
         if (CanPerformForCurrentAreaFlags())
-            RecordStreetFightVictory(work.stage);
+            CommitStreetFightStoryRank(work.stage);
         work.state = 30;
         break;
     case 30:
@@ -1703,9 +1703,9 @@ std::int32_t RoundVictoryConversation(void *parameter) {
 void RetryBeginCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     if (work.battleStatus == 3)
-        CommitStreetFightStoryRank(work.stage);
+        RecordStreetFightVictory(work.stage);
     else
-        ResetStreetFightStoryFlag(work.stage);
+        RecordStreetFightDefeat(work.stage);
     dbgPrintEventMessage(GetLocalizedSceneText("UISMRETRY").data()); // @text EN: "Retry?" | JA: "もう一度？"
     EVT_AT_KsIcon_Enqueue(-1, 82, 83, -1, 0x7fff, 0xffff, 0, 0);
     if (work.audienceTask) {
