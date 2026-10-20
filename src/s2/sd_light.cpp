@@ -1,25 +1,41 @@
 #include "s2/sd_light.hpp"
 
 #include "d3t/content.hpp"
+#include "d3t/model_cache.hpp"
 #include "d3t/render_handles.hpp"
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 
 SDLightDataHeader g_sdLightDataHeader{};
 SDLightMetadataTable g_sdLightMetadata{};
 SDLightOverrides g_sdLightOverrides{};
 std::int32_t g_sdLightSceneId{};
 shen_name g_sdLightArea{};
-std::uint32_t g_sdShadowPassCount{};
+std::uint32_t g_sdLightCount{};
 
 namespace {
 std::atomic<std::int32_t> sdLightReaderCount{};
 std::atomic<std::uint8_t> sdLightWriteLock{};
 
+std::uint64_t *AppendSDLightOverride() {
+    SDLightOverrides &overrides = g_sdLightOverrides;
+    if (overrides.count >= overrides.capacity) {
+        const std::uint32_t capacity = 2U * overrides.capacity >= 16U ? 2U * overrides.capacity : 16U;
+        if (capacity > overrides.capacity) {
+            void *const allocation = std::realloc(overrides.values, sizeof(std::uint64_t) * capacity);
+            if (!allocation)
+                return nullptr;
+            overrides.values = static_cast<std::uint64_t *>(allocation);
+            overrides.capacity = capacity;
+        }
+    }
+    ++overrides.count;
+    return overrides.values + overrides.count - 1;
+}
 void AcquireSDLightWrite() {
     for (;;) {
         while (sdLightReaderCount.load() != 0) {
@@ -177,9 +193,31 @@ std::int64_t LoadSDLightMetadata(std::int32_t sceneId, shen_name area) {
 }
 
 // @verified - p
+std::uint64_t ResolveSDLightOwner(std::uint64_t handle) {
+    std::uint64_t previous = 0;
+    std::uint32_t attempts = 0;
+    for (;;) {
+        const std::uint64_t parent = d3t::GetModelCacheParent(handle);
+        if (parent == previous || !static_cast<std::uint32_t>(parent) || !static_cast<std::uint32_t>(parent >> 32U))
+            break;
+        previous = parent;
+        if (++attempts >= 1024)
+            return parent;
+    }
+    return previous;
+}
+
+// @verified - p
+void AddSDLightOverride(std::uint64_t owner) {
+    for (std::uint32_t index = 0; index < g_sdLightOverrides.count; ++index)
+        if (g_sdLightOverrides.values[index] == owner)
+            return;
+    *AppendSDLightOverride() = owner;
+}
+// @verified - p
 void InitializeSDLightFlags() {
     g_sdLightOverrides.count = 0;
-    g_sdShadowPassCount = 2;
+    g_sdLightCount = 2;
 }
 
 } // namespace shenmue::s2

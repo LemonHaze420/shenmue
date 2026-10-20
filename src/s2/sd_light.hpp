@@ -38,13 +38,15 @@ extern SDLightMetadataTable g_sdLightMetadata;
 extern SDLightOverrides g_sdLightOverrides;
 extern std::int32_t g_sdLightSceneId;
 extern shen_name g_sdLightArea;
-extern std::uint32_t g_sdShadowPassCount;
+extern std::uint32_t g_sdLightCount;
 void InitializeSDLightMetadata();
 void ReleaseSDLightMetadata();
 void CompleteSDLightDataLoad(void *callbackData, std::uint32_t contentHandle, void *data, std::uint64_t size, const char *path);
 std::int64_t LoadSDLightMetadata(std::int32_t sceneId, shen_name area);
 void InitializeSDLightFlags();
 
+std::uint64_t ResolveSDLightOwner(std::uint64_t handle);
+void AddSDLightOverride(std::uint64_t owner);
 enum SDLightType : std::uint32_t { SDLT_Point = 0, SDLT_Directional = 1, SDLT_Spot = 2 };
 
 struct SDSceneLight {
