@@ -1,5 +1,6 @@
 #include "s2/renderer_initialization.hpp"
 #include "s2/sd_light.hpp"
+#include "s2/sd_probe.hpp"
 #include "s2/legacy_draw.hpp"
 #include "s2/legacy_sprite.hpp"
 #include "s2/ui.hpp"
@@ -353,7 +354,7 @@ void SetupMapRendererCaches() {
     g_mainModelCache = d3t::AllocateModelCache("Main");
     d3t::ReleaseModelCache(g_sdOverrideModelCache);
     g_sdOverrideModelCache = d3t::AllocateModelCache("SD Override");
-    NormalizeMapFramePacing();
+    g_sdProbeCount = g_sdProbeCount > 0;
 }
 
 void InitGeneralTextureResources() {

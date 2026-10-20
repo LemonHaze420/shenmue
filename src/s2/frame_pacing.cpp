@@ -8,6 +8,7 @@
 #include "d3t/ui_renderer.hpp"
 #include "s2/d3t_renderer.hpp"
 #include "s2/game_runtime.hpp"
+#include "s2/sd_probe.hpp"
 #include "s2/ui.hpp"
 #include "s2/ui_transition.hpp"
 #include "s2/texture_source.hpp"
@@ -18,7 +19,7 @@
 #include <cmath>
 #include <cstdio>
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 bool framePacingTimerUpdated{};
 std::int32_t g_skipArchiveReadWait{};
 std::uint8_t g_stabilizeFps{};
@@ -33,7 +34,7 @@ namespace {
 
 std::int32_t numFramesProcessed{};
 std::int32_t numFramesWaited{};
-std::int32_t framesToRender{1}; // normalized by SetupBuffers
+// normalized by SetupBuffers
 bool rendererInitialized{};
 bool retireFramePacingImmediately{};
 bool forceFramePacingWait{};
@@ -99,23 +100,19 @@ std::int32_t GetNumFramesProcessed() noexcept {
     return numFramesProcessed;
 }
 
-void NormalizeMapFramePacing() noexcept {
-    numFramesProcessed = numFramesProcessed > 0;
-}
-
 std::int32_t ConsumeFrames() {
     const std::int32_t current = numFramesProcessed;
     if (current == 0)
         return 0;
     EnableElement(UIElement::LoadingScreen);
     ++numFramesWaited;
-    if (current == 3 && numFramesWaited >= 6 * framesToRender) {
+    if (current == 3 && numFramesWaited >= 6 * g_sdProbeCount) {
         ToggleLoadingScreen(3, 0);
         numFramesProcessed = 0;
         numFramesWaited = 0;
         return 0;
     }
-    return current;
+    return current == 3 ? g_sdProbeCount : current;
 }
 
 void WaitForNextFrameWithCallback(const std::uint32_t *handles, std::int32_t count, FramePacingDecision getTotalFramesToRender) {

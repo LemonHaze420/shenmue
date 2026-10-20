@@ -26,7 +26,7 @@ extern bool waitForRendererReadiness;
 void UpdateFramePacing();
 void UpdateCurrentFramesRendered(std::uint32_t updateUi);
 std::int32_t GetNumFramesProcessed() noexcept;
-void NormalizeMapFramePacing() noexcept;
+
 std::int32_t ConsumeFrames();
 void FlushFramePacingRenderQueue();
 float GetFrameTime() noexcept;

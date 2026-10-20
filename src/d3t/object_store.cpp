@@ -14,6 +14,7 @@
 #include "s2/frame_pacing.hpp"
 #include "s2/game_runtime.hpp"
 #include "s2/sd_light.hpp"
+#include "s2/sd_probe.hpp"
 #include "s2/matrix_stack.hpp"
 #endif
 
@@ -428,6 +429,24 @@ void MarkPlacementDayNight(std::uint64_t handle) {
 }
 
 // @verified - p
+void SetupPlacementProbes(ObjectEntry *entry) {
+    if (!entry || !entry->source)
+        return;
+    const D3TModelRecord *const model = ResolveModel(entry->source->renderHandle);
+    const std::int32_t count = model ? static_cast<std::int32_t>(model->probeCount) : 0;
+    std::uint64_t nodes[32]{};
+    D3TModelProbe parameters[32]{};
+    for (std::int32_t index = 0; index < count; ++index) {
+        char name[256];
+        std::sprintf(name, "Probe %d", index);
+        nodes[index] = FindModelCacheNode(entry->expressionTarget, name);
+        std::memcpy(&parameters[index], &model->probes[index], 48);
+        parameters[index].parameter30 = model->probes[index].parameter30;
+    }
+    s2::ConfigureOwnerSDProbes(count, nodes, parameters, entry, entry->expressionTarget);
+}
+
+// @verified - p
 void RegisterPlacementLight(ObjectEntry &entry, const D3TModelSprite &sprite, std::uint64_t node, const char *textureName) {
     entry.source->flags |= OSF_HasLightBindings;
     const Matrix4x4 world = ComputeModelCacheGlobalTransform(node);
@@ -496,8 +515,10 @@ std::uint32_t RegisterPlacementLights(ObjectEntry &entry) {
 void BindPlacement(ObjectEntry &entry, const void *placement) {
 
 #if SHENMUE_IS_S2
-    if (entry.placement && entry.kind == EntryKind::ModelRuntime)
+    if (entry.placement && entry.kind == EntryKind::ModelRuntime) {
         s2::RemoveSDLightOwner(entry.expressionTarget);
+        s2::RemoveOwnerSDProbes(&entry);
+    }
 #endif
     entry.modelRuntime = {};
     if (entry.placement) {
@@ -514,6 +535,7 @@ void BindPlacement(ObjectEntry &entry, const void *placement) {
         if (entry.kind == EntryKind::ModelRuntime) {
             MarkPlacementDayNight(entry.expressionTarget);
             RegisterPlacementLights(entry);
+            SetupPlacementProbes(&entry);
             if (entry.source->modelKind == 1)
                 InitializeObjectStoreExpressions(entry);
             UpdateModelCacheFlags(entry.expressionTarget, 1, ModelCacheFlagMode::Clear);
@@ -1266,6 +1288,7 @@ bool ProcessObjectStore(bool checkShaders, std::int32_t maximumOperations) {
                         if (entry.placement) {
                             MarkPlacementDayNight(entry.expressionTarget);
                             RegisterPlacementLights(entry);
+                            SetupPlacementProbes(&entry);
                         }
                         if (entry.placement && entry.source->modelKind == 1)
                             InitializeObjectStoreExpressions(entry);
