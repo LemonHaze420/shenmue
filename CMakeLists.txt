@@ -1274,6 +1274,7 @@ add_library(shenmue2_game STATIC
   src/s2/system_modules.cpp
   src/s2/title.cpp
   src/s2/ui.cpp
+  src/s2/ui_credits.cpp
   src/s2/ui_options.cpp
   src/s2/ui_collection.cpp
   src/s2/ui_snapshot_debug.cpp

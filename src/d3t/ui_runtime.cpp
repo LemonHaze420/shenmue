@@ -37,8 +37,8 @@ const std::uint32_t *g_nuklearTargetRedirect{};
 #endif
 
 #if !SHENMUE_IS_S1
-std::array<TextureLoadRequest, 8192> g_textureLoadRequests{};
-std::atomic<std::uint16_t> g_textureLoadRequestIndex{};
+std::array<UIAsyncLoadRequest, 8192> g_uiLoadRequests{};
+std::atomic<std::uint16_t> g_uiLoadRequestIndex{};
 std::array<UIViewImageLoadDiagnostic, 83> g_uiImageLoadDiagnostics{};
 std::int32_t g_uiImageLoadDiagnosticIndex = -1;
 #endif

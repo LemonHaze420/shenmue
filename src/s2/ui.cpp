@@ -1,4 +1,5 @@
 #include "s2/ui_internal.hpp"
+#include "s2/ui_credits.hpp"
 #include "s2/ui.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
@@ -105,7 +106,7 @@
 #include <vector>
 #include "s2/area_names.hpp"
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 using namespace ui_detail;
 
 std::array<std::array<char, 256>, 3> g_moveLearnedUiText{};
@@ -289,13 +290,8 @@ d3t::UIPanelDefinition *introLogoPanel = nullptr;
 d3t::UITextureObjectDefinition *introLogoImage = nullptr;
 std::vector<d3t::UIResolvedTextureObject> introObjectRectangles;
 HLib::Task *endingStaffRollTask = nullptr;
-ConversationBuffer *endingStaffRollVoice = nullptr;
+
 std::int32_t endingStaffRollFlag{};
-float endingCreditsTotalDuration = 0.0f;
-float endingCreditsTime = 0.0f;
-float endingCreditsDeltaTime = 0.0f;
-bool endingCreditsInitialized = false;
-bool endingCreditsContentReady = false;
 
 // SetIntroCredit writes the authored widget, not the legacy OPST texture.
 void SetIntroCredit(std::int32_t item, float alpha, std::int32_t side) {
@@ -1761,49 +1757,6 @@ std::int64_t ResetLoadingScreenDefinition() {
     loadingScreen.animations.fill(-1);
     return 1;
 }
-std::int64_t InitializeEndingCredits() {
-    if (endingCreditsInitialized)
-        return 1;
-    shenSetForcedFilmbars(1);
-    endingCreditsTime = 0.0f;
-
-
-
-
-    endingCreditsTotalDuration = 355.0f;
-    endingCreditsDeltaTime = 1.0f;
-    endingCreditsContentReady = false;
-    endingCreditsInitialized = true;
-    return 1;
-}
-
-std::int64_t UpdateEndingCredits() {
-    if (!endingCreditsInitialized)
-        InitializeEndingCredits();
-    const auto &credits = g_uiElements[static_cast<std::size_t>(UIElement::Credits)];
-    if (!endingCreditsContentReady) {
-        if (credits.config.init != 3)
-            return 1;
-        CVS_CtrlConversTask_Enqueue(true);
-        endingStaffRollVoice = shenPlayAudio("stuffroll", {}, 17, false);
-        endingCreditsContentReady = true;
-    }
-    // RenderEndingStaffRoll forces the credits owner to 60 Hz and advances
-    // g_fCreditsTime by g_fCreditsDeltaTime / 60 each render.
-    endingCreditsTime += endingCreditsDeltaTime / 60.0f;
-    return 1;
-}
-
-std::int64_t ReleaseEndingCredits() {
-    shenSetForcedFilmbars(0);
-    if (endingStaffRollVoice)
-        hsFadeVoice(endingStaffRollVoice, 60);
-    endingStaffRollVoice = nullptr;
-    endingCreditsInitialized = false;
-    endingCreditsContentReady = false;
-    return 1;
-}
-
 std::int64_t BindIntroCutsceneCredits() {
     d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::IntroCutsceneCredits)];
     introCreditSprites.fill(nullptr);
@@ -4430,10 +4383,7 @@ void InitializeUIElements() {
     gameQte.isPressed = GameQteInputNullsub;
     gameQte.render = RenderGameQte;
 
-    UIElementState &credits = g_uiElements[static_cast<std::size_t>(UIElement::Credits)];
-    credits.name = "Credits";
-    credits.parseDefinitionFromFile = LoadEndingCredits;
-    credits.tick = UpdateEndingCredits;
+    InitializeEndingCreditsElement(g_uiElements[static_cast<std::size_t>(UIElement::Credits)]);
     UIElementState &gameHudWatch = g_uiElements[static_cast<std::size_t>(UIElement::GameHudWatch)];
     gameHudWatch.name = "Game HUD Watch";
     gameHudWatch.parseDefinitionFromFile = LoadGameHudWatch;
@@ -4442,7 +4392,7 @@ void InitializeUIElements() {
     gameHudWatch.render = RenderGameHudWatch;
     gameHudWatch.isSelected = BindGameHudWatch;
     gameHudWatch.fieldAc = 1;
-    credits.destroy = ReleaseEndingCredits;
+
     UIElementState &loading = g_uiElements[static_cast<std::size_t>(UIElement::LoadingScreen)];
     loading.name = "SLoad Screen";
     loading.parseDefinitionFromFile = LoadLoadingScreenDefinition;
@@ -4778,7 +4728,8 @@ void EndingStaffRollWaitForSave(void *taskData) {
 }
 
 bool EndingCreditsComplete() noexcept {
-    return endingCreditsTime > 10.0f * endingCreditsDeltaTime + endingCreditsTotalDuration;
+    const float total = ((creditsState.tables[0].height + 0.0f) + creditsState.tables[1].height) + creditsState.tables[2].height;
+    return creditsState.scrollProgress > CREDITS_SIGNATURE_DURATION * creditsState.scrollSpeed + total;
 }
 
 // @verified - p
@@ -5233,7 +5184,12 @@ void SetEndingStaffRollFlag(std::int32_t value) noexcept {
 
 void StaffRoll(void *) {
     DispatchPostFxFilterRender(1);
+    InitSceneEffects();
     AllocateDIRE("scene/04/stfrol", 0, 100);
+    creditsLegacyParameters.unknown0c = 1;
+    creditsLegacyParameters.unknown00 = 0.0f;
+    creditsLegacyParameters.unknown08 = 0;
+    creditsLegacyParameters.unknown04 = 2;
     HLib::Task *const film = Queue_SCF_Callback_ScreenFilmTaskEntry(8);
     WaitForNextTask_0(film, 0, 30);
     d3t::SetSceneClearColour(0xff000000U);
@@ -6158,6 +6114,14 @@ void RenderUIContents() {
             if ((element.enabled || element.isVisible) && !element.isRenderable && element.config.init == 3) {
                 SetGameUiFlag(gameUiSecondaryFlags, index, true);
                 RenderHelpFrame();
+            }
+            element.enabled = 0;
+            continue;
+        }
+        if (index == static_cast<std::size_t>(UIElement::Credits)) {
+            if (element.isVisible && !element.isRenderable && element.config.init == 3) {
+                SetGameUiFlag(gameUiSecondaryFlags, index, true);
+                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
             }
             element.enabled = 0;
             continue;

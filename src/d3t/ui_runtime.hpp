@@ -84,17 +84,27 @@ extern std::int32_t g_uiReadStateInitialized;
 std::int32_t TryFinalizeUIViewTextures(std::int32_t slotIndex);
 #if SHENMUE_IS_S2
 
-struct alignas(16) TextureLoadRequest {
-    std::uint16_t generation;
-    std::byte reserved02[14];
+struct UITextureLoadData {
     std::uint32_t texture;
     std::uint32_t linearColour;
+};
+union UILoadPayload {
+    UITextureLoadData image;
+    void *data;
+};
+static_assert(sizeof(UILoadPayload) == 8);
+struct alignas(16) UIAsyncLoadRequest {
+    std::uint16_t generation;
+    std::byte reserved02[14];
+    UILoadPayload payload;
     std::byte reserved18[56];
 };
-static_assert(sizeof(TextureLoadRequest) == 0x50 && offsetof(TextureLoadRequest, texture) == 0x10);
-static_assert(offsetof(TextureLoadRequest, linearColour) == 0x14);
-extern std::array<TextureLoadRequest, 8192> g_textureLoadRequests;
-extern std::atomic<std::uint16_t> g_textureLoadRequestIndex;
+static_assert(sizeof(UIAsyncLoadRequest) == 0x50 && offsetof(UIAsyncLoadRequest, payload) == 0x10);
+static_assert(offsetof(UIAsyncLoadRequest, payload) + offsetof(UITextureLoadData, linearColour) == 0x14);
+extern std::array<UIAsyncLoadRequest, 8192> g_uiLoadRequests;
+extern std::atomic<std::uint16_t> g_uiLoadRequestIndex;
+std::uint32_t AllocateUILoadRequest();
+UILoadPayload *GetUILoadRequest(std::uint32_t handle);
 std::uint32_t InitTexture2d(const char *path, std::uint32_t linearColour, std::uint32_t renderHandle);
 std::uint32_t GetShaderDataByIndexInternal(std::uint32_t requestHandle);
 std::uint32_t GetShaderDataByIndex(std::uint32_t requestHandle);

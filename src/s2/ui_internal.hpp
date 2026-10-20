@@ -300,12 +300,6 @@ extern d3t::UITextureObjectDefinition *introLogoImage;
 
 extern HLib::Task *endingStaffRollTask;
 
-extern ConversationBuffer *endingStaffRollVoice;
-
-extern bool endingCreditsInitialized;
-
-extern bool endingCreditsContentReady;
-
 extern std::uint32_t currentItemSelectState;
 
 extern std::array<CommonIconAtlas, 16> commonIconAtlases;

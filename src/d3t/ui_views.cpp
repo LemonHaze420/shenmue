@@ -27,22 +27,37 @@ void InitTexture2dLoaded(void *data, std::uint32_t contentHandle, void *loadedDa
     d3t::ProcessThreadStates(contentHandle, 0);
 }
 
-std::uint32_t InitTexture2d(const char *path, std::uint32_t linearColour, std::uint32_t renderHandle) {
-    const std::uint16_t index = g_textureLoadRequestIndex.fetch_add(1, std::memory_order_seq_cst) & 0x1fffU;
-    TextureLoadRequest &request = g_textureLoadRequests[index];
-    const std::uint16_t generation = ++request.generation;
-    if (generation) {
-        request.texture = 0;
-        request.linearColour = linearColour;
-        const d3t::D3TShaderLoadTask task{path, renderHandle, 0, {InitTexture2dLoaded, &request.texture}, nullptr, 0, 0, {}};
-        d3t::PushShaderLoadToThreadQueue(&task);
-    }
+std::uint32_t AllocateUILoadRequest() {
+    const std::uint16_t index = g_uiLoadRequestIndex.fetch_add(1, std::memory_order_seq_cst) & 0x1fffU;
+    const std::uint16_t generation = ++g_uiLoadRequests[index].generation;
     return (static_cast<std::uint32_t>(generation) << 16U) | index;
 }
 
+// @verified - p
+UILoadPayload *GetUILoadRequest(std::uint32_t handle) {
+    UIAsyncLoadRequest &request = g_uiLoadRequests[static_cast<std::uint16_t>(handle)];
+    return static_cast<std::uint16_t>(handle >> 16U) == request.generation ? &request.payload : nullptr;
+}
+
+std::uint32_t InitTexture2d(const char *path, std::uint32_t linearColour, std::uint32_t renderHandle) {
+    const std::uint32_t handle = AllocateUILoadRequest();
+    UIAsyncLoadRequest &request = g_uiLoadRequests[static_cast<std::uint16_t>(handle)];
+    if (static_cast<std::uint16_t>(handle >> 16U)) {
+        request.payload.image.texture = 0;
+        request.payload.image.linearColour = linearColour;
+        const d3t::D3TShaderLoadTask task{path, renderHandle, 0, {InitTexture2dLoaded, &request.payload.image}, nullptr, 0, 0, {}};
+        d3t::PushShaderLoadToThreadQueue(&task);
+    }
+    return handle;
+}
+
 std::uint32_t GetShaderDataByIndexInternal(std::uint32_t requestHandle) {
-    const TextureLoadRequest &request = g_textureLoadRequests[static_cast<std::uint16_t>(requestHandle)];
-    return static_cast<std::uint16_t>(requestHandle >> 16U) == request.generation ? request.texture : 0;
+    const UIAsyncLoadRequest &request = g_uiLoadRequests[static_cast<std::uint16_t>(requestHandle)];
+    if (static_cast<std::uint16_t>(requestHandle >> 16U) != request.generation)
+        return 0;
+    std::uint32_t texture;
+    std::memcpy(&texture, &request.payload, sizeof(texture));
+    return texture;
 }
 
 std::uint32_t GetShaderDataByIndex(std::uint32_t requestHandle) {
