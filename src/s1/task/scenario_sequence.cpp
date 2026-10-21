@@ -399,7 +399,7 @@ std::int64_t ASEQ_VOICE(std::int32_t mode, void *rawData, void *rawRuntime) {
             } else {
                 if (char *const extension = std::strchr(voiceName, '.'))
                     *extension = '\0';
-                if (ProcessSubtitleFile(voiceName, data->characterId, 1, nullptr)) {
+                if (ProcessSubtitleFile(voiceName, 0, 0, nullptr)) {
                     return 0;
                 }
             }

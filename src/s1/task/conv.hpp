@@ -77,7 +77,7 @@ static_assert(sizeof(ConversationCameraSlotTable) == 0x30);
 struct ConversationParticipantRestoreState {
     std::uint32_t hadMotmFlag2;
     std::uint32_t savedPoseEvalStage;
-    std::uint32_t hadMapcBit0;
+    std::uint32_t hadCpamBit0;
     std::uint32_t characterId;
 };
 static_assert(sizeof(ConversationParticipantRestoreState) == 0x10);

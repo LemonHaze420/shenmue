@@ -1,6 +1,7 @@
 #include "s1/task/mbst.hpp"
 
-#include "s1/d3t/scratch_memory.hpp"
+#include "s1/scene_memory.hpp"
+#include "s1/boot.hpp"
 #include "s1/motion.hpp"
 #include "s1/legacy_renderer.hpp"
 #include "s1/matrix_stack.hpp"
@@ -80,18 +81,9 @@ float DistanceSquaredToCameraTarget(const Vector3 &position) {
     return dx * dx + dz * dz;
 }
 
-std::int32_t CountReusableMotions() {
-    std::int32_t count = 0;
-    ForEachMapCharacter([&](Character *character) {
-        const MotionManagerWork *const manager = MOTM_GetWork(character);
-        if (manager && (manager->flags & (kMotionBudgetCandidate | kMotionBudgetSelected)) == kMotionBudgetCandidate && manager->motion.activeNodes) {
-            ++count;
-        }
-    });
-    return count;
-}
+std::int32_t CaptureReusableMotions(
 
-std::int32_t CaptureReusableMotions(MotionManagerWork **output, std::int32_t capacity) {
+    std::byte *output, std::int32_t capacity) {
     if (!output || capacity <= 0)
         return 0;
     std::int32_t count = 0;
@@ -100,8 +92,10 @@ std::int32_t CaptureReusableMotions(MotionManagerWork **output, std::int32_t cap
         if (!manager || (manager->flags & (kMotionBudgetCandidate | kMotionBudgetSelected)) != kMotionBudgetCandidate || !manager->motion.activeNodes) {
             return;
         }
-        if (count < capacity)
-            output[count++] = manager;
+        if (count < capacity) {
+            std::memcpy(output + static_cast<std::size_t>(count) * sizeof(manager), &manager, sizeof(manager));
+            ++count;
+        }
     });
     return count;
 }
@@ -114,21 +108,20 @@ void RefreshMotionBudget(MBST_t *mbst, bool releaseUnselected) {
         return;
     }
 
-    void *const checkpoint = GetGlobalPoolCheckpoint();
+    const std::byte *const sceneBase = static_cast<const std::byte *>(g_pSTCH);
     MBSTSelectionEntry fallback{};
     MBSTSelectionEntry *entries = &fallback;
     if (mbst->capacity > 0) {
         const std::size_t allocationSize = static_cast<std::size_t>(mbst->capacity) * sizeof(MBSTSelectionEntry);
-        entries = static_cast<MBSTSelectionEntry *>(AllocateMemoryFromGlobalPool(allocationSize));
-        if (!entries) {
-            RestoreGlobalPoolCheckpoint(checkpoint);
+        entries = static_cast<MBSTSelectionEntry *>(AllocateSceneTransient(allocationSize));
+        if (!entries)
             return;
         }
-    }
 
     const std::int32_t count = MBST_SelectMotionCandidates(mbst, entries, nullptr);
     MBST_CommitMotionCandidates(mbst, entries, count, releaseUnselected);
-    RestoreGlobalPoolCheckpoint(checkpoint);
+    if (mbst->capacity > 0)
+        g_TotalSceneFileReadBytes = reinterpret_cast<const std::byte *>(entries) - sceneBase - 4;
 }
 
 void ConfigureTaskForDestruction(HLib::Task *task) {
@@ -205,7 +198,8 @@ std::int32_t MBST_SelectMotionCandidates(MBST_t *mbst, MBSTSelectionEntry *entri
             return;
         const float distance = DistanceSquaredToCameraTarget(position);
         if (selected < capacity) {
-            entries[selected] = {motion, distance, 0};
+            entries[selected].motion = motion;
+            entries[selected].distanceSquared = distance;
             motion->flags |= kMotionBudgetSelected;
             if (distance > farthestDistance) {
                 farthestDistance = distance;
@@ -220,7 +214,8 @@ std::int32_t MBST_SelectMotionCandidates(MBST_t *mbst, MBSTSelectionEntry *entri
         if (entries[farthestIndex].motion) {
             entries[farthestIndex].motion->flags &= ~kMotionBudgetSelected;
         }
-        entries[farthestIndex] = {motion, distance, 0};
+        entries[farthestIndex].motion = motion;
+        entries[farthestIndex].distanceSquared = distance;
         motion->flags |= kMotionBudgetSelected;
 
         farthestIndex = 0;
@@ -241,10 +236,9 @@ bool MBST_CommitMotionCandidates(MBST_t *mbst, const MBSTSelectionEntry *entries
     if (count > 0 && !entries)
         return false;
 
-    void *const checkpoint = GetGlobalPoolCheckpoint();
-    const std::int32_t reusableCapacity = CountReusableMotions();
-    auto **reusable = reusableCapacity > 0 ?
-        static_cast<MotionManagerWork **>(AllocateMemoryFromGlobalPool(static_cast<std::size_t>(reusableCapacity) * sizeof(MotionManagerWork *))) :
+    const std::int32_t reusableCapacity = mbst->state;
+    std::byte *const reusable = reusableCapacity > 0 ?
+        static_cast<std::byte *>(AllocateSceneTransient(static_cast<std::size_t>(reusableCapacity) * sizeof(MotionManagerWork *))) :
         nullptr;
     const std::int32_t reusableCount = reusable ? CaptureReusableMotions(reusable, reusableCapacity) : 0;
 
@@ -256,7 +250,9 @@ bool MBST_CommitMotionCandidates(MBST_t *mbst, const MBSTSelectionEntry *entries
             continue;
         if (!manager->motion.activeNodes) {
             if (reusableIndex < reusableCount) {
-                MOTI_TransferPrimaryNodes(&reusable[reusableIndex]->motion, &manager->motion);
+                MotionManagerWork *source;
+                std::memcpy(&source, reusable + static_cast<std::size_t>(reusableIndex) * sizeof(source), sizeof(source));
+                MOTI_TransferPrimaryNodes(&source->motion, &manager->motion);
                 ++reusableIndex;
             } else {
                 MOTI_TransferPrimaryNodes(nullptr, &manager->motion);
@@ -268,11 +264,14 @@ bool MBST_CommitMotionCandidates(MBST_t *mbst, const MBSTSelectionEntry *entries
 
     if (releaseUnselected) {
         for (std::int32_t index = reusableIndex; index < reusableCount; ++index) {
-            MOTI_TransferPrimaryNodes(&reusable[index]->motion, nullptr);
+            MotionManagerWork *source;
+            std::memcpy(&source, reusable + static_cast<std::size_t>(index) * sizeof(source), sizeof(source));
+            MOTI_TransferPrimaryNodes(&source->motion, nullptr);
             --mbst->state;
         }
     }
-    RestoreGlobalPoolCheckpoint(checkpoint);
+    if (reusable)
+        g_TotalSceneFileReadBytes = reusable - static_cast<const std::byte *>(g_pSTCH) - 4;
     return committed != 0;
 }
 
@@ -344,17 +343,14 @@ void MBST_PrepareMotionManagerCleanup(MotionManagerWork *excludedManager) {
     if (!mbst)
         return;
 
-    void *const checkpoint = GetGlobalPoolCheckpoint();
+    const std::byte *const sceneBase = static_cast<const std::byte *>(g_pSTCH);
     MBSTSelectionEntry fallback{};
     MBSTSelectionEntry *entries = nullptr;
     if (mbst->capacity > 0) {
-        entries = static_cast<MBSTSelectionEntry *>(AllocateMemoryFromGlobalPool(static_cast<std::size_t>(mbst->capacity) * sizeof(MBSTSelectionEntry)));
-        if (!entries) {
-            RestoreGlobalPoolCheckpoint(checkpoint);
+        entries = static_cast<MBSTSelectionEntry *>(AllocateSceneTransient(static_cast<std::size_t>(mbst->capacity) * sizeof(MBSTSelectionEntry)));
+        if (!entries)
             return;
-        }
     } else if (mbst->capacity < 0) {
-
 
         entries = &fallback;
     }
@@ -374,7 +370,8 @@ void MBST_PrepareMotionManagerCleanup(MotionManagerWork *excludedManager) {
         });
     }
     MBST_CommitMotionCandidates(mbst, entries, count, true);
-    RestoreGlobalPoolCheckpoint(checkpoint);
+    if (mbst->capacity > 0)
+        g_TotalSceneFileReadBytes = reinterpret_cast<const std::byte *>(entries) - sceneBase - 4;
 }
 
 } // namespace shenmue::s1

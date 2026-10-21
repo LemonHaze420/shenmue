@@ -296,6 +296,10 @@ void SetRenderFlags(std::uint32_t setting, std::int32_t value) {
 }
 
 void SetDefaultRenderFlags() {
+    for (const std::uint32_t setting : kDefaultRenderFlagOrder) {
+        SetRenderFlags(setting, g_defaultRenderFlags[setting]);
+        g_currentRenderFlags[setting] = g_defaultRenderFlags[setting];
+    }
     for (std::uint32_t setting = 0; setting < g_defaultRenderFlags.size(); ++setting) {
         SetRenderFlags(setting, g_defaultRenderFlags[setting]);
         g_currentRenderFlags[setting] = g_defaultRenderFlags[setting];

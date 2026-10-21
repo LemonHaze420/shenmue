@@ -870,6 +870,17 @@ bool UI_ICSVPeekScriptResult(std::uint32_t &result) {
     return true;
 }
 
+// @verified - p
+std::int64_t UI_ICSVFreeLabelSurfaces() {
+    std::int64_t result = 0;
+    for (std::int16_t &surface : g_sleepSaveTrainingMenu.labelSurfaces) {
+        result = static_cast<std::uint16_t>(surface);
+        if (surface != -1)
+            result = PVR_FreeAllocatedSurfaceByIndex(surface);
+        surface = -1;
+    }
+    return result;
+}
 void UI_ICSVCallback(HLib::TaskData *) {
     SleepSaveTrainingMenu &menu = g_sleepSaveTrainingMenu;
     menu = {};
@@ -911,6 +922,14 @@ void UI_ICSVMainCallback(HLib::TaskData *) {
             menu.phase = 1;
             menu.selection = 4;
             menu.active = 1;
+            for (std::size_t index = 0; index < menu.labelSurfaces.size(); ++index) {
+                menu.labelSurfaces[index] = -1;
+                if ((menu.flags & 2) == 0 || (index & 1U) != 0) {
+                    menu.labelSurfaces[index] = AllocatePVRSurface(kSleepSaveTrainingLabels[index], 128, 0xffff, 0xf000, 0, true);
+                    if (menu.labelSurfaces[index] == -1)
+                        shenExecuteAICACommand(kActionSelectorSurfaceFailureSound, 0, 0);
+                }
+            }
         }
         break;
     case 1:
@@ -945,6 +964,7 @@ void UI_ICSVMainCallback(HLib::TaskData *) {
         break;
     case 4:
         menu.phase = 0;
+        UI_ICSVFreeLabelSurfaces();
         RestorePad(menu.previousInput);
         menu.active = 0;
         menu.requested = 0;
@@ -991,6 +1011,7 @@ void UI_ICSVMainCallback(HLib::TaskData *) {
     case 5:
         if (highlightIdle()) {
             menu.phase = 0;
+            UI_ICSVFreeLabelSurfaces();
             RestorePad(menu.previousInput);
             menu.active = 0;
             menu.requested = 0;

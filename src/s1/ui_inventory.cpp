@@ -1610,8 +1610,27 @@ void ItemLook_Place() {
     TranslateCameraRelative(eye);
 }
 
-
-
+// @verified - p
+void DrawBatteryIcon(const std::int32_t *batteryId) {
+    if (!g_updateRenderFrameMode)
+        return;
+    ScreenSpaceParams sprite;
+    sprite.angle = 0;
+    sprite.flags14 = 0;
+    sprite.pvrSurfaceIndex = 311;
+    sprite.halfScreenX = 32.0f;
+    sprite.halfScreenY = 418.0f;
+    sprite.positionScaleX = *batteryId == 0 ? 1.0f : 0.75f;
+    sprite.positionScaleY = 1.0f;
+    sprite.alignmentType = 5;
+    sprite.scaledWidth = 64;
+    sprite.scaledHeight = 64;
+    sprite.depthOrScale = 1.0f;
+    const std::int8_t index = std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(*batteryId));
+    if (g_playerStats.batteryLives[index] >= 28801U)
+        g_playerStats.batteryLives[index] = 28800;
+    AdjustScreenSpaceWithParams(&sprite, 0xff000000U, 0);
+}
 
 void DrawBatteryIcons() {
     IconPresentationOwner &icon = g_iconPresentation;
@@ -1626,11 +1645,17 @@ void DrawBatteryIcons() {
         .textureIds = {}};
     object.textureIds.fill(-1);
     DrawObjectForUI(&object);
+    if (!icon.sharedItemPreviewIsCassette) {
+        std::int32_t batteryId;
+        if (icon.sharedItemPreviewValue == 51)
+            batteryId = 0;
+        else if (icon.sharedItemPreviewValue == 1)
+            batteryId = 1;
+        else
+            return;
+        DrawBatteryIcon(&batteryId);
+    }
 }
-
-
-
-
 
 void CassetteMenu_HandleInput() {
     IconPresentationOwner &icon = g_iconPresentation;

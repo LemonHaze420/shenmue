@@ -731,7 +731,8 @@ void TRWave_OffsetStripUVs(std::int32_t offsetU, std::int32_t offsetV, EffeGeome
     const auto offset = [offsetU, offsetV](std::byte *field) {
         std::uint32_t uv = 0;
         std::memcpy(&uv, field, sizeof(uv));
-        uv = (static_cast<std::uint32_t>(offsetV) + uv) | ((static_cast<std::uint32_t>(offsetU) << 16U) + (uv & 0xffff0000U));
+        const std::int32_t v = std::bit_cast<std::int16_t>(static_cast<std::uint16_t>(uv));
+        uv = (static_cast<std::uint32_t>(offsetV) + static_cast<std::uint32_t>(v)) | ((static_cast<std::uint32_t>(offsetU) << 16U) + (uv & 0xffff0000U));
         std::memcpy(field, &uv, sizeof(uv));
     };
     std::byte *cursor = TaskDataPointer<std::byte>(mesh->chunkOffset);
@@ -1162,7 +1163,7 @@ void CalcWeather(TransformedWaveform &waveform) {
     float nearestDistance = 9999.0f;
     bool allCulled = true;
     const Matrix4x4 cameraTransform = g_tmp_cam_xform;
-    const Vector3 lookAt = g_CameraTargetPos;
+    const Vector3 cameraEye = g_CameraEyePos;
     const float radius = (waveform.scale * 16.0f) * 0.7071f;
     const Vector2 &viewScale = prevScreenSpaceToWorldScale;
     Matrix4x4_Push();
@@ -1194,15 +1195,15 @@ void CalcWeather(TransformedWaveform &waveform) {
                     const float halfHeight = depth * viewScale.y + radius;
                     if (view.x <= halfWidth && -halfWidth < view.x && view.y <= halfHeight && -halfHeight < view.y) {
                         inView = true;
-                        visible = lookAt.y >= 2.5f || shenIsLocalSphereVisibleInScreenDepthTable(worldCentre, radius);
+                        visible = cameraEye.y >= 2.5f || shenIsLocalSphereVisibleInScreenDepthTable(worldCentre, radius);
                     }
                 }
                 Matrix4x4::Pop(1);
                 if (visible) {
                     if ((waveform.flags & 4U) == 0U) {
-                        const float dx = worldCentre.x - lookAt.x;
-                        const float dy = worldCentre.y - lookAt.y;
-                        const float dz = worldCentre.z - lookAt.z;
+                        const float dx = worldCentre.x - cameraEye.x;
+                        const float dy = worldCentre.y - cameraEye.y;
+                        const float dz = worldCentre.z - cameraEye.z;
                         nearestDistance = std::fmin(std::sqrt((dx * dx + dy * dy) + dz * dz), nearestDistance);
                     }
                     DrawForWeather(TaskDataPointer<EffeGeometryMesh>(model->meshOffset));

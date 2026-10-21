@@ -2791,7 +2791,7 @@ CharacterCollisionWork *NextCharacterCollisionShape() {
             height = 0.0f;
         const float ryoY = GetPositionForEntity(ryo->entity.node).y;
         const float y = GetPositionForEntity(character->entity.node).y;
-        if (!(ryoY + 1.8f > y && height + y > ryoY))
+        if (!(static_cast<double>(ryoY) + 1.8 > static_cast<double>(y) && height + y > ryoY))
             continue;
         if (!(character->flags.value & 4U))
             work->publishedFlags &= ~0x100U;
@@ -4153,7 +4153,7 @@ void CCOW_RefreshAuthoredShape(Character *character) {
     if (!work)
         return;
     work->targetPosition = character->entity.node.position;
-    work->cachedYaw = charaGetWorldYaw(character);
+    work->cachedYaw = static_cast<std::int32_t>(cpctGetAccumYaw(character));
     BuildCharacterCollisionShape(work->shape, work->targetPosition, static_cast<std::uint16_t>(work->cachedYaw), work->shapeExtents);
 }
 

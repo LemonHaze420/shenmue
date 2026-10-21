@@ -18,16 +18,19 @@ struct MBST_t {
 };
 #pragma pack(pop)
 
+#pragma pack(push, 4)
 struct MBSTSelectionEntry {
     MotionManagerWork *motion;
     float distanceSquared;
     std::uint32_t reserved0c;
 };
 
+#pragma pack(pop)
 static_assert(sizeof(MBST_t) == 0x08);
 static_assert(offsetof(MBST_t, capacity) == 0x04);
 static_assert(offsetof(MBST_t, state) == 0x06);
 static_assert(sizeof(MBSTSelectionEntry) == 0x10);
+static_assert(alignof(MBSTSelectionEntry) == 4);
 static_assert(offsetof(MBSTSelectionEntry, motion) == 0x00);
 static_assert(offsetof(MBSTSelectionEntry, distanceSquared) == 0x08);
 static_assert(offsetof(MBSTSelectionEntry, reserved0c) == 0x0c);

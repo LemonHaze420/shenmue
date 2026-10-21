@@ -130,10 +130,9 @@ void SCNT_Core(ScenRuntimeObject *object) {
         std::int16_t selectedHelp = -1;
         if (!UI_ICSpPeekSelectedHelpToken(selectedHelp))
             return;
-        object->field24 = selectedHelp == 0 ? 1U : selectedHelp == 1 ? 0U : static_cast<std::uint16_t>(selectedHelp);
+        const std::uint8_t selected = static_cast<std::uint8_t>(selectedHelp);
+        object->field24 = selected == 0 ? 1U : selected == 1 ? 0U : selected;
         object->runtimeFlags &= ~0x10U;
-        if (object->field24 == 0xffffU)
-            return;
     }
     if (SCEN_HasActiveScript() && SCNT_IsFreeTalkPairSetupPending(0) && !SCNT_IsParticipantTurnSettled(object->name.name))
         return;
@@ -345,7 +344,7 @@ void SCNT_Core(ScenRuntimeObject *object) {
         }
         if (!ShouldRun() || g_scenHelpPromptOverride != 0)
             return;
-        if (g_areaId != SHEN_NAME(YSFM) || SCEN_HasActiveScript())
+        if (g_areaId != AREA_MFSY.name || SCEN_HasActiveScript())
             g_bGlobalFlag = 1;
         BeginScenInteraction(*object);
         if (object->scriptSlot < kScntScriptSlotCount) {

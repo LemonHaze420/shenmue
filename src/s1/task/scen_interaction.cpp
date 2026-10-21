@@ -395,6 +395,21 @@ void BeginScenInteraction(ScenRuntimeObject &object) {
     g_scenRuntimeState.referencedCharacterIds[static_cast<std::size_t>(index)] = 0;
 }
 
+std::int32_t g_scenarioInteractionStartTicks = 0;
+
+// @verified - p
+std::int64_t scenarioUpdateDeltaTimeTicks() {
+    const std::int64_t ticks = static_cast<std::int64_t>(g_LastFrameTime - QueryFrameTime());
+    g_scenarioInteractionStartTicks = static_cast<std::int32_t>(ticks);
+    return ticks;
+}
+
+// @verified - p
+float scenarioGetCurrentFrameTimeNormalized() {
+    const std::int32_t current = FrameTimeTicks(g_LastFrameTime - QueryFrameTime());
+    const std::uint32_t elapsed = static_cast<std::uint32_t>(g_scenarioInteractionStartTicks) - static_cast<std::uint32_t>(current);
+    return static_cast<float>(static_cast<double>(static_cast<float>(elapsed)) * 30.0 / 12500000.0);
+}
 bool UpdateScenStateFiveRecovery(ScenRuntimeObject &object, const PadCaptureEntry *pad) {
     if ((object.runtimeFlags & kRuntimeFlagInteractionResume) == 0)
         return false;
@@ -403,20 +418,25 @@ bool UpdateScenStateFiveRecovery(ScenRuntimeObject &object, const PadCaptureEntr
         ScenFlags() &= ~kScenarioFlagInteractionResume;
         object.runtimeFlags |= 0x3040000U;
         object.failCount2 = 0;
+        SCNF_LogStateChange(object, -8);
         ClearScenAuthorGameState();
         RestoreScenPadContext();
     }
     if ((object.runtimeFlags & 0x1000000U) == 0) {
         object.runtimeFlags |= 0x1000000U;
-        object.failCount2 = 0;
+        scenarioUpdateDeltaTimeTicks();
         return true;
     }
+    if ((object.runtimeFlags & 0x2000000U) != 0)
+        return true;
+
     const bool cancelInput = pad &&
         (((pad->pressedPriority & 0x0200U) != 0) || (pad->held & 0xf0c0U) != 0 || static_cast<std::uint8_t>(pad->rightStick) != 0x80U ||
             static_cast<std::uint8_t>(pad->rightStick >> 8U) != 0x80U);
-    if ((++object.failCount2 >= 150 || cancelInput) && g_isPlayerGameStateActive == 7 && (object.runtimeFlags & 0x2000000U) == 0) {
+    if ((scenarioGetCurrentFrameTimeNormalized() >= 150.0f || cancelInput) && g_isPlayerGameStateActive == 7) {
         object.runtimeFlags |= kRuntimeFlagPendingFailure2;
         object.failCount2 = 0;
+        SCNF_LogStateChange(object, -8);
         ClearScenAuthorGameState();
         RestoreScenPadContext();
         object.runtimeFlags |= 0x2000000U;

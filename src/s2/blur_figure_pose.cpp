@@ -501,7 +501,7 @@ void AttachObjectBlur(Character *character, std::uint32_t argumentCount, float t
     }
     figure->previousModelCallback = character->applyScale;
     character->applyScale = BlendMatrices;
-    (reinterpret_cast<ModelComponentHeader *>(figure) - 1)->cleanup = FreeBlurWork;
+    SetModelComponentCleanup(character, MODEL_FIGURE_POSE, FreeBlurWork);
 }
 
 // @verified - p

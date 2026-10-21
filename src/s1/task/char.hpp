@@ -16,6 +16,8 @@
 
 namespace shenmue::s1 {
 
+inline constexpr shen_name COMPONENT_CPAM = SHEN_NAME(CPAM);
+
 inline constexpr shen_name IMAGE_YKA_M = SHEN_NAME(YKAM);
 inline constexpr shen_name IMAGE_YKB_M = SHEN_NAME(YKBM);
 inline constexpr shen_name IMAGE_YKC_M = SHEN_NAME(YKCM);

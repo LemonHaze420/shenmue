@@ -1964,7 +1964,7 @@ std::int32_t ExecuteAICACommand_Wrapper(std::uint32_t volume) {
     if (bank < 0)
         return -1;
 
-    g_environmentAicaBanks[bank].active = 1;
+    g_environmentAicaBanks[bank] = {.active = 1};
     shenExecuteAICACommand(0xa5, static_cast<std::uint32_t>(bank), static_cast<std::int32_t>(volume));
     g_environmentAicaBankVolumes[bank] = static_cast<std::int16_t>(volume);
     return bank;

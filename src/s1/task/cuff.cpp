@@ -208,8 +208,8 @@ void CuffFunc(CuffTaskData *data) {
 
     Vector3 startPoint{};
     Vector3 endPoint{};
-    BuildCuffEndpoint(*data, targetWrist, sourcePosition, startPoint);
-    BuildCuffEndpoint(*data, sourceWrist, targetPosition, endPoint);
+    BuildCuffEndpoint(*data, sourceWrist, targetPosition, startPoint);
+    BuildCuffEndpoint(*data, targetWrist, sourcePosition, endPoint);
 
     Matrix4x4 segmentLookAt{};
     BuildCuffSegmentLookAtMatrix(startPoint, endPoint, segmentLookAt);

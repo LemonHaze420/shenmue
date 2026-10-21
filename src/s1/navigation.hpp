@@ -78,19 +78,8 @@ struct NavRawSection {
     std::int32_t count;
 };
 
-constexpr std::array<std::uint32_t, 11> kNavSectionNames{
-    SHEN_NAME(PCCP),
-    SHEN_NAME(PCPP),
-    SHEN_NAME(PCCN),
-    SHEN_NAME(PCMR),
-    SHEN_NAME(PCTG),
-    SHEN_NAME(PCNR),
-    SHEN_NAME(PCMC),
-    SHEN_NAME(PCCC),
-    SHEN_NAME(PCNC),
-    SHEN_NAME(PCWR),
-    SHEN_NAME(PCWC),
-};
+constexpr std::array<std::uint32_t, 11> kNavSectionNames{SHEN_NAME(PCCP), SHEN_NAME(PCCN), SHEN_NAME(PCPP), SHEN_NAME(PCTG), SHEN_NAME(PCMR), SHEN_NAME(PCMC),
+    SHEN_NAME(PCNR), SHEN_NAME(PCNC), SHEN_NAME(PCCC), SHEN_NAME(PCWC), SHEN_NAME(PCWR)};
 extern NavRegion *g_navRegionListHead;
 extern const std::byte *g_navigationCollisionDataTable;
 extern std::int32_t g_navigationRegionCount;

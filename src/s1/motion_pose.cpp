@@ -555,8 +555,8 @@ void MOTN_ClampAnimationAngles(MotionInformationWork &motion, std::int16_t &yaw,
     if ((command & 0x8000U) != 0 && (command & 0x7fffU) >= 101U) {
         constexpr std::array<std::int16_t, 4> baseYaw{9102, 10012, 10922, 11832};
         constexpr std::array<float, 46> rigScale{1.4f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.04f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 0.8f, 1.2f, 1.04f, 1.0f,
-            1.04f, 1.0f, 0.9f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f,
-            1.2f, 1.5f, 1.2f, 1.0f};
+            1.04f, 1.0f, 0.9f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.0f, 1.2f, 1.5f,
+            1.2f, 1.0f, 1.2f, 1.0f};
         const std::int32_t pose = motion.activeBasePoseAnimIndex;
         const std::int32_t limitIndex = pose <= 7 ? 3 - (pose >> 1) : 0;
         std::int32_t scaleIndex = static_cast<std::int32_t>(motion.basePoseTemplateIndex) * 2;
@@ -2885,7 +2885,7 @@ void RotateVirtualBones(MotionNodeRuntime *motionNodes) {
 // SeeminglyDoesNothing (MOTN_UpdateSecondaryMotion): advances the secondary overlay's blend weight and samples its pose, capturing
 // the target rows relative to the attachment frame.
 void MOTN_UpdateSecondaryMotion(MotionInformationWork &motion) {
-    if (motion.secondaryBlendSeed && (motion.motionScaleFrames + 5) > 10)
+    if (motion.secondaryBlendSeed && (static_cast<std::uint32_t>(motion.motionScaleFrames) + 5U) > 10U)
         --motion.secondaryBlendSeed;
     const std::uint8_t seed = motion.secondaryBlendSeed;
     const std::int32_t previousFrames = motion.secondaryBlendFramesPrevious;
@@ -2897,13 +2897,13 @@ void MOTN_UpdateSecondaryMotion(MotionInformationWork &motion) {
     auto *const activeMotionNodes = static_cast<MotionNodeRuntime *>(motion.activeNodes);
     if (secondaryMotionNodes->pairedSourceNode != activeMotionNodes) {
         const float scale = motion.secondaryBlendFrameScale;
-        if (1.0f - scale > 0x1p-23f && (motion.motionScaleFrames + 5) > 10) {
+        if (1.0f - scale > 0x1p-23f && (static_cast<std::uint32_t>(motion.motionScaleFrames) + 5U) > 10U) {
             motion.motionScaleBlendStart = scale;
             motion.motionScaleFrames = 4;
         }
     }
     const std::int32_t scaleFrames = motion.motionScaleFrames;
-    if (scaleFrames + 5 <= 10) {
+    if (static_cast<std::uint32_t>(scaleFrames) + 5U <= 10U) {
         if (seed && 1.0f - motion.secondaryBlendFrameScale < 0x1p-23f) {
             motion.motionScaleBlendStart = baseScale;
             motion.secondaryBlendSeed = 0;
@@ -2920,7 +2920,7 @@ void MOTN_UpdateSecondaryMotion(MotionInformationWork &motion) {
             motion.motionScaleFrames = 10;
         }
     } else if (const std::uint8_t countdown = motion.secondaryBlendCountdown) {
-        if (secondaryMotionNodes->pairedSourceNode != activeMotionNodes || (motion.motionScaleFrames + 5) <= 10) {
+        if (secondaryMotionNodes->pairedSourceNode != activeMotionNodes || (static_cast<std::uint32_t>(motion.motionScaleFrames) + 5U) <= 10U) {
             motion.secondaryBlendCountdown = static_cast<std::uint8_t>(countdown + 1);
         } else {
             weight = ComputeLinearRamp01(countdown, previousFrames);

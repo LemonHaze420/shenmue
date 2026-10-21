@@ -698,6 +698,8 @@ std::byte *DecodeScenHighOpcode(ScenRuntimeObject &object, std::byte *ip, bool &
             if (slot < g_scntWord22.size() && offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max())
                 g_scntWord22[slot] = static_cast<std::uint16_t>(offset);
         }
+        if (g_areaId == AREA_MFSY.name && SCEN_HasActiveScript())
+            g_bGlobalFlag = 1;
         object.runtimeState = 5;
         stop = true;
         return ip + 1;
@@ -706,7 +708,7 @@ std::byte *DecodeScenHighOpcode(ScenRuntimeObject &object, std::byte *ip, bool &
             object.runtimeState = 3;
             stop = true;
         } else {
-            if (g_areaId != SHEN_NAME(YSFM))
+            if (g_areaId != AREA_MFSY.name)
                 g_bGlobalFlag = 1;
             BeginScenInteraction(object);
             object.runtimeFlags |= 0x400020U;
@@ -720,19 +722,22 @@ std::byte *DecodeScenHighOpcode(ScenRuntimeObject &object, std::byte *ip, bool &
         object.relocatedPtrA8 = ScenAddRelative(object, ip + 4, ScenSignExtend(value, 0x800000U));
         return ip + 4;
     }
-    case 0xf6:
+    case 0xf6: {
+        std::byte *next = ip + 1;
         if (object.scriptSlot >= kScntScriptSlotCount || (object.runtimeFlags & 0x2000U) != 0) {
             SCNF_LogStateChange(object, -3);
             object.runtimeState = 1;
         } else {
             object.runtimeFlags |= 0x2000U;
             SCNF_LogStateChange(object, -5);
-            object.instructionPtr = object.scriptStart;
+            next = object.scriptStart;
+            object.instructionPtr = next;
             object.runtimeState = 3;
         }
         object.runtimeFlags = (object.runtimeFlags & 0xff7ffd7fU) | 0x800000U;
         stop = true;
-        return ip + 1;
+        return next;
+    }
     case 0xf7:
         SCNF_LogStateChange(object, -4);
         object.runtimeFlags &= 0xfffffd7fU;
@@ -745,10 +750,10 @@ std::byte *DecodeScenHighOpcode(ScenRuntimeObject &object, std::byte *ip, bool &
         object.runtimeFlags &= 0xfffffd7fU;
         object.runtimeState = 3;
         stop = true;
-        return ip + 1;
+        return object.scriptStart;
     case 0xf9:
         if ((object.runtimeFlags & 2U) != 0) {
-            ScenFlags() &= ~0x80U;
+            ScenFlags() &= ~kScenarioFlagInteractionModal;
             std::byte *const saved = object.savedInstructionPtr ? object.savedInstructionPtr : ip + 1;
             object.runtimeFlags &= 0xffffff7dU;
             object.savedInstructionPtr = nullptr;

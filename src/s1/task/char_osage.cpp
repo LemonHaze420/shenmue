@@ -2133,7 +2133,7 @@ void InitializeOsageWork(Character *character, OsageWork &osage, Mt5RuntimeNode 
 } // namespace
 
 void OSAGE_Alloc(Character *character) {
-    if (!character || !character->model || HLib_GetCharacterComponent(character, SHEN_NAME(OSAG))) {
+    if (!character || !character->model) {
         return;
     }
 

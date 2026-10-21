@@ -751,7 +751,7 @@ void AimRyoAtCharacterHead(std::uint32_t targetName) {
     const Vector3 head = FreeTalkNodePosition(target, kHeadBaseNode);
     if (MotionManagerWork *const manager = MOTM_GetWork(ryo))
         manager->motion.motionControlLock = 0;
-    SetCharaLookAtPosition(ryo, 13, &head, 2);
+    SetLookPointDetails(ryo, 13, &head, 2);
     FACE_SetLookTarget(ryo, 2, &head, 8);
 }
 
@@ -764,7 +764,7 @@ void UpdatePairLookAtTargets() {
     const Vector3 head = FreeTalkNodePosition(headSource, kHeadBaseNode);
     if (MotionManagerWork *const manager = MOTM_GetWork(lookActor))
         manager->motion.motionControlLock = 0;
-    SetCharaLookAtPosition(lookActor, 13, &head, 0);
+    SetLookPointDetails(lookActor, 13, &head, 0);
     AimRyoAtCharacterHead(g_freeTalkPairLookActor);
 }
 
@@ -827,7 +827,7 @@ void SetupFreeTalkFacePair(std::size_t index) {
         g_freeTalkPairSetupPending[index] = 0;
         bRyoFacingDirectionFlag = 1;
         g_freeTalkFaceBlendUpdatePending[index] = 1;
-        g_freeTalkFaceBlendFrame[index] = 0;
+
         return;
     }
     if (!npc->cycle->xformDirty || charaHasBlockingTPMRequest(lookActor))
@@ -883,8 +883,8 @@ void SetupFreeTalkFacePair(std::size_t index) {
         if (MotionManagerWork *const manager = MOTM_GetWork(lookActor)) {
             manager->motion.motionControlLock = 0;
         }
-        SetCharaLookAtPosition(lookActor, 13, &head, 1);
-        FACE_SetLookTarget(lookActor, 1, &head, 8);
+
+        FACE_SetLookTarget(lookActor, 2, &head, 8);
     }
     if (talkSlot < g_freeTalkParticipantRestorePending.size())
         g_freeTalkParticipantRestorePending[talkSlot] = 1;
@@ -906,7 +906,7 @@ void UpdateFaceBlendSlot(std::size_t index) {
         const Vector3 head = FreeTalkNodePosition(headSource, kHeadBaseNode);
         Character *const lookActor = FindFreeTalkCharacter(g_freeTalkPairLookActors[index]);
         if (lookActor)
-            SetCharaLookAtPosition(lookActor, 13, &head, 1);
+            SetLookPointDetails(lookActor, 13, &head, 1);
         return;
     }
     ++frame;
@@ -925,7 +925,7 @@ void UpdateFaceBlendSlot(std::size_t index) {
     if (MotionManagerWork *const manager = MOTM_GetWork(lookActor))
         manager->motion.motionControlLock = 0;
     if (!g_freeTalkFaceBlendSuppressLook)
-        SetCharaLookAtPosition(lookActor, 13, &point, 1);
+        SetLookPointDetails(lookActor, 13, &point, 1);
 }
 
 void ReorientRyoTowardTarget(const Vector3 &target, bool crossedHemisphere) {
@@ -946,7 +946,7 @@ void ReorientRyoTowardTarget(const Vector3 &target, bool crossedHemisphere) {
     const std::uint32_t adjustment = static_cast<std::uint32_t>(crossedHemisphere ? offset / 2 : offset);
     const std::uint32_t facing =
         localTarget.x > 0.0F ? static_cast<std::uint32_t>(currentYaw) - adjustment : static_cast<std::uint32_t>(currentYaw) + adjustment;
-    SetCharaLookAtPosition(ryo, 13, &target, 2);
+    SetLookPointDetails(ryo, 13, &target, 2);
     FACE_SetLookTarget(ryo, 2, &target, 8);
     position.x = static_cast<float>(static_cast<double>(position.x) + 0.001);
     if (manager)
@@ -1022,7 +1022,7 @@ void UpdateFaceTargetBlend() {
         return;
     if (MotionManagerWork *const manager = MOTM_GetWork(ryo))
         manager->motion.motionControlLock = 0;
-    SetCharaLookAtPosition(ryo, 13, &point, 1);
+    SetLookPointDetails(ryo, 13, &point, 1);
     FACE_SetLookTarget(ryo, 2, &point, 1);
 }
 
@@ -1066,7 +1066,7 @@ void EvaluateTimeLimitAndFaceTarget(std::int32_t command, std::uint32_t characte
         }
     }
     FACE_SetLookTarget(character, 2, target, 8);
-    SetCharaLookAtPosition(character, 13, target, 0);
+    SetLookPointDetails(character, 13, target, 0);
     g_has_free_talk_time_limit = 1;
     g_freeTalkMotionResetPending = 1;
     if (command < 120 && manager) {
@@ -1123,7 +1123,7 @@ void HandleFaceRecenterCommand(std::uint32_t targetName) {
         const Vector3 ryoHead = FreeTalkNodePosition(ryo, kHeadBaseNode);
         if (MotionManagerWork *const manager = MOTM_GetWork(target))
             manager->motion.motionControlLock = 0;
-        SetCharaLookAtPosition(target, 13, &ryoHead, 2);
+        SetLookPointDetails(target, 13, &ryoHead, 2);
         FACE_SetLookTarget(target, 2, &ryoHead, 8);
     }
     g_freetalk_timer_complete_flag = 0;
@@ -1138,7 +1138,7 @@ std::uint32_t TalkNameAt(std::size_t index) {
     return index < g_talk_name_tbl.size() ? g_talk_name_tbl[index] : kFreeTalkNoParticipant;
 }
 
-void ProcessFreeTalkEvent(const FreeTalkEvent &event) {
+void ProcessFreeTalkEvent(const FreeTalkEvent &event, std::int32_t outbound) {
     CaptureFreeTalkParticipants(event.characterName);
     g_freeTalkCurrentCharaId = event.characterName;
     g_freeTalkCurrentCharaIsContextOperand = SCEN_IsFreeTalkCharacterContextOwned(event.characterName);
@@ -1222,11 +1222,16 @@ void ProcessFreeTalkEvent(const FreeTalkEvent &event) {
         HandleFaceRecenterCommand(event.characterName);
     }
 
-    QueueFreeTalkAcknowledgement(event, -10);
+    if (outbound >= 0) {
+        const std::array<std::uint32_t, 2> acknowledgement{event.characterName, static_cast<std::uint32_t>(-10)};
+        EnqueueScenarioRelationData(static_cast<std::uint32_t>(outbound), acknowledgement.data(), sizeof(acknowledgement));
+    }
     g_FreeTalk_Status = kFreeTalkNone;
 }
 
 void ProcessFreeTalkFrame(HLib::TaskData *) {
+    const std::int32_t inbound = AcquireScenarioRelationQueue(SHEN_NAME(SCNA));
+    const std::int32_t outbound = AcquireScenarioRelationQueue(SHEN_NAME(SCNF));
     if (bRyoFacingDirectionFlag)
         UpdatePairLookAtTargets();
     for (std::size_t index = 0; index < g_freeTalkConstraintCompletionPending.size(); ++index) {
@@ -1271,12 +1276,10 @@ void ProcessFreeTalkFrame(HLib::TaskData *) {
             SetupFreeTalkFacePair(index);
     }
 
-
-    const std::int32_t inbound = AcquireScenarioRelationQueue(SHEN_NAME(SCNA));
     std::array<std::uint32_t, 2> relation{};
     if (inbound < 0 || DequeueScenarioRelationData(static_cast<std::uint32_t>(inbound), relation.data(), sizeof(relation)) < 1)
         return;
-    ProcessFreeTalkEvent(FreeTalkEvent{relation[0], static_cast<std::int32_t>(relation[1])});
+    ProcessFreeTalkEvent(FreeTalkEvent{relation[0], static_cast<std::int32_t>(relation[1])}, outbound);
 }
 
 bool IsFreetalkTask(const HLib::Task *task) {

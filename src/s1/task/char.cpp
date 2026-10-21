@@ -3088,7 +3088,7 @@ void Character_SubmitForDrawing(Character *character) {
 }
 
 void MOTN_Alloc(Character *character, bool shouldInitializeWithoutBuffers) {
-    if (!character || HLib_GetCharacterComponent(character, SHEN_NAME(MOTM))) {
+    if (!character) {
         return;
     }
     auto *const manager = static_cast<MotionManagerWork *>(AllocateHeapMemoryMODL(character, SHEN_NAME(MOTM), sizeof(MotionManagerWork), MOTM_Callback));

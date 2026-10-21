@@ -771,18 +771,18 @@ void convLoadCueStream() {
         restore.characterId = ScenarioCharacterId(character);
         MotionManagerWork *const manager = MOTM_GetWork(character);
         restore.hadMotmFlag2 = manager ? manager->flags & 2U : 0U;
-        std::uint32_t hadMapcBit0 = 0;
+        std::uint32_t hadCpamBit0 = 0;
         if (!character) {
             restore.savedPoseEvalStage = 0;
         } else {
             restore.savedPoseEvalStage = manager->motion.poseEvaluationStage;
-            if (CharacterComponentNode *const mapc = HLib_GetCharacterComponent(character, SHEN_NAME(MAPC))) {
-                hadMapcBit0 = (mapc->flags & 1U) != 0 ? 1U : 0U;
-                mapc->flags &= ~1U;
+            if (CharacterComponentNode *const cpam = HLib_GetCharacterComponent(character, COMPONENT_CPAM.name)) {
+                hadCpamBit0 = (cpam->flags & 1U) != 0 ? 1U : 0U;
+                cpam->flags &= ~1U;
             }
             character->renderOpacity = 1.0f;
         }
-        restore.hadMapcBit0 = hadMapcBit0;
+        restore.hadCpamBit0 = hadCpamBit0;
         if (restore.hadMotmFlag2 && (manager->flags & 2U) != 0) {
             if (manager->motion.activeNodes) {
                 --MBST_GetWork()->state;
@@ -2107,10 +2107,10 @@ void convUpdateCharaSeqVisibility() {
             character->renderOpacity = 1.0f;
             continue;
         }
-        if (!g_Conv.participantRestore.data()[index].hadMapcBit0 || !character)
+        if (!g_Conv.participantRestore.data()[index].hadCpamBit0 || !character)
             continue;
-        if (CharacterComponentNode *const mapc = HLib_GetCharacterComponent(character, SHEN_NAME(MAPC)))
-            mapc->flags |= 1U;
+        if (CharacterComponentNode *const cpam = HLib_GetCharacterComponent(character, COMPONENT_CPAM.name))
+            cpam->flags |= 1U;
     }
     g_Conv.participantCount = 0;
 }

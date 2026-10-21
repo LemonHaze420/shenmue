@@ -378,7 +378,7 @@ void SCEN_ParseRecursive_Impl() {
         SCNT_Core(g_scenRuntimeState.activeObject);
     } else {
         SetScenPreviousObjectName(active);
-        g_scenarioStepLut.pendingCharacterName = 0;
+        g_scntWord22[0] = 0;
     }
 }
 

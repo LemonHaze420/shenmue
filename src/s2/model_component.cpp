@@ -413,6 +413,12 @@ bool AttachCharacterHandComponents(
 }
 
 // @verified - p
+void SetModelComponentCleanup(Character *character, shen_name token, ModelComponentCleanup cleanup) {
+    if (character)
+        FindHeader(character, token)->cleanup = cleanup;
+}
+
+// @verified - p
 void SetModelComponentCore(Character *character, shen_name token, ModelComponentCore core) {
     if (character)
         FindHeader(character, token)->core = core;

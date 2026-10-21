@@ -601,10 +601,12 @@ std::span<const std::byte> GetScenarioFreeTalkSource(const ScenarioFreeTalkRecor
     return {record.sourceRecord, header.size};
 }
 
+// @verified - p
 ScenarioFreeTalkRecord *AllocateScenarioFreeTalkCharacter(Character *character) {
-    ScenarioFreeTalkRecord *const record = static_cast<ScenarioFreeTalkRecord *>(AllocateModelComponent(
-        character, SCENARIO_FREE_TALK_COMPONENT, sizeof(ScenarioFreeTalkRecord), UpdateScenarioFreeTalkCharacter, FreeScenarioFreeTalkCharacter));
+    ScenarioFreeTalkRecord *const record = static_cast<ScenarioFreeTalkRecord *>(
+        AllocateModelComponent(character, SCENARIO_FREE_TALK_COMPONENT, sizeof(ScenarioFreeTalkRecord), UpdateScenarioFreeTalkCharacter));
     if (record) {
+        SetModelComponentCleanup(character, SCENARIO_FREE_TALK_COMPONENT, FreeScenarioFreeTalkCharacter);
         std::memset(record, 0, sizeof(*record));
         record->control = &record->localControl;
     }

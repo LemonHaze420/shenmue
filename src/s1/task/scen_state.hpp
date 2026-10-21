@@ -4,6 +4,8 @@
 
 namespace shenmue::s1::scen_detail {
 
+inline constexpr shen_name AREA_MFSY = SHEN_NAME(MFSY);
+
 inline constexpr std::uint32_t kScenarioFlagActiveRuntimeObject = 0x1U;
 
 inline constexpr std::uint32_t kScenarioFlagConversationMarkers = 0x4U;

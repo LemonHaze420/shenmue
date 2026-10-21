@@ -100,9 +100,11 @@ struct SleepSaveTrainingMenu {
     std::int8_t flags{1};
     std::uint8_t highlightChoice{4};
     std::array<float, 4> choicePulse{1.0f, 1.0f, 1.0f, 1.0f};
+    std::array<std::int16_t, 4> labelSurfaces{-1, -1, -1, -1};
     std::uint8_t returnHelpToken{};
 };
 
+inline constexpr std::array<const char *, 4> kSleepSaveTrainingLabels{"Sleep", "Save", "Training", "Settings"};
 extern SleepSaveTrainingMenu g_sleepSaveTrainingMenu;
 
 

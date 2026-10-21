@@ -37,6 +37,7 @@ bool AttachCharacterHandComponents(
 
 HLib::Task *QueueModelManagerTask(std::uint8_t nextFunctionIndex);
 
+void SetModelComponentCleanup(Character *character, shen_name token, ModelComponentCleanup cleanup);
 void SetModelComponentCore(Character *character, shen_name token, ModelComponentCore core);
 
 void RunModelComponentCoreCallbacks(Character *character);
