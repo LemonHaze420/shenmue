@@ -190,12 +190,16 @@ struct D3TModelSkin {
 // A referenced model loaded beside this one (its handle is kept in referenceHandles).
 struct D3TModelReference {
     std::uint32_t pathOffset;
-    std::byte reserved_04[0x10];
+    std::byte reserved_04[8];
+    float distance;
+    float fadeRange;
 };
 
 
 struct D3TModelPart {
-    std::uint32_t pathOffsets[7];
+    std::uint32_t pathOffsets[3];
+    float distances[3];
+    std::uint32_t reserved_18;
     std::uint16_t reserved_1c;
     std::uint16_t pathCount;
 };

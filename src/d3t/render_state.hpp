@@ -6,17 +6,31 @@
 
 namespace shenmue::d3t {
 
-
-
-
-
+struct D3TSamplerStateKey {
+    std::uint32_t flags[2];
+    std::uint32_t reserved[2];
+};
+struct D3TResourceBindings {
+    std::uint32_t constantBufferHandles[3][14];
+    std::uint32_t textureHandles[3][32];
+    std::uint32_t textureFlags[3][32];
+    D3TSamplerStateKey samplers[3][16];
+    std::uint32_t bufferHandles[3][8];
+};
+static_assert(sizeof(D3TSamplerStateKey) == 16);
+static_assert(alignof(D3TSamplerStateKey) == 4);
+static_assert(sizeof(D3TResourceBindings) == 0x708);
+static_assert(offsetof(D3TResourceBindings, textureHandles) == 0xa8);
+static_assert(offsetof(D3TResourceBindings, textureFlags) == 0x228);
+static_assert(offsetof(D3TResourceBindings, samplers) == 0x3a8);
+static_assert(offsetof(D3TResourceBindings, bufferHandles) == 0x6a8);
 
 struct D3TRenderState {
     std::uint32_t vertexShader;
     std::uint32_t pixelShader;
     std::uint32_t computeShader;
     std::uint32_t vertexBufferHandles[32];
-    std::array<std::byte, 0x708> unknown08c;
+    D3TResourceBindings bindings;
     std::array<std::byte, 0x44> blendState;
     std::uint32_t blendSampleMask;
     std::array<std::byte, 0x84> outputTargets;
@@ -41,6 +55,7 @@ struct D3TRenderState {
     std::array<std::byte, 0x150> unknown978;
 };
 
+static_assert(offsetof(D3TRenderState, bindings) == 0x8c);
 static_assert(offsetof(D3TRenderState, blendState) == 0x794);
 static_assert(offsetof(D3TRenderState, outputTargets) == 0x7dc);
 static_assert(offsetof(D3TRenderState, scissorRect) == 0x860);

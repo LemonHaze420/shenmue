@@ -96,7 +96,7 @@ std::int64_t SetNewSceneDetails(std::uint32_t sceneId, shen_name area);
 void InitializeModernSceneLightMetadata();
 void ReleaseModernSceneLightMetadata();
 void ExtractAndNormalizeSixFrustumPlanes(std::array<Vector4, 6> &planes, const Matrix4x4 &matrix);
-bool IsAabbInsideSelectedFrustumPlanes(const std::array<Vector4, 6> &planes, const Vector3 &minimum, const Vector3 &maximum, std::uint8_t skipPlanePairs);
+using shenmue ::IsAabbInsideSelectedFrustumPlanes;
 void BindSceneFallbackTextureAndHighSamplers(D3TDeviceContext *context);
 void PrepareTiledSceneLightingAndShadowBuffers(D3TDeviceContext *context, const Matrix4x4 &view);
 void ConfigureAndSubmitModernScenePass(D3TDeviceContext *context, ModernScenePass &pass, RenderLayerGeometryContext &geometry);

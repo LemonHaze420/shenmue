@@ -97,31 +97,6 @@ Matrix4x4 Compose(const Matrix4x4 &parent, const Matrix4x4 &child) {
     return result;
 }
 
-void TransformBounds(Vector3 &minimum, Vector3 &maximum, const Matrix4x4 &transform) {
-    const Vector3 low = minimum;
-    const Vector3 high = maximum;
-    for (unsigned axis = 0; axis < 3; ++axis) {
-        const Vector4 &row = transform.rows[axis];
-        minimum[axis] = std::fmin(row.x * low.x, row.x * high.x) + std::fmin(row.y * low.y, row.y * high.y) + std::fmin(row.z * low.z, row.z * high.z) + row.w;
-        maximum[axis] = std::fmax(row.x * low.x, row.x * high.x) + std::fmax(row.y * low.y, row.y * high.y) + std::fmax(row.z * low.z, row.z * high.z) + row.w;
-    }
-}
-
-float BoundsDistanceSquared(const Vector3 &minimum, const Vector3 &maximum, const Vector3 &position) {
-    float distance = 0.0f;
-    for (unsigned axis = 0; axis < 3; ++axis) {
-        if (minimum[axis] > position[axis]) {
-            const float delta = minimum[axis] - position[axis];
-            distance += delta * delta;
-        }
-        if (position[axis] > maximum[axis]) {
-            const float delta = position[axis] - maximum[axis];
-            distance += delta * delta;
-        }
-    }
-    return distance;
-}
-
 Vector4 RotationQuaternion(const Matrix4x4 &matrix) {
     const float x = matrix.rows[0].x;
     const float y = matrix.rows[1].y;

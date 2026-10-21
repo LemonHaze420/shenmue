@@ -210,25 +210,6 @@ void ExtractAndNormalizeSixFrustumPlanes(std::array<Vector4, 6> &planes, const M
     }
 }
 
-bool IsAabbInsideSelectedFrustumPlanes(const std::array<Vector4, 6> &planes, const Vector3 &minimum, const Vector3 &maximum, std::uint8_t skipPlanePairs) {
-    const std::array<Vector3, 8> corners{{minimum, {maximum.x, minimum.y, minimum.z}, {maximum.x, maximum.y, minimum.z}, {minimum.x, maximum.y, minimum.z},
-        {minimum.x, minimum.y, maximum.z}, {maximum.x, minimum.y, maximum.z}, maximum, {minimum.x, maximum.y, maximum.z}}};
-    for (std::uint32_t index = 2U * skipPlanePairs; index < 6; ++index) {
-        const Vector4 &plane = planes[index];
-        bool outside = true;
-        for (const Vector3 &point : corners) {
-            if (!((((plane.x * point.x + plane.y * point.y) + plane.z * point.z) + plane.w) < 0.0f)) {
-                outside = false;
-                break;
-            }
-        }
-        if (outside)
-            return false;
-    }
-    return true;
-}
-
-
 void BindSceneFallbackTextureAndHighSamplers(D3TDeviceContext *context) {
     BindModernTexture(context, 27, d3t::g_defaultWhiteTexture);
     d3t::D3TRenderState &state = d3t::GetRenderState(*context);

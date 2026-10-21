@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -112,7 +113,10 @@ using Vector3 = Vector3T<float>;
 using Vector3i = Vector3T<std::int32_t>;
 using Vector3s = Vector3T<std::int16_t>;
 
+struct Matrix4x4;
+
 struct Vector4 {
+    static Vector4 *ProjectPoint(const Matrix4x4 *transform, Vector4 *output, const Vector4 *input);
     float x;
     float y;
     float z;
@@ -232,6 +236,9 @@ constexpr float cos_fixed16(std::uint16_t angle) noexcept {
 
 static_assert(sin_fixed16(0) == 0.0f && cos_fixed16(0) > 0.99999f);
 
+void TransformBounds(Vector3 &minimum, Vector3 &maximum, const Matrix4x4 &transform);
+float BoundsDistanceSquared(const Vector3 &minimum, const Vector3 &maximum, const Vector3 &position);
+bool IsAabbInsideSelectedFrustumPlanes(const std::array<Vector4, 6> &planes, const Vector3 &minimum, const Vector3 &maximum, std::uint8_t skipPlanePairs);
 std::uint16_t atan2_fixed16(float y, float x);
 std::int16_t asin_fixed16(float value);
 float cot_fixed16(std::uint16_t angle);

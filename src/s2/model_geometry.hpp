@@ -63,6 +63,40 @@ static_assert(offsetof(ModelGeometryContext, waterBounds) == 1080);
 static_assert(offsetof(ModelGeometryContext, hasSpecialGeometry) == 1096);
 static_assert(offsetof(ModelGeometryContext, submittedDraws) == 1100);
 
+struct ModelDrawCallbackContext {
+    d3t::D3TDeviceContext *context;
+    Matrix4x4 transform;
+};
+struct ModelScenePass {
+    std::uint64_t reserved;
+    std::uint32_t vertexShader;
+    std::uint32_t pixelShader;
+    std::uint32_t materialMask;
+    std::uint32_t type;
+    Vector3 cameraPosition;
+    float clusterNear;
+    float clusterFar;
+    float lodBias;
+    std::uint8_t disableVelocity;
+    std::uint8_t excludeMoving;
+    std::uint8_t fogDisabled;
+    std::uint8_t deferred;
+    std::uint8_t alternateShader;
+    std::uint8_t alternateNodes;
+    std::uint8_t reverseCulling;
+    std::uint8_t disableAspectCulling;
+    void (*drawCallback)(ModelDrawCallbackContext *);
+};
+struct ModelGeometryVisibility {
+    ModelGeometryContext *geometry;
+    std::uint32_t *nodeMask;
+};
+static_assert(sizeof(ModelDrawCallbackContext) == 72);
+static_assert(sizeof(ModelScenePass) == 64);
+static_assert(offsetof(ModelScenePass, type) == 20);
+static_assert(offsetof(ModelScenePass, disableVelocity) == 48);
+static_assert(offsetof(ModelScenePass, drawCallback) == 56);
+static_assert(sizeof(ModelGeometryVisibility) == 16);
 inline constexpr std::uint32_t MODEL_GEOMETRY_FRAME_BYTES = 0x800000;
 extern void *g_modelGeometryFrameMemory;
 extern std::uint32_t g_modelGeometryFrameSize;
@@ -72,10 +106,12 @@ extern std::uint32_t g_instanceBuffer;
 extern std::uint32_t g_billboardBuffer;
 extern std::uint32_t g_defaultPerObjectBuffer;
 extern std::uint32_t g_dedicatedShadowBuffer;
+extern std::array<Vector4, 6> g_modelFrustumPlanes;
 void SetupGlobalRenderBuffers();
 void ReleaseModelGeometryResources();
 void *AllocateModelGeometryFrameMemory(std::uint32_t bytes);
 void RefreshModelCacheMaterials(std::uint32_t handle, d3t::D3TDeviceContext *context, std::uint32_t fileLock);
 ModelGeometryContext *BuildModelGeometry(std::uint32_t handle, d3t::D3TDeviceContext *context);
 
+void CullModelGeometry(ModelGeometryVisibility &visibility, const ModelScenePass &pass);
 } // namespace shenmue::s2

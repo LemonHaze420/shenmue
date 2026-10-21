@@ -26,6 +26,63 @@ void Matrix4x4::preTranslate(Matrix4x4 &m, float x, float y, float z) {
     }
 }
 
+// @verified - p
+Vector4 *Vector4::ProjectPoint(const Matrix4x4 *transform, Vector4 *output, const Vector4 *input) {
+    const float x = input->x, y = input->y, z = input->z;
+    const float depth = ((x * transform->rows[2].x + y * transform->rows[2].y) + z * transform->rows[2].z) + transform->rows[2].w;
+    const float w = ((x * transform->rows[3].x + y * transform->rows[3].y) + z * transform->rows[3].z) + transform->rows[3].w;
+    const float inverse = 1.0f / w;
+    const float outY = inverse * (((x * transform->rows[1].x + y * transform->rows[1].y) + z * transform->rows[1].z) + transform->rows[1].w);
+    output->x = inverse * (((y * transform->rows[0].y + x * transform->rows[0].x) + z * transform->rows[0].z) + transform->rows[0].w);
+    output->y = outY;
+    output->z = inverse * depth;
+    output->w = inverse * w;
+    return output;
+}
+
+float BoundsDistanceSquared(const Vector3 &minimum, const Vector3 &maximum, const Vector3 &position) {
+    float distance = 0.0f;
+    for (unsigned axis = 0; axis < 3; ++axis) {
+        if (minimum[axis] > position[axis]) {
+            const float delta = minimum[axis] - position[axis];
+            distance += delta * delta;
+        }
+        if (position[axis] > maximum[axis]) {
+            const float delta = position[axis] - maximum[axis];
+            distance += delta * delta;
+        }
+    }
+    return distance;
+}
+
+void TransformBounds(Vector3 &minimum, Vector3 &maximum, const Matrix4x4 &transform) {
+    const Vector3 low = minimum;
+    const Vector3 high = maximum;
+    for (unsigned axis = 0; axis < 3; ++axis) {
+        const Vector4 &row = transform.rows[axis];
+        minimum[axis] = std::fmin(row.x * low.x, row.x * high.x) + std::fmin(row.y * low.y, row.y * high.y) + std::fmin(row.z * low.z, row.z * high.z) + row.w;
+        maximum[axis] = std::fmax(row.x * low.x, row.x * high.x) + std::fmax(row.y * low.y, row.y * high.y) + std::fmax(row.z * low.z, row.z * high.z) + row.w;
+    }
+}
+
+// @verified - p
+bool IsAabbInsideSelectedFrustumPlanes(const std::array<Vector4, 6> &planes, const Vector3 &minimum, const Vector3 &maximum, std::uint8_t skipPlanePairs) {
+    const std::array<Vector3, 8> corners{{minimum, {maximum.x, minimum.y, minimum.z}, {maximum.x, maximum.y, minimum.z}, {minimum.x, maximum.y, minimum.z},
+        {minimum.x, minimum.y, maximum.z}, {maximum.x, minimum.y, maximum.z}, maximum, {minimum.x, maximum.y, maximum.z}}};
+    for (std::uint32_t index = 2U * skipPlanePairs; index < 6; ++index) {
+        const Vector4 &plane = planes[index];
+        bool outside = true;
+        for (const Vector3 &point : corners) {
+            if (!((((plane.x * point.x + plane.y * point.y) + plane.z * point.z) + plane.w) < 0.0f)) {
+                outside = false;
+                break;
+            }
+        }
+        if (outside)
+            return false;
+    }
+    return true;
+}
 std::uint16_t atan2_fixed16(float y, float x) {
     const auto fixed = [](float ratio) { return static_cast<std::int32_t>(std::atan(ratio) * 65536.0f / 6.2831855f + 0.5f); };
     if (x >= y) {

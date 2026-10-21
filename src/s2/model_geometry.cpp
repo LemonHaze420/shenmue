@@ -25,6 +25,7 @@ std::uint32_t g_defaultPerObjectBuffer{};
 std::uint32_t g_dedicatedShadowBuffer{};
 
 // @verified - p
+std::array<Vector4, 6> g_modelFrustumPlanes{};
 void SetupGlobalRenderBuffers() {
     d3t::BufferDescription description{.flags = 3, .size = 0x28000, .count = 40, .flags3 = 2, .buffer = nullptr, .name = "Instance Buffer"};
     g_instanceBuffer = d3t::CreateBuffer(&description);
@@ -264,4 +265,33 @@ ModelGeometryContext *BuildModelGeometry(std::uint32_t handle, d3t::D3TDeviceCon
     return geometry;
 }
 
+// @verified - p
+void CullModelGeometry(ModelGeometryVisibility &visibility, const ModelScenePass &pass) {
+    ModelGeometryContext &geometry = *visibility.geometry;
+    if (!visibility.nodeMask) {
+        const std::uint32_t bytes = 4U * (geometry.nodeCount + 1U);
+        visibility.nodeMask = static_cast<std::uint32_t *>(AllocateModelGeometryFrameMemory(bytes));
+        std::memset(visibility.nodeMask, 0xff, bytes);
+    }
+    d3t::ModelCacheSlot *const cache = geometry.cache;
+    if (!cache)
+        return;
+    for (std::uint32_t node = 0; node < cache->nodeCount; ++node) {
+        const D3TModelNode &entry = cache->nodes[node];
+        if ((geometry.nodeFlags[node] & 1U) || !entry.drawGroup)
+            continue;
+        D3TModelRecord *const model = d3t::ResolveModel(cache->modelHandles[node]);
+        if (!model)
+            continue;
+        const D3TModelDrawGroup &group = model->drawGroups[entry.drawGroup - 1U];
+        Vector3 minimum = group.boundsMinimum;
+        Vector3 maximum = group.boundsMaximum;
+        TransformBounds(minimum, maximum, geometry.transforms[node]);
+        const std::uint32_t bit = 1U << (node % 32U);
+        if (IsAabbInsideSelectedFrustumPlanes(g_modelFrustumPlanes, minimum, maximum, pass.type == 1))
+            visibility.nodeMask[node / 32U] |= bit;
+        else
+            visibility.nodeMask[node / 32U] &= ~bit;
+    }
+}
 } // namespace shenmue::s2
