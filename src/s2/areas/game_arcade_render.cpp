@@ -127,29 +127,7 @@ void BindGameArcadeTarget(std::uint32_t texture) {
     }
 }
 
-void DrawGameArcadeFullscreen(std::uint32_t texture, std::uint8_t flags) {
-    // SetBufferAndRectRenderFlags binds Texture2D::Allocate's swap-chain backbuffer, not the scene target.
-    d3t::BindUIFrameRenderTarget();
-    d3t::D3TDeviceContext &context = *d3t::DX11::g_ppD3DDeviceContext;
-    BindQuadState(context, (flags & 1) != 0, false);
-    float x = 1;
-    if (flags & 2) {
-        std::uint32_t width, height;
-        if (d3t::GetTexture2DDimensions(texture, &width, &height))
-            x = (static_cast<float>(width) / static_cast<float>(height)) /
-                (static_cast<float>(d3t::g_originalScreenWidth) / static_cast<float>(d3t::g_originalScreenHeight));
-    }
-    const std::array<Vector4, 4> vertices{{
-        {.x = -x, .y = -1, .z = 0, .w = 1},
-        {.x = x, .y = -1, .z = 1, .w = 1},
-        {.x = -x, .y = 1, .z = 0, .w = 0},
-        {.x = x, .y = 1, .z = 1, .w = 0},
-    }};
-    DrawQuad(context, texture, vertices);
-}
-
 void DrawGameHangOnFrame(std::uint32_t texture) {
-
 
     d3t::BindSceneFrameRenderTarget();
     d3t::D3TDeviceContext &context = *d3t::DX11::g_ppD3DDeviceContext;

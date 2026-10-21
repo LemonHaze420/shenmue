@@ -1,6 +1,7 @@
 #include "s2/areas/game_arcade.hpp"
 #include "s2/areas/game_arcade_tables.hpp"
 #include "s2/areas/game_arcade_render.hpp"
+#include "s2/frame_pipeline.hpp"
 #include "s2/areas/game_arcade_sound.hpp"
 #include "s2/areas/game_emulator_overlay.hpp"
 #include "s2/areas/game_outrun_board.hpp"
@@ -42,7 +43,7 @@
 #include <windows.h>
 #include <d3d11.h>
 #endif
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 GameHarrierInfo g_gameHarrierInfo{};
 GameLongArcadeInfo g_gameOutRunInfo{}, g_gameAfterBurnerInfo{};
 GameHangOnInfo g_gameHangOnInfo{};
@@ -594,7 +595,7 @@ void RunEmulator(EmulatorInfoHeader *info, std::uint8_t *rankings, const GameArc
         HandleInputs();
         UpdateController();
         driver.update(info, rankings, &g_gameArcadeRuntime);
-        DrawGameArcadeFullscreen(texture, 2);
+        RenderSimplePixelShaderPass(&texture, SPSF_PreserveAspect);
         ExecuteCurrentCommandList();
         d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(1);
         RenderUIContents();

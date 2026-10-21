@@ -76,6 +76,13 @@ void UpdateFractionOfDay(float fractionOfDay, std::int64_t unused, float frameTi
 void IncrementTimeSinceStart(float frameTime);
 void SD_Override();
 
+void DrawSceneTexture(d3t::D3TDeviceContext *context, std::uint32_t source, std::uint32_t destination);
+void DrawSDTransparent();
+enum SimplePixelShaderFlag : std::uint8_t { SPSF_Gamma = 1, SPSF_PreserveAspect = 2 };
+extern std::uint32_t g_postEffectSceneTexture;
+void SetBufferAndRectRenderFlags(d3t::D3TDeviceContext *context);
+d3t::D3TDeviceContext *RenderSimplePixelShaderPass(const std::uint32_t *texture, std::uint8_t flags);
+void DoSimplePixelShaderPass();
 struct CameraConstantBlock {
     Matrix4x4 view;
     Matrix4x4 projection;
