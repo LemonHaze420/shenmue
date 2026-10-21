@@ -1199,9 +1199,11 @@ float EvaluateTitleNoise(float value) {
     };
     const float firstCurve = 1.0f - fraction * fraction;
     const float secondCurve = 1.0f - shifted * shifted;
-    const float first = gradient(firstIndex) * fraction * firstCurve * firstCurve * firstCurve * firstCurve;
-    const float second = gradient(secondIndex) * shifted * secondCurve * secondCurve * secondCurve * secondCurve;
-    return (first + second) * 0.39500001f;
+    const float firstSquared = firstCurve * firstCurve;
+    const float first = (gradient(firstIndex) * fraction) * (firstSquared * firstSquared);
+    const float secondSquared = secondCurve * secondCurve;
+    const float second = (gradient(secondIndex) * shifted) * (secondSquared * secondSquared);
+    return (second + first) * 0.39500001f;
 }
 
 std::array<float, 3> EvaluateTitleLighting(float progress) {
