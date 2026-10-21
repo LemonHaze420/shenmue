@@ -221,6 +221,19 @@ std::uint32_t FoldKey(std::uintptr_t key) {
     return static_cast<std::uint32_t>(key + key / 0xffffffffULL);
 }
 
+#if SHENMUE_IS_S2
+// @verified - p
+ObjectEntry *GetObjectStoreEntryByIndex(std::uint32_t index) {
+    if (index >= placementIndex.keys.size())
+        return nullptr;
+    const std::uint32_t key = placementIndex.keys[index];
+    if (!key)
+        return nullptr;
+    const std::size_t found = placementIndex.find(key);
+    const std::uint32_t handle = found == placementIndex.keys.size() ? 0U : placementIndex.values[found];
+    return slotFlags[handle & 0x3ffU] == (handle & 0xfffffc00U) ? &entries[handle & 0x3ffU] : nullptr;
+}
+#endif
 ObjectEntry *FindPlacement(const void *placement) {
     if (!placement)
         return nullptr;
@@ -1249,6 +1262,19 @@ std::int16_t SetObjectSourceActiveFlag(const void *sourceKey, std::int32_t activ
     return std::bit_cast<std::int16_t>(static_cast<std::uint16_t>(source->flags));
 }
 
+#if SHENMUE_IS_S2
+// @verified - p
+void RestoreObjectStoreFrameFlags() {
+    for (std::uint32_t index = 0; index < 1024; ++index) {
+        ObjectEntry *const entry = GetObjectStoreEntryByIndex(index);
+        if (!entry || entry->kind != EntryKind::ModelRuntime || (entry->flags & (OPF_Sky | OPF_SkyProbe)) != 0)
+            continue;
+        UpdateModelCacheFlags(entry->expressionTarget, MCF_Unknown08, ModelCacheFlagMode::Enable);
+        if ((entry->source->flags & OSF_Unknown02) != 0)
+            UpdateModelCacheFlags(entry->expressionTarget, MCF_Unknown01, ModelCacheFlagMode::Enable);
+    }
+}
+#endif
 bool ProcessObjectStore(bool checkShaders, std::int32_t maximumOperations) {
     if (!dirty)
         return false;

@@ -20,6 +20,7 @@
 #include "s2/d3t_renderer.hpp"
 #include "s2/date_time.hpp"
 #include "s2/frame_pipeline.hpp"
+#include "s2/flag.hpp"
 #include "s2/debug_text.hpp"
 #include "s2/game_runtime.hpp"
 #include "s2/event_runtime.hpp"
@@ -124,8 +125,11 @@ void RootTask_Callback(void *) {
         RenderPipeline("Default_PostRender", 1);
 
         RenderPostProcessing(0);
+        ResetVertCount();
+        nullsub();
         RenderPostProcessing(1);
         PerformPostFxFilterRenderPass();
+        nullsub();
         UpdateConversationStreams();
         if (g_debugCameraDisplay) {
             // Each property passes through the XOR_EAX boundary, so every line prints 0.0.

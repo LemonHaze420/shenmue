@@ -6,8 +6,10 @@
 
 namespace shenmue::d3t {
 
-enum ObjectSourceFlag : std::uint32_t { OSF_DedicatedShadow = 0x4, OSF_HasLightBindings = 0x200, OSF_CopyMaterials = 0x400 };
-enum ModelCacheNodeFlag : std::uint16_t { MCF_Day = 0x40, MCF_Night = 0x80 };
+enum ObjectSourceFlag : std::uint32_t { OSF_Unknown02 = 0x2, OSF_DedicatedShadow = 0x4, OSF_HasLightBindings = 0x200, OSF_CopyMaterials = 0x400 };
+enum ObjectPlacementFlag : std::uint8_t { OPF_Sky = 0x2, OPF_SkyProbe = 0x4 };
+
+enum ModelCacheNodeFlag : std::uint16_t { MCF_Unknown01 = 0x1, MCF_Unknown08 = 0x8, MCF_Day = 0x40, MCF_Night = 0x80 };
 struct ModelCacheIndexTable;
 extern std::int32_t g_hashModelRequireAssignedNodes;
 extern std::int32_t g_hashModelRestrictCharacterPaths;
@@ -116,6 +118,7 @@ void SetHashedObjectTransform(const void *placement);
 bool FindHashedObject(const void *placement, const Vector3 *joins, std::uint32_t projectionMode);
 
 #if SHENMUE_IS_S2
+void RestoreObjectStoreFrameFlags();
 bool IsObjectModelRuntime(const void *placement);
 std::uint32_t GetShouldHashFlag();
 void IncrementHashedModelCount(std::int32_t models, std::int32_t culled);

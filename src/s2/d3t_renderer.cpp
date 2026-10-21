@@ -729,12 +729,15 @@ bool ProcessD3TMessages() {
         InitGeneralTextureResources();
         g_s2NeedsLoadTextureResources = false;
     }
-    g_frameGlareIntensity = g_configuredGlareIntensity;
+
     if (shouldQuit)
         return false;
     d3t::GenerateMipsAndUpdateResourcesForDirectX();
     std::atomic_ref<std::int32_t>(g_modelGeometryFrameOffset).exchange(0, std::memory_order_seq_cst);
-    return BeginD3TRenderPass(true);
+    const bool frameOpened = BeginD3TRenderPass(true);
+    d3t::RestoreObjectStoreFrameFlags();
+    g_frameGlareIntensity = g_configuredGlareIntensity;
+    return frameOpened;
 #endif
 }
 

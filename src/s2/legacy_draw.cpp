@@ -3903,6 +3903,10 @@ std::uint32_t CommitLegacyModelMaterialCommands(const std::byte *model) {
 
 }
 
+// @verified - p
+void ResetVertCount() {
+    legacyMaterialVertexCount = 0;
+}
 std::uint32_t ModelFlagDispatch_SetModelFlagDataOpaque(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources) {
     if (!AdmitLegacyGameDisplayModel(modelBytes, xb01Offset)) {
         temporaryModelScale = 1.0f;

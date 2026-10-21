@@ -342,6 +342,7 @@ std::uint32_t FlushQueuedLegacyDrawPasses();
 
 std::uint32_t RenderQueuedLegacyDrawPasses();
 void SDTransparentHack();
+void ResetVertCount();
 void RenderQueuedLegacyDrawPassesOnly();
 std::int64_t ResetLegacyRenderQueue();
 bool GetLegacyRenderQueueEnabled();
