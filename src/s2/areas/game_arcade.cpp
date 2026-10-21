@@ -21,6 +21,7 @@
 #include "s2/renderer_initialization.hpp"
 #include "s2/save.hpp"
 #include "s2/ui.hpp"
+#include "d3t/ui_runtime.hpp"
 #include "s1/modules/arcade.hpp"
 #include "s1/modules/harrier.hpp"
 #include "s1/modules/harrier_cpu.hpp"
@@ -560,6 +561,13 @@ const GameArcadeCoreDriver *Driver(EmulatorGame game) {
 }
 void RunEmulator(EmulatorInfoHeader *info, std::uint8_t *rankings, const GameArcadeCoreDriver &driver) {
     ExecuteCurrentCommandList();
+    d3t::D3TDeviceContext *const previousUiContext = d3t::DX11::g_ppD3DDeviceContext;
+    d3t::DX11::g_ppD3DDeviceContext = g_nuklearRenderDeviceContext;
+    PrepareUIFrame();
+    UpdateScreenScaling();
+    UpdateUIFrameStatus();
+    d3t::DX11::g_ppD3DDeviceContext = previousUiContext;
+    FinishNuklearFrame();
     PresentD3TFrame(2);
     g_gameArcadeRunning = 1;
     InitializeRuntime(info);
@@ -597,9 +605,15 @@ void RunEmulator(EmulatorInfoHeader *info, std::uint8_t *rankings, const GameArc
         driver.update(info, rankings, &g_gameArcadeRuntime);
         RenderSimplePixelShaderPass(&texture, SPSF_PreserveAspect);
         ExecuteCurrentCommandList();
-        d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(1);
-        RenderUIContents();
-        ExecuteCurrentCommandList();
+        GetAspectRatioModeShouldScale();
+        InvokeNuklearFrame(d3t::DXGetPipelineContext(1));
+        d3t::D3TDeviceContext *const previousUiContext = d3t::DX11::g_ppD3DDeviceContext;
+        d3t::DX11::g_ppD3DDeviceContext = g_nuklearRenderDeviceContext;
+        PrepareUIFrame();
+        UpdateScreenScaling();
+        UpdateUIFrameStatus();
+        d3t::DX11::g_ppD3DDeviceContext = previousUiContext;
+        FinishNuklearFrame();
         ResetInputHandler();
         UpdateMipMaps();
 #if defined(_WIN32)
@@ -618,6 +632,7 @@ void RunEmulator(EmulatorInfoHeader *info, std::uint8_t *rankings, const GameArc
     info->flags = (static_cast<std::uint64_t>(static_cast<std::uint32_t>(g_gameArcadeRuntime.playedFrames)) << 32) | g_gameArcadeRuntime.completion;
     info->scoreBcd = g_gameArcadeRuntime.bestScore;
     SetProjectionOff();
+    ProcessD3TMessages();
 }
 void LongModule(void *data, EmulatorGame game) {
     SystemModuleTaskData *module = static_cast<SystemModuleTaskData *>(data);

@@ -154,10 +154,11 @@ std::int32_t sleepSelectionIconId = 0;
 DialogueSelectionPromptState dialogueSelectionPrompt{};
 bool dialogueSelectionOwned{};
 SubtitlePresentationState subtitlePresentation{};
-std::array<std::array<std::uint32_t, 3>, 4> subtitleVoicePalettes{};
+std::array<char, SUBTITLE_LINE_BYTES> subtitleScratch{};
+std::array<std::array<char, SUBTITLE_LINE_BYTES>, 3> subtitleText{};
+std::uint8_t subtitlesEnabled{};
 std::array<std::uint32_t, 3> subtitleVoiceColours{};
 float subtitleCinemaOffset{};
-std::vector<d3t::UIResolvedLabel> subtitleLabelRectangles;
 std::int32_t uiFontLanguage = -1;
 std::uint32_t uiFontRenderHandle = 0;
 MainMenuItem mainMenuSelection = MainMenuItem::NewGame;
@@ -1547,30 +1548,6 @@ std::int64_t RenderGameQte() {
     return 0;
 }
 
-std::intptr_t DrawGameQteFrame() {
-    RenderGameQte();
-    Nuklear_BindRenderTarget();
-    NuklearUpdateForAspectRatio(GetAspectRatioModeShouldScale());
-    CopyNuklearTexToBackBuffer();
-    return 0;
-}
-
-void RenderGameQteFrame() {
-    if (!drawingUI)
-        return;
-#if defined(_WIN32)
-    ExecuteCurrentCommandList();
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(1);
-    const NuklearFrameCallback previous = g_nuklearFrameCallback;
-    g_nuklearFrameCallback = DrawGameQteFrame;
-    InvokeNuklearFrame(d3t::DX11::g_ppD3DDeviceContext);
-    FinishNuklearFrame();
-    g_nuklearFrameCallback = previous;
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
-    d3t::BindUIFrameRenderTarget();
-#endif
-}
-
 std::uint32_t LoadEndingCredits() {
     return ReadUIDefinitionFile(UIElement::Credits, "/ui/Credits/Credits.ui", 0);
 }
@@ -2907,46 +2884,6 @@ std::int64_t RenderGameMenu() {
     return 0;
 }
 
-std::intptr_t DrawGameMenuFrame() {
-    RenderGameMenu();
-    for (std::size_t index = static_cast<std::size_t>(UIElement::SubMenuItems); index <= 23; ++index) {
-        if (index > 15 && index < 20)
-            continue;
-        const UIElementState &element = g_uiElements[index];
-        if (element.config.enabled && element.render)
-            element.render();
-    }
-    const UIElementState &save = g_uiElements[static_cast<std::size_t>(UIElement::LoadSave)];
-    if (save.config.enabled && save.render)
-        save.render();
-    const UIElementState &prompt = g_uiElements[static_cast<std::size_t>(UIElement::YesNoPrompt)];
-    if (prompt.config.enabled && prompt.render && !g_uiElements[static_cast<std::size_t>(UIElement::SubMenuOptions)].isVisible)
-        prompt.render();
-    const UIElementState &information = g_uiElements[static_cast<std::size_t>(UIElement::GameInfoBar)];
-    if (information.config.enabled && information.render && !g_uiElements[static_cast<std::size_t>(UIElement::SubMenuOptions)].isVisible)
-        information.render();
-    Nuklear_BindRenderTarget();
-    NuklearUpdateForAspectRatio(GetAspectRatioModeShouldScale());
-    CopyNuklearTexToBackBuffer();
-    return 0;
-}
-
-void RenderGameMenuFrame() {
-    if (!drawingUI)
-        return;
-#if defined(_WIN32)
-    ExecuteCurrentCommandList();
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(1);
-    const NuklearFrameCallback previous = g_nuklearFrameCallback;
-    g_nuklearFrameCallback = DrawGameMenuFrame;
-    InvokeNuklearFrame(d3t::DX11::g_ppD3DDeviceContext);
-    FinishNuklearFrame();
-    g_nuklearFrameCallback = previous;
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
-    d3t::BindUIFrameRenderTarget();
-#endif
-}
-
 std::uint32_t LoadItemsMenu() {
     return ReadUIDefinitionFile(UIElement::SubMenuItems, "/ui/gamemenu_New/SubMenu_Items.ui", 0);
 }
@@ -4281,6 +4218,7 @@ void InitializeUIElements() {
     mainMenuWheel.render = MainMenuWheelRender;
     mainMenuWheel.tick = TickMainMenuWheel;
     mainMenuWheel.destroy = DestroyMainMenuWheel;
+    mainMenuWheel.unknown98 = MainMenuWheelHints;
     g_mainMenuWheelPending = 1;
     UIElementState &mainMenuNew = g_uiElements[static_cast<std::size_t>(UIElement::MainMenuNew)];
     mainMenuNew.name = "Main Menu New";
@@ -4391,6 +4329,10 @@ void InitializeUIElements() {
     subtitles.parseDefinitionFromFile = LoadSubtitles;
     subtitles.isSelected = BindSubtitles;
     subtitles.reset = ResetSubtitleBindings;
+    subtitles.render = RenderSubtitles;
+    subtitles.postInit = RenderSubtitles;
+    subtitles.tick = EnableSubtitles;
+    subtitles.destroy = ClearSubtitles;
     UIElementState &cutsceneSkip = g_uiElements[static_cast<std::size_t>(UIElement::CutsceneSkip)];
     cutsceneSkip.name = "Cutscene Skip Button";
     cutsceneSkip.parseDefinitionFromFile = LoadCutsceneSkip;
@@ -4515,38 +4457,6 @@ std::int64_t RenderScreenFilm() {
         nk_end(&context);
     }
     return 0;
-}
-
-std::intptr_t DrawScreenFilmFrame() {
-    RefreshNotebook();
-    UIElementState &element = g_uiElements[static_cast<std::size_t>(g_currActiveUIIndex)];
-    if (g_currActiveUIIndex == static_cast<std::int32_t>(UIElement::GameHudMoney))
-        element.postInit();
-    else
-        element.render();
-    Nuklear_BindRenderTarget();
-    NuklearUpdateForAspectRatio(GetAspectRatioModeShouldScale());
-    CopyNuklearTexToBackBuffer();
-    return 0;
-}
-
-void RenderScreenFilmFrame(std::int32_t index) {
-    if (!drawingUI)
-        return;
-#if defined(_WIN32)
-    ExecuteCurrentCommandList();
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(1);
-    const NuklearFrameCallback previous = g_nuklearFrameCallback;
-    const std::int32_t previousIndex = g_currActiveUIIndex;
-    g_currActiveUIIndex = index;
-    g_nuklearFrameCallback = DrawScreenFilmFrame;
-    InvokeNuklearFrame(d3t::DX11::g_ppD3DDeviceContext);
-    FinishNuklearFrame();
-    g_nuklearFrameCallback = previous;
-    g_currActiveUIIndex = previousIndex;
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
-    d3t::BindUIFrameRenderTarget();
-#endif
 }
 
 // STVW snapshot/debug and biography viewer ownership.
@@ -5282,7 +5192,9 @@ void InitializeNuklearUI(std::uint32_t renderHandle) {
     sharedItemsWidget.owner = -1;
     dialogueSelectionPrompt = {};
     subtitlePresentation = {};
-    subtitleVoicePalettes = {};
+    subtitleScratch = {};
+    subtitleText = {};
+    subtitlesEnabled = 0;
     subtitleVoiceColours = {};
     subtitleCinemaOffset = 0.0f;
     loadingScreen = {};
@@ -5314,7 +5226,7 @@ void InitializeNuklearUI(std::uint32_t renderHandle) {
     uiFontLanguage = g_sceneTextLanguage;
     uiFontRenderHandle = renderHandle;
     SelectAppropriateFontDefinition(uiFontLanguage, renderHandle);
-    subtitleLabelRectangles.clear();
+
     previousRenderHandle = renderHandle;
     InitializeSplashScreens(renderHandle);
     LoadSplash();
@@ -5717,12 +5629,6 @@ void UI_BeginFrame() {
     }
 }
 
-void RenderUIFrame() {
-    if (!d3t::BeginUIFrame())
-        return;
-    RenderUIContents();
-}
-
 void UpdateElements() {
     for (std::size_t index = 0; index < g_uiElements.size(); ++index) {
         UIElementState &element = g_uiElements[index];
@@ -5735,9 +5641,6 @@ void UpdateElements() {
             element.config.init = 3;
             if ((element.someFlag3 & 1) && previousRenderHandle)
                 d3t::d3t_DecrementRenderHandleReference(previousRenderHandle);
-            if (index == static_cast<std::size_t>(UIElement::Subtitles)) {
-                LoadSubtitleStyles();
-            }
             if (index == static_cast<std::size_t>(UIElement::FightGauge))
                 BindFightGaugeUI();
             if (index == static_cast<std::size_t>(UIElement::SharedItems))
@@ -5916,34 +5819,20 @@ std::int32_t IsHudFightSpriteActive() noexcept {
     }
     return 0;
 }
-void RenderUIContents() {
-    for (UIMouseCallbackQueue &queue : g_uiMouseCallbackQueues)
-        queue.count = 0;
+void PrepareUIFrame() {
+
     uiPointer = ConsumeWindowUIInput();
     DrainUIFontRequests();
-    FontLoader();
+
     uiFontLanguage = g_sceneTextLanguage;
-    SetupCameraIcon();
-    for (std::size_t word = 0; word < gameUiSecondaryFlags.size(); ++word) {
-        g_uiPreviousInputElements[word] = gameUiSecondaryFlags[word];
-        gameUiSecondaryFlags[word] = 0;
-    }
-    ApplyS2AspectRatio();
+
     const float pointerXScale = GetUIViewportWidth() / static_cast<float>(d3t::g_originalScreenWidth);
     const float pointerYScale = 1080.0f / static_cast<float>(d3t::g_originalScreenHeight);
     uiPointer.position.x *= pointerXScale;
     uiPointer.position.y *= pointerYScale;
     uiPointer.previousPosition.x *= pointerXScale;
     uiPointer.previousPosition.y *= pointerYScale;
-    UpdateElements();
-    RefreshNotebook();
 
-    UIAnim_UpdateDeltaTime(GetFrameTime());
-    UpdateUI();
-    HandleUIStates();
-    if (g_uiElements[static_cast<std::size_t>(UIElement::Splash)].isVisible) {
-        RenderScreenFilmFrame(static_cast<std::int32_t>(UIElement::Splash));
-    }
     // ST fade quads belong to the scene pass, below every UI widget.
     for (std::size_t index = 0; index < screenColourOverlayCount; ++index) {
         const std::uint32_t colour = screenColourOverlays[index];
@@ -5960,240 +5849,16 @@ void RenderUIContents() {
             static_cast<float>(colour >> 24U) / 255.0f);
     }
     screenColourOverlayCount = 0;
-    for (std::size_t index = 0; index < g_uiElements.size(); ++index) {
-        UIElementState &element = g_uiElements[index];
-        if (index == static_cast<std::size_t>(UIElement::GameScreenFade) || index == static_cast<std::size_t>(UIElement::CinemaBars) ||
-            index == static_cast<std::size_t>(UIElement::GameBackground)) {
-            if (element.config.enabled) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::LoadSave) && loadSaveDefinitionFailed.load(std::memory_order_acquire)) {
-            if (element.isVisible)
-                DestroyElementByIndex(UIElement::LoadSave);
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::GameHud) || index == static_cast<std::size_t>(UIElement::GameHudWatch) ||
-            index == static_cast<std::size_t>(UIElement::HudSnapshot) || index == static_cast<std::size_t>(UIElement::GameHudTimer) ||
-            index == static_cast<std::size_t>(UIElement::NotebookPages)) {
-            if ((element.enabled || element.isVisible) && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                if (index == static_cast<std::size_t>(UIElement::NotebookPages))
-                    RenderMemoNotebookPages();
-                else if (index == static_cast<std::size_t>(UIElement::GameHudTimer) || index == static_cast<std::size_t>(UIElement::GameHud) ||
-                    index == static_cast<std::size_t>(UIElement::HudSnapshot) || index == static_cast<std::size_t>(UIElement::GameHudWatch))
-                    RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-                else if (element.render)
-                    element.render();
-                else
-                    d3t::DrawUIDefinition(uiDefinitions[index], 1.0f);
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::GameHudMoney)) {
-            if (element.enabled && !element.isRenderable) {
-                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-                if (static_cast<std::uint32_t>(moneyHudState) - 2U <= 1U) {
-                    SetGameUiFlag(g_uiRefreshedElements, index, true);
-                    SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                }
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::StreetFighterHud)) {
-            if (element.enabled && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::GameQte)) {
-            if (element.config.enabled) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                RenderGameQteFrame();
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::IntroCutsceneCredits)) {
-            // Widget::Enable is a one-frame pulse, independent of ShowElement.
-            if (element.enabled && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                DrawIntroCutsceneCredits();
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::CutsceneSkip)) {
-            if (element.enabled && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                RenderCutsceneSkip();
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::ActionSelector)) {
-            if (element.enabled && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                DrawActionSelector();
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::GameMessage)) {
-            if ((element.enabled || g_debugImGuiRenderMode == 1) && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                DrawGameMessage();
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::GameHelp)) {
-            if ((element.enabled || element.isVisible) && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                RenderHelpFrame();
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::Credits)) {
-            if (element.isVisible && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::GameMenu)) {
-            if (element.isVisible && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                RenderGameMenuFrame();
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if ((index >= static_cast<std::size_t>(UIElement::SubMenuItems) && index <= 15) || (index >= 20 && index <= 23) ||
-            index == static_cast<std::size_t>(UIElement::LoadSave) || index == static_cast<std::size_t>(UIElement::YesNoPrompt) ||
-            index == static_cast<std::size_t>(UIElement::GameInfoBar)) {
-            if (element.config.enabled) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-            }
-            if ((index == static_cast<std::size_t>(UIElement::GameInfoBar) || index == static_cast<std::size_t>(UIElement::LoadSave) ||
-                    index == static_cast<std::size_t>(UIElement::YesNoPrompt)) &&
-                element.config.enabled && !element.isRenderable &&
-                (!g_uiElements[static_cast<std::size_t>(UIElement::GameMenu)].isVisible ||
-                    ((index == static_cast<std::size_t>(UIElement::YesNoPrompt) || index == static_cast<std::size_t>(UIElement::GameInfoBar)) &&
-                        g_uiElements[static_cast<std::size_t>(UIElement::SubMenuOptions)].isVisible)))
-                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-            element.enabled = 0;
-            continue;
-        }
-        if (index == static_cast<std::size_t>(UIElement::PressStart) || index == static_cast<std::size_t>(UIElement::MainMenu)) {
-            if (element.config.enabled && !element.isRenderable && element.config.init == 3) {
-                SetGameUiFlag(g_uiRefreshedElements, index, true);
-                SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                if (index == static_cast<std::size_t>(UIElement::PressStart))
-                    RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-                else {
-                    RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-                    mainMenuFrameWasRendered = true;
-                }
-            }
-            element.enabled = 0;
-            continue;
-        }
-        if (!element.isVisible || element.config.init != 3)
-            continue;
-        SetGameUiFlag(g_uiRefreshedElements, index, true);
-        SetGameUiFlag(gameUiSecondaryFlags, index, true);
-        element.enabled = 1;
-        if (index != static_cast<std::size_t>(UIElement::SubMenuMoves) && index != static_cast<std::size_t>(UIElement::GameInfoBar) &&
-            index != static_cast<std::size_t>(UIElement::MoveLearned) && index != static_cast<std::size_t>(UIElement::SubMenuItems) &&
-            !(index >= 16 && index <= 19) && index != 58 && !(index >= 10 && index <= 25) && index != 29 && index != 53 &&
-            index != static_cast<std::size_t>(UIElement::MainMenu) && index != static_cast<std::size_t>(UIElement::MainMenuWheel) &&
-            index != static_cast<std::size_t>(UIElement::PawnshopFlyer1) && index != static_cast<std::size_t>(UIElement::PawnshopFlyer2) &&
-            index != static_cast<std::size_t>(UIElement::QteMinigame) && index != static_cast<std::size_t>(UIElement::LoadingScreen) && element.tick)
-            element.tick();
-        if ((index >= 16 && index <= 19) || index == 58) {
-            if (!element.isRenderable && element.render)
-                element.render();
-            continue;
-        }
-        if (element.isRenderable)
-            continue;
-        if (index == static_cast<std::size_t>(UIElement::MainMenuWheel)) {
-            RenderMainMenuWheelFrame();
-            mainMenuWheelFrameWasRendered = g_mainMenuWheelWidget != nullptr;
-            continue;
-        }
-        if (index != static_cast<std::size_t>(UIElement::Splash) && index != static_cast<std::size_t>(UIElement::FightGauge) &&
-            index != static_cast<std::size_t>(UIElement::ActionSelector) && index != static_cast<std::size_t>(UIElement::GameMessage) &&
-            index != static_cast<std::size_t>(UIElement::SharedItems)) {
-            if (index == static_cast<std::size_t>(UIElement::NotebookPages)) {
-                RenderMemoNotebookPages();
-            } else if (index == static_cast<std::size_t>(UIElement::PressStart)) {
-                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-            } else if (index == static_cast<std::size_t>(UIElement::MoveLearned)) {
-                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-            } else if (index == static_cast<std::size_t>(UIElement::BigKanjiText) || index == static_cast<std::size_t>(UIElement::DuckRace)) {
-                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
-            } else {
-                if (((index >= 10 && index <= 25) || index == 29 || index == 53 || index == 64 ||
-                        index == static_cast<std::size_t>(UIElement::PawnshopFlyer1) || index == static_cast<std::size_t>(UIElement::PawnshopFlyer2) ||
-                        index == static_cast<std::size_t>(UIElement::QteMinigame) || index == static_cast<std::size_t>(UIElement::LoadingScreen)) &&
-                    element.render)
-                    element.render();
-                else
-                    d3t::DrawUIDefinition(uiDefinitions[index], 1.0f);
-                if (index == static_cast<std::size_t>(UIElement::Subtitles))
-                    DrawSubtitleLabels();
-                if (index == static_cast<std::size_t>(UIElement::MainMenu))
-                    mainMenuFrameWasRendered = true;
-            }
-        }
-    }
+}
 
+void UpdateUIFrameStatus() {
+    const std::uint32_t main = static_cast<std::uint32_t>(UIElement::MainMenu);
+    const std::uint32_t wheel = static_cast<std::uint32_t>(UIElement::MainMenuWheel);
 
-    for (std::size_t index = g_uiElements.size(); index-- > 1;) {
-        auto &element = g_uiElements[index];
-        if (!(gameUiSecondaryFlags[index / 32] & (1U << (index & 31))) || element.config.init != 3 || element.isRenderable)
-            continue;
-        if (currentUIState != -1 && static_cast<std::int32_t>(index) != currentUIState && index != 58 && index != 59 && index != 64)
-            continue;
-        for (UIMouseCallbackQueue &queue : g_uiMouseCallbackQueues) {
-            for (std::int32_t entry = queue.count - 1; entry >= 0; --entry) {
-                UIMouseCallbackEntry &action = queue.entries[static_cast<std::size_t>(entry)];
-                if (action.element != element.index)
-                    continue;
-                if (action.callback)
-                    action.callback(action.rect.data(), action.data);
-                queue.count = 0;
-                break;
-            }
-        }
-        if (currentUIState != -1 && static_cast<std::int32_t>(index) != currentUIState && index != 58 && index != 59 && index != 64)
-            continue;
-        if (element.isPressed && element.isPressed() == 0)
-            break;
-    }
+    if (g_uiRefreshedElements[main / 32U] & (1U << (main & 31U)))
+        mainMenuFrameWasRendered = true;
+    if (g_uiRefreshedElements[wheel / 32U] & (1U << (wheel & 31U)))
+        mainMenuWheelFrameWasRendered = g_mainMenuWheelWidget != nullptr;
 }
 
 void SubmitScreenColourOverlay(std::uint32_t colour) {

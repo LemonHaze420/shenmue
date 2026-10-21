@@ -334,30 +334,6 @@ std::int64_t HelpWidgetRender() {
     return 0;
 }
 
-std::intptr_t DrawHelpFrame() {
-    HelpWidgetRender();
-    Nuklear_BindRenderTarget();
-    NuklearUpdateForAspectRatio(GetAspectRatioModeShouldScale());
-    CopyNuklearTexToBackBuffer();
-    return 0;
-}
-
-void RenderHelpFrame() {
-    if (!drawingUI)
-        return;
-#if defined(_WIN32)
-    ExecuteCurrentCommandList();
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(1);
-    const NuklearFrameCallback previous = g_nuklearFrameCallback;
-    g_nuklearFrameCallback = DrawHelpFrame;
-    InvokeNuklearFrame(d3t::DX11::g_ppD3DDeviceContext);
-    FinishNuklearFrame();
-    g_nuklearFrameCallback = previous;
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
-    d3t::BindUIFrameRenderTarget();
-#endif
-}
-
 std::uint32_t LoadHelpDefinition() {
     return ReadUIDefinitionFile(UIElement::GameHelp, "/ui/gamehelp/Help_New.ui", 0);
 }

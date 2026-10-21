@@ -891,34 +891,6 @@ std::int64_t MainMenuWheelRender() {
     return 0;
 }
 
-std::intptr_t DrawMainMenuWheelFrame() {
-    MainMenuWheelRender();
-    mainMenuSelection = static_cast<MainMenuItem>(g_mainMenuWheelWidget->selection);
-    RefreshMainMenuWheelDescription();
-    Nuklear_BindRenderTarget();
-    NuklearUpdateForAspectRatio(GetAspectRatioModeShouldScale());
-    CopyNuklearTexToBackBuffer();
-    return 0;
-}
-
-void RenderMainMenuWheelFrame() {
-    if (!drawingUI || !g_mainMenuWheelWidget)
-        return;
-    RefreshMainMenuWheelLanguage();
-#if defined(_WIN32)
-    ExecuteCurrentCommandList();
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(1);
-    const NuklearFrameCallback previous = g_nuklearFrameCallback;
-    g_nuklearFrameCallback = DrawMainMenuWheelFrame;
-    InvokeNuklearFrame(d3t::DX11::g_ppD3DDeviceContext);
-    FinishNuklearFrame();
-    g_nuklearFrameCallback = previous;
-    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
-    d3t::BindUIFrameRenderTarget();
-#endif
-    return;
-}
-
 std::int64_t TickMainMenuWheel() {
     ShowElementByIndex(UIElement::GameInfoBar);
     SetDebugHideCameraIcon(0);
@@ -983,9 +955,13 @@ std::int64_t MainMenuWheelInput() {
         return 0;
     }
 
-    if (g_mainMenuWheelWidget)
-        mainMenuSelection = static_cast<MainMenuItem>(g_mainMenuWheelWidget->selection);
+    if (g_mainMenuWheelWidget) {
+        const MainMenuItem selection = static_cast<MainMenuItem>(g_mainMenuWheelWidget->selection);
 
+        if (selection != mainMenuSelection)
+            RefreshMainMenuWheelDescription();
+        mainMenuSelection = selection;
+    }
     const bool selected = enterPressed || (g_inputBuffer[0].pressedPriority & 0x0400U) != 0;
     if (!selected || IsUITransitionActive(g_mainMenuWheelInputBlock))
         return 0;
@@ -1406,6 +1382,15 @@ std::int32_t GetButtonWheelDirection(std::int32_t index) {
 }
 
 // @verified - p
+namespace ui_detail {
+std::array<std::int16_t, 4> mainMenuWheelHintIds = MAIN_MENU_WHEEL_HINTS;
+
+// @verified - p
+std::int64_t MainMenuWheelHints() {
+    mainMenuWheelHintIds[3] = 3845;
+    return CopyHudHintIds(mainMenuWheelHintIds);
+}
+} // namespace ui_detail
 void UpdateMainMenuWheel() {
     if (g_mainMenuWheelIndex == -1)
         return;

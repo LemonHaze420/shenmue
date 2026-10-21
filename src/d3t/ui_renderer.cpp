@@ -760,9 +760,9 @@ bool PresentSceneFrame() {
 #endif
 }
 
-bool DrawFullscreenContrast(std::uint32_t vertexShader, std::uint32_t pixelShader, float contrast) {
+bool DrawFullscreenContrast(D3TDeviceContext *context, std::uint32_t vertexShader, std::uint32_t pixelShader, float contrast) {
 #if defined(_WIN32)
-    D3TDeviceContext *const context = DX11::g_ppD3DDeviceContext;
+
     if (!context || !g_backBufferTexture || !GetNativeShader(vertexShader, ShaderType::Vertex) || !GetNativeShader(pixelShader, ShaderType::Pixel))
         return false;
     SetShaderState(context, vertexShader, pixelShader, 0);
@@ -785,6 +785,7 @@ bool DrawFullscreenContrast(std::uint32_t vertexShader, std::uint32_t pixelShade
     static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(4, 0);
     return true;
 #else
+    static_cast<void>(context);
     static_cast<void>(vertexShader);
     static_cast<void>(pixelShader);
     static_cast<void>(contrast);

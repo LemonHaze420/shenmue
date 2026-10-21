@@ -493,7 +493,6 @@ extern std::uint32_t g_helpIconState;
 void EnableElement(UIElement element);
 void DisableElement(UIElement element);
 void SetUIRenderSuppression(std::int32_t suppressed);
-void RenderUIFrame();
 void SetContinueAvailability(bool available);
 bool ContinueIsAvailable();
 MainMenuItem GetMainMenuSelection();
@@ -509,7 +508,8 @@ void InstallLoadingScreenCallbacks() noexcept;
 extern std::int32_t g_shouldShowLoading;
 void SetFrontendRoute(FrontendRoute route);
 void ReturnToTitleWheel();
-void RenderUIContents();
+void PrepareUIFrame();
+void UpdateUIFrameStatus();
 
 std::int64_t RefreshNotebook();
 void SetUIElementIndex(std::int32_t index);
@@ -541,8 +541,7 @@ bool SetDialogueSelectionFocus(std::size_t slot);
 void MoveDialogueSelectionFocus(std::int32_t delta);
 bool GetDialogueSelectionPromptState(DialogueSelectionPromptState &state);
 
-
-bool ProcessSubtitleText(std::string_view rawMessage);
+d3t::UIWindow *ProcessSubtitleText(const char *rawMessage);
 std::uint32_t ProcessVoiceFlags(std::int32_t speakerMode);
 bool BeginSubtitlePresentation(std::string_view token, std::string_view localizedText, std::int32_t language, std::uint32_t durationFrames);
 bool TickSubtitlePresentation();

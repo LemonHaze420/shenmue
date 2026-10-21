@@ -1,4 +1,5 @@
 #include "s2/ui.hpp"
+#include "s2/legacy_draw.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
 #include "s2/magic_room.hpp"
@@ -110,20 +111,6 @@ using namespace ui_detail;
 
 namespace ui_detail {
 
-void UpdateSubtitleLabelGeometry() {
-    auto &definition = uiDefinitions[static_cast<std::size_t>(UIElement::Subtitles)];
-    constexpr std::array<std::string_view, 3> rows{
-        "Sub_TopLine_Panel",
-        "Sub_MidLine_Panel",
-        "Sub_BotLine_Panel",
-    };
-    for (auto &panel : definition.panels) {
-        if (std::find(rows.begin(), rows.end(), panel.id) != rows.end())
-            panel.scaleY = subtitlePresentation.lineScaleY;
-    }
-    subtitleLabelRectangles = d3t::GetUILabelRectangles(definition);
-}
-
 std::size_t SubtitleWrapSpace(std::string_view text) {
     // SubtitleWrapSpace selects the ASCII space nearest the byte midpoint.
     std::size_t result = std::string_view::npos;
@@ -179,93 +166,74 @@ SubtitleLabelFit FitSubtitleLabel(
     return result;
 }
 
-void DrawSubtitleLabels() {
-    if (!subtitlePresentation.active)
-        return;
-    const auto &definition = uiDefinitions[static_cast<std::size_t>(UIElement::Subtitles)];
-    const float scaleX = static_cast<float>(d3t::g_originalScreenWidth) / 1920.0f;
-    const float scaleY = static_cast<float>(d3t::g_originalScreenHeight) / 1080.0f;
-    const std::size_t count = std::min({definition.labels.size(), subtitleLabelRectangles.size(), std::size_t{9}});
-    for (std::size_t index = 0; index < count; ++index) {
-        const auto &label = definition.labels[index];
-        const auto *panel = definition.findPanel(label.panelId);
-        const auto text = subtitlePresentation.lines[index / 3];
-        if (!panel || text.empty())
-            continue;
-        const auto &resolved = subtitleLabelRectangles[index];
-        const d3t::UIRect bounds{resolved.bounds.x * scaleX, resolved.bounds.y * scaleY, resolved.bounds.width * scaleX, resolved.bounds.height * scaleY};
-        const std::array<std::int32_t, 4> scissor{
-            std::max(0, static_cast<int>(resolved.clip.x * scaleX)),
-            std::max(0, static_cast<int>(resolved.clip.y * scaleY)),
-            std::min(static_cast<int>(d3t::g_originalScreenWidth), static_cast<int>((resolved.clip.x + resolved.clip.width) * scaleX)),
-            std::min(static_cast<int>(d3t::g_originalScreenHeight), static_cast<int>((resolved.clip.y + resolved.clip.height) * scaleY)),
-        };
-        // RenderSubtitles publishes shadow/stroke/text in this
-        // source order: image 0 throughout, family 1 for the first two layers.
-        const UIFontSelection font{uiFontLanguage, index % 3 == 2 ? 0U : 1U, 0};
-        const auto fit = FitSubtitleLabel(font, text, bounds, panel->width * label.width / 1920.0f, panel->height * label.height / 1080.0f, true);
-        if (!(fit.height > 0.0f))
-            continue;
-        auto drawLine = [&](std::string_view line, d3t::UIRect rectangle) {
-            const float width = GetUIFontTextWidth(font, fit.height, line);
-            float x = rectangle.x;
-            if (label.alignment == "Centre")
-                x += std::max(0.0f, (rectangle.width - width) * 0.5f);
-            else if (label.alignment == "Right")
-                x += std::max(0.0f, rectangle.width - width);
-            DrawUIFontText(font, fit.height, line, x, rectangle.y + (rectangle.height - fit.height) * 0.5f, subtitleVoiceColours[2 - index % 3], scissor);
-        };
-        if (fit.split == std::string_view::npos) {
-            drawLine(text, bounds);
-        } else {
-            auto half = bounds;
-            half.height *= 0.5f;
-            drawLine(text.substr(0, fit.split), half);
-            half.y += half.height;
-            drawLine(text.substr(fit.split + 1), half);
-        }
+// @verified - p
+bool AreSubtitleContentsEmpty() {
+    return (!subtitleBackgrounds[1] || subtitleBackgrounds[1]->field44 == 0) && (!subtitleBackgrounds[0] || subtitleBackgrounds[0]->field44 == 0) &&
+        (!subtitlePanels[0] || subtitlePanels[0]->alpha == 0.0f) && (!subtitlePanels[1] || subtitlePanels[1]->alpha == 0.0f) && subtitleText[0][0] == 0 &&
+        subtitleText[1][0] == 0 && subtitleText[2][0] == 0;
+}
+// @verified - p
+void FadeSubtitlePanels() {
+    if (g_debugUiDisabled == 0) {
+        if (subtitlePanels[0] && subtitlePanels[0]->alpha == 1.0f && !IsUITransitionActive(subtitleAlphaBindings[0]))
+            UIWidget_Animate(subtitleAlphaBindings[0], 0, 0.30000001f, 0.0f);
+        if (g_debugUiDisabled == 0 && subtitlePanels[1] && subtitlePanels[1]->alpha == 1.0f && !IsUITransitionActive(subtitleAlphaBindings[1]))
+            UIWidget_Animate(subtitleAlphaBindings[1], 0, 0.30000001f, 0.0f);
     }
 }
+// @verified - p
+std::int64_t EnableSubtitles() {
+    subtitlesEnabled = 1;
 
-void LoadSubtitleStyles() {
-    // LoadSubtitleStyles consumes the first twenty UI variables in source
-    // order. JsonCpp's member iterator is name-ordered, not file-ordered.
-    const auto &bytes = uiDefinitionData[static_cast<std::size_t>(UIElement::Subtitles)];
-    if (bytes.empty())
-        return;
-    Json::CharReaderBuilder builder;
-    builder["collectComments"] = false;
-    builder["rejectDupKeys"] = false;
-    std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-    Json::Value root;
-    std::string errors;
-    const char *const first = reinterpret_cast<const char *>(bytes.data());
-    if (!reader->parse(first, first + bytes.size() - 1, &root, &errors))
-        return;
-    UpdateSubtitleLabelGeometry();
-    const Json::Value &variables = root["Variables"];
-    if (!variables.isObject() || variables.size() > 20)
-        return;
-    std::array<const Json::Value *, 20> ordered{};
-    std::size_t count = 0;
-    for (const Json::Value &variable : variables)
-        ordered[count++] = &variable;
-    std::sort(ordered.begin(), ordered.begin() + count,
-        [](const Json::Value *left, const Json::Value *right) { return left->getOffsetStart() < right->getOffsetStart(); });
-    subtitleVoiceColours = {0xffffffffU, 0xff000000U, 0x80000000U};
-    for (std::size_t index = 0; index < count; ++index) {
-        const Json::Value &variable = *ordered[index];
-        const Json::Value &value = variable["Value"];
-        const std::string type = variable.get("Type", "").asString();
-        if (type == "float4" && index < 12 && value["0"].isNumeric() && value["1"].isNumeric() && value["2"].isNumeric() && value["3"].isNumeric()) {
-            const auto component = [&value](const char *channel) {
-                return static_cast<std::uint32_t>(std::clamp(static_cast<std::int32_t>(value[channel].asFloat()), 0, 255));
-            };
-            subtitleVoicePalettes[index / 3][index % 3] = (component("3") << 24U) | (component("2") << 16U) | (component("1") << 8U) | component("0");
-        } else if (type == "float" && value.isNumeric()) {
-            subtitleCinemaOffset = value.asFloat() / 1080.0f;
+    return 0;
+}
+// @verified - p
+std ::int64_t ClearSubtitles() {
+    subtitlesEnabled = 0;
+    subtitleScratch[0] = 0;
+    std::memset(subtitleText.data(), 0, sizeof(subtitleText));
+    return 1;
+}
+// @verified - p
+std::int64_t RenderSubtitles() {
+    const std ::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement ::Subtitles)].config.uiHandleIndex;
+    if (!GetNuklearElementByIdx(slot))
+        return 0;
+    if (subtitlesEnabled != 1 || AreSubtitleContentsEmpty()) {
+        for (std::size_t row = 0; row < 3; ++row)
+            for (const std::size_t layer : {2U, 1U, 0U}) {
+                const std ::int32_t index = subtitleNativeLabels[layer][row];
+                if (index != -1) {
+                    d3t::UILabelWidget *const label = UI_GetLabel(static_cast<std::uint32_t>(index));
+                    label->text = "";
+                    label->token.alreadyLocalized = 1;
+                }
+            }
+    } else {
+        StartUIIntegerTransition(subtitleActivityTransition, 1, 0, 0.1f, 0.30000001f);
+        if (!IsUITransitionActive(subtitleAlphaBindings[0]) && subtitlePanels[0] && subtitlePanels[0]->alpha == 0.0f)
+            UIWidget_Animate(subtitleAlphaBindings[0], 1, 0.1f, 0.0f);
+        if (!IsUITransitionActive(subtitleAlphaBindings[1]) && subtitlePanels[1] && subtitlePanels[1]->alpha == 0.0f)
+            UIWidget_Animate(subtitleAlphaBindings[1], 1, 0.1f, 0.0f);
+        for (std::size_t row = 0; row < 3; ++row) {
+            for (const std::size_t layer : {2U, 1U, 0U}) {
+                d3t::UILabelWidget *const label = UI_GetLabel(static_cast<std::uint32_t>(subtitleNativeLabels[layer][row]));
+                label->text = subtitleText[row].data();
+                label->colour = subtitleVoiceColours[layer];
+                label->size = 0;
+                label->fontFamily = layer == 0 ? 0 : 1;
+                label->token.alreadyLocalized = 1;
+            }
         }
     }
+    if (GetUIIntegerTransitionValue(subtitleActivityTransition) == 0)
+        FadeSubtitlePanels();
+    if (GetLegacyPerspectiveProjection() - 1U > 2U && subtitleBackgrounds[1] && subtitleBackgrounds[0]) {
+        subtitleBackgrounds[1]->field44 = 0;
+        subtitleBackgrounds[0]->field44 = 0;
+    }
+    uiUpdateWithColour(*GetNativeUiContext(), g_uiElements[static_cast<std::size_t>(UIElement::Subtitles)].config.uiHandleIndex);
+    return 0;
 }
 
 std::uint32_t LoadSubtitles() {
@@ -294,7 +262,7 @@ std::int64_t BindSubtitles() {
     for (std::int32_t index = 0; index < view->widgetCount; ++index) {
         if (view->widgetKinds[static_cast<std::size_t>(index)] != 15)
             continue;
-        subtitleNativeLabels[label % 3][label / 3] = view->widgetPoolIndices[static_cast<std::size_t>(index)];
+        subtitleNativeLabels[2 - label % 3][label / 3] = view->widgetPoolIndices[static_cast<std::size_t>(index)];
         ++label;
     }
     for (std::size_t index = 0; index < view->variables.size(); ++index) {
@@ -321,78 +289,89 @@ std::int64_t ResetSubtitleBindings() {
 }
 } // namespace ui_detail
 
+// @verified - p
 std::uint32_t ProcessVoiceFlags(std::int32_t speakerMode) {
     // ProcessVoiceFlags preserves the four distinct resource palettes.
     const std::size_t palette = speakerMode >= 0 && speakerMode < 3 ? static_cast<std::size_t>(speakerMode) : 3;
-    subtitleVoiceColours = subtitleVoicePalettes[palette];
+
+    for (std::size_t layer = 0; layer < 3; ++layer)
+        subtitleVoiceColours[layer] = subtitleNativeVoicePalettes[3 * palette + layer];
     return subtitleVoiceColours[2];
 }
 
-bool ProcessSubtitleText(std::string_view rawMessage) {
+// @verified - p
+d3t::UIWindow *ProcessSubtitleText(const char *rawMessage) {
+    const char *source = rawMessage;
+    char *target = subtitleScratch.data();
 
+    if (std::strstr(source, "=@") || std::strstr(source, SUBTITLE_NEWLINE_MARKER)) {
+        do {
+            const char *marker = std::strstr(source, "=@");
+            const char *newline = std::strstr(source, SUBTITLE_NEWLINE_MARKER);
 
-    static std::array<char, 0x600> text{};
-    std::size_t length = 0;
-    for (std::size_t index = 0; index < rawMessage.size() && rawMessage[index] != '\0'; ++index) {
-        const unsigned char value = static_cast<unsigned char>(rawMessage[index]);
-        if (index + 1 < rawMessage.size() && value == '=' && rawMessage[index + 1] == '@') {
-            if (length + 3 >= text.size()) {
-                EndSubtitlePresentation();
-                return false;
-            }
-            text[length++] = '.';
-            text[length++] = '.';
-            text[length++] = '.';
-            ++index;
-        } else {
-            if (length + 1 >= text.size()) {
-                EndSubtitlePresentation();
-                return false;
-            }
-            if (value == 0xa1 && index + 1 < rawMessage.size() && static_cast<unsigned char>(rawMessage[index + 1]) == 0xf5) {
-                text[length++] = '\n';
-                ++index;
-            } else {
-                text[length++] = value == '|' ? '"' : static_cast<char>(value);
-            }
-        }
-    }
-    text[length] = '\0';
-    subtitlePresentation = {};
-    subtitlePresentation.text = {text.data(), length};
-    const std::string_view message = subtitlePresentation.text;
-    if (message.find('\n') == std::string_view::npos) {
-        subtitlePresentation.lines[1] = message.substr(0, 0x1ff);
-    } else {
-        std::size_t cursor = 0;
-        std::size_t count = 0;
-        while (count < subtitlePresentation.lines.size()) {
-            const std::size_t end = message.find('\n', cursor);
-            const std::size_t lineLength = end == std::string_view::npos ? message.size() - cursor : end - cursor;
-            subtitlePresentation.lines[count++] = message.substr(cursor, std::min(lineLength, std::size_t{0x1ff}));
-            if (end == std::string_view::npos)
+            if (newline && (!marker || newline < marker))
+                marker = newline;
+            if (marker) {
+                const std::size_t bytes = static_cast<std::size_t>(marker - source);
+                std::memcpy(target, source, bytes);
+                target += bytes;
+                if (static_cast<unsigned char>(*marker) == 0xa1U)
+                    *target++ = '\n';
+                else {
+                    target[0] = '.';
+                    target[1] = '.';
+                    target[2] = '.';
+                    target += 3;
+                }
+                marker += 2;
+            } else
+                std::strcpy(target, source);
+            source = marker;
+        } while (source);
+    } else
+        std::strcpy(target, source);
+    for (std::size_t index = 0; index < std::strlen(subtitleScratch.data()); ++index)
+        if (subtitleScratch[index] == '|')
+            subtitleScratch[index] = '"';
+    std::memset(subtitleText.data(), 0, sizeof(subtitleText));
+    const char *line = subtitleScratch.data();
+    std::int32_t count = 0;
+    float scale = 0.33f;
+    if (!std::strstr(line, "\n"))
+        std::strcpy(subtitleText[1].data(), line);
+    else {
+        do {
+            if (count == 3)
                 break;
-            cursor = end + 1;
-        }
+            const char *newline = std::strstr(line, "\n");
+            if (newline) {
+                std::memcpy(subtitleText[count].data(), line, static_cast<std::size_t>(newline - line));
+                ++newline;
+            } else
+                std::strcpy(subtitleText[count].data(), line);
+            ++count;
+            line = newline;
+        } while (line);
         if (count == 2) {
-            subtitlePresentation.lines[2] = subtitlePresentation.lines[1];
-            subtitlePresentation.lines[1] = {};
-            subtitlePresentation.lineScaleY = 0.48f;
+            std::strcpy(subtitleText[2].data(), subtitleText[1].data());
+            std::memset(subtitleText[1].data(), 0, SUBTITLE_LINE_BYTES);
+            scale = 0.48f;
         }
     }
-    subtitlePresentation.active = true;
-    UpdateSubtitleLabelGeometry();
-    ShowElementByIndex(UIElement::Subtitles);
-    EnableElement(UIElement::Subtitles);
-    return true;
+    if (subtitlePanels[2])
+        subtitlePanels[2]->layout.height.scale = scale;
+    if (subtitlePanels[4])
+        subtitlePanels[4]->layout.height.scale = scale;
+    return subtitlePanels[4];
 }
 
 bool BeginSubtitlePresentation(std::string_view token, std::string_view localizedText, std::int32_t language, std::uint32_t durationFrames) {
     if (token.empty() || token.size() > 12 || localizedText.empty()) {
         return false;
     }
-    if (!ProcessSubtitleText(localizedText))
-        return false;
+    const std::string terminatedText(localizedText);
+    ProcessSubtitleText(terminatedText.c_str());
+    subtitlePresentation.lines = {std::string_view(subtitleText[0].data()), std::string_view(subtitleText[1].data()), std::string_view(subtitleText[2].data())};
     std::copy(token.begin(), token.end(), subtitlePresentation.token.begin());
     subtitlePresentation.text = localizedText;
     subtitlePresentation.language = language;

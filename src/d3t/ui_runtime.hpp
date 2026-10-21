@@ -206,7 +206,12 @@ struct UIButtonWidget {
     std::int32_t field84;
 };
 static_assert(sizeof(UIButtonWidget) == 0x88);
-extern std::array<UIButtonWidget, 128> g_uiButtonWidgets;
+#if SHENMUE_IS_S2
+inline constexpr std::size_t kUIButtonWidgetCount = 512;
+#else
+inline constexpr std::size_t kUIButtonWidgetCount = 128;
+#endif
+extern std::array<UIButtonWidget, kUIButtonWidgetCount> g_uiButtonWidgets;
 
 // The ColourImage widget (kind 19, 256 records): its Id, view image, Colour, Alpha, Rotate (radians) and window.
 struct UIColourImageWidget {
@@ -1066,6 +1071,9 @@ std::int32_t UI_FindViewImageWidget(std::uint32_t slotIndex, const char *id);
 #if SHENMUE_IS_S2
 d3t::UIWindow *UI_FindViewWindowPointer(std::uint32_t slotIndex, const char *id);
 d3t::UILabelWidget *UI_GetLabel(std::uint32_t index);
+d3t::UILayoutItem *UI_FindViewLayoutItem(std::uint32_t slotIndex, const char *id);
+UIButtonWidget *UI_FindViewButton(std::uint32_t slotIndex, const char *id);
+void UI_ResetLabelScaleVariables(std::uint32_t slotIndex);
 UIColourImageWidget *UI_GetColourImageWidget(std::uint32_t index);
 UIButtonIconWidget *UI_FindViewIconWidget(std::uint32_t slotIndex, const char *id, std::int32_t kind);
 #endif

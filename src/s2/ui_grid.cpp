@@ -323,6 +323,12 @@ void AicaExecuteWrapper(std::uint32_t sound) {
 void InitializeUIGrid(UIGrid &grid, const UIGrid &configuration) {
     std::memcpy(&grid, &configuration, 0x78);
     ResetUIGrid(grid);
+    if (grid.panel) {
+        d3t::UIWindow *const window = static_cast<d3t::UIWindow *>(grid.panel);
+        const UIGridStyle &style = GridStyle(grid);
+        window->layout.paddingX = style.labelHeight;
+        window->layout.paddingY = style.labelHeight;
+    }
     grid.transition = UIAnimAllocSlot();
     grid.transitionDuration = 0.25f;
 }

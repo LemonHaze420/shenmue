@@ -506,6 +506,56 @@ std::int32_t UI_FindViewImageWidget(std::uint32_t slotIndex, const char *id) {
 }
 
 #if SHENMUE_IS_S2
+// @verified - p
+d3t::UILayoutItem *UI_FindViewLayoutItem(std::uint32_t slotIndex, const char *id) {
+    const d3t::UIViewSlot<kUIViewImageCapacity> *const slot = GetNuklearElementByIdx(slotIndex);
+    if (!slot || !id)
+        return nullptr;
+    for (std::int32_t widget = 0; widget < slot->widgetCount; ++widget) {
+        if (slot->widgetKinds[widget] != 13)
+            continue;
+        const std::int32_t index = slot->widgetPoolIndices[widget];
+        if (static_cast<std::uint32_t>(index) >= g_uiLayoutItems.size())
+            continue;
+        const char *const name = g_uiLayoutItems[index].id.data();
+        if (name[0] && !std::strcmp(name, id))
+            return &g_uiLayoutItems[index];
+    }
+    return nullptr;
+}
+
+// @verified - p
+UIButtonWidget *UI_FindViewButton(std::uint32_t slotIndex, const char *id) {
+    const d3t::UIViewSlot<kUIViewImageCapacity> *const slot = GetNuklearElementByIdx(slotIndex);
+    if (!slot || !id)
+        return nullptr;
+    for (std::int32_t widget = 0; widget < slot->widgetCount; ++widget) {
+        if (slot->widgetKinds[widget] != 17)
+            continue;
+        const std::int32_t index = slot->widgetPoolIndices[widget];
+        if (static_cast<std::uint32_t>(index) >= g_uiButtonWidgets.size())
+            continue;
+        const char *const name = g_uiButtonWidgets[index].id.data();
+        if (name[0] && !std::strcmp(name, id))
+            return &g_uiButtonWidgets[index];
+    }
+    return nullptr;
+}
+
+// @verified - p
+void UI_ResetLabelScaleVariables(std::uint32_t slotIndex) {
+    d3t::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(slotIndex);
+    for (std::uint32_t index = 0; index < 512; ++index) {
+        d3t::UILabelWidget *const label = UI_GetLabel(index);
+        if (!label)
+            break;
+        if (label->scaleVar != -1) {
+            d3t::UIViewVariable &variable = view->variables[label->scaleVar];
+            if (variable.type == d3t::UIViewVariableType::Float)
+                variable.value.floatValue = 1.0f;
+        }
+    }
+}
 UIButtonIconWidget *UI_FindViewIconWidget(std::uint32_t slotIndex, const char *id, std::int32_t kind) {
     if (slotIndex > 75U || !id)
         return nullptr;

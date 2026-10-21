@@ -735,6 +735,9 @@ bool ProcessD3TMessages() {
     d3t::GenerateMipsAndUpdateResourcesForDirectX();
     std::atomic_ref<std::int32_t>(g_modelGeometryFrameOffset).exchange(0, std::memory_order_seq_cst);
     const bool frameOpened = BeginD3TRenderPass(true);
+    d3t::D3TDeviceContext *const uiContext = g_NuklearInitialized ? d3t::DXGetPipelineContext(1) : nullptr;
+    GetAspectRatioModeShouldScale();
+    InvokeNuklearFrame(uiContext);
     d3t::RestoreObjectStoreFrameFlags();
     g_frameGlareIntensity = g_configuredGlareIntensity;
     return frameOpened;

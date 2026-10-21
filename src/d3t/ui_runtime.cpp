@@ -150,7 +150,7 @@ std::array<d3t::UIWindow, d3t::kUIWindowCount> g_uiWindows{};
 std::array<d3t::UILayoutItem, d3t::kUILayoutItemCount> g_uiLayoutItems{};
 std::array<UIStyleItem, 1024> g_uiStyleItems{};
 std::array<UIDataBinding, 50> g_uiDataBindings{};
-std::array<UIButtonWidget, 128> g_uiButtonWidgets{};
+std::array<UIButtonWidget, kUIButtonWidgetCount> g_uiButtonWidgets{};
 std::array<UIColourImageWidget, 256> g_uiColourImageWidgets{};
 std::array<UIScissorWidget, 10> g_uiScissorWidgets{};
 std::array<UIIconLabelWidget, 64> g_uiIconLabelWidgets{};

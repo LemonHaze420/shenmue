@@ -9,6 +9,7 @@
 
 namespace shenmue::d3t {
 
+struct D3TDeviceContext;
 class UIDefinition;
 struct UITextureObjectDefinition;
 struct UIPanelDefinition;
@@ -98,7 +99,7 @@ struct SceneFrameTargets {
 
 bool ConfigureSceneFrameTargets(const SceneFrameTargets &targets, std::uint32_t inputLayout, std::uint32_t vertexShader, std::uint32_t pixelShader);
 void SelectResolvedSceneFrame(bool resolved);
-bool DrawFullscreenContrast(std::uint32_t vertexShader, std::uint32_t pixelShader, float contrast);
+bool DrawFullscreenContrast(D3TDeviceContext *context, std::uint32_t vertexShader, std::uint32_t pixelShader, float contrast);
 
 bool InitializeUIRenderer(std::uint32_t inputLayout, std::uint32_t vertexShader, std::uint32_t pixelShader, std::uint32_t gammaInputLayout,
     std::uint32_t gammaVertexShader, std::uint32_t gammaPixelShader);

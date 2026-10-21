@@ -234,13 +234,15 @@ extern bool dialogueSelectionOwned;
 
 extern SubtitlePresentationState subtitlePresentation;
 
-extern std::array<std::array<std::uint32_t, 3>, 4> subtitleVoicePalettes;
+inline constexpr std::size_t SUBTITLE_LINE_BYTES = 0x200;
+inline constexpr char SUBTITLE_NEWLINE_MARKER[] = "\xa1\xf5";
+extern std::array<char, SUBTITLE_LINE_BYTES> subtitleScratch;
+extern std::array<std::array<char, SUBTITLE_LINE_BYTES>, 3> subtitleText;
+extern std::uint8_t subtitlesEnabled;
 
 extern std::array<std::uint32_t, 3> subtitleVoiceColours;
 
 extern float subtitleCinemaOffset;
-
-extern std::vector<d3t::UIResolvedLabel> subtitleLabelRectangles;
 
 extern std::int32_t uiFontLanguage;
 
@@ -788,9 +790,10 @@ struct SubtitleLabelFit {
 SubtitleLabelFit FitSubtitleLabel(
     const UIFontSelection &font, std::string_view text, const d3t::UIRect &bounds, float referenceWidth, float referenceHeight, bool allowWrap);
 
-void DrawSubtitleLabels();
+std::int64_t RenderSubtitles();
 
-void LoadSubtitleStyles();
+std::int64_t EnableSubtitles();
+std::int64_t ClearSubtitles();
 
 std::uint32_t ReadUIDefinitionFile(UIElement elementIndex, const char *path, std::int32_t flags);
 
@@ -856,6 +859,98 @@ void EnterNativePrompt(float *, void *data);
 void ClickNativePrompt(float *bounds, void *data);
 
 void NativeMessageBox(std::string_view text, bool useString, std::int32_t clearAfter, void (*callback)(std::int32_t), float seconds = 0.0f);
+
+inline constexpr std::array<const char *, 41> UI_OPTIONS_WINDOWS{"SubMenu_Options::Tab1Button", "SubMenu_Options::Tab2Button", "SubMenu_Options::Tab3Button",
+    "SubMenu_Options::Tab4Button", "SubMenu_Options::TabIcon4", "SubMenu_Options::TabLabel4", "SubMenu_Options::Tab4", "SubMenu_Options::Panel_Root",
+    "SubMenu_Options::OptionParent_#", "SubMenu_Options::Option_Toggle_#", "SubMenu_Options::Option_ToggleRight_#", "SubMenu_Options::Option_ToggleLeft_#",
+    "SubMenu_Options::Option_Toggle_Texture_#", "SubMenu_Options::Option_Toggle_Shadow_#", "SubMenu_Options::Option_Toggle_Label_#",
+    "SubMenu_Options::Option_Toggle_Overlay_#", "SubMenu_Options::Option_List_#", "SubMenu_Options::Option_List_Overlay_#",
+    "SubMenu_Options::Option_ListSelected_Parent_#", "SubMenu_Options::Option_ListSelected_#", "SubMenu_Options::Option_List_Left_#",
+    "SubMenu_Options::Option_List_Right_#", "SubMenu_Options::Option_List_Texture_#", "SubMenu_Options::Option_List_Shadow_#",
+    "SubMenu_Options::Option_List_Label_#", "SubMenu_Options::Option_Scroll_#", "SubMenu_Options::Option_Scroll_Texture_#",
+    "SubMenu_Options::Option_Scroll_Shadow_#", "SubMenu_Options::Option_Scroll_Label_#", "SubMenu_Options::Option_ScrollBar_#",
+    "SubMenu_Options::Option_ScrollBar_Button_#", "SubMenu_Options::Option_Scroll_Overlay_#", "SubMenu_Options::Option_KeyBinding_#",
+    "SubMenu_Options::Option_KeyBinding_Texture_#", "SubMenu_Options::Option_KeyBinding_Shadow_#", "SubMenu_Options::Option_KeyBinding_Label_#",
+    "SubMenu_Options::KeyBinding_Button_Parent_#", "SubMenu_Options::KeyBinding_Button_#", "SubMenu_Options::KeyBinding_Key_#",
+    "SubMenu_Options::Option_KeyBinding_Overlay_#", "SubMenu_Options::Option_Title_#"};
+inline constexpr std::array<const char *, 13> UI_OPTIONS_LABELS{"SubMenu_Options::ToggleOptionNameLabel", "SubMenu_Options::ToggleRight_Label",
+    "SubMenu_Options::ToggleLeft_Label", "SubMenu_Options::ListOptionNameLabel", "SubMenu_Options::ListSelected_Label",
+    "SubMenu_Options::ScrollOptionNameLabel", "SubMenu_Options::ScrollButton_Label", "SubMenu_Options::KeyBindingOptionNameLabel",
+    "SubMenu_Options::TitleLabel", "SubMenu_Options::Label_Tab_1", "SubMenu_Options::Label_Tab_2", "SubMenu_Options::Label_Tab_3",
+    "SubMenu_Options::Label_Tab_4"};
+inline constexpr std::array<const char *, 49> UI_OPTIONS_LAYOUT_ITEMS{"SubMenu_Options::ToggleOption_Background_Spacepush",
+    "SubMenu_Options::ToggleBackground_Game_Shading", "SubMenu_Options::ToggleBackground_Front_Shading", "SubMenu_Options::ToggleBackground_Selected_Spacepush",
+    "SubMenu_Options::ToggleOption_Label_Spacepush", "SubMenu_Options::ToggleRight_Spacepush", "SubMenu_Options::ToggleRight_Shadow_Spacepush",
+    "SubMenu_Options::ToggleRight_Shadow_Spacepush2", "SubMenu_Options::ToggleRight_Shadow_Spacepush3", "SubMenu_Options::ToggleRight_Label_Spacepush",
+    "SubMenu_Options::ToggleLeft_Spacepush", "SubMenu_Options::ToggleLeft_Shadow_Spacepush", "SubMenu_Options::ToggleLeft_Shadow_Spacepush2",
+    "SubMenu_Options::ToggleLeft_Shadow_Spacepush3", "SubMenu_Options::ToggleLeft_Label_Spacepush", "SubMenu_Options::ToggleOption_Overlay_Spacepush",
+    "SubMenu_Options::ListOption_Background_Spacepush", "SubMenu_Options::ListBackground_Game_Shading", "SubMenu_Options::ListBackground_Front_Shading",
+    "SubMenu_Options::ListBackground_Selected_Spacepush", "SubMenu_Options::ListOption_Label_Spacepush", "SubMenu_Options::List_Spacepush",
+    "SubMenu_Options::List_Shadow_Spacepush", "SubMenu_Options::List_Shadow_Spacepush2", "SubMenu_Options::ListSelected_Label_Spacepush",
+    "SubMenu_Options::Option_List_Left_Spacepush", "SubMenu_Options::Option_List_Right_Spacepush", "SubMenu_Options::ListOption_Overlay_Spacepush",
+    "SubMenu_Options::ScrollOption_Background_Spacepush", "SubMenu_Options::ScrollBackground_Game_Shading", "SubMenu_Options::ScrollBackground_Front_Shading",
+    "SubMenu_Options::ScrollBackground_Selected_Spacepush", "SubMenu_Options::ScrollOption_Label_Spacepush", "SubMenu_Options::Option_ScrollBar_Spacepush",
+    "SubMenu_Options::Option_ScrollBar2_Spacepush", "SubMenu_Options::Option_ScrollBarButton_Spacepush",
+    "SubMenu_Options::Option_ScrollBarButtonLabel_Spacepush", "SubMenu_Options::ScrollOption_Overlay_Spacepush",
+    "SubMenu_Options::KeyBinding_Background_Spacepush", "SubMenu_Options::KeyBindingBackground_Game_Shading",
+    "SubMenu_Options::KeyBindingBackground_Front_Shading", "SubMenu_Options::KeyBindingBackground_Selected_Spacepush",
+    "SubMenu_Options::KeyBindingOption_Label_Spacepush", "SubMenu_Options::KeyBinding_Button_Spacepush", "SubMenu_Options::KeyBinding_Shadow_Spacepush",
+    "SubMenu_Options::KeyBinding_Shadow_Spacepush2", "SubMenu_Options::KeyBinding_Key_Spacepush", "SubMenu_Options::KeyBinding_Overlay_Spacepush",
+    "SubMenu_Options::Title_Label_Spacepush"};
+inline constexpr std::array<const char *, 54> UI_OPTIONS_COLOUR_IMAGES{"SubMenu_Options::Image_Tab_1", "SubMenu_Options::Image_Tab_2",
+    "SubMenu_Options::Image_Tab_3", "SubMenu_Options::Image_Tab_4", "SubMenu_Options::Texture_Front_1", "SubMenu_Options::Texture_Front_2",
+    "SubMenu_Options::Texture_Front_3", "SubMenu_Options::Texture_Front_4", "SubMenu_Options::Texture_Game_1", "SubMenu_Options::Texture_Game_2",
+    "SubMenu_Options::Texture_Game_3", "SubMenu_Options::Texture_Game_4", "SubMenu_Options::MainTexture_Game", "SubMenu_Options::MainTexture_Front",
+    "SubMenu_Options::ToggleTexture_Game", "SubMenu_Options::ToggleTexture_Game2", "SubMenu_Options::ToggleTexture_Front2",
+    "SubMenu_Options::ToggleTexture_Front", "SubMenu_Options::ToggleBackground_Game", "SubMenu_Options::ToggleBackground_Front",
+    "SubMenu_Options::ToggleBackground_Selected", "SubMenu_Options::ToggleRight_SubBackground_Game", "SubMenu_Options::ToggleRight_SubBackground_FrontOn",
+    "SubMenu_Options::ToggleRight_SubBackground_FrontOff", "SubMenu_Options::ToggleLeft_SubBackground_Game",
+    "SubMenu_Options::ToggleLeft_SubBackground_FrontOn", "SubMenu_Options::ToggleLeft_SubBackground_FrontOff", "SubMenu_Options::ListTexture_Game",
+    "SubMenu_Options::ListTexture_Game2", "SubMenu_Options::ListTexture_Front2", "SubMenu_Options::ListTexture_Front", "SubMenu_Options::ListBackground_Game",
+    "SubMenu_Options::ListBackground_Front", "SubMenu_Options::ListBackground_Selected", "SubMenu_Options::List_SubBackground_Game",
+    "SubMenu_Options::List_SubBackground_Front", "SubMenu_Options::Arrow_Left", "SubMenu_Options::Arrow_Right", "SubMenu_Options::ScrollTexture_Game",
+    "SubMenu_Options::ScrollTexture_Game2", "SubMenu_Options::ScrollTexture_Front2", "SubMenu_Options::ScrollTexture_Front",
+    "SubMenu_Options::ScrollBackground_Front", "SubMenu_Options::ScrollBackground_Game", "SubMenu_Options::ScrollBackground_Selected",
+    "SubMenu_Options::KeyBindingTexture_Game", "SubMenu_Options::KeyBindingTexture_Game2", "SubMenu_Options::KeyBindingTexture_Front2",
+    "SubMenu_Options::KeyBindingTexture_Front", "SubMenu_Options::KeyBindingBackground_Game", "SubMenu_Options::KeyBindingBackground_Front",
+    "SubMenu_Options::KeyBindingBackground_Selected", "SubMenu_Options::KeyBinding_Button_SubBackground_Game",
+    "SubMenu_Options::KeyBinding_Button_SubBackground_Front"};
+inline constexpr std::array<const char *, 19> UI_OPTIONS_BUTTONS{"SubMenu_Options::MainPanelButton", "SubMenu_Options::Toggle_Background",
+    "SubMenu_Options::Option_ToggleRight_Button", "SubMenu_Options::Option_ToggleLeft_Button", "SubMenu_Options::ToggleOption_Overlay",
+    "SubMenu_Options::List_Background", "SubMenu_Options::Option_ListSelectedButton", "SubMenu_Options::ListOption_Overlay",
+    "SubMenu_Options::Scroll_Background", "SubMenu_Options::Option_ScrollBar_BackgroundOutline", "SubMenu_Options::Option_ScrollBar_Button",
+    "SubMenu_Options::ScrollOption_Overlay", "SubMenu_Options::KeyBinding_Background", "SubMenu_Options::KeyBinding_Button_Button",
+    "SubMenu_Options::KeyBinding_Overlay", "SubMenu_Options::Button_Tab_1", "SubMenu_Options::Button_Tab_2", "SubMenu_Options::Button_Tab_3",
+    "SubMenu_Options::Button_Tab_4"};
+inline constexpr std::array<std::int32_t, 19> UI_OPTIONS_FRONT_IMAGES{13, 17, 16, 19, 22, 23, 25, 26, 29, 30, 32, 35, 40, 41, 42, 47, 48, 50, 53};
+inline constexpr std::array<std::int32_t, 17> UI_OPTIONS_GAME_IMAGES{12, 14, 15, 18, 21, 24, 27, 28, 31, 34, 38, 39, 43, 45, 46, 49, 52};
+inline constexpr std::array<std::int32_t, 4> UI_OPTIONS_GAME_ROW_BACKGROUNDS{18, 31, 43, 49};
+inline constexpr std::array<std::int32_t, 4> UI_OPTIONS_FRONT_ROW_BACKGROUNDS{19, 32, 42, 50};
+inline constexpr std::array<std::int32_t, 4> UI_OPTIONS_SELECTED_ROW_BACKGROUNDS{20, 33, 44, 51};
+struct UIOptionsColours {
+    std::uint32_t tabButton, tabButtonSelected, tabBackground, tabBackgroundSelected;
+    std::uint32_t mainPanel, rowBackground, rowControl, scrollBar, arrow;
+};
+inline constexpr UIOptionsColours UI_OPTIONS_FRONT_COLOURS{.tabButton = 0x7f34595eU,
+    .tabButtonSelected = 0xc1163f4cU,
+    .tabBackground = 0x00ffffffU,
+    .tabBackgroundSelected = 0x1ea5e6ffU,
+    .mainPanel = 0xff3f6a70U,
+    .rowBackground = 0xbe0c222fU,
+    .rowControl = 0U,
+    .scrollBar = 0xd25596a5U,
+    .arrow = 0xeb5aa0ffU};
+inline constexpr UIOptionsColours UI_OPTIONS_GAME_COLOURS{.tabButton = 0x7f322b1cU,
+    .tabButtonSelected = 0xff322b1cU,
+    .tabBackground = 0x00ffffffU,
+    .tabBackgroundSelected = 0xa0ffffffU,
+    .mainPanel = 0xff322b1cU,
+    .rowBackground = 0xdc272415U,
+    .rowControl = 0xff5d5640U,
+    .scrollBar = 0xff5d5640U,
+    .arrow = 0xffffffffU};
+inline constexpr std::array<std::int16_t, 5> UI_OPTIONS_HINTS{45, 44, 3842, 3843, -1};
+inline constexpr std::uint32_t UI_OPTIONS_KEY_BOUND_COLOUR = 0xffffffffU, UI_OPTIONS_KEY_UNBOUND_COLOUR = 0xff1e3fb9U;
 
 enum class OptionKind : std::uint8_t { Toggle, List, Slider, Key, Heading };
 enum class OptionChoices : std::uint8_t {
@@ -1163,6 +1258,9 @@ std::int64_t RenderMoneyHud();
 
 std::int32_t LoadUIFile(const char *path, std::int32_t elementIndex, std::uint32_t *request);
 
+inline constexpr std::array<std::int16_t, 4> MAIN_MENU_WHEEL_HINTS{45, 44, -1, -1};
+std::int64_t MainMenuWheelHints();
+
 inline constexpr const char *UI_HUD_WATCH_COMPASS_IMAGE = "GameHUDWatch_CompassPanel::CompassImage";
 inline constexpr const char *UI_HUD_WATCH_TIME_MARKER = "TIME";
 extern d3t::UIImageWidget *gameHudCompassImage;
@@ -1239,7 +1337,6 @@ std::int64_t BindMainMenuWheel();
 
 std::int64_t MainMenuWheelRender();
 
-void RenderMainMenuWheelFrame();
 std::int64_t TickMainMenuWheel();
 
 std::int64_t DestroyMainMenuWheel();
@@ -1279,8 +1376,6 @@ extern nk_panel helpWidgetPanel;
 void StartHelpBlinkTransition();
 
 std::int64_t HelpWidgetRender();
-
-void RenderHelpFrame();
 
 std::uint32_t LoadHelpDefinition();
 

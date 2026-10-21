@@ -48,6 +48,7 @@
 #include "s2/system_modules.hpp"
 #include "s2/story_state.hpp"
 #include "s2/ui.hpp"
+#include "d3t/ui_runtime.hpp"
 #include "s2/ui_scene.hpp"
 #include "s2/world_render.hpp"
 #include "s2/areas/game_arcade.hpp"
@@ -155,12 +156,24 @@ void RootTask_Callback(void *) {
         DoSimplePixelShaderPass();
         AllocateAndCopyTexture();
         UpdateAuthorMultichannelDevice();
+        ExecuteCurrentCommandList();
         ConsumeFrames();
-        RenderUIContents();
+        d3t::D3TDeviceContext *const previousUiContext = d3t::DX11::g_ppD3DDeviceContext;
+        d3t::DX11::g_ppD3DDeviceContext = g_nuklearRenderDeviceContext;
+        PrepareUIFrame();
+        UpdateScreenScaling();
+        UpdateUIFrameStatus();
+        d3t::DX11::g_ppD3DDeviceContext = previousUiContext;
         SetContrastShaderAndDraw();
 #ifdef _DEBUG
-        DrawQueuedDebugText();
+        if (g_nuklearRenderDeviceContext) {
+            d3t::D3TDeviceContext *const previousContext = d3t::DX11::g_ppD3DDeviceContext;
+            d3t::DX11::g_ppD3DDeviceContext = g_nuklearRenderDeviceContext;
+            DrawQueuedDebugText();
+            d3t::DX11::g_ppD3DDeviceContext = previousContext;
+        }
 #endif
+        FinishNuklearFrame();
         PresentD3TFrame(GetNumFramesProcessed() == 0 ? 1 : 0);
         if (GetShouldReturnToTitleScreen() != 0) {
             SetShouldReturnToTitleScreen(0);

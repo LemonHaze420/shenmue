@@ -383,7 +383,7 @@ void InitGeneralTextureResources() {
 }
 
 void SetContrastShaderAndDraw() {
-    d3t::DrawFullscreenContrast(contrastVertexShader, contrastPixelShader, g_s2CurrentContrast);
+    d3t::DrawFullscreenContrast(g_nuklearRenderDeviceContext, contrastVertexShader, contrastPixelShader, g_s2CurrentContrast);
 }
 
 // @verified - p

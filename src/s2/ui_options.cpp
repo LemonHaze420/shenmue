@@ -110,6 +110,28 @@ using namespace ui_detail;
 
 namespace ui_detail {
 
+std::array<d3t::UIWindow *, 41> optionsWindows{};
+std::array<d3t::UILabelWidget *, 13> optionsLabels{};
+std::array<d3t::UILayoutItem *, 49> optionsLayoutItems{};
+std::array<UIColourImageWidget *, 54> optionsColourImages{};
+std::array<UIButtonWidget *, 19> optionsButtons{};
+UIButtonIconWidget *optionsKeyBindingKey{};
+UIGridTemplate optionsRowTemplate{};
+UIGridTabSelector optionsTabSelector{};
+std::array<void *, 4> optionsTabButtons{}, optionsTabLabels{};
+void EnterOptionsTab(float *, void *window) {
+    EnterUIGridTab(optionsTabSelector, window);
+}
+void LeaveOptionsTab(float *, void *window) {
+    LeaveUIGridTab(optionsTabSelector, window);
+}
+void ClickOptionsTab(float *, void *window) {
+    ClickUIGridTab(optionsTabSelector, window);
+}
+
+std::int32_t optionsShownLanguage{};
+std::array<char, 64> optionsSliderText{};
+
 std::uint32_t LoadNativePrompt() {
     return ReadUIDefinitionFile(UIElement::YesNoPrompt, "/ui/YesNoPrompt/YesNoPrompt_new.ui", 1);
 }
@@ -701,14 +723,14 @@ void DrawOptionsKeyIcon(const d3t::UITextureObjectDefinition &object, const d3t:
     }
 }
 
-void DrawOptionRow(
+void UpdateOptionRowInput(
     UIGrid *grid, void *, const Vector4 *outer, const Vector4 *bounds, std::int32_t, std::uint32_t, const std::int32_t *dictionary, std::int32_t ordinal) {
     if (!dictionary || options.current < 0 || options.current >= 3 || options.root < 0 || options.rowRoot < 0)
         return;
-    const auto &spec = OptionSpecs(options.current)[dictionary[ordinal]];
-    const auto kind = static_cast<std::int8_t>(spec.kind);
-    auto &definition = uiDefinitions[16];
-    auto &layout = options.layout;
+    const OptionSpec &spec = OptionSpecs(options.current)[dictionary[ordinal]];
+    const std::int8_t kind = static_cast<std::int8_t>(spec.kind);
+    d3t::UIDefinition &definition = uiDefinitions[16];
+    AuthoredMenuLayout &layout = options.layout;
     const float sx = 1920.0f / GetUIViewportWidth();
     const d3t::UIRect clip{outer->x * sx, outer->y, outer->z * sx, outer->w};
     const auto clipToGrid = [&clip](const d3t::UIRect &window) {
@@ -724,16 +746,16 @@ void DrawOptionRow(
         overrides, GetUILayoutPaddingScale());
     const auto matches = [&](std::int32_t panel) { return panel >= 0 && options.panelKinds[panel] == kind; };
     const bool selected = ordinal == GetUIGridSelection(*grid);
-    const auto integer = spec.kind == OptionKind::Heading || spec.kind == OptionKind::Slider ? 0 : ReadOptionInteger(spec);
+
     for (std::size_t index = 0; index < definition.textureObjects.size(); ++index) {
-        const auto panel = layout.objectPanels[index];
+        const std::int32_t panel = layout.objectPanels[index];
         if (!matches(panel))
             continue;
-        auto placement = layout.objects[index];
+        d3t::UIResolvedTextureObject placement = layout.objects[index];
         placement.clip = clipToGrid(placement.clip);
-        const auto &id = definition.panels[panel].id;
+        const std::string &id = definition.panels[panel].id;
         if (spec.kind == OptionKind::Slider && id == "SubMenu_Options::Option_ScrollBar_Button_#") {
-            const auto track = options.sliderTrack;
+            const std::int32_t track = options.sliderTrack;
             if (track >= 0)
                 placement.bounds.x = layout.panels[track].x + (layout.panels[track].width - placement.bounds.width) * ReadOptionFraction(spec);
         }
@@ -754,8 +776,8 @@ void DrawOptionRow(
                     BeginOptionEdit();
             }
             if (spec.kind == OptionKind::Slider && id == "SubMenu_Options::Option_ScrollBar_Button_#") {
-                const auto track = options.sliderTrack;
-                auto &drag = options.sliderDrag[options.current][dictionary[ordinal]];
+                const std::int32_t track = options.sliderTrack;
+                OptionsRuntime::SliderDrag &drag = options.sliderDrag[options.current][dictionary[ordinal]];
                 if (uiPointer.leftDown && (hover || drag.active) && track >= 0) {
                     const float pointer = uiPointer.position.x * sx;
                     if (!drag.active) {
@@ -771,64 +793,140 @@ void DrawOptionRow(
                     drag.active = false;
             }
         }
-        if (!drawingUI)
-            continue;
-        d3t::UITextureObjectDefinition object = definition.textureObjects[index];
-        float opacity = selected ? 1.0f : 0.6f;
-        if (object.id.ends_with("Option_Overlay") || object.id == "SubMenu_Options::KeyBinding_Overlay") {
-            object.colour = (object.colour & 0x00ffffffU) | ((options.editing == -1 || options.editing == ordinal) ? 0U : 0x99000000U);
-            opacity = 1.0f;
-        }
-        if (object.id.find("_Game") != std::string::npos && IsCameraIconHidden() == 0)
-            continue;
-        if (object.id.find("_Front") != std::string::npos && IsCameraIconHidden() != 0)
-            continue;
-        if (object.id.ends_with("_Selected") && (IsCameraIconHidden() != 0 || !selected))
-            continue;
-        if (spec.kind == OptionKind::Toggle && object.id.find("SubBackground_FrontOn") != std::string::npos &&
-            ((object.id.find("ToggleRight") != std::string::npos) != (integer == 1)))
-            continue;
-        if (spec.kind == OptionKind::Toggle && object.id.find("SubBackground_FrontOff") != std::string::npos &&
-            ((object.id.find("ToggleRight") != std::string::npos) == (integer == 1)))
-            continue;
-        if (object.kind == d3t::UITextureObjectKind::ButtonIcon && spec.kind == OptionKind::Key)
-            DrawOptionsKeyIcon(object, placement, integer, selected ? 1.0f : 0.6f);
-        else
-            d3t::DrawUITextureObject(definition, object, placement, opacity);
-    }
-    std::array<char, 64> value{};
-    std::string_view caption;
-    if (spec.kind == OptionKind::Slider) {
-        std::snprintf(value.data(), value.size(), "%d%%",
-            static_cast<std::int32_t>(static_cast<float>(spec.maximum - spec.minimum) * ReadOptionFraction(spec) + spec.minimum));
-        caption = value.data();
-    } else if (spec.kind == OptionKind::Key) {
-        FormatUIInputKeyName(integer, value);
-        caption = value.data();
-    } else if (spec.kind != OptionKind::Heading)
-        caption = OptionChoiceCaption(spec, SelectedOptionChoice(spec));
-    for (std::size_t index = 0; index < definition.labels.size(); ++index) {
-        if (!matches(layout.labelPanels[index]))
-            continue;
-        auto placement = layout.labels[index];
-        placement.clip = clipToGrid(placement.clip);
-        auto &label = definition.labels[index];
-        std::string_view text = LocalizedOption(spec.token);
-        if (label.id == "SubMenu_Options::ToggleRight_Label")
-            text = OptionChoiceCaption(spec, 1);
-        else if (label.id == "SubMenu_Options::ToggleLeft_Label")
-            text = OptionChoiceCaption(spec, 0);
-        else if (label.id == "SubMenu_Options::ListSelected_Label" || label.id == "SubMenu_Options::ScrollButton_Label")
-            text = caption;
-        if (drawingUI) {
-            float opacity = selected ? 1.0f : 0.6f;
-            if (spec.kind == OptionKind::Toggle && ((label.id == "SubMenu_Options::ToggleRight_Label" && integer == 0) ||
-                    (label.id == "SubMenu_Options::ToggleLeft_Label" && integer == 1)))
-                opacity *= 0.15f;
-            DrawMovesLabel(label, placement, text, opacity);
-        }
     }
 }
+
+void DrawOptionsToggleRow(std ::int32_t ordinal, UIGrid *grid, std::uint32_t element, const OptionSpec &spec) {
+    const float opacity = ordinal == GetUIGridSelection(*grid) ? 1.0f : 0.60000002f;
+    const std::uint32_t alpha = static_cast<std::uint32_t>(static_cast<std::int32_t>(opacity * 255.0f));
+    const std::int32_t value = ReadOptionInteger(spec);
+    if (optionsLabels[0])
+        optionsLabels[0]->text = LocalizedOption(spec.token).data();
+    if (optionsLabels[1])
+        optionsLabels[1]->text = OptionChoiceCaption(spec, 1).data();
+    if (optionsLabels[2])
+        optionsLabels[2]->text = OptionChoiceCaption(spec, 0).data();
+    if (value == 0 || value == 1) {
+        const std::uint32_t dim = static_cast<std ::uint32_t>(static_cast<std::int32_t>((0.15f * 255.0f) * opacity));
+        if (optionsLabels[1])
+            optionsLabels[1]->colour = (optionsLabels[1]->colour & 0xffffffU) | ((value ? alpha : dim) << 24);
+        if (optionsLabels[2])
+            optionsLabels[2]->colour = (optionsLabels[2]->colour & 0xffffffU) | ((value ? dim : alpha) << 24);
+        if (optionsButtons[2])
+            optionsButtons[2]->alpha = value ? 1.0f : 0.15f;
+        if (optionsButtons[3])
+            optionsButtons[3]->alpha = value ? 0.15f : 1.0f;
+        for (const std::int32_t image : {22, 23, 25, 26})
+            if (optionsColourImages[image]) {
+                const bool shown = (image == 22 || image == 26) ? value == 1 : value == 0;
+                optionsColourImages[image]->colour = (optionsColourImages[image]->colour & 0xffffffU) | (shown ? 0xff000000U : 0U);
+            }
+    }
+    if (optionsButtons[4])
+        optionsButtons[4]->colour = (optionsButtons[4]->colour & 0xffffffU) | ((options.editing == -1 || options.editing == ordinal) ? 0U : 0x99000000U);
+}
+
+void DrawOptionsListRow(std::int32_t ordinal, UIGrid *grid, std::uint32_t element, const OptionSpec &spec) {
+
+    if (optionsLabels[3])
+        optionsLabels[3]->text = LocalizedOption(spec.token).data();
+    if (optionsLabels[4])
+        optionsLabels[4]->text = OptionChoiceCaption(spec, SelectedOptionChoice(spec)).data();
+    if (optionsButtons[7])
+        optionsButtons[7]->colour = (optionsButtons[7]->colour & 0xffffffU) | ((options.editing == -1 || options.editing == ordinal) ? 0U : 0x99000000U);
+}
+
+void DrawOptionsSliderRow(std::int32_t ordinal, UIGrid *grid, std::uint32_t element, const OptionSpec &spec) {
+
+    UILayoutRect bar{}, knob{};
+    UI_GetWindowRect(optionsWindows[29], bar);
+    UI_GetWindowRect(optionsWindows[30], knob);
+    if (optionsWindows[30])
+        optionsWindows[30]->layout.offsetX = (((bar.width + bar.x) - knob.width) - bar.x) * ReadOptionFraction(spec) / static_cast<float>(UI_GetAspectWidth());
+    if (optionsLabels[5])
+        optionsLabels[5]->text = LocalizedOption(spec.token).data();
+    if (optionsLabels[6]) {
+        std::snprintf(optionsSliderText.data(), optionsSliderText.size(), "%i%%",
+            static_cast<std::int32_t>(static_cast<float>(spec.maximum - spec.minimum) * ReadOptionFraction(spec) + spec.minimum));
+        optionsLabels[6]->text = optionsSliderText.data();
+    }
+    if (optionsButtons[11])
+        optionsButtons[11]->colour = (optionsButtons[11]->colour & 0xffffffU) | ((options.editing == -1 || options.editing == ordinal) ? 0U : 0x99000000U);
+}
+
+void DrawOptionsKeyRow(std::int32_t ordinal, UIGrid *grid, std ::uint32_t element, const OptionSpec &spec) {
+    const float opacity = ordinal == GetUIGridSelection(*grid) ? 1.0f : 0.60000002f;
+    const std::uint32_t alpha = static_cast<std::uint32_t>(static_cast<std::int32_t>(opacity * 255.0f));
+
+    if (optionsLabels[7]) {
+        optionsLabels[7]->text = LocalizedOption(spec.token).data();
+        optionsLabels[7]->colour = ((ReadOptionInteger(spec) == -1 ? UI_OPTIONS_KEY_UNBOUND_COLOUR : UI_OPTIONS_KEY_BOUND_COLOUR) & 0xffffffU) | (alpha << 24);
+    }
+    if (optionsKeyBindingKey)
+        optionsKeyBindingKey->action = (spec.offset - static_cast<std::int32_t>(offsetof(S2UserConfiguration280, keyMappings))) / sizeof(std::int32_t);
+    if (optionsButtons[14])
+        optionsButtons[14]->colour = (optionsButtons[14]->colour & 0xffffffU) | ((options.editing == -1 || options.editing == ordinal) ? 0U : 0x99000000U);
+}
+
+void DrawOptionRow(UIGrid *grid, void *panel, const Vector4 *outer, const Vector4 *bounds, std::int32_t spacing, std::uint32_t element,
+    const std ::int32_t *dictionary, std::int32_t ordinal) {
+    if (g_uiElements[16].isRenderable || !dictionary)
+        return;
+    UpdateOptionRowInput(grid, panel, outer, bounds, spacing, element, dictionary, ordinal);
+    const OptionSpec &spec = OptionSpecs(options.current)[dictionary[ordinal]];
+    const UILayoutRect holder{outer->x, outer->y, outer->z, outer->w}, cell{bounds->x, bounds->y, bounds->z, bounds->w};
+    PlaceUIGridCellWidgets(optionsRowTemplate, ordinal, holder, cell);
+    const float opacity = ordinal == GetUIGridSelection(*grid) ? 1.0f : 0.60000002f;
+    const std::uint32_t alpha = static_cast<std::uint32_t>(static_cast<std::int32_t>(opacity * 255.0f));
+    for (std::size_t label = 0; label < 8; ++label)
+        if (optionsLabels[label])
+            optionsLabels[label]->colour = (optionsLabels[label]->colour & 0x00ffffffU) | (alpha << 24);
+    std::int32_t first = 9, end = 16;
+    switch (spec.kind) {
+    case OptionKind::Toggle:
+        DrawOptionsToggleRow(ordinal, grid, element, spec);
+        break;
+    case OptionKind::List:
+        first = 16;
+        end = 25;
+        DrawOptionsListRow(ordinal, grid, element, spec);
+        break;
+    case OptionKind::Slider:
+        first = 25;
+        end = 32;
+        DrawOptionsSliderRow(ordinal, grid, element, spec);
+        break;
+    case OptionKind ::Key:
+        first = 32;
+        end = 40;
+        DrawOptionsKeyRow(ordinal, grid, element, spec);
+        break;
+    case OptionKind::Heading:
+        first = 40;
+        end = -1;
+        if (optionsLabels[8])
+            optionsLabels[8]->text = LocalizedOption(spec.token).data();
+        break;
+    }
+    const bool game = IsCameraIconHidden() != 0;
+    for (std::size_t kind = 0; kind < 4; ++kind) {
+        if (optionsColourImages[UI_OPTIONS_GAME_ROW_BACKGROUNDS[kind]])
+            optionsColourImages[UI_OPTIONS_GAME_ROW_BACKGROUNDS[kind]]->alpha = game ? 1.0f : 0.0f;
+        if (optionsColourImages[UI_OPTIONS_FRONT_ROW_BACKGROUNDS[kind]])
+            optionsColourImages[UI_OPTIONS_FRONT_ROW_BACKGROUNDS[kind]]->alpha = game ? 0.0f : 1.0f;
+        if (optionsColourImages[UI_OPTIONS_SELECTED_ROW_BACKGROUNDS[kind]])
+            optionsColourImages[UI_OPTIONS_SELECTED_ROW_BACKGROUNDS[kind]]->alpha = 0.0f;
+    }
+    if (!game && ordinal == GetUIGridSelection(*grid) && spec.kind != OptionKind::Heading) {
+        const std::size_t kind = static_cast<std::size_t>(spec.kind);
+        if (optionsColourImages[UI_OPTIONS_FRONT_ROW_BACKGROUNDS[kind]])
+            optionsColourImages[UI_OPTIONS_FRONT_ROW_BACKGROUNDS[kind]]->alpha = 0.0f;
+        if (optionsColourImages[UI_OPTIONS_SELECTED_ROW_BACKGROUNDS[kind]])
+            optionsColourImages[UI_OPTIONS_SELECTED_ROW_BACKGROUNDS[kind]]->alpha = 1.0f;
+    }
+    AfterDrawUIGridCell(optionsRowTemplate, *grid, ordinal, first, end, holder, static_cast<nk_panel *>(panel));
+}
+
 std::uint32_t LoadSubMenuOptions() {
     return ReadUIDefinitionFile(UIElement::SubMenuOptions, "/ui/gamemenu_New/SubMenu_Options.ui", 1);
 }
@@ -851,6 +949,7 @@ std::int64_t BindOptionChild(std::int32_t child) {
         {.columns = 1,
             .visibleRows = 8,
             .rows = static_cast<std::int32_t>(OptionSpecs(child).size()),
+            .panel = UI_FindViewWindowPointer(g_uiElements[static_cast<std::size_t>(optionChildElements[child])].config.uiHandleIndex, roots[child]),
             .drawRow = DrawOptionRow,
             .actions = {SelectOptionRow, nullptr, nullptr, nullptr},
             .selectionData = GetOptionRowData,
@@ -902,39 +1001,61 @@ std::int64_t DestroyOptionChild() {
     return 1;
 }
 std::int64_t RenderOptionChild() {
-    if (options.current == 0)
-        currentUIState = HasUnboundUserMappings() ? static_cast<std::int32_t>(UIElement::OptionsControls) : -1;
-    if (options.current < 0 || options.current >= 3)
+    if (g_uiElements[16].isRenderable || options.current < 0 || options.current >= 3)
         return 0;
-    auto &runtime = optionChildren[options.current];
+    OptionChildRuntime &runtime = optionChildren[options.current];
     if (!runtime.bound)
         return 0;
-    const auto &definition = uiDefinitions[static_cast<std::size_t>(optionChildElements[options.current])];
-    auto &layout = runtime.layout;
-    std::array<d3t::UIPanelBoundsOverride, 1> overrides{};
-    std::size_t count = 0;
-    if (runtime.root >= 0) {
-        const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(optionChildElements[options.current])].config.uiHandleIndex;
-        d3t::UIWindow *const root = UI_GetWindow(UI_FindViewWindow(slot, definition.panels[runtime.root].id.c_str()));
-        if (root) {
-            UILayoutRect bounds{};
-            UI_GetWindowRect(root, bounds);
-            const float scaleX = 1920.0f / GetUIViewportWidth();
-            overrides[count++] = {static_cast<std::size_t>(runtime.root), {bounds.x * scaleX, bounds.y, bounds.width * scaleX, bounds.height}};
-        }
-    }
-    d3t::ResolveUIDefinitionLayout(definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels,
-        std::span{overrides}.first(count), GetUILayoutPaddingScale());
-    if (runtime.root >= 0) {
-        const auto &bounds = layout.panels[runtime.root];
-        runtime.grid.bounds = {bounds.x * GetUIViewportWidth() / 1920.0f, bounds.y, bounds.width * GetUIViewportWidth() / 1920.0f, bounds.height};
-    }
-    RenderUIGrid(runtime.grid, static_cast<std::uint32_t>(optionChildElements[options.current]), uiPointer);
-    if (drawingUI)
-        DrawUIGridScrollbar(runtime.grid, static_cast<std::uint32_t>(optionChildElements[options.current]), uiPointer);
+    UIElementState &element = g_uiElements[static_cast<std::size_t>(optionChildElements[options.current])];
+    DrawUIEntity(*GetNativeUiContext(), element.config.uiHandleIndex, element.index);
+    RenderNativeUIGrid(runtime.grid, element.index, uiPointer);
     return 0;
 }
 std::int64_t BindOptions() {
+    const std::uint32_t slot = g_uiElements[16].config.uiHandleIndex;
+    for (std::size_t index = 0; index < optionsWindows.size(); ++index)
+        optionsWindows[index] = UI_FindViewWindowPointer(slot, UI_OPTIONS_WINDOWS[index]);
+    for (std::size_t index = 0; index < optionsLabels.size(); ++index)
+        optionsLabels[index] = UI_GetLabel(static_cast<std::uint32_t>(UI_FindViewLabel(slot, UI_OPTIONS_LABELS[index])));
+    for (std ::size_t index = 0; index < optionsLayoutItems.size(); ++index) {
+        optionsLayoutItems[index] = UI_FindViewLayoutItem(slot, UI_OPTIONS_LAYOUT_ITEMS[index]);
+    }
+    for (std::size_t index = 0; index < optionsColourImages.size(); ++index)
+        optionsColourImages[index] = UI_GetColourImageWidget(static_cast<std::uint32_t>(UI_FindViewColourImage(slot, UI_OPTIONS_COLOUR_IMAGES[index])));
+    for (std::size_t index = 0; index < optionsButtons.size(); ++index) {
+        optionsButtons[index] = UI_FindViewButton(slot, UI_OPTIONS_BUTTONS[index]);
+    }
+    for (std::size_t index = 0; index < 4; ++index) {
+        optionsTabButtons[index] = optionsWindows[index];
+        optionsTabLabels[index] = optionsLabels[index + 9];
+        if (optionsWindows[index]) {
+            optionsWindows[index]->mouseCallbacks.entered = EnterOptionsTab;
+            optionsWindows[index]->mouseCallbacks.left = LeaveOptionsTab;
+            optionsWindows[index]->mouseCallbacks.clicked = ClickOptionsTab;
+        }
+    }
+    optionsTabSelector.first = 0;
+    optionsTabSelector.last = 3;
+    optionsTabSelector.buttons = optionsTabButtons.data();
+    optionsTabSelector.labels = optionsTabLabels.data();
+    optionsKeyBindingKey = UI_FindViewIconWidget(slot, "SubMenu_Options::KeyBinding_Key", 21);
+    optionsRowTemplate.initialized = 0;
+    optionsRowTemplate.viewSlot = slot;
+    optionsRowTemplate.first = 8;
+    optionsRowTemplate.end = 41;
+    optionsRowTemplate.clipWindows[0] = 12;
+    optionsRowTemplate.clipWindows[1] = 22;
+    optionsRowTemplate.clipWindows[2] = 26;
+    optionsRowTemplate.clipWindows[3] = 33;
+    optionsRowTemplate.clipWindows[4] = -1;
+    optionsRowTemplate.windows = optionsWindows.data();
+    optionsRowTemplate.ids = UI_OPTIONS_WINDOWS.data();
+    optionsRowTemplate.layoutFirst = 0;
+    optionsRowTemplate.layoutEnd = 49;
+    optionsRowTemplate.layoutItems = optionsLayoutItems.data();
+    optionsRowTemplate.labelFirst = 0;
+    optionsRowTemplate.labelEnd = 9;
+    optionsRowTemplate.labels = optionsLabels.data();
     auto &definition = uiDefinitions[16];
     BindAuthoredMenuLayout(definition, options.layout);
     options.sliderTrack = MenuPanelIndex(definition, "SubMenu_Options::Option_ScrollBar_#");
@@ -978,6 +1099,9 @@ std::int64_t BindOptions() {
     return 1;
 }
 std::int64_t ResetOptions() {
+    optionsWindows.fill(nullptr);
+    optionsLabels.fill(nullptr);
+    optionsColourImages.fill(nullptr);
     options.tabs.fill(-1);
     return 0;
 }
@@ -1048,6 +1172,7 @@ void SelectOptionsTab(std::int32_t next) {
     options.requested = next;
     if (next == 3) {
         options.requested = options.current;
+        optionsTabSelector.selected = options.current;
         if (IsCameraIconHidden()) NativeMessageBox("UIQUITLAB2", false, 0, ConfirmOptionsQuit); // @text EN: "Are you sure you want to quit?\nAny unsaved progress will be lost." | JA: "タイトル画面に戻ります。よろしいですか？\n（記録されていないゲームデータは失われます）"
         return;
     }
@@ -1058,12 +1183,31 @@ void SelectOptionsTab(std::int32_t next) {
     options.current = next;
     options.editing = -1;
     ShowElementByIndex(optionChildElements[next]);
-    AicaExecuteWrapper(3);
+    const bool game = IsCameraIconHidden() != 0;
+    const UIOptionsColours &colours = game ? UI_OPTIONS_GAME_COLOURS : UI_OPTIONS_FRONT_COLOURS;
+    optionsTabSelector.selected = next;
+    for (std::int32_t tab = 0; tab < 4; ++tab) {
+        if (optionsColourImages[tab]) {
+            const std::uint32_t alpha = static_cast<std::uint32_t>(static_cast<std::int32_t>((tab == next ? 1.0f : 0.60000002f) * 255.0f));
+            optionsColourImages[tab]->colour = (optionsColourImages[tab]->colour & 0xffffffU) |
+                (alpha
+                    << 24); // @text EN: "Are you sure you want to quit?\nAny unsaved progress will be lost." | JA: "タイトル画面に戻ります。よろしいですか？\n（記録されていないゲームデータは失われます）"
+        }
+        if (optionsButtons[15 + tab])
+            optionsButtons[15 + tab]->colour = tab == next ? colours.tabButtonSelected : colours.tabButton;
+        if (optionsColourImages[(game ? 8 : 4) + tab])
+            optionsColourImages[(game ? 8 : 4) + tab]->colour = tab == next ? colours.tabBackgroundSelected : colours.tabBackground;
+    }
+    UpdateUIGridTabColours(optionsTabSelector);
 }
 std::int64_t TickOptions() {
     using enum CameraState;
     ShowElementByIndex(UIElement::GameInfoBar);
     ResetUIGridTabSelector();
+    optionsTabSelector.hovered = optionsTabSelector.previousHover = 0;
+    optionsTabSelector.coloursInitialized = 0;
+    optionsTabSelector.active = 0;
+    SetUIGridTabSelector(&optionsTabSelector, 1);
     options.current = -1;
     options.closing = false;
     options.editing = -1;
@@ -1095,40 +1239,17 @@ std::int64_t OptionsMenuInput() {
         DestroyElementByIndex(UIElement::SubMenuOptions);
         return 0;
     }
-    const auto maximum = IsCameraIconHidden() ? 3 : 2;
-    if (options.tabFocus) {
-        const auto repeated = g_inputBuffer[0].repeatedPresses;
-        if (repeated & 0x1000U) {
-            g_inputBuffer[0].repeatedPresses &= ~0x1000U;
-            if (--options.hoveredTab < 0)
-                options.hoveredTab = maximum;
-            AicaExecuteWrapper(3);
-        }
-        if (repeated & 0x2000U) {
-            g_inputBuffer[0].repeatedPresses &= ~0x2000U;
-            if (++options.hoveredTab > maximum)
-                options.hoveredTab = 0;
-            AicaExecuteWrapper(3);
-        }
-        if (pressed & 0x400U) {
-            g_inputBuffer[0].pressedPriority &= ~0x400U;
-            SelectOptionsTab(options.hoveredTab);
-            options.tabFocus = false;
-            AicaExecuteWrapper(2);
-        }
-        if (pressed & 0x8000U) {
-            g_inputBuffer[0].pressedPriority &= ~0x8000U;
-            options.tabFocus = false;
-            AicaExecuteWrapper(3);
-        }
-    }
-    for (std::int32_t tab = 0; tab <= maximum; ++tab)
-        if (uiPointer.leftClicks && PointInsideMenuPanel(options.layout, options.tabs[tab])) {
-            SelectOptionsTab(tab);
-            options.tabFocus = false;
-        }
-    if (options.requested != options.current)
-        SelectOptionsTab(options.requested);
+    optionsTabSelector.active = options.tabFocus ? 1 : 0;
+    if (options.tabFocus && !optionsTabSelector.previousActive)
+        optionsTabSelector.hovered = options.hoveredTab;
+    ProcessUIGridTabInput(optionsTabSelector);
+    options.tabFocus = optionsTabSelector.active != 0;
+    options.hoveredTab = optionsTabSelector.hovered;
+    if (!IsCameraIconHidden() && optionsTabSelector.selected > optionsTabSelector.last)
+        optionsTabSelector.selected = optionsTabSelector.first;
+
+    if (optionsTabSelector.selected != options.current)
+        SelectOptionsTab(optionsTabSelector.selected);
     return 1;
 }
 std::int64_t RenderOptions() {
@@ -1154,33 +1275,60 @@ std::int64_t RenderOptions() {
     }
     d3t::ResolveUIDefinitionLayout(definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels,
         std::span{overrides}.first(count), GetUILayoutPaddingScale());
-    if (!drawingUI)
-        return 0;
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index) {
-        const auto panel = layout.objectPanels[index];
-        if (panel >= 0 && options.panelKinds[panel] >= 0)
-            continue;
-        const auto &id = definition.textureObjects[index].id;
-        const bool game = IsCameraIconHidden() != 0;
-        if (id.find("_Game") != std::string::npos && !game)
-            continue;
-        if (id.find("_Front") != std::string::npos && game)
-            continue;
-        if (!game && (id == "SubMenu_Options::Image_Tab_4" || id == "SubMenu_Options::Texture_Front_4" || id == "SubMenu_Options::Texture_Game_4"))
-            continue;
-        d3t::DrawUITextureObject(definition, definition.textureObjects[index], layout.objects[index], 1.0f);
+    currentUIState = HasUnboundUserMappings() ? static_cast<std::int32_t>(UIElement::OptionsControls) : -1;
+    const std::int32_t language = GetLoadingScreenTextType(g_sceneTextLanguage);
+    if (optionsShownLanguage != language) {
+        UI_ResetLabelScaleVariables(g_uiElements[16].config.uiHandleIndex);
+        optionsShownLanguage = GetLoadingScreenTextType(g_sceneTextLanguage);
     }
-    for (std::size_t index = 0; index < definition.labels.size(); ++index) {
-        const auto panel = layout.labelPanels[index];
-        if (panel >= 0 && options.panelKinds[panel] >= 0)
-            continue;
-        if (!IsCameraIconHidden() && definition.labels[index].id == "SubMenu_Options::Label_Tab_4")
-            continue;
-        DrawMovesLabel(definition.labels[index], layout.labels[index],
-            definition.labels[index].token.empty() ? std::string_view(definition.labels[index].text) : GetLocalizedSceneText(definition.labels[index].token),
-            1.0f);
-    }
+    DrawUIEntity(*GetNativeUiContext(), g_uiElements[16].config.uiHandleIndex, g_uiElements[16].index);
     return 0;
+}
+std::int64_t SetOptionsTheme() {
+    const bool game = IsCameraIconHidden() != 0;
+    const UIOptionsColours &colours = game ? UI_OPTIONS_GAME_COLOURS : UI_OPTIONS_FRONT_COLOURS;
+    optionsTabSelector.last = game ? 3 : 2;
+    if (optionsWindows[7])
+        std ::snprintf(optionsWindows[7]->layout.parentId.data(), optionsWindows[7]->layout.parentId.size(), "%s",
+            game ? "GameMenu::SubContentPanel" : "MainMenu::ContentPanel");
+    for (const std::int32_t index : game ? std::array<std::int32_t, 3>{4, 5, 6} : std::array<std::int32_t, 3>{8, 9, 10})
+        if (optionsColourImages[index])
+            optionsColourImages[index]->colour &= 0x00ffffffU;
+    for (const std::int32_t index : {36, 37})
+        if (optionsColourImages[index])
+            optionsColourImages[index]->colour = colours.arrow;
+    if (optionsButtons[0])
+        optionsButtons[0]->colour = colours.mainPanel;
+    for (const std::int32_t index : {1, 5, 8, 12})
+        if (optionsButtons[index])
+            optionsButtons[index]->colour = colours.rowBackground;
+
+    for (const std::int32_t index : {2, 3, 6, 13})
+        if (optionsButtons[index])
+            optionsButtons[index]->colour = colours.rowControl;
+    for (const std::int32_t index : {9, 10})
+
+        if (optionsButtons[index])
+            optionsButtons[index]->colour = colours.scrollBar;
+    for (const std::int32_t index : UI_OPTIONS_FRONT_IMAGES)
+        if (optionsColourImages[index])
+            optionsColourImages[index]->alpha = game ? 0.0f : 1.0f;
+    for (const std::int32_t index : UI_OPTIONS_GAME_IMAGES)
+        if (optionsColourImages[index])
+            optionsColourImages[index]->alpha = game ? 1.0f : 0.0f;
+    for (const std::int32_t index : {3, 6, 4, 5})
+        if (optionsWindows[index])
+            optionsWindows[index]->alpha = game ? 1.0f : 0.0f;
+    return 0;
+}
+
+// @verified - p
+std::int64_t OptionsHints() {
+    std::array<std::int16_t, 5> hints = UI_OPTIONS_HINTS;
+    if (!HasUserConfigurationChanges() || HasUnboundUserMappings())
+        hints[3] = -1;
+
+    return CopyHudHintIds(hints);
 }
 void RegisterOptionsAndPrompt() {
     auto &root = g_uiElements[16];
@@ -1192,6 +1340,8 @@ void RegisterOptionsAndPrompt() {
     root.reset = ResetOptions;
     root.tick = TickOptions;
     root.destroy = DestroyOptions;
+    root.unknown88 = SetOptionsTheme;
+    root.unknown98 = OptionsHints;
     const std::array<std::uint32_t (*)(), 3> loaders{LoadOptionsControls, LoadOptionsAudio, LoadOptionsGraphics};
     const std::array<UIAction, 3> binders{BindOptionsControls, BindOptionsAudio, BindOptionsGraphics};
     const std::array<UIAction, 3> resets{ResetOptionsControls, ResetOptionsAudio, ResetOptionsGraphics};

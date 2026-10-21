@@ -10,6 +10,7 @@
 #include "s2/game_runtime.hpp"
 #include "s2/sd_probe.hpp"
 #include "s2/ui.hpp"
+#include "d3t/ui_runtime.hpp"
 #include "s2/ui_transition.hpp"
 #include "s2/texture_source.hpp"
 
@@ -64,9 +65,17 @@ void FlushFramePacingRenderQueue() {
         if (canRenderUi)
             d3t::PresentSceneFrame();
     }
+    ExecuteCurrentCommandList();
     ConsumeFrames();
-    if (canRenderUi)
-        RenderUIContents();
+    if (canRenderUi) {
+        d3t::D3TDeviceContext *const previousUiContext = d3t::DX11::g_ppD3DDeviceContext;
+        d3t::DX11::g_ppD3DDeviceContext = g_nuklearRenderDeviceContext;
+        PrepareUIFrame();
+        UpdateScreenScaling();
+        UpdateUIFrameStatus();
+        d3t::DX11::g_ppD3DDeviceContext = previousUiContext;
+    }
+    FinishNuklearFrame();
     PresentD3TFrame(GetNumFramesProcessed() == 0 ? 1 : 0);
     ProcessD3TMessages();
 }
