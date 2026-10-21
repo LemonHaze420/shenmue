@@ -20,6 +20,7 @@
 #include "s2/load_title.hpp"
 #include "s2/input.hpp"
 #include "s2/inventory.hpp"
+#include "s2/initialization.hpp"
 #include "s2/map_control.hpp"
 #include "s2/memo.hpp"
 #include "s2/magic_room.hpp"
@@ -205,7 +206,7 @@ static_assert(offsetof(SavedPlayerTransform, characterState) == 0x10);
 struct SaveTransitionDescriptor {
     std::uint8_t inputKind;
     std::uint8_t resultKind;
-    std::uint8_t suppressHelp;
+    std::uint8_t blockSoftReset;
 };
 
 struct SaveTransitionTable {
@@ -741,6 +742,7 @@ enum class SaveScreenPrompt : std::uint8_t {
 SaveScreenPrompt saveScreenPrompt = SaveScreenPrompt::None;
 std::size_t saveScreenPromptSlot = 0;
 std::int32_t saveScreenStorageStatus = 0;
+LegacyInputSlot saveScreenInput{};
 TitleFileSelectState titleFileSelect{};
 TitleLoadPhase titleLoadPhase = TitleLoadPhase::Idle;
 bool titleLoadOnly = false;
@@ -769,24 +771,6 @@ std::span<const std::byte> InventoryBankConst(
     const std::span<std::byte> bankData = InventoryBank(bank);
     return {bankData.data(), bankData.size()};
 }
-
-std::uint32_t LoadSaveSpriteTexture(const char* path) {
-    const std::size_t size =
-        static_cast<std::size_t>(ArchiveData_GetFileSize(path));
-    if (!size) return std::numeric_limits<std::uint32_t>::max();
-    void* const allocation = HLib::AllocateTaskData(
-        size, SHEN_NAME(SAVE));
-    if (!allocation) return std::numeric_limits<std::uint32_t>::max();
-    std::uint32_t texture = std::numeric_limits<std::uint32_t>::max();
-    if (ArchiveData_Read(path, 0, allocation, size)) {
-        const std::uint32_t uploaded = UploadTexn(
-            {static_cast<const std::byte*>(allocation), size});
-        if (uploaded) texture = uploaded;
-    }
-    HLib::FreeTaskData(allocation);
-    return texture;
-}
-
 
 template <typename Value>
 Value ReadValue(const S2SaveImage& image, std::size_t offset) noexcept {
@@ -1326,6 +1310,9 @@ void ApplySaveScreenTransition(SaveTaskData& save) {
     if (descriptorIndex >= kSaveTransitionDescriptors.size()) return;
     const SaveTransitionDescriptor descriptor =
         kSaveTransitionDescriptors[descriptorIndex];
+    const std::int32_t transitionEnabled = (descriptor.blockSoftReset & 1U) ? 0 : 1;
+    SetRootSaveTransitionEnabled(transitionEnabled);
+    SetRootSoftResetEnabled(transitionEnabled);
     if (save.initializationMode == 0 &&
         descriptor.inputKind < kSaveHelpFlags.size()) {
         const std::uint32_t helpFlags =
@@ -1504,6 +1491,8 @@ void ApplySaveScreenTransition(SaveTaskData& save) {
         save.field5d0 = static_cast<std::int64_t>(
             (static_cast<std::uint64_t>(save.field5d0) &
              0x00000000ffffffffULL) | high);
+        SetRootSaveTransitionEnabled(1);
+        SetRootSoftResetEnabled(1);
     }
 }
 void SetDiskChange(void* taskData) {
@@ -1577,8 +1566,9 @@ void SaveScreenFadeOut(void* taskData) {
 void SaveScreenRun(void* taskData) {
     auto* const save = static_cast<SaveTaskData*>(taskData);
     padcCheckControllerConnection();
+    if (currentSaveState == 3 || (currentSaveState >= 7 && currentSaveState <= 9))
+        return;
     save->fadeTarget = currentSaveState == 7 ? 190 : 118;
-    if (currentSaveState >= 7 && currentSaveState <= 9) return;
     const bool staffRollCancelled =
         currentSaveState == 6 &&
         (g_inputBuffer[0].pressedPriority & 0x0200U) != 0;
@@ -1587,9 +1577,6 @@ void SaveScreenRun(void* taskData) {
         DestroyElementByIndex(UIElement::LoadSave);
         DestroyElementByIndex(UIElement::GameBackground);
         DestroyElementByIndex(UIElement::GameInfoBar);
-    } else {
-        EnableElement(UIElement::GameBackground);
-        EnableElement(UIElement::LoadSave);
     }
     ApplySaveScreenTransition(*save);
 }
@@ -1621,28 +1608,43 @@ void SaveScreenInitialize(void* taskData) {
     if (currentSaveState == 7 || currentSaveState == 8) return;
     if (currentSaveState == 6 && completedGameCount < 255U) ++completedGameCount;
 
-    ShowElementByIndex(UIElement::GameBackground);
-    SetSaveFrontendMode(1);
-    ShowElementByIndex(UIElement::LoadSave);
-    EnableElement(UIElement::LoadSave);
+    if (GetDebugForceUIEnabled(UIElement::LoadSave)) {
+        ShowElementByIndex(UIElement::GameBackground);
+        SetSaveFrontendMode(1);
+        ShowElementByIndex(UIElement::LoadSave);
+    }
     save->colour = 0;
     save->preRenderCallback = SaveScreenRun;
 }
 
+// @verified - p
 void SaveScreenUpdate(void* taskData) {
-    auto* const save = static_cast<SaveTaskData*>(taskData);
-    save->inputBuffer = save->initializationMode != 0
-        ? &g_inputBuffer[0]
-        : (save->padData ? &save->padData->input : nullptr);
-    if (save->preRenderCallback)
+    SaveTaskData *const save = static_cast<SaveTaskData *>(taskData);
+    if (save->initializationMode != 0) {
+        save->inputBuffer = g_inputBuffer.data();
+    } else if (currentSaveState == 1) {
+        const LegacyInputSlot *const input = ctrlGetPadInputBuffer0(save->padData);
+        saveScreenInput.pressedPriority = input->pressedPriority | g_inputBuffer[3].pressedPriority;
+        save->inputBuffer = &saveScreenInput;
+    } else {
+        save->inputBuffer = ctrlGetPadInputBuffer0(save->padData);
+    }
         save->preRenderCallback(save);
 
     const float rate = currentSaveState == 7 ? 0.07f : 0.2f;
-    save->fadeCurrent +=
-        (static_cast<float>(save->fadeTarget) - save->fadeCurrent) * rate;
-    save->fadeCurrent = std::clamp(save->fadeCurrent, 0.0f, 255.0f);
-    SetScreenFilmColour(
-        static_cast<std::uint32_t>(save->fadeCurrent) << 24U);
+    save->fadeCurrent = (static_cast<float>(save->fadeTarget) - save->fadeCurrent) * rate + save->fadeCurrent;
+    if (save->fadeCurrent < 0.0f)
+        save->fadeCurrent = 0.0f;
+    if (save->fadeCurrent > 255.0f)
+        save->fadeCurrent = 255.0f;
+    LegacyColourQuad packet;
+    packet.quad.flags = 0;
+    packet.colour = static_cast<std::uint32_t>(TruncateSpriteCoordinate(save->fadeCurrent)) << 24U;
+    AdjustScreenAspectRatio(packet.quad, static_cast<ScreenAlignment>(0), 0, 0, 640, 480, ScreenMode::Adjusted);
+    packet.quad.flags |= 0x400U;
+    shenSubmitQuad(packet, 6.0f);
+    WRN_SetBaseColour(0);
+    d3t::SetSceneClearColour(0xff000000U);
 }
 
 void FinishSaveTask(SaveTaskData& save, S2SaveResult result) {
@@ -3762,29 +3764,29 @@ HLib::Task* SM_Init_Enqueue(std::int32_t initializationMode) {
         saveTaskData->updateCallback = SaveTaskIdle;
         saveTaskData->preRenderCallback = SaveScreenInitialize;
         saveTaskData->word0 = 0;
+    }
+    currentSaveState = 0;
+    SetSceneInfos(g_actNumber, g_currentMap, g_entryPoint);
+    EV_SetCanDoAreaJumpTo(true);
+    if (saveTaskData) {
         saveTaskData->field590 = saveTaskData->field598 =
             saveTaskData->field5a0 = saveTaskData->field5a8 =
             saveTaskData->field5b0 = saveTaskData->field5b8 =
             saveTaskData->field5c0 = saveTaskData->field5c8 =
                 std::numeric_limits<std::uint64_t>::max();
-        const std::uint32_t resume02 =
-            LoadSaveSpriteTexture("/SPRITE/RESUME02.SPR");
-        const std::uint32_t resume03 =
-            LoadSaveSpriteTexture("/SPRITE/RESUME03.SPR");
-        if (resume02 != std::numeric_limits<std::uint32_t>::max()) {
-            saveTaskData->field590 =
-                (saveTaskData->field590 & 0x00000000ffffffffULL) |
-                (static_cast<std::uint64_t>(resume02) << 32U);
+        void *const resume02 = LoadLegacySceneFile("sprite", "RESUME02.SPR", SAVE_SPRITE_FILE);
+        if (resume02) {
+            const std::uint32_t texture = static_cast<std::uint32_t>(ReadTexnTexture(resume02));
+            saveTaskData->field590 = (saveTaskData->field590 & 0x00000000ffffffffULL) | (static_cast<std::uint64_t>(texture) << 32U);
+            HLib::FreeTaskData(resume02);
         }
-        if (resume03 != std::numeric_limits<std::uint32_t>::max()) {
-            saveTaskData->field598 =
-                (saveTaskData->field598 & 0xffffffff00000000ULL) |
-                resume03;
+        void *const resume03 = LoadLegacySceneFile("sprite", "RESUME03.SPR", SAVE_SPRITE_FILE);
+        if (resume03) {
+            const std::uint32_t texture = static_cast<std::uint32_t>(ReadTexnTexture(resume03));
+            saveTaskData->field598 = (saveTaskData->field598 & 0xffffffff00000000ULL) | texture;
+            HLib::FreeTaskData(resume03);
         }
     }
-    currentSaveState = 0;
-    SetSceneInfos(g_actNumber, g_currentMap, g_entryPoint);
-    EV_SetCanDoAreaJumpTo(true);
     return saveTask;
 }
 

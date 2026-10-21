@@ -16,6 +16,7 @@
 #include <vector>
 
 namespace shenmue::s2 {
+inline constexpr shen_name SAVE_SPRITE_FILE{SHEN_NAME(USER)};
 inline constexpr shen_name SNAPSHOT_CHARACTER_ID_FILE{SHEN_NAME(SNCF)};
 inline constexpr shen_name TITLE_IMAGE_SPRITE_FILE{SHEN_NAME(TTFL)};
 inline constexpr shen_name TITLE_AREA_SPRITE_FILE{SHEN_NAME(NVTT)};

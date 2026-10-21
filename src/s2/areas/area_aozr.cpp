@@ -426,9 +426,10 @@ void WaitStart_Callback(void *data) {
         HLib::SetCurrentTaskTo(Done_Callback);
         return;
     }
+    ++work->elapsed;
     if (work->elapsed == 100)
         ctrlStopSubtitles();
-    ++work->elapsed;
+
     if (GetShouldRenderIcons(RenderIconSlot::ActionSelector))
         return;
     if (work->elapsed <= 100)

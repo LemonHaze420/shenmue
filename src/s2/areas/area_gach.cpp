@@ -497,7 +497,6 @@ void InitGach() {
     fadeOutFrames = 0;
     prizeRandom = 0;
 }
-// @verified - p
 void QueueGach(std::uintptr_t parameters) {
     const GachEnqueueParams *const request = reinterpret_cast<const GachEnqueueParams *>(parameters);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(GachMainCallback, 5, 0x0b, sizeof(GachTaskWork), GACH_TASK);
@@ -523,8 +522,8 @@ void QueueGach(std::uintptr_t parameters) {
     EV_scenApplyPosOrRotToPartOf(work->machine, 152, &originalPartPosition[0], &originalPartRotation[0], EventCharacterPartTransformMode::Get);
     EV_scenApplyPosOrRotToPartOf(work->machine, 153, &originalPartPosition[1], &originalPartRotation[1], EventCharacterPartTransformMode::Get);
     for (shen_name name : controllerNames) {
-        EV_SetCharaControllerFlags(name, 1, NpcCharacterControllerState::Disabled);
-        EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(name, ApplyGravity, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(name, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     }
     EV_SetNewSceneIndex();
     EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("GACH"), 0);
@@ -866,7 +865,6 @@ void GachHandReturnCallback(void *data) {
     }
     ++work->returnFrames;
 }
-// @verified - p
 void GachExitCallback(void *data) {
     using enum CameraState;
     GachTaskWork *const work = static_cast<GachTaskWork *>(data);
@@ -884,8 +882,8 @@ void GachExitCallback(void *data) {
     HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
     for (shen_name name : {GACH_BASE, GACH_TARGET, GACH_HAND_BASE, GACH_CAMERA})
         SetScenarioCharacterKillMode(name, 1);
-    EV_SetCharaControllerFlags(GACH_RYO, 1, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(GACH_RYO, 3, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(GACH_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(GACH_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     UpdateMotionWorkWithPosition(scenFindMotionwork(GACH_RYO), nullptr, 0);

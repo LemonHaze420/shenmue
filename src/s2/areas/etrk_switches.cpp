@@ -104,7 +104,6 @@ void EtrkPrepareSwitches(EtrkWork &work) {
     camCtrlDisableFilmBars();
     EV_EventSetUpHelpIcon_0(0x57, 0);
 }
-// @verified - p
 std::int32_t EtrkPollSwitches(EtrkWork &work) {
     const std::int32_t remaining = work.remaining--;
     if (remaining >= 1) {
@@ -113,7 +112,7 @@ std::int32_t EtrkPollSwitches(EtrkWork &work) {
         GetBattleDataConfig(0, ETRK_CANCEL);
         if (work.moving >= 1) {
             Vector3 position;
-            EV_GetCharaPosition(ETRK_HAND, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
+            EV_GetCharaPosition(ETRK_HAND, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
             position.x += (work.switches[work.selection].position.x - position.x) / static_cast<float>(work.moving);
             EV_AT_SetPos(ETRK_HAND, EventTransformFlags::AllAxes, position);
             --work.moving;

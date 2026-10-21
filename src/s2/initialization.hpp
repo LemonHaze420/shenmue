@@ -10,6 +10,7 @@ void SetRootRenderDeferredMode(std::int32_t mode) noexcept;
 void SetUnusedEventState(std::int32_t state) noexcept;
 void SetShouldReturnToTitleScreen(std::int32_t requested) noexcept;
 std::int32_t GetShouldReturnToTitleScreen() noexcept;
+void SetRootSaveTransitionEnabled(std::int32_t enabled) noexcept;
 void SetRootSoftResetEnabled(std::int32_t enabled) noexcept;
 
 } // namespace shenmue::s2

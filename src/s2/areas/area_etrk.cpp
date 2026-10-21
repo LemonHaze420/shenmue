@@ -47,11 +47,10 @@ void RunEtrk(std::uintptr_t entry) {
     }
     EtrkSetUp(*work);
 }
-// @verified - p
 void EtrkSetUp(EtrkWork &work) {
     SetPlayerControlEnabled(0);
-    EV_SetCharaControllerFlags(ETRK_RYO, 1, static_cast<NpcCharacterControllerState>(0));
-    EV_SetCharaControllerFlags(ETRK_RYO, 3, static_cast<NpcCharacterControllerState>(0));
+    EV_SetCharaControllerFlags(ETRK_RYO, ApplyGravity, NpcCharacterControllerState ::Disabled);
+    EV_SetCharaControllerFlags(ETRK_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState ::Disabled);
     SetPlayerGameFlags(PlayerGameFlagMode::Bit2, nullptr);
     EV_SetNewSceneIndex();
     EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ETRK"), 0);
@@ -142,11 +141,10 @@ void EtrkPrepareExit(EtrkWork &work) {
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     HLib::SetupTaskDelay(30);
 }
-// @verified - p
 void EtrkExit() {
     SetPlayerControlEnabled(1);
-    EV_SetCharaControllerFlags(ETRK_RYO, 1, static_cast<NpcCharacterControllerState>(1));
-    EV_SetCharaControllerFlags(ETRK_RYO, 3, static_cast<NpcCharacterControllerState>(1));
+    EV_SetCharaControllerFlags(ETRK_RYO, ApplyGravity, NpcCharacterControllerState ::Enabled);
+    EV_SetCharaControllerFlags(ETRK_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState ::Enabled);
     SetPlayerGameFlags(PlayerGameFlagMode::Bit2, reinterpret_cast<void *>(1));
     AT_SetLocalBaseChara(ETRK_RYO, ETRK_INVALID);
     AT_SetLocalBaseChara(ETRK_HAND, ETRK_INVALID);

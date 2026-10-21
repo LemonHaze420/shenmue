@@ -75,6 +75,7 @@ std::int32_t rootRenderDeferredMode = 0;
 std::int32_t unusedEventState = -1;
 std::int32_t shouldReturnToTitleScreen{};
 std::int32_t rootSoftResetEnabled{};
+std::int32_t rootSaveTransitionEnabled{1};
 
 std::int32_t g_debugCameraDisplay{};
 std::array<std::int32_t, 9> cameraProperties{};
@@ -210,6 +211,8 @@ std::filesystem::path gameRoot() {
 
 bool Initialization(int, char **) {
     SetSoftResetInputEnabled(0);
+    rootSoftResetEnabled = 0;
+    rootSaveTransitionEnabled = 1;
     (void)InitializeHLibMemory(0x1200000);
     g_characterShadowRuntime = g_characterShadowStorage.data();
     GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Start);
@@ -307,6 +310,11 @@ void SetShouldReturnToTitleScreen(std::int32_t requested) noexcept {
 std::int32_t GetShouldReturnToTitleScreen() noexcept {
     return shouldReturnToTitleScreen;
 }
+// @verified - p
+void SetRootSaveTransitionEnabled(std::int32_t enabled) noexcept {
+    rootSaveTransitionEnabled = enabled;
+}
+
 // @verified - p: SetRootSoftResetEnabled.
 void SetRootSoftResetEnabled(std::int32_t enabled) noexcept {
     rootSoftResetEnabled = enabled;
