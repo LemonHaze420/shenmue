@@ -8,6 +8,7 @@
 #include "s2/hlib.hpp"
 #include "s2/lighting.hpp"
 #include "s2/map_control.hpp"
+#include "s2/map_assets.hpp"
 #include "s2/memo.hpp"
 #include "s2/model_component.hpp"
 #include "s2/motion_work.hpp"
@@ -171,7 +172,7 @@ void AreaWTA0Init() {
     initializing = 0;
 }
 void AreaWTA0Cleanup(std::int32_t afternoon, std::uint32_t) {
-    SetDefaultVS();
+    SetMapModelDataDefaultVertexShader();
     EV_SetObjectFlagByIndex(1, afternoon ? 0 : 1);
     EV_SetObjectFlagByIndex(2, afternoon ? 1 : 0);
     EV_lightLoad(shen_name{afternoon ? SHEN_NAME(0001) : SHEN_NAME(0000)});

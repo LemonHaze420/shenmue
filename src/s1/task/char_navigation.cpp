@@ -1714,9 +1714,12 @@ void PTMV_ControlTrailFollow(Character *character, Character *source, std::uint8
 }
 
 void PTTM_Allocate(Character *character) {
-    constexpr auto token = SHEN_NAME(PTTM);
-    if (AllocateHeapMemoryMODL(character, token, sizeof(TimedPartyWork), nullptr)) {
-        if (CharacterComponentNode *const component = HLib_GetCharacterComponent(character, token))
+    constexpr shen_name token = SHEN_NAME(PTTM);
+    TimedPartyWork *const work =
+        static_cast<TimedPartyWork *>(AllocateHeapMemoryMODL(character, token.name, sizeof(TimedPartyWork), motion_detail::MotionComponentNoOp));
+    if (work) {
+        work->active = 0;
+        if (CharacterComponentNode *const component = HLib_GetCharacterComponent(character, token.name))
             component->flags &= ~1U;
     }
 }

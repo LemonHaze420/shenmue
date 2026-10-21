@@ -447,20 +447,9 @@ std::uint32_t vfUpdateContactSlotsAndGroundFlags(VFActor &self) {
 
 
 void vfUpdateGroundHeightAndEnemyContacts(VFActor &actor) {
-    std::uint32_t nearbyMask = 0;
-    float groundOffset = 0.0f;
+    std::int32_t nearbyMask = 0;
+    const float groundOffset = vfAccumEnemyGroundOffsetAndMask(actor.position, nearbyMask);
     const std::uint8_t enemyCount = std::min<std::uint8_t>(g_pFightStage->maxEnemies, static_cast<std::uint8_t>(kEnemyCapacity));
-    for (std::uint8_t index = 0; index < enemyCount; ++index) {
-        VFEnemySlot &slot = g_pFightStage->enemySlots[index];
-        if (!slot.character || slot.state != SS_Cooldown)
-            continue;
-        const float dx = actor.position.x - slot.position.x;
-        const float dz = actor.position.z - slot.position.z;
-        if (std::sqrt(dx * dx + dz * dz) >= 0.7f)
-            continue;
-        nearbyMask |= 1U << index;
-        groundOffset += 0.12f;
-    }
 
     const float target = actor.targetGroundY;
     const float ground = target + groundOffset;
@@ -496,15 +485,13 @@ void vfUpdateGroundHeightAndEnemyContacts(VFActor &actor) {
             (slot.triggerFlags & 0x20U) != 0                            ? 959 :
             (slot.triggerFlags & 1U) != 0                               ? 294 :
                                                                           293;
-        if (slot.fighter) {
-            slot.fighter->defaultReactionAnimationId = animation;
-            if ((slot.fighter->moveFlags & 0x40U) != 0)
-                motion->motionFlags |= 0x80U;
-            else
-                motion->motionFlags &= ~0x80U;
+        vfUpdateDefaultReactionAnim(&slot, static_cast<std::uint16_t>(animation));
+        if ((slot.triggerFlags & 0x40U) != 0)
+            motion->motionFlags |= 0x80U;
+        else
+            motion->motionFlags &= ~0x80U;
         }
     }
-}
 
 void vfclResolveContactPoseConstraints(MotionInformationWork *motion, void *user);
 

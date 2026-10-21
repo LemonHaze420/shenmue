@@ -1651,6 +1651,21 @@ void BeginRainTransitionForFixc(WeatherFixcOwner *fixc, float rainValue, std::in
     }
 }
 
+// @verified - p
+void BeginRippleTransitionForFixc(WeatherFixcOwner *fixc, float rainValue, std::int32_t frames) {
+    WeatherParticleGroup *group;
+    if (static_cast<std::uint32_t>(fixc->mode) < 2U)
+        group = static_cast<WeatherRainOwner *>(fixc->cara)->rippleGroup;
+    else if (fixc->mode == 6)
+        group = static_cast<WeatherParticleGroup *>(fixc->cara);
+    else
+        return;
+    if (group && group->rippleParticles) {
+        const float target = static_cast<float>(TruncateToInt32(static_cast<float>(group->rippleCapacity) * rainValue));
+        BeginWeatherFloatTransition(static_cast<WeatherFloat *>(group->rippleCountLflt), target, frames);
+    }
+}
+
 void AdvanceWeatherInteractionCamera() {
     if (!weatherInteractionCamera || !g_cameraControl)
         return;
@@ -3168,6 +3183,13 @@ std::int32_t SetWeatherRainPressureImmediate(float pressure) {
 void BeginRainPressureTransitionForWeatherEffects(float rainValue, std::int32_t frames) {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         BeginRainTransitionForFixc(static_cast<WeatherFixcOwner *>(node->payload.pointer), rainValue, frames);
+}
+
+// @verified - p
+void ComputeCloudVisibility(float rainValue, std::int32_t frames) {
+    for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
+        BeginRippleTransitionForFixc(static_cast<WeatherFixcOwner *>(node->payload.pointer), rainValue, frames);
+    BeginWeatherFloatTransition(GetWeatherRippleLflt(), rainValue, frames);
 }
 
 void UpdateWeatherInteractionCamera() {

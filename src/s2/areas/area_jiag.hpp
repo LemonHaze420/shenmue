@@ -2,7 +2,7 @@
 #include "s2/area_event.hpp"
 #include "s2/area_names.hpp"
 namespace shenmue::s2::areas {
-inline constexpr shen_name JIAG_TASK{SHEN_NAME(minn)};
+inline constexpr shen_name JIAG_TASK{SHEN_NAME(main)};
 inline constexpr shen_name JIAG_LOAD_TASK{SHEN_NAME(load)};
 inline constexpr shen_name JIAG_PLAYER{SHEN_NAME(RYO_)};
 inline constexpr shen_name JIAG_INVALID{0xffffffffU};

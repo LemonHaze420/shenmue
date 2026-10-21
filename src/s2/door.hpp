@@ -69,6 +69,8 @@ static_assert(offsetof(DoorTaskEntry, destinationEntry) == 0x1f4);
 static_assert(offsetof(DoorTaskEntry, previous) == 0x210);
 
 inline constexpr shen_name kDoorTaskToken{SHEN_NAME(DOOR)};
+inline constexpr shen_name kDoorWs00Map{SHEN_NAME(WS00)};
+inline constexpr shen_name kDoorWs00ExcludedEntries[]{SHEN_NAME(R311), SHEN_NAME(R333), SHEN_NAME(R342), SHEN_NAME(R344), SHEN_NAME(R345)};
 inline constexpr shen_name kDoorPlayerName{SHEN_NAME(RYO_)};
 inline constexpr shen_name kDoorQeAreaPrefix{make_shen_name('Q', 'E', '\0', '\0')};
 inline constexpr shen_name kDoorQaAreaPrefix{make_shen_name('Q', 'A', '\0', '\0')};
@@ -182,6 +184,7 @@ const Matrix4x4 *doorFindEntryTransform(std::uint32_t doorId);
 // GetDoorOpeningState: 0 closed, 1 open, 2 no schedule, 3 unrestricted.
 std::int32_t GetDoorOpeningState(shen_name doorId);
 // HasDoorEntry/IsDoorAvailableForNpcRoute: primary-record existence and NPC entrance availability.
+void UnlinkDoorEntry(shen_name doorId);
 bool HasDoorEntry(shen_name doorId);
 bool IsDoorAvailableForNpcRoute(shen_name doorId, const Vector3 &position);
 

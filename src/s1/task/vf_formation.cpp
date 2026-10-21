@@ -405,9 +405,9 @@ void vfApplyEnemySlotAxisOffsetDecay(std::int8_t releasedSlot) {
             if ((flags & mask) == 0)
                 continue;
             group.effectorEnemyMasks[effector] = flags & ~mask;
-            group.effectorGroundOffsets[effector] -= 0.12f;
+            group.effectorGroundOffsets[effector] = static_cast<float>(static_cast<double>(group.effectorGroundOffsets[effector]) - 0.12);
             if (effector == 2) {
-                group.position.y -= 0.12f;
+                group.position.y = static_cast<float>(static_cast<double>(group.position.y) - 0.12);
                 if (group.character)
                     shenApplyTranslationToAll(group.character->entity.node, group.position);
             }
@@ -423,10 +423,10 @@ float vfAccumEnemyGroundOffsetAndMask(const Vector3 &position, std::int32_t &nea
     for (std::uint8_t index = 0; index < stage->maxEnemies; ++index) {
         const VFEnemySlot &group = stage->enemySlots[index];
         if (group.character && group.state == SS_Cooldown &&
-            std::sqrt((position.x - group.position.x) * (position.x - group.position.x) + (position.z - group.position.z) * (position.z - group.position.z)) <
-                0.7f) {
+            static_cast<double>(std::sqrt(
+                (position.x - group.position.x) * (position.x - group.position.x) + (position.z - group.position.z) * (position.z - group.position.z))) < 0.7) {
             nearbyEnemies |= 1 << index;
-            penalty += 0.12f;
+            penalty = static_cast<float>(static_cast<double>(penalty) + 0.12);
         }
     }
     return penalty;
@@ -631,7 +631,7 @@ bool vfTransitionEnemySlotToCooldown(VFMAData *game, VFEnemySlot *group) {
         for (std::size_t effector = 0; effector < 7; ++effector) {
             const float offset = fighter->effectorGroundOffsets[effector];
             group->effectorGroundOffsets[effector] = offset;
-            group->effectorOffsetActive[effector] = std::fabs(group->position.y - offset) > 0.001f ? 1U : 0U;
+            group->effectorOffsetActive[effector] = static_cast<double>(std::fabs(group->position.y - offset)) > 0.001 ? 1U : 0U;
             group->effectorEnemyMasks[effector] = fighter->effectorEnemyMasks[effector];
             activeMask |= fighter->effectorEnemyMasks[effector];
         }
@@ -731,7 +731,7 @@ void vfUpdateRenderOpacityForAll(VFMAData *game) {
     }
     if (stage->teamRespawnTimer[group->teamId] && (g_areaId == SHEN_NAME(MFBT) || static_cast<std::int8_t>(group->triggerFlags) < 0)) {
         Character *const character = group->character;
-        const float alpha = group->fadeAlpha - 0.03f;
+        const float alpha = static_cast<float>(static_cast<double>(group->fadeAlpha) - 0.03);
         group->fadeAlpha = alpha;
         if (alpha > 0.0f) {
             if (character)

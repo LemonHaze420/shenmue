@@ -453,14 +453,7 @@ PackModel *MDLM_FindImage(shen_name chidName, std::int32_t selectionMetric, Pack
 bool MDLM_ActivateCharacterImage(Character *character, const char *chidName, std::uint32_t imageCount) {
     if (!IMGM_Create(character, chidName, imageCount))
         return false;
-    ImageModuleWork *const image = IMGM_GetWork(character);
-    Vector3 position{};
-    Vector3 *positionPointer = nullptr;
-    if ((character->motionFlags & 0x3f) == 0x3f) {
-        position = GetPositionForEntity(character->entity.node);
-        positionPointer = &position;
-    }
-    character->model = imgmCreateHandlerForWithPos(character, image, positionPointer);
+
     return character->model != nullptr;
 }
 

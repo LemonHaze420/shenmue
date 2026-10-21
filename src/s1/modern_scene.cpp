@@ -507,9 +507,9 @@ void CommitModelGeometryDraw(D3TDeviceContext *context, const ModelGeometryDraw 
     }
     if (!noPixelShader) {
         const std::uint8_t alphaToCoverage = material.blendType == 4 && !pass.deferred && (pass.type == 0 || pass.type == 5 || pass.type == 6);
-        if (ReadField<std::uint8_t>(state.blendState.data(), 64) != alphaToCoverage) {
+        if (ReadField<std::uint8_t>(state.blendState.data(), 65) != alphaToCoverage) {
             state.pipelineStateFlags |= d3t::PipelineBlend;
-            WriteField(state.blendState.data(), 64, alphaToCoverage);
+            WriteField(state.blendState.data(), 65, alphaToCoverage);
         }
         BindConstantBuffer(context, 3, 5, runtime.constantBuffer);
         if (runtime.textures[0]) {

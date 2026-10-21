@@ -2,6 +2,7 @@
 
 #include "s2/character.hpp"
 #include "s2/hlib.hpp"
+#include "s2/frame_pacing.hpp"
 #include "s2/mt7.hpp"
 #include "s2/model_component.hpp"
 #include "s2/camera.hpp"
@@ -1217,7 +1218,7 @@ void PrepareLowerFace(FacialModelResource &face, const void *model, std::int32_t
 
 void UpdateFacialMorphs(FacialModelResource &face) {
     FacialModelData &data = face.data;
-    const float delta = HLib::GetScaledDeltaTick();
+    const float delta = g_stabilizeFps != 0 ? g_stabilizedFrameTime * 30.0f : 1.0f;
     if (data.eyelidDuration > 0.0f) {
         if (data.eyelidDuration <= data.eyelidFrame) {
             if (data.flags & 0x200U) {

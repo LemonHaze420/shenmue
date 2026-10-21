@@ -6,6 +6,7 @@
 #include "s2/surface_wave.hpp"
 
 #include "d3t/buffer.hpp"
+#include "d3t/archive_handles.hpp"
 #include "d3t/image_texture_loader.hpp"
 #include "d3t/texture.hpp"
 #include "d3t/ui_renderer.hpp"
@@ -29,6 +30,7 @@
 #include "s2/model_component.hpp"
 #include "s2/model_image.hpp"
 #include "s2/motion_pose.hpp"
+#include "s2/motion.hpp"
 #include "s2/mt7.hpp"
 #include "s2/motion_work.hpp"
 #include "s2/hand.hpp"
@@ -61,6 +63,7 @@
 
 namespace shenmue::s2 {
 std::uint32_t g_airClearColour{};
+std::int32_t g_previousSkyWeatherMode{}, g_currentSkyWeatherMode{};
 std::int32_t g_airDrawDomeEnabled = 1;
 std::int32_t g_airDrawCloudsEnabled = 1;
 std::int32_t g_airDrawPlanetsEnabled = 1;
@@ -2261,16 +2264,10 @@ struct AirPresentation {
 };
 
 struct AirWeatherPresentation {
-    std::int32_t mode{-1};
-    std::int32_t currentTextureIndex{-1};
-    std::int32_t pendingMode{-1};
-    std::int32_t pendingTextureIndex{-1};
-    std::int32_t transitionFrames{};
-    std::int32_t transitionLength{};
+    AirCloudTextureState clouds;
     std::uint32_t previousSecondsSince1980{};
     std::uint32_t secondsSince1980{};
-    bool precipitation{};
-    bool cloudy{};
+
     std::uint32_t skyColour{0xff204cf8U};
     std::uint32_t cloudColour{defaultDaytimeSkyColour};
 };
@@ -2579,11 +2576,7 @@ void ReleaseAirGeometry() {
     airPresentation.doomBytes.clear();
     airPresentation.doomBytes.shrink_to_fit();
     airPresentation.geometryReady = false;
-    airWeatherPresentation.currentTextureIndex = -1;
-    airWeatherPresentation.pendingMode = -1;
-    airWeatherPresentation.pendingTextureIndex = -1;
-    airWeatherPresentation.transitionFrames = 0;
-    airWeatherPresentation.transitionLength = 0;
+    airWeatherPresentation.clouds = {};
     airPresentation.cloudBlends = {1.0f, 0.0f};
     airPresentation.cloudBlendMax = {1.0f, 1.0f};
     airPresentation.cloudUvOffsets = {};
@@ -2625,104 +2618,125 @@ bool IsAirTextureUsedElsewhere(const MT7Model *excluded, std::uint32_t handle) {
     });
 }
 
-bool LoadCloudLayerTexture(AirModelSlot slot, std::int32_t textureIndex) {
-    if (!airPresentation.geometryReady || textureIndex < 0)
-        return false;
-    std::array<char, 32> path{};
-    const int length = std::snprintf(path.data(), path.size(), "/sprite/AIR_TX%02d.SPR", textureIndex);
-    if (length < 0 || static_cast<std::size_t>(length) >= path.size())
-        return false;
-    std::vector<std::byte> sprite;
-    if (!LoadArchivedAirFile(path.data(), sprite))
-        return false;
-    const std::span<const std::byte> bytes{sprite.data(), sprite.size()};
-    std::uint32_t signature{};
-    if (!ReadAirValue(bytes, 0, signature) || signature != texnSignature || bytes.size() < 16) {
-        return false;
-    }
+void ReadSpriteForSkyboxObjects(std::int32_t textureIndex, std::int32_t layer, float blendMax, const std::byte *sprite) {
+    airPresentation.cloudBlendMax[static_cast<std::size_t>(layer)] = blendMax;
+    airWeatherPresentation.clouds.textureIndices[static_cast<std::size_t>(layer)] = textureIndex;
+    const std::span<const std::byte> bytes{sprite, 0x8800};
+
     const std::uint32_t handle = UploadAirPvrTexture(bytes, 16);
     if (!handle)
-        return false;
-    MT7Model &cloud = airPresentation.models[static_cast<std::size_t>(slot)];
+        return;
+    MT7Model &cloud = airPresentation.models[static_cast<std::size_t>(AirModelSlot ::CloudA) + static_cast<std::size_t>(layer)];
     const std::uint32_t previous = cloud.textures.empty() ? 0 : cloud.textures[0].textureIndex;
     SetAirModelTexture(cloud, 0, handle);
-    if (previous && previous != handle && !IsAirTextureUsedElsewhere(&cloud, previous)) {
+    if (previous && previous != handle && !IsAirTextureUsedElsewhere(&cloud, previous))
         d3t::InitTexture2DResource(previous);
-    }
-    return true;
 }
 
-void CompleteCloudTransition() {
-    if (airWeatherPresentation.pendingMode < 0)
+// @verified - p
+void ReadSkyboxTexture(std::int32_t textureIndex, std::int32_t layer, float blendMax) {
+    if (airWeatherPresentation.clouds.textureIndices[static_cast<std::size_t>(layer)] == textureIndex)
         return;
-    std::swap(airPresentation.models[static_cast<std::size_t>(AirModelSlot::CloudA)], airPresentation.models[static_cast<std::size_t>(AirModelSlot::CloudB)]);
+    char filename[16];
+    std::snprintf(filename, sizeof(filename), "AIR_TX%02d.SPR", textureIndex);
+    (void)LoadLegacyFiles("sprite", filename, g_armMotionMemory, 0x8800);
+    ReadSpriteForSkyboxObjects(textureIndex, layer, blendMax, g_armMotionMemory);
+}
+// @verified - p
+std::int32_t ReadCloudSpriteTexture(std::int32_t textureIndex, std::int32_t layer, float blendMax) {
+    AirCloudTextureState &clouds = airWeatherPresentation.clouds;
+    if (!clouds.sprite)
+        return 1;
+    const std::int32_t state = d3t::CheckFileInfo(clouds.sprite);
+    if (state == 3) {
+        (void)ReturnZero();
+        d3t::ReadCachedFile(clouds.sprite);
+        ReadSpriteForSkyboxObjects(textureIndex, layer, blendMax, g_armMotionMemory);
+        clouds.sprite = nullptr;
+        clouds.loadingTextureIndex = -1;
+        return 1;
+    }
+    if (state != 4)
+        return 0;
+    nullsub();
+    return 1;
+}
+
+// @verified - p
+std::int32_t SetupCloudTexture(std::int32_t textureIndex, std::int32_t frames, std::int32_t mode, float blendMax) {
+    AirCloudTextureState &clouds = airWeatherPresentation.clouds;
+    if (!clouds.sprite) {
+        if (clouds.active)
+            return 0;
+        clouds.active = 1;
+        clouds.frames = frames;
+        clouds.loadingTextureIndex = textureIndex;
+        char path[32];
+        std::snprintf(path, sizeof(path), "sprite\\AIR_TX%02d.SPR", textureIndex);
+        clouds.sprite = d3t::LargeFile_OpenPathHandle(path);
+        (void)d3t::GetFileFromCachedBuffer(clouds.sprite, 17, g_armMotionMemory, 0);
+    }
+    if (!ReadCloudSpriteTexture(textureIndex, 1, blendMax))
+        return 0;
+    const float step = frames ? 1.0f / static_cast<float>(frames) : 0.0f;
+    airPresentation.cloudBlends[0] = 1.0f;
+    airPresentation.cloudBlends[1] = mode == 1 ? 1.0f : 0.0f;
+    clouds.blendSteps[0] = step;
+    clouds.blendSteps[1] = -step;
+    nullsub();
+    return 1;
+}
+// @verified - p
+void ResetCloudScaling() {
+    AirCloudTextureState &clouds = airWeatherPresentation.clouds;
+    std ::swap(airPresentation.models[static_cast<std::size_t>(AirModelSlot::CloudA)], airPresentation.models[static_cast<std::size_t>(AirModelSlot::CloudB)]);
     std::swap(airPresentation.cloudBlendMax[0], airPresentation.cloudBlendMax[1]);
     std::swap(airPresentation.cloudUvOffsets[0], airPresentation.cloudUvOffsets[1]);
     std::swap(airPresentation.planetLayers[0], airPresentation.planetLayers[1]);
-    airWeatherPresentation.mode = airWeatherPresentation.pendingMode;
-    airWeatherPresentation.currentTextureIndex = airWeatherPresentation.pendingTextureIndex;
-    airWeatherPresentation.pendingMode = -1;
-    airWeatherPresentation.pendingTextureIndex = -1;
-    airWeatherPresentation.transitionFrames = 0;
-    airWeatherPresentation.transitionLength = 0;
-    airPresentation.cloudBlends = {1.0f, 0.0f};
+    std::swap(airPresentation.cloudBlends[0], airPresentation.cloudBlends[1]);
+    std::swap(clouds.blendSteps[0], clouds.blendSteps[1]);
+    std::swap(clouds.textureIndices[0], clouds.textureIndices[1]);
+}
+// @verified - p
+void ResetCloudScaling_0() {
+    AirCloudTextureState &clouds = airWeatherPresentation.clouds;
+    if (!clouds.active)
+        return;
+    ResetCloudScaling();
+    airPresentation.cloudBlends[0] = 1.0f;
+    clouds.blendSteps[0] = 0.0f;
+    airPresentation.cloudBlends[1] = 0.0f;
+    clouds.blendSteps[1] = 0.0f;
+    nullsub();
+    clouds.active = 0;
+    clouds.frames = 0;
+    if (clouds.sprite) {
+        (void)ReturnZero();
+        d3t::ReadCachedFile(clouds.sprite);
+        clouds.sprite = nullptr;
+        clouds.loadingTextureIndex = -1;
+    }
 }
 
-void BeginCloudMode(std::int32_t mode, bool immediate, std::int32_t transitionLength) {
-    if (mode < 0 || static_cast<std::size_t>(mode) >= cloudTextureIndices.size()) {
-        return;
-    }
-    const std::int32_t textureIndex = cloudTextureIndices[static_cast<std::size_t>(mode)];
-    if (!airPresentation.geometryReady) {
-        airWeatherPresentation.mode = mode;
-        airWeatherPresentation.currentTextureIndex = -1;
-        return;
-    }
-    if (airWeatherPresentation.currentTextureIndex < 0 || immediate) {
-        if (LoadCloudLayerTexture(AirModelSlot::CloudA, textureIndex)) {
-            airWeatherPresentation.mode = mode;
-            airPresentation.cloudBlendMax[0] = cloudBlendMaxValues[static_cast<std::size_t>(mode)];
-            airWeatherPresentation.currentTextureIndex = textureIndex;
-            airWeatherPresentation.pendingMode = -1;
-            airWeatherPresentation.pendingTextureIndex = -1;
-            airWeatherPresentation.transitionFrames = 0;
-            airWeatherPresentation.transitionLength = 0;
-            airPresentation.cloudBlends = {1.0f, 0.0f};
-        }
-        return;
-    }
-    if (airWeatherPresentation.pendingMode == mode || (airWeatherPresentation.pendingMode < 0 && airWeatherPresentation.mode == mode)) {
-        return;
-    }
-    CompleteCloudTransition();
-    if (textureIndex == airWeatherPresentation.currentTextureIndex) {
-        airWeatherPresentation.mode = mode;
-        return;
-    }
-    if (!LoadCloudLayerTexture(AirModelSlot::CloudB, textureIndex))
-        return;
-    airPresentation.cloudBlendMax[1] = cloudBlendMaxValues[static_cast<std::size_t>(mode)];
-    airWeatherPresentation.pendingMode = mode;
-    airWeatherPresentation.pendingTextureIndex = textureIndex;
-    airWeatherPresentation.transitionLength = std::max(1, transitionLength);
-    airWeatherPresentation.transitionFrames = airWeatherPresentation.transitionLength + 1;
-    airPresentation.cloudBlends = {1.0f, airWeatherPresentation.currentTextureIndex == 2 ? 1.0f : 0.0f};
-}
-
+// @verified - p
 void AdvanceCloudTransition() {
-    if (airWeatherPresentation.transitionFrames <= 0 || airWeatherPresentation.transitionLength <= 0) {
+    AirCloudTextureState &clouds = airWeatherPresentation.clouds;
+    if (!clouds.active || clouds.sprite)
         return;
-    }
+    clouds.frames = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(clouds.frames) - 1U);
+    float first = airPresentation.cloudBlends[0];
+    float second = airPresentation.cloudBlends[1];
     if (airWeatherPresentation.secondsSince1980 - airWeatherPresentation.previousSecondsSince1980 > 60U) {
-        airPresentation.cloudBlends[0] -= 0.05f;
-        airPresentation.cloudBlends[1] += 0.05f;
+        first -= 0.050000001f;
+        second += 0.050000001f;
     }
-    const float step = 1.0f / static_cast<float>(airWeatherPresentation.transitionLength);
-    airPresentation.cloudBlends[0] = std::clamp(airPresentation.cloudBlends[0] - step, 0.0f, 1.0f);
-    airPresentation.cloudBlends[1] = std::clamp(airPresentation.cloudBlends[1] + step, 0.0f, 1.0f);
-    if (--airWeatherPresentation.transitionFrames == 0) {
-        CompleteCloudTransition();
-    }
+    first -= clouds.blendSteps[0];
+    second -= clouds.blendSteps[1];
+    airPresentation.cloudBlends[0] = first > 1.0f ? 1.0f : first < 0.0f ? 0.0f : first;
+    airPresentation.cloudBlends[1] = second > 1.0f ? 1.0f : second < 0.0f ? 0.0f : second;
+    nullsub();
+    if (clouds.frames < 0)
+        ResetCloudScaling_0();
 }
 
 // @verified - p
@@ -3188,45 +3202,110 @@ std::uint64_t ResetPlanetLayerOffset(std::int32_t layer) {
     return std::uint64_t{0};
 }
 
-std::int32_t UpdateAirWeatherPresentation(float cloud, float rain, float snow, std::int32_t hour, std::int32_t minute, bool immediate) {
-    if (!airWeatherPresentation.precipitation && (rain >= 0.1f || snow >= 0.1f)) {
-        airWeatherPresentation.precipitation = true;
-    } else if (airWeatherPresentation.precipitation && rain < 0.05f && snow < 0.05f) {
-        airWeatherPresentation.precipitation = false;
-    }
-    if (!airWeatherPresentation.cloudy && cloud >= 0.25f) {
-        airWeatherPresentation.cloudy = true;
-    } else if (airWeatherPresentation.cloudy && cloud < 0.2f) {
-        airWeatherPresentation.cloudy = false;
-    }
+// @verified - p
+std::int32_t GetHasInitCloudTextures() {
+    return airWeatherPresentation.clouds.active;
+}
 
+// @verified - p
+std::int32_t GetCurrentAirLayerIndex() {
+    return airWeatherPresentation.clouds.loadingTextureIndex;
+}
+
+// @verified - p
+bool GetIsCurrentCloudTextureValid() {
+    return airWeatherPresentation.clouds.sprite != nullptr;
+}
+
+// @verified - p
+void SetSkyWeatherModes(std::int32_t previous, std::int32_t current) {
+    g_previousSkyWeatherMode = previous;
+    g_currentSkyWeatherMode = current;
+}
+
+// @verified - p
+void UpdateWeatherClouds(WeatherAir *air, std::int32_t frames) {
+    if (air->field44 == 0) {
+        if (air->rain >= 0.1f || air->snow >= 0.1f)
+            air->field44 = 1;
+    } else if (air->field44 == 1 && air->rain < 0.050000001f && air->snow < 0.050000001f) {
+        air->field44 = 0;
+    }
+    if (air->field40 == 0) {
+        if (air->cloud >= 0.25f)
+            air->field40 = 1;
+    } else if (air->field40 == 1 && air->cloud < 0.2f) {
+        air->field40 = 0;
+    }
     std::int32_t mode = 1;
-    if (airWeatherPresentation.precipitation) {
+    if (air->field44)
         mode = 5;
-    } else if (airWeatherPresentation.cloudy) {
+    else if (air->field40)
         mode = 6;
-    } else {
-        const std::int32_t minuteOfDay = hour * 60 + minute;
-        if (minuteOfDay < 330)
+    else {
+        const std::int32_t minute = air->hour * 60 + air->minute;
+        if (minute < 330)
             mode = 4;
-        else if (minuteOfDay < 630)
+        else if (minute < 630)
             mode = 0;
-        else if (minuteOfDay < 900)
+        else if (minute < 900)
             mode = 1;
-        else if (minuteOfDay < 960)
+        else if (minute < 960)
             mode = 2;
-        else if (minuteOfDay < 1080)
+        else if (minute < 1080)
+            mode = 3;
+        else
+            mode = 4;
+    }
+    if (air->mode == mode)
+        return;
+    const std::int32_t textureIndex = cloudTextureIndices[static_cast<std::size_t>(mode)];
+    if (GetHasInitCloudTextures() && GetCurrentAirLayerIndex() != textureIndex)
+        ResetCloudScaling_0();
+    DateTime time;
+    GetCurrentDateTime(time);
+    if (frames == 500) {
+        if (static_cast<std::uint8_t>(time.hour - 5) > 12U && air->mode <= 4 && mode >= 5)
+            frames = 800;
+    } else if (mode < 5 && static_cast<std::uint32_t>(air->mode - 5) > 1U) {
+        frames = 500;
+    }
+    const std::int32_t previousTexture = air->mode == -1 ? 0 : cloudTextureIndices[static_cast<std::size_t>(air->mode)];
+    if (SetupCloudTexture(textureIndex, frames, previousTexture == 2 ? 1 : 0, cloudBlendMaxValues[static_cast<std::size_t>(mode)])) {
+        SetSkyWeatherModes(air->mode, mode);
+        air->mode = mode;
+    }
+}
+
+// @verified - p
+void UpdateClouds(WeatherAir *air) {
+    air->field44 = air->rain >= 0.1f || air->snow >= 0.1f;
+    air->field40 = air->cloud > 0.25f;
+
+    std::int32_t mode = 0;
+    if (air->field44)
+        mode = 5;
+    else if (air->field40)
+        mode = 6;
+    else {
+        const std::int32_t minute = air->hour * 60 + air->minute;
+        if (minute < 330)
+            mode = 4;
+        else if (minute < 630)
+            mode = 0;
+        else if (minute < 900)
+            mode = 1;
+        else if (minute < 960)
+            mode = 2;
+        else if (minute < 1080)
             mode = 3;
         else
             mode = 4;
     }
 
-    std::int32_t transitionLength = 500;
-    if ((hour < 5 || hour > 17) && airWeatherPresentation.mode >= 0 && airWeatherPresentation.mode <= 4 && mode >= 5) {
-        transitionLength = 800;
-    }
-    BeginCloudMode(mode, immediate, transitionLength);
-    return mode;
+    ReadSkyboxTexture(cloudTextureIndices[static_cast<std::size_t>(mode)], 0, cloudBlendMaxValues[static_cast<std::size_t>(mode)]);
+    SetSkyWeatherModes(air->mode, mode);
+    air->mode = mode;
 }
 
 void InitializeAirPresentation(const void *mapInfo) {
@@ -3243,9 +3322,9 @@ void InitializeAirPresentation(const void *mapInfo) {
         airSkyEnabled = textureIndex != -1;
     }
     LoadAirGeometry();
-    if (airSkyEnabled && textureIndex >= 0 && LoadCloudLayerTexture(AirModelSlot::CloudA, textureIndex)) {
-        airWeatherPresentation.currentTextureIndex = textureIndex;
-    }
+    if (airSkyEnabled && textureIndex >= 0)
+        ReadSkyboxTexture(textureIndex, 0, 1.0f);
+
     d3t::SetSceneClearColour(airSkyEnabled ? airWeatherPresentation.cloudColour : g_airClearColour);
 }
 

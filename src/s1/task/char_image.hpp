@@ -41,6 +41,7 @@ void *IMGM_GetCurrentImageModel(Character *character);
 ImageModuleWork *IMGM_GetWork(Character *character);
 std::uint32_t IMGM_GetImageName(Character *character);
 ImageModuleWork *IMGM_Alloc(Character *character);
+void IMGM_SetupChara(Character *character, ImageModuleWork *image);
 bool IMGM_Create(Character *character, const char *name, std::uint32_t imageCount = 0);
 void *imgmCreateHandlerForWithPos(Character *character, ImageModuleWork *image, Vector3 *position);
 void IMGM_ReleaseImages(ImageModuleWork *image);

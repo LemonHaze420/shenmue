@@ -734,15 +734,17 @@ void FreeWeatherAir(WeatherAir *air) {
     HLib::FreeTaskData(air);
 }
 
-void PublishWeatherAir() {
+void PublishWeatherAir(bool initial = false) {
     weatherAir->cloud = cloud->current = FlushSmall(cloud->current);
     weatherAir->rain = GetWeatherPressure();
     weatherAir->auxiliary = auxiliary->current = FlushSmall(auxiliary->current);
     if (weatherUpdateFog == 1)
         UpdateFog(*weatherAir);
     if (weatherUpdateClouds == 1) {
-        weatherAir->mode =
-            UpdateAirWeatherPresentation(weatherAir->cloud, weatherAir->rain, weatherAir->snow, weatherAir->hour, weatherAir->minute, weatherAir->mode < 0);
+        if (initial)
+            UpdateClouds(weatherAir);
+        else
+            UpdateWeatherClouds(weatherAir, weatherSkyTransitionFrames);
     }
     if (weatherUpdateWind == 1) {
         SetWeatherParticleRainColour(wairPackRainColorRGBA(weatherAir));
@@ -801,6 +803,7 @@ void AdvanceOverride(std::size_t channel) {
 void BeginWeatherRainTransition(float target, std::int32_t frames) {
     BeginRainPressureTransitionForWeatherEffects(target, frames);
     BeginTransition(*rain, target, frames);
+    ComputeCloudVisibility(target, frames);
 }
 
 void UpdateWeatherForCurrentTimeImmediate() {
@@ -860,6 +863,7 @@ void ExecuteWeather_Callback(void *) {
             if (!(pendingOverrides & 10U)) {
                 BeginRainPressureTransitionForWeatherEffects(ReadWeatherChannel(1), 80);
                 BeginTransition(*rain, ReadWeatherChannel(1), 80);
+                ComputeCloudVisibility(ReadWeatherChannel(1), 80);
             }
             BeginTransition(*auxiliary, ReadWeatherChannel(3), 80);
             weatherPublishedHour = forecast.hour;
@@ -1118,7 +1122,7 @@ void UpdateWeather() {
     (void)lfltSetImmediate(cloud, ReadWeatherChannel(0));
     (void)lfltSetImmediate(auxiliary, ReadWeatherChannel(3));
     SetWeatherRainPressureImmediate(ReadWeatherChannel(1));
-    PublishWeatherAir();
+    PublishWeatherAir(true);
 }
 
 std::int64_t RefreshWeatherForCurrentTime(std::int32_t frames) {

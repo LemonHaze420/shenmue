@@ -75,7 +75,8 @@ void AreaJIAGMain(std::uintptr_t) {
     g_usingCustomAuthorCharacterList = 0;
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
-    HLib::SetupTaskDelay(0);
+    if (eventTask)
+        HLib::SetupTimedTask(eventTask, 0);
     HLib::EnqueueTaskWithoutParameter(EVT_UTL_LoadNPCChara_Callback_2, 6, 0x0b, static_cast<std::int32_t>(JIAG_LOAD_TASK.name));
 }
 // @verified - p

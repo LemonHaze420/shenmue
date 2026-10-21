@@ -61,7 +61,7 @@ void InitializeYoruNightScene() {
     if (g_currentMap.name == YORU_SPRING_MAP.name && g_entryPoint != 0) {
         if (g_entryPoint == 1) {
             EV_lightLoad(YORU_LIGHT_ONE);
-            HLib::EnqueueTaskWithoutParameter(areas::E0061SpringCallback, 3, 2, static_cast<std::int32_t>(YORU_SPRING_TASK.name));
+            HLib::EnqueueTaskWithoutParameter(areas::E0061SpringCallback, 3, 2, static_cast<std::int32_t>(YORU_TASK.name));
         } else
             EV_lightLoad(YORU_LIGHT_TWO);
     } else

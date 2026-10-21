@@ -668,7 +668,7 @@ bool AdvanceDoorMotion(DoorEntry &entry) {
 
     PublishDoorBlocker(entry);
     if (!completed) {
-        if (drEntryState == 0 || RegionFamilyCode(doorSearchRegion) != '7')
+        if (doorRuntime.destinationPhase == 0 || RegionFamilyCode(doorRuntime.destinationDoor) != '7')
             drUpdateDoorMotionSound(entry);
         return false;
     }
@@ -2047,7 +2047,8 @@ void UpdateAutomaticDoor(DoorEntry &entry) {
     if (entry.state.family != 7 || !entry.state.primaryResolved || entry.animationTargets.size() < 3) {
         return;
     }
-    (void)AdvanceDoorMotion(entry);
+    if (GetLeafState(entry) == DoorLeafState::ToB || GetLeafState(entry) == DoorLeafState::ToA)
+        (void)AdvanceDoorMotion(entry);
     const bool openingAllowed = GetDoorOpeningState(entry.state.primary) != 0;
     const DoorAreaMetadata *const metadata = GetDataForCurrentMapAndScene(entry.state.primary);
     AutomaticDoorProximity proximity{
@@ -2058,27 +2059,21 @@ void UpdateAutomaticDoor(DoorEntry &entry) {
     };
     ForEachLiveCharacterInMapOrder(CheckAutomaticDoorProximity, &proximity);
     const bool wantsOpen = proximity.characterNear;
-    DoorLeafState leafState = GetLeafState(entry);
-    if (wantsOpen && leafState == DoorLeafState::ToA) {
-        SetLeafState(entry, DoorLeafState::StableA);
-    }
-
+    const DoorLeafState leafState = GetLeafState(entry);
     if (wantsOpen && leafState == DoorLeafState::StableA) {
-        entry.taskEntry->claimant = kDoorTaskToken;
-        (void)StartDoorMotion(entry, 0xf0aaU, DoorLeafState::ToB);
+
+        (void)doorPlayRigidMotion(entry.state.primary, 0xf0aaU, 0.0f, 1.0f);
 
     } else if (!wantsOpen && leafState == DoorLeafState::StableB) {
-        entry.taskEntry->claimant = kDoorTaskToken;
-        (void)StartDoorMotion(entry, 0xf0a9U, DoorLeafState::ToA);
+
+        (void)doorPlayRigidMotion(entry.state.primary, 0xf0a9U, 0.0f, 1.0f);
 
     } else if (wantsOpen && leafState == DoorLeafState::ToA) {
-        const RigidMotion *const closing = LoadRigidMotion(entry.taskEntry->animationId);
-        if (closing) {
-            const float start = static_cast<float>(closing->durationFrames) - entry.taskEntry->motionFrame;
-            entry.taskEntry->claimant = kDoorTaskToken;
-            (void)StartDoorMotion(entry, 0xf0aaU, DoorLeafState::ToB, start);
-        }
+        const float start = entry.taskEntry->motionEndFrame - entry.taskEntry->motionFrame;
+        SetLeafState(entry, DoorLeafState::StableA);
+        (void)doorPlayRigidMotion(entry.state.primary, 0xf0aaU, start, 1.0f);
     }
+
     entry.state.active = entry.taskEntry->motionType == 1;
 }
 
@@ -2259,13 +2254,13 @@ void RecursiveSetDoorViewSpace(MT7Node *node) {
         DoorEntry *const entry = FindDoorEntry(static_cast<std::uint32_t>(IsMDPXorMDP7(node)));
         if (entry) {
             Matrix4x4::GetTransformMatrix(&entry->taskEntry->worldTransform);
-            entry->taskEntry->origin = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
             entry->state.yawRadians = std::atan2(workTransformMatrix.rows[0].z, workTransformMatrix.rows[0].x);
             Matrix4x4_Push();
             const std::uint8_t family = static_cast<std::uint8_t>(entry->state.primary.name >> 8U);
             if (static_cast<std::uint8_t>(family - '5') > 2U)
                 Matrix4x4::preTranslate(0.44999999f, 0.0f, 0.0f);
-            entry->state.interactionPoint = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
+            entry->taskEntry->origin = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
+            entry->state.interactionPoint = entry->taskEntry->origin;
             Matrix4x4::Pop(1);
             UpdateDoorNumberNodes(*entry);
         }
@@ -2893,6 +2888,29 @@ const Vector3 &GetDoorIngressOrigin() {
     return doorRuntime.ingressOrigin;
 }
 
+// @verified - p
+void UnlinkDoorEntry(shen_name doorId) {
+    if (!doorRuntime.entriesActive || !doorRuntime.taskEntries)
+        return;
+    DoorEntry *const entry = FindDoorEntry(doorId.name);
+    if (!entry)
+        return;
+    DoorTaskEntry &data = *entry->taskEntry;
+    data.flags |= 4U;
+    if (data.previous)
+        data.previous->next = data.next;
+    else
+        doorRuntime.sortedHead = data.next;
+    if (data.next)
+        data.next->previous = data.previous;
+    else
+        doorRuntime.sortedTail = data.previous;
+    doorRuntime.sortedEntries.resize(doorRuntime.entries.size());
+    std::size_t count = 0;
+    for (DoorTaskEntry *current = doorRuntime.sortedHead; current; current = current->next)
+        doorRuntime.sortedEntries[count++] = static_cast<std::size_t>(current - doorRuntime.taskEntries);
+    doorRuntime.sortedEntries.resize(count);
+}
 bool HasDoorEntry(shen_name doorId) {
     return FindDoorEntry(doorId.name) != nullptr;
 }
@@ -3298,6 +3316,9 @@ void InitializeDoorRuntime(const MapInfoChunk *doorChunk) {
     doorRuntime.entriesActive = !doorRuntime.entries.empty();
     doorRuntime.sortedHead = doorRuntime.taskEntries;
     doorRuntime.sortedTail = doorRuntime.taskEntries + entryCount - 1;
+    if (g_currentMap == kDoorWs00Map)
+        for (const shen_name door : kDoorWs00ExcludedEntries)
+            UnlinkDoorEntry(door);
     if (hasAutomaticDoor) {
         (void)LoadRigidMotion(0xf0aaU);
         (void)LoadRigidMotion(0xf0a9U);

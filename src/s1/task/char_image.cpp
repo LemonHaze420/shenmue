@@ -220,6 +220,16 @@ ImageModuleWork *IMGM_Alloc(Character *character) {
     }
     return image;
 }
+// @verified - p
+void IMGM_SetupChara(Character *character, ImageModuleWork *image) {
+    Vector3 position;
+    Vector3 *positionPointer = nullptr;
+    if (character && (character->motionFlags & 0x3f) == 0x3f) {
+        position = GetPositionForEntity(character->entity.node);
+        positionPointer = &position;
+    }
+    character->model = imgmCreateHandlerForWithPos(character, image, positionPointer);
+}
 bool IMGM_Create(Character *character, const char *name, std::uint32_t imageCount) {
     if (!character || !name || imageCount > 255)
         return false;
@@ -250,6 +260,7 @@ bool IMGM_Create(Character *character, const char *name, std::uint32_t imageCoun
         slot->selectionMetric = 1;
     }
     image->requestedImage = 0;
+    IMGM_SetupChara(character, image);
     return true;
 }
 

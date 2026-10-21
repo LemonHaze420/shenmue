@@ -1,4 +1,5 @@
 #include "s2/hlib.hpp"
+#include "s2/frame_pacing.hpp"
 #include "s2/pause.hpp"
 
 #include <array>
@@ -884,7 +885,7 @@ void UpdateTimedTask(void *) {
     if (CurrentTask->timedTask.timeUntilExecution <= 0.0f) {
         return;
     }
-    CurrentTask->timedTask.timeUntilExecution -= scaledDeltaTick;
+    CurrentTask->timedTask.timeUntilExecution -= shenGetScaledDeltaTickTime(1.0f);
     if (CurrentTask->timedTask.timeUntilExecution <= 0.0f) {
         CurrentTask->timedTask.timeUntilExecution = 0.0f;
         CurrentTask->activeCallback = CurrentTask->delayedCallback;

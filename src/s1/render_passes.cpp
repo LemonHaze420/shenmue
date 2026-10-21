@@ -1013,7 +1013,7 @@ D3TDeviceContext *DrawFullPass_Quad(const RenderPassHandles *renderPass, DrawPas
         std::uint32_t height = 0;
         if (GetTexture2DDimensions(texture2D, &width, &height) && height && g_originalScreenWidth && g_originalScreenHeight) {
             aspectScale = (static_cast<float>(width) / static_cast<float>(height)) /
-                (static_cast<float>(g_originalScreenHeight) / static_cast<float>(g_originalScreenWidth));
+                (static_cast<float>(g_originalScreenWidth) / static_cast<float>(g_originalScreenHeight));
         }
     }
     const std::array<Vector4, 4> vertices{{
@@ -1142,20 +1142,57 @@ bool DrawNuklearQuads(D3TDeviceContext *context, std::uint32_t renderTarget, std
     return SubmitNuklearQuads(context, renderTarget, texture2D, quads);
 }
 
-bool CompositeNuklearFrame(D3TDeviceContext *context, std::uint32_t texture2D) {
-#if defined(_WIN32)
-    if (!context || !texture2D)
-        return false;
+// @verified - p
+void DrawTexturedQuad(D3TDeviceContext *context, const std::uint32_t *texture2D) {
+    CreateTexture2DInstance(context);
+    SetShaderState(context, g_texturedQuadVertexShader, g_texturedQuadPixelShader, g_fvfLayouts[34]);
 
     // Nuklear renders into its own target.  Composite it with D3T's authored
     // fullscreen pass; CopyResource bypassed the render state and replaced the
     // backbuffer with an empty target before asynchronous UI textures arrived.
-    D3TDeviceContext *const previous = DX11::g_ppD3DDeviceContext;
-    DX11::g_ppD3DDeviceContext = context;
-    const RenderPassHandles pass{texture2D};
-    const bool submitted = DrawFullPass_Quad(&pass, DrawPassOpType::AlphaBlend) != nullptr;
-    DX11::g_ppD3DDeviceContext = previous;
-    return submitted;
+    std::byte *const state = context->renderState.data();
+    constexpr std ::uint64_t blend = 0xf0000291ULL;
+    if (ReadState<std::uint32_t>(state, 0x794) != static_cast<std::uint32_t>(blend))
+        state[0x975] |= std::byte{8};
+    WriteState(state, 0x794, blend);
+    if (ReadState<std::uint64_t>(state, 0x940) != 0 || ReadState<std::uint32_t>(state, 0x950) != 0) {
+        state[0x975] |= std::byte{0x10};
+        const std::array<std::byte, 0x14> disabledDepth{};
+        std::memcpy(state + 0x940, disabledDepth.data(), disabledDepth.size());
+    }
+    if (ReadState<std ::uint32_t>(state, 0x954) != 1U) {
+        state[0x975] |= std::byte{0x20};
+        WriteState(state, 0x954, std ::uint32_t{1});
+    }
+    if (ReadState<std::uint64_t>(state, 0x534) != 5U) {
+        const std::uint16_t dirty = ReadState<std::uint16_t>(state, 0x966) | 1U;
+        WriteState(state, 0x966, dirty);
+        constexpr std::array<std::uint64_t, 2> sampler{5, 0};
+        std::memcpy(state + 0x534, sampler.data(), sizeof(sampler));
+    }
+    const std::uint32_t drawnWidth = g_originalScreenWidth > g_uiScreenWidth ? g_uiScreenWidth : g_originalScreenWidth;
+    const float span =
+        2.0f / (static_cast<float>(static_cast<std::int32_t>(g_originalScreenWidth)) / static_cast<float>(static_cast<std::int32_t>(drawnWidth)));
+    const float left = (2.0f - span) * 0.5f - 1.0f;
+    const float right = span + left;
+    const float u = 1.0f /
+        ((1.0f / (1080.0f / static_cast<float>(g_uiScreenWidth))) *
+            (static_cast<float>(static_cast<std::int32_t>(g_originalScreenHeight)) / static_cast<float>(static_cast<std::int32_t>(drawnWidth))));
+    const std::array<Vector4, 4> vertices{{{left, -1.0f, 0.0f, 1.0f}, {right, -1.0f, u, 1.0f}, {left, 1.0f, 0.0f, 0.0f}, {right, 1.0f, u, 0.0f}}};
+    if (void *const mapped = GetMappedConstantBuffer(context, g_uiScreenWidth, 64))
+        std::memcpy(mapped, vertices.data(), sizeof(vertices));
+    SetTopology(context, 1);
+    BindPixelTexture8(context, texture2D ? *texture2D : 0);
+    SubmitQuad(context);
+    SetTopology(context, 0);
+}
+
+bool CompositeNuklearFrame(D3TDeviceContext *context, std::uint32_t texture2D) {
+#if defined(_WIN32)
+    if (!context || !texture2D)
+        return false;
+    DrawTexturedQuad(context, &texture2D);
+    return true;
 #else
     static_cast<void>(context);
     static_cast<void>(texture2D);

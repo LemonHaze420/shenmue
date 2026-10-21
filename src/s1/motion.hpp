@@ -11,6 +11,9 @@ namespace shenmue::s1 {
 
 struct MotionInformationWork;
 struct Character;
+namespace motion_detail {
+void MotionComponentNoOp(Character *, void *);
+}
 std::uint16_t Shenmue_Atan2Fixed(float first, float direction);
 void MOTI_ApplyPositionOffset(MotionInformationWork &motion, const Vector3 &offset);
 struct ScenarioContext;

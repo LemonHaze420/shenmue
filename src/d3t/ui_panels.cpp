@@ -825,8 +825,9 @@ void UI_DrawButtonWheel(nk_context &context, std::int32_t index) {
             nk_end(&context);
         context.current = nullptr;
     }
-#if SHENMUE_IS_S2
+
     context.style.text.color = savedColour;
+#if SHENMUE_IS_S2
     if (static_cast<std::uint32_t>(wheel.dataBinding) < g_uiDataBindings.size() && static_cast<std::uint32_t>(wheel.selection) < wheel.items.size()) {
         const std::int32_t variable = g_uiDataBindings[static_cast<std::size_t>(wheel.dataBinding)].variable;
         if (static_cast<std::uint32_t>(variable) < view.variables.size())

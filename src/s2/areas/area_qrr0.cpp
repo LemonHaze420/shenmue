@@ -10,6 +10,7 @@
 #include "s2/hlib.hpp"
 #include "s2/lighting.hpp"
 #include "s2/map_control.hpp"
+#include "s2/map_assets.hpp"
 #include "s2/memo.hpp"
 #include "s2/model_component.hpp"
 #include "s2/motion_work.hpp"
@@ -207,7 +208,7 @@ void AreaQRR0Init() {
     waking = 0;
 }
 void AreaQRR0Cleanup(std::int32_t, std::uint32_t) {
-    SetDefaultVS();
+    SetMapModelDataDefaultVertexShader();
     EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
     PushGlobalLightingProgram();
     CheckIsArgEquZero(1);

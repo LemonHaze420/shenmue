@@ -200,6 +200,8 @@ bool vfclInitReactionProgramAndRunHandlers(VFActor &actor, bool mirrorReaction) 
     motionState.field314 = actor.field314;
     motionState.field330 = actor.field330;
     motionState.field322Low = static_cast<std::uint8_t>(actor.field322);
+    if (FightPoseWork *const figp = FIGP_GetWork(actor.character))
+        figp->active = 0;
     const VFCoreMotionGate motionGate = VFCore_DecodeNativeMotion(
         {
             reactionData,
@@ -3224,7 +3226,7 @@ void vfUpdateReactAnimationFrames(VFActor &actor) {
             ++actorCount;
     }
     const std::uint16_t animationId = actor.currentReactionAnimation & 0x0fffU;
-    if (actorCount == 2 && actor.targetActor && (((actor.targetActor->hitStateFlags2 & 0x000dc000U) != 0) || (actor.hitStateFlags2 & 0x00040000U) != 0)) {
+    if (actorCount == 2 && actor.targetActor && (((actor.targetActor->hitStateFlags2 & 0x0009c000U) != 0) || (actor.hitStateFlags2 & 0x00040000U) != 0)) {
         const std::uint8_t *const cue = shenLookupAnimationIndex(animationId, 2);
         if (cue) {
             std::uint16_t cueEnd = 0;
@@ -3249,7 +3251,8 @@ void vfUpdateReactAnimationFrames(VFActor &actor) {
     float nearest = 100.0f;
     for (std::size_t index = 0; index < kBattleSlots; ++index) {
         VFActor *const other = game.actors[index];
-        if (!game.characters[index] || !other || index == actor.slotIndex || other->currentHp <= 0 || (other->hitFlags & 0x00080000U) != 0) {
+        if (!game.characters[index] || !other || index == static_cast<std::uint8_t>(game.playerSlot) || other->currentHp <= 0 ||
+            (other->hitFlags & 0x00080000U) != 0) {
             continue;
         }
         nearest = std::min(nearest, actor.contactPoints[index]);

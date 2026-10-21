@@ -5,6 +5,7 @@
 #include "s2/d3t_renderer.hpp"
 
 #include "s2/hlib.hpp"
+#include "s2/frame_pacing.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
 #include "s2/map_control.hpp"
@@ -640,9 +641,7 @@ void KeyRepeat_Callback(void *taskData) {
 
     LegacyInputSlot &input = g_inputBuffer[repeat->inputIndex];
     std::uint16_t repeated = input.pressedPriority;
-#if SHENMUE_IS_PC
-    const float delta = HLib::GetScaledDeltaTick();
-#endif
+
     for (std::size_t index = 0; index < repeatMasks.size(); ++index) {
         const std::uint16_t mask = repeatMasks[index];
         if ((input.held & mask) == 0)
@@ -656,7 +655,7 @@ void KeyRepeat_Callback(void *taskData) {
             continue;
         }
 #if SHENMUE_IS_PC
-        repeat->counters[index] -= delta;
+        repeat->counters[index] -= shenGetScaledDeltaTickTime(1.0f);
         if (repeat->counters[index] < 0.0f) {
             repeat->counters[index] = 0.0f;
 #else

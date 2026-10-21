@@ -1501,7 +1501,7 @@ void UpdateEasyOptionController() noexcept {
     switch (easyOptionControllerState) {
     case 1:
         ShowElementByIndex(UIElement::Options);
-        if (IsMagicRoomLoadingModels())
+        if (IsMagicRoomLoadingModels() || GetIsCurrentCloudTextureValid())
             break;
         easyOptionPosition = -640.0f;
         easyOptionVelocity = 65.0f;
@@ -1536,7 +1536,7 @@ void UpdateEasyOptionController() noexcept {
         set_icon_select_flags_to(0x0200U);
         break;
     case 4:
-        if (IsMagicRoomLoadingModels())
+        if (IsMagicRoomLoadingModels() || GetIsCurrentCloudTextureValid())
             break;
         ApplyS2DialogueMode(easyOptionDraft[0]);
         ApplyS2ControlMode(easyOptionDraft[1]);

@@ -1191,11 +1191,10 @@ void InitializeMagicRoomGeneration() {
     roomCapacity[15] = 2;
     roomCapacity[16] = 1;
     roomCapacity[18] = 2;
-    roomCapacity[24] = 1;
     roomCapacity[25] = 6;
     roomCapacity[30] = 1;
+    roomCapacity[32] = 1;
     roomCapacity[35] = 1;
-    roomCapacity[38] = 1;
     roomCapacity[41] = 1;
 }
 std::uint64_t FillMagicRoomCategorySeeds() {

@@ -90,7 +90,7 @@ void Bkw0PracticeDecisionSequence(void *data) {
             Bkw0SelectPracticeCamera(sequence, work, practice);
             work.adviceElapsed = 0;
             Bkw0StartPracticeTimers(sequence, work, practice);
-            work.attempts = 0;
+
             Bkw0SequenceValue(sequence, 0x248, std::int32_t{0});
             Bkw0Advance(sequence, 102);
             break;
@@ -232,6 +232,7 @@ void Bkw0PracticeDecisionSequence(void *data) {
             work.practiceWarning = 0;
             work.practiceExpired = 0;
             work.consecutiveRepetitions = 0;
+            work.previousRepetitions = 0;
             if (Bkw0SequenceValue<std::int32_t>(sequence, 0x88) != retry)
                 Bkw0Advance(sequence, 132);
             else if (!Bkw0SequenceValue<std::int32_t>(sequence, 0x250)) {

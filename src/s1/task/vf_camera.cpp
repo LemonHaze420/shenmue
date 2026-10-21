@@ -1653,7 +1653,8 @@ std::uint8_t vfValidateFacingQuadrantForContextAction(VFActor *self, VFSlotRunti
     const auto *target = self->game->actors[slot_runtime->slotIndex];
     if (target->pairContactPriority || (self->hitStateFlags2 & 0x1d010U) != 0 || self->cachedQuadrant == 0xffU || target->cachedQuadrant == 0xffU ||
         VFAreaCanReachQuadrant(static_cast<std::int8_t>(self->cachedQuadrant), static_cast<std::int8_t>(target->cachedQuadrant)) ||
-        self->contactPoints[slot_runtime->slotIndex] <= 1.5f)
+        self->contactPoints[slot_runtime->slotIndex] <= 1.5f ||
+        (self->fightStyleIndex == 29U && target->contactPoints[static_cast<std::uint8_t>(self->game->playerSlot)] > 4.0f))
         return 0xffU;
     self->facingQuadrantStep = saved;
     return 44;

@@ -291,7 +291,7 @@ void HandleMapControlTaskStateTransition(Character *character, MotionPointWork &
         if (static_cast<std::uint32_t>(motion.reserved300) == 0) {
             work.state = 0;
             motion.interpolationAmount = 0.0f;
-            motion.blendMode = 0;
+            motion.blendMode = 1;
         }
         break;
     }

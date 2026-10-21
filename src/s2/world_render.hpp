@@ -9,10 +9,15 @@
 #include <cstdint>
 #include <span>
 
+namespace shenmue::d3t {
+struct LargeFileHandle;
+}
+
 namespace shenmue::s2 {
+struct WeatherAir;
 struct MT7Model;
 struct MT7Node;
-}
+} // namespace shenmue::s2
 
 namespace shenmue::s2 {
 
@@ -132,7 +137,21 @@ float GetPlanetLayerParameter(std::int32_t layer);
 std::uint64_t GetPlanetLayerColour(std::int32_t channel, std::int32_t layer);
 std::uint64_t SetPlanetLayerOffset(const Vector3 &offset, std::int32_t layer);
 std::uint64_t ResetPlanetLayerOffset(std::int32_t layer);
-std::int32_t UpdateAirWeatherPresentation(float cloud, float rain, float snow, std::int32_t hour, std::int32_t minute, bool immediate);
+struct AirCloudTextureState {
+    std::int32_t active{};
+    std::int32_t frames{};
+    std::int32_t loadingTextureIndex{-1};
+    d3t::LargeFileHandle *sprite{};
+    std::array<float, 2> blendSteps{};
+    std::array<std::int32_t, 2> textureIndices{-1, -1};
+};
+std::int32_t GetHasInitCloudTextures();
+std::int32_t GetCurrentAirLayerIndex();
+bool GetIsCurrentCloudTextureValid();
+void SetSkyWeatherModes(std::int32_t previous, std::int32_t current);
+extern std::int32_t g_previousSkyWeatherMode, g_currentSkyWeatherMode;
+void UpdateWeatherClouds(WeatherAir *air, std::int32_t frames);
+void UpdateClouds(WeatherAir *air);
 HLib::Task *QueueAirDrawTask(std::uint8_t nextFunctionIndex);
 
 

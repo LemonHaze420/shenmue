@@ -282,6 +282,7 @@ void EV_WeatherEffectUtil_Impl(std::uint32_t frustumFov, float spawnScale, std::
 std::int64_t Weather_FreeActiveFIXC();
 std::int32_t SetWeatherRainPressureImmediate(float pressure);
 void BeginRainPressureTransitionForWeatherEffects(float rainValue, std::int32_t frames);
+void ComputeCloudVisibility(float rainValue, std::int32_t frames);
 void UpdateWeatherParticleGroups();
 void SetWeatherParticleRainColour(std::uint32_t colour);
 void SetWeatherParticleRippleColour(std::uint32_t colour);

@@ -32,7 +32,7 @@ std::array<shen_name, 10> scraps{};
 std::uint8_t lightOn{}, controlsRestored{}, darkPhase{}, spareAge[4]{};
 constexpr Vector3 scrapPositions[]{{0.072f, 0.051f, 0.061f}, {-0.024f, 0.056f, 0.068f}, {-0.072f, 0.079f, 0.036f}, {-0.066f, 0.082f, -0.031f},
     {0.0f, 0.069f, -0.077f}, {-0.064f, 0.043f, -0.062f}, {0.008f, 0.025f, 0.079f}, {-0.089f, 0.067f, -0.037f}, {0.0f, 0.097f, 0.0f}, {0.013f, 0.122f, -0.062f}};
-constexpr Vector3i scrapRotations[]{{0, 9102, 2730}, {0, 12522, 0}, {0, 20757, 0}, {0, 44418, 0}, {0, 12561, 0}, {910, 10922, 0}, {0, 36772, 0}, {0, 11832, 0},
+constexpr Vector3i scrapRotations[]{{0, 9102, 2730}, {0, 41870, 0}, {0, 20753, 0}, {0, 44418, 0}, {0, 12561, 0}, {910, 10922, 0}, {0, 36772, 0}, {0, 11832, 0},
     {0, 22209, 0}, {63715, 3458, 1820}};
 std::array<std::int32_t, 57> leftHand{1999, 1456, 60441, 1638, 65354, 64811, 546, 61442, 4093, 0, 64811, 60258, 0, 65355, 60801, 0, 725, 64626, 0, 0, 64628, 0,
     0, 61349, 0, 0, 59348, 0, 65172, 63718, 0, 0, 65354, 0, 729, 62440, 0, 65355, 59166, 0, 64811, 64992, 0, 0, 0, 0, 908, 58618, 0, 1456, 60619, 0, 63354, 182,
@@ -157,7 +157,7 @@ void PushSwitch() {
     Vector3 position{-0.35218f, -1.20512f, 0.65925002f};
     const Vector3 origin{279.65399f, 133.58749f, 208.8037f};
     const Vector3i rotation{};
-    TransformScenarioDirection(&origin, &rotation, &position);
+    ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
     PlayRyo(0x2086);
     SetMotionRegionEvalTime(RyoMotion(), 60.0f, MotionRegion::LowerBody);
     SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);

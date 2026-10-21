@@ -122,7 +122,7 @@ void GetTransformAndTransformVector3(VFActor &actor) {
     const std::size_t slotIndex = static_cast<std::int8_t>(actor.slotIndex);
     const auto *const motion = static_cast<const MotionInformationWork *>(actor.motion);
     const std::byte *const profile = actor.contactVolumeRecords;
-    const Matrix4x4 stackTop = workTransformMatrix;
+    const Matrix4x4 stackTop = *g_matrixStack.top.stack;
     const std::uint8_t mode = motion && motion->poseEvaluationSucceeded ? 0U : motion ? motion->poseEvaluationStage : 0U;
     const Matrix4x4 *retainedTransform = nullptr;
 

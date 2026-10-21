@@ -116,7 +116,7 @@ void vfUpdateMain(VFActor &actor) {
 }
 
 void vfmaUpdateCollisionCounter(VFMAData &game, VFCollisionCounterEvent event, std::uint16_t fighterId) {
-    if (game.battleType == 1U || game.battleType == 5U || fighterId >= std::size(game.skillTable)) {
+    if (game.battleType == 4U || game.battleType == 5U || fighterId >= std::size(game.skillTable)) {
         return;
     }
     switch (event) {

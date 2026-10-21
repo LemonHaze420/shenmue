@@ -50,6 +50,7 @@ bool BeginNuklearFrame(D3TDeviceContext *context, std::uint32_t renderTarget);
 bool DrawNuklearImage(
     D3TDeviceContext *context, std::uint32_t renderTarget, std::uint32_t texture2D, float x, float y, float width, float height, float opacity);
 bool DrawNuklearQuads(D3TDeviceContext *context, std::uint32_t renderTarget, std::uint32_t texture2D, std::span<const NuklearQuad> quads);
+void DrawTexturedQuad(D3TDeviceContext *context, const std::uint32_t *texture2D);
 bool CompositeNuklearFrame(D3TDeviceContext *context, std::uint32_t texture2D);
 
 

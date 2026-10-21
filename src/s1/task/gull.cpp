@@ -401,7 +401,7 @@ void GULL_UpdateInternal(GullSequencePayload *sequence) {
     billboard.rows[0] = {directionBasis.y, 0.0f, -directionBasis.x, 0.0f};
     billboard.rows[1] = {0.0f, 1.0f, 0.0f, 0.0f};
     billboard.rows[2] = {directionBasis.x, 0.0f, directionBasis.y, 0.0f};
-    billboard.rows[3] = {g_CameraTargetPos.x, g_CameraTargetPos.y, g_CameraTargetPos.z, 1.0f};
+    billboard.rows[3] = {0.0f, 0.0f, 0.0f, 1.0f};
 
     ::shenmue::matrix_stack::Matrix4x4_Push();
     Matrix4x4::preTranslate(sequence->nextPosition.x, sequence->nextPosition.y, sequence->nextPosition.z);

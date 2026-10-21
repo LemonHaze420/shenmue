@@ -362,7 +362,7 @@ void JUKBSelectLoopCallback(void *data) {
         Vector3 finger;
         ReadPosition(JUKB_FINGER, finger, 0);
         if (work.buttonPhase == 1) {
-            const float choice = GetRandomNumberInRange(4.0f);
+            const std::int32_t choice = static_cast<std::int32_t>(GetRandomNumberInRange(4.0f));
             work.dialogue = EV_PlayDialogue(choice == 0 ? "0107A027" : choice == 1 ? "0107A028" : choice == 2 ? "0107A029" : "0107A030");
         }
         const std::uint16_t part = static_cast<std::uint16_t>(162 + work.selection);

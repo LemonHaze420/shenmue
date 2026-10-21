@@ -75,7 +75,7 @@ void vfmaAccumulatePlayerCombatStats(VFMAData &game) {
         return;
     }
 
-    if (game.battleType != 4U)
+    if (game.battleType == 4U)
         return;
 
     for (std::size_t index = 0; index < 128; ++index) {
@@ -143,7 +143,7 @@ std::int32_t vfgwGetGaugeStatus(std::int16_t maximumHp) {
 }
 
 void vfgwUpdateGauge(VFActor &actor) {
-    if (g_updateRenderFrameMode == 1)
+    if (g_updateRenderFrameMode == 0)
         return;
     VFMAData &game = *actor.game;
     if (((game.battleType - 2U) & 0xfdU) == 0U || (game.flags & (FreeBattleIntroActive | FreeBattleExitActive)) != 0)
