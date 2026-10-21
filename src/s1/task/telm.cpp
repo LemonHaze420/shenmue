@@ -21,8 +21,10 @@
 #include "s1/task/sond.hpp"
 #include "s1/task/srch.hpp"
 #include "s1/timing.hpp"
+#include "s1/steam.hpp"
 #include "s1/ui_runtime.hpp"
 
+#include <bit>
 #include <cmath>
 #include <cstring>
 
@@ -495,8 +497,13 @@ std::int32_t TELM_FindDialMatch(TelephoneWork &phone) {
     }
     UI_SICNClearState(0x0dffU);
     if (phone.dialedDigits[0] == '1' && phone.dialedDigits[1] == '1' && phone.dialedDigits[2] == '0') {
-        UpdateSteamStat(10);
-        UpdateSteamAchievement(10);
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Call_Police];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Call_Police);
+        UpdateSteamAchievement(Stat_Call_Police);
     }
     return entry;
 }

@@ -10,6 +10,7 @@
 
 namespace shenmue::s1 {
 
+inline constexpr shen_name PACK_FILE_BIN = make_name('B', 'I', 'N', ' ');
 struct PackSlot;
 struct PackOwner;
 struct PackModel;

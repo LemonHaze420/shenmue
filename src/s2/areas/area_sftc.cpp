@@ -1000,7 +1000,7 @@ void AllocateBattleVoices(StreetFightEventWork &work) {
         const std::uint32_t forced = AllocateBattleDialogueCondition17(7, -1, fighter, shen_name{}, 1, 100, 1);
         AssignBattleDialogueCallback(forced, SelectForcedBattleVoice);
     }
-    playerDialogue = AllocateBattleDialogue(9, -2, STREET_FIGHT_RYO, fighter, 1, 100, 1);
+    playerDialogue = AllocateBattleDialogueCondition12(9, -2, STREET_FIGHT_RYO, fighter, 1, 100, 1);
     fighterDialogue = AllocateBattleDialogueCondition17(9, -1, fighter, shen_name{}, 1, 100, 1);
     AssignBattleDialogueCallback(fighterDialogue, SelectFighterBattleVoice);
     const std::uint32_t motion = AllocateBattleDialogueCondition17(10, -1, fighter, shen_name{}, 2, 85, 1);

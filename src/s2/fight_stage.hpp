@@ -1032,6 +1032,20 @@ void vfStartCameraDialogue(VFMA_t *game, std::uint32_t id);
 void vfSetFightDialogue(VFMA_t *game, std::int16_t index);
 std::uint32_t AllocateBattleDialogue(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, std::int16_t repeatEvery,
     float probability, std::uint16_t flags);
+std::uint32_t AllocateBattleDialogueCondition2(
+    std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, float healthPercent, float probability);
+std::uint32_t AllocateBattleDialogueCondition3(
+    std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, std::uint16_t health, float probability);
+std::uint32_t AllocateBattleDialogueCondition5(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
+    std::int16_t repeatEvery, float probability, std::uint16_t flags);
+std::uint32_t AllocateBattleDialogueCondition6(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
+    std::int16_t repeatEvery, float probability, std::uint16_t flags);
+std::uint32_t AllocateBattleDialogueCondition9(
+    std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, float distance, float probability, std::uint16_t flags);
+std::uint32_t AllocateBattleDialogueCondition12(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
+    std::int16_t repeatEvery, float probability, std::uint16_t flags);
+std::uint32_t AllocateBattleDialogueCondition16(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
+    std::int16_t repeatEvery, float probability, std::uint16_t flags);
 std::uint32_t AllocateMotionBattleDialogue(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, std::uint16_t animation,
     std::int16_t repeatEvery, float probability, std::uint16_t flags);
 std::uint32_t AllocateBattleDialogueCondition7(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,

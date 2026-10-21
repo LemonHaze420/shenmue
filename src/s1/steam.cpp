@@ -4,19 +4,24 @@
 #include "s1/steam.hpp"
 
 #include <cstring>
+#include <cstdlib>
 #if defined(_WIN32)
 #include <windows.h>
 #endif
 
 namespace shenmue::s1 {
+SteamStatDefinition *g_steamTemporaryStats = nullptr;
 namespace {
 
+std::array<SteamStatDefinition, 29> g_defaultSteamStats{};
+std::array<SteamAchievementDefinition, 28> g_defaultSteamAchievements{};
 SteamRuntimeBindings g_steamRuntime;
 
 } // namespace
 
 void Steam_BindRuntime(const SteamRuntimeBindings &bindings) noexcept {
     g_steamRuntime = bindings;
+    g_steamTemporaryStats = bindings.stats;
 }
 
 bool Steam_InitApp(const SteamAppInfo *) {
@@ -29,35 +34,59 @@ bool Steam_TryGetCurrentUserId(std::uint64_t *) {
 
 void SteamInit() {
 }
-void UpdateSteamStat(std::uint32_t) {
+void PublishSteamStats() {
+    if (!g_steamRuntime.callbacksEnabled)
+        return;
+    for (std::size_t index = 0; index < g_steamRuntime.statCount; ++index) {
+        const SteamStatDefinition &stat = g_steamTemporaryStats[index];
+        if (stat.suppressPublish == 0 && g_steamRuntime.setStat)
+            g_steamRuntime.setStat(stat.name, stat.value);
+    }
+    if (g_steamRuntime.storeStats)
+        g_steamRuntime.storeStats();
 }
 
-void UpdateSteamAchievement(std::uint32_t statIndex) {
-    if (!g_steamRuntime.stats || statIndex >= g_steamRuntime.statCount) {
+void UpdateSteamStat(std::uint32_t statIndex) {
+    if (!g_steamTemporaryStats || statIndex >= g_steamRuntime.statCount)
         return;
-    }
-
-    const SteamStatDefinition &stat = g_steamRuntime.stats[statIndex];
-    if (stat.type != 1 || stat.suppressPublish != 0) {
-        return;
-    }
+    SteamStatDefinition *stats = g_steamTemporaryStats;
+    SteamStatDefinition &stat = stats[statIndex];
+    if (stat.value > stat.maximum && stat.type <= SS_Add)
+        stat.value = stat.maximum;
+    if (stat.value < stat.minimum && stat.type <= SS_Add)
+        stat.value = stat.minimum;
 
     for (std::size_t index = 0; index < g_steamRuntime.achievementCount; ++index) {
         const SteamAchievementDefinition &achievement = g_steamRuntime.achievements[index];
-        if (achievement.statIndex != static_cast<std::int32_t>(statIndex)) {
+        if (achievement.statIndex == static_cast<std::int32_t>(statIndex) && stats[statIndex].type <= SS_Add &&
+            stats[statIndex].value >= achievement.threshold && g_steamRuntime.callbacksEnabled) {
+            if (g_steamRuntime.setAchievement)
+                g_steamRuntime.setAchievement(achievement.name);
+            PublishSteamStats();
+            stats = g_steamTemporaryStats;
+        }
+    }
+}
+
+void UpdateSteamAchievement(std::uint32_t statIndex) {
+    if (!g_steamTemporaryStats || statIndex >= g_defaultSteamStats.size())
+        return;
+    const SteamStatDefinition &definition = g_defaultSteamStats[statIndex];
+    if (definition.type != SS_Add || definition.suppressPublish != 0)
+        return;
+    for (const SteamAchievementDefinition &achievement : g_defaultSteamAchievements) {
+        if (achievement.statIndex != static_cast<std::int32_t>(statIndex))
             continue;
-        }
-        const auto current = static_cast<std::uint32_t>(stat.value);
-        const auto maximum = static_cast<std::uint32_t>(achievement.threshold);
+        const std::uint32_t current = static_cast<std::uint32_t>(g_steamTemporaryStats[statIndex].value);
+        const std::uint32_t maximum = static_cast<std::uint32_t>(achievement.threshold);
         if (current < maximum) {
-            if (g_steamRuntime.callbacksEnabled && g_steamRuntime.indicateAchievementProgress) {
+            if (g_steamRuntime.callbacksEnabled && g_steamRuntime.indicateAchievementProgress)
                 g_steamRuntime.indicateAchievementProgress(achievement.name, current, maximum);
-            }
+
             return;
         }
-        if (current == maximum) {
+        if (current == maximum)
             return;
-        }
     }
 }
 
@@ -71,9 +100,34 @@ void SteamPlatformContextRefresh() {
 
 namespace d3t {
 void SetupAchievements() {
+    for (std::size_t index = 0; index < g_defaultSteamStats.size(); ++index) {
+        SteamStatDefinition &stat = g_defaultSteamStats[index];
+        const SteamStatDefinition &definition = kSteamStatDefinitions[index];
+        std::strcpy(stat.name, definition.name);
+        stat.type = definition.type;
+        stat.reserved88 = definition.reserved88;
+        stat.minimum = definition.minimum;
+        stat.maximum = definition.maximum;
+        stat.suppressPublish = definition.suppressPublish;
+    }
+    for (std::size_t index = 0; index < g_defaultSteamAchievements.size(); ++index) {
+        SteamAchievementDefinition &achievement = g_defaultSteamAchievements[index];
+        const SteamAchievementDefinition &definition = kSteamAchievementDefinitions[index];
+        std::strcpy(achievement.name, definition.name);
+        achievement.statIndex = definition.statIndex;
+        achievement.achievementIndex = definition.achievementIndex;
+        achievement.threshold = definition.threshold;
+    }
 }
 
 void InitializeSteamAPI() {
+    g_steamRuntime.statCount = g_defaultSteamStats.size();
+    g_steamTemporaryStats = static_cast<SteamStatDefinition *>(std::malloc(sizeof(g_defaultSteamStats)));
+    g_steamRuntime.stats = g_steamTemporaryStats;
+    std::memcpy(g_steamTemporaryStats, g_defaultSteamStats.data(), sizeof(g_defaultSteamStats));
+    g_steamRuntime.achievementCount = g_defaultSteamAchievements.size();
+    g_steamRuntime.achievements = static_cast<SteamAchievementDefinition *>(std::malloc(sizeof(g_defaultSteamAchievements)));
+    std::memcpy(g_steamRuntime.achievements, g_defaultSteamAchievements.data(), sizeof(g_defaultSteamAchievements));
     SteamInit();
 }
 } // namespace d3t

@@ -9,6 +9,24 @@
 namespace shenmue::s2 {
 struct TitleFileSelectState;
 enum class SystemModule : std::int32_t;
+enum class UIElement : std::int32_t;
+
+struct TitleCallbackPair {
+    HLib::TaskCallback control;
+    HLib::TaskCallback display;
+};
+static_assert(sizeof(TitleCallbackPair) == 0x10);
+
+struct TitleDebugModuleEntry {
+    const char *name;
+    SystemModule module;
+    std::int32_t reserved0c;
+    void (*control)();
+    std::int32_t (*initialize)(UIElement);
+};
+static_assert(sizeof(TitleDebugModuleEntry) == 0x20);
+static_assert(offsetof(TitleDebugModuleEntry, control) == 0x10);
+static_assert(offsetof(TitleDebugModuleEntry, initialize) == 0x18);
 inline constexpr shen_name titleAreaName{SHEN_NAME(TITL)};
 inline constexpr shen_name TITLE_CONTROL_TASK{SHEN_NAME(TCRL)};
 inline constexpr shen_name TITLE_DISPLAY_TASK{SHEN_NAME(DISP)};

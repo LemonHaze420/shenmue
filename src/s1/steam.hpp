@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 
@@ -42,7 +43,7 @@ struct SteamStatDefinition {
 struct SteamAchievementDefinition {
     char name[128];
     std::int32_t statIndex;
-    std::int32_t reserved84;
+    std::int32_t achievementIndex;
     std::int32_t threshold;
 };
 
@@ -52,6 +53,79 @@ static_assert(offsetof(SteamStatDefinition, minimum) == 0x8c);
 static_assert(offsetof(SteamStatDefinition, suppressPublish) == 0x94);
 static_assert(sizeof(SteamAchievementDefinition) == 0x8c);
 
+enum SteamStatId : std::uint32_t {
+    Stat_Call_Police = 10,
+};
+
+enum SteamStatUpdateType : std::uint32_t {
+    SS_Set = 0,
+    SS_Add = 1,
+};
+
+inline constexpr std::array<SteamStatDefinition, 29> kSteamStatDefinitions{{
+    {.name = "SM1_Stat_Meet_Charlie", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_translate_Letter", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Reach_Harbor", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Break_And_Enter", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Find_Phoenix_Mirror", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Get_A_Job", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Rescue_Nozomi", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Brawl", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Beat_Chai_Harbor", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Win_Game", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Call_Police", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Tree_Flashback", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Kitchen_Flashback", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Dojo_Flashback", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Teach_Fuku_San", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Help_Lady_Find_House", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Buy_Guy_Soda", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Take_Mirror_To_Antiques", .type = SS_Add, .maximum = 2, .suppressPublish = 0},
+    {.name = "SM1_Stat_Find_Kitten", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Learn_From_Tom", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Win_Forklift_Race", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Visit_Fortune_Teller", .type = SS_Set, .maximum = 1, .suppressPublish = 0},
+    {.name = "SM1_Stat_Arcade_Games_Played", .type = SS_Set, .maximum = 2, .suppressPublish = 0},
+    {.name = "SM1_Stat_Capsule_Toy_Count", .type = SS_Add, .maximum = 168, .suppressPublish = 0},
+    {.name = "SM1_Stat_Moves_Learned", .type = SS_Add, .maximum = 50, .suppressPublish = 0},
+    {.name = "Data_SpaceHarrier", .type = SS_Set, .maximum = 1, .suppressPublish = 1},
+    {.name = "Data_Hangon", .type = SS_Set, .maximum = 1, .suppressPublish = 1},
+    {.name = "Data_Take_Mirror_To_Antiques1", .type = SS_Set, .maximum = 1, .suppressPublish = 1},
+    {.name = "Data_Take_Mirror_To_Antiques2", .type = SS_Set, .maximum = 1, .suppressPublish = 1},
+}};
+
+inline constexpr std::array<SteamAchievementDefinition, 28> kSteamAchievementDefinitions{{
+    {.name = "SM1_Achievement_Meet_Charlie", .statIndex = 0, .achievementIndex = 0, .threshold = 1},
+    {.name = "SM1_Achievement_translate_Letter", .statIndex = 1, .achievementIndex = 1, .threshold = 1},
+    {.name = "SM1_Achievement_Reach_Harbor", .statIndex = 2, .achievementIndex = 2, .threshold = 1},
+    {.name = "SM1_Achievement_Break_And_Enter", .statIndex = 3, .achievementIndex = 3, .threshold = 1},
+    {.name = "SM1_Achievement_Find_Phoenix_Mirror", .statIndex = 4, .achievementIndex = 4, .threshold = 1},
+    {.name = "SM1_Achievement_Get_A_Job", .statIndex = 5, .achievementIndex = 5, .threshold = 1},
+    {.name = "SM1_Achievement_Rescue_Nozomi", .statIndex = 6, .achievementIndex = 6, .threshold = 1},
+    {.name = "SM1_Achievement_Brawl", .statIndex = 7, .achievementIndex = 7, .threshold = 1},
+    {.name = "SM1_Achievement_Beat_Chai_Harbor", .statIndex = 8, .achievementIndex = 8, .threshold = 1},
+    {.name = "SM1_Achievement_Win_Game", .statIndex = 9, .achievementIndex = 9, .threshold = 1},
+    {.name = "SM1_Achievement_Call_Police", .statIndex = 10, .achievementIndex = 10, .threshold = 1},
+    {.name = "SM1_Achievement_Tree_Flashback", .statIndex = 11, .achievementIndex = 11, .threshold = 1},
+    {.name = "SM1_Achievement_Kitchen_Flashback", .statIndex = 12, .achievementIndex = 12, .threshold = 1},
+    {.name = "SM1_Achievement_Dojo_Flashback", .statIndex = 13, .achievementIndex = 13, .threshold = 1},
+    {.name = "SM1_Achievement_Teach_Fuku_San", .statIndex = 14, .achievementIndex = 14, .threshold = 1},
+    {.name = "SM1_Achievement_Help_Lady_Find_House", .statIndex = 15, .achievementIndex = 15, .threshold = 1},
+    {.name = "SM1_Achievement_Buy_Guy_Soda", .statIndex = 16, .achievementIndex = 16, .threshold = 1},
+    {.name = "SM1_Achievement_Take_Mirror_To_Antiques", .statIndex = 17, .achievementIndex = 17, .threshold = 2},
+    {.name = "SM1_Achievement_Find_Kitten", .statIndex = 18, .achievementIndex = 18, .threshold = 1},
+    {.name = "SM1_Achievement_Learn_From_Tom", .statIndex = 19, .achievementIndex = 19, .threshold = 1},
+    {.name = "SM1_Achievement_Win_Forklift_Race", .statIndex = 20, .achievementIndex = 20, .threshold = 1},
+    {.name = "SM1_Achievement_Visit_Fortune_Teller", .statIndex = 21, .achievementIndex = 21, .threshold = 1},
+    {.name = "SM1_Achievement_Play_An_Arcade_Game", .statIndex = 22, .achievementIndex = 22, .threshold = 1},
+    {.name = "SM1_Achievement_Collect_Capsule_Toy", .statIndex = 23, .achievementIndex = 23, .threshold = 1},
+    {.name = "SM1_Achievement_Collect_25_Capsule_Toys", .statIndex = 23, .achievementIndex = 24, .threshold = 25},
+    {.name = "SM1_Achievement_Collect_50_Capsule_Toys", .statIndex = 23, .achievementIndex = 25, .threshold = 50},
+    {.name = "SM1_Achievement_Learn_New_Move", .statIndex = 24, .achievementIndex = 26, .threshold = 1},
+    {.name = "SM1_Achievement_Learn_5_Moves", .statIndex = 24, .achievementIndex = 27, .threshold = 5},
+}};
+
+extern SteamStatDefinition *g_steamTemporaryStats;
 using SteamInputHandle = std::uint64_t;
 using SteamInputPoll = std::int64_t (*)(std::uint32_t mode, SteamControllerInput *input, const SteamInputHandle *controllers, std::size_t controllerCount);
 using SteamCallResultCompletion = void (*)(void *user, std::uint64_t call, std::int32_t result, std::uint32_t byteCount, bool ioFailure);

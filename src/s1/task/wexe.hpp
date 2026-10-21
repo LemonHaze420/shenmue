@@ -8,6 +8,9 @@
 namespace shenmue::s1 {
 struct ScenarioContext;
 
+#if SHENMUE_IS_PC
+inline constexpr std::uint32_t kWeatherFcasInterpolation[2] = {0x00010800U, 0x00fcfdfbU};
+#endif
 struct WeatherDataEntry {
     float intensity;
     float targetIntensity;

@@ -17,6 +17,13 @@ static_assert(alignof(TitleSceneEntry) == 1);
 static_assert(offsetof(TitleSceneEntry, area) == 1);
 static_assert(offsetof(TitleSceneEntry, entry) == 5);
 
+struct TitleSceneGroup {
+    std::uint8_t index;
+    std::byte reserved01[7];
+    const TitleSceneEntry *scenes;
+};
+static_assert(sizeof(TitleSceneGroup) == 0x10);
+static_assert(offsetof(TitleSceneGroup, scenes) == 8);
 inline constexpr shen_name TITLE_AREA_0000{SHEN_NAME(0000)};
 inline constexpr shen_name TITLE_AREA_0004{SHEN_NAME(0004)};
 inline constexpr shen_name TITLE_AREA_0005{SHEN_NAME(0005)};
@@ -358,4 +365,17 @@ inline constexpr std::array<const TitleSceneEntry *, 10> TITLE_SCENE_TABLES{
     TITLE_SCENES_EXTRAS.data(),
 };
 
+inline std::array<TitleSceneGroup, 11> TITLE_SCENE_GROUPS{{
+    {.scenes = TITLE_SCENES_DEBUG.data()},
+    {.scenes = TITLE_SCENES_SCENE1.data()},
+    {.scenes = TITLE_SCENES_SCENE2.data()},
+    {.scenes = TITLE_SCENES_SCENE3.data()},
+    {.scenes = TITLE_SCENES_SCENE4.data()},
+    {.scenes = TITLE_SCENES_EVENT1.data()},
+    {.scenes = TITLE_SCENES_EVENT2.data()},
+    {.scenes = TITLE_SCENES_EVENT3.data()},
+    {.scenes = TITLE_SCENES_MOVIE.data()},
+    {.scenes = TITLE_SCENES_EXTRAS.data()},
+    {.scenes = reinterpret_cast<const TitleSceneEntry *>(static_cast<std::uintptr_t>(-1))},
+}};
 } // namespace shenmue::s2

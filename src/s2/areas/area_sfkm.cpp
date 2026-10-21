@@ -990,7 +990,7 @@ void BattleStartCallback(void *parameter) {
         battleDialogueIds[1] = AllocatePeriodicBattleDialogue(20, 157, fighter, STREET_FIGHT_RYO, 300, 100, 0);
         battleDialogueIds[2] = AllocatePeriodicBattleDialogue(20, 159, fighter, STREET_FIGHT_RYO, 720, 100, 0);
     }
-    const std::uint32_t first = AllocateBattleDialogue(30, -1, fighter, shen_name{}, 1, 60, 1);
+    const std::uint32_t first = AllocateBattleDialogueCondition12(30, -1, fighter, shen_name{}, 1, 60, 1);
     AssignBattleDialogueCallback(first, SelectFirstBattleVoice);
     const std::uint32_t second = AllocateBattleDialogueCondition11(30, -1, fighter, shen_name{}, 1, 100, 1);
     AssignBattleDialogueCallback(second, SelectSecondBattleVoice);

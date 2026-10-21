@@ -2517,6 +2517,16 @@ std::int32_t HND_AcquireMotionModel(const char *filename, std::uint8_t motionKin
         *data = nullptr;
     if (size)
         *size = 0;
+    PackTaskData *pack = g_packTaskData;
+    if (!pack && g_packTask)
+        pack = reinterpret_cast<PackTaskData *>(HLib_GetTaskDataForTask(g_packTask));
+    PackSlot *activeReader = nullptr;
+    if (pack && pack->usePackCache) {
+        pack = g_packTaskData;
+        if (!pack && g_packTask)
+            pack = reinterpret_cast<PackTaskData *>(HLib_GetTaskDataForTask(g_packTask));
+        activeReader = pack ? pack->activeReader : nullptr;
+    }
     if (!filename || std::strlen(filename) < 10 || motionKind > 3)
         return -1;
 
@@ -2536,21 +2546,31 @@ std::int32_t HND_AcquireMotionModel(const char *filename, std::uint8_t motionKin
 
     HandMotionEntry &entry = g_handMotionTable[tableIndex];
     if (!entry.motion) {
-        if (std::strncmp(entry.name, "YKB", 3) == 0) {
+        const bool sharedMotion = std::strncmp(entry.name, "YKB", 3) == 0;
+        if (sharedMotion) {
             entry.motion = g_hndb;
             entry.retained = 1;
         } else {
-            char directory[64]{};
             char motionFilename[16]{};
-            std::snprintf(directory, sizeof(directory), "scene/%02d/model/hand", g_sceneId);
             std::snprintf(motionFilename, sizeof(motionFilename), "%.3s_HM.BIN", entry.name);
-            entry.motion = ReadFile(directory, motionFilename, SHEN_NAME(HNDB));
+            if (activeReader) {
+                entry.motion = LoadFileIntoHeapMem(activeReader, motionFilename, PACK_FILE_BIN.name);
+                if (entry.motion) {
+                    entry.retained = 1;
+                    entry.motionSize = PACK_FindBinFileSize(activeReader, motionFilename);
+                }
+            }
+            if (!entry.motion) {
+                char directory[64]{};
+                std::snprintf(directory, sizeof(directory), "scene/%02d/model/hand", g_sceneId);
+                entry.motion = ReadFile(directory, motionFilename, RESOURCE_HNDB.name);
+            }
         }
         if (!entry.motion)
             return -2;
-        if (entry.retained) {
+        if (sharedMotion) {
             entry.motionSize = g_hndbSize;
-        } else {
+        } else if (!entry.retained) {
             const auto *const allocation = reinterpret_cast<const HLib::TaskData *>(entry.motion) - 1;
             if (allocation->content_size > 0 && allocation->content_size <= UINT32_MAX) {
                 entry.motionSize = static_cast<std::uint32_t>(allocation->content_size);

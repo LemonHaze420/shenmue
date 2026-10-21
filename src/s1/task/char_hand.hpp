@@ -7,6 +7,7 @@
 #include <cstdint>
 
 namespace shenmue::s1 {
+inline constexpr shen_name RESOURCE_HNDB = SHEN_NAME(HNDB);
 struct Character;
 struct HandAngleKey;
 struct HandAngleKeyDescriptor;

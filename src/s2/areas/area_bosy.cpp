@@ -185,9 +185,9 @@ void Fight_Callback(void *data) {
             vfCopyPosFromEntity(0, nullptr, 336, 269.7f, 5);
             vfmQueueFightStart(2, 99, 1, 0, 180);
             EV_SetCharacterAlphaEnabled(syuei, false);
-            AllocateBattleDialogue(11, 64, ryo, shen_name{}, 10, 100, 0);
-            AllocateBattleDialogue(10, 70, ryo, shen_name{}, 20, 100, 0);
-            const auto id = AllocateBattleDialogue(12, -1, ryo, shen_name{}, 240, 100, 1);
+            AllocateBattleDialogueCondition12(11, 64, ryo, shen_name{}, 10, 100, 0);
+            AllocateBattleDialogueCondition12(10, 70, ryo, shen_name{}, 20, 100, 0);
+            const auto id = AllocateBattleDialogueCondition15(12, -1, ryo, shen_name{}, 240, 100, 1);
             AssignBattleDialogueCallback(id, NextBattleDialogue);
             Transition(work, 101);
             break;
@@ -203,7 +203,7 @@ void Fight_Callback(void *data) {
                 break;
             }
             if (ReadCounter(work) > 1350) {
-                WriteDialogueId(work, AllocateBattleDialogue(0, 59, shen_name{}, shen_name{}, 1, 100, 0));
+                WriteDialogueId(work, AllocatePeriodicBattleDialogue(0, 59, shen_name{}, shen_name{}, 1, 100, 0));
                 Transition(work, 102);
                 break;
             }

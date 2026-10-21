@@ -2,6 +2,7 @@
 #include "s2/frame_pacing.hpp"
 #include "s2/pause.hpp"
 
+#include "s2/mt7.hpp"
 #include <array>
 #include <cstddef>
 #include <cassert>
@@ -94,6 +95,7 @@ Task *NextTask = nullptr;
 std::byte *DynamicHeapBase = nullptr;
 
 void InitializeAllocator() {
+    ReleaseMT7TaskNodeCopies(dynamicHeap.data(), dynamicHeap.size());
     zeroEntry.header.name.name = SHEN_NAME(OREZ);
     zeroEntry.data[0] = static_cast<std::byte>('O');
     zeroEntry.data[1] = static_cast<std::byte>('R');
@@ -303,6 +305,7 @@ std::int64_t FreeHeapSpace(void *taskData, std::int32_t taskName) {
         }
     }
 
+    ReleaseMT7TaskNodeCopies(taskData, static_cast<std::size_t>(entry->contentSize - sizeof(TaskData)));
     std::uint64_t size = entry->contentSize;
     TaskData *const previous = entry->previous;
     TaskData *const next = entry->next;
@@ -388,6 +391,7 @@ void ValidateOrResetHeap() {
         InitializeAllocator();
     } else {
         TaskData *const first = previous->next;
+        ReleaseMT7TaskNodeCopies(first, static_cast<std::size_t>(reinterpret_cast<std::byte *>(tail) - reinterpret_cast<std::byte *>(first)));
         setEntry(first, HLIB_FREE_TOKEN.name, static_cast<std::uint64_t>(reinterpret_cast<std::byte *>(tail) - reinterpret_cast<std::byte *>(first)), HLIB_FREE_TOKEN.name, 0);
         first->next = tail;
         tail->previous = first;

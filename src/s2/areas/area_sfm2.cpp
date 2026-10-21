@@ -1205,11 +1205,11 @@ void BattleStartCallback(void *parameter) {
     }
     SetCurrentGameFlag(static_cast<std::uint8_t>(GetStreetFightStageFlag(work.stage)), 1);
     work.hudEnabled = 0;
-    const std::uint32_t first = AllocateBattleDialogue(20, -1, work.fighters[0], shen_name{}, 1, 100, 1);
+    const std::uint32_t first = AllocateBattleDialogueCondition12(20, -1, work.fighters[0], shen_name{}, 1, 100, 1);
     AssignBattleDialogueCallback(first, SelectKznBattleVoice);
-    const std::uint32_t second = AllocateBattleDialogue(20, -1, work.fighters[1], shen_name{}, 1, 100, 1);
+    const std::uint32_t second = AllocateBattleDialogueCondition12(20, -1, work.fighters[1], shen_name{}, 1, 100, 1);
     AssignBattleDialogueCallback(second, SelectSsyBattleVoice);
-    const std::uint32_t third = AllocateBattleDialogue(20, -1, work.fighters[2], shen_name{}, 1, 100, 1);
+    const std::uint32_t third = AllocateBattleDialogueCondition12(20, -1, work.fighters[2], shen_name{}, 1, 100, 1);
     AssignBattleDialogueCallback(third, SelectSf2BattleVoice);
     AllocateMotionBattleDialogue(11, 11, work.fighters[0], shen_name{}, 3146, 1, 100, 1);
     AllocateMotionBattleDialogue(11, 12, work.fighters[1], shen_name{}, 3145, 1, 100, 1);

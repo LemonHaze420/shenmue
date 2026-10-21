@@ -983,6 +983,128 @@ std::uint32_t AllocateBattleDialogue(std::int16_t priority, std::int16_t dialogu
 }
 
 // @verified - p
+std::uint32_t AllocateBattleDialogueCondition2(
+    std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, float healthPercent, float probability) {
+    VCDS_t *const record = static_cast<VCDS_t *>(HLib::AllocateTaskData(sizeof(VCDS_t), TASK_VCDS));
+    HLib::AssignDynamicAlignmentForTaskData(record);
+    record->probability = probability;
+    record->healthPercent = healthPercent;
+    record->flags = 0;
+    record->repeatEvery = 1;
+    record->condition = 2;
+    record->priority = static_cast<std::uint16_t>(priority);
+    record->dialogue = dialogue;
+    record->character = character;
+    record->otherCharacter = otherCharacter;
+    vfRegisterCameraDialogue(record);
+    return record->id;
+}
+
+// @verified - p
+std::uint32_t AllocateBattleDialogueCondition3(
+    std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, std::uint16_t health, float probability) {
+    VCDS_t *const record = static_cast<VCDS_t *>(HLib::AllocateTaskData(sizeof(VCDS_t), TASK_VCDS));
+    HLib::AssignDynamicAlignmentForTaskData(record);
+    record->flags = 0;
+    record->health = health;
+    record->repeatEvery = 1;
+    record->probability = probability;
+    record->condition = 3;
+    record->priority = static_cast<std::uint16_t>(priority);
+    record->dialogue = dialogue;
+    record->character = character;
+    record->otherCharacter = otherCharacter;
+    vfRegisterCameraDialogue(record);
+    return record->id;
+}
+
+// @verified - p
+std::uint32_t AllocateBattleDialogueCondition5(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
+    std::int16_t repeatEvery, float probability, std::uint16_t flags) {
+    VCDS_t *const record = static_cast<VCDS_t *>(HLib::AllocateTaskData(sizeof(VCDS_t), TASK_VCDS));
+    HLib::AssignDynamicAlignmentForTaskData(record);
+    record->flags = flags;
+    record->repeatEvery = repeatEvery;
+    record->probability = probability;
+    record->condition = 5;
+    record->priority = static_cast<std::uint16_t>(priority);
+    record->dialogue = dialogue;
+    record->character = character;
+    record->otherCharacter = otherCharacter;
+    vfRegisterCameraDialogue(record);
+    return record->id;
+}
+
+// @verified - p
+std::uint32_t AllocateBattleDialogueCondition6(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
+    std::int16_t repeatEvery, float probability, std::uint16_t flags) {
+    VCDS_t *const record = static_cast<VCDS_t *>(HLib::AllocateTaskData(sizeof(VCDS_t), TASK_VCDS));
+    HLib::AssignDynamicAlignmentForTaskData(record);
+    record->flags = flags;
+    record->repeatEvery = repeatEvery;
+    record->probability = probability;
+    record->condition = 6;
+    record->priority = static_cast<std::uint16_t>(priority);
+    record->dialogue = dialogue;
+    record->character = character;
+    record->otherCharacter = otherCharacter;
+    vfRegisterCameraDialogue(record);
+    return record->id;
+}
+
+// @verified - p
+std::uint32_t AllocateBattleDialogueCondition9(
+    std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, float distance, float probability, std::uint16_t flags) {
+    VCDS_t *const record = static_cast<VCDS_t *>(HLib::AllocateTaskData(sizeof(VCDS_t), TASK_VCDS));
+    HLib::AssignDynamicAlignmentForTaskData(record);
+    record->probability = probability;
+    record->distance = distance;
+    record->flags = flags;
+    record->repeatEvery = -1;
+    record->condition = 9;
+    record->priority = static_cast<std::uint16_t>(priority);
+    record->dialogue = dialogue;
+    record->character = character;
+    record->otherCharacter = otherCharacter;
+    vfRegisterCameraDialogue(record);
+    return record->id;
+}
+
+// @verified - p
+std::uint32_t AllocateBattleDialogueCondition12(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
+    std::int16_t repeatEvery, float probability, std::uint16_t flags) {
+    VCDS_t *const record = static_cast<VCDS_t *>(HLib::AllocateTaskData(sizeof(VCDS_t), TASK_VCDS));
+    HLib::AssignDynamicAlignmentForTaskData(record);
+    record->flags = flags;
+    record->repeatEvery = repeatEvery;
+    record->probability = probability;
+    record->condition = 12;
+    record->priority = static_cast<std::uint16_t>(priority);
+    record->dialogue = dialogue;
+    record->character = character;
+    record->otherCharacter = otherCharacter;
+    vfRegisterCameraDialogue(record);
+    return record->id;
+}
+
+// @verified - p
+std::uint32_t AllocateBattleDialogueCondition16(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
+    std::int16_t repeatEvery, float probability, std::uint16_t flags) {
+    VCDS_t *const record = static_cast<VCDS_t *>(HLib::AllocateTaskData(sizeof(VCDS_t), TASK_VCDS));
+    HLib::AssignDynamicAlignmentForTaskData(record);
+    record->flags = flags;
+    record->repeatEvery = repeatEvery;
+    record->probability = probability;
+    record->condition = 16;
+    record->priority = static_cast<std::uint16_t>(priority);
+    record->dialogue = dialogue;
+    record->character = character;
+    record->otherCharacter = otherCharacter;
+    vfRegisterCameraDialogue(record);
+    return record->id;
+}
+
+// @verified - p
 std::uint32_t AllocateMotionBattleDialogue(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, std::uint16_t animation,
     std::int16_t repeatEvery, float probability, std::uint16_t flags) {
     VCDS_t *const record = static_cast<VCDS_t *>(HLib::AllocateTaskData(sizeof(VCDS_t), TASK_VCDS));

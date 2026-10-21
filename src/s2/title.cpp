@@ -1,6 +1,7 @@
 #include "s2/title.hpp"
 
 #include "s2/date_time.hpp"
+#include "s2/debug_text.hpp"
 #include "s2/game_runtime.hpp"
 #include "s2/conversation.hpp"
 #include "s2/d3t_renderer.hpp"
@@ -89,13 +90,263 @@ std::array<std::int32_t, 4> titleOptionItems{};
 std::int32_t titleOptionItemCount = 0;
 std::int16_t titleSelectedAct = -1;
 std::int32_t titleDebugAct = 0;
-std::array<std::uint8_t, 10> titleSceneIndices{};
+std::int32_t titleDebugSaveSlot = -1;
+std::int8_t titleDebugSaveLoaded{};
 std::int32_t titleCurrentAreaIndex = 0;
 std::int32_t titleDebugSelection = 0;
-std::int32_t titlePreviousDebugSelection = 0;
+std::int32_t titleDebugAreaCharacter = 0;
 std::int32_t titleCurrentCoreModule = 0;
-
 std::int32_t titleAnalogInputLatched{};
+
+// @verified - p
+std::int32_t FindLastTitleSceneGroup(const TitleSceneGroup *groups) {
+    std::int32_t count = 0;
+    while (groups[count].scenes != reinterpret_cast<const TitleSceneEntry *>(static_cast<std::uintptr_t>(-1)))
+        ++count;
+    return count - 1;
+}
+
+// @verified - p
+void SelectTitleSceneGroup(const TitleSceneGroup *groups) {
+    const std::uint16_t input = g_inputBuffer[0].repeatedPresses;
+    if (input & 2U) {
+        do {
+            titleDebugAct = titleDebugAct != 0 ? titleDebugAct - 1 : FindLastTitleSceneGroup(groups);
+        } while (!groups[titleDebugAct].scenes);
+    } else if (input & 4U) {
+        do {
+            ++titleDebugAct;
+            if (groups[titleDebugAct].scenes == reinterpret_cast<const TitleSceneEntry *>(static_cast<std::uintptr_t>(-1)))
+                titleDebugAct = 0;
+        } while (!groups[titleDebugAct].scenes);
+    } else {
+        return;
+    }
+    titleCurrentAreaIndex = groups[titleDebugAct].index;
+    SetTitleSceneInfo(groups[titleDebugAct].scenes[titleCurrentAreaIndex]);
+    titleDebugSaveLoaded = 0;
+}
+
+// @verified - p
+void SelectTitleArea(const TitleSceneEntry *scenes) {
+    const std::uint16_t input = g_inputBuffer[0].repeatedPresses;
+    if (titleCurrentAreaIndex == -2)
+        return;
+    if (input & 0x200U) {
+        if (titleCurrentAreaIndex == -1 || titleCurrentAreaIndex == 0) {
+            std::int32_t count = 0;
+            while (scenes[count].act != 255)
+                ++count;
+            titleCurrentAreaIndex = count - 1;
+        } else {
+            --titleCurrentAreaIndex;
+        }
+    } else if (input & PAD_BUTTON_X) {
+        if (titleCurrentAreaIndex == -1) {
+            titleCurrentAreaIndex = 0;
+        } else {
+            ++titleCurrentAreaIndex;
+            if (scenes[titleCurrentAreaIndex].act == 255)
+                titleCurrentAreaIndex = 0;
+        }
+    } else {
+        return;
+    }
+    SetTitleSceneInfo(scenes[titleCurrentAreaIndex]);
+    titleDebugSaveLoaded = 0;
+}
+
+// @verified - p
+void SetTitleDebugStartTime(shen_name area) {
+    DateTime time;
+    GetCurrentDateTime(time);
+    if (area == TITLE_AREA_0200) {
+        time.hour = 10;
+        time.minute = 0;
+        time.second = 0;
+    } else if (area.characters[0] == 'K') {
+        time.hour = 8;
+        time.minute = 0;
+        if (area != TITLE_AREA_KRF1) {
+            time.hour = 9;
+            time.minute = 30;
+        }
+        time.second = 0;
+    }
+    SetCurrentDateTimeTo(time);
+}
+
+// @verified - p
+std::int32_t InitializeTitleDebugGame(UIElement) {
+    if (titleDebugSaveSlot < 0) {
+        if (InitializeNewGameFromSaveSlot(-1) == 0)
+            return 0;
+        SetTitleDebugStartTime(g_currentMap);
+    } else if (LoadGameFromSaveSlot(titleDebugSaveSlot, titleDebugSaveLoaded) == 0) {
+        return 0;
+    }
+    ApplyTitleMenuOptions();
+    return 1;
+}
+
+// @verified - p
+void DebugTitleSceneSelector() {
+    const std::uint16_t input = g_inputBuffer[0].repeatedPresses;
+    SelectTitleSceneGroup(TITLE_SCENE_GROUPS.data());
+    SelectTitleArea(TITLE_SCENE_GROUPS[titleDebugAct].scenes);
+    const S2SaveDataInfo *const saves = GetBackupSaveDataInfo(0);
+    if (input & PAD_LEFT) {
+        if (titleDebugSelection == 0) {
+            do {
+                titleDebugSaveSlot = titleDebugSaveSlot < 0 ? 3 : titleDebugSaveSlot - 1;
+            } while (titleDebugSaveSlot >= 0 && saves[titleDebugSaveSlot].saveKind == 0);
+            if (titleDebugSaveSlot >= 0) {
+                titleDebugSaveLoaded = 1;
+                g_actNumber = saves[titleDebugSaveSlot].sceneNumber;
+                g_currentMap = saves[titleDebugSaveSlot].mapName;
+                g_entryPoint = saves[titleDebugSaveSlot].entryPoint;
+            } else {
+                titleDebugSaveLoaded = 0;
+            }
+        } else {
+            if (titleDebugSelection == 1) {
+                if (g_actNumber-- == 0)
+                    g_actNumber = 99;
+            } else if (titleDebugSelection == 2) {
+                if (--titleDebugAreaCharacter < -1)
+                    titleDebugAreaCharacter = 3;
+            } else if (titleDebugSelection == 3) {
+                if (g_entryPoint-- == 0)
+                    g_entryPoint = 99;
+            }
+            titleDebugSaveLoaded = 0;
+        }
+    } else if (input & PAD_RIGHT) {
+        if (titleDebugSelection == 0) {
+            bool found = false;
+            while (titleDebugSaveSlot <= 2) {
+                ++titleDebugSaveSlot;
+                if (titleDebugSaveSlot < 0 || saves[titleDebugSaveSlot].saveKind != 0) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                titleDebugSaveSlot = -1;
+            if (titleDebugSaveSlot >= 0) {
+                titleDebugSaveLoaded = 1;
+                g_actNumber = saves[titleDebugSaveSlot].sceneNumber;
+                g_currentMap = saves[titleDebugSaveSlot].mapName;
+                g_entryPoint = saves[titleDebugSaveSlot].entryPoint;
+            } else {
+                titleDebugSaveLoaded = 0;
+            }
+        } else {
+            if (titleDebugSelection == 1) {
+                if (++g_actNumber >= 100)
+                    g_actNumber = 0;
+            } else if (titleDebugSelection == 2) {
+                if (++titleDebugAreaCharacter >= 4)
+                    titleDebugAreaCharacter = -1;
+            } else if (titleDebugSelection == 3) {
+                if (++g_entryPoint >= 100)
+                    g_entryPoint = 0;
+            }
+            titleDebugSaveLoaded = 0;
+        }
+    }
+    shen_name area = g_currentMap.name != 0 ? g_currentMap : TITLE_AREA_0000;
+    if (input & PAD_UP) {
+        if (titleDebugAreaCharacter < 0) {
+            if (--titleDebugSelection < 0)
+                titleDebugSelection = 3;
+        } else {
+            char &character = area.characters[titleDebugAreaCharacter];
+            if (character == '_')
+                character = '0';
+            else if (character == '9')
+                character = 'A';
+            else if (character == 'Z')
+                character = '_';
+            else
+                ++character;
+        }
+    } else if (input & PAD_DOWN) {
+        if (titleDebugAreaCharacter < 0) {
+            if (++titleDebugSelection >= 4)
+                titleDebugSelection = 0;
+        } else {
+            char &character = area.characters[titleDebugAreaCharacter];
+            if (character == '_')
+                character = 'Z';
+            else if (character == '0')
+                character = '_';
+            else if (character == 'A')
+                character = '9';
+            else
+                --character;
+        }
+    }
+    g_currentMap = area;
+    if ((g_rootTaskIterationCount & 0xfU) >= 8 && titleDebugAreaCharacter >= 0)
+        area.characters[titleDebugAreaCharacter] = ' ';
+    SetDebugStringPosition(14, 18);
+    if (titleDebugSaveSlot >= 0 && titleDebugSaveSlot <= 2) {
+        const float step = static_cast<float>(static_cast<std::int16_t>(saves[titleDebugSaveSlot].stepHundreds)) * 0.0001f;
+        DebugTextPrintf("CONTINUE - #%d:STEP%2.4f", titleDebugSaveSlot + 1, static_cast<double>(step));
+    } else {
+        DebugTextPrintf(titleDebugSaveSlot == 3 ? "CONTINUE - RAM" : "CONTINUE - OFF");
+    }
+    DebugTextPrintf(" %c\n", titleDebugSaveLoaded ? 'R' : ' ');
+    DebugTextPrintf("SCENE    - %02d\n", g_actNumber);
+    DebugTextPrintf("AREA     - %c%c%c%c\n", area.characters[0], area.characters[1], area.characters[2], area.characters[3]);
+    DebugTextPrintf("ENTRY    - %02d\n", g_entryPoint);
+    SetDebugStringPosition(12, titleDebugSelection + 18);
+    DebugTextPrintf(">");
+    SetDebugStringPosition(1, 22);
+    if (titleCurrentAreaIndex < 0)
+        DebugTextPrintf("(%2d:--)", titleDebugAct);
+    else
+        DebugTextPrintf("(%2d:%2d)", titleDebugAct, titleCurrentAreaIndex);
+}
+
+const std::array<TitleDebugModuleEntry, 6> TITLE_DEBUG_MODULES{{
+    {.name = "             ", .module = SystemModule::Game, .control = DebugTitleSceneSelector, .initialize = InitializeTitleDebugGame},
+    {.name = " STAFF ROLL  ", .module = SystemModule::Credits, .initialize = GetDebugForceUIEnabled},
+    {.name = "   OUTRUN    ", .module = SystemModule::OutRun, .initialize = GetDebugForceUIEnabled},
+    {.name = "  HARRIER    ", .module = SystemModule::SpaceHarrier, .initialize = GetDebugForceUIEnabled},
+    {.name = "   HANGON    ", .module = SystemModule::HangOn, .initialize = GetDebugForceUIEnabled},
+    {.name = "AFTER BURNER ", .module = SystemModule::AfterBurner, .initialize = GetDebugForceUIEnabled},
+}};
+
+// @verified - p
+void SwitchSystemModuleTaskForFrontend(void *) {
+    const std::uint16_t input = g_inputBuffer[0].pressedPriority;
+    if (input & 0xc0U) {
+        titleCurrentCoreModule += (input & PAD_TRIGGER_LEFT) != 0 ? -1 : 1;
+        const std::int32_t last = g_loadedActNumber == 2 ? 3 : 5;
+        if (titleCurrentCoreModule < 0)
+            titleCurrentCoreModule = last;
+        else if (titleCurrentCoreModule > last)
+            titleCurrentCoreModule = 0;
+    }
+    const TitleDebugModuleEntry &selected = TITLE_DEBUG_MODULES[titleCurrentCoreModule];
+    if (selected.control)
+        selected.control();
+    SetDebugStringPosition(14, 21);
+    DebugTextPrintf("%s", TITLE_DEBUG_MODULES[titleCurrentCoreModule].name);
+    if ((input & 0xc00U) != 0 && TITLE_DEBUG_MODULES[titleCurrentCoreModule].initialize(UIElement{}) != 0) {
+        g_bPaused = false;
+        const SystemModule module = TITLE_DEBUG_MODULES[titleCurrentCoreModule].module;
+        ExecuteAicaCommand(0x1200a0U, 5, 0);
+        ChangeSystemModule(module, 0);
+        if (g_loadedActNumber != g_actNumber) {
+            SetNextSceneNumber(static_cast<std::uint32_t>(g_actNumber));
+            g_bPaused = false;
+            ChangeSystemModule(SystemModule ::DiskChange, 0);
+        }
+    }
+}
 void NativeTitleNoOp(void *) {
 }
 
@@ -164,6 +415,10 @@ void TitleMenuDisplay(void *) {
     EnableElement(UIElement::MainMenu);
 }
 
+const std::array<TitleCallbackPair, 2> TITLE_SECOND_CALLBACKS{{
+    {.control = SwitchSystemModuleTaskForFrontend, .display = SetPressStart},
+    {.control = TitleMenuControl, .display = TitleMenuDisplay},
+}};
 void TitleOptionsControl(void *) {
     padcCheckControllerConnection();
     ProcessTitleOptionsInput();
@@ -412,7 +667,6 @@ void SetTitleMenuSelection(std::int32_t selection) {
     g_previousTitleMenuSelection = selection;
 }
 
-// @verified - p
 std::int32_t SetTitleSceneInfo(const TitleSceneEntry &scene) {
     if (scene.act == 255) {
         g_currentMap = TITLE_AREA_0000;
@@ -422,7 +676,7 @@ std::int32_t SetTitleSceneInfo(const TitleSceneEntry &scene) {
         return 0;
     }
     g_actNumber = scene.act;
-    g_currentMap = scene.area;
+    std::memcpy(&g_currentMap, &scene.area, sizeof(g_currentMap));
     g_entryPoint = scene.entry;
     return scene.entry;
 }
@@ -537,10 +791,10 @@ void TitleControl(void *taskData) {
     TitleDisplayData *const display = static_cast<TitleDisplayData *>(HLib::GetTaskParameter(control->titleSequenceTask));
     std::size_t sequence = static_cast<std::size_t>(titleLoopSequence);
     if (control->state > 0) {
-        if (control->state == 2) {
-            HLib::SetCurrentTaskTo(TitleMenuControl);
-            HLib::AssignCallbackForTask(control->titleSequenceTask, TitleMenuDisplay);
-        }
+
+        HLib::SetCurrentTaskTo(TITLE_SECOND_CALLBACKS[control->state - 1].control);
+        HLib::AssignCallbackForTask(control->titleSequenceTask, TITLE_SECOND_CALLBACKS[control->state - 1].display);
+
         control->state = 0;
         return;
     }
@@ -726,10 +980,10 @@ void TitleModule(void *taskData) {
     }
     d3t::SetSceneClearColour(0xff000000U);
     titleDebugAct = titleSelectedAct == -1 ? g_loadedActNumber : titleSelectedAct;
-    titleCurrentAreaIndex = titleSceneIndices[titleDebugAct];
-    SetTitleSceneInfo(TITLE_SCENE_TABLES[titleDebugAct][titleCurrentAreaIndex]);
+    titleCurrentAreaIndex = TITLE_SCENE_GROUPS[titleDebugAct].index;
+    SetTitleSceneInfo(TITLE_SCENE_GROUPS[titleDebugAct].scenes[titleCurrentAreaIndex]);
     titleDebugSelection = 0;
-    titlePreviousDebugSelection = -1;
+    titleDebugAreaCharacter = -1;
     titleCurrentCoreModule = 0;
     const bool titleSoundMainScene = resumedIntro || g_titleFlagShouldRun != 0;
     g_titleFlagShouldRun = 0;

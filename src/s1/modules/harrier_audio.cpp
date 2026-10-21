@@ -440,7 +440,7 @@ void WaitForAndCloseMusicRead() {
 void SetMusicVoiceVolume(std::uint32_t voiceId, float volume) {
     if (voiceId == kInvalidVoiceId)
         return;
-    SetRawSoundEffectVolume(GetRawSoundEffectVoice(voiceId), volume * g_applicationSettings.savedMusicVolume);
+    SetRawSoundEffectVolume(GetRawSoundEffectVoice(voiceId), volume * g_applicationSettings.savedSfxVolume);
 }
 
 } // namespace
@@ -501,6 +501,7 @@ void CreateAndStartPlayingSourceVoiceForHarrier(std::uint32_t soundIndex) {
     if (slot.voiceId == kInvalidVoiceId)
         return;
     CreateAndStartPlayingSourceVoice(slot.voiceId, slot.fileData, static_cast<std::size_t>(slot.fileSize));
+    SetRawSoundEffectOutputMatrix(playback, kHarrierOutputMatrix.data(), 2, 6);
     SetRawSoundEffectVolume(playback, kHarrierSfxGain * g_applicationSettings.savedSfxVolume);
 }
 
@@ -525,15 +526,17 @@ void DoAudio(bool paused) {
                 slot.paused = 1;
                 SetRawSoundEffectPaused(playback, true);
             }
-        } else if (slot.paused) {
-            slot.paused = 0;
-            StartRawSoundEffectPlayback(playback);
-        } else if (!RawSoundEffectVoiceIsActive(playback)) {
-            ReleaseVoice(slot.voiceId);
+        } else {
+            SetRawSoundEffectVolume(playback, kHarrierSfxGain * g_applicationSettings.savedSfxVolume);
+            if (slot.paused) {
+                slot.paused = 0;
+                StartRawSoundEffectPlayback(playback);
+            } else if (!RawSoundEffectVoiceIsActive(playback)) {
+                ReleaseVoice(slot.voiceId);
+            }
         }
-    }
 }
-
+}
 void HarrierLoadFileFromPath(const char *path) {
     if (!path)
         return;
@@ -585,6 +588,7 @@ void AudioFlushFromArchivesAndPlay() {
         if (g_harrierMusicVoiceIds[current] != kInvalidVoiceId && g_harrierMusicBuffers[current]) {
             ProcessWave_Wrapper_0(
                 g_harrierMusicVoiceIds[current], g_harrierMusicBuffers[current], static_cast<std::size_t>(g_harrierMusicBufferSizes[current]));
+            SetRawSoundEffectOutputMatrix(GetRawSoundEffectVoice(g_harrierMusicVoiceIds[current]), kHarrierOutputMatrix.data(), 2, 6);
         }
         ReadFile_0(0, &g_harrierMusicArchiveHandle);
         g_harrierMusicArchiveHandle = g_invalidArchiveHandle;

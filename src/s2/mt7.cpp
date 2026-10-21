@@ -23,6 +23,7 @@
 #include <limits>
 #include <unordered_set>
 
+#include <unordered_map>
 namespace shenmue::s2 {
 namespace {
 
@@ -31,6 +32,7 @@ constexpr std::array<std::uint32_t, 8> modelSignatures{0x5843444dU, 0x3743444dU,
 #endif
 constexpr std::uint32_t xb01Signature = 0x31304258U;
 
+std::unordered_map<const void *, std::unique_ptr<MT7Node[]>> mt7TaskNodeCopies;
 template <typename Value> bool Read(std::span<const std::byte> bytes, std::size_t offset, Value &value) {
     if (offset > bytes.size() || sizeof(Value) > bytes.size() - offset) {
         return false;
@@ -995,6 +997,23 @@ void AssignFlags(MT7Model *model) {
     model->entityType = !model->nodes.empty() && id > 28672 ? id - 28673 : 0;
 }
 
+MT7Node *AllocateMT7TaskNodeCopies(const void *taskData, std::size_t count) {
+    std::unordered_map<const void *, std::unique_ptr<MT7Node[]>>::iterator entry = mt7TaskNodeCopies.find(taskData);
+    if (entry != mt7TaskNodeCopies.end())
+        return entry->second.get();
+    return mt7TaskNodeCopies.emplace(taskData, std::make_unique<MT7Node[]>(count)).first->second.get();
+}
+
+void ReleaseMT7TaskNodeCopies(const void *begin, std::size_t size) {
+    const std::uintptr_t first = reinterpret_cast<std::uintptr_t>(begin);
+    for (std::unordered_map<const void *, std::unique_ptr<MT7Node[]>>::iterator entry = mt7TaskNodeCopies.begin(); entry != mt7TaskNodeCopies.end();) {
+        const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(entry->first);
+        if (address >= first && address - first < size)
+            entry = mt7TaskNodeCopies.erase(entry);
+        else
+            ++entry;
+    }
+}
 void ReleaseModelFormat7(MT7Model &model) {
     FlushQueuedLegacyDrawPasses();
     if (const MT7Node *const data = GetMT7ReaderData(&model)) {

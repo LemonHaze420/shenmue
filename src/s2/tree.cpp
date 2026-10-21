@@ -7,7 +7,6 @@
 #include "common/math.hpp"
 
 #include <cmath>
-#include <vector>
 
 namespace shenmue::s2 {
 
@@ -17,8 +16,6 @@ namespace {
 
 
 float treePreviousWindSpeed{};
-
-std::vector<std::array<MT7Node, 2>> treeBranchNodes;
 
 std::uint8_t TreeMarker(const MT7Node *node) {
     return static_cast<std::uint8_t>(IsMDPXorMDP7(node));
@@ -59,7 +56,7 @@ void tree_Callback_Enqueue(std::uint8_t nextFunctionIndex) {
     g_treeTask =
         HLib::EnqueueTaskWithParameter(tree_Callback_Callback, nextFunctionIndex, 2, sizeof(TreeSwayRecord) * static_cast<std::size_t>(treeCount), TREE_TASK);
     auto *const records = static_cast<TreeSwayRecord *>(HLib::GetTaskParameter(g_treeTask));
-    treeBranchNodes.assign(static_cast<std::size_t>(treeCount), {});
+    MT7Node *const branchNodes = AllocateMT7TaskNodeCopies(records, 2 * static_cast<std::size_t>(treeCount));
     std::size_t index = 0;
     for (MT7Node *node = mtGetTransform(root); node; node = mtGetSibling(node)) {
         if (TreeMarker(node) != TREE_MODEL_MARKER)
@@ -73,12 +70,12 @@ void tree_Callback_Enqueue(std::uint8_t nextFunctionIndex) {
                 ++match;
             if (match < templateCount) {
                 const std::array<MT7Node *, 3> &source = templates[static_cast<std::size_t>(match)];
-                MT7Node &branch = treeBranchNodes[index][0];
+                MT7Node &branch = branchNodes[2 * index];
                 mt7_CopyXB01Offset(node, source[0]);
                 mt7_UpdateChildOffset(node, &branch);
                 branch = *source[1];
                 mt7_UpdateParentOffset(&branch, node);
-                mt7_UpdateChildOffset(&branch, &treeBranchNodes[index][1]);
+                mt7_UpdateChildOffset(&branch, &branchNodes[2 * index + 1]);
                 mt7_UpdateSiblingOffset(&branch, nullptr);
                 MT7Node *const twig = mtGetTransform(&branch);
                 *twig = *source[2];

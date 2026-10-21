@@ -211,6 +211,8 @@ bool ReadModelFormat7(std::span<const std::byte> bytes, const char *label, MT7Mo
 bool ReadModelFormat7(std::span<const std::byte> bytes, const char *label, MT7Model &model, std::uint16_t flags);
 void ReleaseModelFormat7(MT7Model &model);
 void ReleaseModelFormat7Storage(MT7Model &model);
+MT7Node *AllocateMT7TaskNodeCopies(const void *taskData, std::size_t count);
+void ReleaseMT7TaskNodeCopies(const void *begin, std::size_t size);
 void AssignFlags(MT7Model *model);
 extern Matrix4x4 g_modelNodeTransformBase;
 void CaptureModelNodeTransformBase();

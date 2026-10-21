@@ -1638,6 +1638,9 @@ HLib::Task *WEXE_Init() {
     g_activeWindEntry = allocateWeatherEntry();
     WIND_EnsureWeatherData();
     g_weatherExecuteTask = HLib_EnqueueTaskWithoutParameter(Weather_Tick, 13, 8, makeToken('W', 'E', 'X', 'E'));
+#if SHENMUE_IS_PC
+    g_fcasRuntime = {.current = kWeatherFcasInterpolation};
+#endif
     return g_weatherExecuteTask;
 }
 
@@ -1727,7 +1730,7 @@ void Weather_Tick(HLib::TaskData *) {
             }
             if ((overrides & kWeatherOverrideDual) == 0 && (overrides & kWeatherOverrideSnow) == 0)
                 WEXE_ApplySnowGameData(weatherRealSnow(), 120);
-            g_weatherForecastValue = static_cast<std::int32_t>(g_weatherFcasValue * 255.0f);
+
             WEXE_ApplyFcasGameData(g_weatherFcasValue, 120);
             g_cachedWeatherHour = target.hours;
             g_cachedWeatherMinute = target.minutes;
@@ -1765,7 +1768,13 @@ void Weather_ReadChunks(void *fileData) {
     bindChunk(makeToken('C', 'L', 'U', 'D'), g_cloudNode, g_cloudCount, g_cloudRuntime);
     bindChunk(makeToken('R', 'A', 'I', 'N'), g_rainNode, g_rainCount, g_rainRuntime);
     bindChunk(makeToken('S', 'N', 'O', 'W'), g_snowNode, g_snowCount, g_snowRuntime);
+#if SHENMUE_IS_PC
+    WeatherChunk *const forecast = findChunkUnchecked(first, makeToken('F', 'C', 'A', 'S'));
+    g_forecastCount = forecast->size / static_cast<std::int32_t>(sizeof(std::uint32_t)) - 2;
+    g_forecastNode = forecast + 1;
+#else
     bindChunk(makeToken('F', 'C', 'A', 'S'), g_forecastNode, g_forecastCount, g_fcasRuntime);
+#endif
 }
 
 

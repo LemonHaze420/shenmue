@@ -348,6 +348,7 @@ void HangOn_DestroySession(HLib::TaskData *taskData) {
     if (g_hangOnSession)
         ReleaseHangOnSession();
     g_hangOnFramesToSkip = 60;
+    g_postFxState.enabled = 1;
 }
 } // namespace
 bool LoadHangOnLibrary() {
@@ -649,6 +650,7 @@ void HangOnCreate(HLib::TaskData *taskData) {
         RTArcade_BeginInteraction(ArcadeGame::HangOn);
 #endif
         g_isRenderSuppressed = 1;
+        g_postFxState.enabled = 0;
         g_emulatorSession.result = -1;
         g_emulatorSession.mode = 2;
         g_emulatorSession.field0c = 0;
@@ -701,6 +703,7 @@ void HangOnCreate(HLib::TaskData *taskData) {
                     StartRawSoundEffectVoice(g_hangOnVoice);
                     g_hangOnVoiceStarted = true;
                 }
+                SetRawSoundEffectVolume(g_hangOnVoice, g_applicationSettings.savedSfxVolume);
                 SubmitRawSoundEffectBuffer(g_hangOnVoice, static_cast<const std::byte *>(g_hangOnUpdate.audioData),
                     static_cast<std::uint32_t>(g_hangOnUpdate.audioBytes), g_hangOnUpdate.audioPlayLength);
             }

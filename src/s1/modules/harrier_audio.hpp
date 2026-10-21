@@ -1,8 +1,11 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 namespace shenmue::s1 {
+
+inline constexpr std::array<float, 12> kHarrierOutputMatrix{1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
 
 inline constexpr std::uint32_t kHarrierAudioCommandOffset = 0xd0001;
 

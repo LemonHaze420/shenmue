@@ -51,7 +51,7 @@ std::int64_t KnmnResumeConditionalDialogues(void *) {
     return reinterpret_cast<std::int64_t>(ResumeBattleDialogue(knmnConditionalDialogues[2]));
 }
 std::int64_t KnmnInstallDialogueConditions(void *) {
-    std::uint32_t id = AllocateBattleDialogue(8, -1, KNMN_KEM, shen_name{}, 1, 100, 1);
+    std::uint32_t id = AllocateBattleDialogueCondition12(8, -1, KNMN_KEM, shen_name{}, 1, 100, 1);
     AssignBattleDialogueCallback(id, KnmnCycleOpponentHitVoice);
     id = AllocateBattleDialogueCondition7(7, -1, KNMN_KEM, KNMN_RYO, 1, 100, 1);
     AssignBattleDialogueCallback(id, KnmnCycleOpponentAttackVoice);
@@ -59,7 +59,7 @@ std::int64_t KnmnInstallDialogueConditions(void *) {
     AssignBattleDialogueCallback(id, KnmnCyclePlayerAdviceVoice);
     id = AllocateMotionBattleDialogue(8, -1, KNMN_RYO, shen_name{}, 1, 1, 100, 1);
     AssignBattleDialogueCallback(id, KnmnCyclePlayerMotionVoice);
-    id = AllocateBattleDialogueCondition17(10, -2, KNMN_KEM, KNMN_RYO, 1, 100, 1);
+    id = AllocateBattleDialogueCondition16(10, -2, KNMN_KEM, KNMN_RYO, 1, 100, 1);
     AssignBattleDialogueCallback(id, KnmnResumeConditionalDialogues);
     knmnConditionalDialogues[0] = AllocateMotionBattleDialogue(8, -1, KNMN_RYO, shen_name{}, 283, 1, 100, 2);
     AssignBattleDialogueCallback(knmnConditionalDialogues[0], KnmnCyclePlayerEvadeVoice);
@@ -84,7 +84,7 @@ std::int64_t KnmnRequestButokuBattleEnd(void *) {
 }
 void KnmnInstallEndConditions(std::int64_t (*callback)(void *)) {
     knmnEndRequested = 0;
-    const std::uint32_t hit = AllocateBattleDialogue(0, -2, KNMN_RYO, shen_name{}, 20, 100, 1);
+    const std::uint32_t hit = AllocateBattleDialogueCondition12(0, -2, KNMN_RYO, shen_name{}, 20, 100, 1);
     AssignBattleDialogueCallback(hit, callback);
     const std::uint32_t timed = AllocatePeriodicBattleDialogue(0, -2, shen_name{}, shen_name{}, 1800, 100, 0);
     AssignBattleDialogueCallback(timed, callback);

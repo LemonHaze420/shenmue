@@ -220,6 +220,15 @@ void InitializeHarrierDebugText() {
 }
 
 void SetHarrierRenderFlags() {
+    D3TDeviceContext *const context = DX11::g_ppD3DDeviceContext;
+    if (context) {
+        d3t::D3TRenderState &state = d3t::GetRenderState(*context);
+        d3t::D3TSamplerStateKey &sampler = state.bindings.samplers[1][4];
+        if (sampler.flags[0] != 0 || sampler.flags[1] != 0) {
+            sampler = {};
+            state.samplerDirtyMasks[1] |= 1U << 4U;
+        }
+    }
     SetRenderFlags(0x93, 0);
     SetRenderFlags(0x3b, 1);
     SetRenderFlags(0x3e, 770);
@@ -262,23 +271,20 @@ void DrawHarrierQuad(const std::array<Vertex, 4> &vertices, std::uint32_t shader
     if (!context || !context->deviceContext || !shaderLoad || !g_fvfLayouts[layoutIndex])
         return;
     BindHarrierShader(context, shaderLoad, layoutIndex);
-    if (texture)
-        BindLegacyPixelTexture(context, texture);
+    if (texture) {
+        d3t::D3TRenderState &state = d3t::GetRenderState(*context);
+        if (state.bindings.textureHandles[1][0] != texture || state.bindings.textureFlags[1][0] != 0) {
+            state.bindings.textureHandles[1][0] = texture;
+            state.bindings.textureFlags[1][0] = 0;
+            state.shaderResourceDirtyMasks[1] |= 1U;
+        }
+    }
     void *const mapped = GetMappedConstantBuffer(context, static_cast<std::int64_t>(layoutIndex * 4U), sizeof(vertices));
     if (!mapped)
         return;
     std::memcpy(mapped, vertices.data(), sizeof(vertices));
     CommitLegacyScreenRenderState(context, false);
-    if (layoutIndex != 30) {
-        // SetEmuRenderFlags selects point/wrap PS s4, independently of the legacy material samplers s0..s3.
-        d3t::D3TRenderState &state = d3t::GetRenderState(*context);
-        std::uint64_t samplerFlags = 0;
-        std::memcpy(&samplerFlags, context->renderState.data() + 0x574, sizeof(samplerFlags));
-        if (samplerFlags != 0) {
-            std::memset(context->renderState.data() + 0x574, 0, 16);
-            state.samplerDirtyMasks[1] |= 1U << 4U;
-        }
-    }
+
     DX11_ResetMappedResources(context);
     DX11_UnmapAndSyncShaderBindings(context);
     DX11_SetupShadersForDXAndSetViewports(context);
@@ -365,17 +371,15 @@ void UpdateHarrierPalettes() {
 
 void SwapSpriteCacheMetadata(HarrierSpriteCacheEntry &left, HarrierSpriteCacheEntry &right) {
     const std::int32_t textureSlot = left.textureSlot;
-    const std::int32_t patternKey = left.cachedPatternKey;
-    const std::int16_t palette = left.cachedPalette;
-    const std::int16_t height = left.cachedHeight;
     left.textureSlot = right.textureSlot;
-    left.cachedPatternKey = right.cachedPatternKey;
-    left.cachedPalette = right.cachedPalette;
-    left.cachedHeight = right.cachedHeight;
     right.textureSlot = textureSlot;
-    right.cachedPatternKey = patternKey;
-    right.cachedPalette = palette;
-    right.cachedHeight = height;
+    const std::int32_t patternKey = right.cachedPatternKey;
+    right.cachedPatternKey = left.cachedPatternKey;
+    left.cachedPatternKey = patternKey;
+    right.cachedPatternKey = left.cachedPalette;
+    left.cachedPalette = right.cachedPalette;
+    right.cachedPatternKey = left.cachedHeight;
+    left.cachedHeight = right.cachedHeight;
 }
 
 HarrierSpriteCacheEntry *FindSpriteCacheEntry(std::size_t spriteIndex, std::int32_t patternKey, std::int16_t palette) {
@@ -399,9 +403,30 @@ HarrierSpriteCacheEntry *FindSpriteCacheEntry(std::size_t spriteIndex, std::int3
     return nullptr;
 }
 
-void UploadSpriteTexture(HarrierSpriteCacheEntry &entry) {
+void CreateSpriteTexture(std::size_t spriteIndex, HarrierSpriteCacheEntry &entry) {
+    if ((entry.palette & 0x80) != 0 || g_harrierAverageColour == g_harrierPreviousAverageColour) {
+        const std::size_t first = spriteIndex > 32 ? spriteIndex - 32 : 0;
+        for (std::size_t index = spriteIndex; index > first; --index) {
+            HarrierSpriteCacheEntry &candidate = g_harrierSpriteCache[index - 1];
+            if (candidate.cachedPatternKey == entry.patternKey && candidate.cachedPalette == entry.palette) {
+                entry.cache = &candidate;
+                return;
+            }
+        }
+    }
+    g_harrierSpriteCacheCursor = (g_harrierSpriteCacheCursor + 1U) & 31U;
+    HarrierSpriteCacheEntry &cached = g_harrierSpriteCache[kHarrierSpriteCachePoolStart + g_harrierSpriteCacheCursor];
+    if (&cached != &entry)
+        SwapSpriteCacheMetadata(entry, cached);
+    entry.cache = &entry;
+    entry.claimed = 1;
     if (entry.textureSlot < 0 || static_cast<std::size_t>(entry.textureSlot) >= g_harrierSpriteTextures.size() || entry.width <= 0 || entry.height <= 0)
         return;
+    std::uint32_t &texture = g_harrierSpriteTextures[static_cast<std::size_t>(entry.textureSlot)];
+    InitTexture2DResource(texture);
+    entry.cachedPatternKey = entry.patternKey;
+    entry.cachedPalette = entry.palette;
+    entry.cachedHeight = entry.height;
     const std::size_t pixelCount = static_cast<std::size_t>(entry.width) * static_cast<std::size_t>(entry.height);
     const std::size_t sourceOffset = kHarrierBackgroundGraphicsBytes + static_cast<std::size_t>(entry.patternKey) * 8U;
     if (sourceOffset > g_harrierGraphics.size() || pixelCount > g_harrierGraphics.size() - sourceOffset || pixelCount > g_harrierSpritePixels.size())
@@ -415,8 +440,7 @@ void UploadSpriteTexture(HarrierSpriteCacheEntry &entry) {
     const std::uint8_t *const source = g_harrierGraphics.data() + sourceOffset;
     for (std::size_t index = 0; index < pixelCount; ++index)
         pixels[index] = palette[(source[index] >> 2U) & 0x0fU];
-    std::uint32_t &texture = g_harrierSpriteTextures[static_cast<std::size_t>(entry.textureSlot)];
-    InitTexture2DResource(texture);
+
     const Texture2DDescription description{
         static_cast<std::uint32_t>(entry.width), static_cast<std::uint32_t>(entry.height), 1, 1, kHarrierTextureFormat, 0, 0, 1, 0, 0, pixels};
     texture = CreateTexture2D(&description);
@@ -425,7 +449,7 @@ void UploadSpriteTexture(HarrierSpriteCacheEntry &entry) {
 void AssignSpriteCache(std::size_t spriteIndex, std::int32_t patternKey, std::int16_t palette, std::int16_t width, std::int16_t height) {
     HarrierSpriteCacheEntry &entry = g_harrierSpriteCache[spriteIndex];
     HarrierSpriteCacheEntry *cached = nullptr;
-    if ((static_cast<std::uint16_t>(palette) & 0x80U) != 0 || g_harrierAverageColour == g_harrierPreviousAverageColour)
+    if (static_cast<std::int8_t>(entry.palette) < 0 || g_harrierAverageColour == g_harrierPreviousAverageColour)
         cached = FindSpriteCacheEntry(spriteIndex, patternKey, palette);
     if (cached) {
         if (!cached->claimed) {
@@ -437,27 +461,17 @@ void AssignSpriteCache(std::size_t spriteIndex, std::int32_t patternKey, std::in
         entry.cache = cached;
         return;
     }
-
-    g_harrierSpriteCacheCursor = (g_harrierSpriteCacheCursor + 1U) & 31U;
-    cached = &g_harrierSpriteCache[kHarrierSpriteCachePoolStart + g_harrierSpriteCacheCursor];
-    if (cached != &entry)
-        SwapSpriteCacheMetadata(entry, *cached);
     entry.patternKey = patternKey;
     entry.palette = palette;
     entry.width = width;
     entry.height = height;
-    entry.cachedPatternKey = patternKey;
-    entry.cachedPalette = palette;
-    entry.cachedHeight = height;
-    entry.cache = &entry;
-    entry.claimed = 1;
-    UploadSpriteTexture(entry);
+    entry.cache = nullptr;
 }
 
 void DrawHarrierSprites() {
     for (HarrierSpriteCacheEntry &entry : g_harrierSpriteCache) {
         entry.claimed = 0;
-        entry.cache = nullptr;
+
         if (g_harrierSpritePaletteDirty[static_cast<std::uint16_t>(entry.cachedPalette) & 0x3fU])
             entry.cachedPatternKey = -1;
     }
@@ -502,7 +516,11 @@ void DrawHarrierSprites() {
     SetHarrierRenderFlags();
     for (std::size_t index = 0; index < spriteCount; ++index) {
         HarrierSpriteCacheEntry &entry = g_harrierSpriteCache[index];
-        if (!entry.active || !entry.cache || entry.cache->textureSlot < 0)
+        if (!entry.active)
+            continue;
+        if (!entry.cache)
+            CreateSpriteTexture(index, entry);
+        if (!entry.cache || entry.cache->textureSlot < 0)
             continue;
         const std::size_t textureSlot = static_cast<std::size_t>(entry.cache->textureSlot);
         if (textureSlot < g_harrierSpriteTextures.size() && g_harrierSpriteTextures[textureSlot])
@@ -682,10 +700,31 @@ void DrawHarrierBorder() {
     DrawPositionColourQuad(0.0f, 464.0f, 640.0f, 480.0f, kOpaqueBlack);
 }
 
+void SetHarrierDebugRenderFlags() {
+    D3TDeviceContext *const context = DX11::g_ppD3DDeviceContext;
+    if (context) {
+        d3t::D3TRenderState &state = d3t::GetRenderState(*context);
+        d3t::D3TSamplerStateKey &sampler = state.bindings.samplers[1][4];
+        if (sampler.flags[0] != 0x15U || sampler.flags[1] != 0) {
+            sampler = {.flags = {0x15U, 0}};
+            state.samplerDirtyMasks[1] |= 1U << 4U;
+        }
+        if (state.bindings.textureHandles[1][0] != g_harrierDebugFontTexture || state.bindings.textureFlags[1][0] != 0) {
+            state.bindings.textureHandles[1][0] = g_harrierDebugFontTexture;
+            state.bindings.textureFlags[1][0] = 0;
+            state.shaderResourceDirtyMasks[1] |= 1U;
+        }
+    }
+    SetRenderFlags(0x93, 0);
+    SetRenderFlags(0x3b, 1);
+    SetRenderFlags(0x3e, 770);
+    SetRenderFlags(0x3f, 771);
+}
+
 void DrawDebugString(float x, float y, const char *text, std::uint32_t colourIndex) {
     if (!text || !g_harrierDebugFontTexture)
         return;
-    SetHarrierRenderFlags();
+    SetHarrierDebugRenderFlags();
     const std::uint32_t colour = g_harrierDebugColours[colourIndex & 0x0fU];
     while (*text) {
         const std::uint8_t character = static_cast<std::uint8_t>(*text++);
