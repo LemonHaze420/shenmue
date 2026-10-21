@@ -19,6 +19,15 @@ namespace shenmue::s2 {
 
 #if !SHENMUE_IS_S1
 
+const char *GetStringForUILabel(const char *text) {
+    if (!text)
+        return "";
+    SubtitleStringId id{};
+    char *const bytes = reinterpret_cast<char *>(&id);
+    for (std::size_t index = 0; index < sizeof(id) && text[index]; ++index)
+        bytes[index] = text[index];
+    return ReadStringFromStringTableById(id);
+}
 
 const char *ReadStringFromStringTableById(const SubtitleStringId &id) {
     std::array<char, 13> key{};
@@ -689,7 +698,34 @@ UILayoutRect UI_FitAndDrawLabelText(nk_context &context, const char *text, std::
 }
 
 // A colour's channels scaled by the window colour's (each window channel over 255, the window alpha times its alpha first).
+#if SHENMUE_IS_S2
+std::uint32_t UI_GetWindowColour(const d3t::UIWindow *window) {
+    const std::uint32_t white = ConstructColour(255, 255, 255, 255);
+    if (!window)
+        return white;
+    std::array<std::uint8_t, 4> channels{};
+    std::memcpy(channels.data(), &window->colour, sizeof(window->colour));
+    return ConstructColour(channels[0], channels[1], channels[2], static_cast<std::int32_t>(static_cast<float>(channels[3]) * window->alpha));
+}
+
+std::uint32_t UI_ModulateColour(std::uint32_t colour, std::uint32_t tint) {
+    std::array<std::uint8_t, 4> tintChannels{};
+    std::array<std::uint8_t, 4> channels{};
+    std::memcpy(tintChannels.data(), &tint, sizeof(tint));
+    std::memcpy(channels.data(), &colour, sizeof(colour));
+    for (std::size_t channel = 0; channel < channels.size(); ++channel) {
+        const float scale = static_cast<float>(tintChannels[channel]) / 255.0f;
+        channels[channel] = static_cast<std::uint8_t>(static_cast<std::int32_t>(scale * static_cast<float>(channels[channel])));
+    }
+    std::uint32_t result{};
+    std::memcpy(&result, channels.data(), sizeof(result));
+    return result;
+}
+#endif
 std::uint32_t UI_TintByWindow(const d3t::UIWindow &window, std::uint32_t colour) {
+#if SHENMUE_IS_S2
+    return UI_ModulateColour(colour, UI_GetWindowColour(&window));
+#else
     std::array<std::uint8_t, 4> windowChannels{};
     std::memcpy(windowChannels.data(), &window.colour, sizeof(windowChannels));
     const std::uint32_t tint = ConstructColour(
@@ -705,6 +741,7 @@ std::uint32_t UI_TintByWindow(const d3t::UIWindow &window, std::uint32_t colour)
     std::uint32_t tinted = 0;
     std::memcpy(&tinted, channels.data(), sizeof(tinted));
     return tinted;
+#endif
 }
 
 

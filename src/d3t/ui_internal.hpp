@@ -76,7 +76,6 @@ inline constexpr std::array<std::string_view, uiInputActionNames.size()> kInputA
 }();
 #endif
 
-extern std::int32_t g_uiDrawViewSlot;
 extern std::int32_t g_uiLabelSplitting;
 std::uint32_t ConstructColour(std::int32_t red, std::int32_t green, std::int32_t blue, std::int32_t alpha);
 #if SHENMUE_IS_S2

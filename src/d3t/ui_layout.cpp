@@ -549,8 +549,18 @@ std::int32_t UI_GetAspectWidth() {
 #endif
 }
 
+#if SHENMUE_IS_S2
+float UI_GetReferenceWidth() {
+    if (ShouldScaleS2AspectRatio())
+        return static_cast<float>(GetLogicalScreenHeight()) * 1.33333f;
+    const float height = static_cast<float>(GetLogicalScreenHeight());
+    return (1920.0f / std::fmax(height, 1080.0f)) * height;
+}
 
-
+float UI_GetReferenceHeight() {
+    return static_cast<float>(GetLogicalScreenHeight());
+}
+#endif
 float WithinSafeArea(float length) {
     if (length == 0.0f)
         return 0.0f;

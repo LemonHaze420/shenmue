@@ -46,6 +46,7 @@ std::int64_t NuklearHandleWindowMessages(void *window, std::uint32_t message, st
 #endif
 bool AreS2TriggersSwapped() noexcept;
 float GetS2UserInterfaceSafeArea() noexcept;
+std::int32_t GetLogicalScreenHeight() noexcept;
 bool ShouldScaleS2AspectRatio() noexcept;
 bool GetAspectRatioModeShouldScale() noexcept;
 float GetS2AspectRatioAdjustment() noexcept;

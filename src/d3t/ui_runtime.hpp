@@ -74,7 +74,7 @@ extern nk_draw_null_texture g_nuklearNullTexture;
 extern nk_buffer g_nuklearCommands;
 extern std::int32_t g_waitingForNextTick;
 
-
+extern std::int32_t g_uiDrawViewSlot;
 
 extern std::array<d3t::UIViewSlot<kUIViewImageCapacity>, d3t::kUIViewSlotCount> g_uiViewSlots;
 extern std::array<std::uint32_t, d3t::kUIViewSlotCount * kUIViewImageCapacity> g_uiViewTextures;
@@ -1036,6 +1036,10 @@ std::int32_t UI_FindViewButtonWheel(std::uint32_t slotIndex, const char *id);
 d3t::UIWindow *UI_FindWindowById(const char *id);
 float UI_SafeAreaScale();
 std::int32_t UI_GetAspectWidth();
+#if SHENMUE_IS_S2
+float UI_GetReferenceWidth();
+float UI_GetReferenceHeight();
+#endif
 float WithinSafeArea(float length);
 void AdjustForSafeArea(UILayoutRect &rect, float paddingX, float paddingY);
 void UI_RootWindowArea(const d3t::UIWindow &window, float &width, float &height, float &aspectWidth);
@@ -1058,6 +1062,10 @@ UILabelFit UI_FitLabelScale(nk_context &context, const char *text, std::int32_t 
 UILayoutRect UI_DrawLabelText(nk_context &context, const char *text, std::int32_t length, nk_flags alignment, const UILayoutRect &rect, const UILabelFit &fit);
 UILayoutRect UI_FitAndDrawLabelText(nk_context &context, const char *text, std::int32_t length, nk_flags alignment, const UILayoutRect &rect, float width,
     float height, std::int32_t allowSplit);
+#if SHENMUE_IS_S2
+std::uint32_t UI_GetWindowColour(const d3t::UIWindow *window);
+std::uint32_t UI_ModulateColour(std::uint32_t colour, std::uint32_t tint);
+#endif
 std::uint32_t UI_TintByWindow(const d3t::UIWindow &window, std::uint32_t colour);
 void UI_DrawLabel(nk_context &context, std::int32_t labelIndex, std::int32_t widget);
 std::int32_t UI_FindViewImage(std::uint32_t slot, const char *name);
@@ -1123,5 +1131,6 @@ static_assert(sizeof(SubtitleStringId) == 12);
 
 const char *ReadStringFromStringTableById(const SubtitleStringId &id);
 
+const char *GetStringForUILabel(const char *text);
 } // namespace shenmue::s2
 #endif

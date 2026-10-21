@@ -331,6 +331,9 @@ void shenSetForcedFilmbars(std::int32_t enabled) noexcept {
     g_aspectRatioRenderSuppressed = enabled;
 }
 
+std::int32_t GetLogicalScreenHeight() noexcept {
+    return 1080;
+}
 bool ShouldScaleS2AspectRatio() noexcept {
     return scaleForScreen != 0;
 }
