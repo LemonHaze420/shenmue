@@ -1471,17 +1471,15 @@ struct MapLocationToken {
 
 
 struct LoadScreenPresentation {
-    std::array<float, 9> windowAlpha{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+    std::array<d3t::UIWindow *, 9> windows{};
     std::array<std::int32_t, 9> widgetBindings{-1, -1, -1, -1, -1, -1, -1, -1, -1};
     std::array<char, 512> time{};
     std::array<char, 512> date{};
     std::array<char, 512> area{};
     std::array<char, 512> subArea{};
-    std::array<char, 64> nowLoading{};
+    std::array<char, 512> nowLoading{};
     std::uint32_t headerTexture{};
-    bool headerBound{};
-    bool headerVisible{};
-    bool windowsBound{};
+    std::int32_t headerImage{63};
     bool loadingTextHeld{};
     std::int32_t imageSet{};
 };
@@ -1492,6 +1490,9 @@ void LoadLoadingScreenImage(std::int32_t name, std::int32_t loadIndex, std::int3
     std::int32_t dayOfWeek, std::int32_t hours, std::int32_t minutes, bool pm, const char *filename, UICdttMode mode);
 extern LoadScreenPresentation g_loadScreenPresentation;
 
+extern std::int32_t g_debugLoadingWidgetEnabled;
+extern std::array<UIColourImageWidget *, 31> g_frontendEmblemImages;
+extern std::int32_t g_frontendEmblemImageCount, g_frontendEmblemAnimSlot;
 
 extern std::int32_t g_qteSessionActive;
 void UI_SFXOverlayBegin(const UISfxOverlayRequest &request);

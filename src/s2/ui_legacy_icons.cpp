@@ -3907,6 +3907,44 @@ static std::int64_t RetireIconInputSlot(std::uint32_t slot, std::int32_t force) 
     return result;
 }
 
+// @verified - p
+std::int64_t CloseHeldStateIcons() {
+    const std::int64_t result = RetireIconInputSlot(0, 1);
+    if (result && iconPadControl) {
+        if ((iconPadControl->flags & 2U) != 0 && previousIconPadControl) {
+            BindPadControlEntry(previousIconPadControl);
+            previousIconPadControl = nullptr;
+        }
+        return (iconPadControl->flags & 2U) != 0;
+    }
+    return result;
+}
+
+// @verified - p
+std::int64_t CloseWristwatchTransitionIcons() {
+    std::int64_t result = IsWristwatchOpenable();
+    std::uint32_t closed = 0;
+    if (result) {
+        for (std::uint32_t slot = 2; slot < 8; ++slot) {
+            if (slot == 6)
+                continue;
+            result = RetireIconInputSlot(slot, 1);
+            closed |= static_cast<std::uint32_t>(result);
+        }
+    } else {
+        result = RetireIconInputSlot(0, 1);
+        closed = static_cast<std::uint32_t>(result);
+    }
+    if (closed && iconPadControl) {
+        if ((iconPadControl->flags & 2U) != 0 && previousIconPadControl) {
+            BindPadControlEntry(previousIconPadControl);
+            previousIconPadControl = nullptr;
+        }
+        return (iconPadControl->flags & 2U) != 0;
+    }
+    return result;
+}
+
 std::int64_t RefreshPadControlData(std::uint32_t slot, std::int32_t force) {
     const std::int64_t result = RetireIconInputSlot(slot, force);
     if (result && iconPadControl && (iconPadControl->flags & 2U) && previousIconPadControl) {

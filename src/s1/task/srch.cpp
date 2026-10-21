@@ -1553,7 +1553,7 @@ std::int32_t CurrentSearchItemIdentifier(std::int32_t identifier) {
 }
 
 std::int32_t SpecialAreaSearchItemIdentifier() {
-    if (g_areaId != SHEN_NAME(EBAJ) && g_areaId != SHEN_NAME(NBCD) && g_areaId != SHEN_NAME(UYKM)) {
+    if (g_areaId != SEARCH_AREA_JABE.name && g_areaId != SEARCH_AREA_DCBN.name && g_areaId != SEARCH_AREA_MKYU.name) {
         return -1;
     }
     const std::uint8_t identifier = g_scenarioStepLut.steps[7];

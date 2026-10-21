@@ -860,9 +860,11 @@ void DrawUmbrellas();
 
 namespace shenmue::s1::CycleManager {
 
+#if !SHENMUE_IS_PC
 extern std::array<std::byte, kMobjCoreAllocationSize> g_mobjCoreAllocation;
 extern std::array<std::byte, kMobjHeapAllocationSize> g_mobjHeapAllocation;
 extern std::array<std::byte, kMobjDynamicAllocationSize> g_mobjDynamicAllocation;
+#endif
 void ClearProgramLists();
 void ReleaseWorldOwnersForTeardown();
 void Setup(const char *InFilename);

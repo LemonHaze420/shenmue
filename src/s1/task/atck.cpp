@@ -149,10 +149,11 @@ std::int32_t ATCK_EncodeRaceDialCompositeValue(std::int32_t dialA, std::int32_t 
     return 100 * (below3000 / 300) + 1000 * (below18000 / 3000) + 10000 * (weightedSum / 18000) + 10 * (below300 / 30) + (below300 % 30) / 3;
 }
 
+// @verified - p
 void ATCK_UpdateRaceLapTimeSlots() {
     AtckNativeHudState &hud = ATCK;
     if (hud.bestLapIndex != -1) {
-        const std::int32_t first = 8 * hud.bestLapIndex + 11;
+        const std::int32_t first = 8 * hud.bestLapIndex + 12;
         for (std::int32_t index = first; index < first + 8; ++index) {
             static_cast<UIButtonIconWidget *>(hud.nodes[static_cast<std::size_t>(index)])->colour = 0xffffffffU;
         }
@@ -169,7 +170,7 @@ void ATCK_UpdateRaceLapTimeSlots() {
         }
     }
 
-    const std::int32_t first = 8 * bestLapIndex + 11;
+    const std::int32_t first = 8 * bestLapIndex + 12;
     for (std::int32_t index = first; index < first + 8; ++index) {
         static_cast<UIButtonIconWidget *>(hud.nodes[static_cast<std::size_t>(index)])->colour = kNativeRaceBestColour;
     }

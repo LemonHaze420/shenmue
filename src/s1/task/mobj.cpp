@@ -3,20 +3,46 @@
 namespace shenmue::s1 {
 using namespace CycleManager;
 
-
+// @verified - p
 bool SetMOBJTaskPtr() {
+#if SHENMUE_IS_PC
+    g_pMOBJ = static_cast<std::byte *>(HLib_AllocHeapMemBlock(kMobjCoreAllocationSize - kHLibAllocationHeaderSize, TASK_MOBJ.name));
+    if (!g_pMOBJ)
+        return false;
+    (reinterpret_cast<HLib::TaskData *>(g_pMOBJ) - 1)->alignment |= 1;
+    return true;
+#else
     g_pMOBJ = g_mobjCoreAllocation.data() + kHLibAllocationHeaderSize;
     return true;
+#endif
 }
 
+// @verified - p
 bool MOBJ_AllocateTaskMemory() {
+#if SHENMUE_IS_PC
+    g_pMOBJ_HeapHead = static_cast<std::byte *>(HLib_AllocHeapMemBlock(kMobjHeapAllocationSize - kHLibAllocationHeaderSize, TASK_MOBJ.name));
+    if (!g_pMOBJ_HeapHead)
+        return false;
+    (reinterpret_cast<HLib::TaskData *>(g_pMOBJ_HeapHead) - 1)->alignment |= 1;
+    return true;
+#else
     g_pMOBJ_HeapHead = g_mobjHeapAllocation.data() + kHLibAllocationHeaderSize;
     return true;
+#endif
 }
 
+// @verified - p
 bool MOBJ_SetupTaskPointer() {
+#if SHENMUE_IS_PC
+    g_tmp_MOBJ = static_cast<std::byte *>(HLib_AllocHeapMemBlock(kMobjDynamicWorkSize, TASK_MOBJ.name));
+    if (!g_tmp_MOBJ)
+        return false;
+    (reinterpret_cast<HLib::TaskData *>(g_tmp_MOBJ) - 1)->alignment |= 1;
+    return true;
+#else
     g_tmp_MOBJ = g_mobjDynamicAllocation.data() + kHLibAllocationHeaderSize;
     return true;
+#endif
 }
 
 void MOBJ_Cleanup() {

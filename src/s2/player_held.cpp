@@ -20,7 +20,7 @@ void PrepareHeldTransition() {
     if (IsItemSelectable())
         RequestMemoClose();
     ResetHelpIconsToItemPrompt();
-    padcRefreshCurrentInputs(true);
+    CloseHeldStateIcons();
 }
 
 bool StartHeldScenarioRecord(shen_name name) {
@@ -211,7 +211,11 @@ void plymUpdateHeldState(PlayerModelState &state) {
                 state.heldStateTimer = 0;
             if (IsHeldTransitionReady(state) && state.heldStateTimer <= 0 && (!GetSearchControl() || GetSearchControl()->mode == SearchMode::Idle)) {
                 ++state.heldStateStep;
-                PrepareHeldTransition();
+                SetupWZ2_CtrlWazamaki();
+                if (IsItemSelectable())
+                    RequestMemoClose();
+                ResetHelpIconsToItemPrompt();
+                CloseWristwatchTransitionIcons();
                 if (IsWristwatchOpenable())
                     state.heldStateStep = 5;
             }
@@ -224,7 +228,11 @@ void plymUpdateHeldState(PlayerModelState &state) {
             ++state.heldStateStep;
             for (std::uint32_t region = 1; region <= 4; ++region) {
                 mtwkRequestMotion(state.motionWork, 0xf0f5, static_cast<MotionRegion>(region));
+            }
+            for (std::uint32_t region = 1; region <= 4; ++region) {
                 SetMotionRegionEvalTime(state.motionWork, 0.0f, static_cast<MotionRegion>(region));
+            }
+            for (std::uint32_t region = 1; region <= 4; ++region) {
                 SetMotionFrameTime(state.motionWork, 40, static_cast<MotionRegion>(region));
             }
             state.heldStateTimer = 0;
@@ -284,8 +292,9 @@ void plymUpdateHeldState(PlayerModelState &state) {
             state.heldStateFlags &= static_cast<std::uint16_t>(~heldScheduleEnabled);
             if (!IsHeldTransitionReady(state))
                 return;
+            ++state.heldStateStep;
             PrepareHeldTransition();
-            state.heldStateStep = 2;
+            ++state.heldStateStep;
             if (!StartHeldScenarioRecord(SHEN_NAME(SY08)))
                 ++state.heldStateStep;
             break;
@@ -332,8 +341,9 @@ void plymUpdateHeldState(PlayerModelState &state) {
             state.heldStateFlags |= heldTimeAdvanceActive;
             if (!IsHeldTransitionReady(state))
                 return;
+            ++state.heldStateStep;
             PrepareHeldTransition();
-            state.heldStateStep = 3;
+            state.heldStateStep += 2;
             break;
         case 1:
             state.heldStateStep += 2;
@@ -343,7 +353,7 @@ void plymUpdateHeldState(PlayerModelState &state) {
                 ++state.heldStateStep;
             break;
         case 3: {
-            std::int16_t choices[]{149, 154, 155, -1};
+            std::int16_t choices[]{-1, 149, 154, -1};
             SetupControlSpeakAndUI(choices, 0x7fff, -1, 2);
             ++state.heldStateStep;
             return;
@@ -355,6 +365,8 @@ void plymUpdateHeldState(PlayerModelState &state) {
                     state.heldStateStep = 5;
                 else if (selected == 154 || selected == 155 || selected == 0xffff)
                     state.heldStateStep = 8;
+                if (state.heldStateStep == 5)
+                    SetTimeHudVariant(1);
             }
             return;
         case 5: {
@@ -366,6 +378,7 @@ void plymUpdateHeldState(PlayerModelState &state) {
             target.second = 0;
             if (CompareDateTimeSeconds(g_currentDateTime, target) >= 0) {
                 ++state.heldStateStep;
+                SetTimeHudVariant(0);
             } else {
                 std::int32_t minutes = DiffMinutes(target, g_currentDateTime) + 1;
                 if (minutes > static_cast<std::int8_t>(state.timeAdvanceMinutesPerTick))
@@ -401,8 +414,9 @@ void plymUpdateHeldState(PlayerModelState &state) {
             state.heldStateFlags &= static_cast<std::uint16_t>(~heldRetryEnabled);
             if (!IsHeldTransitionReady(state))
                 return;
+            ++state.heldStateStep;
             PrepareHeldTransition();
-            state.heldStateStep = 2;
+            ++state.heldStateStep;
             state.heldStateTimer = 45;
             break;
         case 1:

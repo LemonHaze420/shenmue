@@ -348,19 +348,15 @@ std::int32_t MainMenuWheel_ReadInput(std::int32_t index) {
         wheel.selection = wheel.selection - 1 < 0 ? wheel.count - 1 : wheel.selection - 1;
         repeated = 0;
         step = 1;
-        if (g_uiNavigateSoundFrame + 5 <= g_FrameCounter) {
-            g_uiNavigateSoundFrame = g_FrameCounter;
-            shenExecuteAICACommand(kUiNavigateSound, 0, 0);
+        PlayGatedUiSound(g_uiNavigateSoundFrame, kUiNavigateSound);
         }
-    }
+
     if ((repeated & 0x4000U) != 0 && !turning()) {
         wheel.selection = wheel.selection + 1 >= wheel.count ? 0 : wheel.selection + 1;
         step = -1;
-        if (g_uiNavigateSoundFrame + 5 <= g_FrameCounter) {
-            g_uiNavigateSoundFrame = g_FrameCounter;
-            shenExecuteAICACommand(kUiNavigateSound, 0, 0);
+        PlayGatedUiSound(g_uiNavigateSoundFrame, kUiNavigateSound);
         }
-    }
+
     return step;
 }
 
@@ -424,11 +420,8 @@ void MainMenuWheel_Update() {
 }
 
 void PlayMainMenuAcceptSound() {
-    if (g_uiAcceptSoundFrame + 5 <= static_cast<std::uint64_t>(g_FrameCounter)) {
-        g_uiAcceptSoundFrame = static_cast<std::uint64_t>(g_FrameCounter);
-        shenExecuteAICACommand(kUiAcceptSound, 0, 0);
+    PlayGatedUiSound(g_uiAcceptSoundFrame, kUiAcceptSound);
     }
-}
 }
 
 namespace shenmue::s1 {
@@ -706,9 +699,41 @@ std::int64_t MainMenuWheelDestroy() {
     return 1;
 }
 
-
-
-
+// @verified - p
+void UpdateFrontendEmblemRotation() {
+    if (g_isInGame == 1) {
+        if (g_frontendEmblemAnimSlot != -1) {
+            UI_ReleaseAnimSlot(g_frontendEmblemAnimSlot);
+            g_frontendEmblemAnimSlot = -1;
+            for (std::int32_t index = 0; index < g_frontendEmblemImageCount; ++index) {
+                if (g_frontendEmblemImages[static_cast<std::size_t>(index)])
+                    g_frontendEmblemImages[static_cast<std::size_t>(index)]->angle = 0.0f;
+            }
+        }
+    } else if (g_isInGame == 0) {
+        if (g_frontendEmblemAnimSlot == -1) {
+            g_frontendEmblemAnimSlot = UIAnimAllocSlot();
+            g_uiAnimSlots[static_cast<std::size_t>(g_frontendEmblemAnimSlot)].loopMode = 1;
+        }
+        UIAnimSlot &slot = g_uiAnimSlots[static_cast<std::size_t>(g_frontendEmblemAnimSlot)];
+        if (slot.status == 0 && g_frontendEmblemAnimSlot != -1) {
+            slot.allocated = 1;
+            slot.interpolation = 2;
+            slot.status = 1;
+            slot.start[0] = 0.0f;
+            slot.current[0] = 0.0f;
+            slot.end[0] = 6.2831855f;
+            slot.duration = 140.0f;
+            slot.delay = 0.0f;
+            slot.elapsed = 0.0f;
+            slot.reserved40 = -1;
+        }
+        for (std::int32_t index = 0; index < g_frontendEmblemImageCount; ++index) {
+            if (g_frontendEmblemImages[static_cast<std::size_t>(index)])
+                g_frontendEmblemImages[static_cast<std::size_t>(index)]->angle = slot.current[0];
+        }
+    }
+}
 std::int64_t MainMenuSelected() {
     g_mainMenuPulseSlot = UIAnimAllocSlot();
     g_mainMenuContentPanel = UI_FindWindowById("MainMenu::ContentPanel");
@@ -730,6 +755,8 @@ std::int64_t MainMenuSelected() {
         if (g_mainMenuFrontImages[image])
             g_mainMenuFrontImageAlphas[image] = static_cast<std::uint8_t>(g_mainMenuFrontImages[image]->colour >> 24U);
     }
+    g_frontendEmblemImages[static_cast<std::size_t>(g_frontendEmblemImageCount++)] =
+        UI_ColourImageRecord(UI_FindViewColourImage(slot, "Main_Menu::Emblem_Panel::Emblem_Image"));
     g_mainMenuUserIdLabel = UI_LabelRecord(UI_FindViewLabel(slot, "USER_ID"));
     g_mainMenuUserIdText[0] = 0;
     if (g_mainMenuUserIdLabel)
@@ -951,6 +978,8 @@ void PressStart_SelectLogo() {
 
 
 std::int64_t PressStartSelected() {
+    if (validateActiveRenderHandle())
+        Shenmue_DispatchRenderPipeline();
     const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[0x3c].config.uiHandleIndex);
     for (std::size_t image = 0; image < g_pressStartLogoImages.size(); ++image)
         g_pressStartLogoImages[image] = UI_FindViewImage(slot, kPressStartLogoImages[image]);
@@ -982,6 +1011,7 @@ std::int64_t PressStartSelected() {
     PressStart_SelectLogo();
     if (g_pressStartIntroActive)
         PressStart_StartIntro();
+    g_frontendEmblemImages[static_cast<std::size_t>(g_frontendEmblemImageCount++)] = g_pressStartEmblemImage;
     return 1;
 }
 
@@ -3053,6 +3083,8 @@ std::int64_t OptionsMenu_IsSelected() {
     rowTemplate.clipWindows[4] = -1;
     rowTemplate.layoutEnd = 47;
     rowTemplate.labelEnd = 9;
+    for (const std::size_t index : {9U, 0U, 1U, 2U, 3U, 12U, 22U, 32U, 38U})
+        g_frontendEmblemImages[static_cast<std::size_t>(g_frontendEmblemImageCount++)] = g_optionsColourImages[index];
     return 1;
 }
 

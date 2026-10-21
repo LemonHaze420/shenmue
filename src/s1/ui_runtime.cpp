@@ -1045,8 +1045,7 @@ std::uint8_t g_mainMenuWheelArmed = 0;
 
 std::int32_t g_mainMenuWheelAnimSlot = -1;
 
-
-std::uint64_t g_uiAcceptSoundFrame = 0;
+std::int32_t g_uiAcceptSoundFrame = 0;
 
 bool UpdateStatByIdx(std::int32_t current, std::int32_t next);
 
@@ -1622,6 +1621,7 @@ void DrawNuklear() {
     }
     FontLoader();
     UI_BeginFrame();
+    UpdateFrontendEmblemRotation();
     UpdateInGameStatus();
     g_uiPreviousInputElements = g_uiRegisteredCallbackRequests;
     g_uiRegisteredCallbackRequests.fill(0);
@@ -1708,7 +1708,6 @@ void DrawNuklear() {
     }
     if (canRender) {
         drewUI |= DrawPresentationOwners(uiRenderTarget);
-        drewUI |= DrawLoadScreenPresentation(uiRenderTarget);
         drewUI |= DrawDebugTextQueue(uiRenderTarget);
     }
 
@@ -2063,7 +2062,7 @@ UIPresentationSnapshot UI_GetPresentationSnapshot() {
         g_iconPresentation.menuState,
         g_iconPresentation.menuSelection,
         static_cast<std::uint8_t>((g_iconPresentation.iconFlags & 0x20U) != 0),
-        static_cast<std::uint8_t>(g_loadScreenPresentation.windowAlpha[8] > 0.0f),
+        static_cast<std::uint8_t>(g_loadScreenPresentation.windows[8] && g_loadScreenPresentation.windows[8]->alpha > 0.0f),
     };
 }
 
@@ -2883,15 +2882,11 @@ std::int32_t g_isInGame = 0;
 
 namespace shenmue::s1::ui_runtime_detail {
 
-std::uint64_t g_loadSaveRejectFrame = 0;
+std::int32_t g_loadSaveRejectFrame = 0;
 
-std::uint64_t g_loadSaveSaveSoundFrame = 0;
+std::int32_t g_loadSaveSaveSoundFrame = 0;
 
-std::uint64_t g_loadSaveBlockedSoundFrame = 0;
-
-
-
-
+std::int32_t g_loadSaveBlockedSoundFrame = 0;
 
 UIGridTemplate g_loadSaveGridTemplate{};
 
@@ -2932,6 +2927,10 @@ namespace shenmue::s1 {
 
 LoadScreenPresentation g_loadScreenPresentation;
 
+std::int32_t g_debugLoadingWidgetEnabled = 1;
+std::array<UIColourImageWidget *, 31> g_frontendEmblemImages{};
+std::int32_t g_frontendEmblemImageCount{};
+std::int32_t g_frontendEmblemAnimSlot = -1;
 } // namespace shenmue::s1
 
 namespace shenmue::s1::ui_runtime_detail {

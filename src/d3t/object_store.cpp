@@ -1077,7 +1077,7 @@ bool RegisterObjectAlias(const void *publicKey, const void *placement) {
     return publicAliases.insert(FoldKey(reinterpret_cast<std::uintptr_t>(publicKey)), reinterpret_cast<std::uintptr_t>(placement)) != publicAliases.keys.size();
 }
 
-bool RegisterObjectSource(const void *source, const char *modelPath, std::uint16_t flags) {
+bool RegisterObjectSource(const void *source, const char *modelPath, std::uint16_t flags, std::uint32_t threadHandle) {
     if (ObjectSource *const existing = FindSource(source)) {
         if (!existing->retiring)
             return false;
@@ -1160,7 +1160,7 @@ bool RegisterObjectSource(const void *source, const char *modelPath, std::uint16
 #if SHENMUE_IS_S2
     if (flags & 0x10U) {
         ObjectSource *const admitted = FindSource(source);
-        admitted->threadHandle = d3t_AllocateRenderHandle();
+        admitted->threadHandle = threadHandle ? threadHandle : d3t_AllocateRenderHandle();
         admitted->loadHandle = DispatchModelLoad(admitted->path, admitted->threadHandle);
         admitted->resolveState = 0;
     }

@@ -122,6 +122,7 @@ void PresentLatestFrame();
 [[noreturn]] void Shutdown();
 namespace d3t {
 void ProfilePerf();
+float GetSecondsByPerformanceQuery();
 } // namespace d3t
 void RenderPipeline(std::int64_t unused, std::int32_t deferred, std::int32_t renderType);
 void BeginSceneFrameSubmission();

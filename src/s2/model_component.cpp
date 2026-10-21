@@ -375,23 +375,24 @@ bool AttachCharacterHandComponents(
         if (!filename[0])
             continue;
         const shen_name token = side ? kRightHandToken : kLeftHandToken;
-        if (FindModelComponent(character, token))
-            continue;
+
         HandModelResource *const resource = new (std::nothrow) HandModelResource{};
         if (!resource)
             return false;
-        HandParams *const hand = static_cast<HandParams *>(AllocateModelComponent(character, token, sizeof(HandParams), UpdateHand, CleanupHand));
+        HandParams *const hand = static_cast<HandParams *>(AllocateModelComponent(character, token, sizeof(HandParams), UpdateHand, nullptr));
         if (!hand) {
             delete resource;
             return false;
         }
+        FindHeader(character, token)->cleanup = CleanupHand;
         if (shared) {
             previous = character->core;
             character->core = CharacterHandDirectCore;
         }
         resource->state = state;
+        resource->hand = hand;
+        resource->next = state->handResources[side];
         state->handResources[side] = resource;
-        hand->owner = character;
         hand->selector = shared ? sharedSelector : static_cast<std::uint8_t>(side + 1);
         hand->previousCore = previous;
         std::strcpy(hand->filename, filename);
@@ -406,6 +407,7 @@ bool AttachCharacterHandComponents(
             hand->extendedPoseWork = HLib::AllocateTaskData(0x400, HAND_POSE_MEMORY);
         if (!shared && (flags & 2U))
             hand->secondaryEnabled = 1;
+        hand->owner = character;
     }
     return true;
 }

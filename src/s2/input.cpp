@@ -29,6 +29,7 @@ namespace shenmue::s2 {
 std::array<LegacyInputSlot, 5> g_inputBuffer{};
 
 // @verified - p
+std::int32_t g_mouseLookInputActive = 1;
 bool HasPressedCancel() {
     return (g_inputBuffer[0].pressedPriority & 0x200U) != 0;
 }
@@ -497,6 +498,7 @@ void HandleControllerInput(std::uint32_t controllerIndex) {
             controller.normalizedSticks[action < 12 ? 3 : 2] = keyboardLookAxisValues[action - 10];
         }
     }
+    g_mouseLookInputActive = 0;
     if (type == static_cast<std::int32_t>(InputType::Qte2)) {
         for (std::int32_t action = 14; action < 18; ++action) {
             const std::uint32_t key = GetGameKeyMapping(action);
@@ -507,6 +509,7 @@ void HandleControllerInput(std::uint32_t controllerIndex) {
     } else if (!lookFromKeys && type == 2 && windowKeys[257].pressed) {
         controller.normalizedSticks.z = mouseDelta.x;
         controller.normalizedSticks.w = -mouseDelta.y;
+        g_mouseLookInputActive = 1;
     }
     if (type <= 3 || type == static_cast<std::int32_t>(InputType::Vehicle)) {
         const std::uint32_t left = type <= 1 ? GetMenuKeyMapping(8) : GetGameKeyMapping(type == 6 ? 40 : 8);

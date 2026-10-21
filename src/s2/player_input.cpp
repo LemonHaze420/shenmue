@@ -375,8 +375,7 @@ void plymUpdateLookAround(PlayerModelState &state) {
             if (state.lookInputFlags != (lookInputDigitalDirections | lookInputZoom)) {
                 state.lookInputFlags = lookInputAnalogStick;
 
-
-                const float rate = 0.059999999f;
+                const float rate = GetIsKeyboardActive() == 1 && UpdateAndGetMouseIsMoving() && g_mouseLookInputActive ? 0.2f : 0.059999999f;
                 state.lookPitchDelta = LerpFixedAngle(
                     static_cast<std::int16_t>(static_cast<std::int32_t>(-(stickY * 0.0078125 * 8192.0))), state.lookPitchDelta, ScaledDelta(rate));
                 state.lookYawDelta = LerpFixedAngle(

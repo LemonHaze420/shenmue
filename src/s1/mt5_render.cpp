@@ -2,6 +2,7 @@
 #include "s1/d3t/namespace.hpp"
 
 #include "s1/task/char.hpp"
+#include "s1/task/cycle_man.hpp"
 #include "s1/d3t/d3t_buffer.hpp"
 #include "s1/d3t/model.hpp"
 #include "s1/d3t/renderer.hpp"
@@ -1963,7 +1964,7 @@ void HMDL_LinkNodeTransformsByKind(Mt5RuntimeNode *source, Mt5RuntimeNode *targe
 
 namespace {
 void SubmitCharacterShadowInternal(Character *character, void *posedModel, void *model, const Vector3 &position, const Vector3i *rotation, const Vector3 *scale,
-    float groundHeight, float direction) {
+    float groundHeight, float direction, CharacterShadowState *shadowState) {
     D3TDeviceContext *const context = DX11::g_ppD3DDeviceContext;
     if (!context || !model || direction == 0.0f || groundHeight >= g_CameraEyePos.y || !std::isfinite(groundHeight) || !std::isfinite(direction)) {
         return;
@@ -1982,8 +1983,7 @@ void SubmitCharacterShadowInternal(Character *character, void *posedModel, void 
         HMDL_LinkNodeTransformsByKind(static_cast<Mt5RuntimeNode *>(posedModel), shadowRoot);
     }
 
-
-    CharacterShadowState *const state = character ? &character->shadowState : nullptr;
+    CharacterShadowState *const state = shadowState ? shadowState : character ? &character->shadowState : nullptr;
     if (!state && g_prevCachedGlobalLightingAdjustFlag == 3)
         return;
 
@@ -2050,12 +2050,12 @@ void SubmitCharacterShadowInternal(Character *character, void *posedModel, void 
 } // namespace
 
 void SubmitCharacterShadow(Character *character, void *posedModel, void *model, const Vector3 &position, const Vector3i &rotation, const Vector3 &scale,
-    float groundHeight, float direction) {
-    SubmitCharacterShadowInternal(character, posedModel, model, position, &rotation, &scale, groundHeight, direction);
+    float groundHeight, float direction, CharacterShadowState *shadowState) {
+    SubmitCharacterShadowInternal(character, posedModel, model, position, &rotation, &scale, groundHeight, direction, shadowState);
 }
 
 void SubmitPosedCharacterShadow(Character *character, void *model, const Vector3 &position, float groundHeight, float direction) {
-    SubmitCharacterShadowInternal(character, model, model, position, nullptr, nullptr, groundHeight, direction);
+    SubmitCharacterShadowInternal(character, model, model, position, nullptr, nullptr, groundHeight, direction, nullptr);
 }
 
 
@@ -2731,6 +2731,105 @@ void SubmitRiggedSceneAttachment(
     }
 
     g_mt5RootTransform = previousRootTransform;
+    g_syncedFaceSecondary = previousSyncedFaceSecondary;
+    g_syncedFaceRoot = previousSyncedFaceRoot;
+    g_activeRiggedCharacter = previousCharacter;
+    g_activeMt5Base = previousBase;
+}
+
+// @verified - p
+void SubmitCycleForDrawing(Mt5RuntimeNode *node) {
+    for (;;) {
+        std::byte *const modelBase = MT5_ModelBaseForNode(node);
+        if (node->siblingOffset)
+            PushMatrix();
+        if (node->transformOffset) {
+            workTransformMatrix = g_mt5RootTransform;
+            Matrix4x4::Multiply(HMDL_TransformForNode(node, node->transformOffset));
+        } else {
+            Matrix4x4::preTranslate(node->position.x, node->position.y, node->position.z);
+            if (node->rotation.z)
+                Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(node->rotation.z));
+            if (node->rotation.y)
+                Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(node->rotation.y));
+            if (node->rotation.x)
+                Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(node->rotation.x));
+            if (node->scale.x != 1.0f || node->scale.y != 1.0f || node->scale.z != 1.0f)
+                Matrix4x4::Scale(node->scale.x, node->scale.y, node->scale.z);
+        }
+        if (node->sceneBindingOffset && !node->attachmentOffset) {
+            std::byte *bindingBase = nullptr;
+            if (void *const binding = MT5_SceneBindingForNode(node, &bindingBase))
+                SubmitSceneObjectForDrawing(binding, bindingBase);
+        }
+        if (node->childOffset)
+            SubmitCycleForDrawing(reinterpret_cast<Mt5RuntimeNode *>(modelBase + node->childOffset));
+        if (!node->siblingOffset)
+            return;
+        PopMatrix();
+        node = reinterpret_cast<Mt5RuntimeNode *>(modelBase + node->siblingOffset);
+    }
+}
+
+// @verified - p
+void SubmitCycleModel(Mt5RuntimeNode *node) {
+    if (!node)
+        return;
+    PushMatrix();
+    g_mt5RootTransform = workTransformMatrix;
+    SubmitCycleForDrawing(node);
+    PopMatrix();
+}
+
+namespace {
+void ApplyMoveObjectTransform(const CycleMoveObjectRuntime &runtime) {
+    Matrix4x4::preTranslate(runtime.pos.x, runtime.pos.y, runtime.pos.z);
+    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(runtime.renderEuler.z));
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(runtime.renderEuler.y));
+    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(runtime.renderEuler.x));
+    Matrix4x4::preTranslate(runtime.tokenLocalOffset.x, runtime.tokenLocalOffset.y, runtime.tokenLocalOffset.z);
+}
+} // namespace
+
+void SubmitCycleMoveObject(CycleMoveObjectRuntime &runtime) {
+    Mt5RuntimeNode *const root = reinterpret_cast<Mt5RuntimeNode *>(runtime.model);
+    std::byte *const previousBase = g_activeMt5Base;
+    Character *const previousCharacter = g_activeRiggedCharacter;
+    Mt5Node *const previousSyncedFaceRoot = g_syncedFaceRoot;
+    Mt5Node *const previousSyncedFaceSecondary = g_syncedFaceSecondary;
+    g_activeMt5Base = MT5_ModelBaseForNode(root);
+    g_activeRiggedCharacter = nullptr;
+    g_syncedFaceRoot = nullptr;
+    g_syncedFaceSecondary = nullptr;
+
+    if (runtime.moveObjectKind != 4) {
+        Matrix4x4::SetActiveTransformToPrePass();
+        ApplyMoveObjectTransform(runtime);
+        const Vector3 shadowPosition{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
+        PopMatrix();
+        constexpr Vector3 unitScale{1.0f, 1.0f, 1.0f};
+        SubmitCharacterShadow(
+            nullptr, root, runtime.shadowOrAuxModel, shadowPosition, runtime.renderEuler, unitScale, runtime.pos.y, 1.0f, &runtime.shadowState);
+    }
+
+    PushMatrix();
+    Matrix4x4::SetActiveTransformToPrePass();
+    ApplyMoveObjectTransform(runtime);
+    static_cast<void>(SubmitRiggedSceneObjectForDrawing(root, nullptr, 0, 0));
+    const bool cachedSubmission = CachedAttachmentOwnsSubmission(root, runtime.renderOpacity, workTransformMatrix);
+    PopMatrix();
+    if (!cachedSubmission) {
+        ApplyMoveObjectTransform(runtime);
+        if (runtime.overrideTransform) {
+            SubmitCycleModel(root);
+        } else {
+            d3t::MT5_SubmitObjectNode(root, runtime.renderOpacity);
+            if (runtime.moveObjectKind == 5)
+                d3t::MT5_SubmitObjectNode(runtime.auxModel, runtime.renderOpacity);
+        }
+    }
+    PopMatrix();
+
     g_syncedFaceSecondary = previousSyncedFaceSecondary;
     g_syncedFaceRoot = previousSyncedFaceRoot;
     g_activeRiggedCharacter = previousCharacter;

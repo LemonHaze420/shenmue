@@ -199,7 +199,8 @@ bool InitBikeMoveObjectRuntime(CycleManager::NpcRecord &npc, uint32_t opcode, ui
             runtime->pos.x = npc.cycle->pos.x;
             runtime->pos.z = npc.cycle->pos.z;
             runtime->overrideTransform = nullptr;
-            std::memset(runtime->unkF0 + 8, 0xFF, 8);
+            runtime->shadowState.lightIndex[0] = -1;
+            runtime->shadowState.lightIndex[1] = -1;
         }
         CycleManager::InitBikeMoveObjectPathContext(npc);
         return true;

@@ -17,11 +17,8 @@ void ActionSelectorSetSelectedChoice(std::int32_t choice) {
         slot.slotUi->sprite = 1;
     selector.hasSelectedChoice = true;
     UIAnimConfigureSelectedChoice(g_actionSelectorElement.selectedChoiceAnimSlot);
-    if (g_uiNavigateSoundFrame + 5 <= g_FrameCounter) {
-        g_uiNavigateSoundFrame = g_FrameCounter;
-        shenExecuteAICACommand(kUiNavigateSound, 0, 0);
+    PlayGatedUiSound(g_uiNavigateSoundFrame, kUiNavigateSound);
     }
-}
 
 const char *ActionSelectorLocalizedToken(std::int32_t token) {
     if (token < 0 || static_cast<std::size_t>(token) >= kActionSelectorStringIds.size()) {
@@ -196,11 +193,8 @@ void ActionSelector_Render() {
         slot.reserved40 = -1;
     }
     g_actionSelectorPresentation.hasSelectedChoice = false;
-    if (g_uiNavigateSoundFrame + 5 <= g_FrameCounter) {
-        g_uiNavigateSoundFrame = g_FrameCounter;
-        shenExecuteAICACommand(kUiNavigateSound, 0, 0);
+    PlayGatedUiSound(g_uiNavigateSoundFrame, kUiNavigateSound);
     }
-}
 
 // STATIC_Action_Selector_IsPressed: once the panel has slid fully in, turn the frame's presses into the selector input code. In value
 // mode the directions step, fill or clear the amount. X opens the selector's help page (SetHelpDetailsByIndex) when it has one.

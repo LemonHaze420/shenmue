@@ -237,12 +237,31 @@ CycleManager::UmbrellaAnimIdFn g_cycleManagerUmbrellaAnimId = nullptr;
 
 namespace shenmue::s1::CycleManager {
 
+#if SHENMUE_IS_PC
+IntersectionEntry *g_cycleSteeringVolumes = nullptr;
+IntersectionEntry *g_pIntersectionPtr = nullptr;
+
+// @verified - p
+bool InitMemory() {
+    g_cycleSteeringVolumes = static_cast<IntersectionEntry *>(
+        HLib_AllocHeapMemBlock((kDynamicTurnVolumeCapacity + kIntersectionVolumeCapacity) * sizeof(IntersectionEntry), TASK_MOBJ.name));
+    g_pIntersectionPtr = nullptr;
+    if (g_cycleSteeringVolumes) {
+        (reinterpret_cast<HLib::TaskData *>(g_cycleSteeringVolumes) - 1)->alignment |= 1;
+        g_pIntersectionPtr = g_cycleSteeringVolumes + kDynamicTurnVolumeCapacity;
+    }
+    g_cycleManagerRuntime.dynamicTurnCollisionVolumes = {g_cycleSteeringVolumes, g_cycleSteeringVolumes ? kDynamicTurnVolumeCapacity : 0};
+    g_cycleManagerRuntime.intersectionEntries = {g_pIntersectionPtr, g_pIntersectionPtr ? kIntersectionVolumeCapacity : 0};
+    return g_cycleSteeringVolumes != nullptr;
+}
+#else
 alignas(std::max_align_t) std::array<std::byte, kMobjCoreAllocationSize> g_mobjCoreAllocation{};
 
 alignas(std::max_align_t) std::array<std::byte, kMobjHeapAllocationSize> g_mobjHeapAllocation{};
 
 alignas(std::max_align_t) std::array<std::byte, kMobjDynamicAllocationSize> g_mobjDynamicAllocation{};
 
+#endif
 void AttachEntityAndInitCycle(Character *character, bool deactivate);
 
 bool AreaCapacityExceeded(std::uint32_t areaId);
@@ -2323,9 +2342,13 @@ void Init() {
     cm.doorRequestFailedPolls = 0;
     cm.doorRequestNotReadyPolls = 0;
     cm.doorRequestAllocFailures = 0;
+#if !SHENMUE_IS_PC
     cm.dynamicTurnCollisionVolumes.fill(CycleManager::IntersectionEntry{});
+#endif
     g_dynamicTurnCollisionVolumeCount = 0;
+#if !SHENMUE_IS_PC
     cm.intersectionEntries.fill(CycleManager::IntersectionEntry{});
+#endif
     g_steeringIntersectionVolumeCount = 0;
 
     if (g_MOBJ_needs_new_update) {
@@ -2397,6 +2420,9 @@ void PreLoad_InitCycleman() {
     g_mobjCycleCapacity = g_MOBJ_pData && g_MOBJ_Cycles ? g_MOBJ_num_entries : 0;
     MOBJ_AllocateTaskMemory();
     MOBJ_SetupTaskPointer();
+#if SHENMUE_IS_PC
+    CycleManager::InitMemory();
+#endif
     CycleManager::LoadMNRBAndMCIR();
     CycleManager::LoadSHUT();
     SetMOBJTaskPtr();
@@ -2610,7 +2636,9 @@ void ReleaseWorldOwnersForTeardown() {
 
     CycleManager::ResetPublishedSceneState();
     g_dynamicTurnCollisionVolumeCount = 0;
+#if !SHENMUE_IS_PC
     cm.intersectionEntries.fill(CycleManager::IntersectionEntry{});
+#endif
     g_steeringIntersectionVolumeCount = 0;
 }
 

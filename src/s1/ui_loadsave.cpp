@@ -56,66 +56,7 @@ namespace shenmue::s1::ui_runtime_detail {
 // The Load Screen's Nuklear windows, drawn while the element is shown or its windows fade: each bound window at its alpha, its labels
 // with the texts GenerateLoadingScreenText_0 binds (TIME, DATE, AREA, SUBAREA and LOADING) and Image_Header with the area's header once
 // SetRenderShaderFlags binds it. The labels use the subtitle font; UILoadScreenFont and the H1/H2 sizes are not modelled.
-bool DrawLoadScreenPresentation(std::uint32_t renderTarget) {
-    const UIBaseRuntime &element = g_uiElements[kLoadScreenElement];
-    if ((!LoadScreen.isVisible && !LoadScreen.isActive && !CDTT_IsLoadingUIActive()) || element.config.init != 3)
-        return false;
-    const LoadScreenPresentation &screen = g_loadScreenPresentation;
-    const UIDefinition &definition = g_parsedUIDefinitions[kLoadScreenElement];
-    const float safeScale = 0.8f + std::clamp(g_currentSettings.display.uiDisplayArea, 0.0f, 1.0f) * 0.2f;
-    const float toScreenX = static_cast<float>(g_uiScreenWidth) / 1920.0f;
-    const float toScreenY = static_cast<float>(g_uiScreenHeight) / 1080.0f;
-    const bool fontsReady = g_uiLoadedLanguage >= 0 && g_uiLoadedLanguage < static_cast<std::int32_t>(g_subtitleFonts.size());
-    bool drew = false;
-    for (const UIObjectDefinition &object : definition.objects) {
-        const UIPanelDefinition *const panel = definition.findPanel(object.panelId);
-        if (!panel)
-            continue;
-        std::size_t window = 0;
-        while (window < kLoadScreenWindowIds.size() && panel->id != kLoadScreenWindowIds[window])
-            ++window;
-        if (window == kLoadScreenWindowIds.size())
-            continue;
-        const float alpha = std::clamp(screen.windowAlpha[window], 0.0f, 1.0f);
-        if (alpha <= 0.0f)
-            continue;
-        const UILayoutRect bounds = UIObjectLayoutRect(object, *panel, ResolveUIPanelRect(definition, *panel, 0, nullptr), safeScale);
-        if (object.kind == UIObjectKind::Label) {
-            const char *text = nullptr;
-            if (object.text == "TIME")
-                text = screen.time.data();
-            else if (object.text == "DATE")
-                text = screen.date.data();
-            else if (object.text == "AREA")
-                text = screen.area.data();
-            else if (object.text == "SUBAREA")
-                text = screen.subArea.data();
-            else if (object.text == "LOADING")
-                text = screen.nowLoading.data();
-            if (!text || !*text || !fontsReady)
-                continue;
-            const std::array<SubtitleFontLayer, 2> &fonts = g_subtitleFonts[static_cast<std::size_t>(g_uiLoadedLanguage)];
-            const std::uint32_t labelAlpha = static_cast<std::uint32_t>(alpha * static_cast<float>(object.colour >> 24U) + 0.5f);
-            const float centreXOffset = bounds.x + bounds.width * 0.5f - 960.0f;
-            const float lineY = bounds.y + bounds.height * 0.5f - 25.0f;
-            drew |= DrawSubtitleLayer(fonts[0], text, lineY, centreXOffset, 0.0f, (labelAlpha << 24U) | (object.colour & 0x00ffffffU), renderTarget);
-            continue;
-        }
-        std::uint32_t texture = 0;
-        if (object.id == "Image_Header") {
-            if (!screen.headerVisible || !screen.headerBound)
-                continue;
-            texture = screen.headerTexture;
-        } else if (const UIImageDefinition *const image = definition.findImage(object.imageName)) {
-            texture = image->textureHandle;
-        }
-        if (!texture)
-            continue;
-        drew |= DrawNuklearImage(g_RenderDeviceContext, renderTarget, texture, bounds.x * toScreenX, bounds.y * toScreenY, bounds.width * toScreenX,
-            bounds.height * toScreenY, alpha);
-    }
-    return drew;
-}
+
 } // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
@@ -344,11 +285,8 @@ void SaveGame(UIRetry70ManBattlePromptResult response) {
     g_hasSaved = 1;
     if (g_saveDisplayModuleState == SAVE_DISPLAY_MODULE_SLEEP_SAVE || g_saveDisplayModuleState == SAVE_DISPLAY_MODULE_ALT_SAVE)
         g_loadSaveConfirmLocked = true;
-    if (g_loadSaveSaveSoundFrame + 5 <= static_cast<std::uint64_t>(g_FrameCounter)) {
-        g_loadSaveSaveSoundFrame = static_cast<std::uint64_t>(g_FrameCounter);
-        shenExecuteAICACommand(kPlaySuccessSound, 0, 0);
+    PlayGatedUiSound(g_loadSaveSaveSoundFrame, kPlaySuccessSound);
     }
-}
 
 void LoadGame(UIRetry70ManBattlePromptResult response) {
     if (response != UIRetry70ManBattlePromptResult::Yes)
@@ -371,10 +309,7 @@ void LoadOrSaveGame(std::int32_t slot) {
     g_currentSlotIndex = slot;
     if (g_saveOrLoad) {
         if (g_saveDisplayModuleState == SAVE_DISPLAY_MODULE_SAVE_GRID && (kSaveGridSaveBlocked || g_saveScreenFlag != 1)) {
-            if (g_loadSaveBlockedSoundFrame + 5 <= static_cast<std::uint64_t>(g_FrameCounter)) {
-                g_loadSaveBlockedSoundFrame = static_cast<std::uint64_t>(g_FrameCounter);
-                shenExecuteAICACommand(kUiNavigateRejectSound, 0, 0);
-            }
+            PlayGatedUiSound(g_loadSaveBlockedSoundFrame, kUiNavigateRejectSound);
         } else if (row.valid) {
             d3t::MessageBox("UISAVECONF", false, 0, SaveGame, 0.0f); // @text EN: "Are you sure you want to save?" | JA: "セーブしてもよろしいですか？"
         } else {
@@ -400,9 +335,8 @@ void LoadSaveGrid_OnSlotConfirmed(float *, void *data) {
         return;
     if ((slot->valid || g_saveOrLoad == 1) && !g_loadSaveConfirmLocked) {
         LoadOrSaveGame(static_cast<std::int32_t>(slot - g_saveSlotInfo.data()));
-    } else if (g_loadSaveRejectFrame + 5 <= static_cast<std::uint64_t>(g_FrameCounter)) {
-        g_loadSaveRejectFrame = static_cast<std::uint64_t>(g_FrameCounter);
-        shenExecuteAICACommand(kUiRejectSound, 0, 0);
+    } else {
+        PlayGatedUiSound(g_loadSaveRejectFrame, kUiRejectSound);
     }
 }
 
@@ -514,6 +448,8 @@ std::int64_t LoadSave_IsSelected() {
     cellTemplate.layoutEnd = 12;
     cellTemplate.labelFirst = 0;
     cellTemplate.labelEnd = 7;
+    g_frontendEmblemImages[static_cast<std::size_t>(g_frontendEmblemImageCount++)] = g_loadSaveColourImages[1];
+    g_frontendEmblemImages[static_cast<std::size_t>(g_frontendEmblemImageCount++)] = g_loadSaveColourImages[4];
     return 1;
 }
 
@@ -694,28 +630,44 @@ std::int64_t LoadSave_Destroy() {
     return 1;
 }
 
-
+// @verified - p
 void LoadScreen_ReleaseHeader() {
     LoadScreenPresentation &screen = g_loadScreenPresentation;
-    if (!screen.headerBound)
+    const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[kLoadScreenElement].config.uiHandleIndex);
+    if (slot > 75U || static_cast<std::uint32_t>(screen.headerImage) >= g_uiImageWidgets.size())
         return;
-    if (screen.headerTexture) {
+    d3t::UIImageWidget &widget = g_uiImageWidgets[static_cast<std::size_t>(screen.headerImage)];
+    d3t::UIViewImage &image = g_uiViewSlots[slot].images[static_cast<std::size_t>(widget.image)];
+    if (image.ready != 1)
+        return;
+    if (d3t::IsTextureHandleValid(screen.headerTexture)) {
         InitTexture2DResource(screen.headerTexture);
         screen.headerTexture = 0;
     }
-    screen.headerBound = false;
-    screen.headerVisible = false;
+    image.textureHandle = 0;
+    image.ready = 0;
+    widget.field44 = 0;
 }
 
-
+// @verified - p
 void LoadScreen_BindHeader() {
     LoadScreenPresentation &screen = g_loadScreenPresentation;
-    std::uint32_t width = 0;
-    std::uint32_t height = 0;
-    if (screen.headerBound || !screen.headerTexture || !GetTexture2DDimensions(screen.headerTexture, &width, &height))
+    const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[kLoadScreenElement].config.uiHandleIndex);
+    if (slot > 75U || static_cast<std::uint32_t>(screen.headerImage) >= g_uiImageWidgets.size())
         return;
-    screen.headerBound = true;
-    screen.headerVisible = true;
+    d3t::UIImageWidget &widget = g_uiImageWidgets[static_cast<std::size_t>(screen.headerImage)];
+    d3t::UIViewImage &image = g_uiViewSlots[slot].images[static_cast<std::size_t>(widget.image)];
+    std::uint32_t width, height;
+    if (image.ready != 0 || !screen.headerTexture || !GetTexture2DDimensions(screen.headerTexture, &width, &height))
+        return;
+    image.widthScale = static_cast<float>(width) / 1920.0f;
+    image.heightScale = static_cast<float>(height) / 1080.0f;
+    image.textureHandle = static_cast<std::int32_t>(screen.headerTexture);
+    image.width = static_cast<std::uint16_t>(width);
+    image.height = static_cast<std::uint16_t>(height);
+    image.region = {0, 0, image.width, image.height};
+    image.ready = 1;
+    widget.field44 = 1;
 }
 } // namespace shenmue::s1::ui_runtime_detail
 
@@ -751,7 +703,8 @@ void LoadLoadingScreenImage(std::int32_t name, std::int32_t loadIndex, std::int3
     if (name < 0) {
         screen.area[0] = '\0';
         screen.subArea[0] = '\0';
-        screen.headerVisible = false;
+        if (static_cast<std::uint32_t>(screen.headerImage) < g_uiImageWidgets.size())
+            g_uiImageWidgets[static_cast<std::size_t>(screen.headerImage)].field44 = 0;
         return;
     }
     const std::int32_t hour = hours > 12 ? hours - 12 : hours;
@@ -788,9 +741,10 @@ void LoadLoadingScreenImage(std::int32_t name, std::int32_t loadIndex, std::int3
         }
     } else {
         screen.area[0] = '\0';
-        screen.headerVisible = false;
+        if (static_cast<std::uint32_t>(screen.headerImage) < g_uiImageWidgets.size())
+            g_uiImageWidgets[static_cast<std::size_t>(screen.headerImage)].field44 = 0;
     }
-    screen.loadingTextHeld = mode == UICdttMode::SpecialDateLoadScreen && screen.windowsBound;
+    screen.loadingTextHeld = mode == UICdttMode::SpecialDateLoadScreen && screen.windows[kLoadScreenLoadingText] != nullptr;
     constexpr std::array<std::size_t, 7> kShownWindows{0, 1, 2, 3, 5, 4, 6};
     for (const std::size_t window : kShownWindows)
         UIWidget_Animate(screen.widgetBindings[window], 1, 0.3f, 0.0f);
@@ -819,14 +773,17 @@ void LoadScreen_ResetUIStates() {
         screen.date[0] = '\0';
         screen.area[0] = '\0';
         screen.subArea[0] = '\0';
-        screen.headerVisible = false;
-    }
-    if (screen.windowsBound) {
-        screen.windowAlpha.fill(0.0f);
-        screen.windowAlpha[kLoadScreenBlackBackground] = 1.0f;
-    }
-}
 
+        if (static_cast<std::uint32_t>(screen.headerImage) < g_uiImageWidgets.size())
+            g_uiImageWidgets[static_cast<std::size_t>(screen.headerImage)].field44 = 0;
+    }
+    for (d3t::UIWindow *const window : screen.windows) {
+        if (window)
+            window->alpha = 0.0f;
+    }
+    if (screen.windows[kLoadScreenBlackBackground])
+        screen.windows[kLoadScreenBlackBackground]->alpha = 1.0f;
+}
 
 std::int64_t LoadScreen_Destroy() {
     constexpr std::array<std::size_t, 9> kHiddenWindows{0, 1, 2, 3, 6, 7, 8, 5, 4};
@@ -836,30 +793,64 @@ std::int64_t LoadScreen_Destroy() {
     return 1;
 }
 
-
-
-std::int64_t LoadScreen_IsSelected() {
+// @verified - p
+std ::int64_t LoadScreen_IsSelected() {
     LoadScreenPresentation &screen = g_loadScreenPresentation;
-    screen.windowsBound = true;
-    for (std::size_t window = 0; window < screen.widgetBindings.size(); ++window)
-        screen.widgetBindings[window] = UIWidget_Bind(static_cast<std::int32_t>(window), &screen.windowAlpha[window], {0.0f, 0.0f}, {1.0f, 1.0f});
+    const std ::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[kLoadScreenElement].config.uiHandleIndex);
+    if (slot > 75U)
+        return 1;
+    d3t::UIViewSlot<d3t::kS1UIViewImageCapacity> &view = g_uiViewSlots[slot];
+    for (std::size_t window = 0; window < screen.windows.size(); ++window)
+        screen.windows[window] = UI_GetWindow(UI_FindViewWindow(slot, kLoadScreenWindowIds[window]));
+    screen.headerImage = UI_FindViewImageWidget(slot, "Image_Header");
+    for (std::int32_t index = 0; index < view.widgetCount; ++index) {
+        if (view.widgetKinds[static_cast<std::size_t>(index)] != 15)
+            continue;
+        d3t::UILabelWidget *const label = UI_LabelRecord(view.widgetPoolIndices[static_cast<
+
+            std::size_t>(index)]);
+        if (!label)
+            continue;
+        if (std::strcmp(label->text, "TIME") == 0)
+            label->text = screen.time.data();
+        else if (std::strcmp(label->text, "DATE") == 0)
+            label->text = screen.date.data();
+        else if (std::strcmp(label->text, "AREA") == 0)
+            label->text = screen.area.data();
+        else if (
+
+            std::strcmp(label->text, "SUBAREA") == 0)
+            label->text = screen.subArea.data();
+        else if (std::strcmp(label->text, "LOADING") == 0)
+            label->text = screen.nowLoading.data();
+    }
+    screen.widgetBindings[0] = -1;
+    for (std::size_t window = 0; window < screen.widgetBindings.size(); ++window) {
+        const std::int32_t handle = UI_FindViewWindow(slot, kLoadScreenWindowIds[window]);
+        d3t::UIWindow *const record = UI_GetWindow(handle);
+        screen.widgetBindings[window] = UIWidget_Bind(handle, record ? &record->alpha : nullptr, {0.0f, 0.0f}, {1.0f, 1.0f});
+    }
     return 1;
 }
 
-
 std::int64_t LoadScreen_Reset() {
-    g_loadScreenPresentation.windowsBound = false;
+    g_loadScreenPresentation.windows.fill(nullptr);
     return 0;
 }
 
-
-
+// @verified - p
 std::int64_t LoadScreen_UpdateNowLoading() {
+
+    const std::uint32_t slot = static_cast<std ::uint32_t>(g_uiElements[kLoadScreenElement].config.uiHandleIndex);
+    if (slot > 75U)
+        return 1;
     LoadScreen_BindHeader();
-    const double seconds = static_cast<double>(platform::performanceCounter()) / static_cast<double>(platform::performanceCounterFrequency());
-    const std::size_t dots = static_cast<std::size_t>(static_cast<std::int64_t>(seconds * 2.0) % 4);
+    const std::int32_t dots = static_cast<std::int32_t>(d3t ::GetSecondsByPerformanceQuery() * 2.0f) % 4;
     std::snprintf(g_loadScreenPresentation.nowLoading.data(), g_loadScreenPresentation.nowLoading.size(), "%s%s", InitAndRetrieveStringFromID("UILOADNOWL"),
-        kLoadingDots[dots]); // @text EN: "Now Loading" | JA: "ＮＯＷ　ＬＯＡＤＩＮＧ"
+        kLoadingDots[static_cast<std::size_t>(dots)]); // @text EN: "Now Loading" | JA: "ＮＯＷ　ＬＯＡＤＩＮＧ"
+    if (g_debugLoadingWidgetEnabled != 0)
+        UI_InputHandler(
+            GNuklearWindow, static_cast<std::int32_t>(slot), 0, g_uiViewSlots[slot].widgetCount); // @text EN: "Now Loading" | JA: "ＮＯＷ　ＬＯＡＤＩＮＧ"
     return 1;
 }
 } // namespace shenmue::s1::ui_runtime_detail

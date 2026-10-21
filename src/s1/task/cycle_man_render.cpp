@@ -197,7 +197,7 @@ void RenderTaggedPayloads() {
 void RenderMoveObjects() {
     for (CycleMoveObjectRuntime *runtime = g_visibleMoveObjects; runtime; runtime = runtime->visibleNext) {
         CycleManager::UpdateMoveObjectRenderNodes(*runtime);
-        SubmitRiggedSceneAttachment(runtime->model, runtime->renderOpacity, runtime->pos, runtime->renderEuler, runtime->tokenLocalOffset, {});
+        SubmitCycleMoveObject(*runtime);
     }
 }
 } // namespace CycleManager

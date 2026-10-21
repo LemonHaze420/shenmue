@@ -14,6 +14,7 @@ namespace shenmue::s2 {
 
 struct Character;
 struct PresentationState;
+struct HandParams;
 struct PakGlobalData;
 struct HandPoseBank {
     std::int32_t *offsets;
@@ -170,6 +171,8 @@ struct HandPoseInfluence {
 };
 
 struct HandModelResource {
+    HandParams *hand{};
+    HandModelResource *next{};
     MT7Model *reader{};
     LegacyDrawResources meshResources;
     LegacyNodeCommandOverride meshCommand{};

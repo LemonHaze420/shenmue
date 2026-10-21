@@ -563,6 +563,7 @@ struct SimNode {
 #include <map>
 #include <limits>
 #include <set>
+#include <span>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -739,7 +740,7 @@ struct CycleMoveObjectRuntime {
     uint32_t activeFlag;
     uint32_t unkE4;
     void *overrideTransform;
-    uint8_t unkF0[32];
+    CharacterShadowState shadowState;
     float pathStartX;
     float pathStartZ;
     int32_t pathCurveDelta;
@@ -754,6 +755,7 @@ struct CycleMoveObjectRuntime {
 };
 static_assert(sizeof(CycleMoveObjectRuntime) == 0x138);
 static_assert(offsetof(CycleMoveObjectRuntime, activeFlag) == 0xe0);
+static_assert(offsetof(CycleMoveObjectRuntime, shadowState) == 0xf0);
 static_assert(offsetof(CycleMoveObjectRuntime, visibilityState) == 0x130);
 #pragma pack(pop)
 
@@ -779,6 +781,14 @@ struct IntersectionEntry {
     uint32_t dword18 = 0;
     uint32_t dword1C = 0;
 };
+static_assert(sizeof(IntersectionEntry) == 28);
+inline constexpr std::size_t kDynamicTurnVolumeCapacity = 44;
+inline constexpr std::size_t kIntersectionVolumeCapacity = 20;
+#if SHENMUE_IS_PC
+extern IntersectionEntry *g_cycleSteeringVolumes;
+extern IntersectionEntry *g_pIntersectionPtr;
+bool InitMemory();
+#endif
 } // namespace CycleManager
 
 
@@ -1173,8 +1183,13 @@ struct RuntimeState {
     uint32_t doorRequestFailedPolls = 0;
     uint32_t doorRequestNotReadyPolls = 0;
     uint32_t doorRequestAllocFailures = 0;
+#if SHENMUE_IS_PC
+    std::span<CycleManager::IntersectionEntry> dynamicTurnCollisionVolumes{g_cycleSteeringVolumes, g_cycleSteeringVolumes ? kDynamicTurnVolumeCapacity : 0};
+    std::span<CycleManager::IntersectionEntry> intersectionEntries{g_pIntersectionPtr, g_pIntersectionPtr ? kIntersectionVolumeCapacity : 0};
+#else
     std::array<CycleManager::IntersectionEntry, 44> dynamicTurnCollisionVolumes{};
     std::array<CycleManager::IntersectionEntry, 20> intersectionEntries{};
+#endif
     uint32_t mobjFrames = 0;
     uint32_t mobjLastActive = 0;
     uint64_t mobjAdvancedTotal = 0;

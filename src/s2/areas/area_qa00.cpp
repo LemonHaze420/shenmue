@@ -271,15 +271,15 @@ void ApplyLighting() {
     EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
     Vector3 position{0.0f, GetQronTemporaryFloorHeight() - 100.0f, 0.0f};
     SetLightRootPosition(position);
-    SetMapLightingPlacementPosition(&position, 5);
-    SetMapLightingPlacementPosition(&position, 6);
+    SetMapModelSlotTransform(5, &position, 0);
+    SetMapModelSlotTransform(6, &position, 0);
     PushGlobalLightingProgram();
     CheckIsArgEquZero(1);
     position = Vector3{0.0f, 10.800000190734863f, 0.0f};
-    SetMapLightingPlacementPosition(&position, 5);
+    SetMapModelSlotTransform(5, &position, 0);
     SetOccupancyForThisFieldSegment(SHEN_NAME(QA0Y), &position, 0);
     position = Vector3{0.0f, 32.400001525878906f, 0.0f};
-    SetMapLightingPlacementPosition(&position, 6);
+    SetMapModelSlotTransform(6, &position, 0);
     SetOccupancyForThisFieldSegment(SHEN_NAME(QA0Z), &position, 0);
     SetAreaFogParams();
 }

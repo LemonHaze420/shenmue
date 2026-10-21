@@ -201,7 +201,10 @@ HandModelResource *GetHandModelResource(const HandParams &hand) {
     PresentationState *const state = FindPresentation(hand.owner);
     if (!state || hand.selector < 1 || hand.selector > 4)
         return nullptr;
-    return state->handResources[(hand.selector - 1) & 1];
+    for (HandModelResource *resource = state->handResources[(hand.selector - 1) & 1]; resource; resource = resource->next)
+        if (resource->hand == &hand)
+            return resource;
+    return nullptr;
 }
 
 void LoadHandModels() {
@@ -1254,8 +1257,13 @@ void CleanupHand(Character *character, void *payload) {
     hand.poseModelData = nullptr;
     if (resource) {
         ReleaseHandModel(*resource);
-        if (resource->state)
-            resource->state->handResources[(hand.selector - 1) & 1] = nullptr;
+        if (resource->state) {
+            HandModelResource **link = &resource->state->handResources[(hand.selector - 1) & 1];
+            while (*link && *link != resource)
+                link = &(*link)->next;
+            if (*link)
+                *link = resource->next;
+        }
         delete resource;
     }
 }

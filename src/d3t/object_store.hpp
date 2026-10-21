@@ -84,10 +84,7 @@ void SetObjectEyeLidExpressionWeights(const void *placement, float leftWeight, f
 #endif
 std::uint64_t ResolveModelRuntimeNode(const void *placement, const char *name, std::int16_t kind);
 
-
-
-
-bool RegisterObjectSource(const void *source, const char *modelPath, std::uint16_t flags);
+bool RegisterObjectSource(const void *source, const char *modelPath, std::uint16_t flags, std::uint32_t threadHandle = 0);
 void ReleaseObjectSource(const void *source);
 // The source's realized D3T model handle (ResolveSourceObjectEntry +0x10), 0 when it has none.
 std::uint32_t GetObjectSourceRenderHandle(const void *source);

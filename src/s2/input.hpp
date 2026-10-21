@@ -99,6 +99,7 @@ static_assert(sizeof(PhysicalControllerState) == 0x54);
 static_assert(offsetof(PhysicalControllerState, normalizedSticks) == 0x10);
 static_assert(offsetof(PhysicalControllerState, active) == 0x50);
 
+extern std::int32_t g_mouseLookInputActive;
 std::uint64_t GetIsKeyboardActive();
 void DetectActiveInputDevice(std::uint32_t controllerIndex);
 void SetXInputFlags();

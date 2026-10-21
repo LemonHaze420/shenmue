@@ -121,7 +121,7 @@ const CDTTState &CDTT_GetState() {
         widget.id = static_cast<CDTTWidgetId>(index);
         widget.authoredOrder = static_cast<std::uint8_t>(index);
         widget.authored = static_cast<std::uint8_t>(screen.widgetBindings[window] >= 0);
-        widget.visible = static_cast<std::uint8_t>(screen.windowAlpha[window] > 0.0f);
+        widget.visible = static_cast<std::uint8_t>(screen.windows[window] && screen.windows[window]->alpha > 0.0f);
     }
     UICdttPresentationText &text = g_cdttState.text;
     std::snprintf(text.date, sizeof(text.date), "%s", screen.date.data());
@@ -131,7 +131,7 @@ const CDTTState &CDTT_GetState() {
     std::snprintf(text.headerPath, sizeof(text.headerPath), "%s", g_cdttViewFilename ? g_cdttViewFilename : "");
     text.locationIndex = static_cast<std::int16_t>(g_cdttViewLoadIndex);
     text.specialDateIndex = static_cast<std::uint8_t>(g_cdttViewSpecialDateIndex);
-    text.loadingTextVisible = static_cast<std::uint8_t>(screen.windowAlpha[8] > 0.0f);
+    text.loadingTextVisible = static_cast<std::uint8_t>(screen.windows[8] && screen.windows[8]->alpha > 0.0f);
     return g_cdttState;
 }
 
@@ -396,7 +396,10 @@ void CDTT_Clear() {
         if (binding >= 0 && binding < static_cast<std::int32_t>(g_uiWidgetBindings.size()))
             g_uiWidgetBindings[static_cast<std::size_t>(binding)].animating = 0;
     }
-    screen.windowAlpha.fill(0.0f);
+    for (d3t::UIWindow *const window : screen.windows) {
+        if (window)
+            window->alpha = 0.0f;
+    }
     screen.imageSet = 0;
     LoadScreen.isVisible = 0;
     g_isRenderSuppressed = 0;

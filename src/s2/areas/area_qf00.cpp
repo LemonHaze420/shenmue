@@ -1501,8 +1501,7 @@ void ApplyQF00Lighting() {
     EV_SetWeatherInstruction(0x1800, 0);
     SetMapModelDataDefaultVertexShader();
     Vector3 position{0.0f, -3.5999999046325684f, 0.0f};
-    SetMapLightingPlacementPosition(&position, 3);
-    SetMapLightingPlacementRotation(0, 3);
+    SetMapModelSlotTransform(3, &position, 0);
     SetOccupancyForThisFieldSegment(SHEN_NAME(QF0Z), &position, 0);
     EV_lightLoad(SHEN_NAME(0002));
     SetLightRootPosition(position);

@@ -721,6 +721,8 @@ std::uint32_t icsToggleIconState(std::uint32_t index, std::int32_t enabled);
 bool IsItemSelectable();
 std::uint16_t GetPadControlData(std::uint8_t mode);
 void padcRefreshCurrentInputs(bool bind);
+std::int64_t CloseHeldStateIcons();
+std::int64_t CloseWristwatchTransitionIcons();
 std::int64_t RefreshPadControlData(std::uint32_t slot, std::int32_t force);
 
 enum class CheckHelpIconOp : std::int32_t {

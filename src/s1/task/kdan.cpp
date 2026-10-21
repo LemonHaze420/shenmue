@@ -515,8 +515,7 @@ bool kaidanHasPathRemaining(const CycleManager::NpcRecord &npc, const CollisionP
     }
 }
 
-
-
+// @verified - p
 bool npcUpdateMoKaidan(CycleManager::NpcRecord &npc) {
     float height = 0.0f;
     std::int32_t value8 = 0;
@@ -532,8 +531,7 @@ bool npcUpdateMoKaidan(CycleManager::NpcRecord &npc) {
                 KDAN_AddOccupancy((guideEntryId & 1) == 0 ? guideEntryId + 2 : guideEntryId - 2, npc);
         }
         if (!npc.cycle->pathPointIndex) {
-            (void)Vector3_SubtractInto(npc.cycle->pos, npc.cycle->pathPoints[0]);
-            npc.cycle->pathSegmentDistanceOrWork = 0.0f;
+            npc.cycle->pathSegmentDistanceOrWork = Vector3_SubtractInto(npc.cycle->pos, npc.cycle->pathPoints[0]);
         }
     }
     return npc.cycle->pathPointIndex == 1;

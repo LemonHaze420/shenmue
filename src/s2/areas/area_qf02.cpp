@@ -68,18 +68,14 @@ void ApplyQF02Lighting() {
     EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
     Vector3 position{0.0f, GetQronTemporaryFloorHeight() - 100.0f, 0.0f};
     SetLightRootPosition(position);
-    SetMapLightingPlacementPosition(&position, 2);
-    SetMapLightingPlacementRotation(0, 2);
-    SetMapLightingPlacementPosition(&position, 3);
-    SetMapLightingPlacementRotation(0, 3);
+    SetMapModelSlotTransform(2, &position, 0);
+    SetMapModelSlotTransform(3, &position, 0);
     PushGlobalLightingProgram();
     (void)CheckIsArgEquZero(1);
     position = {0.0f, 10.800000190734863f, 0.0f};
-    SetMapLightingPlacementPosition(&position, 2);
-    SetMapLightingPlacementRotation(0, 2);
+    SetMapModelSlotTransform(2, &position, 0);
     position = {0.0f, 14.399999618530273f, 0.0f};
-    SetMapLightingPlacementPosition(&position, 3);
-    SetMapLightingPlacementRotation(0, 3);
+    SetMapModelSlotTransform(3, &position, 0);
     SetAreaFogParams();
 }
 } // namespace

@@ -71,11 +71,8 @@ void UI_PlaySound(std::int32_t index) {
     if (index < 0 || static_cast<std::size_t>(index) >= kUiSoundCommands.size())
         return;
     std::int32_t &frame = g_uiSoundFrames[static_cast<std::size_t>(index)];
-    if (frame + 5 <= g_FrameCounter) {
-        frame = g_FrameCounter;
-        shenExecuteAICACommand(kUiSoundCommands[static_cast<std::size_t>(index)], 0, 0);
+    PlayGatedUiSound(frame, kUiSoundCommands[static_cast<std::size_t>(index)]);
     }
-}
 
 // Resolve an authored panel through its parents into the safe-area-mapped authored 1920x1080 space. Children lay out inside the
 // parent's padded rect, as UI_GetPanelRect returns it. Submenu roots parent to GameMenu_New.ui panels, the Collection tabs' roots to

@@ -932,19 +932,17 @@ void RegisterModelNodeAliases(const MT7Node *node, const MT7Node *root, std::uin
 }
 
 // @verified - p
-void FilepathBuilder(const MT7Node *data, const char *directory, const char *subdirectory, const char *stem, std::uint16_t flags) {
+void FilepathBuilder(const MT7Node *data, const char *directory, const char *subdirectory, const char *stem, std::uint16_t flags, std::uint32_t threadHandle) {
     char path[512];
     std::snprintf(path, sizeof(path), "/%s/%s/%s.XXX_/%s.fbx", *directory == '/' ? directory + 1 : directory, subdirectory ? subdirectory : "", stem, stem);
     std::uintptr_t flag = 1;
-    if (!d3t::RegisterObjectSource(data, path, static_cast<std::uint16_t>(flags | 0x110U))) {
-        if (!d3t::RegisterObjectSource(data, path, flags))
+    if (!d3t::RegisterObjectSource(data, path, static_cast<std::uint16_t>(flags | 0x110U), threadHandle)) {
+        if (!d3t::RegisterObjectSource(data, path, flags, threadHandle))
             return;
         flag = 0;
     }
     RegisterModelNodeAliases(data, data, flag);
 }
-
-
 
 bool ReadModelFormat7(std::span<const std::byte> bytes, const char *label, MT7Model &model, std::uint16_t flags) {
     if (!ReadModelFormat7(bytes, label, model)) {

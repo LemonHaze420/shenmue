@@ -203,8 +203,8 @@ void mt7_CopyXB01Offset(MT7Node *node, const MT7Node *source);
 
 const MT7Node *GetMT7ReaderData(const MT7Model *model);
 
-
-void FilepathBuilder(const MT7Node *data, const char *directory, const char *subdirectory, const char *stem, std::uint16_t flags);
+void FilepathBuilder(
+    const MT7Node *data, const char *directory, const char *subdirectory, const char *stem, std::uint16_t flags, std::uint32_t threadHandle = 0);
 
 bool ReadModelFormat7(std::span<const std::byte> bytes, const char *label, MT7Model &model);
 

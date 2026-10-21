@@ -3,7 +3,7 @@
 
 namespace shenmue::s1 {
 
-
+inline constexpr shen_name TASK_MOBJ = SHEN_NAME(MOBJ);
 bool SetMOBJTaskPtr();
 bool MOBJ_AllocateTaskMemory();
 bool MOBJ_SetupTaskPointer();

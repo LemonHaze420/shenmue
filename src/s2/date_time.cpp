@@ -1039,6 +1039,13 @@ bool IsTimeSimulationEnabled() {
     return gameClockUpdateFlag == 1;
 }
 
+// @verified - p
+std::uint32_t SetTimeHudVariant(std::int32_t variant) {
+    const std::uint32_t previous = static_cast<std::uint32_t>(timeHudVariant);
+    if (variant < 2)
+        timeHudVariant = variant;
+    return previous;
+}
 void SetRenderClockAndCompassTo(std::int32_t suppressed) noexcept {
     clockAndCompassSuppressed = static_cast<std::uint8_t>(suppressed);
 }

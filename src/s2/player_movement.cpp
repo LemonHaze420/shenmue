@@ -1072,8 +1072,8 @@ void UpdatePlayerInterpolation(PlayerModelState &state) {
         motionScale *= 0.5f;
     }
 
-    std::int32_t yawDistance = static_cast<std::int16_t>(state.collisionBoundaryYaw - state.currentYaw);
-    yawDistance = std::clamp(std::abs(yawDistance), 0, 0x4000);
+    const std::int32_t yawDifference = static_cast<std::int32_t>(state.collisionBoundaryYaw) - state.currentYaw;
+    const std::int32_t yawDistance = std::clamp<std::int32_t>(static_cast<std::int16_t>(yawDifference < 0 ? -yawDifference : yawDifference), 0, 0x4000);
     const float targetScale = motionScale * (sin_fixed16(static_cast<std::int16_t>(yawDistance)) * 0.75f + 1.0f);
     const float upperScale = (state.movementSelectionFlags & 0x2000U) ? 1.0f : 5.0f;
 

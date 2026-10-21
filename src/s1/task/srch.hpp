@@ -7,6 +7,9 @@
 #include <cstdint>
 
 namespace shenmue::s1 {
+inline constexpr shen_name SEARCH_AREA_JABE{SHEN_NAME(JABE)};
+inline constexpr shen_name SEARCH_AREA_DCBN{SHEN_NAME(DCBN)};
+inline constexpr shen_name SEARCH_AREA_MKYU{SHEN_NAME(MKYU)};
 enum class SearchState : std::int32_t;
 #pragma pack(push, 1)
 struct SearchEntry {

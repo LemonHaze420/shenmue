@@ -1111,7 +1111,8 @@ bool AllocatePAKStuff(PakLoadTaskData &task, PakGlobalData &slot) {
                 if (model) {
                     char stem[9]{};
                     std::strncpy(stem, entry.stem.data(), 8);
-                    FilepathBuilder(GetMT7ReaderData(model), runtime.folder.data(), slot.entryType.data(), stem, tag == SHEN_NAME(CHRM) ? 0x22U : 0x2001U);
+                    FilepathBuilder(GetMT7ReaderData(model), runtime.folder.data(), slot.entryType.data(), stem, tag == SHEN_NAME(CHRM) ? 0x22U : 0x2001U,
+                        task.renderThreadHandle);
                 }
                 if (tag == SHEN_NAME(PROP))
                     ++slot.propIndex;

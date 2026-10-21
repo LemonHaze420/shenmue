@@ -123,6 +123,7 @@ std::int32_t IsCurrentTimeRange(std::uint16_t start, std::uint16_t end);
 std::uint32_t UpdateTempHourMinTimeScale(std::int32_t hour, std::int32_t minute, float scale);
 std::uint64_t shenSetTimeSimulationTo(std::uint32_t state);
 bool IsTimeSimulationEnabled();
+std::uint32_t SetTimeHudVariant(std::int32_t variant);
 void SetRenderClockAndCompassTo(std::int32_t suppressed) noexcept;
 bool IsClockAndCompassSuppressed() noexcept;
 

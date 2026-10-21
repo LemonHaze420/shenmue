@@ -80,12 +80,8 @@ void GameMessage_Render() {
     slot.end[0] = 1.0f;
     slot.duration = 0.5f;
     slot.reserved40 = -1;
-    if (g_uiNavigateSoundFrame + 5 <= g_FrameCounter) {
-        g_uiNavigateSoundFrame = g_FrameCounter;
-        shenExecuteAICACommand(kUiNavigateSound, 0, 0);
+    PlayGatedUiSound(g_uiNavigateSoundFrame, kUiNavigateSound);
     }
-}
-
 
 std::int64_t GameMessage_Destroy() {
     const std::int32_t slotIndex = g_gameMessagePresentation.animSlot;
@@ -101,11 +97,9 @@ std::int64_t GameMessage_Destroy() {
         slot.current[0] = 1.0f;
         slot.duration = 0.5f;
         slot.reserved40 = -1;
-        if (g_uiNavigateSoundFrame + 5 <= g_FrameCounter) {
-            g_uiNavigateSoundFrame = g_FrameCounter;
-            shenExecuteAICACommand(kUiNavigateSound, 0, 0);
+        PlayGatedUiSound(g_uiNavigateSoundFrame, kUiNavigateSound);
         }
-    }
+
     return 1;
 }
 

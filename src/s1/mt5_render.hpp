@@ -10,6 +10,8 @@ namespace shenmue::s1 {
 
 struct PackModel;
 struct Character;
+struct CharacterShadowState;
+struct CycleMoveObjectRuntime;
 struct Mt5RuntimeNode;
 struct EffectLightRenderSlot;
 using D3TDeviceContext = d3t::D3TDeviceContext;
@@ -60,12 +62,14 @@ void SubmitRiggedCharacterModel(void *model, Character *character, float alpha);
 void SubmitBoneEffectCharacterModel(void *model, Character *character);
 void SubmitRiggedSceneAttachment(
     void *model, float alpha, const Vector3 &rootPosition, const Vector3i &rootRotation, const Vector3 &localPosition, const Vector3i &localRotation);
+void SubmitCycleForDrawing(Mt5RuntimeNode *node);
+void SubmitCycleModel(Mt5RuntimeNode *node);
+void SubmitCycleMoveObject(CycleMoveObjectRuntime &runtime);
 void HMDL_ClearNodeTransformLinks(Mt5RuntimeNode *node);
 void HMDL_LinkNodeTransformsByKind(Mt5RuntimeNode *source, Mt5RuntimeNode *target);
 
-
 void SubmitCharacterShadow(Character *character, void *posedModel, void *model, const Vector3 &position, const Vector3i &rotation, const Vector3 &scale,
-    float groundHeight, float direction);
+    float groundHeight, float direction, CharacterShadowState *shadowState = nullptr);
 void SubmitPosedCharacterShadow(Character *character, void *model, const Vector3 &position, float groundHeight, float direction);
 void DrawCharacterObjects();
 void DrawCharacterShadows();

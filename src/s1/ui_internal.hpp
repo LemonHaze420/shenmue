@@ -937,7 +937,7 @@ extern std::uint8_t g_mainMenuWheelArmed;
 
 extern std::int32_t g_mainMenuWheelAnimSlot;
 
-extern std::uint64_t g_uiAcceptSoundFrame;
+extern std::int32_t g_uiAcceptSoundFrame;
 
 extern std::vector<char> g_frontendAutomationOriginalSettingsFile;
 
@@ -1187,11 +1187,11 @@ extern std::int32_t g_isInGame;
 } // namespace shenmue::s1
 
 namespace shenmue::s1::ui_runtime_detail {
-extern std::uint64_t g_loadSaveRejectFrame;
+extern std::int32_t g_loadSaveRejectFrame;
 
-extern std::uint64_t g_loadSaveSaveSoundFrame;
+extern std::int32_t g_loadSaveSaveSoundFrame;
 
-extern std::uint64_t g_loadSaveBlockedSoundFrame;
+extern std::int32_t g_loadSaveBlockedSoundFrame;
 
 extern UIGridTemplate g_loadSaveGridTemplate;
 
@@ -1453,7 +1453,7 @@ std::int64_t Credits_Destroy();
 
 std::int64_t Credits_Tick();
 
-bool DrawLoadScreenPresentation(std::uint32_t renderTarget);
+void UpdateFrontendEmblemRotation();
 
 std::uint32_t NotebookPages_ParseDefinition();
 
@@ -1792,9 +1792,11 @@ namespace shenmue::s1::ui_runtime_detail {
 
 
 template <typename Frame> void PlayGatedUiSound(Frame &frame, std::uint32_t command) {
-    if (frame + 5 > static_cast<Frame>(g_FrameCounter))
+    const std::uint64_t currentFrame = d3t::GetNumRenderedFrames();
+    const std::int32_t threshold = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(frame) + 5U);
+    if (static_cast<std::uint64_t>(static_cast<std::int64_t>(threshold)) > currentFrame)
         return;
-    frame = static_cast<Frame>(g_FrameCounter);
+    frame = static_cast<Frame>(static_cast<std::int32_t>(currentFrame));
     shenExecuteAICACommand(command, 0, 0);
 }
 } // namespace shenmue::s1::ui_runtime_detail
