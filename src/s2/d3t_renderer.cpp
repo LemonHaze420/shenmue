@@ -1,4 +1,5 @@
 #include "s2/d3t_renderer.hpp"
+#include "s2/model_geometry.hpp"
 #include "s2/camera.hpp"
 
 #include "d3t/buffer.hpp"
@@ -41,7 +42,7 @@
 #include <dwmapi.h>
 #endif
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 
 std::int32_t g_aspectRatioRenderSuppressed = 0;
 std::int32_t renQteDoorMotionPending = 0;
@@ -729,6 +730,7 @@ bool ProcessD3TMessages() {
     if (shouldQuit)
         return false;
     d3t::GenerateMipsAndUpdateResourcesForDirectX();
+    std::atomic_ref<std::int32_t>(g_modelGeometryFrameOffset).exchange(0, std::memory_order_seq_cst);
     return BeginD3TRenderPass(true);
 #endif
 }

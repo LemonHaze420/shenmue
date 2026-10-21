@@ -1,4 +1,10 @@
 #include "s2/renderer_initialization.hpp"
+#include "s2/model_geometry.hpp"
+#include "d3t/file_state.hpp"
+#include <cstdlib>
+#if defined(_WIN32)
+#include <malloc.h>
+#endif
 #include "s2/sd_light.hpp"
 #include "s2/sd_probe.hpp"
 #include "s2/legacy_draw.hpp"
@@ -433,6 +439,15 @@ bool InitRenderer() {
     g_nuklearVertexShader = d3t::GetLoadedShader(nuklearShaderLoad, 0);
     g_nuklearPixelShader = d3t::GetLoadedShader(nuklearShaderLoad, 1);
     InitGeneralTextureResources();
+    SetupGlobalRenderBuffers();
+    g_modelGeometryFrameSize = MODEL_GEOMETRY_FRAME_BYTES;
+#if defined(_WIN32)
+    g_modelGeometryFrameMemory = _aligned_malloc(MODEL_GEOMETRY_FRAME_BYTES, 16);
+#else
+    g_modelGeometryFrameMemory = std::aligned_alloc(16, MODEL_GEOMETRY_FRAME_BYTES);
+#endif
+    g_modelGeometryFileLock = d3t::AllocateFileLockHandle();
+    std::atomic_ref<std::int32_t>(g_modelGeometryFrameOffset).exchange(0, std::memory_order_seq_cst);
     SetupNuklear();
     if (!d3t::InitializeUIRenderer(
             g_nuklearInputLayout, g_nuklearVertexShader, g_nuklearPixelShader, g_fvfLayouts[35], texturedQuadGammaVertexShader, texturedQuadGammaPixelShader)) {
@@ -482,6 +497,7 @@ void ShutdownRendererContent() {
     ReleaseSDLightMetadata();
     d3t::ReleaseSceneFrameTargets();
     d3t::ShutdownThreads();
+    ReleaseModelGeometryResources();
     FreeRendererScratch();
 }
 

@@ -24,4 +24,5 @@ std::uint32_t AllocateFileLockHandle();
 void LockFileHandle(std::uint32_t handle);
 void UnlockFileHandle(std::uint32_t handle);
 
+void ReleaseFileLockHandle(std::uint32_t handle);
 } // namespace shenmue::d3t

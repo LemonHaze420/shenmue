@@ -70,4 +70,10 @@ void UnlockFileHandle(std::uint32_t handle) {
     ResolveFileLock(handle).mutex.unlock();
 }
 
+void ReleaseFileLockHandle(std::uint32_t handle) {
+    const std::lock_guard lock(g_fileLockTableMutex);
+    FileLockEntry &entry = g_fileLockTable[handle & 0xffffU];
+    entry.sequence = 0;
+    entry.active = 0;
+}
 } // namespace shenmue::d3t

@@ -270,32 +270,33 @@ Matrix4x4 *ComputeLookAtViewMatrix(Matrix4x4 *output, const Vector3 *eye, const 
     return output;
 }
 
+// @verified - p
 Vector4 *RotationMatrixToQuaternion(const Matrix4x4 *matrix, Vector4 *output) {
     const float trace = matrix->rows[0].x + matrix->rows[1].y + matrix->rows[2].z;
     if (trace > 0.0f) {
-        const float s = std::sqrt(trace + 1.0f) * 2.0f;
-        output->w = 0.25f * s;
-        output->x = (matrix->rows[2].y - matrix->rows[1].z) / s;
-        output->y = (matrix->rows[0].z - matrix->rows[2].x) / s;
-        output->z = (matrix->rows[1].x - matrix->rows[0].y) / s;
+        const float reciprocal = 1.0f / (std::sqrt(trace + 1.0f) * 2.0f);
+        output->w = 0.25f / reciprocal;
+        output->x = (matrix->rows[2].y - matrix->rows[1].z) * reciprocal;
+        output->y = (matrix->rows[0].z - matrix->rows[2].x) * reciprocal;
+        output->z = (matrix->rows[1].x - matrix->rows[0].y) * reciprocal;
     } else if (matrix->rows[0].x > matrix->rows[1].y && matrix->rows[0].x > matrix->rows[2].z) {
-        const float s = std::sqrt(1.0f + matrix->rows[0].x - matrix->rows[1].y - matrix->rows[2].z) * 2.0f;
-        output->w = (matrix->rows[2].y - matrix->rows[1].z) / s;
-        output->x = 0.25f * s;
-        output->y = (matrix->rows[0].y + matrix->rows[1].x) / s;
-        output->z = (matrix->rows[0].z + matrix->rows[2].x) / s;
+        const float reciprocal = 1.0f / (std::sqrt(matrix->rows[0].x + 1.0f - matrix->rows[1].y - matrix->rows[2].z) * 2.0f);
+        output->w = (matrix->rows[2].y - matrix->rows[1].z) * reciprocal;
+        output->x = 0.25f / reciprocal;
+        output->y = (matrix->rows[1].x + matrix->rows[0].y) * reciprocal;
+        output->z = (matrix->rows[2].x + matrix->rows[0].z) * reciprocal;
     } else if (matrix->rows[1].y > matrix->rows[2].z) {
-        const float s = std::sqrt(1.0f + matrix->rows[1].y - matrix->rows[0].x - matrix->rows[2].z) * 2.0f;
-        output->w = (matrix->rows[0].z - matrix->rows[2].x) / s;
-        output->x = (matrix->rows[0].y + matrix->rows[1].x) / s;
-        output->y = 0.25f * s;
-        output->z = (matrix->rows[1].z + matrix->rows[2].y) / s;
+        const float reciprocal = 1.0f / (std::sqrt(matrix->rows[1].y + 1.0f - matrix->rows[0].x - matrix->rows[2].z) * 2.0f);
+        output->w = (matrix->rows[0].z - matrix->rows[2].x) * reciprocal;
+        output->x = (matrix->rows[1].x + matrix->rows[0].y) * reciprocal;
+        output->y = 0.25f / reciprocal;
+        output->z = (matrix->rows[2].y + matrix->rows[1].z) * reciprocal;
     } else {
-        const float s = std::sqrt(1.0f + matrix->rows[2].z - matrix->rows[0].x - matrix->rows[1].y) * 2.0f;
-        output->w = (matrix->rows[1].x - matrix->rows[0].y) / s;
-        output->x = (matrix->rows[0].z + matrix->rows[2].x) / s;
-        output->y = (matrix->rows[1].z + matrix->rows[2].y) / s;
-        output->z = 0.25f * s;
+        const float reciprocal = 1.0f / (std::sqrt(matrix->rows[2].z + 1.0f - matrix->rows[0].x - matrix->rows[1].y) * 2.0f);
+        output->w = (matrix->rows[1].x - matrix->rows[0].y) * reciprocal;
+        output->x = (matrix->rows[2].x + matrix->rows[0].z) * reciprocal;
+        output->y = (matrix->rows[2].y + matrix->rows[1].z) * reciprocal;
+        output->z = 0.25f / reciprocal;
     }
     return output;
 }
