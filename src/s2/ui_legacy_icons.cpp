@@ -19,6 +19,7 @@
 #include "s2/mt7.hpp"
 #include "s2/world_render.hpp"
 #include "s2/areas/area_0001.hpp"
+#include "s2/areas/area_armw.hpp"
 #include "s2/areas/game_arcade.hpp"
 #include "s2/areas/omak_tables.hpp"
 #include "s2/omak_collection_ui.hpp"
@@ -105,7 +106,7 @@
 
 #include "s2/ui_internal.hpp"
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 using namespace ui_detail;
 
 namespace ui_detail {
@@ -3096,6 +3097,7 @@ void SetupCameraIcon() noexcept {
     }
 }
 
+// @verified - p
 std::int32_t GetCurrentUIInputType() noexcept {
     constexpr std::uint32_t kCameraIconRange = 0x03ff0000U;
     constexpr std::uint32_t kAlwaysBlockedWord0 = 0x2c000020U;
@@ -3103,44 +3105,38 @@ std::int32_t GetCurrentUIInputType() noexcept {
     constexpr std::uint32_t kMenuWord0 = 0x0000fe40U;
     constexpr std::uint32_t kMenuWord1 = 0x0003f000U;
     constexpr std::uint32_t kCameraBlockedWord1 = 0x06000000U;
-    constexpr std::uint32_t kCameraMenuWord1 = 0x86000000U;
+    constexpr std::uint32_t kCameraMenuWord1 = 0x06000080U;
 
-    const auto &visible = gameUiVisibilityFlags;
-    const auto &rendered = gameUiSecondaryFlags;
-    if ((visible[0] & kAlwaysBlockedWord0) != 0 || (visible[1] & kAlwaysBlockedWord1) != 0 ||
-        (IsCameraIconHidden() == 0 && ((visible[0] & kCameraIconRange) != 0 || (visible[1] & kCameraBlockedWord1) != 0))) {
-        return 0;
-    }
-    if ((visible[0] & kMenuWord0) != 0 || (visible[1] & kMenuWord1) != 0 ||
-        (IsCameraIconHidden() == 1 && ((visible[0] & kCameraIconRange) != 0 || (visible[1] & kCameraMenuWord1) != 0))) {
-        return 1;
-    }
+    const std::array<std::uint32_t, 3> &input = g_uiPreviousInputElements;
+    if ((input[0] & kAlwaysBlockedWord0) || (input[1] & kAlwaysBlockedWord1) ||
+        (IsCameraIconHidden() == 0 && ((input[0] & kCameraIconRange) || (input[1] & kCameraBlockedWord1))))
+        return static_cast<std::int32_t>(InputType::Menu);
+
+    if ((input[0] & kMenuWord0) || (input[1] & kMenuWord1) || (IsCameraIconHidden() == 1 && ((input[0] & kCameraIconRange) || (input[1] & kCameraMenuWord1))))
+        return static_cast<std::int32_t>(InputType::GameUi);
 
     constexpr std::uint32_t kHelpOverlay = 1U << 16U;
-    const bool helpOverlayVisible = (visible[2] & kHelpOverlay) != 0;
-    const bool gameUiActive = IsGameUIActive();
-    if (helpOverlayVisible && gameUiActive)
-        return 1;
+    if ((input[2] & kHelpOverlay) && IsGameUIActive())
+        return static_cast<std::int32_t>(InputType::GameUi);
 
     constexpr std::uint32_t kQte2 = 1U << 22U;
-    if ((visible[1] & kQte2) != 0 || (rendered[1] & kQte2) != 0 || quickIconPhase != 0) {
-        return helpOverlayVisible ? 2 : static_cast<std::int32_t>(InputType::Qte2);
-    }
+    if ((input[1] & kQte2) || (g_uiRefreshedElements[1] & kQte2) || GetIsQuickIconShowing())
+        return static_cast<std::int32_t>((input[2] & kHelpOverlay) ? InputType::Game : InputType::Qte2);
 
     constexpr std::uint32_t kQte = 1U << 3U;
-    if ((visible[2] & kQte) != 0 || (rendered[2] & kQte) != 0 || IsEventQteInputActive()) {
+    if ((input[2] & kQte) || (g_uiRefreshedElements[2] & kQte) || areas::GetArmwGameplayActive() == 1)
         return static_cast<std::int32_t>(InputType::Qte);
-    }
 
     constexpr std::uint32_t kFightRoot = 1U << 2U;
+    if ((input[0] & kFightRoot) && (IsFightGaugeInputActive() || IsFightGaugeOverlayInputActive()))
+        return static_cast<std::int32_t>(InputType::Fight);
+    if (g_uiElements[static_cast<std::size_t>(UIElement::FightGauge)].isVisible && (IsFightGaugeInputActive() || IsFightGaugeOverlayInputActive()))
+        return static_cast<std::int32_t>(InputType::Fight);
+    if ((g_uiRefreshedElements[0] & kFightRoot) && (IsFightGaugeInputActive() || IsFightGaugeOverlayInputActive()))
+        return static_cast<std::int32_t>(InputType::Fight);
     constexpr std::uint32_t kFightOverlay = 1U << 3U;
-    const bool fightUiActive = IsFightGaugeInputActive();
-    if (((visible[0] | rendered[0]) & kFightRoot) != 0 && fightUiActive) {
+    if ((input[1] & kFightOverlay) || IsHudFightSpriteActive() == 1)
         return static_cast<std::int32_t>(InputType::Fight);
-    }
-    if ((visible[1] & kFightOverlay) != 0 && IsFightGaugeOverlayInputActive()) {
-        return static_cast<std::int32_t>(InputType::Fight);
-    }
 
     return gameMenuActive != 0 && g_gameArcadeRunning == 0 && !GetIsGameHangOnHandleValid() ? 0 : 2;
 }

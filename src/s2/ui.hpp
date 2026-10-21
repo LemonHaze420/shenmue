@@ -468,6 +468,7 @@ std::int32_t IsCameraIconHidden() noexcept;
 extern std::int32_t requestedCameraIconMode;
 void SetDebugHideCameraIcon(std::int32_t hidden) noexcept;
 void SetupCameraIcon() noexcept;
+std::int32_t IsHudFightSpriteActive() noexcept;
 std::int32_t GetCurrentUIInputType() noexcept;
 bool GetIsFreeInputType(std::int32_t type = -1);
 bool IsGameUiSecondaryFlagSet(std::int32_t index);

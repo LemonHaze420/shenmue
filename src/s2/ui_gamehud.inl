@@ -263,7 +263,9 @@ void DrawNativeMenuObject(
         d3t::DrawUITextureObject(definition, object, placement, opacity);
 }
 NativeHudRuntime nativeHud;
-std::array<std::uint32_t, 5> nativeHudRequestedHints{}, nativeHudShownHints{}, nativeHudOverrideHints{};
+std::array<UIButtonIconWidget *, 6> nativeHudSpriteWidgets{};
+std::array<
+std::uint32_t, 5> nativeHudRequestedHints{}, nativeHudShownHints{}, nativeHudOverrideHints{};
 bool nativeHudOverride{};
 std::int32_t nativeHudItemPromptIcon{};
 std::uint32_t LoadNativeGameHud() {
@@ -278,6 +280,11 @@ std::int64_t BindNativeGameHud() {
     constexpr std::array<const char *, 6> sprites{
         "GameHUD_ConfirmSprite", "GameHUD_CancelSprite", "GameHUD_EventSprite", "GameHUD_SystemSprite", "GameHUD_CameraSprite", "GameHUD_CameraStateSprite"};
     constexpr std::array<const char *, 5> buttons{"GameHUD_ConfirmIcon", "GameHUD_CancelIcon", "GameHUD_EventIcon", "GameHUD_SystemIcon", "GameHUD_CameraIcon"};
+    const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[static_cast<std::size_t>(UIElement::GameHud)].config.uiHandleIndex);
+    for (std::size_t index = 0; index < sprites.size(); ++index)
+        nativeHudSpriteWidgets[index] = UI_FindViewIconWidget(slot, sprites[index], 20);
+    if (nativeHudSpriteWidgets[5])
+        nativeHudSpriteWidgets[5]->fieldAC = 1;
     auto &definition = uiDefinitions[64];
     BindAuthoredMenuLayout(definition, nativeHud.layout);
     for (std::size_t i = 0; i < panels.size(); ++i) {
@@ -386,6 +393,10 @@ std::int64_t RenderNativeGameHud() {
         if (i == 4) {
             object.frameIndex = 2305;
             alpha = static_cast<std::uint16_t>(hints[i]) == 0xffffU ? 0 : 255;
+        }
+        if (nativeHudSpriteWidgets[i]) {
+            nativeHudSpriteWidgets[i]->sprite = object.frameIndex;
+            nativeHudSpriteWidgets[i]->inventoryIcon = 1;
         }
         object.colour = (object.colour & 0xffffffU) | (alpha << 24);
         if (i < 4 && nativeHud.buttons[i] >= 0) {
