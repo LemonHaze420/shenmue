@@ -308,6 +308,32 @@ void DoSimplePixelShaderPass() {
     }
 #endif
 }
+float g_sceneDepthClearValue{};
+std::uint32_t g_sceneStencilClearValue{};
+
+// @verified - p
+void RenderPipeline(const char *, std::int32_t keepTargets) {
+#if defined(_WIN32)
+    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
+    d3t::D3TRenderState &state = d3t::GetRenderState(*d3t::DX11::g_ppD3DDeviceContext);
+    if (state.topology != 0) {
+        state.bufferStateFlags |= d3t::BufferTopology;
+        state.topology = 0;
+    }
+    SetupPostFXRenderTargetsAndViewport(d3t::DX11::g_ppD3DDeviceContext);
+    if (keepTargets == 0) {
+        const std::uint32_t packed = d3t::g_sceneClearColour;
+        std::array<float, 4> colour{static_cast<float>((packed >> 16U) & 0xffU) / 255.0f, static_cast<float>((packed >> 8U) & 0xffU) / 255.0f,
+            static_cast<float>(packed & 0xffU) / 255.0f, static_cast<float>(packed >> 24U) / 255.0f};
+        const std::uint32_t backbuffer = d3t::CreateNewTexture2D();
+        d3t::UnmapAndClearViews(d3t::DX11::g_ppD3DDeviceContext, backbuffer, 0, colour.data());
+        d3t::UnmapAndClearViews(d3t::DX11::g_ppD3DDeviceContext, d3t::g_sceneTexture, 0, colour.data());
+        colour[0] = g_sceneDepthClearValue;
+        colour[1] = static_cast<float>(g_sceneStencilClearValue);
+        d3t::UnmapAndClearViews(d3t::DX11::g_ppD3DDeviceContext, d3t::g_sceneDepthTexture, 0, colour.data());
+    }
+#endif
+}
 void GetPostFXScaledRenderTargetSize(float *width, float *height) {
     Vector2i dimensions;
     if (!d3t::QueryTextureSize(d3t::g_sceneTexture, &dimensions))

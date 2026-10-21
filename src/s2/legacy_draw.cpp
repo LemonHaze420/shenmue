@@ -5029,6 +5029,28 @@ std::uint32_t FlushQueuedLegacyDrawPasses() {
     return draws;
 }
 
+void RenderQueuedLegacyDrawPassesOnly() {
+#if defined(_WIN32)
+    SetupPostFXRenderTargetsAndViewport(d3t::DX11::g_ppD3DDeviceContext);
+    if (legacyQueuedDrawCount > 0)
+        SortLegacyQueuedDraws();
+    ++flagDebugCompatibilityReplayDepth;
+    RenderQueuedLegacyDrawPasses();
+    --flagDebugCompatibilityReplayDepth;
+#endif
+}
+
+std::int64_t ResetLegacyRenderQueue() {
+    legacyRenderPacketCount = 0;
+    legacyQueuedDrawCount = 0;
+    legacyQueuedShaderCount = 0;
+    legacyQueuedDrawCommandCount = 0;
+    legacyQueuedCallbackCount = 0;
+    fireQuadCount = 0;
+    ReleaseLegacyFlagDebugCompatibilityDraws();
+    return 0;
+}
+
 void SDTransparentHack() {
 #if defined(_WIN32)
     if (!g_mainModelCache)

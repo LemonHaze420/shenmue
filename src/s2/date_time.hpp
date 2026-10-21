@@ -140,4 +140,5 @@ void SetCtrlHandWatchFlags(std::int32_t enabled);
 
 extern DateTime g_currentDateTime;
 
+extern float g_gameTimeMilliseconds;
 } // namespace shenmue::s2

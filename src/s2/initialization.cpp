@@ -18,6 +18,8 @@
 #include "s2/character.hpp"
 #include "s2/player.hpp"
 #include "s2/d3t_renderer.hpp"
+#include "s2/date_time.hpp"
+#include "s2/frame_pipeline.hpp"
 #include "s2/debug_text.hpp"
 #include "s2/game_runtime.hpp"
 #include "s2/event_runtime.hpp"
@@ -56,7 +58,7 @@
 #include <crtdbg.h>
 #endif
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 namespace {
 
 alignas(32) std::array<Matrix4x4, 64> transformMatrices{};
@@ -96,23 +98,31 @@ void RootTask_Callback(void *) {
         else
             RootShadowLightingCallback(nullptr);
 
-
+        RenderQueuedLegacyShaderPasses();
         ExecuteCurrentCommandList();
+        SD_Override();
+        DateTime dateTime;
+        GetCurrentDateTime(dateTime);
+        const float fractionOfDay =
+            (static_cast<float>(1000 * (dateTime.second + 60 * (dateTime.minute + 60 * dateTime.hour))) + g_gameTimeMilliseconds) / 86400000.0f;
+        shenIsGamePaused();
+        const float frameTime = GetFrameTime();
+        const float sceneFrameTime = shenIsGamePaused() ? 0.0f : GetFrameTime();
+        UpdateFractionOfDay(fractionOfDay, 0, sceneFrameTime);
+        IncrementTimeSinceStart(frameTime);
         d3t::ProcessObjectStore(true, -1);
-        if (!BeginD3TRenderPass(false)) {
-            frameOpen = false;
-            runtimeActive = false;
-            return;
+        SDTransparentHack();
+        if (!GetLegacyRenderMask()) {
+            RenderPipeline("SD Transparent", 1);
+            RenderQueuedLegacyDrawPassesOnly();
+            ResetLegacyRenderQueue();
+            FlushQueuedStripType3Batches();
+            DrawSDTransparent();
+            ExecuteCurrentCommandList();
         }
-        FlushQueuedLegacyDrawPasses();
-        FlushQueuedStripType3Batches();
-        ExecuteCurrentCommandList();
         RenderUIScene();
-        if (!BeginD3TRenderPass(false)) {
-            frameOpen = false;
-            runtimeActive = false;
-            return;
-        }
+        RenderPipeline("Default_PostRender", 1);
+
         RenderPostProcessing(0);
         RenderPostProcessing(1);
         PerformPostFxFilterRenderPass();
@@ -133,7 +143,7 @@ void RootTask_Callback(void *) {
             ResetGameArcadeEmulatorResult();
             InitializeScene();
         }
-        d3t::PresentSceneFrame();
+        DoSimplePixelShaderPass();
         AllocateAndCopyTexture();
         UpdateAuthorMultichannelDevice();
         ConsumeFrames();
@@ -213,6 +223,7 @@ bool Initialization(int, char **) {
     SetScreenDimensions(d3t::g_originalScreenWidth, d3t::g_originalScreenHeight);
     InitializePostProcessingState();
 
+    SetPPFXEnabled(0);
     MatrixStack_InitTransformMatrixStack(transformMatrices.data(), 48);
     SetupLegacyScreenMatrix(0.0f, 0.0f, static_cast<float>(d3t::g_originalScreenWidth), static_cast<float>(d3t::g_originalScreenHeight));
     SetActiveStack(MatrixStackType::Transparent);

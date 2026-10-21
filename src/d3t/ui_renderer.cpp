@@ -24,6 +24,7 @@
 
 namespace shenmue::d3t {
 
+std::uint32_t g_sceneClearColour = 0;
 std::uint32_t g_sceneTexture = 0;
 std::uint32_t g_sceneDepthTexture = 0;
 std::uint32_t g_resolvedSceneTexture;
@@ -35,7 +36,7 @@ std::uint32_t g_uiWhiteTexture = 0;
 std::uint32_t g_backBufferTexture = 0;
 std::uint32_t g_sceneWidth = 0;
 std::uint32_t g_sceneHeight = 0;
-std::uint32_t g_sceneClearColour = 0;
+
 SceneFrameTargets g_requestedSceneTargets{};
 SceneFrameTargets g_allocatedSceneTargets{};
 std::uint32_t g_resolveInputLayout;

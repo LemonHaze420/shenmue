@@ -43,6 +43,7 @@ namespace shenmue::s2 {
 DateTime g_currentDateTime{};
 std::int32_t g_freezeGameTime{};
 
+float g_gameTimeMilliseconds = 0.0f;
 namespace {
 
 constexpr std::int32_t monthStartDays[12]{
@@ -56,7 +57,6 @@ std::uint8_t currentCalendarReservedByte{};
 std::uint16_t currentCalendarReservedWord{}, savedCalendarReservedWord{}, nextCalendarReservedWord{};
 float realSecondsToGameMinute = 1.0f / 3.0f;
 float realTimeScale = -1.0f;
-float milliseconds = 0.0f;
 float secondsPerGameMinute = 3.0f;
 float defaultSecondsPerGameMinute = 3.0f;
 float secondAccumulator = 0.0f;
@@ -552,8 +552,7 @@ void UpdateGameTime(DateTime& dateTime) {
     }
     secondAccumulator = accumulated;
     dateTime.second = static_cast<std::int8_t>(accumulated);
-    milliseconds = static_cast<float>(
-        std::fmod(static_cast<double>(accumulated), 1.0) * 1000.0);
+    g_gameTimeMilliseconds = static_cast<float>(std::fmod(static_cast<double>(accumulated), 1.0) * 1000.0);
 }
 
 void CtrlTimeProgram_Callback(void*) {
@@ -743,7 +742,7 @@ void SetCurrentDateTimeTo(DateTime& dateTime) {
     if (dateTime.year > 99) dateTime.year = 0;
     ComputeDayOfWeek(dateTime);
     g_currentDateTime = dateTime;
-    milliseconds = 0.0f;
+    g_gameTimeMilliseconds = 0.0f;
     ComputeDayOfWeek(g_currentDateTime);
 }
 
@@ -1015,7 +1014,7 @@ void InitCalendar() {
 
     realSecondsToGameMinute = 1.0f / 3.0f;
     realTimeScale = -1.0f;
-    milliseconds = 0.0f;
+    g_gameTimeMilliseconds = 0.0f;
     secondsPerGameMinute = 3.0f;
     defaultSecondsPerGameMinute = 3.0f;
     secondAccumulator = 0.0f;

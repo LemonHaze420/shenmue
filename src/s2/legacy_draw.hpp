@@ -342,6 +342,8 @@ std::uint32_t FlushQueuedLegacyDrawPasses();
 
 std::uint32_t RenderQueuedLegacyDrawPasses();
 void SDTransparentHack();
+void RenderQueuedLegacyDrawPassesOnly();
+std::int64_t ResetLegacyRenderQueue();
 bool GetLegacyRenderQueueEnabled();
 void SetLegacyRenderQueueEnabled(bool enabled);
 void SetLegacyQueuedDrawDepthMode(std::int32_t fromGeometry, float fallbackDepth);
