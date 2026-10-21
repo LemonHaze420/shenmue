@@ -308,9 +308,15 @@ std::int32_t ResolveButtonIconGlyph(std::int32_t action, std::int32_t controlMet
 }
 #endif
 
-
-
-
+#if SHENMUE_IS_S2
+// @verified - p
+void UI_SetFontFamily(std::uint32_t family) {
+    if (static_cast<std::uint32_t>(g_uiFontFace) != family && family < 4U) {
+        g_uiFontFace = static_cast<std::int32_t>(family);
+        UI_SelectFont();
+    }
+}
+#endif
 void UI_SelectFont() {
 #if SHENMUE_IS_S1
     std::int32_t language = g_uiLoadedLanguage;

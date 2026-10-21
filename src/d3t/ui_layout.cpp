@@ -550,6 +550,12 @@ std::int32_t UI_GetAspectWidth() {
 }
 
 #if SHENMUE_IS_S2
+// @verified - p
+float UI_GetFullReferenceWidth() {
+    const float height = static_cast<float>(GetLogicalScreenHeight());
+    return (1920.0f / std::fmax(height, 1080.0f)) * height;
+}
+
 float UI_GetReferenceWidth() {
     if (ShouldScaleS2AspectRatio())
         return static_cast<float>(GetLogicalScreenHeight()) * 1.33333f;

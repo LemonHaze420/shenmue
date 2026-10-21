@@ -11,7 +11,8 @@
 namespace shenmue::s2 {
 
 std::array<ScrollListScrollData, 12> g_scrollListScrollData{};
-std ::array<std::array<PawnFlyerSprite, 64>, 12> g_pawnFlyerSprites{}
+std ::array<ScrollListMoveData, 12> g_scrollListMoveData{};
+std::array<std::array<PawnFlyerSprite, 64>, 12> g_pawnFlyerSprites{}
 
 ;
 UIScrollList *g_pawnFlyerScrollList{};
@@ -230,6 +231,233 @@ void UI_DrawScrollListScrollRow(nk_context &context, std::uint32_t index, std::i
 }
 
 // @verified - p
+ScrollListMoveData GetScrollListMoveData(std::int32_t index) {
+    return g_scrollListMoveData.data()[index];
+}
+
+// @verified - p
+std::int32_t GetMoveCommandSpriteFrame(std::int32_t command) {
+    switch (command) {
+    case 0:
+        return 3;
+    case 1:
+        return 1;
+    case 2:
+        return 4;
+    case 3:
+        return 0;
+    case 4:
+        return 6;
+    case 5:
+        return 2;
+    case 6:
+        return 5;
+    case 7:
+        return 7;
+    default:
+        return -1;
+    }
+}
+
+// @verified - p
+std::int32_t GetMoveCommandAction(std::int32_t command) {
+    switch (command) {
+    case 0:
+        return 24;
+    case 1:
+        return 22;
+    case 2:
+        return 55;
+    case 3:
+        return 54;
+    case 4:
+        return 9;
+    case 5:
+        return 23;
+    case 6:
+        return 25;
+    default:
+        return -1;
+    }
+}
+
+// @verified - p
+const d3t::UIViewImage *GetPlatformButtonIconImage(std::int32_t mode) {
+    return g_platformButtonIconImages[mode == 1 ? 0 : 2];
+}
+
+// @verified - p
+std::int32_t GetPlatformButtonIconSheet() {
+    return g_platformIconsSheet;
+}
+
+// @verified - p
+void UI_DrawScrollListMoveRow(nk_context &context, std::uint32_t index, std::int32_t row, UILayoutRect &bounds) {
+    const float inset = bounds.height - bounds.height * 0.95f;
+    bounds.height = bounds.height * 0.95f;
+    bounds.x = inset * 0.5f + bounds.x;
+    bounds.y = inset * 0.5f + bounds.y;
+    bounds.width = bounds.width - inset;
+    const UILayoutRect outer = bounds;
+    const float width = outer.width * 0.85f;
+    const float x = outer.x + (outer.width - outer.width * 0.85f) * 0.5f;
+    d3t::UIViewSlot<kUIViewImageCapacity> *const view = UI_GetViewSlot(static_cast<std::uint32_t>(g_uiDrawViewSlot));
+    UIScrollList *const list = UI_GetScrollList(index);
+    if (!view || !list)
+        return;
+    const UIScrollListDraw &draw = list->draws.data()[list->field7C];
+    d3t::UISpriteSheet *const sheet = UI_GetSpriteSheet(static_cast<std::uint32_t>(draw.image));
+    d3t::UIWindow *const window = UI_GetWindow(list->window);
+    if (!sheet || !window)
+        return;
+    const std::uint32_t tint = UI_GetWindowColour(window);
+    const ScrollListMoveData data = GetScrollListMoveData(list->words.data()[row]);
+    const std::uint32_t fontColour = list->field74[1] == row ? draw.fontSelectedColour : draw.fontUnselectedColour;
+    if (!data.commands)
+        return;
+    const std::int32_t count = data.commands[0];
+    const std::int32_t arrows = data.groupCount > 1 ? 2 : 0;
+    const struct nk_color savedTextColour = context.style.text.color;
+    const std::uint32_t textColour = UI_ModulateColour(fontColour, tint);
+    std::memcpy(&context.style.text.color, &textColour, sizeof(textColour));
+    const nk_style_button savedButton = context.style.button;
+    context.style.button.text_background = std::bit_cast<struct nk_color>(window->colour);
+    context.style.button.text_normal = std::bit_cast<struct nk_color>(window->colour);
+    context.style.button.text_hover = std::bit_cast<struct nk_color>(window->colour);
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_begin(&context, NK_STATIC, 0.0f, arrows + count + 2);
+    UI_SetFontFamily(2);
+    if (arrows != 0) {
+        d3t::UIViewImage &left = view->images.data()[sheet->image];
+        left.region = {static_cast<std::uint16_t>(sheet->frameMin[14][0]), static_cast<std::uint16_t>(sheet->frameMin[14][1]),
+            static_cast<std::uint16_t>(sheet->frameMax[14][0] - sheet->frameMin[14][0]),
+            static_cast<std::uint16_t>(sheet->frameMax[14][1] - sheet->frameMin[14][1])};
+        UILayoutRect arrow{.x = outer.x, .y = outer.y, .width = 0.0f, .height = 0.0f};
+        UI_ScaleSize(arrow.width, arrow.height, 2, (outer.width - width) * 0.5f, outer.height, static_cast<float>(left.region[2]),
+            static_cast<float>(left.region[3]), nullptr);
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_push(&context, nk_rect(arrow.x, arrow.y, arrow.width, arrow.height));
+        UI_DrawViewImage(context, sheet->image, UI_ModulateColour(fontColour, tint));
+        d3t::UIViewImage &right = view->images.data()[sheet->image];
+        right.region = {static_cast<std::uint16_t>(sheet->frameMin[15][0]), static_cast<std::uint16_t>(sheet->frameMin[15][1]),
+            static_cast<std::uint16_t>(sheet->frameMax[15][0] - sheet->frameMin[15][0]),
+            static_cast<std::uint16_t>(sheet->frameMax[15][1] - sheet->frameMin[15][1])};
+        arrow = {.x = x + width, .y = outer.y, .width = 0.0f, .height = 0.0f};
+        UI_ScaleSize(arrow.width, arrow.height, 2, (outer.width - width) * 0.5f, outer.height, static_cast<float>(right.region[2]),
+            static_cast<float>(right.region[3]), nullptr);
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_push(&context, nk_rect(arrow.x, arrow.y, arrow.width, arrow.height));
+        UI_DrawViewImage(context, sheet->image, UI_ModulateColour(fontColour, tint));
+    }
+    const UILayoutRect background{.x = x, .y = outer.y, .width = width, .height = outer.height};
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_push(&context, nk_rect(background.x, background.y, background.width, background.height));
+    UI_DrawViewImage(context, draw.images[0], UI_ModulateColour(draw.colours[0], tint));
+    float capWidth = 0.0f, capHeight = 0.0f;
+    UI_ScaleSize(capWidth, capHeight, 2, width, outer.height, draw.size20[3][0] * 1920.0f, draw.size20[3][1] * 1080.0f, nullptr);
+    const float overlap = capWidth * 0.1f;
+    const UILayoutRect bar{.x = capWidth + x,
+        .y = outer.y,
+        .width = ((width - width * 0.1f) * (static_cast<float>(data.proficiency) / 200.0f) + width * 0.1f) - capWidth * 2.0f,
+        .height = outer.height};
+    const bool selected = list->field74[1] == row;
+    const std::int32_t bodyImage = selected ? 2 : 1, leftImage = selected ? 3 : 5, rightImage = selected ? 4 : 6;
+    const std::uint32_t barColour = UI_ModulateColour(draw.colours[bodyImage], tint);
+    const UILayoutRect body{.x = bar.x - overlap, .y = bar.y, .width = (overlap + overlap) + bar.width, .height = bar.height};
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_push(&context, nk_rect(body.x, body.y, body.width, body.height));
+    UI_DrawViewImage(context, draw.images[bodyImage], barColour);
+    const UILayoutRect left{.x = bar.x - capWidth, .y = outer.y, .width = capWidth, .height = capHeight};
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_push(&context, nk_rect(left.x, left.y, left.width, left.height));
+    UI_DrawViewImage(context, draw.images[leftImage], barColour);
+    const UILayoutRect right{.x = bar.x + bar.width, .y = outer.y, .width = capWidth, .height = capHeight};
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_push(&context, nk_rect(right.x, right.y, right.width, right.height));
+    UI_DrawViewImage(context, draw.images[rightImage], barColour);
+    const UILayoutRect label{
+        .x = capWidth * 0.5f + x, .y = (outer.height - outer.height * 0.6f) * 0.5f + outer.y, .width = width * 0.5f, .height = outer.height * 0.6f};
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_push(&context, nk_rect(label.x, label.y, label.width, label.height));
+    const UILayoutRect fitted = UI_FitAndDrawLabelText(context, data.text, -1, 17, label, width * 0.5f, outer.height * 0.6f, 1);
+    if (data.critical == 1) {
+        const UILayoutRect critical{.x = (fitted.width + fitted.x) + 10.0f, .y = fitted.y, .width = fitted.height, .height = fitted.height};
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_push(&context, nk_rect(critical.x, critical.y, critical.width, critical.height));
+        UI_DrawViewImage(context, UI_FindViewImage(static_cast<std::uint32_t>(g_uiDrawViewSlot), "CritIcon"), tint);
+    }
+    if (data.known == 1) {
+        const float step = (width * 0.5f) / 5.0f;
+        float runWidth = step;
+        for (std::int32_t command = 0; command < count; ++command) {
+            if (static_cast<std::uint32_t>(GetMoveCommandSpriteFrame(data.commands[command + 1])) <= 6U)
+                runWidth = runWidth + step;
+        }
+        float commandX = (x + width) - runWidth;
+        for (std::int32_t command = 0; command < count; ++command) {
+            const std::int32_t frame = GetMoveCommandSpriteFrame(data.commands[command + 1]);
+            const std::uint32_t white = ConstructColour(255, 255, 255, static_cast<std::int32_t>(fontColour >> 24U));
+            if (static_cast<std::uint32_t>(frame) > 6U) {
+                const float nextX = commandX + step * 0.5f;
+                UILayoutRect rect{
+                    .x = (step - step * 0.8f) * 0.5f + nextX, .y = (outer.height - outer.height * 0.8f) * 0.5f + outer.y, .width = 0.0f, .height = 0.0f};
+                UI_ScaleSize(rect.width, rect.height, 2, step * 0.8f, outer.height * 0.8f, step, step, nullptr);
+                rect.x = (rect.x + step * 0.8f * 0.5f) - rect.width * 0.5f;
+                rect.y = (rect.y + outer.height * 0.8f * 0.5f) - rect.height * 0.5f;
+                d3t::UIViewImage &image = view->images.data()[sheet->image];
+                image.region = {static_cast<std::uint16_t>(sheet->frameMin[frame][0]), static_cast<std::uint16_t>(sheet->frameMin[frame][1]),
+                    static_cast<std::uint16_t>(sheet->frameMax[frame][0] - sheet->frameMin[frame][0]),
+                    static_cast<std::uint16_t>(sheet->frameMax[frame][1] - sheet->frameMin[frame][1])};
+                if (g_waitingForNextTick == 1)
+                    nk_layout_space_push(&context, nk_rect(rect.x, rect.y, rect.width, rect.height));
+                UI_DrawViewImage(context, sheet->image, UI_ModulateColour(white, tint));
+                commandX = nextX - step * 0.5f;
+            } else {
+                const std::int32_t action = GetMoveCommandAction(data.commands[command + 1]);
+                if (action == -1)
+                    continue;
+                const d3t::UIViewImage *const image = GetPlatformButtonIconImage(1);
+                const std::int32_t glyph = ResolveButtonIconGlyph(action, -1, 3, 0);
+                const struct nk_image sprite = UI_GetSpriteImage(GetPlatformButtonIconSheet(), glyph, image);
+                commandX = commandX + step;
+                UILayoutRect rect{
+                    .x = (step - step * 0.8f) * 0.5f + commandX, .y = (outer.height - outer.height * 0.8f) * 0.5f + outer.y, .width = 0.0f, .height = 0.0f};
+                UI_ScaleSize(rect.width, rect.height, 2, step * 0.8f, outer.height * 0.8f, step, step, nullptr);
+                rect.x = (rect.x + step * 0.8f * 0.5f) - rect.width * 0.5f;
+                rect.y = (rect.y + outer.height * 0.8f * 0.5f) - rect.height * 0.5f;
+                if (g_waitingForNextTick == 1)
+                    nk_layout_space_push(&context, nk_rect(rect.x, rect.y, rect.width, rect.height));
+                UI_DrawPreparedImage(context, image ? &image->ready : nullptr, &sprite, UI_ModulateColour(white, tint));
+                UI_SetFontFamily(0);
+                const UIButtonIconLabel icon{.rect = {.x = commandX, .y = outer.y, .width = step, .height = outer.height},
+                    .fontWidth = rect.width * 0.8f,
+                    .fontHeight = rect.height * 0.8f,
+                    .action = action,
+                    .doubleWidth = 0,
+                    .iconFontSize = list->iconFontSize,
+                    .colour = 0xffffffffU,
+                    .alignment = 18,
+                    .controlMethod = -1,
+                    .controlState = 3};
+                UI_DrawButtonIconLabel(context, icon);
+                UI_SetFontFamily(2);
+            }
+        }
+    } else {
+        const UILayoutRect unknown{.x = draw.place08[1][0] * 3.0f + bounds.width, .y = bounds.y, .width = bounds.width, .height = bounds.height};
+        const UILayoutRect rect{.x = UI_GetFullReferenceWidth() * unknown.x,
+            .y = UI_GetReferenceHeight() * unknown.y,
+            .width = UI_GetFullReferenceWidth() * unknown.width,
+            .height = UI_GetReferenceHeight() * unknown.height};
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_push(&context, nk_rect(rect.x, rect.y, rect.width, rect.height));
+        UI_FitAndDrawLabelText(context, GetStringForUILabel("UIWAZUNKOW"), -1, 17, rect, bounds.width * 1920.0f, bounds.height * 1080.0f, 1);
+    }
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_end(&context);
+    context.style.text.color = savedTextColour;
+    context.style.button = savedButton;
+}
 float UI_DrawScrollListPawnshopRow(nk_context &context, std::uint32_t index, std::int32_t row, float y, float &scroll, std::int32_t drawRow) {
     UIScrollList *const list = UI_GetScrollList(index);
     d3t::UIViewSlot<kUIViewImageCapacity> *const view = UI_GetViewSlot(static_cast<std::uint32_t>(g_uiDrawViewSlot));

@@ -1,5 +1,7 @@
 #include "s2/moves_scroll.hpp"
 
+#include "s2/ui_scroll_list.hpp"
+
 #include "d3t/dx11_renderer.hpp"
 #include "d3t/texture.hpp"
 #include "d3t/ui_renderer.hpp"
@@ -53,7 +55,7 @@
 #include <emmintrin.h>
 #endif
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 HLib::Task *g_moveLearnedTask{};
 std::array<std::int16_t, 3> g_moveLearnedTextSurfaces{};
 std::uint16_t g_moveLearnedSavedHelpFlags{};
@@ -328,6 +330,23 @@ std::int64_t ResetWazamakiState() noexcept {
     for (std::size_t index = 2; index < wazamakiTextures.size(); ++index)
         wazamakiTextures[index] = -1;
     return 0;
+}
+
+// @verified - p
+void FillScrollListMoveData(std::int32_t ordinal, ScrollListMoveData & data) {
+    std::int32_t category;
+    NativeWazamakiGroup *const group = FindWazamakiGroup(ordinal, &category);
+    if (!group)
+        return;
+    const std::uint8_t move = group->moves[group->selected];
+    data.text = GetStringForUILabel(MOVE_NAME_TOKENS[category][move].data());
+    data.category = category;
+    data.commands = WAZAMAKI_GROUP_COMMANDS[category][move].data();
+    data.groupCount = group->count;
+    const std::span<const S2MoveSkillBank, 3> banks = S2Save_GetMoveSkillBanks();
+    data.proficiency = banks[category - 1].proficiency[move];
+    data.critical = static_cast<std::int32_t>((MOVE_CRITICAL_MASKS[category - 1] >> move) & 1U);
+    data.known = 1;
 }
 
 void LoadRyoSceneForMovesScreen() {

@@ -1037,6 +1037,8 @@ d3t::UIWindow *UI_FindWindowById(const char *id);
 float UI_SafeAreaScale();
 std::int32_t UI_GetAspectWidth();
 #if SHENMUE_IS_S2
+float UI_GetFullReferenceWidth();
+void UI_SetFontFamily(std::uint32_t family);
 float UI_GetReferenceWidth();
 float UI_GetReferenceHeight();
 #endif

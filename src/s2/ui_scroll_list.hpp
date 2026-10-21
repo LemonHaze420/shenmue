@@ -30,6 +30,25 @@ extern UITexturePage *g_pawnFlyerTexturePage;
 PawnFlyerSprite *GetPawnFlyerSprite(std::int32_t row, std::int32_t index);
 void RebuildPawnFlyerScrollRows(std::int32_t inspection);
 float UI_DrawScrollListPawnshopRow(nk_context &context, std::uint32_t index, std::int32_t row, float y, float &scroll, std::int32_t drawRow);
+struct ScrollListMoveData {
+    std::int32_t proficiency;
+    std::int32_t known;
+    const char *text;
+    const std::uint8_t *commands;
+    std::int32_t category;
+    std::int32_t groupCount;
+    std::int32_t critical;
+    std::int32_t unknown24;
+};
+static_assert(sizeof(ScrollListMoveData) == 40 && offsetof(ScrollListMoveData, commands) == 16 && offsetof(ScrollListMoveData, critical) == 32);
+extern std::array<ScrollListMoveData, 12> g_scrollListMoveData;
+ScrollListMoveData GetScrollListMoveData(std::int32_t index);
+void FillScrollListMoveData(std::int32_t ordinal, ScrollListMoveData &data);
+std::int32_t GetMoveCommandSpriteFrame(std::int32_t command);
+std::int32_t GetMoveCommandAction(std::int32_t command);
+const d3t::UIViewImage *GetPlatformButtonIconImage(std::int32_t mode);
+std::int32_t GetPlatformButtonIconSheet();
+void UI_DrawScrollListMoveRow(nk_context &context, std::uint32_t index, std::int32_t row, UILayoutRect &bounds);
 enum class UIScrollListMethod : std::int32_t {
     Move = 1,
     Scroll = 2,
