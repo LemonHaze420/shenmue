@@ -19,8 +19,6 @@
 
 namespace shenmue::s1 {
 
-std::array<SimpleShaderParameterBlock, 16> g_simpleShaderParameterBlocks{};
-
 FoliageAnimationParameters *g_foliageAnimationParameters = nullptr;
 std::uint32_t g_foliageAnimationParameterCount = 0;
 std::uint32_t g_simpleShaderLoad = 0;
@@ -28,7 +26,6 @@ std::uint32_t g_simpleShaderTemporaryBuffer = 0;
 std::uint32_t g_simpleShaderFileHandle = 0;
 std::uint32_t g_postFxTexture = 0;
 float g_simpleShaderMainParameter = 0.0f;
-std::uint32_t g_simpleShaderMode = 0;
 std::uint32_t g_postFxEnabled = 1;
 std::int32_t g_HasPPFXRendered = 0;
 
@@ -54,47 +51,39 @@ constexpr std::array<std::uint8_t, 0x224> MakePostFxDefaults() {
 constexpr auto kPostFxDefaults = MakePostFxDefaults();
 std::array<std::uint8_t, 0x224> g_postFxState{};
 
-template <typename T> void WriteParameter(std::size_t offset, T value) {
-    std::memcpy(g_simpleShaderParameterBlocks.data()->data.data() + offset, &value, sizeof(value));
-}
-
 void InitializeSimpleShaderParameters() {
-    std::memset(g_simpleShaderParameterBlocks.data(), 0, sizeof(g_simpleShaderParameterBlocks));
+    g_modelShadowSlots.fill(0);
+    g_modelShadowDirty.fill(0);
 
+    ModelLightRecord &sun = g_modelLights[0];
+    sun.colour = {1.0f, 1.0f, 1.0f};
+    sun.type = 1;
+    sun.position = {};
+    sun.direction = {-0.0f, 1.0f, -0.0f};
+    sun.shadowMode = 0;
+    sun.shadowBias = 0.0020000001f;
+    sun.parameterEnabled = 1;
+    sun.parameter104 = 0.25f;
 
+    sun.parameter108 = 0.0f;
+    sun.parameter128 = 0;
+    ModelLightRecord &fill = g_modelLights[1];
+    fill.colour = sun.colour;
+    fill.type = 1;
+    fill.position = sun.position;
+    fill.direction = {0.0f, -1.0f, 0.0f};
+    fill.shadowMode = 1;
+    fill.shadowBias = 0.0020000001f;
+    fill.parameterEnabled = 1;
+    fill.parameter104 = 5.0f;
+    fill.parameter108 = 0.0f;
+    fill.parameter128 = 0;
 
-    WriteParameter(0x00, 1.0f);
-    WriteParameter(0x04, 1.0f);
-    WriteParameter(0x08, 1.0f);
-    WriteParameter(0x0c, std::uint32_t{1});
-    WriteParameter(0x20, -0.0f);
-    WriteParameter(0x24, 1.0f);
-    WriteParameter(0x28, -0.0f);
-    WriteParameter(0x30, 0.0f);
-    WriteParameter(0x34, 0.0020000001f);
-    WriteParameter(0x40, std::uint32_t{1});
-    WriteParameter(0x44, 0.25f);
-
-    WriteParameter(0x138, 1.0f);
-    WriteParameter(0x13c, 1.0f);
-    WriteParameter(0x140, 1.0f);
-    WriteParameter(0x144, std::uint32_t{1});
-    WriteParameter(0x150, 0.0f);
-    WriteParameter(0x158, 0.0f);
-    WriteParameter(0x15c, -1.0f);
-    WriteParameter(0x160, 0.0f);
-    WriteParameter(0x168, std::uint32_t{1});
-    WriteParameter(0x16c, 0.0020000001f);
-    WriteParameter(0x178, std::uint32_t{1});
-    WriteParameter(0x17c, 5.0f);
-
-    for (SimpleShaderParameterBlock &block : g_simpleShaderParameterBlocks) {
-        const std::uint32_t enabled = 1;
-        std::memcpy(block.data.data() + 0x40, &enabled, sizeof(enabled));
-    }
+    for (ModelLightRecord &light : g_modelLights)
+        light.parameterEnabled = 1;
 
     g_simpleShaderMainParameter = 0.0020000001f;
-    g_simpleShaderMode = 2;
+    g_modelLightCount = 2;
 }
 
 FoliageAnimationParameters *AppendFoliageAnimationParameters() {

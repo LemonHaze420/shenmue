@@ -22,6 +22,7 @@
 #include "s1/texture_cache.hpp"
 #include "s1/texture_loader.hpp"
 #include "s1/render_array.hpp"
+#include "s1/model_lighting.hpp"
 #include "s1/probed_hash.hpp"
 #include "s1/d3t/settings.hpp"
 #include "s1/scene.hpp"
@@ -1113,18 +1114,22 @@ void SetupHmdlOwnerProbes(RenderArrayEntry &entry) {
     g_FramePacingFactor = first + probeCount;
 }
 
-
-
-
+// @verified - p
 void RebindHmdlRenderEntry(std::uintptr_t modelData, RenderArrayEntry &entry) {
     if (entry.modelData) {
         if (entry.state == 1) {
 
+            RemoveHmdlLightOwner(entry);
             RemoveCubeProbeSlotsForEntry(entry);
             if (RenderArrayEntry *const bound = reinterpret_cast<RenderArrayEntry *>(ResolveHmdlEntry(entry.modelData)))
                 std::memset(bound->rigState, 0, sizeof(bound->rigState));
 
-
+            if (entry.owner->flags & 4U) {
+                if (entry.reflectionSlot >= 32)
+                    std::abort();
+                g_modelShadowSlots[entry.reflectionSlot] = 0;
+                RemoveModelShadowMappingRequest(entry.reflectionSlot);
+            }
         }
         RemoveLargeHmdlMappingsTo(g_renderIndexStorageA, entry.modelData);
         RemoveHmdlEntryLookup(NormalizeHmdlHandle(entry.modelData));
@@ -1134,10 +1139,13 @@ void RebindHmdlRenderEntry(std::uintptr_t modelData, RenderArrayEntry &entry) {
         if (entry.state == 1) {
             MarkHmdlDayNightNodes(entry.handle);
 
+            AssignHmdlWeatherSprites(entry.handle, entry);
             SetupHmdlOwnerProbes(entry);
             if (entry.owner->remapType == 1)
                 HMDL_InitCEWP(entry);
 
+            if (entry.owner->flags & 4U)
+                AllocateHmdlReflectionSlot(entry);
             ModifyArrayElementsByMurmurHash(entry.handle, 1, 1);
         }
         InsertHmdlEntryLookup(entry.id, NormalizeHmdlHandle(modelData));
@@ -1234,7 +1242,11 @@ bool ResolveHmdlRuntimeAsset(RenderArrayOwner &object, bool setupShaders) {
     if (d3t_IsRenderHandlePending(object.instanceHandle))
         return false;
     const D3TModelLoad *const load = static_cast<const D3TModelLoad *>(d3t::d3t_GetAsyncLoadRecord(object.loadJob));
-    object.renderHandle = load && d3t::ResolveModel(load->modelHandle) ? load->modelHandle : 0U;
+    const std::uint32_t model = load && d3t::ResolveModel(load->modelHandle) ? load->modelHandle : 0U;
+    if (object.flags & 0x400U)
+        d3t::CopyModelMaterials(object.renderHandle, model);
+    else
+        object.renderHandle = model;
     if (setupShaders && !d3t::SetupShaderReferences(object.renderHandle))
         return object.state == 1;
     d3t_CloseRenderHandle(object.instanceHandle);

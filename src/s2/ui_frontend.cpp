@@ -53,6 +53,7 @@
 #include "s2/conversation.hpp"
 #include "s2/system_modules.hpp"
 #include "s2/title.hpp"
+#include "s2/game_runtime.hpp"
 #include "s2/scene_data.hpp"
 #include "s2/font.hpp"
 #include "s2/archive_data.hpp"
@@ -887,7 +888,7 @@ std::int64_t TickMainMenu() {
 void MainMenuWheelClicked(float *, void *data) {
     const std::int32_t *const selection = static_cast<const std::int32_t *>(data);
     if (selection)
-        ActivateMainMenuChoice(static_cast<MainMenuItem>(*selection));
+        CarryOverDataOrNot(static_cast<MainMenuItem>(*selection));
 }
 
 std::int64_t BindMainMenuWheel() {
@@ -921,15 +922,14 @@ std::int64_t MainMenuWheelRender() {
 
 std::int64_t TickMainMenuWheel() {
     ShowElementByIndex(UIElement::GameInfoBar);
+    MainMenuTextNullsub("UIMAINTITL");
     SetDebugHideCameraIcon(0);
-    if (g_mainMenuWheelWidget) {
-        UpdateMainMenuWheel();
-        mainMenuSelection = static_cast<MainMenuItem>(g_mainMenuWheelWidget->selection);
-        RefreshMainMenuWheelDescription();
-        RefreshMainMenuWheelLanguage();
+    UpdateMainMenuWheel();
+    SetTitleMenuUIState(0);
+    SetTitleMenuTransitionCallback(DispatchMainMenuTransition);
+    RefreshMainMenuWheelDescription();
+    return RefreshMainMenuWheelLanguage();
     }
-    return 0;
-}
 
 // @verified - p
 std::int64_t DestroyMainMenuWheel() {
@@ -996,46 +996,88 @@ std::int64_t MainMenuWheelInput() {
     enterPressed = false;
     g_inputBuffer[0].pressedPriority = 0;
     AicaExecuteWrapper(2);
-    return ActivateMainMenuChoice(mainMenuSelection);
+    CarryOverDataOrNot(mainMenuSelection);
+    return 0;
 }
 
-std::int64_t ActivateMainMenuChoice(MainMenuItem selection) {
+std::uint8_t mainMenuContinueRequested{}, mainMenuCollectionRequested{}, mainMenuNewGameRequested{};
 
-    FrontendRoute nextRoute = FrontendRoute::Wheel;
-    bool transitioned = false;
+// @verified - p
+void MainMenuTextNullsub(const char *) {
+}
+
+// @verified - p
+void CarryOverDataCallback(std ::int32_t response) {
+    if (response == 2) {
+        if (IsArchiveReadComplete() || IsArchiveReadPending()) {
+            SetSaveFrontendMode(0);
+            SetSaveMenuSource(2);
+            SelectMainMenuPage(1);
+        } else {
+            MainMenuTextNullsub(nullptr);
+        }
+    } else if (response != 4) {
+        mainMenuNewGameRequested = 1;
+    }
+}
+
+// @verified - p
+void CarryOverDataOrNot(MainMenuItem selection) {
+    AicaExecuteWrapper(2);
     switch (selection) {
     case MainMenuItem::NewGame:
-        nextRoute = FrontendRoute::NewGame;
-        transitioned = BeginNewGameModuleHandoff();
-        break;
+        if ((GetLocalBackupInfo() & 8U) != 0)
+            NativeMessageBox("UIMAINUSES1", false, 1, CarryOverDataCallback);
+        else
+            mainMenuNewGameRequested = 1;
+        return;
     case MainMenuItem::Continue:
     case MainMenuItem ::Collection:
-        AicaExecuteWrapper(2);
+
         if (IsArchiveReadComplete() || IsArchiveReadPending()) {
             SetSaveFrontendMode(0);
             SetSaveMenuSource(selection == MainMenuItem::Continue ? 0 : 1);
             SelectMainMenuPage(1);
+        } else {
+            MainMenuTextNullsub(nullptr);
         }
-        return 0;
+        return;
     case MainMenuItem::Options:
-        nextRoute = FrontendRoute::Options;
-        transitioned = SelectMainMenuPage(2);
-        break;
+        SelectMainMenuPage(2);
+        return;
     case MainMenuItem::Shots:
-        nextRoute = FrontendRoute::Wheel;
-        transitioned = SelectMainMenuPage(3);
-        break;
+        SelectMainMenuPage(3);
+        return;
     }
-    if (!transitioned)
-        return 0;
+}
 
-    enterPressed = false;
-    g_inputBuffer[0].pressedPriority &= ~0x0400U;
-    if (selection != MainMenuItem::Options && selection != MainMenuItem::Shots) {
+// @verified - p
+std::int64_t DispatchMainMenuTransition() {
+    if (mainMenuCollectionRequested != 0) {
+        mainMenuCollectionRequested = 0;
+
+        SetTitleMenuTransitionCallback(nullptr);
+        SetTitleMenuUIState(2);
+        RequestTitleMenuTransition();
+        return 1;
+    }
+    if (mainMenuContinueRequested != 0) {
+        mainMenuContinueRequested = 0;
+        SetTitleMenuTransitionCallback(nullptr);
+        SetTitleMenuUIState(1);
+        RequestTitleMenuTransition();
+        return 1;
+    }
+    if (mainMenuNewGameRequested != 0) {
+        mainMenuNewGameRequested = 0;
         DestroyElementByIndex(UIElement::MainMenu);
         DestroyElementByIndex(UIElement::MainMenuWheel);
+        SetTitleMenuTransitionCallback(nullptr);
+        SetTitleMenuUIState(0);
+        RequestTitleMenuTransition();
+        ResetSteamStatistics();
+        return 1;
     }
-    frontendRoute = nextRoute;
     return 0;
 }
 

@@ -574,6 +574,169 @@ bool S2SaveScreen_CancelPrompt() noexcept;
 bool S2SaveScreen_HasPrompt() noexcept;
 bool S2SaveTask_Begin(std::size_t slot, std::uint8_t clearState, S2SaveTaskCompletion completion = nullptr);
 
+struct TitleFileSelectSprite {
+    std::int8_t group, item;
+    std::array<std::byte, 2> reserved02;
+    Vector3 position;
+};
+static_assert(sizeof(TitleFileSelectSprite) == 0x10 && offsetof(TitleFileSelectSprite, position) == 4);
+struct TitleFileSelectWarningParameters {
+    std::uint8_t context, choice;
+    std::array<std::byte, 2> reserved02;
+    std::int32_t parameter;
+    std::uint8_t previousAct, act;
+    std::array<std::byte, 2> reserved0a;
+};
+static_assert(sizeof(TitleFileSelectWarningParameters) == 0x0c);
+struct TitleFileSelectStateRule {
+    std::int8_t nextState, alternateState, confirmState, cancelState;
+    std::int16_t warning;
+};
+static_assert(sizeof(TitleFileSelectStateRule) == 6 && offsetof(TitleFileSelectStateRule, warning) == 4);
+struct TitleFileSelectSelectionStates {
+    std::int32_t initialState, cancelState, warningState, confirmState;
+};
+static_assert(sizeof(TitleFileSelectSelectionStates) == 0x10);
+struct TitleFileSelectDate {
+    std::uint8_t year, reserved01, month, day, hour, minute;
+};
+static_assert(sizeof(TitleFileSelectDate) == 6);
+inline constexpr shen_name TITLE_SAVE_TEXN = SHEN_NAME(TEXN);
+inline constexpr TitleFileSelectSelectionStates TITLE_SAVE_SELECTION_STATES{25, 8, 32, 28};
+inline constexpr std::array<std::int16_t, 4> TITLE_SAVE_DECIMAL_DIVISORS{1000, 100, 10, 1};
+inline constexpr std::array<TitleFileSelectStateRule, 22> TITLE_SAVE_NEW_GAME_RULES{{
+    {12, 12, -1, -1, 40},
+    {13, 13, 15, 15, 1},
+    {3, 4, 15, 15, 4},
+    {1, 3, 15, 15, 30},
+    {4, 4, 15, 15, 8},
+    {19, 19, 21, 21, 5},
+    {14, 14, 21, 21, 11},
+    {14, 14, 21, 21, 7},
+    {20, 1, 21, 21, 9},
+    {14, 14, 21, 21, 10},
+    {1, 1, 21, 21, 8},
+    {14, 14, 22, 22, 8},
+    {23, 5, -1, -1, 14},
+    {4, 4, 15, -1, 3},
+    {8, 8, 25, 25, 8},
+    {8, 8, 25, 25, 28},
+    {8, 8, 25, 25, 12},
+    {28, 7, -1, -1, 38},
+    {7, 7, 25, 25, 39},
+    {7, 8, 25, -1, 32},
+    {8, 8, 25, 25, 12},
+    {32, 7, 25, 25, 33},
+}};
+inline constexpr std::array<std::array<std::uint16_t, 4>, 6> TITLE_SAVE_BOARD_UV{{
+    {0, 898, 625, 1000},
+    {0, 796, 625, 898},
+    {0, 609, 750, 796},
+    {0, 433, 234, 609},
+    {234, 433, 468, 609},
+    {773, 566, 1000, 1000},
+}};
+inline constexpr std::array<std::array<std::uint16_t, 4>, 44> TITLE_SAVE_CHARACTER_UV{{
+    {0, 875, 62, 1000},
+    {62, 875, 125, 1000},
+    {125, 875, 187, 1000},
+    {187, 875, 250, 1000},
+    {250, 875, 312, 1000},
+    {312, 875, 375, 1000},
+    {375, 875, 437, 1000},
+    {437, 875, 500, 1000},
+    {500, 875, 562, 1000},
+    {562, 875, 625, 1000},
+    {625, 875, 687, 1000},
+    {687, 875, 750, 1000},
+    {750, 875, 812, 1000},
+    {500, 750, 601, 875},
+    {601, 750, 703, 875},
+    {703, 750, 804, 875},
+    {804, 750, 906, 875},
+    {500, 625, 601, 750},
+    {601, 625, 703, 750},
+    {703, 625, 804, 750},
+    {804, 625, 905, 750},
+    {500, 500, 601, 625},
+    {601, 500, 703, 625},
+    {726, 437, 1000, 601},
+    {0, 718, 250, 812},
+    {0, 625, 250, 718},
+    {0, 531, 250, 625},
+    {0, 437, 250, 531},
+    {0, 343, 250, 437},
+    {0, 250, 250, 343},
+    {250, 718, 500, 812},
+    {250, 625, 500, 718},
+    {250, 531, 500, 625},
+    {250, 437, 500, 531},
+    {250, 343, 500, 437},
+    {250, 250, 500, 343},
+    {500, 531, 1000, 625},
+    {500, 437, 1000, 531},
+    {500, 343, 750, 437},
+    {500, 250, 750, 343},
+    {750, 250, 1000, 343},
+    {750, 343, 1000, 437},
+    {0, 125, 1000, 250},
+    {0, 0, 1000, 125},
+}};
+inline constexpr std::array<std::array<std::uint16_t, 4>, 4> TITLE_SAVE_COLOUR_UV{{
+    {0, 296, 468, 1000},
+    {500, 375, 812, 1000},
+    {500, 375, 812, 1000},
+    {0, 218, 468, 296},
+}};
+inline constexpr std::array<std::array<std::uint16_t, 4>, 31> TITLE_SAVE_MAP_FRAME_UV{{
+    {500, 304, 835, 640},
+    {500, 187, 890, 578},
+    {750, 140, 1000, 390},
+    {500, 0, 871, 371},
+    {0, 187, 171, 359},
+    {15, 15, 230, 230},
+    {54, 187, 367, 500},
+    {226, 109, 414, 296},
+    {207, 0, 386, 179},
+    {347, 54, 472, 179},
+    {171, 171, 296, 273},
+    {0, 585, 250, 835},
+    {70, 500, 500, 890},
+    {265, 640, 625, 1000},
+    {250, 500, 500, 750},
+    {250, 500, 500, 750},
+    {70, 500, 500, 890},
+    {70, 500, 500, 890},
+    {70, 500, 500, 890},
+    {265, 640, 625, 1000},
+    {70, 500, 500, 890},
+    {70, 500, 500, 890},
+    {687, 687, 1000, 1000},
+    {687, 687, 1000, 1000},
+    {687, 687, 1000, 1000},
+    {687, 687, 1000, 1000},
+    {687, 687, 1000, 1000},
+    {687, 687, 1000, 1000},
+    {687, 687, 1000, 1000},
+    {687, 687, 1000, 1000},
+    {687, 687, 1000, 1000},
+}};
+inline constexpr std::array<TitleFileSelectSprite, 14> TITLE_SAVE_SPRITES{{
+    {.group = 0, .item = 0, .position = {.x = 160.0f, .y = 59.0f, .z = -2.8000001907348633f}},
+    {.group = 0, .item = 1, .position = {.x = 480.0f, .y = 59.0f, .z = -2.8000001907348633f}},
+    {.group = 0, .item = 5, .position = {.x = 512.0f, .y = 224.0f, .z = -2.8000001907348633f}},
+    {.group = 1, .item = 38, .position = {.x = 198.0f, .y = 97.0f, .z = -2.6000003814697266f}},
+    {.group = 1, .item = 40, .position = {.x = 248.0f, .y = 97.0f, .z = -2.6000003814697266f}},
+    {.group = 0, .item = 3, .position = {.x = 109.0f, .y = 132.0f, .z = -2.700000286102295f}},
+    {.group = 0, .item = 2, .position = {.x = 243.0f, .y = 131.0f, .z = -2.8000001907348633f}},
+    {.group = 1, .item = 42, .position = {.x = 283.0f, .y = 131.0f, .z = -2.6000003814697266f}},
+    {.group = 1, .item = 23, .position = {.x = 99.0f, .y = 132.0f, .z = -2.6000003814697266f}},
+    {.group = 1, .item = 13, .position = {.x = 147.0f, .y = 132.0f, .z = -2.6000003814697266f}},
+    {.group = 2, .item = 0, .position = {.x = 30.0f, .y = 0.0f, .z = -2.8000001907348633f}},
+    {.group = 2, .item = 1, .position = {.x = 30.0f, .y = 0.0f, .z = -2.8000001907348633f}},
+    {.group = 2, .item = 2, .position = {.x = 30.0f, .y = 0.0f, .z = -2.8000001907348633f}},
+    {.group = 2, .item = 3, .position = {.x = 30.0f, .y = 0.0f, .z = -2.8000001907348633f}},
+}};
 #pragma pack(push, 1)
 struct TitleFileSelectSlot {
     std::uint32_t flags;
@@ -602,11 +765,16 @@ struct TitleFileSelectState {
     std::uint32_t state;
     std::int32_t field0dc;
     std::uint32_t field0e0;
-    std::array<std::byte, 0x20> reserved0e4;
+    std::uint32_t reserved0e4;
+    TitleFileSelectWarningParameters warning;
+    std::uint32_t reserved0f4;
+    TitleFileSelectSprite sprite;
 };
 #pragma pack(pop)
 
-static_assert(sizeof(TitleFileSelectState) == 0x104);
+static_assert(sizeof(TitleFileSelectState) == 0x108);
+static_assert(offsetof(TitleFileSelectState, warning) == 0xe8);
+static_assert(offsetof(TitleFileSelectState, sprite) == 0xf8);
 static_assert(offsetof(TitleFileSelectState, selectedSlot) == 0x03);
 static_assert(offsetof(TitleFileSelectState, slots) == 8);
 static_assert(offsetof(TitleFileSelectState, imageTask) == 0xa8);
@@ -620,7 +788,18 @@ static_assert(offsetof(TitleFileSelectState, state) == 0xd8);
 
 struct TitleControlData;
 TitleFileSelectState *AssignActiveTCRL(TitleControlData *control);
-TitleFileSelectState *ResetTitleFileSelectState();
+void TitleContinueControl(void *taskData);
+TitleFileSelectState *InitializeTitleContinueFlags();
+TitleFileSelectState *InitializeTitleNewGameFlags();
+TitleFileSelectState *InitializeTitleCollectionFlags();
+void StartTitleNewGame(void *taskData);
+void StartTitleCollection(void *taskData);
+void StartTitleSnapshotViewer(void *taskData);
+void TFSEL_NewGameCtrl_Callback(void *taskData);
+void TFSEL_DispFileSelect(void *taskData);
+void TFSEL_DispFileSelect_Callback(void *taskData);
+void StartTitleModuleChange(TitleControlData *control, std::int32_t state);
+void ResetTitleImportSelection();
 TitleFileSelectState *InitializeTitleFileSelectState();
 std::int64_t StartTitleLoadGame();
 std::int64_t StartTitleCollectionGame();

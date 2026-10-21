@@ -1389,6 +1389,7 @@ bool DoesCycleEntryHaveFlagsSet(std::uint32_t token);
 bool GetCycleFlagForSpecificChara(std::uint32_t token);
 CycleManager::NpcRecord *NextProgramInList(CycleProgramList list, const CycleManager::NpcRecord *after = nullptr);
 CycleManager::MobjEntry *&ProgramListHead(CycleProgramList list);
+extern MobjEntry *SimSetCursor;
 CycleManager::NpcRecord *EntryRecord(CycleManager::MobjEntry *entry);
 char *FilePointer(uint32_t offset);
 uint32_t FileOffset(const void *pointer);

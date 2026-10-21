@@ -278,6 +278,7 @@ add_library(shenmue1_game STATIC
   src/s1/modern_lighting.cpp
   src/s1/modern_probes.cpp
   src/s1/model_loader.cpp
+  src/s1/model_lighting.cpp
   src/s1/mt5_mesh.cpp
   src/s1/mt5_render.cpp
   src/s1/modules/modules.cpp

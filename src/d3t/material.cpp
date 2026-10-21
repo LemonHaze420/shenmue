@@ -18,11 +18,6 @@
 namespace shenmue::d3t {
 CommonShaderCache g_commonShaderCache{};
 
-namespace {
-std::shared_mutex g_commonShaderCacheLock;
-std::atomic<std::uint32_t> g_d3tMaterialSortKey{0};
-
-
 bool GetMaterialTextureSlot(std::uint32_t type, std::uint32_t &slot) {
     switch (type) {
     case 0:
@@ -76,6 +71,9 @@ bool GetMaterialTextureSlot(std::uint32_t type, std::uint32_t &slot) {
     }
 }
 
+namespace {
+std::shared_mutex g_commonShaderCacheLock;
+std::atomic<std::uint32_t> g_d3tMaterialSortKey{0};
 std::uint32_t FindCommonShaderCacheIndex(const CommonShaderCache &cache, std::uint32_t hash) {
     if (!cache.capacity)
         return UINT32_MAX;
@@ -115,7 +113,7 @@ bool GrowCommonShaderCache(CommonShaderCache &cache, std::uint32_t capacity) {
 void CommonShaderCleanup(void *context) {
     RemoveCachedCommonShader(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(context)));
 }
-}
+} // namespace
 
 void BuildMaterialShaderCapabilities(char *destination, const D3TModelMaterial &material, const D3TModelMaterialParameter *parameters, bool instanced,
     bool hasPrepass, bool debug, bool pcf, bool reflection, std::int32_t platform) {

@@ -71,7 +71,7 @@ void RecomputeSteeringExtents(CycleManager::NpcRecord &npc) {
         return;
     }
 
-    if (npc.cycle->steeringProfile) {
+    if (npc.cycle->steeringProfile == 1) {
         npc.cycle->steeringHalfWidth = npc.cycle->moveConfig->steeringBodyHalfWidth + 0.2f;
         npc.cycle->steeringHalfDepth = npc.cycle->moveConfig->steeringBodyHalfDepth;
         return;

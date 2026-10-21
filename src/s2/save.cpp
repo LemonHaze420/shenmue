@@ -39,6 +39,9 @@
 #include "s2/system_modules.hpp"
 #include "s2/title.hpp"
 #include "s2/title_area_data.hpp"
+#include "s2/item_selector.hpp"
+#include "s2/ui_loadsave.hpp"
+#include "s2/map_info.hpp"
 #include "s2/frame_pacing.hpp"
 #include "s2/sound_program.hpp"
 #include "s2/renderer_initialization.hpp"
@@ -720,6 +723,8 @@ TitleControlData *activeTitleControl{};
 std::int32_t gameLoadSlot{};
 std::uint8_t gameLoadActive{};
 std::int32_t gameLoadStatus{};
+std::int32_t titleNewGameState{};
+std::int32_t titleImportSelection{-1};
 TitleLoadPhase titleLoadPhase = TitleLoadPhase::Idle;
 bool titleLoadOnly = false;
 bool titleFlowActive = false;
@@ -4112,15 +4117,16 @@ TitleFileSelectState *InitializeTitleFileSelectState() {
 }
 
 // @verified - p
-TitleFileSelectState *ResetTitleFileSelectState() {
+void TitleContinueControl(void *) {
     SetTitleWarningLogo(0, nullptr);
-    return InitializeTitleFileSelectState();
+    InitializeTitleFileSelectState();
 }
 
 // @verified - p
 TitleFileSelectState *AssignActiveTCRL(TitleControlData *control) {
     activeTitleControl = control;
-    return ResetTitleFileSelectState();
+    TitleContinueControl(control);
+    return &titleFileSelect;
 }
 
 // @verified - p
@@ -4176,7 +4182,7 @@ std::int64_t StartTitleCompletedGame() {
 
 // @verified - p
 void StartTitleImportedGame(TitleControlData *control) {
-    void *const bank = control->reserved20;
+    void *const bank = control->inheritedSaveBank;
     if (ReadS1SaveDataByIndex(bank, titleFileSelect.selectedSlot) == 0 && BupReady(0) == 0) {
         if (ValidateS1SaveHeader(static_cast<const std::byte *>(bank) + 0x680) && InitializeNewGameFromSaveSlot(titleFileSelect.selectedSlot) != 0) {
             ImportSelectedS1SaveData(bank, 0);
@@ -4288,6 +4294,637 @@ bool GetSaveMenuSlotEligibility(std::uint32_t slot) noexcept {
         return true;
     const S2SaveDataInfo *const info = GetS1BackupSaveDataInfo(slot);
     return info && info->clearState == 6;
+}
+// @verified - p
+TitleFileSelectState *InitializeTitleContinueFlags() {
+    titleFileSelect.titleSequence2 = 9;
+    titleFileSelect.titleSequence = 1;
+    return &titleFileSelect;
+}
+
+// @verified - p
+TitleFileSelectState *InitializeTitleNewGameFlags() {
+    titleFileSelect.titleSequence2 = 8;
+    titleFileSelect.titleSequence = 0;
+    return &titleFileSelect;
+}
+
+// @verified - p
+TitleFileSelectState *InitializeTitleCollectionFlags() {
+    titleFileSelect.titleSequence2 = 9;
+    titleFileSelect.titleSequence = 2;
+    return &titleFileSelect;
+}
+
+// @verified - p
+void ResetTitleImportSelection() {
+    titleImportSelection = -1;
+}
+
+// @verified - p
+void StartTitleModuleChange(TitleControlData *, std::int32_t state) {
+    titleFileSelect.state = state;
+    HLib::SetCurrentTaskTo(TFSEL_ModChange_Callback);
+    titleFileSelect.titleSequence2 = 0;
+    HLib::SetupTaskDelay(10);
+}
+
+// @verified - p
+void DrawTitleFileSelectSprite(std::int32_t group, std::int32_t item, const Vector3 &position) {
+    if (group <= 12) {
+        if (group == 0 && item == 5) {
+            DrawTitleSpriteRect(TITLE_SAVE_BOARD_UV[item].data(), position, 10, 1.25f);
+        } else if (group == 2) {
+            std::uint32_t colour;
+            if (item == 0 || item == 3)
+                colour = 0xbfffffffU;
+            else if (item == 1)
+                colour = 0x7f0000ffU;
+            else if (item == 2)
+                colour = 0x7fff0000U;
+            DrawTitleColourSpriteRect(TITLE_SAVE_COLOUR_UV[item].data(), position, 12, 0.5f, colour);
+        } else {
+            const std::uint16_t *const uv = group == 0 ? TITLE_SAVE_BOARD_UV[item].data() : TITLE_SAVE_CHARACTER_UV[item].data();
+            DrawTitleSpriteRect(uv, position, group == 0 ? 10 : 11, 1.0f);
+        }
+    }
+}
+
+// @verified - p
+void DrawTitleFileSelectNumber(std::int32_t value, std::int32_t digits, std::int32_t padZero, float x, float y) {
+    Vector3 position{.x = x, .y = y, .z = -2.6000004f};
+    for (std::int32_t index = 4 - digits; index < 4; ++index) {
+        const std::int8_t digit = std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(value / TITLE_SAVE_DECIMAL_DIVISORS[index]));
+        value %= TITLE_SAVE_DECIMAL_DIVISORS[index];
+        if (digit > 0)
+            padZero = 1;
+        if (digit > 0 || padZero != 0 || index == 3)
+            DrawTitleFileSelectSprite(1, digit, position);
+        position.x += 16.0f;
+    }
+}
+
+// @verified - p
+void DrawTitleFileSelectDate(std::int32_t x, std::int32_t y, const void *source) {
+    TitleFileSelectDate date;
+    std::memcpy(&date, source, sizeof(date));
+    const std::int8_t month = std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(date.month + 23U));
+    Vector3 position{.x = static_cast<float>(x) - 40.0f, .y = static_cast<float>(y), .z = -2.6000004f};
+    DrawTitleFileSelectSprite(1, month, position);
+    if (month != 28) {
+        position.x = static_cast<float>(x) - 10.0f;
+        DrawTitleFileSelectSprite(1, 10, position);
+    }
+    DrawTitleFileSelectNumber(date.day, 2, 0, static_cast<float>(x) + 2.0f, static_cast<float>(y));
+    position.x = static_cast<float>(x) + 32.0f;
+    DrawTitleFileSelectSprite(1, 11, position);
+    DrawTitleFileSelectNumber(date.year >= 100 ? date.year : date.year + 1900, 4, 0, static_cast<float>(x) + 44.0f, static_cast<float>(y));
+    DrawTitleFileSelectNumber(date.hour, 2, 1, static_cast<float>(x) + 118.0f, static_cast<float>(y));
+    position.x = static_cast<float>(x) + 146.0f;
+    DrawTitleFileSelectSprite(1, 12, position);
+    DrawTitleFileSelectNumber(date.minute, 2, 1, static_cast<float>(x) + 160.0f, static_cast<float>(y));
+}
+
+// @verified - p
+void DrawTitleFileSelectLocalPreview(std::int32_t area) {
+    if (area >= 0) {
+        if (area != static_cast<std::int32_t>(titleFileSelect.field0d0)) {
+            const MapInfoChunk *chunk = reinterpret_cast<const MapInfoChunk *>(titleFileSelect.localAreaTask);
+            std::int32_t index = 0;
+            if (chunk) {
+                while (chunk->name.name != 0) {
+                    if (chunk->nextByteOffset == 0)
+                        break;
+                    if (chunk->name == TITLE_SAVE_TEXN) {
+                        if (area == index) {
+                            ReplacePtxTexture(static_cast<std::uint32_t>(titleFileSelect.field0c8), chunk);
+                            break;
+                        }
+                        ++index;
+                    }
+                    chunk = reinterpret_cast<const MapInfoChunk *>(reinterpret_cast<const std::byte *>(chunk) + chunk->nextByteOffset);
+                }
+            }
+            titleFileSelect.field0d0 = (titleFileSelect.field0d0 & 0xffffffff00000000ULL) | static_cast<std::uint32_t>(area);
+        }
+        if (titleFileSelect.field0c8 >= 0) {
+            LegacySpritePacket packet;
+            packet.colour = 0xffffffffU;
+            packet.secondaryColour = 0;
+            packet.uv = {0.0f, 0.0f, 1.0f, 1.0f};
+            packet.reservedTail = 0;
+            packet.quad.flags = 1024;
+            AdjustScreenAspectRatio(packet.quad, ScreenAlignment::HorizontalStretch, 512, 235, 128, 32, ScreenMode::Centered);
+            LegacySpriteNullsub(packet, static_cast<std::uint32_t>(titleFileSelect.field0c8), -2.7f);
+        }
+    } else {
+        titleFileSelect.field0d0 = (titleFileSelect.field0d0 & 0xffffffff00000000ULL) | 0xffffffffU;
+    }
+}
+
+// @verified - p
+void DrawTitleFileSelectAreaPreview(std::int32_t area) {
+    const shen_name pattern = UI_SAVE_AREAS[area].pattern;
+    std::int32_t image = -1, location = -1;
+    if (pattern == SAVE_MAP_0200)
+        image = location = 2;
+    else if (pattern == SAVE_MAP_WAT0)
+        image = location = 1;
+    else if (pattern == SAVE_MAP_KRF1)
+        image = location = 3;
+    else if (pattern == SAVE_MAP_CLS1) {
+        image = 4;
+        location = 4;
+    } else if (pattern == SAVE_MAP_CLS2) {
+        image = 5;
+        location = 4;
+    } else {
+        switch (pattern.characters[0]) {
+        case 'A':
+            image = location = 0;
+            break;
+        case 'K':
+            image = location = 3;
+            break;
+        case 'Q':
+            image = location = 2;
+            break;
+        case 'W':
+            image = location = 1;
+            break;
+        }
+    }
+    if (image < 0) {
+        titleFileSelect.field0cc = 0xffffffffU;
+        return;
+    }
+    if (image != static_cast<std::int32_t>(titleFileSelect.field0cc)) {
+        if (static_cast<std::int32_t>(titleFileSelect.imageSprite) >= 0) {
+            const MapInfoChunk *chunk = reinterpret_cast<const MapInfoChunk *>(titleFileSelect.imageTask);
+            std::int32_t index = 0;
+            if (chunk) {
+                while (chunk->name.name != 0) {
+                    if (chunk->nextByteOffset == 0)
+                        break;
+                    if (chunk->name == TITLE_SAVE_TEXN) {
+                        if (image == index) {
+                            ReplacePtxTexture(titleFileSelect.imageSprite, chunk);
+                            break;
+                        }
+                        ++index;
+                    }
+                    chunk = reinterpret_cast<const MapInfoChunk *>(reinterpret_cast<const std::byte *>(chunk) + chunk->nextByteOffset);
+                }
+            }
+            chunk = reinterpret_cast<const MapInfoChunk *>(titleFileSelect.areaTask);
+            index = 0;
+            if (chunk) {
+                while (chunk->name.name != 0) {
+                    if (chunk->nextByteOffset == 0)
+                        break;
+                    if (chunk->name == TITLE_SAVE_TEXN) {
+                        if (location == index) {
+                            ReplacePtxTexture(titleFileSelect.field0c4, chunk);
+                            break;
+                        }
+                        ++index;
+                    }
+                    chunk = reinterpret_cast<const MapInfoChunk *>(reinterpret_cast<const std::byte *>(chunk) + chunk->nextByteOffset);
+                }
+            }
+        }
+        titleFileSelect.field0cc = static_cast<std::uint32_t>(image);
+    }
+    if (static_cast<std::int32_t>(titleFileSelect.imageSprite) >= 0) {
+        LegacySpritePacket packet;
+        packet.colour = 0xffffffffU;
+        packet.secondaryColour = 0;
+        packet.uv = {0.0f, 0.0f, 1.0f, 1.0f};
+        packet.reservedTail = 0;
+        packet.quad.flags = 1024;
+        AdjustScreenAspectRatio(packet.quad, ScreenAlignment::HorizontalStretch, 512, 149, 100, 100, ScreenMode::Centered);
+        LegacySpriteNullsub(packet, titleFileSelect.imageSprite, -2.7f);
+        packet.colour = 0xffffffffU;
+        packet.secondaryColour = 0;
+        packet.uv = {0.0f, 0.0f, 1.0f, 1.0f};
+        packet.reservedTail = 0;
+        packet.quad.flags = 1024;
+        AdjustScreenAspectRatio(packet.quad, ScreenAlignment::HorizontalStretch, 512, 213, 128, 32, ScreenMode::Centered);
+        LegacySpriteNullsub(packet, titleFileSelect.field0c4, -2.7f);
+        if (UI_SAVE_AREAS[area].image >= 0) {
+            DrawTitleFileSelectLocalPreview(area);
+            DrawSizedTitleSpriteRect(TITLE_SAVE_MAP_FRAME_UV[UI_SAVE_AREAS[area].image].data(), {.x = 512.0f, .y = 299.0f, .z = -2.7000003f}, 13, 100, 100);
+        }
+    }
+}
+
+// @verified - p
+void DrawTitleFileSelectCard(std::int32_t index, std::int32_t game) {
+    const S2SaveDataInfo *const info = titleFileSelect.slots[index].data;
+    const std::int32_t relative = static_cast<std::int32_t>(static_cast<std::uint32_t>(index) - titleFileSelect.field0e0);
+    const float y = static_cast<float>(relative) * 97.0f;
+    if (static_cast<std::uint32_t>(relative) <= 2U) {
+        titleFileSelect.sprite = TITLE_SAVE_SPRITES[8];
+        titleFileSelect.sprite.position.y = (y - 4.0f) + TITLE_SAVE_SPRITES[8].position.y;
+        DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+        titleFileSelect.sprite = TITLE_SAVE_SPRITES[9];
+        titleFileSelect.sprite.position.y = (y - 4.0f) + TITLE_SAVE_SPRITES[9].position.y;
+        titleFileSelect.sprite.item = std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(titleFileSelect.sprite.item + index));
+        DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+    }
+    const std::uint32_t flags = titleFileSelect.slots[index].flags;
+    if (index == titleFileSelect.selectedSlot) {
+        if (static_cast<std::uint32_t>(relative) <= 2U) {
+            titleFileSelect.sprite = TITLE_SAVE_SPRITES[5];
+            titleFileSelect.sprite.position.y = TITLE_SAVE_SPRITES[5].position.y + y;
+            DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+        }
+        if ((flags & 2) != 0) {
+            DrawTitleFileSelectAreaPreview(ui_detail::SaveMenuAreaIndex(game ? SAVE_MAP_CLS2 : SAVE_MAP_CLS1));
+        } else {
+            const std::int32_t area = ui_detail::SaveMenuAreaIndex(info->mapName);
+            if (area >= 0)
+                DrawTitleFileSelectAreaPreview(area);
+        }
+    } else if (static_cast<std::uint32_t>(relative) <= 2U) {
+        titleFileSelect.sprite = TITLE_SAVE_SPRITES[5];
+        ++titleFileSelect.sprite.item;
+        titleFileSelect.sprite.position.y = TITLE_SAVE_SPRITES[5].position.y + y;
+        DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+    }
+    if ((flags & 1) != 0) {
+        if (static_cast<std::uint32_t>(relative) <= 2U) {
+            titleFileSelect.sprite = TITLE_SAVE_SPRITES[3];
+            titleFileSelect.sprite.position.y = TITLE_SAVE_SPRITES[3].position.y + y;
+            DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+            titleFileSelect.sprite = TITLE_SAVE_SPRITES[4];
+            titleFileSelect.sprite.position.y = TITLE_SAVE_SPRITES[4].position.y + y;
+            DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+            titleFileSelect.sprite = TITLE_SAVE_SPRITES[3];
+            ++titleFileSelect.sprite.item;
+            titleFileSelect.sprite.position.y = (y + 42.0f) + TITLE_SAVE_SPRITES[3].position.y;
+            DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+            titleFileSelect.sprite = TITLE_SAVE_SPRITES[4];
+            titleFileSelect.sprite.position.y = (y + 42.0f) + TITLE_SAVE_SPRITES[4].position.y;
+            DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+            DrawTitleFileSelectDate(242, TruncateSpriteCoordinate(y + 116.0f), &info->gameYear);
+            DrawTitleFileSelectDate(242, TruncateSpriteCoordinate(y + 160.0f), &info->systemYear);
+        }
+    } else if (static_cast<std::uint32_t>(relative) <= 2U) {
+        titleFileSelect.sprite = TITLE_SAVE_SPRITES[7];
+        titleFileSelect.sprite.position.y = TITLE_SAVE_SPRITES[7].position.y + y;
+        DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+    }
+    if (static_cast<std::uint32_t>(relative) <= 2U) {
+        titleFileSelect.sprite = TITLE_SAVE_SPRITES[6];
+        titleFileSelect.sprite.position.y = TITLE_SAVE_SPRITES[6].position.y + y;
+        DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+    }
+}
+
+// @verified - p
+void DrawTitleFileSelectScrollbar() {
+    float y = 125.0f;
+    for (std::int32_t index = 0; index < 10; ++index) {
+        titleFileSelect.sprite = TITLE_SAVE_SPRITES[10];
+        titleFileSelect.sprite.position.y = TITLE_SAVE_SPRITES[10].position.y + y;
+        DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+        const std::int32_t first = static_cast<std::int32_t>(titleFileSelect.field0e0);
+        if (first <= index && first + 3 > index && titleFileSelect.selectedSlot != index) {
+            titleFileSelect.sprite = TITLE_SAVE_SPRITES[11];
+            titleFileSelect.sprite.position.y = (y + 1.25f) + TITLE_SAVE_SPRITES[11].position.y;
+            DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+        } else if (titleFileSelect.selectedSlot == index) {
+            titleFileSelect.sprite = TITLE_SAVE_SPRITES[12];
+            titleFileSelect.sprite.position.y = (y + 1.25f) + TITLE_SAVE_SPRITES[12].position.y;
+            DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+        }
+        y += 22.5f;
+    }
+    titleFileSelect.sprite = TITLE_SAVE_SPRITES[13];
+    titleFileSelect.sprite.position.y = (((y - 11.25f) + 1.25f) - 0.5f) + TITLE_SAVE_SPRITES[13].position.y;
+    DrawTitleFileSelectSprite(titleFileSelect.sprite.group, titleFileSelect.sprite.item, titleFileSelect.sprite.position);
+}
+
+// @verified - p
+void TFSEL_DispFileSelect_Callback(void *) {
+    std::int32_t flags = (titleFileSelect.titleSequence2 & 8) != 0;
+    if ((titleFileSelect.titleSequence2 & 1) != 0) {
+        DrawTitleFileSelectSprite(TITLE_SAVE_SPRITES[0].group, TITLE_SAVE_SPRITES[0].item, TITLE_SAVE_SPRITES[0].position);
+        DrawTitleFileSelectSprite(TITLE_SAVE_SPRITES[1].group, TITLE_SAVE_SPRITES[1].item, TITLE_SAVE_SPRITES[1].position);
+        flags |= 2;
+    }
+    if ((titleFileSelect.titleSequence2 & 4) != 0) {
+        DrawTitleFileSelectSprite(TITLE_SAVE_SPRITES[2].group, TITLE_SAVE_SPRITES[2].item, TITLE_SAVE_SPRITES[2].position);
+        for (std::int32_t index = 0; index < 10; ++index)
+            DrawTitleFileSelectCard(index, titleFileSelect.titleSequence != 0);
+        DrawTitleCaption(titleFileSelect.titleSequence ? 4 : 12, -1);
+        DrawTitleFileSelectScrollbar();
+    }
+    DrawTitleFrame(flags);
+}
+
+// @verified - p
+void TFSEL_DispFileSelect(void *) {
+    if ((titleFileSelect.titleSequence2 & 1) != 0) {
+        DrawTitleFileSelectSprite(TITLE_SAVE_SPRITES[0].group, TITLE_SAVE_SPRITES[0].item, TITLE_SAVE_SPRITES[0].position);
+        DrawTitleFileSelectSprite(TITLE_SAVE_SPRITES[1].group, TITLE_SAVE_SPRITES[1].item, TITLE_SAVE_SPRITES[1].position);
+    }
+    DrawTitleFrame(1);
+    HLib::SetCurrentTaskTo(TFSEL_DispFileSelect_Callback);
+}
+
+// @verified - p
+std::int64_t SelectTitleS1Save() {
+    const S2SaveDataInfo *const infos = GetS1BackupSaveDataInfo(0);
+    GetLocalBackupInfo();
+    const std::uint16_t pressed = g_inputBuffer[0].pressedPriority;
+    const std::uint16_t input = InterpretTitleAnalogInput() | pressed;
+    const std::uint16_t choice = titleFileSelect.field004 > 0 ? input : input & 0xcfffU;
+    if ((g_inputBuffer[0].pressedPriority & 0x200) != 0) {
+        titleFileSelect.titleSequence2 = 8;
+        return 14;
+    }
+    if ((choice & 0x2000) != 0) {
+        do {
+            if (++titleFileSelect.selectedSlot >= 10)
+                titleFileSelect.selectedSlot = 0;
+        } while (
+            infos[titleFileSelect.selectedSlot].saveKind == 0 || (titleFileSelect.titleSequence == 0 && infos[titleFileSelect.selectedSlot].clearState != 6));
+    } else if ((choice & 0x1000) != 0) {
+        do {
+            if (--titleFileSelect.selectedSlot < 0)
+                titleFileSelect.selectedSlot = 9;
+        } while (
+            infos[titleFileSelect.selectedSlot].saveKind == 0 || (titleFileSelect.titleSequence == 0 && infos[titleFileSelect.selectedSlot].clearState != 6));
+    }
+    return (choice & 0xc00) != 0 ? 23 : titleNewGameState;
+}
+
+// @verified - p
+std::int64_t SelectTitleS2Save(const TitleFileSelectSelectionStates &states, std::int32_t) {
+    const S2SaveDataInfo *const infos = GetBackupSaveDataInfo(0);
+    const std::uint16_t pressed = g_inputBuffer[0].pressedPriority;
+    const std::uint16_t input = InterpretTitleAnalogInput() | pressed;
+    if ((input & 0x200) != 0)
+        return states.cancelState;
+    if ((input & 0x3000) != 0) {
+        std::array<std::int32_t, 10> invalid;
+        for (std::int32_t index = 0; index < 10; ++index)
+            invalid[index] = !(infos[index].saveKind != 0 && (titleFileSelect.titleSequence != 0 || infos[index].clearState == 6));
+        const std::int8_t previous = titleFileSelect.selectedSlot;
+        if ((input & 0x2000) != 0) {
+            do {
+                if (++titleFileSelect.selectedSlot >= 10)
+                    titleFileSelect.selectedSlot = previous;
+            } while (invalid[titleFileSelect.selectedSlot] != 0);
+            const std::int8_t next = titleFileSelect.selectedSlot;
+            if (previous != next) {
+                const std::int32_t distance = std::abs(next - previous);
+                if (distance <= 2 - titleFileSelect.field0dc) {
+                    if (next <= 9)
+                        titleFileSelect.field0dc += distance;
+                } else {
+                    titleFileSelect.field0dc = 2;
+                    titleFileSelect.field0e0 = next > 8 ? 7 : titleFileSelect.selectedSlot - 2;
+                }
+            }
+        } else {
+            do {
+                if (--titleFileSelect.selectedSlot < 0)
+                    titleFileSelect.selectedSlot = previous;
+            } while (invalid[titleFileSelect.selectedSlot] != 0);
+            const std::int8_t next = titleFileSelect.selectedSlot;
+            if (previous != next) {
+                const std::int32_t distance = std::abs(next - previous);
+                if (distance <= titleFileSelect.field0dc) {
+                    if (next >= 0)
+                        titleFileSelect.field0dc -= distance;
+                } else {
+                    titleFileSelect.field0dc = 0;
+                    titleFileSelect.field0e0 = next < 1 ? 0 : titleFileSelect.selectedSlot;
+                }
+            }
+        }
+    }
+    return (input & 0xc00) != 0 ? states.confirmState : titleNewGameState;
+}
+
+// @verified - p
+std::int64_t ConfirmTitleS1Save(TitleControlData *control, std::uint32_t, std::uint16_t input) {
+    LegacyColourQuad packet;
+    packet.quad.flags = 0;
+    packet.colour = 0x7f000000U;
+    AdjustScreenAspectRatio(packet.quad, static_cast<ScreenAlignment>(0), 0, 0, 640, 480, ScreenMode::Centered);
+    packet.quad.flags |= 0x400U;
+    shenSubmitQuad(packet, -2.5900004f);
+    std::int32_t selected = -1;
+    if ((input & 0x4000) != 0)
+        titleFileSelect.warning.choice = 1;
+    if ((input & 0x8000) != 0)
+        titleFileSelect.warning.choice = 0;
+    if ((input & 0xc00) != 0) {
+        selected = titleFileSelect.warning.choice != 1;
+        SetTitleWarningLogo(0, nullptr);
+        titleFileSelect.warning.choice = 0;
+    }
+    if (selected != 0) {
+        if (selected == 1)
+            return 5;
+        SetTitleWarningLogo(14, &titleFileSelect.warning);
+        return 23;
+    }
+    void *const bank = control->inheritedSaveBank;
+    if (ReadS1SaveDataByIndex(bank, titleFileSelect.selectedSlot) != 0 || BupReady(0) != 0)
+        return 24;
+    if (!ValidateS1SaveHeader(static_cast<const std::byte *>(bank) + 0x680) || InitializeNewGameFromSaveSlot(titleFileSelect.selectedSlot) == 0)
+        return 24;
+    ImportSelectedS1SaveData(bank, 0);
+    titleFileSelect.titleSequence2 = 0;
+    StartTitleModuleChange(control, g_loadedActNumber == 1 ? 4 : 5);
+    return 10;
+}
+
+// @verified - p
+std::int64_t ConfirmTitleS2Save(TitleControlData *, std::uint32_t, std::uint16_t pressed) {
+    LegacyColourQuad packet;
+    packet.quad.flags = 0;
+    packet.colour = 0x7f000000U;
+    AdjustScreenAspectRatio(packet.quad, static_cast<ScreenAlignment>(0), 0, 0, 640, 480, ScreenMode::Centered);
+    packet.quad.flags |= 0x400U;
+    shenSubmitQuad(packet, -2.5900004f);
+    const std::uint16_t input = InterpretTitleAnalogInput() | pressed;
+    std::int32_t selected = -1;
+    if ((input & 0x4000) != 0)
+        titleFileSelect.warning.choice = 1;
+    if ((input & 0x8000) != 0)
+        titleFileSelect.warning.choice = 0;
+    if ((input & 0xc00) != 0) {
+        selected = titleFileSelect.warning.choice != 1;
+        SetTitleWarningLogo(0, nullptr);
+        titleFileSelect.warning.choice = 0;
+    }
+    if (selected != 0) {
+        if (selected == 1)
+            return 7;
+        SetTitleWarningLogo(38, &titleFileSelect.warning);
+        return titleNewGameState;
+    }
+    if (titleFileSelect.titleSequence == 2)
+        return StartTitleCollectionGame();
+    return (titleFileSelect.slots[titleFileSelect.selectedSlot].flags & 2) != 0 ? StartTitleCompletedGame() : StartTitleLoadGame();
+}
+
+// @verified - p
+std::int64_t ConfirmTitleSceneChange(TitleControlData *, std::uint32_t, std::uint16_t input) {
+    const S2SaveDataInfo *const infos = GetBackupSaveDataInfo(0);
+    titleFileSelect.warning.act = static_cast<std::uint8_t>(infos[titleFileSelect.selectedSlot].actNumber);
+    titleFileSelect.warning.previousAct = titleFileSelect.warning.act;
+    LegacyColourQuad packet;
+    packet.quad.flags = 0;
+    packet.colour = 0x7f000000U;
+    AdjustScreenAspectRatio(packet.quad, static_cast<ScreenAlignment>(0), 0, 0, 640, 480, ScreenMode::Centered);
+    packet.quad.flags |= 0x400U;
+    shenSubmitQuad(packet, -2.5900004f);
+    const S2SaveDataInfo *const saved = GetBackupSaveDataInfo(0);
+    std::int32_t selected = -1;
+    if ((input & 0x4000) != 0)
+        titleFileSelect.warning.choice = 1;
+    if ((input & 0x8000) != 0)
+        titleFileSelect.warning.choice = 0;
+    if ((input & 0xc00) != 0) {
+        selected = titleFileSelect.warning.choice != 1;
+        SetTitleWarningLogo(0, nullptr);
+        titleFileSelect.warning.choice = 0;
+    }
+    if (selected != 0) {
+        if (selected == 1)
+            return 7;
+        SetTitleWarningLogo(33, &titleFileSelect.warning);
+        return 32;
+    }
+    SetNextSceneNumber(saved[titleFileSelect.selectedSlot].actNumber);
+    titleFileSelect.state = 3;
+    HLib::SetCurrentTaskTo(TFSEL_ModChange_Callback);
+    titleFileSelect.titleSequence2 = 0;
+    HLib::SetupTaskDelay(10);
+    return 10;
+}
+
+// @verified - p
+void TFSEL_NewGameCtrl_Callback(void *data) {
+    TitleControlData *const control = static_cast<TitleControlData *>(data);
+    padcCheckControllerConnection();
+    (void)GetPublishedItemSelectorOwnedMask();
+    const std::uint16_t input = g_inputBuffer[0].pressedPriority;
+    const std::uint32_t backup = static_cast<std::uint32_t>(GetLocalBackupInfo());
+    const TitleFileSelectStateRule *const rule = titleNewGameState >= 11 ? &TITLE_SAVE_NEW_GAME_RULES[titleNewGameState - 11] : nullptr;
+    std::int64_t next;
+    switch (titleNewGameState) {
+    case 0:
+        next = titleImportSelection == -1 ? 3 : 14;
+        break;
+    case 1:
+        if ((backup & 8) != 0) {
+            titleFileSelect.titleSequence2 |= 5U;
+            next = 5;
+        } else
+            next = 18;
+        break;
+    case 3:
+    case 14:
+        next = StartTitleCompletedGame();
+        break;
+    case 4:
+    case 8:
+        ExecuteTitleMenuCallback(control, SystemModule::Test);
+        return;
+    case 5:
+        next = SelectTitleS1Save();
+        break;
+    case 6:
+        if ((backup & 0x7fe00U) != 0) {
+            titleFileSelect.titleSequence2 |= 4U;
+            next = 7;
+        } else
+            next = 31;
+        break;
+    case 7:
+        next = SelectTitleS2Save(TITLE_SAVE_SELECTION_STATES, titleFileSelect.titleSequence == 2 ? 0 : 1);
+        break;
+    case 11:
+    case 15:
+    case 16:
+    case 17:
+    case 18:
+    case 20:
+    case 21:
+    case 22:
+    case 24:
+    case 25:
+    case 26:
+    case 27:
+    case 29:
+    case 30:
+    case 31:
+        SetTitleWarningLogo(rule->warning, nullptr);
+        if ((input & 0xc00) == 0)
+            return;
+        [[fallthrough]];
+    case 12:
+        titleNewGameState = rule->nextState;
+        SetTitleWarningLogo(0, nullptr);
+        titleFileSelect.warning.choice = 0;
+        return;
+    case 13:
+        titleFileSelect.warning.parameter = 0;
+        [[fallthrough]];
+    case 19:
+        next = rule->nextState;
+        break;
+    case 23:
+        next = ConfirmTitleS1Save(control, backup, input);
+        break;
+    case 28:
+        next = ConfirmTitleS2Save(control, backup, input);
+        break;
+    case 32:
+        next = ConfirmTitleSceneChange(control, backup, input);
+        break;
+    default:
+        return;
+    }
+    titleNewGameState = static_cast<std::int32_t>(next);
+}
+
+// @verified - p
+void StartTitleNewGame(void *) {
+    SetTitleWarningLogo(0, nullptr);
+    InitializeTitleFileSelectState();
+    titleNewGameState = 0;
+    titleFileSelect.titleSequence2 = 8;
+    ResetAuthorStateFlags();
+    HLib::SetCurrentTaskTo(TFSEL_NewGameCtrl_Callback);
+}
+
+// @verified - p
+void StartTitleCollection(void *) {
+    SetTitleWarningLogo(0, nullptr);
+    InitializeTitleFileSelectState();
+    titleNewGameState = 6;
+    titleFileSelect.titleSequence2 |= 1U;
+    HLib::SetCurrentTaskTo(TFSEL_NewGameCtrl_Callback);
+}
+
+// @verified - p
+void StartTitleSnapshotViewer(void *) {
+    SetTitleWarningLogo(0, nullptr);
+    InitializeTitleFileSelectState();
+    SetTitleWarningLogo(0, nullptr);
+    titleFileSelect.state = 6;
+    HLib::SetCurrentTaskTo(TFSEL_ModChange_Callback);
+    titleFileSelect.titleSequence2 = 0;
+    HLib::SetupTaskDelay(10);
 }
 void S2Save_NewGameTitleTask(void*) {
     padcCheckControllerConnection();

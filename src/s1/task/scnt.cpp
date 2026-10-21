@@ -863,7 +863,7 @@ void SetupFreeTalkFacePair(std::size_t index) {
     }
 
     const std::uint16_t opcode = static_cast<std::uint16_t>(npc->cycle->currentOpcode);
-    constexpr std::uint64_t kResumePositionOpcodes = 0x94108c0504000010ULL;
+    constexpr std::uint64_t kResumePositionOpcodes = 0x10000004058c1094ULL;
     const bool useResumePosition = (opcode <= 60U && ((kResumePositionOpcodes >> opcode) & 1U) != 0) ||
         (opcode == CycleOpcode_StartLinkedCycle && static_cast<std::uint32_t>(npc->cycle->moveObjPhase) - CycleMoveObjPhase_ProcessSubcommands <= 2U);
     Vector3 position = useResumePosition ? npc->cycle->xmptResumePos : lookActor->entity.node.position;

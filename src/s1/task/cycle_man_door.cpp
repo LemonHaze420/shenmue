@@ -209,7 +209,6 @@ bool DispatchSceneTask(uint32_t token, uint32_t dispatchState, uint32_t currentT
 
     if (row->byte31 != previousByte31)
         ++cm.shutDispatchStateChanges;
-    CycleManager::UpdateSHUTRowObject(*row);
 
     return result;
 }

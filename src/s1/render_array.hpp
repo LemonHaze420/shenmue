@@ -1,6 +1,7 @@
 #pragma once
 
 #include "s1/d3t/namespace.hpp"
+#include "common/math.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -42,8 +43,11 @@ struct RenderArrayEntry {
     std::uint32_t cewpInitialized;
     std::byte rigState[0x84f8];
     std::uint64_t *headRigNodes;
-    std::uint32_t faceSlot;
-    std::byte reserved_85cc[0x20];
+    std::uint32_t reflectionSlot;
+    Vector2 reflectionSize;
+    Vector2 reflectionOffset;
+    Vector2 reflectionMinimum;
+    Vector2 reflectionMaximum;
     std::uint32_t id;
     std::uint32_t retire;
     std::byte reserved_85f4[4];
@@ -130,7 +134,11 @@ static_assert(offsetof(RenderArrayEntry, flags) == 0x1c);
 static_assert(offsetof(RenderArrayEntry, cewpInitialized) == 0xc4);
 static_assert(offsetof(RenderArrayEntry, rigState) == 0xc8);
 static_assert(offsetof(RenderArrayEntry, headRigNodes) == 0x85c0);
-static_assert(offsetof(RenderArrayEntry, faceSlot) == 0x85c8);
+static_assert(offsetof(RenderArrayEntry, reflectionSlot) == 0x85c8);
+static_assert(offsetof(RenderArrayEntry, reflectionSize) == 0x85cc);
+static_assert(offsetof(RenderArrayEntry, reflectionOffset) == 0x85d4);
+static_assert(offsetof(RenderArrayEntry, reflectionMinimum) == 0x85dc);
+static_assert(offsetof(RenderArrayEntry, reflectionMaximum) == 0x85e4);
 static_assert(offsetof(RenderArrayEntry, id) == 0x85ec);
 static_assert(offsetof(RenderArrayEntry, retire) == 0x85f0);
 static_assert(sizeof(RenderArrayEntry) == 0x85f8);

@@ -1,6 +1,7 @@
 #include "s2/title.hpp"
 
 #include "s2/date_time.hpp"
+#include "s2/game_runtime.hpp"
 #include "s2/conversation.hpp"
 #include "s2/d3t_renderer.hpp"
 #include "s2/map_control.hpp"
@@ -26,6 +27,7 @@
 #include "s2/area_names.hpp"
 
 namespace shenmue::s2 {
+void TitleControl(void *taskData);
 std::uint16_t g_previousTitleInputUserHandle = 0;
 std::int32_t g_titleFlagShouldRun = 0;
 std::uint32_t g_titleVersionOverride{};
@@ -76,6 +78,8 @@ std::int32_t needsTitleSequenceDraw = 0;
 std::int32_t setPressStartPending = 0;
 std::int32_t pressStartSelected = 0;
 float titleSequenceTime = 0.0f;
+std::int32_t titleAttractSkipRequested{};
+std::int32_t titleWheelTransitionAngle{};
 ConversationBuffer *currentTitleLogo = nullptr;
 std::int32_t titleMenuDialogueMode = 0;
 std::int32_t titleMenuControlMode = 0;
@@ -91,14 +95,69 @@ std::int32_t titleDebugSelection = 0;
 std::int32_t titlePreviousDebugSelection = 0;
 std::int32_t titleCurrentCoreModule = 0;
 
+std::int32_t titleAnalogInputLatched{};
 void NativeTitleNoOp(void *) {
 }
 
-void TitleMenuControl(void *) {
+void TitleMenuControl(void *data) {
+    if (titleAttractSkipRequested != 0) {
+        ReturnToTitleControlTasks();
+        return;
+    }
+    std::uint16_t directions = g_inputBuffer[0].repeatedPresses;
+    std::uint16_t buttons = g_inputBuffer[0].pressedPriority;
     padcCheckControllerConnection();
+    if (titleWheelTransitionAngle != 0) {
+        buttons = 0;
+        directions = 0;
+    }
+    g_previousTitleMenuSelection = g_titleMenuSelection;
+    directions |= InterpretTitleAnalogInput();
+    static_cast<void>(directions);
+    static_cast<void>(GetDebugForceUIEnabled(UIElement::MainMenu));
     if (ExecuteElementCallback(UIElement::MainMenu) == 0 && (!g_titleMenuTransitionCallback || g_titleMenuTransitionCallback() == 0))
         return;
-    g_previousTitleInputUserHandle = FrontendControllerUserHandle();
+    if (g_debugImGuiRenderMode != 1) {
+        g_previousTitleInputUserHandle = FrontendControllerUserHandle();
+        return;
+    }
+    g_titleMenuSelection = g_titleMenuUIState;
+    if ((buttons & 0x0c00U) != 0 || g_titleMenuTransitionRequested != 0) {
+        g_titleMenuTransitionRequested = 0;
+        const std::uint64_t flags = GetLocalBackupInfo();
+        SystemModule module = SystemModule::Option;
+        switch (g_titleMenuSelection) {
+        case 0:
+            module = SystemModule::Hot;
+            break;
+        case 1:
+            module = SystemModule::Logo;
+            if ((GetLocalBackupInfo() & 0x40U) == 0)
+                return;
+            break;
+        case 2:
+            if ((flags & 0x7fe00U) == 0) {
+                vfSubmitQuad(0x7f000000U, -2.5900004f);
+                SetTitleWarningLogo(46, nullptr);
+                module = SystemModule::AfterBurner;
+            }
+            break;
+        case 3:
+            module = SystemModule::Game;
+            break;
+        case 4:
+            module = SystemModule::Cold;
+            break;
+        case 5:
+            module = SystemModule::SpaceHarrier;
+            break;
+        default:
+            return;
+        }
+        ExecuteTitleMenuCallback(static_cast<TitleControlData *>(data), module);
+    } else if ((buttons & 0x0201U) != 0) {
+        ReturnToTitleControlTasks();
+    }
 }
 
 void TitleMenuDisplay(void *) {
@@ -116,6 +175,58 @@ void TitleOptionsDisplay(void *) {
     EnableElement(UIElement::SubMenuOptions);
 }
 
+void StartTitleCreditsMovie(void *) {
+    ChangeSystemModule(SystemModule ::Movie, 0);
+}
+
+void DrawTitleCreditsFrame(void *) {
+    DrawTitleFrame(1);
+}
+
+void StartNextTitleMenuSequence(void *data) {
+    if ((g_inputBuffer[0].pressedPriority & 0x0e00U) == 0)
+        return;
+    SetTitleWarningLogo(0, nullptr);
+    HLib::SetCurrentTaskTo(TitleMenuControl);
+    TitleControlData *const control = static_cast<TitleControlData *>(data);
+    if (control->titleSequenceTask)
+        HLib::AssignCallbackForTask(control->titleSequenceTask, TitleMenuDisplay);
+}
+
+void ShowTitleStorageWarning(void *data) {
+    SetTitleWarningLogo(42, static_cast<TitleControlData *>(data)->warningParameters);
+    vfSubmitQuad(0x7f000000U, -2.5900004f);
+}
+
+void ShowTitleOptionsWarning(void *data) {
+    SetTitleWarningLogo(45, static_cast<TitleControlData *>(data)->warningParameters);
+    vfSubmitQuad(0x7f000000U, -2.5900004f);
+}
+
+void ShowTitleArcadeWarning(void *data) {
+    SetTitleWarningLogo(44, static_cast<TitleControlData *>(data)->warningParameters);
+    vfSubmitQuad(0x7f000000U, -2.5900004f);
+}
+
+void StartTitleHangOnMovie(void *) {
+    ChangeSystemModule(SystemModule::Movie, 0);
+}
+
+const std::array<TitleMenuDispatchEntry, 12> titleMenuDispatch{{
+    {.control = TitleMenuControl, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = TitleOptionsControl, .display = TitleOptionsDisplay, .initialize = nullptr},
+    {.control = TitleContinueControl, .display = TFSEL_DispFileSelect, .initialize = InitializeTitleContinueFlags},
+    {.control = StartTitleNewGame, .display = TFSEL_DispFileSelect, .initialize = InitializeTitleNewGameFlags},
+    {.control = ShowTitleOptionsWarning, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = StartTitleCollection, .display = TFSEL_DispFileSelect, .initialize = InitializeTitleCollectionFlags},
+    {.control = StartTitleCreditsMovie, .display = DrawTitleCreditsFrame, .initialize = nullptr},
+    {.control = ShowTitleStorageWarning, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = ShowTitleArcadeWarning, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = StartNextTitleMenuSequence, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = StartTitleHangOnMovie, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = StartTitleSnapshotViewer, .display = TFSEL_DispFileSelect, .initialize = nullptr},
+}};
+
 bool AssignTitleCallbacks(HLib::TaskCallback controlCallback, HLib::TaskCallback displayCallback) {
     auto *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
     if (!control || !controlCallback || !control->titleSequenceTask || !displayCallback) {
@@ -132,6 +243,76 @@ std::uint32_t TitleAlphaColour(float alpha) {
         scaled >= -9223372036854775808.0f && scaled < 9223372036854775808.0f ? static_cast<std::int64_t>(scaled) : std::numeric_limits<std::int64_t>::min();
     return (static_cast<std::uint32_t>(truncated) << 24) | 0x00ffffffU;
 }
+
+} // namespace
+
+// @verified - p
+// @verified - p
+std::uint16_t InterpretTitleAnalogInput() {
+    std::uint16_t direction = 0;
+    if (g_inputBuffer[0].analog0e < 64)
+        direction = PAD_LEFT;
+    else if (g_inputBuffer[0].analog0e > 192)
+        direction = PAD_RIGHT;
+    else if (g_inputBuffer[0].analog0f < 64)
+        direction = PAD_UP;
+    else if (g_inputBuffer[0].analog0f > 192)
+        direction = PAD_DOWN;
+    else {
+        titleAnalogInputLatched = 0;
+        return 0;
+    }
+    const std::uint16_t result = titleAnalogInputLatched == 0 ? direction : 0;
+    titleAnalogInputLatched = 1;
+    return result;
+}
+
+// @verified - p
+void SetupTitleMenuTask(std::int32_t mode) {
+    TitleControlData *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
+    if (mode != 0) {
+        HLib::AssignCallbackForTask(titleControlTask, TitleMenuControl);
+
+        HLib::AssignCallbackForTask(control->titleSequenceTask, TitleMenuDisplay);
+    } else {
+        const std::size_t sequence = static_cast<std::size_t>(titleLoopSequence);
+        control->display->frameCount = 0;
+        titleSequenceTime = static_cast<float>(TITLE_SEQUENCE_TABLE[sequence].duration);
+        HLib::AssignCallbackForTask(titleControlTask, TitleControl);
+        HLib::AssignCallbackForTask(control->titleSequenceTask, TITLE_SEQUENCE_TABLE[sequence].display);
+    }
+}
+
+// @verified - p
+void ReturnToTitleControlTasks() {
+    titleAttractSkipRequested = 0;
+    ResetSelectedInputDevice();
+    g_bPaused = true;
+    SetupTitleMenuTask(0);
+    TitleAudioControl(-1);
+    logoFlags |= kLeaving;
+}
+
+// @verified - p
+void RequestTitleAttractSkip() {
+    titleAttractSkipRequested = 1;
+}
+// @verified - p
+std::int64_t ExecuteTitleMenuCallback(TitleControlData *control, SystemModule module) {
+    const TitleMenuDispatchEntry &entry = titleMenuDispatch[static_cast<std::size_t>(module)];
+    if (entry.initialize)
+        entry.initialize();
+    HLib ::SetCurrentTaskTo(entry.control);
+    if (module == SystemModule ::Game || module == SystemModule ::HangOn) {
+        if (module == SystemModule::HangOn)
+            HLib::SetupTaskDelay(10);
+        ExecuteAicaCommand(0xaa0U, 5, 30);
+    }
+    if (control->titleSequenceTask)
+        HLib ::AssignCallbackForTask(control->titleSequenceTask, entry.display);
+    if (module == SystemModule::Cold)
+        ResetTitleMenuState();
+    return 1;
 
 } // namespace
 

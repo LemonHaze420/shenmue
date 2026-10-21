@@ -1159,7 +1159,7 @@ bool OccupyAreaOwner(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 void FinishAreaRoute(NpcRouteLiveEntry &entry) {
     if (entry.node) {
         if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-            control->flags &= ~CharacterControlEvaluateMotion;
+            control->flags |= CharacterControlEvaluateMotion;
         if (!CanRevealNpcStream(entry))
             RequestNpcStreamOut(entry, 0);
     }
@@ -1272,7 +1272,7 @@ void QueueAreaDoorMotion(NpcRouteLiveEntry &entry) {
         position.z += root.z;
     }
     if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-        control->flags = (control->flags | CharacterControlFineRaycast) & ~CharacterControlImmovable;
+        control->flags = (control->flags & ~CharacterControlFineRaycast) | CharacterControlStairMode;
     entry.commandFlags |= 1U;
     CopyMotionTransition(entry.motionWork, &position, static_cast<std::uint16_t>(context.targetYaw), 6, 0);
     CopyMotionTransition(entry.motionWork, nullptr, 0, 2, 0);
@@ -2565,7 +2565,7 @@ bool TickNpcAreaRouteState(NpcRouteLiveEntry &entry) {
         entry.commandFlags |= 0x10U;
         if (!(entry.commandFlags & 1U)) {
             if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-                control->flags |= CharacterControlEvaluateMotion;
+                control->flags &= ~CharacterControlEvaluateMotion;
             entry.commandFlags |= 1U;
         }
         if ((entry.commandFlags & 0x4eU) == 2U && !mtwkSetExtraFlag(entry.motionWork, 58, 1)) {
@@ -2675,7 +2675,7 @@ bool TickNpcAreaRouteState(NpcRouteLiveEntry &entry) {
                     return true;
                 }
                 if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-                    control->flags = (control->flags & ~CharacterControlFineRaycast) | CharacterControlImmovable;
+                    control->flags = (control->flags | CharacterControlFineRaycast) & ~CharacterControlStairMode;
                 entry.commandFlags &= ~1U;
                 Vector3 position = NpcRouteAreaToScene(entry.worldPosition);
                 if (!FindNpcIntersectionInScene(position, entry.packedMoveFlags))
@@ -2945,7 +2945,7 @@ bool TickNpcAreaRouteState(NpcRouteLiveEntry &entry) {
                 entry.field2e8 = 0;
                 if (entry.node) {
                     if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-                        control->flags |= CharacterControlImmovable;
+                        control->flags &= ~CharacterControlStairMode;
                 }
                 entry.commandFlags &= ~0x800U;
             } else {

@@ -4,11 +4,9 @@ namespace shenmue::s1 {
 
 using namespace CycleManager;
 
+CycleManager::MobjEntry *CycleManager::SimSetCursor = nullptr;
+
 CycleManager::RuntimeState g_cycleManagerRuntime{};
-
-
-
-
 
 std::int32_t g_MOBJ_num_entries = 0;
 
@@ -1938,7 +1936,7 @@ void UpdateCharaCycles() {
                 entry = next;
                 continue;
             }
-            const float radius = ctx->moveConfig->cycleClassCode <= 3u ? radiusSquared : 6400.0f;
+            const float radius = ctx->moveConfig->cycleClassCode <= 3u ? radiusSquared : 3600.0f;
             const bool inArea = ctx->areaID.name == CycleManager::CurrentAreaId();
             const bool keep =
                 (inArea && shenIsLocalSphereInsideViewCullVolume(ctx->pos, ctx->range) && shenIsLocalSphereVisibleInScreenDepthTable(ctx->pos, ctx->range) &&
@@ -2075,7 +2073,7 @@ void UpdateCharaCycles() {
         for (CycleManager::MobjEntry *entry = g_RunningPrograms; entry; entry = entry->nextDormantProgram) {
             CycleManager::MobjCycle *const ctx = entry->ctx;
             if (ctx->obj)
-                ctx->runningCharaPos = GetPositionForEntity(ctx->obj->entity.node);
+                ctx->pos = GetPositionForEntity(ctx->obj->entity.node);
             if (globalSimulation) {
                 if (SCEN_HasActiveRuntimeObject() && scnf && (scnf->flags & 0x20000U) != 0) {
                     const std::span<const std::uint32_t> referenced = SCEN_ReferencedCharacterIds();

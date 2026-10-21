@@ -7,6 +7,10 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace shenmue ::d3t {
+bool GetMaterialTextureSlot(std::uint32_t type, std::uint32_t &slot);
+}
+
 namespace shenmue {
 struct UberMaterialConstants {
     Vector4 albedo;

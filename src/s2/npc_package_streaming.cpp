@@ -121,7 +121,7 @@ void ReleaseReadyNpcTransitionHumanPackages() {
 }
 
 bool IsNpcGloballyBlocked(const NpcRouteLiveEntry &entry) {
-    if (entry.stateContext.flags & 0x101U) {
+    if (entry.stateContext.flags & 1U) {
         if ((entry.stateContext.flags & 0x300U) || (entry.stateContext.routeFlags & 0x10U))
             return false;
         if (!(entry.flags & 0x4000000U))

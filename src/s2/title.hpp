@@ -7,6 +7,8 @@
 #include "common/types.hpp"
 
 namespace shenmue::s2 {
+struct TitleFileSelectState;
+enum class SystemModule : std::int32_t;
 inline constexpr shen_name titleAreaName{SHEN_NAME(TITL)};
 inline constexpr shen_name TITLE_CONTROL_TASK{SHEN_NAME(TCRL)};
 inline constexpr shen_name TITLE_DISPLAY_TASK{SHEN_NAME(DISP)};
@@ -41,7 +43,8 @@ struct TitleControlData {
     TitleDisplayData *display;
     std::int32_t field18;
     std::int32_t state;
-    std::byte reserved20[0xa010];
+    std::byte inheritedSaveBank[0xa000];
+    std::byte warningParameters[0x10];
 };
 struct TitleModuleWork {
     std::int32_t frames;
@@ -57,6 +60,8 @@ static_assert(offsetof(TitleControlData, titleSequenceTask) == 0);
 static_assert(offsetof(TitleControlData, screenFilmTask) == 8);
 static_assert(offsetof(TitleControlData, display) == 0x10);
 static_assert(offsetof(TitleControlData, state) == 0x1c);
+static_assert(offsetof(TitleControlData, inheritedSaveBank) == 0x20);
+static_assert(offsetof(TitleControlData, warningParameters) == 0xa020);
 static_assert(sizeof(TitleModuleWork) == 0x10);
 static_assert(offsetof(TitleModuleWork, screenFilmTask) == 8);
 inline constexpr std::array<std::array<std::int16_t, 2>, 5> TITLE_LOGO_DIMENSIONS{{
@@ -110,7 +115,19 @@ inline constexpr std::array<TitleSequenceEntry, 13> TITLE_SEQUENCE_TABLE{{
     {.duration = 90, .control = SkipTitleWarning, .display = DrawTitleWarning1},
 }};
 
+struct TitleMenuDispatchEntry {
+    HLib::TaskCallback control;
+    HLib::TaskCallback display;
+    TitleFileSelectState *(*initialize)();
+};
+static_assert(sizeof(TitleMenuDispatchEntry) == 0x18);
+
+void SetupTitleMenuTask(std::int32_t mode);
+void ReturnToTitleControlTasks();
+void RequestTitleAttractSkip();
+std::int64_t ExecuteTitleMenuCallback(TitleControlData *control, SystemModule module);
 void TitleModule(void *taskData);
+std::uint16_t InterpretTitleAnalogInput();
 bool shenIsInIntro() noexcept;
 extern std::uint16_t g_previousTitleInputUserHandle;
 extern std::int32_t g_titleFlagShouldRun;

@@ -1014,12 +1014,13 @@ bool BeginVehicleActiveState(CycleManager::NpcRecord &npc, bool live) {
         }
         if (!npc.vehicleCommandEnabled) {
             if (npc.cycle->primarySoundBankId >= 0) {
-                shenExecuteAICACommand(0xa6, static_cast<std::uint32_t>(npc.cycle->primarySoundBankId), 0);
+                ReleaseEnvironmentAicaBank(static_cast<std::uint32_t>(npc.cycle->primarySoundBankId));
                 npc.cycle->primarySoundBankId = -1;
             }
             attached->next = g_freeMoveObjects;
-            g_freeMoveObjects = attached;
+
             npc.cycle->moveObjRuntime = nullptr;
+            g_freeMoveObjects = attached;
             npc.cycle->moveObjActivationPending = false;
             npc.cycle->currentOpcode = CycleOpcode_AdvanceScript;
             return false;
@@ -1041,14 +1042,15 @@ bool BeginVehicleActiveState(CycleManager::NpcRecord &npc, bool live) {
         attached->pathYaw = npc.vehicleCommandYaw;
         attached->visibilityState = 2;
         BIKE_Init(*attached);
-        attached->next = g_parkedMoveObjects;
-        g_parkedMoveObjects = attached;
-        attached->activeFlag = 1;
+
         if (npc.cycle->primarySoundBankId >= 0) {
-            shenExecuteAICACommand(0xa6, static_cast<std::uint32_t>(npc.cycle->primarySoundBankId), 0);
+            ReleaseEnvironmentAicaBank(static_cast<std::uint32_t>(npc.cycle->primarySoundBankId));
             npc.cycle->primarySoundBankId = -1;
         }
+        attached->next = g_parkedMoveObjects;
+        attached->activeFlag = 1;
         npc.cycle->moveObjRuntime = nullptr;
+        g_parkedMoveObjects = attached;
         npc.cycle->moveObjActivationPending = false;
         npc.cycle->currentOpcode = CycleOpcode_AdvanceScript;
         return false;
@@ -1581,6 +1583,7 @@ bool CheckSteeringOverlap(CycleManager::NpcRecord &npc, float &nearest, bool pro
     if (!overlap) {
         if (!probe) {
             npc.cycle->cycleObjectId = npc.cycle->moveConfig->obj_id.name;
+            npc.cycle->selfCyclePtr = npc.cycle;
             npc.selfCycleIndex = static_cast<int32_t>(&npc - g_cycleManagerRuntime.npcRecords.data());
         }
         return false;
@@ -1607,6 +1610,7 @@ bool CheckSteeringOverlap(CycleManager::NpcRecord &npc, float &nearest, bool pro
     }
     if (!probe) {
         npc.cycle->cycleObjectId = overlap->cycle->moveConfig->obj_id.name;
+        npc.cycle->selfCyclePtr = overlap->cycle;
         npc.selfCycleIndex = static_cast<int32_t>(overlap - g_cycleManagerRuntime.npcRecords.data());
     }
     return blocked;
@@ -2199,6 +2203,29 @@ void UpdateBikeReverseAvoidance(CycleManager::NpcRecord &npc, float observedSpee
         if (duration > 0.0f) {
             reverseSpeed = 2.0f * (frame / duration) * npc.cycle->moveObjSpeedParam;
         }
+    } else if (doForwardConeCheck && npc.cycle->reversePathFrames > 1u) {
+        Matrix4x4::SetActiveTransformToPrePass();
+        if (observedSpeed <= 0.001f)
+            observedSpeed = 0.0092592593f;
+        Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(-npc.cycle->desiredPathYaw));
+        Matrix4x4::preTranslate(-npc.cycle->pos.x, -npc.cycle->pos.y, -npc.cycle->pos.z);
+        float nearest = 0.0f;
+        float clearanceSpeed = 0.0f;
+        bool blocked = false;
+        if (CycleManager::CheckForwardSteeringClearance(npc, 4.5f, nearest)) {
+            clearanceSpeed = ((nearest + 6.5f) / 5.5f) * npc.cycle->moveObjSpeedParam;
+            blocked = true;
+        } else if (CycleManager::CheckSteeringOverlap(npc, nearest, false) && npc.cycle->moveConfig->obj_id.name != npc.cycle->selfCyclePtr->cycleObjectId) {
+            clearanceSpeed = ((nearest + 4.5f) / 3.5f) * npc.cycle->moveObjSpeedParam;
+            blocked = true;
+        }
+        if (blocked) {
+            if (clearanceSpeed > observedSpeed)
+                clearanceSpeed = (clearanceSpeed - observedSpeed) * 0.5f + observedSpeed;
+            npc.cycle->reversePathFrames = 2;
+        }
+        reverseSpeed = std::max(0.0f, clearanceSpeed);
+        Matrix4x4::Pop(1);
     }
     const uint32_t frame = npc.cycle->reversePathFrames;
     npc.cycle->baseMoveSpeed = std::max(0.0f, reverseSpeed);
@@ -2543,7 +2570,6 @@ void TickBikeMoveObjectRelease(CycleManager::NpcRecord &npc) {
             npc.cycle->moveObjRuntime = nullptr;
             npc.releasedMoveObjRuntime = nullptr;
             npc.bikeToken = nullptr;
-            return;
         }
     }
 

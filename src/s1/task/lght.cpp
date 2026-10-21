@@ -3,6 +3,7 @@
 #include "s1/legacy_renderer.hpp"
 #include "s1/lighting.hpp"
 #include "s1/modern_lighting.hpp"
+#include "s1/model_lighting.hpp"
 #include "s1/matrix_stack.hpp"
 #include "s1/motion.hpp"
 #include "s1/player_control.hpp"
@@ -522,6 +523,8 @@ void LGHT_Initialize(const void *mapInfo, std::uint32_t mapInfoSize) {
     constexpr std::uint32_t kLightChunk = static_cast<std::uint32_t>('L') | (static_cast<std::uint32_t>('G') << 8U) | (static_cast<std::uint32_t>('H') << 16U) |
         (static_cast<std::uint32_t>('T') << 24U);
     SetNewSceneDetails(static_cast<std::uint32_t>(g_sceneId), shen_name{g_areaId});
+    g_modelLightOverrides.count = 0;
+    g_modelLightCount = 2;
     LGHT_ResetRuntime();
     if (!mapInfo || mapInfoSize < 8)
         return;

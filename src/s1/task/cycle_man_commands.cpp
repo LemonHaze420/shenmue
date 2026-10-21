@@ -321,7 +321,9 @@ bool UpdateEntryStateAnimPool(CycleManager::NpcRecord &npc, uint32_t currentTime
             motion->playbackRate = playbackScale;
             motion->pendingAnimId = animId;
         } else {
-            freeTalkConv_SetMoveAndFacingConstraint(*local, npc.cycle->pos, npc.cycle->desiredPathYaw, animId, 0.0f, playbackScale, 0.0f, false);
+            const std::uint32_t animationFlags = animId | ((*reinterpret_cast<const std::uint32_t *>(row + 8) << 15) & 0x80000000U);
+            freeTalkConv_SetMoveAndFacingConstraint(
+                *local, npc.cycle->pos, npc.cycle->desiredPathYaw, static_cast<std::int32_t>(animationFlags), 0.0f, playbackScale, 0.0f, false);
         }
     }
     npc.cycle->activeAnimId = animId;

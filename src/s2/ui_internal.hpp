@@ -1332,7 +1332,11 @@ std::int64_t MainMenuSelected();
 
 std::int64_t TickMainMenu();
 
-std::int64_t ActivateMainMenuChoice(MainMenuItem selection);
+void MainMenuTextNullsub(const char *text);
+void CarryOverDataCallback(std::int32_t response);
+void CarryOverDataOrNot(MainMenuItem selection);
+std::int64_t DispatchMainMenuTransition();
+
 std::int64_t BindMainMenuWheel();
 
 std::int64_t MainMenuWheelRender();
@@ -1342,8 +1346,6 @@ std::int64_t TickMainMenuWheel();
 std::int64_t DestroyMainMenuWheel();
 
 std::int64_t MainMenuWheelInput();
-
-std::int64_t ActivateMainMenuChoice(MainMenuItem selection);
 
 extern std::int32_t helpWidgetRunCount, helpWidgetLineCount, helpWidgetIconRunCount, helpWidgetBoxCount;
 

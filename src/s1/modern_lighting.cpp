@@ -182,14 +182,12 @@ void UpdateModernShadowPassBindings(D3TDeviceContext *context) {
     }
 #endif
     std::uint32_t texture = d3t::g_defaultWhiteTexture;
-    for (std::uint32_t index = 0; index < g_simpleShaderMode; ++index) {
-        std::uint32_t candidate = 0;
-        std::memcpy(&candidate, g_simpleShaderParameterBlocks[index].data.data() + 60, sizeof(candidate));
-        if (candidate) {
-            texture = candidate;
+    for (std::uint32_t index = 0; index < g_modelLightCount; ++index)
+        if (g_modelLights[index].textureHandle) {
+            texture = g_modelLights[index].textureHandle;
             break;
         }
-    }
+
     BindModernTexture(context, 31, texture);
 }
 

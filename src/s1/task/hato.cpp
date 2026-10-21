@@ -36,7 +36,6 @@ std::int16_t g_hato_ticks = 0;
 namespace {
 
 constexpr std::int32_t kHatoToken = static_cast<std::int32_t>(SHEN_NAME(HATO));
-constexpr float kFixedAngleScale = 8192.0f / 45.0f;
 constexpr float kRandomScale = 1.0f / 32768.0f;
 constexpr std::uint32_t kUpdatePending = 0x8000U;
 constexpr std::size_t kHatoAllocationSize = 0x5700;
@@ -65,8 +64,8 @@ float DistanceXZ(const Vector3 &lhs, const Vector3 &rhs) noexcept {
 }
 
 std::int16_t AddFixedAngle(std::int16_t angle, float delta) noexcept {
-    const auto result = static_cast<std::int32_t>(static_cast<float>(angle) + delta);
-    return static_cast<std::int16_t>(result & 0xffff);
+    const std::int32_t increment = static_cast<std::int32_t>(delta);
+    return static_cast<std::int16_t>(static_cast<std::uint16_t>(angle) + static_cast<std::uint16_t>(increment));
 }
 
 std::int32_t NativeAtanQuotient(float numerator, float denominator) {
@@ -89,11 +88,17 @@ std::uint16_t NativeFixedAtan2(float value, float direction) {
 float CalculatePigeonAngle(const Vector3 &target, const Vector3 &pigeon, std::int16_t angle) noexcept {
     const float dx = target.x - pigeon.x;
     const float dz = target.z - pigeon.z;
+    Matrix4x4_Push();
+    workTransformMatrix = transformMatrix_prePass;
     const std::uint16_t negativeYaw = static_cast<std::uint16_t>(-angle);
+    const std::int16_t cosineYaw = negativeYaw <= 0x8000U ? static_cast<std::int16_t>(negativeYaw) : angle;
+    const float cosine = ::shenmue::sin_fixed16(static_cast<std::int16_t>(0x4000 - cosineYaw));
     const float sine = ::shenmue::sin_fixed16(static_cast<std::int16_t>(negativeYaw));
-    const float cosine = ::shenmue::sin_fixed16(static_cast<std::int16_t>(::shenmue::fixed16_cosine_angle(negativeYaw)));
-    const float rotatedX = dx * cosine + dz * sine;
-    const float rotatedZ = -dx * sine + dz * cosine;
+    Matrix4x4::RotateAroundY(sine, cosine);
+    const Matrix4x4 &matrix = workTransformMatrix;
+    const float rotatedX = ((matrix.rows[0].x * dx + matrix.rows[1].x * 0.0f) + matrix.rows[2].x * dz) + matrix.rows[3].x;
+    const float rotatedZ = ((matrix.rows[0].z * dx + matrix.rows[1].z * 0.0f) + matrix.rows[2].z * dz) + matrix.rows[3].z;
+    Matrix4x4::Pop();
     const std::uint16_t fixed = NativeFixedAtan2(-rotatedZ, rotatedX);
     return static_cast<float>(fixed) / 182.04445f - 90.0f;
 }
@@ -101,7 +106,7 @@ float CalculatePigeonAngle(const Vector3 &target, const Vector3 &pigeon, std::in
 bool IsPointNearSegmentXZ(const Vector3 &start, const Vector3 &end, const Vector3 &point, float distance) noexcept {
     if (start.x == end.x && start.z == end.z)
         return true;
-    if (DistanceXZ(point, start) < distance || DistanceXZ(point, end) < distance) {
+    if (DistanceXZ(point, start) < distance && DistanceXZ(point, end) < distance) {
         return true;
     }
 
@@ -134,57 +139,75 @@ void PlayTakeoffSound(const Vector3 &position) {
     Execute3DSoundCommand(0x705a9U, 4U, &position, 4.0f, 40.0f, 0U);
 }
 
-float ApplyAvoidanceTarget(HatoEntity &entity, const Vector3 &target, float &angleSum, std::int32_t &angleCount) {
-    entity.pitch = 0;
-    entity.roll = 0;
-    const float distance = DistanceXZ(target, entity.position);
-    if (distance >= 2.5f)
-        return 255.0f;
+float ApplyCharacterAvoidance(HatoEntity &entity, float &averageAngle) {
+    std::int32_t angleCount = 0;
+    bool first = true;
+    float angleSum = 0.0f;
+    averageAngle = 0.0f;
+    Vector3 target = CharacterPosition(CurrentRyo());
+    std::int16_t ticks = g_hato_ticks;
+    CycleManager::MobjEntry *cursor = CycleManager::SimSetCursor;
+    float result;
+    for (;;) {
+        const Vector3 position = entity.position;
+        entity.pitch = 0;
+        entity.roll = 0;
+        result = DistanceXZ(target, position);
+        if (result >= 2.5f) {
+            result = 255.0f;
 
-    if (entity.state != 4U) {
-        if (distance >= 1.5f) {
-            entity.state = 2;
         } else {
-            entity.state = 4;
-            if (g_hato_ticks <= 0) {
-                PlayTakeoffSound(entity.position);
-                g_hato_ticks = 15;
+            if (entity.state != 4U) {
+                if (result >= 1.5f) {
+                    entity.state = 2;
+                } else {
+                    entity.state = 4;
+                    if (ticks <= 0) {
+                        PlayTakeoffSound(position);
+                        cursor = CycleManager::SimSetCursor;
+                        ticks = 15;
+                        g_hato_ticks = 15;
+                    }
+                }
+            }
+
+            float direction = CalculatePigeonAngle(target, position, entity.yaw);
+            ++angleCount;
+            angleSum += direction;
+
+            if (direction <= 0.0f || direction >= 180.0f) {
+                if (direction < 0.0f)
+                    direction = (direction + 90.0f) + 270.0f;
+                entity.yaw = AddFixedAngle(entity.yaw, (direction - 180.0f) / 5.0f * 8192.0f / 45.0f);
+            } else {
+                entity.yaw = AddFixedAngle(entity.yaw, (180.0f - direction) / 5.0f * -8192.0f / 45.0f);
             }
         }
-    }
 
-    float direction = CalculatePigeonAngle(target, entity.position, entity.yaw);
-    angleSum += direction;
-    ++angleCount;
-    if (direction <= 0.0f || direction >= 180.0f) {
-        if (direction < 0.0f)
-            direction += 360.0f;
-        entity.yaw = AddFixedAngle(entity.yaw, (direction - 180.0f) / 5.0f * kFixedAngleScale);
-    } else {
-        entity.yaw = AddFixedAngle(entity.yaw, (180.0f - direction) / 5.0f * -kFixedAngleScale);
-    }
-    return distance;
-}
+        if (first) {
+            cursor = CycleManager::ProgramListHead(CycleProgramList_SimSet);
+            CycleManager ::SimSetCursor = cursor;
+            first = false;
+            if (!cursor)
+                break;
+            target = cursor->ctx->pos;
+            cursor = cursor->nextDormantProgram;
 
-float ApplyCharacterAvoidance(HatoEntity &entity, float &averageAngle) {
-    float angleSum = 0.0f;
-    std::int32_t angleCount = 0;
-    Character *const ryo = CurrentRyo();
-    float result = ApplyAvoidanceTarget(entity, CharacterPosition(ryo), angleSum, angleCount);
-
-    for (CycleManager::NpcRecord &npc : g_cycleManagerRuntime.npcRecords) {
-        if (npc.programList != CycleProgramList_SimSet || !npc.cycle->obj || npc.cycle->obj == ryo) {
-            continue;
+            CycleManager::SimSetCursor = cursor;
+        } else {
+            if (!cursor)
+                break;
+            target = cursor->ctx->pos;
+            cursor = cursor->nextDormantProgram;
+            CycleManager::SimSetCursor = cursor;
         }
-        result = ApplyAvoidanceTarget(entity, CharacterPosition(npc.cycle->obj), angleSum, angleCount);
     }
-
-    averageAngle = angleCount > 0 ? angleSum / static_cast<float>(angleCount) : 0.0f;
+    averageAngle = angleCount != 0 ? angleSum / static_cast<float>(angleCount) : 0.0f;
     return result;
 }
 
 void UpdateEntity(HatoEntity &entity) {
-    HatoTaskData *const data = TempHATO;
+
     const Vector3 ryoPosition = CharacterPosition(CurrentRyo());
     const float ryoDistance = DistanceXZ(ryoPosition, entity.position);
 
@@ -201,7 +224,7 @@ void UpdateEntity(HatoEntity &entity) {
             entity.renderFlag = 0;
             return;
         }
-        entity.alpha = std::min(1.0f, entity.alpha + 0.05f);
+        entity.alpha = entity.alpha < 1.0f ? entity.alpha + 0.05f : 1.0f;
         entity.renderFlag = 1;
     }
 
@@ -222,6 +245,7 @@ void UpdateEntity(HatoEntity &entity) {
 
     entity.pitch = 0;
     entity.roll = 0;
+    HatoTaskData *const data = TempHATO;
     const float centerDistance = DistanceXZ(data->center, entity.position);
     const float maxDistance = data->maxDistance;
     bool randomTurn = false;
@@ -255,10 +279,10 @@ void UpdateEntity(HatoEntity &entity) {
         float delta = 0.0f;
         if (targetAngle <= 0.0f || targetAngle >= 180.0f) {
             if (targetAngle < 0.0f)
-                adjustedAngle += 360.0f;
-            delta = randomTurn ? randomTurnDegrees * -kFixedAngleScale : (180.0f - (adjustedAngle - 180.0f)) / proportion * -kFixedAngleScale;
+                adjustedAngle = (adjustedAngle + 90.0f) + 270.0f;
+            delta = randomTurn ? randomTurnDegrees * -8192.0f / 45.0f : (180.0f - (adjustedAngle - 180.0f)) / proportion * -8192.0f / 45.0f;
         } else {
-            delta = randomTurn ? randomTurnDegrees * kFixedAngleScale : targetAngle / proportion * kFixedAngleScale;
+            delta = randomTurn ? randomTurnDegrees * 8192.0f / 45.0f : targetAngle / proportion * 8192.0f / 45.0f;
         }
         entity.yaw = AddFixedAngle(entity.yaw, delta);
     }
@@ -276,14 +300,14 @@ void UpdateEntity(HatoEntity &entity) {
     }
 
     const float speed =
-        entity.state == 4U ? kStepSize : ((lastAvoidanceDistance < 255.0f || static_cast<std::int8_t>(entity.avoidanceTimer) > 0) ? 0.09f : 0.015f);
+        entity.state == 4U ? kStepSize : ((lastAvoidanceDistance < 255.0f || static_cast<std::int8_t>(entity.avoidanceTimer) > 0) ? 0.089999996f : 0.015f);
     const std::uint16_t heading = static_cast<std::uint16_t>(entity.yaw + 0x8000);
     const std::uint16_t reflectedHeading = heading <= 0x8000U ? heading : static_cast<std::uint16_t>(-heading);
     entity.position.x += SinFixed16(heading) * speed;
     entity.position.z += SinFixed16(0x4000 - reflectedHeading) * speed;
     if (entity.state == 4U) {
         entity.flightAngle += 3.0f;
-        entity.position.y = SinFixed16(static_cast<std::int32_t>(entity.flightAngle * kFixedAngleScale)) + 0.11f;
+        entity.position.y = SinFixed16(static_cast<std::int32_t>(entity.flightAngle * 8192.0f / 45.0f)) + 0.11f;
     } else {
         entity.position.y = 0.11f;
     }
@@ -333,21 +357,19 @@ void DrawEntity(HatoEntity &entity) {
     if (!node)
         return;
 
-    if (entity.alpha < 1.0f)
-        entity.alpha += 0.05f;
+    const bool fading = entity.alpha < 1.0f;
     const Matrix4x4 cameraTransform = workTransformMatrix;
     Matrix4x4::preTranslate(entity.position.x, entity.position.y, entity.position.z);
     Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(entity.yaw));
     Matrix4x4::RotateAroundX_Wrapper(entity.pitch);
 
-    const std::int32_t siblingOffset = node->siblingOffset;
-    node->siblingOffset = 0;
-    d3t::MT5_PushAndReadNodeTree(node, nullptr, entity.alpha);
+    if (fading)
+        entity.alpha += 0.05f;
+    d3t::MT5_SubmitObjectNode(node, fading ? entity.alpha : 1.0f);
     workTransformMatrix = cameraTransform;
 
     SubmitCharacterShadow(nullptr, node, node, entity.position,
         Vector3i{static_cast<std::int16_t>(entity.pitch), entity.yaw, static_cast<std::int16_t>(entity.roll)}, Vector3{1.0f, 1.0f, 1.0f}, 0.0f, -1.0f);
-    node->siblingOffset = siblingOffset;
 }
 
 void ReleaseModels() {

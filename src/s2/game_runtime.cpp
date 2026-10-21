@@ -222,6 +222,9 @@ void InitializeFrameVars() {
 void IncrementSteamStat(std::int32_t) {
 }
 // Steam is excluded middleware; retain the game-owned call boundary without a Steam backend.
+void ResetSteamStatistics() {
+}
+
 void ReadSm2Saves(std::int32_t) {
 }
 

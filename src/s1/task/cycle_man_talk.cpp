@@ -163,6 +163,27 @@ bool UpdateTalkMoveObjectState(CycleManager::NpcRecord &npc, bool motnSteeringAc
             return false;
     }
 
+    bool scaleByDistance = true;
+    if (!ryoTalk) {
+        const CycleManager::MobjCycle *const leader = tracked->cycle->trackedMobj ? tracked->cycle->trackedMobj : tracked->cycle;
+        if (((leader->currentOpcode - 1u) & 0xffdfu) == 0u) {
+            Vector3 path{leader->currentWaypointPos.x - leader->pos.x, 0.0f, leader->currentWaypointPos.z - leader->pos.z};
+            Vector3 follower{npc.cycle->pos.x - leader->pos.x, 0.0f, npc.cycle->pos.z - leader->pos.z};
+            const float waypointX = leader->currentWaypointPos.x - npc.cycle->pos.x;
+            const float waypointZ = leader->currentWaypointPos.z - npc.cycle->pos.z;
+            if (waypointZ * waypointZ + waypointX * waypointX >= 1.0f &&
+                (path.x > 0.00000011920929f || path.x < -0.00000011920929f || path.z > 0.00000011920929f || path.z < -0.00000011920929f)) {
+                const float pathDistance = Vector3::NormalizeInPlace(path);
+                if (follower.x > 0.00000011920929f || follower.x < -0.00000011920929f || follower.z > 0.00000011920929f || follower.z < -0.00000011920929f) {
+                    const float leaderDistance = Vector3::NormalizeInPlace(follower);
+                    if (leaderDistance < pathDistance && leaderDistance <= 3.0f && sin_fixed16(0x2000) <= follower.z * path.z + follower.x * path.x) {
+                        npc.cycle->moveTargetPos = leader->currentWaypointPos;
+                        scaleByDistance = false;
+                    }
+                }
+            }
+        }
+    }
     float dx = npc.cycle->moveTargetPos.x - npc.cycle->pos.x;
     const float dy = npc.cycle->moveTargetPos.y - npc.cycle->pos.y;
     float dz = npc.cycle->moveTargetPos.z - npc.cycle->pos.z;
@@ -215,11 +236,13 @@ bool UpdateTalkMoveObjectState(CycleManager::NpcRecord &npc, bool motnSteeringAc
     float progress = npc.cycle->animMoveSpeedScale;
     if (tracked->cycle->currentOpcode == CycleOpcode_InitTimedPath)
         progress = static_cast<float>(static_cast<double>(tracked->cycle->baseMoveSpeed * tracked->cycle->animMoveSpeedScale) * 0.9);
-    if (distance >= 1.5f) {
-        if (distance > 2.0f)
-            progress *= std::min(2.0f, distance - 0.5f) / 1.5f;
-    } else {
-        progress *= distance / 1.5f;
+    if (scaleByDistance) {
+        if (distance >= 1.5f) {
+            if (distance > 2.0f)
+                progress *= std::min(2.0f, distance - 0.5f) / 1.5f;
+        } else {
+            progress *= distance / 1.5f;
+        }
     }
     npc.cycle->baseMoveSpeed = progress / npc.cycle->animMoveSpeedScale;
 

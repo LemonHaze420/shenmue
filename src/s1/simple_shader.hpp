@@ -1,6 +1,7 @@
 #pragma once
 
 #include "d3t/light_tiles.hpp"
+#include "s1/model_lighting.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -17,13 +18,6 @@ struct FoliageAnimationParameters {
 
 static_assert(sizeof(FoliageAnimationParameters) == 0x14);
 
-struct SimpleShaderParameterBlock {
-    std::array<std::byte, 0x138> data;
-};
-
-static_assert(sizeof(SimpleShaderParameterBlock) == 0x138);
-
-extern std::array<SimpleShaderParameterBlock, 16> g_simpleShaderParameterBlocks;
 using d3t ::g_simpleVertexBufferHandles;
 using d3t ::g_simpleCpuBuffers;
 using d3t ::g_simpleIndexBufferHandles;
@@ -34,7 +28,6 @@ extern std::uint32_t g_simpleShaderTemporaryBuffer;
 extern std::uint32_t g_simpleShaderFileHandle;
 extern std::uint32_t g_postFxTexture;
 extern float g_simpleShaderMainParameter;
-extern std::uint32_t g_simpleShaderMode;
 extern std::uint32_t g_postFxEnabled;
 extern std::int32_t g_HasPPFXRendered;
 bool IsPostProcessPass();

@@ -50,6 +50,7 @@ void IncrementSteamStat(std::int32_t stat);
 void CheckSteamStats();
 
 void ReadSm2Saves(std::int32_t slot);
+void ResetSteamStatistics();
 extern std::array<EventTaskEntry, 64> g_eventTasks;
 extern std::int32_t g_eventTaskFirst;
 extern std::int32_t g_eventTaskLast;

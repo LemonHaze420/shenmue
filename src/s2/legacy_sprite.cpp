@@ -436,6 +436,105 @@ void DrawTitleBackground() {
     LegacySpriteNullsub(titleSpritePacket, static_cast<std::uint32_t>(titleSpriteTextures[14]), -2.9f);
 }
 // @verified - p
+void DrawTitleHints(std::int32_t flags) {
+    std::int32_t ordinal = 0;
+    for (std::int32_t x = 485; x < 629; x += 48) {
+        if (TITLE_HINT_MASKS[ordinal] == 0 || (TITLE_HINT_MASKS[ordinal] & flags) == 0) {
+            titleSpritePacket.colour = 0xffffffffU;
+            titleSpritePacket.secondaryColour = 0;
+            titleSpritePacket.uv = {0.0f, 0.0f, 1.0f, 1.0f};
+            titleSpritePacket.reservedTail = 0;
+            titleSpritePacket.quad.flags = 1024;
+            AdjustScreenAspectRatio(titleSpritePacket.quad, ScreenAlignment::HorizontalStretch, x, 54, 32, 32, ScreenMode::Centered);
+            titleSpritePacket.uv[0] = static_cast<float>(ordinal & 1) * 0.5f;
+            titleSpritePacket.uv[1] = static_cast<float>((ordinal >> 1) & 1) * 0.5f;
+            titleSpritePacket.uv[2] = titleSpritePacket.uv[0] + 0.5f;
+            titleSpritePacket.uv[3] = titleSpritePacket.uv[1] + 0.5f;
+            LegacySpriteNullsub(titleSpritePacket, static_cast<std::uint32_t>(titleSpriteTextures[17]), -2.9f);
+        }
+        ++ordinal;
+    }
+}
+
+// @verified - p
+void DrawTitleFrame(std::int32_t flags) {
+    if ((flags & 1) != 0)
+        DrawTitleBackground();
+    if ((flags & 2) != 0)
+        DrawTitleHints(flags);
+}
+
+// @verified - p
+void DrawTitleCaptionLine(std::int32_t y, std::int32_t item) {
+    titleSpritePacket.colour = 0xffffffffU;
+    titleSpritePacket.secondaryColour = 0;
+    titleSpritePacket.uv = {0.0f, 0.0f, 1.0f, 1.0f};
+    titleSpritePacket.reservedTail = 0;
+    titleSpritePacket.quad.flags = 1024;
+    const std::int32_t page = item / 17, row = item % 17;
+    AdjustScreenAspectRatio(titleSpritePacket.quad, ScreenAlignment::HorizontalStretch, 320, y, 512, 30, ScreenMode::Centered);
+    titleSpritePacket.uv[0] = 0.0f;
+    titleSpritePacket.uv[2] = 1.0f;
+    titleSpritePacket.uv[1] = (static_cast<float>(16 - row) * 30.0f) * 0.001953125f;
+    titleSpritePacket.uv[3] = (static_cast<float>(17 - row) * 30.0f) * 0.001953125f;
+    LegacySpriteNullsub(titleSpritePacket, static_cast<std::uint32_t>(titleSpriteTextures[page + 15]), -2.9f);
+}
+
+// @verified - p
+void DrawTitleCaption(std::int32_t item, std::int32_t secondary) {
+    std::int32_t y = 415;
+    if (secondary > -1) {
+        DrawTitleCaptionLine(400, secondary);
+        y = 430;
+    }
+    DrawTitleCaptionLine(y, item);
+    titleSpritePacket.colour = 0xffffffffU;
+    titleSpritePacket.secondaryColour = 0;
+    titleSpritePacket.uv = {0.0f, 0.0f, 1.0f, 1.0f};
+    titleSpritePacket.reservedTail = 0;
+    titleSpritePacket.quad.flags = 1024;
+    AdjustScreenAspectRatio(titleSpritePacket.quad, ScreenAlignment::HorizontalStretch, 320, 415, 512, 128, ScreenMode::Centered);
+    LegacySpriteNullsub(titleSpritePacket, static_cast<std::uint32_t>(titleSpriteTextures[16]), -2.9f);
+}
+
+// @verified - p
+void DrawTitleColourSpriteRect(const std::uint16_t *uv, const Vector3 &position, std::int32_t texture, float scale, std::uint32_t colour) {
+    titleSpritePacket.secondaryColour = 0;
+    titleSpritePacket.uv = {0.0f, 0.0f, 1.0f, 1.0f};
+    titleSpritePacket.reservedTail = 0;
+    titleSpritePacket.quad.flags = 1024;
+    titleSpritePacket.colour = colour;
+    std::int32_t width = TITLE_SPRITE_DIMENSIONS[texture][0], height = TITLE_SPRITE_DIMENSIONS[texture][1];
+    if (uv) {
+        for (std::size_t index = 0; index < 4; ++index)
+            titleSpritePacket.uv[index] = static_cast<float>(static_cast<std::int16_t>(uv[index])) * 0.001f;
+        width = TruncateSpriteCoordinate(
+            static_cast<float>(static_cast<std::int16_t>(uv[2]) - static_cast<std::int16_t>(uv[0])) * 0.001f * static_cast<float>(width));
+        height = TruncateSpriteCoordinate(
+            static_cast<float>(static_cast<std::int16_t>(uv[3]) - static_cast<std::int16_t>(uv[1])) * 0.001f * static_cast<float>(height));
+    }
+    AdjustScreenAspectRatio(titleSpritePacket.quad, ScreenAlignment::HorizontalStretch, TruncateSpriteCoordinate(position.x),
+        TruncateSpriteCoordinate(position.y), TruncateSpriteCoordinate(static_cast<float>(width) * scale),
+        TruncateSpriteCoordinate(static_cast<float>(height) * scale), ScreenMode::Centered);
+    LegacySpriteNullsub(titleSpritePacket, static_cast<std::uint32_t>(titleSpriteTextures[texture]), position.z);
+}
+
+// @verified - p
+void DrawSizedTitleSpriteRect(const std::uint16_t *uv, const Vector3 &position, std::int32_t texture, std::int16_t width, std::int16_t height) {
+    titleSpritePacket.colour = 0xffffffffU;
+    titleSpritePacket.secondaryColour = 0;
+    titleSpritePacket.uv = {0.0f, 0.0f, 1.0f, 1.0f};
+    titleSpritePacket.reservedTail = 0;
+    titleSpritePacket.quad.flags = 1024;
+    if (uv)
+        for (std::size_t index = 0; index < 4; ++index)
+            titleSpritePacket.uv[index] = static_cast<float>(static_cast<std::int16_t>(uv[index])) * 0.001f;
+    AdjustScreenAspectRatio(titleSpritePacket.quad, ScreenAlignment::HorizontalStretch, TruncateSpriteCoordinate(position.x),
+        TruncateSpriteCoordinate(position.y), width, height, ScreenMode::Centered);
+    LegacySpriteNullsub(titleSpritePacket, static_cast<std::uint32_t>(titleSpriteTextures[texture]), position.z);
+}
+
+// @verified - p
 void DrawTitleSpriteRect(const std::uint16_t *uv, const Vector3 &position, std::int32_t texture, float scale) {
     titleSpritePacket.colour = 0xffffffffU;
     titleSpritePacket.secondaryColour = 0;
