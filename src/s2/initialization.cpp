@@ -126,6 +126,7 @@ void RootTask_Callback(void *) {
         RenderPostProcessing(0);
         RenderPostProcessing(1);
         PerformPostFxFilterRenderPass();
+        UpdateConversationStreams();
         if (g_debugCameraDisplay) {
             // Each property passes through the XOR_EAX boundary, so every line prints 0.0.
             for (std::size_t row = 0; row < debugCameraFormats.size(); ++row) {

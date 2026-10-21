@@ -42,11 +42,9 @@ extern void *g_conversationSecondaryVoiceBuffer;
 extern void *g_conversationSecondaryCompressedBuffer;
 void AllocateConversationStreamBuffers();
 
-enum class DialogueVoiceState : std::uint8_t {
-    Unsupported,
-    Playing,
-    Complete,
-    Failed,
+enum class DialogueVoiceState : std::uint32_t {
+    Stopped = 0,
+    Playing = 3,
 };
 
 bool InitializeDialogueAudio() noexcept;
@@ -57,6 +55,7 @@ bool GetDialogueVoicePosition(const DialogueVoice *voice, std::uint64_t &samples
 void StopDialogueVoice(DialogueVoice *voice) noexcept;
 bool PauseDialogueVoice(DialogueVoice *voice, std::int32_t paused) noexcept;
 bool SetDialogueVoiceVolume(DialogueVoice *voice, float gain) noexcept;
+void SetDialogueVoiceReverbAttenuation(DialogueVoice *voice, std::int32_t unused, std::int32_t attenuation) noexcept;
 bool IsDialogueAudioActive() noexcept;
 // The conversation owner releases every CVBF voice before its audio device.
 void ReleaseDialogueAudio() noexcept;

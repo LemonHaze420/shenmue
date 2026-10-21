@@ -42,6 +42,7 @@ std::array<std::uint32_t, 5> g_conversationIndexDRecord{};
 namespace {
 
 ConversationTaskData conversationData{};
+ConversationTaskData *conversationTaskData{};
 ConversationResource *resources{};
 std::array<std::size_t, 16> indexSizes{};
 std::array<ConversationResource, 2> cachedResources{};
@@ -1383,6 +1384,24 @@ void InitializeConversationDecodeBufferNullsub(DialogueVoice *, void *, std::uin
 }
 
 // @verified - p
+void UpdateConversationStream(ConversationStream &stream) {
+    if (!stream.handle)
+        return;
+    const std::uint32_t state = static_cast<std::uint32_t>(PollDialogueVoice(stream.handle));
+    if (state - 2U > 2U)
+        return;
+    if (stream.volume != -1)
+        stream.volume = -1;
+    if (state == 2)
+        return;
+    if (stream.frameScale != 256)
+        stream.frameScale = 256;
+    if (stream.cameraCode) {
+        const std::int32_t attenuation = static_cast<std::uint32_t>(stream.cameraCode) <= 15U ? CONVERSATION_CAMERA_REVERB_ATTENUATION[stream.cameraCode] : -64;
+        SetDialogueVoiceReverbAttenuation(stream.handle, 0, attenuation);
+        stream.cameraCode = 0;
+    }
+}
 std::uint64_t GetConversationStreamPlaying(ConversationStream &stream) {
     if (!stream.handle)
         return 0;
@@ -1680,6 +1699,7 @@ bool RemoveConversationSpeakerAlias(shen_name target) {
 
 void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks) {
     HLib::EnqueueTaskWithoutParameter(CVS_CtrlConversTask_Callback, 2, 3, static_cast<std::int32_t>(TASK_CONVERSATION.name));
+    conversationTaskData = &conversationData;
     conversationData = {};
     for (ConversationBuffer &buffer : conversationData.buffers) {
         buffer.callback = nullptr;
@@ -1706,6 +1726,15 @@ void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks) {
         std::snprintf(bank, sizeof(bank), "FREE0%d", g_actNumber);
         EV_FreeAuthorPak(1, bank);
     }
+}
+
+// @verified - p
+void UpdateConversationStreams() {
+    if (!conversationTaskData)
+        return;
+    for (ConversationBuffer &buffer : conversationTaskData->buffers)
+        if (buffer.callback)
+            UpdateConversationStream(buffer.stream);
 }
 
 void CVS_CtrlConversTask() {

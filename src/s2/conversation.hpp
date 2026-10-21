@@ -173,6 +173,8 @@ struct SCENDialogueCue {
     std::uint32_t reserved14;
 };
 
+inline constexpr std::array<std::int8_t, 16> CONVERSATION_CAMERA_REVERB_ATTENUATION{
+    -45, -43, -41, -39, -37, -35, -33, -31, -29, -27, -25, -23, -21, -19, -17, -15};
 struct ConversationStream {
     DialogueVoice *handle;
     void *compressedBuffer;
@@ -263,6 +265,7 @@ bool RemoveConversationSpeakerAlias(shen_name target);
 
 void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks);
 void CVS_CtrlConversTask();
+void UpdateConversationStreams();
 void ReleaseConversationResources();
 void SetConversationAudioLanguage(std::int32_t language);
 std::uint64_t GetConversationAudioLanguage() noexcept;

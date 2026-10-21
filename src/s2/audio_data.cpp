@@ -716,15 +716,15 @@ DialogueVoice *StartDialogueVoice(std::int32_t fileId, std::uint16_t entry, floa
 DialogueVoiceState PollDialogueVoice(const DialogueVoice *voice) noexcept {
 #if !defined(_WIN32)
     (void)voice;
-    return DialogueVoiceState::Unsupported;
+    return DialogueVoiceState::Stopped;
 #else
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
     IXAudio2SourceVoice *source = GetDialogueSource(voice);
     if (!source)
-        return DialogueVoiceState::Failed;
+        return DialogueVoiceState::Stopped;
     XAUDIO2_VOICE_STATE state{};
     source->GetState(&state, XAUDIO2_VOICE_NOSAMPLESPLAYED);
-    return state.BuffersQueued ? DialogueVoiceState::Playing : DialogueVoiceState::Complete;
+    return state.BuffersQueued ? DialogueVoiceState::Playing : DialogueVoiceState::Stopped;
 #endif
 }
 
@@ -786,6 +786,36 @@ bool SetDialogueVoiceVolume(DialogueVoice *voice, float gain) noexcept {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
     IXAudio2SourceVoice *source = GetDialogueSource(voice);
     return source && xaudio && masteringVoice && SUCCEEDED(source->SetVolume(gain));
+#endif
+}
+
+namespace {
+void SetVoiceReverbOutputMatrix(void *voice, float gain, std::uint32_t channels) {
+#if defined(_WIN32)
+    if (!bankWetOutput || !voice)
+        return;
+    const std::array<float, 2> matrix{gain, gain};
+    static_cast<IXAudio2SourceVoice *>(voice)->SetOutputMatrix(bankWetOutput, channels, 1, matrix.data(), 0);
+#else
+    (void)voice;
+    (void)gain;
+    (void)channels;
+#endif
+}
+} // namespace
+
+void SetDialogueVoiceReverbAttenuation(DialogueVoice *voice, std::int32_t, std::int32_t attenuation) noexcept {
+#if defined(_WIN32)
+    const std::lock_guard<std::recursive_mutex> lock(audioMutex);
+    IXAudio2SourceVoice *const source = GetDialogueSource(voice);
+    if (!source)
+        return;
+    const float decibels = static_cast<float>(attenuation);
+    const float gain = decibels > -64.0f ? std::pow(10.0f, decibels / 20.0f) : 0.0f;
+    SetVoiceReverbOutputMatrix(source, gain * 3.0f, 1);
+#else
+    (void)voice;
+    (void)attenuation;
 #endif
 }
 

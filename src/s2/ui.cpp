@@ -122,6 +122,9 @@ std::array<std::uint32_t, 3> g_uiPreviousInputElements{};
 std::array<std::int32_t, static_cast<std::size_t>(UIElement::Count)> g_uiFrameElementHistory{};
 std::int32_t g_uiFrameElementHistoryIndex{};
 std::int32_t g_uiDebugRevealAspectBars{};
+std::int32_t g_uiHelpAdmission{};
+float g_uiHelpAdmissionValue{};
+std::int32_t g_uiFreeInputOverride{};
 UIButtonWheel *g_mainMenuWheelWidget{};
 std::int32_t g_mainMenuWheelIndex{};
 std::int32_t g_mainMenuWheelInputBlock{};
@@ -5520,36 +5523,47 @@ std::int64_t ExecuteElementCallback(UIElement elementIndex) {
     return element.unknown28();
 }
 
+// @verified - p
+void SetIsDrawingUI(std::int32_t drawing) {
+    g_waitingForNextTick = drawing;
+}
+
+// @verified - p
+bool IsNonBettingHelpTopic() {
+    return ((static_cast<std::uint32_t>(helpGetCurrentHelp()) - 65U) & ~8U) != 0;
+}
+
 void ShowElementByIndex(UIElement elementIndex) {
     const std::int32_t value = static_cast<std::int32_t>(elementIndex);
     if (value < 0 || value >= static_cast<std::int32_t>(UIElement::Count)) {
         return;
     }
-    const bool overlay = elementIndex == UIElement::GameBackground || elementIndex == UIElement::MoveLearned ||
-        (value >= static_cast<std::int32_t>(UIElement::YesNoPrompt) && value <= static_cast<std::int32_t>(UIElement::GameInfoBar));
-    if (currentUIState != -1 && value != currentUIState && !overlay && elementIndex != UIElement::GameHud) {
+
+    if (currentUIState != -1 && value != currentUIState && static_cast<std::uint32_t>(value - 58) > 1U && elementIndex != UIElement::GameHud) {
         return;
     }
 
     UIElementState &element = g_uiElements[static_cast<std::size_t>(value)];
     if (!element.isVisible) {
+        if (elementIndex == UIElement::GameMenu || (elementIndex == UIElement::GameHelp && !IsGameUIActive()))
+            g_uiHelpAdmission = 1;
         if (element.tick) {
             element.tick();
             if (element.render) {
                 const bool wasDrawing = drawingUI;
                 drawingUI = false;
-                g_waitingForNextTick = 0;
+                SetIsDrawingUI(0);
                 element.render();
-                g_waitingForNextTick = 1;
+                SetIsDrawingUI(1);
                 drawingUI = wasDrawing;
             }
         }
         if (element.initialize) {
             element.initialize();
             if (element.postInit) {
-                g_waitingForNextTick = 0;
+                SetIsDrawingUI(0);
                 element.postInit();
-                g_waitingForNextTick = 1;
+                SetIsDrawingUI(1);
             }
         }
         element.isVisible = 1;
@@ -5650,20 +5664,23 @@ std::int64_t DestroyElementByIndex(UIElement elementIndex) {
     if (value < 0 || value >= static_cast<std::int32_t>(UIElement::Count)) {
         return 0;
     }
-    const bool overlay = elementIndex == UIElement::GameBackground || elementIndex == UIElement::MoveLearned ||
-        (value >= static_cast<std::int32_t>(UIElement::YesNoPrompt) && value <= static_cast<std::int32_t>(UIElement::GameInfoBar));
-    if (currentUIState != -1 && value != currentUIState && !overlay && elementIndex != UIElement::GameHud) {
+
+    if (currentUIState != -1 && value != currentUIState && static_cast<std::uint32_t>(value - 58) > 1U && elementIndex != UIElement::GameHud) {
         return 0;
     }
     UIElementState &element = g_uiElements[static_cast<std::size_t>(value)];
     if (!element.isVisible)
         return 1;
+    if (elementIndex == UIElement::GameMenu || (elementIndex == UIElement::GameHelp && !IsGameUIActive())) {
+        g_uiHelpAdmission = 0;
+        g_uiHelpAdmissionValue = 0.0f;
+    }
     const UIAction destroy = element.destroy ? element.destroy : element.unknown60;
     if (destroy && static_cast<std::uint32_t>(destroy()) != 1U)
         return 0;
     element.isVisible = 0;
     SetGameUiFlag(gameUiVisibilityFlags, static_cast<std::size_t>(value), false);
-    SetGameUiFlag(gameUiSecondaryFlags, static_cast<std::size_t>(value), false);
+
     return 1;
 }
 
@@ -5690,12 +5707,13 @@ bool IsGameUiSecondaryFlagSet(std::int32_t index) {
 }
 
 bool GetIsFreeInputType(std::int32_t type) {
-    const std::uint32_t topic = helpGetCurrentHelp();
-    const bool bettingPredicate = ((topic - 65U) & ~8U) != 0;
-    if ((IsHelpOverlayVisible(UIElement::GameHelp) && !bettingPredicate) || GetIsKeyboardActive() == 1)
+
+    if ((IsHelpOverlayVisible(UIElement::GameHelp) && !IsNonBettingHelpTopic()) || GetIsKeyboardActive() == 1 ||
+        (static_cast<std::uint32_t>(ReturnZero()) != 1U && g_uiFreeInputOverride == 0))
         return false;
-    const std::size_t skip = static_cast<std::size_t>(UIElement::CutsceneSkip);
-    if (g_uiElements[skip].isVisible || g_uiElements[skip].enabled || (gameUiSecondaryFlags[skip / 32] & (1U << (skip & 31))))
+    constexpr std::size_t skip = static_cast<std::size_t>(UIElement::CutsceneSkip);
+    constexpr std::uint32_t skipFlag = 1U << (skip & 31U);
+    if (g_uiElements[skip].isVisible || (g_uiRefreshedElements[skip / 32] & skipFlag) || (g_uiPreviousRefreshedElements[skip / 32] & skipFlag))
         return true;
     if (type >= 0) {
         if (type <= 2 || type == 6)
@@ -5703,9 +5721,8 @@ bool GetIsFreeInputType(std::int32_t type) {
         if (type <= 5)
             return false;
     }
-    type = GetCurrentUIInputType();
-    return type != static_cast<std::int32_t>(InputType::Qte2) && type != static_cast<std::int32_t>(InputType::Fight) &&
-        type != static_cast<std::int32_t>(InputType::Qte);
+    return GetCurrentUIInputType() != static_cast<std::int32_t>(InputType::Qte2) && GetCurrentUIInputType() != static_cast<std::int32_t>(InputType::Fight) &&
+        GetCurrentUIInputType() != static_cast<std::int32_t>(InputType::Qte);
 }
 
 // @verified - p
@@ -5798,11 +5815,11 @@ void CloseVisibleUIElements() {
         if (!element.isVisible)
             continue;
         if (index == 6 || (index == 80 && !IsGameUIActive())) {
-            helpWidgetRunCount = 0;
-            helpWidgetLineCount = 0;
+            g_uiHelpAdmissionValue = 0.0f;
+            g_uiHelpAdmission = 0;
         }
         const UIAction destroy = element.destroy ? element.destroy : element.unknown60;
-        if (!destroy || destroy() == 1)
+        if (!destroy || static_cast<std::uint32_t>(destroy()) == 1U)
             element.isVisible = 0;
     }
 }
