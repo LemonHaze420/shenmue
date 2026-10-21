@@ -19,6 +19,7 @@ inline constexpr Vector4 kDefaultNormalColour{0.5f, 0.5f, 1.0f, 1.0f};
 extern std::uint32_t g_defaultWhiteTexture, g_defaultBlackTexture, g_defaultQuarterTexture, g_defaultThreeQuarterTexture, g_defaultNormalTexture;
 std::uint32_t RGBA8_Create2x2Texture2D(const Vector4 *colour);
 bool IsTextureHandleValid(std::uint32_t handle);
+bool QueryTextureSize(std::uint32_t handle, Vector2i *size);
 void CreateTemp2x2Textures();
 extern std::int32_t g_TextureRefCount;
 

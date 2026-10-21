@@ -108,6 +108,7 @@ template <typename T> struct Vector3T {
 };
 
 using Vector2 = Vector2T<float>;
+using Vector2i = Vector2T<std::int32_t>;
 using Vector2s = Vector2T<std::int16_t>;
 using Vector3 = Vector3T<float>;
 using Vector3i = Vector3T<std::int32_t>;

@@ -38,6 +38,8 @@ extern std::uint8_t g_modelUseDualQuaternion;
 extern std::uint8_t g_modelVisualizeClusters;
 extern float g_modelClampDirectRoughness;
 void SetDebugShaderParams(d3t::D3TDeviceContext *context);
+void GetPostFXScaledRenderTargetSize(float *width, float *height);
+void SetupPostFXRenderTargetsAndViewport(d3t::D3TDeviceContext *context);
 void ConfigureAndSubmitModelScenePass(d3t::D3TDeviceContext *context, ModelScenePass &pass, ModelGeometryContext &geometry);
 
 struct CameraConstantBlock {

@@ -84,6 +84,7 @@ inline constexpr std::array<std::array<float, 2>, 20> UI_ROUNDED_RECT_DIRECTIONS
     {1, 0}, {0.9238795f, 0.38268343f}, {0.70710677f, 0.70710677f}, {0.38268343f, 0.9238795f}, {0, 1},
     {0, 1}, {-0.38268343f, 0.9238795f}, {-0.70710677f, 0.70710677f}, {-0.9238795f, 0.38268343f}, {-1, 0}}};
 
+extern std::uint32_t g_sceneTexture, g_sceneDepthTexture, g_resolvedSceneTexture, g_legacySceneTexture;
 struct SceneFrameTargets {
     std::uint32_t width;
     std::uint32_t height;

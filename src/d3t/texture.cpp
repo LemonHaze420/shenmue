@@ -573,6 +573,15 @@ bool IsTextureHandleValid(std::uint32_t handle) {
     const TextureLock lock;
     return g_textureTags[handle & kTextureIndexMask] == (handle & kTextureTagMask);
 }
+bool QueryTextureSize(std::uint32_t handle, Vector2i *size) {
+    const TextureLock lock;
+    const std::size_t index = handle & kTextureIndexMask;
+    if (g_textureTags[index] != (handle & kTextureTagMask))
+        return false;
+    size->x = g_textureResources[index].width;
+    size->y = g_textureResources[index].height;
+    return true;
+}
 std::uint32_t CreateTexture2D(const Texture2DDescription *description) {
     return CreateTextureResource(*description);
 }

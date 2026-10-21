@@ -1,5 +1,7 @@
 #include "s2/frame_pipeline.hpp"
 
+#include "s2/input_bindings.hpp"
+#include "d3t/ui_renderer.hpp"
 #include "s2/model_draw.hpp"
 #include "s2/sd_light.hpp"
 #include "s2/d3t_renderer.hpp"
@@ -23,6 +25,33 @@ std::int32_t g_modelSpecularBrdfMode{};
 std::uint8_t g_modelUseDualQuaternion = 1;
 std::uint8_t g_modelVisualizeClusters{};
 float g_modelClampDirectRoughness = 0.4f;
+
+void GetPostFXScaledRenderTargetSize(float *width, float *height) {
+    Vector2i dimensions;
+    if (!d3t::QueryTextureSize(d3t::g_sceneTexture, &dimensions))
+        return;
+    const S2UserConfiguration280 &configuration = GetRuntimeUserConfiguration();
+    const float scale = configuration.enableSuperSampling ? 1.0f : 0.4444444477558136f;
+    *width = (static_cast<float>(dimensions.x) * scale) * (((1.0f / (configuration.superSampling + 1.0f)) * 0.0f) + 1.0f);
+    *height = static_cast<float>(dimensions.y) * (configuration.enableSuperSampling ? 1.0f : 0.4444444477558136f);
+}
+
+void SetupPostFXRenderTargetsAndViewport(d3t::D3TDeviceContext * context) {
+    if (!context)
+        return;
+    d3t::D3TRenderState &state = d3t::GetRenderState(*context);
+    state.bufferStateFlags |= 2U;
+    state.outputTargets.fill(std::byte{});
+    std::memcpy(state.outputTargets.data(), &d3t::g_sceneTexture, 4);
+    std::memcpy(state.outputTargets.data() + 128, &d3t::g_sceneDepthTexture, 4);
+    float width, height;
+    GetPostFXScaledRenderTargetSize(&width, &height);
+    const std::array<float, 6> viewport{0.0f, 0.0f, width, height, 0.0f, 1.0f};
+    if (std::memcmp(state.viewport.data(), viewport.data(), sizeof(viewport)) != 0) {
+        state.viewport = viewport;
+        state.viewportDirtyMask |= 1U;
+    }
+}
 
 // @verified - p
 void SetDebugShaderParams(d3t::D3TDeviceContext * context) {
