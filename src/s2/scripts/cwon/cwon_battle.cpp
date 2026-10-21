@@ -449,28 +449,28 @@ void BattleWin(void *data) {
         ++work->authorState;
         SetAuthorControl(1);
         EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
-        if (work->routeState == 5) {
+        if (work->routePass == 5) {
             HideList(streetProps);
             CwonStartAuthor(3, nullptr, 0, streetAuthorCharacters, nullptr);
-        } else if (work->routeState == 7) {
+        } else if (work->routePass == 7) {
             CwonRestoreMarketProps(2);
             Place(SHEN_NAME(IS_6), CWON_INVALID, marketReturnPosition);
             constexpr shen_name hidden[]{SHEN_NAME(IS_5), SHEN_NAME(IS_8), SHEN_NAME(IS_9), shen_name{}};
             HideList(hidden);
             CwonStartAuthor(6, nullptr, 0, marketAuthorCharacters, nullptr);
-        } else if (work->routeState == 8)
+        } else if (work->routePass == 8)
             CwonStartAuthor(7, nullptr, 0, marketAuthorCharacters, nullptr);
         ClearBattleMotionFlagsAndFaces();
     }
     if (work->authorState == 1) {
         using Update = std::int32_t (*)(CwonEventWork *);
         constexpr Update updates[]{UpdateStreetWin, nullptr, UpdateWarehouseWin, UpdateMarketWin};
-        if (updates[work->routeState - 5](work))
+        if (updates[work->routePass - 5](work))
             ++work->authorState;
     } else if (work->authorState == 2) {
         work->temporarySlot = 0;
-        work->failures = 1;
-        work->routeChoice = 74;
+        work->routeChoice = 1;
+        work->routePass = 74;
         work->nextArea = SHEN_NAME(AR02);
         SetScenarioFollowCharacter(CWON_WON);
         SetAuthorControl(0);
@@ -658,14 +658,14 @@ void CwonBattleEndCallback(void *data) {
     SetScenarioCharacterKillMode(base, 1);
     if (GetBtlStatus(ctrlGetCharaByName(CWON_RYO)) == 3) {
         work->battleResult = 1;
-        work->routeState = work->entry == 7 ? 7 : work->entry == 8 ? 8 : 5;
+        work->routePass = work->entry == 7 ? 7 : work->entry == 8 ? 8 : 5;
         if (work->entry != 7 && work->entry != 8)
             EV_stepSetFlags(0, 12);
         Fade(30, true);
         Change(BattleWin);
     } else {
         work->battleResult = 0;
-        work->routeState = work->entry == 7 ? 10 : work->entry == 8 ? 11 : 9;
+        work->routePass = work->entry == 7 ? 10 : work->entry == 8 ? 11 : 9;
         if (work->entry != 7 && work->entry != 8)
             EV_stepSetFlags(1, 12);
         Fade(30, true);
@@ -681,7 +681,7 @@ void CwonBattleLostCallback(void *data) {
             return;
         EV_ToggleCharacterFlag(club);
         EV_DisableCharacterDisplay(club);
-        if (work->routeState != 9) {
+        if (work->routePass != 9) {
             work->authorState = 1;
             EV_DisableCharacterDisplay(sam);
             EV_DisableCharacterDisplay(lly);
@@ -738,7 +738,7 @@ void CwonBattleLostChoiceCallback(void *data) {
     case 1:
         work->authorState = 2;
         ClearBattleMotionFlagsAndFaces();
-        Place(CWON_RYO, CWON_CENTER, work->routeState == 10 ? marketLostPosition : warehouseLostPosition);
+        Place(CWON_RYO, CWON_CENTER, work->routePass == 10 ? marketLostPosition : warehouseLostPosition);
         Turn(CWON_RYO, CWON_CENTER, 0);
         SetMotionRegionFlag(scenFindMotionwork(CWON_RYO), 69, 2, MotionRegion::LowerBody);
         EVT_AT_SetMot(CWON_RYO, 0x7f09, 0, 0, 0, 0);

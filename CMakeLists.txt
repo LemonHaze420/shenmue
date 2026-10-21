@@ -335,6 +335,7 @@ add_library(shenmue1_game STATIC
   src/s1/ui_subtitles.cpp
   src/s1/ui_loadsave.cpp
   src/s1/ui_inventory.cpp
+  src/s1/ui_collection.cpp
   src/s1/task/pack.cpp
   src/s1/task/padc.cpp
   src/s1/task/qte.cpp

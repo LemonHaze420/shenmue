@@ -1,5 +1,6 @@
 #include "s1/ui_internal.hpp"
 
+#include "s1/ui_collection.hpp"
 #include "s1/modern_material.hpp"
 #include "s1/render_array.hpp"
 namespace shenmue::s1::ui_runtime_detail {
@@ -1171,21 +1172,8 @@ void UI_ICISCallback(HLib::TaskData *) {
     icon.itemLookTask = HLib_EnqueueTaskWithoutParameter(UI_ICLICallback, queueIndex, 0, SHEN_NAME(ICLI));
     icon.systemStateTask = HLib_EnqueueTaskWithoutParameter(UI_ICSSCallback, queueIndex, 0, SHEN_NAME(ICSS));
     // ICIS_Init's item-info fields.
-    icon.itemInfoSurface = -1;
-    icon.itemInfoPopupPosition = {-672.0f, 55.0f, 1.0f, 0.0f};
-    icon.itemIconParams = {.halfScreenX = 0.0f,
-        .halfScreenY = 0.0f,
-        .positionScaleX = 1.0f,
-        .positionScaleY = 1.0f,
-        .depthOrScale = 5.0f,
-        .flags14 = 0,
-        .flags16 = 0,
-        .angle = 0,
-        .pvrSurfaceIndex = 0,
-        .scaledWidth = 32,
-        .scaledHeight = 32,
-        .alignmentType = 5,
-        .reserved23 = 0};
+    ICIS_Init();
+    CollectionGrid_Reset();
     icon.iconFlags &= static_cast<std::uint16_t>(~0x20U);
     icon.inventorySlotsPerPage = 8;
     icon.menuState = UIIconSystemMenuState::Closed;
@@ -1345,8 +1333,15 @@ void UI_ICSSMainCallback(HLib::TaskData *) {
     IconPresentationOwner &icon = g_iconPresentation;
     switch (icon.systemGameState) {
     case UIIconSystemGameState::Timex:
+        TMEX_Callback(nullptr);
+        break;
     case UIIconSystemGameState::Collection:
+        if (CollectionGrid_Tick())
+            icon.systemGameState = UIIconSystemGameState::SystemMenuRefresh;
+        break;
     case UIIconSystemGameState::MovesScreen:
+        if (static_cast<std::uint8_t>(HandleMovesScreenUi()))
+            icon.systemGameState = UIIconSystemGameState::SystemMenuRefresh;
         break;
     case UIIconSystemGameState::SaveDisplay:
         if (g_saveDisplayModuleState == 0) {
@@ -1398,7 +1393,7 @@ void UI_ICLIResetSharedItemMenu() {
     if (!icon.sharedItemMenuState)
         return;
 
-    if (g_isPlayerGameStateActive == 0) {
+    if (g_collectionGridPhase == CollectionGridPhase::Inactive && g_isPlayerGameStateActive == 0) {
         icon.iconFlags |= 0x20U;
         icon.overlayMode = 5;
     }

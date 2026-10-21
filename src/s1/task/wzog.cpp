@@ -116,7 +116,7 @@ void ResetAuthToNone() {
     }
 }
 
-std::int64_t HandleMovesScreenUi();
+} // namespace
 
 std::int64_t HandleMovesScreenUi() {
     UIBaseRuntime &moves = g_uiElements[static_cast<std::size_t>(kMovesElement)];
@@ -203,8 +203,7 @@ transition_gate:
     return result & ~0xffLL;
 }
 
-} // namespace
-
+// namespace
 
 void ResetSearchToFree() {
     Character *const ryo = CurrentRyo();

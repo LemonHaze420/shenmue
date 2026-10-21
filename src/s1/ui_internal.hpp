@@ -1255,6 +1255,8 @@ void InstallOwnedTaskMain(HLib::TaskCallback callback);
 
 void EnsureHelpTask();
 
+void Queue_HP_SetUpHelpIcon();
+
 void ActivateOwnedElement(std::int32_t index, const char *path);
 
 bool ResetOwnedElement(std::int32_t index);

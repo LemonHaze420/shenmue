@@ -109,6 +109,7 @@ bool WZOG_IsViewActive();
 void SyncMovesScreenRuntimeState();
 std::uint32_t SetMovesScreenMoveSetAndSelection(std::int32_t moveSet, std::int32_t move);
 std::uint32_t SetTrainingFocusMoveSet(std::int32_t trainingFocus, std::int32_t move);
+std::int64_t HandleMovesScreenUi();
 void ResetSearchToFree();
 void ExitSearchAndMoveCameraRelative(float eyeHeight, float targetDistance, std::uint16_t yaw);
 std::uint8_t BeginMovesScreenViewTransition();

@@ -861,7 +861,7 @@ void StairsQte(void *data) {
             camCtrlSetMotionScaleFactor(.30000001f);
             camCtrlToggleSmoothing(0);
             Camera(114);
-            CwonRestoreGravity(CWON_RYO);
+            CwonDisableGravity(CWON_RYO);
             Position(CWON_RYO, CWON_DRUM_QTE_POSITION);
             Angle(CWON_RYO, 160);
             const auto frames = EVT_AT_SetMot(CWON_RYO, 0xf02a, 0, 1, 0, 0);

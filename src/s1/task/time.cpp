@@ -124,7 +124,7 @@ MapControlData *CurrentMapControl() {
 
 // ctrlGetCompassCamYaw: CTRL publishes the compass yaw in its trailing word.
 std::int32_t CompassCamYaw(const MapControlData *control) {
-    return control ? static_cast<std::int32_t>(control->direction) : 0;
+    return control ? static_cast<std::int16_t>(control->direction) : 0;
 }
 
 std::int32_t CameraAccumulatedYaw() {

@@ -1769,7 +1769,7 @@ void ResetMazeState(bool releaseAllocations) {
     mazeFrameCount = 0;
 }
 
-void MazeTaskCallback(void *taskData) {
+void UpdateMazeTask(void *taskData) {
     MazeTaskData *const data = static_cast<MazeTaskData *>(taskData);
     if (data)
         data->reserved = 0;
@@ -1804,6 +1804,11 @@ void MazeTaskCallback(void *taskData) {
     }
     SetSharedPrngSeed(GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta));
     ++mazeFrameCount;
+}
+
+// @verified - p
+void MazeTaskCallback(void *taskData) {
+    HLib::ExecuteCallbackNow(UpdateMazeTask, taskData);
 }
 
 void *Allocate(std::size_t bytes, shen_name name) {

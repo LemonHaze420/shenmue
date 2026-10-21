@@ -11,7 +11,7 @@ inline constexpr shen_name BRIB_CAMERA_TARGET{SHEN_NAME(camd)};
 inline constexpr shen_name BRIB_EMPTY{0};
 inline constexpr shen_name BRIB_REN_CHARACTERS[]{BRIB_REN, BRIB_KUK, BRIB_EMPTY};
 inline constexpr shen_name BRIB_SENSE_CHARACTERS[]{BRIB_REN, BRIB_KUK, BRIB_WTE, BRIB_EMPTY};
-inline constexpr Vector3 BRIB_KUK_POSITION{180.6f, 128.8f, 72.56f}, BRIB_RYO_OFFSET{0.098f, 0, 1.083f}, BRIB_RYOS_OFFSET{0.939f, 0, -0.289f};
+inline constexpr Vector3 BRIB_KUK_POSITION{301.2f, 128.8f, 72.56f}, BRIB_RYO_OFFSET{0.098f, 0, 1.083f}, BRIB_RYOS_OFFSET{0.939f, 0, -0.289f};
 inline constexpr Vector3i BRIB_ROTATION{0, 49152, 0};
 struct BribWork {
     HLib::Task *parent;

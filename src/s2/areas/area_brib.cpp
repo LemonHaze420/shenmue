@@ -232,15 +232,23 @@ void BribRenStart(void *data) {
                             .completion = nullptr},
         760);
     QueueAreaLoopPosition(
-        {.parent = nullptr, .character = BRIB_KUK, .flags = 3, .position = BRIB_KUK_POSITION, .rotation = BRIB_ROTATION, .completion = nullptr}, 0);
-    QueueAreaLoopPosition(
-        {.parent = nullptr, .character = BRIB_CAMERA, .flags = 3, .position = BRIB_KUK_POSITION, .rotation = BRIB_ROTATION, .completion = nullptr}, 0);
+        {.parent = HLib::GetCurrentTask(), .character = BRIB_KUK, .flags = 3, .position = BRIB_KUK_POSITION, .rotation = BRIB_ROTATION, .completion = nullptr},
+        0);
+    QueueAreaLoopPosition({.parent = HLib::GetCurrentTask(),
+                              .character = BRIB_CAMERA_TARGET,
+                              .flags = 3,
+                              .position = BRIB_KUK_POSITION,
+                              .rotation = BRIB_ROTATION,
+                              .completion = nullptr},
+        0);
     Vector3 ryo = BRIB_RYO_OFFSET;
     BribTransformOffset(BRIB_KUK_POSITION, BRIB_ROTATION, ryo);
-    QueueAreaLoopPosition({.parent = nullptr, .character = BRIB_RYO, .flags = 3, .position = ryo, .rotation = BRIB_ROTATION, .completion = nullptr}, 0);
+    QueueAreaLoopPosition(
+        {.parent = HLib::GetCurrentTask(), .character = BRIB_RYO, .flags = 3, .position = ryo, .rotation = BRIB_ROTATION, .completion = nullptr}, 0);
     Vector3 prop = BRIB_RYOS_OFFSET;
     BribTransformOffset(ryo, BRIB_ROTATION, prop);
-    QueueAreaLoopPosition({.parent = nullptr, .character = BRIB_RYOS, .flags = 3, .position = prop, .rotation = BRIB_ROTATION, .completion = nullptr}, 0);
+    QueueAreaLoopPosition(
+        {.parent = HLib::GetCurrentTask(), .character = BRIB_REN, .flags = 3, .position = prop, .rotation = BRIB_ROTATION, .completion = nullptr}, 0);
     camCtrlSetFovTransitionTo(1);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     QueueAreaLoopCamera("BRIB", 2100, BRIB_CAMERA_TARGET, nullptr, 0);

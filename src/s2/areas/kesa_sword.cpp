@@ -305,8 +305,9 @@ void KesaSwordActivationLoop(void *) {
             SetScenarioCharacterTransparency(ripple, alpha);
             alpha += .025f;
         }
-        partScale.x += .02f;
-        partScale.y = partScale.x;
+        partScale.z += .02f;
+        partScale.y = partScale.z;
+        partScale.x = partScale.z;
         EV_scenApplyPosOrRotToPartOf(ripple, 154, &partScale, nullptr, EventCharacterPartTransformMode::Set);
     }
     if (frame == 1971) {

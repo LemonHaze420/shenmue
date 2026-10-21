@@ -639,9 +639,19 @@ void ProcessRequestSlots(DSWK_t &doorSupport) {
                 continue;
             }
 
-            const std::int32_t candidate = FindCandidateSlotForEntry(doorSupport, request.requestedDoorEntryIndex);
+            std::int32_t candidate = -1;
+            bool found = false;
+            if (request.requestedDoorEntryIndex >= 0) {
+                for (std::int32_t i = 0; i < doorSupport.candidateCount; ++i) {
+                    candidate = i;
+                    if (doorSupport.candDoorEntryIndices[i] == request.requestedDoorEntryIndex) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
             request.candidateSlotIndex = candidate;
-            if (candidate < 0) {
+            if (!found) {
                 request.state = DSWK_REQ_FAILED;
                 continue;
             }

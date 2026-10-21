@@ -9,6 +9,7 @@
 
 namespace shenmue::s1 {
 
+inline constexpr shen_name TASK_KUTI = SHEN_NAME(KUTI);
 struct Character;
 
 

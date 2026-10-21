@@ -245,6 +245,20 @@ void AdjustScreenSpaceWithParams_0(const ScreenSpaceParams *params, std::int32_t
 }
 
 // @verified - p
+void AdjustDefaultScreenSpace(const ScreenSpaceParams *params) {
+    if (!g_updateRenderFrameMode)
+        return;
+    OriginalStrip strip;
+    strip.flags = 0;
+    strip.corner0 = 0xffffffffU;
+    strip.vertexCount = 0xff000000U;
+    strip.normalizedY1 = strip.normalizedX2 = strip.normalizedY3 = 0.0f;
+    strip.normalizedY2 = strip.normalizedX3 = 1.0f;
+    UILayout_BuildQuad(&strip, params->alignmentType, static_cast<std::int32_t>(params->halfScreenX), static_cast<std::int32_t>(params->halfScreenY),
+        params->scaledWidth, params->scaledHeight, params->positionScaleX, params->positionScaleY, params->angle, 0);
+}
+
+// @verified - p
 void AdjustScreenSpaceWithParams(const ScreenSpaceParams *params, std::uint32_t flags, std::int32_t screenMode) {
     if (!g_updateRenderFrameMode)
         return;

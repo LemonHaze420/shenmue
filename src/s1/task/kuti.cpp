@@ -11,13 +11,10 @@
 namespace shenmue::s1 {
 namespace {
 
-constexpr std::int32_t kKutiTaskToken = static_cast<std::int32_t>(SHEN_NAME(KUTI));
 constexpr std::uint32_t kCharacterHandlerType = SHEN_NAME(CEWP);
 constexpr std::size_t kLargeScratchPayload = 0x960;
 constexpr std::size_t kSmallScratchPayload = 0x4c0;
 constexpr std::uint16_t kNoDialogueSlot = 129;
-
-static_assert(kKutiTaskToken == SHEN_NAME(KUTI));
 
 constexpr std::int32_t ScratchToken(std::size_t bank, std::size_t pool) {
     return static_cast<std::int32_t>(make_shen_name('P', 'A', static_cast<char>('0' + bank), static_cast<char>('0' + pool)));
@@ -72,14 +69,19 @@ void ReleaseScratchPools() {
 bool AllocateScratchPools() {
     for (std::size_t bank = 0; bank < g_kutiScratchBanks.size(); ++bank) {
         KutiScratchBank &scratchBank = g_kutiScratchBanks[bank];
-        scratchBank.allocated = 0;
+
         for (std::size_t pool = 0; pool < scratchBank.pools.size(); ++pool) {
             const std::size_t payloadSize = pool == 0 ? kLargeScratchPayload : kSmallScratchPayload;
             const std::int32_t token = ScratchToken(bank, pool);
             void *const allocation = HLib_AllocHeapMemBlock(static_cast<std::int64_t>(payloadSize), token);
-            HLib_EnableTokenCheck(allocation);
+
             scratchBank.pools[pool] = allocation;
         }
+        scratchBank.allocated = 0;
+    }
+    for (KutiScratchBank &scratchBank : g_kutiScratchBanks) {
+        for (void *const allocation : scratchBank.pools)
+            HLib_EnableTokenCheck(allocation);
     }
     return true;
 }
@@ -139,7 +141,7 @@ void KUTI_Callback(HLib::TaskData *) {
 
                 const Matrix4x4 *transform = GetTransformForFACE_ForSpecificChara(character, 5);
                 if (!transform)
-                    transform = &callerTransform;
+                    transform = g_matrixStack.top.stack;
                 workTransformMatrix = *transform;
                 g_activeDialoguePosition = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
 
@@ -161,19 +163,17 @@ void KUTI_Callback(HLib::TaskData *) {
 }
 
 Character **KUTI_Init() {
-    if (g_kutiTask && g_kutiTask->mainTaskCallbackFnPtr == KUTI_Callback) {
-        return g_clipMemory.data();
-    }
-
-    g_kutiTask = nullptr;
-    ReleaseScratchPools();
-    ResetPublishedState();
-
-    g_kutiTask = HLib_EnqueueTaskWithoutParameter(KUTI_Callback, 8, 0, kKutiTaskToken);
-
-
-
+    g_kutiTask = HLib_EnqueueTaskWithoutParameter(KUTI_Callback, 8, 0, TASK_KUTI.name);
+    g_pCurrentFaceActor = nullptr;
+    g_pFACE = nullptr;
+    g_activeDialogueSlot = kNoDialogueSlot;
+    g_activeDialoguePosition = {};
     AllocateScratchPools();
+    g_clipMemory.fill(nullptr);
+
+    g_clipSlotHighWaterIndex = 0;
+
+    g_clipScanIndex = 0;
 
     return g_clipMemory.data();
 }

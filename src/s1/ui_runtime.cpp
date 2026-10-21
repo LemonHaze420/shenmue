@@ -1831,47 +1831,40 @@ void UI_GUITasksEnqueue() {
     if (g_commonIconSprites.count == 0)
         return;
 
-    HLib::Task *const outerTask = CurrentTask;
     IconPresentationOwner &icon = g_iconPresentation;
-    if (!IsOwnedUiTask(icon.rootTask, 14, SHEN_NAME(ICON), UI_ICONCallback, UI_ICONMainCallback)) {
-        icon.rootTask = HLib_EnqueueTaskWithoutParameter(UI_ICONCallback, 14, 0, SHEN_NAME(ICON));
-    }
+
+    icon.rootTask = HLib_EnqueueTaskWithoutParameter(UI_ICONCallback, 14, 0, UI_ICON_TASK.name);
+    HLib::Task *const outerTask = CurrentTask;
     g_conversationPromptRuntimeReady = true;
     SCEN_SetConversationPromptEnabled(true);
     g_conversationPromptSceneEnabled = true;
     if (icon.rootTask) {
         CurrentTask = icon.rootTask;
-        if (!IsOwnedUiTask(icon.menuTask, 15, SHEN_NAME(ICIS), UI_ICISCallback, UI_ICISMainCallback)) {
-            icon.menuTask = HLib_EnqueueTaskWithoutParameter(UI_ICISCallback, 15, 0, SHEN_NAME(ICIS));
-        }
+
+        icon.menuTask = HLib_EnqueueTaskWithoutParameter(UI_ICISCallback, 15, 0, UI_ICIS_TASK.name);
+
         CurrentTask = outerTask;
     }
     g_playerStats.batteryDecrementMask = 0;
     InitGUIStates();
     if (icon.rootTask) {
         CurrentTask = icon.rootTask;
-        if (!IsOwnedUiTask(icon.moneyTask, 8, 0x6f4d4349, UI_ICMoCallback)) {
-            icon.moneyTask = HLib_EnqueueTaskWithoutParameter(UI_ICMoCallback, 8, 0, 0x6f4d4349);
-        }
-        if (!IsOwnedUiTask(icon.actionSelectorTask, 8, 0x70534349, UI_ICSpCallback, UI_ICSpMainCallback)) {
-            icon.actionSelectorTask = HLib_EnqueueTaskWithoutParameter(UI_ICSpCallback, 8, 0, 0x70534349);
-        }
-        if (!IsOwnedUiTask(g_sfxOverlayTask, 8, 0x75514349, UI_ICQuCallback, UI_ICQuMainCallback)) {
-            g_sfxOverlayTask = HLib_EnqueueTaskWithoutParameter(UI_ICQuCallback, 8, 0, 0x75514349);
-        }
-        if (!IsOwnedUiTask(icon.notificationTask, 8, SHEN_NAME(ICNQ), UI_ICNQCallback, UI_ICNQMainCallback)) {
-            icon.notificationTask = HLib_EnqueueTaskWithoutParameter(UI_ICNQCallback, 8, 0, SHEN_NAME(ICNQ));
-        }
-        if (!IsOwnedUiTask(icon.cassetteTask, 8, SHEN_NAME(ICMC), UI_ICMCCallback, UI_ICMCMainCallback)) {
-            icon.cassetteTask = HLib_EnqueueTaskWithoutParameter(UI_ICMCCallback, 8, 0, SHEN_NAME(ICMC));
-        }
+
+        icon.moneyTask = HLib_EnqueueTaskWithoutParameter(UI_ICMoCallback, 8, 0, UI_ICMO_TASK.name);
+        CurrentTask = icon.rootTask;
+        icon.actionSelectorTask = HLib_EnqueueTaskWithoutParameter(UI_ICSpCallback, 8, 0, UI_ICSP_TASK.name);
+        CurrentTask = icon.rootTask;
+        g_sfxOverlayTask = HLib_EnqueueTaskWithoutParameter(UI_ICQuCallback, 8, 0, UI_ICQU_TASK.name);
+        CurrentTask = icon.rootTask;
+        icon.notificationTask = HLib_EnqueueTaskWithoutParameter(UI_ICNQCallback, 8, 0, UI_ICNQ_TASK.name);
+        CurrentTask = icon.rootTask;
+        icon.cassetteTask = HLib_EnqueueTaskWithoutParameter(UI_ICMCCallback, 8, 0, UI_ICMC_TASK.name);
+
         CurrentTask = outerTask;
     }
 
-    if (!IsOwnedUiTask(g_sleepSaveTrainingMenu.task, 8, SHEN_NAME(ICSV), UI_ICSVCallback, UI_ICSVMainCallback)) {
-        g_sleepSaveTrainingMenu.task = HLib_EnqueueTaskWithoutParameter(UI_ICSVCallback, 8, 0, SHEN_NAME(ICSV));
-    }
-    EnsureHelpTask();
+    g_sleepSaveTrainingMenu.task = HLib_EnqueueTaskWithoutParameter(UI_ICSVCallback, 8, 0, UI_ICSV_TASK.name);
+    Queue_HP_SetUpHelpIcon();
     TMEXRuntimeState &tmex = TMEX_GetRuntimeState();
     tmex.watchModelOwner = nullptr;
     WatchModelFilePtr = nullptr;

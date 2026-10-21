@@ -1234,9 +1234,14 @@ static_assert(offsetof(IconSystemMenuCameraTransition, savedAuthorState) == 0x6c
 static_assert(offsetof(IconSystemMenuCameraTransition, frameCount) == 0x74);
 static_assert(offsetof(IconSystemMenuCameraTransition, mode) == 0x7c);
 
-
-
-
+inline constexpr shen_name UI_ICON_TASK = SHEN_NAME(ICON);
+inline constexpr shen_name UI_ICIS_TASK = SHEN_NAME(ICIS);
+inline constexpr shen_name UI_ICMO_TASK = SHEN_NAME(ICMo);
+inline constexpr shen_name UI_ICSP_TASK = SHEN_NAME(ICSp);
+inline constexpr shen_name UI_ICQU_TASK = SHEN_NAME(ICQu);
+inline constexpr shen_name UI_ICNQ_TASK = SHEN_NAME(ICNQ);
+inline constexpr shen_name UI_ICMC_TASK = SHEN_NAME(ICMC);
+inline constexpr shen_name UI_ICSV_TASK = SHEN_NAME(ICSV);
 struct IconPresentationOwner {
     HLib::Task *rootTask{};
     HLib::Task *menuTask{};

@@ -1236,7 +1236,6 @@ std::int64_t RecursivePrepareChildMatrices(MT7Node *model, MT7Node *node) {
     return 0;
 }
 
-// @verified - p
 void mtAssignClothFlags(Character *character, std::int8_t assignMode) {
     MT7Model *const sourceModel = static_cast<MT7Model *>(character->model);
     if (!sourceModel)
@@ -1256,8 +1255,7 @@ void mtAssignClothFlags(Character *character, std::int8_t assignMode) {
         return;
     if (0.52f > ReadClothValue<float>(source + 8) || assignMode == -1)
         return;
-    auto *const cloth =
-        static_cast<ClothComponent *>(AllocateModelComponent(character, kClothToken, sizeof(ClothComponent), UpdateWindReactiveNode, FreeUSE_0));
+    auto *const cloth = static_cast<ClothComponent *>(AllocateModelComponent(character, kClothToken, sizeof(ClothComponent), UpdateWindReactiveNode));
     if (!cloth)
         return;
     cloth->model = root;
@@ -1286,6 +1284,7 @@ void mtAssignClothFlags(Character *character, std::int8_t assignMode) {
         }
     }
     AllocateCLTH_CLMS_CLID_CLVB_CLVO_CLVP_Wrapper(*cloth, model);
+    SetModelComponentCleanup(character, kClothToken, FreeUSE_0);
 }
 
 // @verified - p

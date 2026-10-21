@@ -142,7 +142,7 @@ void ProcessScenario(AuthorController *control) {
                 control->skipTimer = 90.0f;
         } else {
             EnableElement(UIElement::CutsceneSkip);
-            control->skipTimer -= HLib::GetScaledDeltaTick();
+            control->skipTimer -= shenGetScaledDeltaTickTime(1.0f);
             if ((input & 0x0200U) != 0 && (control->currentInput & 0x0200U) == 0) {
                 Author_RequestAbort();
             }

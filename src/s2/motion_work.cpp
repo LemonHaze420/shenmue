@@ -2105,13 +2105,13 @@ void BindMotionControllerMatricesToModelNodes(Character *, MotionWork *work, MT7
 MotionWork *AllocateMotionWork(Character *character) {
     if (!character)
         return nullptr;
-    MotionWork *const work =
-        static_cast<MotionWork *>(AllocateModelComponent(character, motionWorkToken, sizeof(MotionWork), MotionWorkUpdate, MotionWorkCleanup));
+    MotionWork *const work = static_cast<MotionWork *>(AllocateModelComponent(character, motionWorkToken, sizeof(MotionWork), MotionWorkUpdate));
     if (!work)
         return nullptr;
     charaAssignCoreCallback(character, mtwkDrawCharacterCore);
     imgmAssignUpdateCallback(character, mtUpdateTransparencyCallback);
     mtwkAssignDrawCallback(character, DrawShenmueEntity);
+    SetModelComponentCleanup(character, motionWorkToken, MotionWorkCleanup);
     std::memset(work, 0, sizeof(*work));
     if (MotionRigForEntityType(GetCharacterImageSourceType(character)) == 16U) {
         work->runtime.unfo = HLib::AllocateTaskData(4000, motionOverrideMemoryToken);

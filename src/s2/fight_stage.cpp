@@ -594,7 +594,6 @@ std::uint16_t FightFootFacingAngle() {
 
 } // namespace
 
-// @verified - p
 void vfUpdateHitFacingAndKnockback(VFActor *self) {
     self->contactVectors[0] = self->contactPosition;
     const auto readPosition = [self](std::int32_t bone, Vector3 &position) {
@@ -746,7 +745,7 @@ void vfUpdateHitFacingAndKnockback(VFActor *self) {
             if (self->hitFacingTimer < 0.0f)
                 self->hitFacingTimer = 0.0f;
         }
-        const bool secondHalf = static_cast<std::int16_t>(static_cast<double>(self->currentAnimationEndFrame) * 0.5) < self->animationTime;
+        const bool secondHalf = static_cast<double>(self->currentAnimationEndFrame) * 0.5 < self->animationTime;
         const bool turning =
             (self->hitStateFlags & VFHSF_Unknown8) != 0 ? self->animationHalfPhase < 0 || secondHalf : self->animationHalfPhase < 0 && !secondHalf;
         if (turning)

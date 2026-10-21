@@ -956,7 +956,8 @@ bool AuthMotionCommand(std::int32_t phase, const std::int32_t *args, AuthActorCo
         }
         if (nodeMotion) {
             InitializeTimedNodeMotion(*nodeMotion, static_cast<MT7Model *>(character->model), static_cast<std::uint16_t>(actor->motionId));
-            nodeMotion->begin = static_cast<float>(args[2] - 1);
+            nodeMotion->begin = 0.0f;
+            nodeMotion->frame = static_cast<float>(args[2] - 1);
             nodeMotion->end = static_cast<float>(args[3] - 1);
             nodeMotion->flags = 0;
             nodeMotion->speed = context.motionSpeed;
@@ -1627,7 +1628,8 @@ void ApplyAuthoredDynamicStreams() {
                 }
             } else if (stream.opcode == 18) {
                 shen_name subject{};
-                std::uint16_t mode{}, enabled{};
+                std::uint16_t mode{};
+                std::int16_t enabled{};
                 Read(record, 8, subject);
                 Read(record, 12, mode);
                 Read(record, 14, enabled);
