@@ -713,6 +713,21 @@ DialogueVoice *StartDialogueVoice(std::int32_t fileId, std::uint16_t entry, floa
 #endif
 }
 
+void PlayWaveBuffer(const std::byte *data, std::int32_t size, float gain) {
+#if defined(_WIN32)
+    const std::lock_guard<std::recursive_mutex> lock(audioMutex);
+    if (!InitializeDialogueAudio())
+        return;
+    RiffWaveView wave{};
+    if (ParseRiffWave({data, static_cast<std::size_t>(static_cast<std::int64_t>(size))}, wave))
+        SubmitDialogueWave(wave, gain);
+#else
+    (void)data;
+    (void)size;
+    (void)gain;
+#endif
+}
+
 DialogueVoiceState PollDialogueVoice(const DialogueVoice *voice) noexcept {
 #if !defined(_WIN32)
     (void)voice;

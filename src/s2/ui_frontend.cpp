@@ -24,6 +24,8 @@
 #include "s2/omak_collection_ui.hpp"
 
 #include "d3t/content.hpp"
+#include "d3t/archive_handles.hpp"
+#include "d3t/object_store.hpp"
 #include "d3t/image_texture_loader.hpp"
 #include "d3t/render_handles.hpp"
 #include "d3t/texture.hpp"
@@ -127,13 +129,47 @@ void SetSplashMode(std::int32_t mode) {
     splashStateStart = CurrentNanoseconds();
 }
 
-void InitializeSplashScreens(std::uint32_t renderHandle) {
+// @verified - p
+std::uint32_t LoadSplashImage(SplashRuntime &runtime) {
+    const std::int32_t language = GetLoadingScreenTextType(ResetSceneTextLanguage());
+    const char *path = runtime.definition->texturePath;
+    if (!path)
+        return static_cast<std::uint32_t>(language);
+    std::array<char, 260> localized{};
+    if (language != 0) {
+        const char *const extension = d3t::GetFileExtension(path);
+        if (extension) {
+            std::snprintf(localized.data(), localized.size(), "%.*s_%s.%s", static_cast<int>(extension - path - 1), path,
+                SPLASH_LANGUAGE_SUFFIXES[static_cast<std::size_t>(language)], extension);
+            if (d3t::AuthoredAssetExists(localized.data()))
+                path = localized.data();
+        }
+    }
+    runtime.request = SetupUsageForTexture(path, 0);
+    return runtime.request;
+}
 
-    splashScreenIndex = g_s2JapaneseVersion != 0 ? 0 : 2;
+// @verified - p
+bool ValidateSplashImage(SplashRuntime &runtime) {
+    if (runtime.textureHandle)
+        return true;
+    runtime.textureHandle = GetShaderDataByIndex(runtime.request);
+    if (!runtime.textureHandle)
+        return false;
+    runtime.image = {};
+    UI_SetImageFromTexture(runtime.image, runtime.textureHandle);
+    return true;
+}
+// @verified - p
+void InitializeSplashScreens(std::uint32_t) {
+
+    splashScreenIndex = GetS2IsEnglishVersion() ? 0 : 2;
     for (std::size_t index = static_cast<std::size_t>(splashScreenIndex); index < splashRuntime.size(); ++index) {
         SplashRuntime &runtime = splashRuntime[index];
         runtime.definition = &splashImages[index];
-        d3t::LoadImageTexture(runtime.definition->texturePath, false, &runtime.textureHandle, renderHandle);
+        LoadSplashImage(runtime);
+        if (runtime.definition->audioPath)
+            runtime.audioData = static_cast<std::byte *>(d3t::LoadLegacyFile(runtime.definition->audioPath, &runtime.audioSize));
     }
     SetSplashMode(0);
 }
@@ -153,13 +189,12 @@ void ProcessSplashScreen() {
 
     switch (splashScreenMode) {
     case 0:
-        if (elapsed > 0.5f && runtime.textureHandle != 0) {
-            std::uint32_t width = 0;
-            std::uint32_t height = 0;
-            if (d3t::GetTexture2DDimensions(runtime.textureHandle, &width, &height) && width != 0 && height != 0) {
-                SetSplashMode(1);
-            }
+        if (elapsed > 0.5f && ValidateSplashImage(runtime)) {
+            SetSplashMode(1);
+            if (runtime.audioData)
+                PlayWaveBuffer(runtime.audioData, static_cast<std::int32_t>(runtime.audioSize), GetS2AudioSettings().sfxVolume);
         }
+
         break;
     case 1:
         opacity = definition.duration > 0.0f ? elapsed / definition.duration : 1.0f;

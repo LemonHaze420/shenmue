@@ -599,6 +599,12 @@ bool Archive_HasPendingRead(std::uint32_t handle) {
     return false;
 }
 
+const char *GetFileExtension(const char *path) {
+    std::size_t length = std::strlen(path);
+    while (length > 1 && static_cast<std::uint8_t>(path[length - 1] - '.') > 1U)
+        --length;
+    return path[length - 1] == '.' ? path + length : nullptr;
+}
 bool Archive_FileExists(const char *path) {
     ArchiveSourceDesc source;
     ArchiveData_GetSourceDesc(path, source);

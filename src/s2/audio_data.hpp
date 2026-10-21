@@ -49,6 +49,7 @@ enum class DialogueVoiceState : std::uint32_t {
 
 bool InitializeDialogueAudio() noexcept;
 DialogueVoice *StartDialogueVoice(std::int32_t fileId, std::uint16_t entry, float gain) noexcept;
+void PlayWaveBuffer(const std::byte *data, std::int32_t size, float gain);
 DialogueVoiceState PollDialogueVoice(const DialogueVoice *voice) noexcept;
 // Real backend sample cursor; unavailable voices leave the outputs untouched.
 bool GetDialogueVoicePosition(const DialogueVoice *voice, std::uint64_t &samples, std::uint32_t &sampleRate) noexcept;

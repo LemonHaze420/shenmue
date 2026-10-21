@@ -739,9 +739,20 @@ struct SplashImageDefinition {
 };
 
 struct SplashRuntime {
+    std::uint32_t request{};
     std::uint32_t textureHandle{};
+    struct nk_image image {};
+    std::byte *audioData{};
+    std::uint64_t audioSize{};
     const SplashImageDefinition *definition{};
 };
+static_assert(sizeof(SplashImageDefinition) == 0x20 && offsetof(SplashImageDefinition, duration) == 0x10);
+static_assert(sizeof(SplashRuntime) == 0x40 && offsetof(SplashRuntime, image) == 8);
+static_assert(offsetof(SplashRuntime, audioData) == 0x28 && offsetof(SplashRuntime, audioSize) == 0x30 && offsetof(SplashRuntime, definition) == 0x38);
+inline constexpr std::array<const char *, 7> SPLASH_LANGUAGE_SUFFIXES{"", "jp", "fr", "de", "kr", "tc", "sc"};
+std::uint32_t LoadSplashImage(SplashRuntime &runtime);
+bool ValidateSplashImage(SplashRuntime &runtime);
+bool UI_SetImageFromTexture(struct nk_image &image, std::uint32_t texture);
 extern const std::array<SplashImageDefinition, 6> splashImages;
 
 extern std::array<SplashRuntime, 6> splashRuntime;
