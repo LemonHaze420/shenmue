@@ -570,16 +570,33 @@ void SaveMenuResponse(std::int32_t response) {
     }
 }
 
-void ActivateSaveMenuRow(float *, void *data) {
-    const SaveMenuSlot *const slot = static_cast<const SaveMenuSlot *>(data);
-    if (!slot || (!slot->valid && !g_saveFrontendMode)) {
-        AicaExecuteWrapper(8);
+// @verified - p
+void LoadGameCallback(std::int32_t response) {
+    if (response != 2)
         return;
+    for (std::int32_t index = 0; index < 10; ++index) {
+        if (loadSaveRuntime.selected == &loadSaveRuntime.slots[index]) {
+            BeginSaveMenuLoad(index);
+            return;
+        }
     }
+}
+
+// @verified - p
+void LoadOrSaveGame(const SaveMenuSlot *slot) {
     loadSaveRuntime.selected = slot;
     if (g_saveFrontendMode == 0) {
-        loadSaveSelectedSlot = static_cast<std::size_t>(slot - loadSaveRuntime.slots.data());
-        S2SaveScreen_ConfirmSlot(loadSaveSelectedSlot);
+        std::uint32_t index = 0;
+        while (index < 10 && slot != &loadSaveRuntime.slots[index])
+            ++index;
+        if (index == 10)
+            index = 0xffffffffU;
+        if (GetSaveMenuSlotEligibility(index)) {
+            if (slot->valid)
+                NativeMessageBox("UILOADDOYO", false, 1, LoadGameCallback);
+        } else {
+            AicaExecuteWrapper(8);
+        }
         return;
     }
     if (EV_CanDoAreaJump() != 1) {
@@ -589,6 +606,17 @@ void ActivateSaveMenuRow(float *, void *data) {
     if (slot->valid) NativeMessageBox("UISAVECONF", false, 0, SaveMenuResponse); // @text EN: "Are you sure you want to save?" | JA: "セーブしてもよろしいですか？"
     else
         SaveMenuResponse(2);
+}
+
+// @verified - p
+void ActivateSaveMenuRow(float *, void *data) {
+    const SaveMenuSlot *const slot = static_cast<const SaveMenuSlot *>(data);
+    if (slot) {
+        if (slot->valid || g_saveFrontendMode == 1)
+            LoadOrSaveGame(slot);
+        else
+            AicaExecuteWrapper(8);
+    }
 }
 
 void DrawSaveMenuRow(
@@ -965,6 +993,9 @@ std::int64_t MainMenuWheelInput() {
     const bool selected = enterPressed || (g_inputBuffer[0].pressedPriority & 0x0400U) != 0;
     if (!selected || IsUITransitionActive(g_mainMenuWheelInputBlock))
         return 0;
+    enterPressed = false;
+    g_inputBuffer[0].pressedPriority = 0;
+    AicaExecuteWrapper(2);
     return ActivateMainMenuChoice(mainMenuSelection);
 }
 
@@ -978,13 +1009,14 @@ std::int64_t ActivateMainMenuChoice(MainMenuItem selection) {
         transitioned = BeginNewGameModuleHandoff();
         break;
     case MainMenuItem::Continue:
-        nextRoute = FrontendRoute::Continue;
-        transitioned = BeginContinueModuleHandoff();
-        break;
-    case MainMenuItem::Collection:
-        nextRoute = FrontendRoute::TitleLoad;
-        transitioned = BeginTitleLoadModuleHandoff();
-        break;
+    case MainMenuItem ::Collection:
+        AicaExecuteWrapper(2);
+        if (IsArchiveReadComplete() || IsArchiveReadPending()) {
+            SetSaveFrontendMode(0);
+            SetSaveMenuSource(selection == MainMenuItem::Continue ? 0 : 1);
+            SelectMainMenuPage(1);
+        }
+        return 0;
     case MainMenuItem::Options:
         nextRoute = FrontendRoute::Options;
         transitioned = SelectMainMenuPage(2);

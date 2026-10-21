@@ -2,6 +2,8 @@
 
 #include "platform/performance_counter.hpp"
 #include "d3t/content.hpp"
+#include "d3t/archives.hpp"
+#include "s2/camera.hpp"
 #include "d3t/object_store.hpp"
 #include "d3t/render_handles.hpp"
 #include "d3t/threads.hpp"
@@ -33,6 +35,7 @@
     std::int32_t minimumUnlockedWaitSeconds{};
     std::int32_t maximumUnlockedWaitSeconds{};
     bool waitForRendererReadiness{};
+    std::int32_t g_archiveExternalChecksEnabled{};
     namespace {
 
     std::int32_t numFramesProcessed{};
@@ -80,6 +83,60 @@ void FlushFramePacingRenderQueue() {
     ProcessD3TMessages();
 }
 
+// @verified - p
+bool IsArchiveReadComplete() noexcept {
+    return g_archiveExternalChecksEnabled != 0 || (d3t::g_archiveState.type == 2 && g_archiveRemapCheckEnabled != 0);
+}
+
+// @verified - p
+bool IsArchiveReadPending() noexcept {
+    return g_archiveExternalChecksEnabled != 0 || (d3t::g_archiveState.type == 1 && g_archiveRemapCheckEnabled != 0);
+}
+
+// @verified - p
+std::int64_t ReadArchivesAndFlushRenderQueue() {
+    if (g_archiveExternalChecksEnabled == 0) {
+        if (d3t::g_archiveState.type != 1 || g_archiveRemapCheckEnabled == 0)
+            return 1;
+    }
+    if (g_archiveExternalChecksEnabled == 0 || d3t::g_archiveState.type != 0) {
+        const d3t::D3TArchiveDirectory directory{.root = d3t::g_archiveState.root, .backend = d3t::g_archiveState.backend, .type = 2, .asynchronous = 1};
+        d3t::d3t_ReadArchives(&directory);
+    }
+    for (;;) {
+        const std::uint32_t handle = d3t::g_archiveReadTask;
+        if (handle == d3t::g_invalidTaskHandle)
+            return handle;
+        const std::int32_t index = static_cast<std::int16_t>(handle) - 1;
+        const d3t::D3TTaskRecord &task = d3t::g_d3tTasks[index];
+        if (task.generation != handle >> 16U)
+            return index;
+        const std::int32_t state = task.state.load(std::memory_order_seq_cst);
+        if (state == 0)
+            return state;
+        FlushFramePacingRenderQueue();
+    }
+}
+
+// @verified - p
+bool FlushCurrentMessageAndRenderQueue() {
+    if (IsArchiveReadComplete())
+        return true;
+    if (IsArchiveReadPending()) {
+        const bool unlocked = GetNumFramesProcessed() != 0;
+        if (!unlocked) {
+            camCtrlSetFilmBarEnabled(0);
+            shenSetForcedFilmbars(1);
+            UpdateFramePacing();
+        }
+        ReadArchivesAndFlushRenderQueue();
+        if (!unlocked) {
+            UpdateCurrentFramesRendered(0);
+            shenSetForcedFilmbars(0);
+        }
+    }
+    return IsArchiveReadComplete();
+}
 void UpdateFramePacing() {
     if (numFramesProcessed != 0)
         return;

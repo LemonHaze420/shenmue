@@ -122,6 +122,8 @@ extern std::int32_t g_previousTitleMenuSelection;
 extern std::int32_t g_titleMenuUIState;
 extern std::int64_t (*g_titleMenuTransitionCallback)();
 extern std::int32_t g_titleMenuTransitionRequested;
+void TitleAudioControl(std::int32_t sceneIndex);
+void ApplyTitleMenuOptions();
 void SetTitleMenuUIState(std::int32_t state) noexcept;
 void SetTitleMenuTransitionCallback(std::int64_t (*callback)()) noexcept;
 void RequestTitleMenuTransition() noexcept;

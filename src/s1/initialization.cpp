@@ -13,6 +13,8 @@
 #include "s1/file_state.hpp"
 #include "s1/graphics_resources.hpp"
 #include "s1/initialization.hpp"
+#include "s1/task/hplg.hpp"
+#include "s1/steam.hpp"
 #include "s1/input.hpp"
 #include "s1/launch_options.hpp"
 #include "s1/legacy_renderer.hpp"
@@ -57,7 +59,6 @@ void InitializeSteamAPI();
 void ReadConfigFromSave();
 void SettingsFileParser();
 void SetupEffeTransform();
-void SteamSaveFn();
 void SteamPlatformContextRefresh();
 extern std::uint32_t g_ClearColour;
 
@@ -76,11 +77,11 @@ std::int32_t g_sceneInitFlag72c = 0;
 std::uint32_t g_memAlignment = 7;
 void *g_globalMemory = nullptr;
 std::uint32_t g_globalMemorySize = 0;
-void (*g_steamSaveFunction)() = nullptr;
-void (*g_steamCallbackFunction)(std::uint64_t, std::uint64_t) = nullptr;
+SteamStorageCallback g_steamSaveFunction = nullptr;
+SaveStorageCompletion g_steamCallbackFunction = nullptr;
 void *g_activeSaveData = nullptr;
-void *g_steamContext = nullptr;
-void *g_steamContextSecondary = nullptr;
+std::int32_t g_bookkeepingStorageResult = 0;
+std::atomic<std::int32_t> g_bookkeepingStorageState{0};
 std::uint64_t g_initializationTemporaryClearColour = 0;
 std::uint32_t g_hasDirectXInitialized = 0;
 std::int32_t g_postInitState = 0;
@@ -346,10 +347,10 @@ std::int64_t ShenmueInit(GameConfig *config) {
 
     g_steamSaveFunction = SteamSaveFn;
     g_activeSaveData = nullptr;
-    g_steamContext = nullptr;
-    g_steamContextSecondary = nullptr;
+    g_bookkeepingStorageResult = 0;
+    g_bookkeepingStorageState.store(0);
     if (g_steamCallbackFunction) {
-        g_steamCallbackFunction(0, 0);
+        g_steamCallbackFunction(0, nullptr);
     }
 
 #if defined(_WIN32)

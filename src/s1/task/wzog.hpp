@@ -9,13 +9,12 @@ namespace shenmue::s1 {
 
 struct Character;
 
-
+struct MoveSetRuntimeState;
 
 struct MoveListRecord {
     const char *nameToken;
     std::int16_t commandIndex;
 };
-
 
 using MoveCommandRecord = std::array<std::uint8_t, 7>;
 
@@ -77,6 +76,8 @@ void RenderMovesScreenSceneToTexture();
 
 extern HLib::Task *g_pMovesScreenTask;
 
+extern const MoveListRecord *g_movesScreenTextBank;
+extern MoveSetRuntimeState *g_movesScreenMoveTable;
 
 extern std::uint16_t g_movesScreenCurrentAnimSet;
 extern std::uint8_t g_movesScreenSyncedMoveSet;

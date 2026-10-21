@@ -122,6 +122,7 @@ void SetPausedAndInit();
 
 void SetSettingFlags() {
     g_settingFlagsCaptured = 1;
+    g_bookkeepingRefreshUpdatesDisabled = 1;
 }
 
 void SetIntroSceneInfo(HLib::TaskData *) {

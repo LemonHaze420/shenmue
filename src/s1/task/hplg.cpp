@@ -1,4 +1,7 @@
 #include "s1/task/hplg.hpp"
+#include "s1/task/save.hpp"
+#include "s1/d3t/d3t_threads.hpp"
+#include "s1/steam.hpp"
 #include "s1/boot.hpp"
 #include "s1/d3t/d3t_buffer.hpp"
 #include "s1/d3t/renderer.hpp"
@@ -18,6 +21,9 @@
 #include "s1/ui_runtime.hpp"
 
 #include <algorithm>
+#include <atomic>
+#include <cstdio>
+#include <new>
 #include <array>
 #include <bit>
 #include <cstddef>
@@ -31,6 +37,8 @@ namespace shenmue::s1 {
 BookkeepingCache g_bookkeepingStatsCache{};
 std::int32_t g_returnToTitleRequested = 0;
 
+std::int32_t g_bookkeepingRefreshUpdatesDisabled = 0;
+std::uint32_t g_bookkeepingProgressOverride = 0;
 namespace {
 
 constexpr std::int16_t kHotPlugTaskIndex = 2;
@@ -86,144 +94,245 @@ static_assert(offsetof(HotPlugTaskData, listenerHead) == 0x3c8);
 
 std::array<std::byte, kGlobalStatsSize + sizeof(std::uint32_t)> g_bookkeepingGlobalStatsUploadBuffer{};
 std::uint32_t g_bookkeepingRefreshCount = 0;
-[[maybe_unused]] std::uint32_t g_bookkeepingStartupMirror = 0;
-[[maybe_unused]] std::uint32_t g_bookkeepingGlobalStatsUploadCount = 0;
+std::uint32_t g_bookkeepingStartupMirror = 0;
+std::uint32_t g_bookkeepingGlobalStatsUploadCount = 0;
 
-
-
-
-std::int32_t g_globalStatsUploadGate = 0;
-
-
+std::array<std::byte, kS1SaveImageSize> g_saveSlotUploadBuffer;
 
 bool g_bookkeepingStorageConnected = true;
 
-enum class PlatformStorageResult : std::int32_t {
-    Success = 0,
-    Unavailable = -1,
-    Pending = -2,
-    Failed = -3,
+struct BookkeepingStorageRequest {
+    char name[16];
+    void *data;
+    std::byte *buffer;
+    std::uint32_t offset;
+    std::uint32_t size;
+    bool write;
+    SteamStorageCallback callback;
 };
 
 HotPlugTaskData *HotPlugData() {
     return g_hotPlugTask && g_hotPlugTask->task_data_ptr ? reinterpret_cast<HotPlugTaskData *>(g_hotPlugTask->task_data_ptr) : nullptr;
 }
 
-PlatformStorageResult CurrentPlatformStorageState() {
-    return g_bookkeepingStorageConnected ? PlatformStorageResult::Success : PlatformStorageResult::Unavailable;
+std::int32_t CurrentPlatformStorageState() {
+    return g_bookkeepingStorageConnected ? g_bookkeepingStorageState.load() : -1;
 }
 
-PlatformStorageResult ServicePendingPlatformLoad(PlatformStorageResult result) {
-    if (result != PlatformStorageResult::Pending)
-        return result;
-
-
-
-
-
-
-    return PlatformStorageResult::Unavailable;
+void WaitForBookkeepingStorage() {
+    while (CurrentPlatformStorageState() == -2)
+        SteamRemoteStorage_RunCallbacks();
 }
 
-PlatformStorageResult LoadBookkeepingFromPlatform() {
-
-
-
-
-
-    const PlatformStorageResult platformState = CurrentPlatformStorageState();
-    if (platformState == PlatformStorageResult::Pending)
-        return ServicePendingPlatformLoad(platformState);
-    return PlatformStorageResult::Unavailable;
+// @verified - p
+std::int32_t MapBookkeepingStorageResult(std ::int32_t result) {
+    switch (result) {
+    case -3:
+        return -4;
+    case -2:
+        return -5;
+    case -1:
+        return -2;
+    default:
+        return result != 0 ? -6 : 0;
+    }
 }
-
 std::string SaveSlotKey(std::size_t slot) {
     return "SHENMUE1_00" + std::to_string(slot);
 }
 
-bool ReadLocalSaveSlot(std::size_t slot, S1SaveImage &image) {
-    const std::string key = SaveSlotKey(slot);
-    const std::string shortSlot = std::to_string(slot);
-    const std::array<std::filesystem::path, 5> paths{
-        std::filesystem::path{"save"} / key,
-        std::filesystem::path{"save"} / (key + ".bin"),
-        slot == 0 ? std::filesystem::path{"save/s1_new_game.bin"} : std::filesystem::path{},
-        std::filesystem::path{"save"} / ("s1_00" + shortSlot + ".bin"),
-        std::filesystem::path{"save"} / ("s1_slot_" + shortSlot + ".bin"),
-    };
+std::filesystem::path BookkeepingStoragePath(const char *name) {
+    return std::filesystem::path{"save"} / name;
+}
 
-    for (const std::filesystem::path &path : paths) {
-        if (path.empty())
-            continue;
-        if (S1Save_Read(path, image) == S1SaveResult::Success)
-            return true;
+std::filesystem::path BookkeepingReadPath(const char *name) {
+    const std::filesystem::path path = BookkeepingStoragePath(name);
+    std::error_code error;
+    if (std::filesystem::exists(path, error) || std::strncmp(name, "SHENMUE1_00", 11) != 0)
+        return path;
+    const std::string slot{name + 11};
+    const std::array<std::filesystem::path, 4> alternatives{BookkeepingStoragePath((std::string{name} + ".bin").c_str()),
+        slot == "0" ? BookkeepingStoragePath("s1_new_game.bin") : std::filesystem::path{}, BookkeepingStoragePath(("s1_00" + slot + ".bin").c_str()),
+        BookkeepingStoragePath(("s1_slot_" + slot + ".bin").c_str())};
+    for (const std::filesystem::path &alternative : alternatives) {
+        if (!alternative.empty() && std::filesystem::exists(alternative, error))
+            return alternative;
     }
-    return false;
+    return path;
+}
+std::int32_t CheckBookkeepingStorageOpen(const char *name) {
+    std::error_code error;
+    return std::filesystem::is_regular_file(BookkeepingReadPath(name), error) ? 0 : -3;
+}
+
+std::int32_t ReadBookkeepingStorageSize(const char *name) {
+    std::error_code error;
+    const std::uintmax_t size = std::filesystem::file_size(BookkeepingReadPath(name), error);
+    return error ? -3 : static_cast<std::int32_t>(size);
+}
+
+std::int32_t BookkeepingStorageWorker(void *data) {
+    BookkeepingStorageRequest &request = *static_cast<BookkeepingStorageRequest *>(data);
+    S1SaveResult result;
+    if (request.write)
+        result = S1Save_WriteStorageBytes(BookkeepingStoragePath(request.name), request.buffer, request.size);
+    else {
+        result = S1Save_ReadStorageRange(BookkeepingReadPath(request.name), request.buffer, request.offset, request.size);
+        if (result == S1SaveResult::Success)
+            std::memcpy(request.data, request.buffer, request.size);
+    }
+    delete[] request.buffer;
+    if (request.write)
+        g_steamSaveFunction(3, result == S1SaveResult::Success ? 0 : -9, request.data);
+    else
+        request.callback(2, result == S1SaveResult::Success ? 0 : -4, request.data);
+    return 0;
+}
+
+std::int32_t QueueBookkeepingStorage(const char *name, void *data, std::uint32_t offset, std::uint32_t size, bool write) {
+    BookkeepingStorageRequest request{};
+    std::snprintf(request.name, sizeof(request.name), "%s", name);
+    request.data = data;
+    request.callback = g_steamSaveFunction;
+    request.buffer = new (std::nothrow) std::byte[size];
+    if (!request.buffer) {
+        if (!write)
+            g_steamSaveFunction(2, -4, data);
+        return 0;
+    }
+    request.offset = offset;
+    request.size = size;
+    request.write = write;
+    if (write)
+        std::memcpy(request.buffer, data, size);
+    const d3t::D3TTaskDescriptor descriptor{.data = &request, .callback = BookkeepingStorageWorker, .completion = nullptr, .priority = 0};
+    d3t::d3t_QueueTask(&descriptor, sizeof(request));
+    return 0;
+}
+
+// @verified - p
+std::int32_t CheckBookkeepingStorageCapacity(const char *name, std::uint32_t size) {
+    std::int32_t oldSize = 0;
+    constexpr std::int64_t availableBytes = 1000000000;
+    if (CheckBookkeepingStorageOpen(name) == 0) {
+        oldSize = ReadBookkeepingStorageSize(name);
+        if (oldSize < 0)
+            return MapBookkeepingStorageResult(oldSize);
+    }
+    return availableBytes >= static_cast<std::int32_t>(size) - oldSize ? 0 : -5;
+}
+
+// @verified - p
+std::int32_t ReadBookkeepingStorage(const char *name, void *data, std::uint32_t offset, std::uint32_t size) {
+    WaitForBookkeepingStorage();
+    g_bookkeepingStorageState.store(-2);
+    g_steamCallbackFunction = nullptr;
+    const std::int32_t result = CheckBookkeepingStorageOpen(name);
+    if (result != 0) {
+        g_activeSaveData = data;
+        g_bookkeepingStorageResult = -4;
+        g_bookkeepingStorageState.store(0);
+        if (g_steamCallbackFunction)
+            g_steamCallbackFunction(-4, data);
+        return MapBookkeepingStorageResult(result);
+    }
+    return MapBookkeepingStorageResult(QueueBookkeepingStorage(name, data, offset, size, false));
+}
+
+// @verified - p
+std::int32_t WriteBookkeepingStorage(const char *name, void *data, std::uint32_t size, SaveStorageCompletion completion) {
+    WaitForBookkeepingStorage();
+    g_bookkeepingStorageState.store(-2);
+    g_steamCallbackFunction = completion;
+    const std::int32_t result = CheckBookkeepingStorageCapacity(name, size);
+    if (result != 0) {
+        g_bookkeepingStorageResult = -5;
+        g_activeSaveData = data;
+        g_bookkeepingStorageState.store(0);
+        if (g_steamCallbackFunction)
+            g_steamCallbackFunction(-5, data);
+        return result;
+    }
+    return MapBookkeepingStorageResult(QueueBookkeepingStorage(name, data, 0, size, true));
 }
 
 void StageBookkeepingGlobalStatsUploadBuffer() {
-    // UploadBookkeepingGlobalStats copies exactly 0x1804 bytes and then
-    // dispatches Steam_Callbacks(..., "BOOKKEEP", 0x1804).  Keep the staging
-    // and gate semantics game-owned; the final Steam dispatch is intentionally
-    // isolated because that third-party adapter is unavailable.
     std::memcpy(g_bookkeepingGlobalStatsUploadBuffer.data(), &g_bookkeepingStatsCache, g_bookkeepingGlobalStatsUploadBuffer.size());
     ++g_bookkeepingGlobalStatsUploadCount;
 }
 
-void RefreshBookkeepingGlobalStatsCache(HotPlugTaskData &data) {
-    ++g_bookkeepingRefreshCount;
-    std::memset(data.refreshScratch, 0, sizeof(data.refreshScratch));
+// @verified - p
+std::int32_t LoadBookkeepingGlobalStatsAndSaveHeaders() {
     std::memset(&g_bookkeepingStatsCache, 0, sizeof(g_bookkeepingStatsCache));
     g_playerStats.currentSaveProgress = 0;
-
-
-
-
-
-    const bool bookkeepingLoaded = LoadBookkeepingFromPlatform() == PlatformStorageResult::Success;
-    bool slotStatsLoaded = bookkeepingLoaded;
+    WaitForBookkeepingStorage();
+    const std::int32_t storageState = CurrentPlatformStorageState();
+    if (storageState != 0)
+        return storageState;
+    bool globalStatsLoaded = false;
+    if (ReadBookkeepingStorage("BOOKKEEP", &g_bookkeepingStatsCache, 0, g_bookkeepingGlobalStatsUploadBuffer.size()) == 0) {
+        WaitForBookkeepingStorage();
+        globalStatsLoaded = g_bookkeepingStorageResult == 0;
+    }
     bool shouldUploadGlobalStats = false;
-
+    std::array<std::uint8_t, 0x200> header;
     for (std::size_t slot = 0; slot < kMaximumSaveSlots; ++slot) {
-        S1SaveImage image{};
-        if (!ReadLocalSaveSlot(slot, image))
+        std::snprintf(g_currentSaveSlot.data(), g_currentSaveSlot.size(), "%s", SaveSlotKey(slot).c_str());
+        if (ReadBookkeepingStorage(g_currentSaveSlot.data(), header.data(), 0x600, header.size()) != 0)
             continue;
+        WaitForBookkeepingStorage();
+        if (g_bookkeepingStorageResult != 0)
+            continue;
+        WaitForBookkeepingStorage();
+        if (CurrentPlatformStorageState() != 0)
+            continue;
+        std::uint32_t identifier, version;
+        std::memcpy(&identifier, header.data() + 0x80, sizeof(identifier));
+        std::memcpy(&version, header.data() + 0x84, sizeof(version));
+        if (identifier != kS1SaveIdentifier.name || version != kS1SaveVersion)
+            continue;
+        std::memcpy(&g_bookkeepingStatsCache.saveSummaries[slot], header.data() + 0x140, kSaveSummarySize);
 
-        const auto *const bytes = image.bytes.data();
-        std::memcpy(&g_bookkeepingStatsCache.saveSummaries[slot], bytes + kS1SaveSummaryOffset, kSaveSummarySize);
-
-
-
-        if (!slotStatsLoaded) {
-            std::memcpy(g_bookkeepingStatsCache.globalStatsMirror.data(), bytes + kS1SaveGlobalStatsOffset, kGlobalStatsSize);
-            slotStatsLoaded = true;
+        if (!globalStatsLoaded) {
+            if (ReadBookkeepingStorage(
+                    g_currentSaveSlot.data(), g_bookkeepingStatsCache.globalStatsMirror.data(), kS1SaveGlobalStatsOffset, kGlobalStatsSize) == 0) {
+                WaitForBookkeepingStorage();
+                if (g_bookkeepingStorageResult == 0) {
+                    WaitForBookkeepingStorage();
+                    if (CurrentPlatformStorageState() == 0) {
+                        globalStatsLoaded = true;
+                        g_bookkeepingStatsCache.aggregateSaveProgress = header[kInternalProgressOffset - 0x600];
+                    }
+                }
+            }
         }
 
-
-
-        if (g_globalStatsUploadGate == 0) {
+        if (g_bookkeepingRefreshUpdatesDisabled == 0) {
             g_bookkeepingStatsCache.aggregateSaveProgress =
-                static_cast<std::uint8_t>(g_bookkeepingStatsCache.aggregateSaveProgress + bytes[kInternalProgressOffset]);
-            std::uint32_t settingsFlags = 0;
-            std::memcpy(&settingsFlags, bytes + kInternalSettingsFlagsOffset, sizeof(settingsFlags));
+                static_cast<std::uint8_t>(g_bookkeepingStatsCache.aggregateSaveProgress + header[kInternalProgressOffset - 0x600]);
+            std::uint32_t settingsFlags;
+            std::memcpy(&settingsFlags, header.data() + kInternalSettingsFlagsOffset - 0x600, sizeof(settingsFlags));
             S1SettingsFlags_Set(settingsFlags);
             shouldUploadGlobalStats = true;
         }
     }
-
-    g_playerStats.currentSaveProgress = g_bookkeepingStatsCache.aggregateSaveProgress;
+    const std::uint8_t progress = g_bookkeepingStatsCache.aggregateSaveProgress;
+    g_bookkeepingStatsCache.refreshStatus.hasProgress = progress != 0;
+    g_playerStats.currentSaveProgress = progress;
     g_bookkeepingStatsCache.refreshStatus.isLoaded = 1;
-    g_bookkeepingStatsCache.refreshStatus.hasProgress = g_bookkeepingStatsCache.aggregateSaveProgress != 0 ? 1U : 0U;
+    return shouldUploadGlobalStats ? UploadBookkeepingGlobalStats() : progress;
+}
+
+// @verified - p
+void RefreshBookkeepingGlobalStatsCache(HotPlugTaskData &data) {
+    ++g_bookkeepingRefreshCount;
+    std::memset(data.refreshScratch, 0, sizeof(data.refreshScratch));
+    data.hasProgress = 0;
+    LoadBookkeepingGlobalStatsAndSaveHeaders();
     data.hasProgress = static_cast<std::int32_t>(g_bookkeepingStatsCache.refreshStatus.hasProgress);
 
-    if (shouldUploadGlobalStats)
-        StageBookkeepingGlobalStatsUploadBuffer();
-
-    for (BookkeepingListenerNode *node = data.listenerHead; node; node = node->previous) {
-        if (node->callback) {
-            node->callback(reinterpret_cast<const std::byte *>(&g_bookkeepingStatsCache));
-        }
-    }
+    for (BookkeepingListenerNode *node = data.listenerHead; node; node = node->previous)
+        node->callback(reinterpret_cast<const std::byte *>(&g_bookkeepingStatsCache));
 }
 
 void bupHotPlugTask_HPLG_Callback(HLib::TaskData *taskData) {
@@ -231,7 +340,7 @@ void bupHotPlugTask_HPLG_Callback(HLib::TaskData *taskData) {
     if (!data)
         return;
 
-    const std::int32_t connected = CurrentPlatformStorageState() == PlatformStorageResult::Unavailable ? 0 : 1;
+    const std::int32_t connected = CurrentPlatformStorageState() == -1 ? 0 : 1;
     if (connected == data->connected)
         return;
     data->connected = connected;
@@ -240,11 +349,38 @@ void bupHotPlugTask_HPLG_Callback(HLib::TaskData *taskData) {
 
 } // namespace
 
-
-
+// @verified - p
+void SteamSaveFn(std::int32_t, std::int32_t result, void *data) {
+    g_activeSaveData = data;
+    const std::int32_t mapped = MapBookkeepingStorageResult(result);
+    const SaveStorageCompletion completion = g_steamCallbackFunction;
+    g_bookkeepingStorageResult = mapped;
+    g_bookkeepingStorageState.store(0);
+    if (completion)
+        completion(mapped, data);
+}
+// @verified - p
 std::int32_t UploadBookkeepingGlobalStats() {
     StageBookkeepingGlobalStatsUploadBuffer();
-    return 0;
+    const std::int32_t result =
+        WriteBookkeepingStorage("BOOKKEEP", g_bookkeepingGlobalStatsUploadBuffer.data(), g_bookkeepingGlobalStatsUploadBuffer.size(), nullptr);
+    if (result != 0)
+        return result;
+    WaitForBookkeepingStorage();
+    return g_bookkeepingStorageResult;
+}
+
+// @verified - p
+std::int32_t UploadCurrentSaveSlot(S1SaveImage &image) {
+    const std::int32_t result = UploadBookkeepingGlobalStats();
+    if (result != 0)
+        return result;
+    S1Save_PrepareStorageWrite(image);
+    std::memcpy(g_saveSlotUploadBuffer.data(), image.bytes.data(), g_saveSlotUploadBuffer.size());
+    if (WriteBookkeepingStorage(g_currentSaveSlot.data(), g_saveSlotUploadBuffer.data(), g_saveSlotUploadBuffer.size(), nullptr) != 0)
+        return -6;
+    WaitForBookkeepingStorage();
+    return g_bookkeepingStorageResult;
 }
 
 const S1SaveSummary *HPLG_GetSaveSummary(std::size_t slot) {
@@ -288,7 +424,7 @@ void bupHotPlugTaskStart() {
     HLib_EnableTokenCheck(data);
     std::memset(data, 0, sizeof(*data));
     task->task_data_ptr = reinterpret_cast<HLib::TaskData *>(data);
-    data->connected = CurrentPlatformStorageState() == PlatformStorageResult::Unavailable ? 0 : 1;
+    data->connected = CurrentPlatformStorageState() == -1 ? 0 : 1;
     RefreshBookkeepingGlobalStatsCache(*data);
     g_bookkeepingStartupMirror = static_cast<std::uint32_t>(data->hasProgress);
 }
@@ -322,8 +458,8 @@ std::uint32_t HPLG_GetBookkeepingProgress() {
 }
 
 bool HPLG_HasBookkeepingProgress() {
-    const HotPlugTaskData *const data = HotPlugData();
-    return data && data->hasProgress != 0;
+
+    return g_bookkeepingProgressOverride != 0 || g_bookkeepingStartupMirror != 0;
 }
 
 std::uint32_t HPLG_GetBookkeepingRefreshCount() {

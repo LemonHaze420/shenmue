@@ -25,6 +25,7 @@
 #include "s1/task/lcdm.hpp"
 #include "s1/task/pack.hpp"
 #include "s1/task/sond.hpp"
+#include "s1/task/sygh.hpp"
 #include "s1/task/srch.hpp"
 #include "s1/task/vfma.hpp"
 #include "s1/ui_runtime.hpp"
@@ -587,7 +588,7 @@ void DestroyForMovesScreen() {
 }
 
 void MovesScreen_PlaceAndDrawRyo() {
-    const bool frozen = (Shenmue_nPauseState & 2) != 0;
+    const bool frozen = (Shenmue_nPauseState & 2) != 0 || g_moveHelpPopupState != 0;
     if (!frozen) {
         const std::uint16_t stick = g_inputState.slots[0].rightStick;
         g_movesRyoStick = {static_cast<std::uint8_t>(stick), static_cast<std::uint8_t>(-static_cast<std::uint8_t>(stick >> 8U))};
@@ -958,6 +959,8 @@ std::uint8_t BeginMovesScreenViewTransition() {
 }
 
 HLib::Task *g_pMovesScreenTask = nullptr;
+const MoveListRecord *g_movesScreenTextBank = nullptr;
+MoveSetRuntimeState *g_movesScreenMoveTable = nullptr;
 std::uint16_t g_movesScreenRefreshState = 0;
 std::uint16_t g_movesScreenTransitionFlags = 0;
 std::int32_t g_movesScreenViewActive = 0;

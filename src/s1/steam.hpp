@@ -93,6 +93,8 @@ std::uint32_t GetKeyStateDataForCurrentInputMode(std::int32_t argument);
 std::int64_t PollSteamInputEvents(SteamControllerInput *input);
 
 using SteamStorageCallback = void (*)(std::int32_t event, std::int32_t status, void *context);
+extern SteamStorageCallback g_steamSaveFunction;
+void SteamSaveFn(std::int32_t event, std::int32_t status, void *data);
 bool SteamRemoteStorage_IsEnabled() noexcept;
 std::uint64_t SteamRemoteStorage_FileSize(const char *nativePath) noexcept;
 std::int32_t SteamRemoteStorage_CheckOpen(const char *nativePath) noexcept;

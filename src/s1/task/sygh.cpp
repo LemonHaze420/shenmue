@@ -2,6 +2,9 @@
 
 #include "s1/boot.hpp"
 #include "s1/input.hpp"
+#include "s1/font.hpp"
+#include "s1/texture_cache.hpp"
+#include "s1/ui_runtime.hpp"
 #include "s1/task/padc.hpp"
 #include "s1/task/vfma.hpp"
 #include "s1/player_stats.hpp"
@@ -17,6 +20,10 @@
 #include <cstring>
 
 namespace shenmue::s1 {
+void HLib_InertTaskCallback(HLib::TaskData *);
+SYGHDrawState g_syghDrawState = kSyghInitialDrawState;
+std::uint8_t g_moveHelpPopupState{};
+std::array<std::int16_t, 7> g_moveHelpSurfaceIds{-1, -1, -1, -1, -1, -1, -1};
 namespace {
 
 constexpr std::int32_t kSyghToken = static_cast<std::int32_t>(SHEN_NAME(SYGH));
@@ -276,7 +283,7 @@ const char *LocalizedMoveText(const char *id) {
 }
 
 bool MoveScreenActive() {
-    return (WZOG_GetTransitionFlags() & 0xf0U) != 0 || WZOG_GetRefreshState() == 8;
+    return (g_movesScreenTransitionFlags & 0xf0U) != 0 || g_syghDrawState.moveListState == 8;
 }
 
 void AuthorSelectedMove() {
@@ -318,75 +325,14 @@ void AuthorSelectedMove() {
         std::memcpy(line.data(), g_overlay.instruction.data() + offset, bytes);
     }
 }
-
-void BeginOpen() {
-    if (!g_moveCount)
-        return;
-
-    AuthorSelectedMove();
-    g_overlay.visible = true;
-    g_overlay.opening = true;
-    g_overlay.x = kClosedX;
-    g_overlay.y = kClosedY;
 }
-
-void BeginClose() {
-    if (!g_overlay.visible)
-        return;
-
-    g_overlay.opening = false;
-    g_overlay.moveName.fill(0);
-    g_overlay.instruction.fill(0);
-    for (auto &line : g_overlay.descriptionLines)
-        line.fill(0);
-}
-
-void AdvanceOverlay() {
-    if (!g_overlay.visible)
-        return;
-
-    if (g_overlay.opening) {
-        if (g_overlay.y < kOpenY) {
-            g_overlay.y = std::min(kOpenY, g_overlay.y + kSlideY);
-            if (g_overlay.y < kOpenY)
-                return;
-        }
-        g_overlay.x = std::min(kOpenX, g_overlay.x + kSlideX);
-        return;
-    }
-
-    if (g_overlay.x > kClosedX) {
-        g_overlay.x = std::max(kClosedX, g_overlay.x - kSlideX);
-        if (g_overlay.x > kClosedX)
-            return;
-    }
-
-    g_overlay.y = std::max(kClosedY, g_overlay.y - kSlideY);
-    if (g_overlay.x == kClosedX && g_overlay.y == kClosedY) {
-        g_overlay.visible = false;
-        g_overlay.animationSet = 0;
-        g_overlay.moveId = 0;
-        g_overlay.skillValue = 0;
-        g_overlay.moveName.fill(0);
-        g_overlay.instruction.fill(0);
-        for (auto &line : g_overlay.descriptionLines)
-            line.fill(0);
-    }
-}
-
-} // namespace
-
-
 
 void InitializeMovesScreenRuntimeData() {
     constexpr std::array<std::int16_t, 3> kCounts{13, 11, 9};
     constexpr std::array<std::array<std::int16_t, 20>, 3> kInitialProgress{{
-            {{28, 22, 23, 36, 20, 8, 5, 21, 20, 18, 19,
-              20, 19, 1, 1, 1, 1, 1, 1, 1}},
-            {{19, 21, 23, 18, 17, 3, 7, 6, 1, 18, 15,
-              1, 1, 1, 1, 1, 1, 1, 1, 1}},
-            {{26, 27, 27, 22, 17, 2, 4, 24, 17, 1, 1,
-              1, 1, 1, 1, 1, 1, 1, 1, 1}},
+        {{28, 22, 23, 36, 20, 8, 5, 21, 20, 18, 19, 20, 19, 1, 1, 1, 1, 1, 1, 1}},
+        {{19, 21, 23, 18, 17, 3, 7, 6, 1, 18, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
+        {{26, 27, 27, 22, 17, 2, 4, 24, 17, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}},
     }};
 
     for (std::size_t set = 0; set < g_movesRuntimeTables.size(); ++set) {
@@ -417,51 +363,257 @@ void InitializeMovesScreenRuntimeData() {
 }
 
 HLib::Task *EnqueueSYGH() {
-    if (g_syghTask && g_syghTask->mainTaskCallbackFnPtr && g_syghTask->taskToken == static_cast<std::int32_t>(kSyghToken))
-        return g_syghTask;
-    if (!g_movesRuntimeInitialized)
-        InitializeMovesScreenRuntimeData();
 
     g_syghPad = AllocateClearedPADCEntry();
-    if (!EnqueueSYGU()) {
-        if (g_syghPad)
-            ReleasePADCEntry(g_syghPad);
-        g_syghPad = nullptr;
-        return nullptr;
-    }
+    EnqueueSYGU();
 
     g_syghTask = HLib_EnqueueTaskWithoutParameter(CtrlTrainingHelp_SYGH_Callback, 5, 0, kSyghToken);
-    if (!g_syghTask) {
-        SYGU_Destroy();
-        if (g_syghPad)
-            ReleasePADCEntry(g_syghPad);
-        g_syghPad = nullptr;
-        return nullptr;
+    g_syghDrawState.slideX = -304.0f;
+    g_syghDrawState.slideFlags = {};
+    g_movesScreenTextBank = nullptr;
+    g_movesScreenMoveTable = nullptr;
+    g_movesScreenRefreshState = 0;
+    g_pMovesScreenTask = nullptr;
+    g_pMovePopupTask = nullptr;
+    g_syghDrawState.slideY = 240.0f;
+    g_syghDrawState.scale = 1.0f;
+    g_syghDrawState.slideState = 0;
+    g_syghDrawState.depth = 1.0f;
+    g_syghDrawState.selectionLimit = 90;
+    g_movesScreenCurrentAnimSet = 1;
+    g_movesScreenSyncedMoveSet = 0;
+    g_playerStats.movesScreenSelectedMoveIndex = 0;
+    g_syghDrawState.moveListState = 0;
+    g_selectedMoveListIndex = 0;
+    g_syghDrawState.runtime = 0;
+    g_moveHelpPopupState = 0;
+    g_syghDrawState.reservedState = 0;
+    g_playerStats.movesScreenMoveSetAndSelectionState = 0xff00;
+    SyncMovesScreenRuntimeState();
+    const float depth = g_syghDrawState.depth;
+    g_syghDrawState.frame.surface = 0;
+    g_syghDrawState.frame.width = 128;
+    g_syghDrawState.frame.height = 128;
+    g_syghDrawState.frame.scaleX = 1.0f;
+    g_syghDrawState.frame.scaleY = 1.0f;
+    g_syghDrawState.frame.u = g_syghDrawState.frame.v = 0;
+    g_syghDrawState.frame.flags = 5;
+    g_moveListMoveIds = {};
+    g_syghDrawState.move.surface = 0;
+    g_syghDrawState.move.flags = 5;
+    g_syghDrawState.move.u = g_syghDrawState.move.v = 0;
+    g_syghDrawState.frame.depth = depth + 1.0f;
+    g_syghDrawState.move.depth = depth + 7.0f;
+    const float buttonY = g_syghDrawState.slideY + 70.0f;
+    for (std::size_t index = 0; index < 2; ++index) {
+        SYGHSprite &button = g_syghDrawState.buttons[index];
+        button.x = index == 0 ? 240.0f : 400.0f;
+        button.y = buttonY;
+        button.depth = depth + 7.0f;
+        button.width = 64;
+        button.height = 32;
+        button.surface = 0;
+        button.scaleX = 1.0f;
+        button.scaleY = 1.0f;
+        button.u = button.v = 0;
+        button.flags = 5;
     }
-    g_overlay = {false, false, kClosedX, kClosedY, 0, 0, 0, {}, {}, {}};
+    g_syghDrawState.description.y = 152.0f;
+    g_syghDrawState.background.surface = 0;
+    g_syghDrawState.background.width = 256;
+    g_syghDrawState.background.height = 256;
+    g_syghDrawState.background.scaleX = 1.0f;
+    g_syghDrawState.background.scaleY = 1.0f;
+    g_syghDrawState.background.depth = depth;
+    g_syghDrawState.background.u = g_syghDrawState.background.v = 0;
+    g_syghDrawState.background.flags = 5;
+    g_syghDrawState.description.scaleX = 1.0f;
+    g_syghDrawState.description.scaleY = 1.0f;
+    g_syghDrawState.description.width = 32;
+    g_syghDrawState.description.height = 512;
+    g_syghDrawState.description.surface = 0;
+    g_syghDrawState.description.u = g_syghDrawState.description.v = 0;
+    g_syghDrawState.description.flags = 5;
+    g_syghDrawState.help.scaleX = 1.0f;
+    g_syghDrawState.side.y = 215.0f;
+    g_syghDrawState.help.scaleY = 1.0f;
+    g_syghDrawState.help.width = 32;
+    g_syghDrawState.help.height = 512;
+    g_syghDrawState.help.surface = 0;
+    g_syghDrawState.help.u = g_syghDrawState.help.v = 0;
+    g_syghDrawState.description.depth = depth + 3.0f;
+    g_syghDrawState.help.depth = depth + 3.0f;
+    g_syghDrawState.popup.x = 264.0f;
+    g_syghDrawState.underline.y = 404.0f;
+    g_syghDrawState.help.flags = 5;
+    g_syghDrawState.side.width = 48;
+    g_syghDrawState.side.height = 379;
+    g_syghDrawState.side.colour = 0x1f0000ff;
+    g_syghDrawState.popup.centreX = 320.0f;
+    g_syghDrawState.popup.width = 256;
+    g_syghDrawState.popup.height = 176;
+    g_syghDrawState.popup.y = 8.0f;
+    g_syghDrawState.footer.x = 288.0f;
+    g_syghDrawState.popup.colour = 0x7f000000;
+    g_syghDrawState.underline.x = 320.0f;
+    g_syghDrawState.underline.width = 32;
+    g_syghDrawState.underline.height = 1;
+    g_syghDrawState.underline.scaleX = 1.0f;
+    g_syghDrawState.side.depth = depth + 1.0f;
+    g_syghDrawState.underline.depth = g_syghDrawState.side.depth;
+    g_syghDrawState.underline.scaleY = 1.0f;
+    g_syghDrawState.underline.colour = 0x7f507dae;
+    g_syghDrawState.underline.reserved1c = 0;
+    g_syghDrawState.underline.flags = 1;
+    g_syghDrawState.footer.y = 403.0f;
+    g_syghDrawState.footer.width = 608;
+    g_syghDrawState.footer.height = 1;
+    g_syghDrawState.footer.colour = 0x7f0000ff;
+    g_syghDrawState.marker.surface = 0;
+    g_syghDrawState.marker.x = 616.0f;
+    g_syghDrawState.marker.y = 403.0f;
+    g_syghDrawState.marker.width = 32;
+    g_syghDrawState.marker.height = 64;
+    g_syghDrawState.marker.scaleX = 1.0f;
+    g_syghDrawState.marker.scaleY = 1.0f;
+    g_syghDrawState.footer.depth = depth + 2.0f;
+    g_syghDrawState.marker.u = g_syghDrawState.marker.v = 0;
+    g_syghDrawState.marker.flags = 5;
+    g_syghDrawState.cursor.surface = 0;
+    g_syghDrawState.cursor.width = 16;
+    g_syghDrawState.cursor.height = 16;
+    g_syghDrawState.marker.depth = depth + 5.0f;
+    g_syghDrawState.cursor.y = 432.0f;
+    g_syghDrawState.title.depth = 12.0f;
+    g_syghDrawState.cursor.depth = g_syghDrawState.footer.depth;
+    g_syghDrawState.cursor.scaleY = 1.0f;
+    g_syghDrawState.cursor.u = g_syghDrawState.cursor.v = 0;
+    g_syghDrawState.cursor.flags = 1;
+    g_syghDrawState.title.surface = 0;
+    g_syghDrawState.title.x = 320.0f;
+    g_syghDrawState.title.width = 512;
+    g_syghDrawState.title.height = 32;
+    g_syghDrawState.title.scaleX = 1.0f;
+    g_syghDrawState.title.scaleY = 1.0f;
+    g_syghDrawState.title.u = g_syghDrawState.title.v = 0;
+    g_syghDrawState.title.flags = 5;
+    g_overlay = {false, false, 256.0f, 176.0f, 0, 0, 0, {}, {}, {}};
     return g_syghTask;
 }
 
 void CtrlTrainingHelp_SYGH_Callback(HLib::TaskData *) {
     if (!MoveScreenActive())
         return;
-
-    if ((Shenmue_nPauseState & 2) != 0)
+    if ((Shenmue_nPauseState & 2) != 0) {
+        if (g_moveHelpPopupState != 0)
+            HLib_InertTaskCallback(nullptr);
         return;
-
+    }
     const std::uint16_t pressed = g_inputState.slots[0].pressedPriority;
-    if ((pressed & kAcceptButton) != 0 || (g_overlay.visible && (pressed & kHelpButton) != 0)) {
+    if ((pressed & kAcceptButton) != 0 || (g_moveHelpPopupState != 0 && (pressed & kHelpButton) != 0)) {
         shenExecuteAICACommand(kToggleSoundCommand, 0, 0);
-        if (g_overlay.visible && g_overlay.opening) {
-            BeginClose();
-        } else if (g_overlay.visible) {
-            AuthorSelectedMove();
-            g_overlay.opening = true;
+        g_moveHelpPopupState = static_cast<std::uint8_t>((g_moveHelpPopupState + 1) & 0xf1);
+        if ((g_moveHelpPopupState & 1) == 0) {
+            g_moveHelpPopupState |= 0x10;
         } else {
-            BeginOpen();
+            const std::int16_t set = (g_movesScreenTransitionFlags & 0xf0U) != 0 ? 0 : static_cast<std::int8_t>(g_selectedMoveListIndex);
+            const std::int16_t entry = static_cast<std::int8_t>(g_moveListMoveIds[set]);
+            const std::uint16_t selection = static_cast<std::uint16_t>(InitMoves(entry, 2, set));
+            const std::uint8_t move = static_cast<std::uint8_t>(selection);
+            const std::uint8_t animationSet = static_cast<std::uint8_t>(selection >> 8);
+            const NativeMoveTextBank bank = MoveTextBank(animationSet);
+            if (bank.moveNameIds && move < bank.count) {
+                const char *const *descriptions = animationSet == 1 ? g_handMoveNames.data() :
+                    animationSet == 2                               ? g_legMoveNames.data() :
+                                                                      g_throwMoveNames.data();
+                char description[255];
+                std::int32_t length = 0;
+                while (length < 252 && descriptions[move][length] != 0) {
+                    description[length] = descriptions[move][length];
+                    ++length;
+                }
+                if (length < 252)
+                    description[length++] = '.';
+                description[length] = 0;
+                LoadFont("DC_KANJI.FON");
+                if (HLib_CanAllocate64ByteBlock(512) == 1) {
+                    char title[48];
+                    std::sprintf(title, "[ %s ]", bank.moveNameIds[move]);
+                    g_moveHelpSurfaceIds[0] = AllocatePVRSurface(title, 512, 0xffff, 0xf000, 0, true);
+                }
+                bool success = true;
+                for (std::size_t lineIndex = 0; lineIndex < 6; ++lineIndex) {
+                    if (HLib_CanAllocate64ByteBlock(512) != 1) {
+                        success = false;
+                        break;
+                    }
+                    char line[48];
+                    std::size_t count = 0;
+                    while (count < 36 && description[lineIndex * 36 + count] != 0) {
+                        line[count] = description[lineIndex * 36 + count];
+                        ++count;
+                    }
+                    for (std::size_t space = count; space < 36; ++space)
+                        line[space] = ' ';
+                    line[36] = 0;
+                    g_moveHelpSurfaceIds[lineIndex + 1] = AllocatePVRSurface(line, 512, 0xffff, 0xf000, 0, true);
+                    if (count < 36)
+                        break;
+                }
+                LoadFont("WAZA.FON");
+                if (success) {
+                    g_syghDrawState.popup.x = 216.0f;
+                    g_syghDrawState.popup.y = 11.0f;
+                    g_syghDrawState.popup.width = 2;
+                    g_syghDrawState.popup.height = 2;
+                    g_syghDrawState.popup.colour = 0x7f0000ff;
+                    g_overlay.animationSet = animationSet;
+                    g_overlay.moveId = move;
+                    g_overlay.skillValue = ReadMoveSkill(animationSet, move);
+                    std::snprintf(g_overlay.moveName.data(), g_overlay.moveName.size(), "[ %s ]", bank.moveNameIds[move]);
+                    std::snprintf(g_overlay.instruction.data(), g_overlay.instruction.size(), "%s", description);
+                } else {
+                    g_moveHelpPopupState = static_cast<std::uint8_t>((g_moveHelpPopupState + 1) & 0xf1);
+                }
+            } else {
+                g_moveHelpPopupState = static_cast<std::uint8_t>((g_moveHelpPopupState + 1) & 0xf1);
+            }
+        }
+        if ((g_moveHelpPopupState & 1) == 0) {
+            for (std ::int16_t &surface : g_moveHelpSurfaceIds) {
+                if (surface != -1)
+                    PVR_FreeAllocatedSurfaceByIndex(surface);
+
+                surface = -1;
+            }
         }
     }
-    AdvanceOverlay();
+    if ((g_moveHelpPopupState & 1) != 0) {
+        g_syghDrawState.popup.height = static_cast<std::int16_t>(static_cast<std::uint16_t>(g_syghDrawState.popup.height) + 25U);
+        if (g_syghDrawState.popup.height >= 296) {
+            g_syghDrawState.popup.height = 296;
+            g_syghDrawState.popup.width = static_cast<std::int16_t>(static_cast<std::uint16_t>(g_syghDrawState.popup.width) + 152U);
+            if (g_syghDrawState.popup.width > 520)
+                g_syghDrawState.popup.width = 520;
+        }
+    } else if ((g_moveHelpPopupState & 0x10) != 0) {
+        g_syghDrawState.popup.width = static_cast<std::int16_t>(static_cast<std::uint16_t>(g_syghDrawState.popup.width) - 152U);
+        if (g_syghDrawState.popup.width < 2) {
+            g_syghDrawState.popup.width = 2;
+            g_syghDrawState.popup.height = static_cast<std::int16_t>(static_cast<std::uint16_t>(g_syghDrawState.popup.height) - 25U);
+            if (g_syghDrawState.popup.height < 2) {
+                g_syghDrawState.popup.height = 2;
+                g_moveHelpPopupState = 0;
+                return;
+            }
+        }
+        if (g_syghDrawState.popup.height == 2) {
+            g_moveHelpPopupState = 0;
+            return;
+        }
+    }
+    if (g_moveHelpPopupState != 0)
+        HLib_InertTaskCallback(nullptr);
 }
 
 void SYGH_Destroy() {
@@ -530,7 +682,7 @@ void SYGH_ApplyMajorStepMoveSkillProgression() {
                     increment = static_cast<std::int16_t>(increment / 10);
                 } else {
                     const std::int16_t toThreshold = static_cast<std::int16_t>(56 - progress);
-                    increment = static_cast<std::int16_t>(toThreshold + (increment - toThreshold) / 10);
+                    increment = static_cast<std::int16_t>(toThreshold + (increment - toThreshold) / 20);
                 }
             }
         } else {
@@ -575,6 +727,10 @@ void SYGH_SetSelectedMove(std::uint16_t selection) {
 }
 
 const SYGHOverlayState &SYGH_GetOverlayState() noexcept {
+    g_overlay.visible = g_moveHelpPopupState != 0;
+    g_overlay.opening = (g_moveHelpPopupState & 1) != 0;
+    g_overlay.x = static_cast<float>(g_syghDrawState.popup.width);
+    g_overlay.y = static_cast<float>(g_syghDrawState.popup.height);
     return g_overlay;
 }
 

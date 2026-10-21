@@ -1843,30 +1843,44 @@ std::int64_t Fog_ComputeFogAttenuation(float nearDistance, float farDistance) {
         packedDensity = static_cast<std::int16_t>(0x8010U);
     } else {
         int exponent = 0;
-        const float doubledMantissa = 2.0f * static_cast<float>(std::frexp(static_cast<double>(-farDistance), &exponent));
+        float doubledMantissa = 2.0f * static_cast<float>(std::frexp(static_cast<double>(-farDistance), &exponent));
         --exponent;
         std::uint16_t mantissaBits = 0;
-        if (doubledMantissa >= 1.0f)
+        if (doubledMantissa - 1.0f >= 0.0f) {
+            doubledMantissa -= 1.0f;
             mantissaBits |= 0x8000U;
-        if (doubledMantissa >= 0.5f)
+        }
+        if (doubledMantissa - 0.5f >= 0.0f) {
+            doubledMantissa -= 0.5f;
             mantissaBits |= 0x4000U;
-        if (doubledMantissa >= 0.25f)
+        }
+        if (doubledMantissa - 0.25f >= 0.0f) {
+            doubledMantissa -= 0.25f;
             mantissaBits |= 0x2000U;
-        if (doubledMantissa >= 0.125f)
+        }
+        if (doubledMantissa - 0.125f >= 0.0f) {
+            doubledMantissa -= 0.125f;
             mantissaBits |= 0x1000U;
-        if (doubledMantissa >= 0.0625f)
+        }
+        if (doubledMantissa - 0.0625f >= 0.0f) {
+            doubledMantissa -= 0.0625f;
             mantissaBits |= 0x0800U;
-        if (doubledMantissa >= 0.03125f)
+        }
+        if (doubledMantissa - 0.03125f >= 0.0f) {
+            doubledMantissa -= 0.03125f;
             mantissaBits |= 0x0400U;
-        if (doubledMantissa >= 0.015625f)
+        }
+        if (doubledMantissa - 0.015625f >= 0.0f) {
+            doubledMantissa -= 0.015625f;
             mantissaBits |= 0x0200U;
+        }
         if (doubledMantissa >= 0.0078125f)
             mantissaBits |= 0x0100U;
         packedDensity = static_cast<std::int16_t>(mantissaBits | static_cast<std::uint16_t>(exponent));
     }
     if (g_fogDensityInitialized == 0)
         g_fogDensityInitialized = 1;
-    const float maximumExponent = std::fmax(static_cast<float>(static_cast<std::int32_t>(packedDensity) - 7), 0.0f);
+    const float maximumExponent = std::fmax(static_cast<float>(static_cast<std::int32_t>(static_cast<std::uint8_t>(packedDensity)) - 7), 0.0f);
     g_fogMaximumDistance = std::pow(2.0f, maximumExponent) * static_cast<float>(static_cast<std::uint8_t>(static_cast<std::uint16_t>(packedDensity) >> 8U));
 
     std::int64_t result = 124;

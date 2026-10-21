@@ -479,10 +479,10 @@ namespace {
 // takes the active image's summary and the status becomes 2. Local slot files have no storage quota, so 3 is not produced here.
 std::int32_t SaveGame_WriteQueuedSlot(void *) {
     const std::int32_t slot = g_saveWriteSlot;
-    const S1SaveResult result = S1Save_Write(HPLG_SaveSlotPath(static_cast<std::size_t>(slot)), ActiveSaveImage());
-    g_lastS1SaveResult = result;
-    if (result != S1SaveResult::Success) {
-        g_saveWriteStatus.exchange(4);
+    const std::int32_t result = UploadCurrentSaveSlot(ActiveSaveImage());
+    g_lastS1SaveResult = result == 0 ? S1SaveResult::Success : S1SaveResult::WriteFailed;
+    if (result != 0) {
+        g_saveWriteStatus.exchange(result == -5 ? 3 : 4);
         return 0;
     }
     if (slot <= 9) {

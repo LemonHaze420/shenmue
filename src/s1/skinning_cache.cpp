@@ -400,41 +400,57 @@ std::uint32_t AppendSkinningName(CachedSkinningBufferSlot &slot, const char *nam
 
 std::uint64_t AppendSkinningNode(CachedSkinningBufferSlot &slot, std::uint32_t cacheHandle, std::uint32_t parentIndex, const char *nodeName,
     std::uint32_t renderHandle, bool modelOwnedName) {
-    if (slot.entryCount == slot.entryCapacity && !ResizeSkinningEntries(slot, slot.entryCapacity ? slot.entryCapacity + 1U : 10U)) {
+    if (slot.entryCount == slot.entryCapacity && !ResizeSkinningEntries(slot, slot.entryCount + 1U))
         return 0;
-    }
-    const std::uint32_t index = slot.entryCount;
-    if (parentIndex > index || index - parentIndex > UINT16_MAX)
+
+    const std::uint32_t index = slot.entryCount == 0 ? 0U : parentIndex + Read<std::uint16_t>(slot.entries, parentIndex * 20U + 0x06);
+    if (parentIndex > index || index > slot.entryCount || index - parentIndex > UINT16_MAX)
         return 0;
     const std::uint32_t nameOffset = modelOwnedName ? 0U : AppendSkinningName(slot, nodeName);
     if (nameOffset == UINT32_MAX)
         return 0;
-    std::byte *const entry = slot.entries + static_cast<std::size_t>(index) * 20U;
-    Write(entry, 0x00, nameOffset);
-    const std::uint16_t parentDistance = static_cast<std::uint16_t>(index - parentIndex);
-    const std::uint16_t subtreeSize = 1;
-    const std::uint32_t zero = 0;
-    Write(entry, 0x04, parentDistance);
-    Write(entry, 0x06, subtreeSize);
-    Write(entry, 0x08, zero);
-    Write(entry, 0x10, zero);
-    slot.matrices[index] = kIdentityMatrix;
-    slot.secondaryMatrices[index] = kIdentityMatrix;
-    slot.constantBufferHandles[index] = 0;
-    slot.renderHandles[index] = renderHandle;
-    slot.floatValues[index] = 1.0F;
-    std::uint32_t nodeHash = slot.nextNodeHash++;
-    if (!nodeHash)
-        nodeHash = slot.nextNodeHash++;
-    slot.parentHashes[index] = nodeHash;
-    ++slot.entryCount;
-    if (!RebuildMurmurTable(slot)) {
-        --slot.entryCount;
-        if (!modelOwnedName)
-            slot.namesSize = nameOffset;
-        return 0;
+    if (slot.entryCount != 0) {
+        for (std::uint32_t sibling = index; sibling < slot.entryCount;) {
+            std::byte *const node = slot.entries + sibling * 20U;
+            Write(node, 0x04, static_cast<std::uint16_t>(Read<std::uint16_t>(node, 0x04) + 1U));
+            sibling += Read<std::uint16_t>(node, 0x06);
+        }
+        std::byte *ancestor = slot.entries + parentIndex * 20U;
+        Write(ancestor, 0x08, static_cast<std::uint16_t>(Read<std::uint16_t>(ancestor, 0x08) + 1U));
+        for (;;) {
+            const std::uint16_t parentDistance = Read<std::uint16_t>(ancestor, 0x04);
+            Write(ancestor, 0x06, static_cast<std::uint16_t>(Read<std::uint16_t>(ancestor, 0x06) + 1U));
+            if (parentDistance == 0)
+                break;
+            ancestor -= parentDistance * 20U;
+        }
+        const std::size_t moved = slot.entryCount - index;
+        if (moved != 0) {
+            std::memmove(slot.parentHashes + index + 1U, slot.parentHashes + index, moved * sizeof(*slot.parentHashes));
+            std::memmove(slot.entries + (index + 1U) * 20U, slot.entries + index * 20U, moved * 20U);
+            std::memmove(slot.matrices + index + 1U, slot.matrices + index, moved * sizeof(*slot.matrices));
+            std::memmove(slot.renderHandles + index + 1U, slot.renderHandles + index, moved * sizeof(*slot.renderHandles));
+            std::memmove(slot.constantBufferHandles + index + 1U, slot.constantBufferHandles + index, moved * sizeof(*slot.constantBufferHandles));
+            std::memmove(slot.floatValues + index + 1U, slot.floatValues + index, moved * sizeof(*slot.floatValues));
+        }
     }
-    UpdateAncestorSubtreeSizes(slot, index, 1);
+    std::byte *const entry = slot.entries + index * 20U;
+    std::memset(entry, 0, 20U);
+    Write(entry, 0x00, nameOffset);
+    Write(entry, 0x04, static_cast<std::uint16_t>(index - parentIndex));
+    Write(entry, 0x06, static_cast<std::uint16_t>(1));
+    slot.matrices[index] = kIdentityMatrix;
+    slot.renderHandles[index] = renderHandle;
+    const std::uint32_t nodeHash = slot.nextNodeHash++;
+    slot.parentHashes[index] = nodeHash;
+    slot.constantBufferHandles[index] = 0;
+    if (renderHandle) {
+        const BufferDescription description{.flags = 0, .size = 0xa0, .count = 0, .flags3 = 2, .buffer = nullptr, .name = ""};
+        slot.constantBufferHandles[index] = static_cast<std::uint32_t>(CreateBuffer(&description));
+    }
+    slot.floatValues[index] = 1.0F;
+    ++slot.entryCount;
+    RebuildMurmurTable(slot);
     const std::uint64_t handle = (static_cast<std::uint64_t>(nodeHash) << 32U) | cacheHandle;
     if (modelOwnedName)
         g_modelSkinningNodeNames[handle] = nodeName;
@@ -1133,7 +1149,7 @@ void DoTexSort2(std::uint32_t *renderRecord, std::byte *workCache, float frameTi
         queueTrack(primaryAnimation, workCache + 0x30);
         queueTrack(secondaryAnimation, workCache + 0x12790);
     } else {
-        queueTrack(secondaryAnimation, workCache + 0x12790);
+        queueTrack(secondaryAnimation, workCache + 0x30);
     }
 }
 
@@ -1214,7 +1230,7 @@ std::int32_t TexSort(void *data) {
     while (index < record->cacheHandleCount) {
         const std::uint32_t cacheHandle = record->cacheHandles[index];
         std::byte *const workCache = ResolveSkinningWorkCache(cacheHandle);
-        if (workCache && Read<const void *>(workCache, 0x48)) {
+        if (workCache && Read<std::uint32_t>(workCache, 0x24) != 0) {
             ++index;
             continue;
         }
@@ -1483,9 +1499,9 @@ SkinningTexSortRecord *BuildSkinningTexSortRecord(std::uint32_t renderHandle, Sk
         std::memset(table, 0, 0x2d0);
         const std::byte *const descriptor = trackDescriptors + static_cast<std::size_t>(descriptorIndex) * 0x70;
         const std::uint16_t boneCount = Read<std::uint16_t>(descriptor, 0x40);
-        const auto *const sourceBoneIds = Read<const std::uint16_t *>(descriptor, 0x48);
+        const std::byte *const sourceBoneIds = Read<const std::byte *>(descriptor, 0x48);
         for (std::uint32_t bone = 0; bone < boneCount; ++bone) {
-            std::memcpy(table + bone * sizeof(std::uint16_t), &sourceBoneIds[bone], sizeof(std::uint16_t));
+            std::memcpy(table + bone * sizeof(std::uint16_t), sourceBoneIds + bone * sizeof(std::uint32_t), sizeof(std::uint16_t));
         }
 
         void *masks = Read<void *>(table, 0x2c0);

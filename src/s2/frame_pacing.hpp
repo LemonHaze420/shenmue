@@ -33,6 +33,11 @@ std::int32_t GetNumFramesProcessed() noexcept;
 
 std::int32_t ConsumeFrames();
 void FlushFramePacingRenderQueue();
+extern std::int32_t g_archiveExternalChecksEnabled;
+bool IsArchiveReadComplete() noexcept;
+bool IsArchiveReadPending() noexcept;
+std::int64_t ReadArchivesAndFlushRenderQueue();
+bool FlushCurrentMessageAndRenderQueue();
 float GetFrameTime() noexcept;
 float GetLoadingElapsedSeconds() noexcept;
 float shenGetScaledDeltaTickTime(float frames) noexcept;

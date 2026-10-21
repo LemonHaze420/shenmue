@@ -61,7 +61,9 @@ void UpdateSteamAchievement(std::uint32_t statIndex) {
     }
 }
 
-void SteamSaveFn() {
+void SteamRemoteStorage_RunCallbacks() noexcept {
+    if (g_steamRuntime.callbacksEnabled && g_steamRuntime.runCallbacks)
+        g_steamRuntime.runCallbacks();
 }
 
 void SteamPlatformContextRefresh() {

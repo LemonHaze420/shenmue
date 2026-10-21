@@ -38,6 +38,10 @@
 #include "s2/snapshot.hpp"
 #include "s2/system_modules.hpp"
 #include "s2/title.hpp"
+#include "s2/title_area_data.hpp"
+#include "s2/frame_pacing.hpp"
+#include "s2/sound_program.hpp"
+#include "s2/renderer_initialization.hpp"
 #include "s2/load_title.hpp"
 #include "s2/navi.hpp"
 #include "s2/npc.hpp"
@@ -253,40 +257,6 @@ constexpr std::array<SaveTransitionTable, 8> kStaffSaveTables{{
     {kDefaultSaveScreen0Rows}, {kLoadSaveScreen1Rows}, {kSharedSaveScreen2Rows}, {kSharedSaveScreen3Rows},
     {kSharedSaveScreen4Rows}, {kSharedSaveScreen5Rows}, {kLoadSaveScreen6Rows}, {kSharedSaveScreen7Rows},
 }};
-
-#pragma pack(push, 1)
-struct TitleFileSelectState {
-    std::uint8_t titleSequence;
-    std::uint8_t titleSequence2;
-    std::uint8_t field002;
-    std::int8_t selectedSlot;
-    std::uint8_t field004;
-    std::array<std::byte, 0xa3> reserved005;
-    std::uint64_t imageTask;
-    std::uint64_t areaTask;
-    std::uint64_t localAreaTask;
-    std::uint32_t imageSprite;
-    std::uint32_t field0c4;
-    std::int32_t field0c8;
-    std::uint32_t field0cc;
-    std::uint64_t field0d0;
-    std::uint32_t state;
-    std::int32_t field0dc;
-    std::uint32_t field0e0;
-    std::array<std::byte, 0x20> reserved0e4;
-};
-#pragma pack(pop)
-
-static_assert(sizeof(TitleFileSelectState) == 0x104);
-static_assert(offsetof(TitleFileSelectState, selectedSlot) == 0x03);
-static_assert(offsetof(TitleFileSelectState, imageTask) == 0xa8);
-static_assert(offsetof(TitleFileSelectState, areaTask) == 0xb0);
-static_assert(offsetof(TitleFileSelectState, localAreaTask) == 0xb8);
-static_assert(offsetof(TitleFileSelectState, imageSprite) == 0xc0);
-static_assert(offsetof(TitleFileSelectState, field0c4) == 0xc4);
-static_assert(offsetof(TitleFileSelectState, field0c8) == 0xc8);
-static_assert(offsetof(TitleFileSelectState, field0cc) == 0xcc);
-static_assert(offsetof(TitleFileSelectState, state) == 0xd8);
 
 enum class SaveTaskPhase : std::uint32_t {
     Idle = 0,
@@ -746,6 +716,10 @@ std::size_t saveScreenPromptSlot = 0;
 std::int32_t saveScreenStorageStatus = 0;
 LegacyInputSlot saveScreenInput{};
 TitleFileSelectState titleFileSelect{};
+TitleControlData *activeTitleControl{};
+std::int32_t gameLoadSlot{};
+std::uint8_t gameLoadActive{};
+std::int32_t gameLoadStatus{};
 TitleLoadPhase titleLoadPhase = TitleLoadPhase::Idle;
 bool titleLoadOnly = false;
 bool titleFlowActive = false;
@@ -4108,6 +4082,213 @@ bool S2SaveTask_Begin(std::size_t slot, std::uint8_t clearState,
     return true;
 }
 
+// @verified - p
+TitleFileSelectState *InitializeTitleFileSelectState() {
+    titleFileSelect.selectedSlot = -1;
+    titleFileSelect.field004 = 0;
+    titleFileSelect.field002 = 0;
+    titleFileSelect.field0dc = -1;
+    titleFileSelect.field0e0 = 0xffffffffU;
+    S2SaveDataInfo *const data = titleFileSelect.titleSequence ? GetBackupSaveDataInfo(0) : GetS1BackupSaveDataInfo(0);
+    for (std::int8_t index = 0; index < 10; ++index) {
+        TitleFileSelectSlot &slot = titleFileSelect.slots[index];
+        slot.flags = 0;
+        slot.data = &data[index];
+        if (data[index].saveKind != 0) {
+            slot.flags = data[index].clearState == 6 ? 3U : data[index].clearState == 4 ? 5U : 1U;
+            if (data[index].saveKind != 0 && (titleFileSelect.titleSequence != 0 || data[index].clearState == 6)) {
+                if (titleFileSelect.field004 == 0) {
+                    titleFileSelect.selectedSlot = index;
+                    titleFileSelect.field0dc = index > 7 ? index - 7 : 0;
+                    titleFileSelect.field0e0 = index > 7 ? 7 : index;
+                }
+                ++titleFileSelect.field004;
+            }
+        }
+    }
+    titleFileSelect.field0cc = 0xffffffffU;
+    titleFileSelect.field0d0 = (titleFileSelect.field0d0 & 0xffffffff00000000ULL) | 0xffffffffU;
+    return &titleFileSelect;
+}
+
+// @verified - p
+TitleFileSelectState *ResetTitleFileSelectState() {
+    SetTitleWarningLogo(0, nullptr);
+    return InitializeTitleFileSelectState();
+}
+
+// @verified - p
+TitleFileSelectState *AssignActiveTCRL(TitleControlData *control) {
+    activeTitleControl = control;
+    return ResetTitleFileSelectState();
+}
+
+// @verified - p
+std::int64_t StartTitleLoadGame() {
+    if (LoadGameFromSaveSlot(titleFileSelect.selectedSlot, 1) == 0)
+        return 0;
+    DisableFilmBarAndUpdateFramePacing();
+    FlushCurrentMessageAndRenderQueue();
+    titleFileSelect.state = 2;
+    HLib::SetCurrentTaskTo(TFSEL_ModChange_Callback);
+    titleFileSelect.titleSequence2 = 0;
+    HLib::SetupTaskDelay(10);
+    S2SaveDataInfo *const data = GetBackupSaveDataInfo(0);
+    const std::int32_t act = data[titleFileSelect.selectedSlot].actNumber;
+    if (act != g_loadedActNumber) {
+        SetNextSceneNumber(act);
+        titleFileSelect.state = 3;
+        HLib::SetCurrentTaskTo(TFSEL_ModChange_Callback);
+        titleFileSelect.titleSequence2 = 0;
+        HLib::SetupTaskDelay(10);
+    }
+    titleFileSelect.titleSequence2 = 0;
+    const S2SaveDataInfo &selected = data[titleFileSelect.selectedSlot];
+    g_actNumber = selected.sceneNumber;
+    g_currentMap = selected.mapName;
+    g_entryPoint = selected.entryPoint;
+    return 1;
+}
+
+// @verified - p
+std::int64_t StartTitleCollectionGame() {
+    if (LoadGameFromSaveSlot(titleFileSelect.selectedSlot, 0) == 0)
+        return 30;
+    titleFileSelect.state = g_loadedActNumber != 4;
+    HLib::SetCurrentTaskTo(TFSEL_ModChange_Callback);
+    titleFileSelect.titleSequence2 = 0;
+    HLib::SetupTaskDelay(10);
+    return 10;
+}
+
+// @verified - p
+std::int64_t StartTitleCompletedGame() {
+    if (InitializeNewGameFromSaveSlot(titleFileSelect.selectedSlot) == 0)
+        return 4;
+    InitializeInheritedMoveProficiency();
+    titleFileSelect.state = g_loadedActNumber == 1 ? 4 : 5;
+    HLib::SetCurrentTaskTo(TFSEL_ModChange_Callback);
+    titleFileSelect.titleSequence2 = 0;
+    HLib::SetupTaskDelay(10);
+    titleFileSelect.titleSequence2 = 0;
+    return 10;
+}
+
+// @verified - p
+void StartTitleImportedGame(TitleControlData *control) {
+    void *const bank = control->reserved20;
+    if (ReadS1SaveDataByIndex(bank, titleFileSelect.selectedSlot) == 0 && BupReady(0) == 0) {
+        if (ValidateS1SaveHeader(static_cast<const std::byte *>(bank) + 0x680) && InitializeNewGameFromSaveSlot(titleFileSelect.selectedSlot) != 0) {
+            ImportSelectedS1SaveData(bank, 0);
+            titleFileSelect.titleSequence2 = 0;
+            titleFileSelect.state = g_loadedActNumber == 1 ? 4 : 5;
+            HLib::SetCurrentTaskTo(TFSEL_ModChange_Callback);
+            titleFileSelect.titleSequence2 = 0;
+            HLib::SetupTaskDelay(10);
+        }
+    }
+}
+
+// @verified - p
+std::uint8_t ClearTitleLoadScenarioFlags() {
+    for (std::int32_t flag = 1011; flag <= 1017; ++flag)
+        ClearOrSetShenmueFlags(flag, 0);
+    return ClearOrSetShenmueFlags(1018, 0);
+}
+
+// @verified - p
+void TFSEL_ModChange_Callback(void *) {
+    SystemModule module = SystemModule::Title;
+    switch (titleFileSelect.state) {
+    case 0:
+        g_actNumber = 4;
+        g_currentMap = TITLE_AREA_OMAK;
+        g_entryPoint = 0;
+        ResetGlobalStateFlags();
+        module = SystemModule::Game;
+        break;
+    case 1:
+        SetSceneInfos(4, TITLE_AREA_OMAK, 0);
+        S2Save_CheckData();
+        SetNextSceneNumber(4);
+        module = SystemModule::DiskChange;
+        break;
+    case 2:
+        ApplyTitleMenuOptions();
+        ClearTitleLoadScenarioFlags();
+        module = SystemModule::Game;
+        break;
+    case 3:
+        ApplyTitleMenuOptions();
+        ClearTitleLoadScenarioFlags();
+        module = SystemModule::DiskChange;
+        break;
+    case 4:
+        g_actNumber = 1;
+        g_currentMap = TITLE_AREA_0004;
+        g_entryPoint = 0;
+        ApplyTitleMenuOptions();
+        module = SystemModule::Game;
+        break;
+    case 5:
+        SetSceneInfos(1, TITLE_AREA_0004, 0);
+        S2Save_CheckData();
+        SetNextSceneNumber(1);
+        module = SystemModule::DiskChange;
+        break;
+    case 6:
+        g_actNumber = 1;
+        g_currentMap = SNAPSHOT_DEBUG_TASK;
+        g_entryPoint = 0;
+        ResetGlobalStateFlags();
+        module = SystemModule::Game;
+        break;
+    }
+    TitleAudioControl(-1);
+    g_bPaused = false;
+    ExecuteAicaCommand(0x1200a0U, 5, 0);
+    ChangeSystemModule(module, 0);
+}
+
+// @verified - p
+std::int64_t CompleteSaveMenuLoad() {
+    SetTitleMenuTransitionCallback(nullptr);
+    titleFileSelect.selectedSlot = std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(gameLoadSlot));
+    const S2SaveDataInfo *const data = GetBackupSaveDataInfo(titleFileSelect.selectedSlot);
+    if (saveMenuSource == 1) {
+        StartTitleCollectionGame();
+        gameLoadStatus = 1;
+        return 0;
+    }
+    if (saveMenuSource == 0) {
+        const std::int64_t result = data->clearState == 6 ? StartTitleCompletedGame() : StartTitleLoadGame();
+        if (result == 0) {
+            gameLoadStatus = 2;
+            return 0;
+        }
+    } else if (saveMenuSource == 2) {
+        StartTitleImportedGame(activeTitleControl);
+    }
+    gameLoadStatus = 1;
+    return 0;
+}
+
+// @verified - p
+void BeginSaveMenuLoad(std::int32_t slot) {
+    ReadSm2Saves(slot);
+    gameLoadSlot = slot;
+    SetTitleMenuTransitionCallback(CompleteSaveMenuLoad);
+    gameLoadActive = 1;
+    gameLoadStatus = -1;
+}
+
+// @verified - p
+bool GetSaveMenuSlotEligibility(std::uint32_t slot) noexcept {
+    if (saveMenuSource != 2)
+        return true;
+    const S2SaveDataInfo *const info = GetS1BackupSaveDataInfo(slot);
+    return info && info->clearState == 6;
+}
 void S2Save_NewGameTitleTask(void*) {
     padcCheckControllerConnection();
     (void)GetPublishedItemSelectorOwnedMask();

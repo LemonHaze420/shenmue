@@ -96,7 +96,8 @@ void NativeTitleNoOp(void *) {
 
 void TitleMenuControl(void *) {
     padcCheckControllerConnection();
-    ProcessTitleMenuInput();
+    if (ExecuteElementCallback(UIElement::MainMenu) == 0 && (!g_titleMenuTransitionCallback || g_titleMenuTransitionCallback() == 0))
+        return;
     g_previousTitleInputUserHandle = FrontendControllerUserHandle();
 }
 
@@ -245,8 +246,6 @@ std::int32_t SetTitleSceneInfo(const TitleSceneEntry &scene) {
     return scene.entry;
 }
 
-namespace {
-
 // @verified - p
 void TitleAudioControl(std::int32_t sceneIndex) {
     LoadSoundProgram("0002S000.sbt", static_cast<std::uint32_t>(sceneIndex >> 31), 0xffffffffU);
@@ -256,6 +255,11 @@ void TitleAudioControl(std::int32_t sceneIndex) {
     }
 }
 
+// @verified - p
+void ApplyTitleMenuOptions() {
+    ApplyS2TriggerSwapMode(titleMenuTriggerSwap);
+    ApplyS2DialogueMode(static_cast<std::uint8_t>(GetS2AudioSettings().dialogueMode));
+    ApplyS2ControlMode(titleMenuControlMode);
 } // namespace
 
 // @verified - p
@@ -566,6 +570,7 @@ void TitleModule(void *taskData) {
         control->display->currentStateFrame = 1.0f;
         control->display->stateFrame = -0.062745102f;
     }
+    AssignActiveTCRL(control);
 }
 
 } // namespace shenmue::s2

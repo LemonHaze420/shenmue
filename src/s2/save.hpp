@@ -574,6 +574,62 @@ bool S2SaveScreen_CancelPrompt() noexcept;
 bool S2SaveScreen_HasPrompt() noexcept;
 bool S2SaveTask_Begin(std::size_t slot, std::uint8_t clearState, S2SaveTaskCompletion completion = nullptr);
 
+#pragma pack(push, 1)
+struct TitleFileSelectSlot {
+    std::uint32_t flags;
+    std::uint32_t reserved04;
+    S2SaveDataInfo *data;
+};
+static_assert(sizeof(TitleFileSelectSlot) == 0x10);
+static_assert(offsetof(TitleFileSelectSlot, data) == 8);
+
+struct TitleFileSelectState {
+    std::uint8_t titleSequence;
+    std::uint8_t titleSequence2;
+    std::uint8_t field002;
+    std::int8_t selectedSlot;
+    std::uint8_t field004;
+    std::array<std::byte, 3> reserved005;
+    std::array<TitleFileSelectSlot, 10> slots;
+    std::uint64_t imageTask;
+    std::uint64_t areaTask;
+    std::uint64_t localAreaTask;
+    std::uint32_t imageSprite;
+    std::uint32_t field0c4;
+    std::int32_t field0c8;
+    std::uint32_t field0cc;
+    std::uint64_t field0d0;
+    std::uint32_t state;
+    std::int32_t field0dc;
+    std::uint32_t field0e0;
+    std::array<std::byte, 0x20> reserved0e4;
+};
+#pragma pack(pop)
+
+static_assert(sizeof(TitleFileSelectState) == 0x104);
+static_assert(offsetof(TitleFileSelectState, selectedSlot) == 0x03);
+static_assert(offsetof(TitleFileSelectState, slots) == 8);
+static_assert(offsetof(TitleFileSelectState, imageTask) == 0xa8);
+static_assert(offsetof(TitleFileSelectState, areaTask) == 0xb0);
+static_assert(offsetof(TitleFileSelectState, localAreaTask) == 0xb8);
+static_assert(offsetof(TitleFileSelectState, imageSprite) == 0xc0);
+static_assert(offsetof(TitleFileSelectState, field0c4) == 0xc4);
+static_assert(offsetof(TitleFileSelectState, field0c8) == 0xc8);
+static_assert(offsetof(TitleFileSelectState, field0cc) == 0xcc);
+static_assert(offsetof(TitleFileSelectState, state) == 0xd8);
+
+struct TitleControlData;
+TitleFileSelectState *AssignActiveTCRL(TitleControlData *control);
+TitleFileSelectState *ResetTitleFileSelectState();
+TitleFileSelectState *InitializeTitleFileSelectState();
+std::int64_t StartTitleLoadGame();
+std::int64_t StartTitleCollectionGame();
+std::int64_t StartTitleCompletedGame();
+void StartTitleImportedGame(TitleControlData *control);
+void TFSEL_ModChange_Callback(void *taskData);
+void BeginSaveMenuLoad(std::int32_t slot);
+std::int64_t CompleteSaveMenuLoad();
+bool GetSaveMenuSlotEligibility(std::uint32_t slot) noexcept;
 void S2Save_NewGameTitleTask(void *taskData);
 void S2Save_ContinueTitleTask(void *taskData);
 void S2Save_TitleLoadTask(void *taskData);

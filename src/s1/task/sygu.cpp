@@ -10,8 +10,6 @@ HLib::Task *g_syguTask = nullptr;
 } // namespace
 
 HLib::Task *EnqueueSYGU() {
-    if (g_syguTask && g_syguTask->mainTaskCallbackFnPtr && g_syguTask->taskToken == static_cast<std::int32_t>(kSyguToken))
-        return g_syguTask;
 
     g_syguTask = HLib_EnqueueTaskWithoutParameter(HLib_InertTaskCallback, 8, 0, kSyguToken);
     return g_syguTask;

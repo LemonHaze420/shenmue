@@ -72,8 +72,8 @@ std::uint32_t g_settingsFlags = 0xEB;
 namespace {
 
 constexpr std::size_t kChecksumBytes = 0x1800;
-constexpr std::uint32_t kIdentifier = SHEN_NAME(SHEE);
-constexpr std::uint32_t kVersion = 0x10eu;
+constexpr std::uint32_t kIdentifier = kS1SaveIdentifier.name;
+constexpr std::uint32_t kVersion = kS1SaveVersion;
 constexpr std::uint32_t kPayloadBytes = 0x9980u;
 constexpr std::size_t kInventoryIdsMirrorOffset = 0x1000;
 constexpr std::size_t kInventoryCountMirrorOffset = 0x1400;
@@ -633,7 +633,7 @@ void MergeBookkeepingStats(const NativeSaveFile &save) noexcept {
     constexpr std::array<std::size_t, 7> scoreSlots{2, 8, 10, 12, 14, 0, 5};
     for (std::size_t index = 0; index < scoreSlots.size(); ++index)
         MergeMaximum<std::uint32_t>(aggregate, g_arcadeHighScores[scoreSlots[index]], 168 + index * 4);
-    MergeMaximum<std::uint32_t>(aggregate, g_playerStats.segaCoins, 216);
+    MergeMaximum<std::uint32_t>(aggregate, g_playerStats.segaCoinsMaximum, 216);
     MergeDelta32(aggregate, current, previous.data(), 220);
     MergeDelta<std::uint16_t>(aggregate, current, previous.data(), 3740);
     MergeDelta<std::uint16_t>(aggregate, current, previous.data(), 772);
@@ -1016,6 +1016,51 @@ S1SaveResult S1Save_ReadMetadata(const std::filesystem::path &path, S1SaveMetada
     candidate.progress = save.internal.progress;
     metadata = candidate;
     return S1SaveResult::Success;
+}
+
+S1SaveResult S1Save_ReadStorageRange(const std::filesystem::path &path, void *destination, std::uint32_t offset, std::uint32_t size) {
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    if (!file)
+        return S1SaveResult::OpenFailed;
+    if (file.tellg() < static_cast<std::streamoff>(static_cast<std::uint64_t>(offset) + size))
+        return S1SaveResult::InvalidSize;
+    file.seekg(offset, std::ios::beg);
+    file.read(static_cast<char *>(destination), size);
+    return file ? S1SaveResult::Success : S1SaveResult::ReadFailed;
+}
+
+S1SaveResult S1Save_WriteStorageBytes(const std::filesystem::path &path, const void *source, std::uint32_t size) {
+    std::error_code error;
+    if (!path.parent_path().empty())
+        std::filesystem::create_directories(path.parent_path(), error);
+    if (error)
+        return S1SaveResult::OpenFailed;
+    const std::filesystem::path temporary = MakeTemporaryPath(path);
+    std::ofstream file(temporary, std::ios::binary | std::ios::trunc);
+    if (!file) {
+        RemoveTemporaryFile(temporary);
+        return S1SaveResult::OpenFailed;
+    }
+    file.write(static_cast<const char *>(source), size);
+    file.flush();
+    const bool written = static_cast<bool>(file);
+    file.close();
+    if (!written || !file || !FlushFileToDisk(temporary)) {
+        RemoveTemporaryFile(temporary);
+        return S1SaveResult::WriteFailed;
+    }
+    const S1SaveResult result = CommitTemporaryFile(temporary, path);
+    if (result != S1SaveResult::Success)
+        RemoveTemporaryFile(temporary);
+    return result;
+}
+
+void S1Save_PrepareStorageWrite(S1SaveImage &image) {
+    NativeSaveFile save;
+    LoadLayout(image, save);
+    save.internal.settingsFlags = g_settingsFlags;
+    InsertSaveFileHeader(save);
+    StoreLayout(save, image);
 }
 
 S1SaveResult S1Save_Write(const std::filesystem::path &path, S1SaveImage &image) {

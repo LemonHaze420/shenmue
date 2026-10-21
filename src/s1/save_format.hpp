@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/types.hpp"
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -7,6 +9,8 @@
 
 namespace shenmue::s1 {
 
+inline constexpr shen_name kS1SaveIdentifier{SHEN_NAME(SHEE)};
+inline constexpr std::uint32_t kS1SaveVersion = 0x10e;
 inline constexpr std::size_t kS1SaveImageSize = 0xa000;
 inline constexpr std::size_t kS1SaveInternalHeaderOffset = 0x680;
 inline constexpr std::size_t kS1SaveSummaryOffset = 0x740;
@@ -122,6 +126,9 @@ std::int32_t S1Save_ReadCurrentSlot(const std::filesystem::path &path, S1SaveIma
 S1SaveResult S1Save_Load(const std::filesystem::path &path, S1SaveImage &image, std::int32_t block = 1);
 S1SaveResult S1Save_ReadMetadata(const std::filesystem::path &path, S1SaveMetadata &metadata);
 S1SaveResult S1Save_Write(const std::filesystem::path &path, S1SaveImage &image);
+S1SaveResult S1Save_ReadStorageRange(const std::filesystem::path &path, void *destination, std::uint32_t offset, std::uint32_t size);
+S1SaveResult S1Save_WriteStorageBytes(const std::filesystem::path &path, const void *source, std::uint32_t size);
+void S1Save_PrepareStorageWrite(S1SaveImage &image);
 S1SaveResult S1Save_Apply(const S1SaveImage &image, std::int32_t block = 1);
 void S1Save_ApplyPendingMapStartState() noexcept;
 // A loaded save's home snapshot waits for MapControlTask_SetSceneAndAreaID.
