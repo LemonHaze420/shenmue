@@ -6,6 +6,28 @@
 
 namespace shenmue::s2 {
 
+struct S2SaveDataInfo;
+
+struct SaveDataInfoText {
+    std::int32_t valid;
+    std::array<char, 64> gameTime, gameDate;
+    std::array<char, 32> location, area;
+    std::array<char, 64> saveDate, saveTime;
+};
+static_assert(sizeof(SaveDataInfoText) == 324);
+static_assert(offsetof(SaveDataInfoText, gameTime) == 4 && offsetof(SaveDataInfoText, gameDate) == 68);
+static_assert(offsetof(SaveDataInfoText, location) == 132 && offsetof(SaveDataInfoText, area) == 164);
+static_assert(offsetof(SaveDataInfoText, saveDate) == 196 && offsetof(SaveDataInfoText, saveTime) == 260);
+
+extern std::array<SaveDataInfoText, 7> g_saveDataInfoText;
+SaveDataInfoText *GetSaveDataInfoText(std::uint32_t index);
+std::int32_t FormatSaveDataInfoByIndex(std::int32_t index, const S2SaveDataInfo *data, std::int32_t source);
+std::uint32_t FormatAllSaveDataInfo(std::int32_t first, std::int32_t source);
+namespace ui_detail {
+std::int32_t SaveMenuAreaIndex(shen_name map);
+std::int32_t SaveMenuLocationIndex(std::int32_t area);
+} // namespace ui_detail
+
 struct SaveMenuSlot {
     std::int32_t valid, index;
     shen_name map;

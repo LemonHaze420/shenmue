@@ -1066,6 +1066,7 @@ UILayoutRect UI_FitAndDrawLabelText(nk_context &context, const char *text, std::
 std::uint32_t UI_GetWindowColour(const d3t::UIWindow *window);
 std::uint32_t UI_ModulateColour(std::uint32_t colour, std::uint32_t tint);
 #endif
+std::uint32_t ConstructColour(std::int32_t red, std::int32_t green, std::int32_t blue, std::int32_t alpha);
 std::uint32_t UI_TintByWindow(const d3t::UIWindow &window, std::uint32_t colour);
 void UI_DrawLabel(nk_context &context, std::int32_t labelIndex, std::int32_t widget);
 std::int32_t UI_FindViewImage(std::uint32_t slot, const char *name);
