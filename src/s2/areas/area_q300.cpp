@@ -1,3 +1,4 @@
+#include "s2/character.hpp"
 #include "s2/debug.hpp"
 #include "s2/field_collision.hpp"
 #include "s2/sound_program.hpp"
@@ -14,17 +15,17 @@ namespace shenmue::s2::areas {
 namespace {
 std::int32_t initializing{};
 void SetBike() {
-    constexpr shen_name bike{SHEN_NAME(BIKE)};
+
     if (EV_GetShenmueFlag(0x460) || EV_GetShenmueFlag(0x3c0)) {
-        if (DoesScenarioCharacterExist(bike)) {
-            EnsureScenarioCharacterDraw(bike);
-            EnableScenarioCharacterDisplay(bike);
-            ToggleFlagOnFieldEntity(bike, 1);
+        if (DoesScenarioCharacterExist(CHARACTER_BIKE_NAME)) {
+            EnsureScenarioCharacterDraw(CHARACTER_BIKE_NAME);
+            EnableScenarioCharacterDisplay(CHARACTER_BIKE_NAME);
+            ToggleFlagOnFieldEntity(CHARACTER_BIKE_NAME, 1);
         }
-    } else if (DoesScenarioCharacterExist(bike)) {
-        DisableScenarioCharacterDisplay(bike);
-        ToggleScenarioCharacterFlag(bike);
-        ToggleFlagOnFieldEntity(bike, 0);
+    } else if (DoesScenarioCharacterExist(CHARACTER_BIKE_NAME)) {
+        DisableScenarioCharacterDisplay(CHARACTER_BIKE_NAME);
+        ToggleScenarioCharacterFlag(CHARACTER_BIKE_NAME);
+        ToggleFlagOnFieldEntity(CHARACTER_BIKE_NAME, 0);
     }
 }
 void ApplyLighting(std::int32_t night) {

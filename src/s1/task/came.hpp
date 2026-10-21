@@ -163,7 +163,8 @@ struct AnimatedCameraSequence {
 
 extern CameraRuntimeState g_cameraRuntime;
 
-
+bool InitializeDeveloperSelection(DeveloperCameraState &camera, std::int32_t scanFlags);
+bool AdvanceDeveloperSelection(DeveloperCameraState &camera);
 extern Matrix4x4 g_tmp_cam_xform;
 
 

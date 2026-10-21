@@ -5,6 +5,7 @@
 
 namespace shenmue::s2::areas {
 
+inline constexpr shen_name KMZ2_NEXT_MAP{SHEN_NAME(KRK4)};
 void AreaKMZ2Init();
 void AreaKMZ2Main(std::uint32_t startParameters);
 void AreaKMZ2Cleanup(std::int32_t afternoon, std::uint32_t areaIndex);

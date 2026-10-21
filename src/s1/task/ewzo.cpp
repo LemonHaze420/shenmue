@@ -7,11 +7,13 @@
 #include "s1/frame_pipeline.hpp"
 #include "s1/subtitles.hpp"
 #include "s1/player_stats.hpp"
+#include "s1/steam.hpp"
 #include "s1/texture_cache.hpp"
 #include "s1/ui_runtime.hpp"
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -388,15 +390,14 @@ void EnqueueEWZO(std::uint8_t mode, std::uint16_t animationSetId, std::uint16_t 
         return;
     }
 
-    std::uint32_t &movePopupProgress = g_playerStats.pages.slotMachinePlayFramesBySlot[4];
-    std::uint32_t &movePopupCount = g_playerStats.pages.slotMachinePlayFramesBySlot[5];
-    if (movePopupProgress == 0) {
-        movePopupCount = 1;
-    } else if (movePopupProgress == 1) {
-        ++movePopupCount;
-    }
-    UpdateSteamStat(24);
-    UpdateSteamAchievement(24);
+    SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Moves_Learned];
+    if (stat.type == SS_Set)
+        stat.value = 1;
+    else if (stat.type == SS_Add)
+        stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+
+    UpdateSteamStat(Stat_Moves_Learned);
+    UpdateSteamAchievement(Stat_Moves_Learned);
     if (g_pMovePopupTask || animationSetId == 0)
         return;
 

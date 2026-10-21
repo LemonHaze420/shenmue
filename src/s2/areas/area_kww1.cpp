@@ -4,6 +4,7 @@
 #include "s2/date_time.hpp"
 #include "s2/event_runtime.hpp"
 
+#include "s2/scenario_window.hpp"
 #include <cstdint>
 
 namespace shenmue::s2::areas {
@@ -24,6 +25,7 @@ void AreaKWW1Main(std::uint32_t) {
         dateTime.hour = 8;
         dateTime.minute = 0;
         SetCurrentDateTimeTo(dateTime);
+        dbgPrintEventMessage("不当な強制睡眠を実行しました。");
     }
 }
 

@@ -463,11 +463,11 @@ std::uint32_t GetSnapshotAreaSortKey(std::uint32_t area) noexcept {
 
 } // namespace
 
-// @verified - p
 std::int32_t GetSnapshotBioSortKey(std::uint32_t name) noexcept {
     std::int32_t index=0;
     for (;index<48;++index) if (SNAPSHOT_BIOGRAPHIES[index].character.name==name) break;
-    if (name==SNAPSHOT_BIO_SYP.name || name==SNAPSHOT_BIO_SYX.name || name==SNAPSHOT_BIO_SKY.name) return 8;
+    if (name == SNAPSHOT_BIO_SYP.name || name == SNAPSHOT_BIO_SYX.name || name == SNAPSHOT_BIO_KSY.name)
+        return 8;
     if (name==SNAPSHOT_BIO_WSH.name || name==SNAPSHOT_BIO_SN5.name || name==SNAPSHOT_BIO_SNB.name) return 40;
     if (name==SNAPSHOT_BIO_GAI2.name) return 28;
     return index;

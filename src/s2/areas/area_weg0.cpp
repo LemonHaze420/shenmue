@@ -81,12 +81,12 @@ std::int32_t GetPlayerRegion() {
     EV_GetCharaPosition(SHEN_NAME(RYO_), CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     if (position.x <= 205.0f) {
         if (position.y > 102.0f)
-            return position.y > 106.80000305175781f ? 6 : 4;
+            return static_cast<double>(position.y) > 106.8 ? 6 : 4;
         return 2;
     }
     if (position.y <= 102.0f)
         return 1;
-    return position.y > 106.80000305175781f ? 5 : 3;
+    return static_cast<double>(position.y) > 106.8 ? 5 : 3;
 }
 void UpdateVisibility() {
     const std::int32_t region = GetPlayerRegion();

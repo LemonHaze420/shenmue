@@ -156,7 +156,7 @@ std::int32_t FrbtRunAway(FrbtWork &work) {
     EventSetMotion motion{.cleanup = 0, .character = FRBT_RYO, .animation = 0xf003, .frame = 0, .speed = 1, .flags = 0x40000000U, .delay = 0};
     EVT_AT_SetMot_Callback(&motion);
     GetMotionFrameCount(0xf003);
-    const bool sam = GetMotionAnimationId(FindMotionWork(FindCharacterByScenarioName(work.enemies[0])), MotionRegion::LowerBody) == 7;
+    const bool sam = GetMotionRigBoneId(FindMotionWork(FindCharacterByScenarioName(work.enemies[0]))) == 7;
     EventSetCamera camera{
         .cleanup = 0, .camera = sam ? 1200 : 1201, .eye = FRBT_BASE, .target = FRBT_BASE, .context = 0, .reserved11 = {}, .angle = 0, .delay = 0};
     EVT_AT_SetCam_Callback(&camera);
@@ -194,7 +194,7 @@ void FrbtVictoryAuthorCallback(void *data) {
         EventSetMotion motion{.cleanup = 0, .character = FRBT_RYO, .animation = 4929, .frame = 0, .speed = 1, .flags = 0, .delay = 0};
         EVT_AT_SetMot_Callback(&motion);
         GetMotionFrameCount(4929);
-        const bool sam = GetMotionAnimationId(FindMotionWork(FindCharacterByScenarioName(work.enemies[0])), MotionRegion::LowerBody) == 7;
+        const bool sam = GetMotionRigBoneId(FindMotionWork(FindCharacterByScenarioName(work.enemies[0]))) == 7;
         motion.character = work.enemies[0];
         motion.animation = sam ? 4932U : 4942U;
         EVT_AT_SetMot_Callback(&motion);
@@ -280,7 +280,7 @@ void FrbtVictoryAuthorCallback(void *data) {
     EventSetMotion *queuedMotion = static_cast<EventSetMotion *>(HLib::GetTaskParameter(task));
     *queuedMotion = {.cleanup = 1, .character = FRBT_RYO, .animation = 4930, .frame = 0, .speed = 1, .flags = 0, .delay = 100};
     GetMotionFrameCount(4930);
-    const bool sam = GetMotionAnimationId(FindMotionWork(FindCharacterByScenarioName(work.enemies[0])), MotionRegion::LowerBody) == 7;
+    const bool sam = GetMotionRigBoneId(FindMotionWork(FindCharacterByScenarioName(work.enemies[0]))) == 7;
     motion.character = work.enemies[0];
     motion.animation = sam ? 4934U : 4944U;
     EVT_AT_SetMot_Callback(&motion);

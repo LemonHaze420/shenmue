@@ -10,7 +10,7 @@
 
 namespace shenmue::s2 {
 inline constexpr shen_name SNAPSHOT_DEBUG_TASK{SHEN_NAME(STVW)}, SNAPSHOT_DEBUG_PLAYER{SHEN_NAME(RYO_)};
-inline constexpr shen_name SNAPSHOT_BIO_SYP{SHEN_NAME(SYP_)}, SNAPSHOT_BIO_SYX{SHEN_NAME(SYX_)}, SNAPSHOT_BIO_SKY{SHEN_NAME(SKY_)};
+inline constexpr shen_name SNAPSHOT_BIO_SYP{SHEN_NAME(SYP_)}, SNAPSHOT_BIO_SYX{SHEN_NAME(SYX_)}, SNAPSHOT_BIO_KSY{SHEN_NAME(KSY_)};
 inline constexpr shen_name SNAPSHOT_BIO_WSH{SHEN_NAME(WSH_)}, SNAPSHOT_BIO_SN5{SHEN_NAME(SN5_)}, SNAPSHOT_BIO_SNB{SHEN_NAME(SNB_)};
 inline constexpr shen_name SNAPSHOT_BIO_GAI2{SHEN_NAME(GAI2)};
 void InitializeSnapshotViewer();

@@ -1,6 +1,7 @@
 #include "s1/ui_internal.hpp"
 
 #include "s1/ui_collection.hpp"
+#include "s1/steam.hpp"
 #include "s1/modern_material.hpp"
 #include "s1/render_array.hpp"
 namespace shenmue::s1::ui_runtime_detail {
@@ -858,6 +859,8 @@ bool UI_ICONStartItemInfoPopup(std::uint16_t itemId) {
     g_isPlayerGameStateActive = 6;
     icon.overlayMode = 7;
 
+    if (static_cast<std::uint16_t>(itemId - 67U) <= 167U && GetInventoryItemCount(itemId) == 1)
+        RefreshSteamStatForItem(static_cast<std::int16_t>(itemId));
     return true;
 }
 

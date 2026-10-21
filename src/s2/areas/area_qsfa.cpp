@@ -59,13 +59,13 @@ void AreaQSFACleanup(std::int32_t night, std::uint32_t) {
         EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
         PushGlobalLightingProgram();
         CheckIsArgEquZero(1);
-        SuspendParticleEffect(4, fire);
+        ResumeParticleEffect(4, fire);
     } else {
         CheckIsArgEquZero(1);
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
         EV_SetIndexForLightEntry(0, 1);
-        ResumeParticleEffect(4, fire);
+        SuspendParticleEffect(4, fire);
     }
     EV_LoadCutsceneFromCurrentScene("QSFA");
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1015))

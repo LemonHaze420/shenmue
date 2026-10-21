@@ -182,6 +182,7 @@ enum CharacterFlags : std::uint32_t {
 using CharacterCoreCallback = void (*)(Character *);
 inline constexpr shen_name CHARACTER_INVALID_NAME{SHEN_NAME(ERRR)};
 
+inline constexpr shen_name CHARACTER_BIKE_NAME{SHEN_NAME(bike)};
 extern Matrix4x4 g_characterNodeSavedTransform;
 extern Matrix4x4 g_characterChildRotationTransform;
 extern Matrix4x4 g_characterNodeEulerTransform;

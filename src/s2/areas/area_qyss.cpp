@@ -265,7 +265,7 @@ void QyssEndStalkCallback(void *parameter) {
         EVT_AT_SetPosRot(&yuanPosition);
         EventSetAngle yuanAngle{0, QYSS_YUAN, QYSS_INVALID, 270.0F, 0};
         EVT_AT_SetAngY_Callback(&yuanAngle);
-        EventSetMotion yuanMotion{0, QYSS_YUAN, 0xf002, 0, 1.0F, 2, 0};
+        EventSetMotion yuanMotion{0, QYSS_YUAN, 0xf002, 0, 1.0F, 0x40000000U, 0};
         EVT_AT_SetMot_Callback(&yuanMotion);
         (void)GetMotionFrameCount(0xf002);
     }

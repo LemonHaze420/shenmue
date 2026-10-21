@@ -453,6 +453,7 @@ void SnapshotDebugGridInput(SnapshotDebugWork &work, std::uint16_t pressed) {
             work.sort = 0;
         work.phase = work.sort == 3 ? 12 : 4;
         work.page = 0;
+        work.selected = 0;
         work.first = 0;
         ExecuteAicaCommand(0x900abU, 0, 0);
     }
@@ -562,6 +563,7 @@ void SnapshotDebugBiographyInput(SnapshotDebugWork &work, std::uint16_t pressed)
             work.sort = 0;
         work.phase = 4;
         work.page = 0;
+        work.selected = 0;
         work.first = 0;
         work.selectionKind = (work.count - 1) / 9;
         ExecuteAicaCommand(0x900abU, 0, 0);
@@ -1296,7 +1298,9 @@ void SnapshotDebugPageInput(SnapshotDebugWork &work, std::uint16_t pressed) {
 }
 void LoadSnapshotDebugSecretPhoto(SnapshotDebugWork &work) {
     work.panX = 0;
+    work.panY = 0;
     work.zoomWidth = 0;
+    work.zoomHeight = 0;
     work.loadingPhase = 26;
     work.phase = 28;
     CheckHelpIcon(1, 0, CheckHelpIconOp::Remove);

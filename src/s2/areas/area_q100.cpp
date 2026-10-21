@@ -158,17 +158,17 @@ void StreetCallback(void *payload) {
         StreetWatchMainCallback(payload, street);
 }
 void UpdateBike() {
-    const shen_name bike{SHEN_NAME(BIKE)};
+
     if (EV_GetShenmueFlag(0x3c1)) {
-        if (DoesScenarioCharacterExist(bike)) {
-            EnsureScenarioCharacterDraw(bike);
-            EnableScenarioCharacterDisplay(bike);
-            ToggleFlagOnFieldEntity(bike, 1);
+        if (DoesScenarioCharacterExist(CHARACTER_BIKE_NAME)) {
+            EnsureScenarioCharacterDraw(CHARACTER_BIKE_NAME);
+            EnableScenarioCharacterDisplay(CHARACTER_BIKE_NAME);
+            ToggleFlagOnFieldEntity(CHARACTER_BIKE_NAME, 1);
         }
-    } else if (DoesScenarioCharacterExist(bike)) {
-        DisableScenarioCharacterDisplay(bike);
-        ToggleScenarioCharacterFlag(bike);
-        ToggleFlagOnFieldEntity(bike, 0);
+    } else if (DoesScenarioCharacterExist(CHARACTER_BIKE_NAME)) {
+        DisableScenarioCharacterDisplay(CHARACTER_BIKE_NAME);
+        ToggleScenarioCharacterFlag(CHARACTER_BIKE_NAME);
+        ToggleFlagOnFieldEntity(CHARACTER_BIKE_NAME, 0);
     }
 }
 void SpringCallback(void *) {

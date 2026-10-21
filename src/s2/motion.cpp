@@ -5,6 +5,7 @@
 #include "s2/archive_data.hpp"
 #include "s2/character.hpp"
 #include "s2/event_runtime.hpp"
+#include "s2/frame_pacing.hpp"
 #include "s2/hand.hpp"
 #include "s2/map_control.hpp"
 #include "s2/model_component.hpp"
@@ -335,44 +336,56 @@ void RetireMotionBankTracks(const std::byte *data, std::uint64_t size) {
     }
 }
 
-
+std::int32_t SampleTimedNode(const std::byte *data, MT7Node *node, std::int32_t frame, float fraction, std::int32_t index) {
+    if (index >= static_cast<std::int16_t>(ReadMotionU16(data + 8)))
+        return index;
+    const std::byte *const record = data + static_cast<std::size_t>(index) * 0x20;
+    const std::uint16_t scaleOffset = ReadMotionU16(record + 12);
+    auto scale = [&](std::size_t axis) {
+        const std::byte *const source = scaleOffset ? data + scaleOffset + frame * 6 + axis * 2 : record + 14 + axis * 2;
+        float value = DecodeMotnFloat(ReadMotionU16(source));
+        if (scaleOffset && fraction != 0.0f)
+            value += (DecodeMotnFloat(ReadMotionU16(source + 6)) - value) * fraction;
+        return value;
+    };
+    auto rotation = [&](std::size_t axis) {
+        const std::uint16_t offset = ReadMotionU16(record + 20 + axis * 4);
+        const std::byte *const source = offset ? data + offset + frame * 2 : record + 22 + axis * 4;
+        const std::int16_t value = static_cast<std::int16_t>(ReadMotionU16(source));
+        std::int32_t result = value;
+        if (offset && fraction != 0.0f) {
+            const std::int16_t delta = static_cast<std::int16_t>(ReadMotionU16(source + 2) - ReadMotionU16(source));
+            result += static_cast<std::int16_t>(static_cast<std::int32_t>(delta * fraction));
+        }
+        return result;
+    };
+    auto position = [&](std::size_t axis) {
+        const std::uint16_t offset = ReadMotionU16(record + 32 + axis * 4);
+        const std::byte *const source = offset ? data + offset + frame * 2 : record + 34 + axis * 4;
+        float value = DecodeMotnFloat(ReadMotionU16(source));
+        if (offset && fraction != 0.0f)
+            value += (DecodeMotnFloat(ReadMotionU16(source + 2)) - value) * fraction;
+        return value;
+    };
+    node->scale.x = scale(0);
+    node->scale.y = scale(1);
+    node->scale.z = scale(2);
+    node->rotation[0] = rotation(0);
+    node->rotation[1] = rotation(1);
+    node->rotation[2] = rotation(2);
+    node->position.x = position(0);
+    node->position.y = position(1);
+    node->position.z = position(2);
+    std::int32_t next = index + 1;
+    if (mtGetTransform(node))
+        next = SampleTimedNode(data, mtGetTransform(node), frame, fraction, next);
+    if (mtGetSibling(node))
+        return SampleTimedNode(data, mtGetSibling(node), frame, fraction, next);
+    return next;
+}
 void SampleTimedNodes(TimedNodeMotion &motion, std::int32_t frame, float fraction) {
-    const std::byte *const data = motion.data;
-    const std::size_t count = std::min<std::size_t>(ReadMotionU16(data + 8), motion.model->nodes.size());
-    for (std::size_t index = 0; index < count; ++index) {
-        MT7Node &node = motion.model->nodes[index];
-        const std::byte *const record = data + index * 0x20;
-        const std::uint16_t scaleOffset = ReadMotionU16(record + 12);
-        auto scale = [&](std::size_t axis) {
-            const std::byte *const source = scaleOffset ? data + scaleOffset + frame * 6 + axis * 2 : record + 14 + axis * 2;
-            float value = DecodeMotnFloat(ReadMotionU16(source));
-            if (scaleOffset && fraction != 0.0f)
-                value += (DecodeMotnFloat(ReadMotionU16(source + 6)) - value) * fraction;
-            return value;
-        };
-        auto rotation = [&](std::size_t axis) {
-            const std::uint16_t offset = ReadMotionU16(record + 20 + axis * 4);
-            const std::byte *const source = offset ? data + offset + frame * 2 : record + 22 + axis * 4;
-            const std::int16_t value = static_cast<std::int16_t>(ReadMotionU16(source));
-            std::int32_t result = value;
-            if (offset && fraction != 0.0f) {
-                const std::int16_t delta = static_cast<std::int16_t>(ReadMotionU16(source + 2) - ReadMotionU16(source));
-                result += static_cast<std::int16_t>(static_cast<std::int32_t>(delta * fraction));
-            }
-            return result;
-        };
-        auto position = [&](std::size_t axis) {
-            const std::uint16_t offset = ReadMotionU16(record + 32 + axis * 4);
-            const std::byte *const source = offset ? data + offset + frame * 2 : record + 34 + axis * 4;
-            float value = DecodeMotnFloat(ReadMotionU16(source));
-            if (offset && fraction != 0.0f)
-                value += (DecodeMotnFloat(ReadMotionU16(source + 2)) - value) * fraction;
-            return value;
-        };
-        node.position = {position(0), position(1), position(2)};
-        node.rotation = {rotation(0), rotation(1), rotation(2)};
-        node.scale = {scale(0), scale(1), scale(2)};
-    }
+    if (!motion.model->nodes.empty())
+        SampleTimedNode(motion.data, motion.model->nodes.data(), frame, fraction, 0);
 }
 
 bool ReadMotnTuple(std::span<const std::byte> bytes, std::size_t &cursor, float &value, float &leftSlope, float &rightSlope) {
@@ -889,7 +902,7 @@ bool TickTimedNodeMotion(TimedNodeMotion &motion) {
     const float duration = static_cast<float>(static_cast<std::int16_t>(ReadMotionU16(data)));
     const std::int32_t frame = static_cast<std::int32_t>(motion.frame);
     SampleTimedNodes(motion, frame, duration > frame ? motion.frame - frame : 0.0f);
-    const float delta = HLib::GetScaledDeltaTick() * motion.speed;
+    const float delta = shenGetScaledDeltaTickTime(motion.speed);
     motion.frame += (motion.flags & 0x20U) ? -delta : delta;
     return motion.mode == 2;
 }

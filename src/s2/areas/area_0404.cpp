@@ -122,7 +122,7 @@ void Queue0404Author(Area0404Parameter *parent) {
     Area0404AuthorParameter *const child = static_cast<Area0404AuthorParameter *>(HLib::GetTaskParameter(task));
     child->parent = parent;
     child->frame = 0;
-    EV_LoadAudio("0404A000", 0);
+    EV_LoadAudio("0509A000", 0);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     EV_authSceneCtrl(static_cast<AuthSceneCtrl>(parent->selection));
     parent->state = 2;

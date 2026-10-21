@@ -67,14 +67,14 @@ void AreaQSFCCleanup(std::int32_t night, std::uint32_t) {
         EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
         PushGlobalLightingProgram();
         CheckIsArgEquZero(1);
-        SuspendParticleEffect(4, fire);
+        ResumeParticleEffect(4, fire);
         EV_SetObjectFlagByIndex(1, 1);
     } else {
         CheckIsArgEquZero(1);
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
         EV_SetIndexForLightEntry(0, 1);
-        ResumeParticleEffect(4, fire);
+        SuspendParticleEffect(4, fire);
         EV_SetObjectFlagByIndex(1, 0);
     }
     SetNewNpcBatchCountOverride(NpcFillType::FrontFill, night ? 10 : 15);

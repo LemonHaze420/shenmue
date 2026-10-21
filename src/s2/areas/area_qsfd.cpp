@@ -61,14 +61,14 @@ void AreaQSFDCleanup(std::int32_t night, std::uint32_t) {
         PushGlobalLightingProgram();
         CheckIsArgEquZero(1);
         EV_SetObjectFlagByIndex(1, 1);
-        SuspendParticleEffect(4, fire);
+        ResumeParticleEffect(4, fire);
     } else {
         CheckIsArgEquZero(1);
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
         EV_SetIndexForLightEntry(0, 1);
         EV_SetObjectFlagByIndex(1, 0);
-        ResumeParticleEffect(4, fire);
+        SuspendParticleEffect(4, fire);
     }
     SetNewNpcBatchCountOverride(NpcFillType::FrontFill, night ? 12 : 18);
     EV_LoadCutsceneFromCurrentScene("QSFD");

@@ -122,7 +122,7 @@ void RatiWaitQteCallback(void *) {
         return;
     if (!ratiQteStarted) {
         (void)qteBattleUtil(BattleQteMode::SetWait, 1, 6, ratiQteFrames, 0);
-        (void)qteBattleUtil(BattleQteMode::SetLastCommands, 1024, 256, 0, 0);
+        (void)qteBattleUtil(BattleQteMode::SetFirstCommands, 1024, 256, 0, 0);
         (void)qteBattleUtil(BattleQteMode::Start, 0, 0, 0, 0);
         if (ratiQteFrames < 24)
             ratiQteFrames += 4;

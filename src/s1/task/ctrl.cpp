@@ -185,7 +185,7 @@ void MapControlInternal() {
         while (*link) {
             CharacterBucketNode *const node = *link;
             Character *const character = node->character;
-            const bool preserve = character && character->entity.name == SHEN_NAME(CEWP) &&
+            const bool preserve = character && character->entity.name == CHARACTER_ENTITY &&
                 (((character->flags.value & 1U) != 0U) || ((character->flags.value & 2U) != 0U && (character->motionFlags & 1U) != 0U));
             if (preserve) {
                 link = &node->next;
@@ -193,6 +193,13 @@ void MapControlInternal() {
             }
 
             SCEN_UnlinkCharacterIndexNode(control->scenarioTask, character);
+            DeveloperCameraState &selection = g_cameraRuntime.developerCamera;
+            if (g_DisableCamStateUpdate != 0 && character == selection.selectedCharacter) {
+                if (selection.selectedCharacter)
+                    AdvanceDeveloperSelection(selection);
+                else
+                    InitializeDeveloperSelection(selection, 0);
+            }
             if (character == control->ryo)
                 control->ryo = nullptr;
             CHAR_DestroyAndFreeComponents(character);

@@ -28,7 +28,7 @@ void PlaceAreaEntity(std::int32_t placementIndex, std::int32_t characterIndex) {
     AT_SetLocalBaseChara(character, AREA_ENTITY_BASE);
     EV_AT_SetPos(character, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(character, EventTransformFlags::AllAxes, rotation, nullptr);
-    AT_SetLocalBaseChara(character, shen_name{});
+    AT_SetLocalBaseChara(character, EVENT_CHARACTER_INVALID);
 }
 
 void PlaceAreaEntityGroup(std::int32_t placementIndex) {

@@ -22,7 +22,7 @@ constexpr Vector3 bellOffset{0.07000000029802322f, -0.07999999821186066f, 0.0299
 constexpr Vector3i propRotation{-1, -1, -1};
 std::int32_t firePhase{};
 std::uint32_t fireId{};
-std::int16_t previousFloorMode{};
+std::int16_t previousFloorMode = 1;
 void WESMFireBreatherLoop(void *) {
     MotionWork *work = scenFindMotionwork(fireBreather);
     if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody))
@@ -33,7 +33,7 @@ void WESMFireBreatherLoop(void *) {
         if (frame > 430.0f) {
             EV_GetCharaPosition(fireBreather, 7, &position, EventTransformFlags::World);
             SetParticleEffectPosition(4, fireId, &position, &position);
-            SuspendParticleEffect(4, fireId);
+            ResumeParticleEffect(4, fireId);
             firePhase = 1;
         }
     } else if (firePhase == 1) {
@@ -41,7 +41,7 @@ void WESMFireBreatherLoop(void *) {
             EV_GetCharaPosition(fireBreather, 7, &position, EventTransformFlags::World);
             SetParticleEffectPosition(4, fireId, &position, &position);
         } else {
-            ResumeParticleEffect(4, fireId);
+            SuspendParticleEffect(4, fireId);
             firePhase = 2;
         }
     } else if (frame < 400.0f) {
@@ -66,12 +66,12 @@ void InitializeWESMFireBreather() {
     EV_GetCharaPosition(fireProp, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     fireId = static_cast<std::uint32_t>(CreateFireEffect(position, 1.0f, 1.0f, 0, 0));
     SetParticleEffectSize(4, fireId, 0.25f, 0.4000000059604645f);
-    SuspendParticleEffect(4, fireId);
+    ResumeParticleEffect(4, fireId);
     AttachFireEffect(fireId, fireProp, 152, 0.0f);
     EV_GetCharaPosition(fireBreather, 7, &position, EventTransformFlags::World);
     fireId = static_cast<std::uint32_t>(CreateFireEffect(position, 1.0f, 1.0f, 0, 0));
     SetParticleEffectSize(4, fireId, 0.800000011920929f, 0.800000011920929f);
-    SuspendParticleEffect(4, fireId);
+    ResumeParticleEffect(4, fireId);
 }
 void WESMSpringLoop(void *) {
     SetTextureAnimationUV(0.0f, 0.04500000178813934f);

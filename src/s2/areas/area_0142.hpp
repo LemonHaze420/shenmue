@@ -23,7 +23,7 @@ struct E0142LoopParameter {
     std::byte reserved0a[6];
 };
 static_assert(sizeof(E0142LoopParameter) == 0x10);
-inline constexpr shen_name AREA_0142_LIGHT{SHEN_NAME(l001)}, AREA_0142_NEXT_MAP{SHEN_NAME(0000)};
+inline constexpr shen_name AREA_0142_LIGHT{SHEN_NAME(l001)}, AREA_0142_NEXT_MAP{SHEN_NAME(0200)};
 extern const ScriptAreaDefinition area0142ScriptDefinition;
 
 } // namespace shenmue::s2::areas

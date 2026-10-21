@@ -192,14 +192,14 @@ void InitializeSmoke() {
     const Vector3 variance{};
     for (std::int32_t index = 0; index < 2; ++index) {
         smokeIds[index] = static_cast<std::uint32_t>(CreateSmokeEffect(smokePositions[index], volume, 40, 0.05000000074505806f, {}, 0));
-        SetSmokeEffectFalloff(smokeIds[index], 21);
-        SetSmokeEffectFadeFactor(smokeIds[index], 110);
+        SetSmokeEffectFadeFactor(smokeIds[index], 21);
+        SetSmokeEffectFalloff(smokeIds[index], 110);
         SetParticleEffectColour(0, smokeIds[index], 0, 144, 144, 144);
         SetParticleEffectInitialScale(0, smokeIds[index], 0.32899999618530273f);
         SetParticleEffectSize(0, smokeIds[index], 1.559999942779541f, 1.409999966621399f);
         SetParticleEffectBirthRate(0, smokeIds[index], 0.007799999788403511f);
         SetParticleEffectVelocity(0, smokeIds[index], velocity, variance);
-        SuspendParticleEffect(0, smokeIds[index]);
+        ResumeParticleEffect(0, smokeIds[index]);
     }
 }
 void ApplyLighting(std::int32_t night) {
@@ -212,7 +212,7 @@ void ApplyLighting(std::int32_t night) {
         ClearBooks();
         if (EV_GetShenmueFlag(0x213))
             RelocateRyo();
-        SuspendParticleEffect(4, fireId);
+        ResumeParticleEffect(4, fireId);
     } else {
         CheckIsArgEquZero(1);
         EV_ReinitLights(1);
@@ -220,7 +220,7 @@ void ApplyLighting(std::int32_t night) {
         EV_SetIndexForLightEntry(0, 1);
         EV_SetObjectFlagByIndex(2, 0);
         EV_SetObjectFlagByIndex(4, 0);
-        ResumeParticleEffect(4, fireId);
+        SuspendParticleEffect(4, fireId);
     }
     ApplyWeatherRainAndRippleClip(rainClip);
     ApplyWeatherParticleClip(particleClip);

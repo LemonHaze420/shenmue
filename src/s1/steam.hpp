@@ -53,8 +53,23 @@ static_assert(offsetof(SteamStatDefinition, minimum) == 0x8c);
 static_assert(offsetof(SteamStatDefinition, suppressPublish) == 0x94);
 static_assert(sizeof(SteamAchievementDefinition) == 0x8c);
 
+struct CapsuleToyStatistics {
+    char name[128];
+    std::int32_t entryCount;
+    std::uint32_t trackNewItems;
+    std::int32_t *collected;
+};
+static_assert(sizeof(CapsuleToyStatistics) == 144 && offsetof(CapsuleToyStatistics, entryCount) == 128 &&
+    offsetof(CapsuleToyStatistics, trackNewItems) == 132 && offsetof(CapsuleToyStatistics, collected) == 136);
+inline constexpr CapsuleToyStatistics kCapsuleToyStatisticsDefinition{.name = "Data_CapsuleToys", .entryCount = 168, .trackNewItems = 1};
+inline constexpr std::size_t kCapsuleToyStatisticsDefaultBytes = 140;
+extern CapsuleToyStatistics *g_capsuleToyStatistics;
+extern std::int32_t g_capsuleToyStatisticCount;
+void RefreshSteamStatForItem(std::int32_t itemId);
 enum SteamStatId : std::uint32_t {
     Stat_Call_Police = 10,
+    Stat_Capsule_Toy_Count = 23,
+    Stat_Moves_Learned = 24,
 };
 
 enum SteamStatUpdateType : std::uint32_t {

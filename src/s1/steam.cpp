@@ -3,6 +3,7 @@
 #include "s1/input.hpp"
 #include "s1/steam.hpp"
 
+#include <bit>
 #include <cstring>
 #include <cstdlib>
 #if defined(_WIN32)
@@ -11,6 +12,8 @@
 
 namespace shenmue::s1 {
 SteamStatDefinition *g_steamTemporaryStats = nullptr;
+CapsuleToyStatistics *g_capsuleToyStatistics = nullptr;
+std::int32_t g_capsuleToyStatisticCount = 0;
 namespace {
 
 std::array<SteamStatDefinition, 29> g_defaultSteamStats{};
@@ -90,6 +93,22 @@ void UpdateSteamAchievement(std::uint32_t statIndex) {
     }
 }
 
+// @verified - p
+void RefreshSteamStatForItem(std::int32_t itemId) {
+    const std::int32_t index = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(itemId) - 67U);
+    if (g_capsuleToyStatistics->collected[index] != 0)
+        return;
+    if (g_capsuleToyStatistics->trackNewItems == 1)
+        g_capsuleToyStatistics->collected[index] = 1;
+    SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Capsule_Toy_Count];
+    if (stat.type == SS_Set)
+        stat.value = 1;
+    else if (stat.type == SS_Add)
+        stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+    UpdateSteamStat(Stat_Capsule_Toy_Count);
+    UpdateSteamAchievement(Stat_Capsule_Toy_Count);
+}
+
 void SteamRemoteStorage_RunCallbacks() noexcept {
     if (g_steamRuntime.callbacksEnabled && g_steamRuntime.runCallbacks)
         g_steamRuntime.runCallbacks();
@@ -128,6 +147,21 @@ void InitializeSteamAPI() {
     g_steamRuntime.achievementCount = g_defaultSteamAchievements.size();
     g_steamRuntime.achievements = static_cast<SteamAchievementDefinition *>(std::malloc(sizeof(g_defaultSteamAchievements)));
     std::memcpy(g_steamRuntime.achievements, g_defaultSteamAchievements.data(), sizeof(g_defaultSteamAchievements));
+    g_capsuleToyStatisticCount = 1;
+    CapsuleToyStatistics *const capsuleData = static_cast<CapsuleToyStatistics *>(std::malloc(sizeof(CapsuleToyStatistics)));
+    const std::int32_t count = g_capsuleToyStatisticCount;
+    g_capsuleToyStatistics = capsuleData;
+    std::memcpy(capsuleData, &kCapsuleToyStatisticsDefinition, kCapsuleToyStatisticsDefaultBytes * count);
+    if (count > 0) {
+        std::int32_t index = 0;
+        do {
+            std::int32_t *const collected =
+                static_cast<std::int32_t *>(std::malloc(static_cast<std::size_t>(g_capsuleToyStatistics[index].entryCount) * sizeof(std::int32_t)));
+            CapsuleToyStatistics &record = g_capsuleToyStatistics[index];
+            record.collected = collected;
+            std::memset(collected, 0, static_cast<std::size_t>(record.entryCount) * sizeof(std::int32_t));
+        } while (++index < g_capsuleToyStatisticCount);
+    }
     SteamInit();
 }
 } // namespace d3t

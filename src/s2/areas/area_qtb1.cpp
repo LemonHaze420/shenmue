@@ -57,7 +57,7 @@ void AreaQTB1Cleanup(std::int32_t night, std::uint32_t) {
         PushGlobalLightingProgram();
         CheckIsArgEquZero(1);
         EV_SetObjectFlagByIndex(1, 1);
-        SuspendParticleEffect(4, fire);
+        ResumeParticleEffect(4, fire);
         SetPluralControlFor(FindCharacterByScenarioName(STREET_WATCH_RYO), 1);
     } else {
         CheckIsArgEquZero(1);
@@ -65,7 +65,7 @@ void AreaQTB1Cleanup(std::int32_t night, std::uint32_t) {
         EV_SetLightFlagForIndex(0, 2);
         EV_SetIndexForLightEntry(0, 1);
         EV_SetObjectFlagByIndex(1, 0);
-        ResumeParticleEffect(4, fire);
+        SuspendParticleEffect(4, fire);
     }
     SetNewNpcBatchCountOverride(NpcFillType::FrontFill, night ? 10 : 15);
     EV_LoadCutsceneFromCurrentScene("QTB1");

@@ -3518,16 +3518,17 @@ float AdvanceDeveloperTranslation(float value, bool positive) {
     return value > -2.0f ? static_cast<float>(static_cast<double>(value) - 0.0025) : value;
 }
 
-bool DeveloperCharacterEligible(const DeveloperCameraState &camera, Character *character) {
-    if ((camera.selectionScanFlags & 1) != 0)
+bool DeveloperCharacterEligible(std::int32_t scanFlags, Character *character) {
+    if ((scanFlags & 1) != 0)
         return true;
-    if (!character || character->entity.name != SHEN_NAME(CEWP))
+    if (!character || character->entity.name != CHARACTER_ENTITY)
         return false;
     const std::uint32_t flags = character->flags.value;
     return (flags & 1U) != 0U || ((flags & 2U) != 0U && (character->motionFlags & 1U) != 0U);
 }
 
-bool InitializeDeveloperSelection(DeveloperCameraState &camera) {
+} // namespace
+bool InitializeDeveloperSelection(DeveloperCameraState &camera, std::int32_t scanFlags) {
     const MapControlData *const control = CurrentMapControl();
     if (!control) {
         camera.selectionCursor = nullptr;
@@ -3537,8 +3538,9 @@ bool InitializeDeveloperSelection(DeveloperCameraState &camera) {
     for (std::int32_t bucketIndex = 0; bucketIndex < static_cast<std::int32_t>(control->characterBuckets.size()); ++bucketIndex) {
         for (CharacterBucketNode *node = static_cast<CharacterBucketNode *>(control->characterBuckets[static_cast<std::size_t>(bucketIndex)]); node;
              node = node->next) {
-            if (!DeveloperCharacterEligible(camera, node->character))
+            if (!DeveloperCharacterEligible(scanFlags, node->character))
                 continue;
+            camera.selectionScanFlags = scanFlags;
             camera.selectionBucketIndex = bucketIndex;
             camera.selectionCursor = node;
             camera.selectedCharacter = node->character;
@@ -3559,7 +3561,7 @@ bool AdvanceDeveloperSelection(DeveloperCameraState &camera) {
         if (bucketIndex != camera.selectionBucketIndex)
             node = static_cast<CharacterBucketNode *>(control->characterBuckets[static_cast<std::size_t>(bucketIndex)]);
         for (; node; node = node->next) {
-            if (!DeveloperCharacterEligible(camera, node->character))
+            if (!DeveloperCharacterEligible(camera.selectionScanFlags, node->character))
                 continue;
             camera.selectionBucketIndex = bucketIndex;
             camera.selectionCursor = node;
@@ -3567,11 +3569,13 @@ bool AdvanceDeveloperSelection(DeveloperCameraState &camera) {
             return true;
         }
     }
+    camera.selectionBucketIndex = static_cast<std::int32_t>(control->characterBuckets.size());
     camera.selectionCursor = nullptr;
     camera.selectedCharacter = nullptr;
     return false;
 }
 
+namespace {
 void CopyDeveloperSelection(DeveloperCameraState &destination, const DeveloperCameraState &source) {
     destination.selectionScanFlags = source.selectionScanFlags;
     destination.selectionBucketIndex = source.selectionBucketIndex;
@@ -3582,7 +3586,7 @@ void CopyDeveloperSelection(DeveloperCameraState &destination, const DeveloperCa
 void ReverseDeveloperSelection(DeveloperCameraState &camera) {
     DeveloperCameraState cursor{};
     cursor.selectionScanFlags = camera.selectionScanFlags;
-    if (!InitializeDeveloperSelection(cursor)) {
+    if (!InitializeDeveloperSelection(cursor, cursor.selectionScanFlags)) {
         CopyDeveloperSelection(camera, cursor);
         return;
     }
@@ -3815,7 +3819,7 @@ bool UpdateDeveloperCameraController() {
             camera.strafe = 0.0f;
             camera.pan = 0.0f;
             camera.selectionScanFlags = 0;
-            InitializeDeveloperSelection(camera);
+            InitializeDeveloperSelection(camera, camera.selectionScanFlags);
         }
         camera.setDefaultView = false;
     }
@@ -3840,7 +3844,7 @@ bool UpdateDeveloperCameraController() {
     if (!camera.initialized) {
         CaptureDeveloperCameraView(camera);
         if (!camera.selectedCharacter)
-            InitializeDeveloperSelection(camera);
+            InitializeDeveloperSelection(camera, camera.selectionScanFlags);
     }
     QueueDeveloperCameraState();
     if (g_CamState == 2)
@@ -3942,7 +3946,7 @@ bool UpdateDeveloperCameraController() {
             if (camera.selectedCharacter)
                 AdvanceDeveloperSelection(camera);
             else
-                InitializeDeveloperSelection(camera);
+                InitializeDeveloperSelection(camera, camera.selectionScanFlags);
             camera.selectionAccumulator = 0;
         } else if (camera.selectionAccumulator < -250) {
             ReverseDeveloperSelection(camera);

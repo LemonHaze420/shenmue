@@ -103,7 +103,7 @@ void AfterQteExitCallback(void *) {
     EV_PTYCUtils(shenhua, 3, 0);
     SetHighModelXYZ(FindCharacterByScenarioName(shenhua), 0, 0, 0);
     SetHighModelXYZ(FindCharacterByScenarioName(shenhua), 0, 1, 0);
-    camCtrlUtil(static_cast<CameraUtilityMode>(0), 0);
+    camCtrlUtil(CameraUtilityMode ::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     InitiateCleanupForSceneChara(shenhua);
@@ -114,7 +114,7 @@ void AfterQteExitCallback(void *) {
 void EnterForest3Callback(void *) {
     shenToggleAreaFlags(1);
     EV_stepSetFlags(0, 576);
-    EV_scenQueueLoad(g_actNumber, SHEN_NAME(KMZ3), 0);
+    EV_scenQueueLoad(g_actNumber, KMZ2_NEXT_MAP, 0);
 }
 std::int64_t CheckAreaEvent() {
     if (!IsCharacterWithinMazeMarkerRadius(FindCharacterByScenarioName(ryo), 1, 2.0f) || !EV_GetShenmueFlag(576))

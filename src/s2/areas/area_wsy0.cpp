@@ -293,7 +293,7 @@ void QueueMoveRyo() {
     std::int32_t move = 0;
     Vector3 position;
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
-    if (EV_GetShenmueFlag(0x48b) && position.x > 63.5f && position.x < 66.3f && position.z > 121.5f && position.z < 123.1f &&
+    if (EV_GetShenmueFlag(0x48b) && position.x > 63.5f && position.x < 66.3f && position.z > 121.5f && static_cast<double>(position.z) < 123.1 &&
         static_cast<double>(position.y) > 98.1 && static_cast<double>(position.y) < 98.3) {
         EV_stepSetFlags(0, 0x48b);
         move = 1;

@@ -174,7 +174,7 @@ void CollapseExitCallback(void *) {
 void LeaveForestCallback(void *) {
     shenToggleAreaFlags(1);
     EV_stepSetFlags(0, 0xde);
-    EV_scenQueueLoad(g_actNumber, SHEN_NAME(KRM2), 0);
+    EV_scenQueueLoad(g_actNumber, KMZ1_NEXT_MAP, 0);
 }
 void CompanionPatchCallback(void *) {
     if (!FindCharacterByScenarioName(shenhua))

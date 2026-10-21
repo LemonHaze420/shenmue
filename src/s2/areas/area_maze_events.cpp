@@ -14,7 +14,7 @@
 namespace shenmue::s2::areas {
 void RestoreMazeCompanionControl() {
     using enum CameraState;
-    camCtrlUtil(static_cast<CameraUtilityMode>(0), 0);
+    camCtrlUtil(CameraUtilityMode ::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     SetFaceFlagsForChara_0(FindCharacterByScenarioName(MAZE_EVENT_RYO), FacialNodeOriginal);

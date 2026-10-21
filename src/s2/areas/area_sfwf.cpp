@@ -769,7 +769,7 @@ void MainCallback(void *argument) {
         return;
     case 18:
         if (CanPerformForCurrentAreaFlags())
-            ResetStreetFightStoryFlag(work->stage);
+            CommitStreetFightStoryRank(work->stage);
         work->state = 23;
         return;
     case 23:
