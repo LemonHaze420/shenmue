@@ -166,7 +166,7 @@ std::int64_t Queue0510Author(AuthorViewerPairTaskParameter *parent) {
         EV_AssignLightParams(1, 5);
         EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
         SetupLightConfig();
-        PrioritizeLight(3);
+        AssignLightProgram(3);
         break;
     case 7:
         Create0510BreathEffects();
@@ -281,8 +281,8 @@ void Create0510BreathEffects() {
     const Vector3 variance{0.0f, 0.003f, 0.0f};
     for (std::uint32_t &effect : breath0510) {
         effect = static_cast<std::uint32_t>(CreateSmokeEffect(position, spawn, 40, 0.08f, shen_name{}, 0));
-        SetSmokeEffectFalloff(effect, 10);
-        SetSmokeEffectFadeFactor(effect, 144);
+        SetSmokeEffectFadeFactor(effect, 10);
+        SetSmokeEffectFalloff(effect, 144);
         SetParticleEffectColour(0, effect, 0, 255, 255, 255);
         SetParticleEffectInitialScale(0, effect, 0.5f);
         SetParticleEffectSize(0, effect, 0.3f, 0.3f);

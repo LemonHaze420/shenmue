@@ -68,8 +68,8 @@ void CreateTempleSmoke() {
     for (std::size_t index = 0; index < smokeEffects.size(); ++index) {
         const std::uint32_t effect = static_cast<std::uint32_t>(CreateSmokeEffect(smokePositions[index], Vector3{0.1f, 0.0f, 0.1f}, 40, 0.05f, shen_name{}, 0));
         smokeEffects[index] = effect;
-        SetSmokeEffectFalloff(effect, 21);
-        SetSmokeEffectFadeFactor(effect, 110);
+        SetSmokeEffectFadeFactor(effect, 21);
+        SetSmokeEffectFalloff(effect, 110);
         SetParticleEffectColour(0, effect, 0, 144, 144, 144);
         SetParticleEffectInitialScale(0, effect, 0.329f);
         SetParticleEffectSize(0, effect, 1.56f, 1.41f);

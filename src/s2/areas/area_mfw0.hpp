@@ -16,6 +16,9 @@ inline constexpr Vector3 MFW0_INITIAL_RYO_POSITION{.x = 165.3000030517578f, .y =
 inline constexpr Vector3 MFW0_INITIAL_TEACHER_POSITION{.x = 163.3000030517578f, .y = 100, .z = 235.6999969482422f};
 inline constexpr Vector4 MFW0_REFLECTOR{.x = 1, .y = .5f, .z = .5f, .w = .5f};
 inline constexpr Vector4 MFW0_PRACTICE_REFLECTOR{.x = 1, .y = .2f, .z = .2f, .w = .33000001311302185f};
+inline std::int32_t MFW0_HAND_POSE[19][3]{{0, 0, 46606}, {0, 2182, 64444}, {0, 0, 1456}, {0, 64080, 49154}, {0, 908, 44239}, {0, 0, 53340}, {0, 0, 0},
+    {0, 1456, 54796}, {0, 0, 43692}, {0, 727, 50974}, {0, 0, 0}, {0, 2912, 54797}, {0, 182, 44421}, {0, 1456, 50245}, {0, 0, 0}, {2912, 910, 51336},
+    {726, 726, 47517}, {0, 2003, 50974}, {65518, 65427, 0}};
 struct Mfw0MoveResult {
     std::int8_t status, phase, error, steps, force, timing, unused06, flags;
     std::int32_t detail;

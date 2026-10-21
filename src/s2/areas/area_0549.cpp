@@ -123,7 +123,7 @@ std::int64_t Update0549Author(Area0549AuthorParameter *child) {
     const std::int32_t frame = static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     if (child->parent->selection == 1) {
         if (frame == 0) {
-            SetLightSceneIntensity(23, sceneIntensity0549);
+            SetLightSceneIntensity(23, 0.0f);
             SyncWindWithWDATWeatherState();
             SetIsSkySetup(0);
         } else if (frame == 810)

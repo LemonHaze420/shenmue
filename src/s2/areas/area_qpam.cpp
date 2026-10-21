@@ -91,9 +91,13 @@ void QpamDescribe(MapStandEventWork &work, std::int32_t mode) {
     std::int32_t reply = 0;
     const char *voice = nullptr;
     if (mode == 0)
-        work.conversation = EV_PlayDialogue(GetRandomNumberInRange(2) == 0 ? "0099A003" : "0099A004"); // @text 0099A003 EN: "I'll get it later." | JA: "金がないな…\nあとにするか。" ; 0099A004 EN: "Not enough to buy one." | JA: "今は持ち合わせがないか…"
+        work.conversation = EV_PlayDialogue(static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(2))) == 0 ?
+                "0099A003" :
+                "0099A004"); // @text 0099A003 EN: "I'll get it later." | JA: "金がないな…\nあとにするか。" ; 0099A004 EN: "Not enough to buy one." | JA: "今は持ち合わせがないか…"
     else if (mode == 1)
-        EV_PlayDialogue(GetRandomNumberInRange(2) == 0 ? "0099A001" : "0099A002"); // @text 0099A001 EN: "Huh?\nA map=@" | JA: "ん？　地図か…" ; 0099A002 EN: "Maps." | JA: "地図を売ってるな…"
+        EV_PlayDialogue(static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(2))) == 0 ?
+                "0099A001" :
+                "0099A002"); // @text 0099A001 EN: "Huh?\nA map=@" | JA: "ん？　地図か…" ; 0099A002 EN: "Maps." | JA: "地図を売ってるな…"
     else if (mode == 2)
         EV_PlayDialogue("0099A033"); // @text EN: "Maybe later." | JA: "あとにしよう…"
     else if (mode == 3) {
@@ -163,14 +167,20 @@ void QpamDescribe(MapStandEventWork &work, std::int32_t mode) {
             EVT_AT_SetVoice(reply == 3 && work.mode == 2 ? "0099A018" : voice, 0); // @text EN: "A building nearby." | JA: "このあたりのビルの地図か…"
     }
     if (work.mode == 2) {
-        const float selection = GetRandomNumberInRange(4);
+        const std::uint8_t selection = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(4)));
         voice = selection == 0 ? "0099A037" : selection == 1 ? "0099A038" : selection == 2 ? "0099A039" : "0099A040"; // @text 0099A037 EN: "I already have one." | JA: "もう持っていたな。" ; 0099A038 EN: "I have one." | JA: "これはもう持ってるな。" ; 0099A039 EN: "I have it.\nDon't need another." | JA: "これは持ってる。いらないな…" ; 0099A040 EN: "I have this one." | JA: "これは持っていたな。"
     } else if (reply == 1)
-        voice = GetRandomNumberInRange(2) == 0 ? "0099A025" : "0099A026"; // @text 0099A025 EN: "Good." | JA: "役に立ちそうだ。" ; 0099A026 EN: "It'll be useful." | JA: "これで迷わなくてすむな。"
+        voice = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(2))) == 0 ?
+            "0099A025" :
+            "0099A026"; // @text 0099A025 EN: "Good." | JA: "役に立ちそうだ。" ; 0099A026 EN: "It'll be useful." | JA: "これで迷わなくてすむな。"
     else if (reply == 2)
-        voice = GetRandomNumberInRange(2) == 0 ? "0099A028" : "0099A029"; // @text 0099A028 EN: "I'll get it." | JA: "持っておこう。" ; 0099A029 EN: "It'll come in handy." | JA: "あとで使えるな。"
+        voice = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(2))) == 0 ?
+            "0099A028" :
+            "0099A029"; // @text 0099A028 EN: "I'll get it." | JA: "持っておこう。" ; 0099A029 EN: "It'll come in handy." | JA: "あとで使えるな。"
     else if (reply == 3)
-        voice = GetRandomNumberInRange(2) == 0 ? "0099A031" : "0099A032"; // @text 0099A031 EN: "I'll need it." | JA: "使えそうだな。" ; 0099A032 EN: "Good." | JA: "助かるな…"
+        voice = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(2))) == 0 ?
+            "0099A031" :
+            "0099A032"; // @text 0099A031 EN: "I'll need it." | JA: "使えそうだな。" ; 0099A032 EN: "Good." | JA: "助かるな…"
     else
         return;
     EVT_AT_SetVoice(voice, 55);

@@ -44,7 +44,7 @@ struct RenRouteStorage {
         8.11046886444091796875f, 8.72388172149658203125f, 7.5309619903564453125f, 6.376817226409912109375f, 6.653209209442138671875f, 4.859306812286376953125f,
         4.161384105682373046875f};
     float laneBounds[22]{2.7f, 3.0f, 1.8f, 2.4f, 2.2f, 2.5f, 0.8f, 1.6f, 1.4f, 3.0f, 3.0f, 1.5f, 3.0f, 1.3f, 0.8f, 1.7f, 0.2f, 0.4f, 0.3f, 0.4f, 0.8f, 1.1f};
-    std::int32_t auxiliary[3]{-1, -1, -1};
+    std::int32_t auxiliary[3]{};
 };
 RenRouteStorage renRoute;
 std::int32_t routeSelection{}, triggerDelay{};

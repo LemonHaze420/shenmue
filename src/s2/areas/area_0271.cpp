@@ -155,7 +155,7 @@ void Prepare0271Characters() {
     EV_SetCharacterAlphaEnabled(AREA_0271_a026, false);
     EV_SetCharacterAlphaEnabled(AREA_0271_a554, false);
     EV_SetCharacterAlphaEnabled(AREA_0271_a030, false);
-    EV_SetCharacterAlphaEnabled(AREA_0271_a333, false);
+    EV_SetCharacterAlphaEnabled(AREA_0271_a323, false);
     EV_SetCharacterAlphaEnabled(AREA_0271_a148, false);
     EV_SetCharacterAlphaEnabled(AREA_0271_a220, false);
     EV_SetCharacterAlphaEnabled(AREA_0271_a069, false);
@@ -184,7 +184,7 @@ void Restore0271Characters() {
     EV_SetCharacterAlphaEnabled(AREA_0271_a026, true);
     EV_SetCharacterAlphaEnabled(AREA_0271_a554, true);
     EV_SetCharacterAlphaEnabled(AREA_0271_a030, true);
-    EV_SetCharacterAlphaEnabled(AREA_0271_a333, true);
+    EV_SetCharacterAlphaEnabled(AREA_0271_a323, true);
     EV_SetCharacterAlphaEnabled(AREA_0271_a148, true);
     EV_SetCharacterAlphaEnabled(AREA_0271_a220, true);
     EV_SetCharacterAlphaEnabled(AREA_0271_a069, true);

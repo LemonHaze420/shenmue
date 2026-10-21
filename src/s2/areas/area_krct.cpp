@@ -18,6 +18,7 @@
 #include "s2/npc_package.hpp"
 #include "s2/pause.hpp"
 #include "s2/pak.hpp"
+#include "s2/party_companion.hpp"
 #include "s2/player.hpp"
 #include "s2/scene_data.hpp"
 #include "s2/screen_film.hpp"
@@ -319,7 +320,7 @@ void KrctMainLoop(void *) {
         EV_NPC_NewLoadSw(1);
         EV_PTYCUtils(KRCT_SHENHUA, 3, 1);
         KrctConfigureRestoredParty();
-        EV_ForceLoadNpc(KRCT_SHENHUA);
+        ActivatePartyCompanion(KRCT_SHENHUA);
         EV_PTYCUtils(KRCT_SHENHUA, 3, 0);
         ResetCamera();
         krct.state = 27;

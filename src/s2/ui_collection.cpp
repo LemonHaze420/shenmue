@@ -775,11 +775,20 @@ template <std::size_t Child> std::int64_t TickCollectionChild() {
         const auto stock = S2Save_GetInventoryBank(static_cast<S2InventoryBank>(bank));
         const auto maximum = Child == 0 ? GetMaxItemsForItemType(bank) : 64U;
         for (std::uint32_t i = 0; i < maximum; ++i) {
-            const auto quantity = std::to_integer<std::uint8_t>(stock[i]);
+            std::int32_t quantity = std::to_integer<std::uint8_t>(stock[i]);
             if constexpr (Child == 4)
-                if (!quantity)
+                if (!quantity && !g_inventoryStockBiasEnabled)
                     continue;
-            rows[static_cast<std::size_t>(count++)] = {static_cast<std::int32_t>(bank), static_cast<std::int32_t>(i), quantity};
+            if (g_inventoryStockBiasEnabled) {
+                if constexpr (Child == 4)
+                    ++quantity;
+                else if (!quantity)
+                    quantity = 1;
+            }
+            CollectionItemRow &row = rows[static_cast<std::size_t>(count++)];
+            row.type = static_cast<std::int32_t>(bank);
+            row.index = static_cast<std::int32_t>(i);
+            row.quantity = quantity;
         }
         dictionary = reinterpret_cast<const std::int32_t *>(rows.data());
     } else if constexpr (Child == 1) {

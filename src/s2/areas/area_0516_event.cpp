@@ -74,7 +74,7 @@ void Queue0516Author(Area0516Parameter *parent) {
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(callbacks[parent->selection], 4, 0x0b, sizeof(Area0516AuthorParameter), AREA_0516_EVENT_TASK);
     static_cast<Area0516AuthorParameter *>(HLib::GetTaskParameter(task))->parent = parent;
     EV_SetModelDataDefaultVertexShader();
-    EV_LoadCutsceneFromCurrentScene(parent->selection == 0 ? "0516A000" : parent->selection == 1 ? "0516A010" : "0516A020");
+    EV_LoadCutsceneFromCurrentScene(parent->selection == 0 ? "0516A000" : parent->selection == 1 ? "0516A010" : "0516A001");
     EV_lightLoad(AREA_0516_EVENT_LIGHTS[parent->selection]);
     if (parent->selection != 3)
         PushGlobalLightingProgram();

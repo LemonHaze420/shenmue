@@ -273,12 +273,25 @@ void PrepareMemoNotebookLine(
     std::int32_t page, std::uint32_t line, std::uint32_t destination, std::uint32_t borrowed, char messageType, std::string_view legacy) {
     std::array<char, 11> label{};
     std::snprintf(label.data(), label.size(), "MEMP%i%i%iL%i%c", page / 100, page % 100 / 10, page % 10, static_cast<int>(line), messageType);
-    std::string text(GetLocalizedSceneText(label.data()));
-    if (messageType == '0' || text == "[EMPTY LINE]" || text.empty() || text == label.data())
-        text = " ";
-    else {
-        ReplaceMemoMoney(text, "[TRANSFER_YEN]", GetTransferredYen());
-        ReplaceMemoMoney(text, "[TRANSFER_HKD]", static_cast<std::int32_t>(static_cast<float>(GetTransferredYen()) * 0.033333335f));
+    std::string text;
+    if (memoDebugMode == 2)
+        text = legacy;
+    else if (memoDebugMode == 3)
+        text = label.data();
+    else if (memoDebugMode == 4) {
+        std::array<char, 100> pageText{};
+        std::snprintf(pageText.data(), pageText.size(), "TEST: PAGE %u", destination + 1);
+        text = pageText.data();
+    } else {
+        text = GetLocalizedSceneText(label.data());
+        if (messageType == '0' || text == "[EMPTY LINE]")
+            text = " ";
+        else if (text.empty() || text == label.data())
+            text = memoDebugMode == 1 ? legacy : " ";
+        else {
+            ReplaceMemoMoney(text, "[TRANSFER_YEN]", GetTransferredYen());
+            ReplaceMemoMoney(text, "[TRANSFER_HKD]", static_cast<std::int32_t>(static_cast<float>(GetTransferredYen()) * 0.033333335f));
+        }
     }
     auto &target = memoPages.text[destination];
     const std::size_t used = std::strlen(target.data());

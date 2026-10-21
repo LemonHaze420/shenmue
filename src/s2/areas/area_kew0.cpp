@@ -127,7 +127,7 @@ void FreezeKeikaCharactersForAuthor() {
         EV_SetCharaControllerFlags(name, 2, NpcCharacterControllerState::Disabled);
         EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
         UpdateMotionWorkWithPosition(scenFindMotionwork(name), nullptr, 0);
-        EV_mtwkSetEnabled(scenFindMotionwork(name), 0);
+        mtwkSetRequestedRootMode(scenFindMotionwork(name), 0);
     }
 }
 void PrepareKeikaCharactersForFight() {
@@ -142,7 +142,7 @@ void PrepareKeikaCharactersForFight() {
 void PrepareKeikaCharacter(shen_name name) {
     SetScenarioReflectorBoardValues(name, &KEW0_REFLECTOR);
     EV_SetRefBoardParamsFor(name, 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(name), 1);
+    mtwkSetRequestedRootMode(scenFindMotionwork(name), 1);
     SetLowQualityHands(ctrlGetCharaByName(name));
 }
 void KeikaSequenceCallback(void *data) {
@@ -486,7 +486,7 @@ void CleanupKeikaEvent(Kew0EventWork *work) {
     SetPlayerControlEnabled(0);
     SetCharaKill(KEW0_BASE, 1);
     SetMotionRegionFlag(scenFindMotionwork(KEW0_RYO), 71, 0, MotionRegion::LowerBody);
-    EV_mtwkSetEnabled(scenFindMotionwork(KEW0_RYO), 1);
+    mtwkSetRequestedRootMode(scenFindMotionwork(KEW0_RYO), 1);
     for (const std::uint32_t *motion = work->motions; *motion; ++motion)
         DeleteMotion(static_cast<std::int32_t>(*motion));
     EV_FreeAuthorPak(0, "0067");

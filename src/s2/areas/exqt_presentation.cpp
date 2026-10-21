@@ -75,8 +75,8 @@ void QueueExciteResultDisplay(const ExciteState &state) {
         ExcitePartWork &work = *static_cast<ExcitePartWork *>(HLib::GetTaskParameter(task));
         work.part = part;
         // The three off callbacks deliberately retain the allocator's second DWORD.
-        if (!(i & 1))
-            work.enabled = 1;
+
+        work.enabled = (i & 1) == 0;
     }
 }
 void ExciteScoreCallback(void *data) {

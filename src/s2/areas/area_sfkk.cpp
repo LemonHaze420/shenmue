@@ -6,6 +6,7 @@
 #include "s2/conversation.hpp"
 #include "s2/date_time.hpp"
 #include "s2/debug.hpp"
+#include "s2/game_runtime.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/event_gameplay_queued.hpp"
 #include "s2/event_queued.hpp"
@@ -579,22 +580,22 @@ std::int32_t DebugContinueConversation(void *parameter) {
     EVT_AT_SetMot(SFKK_FUY, 0x1aed, 0, 1.1f, 0, 0);
     HLib::Task *const firstTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     SkEventMessageWork *const first = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(firstTask));
-    first->message = "涼「ああ。」";
+    first->message = SFKK_DEBUG_PLAYER_AGREE;
     first->frames = 30;
     HLib::Task *const secondTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     HLib::SetupTimedTask(secondTask, 30);
     SkEventMessageWork *const second = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(secondTask));
-    second->message = "胴元「よし待ってな。」";
+    second->message = SFKK_DEBUG_BOOKIE_WAIT;
     second->frames = 30;
     HLib::Task *const thirdTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     HLib::SetupTimedTask(thirdTask, 60);
     SkEventMessageWork *const third = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(thirdTask));
-    third->message = "胴元「さあさあ、この兄ちゃん、＆まだ若えが、けっこうなツワモノだ。」";
+    third->message = SFKK_DEBUG_BOOKIE_INTRODUCE;
     third->frames = 90;
     HLib::Task *const fourthTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     HLib::SetupTimedTask(fourthTask, 150);
     SkEventMessageWork *const fourth = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(fourthTask));
-    fourth->message = "胴元「さあ誰か、こいつと勝負するやつはいないか？」";
+    fourth->message = SFKK_DEBUG_BOOKIE_CHALLENGER;
     fourth->frames = 60;
     EVT_AT_SetCam(2006, SFKK_BASE, SFKK_BASE, 0, 0, 60);
     EVT_AT_SetCam(120, SFKK_BASE, SFKK_BASE, 0, 0, 150);
@@ -614,17 +615,17 @@ std::int32_t DebugCompletedConversation(void *parameter) {
     EVT_AT_SetPos(fighter, SFKK_BASE, SFKK_DEBUG_HIDDEN_FIGHTER_POSITION, 0);
     HLib::Task *const firstTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     SkEventMessageWork *const first = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(firstTask));
-    first->message = "胴元「さあ誰か！！」";
+    first->message = SFKK_DEBUG_BOOKIE_ANYONE;
     first->frames = 30;
     HLib::Task *const secondTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     HLib::SetupTimedTask(secondTask, 60);
     SkEventMessageWork *const second = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(secondTask));
-    second->message = "胴元「・・・っと、いねえようだな。」";
+    second->message = SFKK_DEBUG_BOOKIE_NO_CHALLENGER;
     second->frames = 60;
     HLib::Task *const thirdTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     HLib::SetupTimedTask(thirdTask, 120);
     SkEventMessageWork *const third = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(thirdTask));
-    third->message = "胴元「ほら、兄ちゃん、賞金だ。」";
+    third->message = SFKK_DEBUG_BOOKIE_PRIZE;
     third->frames = 60;
     EVT_AT_SetCam(2007, SFKK_BASE, SFKK_BASE, 0, 0, 5);
     PATI_StartMoneyCount(static_cast<std::uint32_t>(STREET_FIGHT_PRIZES[work.completedOpponents]), 140);
@@ -645,17 +646,17 @@ std::int32_t DebugStopConversation(void *parameter) {
     EVT_AT_SetPos(fighter, SFKK_BASE, SFKK_DEBUG_HIDDEN_FIGHTER_POSITION, 0);
     HLib::Task *const firstTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     SkEventMessageWork *const first = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(firstTask));
-    first->message = "涼「いや、もうよしとくよ。」";
+    first->message = SFKK_DEBUG_PLAYER_STOP;
     first->frames = 60;
     HLib::Task *const secondTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     HLib::SetupTimedTask(secondTask, 60);
     SkEventMessageWork *const second = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(secondTask));
-    second->message = "胴元「そうか・・・。」";
+    second->message = SFKK_DEBUG_BOOKIE_ACCEPT_STOP;
     second->frames = 60;
     HLib::Task *const thirdTask = HLib::EnqueueTaskWithParameter(SkEventMessageBeginCallback, 6, 0x0b, sizeof(SkEventMessageWork), STREET_FIGHT_EVENT_TASK);
     HLib::SetupTimedTask(thirdTask, 120);
     SkEventMessageWork *const third = static_cast<SkEventMessageWork *>(HLib::GetTaskParameter(thirdTask));
-    third->message = "胴元「しゃあねえ、ほら、賞金だ。」";
+    third->message = SFKK_DEBUG_BOOKIE_STOP_PRIZE;
     third->frames = 60;
     EVT_AT_SetCam(2007, SFKK_BASE, SFKK_BASE, 0, 0, 5);
     PATI_StartMoneyCount(static_cast<std::uint32_t>(STREET_FIGHT_PRIZES[work.completedOpponents]), 140);
@@ -693,6 +694,7 @@ void SetAudienceState(StreetFightEventWork &work, std::uint8_t state, std::int16
 }
 void QueueObjectDisplay(shen_name character, std::int32_t mode, float delay) {
     auto *task = HLib::EnqueueTaskWithParameter(EVT_AT_ObjectDisp_Callback, 6, 0x0b, sizeof(StepObjectDisplayWork), STREET_FIGHT_EVENT_TASK);
+    RegisterEventTask(task);
     auto *work = static_cast<StepObjectDisplayWork *>(HLib::GetTaskParameter(task));
     work->cleanup = 1;
     work->character = character;
@@ -845,8 +847,10 @@ std::int32_t DeclineConversation(void *) {
 std::int32_t InsufficientConversation(void *) {
     SetCamera(108);
     auto *task = HLib::EnqueueTaskWithParameter(EVT_AT_StartMoneyCount_Callback, 6, 0x0b, sizeof(EventMoneyCount), STREET_FIGHT_EVENT_TASK);
+    RegisterEventTask(task);
     auto *work = static_cast<EventMoneyCount *>(HLib::GetTaskParameter(task));
     work->cleanup = 1;
+    work->cash = 0;
     work->delay = 60;
     EVT_AT_SetVoice("0100A037", 1, 0); // @text EN: "I'd like to participate\nbut I don't have enough money." | JA: "参加したいけど、\n金がないか…"
     return 120;

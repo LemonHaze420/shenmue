@@ -129,8 +129,9 @@ void QueueMfw0Event(std::int32_t entry) {
     work.characters = Queue_EVT_AT_ReadChr(task, MFW0_CHARACTERS);
     Mfw0LoadResources(work);
 }
-void RunMfw0(std::uintptr_t) {
-    QueueMfw0Event(g_entryPoint);
+// @verified - p
+void RunMfw0(std::uintptr_t entry) {
+    QueueMfw0Event(static_cast<std::int32_t>(entry));
 }
 } // namespace
 const ScriptAreaDefinition mfw0ScriptDefinition{.areaId = MFW0_AREA, .field04 = 0, .init = InitializeMfw0, .main = RunMfw0};

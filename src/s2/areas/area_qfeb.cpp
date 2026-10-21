@@ -408,8 +408,8 @@ void FinishQfebEscape(QfebEventWork *work) {
     SetCharaKill(QFEB_BASE, 1);
     if (work->entry >= 1 && work->entry <= 3)
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, static_cast<std::int16_t>(1989 + work->entry), 0);
-    EV_SetCharaControllerFlags(QFEB_RYO, 1, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(QFEB_RYO, 2, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(QFEB_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(QFEB_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     ET_AT_KillWork(work->characters);
     GetNpcBatchCountOverride(work->npcBatchOverride);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QFEB"), 0);

@@ -429,7 +429,7 @@ void InspectLeaves() {
 void UpdateBlur() {
     for (std::int32_t i = 20; i--;) {
         auto &leaf = work.leaves[i];
-        if (leaf.state == 1 && zoomPercent >= 90 && visibleState) {
+        if (leaf.inside == 1 && zoomPercent >= 90 && visibleState) {
             CheckHelpIcon(4, 0, CheckHelpIconOp::FrameOverlay);
             figpAssignModeFor(leafNames[i], 1);
             figpSetFlagsBlendForBlur(leafNames[i], 10, 1);
@@ -704,7 +704,7 @@ void MainLoop(void *) {
         Continue(PreExit, 30);
     } else {
         GetBattleDataConfig(0, SHEN_NAME(BTCC));
-        if (GetBattleDataConfig(2, SHEN_NAME(BTBA)) || static_cast<std::int8_t>(g_inputBuffer[0].held) < 0)
+        if (GetBattleDataConfig(2, SHEN_NAME(BTBA)) || static_cast<std::int8_t>(g_inputBuffer[0].pressedPriority) < 0)
             StartCatch();
         else
             GetBattleDataConfig(0, SHEN_NAME(BTBA));
@@ -847,7 +847,7 @@ void Exit(void *) {
     EV_NPC_NewLoadSw(1);
     Continue(Exit2);
     camCtrlSetFovTransitionTo(true);
-    camCtrlUtil(static_cast<CameraUtilityMode>(0), 0);
+    camCtrlUtil(CameraUtilityMode ::ResetPlayerDistance, 0);
     camCtrlSetState(Init);
     Fade(30, false);
     HLib::SetupTaskDelay(30);

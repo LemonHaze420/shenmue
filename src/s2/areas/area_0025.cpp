@@ -45,8 +45,8 @@ void InitializeSmoke() {
     auto &first = smokeEffects[0];
     first = static_cast<std::uint32_t>(CreateSmokeEffect({336.6806945800781f, 128.16099548339844f, 250.6540069580078f},
         {0.10000000149011612f, 0, 0.10000000149011612f}, 70, 0.07999999821186066f, shen_name{0}, 0));
-    SetSmokeEffectFalloff(first, 21);
-    SetSmokeEffectFadeFactor(first, 110);
+    SetSmokeEffectFadeFactor(first, 21);
+    SetSmokeEffectFalloff(first, 110);
     SetParticleEffectColour(0, first, 0, 144, 144, 144);
     SetParticleEffectInitialScale(0, first, 0.32899999618530273f);
     SetParticleEffectSize(0, first, 1.559999942779541f, 1.409999966621399f);
@@ -56,8 +56,8 @@ void InitializeSmoke() {
     for (std::size_t i = 0; i < 15; ++i) {
         auto &smoke = smokeEffects[i + 1];
         smoke = static_cast<std::uint32_t>(CreateSmokeEffect(smokePositions[i], {}, 40, 0.05999999865889549f, shen_name{0}, 0));
-        SetSmokeEffectFalloff(smoke, 13);
-        SetSmokeEffectFadeFactor(smoke, 188);
+        SetSmokeEffectFadeFactor(smoke, 13);
+        SetSmokeEffectFalloff(smoke, 188);
         SetParticleEffectColour(0, smoke, 0, 191, 194, 170);
         SetParticleEffectInitialScale(0, smoke, 0.027450980618596077f);
         SetParticleEffectSize(0, smoke, 0.6666666865348816f, 0.3921568691730499f);

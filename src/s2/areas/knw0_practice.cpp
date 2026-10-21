@@ -61,7 +61,7 @@ void Knw0CapturePractice(void *data) {
             work.practiceReady = 0;
             UpdateMotionWorkWithPosition(scenFindMotionwork(KNW0_RYO), nullptr, 0);
             for (shen_name character : {KNW0_RYO, KNW0_DEKU}) {
-                EV_SetCharaControllerFlags(character, 1, NpcCharacterControllerState::Enabled);
+                EV_SetCharaControllerFlags(character, NpcCharacterControllerFlags::ApplyGravity, NpcCharacterControllerState::Enabled);
                 EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Enabled);
             }
             for (shen_name character : {KNW0_RYO, KNW0_KNK, KNW0_DEKU})
@@ -116,7 +116,7 @@ void Knw0CapturePractice(void *data) {
             Knw0CaptureNoop();
             CheckHelpIcon(1, 1, CheckHelpIconOp::Remove);
             for (shen_name character : {KNW0_RYO, KNW0_DEKU}) {
-                EV_SetCharaControllerFlags(character, 1, NpcCharacterControllerState::Disabled);
+                EV_SetCharaControllerFlags(character, NpcCharacterControllerFlags::ApplyGravity, NpcCharacterControllerState::Disabled);
                 EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Disabled);
             }
             Knw0Complete(sequence);

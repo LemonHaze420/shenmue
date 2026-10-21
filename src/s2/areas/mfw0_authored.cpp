@@ -99,8 +99,8 @@ void Mfw0AuthorLoop(void *data) {
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         SelectPostFxBank(3, work.postFxBank);
         if (work.author.name == MFW0_FIRST_AUTHOR.name || work.author.name == MFW0_REPEAT_AUTHOR.name) {
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 0, reinterpret_cast<std::byte *>(neutralHandPoseCommand), 0);
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 1, reinterpret_cast<std::byte *>(neutralHandPoseCommand), 0);
+            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 1, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
+            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 0, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
         }
         Mfw0RestoreAuthorCharacters();
         work.phase = 3;

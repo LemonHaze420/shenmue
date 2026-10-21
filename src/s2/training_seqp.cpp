@@ -343,9 +343,9 @@ void ResetTrainingAuthorCharacter(shen_name character) {
     UpdateMotionWorkWithPosition(scenFindMotionwork(character), nullptr, 0);
     UpdateMotionWorkWithPosition(scenFindMotionwork(character), nullptr, 3);
     mtwkSetRequestedRootMode(scenFindMotionwork(character), 0);
-    EV_SetCharaControllerFlags(character, 1, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(character, NpcCharacterControllerFlags::ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(character, 2, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(character, NpcCharacterControllerFlags::UpdateHeight, NpcCharacterControllerState::Disabled);
     EV_SetCharacterAlphaEnabled(character, false);
     SetMotionFrameTime(scenFindMotionwork(character), 0, MotionRegion::LowerBody);
     EV_mtwkSetEnabled(scenFindMotionwork(character), 1);

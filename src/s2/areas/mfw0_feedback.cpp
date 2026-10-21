@@ -66,12 +66,12 @@ void Mfw0SlowFeedback(void *data) {
             Mfw0Advance(sequence, 100);
             break;
         case 100: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B081" : "0050B082");
             break;
         }
         case 101: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B083" : "0050B084");
             break;
         }
@@ -94,12 +94,12 @@ void Mfw0VerySlowFeedback(void *data) {
             Mfw0Advance(sequence, 100);
             break;
         case 100: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B085" : "0050B086");
             break;
         }
         case 101: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B084" : "0050B087");
             break;
         }
@@ -225,7 +225,7 @@ void Mfw0ForgotDoubleFeedback(void *data) {
             Mfw0Advance(sequence, 100);
             break;
         case 100: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B088" : "0050B089");
             break;
         }
@@ -353,12 +353,12 @@ void Mfw0FailureFeedback(void *data) {
             Mfw0Advance(sequence, 100);
             break;
         case 100: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B060" : "0050B061");
             break;
         }
         case 101: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B062" : "0050B063");
             break;
         }
@@ -404,7 +404,7 @@ void Mfw0LateRepeatFeedback(void *data) {
             Mfw0Advance(sequence, 100);
             break;
         case 100: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B076" : "0050B077");
             break;
         }
@@ -427,7 +427,7 @@ void Mfw0VeryLateRepeatFeedback(void *data) {
             Mfw0Advance(sequence, 100);
             break;
         case 100: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B079" : "0050B080");
             break;
         }
@@ -450,7 +450,7 @@ void Mfw0EarlyRepeatFeedback(void *data) {
             Mfw0Advance(sequence, 100);
             break;
         case 100: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B067" : "0050B068");
             break;
         }
@@ -473,7 +473,7 @@ void Mfw0VeryEarlyRepeatFeedback(void *data) {
             Mfw0Advance(sequence, 100);
             break;
         case 100: {
-            const float selected = static_cast<float>(GetRandomNumberInRange(2.0f));
+            const std::int32_t selected = static_cast<std::int32_t>(GetRandomNumberInRange(2.0f));
             Mfw0Dialogue(sequence, selected == 0 ? "0050B071" : "0050B072");
             break;
         }

@@ -115,8 +115,8 @@ void PrepareNullsub(std::int32_t) {
 }
 void PrepareFirstConversation(std::int32_t) {
     EV_LoadCutsceneFromCurrentScene("0507A000");
-    SetMapModelSlotEnabled(4, 0);
-    SetMapModelSlotEnabled(0, 0);
+    SetMapModelCommandRoutingEnabled(4, 0);
+    SetMapModelCommandRoutingEnabled(0, 0);
 }
 void PrepareTorchConversation(std::int32_t) {
     const Vector3 position{154.78f, 100.14f, 392.16f};
@@ -173,7 +173,7 @@ void PrepareMorningConversation(std::int32_t) {
     EV_SetLightFlagForIndex(0, 2);
     EV_SetIndexForLightEntry(0, 1);
     EV_SetWeatherInstruction(0x780, 0);
-    SetMapModelSlotEnabled(0, 0);
+    SetMapModelCommandRoutingEnabled(0, 0);
 }
 void PrepareWindConversation(std::int32_t) {
     SetPlayerControlEnabled(0);
@@ -188,8 +188,8 @@ void PrepareWindConversation(std::int32_t) {
     EV_LoadCutsceneFromCurrentScene("0531A000");
 }
 void FinishFirstConversation(KrctAuthorWork *work) {
-    SetMapModelSlotEnabled(4, 1);
-    SetMapModelSlotEnabled(0, 1);
+    SetMapModelCommandRoutingEnabled(4, 1);
+    SetMapModelCommandRoutingEnabled(0, 1);
     *work->result = -1;
     HLib::DestroyTask(work->task);
     ProcessAicaCommand(0xaa0, 1);
@@ -220,7 +220,7 @@ void FinishBranchConversation(KrctAuthorWork *work) {
     HLib::DestroyTask(work->task);
 }
 void FinishMorningConversation(KrctAuthorWork *work) {
-    SetMapModelSlotEnabled(0, 1);
+    SetMapModelCommandRoutingEnabled(0, 1);
     *work->result = -1;
     HLib::DestroyTask(work->task);
 }
@@ -381,15 +381,17 @@ void MorningConversationLoop(void *data) {
 }
 void WindConversationLoop(void *data) {
     KrctAuthorLoopWork *const loop = static_cast<KrctAuthorLoopWork *>(data);
+    const float lowIntensity = (sin_fixed16(static_cast<std::int16_t>(krctFirePhase)) * .05f) + .5f;
+    const float highIntensity = (sin_fixed16(static_cast<std::int16_t>(krctFirePhase)) * .05f) + .9f;
     if (--krctFireTicks <= 0) {
         krctFireTicks = shenGetRandomInt32(60) + 30;
         krctFirePhaseStep = shenGetRandomInt32(2048) + 2048;
     }
     krctFirePhase += krctFirePhaseStep;
-    const float wave = sin_fixed16(static_cast<std::int16_t>(krctFirePhase));
-    SetLightSceneIntensity(1, (wave * .1f) + .6f);
-    SetLightSceneIntensity(3, (wave * .1f) + .6f);
-    SetLightSceneIntensity(4, (wave * .1f) + .6f);
+
+    SetLightSceneIntensity(1, highIntensity);
+    SetLightSceneIntensity(3, lowIntensity);
+    SetLightSceneIntensity(4, lowIntensity);
     loop->frame = static_cast<std::int16_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     if (loop->frame == 410)
         SetNewWindPhaseAndSpeed(4096, .2f);

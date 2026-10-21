@@ -51,7 +51,7 @@ void Knw0FeedbackLine(void *data, const char *first, const char *alternate, bool
             Knw0Advance(sequence, 100);
         } else if (sequence.mode == 100) {
             const char *line = first;
-            if (alternate && GetRandomNumberInRange(static_cast<float>(bound)) != 0)
+            if (alternate && static_cast<std::int32_t>(GetRandomNumberInRange(static_cast<float>(bound))) != 0)
                 line = alternate;
             EV_PlayDialogue(line);
             Knw0Wait(sequence, 4, 101, 60);

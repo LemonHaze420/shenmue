@@ -16,7 +16,7 @@ inline constexpr shen_name AREA_0271_a516{SHEN_NAME(a516)};
 inline constexpr shen_name AREA_0271_a026{SHEN_NAME(a026)};
 inline constexpr shen_name AREA_0271_a554{SHEN_NAME(a554)};
 inline constexpr shen_name AREA_0271_a030{SHEN_NAME(a030)};
-inline constexpr shen_name AREA_0271_a333{SHEN_NAME(a333)};
+inline constexpr shen_name AREA_0271_a323{SHEN_NAME(a323)};
 inline constexpr shen_name AREA_0271_a148{SHEN_NAME(a148)};
 inline constexpr shen_name AREA_0271_a220{SHEN_NAME(a220)};
 inline constexpr shen_name AREA_0271_a069{SHEN_NAME(a069)};

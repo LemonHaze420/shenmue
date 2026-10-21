@@ -60,7 +60,7 @@ void Start0518(std::uintptr_t) {
     EV_SetWeatherInstruction(12, 0);
     EV_lightLoad(AREA_0518_LIGHT);
     for (const std::int16_t light : {0, 6, 7, 8, 3, 5})
-        PrioritizeLight(light);
+        AssignLightProgram(static_cast<std::uint32_t>(light));
     EV_FreeAuthorPak(1, AREA_0518_CONVERSATION);
     Queue_EVT_UTL_LoadNPCChara_3(AREA_0518_CHARACTERS, parent->self);
 }

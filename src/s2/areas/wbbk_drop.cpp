@@ -78,7 +78,7 @@ void FinishDroppedBooks() {
     time.minute += static_cast<std::int32_t>(bookDropTimePenalty);
     SetCurrentDateTimeTo(time);
     Vector3 sampled;
-    SampleBookCarryTrack(bookCarryTrack, sampled, bookCarryDistance * .125f, 0);
+    SampleBookCarryTrack(bookCarryTrack, sampled, bookCarryDistance * .125f, 1);
 }
 void AttachDroppedBook(shen_name actor, const Vector3 &position, const Vector3i &rotation) {
     EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);

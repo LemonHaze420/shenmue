@@ -53,8 +53,8 @@ void RestoreCharacters() {
 void InitializeSmoke(LoopParameter *child) {
     child->smoke =
         static_cast<std::uint32_t>(CreateSmokeEffect({59, 103.55999755859375f, 309.20001220703125f}, {}, 100, 0.0010000000474974513f, shen_name{0}, 3));
-    SetSmokeEffectFalloff(child->smoke, 10);
-    SetSmokeEffectFadeFactor(child->smoke, 255);
+    SetSmokeEffectFadeFactor(child->smoke, 10);
+    SetSmokeEffectFalloff(child->smoke, 255);
     SetParticleEffectColour(0, child->smoke, 0, 142, 125, 110);
     SetParticleEffectInitialScale(0, child->smoke, 0.43529412150382996f);
     SetParticleEffectSize(0, child->smoke, 3.1372549533843994f, 3.1764705181121826f);

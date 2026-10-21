@@ -3048,12 +3048,12 @@ std::int64_t TickItemsMenu() {
     std::int32_t count = 0;
     for (std::int32_t index = 0; index < 384; ++index) {
         const auto quantity = index < static_cast<std::int32_t>(stock.size()) ? std::to_integer<std::uint8_t>(stock[index]) : 0;
-        if (!quantity || index == 2)
+        if ((!quantity && !g_inventoryStockBiasEnabled) || index == 2)
             continue;
         auto &row = itemsMenu.dictionary[count++];
         row[0] = 0;
         row[1] = index;
-        row[2] = quantity;
+        row[2] = quantity + (g_inventoryStockBiasEnabled != 0 ? 1 : 0);
     }
     itemsMenu.count = count;
     SetUIGridDictionary(itemsMenu.grid, count, itemsMenu.dictionary[0].data());

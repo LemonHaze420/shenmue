@@ -45,8 +45,8 @@ void Knw0KillSequence(CompiledSequenceWork *sequence) {
     }
 }
 void Knw0QueueAuthor(shen_name command) {
-    Knw0PrepareAuthorCharacter(KNW0_RYO);
-    Knw0PrepareAuthorCharacter(KNW0_KNK);
+    ResetTrainingAuthorCharacter(KNW0_RYO);
+    ResetTrainingAuthorCharacter(KNW0_KNK);
     HLib::Task *task = HLib::EnqueueTaskWithParameter(Knw0AuthorMainCallback, 4, 0x0b, 0x18, KNW0_TASK);
     Knw0AuthorWork &work = *static_cast<Knw0AuthorWork *>(HLib::GetTaskParameter(task));
     work.task = task;
@@ -59,7 +59,7 @@ void Knw0QueueAuthor(shen_name command) {
 void Knw0RestoreActors() {
     const Vector4 reflector{.x = 1, .y = .30000001192092896f, .z = .30000001192092896f, .w = .30000001192092896f};
     for (shen_name character : {KNW0_RYO, KNW0_KNK}) {
-        EV_SetCharaControllerFlags(character, 1, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(character, NpcCharacterControllerFlags::ApplyGravity, NpcCharacterControllerState::Disabled);
         EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Disabled);
         EV_SetCharacterAlphaEnabled(character, false);
         mtwkSetRequestedRootMode(scenFindMotionwork(character), 1);
@@ -80,22 +80,24 @@ void Knw0InitializeActors(void *data) {
         hmdlSetFlagsFor(FindCharacterByScenarioName(character), 1, 0, 16);
     }
     for (shen_name character : {KNW0_RYO, KNW0_KNK, KNW0_DEKU}) {
-        EV_SetCharaControllerFlags(character, 1, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(character, NpcCharacterControllerFlags::ApplyGravity, NpcCharacterControllerState::Disabled);
         EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Disabled);
     }
     for (shen_name character : {KNW0_RYO, KNW0_KNK})
-        EV_SetCharaControllerFlags(character, 2, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(character, NpcCharacterControllerFlags::UpdateHeight, NpcCharacterControllerState::Disabled);
     SetScenarioCharacterDrawControl(KNW0_RYO, 1, 1);
     SetScenarioCharacterDrawControl(KNW0_KNK, 1, 1);
     EV_mtwkSetEnabled(scenFindMotionwork(KNW0_RYO), 1);
     EV_mtwkSetEnabled(scenFindMotionwork(KNW0_KNK), 0);
     SetMotionSpeed(scenFindMotionwork(KNW0_RYO), 1, MotionRegion::LowerBody);
     SetMotionSpeed(scenFindMotionwork(KNW0_KNK), 1, MotionRegion::LowerBody);
-    for (shen_name character : {KNW0_RYO, KNW0_KNK}) {
+    for (shen_name character : {KNW0_RYO, KNW0_KNK})
         mtwkSetRequestedRootMode(scenFindMotionwork(character), 1);
+    for (shen_name character : {KNW0_RYO, KNW0_KNK})
         SetScenarioReflectorBoardValues(character, &reflector);
+    for (shen_name character : {KNW0_RYO, KNW0_KNK})
         EV_SetRefBoardParamsFor(character, 1);
-    }
+
     EV_AT_SetPos(KNW0_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, KNW0_INITIAL_PLAYER);
     SetTrainingCharacterYaw(KNW0_RYO, 49152);
     SetMotionRegionFlag(scenFindMotionwork(KNW0_RYO), 71, 0, MotionRegion::LowerBody);

@@ -194,9 +194,13 @@ void Knw0Decision(void *data) {
             break;
         case 115:
             work.adviceElapsed = 0;
+            work.attempts = 0;
             work.advicePending = 0;
+            work.timedAdvice = 0;
             work.practiceWarning = 0;
+            work.practiceExpired = 0;
             work.consecutiveRepetitions = 0;
+            work.previousRepetitions = 0;
             if (Knw0Value<std::int32_t>(data, 0x88) != retry)
                 Knw0Advance(sequence, 132);
             else if (!Knw0Value<std::int32_t>(data, 0x250))

@@ -53,7 +53,7 @@ struct RenRouteStorage {
         0.4000000059604645f, 0.4000000059604645f, 0.6000000238418579f, 0.30000001192092896f, 0.699999988079071f, 0.20000000298023224f, 0.30000001192092896f,
         0.6000000238418579f, 0.30000001192092896f, 0.5f, 0.6000000238418579f, 0.6000000238418579f, 0.0f, 0.0f, 0.800000011920929f, 0.0f, 1.100000023841858f,
         1.0f, 3.0f, 0.6000000238418579f, 2.299999952316284f, 3.0f, 1.899999976158142f, 3.0f, 3.0f, 3.0f, 3.0f, 3.0f};
-    std::uint8_t auxiliary[24]{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
+    std::uint8_t auxiliary[24]{};
 };
 RenRouteStorage renRoute;
 struct SamRouteStorage {
@@ -68,7 +68,7 @@ struct SamRouteStorage {
         5.777067184448242f, 6.168703079223633f, 3.5999960899353027f, 3.0538690090179443f};
     float lanes[18]{3.0f, 2.0f, 3.0f, 0.5f, 3.0f, 0.8999999761581421f, 3.0f, 1.2000000476837158f, 0.699999988079071f, 0.800000011920929f, 2.0f, 0.5f,
         0.699999988079071f, 1.2000000476837158f, 0.20000000298023224f, 1.5f, 0.800000011920929f, 1.2999999523162842f};
-    std::uint8_t auxiliary[10]{255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
+    std::uint8_t auxiliary[10]{};
 };
 SamRouteStorage samRoute;
 struct LlyRouteStorage {
@@ -97,8 +97,7 @@ struct LlyRouteStorage {
         2.0999999046325684f, 1.2000000476837158f, 1.899999976158142f, 0.8999999761581421f, 1.5f, 1.5f, 0.800000011920929f, 2.0f, 0.800000011920929f,
         1.7999999523162842f, 1.7999999523162842f, 0.6000000238418579f, 3.0f, 0.4000000059604645f, 2.799999952316284f, 0.8999999761581421f, 3.0f,
         2.0999999046325684f};
-    std::uint8_t auxiliary[29]{
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255};
+    std::uint8_t auxiliary[29]{};
 };
 LlyRouteStorage llyRoute;
 constexpr Vector3 p9cc138{256.5f, 100.2239990234375f, 304.5f};
@@ -770,7 +769,7 @@ void UpdateClj(void *) {
     case Finish:
         if (ryoNotBusy()) {
             Vector3 position{};
-            EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::TurnMotion);
+            EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
             if (ComputeAngle(p9cc698, 5, 0, 0x8000, position)) {
                 RetireInteractions();
                 SetPlayerControlEnabled(0);
@@ -788,7 +787,7 @@ void UpdateClj(void *) {
         spmFadeOut();
         CreateEventCharacter(CharacterCreationHighModel, nullptr, dummy);
         EV_AT_SetPos(dummy, EventTransformFlags::World | EventTransformFlags::AllAxes, p9cc580);
-        EV_AT_SetAngY(dummy, EventTransformFlags::AllAxes, Vector3i{-1, -1, -1});
+        EV_AT_SetAngY(dummy, EventTransformFlags::AllAxes, Vector3i{});
         HLib::SetCurrentTaskTo(UpdateCoolJAuthor);
         context.state = Idle;
         subState = 0;

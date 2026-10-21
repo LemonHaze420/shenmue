@@ -18,8 +18,8 @@ namespace shenmue::s2::areas {
 namespace {
 inline constexpr shen_name MFW0_ATTACK{SHEN_NAME(BATT)};
 void Mfw0NeutralHands() {
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 0, reinterpret_cast<std::byte *>(neutralHandPoseCommand), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 1, reinterpret_cast<std::byte *>(neutralHandPoseCommand), 0);
+    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 1, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
+    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 0, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
 }
 void Mfw0Place(shen_name character, const Vector3 &position, std::int32_t yaw) {
     EV_AT_SetPos(character, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
@@ -104,7 +104,8 @@ void Mfw0Demonstration(void *data, std::int32_t kind) {
             figpAssignModeFor(MFW0_RYO, 0);
             sequence.previousMode = sequence.mode;
             sequence.mode = 105;
-            sequence.parent = nullptr;
+            sequence.continueLoop = 0;
+            sequence.continueAfterWait = 0;
             return;
         case 105:
             if (kind != 1) {
@@ -133,8 +134,8 @@ void Mfw0InitializeActorsSequence(void *data) {
     hmdlSetFlagsFor(FindCharacterByScenarioName(MFW0_RYO), 1, 0, 16);
     SetHighModelXYZ(FindCharacterByScenarioName(MFW0_RYO), 1, 0, 0);
     SetHighModelXYZ(FindCharacterByScenarioName(MFW0_RYO), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 1, reinterpret_cast<std::byte *>(neutralHandPoseCommand), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 0, reinterpret_cast<std::byte *>(neutralHandPoseCommand), 0);
+    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 0, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
+    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 1, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
     SetHighModelXYZ(FindCharacterByScenarioName(MFW0_TKR), 1, 0, 0);
     SetHighModelXYZ(FindCharacterByScenarioName(MFW0_TKR), 1, 1, 0);
     ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_TKR), 1, reinterpret_cast<std::byte *>(openHandPoseCommand), 0);
