@@ -111,7 +111,7 @@ void E0252MainCallback(void *taskData) {
         HLib::Task *const task = HLib::EnqueueTaskWithParameter(E0252LoopCallback, 4, 0x0b, 0x8, AREA_AUTHOR_TASK);
         AreaAuthorLoopTaskParameter *const child = static_cast<AreaAuthorLoopTaskParameter *>(HLib::GetTaskParameter(task));
         child->parent = parent;
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         SetupE0252Characters();
         EV_authSceneCtrl(static_cast<AuthSceneCtrl>(parent->selection));
         parent->state = 2;

@@ -114,7 +114,7 @@ void CleanupE0186(AreaAuthorTaskParameter *parent) {
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
     }
 }
 
@@ -137,11 +137,11 @@ void QueueE0186Loop(AreaAuthorTaskParameter *parent) {
         author = static_cast<AuthSceneCtrl>(AREA_0186_SECOND_AUTHOR.name);
     } else {
         SetupE0186Characters();
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         author = static_cast<AuthSceneCtrl>(AREA_0186_FIRST_AUTHOR.name);
     }
     EV_authSceneCtrl(author);
-    BeginSecondarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     parent->state = 2;
 }
 

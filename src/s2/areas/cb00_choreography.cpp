@@ -58,7 +58,7 @@ void Cb00ResetProps() {
     angle.character = CB00_PLANK_RIGHT;
     EVT_AT_SetAng_Callback(&angle);
     Vector3 zero{};
-    EV_scenApplyPosOrRotToPartOf(CB00_BRIDGE, 0x99, &zero, nullptr, EventCharacterPartTransformMode::Set);
+    EV_scenApplyPosOrRotToPartOf(CB00_PLANK_RIGHT, 0x99, &zero, nullptr, EventCharacterPartTransformMode::Set);
     Queue_EVT_AT_PlayDynamix(CB00_PLANK_LEFT, "CANK", 2, 4, 3, nullptr, 2, 0);
     Queue_EVT_AT_PlayDynamix(CB00_PLANK_RIGHT, "CANK", 2, 4, 3, nullptr, 2, 0);
     position.character = CB00_TRUCK;

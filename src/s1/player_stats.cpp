@@ -240,41 +240,6 @@ void SetPlayerSimpleStat(std::uint32_t command, std::uint32_t value) {
         break;
     }
 }
-std::uint32_t RecordGameModuleLoadStats(std::uint32_t module) {
-    constexpr std::uint32_t kHarrierModule = 9;
-    constexpr std::uint32_t kCreditsModule = 10;
-    constexpr std::uint32_t kHangOnModule = 11;
-
-    if (module == kCreditsModule) {
-        if (g_playerStats.creditsCompletionGate == 0) {
-            g_playerStats.creditsCompletionCount = 1;
-        } else if (g_playerStats.creditsCompletionGate == 1) {
-            ++g_playerStats.creditsCompletionCount;
-        }
-        return g_playerStats.creditsCompletionCount;
-    }
-
-    if (module == kHarrierModule) {
-        if (g_playerStats.harrierCompletionGate == 0) {
-            g_playerStats.harrierCompletionCount = 1;
-        } else if (g_playerStats.harrierCompletionGate == 1) {
-            ++g_playerStats.harrierCompletionCount;
-        }
-    } else if (module == kHangOnModule) {
-        if (g_playerStats.hangOnCompletionGate == 0) {
-            g_playerStats.hangOnCompletionCount = 1;
-        } else if (g_playerStats.hangOnCompletionGate == 1) {
-            ++g_playerStats.hangOnCompletionCount;
-        }
-    } else {
-        return 0;
-    }
-
-    if (g_playerStats.arcadeAggregateGate <= 1) {
-        g_playerStats.arcadeAggregateCount = g_playerStats.harrierCompletionCount + g_playerStats.hangOnCompletionCount;
-    }
-    return g_playerStats.arcadeAggregateCount;
-}
 
 void ResetInventoryControlValue9() {
     g_playerStats.inventoryControlValue9 = 0;

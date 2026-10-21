@@ -1,5 +1,8 @@
 #include "s1/ui_internal.hpp"
 
+#include "s1/steam.hpp"
+
+#include <bit>
 namespace shenmue::s1::ui_runtime_detail {
 const char *GetSubsPathForLanguage(std::int32_t language);
 
@@ -949,6 +952,197 @@ CVWKRuntimeSlot *ProcessSubtitleFile(const char *voiceId, std::uint32_t particip
     if ((g_sceneId != 1 || g_areaId != SHEN_NAME(OP02)) && (S1SettingsFlags_Get() & 2U) == 0 && flags == 0)
         ProcessAudioData(slot, -999);
     g_currentSubtitleSlot = slot;
+    if (!std::strcmp(voiceId, "A0128B010")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Tree_Flashback];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Tree_Flashback);
+        UpdateSteamAchievement(Stat_Tree_Flashback);
+    }
+    if (!std::strcmp(voiceId, "A0122B004")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Kitchen_Flashback];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Kitchen_Flashback);
+        UpdateSteamAchievement(Stat_Kitchen_Flashback);
+    }
+    if (!std::strcmp(voiceId, "A0125BA006")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Dojo_Flashback];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Dojo_Flashback);
+        UpdateSteamAchievement(Stat_Dojo_Flashback);
+    }
+    if (!std::strcmp(voiceId, "E1044A014")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Help_Lady_Find_House];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Help_Lady_Find_House);
+        UpdateSteamAchievement(Stat_Help_Lady_Find_House);
+    }
+    if (!std::strcmp(voiceId, "F1004A157")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Teach_Fuku_San];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Teach_Fuku_San);
+        UpdateSteamAchievement(Stat_Teach_Fuku_San);
+    }
+    if (!std::strcmp(voiceId, "01JUCEAA005")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Buy_Guy_Soda];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Buy_Guy_Soda);
+        UpdateSteamAchievement(Stat_Buy_Guy_Soda);
+    }
+    if (!std::strcmp(voiceId, "A0136A001")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Meet_Charlie];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Meet_Charlie);
+        UpdateSteamAchievement(Stat_Meet_Charlie);
+    }
+    if (!std::strcmp(voiceId, "A0142BB016")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Translate_Letter];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Translate_Letter);
+        UpdateSteamAchievement(Stat_Translate_Letter);
+    }
+    if (!std::strcmp(voiceId, "E1046B002")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Reach_Harbor];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Reach_Harbor);
+        UpdateSteamAchievement(Stat_Reach_Harbor);
+    }
+    if (!std::strcmp(voiceId, "E1012A279")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Find_Phoenix_Mirror];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Find_Phoenix_Mirror);
+        UpdateSteamAchievement(Stat_Find_Phoenix_Mirror);
+    }
+    if (!std::strcmp(voiceId, "01HOKB007")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Take_Mirror_To_Antiques1];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Take_Mirror_To_Antiques1);
+        UpdateSteamAchievement(Stat_Take_Mirror_To_Antiques1);
+        RefreshMirrorAntiquesStat();
+    }
+    if (!std::strcmp(voiceId, "01KEIB005")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Take_Mirror_To_Antiques2];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Take_Mirror_To_Antiques2);
+        UpdateSteamAchievement(Stat_Take_Mirror_To_Antiques2);
+        RefreshMirrorAntiquesStat();
+    }
+    if (!std::strcmp(voiceId, "01MAKA004")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Get_A_Job];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Get_A_Job);
+        UpdateSteamAchievement(Stat_Get_A_Job);
+    }
+    if (!std::strcmp(voiceId, "E1072A009") || !std::strcmp(voiceId, "E1072A017") || !std::strcmp(voiceId, "E1072A018")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Visit_Fortune_Teller];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Visit_Fortune_Teller);
+        UpdateSteamAchievement(Stat_Visit_Fortune_Teller);
+    }
+    if (!std::strcmp(voiceId, "E1041F005")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Find_Kitten];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Find_Kitten);
+        UpdateSteamAchievement(Stat_Find_Kitten);
+    }
+    if (!std::strcmp(voiceId, "E1021B074")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Learn_From_Tom];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Learn_From_Tom);
+        UpdateSteamAchievement(Stat_Learn_From_Tom);
+    }
+    if (!std::strcmp(voiceId, "01BIKEBB001")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Rescue_Nozomi];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Rescue_Nozomi);
+        UpdateSteamAchievement(Stat_Rescue_Nozomi);
+    }
+    if (!std::strcmp(voiceId, "E1078B010")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Win_Forklift_Race];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Win_Forklift_Race);
+        UpdateSteamAchievement(Stat_Win_Forklift_Race);
+    }
+    if (!std::strcmp(voiceId, "01TLYB001")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Brawl];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Brawl);
+        UpdateSteamAchievement(Stat_Brawl);
+    }
+    if (!std::strcmp(voiceId, "A0184CA001")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Beat_Chai_Harbor];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Beat_Chai_Harbor);
+        UpdateSteamAchievement(Stat_Beat_Chai_Harbor);
+    }
+    if (!std::strcmp(voiceId, "A0154A002")) {
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Break_And_Enter];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Break_And_Enter);
+        UpdateSteamAchievement(Stat_Break_And_Enter);
+    }
     ApplyVoiceCameraNearClip(voiceId);
     return slot;
 }

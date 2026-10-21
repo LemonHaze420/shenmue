@@ -16,8 +16,8 @@ void Cb00SmokeCreateCallback(void *data) {
     if (work->character.name)
         EV_GetCharaPosition(work->character, 22, &work->position, EventTransformFlags::World);
     const std::uint32_t effect = static_cast<std::uint32_t>(CreateSmokeEffect(work->position, work->volume, 40, 0.06f, shen_name{0}, 0));
-    SetSmokeEffectFalloff(effect, 27);
-    SetSmokeEffectFadeFactor(effect, 158);
+    SetSmokeEffectFadeFactor(effect, 27);
+    SetSmokeEffectFalloff(effect, 158);
     SetParticleEffectColour(0, effect, 0, 106, 104, 101);
     SetParticleEffectInitialScale(0, effect, 0.21568627655506134f);
     SetParticleEffectSize(0, effect, 2.313725471496582f, 2.8235294818878174f);

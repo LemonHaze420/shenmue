@@ -30,7 +30,6 @@ void LoopCallback(void *);
 // @verified - p
 void InitNullsub() {
 }
-// @verified - p
 void ConfigureEnvironment() {
     SetRenderClockAndCompassTo(1);
     EV_stepSetFlags(0, 5);
@@ -55,7 +54,7 @@ void ConfigureEnvironment() {
         }
     } else if (time.hour >= 23 || (time.hour == 22 && time.minute >= 30))
         shenSetTimeSimulationTo(0);
-    EV_LoadCutsceneFromCurrentScene("0009");
+    EV_LoadCutsceneFromCurrentScene(AREA_0009_CUE);
     EV_FreeAuthorPak(1, "0009");
 }
 void SetCharacters(bool restore) {
@@ -76,12 +75,11 @@ void SetupCharacters() {
 void RestoreCharacters() {
     SetCharacters(true);
 }
-// @verified - p
 void Cleanup(AreaAuthorTaskParameter *parent) {
     const std::uint64_t cash = GetPlayerStat(PlayerStatsId::Cash);
     if (static_cast<std::int64_t>(cash) < 50)
         IncrementSteamStat(12);
-    SetPlayerStat(PlayerStatsId::Cash, static_cast<std::uint32_t>(cash));
+    SetPlayerStat(PlayerStatsId::Cash, 0);
     for (const shen_name *name = characters; name->name != AREA_AUTHOR_INVALID.name; ++name)
         if (FindCharacterByScenarioName(*name)) {
             EV_npcLockUnlock(*name);
@@ -97,12 +95,11 @@ void Cleanup(AreaAuthorTaskParameter *parent) {
     else
         EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
 }
-// @verified - p
 void QueueLoop(AreaAuthorTaskParameter *parent) {
     HLib::Task *task = HLib::EnqueueTaskWithParameter(LoopCallback, 4, 0x0b, 8, AREA_AUTHOR_TASK);
     static_cast<AreaAuthorLoopTaskParameter *>(HLib::GetTaskParameter(task))->parent = parent;
     if (parent->selection == 0)
-        EV_LoadAudio("0009", 0);
+        EV_LoadAudio(AREA_0009_CUE, 0);
     if (parent->selection == 0 || parent->selection == 1)
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     EV_spmBeginSampleExecute();

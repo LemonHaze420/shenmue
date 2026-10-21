@@ -12,6 +12,7 @@
 #include "s2/lighting.hpp"
 #include "s2/map_assets.hpp"
 #include "s2/map_control.hpp"
+#include "s2/memo.hpp"
 #include "s2/model_component.hpp"
 #include "s2/motion.hpp"
 #include "s2/motion_work.hpp"
@@ -102,7 +103,7 @@ void Update0500(void *data) {
             parent->state = 2;
         else {
             SetScreenFilmFade(15, 255, 0, 0, 0, 0, 0, 0, 0);
-            padcRefreshCurrentInputs(false);
+            RefreshPadTask(2, 1);
             EV_EventSetUpHelpIcon_0(0, 0);
         }
         break;
@@ -148,7 +149,7 @@ void Update0500Author(void *data) {
     Area0500AuthorParameter *const child = static_cast<Area0500AuthorParameter *>(data);
     Vector3 position{};
     Vector3i rotation{};
-    EV_GetCharaPosition(AREA_0500_BOAT, 0, &position, EventTransformFlags::Local);
+    EV_GetCharaPosition(AREA_0500_BOAT, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     GetScenarioCharacterEulerAngles(AREA_0500_BOAT, &rotation, EventTransformFlags::Local);
     rotation.y += 0x8000;
     AssignShipSprayLocalPosition(Vector3{0.0f, 0.0f, 13.5f});

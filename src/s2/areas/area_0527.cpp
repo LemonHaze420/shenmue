@@ -64,7 +64,7 @@ void Restore0527CharacterMotion(shen_name character, std::uint16_t animation, co
     Vector3i endRotation{};
     SampleNativeMotionRootAndRotation(GetMotionAnimationId(motion, MotionRegion::LowerBody), GetMotionRigBoneId(motion), frame, &sampledPosition, &endRotation);
     Vector3 position{};
-    EV_GetCharaPosition(character, 0, &position, EventTransformFlags::World);
+    EV_GetCharaPosition(character, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     mtwkRequestMotion(motion, animation, MotionRegion::LowerBody);
     const float height = position.y;
     position.y = 100.0f;

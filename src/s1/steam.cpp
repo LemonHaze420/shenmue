@@ -109,6 +109,20 @@ void RefreshSteamStatForItem(std::int32_t itemId) {
     UpdateSteamAchievement(Stat_Capsule_Toy_Count);
 }
 
+// @verified - p
+void RefreshMirrorAntiquesStat() {
+    const std::int32_t previous = g_steamTemporaryStats[Stat_Take_Mirror_To_Antiques].value;
+    SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Take_Mirror_To_Antiques];
+    if (stat.type <= SS_Add)
+        stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(g_steamTemporaryStats[Stat_Take_Mirror_To_Antiques1].value) +
+            static_cast<std::uint32_t>(g_steamTemporaryStats[Stat_Take_Mirror_To_Antiques2].value));
+    UpdateSteamStat(Stat_Take_Mirror_To_Antiques);
+    const std::int32_t current = g_steamTemporaryStats[Stat_Take_Mirror_To_Antiques].value;
+    const SteamAchievementDefinition &achievement = g_defaultSteamAchievements[Stat_Take_Mirror_To_Antiques];
+    if (current < achievement.threshold && current != previous && g_steamRuntime.callbacksEnabled && g_steamRuntime.indicateAchievementProgress)
+        g_steamRuntime.indicateAchievementProgress(achievement.name, static_cast<std::uint32_t>(current), static_cast<std::uint32_t>(achievement.threshold));
+}
+
 void SteamRemoteStorage_RunCallbacks() noexcept {
     if (g_steamRuntime.callbacksEnabled && g_steamRuntime.runCallbacks)
         g_steamRuntime.runCallbacks();

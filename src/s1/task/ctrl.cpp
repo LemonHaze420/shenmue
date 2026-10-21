@@ -1,4 +1,5 @@
 #include "s1/task/ctrl.hpp"
+#include "s1/steam.hpp"
 #include "s1/chrd.hpp"
 #include "s1/d3t/model.hpp"
 #include "s1/task/cdtt.hpp"
@@ -162,19 +163,28 @@ void LoadGameModule(SystemModule module, std::int32_t sceneId, std::uint32_t are
     }
     g_shouldOverrideClearColour = 1;
 
-    const std::uint32_t moduleIndex = static_cast<std::uint32_t>(module);
-    (void)RecordGameModuleLoadStats(moduleIndex);
-    if (module == SystemModule::Harrier) {
-        UpdateSteamStat(25);
-        UpdateSteamAchievement(25);
-        UpdateSteamStat(22);
+    if (module == SystemModule::Harrier || module == SystemModule::HangOn) {
+        const SteamStatId arcadeStat = module == SystemModule ::Harrier ? Stat_SpaceHarrier : Stat_Hangon;
+        SteamStatDefinition &stat = g_steamTemporaryStats[arcadeStat];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(arcadeStat);
+        UpdateSteamAchievement(arcadeStat);
+        SteamStatDefinition &aggregate = g_steamTemporaryStats[Stat_Arcade_Games_Played];
+        if (aggregate.type <= SS_Add)
+            aggregate.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(g_steamTemporaryStats[Stat_SpaceHarrier].value) +
+                static_cast<std::uint32_t>(g_steamTemporaryStats[Stat_Hangon].value));
+        UpdateSteamStat(Stat_Arcade_Games_Played);
     } else if (module == SystemModule::Credits) {
-        UpdateSteamStat(9);
-        UpdateSteamAchievement(9);
-    } else if (module == SystemModule::HangOn) {
-        UpdateSteamStat(26);
-        UpdateSteamAchievement(26);
-        UpdateSteamStat(22);
+        SteamStatDefinition &stat = g_steamTemporaryStats[Stat_Win_Game];
+        if (stat.type == SS_Set)
+            stat.value = 1;
+        else if (stat.type == SS_Add)
+            stat.value = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stat.value) + 1U);
+        UpdateSteamStat(Stat_Win_Game);
+        UpdateSteamAchievement(Stat_Win_Game);
     }
 }
 

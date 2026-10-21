@@ -29,8 +29,7 @@ StreetWatchState street{.package = "QKBT",
     .withoutAnnouncer = withoutAnnouncer,
     .fighterStyle = 26,
     .partnerStyle = 17,
-    .approachRadiusSquared = 36.0f,
-    .wideResult = true};
+    .approachRadiusSquared = 36.0f};
 std::uint32_t startParameters;
 std::int32_t preAuthorAdmitted, preAuthorBusy;
 StreetFightStartParameters preAuthor;

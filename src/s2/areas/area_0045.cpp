@@ -91,7 +91,7 @@ void QueueE0045Loop(AreaAuthorTaskParameter *parent) {
     AreaAuthorLoopTaskParameter *const child = static_cast<AreaAuthorLoopTaskParameter *>(HLib::GetTaskParameter(task));
     child->parent = parent;
     SetScreenFilmFade(0, 255, 0, 0, 0, 0, 0, 0, 0);
-    BeginSecondarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     SetupE0045Characters();
     EV_authSceneCtrl(static_cast<AuthSceneCtrl>(parent->selection));
     parent->state = 2;

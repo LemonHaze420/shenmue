@@ -12,7 +12,7 @@ inline constexpr shen_name AREA_0175_A396{SHEN_NAME(a396)};
 inline constexpr shen_name AREA_0175_A417{SHEN_NAME(a417)};
 inline constexpr shen_name AREA_0175_CHARACTERS[]{AREA_0175_JOP_, AREA_0175_WON_, AREA_AUTHOR_INVALID};
 inline constexpr char AREA_0175_MOTION[] = "0175A.MOT", AREA_0175_CONVERSATION[] = "0175";
-inline constexpr shen_name AREA_0175_AR00{SHEN_NAME(AR00)}, AREA_0175_AR02{SHEN_NAME(AR02)};
+inline constexpr shen_name AREA_0175_AB00{SHEN_NAME(AB00)}, AREA_0175_AR02{SHEN_NAME(AR02)};
 inline constexpr shen_name AREA_0175_AUTHOR_A{SHEN_NAME(175A)}, AREA_0175_AUTHOR_B{SHEN_NAME(175B)};
 struct E0175TaskParameter {
     HLib::Task *self;

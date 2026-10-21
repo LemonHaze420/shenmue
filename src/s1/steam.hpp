@@ -66,10 +66,37 @@ inline constexpr std::size_t kCapsuleToyStatisticsDefaultBytes = 140;
 extern CapsuleToyStatistics *g_capsuleToyStatistics;
 extern std::int32_t g_capsuleToyStatisticCount;
 void RefreshSteamStatForItem(std::int32_t itemId);
+void RefreshMirrorAntiquesStat();
 enum SteamStatId : std::uint32_t {
+    Stat_Meet_Charlie = 0,
+    Stat_Translate_Letter = 1,
+    Stat_Reach_Harbor = 2,
+    Stat_Break_And_Enter = 3,
+    Stat_Find_Phoenix_Mirror = 4,
+    Stat_Get_A_Job = 5,
+    Stat_Rescue_Nozomi = 6,
+    Stat_Brawl = 7,
+    Stat_Beat_Chai_Harbor = 8,
+    Stat_Win_Game = 9,
     Stat_Call_Police = 10,
+    Stat_Tree_Flashback = 11,
+    Stat_Kitchen_Flashback = 12,
+    Stat_Dojo_Flashback = 13,
+    Stat_Teach_Fuku_San = 14,
+    Stat_Help_Lady_Find_House = 15,
+    Stat_Buy_Guy_Soda = 16,
+    Stat_Take_Mirror_To_Antiques = 17,
+    Stat_Find_Kitten = 18,
+    Stat_Learn_From_Tom = 19,
+    Stat_Win_Forklift_Race = 20,
+    Stat_Visit_Fortune_Teller = 21,
+    Stat_Arcade_Games_Played = 22,
     Stat_Capsule_Toy_Count = 23,
     Stat_Moves_Learned = 24,
+    Stat_SpaceHarrier = 25,
+    Stat_Hangon = 26,
+    Stat_Take_Mirror_To_Antiques1 = 27,
+    Stat_Take_Mirror_To_Antiques2 = 28,
 };
 
 enum SteamStatUpdateType : std::uint32_t {

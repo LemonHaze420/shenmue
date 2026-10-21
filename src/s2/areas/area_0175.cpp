@@ -90,7 +90,7 @@ void CleanupE0175(E0175TaskParameter *parent) {
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0175_AREA.name)
         EV_scenQueueLoad(g_actNumber, AREA_0175_AREA, g_entryPoint);
-    else if (g_currentMap.name == AREA_0175_AR00.name)
+    else if (g_currentMap.name == AREA_0175_AB00.name)
         EV_scenQueueLoad(g_actNumber, AREA_0175_AR02, 26);
     else {
         EV_NPC_NewLoadSw(1);

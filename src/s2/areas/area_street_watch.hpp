@@ -34,7 +34,7 @@ struct StreetWatchState {
     std::int32_t formationAssignments;
     float approachRadiusSquared;
     void (*prepareParentedActors)();
-    bool freeAnnouncerPackage, wideResult;
+    bool freeAnnouncerPackage;
     void (*queueInitialSleep)();
     void (*queueLostSyunen)();
 };

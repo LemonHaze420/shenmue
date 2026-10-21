@@ -155,7 +155,7 @@ void Update0502Author(void *data) {
     if (frame < 1041) {
         Vector3 position{};
         Vector3i rotation{};
-        EV_GetCharaPosition(AREA_0502_PROPS[0], 0, &position, EventTransformFlags::Local);
+        EV_GetCharaPosition(AREA_0502_PROPS[0], CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
         GetScenarioCharacterEulerAngles(AREA_0502_PROPS[0], &rotation, EventTransformFlags::Local);
         rotation.y += 0x8000;
         AssignShipSprayLocalPosition(Vector3{0.0f, 0.0f, 13.5f});

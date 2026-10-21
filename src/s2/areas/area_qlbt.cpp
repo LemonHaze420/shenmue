@@ -37,8 +37,7 @@ StreetWatchState street{.package = "QLBT",
     .withoutAnnouncer = withoutAnnouncer,
     .fighterStyle = 25,
     .partnerStyle = 17,
-    .approachRadiusSquared = 36.0f,
-    .wideResult = true,
+    .approachRadiusSquared = 4.0f,
     .queueLostSyunen = QueueLostSyunen};
 HLib::Task *streetTask;
 StreetWatchWork *streetWork;

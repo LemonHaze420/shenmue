@@ -108,7 +108,7 @@ void CleanupE0265(AreaImmediateAuthorTaskParameter *parent) {
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     }
 }

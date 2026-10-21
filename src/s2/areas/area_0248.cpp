@@ -30,7 +30,6 @@ void E0248LoopCallback(void *taskData);
 void E0248Init() {
 }
 
-// @verified - p
 void E0248Main(std::uintptr_t) {
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(E0248MainCallback, 4, 0x0b, 0x10, AREA_AUTHOR_TASK);
     AreaAuthorTaskParameter *const parent = static_cast<AreaAuthorTaskParameter *>(HLib::GetTaskParameter(task));
@@ -40,7 +39,7 @@ void E0248Main(std::uintptr_t) {
     parent->state = 1;
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(1, "0248");
-    EV_ReinitLights(1);
+    EV_AssignLightParams(1, 1);
     EV_SetWeatherInstruction(12, 0);
     SetMapModelDataDefaultVertexShader();
     EV_lightLoad(AREA_0248_L001);

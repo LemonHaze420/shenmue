@@ -97,7 +97,7 @@ void CleanupE0184(E0184TaskParameter *parent) {
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     }
 }
@@ -110,7 +110,7 @@ void QueueE0184Loop(E0184TaskParameter *parent) {
     child->state = 0;
     EV_NPC_NewLoadSw(1);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-    BeginSecondarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     SetupE0184Characters();
     EV_authSceneCtrl(static_cast<AuthSceneCtrl>(AREA_0184_AREA.name));
     parent->state = 2;

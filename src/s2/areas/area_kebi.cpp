@@ -32,7 +32,6 @@ void AreaKEBIMain(std::uintptr_t) {
 void KEBICheckCallback(void *) {
     HLib::SetCurrentTaskTo(KEBIMainCallback);
 }
-// @verified - p
 void KEBIMainCallback(void *data) {
     KebiTaskData &work = *static_cast<KebiTaskData *>(data);
     switch (work.frame) {
@@ -74,7 +73,9 @@ void KEBIMainCallback(void *data) {
             EventSetCamera camera{0, 3150, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, {}, 0, 0};
             EVT_AT_SetCam_Callback(&camera);
             camCtrlDisableFilmBars();
-            EVT_AT_SetVoice(GetRandomNumberInRange(2.0f) == 0 ? "0075B001" : "0075B002", 1, 0); // @text 0075B001 EN: "Hey, wait!" | JA: "ああ、ちょっと！" ; 0075B002 EN: "Wait up fella!" | JA: "ちょっと、君ィ！"
+            const std::uint8_t voice = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(2.0f)));
+            EVT_AT_SetVoice(voice == 0 ? "0075B001" : "0075B002", 1,
+                0); // @text 0075B001 EN: "Hey, wait!" | JA: "ああ、ちょっと！" ; 0075B002 EN: "Wait up fella!" | JA: "ちょっと、君ィ！"
         }
         break;
     case 2:
@@ -85,9 +86,11 @@ void KEBIMainCallback(void *data) {
             UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_PLAYER), &position, 0);
             EVT_AT_SetCam(3160, KEBI_GUARD, KEBI_GUARD, 0, 0, 20);
             EVT_AT_SetCam(3170, KEBI_GUARD, KEBI_GUARD, 0, 0, 241);
-            const float choice = GetRandomNumberInRange(3.0f);
+            const std::uint8_t choice = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(3.0f)));
             EVT_AT_SetVoice(choice == 0 ? "0075B003" : choice == 1 ? "0075B004" : "0075B005", 1, 50); // @text 0075B003 EN: "This place is for authorized\npersonnel only." | JA: "関係者以外は、\n立ち入り禁止だから。" ; 0075B004 EN: "You can't come in here." | JA: "一般の人は、入れないんだ。" ; 0075B005 EN: "If you don't have a permit,\nyou can't come in." | JA: "許可がないのに\n入っちゃダメだろ。"
-            EVT_AT_SetVoice(GetRandomNumberInRange(2.0f) == 0 ? "0075B006" : "0075B007", 1, 140); // @text 0075B006 EN: "Go on, leave." | JA: "さっさと出て。" ; 0075B007 EN: "Stay away." | JA: "ほら、離れて。"
+            const std::uint8_t dismissal = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(2.0f)));
+            EVT_AT_SetVoice(dismissal == 0 ? "0075B006" : "0075B007", 1,
+                140); // @text 0075B006 EN: "Go on, leave." | JA: "さっさと出て。" ; 0075B007 EN: "Stay away." | JA: "ほら、離れて。"
             ++work.frame;
         }
         break;
@@ -124,7 +127,6 @@ void KEBIMainCallback(void *data) {
     if (work.frame >= 3)
         ++work.frame;
 }
-// @verified - p
 void KEBIExitCallback(void *data) {
     using enum CameraState;
     KebiTaskData &work = *static_cast<KebiTaskData *>(data);
@@ -140,7 +142,7 @@ void KEBIExitCallback(void *data) {
     SetPlayerControlEnabled(1);
     UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_PLAYER), nullptr, 0);
     UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_GUARD), nullptr, 0);
-    CleanupMapControlCharacters();
+    EV_CleanupMapControlTask();
     EV_HLKillOtherHierarchyTask(work.self);
 }
 const ScriptAreaDefinition areaKEBIScriptDefinition{.areaId = AREA_KEBI, .field04 = 0, .init = AreaKEBIInit, .main = AreaKEBIMain};

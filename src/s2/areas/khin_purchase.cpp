@@ -123,7 +123,7 @@ void KhinPurchaseCallback(void *data) {
     EVT_AT_SetVoice(row.voices[0], 1, 0);
     EVT_AT_SetMot(KHIN_RYO, 0xf022, 0, 1, 0x80000000U, 130);
     EVT_AT_SetCam(3010, KHIN_RYO, KHIN_RYO, 0, 0, 130);
-    const float random = GetRandomNumberInRange(3);
+    const std::uint8_t random = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(3)));
     EVT_AT_SetVoice(row.voices[random == 0 ? 1 : random == 1 ? 2 : 3], 1, 130);
     EVT_AT_SetPoint(KHIN_RYO, row.character, 5, 1, 0, 130, 0, 0x20000000U);
     EVT_AT_SetPoint(row.character, KHIN_RYO, 5, 1, 0, 130, 0, 0x20000000U);

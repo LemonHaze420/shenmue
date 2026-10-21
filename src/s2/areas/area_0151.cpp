@@ -77,7 +77,7 @@ void E0151MainCallback(void *taskData) {
         E0151LoopParameter *const child = static_cast<E0151LoopParameter *>(HLib::GetTaskParameter(task));
         child->parent = parent;
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         mtwkSetExtraFlag(scenFindMotionwork(AREA_AUTHOR_RYO), 6, 2);
         EV_SetCharacterAlphaEnabled(AREA_AUTHOR_RYO, false);
         EV_NPC_NewLoadSw(1);
@@ -91,7 +91,7 @@ void E0151MainCallback(void *taskData) {
     } else if (parent->state == 0) {
         EV_NPC_NewLoadSw(1);
         LoadCutsceneAndSoundProgramForArea();
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         SetRenderClockAndCompassTo(0);
         parent->state = 1;

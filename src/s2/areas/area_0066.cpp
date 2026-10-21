@@ -113,7 +113,7 @@ void E0066MainCallback(void *taskData) {
         HLib::Task *const task = HLib::EnqueueTaskWithParameter(E0066LoopCallback, 4, 0x0b, 0x8, AREA_AUTHOR_TASK);
         AreaImmediateAuthorFrameParameter *const child = static_cast<AreaImmediateAuthorFrameParameter *>(HLib::GetTaskParameter(task));
         child->parent = parent;
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         SetupE0066Characters();
         EV_authSceneCtrl(static_cast<AuthSceneCtrl>(AREA_0066_AREA.name));
         parent->state = 2;

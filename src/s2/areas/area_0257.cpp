@@ -114,7 +114,7 @@ void CleanupE0257(AreaImmediateAuthorTaskParameter *parent) {
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
     }
 }
 

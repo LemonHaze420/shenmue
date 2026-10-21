@@ -51,8 +51,8 @@ void RunKhinEvent(std::uintptr_t argument) {
     EV_setHoldStatesFlags(0);
     EV_SetNewSceneIndex();
     SetPlayerControlEnabled(0);
-    EV_SetCharaControllerFlags(KHIN_RYO, 1, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(KHIN_RYO, 3, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(KHIN_RYO, ApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(KHIN_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014)) {
         EV_FreeAuthorPak(1, "0185");
@@ -80,8 +80,8 @@ void KhinSlotCallback(void *data) {
         EV_SetRefBoardParamsFor(work.row->character, 1);
         EV_SetCharacterAlphaEnabled(KHIN_RYO, false);
         EV_SetCharacterAlphaEnabled(work.row->character, false);
-        EV_SetCharaControllerFlags(work.row->character, 1, NpcCharacterControllerState::Disabled);
-        EV_SetCharaControllerFlags(work.row->character, 3, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(work.row->character, ApplyGravity, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(work.row->character, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
         work.state = 2;
         break;
     case 2: {
@@ -235,8 +235,8 @@ void KhinPurchaseExitCallback(void *data) {
     LoadCutsceneAndSoundProgramForArea();
     EVT_AT_MenCtrl({.frames = 8, .startAlpha = 255});
     EV_SetRefBoardParamsFor(KHIN_RYO, 0);
-    EV_SetCharaControllerFlags(KHIN_RYO, 1, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(KHIN_RYO, 3, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(KHIN_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(KHIN_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_NPC_NewLoadSw(1);
     EV_FreeAuthorPak(0, "0185");
     EV_FreeAuthorPak(0, "0112");
@@ -253,15 +253,15 @@ void KhinSlotExitCallback(void *data) {
     using enum CameraState;
     KhinWork &work = *static_cast<KhinWork *>(data);
     EV_EnableCharacterDisplay(KHIN_RYO);
-    EV_SetCharaControllerFlags(KHIN_RYO, 1, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(KHIN_RYO, 3, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(KHIN_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(KHIN_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetRefBoardParamsFor(KHIN_RYO, 0);
     UpdateMotionWorkWithPosition(scenFindMotionwork(KHIN_RYO), nullptr, 0);
     EVT_AT_SetPoint(KHIN_RYO, KHIN_NONE, 0, 1, 0, 0, 0, 0x50000000U);
     EV_SetCharacterAlphaEnabled(KHIN_RYO, true);
     EV_SetCharacterAlphaEnabled(work.row->character, true);
-    EV_SetCharaControllerFlags(work.row->character, 1, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(work.row->character, 3, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(work.row->character, ApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(work.row->character, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetRefBoardParamsFor(work.row->character, 0);
     UpdateMotionWorkWithPosition(scenFindMotionwork(work.row->character), nullptr, 0);
     EV_npcFree(work.row->character);
@@ -350,8 +350,8 @@ void KhinReturnToMenuCallback(void *data) {
         EVT_AT_SetPoint(KHIN_RYO, KHIN_NONE, 0, 3, 0, 0, 0, 0x50000000U);
         LoadCutsceneAndSoundProgramForArea();
         if (!leave) {
-            EV_SetCharaControllerFlags(KHIN_RYO, 1, NpcCharacterControllerState::Enabled);
-            EV_SetCharaControllerFlags(KHIN_RYO, 3, NpcCharacterControllerState::Enabled);
+            EV_SetCharaControllerFlags(KHIN_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
+            EV_SetCharaControllerFlags(KHIN_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
         }
         EV_NPC_NewLoadSw(1);
         camCtrlSetState(Init);

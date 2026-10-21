@@ -59,10 +59,11 @@ void Voice(const char *token, int delay = 0) {
     EVT_AT_SetVoice(token, delay);
 }
 void RandomVoice(const char *first, const char *second, int delay = 0) {
-    Voice(GetRandomNumberInRange(2) == 0 ? first : second, delay);
+    const std::uint8_t value = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(2)));
+    Voice(value == 0 ? first : second, delay);
 }
 void RandomVoice(const char *first, const char *second, const char *third, int delay = 0) {
-    const float value = GetRandomNumberInRange(3);
+    const std::uint8_t value = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(3)));
     Voice(value == 0 ? first : value == 1 ? second : third, delay);
 }
 void Help(std::uint32_t kind) {

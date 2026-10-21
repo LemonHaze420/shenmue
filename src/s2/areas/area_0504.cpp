@@ -172,8 +172,8 @@ void Update0504Splash(void *data) {
 void Update0504CharacterHeight(shen_name character, shen_name heightSource) {
     GetMapModelRoot(1);
     Vector3 base{}, position{};
-    EV_GetCharaPosition(character, 0, &base, EventTransformFlags::Local);
-    EV_GetCharaPosition(character, 0, &position, EventTransformFlags::Local);
+    EV_GetCharaPosition(character, CHARACTER_TRANSLATION_ROOT, &base, EventTransformFlags::Local);
+    EV_GetCharaPosition(character, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     const Vector3 samples[]{base, Vector3{base.x + 0.05f, base.y, base.z}, Vector3{base.x - 0.05f, base.y, base.z}, Vector3{base.x, base.y, base.z + 0.05f},
         Vector3{base.x, base.y, base.z - 0.05f}};
     float height = 0.0f;
@@ -206,8 +206,8 @@ void Update0504Author(void *data) {
     const std::int32_t frame = static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     SetMapModelSlotEnabled(1, 0);
     AdvanceSurfacePhaseAndUpdateGrid(frame);
-    EV_GetCharaPosition(AREA_0504_RYO, 0, &ryoPosition0504, EventTransformFlags::Local);
-    EV_GetCharaPosition(AREA_0504_SIN, 0, &shenhuaPosition0504, EventTransformFlags::Local);
+    EV_GetCharaPosition(AREA_0504_RYO, CHARACTER_TRANSLATION_ROOT, &ryoPosition0504, EventTransformFlags::Local);
+    EV_GetCharaPosition(AREA_0504_SIN, CHARACTER_TRANSLATION_ROOT, &shenhuaPosition0504, EventTransformFlags::Local);
     switch (frame) {
     case 1:
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -317,8 +317,8 @@ void Update0504CameraRideHeight() {
         targetDelta.y * targetDelta.y + targetDelta.x * targetDelta.x + targetDelta.z * targetDelta.z > 0.25f)
         reset = true;
     Vector3 ryo{}, shenhua{};
-    EV_GetCharaPosition(AREA_0504_RYO, 0, &ryo, EventTransformFlags::Local);
-    EV_GetCharaPosition(AREA_0504_SIN, 0, &shenhua, EventTransformFlags::Local);
+    EV_GetCharaPosition(AREA_0504_RYO, CHARACTER_TRANSLATION_ROOT, &ryo, EventTransformFlags::Local);
+    EV_GetCharaPosition(AREA_0504_SIN, CHARACTER_TRANSLATION_ROOT, &shenhua, EventTransformFlags::Local);
     const Vector3 ryoDelta{.x = ryoPosition0504.x - target.x, .y = ryoPosition0504.y - target.y, .z = ryoPosition0504.z - target.z};
     const Vector3 shenhuaDelta{.x = shenhuaPosition0504.x - target.x, .y = shenhuaPosition0504.y - target.y, .z = shenhuaPosition0504.z - target.z};
     const float ryoDistance = std::sqrt(ryoDelta.x * ryoDelta.x + ryoDelta.y * ryoDelta.y + ryoDelta.z * ryoDelta.z);

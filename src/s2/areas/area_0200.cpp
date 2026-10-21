@@ -34,7 +34,6 @@ void E0200Init() {
     fingerRotation0200 = {};
     handRotation0200 = {56434, 0, 0};
 }
-// @verified - p
 void SetupE0200Environment() {
     SetPlayerControlEnabled(0);
     SetRenderClockAndCompassTo(1);
@@ -47,7 +46,7 @@ void SetupE0200Environment() {
     AT_SetLocalBaseChara(AREA_0200_A237, AREA_0200_BASE);
     AT_SetLocalBaseChara(AREA_0200_A238, AREA_0200_BASE);
     for (std::int32_t index = 0; index < 9; ++index)
-        SetMapLightingPlacementEnabled(0, index);
+        SetMapModelCommandRoutingEnabled(0, index);
 }
 // @verified - p
 void E0200Main(std::uintptr_t) {

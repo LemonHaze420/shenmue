@@ -99,7 +99,7 @@ void CleanupE0049(AreaImmediateAuthorTaskParameter *parent) {
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     } else
         EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
@@ -113,7 +113,7 @@ void E0049MainCallback(void *taskData) {
         AreaImmediateAuthorFrameParameter *const child = static_cast<AreaImmediateAuthorFrameParameter *>(HLib::GetTaskParameter(task));
         child->parent = parent;
         child->state = 0;
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         SetupE0049Characters();
         EV_authSceneCtrl(static_cast<AuthSceneCtrl>(AREA_0049_AREA.name));
         parent->state = 2;

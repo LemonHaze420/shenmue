@@ -1050,8 +1050,8 @@ void BattleWaitFadeCallback(void *parameter) {
 void BattleEndCallback(void *parameter) {
     auto &work = *static_cast<StreetFightEventWork *>(parameter);
     const shen_name fighter = work.fighters[work.fighterIndex];
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(STREET_FIGHT_RYO), FacialNodeReplacement);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(fighter), FacialNodeReplacement);
+    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STREET_FIGHT_RYO), Angry, 1.0f, 1.0f);
+    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(fighter), Angry, 1.0f, 1.0f);
     EV_LoadAudio("0100E000", 0);
     EV_spmBeginSampleExecute();
     AT_SetLocalBaseChara(STREET_FIGHT_RYO, SFKK_BASE);

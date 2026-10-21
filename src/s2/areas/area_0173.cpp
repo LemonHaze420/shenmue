@@ -75,7 +75,7 @@ void CleanupE0173(AreaImmediateAuthorTaskParameter *parent) {
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
-        BeginSecondarySampleExecution(0);
+        EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     } else
         EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
@@ -88,7 +88,7 @@ void QueueE0173Loop(AreaImmediateAuthorTaskParameter *parent) {
     child->state = 0;
     child->parent = parent;
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-    BeginSecondarySampleExecution(0);
+    EV_spmBeginSampleExecute();
     EV_NPC_NewLoadSw(1);
     mtwkSetExtraFlag(scenFindMotionwork(AREA_AUTHOR_RYO), 6, 2);
     EV_SetCharacterAlphaEnabled(AREA_AUTHOR_RYO, false);

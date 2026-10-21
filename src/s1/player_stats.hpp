@@ -187,7 +187,6 @@ std::uint16_t CountOwnedCassetteTapes();
 std::uint32_t GetPlayerSimpleStat(std::uint32_t command);
 void SetPlayerSimpleStat(std::uint32_t command, std::uint32_t value);
 void ResetInventoryControlValue9();
-std::uint32_t RecordGameModuleLoadStats(std::uint32_t module);
 std::uint32_t AccessBatteryLife(std::uint32_t mode, std::uint8_t index, std::uint32_t value);
 std::int32_t AccessScenarioStepUniqueItemCount(std::uint32_t mode);
 std::int32_t UpdateAveragedRuntimeStatPageSlot(std::int8_t slotIndex, std::int32_t sampleValue);

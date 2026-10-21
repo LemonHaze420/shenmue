@@ -445,7 +445,7 @@ void StreetWatchMainCallback(void *payload, StreetWatchState &owner) {
         const float degrees = static_cast<float>(signedDifference) / 182.04445f;
         if (GetSquaredDistanceXZ(approach, &position) >= owner.approachRadiusSquared || degrees <= -90.0f || degrees >= 90.0f) {
             if (owner.iconPrepared)
-                EV_EventSetUpHelpIcon_0(0x9c, 0);
+                EV_EventSetUpHelpIcon_0(0, 0);
             owner.iconPrepared = 0;
             return;
         }
@@ -603,7 +603,7 @@ void StreetWatchMainCallback(void *payload, StreetWatchState &owner) {
     case 26:
         if (owner.busy)
             return;
-        if (g_currentMap.name == SHEN_NAME(QLBT) && owner.selection.reserved18 == 99 && (!owner.wideResult || !owner.selection.flags)) {
+        if (g_currentMap.name == SHEN_NAME(QLBT) && owner.selection.reserved18 == 99) {
             EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1233, 1);
             if (owner.queueLostSyunen)
                 owner.queueLostSyunen();
