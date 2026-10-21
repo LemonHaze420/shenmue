@@ -950,17 +950,30 @@ void RegisterOptionsAndPrompt();
 void DrawNativeMenuObject(
     d3t::UIDefinition &definition, const d3t::UITextureObjectDefinition &object, const d3t::UIResolvedTextureObject &placement, float opacity);
 
-struct NativeHudRuntime {
-    AuthoredMenuLayout layout;
-    std::array<std::int32_t, 17> panels;
-    std::array<float, 17> panelOffsetY;
-    std::array<std::int32_t, 6> sprites;
-    std::array<std::int32_t, 5> buttons;
-    std::array<std::int32_t, 5> transitions;
-    std::int32_t blink{-1}, cameraBase{-1};
-    bool bound{};
-};
-extern NativeHudRuntime nativeHud;
+inline constexpr std::array<const char *, 17> UI_GAME_HUD_WINDOWS{"GameHUD::MainHudParent", "GameHUD::ButtonBParent", "GameHUD::ButtonBPanel",
+    "GameHUD::ButtonB", "GameHUD::ButtonBIcon", "GameHUD::ButtonAPanel", "GameHUD::ButtonA", "GameHUD::ButtonAIcon", "GameHUD::ButtonYPanel",
+    "GameHUD::ButtonY", "GameHUD::ButtonYIcon", "GameHUD::ButtonXPanel", "GameHUD::ButtonX", "GameHUD::ButtonXIcon", "GameHUD::CameraPanel",
+    "GameHUD::CameraButtonPanel", "GameHUD::CameraIconPanel"};
+inline constexpr std::array<const char *, 6> UI_GAME_HUD_SPRITES{
+    "GameHUD_ConfirmSprite", "GameHUD_CancelSprite", "GameHUD_EventSprite", "GameHUD_SystemSprite", "GameHUD_CameraSprite", "GameHUD_CameraStateSprite"};
+inline constexpr std::array<const char *, 5> UI_GAME_HUD_BUTTONS{
+    "GameHUD_ConfirmIcon", "GameHUD_CancelIcon", "GameHUD_EventIcon", "GameHUD_SystemIcon", "GameHUD_CameraIcon"};
+inline constexpr const char *UI_GAME_HUD_CAMERA_LABEL = "Camera_Label";
+inline constexpr const char *UI_GAME_HUD_CAMERA_BASE = "HUDCameraBase";
+inline constexpr const char *UI_HUD_SNAPSHOT_SPRITE = "GameHUDSnapshot::CameraIconPanel::CameraStateSprite";
+inline constexpr float UI_HUD_KEYBOARD_Y_SHIFT = 0.0092592593f;
+extern std::array<d3t::UIWindow *, 17> nativeHudWindows;
+extern std::array<UIButtonIconWidget *, 6> nativeHudSpriteWidgets;
+extern std::array<UIButtonIconWidget *, 5> nativeHudButtonWidgets;
+extern d3t::UILabelWidget *nativeHudCameraLabel;
+extern UIColourImageWidget *nativeHudCameraBase;
+extern std::array<std::int32_t, 5> nativeHudTransitions;
+extern std::int32_t nativeHudBlink, nativeHudKeyboardMode;
+void NativeGameHudClicked(float *rectangle, void *window);
+void RefreshNativeHudHints(std::uint32_t *hints);
+std::int64_t UpdateGameHudCameraVisibility();
+std::int64_t NativeGameHudNullsub();
+std::int64_t NativeGameHudInputZero();
 
 extern std::array<std::uint32_t, 5> nativeHudRequestedHints, nativeHudShownHints, nativeHudOverrideHints;
 
@@ -1144,9 +1157,9 @@ extern std::array<d3t::UILabelWidget *, 3> moveLearnedLabels;
 extern std::array<char, 256> gameHudTimerText;
 extern d3t::UIWindow *gameHudTimerPanel;
 extern d3t::UILabelWidget *gameHudTimerLabel;
-extern std::int32_t hudSnapshotCameraState;
+extern UIButtonIconWidget *hudSnapshotCameraState;
 
-void ConstructHudCameraState(UIElement root, std::int32_t index, std::uint32_t mode);
+void ConstructHudCameraState(std::uint32_t mode, UIButtonIconWidget *widget);
 
 std::uint32_t LoadSubtitles();
 

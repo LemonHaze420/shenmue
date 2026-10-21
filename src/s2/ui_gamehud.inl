@@ -262,179 +262,186 @@ void DrawNativeMenuObject(
     } else
         d3t::DrawUITextureObject(definition, object, placement, opacity);
 }
-NativeHudRuntime nativeHud;
+std::array<d3t::UIWindow *, 17> nativeHudWindows{};
+std::array<UIButtonIconWidget *, 5> nativeHudButtonWidgets{};
+d3t::UILabelWidget *nativeHudCameraLabel{};
+UIColourImageWidget *nativeHudCameraBase{};
+std::array<std::int32_t, 5> nativeHudTransitions{};
+std::int32_t nativeHudBlink{}, nativeHudKeyboardMode{};
 std::array<UIButtonIconWidget *, 6> nativeHudSpriteWidgets{};
 std::array<
 std::uint32_t, 5> nativeHudRequestedHints{}, nativeHudShownHints{}, nativeHudOverrideHints{};
 bool nativeHudOverride{};
 std::int32_t nativeHudItemPromptIcon{};
 std::uint32_t LoadNativeGameHud() {
-    nativeHud.bound = false;
+
     return ReadUIDefinitionFile(UIElement::GameHud, "/ui/gamehud/GameHud.ui", 1);
 }
+// @verified - p
 std::int64_t BindNativeGameHud() {
-    constexpr std::array<const char *, 17> panels{"GameHUD::MainHudParent", "GameHUD::ButtonBParent", "GameHUD::ButtonBPanel", "GameHUD::ButtonB",
-        "GameHUD::ButtonBIcon", "GameHUD::ButtonAPanel", "GameHUD::ButtonA", "GameHUD::ButtonAIcon", "GameHUD::ButtonYPanel", "GameHUD::ButtonY",
-        "GameHUD::ButtonYIcon", "GameHUD::ButtonXPanel", "GameHUD::ButtonX", "GameHUD::ButtonXIcon", "GameHUD::CameraPanel", "GameHUD::CameraButtonPanel",
-        "GameHUD::CameraIconPanel"};
-    constexpr std::array<const char *, 6> sprites{
-        "GameHUD_ConfirmSprite", "GameHUD_CancelSprite", "GameHUD_EventSprite", "GameHUD_SystemSprite", "GameHUD_CameraSprite", "GameHUD_CameraStateSprite"};
-    constexpr std::array<const char *, 5> buttons{"GameHUD_ConfirmIcon", "GameHUD_CancelIcon", "GameHUD_EventIcon", "GameHUD_SystemIcon", "GameHUD_CameraIcon"};
-    const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[static_cast<std::size_t>(UIElement::GameHud)].config.uiHandleIndex);
-    for (std::size_t index = 0; index < sprites.size(); ++index)
-        nativeHudSpriteWidgets[index] = UI_FindViewIconWidget(slot, sprites[index], 20);
+    nativeHudKeyboardMode = 0;
+    const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::GameHud)].config.uiHandleIndex;
+    for (std::size_t index = 0; index < nativeHudWindows.size(); ++index)
+        nativeHudWindows[index] = UI_GetWindow(UI_FindViewWindow(slot, UI_GAME_HUD_WINDOWS[index]));
+    for (const std::size_t index : {6U, 3U, 12U, 9U, 14U})
+        if (nativeHudWindows[index])
+            nativeHudWindows[index]->mouseCallbacks.clicked = NativeGameHudClicked;
+    nativeHudCameraLabel = UI_GetLabel(UI_FindViewLabel(slot, UI_GAME_HUD_CAMERA_LABEL));
+    for (std::size_t index = 0; index < nativeHudSpriteWidgets.size(); ++index)
+        nativeHudSpriteWidgets[index] = UI_FindViewIconWidget(slot, UI_GAME_HUD_SPRITES[index], 20);
+    nativeHudCameraBase = UI_GetColourImageWidget(UI_FindViewColourImage(slot, UI_GAME_HUD_CAMERA_BASE));
+
+    for (std::size_t index = 0; index < nativeHudButtonWidgets.size(); ++index)
+        nativeHudButtonWidgets[index] = UI_FindViewIconWidget(slot, UI_GAME_HUD_BUTTONS[index], 21);
+
     if (nativeHudSpriteWidgets[5])
         nativeHudSpriteWidgets[5]->fieldAC = 1;
-    auto &definition = uiDefinitions[64];
-    BindAuthoredMenuLayout(definition, nativeHud.layout);
-    for (std::size_t i = 0; i < panels.size(); ++i) {
-        nativeHud.panels[i] = MenuPanelIndex(definition, panels[i]);
-        if (nativeHud.panels[i] >= 0)
-            nativeHud.panelOffsetY[i] = definition.panels[static_cast<std::size_t>(nativeHud.panels[i])].y.offset;
-    }
-    nativeHud.sprites.fill(-1);
-    nativeHud.buttons.fill(-1);
-    nativeHud.cameraBase = -1;
-    for (std::size_t i = 0; i < definition.textureObjects.size(); ++i) {
-        const auto &object = definition.textureObjects[i];
+    nativeHudBlink = UIAnimAllocSlot();
+    SetUITransitionLoopMode(nativeHudBlink, 2);
+    UIAnim_Start(nativeHudBlink, 1.0f, 0.1f, 0.2f, 0.01f);
 
-        for (std::size_t j = 0; j < sprites.size(); ++j)
-            if (object.id == sprites[j] && nativeHud.sprites[j] < 0)
-                nativeHud.sprites[j] = static_cast<std::int32_t>(i);
-        for (std::size_t j = 0; j < buttons.size(); ++j)
-            if (object.id == buttons[j] && nativeHud.buttons[j] < 0)
-                nativeHud.buttons[j] = static_cast<std::int32_t>(i);
-        if (object.id == "HUDCameraBase" && nativeHud.cameraBase < 0)
-            nativeHud.cameraBase = static_cast<std::int32_t>(i);
-    }
-    if (nativeHud.sprites[5] >= 0)
-        definition.textureObjects[static_cast<std::size_t>(nativeHud.sprites[5])].hidden = true;
-    nativeHud.blink = UIAnimAllocSlot();
-    if (nativeHud.blink >= 0) {
-        g_uiAnimSlots[static_cast<std::size_t>(nativeHud.blink)].loopMode = 2;
-        UIAnim_Start(nativeHud.blink, 1, 0.1f, 0.2f, 0.01f);
-    }
-    for (auto &transition : nativeHud.transitions)
+    for (std::int32_t &transition : nativeHudTransitions)
         transition = UIAnimAllocSlot();
-    nativeHud.bound = true;
+
     return 1;
 }
+// @verified - p
 std::int64_t NativeGameHudInput() {
-    if (!nativeHud.bound || !uiPointer.leftClicks)
+
         return 1;
-    constexpr std::array<std::size_t, 5> panels{6, 3, 12, 9, 14};
-    const float x = uiPointer.position.x * 1920 / GetUIViewportWidth();
-    for (std::size_t i = 0; i < panels.size(); ++i) {
-        const auto panel = nativeHud.panels[panels[i]];
-        if (panel < 0)
-            continue;
-        const auto &bounds = nativeHud.layout.panels[static_cast<std::size_t>(panel)];
-        if (x < bounds.x || x >= bounds.x + bounds.width || uiPointer.position.y < bounds.y || uiPointer.position.y >= bounds.y + bounds.height)
-            continue;
-        const auto &hints = nativeHudOverride ? nativeHudOverrideHints : nativeHudShownHints;
-        if (i < 4 && (hints[i == 0 ? 0 : 3] & 0x20000U))
-            continue;
-        if (i == 4 && g_uiElements[8].isVisible)
-            continue;
-        const std::uint16_t mask = i == 0 ? (GetIsFreeInputType() ? 0x200 : 0x400) :
-            i == 1                        ? (GetIsFreeInputType() ? 0x400 : 0x200) :
-            i == 2                        ? 4 :
-            i == 3                        ? 2 :
-                                            8;
-        InjectInputButtons(mask);
-    }
-    return 1;
 }
+// @verified - p
+void NativeGameHudClicked(float *, void *window) {
+    const std::array<std::uint32_t, 5> &hints = nativeHudOverride ? nativeHudOverrideHints : nativeHudShownHints;
+    if (window == nativeHudWindows[6] && !(hints[0] & 0x20000U))
+        InjectInputButtons(GetIsFreeInputType() ? 512 : 1024);
+    if (window == nativeHudWindows[3] && !(hints[3] & 0x20000U))
+        InjectInputButtons(GetIsFreeInputType() ? 1024 : 512);
+    if (window == nativeHudWindows[12] && !(hints[3] & 0x20000U))
+        InjectInputButtons(4);
+    if (window == nativeHudWindows[9] && !(hints[3] & 0x20000U))
+        InjectInputButtons(2);
+    if (window == nativeHudWindows[14] && !g_uiElements[static_cast<std::size_t>(UIElement::GameMenu)].isVisible)
+        InjectInputButtons(8);
+}
+
+// @verified - p
+void RefreshNativeHudHints(std::uint32_t *hints) {
+    if (static_cast<std::uint16_t>(hints[1]) == 0xffffU && (GetIconSelectFlags() & 0x200U))
+        hints[1] = 44U;
+    if (static_cast<std::uint16_t>(hints[0]) == 0xffffU && (GetIconSelectFlags() & 0x400U)) {
+        hints[1] &= 0xffffU;
+        hints[0] = (hints[0] & 0xffff0000U) | 45U;
+    }
+    if (GetQteControlState())
+        hints[4] = 28U;
+    else
+        hints[4] |= 0xffffU;
+}
+// @verified - p
+std::int64_t UpdateGameHudCameraVisibility() {
+    const float alpha = IsCameraIconHidden() ? 1.0f : 0.0f;
+    for (std::size_t index = 14; index < 17; ++index)
+        if (nativeHudWindows[index])
+            nativeHudWindows[index]->alpha = alpha;
+    return 0;
+}
+
+// @verified - p
+std::int64_t NativeGameHudNullsub() {
+    return 0;
+}
+
+// @verified - p
+std::int64_t NativeGameHudInputZero() {
+    return 0;
+}
+
+// @verified - p
 std::int64_t RenderNativeGameHud() {
-    if (!nativeHud.bound || !drawingUI)
-        return 0;
-    if (!nativeHudOverride) {
-        const std::uint32_t flags = GetIconSelectFlags();
-        if (static_cast<std::uint16_t>(nativeHudShownHints[1]) == 0xffffU && (flags & 0x200U))
-            nativeHudShownHints[1] = 44;
-        if (static_cast<std::uint16_t>(nativeHudShownHints[0]) == 0xffffU && (flags & 0x400U)) {
-            nativeHudShownHints[1] &= 0xffffU;
-            nativeHudShownHints[0] = (nativeHudShownHints[0] & 0xffff0000U) | 45U;
-        }
-        if (GetQteControlState())
-            nativeHudShownHints[4] = 28;
-        else
-            nativeHudShownHints[4] |= 0xffffU;
+    if (!nativeHudOverride)
+        RefreshNativeHudHints(nativeHudShownHints.data());
+    std::array<std::uint32_t, 5> hints = nativeHudOverride ? nativeHudOverrideHints : nativeHudShownHints;
+    if (GetIsFreeInputType()) {
+        const std::uint32_t first = hints[0];
+        hints[0] = hints[1];
+        hints[1] = first;
     }
-    auto hints = nativeHudOverride ? nativeHudOverrideHints : nativeHudShownHints;
-    if (GetIsFreeInputType())
-        std::swap(hints[0], hints[1]);
-    const bool keyboard = GetIsKeyboardActive() == 1;
-    auto &definition = uiDefinitions[64];
-    constexpr std::array<std::size_t, 6> shifted{0, 14, 7, 4, 13, 10};
-    for (const std::size_t i : shifted)
-        if (nativeHud.panels[i] >= 0) {
-            d3t::UIPanelDefinition &panel = definition.panels[static_cast<std::size_t>(nativeHud.panels[i])];
-            panel.y.offset = nativeHud.panelOffsetY[i] + (keyboard ? (i == 0 ? -1 : 1) * 0.0092592593f * 1080 : 0);
+    const std::int32_t keyboard = GetIsKeyboardActive();
+    if (keyboard == 1) {
+        if (nativeHudKeyboardMode == 0) {
+            nativeHudKeyboardMode = 1;
+            if (nativeHudWindows[0])
+                nativeHudWindows[0]->layout.offsetY -= UI_HUD_KEYBOARD_Y_SHIFT;
+            for (const std::size_t index : {14U, 7U, 4U, 13U, 10U})
+                if (nativeHudWindows[index])
+                    nativeHudWindows[index]->layout.offsetY += UI_HUD_KEYBOARD_Y_SHIFT;
+            if (nativeHudCameraBase)
+                nativeHudCameraBase->colour |= 0xff000000U;
+            if (nativeHudButtonWidgets[4])
+                nativeHudButtonWidgets[4]->colour &= 0xffffffU;
         }
-    bool blinking = false;
-    for (std::size_t i = 0; i < 5; ++i) {
-        const auto index = nativeHud.sprites[i];
-        if (index < 0)
+    } else if (nativeHudKeyboardMode == 1) {
+        nativeHudKeyboardMode = 0;
+        if (nativeHudWindows[0])
+            nativeHudWindows[0]->layout.offsetY += UI_HUD_KEYBOARD_Y_SHIFT;
+        for (const std::size_t index : {14U, 7U, 4U, 13U, 10U})
+            if (nativeHudWindows[index])
+                nativeHudWindows[index]->layout.offsetY -= UI_HUD_KEYBOARD_Y_SHIFT;
+        if (nativeHudCameraBase)
+            nativeHudCameraBase->colour &= 0xffffffU;
+        if (nativeHudButtonWidgets[4])
+            nativeHudButtonWidgets[4]->colour |= 0xff000000U;
+    }
+    for (std::size_t index = 0; index < 5; ++index) {
+        const std::uint32_t alpha =
+            hints[index] & 0x10000U ? static_cast<std::uint8_t>(static_cast<std::int32_t>(GetUITransitionValue(nativeHudBlink) * 255.0f)) : 255U;
+        nativeHudSpriteWidgets[index]->colour = (nativeHudSpriteWidgets[index]->colour & 0xffffffU) | (alpha << 24U);
+    }
+    for (std::size_t index = 0; index < 5; ++index) {
+        if (hints[index] & 0x10000U)
+            break;
+        if (index == 4)
+            RestartUITransition(nativeHudBlink);
+    }
+    for (std::size_t index = 0; index < 5; ++index) {
+        UIButtonIconWidget *const sprite = nativeHudSpriteWidgets[index];
+        if (!sprite)
             continue;
-        auto &object = definition.textureObjects[static_cast<std::size_t>(index)];
-        std::uint32_t alpha = 255;
-        if (hints[i] & 0x10000U) {
-            blinking = true;
-            if (nativeHud.blink >= 0)
-                alpha = static_cast<std::uint32_t>(GetUITransitionValue(nativeHud.blink) * 255);
-        }
-        if (hints[i] & 0x20000U)
-            alpha = 100;
-        object.frameIndex = static_cast<std::int16_t>(hints[i]);
-        object.useShared = true;
-        if (i == 2 && object.frameIndex == 51 && nativeHudItemPromptIcon == 1)
-            object.frameIndex = 3847;
-        if (i == 4) {
-            object.frameIndex = 2305;
-            alpha = static_cast<std::uint16_t>(hints[i]) == 0xffffU ? 0 : 255;
-        }
-        if (nativeHudSpriteWidgets[i]) {
-            nativeHudSpriteWidgets[i]->sprite = object.frameIndex;
-            nativeHudSpriteWidgets[i]->inventoryIcon = 1;
-        }
-        object.colour = (object.colour & 0xffffffU) | (alpha << 24);
-        if (i < 4 && nativeHud.buttons[i] >= 0) {
-            auto &button = definition.textureObjects[static_cast<std::size_t>(nativeHud.buttons[i])];
-            button.controlState = GetCurrentUIInputType();
-            button.colour = (button.colour & 0xffffffU) | ((object.frameIndex == -1 ? 168U : 255U) << 24);
+        if (index == 4) {
+            const std::uint32_t alpha = static_cast<std::uint16_t>(hints[index]) == 0xffffU ? 0U : 0xff000000U;
+            sprite->colour = (sprite->colour & 0xffffffU) | alpha;
+            nativeHudButtonWidgets[4]->colour = (nativeHudButtonWidgets[4]->colour & 0xffffffU) | alpha;
+            nativeHudButtonWidgets[4]->fontColour = (nativeHudButtonWidgets[4]->fontColour & 0xffffffU) | alpha;
+
+            if (nativeHudCameraBase)
+                nativeHudCameraBase->colour = (nativeHudCameraBase->colour & 0xffffffU) | alpha;
+            if (alpha) {
+
+                if (keyboard == 1)
+                    nativeHudButtonWidgets[4]->colour &= 0xffffffU;
+                else if (nativeHudCameraBase)
+                    nativeHudCameraBase->colour &= 0xffffffU;
+            }
+            sprite->sprite = 2305;
+            sprite->inventoryIcon = 1;
+        } else {
+            sprite->sprite = static_cast<std::int16_t>(hints[index]);
+            sprite->inventoryIcon = 1;
+            if (hints[index] & 0x20000U)
+                sprite->colour = (sprite->colour & 0xffffffU) | 0x64000000U;
         }
     }
-    if (!blinking && nativeHud.blink >= 0)
-        RestartUITransition(nativeHud.blink);
-    const bool camera = static_cast<std::uint16_t>(hints[4]) != 0xffffU;
-    if (nativeHud.buttons[4] >= 0) {
-        auto &button = definition.textureObjects[static_cast<std::size_t>(nativeHud.buttons[4])];
-        button.colour = (button.colour & 0xffffffU) | ((camera && !keyboard ? 255U : 0U) << 24);
-        button.fontColour = (button.fontColour & 0xffffffU) | ((camera ? 255U : 0U) << 24);
+    if (nativeHudSpriteWidgets[2] && nativeHudSpriteWidgets[2]->sprite == 51 && nativeHudItemPromptIcon == 1)
+        nativeHudSpriteWidgets[2]->sprite = 3847;
+    for (std::size_t index = 0; index < 4; ++index) {
+        nativeHudButtonWidgets[index]->controlState = GetCurrentUIInputType();
+        const std::uint32_t alpha = nativeHudSpriteWidgets[index]->sprite == -1 ? 168U : 255U;
+        nativeHudButtonWidgets[index]->colour = (nativeHudButtonWidgets[index]->colour & 0xffffffU) | (alpha << 24U);
     }
-    if (nativeHud.cameraBase >= 0) {
-        auto &base = definition.textureObjects[static_cast<std::size_t>(nativeHud.cameraBase)];
-        base.colour = (base.colour & 0xffffffU) | ((camera && keyboard ? 255U : 0U) << 24);
-    }
-    auto &layout = nativeHud.layout;
-    d3t::ResolveUIDefinitionLayout(
-        definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels, {}, GetUILayoutPaddingScale());
-    const bool hideCamera = IsCameraIconHidden() == 0;
-    const auto hidden = [&](std::int32_t panel) {
-        for (; panel >= 0; panel = layout.parents[static_cast<std::size_t>(panel)])
-            if (panel == nativeHud.panels[14] || panel == nativeHud.panels[15] || panel == nativeHud.panels[16])
-                return hideCamera;
-        return false;
-    };
-    for (std::size_t i = 0; i < definition.textureObjects.size(); ++i)
-        if (!hidden(layout.objectPanels[i]))
-            DrawNativeMenuObject(definition, definition.textureObjects[i], layout.objects[i], 1);
-    for (std::size_t i = 0; i < definition.labels.size(); ++i)
-        if (!hidden(layout.labelPanels[i])) {
-            const auto &label = definition.labels[i];
-            DrawMovesLabel(label, layout.labels[i], label.token.empty() ? std::string_view(label.text) : GetLocalizedSceneText(label.token), 1, &definition);
-        }
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::GameHud)];
+    DrawUIEntity(*GetNativeUiContext(), element.config.uiHandleIndex, element.index);
+
     return 0;
 }
 
@@ -481,11 +488,15 @@ void RegisterNativeGameHud() {
     hud.parseDefinitionFromFile = LoadNativeGameHud;
     hud.isSelected = BindNativeGameHud;
     hud.isPressed = NativeGameHudInput;
+    hud.unknown28 = NativeGameHudInputZero;
+    hud.reset = NativeGameHudNullsub;
+    hud.postInit = NativeGameHudNullsub;
+    hud.unknown88 = UpdateGameHudCameraVisibility;
     hud.render = RenderNativeGameHud;
     hud.fieldAc = 1;
-    nativeHud.transitions.fill(-1);
-    nativeHud.blink = -1;
-    nativeHud.bound = false;
+    nativeHudTransitions.fill(-1);
+    nativeHudBlink = -1;
+
     nativeHudShownHints.fill(0xffffU);
     nativeHudOverrideHints.fill(0xffffU);
     nativeHudRequestedHints.fill(0xffffU);

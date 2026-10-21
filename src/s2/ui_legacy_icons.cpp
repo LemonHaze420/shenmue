@@ -393,11 +393,11 @@ void HelpWidgetShow() {
             watch.resetRender();
     }
     StartHelpBlinkTransition();
-    for (const auto transition : nativeHud.transitions)
+    for (const auto transition : nativeHudTransitions)
         if (transition != -1)
             RestartUITransition(transition);
-    if (nativeHud.blink != -1)
-        RestartUITransition(nativeHud.blink);
+    if (nativeHudBlink != -1)
+        RestartUITransition(nativeHudBlink);
     for (auto &hint : nativeHudRequestedHints)
         hint = (hint & 0xffff0000U) | 0xffffU;
     for (auto &hint : nativeHudShownHints)
@@ -632,7 +632,7 @@ void DoQteDraw(void *) {
     if (blocked)
         helpIconDrawVisible = 0;
     if (helpIconHudDelay < 0 && helpIconDrawVisible && GetDebugForceUIEnabled(UIElement::GameHud)) {
-        ConstructHudCameraState(UIElement::GameHud, nativeHud.sprites[5], qteControlMask);
+        ConstructHudCameraState(qteControlMask, nativeHudSpriteWidgets[5]);
         EnableElement(UIElement::GameHud);
     }
     LegacyIconSprite cardinal{.y = 445.0f, .icon = 2048, .width = 38, .height = 38};
@@ -658,7 +658,7 @@ void DoQteDraw(void *) {
         camera.y = 50.0f;
         stripX = 480;
         stripY = 50;
-        ConstructHudCameraState(UIElement::HudSnapshot, hudSnapshotCameraState, qteControlMask);
+        ConstructHudCameraState(qteControlMask, hudSnapshotCameraState);
         EnableElement(UIElement::HudSnapshot);
     } else {
         camera.x = 580.0f;

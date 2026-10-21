@@ -3278,38 +3278,39 @@ std::int64_t RenderMoneyHud() {
     return 0;
 }
 
-std::int32_t hudSnapshotCameraState{-1};
+UIButtonIconWidget *hudSnapshotCameraState{};
 
+// @verified - p
 std::uint32_t LoadHudSnapshot() {
-    hudSnapshotCameraState = -1;
+
     return ReadUIDefinitionFile(UIElement::HudSnapshot, "/ui/gamehud/GameHudSnapshot.ui", 1);
 }
 
+// @verified - p
 std::int64_t BindHudSnapshot() {
-    auto &definition = uiDefinitions[static_cast<std::size_t>(UIElement::HudSnapshot)];
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        if (definition.textureObjects[index].id == "GameHUDSnapshot::CameraIconPanel::CameraStateSprite")
-            hudSnapshotCameraState = static_cast<std::int32_t>(index);
+    hudSnapshotCameraState =
+        UI_FindViewIconWidget(g_uiElements[static_cast<std::size_t>(UIElement::HudSnapshot)].config.uiHandleIndex, UI_HUD_SNAPSHOT_SPRITE, 20);
     return 1;
 }
 
+// @verified - p
 std::int64_t RenderHudSnapshot() {
-    d3t::DrawUIDefinition(uiDefinitions[static_cast<std::size_t>(UIElement::HudSnapshot)], 1.0f);
+    uiUpdateWithColour(*GetNativeUiContext(), g_uiElements[static_cast<std::size_t>(UIElement::HudSnapshot)].config.uiHandleIndex);
     return 0;
 }
 
-
-void ConstructHudCameraState(UIElement root, std::int32_t index, std::uint32_t mode) {
-    if (index < 0)
-        return;
-    auto &object = uiDefinitions[static_cast<std::size_t>(root)].textureObjects[static_cast<std::size_t>(index)];
-    object.hidden = !((IsSnapshotSaveInProgress() || mode == 2307) && qteControlState != 0);
-    if (!object.hidden) {
-        object.frameIndex = mode == 0 || mode == 1 ? 2306 : 2307;
-        object.useShared = true;
+// @verified - p
+void ConstructHudCameraState(std::uint32_t mode, UIButtonIconWidget *widget) {
+    if (widget) {
+        if ((IsSnapshotSaveInProgress() || mode == 2307) && GetQteControlState()) {
+            widget->sprite = mode == 0 || mode == 1 ? 2306 : 2307;
+            widget->inventoryIcon = 1;
+            widget->fieldAC = 0;
+        } else {
+            widget->fieldAC = 1;
+        }
     }
 }
-
 std::uint32_t LoadInformationBar() {
     informationBar.bound = false;
     return ReadUIDefinitionFile(UIElement::GameInfoBar, "/ui/gamemenu_New/GameMenu_InformationBar.ui", 1);
@@ -4618,14 +4619,14 @@ void PublishHudHints(const std::uint32_t *input, bool overrideHints) {
                     hint = menuInputHintHistory[previous][column];
                     break;
                 }
-        const std::int32_t transition = nativeHud.transitions[column];
+        const std::int32_t transition = nativeHudTransitions[column];
         if (((output[column] & 0x10000U) && transition >= 0 && IsUITransitionActive(transition)) ||
             (static_cast<std::uint16_t>(hint) != static_cast<std::uint16_t>(output[column]) && static_cast<std::uint16_t>(hint) != 0xffffU))
             hint |= 0x10000U;
         if ((hint & 0x10000U) && transition >= 0 && !IsUITransitionActive(transition)) {
             UIAnim_Start(transition, 1, 0, 1.2f, 0);
-            if (nativeHud.blink >= 0 && !IsUITransitionActive(nativeHud.blink))
-                UIAnim_Start(nativeHud.blink, 1, 0.1f, 0.2f, 0.01f);
+            if (nativeHudBlink >= 0 && !IsUITransitionActive(nativeHudBlink))
+                UIAnim_Start(nativeHudBlink, 1, 0.1f, 0.2f, 0.01f);
         }
         output[column] = hint;
     }
@@ -5931,7 +5932,8 @@ void RenderUIContents() {
                 SetGameUiFlag(gameUiSecondaryFlags, index, true);
                 if (index == static_cast<std::size_t>(UIElement::NotebookPages))
                     RenderMemoNotebookPages();
-                else if (index == static_cast<std::size_t>(UIElement::GameHudTimer))
+                else if (index == static_cast<std::size_t>(UIElement::GameHudTimer) || index == static_cast<std::size_t>(UIElement::GameHud) ||
+                    index == static_cast<std::size_t>(UIElement::HudSnapshot))
                     RenderScreenFilmFrame(static_cast<std::int32_t>(index));
                 else if (element.render)
                     element.render();
