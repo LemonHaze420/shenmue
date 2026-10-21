@@ -1,15 +1,93 @@
 #include "s2/frame_pipeline.hpp"
 
+#include "s2/model_draw.hpp"
+#include "s2/sd_light.hpp"
+#include "s2/d3t_renderer.hpp"
+#include "s2/legacy_draw.hpp"
+#include "d3t/dx11_renderer.hpp"
+#include <cstring>
+
 #include "common/matrix_stack.hpp"
 #include "d3t/model_cache.hpp"
 #include "d3t/buffer.hpp"
 #include "d3t/texture.hpp"
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 Matrix4x4 g_previousCameraProjection = d3t::kModelCacheIdentity;
 Matrix4x4 g_postEffectProjection = d3t::kModelCacheIdentity;
 
 // @verified - p
+std::int32_t g_modelDebugRenderMode{};
+std::uint8_t g_modelVisualizeCascade{};
+std::int32_t g_modelSpecularBrdfMode{};
+std::uint8_t g_modelUseDualQuaternion = 1;
+std::uint8_t g_modelVisualizeClusters{};
+float g_modelClampDirectRoughness = 0.4f;
+
+// @verified - p
+void SetDebugShaderParams(d3t::D3TDeviceContext * context) {
+#if defined(_WIN32)
+    ModelDebugShaderConstants *const constants = static_cast<ModelDebugShaderConstants *>(d3t::MapTempConstantBufferForWriteDiscard(context, 3, 9, 36));
+    if (constants)
+        *constants = {.renderMode = g_modelDebugRenderMode,
+            .visualizeCascade = g_modelVisualizeCascade,
+            .environmentProbesEnabled = 0,
+            .probeVisualizationIndex = 0,
+            .specularBrdfMode = g_modelSpecularBrdfMode,
+            .probeVisualizationMode = 0,
+            .useDualQuaternion = g_modelUseDualQuaternion,
+            .visualizeClusters = g_modelVisualizeClusters,
+            .clampDirectRoughness = g_modelClampDirectRoughness};
+#endif
+}
+
+void ConfigureAndSubmitModelScenePass(d3t::D3TDeviceContext * context, ModelScenePass & pass, ModelGeometryContext & geometry) {
+    if (GetLegacyPerspectiveProjection() == 4)
+        return;
+    d3t::D3TRenderState &state = d3t::GetRenderState(*context);
+    std::uint32_t rasterizer = (pass.reverseCulling == 0) | (2U * ((g_modelDebugRenderMode == 6) | (pass.type == 1 ? 4100U : 4104U)));
+    if (GetAspectRatioModeShouldScale() && !pass.disableAspectCulling && !(pass.type & ~2U))
+        rasterizer |= 4U;
+    if (state.rasterizerState != rasterizer) {
+        state.rasterizerState = rasterizer;
+        state.pipelineStateFlags |= d3t::PipelineRasterizer;
+    }
+    const bool transparent = (pass.materialMask & 8U) != 0;
+    const std::uint64_t depthFlags = !pass.deferred || transparent ? (transparent ? 0x15U : 0x17U) : 13U;
+    std::uint64_t previousDepth;
+    std::memcpy(&previousDepth, state.depthStencilState.data(), sizeof(previousDepth));
+    if (previousDepth != depthFlags || state.stencilReference != 0) {
+        std::memcpy(state.depthStencilState.data(), &depthFlags, sizeof(depthFlags));
+        std::memset(state.depthStencilState.data() + 8, 0, 8);
+        state.stencilReference = 0;
+        state.pipelineStateFlags |= d3t::PipelineDepthStencil;
+    }
+    const std::uint64_t blend = transparent ? 0xf0000285U : 0xf0000000U;
+    std::uint32_t previousBlend;
+    std::memcpy(&previousBlend, state.blendState.data(), sizeof(previousBlend));
+    if (previousBlend != static_cast<std::uint32_t>(blend))
+        state.pipelineStateFlags |= d3t::PipelineBlend;
+    std::memcpy(state.blendState.data(), &blend, sizeof(blend));
+#if defined(_WIN32)
+    ModelDepthConstants *const depth = static_cast<ModelDepthConstants *>(d3t::MapTempConstantBufferForWriteDiscard(context, 2, 12, 20));
+    if (depth)
+        *depth = {.nearFarProduct = 450.00003f, .farMinusNear = 2999.8501f, .farPlane = 3000.0f, .parameterScale = 1.0f, .parameterBias = 5.0f};
+#endif
+    ModelGeometryVisibility &visibility = *static_cast<ModelGeometryVisibility *>(AllocateModelGeometryFrameMemory(sizeof(ModelGeometryVisibility)));
+    visibility = {.geometry = &geometry, .nodeMask = nullptr};
+    const ModelScenePass cullPass = pass;
+    CullModelGeometry(visibility, cullPass);
+    if (pass.type == 0 || pass.type == 6 || pass.type == 7)
+        pass.alternateShader = 1;
+    if (!g_PPFX_Enabled)
+        pass.disableVelocity = 1;
+    pass.clusterNear = 0.15000000596046448f;
+    pass.clusterFar = 3000.0f;
+    pass.alternateNodes = g_sdNightTime == 1;
+    const ModelScenePass drawPass = pass;
+    SubmitModelGeometry(visibility, context, drawPass);
+    visibility = {};
+}
 void SetSceneSharedState(d3t::D3TDeviceContext *context) {
     d3t::D3TRenderState &state = d3t::GetRenderState(*context);
     if (state.bindings.textureHandles[1][27] != d3t::g_defaultWhiteTexture || state.bindings.textureFlags[1][27] != 0) {

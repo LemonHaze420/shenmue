@@ -1246,6 +1246,7 @@ add_library(shenmue2_game STATIC
   src/s2/fight_stage.cpp
   src/s2/lighting.cpp
   src/s2/sd_light.cpp
+  src/s2/scene_lighting.cpp
   src/s2/sd_probe.cpp
   src/s2/model_geometry.cpp
   src/s2/model_draw.cpp

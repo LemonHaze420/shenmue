@@ -8,6 +8,38 @@ struct D3TDeviceContext;
 }
 
 namespace shenmue::s2 {
+struct ModelGeometryContext;
+struct ModelScenePass;
+struct ModelDebugShaderConstants {
+    std::int32_t renderMode;
+    std::uint32_t visualizeCascade;
+    std::uint32_t environmentProbesEnabled;
+    std::uint32_t probeVisualizationIndex;
+    std::int32_t specularBrdfMode;
+    std::uint32_t probeVisualizationMode;
+    std::uint32_t useDualQuaternion;
+    std::uint32_t visualizeClusters;
+    float clampDirectRoughness;
+};
+struct ModelDepthConstants {
+    float nearFarProduct;
+    float farMinusNear;
+    float farPlane;
+    float parameterScale;
+    float parameterBias;
+};
+static_assert(sizeof(ModelDebugShaderConstants) == 36);
+static_assert(offsetof(ModelDebugShaderConstants, useDualQuaternion) == 24);
+static_assert(sizeof(ModelDepthConstants) == 20);
+extern std::int32_t g_modelDebugRenderMode;
+extern std::uint8_t g_modelVisualizeCascade;
+extern std::int32_t g_modelSpecularBrdfMode;
+extern std::uint8_t g_modelUseDualQuaternion;
+extern std::uint8_t g_modelVisualizeClusters;
+extern float g_modelClampDirectRoughness;
+void SetDebugShaderParams(d3t::D3TDeviceContext *context);
+void ConfigureAndSubmitModelScenePass(d3t::D3TDeviceContext *context, ModelScenePass &pass, ModelGeometryContext &geometry);
+
 struct CameraConstantBlock {
     Matrix4x4 view;
     Matrix4x4 projection;

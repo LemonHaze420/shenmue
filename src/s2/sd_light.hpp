@@ -125,6 +125,53 @@ void RemoveSDShadowMappingRequest(std::uint32_t slot);
 void RemoveSDLightBinding(std::uint32_t index);
 void RemoveSDLightOwner(std::uint64_t owner);
 
+struct SDGpuLight {
+    std::byte transformData[192];
+    Vector3 colour;
+    std::uint32_t type;
+    Vector3 position;
+    float range;
+    Vector3 direction;
+    float cone;
+    std::uint32_t shadowMode;
+    float shadowBias;
+    std::uint32_t shadowIndex;
+    std::uint32_t textureHandle;
+};
+struct SDLightTileIndices {
+    std::array<std::uint32_t, 50> points;
+    std::uint32_t pointCount;
+    std::array<std::uint32_t, 50> spots;
+    std::uint32_t spotCount;
+    std::array<std::uint32_t, 16> probes;
+    std::uint32_t probeCount;
+};
+struct SDLightTileOffset {
+    std::uint32_t indexOffset;
+    std::uint16_t spotCount;
+    std::uint16_t pointCount;
+    std::uint32_t probeCount;
+};
+static_assert(sizeof(SDGpuLight) == 256);
+static_assert(offsetof(SDGpuLight, colour) == 192);
+static_assert(offsetof(SDGpuLight, position) == 208);
+static_assert(offsetof(SDGpuLight, direction) == 224);
+static_assert(offsetof(SDGpuLight, shadowMode) == 240);
+static_assert(sizeof(SDLightTileIndices) == 476);
+static_assert(offsetof(SDLightTileIndices, pointCount) == 200);
+static_assert(offsetof(SDLightTileIndices, spotCount) == 404);
+static_assert(offsetof(SDLightTileIndices, probeCount) == 472);
+static_assert(sizeof(SDLightTileOffset) == 12);
+inline constexpr float SD_GPU_LIGHT_SCALE = 0.33000001311302185f;
+inline constexpr float SD_GPU_POINT_RANGE_SCALE = 3.0f;
+inline constexpr float SD_TILE_LIGHT_THRESHOLD = 0.000009999999747378752f;
+extern std::array<std::uint32_t, 4> g_sdDirectionalLightIndices;
+extern std::uint32_t g_sdDirectionalLightCount;
+SDGpuLight *InitializeSDGpuLight(SDGpuLight *light);
+void BuildLightTileLists(
+    d3t::D3TDeviceContext *context, const SDGpuLight *lights, std::uint32_t count, std::uint64_t, std::int32_t, const Matrix4x4 *, float, float);
+void UpdateModelSceneLights(d3t::D3TDeviceContext *context, const Matrix4x4 *viewProjection);
+
 struct SDSceneLight {
     Vector3 colour;
     std::uint32_t type;
