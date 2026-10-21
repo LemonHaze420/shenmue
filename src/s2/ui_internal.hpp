@@ -1150,6 +1150,19 @@ void DrawCollectionSnapshotStatus(std::uint32_t slot, const d3t::UIRect &rectang
 
 void ReleaseCollectionMenuResources();
 
+inline constexpr const char *UI_HUD_MONEY_LABEL = "HUDMoney_MoneyLabel";
+extern UIViewConfiguration moneyHudConfiguration;
+extern std::int32_t moneyHudState;
+extern std::uint32_t moneyHudRequest;
+extern d3t::UILabelWidget *moneyHudLabel;
+extern std::array<char, 512> moneyHudText;
+std::uint32_t AdvanceMoneyHudInit();
+std::int64_t ReloadMoneyHud();
+std::int64_t GetMoneyHudInitState();
+std::int64_t RenderMoneyHud();
+
+std::int32_t LoadUIFile(const char *path, std::int32_t elementIndex, std::uint32_t *request);
+
 inline constexpr const char *UI_HUD_WATCH_COMPASS_IMAGE = "GameHUDWatch_CompassPanel::CompassImage";
 inline constexpr const char *UI_HUD_WATCH_TIME_MARKER = "TIME";
 extern d3t::UIImageWidget *gameHudCompassImage;

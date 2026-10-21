@@ -88,21 +88,55 @@ struct UITextureLoadData {
     std::uint32_t texture;
     std::uint32_t linearColour;
 };
+struct UIFileData {
+    char *text;
+    std::int32_t parsed;
+    std::byte reserved0C[4];
+};
+static_assert(sizeof(UIFileData) == 0x10 && offsetof(UIFileData, parsed) == 8);
+struct UIFileLoadData {
+    std::uint32_t renderHandle;
+    std::byte reserved04[4];
+    UIFileData *data;
+    std::int32_t elementIndex;
+    std::byte reserved14[4];
+};
+static_assert(sizeof(UIFileLoadData) == 0x18 && offsetof(UIFileLoadData, data) == 8 && offsetof(UIFileLoadData, elementIndex) == 0x10);
+struct UIViewConfiguration {
+    std::int32_t uiHandleIndex;
+    std::int32_t enabled;
+    std::int32_t status;
+};
+static_assert(sizeof(UIViewConfiguration) == 12);
 union UILoadPayload {
     UITextureLoadData image;
     void *data;
+    UIFileLoadData file;
 };
-static_assert(sizeof(UILoadPayload) == 8);
+static_assert(sizeof(UILoadPayload) == 0x18);
 struct alignas(16) UIAsyncLoadRequest {
     std::uint16_t generation;
     std::byte reserved02[14];
     UILoadPayload payload;
-    std::byte reserved18[56];
+    std::byte reserved28[40];
 };
 static_assert(sizeof(UIAsyncLoadRequest) == 0x50 && offsetof(UIAsyncLoadRequest, payload) == 0x10);
 static_assert(offsetof(UIAsyncLoadRequest, payload) + offsetof(UITextureLoadData, linearColour) == 0x14);
 extern std::array<UIAsyncLoadRequest, 8192> g_uiLoadRequests;
 extern std::atomic<std::uint16_t> g_uiLoadRequestIndex;
+extern char *g_uiReloadFileMemory;
+char *GetUIReloadFileMemory();
+std::uint32_t GetDefaultUIFileRequest();
+void ReloadUIFile(void *data, void *unused, std::uint32_t contentHandle, void *loadedData);
+void ReinitializeUIFileElement(std::uint32_t index);
+const char *GetUIFilePath(const char *path);
+void CompleteUIFileLoad(void *data, std::uint32_t contentHandle, void *loadedData, std::uint64_t loadedSize, const char *path);
+std::uint32_t QueueUIFileLoad(const char *path, std::int32_t elementIndex, std::uint32_t renderHandle);
+std::int32_t GetNewUIFileInitFor(std::uint32_t *request, UIViewConfiguration &configuration);
+std::int32_t GetShouldInitUIFileFor(std::uint32_t slotIndex);
+void LoadOwnedUIFromMemoryIntoViewSlot(char *memory, std::int32_t &slotIndex);
+struct UIElementState;
+UIElementState *FindUIElementByIdx(std::int32_t slotIndex);
 std::uint32_t AllocateUILoadRequest();
 UILoadPayload *GetUILoadRequest(std::uint32_t handle);
 std::uint32_t InitTexture2d(const char *path, std::uint32_t linearColour, std::uint32_t renderHandle);

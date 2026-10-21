@@ -1,4 +1,9 @@
 #include "d3t/ui_internal.hpp"
+#if SHENMUE_IS_S2
+#include "s2/player.hpp"
+#include <cstdlib>
+#include <new>
+#endif
 
 #if SHENMUE_IS_S1
 #include "s1/d3t/d3t_texture.hpp"
@@ -16,6 +21,96 @@ namespace shenmue::s2 {
 #endif
 
 #if !SHENMUE_IS_S1
+
+char *g_uiReloadFileMemory{};
+
+// @verified - p
+char *GetUIReloadFileMemory() {
+    return g_uiReloadFileMemory;
+}
+
+// @verified - p
+std::uint32_t GetDefaultUIFileRequest() {
+    return 0;
+}
+
+// @verified - p
+void ReloadUIFile(void *data, void *, std::uint32_t contentHandle, void *loadedData) {
+    UILoadPayload *const payload = static_cast<UILoadPayload *>(data);
+    g_uiReloadFileMemory = static_cast<char *>(loadedData);
+    payload->file.data->text = static_cast<char *>(loadedData);
+    payload->file.data->parsed = 0;
+    ReinitializeUIFileElement(payload->file.elementIndex);
+    g_uiReloadFileMemory = nullptr;
+    d3t::ProcessThreadStates(contentHandle, 1);
+}
+
+// @verified - p
+const char *GetUIFilePath(const char *path) {
+    return path;
+}
+
+// @verified - p
+void CompleteUIFileLoad(void *data, std::uint32_t contentHandle, void *loadedData, std::uint64_t, const char *) {
+    UILoadPayload *const payload = static_cast<UILoadPayload *>(data);
+    UIFileData *const file = new UIFileData;
+    file->text = static_cast<char *>(loadedData);
+    file->parsed = 0;
+    std::atomic_ref<UIFileData *>(payload->file.data).store(file, std::memory_order_release);
+    ReturnZero();
+    d3t::ProcessThreadStates(contentHandle, 1);
+}
+
+// @verified - p
+std::uint32_t QueueUIFileLoad(const char *path, std::int32_t elementIndex, std::uint32_t renderHandle) {
+    const std::uint32_t handle = AllocateUILoadRequest();
+    UILoadPayload *const payload = GetUILoadRequest(handle);
+    if (payload) {
+        payload->file.renderHandle = renderHandle;
+        payload->file.data = nullptr;
+        payload->file.elementIndex = elementIndex;
+        const d3t::D3TShaderLoadTask task{.path = path,
+            .renderHandle = renderHandle,
+            .reserved_0c = 0,
+            .thread = {.callback = CompleteUIFileLoad, .data = payload},
+            .destination = nullptr,
+            .destinationCapacity = 0,
+            .option = 0,
+            .reserved_31 = {}};
+        d3t::PushShaderLoadToThreadQueue(&task);
+    }
+    return handle;
+}
+
+// @verified - p
+std::int32_t GetNewUIFileInitFor(std::uint32_t *request, UIViewConfiguration &configuration) {
+    UILoadPayload *payload = GetUILoadRequest(*request);
+    if (!payload)
+        return 1;
+    UIFileData *file = std::atomic_ref<UIFileData *>(payload->file.data).load(std::memory_order_acquire);
+    if (!file || !file->text)
+        return 1;
+    char *const text = file->text;
+    payload = GetUILoadRequest(*request);
+    file = payload ? std::atomic_ref<UIFileData *>(payload->file.data).load(std::memory_order_acquire) : nullptr;
+    if (!file || !file->parsed) {
+        LoadOwnedUIFromMemoryIntoViewSlot(text, configuration.uiHandleIndex);
+        payload = GetUILoadRequest(*request);
+        if (payload) {
+            file = std::atomic_ref<UIFileData *>(payload->file.data).load(std::memory_order_acquire);
+            if (file)
+                file->parsed = 1;
+        }
+    }
+    return 2;
+}
+
+// @verified - p
+std::int32_t GetShouldInitUIFileFor(std::uint32_t slotIndex) {
+    if (slotIndex >= d3t::kUIViewSlotCount)
+        return 2;
+    return TryFinalizeUIViewTextures(static_cast<std::int32_t>(slotIndex)) == 1 ? 3 : 2;
+}
 
 void TextureLoadReleaseNullsub(void *) {
 }
@@ -234,6 +329,47 @@ void LoadUIFromMemoryIntoViewSlot(const char *memory, std::int32_t &slotIndex) {
 
 // S1's table holds GPU handles; S2 resolves generation-tagged requests. S2 completes only at the zero-request sentinel,
 // not when all eighty records are occupied.
+#if SHENMUE_IS_S2
+// @verified - p
+void LoadOwnedUIFromMemoryIntoViewSlot(char *memory, std::int32_t &slotIndex) {
+    if (!g_uiReadStateInitialized)
+        InitializeUIReadState();
+    if (!memory)
+        return;
+    if (slotIndex == -1) {
+        std::size_t freeSlot = 0;
+        while (freeSlot < g_uiViewSlots.size() && g_uiViewSlots[freeSlot].inUse)
+            ++freeSlot;
+        if (freeSlot < g_uiViewSlots.size()) {
+            g_uiViewSlots[freeSlot].inUse = 1;
+            slotIndex = static_cast<std::int32_t>(freeSlot);
+        }
+    } else {
+        g_uiViewSlots[static_cast<std::size_t>(slotIndex)].keepLoaded = 0;
+        ResetUIViewSlot(slotIndex);
+    }
+#if SHENMUE_IS_S2
+    UI_RecordImageViewSlot(slotIndex);
+#endif
+    if (slotIndex <= -1)
+        return;
+    g_currentUIViewSlot = slotIndex;
+    g_parsedUIDocument = cJSON_Parse(memory);
+    std::free(memory);
+    if (!g_parsedUIDocument)
+        FindUIElementByIdx(slotIndex);
+    if (!g_parsedUIDocument)
+        return;
+    ReadImages(g_uiViewSlots[static_cast<std::size_t>(slotIndex)]);
+    d3t::ReadVariables(g_parsedUIDocument, g_uiViewSlots[static_cast<std::size_t>(slotIndex)].variables);
+    d3t::ReadSprites(g_parsedUIDocument, g_uiSpriteSheets, g_uiViewSlots[static_cast<std::size_t>(slotIndex)]);
+    if (cJSON *const view = cJSON_GetObjectItem(g_parsedUIDocument, "View")) {
+        ReadUIView(view);
+        g_uiViewSlots[static_cast<std::size_t>(slotIndex)].inUse = 1;
+    }
+}
+#endif
+
 std::int32_t TryFinalizeUIViewTextures(std::int32_t slotIndex) {
     d3t::UIViewSlot<kUIViewImageCapacity> &slot = g_uiViewSlots[static_cast<std::size_t>(slotIndex)];
     if (slot.imagesLoading >= 1)

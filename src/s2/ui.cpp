@@ -1027,14 +1027,18 @@ std::vector<std::int8_t> actionSelectorObjectChoices;
 std::vector<std::int8_t> actionSelectorLabelChoices;
 std::array<std::array<char, 256>, 4> actionSelectorText{};
 AuthoredMenuLayout actionSelectorLayout;
-AuthoredMenuLayout moneyHudLayout;
+UIViewConfiguration moneyHudConfiguration{-1, 0, -1};
+std::int32_t moneyHudState{};
+std::uint32_t moneyHudRequest{};
+d3t::UILabelWidget *moneyHudLabel{};
+std::array<char, 512> moneyHudText{};
 AuthoredMenuLayout cutsceneSkipLayout;
 
 std::array<char, 256> gameHudTimerText{};
 d3t::UIWindow *gameHudTimerPanel{};
 d3t::UILabelWidget *gameHudTimerLabel{};
 std::int32_t moneyHudCashAdjustment{};
-bool moneyHudBound{};
+
 d3t::UIPanelDefinition *actionSelectorMainPanel{};
 std::int32_t actionSelectorOutPanel{-1};
 std::int32_t actionSelectorInPanel{-1};
@@ -1417,6 +1421,11 @@ void DrainUIFontRequests() {
     uiFontRenderHandle = 0;
 }
 
+// @verified - p
+std::int32_t LoadUIFile(const char *path, std::int32_t elementIndex, std::uint32_t *request) {
+    *request = QueueUIFileLoad(GetUIFilePath(path), elementIndex, previousRenderHandle);
+    return 1;
+}
 void UIFileLoaded(void *data, std::uint32_t, void *loadedData, std::uint64_t loadedSize, const char *) {
     UIElementState *const element = static_cast<UIElementState *>(data);
     if (!element || element->index < 0 || element->index >= static_cast<std::int32_t>(UIElement::Count))
@@ -3242,40 +3251,52 @@ std::uint32_t collectionPendingDelete{std::numeric_limits<std::uint32_t>::max()}
 bool collectionPresentFramed{};
 CollectionPawnFlyer collectionPawnFlyer;
 
-std::uint32_t LoadMoneyHud() {
-    moneyHudBound = false;
-    return ReadUIDefinitionFile(UIElement::GameHudMoney, "/ui/gamehud/GameHudMoney.ui", 0);
-}
-
-std::int64_t BindMoneyHud() {
-    BindAuthoredMenuLayout(uiDefinitions[static_cast<std::size_t>(UIElement::GameHudMoney)], moneyHudLayout);
-    moneyHudBound = true;
-    return 1;
-}
-
-
-std::int64_t RenderMoneyHud() {
-    auto &element = g_uiElements[static_cast<std::size_t>(UIElement::GameHudMoney)];
-    if (element.config.init == 0)
-        LoadMoneyHud();
-    if (element.config.init != 3 || !moneyHudBound)
-        return 0;
-    RefreshNotebook();
-    auto &definition = uiDefinitions[static_cast<std::size_t>(UIElement::GameHudMoney)];
-    auto &layout = moneyHudLayout;
-    d3t::ResolveUIDefinitionLayout(
-        definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels, {}, GetUILayoutPaddingScale());
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        DrawNativeMenuObject(definition, definition.textureObjects[index], layout.objects[index], 1.0f);
-    std::array<char, 32> amount{};
-    std::to_chars(amount.data(), amount.data() + amount.size(), GetCurrentCash() + moneyHudCashAdjustment);
-    for (std::size_t index = 0; index < definition.labels.size(); ++index) {
-        const auto &label = definition.labels[index];
-        const std::string_view text = label.id == "HUDMoney_MoneyLabel" ? std::string_view(amount.data()) :
-            label.token.empty()                                         ? std::string_view(label.text) :
-                                                                          GetLocalizedSceneText(label.token);
-        DrawMovesLabel(label, layout.labels[index], text, 1.0f, &definition);
+// @verified - p
+std::uint32_t AdvanceMoneyHudInit() {
+    if (moneyHudState == 0) {
+        moneyHudState = LoadUIFile("/ui/gamehud/GameHudMoney.ui", 33, &moneyHudRequest);
     }
+
+    else if (moneyHudState == 1) {
+        moneyHudState = GetNewUIFileInitFor(&moneyHudRequest, moneyHudConfiguration);
+        if (moneyHudState == 2) {
+            moneyHudLabel = UI_GetLabel(UI_FindViewLabel(moneyHudConfiguration.uiHandleIndex, UI_HUD_MONEY_LABEL));
+            if (moneyHudLabel)
+                moneyHudLabel->text = moneyHudText.data();
+        }
+    } else if (moneyHudState == 2) {
+        moneyHudState = GetShouldInitUIFileFor(moneyHudConfiguration.uiHandleIndex);
+    }
+    return static_cast<std::uint32_t>(moneyHudState);
+}
+
+// @verified - p
+std ::int64_t ReloadMoneyHud() {
+    ResetUIViewSlot(moneyHudConfiguration.uiHandleIndex);
+    moneyHudConfiguration.uiHandleIndex = -1;
+    moneyHudState = 0;
+    moneyHudRequest = 0;
+    LoadOwnedUIFromMemoryIntoViewSlot(GetUIReloadFileMemory(), moneyHudConfiguration.uiHandleIndex);
+    moneyHudState = 2;
+    return 2;
+}
+// @verified - p
+std::int64_t GetMoneyHudInitState() {
+    return static_cast<std::uint32_t>(moneyHudState);
+}
+
+// @verified - p
+std::int64_t RenderMoneyHud() {
+    if (moneyHudState != 3) {
+        AdvanceMoneyHudInit();
+        if (static_cast<std::uint32_t>(moneyHudState) - 2U > 1U)
+            return 0;
+    }
+    RefreshNotebook();
+    const std::int32_t amount = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(GetCurrentCash()) + static_cast<std::uint32_t>(moneyHudCashAdjustment));
+    std::snprintf(moneyHudText.data(), moneyHudText.size(), "%i", amount);
+    uiUpdateWithColour(*GetNativeUiContext(), moneyHudConfiguration.uiHandleIndex);
+
     return 0;
 }
 
@@ -4415,8 +4436,9 @@ void InitializeUIElements() {
     pawnItems.reset = ResetPawnItemFlyer;
     auto &moneyHud = g_uiElements[static_cast<std::size_t>(UIElement::GameHudMoney)];
     moneyHud.name = "Game HUD Money";
-    moneyHud.parseDefinitionFromFile = LoadMoneyHud;
-    moneyHud.unknown88 = BindMoneyHud;
+    moneyHud.parseDefinitionFromFile = AdvanceMoneyHudInit;
+    moneyHud.unknown70 = ReloadMoneyHud;
+    moneyHud.unknown78 = GetMoneyHudInitState;
     moneyHud.postInit = RenderMoneyHud;
     UIElementState &timer = g_uiElements[static_cast<std::size_t>(UIElement::GameHudTimer)];
     timer.name = "Game HUD Timer";
@@ -4497,7 +4519,11 @@ std::int64_t RenderScreenFilm() {
 
 std::intptr_t DrawScreenFilmFrame() {
     RefreshNotebook();
-    g_uiElements[static_cast<std::size_t>(g_currActiveUIIndex)].render();
+    UIElementState &element = g_uiElements[static_cast<std::size_t>(g_currActiveUIIndex)];
+    if (g_currActiveUIIndex == static_cast<std::int32_t>(UIElement::GameHudMoney))
+        element.postInit();
+    else
+        element.render();
     Nuklear_BindRenderTarget();
     NuklearUpdateForAspectRatio(GetAspectRatioModeShouldScale());
     CopyNuklearTexToBackBuffer();
@@ -5746,6 +5772,33 @@ void SetUIElementIndex(std::int32_t index) {
 }
 
 // @verified - p
+void ReinitializeUIFileElement(std::uint32_t index) {
+    if (index >= g_uiElements.size())
+        return;
+    UIElementState &element = g_uiElements[index];
+    if (element.setup) {
+        if (element.reset)
+            element.reset();
+        ResetUIViewSlot(element.config.uiHandleIndex);
+        const std::uint32_t request = GetDefaultUIFileRequest();
+        element.config.screenWidth = static_cast<std::int16_t>(request);
+        element.config.screenHeight = static_cast<std::int16_t>(request >> 16U);
+        LoadOwnedUIFromMemoryIntoViewSlot(GetUIReloadFileMemory(), element.config.uiHandleIndex);
+        element.config.init = 2;
+    } else if (element.unknown70) {
+        element.unknown70();
+    }
+}
+
+// @verified - p
+UIElementState *FindUIElementByIdx(std::int32_t slotIndex) {
+    for (UIElementState &element : g_uiElements)
+        if (element.config.uiHandleIndex == slotIndex)
+            return &element;
+    return nullptr;
+}
+
+// @verified - p
 void UpdateUI() {
     for (UIMouseCallbackQueue &queue : g_uiMouseCallbackQueues)
         queue.count = 0;
@@ -5945,9 +5998,8 @@ void RenderUIContents() {
         }
         if (index == static_cast<std::size_t>(UIElement::GameHudMoney)) {
             if (element.enabled && !element.isRenderable) {
-                if (element.postInit)
-                    element.postInit();
-                if (element.config.init == 3) {
+                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
+                if (static_cast<std::uint32_t>(moneyHudState) - 2U <= 1U) {
                     SetGameUiFlag(g_uiRefreshedElements, index, true);
                     SetGameUiFlag(gameUiSecondaryFlags, index, true);
                 }
