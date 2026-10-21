@@ -239,32 +239,14 @@ void RestorePreviousInformationBarMessage() {
     CopyUIMessageBox(&informationBar.previous);
 }
 
-struct StreetFighterHudRuntime {
-    std::array<std::array<char, 256>, 4> text{};
-    std::array<std::int32_t, 2> panels{-1, -1};
-    std::array<std::int32_t, 4> labels{-1, -1, -1, -1};
-    std::vector<std::int32_t> parents, objectPanels, labelPanels;
-    std::vector<d3t::UIRect> panelBounds;
-    std::vector<d3t::UIResolvedTextureObject> objects;
-    std::vector<d3t::UIResolvedLabel> labelBounds;
-    std::array<float, 2> opacity{};
-    bool bound{};
-};
-StreetFighterHudRuntime streetFighterHud{};
+std::array<std::array<char, 256>, 4> streetFighterHudText{};
+std::array<d3t ::UIWindow *, 2> streetFighterHudWindows{};
+std::array<d3t::UILabelWidget *, 4> streetFighterHudLabels{};
 
-struct DuckRaceHudRuntime {
-    std::array<std::array<char, 256>, 7> text{};
-    std::array<std::int32_t, 13> panels{};
-    std::array<std::int32_t, 7> labels{};
-    std::array<std::int32_t, 6> bowties{};
-    std::array<float, 13> opacity{};
-    std::vector<std::int32_t> parents, objectPanels, labelPanels;
-    std::vector<d3t::UIRect> panelBounds;
-    std::vector<d3t::UIResolvedTextureObject> objects;
-    std::vector<d3t::UIResolvedLabel> labelBounds;
-    bool bound{};
-};
-DuckRaceHudRuntime duckRaceHud{};
+std::array<std::array<char, 256>, 7> duckRaceHudText{};
+std::array<d3t ::UIWindow *, 13> duckRaceHudWindows{};
+std::array<d3t ::UILabelWidget *, 7> duckRaceHudLabels{};
+std::array<UIButtonIconWidget *, 6> duckRaceHudBowties{};
 
 struct MoveLearnedUiRuntime {
     std::array<std::size_t, 3> labels{};
@@ -3525,91 +3507,61 @@ std::uint32_t LoadStreetFighterHud() {
     return ReadUIDefinitionFile(UIElement::StreetFighterHud, "/ui/gamehud/GameHudStreetFighter.ui", 0);
 }
 
+// @verified - p
 std::int64_t BindStreetFighterHud() {
-    StreetFighterHudRuntime &runtime = streetFighterHud;
-    const d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::StreetFighterHud)];
-    const auto panelIndex = [&definition](std::string_view id) -> std::int32_t {
-        for (std::size_t index = 0; index < definition.panels.size(); ++index)
-            if (definition.panels[index].id == id)
-                return static_cast<std::int32_t>(index);
-        return -1;
-    };
-    for (std::size_t slot = 0; slot < runtime.panels.size(); ++slot)
-        runtime.panels[slot] = panelIndex(UI_STREET_FIGHTER_PANELS[slot]);
-    runtime.labels.fill(-1);
-    for (std::size_t slot = 0; slot < runtime.labels.size(); ++slot)
-        for (std::size_t index = 0; index < definition.labels.size(); ++index)
-            if (definition.labels[index].id == UI_STREET_FIGHTER_LABELS[slot])
-                runtime.labels[slot] = static_cast<std::int32_t>(index);
-    runtime.parents.resize(definition.panels.size());
-    runtime.panelBounds.resize(definition.panels.size());
-    runtime.objects.resize(definition.textureObjects.size());
-    runtime.labelBounds.resize(definition.labels.size());
-    runtime.objectPanels.resize(definition.textureObjects.size());
-    runtime.labelPanels.resize(definition.labels.size());
-    for (std::size_t index = 0; index < definition.panels.size(); ++index)
-        runtime.parents[index] = panelIndex(definition.panels[index].parentId);
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        runtime.objectPanels[index] = panelIndex(definition.textureObjects[index].panelId);
-    for (std::size_t index = 0; index < definition.labels.size(); ++index)
-        runtime.labelPanels[index] = panelIndex(definition.labels[index].panelId);
-    runtime.opacity.fill(0.0f);
-    runtime.bound = true;
+
+    const std ::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::StreetFighterHud)].config.uiHandleIndex;
+
+    for (std::size_t index = 0; index < streetFighterHudWindows.size(); ++index)
+        streetFighterHudWindows[index] = UI_GetWindow(UI_FindViewWindow(slot, UI_STREET_FIGHTER_PANELS[index]));
+    for (std::size_t index = 0; index < streetFighterHudLabels.size(); ++index)
+        streetFighterHudLabels[index] = UI_GetLabel(UI_FindViewLabel(slot, UI_STREET_FIGHTER_LABELS[index]));
+    for (std::size_t index = 0; index < streetFighterHudLabels.size(); ++index) {
+        if (streetFighterHudLabels[index]) {
+            streetFighterHudLabels[index]->text = streetFighterHudText[index].data();
+            streetFighterHudLabels[index]->token.alreadyLocalized = 1;
+        }
+    }
+    if (streetFighterHudWindows[0])
+        HideUIWindow(streetFighterHudWindows[0]);
+    if (streetFighterHudWindows[1])
+        streetFighterHudWindows[1]->alpha = 0.0f;
     return 1;
 }
 
+// @verified - p
 std::int64_t ResetStreetFighterHud() {
-    streetFighterHud.panels.fill(-1);
-    streetFighterHud.labels.fill(-1);
-    streetFighterHud.bound = false;
+    streetFighterHudWindows.fill(nullptr);
+    streetFighterHudLabels.fill(nullptr);
     return 0;
 }
 
+// @verified - p
 std::int64_t ClearStreetFighterHud() {
-    const StreetFighterHudRuntime &runtime = streetFighterHud;
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::StreetFighterHud)];
-    for (const std::int32_t label : runtime.labels)
-        if (label >= 0)
-            definition.labels[label].colour &= 0x00ffffffU;
-    streetFighterHud.opacity = {1.0f, 0.0f};
+    for (d3t ::UILabelWidget *label : streetFighterHudLabels)
+        if (label)
+            label->colour &= 0x00ffffffU;
+    if (streetFighterHudWindows[0])
+        ShowUIWindow(streetFighterHudWindows[0]);
+    if (streetFighterHudWindows[1])
+        streetFighterHudWindows[1]->alpha = 0.0f;
+    return 0;
+}
+// @verified - p
+std::int64_t DestroyStreetFighterHud() {
+    ClearStreetFighterHud();
     return 1;
 }
-
-float StreetFighterPanelOpacity(std::int32_t panel) {
-    float opacity = 1.0f;
-    while (panel >= 0) {
-        for (std::size_t slot = 0; slot < streetFighterHud.panels.size(); ++slot)
-            if (streetFighterHud.panels[slot] == panel)
-                opacity *= streetFighterHud.opacity[slot];
-        panel = streetFighterHud.parents[panel];
-    }
-    return opacity;
-}
-
+// @verified - p
 std::int64_t RenderStreetFighterHud() {
-    StreetFighterHudRuntime &runtime = streetFighterHud;
-    if (!runtime.bound)
-        return 0;
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::StreetFighterHud)];
-    d3t::ResolveUIDefinitionLayout(definition, runtime.parents, runtime.panelBounds, runtime.objects, runtime.labelBounds, runtime.objectPanels,
-        runtime.labelPanels, {}, GetUILayoutPaddingScale());
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        if (drawingUI)
-            d3t::DrawUITextureObject(
-                definition, definition.textureObjects[index], runtime.objects[index], StreetFighterPanelOpacity(runtime.objectPanels[index]));
-    for (std::size_t index = 0; index < definition.labels.size(); ++index) {
-        const d3t::UILabelDefinition &label = definition.labels[index];
-        std::string_view text = label.token.empty() ? std::string_view(label.text) : GetLocalizedSceneText(label.token);
-        for (std::size_t slot = 0; slot < runtime.labels.size(); ++slot)
-            if (runtime.labels[slot] == static_cast<std::int32_t>(index))
-                text = runtime.text[slot].data();
-        DrawMovesLabel(label, runtime.labelBounds[index], text, StreetFighterPanelOpacity(runtime.labelPanels[index]), &definition);
-    }
-    runtime.opacity[0] = 0.0f;
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement ::StreetFighterHud)];
+    uiUpdateWithColour(*GetNativeUiContext(), element.config.uiHandleIndex);
+    if (streetFighterHudWindows[0])
+        HideUIWindow(streetFighterHudWindows[0]);
     ConstructNumStrikesLeftText(0);
+
     return 0;
 }
-
 std::int64_t StreetFighterHudInput() {
     return GetDebugForceUIEnabled(UIElement::StreetFighterHud);
 }
@@ -3617,85 +3569,43 @@ std::int64_t StreetFighterHudInput() {
 std::uint32_t LoadDuckRaceHud() {
     return ReadUIDefinitionFile(UIElement::DuckRace, "/ui/gamehud/GameDuckRace.ui", 0);
 }
-std::int64_t BindDuckRaceHud() {
-    DuckRaceHudRuntime &runtime = duckRaceHud;
-    const d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::DuckRace)];
-    runtime.panels.fill(-1);
-    runtime.labels.fill(-1);
-    runtime.bowties.fill(-1);
-    for (std::size_t slot = 0; slot < runtime.panels.size(); ++slot)
-        for (std::size_t index = 0; index < definition.panels.size(); ++index)
-            if (definition.panels[index].id == UI_DUCK_RACE_PANELS[slot])
-                runtime.panels[slot] = static_cast<std::int32_t>(index);
-    for (std::size_t slot = 0; slot < runtime.labels.size(); ++slot)
-        for (std::size_t index = 0; index < definition.labels.size(); ++index)
-            if (definition.labels[index].id == UI_DUCK_RACE_LABELS[slot])
-                runtime.labels[slot] = static_cast<std::int32_t>(index);
-    for (std::size_t slot = 0; slot < runtime.bowties.size(); ++slot)
-        for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-            if (definition.textureObjects[index].id == UI_DUCK_RACE_BOWTIES[slot])
-                runtime.bowties[slot] = static_cast<std::int32_t>(index);
-    runtime.parents.assign(definition.panels.size(), -1);
-    runtime.objectPanels.assign(definition.textureObjects.size(), -1);
-    runtime.labelPanels.assign(definition.labels.size(), -1);
-    runtime.panelBounds.resize(definition.panels.size());
-    runtime.objects.resize(definition.textureObjects.size());
-    runtime.labelBounds.resize(definition.labels.size());
-    for (std::size_t index = 0; index < definition.panels.size(); ++index) {
-        for (std::size_t parent = 0; parent < definition.panels.size(); ++parent)
-            if (definition.panels[parent].id == definition.panels[index].parentId)
-                runtime.parents[index] = static_cast<std::int32_t>(parent);
+// @verified - p
+std ::int64_t BindDuckRaceHud() {
+    const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::DuckRace)].config.uiHandleIndex;
+    for (std::size_t index = 0; index < duckRaceHudWindows.size(); ++index)
+        duckRaceHudWindows[index] = UI_GetWindow(UI_FindViewWindow(slot, UI_DUCK_RACE_PANELS[index]));
+    for (std::size_t index = 0; index < duckRaceHudLabels.size(); ++index)
+        duckRaceHudLabels[index] = UI_GetLabel(UI_FindViewLabel(slot, UI_DUCK_RACE_LABELS[index]));
+    for (std::size_t index = 0; index < duckRaceHudLabels.size(); ++index) {
+        if (duckRaceHudLabels[index]) {
+            duckRaceHudLabels[index]->text = duckRaceHudText[index].data();
+            duckRaceHudLabels[index]->token.alreadyLocalized = 1;
+        }
     }
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        for (std::size_t panel = 0; panel < definition.panels.size(); ++panel)
-            if (definition.panels[panel].id == definition.textureObjects[index].panelId)
-                runtime.objectPanels[index] = static_cast<std::int32_t>(panel);
-    for (std::size_t index = 0; index < definition.labels.size(); ++index)
-        for (std::size_t panel = 0; panel < definition.panels.size(); ++panel)
-            if (definition.panels[panel].id == definition.labels[index].panelId)
-                runtime.labelPanels[index] = static_cast<std::int32_t>(panel);
-    runtime.bound = true;
+    for (std::size_t index = 0; index < duckRaceHudBowties.size(); ++index)
+        duckRaceHudBowties[index] = UI_FindViewIconWidget(slot, UI_DUCK_RACE_BOWTIES[index], 20);
     return 1;
 }
+// @verified - p
 std::int64_t ResetDuckRaceHud() {
-    duckRaceHud.bound = false;
-    duckRaceHud.panels.fill(-1);
-    duckRaceHud.labels.fill(-1);
+    duckRaceHudWindows.fill(nullptr);
+    duckRaceHudLabels.fill(nullptr);
     return 0;
 }
+// @verified - p
 std::int64_t ClearDuckRaceHud() {
-    duckRaceHud.opacity.fill(0.0f);
-    std::strcpy(duckRaceHud.text[6].data(), "0");
-    return 1;
+    for (d3t::UIWindow *window : duckRaceHudWindows)
+        if (window)
+            window->alpha = 0.0f;
+    std::strcpy(duckRaceHudText[6].data(), "0");
+    return 0;
 }
-float DuckRacePanelOpacity(std::int32_t panel) {
-    float opacity = 1.0f;
-    while (panel >= 0) {
-        for (std::size_t slot = 0; slot < duckRaceHud.panels.size(); ++slot)
-            if (duckRaceHud.panels[slot] == panel)
-                opacity *= duckRaceHud.opacity[slot];
-        panel = duckRaceHud.parents[panel];
-    }
-    return opacity;
-}
+
+// @verified - p
 std::int64_t RenderDuckRaceHud() {
-    DuckRaceHudRuntime &runtime = duckRaceHud;
-    if (!runtime.bound)
-        return 0;
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::DuckRace)];
-    d3t::ResolveUIDefinitionLayout(definition, runtime.parents, runtime.panelBounds, runtime.objects, runtime.labelBounds, runtime.objectPanels,
-        runtime.labelPanels, {}, GetUILayoutPaddingScale());
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        if (drawingUI)
-            d3t::DrawUITextureObject(definition, definition.textureObjects[index], runtime.objects[index], DuckRacePanelOpacity(runtime.objectPanels[index]));
-    for (std::size_t index = 0; index < definition.labels.size(); ++index) {
-        const d3t::UILabelDefinition &label = definition.labels[index];
-        std::string_view text = label.token.empty() ? std::string_view(label.text) : GetLocalizedSceneText(label.token);
-        for (std::size_t slot = 0; slot < runtime.labels.size(); ++slot)
-            if (runtime.labels[slot] == static_cast<std::int32_t>(index))
-                text = runtime.text[slot].data();
-        DrawMovesLabel(label, runtime.labelBounds[index], text, DuckRacePanelOpacity(runtime.labelPanels[index]), &definition);
-    }
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::DuckRace)];
+    uiUpdateWithColour(*GetNativeUiContext(), element.config.uiHandleIndex);
+
     return 0;
 }
 std::int64_t DuckRaceHudInput() {
@@ -4470,7 +4380,7 @@ void InitializeUIElements() {
     streetHud.isSelected = BindStreetFighterHud;
     streetHud.reset = ResetStreetFighterHud;
     streetHud.tick = ClearStreetFighterHud;
-    streetHud.destroy = ClearStreetFighterHud;
+    streetHud.destroy = DestroyStreetFighterHud;
     UIElementState &duckHud = g_uiElements[static_cast<std::size_t>(UIElement::DuckRace)];
     duckHud.name = "Duck Race";
     duckHud.parseDefinitionFromFile = LoadDuckRaceHud;
@@ -4479,7 +4389,7 @@ void InitializeUIElements() {
     duckHud.isSelected = BindDuckRaceHud;
     duckHud.reset = ResetDuckRaceHud;
     duckHud.tick = ClearDuckRaceHud;
-    duckHud.destroy = ClearDuckRaceHud;
+    duckHud.destroy = DuckRaceHudInput;
     UIElementState &information = g_uiElements[static_cast<std::size_t>(UIElement::GameInfoBar)];
     information.name = "Game Menu: Information Bar";
     information.parseDefinitionFromFile = LoadInformationBar;
@@ -4824,8 +4734,8 @@ std::int32_t GetDebugForceUIEnabled(UIElement) noexcept {
 
 // @verified - p
 void ResetStreetFighterHUD() {
-    if (streetFighterHud.panels[0] >= 0)
-        streetFighterHud.opacity[0] = 1.0f;
+    if (streetFighterHudWindows[0])
+        ShowUIWindow(streetFighterHudWindows[0]);
 }
 
 void vfSetupFightUiAndCameraState(VFMA_t *game) {
@@ -4910,18 +4820,18 @@ void vfRestorePostFightUIState(VFMA_t *game) {
     }
 }
 
+// @verified - p
 void SetStreetFighterTimerDigits(const std::array<std::int32_t, 6> &digits) {
-    char *const text = streetFighterHud.text[0].data();
+    char *const text = streetFighterHudText[0].data();
     if (digits[0] > 0)
         std::snprintf(text, 256, "%d%d:%d%d:%d%d", digits[0], digits[1], digits[2], digits[3], digits[4], digits[5]);
     else if (digits[1] > 0)
         std::snprintf(text, 256, "%d:%d%d:%d%d", digits[1], digits[2], digits[3], digits[4], digits[5]);
     else
         std::snprintf(text, 256, "%d%d:%d%d", digits[2], digits[3], digits[4], digits[5]);
-    const std::int32_t label = streetFighterHud.labels[0];
-    if (label >= 0)
-        uiDefinitions[static_cast<std::size_t>(UIElement::StreetFighterHud)].labels[label].colour =
-            digits[0] >= 1 || digits[1] >= 1 || digits[2] >= 1 ? 0xffffffffU : 0xffb7180cU;
+
+    if (streetFighterHudLabels[0])
+        streetFighterHudLabels[0]->colour = digits[0] >= 1 || digits[1] >= 1 || digits[2] >= 1 ? 0xffffffffU : 0xff0c18b7U;
 }
 
 void SetGameHudTimerCaption(const char *text, std::uint32_t colour) {
@@ -4947,74 +4857,74 @@ void SetGameHudTimerCaption(const char *text, std::uint32_t colour) {
 void SetDuckRaceTimerCaption(const char *text) {
     if (text) {
         const std::size_t length = std::strlen(text);
-        if (length < 256)
-            std::memcpy(duckRaceHud.text[6].data(), text, length + 1);
+        if (length < duckRaceHudText[6].size())
+            std::memcpy(duckRaceHudText[6].data(), text, length + 1);
         else
-            duckRaceHud.text[6][0] = '\0';
+            duckRaceHudText[6][0] = '\0';
     }
-    if (duckRaceHud.bound && duckRaceHud.panels[12] >= 0)
-        duckRaceHud.opacity[12] = text ? 1.0f : 0.0f;
+    if (duckRaceHudWindows[12])
+        duckRaceHudWindows[12]->alpha = text ? 1.0f : 0.0f;
 }
 void SetDuckRacePlacementRow(std::int32_t row, const char *text, std::int32_t bowtie) {
     if (text) {
         const std::size_t length = std::strlen(text);
-        if (length < 256)
-            std::memcpy(duckRaceHud.text[row].data(), text, length + 1);
+        if (length < duckRaceHudText[row].size())
+            std::memcpy(duckRaceHudText[row].data(), text, length + 1);
         else
-            duckRaceHud.text[row][0] = '\0';
-    }
-    if (!duckRaceHud.bound)
-        return;
-    if (duckRaceHud.panels[row + 6] >= 0)
-        duckRaceHud.opacity[row + 6] = text ? 1.0f : 0.0f;
-    if (duckRaceHud.panels[row] >= 0)
-        duckRaceHud.opacity[row] = text ? 1.0f : 0.0f;
-    const std::int32_t image = duckRaceHud.bowties[row];
-    if (text && image >= 0)
-        uiDefinitions[static_cast<std::size_t>(UIElement::DuckRace)].textureObjects[image].frameIndex = bowtie;
-}
+            duckRaceHudText[row][0] = '\0';
 
+        if (duckRaceHudWindows[row + 6])
+            duckRaceHudWindows[row + 6]->alpha = 1.0f;
+        if (duckRaceHudWindows[row])
+            duckRaceHudWindows[row]->alpha = 1.0f;
+        if (duckRaceHudBowties[row])
+            duckRaceHudBowties[row]->sprite = bowtie;
+    } else {
+        if (duckRaceHudWindows[row + 6])
+            duckRaceHudWindows[row + 6]->alpha = 0.0f;
+        if (duckRaceHudWindows[row])
+            duckRaceHudWindows[row]->alpha = 0.0f;
+    }
+}
 void ConstructNumStrikesLeftText(std::int32_t strikes) {
-    const std::int32_t label = streetFighterHud.labels[2];
-    if (label >= 0)
-        uiDefinitions[static_cast<std::size_t>(UIElement::StreetFighterHud)].labels[label].colour |= 0xff000000U;
-    streetFighterHud.text[2][0] = '\0';
+    streetFighterHudLabels[2]->colour |= 0xff000000U;
+    streetFighterHudText[2][0] = '\0';
     if (strikes <= 0)
         return;
     const std::string_view source = GetLocalizedSceneText(strikes <= 1 ? "UISFSTRIKES1" : "UISFSTRIKESM"); // @text UISFSTRIKES1 EN: "1 Strike Left" | JA: "残り1発" ; UISFSTRIKESM EN: "[[VALUE]] Strikes Left" | JA: "残り[[VALUE]]発"
     const std::size_t value = source.find("[[VALUE]]");
     if (value == std::string_view::npos)
-        std::snprintf(streetFighterHud.text[2].data(), 256, "%.*s", static_cast<int>(source.size()), source.data());
+        std::snprintf(streetFighterHudText[2].data(), 256, "%.*s", static_cast<int>(source.size()), source.data());
     else
-        std::snprintf(streetFighterHud.text[2].data(), 256, "%.*s%u%.*s", static_cast<int>(value), source.data(), static_cast<unsigned>(strikes),
+        std::snprintf(streetFighterHudText[2].data(), 256, "%.*s%u%.*s", static_cast<int>(value), source.data(), static_cast<unsigned>(strikes),
             static_cast<int>(source.size() - value - 9), source.data() + value + 9);
 }
 
 void GetSFLevel(std::int32_t level) {
-    const std::int32_t label = streetFighterHud.labels[1];
-    if (label >= 0)
-        uiDefinitions[static_cast<std::size_t>(UIElement::StreetFighterHud)].labels[label].colour |= 0xff000000U;
+    streetFighterHudLabels[1]->colour |= 0xff000000U;
     const std::string_view source = GetLocalizedSceneText("UISFLEVEL"); // @text EN: "Lv. [[LEVEL]]" | JA: "レベル[[LEVEL]]"
     const std::size_t value = source.find("[[LEVEL]]");
     if (value == std::string_view::npos)
-        std::snprintf(streetFighterHud.text[1].data(), 256, "%.*s", static_cast<int>(source.size()), source.data());
+        std::snprintf(streetFighterHudText[1].data(), 256, "%.*s", static_cast<int>(source.size()), source.data());
     else
-        std::snprintf(streetFighterHud.text[1].data(), 256, "%.*s%u%.*s", static_cast<int>(value), source.data(), static_cast<unsigned>(level),
+        std::snprintf(streetFighterHudText[1].data(), 256, "%.*s%u%.*s", static_cast<int>(value), source.data(), static_cast<unsigned>(level),
             static_cast<int>(source.size() - value - 9), source.data() + value + 9);
 }
 
 // @verified - p
 void SetFightRoundPrompt(std::int32_t round) {
-    if (streetFighterHud.panels[1] >= 0)
-        streetFighterHud.opacity[1] = round < 0 ? 0.0f : 1.0f;
-    if (round < 0 || streetFighterHud.labels[3] < 0)
-        return;
-    d3t::UILabelDefinition &label = uiDefinitions[static_cast<std::size_t>(UIElement::StreetFighterHud)].labels[streetFighterHud.labels[3]];
-    label.colour = (label.colour & 0x00ffffffU) | 0xc8000000U;
-    const std::string_view text = GetLocalizedSceneText(UI_FIGHT_ROUND_TOKENS[round <= 2 ? round : 2]);
-    std::snprintf(streetFighterHud.text[3].data(), streetFighterHud.text[3].size(), "%.*s", static_cast<int>(text.size()), text.data());
+    if (round >= 0) {
+        if (streetFighterHudWindows[1])
+            streetFighterHudWindows[1]->alpha = 1.0f;
+        d3t::UILabelWidget *const label = streetFighterHudLabels[3];
+        if (label) {
+            label->colour = (label->colour & 0x00ffffffU) | 0xc8000000U;
+            label->text = GetStringForUILabel(UI_FIGHT_ROUND_TOKENS[round <= 2 ? round : 2]);
+        }
+    } else if (streetFighterHudWindows[1]) {
+        streetFighterHudWindows[1]->alpha = 0.0f;
+    }
 }
-
 float GetUIViewportWidth() noexcept {
     if (ShouldScaleS2AspectRatio())
         return 1439.0f;
@@ -6119,7 +6029,7 @@ void RenderUIContents() {
             if (element.enabled && !element.isRenderable && element.config.init == 3) {
                 SetGameUiFlag(g_uiRefreshedElements, index, true);
                 SetGameUiFlag(gameUiSecondaryFlags, index, true);
-                RenderStreetFighterHud();
+                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
             }
             element.enabled = 0;
             continue;
@@ -6261,7 +6171,7 @@ void RenderUIContents() {
                 RenderScreenFilmFrame(static_cast<std::int32_t>(index));
             } else if (index == static_cast<std::size_t>(UIElement::MoveLearned)) {
                 RenderMoveLearnedDefinition();
-            } else if (index == static_cast<std::size_t>(UIElement::BigKanjiText)) {
+            } else if (index == static_cast<std::size_t>(UIElement::BigKanjiText) || index == static_cast<std::size_t>(UIElement::DuckRace)) {
                 RenderScreenFilmFrame(static_cast<std::int32_t>(index));
             } else {
                 if (((index >= 10 && index <= 25) || index == 29 || index == 53 || index == 64 ||
