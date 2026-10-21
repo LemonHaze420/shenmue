@@ -32,6 +32,7 @@
 #include "s2/player.hpp"
 #include "s2/scene_data.hpp"
 #include "s2/story_state.hpp"
+#include "s2/scenario_flags.hpp"
 #include "s2/search.hpp"
 #include "s2/snapshot_viewer.hpp"
 #include "s2/snapshot.hpp"
@@ -326,6 +327,7 @@ struct SavedSceneInfo {
 
 
 InventoryState inventoryState{};
+std::array<std::uint16_t, 64> inventoryResetEntries{};
 S2PersistentPlayerStats playerStats{};
 std::uint16_t retainedImportedPlayerOption{};
 std::int32_t& retainedSaveSelection = nativeSaveBacking.selection;
@@ -2037,7 +2039,7 @@ std::uint64_t ReadBackupFile(const char* name, void* destination, std::uint32_t 
 // @verified - p
 std::uint32_t ScanS1BackupSlots() {
     std::uint32_t flags = 0;
-    for (std::size_t slot = 0; slot < S1_BACKUP_SLOT_NAMES.size(); ++slot) {
+    for (std::size_t slot = 0; slot < g_backupS1SaveDataInfos.size(); ++slot) {
         const char* const name = S1_BACKUP_SLOT_NAMES[slot];
         if (BupReady(0) != 0 || CheckBackupFileExists(name) != 0 || ReadBackupFile(name, backupS1Prefix.data(), 0x600, 0x200) != 0) continue;
         std::uint32_t signature, version;
@@ -2841,6 +2843,120 @@ void ReinitScenarioAndFlags() {
 }
 
 // @verified - p
+std::uint64_t ReadS1SaveDataByIndex(void *bank, std::int32_t slot) {
+    return ReadBackupFile(S1_BACKUP_SLOT_NAMES[static_cast<std::uint32_t>(slot)], bank, 0, S1SaveFileSize);
+}
+
+// @verified - p
+bool ValidateS1SaveHeader(const void *header) noexcept {
+    const S1ImportedSaveHeader &data = *static_cast<const S1ImportedSaveHeader *>(header);
+    return data.signature == S1SaveSignature && data.version == S1SaveVersion;
+}
+
+// @verified - p
+std::int32_t FindInheritedMoveIndex(std::int32_t category, std::int32_t move) noexcept {
+    if (static_cast<std::uint32_t>(category) - 1U > 2U)
+        return -1;
+    const std::span<const std::uint8_t> ids = InheritedMoveIds[category];
+    if (move >= static_cast<std::int32_t>(ids.size()))
+        return -1;
+    for (std::size_t index = 0; index < ids.size(); ++index) {
+        if (move == static_cast<std::int32_t>(ids[index]) - InheritedMoveSourceOffsets[category])
+            return static_cast<std::int32_t>(index);
+    }
+
+    // @verified - p
+    return -1;
+}
+
+// @verified - p
+void InitializeInheritedMoveProficiency() {
+    for (std::int32_t category = 1; category < 4; ++category) {
+        const std::span<const std::int8_t> minimum = InheritedMoveProficiency[category];
+        for (std::int32_t move = 0; move < static_cast<std::int32_t>(minimum.size()); ++move) {
+            const std::int32_t index = FindInheritedMoveIndex(category, move);
+            if (index > 0 && minimum[index] != 0)
+                SetMoveProficiency(0, static_cast<std::uint8_t>(category), static_cast<std::int16_t>(index), minimum[index]);
+        }
+    }
+}
+
+// @verified - p
+std::int64_t ResetItemInventoryState() noexcept {
+    inventoryState.type0.fill(std::byte{});
+    inventoryState.type1.fill(std::byte{});
+    inventoryState.type2.fill(std::byte{});
+    inventoryResetEntries.fill(0xff00U);
+    inventoryState.type4.fill(std::byte{});
+    inventoryState.type3.fill(std::byte{});
+    inventoryState.type5.fill(std::byte{});
+    return 0;
+}
+
+// @verified - p
+std::int64_t ImportS1SaveData(const void *bank, std::int32_t slot) {
+    const std::byte *const bytes = static_cast<const std::byte *>(bank);
+    const S2SaveDataInfo &info =
+        *reinterpret_cast<const S2SaveDataInfo *>(bytes + S1SaveSlotInfoOffset + static_cast<std::ptrdiff_t>(slot) * sizeof(S2SaveDataInfo));
+    const S1ImportedPlayerData &data =
+        *reinterpret_cast<const S1ImportedPlayerData *>(bytes + S1SaveSystemSize + static_cast<std::ptrdiff_t>(slot) * S1SavePlayerStride);
+    DateTime date{.year = static_cast<std::int8_t>(info.gameYear),
+        .month = static_cast<std::int8_t>(info.gameMonth),
+        .day = static_cast<std::int8_t>(info.gameDay),
+        .week = info.gameWeek,
+        .hour = 12,
+        .minute = 30,
+        .second = 0};
+    SetCurrentDateTimeTo(date);
+    AddDaysAndCalculateWeekdayFromCurrentDate(20);
+    playerStats.savedStat0 = data.savedStat0;
+    playerStats.runtimeFlags = data.runtimeFlags;
+    playerStats.cash = data.cash;
+    SetCurrentCash(playerStats.cash);
+    playerStats.segaCoins = data.segaCoins;
+    playerStats.alternateHealth = data.alternateHealth;
+    playerStats.defaultHealth = data.defaultHealth;
+    playerStats.reactionCameraScale = data.reactionCameraScale;
+    playerStats.assistScale = data.assistScale;
+    playerStats.gameConfigurationFlags = data.gameConfigurationFlags;
+    SetS2GameConfigurationFlags(data.gameConfigurationFlags);
+    playerStats.contextActionMode = data.contextActionMode;
+    retainedImportedPlayerOption = data.playerOption;
+    g_savedFightBlurFlag = data.blurFlag;
+    playerStats.transferredYen = data.cash;
+    playerStats.cash = static_cast<std::int32_t>(static_cast<float>(playerStats.transferredYen) * 0.033333335f);
+    SetCurrentCash(playerStats.cash);
+    for (std::int32_t category = 1; category < 4; ++category) {
+        const S1ImportedMoveBank &moves = data.moves[category - 1];
+        const std::span<const std::int8_t> minimum = InheritedMoveProficiency[category];
+        for (std::int32_t entry = 0; entry < moves.count; ++entry) {
+            const std::int32_t move = moves.moveIds[entry];
+            if (move < 0)
+                continue;
+            const std::int32_t index = FindInheritedMoveIndex(category, move);
+            if (index < 0)
+                continue;
+            std::int32_t proficiency = moves.proficiency[entry];
+            if (proficiency < 1)
+                proficiency = 1;
+            if (index < static_cast<std::int32_t>(minimum.size()) && proficiency < minimum[index])
+                proficiency = minimum[index];
+            SetMoveProficiency(0, static_cast<std::uint8_t>(category), static_cast<std::int16_t>(index), static_cast<std::int16_t>(proficiency));
+        }
+    }
+    std::memcpy(GetScenarioPersistentScratch(), data.scenarioScratch.data(), data.scenarioScratch.size());
+    ResetItemInventoryState();
+    ImportS1CapsuleStock(data.capsuleStock.data());
+    return ImportS1KeyItems(data.keyItems.data());
+}
+
+// @verified - p
+void ImportSelectedS1SaveData(const void *bank, std::int32_t slot) {
+    if (slot >= 0)
+        ImportS1SaveData(bank, std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(slot) + 1U));
+}
+
+// @verified - p
 std::uint32_t InitializeDefaultSaveData() noexcept {
     InitializeImageLayout(activeSaveImage);
     activeSaveImageInitialized = true;
@@ -2864,6 +2980,58 @@ std::byte* RestoreSystemSaveProgress() noexcept {
         currentGameFlags = ReadValue<std::uint32_t>(activeSaveImage, kCurrentGameFlagsOffset);
     }
     return activeSaveImage.bytes.data();
+}
+
+// @verified - p
+std::uint64_t ReadSystemSaveHeader(std::int32_t slot) {
+    backupS2Prefix.fill(std::byte{});
+    const std::uint64_t result = ReadBackupFile(kSaveSlotNames[static_cast<std::size_t>(slot)], backupS2Prefix.data(), 0x600, 0x200);
+    if (result != 0)
+        return result;
+    std::uint32_t signature, version;
+    std::memcpy(&signature, backupS2Prefix.data() + 0x80, sizeof(signature));
+    std::memcpy(&version, backupS2Prefix.data() + 0x84, sizeof(version));
+    return signature == kSystemMagic && version == kSaveVersion ? 0U : 0xfffffffaU;
+}
+
+// @verified - p
+std::int64_t RestoreSaveSystemSettings(std::int32_t slot) {
+    if (ReadSystemSaveHeader(slot) == 0) {
+        std::uint32_t configuration;
+        std::memcpy(&configuration, backupS2Prefix.data() + 0xc0, sizeof(configuration));
+        SetS2GameConfigurationFlags(configuration);
+        std::memcpy(&completedGameCount, backupS2Prefix.data() + 0xc4, sizeof(completedGameCount));
+    }
+    return 0;
+}
+
+// @verified - p
+void RestoreGameSaveSlot(std::uint32_t slot) {
+    if (slot <= 9U)
+        DecodeRuntimePayload(activeSaveImage);
+}
+
+// @verified - p
+std::int64_t LoadGameFromSaveSlot(std::int32_t slot, std::int32_t restorePlacement) {
+    const std::uint32_t configuration = GetS2GameConfigurationFlags();
+    ReinitScenarioAndFlags();
+    RestoreSaveSystemSettings(slot);
+    std::int64_t result = 0;
+    if (ReadSaveDataSection(0, slot) == 0) {
+        if (GetTitleVersionOverride() == 0)
+            ResetTitleMenuState();
+        RestoreSystemSaveProgress();
+        if (ReadSaveDataSection(1, slot) == 0) {
+            SetRetainedSaveSelection(slot);
+            RestoreGameSaveSlot(static_cast<std::uint32_t>(slot));
+            if (restorePlacement != 0)
+                ActivateSavedAreaJumpLocation();
+            result = 1;
+        }
+    }
+    SetS2GameConfigurationFlags(configuration);
+    playerStats.gameConfigurationFlags = configuration;
+    return result;
 }
 
 // @verified - p

@@ -1,4 +1,5 @@
 #include "s2/aica_middleware.hpp"
+#include "s1/audio_stream.hpp"
 #include "s2/audio_data.hpp"
 #include "s2/d3t_renderer.hpp"
 #include "common/utility.hpp"
@@ -1237,7 +1238,7 @@ void StartOrUpdateAicaEnvironmentPart(std::uint8_t stateIndex, std::uint8_t part
         return;
     const std::size_t voiceIndex = allocatedVoice;
     void *const playback = PrepareRawSoundEffect(
-        sample.data, sample.bytes, sample.loopBegin, sample.loopLength, sample.channels, volume, frequencyRatio, sample.rate, true, sample.bits);
+        sample.data, sample.bytes, sample.loopBegin, sample.loopLength, sample.channels, volume, frequencyRatio, sample.rate, false, sample.bits);
     if (!playback) {
         ReturnAicaVoice(2, allocatedVoice);
         return;
@@ -2943,7 +2944,7 @@ std::int64_t LoadAICADriver(std::uint16_t *driver, std::uint8_t voiceIndex) {
 
     if (sampleLengthCorrection)
         write_unaligned(sampleLengthCorrection, CORRECTED_SAMPLE_BYTE_COUNT);
-    void *const playback = PrepareRawSoundEffect(sampleData, audioBytes, loopBegin, loopLength, channels, volume, frequencyRatio, sampleRate, true, bits);
+    void *const playback = PrepareRawSoundEffect(sampleData, audioBytes, loopBegin, loopLength, channels, volume, frequencyRatio, sampleRate, !modern, bits);
     if (!playback) {
         voice.xaudioStreamKind = -1;
         ResetAicaVoice(voice);
@@ -3222,6 +3223,7 @@ bool InitializeS2AicaMiddleware() noexcept {
             part.voiceIndex = 0xff;
     }
     aica::g_aicaPlaybackOwners.fill(nullptr);
+    s1::SetRawSoundEffectEnvelopeCallbacks(aica::EnvelopeGenerator_StopAndReset_1, aica::ReleaseEnvelope);
     aica::initialized = true;
     SetAicaBackendRequestSink(aica::Submit);
     try {

@@ -276,7 +276,7 @@ constexpr std::array<float, 32> kAicaFilterQ{
     0.142f, 0.139f, 0.133f, 0.129f, 0.125f, 0.12f, 0.115f, 0.1f};
 
 void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, std::uint32_t loopBegin, std::uint32_t loopLength, std::uint16_t channels,
-    float volume, float frequencyRatio, std::uint32_t sampleRate, bool routeThroughAica, std::uint16_t bitsPerSample = 16);
+    float volume, float frequencyRatio, std::uint32_t sampleRate, bool reclaimable, std::uint16_t bitsPerSample = 16);
 void StartRawSoundEffectPlayback(void *playback);
 void StopRawSoundEffectPlayback(void *playback, bool releaseEnvelope = false);
 void ReleaseRawSoundEffectReservation(void *playback);

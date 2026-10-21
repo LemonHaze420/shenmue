@@ -240,16 +240,6 @@ void SetupLightConfig();
 void SetupModelDataDefaultVS(MT7Node *root);
 void SetDefaultVS();
 
-struct TemporaryReflectionLightState {
-    std::uint32_t slot{};
-    std::int32_t activeLight{};
-    bool engaged{};
-};
-
-bool BeginTemporaryReflectionLight(std::uint32_t slot, const Vector3 &sourcePosition, const Vector3 &cameraPosition, const Vector4 &colour, std::uint32_t mode,
-    std::int16_t yaw, TemporaryReflectionLightState &saved);
-void EndTemporaryReflectionLight(TemporaryReflectionLightState &saved);
-
 struct TemporaryAttachedLightState {
     std::uint32_t slot{};
     std::int32_t activeLight{};

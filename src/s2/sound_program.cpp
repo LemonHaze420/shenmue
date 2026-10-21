@@ -1,5 +1,9 @@
 #include "s2/sound_program.hpp"
 
+#include "d3t/archive_handles.hpp"
+#include "s2/flag.hpp"
+#include "s2/player.hpp"
+
 #include "s2/archive_data.hpp"
 #include "s2/audio_data.hpp"
 #include "s2/author.hpp"
@@ -435,6 +439,63 @@ void SelectSoundBankFilename(char *selected, const char *directory, const char *
     }
 }
 
+// @verified - p
+bool LoadSoundBankChunk(const char *directory, const char *filename, std::uint32_t bank, std::uint64_t size) noexcept {
+    if (cvsHasValidConverseData(nullptr))
+        return false;
+    char path[256];
+    std::sprintf(path, "%s\\%s", directory, filename);
+    for (char *cursor = path; *cursor; ++cursor)
+        if (*cursor == '/')
+            *cursor = '\\';
+    d3t ::LargeFileHandle *const file = d3t::LargeFile_OpenPathHandle(path);
+
+    if (!file)
+        return false;
+    std::byte *const data = static_cast<std::byte *>(HLib::AllocateTaskData(size, SOUND_BANK_CHUNK_DATA));
+    (void)d3t ::GetFileFromCachedBuffer(file, size >> 11U, data, 0);
+
+    std::int32_t state = d3t::CheckFileInfo(file);
+    if (state != 3) {
+        while (state != 4) {
+            state = d3t::CheckFileInfo(file);
+            if (state == 3)
+                break;
+        }
+        if (state == 4)
+            nullsub(static_cast<void *>(nullptr));
+    }
+    (void)LoadBankSoundTable({data, static_cast<std::size_t>(size)}, bank);
+    if (static_cast<std::int32_t>(ReturnZero()) >= 0) {
+        while (ReturnZero() != 0) {
+        }
+        if (ReturnZero() != 0) {
+            do {
+                (void)ReturnZero();
+                (void)d3t::GetFileFromCachedBuffer(file, size >> 11U, data, 0);
+                state = d3t::CheckFileInfo(file);
+                if (state != 3) {
+                    while (state != 4) {
+                        state = d3t::CheckFileInfo(file);
+                        if (state == 3)
+                            break;
+                    }
+                    if (state == 4)
+                        nullsub(static_cast<void *>(nullptr));
+                }
+            } while (ReturnZero() != 0);
+        }
+        while (ReturnZero() != 0) {
+        }
+        d3t::ReadCachedFile(file);
+        HLib::FreeTaskData(data);
+        return true;
+    }
+    HLib::FreeTaskData(data);
+    d3t::ReadCachedFile(file);
+    return false;
+}
+
 bool LoadBank(std::int32_t scene, std::size_t bank, std::string_view filename, std::int32_t allocation) noexcept {
     if (bank >= runtime.banks.size() || filename.empty() || filename.size() >= runtime.banks[bank].filename.size()) {
         return false;
@@ -456,35 +517,47 @@ bool LoadBank(std::int32_t scene, std::size_t bank, std::string_view filename, s
     original[filename.size()] = 0;
     if (std::strcmp(original, "yuan.snd") == 0 && GetConversationAudioLanguage() == 1)
         std::strcpy(original, "yuan_dc.snd");
-    char selected[64];
-    SelectSoundBankFilename(selected, directory, original, static_cast<std::uint32_t>(bank));
+    std::uint64_t totalFree, largestBlock, remainingFree;
+    (void)HLib::AnalyzeFreeHeap(&totalFree, &largestBlock, &remainingFree);
     std::array<char, 96> path{};
-    const int written = std::snprintf(path.data(), path.size(), "%s/%s", directory, selected);
-    if (written <= 0 || static_cast<std::size_t>(written) >= path.size())
+    const int originalWritten = std::snprintf(path.data(), path.size(), "%s/%s", directory, original);
+    if (originalWritten <= 0 || static_cast<std::size_t>(originalWritten) >= path.size())
         return false;
-
-    const std::uint64_t size = ArchiveData_GetFileSize(path.data());
-    if (!size || size > static_cast<std::uint64_t>(SIZE_MAX))
-        return false;
-    std::byte *const data = static_cast<std::byte *>(HLib::AllocateTaskData(size, SOUND_BANK_DATA));
-    if (!data)
-        return false;
+    const std::uint32_t originalSize = static_cast<std::uint32_t>(ArchiveData_GetFileSize(path.data()));
     std::int32_t result = -1;
-    if (ArchiveData_Read(path.data(), 0, data, size)) {
-        const std::span<const std::byte> payload = LoadBankSoundTable({data, static_cast<std::size_t>(size)}, static_cast<std::uint32_t>(bank));
-        if (!payload.empty()) {
-            std::size_t transferSize = payload.size();
-            if (size > 0x20) {
-                const HLib::TaskData *const allocation = reinterpret_cast<const HLib::TaskData *>(data - sizeof(HLib::TaskData));
-                if (allocation->next) {
+    if (originalSize > largestBlock) {
+        result = LoadSoundBankChunk(directory, original, static_cast<std::uint32_t>(bank), largestBlock & 0xfffff800ULL) ? 0 : -1;
+    } else {
+        char selected[64];
+        SelectSoundBankFilename(selected, directory, original, static_cast<std::uint32_t>(bank));
 
-                    transferSize = HLib::GetTaskDataSize(data) + sizeof(HLib::TaskData) - static_cast<std::size_t>(payload.data() - data);
+        const int written = std::snprintf(path.data(), path.size(), "%s/%s", directory, selected);
+        if (written <= 0 || static_cast<std::size_t>(written) >= path.size())
+            return false;
+
+        const std::uint64_t size = ArchiveData_GetFileSize(path.data());
+        if (!size || size > static_cast<std::uint64_t>(SIZE_MAX))
+            return false;
+        std::byte *const data = static_cast<std::byte *>(HLib::AllocateTaskData(size, SOUND_BANK_DATA));
+        if (!data)
+            return false;
+
+        if (ArchiveData_Read(path.data(), 0, data, size)) {
+            const std::span<const std::byte> payload = LoadBankSoundTable({data, static_cast<std::size_t>(size)}, static_cast<std::uint32_t>(bank));
+            if (!payload.empty()) {
+                std::size_t transferSize = payload.size();
+                if (size > 0x20) {
+                    const HLib::TaskData *const allocation = reinterpret_cast<const HLib::TaskData *>(data - sizeof(HLib::TaskData));
+                    if (allocation->next) {
+
+                        transferSize = HLib::GetTaskDataSize(data) + sizeof(HLib::TaskData) - static_cast<std::size_t>(payload.data() - data);
+                    }
                 }
+                result = static_cast<std::int32_t>(LoadAudioIntoAicaMemory({payload.data(), transferSize}, static_cast<std::uint32_t>(bank)));
             }
-            result = static_cast<std::int32_t>(LoadAudioIntoAicaMemory({payload.data(), transferSize}, static_cast<std::uint32_t>(bank)));
         }
+        HLib::FreeTaskData(data);
     }
-    HLib::FreeTaskData(data);
     if (result < 0)
         return false;
 
@@ -1341,11 +1414,11 @@ void SetSoundListenerUsesCamera(std::int32_t enabled) noexcept {
     soundListenerUsesCamera = enabled;
 }
 
+// @verified - p
 void QueueSoundProgramControl() noexcept {
     soundTask = HLib::EnqueueTaskWithoutParameter(SoundProgramControl_Callback, 0x0e, 3, static_cast<std::int32_t>(soundTaskToken.name));
-    if (!soundTask)
-        return;
-    runtime.queued = true;
+
+    runtime.queued = soundTask != nullptr;
     (void)Dispatch(AicaBackendOperation::SetBankProperty, 0, 1, 0, 0x5a);
     (void)Dispatch(AicaBackendOperation::BankCommand, 0x400a0U);
     for (SoundEffectHandle &handle : materialSoundHandles)
@@ -1355,7 +1428,7 @@ void QueueSoundProgramControl() noexcept {
     for (SoundBankFade &fade : runtime.bankFades)
         fade.step = 0.0f;
     soundListenerUsesCamera = 0;
-    while (runtime.pauseDepth != 0)
+    while (runtime.pauseDepth > 0)
         PrimeAicaEmulationForPause(0);
 }
 
@@ -1724,15 +1797,25 @@ void StopSoundProgram() noexcept {
     runtime.activeProgramCommand = -1;
 }
 
+// @verified - p
 void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
     if (enabled) {
-        if (runtime.pauseDepth == 0) {
+        if (runtime.pauseDepth < 1) {
             (void)ExecuteAicaCommand(0x1100a0U, 0, 0);
             (void)ExecuteAicaCommand(0x1300a0U, 0, 0);
             for (std::size_t offset = runtime.banks.size(); offset > 1; --offset) {
                 const std::size_t bank = offset - 1;
                 (void)ExecuteAicaCommand(0x2a0U, static_cast<std::uint32_t>(bank), 0);
                 (void)ExecuteAicaCommand(0x1300a0U, static_cast<std::uint32_t>(bank), 0);
+            }
+            for (std::size_t offset = materialSoundHandles.size(); offset > 0; --offset) {
+                const std::uint32_t slot = static_cast<std::uint32_t>(offset - 1);
+                SoundEffectHandle &handle = materialSoundHandles[slot];
+                if (handle.active == 0)
+                    continue;
+                (void)Dispatch(AicaBackendOperation ::SetBankProperty, 0, 1, 0, 0x5a);
+                (void)Dispatch(AicaBackendOperation::WideBankCommand, MATERIAL_SOUND_GAIN_COMMAND, slot, 0, 0);
+                handle.active = 2;
             }
             (void)Dispatch(AicaBackendOperation::PauseStreams);
         } else {
@@ -1741,7 +1824,7 @@ void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
         ++runtime.pauseDepth;
         return;
     }
-    if (runtime.pauseDepth == 0)
+    if (runtime.pauseDepth <= 0)
         return;
     --runtime.pauseDepth;
     if (runtime.pauseDepth == 1) {
@@ -1751,10 +1834,21 @@ void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
     if (runtime.pauseDepth != 0)
         return;
 
-    for (std::size_t bank = 1; bank < runtime.banks.size(); ++bank) {
-        (void)ExecuteAicaCommand(0x1300a0U, static_cast<std::uint32_t>(bank), 0);
-        (void)ExecuteAicaCommand(0x5a0U, static_cast<std::uint32_t>(bank), runtime.banks[bank].currentVolume);
-        (void)ExecuteAicaCommand(0x3a0U, static_cast<std::uint32_t>(bank), 0);
+    for (std::uint32_t bank = 1; bank < runtime.banks.size(); ++bank) {
+        (void)Dispatch(AicaBackendOperation ::SetBankProperty, 0, 1, 0, 0x5a);
+        (void)Dispatch(AicaBackendOperation::BankCommand, 0x1300a0U, bank, 0, 0);
+        (void)Dispatch(AicaBackendOperation::BankCommand, 0x5a0U, bank, 0, runtime.banks[bank].currentVolume);
+        (void)Dispatch(AicaBackendOperation::SetBankProperty, 0, 1, 0, 0x5a);
+        (void)Dispatch(AicaBackendOperation::BankCommand, 0x3a0U, bank, 0, 0);
+    }
+    for (std::size_t offset = materialSoundHandles.size(); offset > 0; --offset) {
+        const std::uint32_t slot = static_cast<std::uint32_t>(offset - 1);
+        SoundEffectHandle &handle = materialSoundHandles[slot];
+        if (handle.active == 0)
+            continue;
+        handle.active = 1;
+        (void)Dispatch(AicaBackendOperation::SetBankProperty, 0, 1, 0, 0x5a);
+        (void)Dispatch(AicaBackendOperation::WideBankCommand, MATERIAL_SOUND_GAIN_COMMAND, slot, 0, handle.gain);
     }
     (void)Dispatch(AicaBackendOperation::ResumeStreams);
 }

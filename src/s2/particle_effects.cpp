@@ -19,6 +19,7 @@
 #include "s2/ship_spray.hpp"
 #include "s2/daku_spray.hpp"
 #include "s2/renderer_initialization.hpp"
+#include "s2/reflector_board.hpp"
 #include "s2/weather.hpp"
 #include "s2/window.hpp"
 #include "d3t/buffer.hpp"
@@ -251,6 +252,8 @@ std::array<std::uint32_t, 16> smokeTextureHandles{};
 std::array<std::array<std::uint32_t, 2>, 8> fireTextureHandles{};
 HLib::Task *effectController{};
 ParticleEmitter *currentEmitter{};
+Matrix4x4 particleScreenProjection{{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
+Matrix4x4 particleProjectionScratch{};
 std::int32_t effectsSuspended{};
 std::uint64_t particleRandomState{1};
 std::array<float, 5> smokeInitialScale{};
@@ -1566,7 +1569,7 @@ void DispatchWeatherParticleLayer(
     weatherParticleDrawCount = count;
     weatherParticleLayerStride = stride;
     weatherParticleStorage = static_cast<const std::byte *>(HLib::GetPointerFromDynamicHeapOffsetBase(HLib::GetDynamicHeapOffset(particles)));
-    SetLegacyWeatherRenderPass((flags & weatherParticleSpawnFlag) != 0);
+    SetLegacyParticleRenderPass((flags & weatherParticleSpawnFlag) != 0);
     if ((flags & 0x20000000U) != 0) {
         weatherParticleStride = stride;
         weatherCurrentParticleFlags = flags;
@@ -2570,42 +2573,89 @@ void UpdateFireOwner(FireEffect &effect) {
 
 void DrawEmitter(void *data) {
     const std::size_t index = reinterpret_cast<std::uintptr_t>(data);
+    if (!GetLegacyRenderMask()) {
+        particleScreenProjection.rows[0].x = 320.0f;
+        particleScreenProjection.rows[1].y = -240.0f;
+        particleScreenProjection.rows[3].x = 320.0f;
+        particleScreenProjection.rows[3].y = 240.0f;
+        Matrix4x4_Push(&particleScreenProjection);
+        Matrix4x4::MultiplyWithPrePassMatrix(g_matrixStack.entries[2].stack);
+        particleProjectionScratch = workTransformMatrix;
+        Matrix4x4::MultiplyWithPrePassMatrix(g_matrixStack.top.stack - 1);
+    }
     ParticleEmitter &emitter = emitters[index];
+    currentEmitter = &emitter;
     if ((emitter.flags & activeFlag) == 0)
         return;
-    currentEmitter = &emitter;
+
     const Matrix4x4 transform = workTransformMatrix;
     const bool update = (emitter.flags & suspendedFlag) == 0;
     const bool draw = (emitter.flags & 0x04000000U) == 0;
-    if (draw &&
-        !BeginSmokeDraw(static_cast<std::uint32_t>(emitter.count), emitter.flags, emitter.textureHandle,
-            {emitter.textureFlags, emitter.samplerControl, emitter.gpuFlags})) {
-        return;
-    }
-    if (emitter.flags & 0x20000000U) {
-        CompactParticleRecord *const particles = reinterpret_cast<CompactParticleRecord *>(emitter.particles);
-        for (std::int32_t particleIndex = 0; particleIndex < emitter.count; ++particleIndex) {
-            if (update)
-                particles[particleIndex].callback(particles[particleIndex]);
+    const bool compact = (emitter.flags & 0x20000000U) != 0;
+    SetLegacyParticleRenderPass((emitter.flags & 0x40000000U) != 0, compact);
+    const bool mapped = draw &&
+        BeginSmokeDraw(static_cast<std::uint32_t>(emitter.count), emitter.flags, emitter.textureHandle,
+            {emitter.textureFlags, emitter.samplerControl, emitter.gpuFlags}, particleProjectionScratch);
+    if (!draw || mapped) {
+
+        if (compact) {
+            CompactParticleRecord *const particles = reinterpret_cast<CompactParticleRecord *>(emitter.particles);
+            for (std::int32_t particleIndex = 0; particleIndex < emitter.count; ++particleIndex) {
+                if (update)
+                    particles[particleIndex].callback(particles[particleIndex]);
+
+                if (!draw)
+                    workTransformMatrix = transform;
+            }
+        } else {
+            for (std::int32_t particleIndex = 0; particleIndex < emitter.count; ++particleIndex) {
+                if (draw)
+                    workTransformMatrix = *(g_matrixStack.top.stack - 1);
+                ParticleRecord &particle = emitter.particles[particleIndex];
+                if (update)
+                    particle.callback(particle);
+                if (draw && (particle.flags & activeFlag) != 0) {
+                    const Vector3i rotation{
+                        static_cast<std::int32_t>(particle.phaseX), static_cast<std::int32_t>(particle.phaseY), static_cast<std::int32_t>(particle.phaseZ)};
+                    AppendSmokeBillboard(workTransformMatrix, particle.position, rotation, (emitter.flags & 0x08000000U) != 0,
+                        particle.scale * emitter.halfWidth, particle.scale * emitter.halfHeight, particle.colour);
+                }
+                workTransformMatrix = transform;
+            }
         }
         if (draw)
             EndSmokeDraw();
-        return;
     }
-    for (std::int32_t particleIndex = 0; particleIndex < emitter.count; ++particleIndex) {
-        ParticleRecord &particle = emitter.particles[particleIndex];
-        if (update)
-            particle.callback(particle);
-        if (draw && (particle.flags & activeFlag) != 0) {
-            AppendSmokeBillboard(workTransformMatrix, particle.position, static_cast<std::uint16_t>(particle.phaseY), particle.scale * emitter.halfWidth,
-                particle.scale * emitter.halfHeight, particle.colour);
-        }
-        workTransformMatrix = transform;
-    }
-    if (draw)
-        EndSmokeDraw();
+
+#if defined(_WIN32)
+    if (d3t::DX11::g_ppD3DDeviceContext)
+        RestoreLegacyEffectRenderFlags(d3t::GetRenderState(*d3t::DX11::g_ppD3DDeviceContext));
+#endif
+    Matrix4x4::Pop(1);
 }
 
+// @verified - p
+void UpdateParticleSystem(void *data) {
+    const std::int32_t selected = static_cast<std::int32_t>(reinterpret_cast<std::intptr_t>(data));
+    if (selected == -1) {
+        for (std::int32_t index = 0; index < 16; ++index)
+            DrawEmitter(reinterpret_cast<void *>(static_cast<std::intptr_t>(index)));
+        return;
+    }
+    for (std::int32_t index = 0; index < 16; ++index) {
+        if (index != selected) {
+            const std::uint32_t flags = emitters[index].flags & 0xfe7fffffU;
+            emitters[index].flags = flags | ((flags & 0x06000000U) | 0x18000000U) >> 2U;
+        }
+    }
+    DrawEmitter(data);
+    for (std::int32_t index = 0; index < 16; ++index) {
+        if (index != selected) {
+            const std::uint32_t flags = emitters[index].flags & 0xf9ffffffU;
+            emitters[index].flags = flags | (flags & 0x01800000U) << 2U;
+        }
+    }
+}
 void QueueEmitterDraws(void *) {
     for (std::size_t index = 0; index < emitterSlots.size(); ++index) {
         if (emitterSlots[index].state == 0 || !IsWorldDrawingEnabled())
@@ -2622,7 +2672,7 @@ void QueueEmitterDraws(void *) {
         } else if (renderMask) {
             Matrix4x4_Push(&transformMatrix_prePass);
         }
-        SetUpdateCallback(DrawEmitter, reinterpret_cast<void *>(static_cast<std::uintptr_t>(index)), 900.0f);
+        SetUpdateCallback(UpdateParticleSystem, reinterpret_cast<void *>(static_cast<std::uintptr_t>(index)), 900.0f);
         if (reference.active || renderMask)
             Matrix4x4::Pop(1);
     }
@@ -3434,6 +3484,7 @@ void InitializeEffectControl() {
         emitter.halfHeight = 1.0f;
         emitter.colour = 0xffffffffU;
     }
+    ResetReflectorBoardState();
     ResetHikiTextures();
     ResetShipSprayParameters();
     ResetHikiTaskData();

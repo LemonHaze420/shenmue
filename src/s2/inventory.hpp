@@ -8,6 +8,48 @@
 
 namespace shenmue::s2 {
 
+struct S1ImportedItem {
+    std::int16_t index, item;
+};
+static_assert(sizeof(S1ImportedItem) == 4);
+inline constexpr S1ImportedItem S1_IMPORTED_ITEMS[]{
+    {.index = 4, .item = 3},
+    {.index = 3, .item = 2},
+    {.index = 5, .item = 4},
+    {.index = 6, .item = 5},
+    {.index = 2, .item = 1},
+    {.index = 8, .item = 8005},
+    {.index = 7, .item = 6},
+    {.index = 9, .item = 8014},
+    {.index = 16, .item = 8013},
+    {.index = 40, .item = 7},
+    {.index = 10, .item = 8006},
+    {.index = 11, .item = 8007},
+    {.index = 12, .item = 8008},
+    {.index = 13, .item = 8009},
+    {.index = 14, .item = 8010},
+    {.index = 15, .item = 8011},
+    {.index = 17, .item = 3000},
+    {.index = 19, .item = 3001},
+    {.index = 21, .item = 3002},
+    {.index = 23, .item = 3003},
+    {.index = 25, .item = 3004},
+    {.index = 27, .item = 3005},
+    {.index = 29, .item = 3006},
+    {.index = 31, .item = 3007},
+    {.index = 33, .item = 3008},
+    {.index = 35, .item = 3010},
+    {.index = 36, .item = 3009},
+    {.index = 52, .item = 4258},
+    {.index = 53, .item = 4257},
+    {.index = 55, .item = 4259},
+    {.index = 56, .item = 4260},
+    {.index = 37, .item = 4261},
+    {.index = 38, .item = 4262},
+};
+
+std::int64_t ImportS1CapsuleStock(const std::uint8_t *source);
+std::int64_t ImportS1KeyItems(const std::uint8_t *source);
 inline constexpr std::uint32_t InventoryPresentationTypes[10]{5, 5, 5, 9, 8, 8, 6, 5, 0x900, 4};
 extern std::int32_t g_inventoryStockBiasEnabled;
 

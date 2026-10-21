@@ -582,16 +582,32 @@ std::int32_t RemoveInventoryItem(std::uint32_t itemId, std::uint8_t amount) noex
     return value != 0 ? 1 : 0;
 }
 
-void InitItems() {
+// @verified - p
+std::int64_t ImportS1CapsuleStock(const std::uint8_t *source) {
     // ResetItemInventoryState clears the entire persistent bank capacities,
     // including entries beyond the current descriptor counts.
-    for (std::size_t type = 0; type < itemBanks.size(); ++type) {
-        const auto bank = static_cast<S2InventoryBank>(type);
-        const std::size_t size = S2Save_GetInventoryBank(bank).size();
-        for (std::size_t index = 0; index < size; ++index)
-            S2Save_SetInventoryItem(bank, index, std::byte{});
+    std::size_t destination = 0;
+    for (std::int32_t index = 0; index < 256; ++index) {
+        const std::int32_t item = index + 70;
+        if (item < 92 || (item > 93 && static_cast<std::uint32_t>(item - 226) > 3U))
+            S2Save_SetInventoryItem(S2InventoryBank::Type1, destination++, static_cast<std::byte>(source[index]));
     }
+    return 326;
+}
 
+// @verified - p
+std::int64_t ImportS1KeyItems(const std::uint8_t *source) {
+    for (const S1ImportedItem &entry : S1_IMPORTED_ITEMS) {
+        const std::uint8_t count = source[entry.index];
+        if (count != 0)
+            AddInventoryItem(entry.item, count, 0);
+    }
+    const std::int64_t state = GetItemState(5);
+    return state == 0 ? AddInventoryItem(5, 1, 0) : state;
+}
+
+void InitItems() {
+    ResetItemInventoryState();
     constexpr std::uint16_t initialItems[]{
         0, 2, 5, 1, 6, 8006, 4, 8005, 3, 20, 21,
         4080, 4081, 4082, 4083, 4084, 4085, 4086};

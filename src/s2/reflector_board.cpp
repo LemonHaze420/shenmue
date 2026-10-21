@@ -65,27 +65,31 @@ ReflectorBoardParams *FindReflectorBoard(Character *character) {
     return component ? reinterpret_cast<ReflectorBoardParams *>(Payload(component)) : nullptr;
 }
 
+// @verified - p
 void UpdateReflectorBoardParams(Character *character, void *payload) {
     ReflectorBoardParams *const reflector = static_cast<ReflectorBoardParams *>(payload);
     if (!character || !reflector)
         return;
 
     constexpr float fadeStep = 0.010714286f;
-    if (reflector->sector == 1) {
+    if (reflector->sector == 2) {
         const shen_name name = GetCharacterScenarioName(character);
         if (IsScenarioCharacterForcedVisible(name)) {
             reflector->colour[0] = std::min(reflector->colour[0] + fadeStep, kReflectorBoardColourLimit);
+            reflector->colour[1] = reflector->colour[0];
+            reflector->colour[2] = reflector->colour[0];
         } else if (reflector->colour[0] > 0.0f) {
             reflector->colour[0] = std::max(reflector->colour[0] - fadeStep, 0.0f);
-        }
+
         reflector->colour[1] = reflector->colour[0];
         reflector->colour[2] = reflector->colour[0];
-        reflector->lightAngleOrVisible = reflector->colour[0] > 0.0f ? 1 : 0;
+        }
+        reflector->mode = reflector->colour[0] > 0.0f ? 1 : 0;
     } else if (reflector->sector == 3) {
         reflector->colour[0] = std::min(reflector->colour[0] + fadeStep, kReflectorBoardColourLimit);
         reflector->colour[1] = reflector->colour[0];
         reflector->colour[2] = reflector->colour[0];
-        reflector->lightAngleOrVisible = 1;
+        reflector->mode = 1;
     }
     reflector->scale = std::clamp(reflector->colour[0] / kReflectorBoardColourLimit, 0.0f, 1.0f);
 }
@@ -102,44 +106,19 @@ void CleanupReflectorBoardParams(Character *character, void *payload) {
 
 } // namespace model_component_detail
 
+namespace {
+std::int32_t reflectorSavedActiveLight{};
+}
+// @verified - p
 std::int16_t ResolveReflectorBoardCharacterAngle(Character *character) {
-    if (!character || !g_cameraControl)
-        return 0;
-    Matrix4x4 transform{};
-    if (!ResolveCharacterDrawNodeTransform(character, 7, transform))
-        return 0;
-    float x = -transform.rows[2].x;
-    const float y = -transform.rows[2].y;
-    float z = -transform.rows[2].z;
-    if (std::fabs(y) > 0.60000002f) {
-        const float sign = y >= 0.0f ? -1.0f : 1.0f;
-        x = transform.rows[1].x * sign;
-        z = transform.rows[1].z * sign;
-    }
-    const std::int16_t euler = static_cast<std::int16_t>(FixedAtan2(z, -x));
-    const std::int16_t cameraYaw = static_cast<std::int16_t>(-camCtrlGetNextRotY());
-    Vector3 cameraDirection{
-        -sin_fixed16(cameraYaw),
-        0.0f,
-        sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(cameraYaw)))),
-    };
-    Vector3 characterDirection{
-        sin_fixed16(euler),
-        0.0f,
-        sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(euler)))),
-    };
-    const float cameraLength = std::sqrt(cameraDirection.x * cameraDirection.x + cameraDirection.z * cameraDirection.z);
-    if (cameraLength > 0.0f) {
-        cameraDirection.x /= cameraLength;
-        cameraDirection.z /= cameraLength;
-    }
-    const float characterLength = std::sqrt(characterDirection.x * characterDirection.x + characterDirection.z * characterDirection.z);
-    if (characterLength > 0.0f) {
-        characterDirection.x /= characterLength;
-        characterDirection.z /= characterLength;
-    }
-    float angle = ((characterDirection.x * cameraDirection.x + characterDirection.z * cameraDirection.z) * 180.0f - 180.0f) * -0.5f;
-    if (static_cast<std::int16_t>(euler + cameraYaw) < 0)
+    const std::int32_t cameraYaw = -camCtrlGetNextRotY();
+    Vector3 cameraDirection{-sin_fixed16(static_cast<std::int16_t>(cameraYaw)), 0.0f, cos_fixed16(static_cast<std::uint16_t>(cameraYaw))};
+    Vector3::NormalizeInPlace(cameraDirection);
+    const std::int16_t boneYaw = GetMotionBoneYaw(FindMotionWork(character), MB_HeadTarget);
+    Vector3 characterDirection{sin_fixed16(boneYaw), 0.0f, cos_fixed16(static_cast<std::uint16_t>(boneYaw))};
+    Vector3::NormalizeInPlace(characterDirection);
+    float angle = ((Vector3 ::Dot(cameraDirection, characterDirection) * 180.0f) - 180.0f) * -0.5f;
+    if (static_cast<std::int16_t>(boneYaw + cameraYaw) < 0)
         angle = -angle;
     if (angle > 90.0f)
         angle = angle * 0.5f - 90.0f;
@@ -147,59 +126,161 @@ std::int16_t ResolveReflectorBoardCharacterAngle(Character *character) {
         angle = angle * 0.5f + 90.0f;
     else
         angle *= -0.5f;
-    return static_cast<std::int16_t>(angle * 8192.0f / 45.0f);
+    return static_cast<std::int16_t>((angle * 8192.0f) / 45.0f);
 }
 
+// @verified - p
+void SetReflectorBoardDirectionalLight(Vector3 &origin, const Vector3 &cameraPosition, std::uint32_t slot) {
+    if (std::fabs(origin.x) < 0.00001f)
+        origin.x = 0.0f;
+    if (std::fabs(origin.y) < 0.00001f)
+        origin.y = 0.0f;
+    if (std::fabs(origin.z) < 0.00001f)
+        origin.z = 0.0f;
+    Vector3 direction{origin.x - cameraPosition.x, origin.y - cameraPosition.y, origin.z - cameraPosition.z};
+    Vector3::NormalizeInPlace(direction);
+    SetSelectedLightDirection(slot, direction);
+}
+
+// @verified - p
+void shenAssignAttachedLightFor(Vector3 &origin, const Vector3 &cameraPosition, std::int16_t yaw, std::uint32_t slot) {
+    Vector3 current;
+    camCtrlGetTargetPosition(&current);
+    const float dx = current.x - cameraPosition.x;
+    const float dz = current.z - cameraPosition.z;
+    const float distance = std::sqrt(dx * dx + dz * dz);
+    const std::uint16_t angle = static_cast<std::uint16_t>(yaw - camCtrlGetNextRotY());
+    const float projectedX = current.x - sin_fixed16(static_cast<std::int16_t>(angle)) * distance;
+    const float projectedZ = cos_fixed16(angle) * distance + current.z;
+    if (std::fabs(origin.x) < 0.00001f)
+        origin.x = 0.0f;
+    if (std::fabs(origin.y) < 0.00001f)
+        origin.y = 0.0f;
+    if (std::fabs(origin.z) < 0.00001f)
+        origin.z = 0.0f;
+    Vector3 direction{origin.x - projectedX, origin.y - current.y, origin.z - projectedZ};
+    Vector3::NormalizeInPlace(direction);
+    SetSelectedLightDirection(slot, direction);
+}
+
+// @verified - p
+void SetReflectorBoardOrbitPointLight(Vector3 &origin, const Vector3 &cameraPosition, std::int16_t yaw, std::uint32_t slot) {
+    if (std::fabs(origin.x) < 0.00001f)
+        origin.x = 0.0f;
+    if (std::fabs(origin.y) < 0.00001f)
+        origin.y = 0.0f;
+    if (std::fabs(origin.z) < 0.00001f)
+        origin.z = 0.0f;
+    Vector3 current;
+    camCtrlGetTargetPosition(&current);
+    const float dx = current.x - cameraPosition.x;
+    const float dz = current.z - cameraPosition.z;
+    const float distance = std::sqrt(dx * dx + dz * dz);
+    const std::uint16_t angle = static_cast<std::uint16_t>(yaw - camCtrlGetNextRotY());
+    const float projectedX = current.x - sin_fixed16(static_cast<std::int16_t>(angle)) * distance;
+    const float projectedZ = cos_fixed16(angle) * distance + current.z;
+    Vector3 direction{origin.x - projectedX, origin.y - current.y, origin.z - projectedZ};
+    Vector3::NormalizeInPlace(direction);
+    const Vector3 position{origin.x - direction.x * 0.40000001f, origin.y - direction.y * 0.40000001f, origin.z - direction.z * 0.40000001f};
+    shenSetLightPosition(slot, &position);
+    shenSetLightScale(slot, 0.25f);
+    shenSetLightScale2(slot, 1.5f);
+    SetLightKind(slot, 3);
+}
+
+// @verified - p
+void SetReflectorBoardPointLight(Vector3 &origin, const Vector3 &cameraPosition, std::uint32_t slot) {
+    if (std::fabs(origin.x) < 0.00001f)
+        origin.x = 0.0f;
+    if (std::fabs(origin.y) < 0.00001f)
+        origin.y = 0.0f;
+    if (std::fabs(origin.z) < 0.00001f)
+        origin.z = 0.0f;
+    Vector3 direction{origin.x - cameraPosition.x, origin.y - cameraPosition.y, origin.z - cameraPosition.z};
+    Vector3::NormalizeInPlace(direction);
+    const Vector3 position{origin.x - direction.x * 0.40000001f, origin.y - direction.y * 0.40000001f, origin.z - direction.z * 0.40000001f};
+    shenSetLightPosition(slot, &position);
+    shenSetLightScale(slot, 0.25f);
+    shenSetLightScale2(slot, 1.5f);
+    SetLightKind(slot, 3);
+}
+
+// @verified - p
+void ConfigureReflectorBoardLight(Character *character, ReflectorBoardParams *reflector, std::uint32_t slot) {
+    reflectorSavedActiveLight = GetCurrentActiveLight();
+    Vector3 origin;
+    GetCharacterMotionWorldPosition(character, MB_Head, &origin);
+    Vector3 cameraPosition;
+    camCtrlGetNextCamPos(&cameraPosition);
+    SetCurrentActiveLight(3);
+    ResetLightEntry(slot);
+    SetLightKind(slot, 2);
+    SetLegacySelectedLightEnabled(slot, true);
+    const bool custom = reflector->customLight == 1;
+    const std::uint32_t mode = custom ? reflector->lightType : reflectorDefaultLightType;
+    switch (mode) {
+    case 0:
+        SetReflectorBoardDirectionalLight(origin, cameraPosition, slot);
+        break;
+    case 1:
+        shenAssignAttachedLightFor(origin, cameraPosition, static_cast<std::int16_t>(custom ? reflector->lightAngle : reflectorDefaultLightAngle), slot);
+        break;
+    case 2:
+        shenAssignAttachedLightFor(origin, cameraPosition, ResolveReflectorBoardCharacterAngle(character), slot);
+        break;
+    case 3:
+        SetReflectorBoardPointLight(origin, cameraPosition, slot);
+        break;
+    case 4:
+        SetReflectorBoardOrbitPointLight(origin, cameraPosition, static_cast<std::int16_t>(custom ? reflector->lightAngle : reflectorDefaultLightAngle), slot);
+        break;
+    case 5:
+        SetReflectorBoardOrbitPointLight(origin, cameraPosition, ResolveReflectorBoardCharacterAngle(character), slot);
+        break;
+    }
+    const Vector4 colour = custom ? Vector4{reflector->scale, reflector->colour[0], reflector->colour[1], reflector->colour[2]} : reflectorDefaultValues;
+    shenSetLightColour(slot, colour);
+    UpdateLegacyLightTransforms();
+}
+
+// @verified - p
 void AssignReflectorBoardParams(Character *character) {
     ReflectorBoardParams *const reflector = FindReflectorBoard(character);
     if (!reflector)
         return;
-    const auto runRetainedCore = [&] {
-        if (reflector->coreAssignment)
+    if (reflectorBoardActive && (reflector->sector == 1 || reflector->mode != 0)) {
+        if (GetCurrentActiveLight() == 1) {
+            const float scale = reflector->customLight == 1 ? reflector->colour[0] : reflectorDefaultValues.y;
+            Vector3 sourcePosition;
+            GetCharacterMotionWorldPosition(character, MB_Head, &sourcePosition);
+
+            Vector3 cameraPosition;
+            camCtrlGetNextCamPos(&cameraPosition);
+
+            Vector3 direction{sourcePosition.x - cameraPosition.x, sourcePosition.y - cameraPosition.y, sourcePosition.z - cameraPosition.z};
+            Vector3 ::NormalizeInPlace(direction);
+            direction.x *= scale;
+            direction.y *= scale;
+            direction.z *= scale;
+
+            SetLegacyLambertFvfReference(&direction);
             reflector->coreAssignment(character);
-    };
-    if (!reflectorBoardActive || (reflector->sector != 2 && reflector->lightAngleOrVisible == 0)) {
-        runRetainedCore();
-        return;
-    }
+            SetLegacyLambertFvfReference(nullptr);
 
-    Vector3 sourcePosition{};
-    if (!g_cameraControl || !ResolveCharacterDrawNodeTranslation(character, 5, sourcePosition)) {
-        runRetainedCore();
-        return;
-    }
-    Vector3 cameraPosition{};
-    camCtrlGetNextCamPos(&cameraPosition);
-    if (GetCurrentActiveLight() == 1) {
-        Vector3 direction{sourcePosition.x - cameraPosition.x, sourcePosition.y - cameraPosition.y, sourcePosition.z - cameraPosition.z};
-        const float length = std::sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
-        if (length > 0.0f) {
-            const float scale = reflector->mode == 1 ? reflector->colour[0] : reflectorDefaultValues.y;
-            direction.x = direction.x / length * scale;
-            direction.y = direction.y / length * scale;
-            direction.z = direction.z / length * scale;
         }
-        SetLegacyLambertFvfReference(&direction);
-        runRetainedCore();
-        SetLegacyLambertFvfReference(nullptr);
-        return;
-    }
 
-    const bool custom = reflector->customLight == 1;
-    const std::uint32_t lightType = custom ? reflector->lightType : reflectorDefaultLightType;
-    const std::int16_t angle = lightType == 2 || lightType == 5 ?
-        ResolveReflectorBoardCharacterAngle(character) :
-        static_cast<std::int16_t>(custom ? reflector->lightAngleOrVisible : reflectorDefaultLightAngle);
-    const Vector4 colour = custom ? Vector4{reflector->scale, reflector->colour[0], reflector->colour[1], reflector->colour[2]} : reflectorDefaultValues;
-    TemporaryReflectionLightState saved{};
-    if (!BeginTemporaryReflectionLight(15, sourcePosition, cameraPosition, colour, lightType, angle, saved)) {
-        runRetainedCore();
-        return;
+        else {
+            ConfigureReflectorBoardLight(character, reflector, 15);
+            reflector->coreAssignment(character);
+            SetCurrentActiveLight(reflectorSavedActiveLight);
+            ResetLightEntry(15);
+            SetLegacySelectedLightEnabled(15, false);
+            UpdateLegacyLightTransforms();
+        }
+    } else {
+        reflector->coreAssignment(character);
     }
-    runRetainedCore();
-    EndTemporaryReflectionLight(saved);
 }
-
 bool AttachReflectorBoardComponent(Character *character, std::int32_t sector) {
     if (!character)
         return false;
@@ -242,6 +323,12 @@ bool ReadReflectorBoardState(const Character *character, std::int32_t &sector, V
     return true;
 }
 
+// @verified - p
+void ResetReflectorBoardState() {
+    reflectorDefaultValues = {1.0f, 0.30000001f, 0.30000001f, 0.30000001f};
+    reflectorBoardActive = 1;
+}
+
 void SetReflectorBoardDefaultValues(const Vector4 &values) {
     reflectorDefaultValues = {1.0f, values.y, values.z, values.w};
 }
@@ -257,7 +344,7 @@ void ResetReflectorBoardMode(Character *character, std::int32_t sector) {
     reflector->customLight = 1;
     const Vector4 values = reflectorDefaultValues;
     if (sector == 0)
-        sector = 1;
+        sector = 2;
     reflector->sector = sector;
     reflector->scale = values.x;
     reflector->colour[0] = values.y;
@@ -296,7 +383,7 @@ bool SetReflectorBoardLightMode(Character *character, bool active, std::uint32_t
     if (!active)
         reflector->sector = 0;
     reflector->lightType = lightMode;
-    reflector->lightAngleOrVisible = lightAngle;
+    reflector->lightAngle = lightAngle;
     if (!reflector->customLight) {
         reflector->customLight = 1;
         reflector->scale = reflectorDefaultValues.x;

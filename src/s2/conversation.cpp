@@ -1262,7 +1262,7 @@ void LoadIndex(const char *bankName) {
         resource->index = cached->index;
         size = cachedIndexSizes[static_cast<std::size_t>(cached - cachedResources.data())];
     } else
-        resource->index = AllocateIndex(bankName, g_actNumber, 1, size);
+        resource->index = AllocateIndex(bankName, g_actNumber, 0, size);
     indexSizes[static_cast<std::size_t>(resource - resources)] = size;
 }
 

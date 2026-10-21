@@ -362,7 +362,7 @@ void RestoreEngineFlag(std::uint32_t index);
 void SetAlphaFlags(std::uint32_t stage, std::uint32_t setting, std::uint32_t value);
 void InitShaderStates();
 void InitShenmueRendering();
-void SetLegacyWeatherRenderPass(bool translucent);
+void SetLegacyParticleRenderPass(bool translucent, bool compact = false);
 void RenderLegacyWeatherQuads(std::int32_t count);
 void UpdateShaderParams();
 #if defined(_WIN32)
@@ -395,12 +395,9 @@ struct LegacyFireQuad {
     std::uint32_t frameTick{};
 };
 
-
-
-
-
-bool BeginSmokeDraw(std::uint32_t count, std::uint32_t emitterFlags, std::uint32_t texture, const LegacyEffectGpuFlags &gpuFlags);
-bool AppendSmokeBillboard(const Matrix4x4 &worldTransform, const Vector3 &position, std::uint16_t angle, float width, float height, std::uint32_t colour);
+bool BeginSmokeDraw(std::uint32_t count, std::uint32_t emitterFlags, std::uint32_t texture, const LegacyEffectGpuFlags &gpuFlags, const Matrix4x4 &projection);
+bool AppendSmokeBillboard(
+    const Matrix4x4 &worldTransform, const Vector3 &position, const Vector3i &rotation, bool xyz, float width, float height, std::uint32_t colour);
 void EndSmokeDraw();
 
 

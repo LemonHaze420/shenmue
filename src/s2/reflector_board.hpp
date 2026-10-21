@@ -15,7 +15,7 @@ struct ReflectorBoardParams {
     std::int32_t sector;
     std::uint32_t mode;
     std::uint32_t lightType;
-    std::int32_t lightAngleOrVisible;
+    std::int32_t lightAngle;
     std::uint32_t customLight;
 #if SHENMUE_IS_PC
     std::uint32_t reserved2c;
@@ -34,7 +34,7 @@ static_assert(offsetof(ReflectorBoardParams, colour) == 0x0c);
 static_assert(offsetof(ReflectorBoardParams, sector) == 0x18);
 static_assert(offsetof(ReflectorBoardParams, mode) == 0x1c);
 static_assert(offsetof(ReflectorBoardParams, lightType) == 0x20);
-static_assert(offsetof(ReflectorBoardParams, lightAngleOrVisible) == 0x24);
+static_assert(offsetof(ReflectorBoardParams, lightAngle) == 0x24);
 static_assert(offsetof(ReflectorBoardParams, customLight) == 0x28);
 static_assert(offsetof(ReflectorBoardParams, reserved2c) == 0x2c);
 #else
@@ -44,16 +44,23 @@ static_assert(offsetof(ReflectorBoardParams, colour) == 0x08);
 static_assert(offsetof(ReflectorBoardParams, sector) == 0x14);
 static_assert(offsetof(ReflectorBoardParams, mode) == 0x18);
 static_assert(offsetof(ReflectorBoardParams, lightType) == 0x1c);
-static_assert(offsetof(ReflectorBoardParams, lightAngleOrVisible) == 0x20);
+static_assert(offsetof(ReflectorBoardParams, lightAngle) == 0x20);
 static_assert(offsetof(ReflectorBoardParams, customLight) == 0x24);
 static_assert(offsetof(ReflectorBoardParams, reserved28) == 0x28);
 #endif
 #pragma pack(pop)
 
 extern Vector4 reflectorDefaultValues;
+void ResetReflectorBoardState();
 void SetReflectorBoardDefaultValues(const Vector4 &values);
 void ResetReflectorBoardMode(Character *character, std::int32_t sector);
 
+std::int16_t ResolveReflectorBoardCharacterAngle(Character *character);
+void SetReflectorBoardDirectionalLight(Vector3 &origin, const Vector3 &cameraPosition, std::uint32_t slot);
+void shenAssignAttachedLightFor(Vector3 &origin, const Vector3 &cameraPosition, std::int16_t yaw, std::uint32_t slot);
+void SetReflectorBoardOrbitPointLight(Vector3 &origin, const Vector3 &cameraPosition, std::int16_t yaw, std::uint32_t slot);
+void SetReflectorBoardPointLight(Vector3 &origin, const Vector3 &cameraPosition, std::uint32_t slot);
+void ConfigureReflectorBoardLight(Character *character, ReflectorBoardParams *reflector, std::uint32_t slot);
 void AssignReflectorBoardParams(Character *character);
 bool AttachReflectorBoardComponent(Character *character, std::int32_t sector = 1);
 

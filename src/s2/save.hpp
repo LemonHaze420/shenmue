@@ -193,6 +193,70 @@ struct S2SaveDataInfo {
 };
 #pragma pack(pop)
 #pragma pack(push, 1)
+inline constexpr std::size_t S1SaveFileSize = 0xa000;
+inline constexpr std::size_t S1SaveSystemSize = 0x800;
+inline constexpr std::size_t S1SavePlayerStride = 0x1800;
+inline constexpr std::size_t S1SaveSlotInfoOffset = 0x700;
+inline constexpr shen_name S1SaveSignature{SHEN_NAME(SHEE)};
+inline constexpr std::uint32_t S1SaveVersion = 270;
+inline constexpr std::array<std::int32_t, 4> InheritedMoveSourceOffsets{0, 0, 32, 64};
+inline constexpr std::array<std::uint8_t, 19> InheritedHandMoveIds{0, 1, 6, 2, 4, 3, 11, 5, 7, 8, 9, 10, 12, 16, 17, 13, 18, 14, 15};
+inline constexpr std::array<std::int8_t, 19> InheritedHandMoveProficiency{96, 64, 82, 64, 62, 86, 58, 84, 78, 66, 52, 58, 46, 0, 0, 96, 0, 0, 32};
+inline constexpr std::array<std::uint8_t, 19> InheritedLegMoveIds{32, 33, 38, 34, 255, 37, 36, 35, 39, 40, 41, 42, 43, 44, 47, 46, 255, 48, 49};
+inline constexpr std::array<std::int8_t, 19> InheritedLegMoveProficiency{92, 86, 78, 72, 0, 46, 58, 48, 54, 34, 52, 64, 0, 44, 0, 44, 38, 0, 0};
+inline constexpr std::array<std::uint8_t, 14> InheritedThrowMoveIds{64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77};
+inline constexpr std::array<std::int8_t, 14> InheritedThrowMoveProficiency{84, 64, 60, 64, 38, 60, 38, 54, 44, 0, 44, 0, 0, 0};
+inline constexpr std::span<const std::uint8_t> InheritedMoveIds[]{{}, InheritedHandMoveIds, InheritedLegMoveIds, InheritedThrowMoveIds};
+inline constexpr std::span<const std::int8_t> InheritedMoveProficiency[]{
+    {}, InheritedHandMoveProficiency, InheritedLegMoveProficiency, InheritedThrowMoveProficiency};
+
+#pragma pack(push, 1)
+struct S1ImportedSaveHeader {
+    shen_name signature;
+    std::uint32_t version;
+};
+struct S1ImportedMoveBank {
+    std::array<std::int16_t, 20> proficiency;
+    std::array<std::int16_t, 20> moveIds;
+    std::int8_t count;
+    std::uint8_t selected;
+};
+struct S1ImportedPlayerData {
+    std::uint32_t savedStat0;
+    std::array<std::byte, 16> reserved004;
+    std::uint32_t runtimeFlags;
+    std::int32_t cash, segaCoins;
+    std::uint16_t alternateHealth, defaultHealth, reactionCameraScale, assistScale;
+    std::uint32_t gameConfigurationFlags;
+    std::uint16_t contextActionMode, playerOption;
+    std::uint8_t blurFlag;
+    std::byte reserved031;
+    std::array<S1ImportedMoveBank, 3> moves;
+    std::array<std::byte, 8> reserved128;
+    std::array<std::byte, 128> scenarioScratch;
+    std::array<std::byte, 0xa0> reserved1b0;
+    std::array<std::uint8_t, 0x100> keyItems;
+    std::array<std::uint8_t, 0x100> capsuleStock;
+};
+#pragma pack(pop)
+static_assert(sizeof(S1ImportedSaveHeader) == 8);
+static_assert(sizeof(S1ImportedMoveBank) == 0x52);
+static_assert(offsetof(S1ImportedMoveBank, moveIds) == 0x28 && offsetof(S1ImportedMoveBank, count) == 0x50);
+static_assert(sizeof(S1ImportedPlayerData) == 0x450);
+static_assert(offsetof(S1ImportedPlayerData, runtimeFlags) == 0x14 && offsetof(S1ImportedPlayerData, cash) == 0x18);
+static_assert(offsetof(S1ImportedPlayerData, alternateHealth) == 0x20 && offsetof(S1ImportedPlayerData, gameConfigurationFlags) == 0x28);
+static_assert(offsetof(S1ImportedPlayerData, contextActionMode) == 0x2c && offsetof(S1ImportedPlayerData, playerOption) == 0x2e);
+static_assert(offsetof(S1ImportedPlayerData, blurFlag) == 0x30 && offsetof(S1ImportedPlayerData, moves) == 0x32);
+static_assert(offsetof(S1ImportedPlayerData, scenarioScratch) == 0x130 && offsetof(S1ImportedPlayerData, keyItems) == 0x250);
+static_assert(offsetof(S1ImportedPlayerData, capsuleStock) == 0x350);
+
+std::uint64_t ReadS1SaveDataByIndex(void *bank, std::int32_t slot);
+bool ValidateS1SaveHeader(const void *header) noexcept;
+std::int32_t FindInheritedMoveIndex(std::int32_t category, std::int32_t move) noexcept;
+void InitializeInheritedMoveProficiency();
+std::int64_t ImportS1SaveData(const void *bank, std::int32_t slot);
+void ImportSelectedS1SaveData(const void *bank, std::int32_t slot);
+std::int64_t ResetItemInventoryState() noexcept;
 struct SnapshotMetadataRecord {
     std::int32_t id;
     std::int32_t use;
@@ -399,8 +463,8 @@ static_assert(offsetof(BackupSaveReadWork, completion) == 0x08);
 static_assert(offsetof(BackupSaveReadWork, size) == 0x10);
 static_assert(offsetof(BackupSaveReadWork, path) == 0x14);
 static_assert(offsetof(BackupSaveReadWork, destination) == 0x118);
-inline constexpr std::array<const char *, 10> S1_BACKUP_SLOT_NAMES{"SHENMUE1_000", "SHENMUE1_001", "SHENMUE1_002", "SHENMUE1_003", "SHENMUE1_004",
-    "SHENMUE1_005", "SHENMUE1_006", "SHENMUE1_007", "SHENMUE1_008", "SHENMUE1_009"};
+inline constexpr std::array<const char *, 11> S1_BACKUP_SLOT_NAMES{"SHENMUE1_000", "SHENMUE1_001", "SHENMUE1_002", "SHENMUE1_003", "SHENMUE1_004",
+    "SHENMUE1_005", "SHENMUE1_006", "SHENMUE1_007", "SHENMUE1_008", "SHENMUE1_009", "SHENMUE1_010"};
 inline constexpr std::array<std::uint32_t, 10> S2_BACKUP_SLOT_FLAGS{0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000, 0x8000, 0x10000, 0x20000, 0x40000};
 extern std::array<S2SaveDataInfo, 11> &g_backupSaveDataInfos;
 S2SaveDataInfo *GetBackupSaveDataInfo(std::int32_t slot) noexcept;
@@ -532,6 +596,10 @@ std::uint64_t ReadSaveDataSection(std::int32_t gameSection, std::int32_t slot);
 std::byte *RestoreSystemSaveProgress() noexcept;
 std::int64_t InitializeNewGameFromSaveSlot(std::int32_t slot);
 
+std::uint64_t ReadSystemSaveHeader(std::int32_t slot);
+std::int64_t RestoreSaveSystemSettings(std::int32_t slot);
+void RestoreGameSaveSlot(std::uint32_t slot);
+std::int64_t LoadGameFromSaveSlot(std::int32_t slot, std::int32_t restorePlacement);
 inline constexpr std::array<std::int16_t, 13> InitialHandMoveProficiency{96, 64, 82, 64, 62, 86, 58, 84, 78, 66, 52, 58, 46};
 inline constexpr std::array<std::int16_t, 12> InitialLegMoveProficiency{92, 86, 78, 72, 0, 46, 58, 48, 54, 34, 52, 64};
 inline constexpr std::array<std::int16_t, 9> InitialThrowMoveProficiency{84, 64, 60, 64, 38, 60, 38, 54, 44};

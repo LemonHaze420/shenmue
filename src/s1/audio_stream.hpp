@@ -2,7 +2,11 @@
 
 #include "s1/d3t/namespace.hpp"
 #include "s1/hlib.hpp"
+#include "shenmue.h"
 
+#if SHENMUE_IS_S2
+#include "s2/aica_middleware.hpp"
+#endif
 #include <cstddef>
 #include <cstdint>
 #include <atomic>
@@ -25,6 +29,9 @@ inline constexpr shen_name kAhxBufferToken{SHEN_NAME(AHXB)};
 inline constexpr shen_name kVoiceBuffer2Token{SHEN_NAME(VBU2)};
 inline constexpr shen_name kAhxBuffer2Token{SHEN_NAME(AHX2)};
 
+#if SHENMUE_IS_S2
+using AicaState = ::shenmue::s2::aica::AicaState;
+#else
 struct AicaState {
     std::uint32_t phase;
     std::uint32_t uid;
@@ -64,7 +71,9 @@ static_assert(offsetof(AicaState, currentFilterLevel) == 0x38);
 static_assert(offsetof(AicaState, voiceId) == 0x64);
 static_assert(offsetof(AicaState, aicaTone) == 0x68);
 
-#if defined(_WIN32)
+#endif
+
+#if defined (_WIN32)
 #pragma pack(push, 1)
 struct AudioEngineCallbacks final : IXAudio2EngineCallback {
     std::atomic<std::uint32_t> effectFlag{0};
@@ -256,8 +265,13 @@ void InitializeSceneDialogueAudio();
 
 void *StartRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, std::uint32_t loopBegin, std::uint32_t loopLength, std::uint16_t channels,
     float volume, float frequencyRatio, std::uint32_t sampleRate = 44100, bool routeThroughAica = false);
+#if SHENMUE_IS_S2
+void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, std::uint32_t loopBegin, std::uint32_t loopLength, std::uint16_t channels,
+    float volume, float frequencyRatio, std::uint32_t sampleRate = 44100, bool reclaimable = false, std::uint16_t bitsPerSample = 16);
+#else
 void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, std::uint32_t loopBegin, std::uint32_t loopLength, std::uint16_t channels,
     float volume, float frequencyRatio, std::uint32_t sampleRate = 44100, bool routeThroughAica = false);
+#endif
 void StartRawSoundEffectPlayback(void *playback);
 
 

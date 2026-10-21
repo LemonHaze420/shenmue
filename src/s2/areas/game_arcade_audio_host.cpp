@@ -4,6 +4,7 @@
 #include "s1/audio_stream.hpp"
 #include "s1/d3t/settings.hpp"
 #include "s2/areas/game_arcade_audio_host.hpp"
+#include "s2/d3t_renderer.hpp"
 #include <array>
 #include <cmath>
 #include <cstdio>
@@ -56,7 +57,7 @@ IXAudio2MasteringVoice *g_masteringVoice{};
 IXAudio2SubmixVoice *g_aicaSubmixVoice{};
 IUnknown *g_aicaReverbEffect{};
 IUnknown *g_masteringLimiterEffect{};
-std::recursive_mutex g_audioInitializationMutex;
+std::recursive_mutex &g_audioInitializationMutex = s2::aica::GetAudioBackendMutex();
 bool g_audioComInitialized{};
 std::uint32_t g_nextRawSoundEffectVoice{};
 std::unique_ptr<AudioEngineCallbacks> g_audioEngineCallbacks;
@@ -136,7 +137,7 @@ bool InitializeXAudio() {
     if (g_xaudio)
         return true;
     if (!g_audioDeviceSelected) {
-        g_audioDeviceIndex = g_applicationSettings.savedAudioDevice;
+        g_audioDeviceIndex = s2::GetS2AudioSettings().device;
         g_audioDeviceSelected = true;
     }
     const HRESULT comResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
@@ -727,9 +728,9 @@ void StopSourceVoiceAndFlush_0(std::uint32_t voiceId, bool release) {
 }
 
 void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, std::uint32_t loopBegin, std::uint32_t loopLength, std::uint16_t channels,
-    float volume, float frequencyRatio, std::uint32_t sampleRate, bool routeThroughAica) {
+    float volume, float frequencyRatio, std::uint32_t sampleRate, bool reclaimable, std::uint16_t bitsPerSample) {
 #if defined(_WIN32)
-    XA_VoiceContext *const owner = ResolveRawVoice(AllocateRawSoundEffectVoice(16, channels, routeThroughAica));
+    XA_VoiceContext *const owner = ResolveRawVoice(AllocateRawSoundEffectVoice(bitsPerSample, channels, reclaimable));
     if (!owner)
         return nullptr;
     WAVEFORMATEX format{};
@@ -759,7 +760,8 @@ void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, 
     (void)volume;
     (void)frequencyRatio;
     (void)sampleRate;
-    (void)routeThroughAica;
+    (void)reclaimable;
+    (void)bitsPerSample;
     return nullptr;
 #endif
 }
@@ -801,12 +803,13 @@ void *AllocateRawSoundEffectVoice(std::uint16_t bitsPerSample, std::uint16_t cha
     }
     if (!owner)
         return nullptr;
-    if (owner->voice)
-        owner->voice->DestroyVoice();
-    owner->voice = nullptr;
-    Routing(owner) = {};
     owner->active = true;
     owner->reserved = !reclaimable;
+    if (owner->voice)
+        owner->voice->DestroyVoice();
+
+    Routing(owner) = {};
+
     WAVEFORMATEX format{};
     format.wFormatTag = WAVE_FORMAT_PCM;
     format.nChannels = channels;
@@ -1044,6 +1047,7 @@ void ShutdownXAudio() {
     if (g_audioComInitialized)
         CoUninitialize();
     g_audioComInitialized = false;
+    g_audioDeviceSelected = false;
 #endif
     ReleaseEncodedAudioBuffers();
 }

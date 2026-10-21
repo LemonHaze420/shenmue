@@ -197,10 +197,11 @@ void TransformFireLine(std::array<Complex, 32> &line) noexcept {
 }
 
 template <std::size_t N, std::size_t Half, std::size_t Padded>
-void PrepareSpectrum(const float *phases, const float *falloff, float *real, float *imaginary) noexcept {
-    std::fill_n(real, Padded * Padded, 0.0f);
-    std::fill_n(imaginary, Padded * Padded, 0.0f);
-
+void PrepareSpectrum(const float *phases, const float *falloff, float *real, float *imaginary, float dc) noexcept {
+    if constexpr (N == 16) {
+        std::fill_n(real, Padded * Padded, 0.0f);
+        std::fill_n(imaginary, Padded * Padded, 0.0f);
+    }
     const auto store = [real, imaginary](std::size_t y, std::size_t x, float amplitude, float phase, bool conjugate) {
         const std::size_t destination = y * Padded + x;
         real[destination] = NativeCosine(phase) * amplitude;
@@ -220,13 +221,13 @@ void PrepareSpectrum(const float *phases, const float *falloff, float *real, flo
         }
     }
 
-    real[0] = 0.0f;
+    real[0] = dc;
     imaginary[0] = 0.0f;
-    real[N] = 0.0f;
+    real[N] = dc;
     imaginary[N] = 0.0f;
-    real[N * Padded] = 0.0f;
+    real[N * Padded] = dc;
     imaginary[N * Padded] = 0.0f;
-    real[N * Padded + N] = 0.0f;
+    real[N * Padded + N] = dc;
     imaginary[N * Padded + N] = 0.0f;
 }
 
@@ -377,7 +378,7 @@ void InitializeSmokeFft(SmokeFftData &data) noexcept {
     GenerateNative32PointTwiddles();
     GenerateSmokePhases(data);
     GenerateSmokePhaseRates(data);
-    PrepareSpectrum<16, 8, 17>(data.phases.data(), data.falloff.data(), data.real.data(), data.imaginary.data());
+    PrepareSpectrum<16, 8, 17>(data.phases.data(), data.falloff.data(), data.real.data(), data.imaginary.data(), -50.0f);
 }
 
 void SetSmokeFftOutput(SmokeFftData &data, std::byte *raw0x49fAllocation) noexcept {
@@ -432,7 +433,7 @@ void UpdateSmokeFft(SmokeFftData &data) noexcept {
     if ((data.flags & activeFlag) == 0)
         return;
     AdvanceSmokePhases(data);
-    PrepareSpectrum<16, 8, 17>(data.phases.data(), data.falloff.data(), data.real.data(), data.imaginary.data());
+    PrepareSpectrum<16, 8, 17>(data.phases.data(), data.falloff.data(), data.real.data(), data.imaginary.data(), -50.0f);
     RunTwoDimensionalFft<16, 17>(data.real.data(), data.imaginary.data());
 
     auto *output = reinterpret_cast<std::uint32_t *>(data.outputAllocation + kSmokeOutputOffset);
@@ -461,7 +462,7 @@ void InitializeFireFft(FireFftData &data) noexcept {
     GenerateNative32PointTwiddles();
     GenerateFirePhases(data);
     GenerateFirePhaseRates(data);
-    PrepareSpectrum<32, 16, 33>(data.phases.data(), data.falloff.data(), data.real.data(), data.imaginary.data());
+    PrepareSpectrum<32, 16, 33>(data.phases.data(), data.falloff.data(), data.real.data(), data.imaginary.data(), data.falloff[0]);
     data.palette = kDefaultFirePalette.data();
 }
 
@@ -517,7 +518,7 @@ void UpdateFireFft(FireFftData &data, std::uint16_t flags) noexcept {
         return;
     ++data.tick;
     AdvanceFirePhases(data);
-    PrepareSpectrum<32, 16, 33>(data.phases.data(), data.falloff.data(), data.real.data(), data.imaginary.data());
+    PrepareSpectrum<32, 16, 33>(data.phases.data(), data.falloff.data(), data.real.data(), data.imaginary.data(), data.falloff[0]);
     RunTwoDimensionalFft<32, 33>(data.real.data(), data.imaginary.data());
 
     const bool duplicateLowerHalf = (flags & 2U) != 0;

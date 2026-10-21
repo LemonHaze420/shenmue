@@ -1,4 +1,5 @@
 #include "s2/audio_data.hpp"
+#include "s1/audio_stream.hpp"
 #include "s2/aica_middleware.hpp"
 #include "d3t/archive_handles.hpp"
 
@@ -64,20 +65,10 @@ std::recursive_mutex audioMutex;
 std::array<std::byte *, CONVERSATION_WAVE_ARENA_COUNT> dialogueWaveArenas{};
 std::uint32_t dialogueWaveArenaIndex;
 std::uint32_t dialogueSourceIndex;
-struct BankPlatformVoice {
-    aica::AicaState envelope{};
-    bool reserved{};
-    bool started{};
-#if defined(_WIN32)
-    IXAudio2SourceVoice *source{};
-#endif
-};
-std::array<BankPlatformVoice, 160> bankPlatformVoices{};
 
 #if defined(_WIN32)
 IXAudio2 *xaudio{};
 IXAudio2MasteringVoice *masteringVoice{};
-IXAudio2SubmixVoice *bankDryOutput{};
 IXAudio2SubmixVoice *bankWetOutput{};
 std::array<std::atomic<IXAudio2SourceVoice *>, CONVERSATION_SOURCE_COUNT> dialogueSources{};
 std::atomic<std::uint32_t> dialogueCriticalError{};
@@ -166,11 +157,9 @@ void ResetAudioOutput() {
         if (source)
             source->DestroyVoice();
     }
-    if (bankDryOutput)
-        bankDryOutput->DestroyVoice();
     if (bankWetOutput)
         bankWetOutput->DestroyVoice();
-    bankDryOutput = nullptr;
+
     bankWetOutput = nullptr;
     if (masteringVoice)
         masteringVoice->DestroyVoice();
@@ -420,134 +409,38 @@ std::recursive_mutex &GetAudioBackendMutex() noexcept {
 
 void ResetPlatformVoices() noexcept {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-    for (BankPlatformVoice &voice : bankPlatformVoices) {
-#if defined(_WIN32)
-        if (voice.source)
-            voice.source->DestroyVoice();
-#endif
-        voice = {};
-    }
+    s1::ShutdownXAudio();
 }
 
 void *GetRawSoundEffectVoice(std::uint32_t index) {
-    return index < bankPlatformVoices.size() ? &bankPlatformVoices[index] : nullptr;
+    return s1::GetRawSoundEffectVoice(index);
 }
 
 AicaState *GetRawSoundEffectEnvelopeState(std::uint32_t index) {
-    return index < bankPlatformVoices.size() && bankPlatformVoices[index].reserved ? &bankPlatformVoices[index].envelope : nullptr;
+    return s1::GetRawSoundEffectEnvelopeState(index);
 }
 
 std::uint32_t RawSoundEffectVoiceId(void *playback) {
-    if (!playback)
-        return UINT32_MAX;
-    return static_cast<std::uint32_t>(static_cast<BankPlatformVoice *>(playback) - bankPlatformVoices.data());
+
+    return s1 ::RawSoundEffectVoiceId(playback);
 }
 
 bool RawSoundEffectVoiceIsActive(void *playback) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-#if defined(_WIN32)
-    const BankPlatformVoice *const voice = static_cast<const BankPlatformVoice *>(playback);
-    if (!voice || !voice->source)
-        return false;
-    XAUDIO2_VOICE_STATE state{};
-    voice->source->GetState(&state, XAUDIO2_VOICE_NOSAMPLESPLAYED);
-    return state.BuffersQueued != 0;
-#else
-    (void)playback;
-    return false;
-#endif
+
+    return s1::RawSoundEffectVoiceIsActive(playback);
 }
 
 void ReleaseRawSoundEffectReservation(void *playback) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-    BankPlatformVoice *const voice = static_cast<BankPlatformVoice *>(playback);
-    if (!voice)
-        return;
-#if defined(_WIN32)
-    if (voice->source)
-        voice->source->DestroyVoice();
-#endif
-    *voice = {};
+    s1::ReleaseRawSoundEffectReservation(playback);
 }
 
 void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, std::uint32_t loopBegin, std::uint32_t loopLength, std::uint16_t channels,
-    float volume, float frequencyRatio, std::uint32_t sampleRate, bool routeThroughAica, std::uint16_t bitsPerSample) {
+    float volume, float frequencyRatio, std::uint32_t sampleRate, bool reclaimable, std::uint16_t bitsPerSample) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-#if defined(_WIN32)
-    if (!samples || audioBytes == 0 || channels == 0 || channels > 2 || (bitsPerSample != 8 && bitsPerSample != 16) || !InitializeDialogueAudio())
-        return nullptr;
-    if (!bankDryOutput && FAILED(xaudio->CreateSubmixVoice(&bankDryOutput, 6, 48000)))
-        return nullptr;
-    if (!bankWetOutput) {
-        IUnknown *reverb = nullptr;
-        if (FAILED(XAudio2CreateReverb(&reverb)))
-            return nullptr;
-        XAUDIO2_EFFECT_DESCRIPTOR descriptor{reverb, TRUE, 1};
-        const XAUDIO2_EFFECT_CHAIN chain{1, &descriptor};
-        const HRESULT created = xaudio->CreateSubmixVoice(&bankWetOutput, 1, 48000, 0, 0, nullptr, &chain);
-        reverb->Release();
-        if (FAILED(created))
-            return nullptr;
-        const XAUDIO2FX_REVERB_I3DL2_PARAMETERS preset = XAUDIO2FX_I3DL2_PRESET_DEFAULT;
-        XAUDIO2FX_REVERB_PARAMETERS parameters{};
-        ReverbConvertI3DL2ToNative(&preset, &parameters);
-        bankWetOutput->SetEffectParameters(0, &parameters, sizeof(parameters));
-    }
-    BankPlatformVoice *voice = nullptr;
-    for (BankPlatformVoice &candidate : bankPlatformVoices)
-        if (!candidate.reserved) {
-            voice = &candidate;
-            break;
-        }
-    if (!voice)
-        return nullptr;
-    WAVEFORMATEX format{};
-    format.wFormatTag = WAVE_FORMAT_PCM;
-    format.nChannels = channels;
-    format.nSamplesPerSec = sampleRate;
-    format.wBitsPerSample = bitsPerSample;
-    format.nBlockAlign = static_cast<WORD>(channels * (bitsPerSample / 8));
-    format.nAvgBytesPerSec = sampleRate * format.nBlockAlign;
-    XAUDIO2_SEND_DESCRIPTOR destinations[]{{0, bankDryOutput}, {0, bankWetOutput}};
-    const XAUDIO2_VOICE_SENDS sends{2, destinations};
-    if (FAILED(
-            xaudio->CreateSourceVoice(&voice->source, &format, XAUDIO2_VOICE_USEFILTER, XAUDIO2_MAX_FREQ_RATIO, nullptr, routeThroughAica ? &sends : nullptr)))
-        return nullptr;
-    const std::uint32_t samplesCount = audioBytes / format.nBlockAlign;
-    if (loopBegin > samplesCount || loopLength > samplesCount - loopBegin) {
-        voice->source->DestroyVoice();
-        voice->source = nullptr;
-        return nullptr;
-    }
-    XAUDIO2_BUFFER buffer{};
-    buffer.Flags = XAUDIO2_END_OF_STREAM;
-    buffer.AudioBytes = audioBytes;
-    buffer.pAudioData = reinterpret_cast<const BYTE *>(samples);
-    buffer.LoopBegin = loopBegin;
-    buffer.LoopLength = loopLength;
-    buffer.LoopCount = loopLength ? XAUDIO2_LOOP_INFINITE : 0;
-    if (FAILED(voice->source->SubmitSourceBuffer(&buffer)) || FAILED(voice->source->SetVolume(volume)) ||
-        FAILED(voice->source->SetFrequencyRatio(frequencyRatio))) {
-        voice->source->DestroyVoice();
-        voice->source = nullptr;
-        return nullptr;
-    }
-    voice->reserved = true;
-    voice->envelope.voiceId = RawSoundEffectVoiceId(voice);
-    return voice;
-#else
-    (void)samples;
-    (void)audioBytes;
-    (void)loopBegin;
-    (void)loopLength;
-    (void)channels;
-    (void)volume;
-    (void)frequencyRatio;
-    (void)sampleRate;
-    (void)routeThroughAica;
-    (void)bitsPerSample;
-    return nullptr;
-#endif
+
+    return s1::PrepareRawSoundEffect(samples, audioBytes, loopBegin, loopLength, channels, volume, frequencyRatio, sampleRate, reclaimable, bitsPerSample);
 }
 
 void SetDialogueStreamsPaused(bool paused) {
@@ -569,107 +462,41 @@ void SetDialogueStreamsPaused(bool paused) {
 
 void StartRawSoundEffectPlayback(void *playback) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-#if defined(_WIN32)
-    BankPlatformVoice *const voice = static_cast<BankPlatformVoice *>(playback);
-    if (!voice || !voice->source)
-        return;
-    if (FAILED(voice->source->Start())) {
-        ReleaseRawSoundEffectReservation(voice);
-        return;
-    }
-    voice->started = true;
-#else
-    (void)playback;
-#endif
+    s1::StartRawSoundEffectPlayback(playback);
 }
 
 void StopRawSoundEffectPlayback(void *playback, bool releaseEnvelope) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-    BankPlatformVoice *const voice = static_cast<BankPlatformVoice *>(playback);
-    if (!voice)
-        return;
-    if (releaseEnvelope && AssignAicaVoiceRelease(RawSoundEffectVoiceId(voice)))
-        return;
-#if defined(_WIN32)
-    if (voice->source) {
-        voice->source->Stop();
-        voice->source->FlushSourceBuffers();
+    s1::StopRawSoundEffectPlayback(playback, releaseEnvelope);
     }
-#endif
-    voice->envelope.phase = 0;
-}
 
 void SetRawSoundEffectPaused(void *playback, bool paused) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-#if defined(_WIN32)
-    BankPlatformVoice *const voice = static_cast<BankPlatformVoice *>(playback);
-    if (voice && voice->source && voice->started) {
+
         if (paused)
-            voice->source->Stop();
+            s1::SetRawSoundEffectPaused(playback, true);
         else
-            voice->source->Start();
-    }
-#else
-    (void)playback;
-    (void)paused;
-#endif
+            s1::StartRawSoundEffectPlayback(playback);
 }
 
 void SetRawSoundEffectVolume(void *playback, float volume) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-#if defined(_WIN32)
-    BankPlatformVoice *const voice = static_cast<BankPlatformVoice *>(playback);
-    if (voice && voice->source && std::isfinite(volume))
-        voice->source->SetVolume(volume);
-#else
-    (void)playback;
-    (void)volume;
-#endif
+    s1::SetRawSoundEffectVolume(playback, volume);
 }
 
 void SetRawSoundEffectFrequencyRatio(void *playback, float ratio) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-#if defined(_WIN32)
-    BankPlatformVoice *const voice = static_cast<BankPlatformVoice *>(playback);
-    if (voice && voice->source && std::isfinite(ratio))
-        voice->source->SetFrequencyRatio(ratio);
-#else
-    (void)playback;
-    (void)ratio;
-#endif
+    s1 ::SetRawSoundEffectFrequencyRatio(playback, ratio);
 }
 
 void SetRawSoundEffectLowPassFrequency(void *playback, float frequency, float oneOverQ) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-#if defined(_WIN32)
-    BankPlatformVoice *const voice = static_cast<BankPlatformVoice *>(playback);
-    if (!voice || !voice->source || !std::isfinite(frequency) || !std::isfinite(oneOverQ))
-        return;
-    const XAUDIO2_FILTER_PARAMETERS parameters{LowPassFilter, std::clamp(frequency, 0.0f, 1.0f), std::clamp(oneOverQ, 0.0f, XAUDIO2_MAX_FILTER_ONEOVERQ)};
-    voice->source->SetFilterParameters(&parameters);
-#else
-    (void)playback;
-    (void)frequency;
-    (void)oneOverQ;
-#endif
+    (void)s1 ::SetRawSoundEffectLowPassFrequency(playback, frequency, oneOverQ);
 }
 
 void SetRawSoundEffectOutputMatrix(void *playback, const float *matrix, std::uint32_t sourceChannels, std::uint32_t outputChannels) {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
-#if defined(_WIN32)
-    BankPlatformVoice *const voice = static_cast<BankPlatformVoice *>(playback);
-    if (!voice || !voice->source || !matrix)
-        return;
-    if (outputChannels == 6 && bankDryOutput)
-        voice->source->SetOutputMatrix(bankDryOutput, sourceChannels, 6, matrix);
-    else if (outputChannels == 1 && bankWetOutput)
-        voice->source->SetOutputMatrix(bankWetOutput, sourceChannels, 1, matrix);
-#else
-    (void)playback;
-    (void)matrix;
-    (void)sourceChannels;
-    (void)outputChannels;
-#endif
+    (void)s1::SetRawSoundEffectOutputMatrix(playback, matrix, sourceChannels, outputChannels);
 }
 } // namespace aica
 

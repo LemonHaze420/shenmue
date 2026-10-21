@@ -272,7 +272,6 @@ struct SmokeDrawState {
     Matrix4x4 projection{};
 };
 
-Matrix4x4 smokeProjection{};
 SmokeDrawState smokeDraw{};
 std::array<LegacyFireQuad, 512> fireQuads{};
 std::uint32_t fireQuadCount = 0;
@@ -1331,26 +1330,29 @@ void PublishLegacyWeatherSpawnDrift(const Vector3 &drift) {
     std::memcpy(&legacyWeatherSpawnDrift, &drift, sizeof(drift));
 }
 
-void SetLegacyWeatherRenderPass(bool translucent) {
+void SetLegacyParticleRenderPass(bool translucent, bool compact) {
     legacyWeatherRenderPass = translucent ? 1U : 0U;
-    legacyWeatherShaderTypes = {28U, 12U};
-    legacyWeatherVertexStride = 28U;
+    legacyWeatherShaderTypes = compact ? std::array<std::uint32_t, 2>{26U, 10U} : std::array<std::uint32_t, 2>{28U, 12U};
+    legacyWeatherVertexStride = compact ? 16U : 28U;
 #if defined(_WIN32)
     d3t::D3TDeviceContext *const context = d3t::DX11::g_ppD3DDeviceContext;
     if (!context)
         return;
+    const std::uint32_t vertexShader = compact ? g_fvfPdVertexShader : g_fvfPtdTVertexShader;
+    const std::uint32_t pixelShader = compact ? g_fvfPdPixelShader : g_fvfPtdTPixelShader;
+    const std::uint32_t inputLayout = g_fvfLayouts[compact ? 26U : 28U];
     d3t::D3TRenderState &state = d3t::GetRenderState(*context);
-    if (state.vertexShader != g_fvfPtdTVertexShader) {
-        state.vertexShader = g_fvfPtdTVertexShader;
+    if (state.vertexShader != vertexShader) {
+        state.vertexShader = vertexShader;
         state.pipelineStateFlags |= d3t::PipelineVertexShader | d3t::PipelineInputLayout;
         state.vertexBufferDirtyMask = ~std::uint32_t{0};
     }
-    if (state.pixelShader != g_fvfPtdTPixelShader) {
-        state.pixelShader = g_fvfPtdTPixelShader;
+    if (state.pixelShader != pixelShader) {
+        state.pixelShader = pixelShader;
         state.pipelineStateFlags |= d3t::PipelinePixelShader;
     }
-    if (state.inputLayout != g_fvfLayouts[28]) {
-        state.inputLayout = g_fvfLayouts[28];
+    if (state.inputLayout != inputLayout) {
+        state.inputLayout = inputLayout;
         state.pipelineStateFlags |= d3t::PipelineInputLayout;
     }
 #endif
@@ -1654,7 +1656,7 @@ void InitializeLegacyDrawState() {
     characterShadowSavedBusy = false;
 
     smokeDraw = {};
-    smokeProjection = {};
+
     fireQuadCount = 0;
     shaderParameters.constants[24] = {0.0f, 0.0f, 0.0f, 0.49803922f};
     currentVertexColourLayoutType = 1;
@@ -4228,9 +4230,9 @@ std::uint32_t ExecuteProjectedShadowCommandStream(std::span<const std::byte> mod
 void ApplyLegacyEffectRenderModes(d3t::D3TRenderState &state, const LegacyEffectGpuFlags &gpuFlags, std::uint32_t texture);
 #endif
 
-bool BeginSmokeDraw(std::uint32_t count, std::uint32_t emitterFlags, std::uint32_t texture, const LegacyEffectGpuFlags &gpuFlags) {
+bool BeginSmokeDraw(std::uint32_t count, std::uint32_t emitterFlags, std::uint32_t texture, const LegacyEffectGpuFlags &gpuFlags, const Matrix4x4 &projection) {
 #if defined(_WIN32)
-    if (smokeDraw.mapped || !count || count > std::numeric_limits<std::uint32_t>::max() / 6U) {
+    if (smokeDraw.mapped || count > std::numeric_limits<std::uint32_t>::max() / 6U) {
         return false;
     }
     auto *const context = d3t::DX11::g_ppD3DDeviceContext;
@@ -4238,35 +4240,9 @@ bool BeginSmokeDraw(std::uint32_t count, std::uint32_t emitterFlags, std::uint32
     if (!context || vertexCount > std::numeric_limits<std::uint32_t>::max() / sizeof(SmokeGpuVertex)) {
         return false;
     }
-    if (!GetLegacyRenderMask()) {
-        const Matrix4x4 *const cameraProjection = g_matrixStack.entries[2].stack;
-        if (!cameraProjection)
-            return false;
-        Matrix4x4 screenOutput{};
-        screenOutput.rows[0].x = 320.0f;
-        screenOutput.rows[1].y = -240.0f;
-        screenOutput.rows[2].z = 1.0f;
-        screenOutput.rows[3] = {320.0f, 240.0f, 0.0f, 1.0f};
-        smokeProjection = MultiplyEffectMatrices(*cameraProjection, screenOutput);
-    }
-    const bool compact = (emitterFlags & 0x20000000U) != 0;
-    const std::uint32_t vertexShader = compact ? g_fvfPdVertexShader : g_fvfPtdTVertexShader;
-    const std::uint32_t pixelShader = compact ? g_fvfPdPixelShader : g_fvfPtdTPixelShader;
-    const std::uint32_t inputLayout = g_fvfLayouts[compact ? 26U : 28U];
+
     d3t::D3TRenderState &state = d3t::GetRenderState(*context);
-    if (state.vertexShader != vertexShader) {
-        state.vertexShader = vertexShader;
-        state.pipelineStateFlags |= d3t::PipelineVertexShader | d3t::PipelineInputLayout;
-        state.vertexBufferDirtyMask = ~std::uint32_t{0};
-    }
-    if (state.pixelShader != pixelShader) {
-        state.pixelShader = pixelShader;
-        state.pipelineStateFlags |= d3t::PipelinePixelShader;
-    }
-    if (state.inputLayout != inputLayout) {
-        state.inputLayout = inputLayout;
-        state.pipelineStateFlags |= d3t::PipelineInputLayout;
-    }
+
     ApplyLegacyEffectRenderModes(state, gpuFlags, texture);
     auto *const mapped = static_cast<SmokeGpuVertex *>(d3t::GetMappedConstantBuffer(context, 0, vertexCount * sizeof(SmokeGpuVertex)));
     if (!mapped)
@@ -4279,52 +4255,66 @@ bool BeginSmokeDraw(std::uint32_t count, std::uint32_t emitterFlags, std::uint32
         .renderPass = (emitterFlags & 0x40000000U) ? 1U : 0U,
         .compact = (emitterFlags & 0x20000000U) != 0,
         .gpuFlags = gpuFlags,
-        .projection = smokeProjection};
+        .projection = projection};
     return true;
 #else
     static_cast<void>(count);
     static_cast<void>(emitterFlags);
     static_cast<void>(texture);
     static_cast<void>(gpuFlags);
+    static_cast<void>(projection);
     return false;
 #endif
 }
 
-bool AppendSmokeBillboard(const Matrix4x4 &worldTransform, const Vector3 &position, std::uint16_t angle, float width, float height, std::uint32_t colour) {
+bool AppendSmokeBillboard(
+    const Matrix4x4 &worldTransform, const Vector3 &position, const Vector3i &rotation, bool xyz, float width, float height, std::uint32_t colour) {
     if (!smokeDraw.mapped || smokeDraw.count >= smokeDraw.capacity) {
         return false;
     }
 
     const Vector4 centre = TransformEffectPoint(worldTransform, {position.x, position.y, position.z, 1.0f});
-    constexpr float fixedAngleToRadians = 6.28318530717958647692f / 65536.0f;
-    const float radians = static_cast<float>(angle) * fixedAngleToRadians;
-    const float sine = std::sin(radians);
-    const float cosine = std::cos(radians);
+    Matrix4x4 billboard{
+        {{1.0f, 0.0f, 0.0f, worldTransform.rows[0].w}, {0.0f, 1.0f, 0.0f, worldTransform.rows[1].w}, {0.0f, 0.0f, 1.0f, worldTransform.rows[2].w}, centre}};
+    if (xyz) {
+        const float sineX = sin_fixed16(static_cast<std::int16_t>(rotation.x));
+        const float cosineX = cos_fixed16(static_cast<std::uint16_t>(rotation.x));
 
-    // ParticleSystem's selected billboard renderer first moves the particle into
-    // incoming camera space, then discards the incoming XYZ basis so the quad faces the camera.
-    Matrix4x4 billboard = transformMatrix_prePass;
-    billboard.rows[0].w = worldTransform.rows[0].w;
-    billboard.rows[1].w = worldTransform.rows[1].w;
-    billboard.rows[2].w = worldTransform.rows[2].w;
-    billboard.rows[3] = centre;
-    const Matrix4x4 billboardBase = billboard;
-    billboard.rows[0] = TransformEffectPoint(billboardBase, {cosine, sine, 0.0f, billboard.rows[0].w});
-    billboard.rows[1] = TransformEffectPoint(billboardBase, {-sine, cosine, 0.0f, billboard.rows[1].w});
+        // ParticleSystem's selected billboard renderer first moves the particle into
+        // incoming camera space, then discards the incoming XYZ basis so the quad faces the camera.
+        const Matrix4x4 xBase = billboard;
+        billboard.rows[1] = TransformEffectPoint(xBase, {0.0f, cosineX, sineX, 0.0f});
+        billboard.rows[2] = TransformEffectPoint(xBase, {0.0f, -sineX, cosineX, 0.0f});
+        const float sineY = sin_fixed16(static_cast<std::int16_t>(rotation.y));
+        const float cosineY = cos_fixed16(static_cast<std::uint16_t>(rotation.y));
+        const Matrix4x4 yBase = billboard;
+        billboard.rows[0] = TransformEffectPoint(yBase, {cosineY, 0.0f, -sineY, 0.0f});
+        billboard.rows[2] = TransformEffectPoint(yBase, {sineY, 0.0f, cosineY, 0.0f});
+    }
+    const std::uint16_t angle = static_cast<std::uint16_t>(xyz ? rotation.z : rotation.y);
+    const float sine = sin_fixed16(static_cast<std::int16_t>(angle));
+    const float cosine = cos_fixed16(angle);
+    const Matrix4x4 zBase = billboard;
+    billboard.rows[0] = TransformEffectPoint(zBase, {cosine, sine, 0.0f, 0.0f});
+    billboard.rows[1] = TransformEffectPoint(zBase, {-sine, cosine, 0.0f, 0.0f});
     // ParticleSystem's selected billboard renderer publishes transformMatrix_prePass_1
     // as camera stack entry two followed by the fixed 640x480 screen-output matrix.
-    billboard = MultiplyEffectMatrices(billboard, smokeDraw.projection);
+    workTransformMatrix = billboard;
+    Matrix4x4_Push(&smokeDraw.projection);
+    Matrix4x4::MultiplyWithPrePassMatrix(g_matrixStack.top.stack - 1);
+    billboard = workTransformMatrix;
     const auto corner = [&](float horizontal, float vertical) { return TransformEffectPoint(billboard, {horizontal, vertical, 0.0f, 1.0f}); };
     Vector4 topLeft = corner(-width, height);
     Vector4 bottomLeft = corner(-width, -height);
     Vector4 topRight = corner(width, height);
     Vector4 bottomRight = corner(width, -height);
+    Matrix4x4::Pop(1);
     if (topLeft.w <= 0.0f || bottomLeft.w <= 0.0f || topRight.w <= 0.0f || bottomRight.w <= 0.0f) {
         return false;
     }
     const auto perspectiveDivide = [](Vector4 &point) {
         const float reciprocalW = 1.0f / point.w;
-        point = {point.x * reciprocalW, point.y * reciprocalW, point.z * reciprocalW, reciprocalW};
+        point = {point.x / point.w, point.y / point.w, point.z / point.w, reciprocalW};
     };
     perspectiveDivide(topLeft);
     perspectiveDivide(bottomLeft);
@@ -4571,10 +4561,11 @@ void EndSmokeDraw() {
         state.topology = static_cast<std::uint32_t>(d3t::TopologyType::TriangleList);
         state.bufferStateFlags |= d3t::BufferTopology;
     }
-    if (draw.compact)
-        SetEngineFlag(0x66, 0);
+    legacyWeatherQuadCount = static_cast<std::int32_t>(draw.count);
+    SetEngineFlag(0x66, 0);
     // RenderPassFuncs[3 * pass]. Pass one brackets its draw with blending on and depth writes off, then
     // restores InitShenmueRendering's saved blend (0) and depth-write (1) settings.
+    legacyWeatherLightingMode = 0;
     if (draw.count) {
         if (draw.renderPass == 1) {
             SetEngineFlag(0x40, 0);
@@ -4593,7 +4584,7 @@ void EndSmokeDraw() {
         d3t::DX11_ResetMappedResources(context);
         d3t::DX11_UnmapAndSyncShaderBindings(context);
     }
-    RestoreLegacyEffectRenderFlags(state);
+
 #endif
 }
 

@@ -777,6 +777,7 @@ std::int64_t LargeFile_LoadADFSArchiveToc(std::int32_t fileId, const char *path)
     return 0;
 }
 
+// @verified - p
 std::int32_t CheckFileInfo(void *file) {
     if (!file) {
         return 3;
@@ -797,8 +798,8 @@ std::int32_t CheckFileInfo(void *file) {
             return 2;
         }
     }
-    const ArchiveHandleEntry *const archive = Archive_GetHandle(entry.archiveHandle);
-    return archive && archive->readSucceeded ? 3 : 1;
+
+    return 3;
 }
 
 LargeFileHandle *LargeFile_OpenPathHandle(const char *path) {

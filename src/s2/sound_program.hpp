@@ -146,6 +146,7 @@ static_assert(offsetof(SelectedSoundProgramRecord, fades) == 32);
 
 inline constexpr std::int64_t SOUND_PROGRAM_STOP_INDEX = 0xffffffffLL;
 inline constexpr shen_name SOUND_BANK_DATA{SHEN_NAME(SND1)};
+inline constexpr shen_name SOUND_BANK_CHUNK_DATA{SHEN_NAME(SNDD)};
 inline constexpr std::array<const char *, 14> DREAMCAST_MUSIC_BANK_NAMES{"0003_002", "003_014", "009_024", "005_009", "0014_019", "0005_013", "0016_001",
     "0013_022", "0009_018", "0013_024", "0008_015", "0013_029", "0020_007", "0002_020"};
 inline constexpr std::array<const char *, 21> JAPANESE_DREAMCAST_SOUND_BANK_NAMES{"battle_2", "samrary", "kenippa", "stgaya", "stgaya_2", "stgaya_3", "togippa",
@@ -170,7 +171,7 @@ struct SoundProgramRuntimeState {
     std::array<char, 9> programName{};
     std::array<char, 17> soundDataName{};
     std::uint32_t frame{};
-    std::uint32_t pauseDepth{};
+    std::int32_t pauseDepth{};
     std::uint8_t callbackParity{};
     std::int32_t activeProgramCommand{-1};
     std::int64_t selectedSceneIndex{};
