@@ -340,7 +340,8 @@ std::uint32_t GetTextureMappedData();
 std::uint32_t ComputeResolutionScaledIntensity();
 std::uint32_t FlushQueuedLegacyDrawPasses();
 
-
+std::uint32_t RenderQueuedLegacyDrawPasses();
+void SDTransparentHack();
 bool GetLegacyRenderQueueEnabled();
 void SetLegacyRenderQueueEnabled(bool enabled);
 void SetLegacyQueuedDrawDepthMode(std::int32_t fromGeometry, float fallbackDepth);

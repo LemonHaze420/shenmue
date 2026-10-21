@@ -60,6 +60,7 @@ extern std::int32_t g_sdGlobalProbeIndex;
 extern std::array<std::uint32_t, 2> g_sdProbeTextures;
 extern std::uint32_t g_sdGlobalProbeTexture;
 void UpdateModelSceneProbes(d3t::D3TDeviceContext *context);
+void ExtractAndNormalizeSixFrustumPlanes(std::array<Vector4, 6> &planes, const Matrix4x4 &matrix);
 void UpdateSDProbeFrustums(std::uint32_t index);
 void ConfigureSDProbe(std::uint32_t index, std::uint64_t node, const D3TModelProbe *parameters, const void *owner, std::uint64_t root);
 void ConfigureOwnerSDProbes(std::int32_t count, const std::uint64_t *nodes, const D3TModelProbe *parameters, const void *owner, std::uint64_t root);

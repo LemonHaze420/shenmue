@@ -1,5 +1,9 @@
 #include "s2/frame_pipeline.hpp"
 
+#include "s2/sd_probe.hpp"
+#include "s2/simple_shader.hpp"
+#include "s2/renderer_initialization.hpp"
+#include <limits>
 #include "s2/input_bindings.hpp"
 #include "d3t/ui_renderer.hpp"
 #include "s2/model_draw.hpp"
@@ -26,6 +30,70 @@ std::uint8_t g_modelUseDualQuaternion = 1;
 std::uint8_t g_modelVisualizeClusters{};
 float g_modelClampDirectRoughness = 0.4f;
 
+std::uint8_t g_modelSceneSuppressed{};
+float g_currentFractionOfDay{};
+float g_sceneTimeOscillation{};
+float g_sceneTimeDirection = 1.0f;
+float g_timeSinceStart{};
+
+// @verified - p
+void UpdateFractionOfDay(float fractionOfDay, std::int64_t, float frameTime) {
+    g_currentFractionOfDay = fractionOfDay;
+    g_sceneTimeOscillation += g_sceneTimeDirection * frameTime;
+    if (g_sceneTimeOscillation > 5000.0f)
+        g_sceneTimeDirection = -1.0f;
+    else if (g_sceneTimeOscillation < 0.0f)
+        g_sceneTimeDirection = 1.0f;
+}
+
+// @verified - p
+void IncrementTimeSinceStart(float frameTime) {
+    if (g_timeSinceStart >= std::numeric_limits<float>::max() - frameTime)
+        g_timeSinceStart = frameTime + 1.0f;
+    else
+        g_timeSinceStart += frameTime;
+}
+
+void SD_Override() {
+#if defined(_WIN32)
+    if (!g_sdOverrideModelCache || GetLegacyPerspectiveProjection() == 1 || g_modelSceneSuppressed)
+        return;
+    d3t::D3TDeviceContext *const context = d3t::DXGetPipelineContext(1);
+    SetupPostFXRenderTargetsAndViewport(context);
+    d3t::D3TRenderState &state = d3t::GetRenderState(*context);
+    if (state.topology != 0) {
+        state.bufferStateFlags |= 1U;
+        state.topology = 0;
+    }
+    RefreshModelCacheMaterials(g_sdOverrideModelCache, context, g_sdShaderFileLock);
+    CameraConstantBlock camera;
+    camera.projectedOrigin = {};
+    CreateCameraMatrices(camera);
+    Matrix4x4 viewProjection = camera.viewProjection;
+    UpdateModelSceneLights(context, &viewProjection);
+    SetDebugShaderParams(context);
+    SetSceneSharedState(context);
+    void *const mappedCamera = d3t::MapTempConstantBufferForWriteDiscard(context, 3, 0, sizeof(CameraConstantBlock));
+    if (mappedCamera)
+        std::memcpy(mappedCamera, &camera, sizeof(camera));
+    FrameConstantBlock *const frame = static_cast<FrameConstantBlock *>(d3t::MapTempConstantBufferForWriteDiscard(context, 3, 3, sizeof(FrameConstantBlock)));
+    if (frame)
+        frame->time = g_currentFractionOfDay;
+    UpdateModelSceneProbes(context);
+    const ModelScenePass base{.materialMask = 7,
+        .cameraPosition = {camera.projectedOrigin.x, camera.projectedOrigin.y, camera.projectedOrigin.z},
+        .fogDisabled = 1,
+        .disableAspectCulling = 1};
+    ExtractAndNormalizeSixFrustumPlanes(g_modelFrustumPlanes, camera.viewProjection);
+    ModelGeometryContext *const geometry = BuildModelGeometry(g_sdOverrideModelCache, context);
+    ModelScenePass pass = base;
+    ConfigureAndSubmitModelScenePass(context, pass, *geometry);
+    pass = base;
+    pass.materialMask = 8;
+    ConfigureAndSubmitModelScenePass(context, pass, *geometry);
+    d3t::DX11::WaitForCommandListFinish(context);
+#endif
+}
 void GetPostFXScaledRenderTargetSize(float *width, float *height) {
     Vector2i dimensions;
     if (!d3t::QueryTextureSize(d3t::g_sceneTexture, &dimensions))

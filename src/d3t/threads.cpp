@@ -20,6 +20,8 @@
 
 namespace shenmue::d3t {
 
+std::uint32_t g_invalidTaskHandle{};
+
 std::array<D3TTaskRecord, 1024> g_d3tTasks{};
 std::atomic<std::int32_t> g_d3tTaskCount{0};
 std::atomic<std::int32_t> g_d3tDeferredCompletionCount{0};

@@ -75,7 +75,8 @@ Matrix4x4 BuildSDProbeViewMatrix(const Vector3 &eye, const Vector3 &target, cons
 }
 
 // @verified - p
-void ExtractSDProbeFrustum(std::array<Vector4, 6> &planes, const Matrix4x4 &matrix) {
+} // namespace
+void ExtractAndNormalizeSixFrustumPlanes(std::array<Vector4, 6> &planes, const Matrix4x4 &matrix) {
     const Vector4 x = matrix.rows[0], y = matrix.rows[1], z = matrix.rows[2], w = matrix.rows[3];
     planes = {{z, {w.x - z.x, w.y - z.y, w.z - z.z, w.w - z.w}, {x.x + w.x, x.y + w.y, x.z + w.z, x.w + w.w}, {w.x - x.x, w.y - x.y, w.z - x.z, w.w - x.w},
         {w.x - y.x, w.y - y.y, w.z - y.z, w.w - y.w}, {y.x + w.x, y.y + w.y, y.z + w.z, y.w + w.w}}};
@@ -84,7 +85,7 @@ void ExtractSDProbeFrustum(std::array<Vector4, 6> &planes, const Matrix4x4 &matr
         plane = {plane.x * inverse, plane.y * inverse, plane.z * inverse, plane.w * inverse};
     }
 }
-} // namespace
+// namespace
 
 // @verified - p
 void UpdateSDProbeFrustums(std::uint32_t index) {
@@ -105,7 +106,7 @@ void UpdateSDProbeFrustums(std::uint32_t index) {
                 viewProjection.rows[row][column] = ((projection.rows[row].x * view.rows[0][column] + projection.rows[row].y * view.rows[1][column]) +
                                                        projection.rows[row].z * view.rows[2][column]) +
                     projection.rows[row].w * view.rows[3][column];
-        ExtractSDProbeFrustum(probe.frustums[face], viewProjection);
+        ExtractAndNormalizeSixFrustumPlanes(probe.frustums[face], viewProjection);
     }
 }
 

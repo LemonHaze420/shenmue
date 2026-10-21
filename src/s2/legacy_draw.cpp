@@ -1,5 +1,10 @@
 #include "s2/legacy_draw.hpp"
 
+#include "s2/frame_pipeline.hpp"
+#include "s2/game_runtime.hpp"
+#include "s2/frame_pacing.hpp"
+#include "d3t/threads.hpp"
+
 #include "d3t/buffer.hpp"
 #include "d3t/dx11_renderer.hpp"
 #include "d3t/texture.hpp"
@@ -29,9 +34,10 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <d3d11.h>
+#include <immintrin.h>
 #endif
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 
 
 std::int32_t g_legacyScissorEnabled = 0;
@@ -214,6 +220,8 @@ static_assert(offsetof(LegacyQueuedShaderEntry, model) == 8);
 LegacyQueuedShaderEntry *legacyQueuedShaderEntries{};
 float *legacyQueuedShaderSortKeys{};
 std::uint32_t legacyQueuedShaderCount{};
+std::uint32_t legacyQueuedDrawCommandCount{};
+std::uint32_t legacyQueuedCallbackCount{};
 std::uint32_t legacyModelQueryIndex{};
 std::uint8_t legacyModelQueryBatchReady{};
 std::uint32_t unboundLegacyShaderModels{};
@@ -286,6 +294,8 @@ bool AllocateLegacyRenderQueue() {
     legacyQueuedShaderEntries = nullptr;
     legacyQueuedShaderSortKeys = nullptr;
     legacyQueuedShaderCount = 0;
+    legacyQueuedDrawCommandCount = 0;
+    legacyQueuedCallbackCount = 0;
     legacyRenderPackets = static_cast<LegacyRenderPacketState *>(::operator new(sizeof(LegacyRenderPacketState) * packetCapacity));
     legacySortedQueueIndices = static_cast<std::uint32_t *>(::operator new(sizeof(std::uint32_t) * drawCapacity));
     legacySortScratch = static_cast<std::uint32_t *>(::operator new(sizeof(std::uint32_t) * drawCapacity));
@@ -2975,6 +2985,7 @@ void QueueLegacyDrawPacket(const LegacyRenderPacketState *packet, std::span<cons
         (header & 8U)                                                                ? centre.z :
                         ((world.rows[1].z * centre.y + world.rows[0].z * centre.x) + world.rows[2].z * centre.z) + world.rows[3].z;
     legacyQueuedDraws[legacyQueuedDrawCount++] = {packet, 1, xb01Offset, modelBytes.data() + commandOffset, &resources, modelBytes};
+    ++legacyQueuedDrawCommandCount;
 }
 
 std::span<const std::uint32_t> SortLegacyQueuedDraws() {
@@ -4647,6 +4658,7 @@ void SetUpdateCallback(LegacyUpdateCallback callback, void *data, float priority
     entry.type = 2;
     entry.callback = callback;
     entry.callbackData = data;
+    ++legacyQueuedCallbackCount;
 }
 
 namespace {
@@ -4936,9 +4948,8 @@ std::uint32_t SubmitLegacyFlagDebugQuadCompatibility(std::span<const std::byte> 
     return immediate + retained;
 }
 
-std::uint32_t FlushQueuedLegacyDrawPasses() {
-    ++flagDebugCompatibilityReplayDepth;
-    RenderQueuedLegacyShaderPasses();
+std::uint32_t RenderQueuedLegacyDrawPasses() {
+
     const Vector3 savedReference = modelReferenceDirection;
     const Vector4 savedFvfReference = lambertFvfReference;
     const Vector3 savedLight = modelLightVector;
@@ -4947,7 +4958,7 @@ std::uint32_t FlushQueuedLegacyDrawPasses() {
     Vector4 replayReferenceBoard = legacyModelColour;
     const LegacyRenderPacketState *previousPacket = nullptr;
     std::uint32_t draws = 0;
-    for (const std::uint32_t index : SortLegacyQueuedDraws()) {
+    for (const std::uint32_t index : std::span<const std::uint32_t>(legacySortedQueueIndices, legacyQueuedDrawCount)) {
         const LegacyQueuedDraw &entry = legacyQueuedDraws[index];
         const LegacyRenderPacketState &packet = *entry.packet;
         SetEngineFlag(0x3c, 1);
@@ -4999,15 +5010,88 @@ std::uint32_t FlushQueuedLegacyDrawPasses() {
     RestoreEngineFlag(0x3b);
     RestoreEngineFlag(0x40);
     RestoreEngineFlag(0x39);
+    return draws;
+}
+
+std::uint32_t FlushQueuedLegacyDrawPasses() {
+    ++flagDebugCompatibilityReplayDepth;
+    RenderQueuedLegacyShaderPasses();
+    SortLegacyQueuedDraws();
+    const std::uint32_t draws = RenderQueuedLegacyDrawPasses();
     legacyRenderPacketCount = 0;
     legacyQueuedDrawCount = 0;
     legacyQueuedShaderCount = 0;
+    legacyQueuedDrawCommandCount = 0;
+    legacyQueuedCallbackCount = 0;
     fireQuadCount = 0;
     --flagDebugCompatibilityReplayDepth;
     ReleaseLegacyFlagDebugCompatibilityDraws();
     return draws;
 }
 
+void SDTransparentHack() {
+#if defined(_WIN32)
+    if (!g_mainModelCache)
+        return;
+    d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
+    d3t::D3TRenderState &legacyState = d3t::GetRenderState(*d3t::DX11::g_ppD3DDeviceContext);
+    if (legacyState.topology != 0) {
+        legacyState.bufferStateFlags |= 1U;
+        legacyState.topology = 0;
+    }
+    SetupPostFXRenderTargetsAndViewport(d3t::DX11::g_ppD3DDeviceContext);
+    SetupPostFXRenderTargetsAndViewport(d3t::DX11::g_ppD3DDeviceContext);
+    if (legacyQueuedDrawCount > 0)
+        SortLegacyQueuedDraws();
+    ++flagDebugCompatibilityReplayDepth;
+    RenderQueuedLegacyDrawPasses();
+    legacyRenderPacketCount = 0;
+    legacyQueuedDrawCount = 0;
+    legacyQueuedShaderCount = 0;
+    legacyQueuedDrawCommandCount = 0;
+    legacyQueuedCallbackCount = 0;
+    fireQuadCount = 0;
+    --flagDebugCompatibilityReplayDepth;
+    ReleaseLegacyFlagDebugCompatibilityDraws();
+    if (d3t::DX11::g_ppD3DDeviceContext) {
+        d3t::DX11::WaitForCommandListFinish(d3t::DX11::g_ppD3DDeviceContext);
+        d3t::DX11::g_ppD3DDeviceContext = nullptr;
+    }
+    CameraConstantBlock camera;
+    camera.projectedOrigin = {};
+    d3t::D3TDeviceContext *contexts[5];
+    std::uint32_t tasks[5];
+    for (std::uint32_t index = 0; index < 5; ++index) {
+        contexts[index] = d3t::DXGetPipelineContext(index != 0);
+        SetupPostFXRenderTargetsAndViewport(contexts[index]);
+        d3t::D3TRenderState &state = d3t::GetRenderState(*contexts[index]);
+        if (state.topology != 0) {
+            state.bufferStateFlags |= 1U;
+            state.topology = 0;
+        }
+
+        tasks[index] = d3t::g_invalidTaskHandle;
+    }
+    CreateCameraMatrices(camera);
+    void *const mappedCamera = d3t::MapTempConstantBufferForWriteDiscard(contexts[3], 3, 0, sizeof(CameraConstantBlock));
+    if (mappedCamera)
+        std::memcpy(mappedCamera, &camera, sizeof(camera));
+    if (g_frameWaitEnabled[0] && GetNumFramesProcessed() == 0) {
+        for (;;) {
+            std::uint32_t index = 0;
+            for (; index < 5; ++index)
+                if (tasks[index] != d3t::g_invalidTaskHandle && d3t::d3t_IsTaskActive(tasks[index]))
+                    break;
+            if (index == 5)
+                break;
+            if (!g_frameWaitEnabled[1] || !d3t::RunTask(0, tasks, 5))
+                _mm_pause();
+        }
+    }
+    for (d3t::D3TDeviceContext *context : contexts)
+        d3t::DX11::WaitForCommandListFinish(context);
+#endif
+}
 bool InitializeLegacyStripBuffers(std::uint32_t type0Capacity, std::uint32_t type3Capacity) {
     ReleaseLegacyStripType3();
     stripType3BatchCapacity = (type0Capacity + type3Capacity) >> 2U;

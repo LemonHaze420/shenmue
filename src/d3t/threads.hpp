@@ -36,6 +36,7 @@ static_assert(offsetof(D3TTaskRecord, generation) == 0xc28);
 static_assert(offsetof(D3TTaskRecord, result) == 0xc2c);
 static_assert(sizeof(D3TTaskRecord) == 0xc30);
 
+extern std::uint32_t g_invalidTaskHandle;
 extern std::array<D3TTaskRecord, 1024> g_d3tTasks;
 extern std::atomic<std::int32_t> g_d3tTaskCount;
 extern std::atomic<std::int32_t> g_d3tDeferredCompletionCount;

@@ -42,6 +42,40 @@ void GetPostFXScaledRenderTargetSize(float *width, float *height);
 void SetupPostFXRenderTargetsAndViewport(d3t::D3TDeviceContext *context);
 void ConfigureAndSubmitModelScenePass(d3t::D3TDeviceContext *context, ModelScenePass &pass, ModelGeometryContext &geometry);
 
+struct FrameConstantBlock {
+    Vector4 fogRange;
+    Vector4 fogColour;
+    Vector2 backBufferSize;
+    Vector2 windVelocity;
+    Vector3 sunPosition;
+    float storminess;
+    float nightTimeyness;
+    float time;
+    float windTime;
+    float sunsetSize;
+    float wetness;
+    float wetRoughnessDrop;
+    float wetNormalDrop;
+    float wetAlbedoDarken;
+    Vector4 wetMaskUVScaleBias;
+    Vector2 rainShadowMapScale;
+    Vector2 rainShadowMapOffset;
+    Vector2 rainShadowMapUVMin;
+    Vector2 rainShadowMapUVMax;
+    std::int32_t rainShadowViewProjectionIndex;
+};
+static_assert(sizeof(FrameConstantBlock) == 148);
+static_assert(offsetof(FrameConstantBlock, time) == 68);
+static_assert(offsetof(FrameConstantBlock, rainShadowViewProjectionIndex) == 144);
+extern std::uint8_t g_modelSceneSuppressed;
+extern float g_currentFractionOfDay;
+extern float g_sceneTimeOscillation;
+extern float g_sceneTimeDirection;
+extern float g_timeSinceStart;
+void UpdateFractionOfDay(float fractionOfDay, std::int64_t unused, float frameTime);
+void IncrementTimeSinceStart(float frameTime);
+void SD_Override();
+
 struct CameraConstantBlock {
     Matrix4x4 view;
     Matrix4x4 projection;
