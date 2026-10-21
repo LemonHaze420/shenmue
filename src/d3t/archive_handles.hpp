@@ -140,6 +140,8 @@ void *Archive_BindBuffer(std::uint32_t handle, void *destination, std::uint64_t 
 void *Archive_DetachBuffer(std::uint32_t handle);
 void Archive_QueueRead(std::uint32_t handle, std::int32_t operation, const char *path, std::uint64_t offset, std::uint64_t size, std::uint8_t flags);
 bool Archive_HasPendingRead(std::uint32_t handle);
+bool Archive_FileExists(const char *path);
+void *LoadLegacyFile(const char *path, std::uint64_t *size);
 void ReadFile_0(std::uint64_t unused, std::uint32_t *fileState);
 void ReadCachedFile(void *file);
 std::int64_t GetFileFromCachedBuffer(LargeFileHandle *handle, std::uint64_t blockCount, void *destination, std::int32_t forceWait);

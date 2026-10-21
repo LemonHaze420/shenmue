@@ -599,6 +599,51 @@ bool Archive_HasPendingRead(std::uint32_t handle) {
     return false;
 }
 
+bool Archive_FileExists(const char *path) {
+    ArchiveSourceDesc source;
+    ArchiveData_GetSourceDesc(path, source);
+    if (IsArchiveSourceDescActive(source))
+        return true;
+#if defined(_WIN32)
+    while (*path == '/' || *path == '\\')
+        ++path;
+    const DWORD attributes = GetFileAttributesA(path);
+    return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
+#else
+    struct stat attributes {};
+    return stat(path, &attributes) == 0 && !S_ISDIR(attributes.st_mode);
+#endif
+}
+
+// @verified - p
+void *LoadLegacyFile(const char *path, std::uint64_t *size) {
+    if (!Archive_FileExists(path))
+        return nullptr;
+    void *data = nullptr;
+    const std::uint32_t handle = Archive_AllocateHandle(0);
+    if (Archive_DoesHandleExist(handle)) {
+        ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+        if (entry)
+            entry->platformHandle = -1;
+    }
+    std::uint32_t releasedHandle = handle;
+    if (Archive_DoesHandleExist(handle)) {
+        Archive_QueueRead(handle, 0, path, 0, 0, AOF_Read | AIF_Urgent);
+        while (Archive_HasPendingRead(handle)) {
+        }
+        std::uint64_t loadedSize = 0;
+        if (Archive_DoesHandleExist(handle)) {
+            const ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+            if (entry)
+                loadedSize = entry->bufferedDataSize;
+        }
+        data = Archive_DetachBuffer(handle);
+        if (data && size)
+            *size = loadedSize;
+        ReadFile_0(0, &releasedHandle);
+    }
+    return data;
+}
 void ReadFile_0(std::uint64_t, std::uint32_t *fileState) {
     if (!fileState) {
         return;

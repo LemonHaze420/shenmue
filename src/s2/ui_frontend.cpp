@@ -116,8 +116,10 @@ std::uint64_t CurrentNanoseconds() {
     return static_cast<std::uint64_t>(1000000000LL * (counter / frequency) + 1000000000LL * (counter % frequency) / frequency);
 }
 
+// @verified - p
 float SplashElapsed() {
-    return static_cast<float>(CurrentNanoseconds() - splashStateStart) / 1000000000.0f;
+    const std::int64_t elapsed = std::bit_cast<std::int64_t>(CurrentNanoseconds() - splashStateStart);
+    return (static_cast<float>(elapsed) / 1000000.0f) / 1000.0f;
 }
 
 void SetSplashMode(std::int32_t mode) {
@@ -127,9 +129,8 @@ void SetSplashMode(std::int32_t mode) {
 
 void InitializeSplashScreens(std::uint32_t renderHandle) {
 
-
-    splashScreenIndex = 2;
-    for (std::size_t index = 0; index < splashRuntime.size(); ++index) {
+    splashScreenIndex = g_s2JapaneseVersion != 0 ? 0 : 2;
+    for (std::size_t index = static_cast<std::size_t>(splashScreenIndex); index < splashRuntime.size(); ++index) {
         SplashRuntime &runtime = splashRuntime[index];
         runtime.definition = &splashImages[index];
         d3t::LoadImageTexture(runtime.definition->texturePath, false, &runtime.textureHandle, renderHandle);
@@ -202,6 +203,25 @@ void ProcessSplashScreen() {
         const float y = (static_cast<float>(d3t::g_originalScreenHeight) - drawHeight) * 0.5f;
         d3t::DrawUIImage(runtime.textureHandle, x, y, drawWidth, drawHeight, std::clamp(opacity, 0.0f, 1.0f));
     }
+}
+
+// @verified - p
+std::int64_t SplashSelected() {
+    const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::Splash)].config.uiHandleIndex;
+    splashWindow = UI_GetWindow(UI_FindViewWindow(slot, SPLASH_WINDOW_ID));
+    return 1;
+}
+
+// @verified - p
+std::int64_t ResetSplash() {
+    splashWindow = nullptr;
+    return 0;
+}
+
+// @verified - p
+std::int64_t DestroySplash() {
+    SetupAllShaders();
+    return 1;
 }
 
 std::uint32_t LoadSplash() {

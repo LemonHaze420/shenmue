@@ -724,6 +724,11 @@ extern std::int32_t subtitleActivityTransition;
 
 extern std::array<std::int32_t, 2> subtitleAlphaBindings;
 
+inline constexpr char SPLASH_WINDOW_ID[] = "Splash::Panel";
+extern d3t::UIWindow *splashWindow;
+std::int64_t SplashSelected();
+std::int64_t ResetSplash();
+std::int64_t DestroySplash();
 struct SplashImageDefinition {
     const char *texturePath;
     const char *audioPath;

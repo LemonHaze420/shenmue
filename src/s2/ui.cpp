@@ -1438,6 +1438,7 @@ constexpr std::array<SplashImageDefinition, 6> splashImages{{
 }};
 
 std::array<SplashRuntime, 6> splashRuntime{};
+d3t::UIWindow *splashWindow{};
 std::int32_t splashScreenMode = 0;
 std::uint64_t splashStateStart = 0;
 bool splashSkipPressed = false;
@@ -4327,6 +4328,9 @@ void InitializeUIElements() {
     splash.name = "Splash";
     splash.parseDefinitionFromFile = LoadSplash;
 
+    splash.isSelected = SplashSelected;
+    splash.reset = ResetSplash;
+    splash.destroy = DestroySplash;
     UIElementState &pressStart = g_uiElements[static_cast<std::size_t>(UIElement::PressStart)];
     pressStart.name = "Press Start";
     pressStart.parseDefinitionFromFile = LoadPressStart;
