@@ -1137,6 +1137,13 @@ void DrawCollectionSnapshotStatus(std::uint32_t slot, const d3t::UIRect &rectang
 
 void ReleaseCollectionMenuResources();
 
+inline constexpr std::array<const char *, 3> UI_MOVE_LEARNED_LABELS{"Text_Line_1", "Text_Line_2", "Text_Line_3"};
+inline constexpr const char *UI_HUD_TIMER_PANEL = "GameHudTimer::TimerPanel";
+inline constexpr const char *UI_HUD_TIMER_LABEL = "GameHudTimer:TimerLabel";
+extern std::array<d3t::UILabelWidget *, 3> moveLearnedLabels;
+extern std::array<char, 256> gameHudTimerText;
+extern d3t::UIWindow *gameHudTimerPanel;
+extern d3t::UILabelWidget *gameHudTimerLabel;
 extern std::int32_t hudSnapshotCameraState;
 
 void ConstructHudCameraState(UIElement root, std::int32_t index, std::uint32_t mode);

@@ -248,18 +248,7 @@ std::array<d3t ::UIWindow *, 13> duckRaceHudWindows{};
 std::array<d3t ::UILabelWidget *, 7> duckRaceHudLabels{};
 std::array<UIButtonIconWidget *, 6> duckRaceHudBowties{};
 
-struct MoveLearnedUiRuntime {
-    std::array<std::size_t, 3> labels{};
-    std::vector<std::int32_t> parents;
-    std::vector<std::int32_t> objectPanels;
-    std::vector<std::int32_t> labelPanels;
-    std::vector<d3t::UIRect> panelBounds;
-    std::vector<d3t::UIResolvedTextureObject> objects;
-    std::vector<d3t::UIResolvedLabel> labelBounds;
-    bool bound{};
-};
-
-MoveLearnedUiRuntime moveLearnedUi{};
+std::array<d3t ::UILabelWidget *, 3> moveLearnedLabels{};
 
 std::array<SnapshotImageRuntime, 126> snapshotImages{};
 std::array<std::uint32_t, 126> snapshotOrder{};
@@ -1040,10 +1029,10 @@ std::array<std::array<char, 256>, 4> actionSelectorText{};
 AuthoredMenuLayout actionSelectorLayout;
 AuthoredMenuLayout moneyHudLayout;
 AuthoredMenuLayout cutsceneSkipLayout;
-AuthoredMenuLayout gameHudTimerLayout;
+
 std::array<char, 256> gameHudTimerText{};
-d3t::UIPanelDefinition *gameHudTimerPanel{};
-d3t::UILabelDefinition *gameHudTimerLabel{};
+d3t::UIWindow *gameHudTimerPanel{};
+d3t::UILabelWidget *gameHudTimerLabel{};
 std::int32_t moneyHudCashAdjustment{};
 bool moneyHudBound{};
 d3t::UIPanelDefinition *actionSelectorMainPanel{};
@@ -1852,66 +1841,34 @@ std::uint32_t LoadGameBackground() {
     return ReadUIDefinitionFile(UIElement::GameBackground, "/ui/gamemenu_New/GameMenu_Background.ui", 0);
 }
 
-void UpdateMoveLearnedDefinition() {
-    if (!moveLearnedUi.bound)
-        return;
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::MoveLearned)];
-    for (std::size_t line = 0; line < moveLearnedUi.labels.size(); ++line) {
-        const std::size_t label = moveLearnedUi.labels[line];
-        if (label < definition.labels.size())
-            definition.labels[label].text = g_moveLearnedUiText[line].data();
-    }
-}
-
 std::uint32_t LoadMoveLearned() {
     return ReadUIDefinitionFile(UIElement::MoveLearned, "/ui/gamehud/GameHudMoveLearned.ui", 0);
 }
 
+// @verified - p
 std::int64_t BindMoveLearnedDefinition() {
-    constexpr std::size_t missing = std::size_t(-1);
-    constexpr std::array<std::string_view, 3> ids{"Text_Line_1", "Text_Line_2", "Text_Line_3"};
-    moveLearnedUi.labels.fill(missing);
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::MoveLearned)];
-    MoveLearnedUiRuntime &runtime = moveLearnedUi;
-    const auto panelIndex = [&definition](std::string_view id) -> std::int32_t {
-        for (std::size_t index = 0; index < definition.panels.size(); ++index)
-            if (definition.panels[index].id == id)
-                return static_cast<std::int32_t>(index);
-        return -1;
-    };
-    runtime.parents.resize(definition.panels.size());
-    runtime.panelBounds.resize(definition.panels.size());
-    runtime.objectPanels.resize(definition.textureObjects.size());
-    runtime.objects.resize(definition.textureObjects.size());
-    runtime.labelPanels.resize(definition.labels.size());
-    runtime.labelBounds.resize(definition.labels.size());
-    for (std::size_t index = 0; index < definition.panels.size(); ++index) {
-        const std::string &parent = definition.panels[index].parentId;
-        runtime.parents[index] = parent.empty() ? -1 : panelIndex(parent);
-    }
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        runtime.objectPanels[index] = panelIndex(definition.textureObjects[index].panelId);
-    for (std::size_t index = 0; index < definition.labels.size(); ++index)
-        runtime.labelPanels[index] = panelIndex(definition.labels[index].panelId);
-    for (std::size_t label = 0; label < definition.labels.size(); ++label) {
-        for (std::size_t line = 0; line < ids.size(); ++line) {
-            if (definition.labels[label].id == ids[line]) {
-                moveLearnedUi.labels[line] = label;
-            }
+    const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::MoveLearned)].config.uiHandleIndex;
+    for (std::size_t index = 0; index < moveLearnedLabels.size(); ++index)
+        moveLearnedLabels[index] = UI_GetLabel(UI_FindViewLabel(slot, UI_MOVE_LEARNED_LABELS[index]));
+
+    for (std::size_t index = 0; index < moveLearnedLabels.size(); ++index) {
+        if (moveLearnedLabels[index]) {
+            moveLearnedLabels[index]->text = g_moveLearnedUiText[index].data();
+            moveLearnedLabels[index]->token.alreadyLocalized = 1;
         }
     }
-    moveLearnedUi.bound = true;
-    UpdateMoveLearnedDefinition();
     return 1;
 }
 
+// @verified - p
+std::int64_t MoveLearnedInput() {
+    return 0;
+}
+
+// @verified - p
 std::int64_t EnableMoveLearnedMenuLayer() {
-    UIElementState &menu = g_uiElements[static_cast<std::size_t>(UIElement::GameMenu)];
-    if (!menu.isRenderable) {
-        menu.isRenderable = 1;
-        if (menu.resetRender)
-            menu.resetRender();
-    }
+    EnableRenderableByIndex(UIElement::GameMenu);
+
     return 1;
 }
 
@@ -1920,9 +1877,10 @@ std::int64_t DisableMoveLearnedMenuLayer() {
     return 1;
 }
 
+// @verified - p
 std::int64_t ResetMoveLearnedBindings() {
-    moveLearnedUi.labels.fill(std::size_t(-1));
-    moveLearnedUi.bound = false;
+    moveLearnedLabels.fill(nullptr);
+
     return 0;
 }
 
@@ -2407,20 +2365,10 @@ void DrawMovesLabel(
     }
 }
 
+// @verified - p
 std::int64_t RenderMoveLearnedDefinition() {
-    MoveLearnedUiRuntime &runtime = moveLearnedUi;
-    if (!drawingUI || !runtime.bound)
-        return 0;
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::MoveLearned)];
-    d3t::ResolveUIDefinitionLayout(definition, runtime.parents, runtime.panelBounds, runtime.objects, runtime.labelBounds, runtime.objectPanels,
-        runtime.labelPanels, {}, GetUILayoutPaddingScale());
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        d3t::DrawUITextureObject(definition, definition.textureObjects[index], runtime.objects[index], 1.0f);
-    for (std::size_t index = 0; index < definition.labels.size(); ++index) {
-        const d3t::UILabelDefinition &label = definition.labels[index];
-        DrawMovesLabel(
-            label, runtime.labelBounds[index], label.token.empty() ? std::string_view(label.text) : GetLocalizedSceneText(label.token), 1.0f, &definition);
-    }
+    uiUpdateWithColour(*GetNativeUiContext(), g_uiElements[static_cast<std::size_t>(UIElement::MoveLearned)].config.uiHandleIndex);
+
     return 0;
 }
 
@@ -3443,17 +3391,15 @@ std::uint32_t LoadGameHudTimer() {
     return ReadUIDefinitionFile(UIElement::GameHudTimer, "/ui/gamehud/GameHudTimer.ui", 0);
 }
 
+// @verified - p
 std::int64_t BindGameHudTimer() {
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::GameHudTimer)];
-    BindAuthoredMenuLayout(definition, gameHudTimerLayout);
-    const std::int32_t panel = MenuPanelIndex(definition, "GameHudTimer::TimerPanel");
-    gameHudTimerPanel = panel < 0 ? nullptr : &definition.panels[panel];
-    gameHudTimerLabel = nullptr;
-    for (d3t::UILabelDefinition &label : definition.labels)
-        if (label.id == "GameHudTimer:TimerLabel") {
-            gameHudTimerLabel = &label;
-            break;
-        }
+    const std ::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::GameHudTimer)].config.uiHandleIndex;
+    gameHudTimerPanel = UI_GetWindow(UI_FindViewWindow(slot, UI_HUD_TIMER_PANEL));
+    gameHudTimerLabel = UI_GetLabel(UI_FindViewLabel(slot, UI_HUD_TIMER_LABEL));
+    if (gameHudTimerLabel) {
+        gameHudTimerLabel->text = gameHudTimerText.data();
+        gameHudTimerLabel->token.alreadyLocalized = 1;
+    }
     return 1;
 }
 
@@ -3463,39 +3409,18 @@ std::int64_t ResetGameHudTimer() {
     return 0;
 }
 
+// @verified - p
 std::int64_t ClearGameHudTimer() {
     if (gameHudTimerPanel)
-        gameHudTimerPanel->imageOpacity = 0.0f;
+        gameHudTimerPanel->alpha = 0.0f;
     gameHudTimerText[0] = '\0';
     return 0;
 }
 
-float GameHudTimerPanelOpacity(const d3t::UIDefinition &definition, std::int32_t panel) {
-    float opacity = 1.0f;
-    while (panel >= 0) {
-        opacity *= definition.panels[panel].imageOpacity;
-        panel = gameHudTimerLayout.parents[panel];
-    }
-    return opacity;
-}
-
+// @verified - p
 std::int64_t RenderGameHudTimer() {
-    if (!drawingUI)
-        return 0;
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::GameHudTimer)];
-    AuthoredMenuLayout &layout = gameHudTimerLayout;
-    d3t::ResolveUIDefinitionLayout(
-        definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels, {}, GetUILayoutPaddingScale());
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        DrawNativeMenuObject(
-            definition, definition.textureObjects[index], layout.objects[index], GameHudTimerPanelOpacity(definition, layout.objectPanels[index]));
-    for (std::size_t index = 0; index < definition.labels.size(); ++index) {
-        const d3t::UILabelDefinition &label = definition.labels[index];
-        const std::string_view text = &label == gameHudTimerLabel ? std::string_view(gameHudTimerText.data()) :
-            label.token.empty()                                   ? std::string_view(label.text) :
-                                                                    GetLocalizedSceneText(label.token);
-        DrawMovesLabel(label, layout.labels[index], text, GameHudTimerPanelOpacity(definition, layout.labelPanels[index]), &definition);
-    }
+    uiUpdateWithColour(*GetNativeUiContext(), g_uiElements[static_cast<std::size_t>(UIElement::GameHudTimer)].config.uiHandleIndex);
+
     return 0;
 }
 
@@ -4404,8 +4329,9 @@ void InitializeUIElements() {
     moveLearned.name = "Game Move Learned";
     moveLearned.parseDefinitionFromFile = LoadMoveLearned;
     moveLearned.isSelected = BindMoveLearnedDefinition;
-    moveLearned.tick = DisableMoveLearnedMenuLayer;
-    moveLearned.destroy = EnableMoveLearnedMenuLayer;
+    moveLearned.isPressed = MoveLearnedInput;
+    moveLearned.tick = EnableMoveLearnedMenuLayer;
+    moveLearned.destroy = DisableMoveLearnedMenuLayer;
     moveLearned.reset = ResetMoveLearnedBindings;
     moveLearned.render = RenderMoveLearnedDefinition;
 
@@ -4834,6 +4760,7 @@ void SetStreetFighterTimerDigits(const std::array<std::int32_t, 6> &digits) {
         streetFighterHudLabels[0]->colour = digits[0] >= 1 || digits[1] >= 1 || digits[2] >= 1 ? 0xffffffffU : 0xff0c18b7U;
 }
 
+// @verified - p
 void SetGameHudTimerCaption(const char *text, std::uint32_t colour) {
     if (text) {
 #ifdef _WIN32
@@ -4846,11 +4773,11 @@ void SetGameHudTimerCaption(const char *text, std::uint32_t colour) {
             gameHudTimerText[0] = '\0';
 #endif
         if (gameHudTimerPanel)
-            gameHudTimerPanel->imageOpacity = 1.0f;
+            gameHudTimerPanel->alpha = 1.0f;
         if (gameHudTimerLabel)
-            gameHudTimerLabel->colour = colour;
+            gameHudTimerLabel->colour = ConstructColour((colour >> 16U) & 0xffU, (colour >> 8U) & 0xffU, colour & 0xffU, colour >> 24U);
     } else if (gameHudTimerPanel) {
-        gameHudTimerPanel->imageOpacity = 0.0f;
+        gameHudTimerPanel->alpha = 0.0f;
     }
 }
 
@@ -5049,7 +4976,6 @@ void SetMoveLearnedUiLine(std::int32_t index, std::string_view token) {
             std::abort();
         std::memcpy(destination, text.data(), text.size() + 1);
 #endif
-        UpdateMoveLearnedDefinition();
     }
 }
 
@@ -6005,6 +5931,8 @@ void RenderUIContents() {
                 SetGameUiFlag(gameUiSecondaryFlags, index, true);
                 if (index == static_cast<std::size_t>(UIElement::NotebookPages))
                     RenderMemoNotebookPages();
+                else if (index == static_cast<std::size_t>(UIElement::GameHudTimer))
+                    RenderScreenFilmFrame(static_cast<std::int32_t>(index));
                 else if (element.render)
                     element.render();
                 else
@@ -6170,7 +6098,7 @@ void RenderUIContents() {
             } else if (index == static_cast<std::size_t>(UIElement::PressStart)) {
                 RenderScreenFilmFrame(static_cast<std::int32_t>(index));
             } else if (index == static_cast<std::size_t>(UIElement::MoveLearned)) {
-                RenderMoveLearnedDefinition();
+                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
             } else if (index == static_cast<std::size_t>(UIElement::BigKanjiText) || index == static_cast<std::size_t>(UIElement::DuckRace)) {
                 RenderScreenFilmFrame(static_cast<std::int32_t>(index));
             } else {
