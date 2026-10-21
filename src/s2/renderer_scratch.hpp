@@ -18,4 +18,5 @@ extern std::uint64_t g_rendererScratchSliceSize;
 void InitializeRendererScratch();
 void FreeRendererScratch();
 void *GetRendererScratchBlock(std::size_t size);
+void RestoreRendererScratchBlock(void *block);
 } // namespace shenmue::s2

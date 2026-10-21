@@ -1139,6 +1139,16 @@ struct SubtitleStringId {
 };
 static_assert(sizeof(SubtitleStringId) == 12);
 
+inline constexpr std::array<std::uint8_t, 5> UI_UTF8_MASKS{0xc0, 0x80, 0xe0, 0xf0, 0xf8};
+inline constexpr std::array<std::uint8_t, 5> UI_UTF8_PATTERNS{0x80, 0x00, 0xc0, 0xe0, 0xf0};
+inline constexpr std::array<std::uint32_t, 5> UI_UTF8_MIN_CODEPOINT{0, 0, 0x80, 0x800, 0x10000};
+inline constexpr std::array<std::uint32_t, 5> UI_UTF8_MAX_CODEPOINT{0x10ffff, 0x7f, 0x7ff, 0xffff, 0x10ffff};
+inline constexpr std::uint32_t UI_UTF8_REPLACEMENT_CODEPOINT = 0xfffd;
+std::int32_t ValidateUITextCodepoint(std::uint32_t *codepoint, std::int32_t encodedLength);
+std::int32_t DecodeUITextCharacter(const char *text, std::uint32_t *codepoint, std::int32_t size);
+std::int32_t FillStringData(const char *text, std::int32_t size);
+char *ParseGameTagsForBuffer(char *buffer, std::int32_t size, const char *tag);
+void TextFormat(char *buffer, std::int32_t size, const char *tag, const char *replacement);
 const char *ReadStringFromStringTableById(const SubtitleStringId &id);
 
 const char *GetStringForUILabel(const char *text);

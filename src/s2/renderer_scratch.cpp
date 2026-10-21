@@ -34,4 +34,9 @@ void *GetRendererScratchBlock(std::size_t size) {
     g_rendererScratch.current += size;
     return result;
 }
+// @verified - p
+void RestoreRendererScratchBlock(void *block) {
+    if (block)
+        g_rendererScratch.current = static_cast<std::byte *>(block);
+}
 } // namespace shenmue::s2

@@ -9,6 +9,8 @@
 #include "s1/file_loader.hpp"
 #include "s1/texture_loader.hpp"
 #include "s1/mip_streaming.hpp"
+#else
+#include "s2/renderer_scratch.hpp"
 #endif
 
 #if SHENMUE_IS_S1
@@ -19,6 +21,103 @@ namespace shenmue::s2 {
 
 #if !SHENMUE_IS_S1
 
+// @verified - p
+std::int32_t ValidateUITextCodepoint(std::uint32_t *codepoint, std::int32_t encodedLength) {
+    if (!codepoint)
+        return 0;
+    const std::uint32_t value = *codepoint;
+    if (UI_UTF8_MIN_CODEPOINT[static_cast<std::size_t>(encodedLength)] > value || value > UI_UTF8_MAX_CODEPOINT[static_cast<std::size_t>(encodedLength)] ||
+        value - 0xd800U <= 0x7ffU)
+        *codepoint = UI_UTF8_REPLACEMENT_CODEPOINT;
+    std::int32_t length = 1;
+    while (*codepoint > UI_UTF8_MAX_CODEPOINT[static_cast<std::size_t>(length)])
+        ++length;
+    return length;
+}
+
+// @verified - p
+std::int32_t DecodeUITextCharacter(const char *text, std::uint32_t *codepoint, std::int32_t size) {
+    if (!text || !codepoint || !size)
+        return 0;
+    *codepoint = UI_UTF8_REPLACEMENT_CODEPOINT;
+    const auto kindOf = [&](std::uint8_t byte) {
+        std::int32_t kind = 0;
+        while (kind < 5 && (byte & UI_UTF8_MASKS[static_cast<std::size_t>(kind)]) != UI_UTF8_PATTERNS[static_cast<std::size_t>(kind)])
+            ++kind;
+        return kind;
+    };
+    const std::uint8_t lead = static_cast<std::uint8_t>(text[0]);
+    const std::int32_t length = kindOf(lead);
+    std::uint32_t value = length < 5 ? static_cast<std::uint8_t>(lead & ~UI_UTF8_MASKS[static_cast<std::size_t>(length)]) : 0U;
+    if (static_cast<std::uint32_t>(length - 1) > 3U)
+        return 1;
+    std::int32_t read = 1;
+    while (read < length) {
+        if (read >= size)
+            return 0;
+        const std::uint8_t next = static_cast<std::uint8_t>(text[read]);
+        const std::int32_t kind = kindOf(next);
+        value = (value << 6) | (kind < 5 ? static_cast<std::uint8_t>(next & ~UI_UTF8_MASKS[static_cast<std::size_t>(kind)]) : 0U);
+        if (kind)
+            return read;
+        ++read;
+    }
+    *codepoint = value;
+    ValidateUITextCodepoint(codepoint, length);
+    return length;
+}
+
+// @verified - p
+std::int32_t FillStringData(const char *text, std::int32_t size) {
+    if (!text || !size)
+        return 0;
+    std::uint32_t codepoint = 0;
+    std::int32_t offset = 0;
+    std::int32_t count = 0;
+    for (std::int32_t length = DecodeUITextCharacter(text, &codepoint, size); length && offset < size;
+         length = DecodeUITextCharacter(text + offset, &codepoint, size - offset)) {
+        offset += length;
+        ++count;
+    }
+    return count;
+}
+
+// @verified - p
+char *ParseGameTagsForBuffer(char *buffer, std::int32_t size, const char *tag) {
+    const std::size_t tagLength = std::strlen(tag);
+    char *match = buffer;
+    char *cursor = buffer;
+    std::size_t matched = 0;
+    if (!*buffer)
+        return nullptr;
+    while (true) {
+        std::uint32_t codepoint = 0;
+        const std::int32_t length = DecodeUITextCharacter(cursor, &codepoint, size);
+        if (codepoint != static_cast<std::uint32_t>(static_cast<std::int8_t>(tag[matched])))
+            matched = 0;
+        if (codepoint == static_cast<std::uint32_t>(static_cast<std::int8_t>(tag[matched]))) {
+            if (++matched == 1)
+                match = cursor;
+            else if (matched == tagLength)
+                return match;
+        }
+        cursor += length;
+        if (!*cursor)
+            return nullptr;
+    }
+}
+
+// @verified - p
+void TextFormat(char *buffer, std::int32_t size, const char *tag, const char *replacement) {
+    char *const found = ParseGameTagsForBuffer(buffer, size, tag);
+    if (!found)
+        return;
+    char *const copy = static_cast<char *>(GetRendererScratchBlock(static_cast<std::size_t>(static_cast<std::int64_t>(size))));
+    std::snprintf(copy, static_cast<std::size_t>(static_cast<std::int64_t>(size)), "%s", buffer);
+    const std::int32_t space = FillStringData(buffer, size) + static_cast<std::int32_t>(buffer - found);
+    std::snprintf(found, static_cast<std::size_t>(static_cast<std::int64_t>(space)), "%s%s", replacement, copy + (found - buffer) + std::strlen(tag));
+    RestoreRendererScratchBlock(copy);
+}
 const char *GetStringForUILabel(const char *text) {
     if (!text)
         return "";

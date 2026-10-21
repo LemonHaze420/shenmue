@@ -4886,29 +4886,29 @@ void SetDuckRacePlacementRow(std::int32_t row, const char *text, std::int32_t bo
             duckRaceHudWindows[row]->alpha = 0.0f;
     }
 }
+// @verified - p
 void ConstructNumStrikesLeftText(std::int32_t strikes) {
     streetFighterHudLabels[2]->colour |= 0xff000000U;
     streetFighterHudText[2][0] = '\0';
-    if (strikes <= 0)
-        return;
-    const std::string_view source = GetLocalizedSceneText(strikes <= 1 ? "UISFSTRIKES1" : "UISFSTRIKESM"); // @text UISFSTRIKES1 EN: "1 Strike Left" | JA: "残り1発" ; UISFSTRIKESM EN: "[[VALUE]] Strikes Left" | JA: "残り[[VALUE]]発"
-    const std::size_t value = source.find("[[VALUE]]");
-    if (value == std::string_view::npos)
-        std::snprintf(streetFighterHudText[2].data(), 256, "%.*s", static_cast<int>(source.size()), source.data());
-    else
-        std::snprintf(streetFighterHudText[2].data(), 256, "%.*s%u%.*s", static_cast<int>(value), source.data(), static_cast<unsigned>(strikes),
-            static_cast<int>(source.size() - value - 9), source.data() + value + 9);
-}
+    if (strikes > 0) {
+        const char *const key = strikes <= 1 ?
+            "UISFSTRIKES1" :
+            "UISFSTRIKESM"; // @text UISFSTRIKES1 EN: "1 Strike Left" | JA: "残り1発" ; UISFSTRIKESM EN: "[[VALUE]] Strikes Left" | JA: "残り[[VALUE]]発"
 
+        std::snprintf(streetFighterHudText[2].data(), streetFighterHudText[2].size(), "%s", GetStringForUILabel(key));
+        std::array<char, 16> value;
+        std::snprintf(value.data(), value.size(), "%u", static_cast<std::uint32_t>(strikes));
+        TextFormat(streetFighterHudText[2].data(), static_cast<std::int32_t>(streetFighterHudText[2].size()), "[[VALUE]]", value.data());
+    }
+}
+// @verified - p
 void GetSFLevel(std::int32_t level) {
     streetFighterHudLabels[1]->colour |= 0xff000000U;
-    const std::string_view source = GetLocalizedSceneText("UISFLEVEL"); // @text EN: "Lv. [[LEVEL]]" | JA: "レベル[[LEVEL]]"
-    const std::size_t value = source.find("[[LEVEL]]");
-    if (value == std::string_view::npos)
-        std::snprintf(streetFighterHudText[1].data(), 256, "%.*s", static_cast<int>(source.size()), source.data());
-    else
-        std::snprintf(streetFighterHudText[1].data(), 256, "%.*s%u%.*s", static_cast<int>(value), source.data(), static_cast<unsigned>(level),
-            static_cast<int>(source.size() - value - 9), source.data() + value + 9);
+
+    std::snprintf(streetFighterHudText[1].data(), streetFighterHudText[1].size(), "%s", GetStringForUILabel("UISFLEVEL"));
+    std::array<char, 16> value;
+    std::snprintf(value.data(), value.size(), "%u", static_cast<std::uint32_t>(level));
+    TextFormat(streetFighterHudText[1].data(), static_cast<std::int32_t>(streetFighterHudText[1].size()), "[[LEVEL]]", value.data());
 }
 
 // @verified - p
