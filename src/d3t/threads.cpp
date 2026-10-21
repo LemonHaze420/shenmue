@@ -137,6 +137,8 @@ void CallbackWorker(std::stop_token stopToken, std::uint16_t threadIndex, void (
     while (!stopToken.stop_requested() && !g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst)) {
         callback(threadIndex);
     }
+    if (callback == LoadContent && g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst))
+        callback(threadIndex);
 }
 
 void IdleWorker(std::stop_token stopToken, std::wstring name) {

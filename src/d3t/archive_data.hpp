@@ -7,6 +7,7 @@ namespace shenmue::d3t {
 using archive_data::ArchiveDataLoadResult;
 using archive_data::ArchiveSourceDesc;
 using archive_data::ArchiveData_GetSourceDesc;
+using archive_data::ArchiveData_GetSourceBackingPath;
 using archive_data::ArchiveData_ClearArchives;
 using archive_data::ArchiveData_GetFileSize;
 using archive_data::ArchiveData_IsPackedFile;

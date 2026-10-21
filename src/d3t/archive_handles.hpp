@@ -13,6 +13,31 @@ using PlatformFileHandle = std::intptr_t;
 inline constexpr std::uint8_t AIF_Urgent = 0x20;
 inline constexpr std::uint64_t kArchiveBufferBudget = 150U * 1024U * 1024U;
 inline constexpr std::uint64_t kArchiveSourceDistanceCost = 0xa00000000ULL;
+enum ArchiveJobState : std::int32_t {
+    AJS_Free = 0,
+    AJS_Reserved = 1,
+    AJS_Queued = 2,
+    AJS_Claimed = 3,
+    AJS_Pending = 4,
+};
+
+enum ArchiveOpenFlag : std::uint8_t {
+    AOF_Read = 0x01,
+    AOF_Write = 0x02,
+    AOF_Truncate = 0x04,
+    AOF_SkipDecompression = 0x10,
+};
+
+inline constexpr std::uintptr_t ARCHIVE_IO_PENDING = 0x103;
+
+struct ArchiveOverlapped {
+    std::uintptr_t internal;
+    std::uintptr_t transferred;
+    std::uint64_t offset;
+    PlatformFileHandle event;
+};
+static_assert(sizeof(ArchiveOverlapped) == 0x20);
+static_assert(offsetof(ArchiveOverlapped, transferred) == 8 && offsetof(ArchiveOverlapped, offset) == 16 && offsetof(ArchiveOverlapped, event) == 24);
 struct ArchiveHandleEntry {
     char path[0x104];
     std::uint32_t handle;
@@ -27,7 +52,7 @@ struct ArchiveHandleEntry {
     std::uint8_t readSucceeded;
     std::byte reserved_149[7];
     PlatformFileHandle platformHandle;
-    std::byte reserved_158[0x20];
+    ArchiveOverlapped overlapped;
 };
 
 struct ArchiveHandleTable {
@@ -83,6 +108,7 @@ static_assert(offsetof(ArchiveHandleEntry, bufferedDataSize) == 0x138);
 static_assert(offsetof(ArchiveHandleEntry, preserveBufferedData) == 0x140);
 static_assert(offsetof(ArchiveHandleEntry, readSucceeded) == 0x148);
 static_assert(offsetof(ArchiveHandleEntry, platformHandle) == 0x150);
+static_assert(offsetof(ArchiveHandleEntry, overlapped) == 0x158);
 static_assert(sizeof(ArchiveHandleEntry) == 0x178);
 static_assert(offsetof(ArchiveHandleTable, handleIds) == 0xbc000);
 static_assert(offsetof(AsyncArchiveRequest, path) == 9);

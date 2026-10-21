@@ -2,12 +2,15 @@
 
 #include "d3t/archive_data.hpp"
 #include "d3t/threads.hpp"
+#include "d3t/archives.hpp"
+#include "d3t/compression.hpp"
 #include "d3t/file_state.hpp"
 
 #include <algorithm>
 #include <chrono>
 #include <condition_variable>
 #include <cstdlib>
+#include <cstdio>
 #include <cstring>
 #include <mutex>
 #include <thread>
@@ -44,140 +47,304 @@ ArchiveSourceDesc g_currentArchiveSource{};
 std::mutex g_archiveWorkerMutex;
 std::condition_variable_any g_archiveWorkerCondition;
 
-bool readArchiveBackingFile(ArchiveHandleEntry &handle, const AsyncArchiveRequest &request) {
-    const std::uint64_t offset = request.offset;
-    handle.accessMode = request.flags | 1U;
-#if defined(_WIN32)
-    const char *path = request.path;
-    while (*path == '/' || *path == '\\')
-        ++path;
-    const DWORD access = GENERIC_READ | ((handle.accessMode & 2U) ? GENERIC_WRITE : 0U);
-    const DWORD disposition = (handle.accessMode & 2U) ? ((handle.accessMode & 4U) ? CREATE_ALWAYS : OPEN_ALWAYS) : OPEN_EXISTING;
-    const HANDLE file =
-        CreateFileA(path, access, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, disposition, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
-    if (file == INVALID_HANDLE_VALUE)
-        return false;
-    handle.platformHandle = reinterpret_cast<PlatformFileHandle>(file);
-    if (!Archive_GetHandleBuffer(request.archiveHandle, request.size)) {
-        CloseHandle(file);
-        handle.platformHandle = -1;
-        return false;
-    }
-    std::uint64_t size = request.size;
-    LARGE_INTEGER fileSize{};
-    if (GetFileSizeEx(file, &fileSize)) {
-        const std::uint64_t remaining = static_cast<std::uint64_t>(fileSize.QuadPart) - offset;
-        if (size > remaining)
-            size = remaining;
-    }
-    OVERLAPPED overlapped{};
-    overlapped.Offset = static_cast<DWORD>(offset);
-    overlapped.OffsetHigh = static_cast<DWORD>(offset >> 32U);
-    bool succeeded = ReadFile(file, handle.bufferedData, static_cast<DWORD>(size), nullptr, &overlapped) != 0;
-    if (succeeded || GetLastError() == ERROR_IO_PENDING) {
-        DWORD transferred{};
-        succeeded = GetOverlappedResult(file, &overlapped, &transferred, TRUE) != 0;
-    }
-    CloseHandle(file);
-#else
-    const int flags = (handle.accessMode & 2U) ? O_RDWR | O_CREAT | ((handle.accessMode & 4U) ? O_TRUNC : 0) : O_RDONLY;
-    const int file = open(request.path, flags, 0666);
-    if (file < 0)
-        return false;
-    handle.platformHandle = file;
-    if (!Archive_GetHandleBuffer(request.archiveHandle, request.size)) {
-        close(file);
-        handle.platformHandle = -1;
-        return false;
-    }
-    std::uint64_t size = request.size;
-    struct stat attributes {};
-    if (!fstat(file, &attributes)) {
-        const std::uint64_t remaining = static_cast<std::uint64_t>(attributes.st_size) - offset;
-        if (size > remaining)
-            size = remaining;
-    }
-    const ssize_t transferred = pread(file, handle.bufferedData, static_cast<std::uint32_t>(size), static_cast<off_t>(offset));
-    const bool succeeded = transferred > 0 || (transferred == 0 && size == 0);
-    close(file);
-#endif
-    handle.platformHandle = -1;
-    return succeeded;
+// @verified - p
+bool IsArchiveSourceDescActive(const ArchiveSourceDesc &source) {
+    const ArchiveSourceDesc &empty = archive_data::EMPTY_ARCHIVE_SOURCE;
+    return (source.sourceIndex != empty.sourceIndex || source.sourceOffset != empty.sourceOffset || source.fileSize != empty.fileSize ||
+               source.flags != empty.flags) &&
+        source.sourceIndex < g_archiveState.archiveCount && source.fileSize != 0;
 }
 
-bool writeArchiveBackingFile(ArchiveHandleEntry &handle, const AsyncArchiveRequest &request) {
-    if (!handle.bufferedData || (!(handle.archiveLookupFlag & 1U) && ArchiveData_IsPackedFile(request.path)))
+// @verified - p
+bool CheckArchiveHandleOpen(std::uint32_t handle) {
+    if (!Archive_DoesHandleExist(handle))
         return false;
-    const std::uint64_t offset = request.offset;
-    const std::uint32_t size = static_cast<std::uint32_t>(handle.bufferedDataSize);
-    handle.accessMode = request.flags | 2U;
-#if defined(_WIN32)
-    const char *path = request.path;
-    while (*path == '/' || *path == '\\')
-        ++path;
-    const DWORD access = GENERIC_WRITE | ((handle.accessMode & 1U) ? GENERIC_READ : 0U);
-    const HANDLE file = CreateFileA(path, access, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, (handle.accessMode & 4U) ? CREATE_ALWAYS : OPEN_ALWAYS,
-        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
-    if (file == INVALID_HANDLE_VALUE)
-        return false;
-    handle.platformHandle = reinterpret_cast<PlatformFileHandle>(file);
-    OVERLAPPED overlapped{};
-    overlapped.Offset = static_cast<DWORD>(offset);
-    overlapped.OffsetHigh = static_cast<DWORD>(offset >> 32U);
-    bool succeeded = WriteFile(file, handle.bufferedData, size, nullptr, &overlapped) != 0;
-    if (!succeeded && GetLastError() == ERROR_IO_PENDING) {
-        DWORD transferred{};
-        (void)GetOverlappedResult(file, &overlapped, &transferred, TRUE);
+    const ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+    return entry && entry->platformHandle != -1;
+}
 
-        succeeded = true;
-    }
-    CloseHandle(file);
-#else
-    const int flags = ((handle.accessMode & 1U) ? O_RDWR : O_WRONLY) | O_CREAT | ((handle.accessMode & 4U) ? O_TRUNC : 0);
-    const int file = open(request.path, flags, 0666);
-    if (file < 0)
+// @verified - p
+bool IsArchiveHandleOpenForMode(std::uint32_t handle, std::uint8_t required) {
+    if (!Archive_DoesHandleExist(handle))
         return false;
-    handle.platformHandle = file;
-    const bool succeeded = pwrite(file, handle.bufferedData, size, static_cast<off_t>(offset)) >= 0;
-    close(file);
+    const ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+    return entry && entry->platformHandle != -1 && (entry->accessMode & required) != 0;
+}
+
+// @verified - p
+std::uint64_t GetArchiveFileSize(std::uint32_t handle) {
+    if (!Archive_DoesHandleExist(handle))
+        return 0;
+    const ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+    if (!entry)
+        return 0;
+    if (IsArchiveSourceDescActive(entry->source))
+        return entry->source.fileSize;
+    if (entry->platformHandle != -1) {
+#if defined(_WIN32)
+        LARGE_INTEGER size{};
+        if (GetFileSizeEx(reinterpret_cast<HANDLE>(entry->platformHandle), &size))
+            return static_cast<std::uint64_t>(size.QuadPart);
+#else
+        struct stat attributes {};
+        if (!fstat(static_cast<int>(entry->platformHandle), &attributes))
+            return static_cast<std::uint64_t>(attributes.st_size);
 #endif
-    handle.platformHandle = -1;
-    return succeeded;
+    }
+    return 0;
+}
+
+std::int32_t OpenArchiveSlotBackingFile(std::uint32_t handle, const char *path, std::uint8_t mode) {
+    if (!Archive_DoesHandleExist(handle))
+        return 1;
+    ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+    if (!entry)
+        return 1;
+    if (CheckArchiveHandleOpen(handle))
+        Archive_ClosePlatformHandle(handle);
+    ArchiveSourceDesc source = archive_data::EMPTY_ARCHIVE_SOURCE;
+    if (!(entry->archiveLookupFlag & 1U))
+        ArchiveData_GetSourceDesc(path, source);
+    char backing[260];
+    if (IsArchiveSourceDescActive(source)) {
+        if (mode & AOF_Write)
+            return 1;
+        if (!ArchiveData_GetSourceBackingPath(source, backing, sizeof(backing)))
+            return 1;
+        path = backing;
+    }
+    entry->accessMode = mode;
+    std::snprintf(entry->path, sizeof(entry->path), "%s", path);
+    entry->source = source;
+    char *filename = entry->path;
+#if defined(_WIN32)
+
+    while (*filename == '/' || *filename == '\\')
+        ++filename;
+    DWORD access = (mode & AOF_Read) ? GENERIC_READ : 0;
+    DWORD disposition = (mode & AOF_Read) ? OPEN_EXISTING : 0;
+    if (mode & AOF_Write) {
+        access |= GENERIC_WRITE;
+        disposition = (mode & AOF_Truncate) ? CREATE_ALWAYS : OPEN_ALWAYS;
+    }
+    if (access != 0) {
+        const HANDLE file =
+            CreateFileA(filename, access, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, disposition, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, nullptr);
+        entry->platformHandle = reinterpret_cast<PlatformFileHandle>(file);
+        if (file != INVALID_HANDLE_VALUE && (!(mode & AOF_Write) || GetFileAttributesA(filename) != INVALID_FILE_ATTRIBUTES))
+            return 0;
+        (void)GetLastError();
+    }
+#else
+    if (mode & (AOF_Read | AOF_Write)) {
+        const int access = (mode & AOF_Write) ? O_CREAT | ((mode & AOF_Read) ? O_RDWR : O_WRONLY) | ((mode & AOF_Truncate) ? O_TRUNC : 0) : O_RDONLY;
+        int file = open(filename, access, 0666);
+        if (file >= 0 && file < 3) {
+            const int duplicate = fcntl(file, F_DUPFD, 3);
+
+            close(file);
+            file = duplicate;
+        }
+        entry->platformHandle = file;
+        if (file != -1)
+            return 0;
+    }
+#endif
+    return 1;
+}
+
+void MarkArchiveJobPending(std::uint32_t handle) {
+    for (AsyncArchiveRequest &request : g_asyncArchiveRequests) {
+        if (request.state.load(std::memory_order_seq_cst) != AJS_Free && request.archiveHandle == handle) {
+            request.state.exchange(AJS_Pending, std::memory_order_seq_cst);
+            g_archiveWorkerCondition.notify_one();
+            return;
+        }
+    }
+}
+
+// @verified - p
+bool BeginArchiveRead(std::uint32_t handle, std::uint64_t offset, std::uint64_t size) {
+    if (!Archive_DoesHandleExist(handle))
+        return false;
+    ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+    if (!entry || !IsArchiveHandleOpenForMode(handle, AOF_Read) || !Archive_GetHandleBuffer(handle, size))
+        return false;
+    const bool active = IsArchiveSourceDescActive(entry->source);
+    const std::uint64_t remaining = GetArchiveFileSize(handle) - offset;
+    std::uint32_t count = static_cast<std::uint32_t>(size);
+    if (size > remaining)
+        count = static_cast<std::uint32_t>(remaining);
+    if (active)
+        offset += entry->source.sourceOffset;
+    entry->overlapped = {};
+    entry->overlapped.offset = offset;
+#if defined(_WIN32)
+    static_assert(sizeof(ArchiveOverlapped) == sizeof(OVERLAPPED) && alignof(ArchiveOverlapped) == alignof(OVERLAPPED));
+    static_assert(offsetof(ArchiveOverlapped, internal) == offsetof(OVERLAPPED, Internal));
+    static_assert(offsetof(ArchiveOverlapped, transferred) == offsetof(OVERLAPPED, InternalHigh));
+    static_assert(offsetof(ArchiveOverlapped, offset) == offsetof(OVERLAPPED, Offset));
+    static_assert(offsetof(ArchiveOverlapped, event) == offsetof(OVERLAPPED, hEvent));
+    bool accepted =
+        ReadFile(reinterpret_cast<HANDLE>(entry->platformHandle), entry->bufferedData, count, nullptr, reinterpret_cast<OVERLAPPED *>(&entry->overlapped)) != 0;
+    if (!accepted)
+        accepted = GetLastError() == ERROR_IO_PENDING;
+#else
+    const ssize_t read = pread(static_cast<int>(entry->platformHandle), entry->bufferedData, count, static_cast<off_t>(offset));
+    const bool accepted = read >= 0;
+    entry->overlapped.internal = accepted ? 0 : 1;
+    entry->overlapped.transferred = accepted ? static_cast<std::uintptr_t>(read) : 0;
+#endif
+    MarkArchiveJobPending(handle);
+    return accepted;
+}
+
+// @verified - p
+bool BeginArchiveReadChecked(std::uint32_t handle) {
+    if (!Archive_DoesHandleExist(handle) || !Archive_GetHandle(handle) || !IsArchiveHandleOpenForMode(handle, AOF_Read))
+        return false;
+    return BeginArchiveRead(handle, 0, GetArchiveFileSize(handle));
+}
+
+// @verified - p
+bool BeginArchiveWrite(std::uint32_t handle, std::uint64_t offset) {
+    if (!Archive_DoesHandleExist(handle))
+        return false;
+    ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+    if (!entry || IsArchiveSourceDescActive(entry->source) || !IsArchiveHandleOpenForMode(handle, AOF_Write) || !entry->bufferedData)
+        return false;
+    entry->overlapped = {};
+    entry->overlapped.offset = offset;
+    const std::uint32_t count = static_cast<std::uint32_t>(entry->bufferedDataSize);
+#if defined(_WIN32)
+    bool accepted = WriteFile(reinterpret_cast<HANDLE>(entry->platformHandle), entry->bufferedData, count, nullptr,
+                        reinterpret_cast<OVERLAPPED *>(&entry->overlapped)) != 0;
+    if (!accepted)
+        accepted = GetLastError() == ERROR_IO_PENDING;
+#else
+    const ssize_t written = pwrite(static_cast<int>(entry->platformHandle), entry->bufferedData, count, static_cast<off_t>(offset));
+    const bool accepted = written >= 0;
+    entry->overlapped.internal = accepted ? 0 : 1;
+    entry->overlapped.transferred = accepted ? static_cast<std::uintptr_t>(written) : 0;
+#endif
+    MarkArchiveJobPending(handle);
+    return accepted;
+}
+
+// @verified - p
+bool FinalizeCompletedArchiveRead(std::uint32_t handle) {
+#if defined(_WIN32)
+    DWORD transferred = handle;
+#else
+    std::uint32_t transferred = handle;
+#endif
+    if (!CheckArchiveHandleOpen(handle) || !Archive_DoesHandleExist(handle))
+        return false;
+    ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+    if (!entry)
+        return false;
+#if defined(_WIN32)
+    if (!GetOverlappedResult(reinterpret_cast<HANDLE>(entry->platformHandle), reinterpret_cast<OVERLAPPED *>(&entry->overlapped), &transferred, FALSE) &&
+        GetLastError() != ERROR_IO_INCOMPLETE)
+        return false;
+#else
+    if (entry->overlapped.internal != 0)
+        return false;
+    transferred = static_cast<std::uint32_t>(entry->overlapped.transferred);
+#endif
+    const bool wholeFile = transferred == GetArchiveFileSize(handle);
+    const bool active = IsArchiveSourceDescActive(entry->source);
+    if (wholeFile && !(entry->accessMode & AOF_SkipDecompression) && (!active || (IsArchiveSourceDescActive(entry->source) && entry->source.flags != 0))) {
+        std::size_t size = transferred;
+        std::uint32_t result;
+        void *const decoded = d3t_DecompressContent(entry->bufferedData, &size, &result);
+        if (decoded)
+            Archive_BindBuffer(handle, decoded, size, false);
+    }
+    return true;
+}
+
+// @verified - p
+bool PollArchiveIoCompletions() {
+    bool pending = false;
+    for (AsyncArchiveRequest &request : g_asyncArchiveRequests) {
+        if (request.state.load(std::memory_order_seq_cst) != AJS_Pending)
+            continue;
+        pending = true;
+        const std::uint32_t handle = request.archiveHandle;
+        const ArchiveHandleEntry *entry = nullptr;
+        if (CheckArchiveHandleOpen(handle) && Archive_DoesHandleExist(handle))
+            entry = Archive_GetHandle(handle);
+        if (entry && static_cast<std::uint32_t>(entry->overlapped.internal) == ARCHIVE_IO_PENDING)
+            continue;
+        if (request.archiveHandle != g_invalidArchiveHandle && Archive_GetHandle(request.archiveHandle)) {
+            const bool succeeded = request.operation == 0 ? FinalizeCompletedArchiveRead(request.archiveHandle) : request.operation == 1;
+            Archive_ClosePlatformHandle(request.archiveHandle);
+            ArchiveHandleEntry *const completed = Archive_DoesHandleExist(request.archiveHandle) ? Archive_GetHandle(request.archiveHandle) : nullptr;
+            if (completed)
+                completed->readSucceeded = succeeded;
+        }
+        request.state.exchange(AJS_Free, std::memory_order_seq_cst);
+    }
+    return pending;
 }
 
 bool processPublishedReads() {
-    bool processed = false;
-    for (;;) {
+    const
 
         std::lock_guard lock(g_archiveWorkerMutex);
-        AsyncArchiveRequest *const selected = GetBestArchiveIoJob(g_currentArchiveSource);
-        if (!selected)
-            break;
-        AsyncArchiveRequest &request = *selected;
-        ArchiveHandleEntry *const handle = Archive_GetHandle(request.archiveHandle);
-        bool succeeded = false;
-        if (handle && Archive_DoesHandleExist(request.archiveHandle))
-            g_currentArchiveSource = request.source;
-        if (handle && request.operation == 0) {
-            if (!(handle->archiveLookupFlag & 1U) && ArchiveData_IsPackedFile(request.path)) {
-                const std::uint64_t offset = request.offset;
-                const std::uint64_t fileSize = ArchiveData_GetFileSize(request.path);
-                const std::uint64_t readSize = offset <= fileSize ? (std::min)(request.size, fileSize - offset) : 0;
-                handle->accessMode = request.flags | 1U;
-                succeeded = Archive_GetHandleBuffer(request.archiveHandle, request.size) && offset <= fileSize &&
-                    ArchiveData_Read(request.path, offset, handle->bufferedData, readSize);
-            } else {
-                succeeded = readArchiveBackingFile(*handle, request);
-            }
-            handle->readSucceeded = succeeded ? 1 : 0;
-        } else if (handle && request.operation == 1) {
-            succeeded = writeArchiveBackingFile(*handle, request);
-            handle->readSucceeded = succeeded ? 1 : 0;
+    if (g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst)) {
+        while (PollArchiveIoCompletions()) {
         }
-        request.state.store(0);
-        processed = true;
+        return false;
     }
-    return processed;
+    bool processed = false;
+    ArchiveSourceDesc source = g_currentArchiveSource;
+    AsyncArchiveRequest *request = GetBestArchiveIoJob(source);
+    while (request) {
+        bool accepted = false;
+        std::int32_t openResult = 1;
+        if (request->archiveHandle != g_invalidArchiveHandle && Archive_GetHandle(request->archiveHandle)) {
+            g_currentArchiveSource = request->source;
+            if (request->operation == 0) {
+                openResult = OpenArchiveSlotBackingFile(request->archiveHandle, request->path, request->flags | AOF_Read);
+                if (openResult == 0) {
+                    if (request->size == 0 && request->offset == 0) {
+                        accepted = BeginArchiveReadChecked(request->archiveHandle);
+                    } else {
+                        if (request->size == 0)
+                            request->size = GetArchiveFileSize(request->archiveHandle) - request->offset;
+                        accepted = BeginArchiveRead(request->archiveHandle, request->offset, request->size);
+                    }
+                }
+            } else if (request->operation == 1) {
+                openResult = OpenArchiveSlotBackingFile(request->archiveHandle, request->path, request->flags | AOF_Write);
+                if (openResult == 0)
+                    accepted = BeginArchiveWrite(request->archiveHandle, request->offset);
+            }
+        }
+        processed = true;
+        if (openResult == 2) {
+            request->state.exchange(AJS_Queued, std::memory_order_seq_cst);
+            break;
+        }
+        if (!accepted) {
+            ArchiveHandleEntry *const failed = Archive_DoesHandleExist(request->archiveHandle) ? Archive_GetHandle(request->archiveHandle) : nullptr;
+            if (failed)
+                failed->readSucceeded = 0;
+
+            request->state.exchange(AJS_Free, std::memory_order_seq_cst);
+        }
+        PollArchiveIoCompletions();
+        source = g_currentArchiveSource;
+        request = GetBestArchiveIoJob(source);
+    }
+    const bool pending = PollArchiveIoCompletions();
+    if (g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst)) {
+        while (PollArchiveIoCompletions()) {
+        }
+    }
+    return processed || pending;
 }
 
 class ArchiveReadGuard {
@@ -264,8 +431,6 @@ AsyncArchiveRequest *GetBestArchiveIoJob(const ArchiveSourceDesc &source) {
 }
 
 void LoadContent(std::uint16_t threadIndex) {
-    if (g_d3tShutdownThreadFlag.load())
-        return;
     if (!processPublishedReads() && threadIndex < g_workerThreadCount) {
         std::unique_lock lock(g_archiveWorkerMutex);
         g_archiveWorkerCondition.wait_for(lock, std::chrono::milliseconds(100));

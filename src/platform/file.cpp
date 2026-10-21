@@ -13,7 +13,7 @@ bool Platform_CloseFileHandle(PlatformFileHandle handle) {
 #ifdef _WIN32
     return CloseHandle(reinterpret_cast<HANDLE>(handle)) != 0;
 #else
-    return ::close(static_cast<int>(handle)) == 0;
+    return handle != 0 && ::close(static_cast<int>(handle)) == 0;
 #endif
 }
 

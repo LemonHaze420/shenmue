@@ -590,6 +590,15 @@ void ArchiveData_GetSourceDesc(const char *path, ArchiveSourceDesc &source) {
     source.remapEntry = entry;
 }
 
+bool ArchiveData_GetSourceBackingPath(const ArchiveSourceDesc &source, char *path, std::size_t capacity) {
+    const TadEntry &entry = *static_cast<const TadEntry *>(source.remapEntry);
+    const std::string filename = entry.tacPath.string();
+    if (filename.size() >= capacity)
+        return false;
+    std::memcpy(path, filename.c_str(), filename.size() + 1);
+    return true;
+}
+
 bool ArchiveData_Read(const char *path, std::uint64_t offset, void *destination, std::uint64_t size) {
     if (!destination) {
         return false;

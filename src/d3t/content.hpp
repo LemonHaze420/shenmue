@@ -51,7 +51,7 @@ struct D3TContentSlot {
     std::uint32_t archiveHandle;
     void *destination;
     std::uint64_t destinationCapacity;
-    std::uint8_t preserveArchiveBuffer;
+    std::uint8_t bypassArchiveLookup;
     std::uint8_t archivePathExists;
     std::uint8_t option;
     std::byte reserved_1163[5];
@@ -69,6 +69,7 @@ static_assert(offsetof(D3TContentSlot, stateTimestamp) == 0x1140);
 static_assert(offsetof(D3TContentSlot, allocationLock) == 0x1148);
 static_assert(offsetof(D3TContentSlot, archiveHandle) == 0x114c);
 static_assert(offsetof(D3TContentSlot, destination) == 0x1150);
+static_assert(offsetof(D3TContentSlot, bypassArchiveLookup) == 0x1160);
 static_assert(offsetof(D3TContentSlot, option) == 0x1162);
 static_assert(sizeof(D3TContentSlot) == 0x1168);
 

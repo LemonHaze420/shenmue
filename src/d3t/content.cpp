@@ -159,7 +159,7 @@ void startArchiveRead(D3TContentSlot &slot) {
         return;
     }
     setState(slot, 7);
-    const std::uint32_t handle = Archive_AllocateHandle(slot.preserveArchiveBuffer != 0);
+    const std::uint32_t handle = Archive_AllocateHandle(slot.bypassArchiveLookup != 0);
     if (Archive_DoesHandleExist(handle)) {
         ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
         if (entry)
@@ -180,7 +180,7 @@ void startArchiveRead(D3TContentSlot &slot) {
         if (!active || source.flags == 0)
             Archive_BindBuffer(handle, slot.destination, slot.destinationCapacity, true);
     }
-    Archive_QueueRead(handle, 0, slot.resolvedPath, 0, size, 17);
+    Archive_QueueRead(handle, 0, slot.resolvedPath, 0, 0, 17);
     setState(slot, 8);
 }
 
