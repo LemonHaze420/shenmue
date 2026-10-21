@@ -1090,7 +1090,11 @@ void UI_DrawButtonPanel(nk_context &context, std::int32_t index);
 struct nk_image UI_ReadyViewImage(std::int32_t image);
 void UI_DrawCollectionCount(nk_context &context, const UILayoutRect &cell, std::int32_t count, const UICollectionPage &page);
 void UI_DrawCollectionSprite(nk_context &context, const struct nk_image &image, nk_color colour, const UICollectionDraw &draw, const UILayoutRect &cell);
+#if SHENMUE_IS_S2
+void UI_DrawScrollBar(nk_context &context, std::int32_t rows, std::int32_t pageCount, std::int32_t page, const UIScrollBar &bar);
+#else
 void UI_DrawScrollBar(nk_context &context, std::int32_t pageCount, std::int32_t page, const UIScrollBar &bar);
+#endif
 void UI_DrawOptionsList(nk_context &context, std::int32_t index);
 void UI_DrawCollection(nk_context &context, std::int32_t index);
 void UI_DrawMenuBar(nk_context &context, std::int32_t index);

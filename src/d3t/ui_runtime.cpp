@@ -1,5 +1,9 @@
 #include "d3t/ui_internal.hpp"
 
+#if SHENMUE_IS_S2
+#include "s2/ui_scroll_list.hpp"
+#endif
+
 #if SHENMUE_IS_S1
 #include "s1/d3t/d3t_shader_load.hpp"
 #include "s1/d3t/d3t_texture.hpp"
@@ -567,6 +571,11 @@ void UI_InputHandler(nk_context &context, std::int32_t slot, std::int32_t first,
         case 26:
             UI_DrawOptionsList(context, index);
             break;
+#if SHENMUE_IS_S2
+        case 27:
+            UI_DrawScrollList(context, static_cast<std::uint32_t>(index));
+            break;
+#endif
         case 30:
             UI_DrawAreaMap(context, index);
             break;

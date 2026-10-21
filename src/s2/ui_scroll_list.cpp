@@ -231,6 +231,185 @@ void UI_DrawScrollListScrollRow(nk_context &context, std::uint32_t index, std::i
 }
 
 // @verified - p
+float g_scrollListPawnshopOffset{};
+
+// @verified - p
+UIStateStyle *UI_GetStateStyle(std::int32_t index) {
+    return g_uiStateStyles.data() + index;
+}
+
+// @verified - p
+void UI_SetFontSize(std::uint32_t size) {
+    if (static_cast<std::uint32_t>(g_uiFontSize) != size && size < 6U) {
+        g_uiFontSize = static_cast<std::int32_t>(size);
+        UI_SelectFont();
+    }
+}
+
+// @verified - p
+void UI_DrawScrollList(nk_context &context, std::uint32_t index) {
+    UIScrollList *const list = UI_GetScrollList(index);
+    if (!list || list->field44 == 1)
+        return;
+    d3t::UIWindow *const window = UI_GetWindow(list->window);
+    if (!window)
+        return;
+    UILayoutRect bounds{.x = 0.0f, .y = 0.0f, .width = 0.0f, .height = 0.0f};
+    UI_GetWindowRect(window, bounds);
+    const float rowHeight = bounds.height / static_cast<float>(list->rows);
+    const UIScrollListDraw &draw = list->draws.data()[list->field7C];
+    if (draw.selectedStyle != -1)
+        UI_GetStateStyle(draw.selectedStyle);
+    if (draw.unselectedStyle != -1)
+        UI_GetStateStyle(draw.unselectedStyle);
+    const struct nk_color transparent = nk_rgba(0, 0, 0, 0);
+    context.style.window.fixed_background = nk_style_item_color(transparent);
+    context.style.window.background = transparent;
+    context.style.button.normal = nk_style_item_color(transparent);
+    context.style.button.hover = nk_style_item_color(transparent);
+    context.style.button.active = nk_style_item_color(transparent);
+    if (list->hasBar != 0) {
+        d3t::UIWindow *const barWindow = UI_GetWindow(list->bar.window);
+        if (barWindow)
+            barWindow->alpha = window->alpha;
+        UI_DrawScrollBar(context, list->rows, list->field6C, list->field74[1], list->bar);
+    }
+    UI_SetFontSize(static_cast<std::uint32_t>(list->font));
+    std::array<char, 32> name;
+    std::sprintf(name.data(), "scrllList%d", index);
+    if (g_waitingForNextTick == 1) {
+        nk_panel *const panel = reinterpret_cast<nk_panel *>(window->panel.data());
+        nk_begin_titled(
+            &context, panel, name.data(), name.data(), nk_rect(bounds.x, bounds.y, bounds.width, bounds.height), static_cast<nk_flags>(window->flags) | 0x20U);
+    }
+    const struct nk_color savedTextColour = context.style.text.color;
+    const std::uint32_t tint = UI_GetWindowColour(window);
+    std::memcpy(&context.style.text.color, &tint, sizeof(tint));
+    const float selectorY = rowHeight * std::bit_cast<float>(list->field3CC);
+    float y = 0.0f;
+    if (draw.method == static_cast<std::int32_t>(UIScrollListMethod::Pawnshop)) {
+        for (std::int32_t row = 0; row < list->rows; ++row)
+            y = UI_DrawScrollListPawnshopRow(context, index, row, y, g_scrollListPawnshopOffset, 0);
+    }
+    std::int32_t row = 0;
+    y = 0.0f;
+    for (; row < list->rows; ++row) {
+        switch (static_cast<UIScrollListMethod>(draw.method)) {
+        case UIScrollListMethod::Move: {
+            UILayoutRect rect{
+                .x = 0.0f, .y = static_cast<float>(row) * rowHeight + std::bit_cast<float>(list->field3A4), .width = bounds.width, .height = rowHeight};
+            UI_DrawScrollListMoveRow(context, index, row, rect);
+            break;
+        }
+        case UIScrollListMethod::Scroll: {
+            UILayoutRect rect{
+                .x = 0.0f, .y = static_cast<float>(row) * rowHeight + std::bit_cast<float>(list->field3A4), .width = bounds.width, .height = rowHeight};
+            UI_DrawScrollListScrollRow(context, index, row, rect);
+            break;
+        }
+        case UIScrollListMethod::Save:
+            UI_DrawScrollListSaveRow(context, index, row, rowHeight);
+            break;
+        case UIScrollListMethod::Map:
+            UI_DrawScrollListMapRow(context, index, row);
+            break;
+        case UIScrollListMethod::Pawnshop:
+            y = UI_DrawScrollListPawnshopRow(context, index, row, y, g_scrollListPawnshopOffset, 1);
+            break;
+        case UIScrollListMethod::Standard:
+            UI_DrawScrollListStandardRow(context, index, row);
+            break;
+        }
+    }
+    if (list->field74[0] > 0) {
+        switch (static_cast<UIScrollListMethod>(draw.method)) {
+        case UIScrollListMethod::Move: {
+            UILayoutRect rect{.x = 0.0f, .y = rowHeight * -1.0f + std::bit_cast<float>(list->field3A4), .width = bounds.width, .height = rowHeight};
+            UI_DrawScrollListMoveRow(context, index, row + 1, rect);
+            break;
+        }
+        case UIScrollListMethod::Scroll: {
+            UILayoutRect rect{.x = 0.0f, .y = rowHeight * -1.0f + std::bit_cast<float>(list->field3A4), .width = bounds.width, .height = rowHeight};
+            UI_DrawScrollListScrollRow(context, index, row + 1, rect);
+            break;
+        }
+        case UIScrollListMethod::Save:
+            UI_DrawScrollListSaveRow(context, index, row + 1, rowHeight);
+            break;
+        case UIScrollListMethod::Map:
+            UI_DrawScrollListMapRow(context, index, row + 1);
+            break;
+        case UIScrollListMethod::Standard:
+            UI_DrawScrollListStandardRow(context, index, row);
+            break;
+        default:
+            break;
+        }
+    }
+    if (list->rows + list->field74[0] < list->field6C) {
+        switch (static_cast<UIScrollListMethod>(draw.method)) {
+        case UIScrollListMethod::Move: {
+            UILayoutRect rect{
+                .x = 0.0f, .y = static_cast<float>(row) * rowHeight + std::bit_cast<float>(list->field3A4), .width = bounds.width, .height = rowHeight};
+            UI_DrawScrollListMoveRow(context, index, row, rect);
+            break;
+        }
+        case UIScrollListMethod::Scroll: {
+            UILayoutRect rect{
+                .x = 0.0f, .y = static_cast<float>(row) * rowHeight + std::bit_cast<float>(list->field3A4), .width = bounds.width, .height = rowHeight};
+            UI_DrawScrollListScrollRow(context, index, row, rect);
+            break;
+        }
+        case UIScrollListMethod::Save:
+            UI_DrawScrollListSaveRow(context, index, row, rowHeight);
+            break;
+        case UIScrollListMethod::Map:
+            UI_DrawScrollListMapRow(context, index, row);
+            break;
+        case UIScrollListMethod::Pawnshop:
+            UI_DrawScrollListPawnshopRow(context, index, row, y, g_scrollListPawnshopOffset, 1);
+            break;
+        case UIScrollListMethod::Standard:
+            UI_DrawScrollListStandardRow(context, index, row);
+            break;
+        }
+    }
+    if (g_waitingForNextTick == 1) {
+        if (context.current) {
+            if (!(context.current->flags & NK_WINDOW_HIDDEN))
+                nk_end(&context);
+            context.current = nullptr;
+        }
+    }
+    if (list->selectorImage != -1) {
+        d3t::UIViewSlot<kUIViewImageCapacity> *const view = UI_GetViewSlot(static_cast<std::uint32_t>(g_uiDrawViewSlot));
+        if (view) {
+            struct nk_image image;
+            std::memcpy(&image, &view->images.data()[list->selectorImage].textureHandle, sizeof(image));
+            context.style.window.fixed_background = nk_style_item_image(image);
+            const std::uint32_t selectorTint = UI_GetWindowColour(window);
+            std::memcpy(&context.style.window.background, &selectorTint, sizeof(selectorTint));
+            if (list->field64 != 1) {
+                std::sprintf(name.data(), "ScrollSelector%d", index);
+                const UILayoutRect selector{.x = bounds.x + list->selectorX,
+                    .y = (bounds.y + selectorY) + list->selectorY,
+                    .width = bounds.width * list->selectorWidth,
+                    .height = rowHeight * list->selectorHeight};
+                if (g_waitingForNextTick == 1) {
+                    nk_panel *const panel = reinterpret_cast<nk_panel *>(window->panel.data());
+                    nk_begin_titled(&context, panel, name.data(), name.data(), nk_rect(selector.x, selector.y, selector.width, selector.height), 0);
+                    if (g_waitingForNextTick == 1 && context.current) {
+                        if (!(context.current->flags & NK_WINDOW_HIDDEN))
+                            nk_end(&context);
+                        context.current = nullptr;
+                    }
+                }
+            }
+        }
+    }
+    context.style.window.fixed_background = nk_style_item_color(transparent);
+    context.style.text.color = savedTextColour;
+}
 ScrollListMoveData GetScrollListMoveData(std::int32_t index) {
     return g_scrollListMoveData.data()[index];
 }

@@ -1,5 +1,9 @@
 #include "d3t/ui_internal.hpp"
 
+#if SHENMUE_IS_S2
+#include "s2/ui_scroll_list.hpp"
+#endif
+
 #if SHENMUE_IS_S1
 namespace shenmue::s1 {
 #else
@@ -1107,12 +1111,85 @@ void UI_DrawCollectionSprite(nk_context &context, const struct nk_image &image, 
         nk_image_color(&context, UI_ReadyViewImage(draw.backgroundImage), nk_rgba(255, 255, 255, 255));
 }
 
+#if SHENMUE_IS_S2
+// @verified - p
+void UI_DrawScrollBar(nk_context &context, std::int32_t rows, std::int32_t pageCount, std::int32_t page, const UIScrollBar &bar) {
+    d3t::UIWindow *const window = UI_GetWindow(bar.window);
 
+    d3t::UIViewSlot<kUIViewImageCapacity> *const view = UI_GetViewSlot(static_cast<std::uint32_t>(g_uiDrawViewSlot));
+    if (!window || !view || pageCount <= 0)
+        return;
+    UILayoutRect rect{.x = 0.0f, .y = 0.0f, .width = 0.0f, .height = 0.0f};
+    UI_GetWindowRect(window, rect);
+    if (g_waitingForNextTick == 1) {
+        nk_panel *const panel = reinterpret_cast<nk_panel *>(window->panel.data());
+        nk_begin_titled(
+            &context, panel, "scroll bar innit", "scroll bar innit", nk_rect(rect.x, rect.y, rect.width, rect.height), static_cast<nk_flags>(window->flags));
 
-
-
-
-
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_begin(&context, NK_STATIC, 0.0f, 2);
+    }
+    const std::uint32_t tint = UI_GetWindowColour(window);
+    const UILayoutRect outline{.x = 0.0f, .y = 0.0f, .width = rect.width, .height = rect.height};
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_push(&context, nk_rect(outline.x, outline.y, outline.width, outline.height));
+    UI_DrawViewImage(context, bar.outlineImage, tint);
+    UILayoutRect body;
+    if (bar.horizontal != 0) {
+        d3t::UIViewImage &top = view->images.data()[bar.topImage];
+        top.rotate = 1;
+        top.angle = 0.0f;
+        const float start = (static_cast<float>(page) / static_cast<float>(pageCount)) * rect.width;
+        const float step = (rect.width - rect.height) * (1.0f / static_cast<float>(pageCount));
+        const UILayoutRect first{.x = start, .y = 0.0f, .width = rect.height, .height = rect.height};
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_push(&context, nk_rect(first.x, first.y, first.width, first.height));
+        UI_DrawViewImage(context, bar.topImage, tint);
+        d3t::UIViewImage &bottom = view->images.data()[bar.bottomImage];
+        bottom.rotate = 1;
+        bottom.angle = 3.1415901f;
+        const UILayoutRect last{.x = start + step, .y = 0.0f, .width = rect.height, .height = rect.height};
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_push(&context, nk_rect(last.x, last.y, last.width, last.height));
+        UI_DrawViewImage(context, bar.bottomImage, tint);
+        d3t::UIViewImage &track = view->images.data()[bar.barImage];
+        track.rotate = 1;
+        track.angle = UI_IMAGE_CORNER_ANGLE;
+        body = {.x = start + rect.height, .y = 0.0f, .width = step - rect.height * 0.9f, .height = rect.height};
+    } else {
+        d3t::UIViewImage &top = view->images.data()[bar.topImage];
+        top.rotate = 1;
+        top.angle = UI_IMAGE_CORNER_ANGLE;
+        const float step = (rect.height - rect.width) * (1.0f / static_cast<float>(pageCount));
+        const UILayoutRect first{.x = 0.0f, .y = rect.y, .width = rect.width, .height = rect.width};
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_push(&context, nk_rect(first.x, first.y, first.width, first.height));
+        UI_DrawViewImage(context, bar.topImage, tint);
+        d3t::UIViewImage &bottom = view->images.data()[bar.bottomImage];
+        bottom.rotate = 1;
+        bottom.angle = -UI_IMAGE_CORNER_ANGLE;
+        const UILayoutRect last{.x = 0.0f, .y = rect.y + step, .width = rect.width, .height = rect.width};
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_push(&context, nk_rect(last.x, last.y, last.width, last.height));
+        UI_DrawViewImage(context, bar.bottomImage, tint);
+        body = {.x = 0.0f,
+            .y = (static_cast<float>(page) / static_cast<float>(pageCount)) * rect.height + rect.width,
+            .width = step - rect.width * 0.9f,
+            .height = rect.width};
+    }
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_push(&context, nk_rect(body.x, body.y, body.width, body.height));
+    UI_DrawViewImage(context, bar.barImage, tint);
+    if (g_waitingForNextTick == 1) {
+        nk_layout_space_end(&context);
+        if (g_waitingForNextTick == 1 && context.current) {
+            if (!(context.current->flags & NK_WINDOW_HIDDEN))
+                nk_end(&context);
+            context.current = nullptr;
+        }
+    }
+}
+#else
 void UI_DrawScrollBar(nk_context &context, std::int32_t pageCount, std::int32_t page, const UIScrollBar &bar) {
     d3t::UIWindow *const window = UI_GetWindow(bar.window);
     if (!window || static_cast<std::uint32_t>(g_uiDrawViewSlot) > 0x4bU || pageCount <= 0)
@@ -1181,17 +1258,7 @@ void UI_DrawScrollBar(nk_context &context, std::int32_t pageCount, std::int32_t 
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
+#endif
 void UI_DrawOptionsList(nk_context &context, std::int32_t index) {
     if (static_cast<std::uint32_t>(index) > 5U || static_cast<std::uint32_t>(g_uiDrawViewSlot) > 0x4bU)
         return;
@@ -1668,7 +1735,11 @@ void UI_DrawCollection(nk_context &context, std::int32_t index) {
         d3t::UIWindow *const barWindow = UI_GetWindow(collection.bar.window);
         if (barWindow && window)
             barWindow->alpha = window->alpha;
+#if SHENMUE_IS_S2
+        UI_DrawScrollBar(context, 0, pages, current, collection.bar);
+#else
         UI_DrawScrollBar(context, pages, current, collection.bar);
+#endif
     }
 }
 

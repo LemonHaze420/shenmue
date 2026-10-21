@@ -49,6 +49,10 @@ std::int32_t GetMoveCommandAction(std::int32_t command);
 const d3t::UIViewImage *GetPlatformButtonIconImage(std::int32_t mode);
 std::int32_t GetPlatformButtonIconSheet();
 void UI_DrawScrollListMoveRow(nk_context &context, std::uint32_t index, std::int32_t row, UILayoutRect &bounds);
+extern float g_scrollListPawnshopOffset;
+UIStateStyle *UI_GetStateStyle(std::int32_t index);
+void UI_SetFontSize(std::uint32_t size);
+void UI_DrawScrollList(nk_context &context, std::uint32_t index);
 enum class UIScrollListMethod : std::int32_t {
     Move = 1,
     Scroll = 2,
