@@ -1,6 +1,5 @@
 PawnLegacyDrawState pawnDraw{};
-std::array<PawnFlyerSetRow, 12> pawnFlyerRows{};
-std::int32_t pawnSetCursor{}, pawnItemCursor{};
+std::  int32_t pawnSetCursor{}, pawnItemCursor{};
 
 HLib::Task *PawnWindowTextTask() {
     return static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->windowTask;

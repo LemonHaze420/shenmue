@@ -58,6 +58,8 @@ static_assert(sizeof(PawnFlyerSetRow) == 844);
 static_assert(offsetof(PawnFlyerSetRow, collected) == 512);
 static_assert(offsetof(PawnFlyerSetRow, count) == 772);
 static_assert(offsetof(PawnFlyerSetRow, label) == 776);
+extern std::array<PawnFlyerSetRow, 12> pawnFlyerRows;
+PawnFlyerSetRow GetPawnFlyerSetRow(std::int32_t index);
 std::uint32_t GetPawnAvailableSaleModes(shen_name shopName);
 std::int32_t GetPawnSaleResult();
 std::int32_t GetPawnSalePrice();

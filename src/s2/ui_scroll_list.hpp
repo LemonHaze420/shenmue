@@ -17,6 +17,19 @@ ScrollListScrollData GetScrollListScrollData(std::int32_t index);
 d3t::UISpriteSheet *UI_GetSpriteSheet(std::uint32_t index);
 void UI_DrawImageCorners(nk_context *context, const UILayoutRect &bounds, std::int32_t index, std::uint32_t colour);
 void UI_DrawScrollListScrollRow(nk_context &context, std::uint32_t index, std::int32_t row, UILayoutRect &bounds);
+struct PawnFlyerSprite {
+    std::int32_t unknown00;
+    std::int32_t image;
+    float u0, v0, u1, v1;
+    std::int32_t unknown18;
+};
+static_assert(sizeof(PawnFlyerSprite) == 28 && offsetof(PawnFlyerSprite, image) == 4 && offsetof(PawnFlyerSprite, u0) == 8);
+extern std::array<std::array<PawnFlyerSprite, 64>, 12> g_pawnFlyerSprites;
+extern UIScrollList *g_pawnFlyerScrollList;
+extern UITexturePage *g_pawnFlyerTexturePage;
+PawnFlyerSprite *GetPawnFlyerSprite(std::int32_t row, std::int32_t index);
+void RebuildPawnFlyerScrollRows(std::int32_t inspection);
+float UI_DrawScrollListPawnshopRow(nk_context &context, std::uint32_t index, std::int32_t row, float y, float &scroll, std::int32_t drawRow);
 enum class UIScrollListMethod : std::int32_t {
     Move = 1,
     Scroll = 2,

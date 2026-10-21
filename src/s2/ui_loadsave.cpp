@@ -36,12 +36,13 @@ std::int32_t FormatSaveDataInfoByIndex(std::int32_t index, const S2SaveDataInfo 
         area = ui_detail::SaveMenuAreaIndex(data->mapName);
         location = ui_detail::SaveMenuLocationIndex(area);
     }
-    const char *const locationToken = source != 0 || location < 0 ? "UISAVES1CL" :
+    const char *const locationToken = source != 0 || location < 0 ? "UISAVES1CL" /* @text UISAVES1CL EN: "SM1 Save" | JA: "Ｓ１セーブデータ" */ :
         location == 5                                             ? UI_SAVE_AREA_TOKENS[0] :
                                                                     UI_SAVE_LOCATION_TOKENS.data()[location];
     const char *const locationText = GetStringForUILabel(locationToken);
     std::snprintf(text.location.data(), text.location.size(), source == 0 && location >= 0 && data->saveKind == 99 ? "DBG: %s" : "%s", locationText);
-    const char *const areaText = GetStringForUILabel(area < 0 ? "UISAVES1LC" : UI_SAVE_AREA_TOKENS.data()[area]);
+    const char *const areaText =
+        GetStringForUILabel(area < 0 ? "UISAVES1LC" /* @text UISAVES1LC EN: "Cleared Game" | JA: "クリアデータ" */ : UI_SAVE_AREA_TOKENS.data()[area]);
     const std::int32_t result = std::snprintf(text.area.data(), text.area.size(), "%s", areaText);
     return result < 0 ? -1 : result;
 }

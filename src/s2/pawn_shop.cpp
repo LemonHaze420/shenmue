@@ -277,6 +277,12 @@ void PWIN_Callback(void *) {
 
 } // namespace
 
+std::array<PawnFlyerSetRow, 12> pawnFlyerRows{};
+
+// @verified - p
+PawnFlyerSetRow GetPawnFlyerSetRow(std::int32_t index) {
+    return pawnFlyerRows.data()[index];
+}
 char *CreatePAWNShops() {
     pawnMainTask = pawnDrawTask = pawnReleaseTask = nullptr;
     pawnReleaseFrames = 0;
