@@ -19,6 +19,7 @@ static_assert(offsetof(ArchiveSourceDesc, sourceOffset) == 8);
 static_assert(offsetof(ArchiveSourceDesc, fileSize) == 0x10);
 static_assert(offsetof(ArchiveSourceDesc, remapEntry) == 0x18);
 
+inline constexpr ArchiveSourceDesc EMPTY_ARCHIVE_SOURCE{};
 struct ArchiveDataLoadResult {
     std::uint32_t archiveCount;
     std::uint32_t entryCount;

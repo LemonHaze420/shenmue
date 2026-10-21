@@ -2,6 +2,9 @@
 #include "s2/area_jump.hpp"
 
 #include "d3t/asset_remap.hpp"
+#include "d3t/archive_handles.hpp"
+#include "d3t/archives.hpp"
+#include "d3t/compression.hpp"
 #include "d3t/dx11_renderer.hpp"
 #include "d3t/object_store.hpp"
 #include "d3t/texture.hpp"
@@ -54,6 +57,7 @@
 #include <cstring>
 #include <filesystem>
 
+#include <string>
 #if defined(_WIN32)
 #include <windows.h>
 #include <crtdbg.h>
@@ -201,9 +205,15 @@ bool Initialization(int, char **) {
 
     d3t::d3t_CreateThreads();
     InitializeRendererScratch();
+    for (d3t::AsyncArchiveRequest &request : d3t::g_asyncArchiveRequests)
+        request.state.exchange(0, std::memory_order_seq_cst);
+    d3t::d3t_InitializeOodleZLib();
     const std::filesystem::path root = gameRoot();
-    ArchiveDataLoadResult archives{};
-    if (!ArchiveData_LoadArchives(root.string().c_str(), "dx11", 2, &archives)) {
+    const std::string rootString = root.string();
+    const d3t::D3TArchiveDirectory directory{
+        .root = rootString.c_str(), .backend = "dx11", .type = 2, .reserved14 = 0, .reserved18 = 0, .asynchronous = 0, .reserved21 = {}};
+    d3t::d3t_ReadArchives(&directory);
+    if (d3t::g_archiveState.archiveCount == 0) {
         return false;
     }
     d3t::d3t_ReadAssetRemapping();

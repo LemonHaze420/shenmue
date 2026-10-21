@@ -14,7 +14,9 @@ inline constexpr std::uint8_t AIF_Urgent = 0x20;
 inline constexpr std::uint64_t kArchiveBufferBudget = 150U * 1024U * 1024U;
 inline constexpr std::uint64_t kArchiveSourceDistanceCost = 0xa00000000ULL;
 struct ArchiveHandleEntry {
-    std::byte data[0x128];
+    char path[0x104];
+    std::uint32_t handle;
+    ArchiveSourceDesc source;
     std::uint8_t accessMode;
     std::uint8_t archiveLookupFlag;
     std::byte reserved_12a[6];
@@ -73,6 +75,7 @@ struct LargeFileDataEntry {
     std::int32_t reserved_24c;
 };
 
+static_assert(offsetof(ArchiveHandleEntry, handle) == 0x104 && offsetof(ArchiveHandleEntry, source) == 0x108);
 static_assert(offsetof(ArchiveHandleEntry, bufferedData) == 0x130);
 static_assert(offsetof(ArchiveHandleEntry, accessMode) == 0x128);
 static_assert(offsetof(ArchiveHandleEntry, archiveLookupFlag) == 0x129);

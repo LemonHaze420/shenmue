@@ -5,6 +5,7 @@
 #include "platform/performance_counter.hpp"
 #include "d3t/archive_data.hpp"
 #include "d3t/archive_handles.hpp"
+#include "d3t/archives.hpp"
 #include "d3t/asset_remap.hpp"
 #include "d3t/compression.hpp"
 #include "d3t/render_handles.hpp"
@@ -199,31 +200,50 @@ void startArchiveRead(D3TContentSlot &slot) {
     setState(slot, 8);
 }
 
+// @verified - p
 std::int32_t finishContentTask(void *taskData) {
     if (!taskData) {
         return 0;
     }
-    D3TContentSlot *slot = nullptr;
-    std::memcpy(&slot, taskData, sizeof(slot));
+    const auto readSlot = [taskData]() -> D3TContentSlot * {
+        D3TContentSlot *value;
+        std::memcpy(&value, taskData, sizeof(value));
+        return value;
+    };
+    D3TContentSlot *slot = readSlot();
     if (!slot) {
         return 0;
     }
-    std::int32_t expectedState = 10;
-    if (!slot->state.compare_exchange_strong(expectedState, 11, std::memory_order_seq_cst)) {
-        return 0;
+    std::int32_t decodeMode = 11;
+    const std::uint32_t archiveHandle = slot->archiveHandle;
+    if (Archive_DoesHandleExist(archiveHandle)) {
+        const ArchiveHandleEntry *const archive = Archive_GetHandle(archiveHandle);
+        if (archive) {
+            const ArchiveSourceDesc source = archive->source;
+            const ArchiveSourceDesc &empty = archive_data::EMPTY_ARCHIVE_SOURCE;
+            if ((source.sourceIndex != empty.sourceIndex || source.sourceOffset != empty.sourceOffset || source.fileSize != empty.fileSize ||
+                    source.flags != empty.flags) &&
+                source.sourceIndex < g_archiveState.archiveCount && source.fileSize != 0)
+                decodeMode = source.flags;
+        }
     }
-    slot->stateTimestamp = currentNanoseconds();
+    if (decodeMode != 0) {
+        slot = readSlot();
 
-
-
-    std::size_t decodedSize = static_cast<std::size_t>(slot->loadedSize);
-    std::uint32_t decodeResult = 0;
-    void *decoded = d3t_DecompressContent(slot->loadedData, &decodedSize, &decodeResult);
-    if (decoded) {
+        std::size_t decodedSize = static_cast<std::size_t>(slot->loadedSize);
+        std::uint32_t decodeResult = 0;
+        void *decoded = d3t_DecompressContent(slot->loadedData, &decodedSize, &decodeResult);
+        slot = readSlot();
+        if (decodeMode != 11 && (!decoded || decoded == slot->loadedData)) {
+            setState(*slot, 13);
+            return 0;
+        }
+        if (decoded && decoded != slot->loadedData) {
 #if SHENMUE_IS_S2
         if (slot->destination && slot->destinationCapacity >= decodedSize) {
             std::memcpy(slot->destination, decoded, decodedSize);
             std::free(decoded);
+            slot = readSlot();
             decoded = slot->destination;
         }
 #else
@@ -231,6 +251,7 @@ std::int32_t finishContentTask(void *taskData) {
             const std::size_t copySize = std::min(decodedSize, static_cast<std::size_t>(slot->destinationCapacity));
             std::memcpy(slot->destination, static_cast<std::byte *>(decoded) + decodedSize - copySize, copySize);
             std::free(decoded);
+            slot = readSlot();
             decoded = slot->destination;
             decodedSize = copySize;
         }
@@ -238,15 +259,21 @@ std::int32_t finishContentTask(void *taskData) {
         else {
             Archive_BindBuffer(slot->archiveHandle, decoded, decodedSize, false);
         }
+        slot = readSlot();
         slot->loadedData = decoded;
+        slot = readSlot();
         slot->loadedSize = decodedSize;
+        }
     }
-
+    slot = readSlot();
+    setState(*slot, 11);
+    slot = readSlot();
     if (slot->callback) {
         const std::uint32_t index = static_cast<std::uint32_t>(slot - g_d3tContentSlots.data());
         const std::uint32_t handle = (index << 16U) | static_cast<std::uint32_t>(slot->generation);
         slot->callback(slot->callbackData, handle, slot->loadedData, slot->loadedSize, slot->sourcePath);
     }
+    slot = readSlot();
     completeContentSlot(*slot);
     return 0;
 }
