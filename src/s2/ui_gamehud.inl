@@ -453,32 +453,37 @@ std::int64_t GameHudWatchDestroy() {
 }
 // View images 1-3 (compass ring, minute and hour hands) turn by the time HUD's angles, the TIME label shows AM or PM for the current
 // hour, and the view draws; the CompassPanel window alpha fades the ring.
-std::int64_t RenderGameHudWatch() {
-    auto &definition = uiDefinitions[static_cast<std::size_t>(UIElement::GameHudWatch)];
-    const std::array<float, 3> angles{gameHudCompassRotation, gameHudMinuteHandRotation, gameHudHourHandRotation};
-    for (std::size_t image = 1; image < 4 && image < definition.images.size(); ++image)
-        for (auto &object : definition.textureObjects)
-            if (object.imageName == definition.images[image].name)
-                object.rotation = angles[image - 1];
-    DateTime now{};
+// @verified - p
+std::int32_t GetHourMinSecond(std::int32_t *hour, std::int32_t *minute, std::int32_t *second) {
+    DateTime now;
     GetCurrentDateTime(now);
-    const auto suffix=GetLocalizedSceneText(now.hour<12?"UILOADAM00":"UILOADPM00"); // @text UILOADAM00 EN: "am" | JA: "午前" ; UILOADPM00 EN: "pm" | JA: "午後"
-    std::snprintf(gameHudWatchTimeText.data(), gameHudWatchTimeText.size(), "%.*s", static_cast<int>(suffix.size()), suffix.data());
-    if (!drawingUI)
-        return 0;
-    auto &layout = gameHudWatchLayout;
-    d3t::ResolveUIDefinitionLayout(
-        definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels, {}, GetUILayoutPaddingScale());
-    for (std::size_t i = 0; i < definition.textureObjects.size(); ++i) {
-        const auto panel = layout.objectPanels[i];
-        d3t::DrawUITextureObject(
-            definition, definition.textureObjects[i], layout.objects[i], panel < 0 ? 1.0f : definition.panels[static_cast<std::size_t>(panel)].imageOpacity);
-    }
-    for (std::size_t i = 0; i < definition.labels.size(); ++i) {
-        const auto &label = definition.labels[i];
-        DrawMovesLabel(label, layout.labels[i],
-            static_cast<std::int32_t>(i) == gameHudWatchTimeLabel ? std::string_view(gameHudWatchTimeText.data()) : std::string_view(label.text), 1,
-            &definition);
+    *hour = now.hour;
+    *minute = now.minute;
+    *second = now.second;
+    return now.second;
+}
+
+// @verified - p
+std::
+    // @verified - p
+    int64_t
+// @verified - p
+    RenderGameHudWatch() {
+    const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::GameHudWatch)].config.uiHandleIndex;
+    d3t ::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(slot);
+    if (view) {
+        view->images[1].rotate = 1;
+        view->images[1].angle = gameHudCompassRotation;
+        view->images[2].rotate = 1;
+        view->images[2].angle = gameHudMinuteHandRotation;
+        view->images[3].rotate = 1;
+        view->images[3].angle = gameHudHourHandRotation;
+        std::int32_t hour = 0, minute = 0, second = 0;
+        GetHourMinSecond(&hour, &minute, &second);
+        const char *const suffix =
+            GetStringForUILabel(hour < 12 ? "UILOADAM00" : "UILOADPM00"); // @text UILOADAM00 EN: "am" | JA: "午前" ; UILOADPM00 EN: "pm" | JA: "午後"
+        std::snprintf(gameHudWatchTimeText.data(), gameHudWatchTimeText.size(), "%s", suffix);
+        uiUpdateWithColour(*GetNativeUiContext(), slot);
     }
     return 0;
 }

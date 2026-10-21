@@ -479,7 +479,7 @@ bool IsElementAvailable(UIElement element) noexcept;
 void UpdateCompass(float rotation) noexcept;
 void UpdateMinuteHand(float rotation) noexcept;
 void UpdateHourHand(float rotation) noexcept;
-void UpdateCompassImage(std::int32_t enabled, std::int32_t rotation) noexcept;
+void UpdateCompassImage(std::int32_t enabled, std::int32_t alpha) noexcept;
 bool IsEasyOptionActive() noexcept;
 void SetNewEasyOptionState(std::int32_t mode) noexcept;
 bool AbortEasyOptionState(std::int32_t requested) noexcept;

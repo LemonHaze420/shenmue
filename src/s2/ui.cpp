@@ -1250,14 +1250,12 @@ std::int32_t previousCameraIconMode{};
 std::int32_t currentCameraIconMode{};
 // The watch view: its compass ring and hand angles, the AM/PM text its TIME label shows, and the
 // CompassImage widget with the CompassPanel window whose alpha fades the ring in and out.
-d3t::UITextureObjectDefinition *gameHudCompassImage{};
-d3t::UIPanelDefinition *gameHudCompassPanel{};
+d3t::UIImageWidget *gameHudCompassImage{};
+d3t::UIWindow *gameHudCompassWindow{};
 float gameHudCompassRotation{};
 float gameHudMinuteHandRotation{};
 float gameHudHourHandRotation{};
 std::array<char, 0x200> gameHudWatchTimeText{};
-std::int32_t gameHudWatchTimeLabel{-1};
-AuthoredMenuLayout gameHudWatchLayout;
 std::int8_t easyOptionControllerState{};
 std::int8_t easyOptionMode{};
 bool easyOptionShowsOptions{};
@@ -1814,26 +1812,29 @@ std::uint32_t LoadGameHudWatch() {
 
 // The TIME label takes the AM/PM text, and the CompassImage widget and its window are kept for
 // UpdateCompassImage. Images 1-3 (compass ring, minute and hour hands) turn in RenderGameHudWatch.
+// @verified - p
 std::int64_t BindGameHudWatch() {
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::GameHudWatch)];
-    BindAuthoredMenuLayout(definition, gameHudWatchLayout);
-    gameHudWatchTimeLabel = -1;
-    for (std::size_t index = 0; index < definition.labels.size(); ++index)
-        if (definition.labels[index].text == "TIME")
-            gameHudWatchTimeLabel = static_cast<std::int32_t>(index);
-    gameHudCompassImage = nullptr;
-    gameHudCompassPanel = nullptr;
-    for (d3t::UITextureObjectDefinition &object : definition.textureObjects) {
-        if (object.id != "GameHUDWatch_CompassPanel::CompassImage")
-            continue;
-        gameHudCompassImage = &object;
-        for (d3t::UIPanelDefinition &panel : definition.panels)
-            if (panel.id == object.panelId) {
-                gameHudCompassPanel = &panel;
-                break;
-            }
-        break;
+    const std ::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::GameHudWatch)].config.uiHandleIndex;
+    d3t::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(slot);
+    if (view) {
+        view->keepLoaded = 1;
+        for (std::size_t index = 1; index < 4; ++index) {
+            view->images[index].rotate = 1;
+            view->images[index].angle = 0.0f;
+        }
+        for (std::int32_t index = 0; index < view->widgetCount; ++index) {
+            if (view->widgetKinds[index] != 15)
+                continue;
+            d3t::UILabelWidget *const label = UI_GetLabel(view->widgetPoolIndices[index]);
+            if (!std ::strcmp(label->text, UI_HUD_WATCH_TIME_MARKER))
+                label->text = gameHudWatchTimeText.data();
+        }
     }
+    const std::int32_t image = UI_FindViewImageWidget(slot, UI_HUD_WATCH_COMPASS_IMAGE);
+    gameHudCompassImage = static_cast<std::uint32_t>(image) < g_uiImageWidgets.size() ? &g_uiImageWidgets[image] : nullptr;
+    if (gameHudCompassImage)
+        gameHudCompassWindow = UI_GetWindow(gameHudCompassImage->window);
+
     return 1;
 }
 
@@ -5279,7 +5280,7 @@ void InitializeNuklearUI(std::uint32_t renderHandle) {
     gameUiSecondaryFlags.fill(0);
     notebookRefreshFrame = 0;
     gameHudCompassImage = nullptr;
-    gameHudCompassPanel = nullptr;
+    gameHudCompassWindow = nullptr;
     gameScreenFadeColour = 0;
     InitializeUIElements();
     DrainUIFontRequests();
@@ -5584,13 +5585,12 @@ void UpdateHourHand(float rotation) noexcept {
 // Shows or hides the compass ring and sets its window's alpha (percent), not a rotation.
 // @verified - p
 void UpdateCompassImage(std::int32_t enabled, std::int32_t alpha) noexcept {
-    if (!gameHudCompassImage)
-        return;
-    gameHudCompassImage->hidden = enabled != 1;
-    if (gameHudCompassPanel)
-        gameHudCompassPanel->imageOpacity = static_cast<float>(alpha) / 100.0f;
+    if (gameHudCompassImage) {
+        gameHudCompassImage->field44 = enabled == 1;
+        if (gameHudCompassWindow)
+            gameHudCompassWindow->alpha = static_cast<float>(alpha) / 100.0f;
+    }
 }
-
 bool HandleGameUIVisibility() {
     if (GetNumFramesProcessed() == 0) {
         if (GetHelpIconEnabled())
@@ -5933,7 +5933,7 @@ void RenderUIContents() {
                 if (index == static_cast<std::size_t>(UIElement::NotebookPages))
                     RenderMemoNotebookPages();
                 else if (index == static_cast<std::size_t>(UIElement::GameHudTimer) || index == static_cast<std::size_t>(UIElement::GameHud) ||
-                    index == static_cast<std::size_t>(UIElement::HudSnapshot))
+                    index == static_cast<std::size_t>(UIElement::HudSnapshot) || index == static_cast<std::size_t>(UIElement::GameHudWatch))
                     RenderScreenFilmFrame(static_cast<std::int32_t>(index));
                 else if (element.render)
                     element.render();

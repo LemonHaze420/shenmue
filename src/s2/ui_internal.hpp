@@ -1150,6 +1150,14 @@ void DrawCollectionSnapshotStatus(std::uint32_t slot, const d3t::UIRect &rectang
 
 void ReleaseCollectionMenuResources();
 
+inline constexpr const char *UI_HUD_WATCH_COMPASS_IMAGE = "GameHUDWatch_CompassPanel::CompassImage";
+inline constexpr const char *UI_HUD_WATCH_TIME_MARKER = "TIME";
+extern d3t::UIImageWidget *gameHudCompassImage;
+extern d3t::UIWindow *gameHudCompassWindow;
+extern std::array<char, 0x200> gameHudWatchTimeText;
+extern float gameHudCompassRotation, gameHudMinuteHandRotation, gameHudHourHandRotation;
+std::int32_t GetHourMinSecond(std::int32_t *hour, std::int32_t *minute, std::int32_t *second);
+
 inline constexpr std::array<const char *, 3> UI_MOVE_LEARNED_LABELS{"Text_Line_1", "Text_Line_2", "Text_Line_3"};
 inline constexpr const char *UI_HUD_TIMER_PANEL = "GameHudTimer::TimerPanel";
 inline constexpr const char *UI_HUD_TIMER_LABEL = "GameHudTimer:TimerLabel";
