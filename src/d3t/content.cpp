@@ -58,31 +58,6 @@ bool validContentHandle(std::uint32_t handle, D3TContentSlot *&slot) {
     return slot->generation == static_cast<std::uint16_t>(handle);
 }
 
-void clearCompletedSlot(D3TContentSlot &slot) {
-    const std::uint16_t generation = slot.generation;
-    slot.flags.store(0, std::memory_order_relaxed);
-    slot.reserved_08 = 0;
-    slot.renderHandle = 0;
-    std::memset(slot.sourcePath, 0, sizeof(slot.sourcePath));
-    slot.loadedData = nullptr;
-    slot.loadedSize = 0;
-    slot.failureData = nullptr;
-    slot.callback = nullptr;
-    slot.callbackData = nullptr;
-    slot.state.store(0, std::memory_order_relaxed);
-    std::memset(slot.resolvedPath, 0, sizeof(slot.resolvedPath));
-    slot.taskHandle = 0;
-    slot.stateTimestamp = 0;
-    slot.archiveHandle = 0;
-    slot.destination = nullptr;
-    slot.destinationCapacity = 0;
-    slot.preserveArchiveBuffer = 0;
-    slot.archivePathExists = 0;
-    slot.option = 0;
-    slot.generation = generation;
-    slot.allocationLock.store(0, std::memory_order_release);
-}
-
 std::string normalizedSourcePath(const char *path) {
     std::array<char, 280> cleaned{};
     std::snprintf(cleaned.data(), cleaned.size(), "%s", path);
@@ -283,6 +258,8 @@ bool processContentSlots() {
     bool busy = false;
     for (D3TContentSlot &slot : g_d3tContentSlots) {
         const std::int32_t state = slot.state.load(std::memory_order_seq_cst);
+        if (state == 13)
+            slot.failureData = slot.resolvedPath;
         if (state != 0 && state != 12 && state != 13) {
             busy = true;
         }
@@ -303,15 +280,15 @@ bool processContentSlots() {
             startArchiveRead(slot);
         }
         if (slot.state.load(std::memory_order_seq_cst) == 8 && !Archive_HasPendingRead(slot.archiveHandle)) {
-            ArchiveHandleEntry *const archive = Archive_GetHandle(slot.archiveHandle);
-            if (archive && archive->readSucceeded && archive->bufferedData) {
-                slot.loadedData = archive->bufferedData;
-                slot.loadedSize = archive->bufferedDataSize;
-                setState(slot, 9);
-            } else {
-                setState(slot, 13);
+            const std::uint32_t sizeHandle = slot.archiveHandle;
+            const ArchiveHandleEntry *const sizeEntry = Archive_DoesHandleExist(sizeHandle) ? Archive_GetHandle(sizeHandle) : nullptr;
+            slot.loadedSize = sizeEntry ? sizeEntry->bufferedDataSize : 0;
+            const std::uint32_t dataHandle = slot.archiveHandle;
+            const ArchiveHandleEntry *const dataEntry = Archive_DoesHandleExist(dataHandle) ? Archive_GetHandle(dataHandle) : nullptr;
+            slot.loadedData = dataEntry ? dataEntry->bufferedData : nullptr;
+            setState(slot, slot.loadedData ? 9 : 13);
             }
-        }
+
         const std::int32_t completionState = slot.state.load(std::memory_order_seq_cst);
         if (completionState == 9 || completionState == 13) {
             if (completionState == 9 && slot.callback) {
@@ -320,16 +297,9 @@ bool processContentSlots() {
                 setState(slot, 10);
                 slot.taskHandle = d3t_QueueTask(&descriptor, sizeof(slotPointer));
             } else {
-                slot.flags.fetch_or(CSF_ReleaseRequested, std::memory_order_seq_cst);
+
                 completeContentSlot(slot);
             }
-        }
-        if (slot.state.load(std::memory_order_seq_cst) == 12 && (slot.flags.load(std::memory_order_seq_cst) & CSF_ReleaseRequested) != 0) {
-            if ((slot.flags.load(std::memory_order_seq_cst) & CSF_SkipBufferDetach) == 0) {
-                Archive_DetachBuffer(slot.archiveHandle);
-            }
-            ReadFile_0(0, &slot.archiveHandle);
-            clearCompletedSlot(slot);
         }
     }
     return busy;
@@ -387,11 +357,23 @@ void ProcessThreadStates(std::uint32_t contentHandle, std::int32_t type) {
 
 void ProcessRemappings(std::uint64_t unused) {
     static_cast<void>(unused);
-    g_pendingContentRemappingCount = 0;
-    for (const D3TContentSlot &slot : g_d3tContentSlots) {
-        const std::int32_t state = slot.state.load(std::memory_order_seq_cst);
-        if (state != 0 && state != 9 && state != 12 && state != 13)
-            ++g_pendingContentRemappingCount;
+    {
+        const std::lock_guard processLock(g_contentProcessMutex);
+        g_pendingContentRemappingCount = 0;
+        for (D3TContentSlot &slot : g_d3tContentSlots) {
+            const std::uint32_t flags = slot.flags.load(std::memory_order_seq_cst);
+            if (slot.state.load(std::memory_order_seq_cst) == 12 && (flags & CSF_ReleaseRequested) != 0) {
+                if ((flags & CSF_SkipBufferDetach) == 0)
+                    Archive_DetachBuffer(slot.archiveHandle);
+                ReadFile_0(0, &slot.archiveHandle);
+                const std::uint16_t generation = slot.generation;
+                std::memset(&slot, 0, sizeof(slot));
+                slot.generation = generation;
+            }
+            const std::int32_t state = slot.state.load(std::memory_order_seq_cst);
+            if (state != 0 && state != 9 && state != 12 && state != 13)
+                ++g_pendingContentRemappingCount;
+        }
     }
     processContentSlots();
 }
