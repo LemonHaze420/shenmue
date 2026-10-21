@@ -6217,7 +6217,7 @@ void RenderUIContents() {
                 if (index == static_cast<std::size_t>(UIElement::PressStart))
                     DrawPressStartDefinition(uiDefinitions[index]);
                 else {
-                    MainMenuRender();
+                    RenderScreenFilmFrame(static_cast<std::int32_t>(index));
                     mainMenuFrameWasRendered = true;
                 }
             }
@@ -6244,7 +6244,7 @@ void RenderUIContents() {
         if (element.isRenderable)
             continue;
         if (index == static_cast<std::size_t>(UIElement::MainMenuWheel)) {
-            MainMenuWheelRender();
+            RenderMainMenuWheelFrame();
             mainMenuWheelFrameWasRendered = g_mainMenuWheelWidget != nullptr;
             continue;
         }

@@ -166,6 +166,9 @@ extern PressStartRuntime pressStartRuntime;
 
 extern bool mainMenuFrameWasRendered;
 
+extern d3t::UILabelWidget *mainMenuUserIdLabel;
+extern char mainMenuUserIdText;
+
 extern bool mainMenuWheelFrameWasRendered;
 
 extern bool cancelPressed;
@@ -1112,6 +1115,7 @@ std::int64_t BindMainMenuWheel();
 
 std::int64_t MainMenuWheelRender();
 
+void RenderMainMenuWheelFrame();
 std::int64_t TickMainMenuWheel();
 
 std::int64_t DestroyMainMenuWheel();

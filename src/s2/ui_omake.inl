@@ -13,22 +13,62 @@ struct OmakeCollectionRuntime {
 };
 OmakeCollectionRuntime omakeCollectionUI;
 std::array<std::uint8_t, 3> mainMenuBackgroundAlpha{};
-std::uint32_t mainMenuPage = UINT32_MAX;
+std::uint32_t mainMenuPage{};
+std::array<std::int32_t, 35> mainMenuImages{};
+d3t::UIWindow *mainMenuContentWindow{};
+std::array<d3t::UIWindow *, 6> mainMenuPageWindows{};
+d3t::UIImageWidget *mainMenuTitleImage{};
+d3t::UIImageWidget *mainMenuTitleBackground{};
+d3t::UIWindow *mainMenuSwitchAccountIconWindow{};
+d3t::UIWindow *mainMenuSwitchAccountLabelWindow{};
+std::array<UIColourImageWidget *, 3> mainMenuBackgroundImages{};
+std::int32_t mainMenuContentAnimation{};
+
+// @verified - p
+void HideUIWindow(d3t::UIWindow *window) {
+    if (window)
+        window->alpha = 0.0f;
+}
+
+d3t::UILabelWidget *mainMenuUserIdLabel{};
+char mainMenuUserIdText{};
 std::int64_t BindMainMenuDefinition() {
+    const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::MainMenu)].config.uiHandleIndex;
+    mainMenuContentAnimation = UIAnimAllocSlot();
+    mainMenuContentWindow = UI_FindWindowById("MainMenu::ContentPanel");
+    for (std::size_t index = 0; index < mainMenuPageWindows.size(); ++index)
+        mainMenuPageWindows[index] = UI_FindWindowById(OMAKE_MAIN_MENU_ROOTS[index]);
+    const std::int32_t title = UI_FindViewImageWidget(slot, "Image_Main_Menu_Title");
+    mainMenuTitleImage = title == -1 ? nullptr : &g_uiImageWidgets[static_cast<std::size_t>(title)];
+    const std::int32_t background = UI_FindViewImageWidget(slot, "Image_Main_Menu_Title_Head_Back");
+    mainMenuTitleBackground = background == -1 ? nullptr : &g_uiImageWidgets[static_cast<std::size_t>(background)];
+    mainMenuSwitchAccountIconWindow = UI_GetWindow(UI_FindViewWindow(slot, "SwitchAccountButtonIcon"));
+    mainMenuSwitchAccountLabelWindow = UI_GetWindow(UI_FindViewWindow(slot, "SwitchAccountButtonLabel"));
+    HideUIWindow(mainMenuSwitchAccountIconWindow);
+    HideUIWindow(mainMenuSwitchAccountLabelWindow);
+    for (std::size_t index = 0; index < mainMenuImages.size(); ++index)
+        mainMenuImages[index] = UI_FindViewImage(slot, OMAKE_MAIN_MENU_IMAGES[index]);
+    for (std::size_t index = 0; index < mainMenuBackgroundImages.size(); ++index) {
+        const std::int32_t image = UI_FindViewColourImage(slot, OMAKE_MAIN_MENU_BACKGROUNDS[index]);
+        UIColourImageWidget *const widget = image == -1 ? nullptr : &g_uiColourImageWidgets[static_cast<std::size_t>(image)];
+        mainMenuBackgroundImages[index] = widget;
+        mainMenuBackgroundAlpha[index] = static_cast<std::uint8_t>(widget->colour >> 24);
+    }
+    const std::int32_t label = UI_FindViewLabel(slot, "USER_ID");
+    mainMenuUserIdLabel = label == -1 ? nullptr : &g_uiLabelWidgets[static_cast<std::size_t>(label)];
+    mainMenuUserIdText = 0;
+    mainMenuUserIdLabel->text = &mainMenuUserIdText;
     d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::MainMenu)];
-    mainMenuBackgroundAlpha.fill(0);
-    for (d3t::UITextureObjectDefinition &object : definition.textureObjects) {
-        for (std::size_t index = 0; index < mainMenuBackgroundAlpha.size(); ++index)
-            if (object.id == OMAKE_MAIN_MENU_BACKGROUNDS[index])
-                mainMenuBackgroundAlpha[index] = static_cast<std::uint8_t>(object.colour >> 24);
+
+    for (d3t::UITextureObjectDefinition &object : definition.textureObjects)
         if (object.id == "SwitchAccountButtonIcon")
             object.hidden = true;
-    }
-    for (d3t::UILabelDefinition &label : definition.labels) {
-        if (label.id != "SwitchAccountButtonLabel" && label.id != "USER_ID")
+
+    for (d3t::UILabelDefinition &item : definition.labels) {
+        if (item.id != "SwitchAccountButtonLabel" && item.id != "USER_ID")
             continue;
-        label.text.clear();
-        label.token.clear();
+        item.text.clear();
+        item.token.clear();
     }
     return 1;
 }
@@ -360,12 +400,22 @@ std::int64_t ResetOmakeCollectionRender() {
     return 0;
 }
 void RefreshMainMenuTitle() {
+    const std::int32_t language = GetLoadingScreenTextType(ResetSceneTextLanguage());
     const std::uint32_t page = mainMenuPage;
     d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::MainMenu)];
     const std::int32_t titlePage = page >= 1 && page <= 4 ? static_cast<std::int32_t>(page) : 0;
+    if (mainMenuTitleImage)
+        mainMenuTitleImage->image = titlePage + 5 * language + 7;
+    if (mainMenuTitleBackground)
+        mainMenuTitleBackground->image = (titlePage == 4 ? 1 : 0) + 1;
+    for (std::size_t index = 0; index < mainMenuBackgroundImages.size(); ++index) {
+        UIColourImageWidget *const image = mainMenuBackgroundImages[index];
+        if (image)
+            image->colour = (image->colour & 0x00ffffffU) | (titlePage ? static_cast<std::uint32_t>(mainMenuBackgroundAlpha[index]) << 24 : 0);
+    }
     for (d3t::UITextureObjectDefinition &object : definition.textureObjects) {
         if (object.id == "Image_Main_Menu_Title")
-            object.frameIndex = titlePage + 5 * GetLoadingScreenTextType(ResetSceneTextLanguage()) + 7;
+            object.frameIndex = titlePage + 5 * language + 7;
         if (object.id == "Image_Main_Menu_Title_Head_Back")
             object.frameIndex = (titlePage == 4 ? 1 : 0) + 1;
         for (std::size_t index = 0; index < mainMenuBackgroundAlpha.size(); ++index) {
@@ -386,6 +436,9 @@ bool SelectMainMenuPage(std::uint32_t page) {
             return false;
     }
     ShowElementByIndex(static_cast<UIElement>(OMAKE_MAIN_MENU_PAGES[page]));
+    d3t::UIWindow *const window = mainMenuPageWindows[page];
+    if (window)
+        std::snprintf(window->layout.parentId.data(), window->layout.parentId.size(), "%s", mainMenuContentWindow->id.data());
     mainMenuPage = page;
     d3t::UIDefinition &child = uiDefinitions[OMAKE_MAIN_MENU_PAGES[page]];
     if (OMAKE_MAIN_MENU_ROOTS[page])

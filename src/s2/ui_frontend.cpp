@@ -726,10 +726,14 @@ std::int64_t LoadSaveDestroy() {
     return 1;
 }
 
+// @verified - p
 std::int64_t MainMenuRender() {
-    if (drawingUI)
-        d3t::DrawUIDefinition(uiDefinitions[static_cast<std::size_t>(UIElement::MainMenu)], 1.0f);
-    return 0;
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::MainMenu)];
+    DrawUIEntity(*GetNativeUiContext(), element.config.uiHandleIndex, element.index);
+    d3t::UILabelWidget *const label = mainMenuUserIdLabel;
+    mainMenuUserIdText = 0;
+    label->text = &mainMenuUserIdText;
+    return reinterpret_cast<std::intptr_t>(label);
 }
 
 std::int64_t MainMenuSelected() {
@@ -771,10 +775,16 @@ std::int64_t BindMainMenuWheel() {
     return 1;
 }
 
-std::intptr_t DrawMainMenuWheelFrame() {
-    UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::MainMenuWheel)];
-    DrawUIEntity(GNuklearWindow, element.config.uiHandleIndex, element.index);
+// @verified - p
+std::int64_t MainMenuWheelRender() {
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::MainMenuWheel)];
+    DrawUIEntity(*GetNativeUiContext(), element.config.uiHandleIndex, element.index);
     UpdateMainMenuWheel();
+    return 0;
+}
+
+std::intptr_t DrawMainMenuWheelFrame() {
+    MainMenuWheelRender();
     mainMenuSelection = static_cast<MainMenuItem>(g_mainMenuWheelWidget->selection);
     RefreshMainMenuWheelDescription();
     Nuklear_BindRenderTarget();
@@ -783,9 +793,9 @@ std::intptr_t DrawMainMenuWheelFrame() {
     return 0;
 }
 
-std::int64_t MainMenuWheelRender() {
+void RenderMainMenuWheelFrame() {
     if (!drawingUI || !g_mainMenuWheelWidget)
-        return 0;
+        return;
     RefreshMainMenuWheelLanguage();
 #if defined(_WIN32)
     ExecuteCurrentCommandList();
@@ -798,7 +808,7 @@ std::int64_t MainMenuWheelRender() {
     d3t::DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
     d3t::BindUIFrameRenderTarget();
 #endif
-    return 0;
+    return;
 }
 
 std::int64_t TickMainMenuWheel() {
