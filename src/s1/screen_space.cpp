@@ -244,6 +244,19 @@ void AdjustScreenSpaceWithParams_0(const ScreenSpaceParams *params, std::int32_t
         params->scaledWidth, params->scaledHeight, params->positionScaleX, params->positionScaleY, params->angle, screenMode);
 }
 
+// @verified - p
+void AdjustScreenSpaceWithParams(const ScreenSpaceParams *params, std::uint32_t flags, std::int32_t screenMode) {
+    if (!g_updateRenderFrameMode)
+        return;
+    OriginalStrip strip;
+    strip.flags = 0;
+    strip.corner0 = flags | 0x00ffffffU;
+    strip.vertexCount = flags & 0x00ffffffU;
+    strip.normalizedY1 = strip.normalizedX2 = strip.normalizedY3 = 0.0f;
+    strip.normalizedY2 = strip.normalizedX3 = 1.0f;
+    UILayout_BuildQuad(&strip, params->alignmentType, static_cast<std::int32_t>(params->halfScreenX), static_cast<std::int32_t>(params->halfScreenY),
+        params->scaledWidth, params->scaledHeight, params->positionScaleX, params->positionScaleY, params->angle, screenMode);
+}
 
 void AdjustScreenSpaceWithRenderFlags(const ScreenSpaceFillParams *params, std::int32_t screenMode) {
     if (!g_updateRenderFrameMode)
@@ -254,7 +267,6 @@ void AdjustScreenSpaceWithRenderFlags(const ScreenSpaceFillParams *params, std::
     strip.flags |= 0x400U;
     ApplyFadeToPacket(&strip, params->maxExtent);
 }
-
 
 void DrawMiddleOfScreenStretchedAdjusted(std::uint32_t colour, float maxExtent) {
     if (!g_updateRenderFrameMode)

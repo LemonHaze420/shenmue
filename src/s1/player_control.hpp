@@ -21,6 +21,10 @@ struct PlayerMotionMetadata {
 };
 static_assert(sizeof(PlayerMotionMetadata) == 0x0c);
 
+inline constexpr Vector3i kContextBagRotation{0x28e3, 0x38e3, 0};
+inline constexpr Vector3i kContextLanternRotation{0x28e3, 0x38e3, 0};
+inline constexpr Vector3i kContextRaincoatRotation{0x360b, 0xb999, 0x9c71};
+inline constexpr Vector3i kContextRaincoatFoldedRotation{0x18e3, 0xc000, 0xa38e};
 enum class PlayerMovementState : std::int32_t {
     Idle = 0x00,
     TurnExitToIdle = 0x01,

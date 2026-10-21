@@ -11,6 +11,7 @@
 #include "s1/player_control.hpp"
 #include "s1/player_stats.hpp"
 #include "s1/render_passes.hpp"
+#include "s1/render_array.hpp"
 #include "s1/subtitles.hpp"
 #include "s1/texture_cache.hpp"
 #include "s1/texture_loader.hpp"
@@ -781,7 +782,7 @@ bool LoadNotebook() {
     char fbxPath[260]{};
     std::snprintf(fbxPath, sizeof(fbxPath), "%s/%s/%s.fbx", "model/item", "MMA0201G.MT5", "MMA0201G");
 
-    Shenmue_FileRead_ALL(reinterpret_cast<std::int64_t>(model->model), fbxPath, 0, 2);
+    d3t::FileRead_ALL(reinterpret_cast<std::uintptr_t>(model->model), fbxPath, 0, 2, CreateNotebookTextures);
     g_notebookDrawObject.model = model->model;
     g_notebookModelOwner = model;
     g_notebookTextureCount = static_cast<std::int32_t>(model->textureCount);

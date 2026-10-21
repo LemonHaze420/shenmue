@@ -1163,8 +1163,9 @@ static_assert(offsetof(UIDrawObject, textureIds) == 0x38);
 
 void DrawObjectForUI(UIDrawObject *object);
 
-
-
+struct RenderArrayOwner;
+inline constexpr std::uint32_t kNotebookPageTextureParameter = 11;
+extern std::uint32_t g_notebookModelHandle;
 extern std::array<std::uint32_t, 4> g_notebookTextureLeft;
 extern std::array<std::uint32_t, 4> g_notebookTextureRight;
 extern std::array<std::uint8_t, 4> g_notebookLeftPageFlags;
@@ -1175,6 +1176,7 @@ extern std::array<std::byte *, 4> g_notebookMemoTextureData;
 void CreateNotebookTexture2DForPages();
 void CreateNotebookTexture2D(std::int32_t surface, std::byte *memoTexture);
 void FormatNotebookText(std::uint32_t pageIndex, std::uint32_t textBuffer, std::uint32_t pageSlot, std::uint32_t line, char messageType);
+void CreateNotebookTextures(std::uint64_t argument, RenderArrayOwner *object);
 void Notebook_BindModelPageTextures();
 void InitNotebookTexture2D();
 
@@ -1514,6 +1516,9 @@ void Script_SetSfxOverlayTimeoutTuning(ScenarioContext *context, void *rawParams
 
 namespace shenmue::s1::ui_runtime_detail {
 
+inline constexpr std::array<std::int32_t, 8> kCashDenominations{10000000, 1000000, 100000, 10000, 1000, 100, 10, 1};
+inline constexpr std::array<std::int16_t, 10> kCashDigitSprites{277, 278, 279, 280, 281, 282, 283, 284, 285, 286};
+inline constexpr std::array<float, 2> kCashAmountOffsets{0.0f, 4.0f};
 struct CashOverlayOwner {
     UICashOverlayState state{UICashOverlayState::Idle};
     std::int32_t value{};
@@ -1526,7 +1531,19 @@ struct CashOverlayOwner {
     std::uint16_t savedSicnState{};
     UISicnPausePolicy savedSicnPausePolicy{UISicnPausePolicy::KeepOnPause};
     bool savedSicnActive{};
-    std::int16_t selectorSurface{-1};
+    std::int16_t selectorPulseSlot{2};
+    float selectorPulseScale{1.0f};
+    std::uint8_t selectorAmountType{};
+    ScreenSpaceParams currencyIcon{};
+    Vector4 selectorMessagePosition{};
+    float selectorMessageDepth{};
+    Vector4 selectorHintPosition{};
+    std::uint16_t selectorHintFlags{};
+    std::array<ScreenSpaceParams, 2> selectorChoiceMarkers{};
+    ScreenSpaceParams selectorSprite{.pvrSurfaceIndex = -1};
+    std::array<ScreenSpaceParams, 2> selectorArrows{};
+    std::array<ScreenSpaceParams, 8> selectorDigits{};
+    ScreenSpaceParams selectorAmountPrefix{};
     bool useCash{true};
     bool selectorActive{};
     UICashOverlayDisplayMode displayMode{UICashOverlayDisplayMode::None};

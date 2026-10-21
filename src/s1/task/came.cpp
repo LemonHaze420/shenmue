@@ -3496,26 +3496,26 @@ void RotateDeveloperYaw(Vector3 &point, const Vector3 &pivot, std::int16_t angle
     Matrix4x4::Pop(1);
 }
 
-std::int16_t AdvanceDeveloperRotation(std::int16_t value, bool positive) {
+std::int32_t AdvanceDeveloperRotation(std::int32_t value, bool positive) {
     if (positive) {
         if (value <= 0)
             return 9;
-        return static_cast<std::int16_t>(std::min<std::int32_t>(value + 4, 546));
+        return value < 546 ? value + 4 : value;
     }
     if (value >= 0)
         return -9;
-    return static_cast<std::int16_t>(std::max<std::int32_t>(value - 4, -546));
+    return value > -546 ? value - 4 : value;
 }
 
 float AdvanceDeveloperTranslation(float value, bool positive) {
     if (positive) {
         if (value <= 0.0f)
             return 0.005f;
-        return std::min(value + 0.0025f, 2.0f);
+        return value < 2.0f ? static_cast<float>(static_cast<double>(value) + 0.0025) : value;
     }
     if (value >= 0.0f)
         return -0.005f;
-    return std::max(value - 0.0025f, -2.0f);
+    return value > -2.0f ? static_cast<float>(static_cast<double>(value) - 0.0025) : value;
 }
 
 bool DeveloperCharacterEligible(const DeveloperCameraState &camera, Character *character) {
@@ -3602,13 +3602,45 @@ void ReverseDeveloperSelection(DeveloperCameraState &camera) {
     CopyDeveloperSelection(camera, previous);
 }
 
+void UpdateCameraTransformWithMapControlOffset(Vector3 &origin, Vector3 &lookAt) {
+    Matrix4x4 ::SetActiveTransformToPrePass();
+    const MapControlData *const control = CurrentMapControl();
+    Character *const ryo = static_cast<Character *>(control->ryo);
+    const Vector3 position = ryo ? GetPositionForEntity(ryo->entity.node) : Vector3{};
+    Matrix4x4::preTranslate(-position.x, -position.y, -position.z);
+    Matrix4x4::TransformPoint(origin, origin);
+    Matrix4x4::TransformPoint(lookAt, lookAt);
+    Matrix4x4::Pop(1);
+}
+
+void GetCurrentCameraPositionAndDirection(Vector3 &origin, Vector3 &lookAt) {
+    const DeveloperCameraState &camera = g_cameraRuntime.developerCamera;
+    if (g_CamState != 0) {
+        origin = camera.origin;
+        lookAt = camera.lookAt;
+        return;
+    }
+    const MapControlData *const control = CurrentMapControl();
+    Character *const ryo = static_cast<Character *>(control->ryo);
+    const Vector3 position = ryo ? GetPositionForEntity(ryo->entity.node) : Vector3{};
+    Matrix4x4::SetActiveTransformToPrePass();
+    Matrix4x4::preTranslate(position.x, position.y, position.z);
+    Matrix4x4::TransformPoint(camera.origin, origin);
+    Matrix4x4::TransformPoint(camera.lookAt, lookAt);
+    Matrix4x4::Pop(1);
+}
+
 void CaptureDeveloperCameraView(DeveloperCameraState &camera) {
-    camera.origin = g_CameraEyePos;
-    camera.lookAt = g_CameraTargetPos;
-    camera.zAngle = static_cast<std::int16_t>(ZANGLE);
-    camera.fieldOfView = static_cast<float>(currentPerspectiveFov);
-    if (!camera.selectedCharacter)
-        InitializeDeveloperSelection(camera);
+    camera.viewOrigin = g_CameraEyePos;
+    camera.viewLookAt = g_CameraTargetPos;
+    camera.zAngle = ZANGLE;
+    camera.fieldOfView = currentPerspectiveFov;
+    if (g_CamState == 0 || g_CamState == 1) {
+        camera.origin = camera.viewOrigin;
+        camera.lookAt = camera.viewLookAt;
+        if (g_CamState == 0)
+            UpdateCameraTransformWithMapControlOffset(camera.origin, camera.lookAt);
+    }
     camera.initialized = true;
 }
 
@@ -3618,7 +3650,7 @@ Vector3 DeveloperCharacterAnchor(Character *character, bool head) {
     if (!head)
         return GetPositionForEntity(character->entity.node);
     Vector3 position{};
-    mtwkGetCharaBonePosition(character, 0x2f, &position);
+    mtwkGetCharaBonePosition(character, 5U, &position);
     return position;
 }
 
@@ -3665,6 +3697,9 @@ Vector3 DeveloperCameraDisplayPoint(const Vector3 &point, const DeveloperCameraS
 
 void RestoreDeveloperCameraVisibility() {
     ForEachCewpEntityApplyCallback(1, CAME_CewpToggleVisibility);
+    const MapControlData *const control = CurrentMapControl();
+    if (control->scenarioTask)
+        SetMainCallbackToInitForCleanup(control->scenarioTask);
 }
 
 void FreezeForDeveloperCamera() {
@@ -3750,8 +3785,8 @@ void QueueDeveloperCameraDetails(const DeveloperCameraState &camera) {
     }
     if (camera.mode == 9)
         return;
-    const Vector3 displayOrigin = DeveloperCameraDisplayPoint(camera.origin, camera);
-    const Vector3 displayTarget = DeveloperCameraDisplayPoint(camera.lookAt, camera);
+    const Vector3 displayOrigin = DeveloperCameraDisplayPoint(camera.viewOrigin, camera);
+    const Vector3 displayTarget = DeveloperCameraDisplayPoint(camera.viewLookAt, camera);
     QueueDeveloperCameraText(2.0f, 4.0f, "CAM :");
     QueueDeveloperCameraValue(2.0f, 5.0f, "%3.4f", displayOrigin.x);
     QueueDeveloperCameraValue(2.0f, 6.0f, "%3.4f", displayOrigin.y);
@@ -3770,14 +3805,18 @@ bool UpdateDeveloperCameraController() {
     DeveloperCameraState &camera = g_cameraRuntime.developerCamera;
     if (camera.setDefaultView) {
         CaptureDeveloperCameraView(camera);
-        camera.mode = 9;
-        camera.viewOffsetMode = 1;
-        camera.pitchStep = 0;
-        camera.yawStep = 0;
-        camera.dolly = 0.0f;
-        camera.lift = 0.0f;
-        camera.strafe = 0.0f;
-        camera.pan = 0.0f;
+        if (g_CamState == 0 || g_CamState == 1) {
+            camera.mode = 9;
+            camera.viewOffsetMode = 1;
+            camera.pitchStep = 0;
+            camera.yawStep = 0;
+            camera.dolly = 0.0f;
+            camera.lift = 0.0f;
+            camera.strafe = 0.0f;
+            camera.pan = 0.0f;
+            camera.selectionScanFlags = 0;
+            InitializeDeveloperSelection(camera);
+        }
         camera.setDefaultView = false;
     }
 
@@ -3785,15 +3824,24 @@ bool UpdateDeveloperCameraController() {
     if ((flags & kDeveloperOrbit) != 0)
         flags &= ~kDeveloperTranslate;
     if ((flags & (kDeveloperTranslate | kDeveloperOrbit)) == 0 && (camera.pressedButtons & kDeveloperButtonB) != 0) {
-        g_CamState = (g_CamState + 1) % 3;
-        if (g_CamState == 2) {
+        g_CamState = g_CamState < 2 ? g_CamState + 1 : 0;
+        if (g_CamState == 0) {
+            CaptureDeveloperCameraView(camera);
+            Matrix4x4::Pop(1);
+        } else if (g_CamState == 1) {
+            camera.origin = camera.viewOrigin;
+            camera.lookAt = camera.viewLookAt;
+        } else if (g_CamState == 2) {
             ClearDeveloperCameraText();
             RestoreDeveloperCameraVisibility();
         }
     }
 
-    if (g_CamState == 0 || !camera.initialized)
+    if (!camera.initialized) {
         CaptureDeveloperCameraView(camera);
+        if (!camera.selectedCharacter)
+            InitializeDeveloperSelection(camera);
+    }
     QueueDeveloperCameraState();
     if (g_CamState == 2)
         return false;
@@ -3810,6 +3858,11 @@ bool UpdateDeveloperCameraController() {
         camera.lookAt.y - camera.origin.y,
         camera.lookAt.z - camera.origin.z,
     };
+    Matrix4x4::SetActiveTransformToPrePass();
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(Shenmue_Atan2Fixed(direction.x, direction.z)));
+    Matrix4x4::Pop(1);
+    camera.viewHeightVelocity = static_cast<float>(static_cast<double>(camera.viewHeightVelocity) + (camera.viewHeightOffset > 0.0f ? -0.0001 : 0.0001));
+    camera.viewHeightOffset += camera.viewHeightVelocity;
     if (!translate || orbit) {
         if ((flags & kDeveloperPitchMask) != 0) {
             camera.pitchStep = AdvanceDeveloperRotation(camera.pitchStep, (flags & kDeveloperPitchPositive) == 0);
@@ -3898,8 +3951,10 @@ bool UpdateDeveloperCameraController() {
     } else {
         camera.selectionAccumulator = 0;
     }
-    camera.zAngle = static_cast<std::int16_t>(static_cast<float>(camera.zAngle) + static_cast<float>(stickX) * (8192.0f / 22500.0f));
-
+    if (orbit) {
+        const std::int32_t delta = static_cast<std::int32_t>((static_cast<double>(stickX) / 500.0) * -8192.0 / 45.0);
+        camera.zAngle = std::bit_cast<std::int16_t>(static_cast<std::uint16_t>(static_cast<std::uint16_t>(camera.zAngle) - delta));
+    }
     if (translate) {
         direction = {
             camera.lookAt.x - camera.origin.x,
@@ -3937,25 +3992,21 @@ bool UpdateDeveloperCameraController() {
             camera.viewOffsetMode = (camera.viewOffsetMode + 1) % 3;
         if ((camera.pressedButtons & kDeveloperButtonB) != 0 && camera.mode >= 1 && camera.mode <= 8) {
             if (camera.selectedCharacter)
-                mtwkGetCharaBonePosition(camera.selectedCharacter, 0x2f, &camera.lookAt);
+                mtwkGetCharaBonePosition(camera.selectedCharacter, 5U, &camera.lookAt);
             else
                 camera.lookAt = g_tmp_seqdata_pos;
         }
         int stickY = 128 - static_cast<int>(camera.analogY);
         if (std::abs(stickY) < 5)
             stickY = 0;
-        camera.fieldOfView += static_cast<float>(stickY) * (8192.0f / 45000.0f);
+        const std::int32_t delta = static_cast<std::int32_t>((static_cast<double>(stickY) / 1000.0) * -8192.0 / 45.0);
+        camera.fieldOfView = std::bit_cast<std::int16_t>(static_cast<std::uint16_t>(static_cast<std::uint16_t>(camera.fieldOfView) - delta));
     } else {
         camera.lift = 0.0f;
         camera.strafe = 0.0f;
         camera.pan = 0.0f;
     }
 
-    QueueDeveloperCameraDetails(camera);
-    g_CameraEyePos = camera.origin;
-    g_CameraTargetPos = camera.lookAt;
-    ZANGLE = camera.zAngle;
-    currentPerspectiveFov = static_cast<std::int32_t>(camera.fieldOfView);
     g_cameraRuntime.viewReady = finite(camera.origin) && finite(camera.lookAt);
     return true;
 }
@@ -3987,28 +4038,34 @@ void ApplyCameraShake() {
     }
 }
 
-
-
 void BuildDeveloperCameraView() {
+    DeveloperCameraState &camera = g_cameraRuntime.developerCamera;
+    GetCurrentCameraPositionAndDirection(camera.viewOrigin, camera.viewLookAt);
     SetActiveStack(MatrixStackType::Transparent);
     workTransformMatrix = transformMatrix_prePass;
-    CAME_SetFieldOfView(currentPerspectiveFov);
-    constexpr double kFixedAnglePerRadian = 10430.37835047046;
-    const float halfAuthoredFov = static_cast<float>((static_cast<double>(currentPerspectiveFov) / kFixedAnglePerRadian) * 0.5);
-    const float adjustedHalfFov = std::atan(std::tan(halfAuthoredFov) * 0.75f);
-    const std::int32_t projectionFov = static_cast<std::int32_t>((static_cast<double>(adjustedHalfFov) * 2.0 * kFixedAnglePerRadian) + 0.5);
-    computedCameraPitch = projectionFov;
-    const float aspectRatio = g_originalScreenHeight ? static_cast<float>(g_originalScreenWidth) / static_cast<float>(g_originalScreenHeight) : 16.0f / 9.0f;
+    const DisplayModeInfo *const screen = GetScreenResolution();
+    const float degrees = static_cast<float>(camera.fieldOfView) / 182.04445f * 0.5f;
+    const float halfFov = std::tan(static_cast<float>(static_cast<double>(degrees) / 57.29577951308238));
+    const float adjusted = static_cast<float>(static_cast<std::uint16_t>(
+        static_cast<std::int32_t>(std::atan(static_cast<float>(static_cast<double>(halfFov) * 0.75)) * 65536.0f / 6.2831855f + 0.5f)));
+    const float doubled = static_cast<float>((static_cast<double>(adjusted) / 10430.37835047046) * 2.0);
+    const std::uint16_t projectionFov = static_cast<std::uint16_t>(static_cast<std::int32_t>(static_cast<double>(doubled) * 10430.37835047046));
+
+    const float aspectRatio = static_cast<float>(screen->width) / static_cast<float>(GetScreenResolution()->height);
     Matrix4x4_SetupCameraProjectionMatrix(projectionFov, aspectRatio, 0.1f, 200000.0f);
 
     SetActiveStack(MatrixStackType::DepthPrepass);
     workTransformMatrix = transformMatrix_prePass;
-    CalcCameraTransform({g_CameraEyePos.x, g_CameraEyePos.y, g_CameraEyePos.z, 0.0f}, {g_CameraTargetPos.x, g_CameraTargetPos.y, g_CameraTargetPos.z, 0.0f},
-        static_cast<std::int16_t>(-ZANGLE));
-    g_tmp_cam_xform = workTransformMatrix;
-    SetActiveStack(MatrixStackType::PostRender);
-    workTransformMatrix = g_tmp_cam_xform;
-    SetActiveStack(MatrixStackType::DepthPrepass);
+    CalcCameraTransform({camera.viewOrigin.x, camera.viewOrigin.y, camera.viewOrigin.z, 0.0f},
+        {camera.viewLookAt.x, camera.viewLookAt.y, camera.viewLookAt.z, 0.0f},
+        std::bit_cast<std::int16_t>(static_cast<std::uint16_t>(0U - static_cast<std::uint16_t>(camera.zAngle))));
+    matrix_stack::Matrix4x4_Push();
+    if (camera.viewOffsetMode == 0)
+        Matrix4x4 ::preTranslate(camera.viewLookAt.x, camera.viewLookAt.y + camera.viewHeightOffset, camera.viewLookAt.z);
+    else if (camera.viewOffsetMode == 1)
+        Matrix4x4 ::preTranslate(camera.viewLookAt.x, camera.viewLookAt.y, camera.viewLookAt.z);
+    Matrix4x4::Pop(1);
+    QueueDeveloperCameraDetails(camera);
 }
 
 } // namespace

@@ -225,10 +225,25 @@ std::int64_t GameHud_IsSelected() {
     return 1;
 }
 
+// @verified - p
+std::int64_t GameHud_GetContentPanel() {
+    const float alpha = g_isInGame ? 1.0f : 0.0f;
+    for (std::size_t index = 14; index < g_gameHudWindows.size(); ++index) {
+        if (g_gameHudWindows[index])
+            g_gameHudWindows[index]->alpha = alpha;
+    }
+    return reinterpret_cast<std::int64_t>(g_gameHudWindows[16]);
+}
 
-
-
-
+// @verified - p
+std::int64_t GameHud_Destroy() {
+    if (g_currUIState == -1 || g_currUIState == kUiGameHudWatch) {
+        UIBaseRuntime &watch = g_uiElements[kUiGameHudWatch];
+        if (!watch.isVisible || !watch.destroy || static_cast<std::uint32_t>(watch.destroy()) == 1U || g_busy_reset == 1)
+            watch.isVisible = 0;
+    }
+    return 1;
+}
 
 std::int64_t GameHud_Tick() {
     if (LoadScreen.isVisible || CDTT_IsLoadingUIActive())
@@ -286,7 +301,7 @@ std::int64_t GameHud_Tick() {
     if (sprites[kHudPromptEvent] && sprites[kHudPromptEvent]->sprite == 51 && g_hudPromptJinguruIconOverrideActive == 1)
         sprites[kHudPromptEvent]->sprite = 9;
     bool anyPrompt = false;
-    for (std::size_t index = 0; index < g_gameHudButtonIcons.size(); ++index) {
+    for (std::size_t index = 0; index < kHudPromptCamera; ++index) {
         UIButtonIconWidget *const icon = g_gameHudButtonIcons[index];
         if (!icon)
             continue;
@@ -317,8 +332,6 @@ std::int64_t GameHud_Tick() {
     }
     return 0;
 }
-
-
 
 std::int64_t GameHudWatch_IsSelected() {
     const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[kUiGameHudWatch].config.uiHandleIndex);

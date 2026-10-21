@@ -1056,9 +1056,6 @@ void UpdateSndStreaming(CycleManager::NpcRecord &npc) {
 }
 
 void LinkCyclesInStack(int32_t enabled) {
-    if (!CycleManager::IsReady())
-        return;
-
     if (enabled) {
         g_cm_unk_flag = 1;
         return;

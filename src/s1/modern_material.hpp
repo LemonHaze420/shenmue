@@ -25,6 +25,7 @@ static_assert(offsetof(ModelMaterialDescriptor, renderHandle) == 224);
 std::int32_t SetupWritingArea(ModelMaterialDescriptor *areas, const ModelMaterialDescriptor &descriptor);
 bool BuildModelMaterialDescriptor(std::uint32_t handle, std::uint32_t materialIndex, ModelMaterialDescriptor *areas);
 std::uint32_t ResolveModelWritingAreas(std::uint32_t handle, ModelMaterialDescriptor *areas);
+std::uint8_t SetModelMaterialTexture(ModelMaterialDescriptor &descriptor, std::uint32_t parameterIndex, std::uint32_t texture);
 void RefreshDirtyRenderLayerMaterialEntities(std::uint32_t renderLayer, D3TDeviceContext *context, std::uint32_t fileLockHandle);
 
 } // namespace shenmue::s1

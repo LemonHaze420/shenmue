@@ -66,6 +66,7 @@ extern HLib::Task *g_mapControlTask;
 extern std::uint32_t g_mapInfoSize;
 extern FileState *g_mapInfoFileState;
 
+inline constexpr shen_name MAPINFO_COLS = SHEN_NAME(COLS);
 void *MAPINFO_Load();
 void MAPINFO_InitializeSceneParameters(const void *mapInfo);
 const std::byte *MAPINFO_FindChunkPayload(std::uint32_t token, std::uint32_t *payloadSize);

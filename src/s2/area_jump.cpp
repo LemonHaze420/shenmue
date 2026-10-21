@@ -9,6 +9,7 @@
 #include "s2/hlib.hpp"
 #include "s2/load_title.hpp"
 #include "s2/map_control.hpp"
+#include "s2/magic_room.hpp"
 #include "s2/memo.hpp"
 #include "s2/moves_scroll.hpp"
 #include "s2/player.hpp"
@@ -155,7 +156,7 @@ constexpr AreaJumpDestinationEntry areaJumpDestinations[]{
     {174, {.areaId = SHEN_NAME(WSY0)}, 50},
     {255, {.areaId = SHEN_NAME(WK00)}, 32},
     {256, {.areaId = SHEN_NAME(WN00)}, 28},
-    {233, {.areaId = SHEN_NAME(QWG0)}, 0},
+    {233, {.areaId = SHEN_NAME(QUG0)}, 0},
     {165, {.areaId = SHEN_NAME(AR02)}, 26},
     {254, {.areaId = SHEN_NAME(WSY0)}, 50},
     {287, {.areaId = SHEN_NAME(WE00)}, 77},
@@ -190,7 +191,7 @@ constexpr AreaEntryLocation areaEntryLocations[]{
     {SHEN_NAME(SYW0), 0, {330.79001f, 234.38f}},
     {SHEN_NAME(QR00), 40, {116.94f, 172.97f}},
     {SHEN_NAME(QR00), 41, {116.94f, 172.97f}},
-    {SHEN_NAME(QWG0), 40, {155.48f, 185.98f}},
+    {SHEN_NAME(QUG0), 40, {155.48f, 185.98f}},
     {},
 };
 
@@ -203,7 +204,7 @@ bool savedAreaJumpLocationActive{};
 bool savedAreaJumpLocationRequested{};
 
 std::uint8_t g_unusedCtrlFlag{};
-std::int32_t retainedMagicRoomFlag{};
+
 CtrlAreaJumpState ctrlAreaJumpState{CtrlAreaJumpState::LocateEntry};
 const CtrlAreaJumpEntry *activeJumpEntry{areaJumps};
 const AreaJumpScheduleEntry *initialScheduleTable{};
@@ -396,7 +397,7 @@ void ExecuteAreaJump() {
         doorQueueAuthorForMap(persistentState.authorId);
         SetTemporaryAreaJumpAuthor(persistentState.authorId);
         SetQronEntryFloor(persistentState.qronFloor);
-        retainedMagicRoomFlag = persistentState.magicRoomFlag;
+        SetMagicRoomActiveFlag(persistentState.magicRoomFlag);
         SavedAreaJumpLocation location;
         std::memcpy(&location, &persistentState, sizeof(location));
         RestoreSavedAreaJumpLocation(location, persistentState.playerPlacement);
@@ -520,6 +521,7 @@ std::int64_t ResetAreaJumpWarpFlag() noexcept {
     return 0;
 }
 
+// @verified - p
 void CaptureCurrentAreaJumpState() {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     if (Character *const character = static_cast<Character *>(control->ryo)) {
@@ -538,15 +540,15 @@ void CaptureCurrentAreaJumpState() {
     persistentState.sceneActId = g_actNumber;
     persistentState.sceneAreaId = g_currentMap;
     persistentState.sceneEntryId = g_entryPoint;
+    persistentState.authorId = GetCurrentAuthorId();
+    persistentState.qronFloor = static_cast<std::int32_t>(GetQronNextStream());
+    persistentState.magicRoomFlag = static_cast<std::int32_t>(GetMagicRoomActiveFlag());
     persistentState.warpEnabled = EV_CanDoAreaJump() ? 1U : 0U;
     DateTime day{};
     GetCurrentDateTime(day);
     if (day.hour < 7)
         SetPreviousDay(day);
     persistentState.capturedDay = static_cast<std::uint8_t>(day.day);
-    persistentState.authorId = GetCurrentAuthorId();
-    persistentState.qronFloor = static_cast<std::int32_t>(GetQronNextStream());
-    persistentState.magicRoomFlag = retainedMagicRoomFlag;
 }
 
 void AdvanceAreaJumpTimeForDestination(shen_name areaId, std::int32_t entryId) noexcept {
@@ -569,7 +571,6 @@ void CaptureAreaJumpPersistentState(std::span<std::byte, sizeof(AreaJumpPersiste
 
 void RestoreAreaJumpPersistentState(std::span<const std::byte, sizeof(AreaJumpPersistentState)> input) noexcept {
     std::memcpy(&persistentState, input.data(), sizeof(persistentState));
-    retainedMagicRoomFlag = persistentState.magicRoomFlag;
 }
 
 // @verified - p
@@ -605,11 +606,11 @@ shen_name GetAreaJumpLoadAuthor() noexcept {
 }
 
 std::int32_t GetRetainedMagicRoomFlag() noexcept {
-    return retainedMagicRoomFlag;
+    return persistentState.magicRoomFlag;
 }
 
 void SetRetainedMagicRoomFlag(std::int32_t flag) noexcept {
-    retainedMagicRoomFlag = flag;
+    persistentState.magicRoomFlag = flag;
 }
 
 // @verified - p

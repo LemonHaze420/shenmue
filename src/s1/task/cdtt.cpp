@@ -2,6 +2,7 @@
 
 #include "s1/boot.hpp"
 #include "s1/frame_pipeline.hpp"
+#include "s1/simple_shader.hpp"
 #include "s1/task/ctrl.hpp"
 #include "s1/task/disp.hpp"
 #include "s1/task/time.hpp"
@@ -36,8 +37,9 @@ constexpr std::int32_t make_shen_name(char a, char b, char c, char d) {
 constexpr std::int32_t kCDTTTaskToken = SHEN_NAME(CDTT);
 constexpr std::int32_t kTexnToken = SHEN_NAME(TEXN);
 
-
-
+// @verified - p
+void CDTT_DrawLoadScreen(HLib::TaskData *) {
+}
 std::int32_t g_cdttHeaderSurface = -1;
 std::int32_t g_cdttSpecialDateSurface = -1;
 
@@ -202,6 +204,7 @@ void IncrementCurrentDateTime_Wrapper() {
 
 
 void RenderLoadingScreen(std::int32_t name) {
+    g_postFxState.enabled = 0;
     IncrementCurrentDateTime_Wrapper();
     g_cdttLoadNumCount = 0;
     const MapControlData *const control = g_mapControlTask ? reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
@@ -327,18 +330,22 @@ void CDTT_Callback(HLib::TaskData *) {
         if (g_cdttAlpha > 255)
             g_cdttAlpha = 255;
     }
+    CDTT_DrawLoadScreen(nullptr);
 }
 
 
 
 void CDTT_FreeCallback(HLib::TaskData *) {
+    g_postFxState.enabled = 1;
     std::int16_t alpha = g_cdttAlpha;
     if ((Shenmue_nPauseState & 0x102) == 0) {
         alpha = static_cast<std::int16_t>(g_cdttAlpha - 8);
         g_cdttAlpha = alpha;
     }
-    if (alpha >= 0)
+    if (alpha >= 0) {
+        CDTT_DrawLoadScreen(nullptr);
         return;
+    }
     if (g_cdttHeaderSurface != -1)
         PVR_FreeAllocatedSurfaceByIndex(g_cdttHeaderSurface);
     g_cdttHeaderSurface = -1;

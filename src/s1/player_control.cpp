@@ -404,7 +404,6 @@ std::uint16_t g_directionChordState = 0;
 std::uint16_t g_directionChordMask = 0;
 std::int32_t g_cpctLoadHoldFrameCount = 0;
 bool g_cpctLoadHoldInputCleared = false;
-std::int32_t g_cpctLoadHoldCollisionLatch = 0;
 std::uint8_t g_debugAnimationFlag = 0;
 
 CharacterCollisionWork *GetPlayerCollisionWork(Character *character) {
@@ -2325,7 +2324,7 @@ void UpdateLoadHoldInputLatch(PlayerControlWork &control) {
         return;
     }
 
-    g_cpctLoadHoldCollisionLatch = 1;
+    g_skipAuxiliaryCollisionRefresh = 1;
     PadCaptureEntry *const pad = CurrentMapPad();
     if (!pad || (pad->flags & 2U) == 0) {
         g_cpctLoadHoldInputCleared = false;
@@ -4335,19 +4334,19 @@ void BeginContextActionSecondary(PlayerControlWork &control, std::uint16_t anima
     control.reserved1d6 = std::byte{1};
 }
 
-void AttachContextActionObject(Character *object, Character *owner, std::int32_t nodeId, const Vector3 &offset) {
+void AttachContextActionObject(Character *object, Character *owner, std::int32_t nodeId, const Vector3 &offset, const Vector3i &rotation) {
     if (!object || !owner)
         return;
-    fixoSetCharaPos(object, owner, nodeId, &offset, nullptr);
+    fixoSetCharaPos(object, owner, nodeId, &offset, &rotation);
 }
 
-void CompleteContextActionAttachment(Character *object, Character *owner, std::int32_t nodeId, const Vector3 &offset) {
-    AttachContextActionObject(object, owner, nodeId, offset);
+void CompleteContextActionAttachment(Character *object, Character *owner, std::int32_t nodeId, const Vector3 &offset, const Vector3i &rotation) {
+    AttachContextActionObject(object, owner, nodeId, offset, rotation);
     SetContextActionObjectVisible(object, true);
 }
 
 void ResetContextActionHands(Character *character) {
-    mhndApplyCharaHandPose(character, 2, 14, 1);
+    mhndStartIdleHandProgram(character);
 }
 
 void StopContextAction(Character *character, std::uint16_t action) {
@@ -4411,12 +4410,15 @@ void StartOrContinueContextAction(Character *character, PlayerControlWork &contr
         const std::uint32_t id = action == 1 ? SHEN_NAME(ABAG) : SHEN_NAME(RUCO);
         Character *const object = FindContextActionCharacter(id);
         if (control.reserved1d6 == std::byte{}) {
-            fixoClearAttachment(object);
+            if (CharacterCollisionWork *const collision = object ? GetPlayerCollisionWork(object) : nullptr) {
+                collision->stateFlags &= ~7U;
+                collision->stateByte = 0;
+            }
             BeginContextActionSecondary(control, 657, 14, true);
             return;
         }
         const Vector3 offset = action == 4 ? Vector3{-0.030999999F, 0.34799999F, -0.088F} : Vector3{0.079999998F, 0.0F, -0.025F};
-        AttachContextActionObject(object, character, 18, offset);
+        AttachContextActionObject(object, character, 18, offset, action == 4 ? kContextRaincoatRotation : kContextBagRotation);
         mhndApplyCharaHandPose(character, 0, 0, 16);
         mhndApplyCharaHandPose(character, 1, 8, 16);
         SetContextActionObjectVisible(object, true);
@@ -4434,20 +4436,26 @@ void StartOrContinueContextAction(Character *character, PlayerControlWork &contr
     case 3: {
         Character *const object = FindContextActionCharacter(SHEN_NAME(LIGH));
         if (control.reserved1d6 == std::byte{}) {
-            fixoClearAttachment(object);
+            if (CharacterCollisionWork *const collision = object ? GetPlayerCollisionWork(object) : nullptr) {
+                collision->stateFlags &= ~7U;
+                collision->stateByte = 0;
+            }
             BeginContextActionSecondary(control, 1139, 8, true);
             return;
         }
         constexpr Vector3 kLanternOffset{0.079999998F, 0.0F, 0.025F};
-        CompleteContextActionAttachment(object, character, 12, kLanternOffset);
+        CompleteContextActionAttachment(object, character, 12, kLanternOffset, kContextLanternRotation);
         control.reserved1d6 = std::byte{};
         return;
     }
     case 5: {
         Character *const object = FindContextActionCharacter(SHEN_NAME(RUCF));
-        fixoClearAttachment(object);
+        if (CharacterCollisionWork *const collision = object ? GetPlayerCollisionWork(object) : nullptr) {
+            collision->stateFlags &= ~7U;
+            collision->stateByte = 0;
+        }
         constexpr Vector3 kObjectOffset{0.287F, 0.178F, 0.0F};
-        CompleteContextActionAttachment(object, character, 2, kObjectOffset);
+        CompleteContextActionAttachment(object, character, 2, kObjectOffset, kContextRaincoatFoldedRotation);
         return;
     }
     default:

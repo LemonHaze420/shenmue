@@ -76,22 +76,61 @@ void ApplyInverseNode(const MT7Node &node) {
     Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(-node.rotation.z));
     Matrix4x4::preTranslate(-node.position.x, -node.position.y, -node.position.z);
 }
-bool ApplyMarkerTranslation(MT7Node *node, std::uint32_t marker, Vector3 &position, bool requireMesh) {
-    for (; node; node = node->runtimeSibling) {
+// @verified - p
+bool ApplyLMarkerTranslation(MT7Node *node, std::uint32_t marker, Vector3 &position) {
+    if (!node)
+        return false;
+    bool found = false;
+    if (node->runtimeSibling)
         Matrix4x4_Push();
-        srchApplyObjectTransform(node, nullptr);
-        if (IsMDPXorMDP7(node) == marker && (!requireMesh || node->xb01Offset)) {
-            position = Translation();
-            Matrix4x4::Pop(1);
-            return true;
-        }
-        if (node->runtimeChild && ApplyMarkerTranslation(node->runtimeChild, marker, position, requireMesh)) {
-            Matrix4x4::Pop(1);
-            return true;
-        }
-        Matrix4x4::Pop(1);
+    Matrix4x4::preTranslate(node->position.x, node->position.y, node->position.z);
+    if (node->rotation.z)
+        Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(node->rotation.z));
+    if (node->rotation.y)
+        Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(node->rotation.y));
+    if (node->rotation.x)
+        Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(node->rotation.x));
+    if (IsMDPXorMDP7(node) == marker) {
+        found = true;
+        position = Translation();
     }
-    return false;
+    if (node->runtimeChild && !found)
+        found = ApplyLMarkerTranslation(node->runtimeChild, marker, position);
+    if (node->runtimeSibling) {
+        Matrix4x4::Pop(1);
+        if (!found)
+            return ApplyLMarkerTranslation(node->runtimeSibling, marker, position);
+    }
+    return found;
+}
+
+// @verified - p
+bool ApplyQMarkerTranslation(MT7Node *node, std::uint32_t marker, Vector3 &position) {
+    if (!node)
+        return false;
+    bool found = false;
+    if (node->runtimeSibling)
+        Matrix4x4_Push();
+    Matrix4x4::preTranslate(node->position.x, node->position.y, node->position.z);
+    if (node->rotation.z)
+        Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(node->rotation.z));
+    if (node->rotation.y)
+        Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(node->rotation.y));
+    if (node->rotation.x)
+        Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(node->rotation.x));
+    if (IsMDPXorMDP7(node) == marker) {
+        found = true;
+        Matrix4x4::preTranslate(0.12f, -0.1f, 0.0f);
+        position = Translation();
+    }
+    if (node->runtimeChild && !found)
+        found = ApplyQMarkerTranslation(node->runtimeChild, marker, position);
+    if (node->runtimeSibling) {
+        Matrix4x4::Pop(1);
+        if (!found)
+            return ApplyQMarkerTranslation(node->runtimeSibling, marker, position);
+    }
+    return found;
 }
 void UpdateFollowPositions() {
     plymUpdatePlayerSearchLocation(&playerSearchPosition);
@@ -115,9 +154,9 @@ void UpdateFollowPositions() {
             anchorPosition = Translation();
             if (node) {
                 Matrix4x4::SetActiveTransform(transform);
-                if (!ApplyMarkerTranslation(node->runtimeChild, (anchorCharacter.name & 0xffffff00U) | 'Q', anchorPosition, true)) {
+                if (!ApplyQMarkerTranslation(node->runtimeChild, (anchorCharacter.name & 0xffffff00U) | 'Q', anchorPosition)) {
                     Matrix4x4::SetActiveTransform(transform);
-                    ApplyMarkerTranslation(node->runtimeChild, (anchorCharacter.name & 0xffffff00U) | 'L', anchorPosition, false);
+                    ApplyLMarkerTranslation(node->runtimeChild, (anchorCharacter.name & 0xffffff00U) | 'L', anchorPosition);
                 }
             }
             Matrix4x4::Pop(1);
@@ -195,7 +234,7 @@ float FindBestFollowCandidate(const LegacyInputSlot &input) {
         if (screen.x <= -width * 3.5f || screen.x >= width * 3.5f || screen.y <= -height * 3.5f || screen.y >= height * 3.5f)
             continue;
         const float distance = screen.x * screen.x + screen.y * screen.y;
-        if (distance < best) {
+        if (index < 0 || distance < best) {
             best = distance;
             currentFollowCharacter = name;
             currentFollowPosition = point;

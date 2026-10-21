@@ -2262,7 +2262,7 @@ void UpdateCameraTransitions(CameraRuntime &camera) {
         camera.interpolationMode = CameraInterpolationMode::None;
         return;
     }
-    const float amount = progress * HLib::GetScaledDeltaTick();
+    const float amount = shenGetScaledDeltaTickTime(progress);
     if (mode == CameraInterpolationMode::ToTargetContinuous || mode == CameraInterpolationMode::ToTargetTimed) {
         const Vector3 target{CameraLerp(camera.targetPosition.x, camera.transitionTargetPosition.x, amount),
             CameraLerp(camera.targetPosition.y, camera.transitionTargetPosition.y, amount),
@@ -2295,7 +2295,7 @@ void UpdateCameraTransitions(CameraRuntime &camera) {
 }
 
 void UpdateLockedOnCamera(CameraRuntime &camera) {
-    camera.flags &= ~CameraInterpolationSnap;
+    camera.flags |= CameraInterpolationSnap;
     const LegacyInputSlot *const input = CameraInput();
     if (!input)
         return;
@@ -3495,7 +3495,7 @@ void camCtrlHandleLookAroundCam(CameraRuntime &camera) {
             zoomLift = (1.0f - pitchWeight) * zoomLift + pitchWeight * 0.69999999f;
         }
         target.y = y + zoomLift;
-        camera.targetPosition = target;
+        camera.targetPosition = {shenGetScaledDeltaTickTime(target.x), shenGetScaledDeltaTickTime(target.y), shenGetScaledDeltaTickTime(target.z)};
         camera.orbitDistance = 3.0999999f;
         camCtrlGetIdealCameraPosition(camera);
         camCtrlInterpolateApplyCameraAngY(camera);
@@ -4301,7 +4301,7 @@ std::int32_t g_cameraFilmBarsEnabled = 0;
 // 522a20: real CAMT state-10 consumer. Motion interpolation owns its path
 // without VFMA; every fight mode borrows the actual six-slot producer.
 void camCtrlEvaluateGoal() {
-    g_cameraControl->flags |= CameraRaycastEnabled;
+    g_cameraControl->flags &= ~CameraRaycastEnabled;
     if (IsWazamakiInactive() != 0)
         return;
     camCtrlSetNextPosition(fightCameraEye);

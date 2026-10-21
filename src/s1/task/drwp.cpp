@@ -133,6 +133,7 @@ void CharDraw_DRWP(HLib::TaskData *taskData) {
 
     renderTask->entityCount = 0;
     renderTask->acceptedCandidateCount = 0;
+    renderTask->frameCount = 0;
     UpdateGlobalLighting();
     charaEvaluateLightOverride();
 

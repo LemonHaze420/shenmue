@@ -19,7 +19,7 @@ MapControlData *CurrentMapControl() {
     return reinterpret_cast<MapControlData *>(g_mapControlTask->task_data_ptr);
 }
 bool DispatchObject(DRWP_t &renderTask, Character *character) {
-    if (!character || character->entity.name != kCharacterHandlerToken || MOTM_GetWork(character)) {
+    if (!DRWP_IsRetainedCharacter(character) || MOTM_GetWork(character)) {
         return false;
     }
     DRWP_DispatchCharacter(character);

@@ -3044,8 +3044,7 @@ void CtrlAir_Callback(void *taskData) {
 }
 
 void OBJ_Object_Callback(void *taskData) {
-    g_currentFieldPointCount = GetFieldDepthPointCount();
-    g_currentDrawTier = camCtrlGetDrawTier(camCtrlGetCurrentFarDistance());
+
     auto *const parameters = static_cast<ObjectDrawTaskParameters *>(taskData);
     if (!parameters)
         return;
@@ -3053,6 +3052,8 @@ void OBJ_Object_Callback(void *taskData) {
     parameters->submittedTransparent = 0;
     if (!IsWorldDrawingEnabled())
         return;
+    g_currentFieldPointCount = GetFieldDepthPointCount();
+    g_currentDrawTier = camCtrlGetDrawTier(camCtrlGetCurrentFarDistance());
     if (!d3t::BindSceneFrameRenderTarget())
         return;
     const MapControlData *control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));

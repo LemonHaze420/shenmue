@@ -3372,8 +3372,20 @@ void CharacterHandler_FigurePose(Character *character) {
             Matrix4x4::Scale(character->scale.x, character->scale.y, character->scale.z);
             g_sceneObjectMaxScale = character->scale.x;
         }
-        character->drawCallback(character->model, character->renderOpacity);
+        void (*const drawCallback)(void *, float) = character->drawCallback;
+        drawCallback(character->model, character->renderOpacity);
         g_sceneObjectMaxScale = 1.0f;
+        if ((character->flags.value & CharacterFlagReflectInScriptPlane) != 0U && g_dbg_draw_enabled != 0) {
+            PopCharacterMatrix();
+            Matrix4x4_Push();
+            Matrix4x4::Multiply(&g_objectDebugMatrix);
+            TransformCharacterHierarchyZYX(&character->entity.node);
+            if (character->scale.x != 1.0f || character->scale.y != 1.0f || character->scale.z != 1.0f)
+                Matrix4x4::Scale(character->scale.x, character->scale.y, character->scale.z);
+            g_is_busy_transform = 1;
+            drawCallback(character->model, 1.0f);
+            g_is_busy_transform = 0;
+        }
         PopCharacterMatrix();
     }
     g_drawingImageModel = nullptr;

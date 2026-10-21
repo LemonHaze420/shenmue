@@ -246,8 +246,7 @@ void vfUpdateHitFacingAndKnockback(VFActor &actor) {
         case 1:
         case 3:
         case 4:
-            if (actor.guardState != 0)
-                counterReactionFlags = 4U;
+
             counterReactionFlags |= 1U;
             if ((actor.hitParameter & 0x200U) != 0)
                 counterReactionFlags &= ~1U;

@@ -51,6 +51,12 @@ std::int32_t g_numRemainLoadAttempts = 0;
 std::int32_t g_is70ManBattleLoad = 0;
 std::int32_t g_pickedSaveResumeKind = 0;
 std::int32_t g_settingFlagsCaptured = 0;
+std::int32_t g_displayCapturedDialogueMode = 0;
+std::int32_t g_displayCapturedAreaJumpDisabled = 0;
+std::int32_t g_displayCapturedDefaultTriggerLayout = 0;
+std::int32_t g_displayCapturedWeatherMode = 0;
+std::int32_t g_displayDialogueSettingsDirty = 0;
+std::int32_t g_displayGameplaySettingsDirty = 0;
 std::int32_t g_70ManBattleLoadBeforeSettings = 0;
 
 namespace {
@@ -121,8 +127,13 @@ void SetPausedAndInit();
 
 
 void SetSettingFlags() {
+    const std::uint32_t flags = S1SettingsFlags_Get();
     g_settingFlagsCaptured = 1;
+    g_displayCapturedDialogueMode = static_cast<std::int32_t>((flags >> 4U) & 3U);
+    g_displayCapturedDefaultTriggerLayout = g_currentSettings.input.swapTriggers == 0 || g_keyboardActive == 1;
+    g_displayCapturedWeatherMode = static_cast<std::int32_t>((flags >> 7U) & 1U);
     g_bookkeepingRefreshUpdatesDisabled = 1;
+    g_displayCapturedAreaJumpDisabled = (flags & 8U) == 0;
 }
 
 void SetIntroSceneInfo(HLib::TaskData *) {
@@ -272,7 +283,6 @@ void InternalInit() {
 }
 
 void HLTaskFunc_InternalWeatherInit(std::int32_t mode) {
-    const std::uint32_t dialogueMode = static_cast<std::uint32_t>(std::clamp(g_applicationSettings.savedDialogueMode, 0, 3));
 
     void *const bootRomScratch = HLib_AllocMemBlock(0x4000, SHEN_NAME(BROM));
     const bool soundEnabled = bootRomScratch != nullptr;
@@ -283,31 +293,34 @@ void HLTaskFunc_InternalWeatherInit(std::int32_t mode) {
     SOND_ExecuteRawAicaCommand(static_cast<std::uint32_t>(((soundEnabled ? 14 : 15) << 16) + 0x1ba0));
 
     std::uint32_t flags = S1SettingsFlags_Get();
-    if (mode != 0) {
-        flags = (flags & 0xffffffcbU) | (dialogueMode << 4U);
-        if (g_dialogueModeVoiceTextEnable[dialogueMode][0] != 0)
-            flags |= 2U;
-        else
-            flags &= ~2U;
+    if (mode != 0 || g_displayDialogueSettingsDirty != 0) {
+        const std::uint8_t dialogueMode = static_cast<std::uint8_t>(g_currentSettings.dialogueMode);
+        flags = (flags & 0xffffffcbU) | (static_cast<std::uint32_t>(dialogueMode) << 4U);
+        flags = g_dialogueModeVoiceTextEnable[dialogueMode][0] ? flags | 2U : flags & ~2U;
 
-        if (g_dialogueModeVoiceTextEnable[dialogueMode][1] != 0)
-            flags |= 1U;
-        else
-            flags &= ~1U;
+        flags = g_dialogueModeVoiceTextEnable[dialogueMode][1] ? flags | 1U : flags & ~1U;
 
-        if (g_applicationSettings.savedInput.swapTriggers == 0 || g_keyboardActive == 1) {
-            flags |= 0x40U;
-        } else {
-            flags &= ~0x40U;
-        }
-        if (g_applicationSettings.savedInput.weatherMode != 0)
-            flags |= 0x80U;
-        else
-            flags &= ~0x80U;
+        S1SettingsFlags_Set(flags);
     }
-    if (HPLG_GetBookkeepingProgress() == 0)
+    if (mode != 0 || g_displayGameplaySettingsDirty != 0) {
+        flags = g_displayCapturedDefaultTriggerLayout ? flags | 0x40U : flags & ~0x40U;
+
+        flags = g_displayCapturedAreaJumpDisabled ? flags & ~8U : flags | 8U;
+
+        flags = g_displayCapturedWeatherMode ? flags | 0x80U : flags & ~0x80U;
+        S1SettingsFlags_Set(flags);
+        if (mode <= 1) {
+            g_displayDialogueSettingsDirty = 0;
+            g_displayGameplaySettingsDirty = 0;
+        }
+    } else {
+        g_displayDialogueSettingsDirty = 0;
+        g_displayGameplaySettingsDirty = 0;
+    }
+    if (HPLG_GetBookkeepingProgress() == 0) {
         flags &= ~0x80U;
     S1SettingsFlags_Set(flags);
+    }
     Weather_SetWeatherDataByMode(static_cast<std::int32_t>((flags >> 7U) & 1U));
 }
 

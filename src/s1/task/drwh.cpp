@@ -94,7 +94,7 @@ void CharDrawHuman_DRWH_Task_Callback(HLib::TaskData *) {
     for (void *const head : control->characterBuckets) {
         for (auto *node = static_cast<CharacterBucketNode *>(head); node; node = node->next) {
             Character *const character = node->character;
-            if (!character) {
+            if (!DRWP_IsRetainedCharacter(character)) {
                 continue;
             }
             InsertHuman(*renderTask, character);

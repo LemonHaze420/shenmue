@@ -2,6 +2,9 @@
 #include "s1/archive_data.hpp"
 #include "s1/hlib.hpp"
 
+#include "s1/collision.hpp"
+#include "s1/player_control.hpp"
+#include "s1/task/cycle_man.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -108,6 +111,25 @@ std::int64_t shenLoadFile(const char *directory, const char *filename, void *des
 }
 
 void *ReadFile(const char *directory, const char *filename, std::int32_t token) {
+#if SHENMUE_IS_PC
+    const std::int32_t loadingEnabled = g_cm_unk_flag;
+    CycleManager::LinkCyclesInStack(0);
+    if (loadingEnabled)
+        g_skipAuxiliaryCollisionRefresh = 1;
+    const std::int64_t size = static_cast<std::int32_t>(shenOpenFile(directory, filename));
+    void *destination = nullptr;
+    if (size != 0) {
+        destination = HLib_AllocHeapMemBlock(size, token);
+        if (destination && !shenLoadFile(directory, filename, destination, static_cast<std::int32_t>(size))) {
+            HLib_FreeTaskData(static_cast<HLib::TaskData *>(destination), 0);
+            destination = nullptr;
+        }
+    }
+    CycleManager::LinkCyclesInStack(loadingEnabled);
+    if (loadingEnabled)
+        PCCTL_BeginLoadHold();
+    return destination;
+#else
     void *destination = nullptr;
     const std::uint32_t size = static_cast<std::uint32_t>(shenOpenFile(directory, filename));
     if (size == 0) {
@@ -138,6 +160,7 @@ void *ReadFile(const char *directory, const char *filename, std::int32_t token) 
     FileStatAndProcessIfExists(file);
     ReadFile_0(0, &file->handle);
     return destination;
+#endif
 }
 
 } // namespace shenmue::s1

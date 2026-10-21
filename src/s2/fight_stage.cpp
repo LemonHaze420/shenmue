@@ -2548,7 +2548,7 @@ void SuspendFight() {
             motRemoveCallback(game->actors[i]->motion);
     for (std::uint8_t i = 0; i < g_pFightStage->enemyCount; ++i) {
         FCMG_t &slot = g_pFightStage->enemySlots[i];
-        if (slot.character && slot.group && slot.state == 2)
+        if (slot.character && slot.group && slot.state == 3)
             motRemoveCallback(slot.motion);
     }
     for (std::uint8_t i = 0; i < g_pFightStage->enemyCount; ++i) {
@@ -2563,7 +2563,7 @@ void SuspendFight() {
         BindPadControlEntry(game->inputBuffer);
     if (game->savedInput)
         ReleasePadControlEntry(game->savedInput);
-    if (!(g_pFightStage->battleFlags & 0x20000U) && game->inputLockOnStart) {
+    if (!(g_pFightStage->battleFlags & 0x2U) && game->inputLockOnStart) {
         SetPlayerControlEnabled(1);
         game->inputLockOnStart = 0;
     }
@@ -2585,7 +2585,7 @@ std::int32_t ResumeFight(std::int32_t resetActors) {
             vfRegisterGroundTargetCallbacks(game->actors[i]->motion, game->actors[i]);
     for (std::uint8_t i = 0; i < g_pFightStage->enemyCount; ++i) {
         FCMG_t &slot = g_pFightStage->enemySlots[i];
-        if (!slot.character || !slot.group || slot.state != 2)
+        if (!slot.character || !slot.group || slot.state != 3)
             continue;
         for (std::uint32_t selector : fightMotionSelectors) {
             AssignMotionTargetCallback(slot.motion, AdjustCooldownGroundTarget, selector);
@@ -2599,7 +2599,7 @@ std::int32_t ResumeFight(std::int32_t resetActors) {
     }
     std::int32_t result = plymIsSearchStartRequested();
     game->inputLockOnStart = static_cast<std::uint8_t>(result);
-    if (g_pFightStage->battleFlags & 0x20000U) {
+    if (g_pFightStage->battleFlags & 0x2U) {
         game->inputBuffer = nullptr;
         game->savedInput = nullptr;
     } else {
@@ -2610,7 +2610,7 @@ std::int32_t ResumeFight(std::int32_t resetActors) {
         result = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(game->inputBuffer));
     }
     if (resetActors) {
-        g_pFightStage->battleFlags |= 0x100000U;
+        g_pFightStage->battleFlags |= 0x10U;
         result = static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(g_pFightStage));
         for (std::uint8_t i = 0; i < 6; ++i) {
             if (!game->characters[i])

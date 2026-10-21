@@ -4,6 +4,7 @@
 #include "s1/d3t/model.hpp"
 #include "d3t/file_state.hpp"
 
+#include "s1/d3t/d3t_texture.hpp"
 #include <cstdlib>
 #include <cstring>
 namespace shenmue::s1 {
@@ -63,6 +64,22 @@ std::uint32_t ResolveModelWritingAreas(std::uint32_t handle, ModelMaterialDescri
     for (std::uint32_t index = 0; index < model->materialCount; ++index)
         count += BuildModelMaterialDescriptor(handle, index, areas);
     return count;
+}
+// @verified - p
+std::uint8_t SetModelMaterialTexture(ModelMaterialDescriptor &descriptor, std::uint32_t parameterIndex, std::uint32_t texture) {
+    D3TModelRecord *const model = d3t::ResolveModel(descriptor.renderHandle);
+    if (!model)
+        return 0;
+    D3TModelMaterialParameter &parameter = const_cast<D3TModelMaterialParameter &>(descriptor.parameters[parameterIndex]);
+    D3TModelMaterialRuntime &runtime = model->materialRuntime[descriptor.material - model->materials];
+    std::uint32_t slot;
+    if (!d3t::GetMaterialTextureSlot(parameter.type, slot))
+        return 0;
+    IncrementTextureById(texture);
+    InitTexture2DResource(runtime.textures[slot]);
+    runtime.textures[slot] = texture;
+    parameter.texture = 0;
+    return static_cast<std::uint8_t>(texture);
 }
 void RefreshDirtyRenderLayerMaterialEntities(std::uint32_t renderLayer, D3TDeviceContext *context, std::uint32_t fileLockHandle) {
     CachedSkinningBufferSlot *const layer = ResolveCachedSkinningBuffer(renderLayer);

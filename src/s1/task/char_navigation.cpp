@@ -1752,10 +1752,8 @@ void PTTM_Stop(Character *character) {
 bool W3DW_Allocate(Character *character) {
     if (!character)
         return false;
-    Walk3DWork *work = FindWalk3DWork(character);
-    if (!work) {
-        work = static_cast<Walk3DWork *>(AllocateHeapMemoryMODL(character, kWalk3DComponent, sizeof(Walk3DWork), W3DW_Callback));
-    }
+    Walk3DWork *const work = static_cast<Walk3DWork *>(AllocateHeapMemoryMODL(character, kWalk3DComponent, sizeof(Walk3DWork), W3DW_Callback));
+
     if (!work) {
         PromoteWalk3DCharacter(character);
         return false;

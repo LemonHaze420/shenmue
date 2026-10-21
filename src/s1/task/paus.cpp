@@ -92,7 +92,7 @@ bool GetInputStateForHelp() {
         return false;
     if ((g_inputContextFlags & kHelpInputBlock) != 0)
         return false;
-    if ((g_inputContextFlags & kHelpInputAuxiliary) != 0 && g_70mbShownIconStatus != 4) {
+    if ((g_inputContextFlags & kHelpInputAuxiliary) != 0 && g_70mbShownIconStatus == 4) {
         return false;
     }
     return true;

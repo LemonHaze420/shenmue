@@ -684,7 +684,7 @@ void vfProcessHitStateAndMovement(VFActor &actor) {
 
 constexpr std::array<std::array<std::uint32_t, 8>, 8> kVFFrameEventSoundCommands{{
     {{0, 0, 0, 0, 0, 0, 0, 0}},
-    {{0x000377abU, 0x000009a9U, 0x020009a9U, 0x003476abU, 0x003c76abU, 0, 0, 0}},
+    {{0x000377abU, 0x000009a9U, 0x000209a9U, 0x003476abU, 0x003c76abU, 0, 0, 0}},
     {{0x000477abU, 0x000209a9U, 0x000309a9U, 0x003276abU, 0x003276abU, 0, 0, 0}},
     {{0x000077abU, 0x000709a9U, 0x000409a9U, 0x003976abU, 0x003b76abU, 0, 0, 0}},
     {{0x000177abU, 0x000409a9U, 0, 0x003a76abU, 0x003f76abU, 0, 0, 0}},

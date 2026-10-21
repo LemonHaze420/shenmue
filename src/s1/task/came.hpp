@@ -106,21 +106,25 @@ struct DeveloperCameraState {
     bool initialized = false;
     std::int32_t mode = 0;
     std::int32_t viewOffsetMode = 0;
+    float viewHeightOffset = 0.1f;
+    float viewHeightVelocity = 0.0f;
     std::int32_t selectionAccumulator = 0;
     std::int32_t selectionScanFlags = 0;
     std::int32_t selectionBucketIndex = 0;
     CharacterBucketNode *selectionCursor = nullptr;
     Character *selectedCharacter = nullptr;
-    std::int16_t pitchStep = 0;
-    std::int16_t yawStep = 0;
-    std::int16_t zAngle = 0;
-    float fieldOfView = 10922.0f;
+    std::int32_t pitchStep = 0;
+    std::int32_t yawStep = 0;
+    std::int32_t zAngle = 0;
+    std::int32_t fieldOfView = 10922;
     float dolly = 0.0f;
     float lift = 0.0f;
     float strafe = 0.0f;
     float pan = 0.0f;
     Vector3 origin{};
     Vector3 lookAt{};
+    Vector3 viewOrigin{};
+    Vector3 viewLookAt{};
 };
 
 struct CameraRuntimeState {

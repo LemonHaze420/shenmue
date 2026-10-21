@@ -29,27 +29,12 @@ float g_simpleShaderMainParameter = 0.0f;
 std::uint32_t g_postFxEnabled = 1;
 std::int32_t g_HasPPFXRendered = 0;
 
+PostFxState g_postFxState = kPostFxDefaults;
 namespace {
 
 std::uint32_t g_simpleShaderInitFlag = 0;
 std::uint8_t g_postFxInitialized = 0;
 bool g_ppfxMiddlewareAvailable = false;
-
-
-
-constexpr std::array<std::uint8_t, 0x224> MakePostFxDefaults() {
-    std::array<std::uint8_t, 0x224> defaults{};
-    defaults[0] = 1;
-    defaults[4] = 1;
-    defaults[5] = 1;
-    defaults[8] = 0x3f;
-    defaults[9] = 0x42;
-    defaults[10] = 0x0f;
-    return defaults;
-}
-
-constexpr auto kPostFxDefaults = MakePostFxDefaults();
-std::array<std::uint8_t, 0x224> g_postFxState{};
 
 void InitializeSimpleShaderParameters() {
     g_modelShadowSlots.fill(0);
@@ -137,7 +122,7 @@ void InitPostFX() {
 }
 
 bool IsPostProcessPass() {
-    return g_postFxState[0] != 0 && g_ppfxMiddlewareAvailable;
+    return g_postFxState.enabled != 0 && g_ppfxMiddlewareAvailable;
 }
 void GPUPostEffect_InitializeAutoExposure(std::int32_t effect, float minimum, float maximum) {
 

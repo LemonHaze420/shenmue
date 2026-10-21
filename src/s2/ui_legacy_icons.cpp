@@ -2413,7 +2413,7 @@ void CtrlSleepActionIcon_Callback(void *) {
         DestroyElementByIndex(UIElement::LoadSave);
         DestroyElementByIndex(UIElement::GameBackground);
         DestroyElementByIndex(UIElement::GameInfoBar);
-    } else if (sleepActionSubmenuState == 2 && GetDebugForceUIEnabled(UIElement::SubMenuOptions) && (g_inputBuffer[0].pressedPriority & 0x200U) &&
+    } else if (sleepActionSubmenuState == 2 && GetDebugForceUIEnabled(UIElement::Options) && (g_inputBuffer[0].pressedPriority & 0x200U) &&
         !AskKeepOrRevertChanges()) {
         sleepActionPhase &= 0xff00U;
         sleepActionStatus = static_cast<std::uint16_t>((sleepActionStatus & 0xff00U) | 1U);

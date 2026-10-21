@@ -1745,6 +1745,8 @@ std::uint8_t g_debugNotebookRedraw = 0;
 
 namespace shenmue::s1 {
 
+std::uint32_t g_notebookModelHandle{};
+
 std::array<std::uint32_t, 4> g_notebookTextureLeft{};
 
 std::array<std::uint32_t, 4> g_notebookTextureRight{};
@@ -1802,13 +1804,15 @@ std::uint32_t UI_SetPVRSurfaceTexture(std::int32_t surface, std::uint32_t textur
     return ExchangePVRSurfaceTexture(surface, texture);
 }
 
-
+// @verified - p
 void InitGUIStates() {
     CashOverlayOwner &cash = g_cashOverlayPresentation;
     cash.value = 0;
+    cash.selectorAmountType = 0;
     cash.targetBalance = 0;
     cash.balanceAnimating = false;
     cash.selectedValue = 0;
+    SetupScalingForGUI();
     cash.state = UICashOverlayState::Idle;
     cash.timeoutFrames = 600;
     cash.autoCloseFrames = 0.0f;
@@ -1816,6 +1820,7 @@ void InitGUIStates() {
     cash.maximumValue = 0;
     cash.selectorActive = false;
     cash.elapsedFrames = 0;
+    cash.displayMode = UICashOverlayDisplayMode::None;
 }
 
 
@@ -3291,6 +3296,8 @@ const char *UI_Elements_Init() {
     g_uiElements[kUiGameHud].isPressed = UI_NullsubReturn1;
     g_uiElements[kUiGameHud].tick = GameHud_Tick;
     g_uiElements[kUiGameHud].isSelected = GameHud_IsSelected;
+    g_uiElements[kUiGameHud].getContentPanel = GameHud_GetContentPanel;
+    g_uiElements[kUiGameHud].destroy = GameHud_Destroy;
     bindPresentation(kUiGameHudWatch, "Game HUD Watch", [] { return LoadPresentationDefinition(kUiGameHudWatch, "/ui/gamehud/GameHudWatch.ui"); });
     g_uiElements[kUiGameHudWatch].field_ac = 1;
     g_uiElements[kUiGameHudWatch].isSelected = GameHudWatch_IsSelected;

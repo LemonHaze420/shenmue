@@ -1367,7 +1367,7 @@ void Script_EV_PAK_AFS_Utils(ScenarioContext *context, void *rawParams) {
     if (params->mode == 3 && params->operation == 0) {
         COLS_Free();
         std::uint32_t payloadSize = 0;
-        const std::byte *const payload = MAPINFO_FindChunkPayload(SHEN_NAME(SLOC), &payloadSize);
+        const std::byte *const payload = MAPINFO_FindChunkPayload(MAPINFO_COLS.name, &payloadSize);
         COLS_Process(payload ? const_cast<std::byte *>(payload - 8) : nullptr);
     }
 }

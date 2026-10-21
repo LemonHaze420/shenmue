@@ -1,5 +1,7 @@
 #include "s1/ui_internal.hpp"
 
+#include "s1/modern_material.hpp"
+#include "s1/render_array.hpp"
 namespace shenmue::s1::ui_runtime_detail {
 void ItemsMenu_PopulateEntries();
 
@@ -652,11 +654,54 @@ void FormatNotebookText(std::uint32_t pageIndex, std::uint32_t textBuffer, std::
     g_memoTextPages[pageSlot] = memo;
 }
 
-
-
-void Notebook_BindModelPageTextures() {
+// @verified - p
+void CreateNotebookTextures(std::uint64_t, RenderArrayOwner *object) {
+    if (object->state != 1)
+        return;
+    if (!g_notebookTextureLeft[0]) {
+        const Texture2DDescription description{.width = 512, .height = 512, .arraySize = 1, .mipLevels = 1, .format = 2, .bindFlags = 4, .sampleCount = 1};
+        for (std::uint32_t page = 0; page < 4; ++page) {
+            if (!g_notebookTextureLeft[page])
+                g_notebookTextureLeft[page] = CreateTexture2D(&description);
+            g_notebookLeftPageFlags[page] = 1;
+        }
+    }
+    g_notebookModelHandle = object->renderHandle;
+    ModelMaterialDescriptor areas[4]{};
+    if (!ResolveModelWritingAreas(g_notebookModelHandle, areas))
+        return;
+    for (std::uint32_t page = 0; page < 4; ++page) {
+        ModelMaterialDescriptor &area = areas[page];
+        if (!area.name)
+            continue;
+        for (std::uint32_t parameter = 0; parameter < area.material->parameterCount; ++parameter) {
+            if (area.parameters[parameter].type == kNotebookPageTextureParameter) {
+                SetModelMaterialTexture(area, parameter, g_notebookTextureLeft[page]);
+                break;
+            }
+        }
+    }
 }
 
+// @verified - p
+void
+// @verified - p
+Notebook_BindModelPageTextures() {
+    ModelMaterialDescriptor areas[4]{};
+    if (!ResolveModelWritingAreas(g_notebookModelHandle, areas))
+        return;
+    for (std::uint32_t page = 0; page < 4; ++page) {
+        ModelMaterialDescriptor &area = areas[page];
+        if (!area.name)
+            continue;
+        for (std::uint32_t parameter = 0; parameter < area.material->parameterCount; ++parameter) {
+            if (area.parameters[parameter].type == kNotebookPageTextureParameter) {
+                SetModelMaterialTexture(area, parameter, g_notebookTextureLeft[page]);
+                break;
+            }
+        }
+    }
+}
 
 void InitNotebookTexture2D() {
     for (std::uint32_t &texture : g_notebookTextureLeft) {

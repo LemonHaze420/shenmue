@@ -1355,6 +1355,7 @@ std::string FormatCashOverlayText(std::int32_t value);
 
 bool GameMessageAnimIdle();
 
+void SetupScalingForGUI();
 std::string FormatGroupedNumber(std::int32_t value);
 
 void GameMessage_SetContent(UIGameMessageContentType type, std::int32_t value, const char *text);
@@ -2046,6 +2047,10 @@ void UI_UpdateSearchIcons();
 std::int64_t GameHud_IsSelected();
 
 std::int64_t GameHud_Tick();
+
+std::int64_t GameHud_GetContentPanel();
+
+std::int64_t GameHud_Destroy();
 
 std::int64_t GameHudWatch_IsSelected();
 

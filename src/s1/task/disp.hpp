@@ -18,6 +18,12 @@ extern std::int32_t g_numRemainLoadAttempts;
 extern std::int32_t g_is70ManBattleLoad;
 extern std::int32_t g_pickedSaveResumeKind;
 extern std::int32_t g_settingFlagsCaptured;
+extern std::int32_t g_displayCapturedDialogueMode;
+extern std::int32_t g_displayCapturedAreaJumpDisabled;
+extern std::int32_t g_displayCapturedDefaultTriggerLayout;
+extern std::int32_t g_displayCapturedWeatherMode;
+extern std::int32_t g_displayDialogueSettingsDirty;
+extern std::int32_t g_displayGameplaySettingsDirty;
 extern std::int32_t g_70ManBattleLoadBeforeSettings;
 
 std::int32_t DISP_GetTitleState() noexcept;

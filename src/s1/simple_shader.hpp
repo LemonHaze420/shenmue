@@ -8,6 +8,15 @@
 
 namespace shenmue::s1 {
 
+struct PostFxState {
+    std::int32_t enabled;
+    std::array<std::uint8_t, 0x220> parameters;
+};
+static_assert(sizeof(PostFxState) == 0x224);
+static_assert(offsetof(PostFxState, parameters) == 4);
+inline constexpr PostFxState kPostFxDefaults{.enabled = 1, .parameters = {1, 1, 0, 0, 0x3f, 0x42, 0x0f}};
+extern PostFxState g_postFxState;
+
 struct FoliageAnimationParameters {
     float bendiness;
     float maxHeight;
