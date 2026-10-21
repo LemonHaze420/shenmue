@@ -768,12 +768,13 @@ Vector3 vfComputeNearbyFighterPush(float currentX, float currentZ, float previou
             const float cross = previousZ * currentX - previousX * currentZ;
             const std::int16_t angle = static_cast<std::int16_t>(Shenmue_Atan2Fixed(cross, dot));
             const std::uint16_t rotation = static_cast<std::uint16_t>(2 * (-0x4000 - static_cast<std::int32_t>(angle)));
-            const float sine = sin_fixed16(static_cast<std::int16_t>(rotation));
-            const float cosine = sin_fixed16(fixed16_cosine_angle(rotation));
-            const float rotatedX = cosine * currentX + sine * currentZ;
-            const float rotatedZ = -sine * currentX + cosine * currentZ;
-            const float scale = penetration / std::sqrt(rotatedX * rotatedX + rotatedZ * rotatedZ);
-            return {rotatedX - currentX + scale * rotatedX, 0.0f, rotatedZ - currentZ + scale * rotatedZ};
+            workTransformMatrix = transformMatrix_prePass;
+            Matrix4x4 ::RotateAroundY_Wrapper(rotation);
+            const Vector3 rotated{(workTransformMatrix.rows[0].x * currentX + workTransformMatrix.rows[1].x * 0.0f) + workTransformMatrix.rows[2].x * currentZ,
+                (workTransformMatrix.rows[0].y * currentX + workTransformMatrix.rows[1].y * 0.0f) + workTransformMatrix.rows[2].y * currentZ,
+                (workTransformMatrix.rows[0].z * currentX + workTransformMatrix.rows[1].z * 0.0f) + workTransformMatrix.rows[2].z * currentZ};
+            const float scale = penetration / std::sqrt((rotated.y * rotated.y + rotated.x * rotated.x) + rotated.z * rotated.z);
+            return {rotated.x - currentX + scale * rotated.x, 0.0f, rotated.z - currentZ + scale * rotated.z};
         }
         const float scale = penetration / std::sqrt(currentLengthSquared);
         return {scale * currentX, 0.0f, scale * currentZ};

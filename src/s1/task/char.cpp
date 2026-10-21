@@ -954,10 +954,16 @@ FixedObjectWork *FindFixedObjectWork(Character *character) {
 }
 
 void AllocateFIXO(Character *character) {
-    if (!character || FindFixedObjectWork(character))
+    if (!character)
         return;
-    if (!AllocateHeapMemoryMODL(character, SHEN_NAME(FIXO), sizeof(FixedObjectWork), nullptr))
+    FixedObjectWork *const work = static_cast<FixedObjectWork *>(AllocateHeapMemoryMODL(character, SHEN_NAME(FIXO), sizeof(FixedObjectWork), nullptr));
+    if (!work)
         return;
+    work->attachmentPosition = {};
+    work->attachmentRotation = {};
+    work->state = 0;
+    work->flags = 0;
+    work->reserved33 = 0;
     HLib_GetCharacterComponent(character, SHEN_NAME(FIXO))->drawCallback = FIXO_Callback;
 }
 
@@ -2260,7 +2266,7 @@ bool StageGameDisplayNode(GameDisplayWork &display, std::uint32_t nodeId, const 
     GameDisplayEntry &entry = display.staged[display.stagedCount++];
     entry.position = *position;
     entry.node = node;
-    entry.nodeIdentity = static_cast<std::uint32_t>(node->nodeKind) | (static_cast<std::uint32_t>(node->nodeFlags) << 16U);
+    entry.nodeIdentity = static_cast<std::int32_t>(static_cast<std::int16_t>(node->nodeKind));
     entry.renderAlpha = renderAlpha;
     entry.basis = basis ? *basis : Vector3{1.0f, 1.0f, 1.0f};
     return true;
@@ -2321,8 +2327,18 @@ void MOTM_Callback(Character *character, void *payload) {
     if (!character || !manager)
         return;
     g_motnCubicScratch = nullptr;
-    if (const auto *const control = g_mapControlTask ? reinterpret_cast<MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr)
+    if (const MapControlData *const control = g_mapControlTask ? reinterpret_cast<MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr) {
         SCEN_PromoteCharacterIndexNode(control->scenarioTask, character);
+        const ScenarioTaskData *const scenario = control->scenarioTask ? reinterpret_cast<ScenarioTaskData *>(control->scenarioTask->task_data_ptr) : nullptr;
+        std::uint32_t characterId = 0;
+        if (scenario) {
+            const CharacterIdLookupNode *const node = scenario->characterBuckets[reinterpret_cast<std::uintptr_t>(character) % 13U];
+            if (node && node->character == character)
+                characterId = node->id;
+        }
+        std::memcpy(g_currentCharacterName, &characterId, sizeof(characterId));
+        g_currentCharacterName[4] = 0;
+    }
     const Vector3 previousRootWorld = manager->motion.rootWorldPosition;
     const Vector3 previousWorldPosition = GetPositionForEntity(character->entity.node);
     ManageMotionAnimations(character);

@@ -1,5 +1,9 @@
 #include "d3t/ui_internal.hpp"
 
+#if SHENMUE_IS_S2
+#include "s2/frame_pipeline.hpp"
+#endif
+
 #if SHENMUE_IS_S1
 #include "s1/d3t/d3t_buffer.hpp"
 #include "s1/d3t/d3t_render_handles.hpp"
@@ -71,6 +75,29 @@ std::uint32_t InitNuklearScreenTexture() {
 #endif
 
 #if SHENMUE_IS_S2
+// @verified - p
+void SetNuklearViewMatrix(const Matrix4x4 &matrix) {
+    Matrix4x4 transposed;
+    for (std::int32_t row = 0; row < 4; ++row)
+        for (std::int32_t column = 0; column < 4; ++column)
+            transposed.rows[row][column] = matrix.rows[column][row];
+    g_bOrthographicRender = false;
+    g_notebookPageMatrix = transposed;
+}
+
+// @verified - p
+d3t::D3TDeviceContext *SetupNuklearBuffer() {
+#if defined(_WIN32) || defined(SHENMUE_NULL_LIBRARY)
+    if (!g_NuklearInitialized)
+        return nullptr;
+    d3t::D3TDeviceContext *const context = d3t::DXGetPipelineContext(1);
+    SetBufferAndRectRenderFlags(context);
+    return context;
+#else
+    return nullptr;
+#endif
+}
+
 void CreateOrthographicViewMatrix(std::int32_t width, std::int32_t height, Matrix4x4 *matrix) {
     const float x = static_cast<float>(width);
     const float y = static_cast<float>(height);

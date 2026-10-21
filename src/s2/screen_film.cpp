@@ -276,6 +276,8 @@ HLib::Task *Queue_SCF_Callback_ScreenFilmTaskEntry(std::uint8_t nextFunctionInde
     ScreenFilmTaskData *const data = static_cast<ScreenFilmTaskData *>(HLib::GetTaskParameter(task));
     *data = {};
     data->name = kScreenFilmTaskName;
+    ToggleCinemaBars(0);
+    DestroyElementByIndex(UIElement::CinemaBars);
     HLib::SetupTimedTask(task, 0);
     return task;
 }

@@ -2581,15 +2581,15 @@ void vfSelectFallLandingMotion(VFActor &actor) {
     std::uint16_t animation;
     if (static_cast<std::uint16_t>(std::abs(static_cast<int>(difference)) + 0x4000) > 0x8000U) {
         if (static_cast<std::uint16_t>(actor.airAngle + 8192) > 16384U || (actor.hitStateFlags2 & 0x800U) == 0 ||
-            actor.contactCurrentPosition.y < actor.groundY + 0.8f)
+            static_cast<double>(actor.contactCurrentPosition.y) < static_cast<double>(actor.groundY) + 0.8)
             return;
         animation = 629;
     } else {
         if (static_cast<std::uint16_t>(actor.airTiltAngle + 8192) > 16384U || (actor.hitStateFlags2 & 0x800U) != 0 ||
-            actor.contactCurrentPosition.y < actor.groundY + 0.8f)
+            static_cast<double>(actor.contactCurrentPosition.y) < static_cast<double>(actor.groundY) + 0.8)
             return;
         if (actor.guardProbeWorldPosition.y >= (actor.fightStyleIndex == 6 ? 0.8f : 0.6f))
-            animation = actor.contactCurrentPosition.y <= actor.groundY + 1.7f ? 630 : 644;
+            animation = static_cast<double>(actor.contactCurrentPosition.y) <= static_cast<double>(actor.groundY) + 1.7 ? 630 : 644;
         else
             animation = 643;
     }
@@ -2597,7 +2597,7 @@ void vfSelectFallLandingMotion(VFActor &actor) {
     actor.contactCurrentPosition.x = actor.position.x;
     actor.contactCurrentPosition.z = actor.position.z;
     if (actor.moveVelocity.y > 0.0f)
-        actor.moveVelocity.y *= 0.4f;
+        actor.moveVelocity.y = static_cast<float>(static_cast<double>(actor.moveVelocity.y) * 0.4);
     actor.temporaryFacingAngle = static_cast<std::uint16_t>(actor.temporaryFacingAngle + actor.facingAngleStep);
     actor.queuedReactionEvent = 31;
     actor.knockbackAcceleration = actor.timeScale;

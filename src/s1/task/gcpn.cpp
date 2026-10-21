@@ -92,7 +92,7 @@ Character *FindScenarioCharacter(ScenarioContext *context, std::uint32_t id) {
 void GCPN_Destroy(Character *character, void *payload) {
     auto *const work = static_cast<GCPNWork *>(payload);
     character->model = nullptr;
-    character->shadowModel = nullptr;
+    character->renderOpacity = 0.0f;
     if (work->modelOwner) {
         FreePVR(work->modelOwner);
         work->modelOwner = nullptr;
@@ -102,7 +102,7 @@ void GCPN_Destroy(Character *character, void *payload) {
 float SmoothedInputDelta(float current, float target) {
     float delta = target - current;
     if (delta > 3.0f || delta < -3.0f)
-        return delta * 0.03333f;
+        return static_cast<float>(static_cast<double>(delta) * 0.03333);
     if (delta > 0.1f)
         delta = 0.1f;
     return delta >= -0.1f ? delta : -0.1f;
@@ -110,33 +110,34 @@ float SmoothedInputDelta(float current, float target) {
 
 void ApplyCamera(Character *character, GCPNWork &work) {
     const Vector3 actorPosition = character ? GetPositionForEntity(character->entity.node) : Vector3{};
-    const float horizontal = work.horizontalOffset * 0.000390625f;
-    const float vertical = work.verticalOffset * 0.000390625f;
+    const float horizontal = static_cast<float>(static_cast<double>(work.horizontalOffset) * 0.000390625);
+    const float vertical = static_cast<float>(static_cast<double>(work.verticalOffset) * 0.000390625);
 
-    const Vector3 target{
-        (actorPosition.x - work.actorPosition.x) * 0.7f + work.actorPosition.x + work.directionZ * horizontal - work.directionX * vertical,
-        (actorPosition.y - work.actorPosition.y) * 0.7f + work.actorPosition.y - vertical,
-        (actorPosition.z - work.actorPosition.z) * 0.7f + work.actorPosition.z + work.directionX * horizontal + work.directionZ * vertical,
-    };
+    const Vector3 blended{static_cast<float>(static_cast<double>(actorPosition.x - work.actorPosition.x) * 0.7 + static_cast<double>(work.actorPosition.x)),
+        static_cast<float>(static_cast<double>(actorPosition.y - work.actorPosition.y) * 0.7 + static_cast<double>(work.actorPosition.y)),
+        static_cast<float>(static_cast<double>(actorPosition.z - work.actorPosition.z) * 0.7 + static_cast<double>(work.actorPosition.z))};
+    const Vector3 target{blended.x + (work.directionZ * horizontal - work.directionX * vertical), blended.y + -vertical,
+        blended.z + (work.directionX * horizontal + work.directionZ * vertical)};
+    const float halfHorizontal = horizontal * 0.5f;
+    const float halfVertical = vertical * 0.5f;
+    const Vector3 eyeBase{(work.directionZ * halfHorizontal + work.cameraTarget.x) - work.directionX * halfVertical, -halfVertical + work.cameraTarget.y,
+        (work.directionX * halfHorizontal + work.cameraTarget.z) + work.directionZ * halfVertical};
 
+    const std::int32_t fov = static_cast<std::int32_t>((static_cast<double>(work.fovOffset) * 0.0078125 + 1.0) * 10922.0);
     work.noisePhaseX = static_cast<std::uint16_t>(work.noisePhaseX + 728U);
-    const float noiseX = ::shenmue::sin_fixed16(static_cast<std::int16_t>(work.noisePhaseX)) * 0.005f;
+    const float eyeX = static_cast<float>(static_cast<double>(::shenmue::sin_fixed16(static_cast<std::int16_t>(work.noisePhaseX))) * 0.005 + eyeBase.x);
     work.noisePhaseY = static_cast<std::uint16_t>(work.noisePhaseY + 546U);
-    const float noiseY = ::shenmue::sin_fixed16(static_cast<std::int16_t>(work.noisePhaseY)) * 0.005f;
+    const float eyeY = static_cast<float>(static_cast<double>(::shenmue::sin_fixed16(static_cast<std::int16_t>(work.noisePhaseY))) * 0.005 + eyeBase.y);
     work.noisePhaseZ = static_cast<std::uint16_t>(work.noisePhaseZ + 364U);
-    const Vector3 eye{
-        work.cameraTarget.x + work.directionZ * horizontal * 0.5f - work.directionX * vertical * 0.5f + noiseX,
-        work.cameraTarget.y - vertical * 0.5f + noiseY,
-        work.cameraTarget.z + work.directionX * horizontal * 0.5f + work.directionZ * vertical * 0.5f +
-            ::shenmue::sin_fixed16(static_cast<std::int16_t>(work.noisePhaseZ)) * 0.005f,
-    };
+    const float eyeZ = static_cast<float>(static_cast<double>(::shenmue::sin_fixed16(static_cast<std::int16_t>(work.noisePhaseZ))) * 0.005 + eyeBase.z);
+    const Vector3 eye{eyeX, eyeY, eyeZ};
 
     TranslateCameraRelative(eye);
     if (!bLockCamera) {
         g_CameraTargetPos = target;
         shenApplyTranslationToAll(g_cameraTargetNode, target);
     }
-    const auto fov = static_cast<std::int32_t>((work.fovOffset * 0.0078125f + 1.0f) * 10922.0f);
+
     CAME_SetFieldOfView(fov);
 }
 

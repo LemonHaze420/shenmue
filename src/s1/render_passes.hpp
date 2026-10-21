@@ -118,6 +118,8 @@ static_assert(sizeof(EffeParticleVertex) == 0x1c);
 static_assert(offsetof(EffeParticleVertex, diffuse) == 0x10);
 static_assert(offsetof(EffeParticleVertex, u) == 0x14);
 
+extern std::int32_t g_numberOfPolys;
+void PublishEffeParticleDrawCount(std::uint32_t particleCount);
 EffeParticleVertex *MapEffeParticleVertices(D3TDeviceContext *context, std::uint32_t particleCount);
 std::uint32_t CommitEffeParticleVertices(
     D3TDeviceContext *context, std::uint32_t particleCount, std::uint32_t texture2D, bool transparent, const EffeMaterialWords *material = nullptr);

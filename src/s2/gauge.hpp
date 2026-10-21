@@ -43,6 +43,7 @@ std::int32_t GetFightGaugeDisplayLayout() noexcept;
 void SetFightGaugeDisplayLayout(std::int32_t layout) noexcept;
 void SetPlayerEnemyPercents(float player, float enemy) noexcept;
 d3t::UIGaugeState *SetFightGaugePercentSingle(float percent) noexcept;
+void SetFightGaugeSecondaryOverlay(std::int32_t enabled) noexcept;
 void SetFightGaugePrimaryUniform(std::int32_t uniform) noexcept;
 void SetFightGaugePrimaryVisuals(std::int32_t uniform, float alpha) noexcept;
 void FillFightGaugeSecondaryOrbStates(std::int32_t colour) noexcept;

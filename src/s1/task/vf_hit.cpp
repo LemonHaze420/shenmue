@@ -97,7 +97,7 @@ float VFCL_CalculateGuardKnockbackFactor(std::uint8_t fighterId) {
         return 0.0f;
     const float value = static_cast<float>(VF_GetAnimSetValue(fighterId));
     if (value < threshold)
-        return lowValue * value / threshold;
+        return (lowValue / threshold) * value;
     if (value < 100.0f)
         return ((60.0f - lowValue) / (100.0f - threshold)) * (value - threshold) + lowValue;
     return 60.0f;

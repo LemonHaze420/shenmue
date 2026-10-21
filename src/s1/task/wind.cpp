@@ -68,7 +68,11 @@ void WIND_UpdateEntry(void *entryPointer) {
     if (entry.callback) {
         entry.callback(&entry, 0, entry.callbackContext);
     }
-    if (!entry.surfaceHandleSlot || !*entry.surfaceHandleSlot || !**entry.surfaceHandleSlot) {
+    if (!entry.surfaceHandleSlot || !*entry.surfaceHandleSlot
+#if !SHENMUE_IS_PC
+        || !**entry.surfaceHandleSlot
+#endif
+    ) {
         return;
     }
 
@@ -720,7 +724,11 @@ void WIND_DrawGlyphs(void *entryPointer, std::int64_t, std::int32_t skippedState
                 glyphCode = static_cast<std::uint16_t>(glyph[0] | 0x0100U);
             }
             const std::int32_t position = columnOffset + 2 * processed;
+#if SHENMUE_IS_PC
+            stampGlyph(entry, glyphCode, static_cast<std::int16_t>(position % 92), static_cast<std::int16_t>(previousIndex % 2));
+#else
             stampGlyph(entry, glyphCode, static_cast<std::int16_t>(position / 92), static_cast<std::int16_t>(previousIndex % 2));
+#endif
         }
         processed += step;
         control += step;

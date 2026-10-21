@@ -442,6 +442,8 @@ void TMEX_Callback(HLib::TaskData *taskData) {
             if (LoadRyoWatch() && TMEX_Process()) {
                 CaptureTMEXPresentation();
                 g_TMEX_lifecycleState = TMEXLifecycleState::Active;
+            } else {
+                g_TMEX_lifecycleState = TMEXLifecycleState::DestroyRequested;
             }
             break;
         case TMEXLifecycleState::Active:

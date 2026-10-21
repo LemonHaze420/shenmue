@@ -1,9 +1,46 @@
 #pragma once
 #include "s1/ui_runtime.hpp"
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 namespace shenmue::s1::ui_runtime_detail {
+
+struct ActionSelectorLegacySprite {
+    float x;
+    float y;
+    float scaleX;
+    float scaleY;
+    float depth;
+    std::uint16_t zeroWord;
+    std::uint16_t reserved16;
+    std::uint32_t zeroDword;
+    std::int16_t surface;
+    std::uint16_t width;
+    std::uint16_t height;
+    std::uint8_t mode;
+    std::uint8_t reserved23;
+};
+
+static_assert(sizeof(ActionSelectorLegacySprite) == 0x24);
+static_assert(offsetof(ActionSelectorLegacySprite, surface) == 0x1c);
+static_assert(offsetof(ActionSelectorLegacySprite, mode) == 0x22);
+
+inline constexpr std::array<Vector2, 4> kActionSelectorLegacyChoiceOffsets{{{0.0f, -36.0f}, {-62.0f, 0.0f}, {0.0f, 36.0f}, {62.0f, 0.0f}}};
+inline constexpr std::array<float, 4> kActionSelectorLegacyLabelDepths{5.0f, 5.0f, 6.0f, 6.0f};
+inline constexpr std::array<float, 4> kActionSelectorLegacyIconDepths{2.0f, 3.0f, 2.0f, 4.0f};
+inline constexpr std::array<const char *, 2> kActionSelectorBinaryLabelIds{"YES", "NO"};
+inline constexpr std::int16_t kActionSelectorLegacyIconSurface = 262;
+inline constexpr std::uint32_t kActionSelectorSurfaceFailureSound = 0x20aabU;
+
+extern std::array<ActionSelectorLegacySprite, 4> g_actionSelectorLegacyLabelSprites;
+extern std::array<ActionSelectorLegacySprite, 4> g_actionSelectorLegacyIconSprites;
+extern std::int16_t g_actionSelectorHighlightedChoiceIndex;
+
+void ActionSelector_BuildChoiceSurfaces();
+void ActionSelector_CreateChoiceSurface(std::int8_t choice);
+void ActionSelector_FreeChoiceSurfaces();
+void ActionSelector_ResolveChoice();
 
 struct ActionSelectorOwner {
     UIActionSelectorRequest request{-1, -1, -1, -1, 600, -1, 0};
@@ -35,8 +72,6 @@ struct ActionSelectorOwner {
 
     std::int32_t useValueLabels{};
 };
-
-
 
 struct ActionSelectorChoiceUISlot {
     UIButtonIconWidget *slotUi;

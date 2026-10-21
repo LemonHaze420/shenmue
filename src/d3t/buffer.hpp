@@ -94,6 +94,8 @@ static_assert(sizeof(D3TDeviceContext) == 0xdf8);
 
 void *GetD3DDeviceContext(void *renderer);
 
+void SetRenderTargets(D3TDeviceContext *context, const std::array<std::byte, 0x84> &targets);
+void SetRenderViewport(D3TDeviceContext *context, const std::array<float, 6> &viewport);
 namespace DX11 {
 
 extern D3TDeviceContext *g_ppD3DDeviceContext;

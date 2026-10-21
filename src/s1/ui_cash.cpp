@@ -1,5 +1,6 @@
 #include "s1/ui_internal.hpp"
 
+#include "s1/task/telm.hpp"
 namespace shenmue::s1::ui_runtime_detail {
 
 std::string FormatCashOverlayText(std::int32_t value) {
@@ -117,9 +118,16 @@ void UI_ICMoCallback(HLib::TaskData *) {
         icon.iconFlags |= 0x1000U;
         cash.value = cash.useCash ? g_playerStats.cash : static_cast<std::int32_t>(g_playerStats.segaCoins);
         cash.state = UICashOverlayState::WaitOpenAnimation;
-        g_isPlayerGameStateActive = 5;
-        if (cash.displayMode != UICashOverlayDisplayMode::ManualCurrentBalance)
-            CapturePad(icon.input, icon.previousInput);
+
+        if (cash.displayMode == UICashOverlayDisplayMode::ManualCurrentBalance) {
+            g_isPlayerGameStateActive = 5;
+        } else {
+            g_telmIsActive = 0;
+            ForEachCewpEntityApplyCallback(0, telmGetIsActive);
+            g_isPlayerGameStateActive = 5;
+            if (!g_telmIsActive)
+                CapturePad(icon.input, icon.previousInput);
+        }
         cash.selectedValue = 0;
         cash.elapsedFrames = 0;
         cash.resetRequested = false;
@@ -216,8 +224,14 @@ void UI_ICMoCallback(HLib::TaskData *) {
         cash.state = UICashOverlayState::Idle;
         if (cash.displayMode == UICashOverlayDisplayMode::ManualCurrentBalance)
             g_isPlayerGameStateActive = 7;
-        else
-            iconUpdateInputBuffer();
+        else {
+            g_telmIsActive = 0;
+            ForEachCewpEntityApplyCallback(0, telmGetIsActive);
+            if (g_telmIsActive)
+                g_isPlayerGameStateActive = 7;
+            else
+                iconUpdateInputBuffer();
+        }
         icon.overlayMode = 0;
         cash.balanceAnimating = false;
         cash.useCash = true;

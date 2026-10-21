@@ -3226,8 +3226,8 @@ const char *UI_Elements_Init() {
     g_uiElements[kUiActionSelector].tick = ActionSelector_Tick;
     g_uiElements[kUiActionSelector].isSelected = ActionSelector_IsSelected;
     g_uiElements[kUiActionSelector].isPressed = ActionSelector_IsPressed;
+    g_uiElements[kUiActionSelector].unknown28 = ActionSelector_IsPressed;
     g_uiElements[kUiActionSelector].getSearchType = ActionSelector_GetPromptIconSet;
-
 
     UIBaseRuntime &gameTraining = g_uiElements[kUiGameTraining];
     gameTraining.reloadUI = GameTraining_ReloadLegacyUI;

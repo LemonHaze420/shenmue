@@ -130,13 +130,12 @@ bool AttachCharacterAlphaComponent(Character *character) {
     if (!character)
         return false;
     constexpr shen_name token{SHEN_NAME(CPAM)};
-    if (FindModelComponent(character, token))
-        return true;
+    modelSetCharaAlpha(character, 0.0f);
     CharacterAlphaState *const state =
         static_cast<CharacterAlphaState *>(AllocateModelComponent(character, token, sizeof(CharacterAlphaState), UpdateCharacterAlpha));
     if (!state)
         return false;
-    modelSetCharaAlpha(character, 0.0f);
+
     state->alphaSteps = -1;
     state->frameCount = 0;
     return true;

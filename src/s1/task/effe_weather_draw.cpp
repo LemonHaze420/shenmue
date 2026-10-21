@@ -166,8 +166,10 @@ void ApplyWeatherRecordCallbacks(const WeatherDrawGroup &group) {
 
 void SubmitWeatherParticleGroup(
     D3TDeviceContext *context, const WeatherDrawGroup &group, const EffeMaterialWords &groupMaterial, const std::uint32_t &groupTextureHandle) {
+    SetRenderPass((group.flags & 0x40000000U) != 0U ? 1 : 0, 5);
     if ((group.flags & 0x20000000U) != 0) {
         ApplyWeatherRecordCallbacks(group);
+        SetRenderAndAlphaFlags_0();
         return;
     }
     using WeatherConstructor = std::uint32_t (*)(D3TDeviceContext *, const WeatherDrawGroup &);
@@ -175,13 +177,20 @@ void SubmitWeatherParticleGroup(
     constexpr std::array<WeatherConstructor, 8> kConstructors{nullptr, ConstructAndCommitVertsForDrawing_0, nullptr, ConstructAndCommitVertsForDrawing_2,
         nullptr, nullptr, ConstructAndCommitVertsForDrawing_1, ConstructAndCommitVertsForDrawing_1};
     const WeatherConstructor constructor = kConstructors[(group.flags >> 25U) & 7U];
-    if (!constructor)
-        return;
+
     const EffeMaterialWords material = groupMaterial;
     const std::uint32_t handle = groupTextureHandle;
+    const std::uint32_t words[4]{material.texture, material.render, material.alpha, handle};
+    CreateAlphaTextureForParticleEffects(words);
+    if (!constructor) {
+        EFFE_NoOpParticle(nullptr);
+        SetRenderAndAlphaFlags_0();
+        return;
+    }
     const std::uint32_t texture = (material.texture & 8U) != 0 && handle ? handle : d3t::g_defaultWhiteTexture;
     const std::uint32_t polys = constructor(context, group);
     const std::uint32_t submitted = CommitEffeParticleVertices(context, polys, texture, (group.flags & 0x40000000U) != 0, &material);
+    SetRenderAndAlphaFlags_0();
     g_effeSubmittedParticleCount += submitted;
     if (submitted)
         ++g_effeSubmittedParticleSystems;

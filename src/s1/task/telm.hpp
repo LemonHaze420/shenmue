@@ -244,7 +244,6 @@ void TELM_SetTargetTaskAndMode(TelephoneWork *phone, std::uint32_t ownerId, std:
 void TELM_LoadHandMotionAndSetup(TelephoneWork *phone, std::uint32_t ownerId);
 bool telmGetIsActive(Character *character);
 void Script_TELMUtils(ScenarioContext *context, void *rawParams);
-std::int32_t AllocSPLI(float *coefficients, std::int32_t keyCount, const float *times, const float *values, const float *slopes);
 std::int32_t Sequence_ReadFCVKey(FcvSplineReader *reader, float time, float *output);
 
 } // namespace shenmue::s1

@@ -257,6 +257,7 @@ void GameTraining_Render() {
         slot.current[0] = 0.0f;
         slot.end[0] = 1.0f;
         slot.delay = 0.0f;
+        slot.elapsed = 0.0f;
         slot.duration = 0.5f;
         slot.reserved40 = -1;
     }

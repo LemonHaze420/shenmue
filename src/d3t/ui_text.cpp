@@ -2,6 +2,7 @@
 
 #include "d3t/ui_runtime.hpp"
 #if SHENMUE_IS_S1
+#include "s1/ui_internal.hpp"
 #include "s1/d3t/d3t_content.hpp"
 #include "s1/d3t/d3t_texture.hpp"
 #include "s1/d3t/d3t_threads.hpp"
@@ -409,6 +410,12 @@ std::int32_t ResolveButtonIconGlyph(std::int32_t action, std::int32_t controlMet
 
 #if SHENMUE_IS_S2
 // @verified - p
+void UI_SetFontScale(float scale) {
+    g_uiFontScale = scale;
+    UI_SelectFont();
+}
+
+// @verified - p
 void UI_SetFontFamily(std::uint32_t family) {
     if (static_cast<std::uint32_t>(g_uiFontFace) != family && family < 4U) {
         g_uiFontFace = static_cast<std::int32_t>(family);
@@ -519,6 +526,11 @@ void LoadUIFontLanguage(std::int32_t language) {
         d3t::ProcessRemappings();
 #if SHENMUE_IS_S1
     d3t::d3t_ReleaseRenderHandle(handle);
+    if (g_uiElements[kUiSubMenuOptions].isVisible) {
+        if (g_uiElements[kUiMainMenu].isVisible)
+            ui_runtime_detail::MainMenu_UpdateTitle();
+        ui_runtime_detail::Options_RedescribeOption();
+    }
 #else
     d3t::d3t_CloseRenderHandle(handle);
     UpdateCollectionMapLanguage(language);

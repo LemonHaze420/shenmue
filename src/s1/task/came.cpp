@@ -219,6 +219,7 @@ Vector3 currentRelativeZoomCameraTranslation{};
 float g_cameraNearClip = 0.03f;
 std::uint32_t g_cameraStateFlags = 0;
 std::int32_t g_previousAuthorState = 0;
+std::int32_t g_cameraAuthorStateSnapshot = 0;
 std::int32_t g_hazukiResidenceGatedFlag = 1;
 std::int32_t g_temporaryGameState = 0;
 std::uint8_t g_bHasSetupAutoExposure = 0;
@@ -1338,7 +1339,7 @@ void ResetCameraControlTaskState() {
     g_cameraStateFlags &= ~CF_LookAroundMask;
     GCameraSettings2.dampingOwner = nullptr;
     g_NeedsReinit = 0;
-    g_previousAuthorState = -1;
+    g_cameraAuthorStateSnapshot = -1;
     if (Character *const ryo = CurrentRyo())
         ryo->renderOpacity = 1.0f;
 }
@@ -1347,7 +1348,7 @@ bool InitializeCameraAuthorControlState() {
     if (Character *const ryo = CurrentRyo())
         ryo->renderOpacity = 1.0f;
     g_cameraStateFlags &= ~CF_LookAroundMask;
-    g_previousAuthorState = g_nAuthorState;
+    g_cameraAuthorStateSnapshot = g_nAuthorState;
     g_cam_target_orbit_state.interpolationEnabled = 1;
     g_cam_target_orbit_state.orbit.x = 0.0f;
     g_cam_target_orbit_state.orbit.y = 0.0f;
@@ -1394,7 +1395,7 @@ bool GetHasAuthorState() {
 
     if (!g_NeedsReinit)
         return InitializeCameraAuthorControlState();
-    if (g_previousAuthorState == g_nAuthorState)
+    if (g_cameraAuthorStateSnapshot == g_nAuthorState)
         return true;
     ResetCameraControlTaskState();
     return false;
@@ -2740,14 +2741,14 @@ void ResolveCameraEyeCollision(Vector3 &position, const Vector3 &previousEye) {
     Vector3 direction{position.x - previousEye.x, position.y - previousEye.y, position.z - previousEye.z};
     const float length = std::sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
     if (length > 0.0F) {
-        const float inverse = 1.0F / length;
+        const float inverse = static_cast<float>(1.0 / static_cast<double>(length));
         direction.x *= inverse;
         direction.y *= inverse;
         direction.z *= inverse;
     }
-    const float halfZDelta = (position.z - previousEye.z) * 0.5F;
-    const float zStep = direction.z * halfZDelta;
-    const float xStep = direction.x * halfZDelta;
+    const double halfLength = static_cast<double>(length) * 0.5;
+    const float zStep = static_cast<float>(static_cast<double>(direction.z) * halfLength);
+    const float xStep = static_cast<float>(static_cast<double>(direction.x) * halfLength);
     Vector3 pointB{};
     Vector3 pointC{};
     bool foundRoute = false;

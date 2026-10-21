@@ -414,6 +414,7 @@ extern float g_cameraNearClip;
 
 extern std::uint32_t g_cameraStateFlags;
 extern std::int32_t g_previousAuthorState;
+extern std::int32_t g_cameraAuthorStateSnapshot;
 extern std::int32_t g_hazukiResidenceGatedFlag;
 extern std::int32_t g_temporaryGameState;
 

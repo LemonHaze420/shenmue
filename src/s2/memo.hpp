@@ -10,6 +10,12 @@ namespace shenmue::s2 {
 enum class CameraState : std::int32_t;
 
 // MemoPageState is never rebound to the save buffer.
+inline constexpr float MEMO_PAGE_WIDTH = 512.0f, MEMO_PAGE_HEIGHT = 512.0f;
+inline constexpr std::array<float, 2> MEMO_TEXT_FIRST_Y{54.0f, 72.0f}, MEMO_TEXT_LINE_SPACING{1300.0f, 1114.0f}, MEMO_TEXT_FONT_SCALE{1.0f, 0.9f};
+inline constexpr std::array<std::int32_t, 5> MEMO_TITLE_PIECES{1, 1, 1, 1, 2};
+inline constexpr std::uint32_t MEMO_TEXT_COLOUR = 0xff081219U, MEMO_TITLE_COLOUR = 0xff0f2878U;
+inline constexpr std::array<const char *, 3> MEMO_TITLE_PATHS{
+    "/ui/notebookpages/NotebookTitleTop.tga", "/ui/notebookpages/NotebookTitleVertical.tga", "/ui/notebookpages/NotebookTitleBot.tga"};
 struct MemoPageState {
     std::int16_t selectedPage;
     std::int16_t latestPage;

@@ -604,6 +604,7 @@ void CPAM_SetEnabled(Character *character, bool enabled);
 
 
 void Script_motmGetCharaFlags(ScenarioContext *context, void *rawParams);
+std::int64_t ForEachCewpEntityApplyCallback(std::int64_t parameter, bool (*callback)(Character *));
 void Script_CewpFind(ScenarioContext *context, void *rawParams);
 void Script_SetCCOW_Flags(ScenarioContext *context, void *rawParams);
 void Script_ccowUnknown(ScenarioContext *context, void *rawParams);

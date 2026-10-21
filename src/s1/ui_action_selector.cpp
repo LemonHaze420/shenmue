@@ -2,8 +2,92 @@
 
 namespace shenmue::s1::ui_runtime_detail {
 
+std::array<ActionSelectorLegacySprite, 4> g_actionSelectorLegacyLabelSprites{};
+std::array<ActionSelectorLegacySprite, 4> g_actionSelectorLegacyIconSprites{};
+std::int16_t g_actionSelectorHighlightedChoiceIndex{};
+void ActionSelector_CreateChoiceSurface(std::int8_t choice) {
+    ActionSelectorOwner &selector = g_actionSelectorPresentation;
+    const std::array<std::int16_t, 4> stored{selector.request.up, selector.request.left, selector.request.down, selector.request.right};
+    const std::uint16_t token = static_cast<std::uint16_t>(stored[static_cast<std::size_t>(choice)]);
 
+    const char *const id = static_cast<std::int16_t>(selector.request.mode) < 3 ? kActionSelectorStringIds[token] : kActionSelectorBinaryLabelIds[token];
 
+    const char *const text = InitAndRetrieveStringFromID(id);
+    ActionSelectorLegacySprite &sprite = g_actionSelectorLegacyLabelSprites[static_cast<std::size_t>(choice)];
+    sprite.surface = AllocatePVRSurface(text ? text : "ERROR", 256, 0xffff, 0xf000, 0, true);
+    sprite.width = 256;
+    if (sprite.surface == -1)
+        shenExecuteAICACommand(kActionSelectorSurfaceFailureSound, 0, 0);
+}
+
+// A choice shows or hides: its button and label take full or no alpha, its brace shows or not.
+void ActionSelector_BuildChoiceSurfaces() {
+    const ActionSelectorOwner &selector = g_actionSelectorPresentation;
+    const std::array<std::int16_t, 4> stored{selector.request.up, selector.request.left, selector.request.down, selector.request.right};
+    for (std::size_t index = 0; index < stored.size(); ++index) {
+        if (stored[index] == -1)
+            g_actionSelectorLegacyLabelSprites[index].surface = -1;
+        else
+            ActionSelector_CreateChoiceSurface(static_cast<std::int8_t>(index));
+    }
+}
+
+void ActionSelector_FreeChoiceSurfaces() {
+    for (ActionSelectorLegacySprite &sprite : g_actionSelectorLegacyLabelSprites) {
+        if (sprite.surface != -1)
+            PVR_FreeAllocatedSurfaceByIndex(sprite.surface);
+        sprite.surface = -1;
+    }
+}
+void ActionSelector_ResolveChoice() {
+    ActionSelectorOwner &selector = g_actionSelectorPresentation;
+    TryInvokeRegisteredCallback(kUiActionSelector);
+    const std::int32_t currentUiState = g_currUIState;
+    const std::uint8_t code = static_cast<std::uint8_t>(g_actionSelectorInputCode);
+    g_actionSelectorInputCode = 13;
+    if ((code == 2 || code == 9) && (currentUiState == -1 || currentUiState == static_cast<std::int32_t>(kQteMinigameUiElement))) {
+        UIBaseRuntime &qte = g_uiElements[kQteMinigameUiElement];
+        if (!qte.isVisible || !qte.destroy || qte.destroy() == 1 || g_busy_reset == 1)
+            qte.isVisible = 0;
+    }
+    const std::array<std::int16_t, 4> stored{selector.request.up, selector.request.left, selector.request.down, selector.request.right};
+    constexpr std::array<std::int8_t, 4> kDisplayChoice{0, 1, 3, 2};
+    bool countTimeout = code == 13;
+    if ((code & 0xf9) == 0) {
+        const std::uint8_t index = kActionSelectorChoiceByInputCode[static_cast<std::size_t>(code)];
+        if (stored[index] == -1) {
+            countTimeout = true;
+        } else {
+            g_actionSelectorHighlightedChoiceIndex = static_cast<std::int16_t>(index);
+            g_actionSelectorLegacyIconSprites[index].depth = 6.0f;
+            g_actionSelectorLegacyLabelSprites[index].depth = 7.0f;
+            selector.selectedChoice = kDisplayChoice[index];
+            selector.selectedHelpToken = stored[index];
+            selector.state = UIActionSelectorState::SelectionCommitted;
+        }
+    } else if (code == 9 && (selector.request.mode == 2 || selector.request.mode == 5)) {
+        selector.selectedChoice = -1;
+        selector.selectedHelpToken = -1;
+        selector.state = UIActionSelectorState::SelectionCommitted;
+    }
+    if (countTimeout && ++selector.elapsedFrames >= static_cast<std::int16_t>(selector.request.timeoutFrames)) {
+        selector.state = UIActionSelectorState::SelectionCommitted;
+        if (selector.request.timeoutHelpToken == -1) {
+            selector.selectedHelpToken = -1;
+        } else {
+            for (std::size_t index = 0; index < stored.size(); ++index) {
+                if (stored[index] == selector.request.timeoutHelpToken) {
+                    g_actionSelectorHighlightedChoiceIndex = static_cast<std::int16_t>(index);
+                    g_actionSelectorLegacyIconSprites[index].depth = 6.0f;
+                    g_actionSelectorLegacyLabelSprites[index].depth = 7.0f;
+                    selector.selectedChoice = kDisplayChoice[index];
+                    selector.selectedHelpToken = selector.request.timeoutHelpToken;
+                    break;
+                }
+            }
+        }
+    }
+}
 
 void ActionSelectorSetSelectedChoice(std::int32_t choice) {
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
@@ -18,7 +102,7 @@ void ActionSelectorSetSelectedChoice(std::int32_t choice) {
     selector.hasSelectedChoice = true;
     UIAnimConfigureSelectedChoice(g_actionSelectorElement.selectedChoiceAnimSlot);
     PlayGatedUiSound(g_uiNavigateSoundFrame, kUiNavigateSound);
-    }
+}
 
 const char *ActionSelectorLocalizedToken(std::int32_t token) {
     if (token < 0 || static_cast<std::size_t>(token) >= kActionSelectorStringIds.size()) {
@@ -42,8 +126,6 @@ void ActionSelector_ShowChoice(ActionSelectorChoiceUISlot &slot, bool shown) {
         slot.labelUi->colour = (slot.labelUi->colour & 0x00ffffffU) | alpha;
 }
 
-
-
 void ActionSelectorSetChoiceLabelsFromTokenIds(const std::array<std::int32_t, 4> &tokens) {
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
     selector.helpDetailsIndex = -1;
@@ -60,11 +142,8 @@ void ActionSelectorSetChoiceLabelsFromTokenIds(const std::array<std::int32_t, 4>
     selector.labelsDirty = false;
 }
 
-
-
-
 void ActionSelectorSetValueChoiceLabels(std::int32_t maximumValue) {
-    constexpr std::array<std::int32_t, 4> kValueTokens{75, 100, -100, 74};
+    constexpr std ::array<std::int32_t, 4> kValueTokens{75, 100, -100, 74};
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
     selector.helpDetailsIndex = -1;
     selector.simulatedDirectionInput = 0;
@@ -444,6 +523,7 @@ bool UI_ICSpPeekSelectedChoiceIndex(std::int32_t &choiceIndex) {
 
 void UI_ICSpCancel() {
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
+
     if (selector.state == UIActionSelectorState::Idle)
         return;
     selector.selectedHelpToken = -1;
@@ -455,27 +535,48 @@ void UI_ICSpCallback(HLib::TaskData *) {
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
     selector = {};
     selector.request = {-1, -1, -1, -1, 600, -1, 0};
-    selector.state = UIActionSelectorState::Idle;
+    selector.state = UIActionSelectorState ::Idle;
     selector.selectedHelpToken = -1;
     selector.selectedChoice = -1;
     selector.panelStartX = -176.0f;
     selector.panelTargetX = 144.0f;
     selector.panelX = -176.0f;
     selector.panelVelocity = 1.0f;
+    g_actionSelectorHighlightedChoiceIndex = 4;
+    for (std::size_t index = 0; index < g_actionSelectorLegacyLabelSprites.size(); ++index) {
+        ActionSelectorLegacySprite &label = g_actionSelectorLegacyLabelSprites[index];
+        ActionSelectorLegacySprite &icon = g_actionSelectorLegacyIconSprites[index];
+        const Vector2 &offset = kActionSelectorLegacyChoiceOffsets[index];
+        label.x = icon.x = offset.x - 176.0f;
+        label.y = icon.y = offset.y + 91.0f;
+        label.scaleX = label.scaleY = icon.scaleX = icon.scaleY = 1.0f;
+        label.depth = kActionSelectorLegacyLabelDepths[index];
+        icon.depth = kActionSelectorLegacyIconDepths[index];
+        label.zeroWord = icon.zeroWord = 0;
+        label.zeroDword = icon.zeroDword = 0;
+        label.surface = -1;
+        icon.surface = kActionSelectorLegacyIconSurface;
+        label.width = icon.width = 128;
+        label.height = 32;
+        icon.height = 64;
+        label.mode = icon.mode = 5;
+    }
     g_iconPresentation.actionSelectorTask = CurrentTask;
     InstallOwnedTaskMain(UI_ICSpMainCallback);
 }
 
-void UI_ICSpMainCallback(HLib::TaskData *) {
+void UI_ICSpMainCallback(HLib ::TaskData *) {
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
     IconPresentationOwner &icon = g_iconPresentation;
     switch (selector.state) {
-    case UIActionSelectorState::Idle:
+    case UIActionSelectorState ::Idle:
         if (!selector.openRequested)
             break;
-        selector.state = UIActionSelectorState::Opening;
+        selector.state = UIActionSelectorState ::Opening;
         g_isPlayerGameStateActive = 4;
         CapturePad(icon.input, icon.previousInput);
+        ActionSelector_BuildChoiceSurfaces();
+
         selector.hasSelectedChoice = false;
         selector.valueModeActive = false;
         icon.iconFlags |= 0x400U;
@@ -504,56 +605,21 @@ void UI_ICSpMainCallback(HLib::TaskData *) {
             selector.panelX = selector.panelTargetX;
             selector.state = UIActionSelectorState::Active;
         }
-        break;
-    }
-    case UIActionSelectorState::Active: {
-        if (icon.overlayMode != 10)
-            break;
-        // ActionSelector_ResolveChoice.
-        const std::uint8_t code = static_cast<std::uint8_t>(g_actionSelectorInputCode);
-        g_actionSelectorInputCode = 13;
-        if ((code == 2 || code == 9) && (g_currUIState == -1 || g_currUIState == static_cast<std::int32_t>(kQteMinigameUiElement))) {
-            UIBaseRuntime &qte = g_uiElements[kQteMinigameUiElement];
-            if (!qte.isVisible || !qte.destroy || qte.destroy() == 1 || g_busy_reset == 1)
-                qte.isVisible = 0;
-        }
-        const std::array<std::int16_t, 4> stored{selector.request.up, selector.request.left, selector.request.down, selector.request.right};
-        constexpr std::array<std::int8_t, 4> kDisplayChoice{0, 1, 3, 2};
-        bool countTimeout = code == 13;
-        if ((code & 0xf9) == 0) {
-            const std::uint8_t index = kActionSelectorChoiceByInputCode[static_cast<std::size_t>(code)];
-            if (stored[index] == -1) {
-                countTimeout = true;
-            } else {
-                selector.selectedChoice = kDisplayChoice[index];
-                selector.selectedHelpToken = stored[index];
-                selector.state = UIActionSelectorState::SelectionCommitted;
-            }
-        } else if (code == 9 && (selector.request.mode == 2 || selector.request.mode == 5)) {
-            selector.selectedChoice = -1;
-            selector.selectedHelpToken = -1;
-            selector.state = UIActionSelectorState::SelectionCommitted;
-        }
-        if (countTimeout && ++selector.elapsedFrames >= static_cast<std::int16_t>(selector.request.timeoutFrames)) {
-            selector.state = UIActionSelectorState::SelectionCommitted;
-            if (selector.request.timeoutHelpToken == -1) {
-                selector.selectedHelpToken = -1;
-            } else {
-                for (std::size_t index = 0; index < stored.size(); ++index) {
-                    if (stored[index] == selector.request.timeoutHelpToken) {
-                        selector.selectedChoice = kDisplayChoice[index];
-                        selector.selectedHelpToken = selector.request.timeoutHelpToken;
                         break;
                     }
-                }
-            }
-        }
-        break;
-    }
+                    case UIActionSelectorState::Active: {
+                        if (icon.overlayMode != 10)
+                            break;
+                        ActionSelector_ResolveChoice();
+                        break;
+                    }
     case UIActionSelectorState::SelectionCommitted:
-        selector.resetRequested = true;
-        if (ResetOwnedElement(kUiActionSelector))
+
+        if (g_actionSelectorHighlightedChoiceIndex == 4) {
             selector.state = UIActionSelectorState::Closing;
+            selector.resetRequested = true;
+            ResetOwnedElement(kUiActionSelector);
+        }
         break;
     case UIActionSelectorState::Closing: {
         const std::int32_t highlight = g_actionSelectorElement.highlightAnimSlot;
@@ -572,6 +638,7 @@ void UI_ICSpMainCallback(HLib::TaskData *) {
         iconUpdateInputBuffer();
         icon.iconFlags &= static_cast<std::uint16_t>(~0x400U);
         icon.overlayMode = 0;
+        ActionSelector_FreeChoiceSurfaces();
         g_previousHelpTokenId = g_currentHelpTokenId;
         selector.openRequested = false;
         g_currentHelpIconState = 0;
@@ -589,8 +656,24 @@ void UI_ICSpMainCallback(HLib::TaskData *) {
     case UIActionSelectorState::OpenRequested:
         break;
     }
-    if ((icon.iconFlags & 0x400U) != 0)
+    if ((icon.iconFlags & 0x400U) != 0) {
+        if (g_actionSelectorHighlightedChoiceIndex != 4) {
+            const std::size_t index = static_cast<std::size_t>(g_actionSelectorHighlightedChoiceIndex);
+            ActionSelectorLegacySprite &label = g_actionSelectorLegacyLabelSprites[index];
+            ActionSelectorLegacySprite &choiceIcon = g_actionSelectorLegacyIconSprites[index];
+            label.scaleX += 0.25f;
+            label.scaleY += 0.25f;
+            choiceIcon.scaleX += 0.25f;
+            choiceIcon.scaleY += 0.25f;
+            if (label.scaleX >= 2.0f) {
+                label.scaleX = label.scaleY = choiceIcon.scaleX = choiceIcon.scaleY = 1.0f;
+                label.depth = kActionSelectorLegacyLabelDepths[index];
+                choiceIcon.depth = kActionSelectorLegacyIconDepths[index];
+                g_actionSelectorHighlightedChoiceIndex = 4;
+            }
+        }
         g_uiElements[kUiActionSelector].isActive = 1;
-}
+    }
 
+} // namespace shenmue::s1
 } // namespace shenmue::s1

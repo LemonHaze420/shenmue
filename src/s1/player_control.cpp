@@ -1274,7 +1274,7 @@ std::int32_t navUpdateYawSnapAndResolveFacing(std::int32_t baseYaw) {
     g_navLastEntityPosition = last;
     g_navRadiusAdd = 0.5F;
     g_navLastZ = g_playerNavigationPosition.z;
-    g_navTemporaryProbeYaw += (g_navSnapYawAngle + baseYaw - g_navTemporaryProbeYaw) / 2;
+    g_navTemporaryProbeYaw += static_cast<std::int16_t>(g_navSnapYawAngle + baseYaw - g_navTemporaryProbeYaw) / 2;
     const std::int32_t probe = g_navTemporaryProbeYaw;
     g_playerMotion->motionFlags &= ~kMotionUnknown8;
     const bool inside = navFindActiveRegionForPlayer();

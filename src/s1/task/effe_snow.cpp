@@ -47,10 +47,14 @@ void UpdateGeneratedSnowParticleNative(RainParticleNative *particle, WeatherNode
     particle->position.x += deltaX;
     particle->position.y += deltaY;
     particle->position.z += deltaZ;
-    if (particle->position.x > data->bounds.maximumX)
+    if (particle->position.x > data->bounds.maximumX) {
         particle->position.x -= data->bounds.dimensionX;
-    else if (particle->position.x < data->bounds.minimumX)
+        return;
+    }
+    if (particle->position.x < data->bounds.minimumX) {
         particle->position.x += data->bounds.dimensionX;
+        return;
+    }
     if (particle->position.z > data->bounds.maximumZ)
         particle->position.z -= data->bounds.dimensionZ;
     else if (particle->position.z < data->bounds.minimumZ)

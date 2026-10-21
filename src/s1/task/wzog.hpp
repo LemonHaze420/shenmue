@@ -3,6 +3,7 @@
 #include "s1/hlib.hpp"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 namespace shenmue::s1 {
@@ -12,10 +13,14 @@ struct Character;
 struct MoveSetRuntimeState;
 
 struct MoveListRecord {
+    const char *descriptionToken;
     const char *nameToken;
     std::int16_t commandIndex;
 };
 
+static_assert(sizeof(MoveListRecord) == 24);
+static_assert(offsetof(MoveListRecord, nameToken) == 8);
+static_assert(offsetof(MoveListRecord, commandIndex) == 16);
 using MoveCommandRecord = std::array<std::uint8_t, 7>;
 
 

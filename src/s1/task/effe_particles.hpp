@@ -7,6 +7,11 @@
 
 namespace shenmue::s1::effe_detail {
 
+inline constexpr Matrix4x4 kParticleViewportInitialTransform{.rows = {{}, {}, {0.0f, 0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 1.0f}}};
+extern Matrix4x4 g_particleViewportTransform;
+extern Vector2 g_particleViewportSize;
+extern float g_particleViewportScale;
+
 inline constexpr std::size_t kEffeSlots = 16;
 
 inline constexpr std::size_t kSakuraSlots = 8;

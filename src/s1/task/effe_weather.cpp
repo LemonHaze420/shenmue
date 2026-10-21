@@ -749,6 +749,9 @@ void FreeRainRenderData(WeatherNodeData *rain) {
     if (!rain || !rain->rain.pool.records)
         return;
     HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(rain->rain.pool.fade), static_cast<std::int32_t>(SHEN_NAME(LFLT)));
+    const std::uintptr_t key = reinterpret_cast<std::uintptr_t>(rain->rain.pool.records);
+    (void)ReleaseHmdlRuntimeObject(key);
+    (void)ReleaseHmdlRuntimeObject(key + 1);
     HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(rain->rain.pool.records), 0);
     rain->rain.pool.records = static_cast<void *>(nullptr);
     rain->rain.flags = std::uint32_t{0};
@@ -758,9 +761,12 @@ void FreeSnowRenderData(WeatherNodeData *snow) {
     if (!snow || !snow->snow.pool.records)
         return;
     HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(snow->snow.pool.fade), static_cast<std::int32_t>(SHEN_NAME(LFLT)));
+    const std::uintptr_t key = reinterpret_cast<std::uintptr_t>(snow->snow.pool.records);
+    (void)ReleaseHmdlRuntimeObject(key);
+    (void)ReleaseHmdlRuntimeObject(key + 1);
     HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(snow->snow.pool.records), 0);
-    if (snow->snow.textureReference.words[0])
-        snow->snow.textureReference.words[0] = std::uint32_t{0};
+    if (snow->snow.textureReference.texture)
+        snow->snow.textureReference.texture = nullptr;
     snow->snow.pool.records = static_cast<void *>(nullptr);
     snow->snow.flags = std::uint32_t{0};
 }

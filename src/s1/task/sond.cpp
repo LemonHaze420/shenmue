@@ -48,6 +48,21 @@ extern std::int32_t g_actNumber;
 namespace {}
 
 void SOND_UpdateAICA();
+// @verified - p
+std::int64_t ForEachCewpEntityApplyCallback(std::int64_t, bool (*callback)(Character *)) {
+    MapControlData *const control = g_mapControlTask ? reinterpret_cast<MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
+    for (void *bucketHead : control->characterBuckets) {
+        for (CharacterBucketNode *bucket = static_cast<CharacterBucketNode *>(bucketHead); bucket; bucket = bucket->next) {
+            Character *const character = bucket->character;
+            if (character && character->entity.name == SHEN_NAME(CEWP)) {
+                const std::uint32_t flags = character->flags.value;
+                if (((flags & 1U) != 0 || ((flags & 2U) != 0 && (character->motionFlags & 1U) != 0)) && !callback(character))
+                    return 0;
+            }
+        }
+    }
+    return 1;
+}
 void ProcessAmbientSoundEffects();
 void ProcessSoundForCewpHandler();
 void ExecuteAicaCommandLoop(std::int32_t index);

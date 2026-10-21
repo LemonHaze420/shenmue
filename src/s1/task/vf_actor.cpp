@@ -813,7 +813,7 @@ std::uint8_t VF_GetAnimSetValue(std::uint8_t animSetIndex) {
 float VF_GetAnimSetImpactScale(std::uint8_t animSetIndex) {
     if (animSetIndex >= 0x50U)
         return 1.0f;
-    return static_cast<float>(VF_GetAnimSetValue(animSetIndex)) * 0.002f + 1.0f;
+    return static_cast<float>(static_cast<double>(VF_GetAnimSetValue(animSetIndex)) * 0.002 + 1.0);
 }
 
 

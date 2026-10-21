@@ -258,15 +258,81 @@ void ExitSearchAndMoveCameraRelative(float eyeHeight, float targetDistance, std:
     shenApplyTranslationToAll(g_cameraTargetNode, g_CameraTargetPos);
 }
 
-const std::array<MoveListRecord, 19> g_handMoveList{{{"UIMOVETGKN", 0}, {"UIMOVEELSL", 1}, {"UIMOVETWKN", 2}, {"UIMOVEELAS", 3}, {"UIMOVEUPKN", 4}, // @text UIMOVETGKN EN: "Tiger Knuckle" | JA: "虎菱" ; UIMOVEELSL EN: "Elbow Slam" | JA: "小車打ち" ; UIMOVETWKN EN: "Twist Knuckle" | JA: "捻り菱" ; UIMOVEELAS EN: "Elbow Assault" | JA: "裡門頂肘" ; UIMOVEUPKN EN: "Upper Knuckle" | JA: "昇り菱"
-    {"UIMOVESLST", 5}, {"UIMOVERATH", 6}, {"UIMOVEBIWH", 7}, {"UIMOVETWHA", 8}, {"UIMOVEBAWI", 9}, {"UIMOVEAVLA", 10}, {"UIMOVEKAMI", 11}, // @text UIMOVESLST EN: "Sleeve Strike" | JA: "袖突き" ; UIMOVERATH EN: "Rain Thrust" | JA: "村雨突き" ; UIMOVEBIWH EN: "Big Wheel" | JA: "大車" ; UIMOVETWHA EN: "Twin Hand Waves" | JA: "双手波" ; UIMOVEBAWI EN: "Backfist Willow" | JA: "裏柳" ; UIMOVEAVLA EN: "Avalanche Lance" | JA: "崩山槍" ; UIMOVEKAMI EN: "Katana Mist Slash" | JA: "太刀霞"
-    {"UIMOVEMIFL", 12}, {"UIMOVEPITB", 1}, {"UIMOVEDBLB", 8}, {"UIMOVESWAL", 13}, {"UIMOVERISF", 14}, {"UIMOVETWIB", 15}, {"UIMOVESTBA", 16}}}; // @text UIMOVEMIFL EN: "Mistral Flash" | JA: "薙風" ; UIMOVEPITB EN: "Pit Blow" | JA: "水月突き" ; UIMOVEDBLB EN: "Double Blow" | JA: "重ね当て" ; UIMOVESWAL EN: "Swallow Flip" | JA: "燕旋擺柳" ; UIMOVERISF EN: "Rising Flash" | JA: "裂晃閃" ; UIMOVETWIB EN: "Twin Blades" | JA: "双刃" ; UIMOVESTBA EN: "Stab Armor" | JA: "鎧通"
-const std::array<MoveListRecord, 18> g_legMoveList{{{"UIMOVECRKI", 0}, {"UIMOVETRKI", 1}, {"UIMOVESIRE", 2}, {"UIMOVEAGCA", 3}, {"UIMOVESUSL", 4}, // @text UIMOVECRKI EN: "Crescent Kick" | JA: "三日月蹴り" ; UIMOVETRKI EN: "Trample Kick" | JA: "踏み蹴り" ; UIMOVESIRE EN: "Side Reaper Kick" | JA: "払い薙" ; UIMOVEAGCA EN: "Against Cascade" | JA: "瀧昇り" ; UIMOVESUSL EN: "Surplice Slash" | JA: "袈裟斬り"
-    {"UIMOVETHKI", 5}, {"UIMOVEHOAG", 6}, {"UIMOVEBRTI", 7}, {"UIMOVEDAMO", 8}, {"UIMOVECYKI", 9}, {"UIMOVEWIND", 10}, {"UIMOVESWDI", 2}, // @text UIMOVETHKI EN: "Thunder Kick" | JA: "雷蹴り" ; UIMOVEHOAG EN: "Hold Against Leg" | JA: "出足止め" ; UIMOVEBRTI EN: "Brutal Tiger" | JA: "虎乱" ; UIMOVEDAMO EN: "Dark Moon" | JA: "新月" ; UIMOVECYKI EN: "Cyclone Kick" | JA: "疾風" ; UIMOVEWIND EN: "Windmill" | JA: "風車" ; UIMOVESWDI EN: "Swallow Dive" | JA: "燕旋降脚"
-    {"UIMOVETOKI", 11}, {"UIMOVENOSK", 6}, {"UIMOVECRCY", 12}, {"UIMOVEMUDS", 13}, {"UIMOVETWSW", 14}, {"UIMOVESHRE", 15}}}; // @text UIMOVETOKI EN: "Tornado Kick" | JA: "竜巻キック" ; UIMOVENOSK EN: "Nothing Skill" | JA: "未修得" ; UIMOVECRCY EN: "Crawl Cyclone" | JA: "旋風" ; UIMOVEMUDS EN: "Mud Spider" | JA: "土蜘蛛" ; UIMOVETWSW EN: "Twin Swallow Leap" | JA: "飛燕連刈" ; UIMOVESHRE EN: "Shadow Reaper" | JA: "影狩り"
-const std::array<MoveListRecord, 14> g_throwMoveList{{{"UIMOVEOVER", 0}, {"UIMOVESWTH", 1}, {"UIMOVEVOTH", 2}, {"UIMOVEMIRE", 3}, {"UIMOVEDEDR", 4}, // @text UIMOVEOVER EN: "Overthrow" | JA: "背負い投げ" ; UIMOVESWTH EN: "Sweep Throw" | JA: "払い腰" ; UIMOVEVOTH EN: "Vortex Throw" | JA: "巴投げ" ; UIMOVEMIRE EN: "Mist Reaper" | JA: "霞刈り" ; UIMOVEDEDR EN: "Demon Drop" | JA: "羅刹落とし"
-    {"UIMOVESHBU", 5}, {"UIMOVETEDR", 6}, {"UIMOVEDAHA", 7}, {"UIMOVEBATW", 8}, {"UIMOVESHTE", 9}, {"UIMOVEARBR", 10}, {"UIMOVETIST", 11}, // @text UIMOVESHBU EN: "Shoulder Buster" | JA: "巻き固め" ; UIMOVETEDR EN: "Tengu Drop" | JA: "天狗勝" ; UIMOVEDAHA EN: "Darkside Hazuki" | JA: "裏芭月" ; UIMOVEBATW EN: "Back Twist Drop" | JA: "裏落とし" ; UIMOVESHTE EN: "Shadow Step" | JA: "影身" ; UIMOVEARBR EN: "Arm Break Fire" | JA: "朧無双" ; UIMOVETIST EN: "Tiger Storm" | JA: "虎身崩し"
-    {"UIMOVESHBL", 12}, {"UIMOVECRCH", 13}}}; // @text UIMOVESHBL EN: "Shadow Blade" | JA: "影刀" ; UIMOVECRCH EN: "Cross Charge" | JA: "残月"
+const std::array<MoveListRecord, 19> g_handMoveList{{
+    {.descriptionToken = "UIWAZHND00", .nameToken = "UIMOVETGKN", .commandIndex = 0},
+    {.descriptionToken = "UIWAZHND01", .nameToken = "UIMOVEELSL", .commandIndex = 1},
+    {.descriptionToken = "UIWAZHND02", .nameToken = "UIMOVETWKN", .commandIndex = 2},
+    {.descriptionToken = "UIWAZHND03", .nameToken = "UIMOVEELAS", .commandIndex = 3},
+    {.descriptionToken = "UIWAZHND04",
+        .nameToken = "UIMOVEUPKN",
+        .commandIndex =
+            4}, // @text UIMOVETGKN EN: "Tiger Knuckle" | JA: "虎菱" ; UIMOVEELSL EN: "Elbow Slam" | JA: "小車打ち" ; UIMOVETWKN EN: "Twist Knuckle" | JA: "捻り菱" ; UIMOVEELAS EN: "Elbow Assault" | JA: "裡門頂肘" ; UIMOVEUPKN EN: "Upper Knuckle" | JA: "昇り菱"
+    {.descriptionToken = "UIWAZHND05", .nameToken = "UIMOVESLST", .commandIndex = 5},
+    {.descriptionToken = "UIWAZHND06", .nameToken = "UIMOVERATH", .commandIndex = 6},
+    {.descriptionToken = "UIWAZHND07", .nameToken = "UIMOVEBIWH", .commandIndex = 7},
+    {.descriptionToken = "UIWAZHND08", .nameToken = "UIMOVETWHA", .commandIndex = 8},
+    {.descriptionToken = "UIWAZHND09", .nameToken = "UIMOVEBAWI", .commandIndex = 9},
+    {.descriptionToken = "UIWAZHND10", .nameToken = "UIMOVEAVLA", .commandIndex = 10},
+    {.descriptionToken = "UIWAZHND11",
+        .nameToken = "UIMOVEKAMI",
+        .commandIndex =
+            11}, // @text UIMOVESLST EN: "Sleeve Strike" | JA: "袖突き" ; UIMOVERATH EN: "Rain Thrust" | JA: "村雨突き" ; UIMOVEBIWH EN: "Big Wheel" | JA: "大車" ; UIMOVETWHA EN: "Twin Hand Waves" | JA: "双手波" ; UIMOVEBAWI EN: "Backfist Willow" | JA: "裏柳" ; UIMOVEAVLA EN: "Avalanche Lance" | JA: "崩山槍" ; UIMOVEKAMI EN: "Katana Mist Slash" | JA: "太刀霞"
+    {.descriptionToken = "UIWAZHND12", .nameToken = "UIMOVEMIFL", .commandIndex = 12},
+    {.descriptionToken = "UIWAZHND13", .nameToken = "UIMOVEPITB", .commandIndex = 1},
+    {.descriptionToken = "UIWAZHND14", .nameToken = "UIMOVEDBLB", .commandIndex = 8},
+    {.descriptionToken = "UIWAZHND15", .nameToken = "UIMOVESWAL", .commandIndex = 13},
+    {.descriptionToken = "UIWAZHND16", .nameToken = "UIMOVERISF", .commandIndex = 14},
+    {.descriptionToken = "UIWAZHND17", .nameToken = "UIMOVETWIB", .commandIndex = 15},
+    {.descriptionToken = "UIWAZHND18", .nameToken = "UIMOVESTBA", .commandIndex = 16},
+}}; // @text UIMOVEMIFL EN: "Mistral Flash" | JA: "薙風" ; UIMOVEPITB EN: "Pit Blow" | JA: "水月突き" ; UIMOVEDBLB EN: "Double Blow" | JA: "重ね当て" ; UIMOVESWAL EN: "Swallow Flip" | JA: "燕旋擺柳" ; UIMOVERISF EN: "Rising Flash" | JA: "裂晃閃" ; UIMOVETWIB EN: "Twin Blades" | JA: "双刃" ; UIMOVESTBA EN: "Stab Armor" | JA: "鎧通"
+const std::array<MoveListRecord, 18> g_legMoveList{{
+    {.descriptionToken = "UIWAZLEG00", .nameToken = "UIMOVECRKI", .commandIndex = 0},
+    {.descriptionToken = "UIWAZLEG01", .nameToken = "UIMOVETRKI", .commandIndex = 1},
+    {.descriptionToken = "UIWAZLEG02", .nameToken = "UIMOVESIRE", .commandIndex = 2},
+    {.descriptionToken = "UIWAZLEG03", .nameToken = "UIMOVEAGCA", .commandIndex = 3},
+    {.descriptionToken = "UIWAZLEG04",
+        .nameToken = "UIMOVESUSL",
+        .commandIndex =
+            4}, // @text UIMOVECRKI EN: "Crescent Kick" | JA: "三日月蹴り" ; UIMOVETRKI EN: "Trample Kick" | JA: "踏み蹴り" ; UIMOVESIRE EN: "Side Reaper Kick" | JA: "払い薙" ; UIMOVEAGCA EN: "Against Cascade" | JA: "瀧昇り" ; UIMOVESUSL EN: "Surplice Slash" | JA: "袈裟斬り"
+    {.descriptionToken = "UIWAZLEG05", .nameToken = "UIMOVETHKI", .commandIndex = 5},
+    {.descriptionToken = "UIWAZLEG06", .nameToken = "UIMOVEHOAG", .commandIndex = 6},
+    {.descriptionToken = "UIWAZLEG07", .nameToken = "UIMOVEBRTI", .commandIndex = 7},
+    {.descriptionToken = "UIWAZLEG08", .nameToken = "UIMOVEDAMO", .commandIndex = 8},
+    {.descriptionToken = "UIWAZLEG09", .nameToken = "UIMOVECYKI", .commandIndex = 9},
+    {.descriptionToken = "UIWAZLEG10", .nameToken = "UIMOVEWIND", .commandIndex = 10},
+    {.descriptionToken = "UIWAZLEG11",
+        .nameToken = "UIMOVESWDI",
+        .commandIndex =
+            2}, // @text UIMOVETHKI EN: "Thunder Kick" | JA: "雷蹴り" ; UIMOVEHOAG EN: "Hold Against Leg" | JA: "出足止め" ; UIMOVEBRTI EN: "Brutal Tiger" | JA: "虎乱" ; UIMOVEDAMO EN: "Dark Moon" | JA: "新月" ; UIMOVECYKI EN: "Cyclone Kick" | JA: "疾風" ; UIMOVEWIND EN: "Windmill" | JA: "風車" ; UIMOVESWDI EN: "Swallow Dive" | JA: "燕旋降脚"
+    {.descriptionToken = "UIWAZLEG12", .nameToken = "UIMOVETOKI", .commandIndex = 11},
+    {.descriptionToken = "UIWAZLEG13", .nameToken = "UIMOVENOSK", .commandIndex = 6},
+    {.descriptionToken = "UIWAZLEG14", .nameToken = "UIMOVECRCY", .commandIndex = 12},
+    {.descriptionToken = "UIWAZLEG15", .nameToken = "UIMOVEMUDS", .commandIndex = 13},
+    {.descriptionToken = "UIWAZLEG16", .nameToken = "UIMOVETWSW", .commandIndex = 14},
+    {.descriptionToken = "UIWAZLEG17", .nameToken = "UIMOVESHRE", .commandIndex = 15},
+}}; // @text UIMOVETOKI EN: "Tornado Kick" | JA: "竜巻キック" ; UIMOVENOSK EN: "Nothing Skill" | JA: "未修得" ; UIMOVECRCY EN: "Crawl Cyclone" | JA: "旋風" ; UIMOVEMUDS EN: "Mud Spider" | JA: "土蜘蛛" ; UIMOVETWSW EN: "Twin Swallow Leap" | JA: "飛燕連刈" ; UIMOVESHRE EN: "Shadow Reaper" | JA: "影狩り"
+const std::array<MoveListRecord, 14> g_throwMoveList{{
+    {.descriptionToken = "UIWAZTHR00", .nameToken = "UIMOVEOVER", .commandIndex = 0},
+    {.descriptionToken = "UIWAZTHR01", .nameToken = "UIMOVESWTH", .commandIndex = 1},
+    {.descriptionToken = "UIWAZTHR02", .nameToken = "UIMOVEVOTH", .commandIndex = 2},
+    {.descriptionToken = "UIWAZTHR03", .nameToken = "UIMOVEMIRE", .commandIndex = 3},
+    {.descriptionToken = "UIWAZTHR04",
+        .nameToken = "UIMOVEDEDR",
+        .commandIndex =
+            4}, // @text UIMOVEOVER EN: "Overthrow" | JA: "背負い投げ" ; UIMOVESWTH EN: "Sweep Throw" | JA: "払い腰" ; UIMOVEVOTH EN: "Vortex Throw" | JA: "巴投げ" ; UIMOVEMIRE EN: "Mist Reaper" | JA: "霞刈り" ; UIMOVEDEDR EN: "Demon Drop" | JA: "羅刹落とし"
+    {.descriptionToken = "UIWAZTHR05", .nameToken = "UIMOVESHBU", .commandIndex = 5},
+    {.descriptionToken = "UIWAZTHR06", .nameToken = "UIMOVETEDR", .commandIndex = 6},
+    {.descriptionToken = "UIWAZTHR07", .nameToken = "UIMOVEDAHA", .commandIndex = 7},
+    {.descriptionToken = "UIWAZTHR08", .nameToken = "UIMOVEBATW", .commandIndex = 8},
+    {.descriptionToken = "UIWAZTHR09", .nameToken = "UIMOVESHTE", .commandIndex = 9},
+    {.descriptionToken = "UIWAZTHR10", .nameToken = "UIMOVEARBR", .commandIndex = 10},
+    {.descriptionToken = "UIWAZTHR11",
+        .nameToken = "UIMOVETIST",
+        .commandIndex =
+            11}, // @text UIMOVESHBU EN: "Shoulder Buster" | JA: "巻き固め" ; UIMOVETEDR EN: "Tengu Drop" | JA: "天狗勝" ; UIMOVEDAHA EN: "Darkside Hazuki" | JA: "裏芭月" ; UIMOVEBATW EN: "Back Twist Drop" | JA: "裏落とし" ; UIMOVESHTE EN: "Shadow Step" | JA: "影身" ; UIMOVEARBR EN: "Arm Break Fire" | JA: "朧無双" ; UIMOVETIST EN: "Tiger Storm" | JA: "虎身崩し"
+    {.descriptionToken = "UIWAZTHR12", .nameToken = "UIMOVESHBL", .commandIndex = 12},
+    {.descriptionToken = "UIWAZTHR13", .nameToken = "UIMOVECRCH", .commandIndex = 13},
+}}; // @text UIMOVESHBL EN: "Shadow Blade" | JA: "影刀" ; UIMOVECRCH EN: "Cross Charge" | JA: "残月"
 const std::array<MoveCommandRecord, 17> g_handMoveCommands{{{1, 0, 0, 0, 0, 0, 0}, {2, 2, 0, 0, 0, 0, 0}, {2, 3, 0, 0, 0, 0, 0}, {3, 2, 2, 0, 0, 0, 0},
     {3, 3, 3, 0, 0, 0, 0}, {3, 2, 3, 0, 0, 0, 0}, {3, 3, 2, 0, 0, 0, 0}, {3, 0, 7, 1, 0, 0, 0}, {4, 2, 0, 7, 1, 0, 0}, {4, 3, 0, 7, 1, 0, 0},
     {5, 2, 2, 0, 7, 1, 0}, {5, 3, 3, 0, 7, 1, 0}, {2, 4, 0, 0, 0, 0, 0}, {3, 3, 0, 1, 0, 0, 0}, {4, 2, 3, 3, 0, 0, 0}, {4, 3, 2, 2, 0, 0, 0},
@@ -848,6 +914,23 @@ void StoreMovesScreenFocus(std::uint8_t set1, std::uint8_t set2, std::uint8_t se
 std::uint32_t SetMovesScreenMoveSetAndSelection(std::int32_t moveSet, std::int32_t move) {
     g_movesScreenTransitionFlags = 1;
     SyncMovesScreenRuntimeState();
+    switch (moveSet) {
+    case 0:
+        g_movesScreenTextBank = nullptr;
+        break;
+    case 1:
+        g_movesScreenTextBank = g_handMoveList.data();
+        g_movesScreenMoveTable = &g_playerStats.moveSets[0];
+        break;
+    case 2:
+        g_movesScreenTextBank = g_legMoveList.data();
+        g_movesScreenMoveTable = &g_playerStats.moveSets[1];
+        break;
+    case 3:
+        g_movesScreenTextBank = g_throwMoveList.data();
+        g_movesScreenMoveTable = &g_playerStats.moveSets[2];
+        break;
+    }
     (void)VFMA_RequestMove(VFMoveRequestFlags::ApplyEasedCommitTrigger);
     if (moveSet >= 1 && moveSet <= 3 && static_cast<std::int8_t>(g_playerStats.moveSets[static_cast<std::size_t>(moveSet - 1)].count) > 0)
         CopyMovesScreenMoveSet(static_cast<std::size_t>(moveSet - 1));

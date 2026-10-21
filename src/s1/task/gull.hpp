@@ -42,7 +42,7 @@ struct GullSplinePayload {
     std::int32_t keyCount[2];
     float *keyTimes[2];
     float *keyValues[2];
-    std::byte reserved28[0x18];
+    float *endpointSlopes[3];
     float *keySlopes[3];
     float duration;
     std::uint32_t reserved5c;
@@ -72,6 +72,7 @@ static_assert(offsetof(GullSequencePayload, spline) == 0x48);
 static_assert(sizeof(GullSplinePayload) == 0x60);
 static_assert(offsetof(GullSplinePayload, keyTimes) == 0x08);
 static_assert(offsetof(GullSplinePayload, keyValues) == 0x18);
+static_assert(offsetof(GullSplinePayload, endpointSlopes) == 0x28);
 static_assert(offsetof(GullSplinePayload, keySlopes) == 0x40);
 static_assert(offsetof(GullSplinePayload, duration) == 0x58);
 static_assert(sizeof(GullScriptParameters) == 0x1c);
@@ -79,6 +80,7 @@ static_assert(sizeof(GullScriptParameters) == 0x1c);
 std::uint32_t GULL_Enqueue(std::int32_t maxGulls, std::int32_t maxSplines);
 GullSplinePayload *GULL_Create(
     const Vector3 *position, std::int32_t keyCount, GullSplinePayload *existingSpline, const float *xValues, const float *yValues, const float *zValues);
+std::int32_t AllocSPLI(float *coefficients, std::int32_t keyCount, const float *times, const float *values, const float *slopes);
 void SPLI_Alloc(GullSplinePayload *spline);
 std::int32_t HermiteSpline_InterpolateFCVKey(
     float *output, float time, std::int32_t keyCount, const float *keyTimes, const float *keyValues, const float *keySlopes);

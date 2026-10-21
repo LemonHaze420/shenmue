@@ -21,6 +21,22 @@ std::int32_t g_tmp_buffer_handle = 0;
 
 } // namespace DX11
 
+// @verified - p
+void SetRenderTargets(D3TDeviceContext *context, const std::array<std::byte, 0x84> &targets) {
+    D3TRenderState &state = GetRenderState(*context);
+    state.outputTargets = targets;
+    state.bufferStateFlags |= BufferOutputTargets;
+}
+
+// @verified - p
+void SetRenderViewport(D3TDeviceContext *context, const std::array<float, 6> &viewport) {
+    D3TRenderState &state = GetRenderState(*context);
+    if (std::memcmp(state.viewport.data(), viewport.data(), sizeof(viewport)) != 0) {
+        state.viewportDirtyMask |= 1U;
+        state.viewport = viewport;
+    }
+}
+
 void *GetD3DDeviceContext(void *renderer) {
     if (renderer == nullptr) {
         return nullptr;

@@ -317,6 +317,8 @@ struct AreaLocationName {
     const char *stringId;
 };
 
+inline constexpr std::int32_t kUiMainMenu = 4;
+
 inline constexpr std::int32_t kUiSubMenuItems = 9;
 
 inline constexpr std::int32_t kUiSubMenuCollection = 10;
@@ -1303,6 +1305,9 @@ std::int64_t FrontendAutomation_MainMenuTick();
 
 void MainMenuRender();
 
+void MainMenu_UpdateTitle();
+
+void Options_RedescribeOption();
 std::int64_t MainMenuDestroy();
 
 std::int64_t PressStartSelected();

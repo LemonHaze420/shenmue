@@ -74,7 +74,7 @@ void PopulateSicnHudPromptIcons() {
 
     const std::uint8_t scanLimit = GetSicnHudPromptScanLimit();
     std::uint16_t state = g_uiState;
-    std::int32_t drawX = 48 * (13 - (shenGetCanUpdate() ? 1 : 0) - (g_sicnTask ? 1 : 0));
+    std::int32_t drawX = 48 * (13 - (g_iconPresentation.clockSlotReserved ? 1 : 0) - (g_sicnTaskActive ? 1 : 0));
     bool firstPrompt = true;
 
     for (std::size_t bit = 0; bit < g_sicnPromptSlots.size(); ++bit) {
@@ -287,6 +287,8 @@ void UI_ICNQCallback(HLib::TaskData *) {
     icon.bobStep = 3;
     icon.timeoutFrames = 0;
     icon.active = false;
+    icon.clockSlotReserved = false;
+    icon.notificationDrawX = 576.0f;
     icon.ownerMask = 0;
 
     g_sicnTask = nullptr;
@@ -295,8 +297,8 @@ void UI_ICNQCallback(HLib::TaskData *) {
     Shenmue_nPrevPauseState = 0;
     g_uiState = 0;
     g_currentSicn = UISicnPausePolicy::KeepOnPause;
-    ActivateOwnedElement(kUiGameHud, "/ui/gamehud/GameHud.ui");
     InstallOwnedTaskMain(UI_ICNQMainCallback);
+    ActivateOwnedElement(kUiGameHud, "/ui/gamehud/GameHud.ui");
 }
 
 void UI_ICNQMainCallback(HLib::TaskData *) {
@@ -377,12 +379,20 @@ void UI_ICNQMainCallback(HLib::TaskData *) {
 
 
     const bool clockSlot = shenGetCanUpdate() != 0;
-    if (ShouldDrawStandaloneSicnIcon() && icon.kind == UIIconPromptKind::Directional)
-        g_hudPromptFlagsThisFrame = static_cast<std::uint16_t>(g_hudPromptFlagsThisFrame | 0x1000U);
+    icon.clockSlotReserved = clockSlot;
+    if (ShouldDrawStandaloneSicnIcon()) {
+        if (icon.kind != UIIconPromptKind::Button && icon.promptDescriptor == 271)
+            g_hudPromptFlagsThisFrame = static_cast<std::uint16_t>(g_hudPromptFlagsThisFrame | 0x1000U);
+        icon.notificationDrawX = clockSlot ? 528.0f : 576.0f;
+    }
     if (!icon.active && !clockSlot && !g_sicnPopulatedHudPromptsThisFrame) {
         if (!g_uiElements[kUiGameTraining].isVisible) {
             g_uiElements[kUiGameHud].isHandledExternally = 1;
+            if (g_uiElements[kUiGameHud].elementDraw)
+                g_uiElements[kUiGameHud].elementDraw();
             g_uiElements[kUiGameHudWatch].isHandledExternally = 1;
+            if (g_uiElements[kUiGameHudWatch].elementDraw)
+                g_uiElements[kUiGameHudWatch].elementDraw();
         }
         return;
     }
@@ -392,7 +402,11 @@ void UI_ICNQMainCallback(HLib::TaskData *) {
     }
     if (!g_uiElements[kUiMoveLearned].isVisible) {
         g_uiElements[kUiGameHud].isHandledExternally = 0;
+        if (g_uiElements[kUiGameHud].elementDraw)
+            g_uiElements[kUiGameHud].elementDraw();
         g_uiElements[kUiGameHudWatch].isHandledExternally = 0;
+        if (g_uiElements[kUiGameHudWatch].elementDraw)
+            g_uiElements[kUiGameHudWatch].elementDraw();
     }
     g_sicnPopulatedHudPromptsThisFrame = false;
 }

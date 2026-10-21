@@ -38,6 +38,7 @@
 namespace shenmue::s1 {
 
 D3TDeviceContext *g_RenderDeviceContext = nullptr;
+std::int32_t g_numberOfPolys = 0;
 float g_fContrastValue = 0.5f;
 float g_fGammaValue = 1.0f;
 bool g_fFxaaEnabled = true;
@@ -713,6 +714,11 @@ void ReleaseHmdlInstanceCpuMirrors() {
 
 }
 
+void PublishEffeParticleDrawCount(std::uint32_t particleCount) {
+    g_numberOfPolys = std::bit_cast<std::int32_t>(particleCount);
+    SetRenderFlags(0x66, 0);
+    g_currentRenderFlags[0x66] = 0;
+}
 EffeParticleVertex *MapEffeParticleVertices(D3TDeviceContext *context, std::uint32_t particleCount) {
 #if defined(_WIN32)
     if (!context || !particleCount || !g_fvfPtdTVertexShader || !g_fvfPtdTPixelShader || !g_fvfLayouts[28] ||
@@ -729,6 +735,7 @@ EffeParticleVertex *MapEffeParticleVertices(D3TDeviceContext *context, std::uint
 
 std::uint32_t CommitEffeParticleVertices(
     D3TDeviceContext *context, std::uint32_t particleCount, std::uint32_t texture2D, bool transparent, const EffeMaterialWords *material) {
+    PublishEffeParticleDrawCount(particleCount);
 #if defined(_WIN32)
     if (!context || !particleCount)
         return 0;

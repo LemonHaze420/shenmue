@@ -944,6 +944,8 @@ extern bool g_bOrthographicRender;
 extern Matrix4x4 g_notebookPageMatrix;
 extern std::array<float, 2> g_nuklearArmedImageSize;
 void CreateOrthographicViewMatrix(std::int32_t width, std::int32_t height, Matrix4x4 *matrix);
+void SetNuklearViewMatrix(const Matrix4x4 &matrix);
+d3t::D3TDeviceContext *SetupNuklearBuffer();
 std::uint32_t InitNuklearScreenTexture();
 void LoadUIFont(void *data, std::uint32_t contentHandle, void *loadedData, std::uint64_t loadedSize, const char *sourcePath);
 #endif
@@ -1084,6 +1086,7 @@ std::int32_t UI_GetAspectWidth();
 #if SHENMUE_IS_S2
 float UI_GetFullReferenceWidth();
 void UI_SetFontFamily(std::uint32_t family);
+void UI_SetFontScale(float scale);
 float UI_GetReferenceWidth();
 float UI_GetReferenceHeight();
 #endif

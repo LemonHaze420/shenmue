@@ -196,8 +196,41 @@ void FreeSakuraTask(EffeTaskRecord *task) {
     HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(task), 0);
 }
 
+// @verified - p
 void SetSakuraActive(EffeTaskRecord &task, bool active) {
-    SetEffeActive(task, active);
+    const std::size_t slot = static_cast<std::size_t>(task.runtimeSlot);
+    EffeRegistryEntry &entry = g_effeEmitterRegistry[slot];
+    EffeRuntimeTexture &runtime = g_effeRuntime[slot];
+    EffeFftOwner *const owner = task.fftOwner;
+    if (active) {
+        if (entry.state == 1) {
+            entry.state = 2;
+            runtime.flags |= kActiveTextureFlag;
+        }
+        if (owner && static_cast<std::uint32_t>(task.subtype) <= 4U) {
+            const std::size_t index = static_cast<std::size_t>(owner->fftIndex);
+            if (g_effeFftRegistry[index].state == 1) {
+                g_effeFftRegistry[index].state = 2;
+                g_effeFftData[index]->flags |= kActiveTextureFlag;
+            }
+            owner->activeMask |= static_cast<std::uint16_t>(1U << static_cast<std::uint32_t>(task.runtimeSlot));
+        }
+        task.flags |= 2U;
+    } else {
+        if (entry.state == 2) {
+            entry.state = 1;
+            runtime.flags &= ~kActiveTextureFlag;
+        }
+        if (owner && static_cast<std::uint32_t>(task.subtype) <= 4U) {
+            owner->activeMask &= static_cast<std::uint16_t>(~(1U << static_cast<std::uint32_t>(task.runtimeSlot)));
+            const std::size_t index = static_cast<std::size_t>(owner->fftIndex);
+            if (!owner->activeMask && g_effeFftRegistry[index].state == 2) {
+                g_effeFftRegistry[index].state = 1;
+                g_effeFftData[index]->flags &= ~kActiveTextureFlag;
+            }
+        }
+        task.flags &= ~2U;
+    }
 }
 
 void SetSakuraPositionRange(EffeTaskRecord &task, const Vector3 &position, const Vector3 &range) {

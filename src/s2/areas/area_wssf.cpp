@@ -372,7 +372,7 @@ void Power(WssfChildWork &w) {
         helpOverlay = 1;
         SetupGrip();
         SetFightGaugeDisplayLayout(2);
-        SetFightGaugePrimaryUniform(1);
+        SetFightGaugeSecondaryOverlay(1);
         (void)UpdateDualFightGauge(0, 0);
         Mot(ryo, 4377);
         ResetFace();
@@ -508,7 +508,7 @@ void CheckHit(WssfChildWork &w) {
     if (main.result == 3) {
         State(rock, 4);
         State(w, 6);
-        SetFightGaugePrimaryUniform(0);
+        SetFightGaugeSecondaryOverlay(0);
     } else {
         State(rock, 4, 10);
         if (main.result != 0 && main.attempts < 3) {

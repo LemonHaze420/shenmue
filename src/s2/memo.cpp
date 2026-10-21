@@ -3,6 +3,11 @@
 #include "d3t/image_texture_loader.hpp"
 #include "d3t/texture.hpp"
 #include "d3t/ui_renderer.hpp"
+#include "d3t/ui_runtime.hpp"
+#include "d3t/dx11_renderer.hpp"
+#include "s2/ui_scroll_list.hpp"
+#include "s2/game_runtime.hpp"
+#include "s2/d3t_renderer.hpp"
 #include "s2/archive_data.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
@@ -51,11 +56,14 @@ namespace {
 MemoPageState memoPageState{};
 MemoPageRenderer memoPages{};
 
+std::array<std::uint32_t, 3> memoTitleRequests{};
+std::array<d3t::UIViewImage, 3> memoTitleImages{};
+std::int32_t memoTitlePhase{}, memoDebugMode{};
+std::uint8_t memoForcePageRedraw{};
+nk_panel memoPanel{};
 constexpr std::array<std::array<std::int16_t, 2>, 5> memoCategories{{{{-1, 1}}, {{138, 5}}, {{997, 65}}, {{424, 107}}, {{1348, 117}}}};
 constexpr std::array<std::uint16_t, 5> bitmapLineOffsets{0x6708, 0x4f08, 0x3708, 0x1f08, 0x0708};
 constexpr std::array<const char *, 4> memoTextureNames{"AAA_TEX", "BBB_TEX", "CCC_TEX", "DDD_TEX"};
-constexpr std::array<const char *, 3> memoTitleArchivePaths{"tex/assets/ui/notebookpages/notebooktitletop.tga.ad74e639",
-    "tex/assets/ui/notebookpages/notebooktitlevertical.tga.42212956", "tex/assets/ui/notebookpages/notebooktitlebot.tga.68b153cd"};
 
 HLib::Task *memoTask{};
 PadControlEntry *memoPad{};
@@ -98,17 +106,36 @@ bool ownsSharedItems{};
 std::int32_t previousPostFxBank{};
 std::array<std::uint32_t, 4> pageModelBindings{};
 
-void EnsureMemoTitleTextures() {
-    for (std::size_t index = 0; index < memoPages.titleTextures.size(); ++index) {
-        if (memoPages.titleTextures[index])
-            continue;
-        const std::uint64_t size = ArchiveData_GetFileSize(memoTitleArchivePaths[index]);
-        if (!size || size > static_cast<std::uint64_t>((std::numeric_limits<std::size_t>::max)()))
-            continue;
-        std::vector<std::byte> data(static_cast<std::size_t>(size));
-        if (ArchiveData_Read(memoTitleArchivePaths[index], 0, data.data(), size))
-            memoPages.titleTextures[index] = d3t::CreateImageTextureFromMemory(data.data(), data.size(), false);
+// @verified - p
+std::int32_t EnsureMemoTitleTextures() {
+    if (memoTitlePhase == 3)
+        return memoTitlePhase;
+    if (memoTitlePhase == 0) {
+        for (std::size_t index = 0; index < memoTitleRequests.size(); ++index)
+            memoTitleRequests[index] = SetupUsageForTexture(MEMO_TITLE_PATHS[index], 0);
     }
+    memoTitlePhase = 3;
+    for (std::size_t index = 0; index < memoTitleImages.size(); ++index) {
+        d3t::UIViewImage &image = memoTitleImages[index];
+        if (!image.ready) {
+            const std::uint32_t texture = GetShaderDataByIndex(memoTitleRequests[index]);
+            std::uint32_t width, height;
+            if (texture && d3t ::GetTexture2DDimensions(texture, &width, &height)) {
+                image.widthScale = static_cast<float>(width) / 1920.0f;
+                image.heightScale = static_cast<float>(height) / 1080.0f;
+                image.textureHandle = static_cast<std::int32_t>(texture);
+                image.width = static_cast<std::uint16_t>(width);
+                image.height = static_cast<std::uint16_t>(height);
+                image.region = {0, 0, image.width, image.height};
+                image.colour = MEMO_TITLE_COLOUR;
+                image.ready = 1;
+                memoPages.titleTextures[index] = texture;
+            }
+        }
+        if (!image.ready)
+            memoTitlePhase = 2;
+    }
+    return memoTitlePhase;
 }
 
 std::uint32_t ReadMemoWord(const std::byte *source) {
@@ -868,41 +895,68 @@ void MEMO_Callback(void *) {
     previousRightTrigger = right;
 }
 
+// @verified - p
 void DrawMemoPageText(std::uint32_t bank, std::uint32_t index) {
     const std::int32_t textIndex = bank == 1 ? static_cast<std::int32_t>(index) : memoPages.borrowedText[index];
     if (textIndex < 0)
         return;
-    const std::string_view text(memoPages.text[textIndex].data());
-    const float firstY = bank == 1 ? 72.0f : 54.0f;
-    const float spacing = 512.0f * (bank == 1 ? 0.1114f : 0.13f);
+    const char *const text = memoPages.text[textIndex].data();
+    const float savedScale = g_uiFontScale;
+    float scale = MEMO_TEXT_FONT_SCALE[bank];
+    const float spacing = MEMO_TEXT_LINE_SPACING[bank] / 10000.0f;
+    const std::uint32_t language = static_cast<std::uint32_t>(GetLoadingScreenTextType(ResetSceneTextLanguage()));
+    if (language - 4U <= 2U)
+        scale *= 1.0f;
     std::int32_t category = -1;
-    for (std::size_t entry = 0; entry < memoCategories.size(); ++entry)
-        if (memoPages.activePage == memoCategories[entry][1] && (index & 0xfdU) == 0)
+    for (std::size_t entry = 0; entry < memoCategories.size(); ++entry) {
+        if (memoPages.activePage == memoCategories[entry][1] && (index & 0xfdU) == 0) {
             category = static_cast<std::int32_t>(entry);
-    const UIFontSelection font{g_sceneTextLanguage, 3, 2};
-    const float fontHeight = GetUIFontHeight(font) * (bank == 1 ? 0.9f : 1.0f);
-    const std::uint32_t colour = category >= 0 ? 0xff0f2878U : 0xff081219U;
-    bool nonempty = false;
-    std::size_t start = 0;
-    std::uint32_t line = 0;
-    while (start < text.size()) {
-        const std::size_t end = text.find('\n', start);
-        const auto lineText = text.substr(start, end == std::string_view::npos ? text.size() - start : end - start);
-        nonempty |= lineText.find_first_not_of(" \n\0", 0, 3) != std::string_view::npos;
-        DrawUIFontText(font, fontHeight, lineText, 51.2f, firstY + line * spacing, colour,
-            {51, static_cast<std::int32_t>(firstY + line * spacing), 460, static_cast<std::int32_t>(firstY + (line + 1) * spacing)});
-        if (end == std::string_view::npos)
             break;
-        start = end + 1;
-        ++line;
-    }
-    if (category >= 0 && nonempty) {
-        const std::int32_t pieces = category == 4 ? 4 : 3;
-        for (std::int32_t piece = 0; piece < pieces; ++piece) {
-            const std::size_t texture = piece == 0 ? 0 : piece == pieces - 1 ? 2 : 1;
-            d3t::DrawUIImage(memoPages.titleTextures[texture], 30.0f, firstY - 55.0f + (piece + 1) * 60.0f, 452.0f, 60.0f, 1.0f);
         }
     }
+    nk_context &context = *GetNativeUiContext();
+    context.style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
+    UI_SetFontFamily(3);
+    UI_SetFontSize(2);
+    UI_SetFontScale(scale);
+    nk_begin_titled(&context, &memoPanel, "memo", "memo", nk_rect(0, 0, MEMO_PAGE_WIDTH, MEMO_PAGE_HEIGHT), NK_WINDOW_NO_SCROLLBAR);
+    nk_layout_space_begin(&context, NK_STATIC, 0, 10);
+    bool nonempty = false;
+    std::int32_t line = 0;
+    const char *cursor = text;
+    if (*text) {
+        do {
+            const char *const start = cursor;
+            std::uint32_t codepoint;
+            do {
+                cursor += DecodeUITextCharacter(cursor, &codepoint, static_cast<std::int32_t>(text - cursor) + 800);
+                if (!nonempty && codepoint != 0 && codepoint != 10 && codepoint != 32)
+                    nonempty = true;
+            } while (*cursor && codepoint != 10);
+            nk_layout_space_push(&context,
+                nk_rect(MEMO_PAGE_WIDTH * 0.1f, static_cast<float>(line) * (MEMO_PAGE_HEIGHT * spacing) + MEMO_TEXT_FIRST_Y[bank],
+                    MEMO_PAGE_WIDTH * 0.79999995f, MEMO_PAGE_HEIGHT * spacing));
+            const nk_color savedColour = context.style.text.color;
+            const std::uint32_t colour = category < 0 ? MEMO_TEXT_COLOUR : MEMO_TITLE_COLOUR;
+            std::memcpy(&context.style.text.color, &colour, sizeof(colour));
+            nk_text(&context, start, static_cast<std::int32_t>(cursor - start) - 1, category < 0 ? 17 : 18);
+            ++line;
+            context.style.text.color = savedColour;
+        } while (*cursor);
+    }
+    if (category >= 0 && nonempty) {
+        const std::int32_t pieces = MEMO_TITLE_PIECES[static_cast<std::size_t>(category)] + 2;
+        float y = MEMO_TEXT_FIRST_Y[bank] - 55.0f;
+        for (std::int32_t piece = 0; piece < pieces; ++piece) {
+            y += 60.0f;
+            const std::size_t image = piece == 0 ? 0 : piece == pieces - 1 ? 2 : 1;
+            nk_layout_space_push(&context, nk_rect(30.0f, y, MEMO_PAGE_WIDTH - 60.0f, 60.0f));
+            UI_DrawPreparedImage(context, &memoTitleImages[image].ready, &memoTitleImages[image].textureHandle, memoTitleImages[image].colour);
+        }
+    }
+    nk_layout_space_end(&context);
+    nk_end(&context);
+    UI_SetFontScale(savedScale);
 }
 
 } // namespace
@@ -1084,24 +1138,68 @@ std::int64_t DestroyMemoNotebookPages() {
     return 1;
 }
 
+// @verified - p
 void RenderMemoNotebookPages() {
-    EnsureMemoTitleTextures();
+    if (memoTitlePhase != 3)
+        memoTitlePhase = EnsureMemoTitleTextures();
+    memoDebugMode = g_notebookDebugMode;
     if (memoPendingOpen) {
         OpenMemoAtPage(memoPendingOpenPage);
         memoPendingOpen = 0;
     }
     // RenderMemoNotebookPages visits the borrowed bank first, then the four live text targets.
-    for (std::size_t bank = 0; bank < 2; ++bank) {
-        for (std::size_t index = 0; index < 4; ++index) {
+    if (memoForcePageRedraw) {
+        memoPages.dirty[0].fill(true);
+        memoPages.dirty[1].fill(true);
+    }
+    bool dirty = false;
+    for (std ::size_t index = 0; index < 4; ++index)
+        dirty |= memoPages.dirty[1][index];
+    for (std::size_t index = 0; index < 4; ++index)
+        dirty |= memoPages.dirty[0][index];
+    d3t::D3TDeviceContext *context = g_nuklearRenderDeviceContext;
+    if (!dirty)
+        return;
+    nk_clear(GetNativeUiContext());
+    const std::array<float, 6> savedViewport = d3t::GetRenderState(*context).viewport;
+    const Matrix4x4 orthographic{
+        .rows = {{.x = 2.0f / MEMO_PAGE_WIDTH, .w = -1.0f}, {.y = 2.0f / MEMO_PAGE_HEIGHT, .w = -1.0f}, {.z = -1.0f, .w = -0.0f}, {.w = 1.0f}}};
+    SetNuklearViewMatrix(orthographic);
+    if (!context)
+        context = SetupNuklearBuffer();
+    NuklearCompositeNullsub(context);
+    const UIViewport viewport{.rect = {.x = 0.0f, .y = 0.0f, .z = MEMO_PAGE_WIDTH, .w = MEMO_PAGE_HEIGHT}, .depthRange = {.x = 0.0f, .y = 1.0f}};
+    std::array<float, 6> pageViewport;
+    std::memcpy(pageViewport.data(), &viewport, sizeof(viewport));
+    d3t::SetRenderViewport(context, pageViewport);
+    for (std::uint32_t bank = 0; bank < 2; ++bank) {
+        for (std::uint32_t index = 0; index < 4; ++index) {
             if (!memoPages.dirty[bank][index])
                 continue;
-            if (!d3t::BeginUITextureRenderTarget(memoPages.targets[bank][index], true))
-                continue;
-            DrawMemoPageText(static_cast<std::uint32_t>(bank), static_cast<std::uint32_t>(index));
-            d3t::RestoreUIRenderTarget();
+            SetNuklearViewMatrix(orthographic);
+            std::array<std::byte, 0x84> targets{};
+            std::memcpy(targets.data(), &memoPages.targets[bank][index], sizeof(std::uint32_t));
+            d3t::SetRenderTargets(context, targets);
+#if defined(_WIN32) || defined(SHENMUE_NULL_LIBRARY)
+            constexpr std::array<float, 4> transparent{};
+            d3t::UnmapAndClearViews(context, memoPages.targets[bank][index], 0, transparent.data());
+#endif
+            GetAspectRatioModeShouldScale();
+            InvokeNuklearFrame(context);
+            DrawMemoPageText(bank, index);
+            Nuklear_RenderPass(&viewport);
             memoPages.dirty[bank][index] = false;
         }
     }
+    NuklearCompositeNullsub(context);
+    context = g_nuklearRenderDeviceContext;
+    if (context) {
+        GetAspectRatioModeShouldScale();
+        InvokeNuklearFrame(context);
+        if (savedViewport[2] != 0.0f)
+            d3t::SetRenderViewport(context, savedViewport);
+    }
+    nk_clear(GetNativeUiContext());
 }
 
 } // namespace shenmue::s2

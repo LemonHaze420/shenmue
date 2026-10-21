@@ -19,8 +19,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <limits>
-#include <vector>
 
 namespace shenmue::s1 {
 
@@ -97,84 +95,9 @@ void AllocateSplineStorage(GullSplinePayload &spline, std::int32_t keyCount) {
     const std::int64_t slopeBytes = timeBytes * 2;
     spline.keyTimes[0] = static_cast<float *>(HLib_AllocHeapMemBlock(timeBytes, kGullPayloadToken));
     for (std::size_t axis = 0; axis < 3; ++axis) {
-        std::memset(spline.reserved28 + axis * sizeof(void *), 0, sizeof(void *));
+        spline.endpointSlopes[axis] = nullptr;
         spline.keySlopes[axis] = static_cast<float *>(HLib_AllocHeapMemBlock(slopeBytes, kGullPayloadToken));
     }
-}
-
-bool BuildAxisCoefficients(const float *keyTimes, const float *keyValues, std::size_t originalCount, float *coefficients) {
-    std::fill(coefficients, coefficients + originalCount * 2, 0.0f);
-    if (originalCount < 2)
-        return true;
-
-    std::size_t count = originalCount;
-    for (std::size_t index = 0; index + 1 < count; ++index) {
-        if (keyTimes[index] == keyTimes[index + 1]) {
-            count = index + 1;
-            break;
-        }
-    }
-    if (count < 2)
-        return count == 1;
-    if (count == 2) {
-        coefficients[2] = 3.0f * keyValues[0];
-        coefficients[3] = 3.0f * keyValues[1];
-        return true;
-    }
-
-    const std::size_t interiorCount = count > 2 ? count - 2 : 0;
-    std::vector<float> scratch(count + interiorCount * 4, 0.0f);
-    float *const derivatives = scratch.data();
-    if (interiorCount) {
-        float *const lower = derivatives + count;
-        float *const diagonal = lower + interiorCount;
-        float *const upper = diagonal + interiorCount;
-        float *const rightHandSide = upper + interiorCount;
-
-        for (std::size_t row = 0; row < interiorCount; ++row) {
-            const std::size_t index = row + 1;
-            const float previousSpan = keyTimes[index] - keyTimes[index - 1];
-            const float nextSpan = keyTimes[index + 1] - keyTimes[index];
-            if (!(previousSpan > 0.0f) || !(nextSpan > 0.0f))
-                return false;
-
-            const float previousDelta = keyValues[index] - keyValues[index - 1];
-            const float nextDelta = keyValues[index + 1] - keyValues[index];
-            lower[row] = nextSpan;
-            diagonal[row] = 2.0f * (previousSpan + nextSpan);
-            upper[row] = previousSpan;
-            rightHandSide[row] = 3.0f * ((nextSpan * previousDelta / previousSpan) + (previousSpan * nextDelta / nextSpan));
-        }
-
-        lower[0] = 0.0f;
-        upper[interiorCount - 1] = 0.0f;
-        for (std::size_t row = 1; row < interiorCount; ++row) {
-            if (std::fabs(diagonal[row - 1]) <= std::numeric_limits<float>::epsilon()) {
-                return false;
-            }
-            const float factor = lower[row] / diagonal[row - 1];
-            diagonal[row] -= factor * upper[row - 1];
-            rightHandSide[row] -= factor * rightHandSide[row - 1];
-        }
-        if (std::fabs(diagonal[interiorCount - 1]) <= std::numeric_limits<float>::epsilon()) {
-            return false;
-        }
-
-        derivatives[count - 2] = rightHandSide[interiorCount - 1] / diagonal[interiorCount - 1];
-        for (std::size_t row = interiorCount - 1; row-- > 0;) {
-            if (std::fabs(diagonal[row]) <= std::numeric_limits<float>::epsilon()) {
-                return false;
-            }
-            derivatives[row + 1] = (rightHandSide[row] - upper[row] * derivatives[row + 2]) / diagonal[row];
-        }
-    }
-
-    for (std::size_t index = 1; index < count; ++index) {
-        const float span = keyTimes[index] - keyTimes[index - 1];
-        coefficients[index * 2] = derivatives[index - 1] * span + 3.0f * keyValues[index - 1];
-        coefficients[index * 2 + 1] = 3.0f * keyValues[index] - derivatives[index] * span;
-    }
-    return true;
 }
 
 float NormalizeSplineTime(const float value) {
@@ -309,10 +232,9 @@ void SPLI_Alloc(GullSplinePayload *const spline) {
         keyTimes[index] = keyTimes[index - 1] + std::sqrt(dx * dx + dy * dy + dz * dz);
     }
 
-    const std::size_t count = static_cast<std::size_t>(keyCount);
     const std::array<const float *, 3> values{xValues, yValues, zValues};
     for (std::size_t axis = 0; axis < values.size(); ++axis) {
-        BuildAxisCoefficients(keyTimes, values[axis], count, spline->keySlopes[axis]);
+        AllocSPLI(spline->keySlopes[axis], keyCount, keyTimes, values[axis], spline->endpointSlopes[axis]);
     }
 }
 

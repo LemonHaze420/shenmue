@@ -1311,6 +1311,8 @@ struct IconPresentationOwner {
     std::int8_t inventoryPageCount{1};
     std::int8_t inventorySlotsPerPage{8};
     bool active{};
+    bool clockSlotReserved{};
+    float notificationDrawX{};
     bool menuCloseRequested{};
 
     bool sharedItemPreviewIsCassette{};

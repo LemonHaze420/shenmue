@@ -825,15 +825,15 @@ void W3DW_Callback(Character *character, void *payload) {
 bool LNWK_Allocate(Character *character) {
     if (!character)
         return false;
-    if (FindLineWalkWork(character))
-        return true;
-    auto *const work = static_cast<LineWalkWork *>(AllocateHeapMemoryMODL(character, kLineWalkComponent, sizeof(LineWalkWork), LNWK_Callback));
-    if (!work)
+    LineWalkWork *const work = static_cast<LineWalkWork *>(AllocateHeapMemoryMODL(character, kLineWalkComponent, sizeof(LineWalkWork), LNWK_Callback));
+    if (!work) {
+        LineWalkPromoteScenarioCharacter(character);
         return false;
-    work->state = 0;
+    }
     if (CharacterComponentNode *const component = HLib_GetCharacterComponent(character, kLineWalkComponent)) {
         component->flags &= ~1U;
     }
+    work->state = 0;
     return true;
 }
 

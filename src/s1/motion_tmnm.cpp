@@ -166,7 +166,7 @@ void TMNM_Callback(Character *character, void *payload) {
 namespace shenmue::s1 {
 
 void TMNM_Alloc(Character *character) {
-    if (!character || HLib_GetCharacterComponent(character, SHEN_NAME(TMNM))) {
+    if (!character) {
         return;
     }
     auto *const work = static_cast<TmnmWork *>(AllocateHeapMemoryMODL(character, SHEN_NAME(TMNM), sizeof(TmnmWork), TMNM_Callback));

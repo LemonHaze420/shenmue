@@ -462,6 +462,11 @@ d3t::UIGaugeState *SetFightGaugePercentSingle(float percent) noexcept {
     return primary;
 }
 
+// @verified - p
+void SetFightGaugeSecondaryOverlay(std::int32_t enabled) noexcept {
+    fightSecondaryOverlay = enabled;
+}
+
 void SetFightGaugePrimaryUniform(std::int32_t uniform) noexcept {
     fightPrimaryUniform = uniform;
 }
