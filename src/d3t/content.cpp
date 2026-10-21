@@ -1,4 +1,5 @@
 #include "d3t/content.hpp"
+#include "shenmue.h"
 #include "logging.hpp"
 
 #include "platform/performance_counter.hpp"
@@ -219,13 +220,22 @@ std::int32_t finishContentTask(void *taskData) {
     std::uint32_t decodeResult = 0;
     void *decoded = d3t_DecompressContent(slot->loadedData, &decodedSize, &decodeResult);
     if (decoded) {
+#if SHENMUE_IS_S2
+        if (slot->destination && slot->destinationCapacity >= decodedSize) {
+            std::memcpy(slot->destination, decoded, decodedSize);
+            std::free(decoded);
+            decoded = slot->destination;
+        }
+#else
         if (slot->destination) {
             const std::size_t copySize = std::min(decodedSize, static_cast<std::size_t>(slot->destinationCapacity));
             std::memcpy(slot->destination, static_cast<std::byte *>(decoded) + decodedSize - copySize, copySize);
             std::free(decoded);
             decoded = slot->destination;
             decodedSize = copySize;
-        } else {
+        }
+#endif
+        else {
             Archive_BindBuffer(slot->archiveHandle, decoded, decodedSize, false);
         }
         slot->loadedData = decoded;

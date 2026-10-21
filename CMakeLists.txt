@@ -94,7 +94,6 @@ add_library(shenmue_d3t STATIC
   src/d3t/asset_remap.cpp
   src/d3t/buffer.cpp
   src/d3t/compression.cpp
-  src/d3t/content.cpp
   src/d3t/dx11_renderer.cpp
   src/d3t/fvf.cpp
   src/d3t/material.cpp
@@ -150,6 +149,7 @@ if(WIN32)
 endif()
 
 add_library(shenmue1_game STATIC
+  src/d3t/content.cpp
   src/d3t/model_load.cpp
   src/d3t/ui_runtime.cpp
   src/d3t/ui_animation.cpp
@@ -1090,6 +1090,7 @@ add_library(shenmue2_events OBJECT
   src/s2/areas/area_sfwf.cpp
 )
 add_library(shenmue2_game STATIC
+  src/d3t/content.cpp
   src/d3t/model_load.cpp
   src/d3t/ui_runtime.cpp
   src/d3t/ui_animation.cpp
