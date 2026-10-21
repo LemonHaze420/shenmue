@@ -20,9 +20,7 @@
 namespace shenmue::s1 {
 
 std::array<SimpleShaderParameterBlock, 16> g_simpleShaderParameterBlocks{};
-std::array<std::uint32_t, 4> g_simpleVertexBufferHandles{};
-std::array<void *, 4> g_simpleCpuBuffers{};
-std::array<std::uint32_t, 4> g_simpleIndexBufferHandles{};
+
 FoliageAnimationParameters *g_foliageAnimationParameters = nullptr;
 std::uint32_t g_foliageAnimationParameterCount = 0;
 std::uint32_t g_simpleShaderLoad = 0;
@@ -177,31 +175,6 @@ void UpdatePPFX() {
 
     DX11::WaitForCommandListFinish(context);
 #endif
-}
-
-void AllocateSimpleShaderBuffers() {
-    for (std::size_t index = 0; index < g_simpleCpuBuffers.size(); ++index) {
-        const BufferDescription vertexDescription{
-            3,
-            0x17700,
-            12,
-            2,
-            nullptr,
-            nullptr,
-        };
-        g_simpleVertexBufferHandles[index] = static_cast<std::uint32_t>(CreateBuffer(&vertexDescription));
-
-        const BufferDescription indexDescription{
-            3,
-            0x203a00,
-            4,
-            2,
-            nullptr,
-            nullptr,
-        };
-        g_simpleIndexBufferHandles[index] = static_cast<std::uint32_t>(CreateBuffer(&indexDescription));
-        g_simpleCpuBuffers[index] = std::malloc(0x3a1b00);
-    }
 }
 
 std::uint32_t LoadSimpleShader() {

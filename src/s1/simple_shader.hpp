@@ -1,5 +1,6 @@
 #pragma once
 
+#include "d3t/light_tiles.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -23,9 +24,9 @@ struct SimpleShaderParameterBlock {
 static_assert(sizeof(SimpleShaderParameterBlock) == 0x138);
 
 extern std::array<SimpleShaderParameterBlock, 16> g_simpleShaderParameterBlocks;
-extern std::array<std::uint32_t, 4> g_simpleVertexBufferHandles;
-extern std::array<void *, 4> g_simpleCpuBuffers;
-extern std::array<std::uint32_t, 4> g_simpleIndexBufferHandles;
+using d3t ::g_simpleVertexBufferHandles;
+using d3t ::g_simpleCpuBuffers;
+using d3t ::g_simpleIndexBufferHandles;
 extern FoliageAnimationParameters *g_foliageAnimationParameters;
 extern std::uint32_t g_foliageAnimationParameterCount;
 extern std::uint32_t g_simpleShaderLoad;
@@ -44,7 +45,7 @@ void GPUPostEffect_InitializeAutoExposure(std::int32_t effect, float minimum, fl
 void GPUPostEffect_SetAutoExposure(std::int32_t effect);
 
 void InitPostFX();
-void AllocateSimpleShaderBuffers();
+using d3t::AllocateSimpleShaderBuffers;
 std::uint32_t LoadSimpleShader();
 
 } // namespace shenmue::s1

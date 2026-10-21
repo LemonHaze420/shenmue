@@ -6,6 +6,10 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace shenmue::d3t {
+struct D3TDeviceContext;
+}
+
 namespace shenmue::s2 {
 
 struct SDLightDataHeader {
@@ -114,6 +118,7 @@ extern std::array<std::uint8_t, 32> g_sdShadowSlots;
 extern std::array<std::uint8_t, 32> g_sdShadowDirty;
 extern SDShadowMapping g_sdShadowMapping;
 void InitializeSDLightNodes();
+void BindModelSceneLights(d3t::D3TDeviceContext *context);
 std::uint32_t AllocateSDShadowSlots(std::uint32_t count);
 void ReleaseSDLightShadowSlots(SDLightRecord &light);
 void RemoveSDShadowMappingRequest(std::uint32_t slot);

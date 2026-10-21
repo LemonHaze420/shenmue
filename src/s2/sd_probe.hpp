@@ -6,6 +6,10 @@
 #include <cstddef>
 #include <cstdint>
 
+namespace shenmue::d3t {
+struct D3TDeviceContext;
+}
+
 namespace shenmue::s2 {
 
 #pragma pack(push, 4)
@@ -47,6 +51,15 @@ inline constexpr Vector4 SD_PROBE_PROJECTION_W{0, 0, -1, 0};
 inline constexpr float SD_PROBE_HALF_FOV = 0.7853975892066956f;
 extern std::array<SDProbeRecord, 32> g_sdProbes;
 extern std::int32_t g_sdProbeCount;
+struct SDProbeConstants {
+    std::int32_t disableLocalProbes, probeMapPass, globalProbeIndex;
+};
+static_assert(sizeof(SDProbeConstants) == 12);
+extern std::uint32_t g_sdProbeBuffer;
+extern std::int32_t g_sdGlobalProbeIndex;
+extern std::array<std::uint32_t, 2> g_sdProbeTextures;
+extern std::uint32_t g_sdGlobalProbeTexture;
+void UpdateModelSceneProbes(d3t::D3TDeviceContext *context);
 void UpdateSDProbeFrustums(std::uint32_t index);
 void ConfigureSDProbe(std::uint32_t index, std::uint64_t node, const D3TModelProbe *parameters, const void *owner, std::uint64_t root);
 void ConfigureOwnerSDProbes(std::int32_t count, const std::uint64_t *nodes, const D3TModelProbe *parameters, const void *owner, std::uint64_t root);

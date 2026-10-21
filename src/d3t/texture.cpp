@@ -569,6 +569,10 @@ std::int32_t CreateDirectXTexture2DWrapper(std::uint32_t surface, std::uint32_t 
 
 } // namespace
 
+bool IsTextureHandleValid(std::uint32_t handle) {
+    const TextureLock lock;
+    return g_textureTags[handle & kTextureIndexMask] == (handle & kTextureTagMask);
+}
 std::uint32_t CreateTexture2D(const Texture2DDescription *description) {
     return CreateTextureResource(*description);
 }

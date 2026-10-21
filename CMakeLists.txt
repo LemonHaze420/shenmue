@@ -109,6 +109,7 @@ add_library(shenmue_d3t STATIC
   src/d3t/file_state.cpp
   src/d3t/threads.cpp
   src/d3t/texture.cpp
+  src/d3t/light_tiles.cpp
   src/d3t/ui_definition.cpp
   src/d3t/ui_nuklear.cpp
   src/d3t/ui_renderer.cpp
@@ -1248,6 +1249,8 @@ add_library(shenmue2_game STATIC
   src/s2/sd_probe.cpp
   src/s2/model_geometry.cpp
   src/s2/model_draw.cpp
+  src/s2/frame_pipeline.cpp
+  src/s2/simple_shader.cpp
   src/s2/motion.cpp
   src/s2/motion_pose.cpp
   src/s2/motion_frame.cpp

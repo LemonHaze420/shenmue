@@ -1,5 +1,10 @@
 #include "s2/sd_light.hpp"
 
+#include "s2/simple_shader.hpp"
+#include "d3t/light_tiles.hpp"
+#include "d3t/dx11_renderer.hpp"
+#include "d3t/texture.hpp"
+
 #include "d3t/content.hpp"
 #include "d3t/model_cache.hpp"
 #include "d3t/render_handles.hpp"
@@ -47,6 +52,33 @@ void InitializeSDLightNodes() {
 }
 
 // @verified - p
+void BindModelSceneLights(d3t::D3TDeviceContext * context) {
+    d3t::BindLightTileBuffers(context);
+    d3t::D3TRenderState &state = d3t::GetRenderState(*context);
+    for (std::uint32_t stage = 0; stage < 2; ++stage)
+        if (state.bindings.bufferHandles[stage][0] != g_sdLightBuffer) {
+            state.shaderResourceDirtyMasks[stage] |= 1U;
+            state.bindings.bufferHandles[stage][0] = g_sdLightBuffer;
+        }
+#if defined(_WIN32)
+    SDLightConstants *const constants = static_cast<SDLightConstants *>(d3t::MapTempConstantBufferForWriteDiscard(context, 3, 6, 2164));
+    if (constants) {
+        std::memcpy(constants, &g_sdLightConstants, 2164);
+        constants->noShadows = 1;
+    }
+#endif
+    std::uint32_t texture = d3t::g_defaultWhiteTexture;
+    for (std::uint32_t index = 0; index < g_sdLightCount; ++index)
+        if (g_sdLights[index].textureHandle) {
+            texture = g_sdLights[index].textureHandle;
+            break;
+        }
+    if (state.bindings.textureHandles[1][31] != texture || state.bindings.textureFlags[1][31] != 0) {
+        state.shaderResourceDirtyMasks[1] |= 0x80000000U;
+        state.bindings.textureHandles[1][31] = texture;
+        state.bindings.textureFlags[1][31] = 0;
+    }
+}
 std::uint32_t AllocateSDShadowSlots(std::uint32_t count) {
     std::uint32_t freeCount = 0;
     for (std::uint32_t index = 0; index < 32; ++index) {

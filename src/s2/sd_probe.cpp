@@ -1,15 +1,56 @@
 #include "s2/sd_probe.hpp"
 
+#include "d3t/dx11_renderer.hpp"
+#include "d3t/texture.hpp"
+
 #include "d3t/model_cache.hpp"
 #include <bit>
 #include <cmath>
 #include <cstring>
 
-namespace shenmue::s2 {
+    namespace shenmue::s2 {
 
 std::array<SDProbeRecord, 32> g_sdProbes{};
 std::int32_t g_sdProbeCount{};
 
+std::uint32_t g_sdProbeBuffer{};
+std::int32_t g_sdGlobalProbeIndex{};
+std::array<std::uint32_t, 2> g_sdProbeTextures{};
+std::uint32_t g_sdGlobalProbeTexture{};
+
+// @verified - p
+void UpdateModelSceneProbes(d3t::D3TDeviceContext * context) {
+#if defined(_WIN32)
+    SDProbeConstants *const constants = static_cast<SDProbeConstants *>(d3t::MapTempConstantBufferForWriteDiscard(context, 2, 11, 12));
+    if (constants)
+        *constants = {.disableLocalProbes = 0, .probeMapPass = 0, .globalProbeIndex = g_sdGlobalProbeIndex};
+#endif
+    d3t::D3TRenderState &state = d3t::GetRenderState(*context);
+    if (state.bindings.bufferHandles[1][4] != g_sdProbeBuffer) {
+        state.shaderResourceDirtyMasks[1] |= 0x10U;
+        state.bindings.bufferHandles[1][4] = g_sdProbeBuffer;
+    }
+    const std::uint32_t flags[2]{d3t::IsTextureHandleValid(g_sdProbeTextures[0]), d3t::IsTextureHandleValid(g_sdProbeTextures[1])};
+    for (std::uint32_t index = 0; index < 3; ++index) {
+        const std::uint32_t slot = 24U + index;
+        const std::uint32_t texture = index < 2 ? g_sdProbeTextures[index] : g_sdGlobalProbeTexture;
+        const std::uint32_t flag = index < 2 ? flags[index] : 0;
+        if (state.bindings.textureHandles[1][slot] != texture || state.bindings.textureFlags[1][slot] != flag) {
+            state.shaderResourceDirtyMasks[1] |= 1U << slot;
+            state.bindings.textureHandles[1][slot] = texture;
+            state.bindings.textureFlags[1][slot] = flag;
+        }
+    }
+    for (std::uint32_t index = 0; index < 2; ++index) {
+        const std::uint32_t slot = index ? 10U : 2U;
+        const std::uint32_t flags = index ? 640U : 661U;
+        d3t::D3TSamplerStateKey &sampler = state.bindings.samplers[1][slot];
+        if ((sampler.flags[0] | (static_cast<std::uint64_t>(sampler.flags[1]) << 32U)) != flags) {
+            state.samplerDirtyMasks[1] |= static_cast<std::uint16_t>(1U << slot);
+            sampler = {.flags = {flags, 0}, .reserved = {}};
+        }
+    }
+}
 namespace {
 // @verified - p
 Matrix4x4 BuildSDProbeViewMatrix(const Vector3 &eye, const Vector3 &target, const Vector3 &up) {

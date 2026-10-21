@@ -1,4 +1,6 @@
 #include "s2/renderer_initialization.hpp"
+#include "s2/simple_shader.hpp"
+#include "d3t/light_tiles.hpp"
 #include "s2/model_geometry.hpp"
 #include "d3t/file_state.hpp"
 #include <cstdlib>
@@ -456,6 +458,19 @@ bool InitRenderer() {
 
     InitializeSDLightMetadata();
     InitializeSDLightNodes();
+    g_sdShaderFileLock = d3t::AllocateFileLockHandle();
+    const d3t::BufferDescription lightDescription{.flags = 3, .size = 131072, .count = 256, .flags3 = 2, .buffer = nullptr, .name = nullptr};
+    g_sdLightBuffer = d3t::CreateBuffer(&lightDescription);
+    for (std::uint32_t index = 0; index < 32; ++index) {
+        SDFoliageParameters *const parameters = AllocateSDFoliageParameters();
+        if (parameters) {
+            parameters->bendiness = 0.02f;
+            parameters->maxHeight = 4.0f;
+            parameters->startHeight = 0.5f;
+            parameters->wiggleSpeed = 16.0f;
+        }
+    }
+    d3t::AllocateSimpleShaderBuffers();
     std::uint32_t simpleRenderHandle = d3t::d3t_AllocateRenderHandle();
     simpleShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/simple", simpleRenderHandle);
     if (!simpleShaderLoad) {
@@ -494,9 +509,18 @@ void ShutdownRendererContent() {
         d3t::InitTexture2DResource(g_legacyDefaultEffectTexture);
         g_legacyDefaultEffectTexture = 0;
     }
-    ReleaseSDLightMetadata();
     d3t::ReleaseSceneFrameTargets();
     d3t::ShutdownThreads();
+    d3t::ReleaseSimpleShaderBuffers();
+    d3t::ValidateAndCommitBuffer(static_cast<std::int32_t>(g_sdFoliageBuffer));
+    g_sdFoliageBuffer = 0;
+    ReleaseSDLightMetadata();
+    if (g_sdShaderFileLock != 0xffffU)
+        d3t::ReleaseFileLockHandle(g_sdShaderFileLock);
+    g_sdShaderFileLock = 0xffffU;
+    std::free(g_sdFoliageParameters);
+    g_sdFoliageParameters = nullptr;
+    g_sdFoliageCount = g_sdFoliageCapacity = 0;
     ReleaseModelGeometryResources();
     FreeRendererScratch();
 }
