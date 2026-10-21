@@ -58,6 +58,11 @@ bool readArchiveBackingFile(ArchiveHandleEntry &handle, const AsyncArchiveReques
     if (file == INVALID_HANDLE_VALUE)
         return false;
     handle.platformHandle = reinterpret_cast<PlatformFileHandle>(file);
+    if (!Archive_GetHandleBuffer(request.archiveHandle, request.size)) {
+        CloseHandle(file);
+        handle.platformHandle = -1;
+        return false;
+    }
     std::uint64_t size = request.size;
     LARGE_INTEGER fileSize{};
     if (GetFileSizeEx(file, &fileSize)) {
@@ -80,6 +85,11 @@ bool readArchiveBackingFile(ArchiveHandleEntry &handle, const AsyncArchiveReques
     if (file < 0)
         return false;
     handle.platformHandle = file;
+    if (!Archive_GetHandleBuffer(request.archiveHandle, request.size)) {
+        close(file);
+        handle.platformHandle = -1;
+        return false;
+    }
     std::uint64_t size = request.size;
     struct stat attributes {};
     if (!fstat(file, &attributes)) {
@@ -148,13 +158,14 @@ bool processPublishedReads() {
         bool succeeded = false;
         if (handle && Archive_DoesHandleExist(request.archiveHandle))
             g_currentArchiveSource = request.source;
-        if (handle && request.operation == 0 && handle->bufferedData) {
+        if (handle && request.operation == 0) {
             if (!(handle->archiveLookupFlag & 1U) && ArchiveData_IsPackedFile(request.path)) {
                 const std::uint64_t offset = request.offset;
                 const std::uint64_t fileSize = ArchiveData_GetFileSize(request.path);
                 const std::uint64_t readSize = offset <= fileSize ? (std::min)(request.size, fileSize - offset) : 0;
                 handle->accessMode = request.flags | 1U;
-                succeeded = offset <= fileSize && ArchiveData_Read(request.path, offset, handle->bufferedData, readSize);
+                succeeded = Archive_GetHandleBuffer(request.archiveHandle, request.size) && offset <= fileSize &&
+                    ArchiveData_Read(request.path, offset, handle->bufferedData, readSize);
             } else {
                 succeeded = readArchiveBackingFile(*handle, request);
             }
@@ -323,6 +334,27 @@ std::int32_t Archive_ClosePlatformHandle(std::uint32_t handle) {
     const bool result = Platform_CloseFileHandle(entry->platformHandle);
     entry->platformHandle = 0;
     return result ? 1 : 0;
+}
+
+// @verified - p
+void *Archive_GetHandleBuffer(std::uint32_t handle, std::uint64_t size) {
+    if (!Archive_DoesHandleExist(handle))
+        return nullptr;
+    ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+    if (!entry)
+        return nullptr;
+    if (entry->bufferedData && entry->bufferedDataSize != size)
+        releaseBufferedData(handle);
+    if (!entry->bufferedData) {
+        void *const data = std::malloc(static_cast<std::size_t>(size));
+        entry->bufferedDataSize = size;
+        entry->bufferedData = data;
+        entry->preserveBufferedData = 0;
+        acquireWriter(g_openFileSizeReaders, g_openFileSizeWriter);
+        g_openFileSizes += size;
+        g_openFileSizeWriter.store(0);
+    }
+    return entry->bufferedData;
 }
 
 void *Archive_BindBuffer(std::uint32_t handle, void *destination, std::uint64_t size, bool preserveBuffer) {

@@ -109,6 +109,7 @@ ArchiveHandleEntry *Archive_GetHandle(std::uint32_t handle);
 bool Archive_DoesHandleExist(std::uint32_t handle);
 std::uint32_t Archive_AllocateHandle(std::uint8_t archiveLookupFlag);
 std::int32_t Archive_ClosePlatformHandle(std::uint32_t handle);
+void *Archive_GetHandleBuffer(std::uint32_t handle, std::uint64_t size);
 void *Archive_BindBuffer(std::uint32_t handle, void *destination, std::uint64_t size, bool preserveBuffer);
 void *Archive_DetachBuffer(std::uint32_t handle);
 void Archive_QueueRead(std::uint32_t handle, std::int32_t operation, const char *path, std::uint64_t offset, std::uint64_t size, std::uint8_t flags);

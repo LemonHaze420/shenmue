@@ -158,19 +158,28 @@ void startArchiveRead(D3TContentSlot &slot) {
         slot.failureData = slot.resolvedPath;
         return;
     }
-    std::uint32_t handle = Archive_AllocateHandle(0);
+    setState(slot, 7);
+    const std::uint32_t handle = Archive_AllocateHandle(slot.preserveArchiveBuffer != 0);
+    if (Archive_DoesHandleExist(handle)) {
+        ArchiveHandleEntry *const entry = Archive_GetHandle(handle);
+        if (entry)
+            entry->platformHandle = -1;
+    }
+    slot.archiveHandle = handle;
     if (!Archive_DoesHandleExist(handle)) {
         setState(slot, 13);
         return;
     }
-    void *const data = std::malloc(static_cast<std::size_t>(size));
-    if (!data) {
-        ReadFile_0(0, &handle);
-        setState(slot, 13);
-        return;
+    if (slot.destination) {
+        ArchiveSourceDesc source{};
+        ArchiveData_GetSourceDesc(slot.resolvedPath, source);
+        const ArchiveSourceDesc &empty = archive_data::EMPTY_ARCHIVE_SOURCE;
+        const bool active = (source.sourceIndex != empty.sourceIndex || source.sourceOffset != empty.sourceOffset || source.fileSize != empty.fileSize ||
+                                source.flags != empty.flags) &&
+            source.sourceIndex < g_archiveState.archiveCount && source.fileSize != 0;
+        if (!active || source.flags == 0)
+            Archive_BindBuffer(handle, slot.destination, slot.destinationCapacity, true);
     }
-    slot.archiveHandle = handle;
-    Archive_BindBuffer(handle, data, size, false);
     Archive_QueueRead(handle, 0, slot.resolvedPath, 0, size, 17);
     setState(slot, 8);
 }
