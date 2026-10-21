@@ -174,6 +174,57 @@ void InitializeSplashScreens(std::uint32_t) {
     SetSplashMode(0);
 }
 
+// @verified - p
+void DrawSplashImage(const SplashRuntime &runtime, float opacity) {
+    if (!splashWindow)
+        return;
+    nk_context &context = *GetNativeUiContext();
+    UILayoutRect bounds{};
+    UI_GetWindowRect(splashWindow, bounds);
+    if (g_waitingForNextTick == 1) {
+        nk_begin_titled(&context, &splashPanel, "UISplash", "UISplash", nk_rect(bounds.x, bounds.y, bounds.width, bounds.height), NK_WINDOW_NO_SCROLLBAR);
+        nk_layout_space_begin(&context, NK_STATIC, 0.0f, 1);
+    }
+    if (runtime.textureHandle) {
+        const float width = static_cast<float>(runtime.image.region[2]);
+        const float height = static_cast<float>(runtime.image.region[3]);
+        const float x = ((bounds.width - width) * 0.5f) + bounds.x;
+        const float y = ((bounds.height - height) * 0.5f) + bounds.y;
+        if (g_waitingForNextTick == 1)
+            nk_layout_space_push(&context, nk_rect(x, y, width, height));
+        const std::uint32_t colour = ConstructColour(255, 255, 255, static_cast<std::int32_t>(opacity * 255.0f));
+        nk_color tint;
+        std::memcpy(&tint, &colour, sizeof(tint));
+        if (g_waitingForNextTick == 1)
+            nk_image_color(&context, runtime.image, tint);
+    }
+    if (g_waitingForNextTick == 1) {
+        nk_layout_space_end(&context);
+        nk_end(&context);
+    }
+}
+
+std::int64_t SplashRender() {
+    ProcessSplashScreen();
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::Splash)];
+    DrawUIEntity(*GetNativeUiContext(), element.config.uiHandleIndex, element.index);
+    return 0;
+}
+
+// @verified - p
+std::int64_t HandleSplashInput() {
+    if (g_inputBuffer[0].pressedPriority & PAD_BUTTON_X)
+        splashSkipPressed = true;
+    const nk_context &context = *GetNativeUiContext();
+    if (context.input.mouse.buttons[NK_BUTTON_LEFT].clicked != 0)
+        splashSkipPressed = true;
+    if (context.input.mouse.buttons[NK_BUTTON_MIDDLE].clicked != 0)
+        splashSkipPressed = true;
+    if (context.input.mouse.buttons[NK_BUTTON_RIGHT].clicked != 0)
+        splashSkipPressed = true;
+    return 0;
+}
+
 void ProcessSplashScreen() {
     if (splashScreenIndex < 0 || splashScreenIndex >= 6)
         return;
@@ -181,11 +232,6 @@ void ProcessSplashScreen() {
     const SplashImageDefinition &definition = *runtime.definition;
     const float elapsed = SplashElapsed();
     float opacity = 0.0f;
-
-    if (enterPressed) {
-        splashSkipPressed = true;
-        enterPressed = false;
-    }
 
     switch (splashScreenMode) {
     case 0:
@@ -227,17 +273,7 @@ void ProcessSplashScreen() {
         break;
     }
 
-    std::uint32_t width = 0;
-    std::uint32_t height = 0;
-    if (runtime.textureHandle && d3t::GetTexture2DDimensions(runtime.textureHandle, &width, &height) && width != 0 && height != 0) {
-        const float scaleX = static_cast<float>(d3t::g_originalScreenWidth) / 1920.0f;
-        const float scaleY = static_cast<float>(d3t::g_originalScreenHeight) / 1080.0f;
-        const float drawWidth = static_cast<float>(width) * scaleX;
-        const float drawHeight = static_cast<float>(height) * scaleY;
-        const float x = (static_cast<float>(d3t::g_originalScreenWidth) - drawWidth) * 0.5f;
-        const float y = (static_cast<float>(d3t::g_originalScreenHeight) - drawHeight) * 0.5f;
-        d3t::DrawUIImage(runtime.textureHandle, x, y, drawWidth, drawHeight, std::clamp(opacity, 0.0f, 1.0f));
-    }
+    DrawSplashImage(runtime, std::clamp(opacity, 0.0f, 1.0f));
 }
 
 // @verified - p

@@ -726,6 +726,9 @@ extern std::array<std::int32_t, 2> subtitleAlphaBindings;
 
 inline constexpr char SPLASH_WINDOW_ID[] = "Splash::Panel";
 extern d3t::UIWindow *splashWindow;
+extern std::array<BigKanjiGlyph, 8> bigKanjiGlyphs;
+extern std::array<d3t::UIWindow *, 8> bigKanjiPanels;
+extern std::array<UIColourImageWidget *, 8> bigKanjiImages;
 std::int64_t SplashSelected();
 std::int64_t ResetSplash();
 std::int64_t DestroySplash();
@@ -767,6 +770,10 @@ void InitializeSplashScreens(std::uint32_t renderHandle);
 
 void ProcessSplashScreen();
 
+void DrawSplashImage(const SplashRuntime &runtime, float opacity);
+std::int64_t SplashRender();
+std::int64_t HandleSplashInput();
+extern nk_panel splashPanel;
 struct SubtitleLabelFit {
     float height{};
     std::size_t split{std::string_view::npos};

@@ -185,11 +185,9 @@ GameMovesRuntime gameMovesRuntime{};
 QteMinigameRuntime qteMinigame{};
 
 std::array<BigKanjiGlyph, 8> bigKanjiGlyphs{};
-std::array<d3t::UIPanelDefinition *, 8> bigKanjiPanels{};
-std::array<d3t::UITextureObjectDefinition *, 8> bigKanjiImages{};
-AuthoredMenuLayout bigKanjiLayout;
-std::int32_t bigKanjiCount{};
-std::array<float, 8> bigKanjiImageWidths{}, bigKanjiImageHeights{};
+std::array<d3t::UIWindow *, 8> bigKanjiPanels{};
+std::array<UIColourImageWidget *, 8> bigKanjiImages{};
+
 struct ParentMenuLayout {
     std::vector<std::int32_t> parents;
     std::vector<d3t::UIRect> panels;
@@ -1439,6 +1437,7 @@ constexpr std::array<SplashImageDefinition, 6> splashImages{{
 
 std::array<SplashRuntime, 6> splashRuntime{};
 d3t::UIWindow *splashWindow{};
+nk_panel splashPanel{};
 std::int32_t splashScreenMode = 0;
 std::uint64_t splashStateStart = 0;
 bool splashSkipPressed = false;
@@ -2656,21 +2655,14 @@ std::uint32_t LoadBigKanjiText() {
     return ReadUIDefinitionFile(UIElement::BigKanjiText, "/ui/BigKanjiText/BigKanjiText.ui", 0);
 }
 
+// @verified - p
 std::int64_t BindBigKanjiText() {
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::BigKanjiText)];
-    BindAuthoredMenuLayout(definition, bigKanjiLayout);
-    for (std::size_t slot = 0; slot < bigKanjiGlyphs.size(); ++slot) {
-        const std::int32_t panel = MenuPanelIndex(definition, BIG_KANJI_PANEL_IDS[slot]);
-        bigKanjiPanels[slot] = panel < 0 ? nullptr : &definition.panels[panel];
-        bigKanjiImages[slot] = nullptr;
-        for (d3t::UITextureObjectDefinition &object : definition.textureObjects)
-            if (object.id == BIG_KANJI_IMAGE_IDS[slot]) {
-                bigKanjiImages[slot] = &object;
-                break;
-            }
-        if (bigKanjiImages[slot])
-            bigKanjiImages[slot]->frameIndex = static_cast<std::int32_t>(slot);
-    }
+    const std ::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::BigKanjiText)].config.uiHandleIndex;
+    for (std::size_t index = 0; index < bigKanjiPanels.size(); ++index)
+        bigKanjiPanels[index] = UI_GetWindow(UI_FindViewWindow(slot, BIG_KANJI_PANEL_IDS[index].data()));
+    for (std::size_t index = 0; index < bigKanjiImages.size(); ++index)
+        bigKanjiImages[index] = UI_GetColourImageWidget(UI_FindViewColourImage(slot, BIG_KANJI_IMAGE_IDS[index].data()));
+
     return 1;
 }
 
@@ -2687,61 +2679,64 @@ std::int64_t BigKanjiTextTickNullsub() {
     return 0;
 }
 
+// @verified - p
 void UpdateBigKanjiImages() {
-    for (std::size_t slot = 0; slot < bigKanjiGlyphs.size(); ++slot) {
-        BigKanjiGlyph &glyph = bigKanjiGlyphs[slot];
+    for (std::size_t index = 0; index < bigKanjiGlyphs.size(); ++index) {
+        BigKanjiGlyph &glyph = bigKanjiGlyphs[index];
         if (glyph.admittedTexture)
             continue;
-        std::uint32_t width{}, height{};
-        if (!d3t::GetTexture2DDimensions(glyph.texture, &width, &height) || !width || !height)
+        glyph.admittedTexture = GetShaderDataByIndex(glyph.texture);
+        if (!glyph.admittedTexture)
             continue;
-        glyph.admittedTexture = glyph.texture;
-        bigKanjiImageWidths[slot] = static_cast<float>(width) / 1920.0f;
-        bigKanjiImageHeights[slot] = static_cast<float>(height) / 1080.0f;
-        if (bigKanjiImages[slot])
-            bigKanjiImages[slot]->frameIndex = static_cast<std::int32_t>(slot);
+        const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::BigKanjiText)];
+        d3t::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(element.config.uiHandleIndex);
+        if (!view)
+            continue;
+        d3t::UIViewImage &image = view->images[index];
+        image = {};
+        struct nk_image raster {};
+        const bool described = UI_SetImageFromTexture(raster, glyph.admittedTexture);
+        std::memcpy(&image.textureHandle, &raster, sizeof(raster));
+        if (!described)
+            continue;
+        d3t::Texture2DDescription description;
+        if (!d3t::GetTexture2DDescription(glyph.admittedTexture, &description))
+            continue;
+        image.widthScale = static_cast<float>(description.width) / 1920.0f;
+        image.heightScale = static_cast<float>(description.height) / 1080.0f;
+        image.ready = 1;
+        if (bigKanjiImages[index])
+            bigKanjiImages[index]->image = static_cast<std::int32_t>(index);
     }
 }
 
+// @verified - p
 void UpdateBigKanjiPositionAndColour() {
-    for (std::size_t slot = 0; slot < bigKanjiGlyphs.size(); ++slot) {
-        d3t::UIPanelDefinition *const panel = bigKanjiPanels[slot];
-        d3t::UITextureObjectDefinition *const image = bigKanjiImages[slot];
-        if (!panel || !image)
+    for (std::size_t index = 0; index < bigKanjiGlyphs.size(); ++index) {
+        UIColourImageWidget *const image = bigKanjiImages[index];
+        d3t::UIWindow *const panel = bigKanjiPanels[index];
+        if (!image || !panel)
             continue;
-        panel->imageOpacity = 0.0f;
-        const BigKanjiGlyph &glyph = bigKanjiGlyphs[slot];
+        panel->alpha = 0.0f;
+        const BigKanjiGlyph &glyph = bigKanjiGlyphs[index];
         if (!glyph.requested || !glyph.admittedTexture || !glyph.sprite)
             continue;
-        panel->imageOpacity = 1.0f;
+        panel->alpha = 1.0f;
         image->colour = glyph.colour;
-        panel->x.position = (glyph.sprite->x / 640.0f - panel->width / 1920.0f * 0.5f) * 1920.0f;
-        panel->y.position = (glyph.sprite->y / 480.0f - panel->height / 1080.0f * 0.5f) * 1080.0f;
+        const float halfHeight = panel->layout.height.value.fraction * 0.5f;
+        panel->layout.offsetX = (glyph.sprite->x / 640.0f) - (panel->layout.width.value.fraction * 0.5f);
+        panel->layout.offsetY = (glyph.sprite->y / 480.0f) - halfHeight;
+        UI_InvalidateWindowRect(*panel);
     }
 }
 
+// @verified - p
 std::int64_t RenderBigKanjiText() {
     UpdateBigKanjiImages();
     UpdateBigKanjiPositionAndColour();
-    if (drawingUI) {
-        d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::BigKanjiText)];
-        AuthoredMenuLayout &layout = bigKanjiLayout;
-        d3t::ResolveUIDefinitionLayout(
-            definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels, {}, GetUILayoutPaddingScale());
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::BigKanjiText)];
+    uiUpdateWithColour(*GetNativeUiContext(), element.config.uiHandleIndex);
 
-        for (std::size_t index = 0; index < definition.textureObjects.size(); ++index) {
-            const d3t::UITextureObjectDefinition *const object = &definition.textureObjects[index];
-            for (std::int32_t slot = 0; slot < bigKanjiCount; ++slot) {
-                if (bigKanjiImages[slot] != object || !bigKanjiPanels[slot] || !bigKanjiPanels[slot]->imageOpacity)
-                    continue;
-                const BigKanjiGlyph &glyph = bigKanjiGlyphs[slot];
-                const float width = bigKanjiImageWidths[slot] * 1920.0f, height = bigKanjiImageHeights[slot] * 1080.0f;
-                const d3t::UISharedSpriteImage image{glyph.admittedTexture, {0.0f, 0.0f, width, height}};
-                d3t::DrawUITextureObject(definition, *object, layout.objects[index], 1.0f, &image);
-                break;
-            }
-        }
-    }
     for (BigKanjiGlyph &glyph : bigKanjiGlyphs)
         glyph.requested = 0;
     return 0;
@@ -4331,6 +4326,8 @@ void InitializeUIElements() {
     splash.isSelected = SplashSelected;
     splash.reset = ResetSplash;
     splash.destroy = DestroySplash;
+    splash.render = SplashRender;
+    splash.isPressed = HandleSplashInput;
     UIElementState &pressStart = g_uiElements[static_cast<std::size_t>(UIElement::PressStart)];
     pressStart.name = "Press Start";
     pressStart.parseDefinitionFromFile = LoadPressStart;
@@ -5626,20 +5623,22 @@ std::uint32_t ReInitElement(UIElement elementIndex) {
     return parser ? parser() : 3;
 }
 
+// @verified - p
 void PublishBigKanjiText(const char *spriteName, LegacyIconSprite *sprites, std::int32_t count) {
     const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::BigKanjiText)];
-    if (static_cast<std::uint32_t>(element.config.uiHandleIndex) >= d3t::kUIViewSlotCount)
+    d3t ::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(element.config.uiHandleIndex);
+    if (!view)
         return;
-    bigKanjiCount = count;
-    for (std::int32_t slot = 0; slot < count; ++slot) {
-        BigKanjiGlyph &glyph = bigKanjiGlyphs[slot];
-        glyph.sprite = &sprites[slot];
-        std::array<char, 260> path{};
-        std::snprintf(path.data(), path.size(), "/ui/BigKanjiText/Textures/%s/moji_%d.tga?usage=0", spriteName, slot);
-        d3t::LoadImageTexture(path.data(), false, &glyph.texture, 0);
+    view->imagesLoading = count;
+    for (std::uint32_t index = 0; index < static_cast<std::uint32_t>(count); ++index) {
+        BigKanjiGlyph &glyph = bigKanjiGlyphs[index];
+        glyph.sprite = sprites + index;
+        std::array<char, 260> path;
+        std::snprintf(path.data(), path.size(), "/ui/BigKanjiText/Textures/%s/moji_%d.tga", spriteName, index);
+        glyph.texture = SetupUsageForTexture(path.data(), 0);
         glyph.admittedTexture = 0;
-        if (bigKanjiImages[slot])
-            bigKanjiImages[slot]->frameIndex = slot;
+        if (bigKanjiImages[index])
+            bigKanjiImages[index]->image = static_cast<std::int32_t>(index);
     }
 }
 
@@ -5652,15 +5651,16 @@ void PublishBigKanjiGlyph(std::int32_t index, std::uint32_t colour) {
     glyph.colour = (colour & 0xff00ff00U) | ((colour >> 16U) & 0xffU) | ((colour & 0xffU) << 16U);
 }
 
+// @verified - p
 void ReleaseBigKanjiText() {
     for (BigKanjiGlyph &glyph : bigKanjiGlyphs) {
         d3t::InitTexture2DResource(glyph.admittedTexture);
-        if (glyph.texture != glyph.admittedTexture)
-            d3t::InitTexture2DResource(glyph.texture);
         glyph.admittedTexture = 0;
-        glyph.texture = 0;
     }
-    bigKanjiCount = 0;
+    const UIElementState &element = g_uiElements[static_cast<std ::size_t>(UIElement::BigKanjiText)];
+    d3t::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(element.config.uiHandleIndex);
+    if (view)
+        view->imagesLoading = 0;
 }
 
 std::int64_t DestroyElementByIndex(UIElement elementIndex) {
@@ -6052,7 +6052,7 @@ void RenderUIContents() {
     UpdateUI();
     HandleUIStates();
     if (g_uiElements[static_cast<std::size_t>(UIElement::Splash)].isVisible) {
-        ProcessSplashScreen();
+        RenderScreenFilmFrame(static_cast<std::int32_t>(UIElement::Splash));
     }
     // ST fade quads belong to the scene pass, below every UI widget.
     for (std::size_t index = 0; index < screenColourOverlayCount; ++index) {
@@ -6262,7 +6262,7 @@ void RenderUIContents() {
             } else if (index == static_cast<std::size_t>(UIElement::MoveLearned)) {
                 RenderMoveLearnedDefinition();
             } else if (index == static_cast<std::size_t>(UIElement::BigKanjiText)) {
-                RenderBigKanjiText();
+                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
             } else {
                 if (((index >= 10 && index <= 25) || index == 29 || index == 53 || index == 64 ||
                         index == static_cast<std::size_t>(UIElement::PawnshopFlyer1) || index == static_cast<std::size_t>(UIElement::PawnshopFlyer2) ||

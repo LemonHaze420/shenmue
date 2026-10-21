@@ -444,6 +444,9 @@ d3t::UIWindow *UI_FindViewWindowPointer(std::uint32_t slotIndex, const char *id)
 }
 
 // @verified - p
+UIColourImageWidget *UI_GetColourImageWidget(std::uint32_t index) {
+    return index < g_uiColourImageWidgets.size() ? &g_uiColourImageWidgets[index] : nullptr;
+}
 d3t::UILabelWidget *UI_GetLabel(std::uint32_t index) {
     return index > 0x1ffU ? nullptr : &g_uiLabelWidgets[index];
 }

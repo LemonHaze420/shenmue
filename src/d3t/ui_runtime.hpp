@@ -1032,6 +1032,7 @@ std::int32_t UI_FindViewImageWidget(std::uint32_t slotIndex, const char *id);
 #if SHENMUE_IS_S2
 d3t::UIWindow *UI_FindViewWindowPointer(std::uint32_t slotIndex, const char *id);
 d3t::UILabelWidget *UI_GetLabel(std::uint32_t index);
+UIColourImageWidget *UI_GetColourImageWidget(std::uint32_t index);
 UIButtonIconWidget *UI_FindViewIconWidget(std::uint32_t slotIndex, const char *id, std::int32_t kind);
 #endif
 std::int32_t UI_FindViewButtonWheel(std::uint32_t slotIndex, const char *id);
