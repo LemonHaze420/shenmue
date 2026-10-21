@@ -122,11 +122,6 @@ constexpr std::uint32_t HelpColour(std::uint8_t r, std::uint8_t g, std::uint8_t 
 }
 
 // helpIconCodeToAction.
-std::int32_t HelpIconAction(std::int32_t code) {
-    return code >= 0 && code < static_cast<std::int32_t>(HELP_ICON_ACTIONS.size()) ? HELP_ICON_ACTIONS[static_cast<std::size_t>(code)] : -1;
-}
-
-// helpIconInputType.
 std::int32_t HelpIconInputType() {
     switch (helpGetCurrentHelp()) {
     case 0x04:
@@ -148,7 +143,7 @@ std::int32_t HelpIconInputType() {
 void HelpWidgetMakeButtonIcon(UIButtonIconWidget &icon, std::int32_t code) {
     icon = {};
     icon.inUse = 1;
-    icon.action = helpWidgetMode == 1 ? 3 : HelpIconAction(code);
+    icon.action = helpWidgetMode == 1 ? 3 : UI_GetActionForId(code);
     std::sprintf(icon.id.data(), "UIHelp::PlatformButtonIcon_ID:%i_Action:%i", code, icon.action);
     std::sprintf(icon.image.data(), "%s", g_platformButtonIconImages[0]->name);
     icon.field88 = 1;
@@ -2855,7 +2850,7 @@ void HelpWidgetParseLine(std::string_view line) {
 // helpWidgetAddButtonIcon.
 void HelpWidgetAddButtonIcon(std::int32_t code) {
     HelpWidgetMakeButtonIcon(helpWidgetIcons[static_cast<std::size_t>(helpWidgetIconCount)], code);
-    helpWidgetIconActions[static_cast<std::size_t>(helpWidgetIconCount++)] = HelpIconAction(code);
+    helpWidgetIconActions[static_cast<std::size_t>(helpWidgetIconCount++)] = UI_GetActionForId(code);
 }
 
 // FormatColoursForHelpTopic: the coloured boxes behind topic columns, as

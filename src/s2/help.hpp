@@ -47,7 +47,7 @@ struct HelpWidgetBoxDefinition {
     std::uint32_t colour;
     std::int32_t column, row, rows, widthMode;
 };
-inline constexpr std::array<std::int32_t, 26> HELP_ICON_ACTIONS{60, 57, 0, 1, 2, 3, 8, 9, 7, -1, -1, 4, 5, 24, 22, 23, 25, 16, 17, 14, 15, 62, 61, 67, 68, 63};
+
 enum HelpUiState : std::uint8_t {
     HelpIdle = 0,
     HelpShowingPrep = 1,

@@ -201,7 +201,13 @@ namespace shenmue::s1 {
 namespace shenmue::s2 {
 #endif
 
+#if SHENMUE_IS_S1_FAMILY
 inline constexpr std::array<std::int8_t, 24> kTextBlockCellActions{59, 56, 0, 1, 2, 3, 8, 9, 7, -1, -1, 4, 5, 24, 22, 23, 25, 16, 17, 14, 15, 61, 60, 62};
+
+#else
+inline constexpr std::array<std::int32_t, 26> kTextBlockCellActions{
+    60, 57, 0, 1, 2, 3, 8, 9, 7, -1, -1, 4, 5, 24, 22, 23, 25, 16, 17, 14, 15, 62, 61, 67, 68, 63};
+#endif
 
 #if SHENMUE_IS_S1
 } // namespace shenmue::s1
