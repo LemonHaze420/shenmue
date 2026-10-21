@@ -6215,7 +6215,7 @@ void RenderUIContents() {
                 SetGameUiFlag(g_uiRefreshedElements, index, true);
                 SetGameUiFlag(gameUiSecondaryFlags, index, true);
                 if (index == static_cast<std::size_t>(UIElement::PressStart))
-                    DrawPressStartDefinition(uiDefinitions[index]);
+                    RenderScreenFilmFrame(static_cast<std::int32_t>(index));
                 else {
                     RenderScreenFilmFrame(static_cast<std::int32_t>(index));
                     mainMenuFrameWasRendered = true;
@@ -6254,7 +6254,7 @@ void RenderUIContents() {
             if (index == static_cast<std::size_t>(UIElement::NotebookPages)) {
                 RenderMemoNotebookPages();
             } else if (index == static_cast<std::size_t>(UIElement::PressStart)) {
-                DrawPressStartDefinition(uiDefinitions[index]);
+                RenderScreenFilmFrame(static_cast<std::int32_t>(index));
             } else if (index == static_cast<std::size_t>(UIElement::MoveLearned)) {
                 RenderMoveLearnedDefinition();
             } else if (index == static_cast<std::size_t>(UIElement::BigKanjiText)) {

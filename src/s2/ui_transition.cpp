@@ -83,6 +83,10 @@ float GetUITransitionValue(std::int32_t index) {
     return g_uiAnimSlots[static_cast<std::size_t>(index)].current[0];
 }
 
+// @verified - p
+std::int32_t GetUIIntegerTransitionValue(std::int32_t index) {
+    return std::bit_cast<std::int32_t>(g_uiAnimSlots[static_cast<std::size_t>(index)].current[0]);
+}
 void ResetUITransition(std::int32_t index) {
     ClearTransition(g_uiAnimSlots[static_cast<std::size_t>(index)], 0);
 }

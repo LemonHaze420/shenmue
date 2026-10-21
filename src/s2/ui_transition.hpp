@@ -12,6 +12,7 @@ void StartUIAngleTransition(std::int32_t index, float from, float to, std::int32
 void SetUITransitionLoopMode(std::int32_t index, std::int32_t mode);
 bool IsUITransitionActive(std::int32_t index);
 float GetUITransitionValue(std::int32_t index);
+std::int32_t GetUIIntegerTransitionValue(std::int32_t index);
 void ResetUITransition(std::int32_t index);
 void RestartUITransition(std::int32_t index);
 void SetUITransitionValue(std::int32_t index, float value);

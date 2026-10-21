@@ -32,6 +32,11 @@ void HideUIWindow(d3t::UIWindow *window) {
 
 d3t::UILabelWidget *mainMenuUserIdLabel{};
 char mainMenuUserIdText{};
+// @verified - p
+void ShowUIWindow(d3t::UIWindow *window) {
+    if (window)
+        window->alpha = 1.0f;
+}
 std::int64_t BindMainMenuDefinition() {
     const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::MainMenu)].config.uiHandleIndex;
     mainMenuContentAnimation = UIAnimAllocSlot();

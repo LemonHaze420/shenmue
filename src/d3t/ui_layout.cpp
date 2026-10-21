@@ -435,7 +435,19 @@ std::int32_t UI_FindViewWindow(std::uint32_t slotIndex, const char *id) {
     return -1;
 }
 
+#if SHENMUE_IS_S2
+// @verified - p
+d3t::UIWindow *UI_FindViewWindowPointer(std::uint32_t slotIndex, const char *id) {
+    if (!id || !id[0])
+        return nullptr;
+    return UI_GetWindow(UI_FindViewWindow(slotIndex, id));
+}
 
+// @verified - p
+d3t::UILabelWidget *UI_GetLabel(std::uint32_t index) {
+    return index > 0x1ffU ? nullptr : &g_uiLabelWidgets[index];
+}
+#endif
 std::int32_t UI_FindViewLabel(std::uint32_t slotIndex, const char *id) {
     if (slotIndex > 75 || !id)
         return -1;

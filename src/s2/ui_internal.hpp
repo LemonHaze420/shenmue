@@ -145,23 +145,76 @@ extern bool enterPressed;
 
 extern bool forceSkipSplashScreens;
 
+inline constexpr std::array<const char *, 9> PRESS_START_LOGO_IMAGES{"GameLogo", "GameLogo_KR", "GameLogo_SC", "GameLogo_White", "GameLogo_White_KR",
+    "GameLogo_White_SC", "GameLogo_Shadow", "GameLogo_Shadow_KR", "GameLogo_Shadow_SC"};
+inline constexpr std::array<const char *, 2> PRESS_START_MURAL_IMAGES{"Press_Start::Colour_Image::Mural_White", "Press_Start::Colour_Image::Mural_Blur"};
+inline constexpr std::array<const char *, 4> PRESS_START_LOGO_WIDGETS{"Press_Start::Logo_Panel::Logo_Image", "Press_Start::Logo_White::Logo_White_Image",
+    "Press_Start::Logo_Shadow_Left::Logo_Shadow_Left_Image", "Press_Start::Logo_Shadow_Right::Logo_Shadow_Right_Image"};
+inline constexpr std::array<const char *, 2> PRESS_START_ICON_WIDGETS{"PressStart::Icon_Console", "PressStart::Icon_PC"};
+
+// @provisional-layout: IDA has no UDT; the title-light data and consumer establish the fields and 0x50-byte stride.
+struct PressStartLightBand {
+    float begin;
+    float end;
+    float value;
+};
+static_assert(sizeof(PressStartLightBand) == 12 && offsetof(PressStartLightBand, value) == 8);
+struct PressStartLightState {
+    float duration;
+    float phase;
+    std::int32_t direction;
+    std::uint8_t paused;
+    std::array<std::byte, 3> reserved0d;
+    std::int32_t shadowWindow;
+    Vector2 shadowScale;
+    float shadowAmplitude;
+    std::array<PressStartLightBand, 3> bands;
+    std::array<std::byte, 12> reserved44;
+};
+static_assert(sizeof(PressStartLightState) == 0x50 && offsetof(PressStartLightState, bands) == 0x20);
+static_assert(offsetof(PressStartLightState, phase) == 4 && offsetof(PressStartLightState, direction) == 8);
+static_assert(offsetof(PressStartLightState, shadowWindow) == 16 && offsetof(PressStartLightState, shadowScale) == 20);
+inline constexpr std::array<PressStartLightState, 2> PRESS_START_LIGHT_INITIAL{{
+    {.duration = 16.0f,
+        .phase = 0.0f,
+        .direction = 1,
+        .paused = 0,
+        .reserved0d = {},
+        .shadowWindow = 20,
+        .shadowScale = {1.5f, 0.75f},
+        .shadowAmplitude = 25.0f,
+        .bands = {{{.begin = -0.5f, .end = 0.5f, .value = 0.0f}, {.begin = 0.25f, .end = 0.75f, .value = 0.0f}, {.begin = 0.5f, .end = 1.5f, .value = 0.0f}}},
+        .reserved44 = {}},
+    {.duration = 16.0f,
+        .phase = 0.5f,
+        .direction = 1,
+        .paused = 0,
+        .reserved0d = {},
+        .shadowWindow = 21,
+        .shadowScale = {-1.5f, -0.75f},
+        .shadowAmplitude = 25.0f,
+        .bands = {{{.begin = -0.5f, .end = 0.5f, .value = 0.0f}, {.begin = 0.25f, .end = 0.75f, .value = 0.0f}, {.begin = 0.5f, .end = 1.5f, .value = 0.0f}}},
+        .reserved44 = {}},
+}};
 struct PressStartRuntime {
     bool frozen{};
-    std::array<std::int32_t, 23> panels{};
-    std::array<std::int32_t, 23> transitions{};
-    std::array<float, 23> opacity{};
+    std::array<std::int32_t, 9> images{};
+    std::array<d3t::UIWindow *, 23> windows{};
+    std::array<std ::int32_t, 23> transitions{};
+    std::array<UIColourImageWidget *, 2> murals{};
+    std ::array<UIButtonIconWidget *, 2> icons{};
+    std::array<d3t::UIImageWidget *, 4> logos{};
+    d3t ::UILabelWidget *prompt{};
     std::int32_t angleTransition{-1};
     std::int32_t blinkTransition{-1};
-    std::array<float, 2> lightPhase{0.0f, 0.5f};
-    std::array<std::int32_t, 2> lightDirection{1, 1};
-    std::vector<std::int32_t> parents;
-    std::vector<d3t::UIRect> panelBounds;
-    std::vector<d3t::UIPanelBoundsOverride> rootOverrides;
-    std::vector<d3t::UIResolvedTextureObject> objects;
-    std::vector<d3t::UIResolvedLabel> labels;
-    std::vector<std::int32_t> objectPanels;
-    std::vector<std::int32_t> labelPanels;
+    std::array<PressStartLightState, 2> lights = PRESS_START_LIGHT_INITIAL;
 };
+static_assert(offsetof(UIButtonIconWidget, fontColour) == 0x9c && offsetof(UIButtonIconWidget, colour) == 0xb0);
+static_assert(offsetof(d3t::UIViewImage, rotate) == 0x34 && offsetof(d3t::UIViewImage, angle) == 0x38);
+void HideUIWindow(d3t::UIWindow *window);
+void ShowUIWindow(d3t::UIWindow *window);
+void UpdatePressStartTransitions();
+void UpdatePressStartLight(PressStartLightState &light, std::int32_t firstWindow);
 extern PressStartRuntime pressStartRuntime;
 
 extern bool mainMenuFrameWasRendered;
@@ -1123,8 +1176,6 @@ std::int64_t DestroyMainMenuWheel();
 std::int64_t MainMenuWheelInput();
 
 std::int64_t ActivateMainMenuChoice(MainMenuItem selection);
-
-void DrawPressStartDefinition(d3t::UIDefinition &definition);
 
 extern std::int32_t helpWidgetRunCount, helpWidgetLineCount, helpWidgetIconRunCount, helpWidgetBoxCount;
 

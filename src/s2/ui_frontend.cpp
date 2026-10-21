@@ -234,55 +234,48 @@ std::uint32_t LoadMainMenuCollection() {
 
 void ApplyPressStartDefaultOpacity() {
     PressStartRuntime &runtime = pressStartRuntime;
-    for (const std::size_t index : {20U, 21U, 3U, 13U, 14U, 15U, 16U, 17U, 18U, 19U})
-        runtime.opacity[index] = 1.0f;
+    for (const std::size_t index : {20U, 21U, 3U, 13U})
+        ShowUIWindow(runtime.windows[index]);
     for (const std::size_t index : {5U, 7U, 8U})
-        runtime.opacity[index] = 0.0f;
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::PressStart)];
-    for (d3t::UITextureObjectDefinition &object : definition.textureObjects)
-        if (object.kind == d3t::UITextureObjectKind::ColourButton && object.panelId == PRESS_START_PANEL_IDS[6])
-            object.colour &= 0x00ffffffU;
+        HideUIWindow(runtime.windows[index]);
+    for (std::size_t index = 14; index < 20; ++index)
+        ShowUIWindow(runtime.windows[index]);
+    if (runtime.windows[6])
+        runtime.windows[6]->colour &= 0x00ffffffU;
 }
 
-// @verified - p: 4f7cd0 retains the forced-film-bar owner.
 std::int64_t TickPressStart() {
     shenSetForcedFilmbars(1);
+    ResetPressStartLogoImages();
     return 0;
 }
 
-// @verified - p: 4f79f0 binds all 23 native panel slots and the integer blink track.
 std::int64_t PressStartSelected() {
     PressStartRuntime &runtime = pressStartRuntime;
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::PressStart)];
-    const auto panelIndex = [&definition](std::string_view id) -> std::int32_t {
-        if (id.empty())
-            return -1;
-        for (std::size_t index = 0; index < definition.panels.size(); ++index)
-            if (definition.panels[index].id == id)
-                return static_cast<std::int32_t>(index);
-        return -1;
-    };
-    for (std::size_t index = 0; index < runtime.panels.size(); ++index)
-        runtime.panels[index] = panelIndex(PRESS_START_PANEL_IDS[index]);
-    runtime.transitions.fill(-1);
-    runtime.opacity.fill(1.0f);
-    runtime.angleTransition = -1;
+    const std ::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::PressStart)].config.uiHandleIndex;
+    for (std::size_t index = 0; index < runtime.images.size(); ++index)
+        runtime.images[index] = UI_FindViewImage(slot, PRESS_START_LOGO_IMAGES[index]);
+    if (HasUnlockedRenderHandle())
+        SetD3TRenderSettings(0);
+    runtime.prompt = UI_GetLabel(static_cast<std::uint32_t>(UI_FindViewLabel(slot, "PressStart::PressStart")));
     runtime.blinkTransition = UIAnimAllocSlot();
     StartUIIntegerTransition(runtime.blinkTransition, 0, 2, 1.0f, 0.0f);
     SetUITransitionLoopMode(runtime.blinkTransition, 1);
-    runtime.parents.resize(definition.panels.size());
-    runtime.panelBounds.resize(definition.panels.size());
-    runtime.rootOverrides.resize(definition.panels.size());
-    runtime.objects.resize(definition.textureObjects.size());
-    runtime.labels.resize(definition.labels.size());
-    runtime.objectPanels.resize(definition.textureObjects.size());
-    runtime.labelPanels.resize(definition.labels.size());
-    for (std::size_t index = 0; index < definition.panels.size(); ++index)
-        runtime.parents[index] = panelIndex(definition.panels[index].parentId);
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        runtime.objectPanels[index] = panelIndex(definition.textureObjects[index].panelId);
-    for (std::size_t index = 0; index < definition.labels.size(); ++index)
-        runtime.labelPanels[index] = panelIndex(definition.labels[index].panelId);
+    for (std::size_t index = 0; index < runtime.windows.size(); ++index) {
+        runtime.windows[index] = UI_FindViewWindowPointer(slot, PRESS_START_PANEL_IDS[index].data());
+        runtime.transitions[index] = -1;
+    }
+    for (std::size_t index = 0; index < runtime.murals.size(); ++index) {
+        const std::int32_t image = UI_FindViewColourImage(slot, PRESS_START_MURAL_IMAGES[index]);
+        runtime.murals[index] = image == -1 ? nullptr : &g_uiColourImageWidgets[static_cast<std::size_t>(image)];
+    }
+    runtime.angleTransition = -1;
+    for (std::size_t index = 0; index < runtime.icons.size(); ++index)
+        runtime.icons[index] = UI_FindViewIconWidget(slot, PRESS_START_ICON_WIDGETS[index], 21);
+    for (std::size_t index = 0; index < runtime.logos.size(); ++index) {
+        const std::int32_t image = UI_FindViewImageWidget(slot, PRESS_START_LOGO_WIDGETS[index]);
+        runtime.logos[index] = image == -1 ? nullptr : &g_uiImageWidgets[static_cast<std::size_t>(image)];
+    }
     ResetPressStartLogoImages();
     ApplyPressStartDefaultOpacity();
     if (runtime.frozen)
@@ -304,8 +297,32 @@ std::int64_t PressStartInput() {
     return 0;
 }
 
+// @verified - p
 std::int64_t PressStartRender() {
-    LoadPressStart();
+    PressStartRuntime &runtime = pressStartRuntime;
+    const bool keyboard = GetIsKeyboardActive() != 0;
+    for (std::size_t index = 0; index < runtime.icons.size(); ++index) {
+        UIButtonIconWidget *const icon = runtime.icons[index];
+        if (icon) {
+            const std::uint32_t alpha = (keyboard == (index != 0)) ? 0xff000000U : 0U;
+            icon->colour = (icon->colour & 0x00ffffffU) | alpha;
+            icon->fontColour = (icon->fontColour & 0x00ffffffU) | alpha;
+        }
+    }
+    if (runtime.blinkTransition != -1) {
+        bool visible = false;
+        if (!runtime.frozen)
+            visible = GetUIIntegerTransitionValue(runtime.blinkTransition) % 4 != 0;
+        if (runtime.prompt)
+            runtime.prompt->field44 = visible;
+        if (runtime.windows[22])
+            runtime.windows[22]->alpha = visible ? 1.0f : 0.0f;
+    }
+    UpdatePressStartTransitions();
+    UpdatePressStartLight(runtime.lights[0], 14);
+    UpdatePressStartLight(runtime.lights[1], 17);
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::PressStart)];
+    DrawUIEntity(*GetNativeUiContext(), element.config.uiHandleIndex, element.index);
     return 0;
 }
 
@@ -1206,111 +1223,74 @@ float EvaluateTitleNoise(float value) {
     return (second + first) * 0.39500001f;
 }
 
-std::array<float, 3> EvaluateTitleLighting(float progress) {
+// @verified - p
+void UpdatePressStartTransitions() {
 
-    const float wave = std::sin((EvaluateTitleNoise(progress) + progress) * 3.14159265358979323846f);
-    constexpr std::array<std::array<float, 2>, 3> windows{{
-        {-0.5f, 0.5f},
-        {0.25f, 0.75f},
-        {0.5f, 1.5f},
-    }};
-    std::array<float, 3> result{};
-    for (std::size_t index = 0; index < result.size(); ++index) {
-        const float begin = windows[index][0];
-        const float end = windows[index][1];
-        const float value = end > begin ? std::clamp((wave - begin) / (end - begin), 0.0f, 1.0f) : 0.0f;
-        if (index == 0) {
-            result[index] = 1.0f - (std::sin(value * 3.14159265358979323846f + 1.57079632679489661923f) + 1.0f) * 0.5f;
-        } else if (index == 1) {
-            result[index] = (std::sin(value * 6.28318530717958647692f - 1.57079632679489661923f) + 1.0f) * 0.5f;
-        } else {
-            result[index] = (std::sin(value * 3.14159265358979323846f - 1.57079632679489661923f) + 1.0f) * 0.5f;
-        }
-    }
-    return result;
-}
-
-void DrawPressStartDefinition(d3t::UIDefinition &definition) {
     PressStartRuntime &runtime = pressStartRuntime;
-    bool promptVisible = false;
-    if (runtime.blinkTransition != -1 && !runtime.frozen) {
-        const std::int32_t blink = std::bit_cast<std::int32_t>(GetUITransitionValue(runtime.blinkTransition));
-        promptVisible = blink % 4 != 0;
-    }
-    runtime.opacity[22] = promptVisible ? 1.0f : 0.0f;
-    if (runtime.frozen) {
-        for (std::size_t index = 0; index < 14; ++index) {
-            if (runtime.transitions[index] == -1 || runtime.panels[index] == -1)
-                continue;
-            if (IsUITransitionActive(runtime.transitions[index]))
-                runtime.opacity[index] = GetUITransitionValue(runtime.transitions[index]);
-            if ((index == 7 || index == 8) && runtime.angleTransition != -1)
-                for (d3t::UITextureObjectDefinition &object : definition.textureObjects)
-                    if (object.panelId == PRESS_START_PANEL_IDS[index])
-                        object.rotation = GetUITransitionValue(runtime.angleTransition);
-            if (index == 3)
-                runtime.opacity[20] = runtime.opacity[21] = runtime.opacity[index];
-        }
-    }
-    const float backgroundOpacity = runtime.transitions[6] == -1 ? (runtime.frozen ? 0.0f : 1.0f) : GetUITransitionValue(runtime.transitions[6]);
-    for (std::size_t side = 0; side < 2; ++side) {
-        float &phase = runtime.lightPhase[side];
-        phase = std::fmax(0.0f, std::fmin(1.0f, phase + GetFrameTime() * static_cast<float>(runtime.lightDirection[side]) / 16.0f));
-        const std::array<float, 3> lights = EvaluateTitleLighting(phase);
-        const float shadow = std::sin((EvaluateTitleNoise(phase) + phase) * 3.14159265358979323846f) * 25.0f;
-        const std::int32_t shadowPanel = runtime.panels[20 + side];
-        if (shadowPanel != -1) {
-            definition.panels[shadowPanel].x.offset = shadow * (side == 0 ? 1.5f : -1.5f);
-            definition.panels[shadowPanel].y.offset = shadow * (side == 0 ? 0.75f : -0.75f);
-        }
-        for (std::size_t layer = 0; layer < lights.size(); ++layer)
-            runtime.opacity[14 + side * 3 + layer] = lights[layer] * backgroundOpacity;
-        if (phase == 1.0f)
-            runtime.lightDirection[side] = -1;
-        if (phase == 0.0f)
-            runtime.lightDirection[side] = 1;
-    }
-    std::size_t rootOverrideCount = 0;
-    for (std::size_t index = 0; index < definition.panels.size(); ++index) {
-        const d3t::UIPanelDefinition &panel = definition.panels[index];
-        if (runtime.parents[index] != -1 || panel.parentId.empty())
+    if (!runtime.frozen)
+        return;
+    d3t ::UIViewSlot<kUIViewImageCapacity> *const view =
+        GetNuklearElementByIdx(g_uiElements[static_cast<std::size_t>(UIElement::PressStart)].config.uiHandleIndex);
+    for (std::size_t index = 0; index < 14; ++index) {
+        d3t::UIWindow *const window = runtime.windows[index];
+        const std::int32_t transition = runtime.transitions[index];
+        if (transition == -1 || !window)
             continue;
-        d3t::UIRect parent{};
-        const d3t::UIPanelDefinition *authoredParent{};
-        if (FindUIParentBounds(panel.parentId, parent, &authoredParent))
-            runtime.rootOverrides[rootOverrideCount++] = {
-                .panel = index, .bounds = d3t::ResolveUIPanelBounds(panel, parent, authoredParent->width, authoredParent->height)};
-    }
-    d3t::ResolveUIDefinitionLayout(definition, runtime.parents, runtime.panelBounds, runtime.objects, runtime.labels, runtime.objectPanels, runtime.labelPanels,
-        std::span{runtime.rootOverrides.data(), rootOverrideCount}, GetUILayoutPaddingScale());
-    const auto panelOpacity = [&runtime](std::int32_t panel) {
-        float opacity = 1.0f;
-        while (panel >= 0) {
-            for (std::size_t slot = 0; slot < runtime.panels.size(); ++slot)
-                if (runtime.panels[slot] == panel)
-                    opacity *= runtime.opacity[slot];
-            panel = runtime.parents[panel];
+        if (IsUITransitionActive(transition))
+            window->alpha = GetUITransitionValue(transition);
+        if (index >= 7 && index <= 8 && runtime.angleTransition != -1) {
+            d3t::UIViewImage &image = view->images[static_cast<std::size_t>(runtime.murals[index - 7]->image)];
+            image.rotate = 1;
+            image.angle = GetUITransitionValue(runtime.angleTransition);
         }
-        return opacity;
-    };
-    const bool keyboard = GetIsKeyboardActive() != 0;
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index) {
-        d3t::UITextureObjectDefinition &object = definition.textureObjects[index];
-        if (object.panelId == "PressStart::Icon_Console")
-            object.hidden = keyboard;
-        if (object.panelId == "PressStart::Icon_PC")
-            object.hidden = !keyboard;
-        d3t::DrawUITextureObject(definition, object, runtime.objects[index], panelOpacity(runtime.objectPanels[index]));
-    }
-    for (std::size_t index = 0; index < definition.labels.size(); ++index) {
-        const d3t::UILabelDefinition &label = definition.labels[index];
-        if (!promptVisible && label.id == "PressStart::PressStart")
-            continue;
-        DrawMovesLabel(label, runtime.labels[index], label.token.empty() ? std::string_view(label.text) : GetLocalizedSceneText(label.token),
-            panelOpacity(runtime.labelPanels[index]), &definition);
+        if (index == 3) {
+            runtime.windows[20]->alpha = window->alpha;
+            runtime.windows[21]->alpha = window->alpha;
+        }
     }
 }
-} // namespace ui_detail
+
+void UpdatePressStartLight(PressStartLightState &light, std::int32_t firstWindow) {
+    PressStartRuntime &runtime = pressStartRuntime;
+    float opacity = 0.0f;
+    if (runtime.transitions[6] == -1) {
+        if (!runtime.frozen)
+            opacity = 1.0f;
+    } else {
+        opacity = GetUITransitionValue(runtime.transitions[6]);
+    }
+    if (!(light.duration > 0.0f))
+        return;
+    if (light.paused == 0)
+        light.phase = std::fmax(0.0f, std ::fmin(1.0f, ((1.0f / light.duration) * (GetFrameTime() * static_cast<float>(light.direction))) + light.phase));
+    const float noise = EvaluateTitleNoise(light.phase);
+    const float wave = std::sin((noise + light.phase) * 3.1415927f);
+    d3t::UIWindow &shadow = *runtime.windows[static_cast<std::size_t>(light.shadowWindow)];
+    shadow.layout.offsetX = ((wave * light.shadowAmplitude) * light.shadowScale.x) / 1920.0f;
+    shadow.layout.offsetY = ((wave * light.shadowAmplitude) * light.shadowScale.y) / 1080.0f;
+    for (std::size_t index = 0; index < light.bands.size(); ++index) {
+        PressStartLightBand &band = light.bands[index];
+        const float width = band.end - band.begin;
+        if (width <= 0.0f)
+            band.value = 0.0f;
+        else
+            band.value = std ::fmax(0.0f, std::fmin(1.0f, (wave - band.begin) / width));
+        float amount;
+        if (index == 0)
+            amount = 1.0f - (std::sin((band.value * 3.1415927f) + 1.5707964f) + 1.0f) * 0.5f;
+        else if (index == 1)
+            amount = (std::sin((band.value * 6.2831855f) - 1.5707964f) + 1.0f) * 0.5f;
+        else
+            amount = (std::sin((band.value * 3.1415927f) - 1.5707964f) + 1.0f) * 0.5f;
+        runtime.windows[static_cast<std::size_t>(firstWindow) + index]->alpha = amount * opacity;
+    }
+    if (light.phase == 1.0f)
+        light.direction = -1;
+    if (light.phase == 0.0f)
+        light.direction = 1;
+}
+}
+// namespace ui_detail
 // @verified - p
 std::int32_t GetButtonWheelDirection(std::int32_t index) {
     std::uint16_t input = g_inputBuffer[0].repeatedPresses;
@@ -1406,24 +1386,21 @@ std::intptr_t ResetMainMenuWheel() {
     return reinterpret_cast<std::intptr_t>(g_mainMenuWheelWidget);
 }
 
-// @verified - p: 4f8170 resets exactly the admitted native widget-transition slots.
 void FreezePressStartPresentation() {
     PressStartRuntime &runtime = pressStartRuntime;
     runtime.frozen = true;
     if (g_uiElements[static_cast<std::size_t>(UIElement::PressStart)].config.init != 3)
         return;
     for (std::size_t index = 0; index < runtime.transitions.size(); ++index) {
-        if (runtime.panels[index] != -1)
-            runtime.opacity[index] = 0.0f;
+        HideUIWindow(runtime.windows[index]);
         if (runtime.transitions[index] != -1) {
             ResetUITransition(runtime.transitions[index]);
             runtime.transitions[index] = -1;
         }
     }
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::PressStart)];
-    for (d3t::UITextureObjectDefinition &object : definition.textureObjects)
-        if (object.kind == d3t::UITextureObjectKind::ColourButton && object.panelId == PRESS_START_PANEL_IDS[6])
-            object.colour &= 0x00ffffffU;
+
+    if (runtime.windows[6])
+        runtime.windows[6]->colour &= 0x00ffffffU;
 }
 
 // @verified - p: 4f8200 does not reset the retained angle or blink transitions.
@@ -1452,22 +1429,14 @@ void ProcessTitleOptionsInput() {
     FrontendOptionsInput();
 }
 
-// @verified - p: ResetPressStartLogoImages.
 void ResetPressStartLogoImages() {
-    auto &definition = uiDefinitions[static_cast<std::size_t>(UIElement::PressStart)];
-    const auto language = GetLoadingScreenTextType(g_s2SelectedSubtitleLanguage);
-    const std::string_view suffix = language == 4 ? "_KR" : (language == 5 || language == 6) ? "_SC" : "";
-    constexpr std::array<std::string_view, 4> ids{"Press_Start::Logo_Panel::Logo_Image", "Press_Start::Logo_White::Logo_White_Image",
-        "Press_Start::Logo_Shadow_Left::Logo_Shadow_Left_Image", "Press_Start::Logo_Shadow_Right::Logo_Shadow_Right_Image"};
-    constexpr std::array<std::string_view, 4> images{"GameLogo", "GameLogo_White", "GameLogo_Shadow", "GameLogo_Shadow"};
-    for (auto &object : definition.textureObjects) {
-        for (std::size_t index = 0; index < ids.size(); ++index) {
-            if (object.id != ids[index])
-                continue;
-            object.imageName.assign(images[index]);
-            object.imageName.append(suffix);
-        }
-    }
+    PressStartRuntime &runtime = pressStartRuntime;
+    const std::int32_t language = GetLoadingScreenTextType(ResetSceneTextLanguage());
+    const std::size_t variant = language == 4 ? 1U : static_cast<std::uint32_t>(language - 5) <= 1U ? 2U : 0U;
+    runtime.logos[0]->image = runtime.images[variant];
+    runtime.logos[1]->image = runtime.images[3 + variant];
+    runtime.logos[2]->image = runtime.images[6 + variant];
+    runtime.logos[3]->image = runtime.images[6 + variant];
 }
 
 void SetForceSkipSplashScreens(bool enabled) {
