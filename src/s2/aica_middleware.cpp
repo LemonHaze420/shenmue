@@ -2987,6 +2987,7 @@ std::int64_t LoadAICADriver(std::uint16_t *driver, std::uint8_t voiceIndex) {
             envelope->linearVolume = envelopeVolume;
             envelope->baseVolumeDb = envelopeVolume > 0 ? std::max(-64.0f, std::log10(envelopeVolume) * 20.0f) : -64.0f;
             envelope->ownerId = bank;
+            envelope->voiceId = voice.xaudioVoiceId;
             envelope->legacyEnvelope = 0;
             envelope->phase = AICA_ENVELOPE_OFF;
             envelope->filterLevel0 = 0;
