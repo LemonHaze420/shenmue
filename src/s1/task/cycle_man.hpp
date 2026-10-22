@@ -321,7 +321,7 @@ struct MobjCycle {
     int32_t actionTimerOrDoorHandle;
     // The cycle's loaded human pack.
     PackSlot *filename;
-    int32_t contextValue;
+    int32_t scriptContextValue;
     int32_t gapBC;
     CycleManager::TaggedPayload *taggedPayloadList;
     CycleMoveObjectRuntime *moveObjRuntime;

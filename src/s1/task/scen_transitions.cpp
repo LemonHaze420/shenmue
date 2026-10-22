@@ -205,8 +205,8 @@ void ClearTimedTransitionPrompt() {
     shenRefreshUI();
     UI_ResetConversationDetailsState();
     shenExecuteAICACommand(0x30babU, 0, 0);
-    SetStatOrNotebookFlag(0x320U, false);
-    SetStatOrNotebookFlag(0x0c2U, false);
+    SetStatOrNotebookFlag(SHENMUE_FLAG_EV_STOP_ACTIVE, false);
+    SetStatOrNotebookFlag(SHENMUE_FLAG_SLEEP_TRANSITION_MODAL_ACTIVE, false);
     g_TMEX_Flag = 5;
     g_tmex_val = 0;
     g_TMEX_CurrentMode = 0;
@@ -305,7 +305,7 @@ void UpdateTimedTransitionSchedulerInternal() {
             if ((g_activeTimedTransition->flags & TimedTransitionRollbackToPreviousDay2330) != 0)
                 RollTimedTransitionDateBackTo2330();
             if ((entry->flags & TimedTransitionUpdateMemoItem150) != 0 && (g_shenmueFlags[18] & 0x40U) == 0)
-                SetStatOrNotebookFlag(0x96U, true);
+                SetStatOrNotebookFlag(SHENMUE_FLAG_JOMO_A01124_INE_EVENT_DONE, true);
             DetermineActNum();
             ClearTimedTransitionPrompt();
             control->flags |= 1U;

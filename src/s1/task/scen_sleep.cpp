@@ -153,8 +153,8 @@ void SetShouldSleepFlag(std::uint8_t mode) {
     shenRefreshUI();
     UI_ResetConversationDetailsState();
     shenExecuteAICACommand(0x30babU, 0, 0);
-    SetStatOrNotebookFlag(0x320U, false);
-    SetStatOrNotebookFlag(0x0c2U, false);
+    SetStatOrNotebookFlag(SHENMUE_FLAG_EV_STOP_ACTIVE, false);
+    SetStatOrNotebookFlag(SHENMUE_FLAG_SLEEP_TRANSITION_MODAL_ACTIVE, false);
     g_TMEX_Flag = 5;
     g_tmex_val = 0;
     g_TMEX_CurrentMode = 0;
@@ -381,8 +381,8 @@ void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player) {
                 shenRefreshUI();
                 UI_ResetConversationDetailsState();
                 shenExecuteAICACommand(0x30babU, 0, 0);
-                SetStatOrNotebookFlag(0x320U, false);
-                SetStatOrNotebookFlag(0x0c2U, false);
+                SetStatOrNotebookFlag(SHENMUE_FLAG_EV_STOP_ACTIVE, false);
+                SetStatOrNotebookFlag(SHENMUE_FLAG_SLEEP_TRANSITION_MODAL_ACTIVE, false);
                 g_TMEX_Flag = 5;
                 g_tmex_val = 0;
                 g_TMEX_CurrentMode = 0;
@@ -430,8 +430,8 @@ void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player) {
                     }
                 } else if ((state & (kForcedSleepPending | kTmexPromptActive)) == kTmexPromptActive) {
                     if (g_tmex_val == 0) {
-                        SetStatOrNotebookFlag(0x320U, false);
-                        SetStatOrNotebookFlag(0x0c2U, false);
+                        SetStatOrNotebookFlag(SHENMUE_FLAG_EV_STOP_ACTIVE, false);
+                        SetStatOrNotebookFlag(SHENMUE_FLAG_SLEEP_TRANSITION_MODAL_ACTIVE, false);
                         g_shouldSleep |= kForcedSleepPending;
                         enqueueSleepPrompt(true);
                     } else if (g_tmex_val >= 2 && g_tmex_val <= 4 && (minutes < g_forcedSleepWindowStartMinutes || (state & kRegularSleepRequested) != 0)) {
@@ -439,8 +439,8 @@ void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player) {
                         shenRefreshUI();
                         UI_ResetConversationDetailsState();
                         shenExecuteAICACommand(0x30babU, 0, 0);
-                        SetStatOrNotebookFlag(0x320U, false);
-                        SetStatOrNotebookFlag(0x0c2U, false);
+                        SetStatOrNotebookFlag(SHENMUE_FLAG_EV_STOP_ACTIVE, false);
+                        SetStatOrNotebookFlag(SHENMUE_FLAG_SLEEP_TRANSITION_MODAL_ACTIVE, false);
                         g_shouldSleep = static_cast<std::uint8_t>(g_shouldSleep & ~kTmexPromptActive);
                         g_TMEX_Flag = 5;
                         g_tmex_val = 0;

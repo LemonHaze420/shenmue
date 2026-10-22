@@ -101,10 +101,10 @@ bool SCNT_IsParticipantTurnSettled(std::uint32_t name) {
 void SCNT_Core(ScenRuntimeObject *object) {
     if (!object)
         return;
-    if (object->relocatedPtrA8 && g_pCVWK) {
+    if (object->walkAwayReply && g_pCVWK) {
         for (const CVWKRuntimeSlot &slot : g_pCVWK->slots) {
             if (slot.callback && slot.stateOrOwner >= 0) {
-                object->relocatedPtrA8 = nullptr;
+                object->walkAwayReply = nullptr;
                 break;
             }
         }
@@ -291,7 +291,7 @@ void SCNT_Core(ScenRuntimeObject *object) {
     }
 
     constexpr std::uint32_t decodeStates = 0x1d1U;
-    if (object->runtimeState == 3 && (object->runtimeFlags & 0x8000U) == 0)
+    if (object->runtimeState == 3 && (object->runtimeFlags & kRuntimeFlagPlayerLeftTalkRange) == 0)
         return;
     const bool shouldDecode =
         (object->runtimeFlags & kRuntimeFlagStateDecode) == 0 && (object->runtimeState > 8 || (decodeStates & (1U << object->runtimeState)) == 0);
@@ -299,19 +299,19 @@ void SCNT_Core(ScenRuntimeObject *object) {
         if (object->runtimeState != 5)
             object->runtimeState = 0;
         const std::size_t slot = ScenWordSlotIndex(*object);
-        if (slot < g_scntWord22.size())
-            g_scntWord22[slot] = 0;
+        if (slot < g_scntWaitOffsets.size())
+            g_scntWaitOffsets[slot] = 0;
     } else if (shouldDecode) {
         std::byte *const decoded = ScanScenConditionalFlow(*object, object->instructionPtr);
         const std::size_t slot = ScenWordSlotIndex(*object);
-        if (decoded && slot < g_scntWord20.size()) {
+        if (decoded && slot < g_scntSelectedStateOffsets.size()) {
             const auto offset = decoded - object->scriptStart;
-            if (offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max() && static_cast<std::uint16_t>(offset) != g_scntWord20[slot]) {
+            if (offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max() && static_cast<std::uint16_t>(offset) != g_scntSelectedStateOffsets[slot]) {
                 object->instructionPtr = object->scriptStart;
-                g_scntWord26[slot] = 0;
-                g_scntWord20[slot] = static_cast<std::uint16_t>(offset);
-                g_scntWord24[slot] = 0;
-                g_scntWord22[slot] = 0;
+                g_scntReentryOffsets[slot] = 0;
+                g_scntSelectedStateOffsets[slot] = static_cast<std::uint16_t>(offset);
+                g_scntResumeMarkOffsets[slot] = 0;
+                g_scntWaitOffsets[slot] = 0;
                 object->runtimeFlags |= kRuntimeFlagStateDecode;
                 object->runtimeState = 0;
                 (void)RunScenBytecode(*object);
@@ -349,19 +349,19 @@ void SCNT_Core(ScenRuntimeObject *object) {
         BeginScenInteraction(*object);
         if (object->scriptSlot < kScntScriptSlotCount) {
             const std::size_t slot = ScenWordSlotIndex(*object);
-            if ((object->runtimeFlags & 0x8000U) == 0 || (object->runtimeFlags & 0x200U) != 0) {
+            if ((object->runtimeFlags & kRuntimeFlagPlayerLeftTalkRange) == 0 || (object->runtimeFlags & 0x200U) != 0) {
                 if (!ScenCanRead(*object, object->instructionPtr, 3))
                     return;
                 object->instructionPtr += 3;
-            } else if (slot < g_scntWord22.size()) {
-                std::byte *const branch = object->scriptStart + g_scntWord22[slot];
+            } else if (slot < g_scntWaitOffsets.size()) {
+                std::byte *const branch = object->scriptStart + g_scntWaitOffsets[slot];
                 if (!ScenCanRead(*object, branch, 3))
                     return;
                 const std::uint32_t raw = std::to_integer<std::uint8_t>(branch[2]) |
                     ((std::to_integer<std::uint8_t>(branch[1]) + (std::to_integer<std::uint8_t>(branch[0]) << 8U)) << 8U);
                 std::byte *const next = branch + 3;
                 const std::int32_t offset = ScenSignExtend(raw, 0x800000U);
-                object->runtimeFlags = (object->runtimeFlags | 0x100U) & ~0x8000U;
+                object->runtimeFlags = (object->runtimeFlags | 0x100U) & ~kRuntimeFlagPlayerLeftTalkRange;
                 if (offset) {
                     object->instructionPtr = ScenAddRelative(*object, next, offset);
                     if (!object->instructionPtr)
@@ -596,8 +596,8 @@ std::byte *BuildScenConversationMarkers(ScenRuntimeObject &object, std::byte *ip
         case 0x90:
             ++cursor;
             if ((object.runtimeFlags & 0x302U) == 0 && object.scriptSlot < kScntScriptSlotCount) {
-                g_scntWord24[ScenWordSlotIndex(object)] = static_cast<std::uint16_t>(cursor - object.scriptStart);
-                object.relocatedPtrA8 = nullptr;
+                g_scntResumeMarkOffsets[ScenWordSlotIndex(object)] = static_cast<std::uint16_t>(cursor - object.scriptStart);
+                object.walkAwayReply = nullptr;
             }
             object.runtimeFlags |= 0x800000U;
             opcode = readByte();

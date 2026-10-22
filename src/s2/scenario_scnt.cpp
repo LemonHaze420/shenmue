@@ -1083,7 +1083,7 @@ const std::byte *scenBuildDialogueCues(ScenarioFreeTalkRecord &record, const std
         case 0x90:
             ++cursor;
             if (!(record.flags & (ScenarioTalkInterrupted | ScenarioTalkSavedScript)) && !record.requestedRoot) {
-                record.control->resumeOffsets[2] = static_cast<std::uint16_t>(cursor - record.script);
+                record.control->resumeOffsets[TalkResumeMark] = static_cast<std::uint16_t>(cursor - record.script);
                 record.flags |= ScenarioTalkResumeReached;
                 record.pendingScriptCursor = nullptr;
             }
@@ -1221,8 +1221,9 @@ const std::byte *scenExecuteLineOpcode(ScenarioFreeTalkRecord &record, const std
     const std::int32_t operand = static_cast<std::uint8_t>(cursor[1]) + ((opcode & 0x0f) << 8);
     switch (opcode & 0xf0) {
     case 0x10:
-        if (!record.control->resumeOffsets[0] && !(record.flags & (ScenarioTalkInterrupted | ScenarioTalkSavedScript)) && !record.requestedRoot)
-            record.control->resumeOffsets[0] = static_cast<std::uint16_t>(next - record.script);
+        if (!record.control->resumeOffsets[TalkSelectedSection] && !(record.flags & (ScenarioTalkInterrupted | ScenarioTalkSavedScript)) &&
+            !record.requestedRoot)
+            record.control->resumeOffsets[TalkSelectedSection] = static_cast<std::uint16_t>(next - record.script);
         break;
     case 0x20:
         goto lineBlock;
@@ -1300,7 +1301,7 @@ const std::byte *scenExecuteStreamOpcode(ScenarioFreeTalkRecord &record, const s
         if ((record.flags & (ScenarioTalkInterrupted | ScenarioTalkSavedScript)) || record.requestedRoot)
             return next;
         record.flags |= ScenarioTalkResumeReached;
-        record.control->resumeOffsets[2] = static_cast<std::uint16_t>(next - record.script);
+        record.control->resumeOffsets[TalkResumeMark] = static_cast<std::uint16_t>(next - record.script);
         record.pendingScriptCursor = nullptr;
         return next;
     case 0xa0:
@@ -1640,7 +1641,7 @@ const std::byte *scenExecuteControlOpcode(ScenarioFreeTalkRecord &record, const 
         if ((static_cast<std::uint8_t>(cursor[4]) & 0xf0) == 0x90)
             return cursor + 4;
         if (!(record.flags & (ScenarioTalkInterrupted | ScenarioTalkSavedScript)) && !record.requestedRoot)
-            record.control->resumeOffsets[1] = static_cast<std::uint16_t>(next - record.script);
+            record.control->resumeOffsets[TalkWaitPoint] = static_cast<std::uint16_t>(next - record.script);
         record.control->requestedRootOffset = static_cast<std::uint16_t>(next - record.script);
         record.executionState = 5;
         stop = 1;
@@ -1689,12 +1690,12 @@ const std::byte *scenExecuteControlOpcode(ScenarioFreeTalkRecord &record, const 
                 (ScenarioTalkCharacterActive | ScenarioTalkRestartSection);
         }
         ScenarioFreeTalkControl &control = *record.control;
-        if (control.resumeOffsets[2] > control.resumeOffsets[1]) {
+        if (control.resumeOffsets[TalkResumeMark] > control.resumeOffsets[TalkWaitPoint]) {
             record.flags &= ~ScenarioTalkRestartSection;
             completed = false;
             record.flags |= ScenarioTalkResumeAfterSection;
         }
-        if (control.resumeOffsets[2] <= control.resumeOffsets[0]) {
+        if (control.resumeOffsets[TalkResumeMark] <= control.resumeOffsets[TalkSelectedSection]) {
             record.flags |= (ScenarioTalkResumeAfterSection | ScenarioTalkRestartSection);
             completed = false;
         }
@@ -1702,8 +1703,8 @@ const std::byte *scenExecuteControlOpcode(ScenarioFreeTalkRecord &record, const 
             QueueScenarioCharacterAction(record.name, -5);
             record.executionState = 3;
             record.scriptCursor = record.script;
-            control.resumeOffsets[2] = 0;
-            control.resumeOffsets[1] = 0;
+            control.resumeOffsets[TalkResumeMark] = 0;
+            control.resumeOffsets[TalkWaitPoint] = 0;
             record.flags &= ~ScenarioTalkResumeReached;
             record.flags &= ~ScenarioTalkCompletedResume;
             record.flags &= ~ScenarioTalkAllowVoiceOverlap;
@@ -1735,8 +1736,9 @@ const std::byte *scenExecuteControlOpcode(ScenarioFreeTalkRecord &record, const 
             return next;
         }
         ScenarioFreeTalkControl &control = *record.control;
-        const std::uint16_t resume = control.resumeOffsets[2];
-        if (resume > control.resumeOffsets[0] && (record.flags & ScenarioTalkCharacterActive) && resume < control.resumeOffsets[1]) {
+        const std::uint16_t resume = control.resumeOffsets[TalkResumeMark];
+        if (resume > control.resumeOffsets[TalkSelectedSection] && (record.flags & ScenarioTalkCharacterActive) &&
+            resume < control.resumeOffsets[TalkWaitPoint]) {
             QueueScenarioCharacterAction(record.name, -3);
             record.flags |= (ScenarioTalkResumeReached | ScenarioTalkCompletedResume);
             record.executionState = 1;
@@ -1749,11 +1751,11 @@ const std::byte *scenExecuteControlOpcode(ScenarioFreeTalkRecord &record, const 
             record.scriptCursor = record.script;
             if (!(record.flags & ScenarioTalkCharacterActive))
                 record.flags = (record.flags & ~(ScenarioTalkResumeAfterSection | ScenarioTalkRestartSection)) | ScenarioTalkRestartSection;
-            if (control.resumeOffsets[2])
+            if (control.resumeOffsets[TalkResumeMark])
                 record.flags |= (ScenarioTalkResumeAfterSection | ScenarioTalkRestartSection);
             record.flags |= ScenarioTalkCharacterActive;
-            control.resumeOffsets[2] = 0;
-            control.resumeOffsets[1] = 0;
+            control.resumeOffsets[TalkResumeMark] = 0;
+            control.resumeOffsets[TalkWaitPoint] = 0;
             record.flags &= ~(ScenarioTalkResumeReached | ScenarioTalkCompletedResume);
             record.flags &= ~ScenarioTalkAllowVoiceOverlap;
         }
@@ -1854,12 +1856,12 @@ const std::byte *scenSelectRecordStart(ScenarioFreeTalkRecord &record) {
         cursor = record.scriptCursor;
     } else if (state == 1) {
         const ScenarioFreeTalkControl &control = *record.control;
-        if (control.resumeOffsets[2] > control.resumeOffsets[0])
-            cursor = record.script + control.resumeOffsets[2] - 2;
-        else if (control.resumeOffsets[1] > control.resumeOffsets[0])
-            cursor = record.script + control.resumeOffsets[1] - 1;
+        if (control.resumeOffsets[TalkResumeMark] > control.resumeOffsets[TalkSelectedSection])
+            cursor = record.script + control.resumeOffsets[TalkResumeMark] - 2;
+        else if (control.resumeOffsets[TalkWaitPoint] > control.resumeOffsets[TalkSelectedSection])
+            cursor = record.script + control.resumeOffsets[TalkWaitPoint] - 1;
         else
-            cursor = record.script + control.resumeOffsets[0];
+            cursor = record.script + control.resumeOffsets[TalkSelectedSection];
     } else {
         cursor = record.script;
     }
@@ -2317,17 +2319,17 @@ stepProgram : {
     const std::uint32_t controlFlags = control.flags;
     if (controlFlags & 4U) {
         if (controlFlags & 1U) {
-            control.resumeOffsets[0] = 0;
+            control.resumeOffsets[TalkSelectedSection] = 0;
             control.flags &= ~1U;
         }
         control.flags &= ~0x20U;
         const std::byte *const section = SCEN_AdvanceCharacterCommandStream(record);
         if (section) {
-            if (section - record.script != control.resumeOffsets[0]) {
+            if (section - record.script != control.resumeOffsets[TalkSelectedSection]) {
                 record.scriptCursor = record.script;
-                control.resumeOffsets[0] = static_cast<std::uint16_t>(section - record.script);
-                control.resumeOffsets[2] = 0;
-                control.resumeOffsets[1] = 0;
+                control.resumeOffsets[TalkSelectedSection] = static_cast<std::uint16_t>(section - record.script);
+                control.resumeOffsets[TalkResumeMark] = 0;
+                control.resumeOffsets[TalkWaitPoint] = 0;
                 control.completedCount = 0;
                 control.activationCount = 0;
                 record.flags &= ~ScenarioTalkResumeReached;
@@ -2339,7 +2341,7 @@ stepProgram : {
                 control.flags |= 0x20U;
         } else {
             record.executionState = 0;
-            control.resumeOffsets[0] = 0;
+            control.resumeOffsets[TalkSelectedSection] = 0;
             control.completedCount = 0;
             control.activationCount = 0;
         }
@@ -2420,7 +2422,7 @@ stepProgram : {
         } else {
             ScenarioFreeTalkControl &owner = *record.control;
             if (owner.flags & 4U) {
-                const std::byte *const entry = record.script + (record.requestedRoot ? owner.requestedRootOffset : owner.resumeOffsets[1]);
+                const std::byte *const entry = record.script + (record.requestedRoot ? owner.requestedRootOffset : owner.resumeOffsets[TalkWaitPoint]);
                 const std::int32_t value =
                     static_cast<std::uint8_t>(entry[2]) + ((static_cast<std::uint8_t>(entry[1]) + (static_cast<std::uint8_t>(entry[0]) << 8)) << 8);
                 const std::int32_t offset = (value & 0x800000) ? value | static_cast<std::int32_t>(0xff000000U) : value;

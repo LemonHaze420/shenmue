@@ -130,7 +130,7 @@ bool ApplyNpcCommandState(CycleManager::NpcRecord &npc, uint32_t opcode, uint32_
         int32_t scriptVisibleState = 0;
         if (!CycleManager::ReadCommandValue(recordOffset, 4, scriptVisibleState))
             return false;
-        npc.cycle->contextValue = scriptVisibleState;
+        npc.cycle->scriptContextValue = scriptVisibleState;
         npc.cycle->currentOpcode = static_cast<CycleOpcode>(opcode);
         return true;
     }
@@ -209,7 +209,7 @@ bool ApplyNpcCommandState(CycleManager::NpcRecord &npc, uint32_t opcode, uint32_
         npc.vehicleCommandPos = pos;
         npc.vehicleCommandYaw = static_cast<int16_t>(rawYaw & 0xFFFFu);
         npc.vehicleCommandEnabled = enabled != 0;
-        npc.cycle->contextValue = static_cast<int32_t>(vehicleToken);
+        npc.cycle->scriptContextValue = static_cast<int32_t>(vehicleToken);
         npc.cycle->morsCommandArg = npc.vehicleCommandEnabled ? 1u : 0u;
         npc.cycle->currentOpcode = static_cast<CycleOpcode>(opcode);
         return true;
@@ -1303,7 +1303,7 @@ uint32_t MOBJ_executeTaskInternal(CycleManager::MobjEntry *CM, int32_t time, uin
             ctx->cycleCommandPtr = record + 4;
             return 1;
         case CycleOpcode_SetScriptVisibleState:
-            ctx->contextValue = word[1];
+            ctx->scriptContextValue = word[1];
             ctx->cycleCommandPtr = record + 8;
             return 1;
         case CycleOpcode_BeginObjectInteraction:

@@ -913,8 +913,8 @@ void scenActivateCandidate(ScenarioFreeTalkCandidate &candidate) {
             if ((record.flags & ScenarioTalkCompletedResume) && (record.control->flags & ScenarioTalkBinaryPrompt)) {
                 record.executionState = 3;
                 record.flags &= ~(ScenarioTalkResumeReached | ScenarioTalkCompletedResume);
-                record.control->resumeOffsets[1] = 0;
-                record.control->resumeOffsets[2] = 0;
+                record.control->resumeOffsets[TalkWaitPoint] = 0;
+                record.control->resumeOffsets[TalkResumeMark] = 0;
             }
         }
     }

@@ -198,7 +198,7 @@ void LoadScenRuntimeObject(const ScenRuntimeContainer *container, const ScenRunt
     object.stateByte19 = static_cast<std::int8_t>(record->reserved09);
     object.locationCount = record->locationCount;
     object.kvPairCount = static_cast<std::int8_t>((std::min)(record->kvPairCount, static_cast<std::uint8_t>(127)));
-    object.runtimeFlags = 0x8000U;
+    object.runtimeFlags = kRuntimeFlagPlayerLeftTalkRange;
     const auto *const base = reinterpret_cast<const std::byte *>(record);
     const auto *const end = container ? reinterpret_cast<const std::byte *>(container) + container->wholeSize : base + record->size;
     const auto pointer = [base, end](std::uint32_t offset) {
@@ -233,7 +233,7 @@ void LoadScenSequenceObjects() {
 
 bool ScenCycleEntryEligible(const CycleManager::NpcRecord &npc, bool runningPrograms, bool &carry) {
     const float opacity = !npc.cycle->obj || npc.cycle->xm_resume_state || runningPrograms ? 1.0f : npc.cycle->obj->renderOpacity;
-    if (!npc.cycle->loadedBinHandle || !(opacity > 0.99000001f) || npc.cycle->contextValue == -999)
+    if (!npc.cycle->loadedBinHandle || !(opacity > 0.99000001f) || npc.cycle->scriptContextValue == -999)
         return false;
     if (npc.cycle->currentOpcode == CycleOpcode_UseMnrBEntry) {
         if (!CycleManager::MnrBEntryAllowsTalk(npc))
@@ -350,8 +350,8 @@ void UpdateScenTaskData() {
         object.hashNext = hashNext;
         if (previous.instructionPtr)
             object.instructionPtr = previous.instructionPtr + delta;
-        if (previous.relocatedPtrA8)
-            object.relocatedPtrA8 = previous.relocatedPtrA8 + delta;
+        if (previous.walkAwayReply)
+            object.walkAwayReply = previous.walkAwayReply + delta;
         if (previous.savedInstructionPtr)
             object.savedInstructionPtr = previous.savedInstructionPtr + delta;
         if (previous.matrix)
@@ -408,10 +408,10 @@ void ResetScenRuntimeState() {
     for (std::size_t index = 0; index < g_scenRuntimeState.rangeValues.size(); index += 3)
         g_scenRuntimeState.rangeValues[index] = 9.0f;
     g_scenSearchCharacters.fill(0);
-    g_scntWord20.fill(0);
-    g_scntWord22.fill(0);
-    g_scntWord24.fill(0);
-    g_scntWord26.fill(0);
+    g_scntSelectedStateOffsets.fill(0);
+    g_scntWaitOffsets.fill(0);
+    g_scntResumeMarkOffsets.fill(0);
+    g_scntReentryOffsets.fill(0);
     g_scenSequenceObjectsInitialized = false;
     g_cpctPreviousOperand = 0;
     g_cpctSleepPromptReady = true;
@@ -426,10 +426,10 @@ void ResetScenMapEpochRecords() {
     for (std::size_t index = 0; index < g_scenRuntimeState.rangeValues.size(); index += 3)
         g_scenRuntimeState.rangeValues[index] = 9.0f;
     g_scenSearchCharacters.fill(0);
-    g_scntWord20.fill(0);
-    g_scntWord22.fill(0);
-    g_scntWord24.fill(0);
-    g_scntWord26.fill(0);
+    g_scntSelectedStateOffsets.fill(0);
+    g_scntWaitOffsets.fill(0);
+    g_scntResumeMarkOffsets.fill(0);
+    g_scntReentryOffsets.fill(0);
     g_cpctPreviousOperand = 0;
     g_cpctSleepPromptReady = true;
     g_cpctInputUpdatePending = false;

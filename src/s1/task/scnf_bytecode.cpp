@@ -113,7 +113,7 @@ std::int32_t ScenCycleContextValue(const ScenRuntimeObject &object, std::uint16_
     for (const CycleProgramList list : {CycleProgramList_SimSet, CycleProgramList_Running}) {
         for (const CycleManager::NpcRecord *npc = CycleManager::NextProgramInList(list); npc; npc = CycleManager::NextProgramInList(list, npc)) {
             if (npc->cycle->moveConfig->obj_id.name == target && (list == CycleProgramList_Running || npc->cycle->motnSteeringActive))
-                return npc->cycle->contextValue;
+                return npc->cycle->scriptContextValue;
         }
     }
     return -1;
@@ -315,26 +315,26 @@ std::byte *ResolveScenBranchPointer(ScenRuntimeObject &object) {
     const std::size_t slot = ScenWordSlotIndex(object);
     if ((object.runtimeFlags & 2U) != 0 || state == 6) {
         ip = object.instructionPtr;
-    } else if ((ScenFlags() & 0x40U) != 0 && slot < g_scntWord20.size() && g_scntWord20[slot]) {
+    } else if ((ScenFlags() & 0x40U) != 0 && slot < g_scntSelectedStateOffsets.size() && g_scntSelectedStateOffsets[slot]) {
         ScenFlags() &= ~0x40U;
-        ip = object.scriptStart + g_scntWord20[slot];
+        ip = object.scriptStart + g_scntSelectedStateOffsets[slot];
     } else if (state) {
         if (state >= 4) {
             ip = object.instructionPtr;
-        } else if (state == 1 && slot < g_scntWord20.size()) {
-            const std::uint16_t word24 = g_scntWord24[slot];
-            const std::uint16_t word26 = g_scntWord26[slot];
-            if (word24 <= word26) {
-                const std::uint16_t word22 = g_scntWord22[slot];
-                if (word22 <= word26) {
-                    ip = object.scriptStart + word26;
+        } else if (state == 1 && slot < g_scntSelectedStateOffsets.size()) {
+            const std::uint16_t resumeMark = g_scntResumeMarkOffsets[slot];
+            const std::uint16_t reentryPoint = g_scntReentryOffsets[slot];
+            if (resumeMark <= reentryPoint) {
+                const std::uint16_t waitPoint = g_scntWaitOffsets[slot];
+                if (waitPoint <= reentryPoint) {
+                    ip = object.scriptStart + reentryPoint;
                 } else {
-                    object.instructionPtr = object.scriptStart + word22;
+                    object.instructionPtr = object.scriptStart + waitPoint;
                     object.runtimeState = 5;
                     return nullptr;
                 }
             } else {
-                ip = object.scriptStart + (std::max)(0, static_cast<int>(word24) - 2);
+                ip = object.scriptStart + (std::max)(0, static_cast<int>(resumeMark) - 2);
             }
         } else {
             ip = object.scriptStart;
@@ -458,29 +458,29 @@ std::byte *DecodeScenLowOpcode(ScenRuntimeObject &object, std::byte *ip, bool &s
     const std::size_t slot = ScenWordSlotIndex(object);
     switch (opcode & 0xf0U) {
     case 0x10:
-        if (object.scriptSlot < 301U && (object.runtimeFlags & 0x302U) == 0 && slot < g_scntWord20.size()) {
-            if (!object.relocatedPtrA8) {
-                const std::byte *const saved = object.scriptStart + g_scntWord20[slot];
+        if (object.scriptSlot < 301U && (object.runtimeFlags & 0x302U) == 0 && slot < g_scntSelectedStateOffsets.size()) {
+            if (!object.walkAwayReply) {
+                const std::byte *const saved = object.scriptStart + g_scntSelectedStateOffsets[slot];
                 if (next == saved) {
-                    if (g_scntWord26[slot])
-                        next = object.scriptStart + g_scntWord26[slot];
-                    const std::byte *const word24 = object.scriptStart + g_scntWord24[slot];
-                    if (next < word24)
-                        next = const_cast<std::byte *>(word24 - 2);
-                    const std::byte *const word22 = object.scriptStart + g_scntWord22[slot];
-                    if (next < word22) {
+                    if (g_scntReentryOffsets[slot])
+                        next = object.scriptStart + g_scntReentryOffsets[slot];
+                    const std::byte *const resumeMark = object.scriptStart + g_scntResumeMarkOffsets[slot];
+                    if (next < resumeMark)
+                        next = const_cast<std::byte *>(resumeMark - 2);
+                    const std::byte *const waitPoint = object.scriptStart + g_scntWaitOffsets[slot];
+                    if (next < waitPoint) {
                         object.runtimeState = 5;
                         stop = true;
-                        return const_cast<std::byte *>(word22);
+                        return const_cast<std::byte *>(waitPoint);
                     }
                 } else {
                     const auto offset = next - object.scriptStart;
                     if (offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max())
-                        g_scntWord26[slot] = static_cast<std::uint16_t>(offset);
-                    g_scntWord24[slot] = 0;
+                        g_scntReentryOffsets[slot] = static_cast<std::uint16_t>(offset);
+                    g_scntResumeMarkOffsets[slot] = 0;
                 }
             }
-            g_scntWord22[slot] = 0;
+            g_scntWaitOffsets[slot] = 0;
         }
         return next;
     case 0x20: {
@@ -557,9 +557,9 @@ std::byte *DecodeScenMiddleOpcode(ScenRuntimeObject &object, std::byte *ip) {
         if ((object.runtimeFlags & 0x302U) == 0 && object.scriptSlot < kScntScriptSlotCount) {
             const std::size_t slot = ScenWordSlotIndex(object);
             const auto offset = next - object.scriptStart;
-            if (slot < g_scntWord24.size() && offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max()) {
-                g_scntWord24[slot] = static_cast<std::uint16_t>(offset);
-                object.relocatedPtrA8 = nullptr;
+            if (slot < g_scntResumeMarkOffsets.size() && offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max()) {
+                g_scntResumeMarkOffsets[slot] = static_cast<std::uint16_t>(offset);
+                object.walkAwayReply = nullptr;
             }
         }
         object.runtimeFlags |= 0x800000U;
@@ -695,8 +695,8 @@ std::byte *DecodeScenHighOpcode(ScenRuntimeObject &object, std::byte *ip, bool &
         if ((object.runtimeFlags & 0x302U) == 0 && object.scriptSlot < kScntScriptSlotCount) {
             const std::size_t slot = ScenWordSlotIndex(object);
             const auto offset = ip + 1 - object.scriptStart;
-            if (slot < g_scntWord22.size() && offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max())
-                g_scntWord22[slot] = static_cast<std::uint16_t>(offset);
+            if (slot < g_scntWaitOffsets.size() && offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max())
+                g_scntWaitOffsets[slot] = static_cast<std::uint16_t>(offset);
         }
         if (g_areaId == AREA_MFSY.name && SCEN_HasActiveScript())
             g_bGlobalFlag = 1;
@@ -719,7 +719,7 @@ std::byte *DecodeScenHighOpcode(ScenRuntimeObject &object, std::byte *ip, bool &
             return nullptr;
         const std::uint32_t value =
             std::to_integer<std::uint8_t>(ip[3]) | ((std::to_integer<std::uint8_t>(ip[2]) + (std::to_integer<std::uint8_t>(ip[1]) << 8U)) << 8U);
-        object.relocatedPtrA8 = ScenAddRelative(object, ip + 4, ScenSignExtend(value, 0x800000U));
+        object.walkAwayReply = ScenAddRelative(object, ip + 4, ScenSignExtend(value, 0x800000U));
         return ip + 4;
     }
     case 0xf6: {

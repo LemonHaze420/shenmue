@@ -582,7 +582,7 @@ uint32_t ExecuteProgramStep(CycleManager::MobjCycle *ctx, int32_t time, int32_t 
         ctx->cycleCommandPtr = command + 8;
         return result;
     case CycleOpcode_SetScriptVisibleState:
-        ctx->contextValue = word[1];
+        ctx->scriptContextValue = word[1];
         ctx->cycleCommandPtr = command + 8;
         return result;
     case CycleOpcode_BeginObjectInteraction:

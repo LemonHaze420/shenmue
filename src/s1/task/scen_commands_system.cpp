@@ -2114,7 +2114,7 @@ void Script_CycleManagerUtils(ScenarioContext *context, void *rawParams) {
     case 13: {
         CycleManager::NpcRecord *const npc = findInList(params->operand, CycleProgramList_Running);
         if (npc)
-            npc->cycle->contextValue = params->offset;
+            npc->cycle->scriptContextValue = params->offset;
         context->stack->accumulator = npc ? 1U : 0U;
         break;
     }
@@ -2124,7 +2124,7 @@ void Script_CycleManagerUtils(ScenarioContext *context, void *rawParams) {
         break;
     case 17: {
         const CycleManager::NpcRecord *const npc = CycleManager::FindMutableNpcRecord(params->operand);
-        context->stack->accumulator = npc ? npc->cycle->contextValue : 0U;
+        context->stack->accumulator = npc ? npc->cycle->scriptContextValue : 0U;
         break;
     }
     case 15:

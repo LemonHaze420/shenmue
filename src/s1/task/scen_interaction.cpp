@@ -44,15 +44,15 @@ void SCNF_UpdateObjectActivation(ScenRuntimeObject *object, std::int32_t stateHi
         shouldActivate = stateHint;
 
     if (shouldActivate == 0) {
-        if (object->relocatedPtrA8) {
+        if (object->walkAwayReply) {
             if (ScenInteractionBlocked() && (g_ryoIdleTurnInPlaceCounter > 0 || (g_pControlPadController && g_pControlPadController->numActiveFrames > 0))) {
                 ScenFlags() |= kScenarioFlagInteractionModal;
                 shouldActivate = 1;
                 object->runtimeFlags |= 2U;
                 object->savedInstructionPtr = object->instructionPtr;
-                object->instructionPtr = object->relocatedPtrA8;
+                object->instructionPtr = object->walkAwayReply;
             }
-            object->relocatedPtrA8 = nullptr;
+            object->walkAwayReply = nullptr;
         } else {
             if ((runtimeFlags & kRuntimeFlagStateEntered) != 0) {
                 if (g_scenRuntimeState.activeObjectName == object->name.name) {
@@ -192,7 +192,7 @@ std::int32_t CalculateScenCharacterInRange(ScenRuntimeObject &object, float &dis
     if (authoredRange <= distanceSquared) {
         if (distanceSquared >= authoredRange + 5.0F) {
             object.runtimeFlags &= ~0x20U;
-            object.runtimeFlags |= 0x8000U;
+            object.runtimeFlags |= kRuntimeFlagPlayerLeftTalkRange;
         }
         return 0;
     }
@@ -229,7 +229,7 @@ std::int32_t SCEN_InteractiveObjects(std::array<float, 24> &distances, std::arra
     ScenRuntimeObject *const active = g_scenRuntimeState.activeObject;
     if (active && g_searchTemporaryFocusedCharacter) {
         if (g_searchTemporaryFocusedCharacter != active->name.name) {
-            active->relocatedPtrA8 = nullptr;
+            active->walkAwayReply = nullptr;
             const std::int32_t count = std::clamp(g_scenRuntimeState.objectCount, 0, 24);
             for (std::int32_t index = 0; index < count; ++index) {
                 ScenRuntimeObject &candidate = g_scenRuntimeState.objects[static_cast<std::size_t>(index)];
@@ -386,7 +386,7 @@ void BeginScenInteraction(ScenRuntimeObject &object) {
     ScenFlags() = (ScenFlags() & ~(kScenarioFlagInteractionResume | kScenarioFlagInteractionModal)) | kScenarioFlagInteractionModal;
     object.runtimeFlags &= 0xfcffbf7fU;
     object.field14 = -1;
-    object.relocatedPtrA8 = nullptr;
+    object.walkAwayReply = nullptr;
     const std::uint32_t *const participants = static_cast<const std::uint32_t *>(object.participants);
     const std::int64_t count = (reinterpret_cast<const std::byte *>(object.voicePath) - static_cast<const std::byte *>(object.participants)) / 4;
     std::int32_t index = 0;

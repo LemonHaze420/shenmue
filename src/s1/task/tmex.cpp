@@ -73,8 +73,8 @@ constexpr std::uint16_t kTMEXInputMask = 0xf1f9U;
 constexpr std::uint16_t kCloseInput = 0x0200U;
 constexpr std::uint16_t kDateWindowInput = 0x0400U;
 constexpr std::uint16_t kAuxiliaryHandsInput = 0xc000U;
-constexpr std::uint16_t kEventStopActiveFlag = 0x320;
-constexpr std::uint16_t kSleepTransitionModalActiveFlag = 0x0c2;
+constexpr std::uint16_t kEventStopActiveFlag = SHENMUE_FLAG_EV_STOP_ACTIVE;
+constexpr std::uint16_t kSleepTransitionModalActiveFlag = SHENMUE_FLAG_SLEEP_TRANSITION_MODAL_ACTIVE;
 constexpr std::uint8_t kWristwatchHelpToken = 0x18;
 
 TMEXRuntimeState g_tmexRuntime{};

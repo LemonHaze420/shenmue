@@ -426,7 +426,7 @@ PadCaptureEntry *CurrentMapPad() {
 }
 
 constexpr std::uint16_t kTmexCancelInput = 0x0200U;
-constexpr std::uint16_t kTmexSleepTransitionFlag = 0x00c2U;
+constexpr std::uint16_t kTmexSleepTransitionFlag = SHENMUE_FLAG_SLEEP_TRANSITION_MODAL_ACTIVE;
 constexpr std::uint16_t kTmexWatchAnimation = 1193U;
 
 bool ShenmueFlagIsSet(std::uint16_t flag) {
@@ -4294,8 +4294,8 @@ void ryoSetInitialControl(Character *character) {
         shenRefreshUI();
         UI_ResetConversationDetailsState();
         shenExecuteAICACommand(0x30babU, 0, 0);
-        SetStatOrNotebookFlag(0x320U, false);
-        SetStatOrNotebookFlag(0x0c2U, false);
+        SetStatOrNotebookFlag(SHENMUE_FLAG_EV_STOP_ACTIVE, false);
+        SetStatOrNotebookFlag(SHENMUE_FLAG_SLEEP_TRANSITION_MODAL_ACTIVE, false);
         g_TMEX_Flag = 5;
         g_tmex_val = 0;
         g_TMEX_CurrentMode = 0;

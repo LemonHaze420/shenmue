@@ -30,6 +30,8 @@ inline constexpr std::uint32_t kScenarioFlagPadBlockOverride = 0x8000U;
 
 inline constexpr std::uint32_t kScenarioFlagAuthorGameState = 0x10000U;
 
+inline constexpr std::uint32_t kRuntimeFlagPlayerLeftTalkRange = 0x8000U;
+
 inline constexpr std::uint32_t kRuntimeFlagStateTransitionLatch = 0x2000U;
 
 inline constexpr std::uint32_t kRuntimeFlagInteractionResume = 0x4000U;
@@ -90,13 +92,13 @@ extern std::int16_t g_debug_talk_status;
 
 namespace shenmue::s1::scen_detail {
 
-extern std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWord20;
+extern std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntSelectedStateOffsets;
 
-extern std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWord22;
+extern std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWaitOffsets;
 
-extern std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWord24;
+extern std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntResumeMarkOffsets;
 
-extern std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWord26;
+extern std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntReentryOffsets;
 
 extern std::array<std::uint32_t, 9> g_scenSearchCharacters;
 

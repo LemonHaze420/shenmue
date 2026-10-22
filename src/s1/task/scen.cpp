@@ -156,13 +156,13 @@ template <typename T> T *ScenarioPointer(std::uint32_t offset);
 
 GameDateTime g_scenarioDateScratch{.year = 86, .month = 12, .day = 3, .dayOfWeek = 3, .hours = 8, .minutes = 30, .seconds = 0, .reserved = 0};
 
-std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWord20{};
+std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntSelectedStateOffsets{};
 
-std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWord22{};
+std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWaitOffsets{};
 
-std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWord24{};
+std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntResumeMarkOffsets{};
 
-std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntWord26{};
+std::array<std::uint16_t, kScntScriptSlotCount * kScntWordsPerSlot> g_scntReentryOffsets{};
 
 std::array<std::uint32_t, 9> g_scenSearchCharacters{};
 
@@ -378,7 +378,7 @@ void SCEN_ParseRecursive_Impl() {
         SCNT_Core(g_scenRuntimeState.activeObject);
     } else {
         SetScenPreviousObjectName(active);
-        g_scntWord22[0] = 0;
+        g_scntWaitOffsets[0] = 0;
     }
 }
 

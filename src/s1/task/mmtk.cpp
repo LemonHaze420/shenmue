@@ -1,5 +1,7 @@
 #include "s1/task/mmtk.hpp"
 
+#include "s1/flags.hpp"
+
 #include "s1/boot.hpp"
 #include "s1/d3t/settings.hpp"
 #include "s1/file_loader.hpp"

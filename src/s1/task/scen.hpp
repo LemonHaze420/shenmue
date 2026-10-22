@@ -1,5 +1,7 @@
 #pragma once
 
+#include "s1/flags.hpp"
+
 #include "s1/date_time.hpp"
 #include "s1/face.hpp"
 #include "s1/task/char.hpp"
@@ -316,7 +318,7 @@ struct ScenRuntimeObject {
     std::byte *instructionPtr;
     std::byte *savedInstructionPtr;
     std::byte *alternateInstructionPtr;
-    std::byte *relocatedPtrA8;
+    std::byte *walkAwayReply;
     std::uint8_t rangeMode;
     std::uint8_t padB1;
     std::int16_t rangeMin;
