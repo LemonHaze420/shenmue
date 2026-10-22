@@ -16,7 +16,7 @@ void PlaceAreaEntity(std::int32_t placementIndex, std::int32_t characterIndex) {
     const std::int16_t flagIndex = static_cast<std::int16_t>((placementIndex < 16 ? placementIndex : placementIndex - 16) + 16);
     const AreaEntityPlacement &placement = AREA_ENTITY_PLACEMENTS[placementIndex];
     const shen_name character{placement.character.name + (static_cast<std::uint32_t>(characterIndex) << 24)};
-    const std::int32_t flags = static_cast<std::int32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, flagIndex));
+    const std::int32_t flags = static_cast<std::int32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, flagIndex));
     const std::int32_t selector = (flags >> (2 * characterIndex)) & 3;
     const std::byte *const offset = reinterpret_cast<const std::byte *>(&AREA_ENTITY_POSITION_IMAGE) + selector * sizeof(Vector3);
     float x;

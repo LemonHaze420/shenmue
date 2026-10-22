@@ -39,7 +39,6 @@ void AreaCRETInit() {
     cretDormantScratch1 = {};
 }
 
-// @verified - p
 void CRETRetryCallback(void *) {
     if (cretState) {
         if (cretState != 1)
@@ -67,18 +66,18 @@ void CRETRetryCallback(void *) {
         GetCurrentDateTime(dateTime);
         seconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(dateTime));
         EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 48, seconds >> 24);
-        EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 49, seconds >> 16);
-        EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 32, seconds >> 8);
-        EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 33, seconds);
+        EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 49, (seconds >> 16) & 0xffU);
+        EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 32, (seconds >> 8) & 0xffU);
+        EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 33, seconds & 0xffU);
     } else {
-        seconds = EV_GetPlayerFlag(PlayerFlagReadMode::Story, 48) << 24;
-        seconds += EV_GetPlayerFlag(PlayerFlagReadMode::Story, 49) << 16;
-        seconds += EV_GetPlayerFlag(PlayerFlagReadMode::Story, 32) << 8;
-        seconds = seconds + EV_GetPlayerFlag(PlayerFlagReadMode::Story, 33) - 300;
+        seconds = EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 48) << 24;
+        seconds += EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 49) << 16;
+        seconds += EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 32) << 8;
+        seconds = seconds + EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 33) - 300;
         IncrementDateTimeBySeconds(seconds, dateTime);
         SetCurrentDateTimeTo(dateTime);
     }
-    const std::int32_t retries = EV_GetPlayerFlag(PlayerFlagReadMode::Story, 34);
+    const std::int32_t retries = EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 34);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 34, retries + 1);
     InitiateCleanupForSceneChara(EVENT_CHARACTER_INVALID);
     HLib::DestroyCurrentTask();
@@ -142,7 +141,6 @@ void CRETResumeChaseCallback(void *) {
     }
 }
 
-// @verified - p
 void CRETDirectRetryCallback(void *) {
     if (!cretState) {
         SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
@@ -156,11 +154,11 @@ void CRETDirectRetryCallback(void *) {
     GetCurrentDateTime(dateTime);
     const std::uint32_t seconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(dateTime));
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 48, seconds >> 24);
-    EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 49, seconds >> 16);
-    EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 32, seconds >> 8);
-    EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 33, seconds);
+    EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 49, (seconds >> 16) & 0xffU);
+    EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 32, (seconds >> 8) & 0xffU);
+    EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 33, seconds & 0xffU);
     EV_scenQueueLoad(cretAct, cretScene, cretEntry);
-    const std::int32_t retries = EV_GetPlayerFlag(PlayerFlagReadMode::Story, 34);
+    const std::int32_t retries = EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 34);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 34, retries + 1);
     HLib::DestroyCurrentTask();
     EV_NPC_NewLoadSw(1);

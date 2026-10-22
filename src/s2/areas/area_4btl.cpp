@@ -325,7 +325,7 @@ void InitializeBattle(BattleTask &task) {
     AuthorModel(task.opponent, 1);
     ChairState(false);
     if (EV_GetShenmueFlag(0x376) || EV_GetShenmueFlag(0x378)) {
-        anchorSelection = static_cast<std::int32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, 39));
+        anchorSelection = static_cast<std::int32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 39));
         task.state = 3;
     } else
         task.state = 1;

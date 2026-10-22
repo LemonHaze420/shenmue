@@ -50,7 +50,6 @@ void Start0324(std::uintptr_t) {
     Queue_EVT_UTL_LoadNPCChara_3(AREA_0324_CHARACTERS, parent->self);
 }
 
-// @verified - p
 void Update0324(void *taskData) {
     Area0324Parameter *const parent = static_cast<Area0324Parameter *>(taskData);
     if (parent->state == 1)
@@ -64,11 +63,11 @@ void Update0324(void *taskData) {
     } else if (parent->state == 0) {
         DateTime time{};
         GetCurrentDateTime(time);
-        time.hour = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, 32));
-        time.minute = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, 33));
-        time.day = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, 34));
-        time.year = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, 48));
-        time.month = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, 49));
+        time.hour = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 32));
+        time.minute = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 33));
+        time.day = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 34));
+        time.year = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 48));
+        time.month = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 49));
         SetCurrentDateTimeTo(time);
         EV_SetModelDataDefaultVertexShader();
         EV_lightLoad(AREA_0324_LIGHTS[1]);

@@ -46,6 +46,7 @@ struct InventoryIconAtlasRect {
 };
 static_assert(sizeof(InventoryIconAtlasRect) == 5);
 
+inline constexpr std::uint16_t ITEM_SCROLL_STAB_ARMOR = 21;
 constexpr std::uint16_t kOwnedItemCatalogCount = 235;
 constexpr std::uint16_t kCassetteCatalogFirstItem = 255;
 constexpr std::uint16_t kCassetteCatalogCount = 28;

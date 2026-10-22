@@ -525,8 +525,8 @@ NpcConditionResult EvaluateNpcCondition(NpcRouteLiveEntry &entry, std::uint32_t 
         return argument == 1U && !(npcCrowdDensityScale < 0.1f) ? NpcConditionResult::True : NpcConditionResult::False;
     }
     case 5:
-        return static_cast<std::uint32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, static_cast<std::int16_t>(flag))) == argument ? NpcConditionResult::True :
-                                                                                                                                      NpcConditionResult::False;
+        return static_cast<std::uint32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, static_cast<std::int16_t>(flag))) == argument ? NpcConditionResult::True :
+                                                                                                                                     NpcConditionResult::False;
     default:
         return NpcConditionResult::False;
     }

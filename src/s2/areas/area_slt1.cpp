@@ -536,7 +536,7 @@ void InitializeMachine(Slt1Work *work) {
     DateTime time;
     GetCurrentDateTime(time);
     if (static_cast<std::uint32_t>(time.hour - 5) <= 4 && !EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 2061) &&
-        sltOdds[22 * EV_GetPlayerFlag(PlayerFlagReadMode::Story, 35) + 48 + OddsEntry(work)] == 99) {
+        sltOdds[22 * EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 35) + 48 + OddsEntry(work)] == 99) {
         constexpr int angles[]{41692, 59560, 29780};
         for (int i = 0; i < 3; ++i) {
             Vector3i rotation{angles[i], 0, 0};
@@ -741,7 +741,7 @@ void Spin(void *data) {
         camCtrlDisableFilmBars();
         Loop3DSoundEffect(0x13e);
         float random = GetRandomNumberInRange(100);
-        auto oddsIndex = sltOdds[22 * EV_GetPlayerFlag(PlayerFlagReadMode::Story, 35) + 48 + OddsEntry(work)];
+        auto oddsIndex = sltOdds[22 * EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 35) + 48 + OddsEntry(work)];
         if (oddsIndex == 99)
             oddsIndex = 3;
         const auto *odds = &sltOdds[6 * oddsIndex];

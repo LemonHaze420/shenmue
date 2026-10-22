@@ -27,6 +27,7 @@ std::array<std::uint8_t, 32> g_sdShadowSlots{};
 std::array<std::uint8_t, 32> g_sdShadowDirty{};
 SDShadowMapping g_sdShadowMapping{};
 
+std::int32_t g_sdDedicatedShadowSize = 1024;
 void InitializeSDLightNodes() {
     g_sdShadowSlots.fill(0);
     g_sdShadowDirty.fill(0);
@@ -98,6 +99,128 @@ std::uint32_t AllocateSDShadowSlots(std::uint32_t count) {
 
 namespace {
 // @verified - p
+const int g_sdShadowMappingCleanup = std::atexit(ReleaseSDShadowMapping);
+
+// @verified - p
+SDShadowMappingNode *AppendSDShadowMappingNode(SDShadowMapping &mapping) {
+    if (mapping.nodeCount >= mapping.nodeCapacity) {
+        const std::uint32_t capacity = 2U * mapping.nodeCapacity >= 16U ? 2U * mapping.nodeCapacity : 16U;
+        if (capacity > mapping.nodeCapacity) {
+            void *const allocation = std::realloc(mapping.nodes, sizeof(SDShadowMappingNode) * capacity);
+            if (!allocation)
+                return nullptr;
+            mapping.nodes = static_cast<SDShadowMappingNode *>(allocation);
+            mapping.nodeCapacity = capacity;
+        }
+    }
+    return mapping.nodes + mapping.nodeCount++;
+}
+
+// @verified - p
+SDShadowMappingRequest *AppendSDShadowMappingRequest(SDShadowMapping &mapping) {
+    if (mapping.requestCount >= mapping.requestCapacity) {
+        const std::uint32_t capacity = 2U * mapping.requestCapacity >= 16U ? 2U * mapping.requestCapacity : 16U;
+        if (capacity > mapping.requestCapacity) {
+            void *const allocation = std::realloc(mapping.requests, sizeof(SDShadowMappingRequest) * capacity);
+            if (!allocation)
+                return nullptr;
+            mapping.requests = static_cast<SDShadowMappingRequest *>(allocation);
+            mapping.requestCapacity = capacity;
+        }
+    }
+    return mapping.requests + mapping.requestCount++;
+}
+// @verified - p
+SDShadowMappingNode *InsertSDShadowMappingNode(SDShadowMapping &mapping, const SDShadowMappingRequest &request, SDShadowMappingNode *node) {
+    for (;;) {
+        while (node->children[0] || node->children[1]) {
+            SDShadowMappingNode *const result = InsertSDShadowMappingNode(mapping, request, node->children[0]);
+            if (result)
+                return result;
+            node = node->children[1];
+        }
+        if (node->output || node->width < request.width || node->height < request.height)
+            return nullptr;
+        if (node->width == request.width && node->height == request.height)
+            return node;
+        const std::int32_t x = node->x, y = node->y, width = node->width, height = node->height;
+        SDShadowMappingNode **const second = &node->children[1];
+        SDShadowMappingNode *const first = AppendSDShadowMappingNode(mapping);
+        node->children[0] = first;
+        node = first;
+        SDShadowMappingNode *const other = AppendSDShadowMappingNode(mapping);
+        *second = other;
+        *node = {};
+        *other = {};
+        if (width - request.width <= height - request.height) {
+            node->x = x;
+            node->y = y;
+            node->width = width;
+            node->height = request.height;
+            other->x = x;
+            other->y = y + request.height;
+            other->width = width;
+            other->height = height - request.height;
+        } else {
+            node->x = x;
+            node->y = y;
+            node->width = request.width;
+            node->height = height;
+            other->x = x + request.width;
+            other->y = y;
+            other->width = width - request.width;
+            other->height = height;
+        }
+    }
+}
+
+// @verified - p
+void ComputeSDShadowAxisRatios(const SDShadowMappingNode &node, Vector2 &output) {
+    output.x = static_cast<float>(node.x / node.width);
+    output.y = static_cast<float>(node.y / node.height);
+}
+
+bool PackSDShadowMappingRequests() {
+    SDShadowMapping &mapping = g_sdShadowMapping;
+    for (std::uint32_t index = 1; index < mapping.requestCount; ++index) {
+        const SDShadowMappingRequest request = mapping.requests[index];
+        std::uint32_t destination = index;
+        while (destination && request.width > mapping.requests[destination - 1].width) {
+            mapping.requests[destination] = mapping.requests[destination - 1];
+            --destination;
+        }
+        mapping.requests[destination] = request;
+    }
+    bool result = true;
+    SDShadowMappingNode *const root = mapping.nodes;
+    for (std::uint32_t index = 0; index < mapping.requestCount; ++index) {
+        SDShadowMappingRequest &request = mapping.requests[index];
+        if (request.processed)
+            continue;
+        request.processed = 1;
+        SDShadowMappingNode *const node = InsertSDShadowMappingNode(mapping, request, root);
+        if (node) {
+            node->output = request.output;
+            node->slot = request.slot;
+            ComputeSDShadowAxisRatios(*node, *request.output);
+        } else {
+            const SDShadowMappingNode fallback{.children = {}, .x = -1, .y = -1, .width = -1, .height = -1, .slot = 0, .reserved24 = 0, .output = nullptr};
+            ComputeSDShadowAxisRatios(fallback, *request.output);
+            result = false;
+        }
+    }
+    return result;
+}
+
+// @verified - p
+void InsetSDShadowRectangle(const Vector2 &padding, const Vector2 &size, Vector2 &offset, Vector2 &minimum, Vector2 &maximum) {
+    offset.x = size.x * offset.x;
+    offset.y = size.y * offset.y;
+    minimum = {padding.x + offset.x, padding.y + offset.y};
+    maximum = {(offset.x + size.x) - padding.x, (offset.y + size.y) - padding.y};
+}
+
+// @verified - p
 void ClearSDShadowMappingNode(SDShadowMapping &mapping, SDShadowMappingNode &node, std::uint32_t slot) {
     if (node.children[0])
         ClearSDShadowMappingNode(mapping, *node.children[0], slot);
@@ -108,6 +231,41 @@ void ClearSDShadowMappingNode(SDShadowMapping &mapping, SDShadowMappingNode &nod
             if (mapping.nodes[index].slot == slot)
                 node.output = nullptr;
 }
+} // namespace
+
+// @verified - p
+void ReleaseSDShadowMapping() {
+    std::free(g_sdShadowMapping.nodes);
+    g_sdShadowMapping.nodes = nullptr;
+    g_sdShadowMapping.nodeCount = g_sdShadowMapping.nodeCapacity = 0;
+    std::free(g_sdShadowMapping.requests);
+    g_sdShadowMapping.requests = nullptr;
+    g_sdShadowMapping.requestCount = g_sdShadowMapping.requestCapacity = 0;
+}
+
+// @verified - p
+bool AllocateSDShadowBinding(SDShadowBinding &binding) {
+    const std::int32_t pixels = g_sdDedicatedShadowSize;
+    const float size = static_cast<float>(static_cast<std::uint32_t>(pixels)) / g_sdShadowAtlasSize.x;
+    const std::uint32_t slot = AllocateSDShadowSlots(1);
+    if (slot == 32)
+        return false;
+    binding.size = {size, size};
+    binding.slot = slot;
+    SDShadowMappingRequest *const request = AppendSDShadowMappingRequest(g_sdShadowMapping);
+    if (request) {
+        request->processed = 0;
+        request->slot = slot;
+        request->x = request->y = 0;
+        request->width = request->height = pixels;
+        request->output = &binding.offset;
+    }
+    if (!PackSDShadowMappingRequests())
+        return false;
+    g_sdShadowDirty[slot] = 1;
+    const Vector2 padding{(1.0f / g_sdShadowAtlasSize.x) * 2.0f, (1.0f / g_sdShadowAtlasSize.y) * 2.0f};
+    InsetSDShadowRectangle(padding, binding.size, binding.offset, binding.minimum, binding.maximum);
+    return true;
 } // namespace
 
 // @verified - p

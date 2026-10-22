@@ -117,7 +117,11 @@ struct ObjectEntry {
     FacialExpressionState expressions{};
     ModelRuntimeState modelRuntime{};
     EyeControlRig *eyeControlRig{};
+#if SHENMUE_IS_S2
+    s2::SDShadowBinding screenMapping{};
+#else
     std::byte screenMapping[0x24]{};
+#endif
     std::uint32_t handle{};
     UpdateState update{};
     std::uint32_t reserved85b4{};
@@ -125,6 +129,7 @@ struct ObjectEntry {
 static_assert(sizeof(ObjectEntry) == 0x85b8);
 static_assert(offsetof(ObjectEntry, modelRuntime) == 0x88);
 static_assert(offsetof(ObjectEntry, eyeControlRig) == 0x8580);
+static_assert(offsetof(ObjectEntry, screenMapping) == 0x8588);
 static_assert(offsetof(ObjectEntry, handle) == 0x85ac);
 static_assert(offsetof(ObjectEntry, update) == 0x85b0);
 
@@ -531,9 +536,22 @@ void BindPlacement(ObjectEntry &entry, const void *placement) {
     if (entry.placement && entry.kind == EntryKind::ModelRuntime) {
         s2::RemoveSDLightOwner(entry.expressionTarget);
         s2::RemoveOwnerSDProbes(&entry);
+        if (entry.placement) {
+            if (ObjectEntry *const bound = ResolveHashedObjectEntry(entry.placement))
+                bound->modelRuntime = {};
+        }
+        if (entry.source->flags & OSF_DedicatedShadow) {
+            const std::uint32_t slot = static_cast<std::uint32_t>(entry.screenMapping.slot);
+            if (slot >= s2::g_sdShadowSlots.size())
+                std::abort();
+            s2::g_sdShadowSlots[slot] = 0;
+            s2::RemoveSDShadowMappingRequest(slot);
+        }
     }
 #endif
+#if !SHENMUE_IS_S2
     entry.modelRuntime = {};
+#endif
     if (entry.placement) {
         const std::uintptr_t oldPlacement = reinterpret_cast<std::uintptr_t>(entry.placement);
         for (std::size_t index = 0; index < publicAliases.keys.size(); ++index)
@@ -543,16 +561,21 @@ void BindPlacement(ObjectEntry &entry, const void *placement) {
     }
     entry.placement = placement;
     if (placement) {
+#if !SHENMUE_IS_S2
         placementIndex.insert(FoldKey(reinterpret_cast<std::uintptr_t>(placement)), entry.handle);
+#endif
 #if SHENMUE_IS_S2
-        if (entry.kind == EntryKind::ModelRuntime) {
-            MarkPlacementDayNight(entry.expressionTarget);
-            RegisterPlacementLights(entry);
-            SetupPlacementProbes(&entry);
-            if (entry.source->modelKind == 1)
-                InitializeObjectStoreExpressions(entry);
-            UpdateModelCacheFlags(entry.expressionTarget, 1, ModelCacheFlagMode::Clear);
-        }
+            if (entry.kind == EntryKind::ModelRuntime) {
+                MarkPlacementDayNight(entry.expressionTarget);
+                RegisterPlacementLights(entry);
+                SetupPlacementProbes(&entry);
+                if (entry.source->modelKind == 1)
+                    InitializeObjectStoreExpressions(entry);
+                if (entry.source->flags & OSF_DedicatedShadow)
+                    s2::AllocateSDShadowBinding(entry.screenMapping);
+                UpdateModelCacheFlags(entry.expressionTarget, 1, ModelCacheFlagMode::Clear);
+            }
+        placementIndex.insert(FoldKey(reinterpret_cast<std::uintptr_t>(placement)), entry.handle);
 #endif
     }
 #if SHENMUE_IS_S2
@@ -1311,14 +1334,9 @@ bool ProcessObjectStore(bool checkShaders, std::int32_t maximumOperations) {
                         std::strcpy(entry.modelRuntime.modelName, name ? name + 1 : entry.source->path);
                         if (char *const dot = std::strchr(entry.modelRuntime.modelName, '.'))
                             *dot = '\0';
-                        if (entry.placement) {
-                            MarkPlacementDayNight(entry.expressionTarget);
-                            RegisterPlacementLights(entry);
-                            SetupPlacementProbes(&entry);
-                        }
-                        if (entry.placement && entry.source->modelKind == 1)
-                            InitializeObjectStoreExpressions(entry);
-                        UpdateModelCacheFlags(entry.expressionTarget, 1, entry.placement ? ModelCacheFlagMode::Clear : ModelCacheFlagMode::Enable);
+                        const void *const placement = entry.placement;
+                        entry.placement = nullptr;
+                        BindPlacement(entry, placement);
                         ++operations;
                     } else {
                         entry.kind = EntryKind::Legacy;

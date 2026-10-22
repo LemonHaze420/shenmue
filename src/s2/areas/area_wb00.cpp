@@ -100,7 +100,7 @@ BookPartTransform bookParts[]{
 };
 
 void ClearBooks() {
-    const auto flag = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, 11));
+    const auto flag = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 11));
     for (auto &book : books) {
         if (book.name) {
             SetScenarioCharacterKillMode(book, 1);
@@ -110,7 +110,7 @@ void ClearBooks() {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 11, flag & 0xf0);
 }
 void PlaceBooks() {
-    auto count = static_cast<std::int32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Story, 11) >> 4);
+    auto count = static_cast<std::int32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 11) >> 4);
     if (count > 14)
         count = 14;
     if (EV_GetShenmueFlag(FLAG_NIGHT_TIME_ENFORCED) || EV_GetShenmueFlag(0x96)) {

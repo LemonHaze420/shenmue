@@ -1,4 +1,5 @@
 #include "s1/player_stats.hpp"
+#include "s1/item_catalog.hpp"
 #include "s1/d3t/settings.hpp"
 #include "s1/player_control.hpp"
 #include "s1/save_format.hpp"
@@ -55,6 +56,8 @@ void RegisterInventoryItem(std::int16_t itemId) {
 }
 
 void UnlockMoveSkillFromInventoryItem(std::uint16_t itemId) {
+    if (itemId == ITEM_SCROLL_STAB_ARMOR)
+        return;
     struct UnlockEntry {
         std::uint8_t itemId;
         std::uint8_t encodedMoveId;

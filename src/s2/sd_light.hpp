@@ -77,15 +77,26 @@ struct SDLightRecord {
     std::uint32_t state;
     const char *textureName;
 };
+struct SDShadowBinding {
+    std::int32_t slot;
+    Vector2 size;
+    Vector2 offset;
+    Vector2 minimum;
+    Vector2 maximum;
+};
+static_assert(sizeof(SDShadowBinding) == 0x24);
+static_assert(offsetof(SDShadowBinding, size) == 0x04 && offsetof(SDShadowBinding, offset) == 0x0c);
+static_assert(offsetof(SDShadowBinding, minimum) == 0x14 && offsetof(SDShadowBinding, maximum) == 0x1c);
+
 struct SDShadowMappingNode {
     SDShadowMappingNode *children[2];
-    std::uint32_t x, y, width, height;
+    std::int32_t x, y, width, height;
     std::uint32_t slot;
     std::uint32_t reserved24;
     Vector2 *output;
 };
 struct SDShadowMappingRequest {
-    std::uint32_t x, y, width, height;
+    std::int32_t x, y, width, height;
     std::uint8_t processed;
     std::byte reserved11[3];
     std::uint32_t slot;
@@ -117,6 +128,9 @@ extern std::array<SDLightRecord, 512> g_sdLights;
 extern std::array<std::uint8_t, 32> g_sdShadowSlots;
 extern std::array<std::uint8_t, 32> g_sdShadowDirty;
 extern SDShadowMapping g_sdShadowMapping;
+extern std::int32_t g_sdDedicatedShadowSize;
+bool AllocateSDShadowBinding(SDShadowBinding &binding);
+void ReleaseSDShadowMapping();
 void InitializeSDLightNodes();
 void BindModelSceneLights(d3t::D3TDeviceContext *context);
 std::uint32_t AllocateSDShadowSlots(std::uint32_t count);
