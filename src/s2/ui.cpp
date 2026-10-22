@@ -3123,6 +3123,8 @@ constexpr std::array<OptionSpec, 11> graphicsOptions{{
 OptionsRuntime options;
 const OptionSpec *selectedOptionDescription{};
 std::array<OptionChildRuntime, 3> optionChildren;
+std::array<std::array<char, 18>, 10> optionsAudioOutputCaptions{};
+std::int32_t optionsAudioOutputCount{};
 constexpr std::array<UIElement, 3> optionChildElements{UIElement::OptionsControls, UIElement::OptionsAudio, UIElement::OptionsGraphics};
 
 #include "ui_gamehud.inl"

@@ -49,13 +49,7 @@ void BindModelSampler(d3t::D3TDeviceContext *context, std::uint32_t slot, std::u
         sampler = {.flags = {static_cast<std::uint32_t>(flags), static_cast<std::uint32_t>(flags >> 32U)}, .reserved = {}};
     }
 }
-void SetModelSampleMask(d3t::D3TDeviceContext *context, std::uint32_t mask) {
-    d3t::D3TRenderState &state = d3t::GetRenderState(*context);
-    if (state.blendSampleMask != mask) {
-        state.pipelineStateFlags |= d3t::PipelineBlend;
-        state.blendSampleMask = mask;
-    }
-}
+
 } // namespace
 
 void CommitModelGeometryDraw(d3t::D3TDeviceContext *context, const ModelGeometryDraw &draw, const ModelScenePass &pass) {
@@ -145,7 +139,7 @@ void CommitModelGeometryDraw(d3t::D3TDeviceContext *context, const ModelGeometry
     if (draw.opacity < 1.0f && pass.type != 1) {
         const float mask = draw.opacity * 255.0f;
         const std::int64_t value = mask >= -9223372036854775808.0f && mask < 9223372036854775808.0f ? static_cast<std::int64_t>(mask) : INT64_MIN;
-        SetModelSampleMask(context, static_cast<std::uint32_t>(value));
+        d3t::SetupPipelineSampleMask(context, static_cast<std::uint8_t>(value));
     }
     for (std::uint32_t vertex = 0; vertex < geometry.vertexBufferCount; ++vertex)
         if (state.vertexBufferHandles[vertex] != geometry.vertexBuffers[vertex]) {
@@ -232,7 +226,7 @@ void CommitModelGeometryDraw(d3t::D3TDeviceContext *context, const ModelGeometry
         native->DrawIndexed(3U * mesh.primitiveCount, mesh.firstIndex + group.firstIndex, group.baseVertex);
 #endif
     if (draw.opacity < 1.0f)
-        SetModelSampleMask(context, 0xff);
+        d3t::SetupPipelineSampleMask(context, 0xff);
     if (material.doubleSided && state.rasterizerState != savedRasterizer) {
         state.pipelineStateFlags |= d3t::PipelineRasterizer;
         state.rasterizerState = savedRasterizer;

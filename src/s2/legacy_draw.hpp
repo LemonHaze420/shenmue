@@ -71,6 +71,7 @@ struct LegacyTextureBinding {
     std::uint32_t recordIndex{};
     std::int32_t textureTableIndex{-1};
     std::uint32_t textureHandle{};
+    const std::byte *runtimeHandle{};
 };
 
 struct LegacyBaseShaderParameters {

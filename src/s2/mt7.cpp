@@ -832,7 +832,12 @@ void BindMT7WritableRuntimeMeshes(MT7Model &model, std::span<std::byte> sourceAl
         node.runtimeMesh = node.xb01Offset ? source + node.xb01Offset : nullptr;
         if (!node.runtimeMesh || !IsModelXB01(node.runtimeMesh))
             continue;
-        const MT7Node *const owner = node.borrowedMesh ? node.borrowedMesh : &node;
+        MT7Node *const owner = node.borrowedMesh ? const_cast<MT7Node *>(node.borrowedMesh) : &node;
+        for (LegacyTextureBinding &binding : owner->drawResources.textureBindings) {
+            std::byte *const handle = node.runtimeMesh + binding.commandOffset + 12U + 8U * binding.recordIndex;
+            std::memcpy(handle, &binding.textureHandle, sizeof(binding.textureHandle));
+            binding.runtimeHandle = handle;
+        }
         std::uint32_t commandWords;
         std::memcpy(&commandWords, node.runtimeMesh + 28, sizeof(commandWords));
         auto *command = reinterpret_cast<std::uint32_t *>(node.runtimeMesh + 28 + 4 * commandWords);

@@ -681,6 +681,16 @@ void ReleaseDialogueAudio() noexcept {
     }
 }
 
+std::int32_t GetS2AudioOutputCount() noexcept {
+#if defined(_WIN32)
+    const std::lock_guard<std::recursive_mutex> lock(audioMutex);
+    EnumerateAudioOutputs();
+    return static_cast<std::int32_t>(outputDeviceCount);
+#else
+    return 0;
+#endif
+}
+
 std::string_view GetS2AudioOutputName(std::int32_t index) noexcept {
 #if defined(_WIN32)
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);

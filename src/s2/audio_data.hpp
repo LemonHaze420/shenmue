@@ -60,6 +60,7 @@ void SetDialogueVoiceReverbAttenuation(DialogueVoice *voice, std::int32_t unused
 bool IsDialogueAudioActive() noexcept;
 // The conversation owner releases every CVBF voice before its audio device.
 void ReleaseDialogueAudio() noexcept;
+std::int32_t GetS2AudioOutputCount() noexcept;
 std::string_view GetS2AudioOutputName(std::int32_t index) noexcept;
 void QueueS2AudioOutputChange(std::int32_t index);
 void PublishS2AudioOutputAcknowledgement();

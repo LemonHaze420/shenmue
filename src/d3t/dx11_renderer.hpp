@@ -59,6 +59,7 @@ void UnmapAndClearViews(D3TDeviceContext *context, std::uint32_t texture2D, std:
 void *MapTempConstantBufferForWriteDiscard(D3TDeviceContext *context, std::int32_t stageMask, std::uint32_t registerIndex, std::int32_t bufferSize);
 void *GetMappedConstantBuffer(D3TDeviceContext *context, std::int64_t unused, std::uint32_t size);
 std::int64_t DX11_SetupShadersForDXAndSetViewports(D3TDeviceContext *context);
+void SetupPipelineSampleMask(D3TDeviceContext *context, std::uint8_t opacity);
 std::uint32_t CreateNewTexture2D();
 void DirectXUpdateWindowDimensions(std::uint32_t width, std::uint32_t height);
 void PresentFrame(std::int32_t renderMode);

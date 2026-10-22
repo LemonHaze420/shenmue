@@ -335,6 +335,29 @@ void WriteOptionFraction(const OptionSpec &spec, float value) {
 std::string_view LocalizedOption(const char *token) {
     return GetLocalizedSceneText(token);
 }
+void RefreshOptionsAudioOutputs() {
+    optionsAudioOutputCount = std::min(GetS2AudioOutputCount(), 10);
+    const std::string_view off = LocalizedOption(GetS2AudioOutputName(0).data());
+    std::snprintf(optionsAudioOutputCaptions[0].data(), optionsAudioOutputCaptions[0].size(), "%s", off.empty() ? "" : off.data());
+    for (std::int32_t index = 1; index < optionsAudioOutputCount; ++index) {
+        const std::string_view name = GetS2AudioOutputName(index);
+        std::array<char, 18> &caption = optionsAudioOutputCaptions[index];
+        if (name.empty())
+            std::snprintf(caption.data(), 16, "%d. Unknown Output", index + 1);
+        else if (name.size() <= 12)
+            std::snprintf(caption.data(), caption.size(), "%d. %s", index, name.data());
+        else
+            std::snprintf(caption.data(), caption.size(), "%d. %.9s...", index, name.data());
+    }
+}
+std::string_view GetOptionsAudioOutputDescription(std::int32_t index) {
+    if (index < 0 || index >= GetS2AudioOutputCount())
+        return LocalizedOption(audioOptions[0].description);
+    const std::string_view name = GetS2AudioOutputName(index);
+    if (index == 0)
+        return LocalizedOption(name.data());
+    return name.empty() ? LocalizedOption(audioOptions[0].description) : name;
+}
 std::string_view OptionChoiceCaption(const OptionSpec &spec, std::int32_t index) {
     static constexpr std::array<const char*, 2> offOn{"UIOTGLOFF0", "UIOTGLON00"}; // @text UIOTGLOFF0 EN: "Off" | JA: "いいえ" ; UIOTGLON00 EN: "On" | JA: "はい"
     static constexpr std::array<const char*, 2> languages{"UIOTGLENG0", "UIOTGLJPN0"}; // @text UIOTGLENG0 EN: "English" | JA: "英語" ; UIOTGLJPN0 EN: "Japanese" | JA: "日本語"
@@ -366,7 +389,7 @@ std::string_view OptionChoiceCaption(const OptionSpec &spec, std::int32_t index)
     case OptionChoices::Aspect:
         return index < 2 ? LocalizedOption(aspect[index]) : std::string_view{};
     case OptionChoices::AudioOutputs:
-        return index < 10 ? GetS2AudioOutputName(index) : std::string_view{};
+        return index < optionsAudioOutputCount ? std::string_view(optionsAudioOutputCaptions[index].data()) : std::string_view{};
     case OptionChoices::Displays:
         return GetS2DisplayOutputName(index);
     case OptionChoices::Resolutions:
@@ -383,6 +406,8 @@ std::int32_t OptionChoiceValue(const OptionSpec &spec, std::int32_t index) {
 }
 std::int32_t OptionChoiceCount(const OptionSpec &spec) {
     switch (spec.choices) {
+    case OptionChoices::AudioOutputs:
+        return optionsAudioOutputCount;
     case OptionChoices::OffOn:
     case OptionChoices::AudioLanguages:
     case OptionChoices::Aspect:
@@ -421,7 +446,9 @@ const OptionSpec *CurrentOption() {
 }
 void DescribeOption(const OptionSpec &spec, const Vector4 *bounds = nullptr) {
     std::string_view description = LocalizedOption(spec.description);
-    if (spec.choices == OptionChoices::AudioOutputs || spec.choices == OptionChoices::Displays)
+    if (spec.choices == OptionChoices::AudioOutputs)
+        description = GetOptionsAudioOutputDescription(ReadOptionInteger(spec));
+    else if (spec.choices == OptionChoices::Displays)
         if (const auto caption = OptionChoiceCaption(spec, SelectedOptionChoice(spec)); !caption.empty())
             description = caption;
     if (spec.choices == OptionChoices::Dialogue) {
@@ -956,6 +983,8 @@ std::int64_t BindOptionChild(std::int32_t child) {
             .sound = 3});
     runtime.bound = true;
     RefreshOptionChildren();
+    if (child == 1)
+        RefreshOptionsAudioOutputs();
     return 1;
 }
 std::int64_t BindOptionsControls() {
@@ -983,6 +1012,8 @@ std::int64_t ResetOptionsGraphics() {
 std::int64_t TickOptionChild(std::int32_t child) {
     options.editing = -1;
     RefreshOptionChildren();
+    if (child == 1)
+        RefreshOptionsAudioOutputs();
     ClearWindowInput();
     ResetInputHandler();
     ResetUIGrid(optionChildren[child].grid);
@@ -1614,6 +1645,8 @@ void InitEasyOptionTaskCallback(void *) {
 } // namespace ui_detail
 
 void RefreshOptionsLanguage() {
+    if (optionChildren[1].bound)
+        RefreshOptionsAudioOutputs();
     if (selectedOptionDescription) {
         const Vector4 bounds = GetCurrentUIMessageBox().bounds;
         DescribeOption(*selectedOptionDescription, &bounds);

@@ -980,6 +980,8 @@ constexpr std::uint16_t AudioOptionOffset(std::size_t offset) {
 }
 extern const std::array<OptionSpec, 7> audioOptions;
 
+extern std::array<std::array<char, 18>, 10> optionsAudioOutputCaptions;
+extern std::int32_t optionsAudioOutputCount;
 constexpr OptionSpec KeyOption(const char *token, std::int32_t action) {
     return {OptionKind::Key, token, token, static_cast<std::uint16_t>(offsetof(S2UserConfiguration280, keyMappings) + action * sizeof(std::int32_t))};
 }

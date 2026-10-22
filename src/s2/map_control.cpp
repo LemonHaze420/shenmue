@@ -347,16 +347,6 @@ QronSceneChange qronSceneChange{};
 std::int32_t qronEntryFloor = -1000;
 std::uint64_t qronPropPlacements[17]{};
 
-MT7Node *FindQronPropNode(MT7Node *node, shen_name name) {
-    for (; node; node = node->runtimeSibling) {
-        if (static_cast<std::uint32_t>(node->id) == name.name)
-            return node;
-        if (MT7Node *const child = FindQronPropNode(node->runtimeChild, name))
-            return child;
-    }
-    return nullptr;
-}
-
 void BindQronFloorProps() {
     if (!qronFloorRuntime.props)
         return;
@@ -370,7 +360,7 @@ void BindQronFloorProps() {
             (void)d3t::RegisterObjectPlacement(GetMT7ReaderData(readers[index].reader), &qronPropPlacements[index], 0x10);
     }
     for (QronFloorProp *prop = qronFloorRuntime.props; prop->name.name; ++prop) {
-        prop->node = FindQronPropNode(root, prop->name);
+        prop->node = FindModelCharacterRecursive(root, prop->name);
         if (prop->node && static_cast<std::uint8_t>(prop->name.name) != 'R')
             SetDisplayFlagForProp(prop->name, 0);
     }

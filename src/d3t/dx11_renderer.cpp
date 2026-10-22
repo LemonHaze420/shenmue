@@ -708,6 +708,24 @@ void *GetMappedConstantBuffer(D3TDeviceContext *context, std::int64_t unused, st
     return mapped.pData;
 }
 
+// @verified - p
+void SetupPipelineSampleMask(D3TDeviceContext *context, std::uint8_t opacity) {
+    D3TRenderState &state = GetRenderState(*context);
+    std::uint32_t texture;
+    std::memcpy(&texture, state.outputTargets.data(), sizeof(texture));
+    Texture2DDescription description;
+    const std::uint32_t samples = GetTexture2DDescription(texture, &description) ? description.sampleCount : 4U;
+    const std::uint32_t halfStep = 127U / ((1U << (samples & 31U)) - 1U);
+    const std::uint32_t range = 255U - halfStep;
+    std::uint32_t value = opacity + 2U * halfStep;
+    if (value > range)
+        value = range;
+    const std::uint32_t mask = (0x01010101U << ((samples * value / range) & 31U)) - 0x01010101U;
+    if (state.blendSampleMask != mask) {
+        state.pipelineStateFlags |= PipelineBlend;
+        state.blendSampleMask = mask;
+    }
+}
 std::int64_t DX11_SetupShadersForDXAndSetViewports(D3TDeviceContext *context) {
     if (!context || !context->deviceContext)
         return 0;

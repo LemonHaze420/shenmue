@@ -822,6 +822,11 @@ const LegacyIndexDraw *FindIndexDraw(const LegacyDrawResources &resources, std::
 std::uint32_t ResolveTexture(const LegacyDrawResources &resources, std::uint32_t commandOffset, std::uint32_t recordIndex) {
     for (const LegacyTextureBinding &binding : resources.textureBindings) {
         if (binding.commandOffset == commandOffset && binding.recordIndex == recordIndex) {
+            if (binding.runtimeHandle) {
+                std::uint32_t handle;
+                std::memcpy(&handle, binding.runtimeHandle, sizeof(handle));
+                return handle;
+            }
             return binding.textureHandle;
         }
     }
@@ -3159,6 +3164,8 @@ std::uint32_t ExecuteLegacyDrawPacket(
                     value = static_cast<std::uint16_t>((value & 0xff00U) | 1U);
                 SetAlphaFlags(stage, setting, value);
             }
+            if (legacyAlphaPassEnabled)
+                SetAlphaFlags(0, 0x10, 4);
             break;
         }
         case 14: {
