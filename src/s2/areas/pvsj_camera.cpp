@@ -54,7 +54,8 @@ void PvsjUpdateOverlay(PvsjEventWork *work, std::int32_t mode) {
     EV_GetCharaPosition(PVSJ_PLAYER, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(PVSJ_PLAYER, &rotation, EventTransformFlags::World);
     SetXInputDigitalProcessing(1);
-    const float x = static_cast<std::uint8_t>(GetCurrentControlInput(5)) / 255.0f, y = static_cast<std::uint8_t>(GetCurrentControlInput(6)) / 255.0f;
+    const float x = static_cast<std::uint8_t>(GetCurrentControlInput(INPUT_RIGHT_X)) / 255.0f,
+                y = static_cast<std::uint8_t>(GetCurrentControlInput(INPUT_RIGHT_Y)) / 255.0f;
     const float blend = (mode == 2 ? 0.0f : mode == 3 ? static_cast<float>(pvsjCameraBlend) : 255.0f) / 255.0f;
     const auto pitch = static_cast<std::uint16_t>(static_cast<std::int32_t>(((0.5 - static_cast<double>(y)) * 2.0) * 45.0 * 8192.0 / 45.0));
     const auto yaw = static_cast<std::uint16_t>(static_cast<std::int32_t>(((0.5 - static_cast<double>(x)) * 2.0) * 60.0 * 8192.0 / 45.0));

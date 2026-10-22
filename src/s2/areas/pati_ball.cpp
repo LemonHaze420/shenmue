@@ -164,7 +164,7 @@ void PatiBallCallback(void *data) {
     case 4:
     case 5: {
         if (b.frames <= 5400) {
-            HandlePatiBallInput(&b, static_cast<std::uint16_t>(GetCurrentControlInput(2)));
+            HandlePatiBallInput(&b, static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_REPEAT)));
             GetBattleDataConfig(0, PATI_ACCEPT);
             if (b.option == 7)
                 GetBattleDataConfig(0, PATI_CANCEL);

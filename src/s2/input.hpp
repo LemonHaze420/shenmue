@@ -10,7 +10,22 @@
 
 namespace shenmue::s2 {
 
-
+enum ControllerInputSelector : std::int32_t {
+    INPUT_HELD = 0,
+    INPUT_PRESSED = 1,
+    INPUT_REPEAT = 2,
+    INPUT_RIGHT_TRIGGER = 3,
+    INPUT_LEFT_TRIGGER = 4,
+    INPUT_RIGHT_X = 5,
+    INPUT_RIGHT_Y = 6,
+    INPUT_NEW_PRESSES = 7,
+    INPUT_LEFT_X = 8,
+    INPUT_LEFT_Y = 9,
+    INPUT_CONNECTION = 10,
+    INPUT_DISCONNECTED = 11,
+    INPUT_DEVICE_STATE = 12,
+    INPUT_DEVICE_UNAVAILABLE = 13,
+};
 inline constexpr std::uint16_t PAD_BUTTON_X = 0x0400U;
 inline constexpr std::uint16_t PAD_UP = 0x1000U;
 inline constexpr std::uint16_t PAD_DOWN = 0x2000U;

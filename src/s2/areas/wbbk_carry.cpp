@@ -126,7 +126,7 @@ void ChangeBookCarryMotion(std::int32_t preset, std::int8_t transition) {
 }
 void SelectBookCarryInput() {
     bookCarryMotion.requested = 9;
-    const std::uint16_t keys = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 0));
+    const std::uint16_t keys = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_HELD));
     const std::uint8_t trigger = static_cast<std::uint8_t>(EVT_GetControllerInput(0, !GetS2IsEnglishVersion() ? 4 : 3));
     std::int32_t input = (keys & 0x1000U) != 0;
     if (static_cast<std::uint8_t>(trigger - 1) <= 249U)

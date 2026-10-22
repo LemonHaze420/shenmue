@@ -2335,7 +2335,7 @@ void MainCallback(void *parameter) {
         EVT_AT_SetPos(SFLU_BASE, STREET_FIGHT_INVALID, SFLU_STAGE_ORIGIN, 0);
         if (g_entryPoint == 3) {
             dbgPrintEventMessage(SFLU_TRAINING_RETRY_MESSAGE);
-            if (GetCurrentControlInput(7) & 0x606U) {
+            if (GetCurrentControlInput(INPUT_NEW_PRESSES) & 0x606U) {
                 qteBattleUtil(BattleQteMode::RetireAndFree);
                 SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
                 HLib::SetupTaskDelay(30);

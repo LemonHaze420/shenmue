@@ -332,7 +332,7 @@ void Mfw0AwardMoveSequence(void *data) {
             break;
         case 102:
             work.resultFrames = static_cast<std::int16_t>(static_cast<std::uint16_t>(work.resultFrames) - 1);
-            if (static_cast<std::int16_t>(GetCurrentControlInput(1)) == 512 || !work.resultFrames) {
+            if (static_cast<std::int16_t>(GetCurrentControlInput(INPUT_PRESSED)) == 512 || !work.resultFrames) {
                 SetNewEwzoTypeForMoveLearned(1, 0, 0);
                 Mfw0Advance(sequence, 103);
             }

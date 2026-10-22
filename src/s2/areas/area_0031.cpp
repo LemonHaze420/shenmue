@@ -134,7 +134,7 @@ void E0031MainCallback(void *taskData) {
     } else if (parent->state == 4) {
         CleanupE0031(parent);
     } else if (parent->state == 0) {
-        const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, 1));
+        const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024)
             parent->state = 2;
         else if (input == 64) {

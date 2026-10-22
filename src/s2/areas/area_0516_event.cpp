@@ -66,7 +66,7 @@ void Update0516(void *parameter) {
         Queue0516Author(parent);
     else if (parent->state == 3)
         Cleanup0516(parent);
-    else if (parent->state == 0 && EVT_GetControllerInput(0, 1) == 1024)
+    else if (parent->state == 0 && EVT_GetControllerInput(0, INPUT_PRESSED) == 1024)
         parent->state = 1;
 }
 void Queue0516Author(Area0516Parameter *parent) {

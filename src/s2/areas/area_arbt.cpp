@@ -290,7 +290,7 @@ void ArbtCarryQte(void *data) {
         }
         return;
     }
-    const std::uint32_t pressed = static_cast<std::uint32_t>(GetCurrentControlInput(1));
+    const std::uint32_t pressed = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_PRESSED));
     if (carry.direction == 0x8000)
         SetupBattleQteIcon(4, 0);
     else if (carry.direction == 0x4000)
@@ -325,7 +325,8 @@ void ArbtCarryForwardQte(void *data) {
         }
         return;
     }
-    const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(0)), pressed = static_cast<std::uint32_t>(GetCurrentControlInput(1));
+    const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_HELD)),
+                        pressed = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_PRESSED));
     SetupBattleQteIcon(1, 0);
     EnableElement(UIElement::GameQte);
     if (held & carry.direction) {
@@ -357,7 +358,7 @@ void ArbtCarryPutQte(void *data) {
             HLib::SetupTaskDelay(ArbtWarnIdlePut(++work.idleWarnings));
         }
     } else {
-        const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(0));
+        const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_HELD));
         SetupBattleQteIcon(16, 0);
         EnableElement(UIElement::GameQte);
         if (held & carry.direction) {

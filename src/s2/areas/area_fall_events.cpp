@@ -232,13 +232,13 @@ void QueueFallLookCamera() {
 }
 void MoveFallLookTarget() {
     float perspective = static_cast<std::int16_t>(camCtrlGetPerspective()) / 182.04445f;
-    if ((GetCurrentControlInput(4) & 0x40U) && perspective < 90)
+    if ((GetCurrentControlInput(INPUT_LEFT_TRIGGER) & 0x40U) && perspective < 90)
         perspective += 2;
-    else if ((GetCurrentControlInput(3) & 0x80U) && perspective > 20)
+    else if ((GetCurrentControlInput(INPUT_RIGHT_TRIGGER) & 0x80U) && perspective > 20)
         perspective -= 2;
     camCtrlSetPerspective(static_cast<std::uint16_t>((perspective * 8192) / 45));
-    std::int16_t x = static_cast<std::int16_t>(GetCurrentControlInput(5)) - 128;
-    std::int16_t y = 128 - static_cast<std::int16_t>(GetCurrentControlInput(6));
+    std::int16_t x = static_cast<std::int16_t>(GetCurrentControlInput(INPUT_RIGHT_X)) - 128;
+    std::int16_t y = 128 - static_cast<std::int16_t>(GetCurrentControlInput(INPUT_RIGHT_Y));
     x = std::clamp<std::int16_t>(x, -127, 127);
     y = std::clamp<std::int16_t>(y, -127, 127);
     const float dx = std::min(15.0f, std::max(-10.0f, static_cast<float>(x * (y + 127) / 127) * .1f));

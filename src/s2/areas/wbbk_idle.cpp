@@ -32,7 +32,7 @@ void BookIdleInput() {
                 bookSearchTargets[index].flags |= 2;
         }
     }
-    if (static_cast<std::int16_t>(EVT_GetControllerInput(0, 0)))
+    if (static_cast<std::int16_t>(EVT_GetControllerInput(0, INPUT_HELD)))
         bookCarryIdleFrames = 0;
     DateTime time;
     GetCurrentDateTime(time);

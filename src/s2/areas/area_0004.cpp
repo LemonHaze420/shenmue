@@ -1,6 +1,7 @@
 #include "s2/areas/area_0004.hpp"
 
 #include "s2/author.hpp"
+#include "s2/author_viewer_event.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
 #include "s2/date_time.hpp"
@@ -11,6 +12,9 @@
 #include "s2/map_assets.hpp"
 #include "s2/map_control.hpp"
 #include "s2/model_image.hpp"
+#include "s2/mt7.hpp"
+#include "s2/motion_work.hpp"
+#include "s2/scenario_characters.hpp"
 #include "s2/npc_package.hpp"
 #include "s2/player.hpp"
 #include "s2/pak.hpp"
@@ -52,6 +56,8 @@ static_assert(offsetof(AuthorLoopTaskParameter, state) == 0x08);
 constexpr std::uint32_t invalidEffect = 0xffffffffU;
 std::array<std::uint32_t, 2> openingSmokeEffects{invalidEffect, invalidEffect};
 std::int32_t openingWavePhase{};
+std::array<std::uint32_t, 16> openingCharacterTextureFrames{};
+std::array<std::uint32_t *, 16> openingCharacterTextureTargets{};
 std::array<std::byte, 0x100> openingWaveDistance{};
 std::array<std::byte, 0x100> openingWaveFirstKernel{};
 std::array<std::byte, 0x100> openingWaveSecondKernel{};
@@ -104,6 +110,33 @@ constexpr std::array<shen_name, 18> openingAuthorCharacters{{
     a796,
 }};
 
+void CaptureOpeningCharacterTextures() {
+    const MapControlData *control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    Character *character = GetScenarioCharacterNode(control->scenarioTask, aa87);
+    MT7Node *node = mtGetTransform(static_cast<MT7Node *>(character->model));
+    std::int32_t count = 0;
+    for (; node && count < 16; node = mtGetSibling(node)) {
+        const std::int32_t sample = (static_cast<std::int16_t>(node->id) - 152) % 16;
+        if (sample >= 0) {
+            std::uint32_t *const texture = FindSpringTextureCommand(node, 0);
+            ++count;
+            openingCharacterTextureFrames[sample] = *texture;
+        }
+    }
+    const std::array<shen_name, 5> characters{aa87, aa88, aa90, aa91, aa92};
+    for (std::size_t index = 0; index < characters.size(); ++index) {
+        control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        character = GetScenarioCharacterNode(control->scenarioTask, characters[index]);
+        node = mtGetTransform(static_cast<MT7Node *>(character->model));
+        for (; node; node = mtGetSibling(node)) {
+            if ((static_cast<std::int16_t>(node->id) - 152) % 16 == 0) {
+                openingCharacterTextureTargets[index] = FindSpringTextureCommand(node, 0);
+                break;
+            }
+        }
+    }
+}
+
 void SetOpeningTime(std::int8_t hour) {
     DateTime dateTime{};
     GetCurrentDateTime(dateTime);
@@ -119,17 +152,20 @@ void RestoreOpeningAuthorCharacters() {
         EV_SetCharacterAlphaEnabled(character, true);
     }
     for (const shen_name character : openingTemporaryCharacters) {
+        mtwkSetExtraFlag(scenFindMotionwork(character), 6, 0);
         EV_SetCharacterAlphaEnabled(character, true);
     }
 }
 void PrepareOpeningAuthorCharacters() {
-    for (const shen_name character : openingAuthorCharacters) {
+    for (std::size_t index = 1; index < openingAuthorCharacters.size(); ++index) {
+        const shen_name character = openingAuthorCharacters[index];
         EV_EnsureCharacterDraw(character);
         EV_EnableCharacterDisplay(character);
         EV_SetCharacterAlphaEnabled(character, false);
     }
     for (const shen_name character : openingTemporaryCharacters) {
         EV_EnableCharacterDisplay(character);
+        mtwkSetExtraFlag(scenFindMotionwork(character), 6, 2);
         EV_SetCharacterAlphaEnabled(character, false);
     }
 }
@@ -145,8 +181,8 @@ void SetupOpeningSmoke() {
         SetParticleEffectColour(0, effect, 0, 3, 8, 5);
         SetParticleEffectSize(0, effect, 7.176470756530762f, 7.176470756530762f);
         SetParticleEffectInitialScale(0, effect, 0.28823530673980713f);
-        SetSmokeEffectFadeFactor(effect, 112);
-        SetSmokeEffectFalloff(effect, 21);
+        SetSmokeEffectFalloff(effect, 112);
+        SetSmokeEffectFadeFactor(effect, 21);
         SetSmokeEffectPhaseRate(effect, 0.0f);
         ResumeParticleEffect(0, effect);
     }
@@ -247,6 +283,13 @@ void UpdateOpeningCharacterEffects(std::uint16_t frame) {
         EV_GetCharaPosition(aa90, CHARACTER_TRANSLATION_ROOT, &aa90Position, EventTransformFlags::World);
         aa90Position.y = aa87Position.y;
         EV_AT_SetPos(aa90, EventTransformFlags::World | EventTransformFlags::AllAxes, aa90Position);
+        for (std::size_t index = 0; index < OPENING_TEXTURE_PHASE_OFFSETS.size(); ++index) {
+            if (openingCharacterTextureTargets[index]) {
+                const std::uint32_t texture = openingCharacterTextureFrames[(frame + OPENING_TEXTURE_PHASE_OFFSETS[index]) % 16];
+                if (texture)
+                    *openingCharacterTextureTargets[index] = texture;
+            }
+        }
     }
     if (frame == 1U) {
         SetParticleEffectColour(0, openingSmokeEffects[0], 0, 65, 65, 65);
@@ -255,7 +298,7 @@ void UpdateOpeningCharacterEffects(std::uint16_t frame) {
         SetMapModelSlotTransform(16, &position, 0);
         position.y = -0.8f;
         SetMapModelSlotTransform(1, &position, 0);
-        WaitForNextTask_0(GetCurrentAreaScreenFilmTask(), 0, 30);
+        SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         SetOpeningTime(7);
     } else if (frame == 2370U) {
         Vector3 position{1000.0f, 0.0f, 0.0f};
@@ -274,7 +317,13 @@ void UpdateOpeningCharacterEffects(std::uint16_t frame) {
         (void)AssignImageModuleParameters(ctrlGetCharaByName(a822), 1, -1, 0.5f, 0);
     } else if (frame == 2555U) {
         (void)AssignImageModuleParameters(ctrlGetCharaByName(a818), 1, -1, 0.5f, 0);
-    } else if (frame == 2706U) {
+    }
+    if ((frame >= 2362U && frame <= 2410U) || (frame >= 2514U && frame <= 2714U)) {
+        EV_SetObjectFlagByIndex(17, 0);
+        EV_SetObjectFlagByIndex(18, 0);
+        AdvanceSpringTextureAnimation();
+    }
+    if (frame == 2706U) {
         const Vector3 position{0.0f, 1.15f, 0.0f};
         SetMapModelSlotTransform(16, &position, 0);
     } else if (frame >= 2707U && frame <= 2779U) {
@@ -282,11 +331,6 @@ void UpdateOpeningCharacterEffects(std::uint16_t frame) {
     } else if (frame == 2780U) {
         const Vector3 position{};
         SetMapModelSlotTransform(16, &position, 0);
-    }
-
-    if ((frame >= 2362U && frame <= 2410U) || (frame >= 2514U && frame <= 2714U)) {
-        EV_SetObjectFlagByIndex(17, 0);
-        EV_SetObjectFlagByIndex(18, 0);
     }
 }
 
@@ -302,7 +346,7 @@ void CompleteOpening(EventTaskParameter *event) {
     EV_CleanupOpeningTemporaryCharacters();
     EV_CleanupMapControlTask();
     HLib::DestroyTask(event->task);
-    shenQueueChangeModuleAndScene(SystemModule::Game, g_actNumber, SHEN_NAME(AR01), 0);
+    EV_scenQueueLoad(g_actNumber, SHEN_NAME(AR01), 0);
     EV_FinalizeOpeningAix();
     EV_SetGlobalShadowLightingEnabled(true);
 }
@@ -317,10 +361,10 @@ void e0004_EVT_Auth_Loop_0004A000_Callback(void *taskData) {
     if (Author_GetLastMapInfoLoadResult() != AuthorMapInfoLoadResult::Started) {
         return;
     }
-    const std::uint16_t frame = static_cast<std::uint16_t>(Author_GetCurrentFrame());
+    const std::uint16_t frame = static_cast<std::uint16_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     UpdateOpeningCharacterEffects(frame);
-    if (!authGetLoaded()) {
-        WaitForNextTask_0(GetCurrentAreaScreenFilmTask(), 1, 0);
+    if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
+        SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
         RestoreOpeningAuthorCharacters();
         camCtrlSetFarDistance(0.0f);
         parent->state = 3;
@@ -336,12 +380,13 @@ void Queue_e0004_EVT_Auth_Loop_0004A000(EventTaskParameter *parent) {
     child->parent = parent;
     child->state = 0;
     SetupOpeningSmoke();
-    EV_LoadAudio("0004A000", 0);
+    if (IsAuthorMultichannelAudioEnabled() && IsAuthorMultichannelAudioActive())
+        StartAuthorMultichannelAudio(0);
+    else
+        EV_LoadAudio("0004A000", 0);
     PrepareOpeningAuthorCharacters();
-    const auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    if (control)
-        Author_InitializeFromMapInfo(control->mapInfo);
     Queue_OP_StaffRoll();
+    EV_authSceneCtrl(static_cast<AuthSceneCtrl>(parent->debugSelection));
     parent->state = 2;
 }
 
@@ -354,16 +399,22 @@ void e0004_EVT_Auth_Main_Callback(void *taskData) {
     } else if (event->state == 3) {
         CompleteOpening(event);
     } else if (event->state == 0) {
-        const std::uint16_t input = g_inputBuffer[0].pressedPriority;
-        if (input == 0x400U) {
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
+        if (input == PAD_BUTTON_X) {
             event->state = 1;
-        } else if (input == 0x40U) {
+        } else if (input == PAD_TRIGGER_LEFT) {
             if (--event->debugSelection < 0)
                 event->debugSelection = 0;
-        } else if (input == 0x80U) {
+        } else if (input == PAD_TRIGGER_RIGHT) {
             if (++event->debugSelection > 0)
                 event->debugSelection = 0;
         }
+        if (event->debugSelection >= 0 && event->debugSelection < static_cast<std::int32_t>(OPENING_AUTHOR_DEBUG_NAMES.size())) {
+            EV_set_debug_text_pos(2, 4);
+            EV_debug_log_to_screen(OPENING_AUTHOR_DEBUG_NAMES[event->debugSelection]);
+        }
+        EV_set_debug_text_pos(2, 5);
+        EV_debug_log_to_screen("seqdata%d.avb\n", event->debugSelection);
     }
 }
 void e0004_EVT_Auth_Init() {
@@ -398,6 +449,7 @@ void e0004_EVT_Auth_Main(std::uintptr_t) {
     HLib::EnqueueTaskWithoutParameter(EVT_UTL_LoadNPCChara_Callback_2, 6, 0x0b, static_cast<std::int32_t>(TASK_NPC_LOAD.name));
     InitializeWaterReflectionSet();
     InitializeSpringTextureAnimation(23);
+    CaptureOpeningCharacterTextures();
 }
 
 } // namespace

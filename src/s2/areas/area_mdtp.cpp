@@ -727,7 +727,7 @@ void MdtpRecorderCallback(void *data) {
     }
     std::uint16_t input = 0;
     if (!work->pressFrames && inputAllowed) {
-        input = static_cast<std::uint16_t>(GetCurrentControlInput(2)) & 0xf9f9;
+        input = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_REPEAT)) & 0xf9f9;
         if (work->flags & 0x2000) {
             input = 0;
             if (!work->handBlendFrames) {

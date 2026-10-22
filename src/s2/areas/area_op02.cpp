@@ -40,7 +40,7 @@ void StoreOp02PresentationWord(std::size_t offset, std::uint32_t value) {
 }
 void ReadOp02Triggers() {
     for (std::uint8_t index = 0; index < 4; ++index)
-        op02PreviousTriggers[index] = static_cast<std::uint16_t>(EVT_GetControllerInput(index, 12));
+        op02PreviousTriggers[index] = static_cast<std::uint16_t>(EVT_GetControllerInput(index, INPUT_DEVICE_STATE));
 }
 } // namespace
 
@@ -295,9 +295,10 @@ void OP02AuthorLoopCallback(void *data) {
     }
     RefreshTriggerInputs();
     EnableElement(static_cast<UIElement>(79));
-    bool abort = (EVT_GetControllerInput(0, 1) & 0x0edeU) != 0;
+    bool abort = (EVT_GetControllerInput(0, INPUT_PRESSED) & 0x0edeU) != 0;
     for (std::uint8_t index = 0; index < 4 && !abort; ++index) {
-        abort = op02PreviousTriggers[index] == 0 ? EVT_GetControllerInput(index, 12) != 0 : EVT_GetControllerInput(index, 13) != 0;
+        abort = op02PreviousTriggers[index] == 0 ? EVT_GetControllerInput(index, INPUT_DEVICE_STATE) != 0 :
+                                                   EVT_GetControllerInput(index, INPUT_DEVICE_UNAVAILABLE) != 0;
     }
     if (abort) {
         OP02RestoreSceneCharacters();

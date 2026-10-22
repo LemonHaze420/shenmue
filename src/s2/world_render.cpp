@@ -3812,6 +3812,7 @@ Vector3 waterTexturePositions[64]{};
 std::int32_t waterTexturePositionCount{};
 MT7Node *waterTextureExtraNode{};
 
+} // namespace
 std::uint32_t *FindSpringTextureCommand(MT7Node *node, std::int32_t ordinal) {
     std::uint32_t *const mesh = reinterpret_cast<std::uint32_t *>(node->runtimeMesh);
     std::uint32_t *strip = mesh + mesh[6] + 6;
@@ -3828,6 +3829,7 @@ std::uint32_t *FindSpringTextureCommand(MT7Node *node, std::int32_t ordinal) {
 }
 
 // @verified - p
+namespace {
 MT7Node *BindSpringTextureAnimation() {
     MT7Model *const model = const_cast<MT7Model *>(GetMapModelSlots().data()[springTexturePreset].reader);
     MT7Node *node = model->nodes.data()->runtimeChild;
@@ -3843,7 +3845,7 @@ MT7Node *BindSpringTextureAnimation() {
     }
     return node;
 }
-}
+} // namespace
 
 // @verified - p
 MT7Node *InitializeSpringTextureAnimation(std::int32_t preset) {

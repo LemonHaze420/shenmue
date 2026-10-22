@@ -1635,13 +1635,13 @@ void UI_DrawCollection(nk_context &context, std::int32_t index) {
             if (page.field5C == 1 || page.field5C == 2) {
                 if (page.field5C == 1) {
                     if (page.override != 0 && page.drawType == 1)
-                        UI_DrawCollectionCount(context, cell, element.field0[0], page);
+                        UI_DrawCollectionCount(context, cell, element.count, page);
                     const d3t::UIViewSlot<kUIViewImageCapacity> &view = g_uiViewSlots[static_cast<std::size_t>(g_uiDrawViewSlot)];
                     struct nk_image image {};
-                    if (static_cast<std::size_t>(element.field0[1]) < view.images.size())
-                        std::memcpy(&image, &view.images[static_cast<std::size_t>(element.field0[1])].textureHandle, sizeof(image));
+                    if (static_cast<std::size_t>(element.image) < view.images.size())
+                        std::memcpy(&image, &view.images[static_cast<std::size_t>(element.image)].textureHandle, sizeof(image));
                     std::array<float, 4> uv{};
-                    std::memcpy(uv.data(), &element.field0[2], sizeof(uv));
+                    std::memcpy(uv.data(), &element.u0, sizeof(uv));
                     const float imageWidth = static_cast<float>(static_cast<std::int32_t>(image.w));
                     const float imageHeight = static_cast<float>(image.h);
                     const float top = imageHeight - uv[3] * imageHeight;
@@ -1650,11 +1650,11 @@ void UI_DrawCollection(nk_context &context, std::int32_t index) {
                     image.region[2] = static_cast<unsigned short>(static_cast<std::int32_t>(uv[2] * imageWidth - uv[0] * imageWidth));
                     image.region[3] = static_cast<unsigned short>(static_cast<std::int32_t>(imageHeight - uv[1] * imageHeight - top));
                     const bool ready =
-                        static_cast<std::size_t>(element.field0[1]) < view.images.size() && view.images[static_cast<std::size_t>(element.field0[1])].ready == 1;
+                        static_cast<std::size_t>(element.image) < view.images.size() && view.images[static_cast<std::size_t>(element.image)].ready == 1;
                     if (g_waitingForNextTick == 1)
                         nk_image_color(&context, ready ? image : g_uiDefaultImage, tinted(element.colour));
                     if (page.override != 0 && page.drawType == 1)
-                        UI_DrawCollectionCount(context, cell, element.field0[0], page);
+                        UI_DrawCollectionCount(context, cell, element.count, page);
                 } else {
                     context.style.button.border_color = nk_rgba(0, 0, 0, 0);
                     const std::byte *images = nullptr;

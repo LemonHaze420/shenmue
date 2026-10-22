@@ -213,7 +213,7 @@ void Syw0AwardSequence(void *data) {
         }
         case 103: {
             const std::int16_t frames = Syw0Value<std::int16_t>(event, 0x76);
-            if (GetCurrentControlInput(1) == 512 || !frames) {
+            if (GetCurrentControlInput(INPUT_PRESSED) == 512 || !frames) {
                 EV_authSceneCtrl(AuthSceneCtrl::ResetAuthorStopped);
                 for (shen_name name : {SYW0_RYO, SYW0_SYE, SYW0_KNK})
                     SetClothFlag(FindCharacterByScenarioName(name), 4, 0);

@@ -74,8 +74,8 @@ void ShowPatiBoardOdds(PatiEventWork *work) {
 // @verified - p
 std::int32_t SelectPatiBoardInput(PatiEventWork *work) {
     const std::int16_t input =
-        g_patiCameraMoving || g_patiSelectionAccepted || g_patiInspectRequested ? 0 : static_cast<std::int16_t>(GetCurrentControlInput(2));
-    GetCurrentControlInput(0);
+        g_patiCameraMoving || g_patiSelectionAccepted || g_patiInspectRequested ? 0 : static_cast<std::int16_t>(GetCurrentControlInput(INPUT_REPEAT));
+    GetCurrentControlInput(INPUT_HELD);
     const std::int32_t previous = work->selectedBoard;
     std::int32_t left = previous, right = previous;
     float leftDistance = 100000000.0f, rightDistance = 100000000.0f;

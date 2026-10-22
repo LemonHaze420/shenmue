@@ -295,7 +295,7 @@ void JUKBSelectInitCallback(void *data) {
 void JUKBSelectLoopCallback(void *data) {
     using enum CameraState;
     JukbTaskData &work = *static_cast<JukbTaskData *>(data);
-    const std::int32_t stickX = GetCurrentControlInput(5), stickY = GetCurrentControlInput(6);
+    const std::int32_t stickX = GetCurrentControlInput(INPUT_RIGHT_X), stickY = GetCurrentControlInput(INPUT_RIGHT_Y);
     GetBattleDataConfig(0, JUKB_INPUT);
     ++work.selectFrame;
     if (work.selectFrame == 30) {
@@ -303,7 +303,7 @@ void JUKBSelectLoopCallback(void *data) {
         SetTargetPosition(JUKB_TARGETS[7], {std::bit_cast<float>(0x3dfcb924U), std::bit_cast<float>(0x3ebb573fU), .17739999f});
         SetTargetPosition(JUKB_TARGETS[8], {0, -.0015f, -.0255f});
         camCtrlSetPerspective(0x1555);
-        QueueSelection(work, GetCurrentControlInput(0));
+        QueueSelection(work, GetCurrentControlInput(INPUT_HELD));
     }
     if (work.selectFrame > 30) {
         Vector3 position;
@@ -325,7 +325,7 @@ void JUKBSelectLoopCallback(void *data) {
             if (GetBattleDataConfig(1, JUKB_INPUT) && GetBattleDataConfig(2, JUKB_INPUT))
                 work.buttonPhase = 1;
             else
-                QueueSelection(work, GetCurrentControlInput(7));
+                QueueSelection(work, GetCurrentControlInput(INPUT_NEW_PRESSES));
         }
     }
     if (work.rightPhase) {
@@ -339,7 +339,7 @@ void JUKBSelectLoopCallback(void *data) {
         SetTargetPosition(JUKB_TARGETS[1], target);
         if (++work.rightPhase > 8) {
             work.rightPhase = 0;
-            if (GetCurrentControlInput(0) == 0x8000)
+            if (GetCurrentControlInput(INPUT_HELD) == 0x8000)
                 QueueSelection(work, 0x8000);
         }
     }
@@ -354,7 +354,7 @@ void JUKBSelectLoopCallback(void *data) {
         SetTargetPosition(JUKB_TARGETS[1], target);
         if (++work.leftPhase > 8) {
             work.leftPhase = 0;
-            if (GetCurrentControlInput(0) == 0x4000)
+            if (GetCurrentControlInput(INPUT_HELD) == 0x4000)
                 QueueSelection(work, 0x4000);
         }
     }

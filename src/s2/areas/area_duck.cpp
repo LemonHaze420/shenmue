@@ -730,7 +730,7 @@ std::int32_t DuckSelection(DuckEventWork *work) {
         AT_SetLocalBaseChara(money, hand);
     } else if (work->phase != 1)
         return 0;
-    const auto input = static_cast<std::int16_t>(GetCurrentControlInput(7));
+    const auto input = static_cast<std::int16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES));
     if (input & 0x4000)
         --work->selection;
     if (input < 0)
@@ -766,7 +766,7 @@ std::int32_t PaddockView(DuckEventWork *work) {
     return 0;
 }
 std::int32_t PaddockBrowse(DuckEventWork *work) {
-    const auto input = static_cast<std::uint16_t>(GetCurrentControlInput(7));
+    const auto input = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES));
     if (input == 0x4000)
         ++state.browseIndex;
     else if (input == 0x8000)
@@ -815,7 +815,7 @@ std::int32_t Countdown(DuckEventWork *work) {
         return 70;
     case 1:
         if (state.playerRace) {
-            const auto input = static_cast<std::uint16_t>(GetCurrentControlInput(0));
+            const auto input = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_HELD));
             if ((input & 6) == 6)
                 Obstacles(3);
             if ((input & 0x204) == 0x204)

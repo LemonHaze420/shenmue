@@ -111,7 +111,7 @@ void AnanReadInput(AnanWork *work) {
         return;
     std::uint16_t input = 0;
     if (!(work->gameFlags & 0x80008000U)) {
-        input = static_cast<std::uint16_t>(GetCurrentControlInput(0) & 0xfbffU);
+        input = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_HELD) & 0xfbffU);
         if (GetBattleDataConfig(1, ANAN_BUTTON) && GetBattleDataConfig(2, ANAN_BUTTON))
             input |= 0x400;
         else

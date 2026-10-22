@@ -137,7 +137,7 @@ void ShopMain(void *parameter) {
         HLib::SetCurrentTaskTo(Ro10Quit);
         return;
     }
-    const std::int16_t input = static_cast<std::int16_t>(GetCurrentControlInput(2));
+    const std::int16_t input = static_cast<std::int16_t>(GetCurrentControlInput(INPUT_REPEAT));
     bool moved = true;
     if (input < 0) {
         if (++work->column >= shop.columns) {
@@ -163,8 +163,8 @@ void ShopMain(void *parameter) {
         moved = false;
     if (moved)
         work->cameraFrames = 8;
-    float distance =
-        Ro10FlushSmall(static_cast<float>(static_cast<std::int32_t>(GetCurrentControlInput(4)) - static_cast<std::int32_t>(GetCurrentControlInput(3))));
+    float distance = Ro10FlushSmall(static_cast<float>(
+        static_cast<std::int32_t>(GetCurrentControlInput(INPUT_LEFT_TRIGGER)) - static_cast<std::int32_t>(GetCurrentControlInput(INPUT_RIGHT_TRIGGER))));
     distance = Ro10FlushSmall(distance * .00390625f);
     distance = Ro10FlushSmall(distance * .2f);
     distance = Ro10FlushSmall(distance + .5f);

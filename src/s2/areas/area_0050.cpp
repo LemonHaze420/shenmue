@@ -202,7 +202,7 @@ void E0050MainCallback(void *parameter) {
             CleanupE0050(parent);
         return;
     }
-    const std::int16_t input = EVT_GetControllerInput(0, 1);
+    const std::int16_t input = EVT_GetControllerInput(0, INPUT_PRESSED);
     if (input == 1024)
         parent->state = 1;
     else if (input == 64) {

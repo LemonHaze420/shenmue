@@ -166,8 +166,8 @@ std::int32_t RejectInput(std::uint32_t *history) {
 }
 // @verified - p
 std::int32_t MatchInput(std::uint32_t *history) {
-    history[history[60]] = static_cast<std::uint16_t>(GetCurrentControlInput(7));
-    history[history[60] + 30] = static_cast<std::uint16_t>(GetCurrentControlInput(0));
+    history[history[60]] = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES));
+    history[history[60] + 30] = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_HELD));
     const auto cursor = history[60];
     if (cursor == 0 && (history[history[61] + 30] & history[30]))
         return 6;
@@ -234,7 +234,7 @@ void BufferIdle(TrainingWork &work) {
         work.phase = 0;
         Continue(Auto2);
     }
-    if (static_cast<std::uint16_t>(GetCurrentControlInput(0)))
+    if (static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_HELD)))
         work.idleTicks = 0;
 }
 // @verified - p
@@ -325,7 +325,7 @@ void Training(void *data) {
     displayLevel = work.level;
     const auto animation = Animation();
     UpdateStrength(animation != 371 && animation != 5185 && animation != 5188);
-    if (GetCurrentControlInput(7) == 512 && Animation() == 5187) {
+    if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 512 && Animation() == 5187) {
         work.phase = 0;
         Continue(Auto2);
     }

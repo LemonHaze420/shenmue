@@ -93,10 +93,10 @@ void IzumiQteAuthorCallback(void *) {
 }
 
 void UpdateDemonstrationCamera() {
-    const std::int32_t x = static_cast<std::int32_t>(GetCurrentControlInput(5));
-    const std::int32_t y = static_cast<std::int32_t>(GetCurrentControlInput(6));
-    GetCurrentControlInput(4);
-    const std::int32_t zoom = static_cast<std::int32_t>(GetCurrentControlInput(3));
+    const std::int32_t x = static_cast<std::int32_t>(GetCurrentControlInput(INPUT_RIGHT_X));
+    const std::int32_t y = static_cast<std::int32_t>(GetCurrentControlInput(INPUT_RIGHT_Y));
+    GetCurrentControlInput(INPUT_LEFT_TRIGGER);
+    const std::int32_t zoom = static_cast<std::int32_t>(GetCurrentControlInput(INPUT_RIGHT_TRIGGER));
     Vector3 delta{((x - 128) * 0.0078125f) + ((x - 128) * 0.0078125f), ((y - 128) * 0.0078125f) + ((y - 128) * 0.0078125f), 0};
     ApplyScenarioTranslationAndRotation(&delta, &demonstrationCameraRotation, &delta);
     Vector3 target;

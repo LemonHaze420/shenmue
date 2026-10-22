@@ -42,7 +42,7 @@ void Update0512(void *taskData) {
     } else if (parent->state == 3) {
         Cleanup0512(parent);
     } else if (parent->state == 0) {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             parent->state = 1;
         } else if (input == 64) {

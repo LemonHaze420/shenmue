@@ -37,7 +37,11 @@
 #include <cstdlib>
 #include <new>
 #include <thread>
-#if defined(_M_X64) || defined(__x86_64__)
+#if defined(_WIN32) && !defined(SHENMUE_NULL_LIBRARY)
+#include <windows.h>
+#endif
+#if defined(
+_M_X64) || defined(__x86_64__)
 #include <immintrin.h>
 #endif
 
@@ -1342,8 +1346,8 @@ void UpdateAicaPlaybackPitch(std::size_t index) {
     }
     const std::int32_t pitchNote = driverBase[0] == 0 ? static_cast<std::int32_t>((voice.spawnCommand >> 16) & 0x7fU) - 60 : 0;
     const std::int32_t pitchUnits = static_cast<std::int32_t>(
-        (static_cast<double>(static_cast<std::int32_t>(memory[0x8cf + configBase]) + static_cast<std::int8_t>(note[11])) * 1024.0 / 3.0 * 0.015625) +
-        (static_cast<double>(static_cast<std::int32_t>(memory[0x8ce + configBase]) + static_cast<std::int8_t>(note[10]) + pitchNote) * 1024.0 / 3.0));
+        (static_cast<double>(static_cast<std::int8_t>(memory[0x8cf + configBase]) + static_cast<std::int8_t>(note[11])) * 1024.0 / 3.0 * 0.015625) +
+        (static_cast<double>(static_cast<std::int8_t>(memory[0x8ce + configBase]) + static_cast<std::int8_t>(note[10]) + pitchNote) * 1024.0 / 3.0));
     if ((static_cast<std::uint32_t>(pitchUnits) + 0x7fffU) > 0x9ffeU)
         return;
     SetRawSoundEffectFrequencyRatio(g_aicaPlaybackOwners[index], std::pow(2.0f, static_cast<float>(pitchUnits) * (1.0f / 4096.0f)));
@@ -3021,6 +3025,12 @@ void ProcessAicaEventStreams() {
                 stream = control + 4;
                 if (type == 0) {
                     write_unaligned(raw + base + 28, reinterpret_cast<std::uintptr_t>(stream));
+                    const std::uintptr_t driverOffset = reinterpret_cast<std::uintptr_t>(pointerAt(20)) - reinterpret_cast<std::uintptr_t>(bankData);
+                    stream = AicaBankOffset(bankData, bankSize, driverOffset + offset, 1);
+                    if (!stream) {
+                        clearOwner();
+                        break;
+                    }
                     continue;
                 }
                 for (;;) {
@@ -3069,6 +3079,12 @@ void ProcessAicaEventStreams() {
                     stream = control + 4;
                     if (type == 0) {
                         write_unaligned(raw + base + 28, reinterpret_cast<std::uintptr_t>(stream));
+                        const std::uintptr_t driverOffset = reinterpret_cast<std::uintptr_t>(pointerAt(20)) - reinterpret_cast<std::uintptr_t>(bankData);
+                        stream = AicaBankOffset(bankData, bankSize, driverOffset + offset, 1);
+                        if (!stream) {
+                            clearOwner();
+                            ownerFinished = true;
+                        }
                         break;
                     }
                 }
@@ -3384,8 +3400,8 @@ void ExecuteAicaBankA() {
         case 0x1c: {
             const std::uint8_t bank = static_cast<std::uint8_t>(command & 0x0f);
             const std::uint8_t requested = static_cast<std::uint8_t>((command >> 8) & 0x7f);
-            const auto *const fadeBytes = reinterpret_cast<const std::uint8_t *>(kAicaFadeTable.data());
-            reinterpret_cast<std::uint8_t *>(g_aicaMemory)[0x751 + 24U * bank] = fadeBytes[32U + requested];
+
+            reinterpret_cast<std::uint8_t *>(g_aicaMemory)[0x751 + 24U * bank] = kAicaVolumeTable[requested];
             ExecuteAicaCommand_1(0xa01c, 0x0f);
             break;
         }
@@ -3594,8 +3610,8 @@ std::int64_t LoadAICADriver(std::uint16_t *driver, std::uint8_t voiceIndex) {
         ++level;
     const float volume = AicaLevelToGain(level);
     const std::int32_t pitchUnits = static_cast<std::int32_t>(
-        (static_cast<double>(static_cast<std::int32_t>(memory[0x8cf + configBase]) + static_cast<std::int8_t>(note[11])) * 1024.0 / 3.0 * 0.015625) +
-        (static_cast<double>(static_cast<std::int32_t>(memory[0x8ce + configBase]) + static_cast<std::int8_t>(note[10]) + pitchNote) * 1024.0 / 3.0));
+        (static_cast<double>(static_cast<std::int8_t>(memory[0x8cf + configBase]) + static_cast<std::int8_t>(note[11])) * 1024.0 / 3.0 * 0.015625) +
+        (static_cast<double>(static_cast<std::int8_t>(memory[0x8ce + configBase]) + static_cast<std::int8_t>(note[10]) + pitchNote) * 1024.0 / 3.0));
     const float frequencyRatio = std::pow(2.0f, static_cast<float>(pitchUnits) * (1.0f / 4096.0f));
     const std::int8_t authoredAttenuation = static_cast<std::int8_t>(note[7]);
     const std::uint8_t attenuationIndex = authoredAttenuation >= 0 ? static_cast<std::uint8_t>(authoredAttenuation) : memory[0x8cb + configBase];
@@ -3815,6 +3831,9 @@ void ProcessAudioData(CVWKRuntimeSlot *slot, std::int32_t volume) {
 
 void AudioRender() {
     g_audioWorkerRunning.store(true, std::memory_order_release);
+#if defined(_WIN32) && !defined(SHENMUE_NULL_LIBRARY)
+    const HANDLE delayTimer = CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_MODIFY_STATE | SYNCHRONIZE);
+#endif
     std::chrono::steady_clock::time_point previousTick = std::chrono::steady_clock::now();
     while (!g_audioWorkerStop.load(std::memory_order_acquire) && !d3t::g_d3tShutdownThreadFlag.load(std::memory_order_acquire)) {
         RecoverXAudioDeviceIfNeeded();
@@ -3841,8 +3860,17 @@ void AudioRender() {
         }
         const std::chrono::steady_clock::time_point afterWork = std::chrono::steady_clock::now();
         const std::chrono::nanoseconds remaining = std::chrono::milliseconds(4) - (afterWork - previousTick);
+#if defined(_WIN32) && !defined(SHENMUE_NULL_LIBRARY)
+        if (delayTimer && remaining.count() > 0) {
+            LARGE_INTEGER due;
+            due.QuadPart = -static_cast<LONGLONG>(remaining.count() * 7 / 1000);
+            if (due.QuadPart < 0 && SetWaitableTimer(delayTimer, &due, 0, nullptr, nullptr, FALSE))
+                WaitForSingleObject(delayTimer, INFINITE);
+        }
+#else
         if (remaining.count() > 0)
             std::this_thread::sleep_until(afterWork + remaining * 7 / 10);
+#endif
         do {
 #if defined(_M_X64) || defined(__x86_64__)
             _mm_pause();
@@ -3850,6 +3878,10 @@ void AudioRender() {
         } while (std::chrono::steady_clock::now() - previousTick < remaining);
         previousTick = std::chrono::steady_clock::now();
     }
+#if defined(_WIN32) && !defined(SHENMUE_NULL_LIBRARY)
+    if (delayTimer)
+        CloseHandle(delayTimer);
+#endif
     g_audioWorkerRunning.store(false, std::memory_order_release);
 }
 

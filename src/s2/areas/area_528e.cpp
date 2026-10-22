@@ -54,7 +54,7 @@ void Update528E(void *taskData) {
     } else if (parent->state == 3) {
         Cleanup528E(parent);
     } else if (parent->state == 0) {
-        switch (EVT_GetControllerInput(0, 1)) {
+        switch (EVT_GetControllerInput(0, INPUT_PRESSED)) {
         case 1024:
             parent->state = 1;
             break;

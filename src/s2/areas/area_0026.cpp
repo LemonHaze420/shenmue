@@ -273,7 +273,7 @@ void MainCallback(void *data) {
             Cleanup(parent);
         return;
     }
-    const auto input = EVT_GetControllerInput(0, 1);
+    const auto input = EVT_GetControllerInput(0, INPUT_PRESSED);
     if (input == 1024)
         parent->state = 1;
     else if (input == 64) {

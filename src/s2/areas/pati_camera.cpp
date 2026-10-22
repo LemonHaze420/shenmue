@@ -59,8 +59,8 @@ void SetupPatiBoardSize(std::int32_t mode) {
         lookLift = -0.46250001f;
         closeTargetZ = -0.9228f;
     }
-    const float inputX = static_cast<float>(static_cast<std::uint8_t>(GetCurrentControlInput(5))) / 255.0f;
-    float inputY = static_cast<float>(static_cast<std::uint8_t>(GetCurrentControlInput(6))) / 255.0f;
+    const float inputX = static_cast<float>(static_cast<std::uint8_t>(GetCurrentControlInput(INPUT_RIGHT_X))) / 255.0f;
+    float inputY = static_cast<float>(static_cast<std::uint8_t>(GetCurrentControlInput(INPUT_RIGHT_Y))) / 255.0f;
     float zoom;
     if (mode == 1)
         zoom = 255.0f;
@@ -116,7 +116,7 @@ void SetupPatiBoardSize(std::int32_t mode) {
     const float targetLocalY = ((1.0f - inputY) * top + skew * inputY) + lookLift;
     Vector3 closeTarget{((targetLocalX * cy + base.x) + targetLocalY * 0.0f) + closeTargetZ * sy,
         ((targetLocalX * 0.0f + base.y) + targetLocalY) + closeTargetZ * 0.0f, ((targetLocalX * -sy + base.z) + targetLocalY * 0.0f) + closeTargetZ * cy};
-    const std::uint16_t buttons = static_cast<std::uint16_t>(GetCurrentControlInput(2));
+    const std::uint16_t buttons = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_REPEAT));
     g_patiHeightRepeat = (buttons & 0x3000) ? g_patiHeightRepeat + 1 : 0;
     for (std::int32_t index = 0; index <= (g_patiHeightRepeat >= 45 ? 9 : g_patiHeightRepeat / 5); ++index) {
         if (buttons & 0x1000) {

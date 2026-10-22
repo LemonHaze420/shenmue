@@ -256,11 +256,11 @@ template <bool Alternate> std::int32_t ReadDirection() {
     GetBattleDataConfig(0, SHEN_NAME(BTCC));
     if (GetBattleDataConfig(2, SHEN_NAME(BTCC)))
         return 3;
-    if (GetCurrentControlInput(1) & 0x1000) {
+    if (GetCurrentControlInput(INPUT_PRESSED) & 0x1000) {
         state.direction = 1;
         state.ticks = 10;
     }
-    if (GetCurrentControlInput(1) & 0x2000) {
+    if (GetCurrentControlInput(INPUT_PRESSED) & 0x2000) {
         state.direction = 2;
         state.ticks = 10;
     }
@@ -312,19 +312,19 @@ template <bool Alternate> bool ReadFloor() {
         state.destination = -1000;
         return true;
     }
-    if ((GetCurrentControlInput(2) & 0x1000) && (state.selection + 1) % 5) {
+    if ((GetCurrentControlInput(INPUT_REPEAT) & 0x1000) && (state.selection + 1) % 5) {
         ++state.selection;
         state.ticks = 10;
     }
-    if ((GetCurrentControlInput(2) & 0x2000) && state.selection % 5) {
+    if ((GetCurrentControlInput(INPUT_REPEAT) & 0x2000) && state.selection % 5) {
         --state.selection;
         state.ticks = 10;
     }
-    if ((GetCurrentControlInput(2) & 0x8000) && state.selection < 5) {
+    if ((GetCurrentControlInput(INPUT_REPEAT) & 0x8000) && state.selection < 5) {
         state.selection += 5;
         state.ticks = 10;
     }
-    if ((GetCurrentControlInput(2) & 0x4000) && state.selection >= 5) {
+    if ((GetCurrentControlInput(INPUT_REPEAT) & 0x4000) && state.selection >= 5) {
         state.selection -= 5;
         state.ticks = 10;
     }

@@ -545,7 +545,8 @@ static_assert(sizeof(UICollectionPage) == 0x198);
 
 // A Collection element; only its colour (white after a reset) is traced.
 struct UICollectionElement {
-    std::array<std::int32_t, 6> field0;
+    std::int32_t count, image;
+    float u0, v0, u1, v1;
     std::uint32_t colour;
 };
 static_assert(sizeof(UICollectionElement) == 28);
@@ -1071,6 +1072,15 @@ std::int32_t UI_FindViewLabel(std::uint32_t slotIndex, const char *id);
 std::int32_t UI_FindViewColourImage(std::uint32_t slotIndex, const char *id);
 std::int32_t UI_FindViewImageWidget(std::uint32_t slotIndex, const char *id);
 #if SHENMUE_IS_S2
+std::int32_t UI_FindViewCollection(std::uint32_t slot, const char *id);
+std::int32_t UI_FindViewScrollList(std::uint32_t slot, const char *id);
+std::int32_t UI_FindViewTexturePage(std::uint32_t slot, const char *id);
+UICollection *UI_GetCollection(std::uint32_t index);
+UITexturePage *UI_GetTexturePage(std::uint32_t index);
+void UI_UpdateCollectionPageSize(std::uint32_t index);
+void UI_UpdateCollectionInput(std::uint32_t index);
+void UI_UpdateScrollListSelection(std::uint32_t index);
+void UI_UpdateScrollListPage(std::uint32_t index);
 d3t::UIWindow *UI_FindViewWindowPointer(std::uint32_t slotIndex, const char *id);
 d3t::UILabelWidget *UI_GetLabel(std::uint32_t index);
 d3t::UILayoutItem *UI_FindViewLayoutItem(std::uint32_t slotIndex, const char *id);

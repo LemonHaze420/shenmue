@@ -153,7 +153,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             break;
         case 0x8000002f:
             CheckHelpIcon(4, 0, CheckHelpIconOp::FrameOverlay);
-            result = EVT_GetControllerInput(0, 1);
+            result = EVT_GetControllerInput(0, INPUT_PRESSED);
             if (result != 1024)
                 return result;
             break;
@@ -220,7 +220,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             return HLib::DestroyCurrentTask();
         case 0x80010012:
             if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
-                result = EVT_GetControllerInput(0, 1);
+                result = EVT_GetControllerInput(0, INPUT_PRESSED);
                 if (result != 1024)
                     return result;
                 SeekWarehouseScriptLabel(script, static_cast<std::uint16_t>(arg(1)));

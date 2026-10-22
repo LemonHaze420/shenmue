@@ -188,7 +188,7 @@ std::int32_t UpdateQdssKeySelection(QdssWork &work) {
             HLib::SetupTaskDelay(30);
             return 0;
         }
-        const std::uint32_t input = static_cast<std::uint32_t>(GetCurrentControlInput(2));
+        const std::uint32_t input = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_REPEAT));
         if (input & 0x8000U) {
             std::int32_t index = (work.selected + 1) % 8;
             while (!work.available[index].owned)
@@ -292,7 +292,7 @@ std::int32_t UpdateQdssHoleSelection(QdssWork &work) {
             work.hole = 8;
             return 0;
         }
-        const std::uint32_t input = static_cast<std::uint32_t>(GetCurrentControlInput(1));
+        const std::uint32_t input = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_PRESSED));
         if ((input & 0x1000U) && work.hole != 1 && !(work.inserted & 2U)) {
             work.hole = 1;
             work.slide = 10;

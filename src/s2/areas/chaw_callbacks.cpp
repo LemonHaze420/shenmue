@@ -98,7 +98,7 @@ void ChawPlayCallback(void *data) {
             CheckHelpIcon(32, 1, CheckHelpIconOp::FrameOverlay);
         if (work->helpFlags & 4)
             GetBattleDataConfig(0, SHEN_NAME(BTBA));
-        std::uint16_t buttons = static_cast<std::uint16_t>(GetCurrentControlInput(2));
+        std::uint16_t buttons = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_REPEAT));
         if (!buttons)
             buttons = work->pendingButtons;
         if (IsModeBitActive(1))

@@ -76,7 +76,7 @@ void AuthorViewer332EMainCallback(void *taskData) {
     AuthorViewerTaskParameter *const params = static_cast<AuthorViewerTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             params->state = 1;
         } else if (input == 64) {
@@ -162,7 +162,7 @@ void AuthorViewer503EMainCallback(void *taskData) {
     AuthorViewerTaskParameter *const params = static_cast<AuthorViewerTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             params->state = 1;
         } else if (input == 64) {
@@ -264,7 +264,7 @@ void AuthorViewer081EMainCallback(void *taskData) {
     AuthorViewerTaskParameter *const params = static_cast<AuthorViewerTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             params->state = 1;
         } else if (input == 64) {
@@ -369,7 +369,7 @@ void AuthorViewer182EMainCallback(void *taskData) {
     AuthorViewerTaskParameter *const params = static_cast<AuthorViewerTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             params->state = 1;
         } else if (input == 64) {
@@ -463,7 +463,7 @@ void AuthorViewer015EMainCallback(void *taskData) {
     AuthorViewerTaskParameter *const params = static_cast<AuthorViewerTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             params->state = 1;
         } else if (input == 64) {
@@ -575,7 +575,7 @@ void AuthorViewer295EMainCallback(void *taskData) {
     AuthorViewerTaskParameter *const params = static_cast<AuthorViewerTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             params->state = 1;
         } else if (input == 64) {
@@ -697,7 +697,7 @@ void AuthorViewer035EMainCallback(void *taskData) {
     AuthorViewerTaskParameter *const params = static_cast<AuthorViewerTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             params->state = 1;
         } else if (input == 64) {
@@ -805,7 +805,7 @@ void AuthorViewer061EMainCallback(void *taskData) {
     AuthorViewerTaskParameter *const params = static_cast<AuthorViewerTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             params->state = 1;
         } else if (input == 64) {
@@ -911,7 +911,7 @@ void AuthorViewer0006MainCallback(void *taskData) {
     AuthorViewerTaskParameter *const params = static_cast<AuthorViewerTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024) {
             params->state = 1;
         } else if (input == 64) {

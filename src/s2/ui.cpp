@@ -1,6 +1,7 @@
 #include "s2/ui_internal.hpp"
 #include "s2/ui_credits.hpp"
 #include "s2/ui.hpp"
+#include "s2/ui_pawn_legacy.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
 #include "s2/magic_room.hpp"
@@ -4356,6 +4357,14 @@ void InitializeUIElements() {
     actionSelector.tick = StartActionSelector;
     actionSelector.destroy = ActionSelectorDestroy;
     actionSelector.render = DrawActionSelector;
+    UIElementState &pawnLegacy = g_uiElements[static_cast<std::size_t>(UIElement::PawnshopFlyer)];
+    pawnLegacy.name = "PAWNSHOP_FLYER";
+    pawnLegacy.parseDefinitionFromFile = AdvanceLegacyPawnFlyerInit;
+    pawnLegacy.unknown28 = LegacyPawnFlyerInput;
+    pawnLegacy.postInit = RenderLegacyPawnFlyer;
+    pawnLegacy.initialize = InitializeLegacyPawnFlyerNullsub;
+    pawnLegacy.unknown60 = LegacyPawnFlyerReady;
+    pawnLegacy.unknown78 = GetLegacyPawnFlyerResult;
     UIElementState &pawnSets = g_uiElements[static_cast<std::size_t>(UIElement::PawnshopFlyer2)];
     pawnSets.name = "Pawnshop Flyer";
     pawnSets.parseDefinitionFromFile = LoadPawnSetFlyer;

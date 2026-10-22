@@ -536,7 +536,7 @@ std::int32_t PrepareMatch(ArmwWork &work) {
             ArmwCamera(3005);
         const std::int32_t frame = armw.startFrames++;
         if (frame <= 50) {
-            if (!(GetCurrentControlInput(7) & 0x400))
+            if (!(GetCurrentControlInput(INPUT_NEW_PRESSES) & 0x400))
                 break;
             CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
             Phase(work, 9);

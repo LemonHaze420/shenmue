@@ -735,9 +735,12 @@ void GachMainCallback(void *data) {
 // @verified - p
 void GachItemViewCallback(void *data) {
     GachTaskWork *const work = static_cast<GachTaskWork *>(data);
-    const std::int32_t x = static_cast<std::uint16_t>(GetCurrentControlInput(8)), y = static_cast<std::uint16_t>(GetCurrentControlInput(9));
-    const std::int32_t rightY = static_cast<std::uint16_t>(GetCurrentControlInput(4)), rightX = static_cast<std::uint16_t>(GetCurrentControlInput(3));
-    const std::int16_t held = static_cast<std::int16_t>(GetCurrentControlInput(0)), pressed = static_cast<std::int16_t>(GetCurrentControlInput(7));
+    const std::int32_t x = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_LEFT_X)),
+                       y = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_LEFT_Y));
+    const std::int32_t rightY = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_LEFT_TRIGGER)),
+                       rightX = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_RIGHT_TRIGGER));
+    const std::int16_t held = static_cast<std::int16_t>(GetCurrentControlInput(INPUT_HELD)),
+                       pressed = static_cast<std::int16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES));
     EV_EnsureCharacterDraw(GACH_HAND);
     ++work->viewFrames;
     Vector3i rotation;

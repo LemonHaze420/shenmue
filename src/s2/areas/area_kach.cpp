@@ -477,7 +477,7 @@ void KachSelectPointCallback(void *) {
             nearest = i;
         }
     }
-    const auto pressed = static_cast<std::uint16_t>(GetCurrentControlInput(7));
+    const auto pressed = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES));
     std::int32_t direction = -1;
     switch (pressed) {
     case 0x1000:

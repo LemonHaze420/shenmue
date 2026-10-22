@@ -360,7 +360,7 @@ void Power(WssfChildWork &w) {
     auto &rock = Child(main.stone);
     switch (w.step) {
     case -1: {
-        const auto input = GetCurrentControlInput(2);
+        const auto input = GetCurrentControlInput(INPUT_REPEAT);
         if (input == 0x4000)
             --debugPower;
         else if (input == 0x8000)
@@ -409,7 +409,7 @@ void Power(WssfChildWork &w) {
             w.timer = 60;
         if (!camCtrlCheckIsEventCam())
             Cam(10);
-        if (GetCurrentControlInput(1) & 0x400) {
+        if (GetCurrentControlInput(INPUT_PRESSED) & 0x400) {
             ++w.step;
             ++partner.step;
             w.timer = 30;
@@ -448,7 +448,7 @@ void Power(WssfChildWork &w) {
         break;
     }
     case 5: {
-        if (GetCurrentControlInput(1) & 0x400) {
+        if (GetCurrentControlInput(INPUT_PRESSED) & 0x400) {
             (void)Loop3DSoundEffect(0x3fc);
             w.frame = GetMotionFrame(Motion(ryo), MotionRegion::LowerBody);
             ++w.step;
@@ -845,7 +845,7 @@ void WssfMainCallback(void *data) {
         break;
     case 2:
         if (w.step == 0) {
-            const auto buttons = GetCurrentControlInput(1);
+            const auto buttons = GetCurrentControlInput(INPUT_PRESSED);
             if (buttons & 0x400)
                 State(w, 3);
             else if (buttons & 0x200) {

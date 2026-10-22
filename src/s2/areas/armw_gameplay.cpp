@@ -27,7 +27,7 @@ void Face(shen_name character, std::int32_t expression, float frames) {
     SetHighModelAndFaceFlagsForChara(ctrlGetCharaByName(character), expression, frames, 1);
 }
 std::uint32_t ArmwButtons(ArmwWork &work) {
-    std::uint32_t buttons = GetCurrentControlInput(7) == 0x400 ? 1 : 0;
+    std::uint32_t buttons = GetCurrentControlInput(INPUT_NEW_PRESSES) == 0x400 ? 1 : 0;
     GetBattleDataConfig(0, ARMW_BATTLE_INPUT);
     std::int32_t adjustment = 0;
     switch (work.strategy) {

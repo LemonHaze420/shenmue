@@ -259,7 +259,7 @@ void LockOn_Callback(void *data) {
         HLib::SetCurrentTaskTo(Done_Callback);
         return;
     }
-    std::int16_t input = static_cast<std::int16_t>(GetCurrentControlInput(7) & 0xf9fb);
+    std::int16_t input = static_cast<std::int16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES) & 0xf9fb);
     const auto *cell = SelectedCell(work);
     if (cell->explanation != -1) {
         GetBattleDataConfig(0, SHEN_NAME(BTIL));
@@ -303,7 +303,7 @@ void LockOn_Callback(void *data) {
             work->transition = distance * work->board->transitionFrames[work->camera - 1];
         }
     }
-    const auto amount = Snap(-static_cast<float>(GetCurrentControlInput(4)) * .001953125f);
+    const auto amount = Snap(-static_cast<float>(GetCurrentControlInput(INPUT_LEFT_TRIGGER)) * .001953125f);
     const auto goal = Snap(amount + 1);
     work->zoom = Snap(work->zoom * .5f);
     work->zoom = Snap(Snap(goal * .5f) + work->zoom);

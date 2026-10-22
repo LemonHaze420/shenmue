@@ -230,7 +230,7 @@ void QrdkRunCallback(void *data) {
         HLib::SetCurrentTaskTo(QrdkExitCallback);
         return;
     }
-    if (GetCurrentControlInput(2) & 0x400U)
+    if (GetCurrentControlInput(INPUT_REPEAT) & 0x400U)
         work->action |= 1U;
     if (work->action & 1U) {
         float distance;
@@ -307,7 +307,7 @@ void QrdkSerifCallbackLoop(void *data) {
         HLib::DestroyCurrentTask();
         return;
     }
-    if (GetCurrentControlInput(2) & 0x200U) {
+    if (GetCurrentControlInput(INPUT_REPEAT) & 0x200U) {
         if (work->startTicks <= 1) {
             if (work->endTicks > 1)
                 work->endTicks = 1;

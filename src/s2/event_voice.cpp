@@ -108,7 +108,7 @@ void EventVoiceListCallback(void *parameter) {
     }
     if (cvsHasValidConverseData(nullptr)) {
         if ((work->mode & 0x40000000U) != 0) {
-            if (static_cast<std::uint16_t>(GetCurrentControlInput(7)) == 512) {
+            if (static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES)) == 512) {
                 if (work->skipPressFrames != 0)
                     scenCvsCtrlFree(nullptr);
                 else

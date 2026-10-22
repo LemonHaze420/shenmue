@@ -904,7 +904,7 @@ void MainCallback(void *parameter) {
     switch (work.state) {
     case 0:
         EV_EventSetUpHelpIcon_0(GetHelpIconForArea(), 0);
-        work.round = work.losses = 0;
+        work.round = work.wins = work.losses = 0;
         work.roundResults[0] = work.roundResults[1] = work.roundResults[2] = 0;
         for (shen_name name : SFJF_CHARACTERS) {
             if (name.name == STREET_FIGHT_INVALID.name)

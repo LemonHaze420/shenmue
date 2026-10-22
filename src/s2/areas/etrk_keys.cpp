@@ -139,14 +139,14 @@ std::int32_t EtrkPollKeys(EtrkWork &work) {
     GetBattleDataConfig(0, ETRK_CANCEL);
     if (GetBattleDataConfig(2, ETRK_CANCEL))
         return CancelEtrkKeys(work);
-    if (GetCurrentControlInput(2) & 0x8000U) {
+    if (GetCurrentControlInput(INPUT_REPEAT) & 0x8000U) {
         std::int32_t key = (work.key + 1) % 6;
         while (!work.available[key].available)
             key = (key + 1) % 6;
         work.key = key;
         work.direction = 0;
         work.moving = 10;
-    } else if (GetCurrentControlInput(2) & 0x4000U) {
+    } else if (GetCurrentControlInput(INPUT_REPEAT) & 0x4000U) {
         std::int32_t key = (work.key + 5) % 6;
         while (!work.available[key].available)
             key = (key + 5) % 6;

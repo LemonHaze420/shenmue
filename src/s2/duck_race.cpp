@@ -271,7 +271,7 @@ void UpdateDuckRacePlayerSpeed(DuckRaceActor *actor) {
             else
                 actor->flags &= ~1U;
         } else {
-            const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 3));
+            const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_RIGHT_TRIGGER));
             const float amount = input / 255.0f;
             const float target = !input ? 0.0f :
                 amount <= .5f           ? (actor->normalSpeed - actor->minimumSpeed) * (amount + amount) + actor->normalSpeed :
@@ -299,7 +299,7 @@ void UpdateDuckRacePlayerSpeed(DuckRaceActor *actor) {
                 actor->flags |= 1;
         }
     }
-    const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, 0));
+    const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, INPUT_HELD));
     const float response = FlushSmall(((.19444445f / actor->speed + 1.0f) * actor->handling) * .01f);
     std::uint32_t turn = static_cast<std::uint16_t>(TruncateToInt32(response * 8192.0f / 45.0f));
     if (turn > 455)
@@ -488,7 +488,7 @@ void UpdateDuckRaceHopRecovery(DuckRaceActor *actor) {
     }
 }
 void UpdateDuckRacePlayerHopInput(DuckRaceActor *actor) {
-    const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, 0));
+    const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, INPUT_HELD));
     if (input & 0x4000) {
         actor->rotation.y += 254;
         actor->speed = std::fmax(.027777778f, actor->speed);
@@ -497,7 +497,7 @@ void UpdateDuckRacePlayerHopInput(DuckRaceActor *actor) {
         actor->rotation.y -= 254;
         actor->speed = std::fmax(.027777778f, actor->speed);
     }
-    if (EVT_GetControllerInput(0, 3))
+    if (EVT_GetControllerInput(0, INPUT_RIGHT_TRIGGER))
         actor->stamina -= 3;
     else {
         actor->flags |= 64;

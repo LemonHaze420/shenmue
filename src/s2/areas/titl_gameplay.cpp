@@ -160,7 +160,7 @@ void CalculateTitleTimingBonus(TitleWork *work) {
     work->timingBonus[work->step] = bonus;
 }
 bool PollTitleButtons(TitleWork *work) {
-    const std::uint16_t buttons = static_cast<std::uint16_t>(GetCurrentControlInput(7));
+    const std::uint16_t buttons = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES));
     std::int16_t count = 0;
     if (buttons) {
         const bool freeInput = GetIsFreeInputType(-1);

@@ -85,31 +85,31 @@ void PACHDebugLoopCallback(void *taskData) {
     PachDebugTask *const task = static_cast<PachDebugTask *>(taskData);
     PachDebugLayout &layout = task->layouts[task->selectedLayout];
     if (!task->mode) {
-        const bool selected = EVT_GetControllerInput(0, 3) != 0;
-        if (EVT_GetControllerInput(0, 2) & PAD_RIGHT)
+        const bool selected = EVT_GetControllerInput(0, INPUT_RIGHT_TRIGGER) != 0;
+        if (EVT_GetControllerInput(0, INPUT_REPEAT) & PAD_RIGHT)
             layout.horizontalAxis += 0.0099999998f;
-        if (EVT_GetControllerInput(0, 2) & PAD_LEFT)
+        if (EVT_GetControllerInput(0, INPUT_REPEAT) & PAD_LEFT)
             layout.horizontalAxis -= 0.0099999998f;
-        if (EVT_GetControllerInput(0, 2) & PAD_DOWN)
+        if (EVT_GetControllerInput(0, INPUT_REPEAT) & PAD_DOWN)
             layout.verticalAxis -= 0.0099999998f;
-        if (EVT_GetControllerInput(0, 2) & PAD_UP)
+        if (EVT_GetControllerInput(0, INPUT_REPEAT) & PAD_UP)
             layout.verticalAxis += 0.0099999998f;
-        const std::uint32_t horizontal = EVT_GetControllerInput(0, 5);
+        const std::uint32_t horizontal = EVT_GetControllerInput(0, INPUT_RIGHT_X);
         if (horizontal >= 192)
             layout.cameraPosition.x += 0.0099999998f;
         if (horizontal <= 64)
             layout.cameraPosition.x -= 0.0099999998f;
-        const std::uint32_t vertical = EVT_GetControllerInput(0, 6);
+        const std::uint32_t vertical = EVT_GetControllerInput(0, INPUT_RIGHT_Y);
         if (vertical >= 192)
             layout.cameraPosition.y -= 0.0099999998f;
         if (vertical <= 64)
             layout.cameraPosition.y += 0.0099999998f;
-        if (EVT_GetControllerInput(0, 1) & 2U) {
+        if (EVT_GetControllerInput(0, INPUT_PRESSED) & 2U) {
             layout.camera = (layout.camera == 1) + 1;
             EVS_LoopCamera(layout.camera, PACH_CAMERA, PACH_CAMERA);
         }
         PACHNativeDebugNullsub(0, &layout.horizontalAxis);
-        if (EVT_GetControllerInput(0, 1) & 0x100U) {
+        if (EVT_GetControllerInput(0, INPUT_PRESSED) & 0x100U) {
             if (!selected && !PACHFindProp(&layout)) {
                 PatiNailNode &prop = layout.props[layout.nextProp];
                 prop.reserved00 = 0;
@@ -142,9 +142,9 @@ void PACHDebugLoopCallback(void *taskData) {
                 layout.selectedProp = -1;
             }
         }
-        if (EVT_GetControllerInput(0, 1) & 0x400U)
+        if (EVT_GetControllerInput(0, INPUT_PRESSED) & 0x400U)
             PACHMirrorProps(&layout, 0);
-        if (EVT_GetControllerInput(0, 1) & 0x200U)
+        if (EVT_GetControllerInput(0, INPUT_PRESSED) & 0x200U)
             PACHMirrorProps(&layout, 1);
         EV_AT_SetPos(PACH_CAMERA, EventTransformFlags::AllAxes, layout.cameraPosition);
         if (layout.props[layout.nextProp].position.y > 0.0f)
@@ -155,7 +155,7 @@ void PACHDebugLoopCallback(void *taskData) {
         }
     }
     PACHDebugGrid();
-    if (EVT_GetControllerInput(0, 1) & 0x800U) {
+    if (EVT_GetControllerInput(0, INPUT_PRESSED) & 0x800U) {
         if (++task->selectedLayout >= 16)
             task->selectedLayout = 0;
         std::uint16_t angle = static_cast<std::uint16_t>(task->selectedLayout << 12);
@@ -166,7 +166,7 @@ void PACHDebugLoopCallback(void *taskData) {
             angle = static_cast<std::uint16_t>(angle + 4096);
         }
     }
-    if (EVT_GetControllerInput(0, 1) & 64U) {
+    if (EVT_GetControllerInput(0, INPUT_PRESSED) & 64U) {
         if (++pachImage >= 3)
             pachImage = 0;
         for (const shen_name board : PACH_BOARDS)

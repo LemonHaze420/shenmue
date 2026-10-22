@@ -252,7 +252,7 @@ void E0260MainCallback(void *parameter) {
         }
         return;
     }
-    const std::int16_t input = EVT_GetControllerInput(0, 1);
+    const std::int16_t input = EVT_GetControllerInput(0, INPUT_PRESSED);
     if (input == 1024) {
         parent->state = 1;
         Queue_EVT_UTL_LoadNPCChara_3(AREA_0260_CHARACTER_TABLES[parent->selection], parent->self);

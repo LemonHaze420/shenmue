@@ -87,7 +87,7 @@ std::int64_t Queue0001Author(Title0001TaskParameter *parent) {
     child->active = 1;
     child->elapsedFrames = 0.0f;
     for (std::int32_t user = 0; user < 4; ++user)
-        previous0001Input[user] = EVT_GetControllerInput(user, 12);
+        previous0001Input[user] = EVT_GetControllerInput(user, INPUT_DEVICE_STATE);
     camCtrlSaveRuntime();
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     EV_LoadAudio("0001A020", 0);
@@ -143,11 +143,11 @@ void Update0001Author(void *taskData) {
     default:
         break;
     }
-    bool requested = (EVT_GetControllerInput(0, 1) & 0x0ede) != 0;
+    bool requested = (EVT_GetControllerInput(0, INPUT_PRESSED) & 0x0ede) != 0;
     for (std::int32_t user = 0; user < 4 && !requested; ++user) {
-        if (previous0001Input[user] == 0 && EVT_GetControllerInput(user, 12) != 0)
+        if (previous0001Input[user] == 0 && EVT_GetControllerInput(user, INPUT_DEVICE_STATE) != 0)
             requested = true;
-        if (!requested && previous0001Input[user] != 0 && EVT_GetControllerInput(user, 13) != 0)
+        if (!requested && previous0001Input[user] != 0 && EVT_GetControllerInput(user, INPUT_DEVICE_UNAVAILABLE) != 0)
             requested = true;
     }
     if (requested) {
@@ -182,7 +182,7 @@ void Update0001Author(void *taskData) {
         HLib::SetCurrentTaskTo(Update0001Prompt);
     }
     for (std::int32_t user = 0; user < 4; ++user)
-        previous0001Input[user] = EVT_GetControllerInput(user, 12);
+        previous0001Input[user] = EVT_GetControllerInput(user, INPUT_DEVICE_STATE);
     EnableElement(UIElement::PressStart);
 }
 

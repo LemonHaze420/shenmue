@@ -98,7 +98,7 @@ void PlayDebug(void *parameter) {
     SelectBoard(w);
 }
 void UpdateDebug(DaboEventWork &w) {
-    const auto input = GetCurrentControlInput(7);
+    const auto input = GetCurrentControlInput(INPUT_NEW_PRESSES);
     if (input & 0x8000U)
         ++w.selectedBoard;
     else if (input & 0x4000U)
@@ -110,10 +110,10 @@ void UpdateDebug(DaboEventWork &w) {
     }
     if (w.gameType != w.previousType)
         w.previousType = w.gameType;
-    if (EVT_GetControllerInput(0, 7) & PAD_UP) {
+    if (EVT_GetControllerInput(0, INPUT_NEW_PRESSES) & PAD_UP) {
         if (--w.boardSize < 0)
             w.boardSize = 2;
-    } else if (EVT_GetControllerInput(0, 7) & PAD_DOWN) {
+    } else if (EVT_GetControllerInput(0, INPUT_NEW_PRESSES) & PAD_DOWN) {
         if (++w.boardSize >= 3)
             w.boardSize = 0;
     }
@@ -129,9 +129,9 @@ void UpdateDebug(DaboEventWork &w) {
         p.launcherMaximum = .30000001f;
         p.cameraMode = w.boardSize == 0 ? 2 : w.boardSize == 2 ? 1 : p.scale == 1.0f ? 3 : 4;
     }
-    if (GetCurrentControlInput(8))
+    if (GetCurrentControlInput(INPUT_LEFT_X))
         StartBoard(w);
-    else if (GetCurrentControlInput(9)) {
+    else if (GetCurrentControlInput(INPUT_LEFT_Y)) {
         std::memset(w.counters, 0, sizeof(w.counters));
         p.board->ballState = 0;
         HLib::SetCurrentTaskTo(PlayDebug);

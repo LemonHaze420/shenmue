@@ -289,7 +289,7 @@ void QabtCarryQte(void *data) {
         }
         return;
     }
-    const std::uint32_t pressed = static_cast<std::uint32_t>(GetCurrentControlInput(1));
+    const std::uint32_t pressed = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_PRESSED));
     if (pressed == carry.direction || ((pressed & carry.direction) && carry.direction == 0x1000)) {
         if (carry.presses-- == 1) {
             Loop3DSoundEffect(0x900ab);
@@ -319,7 +319,8 @@ void QabtCarryForwardQte(void *data) {
         }
         return;
     }
-    const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(0)), pressed = static_cast<std::uint32_t>(GetCurrentControlInput(1));
+    const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_HELD)),
+                        pressed = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_PRESSED));
     if (held & carry.direction) {
         HLib::SetCurrentTaskTo(carry.phase);
         if (carry.idleCount || carry.frames <= 0)
@@ -349,7 +350,7 @@ void QabtCarryPutQte(void *data) {
             HLib::SetupTaskDelay(QabtWarnIdlePut(++work.idleWarnings));
         }
     } else {
-        const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(0));
+        const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_HELD));
         if (held & carry.direction) {
             Loop3DSoundEffect(0x900ab);
             HLib::SetCurrentTaskTo(QabtCarryPut);

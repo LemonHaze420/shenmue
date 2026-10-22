@@ -293,7 +293,7 @@ void KnmnAwardMoveSequence(void *data) {
             break;
         case 102:
             --work.resultFrames;
-            if (GetCurrentControlInput(1) == 512 || !work.resultFrames) {
+            if (GetCurrentControlInput(INPUT_PRESSED) == 512 || !work.resultFrames) {
                 SetNewEwzoTypeForMoveLearned(1, 0, 0);
                 KnmnAdvance(sequence, 103);
             }

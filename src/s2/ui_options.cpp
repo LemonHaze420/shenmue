@@ -1552,7 +1552,9 @@ void UpdateEasyOptionController() noexcept {
                 BindPadControlEntry(easyOptionPreviousPadControl);
             }
             ReleaseEasyOptionTextures();
-            if (!easyOptionMode) {
+            if (easyOptionMode)
+                SetSleepActionIcon(0);
+            else {
                 CheckHelpIcon(easyOptionSavedHelpVisible, 0, CheckHelpIconOp::Set);
                 SetRenderClockAndCompassTo(easyOptionPreviousClockSuppression ? 1 : 0);
             }

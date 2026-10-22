@@ -38,33 +38,33 @@ bool HasPressedCancel() {
 std::uint32_t EVT_GetControllerInput(std::uint8_t userIndex, std::int32_t selector) {
     const LegacyInputSlot &input = g_inputBuffer[userIndex & 3U];
     switch (selector) {
-    case 0:
+    case INPUT_HELD:
         return input.held;
-    case 1:
+    case INPUT_PRESSED:
         return input.pressedPriority;
-    case 2:
+    case INPUT_REPEAT:
         return input.repeatedPresses;
-    case 3:
+    case INPUT_RIGHT_TRIGGER:
         return input.analog0c;
-    case 4:
+    case INPUT_LEFT_TRIGGER:
         return input.analog0d;
-    case 5:
+    case INPUT_RIGHT_X:
         return input.analog0e;
-    case 6:
+    case INPUT_RIGHT_Y:
         return input.analog0f;
-    case 7:
+    case INPUT_NEW_PRESSES:
         return input.newPresses;
-    case 8:
+    case INPUT_LEFT_X:
         return input.analog10;
-    case 9:
+    case INPUT_LEFT_Y:
         return input.analog11;
-    case 10:
+    case INPUT_CONNECTION:
         return input.connectionState;
-    case 11:
+    case INPUT_DISCONNECTED:
         return input.connectionState == 0;
-    case 12:
+    case INPUT_DEVICE_STATE:
         return input.deviceState;
-    case 13:
+    case INPUT_DEVICE_UNAVAILABLE:
         return input.deviceState == 0;
     default:
         return 0;
@@ -76,25 +76,25 @@ std::uint64_t GetCurrentControlInput(std::int32_t selector) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     const LegacyInputSlot &input = *ctrlGetPadInputBuffer0(static_cast<PadControlEntry *>(control->padControl));
     switch (selector) {
-    case 0:
+    case INPUT_HELD:
         return input.held;
-    case 1:
+    case INPUT_PRESSED:
         return input.pressedPriority;
-    case 2:
+    case INPUT_REPEAT:
         return input.repeatedPresses;
-    case 3:
+    case INPUT_RIGHT_TRIGGER:
         return input.analog0c;
-    case 4:
+    case INPUT_LEFT_TRIGGER:
         return input.analog0d;
-    case 5:
+    case INPUT_RIGHT_X:
         return input.analog0e;
-    case 6:
+    case INPUT_RIGHT_Y:
         return input.analog0f;
-    case 7:
+    case INPUT_NEW_PRESSES:
         return input.newPresses;
-    case 8:
+    case INPUT_LEFT_X:
         return input.analog10;
-    case 9:
+    case INPUT_LEFT_Y:
         return input.analog11;
     default:
         return 0;

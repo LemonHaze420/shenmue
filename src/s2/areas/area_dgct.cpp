@@ -28,7 +28,7 @@ void GameCenterMain(void *data) {
     GameCenterWork &work = *static_cast<GameCenterWork *>(data);
     switch (work.state) {
     case 1: {
-        if (GetCurrentControlInput(7) == 1024)
+        if (GetCurrentControlInput(INPUT_NEW_PRESSES) == PAD_BUTTON_X)
             work.state = 2;
         Vector3 position;
         EV_GetCharaPosition(EXQT_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);

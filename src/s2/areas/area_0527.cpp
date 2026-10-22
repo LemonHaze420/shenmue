@@ -203,23 +203,23 @@ void Update0527Author(void *data) {
     }
     if (child->choiceFrame == child->frame && parent->author == 6)
         SetMazeHourAnimationFrame(0);
-    if (EVT_GetControllerInput(2, 1) & 0x80U)
+    if (EVT_GetControllerInput(2, INPUT_PRESSED) & 0x80U)
         debug0527 = debug0527 == 0;
-    if (EVT_GetControllerInput(2, 0) & PAD_LEFT)
+    if (EVT_GetControllerInput(2, INPUT_HELD) & PAD_LEFT)
         parent->request->position.x -= 0.1f;
-    if (EVT_GetControllerInput(2, 0) & PAD_RIGHT)
+    if (EVT_GetControllerInput(2, INPUT_HELD) & PAD_RIGHT)
         parent->request->position.x += 0.1f;
-    if (EVT_GetControllerInput(2, 0) & PAD_UP)
+    if (EVT_GetControllerInput(2, INPUT_HELD) & PAD_UP)
         parent->request->position.z -= 0.1f;
-    if (EVT_GetControllerInput(2, 0) & PAD_DOWN)
+    if (EVT_GetControllerInput(2, INPUT_HELD) & PAD_DOWN)
         parent->request->position.z += 0.1f;
-    if (EVT_GetControllerInput(2, 0) & 0x400U)
+    if (EVT_GetControllerInput(2, INPUT_HELD) & 0x400U)
         parent->request->yaw -= 182;
-    if (EVT_GetControllerInput(2, 0) & 0x200U)
+    if (EVT_GetControllerInput(2, INPUT_HELD) & 0x200U)
         parent->request->yaw += 182;
-    if (EVT_GetControllerInput(2, 0) & 0x4U)
+    if (EVT_GetControllerInput(2, INPUT_HELD) & 0x4U)
         EV_authSceneCtrl(AuthSceneCtrl::SetAuthorStopped);
-    if (EVT_GetControllerInput(2, 0) & 0x2U)
+    if (EVT_GetControllerInput(2, INPUT_HELD) & 0x2U)
         EV_authSceneCtrl(AuthSceneCtrl::ResetAuthorStopped);
     if (debug0527) {
         EV_set_debug_text_pos(30, 21);

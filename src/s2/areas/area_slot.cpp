@@ -168,7 +168,7 @@ void Main(void *data) {
         DebugScreenLogNullsub(2, 14, "(%08x) LMP2 %2d %2d %4d", lampTasks[1], cylinder->lamps[1]->state, cylinder->lamps[1]->phase, cylinder->lamps[1]->timer);
         DebugScreenLogNullsub(2, 15, "(%08x) LMP3 %2d %2d %4d", lampTasks[2], cylinder->lamps[2]->state, cylinder->lamps[2]->phase, cylinder->lamps[2]->timer);
     }
-    if (EVT_GetControllerInput(0, 1) & 0x40U)
+    if (EVT_GetControllerInput(0, INPUT_PRESSED) & 0x40U)
         work->debug = static_cast<std::int8_t>(~work->debug);
     Tick(work->timer);
     switch (work->state) {
@@ -274,7 +274,7 @@ void ReadSlotWagerInput(SlotMachineWork *work) {
         reels->wager = 0;
         ++work->phase;
     } else if (work->phase == 1) {
-        const std::uint32_t input = EVT_GetControllerInput(0, 1);
+        const std::uint32_t input = EVT_GetControllerInput(0, INPUT_PRESSED);
         if ((input & 0x400U) && reels->wager) {
             player->coins = reels->credits;
             Loop3DSoundEffect(0x142);

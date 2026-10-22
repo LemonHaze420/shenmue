@@ -42,7 +42,7 @@ void AuthorViewer517EMainCallback(void *taskData) {
     AuthorViewerPairTaskParameter *const params = static_cast<AuthorViewerPairTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         switch (input) {
         case 1024:
             params->state = 1;
@@ -175,7 +175,7 @@ void AuthorViewer519EMainCallback(void *taskData) {
     AuthorViewerPairTaskParameter *const params = static_cast<AuthorViewerPairTaskParameter *>(taskData);
     switch (params->state) {
     case 0: {
-        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+        const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         switch (input) {
         case 1024:
             params->state = 1;

@@ -656,7 +656,7 @@ void DartsPlayingLoop(void *data) {
             if (work->actorControl[1])
                 --work->actorControl[1];
             else
-                throwNow = GetCurrentControlInput(1) == 1024;
+                throwNow = GetCurrentControlInput(INPUT_PRESSED) == PAD_BUTTON_X;
         } else if (!work->field08)
             work->field08 = static_cast<std::uint8_t>(DartsAiTriggerReady(work));
 

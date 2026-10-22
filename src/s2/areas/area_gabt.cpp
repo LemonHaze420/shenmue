@@ -240,7 +240,7 @@ void GabtRootSequenceCallback(void *data) {
         case 115:
             if (--event.moveTimer == 30)
                 SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
-            if (GetCurrentControlInput(1) == 0x200 || !event.moveTimer) {
+            if (GetCurrentControlInput(INPUT_PRESSED) == 0x200 || !event.moveTimer) {
                 SetNewEwzoTypeForMoveLearned(1, 0, 0);
                 RootTransition(work, 116);
             }

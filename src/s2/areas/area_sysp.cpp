@@ -643,7 +643,7 @@ void SyspItemCallback(void *) {
         break;
     case SyspCheckBattle:
         SyspUpdateCameraBlendAndRyoFade(1);
-        if (GetBattleDataConfig(2, SYSP_CANCEL_BUTTON) || GetCurrentControlInput(1) == 1 || std::bit_cast<std::int32_t>(syspWaitTicks) >= 1800) {
+        if (GetBattleDataConfig(2, SYSP_CANCEL_BUTTON) || GetCurrentControlInput(INPUT_PRESSED) == 1 || std::bit_cast<std::int32_t>(syspWaitTicks) >= 1800) {
             mtwkSetRequestedRootMode(scenFindMotionwork(SYSP_RYO_), 1);
             SetMotionFrameTime(scenFindMotionwork(SYSP_RYO_), 4, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(SYSP_RYO_), SYSP_ITEM_END_MOTION, MotionRegion::LowerBody);

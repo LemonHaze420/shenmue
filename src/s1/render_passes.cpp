@@ -739,7 +739,7 @@ std::uint32_t CommitEffeParticleVertices(
 #if defined(_WIN32)
     if (!context || !particleCount)
         return 0;
-    SetShaderState(context, g_fvfPtdTVertexShader, g_fvfPtdTPixelShader, g_fvfLayouts[28]);
+
     SetTopology(context, 0);
 
     const std::int32_t savedRenderingMode = g_legacyCurrentRenderingMode;
@@ -751,36 +751,12 @@ std::uint32_t CommitEffeParticleVertices(
     const std::uint64_t savedEngineFlags = g_legacyEngineFlags;
     const std::uint64_t savedEngineField8 = g_legacyEngineField8;
     if (material) {
-        constexpr std::array<std::int32_t, 8> kFogModes{
-            1, 0, 774, 775, 770, 771, 772, 773};
-        constexpr std::array<std::int32_t, 8> kFogCurves{
-            1, 0, 768, 769, 770, 771, 772, 773};
-        constexpr std::array<std::uint32_t, 6> kBlendFactors{1, 3, 0, 0, 2, 3};
+
         SetRenderFlags(103, (material->texture >> 2U) & 1U);
         SetRenderFlags(147, (material->render & 0x18000000U) != 0 ? 2305 : 0);
         SetRenderFlags(64, (material->render & 0x04000000U) == 0 ? 1 : 0);
-        SetRenderFlags(62, kFogModes[material->alpha >> 29U]);
-        SetRenderFlags(63, kFogCurves[(material->alpha >> 26U) & 7U]);
-        SetAlphaFlags(0, 0, kBlendFactors[(material->alpha >> 16U) & 5U]);
-        SetAlphaFlags(0, 1, kBlendFactors[(material->alpha >> 15U) & 5U]);
-        const std::uint32_t alphaMode = (material->alpha >> 13U) & 3U;
-        const std::uint32_t alphaRgb = alphaMode == 0 ? 1U : alphaMode == 2 ? 0U : 2U;
-        const std::uint32_t alphaA = alphaMode == 2 ? 1U : alphaRgb;
-        SetAlphaFlags(0, 3, alphaRgb);
-        SetAlphaFlags(0, 4, alphaRgb);
-        SetAlphaFlags(0, 5, alphaA);
-        const std::uint32_t filterMode = (material->alpha >> 6U) & 3U;
-        SetAlphaFlags(0, 16, filterMode == 1 ? 2U : filterMode == 3 ? 4U : 3U);
-        if (filterMode == 1) {
-            SetAlphaFlags(0, 18, 2);
-        } else if (filterMode == 0) {
-            SetAlphaFlags(0, 19, 2);
-        } else if (filterMode == 2) {
-            SetAlphaFlags(0, 19, 0);
-        } else {
-            SetAlphaFlags(0, 17, 2);
-            SetAlphaFlags(0, 18, 0);
-        }
+        SetRenderAndAlphaFlags(material->alpha);
+
         g_renderParams.specularEnabled = (material->texture >> 2U) & 1U;
         g_renderParams.alphaTestEnabled = 0;
     } else {
@@ -797,8 +773,13 @@ std::uint32_t CommitEffeParticleVertices(
         g_renderParams.alphaTestEnabled = 0;
     }
     BindLegacyPixelTexture(context, ResolveStripTextureHandle(texture2D));
+    if (transparent) {
+        SetRenderFlags(64, 0);
+        g_currentRenderFlags[64] = 0;
+        SetRenderFlags(59, 1);
+        g_currentRenderFlags[59] = 1;
+    }
     CommitLegacyScreenRenderState(context, transparent);
-    SetCommonQuadState(context, transparent ? 0xf0138293ULL : 0xf0000000ULL);
     DX11_ResetMappedResources(context);
     DX11_UnmapAndSyncShaderBindings(context);
     DX11_SetupShadersForDXAndSetViewports(context);
@@ -818,6 +799,12 @@ std::uint32_t CommitEffeParticleVertices(
     g_renderParams.fogEnabled = savedFogEnabled;
     g_renderParams.alphaTestEnabled = savedAlphaTestEnabled;
     g_renderParams.specularEnabled = savedSpecularEnabled;
+    if (transparent) {
+        SetRenderFlags(59, g_defaultRenderFlags[59]);
+        g_currentRenderFlags[59] = g_defaultRenderFlags[59];
+        SetRenderFlags(64, g_defaultRenderFlags[64]);
+        g_currentRenderFlags[64] = g_defaultRenderFlags[64];
+    }
     return native ? particleCount : 0U;
 #else
     static_cast<void>(context);

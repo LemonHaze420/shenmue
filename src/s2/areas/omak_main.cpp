@@ -82,8 +82,8 @@ void OmakeMainCallback(void *data) {
             omakeSpriteAnimation = 10;
         else {
             FinishLoading();
-            input = static_cast<std::uint16_t>(GetCurrentControlInput(2));
-            trigger = static_cast<std::uint16_t>(GetCurrentControlInput(1));
+            input = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_REPEAT));
+            trigger = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_PRESSED));
         }
         OmakeSelection *selection = work->selection;
         if (trigger & 0x400) {

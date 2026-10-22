@@ -43,7 +43,7 @@ void KshtSubtitleCallback(void *) {
             return;
         }
         --subtitleState.countdown;
-        if (GetCurrentControlInput(1) & 0x600)
+        if (GetCurrentControlInput(INPUT_PRESSED) & 0x600)
             subtitleState.countdown = 0;
         else if (subtitleState.countdown > 0)
             return;

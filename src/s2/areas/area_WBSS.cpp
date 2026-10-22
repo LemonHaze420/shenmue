@@ -262,8 +262,8 @@ void UpdateScale() {
             break;
         SetScenarioCharacterTransparency(record.character, GetRandomNumberInRange(.5f) + .5f);
     }
-    if (EVT_GetControllerInput(1, 3)) {
-        const float scale = EVT_GetControllerInput(1, 3) * .0078125f + 1.0f;
+    if (EVT_GetControllerInput(1, INPUT_RIGHT_TRIGGER)) {
+        const float scale = EVT_GetControllerInput(1, INPUT_RIGHT_TRIGGER) * .0078125f + 1.0f;
         EV_set_debug_text_pos(1, 6);
         EV_debug_log_to_screen("Scale:%4.2f", scale);
         for (const auto &record : scales) {

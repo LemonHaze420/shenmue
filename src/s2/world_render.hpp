@@ -193,6 +193,7 @@ bool ApplyWaveTextureMeshResource(std::int32_t slotIndex);
 bool ApplyWaveReflectionResource(std::int32_t slotIndex);
 void SetTextureAnimationUV(float scrollU, float scrollV);
 bool ApplyTextureAnimationResource(std::int32_t slotIndex);
+std::uint32_t *FindSpringTextureCommand(MT7Node *node, std::int32_t ordinal);
 MT7Node *InitializeSpringTextureAnimation(std::int32_t preset);
 std::uint32_t *AdvanceSpringTextureAnimation();
 inline constexpr std::int32_t waterTexturePresets[8][4]{

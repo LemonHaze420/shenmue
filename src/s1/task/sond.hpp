@@ -232,6 +232,11 @@ constexpr std::array<std::uint16_t, 128> kAicaFadeTable{0xa3d7, 0x6d3a, 0x51eb, 
 constexpr std::array<std::int16_t, 16> kAicaPanAttenuation{
     -10000, -4200, -3900, -3600, -3300, -3000, -2700, -2400, -2100, -1800, -1500, -1200, -900, -600, -300, 0};
 
+constexpr std::array<std::uint8_t, 128> kAicaVolumeTable{0, 11, 15, 19, 22, 25, 27, 29, 31, 33, 35, 37, 39, 40, 42, 43, 45, 46, 47, 49, 50, 51, 52, 54, 55, 56,
+    57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 73, 74, 75, 76, 77, 78, 78, 79, 80, 81, 82, 82, 83, 84, 85, 85, 86, 87, 88, 88, 89, 90,
+    90, 91, 92, 92, 93, 94, 94, 95, 96, 96, 97, 98, 98, 99, 100, 100, 101, 102, 102, 103, 103, 104, 105, 105, 106, 106, 107, 108, 108, 109, 109, 110, 110, 111,
+    112, 112, 113, 113, 114, 114, 115, 116, 116, 117, 117, 118, 118, 119, 119, 120, 120, 121, 121, 122, 122, 123, 123, 124, 124, 125, 125, 126, 127};
+
 constexpr std::array<std::uint8_t, 4> kAicaEndStream{0xff, 0, 0, 0};
 constexpr float kAicaInfiniteEnvelopeMilliseconds = (std::numeric_limits<float>::max)();
 constexpr std::array<float, 64> kAicaReleaseMilliseconds{kAicaInfiniteEnvelopeMilliseconds, kAicaInfiniteEnvelopeMilliseconds, 118200.0f, 101300.0f, 88600.0f,

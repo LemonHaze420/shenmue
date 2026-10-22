@@ -252,8 +252,8 @@ void CameraUpdate(CameraRuntime *) {
         y = lastLookY;
         cameraHold = std::max(cameraHold - 1, 0);
     } else {
-        x = static_cast<std::int32_t>(GetCurrentControlInput(5)) - 128;
-        y = static_cast<std::int32_t>(GetCurrentControlInput(6)) - 128;
+        x = static_cast<std::int32_t>(GetCurrentControlInput(INPUT_RIGHT_X)) - 128;
+        y = static_cast<std::int32_t>(GetCurrentControlInput(INPUT_RIGHT_Y)) - 128;
         lastLookX = x;
         lastLookY = y;
     }
@@ -452,7 +452,7 @@ void UpdateZoom() {
             delay = 30;
         }
     } else if (!delay) {
-        const auto x = GetCurrentControlInput(5), y = GetCurrentControlInput(6);
+        const auto x = GetCurrentControlInput(INPUT_RIGHT_X), y = GetCurrentControlInput(INPUT_RIGHT_Y);
         if (x != 128 && y != 128) {
             if (zoomPercent != 100) {
                 cameraZoom = 1;
@@ -489,8 +489,8 @@ void AimHand(bool hit, Vector3 &handPosition) {
         const auto percent = TruncateToInt32((((10922 - cameraFov) / 182.04445f) / 49.998779f) * 100);
         target = eye;
         const float offset = static_cast<float>(100 - percent) / 500 + .12f;
-        target.x -= cos_fixed16(static_cast<std::uint16_t>(GetCurrentControlInput(5) << 7)) * offset;
-        target.y += cos_fixed16(static_cast<std::uint16_t>(GetCurrentControlInput(6) << 7)) * offset;
+        target.x -= cos_fixed16(static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_RIGHT_X) << 7)) * offset;
+        target.y += cos_fixed16(static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_RIGHT_Y) << 7)) * offset;
     }
     work.caughtHeight = target.y;
     Vector2 screen;
@@ -590,7 +590,7 @@ void StartReplay(std::int32_t index) {
     }
     Sound(959);
     Sound(961);
-    (void)GetCurrentControlInput(6);
+    (void)GetCurrentControlInput(INPUT_RIGHT_Y);
     Vector3 point;
     EV_GetCharaPosition(leafNames[work.selected], CHARACTER_TRANSLATION_ROOT, &point, recursive);
     work.replay = index;
@@ -682,8 +682,8 @@ void StartCatch() {
 }
 void MainLoop(void *) {
     SetXInputAnalogProcessing(1);
-    (void)GetCurrentControlInput(5);
-    (void)GetCurrentControlInput(6);
+    (void)GetCurrentControlInput(INPUT_RIGHT_X);
+    (void)GetCurrentControlInput(INPUT_RIGHT_Y);
     --work.remainingFrames;
     DateTime time;
     GetCurrentDateTime(time);

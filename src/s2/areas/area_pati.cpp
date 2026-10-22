@@ -119,7 +119,7 @@ void PatiEventCallback(void *data) {
     work->delay = 0;
     if (GetShouldRenderIcons(RenderIconSlot::Any))
         return;
-    const std::uint8_t extended = static_cast<std::uint8_t>(GetCurrentControlInput(0));
+    const std::uint8_t extended = static_cast<std::uint8_t>(GetCurrentControlInput(INPUT_HELD));
     const std::int8_t entryState = work->state;
     switch (entryState) {
     case 0:

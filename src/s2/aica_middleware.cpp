@@ -865,8 +865,9 @@ void SetAttackFilterParamsForTone(std::uint32_t physicalId, const std::uint8_t *
     SetAttackFilterParams(*state);
 }
 
+// @verified - p
 void EnvelopeGenerator_StopAndReset_1(std::uint32_t physicalId) {
-    StopRawSoundEffectPlayback(GetRawSoundEffectVoice(physicalId));
+    s1::StopSourceVoiceAndFlush_0(physicalId, false);
 }
 
 bool ReleaseEnvelope(std::uint32_t physicalId) {

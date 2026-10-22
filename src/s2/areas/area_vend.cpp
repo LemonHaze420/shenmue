@@ -28,7 +28,8 @@
 
 namespace shenmue::s2 {
 namespace {
-std::int32_t vendingState, vendingElapsed, vendingValidSelection;
+VendMachState vendingState;
+std::int32_t vendingElapsed, vendingValidSelection;
 std::uint16_t vendingPrizeVoice = 1;
 std::int64_t vendingArchive = -1;
 shen_name vendingMachine;
@@ -37,22 +38,22 @@ const Vector3 vendingInitialBasePosition{
     .x = std::bit_cast<float>(0xffffffffU), .y = std::bit_cast<float>(0xffffffffU), .z = std::bit_cast<float>(0xffffffffU)};
 const Vector3i vendingInitialBaseRotation{.x = -1, .y = -1, .z = -1};
 
-void VendingInitCallback(void *);
-void VendingCheckCallback(void *);
-void VendingInitSelectionCallback(void *);
-void VendingSelectionVoiceCallback(void *);
-void VendingSelectCallback(void *);
-void VendingDrinkCallback(void *);
-void VendingPrizeCallback(void *);
-void VendingEndCallback(void *);
-void VendingKillCallback(void *);
+void eVEND_EVT_InitVend(void *);
+void eVEND_EVT_CheckVend(void *);
+void eVEND_EVT_InitSelect(void *);
+void eVEND_EVT_VoiceInSelect(void *);
+void eVEND_EVT_SelectJuice(void *);
+void eVEND_EVT_DrinkJuice(void *);
+void eVEND_EVT_HitCan(void *);
+void eVEND_EVT_VendEnd(void *);
+void eVEND_ET_KillVend(void *);
 
 // @verified - p
 void VendingProcCallback(void *) {
 }
 
 void SelectVendingCanRecords(VendingMachineWork &work) {
-    const VendingCanRecord &record = (work.colour == 1 ? vendRedCans : vendOtherCans)[work.previousSelected];
+    const VendingCanRecord &record = (work.colour == VM_COLOR_RED ? vendRedCans : vendOtherCans)[work.previousSelected];
     work.archiveRecord = record.record;
     work.alternateRecord = record.alternate;
     work.sound = record.sound;
@@ -163,9 +164,9 @@ void InitializeVendingResources(VendingMachineWork &work) {
     work.prizeState = 0;
 }
 
-void VendingInitEnqueue(void *argument) {
+void eVEND_EVT_InitVend_Enqueue(void *argument) {
     HLib::Task *proc = HLib::EnqueueTaskWithParameter(VendingProcCallback, 5, 0x0b, 8, VEND_PROC_TASK);
-    HLib::Task *task = HLib::EnqueueTaskWithParameter(VendingInitCallback, 4, 0x0c, sizeof(VendingMachineWork), VEND_MAIN_TASK);
+    HLib::Task *task = HLib::EnqueueTaskWithParameter(eVEND_EVT_InitVend, 4, 0x0c, sizeof(VendingMachineWork), VEND_MAIN_TASK);
     VendingMachineWork *work = static_cast<VendingMachineWork *>(HLib::GetTaskParameter(task));
     *static_cast<VendingMachineWork **>(HLib::GetTaskParameter(proc)) = work;
     work->procTask = proc;
@@ -177,44 +178,44 @@ void VendingInitEnqueue(void *argument) {
     work->firstSelection = 1;
     EV_FreeAuthorPak(1, "0109");
     EV_EventSetUpHelpIcon_0(25, 0);
-    work->colour = 0;
+    work->colour = VM_COLOR_UNKNOWN;
     for (const VendingMapColour &row : vendMapColours) {
         if (row.map.name == g_currentMap.name) {
             work->colour = row.colour;
             break;
         }
     }
-    if (work->colour == 1) {
+    if (work->colour == VM_COLOR_RED) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 600, " VM_COLOR ==> RED \n");
         vendingMachine = VEND_RED;
-    } else if (work->colour == 2) {
+    } else if (work->colour == VM_COLOR_WHITE) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 605, " VM_COLOR ==> WHITE \n");
         vendingMachine = VEND_WHITE;
-    } else if (work->colour == 3) {
+    } else if (work->colour == VM_COLOR_GREEN) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 610, " VM_COLOR ==> GREEN \n");
         vendingMachine = VEND_GREEN;
     } else {
         EV_debug_log("VEND\\eVEND_et_vend.c", 614, " ****** WARNING ********* \n");
         EV_debug_log("VEND\\eVEND_et_vend.c", 615, " VEND.EV3 can't get <AREA-ID>\n");
     }
-    if (work->colour >= 1 && work->colour <= 3) {
+    if (work->colour >= VM_COLOR_RED && work->colour <= VM_COLOR_GREEN) {
         const char *directory = Filepath_Gen(FilepathGenMode::PackDirectory);
         vendingArchive = EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Mount, reinterpret_cast<std::uintptr_t>(directory),
-            reinterpret_cast<std::uintptr_t>(work->colour == 1 ? "VEND.afs" : "SUNT.afs"));
+            reinterpret_cast<std::uintptr_t>(work->colour == VM_COLOR_RED ? "VEND.afs" : "SUNT.afs"));
     }
     work->wait = 0;
 }
 
-void VendingInitCallback(void *data) {
+void eVEND_EVT_InitVend(void *data) {
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     switch (vendingState) {
-    case 0:
-        vendingState = 1;
+    case VEND_CHECK_CASH:
+        vendingState = VEND_FADE;
         if (std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(GetPlayerStat(PlayerStatsId::Cash))) > 5)
             PlayVendingVoice(work, 25);
         [[fallthrough]];
-    case 1: {
-        vendingState = 2;
+    case VEND_FADE: {
+        vendingState = VM_VEND_TRANS_CHARA;
         EV_debug_log("VEND\\eVEND_et_vend.c", 660, " Now state -->VEND_FADE \n");
         EVT_AT_MenCtrl({.cleanup = 1,
             .frames = 40,
@@ -230,8 +231,8 @@ void VendingInitCallback(void *data) {
         HLib::SetupTaskDelay(6);
         return;
     }
-    case 2: {
-        vendingState = 1;
+    case VM_VEND_TRANS_CHARA: {
+        vendingState = VEND_FADE;
         EV_debug_log("VEND\\eVEND_et_vend.c", 671, " Now state -->VM_VEND_TRANS_CHARA \n");
         if (DoesScenarioCharacterExist(work.originalMachine)) {
             EV_EnableCharacterDisplay(vendingMachine);
@@ -259,7 +260,7 @@ void VendingInitCallback(void *data) {
         EventSetMotion motion{.cleanup = 0, .character = VEND_RYO, .animation = 0xf003, .frame = 0, .speed = 1, .flags = 0x40000000U, .delay = 0};
         EVT_AT_SetMot_Callback(&motion);
         GetMotionFrameCount(0xf003);
-        HLib::SetCurrentTaskTo(VendingCheckCallback);
+        HLib::SetCurrentTaskTo(eVEND_EVT_CheckVend);
         break;
     }
     default:
@@ -296,50 +297,49 @@ std::int32_t VendingInsertCoin() {
     return 170;
 }
 
-void VendingCheckCallback(void *data) {
+void eVEND_EVT_CheckVend(void *data) {
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     EV_debug_log("VEND\\eVEND_et_vend.c", 736, "@@@    eVEND_EVT_CheckVend ( ) \n");
-    if (GetCurrentControlInput(1) == 1024 || work.originalMachine.name != 0xffffffffU) {
+    if (GetCurrentControlInput(INPUT_PRESSED) == PAD_BUTTON_X || work.originalMachine.name != 0xffffffffU) {
         std::int32_t delay;
         if (std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(GetPlayerStat(PlayerStatsId::Cash))) < 5) {
             work.voiceState = 2;
             delay = VendingNoMoney();
             PlayVendingVoice(work, 45);
-            HLib::SetCurrentTaskTo(VendingEndCallback);
+            HLib::SetCurrentTaskTo(eVEND_EVT_VendEnd);
             HLib::SetupTaskDelay(delay + 50);
         } else {
             delay = VendingInsertCoin();
-            HLib::SetCurrentTaskTo(VendingInitSelectionCallback);
+            HLib::SetCurrentTaskTo(eVEND_EVT_InitSelect);
             HLib::SetupTaskDelay(delay);
         }
     }
 }
 
 void HideVendingLamps() {
+    using enum EventCharacterPartTransformMode;
     for (std::int32_t index = 0; index < 8; ++index) {
         Vector3 position;
         Vector3i rotation;
-        EV_scenApplyPosOrRotToPartOf(
-            vendingMachine, static_cast<std::uint16_t>(vendingLamps.parts[index]), &position, &rotation, EventCharacterPartTransformMode::Get);
+        EV_scenApplyPosOrRotToPartOf(vendingMachine, static_cast<std::uint16_t>(vendingLamps.parts[index]), &position, &rotation, Get);
         vendingLamps.positions[index] = position;
         position.z += .1f;
-        EV_scenApplyPosOrRotToPartOf(
-            vendingMachine, static_cast<std::uint16_t>(vendingLamps.parts[index]), &position, nullptr, EventCharacterPartTransformMode::Absolute);
+        EV_scenApplyPosOrRotToPartOf(vendingMachine, static_cast<std::uint16_t>(vendingLamps.parts[index]), &position, nullptr, Absolute);
     }
 }
 
 void RestoreVendingLamps(void *data) {
+    using enum EventCharacterPartTransformMode;
     VendingLampBank &lamps = *static_cast<VendingLampBank *>(data);
     for (std::int32_t index = 0; index < 8; ++index) {
         if (lamps.selected == lamps.parts[index])
             EV_debug_log("VEND\\eVEND_et_vend_auto.c", 468, "@@@   part == lamp[%d]\n", index);
         else
-            EV_scenApplyPosOrRotToPartOf(
-                vendingMachine, static_cast<std::uint16_t>(lamps.parts[index]), &lamps.positions[index], nullptr, EventCharacterPartTransformMode::Absolute);
+            EV_scenApplyPosOrRotToPartOf(vendingMachine, static_cast<std::uint16_t>(lamps.parts[index]), &lamps.positions[index], nullptr, Absolute);
     }
 }
 
-void VendingInitSelectionCallback(void *data) {
+void eVEND_EVT_InitSelect(void *data) {
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     EV_debug_log("VEND\\eVEND_et_vend.c", 772, "@@@  eVEND_EVT_InitSelect( ) \n");
     EV_DisableCharacterDisplay(VEND_RYO);
@@ -361,11 +361,11 @@ void VendingInitSelectionCallback(void *data) {
     EVT_AT_SetCam_Callback(&camera);
     camCtrlDisableFilmBars();
     HideVendingLamps();
-    HLib::SetCurrentTaskTo(VendingSelectionVoiceCallback);
+    HLib::SetCurrentTaskTo(eVEND_EVT_VoiceInSelect);
     HLib::SetupTaskDelay(5);
 }
 
-void VendingSelectionVoiceCallback(void *data) {
+void eVEND_EVT_VoiceInSelect(void *data) {
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     if (work.firstSelection) {
         work.voiceState = 3;
@@ -373,7 +373,7 @@ void VendingSelectionVoiceCallback(void *data) {
     } else
         work.voiceState = 4;
     PlayVendingVoice(work, 0);
-    HLib::SetCurrentTaskTo(VendingSelectCallback);
+    HLib::SetCurrentTaskTo(eVEND_EVT_SelectJuice);
     HLib::SetupTaskDelay(50);
 }
 
@@ -390,28 +390,28 @@ std::int32_t InterpolateVendingHand(const Vector3 &target, const Vector3 &previo
     return delay + 8 / step;
 }
 
-void VendingHandWaitCallback(void *data) {
+void eVEND_ET_SetHandUpYubiWait(void *data) {
     VendingHandWaitWork &work = *static_cast<VendingHandWaitWork *>(data);
-    if (work.state == 2) {
-        work.state = 3;
+    if (work.state == EVVendHand_END) {
+        work.state = EVVendHand_RETIRED;
         EV_debug_log("VEND\\eVEND_et_vend.c", 1466, "EVVendHand_END in eVEND_ET_SetHandUpYubiWait\n");
         HLib::EV_HLKillOtherHierarchyTask(work.task);
     }
-    if (work.state == 4) {
+    if (work.state == EVVendHand_ERROR) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 1470, "EVVendHand_ERROR in eVEND_ET_SetHandUpYubiWait\n");
         HLib::EV_HLKillOtherHierarchyTask(work.task);
     }
     if (work.timer > work.threshold) {
         ApplyCharacterHandPoseCommand(
             ctrlGetCharaByName(work.character), work.side, reinterpret_cast<std::byte *>(work.command), static_cast<std::int16_t>(work.duration));
-        work.state = 2;
+        work.state = EVVendHand_END;
         HLib::SetupTaskDelay(work.duration);
     }
     ++work.timer;
 }
 
-std::int32_t QueueVendingHandWait() {
-    HLib::Task *task = HLib::EnqueueTaskWithParameter(VendingHandWaitCallback, 3, 0x0b, sizeof(VendingHandWaitWork), AREA_EVENT_TASK);
+std::int32_t Queue_eVEND_ET_SetHandUpYubiWait() {
+    HLib::Task *task = HLib::EnqueueTaskWithParameter(eVEND_ET_SetHandUpYubiWait, 3, 0x0b, sizeof(VendingHandWaitWork), AREA_EVENT_TASK);
     VendingHandWaitWork *work = static_cast<VendingHandWaitWork *>(HLib::GetTaskParameter(task));
     work->task = task;
 
@@ -422,7 +422,7 @@ std::int32_t QueueVendingHandWait() {
     work->duration = 5;
     work->threshold = 5;
     work->timer = 0;
-    work->state = 0;
+    work->state = EVVendHand_INIT;
     return 10;
 }
 
@@ -430,7 +430,7 @@ std::int32_t PressVendingButton(const Vector3 &button) {
     const float x = button.x, y = button.y - .01f, z = button.z, pressedZ = z - .008f;
     const Vector3 target{.x = x, .y = y, .z = z};
     const std::int32_t begin = InterpolateVendingHand(target, button, 1, 7);
-    QueueVendingHandWait();
+    Queue_eVEND_ET_SetHandUpYubiWait();
     const float deltaX = x - x, deltaY = y - y;
     for (std::int32_t index = 0; index < 8; index += 4) {
         const float factor = vendInterpolation[index];
@@ -451,7 +451,7 @@ std::int32_t PressVendingButton(const Vector3 &button) {
     return end + 2;
 }
 
-void VendingAutoWaitCallback(void *data) {
+void eVEND_ET_SetVendAutoWait(void *data) {
     VendingAutoWaitWork &work = *static_cast<VendingAutoWaitWork *>(data);
     if (work.state < 0) {
         ++work.timer;
@@ -486,53 +486,53 @@ void DetermineVendingPrize(VendingMachineWork &work, float random) {
     work.previousSelected = 8;
     if (!(random >= .01)) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 967, "Dual-S val=%f\n", random);
-        work.prizeItem = 4016;
+        work.prizeItem = ITEM_DURAL_SILVER;
     } else if (random < .02) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 970, "Dual-G val=%f\n", random);
-        work.prizeItem = 4017;
+        work.prizeItem = ITEM_DURAL_GOLD;
     } else if (random < .0425) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 973, "PROB_AKIRA val=%f\n", random);
-        work.prizeItem = 4000;
+        work.prizeItem = ITEM_AKIRA1;
     } else if (random < .065) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 976, "JUKY  val=%f\n", random);
-        work.prizeItem = 4002;
+        work.prizeItem = ITEM_JACKY1;
     } else if (random < .0875) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 979, "SARA  val=%f\n", random);
-        work.prizeItem = 4004;
+        work.prizeItem = ITEM_SARAH1;
     } else if (random < .11) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 982, "RAU  val=%f\n", random);
-        work.prizeItem = 4006;
+        work.prizeItem = ITEM_LAU1;
     } else if (random < .1325) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 985, "PAI  val=%f\n", random);
-        work.prizeItem = 4008;
+        work.prizeItem = ITEM_PAI1;
     } else if (random < .155) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 988, "URFU  val=%f\n", random);
-        work.prizeItem = 4010;
+        work.prizeItem = ITEM_WOLF1;
     } else if (random < .1775) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 991, "JEFLY  val=%f\n", random);
-        work.prizeItem = 4012;
+        work.prizeItem = ITEM_JEFFRY1;
     } else if (random < .2) {
         EV_debug_log("VEND\\eVEND_et_vend.c", 994, "KAGE  val=%f\n", random);
-        work.prizeItem = 4014;
+        work.prizeItem = ITEM_KAGE1;
     } else {
         work.prizeState = 3;
         work.previousSelected = previous;
     }
 }
 
-void VendingSelectCallback(void *data) {
+void eVEND_EVT_SelectJuice(void *data) {
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     const std::int32_t minutes = shenGetMinutesUntilNextFrameMinute();
     if (++vendingElapsed > 3000 || minutes < 1) {
         work.voiceState = 10;
         PlayVendingVoice(work, 0);
         PATI_StartMoneyCount(5, 50);
-        HLib::SetCurrentTaskTo(VendingEndCallback);
+        HLib::SetCurrentTaskTo(eVEND_EVT_VendEnd);
         HLib::SetupTaskDelay(70);
     }
     GetBattleDataConfig(0, VEND_CANCEL);
     GetBattleDataConfig(0, VEND_ACCEPT);
-    const std::uint16_t input = static_cast<std::uint16_t>(GetCurrentControlInput(1));
+    const std::uint16_t input = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_PRESSED));
     if (work.wait > 0) {
         --work.wait;
         return;
@@ -543,25 +543,25 @@ void VendingSelectCallback(void *data) {
             PlayVendingVoice(work, 0);
             AddThisToCashOrSegaCoins(5, ECashOrCoins::Cash2);
             EV_debug_log("VEND\\eVEND_et_vend.c", 925, "Put B button at selecting Can\n");
-            HLib::SetCurrentTaskTo(VendingEndCallback);
+            HLib::SetCurrentTaskTo(eVEND_EVT_VendEnd);
             return;
         }
         vendingValidSelection = 0;
         const std::int32_t previous = work.selected;
         switch (input) {
-        case 0x8000:
+        case PAD_RIGHT:
             if (previous != work.upperButtons - 1 && previous < work.buttonCount - 1)
                 ++work.selected;
             break;
-        case 0x4000:
+        case PAD_LEFT:
             if (previous > 0 && previous != work.upperButtons)
                 --work.selected;
             break;
-        case 0x1000:
+        case PAD_UP:
             if (previous >= work.upperButtons)
                 work.selected = previous + work.upperButtons - work.buttonCount;
             break;
-        case 0x2000:
+        case PAD_DOWN:
             if (previous < work.upperButtons) {
                 work.selected = previous + work.buttonCount - work.upperButtons;
                 if (work.selected < work.upperButtons)
@@ -583,7 +583,7 @@ void VendingSelectCallback(void *data) {
     PlayVendingVoice(work, 0);
     const std::int32_t delay = PressVendingButton(work.buttons[work.selected]);
     vendingLamps.selected = work.selected;
-    HLib::Task *task = HLib::EnqueueTaskWithParameter(VendingAutoWaitCallback, 3, 0x0b, sizeof(VendingAutoWaitWork), AREA_EVENT_TASK);
+    HLib::Task *task = HLib::EnqueueTaskWithParameter(eVEND_ET_SetVendAutoWait, 3, 0x0b, sizeof(VendingAutoWaitWork), AREA_EVENT_TASK);
     VendingAutoWaitWork *wait = static_cast<VendingAutoWaitWork *>(HLib::GetTaskParameter(task));
     wait->task = task;
     wait->begin = delay - 5;
@@ -602,26 +602,27 @@ void VendingSelectCallback(void *data) {
         SelectVendingCanRecords(work);
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::LoadAfs, static_cast<std::uintptr_t>(vendingArchive),
             static_cast<std::uintptr_t>(work.archiveRecord), work.alternateRecord);
-        HLib::SetCurrentTaskTo(VendingPrizeCallback);
+        HLib::SetCurrentTaskTo(eVEND_EVT_HitCan);
         HLib::SetupTaskDelay(30);
     } else {
         SelectVendingCanRecords(work);
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::LoadAfs, static_cast<std::uintptr_t>(vendingArchive),
             static_cast<std::uintptr_t>(work.archiveRecord), work.alternateRecord);
-        HLib::SetCurrentTaskTo(VendingDrinkCallback);
+        HLib::SetCurrentTaskTo(eVEND_EVT_DrinkJuice);
     }
     HLib::SetupTaskDelay(delay);
 }
 
-void VendingPartCallback(void *data) {
+void eVEND_EVT_CHAR_PARTS_GET(void *data) {
+    using enum EventCharacterPartTransformMode;
     VendingPartWork &work = *static_cast<VendingPartWork *>(data);
-    EV_scenApplyPosOrRotToPartOf(
-        work.character, static_cast<std::uint16_t>(work.part), &work.position, &work.rotation, EventCharacterPartTransformMode::Absolute);
+    EV_scenApplyPosOrRotToPartOf(work.character, static_cast<std::uint16_t>(work.part), &work.position, &work.rotation, Absolute);
     if (work.cleanup)
         HLib::DestroyCurrentTask();
 }
 
 std::int32_t PickUpVendingCan(std::uint32_t sound) {
+    using enum EventCharacterPartTransformMode;
     HLib::Task *task = HLib::EnqueueTaskWithParameter(EVT_AT_Cling, 6, 0x0b, sizeof(EventCling), AREA_EVENT_TASK);
     RegisterEventTask(task);
     *static_cast<EventCling *>(HLib::GetTaskParameter(task)) = {.cleanup = 1,
@@ -649,13 +650,13 @@ std::int32_t PickUpVendingCan(std::uint32_t sound) {
     EVT_AT_SetSound(sound ? 196 : 195, 290);
     Vector3 first, second;
     Vector3i rotation;
-    EV_scenApplyPosOrRotToPartOf(VEND_CAN, 152, &first, &rotation, EventCharacterPartTransformMode::Get);
-    EV_scenApplyPosOrRotToPartOf(VEND_CAN, 153, &second, &rotation, EventCharacterPartTransformMode::Get);
+    EV_scenApplyPosOrRotToPartOf(VEND_CAN, 152, &first, &rotation, Get);
+    EV_scenApplyPosOrRotToPartOf(VEND_CAN, 153, &second, &rotation, Get);
     second.y -= 100.0f;
-    task = HLib::EnqueueTaskWithParameter(VendingPartCallback, 6, 0x0b, sizeof(VendingPartWork), AREA_EVENT_TASK);
+    task = HLib::EnqueueTaskWithParameter(eVEND_EVT_CHAR_PARTS_GET, 6, 0x0b, sizeof(VendingPartWork), AREA_EVENT_TASK);
     HLib::SetupTimedTask(task, 290);
     *static_cast<VendingPartWork *>(HLib::GetTaskParameter(task)) = {.character = VEND_CAN, .part = 153, .position = first, .rotation = rotation, .cleanup = 1};
-    task = HLib::EnqueueTaskWithParameter(VendingPartCallback, 6, 0x0b, sizeof(VendingPartWork), AREA_EVENT_TASK);
+    task = HLib::EnqueueTaskWithParameter(eVEND_EVT_CHAR_PARTS_GET, 6, 0x0b, sizeof(VendingPartWork), AREA_EVENT_TASK);
     HLib::SetupTimedTask(task, 290);
     *static_cast<VendingPartWork *>(HLib::GetTaskParameter(task)) = {
         .character = VEND_CAN, .part = 152, .position = second, .rotation = rotation, .cleanup = 1};
@@ -735,48 +736,48 @@ std::int32_t PickUpVendingPrize() {
     return 390;
 }
 
-void VendingDrinkCallback(void *data) {
+void eVEND_EVT_DrinkJuice(void *data) {
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     EV_debug_log("VEND\\eVEND_et_vend.c", 1014, "@@@     eVEND_EVT_DrinkJuice( ) \n");
     work.voiceState = 9;
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     work.contentState = 4;
     ApplyCharacterHandPoseCommand(
-        ctrlGetCharaByName(VEND_RYO), 0, reinterpret_cast<std::byte *>(work.canKind == 0 ? vendCanHandCommand : vendAlternateCanCommand), 0);
-    ApplyCharacterHandRotation(ctrlGetCharaByName(VEND_RYO), 0, 21, work.canKind == 0 ? &vendCanHandRotation : &vendAlternateHandRotation);
+        ctrlGetCharaByName(VEND_RYO), 0, reinterpret_cast<std::byte *>(work.canKind == VEND_CAN_STANDARD ? vendCanHandCommand : vendAlternateCanCommand), 0);
+    ApplyCharacterHandRotation(ctrlGetCharaByName(VEND_RYO), 0, 21, work.canKind == VEND_CAN_STANDARD ? &vendCanHandRotation : &vendAlternateHandRotation);
     ApplyCharacterHandPoseCommand(ctrlGetCharaByName(VEND_RYO), 1, reinterpret_cast<std::byte *>(vendLeftDrinkCommand), 190);
     ApplyCharacterHandPoseCommand(ctrlGetCharaByName(VEND_RYO), 1, reinterpret_cast<std::byte *>(vendLeftExitCommand), 410);
     const std::int32_t delay = AnimateVendingDrink(PickUpVendingCan(work.sound));
     PlayVendingVoice(work, delay - 240);
-    HLib::SetCurrentTaskTo(VendingEndCallback);
+    HLib::SetCurrentTaskTo(eVEND_EVT_VendEnd);
     HLib::SetupTaskDelay(delay);
 }
 
-void VendingItemCallback(void *data) {
+void eVEND_EVT_REGIST_ITEM_EFFECT(void *data) {
     VendingItemWork &work = *static_cast<VendingItemWork *>(data);
     AddInventoryItem(work.item, 1, 1);
     if (work.cleanup)
         HLib::DestroyCurrentTask();
 }
 
-void QueueVendingItem(std::uint32_t item, std::int32_t delay) {
+void Queue_eVEND_EVT_REGIST_ITEM_EFFECT(std::uint32_t item, std::int32_t delay) {
     if (!delay) {
         AddInventoryItem(item, 1, 1);
         return;
     }
-    HLib::Task *task = HLib::EnqueueTaskWithParameter(VendingItemCallback, 6, 0x0b, sizeof(VendingItemWork), AREA_EVENT_TASK);
+    HLib::Task *task = HLib::EnqueueTaskWithParameter(eVEND_EVT_REGIST_ITEM_EFFECT, 6, 0x0b, sizeof(VendingItemWork), AREA_EVENT_TASK);
     if (delay > 0)
         HLib::SetupTimedTask(task, delay);
     *static_cast<VendingItemWork *>(HLib::GetTaskParameter(task)) = {.cleanup = 1, .item = item};
 }
 
-void VendingPrizeCallback(void *data) {
+void eVEND_EVT_HitCan(void *data) {
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     work.voiceState = 8;
-    if (vendingState != 1) {
-        if (vendingState != 2)
+    if (vendingState != VEND_FADE) {
+        if (vendingState != VM_VEND_TRANS_CHARA)
             return;
-        vendingState = 1;
+        vendingState = VEND_FADE;
         if (vendingArchive != -1) {
             const bool pending = EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0) != 0;
             if (pending || work.contentState == 4)
@@ -785,10 +786,10 @@ void VendingPrizeCallback(void *data) {
         }
         work.contentState = 1;
         EV_debug_log("VEND\\eVEND_et_vend.c", 1105, "HIT_prosesing_02\n");
-        HLib::SetCurrentTaskTo(VendingInitSelectionCallback);
+        HLib::SetCurrentTaskTo(eVEND_EVT_InitSelect);
         return;
     }
-    vendingState = 2;
+    vendingState = VM_VEND_TRANS_CHARA;
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     work.contentState = 4;
     EV_debug_log("VEND\\eVEND_et_vend.c", 1062, "HIT_prosesing_01\n");
@@ -799,7 +800,7 @@ void VendingPrizeCallback(void *data) {
     PlayVendingVoice(work, delay - 190);
     PlayVendingVoice(work, delay - 130);
     EVT_AT_SetPoint(VEND_RYO, VEND_CAN, 0, 1, 0, delay - 190, 190, 0);
-    QueueVendingItem(work.prizeItem, delay - 120);
+    Queue_eVEND_EVT_REGIST_ITEM_EFFECT(work.prizeItem, delay - 120);
     EVT_AT_MenCtrl({.cleanup = 1,
         .frames = 6,
         .startAlpha = 0,
@@ -825,11 +826,11 @@ void VendingPrizeCallback(void *data) {
     HLib::SetupTaskDelay(delay);
 }
 
-void VendingEndCallback(void *) {
+void eVEND_EVT_VendEnd(void *) {
     EV_debug_log("VEND\\eVEND_et_vend.c", 1123, "@@@             eVEND_EVT_VendEnd( ) \n");
     EV_EventSetUpHelpIcon_0(0, 0);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
-    HLib::SetCurrentTaskTo(VendingKillCallback);
+    HLib::SetCurrentTaskTo(eVEND_ET_KillVend);
     EventFilmControl film{.cleanup = 0,
         .frames = 10,
         .startAlpha = 255,
@@ -854,12 +855,12 @@ void ReleaseVendingResources(VendingMachineWork &work) {
     ET_AT_KillWork(work.characters);
 }
 
-void VendingKillCallback(void *data) {
+void eVEND_ET_KillVend(void *data) {
     using enum CameraState;
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     EV_debug_log("VEND\\eVEND_et_vend.c", 1162, "@@@     EV_KillVend( ) \n");
-    if (vendingState != 1) {
-        if (vendingState != 2)
+    if (vendingState != VEND_FADE) {
+        if (vendingState != VM_VEND_TRANS_CHARA)
             return;
         work.voiceState = 11;
         if (vendingArchive != -1) {
@@ -888,7 +889,7 @@ void VendingKillCallback(void *data) {
         EV_NPC_NewLoadSw(1);
         return;
     }
-    vendingState = 2;
+    vendingState = VM_VEND_TRANS_CHARA;
     if (work.voiceState == 7 || work.voiceState == 10) {
         EVT_AT_MenCtrl({.cleanup = 1,
             .frames = 10,
@@ -922,7 +923,7 @@ void VendingKillCallback(void *data) {
 void InitializeVendingMachineEvent() {
     vendingLamps = {.selected = 0, .parts = {172, 173, 174, 175, 176, 177, 178, 179}, .positions = {}};
     vendingPrizeVoice = 1;
-    vendingState = 0;
+    vendingState = VEND_CHECK_CASH;
     vendingElapsed = 0;
     vendingValidSelection = 0;
     vendingArchive = -1;
@@ -933,7 +934,7 @@ void RunVendingMachineEvent(std::uintptr_t argument) {
     HLib::Task *task = HLib::EnqueueTaskWithParameter(EVT_AT_NPCClear_Callback, 6, 0x0b, sizeof(StepNpcClearWork), AREA_EVENT_TASK);
     RegisterEventTask(task);
     StepNpcClearWork *work = static_cast<StepNpcClearWork *>(HLib::GetTaskParameter(task));
-    work->callback = VendingInitEnqueue;
+    work->callback = eVEND_EVT_InitVend_Enqueue;
     work->callbackData = reinterpret_cast<void *>(argument);
     work->reserved10 = 0;
     work->state = 0;

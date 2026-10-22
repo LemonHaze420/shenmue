@@ -125,7 +125,7 @@ void E0235MainCallback(void *taskData) {
         HLib::DestroyTask(parent->self);
         EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
     } else if (parent->state == 0) {
-        const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, 1));
+        const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024)
             parent->state = 1;
         else if (input == 64) {

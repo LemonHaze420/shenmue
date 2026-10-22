@@ -66,13 +66,13 @@ void ScmnStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -129,13 +129,13 @@ void SfbrStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -192,13 +192,13 @@ void SfjfStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -255,13 +255,13 @@ void SfkkStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -318,13 +318,13 @@ void SfkmStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -381,13 +381,13 @@ void SfluStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -444,13 +444,13 @@ void Sfm2StreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -507,13 +507,13 @@ void Sfs2StreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -570,13 +570,13 @@ void SfsrStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -633,13 +633,13 @@ void SftcStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -696,13 +696,13 @@ void SftsStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }
@@ -759,13 +759,13 @@ void SfwfStreetFightConversationCallback(void *parameter) {
     if (work->remainingFrames) {
         if (GetFightModeFlags() & 0x10U) {
             if (work->firstSkipPress) {
-                if (GetCurrentControlInput(1) & 0x200U) {
+                if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                     ++work->state;
                     work->skipped = 1;
                 } else if (--work->skipPressFrames == 0) {
                     work->firstSkipPress = 0;
                 }
-            } else if (GetCurrentControlInput(1) & 0x200U) {
+            } else if (GetCurrentControlInput(INPUT_PRESSED) & 0x200U) {
                 ++work->firstSkipPress;
                 work->skipPressFrames = 20;
             }

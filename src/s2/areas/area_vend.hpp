@@ -11,6 +11,16 @@ inline constexpr shen_name VEND_RYO{SHEN_NAME(RYO_)}, VEND_HAND{SHEN_NAME(chnd)}
 inline constexpr shen_name VEND_RED{SHEN_NAME(JHNR)}, VEND_WHITE{SHEN_NAME(JHNW)}, VEND_GREEN{SHEN_NAME(JHNG)};
 inline constexpr shen_name VEND_ACCEPT{SHEN_NAME(BTEV)}, VEND_CANCEL{SHEN_NAME(BTCC)};
 inline constexpr shen_name vendCharacterNames[]{VEND_RYO, EVENT_CHARACTER_INVALID};
+enum VendMachState : int32_t {
+    VEND_CHECK_CASH,
+    VEND_FADE,
+    VM_VEND_TRANS_CHARA = 2,
+};
+
+enum VendingMachineColour : std::int32_t { VM_COLOR_UNKNOWN = 0, VM_COLOR_RED = 1, VM_COLOR_WHITE = 2, VM_COLOR_GREEN = 3 };
+enum VendingCanKind : std::uint16_t { VEND_CAN_STANDARD = 0, VEND_CAN_ALTERNATE1 = 1, VEND_CAN_ALTERNATE2 = 2 };
+enum VendingCanSound : std::uint16_t { VEND_SOUND_STANDARD = 0, VEND_SOUND_ALTERNATE = 1 };
+enum VendingHandState : std::int32_t { EVVendHand_INIT = 0, EVVendHand_END = 2, EVVendHand_RETIRED = 3, EVVendHand_ERROR = 4 };
 struct VendingMachineWork {
     EventReadCharactersWork *characters;
     Vector3 buttons[8];
@@ -74,26 +84,35 @@ struct VendingCanRecord {
     std::uint16_t sound, kind;
 };
 static_assert(sizeof(VendingCanRecord) == 0xc);
-inline constexpr VendingCanRecord vendRedCans[]{{.record = 0, .alternate = 1, .sound = 1, .kind = 0}, {.record = 0, .alternate = 1, .sound = 1, .kind = 0},
-    {.record = 0, .alternate = 1, .sound = 1, .kind = 0}, {.record = 4, .alternate = 5, .sound = 1, .kind = 0},
-    {.record = 2, .alternate = 3, .sound = 1, .kind = 0}, {.record = 8, .alternate = 9, .sound = 1, .kind = 0},
-    {.record = 6, .alternate = 7, .sound = 0, .kind = 1}, {.record = 6, .alternate = 7, .sound = 0, .kind = 1},
-    {.record = 10, .alternate = 11, .sound = 0, .kind = 0}};
-inline constexpr VendingCanRecord vendOtherCans[]{{.record = 2, .alternate = 3, .sound = 0, .kind = 2}, {.record = 2, .alternate = 3, .sound = 0, .kind = 2},
-    {.record = 6, .alternate = 7, .sound = 0, .kind = 0}, {.record = 6, .alternate = 7, .sound = 0, .kind = 0},
-    {.record = 4, .alternate = 5, .sound = 0, .kind = 0}, {.record = 4, .alternate = 5, .sound = 0, .kind = 0},
-    {.record = 2, .alternate = 3, .sound = 0, .kind = 2}, {.record = 4, .alternate = 5, .sound = 0, .kind = 0},
-    {.record = 0, .alternate = 1, .sound = 0, .kind = 0}};
+inline constexpr VendingCanRecord vendRedCans[]{{.record = 0, .alternate = 1, .sound = VEND_SOUND_ALTERNATE, .kind = VEND_CAN_STANDARD},
+    {.record = 0, .alternate = 1, .sound = VEND_SOUND_ALTERNATE, .kind = VEND_CAN_STANDARD},
+    {.record = 0, .alternate = 1, .sound = VEND_SOUND_ALTERNATE, .kind = VEND_CAN_STANDARD},
+    {.record = 4, .alternate = 5, .sound = VEND_SOUND_ALTERNATE, .kind = VEND_CAN_STANDARD},
+    {.record = 2, .alternate = 3, .sound = VEND_SOUND_ALTERNATE, .kind = VEND_CAN_STANDARD},
+    {.record = 8, .alternate = 9, .sound = VEND_SOUND_ALTERNATE, .kind = VEND_CAN_STANDARD},
+    {.record = 6, .alternate = 7, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_ALTERNATE1},
+    {.record = 6, .alternate = 7, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_ALTERNATE1},
+    {.record = 10, .alternate = 11, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_STANDARD}};
+inline constexpr VendingCanRecord vendOtherCans[]{{.record = 2, .alternate = 3, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_ALTERNATE2},
+    {.record = 2, .alternate = 3, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_ALTERNATE2},
+    {.record = 6, .alternate = 7, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_STANDARD},
+    {.record = 6, .alternate = 7, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_STANDARD},
+    {.record = 4, .alternate = 5, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_STANDARD},
+    {.record = 4, .alternate = 5, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_STANDARD},
+    {.record = 2, .alternate = 3, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_ALTERNATE2},
+    {.record = 4, .alternate = 5, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_STANDARD},
+    {.record = 0, .alternate = 1, .sound = VEND_SOUND_STANDARD, .kind = VEND_CAN_STANDARD}};
 struct VendingMapColour {
     shen_name map;
     std::int32_t colour;
 };
-inline constexpr VendingMapColour vendMapColours[]{{.map = SHEN_NAME(AR01), .colour = 3}, {.map = SHEN_NAME(AR02), .colour = 3},
-    {.map = SHEN_NAME(AR02), .colour = 3}, {.map = SHEN_NAME(AR03), .colour = 3}, {.map = SHEN_NAME(AK00), .colour = 1}, {.map = SHEN_NAME(AKS0), .colour = 1},
-    {.map = SHEN_NAME(AB00), .colour = 2}, {.map = SHEN_NAME(WS00), .colour = 3}, {.map = SHEN_NAME(WK00), .colour = 3}, {.map = SHEN_NAME(WT00), .colour = 2},
-    {.map = SHEN_NAME(WN00), .colour = 2}, {.map = SHEN_NAME(WR00), .colour = 2}, {.map = SHEN_NAME(WE00), .colour = 3}, {.map = SHEN_NAME(WEG0), .colour = 3},
-    {.map = SHEN_NAME(WES1), .colour = 3}, {.map = SHEN_NAME(Q100), .colour = 3}, {.map = SHEN_NAME(Q200), .colour = 1}, {.map = SHEN_NAME(Q300), .colour = 2},
-    {.map = SHEN_NAME(QE01), .colour = 2}, {.map = SHEN_NAME(QE00), .colour = 2}};
+inline constexpr VendingMapColour vendMapColours[]{{.map = SHEN_NAME(AR01), .colour = VM_COLOR_GREEN}, {.map = SHEN_NAME(AR02), .colour = VM_COLOR_GREEN},
+    {.map = SHEN_NAME(AR02), .colour = VM_COLOR_GREEN}, {.map = SHEN_NAME(AR03), .colour = VM_COLOR_GREEN}, {.map = SHEN_NAME(AK00), .colour = VM_COLOR_RED},
+    {.map = SHEN_NAME(AKS0), .colour = VM_COLOR_RED}, {.map = SHEN_NAME(AB00), .colour = VM_COLOR_WHITE}, {.map = SHEN_NAME(WS00), .colour = VM_COLOR_GREEN},
+    {.map = SHEN_NAME(WK00), .colour = VM_COLOR_GREEN}, {.map = SHEN_NAME(WT00), .colour = VM_COLOR_WHITE}, {.map = SHEN_NAME(WN00), .colour = VM_COLOR_WHITE},
+    {.map = SHEN_NAME(WR00), .colour = VM_COLOR_WHITE}, {.map = SHEN_NAME(WE00), .colour = VM_COLOR_GREEN}, {.map = SHEN_NAME(WEG0), .colour = VM_COLOR_GREEN},
+    {.map = SHEN_NAME(WES1), .colour = VM_COLOR_GREEN}, {.map = SHEN_NAME(Q100), .colour = VM_COLOR_GREEN}, {.map = SHEN_NAME(Q200), .colour = VM_COLOR_RED},
+    {.map = SHEN_NAME(Q300), .colour = VM_COLOR_WHITE}, {.map = SHEN_NAME(QE01), .colour = VM_COLOR_WHITE}, {.map = SHEN_NAME(QE00), .colour = VM_COLOR_WHITE}};
 inline constexpr float vendInterpolation[]{0.0f, .022727f, .113636f, .318182f, .681818f, .886364f, .977273f, 1.0f};
 inline constexpr Vector3 vendHandOffset{.x = -.186f, .y = .01f, .z = .427f};
 inline constexpr Vector3i vendHandAngle{.x = 0x9555, .y = 0x8000, .z = 0};

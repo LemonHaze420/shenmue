@@ -69,7 +69,7 @@ void BgsmSelectBet(void *data) {
         return;
     }
     GetBattleDataConfig(0, BGSM_BATTLE_INPUT);
-    const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, 1));
+    const std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
     std::int8_t next;
     switch (input) {
     case 0x400:

@@ -865,7 +865,7 @@ void ShiftRight(Slt1Work *work) {
 }
 void Betting(void *data) {
     auto *work = static_cast<Slt1Work *>(data);
-    if (GetCurrentControlInput(7) == 0x4000 && !work->slideLeft && !work->slideRight && !work->handDelay) {
+    if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 0x4000 && !work->slideLeft && !work->slideRight && !work->handDelay) {
         work->insertCoins = 0;
         if (work->selection == 5) {
             Motion(ryo, 0x2a03, 85, 1.8f, 0x80000000);
@@ -883,7 +883,7 @@ void Betting(void *data) {
             Pose(hand, handButton, 8);
         work->handDelay = 8;
     }
-    if (GetCurrentControlInput(7) == 0x8000 && !work->slideLeft && !work->slideRight && !work->handDelay) {
+    if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 0x8000 && !work->slideLeft && !work->slideRight && !work->handDelay) {
         work->insertCoins = 0;
         if (work->selection == 4 && work->wager) {
             work->selection = 5;
@@ -915,7 +915,7 @@ void Betting(void *data) {
         }
         if (++work->slideLeft > 8) {
             work->slideLeft = 0;
-            if (GetCurrentControlInput(0) == 0x4000)
+            if (GetCurrentControlInput(INPUT_HELD) == 0x4000)
                 ShiftLeft(work);
         }
     }
@@ -936,7 +936,7 @@ void Betting(void *data) {
         }
         if (++work->slideRight > 8) {
             work->slideRight = 0;
-            if (GetCurrentControlInput(0) == 0x8000)
+            if (GetCurrentControlInput(INPUT_HELD) == 0x8000)
                 ShiftRight(work);
         }
     }

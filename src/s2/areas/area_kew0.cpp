@@ -239,7 +239,7 @@ void KeikaSequenceCallback(void *data) {
             break;
         case 112:
             event->learnedFrames = static_cast<std::int16_t>(static_cast<std::uint16_t>(event->learnedFrames) - 1U);
-            if (static_cast<std::int16_t>(GetCurrentControlInput(1)) != 512 && event->learnedFrames)
+            if (static_cast<std::int16_t>(GetCurrentControlInput(INPUT_PRESSED)) != 512 && event->learnedFrames)
                 break;
             SetNewEwzoTypeForMoveLearned(1, 0, 0);
             AdvanceKeikaSequence(work, 113);

@@ -309,7 +309,7 @@ void GabtUpdateMoleOrbit(GabtMoleWork *work) {
 }
 // @verified - p: input capture deliberately waits for a second poll and retains the native invalid-combination admission.
 std::uint32_t GabtLatchMoleInput() {
-    std::uint32_t buttons = static_cast<std::uint32_t>(GetCurrentControlInput(7)) & 0xf606U;
+    std::uint32_t buttons = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_NEW_PRESSES)) & 0xf606U;
     if (gabtInputArmed) {
         if (buttons && buttons != 62982) {
             gabtLatchedButtons = static_cast<std::int32_t>(buttons);
@@ -317,7 +317,7 @@ std::uint32_t GabtLatchMoleInput() {
             return 0;
         }
     } else {
-        const std::uint32_t held = buttons ? static_cast<std::uint32_t>(GetCurrentControlInput(0)) & gabtLatchedButtons : gabtLatchedButtons;
+        const std::uint32_t held = buttons ? static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_HELD)) & gabtLatchedButtons : gabtLatchedButtons;
         buttons |= held;
         gabtLatchedButtons = 0;
         gabtInputArmed = 1;
@@ -328,7 +328,7 @@ std::uint32_t GabtLatchMoleInput() {
 std::int32_t GabtProcessMoleInput(GabtMoleWork *pointer) {
     GabtMoleWork &work = *pointer;
     const std::uint32_t input = GabtLatchMoleInput(), direction = input & 0xd000U, attack = input & 4U;
-    const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(0)) & 0xd000U;
+    const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_HELD)) & 0xd000U;
     switch (work.inputState) {
     case 0:
         if (direction && !attack) {

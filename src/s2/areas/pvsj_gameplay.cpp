@@ -151,7 +151,7 @@ void PvsjMainCallback(void *data) {
     if (GetShouldRenderIcons(RenderIconSlot::Any))
         return;
     if (!filmCheckFadeTrackColour())
-        GetCurrentControlInput(4);
+        GetCurrentControlInput(INPUT_LEFT_TRIGGER);
     switch (work->state) {
     case 0:
         if (EV_ForceLoadNpc(work->owner)) {
@@ -361,7 +361,7 @@ void PvsjMainCallback(void *data) {
                 break;
             }
         }
-        if (GetCurrentControlInput(0) & 0x400U) {
+        if (GetCurrentControlInput(INPUT_HELD) & 0x400U) {
             if (close && FacesCustomer(work)) {
                 pvsjSkipMotion = 1;
                 switch (work->greeting) {
@@ -427,7 +427,7 @@ void PvsjMainCallback(void *data) {
         PvsjUpdateOverlay(work, 0);
         if (++work->stateTicks >= 300)
             work->state = 34;
-        else if (GetCurrentControlInput(0) & 0x400U) {
+        else if (GetCurrentControlInput(INPUT_HELD) & 0x400U) {
             if (FacesCustomer(work)) {
                 if (work->greeting == 1)
                     work->state = 26;

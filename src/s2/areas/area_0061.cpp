@@ -79,7 +79,7 @@ void E0061MainCallback(void *parameter) {
     else if (work->state == 3)
         CleanupE0061(work);
     else if (work->state == 0) {
-        const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, 1));
+        const std::int16_t input = static_cast<std::int16_t>(EVT_GetControllerInput(0, INPUT_PRESSED));
         if (input == 1024)
             work->state = 1;
         else if (input == 64) {

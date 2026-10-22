@@ -121,11 +121,11 @@ std::int32_t EtrkPollSwitches(EtrkWork &work) {
         if (GetBattleDataConfig(2, ETRK_ACCEPT) && work.selection != work.disabledSelection)
             return 1;
         if (!GetBattleDataConfig(2, ETRK_CANCEL)) {
-            if ((GetCurrentControlInput(2) & 0x8000U) && work.selection < 3) {
+            if ((GetCurrentControlInput(INPUT_REPEAT) & 0x8000U) && work.selection < 3) {
                 work.moving = 10;
                 ++work.selection;
             }
-            if ((GetCurrentControlInput(2) & 0x4000U) && work.selection > 0) {
+            if ((GetCurrentControlInput(INPUT_REPEAT) & 0x4000U) && work.selection > 0) {
                 work.moving = 10;
                 --work.selection;
             }

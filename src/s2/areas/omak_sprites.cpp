@@ -61,7 +61,7 @@ void DrawOmakeSprites(OmakeWork *work) {
         if (sprite->name.name)
             OmakeSpriteDrawNullsub(&sprite->packet, sprite->depth);
     }
-    std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(1, 2));
+    std::uint16_t input = static_cast<std::uint16_t>(EVT_GetControllerInput(1, INPUT_REPEAT));
     if (input & 0x800)
         work->debugSprite = ~work->debugSprite;
     if (work->debugSprite < 0)
@@ -97,7 +97,7 @@ void DrawOmakeSprites(OmakeWork *work) {
             --height;
         AdjustScreenAspectRatio(sprite->packet.quad, ScreenAlignment::HorizontalStretch, x, y, width, height, static_cast<ScreenMode>(0));
     }
-    input = static_cast<std::uint16_t>(EVT_GetControllerInput(2, 2));
+    input = static_cast<std::uint16_t>(EVT_GetControllerInput(2, INPUT_REPEAT));
     if (input & 0x1000)
         ++work->animationFrames;
     if (input & 0x2000)

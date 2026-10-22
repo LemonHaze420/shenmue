@@ -8,6 +8,26 @@
 
 namespace shenmue::s2 {
 
+enum ItemId : std::uint32_t {
+    ITEM_AKIRA1 = 4000,
+    ITEM_AKIRA2 = 4001,
+    ITEM_JACKY1 = 4002,
+    ITEM_JACKY2 = 4003,
+    ITEM_SARAH1 = 4004,
+    ITEM_SARAH2 = 4005,
+    ITEM_LAU1 = 4006,
+    ITEM_LAU2 = 4007,
+    ITEM_PAI1 = 4008,
+    ITEM_PAI2 = 4009,
+    ITEM_WOLF1 = 4010,
+    ITEM_WOLF2 = 4011,
+    ITEM_JEFFRY1 = 4012,
+    ITEM_JEFFRY2 = 4013,
+    ITEM_KAGE1 = 4014,
+    ITEM_KAGE2 = 4015,
+    ITEM_DURAL_SILVER = 4016,
+    ITEM_DURAL_GOLD = 4017,
+};
 struct S1ImportedItem {
     std::int16_t index, item;
 };

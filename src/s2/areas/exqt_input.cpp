@@ -12,45 +12,45 @@ namespace {
 bool ReadExciteButtons(ExciteInput &input) {
     bool pressed = false;
     if (GetIsFreeInputType(-1)) {
-        if (GetCurrentControlInput(7) == 1024) {
+        if (GetCurrentControlInput(INPUT_NEW_PRESSES) == PAD_BUTTON_X) {
             input.pressed |= 0x200;
             pressed = true;
         }
-        if (GetCurrentControlInput(7) == 512) {
+        if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 512) {
             input.pressed |= 0x100;
             pressed = true;
         }
     } else {
-        if (GetCurrentControlInput(7) == 1024) {
+        if (GetCurrentControlInput(INPUT_NEW_PRESSES) == PAD_BUTTON_X) {
             input.pressed |= 0x100;
             pressed = true;
         }
-        if (GetCurrentControlInput(7) == 512) {
+        if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 512) {
             input.pressed |= 0x200;
             pressed = true;
         }
     }
-    if (GetCurrentControlInput(7) == 4) {
+    if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 4) {
         input.pressed |= 0x400;
         pressed = true;
     }
-    if (GetCurrentControlInput(7) == 2) {
+    if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 2) {
         input.pressed |= 0x800;
         pressed = true;
     }
-    if (GetCurrentControlInput(7) == 32768) {
+    if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 32768) {
         input.pressed |= 4;
         pressed = true;
     }
-    if (GetCurrentControlInput(7) == 16384) {
+    if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 16384) {
         input.pressed |= 64;
         pressed = true;
     }
-    if (GetCurrentControlInput(7) == 4096) {
+    if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 4096) {
         input.pressed |= 1;
         pressed = true;
     }
-    if (GetCurrentControlInput(7) == 8192) {
+    if (GetCurrentControlInput(INPUT_NEW_PRESSES) == 8192) {
         input.pressed |= 16;
         pressed = true;
     }

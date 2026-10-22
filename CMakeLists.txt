@@ -1291,6 +1291,8 @@ add_library(shenmue2_game STATIC
   src/s2/ui_collection.cpp
   src/s2/ui_snapshot_debug.cpp
   src/s2/ui_pawn_flyers.cpp
+  src/s2/ui_pawn_legacy.cpp
+  src/s2/ui_list_input.cpp
   src/s2/ui_frontend.cpp
   src/s2/ui_legacy_icons.cpp
   src/s2/ui_subtitles.cpp
