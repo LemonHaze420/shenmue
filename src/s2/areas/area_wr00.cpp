@@ -28,10 +28,7 @@ void AreaWR00Init() {
 }
 void AreaWR00Main(std::uint32_t) {
     ApplyWR00Lighting(EV_GetShenmueFlag(0xff));
-    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-    GambleInit();
-    scenFreeEvent("GSET.EV3");
-    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+    SetGamble();
     areaClearAreaEntities();
     SetMainMapProjectedShadowDepth(45.0f);
     EV_SetAlignedShadowRange(7.5f);

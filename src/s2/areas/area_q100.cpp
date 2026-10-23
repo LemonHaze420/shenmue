@@ -206,10 +206,7 @@ void AreaQ100Main(std::uint32_t) {
     InitPati();
     if (g_currentMap.name != SHEN_NAME(Q109)) {
         QueueStreetWatch(street, MinigameCallback, StreetCallback);
-        EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-        GambleInit();
-        scenFreeEvent("GSET.EV3");
-        EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+        SetGamble();
         areaClearAreaEntities();
     }
     initializing = 0;

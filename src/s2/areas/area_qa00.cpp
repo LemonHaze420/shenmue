@@ -306,10 +306,7 @@ void AreaQA00Main(std::uint32_t) {
     GetCurrentDateTime(now);
     EV_GetShenmueFlag(FLAG_NIGHT_TIME_ENFORCED);
     ApplyLighting();
-    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-    GambleInit();
-    scenFreeEvent("GSET.EV3");
-    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+    SetGamble();
     InitPati();
     HLib::EnqueueTaskWithoutParameter(QA00NativeNullsub, 4, 0x0b, static_cast<std::int32_t>(SHEN_NAME(EVNT)));
     QueueMagicRoom("scene/03/stream", "ROOM.afs", floors, 40960);

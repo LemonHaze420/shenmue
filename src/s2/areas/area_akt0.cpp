@@ -74,10 +74,7 @@ void AreaAKT0Main(std::uint32_t) {
         EV_SetIndexForLightEntry(0, 1);
     }
 
-    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-    GambleInit();
-    scenFreeEvent("GSET.EV3");
-    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+    SetGamble();
     HLib::EnqueueTaskWithoutParameter(EVT_JB_InitWk_Callback, 5, 0x0b, eventTaskToken);
 }
 

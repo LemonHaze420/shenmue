@@ -29,10 +29,7 @@ void AreaWS00Init() {
 }
 void AreaWS00Main(std::uint32_t) {
     ApplyLighting(EV_GetShenmueFlag(FLAG_NIGHT_TIME_ENFORCED));
-    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-    GambleInit();
-    scenFreeEvent("GSET.EV3");
-    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+    SetGamble();
     InitPati();
     areaClearAreaEntities();
     constexpr shen_name board{SHEN_NAME(brdX)};

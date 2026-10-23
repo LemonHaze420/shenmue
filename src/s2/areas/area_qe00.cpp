@@ -192,10 +192,7 @@ void AreaQE00Main(std::uint32_t) {
     EV_GetShenmueFlag(FLAG_NIGHT_TIME_ENFORCED);
     ApplyLighting();
     InitPati();
-    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-    GambleInit();
-    scenFreeEvent("GSET.EV3");
-    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+    SetGamble();
     if (g_currentMap == AREA_QE00 || g_currentMap == AREA_QE01 || g_currentMap == AREA_QE06) {
         HLib::EnqueueTaskWithoutParameter(AreaChimeCallback, 4, 0x0b, static_cast<std::int32_t>(SHEN_NAME(chim)));
         areaChimeLastSound = 100;

@@ -440,6 +440,7 @@ add_custom_command(TARGET shenmue1 POST_BUILD
 
 # PC/Xbox area and event implementation objects (native event subroutines compiled into the executable). Kept as an object
 # library so the DC event modules can later build the same sources into separately linked EV overlays.
+set_source_files_properties(src/s2/areas/common/et_setgamble.c PROPERTIES LANGUAGE CXX)
 add_library(shenmue2_events OBJECT
   src/s2/areas/area_0004.cpp
   src/s2/areas/area_0005.cpp
@@ -898,7 +899,7 @@ add_library(shenmue2_events OBJECT
   src/s2/areas/area_loop.cpp
   src/s2/areas/area_0516.cpp
   src/s2/areas/area_entities.cpp
-  src/s2/areas/area_gambling.cpp
+  src/s2/areas/common/et_setgamble.c
   src/s2/areas/area_pigeons.cpp
   src/s2/areas/area_ahqb.cpp
   src/s2/areas/area_cret.cpp

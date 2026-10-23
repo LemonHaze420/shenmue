@@ -92,10 +92,7 @@ void AreaWN00Init() {
 void AreaWN00Main(std::uint32_t startParameters) {
     HLib::EnqueueTaskWithoutParameter(WN00MainLoop, 4, 0x0b, 1852399981);
     ApplyLighting(EV_GetShenmueFlag(FLAG_NIGHT_TIME_ENFORCED));
-    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-    GambleInit();
-    scenFreeEvent("GSET.EV3");
-    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+    SetGamble();
     areaClearAreaEntities();
     entranceMirror = 0;
     sideMirror = 0;

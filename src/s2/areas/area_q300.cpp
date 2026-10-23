@@ -59,10 +59,7 @@ void AreaQ300Main(std::uint32_t) {
     ApplyLighting(EV_GetShenmueFlag(FLAG_NIGHT_TIME_ENFORCED));
     HLib::EnqueueTaskWithoutParameter(Q300SpringLoop, 3, 2, static_cast<std::int32_t>(SHEN_NAME(fntn)));
     InitPati();
-    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-    GambleInit();
-    scenFreeEvent("GSET.EV3");
-    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+    SetGamble();
     areaClearAreaEntities();
     initializing = 0;
 }

@@ -35,10 +35,7 @@ void AreaQR00Main(std::uint32_t) {
     HLib::EnqueueTaskWithoutParameter(QR00NativeNullsub, 4, 0x0b, static_cast<std::int32_t>(SHEN_NAME(EVNT)));
     ApplyLighting(EV_GetShenmueFlag(FLAG_NIGHT_TIME_ENFORCED));
     InitPati();
-    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-    GambleInit();
-    scenFreeEvent("GSET.EV3");
-    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+    SetGamble();
     if (EV_GetShenmueFlag(0x488))
         SetNpcColdResetMode(0);
     SetScenarioCharacterRadius(SHEN_NAME(gat1), 10.0f);

@@ -144,10 +144,7 @@ void AreaAK00Main(std::uint32_t) {
     ResetSoundProgramPhaseFlags(1);
     ApplyAK00LightingAndAudio(EV_GetShenmueFlag(nightTimeFlag));
     InitPati();
-    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
-    GambleInit();
-    scenFreeEvent("GSET.EV3");
-    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
+    SetGamble();
 
     InitializeWaterTextureAnimation(4);
     ConfigureAK00Fft();

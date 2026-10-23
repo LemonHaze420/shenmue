@@ -1,6 +1,8 @@
 #include "s2/areas/area_gambling.hpp"
+#include "s2/area_event.hpp"
 #include "s2/character.hpp"
 #include "s2/event_characters.hpp"
+#include "s2/debug.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/map_control.hpp"
 #include "s2/pak.hpp"
@@ -93,6 +95,14 @@ void SetupObjects(std::int16_t index) {
         EV_AT_SetPos(character, EventTransformFlags::World | EventTransformFlags::AllAxes, board.position);
         EV_AT_SetAngY(character, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
     }
+}
+
+// @verified - p
+void SetGamble() {
+    EV_debug_log("common\\et_setgamble.c", 157, "Gamble Init Start\n");
+    GambleInit();
+    scenFreeEvent("GSET.EV3");
+    EV_debug_log("common\\et_setgamble.c", 161, "Gamble Init End\n");
 }
 
 void GambleInit() {

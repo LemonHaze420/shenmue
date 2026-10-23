@@ -81,6 +81,7 @@ inline constexpr std::array<GamblingBoardPlacement, 8> kowloonBS{{
 }};
 
 extern std::uint32_t g_areaBoardCharacterIndex;
+void SetGamble();
 void GambleInit();
 void LoadBoardSet(shen_name parent, float x, float y, float z, float angleX, float angleY, float angleZ, std::int32_t firstDigits, std::int32_t secondDigits);
 void SetupObjects(std::int16_t index);
