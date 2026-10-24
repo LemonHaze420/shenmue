@@ -3083,7 +3083,7 @@ std::int64_t OptionsMenu_IsSelected() {
     rowTemplate.clipWindows[4] = -1;
     rowTemplate.layoutEnd = 47;
     rowTemplate.labelEnd = 9;
-    for (const std::size_t index : {9U, 0U, 1U, 2U, 3U, 12U, 22U, 32U, 38U})
+    for (const std::size_t index : {13U, 4U, 5U, 6U, 7U, 16U, 26U, 36U, 42U})
         g_frontendEmblemImages[static_cast<std::size_t>(g_frontendEmblemImageCount++)] = g_optionsColourImages[index];
     return 1;
 }
