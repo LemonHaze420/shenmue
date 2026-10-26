@@ -3,10 +3,12 @@
 
 This repository contains a C++ reimplementation of Shenmue I & II for PC and Dreamcast, including the What's Shenmue promotional demo. 
 
+The original code is derived from a C decompilation project which began in 2018. In total there are ~14 executables which have been surfaced. The purpose of this reimplementation is to maintain a codebase which shares as much as possible while maintaining modern interoperability with the original releases, the Demo and the PC versions. 
+
 
 ### Targets
 
-soon.
+- Windows
 
 ### Libs
 
@@ -14,12 +16,12 @@ soon.
 
 ### Build
 
-soon.
+`git submodule update --init --recursive && cmake -S . -B build/windows-asi -G "Visual Studio 17 2022" -A x64 "-DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>" -DSHENMUE_STEAM=ON -DSHENMUE_RT_ARCADE=ON -DSHENMUE_LOAD_HANGON_DLL=ON && cmake --build build/windows-asi --config Release --target shenmue1_asi shenmue2_asi --parallel 4`
 
 
 ### Contributing
 
-soon.
+Contributors are welcome, if you are interested, please get in contact. 
 
 ### Special Thanks
 
