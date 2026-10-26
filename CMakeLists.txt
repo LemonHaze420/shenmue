@@ -65,6 +65,7 @@ if(WIN32)
   add_compile_definitions(NOMINMAX)
 endif()
 option(SHENMUE_ENHANCEMENT_S2_MAP_SEAMS "Build the static Shenmue II map tile seam guardband" ON)
+option(SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE "Keep menu cassette playback active while roaming" OFF)
 option(SHENMUE_RT_ARCADE "Run the original arcade cores on Shenmue I cabinet screens in realtime" OFF)
 option(SHENMUE_LOAD_HANGON_DLL "Resolve the original Hang-On DLL explicitly instead of native imports" OFF)
 
@@ -411,6 +412,9 @@ set_source_files_properties(src/third_party/stb_image.cpp PROPERTIES
 )
 target_compile_features(shenmue1_game PUBLIC cxx_std_20)
 target_include_directories(shenmue1_game PUBLIC src)
+if(SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE)
+  target_compile_definitions(shenmue1_game PRIVATE SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE=1)
+endif()
 target_include_directories(shenmue1_game PRIVATE "${SHENMUE_STB_INCLUDE_DIR}")
 target_link_libraries(shenmue1_game PUBLIC shenmue_common shenmue_d3t ZLIB::ZLIB Threads::Threads
                                            ${SHENMUE_JSONCPP_TARGET})

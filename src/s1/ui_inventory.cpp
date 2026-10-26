@@ -1,10 +1,37 @@
 #include "s1/ui_internal.hpp"
 
+#include "common/keyboard.hpp"
 #include "s1/ui_collection.hpp"
 #include "s1/steam.hpp"
 #include "s1/modern_material.hpp"
 #include "s1/render_array.hpp"
 namespace shenmue::s1::ui_runtime_detail {
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+namespace {
+bool g_portableCassettePlaying = false;
+bool g_cassetteStopKeyHeld = false;
+
+void StopPortableCassette() {
+    if (!g_portableCassettePlaying)
+        return;
+    g_portableCassettePlaying = false;
+    ExecuteCassetteSND(g_cassetteSound);
+    g_cassettePlaying = 0;
+    g_playerStats.batteryDecrementMask &= static_cast<std::uint8_t>(~2U);
+}
+
+void UpdatePortableCassette() {
+    const bool escapeHeld = g_windowInput.keyStates[KeyEscape].pressed != 0;
+    const bool stopPressed = escapeHeld && !g_cassetteStopKeyHeld;
+    g_cassetteStopKeyHeld = escapeHeld;
+    if (!g_portableCassettePlaying || g_cassetteCollectionUiState)
+        return;
+    if (!AccessBatteryLife(1, 1, 0) || (stopPressed && g_isPlayerGameStateActive == 7 && !g_uiElements[kUiGameMenu].isVisible))
+        StopPortableCassette();
+}
+} // namespace
+#endif
+
 void ItemsMenu_PopulateEntries();
 
 void Items_DrawCell(UIGrid *grid, nk_panel *panel, const UILayoutRect *holder, const UILayoutRect *cell, float spacing, std::int32_t element, void *elements,
@@ -1965,6 +1992,9 @@ void ResetCassettePlayer() {
 
 
 void BatteriesAreDead() {
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+    g_portableCassettePlaying = false;
+#endif
     if (g_cassettePlaying) {
         ExecuteCassetteSND(g_cassetteSound);
         g_playerStats.batteryDecrementMask &= static_cast<std::uint8_t>(~2U);
@@ -1991,7 +2021,11 @@ void BatteriesAreDead() {
 void PlayCassette() {
     if (((g_icmcInput ? g_icmcInput->pressedPriority : 0U) & 0x200U) != 0) {
         g_cassetteCollectionUiState = 5;
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+        if (g_cassettePlaying && !g_portableCassettePlaying) {
+#else
         if (g_cassettePlaying) {
+#endif
             ExecuteCassetteSND(g_cassetteSound);
             g_playerStats.batteryDecrementMask &= static_cast<std::uint8_t>(~2U);
             g_cassettePlaying = 0;
@@ -2010,7 +2044,11 @@ void PlayCassette() {
         BatteriesAreDead();
         return;
     }
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+    if (!g_cassettePlaying && !g_portableCassettePlaying)
+#else
     if (!g_cassettePlaying)
+#endif
         ResetAICA(g_cassetteSound, 0.0f);
     if (!g_cassettePlayFlag)
         g_playerStats.batteryDecrementMask |= 2U;
@@ -2022,6 +2060,9 @@ void PlayCassette() {
     shenExecuteAICACommand(cassette.soundCommand, 0, 0);
     g_cassetteIndex = static_cast<std::int8_t>(tape.id);
     g_cassettePlaying = 1;
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+    g_portableCassettePlaying = !g_cassettePlayFlag;
+#endif
 }
 
 
@@ -2969,6 +3010,9 @@ bool shenPrepareCassetteUI() {
 
 
 void UI_StopPlayingCassettes() {
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+    StopPortableCassette();
+#endif
     if (!g_cassetteCollectionUiState)
         return;
     ReleaseCassettePlayerResources();
@@ -2988,6 +3032,9 @@ void UI_StopPlayingCassettes() {
 bool UI_ICMCBegin() {
     if (g_isPlayerGameStateActive != 7 || g_iconPresentation.sharedItemMenuState || g_notebookHelpOverrideActive || !shenPrepareCassetteUI())
         return false;
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+    StopPortableCassette();
+#endif
     g_cassettePlayFlag = 1;
     return true;
 }
@@ -3002,6 +3049,10 @@ bool UI_ICMCWaitForClosed(std::int32_t &result) {
 
 
 void UI_ICMCCallback(HLib::TaskData *) {
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+    g_portableCassettePlaying = false;
+    g_cassetteStopKeyHeld = g_windowInput.keyStates[KeyEscape].pressed != 0;
+#endif
     g_iconPresentation.cassetteTask = CurrentTask;
     g_icmcCassetteSelectedIndex = 0;
     g_cassetteSurfaces.fill(-1);
@@ -3021,6 +3072,9 @@ void UI_ICMCCallback(HLib::TaskData *) {
 
 
 void UI_ICMCMainCallback(HLib::TaskData *) {
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+    UpdatePortableCassette();
+#endif
     switch (g_cassetteCollectionUiState) {
     case 1: {
         g_cassetteSavedHelpToken = g_defaultHelpTokenId;
@@ -3031,6 +3085,9 @@ void UI_ICMCMainCallback(HLib::TaskData *) {
         g_cassetteBaseIndex = 0;
         g_currentCassetteDialogue = nullptr;
         g_cassettePlaying = 0;
+#if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
+        g_cassettePlaying = g_portableCassettePlaying;
+#endif
         g_defaultHelpTokenId = 64;
         g_currentHelpTokenId = 64;
         g_helpButtonId = 0;
