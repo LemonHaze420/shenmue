@@ -1,0 +1,55 @@
+name: Windows
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  asi:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          submodules: recursive
+          persist-credentials: false
+      - name: Configure
+        shell: pwsh
+        run: |
+          $toolchain = Join-Path $env:VCPKG_INSTALLATION_ROOT 'scripts/buildsystems/vcpkg.cmake'
+          cmake -S . -B build/windows-asi -A x64 `
+            "-DCMAKE_TOOLCHAIN_FILE=$toolchain" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+            '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>' `
+            -DSHENMUE_STEAM=ON `
+            -DSHENMUE_ENHANCEMENT_S2_MAP_SEAMS=ON `
+            -DSHENMUE_RT_ARCADE=ON `
+            -DSHENMUE_LOAD_HANGON_DLL=ON
+      - name: Build
+        run: cmake --build build/windows-asi --config Release --target shenmue1_asi shenmue2_asi --parallel 4
+      - name: Check outputs
+        shell: pwsh
+        run: |
+          foreach ($name in @('shenmue1e.asi', 'shenmue2e.asi')) {
+            if (!(Test-Path "build/windows-asi/Release/$name")) { throw "Missing $name" }
+          }
+
+  hangon:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Configure
+        run: cmake -S src/hangon -B build/hangon -A x64
+      - name: Build
+        run: cmake --build build/hangon --config Release --target shenmue_hangon
+      - name: Check output
+        shell: pwsh
+        run: |
+          if (!(Test-Path 'build/hangon/Release/ShenmueHangon.exe')) { throw 'Missing ShenmueHangon.exe' }
