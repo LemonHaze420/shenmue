@@ -29,6 +29,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <string>
 #include <cstring>
 
 namespace shenmue::s1 {
@@ -506,6 +507,8 @@ std::int32_t SaveGame_WriteQueuedSlot(void *) {
 
 
 void SaveGame_0(std::int32_t slot) {
+    const std::string filename = HPLG_SaveSlotPath(static_cast<std::size_t>(slot)).filename().string();
+    std::snprintf(g_currentSaveSlot.data(), g_currentSaveSlot.size(), "%s", filename.c_str());
     InactiveSaveImage() = ActiveSaveImage();
     if (!ActiveSaveIdentifier())
         InitSaveData();
