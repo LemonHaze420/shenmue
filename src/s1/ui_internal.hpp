@@ -2058,6 +2058,8 @@ std::int64_t GameHudWatch_IsSelected();
 
 std::int64_t GameHudWatch_Tick();
 
+void HUD_FightGauge_SetDisplayLayout(std::int32_t layout);
+
 std::uint32_t GameHudGauge_LoadUI();
 
 std::int64_t GameHudGauge_IsSelected();

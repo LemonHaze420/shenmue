@@ -1,4 +1,5 @@
 #include "s1/task/vf_internal.hpp"
+#include "s1/enhancements/enemy_gauge.hpp"
 
 namespace shenmue::s1::vf_detail {
 
@@ -96,6 +97,9 @@ void vfmaAccumulatePlayerCombatStats(VFMAData &game) {
 }
 
 void InitVFGW() {
+#if SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE
+    enhancements::ResetEnemyGauge();
+#endif
     VFGW *const gauge = static_cast<VFGW *>(HLib_AllocHeapMemBlock(sizeof(VFGW), static_cast<std::int32_t>(SHEN_NAME(VFGW))));
     g_pVFGW_Widget = gauge;
     if (gauge)
@@ -201,6 +205,9 @@ void vfgwUpdateGauge(VFActor &actor) {
         actor.maximumHp > 0 ? static_cast<float>(static_cast<std::uint16_t>(g_pVFGW_Widget->hp)) / static_cast<float>(actor.maximumHp) : 0.0f;
     UI_VFUpdateHealthPercentage(healthPercentage, vfgwGetGaugeStatus(actor.maximumHp), static_cast<float>(gauge->pulsePos));
     g_uiElements[kUiGameHudGauge].isActive = 1;
+#if SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE
+    enhancements::UpdateEnemyGauge(game, static_cast<float>(gauge->pulsePos));
+#endif
 }
 
 
