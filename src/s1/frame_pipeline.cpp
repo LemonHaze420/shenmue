@@ -1,4 +1,8 @@
+#include "shenmue.h"
 #if defined(SHENMUE_STEAM)
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
+#include "s1/enhancements/s1_multiplayer.hpp"
+#endif
 #include "d3t/steam.hpp"
 #endif
 
@@ -187,6 +191,10 @@ void ProcessMessages() {
     ProcessRemappings();
     ExecuteADynamicFunctionOnce();
 
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
+    S1Multiplayer_PumpTransport();
+#endif
+
     constexpr float kThirtyFramesPerSecond = 0.03333333507180214f;
     TexSortWrapper(g_bEnableFrameTimeSmoothing ? fFrameTimeMs : kThirtyFramesPerSecond);
 
@@ -226,6 +234,9 @@ void ProcessMessages() {
 } // namespace d3t
 
 [[noreturn]] void Shutdown() {
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
+    S1Multiplayer_Release();
+#endif
 #if defined(SHENMUE_STEAM)
     ::shenmue::d3t::ShutdownSteamStorage();
 #endif

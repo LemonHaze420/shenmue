@@ -926,6 +926,13 @@ void VFMA_SetFieldOfViewForSearchOrClear(std::uint8_t mode);
 void *vfQueueStartGameMain();
 void vfm_Callback_FightTaskEntry_Callback(HLib::TaskData *taskData);
 void vfg_Callback_GameInfoEntry(HLib::TaskData *taskData);
+std::uint32_t EnqueueVFGI(std::int32_t startSlot, std::int32_t maximumEnemies, float knockbackAmount, std::uint8_t battleType, std::int8_t guardEffectSeconds);
+namespace vf_detail {
+std::uint32_t shenStartFGST(std::uint8_t enemies, std::uint8_t groups, std::int8_t areaMasks, std::uint8_t generators);
+std::uint32_t vfConfigureFormationGroup(Character *character, std::uint8_t mode, std::uint32_t flags, std::int32_t value);
+std::uint32_t vfStageSetupUtil(std::uintptr_t command, Character *blockedBy, std::int8_t hpPoolMode, std::uint8_t groupId, std::uint16_t hpTotal,
+    std::uint8_t fightStyle, std::int16_t animationId, std::int16_t spawnYaw, float centerX, float centerY, float centerZ);
+}
 VFMAData *vfMainGetCurrent();
 VFActor *vfFindFighterFor(Character *character);
 std::uint32_t VFMA_GetRemainingFrames();

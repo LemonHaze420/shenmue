@@ -1,6 +1,10 @@
 #include "d3t/steam.hpp"
 #if SHENMUE_IS_S1
 #include "s1/boot.hpp"
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP
+#include "s1/enhancements/s1_multiplayer.hpp"
+#include <cstdlib>
+#endif
 #else
 #include "s2/initialization.hpp"
 #endif
@@ -14,6 +18,9 @@
 #include <dxgi.h>
 #include <exception>
 #include <windows.h>
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1
+#include <shellapi.h>
+#endif
 
 namespace shenmue::d3t {
 namespace {
@@ -85,6 +92,27 @@ void ShutdownOriginalRenderer() {
         ExitOriginalExecutable(0);
 }
 
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
+std::uint64_t GetInvitedSteamLobby() {
+    std::uint64_t lobby = 0;
+    int count = 0;
+    wchar_t **const arguments = CommandLineToArgvW(GetCommandLineW(), &count);
+    if (!arguments)
+        return 0;
+    for (int index = 1; index + 1 < count; ++index) {
+        if (std::wcscmp(arguments[index], L"+connect_lobby") != 0)
+            continue;
+        wchar_t *end = nullptr;
+        const std::uint64_t value = std::wcstoull(arguments[index + 1], &end, 10);
+        if (end != arguments[index + 1] && *end == L'\0')
+            lobby = value;
+        break;
+    }
+    LocalFree(arguments);
+    return lobby;
+}
+#endif
+
 [[noreturn]] void RunGame() {
     int result = 1;
     try {
@@ -119,6 +147,9 @@ void ShutdownOriginalRenderer() {
         if (!SetCurrentDirectoryW(GetExecutableDirectory().c_str()))
             throw std::exception{};
 #if SHENMUE_IS_S1
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP
+        s1::S1Multiplayer_Initialize(GetInvitedSteamLobby());
+#endif
         result = s1::Shenmue_Main(0, nullptr);
 #else
         result = s2::Shenmue2_Main(0, nullptr);
@@ -126,6 +157,9 @@ void ShutdownOriginalRenderer() {
     } catch (...) {
     }
     try {
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
+        s1::S1Multiplayer_Release();
+#endif
         ShutdownSteamStorage();
         ShutdownThreads();
     } catch (...) {

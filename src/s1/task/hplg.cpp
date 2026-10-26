@@ -1,4 +1,8 @@
+#include "shenmue.h"
 #if defined(SHENMUE_STEAM)
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
+#include "s1/enhancements/s1_multiplayer.hpp"
+#endif
 #include "d3t/steam.hpp"
 #endif
 
@@ -541,7 +545,13 @@ void HLib_mainModule(HLib::TaskData *) {
     }
 
     d3t::ProcessMessages();
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
+    S1Multiplayer_BeginInputFrame();
+#endif
     UpdateInputsFromInputDevices();
+#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
+    S1Multiplayer_Update();
+#endif
     HandleUICallbacks();
     UpdateRootFrameCounters();
     HLib_UpdateFrameTiming();
