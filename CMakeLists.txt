@@ -36,7 +36,7 @@ if(NOT SHENMUE_STB_INCLUDE_DIR)
 endif()
 
 if(WIN32)
-  find_package(directxtex CONFIG QUIET)
+  find_package(directxtex CONFIG REQUIRED)
 endif()
 
 if(NOT TARGET JsonCpp::JsonCpp)
