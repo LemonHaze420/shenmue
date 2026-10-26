@@ -1699,6 +1699,10 @@ namespace CycleManager {
 
 
 bool ApproachSteeringTargetXZ(CycleManager::NpcRecord &npc, float factor) {
+#if SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
+    if (g_bEnableFrameTimeSmoothing)
+        factor *= GetNpcMovementFrameScale();
+#endif
     const float deltaZ = npc.cycle->pos.z - npc.cycle->steeringTarget.z;
     const float deltaX = npc.cycle->pos.x - npc.cycle->steeringTarget.x;
     const float distanceSquared = deltaZ * deltaZ + deltaX * deltaX;

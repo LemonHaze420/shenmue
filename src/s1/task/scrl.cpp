@@ -41,6 +41,9 @@ std::array<OriginalStrip, 4> g_skyUpperPackets{};
 std::array<OriginalStrip, 4> g_skyIncomingPackets{};
 std::array<OriginalStrip, 4> g_skyIncomingUpperPackets{};
 std::array<OriginalStrip, 4> g_skyCloudPackets{};
+#if SHENMUE_ENHANCEMENT_S1_SKY_FIX
+bool g_skyFixEnabled = true;
+#endif
 float g_skyScrollX = 0.0f;
 float g_skyScrollY = 0.0f;
 std::int32_t g_bSkyEnabled = 0;
@@ -252,7 +255,12 @@ void Sky_BuildQuadsAndUVs() {
 
     constexpr float kVerticalProjection = 8523.0f;
     const float perspectiveScale = 10922.0f / static_cast<float>(currentPerspectiveFov);
-    float scrollX = -(static_cast<float>(g_fCamAccumYaw + g_spriteHorizontalOffset) * 0.058597326f);
+#if SHENMUE_ENHANCEMENT_S1_SKY_FIX
+    const float yawToPixels = g_skyFixEnabled ? kSkyYawToPixels : 0.058597326f;
+#else
+    constexpr float yawToPixels = 0.058597326f;
+#endif
+    float scrollX = -(static_cast<float>(g_fCamAccumYaw + g_spriteHorizontalOffset) * yawToPixels);
     g_skyScrollX = scrollX;
     if (scrollX > 960.0f) {
         do

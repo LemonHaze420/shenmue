@@ -29,6 +29,9 @@ float QueryFrameTime();
 void UpdateFrameTiming();
 std::int64_t FrameTimeUtil(TimeMode mode);
 float ScaleByFrameTime30fps(float value);
+#if SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
+float GetNpcMovementFrameScale();
+#endif
 
 
 inline std::int32_t FrameTimeTicks(float elapsed) {

@@ -50,6 +50,15 @@ std::int64_t FrameTimeUtil(TimeMode mode) {
     return static_cast<std::int64_t>(currentTime);
 }
 
+#if SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
+float GetNpcMovementFrameScale() {
+    if (!g_bEnableFrameTimeSmoothing)
+        return 1.0f;
+    const float scale = fFrameTimeMs * 30.0f;
+    return scale > 0.0f && scale <= 1.0f ? scale : 1.0f;
+}
+#endif
+
 float ScaleByFrameTime30fps(float value) {
     if (g_bEnableFrameTimeSmoothing) {
         return value * 30.0f * fFrameTimeMs;

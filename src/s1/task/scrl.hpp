@@ -69,6 +69,10 @@ extern std::array<OriginalStrip, 4> g_skyIncomingPackets;
 extern std::array<OriginalStrip, 4> g_skyIncomingUpperPackets;
 extern std::array<OriginalStrip, 4> g_skyCloudPackets;
 
+#if SHENMUE_ENHANCEMENT_S1_SKY_FIX
+inline constexpr float kSkyYawToPixels = (960.0f * (360.0f / 65536.0f)) / 120.0f;
+extern bool g_skyFixEnabled;
+#endif
 extern float g_skyScrollX;
 extern float g_skyScrollY;
 

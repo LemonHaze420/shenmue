@@ -859,6 +859,13 @@ void UpdateAnimationCurvePoints(const std::array<Vector3, 4> &points) {
 
 
 void CalculateCubicPolynomial(Vector3 &result, float distance, float extra) {
+#if SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
+    if (g_bEnableFrameTimeSmoothing) {
+        const float scale = GetNpcMovementFrameScale();
+        distance *= scale;
+        extra *= scale;
+    }
+#endif
     const std::array<float, 4> &arc = g_spline3d.cumulativeArcLen;
     const float along = (arc[1] + distance) + extra;
     const std::size_t index = along > arc[2] ? 2u : 1u;
@@ -1249,7 +1256,12 @@ void cmRecalcAngleForPos(CycleManager::NpcRecord &npc, const Vector3 &direction)
 
 bool BIKEStuff(CycleManager::NpcRecord &npc, Vector3 &direction, const Vector3 &waypoint, Vector3 (&moved)[2], int32_t yawLimit) {
     constexpr float epsilon = std::numeric_limits<float>::epsilon();
+#if SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
+    const float frameScale = GetNpcMovementFrameScale();
+    const float speed = npc.cycle->baseMoveSpeed * frameScale;
+#else
     const float speed = npc.cycle->baseMoveSpeed;
+#endif
     moved[0] = npc.cycle->pos;
     if (speed >= 0.001f) {
         const bool blocked = static_cast<uint8_t>(npc.cycle->bikeSteeringState - 1u) <= 2u;
@@ -1264,7 +1276,12 @@ bool BIKEStuff(CycleManager::NpcRecord &npc, Vector3 &direction, const Vector3 &
             npc.cycle->bikeSteeringState = BikeSteering_SharpTurn;
         const int32_t rate = blocked ? 36 : npc.cycle->bikeSteeringState == BikeSteering_ProbeActive ? 16 : 91;
         const BikeSpeedProfile &profile = CycleManager::GetBikeSpeedProfile(npc.cycle->moveObjRuntime);
-        int32_t step = static_cast<int16_t>(static_cast<int32_t>((npc.cycle->baseMoveSpeed / profile.steeringReferenceSpeed) * static_cast<float>(rate)));
+#if SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
+        const float steeringSpeed = npc.cycle->baseMoveSpeed * frameScale;
+#else
+        const float steeringSpeed = npc.cycle->baseMoveSpeed;
+#endif
+        int32_t step = static_cast<int16_t>(static_cast<int32_t>((steeringSpeed / profile.steeringReferenceSpeed) * static_cast<float>(rate)));
         if (!step)
             step = 1;
         int32_t previousTurn = npc.cycle->moveTargetYaw;
