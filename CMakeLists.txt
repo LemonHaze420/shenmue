@@ -70,7 +70,7 @@ if(WIN32)
   add_compile_definitions(NOMINMAX)
 endif()
 option(SHENMUE_ENHANCEMENT_S2_MAP_SEAMS "Build the static Shenmue II map tile seam guardband" ON)
-option(SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE "Keep menu cassette playback active while roaming" OFF)
+option(SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE "Keep menu cassette playback active while roaming" ON)
 option(SHENMUE_RT_ARCADE "Run the original arcade cores on Shenmue I cabinet screens in realtime" OFF)
 option(SHENMUE_LOAD_HANGON_DLL "Resolve the original Hang-On DLL explicitly instead of native imports" OFF)
 
