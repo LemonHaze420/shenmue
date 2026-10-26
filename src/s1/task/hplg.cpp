@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s1/task/hplg.hpp"
 #include "s1/task/save.hpp"
 #include "s1/d3t/d3t_threads.hpp"
@@ -161,14 +165,23 @@ std::filesystem::path BookkeepingReadPath(const char *name) {
     return path;
 }
 std::int32_t CheckBookkeepingStorageOpen(const char *name) {
+#if defined(SHENMUE_STEAM)
+    return ::shenmue::d3t::SteamFileExists(name) ? 0 : -3;
+#else
     std::error_code error;
     return std::filesystem::is_regular_file(BookkeepingReadPath(name), error) ? 0 : -3;
+#endif
 }
 
 std::int32_t ReadBookkeepingStorageSize(const char *name) {
+#if defined(SHENMUE_STEAM)
+    const std::int32_t size = ::shenmue::d3t::GetSteamFileSize(name);
+    return size < 0 ? -3 : size;
+#else
     std::error_code error;
     const std::uintmax_t size = std::filesystem::file_size(BookkeepingReadPath(name), error);
     return error ? -3 : static_cast<std::int32_t>(size);
+#endif
 }
 
 std::int32_t BookkeepingStorageWorker(void *data) {
@@ -190,6 +203,13 @@ std::int32_t BookkeepingStorageWorker(void *data) {
 }
 
 std::int32_t QueueBookkeepingStorage(const char *name, void *data, std::uint32_t offset, std::uint32_t size, bool write) {
+#if defined(SHENMUE_STEAM)
+    const bool accepted = write ? ::shenmue::d3t::WriteSteamFileAsync(name, data, size, g_steamSaveFunction, data) :
+        ::shenmue::d3t::ReadSteamFileAsync(name, data, offset, size, g_steamSaveFunction, data);
+    if (!accepted)
+        g_steamSaveFunction(2, -4, data);
+    return 0;
+#else
     BookkeepingStorageRequest request{};
     std::snprintf(request.name, sizeof(request.name), "%s", name);
     request.data = data;
@@ -208,10 +228,16 @@ std::int32_t QueueBookkeepingStorage(const char *name, void *data, std::uint32_t
     const d3t::D3TTaskDescriptor descriptor{.data = &request, .callback = BookkeepingStorageWorker, .completion = nullptr, .priority = 0};
     d3t::d3t_QueueTask(&descriptor, sizeof(request));
     return 0;
+#endif
 }
 
-// @verified - p
 std::int32_t CheckBookkeepingStorageCapacity(const char *name, std::uint32_t size) {
+#if defined(SHENMUE_STEAM)
+    const std::int32_t previousSize = ::shenmue::d3t::SteamFileExists(name) ? ::shenmue::d3t::GetSteamFileSize(name) : 0;
+    if (previousSize < 0) return MapBookkeepingStorageResult(previousSize);
+    const std::int64_t growth = static_cast<std::int64_t>(size) - previousSize;
+    return growth <= 0 || ::shenmue::d3t::GetSteamStorageAvailableBytes() >= static_cast<std::uint64_t>(growth) ? 0 : -5;
+#else
     std::int32_t oldSize = 0;
     constexpr std::int64_t availableBytes = 1000000000;
     if (CheckBookkeepingStorageOpen(name) == 0) {
@@ -220,6 +246,7 @@ std::int32_t CheckBookkeepingStorageCapacity(const char *name, std::uint32_t siz
             return MapBookkeepingStorageResult(oldSize);
     }
     return availableBytes >= static_cast<std::int32_t>(size) - oldSize ? 0 : -5;
+#endif
 }
 
 // @verified - p
@@ -478,6 +505,9 @@ void HPLG_SetStorageConnected(bool connected) {
 extern std::int32_t g_pauseStateTemp;
 
 void HLib_mainModule(HLib::TaskData *) {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::RunSteamCallbacks();
+#endif
     g_pauseStateTemp = Shenmue_nPauseState & 2;
     Fog_ApplySpecialSettings();
     BeginSceneFrameSubmission();

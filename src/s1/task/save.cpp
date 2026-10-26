@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s1/task/save.hpp"
 #include "s1/task/warn.hpp"
 
@@ -490,6 +494,9 @@ std::int32_t SaveGame_WriteQueuedSlot(void *) {
         std::memcpy(&summary, ActiveSaveImage().bytes.data() + kS1SaveSummaryOffset, sizeof(summary));
         HPLG_SetSaveSummary(static_cast<std::size_t>(slot), summary);
     }
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::WriteSteamStatisticsFile(slot);
+#endif
     g_saveWriteStatus.exchange(2);
     return 0;
 }

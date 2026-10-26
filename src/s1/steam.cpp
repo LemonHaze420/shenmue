@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s1/d3t/namespace.hpp"
 #include "s1/initialization.hpp"
 #include "s1/input.hpp"
@@ -28,16 +32,33 @@ void Steam_BindRuntime(const SteamRuntimeBindings &bindings) noexcept {
 }
 
 bool Steam_InitApp(const SteamAppInfo *) {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::RequireSteamInitialized();
     return true;
+#else
+    return true;
+#endif
 }
 
-bool Steam_TryGetCurrentUserId(std::uint64_t *) {
+bool Steam_TryGetCurrentUserId(std::uint64_t *userId) {
+#if defined(SHENMUE_STEAM)
+    if (!userId) return false;
+    *userId = ::shenmue::d3t::GetSteamUserId();
+    return true;
+#else
     return false;
+#endif
 }
 
 void SteamInit() {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::RequireSteamInitialized();
+#endif
 }
 void PublishSteamStats() {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::PublishSteamStats();
+#else
     if (!g_steamRuntime.callbacksEnabled)
         return;
     for (std::size_t index = 0; index < g_steamRuntime.statCount; ++index) {
@@ -47,9 +68,13 @@ void PublishSteamStats() {
     }
     if (g_steamRuntime.storeStats)
         g_steamRuntime.storeStats();
+#endif
 }
 
 void UpdateSteamStat(std::uint32_t statIndex) {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::UpdateSteamStat(static_cast<std::int32_t>(statIndex));
+#else
     if (!g_steamTemporaryStats || statIndex >= g_steamRuntime.statCount)
         return;
     SteamStatDefinition *stats = g_steamTemporaryStats;
@@ -69,9 +94,13 @@ void UpdateSteamStat(std::uint32_t statIndex) {
             stats = g_steamTemporaryStats;
         }
     }
+#endif
 }
 
 void UpdateSteamAchievement(std::uint32_t statIndex) {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::UpdateSteamAchievement(static_cast<std::int32_t>(statIndex));
+#else
     if (!g_steamTemporaryStats || statIndex >= g_defaultSteamStats.size())
         return;
     const SteamStatDefinition &definition = g_defaultSteamStats[statIndex];
@@ -91,6 +120,7 @@ void UpdateSteamAchievement(std::uint32_t statIndex) {
         if (current == maximum)
             return;
     }
+#endif
 }
 
 // @verified - p
@@ -124,15 +154,27 @@ void RefreshMirrorAntiquesStat() {
 }
 
 void SteamRemoteStorage_RunCallbacks() noexcept {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::RunSteamCallbacks();
+#else
     if (g_steamRuntime.callbacksEnabled && g_steamRuntime.runCallbacks)
         g_steamRuntime.runCallbacks();
+#endif
 }
 
 void SteamPlatformContextRefresh() {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::RefreshSteamContext();
+#endif
 }
 
 namespace d3t {
 void SetupAchievements() {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::RequireSteamInitialized();
+    std::memcpy(g_defaultSteamStats.data(), ::shenmue::d3t::OriginalSteamStats(), sizeof(g_defaultSteamStats));
+    std::memcpy(g_defaultSteamAchievements.data(), ::shenmue::d3t::OriginalSteamAchievements(), sizeof(g_defaultSteamAchievements));
+#else
     for (std::size_t index = 0; index < g_defaultSteamStats.size(); ++index) {
         SteamStatDefinition &stat = g_defaultSteamStats[index];
         const SteamStatDefinition &definition = kSteamStatDefinitions[index];
@@ -151,9 +193,23 @@ void SetupAchievements() {
         achievement.achievementIndex = definition.achievementIndex;
         achievement.threshold = definition.threshold;
     }
+#endif
 }
 
 void InitializeSteamAPI() {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::RequireSteamInitialized();
+    g_steamTemporaryStats = static_cast<SteamStatDefinition *>(::shenmue::d3t::OriginalSteamStats());
+    g_capsuleToyStatistics = static_cast<CapsuleToyStatistics *>(::shenmue::d3t::OriginalSteamCapsuleStatistics());
+    g_capsuleToyStatisticCount = ::shenmue::d3t::OriginalSteamCapsuleCount();
+    g_steamRuntime.callbacksEnabled = true;
+    g_steamRuntime.stats = g_steamTemporaryStats;
+    g_steamRuntime.statCount = 29;
+    g_steamRuntime.achievements = static_cast<SteamAchievementDefinition *>(::shenmue::d3t::OriginalSteamAchievements());
+    g_steamRuntime.achievementCount = 28;
+    g_steamRuntime.indicateAchievementProgress = ::shenmue::d3t::IndicateSteamAchievementProgress;
+    g_steamRuntime.runCallbacks = ::shenmue::d3t::RunSteamCallbacks;
+#else
     g_steamRuntime.statCount = g_defaultSteamStats.size();
     g_steamTemporaryStats = static_cast<SteamStatDefinition *>(std::malloc(sizeof(g_defaultSteamStats)));
     g_steamRuntime.stats = g_steamTemporaryStats;
@@ -177,20 +233,28 @@ void InitializeSteamAPI() {
         } while (++index < g_capsuleToyStatisticCount);
     }
     SteamInit();
+#endif
 }
 } // namespace d3t
 
 
 
 
+#if !defined(SHENMUE_STEAM)
 void SGAAS_Init(std::uint64_t) {
 }
+#endif
 
 std::int64_t PollSteamInputEvents(SteamControllerInput *input) {
+#if defined(SHENMUE_STEAM)
+    if (!input) return 0;
+    return ::shenmue::d3t::PollSteamInput(GetKeyStateDataForCurrentInputMode(g_xInputReserved1), input);
+#else
     if (input) {
         std::memset(input, 0, sizeof(*input));
     }
     return 0;
+#endif
 }
 
 } // namespace shenmue::s1

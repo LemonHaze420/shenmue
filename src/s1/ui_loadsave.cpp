@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s1/ui_internal.hpp"
 
 namespace shenmue::s1 {
@@ -294,7 +298,9 @@ void LoadGame(UIRetry70ManBattlePromptResult response) {
     const std::int32_t slot = g_currentSlotIndex;
     if (slot < 0 || slot > 9)
         return;
-    // SteamStats(slot) is the third-party achievement hook.
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::ReadSteamStatisticsFile(slot);
+#endif
     g_loadRequested = 1;
     if (g_loadType == 3) {
         g_actNumber = 3;

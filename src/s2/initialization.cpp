@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s2/initialization.hpp"
 #include "s2/area_jump.hpp"
 
@@ -93,6 +97,9 @@ void RootShadowLightingCallback(void *) {
 }
 
 void RootTask_Callback(void *) {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::RunSteamCallbacks();
+#endif
     ProcessPostFxFilterInput();
     UpdateGlobalShadowTiming();
     // ROOT is the frame boundary: index-ordered HLib tasks submit into the
@@ -203,10 +210,14 @@ void RootTask(void *) {
 }
 
 std::filesystem::path gameRoot() {
+#if defined(SHENMUE_STEAM)
+    return ::shenmue::d3t::GetExecutableDirectory();
+#else
     if (const char *root = std::getenv("SHEN_ROOT"); root && *root) {
         return std::filesystem::path(root) / "sm2";
     }
     return std::filesystem::current_path();
+#endif
 }
 
 bool Initialization(int, char **) {
@@ -277,6 +288,14 @@ bool Initialization(int, char **) {
 }
 
 void ShutdownS2RuntimeResources() {
+#if defined(SHENMUE_STEAM)
+    while (IsSnapshotSaveInProgress()) {
+        ::shenmue::d3t::RunSteamCallbacks();
+        d3t::ExecuteADynamicFunctionOnce();
+    }
+    ::shenmue::d3t::ShutdownSteamStorage();
+    d3t::ShutdownThreads();
+#endif
     ReleaseGameArcadeHostResources();
     ShutdownSoundProgramControl();
     ReleaseS2AicaMiddleware();
@@ -323,7 +342,11 @@ void SetRootSoftResetEnabled(std::int32_t enabled) noexcept {
 [[noreturn]] void ShutdownS2Runtime() {
     runtimeActive = false;
     ShutdownS2RuntimeResources();
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::ExitOriginalExecutable(0);
+#else
     std::exit(0);
+#endif
 }
 
 int Shenmue2_Main(int argc, char **argv) {

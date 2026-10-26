@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s2/game_runtime.hpp"
 #include "d3t/object_store.hpp"
 #include "s2/areas/game_arcade.hpp"
@@ -219,16 +223,27 @@ void InitializeFrameVars() {
     g_totalFrameCount = 0;
 }
 
-void IncrementSteamStat(std::int32_t) {
+void IncrementSteamStat(std::int32_t stat) {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::IncrementSteamStat(stat);
+#endif
 }
-// Steam is excluded middleware; retain the game-owned call boundary without a Steam backend.
 void ResetSteamStatistics() {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::ResetSteamStats();
+#endif
 }
 
-void ReadSm2Saves(std::int32_t) {
+void ReadSm2Saves(std::int32_t slot) {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::ReadSteamStatisticsFile(slot);
+#endif
 }
 
 void CheckSteamStats() {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::CheckSteamStats();
+#endif
 }
 
 void IncrementFrameCount() {

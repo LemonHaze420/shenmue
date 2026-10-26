@@ -1,4 +1,11 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s2/input.hpp"
+#if defined(SHENMUE_STEAM)
+#include "s2/areas/game_arcade.hpp"
+#endif
 #include "s2/warning.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/input_bindings.hpp"
@@ -1190,16 +1197,67 @@ bool CheckSoftResetInput() {
     return false;
 }
 
+#if defined(SHENMUE_STEAM)
+namespace {
+bool steamInputActive;
+
+std::uint32_t GetSteamActionSet() {
+    if (g_uiElements[static_cast<std::size_t>(UIElement::GameHelp)].isVisible || IsHelpOverlayVisible(UIElement::GameHelp)) return 0;
+    constexpr std::array<std::uint32_t, 7> modes{0, 0, 1, 3, 2, 2, 4};
+    const std::int32_t type = GetCurrentUIInputType();
+    const std::uint32_t mode = modes[static_cast<std::size_t>(type)];
+    const EmulatorInfoHeader *const info = GetGameArcadeInfo();
+    if (mode == 1 && info && xInputReserved == 1) {
+        switch (info->game) {
+        case EmulatorGame::OutRun: return 7;
+        case EmulatorGame::AfterBurner: return 8;
+        case EmulatorGame::HangOn: return 5;
+        case EmulatorGame::SpaceHarrier: return 6;
+        }
+    }
+    return mode;
+}
+
+std::uint32_t GetSteamButtons(const ::shenmue::d3t::SteamControllerInput &input) {
+    return (input.button4000 == 1 ? 0x4000U : 0U) | (input.button2000 == 1 ? 0x2000U : 0U) | (input.button01 == 1 ? 0x1000U : 0U) |
+        (input.button0200 == 1 ? 0x0200U : 0U) | (input.button0100 == 1 ? 0x0100U : 0U) | (input.button0010 == 1 ? 0x0010U : 0U) |
+        (input.dpadUp == 1 ? 0x0001U : 0U) | (input.dpadDown == 1 ? 0x0002U : 0U) | (input.dpadLeft == 1 ? 0x0004U : 0U) |
+        (input.dpadRight == 1 ? 0x0008U : 0U) | (input.button8000 == 1 ? 0x8000U : 0U);
+}
+}
+#endif
+
 void HandleInputs() {
     LegacyInputSlot &input = g_inputBuffer[0];
 #if defined(_WIN32)
     XINPUT_STATE state{};
     const std::int32_t selectedController = static_cast<std::int32_t>(GetControllerUserIndex());
     const std::uint32_t controllerIndex = selectedController < 0 ? 0U : static_cast<std::uint32_t>(selectedController);
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::SteamControllerInput steam{};
+    const bool steamChanged = ::shenmue::d3t::PollSteamInput(GetSteamActionSet(), &steam) == 1;
+    const bool xinputConnected = !steamChanged && XInputGetState(controllerIndex, &state) == ERROR_SUCCESS;
+    const bool steamActive = steamChanged || (!xinputConnected && steamInputActive);
+    const bool connected = steamChanged || xinputConnected || steamInputActive;
+    if (steamChanged) steamInputActive = true;
+#else
     const bool connected = XInputGetState(controllerIndex, &state) == ERROR_SUCCESS;
+#endif
     PhysicalControllerState &physical = physicalControllers[controllerIndex];
     physical.active = connected ? 1U : 0U;
     if (connected) {
+#if defined(SHENMUE_STEAM)
+        if (steamActive) {
+            physical.buttons = GetSteamButtons(steam);
+            physical.leftTrigger = static_cast<std::uint8_t>(steam.leftTrigger * 255.0f);
+            physical.rightTrigger = static_cast<std::uint8_t>(steam.rightTrigger * 255.0f);
+            const float axes[4]{steam.normalizedLX, steam.normalizedLY, steam.normalizedRX, steam.normalizedRY};
+            for (std::size_t axis = 0; axis < 4; ++axis) {
+                const float value = axes[axis];
+                physical.normalizedSticks[axis] = std::fabs(value) < 0.25f ? 0.0f : value < -1.0f ? -1.0f : value > 1.0f ? 1.0f : value;
+            }
+        } else {
+#endif
         physical.buttons = state.Gamepad.wButtons;
         physical.leftTrigger = state.Gamepad.bLeftTrigger;
         physical.rightTrigger = state.Gamepad.bRightTrigger;
@@ -1212,16 +1270,30 @@ void HandleInputs() {
             const float value = (static_cast<float>(raw) + 0.5f) / 32767.5f;
             physical.normalizedSticks[index] = std::fabs(value) < 0.25f ? 0.0f : value;
         }
+#if defined(SHENMUE_STEAM)
+        }
+#endif
         (void)PostProcessControllerState(controllerIndex);
+#if defined(SHENMUE_STEAM)
+        if (xinputConnected && (physical.buttons || physical.leftTrigger || physical.rightTrigger ||
+            physical.normalizedSticks.x != 0.0f || physical.normalizedSticks.y != 0.0f ||
+            physical.normalizedSticks.z != 0.0f || physical.normalizedSticks.w != 0.0f)) steamInputActive = false;
+#endif
     } else {
         physical.buttons = 0;
         physical.leftTrigger = physical.rightTrigger = 0;
         physical.thumbLX = physical.thumbLY = physical.thumbRX = physical.thumbRY = 0;
         physical.normalizedSticks = {};
     }
+#if defined(SHENMUE_STEAM)
+    if (!steamChanged) {
+#endif
     xInputReserved = 0;
     forceXInputProcessing = 0;
     forceXInputAnalogProcessing = 0;
+#if defined(SHENMUE_STEAM)
+    }
+#endif
     const bool inputEnabled = IsD3TWindowInputEnabled();
     if (inputEnabled) {
         DetectActiveInputDevice(controllerIndex);
@@ -1274,10 +1346,22 @@ void HandleInputs() {
     input.analog0c = state.Gamepad.bRightTrigger;
     input.analog0d = state.Gamepad.bLeftTrigger;
     const bool keyboard = keyboardActive == 1 && !harnessStick;
+#if defined(SHENMUE_STEAM)
+    const bool steamAnalog = steamActive && !harnessStick;
+    const std::int16_t leftX = keyboard ? 0 : steamAnalog ? static_cast<std::int16_t>(physical.normalizedSticks.x * 127.0f) :
+        NormalizeStick(state.Gamepad.sThumbLX, 1.0f);
+    const std::int16_t leftY = keyboard ? 0 : steamAnalog ? static_cast<std::int16_t>(physical.normalizedSticks.y * -127.0f) :
+        NormalizeStick(state.Gamepad.sThumbLY, -1.0f);
+    const std::int16_t rightX = keyboard || steamAnalog ? static_cast<std::int16_t>(physical.normalizedSticks.z * 127.0f) :
+        NormalizeStick(state.Gamepad.sThumbRX, 1.0f);
+    const std::int16_t rightY = keyboard || steamAnalog ? static_cast<std::int16_t>(physical.normalizedSticks.w * -127.0f) :
+        NormalizeStick(state.Gamepad.sThumbRY, -1.0f);
+#else
     const std::int16_t leftX = keyboard ? 0 : NormalizeStick(state.Gamepad.sThumbLX, 1.0f);
     const std::int16_t leftY = keyboard ? 0 : NormalizeStick(state.Gamepad.sThumbLY, -1.0f);
     const std::int16_t rightX = keyboard ? static_cast<std::int16_t>(physical.normalizedSticks.z * 127.0f) : NormalizeStick(state.Gamepad.sThumbRX, 1.0f);
     const std::int16_t rightY = keyboard ? static_cast<std::int16_t>(physical.normalizedSticks.w * -127.0f) : NormalizeStick(state.Gamepad.sThumbRY, -1.0f);
+#endif
     input.analog0e = static_cast<std::uint8_t>(rightX + 0x80);
     input.analog0f = static_cast<std::uint8_t>(rightY + 0x80);
     input.analog10 = static_cast<std::uint8_t>(leftX + 0x80);

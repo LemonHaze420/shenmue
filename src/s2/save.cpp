@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s2/save.hpp"
 #include "s2/area_jump.hpp"
 #include "s2/archive_data.hpp"
@@ -72,6 +76,8 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <sstream>
+#include <thread>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -537,7 +543,11 @@ void FreeSnapshotMetadataWrite(std::int32_t, const void* source) {
 }
 
 bool WriteSnapshotMetadataFile() {
+#if defined(SHENMUE_STEAM)
+    std::unique_lock<std::mutex> lock(snapshotMetadataFileMutex);
+#else
     const std::lock_guard lock(snapshotMetadataFileMutex);
+#endif
     Json::Value root(Json::objectValue);
     Json::Value& header = root["Header"];
     header["id"] = std::string(snapshotMetadata.identifier.begin(),
@@ -581,12 +591,22 @@ bool WriteSnapshotMetadataFile() {
     void* const buffer = std::malloc(json.size());
     if (!buffer) return false;
     std::memcpy(buffer, json.data(), json.size());
+#if defined(SHENMUE_STEAM)
+    lock.unlock();
+#endif
     return QueueSaveFileWrite("SnapshotData", buffer, static_cast<std::uint32_t>(json.size()), FreeSnapshotMetadataWrite) == 0;
 }
 
 void LoadSnapshotMetadataFile() {
+#if defined(SHENMUE_STEAM)
+    const std::vector<std::byte> bytes = ::shenmue::d3t::ReadSteamFileBytes("SnapshotData");
+    if (bytes.empty()) return;
+    std::istringstream input(std::string(reinterpret_cast<const char *>(bytes.data()), bytes.size()));
+    const std::lock_guard<std::mutex> lock(snapshotMetadataFileMutex);
+#else
     const std::lock_guard lock(snapshotMetadataFileMutex);
     std::ifstream input(SnapshotMetadataPath(), std::ios::binary);
+#endif
     if (!input) return;
     Json::CharReaderBuilder builder;
     builder["collectComments"] = false;
@@ -1881,6 +1901,11 @@ bool EnsureBackupParentDirectories(const char* source) {
     return true;
 }
 void QueueBackupArchiveWrite(const char* path,const void* source,std::uint32_t size) {
+#if defined(SHENMUE_STEAM)
+    const bool accepted = ::shenmue::d3t::WriteSteamFileAsync(path, source, size,
+        [](std::int32_t stage, std::int32_t result, void *data) { CompleteBackupSave(stage, result, data); }, const_cast<void *>(source));
+    if (!accepted) CompleteBackupSave(2, -4, source);
+#else
     if (!EnsureBackupParentDirectories(path)) return;
     const std::uint32_t handle=d3t::Archive_AllocateHandle(0);
     if (!d3t::Archive_DoesHandleExist(handle)) { CompleteBackupSave(2,-4,source); return; }
@@ -1894,6 +1919,7 @@ void QueueBackupArchiveWrite(const char* path,const void* source,std::uint32_t s
     std::strcpy(work.path.data(),path);
     const d3t::D3TTaskDescriptor descriptor{.data=&work,.callback=CompleteBackupSaveWrite,.completion=nullptr,.priority=0};
     d3t::d3t_QueueTask(&descriptor,sizeof(work));
+#endif
 }
 std::int32_t CompleteBackupFileRead(void* parameter) {
     BackupSaveReadWork* const work = static_cast<BackupSaveReadWork*>(parameter);
@@ -1908,6 +1934,11 @@ std::int32_t CompleteBackupFileRead(void* parameter) {
 }
 
 void QueueBackupArchiveRead(const char* path, void* destination, std::uint32_t offset, std::uint32_t size) {
+#if defined(SHENMUE_STEAM)
+    const bool accepted = ::shenmue::d3t::ReadSteamFileAsync(path, destination, offset, size,
+        [](std::int32_t stage, std::int32_t result, void *data) { CompleteBackupSave(stage, result, data); }, destination);
+    if (!accepted) CompleteBackupSave(2, -4, destination);
+#else
     const std::uint32_t handle = d3t::Archive_AllocateHandle(0);
     if (!d3t::Archive_DoesHandleExist(handle)) { CompleteBackupSave(2, -4, destination); return; }
     d3t::Archive_GetHandle(handle)->platformHandle = -1;
@@ -1924,8 +1955,15 @@ void QueueBackupArchiveRead(const char* path, void* destination, std::uint32_t o
 #endif
     const d3t::D3TTaskDescriptor descriptor{.data = &work, .callback = CompleteBackupFileRead, .completion = nullptr, .priority = 0};
     d3t::d3t_QueueTask(&descriptor, sizeof(work));
+#endif
 }
 std::int32_t PreflightBackupSaveWrite(const char* path,std::uint32_t size) {
+#if defined(SHENMUE_STEAM)
+    const std::int32_t previousSize = ::shenmue::d3t::SteamFileExists(path) ? ::shenmue::d3t::GetSteamFileSize(path) : 0;
+    if (previousSize < 0) return -4;
+    const std::int64_t growth = static_cast<std::int64_t>(size) - previousSize;
+    return growth <= 0 || ::shenmue::d3t::GetSteamStorageAvailableBytes() >= static_cast<std::uint64_t>(growth) ? 0 : -5;
+#else
     std::int32_t previousSize=0;
 #ifdef _WIN32
     const DWORD attributes=GetFileAttributesA(path);
@@ -1945,15 +1983,30 @@ std::int32_t PreflightBackupSaveWrite(const char* path,std::uint32_t size) {
     }
     const std::int32_t growth=std::bit_cast<std::int32_t>(size-static_cast<std::uint32_t>(previousSize));
     return BACKUP_LOCAL_CAPACITY>=growth?0:-5;
+#endif
 }
 
 } // namespace
 
 std::uint64_t BupReady(std::int32_t reserve) {
+#if defined(SHENMUE_STEAM)
+    while (true) {
+        {
+            const std::lock_guard<std::mutex> lock(backupAdmissionMutex);
+            if (activeBackupState.load(std::memory_order_seq_cst) != -2) {
+                if (reserve) activeBackupState.store(-2, std::memory_order_seq_cst);
+                return static_cast<std::uint32_t>(activeBackupState.load(std::memory_order_seq_cst));
+            }
+        }
+        ::shenmue::d3t::RunSteamCallbacks();
+        std::this_thread::yield();
+    }
+#else
     const std::lock_guard<std::mutex> lock(backupAdmissionMutex);
     while (activeBackupState.load(std::memory_order_seq_cst)==-2) {}
     if (reserve) activeBackupState.store(-2,std::memory_order_seq_cst);
     return static_cast<std::uint32_t>(activeBackupState.load(std::memory_order_seq_cst));
+#endif
 }
 std::uint64_t QueueSaveFileWrite(const char* name,const void* source,std::uint32_t size,BackupSaveCompletion completion) {
     BupReady(1);
@@ -1975,8 +2028,10 @@ std::uint32_t QueueSnapshotMetadataWrite(SnapshotMetadataOwner* metadata) {
     return QueueSaveFileWrite("Snap-shots",metadata,0x1c68)?5:0;
 }
 
-// @verified - p
 std::uint64_t CheckBackupFileExists(const char* name) {
+#if defined(SHENMUE_STEAM)
+    return ::shenmue::d3t::SteamFileExists(name) ? 0U : 0xfffffffcU;
+#else
     const std::filesystem::path path = saveDirectory / name;
 #ifdef _WIN32
     const DWORD attributes = GetFileAttributesA(path.string().c_str());
@@ -1984,6 +2039,7 @@ std::uint64_t CheckBackupFileExists(const char* name) {
 #else
     struct stat attributes{};
     return stat(path.c_str(), &attributes) || S_ISDIR(attributes.st_mode) ? 0xfffffffcU : 0U;
+#endif
 #endif
 }
 
@@ -2473,6 +2529,9 @@ void PackSaveBlock(std::byte* block, std::uint32_t size) {
 }
 
 void CompleteGameSave(std::int32_t result, const void*) {
+#if defined(SHENMUE_STEAM)
+    if (!result) ::shenmue::d3t::WriteSteamStatisticsFile(static_cast<std::int32_t>(gameSaveSlot));
+#endif
     gameSaveStatus.store(result == -5 ? 3 : result ? 4 : 2, std::memory_order_seq_cst);
 }
 
@@ -2605,6 +2664,20 @@ S2SaveResult S2Save_Apply(const S2SaveImage& image) {
 
 S2SaveResult S2Save_Read(const std::filesystem::path& path,
                         S2SaveImage& image) {
+#if defined(SHENMUE_STEAM)
+    if (path.empty()) return S2SaveResult::InvalidArgument;
+    const std::string name = path.filename().string();
+    const std::int32_t size = ::shenmue::d3t::GetSteamFileSize(name.c_str());
+    if (size < 0) return S2SaveResult::OpenFailed;
+    if (size != S2SaveFileSize) return S2SaveResult::SizeMismatch;
+    S2SaveImage candidate{};
+    if (!::shenmue::d3t::ReadSteamFile(name.c_str(), candidate.bytes.data(), 0, static_cast<std::uint32_t>(candidate.bytes.size())))
+        return S2SaveResult::ReadFailed;
+    const S2SaveResult validation = S2Save_Validate(candidate);
+    if (validation != S2SaveResult::Success) return validation;
+    image = candidate;
+    return S2SaveResult::Success;
+#else
     if (path.empty()) return S2SaveResult::InvalidArgument;
     std::error_code error;
     const std::uintmax_t size = std::filesystem::file_size(path, error);
@@ -2622,10 +2695,18 @@ S2SaveResult S2Save_Read(const std::filesystem::path& path,
     if (validation != S2SaveResult::Success) return validation;
     image = candidate;
     return S2SaveResult::Success;
+#endif
 }
 
 S2SaveResult S2Save_Write(const std::filesystem::path& path,
                          const S2SaveImage& image) {
+#if defined(SHENMUE_STEAM)
+    if (path.empty()) return S2SaveResult::InvalidArgument;
+    const S2SaveResult validation = S2Save_Validate(image);
+    if (validation != S2SaveResult::Success) return validation;
+    return ::shenmue::d3t::WriteSteamFile(path.filename().string().c_str(), image.bytes.data(), static_cast<std::uint32_t>(image.bytes.size())) ?
+        S2SaveResult::Success : S2SaveResult::WriteFailed;
+#else
     if (path.empty()) return S2SaveResult::InvalidArgument;
     const S2SaveResult validation = S2Save_Validate(image);
     if (validation != S2SaveResult::Success) return validation;
@@ -2674,6 +2755,7 @@ S2SaveResult S2Save_Write(const std::filesystem::path& path,
     const S2SaveResult commit = CommitTemporaryFile(temporary, path);
     if (commit != S2SaveResult::Success) RemoveTemporaryFile(temporary);
     return commit;
+#endif
 }
 
 S2SaveResult S2Save_ReadSlot(std::size_t slot, S2SaveImage& image) {
@@ -2694,6 +2776,9 @@ S2SaveResult S2Save_WriteSlot(std::size_t slot,
     if (result != S2SaveResult::Success) return result;
     result = S2Save_Write(S2Save_SlotPath(slot), candidate);
     if (result != S2SaveResult::Success) return result;
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::WriteSteamStatisticsFile(static_cast<std::int32_t>(slot));
+#endif
     activeSaveImage = candidate;
     activeSaveImageInitialized = true;
     S2Save_RefreshSlotCatalog();
@@ -3042,8 +3127,12 @@ S2Save_RefreshSlotCatalog() {
         S2SaveSlotInfo& catalog = slotCatalog[slot];
         catalog = {};
         const std::filesystem::path path = S2Save_SlotPath(slot);
+#if defined(SHENMUE_STEAM)
+        catalog.occupied = ::shenmue::d3t::SteamFileExists(path.filename().string().c_str());
+#else
         std::error_code error;
         catalog.occupied = std::filesystem::exists(path, error) && !error;
+#endif
         S2SaveImage image{};
         catalog.result = S2Save_Read(path, image);
         if (catalog.result == S2SaveResult::Success)

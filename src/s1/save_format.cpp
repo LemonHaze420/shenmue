@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s1/save_format.hpp"
 
 #include "s1/player_control.hpp"
@@ -857,6 +861,16 @@ S1SaveResult CommitTemporaryFile(const std::filesystem::path &temporary, const s
 }
 
 S1SaveResult ReadImageBytes(const std::filesystem::path &path, std::span<std::uint8_t, kS1SaveImageSize> bytes, bool requireExactSize = true) {
+#if defined(SHENMUE_STEAM)
+    if (path.empty()) return S1SaveResult::InvalidArgument;
+    const std::string name = path.filename().string();
+    const std::int32_t size = ::shenmue::d3t::GetSteamFileSize(name.c_str());
+    if (size < 0) return S1SaveResult::OpenFailed;
+    if (size < static_cast<std::int32_t>(kS1SaveImageSize) || (requireExactSize && size != static_cast<std::int32_t>(kS1SaveImageSize)))
+        return S1SaveResult::InvalidSize;
+    return ::shenmue::d3t::ReadSteamFile(name.c_str(), bytes.data(), 0, static_cast<std::uint32_t>(bytes.size())) ?
+        S1SaveResult::Success : S1SaveResult::ReadFailed;
+#else
     if (path.empty())
         return S1SaveResult::InvalidArgument;
     std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -868,6 +882,7 @@ S1SaveResult ReadImageBytes(const std::filesystem::path &path, std::span<std::ui
     file.seekg(0, std::ios::beg);
     file.read(reinterpret_cast<char *>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     return file ? S1SaveResult::Success : S1SaveResult::ReadFailed;
+#endif
 }
 
 } // namespace
@@ -1019,6 +1034,13 @@ S1SaveResult S1Save_ReadMetadata(const std::filesystem::path &path, S1SaveMetada
 }
 
 S1SaveResult S1Save_ReadStorageRange(const std::filesystem::path &path, void *destination, std::uint32_t offset, std::uint32_t size) {
+#if defined(SHENMUE_STEAM)
+    const std::string name = path.filename().string();
+    const std::int32_t length = ::shenmue::d3t::GetSteamFileSize(name.c_str());
+    if (length < 0) return S1SaveResult::OpenFailed;
+    if (static_cast<std::uint64_t>(length) < static_cast<std::uint64_t>(offset) + size) return S1SaveResult::InvalidSize;
+    return ::shenmue::d3t::ReadSteamFile(name.c_str(), destination, offset, size) ? S1SaveResult::Success : S1SaveResult::ReadFailed;
+#else
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file)
         return S1SaveResult::OpenFailed;
@@ -1027,9 +1049,13 @@ S1SaveResult S1Save_ReadStorageRange(const std::filesystem::path &path, void *de
     file.seekg(offset, std::ios::beg);
     file.read(static_cast<char *>(destination), size);
     return file ? S1SaveResult::Success : S1SaveResult::ReadFailed;
+#endif
 }
 
 S1SaveResult S1Save_WriteStorageBytes(const std::filesystem::path &path, const void *source, std::uint32_t size) {
+#if defined(SHENMUE_STEAM)
+    return ::shenmue::d3t::WriteSteamFile(path.filename().string().c_str(), source, size) ? S1SaveResult::Success : S1SaveResult::WriteFailed;
+#else
     std::error_code error;
     if (!path.parent_path().empty())
         std::filesystem::create_directories(path.parent_path(), error);
@@ -1053,6 +1079,7 @@ S1SaveResult S1Save_WriteStorageBytes(const std::filesystem::path &path, const v
     if (result != S1SaveResult::Success)
         RemoveTemporaryFile(temporary);
     return result;
+#endif
 }
 
 void S1Save_PrepareStorageWrite(S1SaveImage &image) {
@@ -1078,6 +1105,11 @@ S1SaveResult S1Save_Write(const std::filesystem::path &path, S1SaveImage &image)
     if (finalizedValidation != S1SaveResult::Success)
         return finalizedValidation;
 
+#if defined(SHENMUE_STEAM)
+    const S1SaveResult written = S1Save_WriteStorageBytes(path, &save, sizeof(save));
+    if (written == S1SaveResult::Success) StoreLayout(save, image);
+    return written;
+#else
     if (const std::filesystem::path parent = path.parent_path(); !parent.empty()) {
         std::error_code error;
         std::filesystem::create_directories(parent, error);
@@ -1126,6 +1158,7 @@ S1SaveResult S1Save_Write(const std::filesystem::path &path, S1SaveImage &image)
     }
     StoreLayout(save, image);
     return S1SaveResult::Success;
+#endif
 }
 
 S1SaveResult S1Save_Apply(const S1SaveImage &image, std::int32_t block) {

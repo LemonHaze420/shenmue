@@ -1,4 +1,11 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s1/input.hpp"
+#if defined(SHENMUE_STEAM)
+#include "s1/modules/arcade.hpp"
+#endif
 #include "common/keyboard.hpp"
 #include "s1/frame_pipeline.hpp"
 #include "s1/task/padc.hpp"
@@ -721,6 +728,20 @@ bool UIElementTicked(std::uint32_t element) {
 
 
 
+#if defined(SHENMUE_STEAM)
+std::uint32_t GetKeyStateDataForCurrentInputMode(std::int32_t argument) {
+    if (g_uiElements[kUiHelpNew].isVisible || UIElementRequested(kUiHelpNew)) return 0;
+    constexpr std::array<std::uint32_t, 7> modes{0, 0, 1, 3, 2, 2, 4};
+    const std::uint32_t mode = modes[static_cast<std::size_t>(GetCurrentInputType())];
+    if (mode == 1 && argument == 1) {
+        const ArcadeGame game = Arcade_ActiveGame();
+        if (game == ArcadeGame::HangOn) return 5;
+        if (game == ArcadeGame::SpaceHarrier) return 6;
+    }
+    return mode;
+}
+#endif
+
 InputMode GetCurrentInputType() {
     const bool inGame = g_isInGame != 0;
     const bool inGameExact = g_isInGame == 1;
@@ -763,7 +784,11 @@ InputMode GetCurrentInputType() {
 }
 
 bool ResolveCurrentInputForGame(std::int32_t inputContext) {
+#if defined(SHENMUE_STEAM)
+    if (g_keyboardActive == 1 || (::shenmue::d3t::OriginalSteamGameInputLayout() != 1 && g_debugAllowInputGameLayout == 0)) {
+#else
     if (g_keyboardActive == 1 || (g_steamInputGameLayoutState != 1 && g_debugAllowInputGameLayout == 0)) {
+#endif
         return false;
     }
     if (g_cinemaBars[1].isVisible != 0 || (g_uiRefreshedElements[2] & 0x400U) != 0 || (g_uiPreviousRefreshedElements[2] & 0x400U) != 0 ||

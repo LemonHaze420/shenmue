@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s1/d3t/settings.hpp"
 #include "s1/d3t/namespace.hpp"
 
@@ -369,11 +373,17 @@ bool IsValidDisplaySettings() {
 }
 
 void SettingsFileParser() {
+#if defined(SHENMUE_STEAM)
+    const std::vector<std::byte> bytes = ::shenmue::d3t::ReadSteamFileBytes("Settings");
+    if (bytes.empty()) return;
+    const std::string contents(reinterpret_cast<const char *>(bytes.data()), bytes.size());
+#else
     std::ifstream input("Settings", std::ios::binary);
     if (!input) {
         return;
     }
     const std::string contents((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+#endif
     Json::CharReaderBuilder builder;
     Json::Value root;
     std::string errors;
@@ -496,6 +506,10 @@ bool WriteSettingsFile() {
 
     Json::StreamWriterBuilder builder;
     builder["indentation"] = "";
+#if defined(SHENMUE_STEAM)
+    const std::string contents = Json::writeString(builder, root);
+    return ::shenmue::d3t::WriteSteamFile("Settings", contents.data(), static_cast<std::uint32_t>(contents.size()));
+#else
     std::ofstream outputFile("Settings", std::ios::binary | std::ios::trunc);
     if (!outputFile) {
         return false;
@@ -504,6 +518,7 @@ bool WriteSettingsFile() {
     const bool wrote = writer->write(root, &outputFile) == 0;
     outputFile.flush();
     return wrote && outputFile.good();
+#endif
 }
 } // namespace d3t
 

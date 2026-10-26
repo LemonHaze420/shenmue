@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s1/frame_pipeline.hpp"
 #include "s1/d3t/namespace.hpp"
 
@@ -222,6 +226,9 @@ void ProcessMessages() {
 } // namespace d3t
 
 [[noreturn]] void Shutdown() {
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::ShutdownSteamStorage();
+#endif
 #ifdef SHENMUE_RT_ARCADE
     RTArcade_Shutdown();
 #endif
@@ -247,7 +254,11 @@ void ProcessMessages() {
     std::free(g_globalMemory);
     g_globalMemory = nullptr;
     g_globalMemorySize = 0;
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::ExitOriginalExecutable(0);
+#else
     std::exit(0);
+#endif
 }
 
 

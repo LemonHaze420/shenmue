@@ -14,6 +14,9 @@
 #include <fstream>
 #include <mutex>
 #include <optional>
+#if defined(SHENMUE_STEAM)
+#include <sstream>
+#endif
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -50,6 +53,10 @@ bool g_indexAttempted = false;
 fs::path g_shenRoot;
 std::unordered_map<std::uint64_t, TadEntry> g_tadEntries;
 std::unordered_map<std::string, TadEntry> g_namedEntries;
+#if defined(SHENMUE_STEAM)
+const char *g_embeddedNameDatabase;
+std::size_t g_embeddedNameDatabaseSize;
+#endif
 
 std::uint64_t hashKey(std::uint32_t primary, std::uint32_t secondary);
 std::uint64_t normalHash(const char *path);
@@ -68,10 +75,15 @@ fs::path executableDirectory() {
 }
 
 void addNamedAliases(const fs::path &databasePath) {
+#if defined(SHENMUE_STEAM)
+    static_cast<void>(databasePath);
+    std::istringstream input(std::string(g_embeddedNameDatabase, g_embeddedNameDatabaseSize));
+#else
     std::ifstream input(databasePath, std::ios::binary);
     if (!input) {
         return;
     }
+#endif
     Json::CharReaderBuilder builder;
     Json::Value root;
     std::string errors;
@@ -505,6 +517,9 @@ bool ArchiveData_LoadArchives(const char *root, const char *backend, std::uint32
             ++loaded.archiveCount;
         }
     }
+#if defined(SHENMUE_STEAM)
+    addNamedAliases(fs::path{});
+#else
     const std::array nameDatabases{
         executableDirectory() / "filename_database.json",
         fs::path{"filename_database.json"},
@@ -518,11 +533,20 @@ bool ArchiveData_LoadArchives(const char *root, const char *backend, std::uint32
         }
         error.clear();
     }
+#endif
     if (result) {
         *result = loaded;
     }
     return loaded.archiveCount != 0;
 }
+
+#if defined(SHENMUE_STEAM)
+void ArchiveData_SetEmbeddedNameDatabase(const char *bytes, std::size_t size) {
+    const std::lock_guard<std::mutex> lock(g_indexMutex);
+    g_embeddedNameDatabase = bytes;
+    g_embeddedNameDatabaseSize = size;
+}
+#endif
 
 void ArchiveData_ClearArchives() {
     std::scoped_lock lock(g_indexMutex);

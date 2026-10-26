@@ -456,7 +456,12 @@ void CreateSMWindow() {
     WNDCLASSA windowClass{};
     windowClass.lpfnWndProc = MessageHandler;
     windowClass.hInstance = instance;
-    windowClass.lpszClassName = "SM";
+#if defined(SHENMUE_STEAM)
+    constexpr const char *className = "Shenmue1RE";
+#else
+    constexpr const char *className = "SM";
+#endif
+    windowClass.lpszClassName = className;
     RegisterClassA(&windowClass);
 
     RECT rect{0, 0, 0, 0};
@@ -469,8 +474,8 @@ void CreateSMWindow() {
         rect.bottom = static_cast<LONG>(resolution->height);
     }
     AdjustWindowRect(&rect, style, FALSE);
-    g_windowHandle = CreateWindowExA(0, "SM", "Shenmue I", style, monitor->monitorCoordinates.left, monitor->monitorCoordinates.top, rect.right - rect.left,
-        rect.bottom - rect.top, nullptr, nullptr, instance, nullptr);
+    g_windowHandle = CreateWindowExA(0, className, "Shenmue I", style, monitor->monitorCoordinates.left, monitor->monitorCoordinates.top,
+        rect.right - rect.left, rect.bottom - rect.top, nullptr, nullptr, instance, nullptr);
     ShowWindow(g_windowHandle, g_hideValidationWindow ? SW_HIDE : SW_SHOW);
     ResetWindow();
     g_shouldResetWindow = false;

@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s1/d3t/namespace.hpp"
 #include "s1/boot.hpp"
 #include "s1/audio_stream.hpp"
@@ -338,8 +342,12 @@ std::int64_t ShenmueInit(GameConfig *config) {
         request.state.exchange(0, std::memory_order_seq_cst);
     }
     d3t_InitializeOodleZLib();
+#if defined(SHENMUE_STEAM)
+    const std::filesystem::path gameRoot = ::shenmue::d3t::GetExecutableDirectory();
+#else
     const char *const shenRoot = std::getenv("SHEN_ROOT");
     const std::filesystem::path gameRoot = shenRoot && *shenRoot ? std::filesystem::path(shenRoot) / "sm1" : std::filesystem::current_path();
+#endif
     const std::string gameRootString = gameRoot.string();
     const D3TArchiveDirectory directory{gameRootString.c_str(), "dx11", 2, 0, 0, 0, {}};
     d3t_ReadArchives(&directory);

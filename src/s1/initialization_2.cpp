@@ -546,10 +546,12 @@ void Initialization_2() {
     config.memoryLimit = 100000;
     ShenmueInit(&config);
 
+#if !defined(SHENMUE_STEAM)
     std::uint64_t steamId = 1024;
     if (Steam_TryGetCurrentUserId(&steamId)) {
         SGAAS_Init(steamId);
     }
+#endif
 
     fnptr_GetBuffer = GetBuffer;
     fnptr_UpdateTimer = UpdateTimer;

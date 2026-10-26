@@ -30,6 +30,9 @@ std::uint32_t d3t_HashData(const void *data, std::uint32_t size);
 std::uint32_t d3t_GenerateHash(const char *path);
 char *FilepathCleaner(char *path);
 bool ArchiveData_LoadArchives(const char *root, const char *backend, std::uint32_t type, ArchiveDataLoadResult *result = nullptr);
+#if defined(SHENMUE_STEAM)
+void ArchiveData_SetEmbeddedNameDatabase(const char *bytes, std::size_t size);
+#endif
 void ArchiveData_ClearArchives();
 bool ArchiveData_HasArchives();
 std::uint64_t ArchiveData_GetPathHash(const char *path);

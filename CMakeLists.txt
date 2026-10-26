@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.22)
 
 project(shenmue_recovery LANGUAGES CXX)
 
+option(SHENMUE_STEAM "Build Steam integration modules" OFF)
+if(SHENMUE_STEAM AND WIN32 AND DEFINED VCPKG_TARGET_TRIPLET AND NOT VCPKG_TARGET_TRIPLET MATCHES "static")
+  message(FATAL_ERROR "Steam ASIs require static third-party libraries; select a static vcpkg triplet")
+endif()
+
 find_package(Git QUIET)
 set(SHENMUE_COMMIT_HASH "" CACHE STRING "Source commit for builds without Git metadata")
 add_custom_target(shenmue_build_info
@@ -1413,3 +1418,51 @@ add_custom_command(TARGET shenmue2 POST_BUILD
           "$<TARGET_FILE_DIR:shenmue2>/filename_database.json"
 )
 
+
+
+if(SHENMUE_STEAM)
+  if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message(FATAL_ERROR "Steam ASIs require Windows x64")
+  endif()
+  enable_language(RC)
+  set(steam_names_resource "${CMAKE_CURRENT_BINARY_DIR}/steam_names.rc")
+  file(GENERATE OUTPUT "${steam_names_resource}" CONTENT
+"#include \"shenmue_internal.h\"
+101 RCDATA \"${CMAKE_CURRENT_SOURCE_DIR}/reference/filename_database.json\"
+STRINGTABLE
+BEGIN
+  102 SHENMUE_COMMIT_HASH
+END
+")
+  set_source_files_properties("${steam_names_resource}" PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/filename_database.json")
+  foreach(title IN ITEMS 1 2)
+    get_target_property(steam_sources shenmue${title}_game SOURCES)
+    add_library(shenmue${title}_steam_game STATIC ${steam_sources})
+    foreach(property IN ITEMS COMPILE_DEFINITIONS COMPILE_OPTIONS INCLUDE_DIRECTORIES COMPILE_FEATURES LINK_LIBRARIES INTERFACE_LINK_LIBRARIES)
+      get_target_property(value shenmue${title}_game ${property})
+      if(value)
+        if(property MATCHES "LINK_LIBRARIES")
+          list(FILTER value EXCLUDE REGEX "GameHangon_import[.]lib")
+        endif()
+        set_property(TARGET shenmue${title}_steam_game PROPERTY ${property} "${value}")
+      endif()
+    endforeach()
+    target_compile_definitions(shenmue${title}_steam_game PRIVATE SHENMUE_STEAM=1 SHENMUE_LOAD_HANGON_DLL=1)
+    add_library(shenmue${title}_asi MODULE src/d3t/steam_entry.cpp src/d3t/steam.cpp src/d3t/steam_storage.cpp
+      src/common/archive_data.cpp "${steam_names_resource}")
+    target_compile_features(shenmue${title}_asi PRIVATE cxx_std_20)
+    target_compile_definitions(shenmue${title}_asi PRIVATE SHENMUE_STEAM=1 SHENMUE_TARGET_S${title}_PC=1)
+    target_include_directories(shenmue${title}_asi PRIVATE src)
+    target_link_libraries(shenmue${title}_asi PRIVATE shenmue${title}_steam_game)
+    if(title EQUAL 1)
+      set(steam_name "shenmue1e")
+    else()
+      set(steam_name "shenmue2e")
+    endif()
+    set_target_properties(shenmue${title}_asi PROPERTIES PREFIX "" SUFFIX ".asi" OUTPUT_NAME "${steam_name}")
+    if(MSVC)
+      target_link_options(shenmue${title}_asi PRIVATE /MAP /OPT:REF /INCREMENTAL:NO)
+    endif()
+    shenmue_set_project_warnings(shenmue${title}_asi)
+  endforeach()
+endif()

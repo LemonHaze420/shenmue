@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s2/ui.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
@@ -117,6 +121,9 @@ std::int32_t LoadSnapshotImageTask(void *data) {
         return -1;
     }
     std::vector<std::byte> bytes;
+#if defined(SHENMUE_STEAM)
+    bytes = ::shenmue::d3t::ReadSteamFileBytes(request->path.filename().string().c_str());
+#else
     std::ifstream input(request->path, std::ios::binary | std::ios::ate);
     if (input) {
         const std::streamoff end = input.tellg();
@@ -129,6 +136,7 @@ std::int32_t LoadSnapshotImageTask(void *data) {
                 bytes.clear();
         }
     }
+#endif
     const std::uint32_t texture = bytes.empty() ? 0 : d3t::CreateImageTextureFromMemory(bytes.data(), bytes.size(), false);
     SnapshotImageRuntime &runtime = snapshotImages[request->slot];
     if (runtime.generation.load(std::memory_order_acquire) == request->generation) {
@@ -195,8 +203,12 @@ void DeleteSnapshotSlot(std::uint32_t slot) {
         d3t::InitTexture2DResource(texture);
     image.state.store(0, std::memory_order_release);
     SaveSnapshotMetadata();
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::DeleteSteamFile(S2Save_SnapshotPath(slot).filename().string().c_str());
+#else
     std::error_code error;
     std::filesystem::remove(S2Save_SnapshotPath(slot), error);
+#endif
     RefreshSnapshotOrder();
 }
 // @verified - p

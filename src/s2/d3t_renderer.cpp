@@ -1,3 +1,7 @@
+#if defined(SHENMUE_STEAM)
+#include "d3t/steam.hpp"
+#endif
+
 #include "s2/d3t_renderer.hpp"
 #include "s2/model_geometry.hpp"
 #include "s2/camera.hpp"
@@ -149,6 +153,11 @@ void ApplyDialogueModeFlags(std::uint8_t mode) noexcept {
 }
 
 void ReadRendererUserSettings() {
+#if defined(SHENMUE_STEAM)
+    const std::vector<std::byte> bytes = ::shenmue::d3t::ReadSteamFileBytes("Settings");
+    if (bytes.empty()) return;
+    const std::string text(reinterpret_cast<const char *>(bytes.data()), bytes.size());
+#else
     std::ifstream stream{S2Save_GetDirectory() / "Settings", std::ios::binary | std::ios::ate};
     if (!stream)
         return;
@@ -159,6 +168,7 @@ void ReadRendererUserSettings() {
     stream.seekg(0);
     if (!stream.read(text.data(), size))
         return;
+#endif
     cJSON *const settings = cJSON_Parse(text.c_str());
     if (!settings)
         return;
@@ -630,7 +640,7 @@ bool InitializeD3TRenderer(std::uint32_t width, std::uint32_t height, bool hidde
     RAWINPUTDEVICE rawKeyboard{.usUsagePage = 1, .usUsage = 6, .dwFlags = 0, .hwndTarget = nullptr};
     RegisterRawInputDevices(&rawKeyboard, 1, sizeof(rawKeyboard));
     const HINSTANCE instance = GetModuleHandleW(nullptr);
-    constexpr wchar_t className[] = L"Shenmue2RecoveredWindow";
+    constexpr wchar_t className[] = L"Shenmue2RE";
     WNDCLASSEXW windowClass{};
     windowClass.cbSize = sizeof(windowClass);
     windowClass.style = CS_HREDRAW | CS_VREDRAW;
@@ -706,8 +716,10 @@ bool ProcessD3TMessages() {
     MSG message{};
     UpdateMouseForNuklear();
     while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE)) {
+#if !defined(SHENMUE_STEAM)
         if (message.message == WM_QUIT)
             shouldQuit = true;
+#endif
         TranslateMessage(&message);
         DispatchMessageW(&message);
     }

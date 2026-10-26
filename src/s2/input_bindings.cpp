@@ -196,6 +196,10 @@ void ProcessUserSettingsConfig() {
     cJSON_Delete(settings);
     if (!text)
         return;
+#if defined(SHENMUE_STEAM)
+    QueueSaveFileWrite("Settings", text, static_cast<std::uint32_t>(std::strlen(text)),
+        [](std::int32_t, const void *buffer) { std::free(const_cast<void *>(buffer)); });
+#else
     const std::filesystem::path path = S2Save_GetDirectory() / "Settings";
     std::error_code error;
     std::filesystem::create_directories(path.parent_path(), error);
@@ -209,6 +213,7 @@ void ProcessUserSettingsConfig() {
     const d3t::D3TTaskDescriptor descriptor{.data = &request, .callback = WriteUserSettingsTask, .completion = CompleteUserSettingsWrite, .priority = 0};
     if (!d3t::d3t_QueueTask(&descriptor, sizeof(request)))
         std::free(text);
+#endif
 }
 
 // @verified - p
