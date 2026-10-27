@@ -116,7 +116,7 @@ void OKJOStartAuthor() {
     SetMapFieldDepthSlotEnabled(0, enabled);
     if (currentScene->author.name == OKJO_AUTHORS[1].name) {
         const Vector3 scale{50, 50, 50};
-        SetMotionworkFlagForCharaById(OKJO_SCALED_PROP, &scale);
+        mtwkSetMotionworkScale3(OKJO_SCALED_PROP, &scale);
     }
     if (currentScene->author.name == OKJO_AUTHORS[2].name) {
         SetOkjoScreenFilm();

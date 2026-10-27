@@ -69,7 +69,7 @@ void BgsmPlaceCharacters(BgsmWork &work) {
     EV_DisableCharacterDisplay(BGSM_CASH);
     EV_EnableCharacterDisplay(BGSM_HAND_BASE);
     const Vector3 potScale{1, .6f, 1};
-    SetMotionworkFlagForCharaById(BGSM_POT, &potScale);
+    mtwkSetMotionworkScale3(BGSM_POT, &potScale);
     BgsmPosition(BGSM_HAND_BASE, BGSM_BASE, {});
     BgsmAngle(BGSM_HAND_BASE, BGSM_BASE, 0);
     BgsmPosition(BGSM_POT, BGSM_BASE, {-.4f, 0, .75f});

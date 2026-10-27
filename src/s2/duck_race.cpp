@@ -177,7 +177,7 @@ void InitializeDuckRaceActor(DuckRaceActor *actor, std::int32_t profile) {
     actor->finishTriggerSeen = 0;
     actor->separationRadius *= actor->sizeScale;
     const Vector3 scale{actor->sizeScale, actor->sizeScale, actor->sizeScale};
-    SetMotionworkFlagForCharaById(actor->name, &scale);
+    mtwkSetMotionworkScale3(actor->name, &scale);
     EV_EnableCharacterDisplay(actor->name);
     const std::int32_t motion = profile == 12 ? 32544 :
         profile == 13 || profile == 14        ? 32542 :

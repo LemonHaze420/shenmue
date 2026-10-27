@@ -178,7 +178,7 @@ std::int64_t UranaiMm5Result(shen_name reader, std::int32_t) {
     return 0;
 }
 std::int64_t UranaiMm5Payment(shen_name reader, std::int32_t delay) {
-    EVT_AT_SetFaceLooks(reader, 0, 30, 1, delay);
+    EVT_AT_SetFaceLooks(reader, FacialExpressionId::Normal, 30, 1, delay);
     const std::int32_t readingEnd = EVT_AT_SetMot(reader, URNI_MM5_END_MOTION, 2, 1, 0x40000000U, delay);
     EVT_AT_SetMot(reader, URNI_MM5_IDLE_MOTION, 2, 1, 0, readingEnd);
     EVT_AT_SetMot(URNI_PLAYER, URNI_PLAYER_PALM_END_MOTION, 2, 1, 0x40000000U, delay);

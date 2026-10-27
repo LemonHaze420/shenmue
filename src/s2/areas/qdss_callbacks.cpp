@@ -55,7 +55,7 @@ void PropCallback(void *parameter) {
 }
 void ScaleCallback(void *parameter) {
     const ScaleWork &work = *static_cast<ScaleWork *>(parameter);
-    SetMotionworkFlagForCharaById(work.character, &work.scale);
+    mtwkSetMotionworkScale3(work.character, &work.scale);
     HLib::DestroyCurrentTask();
 }
 void QueueEye(const EyeWork &request, std::int32_t delay) {
@@ -150,7 +150,7 @@ void QueueQdssProp(shen_name prop, std::uint32_t enabled, std::int32_t delay) {
 }
 void QueueQdssScale(shen_name character, const Vector3 &scale, std::int32_t delay) {
     if (!delay) {
-        SetMotionworkFlagForCharaById(character, &scale);
+        mtwkSetMotionworkScale3(character, &scale);
         return;
     }
     HLib::Task *task = HLib::EnqueueTaskWithParameter(ScaleCallback, 4, 0x0b, sizeof(ScaleWork), QDSS_EVENT);

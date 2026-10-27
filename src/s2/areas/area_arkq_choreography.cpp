@@ -100,7 +100,7 @@ std::int32_t ArkqFirstFailure(std::int32_t delay) {
     EVT_AT_DispBlur(ARKQ_REN, 7, 15, 1, 30, delay + 45);
     EVT_AT_SetVoice("0057A023", 1, delay + 30);
     EVT_AT_SetVoice("0057B009", 1, delay + 45);
-    EVT_AT_SetFaceLooks(ARKQ_RYO, 6, 15, 1, delay + 30);
+    EVT_AT_SetFaceLooks(ARKQ_RYO, FacialExpressionId::Suffer, 15, 1, delay + 30);
     return delay + 90;
 }
 std::int32_t ArkqSecondDodge(std::int32_t delay) {
@@ -121,7 +121,7 @@ std::int32_t ArkqSecondFailure(std::int32_t delay) {
     EVT_AT_DispBlur(ARKQ_REN, 7, 15, 1, 30, delay + 20);
     EVT_AT_SetVoice("0057A024", 1, delay + 10);
     EVT_AT_SetVoice("0057B009", 1, delay + 35);
-    EVT_AT_SetFaceLooks(ARKQ_RYO, 6, 15, 1, delay + 20);
+    EVT_AT_SetFaceLooks(ARKQ_RYO, FacialExpressionId::Suffer, 15, 1, delay + 20);
     return delay + 60;
 }
 std::int32_t ArkqThirdFailure(std::int32_t delay) {
@@ -134,15 +134,15 @@ std::int32_t ArkqThirdFailure(std::int32_t delay) {
     EVT_AT_DispBlur(ARKQ_REN, 4, 15, 1, 65, delay);
     EVT_AT_SetVoice("0057A025", 1, delay + 10);
     EVT_AT_SetVoice("0057B009", 1, delay + 35);
-    EVT_AT_SetFaceLooks(ARKQ_RYO, 6, 15, 1, delay + 25);
+    EVT_AT_SetFaceLooks(ARKQ_RYO, FacialExpressionId::Suffer, 15, 1, delay + 25);
     return delay + 65;
 }
 std::int32_t ArkqAllDodges() {
     AT_SetLocalBaseChara(ARKQ_KNIFE, ARKQ_HAND_ANCHOR);
     SetHighModelAndFaceFlagsForChara(ctrlGetCharaByName(ARKQ_RYO), 0, 0, 1);
     SetHighModelAndFaceFlagsForChara(ctrlGetCharaByName(ARKQ_REN), 0, 0, 1);
-    EVT_AT_SetFaceLooks(ARKQ_RYO, 1, 5, 1, 30);
-    EVT_AT_SetFaceLooks(ARKQ_REN, 1, 5, 1, 55);
+    EVT_AT_SetFaceLooks(ARKQ_RYO, FacialExpressionId::Angry, 5, 1, 30);
+    EVT_AT_SetFaceLooks(ARKQ_REN, FacialExpressionId::Angry, 5, 1, 55);
     EVT_AT_SetPos(ARKQ_KNIFE, ARKQ_HAND_ANCHOR, ARKQ_KNIFE_OFFSET, 0);
     EventSetRawAngle angle{.cleanup = 0, .character = ARKQ_KNIFE, .parent = ARKQ_HAND_ANCHOR, .rotation = {.x = 0x8000, .y = 0x8000, .z = 0}, .delay = 0};
     EVT_AT_SetAng_Callback(&angle);

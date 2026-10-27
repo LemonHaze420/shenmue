@@ -69,7 +69,7 @@ void CreateRo10PriceBoards(Ro10Work &work) {
                 const Vector3 scale{.25f, .25f, .25f};
                 EV_AT_SetPos(digits[digit], EventTransformFlags::AllAxes, position);
                 EV_AT_SetAngY(digits[digit], EventTransformFlags::AllAxes, rotation);
-                SetMotionworkFlagForCharaById(digits[digit], &scale);
+                mtwkSetMotionworkScale3(digits[digit], &scale);
             }
         } else {
             digits[0] = shen_name{0};
@@ -105,7 +105,7 @@ void RefreshRo10Items(Ro10Work &work) {
             EV_AT_SetPos(item, EventTransformFlags::World | EventTransformFlags::AllAxes, itemPosition);
             EV_AT_SetAngY(item, EventTransformFlags::World | EventTransformFlags::AllAxes, itemRotation);
             if (!(work.purchased[index] & 8U)) {
-                SetMotionworkFlagForCharaById(item, &scale);
+                mtwkSetMotionworkScale3(item, &scale);
                 work.purchased[index] |= 8U;
             }
             EV_EnableCharacterDisplay(item);

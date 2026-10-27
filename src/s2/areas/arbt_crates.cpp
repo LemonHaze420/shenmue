@@ -92,7 +92,7 @@ void CreateArbtCrates(ArbtCrateWork &work) {
         EV_EnableCharacterDisplay(name);
         EV_SetCharaControllerFlags(name, 1, NpcCharacterControllerState::Disabled);
         const Vector3 scale{1, 1, 0.6f};
-        SetMotionworkFlagForCharaById(name, &scale);
+        mtwkSetMotionworkScale3(name, &scale);
         SetScenarioCharacterDrawControl(name, 2, 1);
         const Vector3 shadowOffset{0, 0, -0.1f}, shadowScale{1.7f, 1, 1};
         SetCharacterShadowOffset(ctrlGetCharaByName(name), &shadowOffset);
@@ -122,7 +122,7 @@ void CreateArbtCrates(ArbtCrateWork &work) {
             }
             scale = {1, 1.75f, 1};
         }
-        SetMotionworkFlagForCharaById(name, &scale);
+        mtwkSetMotionworkScale3(name, &scale);
         EV_SetCharaControllerFlags(name, 1, NpcCharacterControllerState::Disabled);
         AT_SetLocalBaseChara(name, ARBT_BASE);
         EV_AT_SetPos(name, EventTransformFlags::AllAxes, position);

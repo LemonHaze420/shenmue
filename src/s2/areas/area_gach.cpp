@@ -405,7 +405,7 @@ void QueueGachPurchase(GachTaskWork *work) {
     Uncling(GACH_SHELL, 257 - motionStartFrame);
     QueuePose(gachPrizeHandPose, 100, 257 - motionStartFrame);
     const Vector3 scale{handRecord.scale, handRecord.scale, handRecord.scale};
-    SetMotionworkFlagForCharaById(Prize(work).object, &scale);
+    mtwkSetMotionworkScale3(Prize(work).object, &scale);
     Cling(Prize(work).object, GACH_RYO, 14, {handRecord.position.x + 0.117f, handRecord.position.y + 0.017000001f, handRecord.position.z - 0.064999998f},
         {handRecord.rotation.x, handRecord.rotation.y + 32768, handRecord.rotation.z + 49152}, 277 - motionStartFrame);
     Display(Prize(work).object, 282 - motionStartFrame, 0);

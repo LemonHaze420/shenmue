@@ -72,7 +72,7 @@ void SetupE0215Characters() {
     EV_SetCharacterAlphaEnabled(AREA_0215_A413, false);
     EV_SetCharacterAlphaEnabled(AREA_0215_A530, false);
     const Vector3 scale{50.0f, 50.0f, 50.0f};
-    SetMotionworkFlagForCharaById(AREA_0215_A413, &scale);
+    mtwkSetMotionworkScale3(AREA_0215_A413, &scale);
 }
 
 // @verified - p

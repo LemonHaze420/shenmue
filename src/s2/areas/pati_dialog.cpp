@@ -871,7 +871,7 @@ void PatiDoubleLose(PatiEventWork *ctx) {
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
     v3 = FindCharacterByScenarioName(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 4, 15.0, 1.0);
-    EVT_AT_SetFaceLooks(ctx->dealer, 3, 15, 1.0f, 20);
+    EVT_AT_SetFaceLooks(ctx->dealer, FacialExpressionId::Smile, 15, 1.0f, 20);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(4);
     if (RandomInt32 == 1) {

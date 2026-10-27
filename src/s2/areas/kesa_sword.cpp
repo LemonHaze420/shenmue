@@ -27,7 +27,7 @@ float alpha, lightFalloff[2], fireWidth, fireHeight, fireRadiusX, fireRadiusY, f
 std::int32_t waitFrames, partIndex, fire;
 bool firstBeam, secondBeam;
 void Scale(shen_name character, const Vector3 &value) {
-    SetMotionworkFlagForCharaById(character, &value);
+    mtwkSetMotionworkScale3(character, &value);
 }
 void TorchFlag(std::int32_t value) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 2228, value);

@@ -172,8 +172,8 @@ std::int32_t QabtPraiseCarry(std::int32_t streak, std::int32_t delay) {
     } else
         return delay;
     EVT_AT_SetVoice(voice, 1, delay);
-    EVT_AT_SetFaceLooks(QABT_AW2, 3, 30, 1, delay);
-    EVT_AT_SetFaceLooks(QABT_AW2, 0, 30, 1, end);
+    EVT_AT_SetFaceLooks(QABT_AW2, FacialExpressionId::Smile, 30, 1, delay);
+    EVT_AT_SetFaceLooks(QABT_AW2, FacialExpressionId::Normal, 30, 1, end);
     return end;
 }
 namespace {
@@ -183,7 +183,7 @@ void BeginCarryWarning(std::uint32_t motion) {
 }
 void FinishCarryWarning(std::int32_t frames) {
     SetHighModelAndFaceFlagsForChara(ctrlGetCharaByName(QABT_AW2), FacialExpressionId::Angry, 30, 1);
-    EVT_AT_SetFaceLooks(QABT_AW2, 0, 30, 1, frames);
+    EVT_AT_SetFaceLooks(QABT_AW2, FacialExpressionId::Normal, 30, 1, frames);
 }
 } // namespace
 std::int32_t QabtWarnCarryOnce() {

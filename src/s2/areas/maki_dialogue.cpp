@@ -73,7 +73,7 @@ std::int32_t MakiDepositLogs() {
     const std::int32_t duration = 120 + firstFrames + secondFrames + thirdFrames;
     EVT_AT_SetPoint(MAKI_RYO, MAKI_SHENHUA, 21, 3, 1, firstFrames + 80, duration, 0x08000000U);
     EVT_AT_SetPoint(MAKI_SHENHUA, MAKI_RYO, 5, 3, 1, 20, duration, 0);
-    EVT_AT_SetFaceLooks(MAKI_SHENHUA, 0, 8, 1, duration);
+    EVT_AT_SetFaceLooks(MAKI_SHENHUA, FacialExpressionId::Normal, 8, 1, duration);
     return duration;
 }
 std::int32_t MakiDiscussEmptyHands() {
@@ -96,7 +96,7 @@ std::int32_t MakiDiscussEmptyHands() {
     EVT_AT_SetVoice("0518B031", 260); // @text EN: "Please look again, Ryo." | JA: "お願いね、リョウ。"
     EVT_AT_SetVoice("0518A035", 320); // @text EN: "Yeah, I know." | JA: "ああ、わかってる…"
     EVT_AT_SetPoint(MAKI_SHENHUA, MAKI_RYO, 5, 3, 1, 20, 360, 0);
-    EVT_AT_SetFaceLooks(MAKI_SHENHUA, 0, 8, 1, 360);
+    EVT_AT_SetFaceLooks(MAKI_SHENHUA, FacialExpressionId::Normal, 8, 1, 360);
     return 360;
 }
 } // namespace shenmue::s2::areas

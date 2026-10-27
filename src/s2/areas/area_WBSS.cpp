@@ -234,7 +234,7 @@ void RandomizeWall(std::int32_t index) {
     }
     EV_AT_SetPos(record.character, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(record.character, EventTransformFlags::AllAxes, rotation);
-    SetMotionworkFlagForCharaById(record.character, &scale);
+    mtwkSetMotionworkScale3(record.character, &scale);
 }
 // @verified - p
 void PrepareWalls() {
@@ -270,7 +270,7 @@ void UpdateScale() {
             if (!record.character.name)
                 break;
             const Vector3 value{scale * record.scale, scale * record.scale, scale * record.scale};
-            SetMotionworkFlagForCharaById(record.character, &value);
+            mtwkSetMotionworkScale3(record.character, &value);
         }
     }
 }

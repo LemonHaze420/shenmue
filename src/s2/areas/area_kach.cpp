@@ -221,7 +221,7 @@ void KachInitializeCallback(void *) {
     Turn(base, shen_name{0xffffffffU}, kowloonBS[boardIndex].angleY);
     npcSetAreaName(area, &kowloonBS[boardIndex].position, 2, 1);
     const Vector3 scale{0.5f, 0.5f, 0.5f};
-    SetMotionworkFlagForCharaById(ball, &scale);
+    mtwkSetMotionworkScale3(ball, &scale);
     modelSetCharaAlpha(ctrlGetCharaByName(hand), 0.40000001f);
     AT_SetLocalBaseChara(ball, base);
     AT_SetLocalBaseChara(hand, base);

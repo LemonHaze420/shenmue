@@ -125,7 +125,7 @@ void InitPati() {
         } else if (static_cast<std::uint8_t>(surfaceCharacter.name) == 'T') {
             if ((surfaceCharacter.name & 0xffff0000U) != 0x4d440000U) {
                 CreateEventCharacter(CharacterCreationTable0, reinterpret_cast<const std::byte *>("TABLMOTG"), surfaceCharacter);
-                SetMotionworkFlagForCharaById(surfaceCharacter, &tableScale);
+                mtwkSetMotionworkScale3(surfaceCharacter, &tableScale);
                 AT_SetLocalBaseChara(surfaceCharacter, tableCharacter);
                 EV_AT_SetPos(surfaceCharacter, EventTransformFlags::AllAxes, Vector3{});
                 EV_AT_SetAngY(surfaceCharacter, EventTransformFlags::AllAxes, Vector3i{}, nullptr);
@@ -135,7 +135,7 @@ void InitPati() {
         } else if (static_cast<std::uint8_t>(surfaceCharacter.name) == 'G') {
             if ((surfaceCharacter.name & 0xffff0000U) != 0x4d440000U) {
                 CreateEventCharacter(CharacterCreationTable0, reinterpret_cast<const std::byte *>("PCKOMGZG"), surfaceCharacter);
-                SetMotionworkFlagForCharaById(surfaceCharacter, &tableScale);
+                mtwkSetMotionworkScale3(surfaceCharacter, &tableScale);
                 AT_SetLocalBaseChara(surfaceCharacter, tableCharacter);
                 EV_AT_SetPos(surfaceCharacter, EventTransformFlags::AllAxes, Vector3{0.0f, 0.004999999888241291f, 0.0f});
                 EV_AT_SetAngY(surfaceCharacter, EventTransformFlags::AllAxes, Vector3i{}, nullptr);
@@ -187,7 +187,7 @@ void InitPati() {
                 EV_AT_SetAngY(boardCharacter, EventTransformFlags::AllAxes, Vector3i{60074, 32768, 0}, nullptr);
             }
             Vector3 scale{option->scale, option->scale, option->scale};
-            SetMotionworkFlagForCharaById(boardCharacter, &scale);
+            mtwkSetMotionworkScale3(boardCharacter, &scale);
             EV_EnableCharacterDisplay(boardCharacter);
             const std::uint32_t prizeCount = static_cast<std::uint32_t>(std::strlen(board.prizes));
             const std::uint32_t propCount = (option->mode == 8 ? 25 : 13) + 2 * prizeCount;

@@ -1571,14 +1571,14 @@ void AreaQF00Main(std::uint32_t) {
     constexpr Vector3 firstScale{1.0f, 1.0f, 1.0f}, secondScale{0.800000011920929f, 1.0f, 0.800000011920929f};
     SetScenarioCharacterRadius(brg1, 20.0f);
     EV_SetRefBoardParamsFor(brg1, 1);
-    SetMotionworkFlagForCharaById(brg1, &firstScale);
+    mtwkSetMotionworkScale3(brg1, &firstScale);
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 641)) {
         EV_AT_SetPos(brg1, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3{236.10000610351562f, 136.0f, 148.1999969482422f});
         EV_AT_SetAngY(brg1, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, 7281, 0}, nullptr);
     }
     SetScenarioCharacterRadius(brg2, 20.0f);
     EV_SetRefBoardParamsFor(brg2, 1);
-    SetMotionworkFlagForCharaById(brg2, &secondScale);
+    mtwkSetMotionworkScale3(brg2, &secondScale);
 }
 void AreaQF00Cleanup(std::int32_t, std::uint32_t) {
     ApplyQF00Lighting();

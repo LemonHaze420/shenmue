@@ -1304,7 +1304,7 @@ void Prize(void *data) {
             HandRotation(prizeHand, prizeHandRotation);
             Pose(prizeHand, handPrize);
             const Vector3 scale{0.5f, 0.5f, 0.5f};
-            SetMotionworkFlagForCharaById(work->prize, &scale);
+            mtwkSetMotionworkScale3(work->prize, &scale);
             Place(work->prize, prizeHand, prizePosition);
             Turn(work->prize, prizeHand, 0);
             EV_DisableCharacterDisplay(work->prize);

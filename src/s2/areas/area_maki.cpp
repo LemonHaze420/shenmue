@@ -188,7 +188,7 @@ void RunMakiEvent(std::uintptr_t argument) {
         EV_AT_SetPos(character, EventTransformFlags::AllAxes, placement.position);
         EV_AT_SetAngY(character, EventTransformFlags::AllAxes, placement.rotation);
         const Vector3 scale{.x = 1, .y = 1, .z = 1};
-        SetMotionworkFlagForCharaById(character, &scale);
+        mtwkSetMotionworkScale3(character, &scale);
         EV_EnableCharacterDisplay(character);
         SearchTarget &target = makiFirewoodTargets[index];
         target.position.x = placement.position.x;
@@ -219,9 +219,9 @@ void RunMakiEvent(std::uintptr_t argument) {
     AT_SetLocalBaseChara(MAKI_MIDDLE_LOG, MAKI_CLING);
     AT_SetLocalBaseChara(MAKI_LARGE_LOG, MAKI_CLING);
     const Vector3 scale{.x = 1, .y = 1, .z = 1};
-    SetMotionworkFlagForCharaById(MAKI_SMALL_LOG, &scale);
-    SetMotionworkFlagForCharaById(MAKI_MIDDLE_LOG, &scale);
-    SetMotionworkFlagForCharaById(MAKI_LARGE_LOG, &scale);
+    mtwkSetMotionworkScale3(MAKI_SMALL_LOG, &scale);
+    mtwkSetMotionworkScale3(MAKI_MIDDLE_LOG, &scale);
+    mtwkSetMotionworkScale3(MAKI_LARGE_LOG, &scale);
     srchSetTarget(2, makiFirewoodTargets);
     EV_FreeAuthorPak(1, "0518");
     makiRuntime.mainTask = HLib::EnqueueTaskWithoutParameter(MakiMainCallback, 4, 0x0b, static_cast<std::int32_t>(MAKI_TASK.name));

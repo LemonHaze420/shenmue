@@ -100,7 +100,7 @@ void ChawInitialize(ChawEventWork *work) {
     EV_AT_SetPos(CHAW_HAND, EventTransformFlags::AllAxes, {0.17f, 0.86f, 0.53f});
     EV_AT_SetAngY(CHAW_HAND, EventTransformFlags::AllAxes, {49152, 40960, 0});
     const Vector3 scale{0.1f, 0.1f, 0.1f};
-    SetMotionworkFlagForCharaById(CHAW_HAND, &scale);
+    mtwkSetMotionworkScale3(CHAW_HAND, &scale);
     EV_DisableCharacterDisplay(CHAW_HAND);
     EV_AT_SetPos(CHAW_FACE, EventTransformFlags::AllAxes, {0, 0.75f, 0.2f});
     EV_AT_SetAngY(CHAW_FACE, EventTransformFlags::AllAxes, {});

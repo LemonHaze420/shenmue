@@ -1,6 +1,7 @@
 #pragma once
 
 #include "s2/hlib.hpp"
+#include "s2/face_expression.hpp"
 #include "common/types.hpp"
 #include "common/math.hpp"
 

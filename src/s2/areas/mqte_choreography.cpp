@@ -84,7 +84,7 @@ std::int32_t HurdleJumpFailure() {
     EVT_AT_SetMot(MQTE_SHENFA, 7514, 0, 1.1f, 0, 185);
     EVT_AT_SetVoice("0517A008", 1, 0);
     SetHighModelAndFaceFlagsForChara(ctrlGetCharaByName(MQTE_SHENFA), FacialExpressionId::Surprise, 8, .6f);
-    EVT_AT_SetFaceLooks(MQTE_SHENFA, 0, 0, 1, 185);
+    EVT_AT_SetFaceLooks(MQTE_SHENFA, FacialExpressionId::Normal, 0, 1, 185);
     const char *const shenfaVoices[]{"0517B004", "0517B005", "0517B006", "0517B007"}; // @text 0517B004 EN: "Are you okay?" | JA: "大丈夫？" ; 0517B005 EN: "Are you all right?" | JA: "大丈夫っ？" ; 0517B006 EN: "Did you get hurt?" | JA: "ケガしなかった？" ; 0517B007 EN: "All right?" | JA: "平気？"
     const char *const ryoVoices[]{"0517A015", "0517A016", "0517A017", "0517A019"}; // @text 0517A015 EN: "Don't worry." | JA: "いや、大丈夫だ。" ; 0517A016 EN: "I'm okay." | JA: "…大丈夫。" ; 0517A017 EN: "I'm fine." | JA: "俺なら平気だ。" ; 0517A019 EN: "I'm okay.\nLet's move on." | JA: "大丈夫、行こう。"
     EVT_AT_SetVoice(shenfaVoices[shenGetRandomInt32(4)], 1, 70);
@@ -142,9 +142,9 @@ std::int32_t ForestFinalFailure(ForestQteWork &work) {
     EVT_AT_SetPos(MQTE_DUMMY_SHENFA, MQTE_SHENFA, {0, 0, 0}, 0);
     EVT_AT_SetAngY(MQTE_DUMMY_SHENFA, MQTE_SHENFA, 0, 0);
     SetHighModelAndFaceFlagsForChara(ctrlGetCharaByName(MQTE_RYO), FacialExpressionId::Suffer, 8, 1);
-    EVT_AT_SetFaceLooks(MQTE_RYO, 0, 0, 1, 380);
+    EVT_AT_SetFaceLooks(MQTE_RYO, FacialExpressionId::Normal, 0, 1, 380);
     SetHighModelAndFaceFlagsForChara(ctrlGetCharaByName(MQTE_SHENFA), FacialExpressionId::Scheme, 8, 1);
-    EVT_AT_SetFaceLooks(MQTE_SHENFA, 0, 0, 1, 380);
+    EVT_AT_SetFaceLooks(MQTE_SHENFA, FacialExpressionId::Normal, 0, 1, 380);
     EVT_AT_SetCam(7003, MQTE_INVALID, MQTE_INVALID, 0, 0, 0);
     EVT_AT_SetCam(7004, MQTE_INVALID, MQTE_INVALID, 0, 0, 50);
     EVT_AT_SetCam(7000, MQTE_INVALID, MQTE_INVALID, 0, 0, 90);

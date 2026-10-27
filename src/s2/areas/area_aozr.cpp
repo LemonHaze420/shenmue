@@ -174,7 +174,7 @@ bool ShowBoard(ShopWork *work) {
         for (int y = 0; y < work->board->rows; ++y) {
             const auto name = BoardCell(work->board, nullptr, nullptr, x, y);
             if (name.name)
-                SetMotionworkFlagForCharaById(name, &scale);
+                mtwkSetMotionworkScale3(name, &scale);
         }
     return true;
 }

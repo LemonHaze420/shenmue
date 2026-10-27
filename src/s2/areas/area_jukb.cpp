@@ -83,7 +83,7 @@ void AreaJUKBMain(std::uintptr_t parameter) {
     for (std::int32_t i = 5; i != 9; ++i)
         CreateEventCharacter(CharacterCreationHighModel, nullptr, JUKB_TARGETS[i]);
     const Vector3 fingerScale{.1f, .1f, .1f};
-    SetMotionworkFlagForCharaById(JUKB_FINGER, &fingerScale);
+    mtwkSetMotionworkScale3(JUKB_FINGER, &fingerScale);
     AT_SetLocalBaseChara(JUKB_FINGER, JUKB_BOX);
     for (std::int32_t i = 0; i != 7; ++i)
         AT_SetLocalBaseChara(JUKB_TARGETS[i], JUKB_BOX);

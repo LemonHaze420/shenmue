@@ -87,7 +87,7 @@ std::int32_t AHQBFirstMiss() {
     EVT_AT_DispBlur(AHQB_PLAYER, 4, 8, 1, 20, 20);
     EVT_AT_SetCam(2004, AHQB_BASE, AHQB_BASE, 0, 0, 0);
     EVT_AT_SetCam(2005, AHQB_BASE, AHQB_BASE, 0, 0, 20);
-    EVT_AT_SetFaceLooks(AHQB_PLAYER, 6, 10, 1, 25);
+    EVT_AT_SetFaceLooks(AHQB_PLAYER, FacialExpressionId::Suffer, 10, 1, 25);
     ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(AHQB_PLAYER), 0, reinterpret_cast<std::byte *>(fortuneLeftReadingHandPose), 0);
     Queue_EVT_AT_CtrlHandUp_1(AHQB_PLAYER, 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 10, 40);
     return 60;
@@ -163,7 +163,7 @@ std::int32_t AHQBSecondFailure() {
     EVT_AT_SetMot_Callback(&motion);
     GetMotionFrameCount(4226);
     EVT_AT_SetCam(2010, AHQB_BASE, AHQB_BASE, 0, 0, 0);
-    EVT_AT_SetFaceLooks(AHQB_PLAYER, 6, 10, 1, 25);
+    EVT_AT_SetFaceLooks(AHQB_PLAYER, FacialExpressionId::Suffer, 10, 1, 25);
     return 35;
 }
 // @verified - p
@@ -185,7 +185,7 @@ std::int32_t AHQBFinalSuccess() {
 // @verified - p
 std::int32_t AHQBFinalFailure() {
     EVT_AT_SetCam(2007, AHQB_BASE, AHQB_BASE, 0, 0, 0);
-    EVT_AT_SetFaceLooks(AHQB_PLAYER, 6, 10, 1, 10);
+    EVT_AT_SetFaceLooks(AHQB_PLAYER, FacialExpressionId::Suffer, 10, 1, 10);
     return 90;
 }
 // @verified - p
@@ -253,7 +253,7 @@ std::int32_t AHQBCombatPhase(AhqbEventWork *work) {
         EVT_AT_SetAngY(AHQB_GOI, AHQB_BASE, 30, 0);
         QueueSkQteWait(work->qteResult, 512, 20, 20, AHQBFinalSuccess, AHQBFinalFailure, 0);
         EVT_AT_SetCam(2006, AHQB_BASE, AHQB_BASE, 0, 0, 0);
-        EVT_AT_SetFaceLooks(AHQB_PLAYER, 1, 10, 1, 20);
+        EVT_AT_SetFaceLooks(AHQB_PLAYER, FacialExpressionId::Angry, 10, 1, 20);
         work->phase = 7;
         break;
     case 7:

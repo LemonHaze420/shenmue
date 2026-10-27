@@ -136,7 +136,7 @@ void KesaInitializeEnergyBall(std::int32_t mode) {
         EV_AT_SetPos(KESA_EFFECT_ONE, EventTransformFlags::AllAxes, {0, 0, 0});
         EV_AT_SetAngY(KESA_EFFECT_ONE, EventTransformFlags::AllAxes, {16384, 0, 0});
         const Vector3 zeroScale{0, 0, 0};
-        SetMotionworkFlagForCharaById(KESA_EFFECT_ONE, &zeroScale);
+        mtwkSetMotionworkScale3(KESA_EFFECT_ONE, &zeroScale);
         SetScenarioCharacterTransparency(KESA_EFFECT_ONE, 0);
         EV_EnableCharacterDisplay(KESA_EFFECT_ONE);
         AT_SetLocalBaseChara(KESA_EFFECT_ONE, KESA_INVALID);
@@ -150,7 +150,7 @@ void KesaInitializeEnergyBall(std::int32_t mode) {
         EV_AT_SetPos(KESA_EFFECT_TWO, EventTransformFlags::AllAxes, {0, .1f, 0});
         EV_AT_SetAngY(KESA_EFFECT_TWO, EventTransformFlags::AllAxes, {32768, 0, 0});
         const Vector3 effectScale{.09f, .15f, .09f};
-        SetMotionworkFlagForCharaById(KESA_EFFECT_TWO, &effectScale);
+        mtwkSetMotionworkScale3(KESA_EFFECT_TWO, &effectScale);
     }
     kesaEnergyLifetime = 50;
     kesaEnergyActiveParticles = mode == 0 ? 10 : 20;
@@ -193,7 +193,7 @@ void KesaEnergyBallLoop(void *) {
     }
     const float scale = kesaEnergyFrame * .0033333334f;
     const Vector3 effectScale{scale, scale, 1};
-    SetMotionworkFlagForCharaById(KESA_EFFECT_ONE, &effectScale);
+    mtwkSetMotionworkScale3(KESA_EFFECT_ONE, &effectScale);
     SetScenarioCharacterTransparency(KESA_EFFECT_ONE, std::min(1.0f, scale));
     UpdateParticles();
 }

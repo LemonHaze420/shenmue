@@ -144,7 +144,7 @@ void InitializeClub(std::uint32_t slot) {
     vfStageObjectAssignMotFlags(slot, 0x405000);
     vfStageObjectReset(slot, ctrlGetCharaByName(sam));
     const Vector3 scale{2, 0.5f, 2};
-    SetMotionworkFlagForCharaById(club, &scale);
+    mtwkSetMotionworkScale3(club, &scale);
     EV_DisableCharacterDisplay(club);
 }
 

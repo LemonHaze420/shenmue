@@ -171,7 +171,7 @@ void UedeInitializeCharacters(void *data) {
     GetMotionFrameCount(static_cast<std::uint16_t>(motion.animation));
     if (DoesScenarioCharacterExist(UEDE_TABLE)) {
         const Vector3 scale{.5f, 1, .5f};
-        SetMotionworkFlagForCharaById(UEDE_TABLE, &scale);
+        mtwkSetMotionworkScale3(UEDE_TABLE, &scale);
         EventSetPosition tablePosition{.character = UEDE_TABLE, .parent = UEDE_BASE, .position = {-.1f, 0, 0}};
         EVT_AT_SetPosRot(&tablePosition);
         EventSetAngle tableAngle{.character = UEDE_TABLE, .parent = UEDE_BASE};

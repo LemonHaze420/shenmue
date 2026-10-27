@@ -294,8 +294,8 @@ std::int32_t WtkqQteSuccess() {
     Cam(2001, 60);
     Cam(2002, 110);
     EVT_AT_DispBlur(ryo, 4, 20, 1, 30, 0);
-    EVT_AT_SetFaceLooks(kun, 0, 15, 1, 110);
-    EVT_AT_SetFaceLooks(kun, 19, 30, 1, 145);
+    EVT_AT_SetFaceLooks(kun, FacialExpressionId::Normal, 15, 1, 110);
+    EVT_AT_SetFaceLooks(kun, FacialExpressionId::SmileKun, 30, 1, 145);
     Voice("0146C015", 15);
     Voice("0146C013", 30);
     Film(200);
@@ -322,10 +322,10 @@ std::int32_t WtkqQteFailure() {
     Cam(3002, 150);
     Cam(3003, 240);
     EVT_AT_DispBlur(ryo, 1, 20, 2, 20, 160);
-    EVT_AT_SetFaceLooks(ryo, 6, 16, 1, 30);
-    EVT_AT_SetFaceLooks(ryo, 1, 16, 1, 160);
-    EVT_AT_SetFaceLooks(kun, 1, 16, 1, 60);
-    EVT_AT_SetFaceLooks(kun, 19, 16, 1, 240);
+    EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Suffer, 16, 1, 30);
+    EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Angry, 16, 1, 160);
+    EVT_AT_SetFaceLooks(kun, FacialExpressionId::Angry, 16, 1, 60);
+    EVT_AT_SetFaceLooks(kun, FacialExpressionId::SmileKun, 16, 1, 240);
     Film(315);
     return 345;
 }

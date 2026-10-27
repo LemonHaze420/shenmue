@@ -41,7 +41,7 @@ void PlaceEtrkKey(shen_name character, float fraction) {
     AT_SetLocalBaseChara(character, ETRK_KEY_BASE);
     EV_AT_SetPos(character, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(character, EventTransformFlags::AllAxes, rotation, nullptr);
-    SetMotionworkFlagForCharaById(character, &scale);
+    mtwkSetMotionworkScale3(character, &scale);
     EVT_AT_ObjectDisp_1(character, 0, 0);
 }
 std::int32_t CancelEtrkKeys(EtrkWork &work) {
@@ -132,7 +132,7 @@ std::int32_t EtrkPollKeys(EtrkWork &work) {
         for (std::int32_t index = 0; index < 6; ++index)
             if (work.available[index].available) {
                 EV_DisableCharacterDisplay(work.keys[index].character);
-                SetMotionworkFlagForCharaById(work.keys[index].character, &scale);
+                mtwkSetMotionworkScale3(work.keys[index].character, &scale);
             }
         return 1;
     }

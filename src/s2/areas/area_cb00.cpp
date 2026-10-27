@@ -89,7 +89,7 @@ void Cb00Initialize(HLib::Task *task) {
     work->characters = Queue_EVT_AT_ReadChr(task, CB00_READ_CHARACTERS);
     work->smoke = -1;
     const Vector3 scale{1, 1, 1.5f};
-    SetMotionworkFlagForCharaById(CB00_BRIDGE, &scale);
+    mtwkSetMotionworkScale3(CB00_BRIDGE, &scale);
     GetCurrentDateTime(work->date);
     Cb00InitializationNullsub();
     SetRenderClockAndCompassTo(1);

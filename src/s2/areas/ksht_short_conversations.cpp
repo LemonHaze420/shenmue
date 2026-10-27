@@ -22,7 +22,7 @@ void KshtPrepareShortConversation(void *) {
     SelectCamera(610, KSHT_DUMMY);
     EVT_AT_SetCam(620, KSHT_SIN, KSHT_SIN, 0, 0, 60);
     SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(KSHT_RYO), 0, 0, 1);
-    EVT_AT_SetFaceLooks(KSHT_SIN, 1, 45, 1, 30);
+    EVT_AT_SetFaceLooks(KSHT_SIN, FacialExpressionId::Angry, 45, 1, 30);
     SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(KSHT_RYO), 0, 150, 1);
     EVT_AT_SetPoint(KSHT_RYO, KSHT_SIN, 5, 3, 0, 0, 150, 0);
     EVT_AT_SetPoint(KSHT_SIN, KSHT_RYO, 5, 1, 2, 45, 150, 0);
@@ -50,9 +50,9 @@ void KshtPrepareInstructions(void *) {
     SelectCamera(620, KSHT_SIN);
     EVT_AT_SetCam(610, KSHT_DUMMY, KSHT_DUMMY, 0, 0, 75);
     EVT_AT_SetCam(620, KSHT_SIN, KSHT_SIN, 0, 0, 130);
-    EVT_AT_SetFaceLooks(KSHT_SIN, 1, 0, 1, 30);
-    EVT_AT_SetFaceLooks(KSHT_RYO, 0, 75, 1, 30);
-    EVT_AT_SetFaceLooks(KSHT_SIN, 0, 130, 1, 30);
+    EVT_AT_SetFaceLooks(KSHT_SIN, FacialExpressionId::Angry, 0, 1, 30);
+    EVT_AT_SetFaceLooks(KSHT_RYO, FacialExpressionId::Normal, 75, 1, 30);
+    EVT_AT_SetFaceLooks(KSHT_SIN, FacialExpressionId::Normal, 130, 1, 30);
     EVT_AT_SetPoint(KSHT_SIN, KSHT_RYO, 5, 1, 2, 0, 160, 0);
     EVT_AT_SetPoint(KSHT_RYO, KSHT_SIN, 5, 3, 0, 0, 300, 0);
     kshtDelay = 260;

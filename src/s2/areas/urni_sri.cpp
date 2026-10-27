@@ -20,7 +20,7 @@ std::int64_t UranaiSriSetup(shen_name reader, std::int32_t) {
     EventSetAngle angle{.cleanup = 0, .character = projection.character, .parent = reader, .degrees = projection.yaw, .delay = 0};
     EVT_AT_SetAngY_Callback(&angle);
     const Vector3 scale{projection.scale, projection.scale, projection.scale};
-    SetMotionworkFlagForCharaById(projection.character, &scale);
+    mtwkSetMotionworkScale3(projection.character, &scale);
     SetScenarioCharacterTransparency(projection.character, 1);
     SetPluralControlFor(ctrlGetCharaByName(projection.character), 0);
     return 0;

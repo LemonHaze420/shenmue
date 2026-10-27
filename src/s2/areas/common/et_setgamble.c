@@ -54,7 +54,7 @@ void PlaceGamblingBoardDigits(shen_name parent, std::int32_t digits, std::int16_
         const std::int32_t digit = digits / divisor;
         if (static_cast<std::int32_t>(started) | digit) {
             const shen_name character = CreateGamblingModel(digit >= 10 ? models[0] : models[digit]);
-            SetMotionworkFlagForCharaById(character, &scale);
+            mtwkSetMotionworkScale3(character, &scale);
             const Vector3 position{sample * 1.5f, heights[axis] * 1.5f, depths[axis] * 1.5f};
             SetGamblingLocalPlacement(character, parent, position);
             AT_SetLocalBaseChara(character, shen_name{0xffffffffU});
@@ -71,7 +71,7 @@ void LoadBoardSet(shen_name parent, float x, float y, float z, float angleX, flo
     const shen_name name{(g_areaBoardCharacterIndex++ << 24) + SHEN_NAME(mb00)};
     CreateEventCharacter(CharacterCreationHighModel, reinterpret_cast<const std::byte *>("DSTKM01G"), name);
     EnableScenarioCharacterDisplay(name);
-    SetMotionworkFlagForCharaById(name, &scale);
+    mtwkSetMotionworkScale3(name, &scale);
     SetGamblingLocalPlacement(name, parent, Vector3{x, y, z});
     EV_AT_SetAngY(name, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
     PlaceGamblingBoardDigits(name, firstDigits, 0);
@@ -129,7 +129,7 @@ void GambleInit() {
         EnsureGamblingPackage("BOARDSET");
         const shen_name table = CreateGamblingModel("WSC1MISG");
         const Vector3 scale{2.0f, 2.0f, 1.5f};
-        SetMotionworkFlagForCharaById(table, &scale);
+        mtwkSetMotionworkScale3(table, &scale);
         const Vector3 position{board.position.x, board.position.y + 0.75f, board.position.z};
         const Vector3i rotation{0, GamblingAngle(board.angleY), 0};
         EV_AT_SetPos(table, EventTransformFlags::World | EventTransformFlags::AllAxes, position);

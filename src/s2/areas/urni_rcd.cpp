@@ -36,7 +36,7 @@ std::int64_t UranaiRcdSetup(shen_name reader, std::int32_t) {
         EventSetRawAngle rotation{.cleanup = 0, .character = name, .parent = reader, .rotation = {49152, 0, 0}, .delay = 0};
         EVT_AT_SetAng_Callback(&rotation);
         EV_DisableCharacterDisplay(name);
-        SetMotionworkFlagForCharaById(name, &URNI_SEH_SCALE);
+        mtwkSetMotionworkScale3(name, &URNI_SEH_SCALE);
     }
     name = URNI_STICK_HELD_FIRST;
     for (std::int32_t i = 0; i < 5; ++i, name.name += 0x1000000U) {

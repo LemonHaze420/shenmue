@@ -32,7 +32,7 @@ void PlaceCarouselKey(shen_name character, float fraction) {
     AT_SetLocalBaseChara(character, QDSS_KEYS_BASE);
     EV_AT_SetPos(character, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(character, EventTransformFlags::AllAxes, rotation);
-    SetMotionworkFlagForCharaById(character, &scale);
+    mtwkSetMotionworkScale3(character, &scale);
     EVT_AT_ObjectDisp_1(character, 0, 0);
 }
 void DescribeSelectedKey(QdssWork &work) {

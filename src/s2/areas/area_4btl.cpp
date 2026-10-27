@@ -205,10 +205,10 @@ std::int32_t Intro(BattleTask &task) {
     Camera(1401, cam, cam, 60);
     Camera(1402, cam, cam, 135);
     SetHighModelAndFaceFlagsForChara(CharacterFor(ryo), 0, 10, 1);
-    EVT_AT_SetFaceLooks(ryo, 1, 7, 1, 70);
+    EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Angry, 7, 1, 70);
     SetHighModelAndFaceFlagsForChara(CharacterFor(opponent), 1, 10, 1);
-    EVT_AT_SetFaceLooks(opponent, 13, 10, 1, 135);
-    EVT_AT_SetFaceLooks(opponent, 1, 10, 1, 370);
+    EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Scheme, 10, 1, 135);
+    EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Angry, 10, 1, 370);
     EVT_AT_SetPoint(opponent, ryo, 5, 3, 1, 0, 280, 0x80000000U);
     EVT_AT_SetVoice("0083B001", 1, 0); // @text EN: "That was fast=@" | JA: "…来やがったか。"
     EVT_AT_SetVoice("0083A001", 1, 60); // @text EN: "Tell me about Yuanda Zhu." | JA: "朱元達のことを教えろ。"
@@ -271,7 +271,7 @@ std::int32_t Won(BattleTask &task) {
         {"0083B021", 550}, {"0083A015", 660}, {"0083B023", 750}}; // @text 0083B021 EN: "Go through the alley\nby the General Store on Queen's St." | JA: "クイーンズストリートの、\n雑貨屋の脇の路地を入りな…" ; 0083A015 EN: "Take me there." | JA: "そこまで案内しろ。" ; 0083B023 EN: "All right.\nFollow me." | JA: "しょうがねえな…ついてきな。"
     Voices(cues, std::size(cues));
     SetHighModelAndFaceFlagsForChara(CharacterFor(ryo), 0, 10, 1);
-    EVT_AT_SetFaceLooks(ryo, 1, 7, 1, 160);
+    EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Angry, 7, 1, 160);
     SetHighModelAndFaceFlagsForChara(CharacterFor(opponent), 6, 10, 1);
     return 870;
 }
@@ -303,7 +303,7 @@ std::int32_t Lost(BattleTask &task) {
     Camera(1100);
     Camera(1101, cam, cam, 90);
     SetHighModelAndFaceFlagsForChara(CharacterFor(ryo), 6, 0, 1);
-    EVT_AT_SetFaceLooks(ryo, 0, 7, 1, 420);
+    EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Normal, 7, 1, 420);
     EVT_AT_SetVoice(opponent.name == sam.name ? "0082A005" : "0083B010", 1, 0); // @text EN: "So long=@" | JA: "じゃあな…"
     EVT_AT_SetVoice(opponent.name == sam.name ? "0082B010" : "0083A014", 1, opponent.name == sam.name ? 120 : 300); // @text 0082B010 EN: "Take a nap!" | JA: "そこでずっと、おねんねしてな！" ; 0083A014 EN: "Damn.\nI've got to look for the others." | JA: "…くそっ…\nほかのヤツらを探すか…"
     return 420;

@@ -16,7 +16,7 @@ Vector3i EventCharacterRotation(const Character &character, bool recursive) {
 } // namespace event_runtime_detail
 
 
-std::uint64_t SetMotionworkFlagForCharaById(shen_name characterId, const Vector3 *scale) {
+std::uint64_t mtwkSetMotionworkScale3(shen_name characterId, const Vector3 *scale) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *const character = FindScenarioCharacter(control->scenarioTask, characterId);
     if (!character)

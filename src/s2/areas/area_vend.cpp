@@ -692,8 +692,8 @@ std::int32_t AnimateVendingDrink(std::int32_t delay) {
     EVT_AT_SetSound(192, delay + 285);
     EVT_AT_SetSound(192, delay + 470);
     EVT_AT_SetSound(197, detach);
-    EVT_AT_SetFaceLooks(VEND_RYO, 3, 30, .5f, delay + 200);
-    EVT_AT_SetFaceLooks(VEND_RYO, 0, 30, 1, delay + 300);
+    EVT_AT_SetFaceLooks(VEND_RYO, FacialExpressionId::Smile, 30, .5f, delay + 200);
+    EVT_AT_SetFaceLooks(VEND_RYO, FacialExpressionId::Normal, 30, 1, delay + 300);
     return delay + 765;
 }
 
@@ -731,8 +731,8 @@ std::int32_t PickUpVendingPrize() {
     EVT_AT_SetCam(1110, vendingMachine, vendingMachine, 0, 0, 200);
     Queue_EVT_AT_CtrlHandUp_1(VEND_RYO, 0, reinterpret_cast<std::byte *>(vendPrizeHandCommand), 5, 230);
     EVT_AT_ObjectDisp_1(vendingMachine, 390, 0);
-    EVT_AT_SetFaceLooks(VEND_RYO, 4, 30, .5f, 230);
-    EVT_AT_SetFaceLooks(VEND_RYO, 3, 30, .3f, 280);
+    EVT_AT_SetFaceLooks(VEND_RYO, FacialExpressionId::Surprise, 30, .5f, 230);
+    EVT_AT_SetFaceLooks(VEND_RYO, FacialExpressionId::Smile, 30, .3f, 280);
     return 390;
 }
 

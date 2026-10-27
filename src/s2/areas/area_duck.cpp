@@ -316,7 +316,7 @@ void Obstacles(std::int32_t configuration) {
     if (!FindCharacterByScenarioName(jdm2))
         CreateEventCharacter(CharacterCreationHighModel, nullptr, jdm2);
     const Vector3 scale{0.01f, 4, 10};
-    SetMotionworkFlagForCharaById(jmp1, &scale);
+    mtwkSetMotionworkScale3(jmp1, &scale);
     EVT_AT_SetPos(jmp1, invalid, authoredCoordinates[27], 0);
     Rotation(jmp1, Vector3i{45511, 1820, 20480});
     EVT_AT_SetPos(jdm1, jmp1, Vector3{}, 0);

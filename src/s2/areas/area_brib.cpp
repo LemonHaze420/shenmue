@@ -161,7 +161,7 @@ void BribRenStart(void *data) {
     HLib::SetCurrentTaskTo(BribRenLoop);
     HLib::SetupTaskDelay(914);
     const Vector3 scale{0.3f, 0.3f, 0.3f};
-    SetMotionworkFlagForCharaById(BRIB_GREN, &scale);
+    mtwkSetMotionworkScale3(BRIB_GREN, &scale);
     SetAreaLoopCharacterControl(BRIB_GREN, 1);
     SetAreaLoopCharacterControl(BRIB_RYO, 1);
     SetEyeToChara(ctrlGetCharaByName(BRIB_RYO), nullptr, 16, 0);

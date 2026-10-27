@@ -173,8 +173,8 @@ void QueueStreetFightPlayerReaction(shen_name fighter, bool playerWon) {
     EVT_AT_SetCam(playerWon ? 501 : 500, STREET_FIGHT_RYO, STREET_FIGHT_RYO, 0, 0, 5);
     EVT_AT_SetCam(playerWon ? 511 : 510, STREET_FIGHT_RYO, STREET_FIGHT_RYO, 0, 0, 56);
     QueueEventCallFunction(StreetFightReactionNullsub, nullptr, 55);
-    EVT_AT_SetFaceLooks(STREET_FIGHT_RYO, 1, 8, 35, 56);
-    EVT_AT_SetFaceLooks(STREET_FIGHT_RYO, 3, 0, 5, 88);
+    EVT_AT_SetFaceLooks(STREET_FIGHT_RYO, FacialExpressionId::Angry, 8, 35, 56);
+    EVT_AT_SetFaceLooks(STREET_FIGHT_RYO, FacialExpressionId::Smile, 0, 5, 88);
     EVT_AT_SetCam(playerWon ? 521 : 520, fighter, fighter, 0, 0, 96);
     QueueEventCallFunction(StreetFightReactionNullsub, nullptr, 136);
     QueueEventCallFunction(StreetFightRestoreChaseCamera, nullptr, 136);

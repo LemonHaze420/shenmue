@@ -109,7 +109,7 @@ void BeginFlight(ApartmentWork *work, bool fighter) {
             SetScenarioCharacterRadius(name, 200);
         const Vector3 scale{50, 50, 50};
         for (auto name : fighters)
-            SetMotionworkFlagForCharaById(name, &scale);
+            mtwkSetMotionworkScale3(name, &scale);
     } else
         SetScenarioCharacterRadius(plane, 200);
     work->farDistance = camCtrlGetFarDistance();

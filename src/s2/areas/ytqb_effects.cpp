@@ -324,7 +324,7 @@ void YtqbKnockdown(float angle, std::int32_t delay) {
     YtqbCamera(7907, 0, cameraAngle);
     EVT_AT_SetCam(7910, YTQB_DUMR, YTQB_DUMR, cameraAngle, 0, start);
     EVT_AT_SetSound(0x282, delay + 45);
-    EVT_AT_SetFaceLooks(YTQB_RYO_, 6, 15, 1, start);
+    EVT_AT_SetFaceLooks(YTQB_RYO_, FacialExpressionId::Suffer, 15, 1, start);
 }
 void YtqbBackKnockdown(float angle) {
     EVT_AT_SetAngY(YTQB_RYO_, YTQB_RYO_, angle, 25);
@@ -332,13 +332,13 @@ void YtqbBackKnockdown(float angle) {
     EVT_AT_SetCam(7933, YTQB_DUMR, YTQB_DUMR, 0, 0, 25);
     EVT_AT_SetMot(YTQB_RYO_, YTQB_RYOM_RYO_0048E_DOWN_B_0, 2, 1, 0, 25);
     EVT_AT_SetSound(0x282, 65);
-    EVT_AT_SetFaceLooks(YTQB_RYO_, 6, 15, 1, 25);
+    EVT_AT_SetFaceLooks(YTQB_RYO_, FacialExpressionId::Suffer, 15, 1, 25);
 }
 void YtqbSideKnockdown(float angle) {
     EVT_AT_SetAngY(YTQB_RYO_, YTQB_RYO_, angle, 25);
     YtqbCamera(7909);
     EVT_AT_SetCam(7935, YTQB_DUMR, YTQB_DUMR, 0, 0, 25);
-    EVT_AT_SetFaceLooks(YTQB_RYO_, 6, 15, 1, 25);
+    EVT_AT_SetFaceLooks(YTQB_RYO_, FacialExpressionId::Suffer, 15, 1, 25);
     EVT_AT_SetMot(YTQB_RYO_, YTQB_RYOM_RYO_0048E_DOWN_SIDE_R_M, 2, 1, 0, 25);
     EVT_AT_SetSound(0x282, 70);
 }
@@ -347,7 +347,7 @@ void YtqbFinalKnockdown(float angle) {
     EVT_AT_SetCam(7934, YTQB_DUMR, YTQB_DUMR, 0, 0, 40);
     EVT_AT_SetMot(YTQB_RYO_, YTQB_RYOM_RYO_0048E_DOWN_C_0, 2, 1, 0, 40);
     EVT_AT_SetSound(0x282, 110);
-    EVT_AT_SetFaceLooks(YTQB_RYO_, 6, 15, 1, 40);
+    EVT_AT_SetFaceLooks(YTQB_RYO_, FacialExpressionId::Suffer, 15, 1, 40);
 }
 std::int32_t YtqbWaterSuccess() {
     PositionWaterFight();
@@ -375,8 +375,8 @@ std::int32_t YtqbWaterFailure() {
     YtqbStand(YTQB_KIC_);
     YtqbCamera(7937);
     EVT_AT_SetCam(7938, YTQB_DUMR, YTQB_DUMR, 0, 0, 21);
-    EVT_AT_SetFaceLooks(YTQB_RYO_, 6, 5, 1, 23);
-    EVT_AT_SetFaceLooks(YTQB_RYO_, 1, 15, 1, delay);
+    EVT_AT_SetFaceLooks(YTQB_RYO_, FacialExpressionId::Suffer, 5, 1, 23);
+    EVT_AT_SetFaceLooks(YTQB_RYO_, FacialExpressionId::Angry, 15, 1, delay);
     EVT_AT_SetVoice("S2BVA010", 1, 23);
     EVT_AT_SetSound(3366, 19);
     AnimateWater();

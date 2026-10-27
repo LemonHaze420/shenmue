@@ -38,7 +38,7 @@ void InitializePatiBallCharacters(PatiBallWork *ball) {
         }
         character = CreateEventCharacter(CharacterCreationHighModel, reinterpret_cast<const std::byte *>(ball->ballModel), {});
         EV_AT_SetAngY(character, EventTransformFlags::AllAxes, Vector3i{0, ball->boardRotation.y, 0x4000}, nullptr);
-        SetMotionworkFlagForCharaById(character, &size);
+        mtwkSetMotionworkScale3(character, &size);
     }
     ball->current.position = {ball->right, ball->top, ball->radius + 0.0049999999f};
     ball->current.velocity = {0.0f, 0.0f, 0.0f};

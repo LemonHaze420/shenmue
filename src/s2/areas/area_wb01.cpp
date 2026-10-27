@@ -119,7 +119,7 @@ void PlaceWindow(std::int32_t index) {
     }
     EV_AT_SetPos(window.character, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(window.character, EventTransformFlags::AllAxes, rotation, nullptr);
-    SetMotionworkFlagForCharaById(window.character, &scale);
+    mtwkSetMotionworkScale3(window.character, &scale);
 }
 void SetWindows() {
     for (std::int32_t index = 0; windowPlacements[index].x; ++index) {

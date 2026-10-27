@@ -18,7 +18,7 @@
 namespace shenmue::s2 {
 
 
-std::uint64_t SetMotionworkFlagForCharaById(shen_name characterId, const Vector3 *scale);
+std::uint64_t mtwkSetMotionworkScale3(shen_name characterId, const Vector3 *scale);
 std::int64_t scenMotionworkUtil(shen_name characterId, std::uint32_t yaw, float angle, std::int32_t flags, const void *motionData);
 std::int64_t TurnScenarioCharacterTowardPosition(
     shen_name characterId, const Vector3 *target, const std::uint16_t *customMotions, std::uint32_t *yaw, float *angularStep, std::uint32_t flags);

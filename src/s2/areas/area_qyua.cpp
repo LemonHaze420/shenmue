@@ -139,9 +139,9 @@ std::int32_t BeginQyuaKnifeQte() {
     (void)EVT_AT_SetMot(QYUA_PLAYER, 0x2565, 0, 1, 0x40000000U, 0);
     (void)EVT_AT_SetMot(QYUA_REN, 0x2545, 0, 1, 0x40000000U, 0);
     (void)EVT_AT_SetMot(QYUA_YUAN, 0x2590, 0, 1, 0x40000000U, 0);
-    EVT_AT_SetFaceLooks(QYUA_PLAYER, 1, 1, 1, 0);
-    EVT_AT_SetFaceLooks(QYUA_REN, 1, 1, 1, 0);
-    EVT_AT_SetFaceLooks(QYUA_YUAN, 13, 1, 1, 0);
+    EVT_AT_SetFaceLooks(QYUA_PLAYER, FacialExpressionId::Angry, 1, 1, 0);
+    EVT_AT_SetFaceLooks(QYUA_REN, FacialExpressionId::Angry, 1, 1, 0);
+    EVT_AT_SetFaceLooks(QYUA_YUAN, FacialExpressionId::Scheme, 1, 1, 0);
     return 60;
 }
 // @verified - p

@@ -66,7 +66,7 @@ std::int32_t SuccessA() {
     Mot(see, 0x1b46, 0, 0, 0);
     Mot(sjn, 0x1b42, 0, 0, 0);
     Cam(1000, 0);
-    EVT_AT_SetFaceLooks(iii, 6, 10, 1, 20);
+    EVT_AT_SetFaceLooks(iii, FacialExpressionId::Suffer, 10, 1, 20);
     Voice("0045B012", 20);
     return 25;
 }
@@ -87,7 +87,7 @@ std::int32_t SuccessC(std::int32_t delay) {
     Mot(sjn, 0x1b42, 130, 1, delay);
     Cam(1002, delay);
     Cam(1007, delay + 40);
-    EVT_AT_SetFaceLooks(sjn, 6, 10, 1, 20);
+    EVT_AT_SetFaceLooks(sjn, FacialExpressionId::Suffer, 10, 1, 20);
     Voice("0045E012", delay + 10);
     Voice("0045E013", delay + 35);
     return 80;
@@ -98,7 +98,7 @@ std::int32_t FailureA(std::int32_t delay) {
     Mot(iii, 0x1b43, 40, 1, delay);
     Cam(1003, delay);
     Cam(1008, delay + 40);
-    EVT_AT_SetFaceLooks(ryo, 6, 10, 1, 10);
+    EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Suffer, 10, 1, 10);
     Hand(0, ryoQteReactionHandPose, 8, 0);
     Hand(1, ryoQteReactionHandPose, 8, 0);
     Voice("0045B008", delay);
@@ -113,7 +113,7 @@ std::int32_t FailureB(std::int32_t delay) {
     Mot(see, 0x1b45, 90, 1, delay);
     Cam(1004, delay);
     Cam(1005, delay + 40);
-    EVT_AT_SetFaceLooks(ryo, 6, 10, 1, delay + 40);
+    EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Suffer, 10, 1, delay + 40);
     Hand(0, ryoQteReactionHandPose, 8, delay);
     Hand(1, ryoQteReactionHandPose, 8, delay);
     Voice("0045C004", delay + 10);
@@ -128,7 +128,7 @@ std::int32_t FailureC(std::int32_t delay) {
     Mot(sjn, 0x1b41, 70, 1, delay);
     Cam(1006, delay);
     Cam(1009, delay + 35);
-    EVT_AT_SetFaceLooks(ryo, 6, 10, 1, delay + 10);
+    EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Suffer, 10, 1, delay + 10);
     Hand(0, ryoQteReactionHandPose, 8, delay);
     Hand(1, ryoQteReactionHandPose, 8, delay);
     Voice("0045E010", delay);
@@ -213,7 +213,7 @@ std::int32_t AdvanceTime(WrsqWork &work) {
         Cam(125, 0);
         (void)EVT_AT_SetMot(ryo, 0x1b4e, 200, 1, 0x40000000U, 0);
         SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), 6, 10, 1);
-        EVT_AT_SetFaceLooks(ryo, 0, 10, 1, 220);
+        EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Normal, 10, 1, 220);
         delay = 220;
         break;
     case 3:

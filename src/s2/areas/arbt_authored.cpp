@@ -178,8 +178,8 @@ std::int32_t ArbtPraiseCarry(std::int32_t streak, std::int32_t delay) {
     } else
         return delay;
     EVT_AT_SetVoice(voice, 1, delay);
-    EVT_AT_SetFaceLooks(ARBT_TKR, 3, 30, 1, delay);
-    EVT_AT_SetFaceLooks(ARBT_TKR, 0, 30, 1, end);
+    EVT_AT_SetFaceLooks(ARBT_TKR, FacialExpressionId::Smile, 30, 1, delay);
+    EVT_AT_SetFaceLooks(ARBT_TKR, FacialExpressionId::Normal, 30, 1, end);
     return end;
 }
 namespace {
@@ -189,7 +189,7 @@ void BeginCarryWarning(std::uint32_t motion) {
 }
 void FinishCarryWarning(std::int32_t frames) {
     SetHighModelAndFaceFlagsForChara(ctrlGetCharaByName(ARBT_TKR), FacialExpressionId::Angry, 30, 1);
-    EVT_AT_SetFaceLooks(ARBT_TKR, 0, 30, 1, frames);
+    EVT_AT_SetFaceLooks(ARBT_TKR, FacialExpressionId::Normal, 30, 1, frames);
 }
 } // namespace
 std::int32_t ArbtWarnCarryOnce() {

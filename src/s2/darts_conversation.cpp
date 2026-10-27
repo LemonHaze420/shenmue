@@ -1053,7 +1053,7 @@ ConversationBuffer *PlayDartsDeclineOpponentResponse(std::int32_t, bool, shen_na
     if (opponent.name == areas::DART_HCY.name) {
         EV_PlayDialogue("0137A012");
         EVT_AT_SetVoice("0137F010", 1, 80); // @text EN: "Really.\nThat's too bad." | JA: "そうか…\nそれは残念だな。"
-        EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 80);
+        EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Sad, 30, 1.0f, 80);
     } else
         PlayDartsOpponentExit(opponent);
     return nullptr;
@@ -1202,9 +1202,9 @@ std::int32_t PlayDartsOpponentAdmission(shen_name opponent) {
 std::int32_t PlayDartsBetResponse(shen_name opponent, std::int32_t difficulty, std::int32_t bet) {
     switch (opponent.name) {
     case areas::DART_FCJ.name:
-        EV_PlayDialogue("0137A014"); EVT_AT_SetVoice("0137D013", 1, 30); EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 50); return 120; // @text EN: "I'm glad." | JA: "おう、これはうれしいのう。"
+        EV_PlayDialogue("0137A014"); EVT_AT_SetVoice("0137D013", 1, 30); EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Smile, 30, 1.0f, 50); return 120; // @text EN: "I'm glad." | JA: "おう、これはうれしいのう。"
     case areas::DART_HLN.name:
-        EV_PlayDialogue("0137A003"); EVT_AT_SetVoice("0137C010", 1, 30); EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 40); return 120; // @text EN: "Good!\nThat's the spirit!" | JA: "やったあ。そうこなくちゃね。"
+        EV_PlayDialogue("0137A003"); EVT_AT_SetVoice("0137C010", 1, 30); EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Smile, 30, 1.0f, 40); return 120; // @text EN: "Good!\nThat's the spirit!" | JA: "やったあ。そうこなくちゃね。"
     case areas::DART_JON.name:
         if (!difficulty) { EVT_AT_SetVoice("0137A003", 1, 0); EVT_AT_SetVoice("0137B016", 1, 50); } // @text 0137A003 EN: "All right." | JA: "わかった。" ; 0137B016 EN: "Yeah!\nLet's darts man!" | JA: "ＯＫ！　レッツ・プレイ・ナウ。"
         else {
@@ -1219,12 +1219,12 @@ std::int32_t PlayDartsBetResponse(shen_name opponent, std::int32_t difficulty, s
                 break;
             }
         }
-        EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 50);
+        EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Smile, 30, 1.0f, 50);
         return 130;
     case areas::DART_HCY.name:
-        EVT_AT_SetVoice("0137A016", 1, 0); EVT_AT_SetVoice("0137F015", 1, 100); EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 100); return 160; // @text 0137A016 EN: "All right.\nI will accept your offer." | JA: "わかりました。\nその勝負、受けます。" ; 0137F015 EN: "Good." | JA: "よろしい。"
+        EVT_AT_SetVoice("0137A016", 1, 0); EVT_AT_SetVoice("0137F015", 1, 100); EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Smile, 30, 1.0f, 100); return 160; // @text 0137A016 EN: "All right.\nI will accept your offer." | JA: "わかりました。\nその勝負、受けます。" ; 0137F015 EN: "Good." | JA: "よろしい。"
     default:
-        EVT_AT_SetVoice("0137A003", 1, 0); EVT_AT_SetVoice("0137E015", 1, 30); EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 40); return 130; // @text 0137A003 EN: "All right." | JA: "わかった。" ; 0137E015 EN: "That's the spirit. Now, play ball!" | JA: "そうこなくちゃな。\nじゃあ、プレイボールだ！"
+        EVT_AT_SetVoice("0137A003", 1, 0); EVT_AT_SetVoice("0137E015", 1, 30); EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Smile, 30, 1.0f, 40); return 130; // @text 0137A003 EN: "All right." | JA: "わかった。" ; 0137E015 EN: "That's the spirit. Now, play ball!" | JA: "そうこなくちゃな。\nじゃあ、プレイボールだ！"
     }
 }
 
@@ -1235,19 +1235,19 @@ std::int32_t PlayDartsOpponentResult(shen_name opponent, std::int32_t bet) {
         EV_PlayDialogue("0137A013");
         if (bet == 5) { EVT_AT_SetVoice("0137D012", 1, 60); return -140; } // @text EN: "$3.\nNo, how about $1?" | JA: "３ドル。いや、１ドルでどうじゃ。"
         if (bet == 10) { EVT_AT_SetVoice("0137D011", 1, 60); return -120; } // @text EN: "Well then, what about $5?" | JA: "だったら、５ドルでどうじゃ。"
-        EVT_AT_SetVoice("0137D010", 1, 60); EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 80); return 170; // @text EN: "Oh.\nThat is too bad." | JA: "そうか、それは残念じゃのう。"
+        EVT_AT_SetVoice("0137D010", 1, 60); EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Sad, 30, 1.0f, 80); return 170; // @text EN: "Oh.\nThat is too bad." | JA: "そうか、それは残念じゃのう。"
     case areas::DART_HLN.name:
         EV_PlayDialogue("0137A002"); EVT_AT_SetVoice("0137C009", 1, 50); return 120; // @text EN: "Oh, that's too bad." | JA: "そっか。しかたないね…"
     case areas::DART_JON.name:
         EVT_AT_SetVoice("0137A002", 1, 0); // @text EN: "I don't have much money." | JA: "今は持ち合わせがない。"
         EVT_AT_SetVoice(random < 1.0f ? "0137B010" : random < 1.5f ? "0137B011" : "0137B012", 1, 50); // @text 0137B010 EN: "Oh man!" | JA: "オー・ノー！" ; 0137B011 EN: "Why, man?" | JA: "オー・ホワイ？" ; 0137B012 EN: "No way!" | JA: "リアリー？"
         EVT_AT_SetVoice(random < 1.0f ? "0137B013" : random < 1.5f ? "0137B014" : "0137B015", 1, 100); // @text 0137B013 EN: "Get outta here man!" | JA: "グッバイ・ボーイ。" ; 0137B014 EN: "See you man!" | JA: "ソウ・バイバイ。" ; 0137B015 EN: "Sayonara!" | JA: "サヨナーラ。"
-        EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 50);
+        EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Sad, 30, 1.0f, 50);
         return 160;
     case areas::DART_HCY.name:
         EVT_AT_SetVoice("0137A012", 1, 0); EVT_AT_SetVoice("0137F010", 1, 80); return 200; // @text 0137A012 EN: "Thank you, but I'll decline." | JA: "せっかくですが、やめておきます。" ; 0137F010 EN: "Really.\nThat's too bad." | JA: "そうか…\nそれは残念だな。"
     default:
-        EVT_AT_SetVoice("0137A002", 1, 0); EVT_AT_SetVoice("0137E014", 1, 50); EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 50); return 140; // @text 0137A002 EN: "I don't have much money." | JA: "今は持ち合わせがない。" ; 0137E014 EN: "Don't tell me you're broke." | JA: "なんだよ、しけたヤローだな。"
+        EVT_AT_SetVoice("0137A002", 1, 0); EVT_AT_SetVoice("0137E014", 1, 50); EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Sad, 30, 1.0f, 50); return 140; // @text 0137A002 EN: "I don't have much money." | JA: "今は持ち合わせがない。" ; 0137E014 EN: "Don't tell me you're broke." | JA: "なんだよ、しけたヤローだな。"
     }
 }
 
@@ -1255,21 +1255,21 @@ std::int32_t PlayDartsOpponentExit(shen_name opponent) {
     const float random = GetRandomNumberInRange(3.0f);
     switch (opponent.name) {
     case areas::DART_FCJ.name:
-        EV_PlayDialogue("0137A012"); EVT_AT_SetVoice("0137D010", 1, 80); EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 80); return 190; // @text EN: "Oh.\nThat is too bad." | JA: "そうか、それは残念じゃのう。"
+        EV_PlayDialogue("0137A012"); EVT_AT_SetVoice("0137D010", 1, 80); EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Sad, 30, 1.0f, 80); return 190; // @text EN: "Oh.\nThat is too bad." | JA: "そうか、それは残念じゃのう。"
     case areas::DART_HLN.name:
         EV_PlayDialogue("0137A001"); EVT_AT_SetVoice("0137C009", 1, 60); return 120; // @text EN: "Oh, that's too bad." | JA: "そっか。しかたないね…"
     case areas::DART_JON.name:
         EVT_AT_SetVoice("0137A001", 1, 0); // @text EN: "Sorry, not this time." | JA: "悪いけど、やめとくよ。"
         EVT_AT_SetVoice(random < 1.0f ? "0137B010" : random < 1.5f ? "0137B011" : "0137B012", 1, 50); // @text 0137B010 EN: "Oh man!" | JA: "オー・ノー！" ; 0137B011 EN: "Why, man?" | JA: "オー・ホワイ？" ; 0137B012 EN: "No way!" | JA: "リアリー？"
         EVT_AT_SetVoice(random < 1.0f ? "0137B013" : random < 1.5f ? "0137B014" : "0137B015", 1, 100); // @text 0137B013 EN: "Get outta here man!" | JA: "グッバイ・ボーイ。" ; 0137B014 EN: "See you man!" | JA: "ソウ・バイバイ。" ; 0137B015 EN: "Sayonara!" | JA: "サヨナーラ。"
-        EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 50);
+        EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Sad, 30, 1.0f, 50);
         return 160;
     case areas::DART_HCY.name:
         EVT_AT_SetVoice("0137A012", 1, 0); EVT_AT_SetVoice("0137F010", 1, 80); // @text 0137A012 EN: "Thank you, but I'll decline." | JA: "せっかくですが、やめておきます。" ; 0137F010 EN: "Really.\nThat's too bad." | JA: "そうか…\nそれは残念だな。"
         EVT_AT_SetVoice(random < 1.0f ? "0137F011" : random < 1.5f ? "0137F012" : random < 2.5f ? "0137F013" : "0137F014", 1, 210); // @text 0137F011 EN: "Well, I've got to attend a meeting for\nthe Darts Association anyway." | JA: "まあ、ミーももうすぐダーツ協会の\n会議に行かなきゃいけないしな…" ; 0137F012 EN: "I think I had a meeting at\nthe Darts Association today=@" | JA: "さあて、今日はダーツ協会の\n会議があったっけなあ…" ; 0137F013 EN: "It's not very often that you'll have\nthe privilege of playing darts with me=@" | JA: "こういうチャンスは\nメッタにないんだけどなあ…" ; 0137F014 EN: "You're turning down my offer\nto teach you=@?" | JA: "このミーが教えてあげようって\n言ってるのに…"
         return 400;
     default:
-        EVT_AT_SetVoice("0137A001", 1, 0); EVT_AT_SetVoice("0137E013", 1, 60); EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 80); return 150; // @text 0137A001 EN: "Sorry, not this time." | JA: "悪いけど、やめとくよ。" ; 0137E013 EN: "Man, you're no fun." | JA: "なんだよ、つまんねえヤローだな。"
+        EVT_AT_SetVoice("0137A001", 1, 0); EVT_AT_SetVoice("0137E013", 1, 60); EVT_AT_SetFaceLooks(opponent, FacialExpressionId::Sad, 30, 1.0f, 80); return 150; // @text 0137A001 EN: "Sorry, not this time." | JA: "悪いけど、やめとくよ。" ; 0137E013 EN: "Man, you're no fun." | JA: "なんだよ、つまんねえヤローだな。"
     }
 }
 
