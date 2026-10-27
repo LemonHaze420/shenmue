@@ -149,7 +149,7 @@ MotionSnapshot *GetMotionSnapshot(std::uint32_t slot) {
 
 Character *FindSnapshotCharacter(shen_name name) {
     const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return control ? FindScenarioCharacter(control->scenarioTask, name) : nullptr;
+    return control ? scenFindChara(control->scenarioTask, name) : nullptr;
 }
 
 std::array<MotionRigClock *, 5> SnapshotClocks(MotionWork &work) {
@@ -782,7 +782,7 @@ void InitializeTimedNodeMotion(TimedNodeMotion &motion, MT7Model *model, std::ui
 // @verified - p
 std::uintptr_t ConfigureScenarioNodeMotion(shen_name name, std::int32_t motionId, float begin, float end, float frame, float speed, std::int32_t flags) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return 0;
     TimedNodeMotion *const motion = static_cast<TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));
@@ -810,7 +810,7 @@ std::uintptr_t ConfigureScenarioNodeMotion(shen_name name, std::int32_t motionId
 // @verified - p
 bool IsScenarioNodeMotionFinished(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return false;
     const TimedNodeMotion *const motion = static_cast<const TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));
@@ -820,7 +820,7 @@ bool IsScenarioNodeMotionFinished(shen_name name) {
 // @verified - p
 TimedNodeMotion *StopScenarioNodeMotion(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return nullptr;
     TimedNodeMotion *const motion = static_cast<TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));
@@ -831,7 +831,7 @@ TimedNodeMotion *StopScenarioNodeMotion(shen_name name) {
 // @verified - p
 void CopyScenarioNodeMotionTimes(shen_name name, float *begin, float *end, float *frame, float *speed) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return;
     const TimedNodeMotion *const motion = static_cast<const TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));

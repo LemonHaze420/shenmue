@@ -1,6 +1,6 @@
-#include "s2/areas/game_emulator_overlay.hpp"
+#include "s2/areas/game/emulator/overlay.hpp"
 
-#include "s2/areas/game_emulator_draw.hpp"
+#include "s2/areas/game/emulator/draw.hpp"
 #include "s2/input.hpp"
 #include "s2/legacy_draw.hpp"
 #include "s1/modules/harrier.hpp"

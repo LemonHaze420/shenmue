@@ -23,7 +23,7 @@
 #include "s2/mt7.hpp"
 #include "s2/world_render.hpp"
 #include "s2/areas/area_0001.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include "s2/areas/omak_tables.hpp"
 #include "s2/omak_collection_ui.hpp"
 
@@ -709,8 +709,8 @@ void PrepareSnapshotDebug(SnapshotDebugWork &work) {
     if (work.mode)
         EV_EventSetUpHelpIcon_0(0x9a, 0);
     else {
-        work.previousClockSuppression = IsClockAndCompassSuppressed();
-        SetRenderClockAndCompassTo(1);
+        work.previousClockSuppression = shenIsClockAndCompassSuppressed();
+        shenSetClockAndCompassRenderTo(1);
         EV_EventSetUpHelpIcon_0(0x99, 0);
         CheckHelpIcon(32, 0, CheckHelpIconOp::Remove);
     }
@@ -1349,7 +1349,7 @@ void UpdateSnapshotDebug(SnapshotDebugWork &work) {
         break;
     case 3:
         FreeSnapshotDebugMetadata(snapshotDebugMetadata);
-        SetRenderClockAndCompassTo(work.previousClockSuppression == 0);
+        shenSetClockAndCompassRenderTo(work.previousClockSuppression == 0);
         CheckHelpIcon(32, 0, CheckHelpIconOp::Add);
         CheckHelpIcon(256, 0, CheckHelpIconOp::Remove);
         CheckHelpIcon(64, 0, CheckHelpIconOp::Remove);
@@ -1644,7 +1644,7 @@ std::optional<std::uint64_t> EnqueueSnapshotDebug(std::int32_t mode, HLib::Task 
         SetWeatherUpdateEnabledTo(0);
         SetIsSkySetup(0);
         shenSetTimeSimulationTo(0);
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         SetPlayerGameFlags(PlayerGameFlagMode::Bit22, reinterpret_cast<void *>(std::uintptr_t{1}));
         void *const allocation = LoadLegacySceneFile("sprite", "SHOTSVW.SPR", SNAPSHOT_DEBUG_TASK);
         if (allocation) {

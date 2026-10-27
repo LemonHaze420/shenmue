@@ -31,7 +31,7 @@ void SetupE0250Environment(std::int16_t) {
     SetFireFalloff(fire0250, 3.140000104904175f, 4.940000057220459f, 0.7799999713897705f);
     ResumeParticleEffect(4, fire0250);
     SetPlayerControlEnabled(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_FreeAuthorPak(1, "0250");
     EV_FreeAuthorPak(1, "0251");
     EV_UpdateWeatherForMinute(1, 0, 0, 0.0f);

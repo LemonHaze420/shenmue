@@ -336,10 +336,10 @@ void Script_PlayerControlUtils(ScenarioContext *context, void *rawParams) {
 
     switch (params->mode) {
     case 0:
-        PCCTL_DisablePlayerControl();
+        navDisablePlayerControl();
         return;
     case 1:
-        PCCTL_ResetAuthAndInputStates();
+        navResetAuthAndInputStates();
         return;
     case 2:
         setBoolResult(ShouldRun());
@@ -353,13 +353,13 @@ void Script_PlayerControlUtils(ScenarioContext *context, void *rawParams) {
             g_pControlPadController->forcedYawSnap = 1;
         return;
     case 5:
-        PCCTL_SetSkipNavRegionFiltering(false);
+        navSetSkipNavRegionFiltering(false);
         return;
     case 6:
-        PCCTL_SetSkipNavRegionFiltering(true);
+        navSetSkipNavRegionFiltering(true);
         return;
     case 7:
-        PCCTL_RequestNewMode(static_cast<std::int32_t>(params->argument));
+        navRequestNewMode(static_cast<std::int32_t>(params->argument));
         return;
     case 8:
         setBoolResult(!g_pControlPadController || g_pControlPadController->modeState == 0);
@@ -426,7 +426,7 @@ void Script_PlayerControlUtils(ScenarioContext *context, void *rawParams) {
     }
     case 16:
         if (Character *const character = ScenarioCharacter(context, params->argument))
-            PCCTL_UpdateRyoNavYaw(character);
+            navUpdateRyoNavYaw(character);
         return;
     case 17:
         if (!g_pControlPadController) {
@@ -437,7 +437,7 @@ void Script_PlayerControlUtils(ScenarioContext *context, void *rawParams) {
         setBoolResult(g_areaId == params->argument && (g_shouldSleep & 2U) != 0);
         return;
     case 18:
-        PCCTL_MoveToHome();
+        navMoveToHome();
         return;
     default:
         return;
@@ -2385,17 +2385,17 @@ void Script_GetTempAngleInDegrees(ScenarioContext *context, void *rawParams) {
 }
 
 void Script_GetCurrentControlPointCode(ScenarioContext *context, void *) {
-    ScriptArguments(context, nullptr).result(PCCTL_GetCurrentControlPointCode());
+    ScriptArguments(context, nullptr).result(navGetCurrentControlPoint());
 }
 
 void Script_ParseDigitsForInt(ScenarioContext *context, void *) {
-    ScriptArguments(context, nullptr).result(ParseControlPointCodeDigits(PCCTL_GetCurrentControlPointCode()));
+    ScriptArguments(context, nullptr).result(ParseControlPointCodeDigits(navGetCurrentControlPoint()));
 }
 
 void Script_navSetCurrentPos(ScenarioContext *context, void *rawParams) {
     const ScriptArguments arguments(context, rawParams);
     if (Vector3 *const output = arguments.pointer<Vector3>(0))
-        *output = PCCTL_GetCurrentControlPointPosition();
+        *output = navGetCurrentControlPointPosition();
 }
 
 void Script_GetHighScoreValue(ScenarioContext *context, void *rawParams) {

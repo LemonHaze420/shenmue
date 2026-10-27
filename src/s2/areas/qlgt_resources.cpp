@@ -119,7 +119,7 @@ void Prepare(Work &work) {
     EV_FreeAuthorPak(1, "0263");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0263A000");
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EventNull();
     for (std::int32_t i = 1; i < 10; ++i)
         EV_SetObjectFlagByIndex(i, 0);
@@ -154,7 +154,7 @@ void Cleanup(Work &work) {
     SetQronFloor(static_cast<std::int32_t>(GetQronNextStream()));
     ExecuteCleanupFuncForAreaWithCachedScene();
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0263");

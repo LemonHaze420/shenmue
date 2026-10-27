@@ -124,8 +124,8 @@ std::uint32_t UpdateTempHourMinTimeScale(std::int32_t hour, std::int32_t minute,
 std::uint64_t shenSetTimeSimulationTo(std::uint32_t state);
 bool IsTimeSimulationEnabled();
 std::uint32_t SetTimeHudVariant(std::int32_t variant);
-void SetRenderClockAndCompassTo(std::int32_t suppressed) noexcept;
-bool IsClockAndCompassSuppressed() noexcept;
+void shenSetClockAndCompassRenderTo(std::int32_t suppressed) noexcept;
+bool shenIsClockAndCompassSuppressed() noexcept;
 
 // FormatLoadingScreenDate and FormatLoadingScreenTime produce localized labels.
 void FormatLoadingScreenDate(std::span<char> output, std::int32_t year, std::int32_t month, std::uint32_t day, std::int32_t week, std::uint8_t flags);

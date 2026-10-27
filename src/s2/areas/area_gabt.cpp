@@ -81,7 +81,7 @@ void PrepareGabtResources(GabtEventWork &work) {
     SetMapControlStatusFlag(0, 0);
     SetIsSkySetup(0);
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 void RetireGabtEvent(GabtEventWork &work) {
     HasCharacterMotionWork(FindCharacterByScenarioName(GABT_MOLE_RYO));
@@ -99,7 +99,7 @@ void RetireGabtEvent(GabtEventWork &work) {
     EV_FreeAuthorPak(0, "0232");
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GABT"), 0);
     LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     SetQeDoorSceneState(1);
     RemoveInventoryItem(39, 1);
     EV_CleanupMapControlTask();

@@ -4124,7 +4124,7 @@ void CPCT_Process(PlayerControlWork &control) {
         } else if (static_cast<std::uint32_t>(mode - 4) <= 1U && (state == kStateFight || state == kStateWalkTurn180)) {
             control.modeState = 0;
             control.currentMode = 0;
-            PCCTL_UpdateRyoNavYaw(g_playerCharacter);
+            navUpdateRyoNavYaw(g_playerCharacter);
             if (mode == 5) {
                 motion.motionFlags &= ~kMotionStuck;
                 motion.pendingAnimId = kAnimIdleRoot;
@@ -4612,23 +4612,23 @@ bool filmGetTaskFlag() {
     return film && film->current[0] == 0;
 }
 
-std::int32_t PCCTL_GetForcedControlMode() {
+std::int32_t navGetForcedControlMode() {
     return g_pControlPadController && g_pControlPadController->controlMode == 2 ? g_forcedControlMode : 0;
 }
 
-void PCCTL_SetSkipNavRegionFiltering(bool skip) {
+void navSetSkipNavRegionFiltering(bool skip) {
     g_skipNavRegionFiltering = skip ? 1 : 0;
 }
 
-std::uint32_t PCCTL_GetCurrentControlPointCode() {
+std::uint32_t navGetCurrentControlPoint() {
     return g_currentControlPoint ? g_currentControlPointCode : 0;
 }
 
-Vector3 PCCTL_GetCurrentControlPointPosition() {
+Vector3 navGetCurrentControlPointPosition() {
     return g_currentControlPoint ? g_currentControlPointPosition : Vector3{};
 }
 
-void PCCTL_SetScriptWalkMode(std::uint32_t mode) {
+void navSetScriptWalkMode(std::uint32_t mode) {
     if (!g_pControlPadController)
         return;
     if (mode == 2) {
@@ -4646,7 +4646,7 @@ void CPCT_RebindMotionWithNavParams(Character *character) {
     cpctBindMotionWithNavParams(character);
 }
 
-void PCCTL_BeginLoadHold() {
+void navBeginLoadHold() {
     PlayerControlWork *const control = PlayerControl();
     if (!control)
         return;
@@ -4654,7 +4654,7 @@ void PCCTL_BeginLoadHold() {
     control->loadHoldActive = 1;
 }
 
-void PCCTL_ResetForEventCamera(Character *character) {
+void navResetForEventCamera(Character *character) {
     if (!character || character != CurrentRyo() || !g_pControlPadController || !g_playerMotion)
         return;
     g_pControlPadController->modeState = 0;
@@ -4760,7 +4760,7 @@ std::uint8_t shenForceCancel(PlayerControlWork *control) {
             } else if (control->controlGate >= 0) {
                 if (g_TMEX_Flag == 2U && g_tmex_val != 3U && g_tmex_val != 7U && g_tmexRequestFrames < 360U)
                     playNavigateSound();
-                PCCTL_RequestNewMode(1);
+                navRequestNewMode(1);
                 g_suppressDefaultHudPromptIcons = 1;
                 g_pControlPadController->blockedCanControl = 0;
                 g_pControlPadController->state = 2;
@@ -4875,7 +4875,7 @@ std::uint8_t shenForceCancel(PlayerControlWork *control) {
     return static_cast<std::uint8_t>(g_tmexAuthorFrames);
 }
 
-void PCCTL_RequestNewMode(std::int32_t mode) {
+void navRequestNewMode(std::int32_t mode) {
     PlayerControlWork *const control = PlayerControl();
     if (!control || !g_playerMotion)
         return;
@@ -4892,7 +4892,7 @@ void PCCTL_RequestNewMode(std::int32_t mode) {
     CPCT_Process(*control);
 }
 
-void PCCTL_DisablePlayerControl() {
+void navDisablePlayerControl() {
     g_suppressDefaultHudPromptIcons = 1;
     if (g_pControlPadController) {
         g_pControlPadController->blockedCanControl = 0;
@@ -4901,7 +4901,7 @@ void PCCTL_DisablePlayerControl() {
     g_tmexValHigh = 0;
 }
 
-void PCCTL_ResetAuthAndInputStates() {
+void navResetAuthAndInputStates() {
     g_suppressDefaultHudPromptIcons = 0;
     CAME_ClearSequenceActive();
     g_pControlPadController->blockedCanControl = 1;
@@ -4919,7 +4919,7 @@ void PCCTL_ResetAuthAndInputStates() {
     pad->repeatedPresses &= kRetainedInputMask;
 }
 
-void PCCTL_EnablePlayerControl() {
+void navEnablePlayerControl() {
     if (!g_pControlPadController)
         return;
     g_pControlPadController->modeState = 0;
@@ -4944,7 +4944,7 @@ PlayerControlWork *AllocateCPCT(Character *character) {
 }
 
 void CPCT_Toggle(Character *character) {
-    PCCTL_DisablePlayerControl();
+    navDisablePlayerControl();
     CurrentMapControl()->ryo = character;
     if (character) {
         if (CharacterComponentNode *const cpct = HLib_GetCharacterComponent(character, SHEN_NAME(CPCT)))
@@ -4952,7 +4952,7 @@ void CPCT_Toggle(Character *character) {
     }
 }
 
-void PCCTL_UpdateRyoNavYaw(Character *character) {
+void navUpdateRyoNavYaw(Character *character) {
     if (!character)
         return;
     const bool isRyo = CurrentRyo() == character;
@@ -4965,7 +4965,7 @@ void PCCTL_UpdateRyoNavYaw(Character *character) {
     character->entity.node.rotation.y = yaw;
 }
 
-void PCCTL_MoveToHome() {
+void navMoveToHome() {
     const auto flagIsSet = [](std::uint16_t flag) { return (g_shenmueFlags[flag >> 3U] & static_cast<std::uint8_t>(1U << (flag & 7U))) != 0; };
 
     DetermineActNum();

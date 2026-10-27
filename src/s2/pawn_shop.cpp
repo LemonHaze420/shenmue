@@ -92,7 +92,7 @@ void CleanupPawnSale() {
         return;
     ReleasePawnDrawState();
     if ((pawnSelection.flags & 0x10000U) != 0) {
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         pawnSelection.flags &= ~0x10000U;
     }
     if (pawnSelection.helpTopic != 0)
@@ -474,8 +474,8 @@ bool OpenPAWNShop(shen_name shopName, std::uint32_t mode) {
         MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
         pawnPreviousDisplay = IsOfThisVisibilityType(static_cast<Character *>(control->ryo), 3);
         pawnSelection.flags &= ~0x20000U;
-        if (IsClockAndCompassSuppressed()) {
-            SetRenderClockAndCompassTo(1);
+        if (shenIsClockAndCompassSuppressed()) {
+            shenSetClockAndCompassRenderTo(1);
             flags |= 0x10000U;
         }
         LoadLegacyCollectionSprites(TASK_PAWN);

@@ -352,7 +352,7 @@ bool UpdateScenPendingRuntimeEvent(ScenRuntimeObject &object) {
         object.failCount3 = 0;
         if (!ShouldRun() && (ScenFlags() & kScenarioFlagPadBlockOverride) != 0) {
             ScenFlags() &= ~kScenarioFlagPadBlockOverride;
-            PCCTL_ResetAuthAndInputStates();
+            navResetAuthAndInputStates();
         }
         break;
     case -1:

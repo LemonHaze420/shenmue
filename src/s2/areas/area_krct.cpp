@@ -107,7 +107,7 @@ void KrctMainLoop(void *) {
     case 2:
         EV_PTYCUtils(KRCT_SHENHUA, 3, 1);
         KrctNullsub();
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         krct.state = 3;
         EV_NPC_NewLoadSw(0);
         EV_npcLockUnlock(KRCT_NPC);
@@ -140,12 +140,12 @@ void KrctMainLoop(void *) {
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("MAKI"));
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         FinishLoading();
         ExecuteCurrAreaMainFunc_Wrapper(3, reinterpret_cast<std::uintptr_t>(&krct.authorSelection));
         break;
     case 6:
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         KrctNullsub();
         GetCurrentDateTime(time);
         time.minute += 20;
@@ -274,7 +274,7 @@ void KrctMainLoop(void *) {
         break;
     case 21:
         KrctNullsub();
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         krct.state = 22;
         krctAlternateSound = 0;
         HLib::SetupTaskDelay(0);
@@ -326,7 +326,7 @@ void KrctMainLoop(void *) {
         krct.state = 27;
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         InitiateCleanupForSceneChara(KRCT_SHENHUA);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         HLib::SetupTaskDelay(30);
         break;
     case 27:
@@ -374,7 +374,7 @@ void KrctMainLoop(void *) {
         EV_NPC_NewLoadSw(1);
         SetPlayerControlEnabled(1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         FinishLoading();
         break;
     }
@@ -414,7 +414,7 @@ void KrctMainLoop(void *) {
         break;
     case 33:
         camCtrlSetState(SnapYawTarget);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         FinishLoading();
         if (StartScenarioFreeTalkRecord(KRCT_SHENHUA, -1) == 1) {
             krct.authorSelection = -1;
@@ -447,7 +447,7 @@ void KrctMainLoop(void *) {
     }
     case 36:
         KrctNullsub();
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         krctAlternateSound = 0;
         krct.state = 37;
         if (krct.trigger != 8)

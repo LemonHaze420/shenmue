@@ -95,7 +95,7 @@ void ChawCleanup(ChawEventWork *work, bool restoreMedia) {
                 EV_npcFree(*name);
             }
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1021, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CHAWAN"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);

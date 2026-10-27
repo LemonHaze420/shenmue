@@ -52,7 +52,7 @@ void RestoreCharacters() {
 }
 // @verified - p
 void ConfigureEnvironment() {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     if (g_currentMap.name == SHEN_NAME(0014)) {
         DateTime time;
         GetCurrentDateTime(time);
@@ -120,7 +120,7 @@ void MainCallback(void *data) {
         ExecuteCleanupFuncForAreaWithCachedScene();
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         parent->state = 2;
         break;
     case 2:

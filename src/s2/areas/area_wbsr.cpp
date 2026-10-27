@@ -92,7 +92,7 @@ void Choose(std::int32_t choice) {
     if (choice == 1) {
         EV_stepSetFlags(0, 0x46);
         ExecuteBase();
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         (void)shenSetTimeSimulationTo(1);
         SetAuthor(30);
         StartAuthor(SHEN_NAME(AUT2), QueueScenarioA, 0, true);
@@ -117,7 +117,7 @@ void OpeningAuthorDone() {
     (void)SetAuthorStateFlag(29, 1);
     (void)SetScenarioCharacterFlag40(SHEN_NAME(dr2R), 1);
     (void)SetScenarioCharacterFlag40(SHEN_NAME(dr2L), 1);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     (void)shenSetTimeSimulationTo(0);
     std::int16_t choices[]{-1, 333, 334, -1};
     (void)SetupControlSpeakAndUI(choices, 1800, 0, 2);
@@ -372,7 +372,7 @@ void WbsrSelect1Callback(void *) {
     if (EV_GetShenmueFlag(0x2ba)) {
         SetPlayerControlEnabled(0);
         ClearGameFlag(30);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         (void)shenSetTimeSimulationTo(1);
         EV_EnableCharacterDisplay(a048);
         SetAuthor(30);
@@ -384,7 +384,7 @@ void WbsrSelect1Callback(void *) {
         ClearGameFlag(30);
         EV_stepSetFlags(0, 0x2bb);
         ExecuteBase();
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         (void)shenSetTimeSimulationTo(1);
         mtwkSetExtraFlag(RyoMotion(), 55, 0);
         mtwkSetExtraFlag(RyoMotion(), 17, 0);

@@ -30,7 +30,7 @@ void E0059Init() {
 // @verified - p
 void SetupE0059Environment() {
     SetPlayerControlEnabled(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_UpdateWeatherForMinute(0, 0, 0, 0);
     EV_UpdateWeatherForMinute(1, 0, 0, 0);
     EV_FreeAuthorPak(1, "0059");

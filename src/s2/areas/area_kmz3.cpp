@@ -126,7 +126,7 @@ void BranchExitCallback(void *) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 902, 1);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 901, 0);
     EV_PTYCUtils(shenhua, 3, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     RestoreMazeCompanionControl();
     HLib::SetCurrentTaskTo(EventBombCallback);
 }
@@ -149,7 +149,7 @@ void BranchExit2Callback(void *) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 902, 1);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 901, 0);
     EV_PTYCUtils(shenhua, 3, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     RestoreMazeCompanionControl();
     HLib::SetCurrentTaskTo(EventBombCallback);
 }
@@ -283,7 +283,7 @@ void FollowSetupCallback(void *) {
     HLib::SetCurrentTaskTo(FollowExitCallback);
 }
 void BranchSetupCallback(void *) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     AssignMazeEvent(2, {0.0f, 0.0f, 0.0f}, 13768, 7);
     DispatchMazeEvent();
     HLib::SetCurrentTaskTo(BranchChoiceCallback);
@@ -335,7 +335,7 @@ void SpringExitCallback(void *) {
     HLib::SetupTaskDelay(90);
 }
 void SpringSetupCallback(void *) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     AssignMazeEvent(6, {-7.0001001f, -0.14920001f, 8.4889002f}, 6925, 0xffffffffU);
     DispatchMazeEvent();
     HLib::SetCurrentTaskTo(SpringExitCallback);
@@ -586,7 +586,7 @@ void TimeOverExitCallback(void *) {
     if (eventParameters.state == -1) {
         spmFadeOut();
         HLib::SetCurrentTaskTo(MazeTimeOverTo552ECallback);
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         HLib::SetupTaskDelay(90);
     }
 }
@@ -606,7 +606,7 @@ void CollapseExitCallback(void *) {
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, playerPosition);
     EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, playerRotation);
     ResetActorMotion(ryo, 0xf003);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     RestoreMazeCompanionControl();
     HLib::SetCurrentTaskTo(EventBombCallback);
 }
@@ -634,7 +634,7 @@ void StartCallback(void *) {
 void StartNavigationCallback(void *) {
     Vector3 position;
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
-    PlaceNaviMarker(position, 4);
+    navPlaceMarker(position, 4);
     if (!startParameters)
         InitializeMazeNavigationTrail();
     HLib::DestroyCurrentTask();

@@ -2468,7 +2468,7 @@ void authUpdate(std::int32_t sequenceIndex, Character *eyeOwner, Character *targ
     g_animatedCameraSequence.eyeAnchorOwner = eyeOwner;
     g_animatedCameraSequence.targetAnchorOwner = targetOwner;
     g_animatedCameraSequence.chunk = FindSequenceByChunk(sequenceIndex);
-    PCCTL_ResetForEventCamera(CurrentRyo());
+    navResetForEventCamera(CurrentRyo());
     StartAnimatedCamera();
 }
 

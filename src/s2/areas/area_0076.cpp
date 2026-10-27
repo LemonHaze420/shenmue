@@ -23,7 +23,7 @@ void E0076MainCallback(void *);
 void E0076LoopCallback(void *);
 // @verified - p
 void SetupE0076Environment() {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_SetNewSceneIndex();
     if (g_currentMap.name != AREA_0076_AR03.name) {
         DateTime time;
@@ -124,7 +124,7 @@ void CleanupE0076(AreaAuthorTaskParameter *parent) {
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         EV_spmBeginSampleExecute();
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     } else
         EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);

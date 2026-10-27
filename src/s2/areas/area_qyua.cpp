@@ -54,7 +54,7 @@ void InitializeQyuaResources(QyuaEventWork *work) {
     (void)EV_FreeAuthorPak(1, "0217");
     (void)EV_SetNewSceneIndex();
     (void)EV_LoadCutsceneFromCurrentScene("0217A000");
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     QyuaInit();
     (void)EV_SetObjectFlagByIndex(1, 0);
     (void)EV_SetObjectFlagByIndex(3, 0);
@@ -350,7 +350,7 @@ void RestoreQyuaResources(QyuaEventWork *work) {
     (void)hndlSetFlags(FindCharacterByScenarioName(QYUA_REN));
     (void)hndlSetFlags(FindCharacterByScenarioName(QYUA_PLAYER));
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     (void)LoadCutsceneAndSoundProgramForArea();
     (void)EV_spmBeginSampleExecute();
     (void)EV_FreeAuthorPak(0, "0217");

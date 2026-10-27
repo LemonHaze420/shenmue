@@ -96,7 +96,7 @@ void Syw0LoadResources(Syw0Work &work) {
     ApplyWeatherRainAndRippleClip(SYW0_RAIN_CLIP);
     ApplyWeatherParticleClip(SYW0_PARTICLE_CLIP);
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 void Syw0Cleanup(Syw0Work &work) {
     EV_stepSetFlags(0, 133);
@@ -125,7 +125,7 @@ void Syw0Cleanup(Syw0Work &work) {
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WB00"), 0);
     shenSetTimeSimulationTo(1);
     LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
     for (std::int32_t stat = 16; stat <= 31; ++stat)

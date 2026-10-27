@@ -1316,19 +1316,19 @@ Character *ctrlGetRootNode() {
 // @verified - p
 std::uint8_t EnableScenarioCharacterDisplay(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return EV_SetCharDisplay(FindScenarioCharacter(control->scenarioTask, name), CVM_DisplayEnabled, 1);
+    return EV_SetCharDisplay(scenFindChara(control->scenarioTask, name), CVM_DisplayEnabled, 1);
 }
 
 // @verified - p
 std::uint8_t DisableScenarioCharacterDisplay(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return EV_SetCharDisplay(FindScenarioCharacter(control->scenarioTask, name), CVM_DisplayEnabled, 0);
+    return EV_SetCharDisplay(scenFindChara(control->scenarioTask, name), CVM_DisplayEnabled, 0);
 }
 
 // @verified - p
 void EnsureScenarioCharacterDraw(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return;
     HLib::Task *const task = GetCharacterHandlerTask(character);
@@ -1339,7 +1339,7 @@ void EnsureScenarioCharacterDraw(shen_name name) {
 // @verified - p
 void ToggleScenarioCharacterFlag(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return;
     HLib::Task *const task = GetCharacterHandlerTask(character);
@@ -1350,7 +1350,7 @@ void ToggleScenarioCharacterFlag(shen_name name) {
 // @verified - p
 MapEventComponentState *SetCharacterMapEventRegionEnabled(shen_name name, std::uint32_t region, std::uint8_t enabled) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return nullptr;
     MapEventComponentState *const state = static_cast<MapEventComponentState *>(FindModelComponent(character, mapEventComponentToken));
@@ -1366,7 +1366,7 @@ MapEventComponentState *SetCharacterMapEventRegionEnabled(shen_name name, std::u
 // @verified - p
 std::uint64_t IsCharacterMapEventRegionEnabled(shen_name name, std::uint32_t region) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return 0;
     const MapEventComponentState *const state = static_cast<const MapEventComponentState *>(FindModelComponent(character, mapEventComponentToken));
@@ -1377,7 +1377,7 @@ std::uint64_t IsCharacterMapEventRegionEnabled(shen_name name, std::uint32_t reg
 // @verified - p
 std::uint64_t GetCharacterMapEventRegion(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return 0;
     const MapEventComponentState *const state = static_cast<const MapEventComponentState *>(FindModelComponent(character, mapEventComponentToken));

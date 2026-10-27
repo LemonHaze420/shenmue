@@ -31,7 +31,7 @@ void LoopCallback(void *);
 void InitNullsub() {
 }
 void ConfigureEnvironment() {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_stepSetFlags(0, 5);
     SetPlayerGameFlags(PlayerGameFlagMode::Bit5, nullptr);
     DateTime time;
@@ -118,7 +118,7 @@ void MainCallback(void *data) {
         EV_LoadAudio("AR02_000", 2);
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         parent->state = 1;
         break;
     case 1:

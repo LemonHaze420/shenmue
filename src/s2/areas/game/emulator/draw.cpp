@@ -1,4 +1,4 @@
-#include "s2/areas/game_emulator_draw.hpp"
+#include "s2/areas/game/emulator/draw.hpp"
 
 #include "s2/legacy_draw.hpp"
 #include "s2/renderer_initialization.hpp"

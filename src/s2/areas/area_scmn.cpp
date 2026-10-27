@@ -80,7 +80,7 @@ void LoadScmnScene() {
     (void)EV_SetNewSceneIndex();
     (void)EV_LoadCutsceneFromCurrentScene("0255E000");
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 // @verified - p
 void FinishScmnSequence() {
@@ -320,7 +320,7 @@ void ScmnCleanupCallback(void *parameter) {
         (void)DeleteMotion(*motion);
     (void)EV_FreeAuthorPak(0, "0255");
     (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLKillOtherHierarchyTask(work->self);
     (void)EV_ResetFreeTalkFlags();

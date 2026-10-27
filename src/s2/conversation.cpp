@@ -1098,7 +1098,7 @@ ScenarioTaskData *ScenarioData(HLib::Task *task) {
 }
 
 Character *SpeakerCharacter(shen_name name) {
-    return FindScenarioCharacter(ScenarioTask(), name);
+    return scenFindChara(ScenarioTask(), name);
 }
 
 shen_name ResolveSpeaker(shen_name name) {
@@ -1545,14 +1545,14 @@ void PublishPacket(const std::uint32_t *packet, ConversationBuffer &buffer) {
     if (hasCharacter) {
         const std::uint32_t *clip = FindConversationIndexChunk(packet, SHEN_NAME(CLIP));
         if (clip) {
-            Character *character = FindScenarioCharacter(scenario, buffer.speaker);
+            Character *character = scenFindChara(scenario, buffer.speaker);
             if (character)
                 AssignFacialClip(character, reinterpret_cast<const std::int16_t *>(clip + 2));
         }
     } else if (std::memcmp(buffer.code.data(), "F224", 4) == 0) {
         const std::int16_t *clip = FindConversationBuiltinFacialClip(buffer);
         if (clip) {
-            Character *character = FindScenarioCharacter(scenario, buffer.speaker);
+            Character *character = scenFindChara(scenario, buffer.speaker);
             if (character)
                 AssignFacialClip(character, clip);
         }

@@ -145,7 +145,7 @@ void LoadDebugResources(StreetFightEventWork *work) {
     EV_LoadCutsceneFromCurrentScene("0100E000");
     EV_LoadAudio("0100E000", 0);
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 
 // @verified - p
@@ -214,7 +214,7 @@ void CleanupDebug(StreetFightEventWork *work) {
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QSFF"), 0);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ENMY"), 0);
     LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
@@ -1254,7 +1254,7 @@ void CleanupNormalCallback(void *parameter) {
         EV_spmBeginSampleExecute();
     else
         LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014))
@@ -1523,7 +1523,7 @@ void LoadNormalResources(StreetFightEventWork *work) {
     EV_LoadCutsceneFromCurrentScene("0100E000");
     EV_LoadAudio("0100E000", 0);
     EV_spmBeginSampleExecute();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     FinishLoading();
 }
 // @verified - p

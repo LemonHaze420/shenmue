@@ -39,7 +39,7 @@ void Initialize0502() {
     splash0502 = 0;
 }
 void Start0502(std::uintptr_t argument) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(Update0502, 4, 11, sizeof(Area0502Parameter), AREA_0502_EVENT);
     Area0502Parameter *const parent = static_cast<Area0502Parameter *>(HLib::GetTaskParameter(task));
     parent->self = task;
@@ -236,7 +236,7 @@ void Cleanup0502(Area0502Parameter *parent) {
     HLib::DestroyTask(parent->self);
     SetPlayerControlEnabled(1);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     const Vector3 position{0.0f, -1000.0f, 0.0f};
     AssignShipSprayPosition(position);
     AssignHikiPosition(position);

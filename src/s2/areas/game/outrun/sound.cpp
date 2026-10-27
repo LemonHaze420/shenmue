@@ -1,8 +1,8 @@
-#include "s2/areas/game_outrun_sound.hpp"
+#include "s2/areas/game/outrun/sound.hpp"
 
-#include "s2/areas/game_arcade_audio_host.hpp"
-#include "s2/areas/game_arcade_sound.hpp"
-#include "s2/areas/game_outrun_board.hpp"
+#include "s2/areas/game/arcade/audio_host.hpp"
+#include "s2/areas/game/arcade/sound.hpp"
+#include "s2/areas/game/outrun/board.hpp"
 #include "s1/archive_data.hpp"
 #include "s1/audio_stream.hpp"
 #include "s1/d3t/settings.hpp"

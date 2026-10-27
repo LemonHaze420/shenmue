@@ -68,7 +68,7 @@ void AreaKBRGMain(std::uintptr_t parameter) {
     if (task)
         HLib::SetupTimedTask(task, 0);
     HLib::EnqueueTaskWithoutParameter(EVT_UTL_LoadNPCChara_Callback_2, 6, 0x0b, static_cast<std::int32_t>(KBRG_LOAD_TASK.name));
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     GetCurrentDateTime(savedDate);
 }
 // @verified - p

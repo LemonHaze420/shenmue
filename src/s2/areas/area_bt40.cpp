@@ -478,7 +478,7 @@ void Exit(Bt40BoutWork &w) {
         DeleteMotion(*motion);
     if (!mode)
         LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     FinishLoading();
     EV_SetObjectFlagByIndex(1, 1);
     EV_lightLoad(SHEN_NAME(0001));
@@ -536,7 +536,7 @@ void BT40_event_function(std::uintptr_t parameter) {
         EV_LoadAudio("0340A000", 0);
     }
     SetMapControlStatusFlag(0, 0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     FinishLoading();
 }
 void Bt40BoutCallback(void *parameter) {

@@ -53,7 +53,7 @@ void E0140Main(std::uintptr_t) {
     parent->selection = 0;
     parent->state = 1;
     SetPlayerControlEnabled(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_SetNewSceneIndex();
     EV_FreeAuthorPak(1, "0140");
     EV_LoadCutsceneFromCurrentScene("0140A000");
@@ -110,7 +110,7 @@ void CleanupE0140(AreaAuthorTaskParameter *parent) {
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         BeginSecondarySampleExecution(0);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     } else
         EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);

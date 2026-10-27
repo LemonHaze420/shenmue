@@ -868,8 +868,8 @@ add_library(shenmue2_events OBJECT
   src/s2/areas/tejo_lifecycle.cpp
   src/s2/areas/tejo_tables.cpp
   src/s2/areas/area_game.cpp
-  src/s2/areas/game_arcade.cpp
-  src/s2/areas/game_arcade_render.cpp
+  src/s2/areas/game/arcade.cpp
+  src/s2/areas/game/arcade/render.cpp
   src/s2/areas/area_toma.cpp
   src/s2/areas/toma_talk.cpp
   src/s2/areas/toma_helpers.cpp
@@ -1362,22 +1362,22 @@ add_library(shenmue2_game STATIC
   src/s2/darts_conversation.cpp
 )
 add_library(shenmue2_arcade_core STATIC
-  src/s2/areas/game_harrier_control.cpp
+  src/s2/areas/game/harrier/control.cpp
   src/s1/modules/harrier_cpu.cpp
-  src/s2/areas/game_harrier_render.cpp
-  src/s2/areas/game_arcade_diagnostics.cpp
-  src/s2/areas/game_arcade_sound.cpp
-  src/s2/areas/game_arcade_audio_host.cpp
-  src/s2/areas/game_arcade_host_data.cpp
-  src/s2/areas/game_outrun_board.cpp
-  src/s2/areas/game_outrun_sound.cpp
-  src/s2/areas/game_outrun_render.cpp
-  src/s2/areas/game_emulator_draw.cpp
-  src/s2/areas/game_emulator_overlay.cpp
-  src/s2/areas/game_afterburner_board.cpp
-  src/s2/areas/game_afterburner_sound.cpp
-  src/s2/areas/game_afterburner_render.cpp
-  src/s2/areas/game_arcade_math.cpp
+  src/s2/areas/game/harrier/render.cpp
+  src/s2/areas/game/arcade/diagnostics.cpp
+  src/s2/areas/game/arcade/sound.cpp
+  src/s2/areas/game/arcade/audio_host.cpp
+  src/s2/areas/game/arcade/host_data.cpp
+  src/s2/areas/game/outrun/board.cpp
+  src/s2/areas/game/outrun/sound.cpp
+  src/s2/areas/game/outrun/render.cpp
+  src/s2/areas/game/emulator/draw.cpp
+  src/s2/areas/game/emulator/overlay.cpp
+  src/s2/areas/game/afterburner/board.cpp
+  src/s2/areas/game/afterburner/sound.cpp
+  src/s2/areas/game/afterburner/render.cpp
+  src/s2/areas/game/arcade/math.cpp
 )
 target_compile_definitions(shenmue2_arcade_core PRIVATE SHENMUE_TARGET_S2_PC=1 SHENMUE_LOAD_HANGON_DLL=1)
 target_compile_features(shenmue2_arcade_core PRIVATE cxx_std_20)

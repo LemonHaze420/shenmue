@@ -88,7 +88,7 @@ std::int32_t SnapNameSortKey(std::uint32_t name) noexcept {
 
 
 void snapRestorePresentation(SnapControlWork &work) {
-    SetRenderClockAndCompassTo(work.watchSuppressed == 0);
+    shenSetClockAndCompassRenderTo(work.watchSuppressed == 0);
     SetNaviTaskEnabled(work.naviEnabled != 0);
     SetSnapshotDataOption(work.snapshotOption);
     wndEnableMessageDraw();
@@ -178,7 +178,7 @@ void snapCheckShutter(SnapControlWork &work, std::uint8_t pressed) {
     work.fightGaugeVisible = static_cast<std::int32_t>(SetFightGaugeVisible(0));
     work.wkktGaugeVisible = areas::wkktSetGaugeVisible(0);
     work.duckRaceOverlayDisabled = duckSetPlayerOverlayDisabled(1);
-    work.watchSuppressed = IsClockAndCompassSuppressed() ? 1U : 0U;
+    work.watchSuppressed = shenIsClockAndCompassSuppressed() ? 1U : 0U;
     work.naviEnabled = IsNaviTaskEnabled() ? 1 : 0;
     if (g_pFightStage) {
         work.battleFlags = static_cast<std::int32_t>(EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x30001U}, 0));
@@ -310,7 +310,7 @@ SnapshotCharacterIdRecord *snapFindCharacterIdRecord(void *characterIdData) {
 
 
 void snapSavePresentation(SnapControlWork &work) {
-    work.watchSuppressed = IsClockAndCompassSuppressed() ? 1U : 0U;
+    work.watchSuppressed = shenIsClockAndCompassSuppressed() ? 1U : 0U;
     work.naviEnabled = IsNaviTaskEnabled() ? 1 : 0;
     if (g_pFightStage) {
         work.battleFlags = static_cast<std::int32_t>(EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x30001U}, 0));
@@ -625,7 +625,7 @@ void SNAP_Control_Callback(void *parameter) {
         break;
     case SnapState::Capture:
         qteSetupMaskFor90(3);
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         SetNaviTaskEnabled(false);
         SetSnapshotDataOption(1);
         wndDisableMessageDraw();

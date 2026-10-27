@@ -144,7 +144,7 @@ void OP02Prepare(Op02EventWork *work) {
     SetPlayerControlEnabled(0);
     EV_authSceneCtrl(AuthSceneCtrl::DisallowSkipAuthor);
     EV_ToggleCharacterFlag(OP02_PLAYER);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     OP02Nullsub();
     SetIsSkySetup(0);
     EV_ReinitLights(1);

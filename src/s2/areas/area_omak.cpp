@@ -1,6 +1,6 @@
 #include "s2/areas/area_omak.hpp"
 #include "s2/areas/omak_tables.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include "s2/area_jump.hpp"
 #include "s2/date_time.hpp"
 #include "s2/debug.hpp"
@@ -97,7 +97,7 @@ void BootOmake() {
     SetWeatherUpdateEnabledTo(0);
     SetIsSkySetup(0);
     shenSetTimeSimulationTo(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     SetPlayerGameFlags(PlayerGameFlagMode::Bit22, reinterpret_cast<void *>(1));
     ReinitializeLights(1);
     omakeDrawEnabled = 1;

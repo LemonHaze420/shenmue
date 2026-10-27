@@ -82,7 +82,7 @@ void NineKanSetAuthoredControl(std::int32_t enabled) {
         NineKanAuthoredControlNullsub();
     else
         FinishLoading();
-    SetRenderClockAndCompassTo(enabled ? 1 : 0);
+    shenSetClockAndCompassRenderTo(enabled ? 1 : 0);
     const NpcCharacterControllerState state = enabled ? NpcCharacterControllerState::Disabled : NpcCharacterControllerState::Enabled;
     EV_SetCharaControllerFlags(NINE_KAN_RYO, ApplyGravity, state);
     EV_SetCharaControllerFlags(NINE_KAN_RYO, UpdateHeight | ApplyGravity, state);

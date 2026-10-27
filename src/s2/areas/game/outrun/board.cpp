@@ -1,6 +1,6 @@
-#include "s2/areas/game_outrun_board.hpp"
-#include "s2/areas/game_outrun_render.hpp"
-#include "s2/areas/game_outrun_sound.hpp"
+#include "s2/areas/game/outrun/board.hpp"
+#include "s2/areas/game/outrun/render.hpp"
+#include "s2/areas/game/outrun/sound.hpp"
 
 #include "s1/archive_data.hpp"
 #include "s1/input.hpp"

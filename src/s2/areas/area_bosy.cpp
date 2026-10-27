@@ -334,7 +334,7 @@ void Exit(BoutWork *work) {
     ExecuteCleanupFuncForAreaWithCachedScene();
     if (EV_GetShenmueFlag(255))
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1006, 1);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_EventSetUpHelpIcon_0(0, 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->self);
@@ -411,7 +411,7 @@ void AreaBOSYMain(std::uintptr_t parameter) {
     RefreshWeatherForCurrentTime(0);
     UpdateWeather();
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_EventSetUpHelpIcon_0(20, 0);
 }
 const ScriptAreaDefinition areaBOSYScriptDefinition{.areaId = SHEN_NAME(BOSY), .field04 = 0, .init = AreaBOSYInit, .main = AreaBOSYMain};

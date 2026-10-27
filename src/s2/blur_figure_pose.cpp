@@ -587,7 +587,7 @@ std::uintptr_t EV_figpAssignFlagsFor(Character *character, std::uint8_t bitIndex
 // @verified - p
 void LoadBlurModelForCharacter(shen_name character, const char *path, float time) {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    SetBlurModel(FindScenarioCharacter(control->scenarioTask, character), path, time);
+    SetBlurModel(scenFindChara(control->scenarioTask, character), path, time);
 }
 
 
@@ -595,26 +595,26 @@ void LoadBlurModelForCharacter(shen_name character, const char *path, float time
 // @verified - p
 std::uintptr_t figpLoadBlurModelFor(shen_name character, const char *path) {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    FigurePose *const figure = static_cast<FigurePose *>(FindModelComponent(FindScenarioCharacter(control->scenarioTask, character), MODEL_FIGURE_POSE));
+    FigurePose *const figure = static_cast<FigurePose *>(FindModelComponent(scenFindChara(control->scenarioTask, character), MODEL_FIGURE_POSE));
     return figure ? LoadBlurModel(figure, path, false) : 0;
 }
 
 // @verified - p
 FigurePose *figpAssignModeFor(shen_name character, std::int8_t mode) {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return figpAssignModeForCharacter(FindScenarioCharacter(control->scenarioTask, character), mode);
+    return figpAssignModeForCharacter(scenFindChara(control->scenarioTask, character), mode);
 }
 
 // @verified - p
 std::uintptr_t figpSetFlagModesFor(shen_name character, std::uint8_t bitIndex, std::int8_t enabled) {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return EV_figpAssignFlagsFor(FindScenarioCharacter(control->scenarioTask, character), bitIndex, enabled);
+    return EV_figpAssignFlagsFor(scenFindChara(control->scenarioTask, character), bitIndex, enabled);
 }
 
 // @verified - p
 std::uintptr_t figpSetFlagsBlendForBlur(shen_name character, std::int8_t scale, std::int8_t direction) {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return figpAssignMotScaleAndDirFor(FindScenarioCharacter(control->scenarioTask, character), scale, direction);
+    return figpAssignMotScaleAndDirFor(scenFindChara(control->scenarioTask, character), scale, direction);
 }
 
 } // namespace shenmue::s2

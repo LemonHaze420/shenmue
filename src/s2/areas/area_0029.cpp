@@ -90,7 +90,7 @@ void MainCallback(void *data) {
         LoadCutsceneAndSoundProgramForArea();
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         parent->state = 1;
         break;
     case 1:
@@ -125,7 +125,7 @@ void Main(std::uintptr_t) {
     parent->state = 2;
     SetPlayerControlEnabled(0);
     EV_SetNewSceneIndex();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_LoadCutsceneFromCurrentScene("0029A000");
     EV_FreeAuthorPak(1, "0029");
     if (g_currentMap.name == SHEN_NAME(WS00)) {

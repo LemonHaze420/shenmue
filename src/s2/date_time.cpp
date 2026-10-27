@@ -1046,11 +1046,11 @@ std::uint32_t SetTimeHudVariant(std::int32_t variant) {
         timeHudVariant = variant;
     return previous;
 }
-void SetRenderClockAndCompassTo(std::int32_t suppressed) noexcept {
+void shenSetClockAndCompassRenderTo(std::int32_t suppressed) noexcept {
     clockAndCompassSuppressed = static_cast<std::uint8_t>(suppressed);
 }
 
-bool IsClockAndCompassSuppressed() noexcept {
+bool shenIsClockAndCompassSuppressed() noexcept {
     return clockAndCompassSuppressed != 0;
 }
 

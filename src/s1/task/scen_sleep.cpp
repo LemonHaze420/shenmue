@@ -405,7 +405,7 @@ void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player) {
                 (g_shouldSleep & kPromptTriggered) == 0 && minutes >= g_sleepPromptWindowStartMinutes && minutes <= g_sleepPromptWindowEndMinutes;
             if (promptWindow && SCEN_HasSleepTransitionFinished(player, 0)) {
                 g_shouldSleep |= kPromptTriggered;
-                PCCTL_RequestNewMode(1);
+                navRequestNewMode(1);
                 g_suppressDefaultHudPromptIcons = 1;
                 player.blockedCanControl = 0;
                 player.state = 2;
@@ -459,7 +459,7 @@ void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player) {
             player.busy = 1;
         } else {
             player.reserved25f = std::byte{};
-            PCCTL_ResetAuthAndInputStates();
+            navResetAuthAndInputStates();
         }
     }
 }

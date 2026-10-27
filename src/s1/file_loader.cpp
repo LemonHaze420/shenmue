@@ -127,7 +127,7 @@ void *ReadFile(const char *directory, const char *filename, std::int32_t token) 
     }
     CycleManager::LinkCyclesInStack(loadingEnabled);
     if (loadingEnabled)
-        PCCTL_BeginLoadHold();
+        navBeginLoadHold();
     return destination;
 #else
     void *destination = nullptr;

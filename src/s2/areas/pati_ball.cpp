@@ -105,7 +105,7 @@ void PatiBallCallback(void *data) {
     switch (b.phase) {
     case 0: {
         HLib::SetupTaskDelay(10);
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         SetLowQualityHands(FindCharacterByScenarioName(hand));
         SetHighModelXYZ(FindCharacterByScenarioName(hand), 1, 0, 0);
         ApplyCharacterHandRotation(FindCharacterByScenarioName(hand), 0, 21, &PATI_HAND_ROTATION);
@@ -215,7 +215,7 @@ void PatiBallCallback(void *data) {
         UpdatePatiBallPosition(&b);
         break;
     case 13:
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         EV_DisableCharacterDisplay(hand);
         EV_ToggleCharacterFlag(hand);
         DestroyPatiBall(&b);

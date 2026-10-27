@@ -93,7 +93,7 @@ void MarkQdmrRoomVisited(shen_name door, std::uint32_t *roomFlags) {
                 break;
             }
             roomFlags[index] |= 4U;
-            PlaceNaviMarker(position, 4);
+            navPlaceMarker(position, 4);
         }
         if (!(roomFlags[index] & 2U))
             roomFlags[index] |= 2U;

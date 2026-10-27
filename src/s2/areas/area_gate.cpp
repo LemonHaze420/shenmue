@@ -207,7 +207,7 @@ void Cleanup(GateEventWork &work) {
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GATE"), 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     FinishLoading();
     HLib::DestroyTask(work.task);
 }
@@ -241,7 +241,7 @@ void GATE_init_func() {
 void GATE_main_func(std::uintptr_t entry) {
     using namespace gate_event;
     SetPlayerControlEnabled(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     nullsub();
     SetHighModelXYZ(ctrlGetCharaByName(ryo), 1, 1, 0);
     SetHighModelXYZ(ctrlGetCharaByName(ryo), 1, 0, 0);

@@ -254,7 +254,7 @@ namespace {
 
 constexpr std::int32_t kMapEventTaskToken = SHEN_NAME(MEVE);
 
-MapControlData *CurrentControl() {
+MapControlData *shenGetMapCtrl() {
     if (!g_mapControlTask || !g_mapControlTask->task_data_ptr)
         return nullptr;
     return reinterpret_cast<MapControlData *>(g_mapControlTask->task_data_ptr);
@@ -786,8 +786,8 @@ void LoadSceneMapAssets() {
 
     MAPINFO_ApplyDynamicMapDisableChunk();
     ApplyMapPreparationChunk();
-    ReadSCRL(CurrentControl()->mapInfo);
-    LoadSPR_0(MAPINFO_FindChunkIn(CurrentControl()->mapInfo, g_mapInfoSize, SHEN_NAME(SCLM)));
+    ReadSCRL(shenGetMapCtrl()->mapInfo);
+    LoadSPR_0(MAPINFO_FindChunkIn(shenGetMapCtrl()->mapInfo, g_mapInfoSize, SHEN_NAME(SCLM)));
 }
 
 static HLib::Task *EnqueueScrollTaskOwner() {

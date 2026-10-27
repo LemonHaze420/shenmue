@@ -1,4 +1,4 @@
-#include "s2/areas/game_arcade_render.hpp"
+#include "s2/areas/game/arcade/render.hpp"
 
 #include "s2/d3t_renderer.hpp"
 #include "s2/input_bindings.hpp"

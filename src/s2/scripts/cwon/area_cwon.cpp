@@ -90,7 +90,7 @@ void AreaCWONMain(std::uintptr_t argument) {
     SetPlayerControlEnabled(0);
     SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
     nullsub();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     HLib::Task *task = HLib::EnqueueTaskWithParameter(CwonMainCallback, 4, 11, sizeof(CwonEventWork), CWON_TASK);
     if (!task)
         return;

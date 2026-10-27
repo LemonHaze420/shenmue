@@ -92,7 +92,7 @@ void ChawPlayCallback(void *data) {
                 return;
             }
             EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1021, 1);
-            SetRenderClockAndCompassTo(1);
+            shenSetClockAndCompassRenderTo(1);
         }
         if (work->helpFlags & 32)
             CheckHelpIcon(32, 1, CheckHelpIconOp::FrameOverlay);

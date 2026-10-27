@@ -248,7 +248,7 @@ void UI_ICONMainCallback(HLib::TaskData *) {
     if (icon.overlayTransitionStage != 0) {
         if (icon.overlayTransitionStage == 5) {
             iconUpdateInputBuffer();
-            PCCTL_RequestNewMode(static_cast<std::int32_t>(icon.cachedPlayerControlMode));
+            navRequestNewMode(static_cast<std::int32_t>(icon.cachedPlayerControlMode));
             icon.iconFlags &= static_cast<std::uint16_t>(~1U);
             icon.cachedPlayerControlMode = 0;
             icon.overlayTransitionStage = 0;
@@ -264,7 +264,7 @@ void UI_ICONMainCallback(HLib::TaskData *) {
         return;
     }
     icon.cachedPlayerControlMode = g_pControlPadController ? g_pControlPadController->currentMode : 0U;
-    PCCTL_RequestNewMode(5);
+    navRequestNewMode(5);
     g_isPlayerGameStateActive = 0;
     CapturePad(icon.input, icon.previousInput);
     icon.menuState = UIIconSystemMenuState::OpenRequested;

@@ -52,7 +52,7 @@ void Restore0500Character(shen_name character, bool motion) {
 void Initialize0500() {
 }
 void Start0500(std::uintptr_t) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_UpdateWeatherForMinute(0, 0, 0, 0.0f);
     EV_UpdateWeatherForMinute(1, 0, 0, 0.0f);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(Update0500, 4, 11, sizeof(Area0500Parameter), AREA_0500_EVENT);

@@ -447,7 +447,7 @@ void FinalizeScenRuntimeObject(ScenRuntimeObject *object) {
         object->runtimeFlags &= ~kRuntimeFlagConversationCameraActive;
         if ((ScenFlags() & kScenarioFlagPadBlockOverride) != 0) {
             ScenFlags() &= ~kScenarioFlagPadBlockOverride;
-            PCCTL_ResetAuthAndInputStates();
+            navResetAuthAndInputStates();
         }
         ClearScenAuthorGameState();
     }
@@ -482,7 +482,7 @@ void UpdateScenActiveRuntimeObject() {
     g_scenRuntimeState.activeObject = nullptr;
     if (!ShouldRun() && (flags & kScenarioFlagPadBlockOverride) != 0) {
         ScenFlags() &= ~kScenarioFlagPadBlockOverride;
-        PCCTL_ResetAuthAndInputStates();
+        navResetAuthAndInputStates();
     }
     RestoreScenPadContext();
     FinalizeScenRuntimeObject(active);

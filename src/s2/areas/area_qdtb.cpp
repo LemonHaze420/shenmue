@@ -168,7 +168,7 @@ void InitializeBoutResources(QdtbBoutWork *work) {
         PushGlobalLightingProgram();
     }
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     work->unused24 = 0;
 }
 
@@ -182,7 +182,7 @@ void EndBout(QdtbBoutWork *work) {
     EV_FreeAuthorPak(0, "0249");
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDTB"), 0);
     LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     HLib::DestroyCurrentTask();
     DateTime time;
     GetCurrentDateTime(time);

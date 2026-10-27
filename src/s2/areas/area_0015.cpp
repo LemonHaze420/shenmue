@@ -49,7 +49,7 @@ void InitNullsub() {
 }
 // @verified - p
 void ConfigureEnvironment(AreaImmediateAuthorTaskParameter *parent) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_SetNewSceneIndex();
     if (g_currentMap.name == SHEN_NAME(0015)) {
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
@@ -154,7 +154,7 @@ void Cleanup(AreaImmediateAuthorTaskParameter *parent) {
         EVT_AT_SetPosRot(&position);
         EVT_AT_SetAng_Enqueue(AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, 0, 0, 0, 0);
         SetNpcColdResetMode(1);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
     } else if (parent->selection == 1) {
         SetNpcColdResetMode(1);
         HLib::DestroyTask(parent->self);
@@ -174,7 +174,7 @@ void Cleanup(AreaImmediateAuthorTaskParameter *parent) {
         EV_lightLoad(SHEN_NAME(0000));
         PushGlobalLightingProgram();
         CheckIsArgEquZero(1);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
     }
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);

@@ -115,7 +115,7 @@ void AreaQKBTMain(std::uint32_t parameters) {
     EV_GetShenmueFlag(0xff);
     ApplyLighting();
     shenSetTimeSimulationTo(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     InitializeDropParticles();
     EV_SetCharaControllerFlags(STREET_WATCH_RYO, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
     HLib::EnqueueTaskWithoutParameter(MainCallback, 4, 0xb, static_cast<std::int32_t>(STREET_WATCH_TASK.name));

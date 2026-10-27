@@ -419,7 +419,7 @@ void CleanupTogyu(QdtgEventWork *work) {
     hndlSetFlags(ctrlGetCharaByName(QDTG_REN));
     hndlSetFlags(ctrlGetCharaByName(QDTG_RYO));
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0282");
@@ -543,7 +543,7 @@ void InitializeTogyu(QdtgEventWork *work) {
     EVT_AT_SetAngY(QDTG_HIBI, EVENT_CHARACTER_INVALID, 180, 0);
     ApplyCharacterGeometryLighting(ctrlGetCharaByName(QDTG_HIBI), 0);
     ApplyCharacterGeometryLighting(ctrlGetCharaByName(QDTG_YUKA), 0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     QdtgAdmissionNullsub();
 }
 } // namespace

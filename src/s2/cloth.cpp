@@ -1138,7 +1138,7 @@ void UpdateWindReactiveNode(Character *character, void *payload) {
     if (static_cast<std::uint8_t>(cloth.parameters[0x19]) != 1U) {
         if (cloth.assignMode == 2) {
             const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-            if (Character *const author = FindScenarioCharacter(control->scenarioTask, SHEN_NAME(a334))) {
+            if (Character *const author = scenFindChara(control->scenarioTask, SHEN_NAME(a334))) {
                 const Vector3 location = GetCharacterWorldPosition(author);
                 Vector3 direction = GetCharacterWorldPosition(character);
                 direction.x -= location.x;

@@ -4,7 +4,7 @@
 
 #include "s2/game_runtime.hpp"
 #include "d3t/object_store.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include "s2/date_time.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/frame_pacing.hpp"

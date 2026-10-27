@@ -1,5 +1,5 @@
 #include "s2/areas/area_game.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include "s2/author.hpp"
 #include "s2/camera.hpp"
 #include "s2/event_characters.hpp"

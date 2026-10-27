@@ -3,7 +3,7 @@
 #include "s1/d3t/namespace.hpp"
 #include "s1/audio_stream.hpp"
 #include "s1/d3t/settings.hpp"
-#include "s2/areas/game_arcade_audio_host.hpp"
+#include "s2/areas/game/arcade/audio_host.hpp"
 #include "s2/d3t_renderer.hpp"
 #include <array>
 #include <cmath>

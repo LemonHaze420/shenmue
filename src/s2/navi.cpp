@@ -877,7 +877,7 @@ void UpdateNaviInteraction(const LegacyInputSlot &input) {
         if (type) {
             Vector3 position{};
             plymUpdatePlayerSearchLocation(&position);
-            AddNaviMarker(position, static_cast<std::int32_t>(type));
+            navCreate(position, static_cast<std::int32_t>(type));
         }
         naviPhase = 10;
         break;
@@ -1094,7 +1094,7 @@ void RemoveNaviMapMarkers() noexcept {
     CompactMarkers();
 }
 
-std::int32_t AddNaviMarker(const Vector3 &position, std::int32_t type) {
+std::int32_t navCreate(const Vector3 &position, std::int32_t type) {
     if (!naviTask)
         return -1;
     NaviTaskData *const data = static_cast<NaviTaskData *>(HLib::GetTaskParameter(naviTask));
@@ -1121,22 +1121,22 @@ std::int32_t AddNaviMarker(const Vector3 &position, std::int32_t type) {
     const std::uint32_t slot = nextMarker;
     if (++nextMarker >= 128)
         nextMarker = 0;
-    std::uint32_t markerType = 0;
+    NaviMarkerType markerType = NaviMarkerType::ButtonX;
     switch (type) {
     case 3:
-        markerType = 1;
+        markerType = NaviMarkerType::ButtonA;
         break;
     case 4:
-        markerType = 2;
+        markerType = NaviMarkerType::ButtonB;
         break;
     case 6:
-        markerType = 4;
+        markerType = NaviMarkerType::FixedX;
         break;
     case 7:
-        markerType = 5;
+        markerType = NaviMarkerType::FixedA;
         break;
     case 8:
-        markerType = 6;
+        markerType = NaviMarkerType::FixedB;
         break;
     default:
         break;
@@ -1144,28 +1144,28 @@ std::int32_t AddNaviMarker(const Vector3 &position, std::int32_t type) {
     const float scale = 256.0f / (data->config->scale * 128.0f);
     const std::uint8_t x = static_cast<std::uint8_t>(static_cast<std::int32_t>((position.x - data->config->originX) * scale));
     const std::uint8_t z = static_cast<std::uint8_t>(static_cast<std::int32_t>((position.z - data->config->originZ) * scale));
-    markers[slot] = 1 | (2 * markerType + 2) | ((mapIndex & 0x3f) << 4) | ((static_cast<std::uint32_t>(floor) & 0x3f) << 10) |
+    markers[slot] = 1 | (2 * static_cast<std::uint32_t>(markerType) + 2) | ((mapIndex & 0x3f) << 4) | ((static_cast<std::uint32_t>(floor) & 0x3f) << 10) |
         (static_cast<std::uint32_t>(x) << 16) | (static_cast<std::uint32_t>(z) << 24);
     return static_cast<std::int32_t>(nextMarker);
 }
 
-std::int32_t PlaceNaviMarker(const Vector3 &position, std::int32_t type) {
+std::int32_t navPlaceMarker(const Vector3 &position, std::int32_t type) {
     switch (type) {
     case 1:
-        return AddNaviMarker(position, 2);
+        return navCreate(position, 2);
     case 2:
-        return AddNaviMarker(position, 3);
+        return navCreate(position, 3);
     case 3:
-        return AddNaviMarker(position, 4);
+        return navCreate(position, 4);
     case 4:
     case 5:
-        return AddNaviMarker(position, 6);
+        return navCreate(position, 6);
     case 6:
-        return AddNaviMarker(position, 7);
+        return navCreate(position, 7);
     case 7:
-        return AddNaviMarker(position, 8);
+        return navCreate(position, 8);
     default:
-        return AddNaviMarker(position, 0);
+        return navCreate(position, 0);
     }
 }
 

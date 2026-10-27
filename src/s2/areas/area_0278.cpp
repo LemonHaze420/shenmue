@@ -163,7 +163,7 @@ void AuthorLoop(void *taskData) {
     }
     if (parent->author == 3 && frame == 1) {
         const AuthorController *const author = Author_GetController();
-        SetHighModelAndFaceFlagsForChara(FindScenarioCharacter(author ? author->task : nullptr, AREA_0278_RYO), 0, 0.0f, 1.0f);
+        SetHighModelAndFaceFlagsForChara(scenFindChara(author ? author->task : nullptr, AREA_0278_RYO), 0, 0.0f, 1.0f);
     }
     if (parent->author == 1 && frame == 545)
         SetAuthorPlayerFlag(false);

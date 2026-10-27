@@ -226,7 +226,7 @@ void DartsInitStart(void *data) {
     }
     GetCurrentDateTime(work->previousTime);
     shenSetTimeSimulationTo(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     SetPlayerControlEnabled(0);
     mtwkSetRequestedRootMode(scenFindMotionwork(DART_PLAYER), 0);
     EventSetMotion motion{.cleanup = 0, .character = DART_PLAYER, .animation = 61442, .frame = -1, .speed = 1, .flags = 0x80000000U, .delay = 0};
@@ -1934,7 +1934,7 @@ void DartsExit(void *data) {
         if (work->voiceTask)
             HLib::DestroyTaskInternal(work->voiceTask);
         shenSetTimeSimulationTo(1);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         EVS_LoopCamera(0, {}, {});
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);

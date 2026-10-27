@@ -1,6 +1,6 @@
 #pragma once
 
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 
 namespace shenmue::s2 {
 

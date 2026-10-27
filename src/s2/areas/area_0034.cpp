@@ -39,7 +39,7 @@ void E0034Init() {
 void ConfigureE0034Environment() {
     SetPlayerControlEnabled(0);
     EV_SetNewSceneIndex();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_FreeAuthorPak(1, AREA_0034_CONVERSATION);
     EV_LoadCutsceneFromCurrentScene("0034A000");
     if (g_currentMap.name == AREA_0034_AREA.name) {

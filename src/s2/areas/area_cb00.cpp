@@ -92,7 +92,7 @@ void Cb00Initialize(HLib::Task *task) {
     mtwkSetMotionworkScale3(CB00_BRIDGE, &scale);
     GetCurrentDateTime(work->date);
     Cb00InitializationNullsub();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_setHoldStatesFlags(0);
     qteBattleUtil(BattleQteMode::Load);
     qteBattleUtil(BattleQteMode::ResetStates);
@@ -503,7 +503,7 @@ void Cb00Exit(Cb00EventWork *work) {
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     EV_FreeAuthorPak(0, "0063");
     qteBattleUtil(BattleQteMode::RetireAndFree);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_stepSetFlags(work->stepFlag, 0x84);
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
     EV_scenQueueLoad(g_actNumber, work->exitArea, work->exitEntry);

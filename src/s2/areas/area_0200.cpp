@@ -36,7 +36,7 @@ void E0200Init() {
 }
 void SetupE0200Environment() {
     SetPlayerControlEnabled(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_FreeAuthorPak(1, "0200");
     FreeWAIR();
     EV_UpdateWeatherForMinute(0, 0, 0, 0);

@@ -1201,7 +1201,7 @@ void vfFightTaskTeardown(VFMAData *game) {
     shenUpdateInputsInto(static_cast<PadCaptureEntry *>(game->inputBuffer));
     ReleasePADCEntry(static_cast<PadCaptureEntry *>(game->padCaptureEntry));
     if (game->inputLockOnStart == 1)
-        PCCTL_ResetAuthAndInputStates();
+        navResetAuthAndInputStates();
     VFFightStage *const stage = g_pFightStage;
     for (std::uint8_t index = 0; index < stage->maxEnemies; ++index) {
         VFEnemySlot *const group = &stage->enemySlots[index];

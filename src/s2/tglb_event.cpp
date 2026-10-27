@@ -121,7 +121,7 @@ void TGLB_SetupCutscene(TogyuEventWork *work) {
     SetMapControlStatusFlag(0, 1);
     SetNewWindPhaseAndSpeed(32768, 0.25f);
     EV_EventSetUpHelpIcon_0(HELP_TOPIC_FREE_BATTLE, 0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     FinishLoading();
 }
 
@@ -152,7 +152,7 @@ void TGLB_Cleanup(TogyuEventWork *work) {
     EV_FreeAuthorPak(0, togyuAuthorBank);
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(togyuPackage), 0);
     LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_EventSetUpHelpIcon_0(0, 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);

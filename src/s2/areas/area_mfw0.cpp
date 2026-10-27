@@ -37,7 +37,7 @@ void Mfw0LoadResources(Mfw0Work &work) {
     RefreshWeatherForCurrentTime(0);
     EV_UpdateWeather();
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 void Mfw0Cleanup(Mfw0Work &work) {
     using enum CameraState;
@@ -55,7 +55,7 @@ void Mfw0Cleanup(Mfw0Work &work) {
     DateTime time;
     GetCurrentDateTime(time);
     EV_LoadAudio("AK00_000", time.hour >= 19);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
     EV_NPC_NewLoadSw(1);

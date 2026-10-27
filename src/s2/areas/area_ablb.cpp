@@ -337,7 +337,7 @@ void ABLB_main_func(std::uintptr_t) {
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0138A010");
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     vfmDispatchControl(FightControlOp::GaugeResources, {}, 0, 1);
     EV_SetObjectFlagByIndex(10, 0);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 250, 0);

@@ -55,7 +55,7 @@
 #include "d3t/ui_runtime.hpp"
 #include "s2/ui_scene.hpp"
 #include "s2/world_render.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 
 #include <array>
 #include <cstdlib>

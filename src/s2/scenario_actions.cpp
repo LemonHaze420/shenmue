@@ -279,7 +279,7 @@ void RetireScenarioTalkParticipants(shen_name character) {
     talk.facingCommandsIssued = 0;
     talk.unfocusedFacingRequested = 0;
     if (talk.letterVisible) {
-        if (Character *const letter = FindScenarioCharacter(activeScenarioEventRuntime->task, stepVisibleCharacterName)) {
+        if (Character *const letter = scenFindChara(activeScenarioEventRuntime->task, stepVisibleCharacterName)) {
             HLib::Task *const task = GetCharacterHandlerTask(letter);
             charaSetFlags(letter, 0);
             if (task)
@@ -294,7 +294,7 @@ void RetireScenarioTalkParticipants(shen_name character) {
 
 
 void SetModePerCurrentStep(std::int32_t mode) {
-    Character *const letter = FindScenarioCharacter(activeScenarioEventRuntime->task, stepVisibleCharacterName);
+    Character *const letter = scenFindChara(activeScenarioEventRuntime->task, stepVisibleCharacterName);
     if (!letter)
         return;
     if (mode < 0) {
@@ -374,7 +374,7 @@ void scenProcessCharacterActionQueue() {
             talk.letterShowPending = 0;
             talk.letterFrames = 0;
             Character *const ryo = static_cast<Character *>(control->ryo);
-            Character *const letter = FindScenarioCharacter(scenario.task, stepVisibleCharacterName);
+            Character *const letter = scenFindChara(scenario.task, stepVisibleCharacterName);
             if (letter && ryo) {
                 HLib::Task *const task = GetCharacterHandlerTask(letter);
                 charaSetFlags(letter, 1);
@@ -390,7 +390,7 @@ void scenProcessCharacterActionQueue() {
     } else if (talk.letterHidePending && ++talk.letterFrames >= 25) {
         talk.letterHidePending = 0;
         talk.letterFrames = 0;
-        if (Character *const letter = FindScenarioCharacter(scenario.task, stepVisibleCharacterName)) {
+        if (Character *const letter = scenFindChara(scenario.task, stepVisibleCharacterName)) {
             HLib::Task *const task = GetCharacterHandlerTask(letter);
             charaSetFlags(letter, 0);
             if (task)

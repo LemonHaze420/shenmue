@@ -75,7 +75,7 @@ void DrawNpcActiveHumans() {
                 modelSetCharaAlpha(slot.node, alpha);
             } else if (npcNewLoadState && LoadNativeNpcHuman(slot.character, slot.character, false) == 1) {
                 MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-                slot.node = FindScenarioCharacter(control ? control->scenarioTask : nullptr, slot.character);
+                slot.node = scenFindChara(control ? control->scenarioTask : nullptr, slot.character);
                 if (slot.node) {
                     mtwkAssignDrawCallback(slot.node, NpcTransitionDrawNullsub);
                     imgmAssignUpdateCallback(slot.node, charaPrepareNodesForDraw);
@@ -201,7 +201,7 @@ void InterpolateNpcActiveHumans() {
                     modelSetCharaAlpha(node, alpha);
                 } else if (npcNewLoadState && LoadNativeNpcHuman(entry->character, entry->character, false) == 1) {
                     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-                    node = FindScenarioCharacter(control ? control->scenarioTask : nullptr, entry->character);
+                    node = scenFindChara(control ? control->scenarioTask : nullptr, entry->character);
                     entry->nodeOffset = node ? HLib::GetDynamicHeapOffset(node) : 0;
                     if (node) {
                         mtwkAssignDrawCallback(node, NpcTransitionDrawNullsub);

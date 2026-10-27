@@ -1,5 +1,5 @@
 #pragma once
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include <cstdint>
 namespace shenmue::s2 {
 extern std::int32_t g_afterBurnerInputMode;

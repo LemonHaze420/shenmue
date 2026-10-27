@@ -45,7 +45,7 @@
 #include "s2/sound_program.hpp"
 #include "s2/world_render.hpp"
 #include "s2/help.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include "s2/directory_cache.hpp"
 
 #include <array>

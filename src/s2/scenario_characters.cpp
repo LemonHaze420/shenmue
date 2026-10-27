@@ -14,7 +14,7 @@ ScenarioCharacterAssignment *&ScenarioRoot(ScenarioTaskData &scenario) {
 ScenarioCharacterAssignment *&ScenarioBucket(ScenarioTaskData &scenario, std::size_t index) {
     return scenario.characterBuckets[index];
 }
-Character *FindScenarioCharacterId(ScenarioCharacterAssignment *node, shen_name characterId) {
+Character *scenFindCharaById(ScenarioCharacterAssignment *node, shen_name characterId) {
     while (node) {
         if (node->id.name == characterId.name)
             return node->character;
@@ -46,7 +46,7 @@ bool InsertScenarioCharacterId(ScenarioCharacterAssignment *&root, ScenarioChara
 // @verified - p
 Character *GetScenarioCharacterNode(HLib::Task *scenarioTask, shen_name characterId) {
     ScenarioTaskData *const scenario = static_cast<ScenarioTaskData *>(HLib::GetTaskParameter(scenarioTask));
-    return FindScenarioCharacterId(ScenarioRoot(*scenario), characterId);
+    return scenFindCharaById(ScenarioRoot(*scenario), characterId);
 }
 
 void scenSetCharaPosRotById(shen_name characterId, const Vector3 *position, const Vector3i *rotation) {
@@ -55,11 +55,11 @@ void scenSetCharaPosRotById(shen_name characterId, const Vector3 *position, cons
     SetFixoInversePositionRotation(character, position, rotation);
 }
 
-Character *FindScenarioCharacter(HLib::Task *scenarioTask, shen_name characterId) {
+Character *scenFindChara(HLib::Task *scenarioTask, shen_name characterId) {
     ScenarioTaskData *const scenario = ScenarioData(scenarioTask);
     if (!scenario || characterId.name == 0)
         return nullptr;
-    return FindScenarioCharacterId(ScenarioRoot(*scenario), characterId);
+    return scenFindCharaById(ScenarioRoot(*scenario), characterId);
 }
 
 shen_name scenGetCharaName(HLib::Task *scenarioTask, Character *character) {

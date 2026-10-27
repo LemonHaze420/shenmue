@@ -62,7 +62,7 @@ void QabtCleanup(QabtWork &work) {
     EV_EventSetUpHelpIcon_0(0, 0);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
     QabtHelpNullsub();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_FreeAuthorPak(0, work.descriptor->mode == 1 ? "0360" : "0018");
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
@@ -171,7 +171,7 @@ void QabtCarryAutoWait(void *data) {
 }
 void QabtCarryLift(void *data) {
     QabtWork &work = *static_cast<QabtWork *>(data);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     Vector3 position;
     EV_GetCharaPosition(work.crates.crates[work.crates.index], CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     work.carry.frames = position.y <= 0.5f ? QabtLiftLowCrate(work.crates) : QabtLiftHighCrate(work.crates);
@@ -431,7 +431,7 @@ void QabtCarryEnd(void *data) {
 void QabtCarryAddTime(void *data) {
     QabtWork &work = *static_cast<QabtWork *>(data);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     GetCurrentDateTime(work.time);
     if (work.time.hour >= work.endTime.hour + 1) {
         if (!filmCheckFadeTrackColour())
@@ -647,7 +647,7 @@ void QabtMain(QabtWork &work) {
         for (std::int32_t index : {5, 7, 8, 10})
             EV_SetObjectFlagByIndex(index, 0);
     }
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     QabtHelpNullsub();
     EV_EventSetUpHelpIcon_0(70, 0);
     SetInitialQabtCarrySettings(work.carry, 0);

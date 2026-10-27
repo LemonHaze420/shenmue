@@ -21,7 +21,7 @@ namespace shenmue::s2 {
 
 void ChawPreLectureCallback(void *data) {
     ChawEventWork *work = static_cast<ChawEventWork *>(data);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_LoadAudio("0038E000", 0);
     EV_spmBeginSampleExecute();
     SetDoorSubjectEnabled(SHEN_NAME(R103), 0);
@@ -156,7 +156,7 @@ void ChawEndLectureCallback(void *data) {
             mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0xf003, MotionRegion::LowerBody);
             camCtrlSetState(Init);
             camCtrlSetFovTransitionTo(true);
-            SetRenderClockAndCompassTo(0);
+            shenSetClockAndCompassRenderTo(0);
             work->state = 1;
             EV_stepSetFlags(0, 48);
             RemoveInventoryItem(14, 1);

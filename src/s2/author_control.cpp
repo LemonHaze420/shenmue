@@ -130,7 +130,7 @@ void EyesCallback(void *payload) {
         RetireCurrent(eyesControllers, subject);
         return;
     }
-    Character *const character = FindScenarioCharacter(author->task, subject);
+    Character *const character = scenFindChara(author->task, subject);
     if (!character)
         return;
     const std::int16_t flags = ReadRecord<std::int16_t>(state.record, 0x12);
@@ -150,7 +150,7 @@ void EyesCallback(void *payload) {
         if (index < 0 || static_cast<std::size_t>(index) >= eyeBoneIds.size())
             return;
         // mtwkGetTranslationFor: the solved rig bone, else the node translation; zero for a missing character.
-        Character *const referenced = FindScenarioCharacter(author->task, reference);
+        Character *const referenced = scenFindChara(author->task, reference);
         Vector3 position{};
         if (referenced)
             GetCharacterMotionWorldPosition(referenced, eyeBoneIds[static_cast<std::size_t>(index)], &position);
@@ -181,7 +181,7 @@ void PartsCallback(void *payload) {
         RetireCurrent(partsControllers, subject);
         return;
     }
-    Character *const character = FindScenarioCharacter(author->task, subject);
+    Character *const character = scenFindChara(author->task, subject);
     if (!character)
         return;
     if (state.mode != 0) {
@@ -232,7 +232,7 @@ bool ApplyAuthoredEyesRecord(std::span<const std::byte> record, HLib::Task *pare
     if (record.size() < 44 || ReadRecord<std::uint16_t>(record.data(), 4) != 4)
         return false;
     const shen_name subject = ReadRecord<shen_name>(record.data(), 8);
-    if (!FindScenarioCharacter(parent, subject))
+    if (!scenFindChara(parent, subject))
         return false;
     SubcontrollerSlot *const slot = FindSlot(eyesControllers, subject);
     if (!slot)
@@ -255,7 +255,7 @@ bool ApplyAuthoredPartsRecord(std::span<const std::byte> record, HLib::Task *par
     if (record.size() < 44 || ReadRecord<std::uint16_t>(record.data(), 4) != 15)
         return false;
     const shen_name subject = ReadRecord<shen_name>(record.data(), 0x0c);
-    if (!FindScenarioCharacter(parent, subject))
+    if (!scenFindChara(parent, subject))
         return false;
     SubcontrollerSlot *const slot = FindSlot(partsControllers, subject);
     if (!slot)

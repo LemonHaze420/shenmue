@@ -263,7 +263,7 @@ void AreaBTELMain(std::uintptr_t) {
     work->delay = 0;
     work->retries = 0;
     PreparePackage();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 const ScriptAreaDefinition areaBTELScriptDefinition{.areaId = SHEN_NAME(BTEL), .field04 = 0, .init = AreaBTELInit, .main = AreaBTELMain};
 } // namespace shenmue::s2::areas

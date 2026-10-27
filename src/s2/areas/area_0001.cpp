@@ -70,7 +70,7 @@ void Setup0001() {
     ReinitFogTasks(0);
     EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
     EV_authSceneCtrl(AuthSceneCtrl::DisallowSkipAuthor);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_ToggleCharacterFlag(AREA_0001_PLAYER);
     EV_EnsureCharacterDraw(AREA_0001_HIDDEN_MODEL);
     EV_DisableCharacterDisplay(AREA_0001_HIDDEN_MODEL);

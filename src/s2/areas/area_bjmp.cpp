@@ -273,7 +273,7 @@ void AreaBJMPMain(std::uintptr_t) {
     EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity | CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
     qteBattleUtil(BattleQteMode::Load);
     qteBattleUtil(BattleQteMode::Queue);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QJMP"), 0);
     EV_LoadCutsceneFromCurrentScene("0218A000");
     EV_FreeAuthorPak(1, "0218");

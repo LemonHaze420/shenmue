@@ -35,7 +35,7 @@ void VsybMain(std::uintptr_t) {
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(VsybMainCallback, 5, 0x0b, sizeof(VsybEventWork), VSYB_EVENT_TASK);
     VsybEventWork *const work = static_cast<VsybEventWork *>(HLib::GetTaskParameter(task));
     HLib::SetupTimedTask(task, 5);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     work->self = task;
     work->state = 0;
     work->elapsedFrames = 0;

@@ -492,7 +492,7 @@ void CleanupKeikaEvent(Kew0EventWork *work) {
     EV_FreeAuthorPak(0, "0067");
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KEW0"), 0);
     LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     EV_NPC_NewLoadSw(1);
@@ -554,7 +554,7 @@ void InitializeKeikaEvent(Kew0EventWork *work) {
     RefreshWeatherForCurrentTime(0);
     UpdateWeather();
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 } // namespace
 void Kew0Init() {

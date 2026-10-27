@@ -1535,7 +1535,7 @@ void SetCharaKill(shen_name characterId, std::uint32_t mode) {
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     if (!control)
         return;
-    Character *const character = FindScenarioCharacter(control->scenarioTask, characterId);
+    Character *const character = scenFindChara(control->scenarioTask, characterId);
     ctrlSetKillAndIncrementCounter(character, mode);
 }
 

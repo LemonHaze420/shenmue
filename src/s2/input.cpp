@@ -4,7 +4,7 @@
 
 #include "s2/input.hpp"
 #if defined(SHENMUE_STEAM)
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #endif
 #include "s2/warning.hpp"
 #include "s2/event_runtime.hpp"

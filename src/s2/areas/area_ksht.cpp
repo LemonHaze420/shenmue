@@ -71,7 +71,7 @@ void StartKsht(std::uintptr_t argument) {
         date.hour = 17;
         date.minute = 12;
         SetCurrentDateTimeTo(date);
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         kshtSelection = state;
         kshtFreeTalkSelection = state - 5100;
         kshtPhase = 7;
@@ -81,7 +81,7 @@ void StartKsht(std::uintptr_t argument) {
         return;
     }
     if (state == 5120 || state == 5121) {
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         StartAuthor(state - 5112, KshtWaitDrawingCallback, false);
         return;
     }
@@ -90,7 +90,7 @@ void StartKsht(std::uintptr_t argument) {
             EV_EnsureCharacterDraw(SHEN_NAME(usag));
             EV_EnableCharacterDisplay(SHEN_NAME(usag));
         }
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         kshtSelection = state;
         kshtAuthSelection = state - 5200;
         srchSetLookMode();
@@ -102,14 +102,14 @@ void StartKsht(std::uintptr_t argument) {
         return;
     }
     if (state == 5280 || state == 5281) {
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         kshtSelection = state;
         StartAuthor(state - 5264, KshtWaitAuthorCallback, true);
         return;
     }
     if (state == 5282) {
         EV_PTYCUtils(KSHT_SIN, 3, 1);
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         kshtAuthSelection = 18;
         EV_EnableCharacterDisplay(SHEN_NAME(a349));
         EV_ResetFreeTalkFlags();
@@ -119,7 +119,7 @@ void StartKsht(std::uintptr_t argument) {
         return;
     }
     if (state == 5370 || state == 5371) {
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         EV_DisableCharacterDisplay(SHEN_NAME(usag));
         EV_ToggleCharacterFlag(SHEN_NAME(usag));
         kshtSelection = state;
@@ -137,7 +137,7 @@ void StartKsht(std::uintptr_t argument) {
             EV_EnsureCharacterDraw(SHEN_NAME(usag));
             EV_EnableCharacterDisplay(SHEN_NAME(usag));
         }
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         if (kshtRabbitDropCount >= 0 && state == 5451 && ++kshtRabbitDropCount >= 2) {
             const shen_name rabbit{SHEN_NAME(usag)};
             EV_AT_SetPos(rabbit, EventTransformFlags::AllAxes, {143.85851f, 100.8371f, 215.11729f});
@@ -152,7 +152,7 @@ void StartKsht(std::uintptr_t argument) {
         StartKshtSubtitles();
         return;
     }
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     SetPlayerControlEnabled(0);
     kshtSelection = state;
     EV_FreeAuthorPak(1, "0521");

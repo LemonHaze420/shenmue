@@ -884,7 +884,7 @@ void Script_camSetRotationStepSize(ScenarioContext *context, void *rawParams) {
 }
 
 void Script_cpctGetCurrControlMode(ScenarioContext *context, void *) {
-    ScriptArguments(context, nullptr).result(static_cast<std::uint32_t>(PCCTL_GetForcedControlMode()));
+    ScriptArguments(context, nullptr).result(static_cast<std::uint32_t>(navGetForcedControlMode()));
 }
 
 void Script_charaSetClipAngle(ScenarioContext *context, void *rawParams) {
@@ -1014,7 +1014,7 @@ void Script_charaSetRenderOpacity(ScenarioContext *context, void *rawParams) {
 
 void Script_cpctFlagUtil(ScenarioContext *context, void *rawParams) {
     const ScriptArguments arguments(context, rawParams);
-    PCCTL_SetScriptWalkMode(arguments.word(0));
+    navSetScriptWalkMode(arguments.word(0));
 }
 
 void Script_GetHandControlBit3(ScenarioContext *context, void *rawParams) {

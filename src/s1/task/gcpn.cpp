@@ -81,11 +81,11 @@ PackModel *LoadGachaModel(std::int32_t requestedIndex) {
     return model;
 }
 
-MapControlData *CurrentControl() {
+MapControlData *shenGetMapCtrl() {
     return reinterpret_cast<MapControlData *>(g_mapControlTask->task_data_ptr);
 }
 
-Character *FindScenarioCharacter(ScenarioContext *context, std::uint32_t id) {
+Character *scenFindChara(ScenarioContext *context, std::uint32_t id) {
     return SCEN_FindCharacterByFunctionId(context, id);
 }
 
@@ -146,7 +146,7 @@ void GCPN_Update(Character *character, void *payload) {
     if (work->cameraActive == 0)
         return;
 
-    const auto *const input = static_cast<const PadCaptureEntry *>(CurrentControl()->padCaptureEntry);
+    const auto *const input = static_cast<const PadCaptureEntry *>(shenGetMapCtrl()->padCaptureEntry);
     const std::uint8_t stickX = static_cast<std::uint8_t>(input->leftStick);
     const std::uint8_t stickY = static_cast<std::uint8_t>(input->leftStick >> 8U);
     const std::uint8_t triggerLow = static_cast<std::uint8_t>(input->triggers);
@@ -180,13 +180,13 @@ std::int32_t GCPN_ExecuteScript(ScenarioContext *context, const GCPNScriptParame
         return 0;
 
     case 1: {
-        if (!g_modelTable || FindScenarioCharacter(context, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset)))
+        if (!g_modelTable || scenFindChara(context, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset)))
             return -1;
 
         Character *const character = AddCharacterHandler(CharacterHandlerPriority::Low);
         if (!character)
             return -1;
-        CHID_Init(CurrentControl()->scenarioTask, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset), character);
+        CHID_Init(shenGetMapCtrl()->scenarioTask, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset), character);
         AllocateFIXO(character);
         auto *const work = static_cast<GCPNWork *>(AllocateHeapMemoryMODL(character, kGcpnToken, sizeof(GCPNWork), GCPN_Update));
         HLib_GetCharacterComponent(character, kGcpnToken)->destroyCallback = GCPN_Destroy;
@@ -207,18 +207,18 @@ std::int32_t GCPN_ExecuteScript(ScenarioContext *context, const GCPNScriptParame
     }
 
     case 2: {
-        Character *const character = FindScenarioCharacter(context, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset));
+        Character *const character = scenFindChara(context, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset));
         if (!character || !GCPN_Find(character))
             return -1;
         character->flags.value &= ~CharacterFlagActive;
-        ++CurrentControl()->pendingCharacterRetirements;
+        ++shenGetMapCtrl()->pendingCharacterRetirements;
         return 0;
     }
 
     case 3: {
         if (mutableParameters.characterOrTableOffset == 0)
             return -1;
-        Character *const character = FindScenarioCharacter(context, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset));
+        Character *const character = scenFindChara(context, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset));
         if (!character)
             return -1;
         GCPNWork *const work = GCPN_Find(character);
@@ -254,7 +254,7 @@ std::int32_t GCPN_ExecuteScript(ScenarioContext *context, const GCPNScriptParame
     }
 
     case 4: {
-        Character *const character = FindScenarioCharacter(context, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset));
+        Character *const character = scenFindChara(context, static_cast<std::uint32_t>(mutableParameters.characterOrTableOffset));
         GCPNWork *const work = GCPN_Find(character);
         if (!work)
             return -1;

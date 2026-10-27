@@ -3,7 +3,7 @@
 #include "s1/modules/arcade.hpp"
 #include "s1/modules/harrier_cpu.hpp"
 #include "s1/modules/harrier_render.hpp"
-#include "s2/areas/game_harrier_render.hpp"
+#include "s2/areas/game/harrier/render.hpp"
 #include "s1/input.hpp"
 #include <cstdio>
 #include <cstring>

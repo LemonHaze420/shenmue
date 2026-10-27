@@ -217,24 +217,24 @@ bool PlayerEffectLightUsesAccumulatedYaw();
 bool cpctIsTatehizaStateActive();
 bool filmGetTaskFlag();
 std::int32_t ryoUpdateTurnMode(Character *ryo);
-void PCCTL_ResetForEventCamera(Character *character);
-void PCCTL_DisablePlayerControl();
-void PCCTL_EnablePlayerControl();
-void PCCTL_ResetAuthAndInputStates();
-void PCCTL_RequestNewMode(std::int32_t mode);
-void PCCTL_SetSkipNavRegionFiltering(bool skip);
-void PCCTL_UpdateRyoNavYaw(Character *character);
-void PCCTL_MoveToHome();
+void navResetForEventCamera(Character *character);
+void navDisablePlayerControl();
+void navEnablePlayerControl();
+void navResetAuthAndInputStates();
+void navRequestNewMode(std::int32_t mode);
+void navSetSkipNavRegionFiltering(bool skip);
+void navUpdateRyoNavYaw(Character *character);
+void navMoveToHome();
 void InitFlags();
 std::uint8_t shenForceCancel(PlayerControlWork *control);
 void CPCT_Toggle(Character *character);
 PlayerControlWork *AllocateCPCT(Character *character);
 void CPCT_RebindMotionWithNavParams(Character *character);
-void PCCTL_BeginLoadHold();
-std::int32_t PCCTL_GetForcedControlMode();
-std::uint32_t PCCTL_GetCurrentControlPointCode();
-Vector3 PCCTL_GetCurrentControlPointPosition();
-void PCCTL_SetScriptWalkMode(std::uint32_t mode);
+void navBeginLoadHold();
+std::int32_t navGetForcedControlMode();
+std::uint32_t navGetCurrentControlPoint();
+Vector3 navGetCurrentControlPointPosition();
+void navSetScriptWalkMode(std::uint32_t mode);
 
 inline constexpr std::array<PlayerMotionMetadata, 33> kDefaultPlayerMotionMetadata{{
     {903, 0, 1.0f},

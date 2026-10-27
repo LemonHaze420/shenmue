@@ -148,7 +148,7 @@ std::int32_t LoadNativeNpcHuman(shen_name packageName, shen_name characterName, 
         if (!readiness)
             return 0;
         MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-        Character *const character = FindScenarioCharacter(control ? control->scenarioTask : nullptr, characterName);
+        Character *const character = scenFindChara(control ? control->scenarioTask : nullptr, characterName);
         if (!character) {
             ReleaseNativeNpcHumanPackage(packageName);
             return -5;

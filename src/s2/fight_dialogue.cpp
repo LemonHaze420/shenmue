@@ -153,7 +153,7 @@ bool InstructionDirectionChanged(std::uint8_t first, std::uint8_t second) {
 // @verified - p
 bool InstructionFacesCamera(const VFHD_t *owner) {
     const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    auto *const character = FindScenarioCharacter(control->scenarioTask, InstructionValue<shen_name>(owner, 0x474));
+    auto *const character = scenFindChara(control->scenarioTask, InstructionValue<shen_name>(owner, 0x474));
     const auto position = GetCharacterWorldPosition(character);
     const auto yaw = InstructionValue<std::int32_t>(owner, 0x4b8);
     Vector3 camera;
@@ -920,7 +920,7 @@ std::uint8_t UpdateInstructionPose(VFActor *actor) {
             auto time = InstructionValue<std::int16_t>(owner, 0x46c);
             if (time == 10) {
                 const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-                auto *const character = FindScenarioCharacter(control->scenarioTask, InstructionValue<shen_name>(owner, 0x474));
+                auto *const character = scenFindChara(control->scenarioTask, InstructionValue<shen_name>(owner, 0x474));
                 auto *const game = vfmaGetTaskParam();
                 if (game && character) {
                     for (std::size_t i = 0; i != 6; ++i)
@@ -1203,8 +1203,8 @@ std::int32_t vfApplyMoveInstructionConfiguration(VFHD_t *owner) {
     std::memset(owner->result + 8, 0, 4);
     InstructionStore(owner, 0x46a, std::uint16_t{0});
     const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    owner->character = FindScenarioCharacter(control->scenarioTask, instructionCharacter);
-    owner->secondCharacter = instructionSecondCharacter.name ? FindScenarioCharacter(control->scenarioTask, instructionSecondCharacter) : nullptr;
+    owner->character = scenFindChara(control->scenarioTask, instructionCharacter);
+    owner->secondCharacter = instructionSecondCharacter.name ? scenFindChara(control->scenarioTask, instructionSecondCharacter) : nullptr;
     return SetPlayerControlEnabled(0);
 }
 namespace {

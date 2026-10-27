@@ -109,7 +109,7 @@ void scenUpdateFreeTalkRuntime(ScenarioEventRuntime *scenario);
 
 Character *GetScenarioCharacterNode(HLib::Task *scenarioTask, shen_name characterId);
 
-Character *FindScenarioCharacter(HLib::Task *scenarioTask, shen_name characterId);
+Character *scenFindChara(HLib::Task *scenarioTask, shen_name characterId);
 
 shen_name scenGetCharaName(HLib::Task *scenarioTask, Character *character);
 

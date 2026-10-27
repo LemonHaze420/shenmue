@@ -71,7 +71,7 @@ namespace shenmue::s2 {
 
 Character *authFindChara(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return control ? FindScenarioCharacter(control->scenarioTask, name) : nullptr;
+    return control ? scenFindChara(control->scenarioTask, name) : nullptr;
 }
 
 } // namespace shenmue::s2

@@ -140,7 +140,7 @@ void YtqbSetup(YtqbWork &work) {
     SetWeatherInstruction(0x780, false);
     EV_lightLoad(YTQB_0000);
     PushGlobalLightingProgram();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     nullsub();
     qteBattleUtil(BattleQteMode::Load);
     qteBattleUtil(BattleQteMode::Queue);
@@ -371,7 +371,7 @@ void YtqbCleanup(YtqbWork &work) {
     hndlSetFlags(FindCharacterByScenarioName(YTQB_RYO_));
     qteBattleUtil(BattleQteMode::RetireAndFree);
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "S2BV");

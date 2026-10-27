@@ -365,7 +365,7 @@ void TimeOverExitCallback(void *) {
 void StartNavigationCallback(void *) {
     Vector3 position;
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
-    PlaceNaviMarker(position, 4);
+    navPlaceMarker(position, 4);
     HLib::DestroyCurrentTask();
 }
 void StartEntry(std::int32_t variant) {

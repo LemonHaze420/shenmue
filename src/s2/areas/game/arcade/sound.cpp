@@ -1,4 +1,4 @@
-#include "s2/areas/game_arcade_sound.hpp"
+#include "s2/areas/game/arcade/sound.hpp"
 
 #include "s1/archive_data.hpp"
 #include "s1/archive_handles.hpp"

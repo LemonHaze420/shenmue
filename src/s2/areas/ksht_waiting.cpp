@@ -21,7 +21,7 @@ namespace shenmue::s2::areas {
 extern std::uint64_t kshtAuthorMapLighting;
 namespace {
 void DrawingExit(void *) {
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     SetPlayerControlEnabled(1);
     FinishLoading();
     HLib::DestroyCurrentTask();
@@ -97,7 +97,7 @@ void KshtWaitAuthorCallback(void *) {
     ResetKshtCamera();
     EV_NPC_NewLoadSw(1);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     SetPlayerControlEnabled(1);
     HLib::DestroyCurrentTask();
     shenSetFreeQuestInactive();

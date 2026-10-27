@@ -72,7 +72,7 @@ void InitializeTofbResources(TofbEventWork *work) {
     SetWeatherInstruction(0x780, false);
     EV_lightLoad(TOFB_LIGHT);
     PushGlobalLightingProgram();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     TofbDormantBoundary();
 }
 // @verified - p
@@ -255,7 +255,7 @@ void TofbEndingAuthorCallback(void *) {
 // @verified - p
 void CleanupTofbResources(TofbEventWork *work) {
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0048");

@@ -1,4 +1,4 @@
-#include "s2/areas/game_arcade_diagnostics.hpp"
+#include "s2/areas/game/arcade/diagnostics.hpp"
 #include "s1/modules/harrier_render.hpp"
 #include <cstring>
 

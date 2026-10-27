@@ -66,7 +66,7 @@ void Bkw0Retire(Bkw0Work &work) {
         LoadCutsceneAndSoundProgramForArea();
         EV_spmBeginSampleExecute();
     }
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
     EV_scenQueueLoad(g_actNumber, BKW0_RETURN_AREA, selector ? 36 : 37);
@@ -175,7 +175,7 @@ void Bkw0LoadResources(Bkw0Work &work) {
     EV_SetLightFlagForIndex(0, 2);
     EV_SetIndexForLightEntry(0, 1);
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 } // namespace
 void InitializeBkw0Event() {

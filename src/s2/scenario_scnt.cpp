@@ -23,7 +23,7 @@ Character *ResolveScenarioTalkCharacter(shen_name name) {
         auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
         return control ? static_cast<Character *>(control->ryo) : nullptr;
     }
-    return FindScenarioCharacter(activeScenarioEventRuntime->task, name);
+    return scenFindChara(activeScenarioEventRuntime->task, name);
 }
 
 std::uint8_t ScntByte(std::span<const std::byte> bytes, std::size_t offset) {
@@ -2045,7 +2045,7 @@ void scenExecuteRecord(ScenarioFreeTalkRecord *recordPointer) {
             } else if (!(input->pressedPriority & 0x400U)) {
                 if (!(input->pressedPriority & 0x200U) && !(input->held & 0xf0c0U) && input->analog0e == 0x80 && input->analog0f == 0x80) {
                     Vector3 position{};
-                    GetCharacterMotionWorldPosition(FindScenarioCharacter(scenario.task, record.name), 5, &position);
+                    GetCharacterMotionWorldPosition(scenFindChara(scenario.task, record.name), 5, &position);
                     RegisterButtonMediation(SHEN_NAME(BTFT), &position, (ButtonMediationShowButtonHint | ButtonMediationBindX | 0x1U));
                     return;
                 }
@@ -2383,7 +2383,7 @@ stepProgram : {
             }
             if (record.name.name && scenarioPromptFrames > 4) {
                 Vector3 position{};
-                GetCharacterMotionWorldPosition(FindScenarioCharacter(scenario.task, record.name), 5, &position);
+                GetCharacterMotionWorldPosition(scenFindChara(scenario.task, record.name), 5, &position);
                 const std::uint32_t busy = ryoCheckBusyFlags() ? ButtonMediationShowButtonHint : 0U;
                 scenarioHardBusy = 1;
                 if (record.flags & ScenarioTalkResumeReached)

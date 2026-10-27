@@ -1113,7 +1113,7 @@ void ReleaseLegacyWazamaki() {
     ReleaseWazamakiPreviewModels();
     SetHelpIconMenuFlags(wazamakiSavedHelpFlags);
     EV_EventSetUpHelpIcon_0(static_cast<std::uint8_t>(wazamakiSavedHelpTopic), 0);
-    SetRenderClockAndCompassTo(wazamakiSavedClockSuppressed ? 1 : 0);
+    shenSetClockAndCompassRenderTo(wazamakiSavedClockSuppressed ? 1 : 0);
     for (std::array<std::int16_t, 40> &category : wazamakiNameSurfaces) {
         for (std::int16_t &surface : category) {
             if (surface != -1)
@@ -1203,8 +1203,8 @@ bool InitializeLegacyWazamaki() {
     wazamakiCriticalSprite.depth = 11.0f;
     wazamakiCriticalSprite.icon = static_cast<std::uint16_t>(wazamakiTextures[5]);
     wazamakiCriticalSprite.alignment = 5;
-    wazamakiSavedClockSuppressed = IsClockAndCompassSuppressed() ? 1U : 0U;
-    SetRenderClockAndCompassTo(1);
+    wazamakiSavedClockSuppressed = shenIsClockAndCompassSuppressed() ? 1U : 0U;
+    shenSetClockAndCompassRenderTo(1);
     wazamakiSavedHelpTopic = helpGetCurrentIconIdx(1);
     EV_EventSetUpHelpIcon_0(0x33, 0);
     wazamakiSavedHelpFlags = static_cast<std::uint16_t>(GetUiFlag(0));

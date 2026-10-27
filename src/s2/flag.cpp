@@ -438,7 +438,7 @@ void AssignAnimatedFlag(shen_name name, FlagAnimationPlacement *placements, std:
     if (!placements || !count)
         return;
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character || !character->model)
         return;
     MT7Model *const model = static_cast<MT7Model *>(character->model);
@@ -659,7 +659,7 @@ Character *FlagPlayer() {
 }
 
 Character *FlagChara(shen_name id) {
-    return FindScenarioCharacter(static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->scenarioTask, id);
+    return scenFindChara(static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->scenarioTask, id);
 }
 
 // Vector3::DistanceBetween returns the squared distance.

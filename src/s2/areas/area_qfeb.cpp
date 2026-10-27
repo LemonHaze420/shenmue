@@ -386,7 +386,7 @@ void FinishQfebDefeat(QfebEventWork *work) {
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
     EV_FreeAuthorPak(0, "S2BV");
     LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     camCtrlSetNpcRadius(25);
@@ -455,7 +455,7 @@ void QfebMainCallback(void *data) {
         if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
             EV_AT_SetPos(QFEB_REN, EventTransformFlags::World | EventTransformFlags::AllAxes, QFEB_AUTHOR_RETURN_POSES[entry].position);
             EV_AT_SetAngY(QFEB_REN, EventTransformFlags::World | EventTransformFlags::AllAxes, QFEB_AUTHOR_RETURN_POSES[entry].rotation);
-            SetRenderClockAndCompassTo(0);
+            shenSetClockAndCompassRenderTo(0);
             ExecuteCleanupFuncForAreaWithCachedScene();
             work->phaseFrames = 0;
             for (std::int32_t flag = 1; flag <= 3; ++flag)
@@ -482,7 +482,7 @@ void QfebMainCallback(void *data) {
             EV_SetNewSceneIndex();
             spmFadeOut();
             SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
-            SetRenderClockAndCompassTo(1);
+            shenSetClockAndCompassRenderTo(1);
             HLib::SetupTaskDelay(30);
             work->phase = 3;
         } else if (GetSquaredDistanceXZ(&QFEB_PROXIMITY_POINTS[0], &ryo) < 4 || GetSquaredDistanceXZ(&QFEB_PROXIMITY_POINTS[1], &ryo) < 4 ||
@@ -491,7 +491,7 @@ void QfebMainCallback(void *data) {
             EVT_AT_SetMot(QFEB_RYO, 0xf003, 0, 1, 0x40000000U, 0);
             EV_SetNewSceneIndex();
             spmFadeOut();
-            SetRenderClockAndCompassTo(1);
+            shenSetClockAndCompassRenderTo(1);
             SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
             work->phase = 3;
         }
@@ -680,7 +680,7 @@ void QfebMain(std::uintptr_t argument) {
     EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
     EV_SetNewSceneIndex();
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     SetFogRed(9.1f);
     SetFogGreen(40);
     SetFogBlue(1);

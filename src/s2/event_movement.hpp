@@ -62,7 +62,7 @@ void ResetEventMovementTasks();
 std::uint32_t QueueEventMovement(
     HLib::Task *parent, shen_name character, const EventMovementWaypoint *waypoints, const EventMovementMotions *motions, float speed, std::uint32_t flags);
 void EventMovementCallback(void *);
-void InitializeEventMovement(EventMovementWork *);
+void evntInit(EventMovementWork *);
 void StartEventMovementSegment(EventMovementWork *);
 void ConfigureEventMovementMotions(EventMovementWork *);
 void SetEventMovementSegment(std::int32_t slot, std::int32_t index);

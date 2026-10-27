@@ -41,7 +41,7 @@ void E0201Main(std::uintptr_t argument) {
         parent->selection = *reinterpret_cast<const std::int32_t *>(argument) <= 1 ? *reinterpret_cast<const std::int16_t *>(argument) : 0;
     }
     SetPlayerControlEnabled(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     const Vector3 center{110.53f, 92.0f, 147.9f};
     if (npcSetAreaName(AREA_0201_ANP1, &center, 7.0f, 1) == 1)
         EV_debug_log("0201\\e0201_et_0201.c", 247, "NPC_AREA1 : TRUE\n");

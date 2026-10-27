@@ -49,7 +49,7 @@ void SleepSelectionCallback(void *) {
     if (result == 2) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1022, 0);
         HLib::SetCurrentTaskTo(sleepEventData.continuation);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         shenSetTimeSimulationTo(true);
         if ((sleepEventData.flags & 2U) != 0) {
             spmFadeOut();
@@ -59,7 +59,7 @@ void SleepSelectionCallback(void *) {
     } else if (result == 1) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1022, 0);
         HLib::SetCurrentTaskTo(sleepEventData.cancelled);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         shenSetTimeSimulationTo(true);
     }
 }
@@ -169,7 +169,7 @@ void QueueSleepCallback(HLib::TaskCallback accepted, HLib::TaskCallback cancelle
     if (expectedSchedule != shenGetSleepScheduleFlag())
         icon = 3;
     sleepEventData.icon = icon;
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     HLib::SetCurrentTaskTo(SleepIconCallback);
 }
 

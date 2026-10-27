@@ -281,7 +281,7 @@ void ResetScenScriptRuntimeState() {
     ClearScenAuthorGameState();
     if ((ScenFlags() & kScenarioFlagPadBlockOverride) != 0) {
         ScenFlags() &= ~kScenarioFlagPadBlockOverride;
-        PCCTL_ResetAuthAndInputStates();
+        navResetAuthAndInputStates();
     }
     if ((ScenFlags() & kScenarioFlagConversationMarkers) != 0)
         convEndConversationCamera();

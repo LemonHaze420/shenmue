@@ -1,4 +1,4 @@
-#include "s2/areas/game_harrier_render.hpp"
+#include "s2/areas/game/harrier/render.hpp"
 #include "s2/legacy_draw.hpp"
 #include "s1/modules/harrier.hpp"
 #include "d3t/texture.hpp"

@@ -93,7 +93,7 @@ void E0151MainCallback(void *taskData) {
         LoadCutsceneAndSoundProgramForArea();
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         parent->state = 1;
     }
 }

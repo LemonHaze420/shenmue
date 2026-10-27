@@ -1,5 +1,5 @@
 #pragma once
-#include "s2/areas/game_emulator_draw.hpp"
+#include "s2/areas/game/emulator/draw.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>

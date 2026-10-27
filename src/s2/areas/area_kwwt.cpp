@@ -26,7 +26,7 @@ void AreaKWWTInit() {
 }
 
 void AreaKWWTMain(std::uintptr_t argument) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     KWWTNativeNullsub();
     EV_PTYCUtils(KWWT_SHENHUA, 3, 1);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(KWWTAuthorMainCallback, 4, 0x0b, sizeof(KWWTTaskParameter), KWWT_TASK);

@@ -76,7 +76,7 @@ void InitializeQtnjEvent(QtnjEventWork *work) {
     EV_FreeAuthorPak(1, "0284");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0284A000");
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     QtnjSetupNullsub();
     EV_authSceneCtrl(AuthSceneCtrl::HideFilmBars);
     qteBattleUtil(BattleQteMode::Load);
@@ -470,7 +470,7 @@ void CleanupQtnjEvent(QtnjEventWork *work) {
     qteBattleUtil(BattleQteMode::RetireAndFree);
     EV_authSceneCtrl(AuthSceneCtrl::ShowFilmBars);
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0284");

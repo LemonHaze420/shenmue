@@ -55,7 +55,7 @@ void KshtFreeTalkCallback(void *) {
         SetPluralControlFor(FindCharacterByScenarioName(KSHT_SIN), 1);
         SetPluralControlFor(FindCharacterByScenarioName(KSHT_RYO), 1);
         FinishLoading();
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         kshtFreeTalkSelection = 0;
         HLib::DestroyCurrentTask();
         break;
@@ -74,7 +74,7 @@ void KshtFreeTalkCallback(void *) {
     case 6:
         kshtFreeTalkSelection = 0;
         SetPlayerControlEnabled(1);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         SetScreenFilmFade(0, 255, 0, 0, 0, 0, 0, 0, 0);
         HLib::DestroyCurrentTask();
         break;
@@ -92,7 +92,7 @@ void KshtFreeTalkCallback(void *) {
         ExecuteCurrAreaMainFunc_Wrapper(1, reinterpret_cast<std::uintptr_t>(&kshtAuthorMapLighting));
         EVS_LoopCamera(1000, shen_name{0}, shen_name{0});
         PrepareKshtFreeTalkActors();
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         CameraUtilityParameters parameters{.first = 0, .second = 0};
         camCtrlUtil(CameraUtilityMode::ForceSearchCam, reinterpret_cast<std::intptr_t>(&parameters));
         HLib::SetupTaskDelay(60);
@@ -125,7 +125,7 @@ void KshtFreeTalkCallback(void *) {
             return;
         EVS_LoopCamera(2000, shen_name{0}, shen_name{0});
         StopScenarioFreeTalkRecord();
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         HLib::SetupTaskDelay(3);
         break;
     case 10:

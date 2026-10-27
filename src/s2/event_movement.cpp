@@ -43,13 +43,13 @@ std::uint32_t QueueEventMovement(
     work->index = -1;
     work->active = 0;
     work->slot = slot;
-    InitializeEventMovement(work);
+    evntInit(work);
     if (work->parent)
         HLib::SetupTimedTask(work->parent, 0);
     return work->slot;
 }
 // @verified - p
-void InitializeEventMovement(EventMovementWork *work) {
+void evntInit(EventMovementWork *work) {
     float frame = 0.0f;
     std::uint32_t commandFlags = 0;
     if ((work->flags & 0x20000U) == 0) {

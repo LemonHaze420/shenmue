@@ -27,7 +27,7 @@ void Initialize552E() {
 
 // @verified - p
 void Start552E(std::uintptr_t) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(Update552E, 4, 0x0b, sizeof(AuthorViewerPairTaskParameter), AUTHOR_VIEWER_TASK);
     AuthorViewerPairTaskParameter *const parent = static_cast<AuthorViewerPairTaskParameter *>(HLib::GetTaskParameter(task));
     parent->self = task;

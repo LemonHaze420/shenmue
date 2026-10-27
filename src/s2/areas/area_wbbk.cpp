@@ -334,7 +334,7 @@ void BookMainCallback(void *) {
             if (bookEventPhase.frame != 146)
                 return;
             UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_SAI), nullptr, 0);
-            SetRenderClockAndCompassTo(0);
+            shenSetClockAndCompassRenderTo(0);
             EV_DisableCharacterDisplay(bookModelState.stacks[bookModelState.currentStack + 1]);
             EV_AT_SetAngY(BOOK_RYO, EventTransformFlags::AllAxes, {.x = 0, .y = 49152, .z = 0});
             ++bookEventPhase.phase;

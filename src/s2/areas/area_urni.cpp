@@ -67,7 +67,7 @@ void InitializeUranai(UranaiWork *work) {
         EV_SetNewSceneIndex();
         EV_LoadCutsceneFromCurrentScene("0120");
     }
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     UranaiDiagnosticNoop();
     EV_EventSetUpHelpIcon_0(0x36, 0);
 }
@@ -246,7 +246,7 @@ void CleanupUranai(UranaiWork *work) {
     EV_EventSetUpHelpIcon_0(0, 0);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     if (work->selection->mode != 1) {
         LoadCutsceneAndSoundProgramForArea();
         EV_spmBeginSampleExecute();

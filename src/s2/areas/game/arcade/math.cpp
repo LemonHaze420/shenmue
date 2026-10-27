@@ -1,4 +1,4 @@
-#include "s2/areas/game_arcade_math.hpp"
+#include "s2/areas/game/arcade/math.hpp"
 
 #include <bit>
 #include <cstdint>

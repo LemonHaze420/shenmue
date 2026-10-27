@@ -1,5 +1,5 @@
-#include "s2/areas/game_afterburner_render.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/afterburner/render.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include "s2/legacy_draw.hpp"
 #include "s1/modules/harrier.hpp"
 #include "d3t/texture.hpp"

@@ -34,7 +34,7 @@ static_assert(sizeof(ScenarioCharacterAssignment) == 0x28);
 inline constexpr shen_name MEMORY_CHID{SHEN_NAME(CHID)};
 void scenSetCharaPosRotById(shen_name character, const Vector3 *position, const Vector3i *rotation);
 Character *GetScenarioCharacterNode(HLib::Task *scenarioTask, shen_name characterId);
-Character *FindScenarioCharacter(HLib::Task *scenarioTask, shen_name characterId);
+Character *scenFindChara(HLib::Task *scenarioTask, shen_name characterId);
 
 shen_name scenGetCharaName(HLib::Task *scenarioTask, Character *character);
 void CreateScenarioCharacterId(HLib::Task *scenarioTask, shen_name characterId, Character *character);

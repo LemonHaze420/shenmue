@@ -83,7 +83,7 @@ void Setup0504Environment() {
     date.minute = 0;
     SetCurrentDateTimeTo(date);
     SetPlayerControlEnabled(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_SetWeatherInstruction(0x780, 0);
     EV_FreeWAIR();
     EV_UpdateWeatherForMinute(1, 0, 0, 1.0f);

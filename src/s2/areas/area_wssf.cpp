@@ -252,7 +252,7 @@ void FinishChallenge(WssfMainWork &w) {
     if (w.result == 3) {
         if (flag >= 0)
             EV_stepSetFlags(0, flag);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         (void)SetFightGaugeVisible(0);
         (void)ReleaseGauge();
         EV_EventSetUpHelpIcon_0(0, 0);
@@ -290,7 +290,7 @@ void InitializeChildren(WssfMainWork &w) {
         *destinations[i] = task;
     }
     SetupOrigins();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     mtwkSetExtraFlag(Motion(ryo), 13, 0);
     mtwkSetRequestedRootMode(Motion(ryo), 0);
     mtwkSetRequestedRootMode(Motion(sos), 0);

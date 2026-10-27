@@ -18,7 +18,7 @@ Vector3i EventCharacterRotation(const Character &character, bool recursive) {
 
 std::uint64_t mtwkSetMotionworkScale3(shen_name characterId, const Vector3 *scale) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, characterId);
+    Character *const character = scenFindChara(control->scenarioTask, characterId);
     if (!character)
         return 0;
     if (FindMotionWork(character))
@@ -32,7 +32,7 @@ std::uint64_t mtwkSetMotionworkScale3(shen_name characterId, const Vector3 *scal
 
 std::int64_t scenMotionworkUtil(shen_name characterId, std::uint32_t yaw, float angle, std::int32_t flags, const void *motionData) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, characterId);
+    Character *const character = scenFindChara(control->scenarioTask, characterId);
     return ExecuteMotionworkUtility(character, yaw, angle, flags, motionData);
 }
 
@@ -445,7 +445,7 @@ void EV_MAZ_fishCtrl() {
 // @verified - p
 Character *ctrlGetCharaByName(shen_name character) {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return FindScenarioCharacter(control->scenarioTask, character);
+    return scenFindChara(control->scenarioTask, character);
 }
 
 // @verified - p

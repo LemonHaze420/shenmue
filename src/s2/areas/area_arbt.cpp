@@ -62,7 +62,7 @@ void ArbtCleanup(ArbtWork &work) {
     EV_EventSetUpHelpIcon_0(0, 0);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
     ArbtHelpNullsub();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_FreeAuthorPak(0, work.descriptor->mode == 1 ? "0360" : "0018");
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
@@ -172,7 +172,7 @@ void ArbtCarryAutoWait(void *data) {
 }
 void ArbtCarryLift(void *data) {
     ArbtWork &work = *static_cast<ArbtWork *>(data);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     Vector3 position;
     EV_GetCharaPosition(work.crates.crates[work.crates.index], CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     work.carry.frames = position.y <= 0.5f ? ArbtLiftLowCrate(work.crates) : ArbtLiftHighCrate(work.crates);
@@ -441,7 +441,7 @@ void ArbtCarryEnd(void *data) {
 void ArbtCarryAddTime(void *data) {
     ArbtWork &work = *static_cast<ArbtWork *>(data);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     GetCurrentDateTime(work.time);
     if (work.time.hour >= work.endTime.hour + 1) {
         if (!filmCheckFadeTrackColour())
@@ -648,7 +648,7 @@ void ArbtMain(ArbtWork &work) {
         for (std::int32_t index : {5, 7, 8, 10})
             EV_SetObjectFlagByIndex(index, 0);
     }
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     ArbtHelpNullsub();
     EV_EventSetUpHelpIcon_0(70, 0);
     SetInitialArbtCarrySettings(work.carry, 0);

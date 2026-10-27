@@ -19,7 +19,7 @@
 #include "s2/mt7.hpp"
 #include "s2/world_render.hpp"
 #include "s2/areas/area_0001.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include "s2/areas/omak_tables.hpp"
 #include "s2/omak_collection_ui.hpp"
 
@@ -1554,8 +1554,8 @@ void UpdateEasyOptionController() noexcept {
             easyOptionSavedHelpVisible = static_cast<std::uint16_t>(GetUiFlag(0));
             easyOptionSavedHelpSelected = static_cast<std::uint8_t>(GetUiFlag(1));
             CheckHelpIcon(33, 0, CheckHelpIconOp::Set);
-            easyOptionPreviousClockSuppression = IsClockAndCompassSuppressed();
-            SetRenderClockAndCompassTo(1);
+            easyOptionPreviousClockSuppression = shenIsClockAndCompassSuppressed();
+            shenSetClockAndCompassRenderTo(1);
         }
         break;
     case 2:
@@ -1587,7 +1587,7 @@ void UpdateEasyOptionController() noexcept {
                 SetSleepActionIcon(0);
             else {
                 CheckHelpIcon(easyOptionSavedHelpVisible, 0, CheckHelpIconOp::Set);
-                SetRenderClockAndCompassTo(easyOptionPreviousClockSuppression ? 1 : 0);
+                shenSetClockAndCompassRenderTo(easyOptionPreviousClockSuppression ? 1 : 0);
             }
             icsToggleIconState(7, 0);
             EV_NPC_NewLoadSw(easyOptionPreviousNpcState);
@@ -1676,7 +1676,7 @@ bool AbortEasyOptionState(std::int32_t requested) noexcept {
     EV_NPC_NewLoadSw(easyOptionPreviousNpcState);
     if (easyOptionPreviousPadControl && (easyOptionPadControl->flags & 2U))
         BindPadControlEntry(easyOptionPreviousPadControl);
-    SetRenderClockAndCompassTo(easyOptionPreviousClockSuppression ? 1 : 0);
+    shenSetClockAndCompassRenderTo(easyOptionPreviousClockSuppression ? 1 : 0);
     return true;
 }
 

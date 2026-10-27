@@ -2356,12 +2356,12 @@ shen_name GetCharacterScenarioName(const Character *character) {
 
 Character *FindCharacterByScenarioName(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return control ? FindScenarioCharacter(control->scenarioTask, name) : nullptr;
+    return control ? scenFindChara(control->scenarioTask, name) : nullptr;
 }
 // @verified - p
 MotionWork *scenFindMotionwork(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    Character *const character = FindScenarioCharacter(control->scenarioTask, name);
+    Character *const character = scenFindChara(control->scenarioTask, name);
     return character ? FindMotionWork(character) : nullptr;
 }
 

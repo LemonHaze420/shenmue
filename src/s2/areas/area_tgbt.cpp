@@ -54,7 +54,7 @@ void TgbtMain(std::uintptr_t) {
     work->frames = 0;
     work->retries = 0;
     InitializeTgbtResources();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 // @verified - p
 void InitializeTgbtResources() {
@@ -155,7 +155,7 @@ void CleanupTgbtEvent(TgbtEventWork *work) {
     EV_AT_SetPos(TGBT_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, TGBT_EXIT_POSITION);
     EV_AT_SetAngY(TGBT_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{});
     SetCharaKill(TGBT_BASE, 1);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_spmBeginSampleExecute();
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     FinishLoading();

@@ -59,7 +59,7 @@ void BookDropFadeCallback(void *) {
 }
 void FinishDroppedBooks() {
     UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_RYO), nullptr, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     bookModelState.displayMode = 0;
     AttachBookStackToPlayer();
     bookCarryPhase = 0;

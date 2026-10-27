@@ -53,7 +53,7 @@ void YmqbSetup(YmqbWork *work) {
     EV_FreeAuthorPak(1, "0039");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0039A000");
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     YmqbSetupNullsub();
     EV_SetWeatherInstruction(12, 0);
     camCtrlSetFarDistance(60.0f);
@@ -216,7 +216,7 @@ void YmqbCleanup(YmqbWork *work) {
     flddSetPointFlagOnGrid(YMQB_FIGHT_GRID, 0);
     SetPluralControlFor(FindCharacterByScenarioName(YMQB_RYO), 0);
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0039");

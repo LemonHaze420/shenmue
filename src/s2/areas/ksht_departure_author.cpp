@@ -100,7 +100,7 @@ void ExitKshtDepartureAuthor(KshtAuthorController *parent) {
     SetPlayerGameFlags(PlayerGameFlagMode::Bit26, reinterpret_cast<void *>(std::uintptr_t{1}));
     EV_NPC_NewLoadSw(1);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     FinishLoading();
     SetPlayerControlEnabled(1);
 }

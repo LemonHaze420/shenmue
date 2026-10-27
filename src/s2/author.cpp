@@ -773,7 +773,7 @@ void CaptureAuthCharacterState(Character *character, shen_name subject) {
 void RestoreAuthCharacterStates() {
     for (std::size_t index = 0; index < author.characterStateCount; ++index) {
         const AuthCharacterState &state = author.characterStates[index];
-        Character *const character = FindScenarioCharacter(controller->task, state.subject);
+        Character *const character = scenFindChara(controller->task, state.subject);
         if (!character)
             continue;
         SetPluralControlFor(character, static_cast<std::int16_t>(state.pluralControl));
@@ -834,7 +834,7 @@ bool AuthTransformCommand(std::int32_t phase, const std::int32_t *args, AuthActo
             ReportAuthorResourceFailure(AuthorMapInfoLoadResult::ModelMissing, context.subject, "SCNC character");
         return false;
     }
-    Character *const character = FindScenarioCharacter(controller->task, context.subject);
+    Character *const character = scenFindChara(controller->task, context.subject);
     if (phase == 0) {
         actor->transformSpline = args[1];
         AuthSpline &spline = author.transforms[args[1]];
@@ -927,7 +927,7 @@ bool AuthMotionCommand(std::int32_t phase, const std::int32_t *args, AuthActorCo
             ReportAuthorResourceFailure(AuthorMapInfoLoadResult::ModelMissing, context.subject, "SCNC character");
         return false;
     }
-    Character *character = FindScenarioCharacter(controller->task, context.subject);
+    Character *character = scenFindChara(controller->task, context.subject);
     TimedNodeMotion *const nodeMotion = static_cast<TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));
     context.motionType = nodeMotion ? 1U : 0U;
     if (phase == 0) {
@@ -995,7 +995,7 @@ bool AuthMotionCommand(std::int32_t phase, const std::int32_t *args, AuthActorCo
 bool AuthFaceCommand(std::int32_t, const std::int32_t *args, AuthActorContext &) {
     // sctlAuthorApplyFaceLooks is immediate in every phase.
     if (args[0] != 0) {
-        Character *const character = FindScenarioCharacter(controller->task, shen_name{static_cast<std::uint32_t>(args[0])});
+        Character *const character = scenFindChara(controller->task, shen_name{static_cast<std::uint32_t>(args[0])});
         if (character && FindMotionWork(character)) {
             const float frames = static_cast<float>(static_cast<std::uint32_t>(args[4]));
             const float scale = static_cast<float>(static_cast<std::uint32_t>(args[5])) / 100.0f;
@@ -1016,7 +1016,7 @@ bool AuthDialogueCommand(std::int32_t phase, const std::int32_t *args, AuthActor
         context.voiceCountdown = static_cast<std::uint8_t>(countdown - 1U);
         if (countdown)
             return true;
-        Character *const character = FindScenarioCharacter(controller->task, shen_name{static_cast<std::uint32_t>(args[0])});
+        Character *const character = scenFindChara(controller->task, shen_name{static_cast<std::uint32_t>(args[0])});
         if (character) {
             if (args[2] != -1) {
                 const std::byte *const table = controller->lipTable;
@@ -1029,7 +1029,7 @@ bool AuthDialogueCommand(std::int32_t phase, const std::int32_t *args, AuthActor
         return false;
     }
     controller->dialogueFrames = TruncateAuthorFloat(FloatFromBits(args[4]) * 30.0f);
-    Character *const character = FindScenarioCharacter(controller->task, shen_name{static_cast<std::uint32_t>(args[0])});
+    Character *const character = scenFindChara(controller->task, shen_name{static_cast<std::uint32_t>(args[0])});
     controller->dialogueCharacter = character;
     if (!character)
         return false;
@@ -1078,7 +1078,7 @@ bool AuthDialogueCommand(std::int32_t phase, const std::int32_t *args, AuthActor
 
 // @verified - p
 std::int16_t AuthorSoundPan(shen_name subject) {
-    Character *const character = FindScenarioCharacter(controller->task, subject);
+    Character *const character = scenFindChara(controller->task, subject);
     if (!character)
         return 0;
     Vector3 eye;
@@ -1316,7 +1316,7 @@ void sctlAuthApplyMotion() {
         const float end = ((static_cast<float>(arguments[3]) - static_cast<float>(arguments[2])) + 1.0f) / speed + static_cast<float>(state.finalMotionFrame);
         if (static_cast<float>(controller->currentFrame) >= end)
             continue;
-        Character *const character = FindScenarioCharacter(controller->task, shen_name{static_cast<std::uint32_t>(arguments[0])});
+        Character *const character = scenFindChara(controller->task, shen_name{static_cast<std::uint32_t>(arguments[0])});
         if (!character)
             continue;
         TimedNodeMotion *const nodeMotion = static_cast<TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));
@@ -1474,7 +1474,7 @@ void ApplyAuthoredDynamicStreams() {
                 std::int32_t enabled{};
                 Read(record, 8, subject);
                 Read(record, 12, enabled);
-                if (Character *character = FindScenarioCharacter(controller->task, subject)) {
+                if (Character *character = scenFindChara(controller->task, subject)) {
                     constexpr std::uint8_t displayEnabled = 0x04;
                     if (enabled)
                         character->renderFlags |= displayEnabled;
@@ -1488,7 +1488,7 @@ void ApplyAuthoredDynamicStreams() {
                 Read(record, 8, enabled);
                 Read(record, 12, subject);
                 Read(record, 16, values);
-                Character *const character = FindScenarioCharacter(controller->task, subject);
+                Character *const character = scenFindChara(controller->task, subject);
                 ResetReflectorBoardMode(character, enabled ? 1 : 0);
                 if (enabled)
                     SetReflectorBoardValues(character, {1.0f, values.x, values.y, values.z});
@@ -1508,7 +1508,7 @@ void ApplyAuthoredDynamicStreams() {
                 Read(record, 13, right);
                 Read(record, 14, pose);
                 Read(record, 16, ticks);
-                Character *const character = FindScenarioCharacter(controller->task, subject);
+                Character *const character = scenFindChara(controller->task, subject);
                 PrepareAuthorCharacterHands(character, subject);
                 const std::int32_t side = right ? 0 : 1;
                 if (HandParams *const hand = GetCharacterHand(character, side)) {
@@ -1528,7 +1528,7 @@ void ApplyAuthoredDynamicStreams() {
                 Read(record, 8, subject);
                 Read(record, 12, right);
                 Read(record, 16, rotation);
-                if (Character *const character = FindScenarioCharacter(controller->task, subject))
+                if (Character *const character = scenFindChara(controller->task, subject))
                     if (HandParams *const hand = GetCharacterHand(character, right ? 0 : 1))
                         SetHandPrimaryNodeRotation(*hand, rotation);
             } else if (stream.opcode == 10) {
@@ -1543,7 +1543,7 @@ void ApplyAuthoredDynamicStreams() {
                 Read(record, 14, mouth);
                 Read(record, 16, frames);
                 Read(record, 20, scale);
-                Character *const character = FindScenarioCharacter(controller->task, subject);
+                Character *const character = scenFindChara(controller->task, subject);
                 SetUpperFacialExpression(character, upper, static_cast<float>(frames), scale);
                 SetLowerFacialExpression(character, lower, static_cast<float>(frames), scale);
                 SetFacialMouthExpression(character, mouth, static_cast<float>(frames), 1.0f);
@@ -1553,7 +1553,7 @@ void ApplyAuthoredDynamicStreams() {
                 std::uint16_t mode{};
                 Read(record, 8, subject);
                 Read(record, 12, mode);
-                Character *const character = FindScenarioCharacter(controller->task, subject);
+                Character *const character = scenFindChara(controller->task, subject);
                 if (character) {
                     switch (mode) {
                     case 1:
@@ -1633,7 +1633,7 @@ void ApplyAuthoredDynamicStreams() {
                 Read(record, 8, subject);
                 Read(record, 12, mode);
                 Read(record, 14, enabled);
-                Character *const character = FindScenarioCharacter(controller->task, subject);
+                Character *const character = scenFindChara(controller->task, subject);
                 if (mode <= 1) {
                     SetCharacterType(character, mode == 0 ? 0 : 4);
                     SetCharacterDrawControlEnabled(character, enabled > 0);
@@ -1654,7 +1654,7 @@ void ApplyAuthoredDynamicStreams() {
                 std::int32_t mode{};
                 Read(record, 8, subject);
                 Read(record, 12, mode);
-                if (Character *const character = FindScenarioCharacter(controller->task, subject)) {
+                if (Character *const character = scenFindChara(controller->task, subject)) {
                     if (mode == -1)
                         toggleOsagFlags(character);
                     else if (mode >= 0)
@@ -1669,7 +1669,7 @@ void ApplyAuthoredDynamicStreams() {
                 Read(record, 9, direction);
                 Read(record, 10, mode);
                 Read(record, 12, subject);
-                Character *const character = FindScenarioCharacter(controller->task, subject);
+                Character *const character = scenFindChara(controller->task, subject);
                 figpAssignModeForCharacter(character, mode);
                 if (mode)
                     figpAssignMotScaleAndDirFor(character, scale, direction);
@@ -1845,7 +1845,7 @@ void ApplyAuthoredDynamicStreams() {
                 std::int32_t mode{};
                 Read(record, 8, subject);
                 Read(record, 12, mode);
-                if (Character *const character = FindScenarioCharacter(controller->task, subject)) {
+                if (Character *const character = scenFindChara(controller->task, subject)) {
                     switch (mode) {
                     case -5:
                         SetClothFlag(character, 16, 1);
@@ -1874,7 +1874,7 @@ void ApplyAuthoredDynamicStreams() {
                 std::int16_t enabled{};
                 Read(record, 8, enabled);
                 Read(record, 12, subject);
-                SetPluralControlFor(FindScenarioCharacter(controller->task, subject), enabled);
+                SetPluralControlFor(scenFindChara(controller->task, subject), enabled);
             } else if (stream.tag == Tag('F', 'O', 'B', 'J')) {
                 shen_name source{}, target{};
                 std::int32_t bone{};
@@ -1885,7 +1885,7 @@ void ApplyAuthoredDynamicStreams() {
                 Read(record, 16, bone);
                 Read(record, 20, rotation);
                 Read(record, 32, position);
-                Character *const character = FindScenarioCharacter(controller->task, target);
+                Character *const character = scenFindChara(controller->task, target);
                 AuthCharacterState *const state = FindAuthCharacterState(target);
                 if (source.name == SHEN_NAME(RECV)) {
                     if (character) {
@@ -1895,7 +1895,7 @@ void ApplyAuthoredDynamicStreams() {
                     }
                 } else {
                     constexpr std::array<std::uint16_t, 8> boneIds{1, 5, 3, 21, 14, 31, 26, 0};
-                    Character *const owner = FindScenarioCharacter(controller->task, source);
+                    Character *const owner = scenFindChara(controller->task, source);
                     if (character && owner && bone >= 0 && static_cast<std::size_t>(bone) < boneIds.size()) {
                         SetFixoDataForMotionWork(character, owner, boneIds[bone], position, rotation);
                         if (state)
@@ -1965,7 +1965,7 @@ void UpdateAuthorFCVCurves() {
     for (AuthActorContext &context : controller->actorContexts) {
         if ((context.flags & 2U) == 0)
             continue;
-        Character *const character = FindScenarioCharacter(controller->task, context.subject);
+        Character *const character = scenFindChara(controller->task, context.subject);
         MotionWork *const motion = FindMotionWork(character);
         if (crossed) {
             if ((context.flags & 4U) && context.motionType == 0) {
@@ -1993,7 +1993,7 @@ void Author_Callback(void *) {
         for (const AuthActorContext &context : controller->actorContexts) {
             if ((context.flags & 2U) == 0)
                 continue;
-            SetMotionSpeed(FindMotionWork(FindScenarioCharacter(controller->task, context.subject)),
+            SetMotionSpeed(FindMotionWork(scenFindChara(controller->task, context.subject)),
                 paused || context.motionRemaining == 0.0f ? 0.0f : context.motionSpeed, MotionRegion::LowerBody);
         }
         if (paused) {
@@ -2245,7 +2245,7 @@ bool LoadSleepPackageMotionBank(const LoadedMapPackage &package) {
 }
 
 bool AddScenarioActor(shen_name subject) {
-    if (!FindScenarioCharacter(controller->task, subject))
+    if (!scenFindChara(controller->task, subject))
         return false;
     author.actors.push_back({.subject = subject});
     return true;

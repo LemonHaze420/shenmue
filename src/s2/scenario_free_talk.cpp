@@ -455,7 +455,7 @@ bool ScenarioCharacterIsRyo(shen_name name) {
     if (!name.name)
         return false;
     const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    if (activeScenarioEventRuntime && control && FindScenarioCharacter(activeScenarioEventRuntime->task, name) == control->ryo)
+    if (activeScenarioEventRuntime && control && scenFindChara(activeScenarioEventRuntime->task, name) == control->ryo)
         return true;
     return name.name == SHEN_NAME(RYO_) || name.name == SHEN_NAME(null) || name.name == SHEN_NAME(AKIR) || name.name == SHEN_NAME(AKID) ||
         name.name == SHEN_NAME(JAKR) || name.name == SHEN_NAME(AKI_);
@@ -1043,7 +1043,7 @@ void scenUpdateFreeTalkRuntime(ScenarioEventRuntime *scenario) {
         scenarioFreeStateState = npcSetAreaName(talkArea, &center, 0.0f, 0);
     if (!(scenario->flags & ScenarioEventFlagFreeState))
         return;
-    Character *const character = FindScenarioCharacter(scenario->task, scenario->activeCharacter);
+    Character *const character = scenFindChara(scenario->task, scenario->activeCharacter);
     plymUpdatePlayerSearchLocation(&center);
     float radius = 1.0f;
     if (character) {

@@ -48,7 +48,7 @@ void Knw0LoadResources(Knw0Work &work) {
     RefreshWeatherForCurrentTime(0);
     EV_UpdateWeather();
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 void Knw0Cleanup(Knw0Work &work) {
     using enum CameraState;
@@ -64,7 +64,7 @@ void Knw0Cleanup(Knw0Work &work) {
     EV_FreeAuthorPak(0, "0069");
     EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KNW0"), 0);
     LoadCutsceneAndSoundProgramForArea();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
     EV_NPC_NewLoadSw(1);

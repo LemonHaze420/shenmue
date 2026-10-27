@@ -63,7 +63,7 @@ void InitializeQtcvResources(QtcvEventWork *work) {
     EV_FreeAuthorPak(1, "0301");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0301E000");
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     QtcvDormantBoundary();
     SetPluralControlFor(FindCharacterByScenarioName(QTCV_PLAYER), 1);
     SetPluralControlFor(FindCharacterByScenarioName(QTCV_REN), 1);
@@ -195,7 +195,7 @@ void CleanupQtcvResources(QtcvEventWork *work) {
     hndlSetFlags(FindCharacterByScenarioName(QTCV_REN));
     hndlSetFlags(FindCharacterByScenarioName(QTCV_PLAYER));
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0301");

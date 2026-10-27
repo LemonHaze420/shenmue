@@ -1213,7 +1213,7 @@ void WaitFade(void *data) {
         FinishLoading();
         SetPlayerControlEnabled(1);
         CwonRestoreGravity(CWON_RYO);
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         scenFreeEvent("CWON.EV3");
         EV_CleanupMapControlTask();
         HLib::EV_HLKillOtherHierarchyTask(w->task);
@@ -1272,7 +1272,7 @@ void CwonEndChaseCallback(void *data) {
             SetPlayerControlEnabled(1);
             camCtrlSetState(Init);
             camCtrlSetFovTransitionTo(true);
-            SetRenderClockAndCompassTo(0);
+            shenSetClockAndCompassRenderTo(0);
             LoadCutsceneAndSoundProgramForArea();
             EV_spmBeginSampleExecute();
             SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

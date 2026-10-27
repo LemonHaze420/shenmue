@@ -2365,7 +2365,7 @@ void WarmBootstrapNpcRoutes() {
 void ResolveNpcScenarioNodesAndWarmStart() {
     for (NpcRouteLiveEntry &entry : npcRouteEntries) {
         MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-        entry.node = FindScenarioCharacter(control ? control->scenarioTask : nullptr, entry.name);
+        entry.node = scenFindChara(control ? control->scenarioTask : nullptr, entry.name);
         if (!entry.node)
             continue;
         EV_CheckWarmStartNpcRoute(entry.name);

@@ -278,7 +278,7 @@ void QueueGabtMoleAttack(std::int32_t entry) {
         CreateEventCharacter(CharacterCreationHighModel, nullptr, GABT_MOLE_BASE);
         EV_SetNewSceneIndex();
         FinishLoading();
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
     }
 }
 // @verified - p: preserves absolute position and rotation across each native parent removal.

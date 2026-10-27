@@ -14,6 +14,15 @@ namespace shenmue::s2 {
 // The navigation start task's token; its '!' keeps it out of SHEN_NAME, whose argument clang-format would space.
 inline constexpr shen_name TASK_NAVI_START{make_shen_name("nav!")};
 
+enum class NaviMarkerType : std::uint32_t {
+    ButtonX = 0,
+    ButtonA = 1,
+    ButtonB = 2,
+    FixedX = 4,
+    FixedA = 5,
+    FixedB = 6,
+};
+
 struct NaviMapConfig {
     std::int16_t itemId;
     std::int16_t floorDefinition;
@@ -121,8 +130,8 @@ std::int32_t SaveNaviTrail(NaviTrailStorage *trail) noexcept;
 void SelectNaviMapMarkers(shen_name map) noexcept;
 void RemoveLatestNaviMarker() noexcept;
 void RemoveNaviMapMarkers() noexcept;
-std::int32_t AddNaviMarker(const Vector3 &position, std::int32_t type);
-std::int32_t PlaceNaviMarker(const Vector3 &position, std::int32_t type);
+std::int32_t navCreate(const Vector3 &position, std::int32_t type);
+std::int32_t navPlaceMarker(const Vector3 &position, std::int32_t type);
 void AddNaviTrailLocations(std::span<const Vector3> locations);
 
 } // namespace shenmue::s2

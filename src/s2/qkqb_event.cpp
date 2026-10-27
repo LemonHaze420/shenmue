@@ -179,7 +179,7 @@ void Setup(QKQBEventWork &work) {
     EV_FreeAuthorPak(1, "0299");
     EV_SetNewSceneIndex();
     LoadCutsceneSoundProgram("0299E000", g_actNumber);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     Vector3 position{};
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     work.playerY = position.y;
@@ -191,7 +191,7 @@ void Cleanup(QKQBEventWork &work) {
     Motion(ryo, 0xf003, 1);
     hndlSetFlags(FindCharacterByScenarioName(ryo));
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0299");

@@ -329,7 +329,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             break;
         case 0x8002001e: {
             if (!script[2]) {
-                SetRenderClockAndCompassTo(1);
+                shenSetClockAndCompassRenderTo(1);
                 DateTime time{};
                 GetCurrentDateTime(time);
                 SetSleepActionIcon(static_cast<std::int16_t>(static_cast<std::uint32_t>(time.hour - 8) > 14 ? 15 : time.hour < 20 ? 266 : 271));
@@ -339,7 +339,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             result = GetSleepActionIconResult();
             if (result != 1 && result != 2)
                 return pending();
-            SetRenderClockAndCompassTo(0);
+            shenSetClockAndCompassRenderTo(0);
             shenSetTimeSimulationTo(1);
             SeekWarehouseScriptLabel(script, static_cast<std::uint16_t>(arg(result == 2 ? 1 : 2)));
             continue;
@@ -373,7 +373,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
                 std::int16_t choices[]{-1, static_cast<std::int16_t>(arg(1)), static_cast<std::int16_t>(arg(2)), -1};
                 SetupControlSpeakAndUI(
                     choices, op == 0x80040003 ? 1800 : static_cast<std::uint16_t>(arg(6)), static_cast<std::int16_t>(arg(op == 0x80040003 ? 2 : 5)), 2);
-                SetRenderClockAndCompassTo(1);
+                shenSetClockAndCompassRenderTo(1);
                 shenSetTimeSimulationTo(0);
                 return pending();
             }
@@ -381,7 +381,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             result = GetShouldRenderIcons(RenderIconSlot::ActionSelector);
             if (result)
                 return pending();
-            SetRenderClockAndCompassTo(0);
+            shenSetClockAndCompassRenderTo(0);
             shenSetTimeSimulationTo(1);
             SeekWarehouseScriptLabel(script, static_cast<std::uint16_t>(arg(choice == arg(1) ? 3 : 4)));
             if (op == 0x80040003 && choice != arg(1))

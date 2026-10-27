@@ -164,7 +164,7 @@ void Branch1Exit2Callback(void *) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 902, 1);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 901, 0);
     EV_PTYCUtils(shenhua, 3, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     ResumeMazeControl();
     HLib::SetCurrentTaskTo(EventBombCallback);
 }
@@ -188,7 +188,7 @@ void DandelionExitCallback(void *) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 902, 1);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 901, 0);
     EV_PTYCUtils(shenhua, 3, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     ResumeMazeControl();
     if (wakeTask)
         HLib::DestroyTaskInternal(wakeTask);
@@ -251,7 +251,7 @@ void WaterfallExitCallback(void *) {
     EV_PTYCUtils(shenhua, 3, 0);
     EV_PTYCUtils(shenhua, 1, 57);
     camCtrlSetFarDistance(50.0f);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     ResumeMazeControl();
     HLib::SetCurrentTaskTo(EventBombCallback);
 }
@@ -273,7 +273,7 @@ void Branch2ExitCallback(void *) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 902, 1);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 901, 0);
     EV_PTYCUtils(shenhua, 3, 0);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     ResumeMazeControl();
     HLib::SetCurrentTaskTo(EventBombCallback);
 }
@@ -371,7 +371,7 @@ void FollowSetupCallback(void *) {
     HLib::SetCurrentTaskTo(FollowExitCallback);
 }
 void Branch1SetupCallback(void *) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     AssignAbsoluteEvent(9, {-210.6039f, 100.0f, -750.61621f}, 0xa71c);
     DispatchMazeEvent();
     HLib::SetCurrentTaskTo(Branch1ChoiceCallback);
@@ -387,7 +387,7 @@ void CottonRightSetupCallback(void *) {
     HLib::SetCurrentTaskTo(CottonExitCallback);
 }
 void Branch2SetupCallback(void *) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     AssignMazeEvent(23, {3.6257f, 0.48429999f, 12.6213f}, 0x4000, 0xffffffffU);
     DispatchMazeEvent();
     HLib::SetCurrentTaskTo(Branch2ChoiceCallback);
@@ -410,7 +410,7 @@ void LastAuthorRouteSetupCallback(void *) {
     HLib::SetCurrentTaskTo(LastAuthorExitCallback);
 }
 void FinishLastAuthorCallback(void *) {
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     DateTime date;
     GetCurrentDateTime(date);
     if (date.hour < 17) {
@@ -754,7 +754,7 @@ void DandelionLoopCallback(void *payload) {
 void NavigationStartCallback(void *) {
     Vector3 position;
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
-    PlaceNaviMarker(position, 4);
+    navPlaceMarker(position, 4);
     if (!startParameters)
         InitializeMazeNavigationTrail();
     HLib::DestroyCurrentTask();

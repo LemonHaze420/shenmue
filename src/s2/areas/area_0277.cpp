@@ -202,7 +202,7 @@ void Setup0277Scene() {
     EV_UpdateWeather();
     SetIsSkySetup(0);
     SetPlayerControlEnabled(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     EV_FreeAuthorPak(1, AREA_0277_CONVERSATION);
 }
 

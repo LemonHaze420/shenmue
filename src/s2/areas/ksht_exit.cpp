@@ -43,7 +43,7 @@ void KshtExitCallback(void *) {
     HLib::SetCurrentTaskTo(KshtExitWaitCallback);
 }
 void KshtExitWaitCallback(void *) {
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     SetPlayerControlEnabled(1);
     HLib::DestroyCurrentTask();
     camCtrlResetClipDistances();

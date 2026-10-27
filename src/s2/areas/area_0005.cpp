@@ -437,7 +437,7 @@ void CompleteEvent(EventTaskParameter *event) {
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     WaitForNextTask_0(GetCurrentAreaScreenFilmTask(), 0, 30);
 }
 
@@ -539,7 +539,7 @@ void e0005_EVT_Load_AuthChara_Enqueue(std::uintptr_t argument) {
     event->motionIndex = static_cast<std::uint32_t>(ReadMotiFromDirectory(g_actNumber, g_currentMap, "0005A.MOT"));
     event->loadState = 0;
     event->characterIndex = 0;
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     if (g_currentMap.name == standaloneMap.name) {
         BeginPrimarySampleExecution(0);
         event->entryId = g_entryPoint > 4 ? 0 : static_cast<std::int16_t>(g_entryPoint);

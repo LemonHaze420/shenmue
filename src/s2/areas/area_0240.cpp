@@ -148,7 +148,7 @@ void E0240MainCallback(void *taskData) {
         break;
     case 5:
         if (!IsItemSelectable()) {
-            SetRenderClockAndCompassTo(1);
+            shenSetClockAndCompassRenderTo(1);
             E0240ItemReadyNullsub();
             parent->state = 1;
             HLib::SetupTaskDelay(60);

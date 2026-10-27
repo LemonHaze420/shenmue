@@ -23,7 +23,7 @@
 #include "s2/mt7.hpp"
 #include "s2/world_render.hpp"
 #include "s2/areas/area_0001.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include "s2/areas/omak_tables.hpp"
 #include "s2/omak_collection_ui.hpp"
 
@@ -4642,9 +4642,9 @@ void vfSetupFightUiAndCameraState(VFMA_t *game) {
                 EV_EventSetUpHelpIcon_0(HELP_TOPIC_FREE_BATTLE, 0);
         }
     }
-    if (IsClockAndCompassSuppressed()) {
+    if (shenIsClockAndCompassSuppressed()) {
         if ((g_pFightStage->battleFlags & 2) == 0)
-            SetRenderClockAndCompassTo(1);
+            shenSetClockAndCompassRenderTo(1);
         saved |= 0x4000;
     }
     vfSetupFightCameraState(game);
@@ -4681,7 +4681,7 @@ void vfRestorePostFightUIState(VFMA_t *game) {
         }
     }
     if (saved & 0x4000)
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
     if (game->type != 9) {
         HLib::Task *const task = HLib::FindNextTaskInQueueByIndexWithDepth(9, 1);
         if (task)

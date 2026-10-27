@@ -60,7 +60,7 @@ void Q7QbSetup(Q7QbWork &work) {
     EV_FreeAuthorPak(1, "0290");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0290A000");
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     Q7QbSetupNullsub();
     qteBattleUtil(BattleQteMode::Load);
     qteBattleUtil(BattleQteMode::Queue);
@@ -332,7 +332,7 @@ void Q7QbCleanup(Q7QbWork &work) {
     hndlSetFlags(FindCharacterByScenarioName(Q7QB_RYO));
     qteBattleUtil(BattleQteMode::RetireAndFree);
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     LoadCutsceneAndSoundProgramForArea();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0290");

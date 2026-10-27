@@ -87,7 +87,7 @@ void AreaKAMIInit() {
 // @verified - p
 void AreaKAMIMain(std::uintptr_t parameter) {
     SetPlayerControlEnabled(0);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
     kami.self = HLib::EnqueueTaskWithoutParameter(KAMIInitializeCallback, 5, 0x0b, static_cast<std::int32_t>(KAMI_TASK.name));
     kami.request.state = 0;
@@ -108,7 +108,7 @@ void AreaKAMIMain(std::uintptr_t parameter) {
 void KAMIInitializeCallback(void *) {
     if (kami.request.state == 0) {
         KAMIDebugNullsub();
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         SetPlayerControlEnabled(0);
         DisablePluralControl();
         EV_FreeAuthorPak(1, "0027");
@@ -233,7 +233,7 @@ void KAMIStateCallback(void *) {
     case 19:
         SetPlayerControlEnabled(1);
         FinishLoading();
-        SetRenderClockAndCompassTo(0);
+        shenSetClockAndCompassRenderTo(0);
         SetPluralControlFor(FindCharacterByScenarioName(KAMI_PLAYER), 1);
         EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KAMI"), 0);
         HLib::DestroyTask(kami.self);
@@ -331,7 +331,7 @@ void KAMIFinish() {
     ST_LoadTitleFade();
     SetPlayerControlEnabled(1);
     FinishLoading();
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     SetPluralControlFor(FindCharacterByScenarioName(KAMI_PLAYER), 1);
     camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);

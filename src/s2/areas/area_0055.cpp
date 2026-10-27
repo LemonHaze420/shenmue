@@ -59,7 +59,7 @@ void SetupE0055Environment() {
         EV_SetObjectFlagByIndex(11, 0);
     }
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
     if (g_entryPoint < 6)
         EV_authSceneCtrl(AuthSceneCtrl::HideFilmBars);
     InitializeWaterTextureAnimation(5);

@@ -52,13 +52,13 @@ struct HitProfile {
 };
 static_assert(sizeof(HitProfile) == 32);
 constexpr HitProfile hitProfiles[]{
-    {{1,1},{1,1.2f,1,1.2f},{11776,6144,9728,4864}},
-    {{1,1},{1.5f,1.8f,1.2f,1.44f},{13824,9216,12800,6400}},
-    {{1,1},{2,5,1.2f,1.44f},{12288,14336,11264,6144}},
-    {{1,1},{2.5f,2.5f,2.5f,2.5f},{14592,14592,14592,14592}},
-    {{1,1},{1.3f,1.2f,1.2f,1.2f},{11776,4096,9728,4864}},
-    {{1,1},{3.8f,3.8f,3.8f,3.8f},{9216,9216,9216,9216}},
-    {{1,1},{2.5f,2.5f,2.5f,2.5f},{12800,12800,12800,12800}}};
+    {.attackScale = {1, 1}, .impulseScale = {1, 1.2f, 1, 1.2f}, .angles = {11776, 6144, 9728, 4864}},
+    {.attackScale = {1, 1}, .impulseScale = {1.5f, 1.8f, 1.2f, 1.44f}, .angles = {13824, 9216, 12800, 6400}},
+    {.attackScale = {1, 1}, .impulseScale = {2, 5, 1.2f, 1.44f}, .angles = {12288, 14336, 11264, 6144}},
+    {.attackScale = {1, 1}, .impulseScale = {2.5f, 2.5f, 2.5f, 2.5f}, .angles = {14592, 14592, 14592, 14592}},
+    {.attackScale = {1, 1}, .impulseScale = {1.3f, 1.2f, 1.2f, 1.2f}, .angles = {11776, 4096, 9728, 4864}},
+    {.attackScale = {1, 1}, .impulseScale = {3.8f, 3.8f, 3.8f, 3.8f}, .angles = {9216, 9216, 9216, 9216}},
+    {.attackScale = {1, 1}, .impulseScale = {2.5f, 2.5f, 2.5f, 2.5f}, .angles = {12800, 12800, 12800, 12800}}};
 const VFCollisionShape *PushShapes(const VFActor *actor) {
     return reinterpret_cast<const VFCollisionShape *>(actor->parameterAe0);
 }

@@ -87,7 +87,7 @@ void LOCKPrepareEvent() {
     CreateEventCharacter(CharacterCreationHighModel, nullptr, LOCK_BASE);
     EV_FreeAuthorPak(1, "0363");
     FinishLoading();
-    SetRenderClockAndCompassTo(1);
+    shenSetClockAndCompassRenderTo(1);
 }
 // @verified - p
 void LOCKPlaceCharacters(LockEventWork *work) {
@@ -216,7 +216,7 @@ void LOCKReleaseEvent(LockEventWork *work) {
     SetMotionRegionFlag(scenFindMotionwork(LOCK_PLAYER), 71, 0, MotionRegion::LowerBody);
     EV_FreeAuthorPak(0, "0363");
     EV_NPC_NewLoadSw(1);
-    SetRenderClockAndCompassTo(0);
+    shenSetClockAndCompassRenderTo(0);
     CleanupMapControlCharacters();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     SetPlayerControlEnabled(1);

@@ -208,7 +208,7 @@ std::int32_t MakiFinishCollecting() {
         ++makiRuntime.phase;
         return 60;
     case 1:
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         MakiLockPlayerForSequence();
         SetScreenFilmFade(60, 255, 0, 0, 0, 0, 0, 0, 0);
         MakiSetStoryCamera(2000);
@@ -257,7 +257,7 @@ std::int32_t MakiNightfall() {
         ++makiRuntime.phase;
         return 150;
     case 1:
-        SetRenderClockAndCompassTo(1);
+        shenSetClockAndCompassRenderTo(1);
         MakiLockPlayerForSequence();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         MakiSetStoryCamera(3000);

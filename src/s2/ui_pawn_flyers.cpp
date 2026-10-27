@@ -19,7 +19,7 @@
 #include "s2/mt7.hpp"
 #include "s2/world_render.hpp"
 #include "s2/areas/area_0001.hpp"
-#include "s2/areas/game_arcade.hpp"
+#include "s2/areas/game/arcade.hpp"
 #include "s2/areas/omak_tables.hpp"
 #include "s2/omak_collection_ui.hpp"
 
