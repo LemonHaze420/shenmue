@@ -1,8 +1,4 @@
-#include "shenmue.h"
 #include "s1/task/telm.hpp"
-#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
-#include "s1/enhancements/s1_multiplayer.hpp"
-#endif
 
 #include "s1/boot.hpp"
 #include "s1/frame_pipeline.hpp"
@@ -915,18 +911,8 @@ void telmMain(Character *, TelephoneWork &phone) {
             phone.selectionIdleTimer = 0;
             shenExecuteAICACommand(0x305abU, 0, 0);
             phone.audioResetLatched = 0;
-#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
-            const bool multiplayerCall = S1Multiplayer_OnDial(phone.dialedDigits);
-            const std::int32_t match = multiplayerCall ? -1 : TELM_FindDialMatch(phone);
-#else
             const std::int32_t match = TELM_FindDialMatch(phone);
-#endif
             phone.active = match;
-#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
-            if (multiplayerCall) {
-                state = 21;
-            } else
-#endif
             if (match == -1) {
                 if (std::strlen(phone.dialedDigits) < 10) {
                     shenChainToTargetFor(phone, point, phone.dialFollowPosition, 21845);
@@ -1540,9 +1526,6 @@ void EnqueueTELM(Character *character, std::int32_t variant) {
 }
 
 void TELM_Cleanup(TelephoneWork *phone) {
-#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
-    S1Multiplayer_OnPhoneClosed();
-#endif
     phone->active = 0;
     if (HandModelWork *const cameraHand = phone->cameraSequence.hand; cameraHand && (cameraHand->primaryRoot || cameraHand->secondaryRoot))
         HND_ResetMotion(*cameraHand, 0, 0);

@@ -1,8 +1,4 @@
-#include "shenmue.h"
 #include "s1/boot.hpp"
-#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
-#include "s1/enhancements/s1_multiplayer.hpp"
-#endif
 #include "s1/task/ctrl.hpp"
 #include "s1/task/colb.hpp"
 #include "s1/task/disp.hpp"
@@ -167,11 +163,7 @@ int Shenmue_Main(int argc, char **argv) {
 
     HLib::Task *task = CurrentTask;
     for (;;) {
-#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
-        S1Multiplayer_ExecuteTask(task);
-#else
         task->mainTaskCallbackFnPtr(task->task_data_ptr);
-#endif
         task = CurrentTask->nextInQueue;
         CurrentTask = task;
     }

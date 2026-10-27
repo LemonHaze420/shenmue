@@ -1,8 +1,4 @@
-#include "shenmue.h"
 #include "s1/task/char.hpp"
-#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
-#include "s1/enhancements/s1_multiplayer.hpp"
-#endif
 #include "s1/task/char_components_internal.hpp"
 #include "s1/task/conv.hpp"
 #include "logging.hpp"
@@ -3563,11 +3559,7 @@ void HLTaskFunc_CharacterHandler_Callback(HLib::TaskData *taskData) {
     if ((character->flags.value & 0x24u) == CharacterFlagVisible) {
         for (CharacterComponentNode *component = character->componentList; component; component = component->next) {
             if ((component->flags & 1u) && component->updateCallback) {
-#if SHENMUE_ENHANCEMENT_STEAM_S1_MP && SHENMUE_IS_S1 && SHENMUE_IS_PC
-                S1Multiplayer_ExecuteCharacterComponent(character, component);
-#else
                 component->updateCallback(character, component + 1);
-#endif
             }
         }
     }
