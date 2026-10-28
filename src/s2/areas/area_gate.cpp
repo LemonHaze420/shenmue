@@ -58,7 +58,7 @@ const shen_name *EntryCharacters(std::uint32_t entry) {
 
 void ReleaseCharacters(const shen_name *names) {
     for (; names->name != invalid.name; ++names)
-        if (FindCharacterByScenarioName(*names)) {
+        if (ctrlGetScenarioChara(*names)) {
             EV_npcLockUnlock(*names);
             EV_npcFree(*names);
         }
@@ -199,14 +199,14 @@ void Cleanup(GateEventWork &work) {
     ctrlSetKillAndIncrementCounter(ctrlGetCharaByName(keep2), 1);
     ReleaseCharacters(allCharacters.data());
     EV_NPC_NewLoadSw(1);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_LoadAudio(shenGetCurrentSbt(), GetSelectedSoundSceneIndex());
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GATE"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GATE"), 0);
     shenSetClockAndCompassRenderTo(0);
     FinishLoading();
     HLib::DestroyTask(work.task);
@@ -218,7 +218,7 @@ void Restore(GateEventWork &work, std::uint32_t rotationFlags) {
     mtwkRequestMotion(motion, 0xf003, MotionRegion::LowerBody);
     EV_AT_SetAngY(ryo, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
     mtwkSetExtraFlag(motion, 17, 0);
-    SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
     work.state = 0;
     Cleanup(work);
 }
@@ -255,7 +255,7 @@ void GATE_main_func(std::uintptr_t entry) {
     work->entry = static_cast<std::uint32_t>(entry);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, keep);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, keep2);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("GATE"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("GATE"), 0);
     EV_FreeAuthorPak(1, "0253");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0253E000");
@@ -299,8 +299,8 @@ void GateEventCallback(void *parameter) {
         EV_GetCharaPosition(keep2, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(keep2, &rotation, EventTransformFlags::World);
         auto *motion = scenFindMotionwork(ryo);
-        CopyMotionTransition(motion, &position, static_cast<std::uint16_t>(rotation.y), 0, 0);
-        SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+        mtwkCopyTransition(motion, &position, static_cast<std::uint16_t>(rotation.y), 0, 0);
+        mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(motion, 13, 0);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         work.state = 4;

@@ -106,10 +106,10 @@ MdtpSubtitleWork *QueueMdtpSubtitles(std::int32_t clip) {
 void MdtpAuthorCallback(void *data) {
     MdtpAuthorWork &work = *static_cast<MdtpAuthorWork *>(data);
     if (!(work.flags & 1)) {
-        if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load,
+        if (!EV_pakUtils(PakCategory::Package, PakPackageOp::Load,
                 reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)), reinterpret_cast<std::uintptr_t>(work.package)))
             return;
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         work.flags |= 1;
     }
     if (!(work.flags & 2)) {
@@ -127,8 +127,8 @@ void MdtpAuthorCallback(void *data) {
             work.completion(1, 0, work.parent);
         if (!finished)
             EV_authSceneCtrl(AuthSceneCtrl::RefreshAndEnqueue);
-        if (work.package && EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work.package), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work.package), 0);
+        if (work.package && EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work.package), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work.package), 0);
         if (work.flags & 0x80000000U)
             work.flags &= 0x7fffffffU;
         else
@@ -164,9 +164,9 @@ bool QueueMdtpAuthor(shen_name author, AreaLoopCompletion completion) {
 }
 
 const MdtpTape *FindMdtpTape(const char *package, std::uint32_t index) {
-    if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
+    if (!EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
         return nullptr;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::GetFlags, reinterpret_cast<std::uintptr_t>(package), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::GetFlags, reinterpret_cast<std::uintptr_t>(package), 0);
     char filename[] = "umi000.bin";
     filename[3] = static_cast<char>('0' + index / 100);
     filename[4] = static_cast<char>('0' + index / 10 % 10);
@@ -211,7 +211,7 @@ std::int64_t MdtpInitAuthorCompletion(std::int32_t phase, std::int64_t frame, HL
         if (frame == 2600) {
             EV_authSceneCtrl(AuthSceneCtrl::SetAuthorStopped);
             DateTime time;
-            GetCurrentDateTime(time);
+            shenGetCurrentDateTime(time);
             if (time.hour > 7)
                 ++time.day;
             time.hour = 8;

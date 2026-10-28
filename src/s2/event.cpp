@@ -106,7 +106,7 @@ bool EnsureEventPackageLoaded(const char *sceneFolder, const char *packageId) {
     if (!sceneFolder || !*sceneFolder || !LoadMapPackage(sceneFolder, packageId)) {
         return false;
     }
-    LoadPak();
+    pakLoadFlush();
     return true;
 }
 

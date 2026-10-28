@@ -678,7 +678,7 @@ std::uint16_t SelectNpcLocomotion(const NpcRouteStateContext &context, std::uint
             {0xf056, 0xf056, 0xf083, 0xf056, 0xf0a3, 0xf0e9, 0xf077, 0xf09d, 0x8024, 0xf07d, 0xf05d, 0x8024, 0x8024, 0xf056, 0xf0f4},
             {0xf040, 0xf040, 0xf080, 0xf040, 0xf0a0, 0xf0d3, 0xf062, 0xf088, 0x8020, 0xf07a, 0xf05a, 0x8020, 0x8020, 0xf040, 0xf0f3}}};
     constexpr std::array<std::uint16_t, 4> defaults{0xf084, 0xf006, 0x8024, 0x8020};
-    const std::int32_t rig = GetMotionRigBoneId(context.motionWork);
+    const std::int32_t rig = mtwkGetRigBoneId(context.motionWork);
     return rig >= 0 && rig < 15 ? motions[selector][rig] : defaults[selector];
 }
 
@@ -720,7 +720,7 @@ void SetNpcLocomotionScale(NpcRouteStateContext &context, float scale) {
     constexpr std::array<std::uint8_t, 16> scales{11, 11, 11, 10, 10, 11, 12, 12, 12, 12, 11, 10, 10, 11, 11, 10};
     float multiplier = 1.0f;
     if (context.owner->node) {
-        const std::int32_t rig = GetMotionRigBoneId(context.motionWork);
+        const std::int32_t rig = mtwkGetRigBoneId(context.motionWork);
         if (rig >= 0 && rig <= 15)
             multiplier = static_cast<float>(scales[rig]) / 10.0f;
     }
@@ -731,7 +731,7 @@ void SetNpcLocomotionScale(NpcRouteStateContext &context, float scale) {
     if (context.flags & 2U)
         context.stride = ComputeNpcRouteStride(context);
     if (context.owner->node)
-        SetMotionSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
+        mtwkSetSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
 }
 
 void InterpolateNpcRouteLanes(NpcRouteStateContext &context, bool advanced) {
@@ -854,16 +854,16 @@ bool AdvanceUnstreamedNpc(NpcRouteStateContext &context) {
 }
 
 bool RequestNpcRouteTurn(NpcRouteStateContext &context, const Vector3 *target, std::uint16_t yaw, std::int32_t copyType) {
-    SetMotionSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
-    CopyMotionTransition(context.motionWork, target, yaw, 5, copyType);
-    const bool result = CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
-    return (context.flags & 0x10U) ? CopyMotionTransition(context.motionWork, nullptr, 0, 8, 0) : result;
+    mtwkSetSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
+    mtwkCopyTransition(context.motionWork, target, yaw, 5, copyType);
+    const bool result = mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
+    return (context.flags & 0x10U) ? mtwkCopyTransition(context.motionWork, nullptr, 0, 8, 0) : result;
 }
 
 void ApplyNpcRouteEuler(NpcRouteStateContext &context) {
     Vector3i rotation;
     std::memcpy(&rotation, &context.savedEuler, sizeof(rotation));
-    SetCharacterWorldRotation(context.owner->node, rotation);
+    charaSetWorldRot(context.owner->node, rotation);
 }
 
 void RestoreNpcGroundControl(NpcRouteStateContext &context) {
@@ -983,7 +983,7 @@ std::int32_t TickNpcRouteStair(NpcRouteStateContext &context) {
             if ((context.flags & 0x1000U) || (context.routeFlags & 0x800U)) {
                 context.flags |= 0x1000U;
                 context.routeFlags &= ~0x800U;
-                context.motion = GetMotionAnimationId(context.motionWork, MotionRegion::LowerBody);
+                context.motion = mtwkGetAnimationId(context.motionWork, MotionRegion::LowerBody);
                 context.avoidancePhase = 3;
             } else {
                 context.stairTarget = NpcAreaPosition(context.stairTarget);
@@ -993,12 +993,12 @@ std::int32_t TickNpcRouteStair(NpcRouteStateContext &context) {
             }
             mtwkRequestMotion(context.motionWork, context.motion, MotionRegion::LowerBody);
             mtwkSetRequestedRootMode(context.motionWork, 1);
-            SetMotionFrameTime(context.motionWork, 10, MotionRegion::LowerBody);
+            mtwkSetFrameTime(context.motionWork, 10, MotionRegion::LowerBody);
             if (context.flags & 0x1000U)
-                SetMotionSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
+                mtwkSetSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
             else {
-                SetMotionSpeed(context.motionWork, context.motionScale * 1.1f, MotionRegion::LowerBody);
-                SetMotionRegionFlag(context.motionWork, 69, HasMotionDependentTrack(context.motionWork) ? 0 : 2, MotionRegion::LowerBody);
+                mtwkSetSpeed(context.motionWork, context.motionScale * 1.1f, MotionRegion::LowerBody);
+                mtwkSetRegionFlag(context.motionWork, 69, mtwkHasDependentTrack(context.motionWork) ? 0 : 2, MotionRegion::LowerBody);
             }
 
             shenApplyTranslationToAll(&character->entity.node, context.doorPosition);
@@ -1010,7 +1010,7 @@ std::int32_t TickNpcRouteStair(NpcRouteStateContext &context) {
         }
         return context.avoidancePhase;
     case 1:
-        if (SetMotionRegionFlag(context.motionWork, 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(context.motionWork, 65, 1, MotionRegion::LowerBody)) {
             Vector3 position = NpcRouteAreaToScene(context.localPosition);
             position.y += (context.flags & 0x800U) ? 0.44999999f : -0.44999999f;
             const std::int32_t remaining = context.stairRemaining - 2;
@@ -1025,12 +1025,12 @@ std::int32_t TickNpcRouteStair(NpcRouteStateContext &context) {
                 context.flags |= 0x1000U;
                 context.routeFlags &= ~0x800U;
                 context.avoidancePhase = 3;
-                CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
+                mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
             }
         } else if (context.routeFlags & 0x800U) {
-            const float middleDistance = std::abs(GetMotionPoseFrame(context.motionWork, MotionRegion::LowerBody) - context.stairMotionFrames * 0.5f);
+            const float middleDistance = std::abs(mtwkGetPoseFrame(context.motionWork, MotionRegion::LowerBody) - context.stairMotionFrames * 0.5f);
             const bool nearMiddle = context.motionScale * 1.1f > middleDistance;
-            if (nearMiddle || SetMotionRegionFlag(context.motionWork, 68, 1, MotionRegion::LowerBody)) {
+            if (nearMiddle || mtwkSetRegionFlag(context.motionWork, 68, 1, MotionRegion::LowerBody)) {
                 if (nearMiddle) {
                     Vector3 position = NpcRouteAreaToScene(context.localPosition);
                     position.y += (context.flags & 0x800U) ? 0.22499999f : -0.22499999f;
@@ -1039,7 +1039,7 @@ std::int32_t TickNpcRouteStair(NpcRouteStateContext &context) {
                 context.flags |= 0x1000U;
                 context.routeFlags &= ~0x800U;
                 context.avoidancePhase = 3;
-                CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
+                mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
             }
         }
         return context.avoidancePhase;
@@ -1072,14 +1072,14 @@ std::int32_t TickNpcRouteStair(NpcRouteStateContext &context) {
     if (context.routeFlags & 0x800U) {
         context.flags |= 0x1000U;
         context.routeFlags &= ~0x800U;
-        CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
+        mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
     } else {
-        SetMotionSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
+        mtwkSetSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
         context.motion = SelectNpcLocomotion(context, (context.flags & 0x10U) ? 1 : 0);
         mtwkRequestMotion(context.motionWork, context.motion, MotionRegion::LowerBody);
-        SetMotionRegionFlag(context.motionWork, 69, HasMotionDependentTrack(context.motionWork) ? 2 : 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(context.motionWork, 69, mtwkHasDependentTrack(context.motionWork) ? 2 : 0, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(context.motionWork, 1);
-        SetMotionFrameTime(context.motionWork, 6, MotionRegion::LowerBody);
+        mtwkSetFrameTime(context.motionWork, 6, MotionRegion::LowerBody);
     }
     context.flags = (context.flags & ~0x400U) | 0x10000U;
     context.avoidancePhase = 0;
@@ -1090,9 +1090,9 @@ bool RequestNpcRouteMotion(NpcRouteStateContext &context, bool explicitRequest) 
     Character *const character = context.owner->node;
     if (!character || !(context.flags & 3U))
         return false;
-    SetMotionSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
+    mtwkSetSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
     if (context.flags & 0x1000U) {
-        CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
+        mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
         return true;
     }
     switch (context.phase) {
@@ -1100,14 +1100,14 @@ bool RequestNpcRouteMotion(NpcRouteStateContext &context, bool explicitRequest) 
         CharacterControlModel *const control = FindCharacterControlModel(character);
         std::uint32_t flags = control ? control->flags | 0x800U : 0x800U;
         if (context.moveState == 1 || (!context.moveState && explicitRequest)) {
-            CopyMotionTransition(context.motionWork, &context.sceneTarget, static_cast<std::uint16_t>(context.targetYaw), 0, 0);
-            CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
-            SetMotionTimeRelated(context.motionWork, 1, 5, context.doorMotion);
-            SetMotionRegionEvalTime(context.motionWork, 14.0f, MotionRegion::LowerBody);
+            mtwkCopyTransition(context.motionWork, &context.sceneTarget, static_cast<std::uint16_t>(context.targetYaw), 0, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
+            mtwkSetTimeRelated(context.motionWork, 1, 5, context.doorMotion);
+            mtwkSetRegionEvalTime(context.motionWork, 14.0f, MotionRegion::LowerBody);
             flags &= ~4U;
         } else if (context.moveState == 3) {
-            CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.targetYaw), 13, 0);
-            SetMotionTimeRelated(context.motionWork, 1, 5, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.targetYaw), 13, 0);
+            mtwkSetTimeRelated(context.motionWork, 1, 5, 0);
         }
         if (control)
             control->flags = flags;
@@ -1116,18 +1116,18 @@ bool RequestNpcRouteMotion(NpcRouteStateContext &context, bool explicitRequest) 
     case 6:
         if (context.moveState != 1 && (context.moveState || !explicitRequest))
             return false;
-        CopyMotionTransition(context.motionWork, &context.sceneTarget, static_cast<std::uint16_t>(context.targetYaw), 5, 0);
-        CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+        mtwkCopyTransition(context.motionWork, &context.sceneTarget, static_cast<std::uint16_t>(context.targetYaw), 5, 0);
+        mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
         if (context.flags & 0x10U)
-            CopyMotionTransition(context.motionWork, nullptr, 0, 8, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, 0, 8, 0);
         return false;
     case 7: {
         const std::int32_t stair = DetectNpcRouteStair(context);
         if (!stair) {
-            CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 5, 2);
-            CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 5, 2);
+            mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
             if (context.flags & 0x10U)
-                CopyMotionTransition(context.motionWork, nullptr, 0, 8, 0);
+                mtwkCopyTransition(context.motionWork, nullptr, 0, 8, 0);
         } else if (stair == 1 && !explicitRequest) {
             UpdateNpcRouteAvoidance(context);
             TickNpcRouteStair(context);
@@ -1137,8 +1137,8 @@ bool RequestNpcRouteMotion(NpcRouteStateContext &context, bool explicitRequest) 
     case 8: {
         if (context.moveState != 1 && (context.moveState || !explicitRequest)) {
             if (context.moveState == 3) {
-                CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.targetYaw), 13, 0);
-                SetMotionTimeRelated(context.motionWork, 1, 5, 0);
+                mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.targetYaw), 13, 0);
+                mtwkSetTimeRelated(context.motionWork, 1, 5, 0);
             }
             return false;
         }
@@ -1160,13 +1160,13 @@ bool RequestNpcRouteMotion(NpcRouteStateContext &context, bool explicitRequest) 
                 target.z += track.z;
             }
         }
-        CopyMotionTransition(context.motionWork, &target, static_cast<std::uint16_t>(context.targetYaw), 6, 0);
-        CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+        mtwkCopyTransition(context.motionWork, &target, static_cast<std::uint16_t>(context.targetYaw), 6, 0);
+        mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
         if (context.flags & 0x10U)
-            CopyMotionTransition(context.motionWork, nullptr, 0, 8, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, 0, 8, 0);
         if (context.otherName.name && context.doorMotion) {
-            SetMotionTimeRelated(context.motionWork, 1, 5, context.doorMotion);
-            SetMotionRegionEvalTime(context.motionWork, 14.0f, MotionRegion::LowerBody);
+            mtwkSetTimeRelated(context.motionWork, 1, 5, context.doorMotion);
+            mtwkSetRegionEvalTime(context.motionWork, 14.0f, MotionRegion::LowerBody);
         }
         return false;
     }
@@ -1581,18 +1581,18 @@ std::uint8_t UpdateNpcRouteAvoidance(NpcRouteStateContext &context) {
             target.y = 0.0f;
             context.flags |= 0x101000U;
             context.field0a1 = static_cast<std::int8_t>((flags & ~6U) | 4U);
-            SetMotionSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
+            mtwkSetSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
             const Vector3 &root = context.motionWork->runtime.rootPosition;
             const float x = target.x - root.x;
             const float z = target.z - root.z;
-            const float maximum = GetMotionRigScale(static_cast<std::uint32_t>(GetMotionRigBoneId(context.motionWork)), 8, 0) * 0.55000001f * 0.89999998f;
+            const float maximum = GetMotionRigScale(static_cast<std::uint32_t>(mtwkGetRigBoneId(context.motionWork)), 8, 0) * 0.55000001f * 0.89999998f;
             const float distance = std::sqrt(x * x + z * z);
             if (distance > maximum)
                 target = {root.x + x * (maximum / distance), root.y, root.z + z * (maximum / distance)};
-            CopyMotionTransition(context.motionWork, &target, static_cast<std::uint16_t>(context.tangentYaw), 6, 3);
-            CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+            mtwkCopyTransition(context.motionWork, &target, static_cast<std::uint16_t>(context.tangentYaw), 6, 3);
+            mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
             if (context.flags & 0x10U)
-                CopyMotionTransition(context.motionWork, nullptr, 0, 8, 0);
+                mtwkCopyTransition(context.motionWork, nullptr, 0, 8, 0);
             context.routeFlags |= 0x800000U;
         }
         break;
@@ -1664,7 +1664,7 @@ void UpdateNpcAmbientLook(NpcRouteStateContext &context) {
     if (context.doorWaitFrames < 0) {
         if (context.flags & 0x20U) {
             context.flags &= ~0x20U;
-            UpdateMotionWorkWithPosition(context.motionWork, nullptr, 0);
+            mtwkUpdateWithPosition(context.motionWork, nullptr, 0);
         }
 
         const std::int32_t interval = 120 * static_cast<std::int8_t>(context.owner->recordBase[5]);
@@ -1686,12 +1686,12 @@ void UpdateNpcAmbientLook(NpcRouteStateContext &context) {
     Vector3 target;
     std::memcpy(&target, areaPoint + 0x34, sizeof(target));
     Vector3 head{};
-    GetMotionBonePosition(context.motionWork, MB_Eyes, &head);
+    mtwkGetBonePosition(context.motionWork, MB_Eyes, &head);
     if (!std::isnormal(head.y) && head.y != 0.0f)
         head.y = 0.0f;
     target.y = static_cast<float>(point % 25) * 0.0099999998f + head.y - static_cast<float>(static_cast<std::int8_t>(context.owner->recordBase[8]) - 1) * 0.1f;
     target = NpcRouteAreaToScene(target);
-    UpdateMotionWorkWithPosition(context.motionWork, &target, 0);
+    mtwkUpdateWithPosition(context.motionWork, &target, 0);
     context.flags |= 0x20U;
 }
 
@@ -1808,8 +1808,8 @@ void TickNpcRouteMovement(NpcRouteStateContext &context) {
         }
     }
     if (!TickNpcRouteStair(context) && (context.routeFlags & 0x800U)) {
-        CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.tangentYaw), 13, 0);
-        CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+        mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.tangentYaw), 13, 0);
+        mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
         context.flags |= 0x1000U;
         context.routeFlags &= ~0x800U;
         return;
@@ -1817,18 +1817,18 @@ void TickNpcRouteMovement(NpcRouteStateContext &context) {
     if (context.flags & 0x400U) {
         if (context.flags & 0x20U) {
             context.flags &= ~0x20U;
-            UpdateMotionWorkWithPosition(context.motionWork, nullptr, 0);
+            mtwkUpdateWithPosition(context.motionWork, nullptr, 0);
         }
         return;
     }
     if (mtwkSetExtraFlag(context.motionWork, 58, 1)) {
         if (context.flags & 0x20U) {
             context.flags &= ~0x20U;
-            UpdateMotionWorkWithPosition(context.motionWork, nullptr, 0);
+            mtwkUpdateWithPosition(context.motionWork, nullptr, 0);
         }
         context.field0a1 |= 1;
         StoreNpcEulerYaw(context.savedEuler, context.motionWork->runtime.entityRotation.y);
-        if (CopyMotionTransition(context.motionWork, nullptr, 0, 3, 0))
+        if (mtwkCopyTransition(context.motionWork, nullptr, 0, 3, 0))
             RequestNpcRouteMotion(context, true);
     } else if (context.field0a1 & 1) {
         context.field0f4 = 0;
@@ -2045,16 +2045,16 @@ void TickNpcPausedRoute(NpcRouteStateContext &context) {
             wait = ++context.owner->counter416 <= 8;
         if (!wait && g_playerRuntime.character) {
             Vector3 head{};
-            GetMotionBonePosition(FindMotionWork(g_playerRuntime.character), MB_Eyes, &head);
-            UpdateMotionWorkWithPosition(context.motionWork, &head, 1);
+            mtwkGetBonePosition(FindMotionWork(g_playerRuntime.character), MB_Eyes, &head);
+            mtwkUpdateWithPosition(context.motionWork, &head, 1);
             context.flags |= 0x20U;
         }
     }
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (120 * (static_cast<std::int32_t>(date.minute) + 60 * date.hour) - context.waitStartTime > 1800) {
         if (context.owner->node)
-            UpdateMotionWorkWithPosition(context.motionWork, nullptr, 0);
+            mtwkUpdateWithPosition(context.motionWork, nullptr, 0);
         context.flags &= ~0x20U;
         context.routeFlags &= ~1U;
         if (!(context.flags & 8U))
@@ -2169,17 +2169,17 @@ void TickNpcDoorEgress(NpcRouteStateContext &context) {
         if (UpdateNpcObstructionState(context, QueryNpcMoveObstruction(owner, context.moveTarget, true, 0x4000, 0.44999999f, 1.5f) != 0))
             return;
         if (context.routeFlags & 0x800U) {
-            CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
             context.flags |= 0x1000U;
             context.routeFlags &= ~0x800U;
-            SetMotionTimeRelated(context.motionWork, 1, 5, 0);
+            mtwkSetTimeRelated(context.motionWork, 1, 5, 0);
         }
         if (!(context.flags & 0x1000U) && !mtwkSetExtraFlag(context.motionWork, 58, 1)) {
             StoreNpcEulerYaw(context.savedEuler, context.targetYaw);
             owner.flags |= 0x100U;
             context.moveState = 4;
             BeginDoorAnimation(static_cast<std::int32_t>(context.otherName.name), context.scriptOwner, context.doorMotion, 14.0f, context.motionScale * 1.1f);
-            SetMotionSpeed(context.motionWork, context.motionScale * 1.1f, MotionRegion::LowerBody);
+            mtwkSetSpeed(context.motionWork, context.motionScale * 1.1f, MotionRegion::LowerBody);
         }
         break;
     case 3:
@@ -2204,7 +2204,7 @@ void TickNpcDoorEgress(NpcRouteStateContext &context) {
     case 4:
         if (!owner.node)
             CompleteNpcDoorEgress(context, true);
-        else if (SetMotionRegionFlag(context.motionWork, 65, 1, MotionRegion::LowerBody))
+        else if (mtwkSetRegionFlag(context.motionWork, 65, 1, MotionRegion::LowerBody))
             CompleteNpcDoorEgress(context, false);
         break;
     case 6:
@@ -2245,7 +2245,7 @@ void TickNpcRouteApproach(NpcRouteStateContext &context) {
             return;
         }
         if (context.owner->node) {
-            SetMotionSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
+            mtwkSetSpeed(context.motionWork, context.motionScale, MotionRegion::LowerBody);
             Vector3 position = NpcRouteAreaToScene(context.localPosition);
             if (context.stairFlags) {
                 if (context.routeFlags & 0x4040U)
@@ -2255,15 +2255,15 @@ void TickNpcRouteApproach(NpcRouteStateContext &context) {
                 std::int32_t yaw;
                 if (flddQueryStairOrigin(position, origin, yaw)) {
                     context.moveState = 5;
-                    CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.tangentYaw), 13, 0);
-                    CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+                    mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.tangentYaw), 13, 0);
+                    mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
                     return;
                 }
             }
-            CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.tangentYaw), 5, 2);
+            mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(context.tangentYaw), 5, 2);
             if (context.flags & 0x10U)
-                CopyMotionTransition(context.motionWork, nullptr, 0, 8, 0);
-            CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+                mtwkCopyTransition(context.motionWork, nullptr, 0, 8, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
         }
     } else if (context.moveState == 5) {
         if (context.owner->node && mtwkSetExtraFlag(context.motionWork, 58, 1))
@@ -2278,14 +2278,14 @@ void TickNpcRouteApproach(NpcRouteStateContext &context) {
             if (UpdateNpcObstructionState(context, blocked))
                 return;
             if (context.routeFlags & 0x800U) {
-                CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
-                CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+                mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
+                mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
                 context.flags |= 0x1000U;
                 context.routeFlags &= ~0x800U;
             }
             if (context.flags & 0x1000U)
                 return;
-            if (CopyMotionTransition(context.motionWork, nullptr, 0, 3, 0)) {
+            if (mtwkCopyTransition(context.motionWork, nullptr, 0, 3, 0)) {
                 RequestNpcRouteMotion(context, true);
                 return;
             }
@@ -2371,11 +2371,11 @@ void TickNpcRouteTraversal(NpcRouteStateContext &context) {
         StoreNpcEulerYaw(context.savedEuler, yaw);
         context.owner->counter416 = 0;
         if (context.owner->node) {
-            CopyMotionTransition(context.motionWork, nullptr, transitionYaw, 13, 0);
-            CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, transitionYaw, 13, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
         }
     } else if (context.owner->node && (context.flags & 0x20U)) {
-        UpdateMotionWorkWithPosition(context.motionWork, nullptr, 0);
+        mtwkUpdateWithPosition(context.motionWork, nullptr, 0);
         context.flags &= ~0x20U;
     }
 }
@@ -2409,7 +2409,7 @@ void TickNpcDoorIngress(NpcRouteStateContext &context) {
                 context.targetYaw = g_doorIngressRotation.y;
                 ComputeDoorEgress(static_cast<std::int32_t>(context.otherName.name), &context.scenePosition, &context.doorPosition);
                 if (owner.node)
-                    UpdateMotionWorkWithPosition(context.motionWork, &context.doorPosition, 0);
+                    mtwkUpdateWithPosition(context.motionWork, &context.doorPosition, 0);
                 context.doorPosition = NpcAreaPosition(context.doorPosition);
                 if (ClaimDoor(context.otherName, context.scriptOwner))
                     owner.flags |= 0x100U;
@@ -2456,15 +2456,15 @@ void TickNpcDoorIngress(NpcRouteStateContext &context) {
                     QueryNpcMoveObstruction(owner, context.doorPosition, false, 0x4000, owner.streamRadius, -1.0f) != 0))
             return;
         if (context.routeFlags & 0x800U) {
-            CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
             context.flags |= 0x1000U;
             context.routeFlags &= ~0x800U;
             if (context.otherName.name)
-                SetMotionTimeRelated(context.motionWork, 1, 5, 0);
+                mtwkSetTimeRelated(context.motionWork, 1, 5, 0);
         }
         if (context.flags & 0x1000U)
             return;
-        if (CopyMotionTransition(context.motionWork, nullptr, 0, 3, 0)) {
+        if (mtwkCopyTransition(context.motionWork, nullptr, 0, 3, 0)) {
             RequestNpcRouteMotion(context, true);
             return;
         }
@@ -2479,8 +2479,8 @@ void TickNpcDoorIngress(NpcRouteStateContext &context) {
         if (CharacterControlModel *const control = FindCharacterControlModel(owner.node))
             control->flags = (control->flags | 4U) & ~0x800U;
         BeginDoorAnimation(static_cast<std::int32_t>(context.otherName.name), context.scriptOwner, context.doorMotion, 14.0f, context.motionScale * 1.1f);
-        SetMotionSpeed(context.motionWork, context.motionScale * 1.1f, MotionRegion::LowerBody);
-        UpdateMotionWorkWithPosition(context.motionWork, nullptr, 0);
+        mtwkSetSpeed(context.motionWork, context.motionScale * 1.1f, MotionRegion::LowerBody);
+        mtwkUpdateWithPosition(context.motionWork, nullptr, 0);
         return;
     case 3:
         if (ClaimDoor(context.otherName, context.scriptOwner)) {
@@ -2503,7 +2503,7 @@ void TickNpcDoorIngress(NpcRouteStateContext &context) {
             CompleteNpcDoorIngress(context, true);
             return;
         }
-        if (SetMotionRegionFlag(context.motionWork, 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(context.motionWork, 65, 1, MotionRegion::LowerBody)) {
             Vector3 floor = NpcRouteAreaToScene(context.localPosition);
             if (FindNpcIntersectionInScene(floor, context.moveFlags) || (owner.flags & 0x200U)) {
                 if (CharacterControlModel *const control = FindCharacterControlModel(owner.node))
@@ -2551,7 +2551,7 @@ bool FinishNpcRoute(NpcRouteStateContext &context) {
         context.routeFlags |= 1U;
         context.flags |= 0x8000U;
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         context.waitStartTime = 120 * (static_cast<std::int32_t>(date.minute) + 60 * date.hour);
         return false;
     }
@@ -2604,28 +2604,28 @@ void UpdateLinkedNpcRoute(NpcRouteStateContext &context) {
         context.routeFlags |= 0x2000800U;
         if (context.owner->node && leader.node) {
             Vector3 head{};
-            GetMotionBonePosition(leader.motionWork, MB_Eyes, &head);
-            UpdateMotionWorkWithPosition(context.motionWork, &head, 0);
+            mtwkGetBonePosition(leader.motionWork, MB_Eyes, &head);
+            mtwkUpdateWithPosition(context.motionWork, &head, 0);
         }
     } else if (request == 2) {
         leader.stateContext.routeFlags |= 0x2000800U;
         if (context.owner->node && leader.node) {
             Vector3 head{};
-            GetMotionBonePosition(context.motionWork, MB_Eyes, &head);
-            UpdateMotionWorkWithPosition(leader.motionWork, &head, 0);
+            mtwkGetBonePosition(context.motionWork, MB_Eyes, &head);
+            mtwkUpdateWithPosition(leader.motionWork, &head, 0);
         }
     } else if (context.linkedRoute.leashDistance * 0.5f <= distance)
         return;
     if (request != 1 && (context.routeFlags & 0x2000000U) && !(context.owner->flags & 0x10U)) {
         context.routeFlags &= ~0x2000000U;
         if (context.owner->node)
-            UpdateMotionWorkWithPosition(context.motionWork, nullptr, 0);
+            mtwkUpdateWithPosition(context.motionWork, nullptr, 0);
         SetNpcRouteMotionState(context, 3);
     }
     if (request != 2 && (leader.stateContext.routeFlags & 0x2000000U) && !(leader.flags & 0x10U)) {
         leader.stateContext.routeFlags &= ~0x2000000U;
         if (leader.node)
-            UpdateMotionWorkWithPosition(leader.motionWork, nullptr, 0);
+            mtwkUpdateWithPosition(leader.motionWork, nullptr, 0);
         SetNpcRouteMotionState(leader.stateContext, 3);
     }
 }
@@ -2649,8 +2649,8 @@ void RestartNpcAreaRouteContext(NpcRouteStateContext &context) {
 }
 
 void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
-    entry.flags = (entry.flags & ~3U) | NpcRouteStreamLive;
-    entry.node = FindCharacterByScenarioName(entry.name);
+    entry.flags = (entry.flags & ~3U) | NRSF_Live;
+    entry.node = ctrlGetScenarioChara(entry.name);
     entry.motionWork = FindMotionWork(entry.node);
     npcSlotFlags[entry.poolIndex] |= 1U;
     entry.streamRadius = 0.30000001f;
@@ -2662,7 +2662,7 @@ void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
     if (CharacterControlModel *const control = FindCharacterControlModel(entry.node)) {
         if (!(entry.flags & 0x200U)) {
             if ((npcSchedule.floor != -1000 && (entry.packedMoveFlags & 0xff00U)) || (entry.flags & 0x2000U))
-                control->flags &= ~CharacterControlApplyGravity;
+                control->flags &= ~CCMF_ApplyGravity;
             if (entry.flags & 0x8000000U)
                 control->flags = (control->flags & ~0x804U) | 0x800U;
         }
@@ -2678,12 +2678,12 @@ void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
     Vector3i rotation;
     std::memcpy(&rotation, &entry.euler, sizeof(rotation));
     shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
-    SetCharacterWorldRotation(entry.node, rotation);
-    EV_mtwkSetEnabled(entry.motionWork, true);
+    charaSetWorldRot(entry.node, rotation);
+    mtwkSetEnabled(entry.motionWork, true);
     mtwkSetRequestedRootMode(entry.motionWork, 1);
-    SetMotionFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
+    mtwkSetFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
     if (entry.name.name == SHEN_NAME(REN_))
-        SetMotionTimeRelated(entry.motionWork, 1, 0, 0xa204);
+        mtwkSetTimeRelated(entry.motionWork, 1, 0, 0xa204);
     entry.flags &= ~0x1000000U;
     if (entry.flags & 8U) {
         if (entry.liveState == 1) {
@@ -2705,7 +2705,7 @@ void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
         return;
     case 3:
         shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
-        SetCharacterWorldRotation(entry.node, rotation);
+        charaSetWorldRot(entry.node, rotation);
         if (!(entry.flags & 0x400U))
             break;
         mtwkSetRequestedRootMode(entry.motionWork, 0);
@@ -2713,7 +2713,7 @@ void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
         return;
     case 4:
         if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-            control->flags &= ~(CharacterControlApplyGravity | CharacterControlEvaluateMotion);
+            control->flags &= ~(CCMF_ApplyGravity | CCMF_EvaluateMotion);
         shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
         SetCharacterType(entry.node, 3);
         break;
@@ -2724,9 +2724,9 @@ void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
         entry.currentMotionId = SelectNpcSeatedIdleMotion(entry);
         break;
     case 7:
-        SetMotionDrawOverrideData(entry.motionWork, nullptr);
+        mtwkSetDrawOverrideData(entry.motionWork, nullptr);
         if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-            control->flags &= ~(CharacterControlEvaluateMotion | CharacterControlVoxelSweep);
+            control->flags &= ~(CCMF_EvaluateMotion | CCMF_VoxelSweep);
         shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
         if (entry.flags & 0x40000U) {
             const std::uint32_t frames = npcMotionClips[entry.clipOverrideIndex].frameCount;
@@ -2738,9 +2738,9 @@ void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
         return;
     case 8: {
         if (entry.streamCost == 1) {
-            SetMotionDrawOverrideData(entry.motionWork, nullptr);
+            mtwkSetDrawOverrideData(entry.motionWork, nullptr);
             if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-                control->flags &= ~(CharacterControlEvaluateMotion | CharacterControlVoxelSweep);
+                control->flags &= ~(CCMF_EvaluateMotion | CCMF_VoxelSweep);
             return;
         }
         NpcAreaRouteState &state = *GetNpcAreaPointRouteState(entry.currentAreaPoint);
@@ -2753,7 +2753,7 @@ void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
         ApplyNpcAreaMotion(entry, entry.currentMotionId);
         if (((entry.routeMotionState - 16) & 0xfb) == 0) {
             if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-                control->flags |= CharacterControlStairMode;
+                control->flags |= CCMF_StairMode;
             entry.commandFlags |= 0x800U;
         }
         return;
@@ -2763,7 +2763,7 @@ void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
         break;
     }
     mtwkRequestMotion(entry.motionWork, entry.currentMotionId, MotionRegion::LowerBody);
-    SetMotionSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
+    mtwkSetSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
 }
 
 std::int64_t NpcRouteScheduleCallback(NpcRouteLiveEntry *entry) {
@@ -2836,7 +2836,7 @@ void TickNpcMotionClip(NpcRouteLiveEntry &entry) {
     entry.node->viewPosition = viewPosition;
     const float magnitude = std::sqrt(viewPosition.x * viewPosition.x + viewPosition.y * viewPosition.y + viewPosition.z * viewPosition.z);
     entry.node->drawDistance = magnitude < 0.0000099999997f ? 0.0f : magnitude;
-    SetMotionDrawOverrideData(entry.motionWork, clip.frames + static_cast<std::int32_t>(entry.animationFrame) * clip.boneCount);
+    mtwkSetDrawOverrideData(entry.motionWork, clip.frames + static_cast<std::int32_t>(entry.animationFrame) * clip.boneCount);
 }
 
 bool SetNpcMotionAttachment(NpcRouteLiveEntry &entry, std::uint16_t motion, std::uint8_t flags, std::int32_t slot) {
@@ -2975,9 +2975,9 @@ void SetNpcRouteMotionState(NpcRouteStateContext &context, std::int32_t operatio
         if (!(context.flags & 0x1000U))
             context.routeFlags |= 0x800U;
         if ((context.owner->flags & 0x40U) && context.owner->node) {
-            CopyMotionTransition(context.motionWork, nullptr, 0, 1, 0);
-            CopyMotionTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
-            CopyMotionTransition(context.motionWork, nullptr, 0, 2, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, 0, 1, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, static_cast<std::uint16_t>(ReadNpcEulerYaw(context.savedEuler)), 13, 0);
+            mtwkCopyTransition(context.motionWork, nullptr, 0, 2, 0);
         }
         return;
     case 3:
@@ -3007,15 +3007,15 @@ void TickNpcSpecialRouteContext(NpcRouteLiveEntry &entry) {
 
 void ResumeNpcScheduleMotion(NpcRouteLiveEntry &entry) {
     std::int32_t phase = static_cast<std::int32_t>(npcFrameCount) + 2 * static_cast<std::int8_t>(entry.recordBase[8]);
-    if (GetMotionAnimationId(entry.motionWork, MotionRegion::LowerBody))
+    if (mtwkGetAnimationId(entry.motionWork, MotionRegion::LowerBody))
         phase += 20;
     mtwkRequestMotion(entry.motionWork, entry.currentMotionId, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(entry.motionWork, 1);
-    SetMotionFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
-    SetMotionSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
+    mtwkSetFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
+    mtwkSetSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
     const MotnSequence &sequence = *FindLoadedMotionSequence(entry.currentMotionId);
     const float frame = static_cast<float>(phase % (sequence.frameCount - 1));
-    SetMotionRegionEvalTime(entry.motionWork, frame, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(entry.motionWork, frame, MotionRegion::LowerBody);
     Vector3 track;
     SampleNativeMotionRoot(entry.currentMotionId, GetCharacterBoneId(entry.node), frame, track);
     Vector3i rotation;
@@ -3027,9 +3027,9 @@ void ResumeNpcScheduleMotion(NpcRouteLiveEntry &entry) {
     track = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
     Matrix4x4::Pop(1);
     shenApplyTranslationToAll(&entry.node->entity.node, track);
-    SetCharacterWorldRotation(entry.node, rotation);
+    charaSetWorldRot(entry.node, rotation);
     if (CharacterControlModel *const control = FindCharacterControlModel(entry.node)) {
-        control->flags &= ~(CharacterControlApplyGravity | CharacterControlEvaluateMotion);
+        control->flags &= ~(CCMF_ApplyGravity | CCMF_EvaluateMotion);
     }
 }
 
@@ -3158,10 +3158,10 @@ bool ReleaseNpcRouteControl(NpcRouteStateContext *context, shen_name character, 
         }
         std::int32_t savedYaw;
         std::memcpy(&savedYaw, &context->savedEuler.y, sizeof(savedYaw));
-        CopyMotionTransition(context->motionWork, nullptr, static_cast<std::uint16_t>(savedYaw), 13, 0);
-        CopyMotionTransition(context->motionWork, nullptr, 0, 2, 0);
+        mtwkCopyTransition(context->motionWork, nullptr, static_cast<std::uint16_t>(savedYaw), 13, 0);
+        mtwkCopyTransition(context->motionWork, nullptr, 0, 2, 0);
         if (context->flags & 0x20U) {
-            UpdateMotionWorkWithPosition(context->motionWork, nullptr, 0);
+            mtwkUpdateWithPosition(context->motionWork, nullptr, 0);
             context->flags &= ~0x20U;
         }
     }
@@ -3339,7 +3339,7 @@ bool BindNpcScriptRoute(shen_name character, const NpcRouteNode *route, const Ve
     context.flags = 1;
     context.routeFlags = 32950;
     context.moveFlags = route->flags | (entry->packedMoveFlags & 0x1ff00U);
-    Character *const node = FindCharacterByScenarioName(character);
+    Character *const node = ctrlGetScenarioChara(character);
     if (node) {
         const Vector3i rotation = GetCharacterWorldRotation(node);
         std::memcpy(&context.savedEuler, &rotation, sizeof(rotation));
@@ -3432,7 +3432,7 @@ bool StartNpcScriptAreaRoute(shen_name character, shen_name oldPoint, shen_name 
         context.field10a = static_cast<std::uint16_t>(static_cast<std::uint32_t>(yaw) >> 16U);
         context.routeFlags |= 0x20000U;
     }
-    Character *const node = FindCharacterByScenarioName(character);
+    Character *const node = ctrlGetScenarioChara(character);
     if (node) {
         const Vector3i rotation = GetCharacterWorldRotation(node);
         std::memcpy(&context.savedEuler, &rotation, sizeof(rotation));
@@ -3526,12 +3526,12 @@ std::int64_t PlaceNpcAtAreaPoint(shen_name character, shen_name areaPoint, const
             entry.worldPosition = NpcAreaPosition(entry.localPosition);
         }
         if (entry.node) {
-            CopyMotionTransition(entry.motionWork, nullptr, 0, 1, 0);
+            mtwkCopyTransition(entry.motionWork, nullptr, 0, 1, 0);
             shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
             Vector3i rotation;
             std::memcpy(&rotation, &entry.euler, sizeof(rotation));
-            SetCharacterWorldRotation(entry.node, rotation);
-            SetMotionRegionFlag(entry.motionWork, 71, 0, MotionRegion::LowerBody);
+            charaSetWorldRot(entry.node, rotation);
+            mtwkSetRegionFlag(entry.motionWork, 71, 0, MotionRegion::LowerBody);
             mtwkSetExtraFlag(entry.motionWork, 14, 0);
             entry.currentMotionId = SelectNpcIdleMotion(entry);
             mtwkRequestMotion(entry.motionWork, entry.currentMotionId, MotionRegion::LowerBody);

@@ -29,10 +29,10 @@ void UpdateTorchPosition(std::uint32_t light, shen_name torch) {
     PrioritizeLight(static_cast<std::int16_t>(light));
 }
 void ConfigureTorchHands() {
-    auto *character = FindCharacterByScenarioName(KESA_SHENHUA);
+    auto *character = ctrlGetScenarioChara(KESA_SHENHUA);
     SetHighModelXYZ(character, 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(KESA_SHENHUA), 0, 1, 0);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(KESA_SHENHUA), 1, 3, 16);
+    SetHighModelXYZ(ctrlGetScenarioChara(KESA_SHENHUA), 0, 1, 0);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(KESA_SHENHUA), 1, 3, 16);
 }
 void SetupCaveObjects() {
     constexpr shen_name aa33{SHEN_NAME(aa33)}, a704{SHEN_NAME(a704)}, aa36{SHEN_NAME(aa36)}, aa39{SHEN_NAME(aa39)}, aa75{SHEN_NAME(aa75)},
@@ -111,9 +111,9 @@ void KesaSetupTorch() {
     AttachScenarioCharacter(KESA_TORCH, KESA_RYO, 21, &position, &rotation);
     EV_EnableCharacterDisplay(KESA_TORCH);
     mtwkRequestMotion(scenFindMotionwork(KESA_RYO), 0x2a41, MotionRegion::LeftArm);
-    SetMotionRegionFlag(scenFindMotionwork(KESA_RYO), 69, 0, MotionRegion::LeftArm);
-    SetMotionSpeed(scenFindMotionwork(KESA_RYO), .1f, MotionRegion::LeftArm);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(KESA_RYO), 1, 0, 16);
+    mtwkSetRegionFlag(scenFindMotionwork(KESA_RYO), 69, 0, MotionRegion::LeftArm);
+    mtwkSetSpeed(scenFindMotionwork(KESA_RYO), .1f, MotionRegion::LeftArm);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(KESA_RYO), 1, 0, 16);
     const Vector4 colour{1, 1, .5f, .2f};
     const float falloff[]{.7f, 0};
     SetLightFlagForIndex(32, 3);
@@ -131,26 +131,26 @@ void KesaSetupTorch() {
 void KesaSetLight(void *) {
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1757))
         return;
-    SetMotionSpeed(scenFindMotionwork(KESA_RYO), .1f, MotionRegion::LeftArm);
+    mtwkSetSpeed(scenFindMotionwork(KESA_RYO), .1f, MotionRegion::LeftArm);
     if (DoesScenarioCharacterExist(KESA_SHENHUA)) {
-        if (GetMotionAnimationId(scenFindMotionwork(KESA_SHENHUA), MotionRegion::LeftArm) != 0x2a41) {
+        if (mtwkGetAnimationId(scenFindMotionwork(KESA_SHENHUA), MotionRegion::LeftArm) != 0x2a41) {
             SetNpcRouteControlHold(KESA_SHENHUA, 1);
             mtwkRequestMotion(scenFindMotionwork(KESA_SHENHUA), 0x2a41, MotionRegion::LeftArm);
-            SetMotionRegionFlag(scenFindMotionwork(KESA_SHENHUA), 69, 0, MotionRegion::LeftArm);
+            mtwkSetRegionFlag(scenFindMotionwork(KESA_SHENHUA), 69, 0, MotionRegion::LeftArm);
             EV_AT_SetAngY(KESA_COMPANION_TORCH, EventTransformFlags::AllAxes, {0, 0, 0});
             ConfigureTorchHands();
-            hmdlSetFlagsFor(FindCharacterByScenarioName(KESA_SHENHUA), 0, 0, 16);
+            hmdlSetFlagsFor(ctrlGetScenarioChara(KESA_SHENHUA), 0, 0, 16);
             torchHandDelay = 5;
             if (EV_GetShenmueFlag(732)) {
                 mtwkRequestMotion(scenFindMotionwork(KESA_SHENHUA), 0x9505, MotionRegion::RightArm);
-                SetMotionRegionFlag(scenFindMotionwork(KESA_SHENHUA), 69, 0, MotionRegion::RightArm);
-                hmdlSetFlagsFor(FindCharacterByScenarioName(KESA_SHENHUA), 0, 2, 16);
+                mtwkSetRegionFlag(scenFindMotionwork(KESA_SHENHUA), 69, 0, MotionRegion::RightArm);
+                hmdlSetFlagsFor(ctrlGetScenarioChara(KESA_SHENHUA), 0, 2, 16);
             }
         }
-        SetMotionSpeed(scenFindMotionwork(KESA_SHENHUA), .1f, MotionRegion::LeftArm);
+        mtwkSetSpeed(scenFindMotionwork(KESA_SHENHUA), .1f, MotionRegion::LeftArm);
         if (torchHandDelay >= 0 && --torchHandDelay == 0) {
             ConfigureTorchHands();
-            hmdlSetFlagsFor(FindCharacterByScenarioName(KESA_SHENHUA), 0, EV_GetShenmueFlag(732) ? 0 : 2, 16);
+            hmdlSetFlagsFor(ctrlGetScenarioChara(KESA_SHENHUA), 0, EV_GetShenmueFlag(732) ? 0 : 2, 16);
         }
         Vector3 position{.07f, 0, .03f};
         Vector3i rotation{62624, 0, 62988};

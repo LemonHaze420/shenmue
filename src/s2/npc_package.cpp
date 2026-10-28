@@ -472,7 +472,7 @@ std::span<NpcRouteLiveEntry> CreateNpcRouteLiveEntries(std::span<const NpcRouteR
         InitializeNpcInterpreterState(entry, static_cast<std::int32_t>(index));
         entry.poolIndex = static_cast<std::int16_t>(index);
         if (!authored) {
-            entry.flags = NpcRouteAbstractActive;
+            entry.flags = NRSF_AbstractActive;
             entry.liveState = 1;
             entry.streamSortKey = 1000.0f;
             entry.currentCommand = entry.branchCommandStart = nullptr;

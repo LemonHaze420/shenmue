@@ -248,8 +248,8 @@ void Mfw0IntroductionSequence(void *data) {
             SetTrainingCharacterYaw(MFW0_RYO, 8192);
             EV_AT_SetPos(MFW0_TKR, EventTransformFlags::World | EventTransformFlags::AllAxes, MFW0_TEACHER_POSITION);
             SetTrainingCharacterYaw(MFW0_TKR, 41264);
-            SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(MFW0_TKR), 4994, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(MFW0_RYO), 0xf003, MotionRegion::LowerBody);
             Mfw0Advance(sequence, 119);
@@ -293,8 +293,8 @@ void Mfw0FinishTrainingSequence(void *data) {
             Mfw0Advance(sequence, 100);
             break;
         case 100:
-            UpdateMotionWorkWithPosition(scenFindMotionwork(MFW0_RYO), nullptr, 0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(MFW0_TKR), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(MFW0_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(MFW0_TKR), nullptr, 0);
             ProcessAicaCommand(0xaa0, 30);
             spmFadeOut();
             Mfw0Complete(sequence);

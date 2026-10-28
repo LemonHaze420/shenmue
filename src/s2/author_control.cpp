@@ -153,7 +153,7 @@ void EyesCallback(void *payload) {
         Character *const referenced = scenFindChara(author->task, reference);
         Vector3 position{};
         if (referenced)
-            GetCharacterMotionWorldPosition(referenced, eyeBoneIds[static_cast<std::size_t>(index)], &position);
+            charaGetMotWorldPos(referenced, eyeBoneIds[static_cast<std::size_t>(index)], &position);
         target.x += position.x;
         target.y += position.y;
         target.z += position.z;

@@ -71,13 +71,13 @@ void QueueFade(std::int32_t frames, bool toBlack, std::int32_t delay) {
         .delay = static_cast<float>(delay)});
 }
 void FreePackage(const char *name) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
 }
 void LoadPackage(const char *name) {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(name));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 // @verified - p
 void FreeRefereePackages() {
@@ -95,7 +95,7 @@ void LoadOpponentPackage() {
 }
 void LoadMatchPackages() {
     LoadPackage("ARMWCOMN");
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("ARMWCOMN"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("ARMWCOMN"), 0);
     armw.handMotion = LoadHandPoseBank(g_actNumber, g_currentMap, "HMOT_0008E");
     LoadPackage(refereePackages[armw.refereeMotion]);
     LoadOpponentPackage();
@@ -117,7 +117,7 @@ void PinBase() {
 std::int32_t OpponentMotion(shen_name opponent) {
     if (opponent.name == SHEN_NAME(SFC_) || opponent.name == SHEN_NAME(DGY_) || opponent.name == SHEN_NAME(MHK_))
         return 2;
-    const std::int32_t bone = GetMotionRigBoneId(scenFindMotionwork(opponent));
+    const std::int32_t bone = mtwkGetRigBoneId(scenFindMotionwork(opponent));
     return bone == 7 ? 0 : bone == 9 ? 1 : 3;
 }
 std::int32_t Ladder(const ArmwWork &work) {
@@ -177,7 +177,7 @@ void SelectCharacters(ArmwWork &work) {
     work.nextEntry = nextEntries[armw.location];
     work.player = ARMW_RYO;
     work.referee = referees[armw.location];
-    armw.refereeMotion = GetMotionRigBoneId(scenFindMotionwork(work.referee)) == 7 ? 0 : 1;
+    armw.refereeMotion = mtwkGetRigBoneId(scenFindMotionwork(work.referee)) == 7 ? 0 : 1;
     SelectOpponent(work);
     armw.characters[0] = work.player;
     armw.characters[1] = work.referee;
@@ -216,8 +216,8 @@ void InitializeResources(ArmwWork &work) {
     EV_FreeAuthorPak(1, g_currentMap == AREA_QTB4 ? "0368" : "0008");
     ArmwSetVoicePrefixes(work.referee, work.opponent);
     LoadPackage("ARMW");
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ARMW"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("ARMW"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ARMW"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("ARMW"), 0);
     EV_LoadCutsceneFromCurrentScene("0008A000");
     CreateEventCharacter(CharacterCreationHighModel, nullptr, ARMW_BASE);
     armw.opponentMotion = OpponentMotion(work.opponent);
@@ -867,7 +867,7 @@ bool LoadNextOpponent(ArmwWork &work) {
     EV_SetRefBoardParamsFor(work.opponent, 1);
     AT_SetLocalBaseChara(work.opponent, EVENT_CHARACTER_INVALID);
     mtwkSetRequestedRootMode(scenFindMotionwork(work.opponent), 3);
-    SetMotionFrameTime(scenFindMotionwork(work.opponent), 7, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(work.opponent), 7, MotionRegion::LowerBody);
     EV_EnableCharacterDisplay(work.opponent);
     GetCharacterMotionCompatibilityResult(ctrlGetCharaByName(work.opponent));
     SetFaceFlagsForChara_0(ctrlGetCharaByName(work.opponent), FacialNodeReplacement);
@@ -949,7 +949,7 @@ void EndCallback(void *data) {
     EV_stepSetFlags(work.flags & 1 ? 0 : work.flags & 0x20 ? 2 : 1, 4 - ((work.flags & 8) != 0));
     EV_NPC_NewLoadSw(1);
     if (!work.nextScene.name) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
         EVT_AT_SetMot(ARMW_RYO, 61442, 0, 1, 0x40000000U, 0);
         // The exit facing goes through EVT_AT_SetAngY, which keeps Ryo's current X and Z rotation.

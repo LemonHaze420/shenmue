@@ -464,7 +464,7 @@ std::int32_t YcpaLaneConversation() {
         cue->delay = 1900.0f;
         std::memcpy(cue->voice, "0235A040", sizeof("0235A040"));
     }
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(YCPA_YUA), 2, 0, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(YCPA_YUA), 2, 0, 1);
     return 1930;
 }
 } // namespace shenmue::s2::areas

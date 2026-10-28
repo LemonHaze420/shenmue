@@ -420,12 +420,12 @@ void CleanupTogyu(QdtgEventWork *work) {
     hndlSetFlags(ctrlGetCharaByName(QDTG_RYO));
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0282");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDTG"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0282"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("282E"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDTG"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0282"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("282E"), 0);
     SetNaviDisplayOverride(work->savedNavi != 0);
     DeleteMotion(work->motion);
     ET_AT_KillWork(work->characters);
@@ -515,22 +515,22 @@ void InitializeTogyu(QdtgEventWork *work) {
     EV_ResetFreeTalkFlags();
     EVT_SetQteRetryFrames(24);
     EVT_SetQteFailureCount(0);
-    GetCurrentDateTime(eventTemporaryDateTime);
+    shenGetCurrentDateTime(eventTemporaryDateTime);
     work->state = 1;
     work->characters = Queue_EVT_AT_ReadChr(work->task, QDTG_CHARACTERS);
     work->motion = ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
     work->savedNavi = SetNaviDisplayOverride(true);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("282E"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("0282"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QDTG"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDTG"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDTG"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDTG"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDTG"), 0);
     EV_FreeAuthorPak(1, "0282");
     EV_SetNewSceneIndex();
     SetWeatherUpdateEnabledTo(0);

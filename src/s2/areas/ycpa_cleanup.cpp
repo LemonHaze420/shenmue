@@ -33,7 +33,7 @@ void QueueEveningArea(bool rewindMorning) {
     constexpr std::int32_t times[]{19, 0, 19, 30, 20, 0};
     const std::int32_t destination = EveningDestination();
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (rewindMorning && time.hour < 8)
         --time.day;
     time.hour = static_cast<std::int8_t>(times[destination * 2]);
@@ -117,11 +117,11 @@ void YcpaEndChaseCallback(void *data) {
         CancelEventMovement(index);
     EV_authSceneCtrl(AuthSceneCtrl::ShowFilmBars);
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(YCPA_RYO), FacialNodeOriginal);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(YCPA_RYO), FacialNodeOriginal);
     if (DoesScenarioCharacterExist(YCPA_REN))
-        hndlSetFlags(FindCharacterByScenarioName(YCPA_REN));
+        hndlSetFlags(ctrlGetScenarioChara(YCPA_REN));
     if (DoesScenarioCharacterExist(YCPA_YUA))
-        hndlSetFlags(FindCharacterByScenarioName(YCPA_YUA));
+        hndlSetFlags(ctrlGetScenarioChara(YCPA_YUA));
     std::int32_t timeLimit = 5;
     qteBattleUtil(BattleQteMode::RetireAndFree);
     ET_AT_KillWork(work.characters);
@@ -131,8 +131,8 @@ void YcpaEndChaseCallback(void *data) {
         SetCharaKill(character, 1);
     scenFreeEvent("YCPA.EV3");
     EV_FreeAuthorPak(0, "0235");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YCPAMAIN"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YCPAMAIN"), 0);
     switch (ycpaSavedEvent) {
     case 3:
     case 4:
@@ -188,7 +188,7 @@ void YcpaEndChaseCallback(void *data) {
     bool resumeSamples = false;
     if (ycpaSavedEvent == 9 && work.finished) {
         RestorePlayer(YCPA_INVALID, Vector3{.x = 293, .y = 100, .z = 76.59999847412109375f}, 180);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_LoadAudio("QAE1_000.sbt", 0);
         resumeSamples = true;
     } else {
@@ -242,7 +242,7 @@ void YcpaEndAdviceCallback(void *) {
     EV_npcLockUnlock(YCPA_REN);
     HLib::MarkCurrentTaskForCleanup();
     scenFreeEvent("YCPA.EV3");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
     EV_FreeAuthorPak(0, "0235");
     EV_NPC_NewLoadSw(1);
     SetPlayerControlEnabled(1);
@@ -261,7 +261,7 @@ void YcpaChangeAreaAfterAdvice(void *) {
     EV_npcLockUnlock(YCPA_REN);
     HLib::MarkCurrentTaskForCleanup();
     scenFreeEvent("YCPA.EV3");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
     EV_FreeAuthorPak(0, "0235");
     EV_NPC_NewLoadSw(1);
     EV_stepSetFlags(0, 0x2a8);

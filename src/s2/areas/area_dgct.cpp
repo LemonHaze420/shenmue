@@ -61,7 +61,7 @@ void InitializeGameCenterQte(ExciteState &state) {
     position.x += 0;
     position.y += 0;
     position.z += .718f;
-    SetMotionRegionFlag(scenFindMotionwork(EXQT_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(EXQT_RYO), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetAngY(EXQT_RYO, EventTransformFlags::AllAxes, {0, 0, 0}, nullptr);
     EV_AT_SetPos(EXQT_RYO, EventTransformFlags::AllAxes, position);
     EV_SetCharaControllerFlags(EXQT_RYO, 2, static_cast<NpcCharacterControllerState>(0));

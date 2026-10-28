@@ -25,7 +25,7 @@ float Cosine(std::uint16_t angle) {
 void PvsjSetCamera(PvsjEventWork *work, std::int32_t id, shen_name eye, shen_name target, std::int32_t delay) {
     if (id == work->cameraId && eye.name == work->cameraEye.name && target.name == work->cameraTarget.name)
         return;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
     EVT_AT_SetCam(id, eye, target, 0, 0, delay);
     work->cameraId = id;
     pvsjCameraBlend = -1;

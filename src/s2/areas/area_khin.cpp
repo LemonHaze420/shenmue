@@ -53,7 +53,7 @@ void RunKhinEvent(std::uintptr_t argument) {
     SetPlayerControlEnabled(0);
     EV_SetCharaControllerFlags(KHIN_RYO, ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(KHIN_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014)) {
         EV_FreeAuthorPak(1, "0185");
         EV_FreeAuthorPak(1, "0112");
@@ -217,12 +217,12 @@ void KhinPurchaseExitCallback(void *data) {
     }
     EV_setHoldStatesFlags(1);
     EV_setHoldStatesFlags(1);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(work.row->character), Normal, 10, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(work.row->character), Normal, 10, 1);
     EVT_AT_SetPoint(KHIN_RYO, KHIN_NONE, 0, 1, 0, 0, 0, 0x50000000U);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(KHIN_RYO), nullptr, 0);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(work.row->character), nullptr, 0);
-    (void)FindMotionWork(FindCharacterByScenarioName(KHIN_RYO));
-    (void)FindMotionWork(FindCharacterByScenarioName(work.row->character));
+    mtwkUpdateWithPosition(scenFindMotionwork(KHIN_RYO), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(work.row->character), nullptr, 0);
+    (void)FindMotionWork(ctrlGetScenarioChara(KHIN_RYO));
+    (void)FindMotionWork(ctrlGetScenarioChara(work.row->character));
     EV_SetCharacterAlphaEnabled(KHIN_RYO, true);
     EV_SetCharacterAlphaEnabled(work.row->character, true);
     EV_EnableCharacterDisplay(KHIN_RYO);
@@ -232,7 +232,7 @@ void KhinPurchaseExitCallback(void *data) {
     EV_SetRefBoardParamsFor(work.row->character, 0);
     EV_npcFree(work.row->character);
     EV_npcLockUnlock(work.row->character);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EVT_AT_MenCtrl({.frames = 8, .startAlpha = 255});
     EV_SetRefBoardParamsFor(KHIN_RYO, 0);
     EV_SetCharaControllerFlags(KHIN_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
@@ -245,7 +245,7 @@ void KhinPurchaseExitCallback(void *data) {
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
     HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
 }
@@ -256,17 +256,17 @@ void KhinSlotExitCallback(void *data) {
     EV_SetCharaControllerFlags(KHIN_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(KHIN_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetRefBoardParamsFor(KHIN_RYO, 0);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(KHIN_RYO), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(KHIN_RYO), nullptr, 0);
     EVT_AT_SetPoint(KHIN_RYO, KHIN_NONE, 0, 1, 0, 0, 0, 0x50000000U);
     EV_SetCharacterAlphaEnabled(KHIN_RYO, true);
     EV_SetCharacterAlphaEnabled(work.row->character, true);
     EV_SetCharaControllerFlags(work.row->character, ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(work.row->character, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetRefBoardParamsFor(work.row->character, 0);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(work.row->character), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(work.row->character), nullptr, 0);
     EV_npcFree(work.row->character);
     EV_npcLockUnlock(work.row->character);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_NPC_NewLoadSw(1);
     EV_FreeAuthorPak(0, "0185");
     EVS_LoopCamera(0, KHIN_NONE, KHIN_NONE);
@@ -315,7 +315,7 @@ void KhinSlotExitCallback(void *data) {
     }
     SetPlayerControlEnabled(1);
     HLib::ResolveDeferredCallback(work.caller);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
     HLib::EV_HLKillOtherHierarchyTask(work.task);
 }
 void KhinReturnToMenuCallback(void *data) {
@@ -348,7 +348,7 @@ void KhinReturnToMenuCallback(void *data) {
         const bool leave = work.state == 3;
         ctrlStopSubtitles();
         EVT_AT_SetPoint(KHIN_RYO, KHIN_NONE, 0, 3, 0, 0, 0, 0x50000000U);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         if (!leave) {
             EV_SetCharaControllerFlags(KHIN_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
             EV_SetCharaControllerFlags(KHIN_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
@@ -357,7 +357,7 @@ void KhinReturnToMenuCallback(void *data) {
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
         HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
         EV_CleanupMapControlTask();
         HLib::EV_HLKillOtherHierarchyTask(work.task);
         if (leave)

@@ -75,10 +75,10 @@ void MoveReadyEnemy(FCMG_t *group, float x, float z) {
         z = 0;
     group->position.x += x;
     group->position.z += z;
-    auto root = GetMotionRootPosition(group->motion);
+    auto root = mtwkGetRootPosition(group->motion);
     root.x += x;
     root.z += z;
-    SetMotionRootPosition(group->motion, root);
+    mtwkSetRootPosition(group->motion, root);
     shenApplyTranslationToAll(&group->character->entity.node, group->position);
 }
 std::int32_t StyleAnimation(const VFActor &actor, std::size_t offset) {
@@ -232,7 +232,7 @@ void vfclChooseReactionAnim(VFActor *source, VFActor *destination) {
 void vfclTransformContactShapes(VFActor *self) {
     const auto *const shapes = reinterpret_cast<const VFCollisionShape *>(self->parameterAd8);
     for (std::size_t i = 0; i != 10; ++i) {
-        const auto *const bone = charaGetBoneTransform(self->motion, shapes[i].bone);
+        const auto *const bone = mtwkGetBoneTransform(self->motion, shapes[i].bone);
         if (!bone)
             continue;
         Matrix4x4::SetActiveTransform(bone);
@@ -240,7 +240,7 @@ void vfclTransformContactShapes(VFActor *self) {
     }
     const auto *const pushes = PushShapes(self);
     for (std::size_t i = 0; i != 3; ++i) {
-        Matrix4x4::SetActiveTransform(charaGetBoneTransform(self->motion, pushes[i].bone));
+        Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(self->motion, pushes[i].bone));
         Matrix4x4::TransformPoint(pushes[i].point, self->game->collision->samples[self->groupIndex].points[i]);
     }
 }
@@ -271,10 +271,10 @@ void vfInitializeActorCollision(VFMA_t *game, std::uint8_t index) {
 void vfclMoveEntityWithContactHistory(VFActor *self, float x, float z) {
     if (std::fabs(x) < 0.00000011920929f && std::fabs(z) < 0.00000011920929f)
         return;
-    Vector3 root = GetMotionRootPosition(self->motion);
+    Vector3 root = mtwkGetRootPosition(self->motion);
     root.x += x;
     root.z += z;
-    SetMotionRootPosition(self->motion, root);
+    mtwkSetRootPosition(self->motion, root);
     self->contactPosition.x += x;
     self->contactPosition.z += z;
     self->position.x += x;
@@ -392,7 +392,7 @@ void vfClCopyMotionData(VFMA_t *game) {
         if (game->characters[i]) {
             const auto &delta = game->collision->contactDeltas[i];
             if (std::fabs(delta.x) >= 0.00000011920929f || std::fabs(delta.y) >= 0.00000011920929f)
-                ApplyMotionCollisionTranslation(game->actors[i]->motion, delta.x, 0, delta.y);
+                mtwkApplyCollisionTranslation(game->actors[i]->motion, delta.x, 0, delta.y);
         }
 }
 
@@ -522,7 +522,7 @@ void vfClRaycastInWorldGrid() {
             const bool togyu = scenGetCharaName(control->scenarioTask, group.character).name == SHEN_NAME(TGY_);
             const auto &shape = togyu ? togyuPushShapes[0] : pushShapes[0];
             Vector3 point;
-            Matrix4x4::SetActiveTransform(charaGetBoneTransform(group.motion, shape.bone));
+            Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(group.motion, shape.bone));
             Matrix4x4::TransformPoint(shape.point, point);
             if (RaycastInWorldGrid(hit, point, shape.radius)) {
                 if (group.setPosition)
@@ -742,7 +742,7 @@ void vfClGetBonePos(std::uint8_t index, VFActor *first, VFActor *second) {
         std::uint32_t mask = 0;
         Vector3 position;
         for (std::size_t i = 0; i != 10; ++i) {
-            (void)GetMotionBonePosition(self->motion, static_cast<MotionBoneId>(shapes[i].bone), &position);
+            (void)mtwkGetBonePosition(self->motion, static_cast<MotionBoneId>(shapes[i].bone), &position);
             if (height > position.y)
                 mask |= shapes[i].tag;
         }

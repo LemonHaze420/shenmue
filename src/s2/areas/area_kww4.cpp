@@ -40,7 +40,7 @@ void eKWW4_EVT_KWW4_start_Callback(void *) {
     EV_AT_SetPos(sin, relativeXyz, position);
     EV_AT_SetAngY(sin, relativeXyz, rotation, nullptr);
     mtwkSetExtraFlag(scenFindMotionwork(sin), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(sin), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(sin), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(sin), 13, 0);
     mtwkRequestMotion(scenFindMotionwork(sin), 0x9502, MotionRegion::LowerBody);
     EV_PTYCUtils(sin, 3, 0);
@@ -62,7 +62,7 @@ void eKWW4_EVT_nonsleep_ready_Callback(void *) {
 
 void eKWW4_EVT_SetKago_Callback(void *) {
     if (DoesScenarioCharacterExist(sin)) {
-        if (GetMotionAnimationId(scenFindMotionwork(sin), MotionRegion::RightArm) != 0x9505) {
+        if (mtwkGetAnimationId(scenFindMotionwork(sin), MotionRegion::RightArm) != 0x9505) {
             SetNpcRouteControlHold(sin, 1);
             mtwkRequestMotion(scenFindMotionwork(sin), 0x9505, MotionRegion::RightArm);
             SetHighModelXYZ(ctrlGetCharaByName(sin), 1, 1, 0);
@@ -73,7 +73,7 @@ void eKWW4_EVT_SetKago_Callback(void *) {
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1854))
         return;
 
-    SetMotionRegionFlag(scenFindMotionwork(sin), 73, 0, MotionRegion::RightArm);
+    mtwkSetRegionFlag(scenFindMotionwork(sin), 73, 0, MotionRegion::RightArm);
     SetHighModelXYZ(ctrlGetCharaByName(sin), 0, 1, 0);
     SetHighModelXYZ(ctrlGetCharaByName(sin), 0, 0, 0);
     HLib::DestroyCurrentTask();

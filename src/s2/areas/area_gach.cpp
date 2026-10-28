@@ -45,7 +45,7 @@ const GachCatalogEntry &Prize(const GachTaskWork *work) {
     return gachCatalog[gachSets[work->set].tiers[work->rarity][work->selection]];
 }
 std::int64_t Package(std::int32_t operation, const char *first = nullptr, const char *second = nullptr) {
-    return EV_ControlPackageResources(PakCategory::Package, operation, reinterpret_cast<std::uintptr_t>(first), reinterpret_cast<std::uintptr_t>(second));
+    return EV_pakUtils(PakCategory::Package, operation, reinterpret_cast<std::uintptr_t>(first), reinterpret_cast<std::uintptr_t>(second));
 }
 void Place(shen_name character, shen_name parent, const Vector3 &position) {
     EventSetPosition request{0, character, parent, position, 0};
@@ -147,7 +147,7 @@ void SpeakPrize(GachTaskWork *work) {
 void BeginExit(GachTaskWork *work) {
     using enum CameraState;
     camCtrlSetState(Init);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(GACH_RYO), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(GACH_RYO), nullptr, 0);
     work->state = 12;
 }
 // @verified - p
@@ -364,7 +364,7 @@ void QueueGachPurchase(GachTaskWork *work) {
     camCtrlDisableFilmBars();
     SetHighModelAndFaceFlagsForChara(ctrlGetCharaByName(GACH_RYO), Scheme, 10, 1);
     PATI_StartMoneyCount(0xfffffffb, 10);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(GACH_RYO), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(GACH_RYO), nullptr, 0);
     const std::uint32_t sounds[]{327, 621, 621, 624, 623, 622, 906, 906};
     const std::int32_t times[]{115, 134, 157, 174, 189, 228, 267, 319};
     for (std::int32_t i = 0; i < 8; ++i)
@@ -526,7 +526,7 @@ void QueueGach(std::uintptr_t parameters) {
         EV_SetCharaControllerFlags(name, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     }
     EV_SetNewSceneIndex();
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("GACH"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("GACH"), 0);
     EV_FreeAuthorPak(1, "0108");
     EV_LoadCutsceneFromCurrentScene("01080000.smp");
 }
@@ -651,7 +651,7 @@ void GachMainCallback(void *data) {
     case 4:
         EV_GetCharaPosition(GACH_BASE, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         position.y += 0.80000001f;
-        UpdateMotionWorkWithPosition(scenFindMotionwork(GACH_RYO), &position, 1);
+        mtwkUpdateWithPosition(scenFindMotionwork(GACH_RYO), &position, 1);
         Speak(work, 0);
         work->state = 5;
         HLib::SetupTaskDelay(50);
@@ -714,7 +714,7 @@ void GachMainCallback(void *data) {
         ApplyCharacterHandRotation(ctrlGetCharaByName(GACH_RYO), 0, 21, &wrist);
         EV_GetCharaPosition(GACH_BASE, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         position.y += 0.69999999f;
-        UpdateMotionWorkWithPosition(scenFindMotionwork(GACH_RYO), &position, 1);
+        mtwkUpdateWithPosition(scenFindMotionwork(GACH_RYO), &position, 1);
         EVS_LoopCamera(3050, GACH_BASE, GACH_BASE);
         mtwkRequestMotion(scenFindMotionwork(GACH_RYO), 0x1885, MotionRegion::LowerBody);
         camCtrlDisableFilmBars();
@@ -878,7 +878,7 @@ void GachExitCallback(void *data) {
     EV_FreeAuthorPak(0, "0108");
     EV_EnableCharacterDisplay(GACH_RYO);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 551, 0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     hndlSetFlags(ctrlGetCharaByName(GACH_RYO));
     hndlSetFlags(ctrlGetCharaByName(GACH_HAND));
     (void)FindMotionWork(ctrlGetCharaByName(GACH_RYO));
@@ -889,7 +889,7 @@ void GachExitCallback(void *data) {
     EV_SetCharaControllerFlags(GACH_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(GACH_RYO), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(GACH_RYO), nullptr, 0);
     EV_EventSetUpHelpIcon_0(0, 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);

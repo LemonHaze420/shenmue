@@ -89,16 +89,16 @@ void KnmnLoadPackages(KnmnGameWork &work) {
     EV_SetNewSceneIndex();
     work.masterMotion = static_cast<std::uint32_t>(ReadMotiFromDirectory(g_actNumber, g_currentMap, "MASTER.MOT"));
     EV_FreeAuthorPak(1, "0026");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("KNMN"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     if (work.mode != 3) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("KNMNAUTH"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     }
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KNMN"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KNMN"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KNMN"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KNMN"), 0);
     EV_LoadCutsceneFromCurrentScene("0026A000");
 }
 void KnmnMakeGameCallback(void *) {
@@ -162,11 +162,11 @@ bool KnmnTickEndTimer() {
 }
 void KnmnPrepareBattle(KnmnGameWork &work) {
     shenStartFGST(10, 10, 0, 0);
-    shenInitFightData(FindCharacterByScenarioName(KNMN_RYO), nullptr, 0, 0, 0, 0);
+    shenInitFightData(ctrlGetScenarioChara(KNMN_RYO), nullptr, 0, 0, 0, 0);
     vfCopyPosFromEntity(0, nullptr, 43.20000076293945f, 249.3000030517578f, 5);
     work.battleFrames = 0;
     LoadBlurModelForCharacter(KNMN_KEM, "KEM_B.MT7", 1);
-    SetLowQualityHands(FindCharacterByScenarioName(KNMN_KEM));
+    SetLowQualityHands(ctrlGetScenarioChara(KNMN_KEM));
 }
 } // namespace
 void InitializeKnmnEvent() {
@@ -223,8 +223,8 @@ void KnmnInitBattleCallback(void *data) {
     KnmnAngle(KNMN_KEM, 270);
     KnmnBattleCamera();
     KnmnPrepareBattle(work);
-    shenInitFightData(FindCharacterByScenarioName(KNMN_KEM), nullptr, 1, 1, 200, 9);
-    vfUpdateFlagsFor(FindCharacterByScenarioName(KNMN_KEM), 0, 0x08000000U, 0);
+    shenInitFightData(ctrlGetScenarioChara(KNMN_KEM), nullptr, 1, 1, 200, 9);
+    vfUpdateFlagsFor(ctrlGetScenarioChara(KNMN_KEM), 0, 0x08000000U, 0);
     vfmQueueFightStart(2, 99, 1, 0, work.mode <= 1 ? -1 : 60);
     KnmnInstallBattleDialogues();
     if (work.mode <= 1) {
@@ -246,10 +246,10 @@ void KnmnInitButokuCallback(void *data) {
         KnmnAngle(KNMN_KEM, 270);
     }
     LoadBlurModelForCharacter(KNMN_KEM, "KEM_B.MT7", 1);
-    SetLowQualityHands(FindCharacterByScenarioName(KNMN_KEM));
+    SetLowQualityHands(ctrlGetScenarioChara(KNMN_KEM));
     shenStartFGST(10, 10, 0, 0);
-    shenInitFightData(FindCharacterByScenarioName(KNMN_RYO), nullptr, 0, 0, 0, 0);
-    shenInitFightData(FindCharacterByScenarioName(KNMN_KEM), nullptr, 1, 1, 200, 9);
+    shenInitFightData(ctrlGetScenarioChara(KNMN_RYO), nullptr, 0, 0, 0, 0);
+    shenInitFightData(ctrlGetScenarioChara(KNMN_KEM), nullptr, 1, 1, 200, 9);
     work.battleFrames = 0;
     vfCopyPosFromEntity(0, nullptr, 43.20000076293945f, 249.3000030517578f, 5);
     vfmQueueFightStart(2, 99, 1, 0, -1);
@@ -340,16 +340,16 @@ void KnmnAuthFirstEndCallback(void *data) {
 void KnmnAuthTomoCallback(void *data) {
     KnmnGameWork &work = *static_cast<KnmnGameWork *>(data);
     if (!work.state) {
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
         Vector3 target;
         EV_GetCharaPosition(KNMN_KEM, 5, &target, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), &target, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), &target, 0);
         EV_authSceneCtrl(static_cast<AuthSceneCtrl>(SHEN_NAME(TOMO)));
         ++work.state;
     } else {
         if (work.state == 1) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
             ++work.state;
         }
         if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
@@ -365,17 +365,17 @@ void KnmnAuthShoukindaCallback(void *data) {
     KnmnGameWork &work = *static_cast<KnmnGameWork *>(data);
     switch (work.state) {
     case 0: {
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
         Vector3 target;
         EV_GetCharaPosition(KNMN_KEM, 5, &target, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), &target, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), &target, 0);
         EV_authSceneCtrl(static_cast<AuthSceneCtrl>(SHEN_NAME(SHOU)));
         ++work.state;
         break;
     }
     case 1:
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
         ++work.state;
         [[fallthrough]];
     case 2:
@@ -437,8 +437,8 @@ void KnmnEndCallback(void *data) {
     InitiateCleanupForSceneChara(KNMN_KEM);
     ET_AT_KillWork(work.characters);
     for (const char *package : {"KNMN", "KNMNAUTH"})
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
     EV_FreeAuthorPak(0, "0026");
     DeleteMotion(static_cast<std::int32_t>(work.masterMotion));
     EV_CleanupMapControlTask();
@@ -451,7 +451,7 @@ void KnmnEndCallback(void *data) {
         LoadAreaFunc_Wrapper_0("WKKT.EV2", 0);
         ExecuteAreaMainFunction("WKKT.EV2", 1);
     } else {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
         KnmnMotion(KNMN_RYO, 0xf003);
         KnmnPosition(
@@ -463,7 +463,7 @@ void KnmnEndCallback(void *data) {
         KnmnFade(30, true);
         EV_CheckWarmStartNpcRoute(KNMN_KEM);
         EV_ForceLoadNpc(KNMN_KEM);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     }
 }
 void KnmnAuthWazaCallback(void *data) {

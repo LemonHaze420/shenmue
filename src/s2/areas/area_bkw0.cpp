@@ -39,31 +39,31 @@ bool Bkw0IsZero(std::int32_t value) {
     return value == 0;
 }
 void Bkw0RaiseHands(shen_name name) {
-    SetHighModelXYZ(FindCharacterByScenarioName(name), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(name), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(name), 0, reinterpret_cast<std::byte *>(openHandPoseCommand), 1);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(name), 1, reinterpret_cast<std::byte *>(openHandPoseCommand), 1);
+    SetHighModelXYZ(ctrlGetScenarioChara(name), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(name), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(name), 0, reinterpret_cast<std::byte *>(openHandPoseCommand), 1);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(name), 1, reinterpret_cast<std::byte *>(openHandPoseCommand), 1);
 }
 void Bkw0Retire(Bkw0Work &work) {
     const std::int32_t selector = work.selector;
     if (!selector) {
         EV_stepSetFlags(0, 232);
-        hndlSetFlags(FindCharacterByScenarioName(BKW0_RYO));
-        hndlSetFlags(FindCharacterByScenarioName(BKW0_BKN));
-        hndlSetFlags(FindCharacterByScenarioName(BKW0_LKN));
+        hndlSetFlags(ctrlGetScenarioChara(BKW0_RYO));
+        hndlSetFlags(ctrlGetScenarioChara(BKW0_BKN));
+        hndlSetFlags(ctrlGetScenarioChara(BKW0_LKN));
     } else if (selector == 1)
-        hndlSetFlags(FindCharacterByScenarioName(BKW0_RYO));
+        hndlSetFlags(ctrlGetScenarioChara(BKW0_RYO));
     if (work.characters)
         ET_AT_KillWork(work.characters);
     SetPlayerControlEnabled(0);
     SetCharaKill(BKW0_BASE, 1);
-    SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
     for (std::uint32_t *motion = work.motions; *motion; ++motion)
         DeleteMotion(*motion);
     EV_FreeAuthorPak(0, "0068");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BKW0"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BKW0"), 0);
     if (!work.selector) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
     }
     shenSetClockAndCompassRenderTo(0);
@@ -76,14 +76,14 @@ void Bkw0RootCallback(void *data) {
     switch (work.state) {
     case 0:
         if (!work.selector) {
-            SetLowQualityHands(FindCharacterByScenarioName(BKW0_RYO));
-            SetLowQualityHands(FindCharacterByScenarioName(BKW0_BKN));
-            SetLowQualityHands(FindCharacterByScenarioName(BKW0_LKN));
+            SetLowQualityHands(ctrlGetScenarioChara(BKW0_RYO));
+            SetLowQualityHands(ctrlGetScenarioChara(BKW0_BKN));
+            SetLowQualityHands(ctrlGetScenarioChara(BKW0_LKN));
             Bkw0RaiseHands(BKW0_RYO);
             Bkw0RaiseHands(BKW0_BKN);
             Bkw0RaiseHands(BKW0_LKN);
         } else if (work.selector == 1) {
-            SetLowQualityHands(FindCharacterByScenarioName(BKW0_RYO));
+            SetLowQualityHands(ctrlGetScenarioChara(BKW0_RYO));
             Bkw0RaiseHands(BKW0_RYO);
         }
         work.state = 3;
@@ -119,7 +119,7 @@ void Bkw0RootCallback(void *data) {
         Bkw0CreateSmoke();
         Bkw0SetupNullsub();
         if (!work.selector) {
-            EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BKW0"), 0);
+            EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BKW0"), 0);
             LoadBlurModelForCharacter(BKW0_RYO, "RYO_B.MT7", 1);
             LoadBlurModelForCharacter(BKW0_LKN, nullptr, 1);
             work.sequence = QueueCompiledSequence(Bkw0TrainingSequence, BKW0_SEQUENCE, &work);
@@ -157,8 +157,8 @@ void Bkw0RootCallback(void *data) {
 }
 void Bkw0LoadResources(Bkw0Work &work) {
     work.motions[0] = 0;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BKW0"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BKW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BKW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BKW0"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, BKW0_BASE);
     EV_FreeAuthorPak(1, "0068");
     if (!work.selector) {

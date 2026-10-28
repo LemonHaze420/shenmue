@@ -20,7 +20,7 @@ namespace shenmue::s2 {
 void WktaInit() {
 }
 void WktaMain(std::uintptr_t argument) {
-    mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(WKTA_RYO)), 0xf002, MotionRegion::LowerBody);
+    mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(WKTA_RYO)), 0xf002, MotionRegion::LowerBody);
     spmFadeOut();
     HLib::Task *task = HLib::EnqueueTaskWithParameter(WktaOpeningCallback, 4, 0x0b, sizeof(WktaWork), WKTA_EVENT);
     auto *work = static_cast<WktaWork *>(HLib::GetTaskParameter(task));
@@ -31,7 +31,7 @@ void WktaMain(std::uintptr_t argument) {
     work->response = static_cast<std::int32_t>(argument);
     EV_SetNewSceneIndex();
     (void)EV_LoadCutsceneFromCurrentScene("0024E000.smp");
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WKTA"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WKTA"), 0);
     (void)EV_LoadAudio("0024E000", 0);
     (void)EV_spmBeginSampleExecute();
     (void)EV_FreeAuthorPak(1, "0024");
@@ -40,9 +40,9 @@ void WktaMain(std::uintptr_t argument) {
 void FinishWkta(WktaWork *work) {
     using enum CameraState;
     (void)camCtrlSetState(Init);
-    (void)LoadCutsceneAndSoundProgramForArea();
+    (void)sbtLoadProgram();
     SetPlayerControlEnabled(1);
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WKTA"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WKTA"), 0);
     scenFreeEvent("WKTA.EV3");
     HLib::DestroyTask(work->self);
     (void)EV_FreeAuthorPak(0, "0024");
@@ -54,7 +54,7 @@ void WktaOpeningCallback(void *data) {
     switch (work.phase) {
     case 1:
         if (EV_ForceLoadNpc(WKTA_KKI) == 1) {
-            work.savedAnimation = GetMotionAnimationId(FindMotionWork(FindCharacterByScenarioName(WKTA_KKI)), MotionRegion::LowerBody);
+            work.savedAnimation = mtwkGetAnimationId(FindMotionWork(ctrlGetScenarioChara(WKTA_KKI)), MotionRegion::LowerBody);
             EV_DisableCharacterDisplay(WKTA_KKI);
             EV_SetCharaControllerFlags(WKTA_KKI, ApplyGravity, NpcCharacterControllerState::Disabled);
             EV_SetCharaControllerFlags(WKTA_KKI, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);

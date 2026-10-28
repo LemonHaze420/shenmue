@@ -27,7 +27,7 @@ std::uint64_t knw0RetainedMotionTimes[8]{};
 void Knw0Nullsub() {
 }
 void Knw0PrepareHands(shen_name character) {
-    Character *actor = FindCharacterByScenarioName(character);
+    Character *actor = ctrlGetScenarioChara(character);
     SetHighModelXYZ(actor, 1, 1, 0);
     SetHighModelXYZ(actor, 1, 0, 0);
     ApplyCharacterHandPoseCommand(actor, 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
@@ -37,8 +37,8 @@ void Knw0LoadResources(Knw0Work &work) {
     if (IsFightActive())
         check_dead_status(1);
     work.motions[0] = 0;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KNW0"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KNW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KNW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KNW0"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, SHEN_NAME(BASE));
     EV_FreeAuthorPak(1, "0069");
     EV_SetNewSceneIndex();
@@ -53,17 +53,17 @@ void Knw0LoadResources(Knw0Work &work) {
 void Knw0Cleanup(Knw0Work &work) {
     using enum CameraState;
     EV_stepSetFlags(0, 0xc4);
-    hndlSetFlags(FindCharacterByScenarioName(KNW0_RYO));
-    hndlSetFlags(FindCharacterByScenarioName(KNW0_KNK));
+    hndlSetFlags(ctrlGetScenarioChara(KNW0_RYO));
+    hndlSetFlags(ctrlGetScenarioChara(KNW0_KNK));
     ET_AT_KillWork(work.characters);
     SetPlayerControlEnabled(0);
     SetCharaKill(SHEN_NAME(BASE), 1);
-    SetMotionRegionFlag(scenFindMotionwork(KNW0_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(KNW0_RYO), 71, 0, MotionRegion::LowerBody);
     for (std::uint32_t *motion = work.motions; *motion; ++motion)
         DeleteMotion(*motion);
     EV_FreeAuthorPak(0, "0069");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KNW0"), 0);
-    LoadCutsceneAndSoundProgramForArea();
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KNW0"), 0);
+    sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
@@ -81,11 +81,11 @@ void Knw0RootCallback(void *data) {
         ++work.frames;
         break;
     case 2:
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KNW0"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KNW0"), 0);
         LoadBlurModelForCharacter(KNW0_RYO, "RYO_B.MT7", 1);
         LoadBlurModelForCharacter(KNW0_KNK, "KNK_B.MT7", 1);
-        SetLowQualityHands(FindCharacterByScenarioName(KNW0_RYO));
-        SetLowQualityHands(FindCharacterByScenarioName(KNW0_KNK));
+        SetLowQualityHands(ctrlGetScenarioChara(KNW0_RYO));
+        SetLowQualityHands(ctrlGetScenarioChara(KNW0_KNK));
         Knw0PrepareHands(KNW0_RYO);
         Knw0PrepareHands(KNW0_KNK);
         Knw0Nullsub();

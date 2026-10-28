@@ -58,7 +58,7 @@ void Update0519(void *taskData) {
 // @verified - p
 void Cleanup0519(AuthorViewerPairTaskParameter *parent) {
     for (const shen_name *character = AREA_0519_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -110,10 +110,10 @@ void Update0519AuthorTask(void *taskData) {
 // @verified - p
 void Setup0519Package(std::int32_t selection) {
     const char *package = selection < 2 ? "KRK2" : "KRK4";
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(package), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(package), 0);
     std::array<std::byte, 0x100> distance, first, second;
     GenerateFFT(0.5f);
     FillFftDistance(FillFftKernel(3.9200000762939453f, GenerateDistanceFalloffRowMajor(1.2899999618530273f, distance)));

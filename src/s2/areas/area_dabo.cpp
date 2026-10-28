@@ -84,7 +84,7 @@ void StartBoard(DaboEventWork &w) {
     auto &board = *w.pachi->board;
     board.task = w.task;
     board.state18 = board.state1c = board.ballState = 0;
-    SetMotionRegionFlag(scenFindMotionwork(SHEN_NAME(RYO_)), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(SHEN_NAME(RYO_)), 71, 0, MotionRegion::LowerBody);
 
 
     LoadAreaFunc_Wrapper_0("OTOS.EV3", 0);
@@ -214,9 +214,9 @@ void DABO_main_func(std::uintptr_t) {
     w.task = task;
     w.pachi = &w.inlinePachi;
     w.pachi->board = &w.inlineBoard;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("PATI"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     dabo::Setup(w);
 }
 void DaboDebugCallback(void *parameter) {

@@ -185,7 +185,7 @@ void SetupPatiBoardSize(std::int32_t mode) {
                 dz = g_patiFilteredEye.z - g_patiCameraPosition.z;
     g_patiCameraMoving = (dy * dy + dx * dx) + dz * dz >= 0.001f;
     g_patiModelAlpha += (std::fmin(0.5f, fraction * fraction) - g_patiModelAlpha) * 0.5f;
-    modelSetCharaAlpha(FindCharacterByScenarioName(shen_name{static_cast<std::uint32_t>(patiGameplayPlacements[0].yaw)}), g_patiModelAlpha);
+    modelSetCharaAlpha(ctrlGetScenarioChara(shen_name{static_cast<std::uint32_t>(patiGameplayPlacements[0].yaw)}), g_patiModelAlpha);
 }
 // @verified - p
 void SetupPatiBoard(std::int32_t mode) {

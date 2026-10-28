@@ -744,9 +744,9 @@ void CaptureAuthCharacterState(Character *character, shen_name subject) {
         SetFacialBlinkDelay(character, 0);
         AT_SetEyeCtrl(character, 0.0f, 0.0f, 0.0f);
         hmdlSetFlagsFor(character, 2, 8, 0);
-        CopyMotionTransition(motion, nullptr, 0, 1, 0);
+        mtwkCopyTransition(motion, nullptr, 0, 1, 0);
         mtwkSetRequestedRootMode(motion, 0);
-        UpdateMotionWorkWithPosition(motion, nullptr, 0);
+        mtwkUpdateWithPosition(motion, nullptr, 0);
         SetEyeToChara(character, &eyeTarget, 0, 0);
         ResetReflectorBoardMode(character, 1);
         SetReflectorBoardValues(character, {0.3f, 0.3f, 0.3f, 0.3f});
@@ -894,7 +894,7 @@ bool AuthTransformCommand(std::int32_t phase, const std::int32_t *args, AuthActo
                 for (std::size_t axis = 0; axis < 3; ++axis)
                     character->entity.node.rotation[axis] = authorTransformPose.rotation[axis];
                 if (context.splineTracks[6].count)
-                    SetMotionBoneTarget(FindMotionWork(character), 7, &authorTransformPose.scale);
+                    mtwkSetBoneTarget(FindMotionWork(character), 7, &authorTransformPose.scale);
             }
         }
         ReleaseAuthorSplines(context);
@@ -912,7 +912,7 @@ bool AuthTransformCommand(std::int32_t phase, const std::int32_t *args, AuthActo
     for (std::size_t axis = 0; axis < 3; ++axis)
         character->entity.node.rotation[axis] = authorTransformPose.rotation[axis];
     if (context.splineTracks[6].count)
-        SetMotionBoneTarget(FindMotionWork(character), 7, &authorTransformPose.scale);
+        mtwkSetBoneTarget(FindMotionWork(character), 7, &authorTransformPose.scale);
     if (phase == 0)
         CaptureAuthCharacterState(character, context.subject);
     return true;
@@ -976,7 +976,7 @@ bool AuthMotionCommand(std::int32_t phase, const std::int32_t *args, AuthActorCo
             if (nodeMotion)
                 nodeMotion->speed = 0.0f;
             else
-                SetMotionSpeed(FindMotionWork(character), 0, MotionRegion::LowerBody);
+                mtwkSetSpeed(FindMotionWork(character), 0, MotionRegion::LowerBody);
             return false;
         }
         return true;
@@ -1327,7 +1327,7 @@ void sctlAuthApplyMotion() {
         if (nodeMotion) {
             InitializeTimedNodeMotion(*nodeMotion, static_cast<MT7Model *>(character->model), motion);
         } else {
-            SetMotionRegionFlag(work, 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(work, 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(work, motion, MotionRegion::LowerBody);
         }
         const float time = (static_cast<float>(static_cast<std::int32_t>(controller->framesRemaining)) - static_cast<float>(state.finalMotionFrame)) * speed +
@@ -1336,8 +1336,8 @@ void sctlAuthApplyMotion() {
             nodeMotion->frame = time;
             nodeMotion->speed = speed;
         } else {
-            SetMotionRegionEvalTime(work, time, MotionRegion::LowerBody);
-            SetMotionSpeed(work, speed, MotionRegion::LowerBody);
+            mtwkSetRegionEvalTime(work, time, MotionRegion::LowerBody);
+            mtwkSetSpeed(work, speed, MotionRegion::LowerBody);
         }
         Vector3 position = character->entity.node.position;
         Vector3i rotation{character->entity.node.rotation[0], character->entity.node.rotation[1], character->entity.node.rotation[2]};
@@ -1970,7 +1970,7 @@ void UpdateAuthorFCVCurves() {
         if (crossed) {
             if ((context.flags & 4U) && context.motionType == 0) {
                 context.transformFlags = 0x80;
-                context.transformFlags |= SetMotionRegionFlag(motion, 68, 1, MotionRegion::LowerBody) != 0;
+                context.transformFlags |= mtwkSetRegionFlag(motion, 68, 1, MotionRegion::LowerBody) != 0;
             }
             SetClothFlag(character, 16, 1);
             toggleOsagFlags(character);
@@ -1993,7 +1993,7 @@ void Author_Callback(void *) {
         for (const AuthActorContext &context : controller->actorContexts) {
             if ((context.flags & 2U) == 0)
                 continue;
-            SetMotionSpeed(FindMotionWork(scenFindChara(controller->task, context.subject)),
+            mtwkSetSpeed(FindMotionWork(scenFindChara(controller->task, context.subject)),
                 paused || context.motionRemaining == 0.0f ? 0.0f : context.motionSpeed, MotionRegion::LowerBody);
         }
         if (paused) {

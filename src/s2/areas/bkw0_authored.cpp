@@ -67,7 +67,7 @@ void Bkw0AuthorLoop(void *data) {
             for (std::int32_t i = 0; i < 18; ++i) {
                 const shen_name character = bkw0Characters[bkw0CrowdOffset + i];
                 if (((character.name - BKW0_S01.name) & 0xfffeffffU) != 0)
-                    UpdateMotionWorkWithPosition(scenFindMotionwork(character), nullptr, 0);
+                    mtwkUpdateWithPosition(scenFindMotionwork(character), nullptr, 0);
             }
             break;
         case 560:

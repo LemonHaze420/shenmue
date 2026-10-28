@@ -28,8 +28,8 @@ void BeginMovingCrate(ArbtCrateWork &work, std::int32_t delay) {
 void ArbtTrackLiftHand(void *) {
     Vector3 position;
     EV_GetCharaPosition(ARBT_EG0L, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 0.01f);
-    LatchMotionBoneTarget(scenFindMotionwork(ARBT_RYO), 17, &position);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 0.01f);
+    mtwkLatchBoneTarget(scenFindMotionwork(ARBT_RYO), 17, &position);
 }
 std::int32_t ArbtIntroduceJob() {
     Position(ARBT_TKR, ARBT_BASE, -2.9f, 0, 3.1f, 10);
@@ -101,7 +101,7 @@ std::int32_t ArbtLiftHighCrate(ArbtCrateWork &work) {
     Position(ARBT_RYO, ARBT_TKR, 0, 0, 1.95f, 0);
     EVT_AT_SetMot(ARBT_RYO, 4837, 2, 1.5f, 0x40000000U, 0);
     const std::int32_t frames = EVT_AT_SetMot(ARBT_TKR, 4809, 2, 1.5f, 0x40000000U, 0);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
     QueueEventRepeatedFunction(ArbtTrackLiftHand, nullptr, 20, 30);
     BeginMovingCrate(work, 50);
     EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
@@ -114,7 +114,7 @@ std::int32_t ArbtLiftLowCrate(ArbtCrateWork &work) {
     Position(ARBT_RYO, ARBT_TKR, 0, 0, 1.95f, 0);
     EVT_AT_SetMot(ARBT_RYO, 4836, 5, 1.5f, 0x40000000U, 0);
     const std::int32_t frames = EVT_AT_SetMot(ARBT_TKR, 4808, 2, 1.5f, 0x40000000U, 0);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
     QueueEventRepeatedFunction(ArbtTrackLiftHand, nullptr, 59, 30);
     BeginMovingCrate(work, 89);
     EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);

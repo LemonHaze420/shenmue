@@ -52,12 +52,12 @@ void ConfigureEnvironment(AreaImmediateAuthorTaskParameter *parent) {
     shenSetClockAndCompassRenderTo(1);
     EV_SetNewSceneIndex();
     if (g_currentMap.name == SHEN_NAME(0015)) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(parent->selection == 2 ? "0015A2" : "0015A1"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         if (parent->selection != 2) {
             DateTime time;
-            GetCurrentDateTime(time);
+            shenGetCurrentDateTime(time);
             if (time.hour < 19) {
                 EV_ReinitLights(1);
                 EV_SetLightFlagForIndex(0, 2);
@@ -106,9 +106,9 @@ void QueueLoop(AreaImmediateAuthorTaskParameter *parent) {
     HLib::Task *task = HLib::EnqueueTaskWithParameter(LoopCallback, 4, 0x0b, 8, AREA_AUTHOR_TASK);
     *static_cast<AreaImmediateAuthorTaskParameter **>(HLib::GetTaskParameter(task)) = parent;
     if (g_currentMap.name == SHEN_NAME(0015)) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(parent->selection == 2 ? "WSY0" : "WS00"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     }
     if (parent->selection == 2)
         EV_LoadAudio("0015A020", 0);
@@ -131,24 +131,24 @@ void QueueLoop(AreaImmediateAuthorTaskParameter *parent) {
 void Cleanup(AreaImmediateAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *name = characters[parent->selection]; name->name != AREA_AUTHOR_INVALID.name; ++name)
-        if (FindCharacterByScenarioName(*name)) {
+        if (ctrlGetScenarioChara(*name)) {
             EV_npcLockUnlock(*name);
             EV_npcFree(*name);
         }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(parent->selection == 2 ? "0015A2" : "0015A1"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(parent->selection == 2 ? "0015A2" : "0015A1"), 0);
     EV_NPC_NewLoadSw(1);
     EV_FreeAuthorPak(0, "0015");
     EV_CleanupMapControlTask();
     if (g_currentMap.name == SHEN_NAME(0015)) {
         for (const char *name : {"WS00", "WSY0"})
-            if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
-                EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
+            if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
+                EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
         EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
         return;
     }
     if (parent->selection == 0) {
         HLib::DestroyTask(parent->self);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_stepSetFlags(0, 190);
         EventSetPosition position{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {79.19999694824219f, 99.9000015258789f, 164.8800048828125f}, 0};
         EVT_AT_SetPosRot(&position);

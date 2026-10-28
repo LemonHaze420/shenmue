@@ -64,12 +64,12 @@ void Message(const char *text, std::int32_t delay) {
 void Reload(ApartmentWork *work) {
     using enum CameraState;
     EV_NPC_NewLoadSw(1);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     SetCharaKill(target, 1);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("APA0"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("APA0"), 0);
     scenFreeEvent("APA0.EV3");
     if (work->farDistance != 0)
         camCtrlSetFarDistance(work->farDistance);
@@ -89,13 +89,13 @@ void MoveFlight(shen_name name) {
 void Plane_Callback(void *) {
     Vector3 position;
     EV_GetCharaPosition(plane, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &position, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(ryo), &position, 0);
     MoveFlight(plane);
 }
 void Fighters_Callback(void *) {
     Vector3 position;
     EV_GetCharaPosition(fighters[0], CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &position, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(ryo), &position, 0);
     for (auto name : fighters)
         MoveFlight(name);
 }
@@ -156,7 +156,7 @@ void Shutter_Callback(void *data) {
     DateTime time;
     switch (work->phase) {
     case 0:
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour >= 19) {
             Reload(work);
             return;
@@ -184,7 +184,7 @@ void Shutter_Callback(void *data) {
         HLib::SetupTaskDelay(40);
         break;
     case 4:
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour < 19) {
             time.hour = 19;
             time.minute = 0;
@@ -205,7 +205,7 @@ void SayNext_Callback(void *) {
     CreateEventCharacter(CharacterCreationHighModel, nullptr, dummy);
     Vector3 position;
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
-    const auto rotation = GetCharacterWorldRotation(FindCharacterByScenarioName(ryo));
+    const auto rotation = GetCharacterWorldRotation(ctrlGetScenarioChara(ryo));
     EV_AT_SetPos(dummy, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(dummy, EventTransformFlags::AllAxes, rotation);
     EVT_AT_SetVoice("0022A001", 1, 30); // @text EN: "This is the Yan Tin Apartments.\nLishao Tao lives here=@" | JA: "ここが恩田楼か。\n桃李少老師は、ここに…"
@@ -216,8 +216,8 @@ void SayNext_Callback(void *) {
     AttachScenarioCharacter(object, ryo, 14, &offset, &attachment);
     EV_EnableCharacterDisplay(object);
     EVT_AT_SetCam(10, dummy, dummy, 0, 0, 0);
-    SetLowQualityHands(FindCharacterByScenarioName(ryo));
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 0, 0);
+    SetLowQualityHands(ctrlGetScenarioChara(ryo));
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 0, 0);
     HLib::SetCurrentTaskTo(FinishSay_Callback);
     HLib::SetupTaskDelay(150);
 }
@@ -232,7 +232,7 @@ void FinishSay_Callback(void *) {
     EVS_LoopCamera(0, shen_name{}, shen_name{});
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
-    hndlSetFlags(FindCharacterByScenarioName(ryo));
+    hndlSetFlags(ctrlGetScenarioChara(ryo));
     HLib::SetCurrentTaskTo(Loop_Callback);
 }
 
@@ -322,7 +322,7 @@ void AreaAPA0Main(std::uintptr_t parameter) {
     work->farDistance = 0;
     CreateEventCharacter(CharacterCreationHighModel, nullptr, target);
     EV_SetNewSceneIndex();
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("APA0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("APA0"), 0);
 }
 const ScriptAreaDefinition areaAPA0ScriptDefinition{.areaId = SHEN_NAME(APA0), .field04 = 0, .init = AreaAPA0Init, .main = AreaAPA0Main};
 } // namespace shenmue::s2::areas

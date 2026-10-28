@@ -59,7 +59,7 @@ HLib::Task *InitializeQdfoCharacters(HLib::Task *task) {
     EV_SetCharaControllerFlags(QDFO_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     (void)SetPlayerGameFlags(PlayerGameFlagMode::Bit2, nullptr);
     EV_SetRefBoardParamsFor(QDFO_RYO, 1);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDFO"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDFO"), 0);
     (void)EV_FreeAuthorPak(1, "0246");
     return Queue_EVT_UTL_LoadNPCChara_3(QDFO_CHARACTERS, work->task);
 }

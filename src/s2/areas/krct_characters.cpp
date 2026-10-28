@@ -14,22 +14,22 @@ namespace {
 std::array<std::int32_t, 60> restHandPose = krctRestHandPose;
 void RestoreMotion(shen_name name) {
     mtwkSetExtraFlag(scenFindMotionwork(name), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(name), 13, 0);
 }
 } // namespace
 void KrctRestoreHighModels(void *) {
-    Character *character = FindCharacterByScenarioName(KRCT_RYO);
+    Character *character = ctrlGetScenarioChara(KRCT_RYO);
     SetHighModelXYZ(character, 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(KRCT_RYO), 1, 0, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(KRCT_RYO), 1, reinterpret_cast<std::byte *>(restHandPose.data()), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(KRCT_RYO), 0, reinterpret_cast<std::byte *>(restHandPose.data()), 0);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(KRCT_RYO), FacialNodeReplacement);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(KRCT_RYO), 0, 1, 1);
-    SetHighModelXYZ(FindCharacterByScenarioName(KRCT_SHENHUA), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(KRCT_SHENHUA), 1, 0, 0);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(KRCT_SHENHUA), FacialNodeReplacement);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(KRCT_SHENHUA), 0, 1, 1);
+    SetHighModelXYZ(ctrlGetScenarioChara(KRCT_RYO), 1, 0, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(KRCT_RYO), 1, reinterpret_cast<std::byte *>(restHandPose.data()), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(KRCT_RYO), 0, reinterpret_cast<std::byte *>(restHandPose.data()), 0);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(KRCT_RYO), FacialNodeReplacement);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(KRCT_RYO), 0, 1, 1);
+    SetHighModelXYZ(ctrlGetScenarioChara(KRCT_SHENHUA), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(KRCT_SHENHUA), 1, 0, 0);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(KRCT_SHENHUA), FacialNodeReplacement);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(KRCT_SHENHUA), 0, 1, 1);
     HLib::DestroyCurrentTask();
 }
 void KrctConfigureRestoredParty() {
@@ -62,14 +62,14 @@ void KrctConfigureSeatedParty() {
         RestoreMotion(name);
         mtwkRequestMotion(scenFindMotionwork(name),
             static_cast<std::uint16_t>(name.name == KRCT_RYO.name ? (alternate ? 0x1009 : 0x1006) : (alternate ? 0x100a : 0x1008)), MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(name), 1, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(name), 1, MotionRegion::LowerBody);
         mtwkSetExtraFlag(scenFindMotionwork(name), 3, 2);
         EV_SetCharaControllerFlags(name, 1, NpcCharacterControllerState::Disabled);
         EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
         mtwkSetExtraFlag(scenFindMotionwork(name), 6, 2);
         EV_SetCharacterAlphaEnabled(name, false);
-        SetFaceFlagsForChara(FindCharacterByScenarioName(name), 1);
+        SetFaceFlagsForChara(ctrlGetScenarioChara(name), 1);
     }
-    clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 13);
+    clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 13);
 }
 } // namespace shenmue::s2::areas

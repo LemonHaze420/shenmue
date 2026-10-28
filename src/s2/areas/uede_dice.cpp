@@ -253,8 +253,8 @@ void UedePlayerThrow(void *data) {
         Loop3DSoundEffect(0xc40);
         work.playerDice[0] = static_cast<std::int16_t>(shenGetRandomInt32(6));
         work.playerDice[1] = static_cast<std::int16_t>(shenGetRandomInt32(6));
-        if (GetMotionFrame(scenFindMotionwork(UEDE_RYO), MotionRegion::LowerBody) > 33 &&
-            GetMotionFrame(scenFindMotionwork(UEDE_RYO), MotionRegion::LowerBody) < 34)
+        if (mtwkGetFrame(scenFindMotionwork(UEDE_RYO), MotionRegion::LowerBody) > 33 &&
+            mtwkGetFrame(scenFindMotionwork(UEDE_RYO), MotionRegion::LowerBody) < 34)
             work.playerDice[1] = 5;
         CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
         CheckHelpIcon(1, 0, CheckHelpIconOp::Set);

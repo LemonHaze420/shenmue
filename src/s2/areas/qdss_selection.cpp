@@ -91,7 +91,7 @@ void DescribeSelectedKey(QdssWork &work) {
 }
 bool OutsideOpeningHours() {
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     return static_cast<std::uint32_t>(static_cast<std::int32_t>(date.hour) - 2) <= 2U;
 }
 void RegisterSelectionButtons(bool diagram) {

@@ -28,7 +28,7 @@ void DartsGameArrowCallback(void *taskData) {
     if (work->character.name == dartsTemporaryCharacter.name) {
         const shen_name arrow = work->arrow;
         HLib::DestroyCurrentTask();
-        ResetCharaFixo(FindCharacterByScenarioName(arrow));
+        ResetCharaFixo(ctrlGetScenarioChara(arrow));
         return;
     }
     if (!DoesScenarioCharacterExist(work->character) || !DoesScenarioCharacterExist(work->arrow)) {
@@ -36,13 +36,13 @@ void DartsGameArrowCallback(void *taskData) {
         EV_DisableCharacterDisplay(arrow);
         EV_ToggleCharacterFlag(arrow);
         HLib::DestroyCurrentTask();
-        ResetCharaFixo(FindCharacterByScenarioName(arrow));
+        ResetCharaFixo(ctrlGetScenarioChara(arrow));
         return;
     }
     EV_EnableCharacterDisplay(work->arrow);
     EV_EnsureCharacterDraw(work->arrow);
-    Character *const target = FindCharacterByScenarioName(work->arrow);
-    Character *const source = FindCharacterByScenarioName(work->character);
+    Character *const target = ctrlGetScenarioChara(work->arrow);
+    Character *const source = ctrlGetScenarioChara(work->character);
     if (work->character.name == DART_JON.name) {
         SetFixoDataForMotionWork(target, source, 21, DART_JON_ARROW_OFFSET, DART_ARROW_ROTATION);
     } else if (work->character.name == DART_FCJ.name || work->character.name == DART_HLN.name) {

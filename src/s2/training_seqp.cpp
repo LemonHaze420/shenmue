@@ -75,9 +75,9 @@ void TrainingTurnStepSequence(void *data) {
         case 101: {
             Vector3 position;
             EV_GetCharaPosition(target, 5, &position, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(character), &position, 0);
-            EV_mtwkSetEnabled(scenFindMotionwork(character), 0);
-            SetMotionFrameTime(scenFindMotionwork(character), frameTime, MotionRegion::LowerBody);
+            mtwkUpdateWithPosition(scenFindMotionwork(character), &position, 0);
+            mtwkSetEnabled(scenFindMotionwork(character), 0);
+            mtwkSetFrameTime(scenFindMotionwork(character), frameTime, MotionRegion::LowerBody);
             Vector3i sampled;
             GetScenarioCharacterEulerAngles(character, &sampled, EventTransformFlags::MotionYaw);
             const Vector3i rotation{0, static_cast<std::uint16_t>(sampled.y), 0};
@@ -90,7 +90,7 @@ void TrainingTurnStepSequence(void *data) {
             break;
         }
         case 102:
-            SetMotionFrameTime(scenFindMotionwork(character), 8, MotionRegion::LowerBody);
+            mtwkSetFrameTime(scenFindMotionwork(character), 8, MotionRegion::LowerBody);
             TrainingComplete(sequence);
             return;
         default:
@@ -144,7 +144,7 @@ std::uint16_t SelectTrainingStepMotion(shen_name character, const Vector3 *targe
     GetScenarioCharacterEulerAngles(character, &rotation, EventTransformFlags::World);
     const std::int16_t angle = InverseFixedAtan2(target->x - position.x, target->z - position.z);
     const float degrees = TrainingFacingDifference(angle, rotation.y) / 182.04445f;
-    const bool mirrored = SetMotionRegionFlag(scenFindMotionwork(character), 70, 1, MotionRegion::LowerBody) != 0;
+    const bool mirrored = mtwkSetRegionFlag(scenFindMotionwork(character), 70, 1, MotionRegion::LowerBody) != 0;
     if (degrees < -157.5f || degrees > 157.5f)
         return 5005;
     if (mirrored) {
@@ -189,12 +189,12 @@ void TrainingRepositionSequence(void *data) {
             const std::uint16_t motion = SelectTrainingStepMotion(character, target);
             WriteTrainingValue(data, 0x148, std::int32_t(motion));
             mtwkRequestMotion(scenFindMotionwork(character), motion, MotionRegion::LowerBody);
-            if (SetMotionRegionFlag(scenFindMotionwork(character), 70, 1, MotionRegion::LowerBody))
-                SetMotionRegionFlag(scenFindMotionwork(character), 69, 0, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(character), 71, 2, MotionRegion::LowerBody);
-            SetMotionSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
-            EV_mtwkSetEnabled(scenFindMotionwork(character), 1);
-            SetMotionRegionFlag(scenFindMotionwork(character), 66, 0, MotionRegion::LowerBody);
+            if (mtwkSetRegionFlag(scenFindMotionwork(character), 70, 1, MotionRegion::LowerBody))
+                mtwkSetRegionFlag(scenFindMotionwork(character), 69, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(character), 71, 2, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
+            mtwkSetEnabled(scenFindMotionwork(character), 1);
+            mtwkSetRegionFlag(scenFindMotionwork(character), 66, 0, MotionRegion::LowerBody);
             TrainingAdvance(sequence, 100);
             break;
         }
@@ -208,13 +208,13 @@ void TrainingRepositionSequence(void *data) {
             const float distance = GetSquaredEuclideanDistance(&position, target);
             if (distance <= ReadTrainingValue<float>(data, 0x1d4) && distance >= .05f) {
                 WriteTrainingValue(data, 0x1d4, distance);
-                if (!SetMotionRegionFlag(scenFindMotionwork(character), 65, 1, MotionRegion::LowerBody))
+                if (!mtwkSetRegionFlag(scenFindMotionwork(character), 65, 1, MotionRegion::LowerBody))
                     break;
                 const std::uint16_t motion = SelectTrainingStepMotion(character, target);
                 WriteTrainingValue(data, 0x148, std::int32_t(motion));
                 mtwkRequestMotion(scenFindMotionwork(character), motion, MotionRegion::LowerBody);
-                if (SetMotionRegionFlag(scenFindMotionwork(character), 70, 1, MotionRegion::LowerBody))
-                    SetMotionRegionFlag(scenFindMotionwork(character), 69, 0, MotionRegion::LowerBody);
+                if (mtwkSetRegionFlag(scenFindMotionwork(character), 70, 1, MotionRegion::LowerBody))
+                    mtwkSetRegionFlag(scenFindMotionwork(character), 69, 0, MotionRegion::LowerBody);
                 const std::int32_t repetitions = ReadTrainingValue<std::int32_t>(data, 0x1d0) + 1;
                 WriteTrainingValue(data, 0x1d0, repetitions);
                 if (repetitions <= 7)
@@ -226,10 +226,10 @@ void TrainingRepositionSequence(void *data) {
         }
         case 101:
             mtwkRequestMotion(scenFindMotionwork(character), 306, MotionRegion::LowerBody);
-            if (SetMotionRegionFlag(scenFindMotionwork(character), 70, 1, MotionRegion::LowerBody))
-                SetMotionRegionFlag(scenFindMotionwork(character), 69, 0, MotionRegion::LowerBody);
-            SetMotionSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
-            EV_mtwkSetEnabled(scenFindMotionwork(character), 1);
+            if (mtwkSetRegionFlag(scenFindMotionwork(character), 70, 1, MotionRegion::LowerBody))
+                mtwkSetRegionFlag(scenFindMotionwork(character), 69, 0, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
+            mtwkSetEnabled(scenFindMotionwork(character), 1);
             RetireCompiledSequenceLinks(&sequence);
             HLib::DestroyCurrentTask();
             return;
@@ -305,16 +305,16 @@ void TrainingAttackSequence(void *data) {
                 if (package)
                     vfmDispatchControl(FightControlOp::Package, shen_name{}, reinterpret_cast<std::uintptr_t>(package), 1);
                 if (opponent.name == TRAINING_LKN.name) {
-                    shenInitFightData(FindCharacterByScenarioName(player), nullptr, 0, 0, 0, 46);
+                    shenInitFightData(ctrlGetScenarioChara(player), nullptr, 0, 0, 0, 46);
                     vfCopyPosFromEntity(0, nullptr, 109.98f, 204.42f, 2.5f);
                 } else
-                    shenInitFightData(FindCharacterByScenarioName(player), nullptr, 0, 0, 0, 16);
-                vfUpdateFlagsFor(FindCharacterByScenarioName(player), 0, 0x08000000U, flags);
-                shenInitFightData(FindCharacterByScenarioName(opponent), nullptr, 1, 1, 100, static_cast<std::uint8_t>(style));
-                vfUpdateFlagsFor(FindCharacterByScenarioName(player), 0, 0x10000, 0);
-                vfUpdateFlagsFor(FindCharacterByScenarioName(opponent), 0, 0x10000, 0);
+                    shenInitFightData(ctrlGetScenarioChara(player), nullptr, 0, 0, 0, 16);
+                vfUpdateFlagsFor(ctrlGetScenarioChara(player), 0, 0x08000000U, flags);
+                shenInitFightData(ctrlGetScenarioChara(opponent), nullptr, 1, 1, 100, static_cast<std::uint8_t>(style));
+                vfUpdateFlagsFor(ctrlGetScenarioChara(player), 0, 0x10000, 0);
+                vfUpdateFlagsFor(ctrlGetScenarioChara(opponent), 0, 0x10000, 0);
                 if (opponent.name == TRAINING_LKN.name)
-                    vfUpdateFlagsFor(FindCharacterByScenarioName(TRAINING_LKN), 0, 0x10000000, 0);
+                    vfUpdateFlagsFor(ctrlGetScenarioChara(TRAINING_LKN), 0, 0x10000000, 0);
                 vfmQueueFightStart(2, 99, 1, 9, -1);
                 EV_vfBattleUtil(FightBattleUtilOp::CollisionFlags, shen_name{1}, 1);
             }
@@ -340,16 +340,16 @@ void RetireTrainingFight(void *event, shen_name character) {
 }
 void ResetTrainingAuthorCharacter(shen_name character) {
     EV_EnableCharacterDisplay(character);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(character), nullptr, 0);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(character), nullptr, 3);
+    mtwkUpdateWithPosition(scenFindMotionwork(character), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(character), nullptr, 3);
     mtwkSetRequestedRootMode(scenFindMotionwork(character), 0);
     EV_SetCharaControllerFlags(character, NpcCharacterControllerFlags::ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, NpcCharacterControllerFlags::UpdateHeight, NpcCharacterControllerState::Disabled);
     EV_SetCharacterAlphaEnabled(character, false);
-    SetMotionFrameTime(scenFindMotionwork(character), 0, MotionRegion::LowerBody);
-    EV_mtwkSetEnabled(scenFindMotionwork(character), 1);
-    SetMotionSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(character), 0, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(character), 1);
+    mtwkSetSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
 }
 bool TrainingNeedsFacingReset(std::int32_t practice) {
     const std::int32_t wanted = !(practice & ~9) && practice != 8 ? 32768 : 0;

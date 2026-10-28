@@ -21,8 +21,8 @@ void PoseNow(shen_name character, shen_name parent, float x, float z, float yaw)
     EVT_AT_SetPosAng_Callback(&pose);
 }
 void ResetRenCloth() {
-    toggleOsagFlags(FindCharacterByScenarioName(ren));
-    SetClothFlag(FindCharacterByScenarioName(ren), 16, 1);
+    toggleOsagFlags(ctrlGetScenarioChara(ren));
+    SetClothFlag(ctrlGetScenarioChara(ren), 16, 1);
 }
 } // namespace
 void QueueSearchPose(std::int32_t side, std::int32_t delay) {

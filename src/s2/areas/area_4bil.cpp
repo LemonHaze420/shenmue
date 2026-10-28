@@ -56,7 +56,7 @@ Stage nextStage{};
 std::int32_t StartGreeting(), ContinueGreeting(), FinishConversation(), StartAmbush(), StartLateGreeting(), StartFenceRun(), FinishFenceJump();
 
 MotionWork *MotionFor(shen_name character) {
-    return FindMotionWork(FindCharacterByScenarioName(character));
+    return FindMotionWork(ctrlGetScenarioChara(character));
 }
 void Camera(std::int32_t index, std::int32_t delay = 0) {
     EVT_AT_SetCam(index, base, base, 0.0f, 0, delay);
@@ -140,7 +140,7 @@ void Setup4Bil() {
     CreateEventCharacter(CharacterCreationHighModel, nullptr, base);
     EV_AT_SetPos(base, EventTransformFlags::World | EventTransformFlags::AllAxes, basePosition);
     EV_AT_SetAngY(base, EventTransformFlags::AllAxes, Vector3i{});
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("4BIL"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("4BIL"), 0);
     EV_FreeAuthorPak(1, "0063");
     routeSelection = 0;
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 311)) {
@@ -176,7 +176,7 @@ void Update4Bil(void *) {
         FinishLoading();
         EV_NPC_NewLoadSw(1);
         StartRenRoute();
-        EV_mtwkSetEnabled(MotionFor(ren), 1);
+        mtwkSetEnabled(MotionFor(ren), 1);
         mtwkSetExtraFlag(MotionFor(ren), 0, 0);
         state = runState;
         break;
@@ -194,7 +194,7 @@ void Update4Bil(void *) {
         EV_SetCharaControllerFlags(ren, 3, NpcCharacterControllerState::Disabled);
         shenToggleAreaFlags(0);
         mtwkSetRequestedRootMode(MotionFor(ren), 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("4BIL"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("4BIL"), 0);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1006, 0);
         const std::int32_t delay = nextStage();
         if (authorWaitRequested) {
@@ -272,7 +272,7 @@ std::int32_t ContinueGreeting() {
     EVT_AT_SetAngY(ryo, base, 0, 0);
     EVT_AT_SetPos(ren, base, {6.5f, 0, 2}, 0);
     EVT_AT_SetAngY(ren, base, 270, 0);
-    UpdateMotionWorkWithPosition(MotionFor(ryo), &renRouteTarget, 0);
+    mtwkUpdateWithPosition(MotionFor(ryo), &renRouteTarget, 0);
     EVT_AT_SetMot(ryo, 0xf003, 0, 1, 0, 0);
     EVT_AT_SetMot(ren, 0x11c2, 75, 1, 0, 0);
     EVT_AT_SetAngY(ryo, base, 45, 75);
@@ -336,8 +336,8 @@ std::int32_t FinishConversation() {
 }
 std::int32_t StartFenceRun() {
     mtwkSetRequestedRootMode(MotionFor(ryo), 0);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(ren), 0, 3, 16);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(ren), 1, 3, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(ren), 0, 3, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(ren), 1, 3, 16);
     EVT_AT_SetPos(ryo, base, {9.5f, 0, 2.5f}, 0);
     EVT_AT_SetAngY(ryo, base, 80, 0);
     EVT_AT_SetPos(ren, base, {2, 0.100000001490116119384765625f, 0.60000002384185791015625f}, 0);
@@ -354,8 +354,8 @@ std::int32_t FinishFenceJump() {
     EVT_AT_SetAngY(ryo, base, 0, 0);
     EV_DisableCharacterDisplay(ren);
     mtwkSetRequestedRootMode(MotionFor(ryo), 0);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(ryo), 0, 3, 16);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(ryo), 1, 3, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(ryo), 0, 3, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(ryo), 1, 3, 16);
     EVT_AT_SetMot(ryo, 0x11c4, 105, 1.5f, 0, 0);
     EVT_AT_SetVoice("0063A016", 1, 0);
     Camera(40);

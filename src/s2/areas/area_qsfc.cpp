@@ -63,7 +63,7 @@ void AreaQSFCInit() {
 }
 void AreaQSFCCleanup(std::int32_t night, std::uint32_t) {
     if (night) {
-        SetPluralControlFor(FindCharacterByScenarioName(STREET_WATCH_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(STREET_WATCH_RYO), 1);
         EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
         PushGlobalLightingProgram();
         CheckIsArgEquZero(1);

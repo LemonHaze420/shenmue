@@ -82,7 +82,7 @@ void Bkw0PracticeDecisionSequence(void *data) {
             Bkw0ResetActors(practice);
             EV_AT_SetPos(BKW0_LKN, EventTransformFlags::World | EventTransformFlags::AllAxes, BKW0_LKN_POSITION);
             Bkw0ResetPracticeOpponentAngle();
-            SetMotionRegionFlag(scenFindMotionwork(BKW0_LKN), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BKW0_LKN), 71, 0, MotionRegion::LowerBody);
             Bkw0SequenceValue(sequence, 0x250, std::int32_t{1});
             Bkw0Advance(sequence, 101);
             break;

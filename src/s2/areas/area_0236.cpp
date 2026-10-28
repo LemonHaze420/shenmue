@@ -76,7 +76,7 @@ void RestoreE0236Characters() {
 // @verified - p
 void CleanupE0236(E0236TaskParameter *parent) {
     for (const shen_name *character = AREA_0236_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

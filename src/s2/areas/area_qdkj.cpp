@@ -27,7 +27,7 @@ void AreaQDKJMain(std::uint32_t) {
     areaQDKJInitializing = 1;
     (void)SetMapControlStatusFlag(0, 0);
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     AreaQDKJCleanup(EV_GetShenmueFlag(0xffU) != 0 ? 1 : 0, 0);
     areaQDKJInitializing = 0;
 }

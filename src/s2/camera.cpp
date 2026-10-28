@@ -191,9 +191,9 @@ void vfSetupLinkedFightCamera(VFActor *linked, std::uint8_t kind) {
         direction = 2;
     } else {
         if (cameraMotionMode == CameraMotionMode::AutoQuadratic || cameraMotionMode == CameraMotionMode::AutoQuadratic2)
-            SetMotionEnvironmentEnabled(0);
+            mtwkSetEnvironmentEnabled(0);
         else
-            SetMotionEnvironmentEnabled(linked->motion, 0);
+            mtwkSetEnvironmentEnabled(linked->motion, 0);
         if (linked->groupIndex != game->playerSlot)
             SetBlurModel(linked->character, nullptr, time);
         EV_figpAssignFlagsFor(linked->character, 0, 1);
@@ -219,7 +219,7 @@ void vfUnknownCamRelated(VFMA_t *) {
         return;
     figpAssignModeForCharacter(fightCameraLinkedCharacter, 0);
     EV_figpAssignFlagsFor(fightCameraLinkedCharacter, 0, 0);
-    SetMotionEnvironmentEnabled(1);
+    mtwkSetEnvironmentEnabled(1);
     for (std::uint8_t i = 0; i < g_pFightStage->enemyCount; ++i) {
         FCMG_t &slot = g_pFightStage->enemySlots[i];
         if (slot.character && slot.character != fightCameraLinkedCharacter && !(slot.savedControlFlags & 0x80000000))
@@ -249,7 +249,7 @@ void BeginMotionInterpolationCamera(Character *target) {
     using enum CameraState;
     fightMotionCameraTarget = target;
     if (target) {
-        GetCharacterMotionWorldPosition(target, 5, &fightMotionCameraWaypoints[fightMotionCameraWaypointCount]);
+        charaGetMotWorldPos(target, 5, &fightMotionCameraWaypoints[fightMotionCameraWaypointCount]);
         ++fightMotionCameraWaypointCount;
     }
     SetPlayerControlEnabled(0);
@@ -457,16 +457,16 @@ void UpdateFieldFightCamera(VFActor *self, VFActor *other) {
 void UpdateFirstPersonFightCamera(VFMA_t *game, VFActor *self, VFActor *other) {
     const bool followup = (self->activeMotionFlags & 0x8000000) || (self->groundContactFlags & 1);
     Vector3 selfBone{}, otherBone{};
-    GetCharacterMotionWorldPosition(self->character, 3, &selfBone);
-    GetCharacterMotionWorldPosition(other->character, 3, &otherBone);
+    charaGetMotWorldPos(self->character, 3, &selfBone);
+    charaGetMotWorldPos(other->character, 3, &otherBone);
     const float selfHeight = (1.35000002f - 1.2f) + (selfBone.y - self->targetGroundY);
     const float otherHeight = (otherBone.y - other->targetGroundY) + (1.3f - 1.2f);
     const float perspectiveScale = 60 / (static_cast<float>(static_cast<std::int16_t>(camCtrlGetPerspective())) / 182.04445f);
     if ((self->hitStateFlags & 0xc0000) || ((self->hitStateFlags & 0x10000) && !(self->hitStateFlags & 0x8000))) {
         EV_figpAssignFlagsFor(self->character, 0, 1);
         figpAssignModeForCharacter(self->character, 0);
-        GetCharacterMotionWorldPosition(self->character, 5, &fightCameraDesiredEye);
-        GetCharacterMotionWorldPosition(other->character, 5, &fightCameraDesiredTarget);
+        charaGetMotWorldPos(self->character, 5, &fightCameraDesiredEye);
+        charaGetMotWorldPos(other->character, 5, &fightCameraDesiredTarget);
         Vector3 delta{fightCameraDesiredEye.x - fightCameraDesiredTarget.x, fightCameraDesiredEye.y - fightCameraDesiredTarget.y,
             fightCameraDesiredEye.z - fightCameraDesiredTarget.z};
         const float distance = perspectiveScale + FightCameraLength(delta);
@@ -812,7 +812,7 @@ void UpdateMotionInterpolationFightCamera() {
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     auto *const player = static_cast<Character *>(control->ryo);
     Vector3 playerBone{};
-    GetCharacterMotionWorldPosition(player, 5, &playerBone);
+    charaGetMotWorldPos(player, 5, &playerBone);
     playerBone.y += 0.5f;
     fightCameraDesiredEye = playerBone;
     if (fightMotionCameraInitializeEye) {
@@ -844,7 +844,7 @@ void UpdateMotionInterpolationFightCamera() {
         }
     } else if (fightMotionCameraState == 2 || fightMotionCameraState == 3) {
         if (fightMotionCameraState == 2) {
-            GetCharacterMotionWorldPosition(fightMotionCameraTarget, 5, &fightCameraDesiredTarget);
+            charaGetMotWorldPos(fightMotionCameraTarget, 5, &fightCameraDesiredTarget);
             Vector3 relative{fightCameraDesiredEye.x - fightMotionCameraSegmentTarget.x, fightCameraDesiredEye.y - fightMotionCameraSegmentTarget.y,
                 fightCameraDesiredEye.z - fightMotionCameraSegmentTarget.z};
             ScaleFightCameraVector(relative, 1.5f);
@@ -878,7 +878,7 @@ void UpdateMotionFightCamera(VFActor *self, VFActor *other) {
     auto *const player = static_cast<Character *>(control->ryo);
     auto *const motion = FindMotionWork(player);
     Vector3 playerBone{};
-    GetCharacterMotionWorldPosition(player, 5, &playerBone);
+    charaGetMotWorldPos(player, 5, &playerBone);
     Vector3 focus;
     if (fightMotionCameraTarget)
         focus = GetCharacterWorldPosition(fightMotionCameraTarget);
@@ -887,7 +887,7 @@ void UpdateMotionFightCamera(VFActor *self, VFActor *other) {
     focus.y += 1;
     switch (fightMotionCameraUpdateState) {
     case 0:
-        if (GetMotionAnimationId(motion, MotionRegion::LowerBody) == 0xf01b && GetMotionFrame(motion, MotionRegion::LowerBody) > 20) {
+        if (mtwkGetAnimationId(motion, MotionRegion::LowerBody) == 0xf01b && mtwkGetFrame(motion, MotionRegion::LowerBody) > 20) {
             cpamSetFlag(player, 1);
             fightMotionCameraUpdateState = 1;
         }
@@ -895,7 +895,7 @@ void UpdateMotionFightCamera(VFActor *self, VFActor *other) {
     case 1:
         fightCameraDesiredEye = playerBone;
         fightCameraDesiredTarget = focus;
-        if (GetMotionAnimationId(motion, MotionRegion::LowerBody) == 0xf01b && SetMotionRegionFlag(motion, 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkGetAnimationId(motion, MotionRegion::LowerBody) == 0xf01b && mtwkSetRegionFlag(motion, 65, 1, MotionRegion::LowerBody)) {
             mtwkRequestMotion(motion, 0xf01a, MotionRegion::LowerBody);
             SetHelpIconMenuFlags(320);
             g_cameraControl->flags |= 0x20000;
@@ -908,7 +908,7 @@ void UpdateMotionFightCamera(VFActor *self, VFActor *other) {
         ScaleFightCameraVector(direction, 1);
         fightCameraDesiredEye = {playerBone.x + direction.x, playerBone.y, playerBone.z + direction.z};
         fightCameraDesiredTarget = focus;
-        SetMotionRegionEvalTime(motion, 0, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(motion, 0, MotionRegion::LowerBody);
         float perspective = static_cast<float>(static_cast<std::int16_t>(camCtrlGetPerspective())) / 182.04445f;
         if ((g_inputBuffer[0].held & 0x40) && perspective < 60)
             perspective += 2;
@@ -928,7 +928,7 @@ void UpdateMotionFightCamera(VFActor *self, VFActor *other) {
     case 3: {
         fightCameraDesiredEye = playerBone;
         fightCameraDesiredTarget = focus;
-        SetMotionRegionEvalTime(motion, 0, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(motion, 0, MotionRegion::LowerBody);
         const float perspective = static_cast<float>(static_cast<std::int16_t>(camCtrlGetPerspective())) / 182.04445f;
         if (perspective >= 56)
             fightMotionCameraUpdateState = 4;
@@ -939,7 +939,7 @@ void UpdateMotionFightCamera(VFActor *self, VFActor *other) {
     case 4:
         fightCameraDesiredEye = fightMotionCameraSavedEye;
         fightCameraDesiredTarget = fightMotionCameraSavedTarget;
-        if (GetMotionAnimationId(motion, MotionRegion::LowerBody) == 0xf01a && SetMotionRegionFlag(motion, 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkGetAnimationId(motion, MotionRegion::LowerBody) == 0xf01a && mtwkSetRegionFlag(motion, 65, 1, MotionRegion::LowerBody)) {
             camCtrlSetInterpModeTo(CameraMotionMode::Default);
             camCtrlSetFovTransitionTo(false);
             camCtrlSetState(Init);
@@ -1484,7 +1484,7 @@ std::int32_t RadiansToFixedAngle(float radians) {
 
 Vector3 ConversationActorPosition(Character *character) {
     Vector3 position{};
-    GetCharacterMotionWorldPosition(character, 5, &position);
+    charaGetMotWorldPos(character, 5, &position);
     return position;
 }
 
@@ -1527,7 +1527,7 @@ void ApplyConversationSpecialModeOverride(Vector3 &eye, Vector3 &target, std::ui
     // The target sits on the right hand (rig bone 14); the eye looks along the hand's rotated
     // axis, pitched by 0x2e38, from half a unit back.
     Matrix4x4_Push();
-    Matrix4x4::SetActiveTransform(charaGetBoneTransform(FindMotionWork(state.root), 14));
+    Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(FindMotionWork(state.root), 14));
     Matrix4x4::preTranslate(0.17f, 0.050000001f, -0.029999999f);
     Vector3 specialTarget{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
     Matrix4x4::SetViewMatrixFromEuler(16384, 25486, 16384);
@@ -2007,8 +2007,8 @@ void SelectConversationCameraSide() {
     if (state.memberCount <= 1)
         return;
     Vector3 root, partner;
-    GetCharacterMotionWorldPosition(state.root, 5, &root);
-    GetCharacterMotionWorldPosition(state.specialTarget, 5, &partner);
+    charaGetMotWorldPos(state.root, 5, &root);
+    charaGetMotWorldPos(state.specialTarget, 5, &partner);
     const Vector3 direction{partner.x - root.x, partner.y - root.y, partner.z - root.z};
     Vector3s angles;
     Vector3_ToFixed16EulerAngles(direction, angles);
@@ -2602,8 +2602,8 @@ void RefreshConversationSceneFlags() {
     if (QueryNpcRouteLiveState(state.specialTargetName) == 13)
         state.sceneFlags |= 8U;
     Vector3 root, partner;
-    GetCharacterMotionWorldPosition(state.root, 6, &root);
-    GetCharacterMotionWorldPosition(state.specialTarget, 6, &partner);
+    charaGetMotWorldPos(state.root, 6, &root);
+    charaGetMotWorldPos(state.specialTarget, 6, &partner);
     flddPushIntersectionFlag(4096);
     if (flddFindIntersections(root, partner))
         state.sceneFlags |= 0x20U;
@@ -2691,7 +2691,7 @@ void SmoothConversationActorPose() {
         return;
     Matrix4x4_Push();
     const std::size_t shot = static_cast<std::size_t>(state.shotIndex);
-    Matrix4x4::SetActiveTransform(charaGetBoneTransform(FindMotionWork(state.targetAnchors[shot]), 5));
+    Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(FindMotionWork(state.targetAnchors[shot]), 5));
     Matrix4x4::preTranslate(0.06549f, 0.0f, 0.081969999f);
     const Vector3 head{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
     Matrix4x4::Pop(1);
@@ -3736,12 +3736,12 @@ void GetPosRotUtil(
     if (!(mode & 4) && (mode & 0x20))
         position = GetCharacterWorldPosition(character);
     else
-        GetCharacterMotionWorldPosition(character, bone, &position);
+        charaGetMotWorldPos(character, bone, &position);
     if (!(mode & 2))
         return;
     if (auto *const motion = FindMotionWork(character)) {
         rotation.x = rotation.z = 0;
-        rotation.y = !(mode & 4) && (mode & 0x20) ? motion->runtime.entityRotation.y : GetMotionBoneYaw(motion, bone);
+        rotation.y = !(mode & 4) && (mode & 0x20) ? motion->runtime.entityRotation.y : mtwkGetBoneYaw(motion, bone);
     } else
         rotation = GetCharacterWorldRotation(character);
 }
@@ -4152,7 +4152,7 @@ void camCtrlProjectCameraMatrices(void *) {
 // @verified - p
 void camCtrlSetCamSnapAngY(CameraRuntime &camera) {
     camCtrlSetFloats(*g_cameraControl, 0.23f, 0.30000001f);
-    Character *const target = FindCharacterByScenarioName(camera.targetCharacter);
+    Character *const target = ctrlGetScenarioChara(camera.targetCharacter);
     if (!target)
         return;
     const Vector3 position = GetCharacterWorldPosition(target);
@@ -4433,9 +4433,9 @@ std::uint64_t EVS_LoopCamera(std::int64_t cameraId, shen_name eye, shen_name tar
     } request{cameraId, nullptr, nullptr};
     static_assert(sizeof(CameraRequest) == 0x18);
     if (eye.name != 0)
-        request.eyeNode = FindCharacterByScenarioName(eye);
+        request.eyeNode = ctrlGetScenarioChara(eye);
     if (target.name != 0)
-        request.targetNode = FindCharacterByScenarioName(target);
+        request.targetNode = ctrlGetScenarioChara(target);
     camCtrlToggleSplineRebuildFlag(3, &request);
     return camCtrlSetState(Scripted);
 }
@@ -4847,9 +4847,9 @@ void EndConversationCameraStream() {
     state.flags &= 0xf7effbfdU;
     const std::size_t shot = static_cast<std::size_t>(state.shotIndex);
     if (!(state.currentShotFlags & 8U)) {
-        if (state.shotType == 1 && state.root && state.specialTargetName.name == GetCharacterScenarioName(state.targetAnchors[shot]).name) {
+        if (state.shotType == 1 && state.root && state.specialTargetName.name == ctrlGetScenarioCharaName(state.targetAnchors[shot]).name) {
             Vector3 root{};
-            GetCharacterMotionWorldPosition(state.root, 5, &root);
+            charaGetMotWorldPos(state.root, 5, &root);
             const std::int16_t yaw = GetAllAngYForNode(&state.root->entity.node);
             Vector3 eye{};
             camCtrlGetNextCamPos(&eye);
@@ -4862,7 +4862,7 @@ void EndConversationCameraStream() {
                 return;
         }
         state.flags |= 0x20U;
-    } else if (state.shotType == 1 && GetCharacterScenarioName(state.eyeAnchors[shot]).name == state.specialTargetName.name) {
+    } else if (state.shotType == 1 && ctrlGetScenarioCharaName(state.eyeAnchors[shot]).name == state.specialTargetName.name) {
         const Vector3 target = GetPlayerTargetWorldPosition();
         Vector3 position{}, lookAt{};
         camCtrlComputeOrbitCameraFromTarget(&target, InverseFixedAtan2(state.lookLocation.x - target.x, state.lookLocation.z - target.z), &position, &lookAt);
@@ -4915,7 +4915,7 @@ shen_name GetCameraSpecialTargetName() {
 shen_name camCtrlGetConversationEyeAnchorName() {
     if (conversationCamera.shotIndex < 0)
         return {};
-    return GetCharacterScenarioName(conversationCamera.eyeAnchors[static_cast<std::size_t>(conversationCamera.shotIndex)]);
+    return ctrlGetScenarioCharaName(conversationCamera.eyeAnchors[static_cast<std::size_t>(conversationCamera.shotIndex)]);
 }
 
 // @verified - p
@@ -6189,8 +6189,8 @@ bool camCtrlSetSequenceView(CameraSequenceLease &lease, std::int32_t cameraId, s
     camera.flags = (camera.flags & ~CameraAutomaticDistanceFov) | CameraRebuildPositionSpline | CameraRebuildRotationSpline;
     camera.cameraId.name = static_cast<std::uint32_t>(cameraId);
     camera.fieldC4 = 0;
-    Character *const eyeCharacter = FindCharacterByScenarioName(eyeAttachment);
-    Character *const targetCharacter = FindCharacterByScenarioName(targetAttachment);
+    Character *const eyeCharacter = ctrlGetScenarioChara(eyeAttachment);
+    Character *const targetCharacter = ctrlGetScenarioChara(targetAttachment);
     camera.splineBoundary = reinterpret_cast<std::intptr_t>(eyeCharacter);
     camera.splineCoefficients = reinterpret_cast<std::intptr_t>(targetCharacter);
     camera.showFilmBars = 0;
@@ -6203,12 +6203,12 @@ bool camCtrlTickSequenceView(CameraSequenceLease &lease) {
         return false;
     Vector3 eye = lease.authoredEye;
     Vector3 target = lease.authoredTarget;
-    if (Character *const attached = FindCharacterByScenarioName(lease.eyeAttachment)) {
+    if (Character *const attached = ctrlGetScenarioChara(lease.eyeAttachment)) {
         eye.x += attached->entity.node.position.x;
         eye.y += attached->entity.node.position.y;
         eye.z += attached->entity.node.position.z;
     }
-    if (Character *const attached = FindCharacterByScenarioName(lease.targetAttachment)) {
+    if (Character *const attached = ctrlGetScenarioChara(lease.targetAttachment)) {
         target.x += attached->entity.node.position.x;
         target.y += attached->entity.node.position.y;
         target.z += attached->entity.node.position.z;

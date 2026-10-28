@@ -89,13 +89,13 @@ void CleanupE0066(AreaImmediateAuthorTaskParameter *parent) {
     AddInventoryItem(0x1f4c, 1, 0);
     AddInventoryItem(0x0d, 1, 0);
     for (const shen_name *character = AREA_0066_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_NPC_NewLoadSw(1);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0066A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0066A"), 0);
     EV_FreeAuthorPak(0, AREA_0066_CONVERSATION);
 
     EV_CleanupMapControlTask();

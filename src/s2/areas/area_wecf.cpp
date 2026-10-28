@@ -40,15 +40,15 @@ void AreaWECFCleanup(std::int32_t, std::uint32_t) {
 void JukeboxInitCallback(void *) {
     if (GetNpcNewLoadState() != 1)
         return;
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("JUKB"), 0, 0) != 0)
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("JUKB"), 0, 0) != 0)
         return;
 
     (void)EV_NPC_NewLoadSw(0);
     (void)EV_ResetFreeTalkFlags();
     const char *const packagePath = Filepath_Gen(FilepathGenMode::PackDirectory);
-    if (EV_ControlPackageResources(
+    if (EV_pakUtils(
             PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(packagePath), reinterpret_cast<std::uintptr_t>("JUKB"), 0) != 0) {
-        (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0, 0);
+        (void)EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0, 0);
         HLib::EnqueueTaskWithoutParameter(JukeboxRevolveCallback, 6, 0x0b, static_cast<std::int32_t>(EVENT_CHARACTER_TASK.name));
         Vector3 zero{};
         EV_scenApplyPosOrRotToPartOf(CHARACTER_WECF_JUKEBOX, 161, &zero, nullptr, EventCharacterPartTransformMode::Set);

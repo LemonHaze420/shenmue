@@ -54,20 +54,20 @@ void CaptureScenarioSpeakerPose() {
         MotionWork *const motion = FindMotionWork(participant);
         if (!motion)
             continue;
-        talk.participantMotionIds[index] = GetMotionAnimationId(motion, MotionRegion::LowerBody);
+        talk.participantMotionIds[index] = mtwkGetAnimationId(motion, MotionRegion::LowerBody);
         talk.participantWorldYaws[index] = shenGetRotYFromNode(participant);
         talk.participantEntityYaws[index] = static_cast<std::uint32_t>(motion->runtime.entityRotation.y);
     }
     if (Character *const speaker = ResolveScenarioTalkCharacter(talk.actionCharacter))
-        GetCharacterMotionWorldPosition(speaker, 5, &talk.speakerPosition);
+        charaGetMotWorldPos(speaker, 5, &talk.speakerPosition);
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     if (Character *const ryo = static_cast<Character *>(control->ryo))
-        GetCharacterMotionWorldPosition(ryo, 5, &talk.playerPosition);
+        charaGetMotWorldPos(ryo, 5, &talk.playerPosition);
     if (Character *const speaker = ResolveScenarioTalkCharacter(talk.actionCharacter)) {
         Vector3 position{};
-        GetCharacterMotionWorldPosition(speaker, 22, &position);
+        charaGetMotWorldPos(speaker, 22, &position);
         talk.speakerHeadHeight = position.y;
-        GetCharacterMotionWorldPosition(speaker, 27, &position);
+        charaGetMotWorldPos(speaker, 27, &position);
         talk.speakerChestHeight = position.y;
     }
 }
@@ -127,7 +127,7 @@ void TurnScenarioPlayerTowardSpeaker() {
     if (talk.playerTurnAround) {
         if (Character *const speaker = ResolveScenarioTalkCharacter(target)) {
             Vector3 position{};
-            GetCharacterMotionWorldPosition(speaker, 5, &position);
+            charaGetMotWorldPos(speaker, 5, &position);
             plymSetSpecialModeTargetPosition(&position, talk.playerFacingMode ? 2 : 0);
             talk.playerFacingMode = 0;
             SetEyeToChara(static_cast<Character *>(control->ryo), &position, 16, 2);
@@ -141,7 +141,7 @@ void TurnScenarioPlayerTowardSpeaker() {
     ++talk.playerTurnFrames;
     if (Character *const speaker = ResolveScenarioTalkCharacter(target)) {
         Vector3 position{};
-        GetCharacterMotionWorldPosition(speaker, 5, &position);
+        charaGetMotWorldPos(speaker, 5, &position);
         talk.speakerPosition = position;
         talk.playerTurnPending = 0;
         talk.playerTurnFrames = 0;
@@ -162,7 +162,7 @@ void FaceScenarioParticipantsForward() {
         if (!character)
             continue;
         Vector3 position{};
-        GetCharacterMotionWorldPosition(character, 5, &position);
+        charaGetMotWorldPos(character, 5, &position);
         const auto yaw = static_cast<std::uint16_t>(shenGetRotYFromNode(character));
         position.x -= FixedAngleSin(yaw);
         position.z -= FixedAngleCos(yaw);
@@ -208,7 +208,7 @@ void TurnScenarioParticipantToward(std::size_t slot) {
     }
     Vector3 position{};
     if (Character *const target = ResolveScenarioTalkCharacter(talk.turnTargets[slot]))
-        GetCharacterMotionWorldPosition(target, 5, &position);
+        charaGetMotWorldPos(target, 5, &position);
     talk.participantTurnIssued[slot] = 1;
     RequestNpcSpecialMotionTarget(talk.turnSources[slot], &position);
     SetEyeToChara(ResolveScenarioTalkCharacter(talk.turnSources[slot]), &position, 16, 2);
@@ -240,7 +240,7 @@ void RetireScenarioTalkParticipants(shen_name character) {
             const bool actionMode = (activeScenarioEventRuntime->flags & 0x4000U) != 0;
             if (!actionMode || node) {
                 if (actionMode)
-                    UpdateMotionWorkWithPosition(FindMotionWork(node), nullptr, 0);
+                    mtwkUpdateWithPosition(FindMotionWork(node), nullptr, 0);
                 if (node) {
                     SetEyeToChara(node, &zero, 16, 0);
                     if (ScenarioCharacterIsRyo(participant))
@@ -346,22 +346,22 @@ void scenProcessCharacterActionQueue() {
             if (MotionWork *const motion = FindMotionWork(first)) {
                 Vector3 position{};
                 if (talk.participantFacing[0] > 0) {
-                    GetCharacterMotionWorldPosition(second, 5, &position);
-                    UpdateMotionWorkWithPosition(motion, &position, 770);
+                    charaGetMotWorldPos(second, 5, &position);
+                    mtwkUpdateWithPosition(motion, &position, 770);
                 }
                 if (talk.participantFacing[0] < 0) {
-                    UpdateMotionWorkWithPosition(motion, nullptr, 0);
+                    mtwkUpdateWithPosition(motion, nullptr, 0);
                     talk.participantFacing[0] = 0;
                 }
             }
             if (MotionWork *const motion = FindMotionWork(second)) {
                 Vector3 position{};
                 if (talk.participantFacing[1] > 0) {
-                    GetCharacterMotionWorldPosition(first, 5, &position);
-                    UpdateMotionWorkWithPosition(motion, &position, 770);
+                    charaGetMotWorldPos(first, 5, &position);
+                    mtwkUpdateWithPosition(motion, &position, 770);
                 }
                 if (talk.participantFacing[1] < 0) {
-                    UpdateMotionWorkWithPosition(motion, nullptr, 0);
+                    mtwkUpdateWithPosition(motion, nullptr, 0);
                     talk.participantFacing[1] = 0;
                 }
             }
@@ -499,7 +499,7 @@ void scenProcessCharacterActionQueue() {
             if (scenario.flags & 0x4000U) {
                 talk.participantFacing[0] = -1;
             } else {
-                UpdateMotionWorkWithPosition(FindMotionWork(static_cast<Character *>(control->ryo)), nullptr, 0);
+                mtwkUpdateWithPosition(FindMotionWork(static_cast<Character *>(control->ryo)), nullptr, 0);
                 talk.facingApplied[0] = 0;
             }
         } else if (action - 20U <= 9U || action - 217U <= 0x1dU || action - 120U <= 9U) {

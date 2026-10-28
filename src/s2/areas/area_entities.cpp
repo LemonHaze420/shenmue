@@ -58,9 +58,9 @@ void areaClearAreaEntities() {
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(packageName));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, AREA_ENTITY_BASE);
     for (std::int32_t index = 0; index < 22; ++index) {
         if (AREA_ENTITY_PLACEMENTS[index].area.name == g_currentMap.name)

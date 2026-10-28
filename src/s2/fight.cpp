@@ -96,7 +96,7 @@ std::uint32_t shenInitFightData(Character *character, void *blocker, std::uint8_
 VFActor *btlGetActorByScenarioName(VFMA_t *game, shen_name name) {
     if (!game)
         return nullptr;
-    Character *const character = FindCharacterByScenarioName(name);
+    Character *const character = ctrlGetScenarioChara(name);
     if (!character)
         return nullptr;
     for (std::uint32_t i = 0; i < 6; ++i)
@@ -366,7 +366,7 @@ std::uint32_t EV_vfBattleUtil(FightBattleUtilOp operation, shen_name name, std::
     case FightBattleUtilOp::SkillMask:
         return static_cast<std::uint8_t>(vfCheckSkillFlag(name));
     case FightBattleUtilOp::MotionOrSlotFlag:
-        if (Character *const character = FindCharacterByScenarioName(name)) {
+        if (Character *const character = ctrlGetScenarioChara(name)) {
             if (value == 0)
                 ToggleFightMotionCallbackFlag(character, 0);
             else if (value > 0) {
@@ -417,7 +417,7 @@ std::int64_t vfmDispatchControl(FightControlOp operation, shen_name name, std::u
         break;
     case FightControlOp::MotionUpdateCamera:
         if (game) {
-            Character *const character = FindCharacterByScenarioName(name);
+            Character *const character = ctrlGetScenarioChara(name);
             if (character && EV_camCtrlToggleCombatCamera(4, 1) == 0)
                 BeginMotionUpdateCamera(character);
         }
@@ -478,7 +478,7 @@ std::int64_t vfmDispatchControl(FightControlOp operation, shen_name name, std::u
         AppendMotionCameraWaypoint(*reinterpret_cast<const Vector3 *>(payload));
         break;
     case FightControlOp::MotionInterpolationCamera:
-        BeginMotionInterpolationCamera(FindCharacterByScenarioName(name));
+        BeginMotionInterpolationCamera(ctrlGetScenarioChara(name));
         break;
     case FightControlOp::MotionNibble: {
         const std::int8_t code = static_cast<std::int8_t>(name.name);

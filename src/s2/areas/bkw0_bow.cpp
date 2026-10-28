@@ -33,10 +33,10 @@ void Bkw0BowSequence(void *data) {
             EV_SetCharaControllerFlags(BKW0_MYS, 2, NpcCharacterControllerState::Disabled);
             EV_SetCharacterAlphaEnabled(BKW0_RYO, false);
             EV_SetCharacterAlphaEnabled(BKW0_MYS, false);
-            EV_mtwkSetEnabled(scenFindMotionwork(BKW0_RYO), 1);
-            EV_mtwkSetEnabled(scenFindMotionwork(BKW0_MYS), 1);
-            SetMotionSpeed(scenFindMotionwork(BKW0_RYO), 1, MotionRegion::LowerBody);
-            SetMotionSpeed(scenFindMotionwork(BKW0_MYS), 1, MotionRegion::LowerBody);
+            mtwkSetEnabled(scenFindMotionwork(BKW0_RYO), 1);
+            mtwkSetEnabled(scenFindMotionwork(BKW0_MYS), 1);
+            mtwkSetSpeed(scenFindMotionwork(BKW0_RYO), 1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(BKW0_MYS), 1, MotionRegion::LowerBody);
             Bkw0PlaceCrowd();
             Bkw0TrainCrowd(work.selector, 1);
             EV_SetRefBoardParamsFor(BKW0_RYO, 1);
@@ -50,8 +50,8 @@ void Bkw0BowSequence(void *data) {
             EV_AT_SetAngY(BKW0_MYS, EventTransformFlags::AllAxes, bkw0BowMysRotation);
             mtwkRequestMotion(scenFindMotionwork(BKW0_RYO), 7954, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(BKW0_MYS), 7955, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(BKW0_MYS), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BKW0_MYS), 71, 0, MotionRegion::LowerBody);
             work.camera = 9050;
             EVS_LoopCamera(9050, BKW0_BASE, BKW0_BASE);
             work.frames = 0;
@@ -94,12 +94,12 @@ void Bkw0BowSequence(void *data) {
                 EV_PlayDialogue("0068D004");
                 break;
             case 510:
-                hmdlSetFlagsFor(FindCharacterByScenarioName(BKW0_MYS), 0, 0, 16);
-                hmdlSetFlagsFor(FindCharacterByScenarioName(BKW0_MYS), 1, 1, 16);
+                hmdlSetFlagsFor(ctrlGetScenarioChara(BKW0_MYS), 0, 0, 16);
+                hmdlSetFlagsFor(ctrlGetScenarioChara(BKW0_MYS), 1, 1, 16);
                 break;
             case 570:
-                hmdlSetFlagsFor(FindCharacterByScenarioName(BKW0_MYS), 0, 2, 16);
-                hmdlSetFlagsFor(FindCharacterByScenarioName(BKW0_MYS), 1, 2, 16);
+                hmdlSetFlagsFor(ctrlGetScenarioChara(BKW0_MYS), 0, 2, 16);
+                hmdlSetFlagsFor(ctrlGetScenarioChara(BKW0_MYS), 1, 2, 16);
                 break;
             case 590:
                 EV_PlayDialogue("0068A018");

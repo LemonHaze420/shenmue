@@ -166,7 +166,7 @@ void ConfigureMotion(std::uint16_t animation) {
     mtwkRequestMotion(Motion(), animation, MotionRegion::LowerBody);
     mtwkSetExtraFlag(Motion(), 13, 0);
     mtwkSetExtraFlag(Motion(), 17, 0);
-    SetMotionRegionFlag(Motion(), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(Motion(), 71, 0, MotionRegion::LowerBody);
 }
 void SetupLeaf(std::int32_t index) {
     EV_AT_SetPos(leafNames[index], local, leafOrigin);
@@ -185,7 +185,7 @@ void SetupLeaf(std::int32_t index) {
     leaf.reserved34 = leaf.inside = leaf.state = leaf.blur = 0;
     leaf.delay = 30 * static_cast<std::int32_t>(shenGetRandomInt32(10));
     leaf.alpha = 1;
-    ResetCharaFixo(FindCharacterByScenarioName(leafNames[index]));
+    ResetCharaFixo(ctrlGetScenarioChara(leafNames[index]));
 }
 void SetupAllLeaves() {
     for (std::int32_t i = 20; i--;)
@@ -199,13 +199,13 @@ void SetupRyo() {
     EV_SetCharaControllerFlags(ryo, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     mtwkSetExtraFlag(Motion(), 6, 2);
     EV_SetCharacterAlphaEnabled(ryo, false);
-    (void)GetCharacterMotionCompatibilityResult(FindCharacterByScenarioName(ryo));
-    (void)HasCharacterMotionWork(FindCharacterByScenarioName(ryo));
+    (void)GetCharacterMotionCompatibilityResult(ctrlGetScenarioChara(ryo));
+    (void)HasCharacterMotionWork(ctrlGetScenarioChara(ryo));
     EV_AT_SetPos(ryo, local, Vector3{0, 0, 3});
     EV_AT_SetAngY(ryo, local, Vector3i{});
-    SetFaceFlagsForChara(FindCharacterByScenarioName(ryo), 1);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 0, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ryo), 0, reinterpret_cast<std::byte *>(readyHand), 0);
+    SetFaceFlagsForChara(ctrlGetScenarioChara(ryo), 1);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 0, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ryo), 0, reinterpret_cast<std::byte *>(readyHand), 0);
 }
 void ConfigureAuthorSubjects() {
     AT_SetLocalBaseChara(ryo, invalid);
@@ -350,7 +350,7 @@ void MoveLeaves(void *) {
                 leaf.alpha -= .016f;
             if (leaf.alpha < 0)
                 leaf.alpha = 0;
-            modelSetCharaAlpha(FindCharacterByScenarioName(name), leaf.alpha);
+            modelSetCharaAlpha(ctrlGetScenarioChara(name), leaf.alpha);
             if (leaf.position.y < .5f)
                 SetupLeaf(i);
             if (leaf.accumulated >= leaf.limit) {
@@ -565,18 +565,18 @@ std::int32_t PlayReplay(std::int32_t index) {
     }
     EV_EnableCharacterDisplay(ryo);
     mtwkRequestMotion(Motion(), static_cast<std::uint16_t>(shot.animation), MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(Motion(), shot.begin, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(Motion(), shot.begin, MotionRegion::LowerBody);
     if (index >= 4) {
         Queue_EVT_AT_CtrlHandUp_1(ryo, 0, reinterpret_cast<std::byte *>(neutralHandPoseCommand), 40, 70);
         Queue_EVT_AT_CtrlHandUp_1(ryo, 0, reinterpret_cast<std::byte *>(relaxedHand), 20, 85);
         BadVoice();
     } else {
-        SetMotionLayerEndFrame(Motion(), shot.end, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(Motion(), shot.end, MotionRegion::LowerBody);
         GoodVoice(index);
     }
     mtwkSetExtraFlag(Motion(), 17, 0);
     mtwkSetExtraFlag(Motion(), 13, 0);
-    SetMotionRegionFlag(Motion(), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(Motion(), 71, 0, MotionRegion::LowerBody);
     EV_DisableCharacterDisplay(rude);
     return TruncateToInt32(shot.end - shot.begin);
 }
@@ -686,7 +686,7 @@ void MainLoop(void *) {
     (void)GetCurrentControlInput(INPUT_RIGHT_Y);
     --work.remainingFrames;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.hour >= 19)
         work.remainingFrames = 0;
     if (zoomPercent <= 20 && work.remainingFrames <= 0) {
@@ -723,7 +723,7 @@ void MainInit2(void *) {
 }
 void MainInit(void *) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.hour >= 19) {
         ProcessAicaCommand(0xaa0, 30);
         Continue(Exit, 30);
@@ -760,7 +760,7 @@ void SkipOpening(void *) {
     mtwkSetExtraFlag(Motion(), 6, 2);
     mtwkRequestMotion(Motion(), 4107, MotionRegion::LowerBody);
     mtwkSetExtraFlag(Motion(), 13, 0);
-    SetMotionRegionFlag(Motion(), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(Motion(), 71, 0, MotionRegion::LowerBody);
     EV_DisableCharacterDisplay(rude);
     EVS_LoopCamera(1018, shen_name{}, shen_name{});
     Fade(30, false);
@@ -782,7 +782,7 @@ void Opening(void *) {
 }
 void PreExit(void *) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.hour >= 19) {
         Continue(Exit);
         return;
@@ -821,25 +821,25 @@ void Exit(void *) {
     EV_SetCharaControllerFlags(ryo, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     mtwkSetExtraFlag(Motion(), 6, 0);
     EV_SetCharacterAlphaEnabled(ryo, true);
-    (void)HasCharacterMotionWork(FindCharacterByScenarioName(ryo));
-    UpdateMotionWorkWithPosition(Motion(), nullptr, 0);
+    (void)HasCharacterMotionWork(ctrlGetScenarioChara(ryo));
+    mtwkUpdateWithPosition(Motion(), nullptr, 0);
     EV_EnableCharacterDisplay(ryo);
-    (void)HasCharacterMotionWork(FindCharacterByScenarioName(ryo));
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(ryo), FacialNodeOriginal);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 1, 0);
+    (void)HasCharacterMotionWork(ctrlGetScenarioChara(ryo));
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(ryo), FacialNodeOriginal);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 1, 0);
     mtwkRequestMotion(Motion(), 61443, MotionRegion::LowerBody);
     mtwkSetExtraFlag(Motion(), 13, 0);
-    SetMotionRegionFlag(Motion(), 71, 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(Motion(), 71, 2, MotionRegion::LowerBody);
     EV_FreeAuthorPak(0, "0037");
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_LoadAudio(shenGetCurrentSbt(), GetSelectedSoundSceneIndex());
     HLib::DestroyTaskInternal(work.moveTask);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WB88"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WB88"), 0);
     for (const shen_name character : characters) {
         if (character.name == invalid.name)
             break;
-        if (FindCharacterByScenarioName(character)) {
+        if (ctrlGetScenarioChara(character)) {
             EV_npcLockUnlock(character);
             EV_npcFree(character);
         }
@@ -1088,17 +1088,17 @@ void Auto2(void *) {
     }
     Vector3 position;
     EV_GetCharaPosition(duck, CHARACTER_TRANSLATION_ROOT, &position, recursive);
-    UpdateMotionWorkWithPosition(Motion(), &position, 1280);
-    UpdateMotionWorkWithPosition(Motion(), nullptr, 3);
+    mtwkUpdateWithPosition(Motion(), &position, 1280);
+    mtwkUpdateWithPosition(Motion(), nullptr, 3);
 }
 void Auto3(void *) {
-    UpdateMotionWorkWithPosition(Motion(), nullptr, 0);
+    mtwkUpdateWithPosition(Motion(), nullptr, 0);
     SetupAllLeaves();
     Camera(1130);
     camCtrlDisableFilmBars();
     EV_AT_SetPos(ryo, local, Vector3{.1244f, 0, 2.8900001f});
     mtwkSetExtraFlag(Motion(), 17, 0);
-    SetMotionRegionFlag(Motion(), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(Motion(), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(Motion(), 13, 0);
     EVT_AT_SetMot(ryo, 306, 0, 1, 0, 0);
     (void)GetMotionFrameCount(306);
@@ -1199,8 +1199,8 @@ void Main(std::uintptr_t argument) {
         AT_SetLocalBaseChara(leafNames[i], dummy);
         LoadBlurModelForCharacter(leafNames[i], nullptr, 0);
     }
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("WB88"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WB88"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("WB88"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WB88"), 0);
     EV_SetNewSceneIndex();
     EV_FreeAuthorPak(1, "0037");
     EV_LoadCutsceneFromCurrentScene("0037A000");

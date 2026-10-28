@@ -69,7 +69,7 @@ void AreaKBRGMain(std::uintptr_t parameter) {
         HLib::SetupTimedTask(task, 0);
     HLib::EnqueueTaskWithoutParameter(EVT_UTL_LoadNPCChara_Callback_2, 6, 0x0b, static_cast<std::int32_t>(KBRG_LOAD_TASK.name));
     shenSetClockAndCompassRenderTo(1);
-    GetCurrentDateTime(savedDate);
+    shenGetCurrentDateTime(savedDate);
 }
 // @verified - p
 void KBRGPrepareCharacter(shen_name character) {
@@ -104,7 +104,7 @@ void KBRGStoryCallback(void *) {
             EV_AT_SetPos(KBRG_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3{-18.620001f, -1.0f, -34.27f});
             EV_AT_SetAngY(KBRG_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, 54613, 0});
             mtwkRequestMotion(scenFindMotionwork(KBRG_PLAYER), 0xf003, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(KBRG_PLAYER), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(KBRG_PLAYER), 71, 0, MotionRegion::LowerBody);
             EV_SetCharaControllerFlags(KBRG_PLAYER, ApplyGravity, NpcCharacterControllerState::Enabled);
             EV_SetCharaControllerFlags(KBRG_PLAYER, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
             camCtrlSetFovTransitionTo(true);
@@ -181,7 +181,7 @@ void KBRGQteCallback(void *) {
             if (bridgeSucceeded == 1) {
                 shenSetTimeSimulationTo(1);
                 DateTime date;
-                GetCurrentDateTime(date);
+                shenGetCurrentDateTime(date);
                 const std::uint32_t seconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(date)) + 1800U;
                 IncrementDateTimeBySeconds(seconds, date);
                 SetCurrentDateTimeTo(date);
@@ -198,7 +198,7 @@ void KBRGQteCallback(void *) {
 }
 // @verified - p
 void KBRGRestoreGameplay() {
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EnableCharDisplayAndSetMotionworkData(KBRG_PLAYER);
     EnableCharDisplayAndSetMotionworkData(KBRG_SHENHUA);
     SetPlayerControlEnabled(1);
@@ -208,7 +208,7 @@ void KBRGRestoreGameplay() {
     EV_EventSetUpHelpIcon_0(0x3f, 0);
     HLib::DestroyCurrentTask();
     scenFreeEvent("KBRG");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KBRG"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KBRG"), 0);
     ActivatePartyCompanion(KBRG_SHENHUA);
     EV_PTYCUtils(KBRG_SHENHUA, 3, 1);
     EV_AT_SetPos(KBRG_SHENHUA, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3{-21.620001f, -1.0f, -33.599998f});

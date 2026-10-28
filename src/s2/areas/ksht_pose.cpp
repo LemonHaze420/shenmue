@@ -20,23 +20,23 @@ struct KshtEyeRequest {
 static_assert(sizeof(KshtEyeRequest) == 0x18);
 void KshtEyeCallback(void *data) {
     KshtEyeRequest *request = static_cast<KshtEyeRequest *>(data);
-    AT_SetEyeCtrl(FindCharacterByScenarioName(request->character), request->frames, request->left, request->right);
+    AT_SetEyeCtrl(ctrlGetScenarioChara(request->character), request->frames, request->left, request->right);
     if (request->cleanup)
         HLib::DestroyCurrentTask();
 }
 void SetKshtActorPose(shen_name actor, const Vector3 &position, const Vector3i &rotation, std::uint32_t animation, float loopTime, bool companion) {
-    EV_SetCharaControllerFlags(actor, CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
     AT_SetLocalBaseChara(actor, KSHT_DUMMY);
     EV_AT_SetPos(actor, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(actor, EventTransformFlags::AllAxes, rotation);
     mtwkSetExtraFlag(scenFindMotionwork(actor), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(actor), 13, 0);
     mtwkRequestMotion(scenFindMotionwork(actor), static_cast<std::uint16_t>(animation), MotionRegion::LowerBody);
     if (companion)
-        SetMotionLayerLoopStartTime(scenFindMotionwork(actor), loopTime, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(actor), 1, MotionRegion::LowerBody);
+        mtwkSetLayerLoopStartTime(scenFindMotionwork(actor), loopTime, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(actor), 1, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(actor), 0, 0);
     mtwkSetExtraFlag(scenFindMotionwork(actor), 3, 2);
     MotionWork *motion = scenFindMotionwork(actor);
@@ -44,14 +44,14 @@ void SetKshtActorPose(shen_name actor, const Vector3 &position, const Vector3i &
         motion->runtime.callbackFlags |= 1;
     if (!companion)
         mtwkSetExtraFlag(scenFindMotionwork(actor), 6, 2);
-    FindMotionWork(FindCharacterByScenarioName(actor));
-    FindMotionWork(FindCharacterByScenarioName(actor));
-    SetFaceFlagsForChara(FindCharacterByScenarioName(actor), 0);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(actor), 0, 0, 1);
-    SetHighModelXYZ(FindCharacterByScenarioName(actor), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(actor), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(actor), 0, reinterpret_cast<std::byte *>(kshtDefaultHand), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(actor), 1, reinterpret_cast<std::byte *>(kshtDefaultHand), 0);
+    FindMotionWork(ctrlGetScenarioChara(actor));
+    FindMotionWork(ctrlGetScenarioChara(actor));
+    SetFaceFlagsForChara(ctrlGetScenarioChara(actor), 0);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(actor), 0, 0, 1);
+    SetHighModelXYZ(ctrlGetScenarioChara(actor), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(actor), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(actor), 0, reinterpret_cast<std::byte *>(kshtDefaultHand), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(actor), 1, reinterpret_cast<std::byte *>(kshtDefaultHand), 0);
 }
 } // namespace
 void QueueKshtWaitEye(float frames, float left, float right, std::int32_t delay) {

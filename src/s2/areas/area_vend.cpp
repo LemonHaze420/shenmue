@@ -155,10 +155,10 @@ void InitializeVendingResources(VendingMachineWork &work) {
     work.characters = Queue_EVT_AT_ReadChr(work.task, vendCharacterNames);
     InitializeVendingButtons(work);
     const char *directory = Filepath_Gen(FilepathGenMode::PackDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("VEND"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("VEND"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("VEND"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("VEND"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("VEND"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("VEND"), 0);
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0109E000");
     work.prizeState = 0;
@@ -200,7 +200,7 @@ void eVEND_EVT_InitVend_Enqueue(void *argument) {
     }
     if (work->colour >= VM_COLOR_RED && work->colour <= VM_COLOR_GREEN) {
         const char *directory = Filepath_Gen(FilepathGenMode::PackDirectory);
-        vendingArchive = EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Mount, reinterpret_cast<std::uintptr_t>(directory),
+        vendingArchive = EV_pakUtils(PakCategory::Partition, PakPartitionOp::Mount, reinterpret_cast<std::uintptr_t>(directory),
             reinterpret_cast<std::uintptr_t>(work->colour == VM_COLOR_RED ? "VEND.afs" : "SUNT.afs"));
     }
     work->wait = 0;
@@ -600,13 +600,13 @@ void eVEND_EVT_SelectJuice(void *data) {
         work.prizeState = 2;
         vendingElapsed = 0;
         SelectVendingCanRecords(work);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::LoadAfs, static_cast<std::uintptr_t>(vendingArchive),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::LoadAfs, static_cast<std::uintptr_t>(vendingArchive),
             static_cast<std::uintptr_t>(work.archiveRecord), work.alternateRecord);
         HLib::SetCurrentTaskTo(eVEND_EVT_HitCan);
         HLib::SetupTaskDelay(30);
     } else {
         SelectVendingCanRecords(work);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::LoadAfs, static_cast<std::uintptr_t>(vendingArchive),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::LoadAfs, static_cast<std::uintptr_t>(vendingArchive),
             static_cast<std::uintptr_t>(work.archiveRecord), work.alternateRecord);
         HLib::SetCurrentTaskTo(eVEND_EVT_DrinkJuice);
     }
@@ -740,7 +740,7 @@ void eVEND_EVT_DrinkJuice(void *data) {
     VendingMachineWork &work = *static_cast<VendingMachineWork *>(data);
     EV_debug_log("VEND\\eVEND_et_vend.c", 1014, "@@@     eVEND_EVT_DrinkJuice( ) \n");
     work.voiceState = 9;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     work.contentState = 4;
     ApplyCharacterHandPoseCommand(
         ctrlGetCharaByName(VEND_RYO), 0, reinterpret_cast<std::byte *>(work.canKind == VEND_CAN_STANDARD ? vendCanHandCommand : vendAlternateCanCommand), 0);
@@ -779,9 +779,9 @@ void eVEND_EVT_HitCan(void *data) {
             return;
         vendingState = VEND_FADE;
         if (vendingArchive != -1) {
-            const bool pending = EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0) != 0;
+            const bool pending = EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0) != 0;
             if (pending || work.contentState == 4)
-                EV_ControlPackageResources(PakCategory::Package, pending ? 13 : 12, static_cast<std::uintptr_t>(vendingArchive),
+                EV_pakUtils(PakCategory::Package, pending ? 13 : 12, static_cast<std::uintptr_t>(vendingArchive),
                     static_cast<std::uintptr_t>(work.archiveRecord), work.alternateRecord);
         }
         work.contentState = 1;
@@ -790,7 +790,7 @@ void eVEND_EVT_HitCan(void *data) {
         return;
     }
     vendingState = VM_VEND_TRANS_CHARA;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     work.contentState = 4;
     EV_debug_log("VEND\\eVEND_et_vend.c", 1062, "HIT_prosesing_01\n");
     ApplyCharacterHandPoseCommand(ctrlGetCharaByName(VEND_RYO), 0, reinterpret_cast<std::byte *>(vendCanHandCommand), 0);
@@ -851,7 +851,7 @@ void ReleaseVendingResources(VendingMachineWork &work) {
     EV_DisableCharacterDisplay(vendingMachine);
     if (DoesScenarioCharacterExist(work.originalMachine))
         EV_EnableCharacterDisplay(work.originalMachine);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("VEND"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("VEND"), 0);
     ET_AT_KillWork(work.characters);
 }
 
@@ -864,12 +864,12 @@ void eVEND_ET_KillVend(void *data) {
             return;
         work.voiceState = 11;
         if (vendingArchive != -1) {
-            const bool pending = EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0) != 0;
+            const bool pending = EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0) != 0;
             if (pending || work.contentState == 4)
-                EV_ControlPackageResources(PakCategory::Package, pending ? 13 : 12, static_cast<std::uintptr_t>(vendingArchive),
+                EV_pakUtils(PakCategory::Package, pending ? 13 : 12, static_cast<std::uintptr_t>(vendingArchive),
                     static_cast<std::uintptr_t>(work.archiveRecord), work.alternateRecord);
             work.contentState = 5;
-            EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Unmount, static_cast<std::uintptr_t>(vendingArchive), 0);
+            EV_pakUtils(PakCategory::Partition, PakPartitionOp::Unmount, static_cast<std::uintptr_t>(vendingArchive), 0);
             vendingArchive = -1;
         }
         camCtrlSetFovTransitionTo(true);
@@ -885,7 +885,7 @@ void eVEND_ET_KillVend(void *data) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 551, 0);
         SetPlayerControlEnabled(1);
         ReleaseVendingResources(work);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_NPC_NewLoadSw(1);
         return;
     }

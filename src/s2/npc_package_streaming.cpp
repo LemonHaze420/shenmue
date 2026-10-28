@@ -48,7 +48,7 @@ using namespace npc_package_detail;
 
 namespace npc_package_detail {
 
-std::int32_t FindNativeNpcHumanPackageIndex(shen_name name) {
+std::int32_t npcLoadFromPak(shen_name name) {
     if (!npcHumanIndex)
         return -1;
     const std::uint32_t *const names = reinterpret_cast<const std::uint32_t *>(npcHumanIndex + 4);
@@ -58,8 +58,8 @@ std::int32_t FindNativeNpcHumanPackageIndex(shen_name name) {
     return -1;
 }
 
-bool ReleaseNativeNpcHumanPackage(shen_name name) {
-    const std::int32_t index = FindNativeNpcHumanPackageIndex(name);
+bool npcReleasePak(shen_name name) {
+    const std::int32_t index = npcLoadFromPak(name);
     if (index < 0)
         return false;
     NpcHumanPakSlot &slot = npcHumanSlots[index];
@@ -75,8 +75,8 @@ bool ReleaseNativeNpcHumanPackage(shen_name name) {
     return true;
 }
 
-bool ReleaseReadyNpcHumanPackage(shen_name name) {
-    const std::int32_t index = FindNativeNpcHumanPackageIndex(name);
+bool npcReleaseReadyPak(shen_name name) {
+    const std::int32_t index = npcLoadFromPak(name);
     if (index < 0 || npcHumanSlots[index].state != NpcHumanPakState::Ready)
         return false;
     NpcHumanPakSlot &slot = npcHumanSlots[index];
@@ -92,7 +92,7 @@ void ReleaseNpcTransitionHumanPackages() {
         for (; entry->character.name; ++entry) {
             if (group->area.name != npcLoadedArea.name)
                 continue;
-            ReleaseNativeNpcHumanPackage(entry->character);
+            npcReleasePak(entry->character);
             entry->nodeOffset = 0;
         }
         group = reinterpret_cast<NpcRouteResetGroupHeader *>(reinterpret_cast<std::byte *>(entry) + 4);
@@ -100,7 +100,7 @@ void ReleaseNpcTransitionHumanPackages() {
     for (NpcTransitionRuntimeSlot &slot : npcTransitionRuntimeSlots) {
         if (!slot.character.name)
             continue;
-        ReleaseNativeNpcHumanPackage(slot.character);
+        npcReleasePak(slot.character);
         slot.node = nullptr;
     }
 }
@@ -109,13 +109,13 @@ void ReleaseReadyNpcTransitionHumanPackages() {
     for (NpcRouteResetGroupHeader *group = npcRouteResetGroup; group->area.name;) {
         NpcRouteResetEntry *entry = reinterpret_cast<NpcRouteResetEntry *>(group + 1);
         for (; entry->character.name; ++entry) {
-            if (group->area.name == npcLoadedArea.name && ReleaseReadyNpcHumanPackage(entry->character))
+            if (group->area.name == npcLoadedArea.name && npcReleaseReadyPak(entry->character))
                 entry->nodeOffset = 0;
         }
         group = reinterpret_cast<NpcRouteResetGroupHeader *>(reinterpret_cast<std::byte *>(entry) + 4);
     }
     for (NpcTransitionRuntimeSlot &slot : npcTransitionRuntimeSlots) {
-        if (slot.character.name && ReleaseReadyNpcHumanPackage(slot.character))
+        if (slot.character.name && npcReleaseReadyPak(slot.character))
             slot.node = nullptr;
     }
 }
@@ -130,10 +130,10 @@ bool IsNpcGloballyBlocked(const NpcRouteLiveEntry &entry) {
     return (static_cast<std::uint8_t>(entry.recordBase[0x0b]) & 0x10U) != 0;
 }
 
-std::int32_t LoadNativeNpcHuman(shen_name packageName, shen_name characterName, bool fromHumans) {
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, bool fromHumans) {
     if (!npcHumanSlots)
         return 0;
-    const std::int32_t index = FindNativeNpcHumanPackageIndex(packageName);
+    const std::int32_t index = npcLoadFromPak(packageName);
     if (index < 0)
         return -1;
     NpcHumanPakSlot &slot = npcHumanSlots[index];
@@ -142,7 +142,7 @@ std::int32_t LoadNativeNpcHuman(shen_name packageName, shen_name characterName, 
     if (slot.state == NpcHumanPakState::Ready) {
         const std::int32_t readiness = GetPakReadiness(slot.pak);
         if (readiness < 0) {
-            ReleaseNativeNpcHumanPackage(packageName);
+            npcReleasePak(packageName);
             return -6;
         }
         if (!readiness)
@@ -150,7 +150,7 @@ std::int32_t LoadNativeNpcHuman(shen_name packageName, shen_name characterName, 
         MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
         Character *const character = scenFindChara(control ? control->scenarioTask : nullptr, characterName);
         if (!character) {
-            ReleaseNativeNpcHumanPackage(packageName);
+            npcReleasePak(packageName);
             return -5;
         }
         char filename[9] = {};
@@ -230,7 +230,7 @@ void ReleaseNativeNpcHumanPackages() {
     if (npcHumanIndex && npcHumanSlots) {
         const std::uint32_t *const names = reinterpret_cast<const std::uint32_t *>(npcHumanIndex + 4);
         for (std::int32_t index = 0; index < npcHumanCount; ++index)
-            ReleaseNativeNpcHumanPackage(shen_name{names[index]});
+            npcReleasePak(shen_name{names[index]});
     }
     npcHasCachedPak = false;
 }
@@ -304,7 +304,7 @@ std::int16_t FindNpcHumanPackageIndex(shen_name name) {
 }
 
 void ReleaseNpcRouteStream(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &runtime, bool clearPackageAlias) {
-    ReleaseNativeNpcHumanPackage(ReadNpcLiveField<shen_name>(entry, npcLoadHumanNameOffset));
+    npcReleasePak(ReadNpcLiveField<shen_name>(entry, npcLoadHumanNameOffset));
     npcActiveStreamCost -= entry.streamCost;
     if (entry.flags & 0x10U) {
         entry.liveState = entry.previousLiveState;
@@ -337,8 +337,8 @@ void BeginNpcRouteStreamOut(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &run
     if (runtime.streamState == NpcHumanStreamState::Inactive && !runtime.character && !entry.node) {
         return;
     }
-    entry.flags &= ~NpcRouteStreamLive;
-    entry.flags |= NpcRouteStreamFadeOut;
+    entry.flags &= ~NRSF_Live;
+    entry.flags |= NRSF_FadeOut;
     runtime.streamState = NpcHumanStreamState::ReleasePending;
 }
 
@@ -353,8 +353,8 @@ bool PublishExistingNpcCharacter(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord
     entry.motionWork = motionWork;
     runtime.character = character;
     runtime.streamState = NpcHumanStreamState::Live;
-    entry.flags &= ~(NpcRouteStreamRequested | NpcRouteStreamFadeOut | NpcRouteStreamStartHidden);
-    entry.flags |= NpcRouteStreamLive;
+    entry.flags &= ~(NRSF_Requested | NRSF_FadeOut | NRSF_StartHidden);
+    entry.flags |= NRSF_Live;
     npcSlotFlags[entry.poolIndex] |= 1U;
     entry.streamRouteChangeKind = 0;
     entry.streamRadius = 0.30000001f;
@@ -362,21 +362,21 @@ bool PublishExistingNpcCharacter(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord
     // HandleCharaStates -> UpdateStreamedNpcMotion publishes the MTWK update bit;
     // StreamNpcCharacters then applies its two explicit hidden-entry gates.
     motionWork->runtime.callbackFlags |= 1U;
-    SetFaceFlagsForChara_0(character, (streamFlags & (NpcRouteAbstractActive | NpcRouteStreamStartHidden)) != NpcRouteStreamStartHidden);
+    SetFaceFlagsForChara_0(character, (streamFlags & (NRSF_AbstractActive | NRSF_StartHidden)) != NRSF_StartHidden);
     if (entry.name.name == SHEN_NAME(SIN_)) {
         SetLowQualityHands(character);
         SetCharacterHandRegionEnabled(character, 0, true, 1);
         SetCharacterHandRegionEnabled(character, 1, true, 1);
         SetCharacterType(character, CharacterTypeStencilShadow);
     }
-    const bool startHidden = (streamFlags & (NpcRouteAbstractActive | NpcRouteStreamForceHidden)) == 0 && (streamFlags & NpcRouteStreamStartHidden) != 0;
-    if ((streamFlags & NpcRouteStreamForceHidden) != 0 || startHidden) {
+    const bool startHidden = (streamFlags & (NRSF_AbstractActive | NRSF_ForceHidden)) == 0 && (streamFlags & NRSF_StartHidden) != 0;
+    if ((streamFlags & NRSF_ForceHidden) != 0 || startHidden) {
         character->renderFlags &= ~CRF_All;
         if (CharacterControlModel *const control = FindCharacterControlModel(character)) {
-            control->flags &= ~CharacterControlVoxelSweep;
+            control->flags &= ~CCMF_VoxelSweep;
         }
         if (startHidden)
-            entry.flags |= NpcRouteStreamLoadedHidden;
+            entry.flags |= NRSF_LoadedHidden;
     }
     const std::int8_t loaded = 1;
     WriteNpcLiveField(entry, npcLoadHumanResultOffset, loaded);
@@ -387,7 +387,7 @@ bool PublishExistingNpcCharacter(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord
 bool EnsureNpcRouteStreamReady(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &runtime) {
     const shen_name alias = ReadNpcLiveField<shen_name>(entry, npcLoadHumanNameOffset);
     runtime.packageAlias = alias;
-    const std::int32_t result = LoadNativeNpcHuman(alias, entry.name, (entry.flags & NpcRouteStreamUseHumansAfs) != 0);
+    const std::int32_t result = npcLoadHuman(alias, entry.name, (entry.flags & NRSF_UseHumansAfs) != 0);
     npcLastHumanLoadResult = result;
     WriteNpcLiveField(entry, npcLoadHumanResultOffset, static_cast<std::int8_t>(result));
     if (!result) {
@@ -399,7 +399,7 @@ bool EnsureNpcRouteStreamReady(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &
         runtime.streamState = NpcHumanStreamState::Missing;
         return false;
     }
-    return PublishExistingNpcCharacter(entry, runtime, FindCharacterByScenarioName(entry.name));
+    return PublishExistingNpcCharacter(entry, runtime, ctrlGetScenarioChara(entry.name));
 }
 
 float NpcDistanceXZ(const Vector3 &first, const Vector3 &second) {
@@ -563,11 +563,11 @@ void EvaluateNpcMotionAttachments(NpcRouteLiveEntry &entry) {
         }
         attachment.frame = -12.0f;
         for (std::uint32_t region = 1; region < 5; ++region) {
-            if (!(attachment.flags & (1U << region)) || !SetMotionRegionFlag(entry.motionWork, 72, 1, static_cast<MotionRegion>(region)) ||
-                GetMotionAnimationId(entry.motionWork, static_cast<MotionRegion>(region)) != attachment.motion)
+            if (!(attachment.flags & (1U << region)) || !mtwkSetRegionFlag(entry.motionWork, 72, 1, static_cast<MotionRegion>(region)) ||
+                mtwkGetAnimationId(entry.motionWork, static_cast<MotionRegion>(region)) != attachment.motion)
                 continue;
-            attachment.frame = GetMotionFrame(entry.motionWork, static_cast<MotionRegion>(region));
-            if (SetMotionRegionFlag(entry.motionWork, 68, 1, static_cast<MotionRegion>(region)))
+            attachment.frame = mtwkGetFrame(entry.motionWork, static_cast<MotionRegion>(region));
+            if (mtwkSetRegionFlag(entry.motionWork, 68, 1, static_cast<MotionRegion>(region)))
                 attachment.frame -= 12.0f;
             break;
         }
@@ -583,31 +583,31 @@ void EvaluateNpcMotionAttachments(NpcRouteLiveEntry &entry) {
             }
         }
         if (selected == -1) {
-            RequestMotionRegionDetach(entry.motionWork, static_cast<MotionRegion>(region));
+            mtwkRequestRegionDetach(entry.motionWork, static_cast<MotionRegion>(region));
             continue;
         }
         const NpcMotionAttachment &attachment = entry.motionAttachments[selected];
-        std::uint16_t active = GetMotionAnimationId(entry.motionWork, static_cast<MotionRegion>(region));
-        if (!SetMotionRegionFlag(entry.motionWork, 72, 1, static_cast<MotionRegion>(region)))
+        std::uint16_t active = mtwkGetAnimationId(entry.motionWork, static_cast<MotionRegion>(region));
+        if (!mtwkSetRegionFlag(entry.motionWork, 72, 1, static_cast<MotionRegion>(region)))
             active = 0;
-        const std::uint16_t queued = GetQueuedMotionAnimationId(entry.motionWork, static_cast<MotionRegion>(region));
+        const std::uint16_t queued = mtwkGetQueuedAnimationId(entry.motionWork, static_cast<MotionRegion>(region));
         if ((!active && !queued) || (active && active != attachment.motion) || (queued && queued != attachment.motion)) {
             const MotnSequence *const sequence = FindLoadedMotionSequence(attachment.motion);
             const float last = sequence ? static_cast<float>(sequence->frameCount) - 1.0f : -1.0f;
             if (last < 0.0f)
                 continue;
-            float frame = (attachment.frame + 12.0f) * GetMotionSpeed(entry.motionWork, static_cast<MotionRegion>(region));
+            float frame = (attachment.frame + 12.0f) * mtwkGetSpeed(entry.motionWork, static_cast<MotionRegion>(region));
             if (attachment.flags & 0x20U) {
                 while (frame > last)
                     frame -= last;
             } else
                 frame = std::fmin(last, frame);
             mtwkRequestMotion(entry.motionWork, attachment.motion, static_cast<MotionRegion>(region));
-            SetMotionRegionEvalTime(entry.motionWork, frame, static_cast<MotionRegion>(region));
+            mtwkSetRegionEvalTime(entry.motionWork, frame, static_cast<MotionRegion>(region));
             mtwkSetRequestedRootMode(entry.motionWork, 1);
-            SetMotionFrameTime(entry.motionWork, 12, static_cast<MotionRegion>(region));
-        } else if (!(attachment.flags & 0x20U) && SetMotionRegionFlag(entry.motionWork, 65, 1, static_cast<MotionRegion>(region))) {
-            RequestMotionRegionDetach(entry.motionWork, static_cast<MotionRegion>(region));
+            mtwkSetFrameTime(entry.motionWork, 12, static_cast<MotionRegion>(region));
+        } else if (!(attachment.flags & 0x20U) && mtwkSetRegionFlag(entry.motionWork, 65, 1, static_cast<MotionRegion>(region))) {
+            mtwkRequestRegionDetach(entry.motionWork, static_cast<MotionRegion>(region));
             completed[selected] = true;
         }
     }
@@ -635,7 +635,7 @@ void UpdateNpcMotionAttachments(NpcRouteLiveEntry &entry) {
     } else if (first.motion && !(entry.flags & 0x10U))
         ClearNpcMotionAttachment(entry, 0);
     if (entry.controlFlags & 3U) {
-        RequestMotionRegionDetach(entry.motionWork, MotionRegion::LowerBody);
+        mtwkRequestRegionDetach(entry.motionWork, MotionRegion::LowerBody);
         if (entry.controlFlags & 1U) {
             ClearNpcMotionAttachment(entry, 0);
             ClearNpcMotionAttachment(entry, 1);
@@ -667,13 +667,13 @@ bool CheckNpcCachedVisibility(NpcRouteLiveEntry &entry, const Vector3 &position,
 void UpdateNpcFrameCulling(NpcRouteLiveEntry &entry) {
     if (!entry.node)
         return;
-    SetMotionWorkCulled(entry.motionWork, false);
+    mtwkSetCulled(entry.motionWork, false);
     if (npcUsePositionCullCallback) {
         if ((entry.flags & 0x1058U) || (entry.stateContext.flags & 1U) || (static_cast<std::uint8_t>(entry.recordBase[0x0b]) & 0x20U))
             return;
         if (CheckNpcCachedVisibility(entry, GetCharacterWorldPosition(entry.node), 0.60000002f))
             return;
-        SetMotionWorkCulled(entry.motionWork, true);
+        mtwkSetCulled(entry.motionWork, true);
         entry.node->renderFlags &= ~CRF_InRange;
         entry.node->position = {};
         return;
@@ -682,16 +682,16 @@ void UpdateNpcFrameCulling(NpcRouteLiveEntry &entry) {
         return;
     Vector3 position = GetCharacterWorldPosition(entry.node);
     if (!CheckNpcCachedVisibility(entry, position, 0.40000001f)) {
-        SetMotionWorkCulled(entry.motionWork, true);
+        mtwkSetCulled(entry.motionWork, true);
         entry.node->renderFlags &= ~CRF_InRange;
         entry.node->position = {};
     } else {
-        if (!GetMotionAnimationId(entry.motionWork, MotionRegion::LowerBody))
+        if (!mtwkGetAnimationId(entry.motionWork, MotionRegion::LowerBody))
             return;
         position = TransformNpcPoint(position);
         if (position.x * position.x + position.y * position.y + position.z * position.z <= 729.0f)
             return;
-        SetMotionWorkCulled(entry.motionWork, true);
+        mtwkSetCulled(entry.motionWork, true);
         entry.node->renderFlags |= CRF_InRange;
     }
     const std::uint16_t counter = static_cast<std::uint16_t>((entry.field2d8 >> 16) + 1);
@@ -704,7 +704,7 @@ std::int32_t SetNpcStreamLifecycleState(NpcRouteLiveEntry &entry, std::int32_t m
         entry.loadHumanResult = 8;
     if (entry.flags & 8U)
         return 2;
-    if (entry.flags & NpcRouteStreamPinned)
+    if (entry.flags & NRSF_Pinned)
         return 3;
     if (!(entry.flags & 7U))
         return 4;
@@ -805,7 +805,7 @@ bool CanNpcEnterScenario(shen_name character) {
         if (GetNpcAreaSpecialMotionFlags(*entry) & 0x80U)
             return false;
     }
-    const PartyCompanion *const party = FindPartyCompanion(FindCharacterByScenarioName(character));
+    const PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(character));
     return !party || !(party->flags & 2U) || party->behaviorState != 8;
 }
 
@@ -822,10 +822,10 @@ bool BeginNpcSpecialMotion(shen_name character) {
     entry->specialMotionPhase = 0;
     if (entry->previousLiveState == 8) {
         if (GetNpcAreaSpecialMotionFlags(*entry) & 2U)
-            SetMotionSpeed(entry->motionWork, 0.0f, MotionRegion::LowerBody);
+            mtwkSetSpeed(entry->motionWork, 0.0f, MotionRegion::LowerBody);
         entry->commandFlags |= 0x40U;
     } else if (entry->previousLiveState != 1) {
-        SetMotionSpeed(entry->motionWork, entry->previousLiveState == 4 ? 0.0f : 1.0f, MotionRegion::LowerBody);
+        mtwkSetSpeed(entry->motionWork, entry->previousLiveState == 4 ? 0.0f : 1.0f, MotionRegion::LowerBody);
     }
     entry->liveState = 2;
     entry->counter416 = 0;
@@ -837,14 +837,14 @@ bool EndNpcSpecialMotion(shen_name character) {
     if (!entry || !(entry->flags & 0x10U))
         return false;
     SetPartyConversationPaused(character, false);
-    UpdateMotionWorkWithPosition(entry->motionWork, nullptr, 0);
-    RequestMotionTargetFacing(entry->motionWork, nullptr, 0);
+    mtwkUpdateWithPosition(entry->motionWork, nullptr, 0);
+    mtwkRequestTargetFacing(entry->motionWork, nullptr, 0);
     if (entry->flags & 8U) {
         entry->flags &= ~0x4010U;
         entry->liveState = entry->previousLiveState;
         entry->specialMotionPhase = 0;
         if (entry->motionWork)
-            SetMotionTimeRelated(entry->motionWork, 0, 0, 0);
+            mtwkSetTimeRelated(entry->motionWork, 0, 0, 0);
     } else {
         entry->specialMotionPhase = 10;
         entry->flags |= 0x4000U;
@@ -869,7 +869,7 @@ bool ResetNpcSpecialMotionTarget(shen_name character) {
         return false;
     if (!(entry->flags & 0x200000U)) {
         entry->specialMotionPhase = 5;
-        UpdateMotionWorkWithPosition(entry->motionWork, nullptr, 0);
+        mtwkUpdateWithPosition(entry->motionWork, nullptr, 0);
     }
     return true;
 }
@@ -880,7 +880,7 @@ bool RequestNpcSpecialMotionLookTarget(shen_name character, const Vector3 *targe
         return false;
     if (!(entry->flags & 0x200000U)) {
         entry->specialMotionPhase = 6;
-        UpdateMotionWorkWithPosition(entry->motionWork, nullptr, 2);
+        mtwkUpdateWithPosition(entry->motionWork, nullptr, 2);
         entry->specialMotionTarget = *target;
     }
     return true;
@@ -905,8 +905,8 @@ std::uint64_t IsNpcSceneMotionPlaying(shen_name character) {
     if (!entry || !entry->node)
         return 0;
     for (std::uint32_t region = 1; region < 5; ++region) {
-        if (SetMotionRegionFlag(entry->motionWork, 72, 1, static_cast<MotionRegion>(region)) &&
-            GetMotionAnimationId(entry->motionWork, static_cast<MotionRegion>(region)) ==
+        if (mtwkSetRegionFlag(entry->motionWork, 72, 1, static_cast<MotionRegion>(region)) &&
+            mtwkGetAnimationId(entry->motionWork, static_cast<MotionRegion>(region)) ==
                 RemapNpcMotionForRig(GetCharacterBoneId(entry->node), NPC_SCENE_MOTION))
             return 1;
     }
@@ -1013,7 +1013,7 @@ bool NpcWait() {
         return false;
     for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
         const NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        if (!(entry.flags & NpcRouteAbstractActive) && (entry.flags & NpcRouteStreamRequested))
+        if (!(entry.flags & NRSF_AbstractActive) && (entry.flags & NRSF_Requested))
             return true;
     }
     return false;
@@ -1083,9 +1083,9 @@ std::int64_t MarkNpcRoutePartyControl(shen_name character) {
     for (NpcRouteLiveEntry &entry : npcRouteEntries) {
         if (entry.name.name != character.name)
             continue;
-        if (!(entry.flags & NpcRouteAbstractActive))
+        if (!(entry.flags & NRSF_AbstractActive))
             return 0;
-        entry.flags |= NpcRouteFlag80;
+        entry.flags |= NRSF_Unknown80;
         return 1;
     }
     return 0;
@@ -1097,9 +1097,9 @@ std::int64_t ClearNpcRoutePartyControl(shen_name character) {
     for (NpcRouteLiveEntry &entry : npcRouteEntries) {
         if (entry.name.name != character.name)
             continue;
-        if (!(entry.flags & NpcRouteAbstractActive))
+        if (!(entry.flags & NRSF_AbstractActive))
             return 0;
-        entry.flags &= ~NpcRouteFlag80;
+        entry.flags &= ~NRSF_Unknown80;
         return 1;
     }
     return 0;
@@ -1113,12 +1113,12 @@ NpcRouteLiveEntry *WarmStartNpcRoute(shen_name character) {
         NpcRouteLiveEntry &entry = npcRouteEntries[index];
         if (entry.name.name != character.name)
             continue;
-        if (!(entry.flags & NpcRouteAbstractActive)) {
+        if (!(entry.flags & NRSF_AbstractActive)) {
             npcPoolTarget -= entry.streamCost;
-            if ((entry.flags & (NpcRouteStreamRequested | NpcRouteStreamStartHidden)) == (NpcRouteStreamRequested | NpcRouteStreamStartHidden))
+            if ((entry.flags & (NRSF_Requested | NRSF_StartHidden)) == (NRSF_Requested | NRSF_StartHidden))
                 ReleaseNpcRouteStream(entry, npcRouteRuntimeRecords[index], false);
         }
-        entry.flags |= NpcRouteAbstractActive | NpcRouteFlag80;
+        entry.flags |= NRSF_AbstractActive | NRSF_Unknown80;
         entry.controlFlags |= 2U;
         if (entry.node) {
             FindMotionWork(entry.node)->runtime.callbackFlags &= ~8U;
@@ -1138,7 +1138,7 @@ std::int64_t npcWarmStartHumanRoute(shen_name character) {
     NpcRouteLiveEntry *const entry = WarmStartNpcRoute(character);
     if (!entry)
         return 0;
-    entry->flags |= NpcRouteStreamUseHumansAfs;
+    entry->flags |= NRSF_UseHumansAfs;
     return 1;
 }
 
@@ -1148,11 +1148,11 @@ std::int64_t EV_ForceLoadNpc(shen_name character) {
             NpcRouteLiveEntry &entry = npcRouteEntries[index];
             if (entry.name.name != character.name)
                 continue;
-            entry.flags &= ~NpcRouteStreamStartHidden;
+            entry.flags &= ~NRSF_StartHidden;
             return RequestNpcStreamLoad(entry);
         }
     }
-    return LoadNativeNpcHuman(character, character, false) > 0;
+    return npcLoadHuman(character, character, false) > 0;
 }
 
 std::uint64_t EV_npcStreamOrLoadHuman(shen_name character) {
@@ -1161,12 +1161,12 @@ std::uint64_t EV_npcStreamOrLoadHuman(shen_name character) {
             NpcRouteLiveEntry &entry = npcRouteEntries[index];
             if (entry.name.name != character.name)
                 continue;
-            entry.flags &= ~NpcRouteStreamStartHidden;
+            entry.flags &= ~NRSF_StartHidden;
             RequestNpcStreamLoad(entry);
             return static_cast<std::uint32_t>(npcLastHumanLoadResult);
         }
     }
-    npcLastHumanLoadResult = LoadNativeNpcHuman(character, character, false);
+    npcLastHumanLoadResult = npcLoadHuman(character, character, false);
     return static_cast<std::uint32_t>(npcLastHumanLoadResult);
 }
 
@@ -1176,7 +1176,7 @@ void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry) {
     for (std::uint32_t region = 1; region < 5; ++region)
         entry.motionWork->runtime.regionFlags[region] |= 0x400U;
     mtwkSetRequestedRootMode(entry.motionWork, 1);
-    SetMotionFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
+    mtwkSetFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
     switch (entry.liveState) {
     case 1:
         entry.currentMotionId = SelectNpcLocomotion(entry.stateContext, (entry.stateContext.flags & 0x10U) ? 1 : 0);
@@ -1188,13 +1188,13 @@ void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry) {
         if (entry.flags & 0x400U) {
             Vector3i rotation;
             std::memcpy(&rotation, &entry.euler, sizeof(rotation));
-            SetCharacterWorldRotation(entry.node, rotation);
+            charaSetWorldRot(entry.node, rotation);
             return;
         }
         break;
     case 4:
         if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-            control->flags &= ~(CharacterControlApplyGravity | CharacterControlEvaluateMotion);
+            control->flags &= ~(CCMF_ApplyGravity | CCMF_EvaluateMotion);
         shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
         break;
     case 5:
@@ -1214,7 +1214,7 @@ void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry) {
         ApplyNpcAreaMotion(entry, entry.currentMotionId);
         if (((entry.routeMotionState - 16) & 0xfb) == 0) {
             if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-                control->flags |= CharacterControlStairMode;
+                control->flags |= CCMF_StairMode;
             entry.commandFlags |= 0x800U;
         }
         break;
@@ -1226,7 +1226,7 @@ void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry) {
     mtwkRequestMotion(entry.motionWork, entry.currentMotionId, MotionRegion::LowerBody);
     Vector3i rotation;
     std::memcpy(&rotation, &entry.euler, sizeof(rotation));
-    SetCharacterWorldRotation(entry.node, rotation);
+    charaSetWorldRot(entry.node, rotation);
 }
 
 // @verified - p
@@ -1239,9 +1239,9 @@ std::int64_t npcSetLock(shen_name character, std::int32_t preserveMotion) {
             continue;
         if (ReadU32(entry.recordBase) == SHEN_NAME(MOVE))
             return 0;
-        if (entry.flags & NpcRouteAbstractActive) {
+        if (entry.flags & NRSF_AbstractActive) {
             npcPoolTarget += entry.streamCost;
-            entry.flags &= ~(NpcRouteAbstractActive | NpcRouteStreamUseHumansAfs);
+            entry.flags &= ~(NRSF_AbstractActive | NRSF_UseHumansAfs);
             entry.controlFlags &= ~2U;
             if (!preserveMotion)
                 ResumeNpcMotionAfterUnlock(entry);
@@ -1267,13 +1267,13 @@ std::int64_t EV_npcFree(shen_name character) {
             NpcRouteLiveEntry &entry = npcRouteEntries[index];
             if (entry.name.name != character.name)
                 continue;
-            if (entry.flags & (NpcRouteStreamRequested | NpcRouteStreamLive | NpcRouteStreamFadeOut)) {
+            if (entry.flags & (NRSF_Requested | NRSF_Live | NRSF_FadeOut)) {
                 ReleaseNpcRouteStream(entry, npcRouteRuntimeRecords[index], false);
             }
             return 1;
         }
     }
-    return ReleaseNativeNpcHumanPackage(character);
+    return npcReleasePak(character);
 }
 
 void EV_SetAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTask, bool visible, bool lowQualityHands) {
@@ -1379,7 +1379,7 @@ void ConditionalNpcLoadCallback(void *data) {
         EV_AT_SetAngY(entry->character, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, entry->yaw, 0});
         if (entry->motion != 0xffffffffU)
             mtwkRequestMotion(
-                FindMotionWork(FindCharacterByScenarioName(entry->character)), static_cast<std::uint16_t>(entry->motion), MotionRegion::LowerBody);
+                FindMotionWork(ctrlGetScenarioChara(entry->character)), static_cast<std::uint16_t>(entry->motion), MotionRegion::LowerBody);
         work.admitted[work.entryIndex++] = 1;
         work.phase = 1;
     }
@@ -1477,7 +1477,7 @@ void EVT_UTL_LoadNPCChara_Callback_1(void *) {
     EV_SetRefBoardParamsFor(character, 1);
     EV_SetCharacterAlphaEnabled(character, false);
     if (genericNpcLoadLowQualityHands)
-        SetLowQualityHands(FindCharacterByScenarioName(character));
+        SetLowQualityHands(ctrlGetScenarioChara(character));
     ++genericNpcLoadCharacters;
     genericNpcLoadPhase = 0;
     if (genericNpcLoadCharacters->name == 0xffffffffU) {
@@ -1517,7 +1517,7 @@ void EVT_UTL_LoadNPCChara_Callback_2(void *taskData) {
         }
 
         if (areaNpcLoadLowQualityHands != 0) {
-            SetLowQualityHands(FindCharacterByScenarioName(character));
+            SetLowQualityHands(ctrlGetScenarioChara(character));
         }
 
         ++areaNpcLoadCharacters;
@@ -1628,7 +1628,7 @@ std::int64_t EV_ResetFreeTalkFlags() {
             if (runtime.streamState == NpcHumanStreamState::Missing)
                 runtime.streamState = NpcHumanStreamState::Inactive;
         }
-        if (!(entry.flags & (NpcRouteAbstractActive | NpcRouteStreamPinned)) && (entry.flags & 7U)) {
+        if (!(entry.flags & (NRSF_AbstractActive | NRSF_Pinned)) && (entry.flags & 7U)) {
             FlushQueuedLegacyDrawPasses();
             ReleaseNpcRouteStream(entry, runtime, false);
         }
@@ -1672,7 +1672,7 @@ std::uint64_t CountNpcLiveStreams() {
         return 0;
     std::uint32_t count = 0;
     for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index)
-        if (npcRouteEntries[index].flags & NpcRouteStreamLive)
+        if (npcRouteEntries[index].flags & NRSF_Live)
             ++count;
     return count;
 }
@@ -1683,7 +1683,7 @@ std::uint64_t IsNpcLoadedOrVisible(shen_name character) {
     for (std::size_t index = 0; index < npcRouteEntries.size(); ++index) {
         const NpcRouteLiveEntry &entry = npcRouteEntries[index];
         if (entry.name.name == character.name)
-            return (entry.flags & NpcRouteAbstractActive) != 0;
+            return (entry.flags & NRSF_AbstractActive) != 0;
     }
     return 0;
 }
@@ -1694,7 +1694,7 @@ std::uint64_t IsNpcUsingHumansAfs(shen_name character) {
     for (std::size_t index = 0; index < npcRouteEntries.size(); ++index) {
         const NpcRouteLiveEntry &entry = npcRouteEntries[index];
         if (entry.name.name == character.name)
-            return (entry.flags & NpcRouteStreamUseHumansAfs) != 0;
+            return (entry.flags & NRSF_UseHumansAfs) != 0;
     }
     return 0;
 }
@@ -1705,11 +1705,11 @@ std::int64_t EV_ForceLoadNpcFromHumans(shen_name character) {
             NpcRouteLiveEntry &entry = npcRouteEntries[index];
             if (entry.name.name != character.name)
                 continue;
-            entry.flags &= ~NpcRouteStreamStartHidden;
+            entry.flags &= ~NRSF_StartHidden;
             return RequestNpcStreamLoad(entry);
         }
     }
-    return LoadNativeNpcHuman(character, character, true) > 0;
+    return npcLoadHuman(character, character, true) > 0;
 }
 
 std::uint64_t EV_npcStreamOrLoadHumanFromHumans(shen_name character) {
@@ -1718,12 +1718,12 @@ std::uint64_t EV_npcStreamOrLoadHumanFromHumans(shen_name character) {
             NpcRouteLiveEntry &entry = npcRouteEntries[index];
             if (entry.name.name != character.name)
                 continue;
-            entry.flags &= ~NpcRouteStreamStartHidden;
+            entry.flags &= ~NRSF_StartHidden;
             RequestNpcStreamLoad(entry);
             return static_cast<std::uint32_t>(npcLastHumanLoadResult);
         }
     }
-    npcLastHumanLoadResult = LoadNativeNpcHuman(character, character, true);
+    npcLastHumanLoadResult = npcLoadHuman(character, character, true);
     return static_cast<std::uint32_t>(npcLastHumanLoadResult);
 }
 
@@ -1802,10 +1802,10 @@ std::int32_t npcReleaseUnusedStreams() {
             if (runtime.streamState == NpcHumanStreamState::Missing)
                 runtime.streamState = NpcHumanStreamState::Inactive;
         }
-        if ((entry.flags & (NpcRouteAbstractActive | NpcRouteStreamPinned)) == 0 &&
-            (entry.flags & (NpcRouteStreamRequested | NpcRouteStreamLive | NpcRouteStreamFadeOut)) != 0) {
+        if ((entry.flags & (NRSF_AbstractActive | NRSF_Pinned)) == 0 &&
+            (entry.flags & (NRSF_Requested | NRSF_Live | NRSF_FadeOut)) != 0) {
             FlushQueuedLegacyDrawPasses();
-            if (entry.flags & NpcRouteStreamRequested)
+            if (entry.flags & NRSF_Requested)
                 ReleaseNpcRouteStream(entry, runtime, false);
         }
     }
@@ -1831,20 +1831,20 @@ std::int32_t PrepareNpcAllFromArray() {
                 runtime.streamState = NpcHumanStreamState::Inactive;
         }
         std::uint32_t pending = 4;
-        if ((entry.flags & NpcRouteAbstractActive) != 0) {
+        if ((entry.flags & NRSF_AbstractActive) != 0) {
             pending = 2;
-        } else if ((entry.flags & NpcRouteStreamPinned) != 0) {
+        } else if ((entry.flags & NRSF_Pinned) != 0) {
             pending = 3;
-        } else if ((entry.flags & (NpcRouteStreamRequested | NpcRouteStreamLive | NpcRouteStreamFadeOut)) != 0) {
+        } else if ((entry.flags & (NRSF_Requested | NRSF_Live | NRSF_FadeOut)) != 0) {
             FlushQueuedLegacyDrawPasses();
-            pending = entry.flags & NpcRouteStreamRequested;
+            pending = entry.flags & NRSF_Requested;
             if (pending != 0)
                 ReleaseNpcRouteStream(entry, runtime, false);
-            if ((entry.flags & (NpcRouteStreamLive | NpcRouteAbstractActive | 0x10U)) == NpcRouteStreamLive) {
+            if ((entry.flags & (NRSF_Live | NRSF_AbstractActive | 0x10U)) == NRSF_Live) {
                 entry.field335 = 0;
-                entry.flags = (entry.flags & ~(NpcRouteStreamLive | NpcRouteStreamFadeOut)) | NpcRouteStreamFadeOut;
+                entry.flags = (entry.flags & ~(NRSF_Live | NRSF_FadeOut)) | NRSF_FadeOut;
             }
-            if ((entry.flags & NpcRouteStreamFadeOut) != 0)
+            if ((entry.flags & NRSF_FadeOut) != 0)
                 UpdateNpcStreamFade(entry);
         }
         if (pending == 0)

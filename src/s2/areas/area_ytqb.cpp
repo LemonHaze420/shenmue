@@ -67,7 +67,7 @@ void RetireNpcRequests(EventNpcReadWork &work) {
 }
 void EnableFinalPluralControl() {
     for (std::int32_t i = 0; i < 6; ++i)
-        SetPluralControlFor(FindCharacterByScenarioName(YTQB_FinalNames[i]), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(YTQB_FinalNames[i]), 1);
 }
 void StartCombinationPrompt(std::int32_t second, std::int32_t third) {
     qteBattleUtil(BattleQteMode::SetLastCommands, 16, second, third);
@@ -118,16 +118,16 @@ void YtqbSetup(YtqbWork &work) {
     EV_ResetFreeTalkFlags();
     EVT_SetQteRetryFrames(24);
     EVT_SetQteFailureCount(0);
-    GetCurrentDateTime(eventTemporaryDateTime);
+    shenGetCurrentDateTime(eventTemporaryDateTime);
     work.characters = Queue_EVT_AT_ReadChr(work.task, YTQB_PlayerNames);
     work.npcs = nullptr;
     for (const char *package : {"YTQB", "0048", "048E"}) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(package));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     }
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("YTQB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("YTQB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("YTQB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("YTQB"), 0);
     EV_FreeAuthorPak(1, "S2BV");
     EV_FreeAuthorPak(1, "0048");
     EV_SetNewSceneIndex();
@@ -166,8 +166,8 @@ void YtqbStart(void *data) {
     YtqbAngle(YTQB_DUMR, YTQB_RYO_, 0);
     YtqbPosition(YTQB_BASE, YTQB_INVALID, YTQB_WorldBase);
     YtqbAngle(YTQB_BASE, YTQB_INVALID, 0);
-    SetMotionFrameTime(scenFindMotionwork(YTQB_RYO_), 8, MotionRegion::LowerBody);
-    SetLowQualityHands(FindCharacterByScenarioName(YTQB_RYO_));
+    mtwkSetFrameTime(scenFindMotionwork(YTQB_RYO_), 8, MotionRegion::LowerBody);
+    SetLowQualityHands(ctrlGetScenarioChara(YTQB_RYO_));
     work.parameters.player = YTQB_RYO_;
     work.continuation = YtqbSboAttack;
     work.parameters.firstOpponent = YTQB_INVALID;
@@ -226,14 +226,14 @@ void YtqbStartWaterAuthor(void *data) {
 }
 void YtqbWaitWaterAuthor(void *) {
     if (EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame) == 1)
-        SetPluralControlFor(FindCharacterByScenarioName(YTQB_RYO_), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(YTQB_RYO_), 1);
     if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded))
         return;
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
     EV_authSceneCtrl(AuthSceneCtrl::ShowFilmBars);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(YTQB_RYO_), 0, reinterpret_cast<std::byte *>(ryoQteHandPose), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(YTQB_RYO_), 1, reinterpret_cast<std::byte *>(ryoQteHandPose), 0);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(YTQB_RYO_), static_cast<std::int32_t>(FacialExpressionId::Angry), 1, 1);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(YTQB_RYO_), 0, reinterpret_cast<std::byte *>(ryoQteHandPose), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(YTQB_RYO_), 1, reinterpret_cast<std::byte *>(ryoQteHandPose), 0);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(YTQB_RYO_), static_cast<std::int32_t>(FacialExpressionId::Angry), 1, 1);
     StartCombinationPrompt(16, 1024);
     HLib::SetCurrentTaskTo(YtqbWaterResult);
 }
@@ -319,7 +319,7 @@ void YtqbFinish(void *data) {
 }
 void YtqbWaitMotion(void *data) {
     YtqbWork &work = *static_cast<YtqbWork *>(data);
-    if (SetMotionRegionFlag(scenFindMotionwork(YTQB_RYO_), 65, 1, MotionRegion::LowerBody) && work.npcs->characters[24].name == 0)
+    if (mtwkSetRegionFlag(scenFindMotionwork(YTQB_RYO_), 65, 1, MotionRegion::LowerBody) && work.npcs->characters[24].name == 0)
         HLib::SetCurrentTaskTo(work.continuation);
 }
 void YtqbNextQte(void *data) {
@@ -367,17 +367,17 @@ void YtqbCleanup(YtqbWork &work) {
     RemoveInventoryItem(37, 1);
     RemoveInventoryItem(38, 1);
     RemoveInventoryItem(40, 1);
-    SetPluralControlFor(FindCharacterByScenarioName(YTQB_RYO_), 0);
-    hndlSetFlags(FindCharacterByScenarioName(YTQB_RYO_));
+    SetPluralControlFor(ctrlGetScenarioChara(YTQB_RYO_), 0);
+    hndlSetFlags(ctrlGetScenarioChara(YTQB_RYO_));
     qteBattleUtil(BattleQteMode::RetireAndFree);
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "S2BV");
     EV_FreeAuthorPak(0, "0048");
     for (const char *package : {"YTQB", "0048", "048E"})
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
     ET_AT_KillWork(work.characters);
 }
 void YtqbExit(YtqbWork &work) {

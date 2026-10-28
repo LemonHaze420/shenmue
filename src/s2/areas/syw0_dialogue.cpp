@@ -120,7 +120,7 @@ void Syw0ExitPracticeSequence(void *data) {
             Syw0TurnToTeacher(sequence);
             Vector3 target;
             EV_GetCharaPosition(SYW0_RYO, 5, &target, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
             if (practice >= 0 && practice <= 1) {
                 EV_AT_SetPos(SYW0_SYE, EventTransformFlags::World | EventTransformFlags::AllAxes, SYW0_TEACHER_WEIGHT_POSITION);
                 SetTrainingCharacterYaw(SYW0_SYE, 32768);
@@ -129,7 +129,7 @@ void Syw0ExitPracticeSequence(void *data) {
                 SetTrainingCharacterYaw(SYW0_SYE, 49152);
             }
             mtwkRequestMotion(scenFindMotionwork(SYW0_SYE), 8841, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
             sequence.resultSlot = 1;
             Syw0Wait(sequence, 8, 113);
             break;
@@ -213,9 +213,9 @@ void Syw0WeightSuccessSequence(void *data) {
             EV_AT_SetAngY(SYW0_SYE, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
             Vector3 target;
             EV_GetCharaPosition(SYW0_RYO, 5, &target, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
             mtwkRequestMotion(scenFindMotionwork(SYW0_SYE), 8841, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
             Syw0Advance(sequence, 104);
             break;
         }

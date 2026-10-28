@@ -156,7 +156,7 @@ void GameEnqueueCallback(void *data) {
     EV_SetRefBoardParamsFor(ryo, 1);
     EV_SetNewSceneIndex();
     Gravity(false);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("GAME"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("GAME"), 0);
     EV_LoadCutsceneFromCurrentScene("0118E000.smp");
     EV_FreeAuthorPak(1, "0147");
 }
@@ -187,7 +187,7 @@ void GameAuthorCallback(void *data) {
         Vector3 target;
         EV_GetCharaPosition(machine, CHARACTER_TRANSLATION_ROOT, &target, EventTransformFlags::World);
         target.y += 1.2f;
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &target, 1);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), &target, 1);
         EVT_AT_SetMot(ryo, 0xf002, 0, 1, 0x40000000, 0);
         Voice("0147A001", 10); // @text EN: "Five dollars a game=@" | JA: "１回５ドルか…"
         if (work->kind <= 3) {
@@ -270,7 +270,7 @@ void GameAuthorCallback(void *data) {
             work->state = 7;
             break;
         }
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
         if (work->kind <= 3) {
             SetCurrentGameFlag(static_cast<std::uint8_t>(3 - work->kind), 1);
             Camera(3020 + work->kind);
@@ -406,17 +406,17 @@ void GameExitCallback(void *data) {
     using enum CameraState;
     auto *work = static_cast<GameWork *>(data);
     SetScenarioCharacterKillMode(machine, 1);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_EnableCharacterDisplay(ryo);
     EV_SetRefBoardParamsFor(ryo, 0);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
     Gravity(true);
     EVS_LoopCamera(0, shen_name{}, shen_name{});
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GAME"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GAME"), 0);
     if (!(pendingAchievement | pendingPrize)) {
         EV_NPC_NewLoadSw(1);
         SetPlayerControlEnabled(1);

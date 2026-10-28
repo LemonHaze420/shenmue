@@ -28,17 +28,17 @@ void BeginDroppedBooks() {
     bookModelState.displayMode = 1;
     bookDropRecovery &= 0xffffffff00000000ULL;
     bookModelState.animationFrame = 0;
-    SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 71, 0, MotionRegion::LowerBody);
     ResetBookMotionLayers();
     mtwkRequestMotion(scenFindMotionwork(BOOK_RYO), bookModelState.mirror >= 0 ? 0x188a : 0x1889, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
-    EV_SetCharaControllerFlags(BOOK_DYNAMIC, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
+    mtwkSetRegionEvalTime(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
+    EV_SetCharaControllerFlags(BOOK_DYNAMIC, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
     CopyBookPlayerAnchor();
     AT_SetLocalBaseChara(BOOK_DYNAMIC, BOOK_RYO);
     Vector3 position;
     EV_GetCharaPosition(BOOK_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     position.y += 1.5f;
-    UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_SAI), &position, 1);
+    mtwkUpdateWithPosition(scenFindMotionwork(BOOK_SAI), &position, 1);
     EV_AT_SetPos(BOOK_DYNAMIC, EventTransformFlags::AllAxes, {.x = .05f, .y = 1.03f, .z = -.37f});
     EV_AT_SetAngY(BOOK_DYNAMIC, EventTransformFlags::AllAxes, {.x = 0, .y = 0, .z = 0});
     if (bookCarryVariant <= 2)
@@ -58,7 +58,7 @@ void BookDropFadeCallback(void *) {
     HLib::DestroyCurrentTask();
 }
 void FinishDroppedBooks() {
-    UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_RYO), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(BOOK_RYO), nullptr, 0);
     shenSetClockAndCompassRenderTo(0);
     bookModelState.displayMode = 0;
     AttachBookStackToPlayer();
@@ -74,16 +74,16 @@ void FinishDroppedBooks() {
     HLib::Task *task = HLib::EnqueueTaskWithoutParameter(BookDropFadeCallback, 6, 0x0d, static_cast<std::int32_t>(BOOK_TASK.name));
     HLib::SetupTimedTask(task, 1);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.minute += static_cast<std::int32_t>(bookDropTimePenalty);
     SetCurrentDateTimeTo(time);
     Vector3 sampled;
     SampleBookCarryTrack(bookCarryTrack, sampled, bookCarryDistance * .125f, 1);
 }
 void AttachDroppedBook(shen_name actor, const Vector3 &position, const Vector3i &rotation) {
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-    SetFixoDataForMotionWork(FindCharacterByScenarioName(actor), FindCharacterByScenarioName(BOOK_RYO), 14, position, {rotation.x, rotation.y, rotation.z});
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(BOOK_RYO, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+    SetFixoDataForMotionWork(ctrlGetScenarioChara(actor), ctrlGetScenarioChara(BOOK_RYO), 14, position, {rotation.x, rotation.y, rotation.z});
 }
 void QueueDroppedBookMovement(shen_name actor, const Vector3 &position, const Vector3i &rotation, std::int32_t duration) {
     EV_GetCharaPosition(actor, CHARACTER_TRANSLATION_ROOT, &bookSmoothMovement.fromPosition, EventTransformFlags::Local);
@@ -130,10 +130,10 @@ void RecoverDroppedBooks() {
     if (frame < 89)
         UpdateDroppedBookDisplay();
     if (frame == 90) {
-        SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 69, 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 69, 2, MotionRegion::LowerBody);
         SetBookActorMotion(BOOK_RYO, 6280);
-        SetMotionSpeed(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
-        SetMotionRegionEvalTime(scenFindMotionwork(BOOK_RYO), 250, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(scenFindMotionwork(BOOK_RYO), 250, MotionRegion::LowerBody);
         CopyBookPlayerAnchor();
         EVS_LoopCamera(shenGetRandomInt32(2) + 2030, bookPlayerAnchor, bookPlayerAnchor);
         AttachBookStackToPlayer();
@@ -166,21 +166,21 @@ void RecoverDroppedBooks() {
     if (frame == 150)
         AttachDroppedBook(SHEN_NAME(RZOU), {.x = .108999997f, .y = .072999999f, .z = -.17f}, {.x = 3018, .y = 0, .z = 60220});
     if (frame == 170) {
-        ResetCharaFixo(FindCharacterByScenarioName(SHEN_NAME(RZOU)));
+        ResetCharaFixo(ctrlGetScenarioChara(SHEN_NAME(RZOU)));
         QueueDroppedBookMovement(SHEN_NAME(RZOU), {.x = -.528599977f, .y = .251399994f, .z = -.5298f}, {.x = 13848, .y = 32768, .z = 16384}, 8);
     }
     if (frame == 192)
         AttachDroppedBook(SHEN_NAME(SZOU), {.x = .128999993f, .y = .0480000004f, .z = -.109f}, {.x = 58980, .y = 29855, .z = 57526});
     if (frame == 214) {
-        ResetCharaFixo(FindCharacterByScenarioName(SHEN_NAME(SZOU)));
+        ResetCharaFixo(ctrlGetScenarioChara(SHEN_NAME(SZOU)));
         QueueDroppedBookMovement(SHEN_NAME(SZOU), {.x = -.50400001f, .y = .28310001f, .z = -.5284f}, {.x = 49152, .y = 0, .z = 16384}, 5);
     }
     if (frame == 240) {
         AttachDroppedBook(SHEN_NAME(TZOU), {.x = .153999999f, .y = .0160000008f, .z = -.12899999f}, {.x = 47331, .y = 30037, .z = 61531});
-        UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_SAI), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(BOOK_SAI), nullptr, 0);
     }
     if (frame == 299)
-        ResetCharaFixo(FindCharacterByScenarioName(SHEN_NAME(TZOU)));
+        ResetCharaFixo(ctrlGetScenarioChara(SHEN_NAME(TZOU)));
     if (frame == 260) {
         Vector3 position;
         Vector3i rotation;
@@ -195,14 +195,14 @@ void RecoverDroppedBooks() {
         SetParticleEffectBirthRate(0, bookSmokeEffect, 0);
     }
     if (frame == 90)
-        SetMotionRegionEvalTime(scenFindMotionwork(BOOK_RYO), 250, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(scenFindMotionwork(BOOK_RYO), 250, MotionRegion::LowerBody);
     if (frame == 270)
         SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
     if (frame >= 180) {
         Vector3 position;
         EV_GetCharaPosition(BOOK_RYO, 10, &position, EventTransformFlags::World);
         position.y -= .5f;
-        UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_RYO), &position, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(BOOK_RYO), &position, 0);
     }
     if (frame == 330)
         FinishDroppedBooks();
@@ -232,7 +232,7 @@ void UpdateBookCarryTask() {
             Vector3 position;
             EV_GetCharaPosition(BOOK_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
             position.y += 1.5f;
-            UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_SAI), &position, 1);
+            mtwkUpdateWithPosition(scenFindMotionwork(BOOK_SAI), &position, 1);
         }
     }
     if (!dispatched) {
@@ -263,7 +263,7 @@ void UpdateBookCarryTask() {
     }
     if ((bookCarryPhase & 0xf7) == 0 && IsBookTimeExpired()) {
         EV_DisableCharacterDisplay(bookModelState.stacks[bookModelState.currentStack + 1]);
-        SetMotionSpeed(scenFindMotionwork(BOOK_RYO), 0, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(BOOK_RYO), 0, MotionRegion::LowerBody);
         return;
     }
     if (bookCarryPhase == 5)

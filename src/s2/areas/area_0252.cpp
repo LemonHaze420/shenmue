@@ -33,7 +33,7 @@ void E0252Init() {
 // @verified - p
 void ConfigureE0252Environment() {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 11;
     time.minute = 30;
     SetCurrentDateTimeTo(time);
@@ -92,7 +92,7 @@ void RestoreE0252Characters() {
 // @verified - p
 void CleanupE0252(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0252_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

@@ -98,8 +98,8 @@ void BgsmInitialize(void *data) {
     EV_EventSetUpHelpIcon_0(0x48, 0);
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(1, "0103");
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BGSM"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BGSM"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BGSM"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BGSM"), 0);
     EV_LoadCutsceneFromCurrentScene("01030000");
     EV_LoadAudio("01030000", 0);
     EV_spmBeginSampleExecute();
@@ -195,7 +195,7 @@ void BgsmEnd(void *data) {
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.self);
     ET_AT_KillWork(work.characters);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BGSM"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BGSM"), 0);
     EV_NPC_NewLoadSw(1);
     EV_FreeAuthorPak(0, "0103");
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);

@@ -38,7 +38,7 @@ void ConfigureE0080Environment() {
     EV_LoadCutsceneFromCurrentScene("0080A000");
     EV_FreeAuthorPak(1, AREA_0080_CONVERSATION);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (static_cast<std::uint8_t>(time.hour - 19) <= 5) {
         EV_lightLoad(AREA_0080_0000);
         PushGlobalLightingProgram();
@@ -63,14 +63,14 @@ void E0080Main(std::uintptr_t) {
 // @verified - p
 void CleanupE0080(AreaImmediateAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0080_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
     EV_FreeAuthorPak(0, AREA_0080_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0080A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0080A"), 0);
 
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);

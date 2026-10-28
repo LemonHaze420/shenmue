@@ -83,7 +83,7 @@ void SleepAdmissionCallback(void *) {
 void QueueInitialSleep() {
     SetPlayerControlEnabled(0);
     EV_setHoldStatesFlags(0);
-    mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
+    mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0xf002, MotionRegion::LowerBody);
     HLib::Task *task = HLib::EnqueueTaskWithoutParameter(SleepAdmissionCallback, 4, 0xb, static_cast<std::int32_t>(STREET_WATCH_TASK.name));
     HLib::SetupTimedTask(task, 10);
 }
@@ -145,13 +145,13 @@ void WakeAfterAuthorCallback(void *) {
     using enum CameraState;
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
-    EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
-    SetMotionRegionFlag(FindMotionWork(FindCharacterByScenarioName(ryo)), 71, 0, MotionRegion::LowerBody);
+    EV_SetCharaControllerFlags(ryo, CCMF_UpdateHeight, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
+    mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, {120.0f, 94.30000305175781f, 550.7000122070312f});
     EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, {0, 43691, 0});
-    mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
+    mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0xf002, MotionRegion::LowerBody);
     sleepEventData.flags = 1;
     sleepEventData.continuation = SleepCompleteCallback;
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -174,9 +174,9 @@ void SleepCompleteCallback(void *) {
 void WonLoopCallback(void *) {
     const std::int32_t frame = static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     if (frame == 570)
-        SetChildObjectFlagByIndex(FindCharacterByScenarioName(ryo), 4);
+        SetChildObjectFlagByIndex(ctrlGetScenarioChara(ryo), 4);
     else if (frame == 802)
-        SetChildObjectFlagByIndex(FindCharacterByScenarioName(ryo), 0);
+        SetChildObjectFlagByIndex(ctrlGetScenarioChara(ryo), 0);
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded))
         HLib::DestroyCurrentTask();
 }
@@ -209,7 +209,7 @@ void WonAuthorCallback(void *) {
         snapAssignFrmCntFlags(136, 120);
 }
 void WonAfterAuthorCallback(void *) {
-    mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
+    mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0xf002, MotionRegion::LowerBody);
     FreeSleepPackageActors();
     spmFadeOut();
     EV_FreeAuthorPak(0, "0143");
@@ -240,7 +240,7 @@ void MainCallback(void *) {
     if (ryoNotBusy() && shenTrySleepTrigger(&sleepBox)) {
         SetPlayerControlEnabled(0);
         EV_setHoldStatesFlags(0);
-        mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
+        mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0xf002, MotionRegion::LowerBody);
         HLib::EnqueueTaskWithoutParameter(SleepRunCallback, 4, 0xb, static_cast<std::int32_t>(sleepTask.name));
     }
 }
@@ -255,7 +255,7 @@ void WaveCallback(void *) {
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 2228))
         return;
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     bool update = ((date.minute & 7) == 0 && date.second == 0) || GetCurrentAuthorId().name == SHEN_NAME(YORU) || initializing;
     if (!update) {
         Vector3 position;

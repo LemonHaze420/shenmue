@@ -42,7 +42,7 @@ void ResetPatiNailModelState() {
 // @verified - p
 void AttachPatiNails(PatiEventWork *work, shen_name board, const char *nailFile) {
     RestorePatiNailModels();
-    Character *character = FindCharacterByScenarioName(board);
+    Character *character = ctrlGetScenarioChara(board);
     MT7Model &model = *static_cast<MT7Model *>(character->model);
     MT7Node *transform = model.nodes[0].runtimeChild;
     ModelCloneNode *sourceRoot = reinterpret_cast<ModelCloneNode *>(const_cast<std::byte *>(model.source.data()) + model.nodes[0].sourceOffset);
@@ -98,7 +98,7 @@ void AttachPatiNails(PatiEventWork *work, shen_name board, const char *nailFile)
         patiNailNodes[index].runtimeParent = &patiNailNodes[index - 1];
         patiNailNodes[index - 1].runtimeSibling = &patiNailNodes[index];
     }
-    MT7Model *pinModel = static_cast<MT7Model *>(FindCharacterByScenarioName(PATI_PIN)->model);
+    MT7Model *pinModel = static_cast<MT7Model *>(ctrlGetScenarioChara(PATI_PIN)->model);
     const MT7Node &pin = pinModel->nodes[0];
     const ModelCloneNode *pinSource = reinterpret_cast<const ModelCloneNode *>(pinModel->source.data() + pin.sourceOffset);
     EV_DisableCharacterDisplay(PATI_PIN);

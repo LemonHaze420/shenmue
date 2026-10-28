@@ -93,7 +93,7 @@ void RestoreE0039Characters(std::int16_t selection) {
 // @verified - p
 void CleanupE0039(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0039_CHARACTER_TABLES[parent->selection]; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -104,7 +104,7 @@ void CleanupE0039(AreaAuthorTaskParameter *parent) {
     const std::int16_t selection = parent->selection;
     if (selection == 5) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 8;
         time.minute = 55;
         SetCurrentDateTimeTo(time);
@@ -145,9 +145,9 @@ void LoadE0039ScenePackages(std::int32_t selection) {
         break;
     }
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     SetMapModelDataDefaultVertexShader();
     if (selection == 0)
         EV_lightLoad(AREA_0039_0000);

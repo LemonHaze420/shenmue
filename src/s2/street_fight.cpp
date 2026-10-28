@@ -813,16 +813,16 @@ void StreetFightLookCallback(void *parameter) {
             if (DoesScenarioCharacterExist(work->character) && DoesScenarioCharacterExist(work->target)) {
                 Vector3 position;
                 EV_GetCharaPosition(work->target, 5, &position, EventTransformFlags::World);
-                (void)UpdateMotionWorkWithPosition(scenFindMotionwork(work->character), &position, 0);
+                (void)mtwkUpdateWithPosition(scenFindMotionwork(work->character), &position, 0);
                 if (work->flags & 0x100U)
-                    (void)UpdateMotionWorkWithPosition(scenFindMotionwork(work->character), nullptr, 3);
+                    (void)mtwkUpdateWithPosition(scenFindMotionwork(work->character), nullptr, 3);
             }
         }
         if (work->frames)
             --work->frames;
     } else {
         if (!(work->flags & 0x1000U) && DoesScenarioCharacterExist(work->character))
-            (void)UpdateMotionWorkWithPosition(scenFindMotionwork(work->character), nullptr, 0);
+            (void)mtwkUpdateWithPosition(scenFindMotionwork(work->character), nullptr, 0);
         (void)HLib::DestroyCurrentTask();
     }
 }
@@ -936,14 +936,14 @@ void StreetFightCharacterLoadCallback(void *parameter) {
     EV_SetCharaControllerFlags(character, UpdateHeight, NpcCharacterControllerState::Disabled);
     AT_SetLocalBaseChara(character, STREET_FIGHT_INVALID);
     (void)figpSetFlagsBlendForBlur(character, 2, 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(character), 1);
+    mtwkSetEnabled(scenFindMotionwork(character), 1);
     (void)mtwkSetExtraFlag(scenFindMotionwork(character), 0, 0);
     (void)mtwkSetExtraFlag(scenFindMotionwork(character), 3, 2);
     (void)mtwkSetRequestedRootMode(scenFindMotionwork(character), 3);
-    (void)SetMotionFrameTime(scenFindMotionwork(character), 7, MotionRegion::LowerBody);
-    (void)SetMotionRegionFlag(scenFindMotionwork(character), 66, 2, MotionRegion::LowerBody);
-    (void)SetMotionRegionFlag(scenFindMotionwork(character), 69, 2, MotionRegion::LowerBody);
-    (void)SetMotionRegionFlag(scenFindMotionwork(character), 71, 2, MotionRegion::LowerBody);
+    (void)mtwkSetFrameTime(scenFindMotionwork(character), 7, MotionRegion::LowerBody);
+    (void)mtwkSetRegionFlag(scenFindMotionwork(character), 66, 2, MotionRegion::LowerBody);
+    (void)mtwkSetRegionFlag(scenFindMotionwork(character), 69, 2, MotionRegion::LowerBody);
+    (void)mtwkSetRegionFlag(scenFindMotionwork(character), 71, 2, MotionRegion::LowerBody);
     EV_EnableCharacterDisplay(character);
     EV_EnsureCharacterDraw(character);
     SetScenarioCharacterType(character, CharacterTypeStencilShadow);

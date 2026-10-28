@@ -164,7 +164,7 @@ void FixLeafCallback(void *parameter) {
         HLib::DestroyCurrentTask();
         return;
     }
-    GetParentBoneWrapper(scenFindMotionwork(work.character), work.bone | 0x40000000);
+    mtwkGetParentBoneWrapper(scenFindMotionwork(work.character), work.bone | 0x40000000);
     --work.frames;
 }
 void QueueFixLeaf(std::int32_t bone) {
@@ -316,7 +316,7 @@ void UpdateRockyCompanion() {
         const float dx = placement.position.x - position.x, dz = placement.position.z - position.z;
         if (dx * dx + dz * dz < 9) {
             EV_PTYCUtils(shenhua, 3, 1);
-            RequestMotionPositionTransition(scenFindMotionwork(shenhua), &placement.position, static_cast<std::uint16_t>(placement.rotation.y), 0, 0);
+            mtwkRequestPositionTransition(scenFindMotionwork(shenhua), &placement.position, static_cast<std::uint16_t>(placement.rotation.y), 0, 0);
             rockyFall.companionPhase = 1;
         }
     }
@@ -417,7 +417,7 @@ void RockyFallCallback(void *) {
                 QueueFixLeaf(30);
                 QueueFixLeaf(25);
             }
-            EV_mtwkSetEnabled(scenFindMotionwork(ryo), 0);
+            mtwkSetEnabled(scenFindMotionwork(ryo), 0);
         }
         EVT_AT_SetMot(ryo, config->recover, 0, 1, 0x40000000U, 0);
         rockyFall.state = 5;
@@ -435,16 +435,16 @@ void RockyFallCallback(void *) {
             EVT_AT_SetMot(shenhua, 0xf0a5, 0, 1, 0x40000000U, 0);
             EVT_AT_SetMot(shenhua, 0x298c, 0, 1, 0, 15);
         }
-        auto *player = FindCharacterByScenarioName(ryo);
+        auto *player = ctrlGetScenarioChara(ryo);
         SetHighModelAndFaceFlagsForChara(player, 4, 10, 1);
-        SetFacialMouthExpression(FindCharacterByScenarioName(ryo), 1, 10, 1);
+        SetFacialMouthExpression(ctrlGetScenarioChara(ryo), 1, 10, 1);
         figpSetFlagsBlendForBlur(ryo, 5, 1);
         figpAssignModeFor(ryo, 1);
         EV_AT_SetPos(ryo, EventTransformFlags::World | EventTransformFlags::AllAxes, rockyFall.startPosition);
         EV_AT_SetAngY(ryo, EventTransformFlags::World | EventTransformFlags::AllAxes, rockyFall.targetRotation);
         AT_SetLocalBaseChara(dummy, shen_name{});
         EVT_AT_SetMot(ryo, config->fail, 0, .6000000238418579f, 0x40000000U, 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
         QueueFallCamera(config->failureCamera);
         EVT_AT_SetVoice("0100A080", 20); // @text EN: " " | JA: "うわぁぁぁーっ！"
         QueueFallVoice();
@@ -462,7 +462,7 @@ void RockyFallCallback(void *) {
         return;
     }
     case 5:
-        EV_mtwkSetEnabled(scenFindMotionwork(ryo), 1);
+        mtwkSetEnabled(scenFindMotionwork(ryo), 1);
         SetPlayerControlEnabled(1);
         FinishLoading();
         EV_SetCharaControllerFlags(ryo, 2, NpcCharacterControllerState::Enabled);
@@ -556,7 +556,7 @@ void RoomFallCallback(void *) {
         EV_AT_SetAngY(ryo, EventTransformFlags::World | EventTransformFlags::AllAxes, roomFall.targetRotation);
         AT_SetLocalBaseChara(dummy, shen_name{});
         EVT_AT_SetMot(ryo, config->begin, 0, 1, 0x40000000U, 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
         QueueFallCamera(config->camera);
         figpSetFlagsBlendForBlur(ryo, 5, 1);
         figpAssignModeFor(ryo, 1);
@@ -593,7 +593,7 @@ void RoomFallCallback(void *) {
                 QueueFixLeaf(30);
                 QueueFixLeaf(25);
             }
-            EV_mtwkSetEnabled(scenFindMotionwork(ryo), 0);
+            mtwkSetEnabled(scenFindMotionwork(ryo), 0);
         }
         EVT_AT_SetMot(ryo, config->recover, 0, 1, 0x40000000U, 0);
         roomFall.state = 9;
@@ -602,8 +602,8 @@ void RoomFallCallback(void *) {
     }
     case 4: {
         EV_FreeAuthorPak(1, "0100");
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), 4, 10, 1);
-        SetFacialMouthExpression(FindCharacterByScenarioName(ryo), 1, 10, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ryo), 4, 10, 1);
+        SetFacialMouthExpression(ctrlGetScenarioChara(ryo), 1, 10, 1);
         figpSetFlagsBlendForBlur(ryo, 5, 1);
         figpAssignModeFor(ryo, 1);
         AT_SetLocalBaseChara(dummy, ryo);
@@ -613,7 +613,7 @@ void RoomFallCallback(void *) {
         EV_AT_SetAngY(ryo, EventTransformFlags::World | EventTransformFlags::AllAxes, roomFall.exitRotation);
         AT_SetLocalBaseChara(dummy, shen_name{});
         EVT_AT_SetMot(ryo, config->fail, 0, .699999988079071f, 0x40000000U, 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
         QueueFallCamera(config->failureCamera);
         EVT_AT_SetVoice("0100A080", 20); // @text EN: " " | JA: "うわぁぁぁーっ！"
         EVT_AT_MenCtrl(EventFilmControl{1, 30, 0, 0, 0, 0, 255, 0, 0, 0, 40});
@@ -653,7 +653,7 @@ void RoomFallCallback(void *) {
             MoveFallLookTarget();
         return;
     case 9:
-        EV_mtwkSetEnabled(scenFindMotionwork(ryo), 1);
+        mtwkSetEnabled(scenFindMotionwork(ryo), 1);
         SetPlayerControlEnabled(1);
         FinishLoading();
         EV_SetCharaControllerFlags(ryo, 2, NpcCharacterControllerState::Enabled);
@@ -672,11 +672,11 @@ void RoomFallCallback(void *) {
 void QueueRockyAreaFallEvent() {
     EV_FreeAuthorPak(1, "0100");
     EV_FreeAuthorPak(1, "0540");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("FALL"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("FALL"), 0);
     LoadBlurModelForCharacter(ryo, "RYO_B.MT7", 1);
     auto *task = HLib::EnqueueTaskWithoutParameter(RockyFallCallback, 4, 0xb, static_cast<std::int32_t>(fallToken.name));
     rockyFall = {};
@@ -690,9 +690,9 @@ void QueueRockyAreaFallEvent() {
     AnchorDummyToPlayer();
 }
 void QueueRoomFallEvent() {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("FALL"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     LoadBlurModelForCharacter(ryo, "RYO_B.MT7", 1);
     auto *task = HLib::EnqueueTaskWithoutParameter(RoomFallCallback, 4, 0xb, static_cast<std::int32_t>(fallToken.name));
     roomFall = {};
@@ -704,15 +704,15 @@ void QueueRoomFallEvent() {
 void UpdateShenhuaOcclusionAlpha() {
     if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded))
         return;
-    auto *character = FindCharacterByScenarioName(shenhua);
+    auto *character = ctrlGetScenarioChara(shenhua);
     if (!character)
         return;
     SetFlagForToken(character, SHEN_NAME(MAPC), 0);
     Matrix4x4_Push(&g_cameraControl->projectionMatrix);
     Vector3 playerPosition, companionPosition;
-    GetMotionBonePosition(scenFindMotionwork(ryo), MB_Chest, &playerPosition);
+    mtwkGetBonePosition(scenFindMotionwork(ryo), MB_Chest, &playerPosition);
     Matrix4x4::TransformPoint(playerPosition, playerPosition);
-    GetMotionBonePosition(scenFindMotionwork(shenhua), MB_Chest, &companionPosition);
+    mtwkGetBonePosition(scenFindMotionwork(shenhua), MB_Chest, &companionPosition);
     Matrix4x4::TransformPoint(companionPosition, companionPosition);
     character->alpha = std::min(1.0f, std::max(0.0f, character->alpha + (-playerPosition.z > -companionPosition.z ? -.1f : .1f)));
     Matrix4x4::Pop(1);

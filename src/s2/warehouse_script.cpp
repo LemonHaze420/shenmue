@@ -140,7 +140,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             break;
         case 0x8000002c: {
             DateTime time{};
-            GetCurrentDateTime(time);
+            shenGetCurrentDateTime(time);
             ++time.day;
             time.hour = 8;
             time.minute = 0;
@@ -244,7 +244,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             EnableWarehouseController(name(1), false);
             MotionWork *motion = scenFindMotionwork(name(1));
             mtwkSetRequestedRootMode(motion, 0);
-            SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(motion, 0xf003, MotionRegion::LowerBody);
             break;
         }
@@ -285,16 +285,16 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
         }
         case 0x80010034:
             if (!script[2]) {
-                result = EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load,
+                result = EV_pakUtils(PakCategory::Package, PakPackageOp::Load,
                     reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)), reinterpret_cast<std::uintptr_t>(ScriptString(arg(1))));
                 return pending();
             }
-            result = EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0);
+            result = EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0);
             if (result)
                 return pending();
             break;
         case 0x80010035:
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, arg(1), 0);
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, arg(1), 0);
             break;
         case 0x80020007:
             EV_stepSetFlags(static_cast<std::uint8_t>(arg(2)), static_cast<std::int32_t>(arg(1)));
@@ -331,7 +331,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             if (!script[2]) {
                 shenSetClockAndCompassRenderTo(1);
                 DateTime time{};
-                GetCurrentDateTime(time);
+                shenGetCurrentDateTime(time);
                 SetSleepActionIcon(static_cast<std::int16_t>(static_cast<std::uint32_t>(time.hour - 8) > 14 ? 15 : time.hour < 20 ? 266 : 271));
                 shenSetTimeSimulationTo(0);
                 return pending();
@@ -353,7 +353,7 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             return script[1];
         case 0x80020036: {
             DateTime time{};
-            GetCurrentDateTime(time);
+            shenGetCurrentDateTime(time);
             time.hour = static_cast<std::uint8_t>(arg(1));
             time.minute = static_cast<std::uint8_t>(arg(2));
             SetCurrentDateTimeTo(time);
@@ -389,19 +389,19 @@ std::int64_t ExecuteWarehouseScript(std::uint32_t *script) {
             continue;
         }
         case 0x8004000f: {
-            SetMotionRegionFlag(scenFindMotionwork(name(1)), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(name(1)), 71, 0, MotionRegion::LowerBody);
             const Vector3 position{static_cast<float>(arg(2)) / 100.0f, static_cast<float>(arg(3)) / 100.0f, static_cast<float>(arg(4)) / 100.0f};
             EV_AT_SetPos(name(1), EventTransformFlags::AllAxes, position);
             break;
         }
         case 0x80040010: {
-            SetMotionRegionFlag(scenFindMotionwork(name(1)), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(name(1)), 71, 0, MotionRegion::LowerBody);
             const Vector3i rotation{static_cast<std::int32_t>(arg(2)), static_cast<std::int32_t>(arg(3)), static_cast<std::int32_t>(arg(4))};
             EV_AT_SetAngY(name(1), EventTransformFlags::AllAxes, rotation);
             break;
         }
         case 0x80050011: {
-            SetMotionRegionFlag(scenFindMotionwork(name(1)), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(name(1)), 71, 0, MotionRegion::LowerBody);
             const Vector3 position{static_cast<float>(arg(2)) / 100.0f, static_cast<float>(arg(3)) / 100.0f, static_cast<float>(arg(4)) / 100.0f};
             const Vector3i rotation{0, static_cast<std::int32_t>(arg(5)), 0};
             EV_AT_SetPos(name(1), EventTransformFlags::AllAxes, position);
@@ -421,7 +421,7 @@ void HideWarehouseAuthorCharacter(shen_name character) {
     EV_SetCharaControllerFlags(character, 2, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Disabled);
     mtwkSetRequestedRootMode(scenFindMotionwork(character), 0);
-    SetMotionRegionFlag(scenFindMotionwork(character), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(character), 71, 0, MotionRegion::LowerBody);
     const Vector3 position{-1000, -1000, -1000};
     EV_AT_SetPos(character, EventTransformFlags::AllAxes, position);
 }
@@ -449,7 +449,7 @@ void LoadWarehouseAuthorPackages() {
 // @verified - p
 std::int64_t ReleaseWarehouseAuthorPackages() {
     if (characterPackage[0])
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(characterPackage), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(characterPackage), 0);
     for (std::uint32_t i = 0; authorCharacters[i].name; ++i) {
         EV_npcFree(authorCharacters[i]);
         EV_npcLockUnlock(authorCharacters[i]);
@@ -473,13 +473,13 @@ void StartWarehouseExitAuthor(std::uint32_t author) {
 namespace {
 // @verified - p
 void WarehousePackageRetry(void *) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(characterPackage)))
         HLib::SetCurrentTaskTo(WarehousePackageWait);
 }
 // @verified - p
 void WarehousePackageWait(void *) {
-    if ((authorLoadMask & 1) && !EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
+    if ((authorLoadMask & 1) && !EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
         authorLoadMask &= ~1U;
     for (std::uint32_t i = 0; authorCharacters[i].name; ++i)
         if ((authorLoadMask & (2U << i)) && EV_ForceLoadNpc(authorCharacters[i]))
@@ -524,7 +524,7 @@ void WarehouseReturnToTemple(void *) {
     EV_stepSetFlags(0, flag);
     ReleaseWarehouseAuthorPackages();
     EV_FreeAuthorPak(0, "0031");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
     EV_scenQueueLoad(1, SHEN_NAME(WB00), 3);
 }
 // @verified - p
@@ -537,22 +537,22 @@ void WarehouseLockonFirst(void *) {
         const Vector3i rotation{};
         EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, position);
         EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, rotation);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &look, 1);
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), 1, 20, 0.60000002f);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), &look, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ryo), 1, 20, 0.60000002f);
         break;
     }
     case 120:
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
         EV_EnableCharacterDisplay(ryo);
         mtwkSetRequestedRootMode(scenFindMotionwork(ryo), 0);
-        SetMotionFrameTime(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
         mtwkRequestMotion(scenFindMotionwork(ryo), 0xf002, MotionRegion::LowerBody);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
         EVS_LoopCamera(1037, invalid, invalid);
         EV_PlayDialogue("0031A068");
         break;
     case 270:
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
@@ -572,10 +572,10 @@ void WarehouseLockonSecond(void *) {
         const Vector3i rotation{};
         EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, position);
         EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, rotation);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &look, 1);
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), 1, 20, 0.60000002f);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), &look, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ryo), 1, 20, 0.60000002f);
     } else if (lockonTicks == 120) {
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
@@ -601,7 +601,7 @@ std::int64_t StartWarehouseLockonSequence() {
     srchReset();
     EV_EnableCharacterDisplay(ryo);
     SetPlayerControlEnabled(0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
     camCtrlSetState(Init);
     return EVS_LoopCamera(target.name == SHEN_NAME(MA01) ? 1038 : 1039, shen_name{0}, shen_name{0});
 }

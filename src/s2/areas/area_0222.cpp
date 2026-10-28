@@ -92,14 +92,14 @@ void RestoreE0222Characters(std::int16_t selection) {
 // @verified - p
 void CleanupE0222(AreaImmediateAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0222_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_0222_CONVERSATION);
     const char *const package = g_currentMap.name == AREA_0222_AREA.name ? "0222A" : parent->selection == 0 ? "0222A1" : "0222A2";
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
 
     EV_CleanupMapControlTask();
     if (g_currentMap.name == AREA_0222_AREA.name)

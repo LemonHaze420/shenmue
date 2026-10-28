@@ -125,13 +125,13 @@ void LoadDebugResources(StreetFightEventWork *work) {
     work->motions[0] = 0;
     EV_FreeAuthorPak(1, "0100");
     const char *path = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("ENMY"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("ENMY"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     path = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("QJBT"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("QJBT"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, SFJF_BASE);
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0100E000");
@@ -195,7 +195,7 @@ void CleanupDebug(StreetFightEventWork *work) {
     SetCharaKill(SFJF_BASE, 1);
     EV_AT_SetPos(STREET_FIGHT_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, SFJF_DEBUG_EXIT_POSITION);
     EV_AT_SetAngY(STREET_FIGHT_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, SFJF_DEBUG_EXIT_ROTATION);
-    SetMotionRegionFlag(scenFindMotionwork(STREET_FIGHT_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(STREET_FIGHT_RYO), 71, 0, MotionRegion::LowerBody);
     if (work->hudEnabled)
         ToggleStreetFighterUI();
     GetNpcBatchCountOverride(work->previousNpcBatchCount);
@@ -203,9 +203,9 @@ void CleanupDebug(StreetFightEventWork *work) {
         DeleteMotion(*motion);
     EV_FreeAuthorPak(0, "0100");
     if (!(parameters->flags & 1U))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ENMY"), 0);
-    LoadCutsceneAndSoundProgramForArea();
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ENMY"), 0);
+    sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -295,7 +295,7 @@ void DebugMainCallback(void *parameter) {
         const std::uint32_t choice = ControlStreetFightActionChoice(1);
         if (!choice)
             break;
-        UpdateMotionWorkWithPosition(scenFindMotionwork(STREET_FIGHT_RYO), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(STREET_FIGHT_RYO), nullptr, 0);
         if (choice == 38)
             work.state = static_cast<std::int32_t>(GetPlayerStat(PlayerStatsId::Cash)) >= 20 ? 6 : 8;
         else
@@ -380,7 +380,7 @@ void DebugMainCallback(void *parameter) {
         const std::uint32_t choice = ControlStreetFightActionChoice(1);
         if (!choice)
             break;
-        UpdateMotionWorkWithPosition(scenFindMotionwork(STREET_FIGHT_RYO), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(STREET_FIGHT_RYO), nullptr, 0);
         work.state = choice == 38 ? 20 : 21;
         break;
     }
@@ -483,18 +483,18 @@ void DebugBattleStartCallback(void *parameter) {
     shenStartFGST(10, 10, 0, 0);
     EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{8}, 1);
     vfmDispatchControl(FightControlOp::Package, shen_name{}, reinterpret_cast<std::uintptr_t>("QJBT"), 1);
-    shenInitFightData(FindCharacterByScenarioName(STREET_FIGHT_RYO), nullptr, 0, 0, 0, 0);
+    shenInitFightData(ctrlGetScenarioChara(STREET_FIGHT_RYO), nullptr, 0, 0, 0, 0);
     vfmDispatchControl(FightControlOp::Package, shen_name{}, reinterpret_cast<std::uintptr_t>("ENMY"), 1);
-    shenInitFightData(FindCharacterByScenarioName(fighter), nullptr, 1, 1, definition->hitPoints, definition->fightStyle);
-    vfUpdateFlagsFor(FindCharacterByScenarioName(fighter), 0, 0x08000000U, definition->difficulty);
+    shenInitFightData(ctrlGetScenarioChara(fighter), nullptr, 1, 1, definition->hitPoints, definition->fightStyle);
+    vfUpdateFlagsFor(ctrlGetScenarioChara(fighter), 0, 0x08000000U, definition->difficulty);
     EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{1}, 1);
     vfCopyPosFromEntity(0, nullptr, SFJF_DEBUG_OPPONENT_ORIGIN.x, SFJF_DEBUG_OPPONENT_ORIGIN.z, 2.5f);
     vfmQueueFightStart(2, 0x63, 1, 8, 30);
     work.hudEnabled = 0;
-    AccessFightActorFlag411(1, FindCharacterByScenarioName(fighter), definition->guardMode);
-    AccessFightActorGroupFloat(1, FindCharacterByScenarioName(fighter), definition->strikeScale);
-    AccessFightActorGroupFloat(3, FindCharacterByScenarioName(fighter), definition->guardScale);
-    AccessFightActorGroupFloat(5, FindCharacterByScenarioName(fighter), definition->guardScale);
+    AccessFightActorFlag411(1, ctrlGetScenarioChara(fighter), definition->guardMode);
+    AccessFightActorGroupFloat(1, ctrlGetScenarioChara(fighter), definition->strikeScale);
+    AccessFightActorGroupFloat(3, ctrlGetScenarioChara(fighter), definition->guardScale);
+    AccessFightActorGroupFloat(5, ctrlGetScenarioChara(fighter), definition->guardScale);
     HLib::SetCurrentTaskTo(DebugBattleReadyGoCallback);
 }
 
@@ -516,11 +516,11 @@ void DebugBattleWaitCallback(void *parameter) {
     StreetFightEventWork &work = *static_cast<StreetFightEventWork *>(parameter);
     if (IsFightActive())
         return;
-    if (GetBtlStatus(FindCharacterByScenarioName(STREET_FIGHT_RYO)) == 7) {
+    if (GetBtlStatus(ctrlGetScenarioChara(STREET_FIGHT_RYO)) == 7) {
         work.battleStatus = 7;
         EV_PlayDialogue("0100B075");
     } else {
-        work.battleStatus = GetBtlStatus(FindCharacterByScenarioName(STREET_FIGHT_RYO)) == 3 ? 3 : 2;
+        work.battleStatus = GetBtlStatus(ctrlGetScenarioChara(STREET_FIGHT_RYO)) == 3 ? 3 : 2;
         EVT_AT_SetVoice("0100B074", 1, 0); // @text EN: "勝負あり！" | JA: "勝負あり！"
     }
     HLib::SetCurrentTaskTo(DebugBattleWaitFadeCallback);
@@ -750,12 +750,12 @@ void AuthorLoopCallback(void *parameter) {
         } else if (frame == 1729 || frame == 1859) {
             const bool enabled = frame == 1729;
             for (shen_name name : {STREET_FIGHT_RYO, SFJF_AW3, SFJF_RE1})
-                SetPluralControlFor(FindCharacterByScenarioName(name), enabled);
+                SetPluralControlFor(ctrlGetScenarioChara(name), enabled);
             for (shen_name name : {STREET_FIGHT_RYO, SFJF_AW3, SFJF_RE1})
-                SetFaceFlagsForChara_0(FindCharacterByScenarioName(name), !enabled);
+                SetFaceFlagsForChara_0(ctrlGetScenarioChara(name), !enabled);
             for (shen_name name : {STREET_FIGHT_RYO, SFJF_AW3, SFJF_RE1}) {
-                SetHighModelXYZ(FindCharacterByScenarioName(name), !enabled, 1, 0);
-                SetHighModelXYZ(FindCharacterByScenarioName(name), !enabled, 0, 0);
+                SetHighModelXYZ(ctrlGetScenarioChara(name), !enabled, 1, 0);
+                SetHighModelXYZ(ctrlGetScenarioChara(name), !enabled, 0, 0);
             }
         }
     }
@@ -772,8 +772,8 @@ std::int32_t DefeatPoseConversation(void *parameter) {
     const shen_name fighter = work.fighters[work.fighterIndex];
     EV_DisableCharacterDisplay(STREET_FIGHT_RYO);
     EV_SetCharacterAlphaEnabled(fighter, false);
-    SetHighModelXYZ(FindCharacterByScenarioName(fighter), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(fighter), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(fighter), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(fighter), 1, 1, 0);
     EVT_AT_SetPos(fighter, SFJF_BASE, {0, -0.05f, 0}, 0);
     EVT_AT_SetAngY(fighter, SFJF_BASE, 90, 0);
     EVT_AT_SetMot(fighter, 10881, 0, 1, 0x40000000U, 0);
@@ -842,7 +842,7 @@ void CleanupNormalCallback(void *parameter) {
     for (shen_name name : SFJF_CHARACTERS) {
         if (name.name == STREET_FIGHT_INVALID.name)
             break;
-        hndlSetFlags(FindCharacterByScenarioName(name));
+        hndlSetFlags(ctrlGetScenarioChara(name));
     }
     for (shen_name name : {STREET_FIGHT_RYO, SFJF_AW3}) {
         EV_SetCharaControllerFlags(name, 2, NpcCharacterControllerState::Enabled);
@@ -865,17 +865,17 @@ void CleanupNormalCallback(void *parameter) {
         EV_AT_SetAngY(STREET_FIGHT_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, {0, 14672, 0});
         RepositionPlayerForQronFloor(-3);
     }
-    SetMotionRegionFlag(scenFindMotionwork(STREET_FIGHT_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(STREET_FIGHT_RYO), 71, 0, MotionRegion::LowerBody);
     EV_EnableCharacterDisplay(STREET_FIGHT_RYO);
     GetNpcBatchCountOverride(work.previousNpcBatchCount);
     for (std::int32_t *motion = work.motions; *motion; ++motion)
         DeleteMotion(*motion);
     if (!(start->flags & 1))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014))
         EV_spmBeginSampleExecute();
     else
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     EV_FreeAuthorPak(0, "0256");
     ExecuteCleanupFuncForAreaWithCachedScene();
@@ -909,10 +909,10 @@ void MainCallback(void *parameter) {
         for (shen_name name : SFJF_CHARACTERS) {
             if (name.name == STREET_FIGHT_INVALID.name)
                 break;
-            SetLowQualityHands(FindCharacterByScenarioName(name));
+            SetLowQualityHands(ctrlGetScenarioChara(name));
         }
-        SetHighModelXYZ(FindCharacterByScenarioName(SFJF_AW3), 0, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(SFJF_AW3), 0, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(SFJF_AW3), 0, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(SFJF_AW3), 0, 1, 0);
         for (shen_name name : {STREET_FIGHT_RYO, SFJF_AW3}) {
             EV_SetCharaControllerFlags(name, 2, NpcCharacterControllerState::Disabled);
             EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
@@ -983,8 +983,8 @@ void MainCallback(void *parameter) {
         EVT_AT_SetPosRot(&position);
         angle = {0, fighter, SFJF_BASE, 0, 0};
         EVT_AT_SetAngY_Callback(&angle);
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STREET_FIGHT_RYO), 1, 1, 1);
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(SFJF_AW3), 1, 1, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(STREET_FIGHT_RYO), 1, 1, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(SFJF_AW3), 1, 1, 1);
         if (DoesScenarioCharacterExist(SFJF_CHN)) {
             if (!threeRound) {
                 EV_AT_SetPos(SFJF_CHN, EventTransformFlags::World | EventTransformFlags::AllAxes, {265.5f, 85.5999984741211f, 228.89999389648438f});
@@ -1042,10 +1042,10 @@ void MainCallback(void *parameter) {
         std::int32_t difficulty = static_cast<std::int32_t>(vfmDispatchControl(FightControlOp::MotionNibble, shen_name{129}, 0, -1));
         if (difficulty > 2)
             difficulty = 2;
-        shenInitFightData(FindCharacterByScenarioName(STREET_FIGHT_RYO), nullptr, 0, 0, 300, 0);
+        shenInitFightData(ctrlGetScenarioChara(STREET_FIGHT_RYO), nullptr, 0, 0, 300, 0);
         const std::uint16_t hp = static_cast<std::uint16_t>(threeRound ? 80 * work.rank + 300 : 100 * (5 - difficulty));
-        shenInitFightData(FindCharacterByScenarioName(SFJF_AW3), nullptr, 1, 1, hp, 0x17);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(SFJF_AW3), 0, 0x8000000U, difficulty);
+        shenInitFightData(ctrlGetScenarioChara(SFJF_AW3), nullptr, 1, 1, hp, 0x17);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(SFJF_AW3), 0, 0x8000000U, difficulty);
         if (threeRound) {
             const std::int32_t level = static_cast<std::int32_t>(vfmDispatchControl(FightControlOp::MotionNibble, shen_name{65}, 0, -1));
             vfmDispatchControl(FightControlOp::StreetFightLevel, {}, static_cast<std::uintptr_t>(level + 1), 1);
@@ -1088,7 +1088,7 @@ void MainCallback(void *parameter) {
     }
     case 10:
         if (!IsFightActive()) {
-            work.battleStatus = GetBtlStatus(FindCharacterByScenarioName(STREET_FIGHT_RYO));
+            work.battleStatus = GetBtlStatus(ctrlGetScenarioChara(STREET_FIGHT_RYO));
             const std::int64_t result = RecordStreetFightRound(&work);
             if (threeRound && result) {
                 SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
@@ -1107,7 +1107,7 @@ void MainCallback(void *parameter) {
             HLib::SetupTaskDelay(30);
             EV_NPC_NewLoadSw(0);
         } else if (!work.audienceResultPublished) {
-            const std::int32_t result = GetBtlStatus(FindCharacterByScenarioName(STREET_FIGHT_RYO));
+            const std::int32_t result = GetBtlStatus(ctrlGetScenarioChara(STREET_FIGHT_RYO));
             if (result == 3) {
                 SetAudienceResult(work, 6, 2);
                 ++work.audienceResultPublished;
@@ -1119,8 +1119,8 @@ void MainCallback(void *parameter) {
         return;
     case 11:
         if (!filmCheckFadeTrackColour()) {
-            SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STREET_FIGHT_RYO), 1, 1, 1);
-            SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(SFJF_AW3), 1, 1, 1);
+            SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(STREET_FIGHT_RYO), 1, 1, 1);
+            SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(SFJF_AW3), 1, 1, 1);
             if (work.battleStatus == 3) {
                 EV_DisableCharacterDisplay(SFJF_SFA);
                 RecordStreetFightVictory(work.stage);
@@ -1238,13 +1238,13 @@ void LoadNormalResources(StreetFightEventWork *work) {
         check_dead_status(1);
     work->motions[0] = 0;
     RepositionPlayerForQronFloor(-3);
-    if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QJBT"), 0)) {
+    if (!EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QJBT"), 0)) {
         const char *const path = Filepath_Gen(FilepathGenMode::SceneDirectory);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("QJBT"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("QJBT"));
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     }
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QJBT"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, SFJF_BASE);
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0256A000");

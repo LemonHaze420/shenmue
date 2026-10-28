@@ -152,24 +152,24 @@ void AHQBEndCallback(void *data) {
     if (DoesScenarioCharacterExist(AHQB_DIS2))
         EV_EnableCharacterDisplay(AHQB_DIS2);
     for (const shen_name character : {AHQB_PLAYER, AHQB_HTK, AHQB_GOI}) {
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 0, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 0, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 0, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 0, 1, 0);
     }
-    hndlSetFlags(FindCharacterByScenarioName(AHQB_HTK));
-    hndlSetFlags(FindCharacterByScenarioName(AHQB_GOI));
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(AHQB_PLAYER), 0, 0, 1);
+    hndlSetFlags(ctrlGetScenarioChara(AHQB_HTK));
+    hndlSetFlags(ctrlGetScenarioChara(AHQB_GOI));
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(AHQB_PLAYER), 0, 0, 1);
     ET_AT_KillWork(work->characters);
     EV_FreeAuthorPak(0, "0010");
     if (g_currentMap.name == AHQB_WN00.name)
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AHQBAUT3"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AHQBAUT3"), 0);
     else if (g_currentMap.name == AHQB_AR03.name)
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AHQBAUT2"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AHQBAUT2"), 0);
     else if (g_currentMap.name == AHQB_WS00.name || g_currentMap.name == AREA_AHQB.name)
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AHQBAUT1"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AHQB"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AHQBAUT1"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AHQB"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     EV_NPC_NewLoadSw(1);
@@ -209,24 +209,24 @@ std::int32_t AHQBInitialize(AhqbEventWork *work) {
     EV_FreeAuthorPak(1, "0010");
     switch (g_currentMap.name) {
     case AHQB_WN00.name:
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("AHQBAUT3"));
         break;
     case AHQB_AR03.name:
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("AHQBAUT2"));
         break;
     case AHQB_WS00.name:
     case AREA_AHQB.name:
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("AHQBAUT1"));
         break;
     default:
         break;
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("AHQB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("AHQB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("AHQB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("AHQB"), 0);
     EV_debug_log("AHQB\\eAHQB_et_snakeqte.c", 221, "sssss\n");
     CreateEventCharacter(CharacterCreationHighModel, nullptr, AHQB_BASE);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, AHQB_DUMMY);
@@ -234,11 +234,11 @@ std::int32_t AHQBInitialize(AhqbEventWork *work) {
         EV_DisableCharacterDisplay(AHQB_DIS1);
     if (DoesScenarioCharacterExist(AHQB_DIS2))
         EV_DisableCharacterDisplay(AHQB_DIS2);
-    SetLowQualityHands(FindCharacterByScenarioName(AHQB_HTK));
-    SetLowQualityHands(FindCharacterByScenarioName(AHQB_GOI));
+    SetLowQualityHands(ctrlGetScenarioChara(AHQB_HTK));
+    SetLowQualityHands(ctrlGetScenarioChara(AHQB_GOI));
     for (const shen_name character : {AHQB_HTK, AHQB_GOI, AHQB_PLAYER}) {
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 1, 0);
     }
     work->state = 1;
     switch (g_currentMap.name) {

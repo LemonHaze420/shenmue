@@ -40,7 +40,7 @@ shen_name ReadCleanupPlacementCharacter(std::int32_t index) {
 void ChawCleanup(ChawEventWork *work, bool restoreMedia) {
     using enum CameraState;
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (work->advanceTime)
         npcAdvanceTime(date.hour, date.minute);
     mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0xf003, MotionRegion::LowerBody);
@@ -96,7 +96,7 @@ void ChawCleanup(ChawEventWork *work, bool restoreMedia) {
             }
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1021, 0);
     shenSetClockAndCompassRenderTo(0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CHAWAN"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CHAWAN"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     EV_SetRefBoardParamsFor(CHAW_RYO, 1);

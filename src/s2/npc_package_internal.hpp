@@ -328,13 +328,13 @@ extern std::uint64_t npcLargestSceneBlock;
 
 extern std::uint64_t npcLargestDynamicBlock;
 
-bool ReleaseNativeNpcHumanPackage(shen_name name);
+bool npcReleasePak(shen_name name);
 
 void ReleaseNpcTransitionHumanPackages();
 
 bool IsNpcGloballyBlocked(const NpcRouteLiveEntry &entry);
 
-std::int32_t LoadNativeNpcHuman(shen_name packageName, shen_name characterName, bool fromHumans);
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, bool fromHumans);
 
 std::uint16_t ReadU16(const std::byte *source);
 

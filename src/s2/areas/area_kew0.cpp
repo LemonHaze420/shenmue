@@ -69,7 +69,7 @@ void QueueKeikaAuthor(shen_name author) {
     work->state = 1;
     work->author = author;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.hour < 19) {
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
@@ -126,7 +126,7 @@ void FreezeKeikaCharactersForAuthor() {
         EV_SetCharaControllerFlags(name, 1, NpcCharacterControllerState::Disabled);
         EV_SetCharaControllerFlags(name, 2, NpcCharacterControllerState::Disabled);
         EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(name), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(name), nullptr, 0);
         mtwkSetRequestedRootMode(scenFindMotionwork(name), 0);
     }
 }
@@ -312,7 +312,7 @@ void KeikaBattleCallback(void *data) {
             mtwkRequestMotion(scenFindMotionwork(KEW0_IKO), KEW0_IKO_MOTION, MotionRegion::LowerBody);
             SetFixoDataForMotionWork(ctrlGetCharaByName(KEW0_PROP), ctrlGetCharaByName(KEW0_IKO), 14, kew0PropAttachmentPosition,
                 {KEW0_PROP_ROTATION.x, KEW0_PROP_ROTATION.y, KEW0_PROP_ROTATION.z});
-            SetMotionRegionFlag(scenFindMotionwork(KEW0_IKO), 66, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(KEW0_IKO), 66, 0, MotionRegion::LowerBody);
             mtwkSetExtraFlag(scenFindMotionwork(KEW0_KEK), 6, 2);
             WaitKeikaSequence(work, 2, 101, 2, 1);
             break;
@@ -401,7 +401,7 @@ void KeikaBattleCallback(void *data) {
                 if (voice) {
                     EV_PlayDialogue(voice);
                     if (motion == KEW0_ANGRY_A)
-                        UpdateMotionWorkWithPosition(scenFindMotionwork(KEW0_KEK), nullptr, 0);
+                        mtwkUpdateWithPosition(scenFindMotionwork(KEW0_KEK), nullptr, 0);
                     mtwkRequestMotion(scenFindMotionwork(KEW0_KEK), motion, MotionRegion::LowerBody);
                 }
                 if (++event->dialogueIndex == 6 && !event->adviceShown) {
@@ -412,22 +412,22 @@ void KeikaBattleCallback(void *data) {
                     event->dialogueIndex = 0;
                 event->dialogueFrames = shenGetRandomInt32(150) + 120;
             }
-            if (GetMotionAnimationId(scenFindMotionwork(KEW0_KEK), MotionRegion::LowerBody) == KEW0_ANGRY_A) {
-                if (SetMotionRegionFlag(scenFindMotionwork(KEW0_KEK), 65, 1, MotionRegion::LowerBody)) {
+            if (mtwkGetAnimationId(scenFindMotionwork(KEW0_KEK), MotionRegion::LowerBody) == KEW0_ANGRY_A) {
+                if (mtwkSetRegionFlag(scenFindMotionwork(KEW0_KEK), 65, 1, MotionRegion::LowerBody)) {
                     mtwkRequestMotion(scenFindMotionwork(KEW0_KEK), KEW0_ANGRY_C, MotionRegion::LowerBody);
-                    SetMotionLayerFrameRange(scenFindMotionwork(KEW0_KEK), 60, 60, -1, MotionRegion::LowerBody);
+                    mtwkSetLayerFrameRange(scenFindMotionwork(KEW0_KEK), 60, 60, -1, MotionRegion::LowerBody);
                     event->targetFrames = 21;
                 } else
                     event->targetFrames = 0;
             }
             if (event->targetFrames > 20) {
                 Vector3 position;
-                if (GetMotionAnimationId(scenFindMotionwork(KEW0_KEK), MotionRegion::LowerBody) != KEW0_ANGRY_A) {
+                if (mtwkGetAnimationId(scenFindMotionwork(KEW0_KEK), MotionRegion::LowerBody) != KEW0_ANGRY_A) {
                     EV_GetCharaPosition(KEW0_RYO, 5, &position, EventTransformFlags::World);
-                    UpdateMotionWorkWithPosition(scenFindMotionwork(KEW0_KEK), &position, 0);
+                    mtwkUpdateWithPosition(scenFindMotionwork(KEW0_KEK), &position, 0);
                 }
                 EV_GetCharaPosition(KEW0_MOK, 5, &position, EventTransformFlags::World);
-                UpdateMotionWorkWithPosition(scenFindMotionwork(KEW0_IKO), &position, 0);
+                mtwkUpdateWithPosition(scenFindMotionwork(KEW0_IKO), &position, 0);
                 event->targetFrames = 0;
             }
             ++event->targetFrames;
@@ -436,8 +436,8 @@ void KeikaBattleCallback(void *data) {
             if (!event->battlePhase && event->battleFrames-- == 1) {
                 EV_vfBattleUtil(FightBattleUtilOp::FightModeFlags, shen_name{1}, 1);
                 vfmDispatchControl(FightControlOp::QueuedAction, KEW0_RYO, 0x08000e6fU, 1);
-                SetMotionSpeed(scenFindMotionwork(KEW0_KEK), .25f, MotionRegion::LowerBody);
-                SetMotionSpeed(scenFindMotionwork(KEW0_IKO), .25f, MotionRegion::LowerBody);
+                mtwkSetSpeed(scenFindMotionwork(KEW0_KEK), .25f, MotionRegion::LowerBody);
+                mtwkSetSpeed(scenFindMotionwork(KEW0_IKO), .25f, MotionRegion::LowerBody);
                 ++event->battlePhase;
                 event->battleFrames = 90;
             }
@@ -465,8 +465,8 @@ void KeikaBattleCallback(void *data) {
             break;
         case 109:
             scenCvsCtrlFree(0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KEW0_KEK), nullptr, 0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KEW0_IKO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KEW0_KEK), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KEW0_IKO), nullptr, 0);
             figpAssignModeFor(KEW0_RYO, 0);
             figpAssignModeFor(KEW0_MOK, 0);
             RetireCompiledSequenceLinks(work);
@@ -485,13 +485,13 @@ void CleanupKeikaEvent(Kew0EventWork *work) {
     ET_AT_KillWork(work->characters);
     SetPlayerControlEnabled(0);
     SetCharaKill(KEW0_BASE, 1);
-    SetMotionRegionFlag(scenFindMotionwork(KEW0_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(KEW0_RYO), 71, 0, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(KEW0_RYO), 1);
     for (const std::uint32_t *motion = work->motions; *motion; ++motion)
         DeleteMotion(static_cast<std::int32_t>(*motion));
     EV_FreeAuthorPak(0, "0067");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KEW0"), 0);
-    LoadCutsceneAndSoundProgramForArea();
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KEW0"), 0);
+    sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
@@ -511,7 +511,7 @@ void KeikaMainCallback(void *data) {
     case 1:
         for (shen_name name : {KEW0_RYO, KEW0_KEK, KEW0_MOK, KEW0_IKO})
             PrepareKeikaCharacter(name);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KEW0"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KEW0"), 0);
         LoadBlurModelForCharacter(KEW0_RYO, "RYO_B.MT7", 1);
         LoadBlurModelForCharacter(KEW0_KEK, "KEK_B.MT7", 1);
         LoadBlurModelForCharacter(KEW0_MOK, nullptr, 1);
@@ -543,8 +543,8 @@ void InitializeKeikaEvent(Kew0EventWork *work) {
     if (IsFightActive())
         check_dead_status(1);
     work->motions[0] = 0;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KEW0"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KEW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KEW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KEW0"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, KEW0_BASE);
     EV_FreeAuthorPak(1, "0067");
     EV_SetNewSceneIndex();

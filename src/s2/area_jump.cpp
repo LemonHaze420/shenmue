@@ -279,7 +279,7 @@ bool CheckJumpBoundary(const CtrlAreaJumpEntry &entry, bool secondary) {
 
 bool AreaJumpWarpCompatible() {
     DateTime now{};
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     if (now.hour < 7)
         SetPreviousDay(now);
     SetPreviousDay(now);
@@ -393,7 +393,7 @@ void ExecuteAreaJump() {
     if (destination.destination.specialMode == 2U) {
         scenSetTaskFlags(0);
         AdvanceTimeForDistance({persistentState.returnPosition.x, persistentState.returnPosition.z});
-        GetCurrentDateTime(persistentState.capturedTime);
+        shenGetCurrentDateTime(persistentState.capturedTime);
         doorQueueAuthorForMap(persistentState.authorId);
         SetTemporaryAreaJumpAuthor(persistentState.authorId);
         SetQronEntryFloor(persistentState.qronFloor);
@@ -545,7 +545,7 @@ void CaptureCurrentAreaJumpState() {
     persistentState.magicRoomFlag = static_cast<std::int32_t>(GetMagicRoomActiveFlag());
     persistentState.warpEnabled = EV_CanDoAreaJump() ? 1U : 0U;
     DateTime day{};
-    GetCurrentDateTime(day);
+    shenGetCurrentDateTime(day);
     if (day.hour < 7)
         SetPreviousDay(day);
     persistentState.capturedDay = static_cast<std::uint8_t>(day.day);

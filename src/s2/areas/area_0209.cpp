@@ -48,11 +48,11 @@ static_assert(sizeof(AuthorLoopParameter) == 8);
 
 void SetAuthorCharacters(bool restore) {
     const std::uint32_t flag = restore ? 0 : 2;
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(ryo)), 6, flag);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 6, flag);
     EV_SetCharacterAlphaEnabled(ryo, restore);
     EV_SetCharacterAlphaEnabled(object, restore);
     for (const shen_name *character = characters; character->name != 0xffffffffU; ++character) {
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(*character)), 6, flag);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(*character)), 6, flag);
         EV_SetCharacterAlphaEnabled(*character, restore);
     }
 }
@@ -91,12 +91,12 @@ void QueueAuthorLoop(EventParameter *parent) {
 // 1402dba90: retained even though playback returns to the selector, not state 3.
 void Cleanup(EventParameter *parent) {
     for (const shen_name *character = characters; character->name != 0xffffffffU; ++character) {
-        if (!FindCharacterByScenarioName(*character))
+        if (!ctrlGetScenarioChara(*character))
             continue;
         EV_npcLockUnlock(*character);
         EV_npcFree(*character);
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MAP"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MAP"), 0);
     EV_FreeAuthorPak(0, "0209");
     DeleteMotion(static_cast<std::int32_t>(parent->motion));
     EV_CleanupMapControlTask();
@@ -139,9 +139,9 @@ void EventMain(void *taskData) {
 void SetupEnvironment() {
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(1, "0209");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("MAP"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_SetWeatherInstruction(12, 0);
     Vector3 position{0.0f, 14.399999618530273f, 0.0f};
     for (std::int32_t slot = 0; slot < 9; ++slot)

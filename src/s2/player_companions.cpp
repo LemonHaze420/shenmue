@@ -259,7 +259,7 @@ void UpdatePlayerPartyCompanions(PlayerModelState &state) {
             }
         }
     } else {
-        if ((EV_GetShenmueFlag(0x191) || EV_GetShenmueFlag(0x190)) && !RegisterNpcFlags(PLAYER_COMPANION_REN, NpcRouteAbstractActive, 2))
+        if ((EV_GetShenmueFlag(0x191) || EV_GetShenmueFlag(0x190)) && !RegisterNpcFlags(PLAYER_COMPANION_REN, NRSF_AbstractActive, 2))
             EV_CheckWarmStartNpcRoute(PLAYER_COMPANION_REN);
         if (FindPTYCForChara(PLAYER_COMPANION_REN))
             ptycCharaUnlock(PLAYER_COMPANION_REN);
@@ -311,7 +311,7 @@ void UpdatePlayerPartyCompanions(PlayerModelState &state) {
         if (FindPTYCForChara(PLAYER_COMPANION_SHENHUA))
             PTYCUtils(PLAYER_COMPANION_SHENHUA, 0, 1);
     } else {
-        if ((EV_GetShenmueFlag(0x192) || EV_GetShenmueFlag(0x193)) && !RegisterNpcFlags(PLAYER_COMPANION_SHENHUA, NpcRouteAbstractActive, 2))
+        if ((EV_GetShenmueFlag(0x192) || EV_GetShenmueFlag(0x193)) && !RegisterNpcFlags(PLAYER_COMPANION_SHENHUA, NRSF_AbstractActive, 2))
             EV_CheckWarmStartNpcRoute(PLAYER_COMPANION_SHENHUA);
         if (FindPTYCForChara(PLAYER_COMPANION_SHENHUA))
             ptycCharaUnlock(PLAYER_COMPANION_SHENHUA);

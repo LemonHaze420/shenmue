@@ -9,22 +9,22 @@ void KnmnFeedbackOpening(CompiledSequenceWork &sequence) {
     KnmnPracticeWork &work = *static_cast<KnmnPracticeWork *>(sequence.event);
     const std::uint8_t gesture = KnmnValue<std::uint8_t>(&work, 0x65c);
     if (gesture <= 2) {
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_KEM), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_KEM), nullptr, 0);
         mtwkRequestMotion(scenFindMotionwork(KNMN_KEM), static_cast<std::uint16_t>(5195 + gesture), MotionRegion::LowerBody);
-    } else if (gesture == 3 && SetMotionRegionFlag(scenFindMotionwork(KNMN_KEM), 65, 1, MotionRegion::LowerBody)) {
+    } else if (gesture == 3 && mtwkSetRegionFlag(scenFindMotionwork(KNMN_KEM), 65, 1, MotionRegion::LowerBody)) {
         Vector3 target;
         EV_GetCharaPosition(KNMN_RYO, 5, &target, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_KEM), &target, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_KEM), &target, 0);
         mtwkRequestMotion(scenFindMotionwork(KNMN_KEM), 5193, MotionRegion::LowerBody);
     }
     const std::uint8_t next = static_cast<std::uint8_t>(gesture + 1);
     KnmnValue(&work, 0x65c, std::uint8_t(next > 3 ? 0 : next));
 }
 void KnmnFeedbackClosing() {
-    if (SetMotionRegionFlag(scenFindMotionwork(KNMN_KEM), 65, 1, MotionRegion::LowerBody)) {
+    if (mtwkSetRegionFlag(scenFindMotionwork(KNMN_KEM), 65, 1, MotionRegion::LowerBody)) {
         Vector3 target;
         EV_GetCharaPosition(KNMN_RYO, 5, &target, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_KEM), &target, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_KEM), &target, 0);
         mtwkRequestMotion(scenFindMotionwork(KNMN_KEM), 5193, MotionRegion::LowerBody);
     }
 }
@@ -238,17 +238,17 @@ void KnmnRepeatFeedbackSequence(void *data) {
         case 101:
             figpSetFlagsBlendForBlur(KNMN_RYO, 8, 2);
             figpAssignModeFor(KNMN_RYO, 4);
-            SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
-            EV_mtwkSetEnabled(scenFindMotionwork(KNMN_RYO), 1);
+            mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetEnabled(scenFindMotionwork(KNMN_RYO), 1);
             mtwkRequestMotion(scenFindMotionwork(KNMN_RYO), 1, MotionRegion::LowerBody);
-            SetMotionLayerFrameRange(scenFindMotionwork(KNMN_RYO), -1, -1, -1, MotionRegion::LowerBody);
-            SetMotionSpeed(scenFindMotionwork(KNMN_RYO), 1, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 0, MotionRegion::LowerBody);
+            mtwkSetLayerFrameRange(scenFindMotionwork(KNMN_RYO), -1, -1, -1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(KNMN_RYO), 1, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 0, MotionRegion::LowerBody);
             sequence.waitCharacter = KNMN_RYO;
             KnmnWait(sequence, 5, 102);
             break;
         case 102:
-            SetMotionSpeed(scenFindMotionwork(KNMN_RYO), 1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(KNMN_RYO), 1, MotionRegion::LowerBody);
             figpAssignModeFor(KNMN_RYO, 0);
             KnmnComplete(sequence);
             return;

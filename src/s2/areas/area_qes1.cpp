@@ -156,8 +156,8 @@ void Qes1HideCharacters() {
     EV_ToggleCharacterFlag(QES_CHAINSAW);
 }
 std::int32_t Qes1Initialize(Qes1EventWork *work) {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QES1"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QES1"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QES1"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QES1"), 0);
     eventSavedSoundScene = GetSelectedSoundSceneIndex();
     std::strcpy(eventSavedSoundBankName.data(), shenGetCurrentSbt());
     std::strcpy(eventSavedBgmName.data(), GetCurrentBgm());
@@ -194,7 +194,7 @@ std::int32_t Qes1Initialize(Qes1EventWork *work) {
     for (std::int32_t index = 0; index < 20; ++index)
         eventMovementStates[index] = 0;
     work->phase = 1;
-    GetCurrentDateTime(eventTemporaryDateTime);
+    shenGetCurrentDateTime(eventTemporaryDateTime);
     work->retryCanSkip = 0;
     return 0;
 }
@@ -208,9 +208,9 @@ std::int32_t Qes1ResetActors(Qes1EventWork *work) {
             }
         }
     SetCurrentDateTimeTo(eventTemporaryDateTime);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QES1AUTH"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     work->phase = 2;
     return 0;
 }
@@ -245,8 +245,8 @@ std::int32_t Qes1Intro(Qes1EventWork *work) {
         break;
     }
     case 1: {
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QES1AUTH"), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QES1AUTH"), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QES1AUTH"), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QES1AUTH"), 0);
         Queue_EVT_UTL_LoadNPCChara_3(QES1_KICK_CHARACTERS, nullptr);
         EV_DisableCharacterDisplay(QES_YUA);
         EV_DisableCharacterDisplay(QES_CHAINSAW);
@@ -987,8 +987,8 @@ void Qes1Cleanup(Qes1EventWork *work) {
     EV_LoadCutsceneFromCurrentScene(eventSavedBgmName.data());
     EV_LoadAudio(eventSavedSoundBankName.data(), eventSavedSoundScene);
     EV_spmBeginSampleExecute();
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QES1"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QES1"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QES1"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QES1"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
     EV_NPC_NewLoadSw(1);

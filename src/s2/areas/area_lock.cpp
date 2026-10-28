@@ -82,8 +82,8 @@ void AreaLOCKMain(std::uintptr_t parameter) {
 }
 // @verified - p
 void LOCKPrepareEvent() {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, LOCK_BASE);
     EV_FreeAuthorPak(1, "0363");
     FinishLoading();
@@ -108,7 +108,7 @@ void LOCKPlaceCharacters(LockEventWork *work) {
     }
     EVT_AT_SetMot(LOCK_PLAYER, 0xf002, 0, 1, 0x40000000U, 0);
     GetMotionFrameCount(0xf002);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
 }
 // @verified - p
 void LOCKPlacePlayer(LockEventWork *work) {
@@ -124,13 +124,13 @@ std::int32_t LOCKHgnConversation(LockEventWork *work) {
     GetMotionFrameCount(11009);
     Vector3 position;
     EV_GetCharaPosition(LOCK_PLAYER, 5, &position, EventTransformFlags::World);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(work->opponent), &position, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(work->opponent), &position, 0);
     EV_GetCharaPosition(work->opponent, 5, &position, EventTransformFlags::World);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(LOCK_PLAYER), &position, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(LOCK_PLAYER), &position, 0);
     EV_GetCharaPosition(LOCK_PLAYER, 7, &position, EventTransformFlags::World);
-    SetEyeToChara(FindCharacterByScenarioName(work->opponent), &position, 15, 2);
+    SetEyeToChara(ctrlGetScenarioChara(work->opponent), &position, 15, 2);
     EV_GetCharaPosition(work->opponent, 7, &position, EventTransformFlags::World);
-    SetEyeToChara(FindCharacterByScenarioName(LOCK_PLAYER), &position, 15, 2);
+    SetEyeToChara(ctrlGetScenarioChara(LOCK_PLAYER), &position, 15, 2);
     const bool storyFlag = EV_GetShenmueFlag(0x288) != 0;
     const std::int32_t first = static_cast<std::int32_t>(GetRandomNumberInRange(3.0f));
     if (storyFlag)
@@ -142,7 +142,7 @@ std::int32_t LOCKHgnConversation(LockEventWork *work) {
         EVT_AT_SetVoice(second == 0 ? "0363B004" : second == 1 ? "0363B005" : "0363B006", 1, 60); // @text 0363B004 EN: "Can't go in." | JA: "勝手に入るな。" ; 0363B005 EN: "This place is off limits." | JA: "ここは立ち入り禁止だ。" ; 0363B006 EN: "You can't go further." | JA: "その先に行くんじゃない。"
     else
         EVT_AT_SetVoice(second == 0 ? "0363B010" : second == 1 ? "0363B011" : "0363B012", 1, 60); // @text 0363B010 EN: "You're asking for trouble." | JA: "勝手に入られると困るんだよ。" ; 0363B011 EN: "You gotta pay to go through." | JA: "入るんなら金を払ってくれ。" ; 0363B012 EN: "Gotta pay to go in!" | JA: "金を払わねえうちは\n通せねえぜ。"
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
     EVT_AT_SetCam(2068, work->opponent, work->opponent, 0, 0, 0);
     camCtrlDisableFilmBars();
     return 150;
@@ -154,13 +154,13 @@ std::int32_t LOCKWtbConversation(LockEventWork *work) {
     GetMotionFrameCount(11009);
     Vector3 position;
     EV_GetCharaPosition(LOCK_PLAYER, 5, &position, EventTransformFlags::World);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(work->opponent), &position, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(work->opponent), &position, 0);
     EV_GetCharaPosition(work->opponent, 5, &position, EventTransformFlags::World);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(LOCK_PLAYER), &position, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(LOCK_PLAYER), &position, 0);
     EV_GetCharaPosition(LOCK_PLAYER, 7, &position, EventTransformFlags::World);
-    SetEyeToChara(FindCharacterByScenarioName(work->opponent), &position, 15, 2);
+    SetEyeToChara(ctrlGetScenarioChara(work->opponent), &position, 15, 2);
     EV_GetCharaPosition(work->opponent, 7, &position, EventTransformFlags::World);
-    SetEyeToChara(FindCharacterByScenarioName(LOCK_PLAYER), &position, 15, 2);
+    SetEyeToChara(ctrlGetScenarioChara(LOCK_PLAYER), &position, 15, 2);
     const bool storyFlag = EV_GetShenmueFlag(0x287) != 0;
     const std::int32_t first = static_cast<std::int32_t>(GetRandomNumberInRange(3.0f));
     if (storyFlag)
@@ -172,7 +172,7 @@ std::int32_t LOCKWtbConversation(LockEventWork *work) {
         EVT_AT_SetVoice(second == 0 ? "0363D004" : second == 1 ? "0363D005" : "0363D006", 1, 60); // @text 0363D004 EN: "You can't just walk in." | JA: "勝手に入るな。" ; 0363D005 EN: "Keep out!" | JA: "その先に行くんじゃない。" ; 0363D006 EN: "This place is off limits." | JA: "ここは立ち入り禁止だ。"
     else
         EVT_AT_SetVoice(second == 0 ? "0363D010" : second == 1 ? "0363D011" : "0363D012", 1, 60); // @text 0363D010 EN: "You're asking for trouble." | JA: "勝手に入られると困るんだよ。" ; 0363D011 EN: "Pay, if you wanna go in." | JA: "入るんなら金を払ってくれ。" ; 0363D012 EN: "You can't go in\nif you don't pay." | JA: "金を払わねえうちは\n通せねえな。"
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
     EVT_AT_SetCam(2060, work->opponent, work->opponent, 0, 0, 0);
     camCtrlDisableFilmBars();
     return 150;
@@ -184,13 +184,13 @@ std::int32_t LOCKSf8Conversation(LockEventWork *work) {
     GetMotionFrameCount(11009);
     Vector3 position;
     EV_GetCharaPosition(LOCK_PLAYER, 5, &position, EventTransformFlags::World);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(work->opponent), &position, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(work->opponent), &position, 0);
     EV_GetCharaPosition(work->opponent, 5, &position, EventTransformFlags::World);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(LOCK_PLAYER), &position, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(LOCK_PLAYER), &position, 0);
     EV_GetCharaPosition(LOCK_PLAYER, 7, &position, EventTransformFlags::World);
-    SetEyeToChara(FindCharacterByScenarioName(work->opponent), &position, 15, 2);
+    SetEyeToChara(ctrlGetScenarioChara(work->opponent), &position, 15, 2);
     EV_GetCharaPosition(work->opponent, 7, &position, EventTransformFlags::World);
-    SetEyeToChara(FindCharacterByScenarioName(LOCK_PLAYER), &position, 15, 2);
+    SetEyeToChara(ctrlGetScenarioChara(LOCK_PLAYER), &position, 15, 2);
     const bool storyFlag = EV_GetShenmueFlag(0x2bd) != 0;
     const std::int32_t first = static_cast<std::int32_t>(GetRandomNumberInRange(3.0f));
     if (storyFlag)
@@ -202,7 +202,7 @@ std::int32_t LOCKSf8Conversation(LockEventWork *work) {
         EVT_AT_SetVoice(second == 0 ? "0363C004" : second == 1 ? "0363C005" : "0363C006", 1, 60); // @text 0363C004 EN: "You can't just walk in." | JA: "勝手に入るなよ。" ; 0363C005 EN: "You can't go any further." | JA: "そこから先に行くな。" ; 0363C006 EN: "This place is off limits." | JA: "ここは立ち入り禁止だ。"
     else
         EVT_AT_SetVoice(second == 0 ? "0363C010" : second == 1 ? "0363C011" : "0363C012", 1, 60); // @text 0363C010 EN: "You're asking for trouble." | JA: "勝手に入られると困るんだよ。" ; 0363C011 EN: "Pay, if you wanna go in." | JA: "入るんなら金を払いな。" ; 0363C012 EN: "You can't go in\nif you don't pay." | JA: "金を払わねえうちは\n通せねえぜ。"
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
     EVT_AT_SetCam(2064, LOCK_BASE, LOCK_BASE, 0, 0, 0);
     camCtrlDisableFilmBars();
     return 155;
@@ -213,7 +213,7 @@ void LOCKReleaseEvent(LockEventWork *work) {
     ET_AT_KillWork(work->admission);
     SetPlayerControlEnabled(0);
     SetCharaKill(LOCK_BASE, 1);
-    SetMotionRegionFlag(scenFindMotionwork(LOCK_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(LOCK_PLAYER), 71, 0, MotionRegion::LowerBody);
     EV_FreeAuthorPak(0, "0363");
     EV_NPC_NewLoadSw(1);
     shenSetClockAndCompassRenderTo(0);
@@ -260,11 +260,11 @@ void LOCKMainCallback(void *data) {
         return;
     case 2: {
         if (work->opponent.name) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(LOCK_PLAYER), nullptr, 0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(work->opponent), nullptr, 0);
-            SetEyeToChara(FindCharacterByScenarioName(LOCK_PLAYER), nullptr, 16, 0);
-            SetEyeToChara(FindCharacterByScenarioName(work->opponent), nullptr, 16, 0);
-            EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(LOCK_PLAYER), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(work->opponent), nullptr, 0);
+            SetEyeToChara(ctrlGetScenarioChara(LOCK_PLAYER), nullptr, 16, 0);
+            SetEyeToChara(ctrlGetScenarioChara(work->opponent), nullptr, 16, 0);
+            EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("LOCK"), 0);
             if (work->entry == 0)
                 EVT_AT_SetCam(2069, LOCK_BASE, LOCK_BASE, 0, 0, 0);
             else if (work->entry == 1)
@@ -283,7 +283,7 @@ void LOCKMainCallback(void *data) {
         const float deltaZ = placement.finish.z - placement.start.z;
         const float length = std::sqrt(deltaZ * deltaZ + deltaX * deltaX);
         const Vector3 target{(placement.distance * deltaX) / length + position.x, position.y, (deltaZ * placement.distance) / length + position.z};
-        CopyMotionTransition(scenFindMotionwork(LOCK_PLAYER), &target, static_cast<std::uint16_t>(placement.yaw), 0, 0);
+        mtwkCopyTransition(scenFindMotionwork(LOCK_PLAYER), &target, static_cast<std::uint16_t>(placement.yaw), 0, 0);
         ++work->state;
         [[fallthrough]];
     }

@@ -221,7 +221,7 @@ void navResetForEventCamera(Character *character);
 void navDisablePlayerControl();
 void navEnablePlayerControl();
 void navResetAuthAndInputStates();
-void navRequestNewMode(std::int32_t mode);
+void ryoRequestNewMode(std::int32_t mode);
 void navSetSkipNavRegionFiltering(bool skip);
 void navUpdateRyoNavYaw(Character *character);
 void navMoveToHome();

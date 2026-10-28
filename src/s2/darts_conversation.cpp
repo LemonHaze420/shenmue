@@ -786,7 +786,7 @@ ConversationBuffer *PlayDartsOpponentPaymentResponse(std::int32_t mode, bool pla
 
 ConversationBuffer *PlayDartsOpponentReplayResponse(std::int32_t mode, bool playerTurn, shen_name opponent) {
     Character *Chara;
-    Chara = FindCharacterByScenarioName(opponent);
+    Chara = ctrlGetScenarioChara(opponent);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 30.0, 1.0);
     GetRandomNumberInRange(3.0);
     switch (opponent.name) {
@@ -807,7 +807,7 @@ ConversationBuffer *PlayDartsOpponentReplayResponse(std::int32_t mode, bool play
 
 ConversationBuffer *PlayDartsOpponentBonusReplayResponse(std::int32_t mode, bool playerTurn, shen_name opponent) {
     Character *Chara;
-    Chara = FindCharacterByScenarioName(opponent);
+    Chara = ctrlGetScenarioChara(opponent);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 30.0, 1.0);
     GetRandomNumberInRange(3.0);
     switch (opponent.name) {
@@ -829,7 +829,7 @@ ConversationBuffer *PlayDartsOpponentBonusReplayResponse(std::int32_t mode, bool
 
 ConversationBuffer *PlayDartsOpponentFinalResponse(std::int32_t mode, bool playerTurn, shen_name opponent) {
     Character *Chara;
-    Chara = FindCharacterByScenarioName(opponent);
+    Chara = ctrlGetScenarioChara(opponent);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 30.0, 1.0);
     GetRandomNumberInRange(3.0);
     switch (opponent.name) {
@@ -851,7 +851,7 @@ ConversationBuffer *PlayDartsThrowStartResponse(std::int32_t mode, bool playerTu
     Character *Chara;
     float random;
     const char *v7;
-    Chara = FindCharacterByScenarioName(opponent);
+    Chara = ctrlGetScenarioChara(opponent);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 30.0, 1.0);
     random = GetRandomNumberInRange(3.0);
     switch (opponent.name) {
@@ -1093,12 +1093,12 @@ ConversationBuffer *PlayDartsWonBetResponse(std::int32_t, bool, shen_name oppone
         EVT_AT_SetVoice("0137E062", 1, 380); // @text EN: "Here's your money." | JA: "ホレッ、かけ金だ。"
         break;
     }
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(opponent), 5, 30.0f, 1.0f);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(opponent), 5, 30.0f, 1.0f);
     return nullptr;
 }
 
 ConversationBuffer *PlayDartsLostBetResponse(std::int32_t, bool, shen_name opponent) {
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(opponent), 3, 30.0f, 1.0f);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(opponent), 3, 30.0f, 1.0f);
     GetRandomNumberInRange(3.0f);
     switch (opponent.name) {
     case areas::DART_FCJ.name:

@@ -40,7 +40,7 @@ void RestoreCharacters() {
 }
 // @verified - p
 void Cleanup(AreaAuthorTaskParameter *parent) {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0029A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0029A"), 0);
     EV_FreeAuthorPak(0, "0029");
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
@@ -69,7 +69,7 @@ void LoopCallback(void *data) {
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 41870, 0}, 0};
         EVT_AT_SetAng_Callback(&angle);
         for (const shen_name *name = characters; name->name != AREA_AUTHOR_INVALID.name; ++name)
-            if (FindCharacterByScenarioName(*name)) {
+            if (ctrlGetScenarioChara(*name)) {
                 EV_npcLockUnlock(*name);
                 EV_npcFree(*name);
             }
@@ -87,7 +87,7 @@ void MainCallback(void *data) {
     auto *parent = static_cast<AreaAuthorTaskParameter *>(data);
     switch (parent->state) {
     case 0:
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         shenSetClockAndCompassRenderTo(0);

@@ -154,8 +154,8 @@ void BribQueueAttachment(
 }
 void BribRenStart(void *data) {
     EV_NPC_NewLoadSw(1);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
     if (!data)
         return;
     HLib::SetCurrentTaskTo(BribRenLoop);
@@ -312,8 +312,8 @@ void BribRenLoop(void *data) {
     HLib::SetupTimedTask(work.parent, 1);
     HLib::MarkCurrentTaskForCleanup();
     scenFreeEvent("BRIB.EV3");
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("BRIB"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("BRIB"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
     SetPlayerControlEnabled(1);
     EV_NPC_NewLoadSw(1);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1869, 1);
@@ -346,10 +346,10 @@ std::int64_t BribSenseAuthorCallback(std::int32_t phase, std::int64_t frame, HLi
 void BribSenseAuthorLoop(void *data) {
     AreaLoopAuthorWork &work = *static_cast<AreaLoopAuthorWork *>(data);
     if (!(work.flags & 1U)) {
-        if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load,
+        if (!EV_pakUtils(PakCategory::Package, PakPackageOp::Load,
                 reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)), reinterpret_cast<std::uintptr_t>(work.package)))
             return;
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         work.flags |= 1U;
     }
     if (!(work.flags & 2U)) {
@@ -368,8 +368,8 @@ void BribSenseAuthorLoop(void *data) {
         work.completion(1, 0, work.parent);
     if (!finished)
         EV_authSceneCtrl(AuthSceneCtrl::RefreshAndEnqueue);
-    if (work.package && EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work.package), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work.package), 0);
+    if (work.package && EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work.package), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work.package), 0);
     if (work.flags & 0x80000000U)
         work.flags &= ~0x80000000U;
     else
@@ -399,8 +399,8 @@ bool QueueBribSenseAuthor() {
 }
 void BribSenseStart(void *data) {
     EV_NPC_NewLoadSw(1);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
     HLib::SetCurrentTaskTo(BribSenseLoop);
     if (data) {
         SetAreaLoopCharacterControl(BRIB_RYO, 1);
@@ -431,8 +431,8 @@ void BribSenseLoop(void *data) {
     HLib::SetupTimedTask(work.parent, 1);
     HLib::MarkCurrentTaskForCleanup();
     scenFreeEvent("BRIB.EV3");
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("BRIB"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("BRIB"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BRIB"), 0);
     SetPlayerControlEnabled(1);
     EV_NPC_NewLoadSw(1);
 }

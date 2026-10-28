@@ -29,7 +29,7 @@ void E0062LoopCallback(void *taskData);
 void SetupE0062Environment() {
     SetPlayerControlEnabled(0);
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     if (dateTime.hour < 19) {
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
@@ -66,7 +66,7 @@ void E0062Main(std::uintptr_t) {
 // @verified - p
 void CleanupE0062(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0062_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

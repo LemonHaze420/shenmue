@@ -43,8 +43,8 @@ void PrepareShrineOwner() {
     EV_SetCharaControllerFlags(QDSS_RYO, ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(QDSS_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     SetPlayerGameFlags(PlayerGameFlagMode::Bit2, nullptr);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDSS"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDSS"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDSS"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDSS"), 0);
     EV_AT_SetPos(QDSS_BASE, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3{171.5f, 136, 64.800003f});
     EV_AT_SetAngY(QDSS_BASE, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, 49152, 0});
     std::memcpy(qdssKeys, initialKeys, sizeof(initialKeys));
@@ -159,7 +159,7 @@ void ShrineCallback(void *parameter) {
         break;
     case 1: {
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         work.savedSeconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(date));
         EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 48, work.savedSeconds >> 24);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 49, (work.savedSeconds >> 16) & 255);
@@ -275,7 +275,7 @@ void ShrineCallback(void *parameter) {
         break;
     case 19: {
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         const std::uint32_t earlier = static_cast<std::uint32_t>(ComputeSecondsSince1980(date)) - 7200U;
         if (static_cast<std::uint32_t>(static_cast<std::int32_t>(date.hour) - 2) > 2U) {
             if (EV_GetShenmueFlag(0x3c9) && work.savedSeconds < earlier) {

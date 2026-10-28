@@ -95,7 +95,7 @@ void CreateCandles() {
 void PrepareAuthorCharacter(shen_name name) {
     EV_EnsureCharacterDraw(name);
     EV_EnableCharacterDisplay(name);
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(name)), 6, 2);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(name)), 6, 2);
     EV_SetCharacterAlphaEnabled(name, false);
 }
 
@@ -133,13 +133,13 @@ void PrepareAuthorCharacters(std::int16_t author) {
 
 void RestoreAuthorCharacters() {
     EV_EnableCharacterDisplay(AREA_0278_RYO);
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(AREA_0278_RYO)), 6, 0);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(AREA_0278_RYO)), 6, 0);
     EV_SetCharacterAlphaEnabled(AREA_0278_RYO, true);
     for (const shen_name name : AREA_0278_MODELS)
         EV_SetCharacterAlphaEnabled(name, true);
     for (const shen_name *name = AREA_0278_CHARACTERS; name->name != 0xffffffffU; ++name) {
         EV_EnableCharacterDisplay(*name);
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(*name)), 6, 0);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(*name)), 6, 0);
         EV_SetCharacterAlphaEnabled(*name, true);
     }
 }
@@ -219,7 +219,7 @@ void QueueAuthor(EventParameter *parent) {
         break;
     case 2:
         CreateCandles();
-        SetClothFlag(FindCharacterByScenarioName(AREA_0278_HUNHUI), 2, true);
+        SetClothFlag(ctrlGetScenarioChara(AREA_0278_HUNHUI), 2, true);
         break;
     case 3:
         EV_lightLoad(AREA_0278_LIGHTS[2]);
@@ -236,14 +236,14 @@ void FinishEvent(EventParameter *parent) {
     shenUpdateCurrentDateTime();
     EV_stepSetFlags(0, 0x12c);
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.day += 2;
     date.hour = 8;
     date.minute = 0;
     SetCurrentDateTimeTo(date);
     AddInventoryItem(0x16, 1, 0);
     for (const shen_name *name = AREA_0278_CHARACTERS; name->name != 0xffffffffU; ++name) {
-        if (!FindCharacterByScenarioName(*name))
+        if (!ctrlGetScenarioChara(*name))
             continue;
         EV_npcLockUnlock(*name);
         EV_npcFree(*name);
@@ -271,7 +271,7 @@ void PrepareEnvironment() {
     SetPlanetLayerOffset(planetOffset, 0);
     SetPlanetLayerOffset(planetOffset, 1);
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 20;
     date.minute = 0;
     SetCurrentDateTimeTo(date);

@@ -208,8 +208,8 @@ void KachVoiceWaitCallback(void *parameter) {
 // @verified - p
 void KachInitializeCallback(void *) {
     SetLoadingDrawFlags(3);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KACH"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KACH"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KACH"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KACH"), 0);
     EV_EventSetUpHelpIcon_0(0x76, 0);
     Help(1);
     EV_SetNewSceneIndex();
@@ -231,10 +231,10 @@ void KachInitializeCallback(void *) {
     Turn(dummy, base, 0);
     Place(hand, base, {0.31f, 0.85000002f, 0.30000001f});
     Rotate(hand, base, {32768, 32768, 45056});
-    if (GetMotionRigBoneId(scenFindMotionwork(machine.dealer)) == 6)
+    if (mtwkGetRigBoneId(scenFindMotionwork(machine.dealer)) == 6)
         motionStyle = 0;
     else
-        motionStyle = (GetMotionRigBoneId(scenFindMotionwork(machine.dealer)) == 5) + 1;
+        motionStyle = (mtwkGetRigBoneId(scenFindMotionwork(machine.dealer)) == 5) + 1;
     (void)FindMotionWork(ctrlGetCharaByName(machine.dealer));
     SetFaceFlagsForChara_0(ctrlGetCharaByName(machine.dealer), FacialNodeReplacement);
     LoadBlurModelForCharacter(machine.dealer, nullptr, 0);
@@ -655,7 +655,7 @@ void KachCleanupCallback(void *) {
     point.character = machine.dealer;
     EVT_AT_SetPoint_Callback(&point);
     EV_EventSetUpHelpIcon_0(0, 0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     (void)FindMotionWork(ctrlGetCharaByName(machine.dealer));
     hndlSetFlags(ctrlGetCharaByName(hand));
@@ -669,7 +669,7 @@ void KachCleanupCallback(void *) {
     HLib::EV_HLKillOtherHierarchyTask(mainTask);
     Motion(ryo, 0xf002);
     EV_NPC_NewLoadSw(1);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KACH"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KACH"), 0);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
 }
 // @verified - p

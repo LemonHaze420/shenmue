@@ -28,16 +28,16 @@ enum class NpcCharacterControllerState : std::int32_t {
 };
 
 enum NpcRouteStreamFlags : std::uint32_t {
-    NpcRouteStreamRequested = 0x00000001U,
-    NpcRouteStreamLive = 0x00000002U,
-    NpcRouteStreamFadeOut = 0x00000004U,
-    NpcRouteAbstractActive = 0x00000008U,
-    NpcRouteStreamForceHidden = 0x00000040U,
-    NpcRouteFlag80 = 0x00000080U,
-    NpcRouteStreamPinned = 0x00000200U,
-    NpcRouteStreamStartHidden = 0x00001000U,
-    NpcRouteStreamUseHumansAfs = 0x40000000U,
-    NpcRouteStreamLoadedHidden = 0x80000000U,
+    NRSF_Requested = 0x00000001U,
+    NRSF_Live = 0x00000002U,
+    NRSF_FadeOut = 0x00000004U,
+    NRSF_AbstractActive = 0x00000008U,
+    NRSF_ForceHidden = 0x00000040U,
+    NRSF_Unknown80 = 0x00000080U,
+    NRSF_Pinned = 0x00000200U,
+    NRSF_StartHidden = 0x00001000U,
+    NRSF_UseHumansAfs = 0x40000000U,
+    NRSF_LoadedHidden = 0x80000000U,
 };
 
 struct NpcRouteLiveEntry;

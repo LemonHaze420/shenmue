@@ -834,8 +834,8 @@ void StrandSpringTransform(OsageNode &node) {
     if (directional) {
         MotionWork *const motion = FindMotionWork(work.owner);
         Vector3 start{}, end{};
-        GetMotionBonePosition(motion, static_cast<MotionBoneId>(directional == 1 ? 3 : 22), &start);
-        GetMotionBonePosition(motion, static_cast<MotionBoneId>(directional == 1 ? 5 : 3), &end);
+        mtwkGetBonePosition(motion, static_cast<MotionBoneId>(directional == 1 ? 3 : 22), &start);
+        mtwkGetBonePosition(motion, static_cast<MotionBoneId>(directional == 1 ? 5 : 3), &end);
         direction = {start.x - end.x, start.y - end.y, start.z - end.z};
         Vector3::NormalizeInPlace(direction);
     }
@@ -1058,7 +1058,7 @@ void ProcessNodeTree(MT7Node *model, Character *character) {
 // @verified - p
 void CollisionSurfaces(const OsageCollisionPoint *points, MotionWork *motion, Vector4 *output) {
     for (std::int32_t i = 0; i < 28; ++i) {
-        Matrix4x4::SetActiveTransform(charaGetBoneTransform(motion, collisionBones[i]));
+        Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(motion, collisionBones[i]));
         Matrix4x4::preTranslate(points[i].x * 0.0099999998f, points[i].y * 0.0099999998f, points[i].z * 0.0099999998f);
         const Vector3 position = Translation();
         output[i] = {position.x, position.y, position.z, points[i].radius * 0.0099999998f};
@@ -1162,7 +1162,7 @@ void UpdateCharacterOsage(MT7Node *model, Character *character) {
     Matrix4x4_Push();
     for (std::int32_t i = 0; i < 5; ++i) {
         const ReferenceAngle &reference = referenceAngles[i];
-        Matrix4x4::SetActiveTransform(charaGetBoneTransform(motion, reference.bone));
+        Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(motion, reference.bone));
         const Vector3 joint = Translation();
         Matrix4x4_Push();
         Matrix4x4::preTranslate(reference.base.x, reference.base.y, reference.base.z);
@@ -1196,7 +1196,7 @@ void UpdateCharacterOsage(MT7Node *model, Character *character) {
     groundHeight = -100000;
     motionScale = work->motionScale;
     if (std::fabs(motionScale) < 0.00000011920929f) {
-        motionScale = GetMotionSpeed(motion, MotionRegion::LowerBody);
+        motionScale = mtwkGetSpeed(motion, MotionRegion::LowerBody);
         if (std::fabs(motionScale) < 0.00000011920929f)
             motionScale = 1;
     }

@@ -125,13 +125,13 @@ std::int32_t QueueBookDialogue(std::int32_t sequence, std::int32_t books) {
         return 90;
     }
     case 8: {
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(BOOK_SAI), FacialNodeReplacement);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(BOOK_SAI), FacialNodeReplacement);
         constexpr const char *voices[]{"0035E037", "0035E038", "0035E039", "0035E040", "0035E041"}; // @text 0035E037 EN: "Hurry and bring the books out." | JA: "早く本を運んできてください。" ; 0035E038 EN: "What are you doing?\nPlease bring them." | JA: "何してるんですか？\nお願いしますよ。" ; 0035E039 EN: "If you're wasting time,\nyou'll get into trouble." | JA: "サボってると、\n老師にしかられますよ。" ; 0035E040 EN: "What are you doing?\nBring the books." | JA: "何してるんですか？\n本を運んでください。" ; 0035E041 EN: "What's wrong?\nYou should work or else=@" | JA: "どうしたんですか？\n本を運ばないと…"
         Voice(voices[shenGetRandomInt32(5)], 0);
         return 90;
     }
     case 9: {
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(BOOK_SAI), FacialNodeReplacement);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(BOOK_SAI), FacialNodeReplacement);
         constexpr const char *voices[]{"0035E042", "0035E043", "0035E044", "0035E045", "0035E046"}; // @text 0035E042 EN: "What's wrong?\nBring the pile please." | JA: "どうしたんですか？\n早く運んでください。" ; 0035E043 EN: "Are you tired?" | JA: "あれ？　疲れちゃったんですか？" ; 0035E044 EN: "Come on.\nBring them." | JA: "さあ、運んでください。" ; 0035E045 EN: "Place the piles on the stand." | JA: "本を台まで運ぶんですよ。" ; 0035E046 EN: "Keep up the work." | JA: "がんばって運んでください！"
         Voice(voices[shenGetRandomInt32(5)], 0);
         return 90;

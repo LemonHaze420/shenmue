@@ -88,20 +88,20 @@ void Update290E(void *taskData) {
 void Cleanup290E(Area290EParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_290E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_290E_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_290E_ARCHIVE), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_290E_ARCHIVE), 0);
     EV_authSceneCtrl(AuthSceneCtrl::ShowFilmBars);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_290E.name) {
         EV_scenQueueLoad(g_actNumber, AREA_290E, g_entryPoint);
     } else {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EventSetPosition position{0, AREA_290E_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {213.8300018310547f, 143.1999969482422f, 147.75999450683594f}, 0.0f};
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_290E_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {0, 16384, 0}, 0.0f};

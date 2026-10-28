@@ -24,15 +24,15 @@ void QA22MainloopCallback(void *) {
         return;
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1809))
         return;
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("KHIN"), 0))
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("KHIN"), 0))
         return;
     SetPlayerControlEnabled(0);
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
     const char *const directory = Filepath_Gen(FilepathGenMode::PackDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("KHIN"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("KHIN"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
     ExecuteCurrAreaMainFunc("KHIN.EV3", reinterpret_cast<std::uintptr_t>(&authorParameter));
 }
 
@@ -55,7 +55,7 @@ void AreaQA22Main(std::uint32_t) {
     EV_SetWeatherInstruction(0x780, 0);
     EV_SetWeatherInstruction(0x0c, 0);
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     (void)EV_GetShenmueFlag(0xff);
     EV_lightLoad(QA22_LIGHT);
     PushGlobalLightingProgram();

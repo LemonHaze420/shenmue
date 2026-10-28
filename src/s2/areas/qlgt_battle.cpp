@@ -16,26 +16,26 @@ void StartBattle(void *data) {
     Work &work = *static_cast<Work *>(data);
     const Course &course = *work.course;
     shenStartFGST(10, 10, 0, 0);
-    shenInitFightData(FindCharacterByScenarioName(ryo), nullptr, 0, 0, 0, 0);
+    shenInitFightData(ctrlGetScenarioChara(ryo), nullptr, 0, 0, 0, 0);
     for (std::int32_t i = 0; i < course.enemyCount; ++i) {
         const bool advanced = static_cast<std::uint32_t>(work.entry->course - 2) <= 1;
-        shenInitFightData(FindCharacterByScenarioName(actors[2 + i]), nullptr, 1, 1,
+        shenInitFightData(ctrlGetScenarioChara(actors[2 + i]), nullptr, 1, 1,
             static_cast<std::uint16_t>(advanced ? advancedHealth[i] : ordinaryHealth[i]),
             static_cast<std::uint8_t>(advanced ? advancedStyles[i] : ordinaryStyles[i]));
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(actors[2 + i]), FacialNodeOriginal);
-        SetHighModelXYZ(FindCharacterByScenarioName(actors[2 + i]), 0, 1, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(actors[2 + i]), 0, 0, 0);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(actors[2 + i]), FacialNodeOriginal);
+        SetHighModelXYZ(ctrlGetScenarioChara(actors[2 + i]), 0, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(actors[2 + i]), 0, 0, 0);
     }
     vfCopyPosFromEntity(0, nullptr, course.failBattle.x, course.failBattle.z, course.failBattleRadius);
     EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x800}, 1);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(ryo), FacialNodeOriginal);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(ren), FacialNodeOriginal);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(ryo), FacialNodeOriginal);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(ren), FacialNodeOriginal);
     SetScenarioCharacterType(ryo, CharacterTypeDefault);
     SetScenarioCharacterType(ren, CharacterTypeDefault);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ren), 0, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ren), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ren), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ren), 0, 0, 0);
     if (work.entry->course != 1) {
         EV_DisableCharacterDisplay(ren);
         EV_ToggleCharacterFlag(ren);
@@ -55,7 +55,7 @@ void PlayBattle(void *data) {
         TrackDrumTransparency(false);
         return;
     }
-    if (GetBtlStatus(FindCharacterByScenarioName(ryo)) == 3) {
+    if (GetBtlStatus(ctrlGetScenarioChara(ryo)) == 3) {
         EV_stepSetFlags(0, work.entry->step);
         HLib::SetCurrentTaskTo(Win);
     } else {
@@ -75,14 +75,14 @@ void Win(void *data) {
         EV_EnableCharacterDisplay(ren);
         EV_EnsureCharacterDraw(ren);
     }
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(ryo), FacialNodeReplacement);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(ren), FacialNodeReplacement);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(ryo), FacialNodeReplacement);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(ren), FacialNodeReplacement);
     SetScenarioCharacterType(ryo, CharacterTypePlayer);
     SetScenarioCharacterType(ren, CharacterTypePlayer);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ren), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ren), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ren), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ren), 1, 0, 0);
     EV_LoadAudio("0263A000", 0);
     EV_spmBeginSampleExecute();
     Film(30, 255, 0);
@@ -115,19 +115,19 @@ void Retry(void *data) {
         EV_EnableCharacterDisplay(ren);
         EV_EnsureCharacterDraw(ren);
     }
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(ryo), FacialNodeReplacement);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(ryo), FacialNodeReplacement);
     SetScenarioCharacterType(ryo, CharacterTypeDefault);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(ren), FacialNodeReplacement);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(ren), FacialNodeReplacement);
     SetScenarioCharacterType(ren, CharacterTypeDefault);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ren), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ren), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ren), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ren), 1, 0, 0);
     for (std::int32_t i = 0; i < work.course->enemyCount; ++i) {
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(actors[2 + i]), FacialNodeReplacement);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(actors[2 + i]), FacialNodeReplacement);
         SetScenarioCharacterType(actors[2 + i], CharacterTypeDefault);
-        SetHighModelXYZ(FindCharacterByScenarioName(actors[2 + i]), 1, 1, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(actors[2 + i]), 1, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(actors[2 + i]), 1, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(actors[2 + i]), 1, 0, 0);
     }
     work.retry = 1;
     ST_LoadTitleFade();

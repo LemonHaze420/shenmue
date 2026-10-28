@@ -54,7 +54,7 @@ void Update0505(void *taskData) {
 // @verified - p
 void Cleanup0505(AuthorViewerTaskParameter *parent) {
     for (const shen_name *character = AREA_0505_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -113,7 +113,7 @@ void Prepare0505Characters() {
 // @verified - p
 void Setup0505Waves() {
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 14;
     date.minute = 30;
     SetCurrentDateTimeTo(date);

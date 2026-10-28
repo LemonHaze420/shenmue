@@ -55,7 +55,7 @@ void plymUpdateRegionInteraction(PlayerModelState &state) {
         Vector3 ingress{};
         ComputeDoorIngress(static_cast<std::int32_t>(state.searchRegionKey), &position, &ingress);
         state.regionInteractionMotionId = GetNpcDoorAnimation(static_cast<std::int32_t>(state.searchRegionKey), state.characterNode, &position);
-        RequestMotionPositionTransition(state.motionWork, &ingress, static_cast<std::uint16_t>(g_doorIngressRotation.y),
+        mtwkRequestPositionTransition(state.motionWork, &ingress, static_cast<std::uint16_t>(g_doorIngressRotation.y),
             state.regionInteractionMotionId | 0x01000000U, automaticRegion ? 0.0f : 1.0f);
         toggleCCMflagsByAmt(state.characterNode, 0x800U);
         ++state.regionInteractionState;
@@ -71,7 +71,7 @@ void plymUpdateRegionInteraction(PlayerModelState &state) {
         ccmSetFlagsFor(state.characterNode, 0x80U);
         return;
     case 4:
-        if (!SetMotionRegionFlag(state.motionWork, 65U, 1, MotionRegion::LowerBody))
+        if (!mtwkSetRegionFlag(state.motionWork, 65U, 1, MotionRegion::LowerBody))
             return;
         ++state.regionInteractionState;
         break;
@@ -440,7 +440,7 @@ void plymUpdateAuthorPlacementTarget(PlayerModelState &state) {
             g_playerRuntime.model->specialModeFlags &= ~0x10U;
     } else {
         Vector3 position{};
-        GetCharacterMotionWorldPosition(author, 6, &position);
+        charaGetMotWorldPos(author, 6, &position);
         if ((g_playerRuntime.flags & 0x40000U) && g_playerRuntime.model) {
             g_playerRuntime.model->specialModeState = 2;
             g_playerRuntime.model->specialModeTargetPosition = position;
@@ -1578,7 +1578,7 @@ std::int32_t plymBeginSpecialMode() {
     state->specialModeCounter &= 0xff00U;
     state->specialModeStep = 0;
     if (mtwkSetExtraFlag(state->motionWork, 59U, 1) != 0)
-        ResetMotionWorkPositionTransition(state->motionWork);
+        mtwkResetPositionTransition(state->motionWork);
     state->specialModeAuthorName = GetActiveScenarioCharacter();
     if ((state->motionInputState == 10U || state->placementTargetState == 1U) && state->specialModeAuthorName.name == SHEN_NAME(SIN_))
         plymRequestSpecialAuthorTarget(state->specialModeAuthorName);

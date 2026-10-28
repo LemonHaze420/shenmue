@@ -16,7 +16,7 @@ std::int32_t DartsOpponentAttachBone(shen_name opponent, std::int32_t difficulty
 
 // The fifth motion argument carries raw DWORD flags, not a float value.
 std::uint32_t DartsBeginOpponentThrow(shen_name opponent, std::int32_t difficulty) {
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(opponent)), 13, 0);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(opponent)), 13, 0);
     std::size_t index = 0;
     while (index < 5 && DART_OPPONENT_WORDS[index][0] != opponent.name)
         ++index;

@@ -141,7 +141,7 @@ void Exit(SlotRootWork *work) {
         scenSetTaskFlags(6);
         HLib::DestroyTask(work->task);
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SLOT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SLOT"), 0);
 }
 // @verified - p
 void Main(void *data) {
@@ -688,7 +688,7 @@ void AuthorStart(void *data) {
         Vector3i rotation;
         EV_GetCharaPosition(playerModel, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(playerModel, &rotation, EventTransformFlags::World);
-        CopyMotionTransition(scenFindMotionwork(ryo), &position, rotation.y, 0, 0);
+        mtwkCopyTransition(scenFindMotionwork(ryo), &position, rotation.y, 0, 0);
         work->authorState = 1;
         break;
     }
@@ -781,7 +781,7 @@ void QueueSlot(std::uintptr_t argument) {
     GetScenarioCharacterEulerAngles(slotAuthors[work->machineIndex], &rotation, EventTransformFlags::World);
     EV_AT_SetPos(slot, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(slot, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SLOT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SLOT"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, playerModel);
 }
 const ScriptAreaDefinition slotScriptDefinition{.areaId = SHEN_NAME(SLOT), .field04 = 0, .init = SlotInitializationNullsub, .main = QueueSlot};

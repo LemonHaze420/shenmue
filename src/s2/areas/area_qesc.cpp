@@ -77,11 +77,11 @@ void InitializeQescEscape(QescEventWork *work) {
     work->characters = Queue_EVT_AT_ReadChr(work->task, QESC_CHARACTERS);
     work->motion = ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    (void)EV_ControlPackageResources(
+    (void)EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("QESC"));
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QESC"), 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QESC"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QESC"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QESC"), 0);
     if (g_currentMap.name != AREA_QESC.name)
         return;
     SetWeatherUpdateEnabledTo(0);

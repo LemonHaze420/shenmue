@@ -52,8 +52,8 @@ void Area9KANInit() {
 }
 void Area9KANMain(std::uintptr_t argument) {
     SetPlayerControlEnabled(0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("9KAN"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("9KAN"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("9KAN"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("9KAN"), 0);
     EV_FreeAuthorPak(1, "0237");
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(NineKanLoop, 4, 0x0b, sizeof(NineKanWork), NINE_KAN_TASK);
     NineKanWork *const work = static_cast<NineKanWork *>(HLib::GetTaskParameter(task));
@@ -250,12 +250,12 @@ void NineKanLoop(void *data) {
         EV_SetCharaControllerFlags(NINE_KAN_REN, 12, NpcCharacterControllerState::Enabled);
         EV_SetCharaControllerFlags(NINE_KAN_YUA, 12, NpcCharacterControllerState::Enabled);
         EV_SetCharaControllerFlags(NINE_KAN_CHO, 12, NpcCharacterControllerState::Enabled);
-        GetCurrentDateTime(now);
+        shenGetCurrentDateTime(now);
         work.deadline = static_cast<std::uint32_t>(ComputeSecondsSince1980(now)) + 3600;
         work.state = 3;
         return;
     case 3:
-        GetCurrentDateTime(now);
+        shenGetCurrentDateTime(now);
         if (NineKanAtIntroductionPoint() || work.deadline < static_cast<std::uint32_t>(ComputeSecondsSince1980(now))) {
             if (srchHasActiveLockonTarget())
                 srchReset();
@@ -308,7 +308,7 @@ void NineKanLoop(void *data) {
             }
         EV_CheckWarmStartNpcRoute(NINE_KAN_REN);
         EV_ForceLoadNpc(NINE_KAN_REN);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         EnableAuthoredCharacterFlagsAndDisplay(NINE_KAN_REN);
         srchSetLookMode();
         SetDisplayFlagForProp(NINE_KAN_PROP, 0);
@@ -317,7 +317,7 @@ void NineKanLoop(void *data) {
         EV_DisableCharacterDisplay(NINE_KAN_TGY);
         EV_DisableCharacterDisplay(NINE_KAN_BIRD);
         EV_EnableCharacterDisplay(NINE_KAN_AUTHOR_BIRD);
-        GetCurrentDateTime(work.date);
+        shenGetCurrentDateTime(work.date);
         EV_lightLoad(NINE_KAN_LIGHT);
         PushGlobalLightingProgram();
         EV_authSceneCtrl(static_cast<AuthSceneCtrl>((work.introRetry ? NINE_KAN_RETRY_INTRO : NINE_KAN_INTRO).name));
@@ -364,13 +364,13 @@ void NineKanLoop(void *data) {
         EV_npcUnknownFunc(NINE_KAN_YUA);
         EVT_AT_SetPos(NINE_KAN_TGY, NINE_KAN_INVALID, {}, 0);
         EVT_AT_SetAngY(NINE_KAN_TGY, NINE_KAN_INVALID, 0, 0);
-        GetCurrentDateTime(now);
+        shenGetCurrentDateTime(now);
         work.deadline = static_cast<std::uint32_t>(ComputeSecondsSince1980(now)) + 200;
         work.state = 13;
         return;
     case 13: {
         const std::int32_t state = NineKanChooseHidingPlace();
-        GetCurrentDateTime(now);
+        shenGetCurrentDateTime(now);
         if (state != 17 || work.deadline < static_cast<std::uint32_t>(ComputeSecondsSince1980(now))) {
             if (srchHasActiveLockonTarget())
                 srchReset();
@@ -412,7 +412,7 @@ void NineKanLoop(void *data) {
     case 19:
         EV_LoadAudio("0237A000", 1);
         EV_spmBeginSampleExecute();
-        GetCurrentDateTime(work.date);
+        shenGetCurrentDateTime(work.date);
         if (work.soundTask) {
             HLib::DestroyTask(work.soundTask);
             work.soundTask = nullptr;
@@ -488,7 +488,7 @@ void NineKanLoop(void *data) {
         work.state = 32;
         return;
     case 32:
-        GetCurrentDateTime(work.date);
+        shenGetCurrentDateTime(work.date);
         if (work.date.hour > 7)
             ++work.date.day;
         work.date.hour = 8;
@@ -497,7 +497,7 @@ void NineKanLoop(void *data) {
         SetCurrentDateTimeTo(work.date);
         Queue_ST_LoadTitleFadeIn(NINE_KAN_NEXT_DAY);
         EV_stepSetFlags(0, 0x143);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("9KAN"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("9KAN"), 0);
         scenFreeEvent("9KAN.EV3");
         EV_scenQueueLoad(g_actNumber, NINE_KAN_DESTINATION, 0);
         EV_CleanupMapControlTask();

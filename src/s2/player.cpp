@@ -246,9 +246,9 @@ std::uint64_t SetPlayerControlEnabled(std::int32_t mode) {
         // triplet; only yaw survives this boundary.
         state->characterNode->entity.node.rotation[0] = 0;
         state->characterNode->entity.node.rotation[2] = 0;
-        EV_mtwkSetEnabled(FindMotionWork(state->characterNode), true);
+        mtwkSetEnabled(FindMotionWork(state->characterNode), true);
         if (mtwkSetExtraFlag(state->motionWork, 59U, 1)) {
-            ResetMotionWorkPositionTransition(state->motionWork);
+            mtwkResetPositionTransition(state->motionWork);
         }
     }
 
@@ -536,7 +536,7 @@ bool plymCanEvaluateSearchTargets() {
         return true;
     if (!state->motionWork)
         return false;
-    const std::uint16_t motion = GetMotionAnimationId(state->motionWork, MotionRegion::LowerBody);
+    const std::uint16_t motion = mtwkGetAnimationId(state->motionWork, MotionRegion::LowerBody);
     return motion != 0xf024U && motion != 0xf029U && motion != 0xf034U && !GetShouldRenderIcons(RenderIconSlot::ItemEffectMessage) &&
         (g_playerRuntime.flags & 0x40000U) == 0;
 }

@@ -73,11 +73,11 @@ void Cleanup329E(Area329EParameter *parent) {
     SetPlayerControlEnabled(1);
     EV_npcLockUnlock(AREA_329E_GAI);
     npcSetAreaName(AREA_329E_NPC_AREA, nullptr, 0.0f, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0329E"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0329E"), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_329E_RETURN_MAP.name) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
     } else {
         EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);

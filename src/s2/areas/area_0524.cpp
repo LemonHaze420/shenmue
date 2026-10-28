@@ -26,7 +26,7 @@ void Initialize0524() {
 // @verified - p
 void Setup0524() {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 0;
     time.minute = 0;
     SetCurrentDateTimeTo(time);
@@ -92,7 +92,7 @@ void Update0524(void *taskData) {
 // @verified - p
 void Cleanup0524(AuthorViewerPairTaskParameter *parent) {
     for (const shen_name *character = AREA_0524_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

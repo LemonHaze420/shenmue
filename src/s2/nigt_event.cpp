@@ -43,7 +43,7 @@ void NIGTMainCallback(void *taskData) {
     case 0: {
         (void)mtwkRequestMotion(scenFindMotionwork(NIGT_RYO), 0xf003, MotionRegion::LowerBody);
         DateTime dateTime;
-        GetCurrentDateTime(dateTime);
+        shenGetCurrentDateTime(dateTime);
         (void)CreateEventCharacter(CharacterCreationHighModel, nullptr, NIGT_YORU);
         params->state = dateTime.hour == 19 && dateTime.minute == 0 ? 1 : 3;
         break;
@@ -111,7 +111,7 @@ void NIGTMainCallback(void *taskData) {
 void NIGTExitCallback(void *taskData) {
     NIGTTaskParameter *const params = static_cast<NIGTTaskParameter *>(taskData);
     EV_FreeAuthorPak(0, NIGT_AUTHOR_PACKAGE);
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(NIGT_PACKAGE), 0, 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(NIGT_PACKAGE), 0, 0);
     HLib::EV_HLKillOtherHierarchyTask(params->self);
     EV_scenQueueLoad(g_actNumber, NIGT_RETURN_AREA, 1);
 }

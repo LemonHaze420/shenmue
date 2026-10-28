@@ -20,7 +20,7 @@ void CalculateMdtpHandTarget(std::int32_t selected, Vector3 *output, std::int32_
     Vector3i recorderRotation;
     Matrix4x4 bone;
     GetCharacterHandEndpoint(ctrlGetCharaByName(MDTP_PLAYER), 0, 3, &endpoint);
-    CopyMotionBoneTransform(scenFindMotionwork(MDTP_PLAYER), 14, &bone);
+    mtwkCopyBoneTransform(scenFindMotionwork(MDTP_PLAYER), 14, &bone);
     Matrix4x4_Push(&bone);
     Matrix4x4::TransformPoint(endpoint, transformed);
     Matrix4x4::Pop();
@@ -131,25 +131,25 @@ void UpdateMdtpHand(MdtpWork *work) {
     Vector3 target;
     CalculateMdtpHandTarget(work->selectedButton, &target, work->pressFrames);
     BlendMdtpHandPosition(&work->handPosition, &target, work->handBlendFrames);
-    LatchMotionBoneTarget(scenFindMotionwork(MDTP_PLAYER), 10, &work->handPosition);
+    mtwkLatchBoneTarget(scenFindMotionwork(MDTP_PLAYER), 10, &work->handPosition);
     const Vector3i rotation{.x = 63352, .y = 0, .z = 0};
     ApplyCharacterHandRotation(ctrlGetCharaByName(MDTP_PLAYER), 0, 1, &rotation);
     if (--work->handBlendFrames < 0)
         work->handBlendFrames = 0;
 }
 void MaintainMdtpMotion(std::int32_t transition) {
-    if (GetMotionAnimationId(scenFindMotionwork(MDTP_PLAYER), MotionRegion::LowerBody) == MDTP_MOTION &&
-        GetMotionFrame(scenFindMotionwork(MDTP_PLAYER), MotionRegion::LowerBody) <= 40.0f)
+    if (mtwkGetAnimationId(scenFindMotionwork(MDTP_PLAYER), MotionRegion::LowerBody) == MDTP_MOTION &&
+        mtwkGetFrame(scenFindMotionwork(MDTP_PLAYER), MotionRegion::LowerBody) <= 40.0f)
         return;
     mtwkRequestMotion(scenFindMotionwork(MDTP_PLAYER), MDTP_MOTION, MotionRegion::LowerBody);
     if (transition) {
         mtwkSetRequestedRootMode(scenFindMotionwork(MDTP_PLAYER), 1);
-        SetMotionFrameTime(scenFindMotionwork(MDTP_PLAYER), 32, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(MDTP_PLAYER), 32, MotionRegion::LowerBody);
     } else
         mtwkSetExtraFlag(scenFindMotionwork(MDTP_PLAYER), 17, 0);
-    SetMotionLayerLoopStartTime(scenFindMotionwork(MDTP_PLAYER), 0, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(MDTP_PLAYER), 0, MotionRegion::LowerBody);
-    SetMotionLayerEndFrame(scenFindMotionwork(MDTP_PLAYER), 114, MotionRegion::LowerBody);
+    mtwkSetLayerLoopStartTime(scenFindMotionwork(MDTP_PLAYER), 0, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(scenFindMotionwork(MDTP_PLAYER), 0, MotionRegion::LowerBody);
+    mtwkSetLayerEndFrame(scenFindMotionwork(MDTP_PLAYER), 114, MotionRegion::LowerBody);
     const Vector3 position{.x = 0.0040000002f, .y = -0.154f, .z = 1.126f};
     const Vector3i rotation{.x = 0, .y = 0, .z = 0};
     EV_AT_SetPos(MDTP_PLAYER, EventTransformFlags::AllAxes, position);

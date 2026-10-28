@@ -734,7 +734,7 @@ void LightTask_Callback(void *) {
             light.type = SDLT_Directional;
             if (index == 0) {
                 DateTime date;
-                GetCurrentDateTime(date);
+                shenGetCurrentDateTime(date);
                 UpdateSunForDateTime(date, 35.0f, light.direction, 1.0f);
                 light.direction = {-light.direction.x, -light.direction.y, -light.direction.z};
             }
@@ -747,7 +747,7 @@ void LightTask_Callback(void *) {
         }
     }
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     Vector3 camera;
     camCtrlGetNextCamPos(&camera);
     PublishSDLights(lights, camera, static_cast<std::uint8_t>(date.hour));
@@ -1203,7 +1203,7 @@ void PerformWeatherRenderPass() {
         if (GetCurrentActiveLight() != 1 || GetWeatherWindVector() > 0.1f || GetWeatherPressure() > 0.1f)
             return;
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         UpdateSunForDateTime(date, 35.0f, g_sunDirectionVector, 10000.0f);
         if (g_sunDirectionVector.y < 300.0f)
             return;

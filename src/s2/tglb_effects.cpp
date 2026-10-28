@@ -106,7 +106,7 @@ void TogyuBattleVoiceControlCallback(void *taskData) {
     if (work.phase == 0) {
         if (cvsHasValidConverseData())
             return;
-        Character *const character = FindCharacterByScenarioName(TOGYU_NAME);
+        Character *const character = ctrlGetScenarioChara(TOGYU_NAME);
         const std::int32_t healthPercent = static_cast<std::int32_t>(GetFightCharacterFlag(1, character, 0.0f));
         std::uint16_t cue = 0;
         if (work.cueGroup >= 0 && work.cueGroup <= 2) {

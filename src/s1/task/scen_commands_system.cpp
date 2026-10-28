@@ -359,7 +359,7 @@ void Script_PlayerControlUtils(ScenarioContext *context, void *rawParams) {
         navSetSkipNavRegionFiltering(true);
         return;
     case 7:
-        navRequestNewMode(static_cast<std::int32_t>(params->argument));
+        ryoRequestNewMode(static_cast<std::int32_t>(params->argument));
         return;
     case 8:
         setBoolResult(!g_pControlPadController || g_pControlPadController->modeState == 0);

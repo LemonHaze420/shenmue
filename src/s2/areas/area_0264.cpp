@@ -95,7 +95,7 @@ void RestoreE0264Characters() {
 // @verified - p
 void CleanupE0264(AreaImmediateAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0264_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -105,7 +105,7 @@ void CleanupE0264(AreaImmediateAuthorTaskParameter *parent) {
     EV_npcLockUnlock(AREA_0264_TKY_);
     npcSetAreaName(AREA_0264_ANP1, nullptr, 0.0f, 0);
     EV_FreeAuthorPak(0, AREA_0264_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0264A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0264A"), 0);
 
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);

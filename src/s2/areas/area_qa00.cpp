@@ -303,7 +303,7 @@ void AreaQA00Main(std::uint32_t) {
     AttachMapLightingPlacement(4, 11);
     SetQronFloorDescriptor(&descriptor);
     DateTime now;
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     EV_GetShenmueFlag(FLAG_NIGHT_TIME_ENFORCED);
     ApplyLighting();
     SetGamble();

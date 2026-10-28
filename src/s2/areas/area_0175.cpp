@@ -75,17 +75,17 @@ void RestoreE0175Characters() {
 void CleanupE0175(E0175TaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0175_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_0175_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0175A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0175A"), 0);
     if (GetSoundProgramPhaseFlag(1))
         ResetSoundProgramPhaseFlags(1);
     else
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0175_AREA.name)

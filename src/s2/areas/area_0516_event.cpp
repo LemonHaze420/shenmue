@@ -90,7 +90,7 @@ void Queue0516Author(Area0516Parameter *parent) {
 }
 void Cleanup0516(Area0516Parameter *parent) {
     for (const shen_name *name = AREA_0516_EVENT_CHARACTERS; name->name != 0xffffffffU; ++name) {
-        if (FindCharacterByScenarioName(*name)) {
+        if (ctrlGetScenarioChara(*name)) {
             EV_npcLockUnlock(*name);
             EV_npcFree(*name);
         }

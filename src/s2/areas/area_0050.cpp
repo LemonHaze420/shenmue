@@ -54,7 +54,7 @@ void SetupE0050Environment(AreaAuthorTaskParameter *parent) {
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(1, "0050");
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     EV_SetModelDataDefaultVertexShader();
     if (time.hour < 19) {
         EV_SetObjectFlagByIndex(7, 0);
@@ -182,7 +182,7 @@ void E0050LoopCallback(void *parameter) {
 }
 // @verified - p
 void CleanupE0050(AreaAuthorTaskParameter *parent) {
-    if (FindCharacterByScenarioName(AREA_0050_TKR)) {
+    if (ctrlGetScenarioChara(AREA_0050_TKR)) {
         EV_npcLockUnlock(AREA_0050_TKR);
         EV_npcFree(AREA_0050_TKR);
     }

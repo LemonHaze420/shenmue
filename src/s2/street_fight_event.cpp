@@ -187,7 +187,7 @@ std::int64_t PlayStreetFightVictoryAppearance() {
     EVT_AT_SetPos(STREET_FIGHT_CHN, STREET_FIGHT_INVALID, STREET_FIGHT_VICTORY_POSITION, 0);
     EVT_AT_SetAngY(STREET_FIGHT_CHN, STREET_FIGHT_INVALID, 172, 0);
     EVT_AT_SetMot(STREET_FIGHT_CHN, 9666, 0, 1, 0x40000000U, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QSFC"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QSFC"), 0);
     EventSetCamera camera{
         .cleanup = 0, .camera = 9901, .eye = STREET_FIGHT_CHN, .target = STREET_FIGHT_CHN, .context = 0, .reserved11 = {}, .angle = 0, .delay = 0};
     EVT_AT_SetCam_Callback(&camera);
@@ -209,7 +209,7 @@ std::uint64_t QueueStreetFightMotionSpeed(shen_name character, float speed, std:
 // @verified - p
 void StreetFightMotionSpeedCallback(void *taskData) {
     EventSetMotion *const work = static_cast<EventSetMotion *>(taskData);
-    SetMotionSpeed(scenFindMotionwork(work->character), work->speed, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(work->character), work->speed, MotionRegion::LowerBody);
     if (work->cleanup)
         HLib::DestroyCurrentTask();
 }

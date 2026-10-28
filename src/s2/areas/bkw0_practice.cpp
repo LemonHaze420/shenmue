@@ -34,11 +34,11 @@ void Bkw0InitializeTrainingSequence(void *data) {
     EV_SetCharaControllerFlags(BKW0_LKN, 2, NpcCharacterControllerState::Disabled);
     for (shen_name character : {BKW0_RYO, BKW0_LKN, BKW0_BKN})
         SetScenarioCharacterDrawControl(character, 1, 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(BKW0_RYO), 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(BKW0_LKN), 0);
-    EV_mtwkSetEnabled(scenFindMotionwork(BKW0_BKN), 1);
+    mtwkSetEnabled(scenFindMotionwork(BKW0_RYO), 1);
+    mtwkSetEnabled(scenFindMotionwork(BKW0_LKN), 0);
+    mtwkSetEnabled(scenFindMotionwork(BKW0_BKN), 1);
     for (shen_name character : {BKW0_RYO, BKW0_LKN, BKW0_BKN})
-        SetMotionSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
     for (shen_name character : {BKW0_RYO, BKW0_LKN, BKW0_BKN})
         mtwkSetRequestedRootMode(scenFindMotionwork(character), 1);
     for (shen_name character : {BKW0_RYO, BKW0_LKN, BKW0_BKN})
@@ -48,11 +48,11 @@ void Bkw0InitializeTrainingSequence(void *data) {
     const Vector3i ryoRotation{0, 32768, 0};
     EV_AT_SetPos(BKW0_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, BKW0_RYO_INITIAL_POSITION);
     EV_AT_SetAngY(BKW0_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, ryoRotation);
-    SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(BKW0_LKN, EventTransformFlags::World | EventTransformFlags::AllAxes, BKW0_LKN_POSITION);
     const Vector3i lknRotation{0, arbtCameraRotation.yaw, 0};
     EV_AT_SetAngY(BKW0_LKN, EventTransformFlags::World | EventTransformFlags::AllAxes, lknRotation);
-    SetMotionRegionFlag(scenFindMotionwork(BKW0_LKN), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(BKW0_LKN), 71, 0, MotionRegion::LowerBody);
     GetNpcBatchCountOverride(30);
     Bkw0PlaceCrowd();
     Bkw0TrainCrowd(0, 1);
@@ -63,22 +63,22 @@ void Bkw0ResetActors(std::int32_t practice) {
         EV_AT_SetPos(BKW0_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, BKW0_RYO_POSITION);
         const Vector3i rotation{0, 32768, 0};
         EV_AT_SetAngY(BKW0_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
-        SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
     }
-    if (GetMotionAnimationId(scenFindMotionwork(BKW0_RYO), MotionRegion::LowerBody) != 306) {
-        SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(BKW0_RYO), nullptr, 0);
+    if (mtwkGetAnimationId(scenFindMotionwork(BKW0_RYO), MotionRegion::LowerBody) != 306) {
+        mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkUpdateWithPosition(scenFindMotionwork(BKW0_RYO), nullptr, 0);
         mtwkRequestMotion(scenFindMotionwork(BKW0_RYO), 306, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 69, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 69, 0, MotionRegion::LowerBody);
     }
-    EV_mtwkSetEnabled(scenFindMotionwork(BKW0_RYO), 1);
-    SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 69, 0, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(BKW0_RYO), 1);
+    mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 69, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(BKW0_LKN, EventTransformFlags::World | EventTransformFlags::AllAxes, BKW0_LKN_POSITION);
     Bkw0ResetPracticeOpponentAngle();
-    SetMotionRegionFlag(scenFindMotionwork(BKW0_LKN), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(BKW0_LKN), 71, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(BKW0_LKN), 3686, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(BKW0_LKN), 69, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(BKW0_LKN), 69, 0, MotionRegion::LowerBody);
 }
 void Bkw0PracticeSequence(void *data) {
     CompiledSequenceWork &sequence = *static_cast<CompiledSequenceWork *>(data);
@@ -90,27 +90,27 @@ void Bkw0PracticeSequence(void *data) {
         switch (sequence.mode) {
         case 0: {
             work.practiceReady = 0;
-            UpdateMotionWorkWithPosition(scenFindMotionwork(BKW0_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(BKW0_RYO), nullptr, 0);
             for (shen_name character : {BKW0_RYO, work.opponent}) {
                 EV_SetCharaControllerFlags(character, 1, NpcCharacterControllerState::Disabled);
                 EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Disabled);
             }
-            EV_mtwkSetEnabled(scenFindMotionwork(BKW0_RYO), 1);
-            EV_mtwkSetEnabled(scenFindMotionwork(BKW0_LKN), 1);
-            EV_mtwkSetEnabled(scenFindMotionwork(work.opponent), 1);
-            SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetEnabled(scenFindMotionwork(BKW0_RYO), 1);
+            mtwkSetEnabled(scenFindMotionwork(BKW0_LKN), 1);
+            mtwkSetEnabled(scenFindMotionwork(work.opponent), 1);
+            mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
             EV_AT_SetPos(BKW0_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, BKW0_RYO_POSITION);
             const Vector3i rotation{0, 32768, 0};
             EV_AT_SetAngY(BKW0_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
-            SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 69, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 69, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(BKW0_RYO), 306, MotionRegion::LowerBody);
             EV_AT_SetPos(BKW0_LKN, EventTransformFlags::World | EventTransformFlags::AllAxes, BKW0_LKN_POSITION);
             Bkw0ResetPracticeOpponentAngle();
-            SetMotionRegionFlag(scenFindMotionwork(BKW0_LKN), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BKW0_LKN), 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(BKW0_LKN), 3686, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(BKW0_LKN), 69, 2, MotionRegion::LowerBody);
-            if (GetMotionAnimationId(scenFindMotionwork(BKW0_BKN), MotionRegion::LowerBody) == 7942)
+            mtwkSetRegionFlag(scenFindMotionwork(BKW0_LKN), 69, 2, MotionRegion::LowerBody);
+            if (mtwkGetAnimationId(scenFindMotionwork(BKW0_BKN), MotionRegion::LowerBody) == 7942)
                 mtwkRequestMotion(scenFindMotionwork(BKW0_BKN), 7939, MotionRegion::LowerBody);
             FinishLoading();
             CheckHelpIcon(1, 0, CheckHelpIconOp::Add);
@@ -125,7 +125,7 @@ void Bkw0PracticeSequence(void *data) {
             vfSetMoveInstructionConfiguration(BKW0_RYO, BKW0_LKN, static_cast<std::int16_t>(instruction), static_cast<std::int16_t>(second), work.fightResults);
             Vector3 position;
             EV_GetCharaPosition(BKW0_RYO, 5, &position, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(BKW0_BKN), &position, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(BKW0_BKN), &position, 0);
             CompiledSequenceWork *look = Bkw0Child(sequence, Bkw0LookSequence, BKW0_LOOK, 1);
             Bkw0SequenceValue(*look, 0x138, BKW0_BKN);
             Bkw0SequenceValue(*look, 0x140, BKW0_RYO);

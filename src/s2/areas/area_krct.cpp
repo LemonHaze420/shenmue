@@ -40,7 +40,7 @@ void ResetCamera() {
 }
 void RestoreMotion(shen_name character) {
     mtwkSetExtraFlag(scenFindMotionwork(character), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(character), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(character), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(character), 13, 0);
 }
 void LoadCompanion() {
@@ -137,9 +137,9 @@ void KrctMainLoop(void *) {
         EV_stepSetFlags(0, 308);
         krct.state = 6;
         krct.authorSelection = 0;
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("MAKI"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         shenSetClockAndCompassRenderTo(0);
         FinishLoading();
         ExecuteCurrAreaMainFunc_Wrapper(3, reinterpret_cast<std::uintptr_t>(&krct.authorSelection));
@@ -147,7 +147,7 @@ void KrctMainLoop(void *) {
     case 6:
         shenSetClockAndCompassRenderTo(1);
         KrctNullsub();
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.minute += 20;
         SetCurrentDateTimeTo(time);
         krct.scene(1);
@@ -166,14 +166,14 @@ void KrctMainLoop(void *) {
         StartAuthor(3, 32, 416);
         break;
     case 10:
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("SHASHIN"), 0))
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("SHASHIN"), 0))
             break;
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
             break;
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load,
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::Load,
                 reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)), reinterpret_cast<std::uintptr_t>("SHASHIN")) != 1)
             break;
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         krct.authorSelection = 6;
         krct.state = 34;
         EV_stepSetFlags(0, 420);
@@ -227,7 +227,7 @@ void KrctMainLoop(void *) {
     case 17:
         EV_EnableCharacterDisplay(house);
         UpdateTempHourMinTimeScale(time.hour, time.minute, -1);
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 1;
         time.minute = 40;
         SetCurrentDateTimeTo(time);
@@ -255,7 +255,7 @@ void KrctMainLoop(void *) {
         EV_LoadAudio("0530A000", 0);
         EV_spmBeginSampleExecute();
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1495, 0);
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour >= 19)
             ++time.day;
         time.hour = 8;
@@ -289,7 +289,7 @@ void KrctMainLoop(void *) {
         break;
     case 23:
         krct.state = 14;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour += 2;
         SetCurrentDateTimeTo(time);
         Queue_ST_LoadTitleFadeIn(fhTitle);
@@ -300,7 +300,7 @@ void KrctMainLoop(void *) {
         break;
     case 24:
         krct.state = 17;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour += 2;
         SetCurrentDateTimeTo(time);
         Queue_ST_LoadTitleFadeIn(fhTitle);
@@ -426,7 +426,7 @@ void KrctMainLoop(void *) {
         break;
     case 34:
         krct.state = 32;
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SHASHIN"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SHASHIN"), 0);
         break;
     case 35: {
         krct.trigger = 0;
@@ -458,9 +458,9 @@ void KrctMainLoop(void *) {
         break;
     case 37:
         EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KRCT_RYO), nullptr, 3);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KRCT_RYO), nullptr, 0);
-        clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KRCT_RYO), nullptr, 3);
+        mtwkUpdateWithPosition(scenFindMotionwork(KRCT_RYO), nullptr, 0);
+        clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 0);
         EV_CheckWarmStartNpcRoute(KRCT_SHENHUA);
         EV_CheckWarmStartNpcRoute(KRCT_NPC);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1004, 0);

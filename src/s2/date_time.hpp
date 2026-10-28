@@ -98,7 +98,7 @@ static_assert(offsetof(HandWatchControl, flags) == 0x5c);
 static_assert(sizeof(HandWatchControl) == 0x60);
 #endif
 
-void GetCurrentDateTime(DateTime &dateTime);
+void shenGetCurrentDateTime(DateTime &dateTime);
 void CopyCurrentCalendarRecord(std::span<std::byte, CALENDAR_RECORD_SIZE> output);
 void IncrementDateTimeInPlace(DateTime &current, const DateTime &increment);
 void InitCalendar();

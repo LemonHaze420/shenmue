@@ -105,16 +105,16 @@ void RestoreE0036Characters(std::uint32_t authorCommand) {
 // @verified - p
 void CleanupE0036(E0036TaskParameter *parent) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 8;
     time.minute = 55;
     SetCurrentDateTimeTo(time);
     for (const shen_name *character = AREA_0036_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0036A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0036A"), 0);
     EV_FreeAuthorPak(0, "0036");
     EV_FreeAuthorPak(0, "0034");
     EV_CleanupMapControlTask();
@@ -165,7 +165,7 @@ void E0036LoopCallback(void *data) {
     const std::int32_t frame = static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     if (parent->authorCommand == AREA_0036_AUTHOR_0034.name) {
         if (frame == 0 || frame == 161)
-            SetChildObjectFlagByIndex(FindCharacterByScenarioName(AREA_AUTHOR_RYO), frame == 0 ? 2 : 0);
+            SetChildObjectFlagByIndex(ctrlGetScenarioChara(AREA_AUTHOR_RYO), frame == 0 ? 2 : 0);
     } else if (parent->authorCommand == AREA_0036_AREA.name && frame == 776) {
         HLib::Task *const task = HLib::EnqueueTaskWithParameter(EVT_AT_PlayDynamix_Callback, 6, 0x0b, 0x30, AREA_AUTHOR_TASK);
         RegisterEventTask(task);
@@ -210,7 +210,7 @@ void FinishE0036Auth(void *data) {
         parent->state = 4;
     } else {
         if (g_currentMap.name == AREA_0036_WTA0.name)
-            SetChildObjectFlagByIndex(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 0);
+            SetChildObjectFlagByIndex(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 0);
         parent->state = 3;
     }
     SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);

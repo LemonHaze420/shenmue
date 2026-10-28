@@ -313,8 +313,8 @@ void Qes3AfterFightAuthorCallback(void *) {
 }
 void RestoreQes3FightCharacter(shen_name character) {
     mtwkSetRequestedRootMode(scenFindMotionwork(character), 3);
-    SetMotionFrameTime(scenFindMotionwork(character), 7, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(character), 69, 2, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(character), 7, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(character), 69, 2, MotionRegion::LowerBody);
     EV_SetCharacterAlphaEnabled(character, false);
     mtwkSetExtraFlag(scenFindMotionwork(character), 55, 2);
 }

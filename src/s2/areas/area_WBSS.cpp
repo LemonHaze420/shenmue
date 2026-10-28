@@ -276,11 +276,11 @@ void UpdateScale() {
 }
 // @verified - p
 void PrepareCloth() {
-    SetLowQualityHands(FindCharacterByScenarioName(ryo));
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ryo), 0, reinterpret_cast<std::byte *>(leftHand), 10);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ryo), 1, reinterpret_cast<std::byte *>(rightHand), 10);
+    SetLowQualityHands(ctrlGetScenarioChara(ryo));
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ryo), 0, reinterpret_cast<std::byte *>(leftHand), 10);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ryo), 1, reinterpret_cast<std::byte *>(rightHand), 10);
     EV_SetCharaControllerFlags(cloth, 3, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(ryo, 3, NpcCharacterControllerState::Disabled);
     const Vector3 position{.152f, 0, -.013f};
@@ -371,7 +371,7 @@ void BeginWipe(WipeWork &work) {
     Vector3 projected{(player.x - previousPlayer.x) * 5.0f + player.x, player.y, (player.z - previousPlayer.z) * 5.0f + player.z};
     previousPlayer = player;
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (static_cast<std::int8_t>(time.hour) >= 20) {
         if (ryoNotBusy()) {
             SetPlayerControlEnabled(0);
@@ -471,12 +471,12 @@ void BeginWipe(WipeWork &work) {
     EV_AT_SetPos(anchor, EventTransformFlags::AllAxes, target);
     MotionWork *motion = scenFindMotionwork(ryo);
     mtwkSetRequestedRootMode(motion, 1);
-    SetMotionFrameTime(motion, 18, MotionRegion::LowerBody);
-    SetMotionSpeed(motion, 1, MotionRegion::LowerBody);
-    CopyMotionTransition(motion, &target, static_cast<std::uint16_t>(yaw), 0, 0);
-    SetMotionRegionFlag(motion, 69, 0, MotionRegion::LowerBody);
-    SetMotionTimeRelated(motion, 1, 5, 5136);
-    SetMotionRegionEvalTime(motion, 17, MotionRegion::LowerBody);
+    mtwkSetFrameTime(motion, 18, MotionRegion::LowerBody);
+    mtwkSetSpeed(motion, 1, MotionRegion::LowerBody);
+    mtwkCopyTransition(motion, &target, static_cast<std::uint16_t>(yaw), 0, 0);
+    mtwkSetRegionFlag(motion, 69, 0, MotionRegion::LowerBody);
+    mtwkSetTimeRelated(motion, 1, 5, 5136);
+    mtwkSetRegionEvalTime(motion, 17, MotionRegion::LowerBody);
     if (kind == 8)
         work.finished = 1;
     work.kind = static_cast<std::int8_t>(kind);
@@ -557,7 +557,7 @@ void FinishWipe(WipeWork &work) {
             work.phase = 6;
         else {
             Vector3 target = Position(records[work.area].character);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &target, 1);
+            mtwkUpdateWithPosition(scenFindMotionwork(ryo), &target, 1);
             QueueWarehouseScriptLoop(voice);
             SeekWarehouseScriptLabel(voice, static_cast<std::uint16_t>(work.kind));
             ++work.phase;
@@ -578,8 +578,8 @@ void FinishWipe(WipeWork &work) {
         break;
     case 5:
         if (exitScript[3]) {
-            SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), 0, 10, .60000002f);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+            SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ryo), 0, 10, .60000002f);
+            mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
             ++work.phase;
         }
         break;
@@ -616,7 +616,7 @@ void AddWallAlpha(void *) {
 }
 // @verified - p
 void Face(void *) {
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), 1, 10, .60000002f);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ryo), 1, 10, .60000002f);
     HLib::DestroyCurrentTask();
 }
 // @verified - p
@@ -653,7 +653,7 @@ void ScenarioInit(void *data) {
     work.line = 0;
     work.state = work.phase = 0;
     HLib::SetCurrentTaskTo(Scenario);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS2"), 0);
     HLib::EnqueueTaskWithoutParameter(MoveCloth, 4, 0x0b, static_cast<std::int32_t>(SHEN_NAME(zou_)));
     openingWipe = false;
 }
@@ -722,7 +722,7 @@ void Scenario(void *data) {
     case 5:
         if (work.phase == 0) {
             mtwkSetRequestedRootMode(scenFindMotionwork(ryo), 0);
-            SetMotionFrameTime(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
+            mtwkSetFrameTime(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
             FadeIn();
             if (openingWipe)
                 EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, Vector3i{0, 49152, 0});
@@ -758,7 +758,7 @@ void Scenario(void *data) {
         break;
     case 8:
         if (work.phase == 0) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
             EV_stepSetFlags(0, 0x25);
             FadeOut();
             HLib::SetupTaskDelay(32);
@@ -785,7 +785,7 @@ void Scenario(void *data) {
         break;
     case 17:
         if (work.phase == 0) {
-            SetMotionSpeed(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
             FadeOut();
             HLib::SetupTaskDelay(30);
             ++work.phase;
@@ -805,7 +805,7 @@ void Scenario(void *data) {
         break;
     case 18:
         if (work.phase == 0) {
-            SetMotionSpeed(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
             FadeOut(60);
             HLib::SetupTaskDelay(60);
             ++work.phase;
@@ -822,8 +822,8 @@ void Scenario(void *data) {
             work.phase = work.frame = 0;
             EV_AT_SetPos(siz, EventTransformFlags::AllAxes, Vector3{});
             FadeIn();
-            SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
-            SetMotionFrameTime(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+            mtwkSetFrameTime(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
             mtwkSetRequestedRootMode(scenFindMotionwork(ryo), 0);
             mtwkRequestMotion(scenFindMotionwork(ryo), 0xf002, MotionRegion::LowerBody);
             PrepareCloth();

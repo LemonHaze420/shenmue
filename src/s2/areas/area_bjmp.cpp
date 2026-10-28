@@ -103,12 +103,12 @@ void FallingPosition_Callback(void *) {
         HLib::DestroyCurrentTask();
 }
 int EndLanding() {
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(tgy), 1, 10.0f, 1.0f);
-    SetLowQualityHands(FindCharacterByScenarioName(tgy));
-    SetHighModelXYZ(FindCharacterByScenarioName(tgy), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(tgy), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(tgy), 0, reinterpret_cast<std::byte *>(hands.data()), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(tgy), 1, reinterpret_cast<std::byte *>(hands.data()), 0);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(tgy), 1, 10.0f, 1.0f);
+    SetLowQualityHands(ctrlGetScenarioChara(tgy));
+    SetHighModelXYZ(ctrlGetScenarioChara(tgy), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(tgy), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(tgy), 0, reinterpret_cast<std::byte *>(hands.data()), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(tgy), 1, reinterpret_cast<std::byte *>(hands.data()), 0);
     EV_EnableCharacterDisplay(tgy);
     Camera(20);
     Camera(25, 39);
@@ -153,7 +153,7 @@ void Auth1_Callback(void *data) {
     EV_LoadAudio("0218A000", 0);
     EV_spmBeginSampleExecute();
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 8;
     time.minute = 30;
     SetCurrentDateTimeTo(time);
@@ -230,14 +230,14 @@ void Main_Callback(void *data) {
 void Exit_Callback(void *data) {
     using enum CameraState;
     auto *work = static_cast<JumpWork *>(data);
-    hndlSetFlags(FindCharacterByScenarioName(tgy));
+    hndlSetFlags(ctrlGetScenarioChara(tgy));
     qteBattleUtil(BattleQteMode::RetireAndFree);
     FinishLoading();
     EV_cuffsSetFlags();
     EV_stepSetFlags(0, 272);
     EV_stepSetFlags(0, 317);
-    EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity | CharacterControlUpdateHeight, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_ApplyGravity | CCMF_UpdateHeight, NpcCharacterControllerState::Enabled);
     for (shen_name name : {ryo, tgy, ren}) {
         EV_npcFree(name);
         EV_npcLockUnlock(name);
@@ -245,7 +245,7 @@ void Exit_Callback(void *data) {
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     SetCharaKill(dummy, 1);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QJMP"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QJMP"), 0);
     SetPlayerControlEnabled(1);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->self);
@@ -266,15 +266,15 @@ void AreaBJMPMain(std::uintptr_t) {
     EVT_AT_SetPos(dummy, shen_name{0xffffffffU}, Vector3{215.3f, 111, 197}, 0);
     EVT_AT_SetAngY(dummy, shen_name{0xffffffffU}, 270, 0);
     Queue_EVT_AT_ReadChr(work->self, names);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QJMP"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity | CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_SetCharaControllerFlags(ryo, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_ApplyGravity | CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
     qteBattleUtil(BattleQteMode::Load);
     qteBattleUtil(BattleQteMode::Queue);
     shenSetClockAndCompassRenderTo(1);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QJMP"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QJMP"), 0);
     EV_LoadCutsceneFromCurrentScene("0218A000");
     EV_FreeAuthorPak(1, "0218");
 }

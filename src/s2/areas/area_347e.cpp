@@ -88,20 +88,20 @@ void Update347E(void *taskData) {
 void Cleanup347E(Area347EParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_347E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_347E_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_347E_ARCHIVE), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_347E_ARCHIVE), 0);
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_347E.name) {
         EV_scenQueueLoad(g_actNumber, AREA_347E, g_entryPoint);
     } else {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EventSetPosition position{0, AREA_347E_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {244.27000427246094f, 139.60000610351562f, 157.55999755859375f}, 0.0f};
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_347E_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {0, 41870, 0}, 0.0f};
@@ -132,12 +132,12 @@ std::int64_t Queue347EAuthor(Area347EParameter *parent) {
 std::int64_t Update347EAuthor(Area347EAuthorParameter *child) {
     const std::int16_t frame = static_cast<std::int16_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     if (frame == 515)
-        hmdlSetFlagsFor(FindCharacterByScenarioName(AREA_347E_RYO_), 0, 0, 12);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(AREA_347E_RYO_), 0, 0, 12);
     else if (frame == 801)
-        hmdlSetFlagsFor(FindCharacterByScenarioName(AREA_347E_RYO_), 0, 8, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(AREA_347E_RYO_), 0, 8, 16);
     const std::int64_t result = EV_authSceneCtrl(AuthSceneCtrl::IsLoaded);
     if (static_cast<std::uint32_t>(result) == 0) {
-        hmdlSetFlagsFor(FindCharacterByScenarioName(AREA_347E_RYO_), 0, 8, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(AREA_347E_RYO_), 0, 8, 16);
         child->parent->state = g_currentMap.name == AREA_347E.name ? 0 : 3;
         mtwkSetExtraFlag(scenFindMotionwork(AREA_347E_RYO_), 6, 0);
         EV_SetCharacterAlphaEnabled(AREA_347E_RYO_, true);

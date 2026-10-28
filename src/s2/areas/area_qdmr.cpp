@@ -184,7 +184,7 @@ void QdmrStartInitialAuthor(void *parameter) {
             return;
         RepositionPlayerForQronFloor(18);
         EV_FreeAuthorPak(1, "0266");
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDMR"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDMR"), 0);
         EV_LoadCutsceneFromCurrentScene("0266A000");
         EV_LoadAudio("0266A000", 1);
         EV_spmBeginSampleExecute();
@@ -454,7 +454,7 @@ void QdmrEscapeToLadder(void *parameter) {
     EV_GetCharaPosition(QDMR_PLAYER, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     position.x = QDMR_LADDER_POSITION.x;
     position.z = QDMR_LADDER_POSITION.z;
-    CopyMotionTransition(scenFindMotionwork(QDMR_PLAYER), &position, 10922, 0, 0);
+    mtwkCopyTransition(scenFindMotionwork(QDMR_PLAYER), &position, 10922, 0, 0);
     HLib::SetCurrentTaskTo(QdmrWaitLadderMotion);
 }
 void QdmrWaitLadderMotion(void *parameter) {
@@ -739,7 +739,7 @@ void QdmrEndTransition(void *parameter) {
                             .reserved2c = 0,
                             .completion = nullptr},
         0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRTRNS"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRTRNS"), 0);
     EV_FreeAuthorPak(0, "0266");
     work->timerRequests |= 0x40000000U;
     work->timer = 10800;
@@ -2206,8 +2206,8 @@ void QdmrFirstRoomFight(void *parameter) {
                                 .reserved2c = 0,
                                 .completion = nullptr},
             0);
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL1"), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL1"), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL1"), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL1"), 0);
         Vector3 origin;
         Vector3i rotation;
         rotation.x = 0;
@@ -2238,8 +2238,8 @@ void QdmrFirstRoomFight(void *parameter) {
                                 .reserved2c = 0,
                                 .completion = nullptr},
             0);
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL1"), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL1"), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL1"), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL1"), 0);
         work->battleRetries = static_cast<std::int32_t>(static_cast<std::uint32_t>(work->battleRetries) + 1U);
         HLib::SetCurrentTaskTo(QdmrBeginRetry);
     }
@@ -2277,8 +2277,8 @@ void QdmrEndFirstRepeat(void *parameter) {
     doorLoopRigidMotion(work->door, 7234, -1, 1);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     MarkQdmrRoomVisited(work->door, work->roomFlags);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0);
     EV_AT_SetPos(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, work->savedPosition);
     EV_AT_SetAngY(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, work->savedYaw, 0}, nullptr);
     QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -2380,8 +2380,8 @@ void QdmrSecondRoomFight(void *parameter) {
                                 .reserved2c = 0,
                                 .completion = nullptr},
             0);
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL2"), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL2"), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL2"), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL2"), 0);
         Vector3 origin;
         Vector3i rotation;
         rotation.x = 0;
@@ -2412,8 +2412,8 @@ void QdmrSecondRoomFight(void *parameter) {
                                 .reserved2c = 0,
                                 .completion = nullptr},
             0);
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL2"), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL2"), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL2"), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL2"), 0);
         work->battleRetries = static_cast<std::int32_t>(static_cast<std::uint32_t>(work->battleRetries) + 1U);
         HLib::SetCurrentTaskTo(QdmrBeginRetry);
     }
@@ -2451,8 +2451,8 @@ void QdmrEndSecondRepeat(void *parameter) {
     doorLoopRigidMotion(work->door, 7234, -1, 1);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     MarkQdmrRoomVisited(work->door, work->roomFlags);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0);
     EV_AT_SetPos(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, work->savedPosition);
     EV_AT_SetAngY(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, work->savedYaw, 0}, nullptr);
     QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -2554,8 +2554,8 @@ void QdmrThirdRoomFight(void *parameter) {
                                 .reserved2c = 0,
                                 .completion = nullptr},
             0);
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL3"), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL3"), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL3"), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL3"), 0);
         Vector3 origin;
         Vector3i rotation;
         rotation.x = 0;
@@ -2586,8 +2586,8 @@ void QdmrThirdRoomFight(void *parameter) {
                                 .reserved2c = 0,
                                 .completion = nullptr},
             0);
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL3"), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL3"), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBTL3"), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBTL3"), 0);
         work->battleRetries = static_cast<std::int32_t>(static_cast<std::uint32_t>(work->battleRetries) + 1U);
         HLib::SetCurrentTaskTo(QdmrBeginRetry);
     }
@@ -2625,8 +2625,8 @@ void QdmrEndThirdRepeat(void *parameter) {
     doorLoopRigidMotion(work->door, 7234, -1, 1);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     MarkQdmrRoomVisited(work->door, work->roomFlags);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0);
     EV_AT_SetPos(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, work->savedPosition);
     EV_AT_SetAngY(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, work->savedYaw, 0}, nullptr);
     QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -2674,8 +2674,8 @@ void QdmrEndNormalRoom(void *parameter) {
     doorLoopRigidMotion(work->door, 7234, -1, 1);
     ReleaseDoor(work->door.name, QDMR_PLAYER);
     MarkQdmrRoomVisited(work->door, work->roomFlags);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRNRML"), 0);
     EV_AT_SetPos(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, work->savedPosition);
     EV_AT_SetAngY(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, work->savedYaw, 0}, nullptr);
     QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -2734,7 +2734,7 @@ void QdmrEndBingoOpening(void *parameter) {
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDMR"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDMR"), 0);
     flddSetPointFlagOnGrid(QDMR_DEFAULT_LIGHT, 0);
     flddSetPointFlagOnGrid(QDMR_QF0X, 0);
     flddSetPointFlagOnGrid(QDMR_PROP, 0);
@@ -2767,7 +2767,7 @@ void QdmrBingoFight(void *parameter) {
         work->flags |= 1U;
         return;
     }
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDMR"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDMR"), 0);
     flddSetPointFlagOnGrid(QDMR_DEFAULT_LIGHT, 1);
     flddSetPointFlagOnGrid(QDMR_QF0X, 1);
     flddSetPointFlagOnGrid(QDMR_PROP, 1);
@@ -2794,8 +2794,8 @@ void QdmrBingoFight(void *parameter) {
 void QdmrBingoWin(void *parameter) {
     using enum CameraState;
     RestoreAreaLoopCharacters(QDMR_BINGO_NPCS);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0);
     EV_FreeAuthorPak(0, "0266");
     SetAreaLoopCharacterControl(QDMR_PLAYER, 0);
     if (ctrlGetCharaByName(QDMR_PLAYER)) {
@@ -2829,8 +2829,8 @@ void QdmrBingoLose(void *parameter) {
         return;
     ST_LoadTitleFade();
     RestoreAreaLoopCharacters(QDMR_BINGO_NPCS);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMRBBTL"), 0);
     QdmrEventWork *const work = static_cast<QdmrEventWork *>(parameter);
     if (work) {
         work->battleRetries = static_cast<std::int32_t>(static_cast<std::uint32_t>(work->battleRetries) + 1U);

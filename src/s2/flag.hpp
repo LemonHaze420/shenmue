@@ -321,21 +321,21 @@ enum class FlagOp : std::uint8_t {
 };
 
 enum ShenPlayerFlags : std::uint32_t {
-    ShenPlayerFlag_Active = 0x00000002U,
-    ShenPlayerFlag_HelpIconShown = 0x00000020U,
-    ShenPlayerFlag_WaitTimeAdvance = 0x00000040U,
-    ShenPlayerFlag_PackLoadPending = 0x00000080U,
-    ShenPlayerFlag_PackExecutePending = 0x00000100U,
-    ShenPlayerFlag_NpcReleasePending = 0x00000200U,
-    ShenPlayerFlag_SpecialPosePending = 0x00000400U,
-    ShenPlayerFlag_ActionChoicePending = 0x00000800U,
-    ShenPlayerFlag_EventMessageShown = 0x00001000U,
-    ShenPlayerFlag_VoicePending = 0x00002000U,
-    ShenPlayerFlag_FadeHold = 0x00004000U,
-    ShenPlayerFlag_CurfewSceneChange = 0x00008000U,
-    ShenPlayerFlag_SearchReleasePending = 0x00010000U,
-    ShenPlayerFlag_CurfewReached = 0x00040000U,
-    ShenPlayerFlag_DetachedVoicePending = 0x00080000U,
+    SPF_Active = 0x00000002U,
+    SPF_HelpIconShown = 0x00000020U,
+    SPF_WaitTimeAdvance = 0x00000040U,
+    SPF_PackLoadPending = 0x00000080U,
+    SPF_PackExecutePending = 0x00000100U,
+    SPF_NpcReleasePending = 0x00000200U,
+    SPF_SpecialPosePending = 0x00000400U,
+    SPF_ActionChoicePending = 0x00000800U,
+    SPF_EventMessageShown = 0x00001000U,
+    SPF_VoicePending = 0x00002000U,
+    SPF_FadeHold = 0x00004000U,
+    SPF_CurfewSceneChange = 0x00008000U,
+    SPF_SearchReleasePending = 0x00010000U,
+    SPF_CurfewReached = 0x00040000U,
+    SPF_DetachedVoicePending = 0x00080000U,
 };
 
 

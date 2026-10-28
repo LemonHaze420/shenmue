@@ -35,9 +35,9 @@ void AnanGetHandPosition(float tilt, Vector3 *output) {
 }
 void AnanSetLiftPose(float tilt) {
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_MAN), 0);
-    SetMotionRegionFlag(scenFindMotionwork(ANAN_MAN), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ANAN_MAN), 71, 0, MotionRegion::LowerBody);
     AnanSetLiftFrame(tilt);
-    SetMotionSpeed(scenFindMotionwork(ANAN_MAN), 0, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_MAN), 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ANAN_MAN), 9, 0);
 }
 void AnanSetLiftFrame(float tilt) {
@@ -46,9 +46,9 @@ void AnanSetLiftFrame(float tilt) {
     frame = SnapAnan(frame * .5f);
     frame = SnapAnan(frame * 41.0f);
     mtwkRequestMotion(scenFindMotionwork(ANAN_MAN), 0x67cb, MotionRegion::LowerBody);
-    SetMotionLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), frame, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(ANAN_MAN), frame, MotionRegion::LowerBody);
-    SetMotionLayerEndFrame(scenFindMotionwork(ANAN_MAN), frame, MotionRegion::LowerBody);
+    mtwkSetLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), frame, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(scenFindMotionwork(ANAN_MAN), frame, MotionRegion::LowerBody);
+    mtwkSetLayerEndFrame(scenFindMotionwork(ANAN_MAN), frame, MotionRegion::LowerBody);
     for (const AnanPlacement *row = ananGamePlacement; row->character.name != ANAN_INVALID.name; ++row) {
         if (row->character.name == ANAN_MAN.name) {
             EV_AT_SetPos(ANAN_MAN, EventTransformFlags::AllAxes, row->position);
@@ -73,25 +73,25 @@ void AnanSetTargets(bool includeHand) {
         Vector3 point{-2.4f, -.65f, .1f};
         Vector3 copy = origin;
         ApplyScenarioTranslationAndRotation(&copy, &rotation, &point);
-        SetMotionBoneTarget(scenFindMotionwork(ANAN_MAN), 10, &point);
+        mtwkSetBoneTarget(scenFindMotionwork(ANAN_MAN), 10, &point);
     }
     Vector3 point{-2.7f, -.4f, .05f};
     Vector3 copy = origin;
     ApplyScenarioTranslationAndRotation(&copy, &rotation, &point);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ANAN_MAN), 17, 1.0f);
-    SetMotionBoneTarget(scenFindMotionwork(ANAN_MAN), 17, &point);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ANAN_MAN), 17, 1.0f);
+    mtwkSetBoneTarget(scenFindMotionwork(ANAN_MAN), 17, &point);
 }
 void AnanStopLift(std::int32_t confirming, std::int32_t fixedCamera) {
     MotionWork *motion = scenFindMotionwork(ANAN_MAN);
     if (!motion)
         return;
     mtwkSetExtraFlag(motion, 9, 2);
-    SetMotionSpeed(motion, 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(motion, 1, MotionRegion::LowerBody);
     mtwkRequestMotion(motion, 0x67c6, MotionRegion::LowerBody);
-    EV_mtwkSetEnabled(motion, 1);
-    SetMotionLayerLoopStartTime(motion, 170, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(motion, 170, MotionRegion::LowerBody);
-    SetMotionLayerEndFrame(motion, 200, MotionRegion::LowerBody);
+    mtwkSetEnabled(motion, 1);
+    mtwkSetLayerLoopStartTime(motion, 170, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(motion, 170, MotionRegion::LowerBody);
+    mtwkSetLayerEndFrame(motion, 200, MotionRegion::LowerBody);
     if (!fixedCamera) {
         const std::int32_t choice = shenGetRandomInt32(confirming ? 3 : 5);
         const std::int32_t camera = choice == 0 ? 1907 : choice == 1 ? 1908 : choice == 3 ? 1910 : choice == 4 ? 1911 : 1909;
@@ -299,7 +299,7 @@ std::int32_t AnanUpdateGame(AnanWork *work) {
         return 4;
     }
     DateTime now;
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     if (now.hour >= 19 && now.minute >= 30) {
         AnanStopLift(0, 1);
         AnanSelectCamera(1912);

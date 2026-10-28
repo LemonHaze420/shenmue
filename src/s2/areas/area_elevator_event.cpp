@@ -117,9 +117,9 @@ template <bool Alternate> void Cleanup() {
     for (const char *bank : {"0354", "0355", "0304", "0298"})
         EV_FreeAuthorPak(0, bank);
     scenFreeEvent(Area<Alternate>());
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(Area<Alternate>()), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(Area<Alternate>()), 0);
     SetPlayerControlEnabled(1);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_NPC_NewLoadSw(1);
     EV_EventSetUpHelpIcon_0(0, 0);
     FinishLoading();
@@ -337,11 +337,11 @@ template <bool Alternate> void MoveCursor(float dz) {
     EV_AT_SetPos(cursor, localXYZ, position);
 }
 template <bool Alternate> void SetRanges(float ryoStart, float ryoEnd, float renStart, float renEnd) {
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
-    SetMotionLayerFrameRange(scenFindMotionwork(ryo), ryoStart, ryoStart, ryoEnd, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetLayerFrameRange(scenFindMotionwork(ryo), ryoStart, ryoStart, ryoEnd, MotionRegion::LowerBody);
     if (RenPresent<Alternate>()) {
-        SetMotionRegionFlag(scenFindMotionwork(ren), 71, 0, MotionRegion::LowerBody);
-        SetMotionLayerFrameRange(scenFindMotionwork(ren), renStart, renStart, renEnd, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(ren), 71, 0, MotionRegion::LowerBody);
+        mtwkSetLayerFrameRange(scenFindMotionwork(ren), renStart, renStart, renEnd, MotionRegion::LowerBody);
     }
 }
 template <bool Alternate> void EventCallback(void *) {
@@ -399,13 +399,13 @@ template <bool Alternate> void EventCallback(void *) {
             using enum CameraState;
             DisableScenarioCharacterDisplay(cursor);
             if (EV_GetShenmueFlag(0x164)) {
-                LoadCutsceneAndSoundProgramForArea();
+                sbtLoadProgram();
                 LoadAreaFunc_Wrapper_0("BTEL.EV3", 0);
                 ExecuteCurrAreaMainFunc("BTEL.EV3", 0);
                 EV_stepSetFlags(0, 0x164);
                 ReleaseActors<Alternate>();
                 scenFreeEvent("ELV2");
-                EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ELV2"), 0);
+                EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ELV2"), 0);
                 camCtrlSetState(Init);
                 EV_EventSetUpHelpIcon_0(0, 0);
                 FinishLoading();
@@ -415,10 +415,10 @@ template <bool Alternate> void EventCallback(void *) {
             if (!RequestElevatorFloor(state.elevator, static_cast<std::int16_t>(state.sourceFloor), state.direction))
                 return;
             mtwkRequestMotion(scenFindMotionwork(ryo), 0x2683, MotionRegion::LowerBody);
-            SetMotionLayerFrameRange(scenFindMotionwork(ryo), 0, 0, 160, MotionRegion::LowerBody);
+            mtwkSetLayerFrameRange(scenFindMotionwork(ryo), 0, 0, 160, MotionRegion::LowerBody);
             if (RenPresent<Alternate>()) {
                 mtwkRequestMotion(scenFindMotionwork(ren), 0x2681, MotionRegion::LowerBody);
-                SetMotionLayerFrameRange(scenFindMotionwork(ren), 45, 45, 200, MotionRegion::LowerBody);
+                mtwkSetLayerFrameRange(scenFindMotionwork(ren), 45, 45, 200, MotionRegion::LowerBody);
             }
             UpdateCurrentDigits<Alternate>();
             state.phase = 4;
@@ -426,13 +426,13 @@ template <bool Alternate> void EventCallback(void *) {
         }
         [[fallthrough]];
     case 4:
-        if (GetMotionFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) > 80) {
+        if (mtwkGetFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) > 80) {
             EVS_LoopCamera(1020, cabin, cabin);
             state.phase = 5;
         }
         return;
     case 5: {
-        const float frame = GetMotionFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody);
+        const float frame = mtwkGetFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody);
         if (Alternate ? !(frame <= 155.0f) : frame > 155.0f) {
             SetRanges<Alternate>(300, 301, 200, 200);
             SetupFloorCursor<Alternate>();
@@ -521,13 +521,13 @@ template <bool Alternate> void EventCallback(void *) {
         state.phase = 13;
         return;
     case 13:
-        if (GetMotionFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) > 560) {
+        if (mtwkGetFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) > 560) {
             CloseAndResumeElevator(state.elevator);
             state.phase = 14;
         }
         return;
     case 14:
-        if (GetMotionFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) > 600)
+        if (mtwkGetFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) > 600)
             state.phase = 15;
         return;
     case 15:
@@ -607,18 +607,18 @@ template <bool Alternate> void InitCallback(void *) {
     SetGravity(ryo, NpcCharacterControllerState::Disabled);
     AT_SetLocalBaseChara(ryo, cabin);
     SetLocalPose(ryo, {1, 0, 1}, {});
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0x2684, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ryo), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ryo), 1, MotionRegion::LowerBody);
     SetClothFlag(ctrlGetCharaByName(ryo), 16, 1);
     if (RenPresent<Alternate>()) {
         EV_SetCharacterAlphaEnabled(ren, false);
         AT_SetLocalBaseChara(ren, cabin);
         SetGravity(ren, NpcCharacterControllerState::Disabled);
         SetLocalPose(ren, {-0.1f, 0, 1.3f}, {});
-        SetMotionRegionFlag(scenFindMotionwork(ren), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(ren), 71, 0, MotionRegion::LowerBody);
         mtwkRequestMotion(scenFindMotionwork(ren), 0x2682, MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(ren), 1, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(ren), 1, MotionRegion::LowerBody);
         SetClothFlag(ctrlGetCharaByName(ren), 16, 1);
     }
     SetLowQualityHands(ctrlGetCharaByName(cursor));
@@ -715,8 +715,8 @@ template <bool Alternate> void Main(shen_name elevator) {
     nullsub();
     EV_EventSetUpHelpIcon_0(85, 0);
     EV_SetNewSceneIndex();
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(Area<Alternate>()), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(Area<Alternate>()), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(Area<Alternate>()), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(Area<Alternate>()), 0);
     EV_LoadCutsceneFromCurrentScene("0298E000");
     for (const char *bank : {"0354", "0355", "0304", "0298"})
         EV_FreeAuthorPak(1, bank);

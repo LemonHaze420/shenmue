@@ -149,7 +149,7 @@ Vector3 playerPosition{};
 std::uint32_t mainState{}, subState{};
 std::int32_t authorFlag{}, renGrace{}, prelude{}, escaped{};
 MotionWork *MotionFor(shen_name name) {
-    return FindMotionWork(FindCharacterByScenarioName(name));
+    return FindMotionWork(ctrlGetScenarioChara(name));
 }
 void Film(std::uint32_t frames, std::uint8_t start, std::uint8_t target) {
     SetScreenFilmFade(frames, start, 0, 0, 0, target, 0, 0, 0);
@@ -179,18 +179,18 @@ void AuthName(shen_name name) {
     EV_authSceneCtrl(static_cast<AuthSceneCtrl>(name.name));
 }
 void Package(std::int32_t mode, const char *name, std::int32_t category = 0) {
-    EV_ControlPackageResources(category, mode, reinterpret_cast<std::uintptr_t>(name), 0);
+    EV_pakUtils(category, mode, reinterpret_cast<std::uintptr_t>(name), 0);
 }
 void LoadAuthor(const char *name) {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(name));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 void ResetCharacter(shen_name name) {
     auto *work = MotionFor(name);
-    EV_mtwkSetEnabled(work, 1);
+    mtwkSetEnabled(work, 1);
     mtwkSetExtraFlag(work, 0, 0);
-    SetMotionRegionFlag(work, 66, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(work, 66, 0, MotionRegion::LowerBody);
     EV_SetCharacterAlphaEnabled(name, false);
     mtwkSetRequestedRootMode(work, 0);
 }
@@ -217,7 +217,7 @@ bool UpdatePace(ChaseContext &context) {
     const float distance = DistanceSquared(context.position);
     const bool touching = distance < 4, near = distance<49, far = distance> 900;
     if (context.character.name == clj.name)
-        SetMotionSpeed(MotionFor(clj), touching ? 1 : near ? context.nearSpeed : context.normalSpeed, MotionRegion::LowerBody);
+        mtwkSetSpeed(MotionFor(clj), touching ? 1 : near ? context.nearSpeed : context.normalSpeed, MotionRegion::LowerBody);
     else {
         if (!touching)
             if (auto *route = FindNpcRouteStateContext(context.character))
@@ -282,21 +282,21 @@ void SamExtra() {
         EV_SetCharaControllerFlags(sam, 2, NpcCharacterControllerState::Disabled);
         Place(sam, p9cc590, p9cc260);
         Play(sam, 0x11c6);
-        SetMotionLayerLoopStartTime(work, 30, MotionRegion::LowerBody);
-        SetMotionLayerEndFrame(work, 377, MotionRegion::LowerBody);
-        SetMotionSpeed(work, 1, MotionRegion::LowerBody);
+        mtwkSetLayerLoopStartTime(work, 30, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(work, 377, MotionRegion::LowerBody);
+        mtwkSetSpeed(work, 1, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(work, 0);
         samChase.phase = 2;
         break;
     case 2:
-        if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
             Place(sam, p9cc5a0, p9cc9c0);
             mtwkSetRequestedRootMode(work, 1);
-            SetMotionSpeed(work, 1.5f, MotionRegion::LowerBody);
-            CopyMotionTransition(work, &p9cc270, 49152, 0, 0);
-            SetMotionTimeRelated(work, 1, 5, 4549);
+            mtwkSetSpeed(work, 1.5f, MotionRegion::LowerBody);
+            mtwkCopyTransition(work, &p9cc270, 49152, 0, 0);
+            mtwkSetTimeRelated(work, 1, 5, 4549);
             samChase.phase = 3;
-        } else if (GetMotionFrame(work, MotionRegion::LowerBody) > 240 && ComputeAngle(Vector3{233.3f, 98.33f, 465}, 3, 0, 0x8000, playerPosition)) {
+        } else if (mtwkGetFrame(work, MotionRegion::LowerBody) > 240 && ComputeAngle(Vector3{233.3f, 98.33f, 465}, 3, 0, 0x8000, playerPosition)) {
             RetireInteractions();
             SetPlayerControlEnabled(0);
             Film(15, 0, 255);
@@ -308,13 +308,13 @@ void SamExtra() {
         if (!mtwkSetExtraFlag(work, 58, 1)) {
             Play(sam, 0x11c5);
             mtwkSetRequestedRootMode(work, 1);
-            SetMotionSpeed(work, 1, MotionRegion::LowerBody);
-            SetMotionRegionFlag(work, 69, 0, MotionRegion::LowerBody);
+            mtwkSetSpeed(work, 1, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(work, 69, 0, MotionRegion::LowerBody);
             samChase.phase = 4;
         }
         break;
     case 4:
-        if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
             samChase.phase = 0;
             samChase.state = Sleep;
         }
@@ -327,22 +327,22 @@ void LlyExtra() {
     auto *work = MotionFor(lly);
     switch (llyChase.phase) {
     case 0:
-        CopyMotionTransition(work, &p9cc928, 17294, 0, 0);
-        SetMotionTimeRelated(work, 1, 5, 4545);
+        mtwkCopyTransition(work, &p9cc928, 17294, 0, 0);
+        mtwkSetTimeRelated(work, 1, 5, 4545);
         mtwkSetRequestedRootMode(work, 1);
-        SetMotionSpeed(work, 1.5f, MotionRegion::LowerBody);
+        mtwkSetSpeed(work, 1.5f, MotionRegion::LowerBody);
         Controllers(lly, false);
         llyChase.phase = 1;
         break;
     case 1:
         if (!mtwkSetExtraFlag(work, 58, 1)) {
             mtwkSetRequestedRootMode(work, 1);
-            SetMotionSpeed(work, 1, MotionRegion::LowerBody);
+            mtwkSetSpeed(work, 1, MotionRegion::LowerBody);
             llyChase.phase = 2;
         }
         break;
     case 2:
-        if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
             llyChase.phase = 0;
             llyChase.state = Sleep;
         }
@@ -367,7 +367,7 @@ void CljExtra() {
         }
         break;
     case 2:
-        if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
             cljChase.phase = 0;
             cljChase.state = Sleep;
         }
@@ -465,7 +465,7 @@ void BeginCapture(ChaseContext &context, bool transition) {
     SetPlayerControlEnabled(0);
     shenToggleAreaFlags(2);
     if (transition)
-        CopyMotionTransition(MotionFor(context.character), nullptr, 0, 1, 0);
+        mtwkCopyTransition(MotionFor(context.character), nullptr, 0, 1, 0);
     subState = 0;
     context.state = Capture;
     Film(15, 0, 255);
@@ -538,7 +538,7 @@ void UpdateSam(void *) {
     case Exit:
         if (!IsNpcRouteActive(sam))
             ReleaseNpcRouteControl(nullptr, sam, -1);
-        CopyMotionTransition(MotionFor(sam), nullptr, 0, 13, 0);
+        mtwkCopyTransition(MotionFor(sam), nullptr, 0, 13, 0);
         context.state = Exit2;
         break;
     case Exit2:
@@ -599,7 +599,7 @@ void UpdateLly(void *) {
     case Goal:
         if (ryoNotBusy() && DistanceSquared(context.position) < 4) {
             BeginCapture(context, true);
-            if (context.phase == 1 && GetMotionFrame(MotionFor(lly), MotionRegion::LowerBody) > 220)
+            if (context.phase == 1 && mtwkGetFrame(MotionFor(lly), MotionRegion::LowerBody) > 220)
                 context.phase = 3;
             else
                 context.phase = context.phase == 2 ? 3 : 2;
@@ -612,7 +612,7 @@ void UpdateLly(void *) {
     case Exit:
         if (!IsNpcRouteActive(lly))
             ReleaseNpcRouteControl(nullptr, lly, -1);
-        CopyMotionTransition(MotionFor(lly), nullptr, 0, 13, 0);
+        mtwkCopyTransition(MotionFor(lly), nullptr, 0, 13, 0);
         context.state = Exit2;
         break;
     case Exit2:
@@ -638,7 +638,7 @@ void SetupCoolJAuthor() {
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(1, "0062");
     LoadAuthor("0062A");
-    SetLowQualityHands(FindCharacterByScenarioName(clj));
+    SetLowQualityHands(ctrlGetScenarioChara(clj));
     Controllers(ryo, false);
     Controllers(clj, false);
     EV_SetCharacterAlphaEnabled(clj, false);
@@ -738,14 +738,14 @@ void UpdateClj(void *) {
         break;
     case Start:
         FaceTarget(clj, cljPoints[context.cursor]);
-        SetMotionRegionFlag(MotionFor(clj), 66, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(MotionFor(clj), 66, 0, MotionRegion::LowerBody);
         Play(clj, 0x11c9);
-        SetMotionLayerEndFrame(MotionFor(clj), 15, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(MotionFor(clj), 15, MotionRegion::LowerBody);
         context.state = Run;
         break;
     case Run:
         UpdatePace(context);
-        SetMotionRegionFlag(MotionFor(clj), 66, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(MotionFor(clj), 66, 0, MotionRegion::LowerBody);
         SteerClj();
         break;
     case Goal:
@@ -753,7 +753,7 @@ void UpdateClj(void *) {
             RetireInteractions();
             SetPlayerControlEnabled(0);
             shenToggleAreaFlags(2);
-            CopyMotionTransition(MotionFor(clj), nullptr, 0, 1, 0);
+            mtwkCopyTransition(MotionFor(clj), nullptr, 0, 1, 0);
             subState = 0;
             context.state = Capture;
         } else
@@ -875,7 +875,7 @@ void NightAuthorModels(std::int32_t frame, bool second) {
     if (!EV_GetShenmueFlag(0xff))
         return;
     for (shen_name name : allNames) {
-        auto *character = FindCharacterByScenarioName(name);
+        auto *character = ctrlGetScenarioChara(name);
         SetPluralControlFor(character, 1);
         SetScenarioCharacterType(name, CharacterTypeDefault);
         SetHighModelXYZ(character, 0, 0, 0);
@@ -916,14 +916,14 @@ void UpdateMain(void *) {
             for (shen_name name : npcNames) {
                 if (name.name == 0xffffffffU)
                     break;
-                SetLowQualityHands(FindCharacterByScenarioName(name));
+                SetLowQualityHands(ctrlGetScenarioChara(name));
             }
             EV_FreeAuthorPak(1, "0061");
             EV_LoadCutsceneFromCurrentScene("0061A000");
             camCtrlCacheUtil(4);
             AuthName(SHEN_NAME(PRE1));
             for (shen_name name : allNames)
-                SetPluralControlFor(FindCharacterByScenarioName(name), 1);
+                SetPluralControlFor(ctrlGetScenarioChara(name), 1);
             mainState = Auth;
             prelude = 1;
         } else {
@@ -972,13 +972,13 @@ void UpdateMain(void *) {
             for (shen_name name : npcNames) {
                 if (name.name == 0xffffffffU)
                     break;
-                hndlSetFlags(FindCharacterByScenarioName(name));
+                hndlSetFlags(ctrlGetScenarioChara(name));
             }
             for (shen_name name : allNames)
-                SetPluralControlFor(FindCharacterByScenarioName(name), 0);
+                SetPluralControlFor(ctrlGetScenarioChara(name), 0);
             EV_stepSetFlags(0, 0x7f);
             DateTime time{};
-            GetCurrentDateTime(time);
+            shenGetCurrentDateTime(time);
             npcAdvanceTime(time.hour, time.minute);
             Place(ryo, {195.4f, 98.87f, 414.8f}, {0, 43690, 0});
             StartChase();

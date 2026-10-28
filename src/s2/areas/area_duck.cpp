@@ -162,16 +162,16 @@ void PaddockActors() {
         Position(second, Vector3{static_cast<float>(i) * 1.2f + 219.0f, 109.0f, static_cast<float>(i) * 0.4f + 330.2f}, 0);
         EV_EnableCharacterDisplay(first);
         EV_EnableCharacterDisplay(second);
-        modelSetCharaAlpha(FindCharacterByScenarioName(first), 1);
-        modelSetCharaAlpha(FindCharacterByScenarioName(second), 0);
+        modelSetCharaAlpha(ctrlGetScenarioChara(first), 1);
+        modelSetCharaAlpha(ctrlGetScenarioChara(second), 0);
         SetRaceFieldVisibility(true);
     }
 }
 void FadePaddock_Callback(void *) {
     state.paddockAlpha -= 0.05f;
     for (std::int32_t i = 0; i < 5; ++i) {
-        modelSetCharaAlpha(FindCharacterByScenarioName(shen_name{static_cast<std::uint32_t>(SHEN_NAME(PAI0) + i * 0x01000000U)}), state.paddockAlpha);
-        modelSetCharaAlpha(FindCharacterByScenarioName(shen_name{static_cast<std::uint32_t>(SHEN_NAME(PAI5) + i * 0x01000000U)}), 1 - state.paddockAlpha);
+        modelSetCharaAlpha(ctrlGetScenarioChara(shen_name{static_cast<std::uint32_t>(SHEN_NAME(PAI0) + i * 0x01000000U)}), state.paddockAlpha);
+        modelSetCharaAlpha(ctrlGetScenarioChara(shen_name{static_cast<std::uint32_t>(SHEN_NAME(PAI5) + i * 0x01000000U)}), 1 - state.paddockAlpha);
     }
     if (state.paddockAlpha <= 0) {
         SetRaceFieldVisibility(false);
@@ -311,9 +311,9 @@ void Obstacles(std::int32_t configuration) {
     for (auto name : obstacleNames)
         Rotation(name, Vector3i{0, 0, 0x4000});
     constexpr shen_name jdm1{SHEN_NAME(JDM1)}, jdm2{SHEN_NAME(JDM2)}, jmp1{SHEN_NAME(JMP1)};
-    if (!FindCharacterByScenarioName(jdm1))
+    if (!ctrlGetScenarioChara(jdm1))
         CreateEventCharacter(CharacterCreationHighModel, nullptr, jdm1);
-    if (!FindCharacterByScenarioName(jdm2))
+    if (!ctrlGetScenarioChara(jdm2))
         CreateEventCharacter(CharacterCreationHighModel, nullptr, jdm2);
     const Vector3 scale{0.01f, 4, 10};
     mtwkSetMotionworkScale3(jmp1, &scale);
@@ -474,19 +474,19 @@ void DrawStandings() {
 void InitializeRace(DuckEventWork *work) {
     CreateEventCharacter(CharacterCreationHighModel, nullptr, pcam);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, hdum);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("DUCK"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("DUCK"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("DUCK"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("DUCK"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("DUCK"), 0);
     EV_LoadCutsceneFromCurrentScene("0122E000");
     EV_LoadAudio("0122E000", 0);
     EV_FreeAuthorPak(1, "0122");
     std::strcpy(state.voicePrefix.data(), "0122");
     EV_LoadNPCRoute("NPC_DUCK.BIN");
     CreateEventCharacter(CharacterCreationHighModel, nullptr, base);
-    SetLowQualityHands(FindCharacterByScenarioName(hand));
-    SetHighModelXYZ(FindCharacterByScenarioName(hand), 1, 0, 0);
+    SetLowQualityHands(ctrlGetScenarioChara(hand));
+    SetHighModelXYZ(ctrlGetScenarioChara(hand), 1, 0, 0);
     AT_SetLocalBaseChara(hdum, board);
     AT_SetLocalBaseChara(hand, hdum);
     LoadGauge();
@@ -559,7 +559,7 @@ void EntryEligibility(DuckEventWork *work) {
         break;
     case 2:
         for (auto *name = introCharacters; name->name != invalid.name; ++name)
-            if (FindCharacterByScenarioName(*name)) {
+            if (ctrlGetScenarioChara(*name)) {
                 EV_npcLockUnlock(*name);
                 EV_npcFree(*name);
             }
@@ -571,7 +571,7 @@ void EntryEligibility(DuckEventWork *work) {
     }
 }
 std::int32_t EntryDialogue(DuckEventWork *work) {
-    SetupHandPoseScript(FindCharacterByScenarioName(xgh));
+    SetupHandPoseScript(ctrlGetScenarioChara(xgh));
     if (!EV_GetScreenFilmIsNotShowing())
         FadeIn();
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1335) || (state.paidGame && GetPlayerStat(PlayerStatsId::Cash) < 50)) {
@@ -726,7 +726,7 @@ std::int32_t DuckSelection(DuckEventWork *work) {
         EVT_AT_SetPos(money, hand, Vector3{0.2f, -0.18f, -0.5f}, 0);
         Rotation(money, Vector3i{0, 0, 20480}, hand);
         OddsBoard();
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(hand), 0, reinterpret_cast<std::byte *>(holdHand.data()), 0);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(hand), 0, reinterpret_cast<std::byte *>(holdHand.data()), 0);
         AT_SetLocalBaseChara(money, hand);
     } else if (work->phase != 1)
         return 0;
@@ -745,7 +745,7 @@ std::int32_t DuckSelection(DuckEventWork *work) {
     state.playerRace = 0;
     work->state = DuckState::Countdown;
     work->phase = 0;
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(hand), 0, reinterpret_cast<std::byte *>(releaseHand.data()), 4);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(hand), 0, reinterpret_cast<std::byte *>(releaseHand.data()), 4);
     auto *task = HLib::EnqueueTaskWithoutParameter(FallMoney_Callback, 4, 0x0b, 2037280621);
     HLib::SetupTimedTask(task, 4);
     AT_SetLocalBaseChara(money, invalid);
@@ -902,7 +902,7 @@ void End_Callback(void *data) {
     EV_FreeAuthorPak(0, "0122");
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1021, 0);
     SetPlayerControlEnabled(0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("DUCK"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("DUCK"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(state.main);
     HLib::EV_HLKillOtherHierarchyTask(state.debug);
@@ -993,8 +993,8 @@ std::int64_t DuckRaceRunBettingWinSequence(const DuckEventWork *work) {
     InitialPositions(false);
     Motion(ryo, 61442);
     if (shenGetRandomInt32(2)) {
-        hmdlSetFlagsFor(FindCharacterByScenarioName(xgh), 1, 0, 16);
-        hmdlSetFlagsFor(FindCharacterByScenarioName(xgh), 0, 0, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(xgh), 1, 0, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(xgh), 0, 0, 16);
         Motion(xgh, 32528);
         Camera(2103);
     } else {
@@ -1009,7 +1009,7 @@ std::int64_t DuckRaceRunBettingWinSequence(const DuckEventWork *work) {
     Camera(2101, invalid, invalid, 65);
     const float payout = static_cast<float>(state.odds[work->selection]) * static_cast<float>(work->wager) / 10.0f;
     PATI_StartMoneyCount(static_cast<std::uint32_t>(TruncateToInt32(payout)), 80);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(xgh), Smile, 0, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(xgh), Smile, 0, 1);
     EVT_AT_SetFaceLooks(xgh, Normal, 0, 1, 200);
     return 240;
 }
@@ -1034,7 +1034,7 @@ std::int64_t DuckRaceRunBettingLossSequence() {
     EVT_AT_SetVoice("0122C017", 1, 200); // @text EN: "Another try?" | JA: "どうだい、もういっちょ？"
     Camera(2100);
     Camera(2101, invalid, invalid, 100);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(xgh), Sad, 0, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(xgh), Sad, 0, 1);
     EVT_AT_SetFaceLooks(xgh, Normal, 0, 1, 200);
     return 240;
 }
@@ -1047,8 +1047,8 @@ std::int64_t DuckRaceRunSpecialWinSequence() {
     InitialPositions(false);
     Motion(ryo, 61442);
     if (shenGetRandomInt32(2)) {
-        hmdlSetFlagsFor(FindCharacterByScenarioName(xgh), 1, 0, 16);
-        hmdlSetFlagsFor(FindCharacterByScenarioName(xgh), 0, 0, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(xgh), 1, 0, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(xgh), 0, 0, 16);
         Motion(xgh, 32528);
         Camera(2103);
     } else {
@@ -1063,7 +1063,7 @@ std::int64_t DuckRaceRunSpecialWinSequence() {
     QueueDisplay(medal, 1, 241);
     Camera(2102, invalid, invalid, 70);
     QueueEventCallFunction(AwardPrize, nullptr, 70);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(xgh), Smile, 0, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(xgh), Smile, 0, 1);
     EVT_AT_SetFaceLooks(xgh, Normal, 0, 1, 180);
     return 240;
 }
@@ -1087,7 +1087,7 @@ std::int64_t DuckRaceRunSpecialLossSequence() {
     EVT_AT_SetVoice("0122C016", 1, 70); // @text EN: "That was close." | JA: "兄ちゃん、惜しかったな。"
     EVT_AT_SetVoice("0122C017", 1, 130); // @text EN: "Another try?" | JA: "どうだい、もういっちょ？"
     Camera(2101, invalid, invalid, 70);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(xgh), Sad, 0, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(xgh), Sad, 0, 1);
     EVT_AT_SetFaceLooks(xgh, Normal, 0, 1, 170);
     return 170;
 }

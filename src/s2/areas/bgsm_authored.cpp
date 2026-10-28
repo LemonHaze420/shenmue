@@ -87,7 +87,7 @@ void BgsmPlaceCharacters(BgsmWork &work) {
     AT_SetLocalBaseChara(BGSM_CASH, BGSM_BASE);
     for (shen_name die : BGSM_DICE)
         AT_SetLocalBaseChara(die, BGSM_BASE);
-    const std::int32_t motion = GetMotionRigBoneId(scenFindMotionwork(work.opponent));
+    const std::int32_t motion = mtwkGetRigBoneId(scenFindMotionwork(work.opponent));
     bgsmOpponentPose = motion == 7 ? 0 : (motion != 9) + 1;
     const Vector4 *spots = BGSM_SPOT_COUNTS[work.board] == 4 ? BGSM_FOUR_SPOTS : BGSM_NINE_SPOTS;
     for (std::int32_t index = 0; index < BGSM_SPOT_COUNTS[work.board]; ++index) {

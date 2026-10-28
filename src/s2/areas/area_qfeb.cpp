@@ -78,7 +78,7 @@ void QfebAuthorLoopCallback(void *data) {
     work->frame = static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     EV_authSceneCtrl(AuthSceneCtrl::GetFramesRemaining);
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         mtwkSetExtraFlag(scenFindMotionwork(QFEB_RYO), 6, 0);
         EV_SetCharacterAlphaEnabled(QFEB_RYO, true);
         mtwkSetExtraFlag(scenFindMotionwork(QFEB_REN), 6, 0);
@@ -98,7 +98,7 @@ void PrepareQfebBattleChoreography(QfebEventWork *work) {
     for (std::int32_t index = 0; index < 2; ++index) {
         const shen_name name = QFEB_CHOREOGRAPHY_NPCS[entry][index];
         mtwkSetRequestedRootMode(scenFindMotionwork(name), 3);
-        SetMotionFrameTime(scenFindMotionwork(name), 15, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(name), 15, MotionRegion::LowerBody);
         EVT_AT_SetMot(name, index == 0 ? 0x7f03U : 0x7f06U, 0, 1, 0x80000000U, index == 0 ? 10 : 20);
         EventSetPosition position{
             .cleanup = 0, .character = name, .parent = EVENT_CHARACTER_INVALID, .position = QFEB_CHOREOGRAPHY_NPC_POSITIONS[entry][index], .delay = 0};
@@ -383,9 +383,9 @@ void FinishQfebDefeat(QfebEventWork *work) {
     SetCharaKill(QFEB_BASE, 1);
     ET_AT_KillWork(work->characters);
     GetNpcBatchCountOverride(work->npcBatchOverride);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
     EV_FreeAuthorPak(0, "S2BV");
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
@@ -412,7 +412,7 @@ void FinishQfebEscape(QfebEventWork *work) {
     EV_SetCharaControllerFlags(QFEB_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     ET_AT_KillWork(work->characters);
     GetNpcBatchCountOverride(work->npcBatchOverride);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
     EV_FreeAuthorPak(0, "0302");
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
@@ -464,14 +464,14 @@ void QfebMainCallback(void *data) {
         }
         break;
     case 2:
-        if (GetMotionAnimationId(scenFindMotionwork(QFEB_RYO), MotionRegion::LowerBody) == 0xf009 ||
-            GetMotionAnimationId(scenFindMotionwork(QFEB_RYO), MotionRegion::LowerBody) == 0xf008) {
+        if (mtwkGetAnimationId(scenFindMotionwork(QFEB_RYO), MotionRegion::LowerBody) == 0xf009 ||
+            mtwkGetAnimationId(scenFindMotionwork(QFEB_RYO), MotionRegion::LowerBody) == 0xf008) {
             SetPlayerControlEnabled(0);
             SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
             shenToggleAreaFlags(2);
             work->phase = 11;
-        } else if (GetMotionAnimationId(scenFindMotionwork(QFEB_RYO), MotionRegion::LowerBody) == 0xf02b ||
-            GetMotionAnimationId(scenFindMotionwork(QFEB_RYO), MotionRegion::LowerBody) == 0xf02a) {
+        } else if (mtwkGetAnimationId(scenFindMotionwork(QFEB_RYO), MotionRegion::LowerBody) == 0xf02b ||
+            mtwkGetAnimationId(scenFindMotionwork(QFEB_RYO), MotionRegion::LowerBody) == 0xf02a) {
             SetPlayerControlEnabled(0);
             SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
             shenToggleAreaFlags(2);
@@ -506,7 +506,7 @@ void QfebMainCallback(void *data) {
                     if (index)
                         EV_SetCharacterAlphaEnabled(name, false);
                     mtwkSetRequestedRootMode(scenFindMotionwork(name), 3);
-                    SetMotionFrameTime(scenFindMotionwork(name), 7, MotionRegion::LowerBody);
+                    mtwkSetFrameTime(scenFindMotionwork(name), 7, MotionRegion::LowerBody);
                     EVT_AT_SetMot(name, 0xf003, 0, 1, 0x80000000U, 0);
                     EventSetPosition position{
                         .cleanup = 0, .character = name, .parent = EVENT_CHARACTER_INVALID, .position = QFEB_CHOREOGRAPHY_POSITIONS[entry][index], .delay = 0};
@@ -673,11 +673,11 @@ void QfebMain(std::uintptr_t argument) {
     work->voiceFrames = 0;
     work->previousVoice = 0;
     work->phase = 0;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QFEB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QFEB"), 0);
     EV_SetNewSceneIndex();
     FinishLoading();
     shenSetClockAndCompassRenderTo(1);

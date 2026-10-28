@@ -18,7 +18,7 @@ bool MatchesSign(const ChawEventWork *work, const std::int32_t *sign) {
 }
 std::int32_t CurrentSecond() {
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     return date.second + 60 * (date.minute + 60 * date.hour);
 }
 } // namespace
@@ -136,7 +136,7 @@ std::int32_t ChawGetProgression(ChawEventWork *work) {
         if (!EV_GetShenmueFlag(0x24b))
             return 1;
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         return (date.minute + 100 * date.hour >= 1930) + 2;
     }
     case 3:

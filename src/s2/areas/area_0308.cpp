@@ -59,7 +59,7 @@ void Update0308(void *taskData) {
 void Cleanup0308(AuthorViewerTaskParameter *parent) {
     shenUpdateCurrentDateTime();
     for (const shen_name *character = AREA_0308_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

@@ -61,7 +61,7 @@ bool ActorSearchPosition(shen_name name, Vector3 &position) {
     Character *const character = GetScenarioCharacterNode(static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->scenarioTask, name);
     if (!character)
         return false;
-    GetCharacterMotionWorldPosition(character, 5, &position);
+    charaGetMotWorldPos(character, 5, &position);
     return true;
 }
 void ApplyInverseNode(const MT7Node &node) {

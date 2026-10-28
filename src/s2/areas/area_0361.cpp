@@ -50,17 +50,17 @@ void Update0361(void *taskData) {
 void Cleanup0361(Area0361Parameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0361_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_0361_ARCHIVE), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_0361_ARCHIVE), 0);
     EV_FreeAuthorPak(0, AREA_0361_CONVERSATION);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0361_RETURN.name) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EventSetPosition position{0, AREA_0361_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {255.75f, 161.1999969482422f, 139.97999572753906f}, 0.0f};
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_0361_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {0, 0x4000, 0}, 0.0f};

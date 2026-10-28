@@ -705,7 +705,7 @@ WeatherAir *AllocateWeatherAir(std::uint32_t lightIndex, const WeatherTable *tab
     air->tableCount = tableCount;
     air->instruction = 0x3fffU;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     CopyWeatherTime(*air, time);
     air->cloud = air->rain = air->snow = air->auxiliary = 0.0f;
     air->field40 = air->field44 = 0;
@@ -758,7 +758,7 @@ void ProcessNewWeatherData() {
     (void)AdvanceWeatherFloat(cloud);
     (void)AdvanceWeatherFloat(auxiliary);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     CopyWeatherTime(*weatherAir, time);
     PublishWeatherAir();
 }
@@ -766,7 +766,7 @@ void ProcessNewWeatherData() {
 void UpdateSunOrWindRotationVector() {
     const float speed = std::fmax(GetWeatherPressure() * 0.00099999993f, GetWeatherWindVector() * 0.00050000002f) + 0.00050000002f;
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     const float timeOfDay = ((static_cast<float>(time.minute) / 60.0f) * 10000.0f + static_cast<float>(time.hour) * 10000.0f) +
         ((static_cast<float>(time.second) / 60.0f) * 100.0f) * 1.666666f;
     const std::uint16_t angle = static_cast<std::uint16_t>(static_cast<std::int32_t>((timeOfDay * 0.0000083333334f) * 65536.0f));
@@ -809,7 +809,7 @@ void BeginWeatherRainTransition(float target, std::int32_t frames) {
 void UpdateWeatherForCurrentTimeImmediate() {
     weatherUpdateTime = 1;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     UpdateWeatherTimelines(time.day, time.hour, time.minute);
     (void)lfltSetImmediate(cloud, ReadWeatherChannel(0));
     (void)lfltSetImmediate(auxiliary, ReadWeatherChannel(3));
@@ -833,7 +833,7 @@ void ExecuteWeather_Callback(void *) {
     weatherRippleLifetimeStep = 0.050000001f;
     if (weatherUpdateTime == 1) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (weatherPublishedYear != time.year || weatherPublishedMonth != time.month || weatherPublishedDay != time.day) {
             if (weatherWind) {
                 UpdateWeatherTimelines(time.day, time.hour, time.minute);
@@ -893,7 +893,7 @@ void ExecuteWeather_Callback(void *) {
 // @verified - p
 void ApplyPlanetRotForCurrentDateTime() {
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     std::int32_t day = static_cast<std::int8_t>(date.day);
     if (date.month & 1)
         day += 31;
@@ -1116,7 +1116,7 @@ void UpdateWeather() {
     EnsureWeatherFixcRegistered();
     weatherUpdateWind = 1;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     CopyWeatherTime(*weatherAir, time);
     UpdateWeatherTimelines(time.day, time.hour, time.minute);
     (void)lfltSetImmediate(cloud, ReadWeatherChannel(0));
@@ -1128,7 +1128,7 @@ void UpdateWeather() {
 std::int64_t RefreshWeatherForCurrentTime(std::int32_t frames) {
     weatherUpdateTime = 1;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     const std::int32_t totalMinutes = frames / 240;
     const std::int32_t hours = totalMinutes / 60;
     time.minute = static_cast<std::int8_t>(static_cast<std::int32_t>(time.minute) + totalMinutes % 60);
@@ -1154,7 +1154,7 @@ std::int64_t RefreshWeatherForCurrentTime(std::int32_t frames) {
 
 void UpdateWeatherForMinute(std::int32_t mode, std::int32_t enable, std::int32_t frames, float value) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     UpdateWeatherTimelines(time.day, time.hour, time.minute);
     if ((mode != 0 && mode != 1) || (mode == 1 && (pendingOverrides & 8U) != 0))
         return;
@@ -1221,7 +1221,7 @@ float GetWeatherPressure() {
 // @verified - p
 float UpdateWeatherAndTime(std::int32_t minutes) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     UpdateWeatherTimelines(time.day, time.hour, time.minute);
     float maximum = ReadWeatherChannel(1);
     const std::int32_t firstStep = 10 - time.minute % 10;
@@ -1259,7 +1259,7 @@ std::uint64_t GetWeatherUpdateEnabled() {
 // @verified - p
 std::int32_t GetCurrentWeather() {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     UpdateWeatherTimelines(time.day, time.hour, time.minute);
     if (ReadWeatherChannel(1) > 0.0f)
         return 2;
@@ -1282,7 +1282,7 @@ void SyncWindWithWDATWeatherState() {
     if (!wind)
         return;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     UpdateWeatherTimelines(time.day, time.hour, time.minute);
     BeginWindPhaseTransition(*wind, GetWeatherPhaseForCurrentDay(*weatherData));
     BeginWindSpeedTransition(*wind, GetWeatherIntensityForCurrentDay(*weatherData) / 30.0f);

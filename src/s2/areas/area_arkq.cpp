@@ -55,11 +55,11 @@ void SetupArkqCharacters() {
     EVT_AT_SetPos(ARKQ_LLY, ARKQ_BASE, {.x = 7.8f, .y = 0, .z = -10.9f}, 0);
     EVT_AT_SetAngY(ARKQ_LLY, ARKQ_BASE, 180, 0);
     for (shen_name character : ARKQ_SPECTATORS)
-        SetMotionRegionFlag(scenFindMotionwork(character), 66, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(character), 66, 0, MotionRegion::LowerBody);
 }
 std::int32_t SetupArkqResources(ArkqWork &work) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.hour >= 19 || (time.hour == 6 && time.minute >= 30)) {
         SetIsSkySetup(0);
         EV_SetObjectFlagByIndex(1, 0);
@@ -70,7 +70,7 @@ std::int32_t SetupArkqResources(ArkqWork &work) {
     qteBattleUtil(BattleQteMode::ResetStates);
     qteBattleUtil(BattleQteMode::Load);
     qteBattleUtil(BattleQteMode::Queue);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MPK00"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MPK00"), 0);
     EV_LoadCutsceneFromCurrentScene("0057A000");
     EV_LoadAudio("0057A000", 0);
     EV_spmBeginSampleExecute();
@@ -387,7 +387,7 @@ void ArkqCleanupCallback(void *data) {
         EV_scenQueueLoad(g_actNumber, ARKQ_SUCCESS_MAP, 50);
     } else {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour >= 1)
             ++time.day;
         time.hour = 1;

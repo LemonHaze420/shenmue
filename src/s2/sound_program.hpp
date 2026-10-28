@@ -249,7 +249,7 @@ void shenAssignSoundProgramByPtr(std::span<const std::byte> table) noexcept;
 std::uint64_t shenAssignActiveSmp(const char *name) noexcept;
 std::uint64_t LoadCutsceneSoundProgram(const char *name, std::int32_t actNumber) noexcept;
 std::uint64_t EV_LoadCutsceneFromCurrentScene(const char *name) noexcept;
-bool LoadCutsceneAndSoundProgramForArea() noexcept;
+bool sbtLoadProgram() noexcept;
 void StopSoundProgram() noexcept;
 
 void SoundProgramControl_Callback(void *);

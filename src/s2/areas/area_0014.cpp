@@ -55,7 +55,7 @@ void ConfigureEnvironment() {
     shenSetClockAndCompassRenderTo(1);
     if (g_currentMap.name == SHEN_NAME(0014)) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour < 19) {
             EV_ReinitLights(1);
             EV_SetLightFlagForIndex(0, 2);
@@ -96,7 +96,7 @@ void LoopCallback(void *data) {
     EVT_AT_SetAng_Callback(&angle);
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0014A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0014A"), 0);
     auto *parent = *static_cast<AreaImmediateAuthorTaskParameter **>(data);
     if (g_currentMap.name == SHEN_NAME(AR02)) {
         AddInventoryItem(0x178a, 1, 1);

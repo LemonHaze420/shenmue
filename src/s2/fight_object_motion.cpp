@@ -325,7 +325,7 @@ bool vfStageObjectOverlapsActor(VOBJ_t *owner, VFActor *actor, std::int32_t with
     const Vector3 &centre = actor->game->collision->samples[actor->groupIndex].points[0];
     if (ObjectDistanceSquared(centre, owner->object.contactPosition) > g_fightStageObjectMaximumDistance)
         return false;
-    const std::int32_t motion = GetMotionAnimationId(FindMotionWork(actor->game->characters[actor->groupIndex]), MotionRegion::LowerBody) & 0xfff;
+    const std::int32_t motion = mtwkGetAnimationId(FindMotionWork(actor->game->characters[actor->groupIndex]), MotionRegion::LowerBody) & 0xfff;
     if (motion == 1608) {
         if (float(actor->parameter2e0) > actor->animationTime)
             return false;
@@ -503,7 +503,7 @@ void vfUpdateRotationAnglesFromStageObject(VOBJ_t *owner, VFMA_t *game) {
     }
     object.contactPosition = object.definition->attachmentPosition;
     object.rotation = object.definition->attachmentRotation;
-    Matrix4x4 *const bone = charaGetBoneTransform(FindMotionWork(object.reactingCharacter), object.definition->attachmentBone);
+    Matrix4x4 *const bone = mtwkGetBoneTransform(FindMotionWork(object.reactingCharacter), object.definition->attachmentBone);
     Matrix4x4_Push();
     Matrix4x4::SetActiveTransform(bone);
     Matrix4x4::preTranslate(object.contactPosition.x, object.contactPosition.y, object.contactPosition.z);
@@ -735,7 +735,7 @@ void vfBreakStageObject(VOBJ_t *owner) {
     EV_SetCharDisplay(object.controlCharacter, CVM_DisplayEnabled, 0);
     object.model = broken;
     shenApplyTranslationToAll(GetCharacterNode(object.model), object.contactPosition);
-    SetCharacterWorldRotation(object.model, object.rotation);
+    charaSetWorldRot(object.model, object.rotation);
     EmitFightSmoke(5, reinterpret_cast<VFActor *>(object.model));
     owner->object.rotationImpulse = {};
     object.reactionFlags &= 0xffffff9f;
@@ -1030,7 +1030,7 @@ void vfclUpdateStageObjectHitboxesPhysics(VFMA_t *game) {
             if ((object.reactionFlags & 0x60) && (!(definition->flags & 0x60U) || !(object.reactionFlags & 8)))
                 vfRecalcStageObjectLocalEuler(owner);
             shenApplyTranslationToAll(GetCharacterNode(object.model), object.contactPosition);
-            SetCharacterWorldRotation(object.model, object.rotation);
+            charaSetWorldRot(object.model, object.rotation);
             vfTransformStageObjectHitboxes(owner);
         }
         vfUpdateStageObjectWorldPos(owner);

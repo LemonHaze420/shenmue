@@ -371,7 +371,7 @@ int Buy(MapStandEventWork &work) {
         ApplyCharacterHandPoseCommand(character, 0, reinterpret_cast<std::byte *>(buyingHand.data()), 100);
         Vector3 position{};
         EV_GetCharaPosition(work.stand, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &position, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), &position, 0);
         EV_SetRefBoardParamsFor(work.map, 1);
         AddThisToCashOrSegaCoins(-work.cost, ECashOrCoins::Cash2);
         if (work.item != -1)
@@ -445,7 +445,7 @@ void HPAM_main_func(std::uintptr_t request) {
     Film(16, 255);
     HLib::SetupTaskDelay(-1);
     Gravity(false);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("HPAM"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("HPAM"), 0);
     EV_FreeAuthorPak(1, "0099");
     EV_LoadCutsceneFromCurrentScene("0099E000.smp");
 }
@@ -475,11 +475,11 @@ void MapStandExitCallback(void *parameter) {
     using enum CameraState;
     using namespace map_stand;
     auto &work = *static_cast<MapStandEventWork *>(parameter);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     Film(8, 255);
     EnableScenarioCharacterDisplay(ryo);
     EV_SetRefBoardParamsFor(ryo, 0);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
     hndlSetFlags(ctrlGetCharaByName(ryo));
     if (work.map.name)
         EV_SetRefBoardParamsFor(work.map, 0);
@@ -493,7 +493,7 @@ void MapStandExitCallback(void *parameter) {
     HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HPAM"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HPAM"), 0);
 }
 const ScriptAreaDefinition areaHPAMScriptDefinition{.areaId = SHEN_NAME(HPAM), .field04 = 0, .init = nullptr, .main = HPAM_main_func};
 } // namespace shenmue::s2

@@ -26,7 +26,7 @@ void PrepareKshtCloudCharacters(std::int32_t selection) {
         PrepareKshtProp(SHEN_NAME(a246));
         PrepareKshtProp(SHEN_NAME(a349));
         EV_DisableCharacterDisplay(SHEN_NAME(a246));
-        SetPluralControlFor(FindCharacterByScenarioName(SHEN_NAME(RCKO)), 0);
+        SetPluralControlFor(ctrlGetScenarioChara(SHEN_NAME(RCKO)), 0);
         break;
     case 3:
     case 5:
@@ -34,9 +34,9 @@ void PrepareKshtCloudCharacters(std::int32_t selection) {
         for (shen_name prop : cloudProps)
             PrepareKshtProp(prop);
         for (shen_name prop : cloudProps)
-            ApplyCharacterGeometryLighting(FindCharacterByScenarioName(prop), 1);
-        charaSetDisplayEnabledFlag(FindCharacterByScenarioName(cloudProps[1]), 0);
-        charaSetDisplayEnabledFlag(FindCharacterByScenarioName(cloudProps[2]), 0);
+            ApplyCharacterGeometryLighting(ctrlGetScenarioChara(prop), 1);
+        charaSetDisplayEnabledFlag(ctrlGetScenarioChara(cloudProps[1]), 0);
+        charaSetDisplayEnabledFlag(ctrlGetScenarioChara(cloudProps[2]), 0);
         PrepareKshtActor(KSHT_RYO);
         PrepareKshtActor(KSHT_SIN);
         break;

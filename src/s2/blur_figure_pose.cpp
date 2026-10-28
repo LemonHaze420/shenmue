@@ -287,7 +287,7 @@ void BlurWork(Character *character) {
             entry.position.z = motion->runtime.rootPosition.z - motion->runtime.previousRootPosition.z;
         }
         for (std::size_t bone = 0; bone < blurBoneTransformCount; ++bone) {
-            const Matrix4x4 *const transform = charaGetBoneTransform(motion, blurBoneSelectors[bone]);
+            const Matrix4x4 *const transform = mtwkGetBoneTransform(motion, blurBoneSelectors[bone]);
             if (transform)
                 entry.boneTransforms[bone] = *transform;
         }
@@ -532,7 +532,7 @@ std::uintptr_t figpToggleMotionworkFlag(Character *character, MotionWork *work) 
         FindLoadedMotionTimedCommand(work->runtime.currentMotionId[0], 24, clock.splitTimeFrames - clock.ticksTime, clock.splitTimeFrames, 1);
     if (!command.empty() && (figure->flags & 0x41U) == 0) {
         std::uint8_t mode = static_cast<std::uint8_t>(command[3]);
-        const std::uint16_t mirrored = SetMotionRegionFlag(work, 70, 1, MotionRegion::LowerBody);
+        const std::uint16_t mirrored = mtwkSetRegionFlag(work, 70, 1, MotionRegion::LowerBody);
         if (mirrored) {
             switch (mode) {
             case 4:

@@ -18,7 +18,7 @@ void StartOpponentAt(std::int32_t entry) {
     EVT_AT_SetPosRot(&position);
     EventSetAngle angle{0, CWON_WON, CWON_CENTER, opponentYaws[entry], 0};
     EVT_AT_SetAngY_Callback(&angle);
-    EV_mtwkSetEnabled(scenFindMotionwork(CWON_WON), 1);
+    mtwkSetEnabled(scenFindMotionwork(CWON_WON), 1);
     EV_EnsureCharacterDraw(CWON_WON);
     EV_EnableCharacterDisplay(CWON_WON);
 }

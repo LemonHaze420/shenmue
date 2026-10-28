@@ -95,7 +95,7 @@ std::int32_t QabtLiftHighCrate(ArbtCrateWork &work) {
     Position(ARBT_RYO, QABT_AW2, 0, 0, 1.95f, 0);
     EVT_AT_SetMot(ARBT_RYO, 11118, 2, 1.5f, 0x40000000U, 0);
     const std::int32_t frames = EVT_AT_SetMot(QABT_AW2, 11082, 2, 1.5f, 0x40000000U, 0);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
     QueueEventRepeatedFunction(ArbtTrackLiftHand, nullptr, 20, 30);
     BeginMovingCrate(work, 50);
     EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
@@ -108,7 +108,7 @@ std::int32_t QabtLiftLowCrate(ArbtCrateWork &work) {
     Position(ARBT_RYO, QABT_AW2, 0, 0, 1.95f, 0);
     EVT_AT_SetMot(ARBT_RYO, 11117, 5, 1.5f, 0x40000000U, 0);
     const std::int32_t frames = EVT_AT_SetMot(QABT_AW2, 11081, 2, 1.5f, 0x40000000U, 0);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
     QueueEventRepeatedFunction(ArbtTrackLiftHand, nullptr, 59, 30);
     BeginMovingCrate(work, 89);
     EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);

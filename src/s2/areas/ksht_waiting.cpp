@@ -54,7 +54,7 @@ void DrawingNewDay(void *) {
     if (kshtAuthSelection != -1)
         return;
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (date.hour >= 19)
         ++date.day;
     date.hour = 8;

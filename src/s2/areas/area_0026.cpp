@@ -57,7 +57,7 @@ void RestoreCharacters() {
 void ConfigureEnvironment() {
     SetPlayerControlEnabled(0);
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.hour < 19) {
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
@@ -253,7 +253,7 @@ void QueueAuthor(AreaAuthorTaskParameter *parent) {
 // @verified - p
 void Cleanup(AreaAuthorTaskParameter *parent) {
     for (const shen_name *name = characters; name->name != AREA_AUTHOR_INVALID.name; ++name)
-        if (FindCharacterByScenarioName(*name)) {
+        if (ctrlGetScenarioChara(*name)) {
             EV_npcLockUnlock(*name);
             EV_npcFree(*name);
         }

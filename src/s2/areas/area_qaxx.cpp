@@ -43,7 +43,7 @@ void AreaQAXXMain(std::uint32_t) {
     }
     (void)EV_SetObjectFlagByIndex(5, objectFlag);
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     dateTime.hour = 8;
     dateTime.minute = 30;
     SetCurrentDateTimeTo(dateTime);

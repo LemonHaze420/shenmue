@@ -85,7 +85,7 @@ void QueuePatiBall(PatiGameWork *game) {
 }
 // @verified - p
 void DestroyPatiBall(PatiBallWork *ball) {
-    hndlSetFlags(FindCharacterByScenarioName(shen_name{static_cast<std::uint32_t>(patiGameplayPlacements[0].yaw)}));
+    hndlSetFlags(ctrlGetScenarioChara(shen_name{static_cast<std::uint32_t>(patiGameplayPlacements[0].yaw)}));
     EV_EnableCharacterDisplay(PATI_PLAYER);
     ResetScenarioCharacterAttachment(PATI_CAMERA);
     if (DoesScenarioCharacterExist(PATI_BACKPACK))
@@ -106,13 +106,13 @@ void PatiBallCallback(void *data) {
     case 0: {
         HLib::SetupTaskDelay(10);
         shenSetClockAndCompassRenderTo(1);
-        SetLowQualityHands(FindCharacterByScenarioName(hand));
-        SetHighModelXYZ(FindCharacterByScenarioName(hand), 1, 0, 0);
-        ApplyCharacterHandRotation(FindCharacterByScenarioName(hand), 0, 21, &PATI_HAND_ROTATION);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(hand), 0, reinterpret_cast<std::byte *>(patiHandPoseCommand), 1);
+        SetLowQualityHands(ctrlGetScenarioChara(hand));
+        SetHighModelXYZ(ctrlGetScenarioChara(hand), 1, 0, 0);
+        ApplyCharacterHandRotation(ctrlGetScenarioChara(hand), 0, 21, &PATI_HAND_ROTATION);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(hand), 0, reinterpret_cast<std::byte *>(patiHandPoseCommand), 1);
         EV_EnsureCharacterDraw(hand);
         EV_DisableCharacterDisplay(hand);
-        modelSetCharaAlpha(FindCharacterByScenarioName(hand), 0.0f);
+        modelSetCharaAlpha(ctrlGetScenarioChara(hand), 0.0f);
         if (hand.name == PATI_HAND_MODEL.name) {
             Vector3i rotation{};
             Matrix4x4_Push(nullptr);

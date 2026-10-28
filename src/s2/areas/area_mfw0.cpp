@@ -28,8 +28,8 @@ void Mfw0LoadResources(Mfw0Work &work) {
     if (IsFightActive())
         check_dead_status(1);
     work.motions[0] = 0;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("MFW0"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MFW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("MFW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MFW0"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, MFW0_BASE);
     EV_FreeAuthorPak(1, "0050");
     SetMapControlStatusFlag(0, 1);
@@ -42,18 +42,18 @@ void Mfw0LoadResources(Mfw0Work &work) {
 void Mfw0Cleanup(Mfw0Work &work) {
     using enum CameraState;
     EV_stepSetFlags(0, 153);
-    hndlSetFlags(FindCharacterByScenarioName(MFW0_TKR));
+    hndlSetFlags(ctrlGetScenarioChara(MFW0_TKR));
     ET_AT_KillWork(work.characters);
     SetPlayerControlEnabled(0);
     SetCharaKill(MFW0_BASE, 1);
-    SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
     for (std::uint32_t *motion = work.motions; *motion; ++motion)
         DeleteMotion(*motion);
     EV_FreeAuthorPak(0, "0050");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MFW0"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MFW0"), 0);
     EV_LoadCutsceneFromCurrentScene("AK00");
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     EV_LoadAudio("AK00_000", time.hour >= 19);
     shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
@@ -73,8 +73,8 @@ void Mfw0RootCallback(void *data) {
         ++work.frames;
         break;
     case 2:
-        SetLowQualityHands(FindCharacterByScenarioName(MFW0_TKR));
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MFW0"), 0);
+        SetLowQualityHands(ctrlGetScenarioChara(MFW0_TKR));
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MFW0"), 0);
         LoadBlurModelForCharacter(MFW0_RYO, "RYO_B.MT7", 1);
         LoadBlurModelForCharacter(MFW0_TKR, "TKR_B.MT7", 1);
         Mfw0Nullsub();

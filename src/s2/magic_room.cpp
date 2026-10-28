@@ -343,7 +343,7 @@ void UpdateRoomAnimations() {
             }
         } else if (placement.kind == static_cast<std::int32_t>(MagicRoomPlacementKind::Clock)) {
             DateTime time;
-            GetCurrentDateTime(time);
+            shenGetCurrentDateTime(time);
             const std::int32_t seconds = static_cast<std::int8_t>(time.second) + 60 * time.minute;
             const std::int32_t minutes = time.minute + 60 * (time.hour % 12);
             MT7Node *node = GetChildObjectByIndex(model, root, 0x96);

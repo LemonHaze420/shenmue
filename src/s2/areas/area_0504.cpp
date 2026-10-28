@@ -78,7 +78,7 @@ void Update0504(void *data) {
 }
 void Setup0504Environment() {
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 12;
     date.minute = 0;
     SetCurrentDateTimeTo(date);
@@ -111,19 +111,19 @@ void Setup0504Environment() {
 }
 void Prepare0504Characters() {
     for (const shen_name character : {AREA_0504_RYO, AREA_0504_SIN, AREA_0504_BOAT}) {
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 6, 2);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 2);
         EV_SetCharacterAlphaEnabled(character, false);
     }
     EV_SetCharacterAlphaEnabled(AREA_0504_PROP, false);
-    clmdUtil(FindCharacterByScenarioName(AREA_0504_SIN), 6);
+    clmdUtil(ctrlGetScenarioChara(AREA_0504_SIN), 6);
 }
 void Restore0504Characters() {
     for (const shen_name character : {AREA_0504_RYO, AREA_0504_SIN, AREA_0504_BOAT}) {
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 6, 0);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 0);
         EV_SetCharacterAlphaEnabled(character, true);
     }
     EV_SetCharacterAlphaEnabled(AREA_0504_PROP, true);
-    clmdUtil(FindCharacterByScenarioName(AREA_0504_SIN), 0);
+    clmdUtil(ctrlGetScenarioChara(AREA_0504_SIN), 0);
 }
 void Update0504Waves(void *) {
     if (static_cast<std::uint8_t>(shenIsGamePaused()) != 0)

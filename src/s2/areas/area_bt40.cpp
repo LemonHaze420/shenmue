@@ -145,7 +145,7 @@ void BattleSetup() {
     for (int i = 0; i < 7; ++i)
         mtwkRequestMotion(scenFindMotionwork(characters[i]), i == 1 ? 0x29c1U : 306U, MotionRegion::LowerBody);
     for (int i = 0; i < 7; ++i)
-        SetMotionRegionFlag(scenFindMotionwork(characters[i]), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(characters[i]), 71, 0, MotionRegion::LowerBody);
     EVS_LoopCamera(9001, shen_name{0xffffffffU}, shen_name{0xffffffffU});
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     for (int i = 0; i < 7; ++i)
@@ -252,7 +252,7 @@ void FightSequence(void *parameter) {
         case 109:
             EnableScenarioCharacterDisplay(joy);
             EnsureScenarioCharacterDraw(joy);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(joy), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(joy), nullptr, 0);
             figpAssignModeFor(ryo, 0);
             for (int i = 2; i < 7; ++i)
                 figpAssignModeFor(characters[i], 0);
@@ -421,16 +421,16 @@ void ChallengeSequence(void *parameter) {
         case 101: {
             Vector3 p{};
             EV_GetCharaPosition(joy, 5, &p, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &p, 0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 3);
+            mtwkUpdateWithPosition(scenFindMotionwork(ryo), &p, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 3);
             EV_GetCharaPosition(ryo, 5, &p, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(joy), &p, 0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(joy), nullptr, 3);
+            mtwkUpdateWithPosition(scenFindMotionwork(joy), &p, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(joy), nullptr, 3);
             Wait(w, 2, 102, 105);
             break;
         }
         case 102:
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &leavePosition, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(ryo), &leavePosition, 0);
             Wait(w, 2, 103, 80);
             break;
         case 103:
@@ -440,8 +440,8 @@ void ChallengeSequence(void *parameter) {
             break;
         case 104:
             if (!filmCheckFadeTrackColour()) {
-                UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
-                UpdateMotionWorkWithPosition(scenFindMotionwork(joy), nullptr, 0);
+                mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+                mtwkUpdateWithPosition(scenFindMotionwork(joy), nullptr, 0);
                 Wait(w, 2, 111, 1);
             }
             break;
@@ -464,20 +464,20 @@ void Exit(Bt40BoutWork &w) {
     const auto result = w.result;
     ET_AT_KillWork(w.characters);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0xf004, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     if (DoesScenarioCharacterExist(joy)) {
         mtwkRequestMotion(scenFindMotionwork(joy), 0xf05f, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(joy), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(joy), 71, 0, MotionRegion::LowerBody);
     }
     flddSetPointFlagOnGrid(SHEN_NAME(BT40), 0);
     flddSetPointFlagOnGrid(SHEN_NAME(0000), 1);
     SetCharaKill(base, 1);
     EV_FreeAuthorPak(0, "0340");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BT40"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BT40"), 0);
     for (auto *motion = w.motions; *motion; ++motion)
         DeleteMotion(*motion);
     if (!mode)
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     FinishLoading();
     EV_SetObjectFlagByIndex(1, 1);
@@ -525,8 +525,8 @@ void BT40_event_function(std::uintptr_t parameter) {
     if (w.mode)
         SetPlayerGameFlags(static_cast<PlayerGameFlagMode>(22), nullptr);
     w.motions[0] = 0;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BT40"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BT40"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BT40"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BT40"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, base);
     EV_FreeAuthorPak(1, "0340");
     if (!w.mode) {

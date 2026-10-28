@@ -63,15 +63,15 @@ namespace model_component_detail {
 // The root's ground height follows its lower foot target. Stepping up while walking blends toward the raised foot's
 // ground; PLYM's ground blend then lifts the probe height.
 void ccmUpdateRootGroundHeight(CharacterControlModel &control) {
-    if ((control.flags & CharacterControlRootOwner) == 0)
+    if ((control.flags & CCMF_RootOwner) == 0)
         return;
     MotionWork *const motion = FindMotionWork(control.owner);
     if (!motion)
         return;
     Vector3 right{}, left{}, sampled{};
-    GetMotionControllerTargetPosition(motion, 6, right);
-    GetMotionControllerTargetPosition(motion, 5, left);
-    SampleNativeMotionRoot(GetMotionAnimationId(motion, MotionRegion::LowerBody), GetMotionRigBoneId(motion), -1.0f, sampled);
+    mtwkGetControllerTargetPosition(motion, 6, right);
+    mtwkGetControllerTargetPosition(motion, 5, left);
+    SampleNativeMotionRoot(mtwkGetAnimationId(motion, MotionRegion::LowerBody), mtwkGetRigBoneId(motion), -1.0f, sampled);
     if (plymIsSearchStartRequested()) {
         right = {right.x + control.frameDisplacement.x, right.y + control.frameDisplacement.y, right.z + control.frameDisplacement.z};
         left = {left.x + control.frameDisplacement.x, left.y + control.frameDisplacement.y, left.z + control.frameDisplacement.z};
@@ -89,7 +89,7 @@ void ccmUpdateRootGroundHeight(CharacterControlModel &control) {
     if (leftGround == kNoSceneIntersection)
         leftGround = control.groundHeight;
     float lower = std::fmin(rightGround, leftGround);
-    if ((control.flags & CharacterControlHeightStep) == 0)
+    if ((control.flags & CCMF_HeightStep) == 0)
         lower = std::fmin(lower, control.groundHeight);
     const float rise = std::fmax(rightGround, leftGround) - lower;
     float vertical{}, verticalSecond{}, blendX{}, blendZ{};
@@ -99,7 +99,7 @@ void ccmUpdateRootGroundHeight(CharacterControlModel &control) {
     plymGetControllerDeltaXZ(&firstDelta, &secondDelta);
     control.adjustedGroundHeight = lower;
     float lift = 0.0f;
-    const bool rightRaised = GetIsRHandAboveShoulder(motion);
+    const bool rightRaised = mtwkIsRightHandAboveShoulder(motion);
     const Vector3 &raised = rightRaised ? left : right;
     const Vector3 &other = rightRaised ? right : left;
     const Vector3 &delta = rightRaised ? firstDelta : secondDelta;
@@ -138,16 +138,16 @@ void ccmUpdateRootGroundHeight(CharacterControlModel &control) {
 void UpdateCharacterControlModel(Character *character, void *payload) {
     auto *const control = static_cast<CharacterControlModel *>(payload);
     if (!flddIsValid())
-        control->flags &= ~(CharacterControlUpdateHeight | CharacterControlApplyGravity | CharacterControlEvaluateMotion);
-    control->flags &= ~(CharacterControlNoGround | CharacterControlHeightStep);
+        control->flags &= ~(CCMF_UpdateHeight | CCMF_ApplyGravity | CCMF_EvaluateMotion);
+    control->flags &= ~(CCMF_NoGround | CCMF_HeightStep);
     control->appliedMovement = {};
     control->residualMovement = {};
-    if ((control->flags & CharacterControlResetMotion) != 0) {
+    if ((control->flags & CCMF_ResetMotion) != 0) {
         control->field04 = 0;
         control->verticalVelocity = 0.0f;
         control->field0c = 0;
     }
-    if ((control->flags & CharacterControlUpdateHeight) == 0)
+    if ((control->flags & CCMF_UpdateHeight) == 0)
         return;
 
     const Vector3 root = GetCharacterWorldPosition(character);
@@ -157,7 +157,7 @@ void UpdateCharacterControlModel(Character *character, void *payload) {
     control->groundHeight = shenFindIntersectionWithScene(point, point.y);
     point.y -= 1.0f;
     if (control->groundHeight == kNoSceneIntersection) {
-        control->flags |= CharacterControlNoGround;
+        control->flags |= CCMF_NoGround;
         control->groundHeight = root.y;
         control->groundPitch = 0;
         control->groundYaw = 0;
@@ -167,7 +167,7 @@ void UpdateCharacterControlModel(Character *character, void *payload) {
         control->groundPitch = angles.x;
         control->groundYaw = angles.y;
         if (control->groundHeight - control->previousGroundHeight >= 0.40000001f) {
-            control->flags |= CharacterControlHeightStep;
+            control->flags |= CCMF_HeightStep;
             control->groundHeight = root.y;
         }
     }
@@ -175,22 +175,22 @@ void UpdateCharacterControlModel(Character *character, void *payload) {
     control->adjustedGroundHeight = control->groundHeight;
     ccmUpdateRootGroundHeight(*control);
     const float groundCenter = control->adjustedGroundHeight + 0.40000001f;
-    if ((control->flags & CharacterControlApplyGravity) != 0) {
+    if ((control->flags & CCMF_ApplyGravity) != 0) {
         control->verticalVelocity = -0.010896279f * HLib::GetScaledDeltaTick() + control->verticalVelocity;
         point.y += control->verticalVelocity;
     }
 
     Vector3 offset = pending;
-    if ((control->flags & CharacterControlEvaluateMotion) != 0) {
+    if ((control->flags & CCMF_EvaluateMotion) != 0) {
         Vector3 contact{};
-        if ((control->flags & CharacterControlSnapToGround) != 0 && groundCenter + 0.03f > point.y) {
+        if ((control->flags & CCMF_SnapToGround) != 0 && groundCenter + 0.03f > point.y) {
             const float previous = point.y - control->verticalVelocity;
             contact.y = groundCenter;
             point.y = (groundCenter - previous) * 0.5f + previous;
             control->verticalVelocity = 0.0f;
         }
-        if ((control->flags & CharacterControlFineRaycast) != 0) {
-            if ((control->flags & CharacterControlFieldDataDebug) != 0)
+        if ((control->flags & CCMF_FineRaycast) != 0) {
+            if ((control->flags & CCMF_FieldDataDebug) != 0)
                 flddToggleFlag(32);
             if (RaycastInWorldGrid(contact, point, control->collisionRadius)) {
                 point.x = (contact.x - point.x) * 0.80000001f + point.x;
@@ -199,17 +199,17 @@ void UpdateCharacterControlModel(Character *character, void *payload) {
         }
         offset = {point.x - root.x, (point.y - root.y) - 0.40000001f, point.z - root.z};
         control->residualMovement = {(contact.x - root.x) - pending.x, ((contact.y - root.y) - 0.40000001f) - pending.y, (contact.z - root.z) - pending.z};
-        if ((control->flags & CharacterControlAlternateProbe) != 0) {
+        if ((control->flags & CCMF_AlternateProbe) != 0) {
             const Vector3 probe{offset.x + root.x, (offset.y + root.y) + 1.5f, offset.z + root.z};
             if (shenFindIntersectionWithScene(probe, probe.y) == kNoSceneIntersection) {
-                if ((control->flags & CharacterControlApplyGravity) != 0)
+                if ((control->flags & CCMF_ApplyGravity) != 0)
                     control->verticalVelocity = 0.0f;
                 offset.y = 0.0f;
-                if ((control->flags & CharacterControlFineCollision) != 0)
+                if ((control->flags & CCMF_FineCollision) != 0)
                     offset.x = offset.z = 0.0f;
             }
         }
-        if ((control->flags & (CharacterControlFineRaycast | CharacterControlFineCollision)) == (CharacterControlFineRaycast | CharacterControlFineCollision)) {
+        if ((control->flags & (CCMF_FineRaycast | CCMF_FineCollision)) == (CCMF_FineRaycast | CCMF_FineCollision)) {
             const Vector3 rayEnd{control->previousWorldPosition.x, control->previousWorldPosition.y + 0.40000001f, control->previousWorldPosition.z};
             Vector3 rayStart{offset.x + root.x, (offset.y + root.y) + 0.40000001f, offset.z + root.z};
             if (SquaredDistance(rayEnd, rayStart) < 0.090000004f) {
@@ -231,13 +231,13 @@ void UpdateCharacterControlModel(Character *character, void *payload) {
     const float vertical = offset.y - pending.y;
     float moveX = offset.x - pending.x;
     float moveZ = offset.z - pending.z;
-    if (vertical <= 0.0f && GetCharacterScenarioName(character).name != SHEN_NAME(BCYL))
+    if (vertical <= 0.0f && ctrlGetScenarioCharaName(character).name != SHEN_NAME(BCYL))
         control->verticalVelocity = vertical;
     control->collisionAdjustment.y = vertical;
     character->position = {offset.x, pending.y, offset.z};
     MotionWork *const motion = FindMotionWork(character);
     if (motion && (std::fabs(moveX) >= kCharacterControlEpsilon || std::fabs(moveZ) >= kCharacterControlEpsilon))
-        ApplyMotionCollisionTranslation(motion, moveX, 0.0f, moveZ);
+        mtwkApplyCollisionTranslation(motion, moveX, 0.0f, moveZ);
     if (std::fabs(moveX) < kCharacterControlEpsilon)
         moveX = 0.0f;
     if (std::fabs(moveZ) < kCharacterControlEpsilon)
@@ -286,21 +286,21 @@ void CharCollisionSort(Character *character, void *) {
     control->frameDisplacement = {
         translation.x - control->previousWorldPosition.x, translation.y - control->previousWorldPosition.y, translation.z - control->previousWorldPosition.z};
     control->previousWorldPosition = {translation.x + character->position.x, translation.y + character->position.y, translation.z + character->position.z};
-    if ((control->flags & CharacterControlResetMotion) != 0) {
+    if ((control->flags & CCMF_ResetMotion) != 0) {
         control->field04 = 0;
         control->verticalVelocity = 0.0f;
         control->field0c = 0;
         control->frameDisplacement = {};
         control->collisionAdjustment = {};
     }
-    control->flags &= ~CharacterControlResetMotion;
+    control->flags &= ~CCMF_ResetMotion;
     if (std::fabs(control->residualMovement.x) >= kCharacterControlEpsilon || std::fabs(control->residualMovement.z) >= kCharacterControlEpsilon)
-        control->flags |= CharacterControlMoving;
-    control->flags &= ~CharacterControlConversationMember;
+        control->flags |= CCMF_Moving;
+    control->flags &= ~CCMF_ConversationMember;
     control->displacementSquared = control->frameDisplacement.x * control->frameDisplacement.x + control->frameDisplacement.y * control->frameDisplacement.y +
         control->frameDisplacement.z * control->frameDisplacement.z;
     if (IsConversationCameraCharacter(character))
-        control->flags |= CharacterControlConversationMember;
+        control->flags |= CCMF_ConversationMember;
 
     control->collisionCenter.x = translation.x;
     control->collisionCenter.z = translation.z;
@@ -310,21 +310,21 @@ void CharCollisionSort(Character *character, void *) {
         clusterRadius = motionWork->runtime.clusterRadius;
     }
     control->collisionCenter.y = translation.y;
-    const bool preserveRadius = (control->flags & CharacterControlPreserveCollisionRadius) != 0;
+    const bool preserveRadius = (control->flags & CCMF_PreserveCollisionRadius) != 0;
     if (!preserveRadius)
         control->collisionCenterRadius = clusterRadius + 0.1f;
-    if ((control->flags & CharacterControlFineCollision) != 0) {
+    if ((control->flags & CCMF_FineCollision) != 0) {
         control->collisionCenter = translation;
         if (!preserveRadius)
             control->collisionCenterRadius = control->collisionRadius;
         if (plymIsSearchStartRequested() && plymIsSearchBlocked())
-            control->flags |= CharacterControlSearchBlocked;
+            control->flags |= CCMF_SearchBlocked;
         if (plymIsLookAllowed(64))
-            control->flags |= CharacterControlLookMode;
+            control->flags |= CCMF_LookMode;
     }
-    control->flags &= ~CharacterControlPreserveCollisionRadius;
-    if ((control->flags & CharacterControlIntersectionHit) != 0)
-        control->flags = (control->flags & ~CharacterControlIntersectionHit) | CharacterControlSearchBlocked;
+    control->flags &= ~CCMF_PreserveCollisionRadius;
+    if ((control->flags & CCMF_IntersectionHit) != 0)
+        control->flags = (control->flags & ~CCMF_IntersectionHit) | CCMF_SearchBlocked;
     coliPositionAdd(character, &control->collisionAdjustment);
     control->collisionAdjustment = {};
 }
@@ -344,7 +344,7 @@ void GatherCharacterControl(Character *character, void *context) {
 
     const std::uint32_t flags = control->flags;
     control->flags &= ~kCharacterControlGatherClearFlags;
-    if ((flags & 0x00000409U) != (CharacterControlUpdateHeight | CharacterControlVoxelSweep) || (HeaderForPayload(control)->flags & 1U) == 0)
+    if ((flags & 0x00000409U) != (CCMF_UpdateHeight | CCMF_VoxelSweep) || (HeaderForPayload(control)->flags & 1U) == 0)
         return;
     if (gather.count >= gather.controls.size()) {
         gather.full = true;
@@ -416,8 +416,8 @@ void ResolveCharacterControlPair(CharacterControlModel &first, CharacterControlM
     Vector3 secondShare{direction.x * secondScale, direction.y * secondScale, direction.z * secondScale};
 
     const std::uint32_t combined = first.flags | second.flags;
-    if ((combined & CharacterControlFineCollision) != 0 && (combined & CharacterControlImmovable) == 0 && (combined & CharacterControlLookMode) == 0) {
-        const bool firstFine = (first.flags & CharacterControlFineCollision) != 0;
+    if ((combined & CCMF_FineCollision) != 0 && (combined & CCMF_Immovable) == 0 && (combined & CCMF_LookMode) == 0) {
+        const bool firstFine = (first.flags & CCMF_FineCollision) != 0;
         CharacterControlModel &fine = firstFine ? first : second;
         CharacterControlModel &other = firstFine ? second : first;
         Vector3 &fineShare = firstFine ? firstShare : secondShare;
@@ -516,7 +516,7 @@ void ResolveCharacterControlPair(CharacterControlModel &first, CharacterControlM
         }
         if ((std::fabs(otherShare.x) >= kCharacterControlEpsilon || std::fabs(otherShare.y) >= kCharacterControlEpsilon ||
                 std::fabs(otherShare.z) >= kCharacterControlEpsilon) &&
-            (other.flags & (CharacterControlFineRaycast | CharacterControlEvaluateMotion)) == (CharacterControlFineRaycast | CharacterControlEvaluateMotion)) {
+            (other.flags & (CCMF_FineRaycast | CCMF_EvaluateMotion)) == (CCMF_FineRaycast | CCMF_EvaluateMotion)) {
             if (RaycastInWorldGrid(otherHit, otherProbe, other.collisionRadius) != 0 && !rayBlocked) {
                 otherHit.y += -0.40000001f;
                 otherShare = {otherHit.x - other.collisionCenter.x, otherHit.y - other.collisionCenter.y, otherHit.z - other.collisionCenter.z};
@@ -545,11 +545,11 @@ void ApplyCharacterControlPairAdjustment(CharacterControlModel &control) {
     const Vector3 adjustment = control.pairAdjustment;
     if ((std::fabs(adjustment.x) < kCharacterControlEpsilon && std::fabs(adjustment.y) < kCharacterControlEpsilon &&
             std::fabs(adjustment.z) < kCharacterControlEpsilon) ||
-        (control.flags & CharacterControlVoxelSweep) == 0) {
+        (control.flags & CCMF_VoxelSweep) == 0) {
         return;
     }
 
-    if ((control.flags & CharacterControlFineCollision) != 0) {
+    if ((control.flags & CCMF_FineCollision) != 0) {
         Vector3 rayEnd = control.previousWorldPosition;
         rayEnd.y += 0.40000001f;
         const Vector3 rayStart{rayEnd.x + adjustment.x, rayEnd.y + adjustment.y, rayEnd.z + adjustment.z};
@@ -748,7 +748,7 @@ float GetCharacterCollisionCapsuleMargin(const Character *character) {
 CharacterControlModel *SetCharacterCollisionCapsuleMargin(Character *character, float margin) {
     CharacterControlModel *const control = FindCharacterControlModel(character);
     if (control) {
-        control->flags |= CharacterControlPreserveCollisionRadius;
+        control->flags |= CCMF_PreserveCollisionRadius;
         control->collisionCenterRadius = margin;
     }
     return control;

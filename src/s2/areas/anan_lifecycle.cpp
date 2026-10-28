@@ -77,12 +77,12 @@ void AnanFinish(void *data) {
         }
         AnanFilm(32, 255, 0);
         spmFadeOut();
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
         const char *packages[]{"ANANFIR2", "ANANFIR3", "ANANFIR1", "ANANSCC", "ANANSCC", "ANANTIOF", "ANANANGR", "ANANSTRT", "ANAN"};
         for (const char *package : packages) {
-            if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
-                EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+            if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
+                EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
         }
         if (lifecycle & 4U) {
             EV_FreeAuthorPak(0, "0020");
@@ -197,10 +197,10 @@ void AnanBeginFirstChoice(void *data) {
     }
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_RYO), 0);
     mtwkRequestMotion(scenFindMotionwork(ANAN_RYO), 0xf002, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_MAN), 0);
     mtwkRequestMotion(scenFindMotionwork(ANAN_MAN), 0xf087, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
     ApplyAnanPlacements(ananFirstChoicePlacement);
     AnanSelectCamera(1514);
     std::int16_t choices[]{-1, 90, 83, -1};
@@ -219,12 +219,12 @@ void AnanWaitFirstChoice(void *data) {
     if (shenGetCtrlSpeakIconFlag() == 90) {
         mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_RYO), 0);
         mtwkRequestMotion(scenFindMotionwork(ANAN_RYO), 0xf003, MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_MAN), 0);
         mtwkRequestMotion(scenFindMotionwork(ANAN_MAN), 0x67c5, MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
-        SetMotionLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), 40, MotionRegion::LowerBody);
-        SetMotionRegionEvalTime(scenFindMotionwork(ANAN_MAN), 40, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
+        mtwkSetLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), 40, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(scenFindMotionwork(ANAN_MAN), 40, MotionRegion::LowerBody);
         HLib::SetCurrentTaskTo(AnanExplain);
         HLib::SetupTaskDelay(-1);
         QueueAnanVoice("0020A002", 0, 80, nullptr);
@@ -234,18 +234,18 @@ void AnanWaitFirstChoice(void *data) {
         ApplyAnanPlacements(ananDeclinePlacement);
         mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_RYO), 0);
         mtwkRequestMotion(scenFindMotionwork(ANAN_RYO), 0xf003, MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_MAN), 0);
         mtwkRequestMotion(scenFindMotionwork(ANAN_MAN), 0xf087, MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
         HLib::SetCurrentTaskTo(AnanFinish);
         HLib::SetupTaskDelay(-1);
         QueueAnanVoice("0020A001", 0, 120, nullptr);
         QueueAnanVoice("0020B024", 130, 200, AnanVoiceResumeCaller);
         QueueAnanCamera(1902, 130);
     }
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("ANANSTRT"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ANANSTRT"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("ANANSTRT"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ANANSTRT"), 0);
 }
 void AnanExplain(void *data) {
     AnanWork *work = static_cast<AnanWork *>(data);
@@ -263,14 +263,14 @@ void AnanExplain(void *data) {
     ApplyAnanPlacements(ananExplanationPlacement);
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_RYO), 0);
     mtwkRequestMotion(scenFindMotionwork(ANAN_RYO), 0xf003, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(ANAN_RYO), 71, 0, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ANAN_RYO), 1.2f, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ANAN_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_RYO), 1.2f, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_MAN), 0);
     mtwkRequestMotion(scenFindMotionwork(ANAN_MAN), 0x67c6, MotionRegion::LowerBody);
-    SetMotionLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), 220, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(ANAN_MAN), 220, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(ANAN_MAN), 71, 0, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ANAN_MAN), 1.2f, MotionRegion::LowerBody);
+    mtwkSetLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), 220, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(scenFindMotionwork(ANAN_MAN), 220, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ANAN_MAN), 71, 0, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_MAN), 1.2f, MotionRegion::LowerBody);
     AnanFilm(32, 255, 0);
     HLib::SetCurrentTaskTo(AnanInitializeGame);
     HLib::SetupTaskDelay(-1);
@@ -299,9 +299,9 @@ void AnanBeginAngry(void *data) {
     }
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_MAN), 0);
     mtwkRequestMotion(scenFindMotionwork(ANAN_MAN), 0x67c4, MotionRegion::LowerBody);
-    SetMotionLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), 180, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(ANAN_MAN), 180, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
+    mtwkSetLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), 180, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(scenFindMotionwork(ANAN_MAN), 180, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ANAN_MAN), 9, 2);
     HLib::SetCurrentTaskTo(AnanPlayAngryAuthor);
     HLib::SetupTaskDelay(-1);
@@ -349,9 +349,9 @@ void AnanBeginTimeOver(void *data) {
     const bool straight = AnanIsStraight(work);
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_MAN), 0);
     mtwkRequestMotion(scenFindMotionwork(ANAN_MAN), straight ? 0x67c3 : 0x67c8, MotionRegion::LowerBody);
-    SetMotionLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), 180, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(ANAN_MAN), 180, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
+    mtwkSetLayerLoopStartTime(scenFindMotionwork(ANAN_MAN), 180, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(scenFindMotionwork(ANAN_MAN), 180, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_MAN), 1, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ANAN_MAN), 9, 2);
     HLib::SetCurrentTaskTo(AnanPlayTimeOverAuthor);
     HLib::SetupTaskDelay(-1);
@@ -471,7 +471,7 @@ void AnanOfferRetry(void *data) {
     EV_AT_SetPos(ANAN_RYO, EventTransformFlags::AllAxes, position);
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_RYO), 0);
     mtwkRequestMotion(scenFindMotionwork(ANAN_RYO), 0xf003, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
     const Vector3i rotation{0, 13471, 0};
     EV_AT_SetAngY(ANAN_RYO, EventTransformFlags::AllAxes, rotation);
     mtwkSetExtraFlag(scenFindMotionwork(ANAN_RYO), 17, 0);
@@ -489,8 +489,8 @@ void AnanWaitRetry(void *data) {
     }
     if (GetShouldRenderIcons(RenderIconSlot::ActionSelector))
         return;
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("ANANFIR1"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ANANFIR1"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("ANANFIR1"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ANANFIR1"), 0);
     if (shenGetCtrlSpeakIconFlag() != 152) {
         EV_NPC_NewLoadSw(0);
         EV_ResetFreeTalkFlags();
@@ -507,11 +507,11 @@ void AnanWaitRetry(void *data) {
     mtwkSetExtraFlag(scenFindMotionwork(ANAN_RYO), 17, 0);
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_RYO), 0);
     mtwkRequestMotion(scenFindMotionwork(ANAN_RYO), 0xf003, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_RYO), 1, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(ANAN_MAN), 0);
     mtwkRequestMotion(scenFindMotionwork(ANAN_MAN), 0x67c2, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ANAN_MAN), .89999998f, MotionRegion::LowerBody);
-    EV_mtwkSetEnabled(scenFindMotionwork(ANAN_MAN), 0);
+    mtwkSetSpeed(scenFindMotionwork(ANAN_MAN), .89999998f, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(ANAN_MAN), 0);
     ApplyAnanPlacements(ananRetryPlacement);
     HLib::SetCurrentTaskTo(AnanRetry);
     HLib::SetupTaskDelay(-1);

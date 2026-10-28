@@ -73,7 +73,7 @@ void DrawNpcActiveHumans() {
                     SetCharacterUnknownFlag(slot.node, 1);
                 }
                 modelSetCharaAlpha(slot.node, alpha);
-            } else if (npcNewLoadState && LoadNativeNpcHuman(slot.character, slot.character, false) == 1) {
+            } else if (npcNewLoadState && npcLoadHuman(slot.character, slot.character, false) == 1) {
                 MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
                 slot.node = scenFindChara(control ? control->scenarioTask : nullptr, slot.character);
                 if (slot.node) {
@@ -82,7 +82,7 @@ void DrawNpcActiveHumans() {
                     modelSetCharaAlpha(slot.node, 0.0f);
                     shenApplyTranslationToAll(&slot.node->entity.node, slot.position);
                     rotation.y = slot.yaw;
-                    SetCharacterWorldRotation(slot.node, rotation);
+                    charaSetWorldRot(slot.node, rotation);
                     if (slot.motions)
                         InitializeTimedNodeMotion(npcTransitionMotionCaches[slot.motionCacheIndex], static_cast<MT7Model *>(slot.node->model),
                             slot.motions[static_cast<std::int8_t>(slot.motionCursor)]);
@@ -92,7 +92,7 @@ void DrawNpcActiveHumans() {
             SetCharacterUnknownFlag(slot.node, 0);
             const float alpha = charaGetAlphaDraw(slot.node);
             if (alpha <= 0.00000011920929f) {
-                ReleaseNativeNpcHumanPackage(slot.character);
+                npcReleasePak(slot.character);
                 slot.node = nullptr;
             } else {
                 float nextAlpha = alpha - 0.050000001f;
@@ -153,7 +153,7 @@ void InterpolateNpcActiveHumans() {
                 rotation = {};
                 ComputeNpcRouteResetFacing(entry->previousPosition, entry->position, rotation);
                 const std::int16_t difference = static_cast<std::int16_t>(rotation.y - oldYaw);
-                SetCharacterWorldRotation(node, rotation);
+                charaSetWorldRot(node, rotation);
                 model = static_cast<MT7Model *>(node->model);
                 model->nodes[0].rotation.x = ComputeNpcRouteResetPitch(entry->previousPosition, entry->position, static_cast<std::int16_t>(rotation.y));
                 if (MT7Node *const child = GetChildObjectByIndex(*model, model->nodes.data(), 0x99))
@@ -199,7 +199,7 @@ void InterpolateNpcActiveHumans() {
                         SetCharacterUnknownFlag(node, 1);
                     }
                     modelSetCharaAlpha(node, alpha);
-                } else if (npcNewLoadState && LoadNativeNpcHuman(entry->character, entry->character, false) == 1) {
+                } else if (npcNewLoadState && npcLoadHuman(entry->character, entry->character, false) == 1) {
                     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
                     node = scenFindChara(control ? control->scenarioTask : nullptr, entry->character);
                     entry->nodeOffset = node ? HLib::GetDynamicHeapOffset(node) : 0;
@@ -219,7 +219,7 @@ void InterpolateNpcActiveHumans() {
                 SetCharacterUnknownFlag(node, 0);
                 const float alpha = charaGetAlphaDraw(node);
                 if (alpha <= 0.00000011920929f) {
-                    ReleaseNativeNpcHumanPackage(entry->character);
+                    npcReleasePak(entry->character);
                     entry->nodeOffset = 0;
                 } else {
                     float nextAlpha = alpha - 0.050000001f;

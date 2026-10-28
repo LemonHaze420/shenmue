@@ -121,8 +121,8 @@ void InitializeRenQteEntry(RenQteWork *work) {
     AT_SetLocalBaseChara(REN_QTE_REN, work->base);
     mtwkSetRequestedRootMode(scenFindMotionwork(REN_QTE_PLAYER), 3);
     mtwkSetRequestedRootMode(scenFindMotionwork(REN_QTE_REN), 3);
-    SetMotionFrameTime(scenFindMotionwork(REN_QTE_PLAYER), 5, MotionRegion::LowerBody);
-    SetMotionFrameTime(scenFindMotionwork(REN_QTE_REN), 5, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(REN_QTE_PLAYER), 5, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(REN_QTE_REN), 5, MotionRegion::LowerBody);
     EV_EnableCharacterDisplay(REN_QTE_DOOR);
     EV_DisableCharacterDisplay(REN_QTE_BROKEN_DOOR);
     switch (work->entry->type) {

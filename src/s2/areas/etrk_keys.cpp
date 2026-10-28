@@ -162,8 +162,8 @@ std::int32_t EtrkTryKey(EtrkWork &work) {
     EV_EnableCharacterDisplay(ETRK_RYO);
     EV_DisableCharacterDisplay(ETRK_HAND);
     EVT_AT_ObjectDisp_1(key, 0, 0);
-    ApplyCharacterHandRotation(FindCharacterByScenarioName(ETRK_RYO), 0, 21, &etrkPlayerHandRotation);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ETRK_RYO), 0, reinterpret_cast<std::byte *>(etrkKeyHand), 0);
+    ApplyCharacterHandRotation(ctrlGetScenarioChara(ETRK_RYO), 0, 21, &etrkPlayerHandRotation);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ETRK_RYO), 0, reinterpret_cast<std::byte *>(etrkKeyHand), 0);
     EVT_AT_SetCam(1300, work.board, work.board, 0, 0, 0);
     EVT_AT_SetPos(ETRK_RYO, work.board, Vector3{-.074000001f, -1.3940001f, .79799998f}, 0);
     EVT_AT_SetAngY(ETRK_RYO, work.board, 0, 0);
@@ -225,9 +225,9 @@ std::int32_t EtrkTryKey(EtrkWork &work) {
 void EtrkOpenBoard(EtrkWork &work) {
     EV_EnableCharacterDisplay(ETRK_RYO);
     EV_DisableCharacterDisplay(ETRK_HAND);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ETRK_RYO), 0, reinterpret_cast<std::byte *>(etrkOpenHand), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ETRK_RYO), 0, reinterpret_cast<std::byte *>(etrkReturnHand), 40);
-    ApplyCharacterHandRotation(FindCharacterByScenarioName(ETRK_RYO), 0, 21, &etrkPlayerHandRotation);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ETRK_RYO), 0, reinterpret_cast<std::byte *>(etrkOpenHand), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ETRK_RYO), 0, reinterpret_cast<std::byte *>(etrkReturnHand), 40);
+    ApplyCharacterHandRotation(ctrlGetScenarioChara(ETRK_RYO), 0, 21, &etrkPlayerHandRotation);
     EVT_AT_SetCam(1310, work.board, work.board, 0, 0, 0);
     EVT_AT_SetPos(ETRK_RYO, work.board, Vector3{-.11f, -1.355f, .73000002f}, 0);
     EVT_AT_SetAngY(ETRK_RYO, work.board, 0, 0);

@@ -47,8 +47,8 @@ void QF40HurryStartCallback(void *) {
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("BT40"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("BT40"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     qf40BattleState = 1;
     ExecuteCurrAreaMainFunc_Wrapper(3, reinterpret_cast<std::uintptr_t>(&qf40BattleState));
     HLib::SetCurrentTaskTo(QF40StartStairAuthorCallback);
@@ -59,11 +59,11 @@ void QF40StartStairAuthorCallback(void *) {
         return;
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("0273A"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     ExecuteCurrAreaMainFunc_Wrapper(3, 1);
     HLib::DestroyCurrentTask();
 }

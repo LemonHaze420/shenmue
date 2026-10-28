@@ -41,7 +41,7 @@ void Start0518(std::uintptr_t) {
     parent->state = 0;
     parent->selection = 0;
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 22;
     time.minute = 0;
     SetCurrentDateTimeTo(time);
@@ -106,7 +106,7 @@ void Cleanup0518(AuthorViewerPairTaskParameter *parent) {
     FreeParticleEffect(4, stationaryFire0518);
     FreeParticleEffect(4, carriedFire0518);
     for (const shen_name *character = AREA_0518_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -193,7 +193,7 @@ void Prepare0518Characters() {
     EV_SetCharacterAlphaEnabled(AREA_0518_a466, false);
     EV_SetCharacterAlphaEnabled(AREA_0518_a468, false);
     EV_SetCharacterAlphaEnabled(AREA_0518_a470, false);
-    clmdUtil(FindCharacterByScenarioName(AREA_0518_SIN_), 11);
+    clmdUtil(ctrlGetScenarioChara(AREA_0518_SIN_), 11);
 }
 
 // @verified - p
@@ -207,7 +207,7 @@ void Restore0518Characters() {
     EV_SetCharacterAlphaEnabled(AREA_0518_a466, true);
     EV_SetCharacterAlphaEnabled(AREA_0518_a468, true);
     EV_SetCharacterAlphaEnabled(AREA_0518_a470, true);
-    clmdUtil(FindCharacterByScenarioName(AREA_0518_SIN_), 0);
+    clmdUtil(ctrlGetScenarioChara(AREA_0518_SIN_), 0);
 }
 
 const ScriptAreaDefinition area0518ScriptDefinition{.areaId = AREA_0518, .field04 = 0, .init = Initialize0518, .main = Start0518};

@@ -67,7 +67,7 @@ void ChangePositionCallback(void *);
 void DandelionLoopCallback(void *);
 void ResetActorMotion(shen_name actor, std::uint16_t animation) {
     mtwkSetExtraFlag(scenFindMotionwork(actor), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(actor), 13, 0);
     mtwkRequestMotion(scenFindMotionwork(actor), animation, MotionRegion::LowerBody);
 }
@@ -82,7 +82,7 @@ void LoadCompanion(HLib::Task *continuation) {
 void AssignMazeEvent(std::int32_t state, Vector3 position, std::uint32_t yaw, std::uint32_t unit) {
     shenToggleAreaFlags(0);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 13, 0);
     EV_PTYCUtils(shenhua, 3, 1);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0xf003, MotionRegion::LowerBody);
@@ -91,7 +91,7 @@ void AssignMazeEvent(std::int32_t state, Vector3 position, std::uint32_t yaw, st
     eventParameters.position = position;
     eventParameters.yaw = yaw;
     if (unit == 0xffffffffU)
-        unit = static_cast<std::uint32_t>(GetCharacterMazeUnitIndex(FindCharacterByScenarioName(ryo)));
+        unit = static_cast<std::uint32_t>(GetCharacterMazeUnitIndex(ctrlGetScenarioChara(ryo)));
     Vector3 unitPosition;
     GetMazeUnitPosition(static_cast<std::int32_t>(unit), &unitPosition);
     const Vector3i unitRotation{0, static_cast<std::int32_t>(GetMazeUnitYaw(static_cast<std::int32_t>(unit))), 0};
@@ -105,7 +105,7 @@ void AssignAbsoluteEvent(std::int32_t state, Vector3 position, std::uint32_t yaw
     shenToggleAreaFlags(0);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0xf003, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 13, 0);
     EV_PTYCUtils(shenhua, 3, 1);
     ResetActorMotion(shenhua, 0x9502);
@@ -199,7 +199,7 @@ void DandelionExitCallback(void *) {
     HLib::SetCurrentTaskTo(EventBombCallback);
     for (std::uint32_t i = 0; i != 100; ++i) {
         const shen_name name{14177U | ((i / 10 + 48U) << 16) | ((i % 10 + 48U) << 24)};
-        if (FindCharacterByScenarioName(name)) {
+        if (ctrlGetScenarioChara(name)) {
             ToggleScenarioCharacterFlag(name);
             DisableScenarioCharacterDisplay(name);
             EV_SetCharacterAlphaEnabled(name, true);
@@ -412,7 +412,7 @@ void LastAuthorRouteSetupCallback(void *) {
 void FinishLastAuthorCallback(void *) {
     shenSetClockAndCompassRenderTo(1);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (date.hour < 17) {
         date.hour = 17;
         date.minute = 2;
@@ -473,18 +473,18 @@ constexpr ForestRelocation relocations[]{
     {"GOURYU3", 792, 0, 1, 8, {}, 0, {}},
 };
 void UpdateDangerFlags() {
-    Character *player = FindCharacterByScenarioName(ryo);
+    Character *player = ctrlGetScenarioChara(ryo);
     if (IsCharacterWithinMazeMarkerRadius(player, 3, 10.0f) && EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1441) == 1) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1440, 0);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1675, 0);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1441, 0);
     }
-    player = FindCharacterByScenarioName(ryo);
+    player = ctrlGetScenarioChara(ryo);
     if (IsCharacterWithinMazeMarkerRadius(player, 11, 15.0f) && !EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1441)) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1440, 1);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1441, 1);
     }
-    player = FindCharacterByScenarioName(ryo);
+    player = ctrlGetScenarioChara(ryo);
     if (IsCharacterWithinMazeMarkerRadius(player, 11, 7.0f)) {
         if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1441)) {
             EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1440, 1);
@@ -517,7 +517,7 @@ bool CheckRelocation() {
 bool CheckTriggers() {
     for (std::uint32_t i = 0; i != 10; ++i) {
         const ForestTrigger &row = triggers[i];
-        if (!IsCharacterWithinMazeMarkerRadius(FindCharacterByScenarioName(ryo), row.marker, row.radius) || !EV_GetShenmueFlag(row.story))
+        if (!IsCharacterWithinMazeMarkerRadius(ctrlGetScenarioChara(ryo), row.marker, row.radius) || !EV_GetShenmueFlag(row.story))
             continue;
         shenToggleAreaFlags(2);
         SetPlayerControlEnabled(0);
@@ -548,7 +548,7 @@ bool CheckTimeOver() {
     if (!EV_GetShenmueFlag(1111))
         return false;
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 902)) {
         if ((date.hour < 16 || date.minute < 30) && date.hour < 17)
             return false;
@@ -575,21 +575,21 @@ void ChangePositionCallback(void *) {
     position.y = shenFindIntersectionWithScene(position, position.y);
     EV_AT_SetPos(shenhua, EventTransformFlags::AllAxes, position);
     mtwkSetExtraFlag(scenFindMotionwork(shenhua), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(shenhua), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(shenhua), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(shenhua), 13, 0);
     mazeGetMarkerPosition(playerMarker, &position);
     position.y = 100.0f;
     position.y = shenFindIntersectionWithScene(position, position.y);
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, position);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 13, 0);
     forceEvent = (forceEvent & 0xffffffff00000000ULL) | 1;
     HLib::SetCurrentTaskTo(EventBombCallback);
 }
 void TimeOverLockCallback(void *) {
     HLib::SetCurrentTaskTo(TimeOverSetupCallback);
-    if (!FindCharacterByScenarioName(shenhua)) {
+    if (!ctrlGetScenarioChara(shenhua)) {
         HLib::SetupTaskDelay(0);
         LoadCompanion(HLib::GetCurrentTask());
     }
@@ -628,7 +628,7 @@ constexpr Vector3 cameraPositions[]{
     {-164.462600708008f, 34.7047996520996f, -846.694580078125f},
 };
 void EventBombCallback(void *) {
-    if (GetCharacterMazeUnitIndex(FindCharacterByScenarioName(ryo)) == 5) {
+    if (GetCharacterMazeUnitIndex(ctrlGetScenarioChara(ryo)) == 5) {
         Vector3 playerPosition;
         EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &playerPosition, EventTransformFlags::World);
         const Vector3 *target = nullptr;
@@ -798,7 +798,7 @@ void AreaKMZ4Main(std::uint32_t parameters) {
     EV_UpdateWeatherForMinute(0, 0, 0, 0.0f);
     EV_UpdateWeatherForMinute(1, 0, 0, 0.0f);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (static_cast<std::uint8_t>(date.hour - 8) > 14U) {
         date.hour = 8;
         date.minute = 0;

@@ -32,9 +32,9 @@ void PatiGreeting(PatiEventWork *ctx) {
     PatiGameWork *v24;
     std::int64_t v25;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, ctx->delay);
     shenGetRandomInt32(2);
@@ -143,9 +143,9 @@ void PatiExplainRules(PatiEventWork *ctx) {
     const char *v11;
     std::int16_t RandomInt32;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, ctx->delay);
     QueuePatiVoice(&ctx->game, "A003", &ctx->delay);
@@ -270,9 +270,9 @@ void PatiExplainMuseumBoard(PatiEventWork *ctx) {
     PatiGameWork *v9;
     const char *v10;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, ctx->delay);
     QueuePatiVoice(&ctx->game, "A025", &ctx->delay);
@@ -358,9 +358,9 @@ void PatiCancel(PatiEventWork *ctx) {
     std::int16_t v7;
     const char *v8;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     p_start_frm = &ctx->delay;
     SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, ctx->delay);
@@ -384,9 +384,9 @@ void PatiAcceptPlay(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, ctx->delay);
     RandomInt32 = shenGetRandomInt32(2);
@@ -401,9 +401,9 @@ void PatiChooseBoard(PatiEventWork *ctx) {
     Character *Chara;
     Character *v3;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     QueuePatiVoice(&ctx->game, "B037", &ctx->delay);
@@ -419,9 +419,9 @@ void PatiSelectionReminder(PatiEventWork *ctx) {
 
     start_frame = 0;
     g_patiCameraTime = 99999;
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 2, 10.0, 1.0);
     RandomInt32 = shenGetRandomInt32(3);
     if (RandomInt32 == 1) {
@@ -442,9 +442,9 @@ void PatiBoardSelected(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     RandomInt32 = shenGetRandomInt32(0);
     v5 = "A009";
@@ -461,9 +461,9 @@ void PatiInsufficientFunds(PatiEventWork *ctx) {
     signed int *p_start_frm;
     PatiGameWork *p_gameData;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     SetPatiCamera((g_patiDealerCamera + 1), ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(3);
@@ -488,9 +488,9 @@ void PatiLowerStake(PatiEventWork *ctx) {
     PatiGameWork *v6;
     const char *v7;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     v4 = &ctx->delay;
     SetPatiCamera((g_patiDealerCamera + 1), ctx->dealer, ctx->dealer, ctx->delay);
@@ -523,7 +523,7 @@ void PatiWin(PatiEventWork *ctx) {
     Character *v17;
     std::int16_t v18;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
     p_start_frm = &ctx->delay;
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
@@ -531,7 +531,7 @@ void PatiWin(PatiEventWork *ctx) {
     PatiDebugLog((char *)"PATI\\ePATI_et_patinko.c", 1452, (char *)"(%i,", Type + ctx->payout - ctx->totalBet);
     PatiDebugLog((char *)"PATI\\ePATI_et_patinko.c", 1453, (char *)"%i)", 5 * ctx->bet);
     if ((int)(GetPatiPayout(ctx) + ctx->payout - ctx->totalBet) >= 5 * ctx->bet) {
-        v5 = FindCharacterByScenarioName(ctx->dealer);
+        v5 = ctrlGetScenarioChara(ctx->dealer);
         SetHighModelAndFaceFlagsForChara(v5, 10, 10.0, 1.0);
         PatiDebugLog((char *)"PATI\\ePATI_et_patinko.c", 1456, (char *)" Now win, and total win over 5x");
         RandomInt32 = shenGetRandomInt32(3);
@@ -557,7 +557,7 @@ void PatiWin(PatiEventWork *ctx) {
     v12 = GetPatiPayout(ctx);
     v13 = ctx->dealer;
     if (ctx->payout - ctx->totalBet + v12 < 0) {
-        v17 = FindCharacterByScenarioName(v13);
+        v17 = ctrlGetScenarioChara(v13);
         SetHighModelAndFaceFlagsForChara(v17, 2, 10.0, 1.0);
         PatiDebugLog((char *)"PATI\\ePATI_et_patinko.c", 1494, (char *)"Now win, but  total lose");
         v18 = shenGetRandomInt32(2);
@@ -567,7 +567,7 @@ void PatiWin(PatiEventWork *ctx) {
             v9 = "B067";
         goto LABEL_18;
     }
-    v14 = FindCharacterByScenarioName(v13);
+    v14 = ctrlGetScenarioChara(v13);
     SetHighModelAndFaceFlagsForChara(v14, 3, 10.0, 1.0);
     PatiDebugLog((char *)"PATI\\ePATI_et_patinko.c", 1474, (char *)" Now win, and total win less 5x");
     v15 = shenGetRandomInt32(4);
@@ -601,9 +601,9 @@ void PatiFirstDoubleWin(PatiEventWork *ctx) {
     const char *v9;
     std::int16_t v10;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     p_start_frm = &ctx->delay;
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
@@ -656,9 +656,9 @@ void PatiDoubleWin(PatiEventWork *ctx) {
     PatiGameWork *p_gameData;
     const char *v7;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(6);
@@ -699,9 +699,9 @@ void PatiFinalDoubleWin(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v7;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 10, 10.0, 1.0);
     v4 = &ctx->delay;
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
@@ -724,9 +724,9 @@ void PatiFirstChallengeWin(PatiEventWork *ctx) {
     PatiGameWork *v6;
     const char *v7;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(4);
@@ -756,9 +756,9 @@ void PatiChallengeWin(PatiEventWork *ctx) {
     signed int *v5;
     PatiGameWork *v6;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(3);
@@ -785,9 +785,9 @@ void PatiFinalChallengeWin(PatiEventWork *ctx) {
     PatiGameWork *v8;
     const char *v9;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 4, 10.0, 1.0);
     v4 = &ctx->delay;
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
@@ -823,9 +823,9 @@ void PatiLose(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v12;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     v4 = ctx->totalBet - ctx->payout;
@@ -867,9 +867,9 @@ void PatiDoubleLose(PatiEventWork *ctx) {
     PatiGameWork *p_gameData;
     const char *v10;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 4, 15.0, 1.0);
     EVT_AT_SetFaceLooks(ctx->dealer, FacialExpressionId::Smile, 15, 1.0f, 20);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
@@ -901,9 +901,9 @@ void PatiFirstChallengeLose(PatiEventWork *ctx) {
     signed int *p_start_frm;
     PatiGameWork *p_gameData;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(3);
@@ -927,9 +927,9 @@ void PatiChallengeLose(PatiEventWork *ctx) {
     signed int *v5;
     PatiGameWork *v6;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(3);
@@ -953,9 +953,9 @@ void PatiFinalChallengeLose(PatiEventWork *ctx) {
     signed int *v5;
     PatiGameWork *v6;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(3);
@@ -978,9 +978,9 @@ void PatiOfferReplay(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(2);
@@ -997,9 +997,9 @@ void PatiOfferDouble(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     RandomInt32 = shenGetRandomInt32(2);
     v5 = "E067";
@@ -1015,9 +1015,9 @@ void PatiAcceptContinue(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     SetPatiCamera((g_patiPlayerCamera + 1), PATI_PLAYER, PATI_PLAYER, ctx->delay);
     RandomInt32 = shenGetRandomInt32(2);
@@ -1034,9 +1034,9 @@ void PatiDeclineContinue(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera((g_patiPlayerCamera + 1), PATI_PLAYER, PATI_PLAYER, ctx->delay);
     RandomInt32 = shenGetRandomInt32(2);
@@ -1054,9 +1054,9 @@ void PatiOfferChallenge(PatiEventWork *ctx) {
     signed int *v5;
     PatiGameWork *v6;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     RandomInt32 = shenGetRandomInt32(3);
     v5 = &ctx->delay;
@@ -1076,9 +1076,9 @@ void PatiFinalChallengeRound(PatiEventWork *ctx) {
     Character *Chara;
     Character *v3;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     QueuePatiVoice(&ctx->game, "D069", &ctx->delay);
     QueuePatiVoice(&ctx->game, "D070", &ctx->delay);
@@ -1089,9 +1089,9 @@ void PatiAfterDouble(PatiEventWork *ctx) {
     Character *Chara;
     Character *v3;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     QueuePatiVoice(&ctx->game, "E065", &ctx->delay);
@@ -1106,9 +1106,9 @@ void PatiAfterChallenge(PatiEventWork *ctx) {
     PatiGameWork *v6;
     const char *v7;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera((g_patiDealerCamera + 1), ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(3);
@@ -1136,9 +1136,9 @@ void PatiPrizeExhausted(PatiEventWork *ctx) {
     signed int *p_start_frm;
     PatiGameWork *p_gameData;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 12, 10.0, 1.0);
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
     RandomInt32 = shenGetRandomInt32(3);
@@ -1164,9 +1164,9 @@ void PatiRejectSameDoubleBoard(PatiEventWork *ctx) {
     const char *v7;
     std::int16_t v8;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     RandomInt32 = shenGetRandomInt32(2);
     p_start_frm = &ctx->delay;
@@ -1195,9 +1195,9 @@ void PatiRejectOtherChallengeBoard(PatiEventWork *ctx) {
     const char *v7;
     std::int16_t v8;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     RandomInt32 = shenGetRandomInt32(2);
     v5 = &ctx->delay;
@@ -1223,9 +1223,9 @@ void PatiStuck(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 7, 10.0, 1.0);
     SetPatiCamera((g_patiDealerCamera + 1), ctx->dealer, ctx->dealer, ctx->delay);
     SetPatiMotion(ctx->dealer, ctx->motions->concern, 0.0, 1.0, ctx->delay);
@@ -1250,9 +1250,9 @@ void PatiClosing(PatiEventWork *ctx) {
     std::int16_t v8;
     const char *v9;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 7, 10.0, 1.0);
     p_start_frm = &ctx->delay;
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
@@ -1279,9 +1279,9 @@ void PatiSelectGameCount(PatiEventWork *ctx) {
     PatiGameWork *v6;
     const char *v7;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     v4 = &ctx->delay;
     SetPatiCamera((g_patiDealerCamera + 1), ctx->dealer, ctx->dealer, ctx->delay);
@@ -1308,10 +1308,10 @@ void PatiPrizeResult(PatiEventWork *ctx) {
     PatiGameWork *p_gameData;
     signed int *p_start_frm;
 
-    ryo = FindCharacterByScenarioName(PATI_PLAYER);
+    ryo = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(ryo, 0, 10.0, 1.0);
 
-    npc = FindCharacterByScenarioName(ctx->dealer);
+    npc = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(npc, 3, 10.0, 1.0);
 
     SetPatiCamera(g_patiDealerCamera, ctx->dealer, ctx->dealer, ctx->delay);
@@ -1352,7 +1352,7 @@ void PatiPrizeResult(PatiEventWork *ctx) {
 void PatiMissingDealer(PatiEventWork *ctx) {
     Character *Chara;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
     SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, ctx->delay);
     QueuePatiVoice(&ctx->game, "A017", &ctx->delay);
@@ -1365,9 +1365,9 @@ void PatiDealerVersusWin(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 3, 10.0, 1.0);
     SetPatiCamera((g_patiDealerCamera + 2), ctx->dealer, ctx->dealer, ctx->delay);
     SetPatiMotion(ctx->dealer, 6055, 0.0, 1.0, ctx->delay);
@@ -1385,9 +1385,9 @@ void PatiDealerVersusLose(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 2, 10.0, 1.0);
     SetPatiCamera((g_patiDealerCamera + 2), ctx->dealer, ctx->dealer, ctx->delay);
     SetPatiMotion(ctx->dealer, 6045, 0.0, 1.0, ctx->delay);
@@ -1404,7 +1404,7 @@ void PatiPlayerTurn(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v4;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
     SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, ctx->delay);
     SetPatiMotion(PATI_PLAYER, 6042, 0.0, 1.0, ctx->delay);
@@ -1422,7 +1422,7 @@ void PatiPlayerVersusWin(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v4;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 3, 10.0, 0.5);
     SetPatiCamera((g_patiPlayerCamera + 1), PATI_PLAYER, PATI_PLAYER, ctx->delay);
     SetPatiMotion(PATI_PLAYER, 6044, 0.0, 1.0, ctx->delay);
@@ -1439,7 +1439,7 @@ void PatiPlayerVersusLose(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *voiceCode;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 2, 10.0, 0.5);
     SetPatiCamera((g_patiPlayerCamera + 1), PATI_PLAYER, PATI_PLAYER, ctx->delay);
     SetPatiMotion(PATI_PLAYER, 6039, 0.0, 1.0, ctx->delay);
@@ -1456,7 +1456,7 @@ void PatiNextVersusRound(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v4;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
     SetPatiCamera((g_patiPlayerCamera + 1), PATI_PLAYER, PATI_PLAYER, ctx->delay);
     SetPatiMotion(PATI_PLAYER, 6042, 0.0, 1.0, ctx->delay);
@@ -1476,7 +1476,7 @@ void PatiVersusSuddenDeath(PatiEventWork *ctx) {
     PatiGameWork *v5;
     const char *v6;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
     v3 = &ctx->delay;
     SetPatiCamera((g_patiPlayerCamera + 1), PATI_PLAYER, PATI_PLAYER, ctx->delay);
@@ -1504,9 +1504,9 @@ void PatiVersusWin(PatiEventWork *ctx) {
     int v10;
     signed int v11;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 3, 10.0, 0.5);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 1, 10.0, 0.5);
     v4 = &ctx->delay;
     name = ctx->delay;
@@ -1548,9 +1548,9 @@ void PatiVersusLose(PatiEventWork *ctx) {
 
     v1 = &ctx->delay;
     v2 = ctx->delay;
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v5 = FindCharacterByScenarioName(ctx->dealer);
+    v5 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v5, 3, 10.0, 1.0);
     SetPatiCamera((g_patiPlayerCamera + 1), PATI_PLAYER, PATI_PLAYER, *v1);
     SetPatiMotion(PATI_PLAYER, 6039, 0.0, 1.0, *v1);
@@ -1584,9 +1584,9 @@ void PatiMuseumIntro(PatiEventWork *ctx) {
     const char *v7;
 
     PatiDebugLog((char *)"PATI\\ePATI_et_patinko.c", 2416, (char *)"ctx : SA_MuseumIntro\n");
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, ctx->delay);
     QueuePatiVoice(&ctx->game, "A001", &ctx->delay);
@@ -1620,9 +1620,9 @@ void PatiMuseumBoardSelected(PatiEventWork *ctx) {
     const char *v9;
     std::int16_t v10;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     RandomInt32 = shenGetRandomInt32(5);
     p_start_frm = &ctx->delay;
@@ -1667,9 +1667,9 @@ void PatiMuseumPlay(PatiEventWork *ctx) {
     std::int16_t RandomInt32;
     const char *v5;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     RandomInt32 = shenGetRandomInt32(2);
     v5 = "A006";
@@ -1689,9 +1689,9 @@ void PatiMuseumReselect(PatiEventWork *ctx) {
     PatiGameWork *v8;
     const char *v9;
 
-    Chara = FindCharacterByScenarioName(PATI_PLAYER);
+    Chara = ctrlGetScenarioChara(PATI_PLAYER);
     SetHighModelAndFaceFlagsForChara(Chara, 0, 10.0, 1.0);
-    v3 = FindCharacterByScenarioName(ctx->dealer);
+    v3 = ctrlGetScenarioChara(ctx->dealer);
     SetHighModelAndFaceFlagsForChara(v3, 0, 10.0, 1.0);
     RandomInt32 = shenGetRandomInt32(4);
     p_start_frm = &ctx->delay;

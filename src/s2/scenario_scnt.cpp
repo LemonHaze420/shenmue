@@ -46,7 +46,7 @@ bool FreeTalkProgram(const ScenarioFreeTalkRecord &record, std::span<const std::
 bool ResolveScntGameDataOperand(std::int32_t index, std::int32_t &value) {
     DateTime dateTime{};
     if (index >= 0 && index <= 5) {
-        GetCurrentDateTime(dateTime);
+        shenGetCurrentDateTime(dateTime);
         switch (index) {
         case 0:
             value = dateTime.year;
@@ -99,7 +99,7 @@ bool ResolveScntGameDataOperand(std::int32_t index, std::int32_t &value) {
 bool AssignScntGameDataOperand(std::int32_t index, std::int32_t value) {
     DateTime dateTime{};
     if (index >= 0 && index <= 5) {
-        GetCurrentDateTime(dateTime);
+        shenGetCurrentDateTime(dateTime);
         switch (index) {
         case 0:
             dateTime.year = static_cast<std::int8_t>(value);
@@ -2045,7 +2045,7 @@ void scenExecuteRecord(ScenarioFreeTalkRecord *recordPointer) {
             } else if (!(input->pressedPriority & 0x400U)) {
                 if (!(input->pressedPriority & 0x200U) && !(input->held & 0xf0c0U) && input->analog0e == 0x80 && input->analog0f == 0x80) {
                     Vector3 position{};
-                    GetCharacterMotionWorldPosition(scenFindChara(scenario.task, record.name), 5, &position);
+                    charaGetMotWorldPos(scenFindChara(scenario.task, record.name), 5, &position);
                     RegisterButtonMediation(SHEN_NAME(BTFT), &position, (ButtonMediationShowButtonHint | ButtonMediationBindX | 0x1U));
                     return;
                 }
@@ -2383,7 +2383,7 @@ stepProgram : {
             }
             if (record.name.name && scenarioPromptFrames > 4) {
                 Vector3 position{};
-                GetCharacterMotionWorldPosition(scenFindChara(scenario.task, record.name), 5, &position);
+                charaGetMotWorldPos(scenFindChara(scenario.task, record.name), 5, &position);
                 const std::uint32_t busy = ryoCheckBusyFlags() ? ButtonMediationShowButtonHint : 0U;
                 scenarioHardBusy = 1;
                 if (record.flags & ScenarioTalkResumeReached)
@@ -2497,7 +2497,7 @@ acknowledgements:
             } else if (acknowledgement.action == -2) {
                 record.flags &= ~ScenarioTalkWaitEnd;
                 record.timers[2] = 0;
-                UpdateMotionWorkWithPosition(FindMotionWork(ScenarioRyo()), nullptr, 0);
+                mtwkUpdateWithPosition(FindMotionWork(ScenarioRyo()), nullptr, 0);
                 EndScenarioPlayerPresentation(3);
             } else if (acknowledgement.action == -1) {
                 record.flags &= ~ScenarioTalkWaitStart;

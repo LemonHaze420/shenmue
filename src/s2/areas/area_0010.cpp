@@ -56,25 +56,25 @@ void RestoreCharacters(std::int16_t selection) {
 // @verified - p
 void SelectAuthor(std::int32_t selection) {
     for (const char *name : {"AR03", "WN00", "WS00"})
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
     if (selection < 0 || selection > 8)
         return;
     constexpr const char *names[]{"WS00", "AR03", "WN00"};
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(names[selection / 3]));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 // @verified - p
 void Cleanup(AreaAuthorTaskParameter *parent) {
     for (const shen_name *name = characters; name->name != AREA_AUTHOR_INVALID.name; ++name)
-        if (FindCharacterByScenarioName(*name)) {
+        if (ctrlGetScenarioChara(*name)) {
             EV_npcLockUnlock(*name);
             EV_npcFree(*name);
         }
     for (const char *name : {"AR02", "AK00", "WS00"})
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
     EV_FreeAuthorPak(0, "0010");
     DeleteMotion(std::bit_cast<std::int32_t>(parent->motion));
     EV_CleanupMapControlTask();

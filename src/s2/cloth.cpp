@@ -78,7 +78,7 @@ void UpdateClothBoneCapsules(ClothComponent &cloth, const std::byte *records) {
         const std::uint8_t boneId = static_cast<std::uint8_t>(records[8]);
         const std::uint8_t group = static_cast<std::uint8_t>(records[9]);
         Matrix4x4_Push();
-        Matrix4x4::SetActiveTransform(charaGetBoneTransform(cloth.motionWork, boneId));
+        Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(cloth.motionWork, boneId));
         const Vector3 centre{static_cast<float>(ReadClothValue<std::int16_t>(records)) * 0.001f,
             static_cast<float>(ReadClothValue<std::int16_t>(records + 2)) * 0.001f, static_cast<float>(ReadClothValue<std::int16_t>(records + 4)) * 0.001f};
         Matrix4x4::TransformPoint(centre, capsule->position);
@@ -653,9 +653,9 @@ void clmdSolveRows(ClothObject &object, const Vector3 &firstForce, const Vector3
 // @verified - p
 void clmdLiftBelowAnkles(ClothObject &object) {
     Vector3 position;
-    GetMotionBonePosition(object.owner->motionWork, MB_LeftAnkle, &position);
+    mtwkGetBonePosition(object.owner->motionWork, MB_LeftAnkle, &position);
     const float firstHeight = position.y;
-    GetMotionBonePosition(object.owner->motionWork, MB_RightAnkle, &position);
+    mtwkGetBonePosition(object.owner->motionWork, MB_RightAnkle, &position);
     const float height = (position.y < firstHeight ? position.y : firstHeight) + clothAnkleOffset;
     ClothVertexState *vertex = object.vertices + object.columns;
     for (std::uint8_t row = 1; row < object.rows; ++row) {
@@ -678,24 +678,24 @@ void clmdUpdateDynamics(ClothObject &object) {
     if (firstKind == 2 || firstKind == 5) {
         if (firstKind == 5)
             referenceBone = 3;
-        GetMotionBonePosition(work, MB_LeftThigh, &clothRootPosition);
-        GetMotionBonePosition(work, MB_RightThigh, &clothPairedBonePosition);
+        mtwkGetBonePosition(work, MB_LeftThigh, &clothRootPosition);
+        mtwkGetBonePosition(work, MB_RightThigh, &clothPairedBonePosition);
     } else if (firstKind == 3) {
-        GetMotionBonePosition(work, MB_LeftShin, &clothRootPosition);
-        GetMotionBonePosition(work, MB_RightShin, &clothPairedBonePosition);
+        mtwkGetBonePosition(work, MB_LeftShin, &clothRootPosition);
+        mtwkGetBonePosition(work, MB_RightShin, &clothPairedBonePosition);
     } else if (firstKind == 4) {
-        GetMotionBonePosition(work, MB_Pelvis, &clothRootPosition);
+        mtwkGetBonePosition(work, MB_Pelvis, &clothRootPosition);
         clothPairedBonePosition = {clothRootPosition.x, clothRootPosition.y - 2.0f, clothRootPosition.z};
         clothRootPosition.y = clothPairedBonePosition.y;
     } else {
-        GetMotionBonePosition(work, MB_LeftAnkle, &clothRootPosition);
-        GetMotionBonePosition(work, MB_RightAnkle, &clothPairedBonePosition);
+        mtwkGetBonePosition(work, MB_LeftAnkle, &clothRootPosition);
+        mtwkGetBonePosition(work, MB_RightAnkle, &clothPairedBonePosition);
     }
     clothRootPosition.x += (clothPairedBonePosition.x - clothRootPosition.x) * 0.5f;
     clothRootPosition.y += (clothPairedBonePosition.y - clothRootPosition.y) * 0.5f;
     clothRootPosition.z += (clothPairedBonePosition.z - clothRootPosition.z) * 0.5f;
     Vector3 reference;
-    GetMotionBonePosition(work, static_cast<MotionBoneId>(referenceBone), &reference);
+    mtwkGetBonePosition(work, static_cast<MotionBoneId>(referenceBone), &reference);
     const float firstLength = std::sqrt(clmdDistanceSquared(clothRootPosition, reference));
     Vector3 firstForce{};
     if (!(std::fabs(firstLength) < 0.00000011920929f)) {
@@ -708,19 +708,19 @@ void clmdUpdateDynamics(ClothObject &object) {
         Vector3 first, second;
         switch (secondKind) {
         case 1:
-            GetMotionBonePosition(work, MB_LeftAnkle, &first);
-            GetMotionBonePosition(work, MB_RightAnkle, &second);
+            mtwkGetBonePosition(work, MB_LeftAnkle, &first);
+            mtwkGetBonePosition(work, MB_RightAnkle, &second);
             break;
         case 2:
-            GetMotionBonePosition(work, MB_LeftThigh, &first);
-            GetMotionBonePosition(work, MB_RightThigh, &second);
+            mtwkGetBonePosition(work, MB_LeftThigh, &first);
+            mtwkGetBonePosition(work, MB_RightThigh, &second);
             break;
         case 3:
-            GetMotionBonePosition(work, MB_LeftShin, &first);
-            GetMotionBonePosition(work, MB_RightShin, &second);
+            mtwkGetBonePosition(work, MB_LeftShin, &first);
+            mtwkGetBonePosition(work, MB_RightShin, &second);
             break;
         case 4:
-            GetMotionBonePosition(work, MB_Pelvis, &first);
+            mtwkGetBonePosition(work, MB_Pelvis, &first);
             second = {first.x, first.y - 2.0f, first.z};
             first.y = second.y;
             break;
@@ -1180,7 +1180,7 @@ void UpdateWindReactiveNode(Character *character, void *payload) {
     }
     if (cloth.name.name == kun.name) {
         std::byte *const parameters = cloth.parameters;
-        const std::uint16_t animation = GetMotionAnimationId(cloth.motionWork, MotionRegion::LowerBody);
+        const std::uint16_t animation = mtwkGetAnimationId(cloth.motionWork, MotionRegion::LowerBody);
         if (g_currentMap.name == SHEN_NAME(AKS1) ||
             (g_currentMap == AREA_WT00 && (static_cast<std::uint32_t>(animation) - 0xe3b2U <= 2U || animation == 0xe299U))) {
             parameters[0x16] = std::byte{1};

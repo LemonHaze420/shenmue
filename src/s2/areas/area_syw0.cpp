@@ -45,13 +45,13 @@ void Syw0SetupCharacters() {
     EventSetMotion motion{.cleanup = 0, .character = SYW0_RYO, .animation = 306, .frame = 0, .speed = 1, .flags = 0x40000000U, .delay = 0};
     EVT_AT_SetMot_Callback(&motion);
     GetMotionFrameCount(306);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SYW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SYW0"), 0);
     LoadBlurModelForCharacter(SYW0_RYO, "RYO_B.MT7", 1);
     LoadBlurModelForCharacter(SYW0_SYE, "SYE_B.MT7", 1);
     LoadBlurModelForCharacter(SYW0_KNK, "KNK_B.MT7", 1);
-    SetPluralControlFor(FindCharacterByScenarioName(SYW0_RYO), 1);
-    SetPluralControlFor(FindCharacterByScenarioName(SYW0_SYE), 1);
-    SetPluralControlFor(FindCharacterByScenarioName(SYW0_KNK), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(SYW0_RYO), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(SYW0_SYE), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(SYW0_KNK), 1);
     const Vector3i left{.x = 0, .y = 16384, .z = 0};
     constexpr shen_name leftProp{SHEN_NAME(dr1L)}, rightProp{SHEN_NAME(dr1R)};
     EV_AT_SetAngY(leftProp, EventTransformFlags::AllAxes, left);
@@ -65,8 +65,8 @@ void Syw0LoadResources(Syw0Work &work) {
     if (IsFightActive())
         check_dead_status(1);
     work.motions[0] = 0;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SYW0"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SYW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SYW0"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SYW0"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, SYW0_BASE);
     EV_FreeAuthorPak(1, "0064");
     EV_SetNewSceneIndex();
@@ -100,18 +100,18 @@ void Syw0LoadResources(Syw0Work &work) {
 }
 void Syw0Cleanup(Syw0Work &work) {
     EV_stepSetFlags(0, 133);
-    SetPluralControlFor(FindCharacterByScenarioName(SYW0_RYO), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(SYW0_SYE), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(SYW0_KNK), 0);
-    hndlSetFlags(FindCharacterByScenarioName(SYW0_RYO));
-    hndlSetFlags(FindCharacterByScenarioName(SYW0_SYE));
-    hndlSetFlags(FindCharacterByScenarioName(SYW0_KNK));
-    hndlSetFlags(FindCharacterByScenarioName(SYW0_KSY));
-    hndlSetFlags(FindCharacterByScenarioName(SYW0_KSM));
+    SetPluralControlFor(ctrlGetScenarioChara(SYW0_RYO), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(SYW0_SYE), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(SYW0_KNK), 0);
+    hndlSetFlags(ctrlGetScenarioChara(SYW0_RYO));
+    hndlSetFlags(ctrlGetScenarioChara(SYW0_SYE));
+    hndlSetFlags(ctrlGetScenarioChara(SYW0_KNK));
+    hndlSetFlags(ctrlGetScenarioChara(SYW0_KSY));
+    hndlSetFlags(ctrlGetScenarioChara(SYW0_KSM));
     ET_AT_KillWork(work.characters);
     SetPlayerControlEnabled(0);
     SetCharaKill(SYW0_BASE, 1);
-    SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
     if (syw0FireEffect) {
         FreeParticleEffect(4, syw0FireEffect);
         syw0FireEffect = 0;
@@ -121,10 +121,10 @@ void Syw0Cleanup(Syw0Work &work) {
     for (std::uint32_t *motion = work.motions; *motion; ++motion)
         DeleteMotion(*motion);
     EV_FreeAuthorPak(0, "0064");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SYW0"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WB00"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SYW0"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WB00"), 0);
     shenSetTimeSimulationTo(1);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
@@ -134,7 +134,7 @@ void Syw0Cleanup(Syw0Work &work) {
         EV_scenQueueLoad(g_actNumber, SYW0_RETURN, 0);
     else {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour >= 8)
             ++time.day;
         time.hour = 8;
@@ -150,7 +150,7 @@ void Syw0RootCallback(void *data) {
     switch (work.state) {
     case 0:
         for (std::int32_t i = 0; i < 5; ++i)
-            SetLowQualityHands(FindCharacterByScenarioName(SYW0_CHARACTERS[i]));
+            SetLowQualityHands(ctrlGetScenarioChara(SYW0_CHARACTERS[i]));
         QueueExtraTelop("", 99);
         Syw0SetupCharacters();
         work.sequence = QueueCompiledSequence(Syw0TrainingSequence, SYW0_SEQUENCE, &work);
@@ -187,7 +187,7 @@ void InitializeSyw0() {
 void QueueSyw0Event(std::int32_t entry) {
     SetPlayerControlEnabled(0);
     SetScreenFilmFade(1, 0, 0, 0, 0, 255, 0, 0, 0);
-    GetCurrentDateTime(syw0SavedDateTime);
+    shenGetCurrentDateTime(syw0SavedDateTime);
     shenSetTimeSimulationTo(0);
     HLib::Task *task = HLib::EnqueueTaskWithParameter(Syw0RootCallback, 4, 0x0b, sizeof(Syw0Work), SYW0_TASK);
     Syw0Work &work = *static_cast<Syw0Work *>(HLib::GetTaskParameter(task));

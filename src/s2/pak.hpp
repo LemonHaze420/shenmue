@@ -203,13 +203,13 @@ enum Value : std::uint64_t {
 
 
 
-std::int64_t EV_ControlPackageResources(
+std::int64_t EV_pakUtils(
     std::int32_t category, std::uint64_t mode, std::uintptr_t source, std::uintptr_t target, std::int32_t secondaryIndex = 0);
 #endif
 std::int32_t GetPakReadiness(PakGlobalData *package);
 void DestroyPakFileAFS(PakGlobalData *package);
 const LoadedMapPackage *LoadPakPackageFromMemory(const char *packageName, std::span<const std::byte> packedPkf, std::span<const std::byte> packedPks);
-void LoadPak();
+void pakLoadFlush();
 void FreePakLoadTask();
 bool UnloadMapPackage(const char *packageName);
 PakGlobalData *GetPakLoadTaskDataPointer();

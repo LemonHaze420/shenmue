@@ -9,10 +9,10 @@
 namespace shenmue::s2::areas {
 
 std::int32_t YcpaDoorInterruption() {
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(RYO_)), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(RYO_)), 0, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(REN_)), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(REN_)), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(RYO_)), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(RYO_)), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(REN_)), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(REN_)), 0, 1, 0);
     {
         EventSetPosition cue{.cleanup = 0, .character = YCPA_RYO, .parent = YCPA_INVALID, .position = {.x = 290.9f, .y = 100.0f, .z = 74.1f}, .delay = 0.0f};
         EVT_AT_SetPosRot(&cue);

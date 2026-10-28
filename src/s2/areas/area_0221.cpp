@@ -40,7 +40,7 @@ void E0221Main(std::uintptr_t) {
     parent->state = 1;
     EV_stepSetFlags(0, 0x13e);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 9;
     time.minute = 30;
     SetCurrentDateTimeTo(time);
@@ -80,7 +80,7 @@ void RestoreE0221Characters() {
 // @verified - p
 void CleanupE0221(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0221_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -116,7 +116,7 @@ void E0221MainCallback(void *taskData) {
         break;
     case 4: {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 12;
         time.minute = 0;
         SetCurrentDateTimeTo(time);

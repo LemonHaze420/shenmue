@@ -81,7 +81,7 @@ void UpdateCharacterAlpha(Character *character, void *payload) {
             return;
         }
         bool empty = true;
-        if (const Matrix4x4 *const hip = charaGetBoneTransform(motion, 1)) {
+        if (const Matrix4x4 *const hip = mtwkGetBoneTransform(motion, 1)) {
             for (const Vector4 &row : hip->rows) {
                 if (!(0.00000011920929f > std::abs(row.x)) || !(0.00000011920929f > std::abs(row.y)) || !(0.00000011920929f > std::abs(row.z)) ||
                     !(0.00000011920929f > std::abs(row.w))) {
@@ -90,7 +90,7 @@ void UpdateCharacterAlpha(Character *character, void *payload) {
                 }
             }
         }
-        fallback = !GetMotionBonePosition(motion, MB_Chest, &origin) || empty;
+        fallback = !mtwkGetBonePosition(motion, MB_Chest, &origin) || empty;
     }
     if (fallback)
         origin = GetCharacterWorldPosition(character);

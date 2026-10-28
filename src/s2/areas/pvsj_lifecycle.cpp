@@ -16,10 +16,10 @@ namespace shenmue::s2 {
 
 void PvsjBeginGame(PvsjEventWork *work) {
     if (DoesScenarioCharacterExist(work->owner)) {
-        UpdateMotionWorkWithPosition(scenFindMotionwork(work->owner), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(work->owner), nullptr, 0);
         EV_SetCharacterAlphaEnabled(work->owner, true);
     }
-    SetMotionRegionFlag(scenFindMotionwork(PVSJ_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(PVSJ_PLAYER), 71, 0, MotionRegion::LowerBody);
     shenLoadEventFrom("PATI.EV3", EventFunctionType::Event3);
     ExecuteCurrAreaMainFunc("PATI.EV3", reinterpret_cast<std::uintptr_t>(pvsjGameArgument));
     HLib::SetupTaskDelay(0);
@@ -28,24 +28,24 @@ void PvsjBeginGame(PvsjEventWork *work) {
 void PvsjFinish(PvsjEventWork *work) {
     auto *const invalid = reinterpret_cast<PakAfsPartition *>(~std::uintptr_t{});
     if (work->gamePartition != invalid) {
-        EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Unmount, reinterpret_cast<std::uintptr_t>(work->gamePartition), 0);
+        EV_pakUtils(PakCategory::Partition, PakPartitionOp::Unmount, reinterpret_cast<std::uintptr_t>(work->gamePartition), 0);
         work->gamePartition = invalid;
     }
     HLib::FreeTaskData(work->voiceLoadBuffer);
     HLib::FreeTaskData(work->voiceLengths);
     if (work->jobPartition != invalid) {
         if (work->customerPartition != -1) {
-            const auto mode = EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0) ? 13 : 12;
-            EV_ControlPackageResources(PakCategory::Package, mode, reinterpret_cast<std::uintptr_t>(work->jobPartition),
+            const auto mode = EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0) ? 13 : 12;
+            EV_pakUtils(PakCategory::Package, mode, reinterpret_cast<std::uintptr_t>(work->jobPartition),
                 static_cast<std::uintptr_t>(PVSJ_CUSTOMER_PARTITIONS[work->customerPartition].models),
                 static_cast<std::uint32_t>(PVSJ_CUSTOMER_PARTITIONS[work->customerPartition].hands));
             work->customerPartition = -1;
         }
-        EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Unmount, reinterpret_cast<std::uintptr_t>(work->jobPartition), 0);
+        EV_pakUtils(PakCategory::Partition, PakPartitionOp::Unmount, reinterpret_cast<std::uintptr_t>(work->jobPartition), 0);
         work->jobPartition = invalid;
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("PATI"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("PVSJ"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("PVSJ"), 0);
     PvsjReleaseVoice(work);
     EV_LoadCutsceneFromCurrentScene(work->bgm);
     EV_LoadAudio(work->sbt, work->soundScene);
@@ -53,7 +53,7 @@ void PvsjFinish(PvsjEventWork *work) {
     EV_EventSetUpHelpIcon_0(0, 0);
     EV_NPC_NewLoadSw(1);
     EV_SetRefBoardParamsFor(PVSJ_PLAYER, 0);
-    auto *player = FindCharacterByScenarioName(PVSJ_PLAYER);
+    auto *player = ctrlGetScenarioChara(PVSJ_PLAYER);
     SetHighModelAndFaceFlagsForChara(player, FacialExpressionId::Normal, 10, 1);
     HasCharacterMotionWork(player);
     GetCharacterMotionCompatibilityResult(player);

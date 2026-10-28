@@ -13,7 +13,7 @@ shen_name slCurrentAuthor{};
 SlEventData slEventData{};
 // @verified - p
 void SlPackageWaitCallback(void *) {
-    if ((slEventData.pendingMask & 1U) && !EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
+    if ((slEventData.pendingMask & 1U) && !EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
         slEventData.pendingMask &= ~1U;
     for (std::uint32_t index = 0; slEventData.characters[index].name; ++index) {
         const std::uint32_t mask = 2U << (index & 31U);
@@ -34,7 +34,7 @@ void ResetSlAuthorCharacter(shen_name character) {
     if ((character.name & 0xff000000U) == 0x5f000000U) {
         EV_SetCharacterAlphaEnabled(character, false);
         (void)mtwkSetRequestedRootMode(scenFindMotionwork(character), 0);
-        (void)SetMotionRegionFlag(scenFindMotionwork(character), 71, 0, MotionRegion::LowerBody);
+        (void)mtwkSetRegionFlag(scenFindMotionwork(character), 71, 0, MotionRegion::LowerBody);
     }
     EV_SetCharaControllerFlags(character, UpdateHeight, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, ApplyGravity, NpcCharacterControllerState::Disabled);

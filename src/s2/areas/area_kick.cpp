@@ -118,12 +118,12 @@ void Exit() {
     camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     for (const shen_name *name = characters; name->name != 0xffffffffU; ++name) {
-        if (FindCharacterByScenarioName(*name)) {
+        if (ctrlGetScenarioChara(*name)) {
             EV_npcLockUnlock(*name);
             EV_npcFree(*name);
         }
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KICKDOOR"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KICKDOOR"), 0);
     EV_CleanupMapControlTask();
     HLib::MarkCurrentTaskForCleanup();
     EV_scenQueueLoad(g_actNumber, SHEN_NAME(QEDJ), 1);
@@ -152,7 +152,7 @@ void AreaKICKMain(std::uintptr_t) {
     qteBattleUtil(BattleQteMode::ResetStates);
     qteBattleUtil(BattleQteMode::Load);
     qteBattleUtil(BattleQteMode::Queue);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KICKDOOR"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KICKDOOR"), 0);
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0236A000");
     EV_LoadAudio("0236A000", 1);
@@ -163,7 +163,7 @@ void AreaKICKMain(std::uintptr_t) {
     EV_authSceneCtrl(AuthSceneCtrl::HideFilmBars);
     auto *task = HLib::EnqueueTaskWithoutParameter(KICK_KickDoor_Callback, 6, 0x0b, SHEN_NAME(kick));
     state = SHEN_NAME(INIT);
-    GetCurrentDateTime(savedTime);
+    shenGetCurrentDateTime(savedTime);
     AssignGenericNpcLoadContext(characters, task);
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();

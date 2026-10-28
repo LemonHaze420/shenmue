@@ -82,7 +82,7 @@ void Cleanup194E(Area194EParameter *parent) {
     using enum CameraState;
     const shen_name *character = g_currentMap.name == AREA_194E.name ? AREA_194E_CHARACTERS : AREA_194E_VARIANTS[parent->selection];
     for (; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -97,7 +97,7 @@ void Cleanup194E(Area194EParameter *parent) {
     else if (parent->selection == 2)
         archive = "0194E3";
     if (archive)
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(archive), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(archive), 0);
     EV_FreeAuthorPak(0, AREA_194E_CONVERSATION);
     EV_CleanupMapControlTask();
     if (g_currentMap.name == AREA_194E.name) {
@@ -239,8 +239,8 @@ void Restore194ECharacters(std::int16_t selection) {
 void Select194EPackage(std::int32_t selection) {
     constexpr const char *packages[]{"AKS1", "WN00", "WNX9", "WTA0"};
     for (const char *package : packages) {
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
     }
     EV_SetModelDataDefaultVertexShader();
     const char *package;
@@ -254,9 +254,9 @@ void Select194EPackage(std::int32_t selection) {
         package = "AKS1";
     else
         return;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     if (selection == 1) {
         EV_LoadCutsceneFromCurrentScene(package);
         EV_lightLoad(AREA_194E_LIGHT_0001);

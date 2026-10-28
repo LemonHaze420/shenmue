@@ -263,7 +263,7 @@ void ApplyConstraint(MotionWork &work, Vector3 *position, std::uint32_t controll
         float distance = 0.0f;
         bool limited = false;
         if (state.seqFlags & MSF_LimitConstraintStep) {
-            GetMotionControllerTargetPosition(&work, controller, bone);
+            mtwkGetControllerTargetPosition(&work, controller, bone);
             Matrix4x4::TransformPoint(bone, bone);
             delta = {source.x - bone.x, source.y - bone.y, source.z - bone.z};
             distance = Vector3::CalcMagnitude(delta);
@@ -286,7 +286,7 @@ void ApplyConstraint(MotionWork &work, Vector3 *position, std::uint32_t controll
             std::uint16_t total = state.constraintBlendTotalFrames[controller];
             if (total == 0) {
                 Vector3 bone;
-                GetMotionControllerTargetPosition(&work, controller, bone);
+                mtwkGetControllerTargetPosition(&work, controller, bone);
                 state.constraintBlendSource[controller] = bone;
                 Matrix4x4::TransformPoint(state.constraintBlendSource[controller], source);
                 Matrix4x4::TransformPoint(bone, bone);
@@ -714,7 +714,7 @@ void mtwkCopyRigFlags(
 // Clamps the region's published clock to the requested split/current/end and mirrors the
 // split and end into the rig's authored pair; returns the clamped current time.
 // @verified - p
-float TimePair_ClampAndPropagate(MotionWork *work, float split, float ticks, float maximum, MotionRegion region) {
+float mtwkTimePairClampAndPropagate(MotionWork *work, float split, float ticks, float maximum, MotionRegion region) {
     MotionTimePair &pair = g_motionRegionClocks[region]->current;
     if (maximum >= 0.0f && pair.maxTime > maximum)
         pair.maxTime = maximum;
@@ -739,7 +739,7 @@ float TimePair_ClampAndPropagate(MotionWork *work, float split, float ticks, flo
 }
 
 // @verified - p
-void AssignStaticDataForBodyRegion(MotionWork *work, float split, float ticks, float maximum, MotionRegion region) {
+void mtwkAssignStaticDataForBodyRegion(MotionWork *work, float split, float ticks, float maximum, MotionRegion region) {
     MotionTimePair &pair = g_motionRegionClocks[region]->current;
     if (split > 0.0f)
         pair.splitTimeFrames = 0.0f;
@@ -832,7 +832,7 @@ bool SampleNativeMotionRoot(std::uint16_t animation, std::int32_t boneId, float 
 }
 
 // @verified - p
-void Rig_EvaluateControllers(MotionWork *work, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags, MotionRegion region) {
+void mtwkRigEvaluateControllers(MotionWork *work, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags, MotionRegion region) {
     IKRig &rig = work->rig;
     g_motionUseOverride = static_cast<std::int32_t>(rig.useOverride);
     switch (region) {
@@ -994,7 +994,7 @@ bool Rig_SetupMotionGraph(IKRig &rig, const MotionStreamContext *context, float 
 }
 
 // @verified - p
-void Rig_RunOverrideBlendPass(MotionWork *work) {
+void mtwkRigRunOverrideBlendPass(MotionWork *work) {
     MotionRuntimeState &state = work->runtime;
     for (std::uint32_t region = 0; region < 5; ++region) {
         if ((state.regionFlags[region] & MRF_Transition) && (state.currentRootMode & 0xfdU)) {
@@ -1029,14 +1029,14 @@ void Rig_RunOverrideBlendPass(MotionWork *work) {
             break;
         }
         if (static_cast<std::uint8_t>(evaluated))
-            Rig_EvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
+            mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
     }
     TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
     state.overrideBlendTime = -1.0f;
 }
 
 // @verified - p
-void ClearOverrideCallbacksForBodyRegion(MotionWork *work, MotionRegion region) {
+void mtwkClearOverrideCallbacksForBodyRegion(MotionWork *work, MotionRegion region) {
     IKRig &rig = work->rig;
     MotionBaseRig &base = rig.lowerBody;
     switch (region) {
@@ -1093,7 +1093,7 @@ void ClearOverrideCallbacksForBodyRegion(MotionWork *work, MotionRegion region) 
 }
 
 // @verified - p
-void InstallActiveOverrideCallbacks(MotionWork *work) {
+void mtwkInstallActiveOverrideCallbacks(MotionWork *work) {
     IKRig &rig = work->rig;
     MotionTargetParameters *const targets = work->targets;
     if (targets[0].callback)
@@ -1126,7 +1126,7 @@ void InstallActiveOverrideCallbacks(MotionWork *work) {
 }
 
 // @verified - p
-void InstallConstraintTargetCallback(MotionWork *work, std::uint32_t controller) {
+void mtwkInstallConstraintTargetCallback(MotionWork *work, std::uint32_t controller) {
     IKRig &rig = work->rig;
     MotionTargetParameters *const targets = work->targets;
     switch (controller) {
@@ -1163,7 +1163,7 @@ void InstallConstraintTargetCallback(MotionWork *work, std::uint32_t controller)
 }
 
 // @verified - p
-void ClearConstraintTargetCallbackIfInactive(MotionWork *work, std::uint32_t controller) {
+void mtwkClearConstraintTargetCallbackIfInactive(MotionWork *work, std::uint32_t controller) {
     IKRig &rig = work->rig;
     const MotionRuntimeState &state = work->runtime;
     const auto inactive = [&](std::uint32_t region) { return !(state.regionFlags[region] & MRF_Transition) || state.currentRootMode != 2; };
@@ -1212,7 +1212,7 @@ void ClearConstraintTargetCallbackIfInactive(MotionWork *work, std::uint32_t con
 
 
 // @verified - p
-void UpdatePelvisYaw(MotionWork *work) {
+void mtwkUpdatePelvisYaw(MotionWork *work) {
     MotionRuntimeState &state = work->runtime;
     const std::int16_t clamp = state.pelvisYawClamp;
     std::int16_t step = static_cast<std::int16_t>(state.pelvisYawStep);
@@ -1250,7 +1250,7 @@ void UpdatePelvisYaw(MotionWork *work) {
 }
 
 // @verified - p
-std::int32_t UpdateMotionOverrideCallbacks(MotionWork *work) {
+std::int32_t mtwkUpdateOverrideCallbacks(MotionWork *work) {
     MotionRuntimeState &state = work->runtime;
     IKRig &rig = work->rig;
     const std::uint32_t controllers = rig.useOverride ? 9U : 7U;
@@ -1265,7 +1265,7 @@ std::int32_t UpdateMotionOverrideCallbacks(MotionWork *work) {
     for (std::uint32_t controller = 0, shift = 0; controller < controllers; ++controller, shift += 3) {
         if (state.latchedConstraintTarget[controller]) {
             state.constraintStateBits = (3U << shift) | (state.constraintStateBits & ~(7U << shift));
-            InstallConstraintTargetCallback(work, controller);
+            mtwkInstallConstraintTargetCallback(work, controller);
             continue;
         }
         const std::uint32_t bits = state.constraintStateBits;
@@ -1273,17 +1273,17 @@ std::int32_t UpdateMotionOverrideCallbacks(MotionWork *work) {
             continue;
         if ((bits >> shift) & 6U) {
             state.constraintStateBits = (4U << shift) | (bits & ~(6U << shift));
-            InstallConstraintTargetCallback(work, controller);
+            mtwkInstallConstraintTargetCallback(work, controller);
         } else {
             state.constraintStateBits = bits & ~(7U << shift);
-            ClearConstraintTargetCallbackIfInactive(work, controller);
+            mtwkClearConstraintTargetCallbackIfInactive(work, controller);
         }
     }
     if (!rig.useOverride) {
         if (state.pelvisYawCurrent || state.pelvisYawHalf || state.pelvisYawTarget) {
             BindCallback(rig.lowerBody.pelvisRotationCallback, ApplyRotY_ThenCopyOrRotZYX, &work->rotations[0]);
             BindCallback(rig.chest.upperRotation.callback, ApplyChannelRotZYX_WithIKXBias, &work->rotations[12]);
-            UpdatePelvisYaw(work);
+            mtwkUpdatePelvisYaw(work);
         } else {
             if (!(state.regionFlags[0] & MRF_Transition) || state.currentRootMode != 2)
                 rig.lowerBody.pelvisRotationCallback.evaluate = nullptr;
@@ -1326,7 +1326,7 @@ std::int32_t UpdateMotionOverrideCallbacks(MotionWork *work) {
         if ((!(state.regionFlags[1] & MRF_Transition) || state.currentRootMode != 2) && 0.00000011920929f > state.chestBlendScale)
             rig.chest.rotation.callback.evaluate = nullptr;
     }
-    InstallActiveOverrideCallbacks(work);
+    mtwkInstallActiveOverrideCallbacks(work);
     return 1;
 }
 
@@ -1352,7 +1352,7 @@ void mtwkApplyRootPos(MotionWork *work) {
 // dependent regions follow the base region, and the requested root mode sets the blend
 // length and, for modes 4/5, pre-translates the root by the blend's travel.
 // @verified - p
-void applyRootTranslation(MotionWork *work) {
+void mtwkApplyRootTranslation(MotionWork *work) {
     MotionRuntimeState &state = work->runtime;
     g_ikEnabled = 0;
     state.pendingFootstepCue = 0;
@@ -1429,7 +1429,7 @@ void applyRootTranslation(MotionWork *work) {
                                 state.pendingLayerStartFrame[region] = maximum;
                             }
                         }
-                        SetMotionSpeed(work, g_motionRegionClocks[0]->playbackSpeed, static_cast<MotionRegion>(region));
+                        mtwkSetSpeed(work, g_motionRegionClocks[0]->playbackSpeed, static_cast<MotionRegion>(region));
                     } else {
                         state.regionFlags[region] = flags & 0xfeffU;
                     }
@@ -1531,7 +1531,7 @@ void applyRootTranslation(MotionWork *work) {
 // Promotes each queued motion: resolves its stream, retires and registers the region's prop
 // tracks, chooses the transition length and start frame, then reads the motion into the rig.
 // @verified - p
-std::int32_t MOTN_ProcessLayers(MotionWork *work) {
+std::int32_t mtwkProcessLayers(MotionWork *work) {
     MotionRuntimeState &state = work->runtime;
     std::int32_t processed = 0;
     for (std::uint32_t region = 0; region < 5; ++region) {
@@ -1713,7 +1713,7 @@ std::int32_t MOTN_ProcessLayers(MotionWork *work) {
                 if (state.motnFlags & motionInitBaking)
                     flags |= motionInitSwapLeadFoot;
             }
-            Rig_EvaluateControllers(work, &context, loopStart, localTime, flags, static_cast<MotionRegion>(region));
+            mtwkRigEvaluateControllers(work, &context, loopStart, localTime, flags, static_cast<MotionRegion>(region));
         }
         state.previousMotionId[region] = state.currentMotionId[region];
         state.currentMotionId[region] = state.queuedMotionId[region];
@@ -1779,7 +1779,7 @@ std::int32_t MOTN_ProcessLayers(MotionWork *work) {
 void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
     MotionRuntimeState &state = work->runtime;
     if (state.overrideBlendTime > 0.0f)
-        Rig_RunOverrideBlendPass(work);
+        mtwkRigRunOverrideBlendPass(work);
     std::uint32_t result = 0;
     if (!g_motionLayerEvaluated[0]) {
         const std::uint16_t flags = state.regionFlags[0];
@@ -1811,7 +1811,7 @@ void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
         const float endX = channels.rows[3].x + pelvis.x;
         const float endZ = channels.rows[3].z + pelvis.z;
         g_motionRegionClocks[0]->current.ticksTime = 0.0f;
-        Rig_EvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, MotionRegion::LowerBody);
+        mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, MotionRegion::LowerBody);
         BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, motionInterpolationHermiteAuto);
         state.regionFlags[0] |= MRF_Unknown01;
         pelvis.x = -(channels.rows[3].x - endX);
@@ -1821,13 +1821,13 @@ void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
         BuildChannelTransformAtTime(work->rig.lowerBody, &channels, ceil_float(g_motionRegionClocks[0]->current.maxTime), motionInterpolationHermiteAuto);
         const float endX = channels.rows[3].x + pelvis.x;
         const float endZ = channels.rows[3].z + pelvis.z;
-        Rig_EvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, MotionRegion::LowerBody);
+        mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, MotionRegion::LowerBody);
         BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, motionInterpolationHermiteAuto);
         pelvis.x = -(channels.rows[3].x - endX);
         pelvis.z = -(channels.rows[3].z - endZ);
         reread = true;
     } else if (result == 2) {
-        Rig_EvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, MotionRegion::LowerBody);
+        mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, MotionRegion::LowerBody);
         BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, motionInterpolationHermiteAuto);
         pelvis.x = -channels.rows[3].x;
         pelvis.z = -channels.rows[3].z;
@@ -1838,14 +1838,14 @@ void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
         state.blendRemainingFrames[0] = remaining;
         state.layerBlendAlpha[0] = 1.0f - static_cast<float>(remaining) / static_cast<float>(state.blendTotalFrames[0]);
         if (!remaining) {
-            ClearOverrideCallbacksForBodyRegion(work, MotionRegion::LowerBody);
+            mtwkClearOverrideCallbacksForBodyRegion(work, MotionRegion::LowerBody);
             state.regionFlags[0] &= ~MRF_Transition;
             state.blendTotalFrames[0] = 0;
         }
     } else {
         state.layerBlendAlpha[0] = 1.0f;
         if (state.previousRootMode == 2 && state.currentRootMode != 2)
-            ClearOverrideCallbacksForBodyRegion(work, MotionRegion::LowerBody);
+            mtwkClearOverrideCallbacksForBodyRegion(work, MotionRegion::LowerBody);
     }
     for (std::uint32_t region = 1; region < 5; ++region) {
         std::uint16_t &flags = state.regionFlags[region];
@@ -1890,13 +1890,13 @@ void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
                 }
                 if (evaluate) {
                     clock->current.ticksTime = 0.0f;
-                    Rig_EvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
+                    mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
                 }
             }
         } else {
             clock->current.ticksTime = g_motionRegionClocks[0]->current.ticksTime;
             if (reread) {
-                Rig_EvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
+                mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
                 if (state.regionFlags[0] & MRF_Unknown01)
                     flags |= 1U;
             }
@@ -1908,7 +1908,7 @@ void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
             state.blendRemainingFrames[region] = remaining;
             state.layerBlendAlpha[region] = 1.0f - static_cast<float>(remaining) / static_cast<float>(state.blendTotalFrames[region]);
             if (!state.blendRemainingFrames[region]) {
-                ClearOverrideCallbacksForBodyRegion(work, static_cast<MotionRegion>(region));
+                mtwkClearOverrideCallbacksForBodyRegion(work, static_cast<MotionRegion>(region));
                 state.blendTotalFrames[region] = 0;
                 flags &= 0xffefU;
             }
@@ -1917,7 +1917,7 @@ void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
         } else {
             state.layerBlendAlpha[region] = 1.0f;
             if (state.previousRootMode == 2 && state.currentRootMode != 2)
-                ClearOverrideCallbacksForBodyRegion(work, static_cast<MotionRegion>(region));
+                mtwkClearOverrideCallbacksForBodyRegion(work, static_cast<MotionRegion>(region));
         }
     }
     if (state.transitionTimer >= 0.0f) {
@@ -1954,7 +1954,7 @@ void mtwkApplySequenceCommands(MotionWork *work) {
                 MotionRigClock *clocks[5];
                 mtwkCopyRigFlags(work, &clocks[0], &clocks[1], &clocks[2], &clocks[3], &clocks[4]);
                 holdTime = clocks[region]->current.maxTime;
-                TimePair_ClampAndPropagate(work, -1.0f, -1.0f, holdTime - 0.001f, static_cast<MotionRegion>(region));
+                mtwkTimePairClampAndPropagate(work, -1.0f, -1.0f, holdTime - 0.001f, static_cast<MotionRegion>(region));
             }
         }
         if ((flags & 0x10U) && state.currentRootMode != 2)
@@ -1966,12 +1966,12 @@ void mtwkApplySequenceCommands(MotionWork *work) {
         const float previousTicks = g_motionRegionClocks[region]->current.ticksTime;
         if (state.layerSampleFrame[region] >= 0.0f)
             state.pendingLayerStartFrame[region] = state.layerSampleFrame[region];
-        AssignStaticDataForBodyRegion(work, loopStart, state.pendingLayerStartFrame[region], state.layerEndFrame[region], static_cast<MotionRegion>(region));
-        const float current = TimePair_ClampAndPropagate(
+        mtwkAssignStaticDataForBodyRegion(work, loopStart, state.pendingLayerStartFrame[region], state.layerEndFrame[region], static_cast<MotionRegion>(region));
+        const float current = mtwkTimePairClampAndPropagate(
             work, state.layerLoopStartTime[region], state.pendingLayerStartFrame[region], state.layerEndFrame[region], static_cast<MotionRegion>(region));
         if (previousTicks > current && !(flags & 1U)) {
-            Rig_EvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
-            TimePair_ClampAndPropagate(work, -1.0f, current, -1.0f, static_cast<MotionRegion>(region));
+            mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
+            mtwkTimePairClampAndPropagate(work, -1.0f, current, -1.0f, static_cast<MotionRegion>(region));
         }
         if (region == 0) {
             if (state.pendingLayerStartFrame[0] > 0.0f) {
@@ -1995,11 +1995,11 @@ void mtwkApplySequenceCommands(MotionWork *work) {
                 } else {
                     const float alpha = state.layerBlendAlpha[0];
                     const float earlier = current - shenGetScaledDeltaTickTime(work->rig.lowerBody.clock.playbackSpeed);
-                    TimePair_ClampAndPropagate(work, -1.0f, earlier > 0.0f ? earlier : 0.0f, -1.0f, MotionRegion::LowerBody);
+                    mtwkTimePairClampAndPropagate(work, -1.0f, earlier > 0.0f ? earlier : 0.0f, -1.0f, MotionRegion::LowerBody);
                     if (state.regionFlags[0] & MRF_Transition)
                         state.layerBlendAlpha[0] = 1.0f - static_cast<float>(state.blendRemainingFrames[0] + 1) / static_cast<float>(state.blendTotalFrames[0]);
                     TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
-                    TimePair_ClampAndPropagate(work, -1.0f, current, -1.0f, MotionRegion::LowerBody);
+                    mtwkTimePairClampAndPropagate(work, -1.0f, current, -1.0f, MotionRegion::LowerBody);
                     state.layerBlendAlpha[0] = alpha;
                 }
             }
@@ -2037,7 +2037,7 @@ void mtwkApplySequenceCommands(MotionWork *work) {
 
 // Translates every solved world matrix and target output by the root correction.
 // @verified - p
-void motnAdvanceInterpolated(MotionWork *work, float x, float y, float z) {
+void mtwkAdvanceInterpolated(MotionWork *work, float x, float y, float z) {
     IKRig &rig = work->rig;
     MotionBaseRig &base = rig.lowerBody;
     TranslateMatrix(base.pelvisWorld, x, y, z);
@@ -2077,7 +2077,7 @@ void motnAdvanceInterpolated(MotionWork *work, float x, float y, float z) {
 }
 
 // @verified - p
-void motnCopyInterpolated(MotionWork *work, float x, float y, float z) {
+void mtwkCopyInterpolated(MotionWork *work, float x, float y, float z) {
     IKRig &rig = work->rig;
     TranslateTarget(rig.chest.target, x, y, z);
     TranslateTarget(rig.head.target, x, y, z);
@@ -2121,7 +2121,7 @@ std::uint32_t mtwkApplyTransforms(const Matrix4x4 *pelvis) {
 // The F005-relative footstep cue for walk-family motions: opcode 4 is looked up in F005 at
 // the frames scaled by the two motions' lengths, and the remap flag selects the stair cues.
 // @verified - p
-void resolveAnimId(MotionWork *work, std::uint16_t motion, std::uint16_t remap, float begin, float end) {
+void mtwkResolveAnimId(MotionWork *work, std::uint16_t motion, std::uint16_t remap, float begin, float end) {
     const std::int32_t walkFrames = MotionFrameCount(0xf005U);
     const std::int32_t frames = MotionFrameCount(motion);
     const float ratio = static_cast<float>(walkFrames - 1) / static_cast<float>(frames - 1);
@@ -2169,13 +2169,13 @@ void mtwkSelectRandomFootstepCue(MotionWork *work, std::uint16_t motion, float b
 
 
 // @verified - p
-void UpdateMotionCollisionCluster(MotionWork *work) {
+void mtwkUpdateCollisionCluster(MotionWork *work) {
     IKRig &rig = work->rig;
     const std::uint8_t count = rig.useOverride ? 9U : 7U;
     Vector3 points[9]{};
     points[0] = {rig.lowerBody.pelvisWorld.rows[3].x, rig.lowerBody.pelvisWorld.rows[3].y, rig.lowerBody.pelvisWorld.rows[3].z};
     points[1] = TargetOutput(rig.chest.target);
-    GetMotionBonePosition(work, MB_Head, &points[2]);
+    mtwkGetBonePosition(work, MB_Head, &points[2]);
     points[3] = TargetOutput(rig.rightArm.target);
     points[4] = TargetOutput(rig.leftArm.target);
     points[5] = TargetOutput(rig.lowerBody.leftFoot);
@@ -2252,11 +2252,11 @@ std::int32_t mtwkApplyInterpolatedTransforms(MotionWork *work) {
             remap = 0;
         if (remap < 2) {
             if (begin > end) {
-                resolveAnimId(work, motion, remap, begin, static_cast<float>(MotionFrameCount(motion)) - 1.0f);
+                mtwkResolveAnimId(work, motion, remap, begin, static_cast<float>(MotionFrameCount(motion)) - 1.0f);
                 if (!state.pendingFootstepCue)
-                    resolveAnimId(work, motion, remap, 0.0f, end);
+                    mtwkResolveAnimId(work, motion, remap, 0.0f, end);
             } else {
-                resolveAnimId(work, motion, remap, begin, end);
+                mtwkResolveAnimId(work, motion, remap, begin, end);
             }
         } else if (begin > end) {
             mtwkUpdateBoneForTime(work, motion, begin, g_motionRegionClocks[0]->current.maxTime);
@@ -2286,7 +2286,7 @@ std::int32_t mtwkApplyInterpolatedTransforms(MotionWork *work) {
         state.requestedRootYawOffset = 0;
     state.motnFlags &= ~0x20000U;
     state.gaitSplitFraction = -1.0f;
-    UpdateMotionCollisionCluster(work);
+    mtwkUpdateCollisionCluster(work);
     return 1;
 }
 
@@ -2295,7 +2295,7 @@ std::int32_t mtwkApplyInterpolatedTransforms(MotionWork *work) {
 // @verified - p
 Matrix4x4 *mtwkBuildArmRebaseTransform(Matrix4x4 *destination, MotionWork *work) {
     Vector3 anchor;
-    GetMotionBonePosition(work, MB_RightForearm, &anchor);
+    mtwkGetBonePosition(work, MB_RightForearm, &anchor);
     *destination = work->rig.rightArm.forearmWorld;
     const Vector3 *const segment = work->runtime.ikTargetPosition;
     Vector3 axis{segment[1].x - segment[0].x, segment[1].y - segment[0].y, segment[1].z - segment[0].z};
@@ -2353,12 +2353,12 @@ std::int32_t mtwkEvaluateMotionFrame(MotionWork *work) {
     Matrix4x4_PushActiveTransform();
     mtwkApplyRootPos(work);
     mtwkCopyRigFlags(work, &g_motionRegionClocks[0], &g_motionRegionClocks[1], &g_motionRegionClocks[2], &g_motionRegionClocks[3], &g_motionRegionClocks[4]);
-    applyRootTranslation(work);
-    MOTN_ProcessLayers(work);
+    mtwkApplyRootTranslation(work);
+    mtwkProcessLayers(work);
     mtwkAdvanceAnimFrameAndLayers(work);
     mtwkApplySequenceCommands(work);
-    UpdateMotionOverrideCallbacks(work);
-    AssignMotionCallbacks(work);
+    mtwkUpdateOverrideCallbacks(work);
+    mtwkAssignCallbacks(work);
     const std::uint32_t interpolationMode = ((state.seqFlags >> motionSequenceInterpolationShift) & motionInterpolationLinear) | motionInterpolationHermite;
     if ((state.motnFlags & 9U) != 1U) {
         TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
@@ -2372,13 +2372,13 @@ std::int32_t mtwkEvaluateMotionFrame(MotionWork *work) {
     }
     Vector3 bonePosition;
     if ((state.channelFlags & 0x1fU) < 9U && !(state.motnFlags & 8U))
-        GetMotionControllerTargetPosition(work, state.channelFlags & 0x1fU, bonePosition);
+        mtwkGetControllerTargetPosition(work, state.channelFlags & 0x1fU, bonePosition);
     g_ikEnabled = 1;
     IK_BuildAndSolve(work->rig, interpolationMode);
     g_ikEnabled = 0;
     if ((state.channelFlags & 0x1fU) < 9U && !(state.motnFlags & 8U)) {
         Vector3 solved;
-        GetMotionControllerTargetPosition(work, state.channelFlags & 0x1fU, solved);
+        mtwkGetControllerTargetPosition(work, state.channelFlags & 0x1fU, solved);
         bonePosition = {bonePosition.x - solved.x, bonePosition.y - solved.y, bonePosition.z - solved.z};
         Matrix4x4_Push();
         InvertModelWorkTransform();
@@ -2396,24 +2396,24 @@ std::int32_t mtwkEvaluateMotionFrame(MotionWork *work) {
             bonePosition.x = 0.0f;
             bonePosition.z = 0.0f;
         }
-        motnAdvanceInterpolated(work, bonePosition.x, bonePosition.y, bonePosition.z);
-        motnCopyInterpolated(work, bonePosition.x, bonePosition.y, bonePosition.z);
+        mtwkAdvanceInterpolated(work, bonePosition.x, bonePosition.y, bonePosition.z);
+        mtwkCopyInterpolated(work, bonePosition.x, bonePosition.y, bonePosition.z);
         work->rig.lowerBody.pelvisTransform.rows[3].y = bonePosition.y;
     }
     mtwkApplyInterpolatedTransforms(work);
     Matrix4x4::Pop(1);
     Matrix4x4 rebase;
     if (state.ikTargetPosition) {
-        GetMotionBonePosition(work, MB_RightForearm, &bonePosition);
+        mtwkGetBonePosition(work, MB_RightForearm, &bonePosition);
         Matrix4x4 arm;
         rebase = *mtwkBuildArmRebaseTransform(&arm, work);
         state.transformStart = &rebase;
     }
     if (state.transformStart)
-        RebaseMotionSolvedMatrices(work);
+        mtwkRebaseSolvedMatrices(work);
     if (state.ikTargetPosition) {
         const Vector3 &target = state.ikTargetPosition[0];
-        motnAdvanceInterpolated(work, target.x - bonePosition.x, target.y - bonePosition.y, target.z - bonePosition.z);
+        mtwkAdvanceInterpolated(work, target.x - bonePosition.x, target.y - bonePosition.y, target.z - bonePosition.z);
         state.ikTargetPosition = nullptr;
         state.transformStart = nullptr;
     }

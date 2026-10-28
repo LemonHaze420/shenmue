@@ -108,14 +108,14 @@ void FreeCharacters(const shen_name *list) {
         }
 }
 void WaitPackages() {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 void RequestPartition(std::int32_t index) {
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::LoadAfs, reinterpret_cast<std::uintptr_t>(cwonPack), static_cast<std::uintptr_t>(index), index + 1);
 }
 void FreePartition(std::int32_t index) {
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(cwonPack), static_cast<std::uintptr_t>(index), index + 1);
 }
 void LoadCharacters(const shen_name *names, HLib::Task *parent = nullptr) {
@@ -282,7 +282,7 @@ void DodgePass(void *data) {
         Angle(CWON_RYO, 180);
         Camera(129);
         Motion(4145, -1, 1, 0x60000000U);
-        SetMotionLayerEndFrame(scenFindMotionwork(CWON_RYO), 40, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(scenFindMotionwork(CWON_RYO), 40, MotionRegion::LowerBody);
         EVT_AT_SetVoice("0011A021", 1, 0);
         WaitMotion(w);
     } else if (w->authorState == 1) {
@@ -656,7 +656,7 @@ void CleanQte(void *data) {
     switch (w->authorState) {
     case 0:
         w->authorState = 1;
-        SetMotionSpeed(scenFindMotionwork(CWON_RYO), .8f, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(CWON_RYO), .8f, MotionRegion::LowerBody);
         ImmediateQte(256, 20);
         break;
     case 1:
@@ -763,7 +763,7 @@ void CwonRootWarehouseIntroCallback(void *data) {
     auto *w = static_cast<CwonEventWork *>(data);
     switch (w->authorState) {
     case -1:
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("CWONTRY2"));
         WaitPackages();
         LoadCharacters(CWON_CHS_HLN_CHARACTERS, HLib::GetCurrentTask());
@@ -785,7 +785,7 @@ void CwonRootWarehouseIntroCallback(void *data) {
     case 1:
         if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
             WaitPackages();
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CWONTRY2"), 0);
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CWONTRY2"), 0);
             FreeCharacters(CWON_CHS_HLN_CHARACTERS);
             Motion(4137);
             EVT_AT_SetMot(CWON_WON, 4137, -1, 1, 0, 0);
@@ -856,7 +856,7 @@ void StairsQte(void *data) {
     case 2:
         if (CwonPositionThreshold(CWON_RYO, 443, true, false)) {
             ++w->authorState;
-            EV_mtwkSetEnabled(scenFindMotionwork(CWON_WON), 1);
+            mtwkSetEnabled(scenFindMotionwork(CWON_WON), 1);
             ImmediateQte(4, 20);
             camCtrlSetMotionScaleFactor(.30000001f);
             camCtrlToggleSmoothing(0);
@@ -891,7 +891,7 @@ void StairsPass(void *data) {
     Camera(164);
     Position(CWON_RYO, CWON_BARREL_FAILURE_POSITION);
     Motion(4145);
-    SetMotionLayerEndFrame(scenFindMotionwork(CWON_RYO), 39, MotionRegion::LowerBody);
+    mtwkSetLayerEndFrame(scenFindMotionwork(CWON_RYO), 39, MotionRegion::LowerBody);
     Next(SignQte);
     WaitMotion(w);
 }
@@ -990,7 +990,7 @@ void SignFail(void *data) {
         } else {
             EV_authSceneCtrl(AuthSceneCtrl::RefreshAndEnqueue);
             for (const shen_name *name = CWON_AUTHOR_CHARACTERS; name->name; ++name) {
-                EV_mtwkSetEnabled(scenFindMotionwork(*name), 1);
+                mtwkSetEnabled(scenFindMotionwork(*name), 1);
                 mtwkSetRequestedRootMode(scenFindMotionwork(*name), 3);
                 EV_SetRefBoardParamsFor(*name, 1);
             }
@@ -1024,7 +1024,7 @@ void EndPass(void *data) {
             IncrementSteamStat(13);
             CwonPrepareCharacters(CWON_END_CHARACTERS);
             FreeCharacters(CWON_DEY_CHARACTERS);
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load,
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Load,
                 reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)), reinterpret_cast<std::uintptr_t>("CWONHAND"));
             ++w->authorState;
             EV_authSceneCtrl(AuthSceneCtrl::ShowFilmBars);
@@ -1039,7 +1039,7 @@ void EndPass(void *data) {
         w->routePass = 4;
         {
             DateTime date;
-            GetCurrentDateTime(date);
+            shenGetCurrentDateTime(date);
             if (date.hour >= 19)
                 EV_lightLoad(SHEN_NAME(0001));
         }
@@ -1200,7 +1200,7 @@ void LostEnd(void *data) {
 }
 void WaitLoad(void *) {
     if (EV_ForceLoadNpc(CWON_WON)) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         EV_NPC_NewLoadSw(1);
@@ -1227,8 +1227,8 @@ void CwonEndChaseCallback(void *data) {
     if (!g_usingCustomAuthorCharacterList)
         return;
     WaitPackages();
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("CWONHAND"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CWONHAND"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("CWONHAND"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CWONHAND"), 0);
     EV_npcLockUnlock(SHEN_NAME(SAM_));
     EV_npcLockUnlock(SHEN_NAME(LLY_));
     for (const shen_name *list : {CWON_CHARACTERS, CWON_GET_CHARACTERS, CWON_MARKET_CHARACTERS, CWON_WAREHOUSE_CHARACTERS, CWON_DEY_CHARACTERS,
@@ -1239,9 +1239,9 @@ void CwonEndChaseCallback(void *data) {
     const bool retailHost = g_currentMap.name == SHEN_NAME(AR02);
     if (!retailHost) {
         if (cwonPackIndex != -1 && cwonPackState != 1)
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(cwonPack),
+            EV_pakUtils(PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(cwonPack),
                 static_cast<std::uintptr_t>(cwonPackIndex), cwonPackState);
-        EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Unmount, reinterpret_cast<std::uintptr_t>(cwonPack), 0);
+        EV_pakUtils(PakCategory::Partition, PakPartitionOp::Unmount, reinterpret_cast<std::uintptr_t>(cwonPack), 0);
     }
     EV_NPC_NewLoadSw(1);
     if (w->temporarySlot <= 1)
@@ -1256,7 +1256,7 @@ void CwonEndChaseCallback(void *data) {
         CwonRestoreMarketProps(0);
         camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CWONBATL"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CWONBATL"), 0);
         if (w->entry == 7)
             for (shen_name name : {SHEN_NAME(TBLa), SHEN_NAME(TBLb), SHEN_NAME(TBLc), SHEN_NAME(TBLd), SHEN_NAME(TBLe)})
                 ToggleFlagOnFieldEntity(name, 1);
@@ -1273,7 +1273,7 @@ void CwonEndChaseCallback(void *data) {
             camCtrlSetState(Init);
             camCtrlSetFovTransitionTo(true);
             shenSetClockAndCompassRenderTo(0);
-            LoadCutsceneAndSoundProgramForArea();
+            sbtLoadProgram();
             EV_spmBeginSampleExecute();
             SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         }

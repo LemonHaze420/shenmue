@@ -168,7 +168,7 @@ void InitializeSprites(std::int32_t useCurrentArea, std::int32_t initializeCommo
     if (initializeCommonTextures) {
         PakLoadTaskEntry_Enqueue(3, 0);
         ReadPakFileFromDirectory("/MISC", "TEXTURES", 4);
-        LoadPak();
+        pakLoadFlush();
         PakGlobalData *const package = GetPakLoadTaskDataPointer();
         if (package) {
             constexpr shen_name binExtension{make_shen_name('B', 'I', 'N', ' ')};

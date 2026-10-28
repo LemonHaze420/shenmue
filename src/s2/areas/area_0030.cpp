@@ -33,7 +33,7 @@ void E0030Init() {
 void ConfigureE0030Environment() {
     SetPlayerControlEnabled(0);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.hour < 19) {
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
@@ -83,7 +83,7 @@ void RestoreE0030Characters() {
 // @verified - p
 void CleanupE0030(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0030_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

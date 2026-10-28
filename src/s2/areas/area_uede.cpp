@@ -82,8 +82,8 @@ void RunUede(std::uintptr_t argument) {
 void UedePrepareResources(UedeWork &work) {
     FinishLoading();
     EV_EventSetUpHelpIcon_0(0x47, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("UEDE"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("UEDE"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("UEDE"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("UEDE"), 0);
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene(work.audio);
     EV_LoadAudio(work.audio, 0);
@@ -105,7 +105,7 @@ void UedePrepareResources(UedeWork &work) {
     ApplyCharacterHandPoseCommand(ctrlGetCharaByName(work.opponent), 1, reinterpret_cast<std::byte *>(uedeCupHandPose), 8);
     work.played = 0;
     uedeStartingCash = static_cast<std::int32_t>(GetPlayerStat(PlayerStatsId::Cash));
-    uedeOpponentPose = GetMotionRigBoneId(scenFindMotionwork(work.opponent)) == 6;
+    uedeOpponentPose = mtwkGetRigBoneId(scenFindMotionwork(work.opponent)) == 6;
     std::strcpy(uedeVoicePrefixes[0], "0102A");
     switch (work.opponent.name) {
     case SHEN_NAME(AHE_):
@@ -182,7 +182,7 @@ void UedeInitializeCharacters(void *data) {
     AT_SetLocalBaseChara(UEDE_DICE[1], UEDE_BASE);
     if (g_currentMap.name != UEDE_AREA.name)
         EV_DisableCharacterDisplay(UEDE_POT);
-    uedeOpponentPose = GetMotionRigBoneId(scenFindMotionwork(work.opponent)) == 6;
+    uedeOpponentPose = mtwkGetRigBoneId(scenFindMotionwork(work.opponent)) == 6;
     EV_NPC_NewLoadSw(1);
     HLib::SetCurrentTaskTo(UedeWaitLoading);
     QueueSkNpcWait(work.self);
@@ -247,13 +247,13 @@ void UedeEnd(void *data) {
     EV_EventSetUpHelpIcon_0(0, 0);
     hndlSetFlags(ctrlGetCharaByName(UEDE_RYO));
     hndlSetFlags(ctrlGetCharaByName(work.opponent));
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     ET_AT_KillWork(work.characters);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.self);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("UEDE"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("UEDE"), 0);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
     EV_NPC_NewLoadSw(1);
 }

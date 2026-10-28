@@ -180,8 +180,8 @@ void Fight_Callback(void *data) {
             WriteCounter(work, 0);
             shenStartFGST(10, 10, 0, 0);
             vfmDispatchControl(FightControlOp::Package, shen_name{}, reinterpret_cast<std::uintptr_t>("BOSY"), 1);
-            shenInitFightData(FindCharacterByScenarioName(ryo), nullptr, 0, 0, 0, 0);
-            shenInitFightData(FindCharacterByScenarioName(syuei), nullptr, 1, 1, 20000, 15);
+            shenInitFightData(ctrlGetScenarioChara(ryo), nullptr, 0, 0, 0, 0);
+            shenInitFightData(ctrlGetScenarioChara(syuei), nullptr, 1, 1, 20000, 15);
             vfCopyPosFromEntity(0, nullptr, 336, 269.7f, 5);
             vfmQueueFightStart(2, 99, 1, 0, 180);
             EV_SetCharacterAlphaEnabled(syuei, false);
@@ -326,11 +326,11 @@ void Exit(BoutWork *work) {
     ET_AT_KillWork(work->characters);
     SetPlayerControlEnabled(0);
     SetCharaKill(base, 1);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     for (auto *motion = work->motions; *motion; ++motion)
         DeleteMotion(*motion);
     EV_FreeAuthorPak(0, "0032");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BOSY"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BOSY"), 0);
     ExecuteCleanupFuncForAreaWithCachedScene();
     if (EV_GetShenmueFlag(255))
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1006, 1);
@@ -350,7 +350,7 @@ void Bout_Callback(void *data) {
     switch (work->phase) {
     case 0:
         SetPlayerControlEnabled(0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOSY"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOSY"), 0);
         LoadBlurModelForCharacter(ryo, "RYO_B.MT7", 1);
         LoadBlurModelForCharacter(syuei, "SYE_B.MT7", 1);
         work->sequence = QueueCompiledSequence(Sequence_Callback, SHEN_NAME(SEQP), work);
@@ -399,8 +399,8 @@ void AreaBOSYMain(std::uintptr_t parameter) {
     if (IsFightActive())
         check_dead_status(1);
     work->motions[0] = 0;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BOSY"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOSY"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BOSY"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOSY"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, base);
     EV_FreeAuthorPak(1, "0032");
     EV_LoadCutsceneFromCurrentScene("0032A000");

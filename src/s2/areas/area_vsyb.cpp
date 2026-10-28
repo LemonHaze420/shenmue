@@ -61,7 +61,7 @@ void VsybMainCallback(void *parameter) {
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         EV_authSceneCtrl(AuthSceneCtrl::DisallowSkipAuthor);
         QueueSkAuthorStart(work->self, static_cast<std::int32_t>(VSYB_OPENING_AUTHOR.name), nullptr, nullptr, 0);
-        SetCharacterOsageMode(FindCharacterByScenarioName(VSYB_REN), 4);
+        SetCharacterOsageMode(ctrlGetScenarioChara(VSYB_REN), 4);
         work->elapsedFrames = 0;
         work->durationFrames = 0;
         work->state = 4;
@@ -85,7 +85,7 @@ void VsybMainCallback(void *parameter) {
         flddSetPointFlagOnGrid(VSYB_BATTLE_POINT, 0);
         EV_stepSetFlags(1, 0x7d);
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         date.hour += 2;
         SetCurrentDateTimeTo(date);
         EV_DisableCharacterDisplay(VSYB_YUAN);
@@ -115,10 +115,10 @@ void VsybMainCallback(void *parameter) {
 // @verified - p
 void InitializeVsybResources(VsybEventWork *work) {
     EV_DisableCharacterDisplay(VSYB_REN);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("VSYB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("VSYB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("VSYB"), 0);
     EV_LoadCutsceneFromCurrentScene("0058A000.smp");
     EV_LoadAudio("0058A000.sbt", 0);
     EV_spmBeginSampleExecute();
@@ -127,9 +127,9 @@ void InitializeVsybResources(VsybEventWork *work) {
     work->motion = ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
     EV_FreeAuthorPak(1, "0058");
     shenStartFGST(10, 10, 0, 0);
-    shenInitFightData(FindCharacterByScenarioName(VSYB_PLAYER), nullptr, 0, 0, 0, 0);
-    shenInitFightData(FindCharacterByScenarioName(VSYB_FIRST_OPPONENT), nullptr, 1, 1, 300, 2);
-    shenInitFightData(FindCharacterByScenarioName(VSYB_SECOND_OPPONENT), nullptr, 1, 1, 300, 2);
+    shenInitFightData(ctrlGetScenarioChara(VSYB_PLAYER), nullptr, 0, 0, 0, 0);
+    shenInitFightData(ctrlGetScenarioChara(VSYB_FIRST_OPPONENT), nullptr, 1, 1, 300, 2);
+    shenInitFightData(ctrlGetScenarioChara(VSYB_SECOND_OPPONENT), nullptr, 1, 1, 300, 2);
 }
 // @verified - p
 void PrepareVsybBattle() {
@@ -154,17 +154,17 @@ void PrepareVsybBattle() {
     ToggleScenarioCharacterFlag(VSYB_REN);
     EV_DisableCharacterDisplay(VSYB_WONG);
     ToggleScenarioCharacterFlag(VSYB_WONG);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(VSYB_PLAYER), FacialNodeOriginal);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(VSYB_YUAN), FacialNodeOriginal);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(VSYB_PLAYER), FacialNodeOriginal);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(VSYB_YUAN), FacialNodeOriginal);
     SetScenarioCharacterType(VSYB_PLAYER, CharacterTypeDefault);
     SetScenarioCharacterType(VSYB_FIRST_OPPONENT, CharacterTypeDefault);
     SetScenarioCharacterType(VSYB_SECOND_OPPONENT, CharacterTypeDefault);
     SetScenarioCharacterType(VSYB_YUAN, CharacterTypeDefault);
-    hndlSetFlags(FindCharacterByScenarioName(VSYB_PLAYER));
-    hndlSetFlags(FindCharacterByScenarioName(VSYB_REN));
-    hndlSetFlags(FindCharacterByScenarioName(VSYB_YUAN));
-    hndlSetFlags(FindCharacterByScenarioName(VSYB_SECOND_OPPONENT));
-    hndlSetFlags(FindCharacterByScenarioName(VSYB_COH));
+    hndlSetFlags(ctrlGetScenarioChara(VSYB_PLAYER));
+    hndlSetFlags(ctrlGetScenarioChara(VSYB_REN));
+    hndlSetFlags(ctrlGetScenarioChara(VSYB_YUAN));
+    hndlSetFlags(ctrlGetScenarioChara(VSYB_SECOND_OPPONENT));
+    hndlSetFlags(ctrlGetScenarioChara(VSYB_COH));
     vfmQueueFightStart(3, 99, 1, 0, -1);
     vfmDispatchControl(FightControlOp::CameraParameter, shen_name{0}, 13, 1);
     EV_LoadAudio("0058A000.sbt", 1);
@@ -176,12 +176,12 @@ void VsybBattleCallback(void *parameter) {
         EnsureScenarioCharacterDraw(VSYB_REN);
         EV_EnableCharacterDisplay(VSYB_WONG);
         EnsureScenarioCharacterDraw(VSYB_WONG);
-        SetLowQualityHands(FindCharacterByScenarioName(VSYB_PLAYER));
-        SetLowQualityHands(FindCharacterByScenarioName(VSYB_REN));
-        SetLowQualityHands(FindCharacterByScenarioName(VSYB_YUAN));
-        SetLowQualityHands(FindCharacterByScenarioName(VSYB_SECOND_OPPONENT));
-        SetLowQualityHands(FindCharacterByScenarioName(VSYB_COH));
-        work->state = GetBtlStatus(FindCharacterByScenarioName(VSYB_PLAYER)) == 3 ? 7 : 9;
+        SetLowQualityHands(ctrlGetScenarioChara(VSYB_PLAYER));
+        SetLowQualityHands(ctrlGetScenarioChara(VSYB_REN));
+        SetLowQualityHands(ctrlGetScenarioChara(VSYB_YUAN));
+        SetLowQualityHands(ctrlGetScenarioChara(VSYB_SECOND_OPPONENT));
+        SetLowQualityHands(ctrlGetScenarioChara(VSYB_COH));
+        work->state = GetBtlStatus(ctrlGetScenarioChara(VSYB_PLAYER)) == 3 ? 7 : 9;
         SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
         HLib::SetCurrentTaskTo(VsybMainCallback);
     }
@@ -189,7 +189,7 @@ void VsybBattleCallback(void *parameter) {
 }
 void CleanupVsybEvent(VsybEventWork *work) {
     spmFadeOut();
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("VSYB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("VSYB"), 0);
     EV_SetModelDataDefaultVertexShader();
     EV_lightLoad(VSYB_LIGHT);
     CheckIsArgEquZero(1);

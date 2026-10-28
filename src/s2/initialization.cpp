@@ -116,7 +116,7 @@ void RootTask_Callback(void *) {
         ExecuteCurrentCommandList();
         SD_Override();
         DateTime dateTime;
-        GetCurrentDateTime(dateTime);
+        shenGetCurrentDateTime(dateTime);
         const float fractionOfDay =
             (static_cast<float>(1000 * (dateTime.second + 60 * (dateTime.minute + 60 * dateTime.hour))) + g_gameTimeMilliseconds) / 86400000.0f;
         shenIsGamePaused();

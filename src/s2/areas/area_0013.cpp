@@ -115,7 +115,7 @@ void QueueE0013Loop(AreaImmediateAuthorTaskParameter *parent) {
 void CleanupE0013(AreaImmediateAuthorTaskParameter *parent) {
     using enum CameraState;
     EV_FreeAuthorPak(0, "0013");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0013A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0013A"), 0);
     npcSetAreaName(AREA_0013_ANP1, nullptr, 0.0f, 0);
     EV_CleanupMapControlTask();
     if (g_currentMap.name == AREA_0013_AR02.name) {
@@ -123,11 +123,11 @@ void CleanupE0013(AreaImmediateAuthorTaskParameter *parent) {
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 267, 0}, 0};
         EVT_AT_SetAng_Callback(&angle);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_ResetFreeTalkFlags();
         EV_NPC_NewLoadSw(0);
         EV_ForceLoadNpc(AREA_0013_WON);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         EV_CheckWarmStartNpcRoute(AREA_0013_WON);
         EV_NPC_NewLoadSw(1);
         mtwkRequestMotion(scenFindMotionwork(AREA_AUTHOR_RYO), 0xf003, MotionRegion::LowerBody);

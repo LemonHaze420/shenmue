@@ -15,12 +15,12 @@
 namespace shenmue::s2::areas {
 BookScenarioData bookScenarioData;
 void HideBookScenarioActor(shen_name actor) {
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
     EV_SetCharacterAlphaEnabled(actor, false);
-    EV_SetCharaControllerFlags(actor, CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
     mtwkSetRequestedRootMode(scenFindMotionwork(actor), 0);
-    SetMotionRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(actor, EventTransformFlags::AllAxes, {.x = -1000, .y = -1000, .z = -1000});
 }
 void QueueBookScenarioActors(const char *authorBank, const shen_name *actors, HLib::TaskCallback continuation) {
@@ -49,12 +49,12 @@ void QueueBookScenarioActors(const char *authorBank, const shen_name *actors, HL
         HLib::SetCurrentTaskTo(BookScenarioPackageWaitCallback);
 }
 void BookScenarioPackageRetryCallback(void *) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(bookScenarioData.package)))
         HLib::SetCurrentTaskTo(BookScenarioPackageWaitCallback);
 }
 void BookScenarioPackageWaitCallback(void *) {
-    if ((bookScenarioData.pendingResources & 1U) && !EV_ControlPackageResources(PakCategory::Package, PakPackageOp::LoadAfs, 0, 0))
+    if ((bookScenarioData.pendingResources & 1U) && !EV_pakUtils(PakCategory::Package, PakPackageOp::LoadAfs, 0, 0))
         bookScenarioData.pendingResources &= ~1U;
     for (std::uint32_t i = 0; bookScenarioData.actors[i].name; ++i) {
         const std::uint32_t mask = 2U << (i & 31U);

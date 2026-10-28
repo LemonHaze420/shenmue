@@ -173,7 +173,7 @@ void eSTEP_EVT_Step(void *data) {
         SetStepAngle(work->character, work->character, 270);
         HLib::SetupTaskDelay(25);
         ++work->phase;
-    } else if (SetMotionRegionFlag(scenFindMotionwork(work->character), 65, 1, MotionRegion::LowerBody)) {
+    } else if (mtwkSetRegionFlag(scenFindMotionwork(work->character), 65, 1, MotionRegion::LowerBody)) {
         const bool samRig = STEP_GetMotionRigId(work->character) == 7;
         EVT_AT_SetMot(work->character, samRig ? 7067 : 7089, 0, 1, 0x40000000U, 0);
         SetStepPosition(work->character, work->character, {.x = 0, .y = -0.45f, .z = 0});
@@ -201,7 +201,7 @@ std::int32_t STEP_FirstDodgeFailure() {
     SetStepAngle(STEP_KR4, STEP_RYO, 0);
     SetStepMotion(STEP_RYO, 7060, 0, 0.8f, 0x44000000U);
     SetStepMotion(STEP_KR4, 7096, 31, 0.8f, 0x44000000U);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STEP_RYO), 6, 8, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(STEP_RYO), 6, 8, 1);
     PlayStepVoice("S2BVA009");
     return 45;
 }
@@ -265,7 +265,7 @@ std::int32_t STEP_SecondDodgeFailure() {
 std::int32_t STEP_SecondCounterSuccess() {
     SetStepCamera(3303);
     EVT_AT_SetCam(3306, STEP_BASE, STEP_BASE, 0, 0, 60);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STEP_RYO), 1, 8, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(STEP_RYO), 1, 8, 1);
     QueueStepFace(STEP_KR4, 6, 8, 20);
     EVT_AT_DispBlur(STEP_RYO, 6, 10, 2, 15, 0);
     SetStepMotion(STEP_RYO, 7042, 0, 1, 0x40000000U);
@@ -397,7 +397,7 @@ void setRyoKaidanPos_Callback(void *) {
     HLib::DestroyCurrentTask();
 }
 std::int32_t STEP_FinalDodgeSuccess() {
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STEP_RYO), 1, 8, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(STEP_RYO), 1, 8, 1);
     SetStepPosition(STEP_RYO, STEP_RYO, {.x = -0.2f, .y = 0, .z = 0.4f});
     SetStepPosition(STEP_CHD, STEP_RYO, {.x = -0.8f, .y = 1.5f, .z = -2.26f});
     SetStepAngle(STEP_CHD, STEP_RYO, 0);
@@ -452,11 +452,11 @@ std::int32_t STEP_BeginFinalOpponent(StepEventWork *work) {
 }
 
 std::int32_t STEP_SetupKaidanQte(StepEventWork *work) {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("STEP"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("STEP"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("STEP"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("STEP"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("STEP"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, STEP_BASE);
     SetStepPosition(STEP_BASE, STEP_INVALID, {.x = 264.7f, .y = 241.3f, .z = 137.52f});
     SetStepAngle(STEP_BASE, STEP_INVALID, 0);
@@ -469,11 +469,11 @@ std::int32_t STEP_SetupKaidanQte(StepEventWork *work) {
     EV_FreeAuthorPak(1, "S2BV");
     EV_FreeAuthorPak(1, "0274");
     work->state = 1;
-    (void)FindMotionWork(FindCharacterByScenarioName(STEP_RYO));
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(STEP_RYO), FacialNodeReplacement);
+    (void)FindMotionWork(ctrlGetScenarioChara(STEP_RYO));
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(STEP_RYO), FacialNodeReplacement);
     for (std::size_t i = 0; i + 1 < stepCharacterNames.size(); ++i) {
         SetScenarioCharacterType(stepCharacterNames[i], CharacterTypeStencilShadow);
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(stepCharacterNames[i]), 1, 0, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(stepCharacterNames[i]), 1, 0, 1);
     }
     return 0;
 }
@@ -483,10 +483,10 @@ std::int32_t STEP_RunKaidanQte(StepEventWork *work) {
     case 0:
         EV_LoadAudio("0273A000", 0);
         EV_spmBeginSampleExecute();
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STEP_RYO), 1, 0, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(STEP_RYO), 1, 0, 1);
         for (std::size_t i = 0; i + 1 < stepCharacterNames.size(); ++i) {
             EV_DisableCharacterDisplay(stepCharacterNames[i]);
-            SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(stepCharacterNames[i]), 1, 0, 1);
+            SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(stepCharacterNames[i]), 1, 0, 1);
         }
         EV_EnableCharacterDisplay(STEP_RYO);
         delay = STEP_BeginFirstOpponent(work);
@@ -537,7 +537,7 @@ std::int32_t STEP_RunKaidanQte(StepEventWork *work) {
         ++work->phase;
         break;
     case 12:
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(STEP_RYO), 6, 8, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(STEP_RYO), 6, 8, 1);
         if (!work->qteSucceeded)
             work->phase = 50;
         else {
@@ -637,10 +637,10 @@ std::int32_t STEP_RunKaidanAuthor(StepEventWork *work) {
         (void)IsAuthorMultichannelAudioEnabled();
         ET_AT_KillWork(work->characters);
         SetPlayerControlEnabled(0);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("STEP"), 0);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("STEP"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("STEPAUTH"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         Queue_EVT_UTL_LoadNPCChara_3(stepAuthorCharacterNames.data(), work->task);
         EV_LoadCutsceneFromCurrentScene("0274A000");
         if (!IsAuthorStreamingAudioLoaded())
@@ -677,7 +677,7 @@ std::int32_t STEP_FinishKaidanAuthor(StepEventWork *work) {
 void eSTEP_EVT_EndKaidanQte_Callback(void *data) {
     StepEventWork *const work = static_cast<StepEventWork *>(data);
     FinishLoading();
-    (void)FindMotionWork(FindCharacterByScenarioName(STEP_RYO));
+    (void)FindMotionWork(ctrlGetScenarioChara(STEP_RYO));
     for (std::size_t i = 0; i + 1 < stepAuthorCharacterNames.size(); ++i)
         if (DoesScenarioCharacterExist(stepAuthorCharacterNames[i])) {
             EV_npcLockUnlock(stepAuthorCharacterNames[i]);
@@ -688,14 +688,14 @@ void eSTEP_EVT_EndKaidanQte_Callback(void *data) {
     SetCharaKill(STEP_BASE, 1);
     EV_FreeAuthorPak(0, "S2BV");
     EV_FreeAuthorPak(0, "0274");
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("STEPAUTH"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("STEPAUTH"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("STEPAUTH"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("STEPAUTH"), 0);
     scenFreeEvent("STEP.EV3");
     scenSetTaskFlags(8);
     Queue_ST_LoadTitleFadeIn(shen_name{});
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("TGLB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     ExecuteCurrAreaMainFunc_Wrapper(2, 0);
     camCtrlResetClipDistances();
 }
@@ -754,7 +754,7 @@ void STEP_init_func() {
 void Queue_EVT_AT_NPCClear(std::uintptr_t) {
     StepRemovedLogger();
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 17;
     date.minute = 30;
     SetCurrentDateTimeTo(date);

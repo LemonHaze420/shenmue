@@ -45,7 +45,7 @@ const EventDartsAiRecord *FindDartsAiRecord(shen_name character) {
 }
 
 void SetEventCharacterRotation(shen_name character, const Vector3i &rotation) {
-    Character *const found = FindCharacterByScenarioName(character);
+    Character *const found = ctrlGetScenarioChara(character);
     if (!found)
         return;
     found->entity.node.rotation[0] = rotation.x;
@@ -57,7 +57,7 @@ void SetEventCharacterRotation(shen_name character, const Vector3i &rotation) {
 }
 
 void SetEventCharacterControllerFlags(shen_name character, std::uint32_t flags, bool enabled) {
-    Character *const found = FindCharacterByScenarioName(character);
+    Character *const found = ctrlGetScenarioChara(character);
     CharacterControlModel *const control = FindCharacterControlModel(found);
     if (!control)
         return;
@@ -115,8 +115,8 @@ void DartsPositionCallback(void *taskData) {
     if (data->hasRotation)
         EV_AT_SetAngY(data->character, EventTransformFlags::AllAxes, data->rotation, nullptr);
     AT_SetLocalBaseChara(data->character, previousParent);
-    SetClothFlag(FindCharacterByScenarioName(data->character), 16, 1);
-    toggleOsagFlags(FindCharacterByScenarioName(data->character));
+    SetClothFlag(ctrlGetScenarioChara(data->character), 16, 1);
+    toggleOsagFlags(ctrlGetScenarioChara(data->character));
     if (data->cleanupTask)
         HLib::DestroyCurrentTask();
 }
@@ -138,8 +138,8 @@ std::uint16_t SetDartsAiMotion(shen_name character, std::uint32_t flags) {
 void SetDartsPosition(shen_name character, shen_name parent, float xOffset, std::int32_t delayFrames) {
     const Vector3 position{xOffset, 0.0f, 3.5999999f};
     const Vector3i rotation{};
-    if (Character *const found = FindCharacterByScenarioName(character)) {
-        SetMotionRegionFlag(FindMotionWork(found), 71, 0, MotionRegion::LowerBody);
+    if (Character *const found = ctrlGetScenarioChara(character)) {
+        mtwkSetRegionFlag(FindMotionWork(found), 71, 0, MotionRegion::LowerBody);
     }
     QueueDartsPosition(character, parent, &position, &rotation, delayFrames);
 }
@@ -163,7 +163,7 @@ void EventDartsArrowCallback(void *taskData) {
     if (data->character.name == eventDartsTemporaryCharacter.name) {
         const shen_name target = data->arrow;
         HLib::DestroyCurrentTask();
-        ResetCharaFixo(FindCharacterByScenarioName(target));
+        ResetCharaFixo(ctrlGetScenarioChara(target));
         return;
     }
     if (!DoesScenarioCharacterExist(data->character) || !DoesScenarioCharacterExist(data->arrow)) {
@@ -171,14 +171,14 @@ void EventDartsArrowCallback(void *taskData) {
         EV_DisableCharacterDisplay(target);
         EV_ToggleCharacterFlag(target);
         HLib::DestroyCurrentTask();
-        ResetCharaFixo(FindCharacterByScenarioName(target));
+        ResetCharaFixo(ctrlGetScenarioChara(target));
         return;
     }
 
     EV_EnableCharacterDisplay(data->arrow);
     EV_EnsureCharacterDraw(data->arrow);
-    Character *const source = FindCharacterByScenarioName(data->character);
-    Character *const arrow = FindCharacterByScenarioName(data->arrow);
+    Character *const source = ctrlGetScenarioChara(data->character);
+    Character *const arrow = ctrlGetScenarioChara(data->arrow);
     constexpr Vector3 jonOffset{0.1400000006f, -0.0599999987f, 0.0399999991f};
     constexpr Vector3 fcjHlnOffset{0.1099999994f, -0.0900000036f, -0.0f};
     constexpr Vector3 defaultOffset{0.1400000006f, -0.0599999987f, -0.0199999996f};
@@ -205,7 +205,7 @@ void PrepareDartsArrows(EventEnemyDartsTaskData &data) {
             EV_EnsureCharacterDraw(arrow);
             Vector3 position;
             CalculateDartsPositionOrScore(score, &position);
-            SetMotionRegionFlag(FindMotionWork(FindCharacterByScenarioName(arrow)), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(arrow)), 71, 0, MotionRegion::LowerBody);
             const Vector3i rotation{0, 0xc000, 0};
             QueueDartsPosition(arrow, data.configuration70->character, &position, &rotation, 0);
             ++arrowIndex;
@@ -285,9 +285,9 @@ void EventEnemyDartsCallback(void *taskData) {
             data->byte4a = 2;
             eventDartsTemporaryCharacter = enemy;
             BeginDartsEvent(enemy, 2, data);
-        } else if (Character *const character = FindCharacterByScenarioName(enemy)) {
+        } else if (Character *const character = ctrlGetScenarioChara(enemy)) {
             MotionWork *const motionWork = FindMotionWork(character);
-            if (SetMotionRegionFlag(motionWork, 65, 1, MotionRegion::LowerBody) && ryoNotBusy()) {
+            if (mtwkSetRegionFlag(motionWork, 65, 1, MotionRegion::LowerBody) && ryoNotBusy()) {
                 SetDartsAiMotion(enemy, 0x02000000U);
                 const bool aks0Xho = g_currentMap.name == SHEN_NAME(AKS0) && enemy.name == SHEN_NAME(XHO_);
                 SetDartsPosition(enemy, data->configuration70->character, aks0Xho ? -0.30000001f : 0.0f, 1);
@@ -317,11 +317,11 @@ void EventEnemyDartsCallback(void *taskData) {
     EV_EnableCharacterDisplay(data->configuration70->character);
     EV_SetCharacterAlphaEnabled(enemy, true);
     QueueDartsArrow(enemy, SHEN_NAME(Ya14));
-    mtwkSetRequestedRootMode(FindMotionWork(FindCharacterByScenarioName(enemy)), 3);
-    EV_mtwkSetEnabled(FindMotionWork(FindCharacterByScenarioName(enemy)), true);
-    SetEventCharacterControllerFlags(enemy, CharacterControlApplyGravity, false);
-    SetEventCharacterControllerFlags(enemy, CharacterControlUpdateHeight | CharacterControlApplyGravity, false);
-    SetEventCharacterControllerFlags(enemy, CharacterControlUpdateHeight, false);
+    mtwkSetRequestedRootMode(FindMotionWork(ctrlGetScenarioChara(enemy)), 3);
+    mtwkSetEnabled(FindMotionWork(ctrlGetScenarioChara(enemy)), true);
+    SetEventCharacterControllerFlags(enemy, CCMF_ApplyGravity, false);
+    SetEventCharacterControllerFlags(enemy, CCMF_UpdateHeight | CCMF_ApplyGravity, false);
+    SetEventCharacterControllerFlags(enemy, CCMF_UpdateHeight, false);
     RestoreOpponentDartsScores(enemy, &data->field58, &data->field5c);
     PrepareDartsArrows(*data);
 
@@ -346,11 +346,11 @@ void EventEnemyDartsCallback(void *taskData) {
 
 
 void EVT_EnsureDartsPackageMounted() {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("DARTS"), 0))
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("DARTS"), 0))
         return;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("DARTS"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 
 void EVT_PrepareDartsPlacement(const EventDartsPlacement &placement) {

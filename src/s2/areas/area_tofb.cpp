@@ -50,17 +50,17 @@ void TofbMain(std::uintptr_t) {
 void InitializeTofbResources(TofbEventWork *work) {
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
-    GetCurrentDateTime(eventTemporaryDateTime);
+    shenGetCurrentDateTime(eventTemporaryDateTime);
     work->characters = Queue_EVT_AT_ReadChr(work->task, TOFB_LOAD_CHARACTERS);
     work->motionHandle = ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("0047"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("TOFB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("TOFB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TOFB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("TOFB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TOFB"), 0);
     EV_FreeAuthorPak(1, "0047");
     EV_FreeAuthorPak(1, "0048");
     EV_SetNewSceneIndex();
@@ -156,14 +156,14 @@ void TofbBattleStartCallback(void *) {
     vfStageDefinitionAddHitbox(0, 2, 1, 0, 0.30000001192092896f, 0, 0.6000000238418579f);
     vfStageDefinitionAddHitbox(0, 2, 0x8001, 0.8999999761581421f, 0.5f, 0, 0.5f);
     vfStageDefinitionSetMotion(0, TOFB_TABLE_MOTION.name, 17, nullptr, 2, 2, 299, 117);
-    vfAllocateVOBJ(0, FindCharacterByScenarioName(TOFB_TABLE), 0);
-    vfStageObjectSetBrokenModel(0, FindCharacterByScenarioName(TOFB_BROKEN_TABLE), 720);
+    vfAllocateVOBJ(0, ctrlGetScenarioChara(TOFB_TABLE), 0);
+    vfStageObjectSetBrokenModel(0, ctrlGetScenarioChara(TOFB_BROKEN_TABLE), 720);
     vfInitializeStageObjectHitboxes();
-    shenInitFightData(FindCharacterByScenarioName(TOFB_PLAYER), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (tofbRetries + 2)), 0);
-    shenInitFightData(FindCharacterByScenarioName(TOFB_CHR), nullptr, 1, 1, 80, 6);
-    shenInitFightData(FindCharacterByScenarioName(TOFB_SBO), nullptr, 1, 1, 80, 3);
-    shenInitFightData(FindCharacterByScenarioName(TOFB_SCX), nullptr, 1, 1, 100, 4);
-    shenInitFightData(FindCharacterByScenarioName(TOFB_MRC), nullptr, 1, 1, 100, 5);
+    shenInitFightData(ctrlGetScenarioChara(TOFB_PLAYER), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (tofbRetries + 2)), 0);
+    shenInitFightData(ctrlGetScenarioChara(TOFB_CHR), nullptr, 1, 1, 80, 6);
+    shenInitFightData(ctrlGetScenarioChara(TOFB_SBO), nullptr, 1, 1, 80, 3);
+    shenInitFightData(ctrlGetScenarioChara(TOFB_SCX), nullptr, 1, 1, 100, 4);
+    shenInitFightData(ctrlGetScenarioChara(TOFB_MRC), nullptr, 1, 1, 100, 5);
     vfCopyPosFromEntity(0, nullptr, 219, 212, 4);
     EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x800}, 1);
     for (const shen_name character : TOFB_HIDDEN_CHARACTERS) {
@@ -185,7 +185,7 @@ void TofbBattleCallback(void *) {
     }
     for (const shen_name character : TOFB_HIDDEN_CHARACTERS)
         EnsureScenarioCharacterDraw(character);
-    if (GetBtlStatus(FindCharacterByScenarioName(TOFB_PLAYER)) == 3) {
+    if (GetBtlStatus(ctrlGetScenarioChara(TOFB_PLAYER)) == 3) {
         EV_stepSetFlags(0, 0x55);
         HLib::SetCurrentTaskTo(TofbVictoryAuthorCallback);
     } else {
@@ -202,10 +202,10 @@ void TofbBattleCallback(void *) {
 }
 // @verified - p
 void TofbVictoryAuthorCallback(void *) {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0047"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0047"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("0048"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_SetModelDataDefaultVertexShader();
     EV_lightLoad(TOFB_LIGHT);
     PushGlobalLightingProgram();
@@ -227,7 +227,7 @@ void TofbRetryCallback(void *) {
 void MaintainTofbBattleCamera(std::int32_t mode) {
     Vector3 camera;
     camCtrlGetNextCamPos(&camera);
-    if (!FindCharacterByScenarioName(TOFB_BROKEN_TABLE))
+    if (!ctrlGetScenarioChara(TOFB_BROKEN_TABLE))
         return;
     if (mode == 1) {
         EV_SetCharacterAlphaEnabled(TOFB_BROKEN_TABLE, false);
@@ -256,12 +256,12 @@ void TofbEndingAuthorCallback(void *) {
 void CleanupTofbResources(TofbEventWork *work) {
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0048");
     EV_FreeAuthorPak(0, "0047");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TOFB"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0048"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TOFB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0048"), 0);
     DeleteMotion(work->motionHandle);
     ET_AT_KillWork(work->characters);
     EV_NPC_NewLoadSw(1);

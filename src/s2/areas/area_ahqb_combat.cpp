@@ -74,7 +74,7 @@ std::int32_t AHQBCompleteCombat() {
     EVT_AT_DispBlur(AHQB_PLAYER, 6, 15, 2, 30, 25);
     EVT_AT_SetCam(2004, AHQB_BASE, AHQB_BASE, 0, 0, 0);
     EVT_AT_SetCam(2012, AHQB_BASE, AHQB_BASE, 0, 0, 25);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(AHQB_PLAYER), 0, reinterpret_cast<std::byte *>(fortuneLeftReadingHandPose), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(AHQB_PLAYER), 0, reinterpret_cast<std::byte *>(fortuneLeftReadingHandPose), 0);
     Queue_EVT_AT_CtrlHandUp_1(AHQB_PLAYER, 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 10, 40);
     return 100;
 }
@@ -88,7 +88,7 @@ std::int32_t AHQBFirstMiss() {
     EVT_AT_SetCam(2004, AHQB_BASE, AHQB_BASE, 0, 0, 0);
     EVT_AT_SetCam(2005, AHQB_BASE, AHQB_BASE, 0, 0, 20);
     EVT_AT_SetFaceLooks(AHQB_PLAYER, FacialExpressionId::Suffer, 10, 1, 25);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(AHQB_PLAYER), 0, reinterpret_cast<std::byte *>(fortuneLeftReadingHandPose), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(AHQB_PLAYER), 0, reinterpret_cast<std::byte *>(fortuneLeftReadingHandPose), 0);
     Queue_EVT_AT_CtrlHandUp_1(AHQB_PLAYER, 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 10, 40);
     return 60;
 }
@@ -122,7 +122,7 @@ std::int32_t AHQBFirstCounter() {
     GetMotionFrameCount(4229);
     EVT_AT_SetCam(2009, AHQB_BASE, AHQB_BASE, 0, 0, 0);
     EVT_AT_DispBlur(AHQB_PLAYER, 4, 8, 1, 20, 10);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(AHQB_PLAYER), 0, reinterpret_cast<std::byte *>(fortuneLeftReadingHandPose), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(AHQB_PLAYER), 0, reinterpret_cast<std::byte *>(fortuneLeftReadingHandPose), 0);
     Queue_EVT_AT_CtrlHandUp_1(AHQB_PLAYER, 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 10, 40);
     return 20;
 }
@@ -130,8 +130,8 @@ std::int32_t AHQBFirstCounter() {
 std::int32_t AHQBFirstFailureCamera() {
     EVT_AT_SetCam(2002, AHQB_BASE, AHQB_BASE, 0, 0, -1);
     EVT_AT_SetCam(2003, AHQB_BASE, AHQB_BASE, 0, 0, 60);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(AHQB_PLAYER), 6, 10, 1);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(AHQB_HTK), 0, reinterpret_cast<std::byte *>(opponentCounterHandPose), 0);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(AHQB_PLAYER), 6, 10, 1);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(AHQB_HTK), 0, reinterpret_cast<std::byte *>(opponentCounterHandPose), 0);
     return 90;
 }
 // @verified - p
@@ -194,10 +194,10 @@ std::int32_t AHQBCombatPhase(AhqbEventWork *work) {
     case 0: {
         EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
         for (const shen_name character : {AHQB_PLAYER, AHQB_HTK, AHQB_GOI})
-            SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(character), 1, 0, 1);
+            SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(character), 1, 0, 1);
         for (const shen_name character : {AHQB_PLAYER, AHQB_HTK, AHQB_GOI}) {
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(character), 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(character), 1, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(character), 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(character), 1, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
         }
         const std::int32_t delay = AHQBBeginCombat(work);
         work->phase = 1;

@@ -47,7 +47,7 @@ void CRETRetryCallback(void *) {
         ReleaseNpcScriptRouteOwner();
         if ((static_cast<std::uint32_t>(cretMode - 2) & 0xfffffffdU) == 0) {
             DateTime current;
-            GetCurrentDateTime(current);
+            shenGetCurrentDateTime(current);
         }
         if (cvsHasValidConverseData(cretDialogue))
             return;
@@ -63,7 +63,7 @@ void CRETRetryCallback(void *) {
     DateTime dateTime;
     std::uint32_t seconds;
     if ((static_cast<std::uint32_t>(cretMode) & 0xfffffff5U) || cretMode == 2) {
-        GetCurrentDateTime(dateTime);
+        shenGetCurrentDateTime(dateTime);
         seconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(dateTime));
         EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 48, seconds >> 24);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 49, (seconds >> 16) & 0xffU);
@@ -151,7 +151,7 @@ void CRETDirectRetryCallback(void *) {
     if (cretState != 1 || filmCheckFadeTrackColour())
         return;
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     const std::uint32_t seconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(dateTime));
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 48, seconds >> 24);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 49, (seconds >> 16) & 0xffU);
@@ -168,7 +168,7 @@ void CRETDirectRetryCallback(void *) {
 // @verified - p
 void AreaCRETMain(std::uintptr_t argument) {
     const std::int32_t mode = static_cast<std::int32_t>(argument);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CRET"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CRET"), 0);
     cretMode = mode;
     cretState = 0;
     cretStoryStep = 0;

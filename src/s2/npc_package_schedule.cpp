@@ -101,7 +101,7 @@ void InitializeNpcInterpreterState(NpcRouteLiveEntry &entry, std::int32_t slot) 
         entry.currentAreaPoint = ReadU16(record + 0x0c);
         entry.currentCommand = record + 0x38;
     } else {
-        entry.flags |= NpcRouteAbstractActive;
+        entry.flags |= NRSF_AbstractActive;
         entry.recordBase = npcScriptRecord.data();
         entry.name = NPC_SCRIPT_ROUTE_SLOT;
         entry.humanPackageIndex = static_cast<std::int16_t>(slot);
@@ -252,7 +252,7 @@ std::int64_t TickNpcAreaRoute(NpcRouteLiveEntry *routeEntry, std::int32_t curren
     if (!TickNpcRouteStateContext(&entry.stateContext))
         return false;
     if (entry.motionWork)
-        SetMotionSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
+        mtwkSetSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
     entry.currentAreaPoint = entry.pendingAreaPoint;
     NpcRouteRuntimeRecord *const runtime = GetNpcRuntimeRecord(entry);
     if (runtime && NpcRecordContains(*runtime, entry.currentCommand, 16) && ReadU32(entry.currentCommand) == 42) {
@@ -396,14 +396,14 @@ bool ResumeNpcTimedMotion(NpcRouteLiveEntry &entry) {
     const MotnSequence &sequence = *FindLoadedMotionSequence(entry.currentMotionId);
     const std::int32_t frame = npcFrameCount % (sequence.frameCount - 1);
     if (frame) {
-        SetMotionRegionFlag(entry.motionWork, 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(entry.motionWork, 71, 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(entry.motionWork, 14, 0);
-        SetMotionRegionEvalTime(entry.motionWork, static_cast<float>(frame), MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(entry.motionWork, static_cast<float>(frame), MotionRegion::LowerBody);
     }
     auto &slot = *static_cast<NpcTimedMotionSlot *>(entry.timedMotionHandle);
     if (!slot.motion)
         return true;
-    slot.character = FindCharacterByScenarioName(slot.name);
+    slot.character = ctrlGetScenarioChara(slot.name);
     if (!slot.character)
         return false;
     slot.character->renderFlags |= CRF_DisplayEnabled;
@@ -420,7 +420,7 @@ bool ResumeNpcTimedMotion(NpcRouteLiveEntry &entry) {
     shenApplyTranslationToAll(&slot.character->entity.node, position);
     Vector3i rotation;
     std::memcpy(&rotation, &entry.euler, sizeof(rotation));
-    SetCharacterWorldRotation(slot.character, rotation);
+    charaSetWorldRot(slot.character, rotation);
     InitializeTimedNodeMotion(slot.animation, static_cast<MT7Model *>(slot.character->model), slot.motion);
     slot.animation.frame = static_cast<float>(frame);
     TickTimedNodeMotion(slot.animation);
@@ -478,7 +478,7 @@ void BeginNpcTimedMotion(NpcRouteLiveEntry &entry) {
         shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
         Vector3i rotation;
         std::memcpy(&rotation, &entry.euler, sizeof(rotation));
-        SetCharacterWorldRotation(entry.node, rotation);
+        charaSetWorldRot(entry.node, rotation);
         entry.streamRadius = 0.30000001f;
     }
     entry.liveState = 3;
@@ -698,8 +698,8 @@ std::int64_t NpcForcedHeightCompletionCallback(NpcRouteLiveEntry *entry) {
             if (CharacterControlModel *const control = FindCharacterControlModel(entry->node)) {
                 std::uint32_t flags = control->flags;
                 if (npcSchedule.floor == -1000 || !(entry->packedMoveFlags & 0xff00U))
-                    flags |= CharacterControlApplyGravity;
-                control->flags = flags | CharacterControlEvaluateMotion;
+                    flags |= CCMF_ApplyGravity;
+                control->flags = flags | CCMF_EvaluateMotion;
             }
         }
         entry->flags &= ~0x8000U;
@@ -858,12 +858,12 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
         else
             entry.commandFlags |= 0x100U;
         if (entry.node) {
-            CopyMotionTransition(entry.motionWork, nullptr, 0, 1, 0);
+            mtwkCopyTransition(entry.motionWork, nullptr, 0, 1, 0);
             shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
             Vector3i rotation;
             std::memcpy(&rotation, &entry.euler, sizeof(rotation));
-            SetCharacterWorldRotation(entry.node, rotation);
-            SetMotionRegionFlag(entry.motionWork, 71, 0, MotionRegion::LowerBody);
+            charaSetWorldRot(entry.node, rotation);
+            mtwkSetRegionFlag(entry.motionWork, 71, 0, MotionRegion::LowerBody);
             mtwkSetExtraFlag(entry.motionWork, 14, 0);
             mtwkRequestMotion(entry.motionWork, entry.currentMotionId, MotionRegion::LowerBody);
         }
@@ -921,12 +921,12 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
         entry.motionSpeed = ReadF32(command + 20);
         entry.currentCommand = next;
         if (entry.node &&
-            (entry.currentMotionId != GetMotionAnimationId(entry.motionWork, MotionRegion::LowerBody) ||
-                !motnIsCurrentAnimOpenEnded(entry.motionWork, MotionRegion::LowerBody))) {
+            (entry.currentMotionId != mtwkGetAnimationId(entry.motionWork, MotionRegion::LowerBody) ||
+                !mtwkIsCurrentAnimOpenEnded(entry.motionWork, MotionRegion::LowerBody))) {
             mtwkSetRequestedRootMode(entry.motionWork, 1);
-            SetMotionFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
+            mtwkSetFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
             if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-                control->flags &= ~(CharacterControlApplyGravity | CharacterControlEvaluateMotion);
+                control->flags &= ~(CCMF_ApplyGravity | CCMF_EvaluateMotion);
             SetCharacterType(entry.node, 3);
             if (entry.flags & 0xa000U)
                 entry.localPosition.y = entry.forcedY;
@@ -935,9 +935,9 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
             shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
             Vector3i rotation;
             std::memcpy(&rotation, &entry.euler, sizeof(rotation));
-            SetCharacterWorldRotation(entry.node, rotation);
+            charaSetWorldRot(entry.node, rotation);
             mtwkRequestMotion(entry.motionWork, entry.currentMotionId, MotionRegion::LowerBody);
-            SetMotionSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
+            mtwkSetSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
             entry.streamRadius = 0.30000001f;
         }
         entry.flags |= npcMotionStateActive;
@@ -975,10 +975,10 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
         entry.motionSpeed = ReadF32(command + 16);
         entry.currentCommand = next;
         if (entry.node &&
-            (entry.currentMotionId != GetMotionAnimationId(entry.motionWork, MotionRegion::LowerBody) ||
-                !motnIsCurrentAnimOpenEnded(entry.motionWork, MotionRegion::LowerBody))) {
+            (entry.currentMotionId != mtwkGetAnimationId(entry.motionWork, MotionRegion::LowerBody) ||
+                !mtwkIsCurrentAnimOpenEnded(entry.motionWork, MotionRegion::LowerBody))) {
             mtwkSetRequestedRootMode(entry.motionWork, 1);
-            SetMotionFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
+            mtwkSetFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
             if (entry.flags & 0xa000U)
                 entry.localPosition.y = entry.forcedY;
             else
@@ -986,9 +986,9 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
             shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
             Vector3i rotation;
             std::memcpy(&rotation, &entry.euler, sizeof(rotation));
-            SetCharacterWorldRotation(entry.node, rotation);
+            charaSetWorldRot(entry.node, rotation);
             mtwkRequestMotion(entry.motionWork, entry.currentMotionId, MotionRegion::LowerBody);
-            SetMotionSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
+            mtwkSetSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
             entry.streamRadius = 0.30000001f;
         }
         entry.flags |= npcMotionStateActive;
@@ -1007,7 +1007,7 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
         if (entry.node) {
             ResumeNpcScheduleMotion(entry);
             if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-                control->flags &= ~(CharacterControlApplyGravity | CharacterControlEvaluateMotion);
+                control->flags &= ~(CCMF_ApplyGravity | CCMF_EvaluateMotion);
         }
         entry.liveState = 5;
         entry.flags |= npcMotionStateActive;
@@ -1022,10 +1022,10 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
         entry.currentCommand = next;
         entry.motionSpeed = 1.0f;
         if (entry.node &&
-            (entry.currentMotionId != GetMotionAnimationId(entry.motionWork, MotionRegion::LowerBody) ||
-                !motnIsCurrentAnimOpenEnded(entry.motionWork, MotionRegion::LowerBody))) {
+            (entry.currentMotionId != mtwkGetAnimationId(entry.motionWork, MotionRegion::LowerBody) ||
+                !mtwkIsCurrentAnimOpenEnded(entry.motionWork, MotionRegion::LowerBody))) {
             mtwkSetRequestedRootMode(entry.motionWork, 1);
-            SetMotionFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
+            mtwkSetFrameTime(entry.motionWork, 20, MotionRegion::LowerBody);
             if (entry.flags & 0xa000U)
                 entry.localPosition.y = entry.forcedY;
             else
@@ -1033,9 +1033,9 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
             shenApplyTranslationToAll(&entry.node->entity.node, entry.localPosition);
             Vector3i rotation;
             std::memcpy(&rotation, &entry.euler, sizeof(rotation));
-            SetCharacterWorldRotation(entry.node, rotation);
+            charaSetWorldRot(entry.node, rotation);
             mtwkRequestMotion(entry.motionWork, entry.currentMotionId, MotionRegion::LowerBody);
-            SetMotionSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
+            mtwkSetSpeed(entry.motionWork, entry.motionSpeed, MotionRegion::LowerBody);
             entry.streamRadius = 0.30000001f;
         }
         entry.flags |= npcMotionStateActive;
@@ -1079,12 +1079,12 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
         keepExecuting = true;
         break;
     case 22:
-        entry.flags |= NpcRouteStreamForceHidden;
+        entry.flags |= NRSF_ForceHidden;
         entry.currentCommand = next;
         if (entry.node) {
             EV_SetCharDisplay(entry.node, CVM_All, 0);
             if (CharacterControlModel *const control = FindCharacterControlModel(entry.node))
-                control->flags &= ~CharacterControlVoxelSweep;
+                control->flags &= ~CCMF_VoxelSweep;
         }
         keepExecuting = true;
         break;
@@ -1267,7 +1267,7 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
         break;
     case 26:
     case 58:
-        if ((entry.node && SetMotionRegionFlag(entry.motionWork, 65, 1, MotionRegion::LowerBody)) || (!entry.node && opcode == 58) || npcIsTimeAdvancing == 1) {
+        if ((entry.node && mtwkSetRegionFlag(entry.motionWork, 65, 1, MotionRegion::LowerBody)) || (!entry.node && opcode == 58) || npcIsTimeAdvancing == 1) {
             WriteNpcLiveField(entry, npcCurrentCommandOffset, next);
             entry.liveState = 0;
             entry.scheduleProgress = 1;
@@ -1381,7 +1381,7 @@ void FreeNpcMotionBanks() {
 void FreeNpcMotionClips() {
     for (NpcRouteLiveEntry &entry : npcRouteEntries) {
         if (entry.motionWork)
-            SetMotionDrawOverrideData(entry.motionWork, nullptr);
+            mtwkSetDrawOverrideData(entry.motionWork, nullptr);
     }
     for (NpcMotionClip &clip : npcMotionClips) {
         HLib::FreeTaskData(clip.allocation);
@@ -2325,8 +2325,8 @@ void WarmBootstrapNpcRoutes() {
         trigger.packedCondition = 0xffffffffU;
     for (std::size_t index = 0; index < npcRouteEntries.size(); ++index) {
         NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        const std::uint32_t retained = entry.flags & (NpcRouteAbstractActive | NpcRouteStreamPinned);
-        if (retained & NpcRouteAbstractActive)
+        const std::uint32_t retained = entry.flags & (NRSF_AbstractActive | NRSF_Pinned);
+        if (retained & NRSF_AbstractActive)
             npcSetLock(entry.name, 1);
         entry.node = nullptr;
         ResetNpcAreaRouteState(entry);
@@ -2337,9 +2337,9 @@ void WarmBootstrapNpcRoutes() {
         runtime.character = nullptr;
         runtime.packageAlias = {};
         runtime.streamState = NpcHumanStreamState::Inactive;
-        if (retained & NpcRouteAbstractActive) {
+        if (retained & NRSF_AbstractActive) {
             WarmStartNpcRoute(entry.name);
-            entry.node = FindCharacterByScenarioName(entry.name);
+            entry.node = ctrlGetScenarioChara(entry.name);
             if (entry.node) {
                 npcActiveStreamCost += entry.streamCost;
                 entry.loadHumanResult = 1;
@@ -2371,7 +2371,7 @@ void ResolveNpcScenarioNodesAndWarmStart() {
         EV_CheckWarmStartNpcRoute(entry.name);
         npcActiveStreamCost += entry.streamCost;
         entry.loadHumanResult = 1;
-        entry.flags = (entry.flags & ~3U) | NpcRouteStreamLive;
+        entry.flags = (entry.flags & ~3U) | NRSF_Live;
         entry.motionWork = FindMotionWork(entry.node);
         npcSlotFlags[entry.poolIndex] |= 1U;
         entry.stateContext.motionWork = entry.motionWork;
@@ -2382,7 +2382,7 @@ void ResolveNpcScenarioNodesAndWarmStart() {
         if (CharacterControlModel *const control = FindCharacterControlModel(entry.node)) {
             if (!(entry.flags & 0x200U)) {
                 if ((npcSchedule.floor != -1000 && (entry.packedMoveFlags & 0xff00U)) || (entry.flags & 0x2000U))
-                    control->flags &= ~CharacterControlApplyGravity;
+                    control->flags &= ~CCMF_ApplyGravity;
                 if (entry.flags & 0x8000000U)
                     control->flags = (control->flags & ~0x804U) | 0x800U;
             }

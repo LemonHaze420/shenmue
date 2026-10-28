@@ -25,8 +25,8 @@ void PrepareDeparture(std::int32_t selection) {
         PrepareKshtProp(basket);
         PrepareKshtProp(secondBasket);
     } else if (selection == 20) {
-        charaSetDisplayEnabledFlag(FindCharacterByScenarioName(departureProps[0]), 1);
-        charaSetDisplayEnabledFlag(FindCharacterByScenarioName(departureProps[1]), 1);
+        charaSetDisplayEnabledFlag(ctrlGetScenarioChara(departureProps[0]), 1);
+        charaSetDisplayEnabledFlag(ctrlGetScenarioChara(departureProps[1]), 1);
         EV_DisableCharacterDisplay(basket);
         EV_DisableCharacterDisplay(secondBasket);
     }
@@ -91,7 +91,7 @@ void ExitKshtDepartureAuthor(KshtAuthorController *parent) {
     ResetKshtMotion(KSHT_RYO);
     *parent->result = -1;
     HLib::DestroyTask(parent->task);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_LoadAudio("KSH1_000", 1);
     EV_spmBeginSampleExecute();
     FreeKshtCharacters(kshtCompanionList);

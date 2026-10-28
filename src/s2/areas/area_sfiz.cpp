@@ -113,10 +113,10 @@ void UpdateDemonstrationCamera() {
 std::int32_t LoadIzumiResources(IzumiEventWork *work) {
     EV_SetNewSceneIndex();
     const char *const path = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("SFIZ"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SFIZ"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SFIZ"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("SFIZ"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SFIZ"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SFIZ"), 0);
     qteBattleUtil(BattleQteMode::SetWait, 15, 6, 20, 0);
     qteBattleUtil(BattleQteMode::SetFirstCommands, 1536, 2304, 0, 0);
     qteBattleUtil(BattleQteMode::SetLastCommands, 0, 0, 0, 0);
@@ -660,8 +660,8 @@ void EndIzumiBattleCallback(void *parameter) {
     SetCharaKill(SFIZ_BASE, 1);
     SetCharaKill(SFIZ_A015, 1);
     SetCharaKill(SFIZ_A016, 1);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SFIZ"), 0);
-    LoadCutsceneAndSoundProgramForArea();
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SFIZ"), 0);
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     scenFreeEvent("SFIZ.EV3");
     SetupIzumiMap(1);

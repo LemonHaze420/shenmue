@@ -46,7 +46,7 @@ void E0077Main(std::uintptr_t) {
     parent->state = 1;
     if (g_currentMap.name == AREA_0077_WN00.name) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         parent->selection = time.hour < 19;
     } else {
         EV_ReinitLights(1);
@@ -87,18 +87,18 @@ void CleanupE0077(AreaAuthorTaskParameter *parent) {
     using enum CameraState;
     SetNpcColdResetMode(1);
     for (const shen_name *character = AREA_0077_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_0077_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0077A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0077A"), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0077_WN00.name) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         EV_SetModelDataDefaultVertexShader();
         if (time.hour < 19) {
             EV_ReinitLights(1);
@@ -108,7 +108,7 @@ void CleanupE0077(AreaAuthorTaskParameter *parent) {
             EV_lightLoad(AREA_0077_LIGHT);
             PushGlobalLightingProgram();
         }
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EVT_AT_SetPos(AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, Vector3{246.4f, 104.5f, 195.2f}, 0);
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, Vector3i{0, 15564, 0}, 0};
         EVT_AT_SetAng_Callback(&angle);

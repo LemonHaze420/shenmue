@@ -73,7 +73,7 @@ void Update122E(void *taskData) {
 // @verified - p
 void Cleanup122E(AuthorViewerTaskParameter *parent) {
     for (const shen_name *character = AREA_122E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -130,15 +130,15 @@ void Restore122ECharacters() {
 
 // @verified - p
 void Select122EPackage(std::int32_t selection) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(AREA_122E_FIRST_PACKAGE), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_122E_FIRST_PACKAGE), 0);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(AREA_122E_SECOND_PACKAGE), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_122E_SECOND_PACKAGE), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(AREA_122E_FIRST_PACKAGE), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_122E_FIRST_PACKAGE), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(AREA_122E_SECOND_PACKAGE), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_122E_SECOND_PACKAGE), 0);
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
     const char *const package = selection >= 6 ? AREA_122E_FIRST_PACKAGE : AREA_122E_SECOND_PACKAGE;
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_SetModelDataDefaultVertexShader();
     if (selection >= 6) {
         EV_ReinitLights(1);

@@ -86,7 +86,7 @@ void SetupAuthorViewer517E() {
     SetPlayerControlEnabled(0);
     (void)EV_FreeAuthorPak(1, AUTHOR_VIEWER_517E_CONVERSATION);
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     dateTime.hour = 20;
     SetCurrentDateTimeTo(dateTime);
     EV_SetWeatherInstruction(AUTHOR_VIEWER_517E_WEATHER_LIGHTING_MASK, 0);
@@ -100,7 +100,7 @@ void SetupAuthorViewer517E() {
 // @verified - p
 void CleanupAuthorViewer517E(AuthorViewerPairTaskParameter *parent) {
     for (const shen_name *character = AUTHOR_VIEWER_517E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             (void)EV_npcLockUnlock(*character);
             (void)EV_npcFree(*character);
         }
@@ -227,25 +227,25 @@ std::int64_t SelectAuthorViewer519EPackage(std::int32_t selection) {
     const char *directory;
     const char *package;
     if (selection < 2) {
-        if (EV_ControlPackageResources(
+        if (EV_pakUtils(
                 PakCategory::Package, AUTHOR_VIEWER_PACKAGE_IS_LOADED, reinterpret_cast<std::uintptr_t>(AUTHOR_VIEWER_519E_SECOND_PACKAGE), 0)) {
-            (void)EV_ControlPackageResources(
+            (void)EV_pakUtils(
                 PakCategory::Package, AUTHOR_VIEWER_PACKAGE_FREE_IF_LOADED, reinterpret_cast<std::uintptr_t>(AUTHOR_VIEWER_519E_SECOND_PACKAGE), 0);
         }
         directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
         package = AUTHOR_VIEWER_519E_FIRST_PACKAGE;
     } else {
-        if (EV_ControlPackageResources(
+        if (EV_pakUtils(
                 PakCategory::Package, AUTHOR_VIEWER_PACKAGE_IS_LOADED, reinterpret_cast<std::uintptr_t>(AUTHOR_VIEWER_519E_FIRST_PACKAGE), 0)) {
-            (void)EV_ControlPackageResources(
+            (void)EV_pakUtils(
                 PakCategory::Package, AUTHOR_VIEWER_PACKAGE_FREE_IF_LOADED, reinterpret_cast<std::uintptr_t>(AUTHOR_VIEWER_519E_FIRST_PACKAGE), 0);
         }
         directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
         package = AUTHOR_VIEWER_519E_SECOND_PACKAGE;
     }
-    (void)EV_ControlPackageResources(
+    (void)EV_pakUtils(
         PakCategory::Package, AUTHOR_VIEWER_PACKAGE_LOAD, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(package));
-    return EV_ControlPackageResources(PakCategory::Package, AUTHOR_VIEWER_PACKAGE_WAIT, 0, 0);
+    return EV_pakUtils(PakCategory::Package, AUTHOR_VIEWER_PACKAGE_WAIT, 0, 0);
 }
 
 // @verified - p
@@ -288,7 +288,7 @@ void AuthorViewer519ELoopTaskCallback(void *taskData) {
 // @verified - p
 void CleanupAuthorViewer519E(AuthorViewerPairTaskParameter *parent) {
     for (const shen_name *character = AUTHOR_VIEWER_519E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             (void)EV_npcLockUnlock(*character);
             (void)EV_npcFree(*character);
         }

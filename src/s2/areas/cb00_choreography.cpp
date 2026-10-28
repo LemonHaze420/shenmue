@@ -20,20 +20,20 @@ void Cb00SetupCharacters() {
     RefreshWeatherForCurrentTime(0);
     EV_UpdateWeather();
     EV_UpdateWeatherForMinute(1, 0, 0, 0);
-    SetMotionRegionFlag(scenFindMotionwork(CB00_RYO), 71, 2, MotionRegion::LowerBody);
-    EV_mtwkSetEnabled(scenFindMotionwork(CB00_RYO), 0);
-    SetMotionRegionFlag(scenFindMotionwork(CB00_REN), 71, 2, MotionRegion::LowerBody);
-    EV_mtwkSetEnabled(scenFindMotionwork(CB00_REN), 0);
-    SetLowQualityHands(FindCharacterByScenarioName(CB00_REN));
+    mtwkSetRegionFlag(scenFindMotionwork(CB00_RYO), 71, 2, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(CB00_RYO), 0);
+    mtwkSetRegionFlag(scenFindMotionwork(CB00_REN), 71, 2, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(CB00_REN), 0);
+    SetLowQualityHands(ctrlGetScenarioChara(CB00_REN));
     EV_authSceneCtrl(AuthSceneCtrl::HideFilmBars);
     EV_FreeAuthorPak(1, "0063");
     SetScenarioCharacterRadius(CB00_RYO, 10);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(CB00_RYO), FacialNodeReplacement);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(CB00_RYO), 0, 1, 1);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(CB00_RYO), FacialNodeReplacement);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(CB00_RYO), 0, 1, 1);
     SetScenarioCharacterType(CB00_REN, CharacterTypeStencilShadow);
     EV_authSceneCtrl(AuthSceneCtrl::DisallowSkipAuthor);
     for (shen_name character : CB00_TRUCKS)
-        SetPluralControlFor(FindCharacterByScenarioName(character), 0);
+        SetPluralControlFor(ctrlGetScenarioChara(character), 0);
 }
 void Cb00ResetProps() {
     EventSetPosition position{.cleanup = 0, .character = CB00_PIPE, .parent = CB00_CENTRE, .position = CB00_PIPE_POSITION, .delay = 0};
@@ -77,7 +77,7 @@ void Cb00SetupSceneLighting() {
     EV_SetIndexForLightEntry(0, 1);
     EV_UpdateWeather();
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (static_cast<std::uint8_t>(time.hour - 6) <= 12) {
         EV_SetWeatherInstruction(0x0f, 1);
         EV_SetWeatherInstruction(0x780, 1);
@@ -100,7 +100,7 @@ void Cb00RestoreSceneLighting() {
     EV_SetIndexForLightEntry(0, 1);
     EV_UpdateWeather();
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (static_cast<std::uint8_t>(time.hour - 6) <= 12) {
         EV_SetWeatherInstruction(0x0f, 1);
         EV_SetWeatherInstruction(0x780, 1);
@@ -122,7 +122,7 @@ void Cb00SetupRetryLighting() {
     EV_SetIndexForLightEntry(0, 1);
     EV_UpdateWeather();
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (static_cast<std::uint8_t>(time.hour - 6) <= 12) {
         EV_SetWeatherInstruction(0x0f, 1);
         EV_SetWeatherInstruction(0x780, 1);

@@ -139,7 +139,7 @@ void CaptureOpeningCharacterTextures() {
 
 void SetOpeningTime(std::int8_t hour) {
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     dateTime.hour = hour;
     dateTime.minute = 0;
     SetCurrentDateTimeTo(dateTime);

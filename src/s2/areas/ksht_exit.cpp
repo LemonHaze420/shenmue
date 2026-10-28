@@ -17,15 +17,15 @@ void RestoreConversationActor(shen_name actor) {
     EV_SetCharaControllerFlags(actor, 3, NpcCharacterControllerState::Enabled);
     AT_SetLocalBaseChara(actor, KSHT_INVALID);
     if (mtwkSetExtraFlag(scenFindMotionwork(actor), 59, 1))
-        UpdateMotionWorkWithPosition(scenFindMotionwork(actor), nullptr, 0);
-    FindMotionWork(FindCharacterByScenarioName(actor));
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(actor), FacialNodeOriginal);
-    SetHighModelXYZ(FindCharacterByScenarioName(actor), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(actor), 0, 1, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(actor), nullptr, 0);
+    FindMotionWork(ctrlGetScenarioChara(actor));
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(actor), FacialNodeOriginal);
+    SetHighModelXYZ(ctrlGetScenarioChara(actor), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(actor), 0, 1, 0);
 }
 } // namespace
 void KshtWaitConversationMotion(void *) {
-    if (SetMotionRegionFlag(scenFindMotionwork(KSHT_RYO), 65, 1, MotionRegion::LowerBody)) {
+    if (mtwkSetRegionFlag(scenFindMotionwork(KSHT_RYO), 65, 1, MotionRegion::LowerBody)) {
         HLib::SetCurrentTaskTo(KshtExitCallback);
         SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
         HLib::SetupTaskDelay(30);

@@ -386,7 +386,7 @@ void LoadRyoSceneForMovesScreen() {
     modelSetCharaAlpha(wazamakiPreviewCharacter, 1.0f);
     EV_SetCharDisplay(wazamakiPreviewCharacter, CVM_DisplayEnabled, 0);
     mtwkSetExtraFlag(FindMotionWork(wazamakiPreviewCharacter), 6, 2);
-    SetMotionEnvironmentEnabled(0);
+    mtwkSetEnvironmentEnabled(0);
     charaToggleFlag(wazamakiPreviewCharacter, 0);
     wazamakiPreviewScale = wazamakiPreviewDefaultScale;
     UpdateLegacyPreviewTransform();
@@ -416,9 +416,9 @@ void RequestWazamakiPreviewMotion(Character *character, std::uint8_t category, s
     if (character) {
         MotionWork *const work = FindMotionWork(character);
         mtwkRequestMotion(work, wazamakiPreviewPendingMotion, MotionRegion::LowerBody);
-        SetMotionRegionFlag(work, 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(work, 71, 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(work, 0, 2);
-        SetMotionRegionFlag(work, 66, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(work, 66, 0, MotionRegion::LowerBody);
     }
     wazamakiPreviewMotionYaw = 0;
     if (category == 3 && (id > 21 || !(0x00201900U & (1U << id))) && learned)
@@ -515,7 +515,7 @@ void DrawWazamakiPreview() {
     Matrix4x4::GetTransformMatrix(&wazamakiPreviewRootTransform);
     Matrix4x4::Pop(1);
     WazamakiMatrixUpdateNullsub();
-    SetMotionRootTransformOverride(FindMotionWork(wazamakiPreviewCharacter), &wazamakiPreviewRootTransform);
+    mtwkSetRootTransformOverride(FindMotionWork(wazamakiPreviewCharacter), &wazamakiPreviewRootTransform);
     ExecuteCharacterCoreDraw(wazamakiPreviewCharacter);
     Matrix4x4_Push();
     WazamakiMatrixUpdateNullsub();
@@ -535,7 +535,7 @@ void ReleaseWazamakiPreviewModels() {
 
     LcdmInit(0);
     g_worldDrawingEnabled = true;
-    SetMotionEnvironmentEnabled(1);
+    mtwkSetEnvironmentEnabled(1);
     if (wazamakiPreviewCharacter) {
         EV_SetCharDisplay(wazamakiPreviewCharacter, CVM_DisplayEnabled, 0);
         ctrlSetKillAndIncrementCounter(wazamakiPreviewCharacter, 1);

@@ -109,9 +109,9 @@ void Syw0PracticeDecisionSequence(void *data) {
             for (std::size_t offset : {0x5c0U, 0x5c8U, 0x5d0U, 0x5d8U})
                 Syw0Value(&work, offset, static_cast<CompiledSequenceWork *>(nullptr));
             Syw0ResetPracticeActors(static_cast<std::int32_t>(practice));
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_KNK), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_KNK), 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(SYW0_SYE), 8841, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
             Syw0Value(&sequence, 0x250, std::int32_t{1});
             Syw0Advance(sequence, 101);
             break;

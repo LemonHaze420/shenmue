@@ -97,11 +97,11 @@ void LostSyunenCallback(void *payload) {
         EV_NPC_NewLoadSw(0);
         EV_ResetFreeTalkFlags();
         work.audience = QueueStreetFightAudience();
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("QLBT"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QLBT"), 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QLBT"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QLBT"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QLBT"), 0);
         work.characters = Queue_EVT_AT_ReadChr(work.task, lostActors);
         work.state = 1;
     } else if (work.state == 1) {
@@ -127,14 +127,14 @@ void LostSyunenCallback(void *payload) {
         EV_SetCharacterAlphaEnabled(fighter, false);
         EV_SetCharacterAlphaEnabled(lostPartner, false);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1233, 0);
-        SetClothFlag(FindCharacterByScenarioName(fighter), 4, 1);
-        SetClothFlag(FindCharacterByScenarioName(lostPartner), 4, 1);
+        SetClothFlag(ctrlGetScenarioChara(fighter), 4, 1);
+        SetClothFlag(ctrlGetScenarioChara(lostPartner), 4, 1);
         work.state = 2;
     } else if (work.state == 2 && EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1234)) {
         SetPlayerControlEnabled(0);
         ET_AT_KillWork(work.characters);
         SetPlayerControlEnabled(0);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QLBT"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QLBT"), 0);
         if (work.audience) {
             HLib::GetTaskParameter(work.audience);
             HLib::DestroyTaskInternal(work.audience);
@@ -194,7 +194,7 @@ void MainCallback(void *) {
     const Vector3 first{240.0f, 0, 90.0f}, second{230.0f, 0, 85.5f};
     Vector3 position;
     EV_GetCharaPosition(STREET_WATCH_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-    const Vector3i rotation = GetCharacterWorldRotation(FindCharacterByScenarioName(STREET_WATCH_RYO));
+    const Vector3i rotation = GetCharacterWorldRotation(ctrlGetScenarioChara(STREET_WATCH_RYO));
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 531) || !TestCharaPositionWithinRange(STREET_WATCH_RYO, &first, &second, shen_name{0}) ||
         !(position.y > 139) || static_cast<std::uint32_t>(rotation.y) - 10378U > 0x5552U)
         return;
@@ -206,7 +206,7 @@ void MainCallback(void *) {
         GetBattleDataConfig(0, SHEN_NAME(BTLD));
 }
 void ApplyLighting() {
-    SetPluralControlFor(FindCharacterByScenarioName(STREET_WATCH_RYO), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(STREET_WATCH_RYO), 1);
     EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
     AssignLightProgram(0);
     SetDefaultVSByIndex(1);

@@ -15,7 +15,7 @@ std::int32_t areaChimeLastSound{-1};
 // @verified - p
 void AreaChimeCallback(void *) {
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     const std::int32_t stream = static_cast<std::int32_t>(GetQronNextStream());
     const std::size_t tableOffset = stream == 8 ? 15U : 0U;
     const std::int32_t hour = dateTime.hour;

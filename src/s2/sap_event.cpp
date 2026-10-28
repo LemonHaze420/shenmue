@@ -49,14 +49,14 @@ void InitializeSapAuthorEvent(const char *authorBank, std::uintptr_t, const shen
 // @verified - p
 void SapPackageLoadCallback(void *) {
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    if (EV_ControlPackageResources(
+    if (EV_pakUtils(
             PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(sapEventData.packageName)))
         HLib::SetCurrentTaskTo(SapPackageWaitCallback);
 }
 
 // @verified - p
 void SapPackageWaitCallback(void *) {
-    if ((sapEventData.pendingMask & 1U) && !EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
+    if ((sapEventData.pendingMask & 1U) && !EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
         sapEventData.pendingMask &= ~1U;
     for (std::uint32_t index = 0; sapEventData.characters[index].name; ++index) {
         const std::uint32_t mask = 2U << (index & 31U);
@@ -79,7 +79,7 @@ void ResetSapAuthorCharacter(shen_name character) {
     EV_SetCharaControllerFlags(character, ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     (void)mtwkSetRequestedRootMode(scenFindMotionwork(character), 0);
-    (void)SetMotionRegionFlag(scenFindMotionwork(character), 71, 0, MotionRegion::LowerBody);
+    (void)mtwkSetRegionFlag(scenFindMotionwork(character), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(character, EventTransformFlags::AllAxes, hiddenPosition);
 }
 

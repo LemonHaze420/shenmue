@@ -84,7 +84,7 @@ void TGLB_ArrangeSpectators() {
     for (std::size_t i = 0; i < togyuArrangementMotionCharacters.size(); ++i)
         mtwkRequestMotion(scenFindMotionwork(togyuArrangementMotionCharacters[i]), togyuArrangementMotions[i], MotionRegion::LowerBody);
     for (shen_name name : togyuArrangementMotionCharacters)
-        SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
 }
 
 // @verified - p
@@ -109,8 +109,8 @@ void TGLB_ArrangeCharacters(TogyuEventWork *work) {
 // @verified - p
 void TGLB_SetupCutscene(TogyuEventWork *work) {
     work->motionHandles[0] = 0;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(togyuPackage), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(togyuPackage), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(togyuPackage), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(togyuPackage), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, TOGYU_BASE);
     EV_FreeAuthorPak(1, togyuAuthorBank);
     EV_SetNewSceneIndex();
@@ -131,11 +131,11 @@ void TGLB_Cleanup(TogyuEventWork *work) {
     (void)IsAuthorMultichannelAudioEnabled();
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
     for (shen_name name : togyuHandCharacters)
-        hndlSetFlags(FindCharacterByScenarioName(name));
+        hndlSetFlags(ctrlGetScenarioChara(name));
     ET_AT_KillWork(work->characters);
     SetPlayerControlEnabled(0);
     SetCharaKill(TOGYU_BASE, 1);
-    SetMotionRegionFlag(scenFindMotionwork(TOGYU_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(TOGYU_RYO), 71, 0, MotionRegion::LowerBody);
     if (work->smokeId != -1) {
         SuspendParticleEffect(0, work->smokeId);
         FreeParticleEffect(0, work->smokeId);
@@ -150,8 +150,8 @@ void TGLB_Cleanup(TogyuEventWork *work) {
         ++motion;
     }
     EV_FreeAuthorPak(0, togyuAuthorBank);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(togyuPackage), 0);
-    LoadCutsceneAndSoundProgramForArea();
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(togyuPackage), 0);
+    sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     EV_EventSetUpHelpIcon_0(0, 0);
     EV_CleanupMapControlTask();
@@ -210,14 +210,14 @@ void EVT_Togyu_Main_Callback(void *data) {
     switch (work->phase) {
     case 0:
         for (shen_name name : togyuHandCharacters)
-            SetLowQualityHands(FindCharacterByScenarioName(name));
-        (void)FindMotionWork(FindCharacterByScenarioName(TOGYU_RYO));
-        (void)FindMotionWork(FindCharacterByScenarioName(TOGYU_NAME));
+            SetLowQualityHands(ctrlGetScenarioChara(name));
+        (void)FindMotionWork(ctrlGetScenarioChara(TOGYU_RYO));
+        (void)FindMotionWork(ctrlGetScenarioChara(TOGYU_NAME));
         for (shen_name name : togyuFighters) {
-            SetHighModelXYZ(FindCharacterByScenarioName(name), 1, 1, 0);
-            SetHighModelXYZ(FindCharacterByScenarioName(name), 1, 0, 0);
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(name), 1, reinterpret_cast<std::byte *>(idleHandCommands.data()), 1);
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(name), 0, reinterpret_cast<std::byte *>(idleHandCommands.data()), 1);
+            SetHighModelXYZ(ctrlGetScenarioChara(name), 1, 1, 0);
+            SetHighModelXYZ(ctrlGetScenarioChara(name), 1, 0, 0);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(name), 1, reinterpret_cast<std::byte *>(idleHandCommands.data()), 1);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(name), 0, reinterpret_cast<std::byte *>(idleHandCommands.data()), 1);
         }
         ST_LoadTitleFade();
         currentSound = nullptr;
@@ -244,9 +244,9 @@ void EVT_Togyu_Main_Callback(void *data) {
         EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{8}, 1);
         {
             const std::int32_t hp = static_cast<std::int32_t>(vfmDispatchControl(FightControlOp::MotionNibble, shen_name{TOGYU_HEALTH_NIBBLE}, 0, -1));
-            shenInitFightData(FindCharacterByScenarioName(TOGYU_RYO), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (hp + 3)), 0);
+            shenInitFightData(ctrlGetScenarioChara(TOGYU_RYO), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (hp + 3)), 0);
         }
-        shenInitFightData(FindCharacterByScenarioName(opponent), nullptr, 1, 1, 800, 8);
+        shenInitFightData(ctrlGetScenarioChara(opponent), nullptr, 1, 1, 800, 8);
         vfCopyPosFromEntity(0, nullptr, togyuFightRingCentre.x, togyuFightRingCentre.y, togyuFightRingRadius);
         EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x100}, 1);
         EV_vfBattleUtil(FightBattleUtilOp::CombatCameraFlags, shen_name{2}, 1);
@@ -310,13 +310,13 @@ void EVT_BattleEntry_Callback(void *data) {
     EVT_AT_SetMot_Callback(&motion);
     GetMotionFrameCount(TOGYU_ENTRY_MOTION);
     for (shen_name name : togyuSpectators)
-        (void)FindMotionWork(FindCharacterByScenarioName(name));
+        (void)FindMotionWork(ctrlGetScenarioChara(name));
     for (shen_name name : togyuSpectators) {
-        SetHighModelXYZ(FindCharacterByScenarioName(name), 0, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(name), 0, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(name), 0, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(name), 0, 1, 0);
     }
     for (shen_name name : togyuSpectators)
-        SetClothFlag(FindCharacterByScenarioName(name), 4, 1);
+        SetClothFlag(ctrlGetScenarioChara(name), 4, 1);
     HLib::SetCurrentTaskTo(EVT_BattlePreEvent_Callback);
     HLib::SetupTaskDelay(1);
 }
@@ -362,7 +362,7 @@ void EVT_BattleWait_Callback(void *data) {
     const shen_name opponent = work->opponents[work->selectedOpponent];
     if (IsFightActive()) {
         if (togyuBattleVoiceTask &&
-            (!GetFightCharacterFlag(0, FindCharacterByScenarioName(opponent), 0) || !GetFightCharacterFlag(0, FindCharacterByScenarioName(TOGYU_RYO), 0) ||
+            (!GetFightCharacterFlag(0, ctrlGetScenarioChara(opponent), 0) || !GetFightCharacterFlag(0, ctrlGetScenarioChara(TOGYU_RYO), 0) ||
                 (GetFightTaskFlags() & 0x80000))) {
             HLib::DestroyTaskInternal(togyuBattleVoiceTask);
             BeginFightDialogueRetirement();
@@ -372,11 +372,11 @@ void EVT_BattleWait_Callback(void *data) {
             Vector3 position;
             EV_GetCharaPosition(TOGYU_RYO, 5, &position, EventTransformFlags::World);
             for (shen_name name : togyuLookCharacters)
-                UpdateMotionWorkWithPosition(scenFindMotionwork(name), &position, 0);
+                mtwkUpdateWithPosition(scenFindMotionwork(name), &position, 0);
             waitCounter = 0;
         }
         ++waitCounter;
-    } else if (GetBtlStatus(FindCharacterByScenarioName(TOGYU_RYO)) == TOGYU_BATTLE_LOSS) {
+    } else if (GetBtlStatus(ctrlGetScenarioChara(TOGYU_RYO)) == TOGYU_BATTLE_LOSS) {
         spmFadeOut();
         SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
         HLib::SetCurrentTaskTo(EVT_BattleLose_Callback);
@@ -389,16 +389,16 @@ void EVT_BattleWait_Callback(void *data) {
 // @verified - p
 void TGLB_ClearSpectatorLooks() {
     for (shen_name name : togyuLookCharacters)
-        UpdateMotionWorkWithPosition(scenFindMotionwork(name), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(name), nullptr, 0);
     for (shen_name name : togyuLookCharacters)
-        UpdateMotionWorkWithPosition(scenFindMotionwork(name), nullptr, 3);
+        mtwkUpdateWithPosition(scenFindMotionwork(name), nullptr, 3);
 }
 // @verified - p
 void EVT_BattleWait2_Callback(void *) {
     if (!filmCheckFadeTrackColour()) {
         TGLB_ClearSpectatorLooks();
         for (shen_name name : togyuSpectators)
-            SetClothFlag(FindCharacterByScenarioName(name), 4, 0);
+            SetClothFlag(ctrlGetScenarioChara(name), 4, 0);
         HLib::SetCurrentTaskTo(EVT_ButtiAuthor_Callback);
     }
 }
@@ -449,7 +449,7 @@ void EVT_OtherLooks_Callback(void *) {
     Vector3 position;
     EV_GetCharaPosition(TOGYU_RYO, 5, &position, EventTransformFlags::World);
     for (shen_name name : togyuLookCharacters)
-        UpdateMotionWorkWithPosition(scenFindMotionwork(name), &position, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(name), &position, 0);
     HLib::DestroyCurrentTask();
 }
 
@@ -640,7 +640,7 @@ void EVT_SyueiAuthor3_Callback(void *data) {
     const std::int32_t frame = static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     switch (frame) {
     case 242:
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(togyuPackage), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(togyuPackage), 0);
         LGHT_Parser_Internal(TOGYU_LIGHT.name);
         ExecuteMaterialSoundHandleCommand(currentSound, 0xa6, 0);
         break;
@@ -745,8 +745,8 @@ void EVT_WonAuthor3_Callback(void *data) {
     switch (static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame))) {
     case 1:
         for (shen_name name : togyuSpectators) {
-            SetHighModelXYZ(FindCharacterByScenarioName(name), 0, 0, 0);
-            SetHighModelXYZ(FindCharacterByScenarioName(name), 0, 1, 0);
+            SetHighModelXYZ(ctrlGetScenarioChara(name), 0, 0, 0);
+            SetHighModelXYZ(ctrlGetScenarioChara(name), 0, 1, 0);
         }
         break;
     case 220:

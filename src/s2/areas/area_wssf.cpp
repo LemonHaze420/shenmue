@@ -65,7 +65,7 @@ WssfMainWork &Parent(WssfChildWork &w) {
     return *static_cast<WssfMainWork *>(HLib::GetTaskParameter(w.parent));
 }
 MotionWork *Motion(shen_name name) {
-    return FindMotionWork(FindCharacterByScenarioName(name));
+    return FindMotionWork(ctrlGetScenarioChara(name));
 }
 void Fade(std::int32_t frames, std::int32_t to) {
     SetScreenFilmFade(frames, 255, 0, 0, 0, to, 0, 0, 0);
@@ -95,11 +95,11 @@ bool AuthorLoaded() {
     return EV_authSceneCtrl(AuthSceneCtrl::IsLoaded) != 0;
 }
 void Face(std::int32_t expression) {
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), expression, 0, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ryo), expression, 0, 1);
 }
 void ResetFace() {
     Face(0);
-    SetUpperFacialExpression(FindCharacterByScenarioName(ryo), 0, 0, 1);
+    SetUpperFacialExpression(ctrlGetScenarioChara(ryo), 0, 0, 1);
 }
 void Controllers(shen_name name, bool enabled) {
     const auto state = enabled ? NpcCharacterControllerState::Enabled : NpcCharacterControllerState::Disabled;
@@ -113,7 +113,7 @@ void PrepareCharacters() {
     for (auto name : people) {
         Show(name);
         (void)EV_SetCharaControllerFlags(name, UpdateHeight, NpcCharacterControllerState::Disabled);
-        EV_mtwkSetEnabled(Motion(name), 1);
+        mtwkSetEnabled(Motion(name), 1);
         mtwkSetExtraFlag(Motion(name), 0, 0);
         (void)EV_SetCharaControllerFlags(name, ApplyGravity, NpcCharacterControllerState::Disabled);
         (void)EV_SetCharaControllerFlags(name, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
@@ -121,7 +121,7 @@ void PrepareCharacters() {
         SetScenarioReflectorBoardValues(name, &reflector);
         EV_SetRefBoardParamsFor(name, 1);
         for (std::int32_t side = 0; side < 2; ++side)
-            hmdlSetFlagsFor(FindCharacterByScenarioName(name), side, 8, 16);
+            hmdlSetFlagsFor(ctrlGetScenarioChara(name), side, 8, 16);
     }
     for (auto name : {stone, support}) {
         EV_EnableCharacterDisplay(name);
@@ -157,7 +157,7 @@ void AttachStone() {
     AttachScenarioCharacter(stone, ryo, 21, &attachmentPosition, &attachmentRotation);
 }
 void SetupGrip() {
-    Character *const character = FindCharacterByScenarioName(ryo);
+    Character *const character = ctrlGetScenarioChara(ryo);
     (void)SetHighModelXYZ(character, 1, 0, 0);
     (void)SetHighModelXYZ(character, 1, 1, 0);
     const Vector3i rightRotation{}, leftRotation{61307, 62342, 449};
@@ -190,7 +190,7 @@ void PartnerWarning(WssfMainWork &w) {
     (void)EVT_AT_SetAngY(sos, dummy, 112.5f, 0);
     Mot(sos, 4380, 0, 0x10000000U);
     Cam(4);
-    (void)UpdateMotionWorkWithPosition(Motion(sos), nullptr, 0);
+    (void)mtwkUpdateWithPosition(Motion(sos), nullptr, 0);
     const auto count = Child(w.partner).counter;
 
     EVT_AT_SetVoice(count == 1 ? "0028C028" : count == 2 ? "0028C029" : "0028C030", 1, 0); // @text 0028C028 EN: "Don't keep us waiting.\nHurry up." | JA: "おい、まだかよ。\nさっさとやれ。" ; 0028C029 EN: "What are you waiting for?\nGet on with it!" | JA: "まだやんねーのか！\nいつまで待たせるんだ！" ; 0028C030 EN: "What are you waiting for?\nHurry up and break it!" | JA: "おい、いいかげんにしろ！\n早く割らねえか！"
@@ -219,7 +219,7 @@ void Finish(WssfMainWork &w) {
     (void)EV_LoadCutsceneFromCurrentScene(savedBgm);
     (void)EV_LoadAudio(savedSbt, savedScene);
     (void)EV_spmBeginSampleExecute();
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ISIWARI"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ISIWARI"), 0);
     for (auto name : loadNames) {
         if (name.name == 0xffffffffU)
             break;
@@ -347,8 +347,8 @@ void PlayerInit(WssfChildWork &w) {
         return;
     (void)AT_SetLocalBaseChara(ryo, dummy);
     Pose(ryo, {}, {});
-    (void)FindMotionWork(FindCharacterByScenarioName(ryo));
-    (void)FindMotionWork(FindCharacterByScenarioName(ryo));
+    (void)FindMotionWork(ctrlGetScenarioChara(ryo));
+    (void)FindMotionWork(ctrlGetScenarioChara(ryo));
     Mot(ryo, 0xf003, 0, 0x10000000U);
     Cam(1, dummy);
     State(w, 2);
@@ -385,14 +385,14 @@ void Power(WssfChildWork &w) {
         Cam(2);
         break;
     case 1:
-        if (SetMotionRegionFlag(Motion(ryo), 65, 1, MotionRegion::LowerBody))
+        if (mtwkSetRegionFlag(Motion(ryo), 65, 1, MotionRegion::LowerBody))
             ++w.step;
         break;
     case 2: {
         battleInput = helpOverlay = 1;
         Vector3 p;
         EV_GetCharaPosition(stone, 0xffffffffU, &p, EventTransformFlags::World);
-        (void)UpdateMotionWorkWithPosition(Motion(ryo), &p, 0);
+        (void)mtwkUpdateWithPosition(Motion(ryo), &p, 0);
         Cam(10);
         Mot(ryo, 4369);
         EV_EnableCharacterDisplay(people[7]);
@@ -402,10 +402,10 @@ void Power(WssfChildWork &w) {
         break;
     }
     case 3: {
-        (void)GetParentBoneWrapper(Motion(ryo), 17);
+        (void)mtwkGetParentBoneWrapper(Motion(ryo), 17);
         if (w.timer == 26)
             (void)Loop3DSoundEffect(0x3a4);
-        if (SetMotionRegionFlag(Motion(ryo), 65, 1, MotionRegion::LowerBody))
+        if (mtwkSetRegionFlag(Motion(ryo), 65, 1, MotionRegion::LowerBody))
             w.timer = 60;
         if (!camCtrlCheckIsEventCam())
             Cam(10);
@@ -415,20 +415,20 @@ void Power(WssfChildWork &w) {
             w.timer = 30;
             main.latchedPower = main.power;
             battleInput = 0;
-            const float frame = GetMotionFrame(Motion(ryo), MotionRegion::LowerBody);
+            const float frame = mtwkGetFrame(Motion(ryo), MotionRegion::LowerBody);
             hitGate = frame <= 34;
             (void)Loop3DSoundEffect(0x3fc, frame);
             scenCvsCtrlFree();
         } else {
-            main.endFrame = GetMotionEndFrame(Motion(ryo), MotionRegion::LowerBody);
-            main.power = ComputePower(GetMotionFrame(Motion(ryo), MotionRegion::LowerBody), main.endFrame);
+            main.endFrame = mtwkGetEndFrame(Motion(ryo), MotionRegion::LowerBody);
+            main.power = ComputePower(mtwkGetFrame(Motion(ryo), MotionRegion::LowerBody), main.endFrame);
             maxPower = main.power;
             (void)UpdateDualFightGauge(static_cast<float>(main.power), 0);
         }
         break;
     }
     case 4: {
-        const float frame = GetMotionFrame(Motion(ryo), MotionRegion::LowerBody);
+        const float frame = mtwkGetFrame(Motion(ryo), MotionRegion::LowerBody);
         if (frame < 30)
             hitGate = 1;
         else if (!hitGate)
@@ -437,7 +437,7 @@ void Power(WssfChildWork &w) {
             battleInput = helpOverlay = 1;
             const float offset = static_cast<float>(main.difficulty) * 5;
             Mot(ryo, 4376, 30 - offset);
-            SetMotionLayerEndFrame(Motion(ryo), 50, MotionRegion::LowerBody);
+            mtwkSetLayerEndFrame(Motion(ryo), 50, MotionRegion::LowerBody);
             Cam(3);
             (void)Loop3DSoundEffect(0x32, offset);
             (void)EVT_AT_SetSound(0xa8, 3);
@@ -450,15 +450,15 @@ void Power(WssfChildWork &w) {
     case 5: {
         if (GetCurrentControlInput(INPUT_PRESSED) & 0x400) {
             (void)Loop3DSoundEffect(0x3fc);
-            w.frame = GetMotionFrame(Motion(ryo), MotionRegion::LowerBody);
+            w.frame = mtwkGetFrame(Motion(ryo), MotionRegion::LowerBody);
             ++w.step;
             break;
         }
-        if (SetMotionRegionFlag(Motion(ryo), 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(Motion(ryo), 65, 1, MotionRegion::LowerBody)) {
             main.power = 0;
             ++w.step;
         } else {
-            float frame = GetMotionFrame(Motion(ryo), MotionRegion::LowerBody);
+            float frame = mtwkGetFrame(Motion(ryo), MotionRegion::LowerBody);
             if (frame > 40)
                 frame = 40 - (frame - 40) / 3;
             const float start = 30 - static_cast<float>(main.difficulty) * 5;
@@ -469,20 +469,20 @@ void Power(WssfChildWork &w) {
         break;
     }
     case 6:
-        if (!SetMotionRegionFlag(Motion(ryo), 65, 1, MotionRegion::LowerBody))
+        if (!mtwkSetRegionFlag(Motion(ryo), 65, 1, MotionRegion::LowerBody))
             break;
         [[fallthrough]];
     case 7:
-        (void)UpdateMotionWorkWithPosition(Motion(ryo), nullptr, 0);
-        (void)UpdateMotionWorkWithPosition(Motion(sos), nullptr, 0);
+        (void)mtwkUpdateWithPosition(Motion(ryo), nullptr, 0);
+        (void)mtwkUpdateWithPosition(Motion(sos), nullptr, 0);
         figpAssignModeFor(ryo, 0);
         State(w, 4);
         ++rock.step;
         break;
     case 10: {
-        const float frame = GetMotionFrame(Motion(ryo), MotionRegion::LowerBody);
-        const float speed = GetMotionSpeed(Motion(ryo), MotionRegion::LowerBody);
-        SetMotionRegionEvalTime(Motion(ryo), frame - speed, MotionRegion::LowerBody);
+        const float frame = mtwkGetFrame(Motion(ryo), MotionRegion::LowerBody);
+        const float speed = mtwkGetSpeed(Motion(ryo), MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(Motion(ryo), frame - speed, MotionRegion::LowerBody);
         break;
     }
     default:
@@ -589,7 +589,7 @@ void Complete(WssfChildWork &w) {
         break;
     case 1:
         for (std::size_t i = 1; i < std::size(people); ++i)
-            (void)SetPluralControlFor(FindCharacterByScenarioName(people[i]), 1);
+            (void)SetPluralControlFor(ctrlGetScenarioChara(people[i]), 1);
         w.step = main.result == 3 && main.tier < 3 ? 2 : 3;
         break;
     case 2:
@@ -655,7 +655,7 @@ void PartnerWait(WssfChildWork &w) {
         (void)EV_AT_SetAngY(sos, EventTransformFlags::AllAxes, {0, 14563, 0});
         Vector3 p;
         EV_GetCharaPosition(stone, 0xffffffffU, &p, EventTransformFlags::World);
-        (void)UpdateMotionWorkWithPosition(Motion(sos), &p, 1);
+        (void)mtwkUpdateWithPosition(Motion(sos), &p, 1);
         break;
     }
     case 2:
@@ -687,7 +687,7 @@ void PartnerWait(WssfChildWork &w) {
         }
         break;
     case 11:
-        (void)UpdateMotionWorkWithPosition(Motion(sos), nullptr, 0);
+        (void)mtwkUpdateWithPosition(Motion(sos), nullptr, 0);
         player.step = 7;
         w.step = 3;
         break;
@@ -743,7 +743,7 @@ void StoneBreak(WssfChildWork &w) {
     switch (w.step) {
     case 0:
         EV_AT_SetPos(fragments, EventTransformFlags::AllAxes, {0, .5f, 0});
-        ApplyCharacterGeometryLighting(FindCharacterByScenarioName(fragments), 0);
+        ApplyCharacterGeometryLighting(ctrlGetScenarioChara(fragments), 0);
         if (w.variant == 0) {
             Pose(fragments, {.037f, -.142f, -.423f}, {0, 63715, 0});
             w.frame = 4;
@@ -807,13 +807,13 @@ void WssfMain(std::uintptr_t argument) {
     EV_EventSetUpHelpIcon_0(0x49, 0);
     Fade(0, 255);
     entry = g_currentMap.name == SHEN_NAME(WESM) ? static_cast<std::int32_t>(argument) : static_cast<std::int32_t>(g_entryPoint);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ISIWARI"), 0);
-    (void)SetLowQualityHands(FindCharacterByScenarioName(ryo));
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ISIWARI"), 0);
+    (void)SetLowQualityHands(ctrlGetScenarioChara(ryo));
     savedScene = GetSelectedSoundSceneIndex();
     std::memcpy(savedBgm, GetCurrentBgm(), 16);
     std::memcpy(savedSbt, shenGetCurrentSbt(), 16);
     (void)EV_LoadCutsceneFromCurrentScene("0028A000");
-    GetCurrentDateTime(eventSavedCurrentDateTime);
+    shenGetCurrentDateTime(eventSavedCurrentDateTime);
     battleInput = helpOverlay = 0;
     mainTask = HLib::EnqueueTaskWithParameter(WssfMainCallback, 4, 0xb, 0x58, SHEN_NAME(EVNT));
     auto &w = *static_cast<WssfMainWork *>(HLib::GetTaskParameter(mainTask));

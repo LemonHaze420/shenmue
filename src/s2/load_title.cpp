@@ -861,7 +861,7 @@ void DoLoadStuff(std::uint32_t author, bool nextStream) {
         loadTitle.fadeMode = 0;
     }
     DateTime now{};
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     std::array<std::int8_t, 12> &date = loadTitle.date;
     date[YearTens] = static_cast<std::int8_t>(now.year / 10);
     date[YearUnits] = static_cast<std::int8_t>(now.year % 10);

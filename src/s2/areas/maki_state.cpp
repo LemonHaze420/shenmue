@@ -22,8 +22,8 @@ namespace {
 void MakiEventNullsub() {
 }
 void MakiClearUpperBody() {
-    SetMotionRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::LeftArm);
-    SetMotionRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::RightArm);
+    mtwkSetRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::LeftArm);
+    mtwkSetRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::RightArm);
 }
 void MakiSetStoryCamera(std::int32_t camera) {
     EVT_AT_SetCam(camera, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, 0, 0);
@@ -113,7 +113,7 @@ std::int32_t MakiCollectFirewood() {
             }
         }
         std::uint32_t *command = makiRuntime.heldCount == 1 ? makiSingleLogHandCommand : makiCarryHandCommand;
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MAKI_RYO), 1, reinterpret_cast<std::byte *>(command), 0);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MAKI_RYO), 1, reinterpret_cast<std::byte *>(command), 0);
         EVT_AT_SetPoint(MAKI_RYO, character, 5, 3, 1, 0, 0, 0x28000000U);
         EVT_AT_ObjectDisp_1(character, delay, 1);
         EVT_AT_ObjectDisp_1(MAKI_SMALL_LOG, delay, 1);
@@ -142,9 +142,9 @@ std::int32_t MakiCollectFirewood() {
             return 0;
         }
         makiRuntime.state = 1;
-        SetMotionRegionFlag(scenFindMotionwork(MAKI_RYO), 71, 0, MotionRegion::RightArm);
+        mtwkSetRegionFlag(scenFindMotionwork(MAKI_RYO), 71, 0, MotionRegion::RightArm);
         mtwkRequestMotion(scenFindMotionwork(MAKI_RYO), 0x4004, MotionRegion::RightArm);
-        SetMotionSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
+        mtwkSetSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
         EVT_AT_SetMot(MAKI_RYO, 0xf003, 0, 1, 0x40000000U, 0);
         EV_AT_SetPos(MAKI_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, makiSavedPosition);
         EV_AT_SetAngY(MAKI_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, makiSavedRotation);
@@ -186,8 +186,8 @@ std::int32_t MakiReturnToCampfire() {
         EVT_AT_SetAngY(MAKI_RYO, EVENT_CHARACTER_INVALID, 315, 0);
         EVT_AT_SetMot(MAKI_RYO, 0xf002, 0, 1, 0x40000000U, 0);
         mtwkRequestMotion(scenFindMotionwork(MAKI_RYO), 0x4004, MotionRegion::RightArm);
-        SetMotionSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
-        SetMotionRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::LeftArm);
+        mtwkSetSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
+        mtwkSetRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::LeftArm);
         makiRuntime.state = 1;
         makiRuntime.phase = 0;
         break;

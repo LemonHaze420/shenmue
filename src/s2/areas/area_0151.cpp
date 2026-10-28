@@ -58,7 +58,7 @@ void E0151Main(std::uintptr_t argument) {
 // @verified - p
 void CleanupE0151(E0151TaskParameter *parent) {
     EV_FreeAuthorPak(0, AREA_0151_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0151A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0151A"), 0);
     npcSetAreaName(AREA_0151_ANP1, nullptr, 0.0f, 0);
 
     EV_CleanupMapControlTask();
@@ -90,7 +90,7 @@ void E0151MainCallback(void *taskData) {
             parent->state = 4;
     } else if (parent->state == 0) {
         EV_NPC_NewLoadSw(1);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         shenSetClockAndCompassRenderTo(0);

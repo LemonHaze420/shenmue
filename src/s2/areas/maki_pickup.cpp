@@ -103,7 +103,7 @@ void MakiAttachLighter(std::int32_t delay) {
             .delay = 0};
         EVT_AT_Cling(&work);
     }
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MAKI_RYO), 0, reinterpret_cast<std::byte *>(makiLighterHandCommand), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MAKI_RYO), 0, reinterpret_cast<std::byte *>(makiLighterHandCommand), 0);
 }
 
 std::int32_t MakiPickSingleLog(shen_name character) {
@@ -200,7 +200,7 @@ void MakiRefreshHeldLogs() {
             command = reinterpret_cast<std::byte *>(makiSingleLogHandCommand);
         } else
             command = reinterpret_cast<std::byte *>(crateGripHandPose);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MAKI_RYO), 1, command, 0);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MAKI_RYO), 1, command, 0);
     } else {
         mtwkRequestMotion(scenFindMotionwork(MAKI_RYO), 0x4004, MotionRegion::LeftArm);
         for (std::int32_t i = 0; i < makiRuntime.heldCount; ++i) {
@@ -218,7 +218,7 @@ void MakiRefreshHeldLogs() {
                 .delay = 0};
             EVT_AT_Cling(&work);
         }
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MAKI_RYO), 1, reinterpret_cast<std::byte *>(makiCarryHandCommand), 0);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MAKI_RYO), 1, reinterpret_cast<std::byte *>(makiCarryHandCommand), 0);
     }
 }
 } // namespace shenmue::s2::areas

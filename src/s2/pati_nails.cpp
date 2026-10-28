@@ -35,7 +35,7 @@ std::uint64_t ParsePatiNailData(PatiNailData *destination, std::span<const std::
 }
 std::uint64_t ParsePatiNailFile(PatiNailData *destination, const char *resource) {
     EV_NPC_NewLoadSw(0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
     if (std::strlen(resource) >= 8) {
         const auto *bytes = static_cast<const std::byte *>(LoadCurrentPakBinary(resource));
         return ParsePatiNailData(destination, {bytes, static_cast<std::size_t>(GetCurrentPakBinarySize(resource))});

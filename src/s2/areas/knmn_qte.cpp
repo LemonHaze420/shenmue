@@ -37,11 +37,11 @@ void KnmnPracticeSequence(void *data) {
         switch (sequence.mode) {
         case 0:
             KnmnValue(&work, 0x650, std::uint8_t{0});
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
             KnmnSetPracticeGravity(1);
-            EV_mtwkSetEnabled(scenFindMotionwork(KNMN_RYO), 1);
-            EV_mtwkSetEnabled(scenFindMotionwork(KNMN_DEKU), 1);
-            SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetEnabled(scenFindMotionwork(KNMN_RYO), 1);
+            mtwkSetEnabled(scenFindMotionwork(KNMN_DEKU), 1);
+            mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
             EV_AT_SetPos(KNMN_DEKU, EventTransformFlags::AllAxes, KNMN_DUMMY_PRACTICE_POSITION);
             FinishLoading();
             CheckHelpIcon(1, 0, CheckHelpIconOp::Add);
@@ -55,7 +55,7 @@ void KnmnPracticeSequence(void *data) {
                 KNMN_RYO, KNMN_KEM, static_cast<std::int16_t>(instruction), static_cast<std::int16_t>(second), reinterpret_cast<std::byte *>(work.results));
             Vector3 position;
             EV_GetCharaPosition(KNMN_RYO, 5, &position, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_KEM), &position, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_KEM), &position, 0);
             CompiledSequenceWork *child = KnmnChild(sequence, TrainingAttackSequence, SHEN_NAME(BATT), 0);
             KnmnValue(child, 0x138, KNMN_RYO);
             KnmnValue(child, 0x140, KNMN_DEKU);
@@ -126,7 +126,7 @@ void KnmnQteSequence(void *data) {
             EV_AT_SetAngY(KNMN_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{.x = 0, .y = 16384, .z = 0});
             EV_AT_SetPos(KNMN_DEKU, EventTransformFlags::World | EventTransformFlags::AllAxes, KNMN_DUMMY_PRACTICE_POSITION);
             EV_AT_SetAngY(KNMN_DEKU, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{.x = 0, .y = 49152, .z = 0});
-            SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 2, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 2, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(KNMN_RYO), 306, MotionRegion::LowerBody);
             KnmnAdvance(sequence, 101);
             break;
@@ -141,11 +141,11 @@ void KnmnQteSequence(void *data) {
                 vfmDispatchControl(FightControlOp::QueuedAction, KNMN_RYO, restart == 1 ? 409 : restart == 2 ? 408 : 0, 1);
             } else {
                 shenStartFGST(10, 10, 0, 0);
-                shenInitFightData(FindCharacterByScenarioName(KNMN_RYO), nullptr, 0, 0, 0, 16);
-                vfUpdateFlagsFor(FindCharacterByScenarioName(KNMN_RYO), 0, 0x08000000U, 1);
-                shenInitFightData(FindCharacterByScenarioName(KNMN_DEKU), nullptr, 1, 1, 100, 1);
-                vfUpdateFlagsFor(FindCharacterByScenarioName(KNMN_RYO), 0, 0x10000U, 0);
-                vfUpdateFlagsFor(FindCharacterByScenarioName(KNMN_DEKU), 0, 0x10000U, 0);
+                shenInitFightData(ctrlGetScenarioChara(KNMN_RYO), nullptr, 0, 0, 0, 16);
+                vfUpdateFlagsFor(ctrlGetScenarioChara(KNMN_RYO), 0, 0x08000000U, 1);
+                shenInitFightData(ctrlGetScenarioChara(KNMN_DEKU), nullptr, 1, 1, 100, 1);
+                vfUpdateFlagsFor(ctrlGetScenarioChara(KNMN_RYO), 0, 0x10000U, 0);
+                vfUpdateFlagsFor(ctrlGetScenarioChara(KNMN_DEKU), 0, 0x10000U, 0);
                 EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{4}, 1);
                 qteBattleUtil(BattleQteMode::Load);
                 qteBattleUtil(BattleQteMode::SetWait, 0, 12, 24);
@@ -165,7 +165,7 @@ void KnmnQteSequence(void *data) {
             KnmnAdvance(sequence, 102);
             break;
         case 102:
-            if (GetMotionAnimationId(scenFindMotionwork(KNMN_RYO), MotionRegion::LowerBody) == 306 && !cvsHasValidConverseData()) {
+            if (mtwkGetAnimationId(scenFindMotionwork(KNMN_RYO), MotionRegion::LowerBody) == 306 && !cvsHasValidConverseData()) {
                 qteBattleUtil(BattleQteMode::Start);
                 KnmnAdvance(sequence, 103);
             }
@@ -181,7 +181,7 @@ void KnmnQteSequence(void *data) {
                 const std::int32_t frames = KnmnValue<std::int32_t>(data, 0x248);
                 if (frames)
                     KnmnValue(data, 0x248, frames - 1);
-                else if (GetMotionAnimationId(scenFindMotionwork(KNMN_RYO), MotionRegion::LowerBody) == 306 && !cvsHasValidConverseData()) {
+                else if (mtwkGetAnimationId(scenFindMotionwork(KNMN_RYO), MotionRegion::LowerBody) == 306 && !cvsHasValidConverseData()) {
                     qteBattleUtil(BattleQteMode::Start);
                     KnmnValue(data, 0x248, std::int32_t{60});
                 }
@@ -203,7 +203,7 @@ void KnmnQteSequence(void *data) {
             break;
         case 105:
             mtwkRequestMotion(scenFindMotionwork(KNMN_RYO), 1, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 0, MotionRegion::LowerBody);
             KnmnWait(sequence, 2, 106, 12);
             break;
         case 106:
@@ -320,10 +320,10 @@ void KnmnSuccessSequence(void *data) {
             EV_EnableCharacterDisplay(KNMN_KEM);
             ResetTrainingAuthorCharacter(KNMN_RYO);
             ResetTrainingAuthorCharacter(KNMN_KEM);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_KEM), nullptr, 3);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_KEM), nullptr, 3);
             Vector3 target;
             EV_GetCharaPosition(KNMN_RYO, 5, &target, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_KEM), &target, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_KEM), &target, 0);
             knmnSuccessSavedPostFx = static_cast<std::int32_t>(GetPostFxBankValue(3));
             SelectPostFxBank(3, 0);
             EV_authSceneCtrl(static_cast<AuthSceneCtrl>(SHEN_NAME(WAZA)));
@@ -346,8 +346,8 @@ void KnmnSuccessSequence(void *data) {
             KnmnComplete(sequence, true);
             return;
         case 144:
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 3);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
             KnmnWait(sequence, 2, 134, 1);
             break;
         default:

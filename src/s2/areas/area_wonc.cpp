@@ -93,33 +93,33 @@ void WoncWaitAuthorCallback(void *) {
     case 1: {
         EV_DisableCharacterDisplay(WONC_WONG);
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         if (date.hour < 19)
             return;
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_PLAYER), 0, 0, 0);
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_PLAYER), 0, 1, 0);
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_WONG), 0, 0, 0);
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_WONG), 0, 1, 0);
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_SAM), 0, 0, 0);
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_SAM), 0, 1, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_PLAYER), 0, 0, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_PLAYER), 0, 1, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_WONG), 0, 0, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_WONG), 0, 1, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_SAM), 0, 0, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_SAM), 0, 1, 0);
         break;
     }
     case 75:
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_LILLY), 0, 0, 0);
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_LILLY), 0, 1, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_LILLY), 0, 0, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_LILLY), 0, 1, 0);
         break;
     case 190:
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_SAM), 0, 0, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_SAM), 0, 0, 0);
         break;
     case 211:
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_PLAYER), 0, 1, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_PLAYER), 0, 1, 0);
         EV_DisableCharacterDisplay(WONC_LILLY);
         break;
     case 215:
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_SAM), 0, 1, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_SAM), 0, 1, 0);
         break;
     case 225:
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_PLAYER), 0, 0, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_PLAYER), 0, 0, 0);
         break;
     case 310:
         EV_EnableCharacterDisplay(WONC_WONG);
@@ -128,10 +128,10 @@ void WoncWaitAuthorCallback(void *) {
         EV_EnableCharacterDisplay(WONC_LILLY);
         break;
     case 674:
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_WONG), 0, 0, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_WONG), 0, 0, 0);
         break;
     case 688:
-        (void)SetHighModelXYZ(FindCharacterByScenarioName(WONC_WONG), 0, 1, 0);
+        (void)SetHighModelXYZ(ctrlGetScenarioChara(WONC_WONG), 0, 1, 0);
         break;
     default:
         break;
@@ -150,7 +150,7 @@ void WoncCompleteAuthorCallback(void *) {
     RestoreWoncCharacters();
     (void)camCtrlSetFovTransitionTo(true);
     (void)camCtrlSetState(Init);
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(woncCurrentAuthor->package), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(woncCurrentAuthor->package), 0);
     (void)EV_FreeAuthorPak(0, woncCurrentAuthor->authorBank);
     (void)EV_ForceLoadNpc(WONC_WONG);
     HLib::SetCurrentTaskTo(WoncEndCallback);
@@ -178,7 +178,7 @@ void RestoreWoncCharacters() {
 void WoncEndCallback(void *) {
     if (EV_ForceLoadNpc(WONC_WONG)) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 0x8b4, 0);
-        (void)LoadCutsceneAndSoundProgramForArea();
+        (void)sbtLoadProgram();
         (void)EV_spmBeginSampleExecute();
         (void)EV_NPC_NewLoadSw(1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

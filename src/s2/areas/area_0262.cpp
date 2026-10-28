@@ -49,7 +49,7 @@ void ConfigureE0262Environment() {
 // @verified - p
 void E0262Main(std::uintptr_t argument) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     SetPlayerControlEnabled(0);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 32, time.hour);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 33, time.minute);
@@ -96,13 +96,13 @@ void RestoreE0262Characters() {
 void CleanupE0262(AreaImmediateAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0262_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_0262_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0262A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0262A"), 0);
 
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
@@ -110,7 +110,7 @@ void CleanupE0262(AreaImmediateAuthorTaskParameter *parent) {
     if (g_currentMap.name == AREA_0262_AREA.name)
         EV_scenQueueLoad(g_actNumber, AREA_0262_AREA, g_entryPoint);
     else {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EventSetPosition position{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {215.3f, 92.8f, 129.8f}, 0.0f};
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle rotation{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 49152, 0}, 0.0f};

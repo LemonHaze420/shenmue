@@ -769,7 +769,7 @@ void UpdateGlobalShadowTiming() {
         weather = GetWeatherWindVector();
     globalShadowWeatherAlpha = weather <= 0.1f ? 0.4f : (1.0f - weather) * 0.4f;
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     const float minute = static_cast<float>(date.minute) / 60.0f;
     float opacity{};
     if (date.hour == 11)
@@ -806,7 +806,7 @@ void MaybeDoGlobalShadowLighting() {
         GetGlobalShadowOpacity() < 0.01f)
         return;
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (static_cast<std::uint8_t>(date.hour - 8) <= 10U && static_cast<std::uint32_t>(GetCurrentActiveLight() - 2) > 1U)
         DrawQueuedMainMapProjectedShadows();
 }
@@ -2406,7 +2406,7 @@ void UploadAirDomeColours() {
 
 void UpdateTimeOfDay() {
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     const float hours = static_cast<float>(dateTime.hour) * 10000.0f;
     const float minutes = (static_cast<float>(dateTime.minute) / 60.0f) * 10000.0f;
     airTimeOfDay = ((static_cast<float>(dateTime.second) / 60.0f) * 100.0f) * 1.666666f + (minutes + hours);
@@ -3028,7 +3028,7 @@ void CtrlAir_Callback(void *taskData) {
     UpdateTimeOfDay();
     airWeatherPresentation.previousSecondsSince1980 = airWeatherPresentation.secondsSince1980;
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     airWeatherPresentation.secondsSince1980 = static_cast<std::uint32_t>(ComputeSecondsSince1980(dateTime));
     UpdateCelestialCoordinates();
     UpdateNightTime();
@@ -3264,7 +3264,7 @@ void UpdateWeatherClouds(WeatherAir *air, std::int32_t frames) {
     if (GetHasInitCloudTextures() && GetCurrentAirLayerIndex() != textureIndex)
         ResetCloudScaling_0();
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (frames == 500) {
         if (static_cast<std::uint8_t>(time.hour - 5) > 12U && air->mode <= 4 && mode >= 5)
             frames = 800;

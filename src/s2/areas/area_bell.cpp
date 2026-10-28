@@ -74,7 +74,7 @@ void RestoreControl(void *parameter) {
     auto *state = static_cast<BellEventWork *>(parameter);
     state->busy = 0;
     SetPlayerControlEnabled(1);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
     EVS_LoopCamera(0, {}, {});
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
@@ -193,10 +193,10 @@ void BELL_main_func(std::uintptr_t argument) {
         EV_FreeAuthorPak(1, "0202");
         EV_FreeAuthorPak(1, "0203");
         EV_SetCanDoAreaJumpTo(0);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("BELL"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BELL"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BELL"), 0);
         EV_setHoldStatesFlags(0);
     }
     work->command = command;
@@ -334,7 +334,7 @@ void BellInteractionCallback(void *parameter) {
     DisableScenarioCharacterDisplay(ryo);
     Vector3 position{};
     EV_GetCharaPosition(anchor, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ren), &position, 1);
+    mtwkUpdateWithPosition(scenFindMotionwork(ren), &position, 1);
     Vector4 reflector{1, 0.3f, 0.3f, 0.3f};
     SetScenarioReflectorBoardValues(ren, &reflector);
     EV_SetRefBoardParamsFor(ren, 1);
@@ -365,7 +365,7 @@ void BellRingCallback(void *parameter) {
         Hand(ryo, 1, ringingHand, 10);
         const Vector3 look{208.5f, 104.5f, 194.5f};
         SetEyeToChara(ctrlGetCharaByName(ryo), &look, 20, 2);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &look, 1);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), &look, 1);
         QueueEventCallFunction(ResetEye, nullptr, 170);
         Gravity(ryo, false);
         Gravity(ren, false);
@@ -384,7 +384,7 @@ void BellRingCallback(void *parameter) {
         EV_SetCharacterAlphaEnabled(ren, false);
         EV_SetCharacterAlphaEnabled(ryo, false);
         EV_stepSetFlags(0, 0x131);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
         EnableScenarioCharacterDisplay(ren);
         EnableScenarioCharacterDisplay(ryo);
         DisableScenarioCharacterDisplay(SHEN_NAME(a047));
@@ -422,7 +422,7 @@ void BellExitCallback(void *parameter) {
     SetDoorSubjectEnabled(bellDoor, 1);
     EV_FreeAuthorPak(0, "0202");
     EV_FreeAuthorPak(0, "0203");
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_setHoldStatesFlags(1);
     srchClearTarget(2);
     EV_SetCanDoAreaJumpTo(1);
@@ -441,7 +441,7 @@ void BellExitCallback(void *parameter) {
     EVS_LoopCamera(0, {}, {});
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BELL"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BELL"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(state->task);
     EV_scenQueueLoad(g_actNumber, SHEN_NAME(QB00), 51);

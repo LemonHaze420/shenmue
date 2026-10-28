@@ -85,15 +85,15 @@ void FrbtPositionBase() {
 }
 void FrbtResetEnemyMotion(shen_name character) {
     EV_EnableCharacterDisplay(character);
-    mtwkSetRequestedRootMode(FindMotionWork(FindCharacterByScenarioName(character)), 3);
-    SetMotionFrameTime(FindMotionWork(FindCharacterByScenarioName(character)), 7, MotionRegion::LowerBody);
-    SetMotionRegionFlag(FindMotionWork(FindCharacterByScenarioName(character)), 69, 2, MotionRegion::LowerBody);
+    mtwkSetRequestedRootMode(FindMotionWork(ctrlGetScenarioChara(character)), 3);
+    mtwkSetFrameTime(FindMotionWork(ctrlGetScenarioChara(character)), 7, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(character)), 69, 2, MotionRegion::LowerBody);
     EV_SetCharaControllerFlags(character, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, 0, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharacterAlphaEnabled(character, false);
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 55, 2);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 55, 2);
 }
 void FrbtFacePlayer(shen_name character) {
     Vector3 player, enemy;
@@ -156,7 +156,7 @@ std::int32_t FrbtRunAway(FrbtWork &work) {
     EventSetMotion motion{.cleanup = 0, .character = FRBT_RYO, .animation = 0xf003, .frame = 0, .speed = 1, .flags = 0x40000000U, .delay = 0};
     EVT_AT_SetMot_Callback(&motion);
     GetMotionFrameCount(0xf003);
-    const bool sam = GetMotionRigBoneId(FindMotionWork(FindCharacterByScenarioName(work.enemies[0]))) == 7;
+    const bool sam = mtwkGetRigBoneId(FindMotionWork(ctrlGetScenarioChara(work.enemies[0]))) == 7;
     EventSetCamera camera{
         .cleanup = 0, .camera = sam ? 1200 : 1201, .eye = FRBT_BASE, .target = FRBT_BASE, .context = 0, .reserved11 = {}, .angle = 0, .delay = 0};
     EVT_AT_SetCam_Callback(&camera);
@@ -194,7 +194,7 @@ void FrbtVictoryAuthorCallback(void *data) {
         EventSetMotion motion{.cleanup = 0, .character = FRBT_RYO, .animation = 4929, .frame = 0, .speed = 1, .flags = 0, .delay = 0};
         EVT_AT_SetMot_Callback(&motion);
         GetMotionFrameCount(4929);
-        const bool sam = GetMotionRigBoneId(FindMotionWork(FindCharacterByScenarioName(work.enemies[0]))) == 7;
+        const bool sam = mtwkGetRigBoneId(FindMotionWork(ctrlGetScenarioChara(work.enemies[0]))) == 7;
         motion.character = work.enemies[0];
         motion.animation = sam ? 4932U : 4942U;
         EVT_AT_SetMot_Callback(&motion);
@@ -224,10 +224,10 @@ void FrbtVictoryAuthorCallback(void *data) {
     if (work.phase)
         return;
     EV_LoadAudio("0052E010", 1);
-    SetHighModelXYZ(FindCharacterByScenarioName(FRBT_RYO), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(FRBT_RYO), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(FRBT_RYO), 0, reinterpret_cast<std::byte *>(fortuneReadingHandPose), 8);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(FRBT_RYO), 1, reinterpret_cast<std::byte *>(fortuneReadingHandPose), 8);
+    SetHighModelXYZ(ctrlGetScenarioChara(FRBT_RYO), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(FRBT_RYO), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(FRBT_RYO), 0, reinterpret_cast<std::byte *>(fortuneReadingHandPose), 8);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(FRBT_RYO), 1, reinterpret_cast<std::byte *>(fortuneReadingHandPose), 8);
     for (std::int32_t i = 1; i < work.enemyCount; ++i)
         EV_DisableCharacterDisplay(work.enemies[i]);
     FrbtPositionBase();
@@ -280,7 +280,7 @@ void FrbtVictoryAuthorCallback(void *data) {
     EventSetMotion *queuedMotion = static_cast<EventSetMotion *>(HLib::GetTaskParameter(task));
     *queuedMotion = {.cleanup = 1, .character = FRBT_RYO, .animation = 4930, .frame = 0, .speed = 1, .flags = 0, .delay = 100};
     GetMotionFrameCount(4930);
-    const bool sam = GetMotionRigBoneId(FindMotionWork(FindCharacterByScenarioName(work.enemies[0]))) == 7;
+    const bool sam = mtwkGetRigBoneId(FindMotionWork(ctrlGetScenarioChara(work.enemies[0]))) == 7;
     motion.character = work.enemies[0];
     motion.animation = sam ? 4934U : 4944U;
     EVT_AT_SetMot_Callback(&motion);
@@ -306,10 +306,10 @@ void FrbtVictoryAuthorCallback(void *data) {
 }
 void FrbtMapGetCallback(void *data) {
     FrbtWork &work = *static_cast<FrbtWork *>(data);
-    SetHighModelXYZ(FindCharacterByScenarioName(FRBT_RYO), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(FRBT_RYO), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(FRBT_RYO), 0, reinterpret_cast<std::byte *>(fortuneReadingHandPose), 8);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(FRBT_RYO), 1, reinterpret_cast<std::byte *>(fortuneReadingHandPose), 8);
+    SetHighModelXYZ(ctrlGetScenarioChara(FRBT_RYO), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(FRBT_RYO), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(FRBT_RYO), 0, reinterpret_cast<std::byte *>(fortuneReadingHandPose), 8);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(FRBT_RYO), 1, reinterpret_cast<std::byte *>(fortuneReadingHandPose), 8);
     HLib::Task *task = HLib::EnqueueTaskWithParameter(EVT_AT_CtrlHandUp_Callback, 6, 0x0b, sizeof(EventControlHand), AREA_EVENT_TASK);
     RegisterEventTask(task);
     EventControlHand *hand = static_cast<EventControlHand *>(HLib::GetTaskParameter(task));

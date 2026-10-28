@@ -73,7 +73,7 @@ void UpdateReflectorBoardParams(Character *character, void *payload) {
 
     constexpr float fadeStep = 0.010714286f;
     if (reflector->sector == 2) {
-        const shen_name name = GetCharacterScenarioName(character);
+        const shen_name name = ctrlGetScenarioCharaName(character);
         if (IsScenarioCharacterForcedVisible(name)) {
             reflector->colour[0] = std::min(reflector->colour[0] + fadeStep, kReflectorBoardColourLimit);
             reflector->colour[1] = reflector->colour[0];
@@ -114,7 +114,7 @@ std::int16_t ResolveReflectorBoardCharacterAngle(Character *character) {
     const std::int32_t cameraYaw = -camCtrlGetNextRotY();
     Vector3 cameraDirection{-sin_fixed16(static_cast<std::int16_t>(cameraYaw)), 0.0f, cos_fixed16(static_cast<std::uint16_t>(cameraYaw))};
     Vector3::NormalizeInPlace(cameraDirection);
-    const std::int16_t boneYaw = GetMotionBoneYaw(FindMotionWork(character), MB_HeadTarget);
+    const std::int16_t boneYaw = mtwkGetBoneYaw(FindMotionWork(character), MB_HeadTarget);
     Vector3 characterDirection{sin_fixed16(boneYaw), 0.0f, cos_fixed16(static_cast<std::uint16_t>(boneYaw))};
     Vector3::NormalizeInPlace(characterDirection);
     float angle = ((Vector3 ::Dot(cameraDirection, characterDirection) * 180.0f) - 180.0f) * -0.5f;
@@ -209,7 +209,7 @@ void SetReflectorBoardPointLight(Vector3 &origin, const Vector3 &cameraPosition,
 void ConfigureReflectorBoardLight(Character *character, ReflectorBoardParams *reflector, std::uint32_t slot) {
     reflectorSavedActiveLight = GetCurrentActiveLight();
     Vector3 origin;
-    GetCharacterMotionWorldPosition(character, MB_Head, &origin);
+    charaGetMotWorldPos(character, MB_Head, &origin);
     Vector3 cameraPosition;
     camCtrlGetNextCamPos(&cameraPosition);
     SetCurrentActiveLight(3);
@@ -252,7 +252,7 @@ void AssignReflectorBoardParams(Character *character) {
         if (GetCurrentActiveLight() == 1) {
             const float scale = reflector->customLight == 1 ? reflector->colour[0] : reflectorDefaultValues.y;
             Vector3 sourcePosition;
-            GetCharacterMotionWorldPosition(character, MB_Head, &sourcePosition);
+            charaGetMotWorldPos(character, MB_Head, &sourcePosition);
 
             Vector3 cameraPosition;
             camCtrlGetNextCamPos(&cameraPosition);

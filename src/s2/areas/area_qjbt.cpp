@@ -99,7 +99,7 @@ void AuthorAdmissionCallback(void *) {
 bool IsBattleMotionAvailable() {
     Vector3 position;
     EV_GetCharaPosition(STREET_WATCH_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-    const Vector3i rotation = GetCharacterWorldRotation(FindCharacterByScenarioName(STREET_WATCH_RYO));
+    const Vector3i rotation = GetCharacterWorldRotation(ctrlGetScenarioChara(STREET_WATCH_RYO));
     const Vector3 first{273.0f, 0.0f, 235.0f}, second{271.0f, 0.0f, 230.0f};
     return TestCharaPositionWithinRange(STREET_WATCH_RYO, &first, &second, shen_name{0}) && GetQronNextStream() == 0 &&
         static_cast<std::uint32_t>(rotation.y) - 6736U <= 25484U;
@@ -117,7 +117,7 @@ void MainCallback(void *) {
         GetBattleDataConfig(0, SHEN_NAME(BTLD));
 }
 void ApplyLighting() {
-    SetPluralControlFor(FindCharacterByScenarioName(STREET_WATCH_RYO), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(STREET_WATCH_RYO), 1);
     EV_SetWeatherInstruction(0x0f, 0);
     EV_SetWeatherInstruction(0x780, 0);
     EV_SetWeatherInstruction(0x1800, 0);

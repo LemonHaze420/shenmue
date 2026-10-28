@@ -73,7 +73,7 @@ void RestoreE0016Characters() {
 // @verified - p
 void CleanupE0016(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0016_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -88,7 +88,7 @@ void CleanupE0016(AreaAuthorTaskParameter *parent) {
 // @verified - p
 void QueueE0016Loop(AreaAuthorTaskParameter *parent) {
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     dateTime.hour = static_cast<std::uint32_t>(parent->selection) > 2 ? 8 : 22;
     dateTime.minute = 0;
     SetCurrentDateTimeTo(dateTime);

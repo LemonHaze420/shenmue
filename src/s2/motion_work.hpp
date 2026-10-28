@@ -27,7 +27,7 @@ extern std::uint32_t g_motionDrawOverrideFlags;
 extern std::array<const Matrix4x4 *, 7> g_motionDeformationControllers;
 extern MotionWork *g_activeMotionWork;
 extern std::int32_t g_mtwkCurrentIsRyo;
-void SetActiveMTWK(MotionWork *work);
+void mtwkSetActive(MotionWork *work);
 void mtwkGetArmHandPoseChanges(MotionWork *work, std::int32_t *shapes, std::int32_t *frames);
 std::int64_t mtwkSetOverridesEnabled(std::int32_t enabled);
 
@@ -393,33 +393,33 @@ void ApplyConstraint(MotionWork &work, Vector3 *position, std::uint32_t controll
 void EvaluateHeadLookAt(MotionWork &work, Vector3 *target, std::uint32_t controller);
 void mtwkCopyRigFlags(
     MotionWork *work, MotionRigClock **lowerBody, MotionRigClock **chest, MotionRigClock **head, MotionRigClock **rightArm, MotionRigClock **leftArm);
-float TimePair_ClampAndPropagate(MotionWork *work, float split, float ticks, float maximum, MotionRegion region);
-void AssignStaticDataForBodyRegion(MotionWork *work, float split, float ticks, float maximum, MotionRegion region);
+float mtwkTimePairClampAndPropagate(MotionWork *work, float split, float ticks, float maximum, MotionRegion region);
+void mtwkAssignStaticDataForBodyRegion(MotionWork *work, float split, float ticks, float maximum, MotionRegion region);
 std::uint32_t TimestepUpdate(MotionRigClock *clock, std::uint32_t allowOverflow, std::uint32_t allowReset);
 std::uint32_t AnimClock_ForceJump(MotionRigClock *clock);
-void Rig_EvaluateControllers(MotionWork *work, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags, MotionRegion region);
+void mtwkRigEvaluateControllers(MotionWork *work, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags, MotionRegion region);
 bool Rig_SetupMotionGraph(IKRig &rig, const MotionStreamContext *context, float time, std::uint32_t flags, std::uint32_t region,
     MotionTargetParameters *targets, MotionRotationParameters *rotations);
-void Rig_RunOverrideBlendPass(MotionWork *work);
-void ClearOverrideCallbacksForBodyRegion(MotionWork *work, MotionRegion region);
-void InstallActiveOverrideCallbacks(MotionWork *work);
-void InstallConstraintTargetCallback(MotionWork *work, std::uint32_t controller);
-void ClearConstraintTargetCallbackIfInactive(MotionWork *work, std::uint32_t controller);
-void UpdatePelvisYaw(MotionWork *work);
-std::int32_t UpdateMotionOverrideCallbacks(MotionWork *work);
+void mtwkRigRunOverrideBlendPass(MotionWork *work);
+void mtwkClearOverrideCallbacksForBodyRegion(MotionWork *work, MotionRegion region);
+void mtwkInstallActiveOverrideCallbacks(MotionWork *work);
+void mtwkInstallConstraintTargetCallback(MotionWork *work, std::uint32_t controller);
+void mtwkClearConstraintTargetCallbackIfInactive(MotionWork *work, std::uint32_t controller);
+void mtwkUpdatePelvisYaw(MotionWork *work);
+std::int32_t mtwkUpdateOverrideCallbacks(MotionWork *work);
 std::uint32_t HasLeadFootCommand(std::uint16_t motion);
 void mtwkApplyRootPos(MotionWork *work);
-void applyRootTranslation(MotionWork *work);
-std::int32_t MOTN_ProcessLayers(MotionWork *work);
+void mtwkApplyRootTranslation(MotionWork *work);
+std::int32_t mtwkProcessLayers(MotionWork *work);
 void mtwkAdvanceAnimFrameAndLayers(MotionWork *work);
 void mtwkApplySequenceCommands(MotionWork *work);
-void motnAdvanceInterpolated(MotionWork *work, float x, float y, float z);
-void motnCopyInterpolated(MotionWork *work, float x, float y, float z);
+void mtwkAdvanceInterpolated(MotionWork *work, float x, float y, float z);
+void mtwkCopyInterpolated(MotionWork *work, float x, float y, float z);
 std::uint32_t mtwkApplyTransforms(const Matrix4x4 *pelvis);
-void resolveAnimId(MotionWork *work, std::uint16_t motion, std::uint16_t remap, float begin, float end);
+void mtwkResolveAnimId(MotionWork *work, std::uint16_t motion, std::uint16_t remap, float begin, float end);
 void mtwkUpdateBoneForTime(MotionWork *work, std::uint16_t motion, float begin, float end);
 void mtwkSelectRandomFootstepCue(MotionWork *work, std::uint16_t motion, float begin, float end);
-void UpdateMotionCollisionCluster(MotionWork *work);
+void mtwkUpdateCollisionCluster(MotionWork *work);
 std::int32_t mtwkApplyInterpolatedTransforms(MotionWork *work);
 Matrix4x4 *mtwkBuildArmRebaseTransform(Matrix4x4 *destination, MotionWork *work);
 // Returns whether the character is on screen (always for search-hand motion).
@@ -439,14 +439,14 @@ void BindMotionControllerMatricesToModelNodes(Character *character, MotionWork *
 
 
 extern std::int32_t g_usingEnv;
-void SetMotionEnvironmentEnabled(std::int32_t enabled) noexcept;
+void mtwkSetEnvironmentEnabled(std::int32_t enabled) noexcept;
 
-bool AssignMotionTargetCallback(MotionWork *work, MotionTargetCallback callback, std::int32_t selector);
-bool AssignMotionTargetParameter(MotionWork *work, void *parameter, std::int32_t selector);
-MotionTargetCallback GetMotionTargetCallback(const MotionWork *work, std::int32_t selector);
-void *GetMotionTargetParameter(const MotionWork *work, std::int32_t selector);
-void TransformWithoutIKEnabled(MotionWork *work, Vector3 *foot, Vector3 *pelvis);
-bool GetMotionControllerTargetPosition(const MotionWork *work, std::uint32_t controller, Vector3 &position);
+bool mtwkAssignTargetCallback(MotionWork *work, MotionTargetCallback callback, std::int32_t selector);
+bool mtwkAssignTargetParameter(MotionWork *work, void *parameter, std::int32_t selector);
+MotionTargetCallback mtwkGetTargetCallback(const MotionWork *work, std::int32_t selector);
+void *mtwkGetTargetParameter(const MotionWork *work, std::int32_t selector);
+void mtwkTransformWithoutIKEnabled(MotionWork *work, Vector3 *foot, Vector3 *pelvis);
+bool mtwkGetControllerTargetPosition(const MotionWork *work, std::uint32_t controller, Vector3 &position);
 
 MotionWork *AllocateMotionWork(Character *character);
 MotionWork *FindMotionWork(const Character *character);
@@ -457,83 +457,83 @@ float AssignCharacterMotionYaw(Character *character, std::int32_t yaw, const std
 // SetMotionDrawOverrideData. The bank owner retains the matrices through draw and clears
 // this pointer before releasing the bank. Records follow drawable-node
 // preorder, not bone IDs; each XB01-bearing node consumes one 0x40 record.
-bool SetMotionDrawOverrideData(MotionWork *motionWork, const Matrix4x4 *frame);
-const Matrix4x4 *GetMotionDrawOverrideData(const MotionWork *motionWork);
-bool SetMotionIkTargetPosition(MotionWork *work, Vector3 *position);
+bool mtwkSetDrawOverrideData(MotionWork *motionWork, const Matrix4x4 *frame);
+const Matrix4x4 *mtwkGetDrawOverrideData(const MotionWork *motionWork);
+bool mtwkSetIkTargetPosition(MotionWork *work, Vector3 *position);
 
-void SetMotionRootTransformOverride(MotionWork *motionWork, const Matrix4x4 *transform);
+void mtwkSetRootTransformOverride(MotionWork *motionWork, const Matrix4x4 *transform);
 
-bool BuildMotionRootRebaseTransform(const MotionWork *motionWork, Matrix4x4 &transform);
-bool EvaluateCurrentMotionPose(const MotionWork *motionWork, MotionPose &pose);
-Matrix4x4 *charaGetBoneTransform(MotionWork *motion, std::int32_t boneId);
-void RebaseMotionSolvedMatrices(MotionWork *work);
-bool CopyMotionBoneTransform(MotionWork *motion, std::int32_t boneId, Matrix4x4 *transform);
-bool GetMotionBonePosition(MotionWork *motion, MotionBoneId boneId, Vector3 *position);
+bool mtwkBuildRootRebaseTransform(const MotionWork *motionWork, Matrix4x4 &transform);
+bool mtwkEvaluateCurrentPose(const MotionWork *motionWork, MotionPose &pose);
+Matrix4x4 *mtwkGetBoneTransform(MotionWork *motion, std::int32_t boneId);
+void mtwkRebaseSolvedMatrices(MotionWork *work);
+bool mtwkCopyBoneTransform(MotionWork *motion, std::int32_t boneId, Matrix4x4 *transform);
+bool mtwkGetBonePosition(MotionWork *motion, MotionBoneId boneId, Vector3 *position);
 
-bool GetIsRHandAboveShoulder(MotionWork *motion);
+bool mtwkIsRightHandAboveShoulder(MotionWork *motion);
 // Whether the right shoulder (0x19) sits higher than the right hand (0x1e).
-bool GetIsRHandBelowShoulder(MotionWork *motion);
-void GetCharacterMotionLocalPosition(Character *character, std::int32_t bone, Vector3 *position);
-void GetCharacterMotionNodePosition(Character *character, std::int32_t bone, Vector3 *position);
-void GetCharacterMotionWorldPosition(Character *character, std::int32_t bone, Vector3 *position);
+bool mtwkIsRightHandBelowShoulder(MotionWork *motion);
+void charaGetMotLocalPos(Character *character, std::int32_t bone, Vector3 *position);
+void charaGetMotNodePos(Character *character, std::int32_t bone, Vector3 *position);
+void charaGetMotWorldPos(Character *character, std::int32_t bone, Vector3 *position);
 void TransformScenarioMotionBonePose(shen_name character, std::int32_t boneId, Vector3 *position, Vector3i *rotation);
 
 bool ResolveAuthoredMotionBoneTransform(const Character *character, std::uint16_t boneId, Matrix4x4 &transform);
-bool GetCharacterMotionBonePosition(Character *character, std::uint16_t boneId, Vector3 &position);
-std::int16_t GetMotionBoneYaw(MotionWork *motion, std::int32_t bone);
-bool SetMotionConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot, const Vector3 &worldTarget);
-void ClearMotionConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot);
-void ClearAllMotionConstraintTargets(MotionWork *motionWork);
-bool IsMotionConstraintTargetSettled(const MotionWork *motionWork, MotionConstraintSlot slot);
+bool charaGetMotBonePos(Character *character, std::uint16_t boneId, Vector3 &position);
+std::int16_t mtwkGetBoneYaw(MotionWork *motion, std::int32_t bone);
+bool mtwkSetConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot, const Vector3 &worldTarget);
+void mtwkClearConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot);
+void mtwkClearAllConstraintTargets(MotionWork *motionWork);
+bool mtwkIsConstraintTargetSettled(const MotionWork *motionWork, MotionConstraintSlot slot);
 bool mtwkRequestMotion(MotionWork *motionWork, std::uint16_t motionId, MotionRegion region);
-std::uint16_t GetMotionAnimationId(const MotionWork *motionWork, MotionRegion region);
-std::int64_t motnIsCurrentAnimOpenEnded(const MotionWork *motionWork, MotionRegion region);
+std::uint16_t mtwkGetAnimationId(const MotionWork *motionWork, MotionRegion region);
+std::int64_t mtwkIsCurrentAnimOpenEnded(const MotionWork *motionWork, MotionRegion region);
 
-std::uint16_t GetQueuedMotionAnimationId(const MotionWork *motionWork, MotionRegion region);
+std::uint16_t mtwkGetQueuedAnimationId(const MotionWork *motionWork, MotionRegion region);
 // MOTN_SampleTrack: a motion's root translation at a frame (negative selects the last), scaled to the rig.
 bool SampleNativeMotionRoot(std::uint16_t animation, std::int32_t boneId, float frame, Vector3 &output);
 bool SampleNativeMotionRootAndRotation(std::uint16_t animation, std::int32_t boneId, float frame, Vector3 *position, Vector3i *rotation);
 bool ApplyCharacterMotionToPose(Character *character, Vector3 *position, Vector3i *rotation, float frame, std::uint16_t motion);
-bool vfClsampleCurrentMotion(MotionWork *motionWork, float frame, Vector3 &output);
-Vector3 GetMotionRootPosition(const MotionWork *motion);
-void SetMotionRootPosition(MotionWork *motion, const Vector3 &position);
-void ApplyMotionCollisionTranslation(MotionWork *motion, float x, float y, float z);
-void RequestMotionRegionDetach(MotionWork *motionWork, MotionRegion region);
-std::int32_t GetMotionRigBoneId(const MotionWork *motionWork);
-MotionTimePair *GetMotionLayerTimePair(MotionWork *motionWork, MotionRegion region);
-const MotionTimePair *GetMotionLayerTimePair(const MotionWork *motionWork, MotionRegion region);
-std::uint32_t GetMotionTrackedRootMode(const MotionWork *work);
-float GetMotionTransitionFramesRemaining(const MotionWork *work, MotionRegion region);
-void CopyMotionRegionTimes(const MotionWork *work, float *split, float *current, float *maximum, float *speed, MotionRegion region);
-float GetMotionSplitFrame(const MotionWork *work, MotionRegion region);
-float GetMotionFrame(const MotionWork *motionWork, MotionRegion region);
-float GetMotionPoseFrame(const MotionWork *motionWork, MotionRegion region);
-float GetMotionEndFrame(const MotionWork *motionWork, MotionRegion region);
-void SetMotionEntityRotation(MotionWork *motionWork, const Vector3i &rotation);
+bool mtwkSampleCurrentMotion(MotionWork *motionWork, float frame, Vector3 &output);
+Vector3 mtwkGetRootPosition(const MotionWork *motion);
+void mtwkSetRootPosition(MotionWork *motion, const Vector3 &position);
+void mtwkApplyCollisionTranslation(MotionWork *motion, float x, float y, float z);
+void mtwkRequestRegionDetach(MotionWork *motionWork, MotionRegion region);
+std::int32_t mtwkGetRigBoneId(const MotionWork *motionWork);
+MotionTimePair *mtwkGetLayerTimePair(MotionWork *motionWork, MotionRegion region);
+const MotionTimePair *mtwkGetLayerTimePair(const MotionWork *motionWork, MotionRegion region);
+std::uint32_t mtwkGetTrackedRootMode(const MotionWork *work);
+float mtwkGetTransitionFramesRemaining(const MotionWork *work, MotionRegion region);
+void mtwkCopyRegionTimes(const MotionWork *work, float *split, float *current, float *maximum, float *speed, MotionRegion region);
+float mtwkGetSplitFrame(const MotionWork *work, MotionRegion region);
+float mtwkGetFrame(const MotionWork *motionWork, MotionRegion region);
+float mtwkGetPoseFrame(const MotionWork *motionWork, MotionRegion region);
+float mtwkGetEndFrame(const MotionWork *motionWork, MotionRegion region);
+void mtwkSetEntityRotation(MotionWork *motionWork, const Vector3i &rotation);
 
 
 
-bool GetParentBoneWrapper(MotionWork *motionWork, std::int32_t selector);
-bool vfmaSetAngleFor(MotionWork *motionWork, std::int32_t angle);
-bool SetMotionBoneTarget(MotionWork *motionWork, std::int32_t selector, const Vector3 *point);
-bool LatchMotionBoneTarget(MotionWork *motionWork, std::int32_t selector, const Vector3 *point);
-float GetMotionBoneTargetStepLimit(const MotionWork *work, std::int32_t selector);
-bool SetMotionBoneTargetStepLimit(MotionWork *work, std::int32_t selector, float limit);
+bool mtwkGetParentBoneWrapper(MotionWork *motionWork, std::int32_t selector);
+bool mtwkSetAngle(MotionWork *motionWork, std::int32_t angle);
+bool mtwkSetBoneTarget(MotionWork *motionWork, std::int32_t selector, const Vector3 *point);
+bool mtwkLatchBoneTarget(MotionWork *motionWork, std::int32_t selector, const Vector3 *point);
+float mtwkGetBoneTargetStepLimit(const MotionWork *work, std::int32_t selector);
+bool mtwkSetBoneTargetStepLimit(MotionWork *work, std::int32_t selector, float limit);
 
-void SetMotionSpeed(MotionWork *motionWork, float speed, MotionRegion region);
-float GetMotionSpeed(const MotionWork *motionWork, MotionRegion region);
+void mtwkSetSpeed(MotionWork *motionWork, float speed, MotionRegion region);
+float mtwkGetSpeed(const MotionWork *motionWork, MotionRegion region);
 // Shared by PLYM collision-speed and MTWK copy transitions; returns the previous pelvis scale ratio or -1.
-float SetMotionRigScale(MotionWork *motionWork, float scale);
+float mtwkSetRigScale(MotionWork *motionWork, float scale);
 std::uint32_t mtwkSetExtraFlag(MotionWork *motionWork, std::uint32_t flag, std::int32_t operation);
-std::uint16_t SetMotionRegionFlag(MotionWork *motionWork, std::uint32_t mode, std::int32_t operation, MotionRegion region);
+std::uint16_t mtwkSetRegionFlag(MotionWork *motionWork, std::uint32_t mode, std::int32_t operation, MotionRegion region);
 bool mtwkSetRequestedRootMode(MotionWork *motionWork, std::uint32_t mode);
-bool SetMotionExtraMotion(MotionWork *motionWork, std::uint32_t slot, std::uint16_t motionId);
-void EV_mtwkSetEnabled(MotionWork *motionWork, std::int32_t enabled);
-std::uint32_t IsMotionWorkEnabled(const MotionWork *motionWork);
-void SetMotionReactFlags(MotionWork *work, std::uint8_t flags);
+bool mtwkSetExtra(MotionWork *motionWork, std::uint32_t slot, std::uint16_t motionId);
+void mtwkSetEnabled(MotionWork *motionWork, std::int32_t enabled);
+std::uint32_t mtwkIsEnabled(const MotionWork *motionWork);
+void mtwkSetReactFlags(MotionWork *work, std::uint8_t flags);
 // SetMotionWorkCulled independently gates MTWK_Callback without changing root writeback.
-void SetMotionWorkCulled(MotionWork *motionWork, bool culled);
-void SetMotionEnvironmentEnabled(MotionWork *motionWork, std::uint32_t enabled);
+void mtwkSetCulled(MotionWork *motionWork, bool culled);
+void mtwkSetEnvironmentEnabled(MotionWork *motionWork, std::uint32_t enabled);
 
 std::int64_t ExecuteMotionworkUtility(Character *character, std::uint32_t yaw, float angle, std::int32_t flags, const void *motionData);
 
@@ -546,27 +546,27 @@ bool BeginAuthoredCharacterMotion(
 // the node's current Y. Abort only re-enables writeback and clears extra flag 9.
 void FinishAuthoredCharacterMotion(Character *character, float speed, bool interrupted, bool applyYawOffset);
 
-bool UpdateMotionWorkWithPosition(MotionWork *work, const Vector3 *target, std::uint16_t operation);
-bool RequestMotionTargetFacing(MotionWork *work, const Vector3 *target, std::uint32_t flags);
-bool SetMotionFrameTime(MotionWork *work, std::uint32_t frames, MotionRegion region);
-void SetMotionRegionEvalTime(MotionWork *work, float frame, MotionRegion region);
-void SetMotionLayerEndFrame(MotionWork *work, float frame, MotionRegion region);
-void SetMotionLayerLoopStartTime(MotionWork *work, float frame, MotionRegion region);
-void SetMotionLayerFrameRange(MotionWork *work, float loopStart, float startFrame, float endFrame, MotionRegion region);
-bool AssignMotionRigYawOffset(MotionWork *work, std::uint32_t yaw);
-void SetMotionPelvisYawStep(MotionWork *work, std::int16_t step);
-std::uint64_t SetMotionTimeRelated(MotionWork *work, std::uint32_t mode, std::uint16_t slot, std::uint16_t motionId);
-bool HasMotionTrackCommand(const MotionWork *work, MotionRegion region);
-bool HasMotionDependentTrack(const MotionWork *work);
-bool ResetMotionWorkPositionTransition(MotionWork *motionWork);
-bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::uint16_t yaw, std::int16_t operation, std::int32_t copyType);
-bool RequestMotionPositionTransition(MotionWork *work, const Vector3 *position, std::uint16_t yaw, std::uint32_t motion, float startFrame);
+bool mtwkUpdateWithPosition(MotionWork *work, const Vector3 *target, std::uint16_t operation);
+bool mtwkRequestTargetFacing(MotionWork *work, const Vector3 *target, std::uint32_t flags);
+bool mtwkSetFrameTime(MotionWork *work, std::uint32_t frames, MotionRegion region);
+void mtwkSetRegionEvalTime(MotionWork *work, float frame, MotionRegion region);
+void mtwkSetLayerEndFrame(MotionWork *work, float frame, MotionRegion region);
+void mtwkSetLayerLoopStartTime(MotionWork *work, float frame, MotionRegion region);
+void mtwkSetLayerFrameRange(MotionWork *work, float loopStart, float startFrame, float endFrame, MotionRegion region);
+bool mtwkAssignRigYawOffset(MotionWork *work, std::uint32_t yaw);
+void mtwkSetPelvisYawStep(MotionWork *work, std::int16_t step);
+std::uint64_t mtwkSetTimeRelated(MotionWork *work, std::uint32_t mode, std::uint16_t slot, std::uint16_t motionId);
+bool mtwkHasTrackCommand(const MotionWork *work, MotionRegion region);
+bool mtwkHasDependentTrack(const MotionWork *work);
+bool mtwkResetPositionTransition(MotionWork *motionWork);
+bool mtwkCopyTransition(MotionWork *motionWork, const Vector3 *position, std::uint16_t yaw, std::int16_t operation, std::int32_t copyType);
+bool mtwkRequestPositionTransition(MotionWork *work, const Vector3 *position, std::uint16_t yaw, std::uint32_t motion, float startFrame);
 
 
 
-bool BeginMotionPositionTransition(MotionWork *motionWork, const Vector3 &target, std::uint16_t targetYaw);
+bool mtwkBeginPositionTransition(MotionWork *motionWork, const Vector3 &target, std::uint16_t targetYaw);
 
 
-bool CompleteMotionPositionTransitionRequest(MotionWork *motionWork);
+bool mtwkCompletePositionTransitionRequest(MotionWork *motionWork);
 
 } // namespace shenmue::s2

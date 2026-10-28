@@ -36,7 +36,7 @@ void ExciteAward(void *) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1746, 1);
         HLib::MarkCurrentTaskForCleanup();
         scenFreeEvent("EXQT.EV3");
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("EXQT"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("EXQT"), 0);
     }
 }
 void ExciteExitToOmake(void *) {
@@ -55,10 +55,10 @@ void ExitExcite(ExciteState &state) {
     EV_SetCharaControllerFlags(EXQT_RYO, 2, static_cast<NpcCharacterControllerState>(1));
     EV_SetCharaControllerFlags(EXQT_RYO, 3, static_cast<NpcCharacterControllerState>(1));
     mtwkRequestMotion(scenFindMotionwork(EXQT_RYO), 0xf002, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(EXQT_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(EXQT_RYO), 71, 0, MotionRegion::LowerBody);
     spmFadeOut();
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014)) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
     }
     EV_FreeAuthorPak(0, "0116E");
@@ -74,7 +74,7 @@ void ExitExcite(ExciteState &state) {
             HLib::MarkCurrentTaskForCleanup();
             scenFreeEvent("EXQT.EV3");
             SetPlayerControlEnabled(1);
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("EXQT"), 0);
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("EXQT"), 0);
             SetScreenFilmFade(15, 255, 0, 0, 0, 0, 0, 0, 0);
         } else
             HLib::SetCurrentTaskTo(ExciteAward);
@@ -88,7 +88,7 @@ void InitializeExcitePosition(ExciteState &state) {
     EV_EnsureCharacterDraw(EXQT_MACHINE);
     SetPlayerControlEnabled(0);
     mtwkRequestMotion(scenFindMotionwork(EXQT_RYO), 0xf002, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(EXQT_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(EXQT_RYO), 71, 0, MotionRegion::LowerBody);
     EVT_AT_SetPosAng(EXQT_RYO, EXQT_MACHINE, 0, .718f, 0, -1);
     EV_SetCharaControllerFlags(EXQT_RYO, 2, static_cast<NpcCharacterControllerState>(0));
     EV_SetCharaControllerFlags(EXQT_RYO, 3, static_cast<NpcCharacterControllerState>(0));
@@ -138,7 +138,7 @@ void RunExqt(std::uintptr_t argument) {
         EV_SetNewSceneIndex();
     EV_spmBeginSampleExecute();
     RestoreExciteHands();
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("EXQT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("EXQT"), 0);
 }
 void ExciteMain(void *data) {
     ExciteState &state = static_cast<ExciteTaskWork *>(data)->state;

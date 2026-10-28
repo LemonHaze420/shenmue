@@ -67,20 +67,20 @@ void KnmnResetActors(std::int32_t practice) {
     if (!(practice & ~9) && practice != 8) {
         EV_AT_SetPos(KNMN_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, KNMN_PLAYER_PRACTICE_POSITION);
         EV_AT_SetAngY(KNMN_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{.x = 0, .y = 16384, .z = 0});
-        SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
     }
-    if (GetMotionAnimationId(scenFindMotionwork(KNMN_RYO), MotionRegion::LowerBody) != 306) {
-        SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
+    if (mtwkGetAnimationId(scenFindMotionwork(KNMN_RYO), MotionRegion::LowerBody) != 306) {
+        mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
         mtwkRequestMotion(scenFindMotionwork(KNMN_RYO), 306, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 0, MotionRegion::LowerBody);
     }
-    EV_mtwkSetEnabled(scenFindMotionwork(KNMN_RYO), 1);
-    SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 0, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(KNMN_RYO), 1);
+    mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 69, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(KNMN_KEM, EventTransformFlags::World | EventTransformFlags::AllAxes, KNMN_TEACHER_PRACTICE_POSITION);
     EV_AT_SetAngY(KNMN_KEM, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{.x = 0, .y = 60984, .z = 0});
-    SetMotionRegionFlag(scenFindMotionwork(KNMN_KEM), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(KNMN_KEM), 71, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(KNMN_KEM), 5193, MotionRegion::LowerBody);
 }
 bool KnmnNeedsFacingReset(std::int32_t practice) {
@@ -205,8 +205,8 @@ void KnmnPracticeRootSequence(void *data) {
                 RetireCompiledSequenceLinks(&sequence);
                 HLib::DestroyCurrentTask();
             }
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_KEM), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_KEM), nullptr, 0);
             break;
         default:
             UpdateCompiledSequenceWait(&sequence);
@@ -260,8 +260,8 @@ void KnmnFinishPracticeSequence(void *data) {
         if (!sequence.mode)
             KnmnAdvance(sequence, 100);
         else if (sequence.mode == 100) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNMN_KEM), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNMN_KEM), nullptr, 0);
             KnmnComplete(sequence);
             return;
         } else
@@ -322,10 +322,10 @@ void KnmnInitializeDemonstrationSequence(void *data) {
         EV_SetCharaControllerFlags(character, UpdateHeight, NpcCharacterControllerState::Disabled);
         SetScenarioCharacterDrawControl(character, 1, 1);
     }
-    EV_mtwkSetEnabled(scenFindMotionwork(KNMN_RYO), 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(KNMN_KEM), 0);
-    SetMotionSpeed(scenFindMotionwork(KNMN_RYO), 1, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(KNMN_KEM), 1, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(KNMN_RYO), 1);
+    mtwkSetEnabled(scenFindMotionwork(KNMN_KEM), 0);
+    mtwkSetSpeed(scenFindMotionwork(KNMN_RYO), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(KNMN_KEM), 1, MotionRegion::LowerBody);
     for (shen_name character : {KNMN_RYO, KNMN_KEM}) {
         mtwkSetRequestedRootMode(scenFindMotionwork(character), 1);
         SetScenarioReflectorBoardValues(character, &KNMN_PRACTICE_REFLECTOR);
@@ -333,10 +333,10 @@ void KnmnInitializeDemonstrationSequence(void *data) {
     }
     EV_AT_SetPos(KNMN_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, KNMN_PLAYER_PRACTICE_POSITION);
     EV_AT_SetAngY(KNMN_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{.x = 0, .y = 16384, .z = 0});
-    SetMotionRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(KNMN_RYO), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(KNMN_KEM, EventTransformFlags::World | EventTransformFlags::AllAxes, KNMN_TEACHER_PRACTICE_POSITION);
     EV_AT_SetAngY(KNMN_KEM, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{.x = 0, .y = 60984, .z = 0});
-    SetMotionRegionFlag(scenFindMotionwork(KNMN_KEM), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(KNMN_KEM), 71, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(KNMN_KEM), 5193, MotionRegion::LowerBody);
     KnmnComplete(sequence);
 }

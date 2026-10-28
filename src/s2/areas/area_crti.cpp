@@ -56,7 +56,7 @@ void CRTIRetryCallback(void *) {
     DateTime dateTime;
     std::uint32_t seconds;
     if ((static_cast<std::uint32_t>(crtiMode) & 0xfffffff5U) || crtiMode == 2) {
-        GetCurrentDateTime(dateTime);
+        shenGetCurrentDateTime(dateTime);
         seconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(dateTime));
         EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 48, seconds >> 24);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 49, (seconds >> 16) & 0xffU);
@@ -113,7 +113,7 @@ void CRTIResumeChaseCallback(void *) {
 // @verified - p
 void AreaCRTIMain(std::uintptr_t argument) {
     const std::int32_t mode = static_cast<std::int32_t>(argument);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CRTI"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CRTI"), 0);
     crtiMode = mode;
     crtiState = 0;
     crtiStoryStep = 0;
@@ -184,7 +184,7 @@ void AreaCRTIMain(std::uintptr_t argument) {
         crtiEntry = 0;
         break;
     default:
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CRTI"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("CRTI"), 0);
         EV_NPC_NewLoadSw(1);
         SetPlayerControlEnabled(1);
         return;

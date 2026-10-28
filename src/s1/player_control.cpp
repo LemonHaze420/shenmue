@@ -4760,7 +4760,7 @@ std::uint8_t shenForceCancel(PlayerControlWork *control) {
             } else if (control->controlGate >= 0) {
                 if (g_TMEX_Flag == 2U && g_tmex_val != 3U && g_tmex_val != 7U && g_tmexRequestFrames < 360U)
                     playNavigateSound();
-                navRequestNewMode(1);
+                ryoRequestNewMode(1);
                 g_suppressDefaultHudPromptIcons = 1;
                 g_pControlPadController->blockedCanControl = 0;
                 g_pControlPadController->state = 2;
@@ -4875,7 +4875,7 @@ std::uint8_t shenForceCancel(PlayerControlWork *control) {
     return static_cast<std::uint8_t>(g_tmexAuthorFrames);
 }
 
-void navRequestNewMode(std::int32_t mode) {
+void ryoRequestNewMode(std::int32_t mode) {
     PlayerControlWork *const control = PlayerControl();
     if (!control || !g_playerMotion)
         return;

@@ -12,12 +12,12 @@ namespace shenmue::s2 {
 std::uint32_t g_areaBoardCharacterIndex{};
 namespace {
 void EnsureGamblingPackage(const char *archive) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(archive), 0))
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(archive), 0))
         return;
     const char *const directory = Filepath_Gen(FilepathGenMode::PackDirectory);
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(archive));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 shen_name CreateGamblingModel(const char *model, shen_name name = {}) {
     const shen_name character = CreateEventCharacter(CharacterCreationHighModel, reinterpret_cast<const std::byte *>(model), name);

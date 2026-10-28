@@ -31,10 +31,10 @@ std::int32_t Cash() {
     return static_cast<std::int32_t>(GetPlayerStat(PlayerStatsId::Cash));
 }
 void Face(shen_name character) {
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(character), FacialExpressionId::Normal, 10, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(character), FacialExpressionId::Normal, 10, 1);
 }
 void Rebase(shen_name character) {
-    UpdateMotionWorkWithPosition(scenFindMotionwork(character), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(character), nullptr, 0);
 }
 void DisableNpcLoads() {
     EV_NPC_NewLoadSw(0);
@@ -62,8 +62,8 @@ void Camera(PvsjEventWork *work, std::int32_t id, shen_name character) {
 void DialogueSubjects(PvsjEventWork *work, shen_name character) {
     CheckHelpIcon(1, 0, CheckHelpIconOp::Set);
     EV_EnableCharacterDisplay(PVSJ_PLAYER);
-    GetCharacterMotionCompatibilityResult(FindCharacterByScenarioName(PVSJ_PLAYER));
-    GetCharacterMotionCompatibilityResult(FindCharacterByScenarioName(character));
+    GetCharacterMotionCompatibilityResult(ctrlGetScenarioChara(PVSJ_PLAYER));
+    GetCharacterMotionCompatibilityResult(ctrlGetScenarioChara(character));
     Face(PVSJ_PLAYER);
     Face(character);
     EV_SetRefBoardParamsFor(PVSJ_PLAYER, 1);
@@ -72,15 +72,15 @@ void DialogueSubjects(PvsjEventWork *work, shen_name character) {
 void ReleaseSubjects(PvsjEventWork *work, shen_name character) {
     Face(PVSJ_PLAYER);
     Face(character);
-    HasCharacterMotionWork(FindCharacterByScenarioName(PVSJ_PLAYER));
-    HasCharacterMotionWork(FindCharacterByScenarioName(character));
+    HasCharacterMotionWork(ctrlGetScenarioChara(PVSJ_PLAYER));
+    HasCharacterMotionWork(ctrlGetScenarioChara(character));
     EV_SetRefBoardParamsFor(character, 0);
     EV_SetCharacterAlphaEnabled(character, false);
     EV_npcLockUnlock(character);
 }
 std::int32_t Minute() {
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     return date.minute + 60 * (date.hour + 24 * date.day);
 }
 shen_name RandomPoint(PvsjEventWork *work) {
@@ -106,7 +106,7 @@ void ResetBlend(PvsjEventWork *work) {
 }
 void FinishCharacter(shen_name character) {
     Face(character);
-    HasCharacterMotionWork(FindCharacterByScenarioName(character));
+    HasCharacterMotionWork(ctrlGetScenarioChara(character));
     EV_SetRefBoardParamsFor(character, 0);
     Rebase(character);
     EV_SetCharacterAlphaEnabled(character, true);
@@ -124,9 +124,9 @@ void LoadCustomerHands(PvsjEventWork *work) {
     work->customerPartition = index;
     DisableNpcLoads();
     EV_ResetFreeTalkFlags();
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::LoadAfs, reinterpret_cast<std::uintptr_t>(work->jobPartition),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::LoadAfs, reinterpret_cast<std::uintptr_t>(work->jobPartition),
         static_cast<std::uintptr_t>(PVSJ_CUSTOMER_PARTITIONS[index].models), static_cast<std::uint32_t>(PVSJ_CUSTOMER_PARTITIONS[index].hands));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     const bool high = PVSJ_CUSTOMER_PARTITIONS[index].highHands == 1;
     Vector3 position{high ? -0.097198486f : -0.11279297f, high ? -0.045295715f : -0.050003052f, high ? 0.073486328f : 0.093688965f};
     Vector3i rotation{0, 0, 61895};
@@ -182,8 +182,8 @@ void PvsjMainCallback(void *data) {
             EV_CheckWarmStartNpcRoute(work->owner);
             Rebase(work->owner);
             EV_SetCharacterAlphaEnabled(work->owner, false);
-            GetCharacterMotionCompatibilityResult(FindCharacterByScenarioName(PVSJ_PLAYER));
-            GetCharacterMotionCompatibilityResult(FindCharacterByScenarioName(work->owner));
+            GetCharacterMotionCompatibilityResult(ctrlGetScenarioChara(PVSJ_PLAYER));
+            GetCharacterMotionCompatibilityResult(ctrlGetScenarioChara(work->owner));
             Face(PVSJ_PLAYER);
             Face(work->owner);
             EV_SetRefBoardParamsFor(PVSJ_PLAYER, 1);
@@ -277,7 +277,7 @@ void PvsjMainCallback(void *data) {
         break;
     }
     case 9:
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(PVSJ_PLAYER), FacialNodeOriginal);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(PVSJ_PLAYER), FacialNodeOriginal);
         if (pvsjCameraBlend == -1) {
             pvsjCameraBlend = 0;
             PvsjSetOverlay(work, 3);
@@ -293,7 +293,7 @@ void PvsjMainCallback(void *data) {
         break;
     case 10:
         SetPlayerGameFlags(static_cast<PlayerGameFlagMode>(5), nullptr);
-        modelSetCharaAlpha(FindCharacterByScenarioName(PVSJ_PLAYER), (30.0f - work->stateTicks) / 30.0f);
+        modelSetCharaAlpha(ctrlGetScenarioChara(PVSJ_PLAYER), (30.0f - work->stateTicks) / 30.0f);
         pvsjCameraBlend = static_cast<std::int16_t>((static_cast<float>(work->stateTicks) / 30.0f) * 255.0f);
         PvsjUpdateOverlay(work, 3);
         if (work->stateTicks >= 30)
@@ -302,10 +302,10 @@ void PvsjMainCallback(void *data) {
             ++work->stateTicks;
         break;
     case 11:
-        modelSetCharaAlpha(FindCharacterByScenarioName(PVSJ_PLAYER), 1);
+        modelSetCharaAlpha(ctrlGetScenarioChara(PVSJ_PLAYER), 1);
         EV_DisableCharacterDisplay(PVSJ_PLAYER);
         SetPlayerGameFlags(static_cast<PlayerGameFlagMode>(5), reinterpret_cast<void *>(1));
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(PVSJ_PLAYER), FacialNodeReplacement);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(PVSJ_PLAYER), FacialNodeReplacement);
         pvsjCameraBlend = 255;
         PvsjUpdateOverlay(work, 1);
         work->state = 12;
@@ -507,7 +507,7 @@ void PvsjMainCallback(void *data) {
         PvsjReleaseVoice(work);
         auto *invalid = reinterpret_cast<PakAfsPartition *>(~std::uintptr_t{});
         if (work->gamePartition != invalid) {
-            EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Unmount, reinterpret_cast<std::uintptr_t>(work->gamePartition), 0);
+            EV_pakUtils(PakCategory::Partition, PakPartitionOp::Unmount, reinterpret_cast<std::uintptr_t>(work->gamePartition), 0);
             work->gamePartition = invalid;
         }
         LoadCustomerHands(work);
@@ -517,18 +517,18 @@ void PvsjMainCallback(void *data) {
     }
     case 32:
         EV_EventSetUpHelpIcon_0(145, 0);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(work->jobPartition),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(work->jobPartition),
             static_cast<std::uintptr_t>(PVSJ_CUSTOMER_PARTITIONS[work->customerPartition].models),
             static_cast<std::uint32_t>(PVSJ_CUSTOMER_PARTITIONS[work->customerPartition].hands));
         work->customerPartition = -1;
         SetPlayerControlEnabled(0);
         EV_npcLockUnlock(work->customer);
-        work->gamePartition = reinterpret_cast<PakAfsPartition *>(EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Mount,
+        work->gamePartition = reinterpret_cast<PakAfsPartition *>(EV_pakUtils(PakCategory::Partition, PakPartitionOp::Mount,
             reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)), reinterpret_cast<std::uintptr_t>("PATI.afs")));
-        if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("PATI"), 0)) {
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+        if (!EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("PATI"), 0)) {
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
                 reinterpret_cast<std::uintptr_t>("PATI"));
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+            EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         }
         work->cameraId = 0;
         work->cameraEye = {};
@@ -659,7 +659,7 @@ void PvsjMainCallback(void *data) {
         if (!filmCheckFadeTrackColour()) {
             EV_SetRefBoardParamsFor(PVSJ_PLAYER, 0);
             Face(PVSJ_PLAYER);
-            HasCharacterMotionWork(FindCharacterByScenarioName(PVSJ_PLAYER));
+            HasCharacterMotionWork(ctrlGetScenarioChara(PVSJ_PLAYER));
             if (DoesScenarioCharacterExist(work->owner))
                 FinishCharacter(work->owner);
             EV_npcLockUnlock(work->owner);

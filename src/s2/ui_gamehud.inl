@@ -456,7 +456,7 @@ std::int64_t GameHudWatchDestroy() {
 // @verified - p
 std::int32_t GetHourMinSecond(std::int32_t *hour, std::int32_t *minute, std::int32_t *second) {
     DateTime now;
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     *hour = now.hour;
     *minute = now.minute;
     *second = now.second;

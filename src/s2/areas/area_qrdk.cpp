@@ -44,7 +44,7 @@ void QrdkMain(std::uintptr_t) {
     work->task = task;
     work->enemyCount = count;
     QrdkHideCharacter(QRDK_RYO);
-    SetMotionSpeed(scenFindMotionwork(QRDK_RYO), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(QRDK_RYO), 1, MotionRegion::LowerBody);
     SetPlayerControlEnabled(0);
     HLib::SetupTaskDelay(-1);
 }
@@ -82,11 +82,11 @@ void QrdkInitializeCallback(void *data) {
 }
 
 void QrdkWaitPackageCallback(void *) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("QRDK"))) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QRDK"), 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QRDK"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QRDK"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QRDK"), 0);
         HLib::SetCurrentTaskTo(QrdkLoadCharactersCallback);
     }
 }
@@ -166,9 +166,9 @@ void QrdkPlaceOnRoute(QrdkWork *work) {
     if (std::fabs(z) < 0.00000011920929f)
         z = 0;
     const std::uint16_t yaw = static_cast<std::uint16_t>(InverseFixedAtan2(x, z));
-    CopyMotionTransition(scenFindMotionwork(QRDK_RYO), &position, yaw, 5, 0);
-    CopyMotionTransition(scenFindMotionwork(QRDK_RYO), &position, yaw, 8, 0);
-    CopyMotionTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 12, 0);
+    mtwkCopyTransition(scenFindMotionwork(QRDK_RYO), &position, yaw, 5, 0);
+    mtwkCopyTransition(scenFindMotionwork(QRDK_RYO), &position, yaw, 8, 0);
+    mtwkCopyTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 12, 0);
 }
 
 void QrdkStartRouteCallback(void *data) {
@@ -226,7 +226,7 @@ shen_name QrdkFindClosestDoor(float *distance) {
 void QrdkRunCallback(void *data) {
     QrdkWork *const work = static_cast<QrdkWork *>(data);
     if (!work) {
-        CopyMotionTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 13, 0);
+        mtwkCopyTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 13, 0);
         HLib::SetCurrentTaskTo(QrdkExitCallback);
         return;
     }
@@ -254,7 +254,7 @@ void QrdkRunCallback(void *data) {
                 EV_GetCharaPosition(QRDK_RYO, CHARACTER_TRANSLATION_ROOT, &work->savedPosition, EventTransformFlags::World);
                 GetScenarioCharacterEulerAngles(QRDK_RYO, &work->savedRotation, EventTransformFlags::World);
                 if (mtwkSetExtraFlag(scenFindMotionwork(QRDK_RYO), 58, 1))
-                    CopyMotionTransition(scenFindMotionwork(QRDK_RYO), nullptr, static_cast<std::uint16_t>(work->savedRotation.y), 13, 0);
+                    mtwkCopyTransition(scenFindMotionwork(QRDK_RYO), nullptr, static_cast<std::uint16_t>(work->savedRotation.y), 13, 0);
                 HLib::SetCurrentTaskTo(QrdkBeginDoorCallback);
                 return;
             }
@@ -359,7 +359,7 @@ void QrdkBeginDoorCallback(void *data) {
     if (data)
         HLib::SetCurrentTaskTo(QrdkGetDoorCallback);
     else {
-        CopyMotionTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 13, 0);
+        mtwkCopyTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 13, 0);
         HLib::SetCurrentTaskTo(QrdkExitCallback);
     }
 }
@@ -367,7 +367,7 @@ void QrdkBeginDoorCallback(void *data) {
 void QrdkGetDoorCallback(void *data) {
     QrdkWork *const work = static_cast<QrdkWork *>(data);
     if (!work) {
-        CopyMotionTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 13, 0);
+        mtwkCopyTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 13, 0);
         HLib::SetCurrentTaskTo(QrdkExitCallback);
         return;
     }
@@ -385,7 +385,7 @@ void QrdkGetDoorCallback(void *data) {
     QrdkGetDoorPoint(work->door, &doorPosition, &doorYaw);
     GetScenarioCharacterEulerAngles(QRDK_RYO, &rotation, EventTransformFlags::World);
     const bool side = ComputeAngle(ryo, 10, static_cast<std::int16_t>(rotation.y + 0x4000), 0x4000, doorPosition);
-    CopyMotionTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 1, 0);
+    mtwkCopyTransition(scenFindMotionwork(QRDK_RYO), nullptr, 0, 1, 0);
     Vector3 position{-0.8999999761581421f, 0, 2};
     float start, end;
     std::uint16_t motion;
@@ -420,14 +420,14 @@ void QrdkGetDoorCallback(void *data) {
     EV_AT_SetPos(QRDK_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(QRDK_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
     if (side)
-        SetMotionRegionFlag(scenFindMotionwork(QRDK_RYO), 69, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(QRDK_RYO), 69, 0, MotionRegion::LowerBody);
     work->action |= 2U;
     doorPlayRigidMotion(work->door, 0xf0ca, 0, 1);
     mtwkRequestMotion(scenFindMotionwork(QRDK_RYO), motion, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(QRDK_RYO), 0);
-    SetMotionLayerLoopStartTime(scenFindMotionwork(QRDK_RYO), start, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(QRDK_RYO), start, MotionRegion::LowerBody);
-    SetMotionLayerEndFrame(scenFindMotionwork(QRDK_RYO), end, MotionRegion::LowerBody);
+    mtwkSetLayerLoopStartTime(scenFindMotionwork(QRDK_RYO), start, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(scenFindMotionwork(QRDK_RYO), start, MotionRegion::LowerBody);
+    mtwkSetLayerEndFrame(scenFindMotionwork(QRDK_RYO), end, MotionRegion::LowerBody);
     if (work->door.name == QRDK_R102.name || work->door.name == QRDK_R104.name || work->door.name == QRDK_R117.name)
         HLib::SetCurrentTaskTo(QrdkBattleMessageCallback);
     else
@@ -468,7 +468,7 @@ void QrdkWrongRoomCallback(void *data) {
         HLib::SetCurrentTaskTo(QrdkExitCallback);
         return;
     }
-    if ((work->action & 2U) && !SetMotionRegionFlag(scenFindMotionwork(QRDK_RYO), 65, 1, MotionRegion::LowerBody))
+    if ((work->action & 2U) && !mtwkSetRegionFlag(scenFindMotionwork(QRDK_RYO), 65, 1, MotionRegion::LowerBody))
         return;
     work->action &= ~2U;
     const char *text;
@@ -512,7 +512,7 @@ void QrdkFoundCallback(void *data) {
         HLib::SetCurrentTaskTo(QrdkExitCallback);
         return;
     }
-    if ((work->action & 2U) && !SetMotionRegionFlag(scenFindMotionwork(QRDK_RYO), 65, 1, MotionRegion::LowerBody))
+    if ((work->action & 2U) && !mtwkSetRegionFlag(scenFindMotionwork(QRDK_RYO), 65, 1, MotionRegion::LowerBody))
         return;
     work->action &= ~2U;
     QrdkQueueSerif("発見　イベント終了", 1, 100, QrdkResumeOnSerifFinished);
@@ -529,7 +529,7 @@ void QrdkBattleMessageCallback(void *data) {
         HLib::SetCurrentTaskTo(QrdkExitCallback);
         return;
     }
-    if ((work->action & 2U) && !SetMotionRegionFlag(scenFindMotionwork(QRDK_RYO), 65, 1, MotionRegion::LowerBody))
+    if ((work->action & 2U) && !mtwkSetRegionFlag(scenFindMotionwork(QRDK_RYO), 65, 1, MotionRegion::LowerBody))
         return;
     work->action &= ~2U;
     ReleaseDoor(std::bit_cast<std::int32_t>(work->door.name), shen_name{0});
@@ -605,15 +605,15 @@ void QrdkStartBattleCallback(void *data) {
     QrdkGetDoorPoint(work->door, &position, nullptr);
     shenStartFGST(10, 10, 0, 0);
     vfmDispatchControl(FightControlOp::Package, shen_name{0}, reinterpret_cast<std::uintptr_t>("QRDK"), 1);
-    shenInitFightData(FindCharacterByScenarioName(QRDK_RYO), nullptr, 0, 0, 0, 0);
+    shenInitFightData(ctrlGetScenarioChara(QRDK_RYO), nullptr, 0, 0, 0, 0);
     for (std::size_t index = 0; QRDK_ENEMIES[index].character.name != QRDK_INVALID.name; ++index) {
         const QrdkEnemy &enemy = QRDK_ENEMIES[index];
         if (work->defeated[index] || enemy.door.name != work->door.name)
             continue;
-        shenInitFightData(FindCharacterByScenarioName(enemy.character), nullptr, 1, 1, 40, static_cast<std::uint8_t>(enemy.style));
-        vfUpdateFlagsFor(FindCharacterByScenarioName(enemy.character), 0, 0x400000, 128);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(enemy.character), 0, 0x200000, 2048);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(enemy.character), 0, 0x8000000, 1);
+        shenInitFightData(ctrlGetScenarioChara(enemy.character), nullptr, 1, 1, 40, static_cast<std::uint8_t>(enemy.style));
+        vfUpdateFlagsFor(ctrlGetScenarioChara(enemy.character), 0, 0x400000, 128);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(enemy.character), 0, 0x200000, 2048);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(enemy.character), 0, 0x8000000, 1);
     }
     vfCopyPosFromEntity(0, nullptr, position.x, position.z, 7);
     vfmQueueFightStart(2, 2, 1, 1, -1);
@@ -638,7 +638,7 @@ void QrdkBattleCallback(void *data) {
         work->defeated[index] = 1;
     }
     FinishLoading();
-    if (GetBtlStatus(FindCharacterByScenarioName(QRDK_RYO)) == 3) {
+    if (GetBtlStatus(ctrlGetScenarioChara(QRDK_RYO)) == 3) {
         work->flags |= 3U;
         SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
         QrdkPlaceOnRoute(work);
@@ -707,8 +707,8 @@ void QrdkExitCallback(void *data) {
             EV_SetRefBoardParamsFor(character, 0);
         EV_npcLockUnlock(character);
     }
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QRDK"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QRDK"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QRDK"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QRDK"), 0);
     EV_CleanupMapControlTask();
     HLib::MarkCurrentTaskForCleanup();
     if (parent)

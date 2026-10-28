@@ -22,7 +22,7 @@ void AreaQC06MainLoop(void *) {
 void AreaQC06Main(std::uint32_t) {
     (void)SetMapControlStatusFlag(0, 0);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     (void)EV_GetShenmueFlag(0xffU);
     EV_SetWeatherInstruction(0x0fU, 0);
     EV_SetWeatherInstruction(0x780U, 0);

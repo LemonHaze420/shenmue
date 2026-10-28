@@ -135,7 +135,7 @@ void Voice(const char *code, std::int32_t delay = 0) {
     EVT_AT_SetVoice(code, 1, delay);
 }
 std::uint16_t Animation() {
-    return GetMotionAnimationId(scenFindMotionwork(ryo), MotionRegion::LowerBody);
+    return mtwkGetAnimationId(scenFindMotionwork(ryo), MotionRegion::LowerBody);
 }
 void HideGauge() {
     strength = -1;
@@ -241,7 +241,7 @@ void BufferIdle(TrainingWork &work) {
 void BufferDuringMotion(TrainingWork &work) {
     if (Animation() != 5187) {
         const float end = GetMotionFrameCount(Animation());
-        const float frame = GetMotionFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody);
+        const float frame = mtwkGetFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody);
         if (frame >= end - motionInputMargin) {
             work.action = MatchInput(work.history);
             if (work.action == 1 || work.action == 2) {
@@ -256,7 +256,7 @@ void BufferDuringMotion(TrainingWork &work) {
         if (end - frame < .02f && frame - end < .02f)
             EVT_AT_SetMot(ryo, 5187, 0, 1, 0x60000000U, 0);
     }
-    if (SetMotionRegionFlag(scenFindMotionwork(ryo), 65, 1, MotionRegion::LowerBody) && static_cast<std::uint32_t>(work.action) > 2)
+    if (mtwkSetRegionFlag(scenFindMotionwork(ryo), 65, 1, MotionRegion::LowerBody) && static_cast<std::uint32_t>(work.action) > 2)
         EVT_AT_SetMot(ryo, 5187, 0, 1, 0x60000000U, -1);
 }
 // @verified - p
@@ -316,7 +316,7 @@ void Training(void *data) {
             BufferIdle(work);
         else
             BufferDuringMotion(work);
-    } else if (work.phase == 2 && (SetMotionRegionFlag(scenFindMotionwork(ryo), 65, 1, MotionRegion::LowerBody) || Animation() == 5187)) {
+    } else if (work.phase == 2 && (mtwkSetRegionFlag(scenFindMotionwork(ryo), 65, 1, MotionRegion::LowerBody) || Animation() == 5187)) {
         if (work.action)
             PlayStrike(work.action);
         work.phase = 0;
@@ -442,14 +442,14 @@ void Action(void *data) {
     EVT_AT_SetSound(948, 10);
     EVT_AT_SetSound(secondSounds[grade], 30);
     EVT_AT_SetMot(ryo, 5188, 40, 1, 0x20000000U, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ryo), 0, reinterpret_cast<std::byte *>(strikeHand), 8);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ryo), 0, reinterpret_cast<std::byte *>(strikeHand), 8);
     Queue_EVT_AT_CtrlHandUp_1(ryo, 0, reinterpret_cast<std::byte *>(qteHand), 8, 60);
     Feedback(work);
 }
 // @verified - p
 void ActionWait(void *data) {
     auto &work = *static_cast<TrainingWork *>(data);
-    if (!SetMotionRegionFlag(scenFindMotionwork(ryo), 65, 1, MotionRegion::LowerBody))
+    if (!mtwkSetRegionFlag(scenFindMotionwork(ryo), 65, 1, MotionRegion::LowerBody))
         return;
     if (taught[work.level / 10] || work.action)
         Continue(Training);
@@ -505,11 +505,11 @@ void Prepare() {
     }
     if (entry != 1)
         EV_SetNewSceneIndex();
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("WKKT"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WKKT"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("WKKT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WKKT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("WKKT"), 0);
     EV_LoadCutsceneFromCurrentScene("0026A028");
     EV_FreeAuthorPak(1, "0026");
     LoadGauge();
@@ -518,7 +518,7 @@ void Prepare() {
     CreateEventCharacter(CharacterCreationHighModel, nullptr, base);
     Position(base, absolute, basePosition);
     Angle(base, absolute, 0);
-    Character *character = FindCharacterByScenarioName(ryo);
+    Character *character = ctrlGetScenarioChara(ryo);
     SetLowQualityHands(character);
     SetHighModelXYZ(character, 1, 0, 0);
     SetHighModelXYZ(character, 1, 1, 0);
@@ -702,7 +702,7 @@ void End(void *data) {
         FreeParticleEffect(3, work.leafB);
     if (work.smoke != -1)
         FreeParticleEffect(0, work.smoke);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WKKT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WKKT"), 0);
     EV_FreeAuthorPak(0, "0026");
     InitiateCleanupForSceneChara(kem);
     ET_AT_KillWork(work.readCharacters);
@@ -713,7 +713,7 @@ void End(void *data) {
     GetMotionFrameCount(61443);
     Position(ryo, absolute, exitPosition);
     Angle(ryo, absolute, 247.5f);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     LcdmInit(0);
     EV_EventSetUpHelpIcon_0(0, 0);
@@ -726,10 +726,10 @@ void End(void *data) {
         FadeIn();
         EV_CheckWarmStartNpcRoute(kem);
         EV_ForceLoadNpc(kem);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     } else {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour < 19) {
             time.hour = 19;
             time.minute = 0;

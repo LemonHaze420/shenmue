@@ -667,7 +667,7 @@ std::int32_t snddSceneIndex{-1};
 
 
 // @verified - p
-std::int32_t SnddProgramSceneCount() noexcept {
+std::int32_t snddProgramSceneCount() noexcept {
     std::string_view sbtName{};
     const std::span<const std::byte> smap = FindSoundRecord(smapTag, snddProgramName ? FixedName(snddProgramName, 16) : std::string_view{});
     for (std::size_t bank = 0; bank < 8 && !smap.empty(); ++bank) {
@@ -700,7 +700,7 @@ void SNDD_Reader(const MapInfoChunk *sndd, std::int32_t, std::int32_t entryId) n
     std::int32_t mode = 0;
     std::array<std::int32_t, 2> values{};
     DateTime now{};
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     std::int32_t op = Read<std::int32_t>(cursor);
     if (!op)
         return;
@@ -759,7 +759,7 @@ void SNDD_Reader(const MapInfoChunk *sndd, std::int32_t, std::int32_t entryId) n
                             value = now.minute;
                             break;
                         case 23:
-                            value = SnddProgramSceneCount();
+                            value = snddProgramSceneCount();
                             break;
                         case 24:
                             value = static_cast<std::int32_t>(GetCurrentStep());
@@ -864,7 +864,7 @@ void UpdateSampleProgram(SampleProgramState *program) noexcept {
     if (!program || program->executing == 0)
         return;
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     const std::int32_t quarter = 4 * date.hour + date.minute / 15;
     const std::int32_t nextQuarter = quarter + 1 <= 95 ? quarter + 1 : 0;
     const float minute = static_cast<float>(date.minute % 15);
@@ -884,7 +884,7 @@ void UpdateSampleProgram(SampleProgramState *program) noexcept {
         float gain = 127.0f;
         if (record.spatialMode == 1) {
             if (record.characterName != 0) {
-                Character *const character = FindCharacterByScenarioName(shen_name{record.characterName});
+                Character *const character = ctrlGetScenarioChara(shen_name{record.characterName});
                 if (!character)
                     continue;
                 source = GetCharacterWorldPosition(character);
@@ -1581,7 +1581,7 @@ std::uint64_t EV_LoadCutsceneFromCurrentScene(const char *name) noexcept {
     return LoadCutsceneSoundProgram(name, g_actNumber);
 }
 
-bool LoadCutsceneAndSoundProgramForArea() noexcept {
+bool sbtLoadProgram() noexcept {
     // LoadCutsceneAndSoundProgramForArea preserves the second load when the first fails.
     if (!savedProgramName[0])
         return false;

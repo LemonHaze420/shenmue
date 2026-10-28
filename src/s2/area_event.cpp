@@ -519,7 +519,7 @@ void ApplyPlayerEntryLocation(Character *character, const Vector3 &position, std
     character->entity.node.rotation[2] = 0;
     shenDecrementRotYAllNodes(&character->entity.node, static_cast<std::int16_t>(yaw));
     if (MotionWork *const motion = FindMotionWork(character))
-        SetMotionEntityRotation(motion, Vector3i{0, yaw, 0});
+        mtwkSetEntityRotation(motion, Vector3i{0, yaw, 0});
     camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
 }
@@ -640,7 +640,7 @@ void EVT_PreAreaMainLoop(std::uintptr_t rawParameters) {
     areaFlags = 0;
     g_areaHeldItemRestorePending = static_cast<std::int32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 966));
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     SetWeatherUpdateEnabledTo(1);
     RefreshWeatherForCurrentTime(0);
     EV_UpdateWeather();
@@ -1246,7 +1246,7 @@ void Startup_EventBase_Callback(void *) {
     case 6:
     case 7:
         LoadMapPackage(Filepath_Gen(FilepathGenMode::SceneDirectory), record.startupPayload);
-        LoadPak();
+        pakLoadFlush();
 #if SHENMUE_IS_DC
         ExecuteCurrentAreaMainFunction(static_cast<EventFunctionType>(record.startupMode - 4U));
 #else
@@ -1282,7 +1282,7 @@ void EI_Startup_BeginEventFade() {
     if ((GetLoadingPhaseFlags() & kLoadingPhaseSkipTitleFade) == 0)
         ST_LoadTitleFade();
     if ((GetLoadingPhaseFlags() & kLoadingPhaseWaitNpcBeforeFade) == 0)
-        LoadPak();
+        pakLoadFlush();
 }
 
 void EI_Startup_EventFade1_Callback(void *) {

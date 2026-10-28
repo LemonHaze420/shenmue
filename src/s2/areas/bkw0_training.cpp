@@ -41,7 +41,7 @@ void Bkw0TrainingSequence(void *data) {
             EV_AT_SetPos(BKW0_BKN, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
             EV_AT_SetAngY(BKW0_BKN, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
             mtwkRequestMotion(scenFindMotionwork(BKW0_BKN), 7939, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(BKW0_BKN), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BKW0_BKN), 71, 0, MotionRegion::LowerBody);
             work.differentThrows = 0;
             work.repeatedThrows = 0;
             work.consecutiveThrows = 0;
@@ -184,8 +184,8 @@ void Bkw0FinishTrainingSequence(void *data) {
         if (!sequence.mode)
             Bkw0Advance(sequence, 100);
         else if (sequence.mode == 100) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(BKW0_RYO), nullptr, 0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(BKW0_LKN), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(BKW0_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(BKW0_LKN), nullptr, 0);
             ProcessAicaCommand(0xaa0, 30);
             Bkw0Complete(sequence);
             return;

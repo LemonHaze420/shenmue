@@ -46,7 +46,7 @@ void E0063Main(std::uintptr_t) {
 // @verified - p
 void CleanupE0063(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0063_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

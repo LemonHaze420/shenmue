@@ -106,7 +106,7 @@ void RestoreE0033Characters(std::int8_t mode) {
 // @verified - p
 void CleanupE0033(E0033TaskParameter *parent) {
     for (const shen_name *character = AREA_0033_SELECTED_CHARACTERS[parent->mode]; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -114,7 +114,7 @@ void CleanupE0033(E0033TaskParameter *parent) {
     EV_stepSetFlags(0, 39);
     EV_FreeAuthorPak(0, "0033");
     EV_FreeAuthorPak(0, "0192");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0033A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0033A"), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0033_WTA0.name) {
@@ -184,7 +184,7 @@ void E0033LoopCallback(void *data) {
         if (frame == 971) {
             if (parent->nextDay == 0) {
                 DateTime time;
-                GetCurrentDateTime(time);
+                shenGetCurrentDateTime(time);
                 time.hour = 23;
                 time.minute = 30;
                 SetCurrentDateTimeTo(time);

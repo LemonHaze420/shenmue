@@ -49,8 +49,8 @@ void Qte_Callback(void *);
 void Exit_Callback(void *);
 void Gravity(shen_name name, bool enabled) {
     const auto state = enabled ? NpcCharacterControllerState::Enabled : NpcCharacterControllerState::Disabled;
-    EV_SetCharaControllerFlags(name, CharacterControlApplyGravity, state);
-    EV_SetCharaControllerFlags(name, CharacterControlApplyGravity | CharacterControlUpdateHeight, state);
+    EV_SetCharaControllerFlags(name, CCMF_ApplyGravity, state);
+    EV_SetCharaControllerFlags(name, CCMF_ApplyGravity | CCMF_UpdateHeight, state);
 }
 void Splash_Callback(void *) {
     if (splashAge == 20) {
@@ -212,7 +212,7 @@ void Exit_Callback(void *data) {
     using enum CameraState;
     auto *work = static_cast<StoneWork *>(data);
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.minute = static_cast<std::int8_t>(time.minute + 30);
     if (time.minute >= 60) {
         ++time.hour;
@@ -230,7 +230,7 @@ void Exit_Callback(void *data) {
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ISTB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ISTB"), 0);
     const int selection = work->selection;
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->self);
@@ -257,9 +257,9 @@ void AreaISTBMain(std::uintptr_t) {
     EV_UpdateWeatherForMinute(1, 0, 0, 0);
     Queue_EVT_AT_ReadChr(work->self, names);
     shenSetTimeSimulationTo(0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("ISTB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     qteBattleUtil(BattleQteMode::Load);
     qteBattleUtil(BattleQteMode::Queue);
     EV_LoadCutsceneFromCurrentScene("0519A000.smp");

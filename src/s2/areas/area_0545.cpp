@@ -92,7 +92,7 @@ void Update0545AuthorTask(void *taskData) {
 // @verified - p
 void Cleanup0545(Area0545Parameter *parent) {
     for (const shen_name *character = AREA_0545_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -101,7 +101,7 @@ void Cleanup0545(Area0545Parameter *parent) {
     parent->input->author = -1;
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0545"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0545"), 0);
 }
 
 const ScriptAreaDefinition area0545ScriptDefinition{.areaId = AREA_0545, .field04 = 0, .init = Initialize0545, .main = Start0545};

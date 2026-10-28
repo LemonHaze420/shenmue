@@ -22,23 +22,23 @@ void Syw0PlaceActor(shen_name name, const Vector3 &position, std::int32_t yaw) {
 void Syw0ResetPracticeActors(std::int32_t practice) {
     if (practice >= 0 && (practice <= 1 || practice == 2 || practice == 9)) {
         Syw0PlaceActor(SYW0_RYO, practice <= 1 ? SYW0_PLAYER_WEIGHT_POSITION : SYW0_PLAYER_FORCE_POSITION, practice <= 1 ? 49152 : trainingPracticeTargetYaw);
-        SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
         const shen_name opponent = practice <= 1 ? SYW0_DEKU : SYW0_KNK;
         Syw0PlaceActor(opponent, practice <= 1 ? SYW0_DUMMY_WEIGHT_POSITION : SYW0_OPPONENT_FORCE_POSITION, practice <= 1 ? 16384 : 32768);
-        SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     }
-    if (GetMotionAnimationId(scenFindMotionwork(SYW0_RYO), MotionRegion::LowerBody) != 306) {
-        SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYW0_RYO), nullptr, 0);
+    if (mtwkGetAnimationId(scenFindMotionwork(SYW0_RYO), MotionRegion::LowerBody) != 306) {
+        mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYW0_RYO), nullptr, 0);
         mtwkRequestMotion(scenFindMotionwork(SYW0_RYO), 306, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 69, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 69, 0, MotionRegion::LowerBody);
     }
-    EV_mtwkSetEnabled(scenFindMotionwork(SYW0_RYO), 1);
-    SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 69, 0, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(SYW0_KNK), 71, 0, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(SYW0_RYO), 1);
+    mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 69, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(SYW0_KNK), 71, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(SYW0_KNK), 3686, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(SYW0_KNK), 69, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(SYW0_KNK), 69, 0, MotionRegion::LowerBody);
 }
 void Syw0PracticeSequence(void *data) {
     CompiledSequenceWork &sequence = *static_cast<CompiledSequenceWork *>(data);
@@ -51,15 +51,15 @@ void Syw0PracticeSequence(void *data) {
         switch (sequence.mode) {
         case 0: {
             Syw0Value(event, 0x650, std::uint8_t{0});
-            UpdateMotionWorkWithPosition(scenFindMotionwork(SYW0_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(SYW0_RYO), nullptr, 0);
             for (shen_name name : {SYW0_RYO, SYW0_KNK, SYW0_DEKU}) {
                 EV_SetCharaControllerFlags(name, 1, NpcCharacterControllerState::Disabled);
                 EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
             }
-            EV_mtwkSetEnabled(scenFindMotionwork(SYW0_RYO), 1);
-            EV_mtwkSetEnabled(scenFindMotionwork(SYW0_KNK), 1);
-            EV_mtwkSetEnabled(scenFindMotionwork(Syw0Value<shen_name>(event, 0x644)), 1);
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetEnabled(scenFindMotionwork(SYW0_RYO), 1);
+            mtwkSetEnabled(scenFindMotionwork(SYW0_KNK), 1);
+            mtwkSetEnabled(scenFindMotionwork(Syw0Value<shen_name>(event, 0x644)), 1);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
             if (practice == 2) {
                 Syw0PlaceActor(SYW0_RYO, SYW0_PLAYER_FORCE_POSITION, trainingPracticeTargetYaw);
                 Syw0PlaceActor(SYW0_KNK, SYW0_OPPONENT_FORCE_POSITION, 32768);
@@ -69,17 +69,17 @@ void Syw0PracticeSequence(void *data) {
                 Syw0PlaceActor(SYW0_KNK, SYW0_OPPONENT_WEIGHT_POSITION, 16384);
                 Syw0PlaceActor(SYW0_DEKU, SYW0_DUMMY_WEIGHT_POSITION, 16384);
             }
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_KNK), 71, 0, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_DEKU), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_KNK), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_DEKU), 71, 0, MotionRegion::LowerBody);
             if (static_cast<std::uint32_t>(practice) <= 1 || practice == 2) {
-                SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 69, practice == 2 ? 2 : 0, MotionRegion::LowerBody);
-                SetMotionRegionFlag(scenFindMotionwork(SYW0_KNK), 69, 0, MotionRegion::LowerBody);
+                mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 69, practice == 2 ? 2 : 0, MotionRegion::LowerBody);
+                mtwkSetRegionFlag(scenFindMotionwork(SYW0_KNK), 69, 0, MotionRegion::LowerBody);
             }
             mtwkRequestMotion(scenFindMotionwork(SYW0_RYO), 306, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(SYW0_KNK), 2325, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(SYW0_DEKU), 306, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_DEKU), 69, 2, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_DEKU), 69, 2, MotionRegion::LowerBody);
             FinishLoading();
             CheckHelpIcon(1, 0, CheckHelpIconOp::Add);
             Syw0Wait(sequence, 2, 100, 10);
@@ -93,7 +93,7 @@ void Syw0PracticeSequence(void *data) {
                 SYW0_RYO, SYW0_KNK, static_cast<std::int16_t>(instruction), static_cast<std::int16_t>(second), static_cast<std::byte *>(event) + 0x78);
             Vector3 target;
             EV_GetCharaPosition(SYW0_RYO, 5, &target, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
             CompiledSequenceWork *child = Syw0Child(sequence, TrainingAttackSequence, SYW0_ATTACK, 0);
             Syw0Value(child, 0x138, SYW0_RYO);
             Syw0Value(child, 0x140, practice == 2 ? SYW0_KNK : SYW0_DEKU);
@@ -121,7 +121,7 @@ void Syw0PracticeSequence(void *data) {
             mtwkSetRequestedRootMode(scenFindMotionwork(SYW0_RYO), 1);
             break;
         case 104:
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 70, 1, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 70, 1, MotionRegion::LowerBody);
             sequence.waitChildIndex = 0;
             Syw0Wait(sequence, 10, 105);
             break;

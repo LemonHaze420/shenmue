@@ -97,10 +97,10 @@ void QueueTomaWaitPackage(shen_name map, std::uint32_t argument) {
 }
 void TomaWaitPackage(void *parameter) {
     TomaWork *const work = static_cast<TomaWork *>(parameter);
-    if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (!EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("TOMA")))
         return;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_NPC_NewLoadSw(1);
     HLib::SetCurrentTaskTo(TomaStart);
     const TomaMapEntry *const row = FindTomaMap(work->map);
@@ -233,8 +233,8 @@ void TomaDone(void *parameter) {
     FinishLoading();
     EV_CleanupMapControlTask();
     HLib::MarkCurrentTaskForCleanup();
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("TOMA"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TOMA"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("TOMA"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TOMA"), 0);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 2095, 0);
     EV_NPC_NewLoadSw(1);
     EV_SetModelDataDefaultVertexShader();

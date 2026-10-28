@@ -17,12 +17,12 @@ void RestoreMazeCompanionControl() {
     camCtrlUtil(CameraUtilityMode ::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(MAZE_EVENT_RYO), FacialNodeOriginal);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAZE_EVENT_RYO), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAZE_EVENT_RYO), 0, 1, 0);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(MAZE_EVENT_SHENHUA), FacialNodeOriginal);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAZE_EVENT_SHENHUA), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAZE_EVENT_SHENHUA), 0, 1, 0);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(MAZE_EVENT_RYO), FacialNodeOriginal);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAZE_EVENT_RYO), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAZE_EVENT_RYO), 0, 1, 0);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(MAZE_EVENT_SHENHUA), FacialNodeOriginal);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAZE_EVENT_SHENHUA), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAZE_EVENT_SHENHUA), 0, 1, 0);
     InitiateCleanupForSceneChara(MAZE_EVENT_SHENHUA);
     shenToggleAreaFlags(2);
     SetPlayerControlEnabled(1);
@@ -35,7 +35,7 @@ void MazeTimeOverToForest4Callback(void *) {
 }
 void MazeTimeOverTo552ECallback(void *) {
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     dateTime.hour += 2;
     SetCurrentDateTimeTo(dateTime);
     shenToggleAreaFlags(1);

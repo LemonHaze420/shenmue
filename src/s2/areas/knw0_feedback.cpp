@@ -10,18 +10,18 @@ void Knw0FeedbackOpening(CompiledSequenceWork &sequence) {
     Knw0Work &work = *static_cast<Knw0Work *>(sequence.event);
     switch (work.gesture) {
     case 0:
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNW0_KNK), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNW0_KNK), nullptr, 0);
         mtwkRequestMotion(scenFindMotionwork(KNW0_KNK), 0x1905, MotionRegion::LowerBody);
         break;
     case 1:
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNW0_KNK), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNW0_KNK), nullptr, 0);
         mtwkRequestMotion(scenFindMotionwork(KNW0_KNK), 0x1904, MotionRegion::LowerBody);
         break;
     case 2:
-        if (SetMotionRegionFlag(scenFindMotionwork(KNW0_KNK), 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(scenFindMotionwork(KNW0_KNK), 65, 1, MotionRegion::LowerBody)) {
             Vector3 target;
             EV_GetCharaPosition(KNW0_RYO, 5, &target, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KNW0_KNK), &target, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KNW0_KNK), &target, 0);
             mtwkRequestMotion(scenFindMotionwork(KNW0_KNK), 0x1902, MotionRegion::LowerBody);
         }
         break;
@@ -33,10 +33,10 @@ void Knw0FeedbackOpening(CompiledSequenceWork &sequence) {
         work.gesture = 0;
 }
 void Knw0FeedbackClosing() {
-    if (SetMotionRegionFlag(scenFindMotionwork(KNW0_KNK), 65, 1, MotionRegion::LowerBody)) {
+    if (mtwkSetRegionFlag(scenFindMotionwork(KNW0_KNK), 65, 1, MotionRegion::LowerBody)) {
         Vector3 target;
         EV_GetCharaPosition(KNW0_RYO, 5, &target, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KNW0_KNK), &target, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KNW0_KNK), &target, 0);
         mtwkRequestMotion(scenFindMotionwork(KNW0_KNK), 0x1902, MotionRegion::LowerBody);
     }
 }

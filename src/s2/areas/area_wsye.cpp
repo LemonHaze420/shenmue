@@ -86,9 +86,9 @@ void WsyeStartSecondAuthorCallback(void *) {
 // @verified - p
 void PlaceWsyePlayer(const Vector3 &position) {
     constexpr Vector3i rotation{0, 1226, 0};
-    (void)SetMotionRegionFlag(scenFindMotionwork(WSYE_PLAYER), 71, 0, MotionRegion::LowerBody);
+    (void)mtwkSetRegionFlag(scenFindMotionwork(WSYE_PLAYER), 71, 0, MotionRegion::LowerBody);
     (void)mtwkSetRequestedRootMode(scenFindMotionwork(WSYE_PLAYER), 0);
-    (void)SetMotionFrameTime(scenFindMotionwork(WSYE_PLAYER), 0, MotionRegion::LowerBody);
+    (void)mtwkSetFrameTime(scenFindMotionwork(WSYE_PLAYER), 0, MotionRegion::LowerBody);
     EV_AT_SetPos(WSYE_PLAYER, EventTransformFlags::AllAxes, position);
     (void)EV_AT_SetAngY(WSYE_PLAYER, EventTransformFlags::AllAxes, rotation, nullptr);
 }
@@ -108,7 +108,7 @@ void WsyeCompleteAuthorCallback(void *) {
     SetPlayerControlEnabled(1);
     (void)HLib::DestroyCurrentTask();
     (void)EV_FreeAuthorPak(0, "0015");
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WSYE"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WSYE"), 0);
     (void)EV_NPC_NewLoadSw(1);
 }
 const ScriptAreaDefinition wsyeScriptDefinition{.areaId = AREA_WSYE, .field04 = 0, .init = WsyeInit, .main = WsyeMain};

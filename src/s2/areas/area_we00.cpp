@@ -72,7 +72,7 @@ std::int32_t UpdateWE00BikeVisibility() {
 // @verified - p
 void AreaWE00MainLoop(void *) {
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     const std::uint8_t openHour = static_cast<std::uint8_t>(static_cast<std::uint8_t>(dateTime.hour) - WE00_OPENING_HOUR);
     if (openHour > WE00_OPEN_HOUR_SPAN) {
         EV_EnableCharacterDisplay(WE00_CLOSED_SIGN);

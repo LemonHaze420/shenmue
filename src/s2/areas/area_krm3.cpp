@@ -41,7 +41,7 @@ void KRM3StartCallback(void *) {
     EV_AT_SetPos(shenhua, relativeXyz, position);
     EV_AT_SetAngY(shenhua, relativeXyz, rotation);
     mtwkSetExtraFlag(scenFindMotionwork(shenhua), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(shenhua), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(shenhua), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(shenhua), 13, 0);
     mtwkRequestMotion(scenFindMotionwork(shenhua), shenhuaAreaMotion, MotionRegion::LowerBody);
     EV_PTYCUtils(shenhua, 3, 0);
@@ -79,7 +79,7 @@ void AreaKRM3Main(std::uint32_t startParameters) {
     EV_UpdateWeatherForMinute(0, 0, 0, 0.0f);
     EV_UpdateWeatherForMinute(1, 0, 0, 0.0f);
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     (void)CheckIsArgEquZero(1);
 
     EV_ReinitLights(1);

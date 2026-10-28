@@ -22,7 +22,7 @@ constexpr Vector3 fishBoxes[] = {
 
 void FISH_Draw(const MazeAuthoredObject &object, const MazeRoad &context) {
     const std::uint32_t box = object.name.name == SHEN_NAME(HIY1) ? 0U : 4U;
-    const Character *const character = FindCharacterByScenarioName(TASK_FISH);
+    const Character *const character = ctrlGetScenarioChara(TASK_FISH);
     const MT7Model *const model = character ? static_cast<const MT7Model *>(character->model) : object.modelReader->data;
     const std::int32_t seed = static_cast<std::int32_t>(static_cast<std::uint32_t>(context.unit) + (static_cast<std::uint32_t>(context.block) << 7));
     MAZ_fishCtrlUpdate(&fishBoxes[box], &fishBoxes[box + 1], 9, seed, model);

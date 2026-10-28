@@ -93,14 +93,14 @@ void RestoreE0257Characters() {
 void CleanupE0257(AreaImmediateAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0257_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_NPC_NewLoadSw(1);
     EV_FreeAuthorPak(0, AREA_0257_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0257A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0257A"), 0);
     npcSetAreaName(AREA_0257_ANP1, nullptr, 0.0f, 0);
 
     EV_CleanupMapControlTask();
@@ -109,7 +109,7 @@ void CleanupE0257(AreaImmediateAuthorTaskParameter *parent) {
         EV_scenQueueLoad(g_actNumber, AREA_0257_AREA, g_entryPoint);
     else {
         ExecuteCleanupFuncForAreaWithCachedScene();
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);

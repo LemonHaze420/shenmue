@@ -26,7 +26,7 @@ void AreaQB00Main(std::uint32_t) {
     (void)SetFogDistance(QB00_FOG_COLOUR);
     ReinitFogTasks(1);
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     (void)EV_GetShenmueFlag(QB00_NIGHT_FLAG);
     EV_AssignLightParams(1, 4);
     EV_lightLoad(LIGHT_DEFAULT_DEFINITION);

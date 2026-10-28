@@ -41,7 +41,7 @@ void E0056Main(std::uintptr_t argument) {
     EV_SetNewSceneIndex();
     if (g_currentMap.name == AREA_0056_AREA.name) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour < 19) {
             EV_ReinitLights(1);
             EV_SetLightFlagForIndex(0, 2);
@@ -81,14 +81,14 @@ void RestoreE0056Characters() {
 void CleanupE0056(E0056TaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0056_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     EV_NPC_NewLoadSw(1);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 0x8b4, 0);
     EV_FreeAuthorPak(0, "0056");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0056A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0056A"), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0056_AREA.name)
@@ -96,7 +96,7 @@ void CleanupE0056(E0056TaskParameter *parent) {
     else if (parent->selection == 1 || parent->selection == 2)
         EV_scenQueueLoad(g_actNumber, AREA_0056_ARKQ, 0);
     else if (parent->selection == 0) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EVT_AT_SetPos(AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, Vector3{289.78f, 95.3f, 590.3f}, 0);
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, Vector3i{0, 364, 0}, 0};
         EVT_AT_SetAng_Callback(&angle);

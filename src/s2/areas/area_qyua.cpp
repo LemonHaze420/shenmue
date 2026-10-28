@@ -38,19 +38,19 @@ void QyuaMain(std::uintptr_t argument) {
 void InitializeQyuaResources(QyuaEventWork *work) {
     (void)EV_NPC_NewLoadSw(0);
     (void)EV_ResetFreeTalkFlags();
-    GetCurrentDateTime(qyuaStartDate);
+    shenGetCurrentDateTime(qyuaStartDate);
     EVT_SetQteRetryFrames(24);
     EVT_SetQteFailureCount(0);
     work->characters = Queue_EVT_AT_ReadChr(work->self, QYUA_CHARACTERS);
     work->authorHasPlayed = 0;
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("0217"));
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QYUA"));
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QYUA"), 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QYUA"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QYUA"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QYUA"), 0);
     (void)EV_FreeAuthorPak(1, "0217");
     (void)EV_SetNewSceneIndex();
     (void)EV_LoadCutsceneFromCurrentScene("0217A000");
@@ -65,10 +65,10 @@ void QyuaStartCallback(void *parameter) {
     work->nextCallback = QyuaWaitOpeningAuthorCallback;
     work->succeeded = 0;
     LoadBlurModelForCharacter(QYUA_REN, "REN_B.MT7", 1.0F);
-    (void)SetLowQualityHands(FindCharacterByScenarioName(QYUA_PLAYER));
-    (void)SetLowQualityHands(FindCharacterByScenarioName(QYUA_REN));
-    (void)SetLowQualityHands(FindCharacterByScenarioName(QYUA_YUAN));
-    (void)SetLowQualityHands(FindCharacterByScenarioName(QYUA_TOGYU));
+    (void)SetLowQualityHands(ctrlGetScenarioChara(QYUA_PLAYER));
+    (void)SetLowQualityHands(ctrlGetScenarioChara(QYUA_REN));
+    (void)SetLowQualityHands(ctrlGetScenarioChara(QYUA_YUAN));
+    (void)SetLowQualityHands(ctrlGetScenarioChara(QYUA_TOGYU));
     EventCling knife{0, QYUA_KNIFE, QYUA_YUAN, 14, QYUA_KNIFE_POSITION, QYUA_KNIFE_ROTATION, 0, 0};
     EVT_AT_Cling(&knife);
     (void)EV_cuffsAttach(QYUA_PLAYER, 1, QYUA_REN, 0, 0.30000001192092896F);
@@ -88,7 +88,7 @@ void QyuaStartCallback(void *parameter) {
     EVT_AT_SetAngY(QYUA_DUMMY_TOGYU, QYUA_TOGYU, 0, 0);
     EVT_AT_SetPos(QYUA_TOGYU, QYUA_BASE, {-1000.0F, 0, 0}, 0);
     EVT_AT_SetAngY(QYUA_TOGYU, QYUA_BASE, 0, 0);
-    (void)SetPluralControlFor(FindCharacterByScenarioName(QYUA_PLAYER), 0);
+    (void)SetPluralControlFor(ctrlGetScenarioChara(QYUA_PLAYER), 0);
     EV_EnableCharacterDisplay(QYUA_PLAYER);
     EV_EnableCharacterDisplay(QYUA_REN);
     EV_EnableCharacterDisplay(QYUA_YUAN);
@@ -107,18 +107,18 @@ void QyuaWaitOpeningAuthorCallback(void *) {
         return;
     EV_DisableCharacterDisplay(QYUA_AUTHOR_KNIFE);
     EV_EnableCharacterDisplay(QYUA_KNIFE);
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(QYUA_PLAYER), 1, 0, 0);
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(QYUA_PLAYER), 1, 1, 0);
-    (void)ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QYUA_PLAYER), 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
-    (void)ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QYUA_PLAYER), 1, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(QYUA_REN), 1, 0, 0);
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(QYUA_REN), 1, 1, 0);
-    (void)ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QYUA_REN), 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
-    (void)ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QYUA_REN), 1, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(QYUA_YUAN), 1, 0, 0);
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(QYUA_YUAN), 1, 1, 0);
-    (void)ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QYUA_YUAN), 0, reinterpret_cast<std::byte *>(yuanKnifeHandPose), 0);
-    (void)ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QYUA_YUAN), 1, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(QYUA_PLAYER), 1, 0, 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(QYUA_PLAYER), 1, 1, 0);
+    (void)ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QYUA_PLAYER), 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
+    (void)ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QYUA_PLAYER), 1, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(QYUA_REN), 1, 0, 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(QYUA_REN), 1, 1, 0);
+    (void)ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QYUA_REN), 0, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
+    (void)ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QYUA_REN), 1, reinterpret_cast<std::byte *>(handPoseReplacementCommand), 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(QYUA_YUAN), 1, 0, 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(QYUA_YUAN), 1, 1, 0);
+    (void)ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QYUA_YUAN), 0, reinterpret_cast<std::byte *>(yuanKnifeHandPose), 0);
+    (void)ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QYUA_YUAN), 1, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
     const std::int32_t frames = BeginQyuaKnifeQte();
     EVT_AT_QTE(0x10, 0x10, 0, frames - 29);
     HLib::SetCurrentTaskTo(QyuaFirstResultCallback);
@@ -133,8 +133,8 @@ std::int32_t BeginQyuaKnifeQte() {
     EVT_AT_SetAngY(QYUA_REN, QYUA_PLAYER, 0, 0);
     EVT_AT_SetPos(QYUA_YUAN, QYUA_PLAYER, {-1.97384F, 0, 0.02722F}, 0);
     EVT_AT_SetAngY(QYUA_YUAN, QYUA_PLAYER, 0, 0);
-    SetClothFlag(FindCharacterByScenarioName(QYUA_PLAYER), 16, 1);
-    toggleOsagFlags(FindCharacterByScenarioName(QYUA_REN));
+    SetClothFlag(ctrlGetScenarioChara(QYUA_PLAYER), 16, 1);
+    toggleOsagFlags(ctrlGetScenarioChara(QYUA_REN));
     EVT_AT_SetCam(7800, QYUA_DUMMY_RYO, QYUA_DUMMY_RYO, 0, 0, 0);
     (void)EVT_AT_SetMot(QYUA_PLAYER, 0x2565, 0, 1, 0x40000000U, 0);
     (void)EVT_AT_SetMot(QYUA_REN, 0x2545, 0, 1, 0x40000000U, 0);
@@ -310,7 +310,7 @@ void QyuaSuccessAuthorCallback(void *parameter) {
 void QyuaWaitResultAuthorCallback(void *parameter) {
     QyuaEventWork *const work = static_cast<QyuaEventWork *>(parameter);
     if (EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame) == 1)
-        (void)SetPluralControlFor(FindCharacterByScenarioName(QYUA_PLAYER), 1);
+        (void)SetPluralControlFor(ctrlGetScenarioChara(QYUA_PLAYER), 1);
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         spmFadeOut();
         HLib::SetCurrentTaskTo(work->nextCallback);
@@ -344,18 +344,18 @@ void RestoreQyuaResources(QyuaEventWork *work) {
     EV_cuffsSetFlags();
     EventCling knife{0, QYUA_KNIFE, shen_name{}, 0, {}, {}, 1, 0};
     EVT_AT_Cling(&knife);
-    (void)SetPluralControlFor(FindCharacterByScenarioName(QYUA_PLAYER), 0);
-    (void)hndlSetFlags(FindCharacterByScenarioName(QYUA_TOGYU));
-    (void)hndlSetFlags(FindCharacterByScenarioName(QYUA_YUAN));
-    (void)hndlSetFlags(FindCharacterByScenarioName(QYUA_REN));
-    (void)hndlSetFlags(FindCharacterByScenarioName(QYUA_PLAYER));
+    (void)SetPluralControlFor(ctrlGetScenarioChara(QYUA_PLAYER), 0);
+    (void)hndlSetFlags(ctrlGetScenarioChara(QYUA_TOGYU));
+    (void)hndlSetFlags(ctrlGetScenarioChara(QYUA_YUAN));
+    (void)hndlSetFlags(ctrlGetScenarioChara(QYUA_REN));
+    (void)hndlSetFlags(ctrlGetScenarioChara(QYUA_PLAYER));
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    (void)LoadCutsceneAndSoundProgramForArea();
+    (void)sbtLoadProgram();
     (void)EV_spmBeginSampleExecute();
     (void)EV_FreeAuthorPak(0, "0217");
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QYUA"), 0);
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0217"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QYUA"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0217"), 0);
     ET_AT_KillWork(work->characters);
     SetPlayerControlEnabled(0);
     (void)EV_NPC_NewLoadSw(1);

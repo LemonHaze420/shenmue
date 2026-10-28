@@ -89,8 +89,8 @@ void Syw0GateSequence(void *data) {
             EV_AT_SetPos(SYW0_KNK, EventTransformFlags::World | EventTransformFlags::AllAxes, SYW0_GATE_OPPONENT_POSITION);
             const Vector3i opponentRotation{.x = 0, .y = 32768, .z = 0};
             EV_AT_SetAngY(SYW0_KNK, EventTransformFlags::World | EventTransformFlags::AllAxes, opponentRotation);
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_RYO), 69, 2, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(SYW0_KNK), 69, 2, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_RYO), 69, 2, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(SYW0_KNK), 69, 2, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(SYW0_RYO), 306, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(SYW0_KNK), 2325, MotionRegion::LowerBody);
             Syw0Advance(sequence, 101);
@@ -107,15 +107,15 @@ void Syw0GateSequence(void *data) {
                     vfmDispatchControl(FightControlOp::ReactionRank, SYW0_RYO, 1, 1);
                 vfmDispatchControl(FightControlOp::QueuedAction, SYW0_RYO, motion, 1);
                 vfmDispatchControl(FightControlOp::QueuedAction, SYW0_KNK, 0x915, 1);
-                SetMotionRegionFlag(scenFindMotionwork(SYW0_KNK), 69, 2, MotionRegion::LowerBody);
+                mtwkSetRegionFlag(scenFindMotionwork(SYW0_KNK), 69, 2, MotionRegion::LowerBody);
             } else {
                 shenStartFGST(10, 10, 0, 0);
                 vfmDispatchControl(FightControlOp::Package, shen_name{}, reinterpret_cast<std::uintptr_t>("SYW0"), 1);
-                shenInitFightData(FindCharacterByScenarioName(SYW0_RYO), nullptr, 0, 0, 0, 16);
-                vfUpdateFlagsFor(FindCharacterByScenarioName(SYW0_RYO), 0, 0x8000000, 1);
-                shenInitFightData(FindCharacterByScenarioName(SYW0_KNK), nullptr, 1, 1, 100, 33);
-                vfUpdateFlagsFor(FindCharacterByScenarioName(SYW0_RYO), 0, 0x10000, 0);
-                vfUpdateFlagsFor(FindCharacterByScenarioName(SYW0_KNK), 0, 0x10000, 0);
+                shenInitFightData(ctrlGetScenarioChara(SYW0_RYO), nullptr, 0, 0, 0, 16);
+                vfUpdateFlagsFor(ctrlGetScenarioChara(SYW0_RYO), 0, 0x8000000, 1);
+                shenInitFightData(ctrlGetScenarioChara(SYW0_KNK), nullptr, 1, 1, 100, 33);
+                vfUpdateFlagsFor(ctrlGetScenarioChara(SYW0_RYO), 0, 0x10000, 0);
+                vfUpdateFlagsFor(ctrlGetScenarioChara(SYW0_KNK), 0, 0x10000, 0);
                 EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{4}, 1);
                 qteBattleUtil(BattleQteMode::Load);
                 qteBattleUtil(BattleQteMode::SetWait, 10, 7, 60, 0);
@@ -136,7 +136,7 @@ void Syw0GateSequence(void *data) {
             break;
         }
         case 102: {
-            const std::uint32_t animation = GetMotionAnimationId(scenFindMotionwork(SYW0_RYO), MotionRegion::LowerBody);
+            const std::uint32_t animation = mtwkGetAnimationId(scenFindMotionwork(SYW0_RYO), MotionRegion::LowerBody);
             if (animation - 408U <= 1 || cvsHasValidConverseData(nullptr)) {
                 if (cvsHasValidConverseData(nullptr)) {
                     GetConverseDataForChara(SYW0_RYO);
@@ -162,8 +162,8 @@ void Syw0GateSequence(void *data) {
                 break;
             }
             if ((EV_vfBattleUtil(FightBattleUtilOp::ActorField, SYW0_RYO, 14) & 0x2500) && (EV_vfBattleUtil(FightBattleUtilOp::ActorField, SYW0_KNK, 0) & 2)) {
-                const double frame = GetMotionFrame(scenFindMotionwork(SYW0_KNK), MotionRegion::LowerBody);
-                const double split = GetMotionSplitFrame(scenFindMotionwork(SYW0_KNK), MotionRegion::LowerBody);
+                const double frame = mtwkGetFrame(scenFindMotionwork(SYW0_KNK), MotionRegion::LowerBody);
+                const double split = mtwkGetSplitFrame(scenFindMotionwork(SYW0_KNK), MotionRegion::LowerBody);
                 if (frame > split + 2.0) {
                     qteBattleUtil(BattleQteMode::Start);
                     break;

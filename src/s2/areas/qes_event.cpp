@@ -73,14 +73,14 @@ void PrepareQesCharacter(shen_name character) {
     SetScenarioCharacterDrawControl(character, 1, 1);
     AT_SetLocalBaseChara(character, QES_INVALID);
     figpSetFlagsBlendForBlur(character, 2, 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(character), 1);
+    mtwkSetEnabled(scenFindMotionwork(character), 1);
     mtwkSetExtraFlag(scenFindMotionwork(character), 0, 0);
     mtwkSetExtraFlag(scenFindMotionwork(character), 3, 2);
     mtwkSetRequestedRootMode(scenFindMotionwork(character), 3);
-    SetMotionFrameTime(scenFindMotionwork(character), 7, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(character), 66, 2, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(character), 69, 2, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(character), 71, 2, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(character), 7, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(character), 66, 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(character), 69, 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(character), 71, 2, MotionRegion::LowerBody);
 }
 void QueueQesRetryFade(std::int32_t delay) {
     EVT_AT_MenCtrl(EventFilmControl{.cleanup = 1,

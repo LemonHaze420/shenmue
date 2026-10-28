@@ -84,11 +84,11 @@ void KhinPurchaseCallback(void *data) {
         EVT_AT_SetPos(KHIN_HAND, KHIN_RYO, {0, 1.4f, 0}, 0);
         EVT_AT_SetAngY(KHIN_HAND, KHIN_RYO, 145, 0);
         EV_DisableCharacterDisplay(KHIN_HAND);
-        SetLowQualityHands(FindCharacterByScenarioName(KHIN_HAND));
-        SetHighModelXYZ(FindCharacterByScenarioName(KHIN_HAND), 1, 0, 0);
+        SetLowQualityHands(ctrlGetScenarioChara(KHIN_HAND));
+        SetHighModelXYZ(ctrlGetScenarioChara(KHIN_HAND), 1, 0, 0);
         const Vector3i handRotation{18258, 2476, 5540};
-        ApplyCharacterHandRotation(FindCharacterByScenarioName(KHIN_HAND), 0, 21, &handRotation);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(KHIN_HAND), 0, reinterpret_cast<std::byte *>(khinHandCommand), 0);
+        ApplyCharacterHandRotation(ctrlGetScenarioChara(KHIN_HAND), 0, 21, &handRotation);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(KHIN_HAND), 0, reinterpret_cast<std::byte *>(khinHandCommand), 0);
         const Vector3 scale = khinSelector == 22 ? Vector3{1, 1, 1} : Vector3{.5f, .5f, .5f};
         mtwkSetMotionworkScale3(work.row->firstItem, &scale);
         EVT_AT_SetPos(work.row->firstItem, KHIN_HAND, khinItemOffset, 0);
@@ -104,9 +104,9 @@ void KhinPurchaseCallback(void *data) {
             mtwkSetMotionworkScale3(work.row->secondItem, &secondScale);
             EV_DisableCharacterDisplay(work.row->secondItem);
         }
-        (void)FindMotionWork(FindCharacterByScenarioName(KHIN_RYO));
-        (void)FindMotionWork(FindCharacterByScenarioName(work.row->character));
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(work.row->character), Scheme, 10, 1);
+        (void)FindMotionWork(ctrlGetScenarioChara(KHIN_RYO));
+        (void)FindMotionWork(ctrlGetScenarioChara(work.row->character));
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(work.row->character), Scheme, 10, 1);
         work.state = 2;
         return;
     }

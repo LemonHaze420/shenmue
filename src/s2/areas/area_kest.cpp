@@ -79,7 +79,7 @@ void PositionPlayer(const Vector3 &position, const Vector3i &rotation) {
     EV_AT_SetPos(KEST_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(KEST_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
     mtwkSetExtraFlag(scenFindMotionwork(KEST_PLAYER), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(KEST_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(KEST_PLAYER), 71, 0, MotionRegion::LowerBody);
 }
 void QueueCamera(std::int32_t camera, float delay) {
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(EVT_AT_SetCam_Callback, 6, 0x0b, sizeof(EventSetCamera), KEST_EVENT_TASK);
@@ -212,7 +212,7 @@ void KESTWaitCallback(void *) {
 // @verified - p
 void KESTReleaseCallback(void *) {
     for (const shen_name *character = characters; character->name != KEST_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

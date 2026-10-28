@@ -53,13 +53,13 @@ void Cleanup0339(AuthorViewerTaskParameter *parent) {
     EV_stepSetFlags(0, 0x392);
     SetNpcColdResetMode(1);
     for (const shen_name *character = AREA_0339_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_0339_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0339A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0339A"), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0339_RETURN.name) {
@@ -67,7 +67,7 @@ void Cleanup0339(AuthorViewerTaskParameter *parent) {
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_0339_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {0, 33942, 0}, 0.0f};
         EVT_AT_SetAng_Callback(&angle);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);

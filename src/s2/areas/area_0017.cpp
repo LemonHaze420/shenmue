@@ -46,12 +46,12 @@ void ConfigureArchive(std::int32_t selection) {
             EV_SetObjectFlagByIndex(i, 0);
         index = 2;
     } else if (selection == 2) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::DestroyAfs, reinterpret_cast<std::uintptr_t>(archive), 2);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::DestroyAfs, reinterpret_cast<std::uintptr_t>(archive), 2);
         index = 0;
     } else
         return;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::LoadAfs, reinterpret_cast<std::uintptr_t>(archive), index);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::LoadAfs, reinterpret_cast<std::uintptr_t>(archive), index);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 void PrepareCharacter(shen_name name, bool motion) {
     EV_EnableCharacterDisplay(name);
@@ -90,7 +90,7 @@ void RestoreCharacters(AreaImmediateAuthorTaskParameter *parent) {
 // @verified - p
 void Cleanup(AreaImmediateAuthorTaskParameter *parent) {
     for (const shen_name *name = cleanupCharacters; name->name != AREA_AUTHOR_INVALID.name; ++name)
-        if (FindCharacterByScenarioName(*name)) {
+        if (ctrlGetScenarioChara(*name)) {
             EV_npcLockUnlock(*name);
             EV_npcFree(*name);
         }
@@ -127,7 +127,7 @@ void QueueLoop(AreaImmediateAuthorTaskParameter *parent) {
 void BeginExitFade(bool command) {
     SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
     hsFadeVoice(voice, 30);
-    SetMotionEnvironmentEnabled(0);
+    mtwkSetEnvironmentEnabled(0);
     if (command)
         ExecuteAicaCommand(0x1100a0, 4, 0);
     spmFadeOut();
@@ -221,7 +221,7 @@ void Main(std::uintptr_t) {
     parent->self = task;
     parent->state = 1;
     parent->selection = static_cast<std::int16_t>(static_cast<std::uint32_t>(g_entryPoint) > 2 ? 0 : g_entryPoint);
-    archive = reinterpret_cast<PakAfsPartition *>(EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Mount,
+    archive = reinterpret_cast<PakAfsPartition *>(EV_pakUtils(PakCategory::Partition, PakPartitionOp::Mount,
         reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)), reinterpret_cast<std::uintptr_t>("0017_MAP.afs")));
     voice = shenPlayAudioWithFlags("joy", 1);
     SetAreaNpcLowQualityHands(false);

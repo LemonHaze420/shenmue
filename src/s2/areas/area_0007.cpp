@@ -54,7 +54,7 @@ void SetupE0007Environment() {
     EV_SetNewSceneIndex();
     if (g_currentMap.name != AREA_0007_AR02.name) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour < 19) {
             EV_ReinitLights(1);
             EV_SetLightFlagForIndex(0, 2);
@@ -85,7 +85,7 @@ void E0007Main(std::uintptr_t) {
     SetNpcColdResetMode(0);
     SetPlayerControlEnabled(0);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(E0007MainCallback, 4, 0x0b, 16, AREA_AUTHOR_TASK);
     AreaAuthorTaskParameter *const parent = static_cast<AreaAuthorTaskParameter *>(HLib::GetTaskParameter(task));
     parent->self = task;
@@ -99,7 +99,7 @@ void E0007Main(std::uintptr_t) {
 }
 // @verified - p
 void SetupE0007Characters(std::int16_t selection) {
-    SetLowQualityHands(FindCharacterByScenarioName(AREA_0007_JOP));
+    SetLowQualityHands(ctrlGetScenarioChara(AREA_0007_JOP));
     mtwkSetExtraFlag(scenFindMotionwork(AREA_AUTHOR_RYO), 6, 2);
     EV_SetCharacterAlphaEnabled(AREA_AUTHOR_RYO, false);
     mtwkSetExtraFlag(scenFindMotionwork(AREA_0007_JOP), 6, 2);
@@ -138,14 +138,14 @@ void RestoreE0007Characters(std::int16_t selection) {
 void CleanupE0007(AreaAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0007_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, AREA_0007_DUCK_GUTS_FLAG, 0);
     EV_NPC_NewLoadSw(1);
     EV_FreeAuthorPak(0, "0007");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0007A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0007A"), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     SetNpcColdResetMode(1);
@@ -154,7 +154,7 @@ void CleanupE0007(AreaAuthorTaskParameter *parent) {
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 25753, 0}, 0};
         EVT_AT_SetAng_Callback(&angle);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
@@ -183,10 +183,10 @@ void E0007MainCallback(void *taskData) {
     AreaAuthorTaskParameter *const parent = static_cast<AreaAuthorTaskParameter *>(taskData);
     if (parent->state == 1) {
         QueueE0007Loop(parent);
-        charaSetDisplayEnabledFlag(FindCharacterByScenarioName(AREA_0007_RCKO), 0);
+        charaSetDisplayEnabledFlag(ctrlGetScenarioChara(AREA_0007_RCKO), 0);
     } else if (parent->state == 3) {
         CleanupE0007(parent);
-        charaSetDisplayEnabledFlag(FindCharacterByScenarioName(AREA_0007_RCKO), 1);
+        charaSetDisplayEnabledFlag(ctrlGetScenarioChara(AREA_0007_RCKO), 1);
     }
 }
 // @verified - p
@@ -194,17 +194,17 @@ void E0007LoopCallback(void *taskData) {
     AreaAuthorTaskParameter *const parent = static_cast<AreaAuthorLoopTaskParameter *>(taskData)->parent;
     const std::int32_t frame = EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame);
     if (frame == 0) {
-        SetPluralControlFor(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_JOP), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_JOP), 1);
     }
     if (parent->selection == 0 && frame == 341)
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, AREA_0007_DUCK_GUTS_FLAG, 0);
     if ((parent->selection == 0 && frame == 370) || (parent->selection == 1 && frame == 0)) {
         if (parent->selection == 0) {
-            SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_GOI), 1);
-            SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_HTK), 1);
-            SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_SHI), 1);
-            SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_UNH), 1);
+            SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_GOI), 1);
+            SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_HTK), 1);
+            SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_SHI), 1);
+            SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_UNH), 1);
         }
         EV_ToggleCharacterFlag(AREA_0007_GOI);
         EV_ToggleCharacterFlag(AREA_0007_HTK);
@@ -225,12 +225,12 @@ void E0007LoopCallback(void *taskData) {
     EV_EnableCharacterDisplay(AREA_0007_HTK);
     EV_EnableCharacterDisplay(AREA_0007_SHI);
     EV_EnableCharacterDisplay(AREA_0007_UNH);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_JOP), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_GOI), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_HTK), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_SHI), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_0007_UNH), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_JOP), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_GOI), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_HTK), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_SHI), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_0007_UNH), 0);
     SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
     RestoreE0007Characters(parent->selection);
     parent->state = 3;

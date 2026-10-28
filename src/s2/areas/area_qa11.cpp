@@ -12,7 +12,7 @@ void AreaQA11Init() {
 
 void AreaQA11Main(std::uint32_t) {
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     if (EV_GetShenmueFlag(0xff)) {
         EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
         PushGlobalLightingProgram();

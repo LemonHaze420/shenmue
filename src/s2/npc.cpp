@@ -193,8 +193,8 @@ std::uint16_t RemapNpcMotionForRig(std::int32_t rig, std::uint16_t motion) {
 }
 
 std::uint16_t SelectNpcSpecialMotion(const NpcRouteLiveEntry &entry, bool varied) {
-    if (entry.node && HasMotionDependentTrack(entry.motionWork)) {
-        const std::uint16_t current = GetMotionAnimationId(entry.motionWork, MotionRegion::LowerBody);
+    if (entry.node && mtwkHasDependentTrack(entry.motionWork)) {
+        const std::uint16_t current = mtwkGetAnimationId(entry.motionWork, MotionRegion::LowerBody);
         for (const auto &pair : dependentMotionPairs)
             if (pair[0] == current)
                 return pair[1];
@@ -258,12 +258,12 @@ bool TickNpcSpecialMotion(NpcRouteLiveEntry &entry) {
     MotionWork *const work = entry.motionWork;
     switch (entry.specialMotionPhase) {
     case 2:
-        if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody) && !mtwkSetExtraFlag(work, 58, 1)) {
+        if (mtwkSetRegionFlag(work, 65, 1, MotionRegion::LowerBody) && !mtwkSetExtraFlag(work, 58, 1)) {
             const std::uint16_t motion = SelectNpcSpecialMotion(entry, true);
             if (!motion) {
-                SetMotionSpeed(work, 0.0f, MotionRegion::LowerBody);
+                mtwkSetSpeed(work, 0.0f, MotionRegion::LowerBody);
                 entry.specialMotionPhase = 0;
-            } else if (motion != GetMotionAnimationId(work, MotionRegion::LowerBody)) {
+            } else if (motion != mtwkGetAnimationId(work, MotionRegion::LowerBody)) {
                 if (entry.previousLiveState != 1)
                     shenApplyTranslationToAll(&entry.node->entity.node, entry.specialMotionSavedPosition);
                 mtwkRequestMotion(work, motion, MotionRegion::LowerBody);
@@ -271,7 +271,7 @@ bool TickNpcSpecialMotion(NpcRouteLiveEntry &entry) {
         }
         return true;
     case 3: {
-        UpdateMotionWorkWithPosition(work, &entry.specialMotionTarget, 1);
+        mtwkUpdateWithPosition(work, &entry.specialMotionTarget, 1);
         if (entry.eyeControlProfile) {
             const std::int8_t saved = entry.eyeControlProfile;
             entry.eyeControlProfile = 0;
@@ -296,25 +296,25 @@ bool TickNpcSpecialMotion(NpcRouteLiveEntry &entry) {
             if (flags & 1U) {
                 const std::uint32_t transition = SelectNpcAreaTransitionMotion(entry);
                 if (const std::uint16_t motion = static_cast<std::uint16_t>(transition)) {
-                    if (motion != GetMotionAnimationId(work, MotionRegion::LowerBody))
+                    if (motion != mtwkGetAnimationId(work, MotionRegion::LowerBody))
                         mtwkRequestMotion(work, motion, MotionRegion::LowerBody);
                     flags = transition >> 16;
                 }
                 if (flags & 4U) {
-                    UpdateMotionWorkWithPosition(work, &entry.specialMotionTarget, 0);
+                    mtwkUpdateWithPosition(work, &entry.specialMotionTarget, 0);
                 } else {
-                    UpdateMotionWorkWithPosition(work, &entry.specialMotionTarget, 1);
+                    mtwkUpdateWithPosition(work, &entry.specialMotionTarget, 1);
                     if (flags & 8U)
-                        UpdateMotionWorkWithPosition(work, nullptr, 7);
+                        mtwkUpdateWithPosition(work, nullptr, 7);
                     else if (flags & 0x70U) {
                         if (difference < 0) {
-                            UpdateMotionWorkWithPosition(work, nullptr, (flags & 0x10U) ? 13 : 12);
+                            mtwkUpdateWithPosition(work, nullptr, (flags & 0x10U) ? 13 : 12);
                             if (flags & 0x20U)
-                                UpdateMotionWorkWithPosition(work, nullptr, 10);
+                                mtwkUpdateWithPosition(work, nullptr, 10);
                         } else {
-                            UpdateMotionWorkWithPosition(work, nullptr, (flags & 0x10U) ? 10 : 9);
+                            mtwkUpdateWithPosition(work, nullptr, (flags & 0x10U) ? 10 : 9);
                             if (flags & 0x20U)
-                                UpdateMotionWorkWithPosition(work, nullptr, 13);
+                                mtwkUpdateWithPosition(work, nullptr, 13);
                         }
                     }
                 }
@@ -339,27 +339,27 @@ bool TickNpcSpecialMotion(NpcRouteLiveEntry &entry) {
         if (!motion)
             motion = SelectNpcSpecialMotion(entry, false);
         if (!motion) {
-            SetMotionSpeed(work, 0.0f, MotionRegion::LowerBody);
+            mtwkSetSpeed(work, 0.0f, MotionRegion::LowerBody);
             entry.specialMotionPhase = 0;
             return true;
         }
         if (turn) {
             entry.streamingCountdown = static_cast<std::uint16_t>((entry.streamingCountdown & 0xffU) | (entry.specialMotionPhase << 8));
             entry.specialMotionPhase = 4;
-            UpdateMotionWorkWithPosition(work, nullptr, 0);
+            mtwkUpdateWithPosition(work, nullptr, 0);
             entry.counter416 = 0;
-        } else if (motion == GetMotionAnimationId(work, MotionRegion::LowerBody)) {
+        } else if (motion == mtwkGetAnimationId(work, MotionRegion::LowerBody)) {
             return true;
         }
-        CopyMotionTransition(work, nullptr, static_cast<std::uint16_t>(turn + rotation.y), 13, 0);
-        SetMotionTimeRelated(work, 1, 5, motion);
-        SetMotionTimeRelated(work, 1, 0, motion);
+        mtwkCopyTransition(work, nullptr, static_cast<std::uint16_t>(turn + rotation.y), 13, 0);
+        mtwkSetTimeRelated(work, 1, 5, motion);
+        mtwkSetTimeRelated(work, 1, 0, motion);
         return true;
     }
     case 4:
         if (!mtwkSetExtraFlag(work, 58, 1) || ++entry.counter416 > 8) {
             entry.specialMotionPhase = static_cast<std::uint8_t>(entry.streamingCountdown >> 8);
-            UpdateMotionWorkWithPosition(work, &entry.specialMotionTarget, 1);
+            mtwkUpdateWithPosition(work, &entry.specialMotionTarget, 1);
         }
         return true;
     case 5:
@@ -369,19 +369,19 @@ bool TickNpcSpecialMotion(NpcRouteLiveEntry &entry) {
                 const Vector3i rotation = GetCharacterWorldRotation(entry.node);
                 const std::uint16_t yaw = static_cast<std::uint16_t>(NpcEulerYaw(entry.euler));
                 if (static_cast<std::uint16_t>(rotation.y) != yaw)
-                    CopyMotionTransition(work, nullptr, yaw, 13, 0);
+                    mtwkCopyTransition(work, nullptr, yaw, 13, 0);
             }
         }
         return true;
     case 6: {
         entry.specialMotionPhase = 0;
-        const bool left = HasMotionTrackCommand(work, MotionRegion::RightArm);
-        const bool right = HasMotionTrackCommand(work, MotionRegion::LeftArm);
+        const bool left = mtwkHasTrackCommand(work, MotionRegion::RightArm);
+        const bool right = mtwkHasTrackCommand(work, MotionRegion::LeftArm);
         if (left && right) {
-            UpdateMotionWorkWithPosition(work, &entry.specialMotionTarget, 0);
+            mtwkUpdateWithPosition(work, &entry.specialMotionTarget, 0);
             return true;
         }
-        RequestMotionTargetFacing(work, &entry.specialMotionTarget, left ? 2 : right ? 4 : 0);
+        mtwkRequestTargetFacing(work, &entry.specialMotionTarget, left ? 2 : right ? 4 : 0);
         if (entry.previousLiveState == 4 || entry.previousLiveState == 8 || IsPartyCompanionOnStairs(entry.name) || (entry.stateContext.flags & 0x400U))
             return true;
         const Vector3 position = GetCharacterWorldPosition(entry.node);
@@ -396,28 +396,28 @@ bool TickNpcSpecialMotion(NpcRouteLiveEntry &entry) {
         }
         if (entry.stateContext.flags & 0x10000U)
             difference = 0;
-        CopyMotionTransition(work, nullptr, static_cast<std::uint16_t>(NpcExcessTurn(difference) + rotation.y), 13, 0);
+        mtwkCopyTransition(work, nullptr, static_cast<std::uint16_t>(NpcExcessTurn(difference) + rotation.y), 13, 0);
         const std::uint16_t motion = SelectNpcSpecialMotion(entry, false);
         if (motion) {
-            SetMotionTimeRelated(work, 1, 5, motion);
-            SetMotionTimeRelated(work, 1, 0, motion);
+            mtwkSetTimeRelated(work, 1, 5, motion);
+            mtwkSetTimeRelated(work, 1, 0, motion);
         } else
-            SetMotionSpeed(work, 0.0f, MotionRegion::LowerBody);
+            mtwkSetSpeed(work, 0.0f, MotionRegion::LowerBody);
         return true;
     }
     case 7:
         entry.specialMotionPhase = 0;
-        RequestMotionTargetFacing(work, nullptr, 0);
+        mtwkRequestTargetFacing(work, nullptr, 0);
         return true;
     case 10:
         if (entry.stateContext.flags & 0x8000U)
             ReleaseNpcSpecialAnchor(entry);
         if (entry.eyeControlProfile)
             HandleNpcEyeControl(entry);
-        SetMotionTimeRelated(work, 0, 0, 0);
+        mtwkSetTimeRelated(work, 0, 0, 0);
         if (entry.name.name == SHEN_NAME(REN_))
-            SetMotionTimeRelated(work, 1, 0, 0xa204);
-        SetMotionSpeed(work, entry.motionSpeed, MotionRegion::LowerBody);
+            mtwkSetTimeRelated(work, 1, 0, 0xa204);
+        mtwkSetSpeed(work, entry.motionSpeed, MotionRegion::LowerBody);
         if (entry.previousLiveState == 1) {
             CompleteNpcSpecialMotion(entry);
             SetNpcRouteMotionState(entry.stateContext, 3, false);
@@ -432,16 +432,16 @@ bool TickNpcSpecialMotion(NpcRouteLiveEntry &entry) {
         if (entry.previousLiveState == 5) {
             const Vector3 position = NpcRouteAreaToScene(entry.worldPosition);
             entry.specialMotionPhase = 12;
-            CopyMotionTransition(work, &position, static_cast<std::uint16_t>(NpcEulerYaw(entry.euler)), 6, 0);
+            mtwkCopyTransition(work, &position, static_cast<std::uint16_t>(NpcEulerYaw(entry.euler)), 6, 0);
             return true;
         }
         entry.specialMotionPhase = 11;
-        CopyMotionTransition(work, &entry.specialMotionSavedPosition, static_cast<std::uint16_t>(NpcEulerYaw(entry.euler)), 6, 0);
-        SetMotionTimeRelated(work, 0, 6, 0);
-        SetMotionTimeRelated(work, 1, 5, entry.currentMotionId);
-        if (GetCharacterScenarioName(entry.node).name == SHEN_NAME(REN_))
-            SetMotionTimeRelated(work, 1, 0, 0xa204);
-        SetMotionRegionEvalTime(work, entry.animationFrame, MotionRegion::LowerBody);
+        mtwkCopyTransition(work, &entry.specialMotionSavedPosition, static_cast<std::uint16_t>(NpcEulerYaw(entry.euler)), 6, 0);
+        mtwkSetTimeRelated(work, 0, 6, 0);
+        mtwkSetTimeRelated(work, 1, 5, entry.currentMotionId);
+        if (ctrlGetScenarioCharaName(entry.node).name == SHEN_NAME(REN_))
+            mtwkSetTimeRelated(work, 1, 0, 0xa204);
+        mtwkSetRegionEvalTime(work, entry.animationFrame, MotionRegion::LowerBody);
         return true;
     case 11:
     case 12:
@@ -458,7 +458,7 @@ bool TickNpcSpecialMotion(NpcRouteLiveEntry &entry) {
 void PublishNpcRouteLiveEntries(std::span<NpcRouteLiveEntry> entries) {
     npcRouteLiveEntries = entries;
     for (NpcRouteLiveEntry &entry : npcRouteLiveEntries) {
-        entry.node = FindCharacterByScenarioName(entry.name);
+        entry.node = ctrlGetScenarioChara(entry.name);
         entry.motionWork = entry.node ? FindMotionWork(entry.node) : nullptr;
         entry.stateContext.owner = &entry;
         entry.stateContext.motionWork = entry.motionWork;
@@ -556,7 +556,7 @@ std::int32_t AcquireNpcRuntimeEntryForScript(shen_name character, NpcRouteLiveEn
         entry.flags &= ~0x4000U;
         entry.liveState = entry.previousLiveState;
     } else {
-        const float frame = static_cast<float>(static_cast<std::int16_t>(static_cast<std::int32_t>(GetMotionFrame(entry.motionWork, MotionRegion::LowerBody))));
+        const float frame = static_cast<float>(static_cast<std::int16_t>(static_cast<std::int32_t>(mtwkGetFrame(entry.motionWork, MotionRegion::LowerBody))));
         std::memcpy(reinterpret_cast<std::byte *>(&entry) + 0x418, &frame, sizeof(frame));
         entry.specialMotionSavedPosition = GetCharacterWorldPosition(entry.node);
     }
@@ -598,12 +598,12 @@ void PauseNpcRouteMotion(NpcRouteStateContext *context, shen_name character) {
     if (!(context->flags & 0x1000U))
         context->routeFlags |= 0x800U;
     NpcRouteLiveEntry &entry = *context->owner;
-    if ((entry.flags & NpcRouteStreamForceHidden) && entry.node) {
+    if ((entry.flags & NRSF_ForceHidden) && entry.node) {
         std::uint32_t yaw;
         std::memcpy(&yaw, &context->savedEuler.y, sizeof(yaw));
-        CopyMotionTransition(entry.motionWork, nullptr, 0, 1, 0);
-        CopyMotionTransition(entry.motionWork, nullptr, static_cast<std::uint16_t>(yaw), 13, 0);
-        CopyMotionTransition(entry.motionWork, nullptr, 0, 2, 0);
+        mtwkCopyTransition(entry.motionWork, nullptr, 0, 1, 0);
+        mtwkCopyTransition(entry.motionWork, nullptr, static_cast<std::uint16_t>(yaw), 13, 0);
+        mtwkCopyTransition(entry.motionWork, nullptr, 0, 2, 0);
     }
 }
 
@@ -617,17 +617,17 @@ std::int8_t EV_SetCharaControllerFlags(shen_name character, std::uint32_t flags,
     std::uint32_t mask{};
     switch (flags) {
     case 0:
-        mask = CharacterControlUpdateHeight;
+        mask = CCMF_UpdateHeight;
         break;
     case UpdateHeight:
-        mask = CharacterControlApplyGravity;
+        mask = CCMF_ApplyGravity;
         break;
     case ApplyGravity:
-        mask = state == NpcCharacterControllerState::Enabled ? CharacterControlEvaluateMotion | CharacterControlSnapToGround | CharacterControlFineRaycast :
-                                                               CharacterControlEvaluateMotion;
+        mask = state == NpcCharacterControllerState::Enabled ? CCMF_EvaluateMotion | CCMF_SnapToGround | CCMF_FineRaycast :
+                                                               CCMF_EvaluateMotion;
         break;
     case UpdateHeight | ApplyGravity:
-        mask = CharacterControlVoxelSweep;
+        mask = CCMF_VoxelSweep;
         break;
     case EvaluateMotion | SolverAssist:
         mask = 0x00001000U;
@@ -651,7 +651,7 @@ std::int8_t EV_SetCharaControllerFlags(shen_name character, std::uint32_t flags,
 }
 
 void EV_SetRefBoardParamsFor(shen_name character, std::int32_t sector) {
-    ResetReflectorBoardMode(FindCharacterByScenarioName(character), sector);
+    ResetReflectorBoardMode(ctrlGetScenarioChara(character), sector);
 }
 
 void SetScenarioFollowCharacter(shen_name character) {

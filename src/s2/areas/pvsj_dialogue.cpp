@@ -10,7 +10,7 @@
 namespace shenmue::s2 {
 namespace {
 void Face(shen_name name, std::int32_t expression = 0) {
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(name), expression, 10, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(name), expression, 10, 1);
 }
 void Faces(PvsjEventWork *work, shen_name other, std::int32_t expression = 0) {
     Face(PVSJ_PLAYER);

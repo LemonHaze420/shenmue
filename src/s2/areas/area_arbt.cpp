@@ -64,9 +64,9 @@ void ArbtCleanup(ArbtWork &work) {
     ArbtHelpNullsub();
     shenSetClockAndCompassRenderTo(0);
     EV_FreeAuthorPak(0, work.descriptor->mode == 1 ? "0360" : "0018");
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ARBT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ARBT"), 0);
     ET_AT_KillWork(work.characters);
     EV_NPC_NewLoadSw(1);
     SetPlayerControlEnabled(0);
@@ -98,10 +98,10 @@ void ArbtReadyInit(void *data) {
     }
     mtwkSetRequestedRootMode(scenFindMotionwork(ARBT_RYO), 1);
     mtwkSetRequestedRootMode(scenFindMotionwork(ARBT_TKR), 1);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 10, 2);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ARBT_TKR), 10, 2);
-    SetMotionBoneTargetStepLimit(scenFindMotionwork(ARBT_TKR), 17, 2);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 10, 2);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ARBT_RYO), 17, 1);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ARBT_TKR), 10, 2);
+    mtwkSetBoneTargetStepLimit(scenFindMotionwork(ARBT_TKR), 17, 2);
     mtwkSetExtraFlag(scenFindMotionwork(ARBT_RYO), 55, 0);
     mtwkSetExtraFlag(scenFindMotionwork(ARBT_TKR), 55, 0);
     AT_SetLocalBaseChara(ARBT_RYO, ARBT_BASE);
@@ -198,7 +198,7 @@ void ArbtCarryFinishTurns(void *data) {
         EVT_AT_SetVoice("0018C090", 1, carry.frames); // @text EN: "We're putting it down." | JA: "よし、降ろすぞ。"
         HLib::SetupTaskDelay(carry.frames + 60);
     } else {
-        GetCurrentDateTime(work.time);
+        shenGetCurrentDateTime(work.time);
         if (work.time.hour < work.endTime.hour) {
             CheckHelpIcon(0xd020, 0xd020, CheckHelpIconOp::Remove);
             CheckHelpIcon(0x2020, 0, CheckHelpIconOp::Add);
@@ -242,7 +242,7 @@ void ArbtCarryRoute(void *data) {
                 HLib::SetupTaskDelay(delay);
         }
     } else {
-        GetCurrentDateTime(work.time);
+        shenGetCurrentDateTime(work.time);
         if (work.time.hour < work.endTime.hour) {
             const std::int32_t delay = carry.frames > 30 ? carry.frames - 30 : 0;
             carry.success = 0;
@@ -442,7 +442,7 @@ void ArbtCarryAddTime(void *data) {
     ArbtWork &work = *static_cast<ArbtWork *>(data);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
     shenSetClockAndCompassRenderTo(1);
-    GetCurrentDateTime(work.time);
+    shenGetCurrentDateTime(work.time);
     if (work.time.hour >= work.endTime.hour + 1) {
         if (!filmCheckFadeTrackColour())
             HLib::SetCurrentTaskTo(ArbtCarryTimeOver);
@@ -556,16 +556,16 @@ void ArbtMain(ArbtWork &work) {
     work.failures = 0;
     work.idleWarnings = 0;
     work.perfectStreak = 0;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("ARBT"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ARBT"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("ARBT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ARBT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("ARBT"), 0);
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0018E000");
     EV_FreeAuthorPak(1, work.descriptor->mode == 1 ? "0360" : "0018");
-    GetCurrentDateTime(work.time);
-    GetCurrentDateTime(work.endTime);
+    shenGetCurrentDateTime(work.time);
+    shenGetCurrentDateTime(work.endTime);
     if (EV_GetShenmueFlag(0x12)) {
         EV_stepSetFlags(0, 0x12);
         work.firstJob = 1;

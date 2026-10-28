@@ -42,7 +42,7 @@ void UpdateInstallMotion(VFActor *self) {
         Install(self, static_cast<std::int16_t>(self->queuedAction));
         ++self->hitPhase;
     }
-    if (!GetMotionAnimationId(self->motion, MotionRegion::LowerBody))
+    if (!mtwkGetAnimationId(self->motion, MotionRegion::LowerBody))
         self->queuedAction = 0;
 }
 
@@ -55,7 +55,7 @@ void UpdateDefaultReaction(VFActor *self) {
     if ((self->hitStateFlags & VFHSF_AttackGuardWindow) && (self->currentAnimation & 0xfff) == self->defaultAnimations[0]) {
         vfResetScriptedFormationMotion(self);
         if ((self->savedSecondaryMotionFlags & VFSMF_AlternateFootTarget) && static_cast<std::uint16_t>(self->motionTimer))
-            GetParentBoneWrapper(self->motion, ((self->stateFlags & VFSF_UseLeftFootTarget) ? MB_LeftFootTarget : MB_RightFootTarget) | motionTargetIgnoreY);
+            mtwkGetParentBoneWrapper(self->motion, ((self->stateFlags & VFSF_UseLeftFootTarget) ? MB_LeftFootTarget : MB_RightFootTarget) | motionTargetIgnoreY);
         return;
     }
     if ((!self->requestedAnimation && (self->moveFlags & VFMF_NeedsAnimationStep)) ||
@@ -68,7 +68,7 @@ void UpdateDefaultReaction(VFActor *self) {
         vfResetScriptedFormationMotion(self);
         if (self->secondaryMotionFlags & VFSMF_AlternateFootTarget) {
             self->stateFlags ^= VFSF_UseLeftFootTarget;
-            GetParentBoneWrapper(self->motion, ((self->stateFlags & VFSF_UseLeftFootTarget) ? MB_LeftFootTarget : MB_RightFootTarget) | motionTargetIgnoreY);
+            mtwkGetParentBoneWrapper(self->motion, ((self->stateFlags & VFSF_UseLeftFootTarget) ? MB_LeftFootTarget : MB_RightFootTarget) | motionTargetIgnoreY);
         }
         vfSelectDefaultMotion(self, 0);
     }
@@ -372,8 +372,8 @@ void UpdateAuthoredDefeat(VFActor *self) {
             self->hitPhase = 2;
         if ((self->hitStateFlags & (VFHSF_AttackGuardWindow | VFHSF_SpecialGuardOrParry | VFHSF_GuardState | VFHSF_AlignedToGround)) == 0x200) {
             mtwkSetExtraFlag(self->motion, 0, 0);
-            motRemoveCallback(self->motion);
-            SetMotionSpeed(self->motion, 1, MotionRegion::LowerBody);
+            mtwkRemoveCallback(self->motion);
+            mtwkSetSpeed(self->motion, 1, MotionRegion::LowerBody);
             ++self->hitPhase;
         }
     } else if (self->hitPhase == 1) {
@@ -416,7 +416,7 @@ void UpdateLocomotion(VFActor *self) {
                 self->facingAngle = static_cast<std::uint16_t>(self->facingAngle + int(float(turns[previous]) * self->scale));
             }
             animation = Animation(self, mode == 1 ? 314 : 316);
-            if (SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody))
+            if (mtwkSetRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody))
                 keepMotion = self->requestedAnimation == -1;
             else if (!(self->motionFlags & VFMOF_Unknown4))
                 return;
@@ -427,7 +427,7 @@ void UpdateLocomotion(VFActor *self) {
     } else {
         stationary = true;
         if ((self->motionFlags & VFMOF_Unknown4) ||
-            ((self->motionFlags & VFMOF_Unknown2) && !SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody)))
+            ((self->motionFlags & VFMOF_Unknown2) && !mtwkSetRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody)))
             return;
         if (self->fightStyle == 0 && (float(self->initialHp) * 0.5f > self->hp || self->parameterB24 > 0))
             animation = (self->moveFlags & VFMF_MirroredStance) ? 32826 : 59;
@@ -473,7 +473,7 @@ void UpdateTargetLocomotion(VFActor *self) {
     const bool alternate = self->reactionMovement.state.mode != 1;
     const auto animation = Animation(self, alternate ? 316 : 314);
     if (!(self->activeMotionFlags & VFSMF_Unknown8000000) || (self->motionFlags & VFMOF_Unknown4) ||
-        SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody) || (!(self->motionFlags & VFMOF_ContactCategoryA) != alternate)) {
+        mtwkSetRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody) || (!(self->motionFlags & VFMOF_ContactCategoryA) != alternate)) {
         self->moveFlags &= ~VFMF_MirrorReactionAngle;
         self->pendingAnimation = animation;
         if (alternate)
@@ -804,7 +804,7 @@ void UpdateAirborneReaction(VFActor *self) {
         if (self->animationTime >= float(self->reactionEndFrame))
             figpAssignModeForCharacter(self->character, 0);
         mtwkSetExtraFlag(self->motion, 0, 0);
-        if (SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody)) {
             if (!(self->hitStateFlags & VFHSF_SpecialThrow) && !(self->moveFlags & VFMF_ForceDefeat))
                 self->parameter370 = 0x06000000;
             self->moveFlags &= ~VFMF_HitReactionLock;
@@ -904,7 +904,7 @@ void UpdateDirectionalMotion(VFActor *self) {
         if (mirrored) {
             self->hitStateFlags &= ~VFHSF_MirroredReactionAngle;
             self->moveFlags &= ~(VFMF_MirrorReactionAngle | VFMF_MirroredStance);
-            SetMotionRegionFlag(self->motion, 69, 2, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(self->motion, 69, 2, MotionRegion::LowerBody);
         }
         break;
     case 1:
@@ -929,7 +929,7 @@ void UpdateDirectionalMotion(VFActor *self) {
         if (mirrored) {
             self->hitStateFlags &= ~VFHSF_MirroredReactionAngle;
             self->moveFlags &= ~(VFMF_MirrorReactionAngle | VFMF_MirroredStance);
-            SetMotionRegionFlag(self->motion, 69, 2, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(self->motion, 69, 2, MotionRegion::LowerBody);
         }
         break;
     case 5:

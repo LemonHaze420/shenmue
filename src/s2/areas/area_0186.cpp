@@ -41,7 +41,7 @@ void E0186Init() {
 void ConfigureE0186Environment() {
     if (g_currentMap.name == AREA_0186_AREA.name) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 22;
         time.minute = 0;
         SetCurrentDateTimeTo(time);
@@ -91,12 +91,12 @@ void RestoreE0186Characters() {
 void CleanupE0186(AreaAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0186_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0186A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0186A"), 0);
     EV_FreeAuthorPak(0, AREA_0186_CONVERSATION);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);

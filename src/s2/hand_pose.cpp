@@ -180,7 +180,7 @@ void MhndRenumberSayLeftFingers(MT7Model *model) {
 
 // @verified - p
 void MhndMeasureHand(Character *character, std::int32_t handId, std::array<float, 6> &measurements) {
-    if (GetCharacterScenarioName(character).name == SHEN_NAME(SAY_)) {
+    if (ctrlGetScenarioCharaName(character).name == SHEN_NAME(SAY_)) {
         MhndRenumberSayLeftFingers(static_cast<MT7Model *>(character->model));
         MhndRenumberSayLeftFingers(GetImageModuleSource(character));
     }

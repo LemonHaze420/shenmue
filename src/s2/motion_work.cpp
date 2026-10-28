@@ -43,7 +43,7 @@ MotionWork *g_activeMotionWork{};
 std::int32_t g_mtwkCurrentIsRyo{};
 
 // @verified - p
-void SetActiveMTWK(MotionWork *work) {
+void mtwkSetActive(MotionWork *work) {
     g_activeMotionWork = work;
 }
 
@@ -484,7 +484,7 @@ void CopySetLeadFoot(MotionWork &work, std::uint16_t motion, bool splitWindow) {
     if (state.copyFlags & MCF_LeadFoot) {
         state.motnFlags &= ~0x10000U;
         if (motion)
-            SetMotionRegionEvalTime(&work, static_cast<float>(GetMotionFrameCount(motion)) * 0.5f, MotionRegion::LowerBody);
+            mtwkSetRegionEvalTime(&work, static_cast<float>(GetMotionFrameCount(motion)) * 0.5f, MotionRegion::LowerBody);
     } else {
         state.motnFlags |= 0x10000U;
     }
@@ -495,19 +495,19 @@ void CopySetLeadFoot(MotionWork &work, std::uint16_t motion, bool splitWindow) {
 // @verified - p
 void CopyPlayAt(CopyMotionContext &context, const Vector3 &position, std::int16_t yaw, std::uint16_t motion, std::uint32_t mode, std::uint32_t frames) {
     shenApplyTranslationToAll(&context.character.entity.node, position);
-    SetCharacterWorldRotation(&context.character, {0, yaw, 0});
+    charaSetWorldRot(&context.character, {0, yaw, 0});
     mtwkRequestMotion(&context.work, motion, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(&context.work, mode);
-    SetMotionFrameTime(&context.work, static_cast<std::uint32_t>(static_cast<std::int32_t>(1.0f / context.state().motionScale * static_cast<float>(frames))),
+    mtwkSetFrameTime(&context.work, static_cast<std::uint32_t>(static_cast<std::int32_t>(1.0f / context.state().motionScale * static_cast<float>(frames))),
         MotionRegion::LowerBody);
-    SetMotionSpeed(&context.work, context.state().motionScale, MotionRegion::LowerBody);
+    mtwkSetSpeed(&context.work, context.state().motionScale, MotionRegion::LowerBody);
 }
 
 void CopyReleaseLook(MotionWork &work) {
     if (!(work.runtime.copyFlags & MCF_LookSuppressed))
         return;
-    UpdateMotionWorkWithPosition(&work, nullptr, 0);
-    UpdateMotionWorkWithPosition(&work, nullptr, 0x304);
+    mtwkUpdateWithPosition(&work, nullptr, 0);
+    mtwkUpdateWithPosition(&work, nullptr, 0x304);
 }
 
 // mtwkCommitCopyCurrentTransition restores the lead foot, root mode and step frames saved when the copy began.
@@ -532,8 +532,8 @@ void CopyAdvanceScale(MotionWork &work) {
     MotionRuntimeState &state = work.runtime;
     const float scale = static_cast<float>(--state.copyScaleCountdown) * 0.125f * (1.0f - state.insideRectangleScale) + state.insideRectangleScale;
     if (scale < 1.0f) {
-        SetMotionRigScale(&work, scale);
-        SetMotionSpeed(&work, (1.4f - scale * 0.40000001f) * state.motionScale, MotionRegion::LowerBody);
+        mtwkSetRigScale(&work, scale);
+        mtwkSetSpeed(&work, (1.4f - scale * 0.40000001f) * state.motionScale, MotionRegion::LowerBody);
     }
 }
 
@@ -545,12 +545,12 @@ bool CopyReachedStepWindow(MotionWork &work, std::uint16_t motion) {
     if (regionFlags & MRF_Transition) {
         const bool secondFoot = (state.motnFlags & 0x8000U) ? (state.motnFlags & 0x10000U) != 0 : (state.copyFlags & MCF_LeadFoot) != 0;
         state.copyFlags = (state.copyFlags & ~MCF_SampledLeadFoot) | (secondFoot ? MCF_SampledLeadFoot : 0U);
-        return GetMotionTransitionFramesRemaining(&work, MotionRegion::LowerBody) < ((state.copyFlags & MCF_Running) ? 1.1f : 2.0999999f);
+        return mtwkGetTransitionFramesRemaining(&work, MotionRegion::LowerBody) < ((state.copyFlags & MCF_Running) ? 1.1f : 2.0999999f);
     }
     if (!(regionFlags & MRF_Loop) && (regionFlags & MRF_Unknown02))
         return true;
-    const float frame = GetMotionFrame(&work, MotionRegion::LowerBody);
-    const float speed = GetMotionSpeed(&work, MotionRegion::LowerBody);
+    const float frame = mtwkGetFrame(&work, MotionRegion::LowerBody);
+    const float speed = mtwkGetSpeed(&work, MotionRegion::LowerBody);
     const int frames = static_cast<int>(GetMotionFrameCount(motion));
     const int margin = (state.copyFlags & MCF_Running) ? 2 : 3;
     const float halfWindow = static_cast<float>(frames / 2 - margin);
@@ -633,7 +633,7 @@ std::uint8_t CopyRequestLook(CopyMotionContext &context, const Vector3 &destinat
     }
     if (static_cast<std::uint16_t>(difference + DEG_TO_ANG(157.5f)) > 0xe000U)
         return 0;
-    UpdateMotionWorkWithPosition(&context.work, &target, 0x501);
+    mtwkUpdateWithPosition(&context.work, &target, 0x501);
     state.motnFlags |= 0x40000U;
     state.copyFlags |= MCF_LookSuppressed;
     return static_cast<std::uint8_t>(std::abs(static_cast<int>(difference)) >> 11U);
@@ -845,8 +845,8 @@ void CopyAdjustStride(CopyMotionContext &context, const Vector3 &position, std::
     state.insideRectangleScale = scale;
     if (scale >= 1.0f)
         return;
-    SetMotionRigScale(&context.work, scale);
-    SetMotionSpeed(&context.work, (1.4f - state.insideRectangleScale * 0.40000001f) * state.motionScale, MotionRegion::LowerBody);
+    mtwkSetRigScale(&context.work, scale);
+    mtwkSetSpeed(&context.work, (1.4f - state.insideRectangleScale * 0.40000001f) * state.motionScale, MotionRegion::LowerBody);
 }
 
 // CopyBeginStep handles the initial step, including the intermediate 112.5-degree turn.
@@ -1018,7 +1018,7 @@ bool CopyTurnStep(CopyMotionContext &context, bool towardPosition) {
         if (state.copyDelayFrames) {
             Vector3i rotation = GetCharacterWorldRotation(&context.character);
             rotation.y += CopyYawDifference(state.copyTravelYaw, rotation.y) / state.copyDelayFrames;
-            SetCharacterWorldRotation(&context.character, rotation);
+            charaSetWorldRot(&context.character, rotation);
             --state.copyDelayFrames;
         } else
             CopySetState(state, 5, 1);
@@ -1202,7 +1202,7 @@ bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) 
     if (state.copyPhase != 2U && state.copyPhase != 3U && state.copyPhase != 4U) {
         if (state.regionFlags[0] & MRF_Transition) {
             if (!(state.motnFlags & 0x8000U))
-                GetParentBoneWrapper(&context.work,
+                mtwkGetParentBoneWrapper(&context.work,
                     (state.copyFlags & MCF_LeadFoot) ? (MB_RightFootTarget | motionTargetIgnoreX | motionTargetIgnoreY) :
                                                        (MB_LeftFootTarget | motionTargetIgnoreX | motionTargetIgnoreY));
         } else {
@@ -1227,7 +1227,7 @@ bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) 
                     const float x = state.copySplinePosition.x - previous.x, z = state.copySplinePosition.z - previous.z;
                     if (std::fabs(x) >= 0.001f || std::fabs(z) >= 0.001f) {
                         rotation.y = FixedAtan2(-x, -z);
-                        SetCharacterWorldRotation(&context.character, rotation);
+                        charaSetWorldRot(&context.character, rotation);
                     }
                 }
             }
@@ -1252,8 +1252,8 @@ bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) 
         const std::uint32_t frames = static_cast<std::uint32_t>(((state.copyFlags & MCF_Running) ? 8.0f : 16.0f) * 0.69999999f);
         CopyPlayAt(context, position, yaw, motion, 1, frames);
         if (state.insideRectangleScale < 1.0f) {
-            SetMotionRigScale(&context.work, state.insideRectangleScale);
-            SetMotionSpeed(&context.work, (1.4f - state.insideRectangleScale * 0.40000001f) * state.motionScale, MotionRegion::LowerBody);
+            mtwkSetRigScale(&context.work, state.insideRectangleScale);
+            mtwkSetSpeed(&context.work, (1.4f - state.insideRectangleScale * 0.40000001f) * state.motionScale, MotionRegion::LowerBody);
         }
         state.copyStepState = 1;
         return false;
@@ -1798,11 +1798,11 @@ void PlayTargetFacingTurn(MotionWork &work, bool moving, bool left, std::int16_t
     state.pelvisYawStep = 384;
     mtwkRequestMotion(&work, motion, MotionRegion::Chest);
     mtwkRequestMotion(&work, motion, MotionRegion::Head);
-    SetMotionFrameTime(&work, static_cast<std::uint32_t>(frames), MotionRegion::Chest);
-    SetMotionFrameTime(&work, static_cast<std::uint32_t>(frames), MotionRegion::Head);
+    mtwkSetFrameTime(&work, static_cast<std::uint32_t>(frames), MotionRegion::Chest);
+    mtwkSetFrameTime(&work, static_cast<std::uint32_t>(frames), MotionRegion::Head);
     const MotionRegion arm = left ? MotionRegion::LeftArm : MotionRegion::RightArm;
     mtwkRequestMotion(&work, motion, arm);
-    SetMotionFrameTime(&work, static_cast<std::uint32_t>(frames), arm);
+    mtwkSetFrameTime(&work, static_cast<std::uint32_t>(frames), arm);
     if (left) {
         state.regionFlags[1] |= MRF_LeadFoot;
         state.regionFlags[2] |= MRF_LeadFoot;
@@ -1833,11 +1833,11 @@ void UpdateTargetFacingTransition(Character &character, MotionWork &work) {
         const auto yaw = static_cast<std::uint16_t>(GetCharacterWorldRotation(&character).y);
         state.targetFacingYaw = FixedAtan2(position.x - state.targetFacingPosition.x, position.z - state.targetFacingPosition.z);
         if (flags & 1U) {
-            CopyMotionTransition(&work, nullptr, static_cast<std::uint16_t>(state.targetFacingYaw), 0, 2);
-            CopyMotionTransition(&work, nullptr, 0, 2, 0);
+            mtwkCopyTransition(&work, nullptr, static_cast<std::uint16_t>(state.targetFacingYaw), 0, 2);
+            mtwkCopyTransition(&work, nullptr, 0, 2, 0);
             state.targetFacingYawDelta = 0;
         } else if (state.seqFlags & MSF_PositionTransition)
-            CopyMotionTransition(&work, nullptr, yaw, 0, 2);
+            mtwkCopyTransition(&work, nullptr, yaw, 0, 2);
         state.targetFacingState = 2;
         return;
     }
@@ -1877,7 +1877,7 @@ void UpdateTargetFacingTransition(Character &character, MotionWork &work) {
         return;
     case 6: {
         setSpeeds(1.0f, false);
-        const float frame = GetMotionFrame(&work, MotionRegion::Chest);
+        const float frame = mtwkGetFrame(&work, MotionRegion::Chest);
         const float count = static_cast<float>(GetMotionFrameCount(state.currentMotionId[1]));
         if (frame <= count * 0.5f)
             return;
@@ -1886,7 +1886,7 @@ void UpdateTargetFacingTransition(Character &character, MotionWork &work) {
             if (region >= 3U && !(flags & 0x20U) && region != ((flags & 4U) ? 4U : 3U))
                 continue;
             state.regionFlags[region] |= MRF_ReturnToLowerBody;
-            SetMotionFrameTime(&work, static_cast<std::uint32_t>(static_cast<int>(remaining)), static_cast<MotionRegion>(region));
+            mtwkSetFrameTime(&work, static_cast<std::uint32_t>(static_cast<int>(remaining)), static_cast<MotionRegion>(region));
         }
         state.targetFacingState = 7;
         state.chestRotationOverrideBlendTime = 1.0f / remaining;
@@ -1970,16 +1970,16 @@ void MotionWorkUpdate(Character *character, void *payload) {
     auto &work = *static_cast<MotionWork *>(payload);
     if (work.runtime.drawOverrideData || (work.runtime.callbackFlags & 8U))
         return;
-    SetActiveMTWK(&work);
+    mtwkSetActive(&work);
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     scenGetCharaName(control->scenarioTask, character);
     g_mtwkCurrentIsRyo = control->ryo == character;
-    ClearSearchHandMotionRequests(&work);
+    mtwkClearSearchHandRequests(&work);
 
     UpdateMotionTransitionControllers(*character, work);
 
     const Vector3 position = GetCharacterWorldPosition(character);
-    SetMotionRootPosition(&work, position);
+    mtwkSetRootPosition(&work, position);
     work.runtime.entityRotation = GetCharacterWorldRotation(character);
     if (work.runtime.transformSource) {
         CopyCharacterSourceTransform(static_cast<const Character *>(work.runtime.transformSource),
@@ -2003,7 +2003,7 @@ void MotionWorkUpdate(Character *character, void *payload) {
     figpToggleMotionworkFlag(character, &work);
     if ((work.runtime.callbackFlags & 1U) != 0) {
         Vector4 delta;
-        UpdateMotionRootDeltaVector(&work, &delta);
+        mtwkUpdateRootDeltaVector(&work, &delta);
         const Vector3 translation{delta.x, delta.y, delta.z};
         AddCharacterChildSpacePosition(character, &translation);
     }
@@ -2038,7 +2038,7 @@ void MotionWorkUpdate(Character *character, void *payload) {
     const float distance = Vector3::CalcMagnitude(character->viewPosition);
     character->drawDistance = distance >= 0.0000099999997f ? distance : 0.0f;
     GetSearchHandWristAngles(work, g_characterHandWristAngles);
-    SetActiveMTWK(nullptr);
+    mtwkSetActive(nullptr);
 }
 
 } // namespace
@@ -2066,7 +2066,7 @@ float GetRandomNumberInRange(float bound) noexcept {
     return IncrementSharedPrngFloat() * bound;
 }
 
-void SetMotionEnvironmentEnabled(std::int32_t enabled) noexcept {
+void mtwkSetEnvironmentEnabled(std::int32_t enabled) noexcept {
     g_usingEnv = enabled;
 }
 
@@ -2172,7 +2172,7 @@ float AssignCharacterMotionYaw(Character *character, std::int32_t yaw, const std
         degrees = static_cast<float>(static_cast<double>(degrees) + 360.0);
     return degrees / static_cast<float>(frameCount);
 }
-bool SetMotionConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot, const Vector3 &worldTarget) {
+bool mtwkSetConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot, const Vector3 &worldTarget) {
     const std::size_t index = static_cast<std::size_t>(slot);
     if (!motionWork || index >= motionConstraintCount)
         return false;
@@ -2182,7 +2182,7 @@ bool SetMotionConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot
     return true;
 }
 
-void ClearMotionConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot) {
+void mtwkClearConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot) {
     const std::size_t index = static_cast<std::size_t>(slot);
     if (!motionWork || index >= motionConstraintCount)
         return;
@@ -2190,7 +2190,7 @@ void ClearMotionConstraintTarget(MotionWork *motionWork, MotionConstraintSlot sl
     motionWork->runtime.latchedConstraintTarget[index] = nullptr;
 }
 
-void ClearAllMotionConstraintTargets(MotionWork *motionWork) {
+void mtwkClearAllConstraintTargets(MotionWork *motionWork) {
     if (!motionWork)
         return;
     MotionRuntimeState &state = motionWork->runtime;
@@ -2201,7 +2201,7 @@ void ClearAllMotionConstraintTargets(MotionWork *motionWork) {
     state.constraintStateBits = 0;
 }
 
-bool IsMotionConstraintTargetSettled(const MotionWork *motionWork, MotionConstraintSlot slot) {
+bool mtwkIsConstraintTargetSettled(const MotionWork *motionWork, MotionConstraintSlot slot) {
     const std::size_t index = static_cast<std::size_t>(slot);
     if (!motionWork || index >= motionConstraintCount) {
         return false;
@@ -2209,17 +2209,17 @@ bool IsMotionConstraintTargetSettled(const MotionWork *motionWork, MotionConstra
     return (GetConstraintState(motionWork->runtime, index) & constraintTransitionMask) == 2U && motionWork->runtime.constraintBlendRemainingFrames[index] == 0;
 }
 
-bool EvaluateCurrentMotionPose(const MotionWork *motionWork, MotionPose &pose) {
+bool mtwkEvaluateCurrentPose(const MotionWork *motionWork, MotionPose &pose) {
     if (!motionWork)
         return false;
     const MotnSequence *const sequence = FindLoadedMotionSequence(motionWork->runtime.currentMotionId[0]);
     if (!sequence || !sequence->frameCount)
         return false;
-    return EvaluateMotionPose(*sequence, std::max(0.0f, GetMotionPoseFrame(motionWork, MotionRegion::LowerBody)) / 30.0f,
+    return EvaluateMotionPose(*sequence, std::max(0.0f, mtwkGetPoseFrame(motionWork, MotionRegion::LowerBody)) / 30.0f,
         static_cast<std::uint8_t>(motionWork->rig.boneId), pose, motionWork);
 }
 
-bool SetMotionDrawOverrideData(MotionWork *motionWork, const Matrix4x4 *frame) {
+bool mtwkSetDrawOverrideData(MotionWork *motionWork, const Matrix4x4 *frame) {
     if (!motionWork)
         return false;
 
@@ -2228,24 +2228,24 @@ bool SetMotionDrawOverrideData(MotionWork *motionWork, const Matrix4x4 *frame) {
     return true;
 }
 
-const Matrix4x4 *GetMotionDrawOverrideData(const MotionWork *motionWork) {
+const Matrix4x4 *mtwkGetDrawOverrideData(const MotionWork *motionWork) {
     return motionWork ? motionWork->runtime.drawOverrideData : nullptr;
 }
 
 // @verified - p
-bool SetMotionIkTargetPosition(MotionWork *work, Vector3 *position) {
+bool mtwkSetIkTargetPosition(MotionWork *work, Vector3 *position) {
     if (!work)
         return false;
     work->runtime.ikTargetPosition = position;
     return true;
 }
 
-void SetMotionRootTransformOverride(MotionWork *motionWork, const Matrix4x4 *transform) {
+void mtwkSetRootTransformOverride(MotionWork *motionWork, const Matrix4x4 *transform) {
     if (motionWork)
         motionWork->runtime.transformStart = transform;
 }
 
-bool BuildMotionRootRebaseTransform(const MotionWork *motionWork, Matrix4x4 &transform) {
+bool mtwkBuildRootRebaseTransform(const MotionWork *motionWork, Matrix4x4 &transform) {
     if (!motionWork || !motionWork->runtime.transformStart)
         return false;
     const Matrix4x4 *const root = motionWork->runtime.transformStart;
@@ -2262,7 +2262,7 @@ bool BuildMotionRootRebaseTransform(const MotionWork *motionWork, Matrix4x4 &tra
 }
 
 // @verified - p
-void RebaseMotionSolvedMatrices(MotionWork *work) {
+void mtwkRebaseSolvedMatrices(MotionWork *work) {
     (void)Matrix4x4_Push(&transformMatrix_prePass);
     const Matrix4x4 *const root = work->runtime.transformStart;
     Matrix4x4::preTranslate(root->rows[3].x, root->rows[3].y, root->rows[3].z);
@@ -2314,7 +2314,7 @@ bool mtwkRequestMotion(MotionWork *motionWork, std::uint16_t motionId, MotionReg
     return true;
 }
 
-std::uint16_t GetMotionAnimationId(const MotionWork *motionWork, MotionRegion region) {
+std::uint16_t mtwkGetAnimationId(const MotionWork *motionWork, MotionRegion region) {
     if (!motionWork || region > 5U)
         return 0;
 
@@ -2324,10 +2324,10 @@ std::uint16_t GetMotionAnimationId(const MotionWork *motionWork, MotionRegion re
 }
 
 // @verified - p
-std::int64_t motnIsCurrentAnimOpenEnded(const MotionWork *motionWork, MotionRegion region) {
+std::int64_t mtwkIsCurrentAnimOpenEnded(const MotionWork *motionWork, MotionRegion region) {
     if (!motionWork || region > 5U)
         return 0;
-    const std::span<const std::byte> command = FindLoadedMotionSecondaryEntry(GetMotionAnimationId(motionWork, region), 1);
+    const std::span<const std::byte> command = FindLoadedMotionSecondaryEntry(mtwkGetAnimationId(motionWork, region), 1);
     if (command.empty())
         return 0;
     std::uint16_t count;
@@ -2335,7 +2335,7 @@ std::int64_t motnIsCurrentAnimOpenEnded(const MotionWork *motionWork, MotionRegi
     return count == 0xffffU;
 }
 
-std::uint16_t GetQueuedMotionAnimationId(const MotionWork *motionWork, MotionRegion region) {
+std::uint16_t mtwkGetQueuedAnimationId(const MotionWork *motionWork, MotionRegion region) {
     if (!motionWork || region > 5U)
         return 0;
 
@@ -2369,7 +2369,7 @@ bool SampleNativeMotionRootAndRotation(std::uint16_t animation, std::int32_t bon
 }
 
 // @verified-s2: 0x7ff6185db3a0 (vfClsampleCurrentMotion).
-bool vfClsampleCurrentMotion(MotionWork *work, float frame, Vector3 &output) {
+bool mtwkSampleCurrentMotion(MotionWork *work, float frame, Vector3 &output) {
     const std::int32_t boneId = work ? work->rig.boneId : -1;
     auto &state = work->runtime;
     std::uint16_t animation = state.queuedMotionId[0];
@@ -2402,7 +2402,7 @@ bool vfClsampleCurrentMotion(MotionWork *work, float frame, Vector3 &output) {
     return sampled;
 }
 
-void RequestMotionRegionDetach(MotionWork *motionWork, MotionRegion region) {
+void mtwkRequestRegionDetach(MotionWork *motionWork, MotionRegion region) {
     if (!motionWork)
         return;
     if (!region) {
@@ -2415,7 +2415,7 @@ void RequestMotionRegionDetach(MotionWork *motionWork, MotionRegion region) {
 }
 
 // @verified - p
-Matrix4x4 *charaGetBoneTransform(MotionWork *motion, std::int32_t boneId) {
+Matrix4x4 *mtwkGetBoneTransform(MotionWork *motion, std::int32_t boneId) {
     if (!motion)
         return nullptr;
     IKRig &rig = motion->rig;
@@ -2502,10 +2502,10 @@ Matrix4x4 *charaGetBoneTransform(MotionWork *motion, std::int32_t boneId) {
 }
 
 // @verified - p
-bool CopyMotionBoneTransform(MotionWork *motion, std::int32_t boneId, Matrix4x4 *transform) {
+bool mtwkCopyBoneTransform(MotionWork *motion, std::int32_t boneId, Matrix4x4 *transform) {
     if (!motion || !transform)
         return false;
-    const Matrix4x4 *const source = charaGetBoneTransform(motion, boneId);
+    const Matrix4x4 *const source = mtwkGetBoneTransform(motion, boneId);
     if (!source)
         return false;
     *transform = *source;
@@ -2513,7 +2513,7 @@ bool CopyMotionBoneTransform(MotionWork *motion, std::int32_t boneId, Matrix4x4 
 }
 
 // @verified - p
-bool GetMotionBonePosition(MotionWork *motion, MotionBoneId boneId, Vector3 *position) {
+bool mtwkGetBonePosition(MotionWork *motion, MotionBoneId boneId, Vector3 *position) {
     if (!motion)
         return false;
     switch (boneId) {
@@ -2526,7 +2526,7 @@ bool GetMotionBonePosition(MotionWork *motion, MotionBoneId boneId, Vector3 *pos
     case MB_HeadAimTarget:
     case MB_PelvisOverrideTarget: {
         const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(boneId));
-        return controller != -1 && GetMotionControllerTargetPosition(motion, static_cast<std::uint32_t>(controller), *position);
+        return controller != -1 && mtwkGetControllerTargetPosition(motion, static_cast<std::uint32_t>(controller), *position);
     }
     case MB_Eyes: {
         Matrix4x4 eye;
@@ -2535,13 +2535,13 @@ bool GetMotionBonePosition(MotionWork *motion, MotionBoneId boneId, Vector3 *pos
         return true;
     }
     case MB_RightForearmTarget:
-        return GetMotionBonePosition(motion, MB_RightWrist, position);
+        return mtwkGetBonePosition(motion, MB_RightWrist, position);
     case MB_LeftForearmTarget:
-        return GetMotionBonePosition(motion, MB_LeftWrist, position);
+        return mtwkGetBonePosition(motion, MB_LeftWrist, position);
     default:
         break;
     }
-    const Matrix4x4 *const transform = charaGetBoneTransform(motion, boneId);
+    const Matrix4x4 *const transform = mtwkGetBoneTransform(motion, boneId);
     if (!transform)
         return false;
     *position = {transform->rows[3].x, transform->rows[3].y, transform->rows[3].z};
@@ -2549,13 +2549,13 @@ bool GetMotionBonePosition(MotionWork *motion, MotionBoneId boneId, Vector3 *pos
 }
 
 // @verified - p
-bool GetIsRHandAboveShoulder(MotionWork *motion) {
+bool mtwkIsRightHandAboveShoulder(MotionWork *motion) {
     Vector3 root{};
     Vector3 shoulder{};
     Vector3 hand{};
-    GetMotionBonePosition(motion, MB_Pelvis, &root);
-    GetMotionBonePosition(motion, MB_LeftFootTarget, &shoulder);
-    GetMotionBonePosition(motion, MB_RightFootTarget, &hand);
+    mtwkGetBonePosition(motion, MB_Pelvis, &root);
+    mtwkGetBonePosition(motion, MB_LeftFootTarget, &shoulder);
+    mtwkGetBonePosition(motion, MB_RightFootTarget, &hand);
     shoulder.x -= root.x;
     shoulder.z -= root.z;
     hand.x -= root.x;
@@ -2569,25 +2569,25 @@ bool GetIsRHandAboveShoulder(MotionWork *motion) {
 }
 
 // @verified - p
-bool GetIsRHandBelowShoulder(MotionWork *motion) {
+bool mtwkIsRightHandBelowShoulder(MotionWork *motion) {
     Vector3 shoulder{};
     Vector3 hand{};
-    GetMotionBonePosition(motion, MB_LeftFootTarget, &shoulder);
-    GetMotionBonePosition(motion, MB_RightFootTarget, &hand);
+    mtwkGetBonePosition(motion, MB_LeftFootTarget, &shoulder);
+    mtwkGetBonePosition(motion, MB_RightFootTarget, &hand);
     return shoulder.y > hand.y;
 }
 
 // @verified - p
 void TransformScenarioMotionBonePose(shen_name character, std::int32_t boneId, Vector3 *position, Vector3i *rotation) {
     Matrix4x4 transform;
-    CopyMotionBoneTransform(scenFindMotionwork(character), boneId, &transform);
+    mtwkCopyBoneTransform(scenFindMotionwork(character), boneId, &transform);
     TransformCharacterPoseByMatrix(&transform, position, rotation);
 }
 
 // @verified - p
-void GetCharacterMotionLocalPosition(Character *character, std::int32_t bone, Vector3 *position) {
+void charaGetMotLocalPos(Character *character, std::int32_t bone, Vector3 *position) {
     MotionWork *const work = FindMotionWork(character);
-    if (work && GetMotionBonePosition(work, static_cast<MotionBoneId>(bone), position)) {
+    if (work && mtwkGetBonePosition(work, static_cast<MotionBoneId>(bone), position)) {
         CharacterNode *const child = GetCharacterNode(character)->child;
         if (child)
             TransformPointToCharacterNodeSpace(child, position);
@@ -2597,18 +2597,18 @@ void GetCharacterMotionLocalPosition(Character *character, std::int32_t bone, Ve
 }
 
 // @verified - p
-void GetCharacterMotionNodePosition(Character *character, std::int32_t bone, Vector3 *position) {
+void charaGetMotNodePos(Character *character, std::int32_t bone, Vector3 *position) {
     MotionWork *const work = FindMotionWork(character);
-    if (work && GetMotionBonePosition(work, static_cast<MotionBoneId>(bone), position))
+    if (work && mtwkGetBonePosition(work, static_cast<MotionBoneId>(bone), position))
         TransformPointToCharacterNodeSpace(GetCharacterNode(character), position);
     else
         GetCharacterLocalPosition(character, position);
 }
 
 // @verified - p
-void GetCharacterMotionWorldPosition(Character *character, std::int32_t bone, Vector3 *position) {
+void charaGetMotWorldPos(Character *character, std::int32_t bone, Vector3 *position) {
     MotionWork *const work = FindMotionWork(character);
-    if (!work || !GetMotionBonePosition(work, static_cast<MotionBoneId>(bone), position))
+    if (!work || !mtwkGetBonePosition(work, static_cast<MotionBoneId>(bone), position))
         *position = GetCharacterWorldPosition(character);
 }
 
@@ -2780,7 +2780,7 @@ bool ResolveAuthoredMotionBoneTransform(const Character *character, std::uint16_
     return ResolveCharacterDrawNodeTransform(character, nodeId, transform);
 }
 
-bool GetCharacterMotionBonePosition(Character *character, std::uint16_t boneId, Vector3 &position) {
+bool charaGetMotBonePos(Character *character, std::uint16_t boneId, Vector3 &position) {
     if (!character)
         return false;
     const MotionWork *const motion = FindMotionWork(character);
@@ -2802,25 +2802,25 @@ bool GetCharacterMotionBonePosition(Character *character, std::uint16_t boneId, 
 
 // mtwkApplyTransformsForEntityAndBone: the facing of a solved rig matrix.
 // @verified - p
-std::int16_t GetMotionBoneYaw(MotionWork *motion, std::int32_t bone) {
-    return static_cast<std::int16_t>(mtwkApplyTransforms(charaGetBoneTransform(motion, bone)));
+std::int16_t mtwkGetBoneYaw(MotionWork *motion, std::int32_t bone) {
+    return static_cast<std::int16_t>(mtwkApplyTransforms(mtwkGetBoneTransform(motion, bone)));
 }
 
-std::int32_t GetMotionRigBoneId(const MotionWork *motionWork) {
+std::int32_t mtwkGetRigBoneId(const MotionWork *motionWork) {
     return motionWork ? static_cast<std::int32_t>(motionWork->rig.boneId) : -1;
 }
-MotionTimePair *GetMotionLayerTimePair(MotionWork *motionWork, MotionRegion region) {
+MotionTimePair *mtwkGetLayerTimePair(MotionWork *motionWork, MotionRegion region) {
     MotionRigClock *clock = RigClock(motionWork, region);
     return clock ? &clock->current : nullptr;
 }
 
-const MotionTimePair *GetMotionLayerTimePair(const MotionWork *motionWork, MotionRegion region) {
+const MotionTimePair *mtwkGetLayerTimePair(const MotionWork *motionWork, MotionRegion region) {
     const MotionRigClock *clock = RigClock(motionWork, region);
     return clock ? &clock->current : nullptr;
 }
 
 // @verified - p
-std::uint32_t GetMotionTrackedRootMode(const MotionWork *work) {
+std::uint32_t mtwkGetTrackedRootMode(const MotionWork *work) {
     for (std::size_t region = 0; region < 5; ++region)
         if (work->runtime.regionFlags[region] & MRF_Transition)
             return work->runtime.currentRootMode;
@@ -2828,7 +2828,7 @@ std::uint32_t GetMotionTrackedRootMode(const MotionWork *work) {
 }
 
 // @verified - p
-float GetMotionTransitionFramesRemaining(const MotionWork *work, MotionRegion region) {
+float mtwkGetTransitionFramesRemaining(const MotionWork *work, MotionRegion region) {
     if (!work || !(work->runtime.regionFlags[region] & MRF_Transition))
         return 0.0f;
     const MotionRuntimeState &state = work->runtime;
@@ -2840,7 +2840,7 @@ float GetMotionTransitionFramesRemaining(const MotionWork *work, MotionRegion re
 }
 
 // @verified - p
-void CopyMotionRegionTimes(const MotionWork *work, float *split, float *current, float *maximum, float *speed, MotionRegion region) {
+void mtwkCopyRegionTimes(const MotionWork *work, float *split, float *current, float *maximum, float *speed, MotionRegion region) {
     if (!work)
         return;
     const MotionRigClock &clock = *RigClock(work, region);
@@ -2855,21 +2855,21 @@ void CopyMotionRegionTimes(const MotionWork *work, float *split, float *current,
 }
 
 // @verified - p
-float GetMotionSplitFrame(const MotionWork *work, MotionRegion region) {
+float mtwkGetSplitFrame(const MotionWork *work, MotionRegion region) {
     return work ? RigClock(work, region)->current.splitTimeFrames : -1.0f;
 }
 
 // mtwkResetScaleAndCopyRigDefaults: the region's clock frame, or its blended frame while tracked.
 // @verified - p
-float GetMotionFrame(const MotionWork *motionWork, MotionRegion region) {
-    const MotionTimePair *pair = GetMotionLayerTimePair(motionWork, region);
+float mtwkGetFrame(const MotionWork *motionWork, MotionRegion region) {
+    const MotionTimePair *pair = mtwkGetLayerTimePair(motionWork, region);
     if (!pair)
         return -1.0f;
     const MotionRuntimeState &state = motionWork->runtime;
     float frame = pair->ticksTime;
     if ((state.regionFlags[region] & MRF_Transition) == 0)
         return frame;
-    const float remaining = (state.blendTotalFrames[region] - frame) * shenGetScaledDeltaTickTime(GetMotionSpeed(motionWork, region));
+    const float remaining = (state.blendTotalFrames[region] - frame) * shenGetScaledDeltaTickTime(mtwkGetSpeed(motionWork, region));
     if (state.currentRootMode == 3U) {
         frame = state.layerSampleFrame[region] - remaining;
         while (frame < 0.0f)
@@ -2882,8 +2882,8 @@ float GetMotionFrame(const MotionWork *motionWork, MotionRegion region) {
     return frame;
 }
 
-float GetMotionPoseFrame(const MotionWork *motionWork, MotionRegion region) {
-    const MotionTimePair *pair = GetMotionLayerTimePair(motionWork, region);
+float mtwkGetPoseFrame(const MotionWork *motionWork, MotionRegion region) {
+    const MotionTimePair *pair = mtwkGetLayerTimePair(motionWork, region);
     if (!pair)
         return -1.0f;
     const MotionRuntimeState &state = motionWork->runtime;
@@ -2893,12 +2893,12 @@ float GetMotionPoseFrame(const MotionWork *motionWork, MotionRegion region) {
     return pair->ticksTime;
 }
 
-float GetMotionEndFrame(const MotionWork *motionWork, MotionRegion region) {
-    const MotionTimePair *pair = GetMotionLayerTimePair(motionWork, region);
+float mtwkGetEndFrame(const MotionWork *motionWork, MotionRegion region) {
+    const MotionTimePair *pair = mtwkGetLayerTimePair(motionWork, region);
     return pair ? pair->maxTime : -1.0f;
 }
 
-void SetMotionEntityRotation(MotionWork *motionWork, const Vector3i &rotation) {
+void mtwkSetEntityRotation(MotionWork *motionWork, const Vector3i &rotation) {
     if (motionWork)
         motionWork->runtime.entityRotation = rotation;
 }
@@ -2932,7 +2932,7 @@ std::int32_t ParentBoneId(std::uint32_t selector) {
 
 } // namespace
 
-bool GetParentBoneWrapper(MotionWork *motionWork, std::int32_t selector) {
+bool mtwkGetParentBoneWrapper(MotionWork *motionWork, std::int32_t selector) {
     if (!motionWork)
         return false;
     const std::uint32_t absolute = selector < 0 ? 0U - static_cast<std::uint32_t>(selector) : static_cast<std::uint32_t>(selector);
@@ -2952,7 +2952,7 @@ bool GetParentBoneWrapper(MotionWork *motionWork, std::int32_t selector) {
 }
 
 
-bool vfmaSetAngleFor(MotionWork *work, std::int32_t angle) {
+bool mtwkSetAngle(MotionWork *work, std::int32_t angle) {
     if (angle < 0)
         return false;
     work->runtime.constraintStepLimit[2] = float(angle) / 10430.378f;
@@ -2960,7 +2960,7 @@ bool vfmaSetAngleFor(MotionWork *work, std::int32_t angle) {
 }
 
 // @verified - p
-bool SetMotionBoneTarget(MotionWork *work, std::int32_t selector, const Vector3 *point) {
+bool mtwkSetBoneTarget(MotionWork *work, std::int32_t selector, const Vector3 *point) {
     const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(selector));
     if (controller == -1)
         return false;
@@ -2977,7 +2977,7 @@ bool SetMotionBoneTarget(MotionWork *work, std::int32_t selector, const Vector3 
 }
 
 // @verified - p
-bool LatchMotionBoneTarget(MotionWork *work, std::int32_t selector, const Vector3 *point) {
+bool mtwkLatchBoneTarget(MotionWork *work, std::int32_t selector, const Vector3 *point) {
     const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(selector));
     if (controller == -1)
         return false;
@@ -2994,20 +2994,20 @@ bool LatchMotionBoneTarget(MotionWork *work, std::int32_t selector, const Vector
 }
 
 // @verified - p
-float GetMotionBoneTargetStepLimit(const MotionWork *work, std::int32_t selector) {
+float mtwkGetBoneTargetStepLimit(const MotionWork *work, std::int32_t selector) {
     const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(selector));
     return controller == -1 ? 0.0f : work->runtime.constraintStepLimit[controller];
 }
 
 // @verified - p
-bool SetMotionBoneTargetStepLimit(MotionWork *work, std::int32_t selector, float limit) {
+bool mtwkSetBoneTargetStepLimit(MotionWork *work, std::int32_t selector, float limit) {
     const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(selector));
     if (controller == -1 || limit < 0.0f)
         return false;
     work->runtime.constraintStepLimit[controller] = limit;
     return true;
 }
-bool AssignMotionTargetCallback(MotionWork *work, MotionTargetCallback callback, std::int32_t selector) {
+bool mtwkAssignTargetCallback(MotionWork *work, MotionTargetCallback callback, std::int32_t selector) {
     if (!work)
         return false;
     const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(selector));
@@ -3019,7 +3019,7 @@ bool AssignMotionTargetCallback(MotionWork *work, MotionTargetCallback callback,
 }
 
 // @verified - p
-bool AssignMotionTargetParameter(MotionWork *work, void *parameter, std::int32_t selector) {
+bool mtwkAssignTargetParameter(MotionWork *work, void *parameter, std::int32_t selector) {
     if (!work)
         return false;
     const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(selector));
@@ -3031,7 +3031,7 @@ bool AssignMotionTargetParameter(MotionWork *work, void *parameter, std::int32_t
 }
 
 // @verified-s2: 0x7ff6185d9100.
-MotionTargetCallback GetMotionTargetCallback(const MotionWork *work, std::int32_t selector) {
+MotionTargetCallback mtwkGetTargetCallback(const MotionWork *work, std::int32_t selector) {
     if (!work)
         return nullptr;
     const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(selector));
@@ -3044,7 +3044,7 @@ MotionTargetCallback GetMotionTargetCallback(const MotionWork *work, std::int32_
 }
 
 // @verified-s2: 0x7ff6185d9130.
-void *GetMotionTargetParameter(const MotionWork *work, std::int32_t selector) {
+void *mtwkGetTargetParameter(const MotionWork *work, std::int32_t selector) {
     if (!work)
         return nullptr;
     const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(selector));
@@ -3058,7 +3058,7 @@ void *GetMotionTargetParameter(const MotionWork *work, std::int32_t selector) {
 
 // Evaluates the right-foot and pelvis target callbacks with IK disabled, then leaves IK enabled.
 // @verified - p
-void TransformWithoutIKEnabled(MotionWork *work, Vector3 *foot, Vector3 *pelvis) {
+void mtwkTransformWithoutIKEnabled(MotionWork *work, Vector3 *foot, Vector3 *pelvis) {
     g_ikEnabled = 0;
     MotionCallback &footCallback = work->rig.lowerBody.rightFoot.callback;
     static_cast<MotionTargetParameters *>(footCallback.parameters)->output = foot;
@@ -3073,7 +3073,7 @@ void TransformWithoutIKEnabled(MotionWork *work, Vector3 *foot, Vector3 *pelvis)
 
 // mtwkGetControllerTargetPosition: the pelvis position, or a controller's solved target.
 // @verified - p
-bool GetMotionControllerTargetPosition(const MotionWork *work, std::uint32_t controller, Vector3 &position) {
+bool mtwkGetControllerTargetPosition(const MotionWork *work, std::uint32_t controller, Vector3 &position) {
     if (!work || controller >= 9U)
         return false;
     const IKRig &rig = work->rig;
@@ -3113,18 +3113,18 @@ bool GetMotionControllerTargetPosition(const MotionWork *work, std::uint32_t con
 }
 
 // @verified - p
-void SetMotionSpeed(MotionWork *motionWork, float speed, MotionRegion region) {
+void mtwkSetSpeed(MotionWork *motionWork, float speed, MotionRegion region) {
     if (motionWork && speed >= 0.0f && speed <= 4.0f)
         RigClock(motionWork, region)->playbackSpeed = speed;
 }
 
-float GetMotionSpeed(const MotionWork *motionWork, MotionRegion region) {
+float mtwkGetSpeed(const MotionWork *motionWork, MotionRegion region) {
     const MotionRigClock *clock = RigClock(motionWork, region);
     return clock ? clock->playbackSpeed : 0.0f;
 }
 
 // @verified - p
-float SetMotionRigScale(MotionWork *work, float scale) {
+float mtwkSetRigScale(MotionWork *work, float scale) {
     if (!work || !work->runtime.currentMotionId[0])
         return -1.0f;
     const MotnSequence *const sequence = FindLoadedMotionSequence(work->runtime.currentMotionId[0]);
@@ -3171,7 +3171,7 @@ std::uint32_t mtwkSetExtraFlag(MotionWork *motionWork, std::uint32_t flag, std::
     return previous;
 }
 // @verified - p
-void EV_mtwkSetEnabled(MotionWork *motionWork, std::int32_t enabled) {
+void mtwkSetEnabled(MotionWork *motionWork, std::int32_t enabled) {
     if (!motionWork)
         return;
     if (enabled)
@@ -3181,17 +3181,17 @@ void EV_mtwkSetEnabled(MotionWork *motionWork, std::int32_t enabled) {
 }
 
 // @verified - p
-std::uint32_t IsMotionWorkEnabled(const MotionWork *motionWork) {
+std::uint32_t mtwkIsEnabled(const MotionWork *motionWork) {
     return motionWork ? motionWork->runtime.callbackFlags & 1U : 0U;
 }
 
 // @verified - p
-void SetMotionReactFlags(MotionWork *work, std::uint8_t flags) {
+void mtwkSetReactFlags(MotionWork *work, std::uint8_t flags) {
     if (work)
         work->runtime.environmentFlags |= flags & 0x0fU;
 }
 
-void SetMotionWorkCulled(MotionWork *motionWork, bool culled) {
+void mtwkSetCulled(MotionWork *motionWork, bool culled) {
     if (!motionWork)
         return;
     if (culled)
@@ -3200,7 +3200,7 @@ void SetMotionWorkCulled(MotionWork *motionWork, bool culled) {
         motionWork->runtime.callbackFlags &= ~8U;
 }
 
-void SetMotionEnvironmentEnabled(MotionWork *motionWork, std::uint32_t enabled) {
+void mtwkSetEnvironmentEnabled(MotionWork *motionWork, std::uint32_t enabled) {
     if (motionWork)
         motionWork->runtime.enableEnvironmentMotion = enabled;
 }
@@ -3215,7 +3215,7 @@ std::int64_t ExecuteMotionworkUtility(Character *character, std::uint32_t yaw, f
     const std::uint16_t adjustedYaw = static_cast<std::uint16_t>(static_cast<std::uint32_t>(currentYaw) - static_cast<std::uint32_t>(yawDelta));
     shenSetRotY(character, static_cast<std::int32_t>(adjustedYaw));
 
-    if (SetMotionRegionFlag(FindMotionWork(character), 65, 1, MotionRegion::LowerBody) == 0)
+    if (mtwkSetRegionFlag(FindMotionWork(character), 65, 1, MotionRegion::LowerBody) == 0)
         return 0;
 
     shenSetRotY(character, std::bit_cast<std::int32_t>(yaw));
@@ -3233,21 +3233,21 @@ bool BeginAuthoredCharacterMotion(
     if (!work)
         return false;
     if (authoredRotation) {
-        SetMotionEntityRotation(work, *authoredRotation);
+        mtwkSetEntityRotation(work, *authoredRotation);
     } else {
         character->entity.node.position = {};
         std::fill(std::begin(character->entity.node.rotation), std::end(character->entity.node.rotation), 0);
-        SetMotionEntityRotation(work, {});
+        mtwkSetEntityRotation(work, {});
     }
-    EV_mtwkSetEnabled(work, false);
+    mtwkSetEnabled(work, false);
     mtwkRequestMotion(work, motionId, MotionRegion::LowerBody);
     work->runtime.layerLoopStartTime[0] = 0.0f;
     work->runtime.pendingLayerStartFrame[0] = std::fmax(0.0f, startFrame);
     work->runtime.layerEndFrame[0] = endFrame < 0.0f ? 10000.0f : endFrame;
     mtwkSetExtraFlag(work, 9, 0);
     if ((commandFlags & 1U) != 0)
-        SetMotionRegionFlag(work, 69, 0, MotionRegion::LowerBody);
-    SetMotionSpeed(work, speed, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(work, 69, 0, MotionRegion::LowerBody);
+    mtwkSetSpeed(work, speed, MotionRegion::LowerBody);
     return true;
 }
 
@@ -3255,9 +3255,9 @@ void FinishAuthoredCharacterMotion(Character *character, float speed, bool inter
     MotionWork *const work = FindMotionWork(character);
     if (!work)
         return;
-    EV_mtwkSetEnabled(work, true);
+    mtwkSetEnabled(work, true);
     if (!interrupted)
-        SetMotionSpeed(work, speed, MotionRegion::LowerBody);
+        mtwkSetSpeed(work, speed, MotionRegion::LowerBody);
     mtwkSetExtraFlag(work, 9, 2);
     if (interrupted)
         return;
@@ -3277,7 +3277,7 @@ bool ApplyCharacterMotionToPose(Character *character, Vector3 *position, Vector3
     Matrix4x4_PushActiveTransform();
     Matrix4x4::preTranslate(position->x, position->y, position->z);
     Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(rotation->y));
-    SampleNativeMotionRootAndRotation(motion, GetMotionRigBoneId(work), frame, position, rotation);
+    SampleNativeMotionRootAndRotation(motion, mtwkGetRigBoneId(work), frame, position, rotation);
     Matrix4x4::preTranslate(position->x, 0.0f, position->z);
     Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(rotation->z));
     Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(rotation->y));
@@ -3290,7 +3290,7 @@ bool ApplyCharacterMotionToPose(Character *character, Vector3 *position, Vector3
     return true;
 }
 
-bool UpdateMotionWorkWithPosition(MotionWork *work, const Vector3 *target, std::uint16_t operation) {
+bool mtwkUpdateWithPosition(MotionWork *work, const Vector3 *target, std::uint16_t operation) {
     if (target && static_cast<std::int32_t>(camCtrlGetState()) == 28)
         return true;
     if (!work)
@@ -3381,13 +3381,13 @@ bool UpdateMotionWorkWithPosition(MotionWork *work, const Vector3 *target, std::
         return false;
     }
     if (mode == 6U || mode == 7U || mode == 9U || mode == 10U)
-        GetMotionControllerTargetPosition(work, 3, state.leftControllerTarget);
+        mtwkGetControllerTargetPosition(work, 3, state.leftControllerTarget);
     if (mode == 6U || mode == 7U || mode == 12U || mode == 13U)
-        GetMotionControllerTargetPosition(work, 4, state.rightControllerTarget);
+        mtwkGetControllerTargetPosition(work, 4, state.rightControllerTarget);
     return true;
 }
 
-bool RequestMotionTargetFacing(MotionWork *work, const Vector3 *target, std::uint32_t flags) {
+bool mtwkRequestTargetFacing(MotionWork *work, const Vector3 *target, std::uint32_t flags) {
     if (!work || work->rig.useOverride)
         return false;
     auto &state = work->runtime;
@@ -3424,11 +3424,11 @@ bool RequestMotionTargetFacing(MotionWork *work, const Vector3 *target, std::uin
     return true;
 }
 
-bool ResetMotionWorkPositionTransition(MotionWork *work) {
-    return UpdateMotionWorkWithPosition(work, nullptr, 0);
+bool mtwkResetPositionTransition(MotionWork *work) {
+    return mtwkUpdateWithPosition(work, nullptr, 0);
 }
 
-void SetMotionLayerEndFrame(MotionWork *work, float frame, MotionRegion region) {
+void mtwkSetLayerEndFrame(MotionWork *work, float frame, MotionRegion region) {
     if (!work)
         return;
     if (frame < 0.0f)
@@ -3437,13 +3437,13 @@ void SetMotionLayerEndFrame(MotionWork *work, float frame, MotionRegion region) 
         work->runtime.layerEndFrame[region] = frame;
 }
 
-void SetMotionLayerLoopStartTime(MotionWork *work, float frame, MotionRegion region) {
+void mtwkSetLayerLoopStartTime(MotionWork *work, float frame, MotionRegion region) {
     if (work && region < 5U)
         work->runtime.layerLoopStartTime[region] = frame < 0.0f ? 0.0f : frame;
 }
 
 // @verified - p
-void SetMotionLayerFrameRange(MotionWork *work, float loopStart, float startFrame, float endFrame, MotionRegion region) {
+void mtwkSetLayerFrameRange(MotionWork *work, float loopStart, float startFrame, float endFrame, MotionRegion region) {
     if (!work || region >= 5U)
         return;
     work->runtime.layerLoopStartTime[region] = loopStart < 0.0f ? 0.0f : loopStart;
@@ -3451,31 +3451,31 @@ void SetMotionLayerFrameRange(MotionWork *work, float loopStart, float startFram
     work->runtime.layerEndFrame[region] = endFrame < 0.0f ? 10000.0f : endFrame;
 }
 
-bool AssignMotionRigYawOffset(MotionWork *work, std::uint32_t yaw) {
+bool mtwkAssignRigYawOffset(MotionWork *work, std::uint32_t yaw) {
     if (!work)
         return false;
     work->runtime.requestedRootYawOffset = std::bit_cast<std::int32_t>(yaw);
     return true;
 }
 
-void SetMotionPelvisYawStep(MotionWork *work, std::int16_t step) {
+void mtwkSetPelvisYawStep(MotionWork *work, std::int16_t step) {
     work->runtime.pelvisYawStep = static_cast<std::uint16_t>(step);
 }
 
 // @verified - p
-bool SetMotionFrameTime(MotionWork *work, std::uint32_t frames, MotionRegion region) {
+bool mtwkSetFrameTime(MotionWork *work, std::uint32_t frames, MotionRegion region) {
     if (region >= 5U)
         return false;
     work->runtime.defaultRegionStepFrames[region] = static_cast<std::uint16_t>(std::min(frames, 255U));
     return true;
 }
 
-void SetMotionRegionEvalTime(MotionWork *work, float frame, MotionRegion region) {
+void mtwkSetRegionEvalTime(MotionWork *work, float frame, MotionRegion region) {
     if (work && region < 5U)
         work->runtime.pendingLayerStartFrame[region] = frame < 0.0f ? 0.0f : frame;
 }
 
-bool HasMotionTrackCommand(const MotionWork *work, MotionRegion region) {
+bool mtwkHasTrackCommand(const MotionWork *work, MotionRegion region) {
     if (!work || region >= 5U)
         return false;
     const auto &state = work->runtime;
@@ -3494,7 +3494,7 @@ bool HasMotionTrackCommand(const MotionWork *work, MotionRegion region) {
     return false;
 }
 
-bool HasMotionDependentTrack(const MotionWork *work) {
+bool mtwkHasDependentTrack(const MotionWork *work) {
     if (!work)
         return false;
     for (std::size_t region = 0; region < 5; ++region)
@@ -3503,7 +3503,7 @@ bool HasMotionDependentTrack(const MotionWork *work) {
     return false;
 }
 
-std::uint16_t SetMotionRegionFlag(MotionWork *motionWork, std::uint32_t mode, std::int32_t operation, MotionRegion region) {
+std::uint16_t mtwkSetRegionFlag(MotionWork *motionWork, std::uint32_t mode, std::int32_t operation, MotionRegion region) {
     if (!motionWork || mode <= 63U)
         return 0;
 
@@ -3562,7 +3562,7 @@ bool mtwkSetRequestedRootMode(MotionWork *motionWork, std::uint32_t mode) {
 }
 
 // @verified - p
-std::uint64_t SetMotionTimeRelated(MotionWork *work, std::uint32_t mode, std::uint16_t slot, std::uint16_t motionId) {
+std::uint64_t mtwkSetTimeRelated(MotionWork *work, std::uint32_t mode, std::uint16_t slot, std::uint16_t motionId) {
     if (!work)
         return false;
     EnsureDefaultMotionSet(*work);
@@ -3590,12 +3590,12 @@ std::uint64_t SetMotionTimeRelated(MotionWork *work, std::uint32_t mode, std::ui
     return mode != 0U;
 }
 
-bool SetMotionExtraMotion(MotionWork *work, std::uint32_t slot, std::uint16_t motionId) {
-    return slot < 6U && SetMotionTimeRelated(work, 1, static_cast<std::uint16_t>(slot), motionId);
+bool mtwkSetExtra(MotionWork *work, std::uint32_t slot, std::uint16_t motionId) {
+    return slot < 6U && mtwkSetTimeRelated(work, 1, static_cast<std::uint16_t>(slot), motionId);
 }
 
 // @verified - p
-bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::uint16_t yaw, std::int16_t operation, std::int32_t copyType) {
+bool mtwkCopyTransition(MotionWork *motionWork, const Vector3 *position, std::uint16_t yaw, std::int16_t operation, std::int32_t copyType) {
     if (!motionWork)
         return false;
     EnsureDefaultMotionSet(*motionWork);
@@ -3720,10 +3720,10 @@ bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::
     }
     if (variant == 2 || variant == 3)
         state.copyFlags |= MCF_LookPending;
-    state.motionScale = GetMotionSpeed(motionWork, MotionRegion::LowerBody);
+    state.motionScale = mtwkGetSpeed(motionWork, MotionRegion::LowerBody);
     if (state.motionScale < 0.5f) {
         state.motionScale = 0.5f;
-        SetMotionSpeed(motionWork, 0.5f, MotionRegion::LowerBody);
+        mtwkSetSpeed(motionWork, 0.5f, MotionRegion::LowerBody);
     }
     state.seqFlags |= MSF_PositionTransition;
     if (operation != 13)
@@ -3732,7 +3732,7 @@ bool CopyMotionTransition(MotionWork *motionWork, const Vector3 *position, std::
 }
 
 // @verified - p
-bool RequestMotionPositionTransition(MotionWork *work, const Vector3 *position, std::uint16_t yaw, std::uint32_t motion, float startFrame) {
+bool mtwkRequestPositionTransition(MotionWork *work, const Vector3 *position, std::uint16_t yaw, std::uint32_t motion, float startFrame) {
     if (!work)
         return false;
     const std::uint16_t animation = static_cast<std::uint16_t>(motion);
@@ -3752,11 +3752,11 @@ bool RequestMotionPositionTransition(MotionWork *work, const Vector3 *position, 
             Matrix4x4::TransformPoint(target, target);
             Matrix4x4::Pop(1);
         }
-        CopyMotionTransition(work, &target, yaw, 6, 0);
+        mtwkCopyTransition(work, &target, yaw, 6, 0);
         if (motion & 0xff000000U)
-            CopyMotionTransition(work, nullptr, 0, 11, 0);
+            mtwkCopyTransition(work, nullptr, 0, 11, 0);
     } else {
-        CopyMotionTransition(work, nullptr, yaw, 13, 0);
+        mtwkCopyTransition(work, nullptr, yaw, 13, 0);
     }
     EnsureDefaultMotionSet(*work);
     if (animation != 0 && !FindLoadedMotionData(animation).empty()) {
@@ -3767,36 +3767,36 @@ bool RequestMotionPositionTransition(MotionWork *work, const Vector3 *position, 
         work->runtime.copyFlags &= ~MCF_Unknown1000;
     }
     if (startFrame >= 0.0f)
-        SetMotionRegionEvalTime(work, startFrame, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(work, startFrame, MotionRegion::LowerBody);
     if (mirrored)
         work->runtime.regionFlags[0] |= MRF_LeadFoot;
     return true;
 }
 
-bool BeginMotionPositionTransition(MotionWork *motionWork, const Vector3 &target, std::uint16_t targetYaw) {
-    return CopyMotionTransition(motionWork, &target, targetYaw, 0, 0);
+bool mtwkBeginPositionTransition(MotionWork *motionWork, const Vector3 &target, std::uint16_t targetYaw) {
+    return mtwkCopyTransition(motionWork, &target, targetYaw, 0, 0);
 }
 
-bool CompleteMotionPositionTransitionRequest(MotionWork *motionWork) {
+bool mtwkCompletePositionTransitionRequest(MotionWork *motionWork) {
     if (!motionWork || !(motionWork->runtime.seqFlags & MSF_PositionTransition)) {
         return false;
     }
     // mtwkCopyCurrent op 14 precedes mtwkSetTimeRelated mode 1/slot 5.
     motionWork->runtime.copyFlags &= ~MCF_AlternateLocomotion;
-    return SetMotionExtraMotion(motionWork, 5U, 0xf002U);
+    return mtwkSetExtra(motionWork, 5U, 0xf002U);
 }
 
 // 5d94c0 / 5db020: the runtime root is distinct from solved pelvis output.
-Vector3 GetMotionRootPosition(const MotionWork *motion) {
+Vector3 mtwkGetRootPosition(const MotionWork *motion) {
     return motion->runtime.rootPosition;
 }
-void SetMotionRootPosition(MotionWork *motion, const Vector3 &position) {
+void mtwkSetRootPosition(MotionWork *motion, const Vector3 &position) {
     motion->runtime.rootPosition = position;
 }
 
 
 
-void ApplyMotionCollisionTranslation(MotionWork *motion, float x, float y, float z) {
+void mtwkApplyCollisionTranslation(MotionWork *motion, float x, float y, float z) {
     if (!motion)
         return;
     motion->runtime.rootDelta.x += x;

@@ -23,8 +23,8 @@ void GabtPrepareAuthorCharacter(shen_name character) {
     EV_SetCharaControllerFlags(character, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     mtwkSetExtraFlag(scenFindMotionwork(character), 6, 2);
     EV_SetCharacterAlphaEnabled(character, false);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(character), 0, 8, 16);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(character), 1, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(character), 0, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(character), 1, 8, 16);
 }
 // @verified - p
 void GabtPrepareAuthorCharacters() {
@@ -53,10 +53,10 @@ void GabtPrepareAuthorLighting(GabtAuthorWork *work) {
     SetWeatherUpdateEnabledTo(0);
     EV_SetModelDataDefaultVertexShader();
     if (work->author.name == GABT_AUTHOR_INTRO.name || work->author.name == GABT_AUTHOR_PRACTICE.name) {
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
         EV_lightLoad(GABT_AUTHOR_LIGHT_INTRO);
     } else if (work->author.name == GABT_AUTHOR_RESULT.name) {
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
         EV_lightLoad(GABT_AUTHOR_LIGHT_RESULT);
     }
     PushGlobalLightingProgram();

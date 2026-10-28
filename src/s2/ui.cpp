@@ -2853,7 +2853,7 @@ std::int64_t RenderGameMenu() {
     std::snprintf(gameMenuInformationText[0].data(), 256, language == 2 || language == 3 ? "%s%s HK$" : "%sHK$ %s", stats.cash < 0 ? "-" : "", amount.data());
     FormatGameMenuNumber(gameMenuInformationText[1], stats.segaCoins);
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     FormatLoadingScreenDate(gameMenuInformationText[2], date.year, date.month, date.day, date.week, 2);
     nk_context &context = *GetNativeUiContext();
     g_waitingForNextTick = 0;

@@ -57,8 +57,8 @@ bool YcpaDiscoverySightLinesClear() {
 }
 bool YcpaSelectDiscoveryPlacement(bool followUp) {
     for (shen_name character : {YCPA_RYO, YCPA_REN, YCPA_YUA}) {
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 1, 0);
     }
     Vector3 original;
     Vector3i originalAngle;

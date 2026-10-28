@@ -144,10 +144,10 @@ void InitializeBoutResources(QdtbBoutWork *work) {
     if (IsFightActive())
         check_dead_status(1);
     const char *const path = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("QDTB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDTB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDTB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("QDTB"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDTB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDTB"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, QDTB_BASE);
     EV_FreeAuthorPak(1, "0249");
     EV_SetNewSceneIndex();
@@ -158,7 +158,7 @@ void InitializeBoutResources(QdtbBoutWork *work) {
     RefreshWeatherForCurrentTime(0);
     EV_UpdateWeather();
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (static_cast<std::uint32_t>(time.hour - 19) > 5U) {
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
@@ -176,16 +176,16 @@ void EndBout(QdtbBoutWork *work) {
     ET_AT_KillWork(work->characters);
     SetPlayerControlEnabled(0);
     SetCharaKill(QDTB_BASE, 1);
-    SetMotionRegionFlag(scenFindMotionwork(QDTB_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(QDTB_RYO), 71, 0, MotionRegion::LowerBody);
     for (std::uint32_t *motion = work->motions; *motion; ++motion)
         DeleteMotion(*motion);
     EV_FreeAuthorPak(0, "0249");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDTB"), 0);
-    LoadCutsceneAndSoundProgramForArea();
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDTB"), 0);
+    sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     HLib::DestroyCurrentTask();
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.day = static_cast<std::uint8_t>(time.day + 3);
     time.hour = 8;
     time.minute = 0;
@@ -201,7 +201,7 @@ void BoutMainCallback(void *data) {
         work->state = 3;
         break;
     case 3:
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDTB"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDTB"), 0);
         LoadBlurModelForCharacter(QDTB_RYO, "RYO_B.MT7", 1);
         LoadBlurModelForCharacter(QDTB_SYE, "SYE_B.MT7", 1);
         LoadBlurModelForCharacter(QDTB_TGY, "TGY_B.MT7", 1);

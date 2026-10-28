@@ -56,13 +56,13 @@ void EV_GetCharaPosition(shen_name name, std::uint32_t bone, Vector3 *position, 
         if (bone == CHARACTER_TRANSLATION_ROOT)
             *position = GetCharacterWorldPosition(character);
         else
-            GetCharacterMotionWorldPosition(character, static_cast<std::int32_t>(bone), position);
+            charaGetMotWorldPos(character, static_cast<std::int32_t>(bone), position);
     } else if (bone == CHARACTER_TRANSLATION_ROOT) {
         GetCharacterLocalPosition(character, position);
     } else if (mode & EventTransformFlags::CharacterNodeSpace) {
-        GetCharacterMotionNodePosition(character, static_cast<std::int32_t>(bone), position);
+        charaGetMotNodePos(character, static_cast<std::int32_t>(bone), position);
     } else {
-        GetCharacterMotionLocalPosition(character, static_cast<std::int32_t>(bone), position);
+        charaGetMotLocalPos(character, static_cast<std::int32_t>(bone), position);
     }
 }
 
@@ -91,7 +91,7 @@ void GetScenarioCharacterEulerAngles(shen_name name, Vector3i *rotation, std::ui
 }
 // @verified - p
 void EV_scenApplyPosOrRotToPartOf(shen_name character, std::uint16_t part, Vector3 *position, Vector3i *rotation, EventCharacterPartTransformMode mode) {
-    Character *const found = FindCharacterByScenarioName(character);
+    Character *const found = ctrlGetScenarioChara(character);
     if (!found || !found->model)
         return;
 
@@ -370,7 +370,7 @@ void EV_AT_SetPos(shen_name character, std::uint32_t flags, const Vector3 &reque
 }
 
 std::int64_t EV_AT_SetAngY(shen_name character, std::uint32_t flags, const Vector3i &requested, const std::uint16_t *customMotions) {
-    Character *const found = FindCharacterByScenarioName(character);
+    Character *const found = ctrlGetScenarioChara(character);
     if (!found)
         return 0;
     // EV_AT_SetAngY delegates every flag to SetAngY.
@@ -390,14 +390,14 @@ std::int64_t EV_AT_SetAngY(shen_name character, std::uint32_t flags, const Vecto
         AssignCharacterMotionYaw(found, rotation.y, customMotions, flags);
     } else {
         if (recursive) {
-            SetCharacterWorldRotation(found, rotation);
+            charaSetWorldRot(found, rotation);
         } else {
             found->entity.node.rotation[0] = rotation.x;
             found->entity.node.rotation[1] = rotation.y;
             found->entity.node.rotation[2] = rotation.z;
         }
         if (MotionWork *const work = FindMotionWork(found)) {
-            SetMotionEntityRotation(work, rotation);
+            mtwkSetEntityRotation(work, rotation);
         }
     }
     return (flags & EventTransformFlags::MotionTurnMask) ? static_cast<std::uint32_t>(requested.y) : 0;
@@ -479,7 +479,7 @@ void EV_CleanupOpeningTemporaryCharacters() {
     for (const shen_name name : openingTemporaryCharacters) {
         if (name.name == 0xffffffffU)
             break;
-        if (FindCharacterByScenarioName(name)) {
+        if (ctrlGetScenarioChara(name)) {
             EV_npcLockUnlock(name);
             EV_npcFree(name);
         }

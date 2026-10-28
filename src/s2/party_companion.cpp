@@ -211,15 +211,15 @@ void AdjustPartyControllerFloor(std::uint32_t, Vector3 *target, MotionWork *, vo
 // @verified - p
 void ConfigurePartyMotion(PartyCompanion &party) {
     MotionWork *const work = party.motionWork;
-    CopyMotionTransition(work, nullptr, 0, 1, 0);
+    mtwkCopyTransition(work, nullptr, 0, 1, 0);
     const std::uint16_t idle = PartyIdleMotion(party);
     mtwkSetRequestedRootMode(work, 1);
-    SetMotionFrameTime(work, 20, MotionRegion::LowerBody);
+    mtwkSetFrameTime(work, 20, MotionRegion::LowerBody);
     mtwkRequestMotion(work, idle, MotionRegion::LowerBody);
-    SetMotionTimeRelated(work, 1, 0, idle);
+    mtwkSetTimeRelated(work, 1, 0, idle);
     mtwkSetExtraFlag(work, 55, 0);
-    AssignMotionTargetCallback(work, AdjustPartyControllerFloor, 25);
-    AssignMotionTargetCallback(work, AdjustPartyControllerFloor, 30);
+    mtwkAssignTargetCallback(work, AdjustPartyControllerFloor, 25);
+    mtwkAssignTargetCallback(work, AdjustPartyControllerFloor, 30);
 }
 
 // @verified - p
@@ -860,7 +860,7 @@ void PublishPartyRelocation(PartyCompanion &party, const Vector3 &position) {
     party.position = position;
     party.character->alpha = 0.0099999998f;
     if (party.motionWork)
-        SetMotionRegionFlag(party.motionWork, 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(party.motionWork, 71, 0, MotionRegion::LowerBody);
 }
 
 // Out of sight and out of reach, the companion reappears behind the player (guide: ahead of them). Returns -1 when
@@ -882,8 +882,8 @@ std::int32_t ResetPartyPlacementNearPlayer(PartyCompanion &party) {
     if (blocked) {
         if (std::fabs(position.y - player.y) < 2.0f && distance < 100.0f) {
             Vector3 playerBone{}, partyBone{};
-            GetCharacterMotionWorldPosition(ctrlGetRootNode(), 6, &playerBone);
-            GetCharacterMotionWorldPosition(party.character, 6, &partyBone);
+            charaGetMotWorldPos(ctrlGetRootNode(), 6, &playerBone);
+            charaGetMotWorldPos(party.character, 6, &partyBone);
             if (!flddFindIntersections(playerBone, partyBone))
                 return -3;
         }
@@ -916,12 +916,12 @@ std::int32_t ResetPartyPlacementNearPlayer(PartyCompanion &party) {
     party.position = position;
     party.yaw = yaw;
     charaSetFlagFor(party.character, 1);
-    toggleCCMflagsByAmt(party.character, CharacterControlResetMotion);
+    toggleCCMflagsByAmt(party.character, CCMF_ResetMotion);
     if (party.motionWork)
         ConfigurePartyMotion(party);
     party.character->alpha = 0.0099999998f;
     if (party.motionWork)
-        SetMotionRegionFlag(party.motionWork, 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(party.motionWork, 71, 0, MotionRegion::LowerBody);
     return 1;
 }
 
@@ -977,9 +977,9 @@ bool RelocatePartyAcrossQronFloor(PartyCompanion &party) {
     probe.y += 0.5f;
     const float floor = shenFindIntersectionWithScene(probe, probe.y);
     if (floor == kNoSceneIntersection || party.position.y - floor >= 2.699999928474426)
-        ccmSetFlagsFor(party.character, CharacterControlApplyGravity);
+        ccmSetFlagsFor(party.character, CCMF_ApplyGravity);
     else if (!(party.movement->flags & 8U))
-        toggleCCMflagsByAmt(party.character, CharacterControlApplyGravity);
+        toggleCCMflagsByAmt(party.character, CCMF_ApplyGravity);
     if (party.motionState == 5)
         return false;
     if (floor != kNoSceneIntersection && (party.position.y - floor < 2.6999998f || party.position.y - player.y < 1.8f))
@@ -1190,8 +1190,8 @@ void UpdatePartyStairController(PartyCompanion &party) {
             SetCharacterCollisionCapsuleMargin(party.character, 0.32499999f);
     }
     Vector3 right{}, left{};
-    GetMotionControllerTargetPosition(party.motionWork, 6, right);
-    GetMotionControllerTargetPosition(party.motionWork, 5, left);
+    mtwkGetControllerTargetPosition(party.motionWork, 6, right);
+    mtwkGetControllerTargetPosition(party.motionWork, 5, left);
     Matrix4x4_PushActiveTransform();
     Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(-movement.targetWorldYaw));
     Matrix4x4::preTranslate(-movement.targetWorldPosition.x, -movement.targetWorldPosition.y, -movement.targetWorldPosition.z);
@@ -1233,12 +1233,12 @@ void UpdatePartyFollowBehavior(PartyCompanion &party) {
     bool relocated = false;
     if ((placement.flags & 8U) && RelocatePartyAlongTrail(party)) {
         party.behaviorState = party.motionState = 0;
-        CopyMotionTransition(party.motionWork, nullptr, party.yaw, 13, 0);
+        mtwkCopyTransition(party.motionWork, nullptr, party.yaw, 13, 0);
         relocated = true;
     }
     if (RelocatePartyAcrossQronFloor(party)) {
         party.behaviorState = party.motionState = 0;
-        CopyMotionTransition(party.motionWork, nullptr, party.yaw, 13, 0);
+        mtwkCopyTransition(party.motionWork, nullptr, party.yaw, 13, 0);
         relocated = true;
     }
     switch (party.behaviorState) {
@@ -1347,7 +1347,7 @@ void UpdatePartyGuideBehavior(PartyCompanion &party) {
             else if (party.flags & 0x40000U) {
                 Vector3 target{};
                 if (ctrlGetRootNode())
-                    GetCharacterMotionWorldPosition(ctrlGetRootNode(), 5, &target);
+                    charaGetMotWorldPos(ctrlGetRootNode(), 5, &target);
                 RequestNpcSpecialMotionTarget(party.name, &target);
             }
         }
@@ -1389,15 +1389,15 @@ void UpdatePartyMotionController(PartyCompanion &party) {
         case 14:
             if (party.idleFrames > 150) {
                 const std::uint16_t idle = PartyIdleMotion(party);
-                if (GetMotionAnimationId(movement.motionWork, MotionRegion::LowerBody) != idle) {
+                if (mtwkGetAnimationId(movement.motionWork, MotionRegion::LowerBody) != idle) {
                     mtwkSetRequestedRootMode(movement.motionWork, 1);
-                    SetMotionFrameTime(movement.motionWork, 20, MotionRegion::LowerBody);
+                    mtwkSetFrameTime(movement.motionWork, 20, MotionRegion::LowerBody);
                     mtwkRequestMotion(movement.motionWork, idle, MotionRegion::LowerBody);
                 }
             }
             break;
         case 2:
-            CopyMotionTransition(work, nullptr, party.requestedYaw, 13, 0);
+            mtwkCopyTransition(work, nullptr, party.requestedYaw, 13, 0);
             party.motionState = 4;
             break;
         case 3:
@@ -1405,16 +1405,16 @@ void UpdatePartyMotionController(PartyCompanion &party) {
                 party.motionState = 6;
                 party.motionPhase = 0;
             } else {
-                CopyMotionTransition(work, &placement.position, placement.targetYaw, 0, 1);
-                CopyMotionTransition(work, nullptr, 0, 16, 0);
+                mtwkCopyTransition(work, &placement.position, placement.targetYaw, 0, 1);
+                mtwkCopyTransition(work, nullptr, 0, 16, 0);
                 party.behaviorState = party.motionState = 1;
             }
             break;
         case 13: {
             const std::int16_t bearing = Vector3_GetAngleBetweenPointsXZ(party.separationTarget, *plymUpdatePlayerSearchLocation(nullptr));
             const std::int16_t yaw = (movement.flags & 8U) ? party.yaw : bearing;
-            CopyMotionTransition(work, &party.separationTarget, yaw, 0, 0);
-            CopyMotionTransition(work, nullptr, 0, 2, 0);
+            mtwkCopyTransition(work, &party.separationTarget, yaw, 0, 0);
+            mtwkCopyTransition(work, nullptr, 0, 2, 0);
             party.motionState = 3;
             break;
         }
@@ -1430,23 +1430,23 @@ void UpdatePartyMotionController(PartyCompanion &party) {
             party.motionPhase = 0;
             break;
         }
-        CopyMotionTransition(work, &placement.position, placement.targetYaw, 0, 0);
-        CopyMotionTransition(work, nullptr, 0, 16, 0);
+        mtwkCopyTransition(work, &placement.position, placement.targetYaw, 0, 0);
+        mtwkCopyTransition(work, nullptr, 0, 16, 0);
         if (party.runBlend >= 0.5f) {
-            if (!CopyMotionTransition(work, nullptr, 0, 15, 0))
-                CopyMotionTransition(work, nullptr, 0, 8, 0);
+            if (!mtwkCopyTransition(work, nullptr, 0, 15, 0))
+                mtwkCopyTransition(work, nullptr, 0, 8, 0);
             movement.field15c = party.speedScale;
-        } else if (CopyMotionTransition(work, nullptr, 0, 15, 0)) {
-            CopyMotionTransition(work, nullptr, 0, 14, 0);
+        } else if (mtwkCopyTransition(work, nullptr, 0, 15, 0)) {
+            mtwkCopyTransition(work, nullptr, 0, 14, 0);
         }
         if (party.requestedAction == 1 || party.requestedAction == 13) {
-            CopyMotionTransition(work, nullptr, party.yaw, 13, 0);
+            mtwkCopyTransition(work, nullptr, party.yaw, 13, 0);
             party.motionState = 3;
         } else if (party.requestedAction == 11) {
-            CopyMotionTransition(work, nullptr, 0, 2, 0);
+            mtwkCopyTransition(work, nullptr, 0, 2, 0);
             party.motionState = 5;
         } else if (party.requestedAction == 14) {
-            CopyMotionTransition(work, &placement.position, placement.targetYaw, 6, 0);
+            mtwkCopyTransition(work, &placement.position, placement.targetYaw, 6, 0);
             party.motionState = 3;
         }
         if (!mtwkSetExtraFlag(work, 58, 1) && party.motionState == 1)
@@ -1454,19 +1454,19 @@ void UpdatePartyMotionController(PartyCompanion &party) {
         break;
     case 3:
         if (party.requestedAction == 3) {
-            CopyMotionTransition(work, &placement.position, placement.targetYaw, 0, 0);
+            mtwkCopyTransition(work, &placement.position, placement.targetYaw, 0, 0);
             party.motionState = 1;
         } else if (party.requestedAction == 11) {
-            CopyMotionTransition(work, nullptr, party.yaw, 13, 0);
+            mtwkCopyTransition(work, nullptr, party.yaw, 13, 0);
             party.motionState = 5;
         }
         if (party.motionState == 3) {
-            if (CopyMotionTransition(work, nullptr, 0, 15, 0))
-                CopyMotionTransition(work, nullptr, 0, 14, 0);
-            if (CopyMotionTransition(work, nullptr, 0, 3, 0))
-                CopyMotionTransition(work, nullptr, 0, 2, 0);
+            if (mtwkCopyTransition(work, nullptr, 0, 15, 0))
+                mtwkCopyTransition(work, nullptr, 0, 14, 0);
+            if (mtwkCopyTransition(work, nullptr, 0, 3, 0))
+                mtwkCopyTransition(work, nullptr, 0, 2, 0);
             if (party.stateFrames > 120U) {
-                CopyMotionTransition(work, nullptr, party.yaw, 13, 0);
+                mtwkCopyTransition(work, nullptr, party.yaw, 13, 0);
                 party.behaviorState = party.motionState = 0;
             } else if (!mtwkSetExtraFlag(work, 58, 1)) {
                 party.behaviorState = party.motionState = 0;
@@ -1479,7 +1479,7 @@ void UpdatePartyMotionController(PartyCompanion &party) {
         break;
     case 5:
         if (party.doorPhase == 0) {
-            if (!ClaimDoor(shen_name{party.doorId}, GetCharacterScenarioName(party.character)))
+            if (!ClaimDoor(shen_name{party.doorId}, ctrlGetScenarioCharaName(party.character)))
                 break;
             ++party.doorPhase;
         }
@@ -1488,11 +1488,11 @@ void UpdatePartyMotionController(PartyCompanion &party) {
             const Vector3 current = GetCharacterWorldPosition(party.character);
             Vector3 target{};
             ComputeDoorIngress(static_cast<std::int32_t>(party.doorId), &current, &target);
-            if (CopyMotionTransition(work, &target, static_cast<std::uint16_t>(g_doorIngressRotation.y), 0, 0)) {
+            if (mtwkCopyTransition(work, &target, static_cast<std::uint16_t>(g_doorIngressRotation.y), 0, 0)) {
                 const auto animation = static_cast<std::uint16_t>(GetNpcDoorAnimation(static_cast<std::int32_t>(party.doorId), party.character, &current));
-                SetMotionTimeRelated(work, 1, 5, animation);
+                mtwkSetTimeRelated(work, 1, 5, animation);
                 ++party.doorPhase;
-                toggleCCMflagsByAmt(party.character, CharacterControlStairMode);
+                toggleCCMflagsByAmt(party.character, CCMF_StairMode);
             }
             break;
         }
@@ -1500,15 +1500,15 @@ void UpdatePartyMotionController(PartyCompanion &party) {
             if (!mtwkSetExtraFlag(work, 58, 1)) {
                 const Vector3 current = GetCharacterWorldPosition(party.character);
                 const auto animation = GetNpcDoorAnimation(static_cast<std::int32_t>(party.doorId), party.character, &current);
-                BeginDoorAnimation(static_cast<std::int32_t>(party.doorId), GetCharacterScenarioName(party.character), static_cast<std::int32_t>(animation));
-                ccmSetFlagsFor(party.character, CharacterControlFineRaycast);
+                BeginDoorAnimation(static_cast<std::int32_t>(party.doorId), ctrlGetScenarioCharaName(party.character), static_cast<std::int32_t>(animation));
+                ccmSetFlagsFor(party.character, CCMF_FineRaycast);
                 ++party.doorPhase;
             }
             break;
         case 3:
-            if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
-                toggleCCMflagsByAmt(party.character, CharacterControlFineRaycast);
-                ccmSetFlagsFor(party.character, CharacterControlStairMode);
+            if (mtwkSetRegionFlag(work, 65, 1, MotionRegion::LowerBody)) {
+                toggleCCMflagsByAmt(party.character, CCMF_FineRaycast);
+                ccmSetFlagsFor(party.character, CCMF_StairMode);
                 ++party.doorPhase;
             }
             break;
@@ -1540,20 +1540,20 @@ void UpdatePartyMotionController(PartyCompanion &party) {
                 auto yaw = static_cast<std::uint16_t>(movement.targetWorldYaw);
                 if (party.stairDirection == -1)
                     yaw = static_cast<std::uint16_t>(yaw + 0x8000U);
-                CopyMotionTransition(work, &target, yaw, 0, 0);
-                CopyMotionTransition(work, nullptr, 0, 2, 0);
+                mtwkCopyTransition(work, &target, yaw, 0, 0);
+                mtwkCopyTransition(work, nullptr, 0, 2, 0);
                 ++party.motionPhase;
             }
             break;
         case 1:
             if (party.requestedAction == 1)
                 party.motionState = 3;
-            else if (CopyMotionTransition(work, nullptr, 0, 3, 0))
+            else if (mtwkCopyTransition(work, nullptr, 0, 3, 0))
                 party.motionPhase = 0;
             else if (!mtwkSetExtraFlag(work, 58, 1)) {
                 ++party.motionPhase;
                 mtwkSetRequestedRootMode(work, 3);
-                SetMotionFrameTime(work, 1, MotionRegion::LowerBody);
+                mtwkSetFrameTime(work, 1, MotionRegion::LowerBody);
                 if (party.stairDirection == 1)
                     RequestPlayerMotion(movement, 61483);
                 else if (party.stairDirection == -1)
@@ -1564,12 +1564,12 @@ void UpdatePartyMotionController(PartyCompanion &party) {
             if (!movement.stepDirection || party.requestedAction == 1) {
                 if ((movement.playerMotionFlags & 2U) && (movement.playerMotionFlags & 1U)) {
                     mtwkSetRequestedRootMode(movement.motionWork, 1);
-                    SetMotionFrameTime(movement.motionWork, 20, MotionRegion::LowerBody);
+                    mtwkSetFrameTime(movement.motionWork, 20, MotionRegion::LowerBody);
                     mtwkRequestMotion(movement.motionWork, PartyIdleMotion(party), MotionRegion::LowerBody);
                     movement.flags |= 0x20000U;
                     party.motionState = party.requestedAction == 1 ? 3 : 1;
                 }
-            } else if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody))
+            } else if (mtwkSetRegionFlag(work, 65, 1, MotionRegion::LowerBody))
                 movement.flags |= 0x20000U;
             break;
         default:
@@ -1590,7 +1590,7 @@ void UpdatePartyMotionController(PartyCompanion &party) {
     ++party.stateFrames;
     if (party.motionState != previousState)
         party.stateFrames = 0;
-    SetMotionSpeed(work, movement.field160 * movement.field15c, MotionRegion::LowerBody);
+    mtwkSetSpeed(work, movement.field160 * movement.field15c, MotionRegion::LowerBody);
     movement.previousField15c = movement.field15c;
 }
 
@@ -1618,8 +1618,8 @@ void UpdatePartyCharacterState(PartyCompanion &party) {
         party.movement->motionWork = work;
         ConfigurePartyMotion(party);
     }
-    if (party.motionWork && SetMotionRegionFlag(party.motionWork, 71, 1, MotionRegion::LowerBody))
-        SetMotionRegionFlag(party.motionWork, 71, 2, MotionRegion::LowerBody);
+    if (party.motionWork && mtwkSetRegionFlag(party.motionWork, 71, 1, MotionRegion::LowerBody))
+        mtwkSetRegionFlag(party.motionWork, 71, 2, MotionRegion::LowerBody);
     UpdatePlayerMovementState(*party.movement);
     party.position = GetCharacterWorldPosition(party.character);
     party.yaw = GetAllAngYForNode(&party.character->entity.node);
@@ -1713,10 +1713,10 @@ PartyCompanion *FindPartyCompanion(const Character *character) {
 shen_name FindNavigationPartyCompanion(shen_name name) {
     PartyCompanion *party = nullptr;
     if (name.name) {
-        party = FindPartyCompanion(FindCharacterByScenarioName(name));
+        party = FindPartyCompanion(ctrlGetScenarioChara(name));
     } else {
         for (const shen_name candidate : kPartyNames) {
-            party = FindPartyCompanion(FindCharacterByScenarioName(candidate));
+            party = FindPartyCompanion(ctrlGetScenarioChara(candidate));
             if (party)
                 break;
         }
@@ -1725,17 +1725,17 @@ shen_name FindNavigationPartyCompanion(shen_name name) {
 }
 
 bool IsPartyCompanionPlaced(shen_name name) {
-    const PartyCompanion *const party = FindPartyCompanion(FindCharacterByScenarioName(name));
+    const PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     return party && (party->flags & 0x202U) == 2U;
 }
 
 bool IsPartyCompanionOnStairs(shen_name name) {
-    const PartyCompanion *const party = FindPartyCompanion(FindCharacterByScenarioName(name));
+    const PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     return party && (party->movement->flags & 8U) != 0;
 }
 
 std::int32_t SetPartyConversationPaused(shen_name name, bool paused) {
-    PartyCompanion *const party = FindPartyCompanion(FindCharacterByScenarioName(name));
+    PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     if (!party)
         return -1;
     if (paused)
@@ -1747,7 +1747,7 @@ std::int32_t SetPartyConversationPaused(shen_name name, bool paused) {
 
 // @verified - p
 std::int64_t ReleaseAbsentPartyCharacter(shen_name name) {
-    if (FindCharacterByScenarioName(name))
+    if (ctrlGetScenarioChara(name))
         return 0xffffffffLL;
     EV_npcFree(name);
     return 0;
@@ -1767,11 +1767,11 @@ bool AttachPartyCompanion(Character *character) {
     party->followDistance = 3.5f;
     party->routeIndex = -1;
     party->flags |= 0xa12U;
-    party->name = GetCharacterScenarioName(character);
+    party->name = ctrlGetScenarioCharaName(character);
     party->character = character;
     party->movement->character = character;
     party->movement->flags |= 0x24U;
-    EV_mtwkSetEnabled(FindMotionWork(character), true);
+    mtwkSetEnabled(FindMotionWork(character), true);
     cpamSetFlag(party->character, 1);
     toggleCCMflagsByAmt(character, 0x300000U);
     if (party->name.name == kPartyNames[1].name) {
@@ -1797,11 +1797,11 @@ bool AttachPartyCompanion(Character *character) {
         partyTransition.present = 0;
         party->character->alpha = 0.0f;
         charaSetFlagFor(party->character, 1);
-        toggleCCMflagsByAmt(character, CharacterControlResetMotion);
+        toggleCCMflagsByAmt(character, CCMF_ResetMotion);
         if (party->mode == 1)
             party->flags |= 0x200U;
         if (party->motionWork)
-            SetMotionRegionFlag(party->motionWork, 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(party->motionWork, 71, 0, MotionRegion::LowerBody);
     }
     return true;
 }
@@ -1816,7 +1816,7 @@ void ReactivatePartyCompanion(PartyCompanion &party) {
     party.runBlend = 0.0f;
     party.frameCount = 0;
     const std::int16_t yaw = GetAllAngYForNode(&party.character->entity.node);
-    CopyMotionTransition(FindMotionWork(party.character), nullptr, yaw, 13, 0);
+    mtwkCopyTransition(FindMotionWork(party.character), nullptr, yaw, 13, 0);
     toggleCCMflagsByAmt(party.character, 0x300000U);
     cpamSetFlag(party.character, 1);
     if (MotionWork *const motion = FindMotionWork(party.character)) {
@@ -1832,7 +1832,7 @@ std::int32_t ActivatePartyCompanion(shen_name name) {
     if (!EV_ForceLoadNpc(name))
         return -1;
     EV_CheckWarmStartNpcRoute(name);
-    Character *const character = FindCharacterByScenarioName(name);
+    Character *const character = ctrlGetScenarioChara(name);
     if (!character)
         return -1;
     if (PartyCompanion *const party = FindPartyCompanion(character)) {
@@ -1847,7 +1847,7 @@ std::int32_t ActivatePartyCompanion(shen_name name) {
 
 // @verified - p
 std::int32_t DeactivatePartyCompanion(shen_name name) {
-    Character *const character = FindCharacterByScenarioName(name);
+    Character *const character = ctrlGetScenarioChara(name);
     if (!character)
         return -1;
     PartyCompanion *const party = FindPartyCompanion(character);
@@ -1858,13 +1858,13 @@ std::int32_t DeactivatePartyCompanion(shen_name name) {
     EV_npcFree(name);
     if (party->motionState == 5 && party->doorId != 0 && party->doorPhase > 0) {
         party->doorPhase = 0;
-        ReleaseDoor(static_cast<std::int32_t>(party->doorId), GetCharacterScenarioName(party->character));
+        ReleaseDoor(static_cast<std::int32_t>(party->doorId), ctrlGetScenarioCharaName(party->character));
     }
     return 0;
 }
 
 std::int32_t UnlockPartyCompanion(shen_name name) {
-    PartyCompanion *const party = FindPartyCompanion(FindCharacterByScenarioName(name));
+    PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     if (!party)
         return -1;
     if (!(party->flags & 0x40000000U) && name.name != kPartyNames[1].name) {
@@ -1873,7 +1873,7 @@ std::int32_t UnlockPartyCompanion(shen_name name) {
         party->flags &= ~2U;
         if (!(party->flags & 0x2000U) && party->motionState == 5 && party->doorId && party->doorPhase > 0) {
             party->doorPhase = 0;
-            ReleaseDoor(static_cast<std::int32_t>(party->doorId), GetCharacterScenarioName(party->character));
+            ReleaseDoor(static_cast<std::int32_t>(party->doorId), ctrlGetScenarioCharaName(party->character));
         }
     }
     return 0;
@@ -1881,7 +1881,7 @@ std::int32_t UnlockPartyCompanion(shen_name name) {
 
 // @verified - p
 std::int32_t plymGetPartyAuthorStatus(shen_name name) {
-    Character *const character = FindCharacterByScenarioName(name);
+    Character *const character = ctrlGetScenarioChara(name);
     if (!character)
         return 0;
     const PartyCompanion *const party = FindPartyCompanion(character);
@@ -1895,12 +1895,12 @@ std::int32_t plymGetPartyAuthorStatus(shen_name name) {
 }
 
 std::int32_t FindPTYCForChara(shen_name name) {
-    const PartyCompanion *const party = FindPartyCompanion(FindCharacterByScenarioName(name));
+    const PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     return party && (party->flags & 2U) != 0;
 }
 
 std::int32_t ptycCharaUnlock(shen_name name) {
-    PartyCompanion *const party = FindPartyCompanion(FindCharacterByScenarioName(name));
+    PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     if (!party)
         return -1;
     if ((party->flags & 0x40000000U) != 0 || name.name == SHEN_NAME(SIN_))
@@ -1910,14 +1910,14 @@ std::int32_t ptycCharaUnlock(shen_name name) {
     party->flags &= ~2U;
     if ((party->flags & 0x2000U) == 0 && party->motionState == 5 && party->doorId != 0 && party->doorPhase > 0) {
         party->doorPhase = 0;
-        ReleaseDoor(static_cast<std::int32_t>(party->doorId), GetCharacterScenarioName(party->character));
+        ReleaseDoor(static_cast<std::int32_t>(party->doorId), ctrlGetScenarioCharaName(party->character));
     }
     return 0;
 }
 
 // @verified - p
 std::int32_t PTYCUtils(shen_name name, std::int32_t command, std::int32_t argument) {
-    PartyCompanion *const party = FindPartyCompanion(FindCharacterByScenarioName(name));
+    PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     if (!party)
         return 0;
     switch (command) {
@@ -1941,7 +1941,7 @@ std::int32_t PTYCUtils(shen_name name, std::int32_t command, std::int32_t argume
         } else if (!argument && previous) {
             party->flags &= ~0x1002U;
             if (mtwkSetExtraFlag(party->motionWork, 58, 1)) {
-                CopyMotionTransition(party->motionWork, nullptr, party->yaw, 13, 0);
+                mtwkCopyTransition(party->motionWork, nullptr, party->yaw, 13, 0);
             }
         }
         return static_cast<std::int32_t>(previous);
@@ -1951,11 +1951,11 @@ std::int32_t PTYCUtils(shen_name name, std::int32_t command, std::int32_t argume
         if (argument && !previous) {
             party->flags |= 0x2000U;
             if (mtwkSetExtraFlag(party->motionWork, 58, 1)) {
-                CopyMotionTransition(party->motionWork, nullptr, party->yaw, 13, 0);
+                mtwkCopyTransition(party->motionWork, nullptr, party->yaw, 13, 0);
             }
             if (party->motionState == 5 && party->doorId && party->doorPhase > 0) {
                 party->doorPhase = 0;
-                ReleaseDoor(static_cast<std::int32_t>(party->doorId), GetCharacterScenarioName(party->character));
+                ReleaseDoor(static_cast<std::int32_t>(party->doorId), ctrlGetScenarioCharaName(party->character));
             }
         } else if (!argument && previous) {
             party->behaviorState = 0;
@@ -1997,7 +1997,7 @@ std::int32_t ImportPartyCompanionTransition(const PartyCompanionTransition &stat
 std::int32_t ExportPartyCompanionTransition(PartyCompanionTransition &state) {
     std::int32_t present = 0;
     for (const shen_name name : kPartyNames) {
-        const PartyCompanion *const party = FindPartyCompanion(FindCharacterByScenarioName(name));
+        const PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
         if (!party)
             continue;
         partyTransition.name = name;

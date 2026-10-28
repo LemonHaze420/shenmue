@@ -45,7 +45,7 @@ AK00State state{};
 
 void SetBikeEnabledForStoryFlag() {
     const bool enabled = EV_GetShenmueFlag(bikeStoryFlag) != 0;
-    if (!FindCharacterByScenarioName(bike))
+    if (!ctrlGetScenarioChara(bike))
         return;
 
     if (enabled) {
@@ -77,7 +77,7 @@ void UpdateAK00Wave(void *) {
 
     bool update = state.initializing != 0;
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     if ((dateTime.minute & 7) == 0 && dateTime.second == 0)
         update = true;
 

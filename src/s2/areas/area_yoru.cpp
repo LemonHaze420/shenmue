@@ -27,9 +27,9 @@ void YoruMain(std::uintptr_t) {
     } else if (g_currentMap.name == YORU_TOWER_MAP.name) {
         work->authorCommand = static_cast<std::int16_t>(static_cast<std::uint32_t>(g_entryPoint) > 1 ? 0 : g_entryPoint);
         const char *const package = work->authorCommand == 0 ? "Q300" : "QTB4";
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(package));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     } else
         work->authorCommand = 0;
     InitializeYoruNightScene();
@@ -45,16 +45,16 @@ void LoadYoruMapForEntry(std::int8_t entry) {
         package = "ARSF";
     else
         return;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 // @verified - p
 void InitializeYoruNightScene() {
     SetScreenFilmFade(0, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(0);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 19;
     time.minute = 0;
     SetCurrentDateTimeTo(time);

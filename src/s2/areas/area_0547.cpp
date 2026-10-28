@@ -41,12 +41,12 @@ void Reset0547Camera() {
     camCtrlSetState(Init);
 }
 void Restore0547Motion(shen_name character, std::uint16_t motionId, const Vector3 &position, const Vector3i &rotation) {
-    MotionWork *const motion = FindMotionWork(FindCharacterByScenarioName(character));
+    MotionWork *const motion = FindMotionWork(ctrlGetScenarioChara(character));
     mtwkRequestMotion(motion, motionId, MotionRegion::LowerBody);
     EV_AT_SetPos(character, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(character, EventTransformFlags::AllAxes, rotation, nullptr);
     mtwkSetExtraFlag(motion, 17, 0);
-    SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(motion, 13, 0);
 }
 } // namespace
@@ -109,7 +109,7 @@ void Queue0547Author(Area0547Parameter *parent) {
 }
 void Prepare0547Characters() {
     for (const shen_name character : {AREA_0547_RYO, AREA_0547_SIN}) {
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 6, 2);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 2);
         EV_SetCharacterAlphaEnabled(character, false);
     }
     for (const shen_name prop : AREA_0547_PROPS) {
@@ -119,7 +119,7 @@ void Prepare0547Characters() {
 }
 void Restore0547Characters() {
     for (const shen_name character : {AREA_0547_RYO, AREA_0547_SIN}) {
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 6, 0);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 0);
         EV_SetCharacterAlphaEnabled(character, true);
     }
     for (const shen_name prop : AREA_0547_PROPS)

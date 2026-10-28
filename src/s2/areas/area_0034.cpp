@@ -106,26 +106,26 @@ void RestoreE0034Characters() {
 // @verified - p
 void CleanupE0034(AreaImmediateAuthorTaskParameter *parent) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 9;
     time.minute = 0;
     SetCurrentDateTimeTo(time);
     for (const shen_name *character = AREA_0034_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0034A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0034A"), 0);
     EV_FreeAuthorPak(0, AREA_0034_CONVERSATION);
 
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name != AREA_0034_WTA0.name) {
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("WTA0"), 0) != 0)
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WTA0"), 0);
-        else if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("WB00"), 0) != 0)
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WB00"), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("WTA0"), 0) != 0)
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WTA0"), 0);
+        else if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("WB00"), 0) != 0)
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WB00"), 0);
         if (g_entryPoint != 1) {
             EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
             return;
@@ -137,9 +137,9 @@ void CleanupE0034(AreaImmediateAuthorTaskParameter *parent) {
 // @verified - p
 void LoadE0034ScenePackages(std::int32_t selection) {
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory),
         reinterpret_cast<std::uintptr_t>(selection != 0 ? "WB00" : "WTA0"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     if (selection != 0) {
         EV_SetObjectFlagByIndex(2, 0);
         EV_SetObjectFlagByIndex(4, 0);
@@ -173,9 +173,9 @@ void E0034LoopCallback(void *taskData) {
     const std::int32_t frame = static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     if (frame == 1) {
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-        SetChildObjectFlagByIndex(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 1);
+        SetChildObjectFlagByIndex(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 1);
     } else if (frame == 221)
-        SetChildObjectFlagByIndex(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 0);
+        SetChildObjectFlagByIndex(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 0);
     if (GetCurrentAuthorId().name == AREA_0034_AREA.name) {
         if (frame == 1)
             snapSetDesc(1);
@@ -184,7 +184,7 @@ void E0034LoopCallback(void *taskData) {
     }
     if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) != 0)
         return;
-    SetChildObjectFlagByIndex(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 0);
+    SetChildObjectFlagByIndex(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 0);
     RestoreE0034Characters();
     static_cast<AreaImmediateAuthorFrameParameter *>(taskData)->parent->state = 3;
     SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);

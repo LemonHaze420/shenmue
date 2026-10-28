@@ -79,7 +79,7 @@ void KnmnPracticeDecisionSequence(void *data) {
             KnmnResetActors(static_cast<std::int32_t>(practice));
             EV_AT_SetPos(KNMN_KEM, EventTransformFlags::World | EventTransformFlags::AllAxes, KNMN_TEACHER_PRACTICE_POSITION);
             EV_AT_SetAngY(KNMN_KEM, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{.x = 0, .y = 60984, .z = 0});
-            SetMotionRegionFlag(scenFindMotionwork(KNMN_KEM), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(KNMN_KEM), 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(KNMN_KEM), 5193, MotionRegion::LowerBody);
             KnmnValue(data, 0x250, std::int32_t{1});
             KnmnAdvance(sequence, 101);

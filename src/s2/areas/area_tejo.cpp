@@ -48,9 +48,9 @@ void TejoMain(std::uintptr_t) {
 void TejoProgressionCallback(void *) {
     switch (tejoProgression.name) {
     case SHEN_NAME(TRAP):
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("TTRP"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         ExecuteCurrAreaMainFunc("TTRP.EV3", 0);
         tejoProgression = TEJO_RATI;
         tejoWaitFlag = 311;
@@ -61,21 +61,21 @@ void TejoProgressionCallback(void *) {
         SetConversationCameraCodesEnabled(0);
         SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
         EV_stepSetFlags(0, 311);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("RATI"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         tejoProgression = TEJO_FIRST_QTE;
         tejoQteEntries = tejoLowerQteEntries;
         tejoWaitFlag = 312;
         if (!tejoRetryMode || tejoRetryMode == 3) {
             DateTime date;
-            GetCurrentDateTime(date);
+            shenGetCurrentDateTime(date);
             if (date.hour >= 23)
                 date.minute = 45;
             else
                 ++date.hour;
             SetCurrentDateTimeTo(date);
-            GetCurrentDateTime(eventSavedCurrentDateTime);
+            shenGetCurrentDateTime(eventSavedCurrentDateTime);
         } else if (tejoRetryMode < 4)
             SetCurrentDateTimeTo(eventSavedCurrentDateTime);
         SetQronFloor(5);
@@ -97,15 +97,15 @@ void TejoProgressionCallback(void *) {
         EV_stepSetFlags(0, 314);
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 952, 0);
         SetAllMapFieldDepthSlotsEnabled(0);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("TOPA"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         SetQronFloor(4);
         SetQronMapLightingEnabled(0);
         if (tejoRetryMode)
             SetCurrentDateTimeTo(tejoForceCheckpoint.date);
         else
-            GetCurrentDateTime(tejoForceCheckpoint.date);
+            shenGetCurrentDateTime(tejoForceCheckpoint.date);
         ExecuteCurrAreaMainFunc("TOPA.EV3", static_cast<std::uintptr_t>(tejoRetryMode));
         tejoProgression = TEJO_SECOND_QTE;
         tejoQteEntries = tejoUpperQteEntries;
@@ -127,9 +127,9 @@ void TejoProgressionCallback(void *) {
         for (std::int32_t index = 1; index < 32; ++index)
             if (GetMagicRoomFlag(index))
                 SetMapLightingPlacementEnabled(0, index);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("HIDE"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         ExecuteCurrAreaMainFunc("HIDE.EV3", 0);
         tejoProgression = TEJO_ROOF;
         tejoWaitFlag = 628;
@@ -138,7 +138,7 @@ void TejoProgressionCallback(void *) {
     case SHEN_NAME(ROOF): {
         EV_stepSetFlags(0, 628);
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         date.hour = 21;
         date.minute = 0;
         SetCurrentDateTimeTo(date);

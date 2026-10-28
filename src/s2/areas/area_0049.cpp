@@ -78,13 +78,13 @@ void CleanupE0049(AreaImmediateAuthorTaskParameter *parent) {
     using enum CameraState;
     FreeParticleEffect(3, e0049Leaves);
     for (const shen_name *character = AREA_0049_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_0049_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0049A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0049A"), 0);
     SetNpcColdResetMode(0);
 
     EV_CleanupMapControlTask();

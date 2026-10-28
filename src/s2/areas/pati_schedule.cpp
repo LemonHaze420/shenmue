@@ -29,7 +29,7 @@ void QueuePatiVoice(PatiGameWork *game, const char *code, std::int32_t *frame) {
 void SetPatiCamera(std::int32_t camera, shen_name eye, shen_name target, std::int32_t delay) {
     if (camera == g_patiCameraId && eye.name == g_patiCameraEye.name && target.name == g_patiCameraTarget.name)
         return;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
     EVT_AT_SetCam(camera, eye, target, 0.0f, 0, delay);
     g_patiCameraId = camera;
     g_patiCameraEye = eye;

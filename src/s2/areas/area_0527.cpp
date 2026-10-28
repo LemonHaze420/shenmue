@@ -24,7 +24,7 @@ namespace {
 std::int32_t debug0527;
 Matrix4x4 placement0527;
 MotionWork *Motion0527(shen_name character) {
-    return FindMotionWork(FindCharacterByScenarioName(character));
+    return FindMotionWork(ctrlGetScenarioChara(character));
 }
 void Set0527Placement(const Area0527Request &request) {
     Matrix4x4_PushActiveTransform();
@@ -59,10 +59,10 @@ void Restore0527CharacterMotion(shen_name character, std::uint16_t animation, co
     Vector3 sampledPosition{};
     Vector3i startRotation{};
     SampleNativeMotionRootAndRotation(
-        GetMotionAnimationId(motion, MotionRegion::LowerBody), GetMotionRigBoneId(motion), 0.0f, &sampledPosition, &startRotation);
-    const float frame = GetMotionFrame(motion, MotionRegion::LowerBody);
+        mtwkGetAnimationId(motion, MotionRegion::LowerBody), mtwkGetRigBoneId(motion), 0.0f, &sampledPosition, &startRotation);
+    const float frame = mtwkGetFrame(motion, MotionRegion::LowerBody);
     Vector3i endRotation{};
-    SampleNativeMotionRootAndRotation(GetMotionAnimationId(motion, MotionRegion::LowerBody), GetMotionRigBoneId(motion), frame, &sampledPosition, &endRotation);
+    SampleNativeMotionRootAndRotation(mtwkGetAnimationId(motion, MotionRegion::LowerBody), mtwkGetRigBoneId(motion), frame, &sampledPosition, &endRotation);
     Vector3 position{};
     EV_GetCharaPosition(character, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     mtwkRequestMotion(motion, animation, MotionRegion::LowerBody);
@@ -75,7 +75,7 @@ void Restore0527CharacterMotion(shen_name character, std::uint16_t animation, co
     EV_AT_SetPos(character, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(character, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation, nullptr);
     mtwkSetExtraFlag(motion, 17, 0);
-    SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
 }
 } // namespace
 void Initialize0527() {
@@ -105,9 +105,9 @@ void Queue0527Author(Area0527Parameter *parent) {
     child->parent = parent;
     child->frame = 0;
     MotionWork *const motion = Motion0527(AREA_0527_SIN);
-    CopyMotionTransition(motion, nullptr, 0, 1, 0);
+    mtwkCopyTransition(motion, nullptr, 0, 1, 0);
     mtwkSetExtraFlag(motion, 17, 0);
-    SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(motion, 13, 0);
     switch (parent->author) {
     case 2:
@@ -151,7 +151,7 @@ void Prepare0527Character(shen_name character) {
     mtwkSetExtraFlag(motion, 6, 2);
     EV_SetCharacterAlphaEnabled(character, false);
     mtwkSetExtraFlag(motion, 17, 0);
-    SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(motion, 13, 0);
 }
 void Prepare0527Characters() {

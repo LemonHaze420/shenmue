@@ -483,7 +483,7 @@ finishState:
             state.lookTargetMode = lookTargetSpecialFast;
         }
         Vector3 head{};
-        GetCharacterMotionWorldPosition(state.characterNode, 6, &head);
+        charaGetMotWorldPos(state.characterNode, 6, &head);
         Matrix4x4_Push(&transformMatrix_prePass);
         Matrix4x4::preTranslate(head.x, head.y, head.z);
         Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(yaw));
@@ -642,7 +642,7 @@ bool scenIsRecordRunning(shen_name name) {
 
 Vector3 PlymHeadLookPoint(const PlayerModelState &state, std::uint16_t yaw, std::uint16_t pitch, bool withCharacterYaw) {
     Vector3 head{};
-    GetCharacterMotionWorldPosition(state.characterNode, 6, &head);
+    charaGetMotWorldPos(state.characterNode, 6, &head);
     Matrix4x4_Push(&transformMatrix_prePass);
     Matrix4x4::preTranslate(head.x, head.y, head.z);
     if (withCharacterYaw)
@@ -721,7 +721,7 @@ void plymUpdateAutomaticLook(PlayerModelState &state) {
         startAuthorLook();
     }
     if (look.flags & automaticLookAuthorTarget) {
-        GetCharacterMotionWorldPosition(author, 6, &state.lookAtPosition);
+        charaGetMotWorldPos(author, 6, &state.lookAtPosition);
         looking = true;
         if (finishedAuthor) {
             const std::int16_t authorYaw = GetAllAngYForNode(&author->entity.node);
@@ -822,13 +822,13 @@ void plymUpdateLookTarget(PlayerModelState &state) {
             break;
         }
         if (operation)
-            UpdateMotionWorkWithPosition(motionWork, nullptr, operation);
-        UpdateMotionWorkWithPosition(motionWork, &state.lookAtPosition, (state.lookTargetFlags & 4U) != 0);
+            mtwkUpdateWithPosition(motionWork, nullptr, operation);
+        mtwkUpdateWithPosition(motionWork, &state.lookAtPosition, (state.lookTargetFlags & 4U) != 0);
         if (state.lookTargetFlags & 8U) {
             Vector3 hip{};
             Vector3 knee{};
-            GetMotionBonePosition(motionWork, MB_Head, &hip);
-            GetMotionBonePosition(motionWork, MB_HeadTarget, &knee);
+            mtwkGetBonePosition(motionWork, MB_Head, &hip);
+            mtwkGetBonePosition(motionWork, MB_HeadTarget, &knee);
             const std::int16_t legYaw = PlymAngleXZ({knee.x - hip.x, knee.y - hip.y, knee.z - hip.z});
             const std::int16_t targetYaw = PlymAngleXZ({state.lookAtPosition.x - hip.x, state.lookAtPosition.y - hip.y, state.lookAtPosition.z - hip.z});
             const auto difference = static_cast<std::int16_t>(std::abs(targetYaw - legYaw));
@@ -840,10 +840,10 @@ void plymUpdateLookTarget(PlayerModelState &state) {
             }
         }
         if (state.lookTargetMode == lookTargetForcedYaw)
-            SetMotionPelvisYawStep(motionWork, 0x2000);
+            mtwkSetPelvisYawStep(motionWork, 0x2000);
     } else if (request == -1 ? mtwkSetExtraFlag(motionWork, 59U, 1) != 0 : mtwkSetExtraFlag(motionWork, 59U, 1) != 0 && !plymCheckAuthorTargetRequested()) {
-        UpdateMotionWorkWithPosition(motionWork, nullptr, request == -1 ? 3 : 1284);
-        UpdateMotionWorkWithPosition(motionWork, nullptr, 0);
+        mtwkUpdateWithPosition(motionWork, nullptr, request == -1 ? 3 : 1284);
+        mtwkUpdateWithPosition(motionWork, nullptr, 0);
     }
     state.padFlags &= ~0x100U;
     state.lookTargetMode = 0;
@@ -869,21 +869,21 @@ bool plymPublishSearchHandTarget(PlayerSearchHand hand, const Vector3 *worldTarg
 
     MotionWork *const motionWork = g_playerRuntime.model ? g_playerRuntime.model->motionWork : nullptr;
     if (!worldTarget) {
-        ClearMotionConstraintTarget(motionWork, slot);
+        mtwkClearConstraintTarget(motionWork, slot);
         return false;
     }
-    return SetMotionConstraintTarget(motionWork, slot, *worldTarget);
+    return mtwkSetConstraintTarget(motionWork, slot, *worldTarget);
 }
 
 void plymClearSearchHandTargets() {
     MotionWork *const motionWork = g_playerRuntime.model ? g_playerRuntime.model->motionWork : nullptr;
-    ClearMotionConstraintTarget(motionWork, MotionConstraintSlot::RightArm);
-    ClearMotionConstraintTarget(motionWork, MotionConstraintSlot::LeftArm);
+    mtwkClearConstraintTarget(motionWork, MotionConstraintSlot::RightArm);
+    mtwkClearConstraintTarget(motionWork, MotionConstraintSlot::LeftArm);
 }
 
 bool plymIsSearchHandTargetSettled(PlayerSearchHand hand) {
     const MotionConstraintSlot slot = hand == PlayerSearchHand::Right ? MotionConstraintSlot::RightArm : MotionConstraintSlot::LeftArm;
-    return IsMotionConstraintTargetSettled(g_playerRuntime.model ? g_playerRuntime.model->motionWork : nullptr, slot);
+    return mtwkIsConstraintTargetSettled(g_playerRuntime.model ? g_playerRuntime.model->motionWork : nullptr, slot);
 }
 
 void ctrlSetLookOverlayWeight(float alpha) {

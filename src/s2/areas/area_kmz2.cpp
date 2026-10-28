@@ -46,7 +46,7 @@ void TimeOverExitCallback(void *);
 
 void ResetActorMotion(shen_name actor, std::uint16_t motion) {
     mtwkSetExtraFlag(scenFindMotionwork(actor), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(actor), 13, 0);
     mtwkRequestMotion(scenFindMotionwork(actor), motion, MotionRegion::LowerBody);
 }
@@ -54,7 +54,7 @@ void AssignEventParameters(Vector3 position, std::int32_t state, std::uint32_t y
     shenToggleAreaFlags(0);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0xf003, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 13, 0);
     EV_PTYCUtils(shenhua, 3, 1);
     ResetActorMotion(shenhua, 0x9502);
@@ -101,8 +101,8 @@ void AfterQteExitCallback(void *) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 902, 0);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 901, 1);
     EV_PTYCUtils(shenhua, 3, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(shenhua), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(shenhua), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(shenhua), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(shenhua), 0, 1, 0);
     camCtrlUtil(CameraUtilityMode ::ResetPlayerDistance, 0);
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
@@ -117,7 +117,7 @@ void EnterForest3Callback(void *) {
     EV_scenQueueLoad(g_actNumber, KMZ2_NEXT_MAP, 0);
 }
 std::int64_t CheckAreaEvent() {
-    if (!IsCharacterWithinMazeMarkerRadius(FindCharacterByScenarioName(ryo), 1, 2.0f) || !EV_GetShenmueFlag(576))
+    if (!IsCharacterWithinMazeMarkerRadius(ctrlGetScenarioChara(ryo), 1, 2.0f) || !EV_GetShenmueFlag(576))
         return 0;
     shenToggleAreaFlags(2);
     SetPlayerControlEnabled(0);
@@ -141,7 +141,7 @@ std::int64_t CheckTimeOver() {
     if (!EV_GetShenmueFlag(0x454))
         return 0;
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 902)) {
         if (dateTime.hour < 16 || dateTime.minute < 30)
             return 0;
@@ -199,7 +199,7 @@ void AreaKMZ2Main(std::uint32_t startParameters) {
     EV_UpdateWeatherForMinute(1, 0, 0, 0.0f);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1495, 0);
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     if (static_cast<std::uint8_t>(dateTime.hour - 8) > 14U) {
         dateTime.hour = 8;
         dateTime.minute = 22;

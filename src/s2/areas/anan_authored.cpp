@@ -20,15 +20,15 @@ void ApplyAnanPlacements(const AnanPlacement *placements) {
     }
 }
 void AnanSelectCamera(std::int32_t camera) {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ANAN"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ANAN"), 0);
     EVS_LoopCamera(camera, ANAN_BASE, ANAN_BASE);
 }
 void AnanLoadPackage(const char *package) {
     const char *directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(package), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(package), 0);
 }
 void AnanFilm(std::uint32_t frames, std::uint32_t from, std::uint32_t to) {
     SetScreenFilmFade(frames, from, 0, 0, 0, to, 0, 0, 0);
@@ -219,7 +219,7 @@ void AnanCamera(void *data) {
         if (--work->delay > 0)
             return;
         if (work->packageBytes[0])
-            EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->packageBytes), 0);
+            EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->packageBytes), 0);
         EVS_LoopCamera(work->camera, work->target, work->target);
     }
     HLib::DestroyCurrentTask();

@@ -48,8 +48,8 @@ void ClearForestWeather() {
 }
 void ReleaseForestScenePackages() {
     for (const char *name : {"KWW1", "KWA1", "KWA2", "KWA3"})
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
 }
 void AlignForestDummies() {
     EVT_AT_SetPos(MQTE_DUMMY_RYO, MQTE_RYO, {0, 0, 0}, 0);
@@ -67,16 +67,16 @@ void RestoreForestLighting() {
 std::int32_t SetupForest(ForestQteWork &work) {
     EV_SetNewSceneIndex();
     if (g_currentMap.name == MQTE_AREA.name) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("MQTETEST"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("MQTE"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("MQTE"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MQTE"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("MQTE"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MQTE"), 0);
     EV_LoadCutsceneFromCurrentScene("0517A000");
     EV_FreeAuthorPak(1, "0517");
     ForestRemovedLogger();
@@ -101,7 +101,7 @@ void ForestEnd(void *data) {
     ForestQteWork &work = *static_cast<ForestQteWork *>(data);
     SetScreenFilmFade(1, 0, 0, 0, 0, 255, 0, 0, 0);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (date.hour < 19) {
         date.hour = 19;
         date.minute = 0;
@@ -121,8 +121,8 @@ void ForestEnd(void *data) {
     SetCharaKill(MQTE_CAMERA, 1);
     EV_FreeAuthorPak(0, "0517");
     for (const char *name : {"MQTETEST", "MQTE"})
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
     scenFreeEvent("MQTE.EV3");
     SetPlayerControlEnabled(0);
     EV_stepSetFlags(0, 0xeb);
@@ -270,7 +270,7 @@ std::int32_t RunForestRoute(ForestQteWork &work) {
     work.obstacle = static_cast<std::int16_t>(GetCharacterMazeUnitIndex(ctrlGetCharaByName(MQTE_SHENFA)));
     const std::int32_t end = static_cast<std::int32_t>(GetMazeRoads(forestStage).size()) - 30;
     if (ForestCharacterRoadIndex(MQTE_SHENFA) <= end) {
-        if (work.obstacle != -1 && work.previousUnit != work.obstacle && GetMotionAnimationId(scenFindMotionwork(MQTE_RYO), MotionRegion::LowerBody) == 61446) {
+        if (work.obstacle != -1 && work.previousUnit != work.obstacle && mtwkGetAnimationId(scenFindMotionwork(MQTE_RYO), MotionRegion::LowerBody) == 61446) {
             work.previousUnit = work.obstacle;
             Vector3 position;
             GetMazeUnitPosition(work.obstacle, &position);
@@ -480,7 +480,7 @@ std::int32_t RunForestAuthor(ForestQteWork &work, bool failure) {
         EV_SetAuthorActiveTo(1);
     if (!failure) {
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         if (forestStage >= 0 && forestStage <= 2) {
             date.hour = static_cast<std::uint8_t>(16 + forestStage);
             date.minute = 30;
@@ -518,9 +518,9 @@ std::int32_t RunForestAuthor(ForestQteWork &work, bool failure) {
         }
     }
     if (package)
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_SetModelDataDefaultVertexShader();
     if ((forestStage == 1 && failure) || (forestStage == 2 && !failure)) {
         EV_SetWeatherInstruction(12, 0);

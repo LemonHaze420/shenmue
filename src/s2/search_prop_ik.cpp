@@ -782,7 +782,7 @@ bool srchUpdatePropIK(SearchTaskData &search) {
     if (slot->active & 0x40U) {
         Character *const player = Player();
         MotionWork *const work = FindMotionWork(player);
-        if (SetMotionRegionFlag(work, 66, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(work, 66, 1, MotionRegion::LowerBody)) {
             slot->leftSide = Config(*slot).hand;
             if (!(slot->active & 0x20U))
                 BuildPropTransforms(*slot);
@@ -805,7 +805,7 @@ bool srchUpdatePropIK(SearchTaskData &search) {
             UpdatePropChestAndCamera(*slot);
         } else {
             mtwkRequestMotion(work, 0xf002, MotionRegion::LowerBody);
-            SetMotionRegionFlag(work, 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(work, 71, 0, MotionRegion::LowerBody);
         }
         return true;
     }

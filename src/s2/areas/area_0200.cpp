@@ -74,10 +74,10 @@ void SetupE0200Characters() {
     EV_SetCharacterAlphaEnabled(AREA_0200_A816, false);
     EV_SetCharacterAlphaEnabled(AREA_0200_A818, false);
     EV_SetCharacterAlphaEnabled(AREA_0200_A820, false);
-    AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0200_A814), 1, -1, 1.0f, 1);
-    AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0200_A816), 1, -1, 1.0f, 1);
-    AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0200_A818), 1, -1, 1.0f, 1);
-    AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0200_A820), 1, -1, 1.0f, 1);
+    AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0200_A814), 1, -1, 1.0f, 1);
+    AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0200_A816), 1, -1, 1.0f, 1);
+    AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0200_A818), 1, -1, 1.0f, 1);
+    AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0200_A820), 1, -1, 1.0f, 1);
     for (const shen_name *character = AREA_0200_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
         mtwkSetExtraFlag(scenFindMotionwork(*character), 6, 2);
         EV_SetCharacterAlphaEnabled(*character, false);
@@ -173,7 +173,7 @@ void QueueE0200Loop(AreaImmediateAuthorTaskParameter *parent) {
 // @verified - p
 void CleanupE0200(AreaImmediateAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0200_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -198,25 +198,25 @@ void E0200LoopCallback(void *taskData) {
         camCtrlSetNearDistance(200.0f);
         break;
     case 530:
-        AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0200_A814), 1, -1, 0.5f, 0);
-        AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0200_A818), 1, -1, 0.5f, 0);
-        AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0200_A820), 1, -1, 0.5f, 0);
+        AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0200_A814), 1, -1, 0.5f, 0);
+        AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0200_A818), 1, -1, 0.5f, 0);
+        AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0200_A820), 1, -1, 0.5f, 0);
         break;
     case 535:
-        AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0200_A816), 1, -1, 0.5f, 0);
+        AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0200_A816), 1, -1, 0.5f, 0);
         break;
     case 1940:
         camCtrlSetFarDistance(1200.0f);
         camCtrlSetNearDistance(700.0f);
         break;
     case 2710:
-        SetClothFlag(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 4, 1);
+        SetClothFlag(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 4, 1);
         break;
     case 2872:
         SetAllMapFieldDepthSlotsEnabled(0);
         break;
     case 2880:
-        SetClothFlag(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 4, 0);
+        SetClothFlag(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 4, 0);
         break;
     case 3128:
         SetAllMapFieldDepthSlotsEnabled(1);

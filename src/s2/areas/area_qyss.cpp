@@ -89,18 +89,18 @@ void QyssStalkCallback(void *parameter) {
 // @verified - p
 std::int32_t InitializeQyssStalk(QyssStalkWork *work) {
     (void)SetDoorSubjectEnabled(QYSS_ELEVATOR, 0);
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QYSS"));
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QYSS"), 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QYSS"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QYSS"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QYSS"), 0);
     (void)EV_LoadCutsceneFromCurrentScene(qyssEntryMode == 2 ? "0235A012" : "0235A000");
     (void)EV_LoadAudio("023AE000", 0);
     (void)EV_spmBeginSampleExecute();
     (void)EV_FreeAuthorPak(1, "0235");
     (void)CreateEventCharacter(CharacterCreationHighModel, nullptr, QYSS_BASE);
-    (void)SetLowQualityHands(FindCharacterByScenarioName(QYSS_REN));
-    (void)SetLowQualityHands(FindCharacterByScenarioName(QYSS_YUAN));
+    (void)SetLowQualityHands(ctrlGetScenarioChara(QYSS_REN));
+    (void)SetLowQualityHands(ctrlGetScenarioChara(QYSS_YUAN));
     if (!qyssEntryMode)
         work->authorState = 3;
     else if (qyssEntryMode == 1) {
@@ -156,7 +156,7 @@ std::int32_t FadeQyssWaiting(QyssStalkWork *work) {
     if (work->state == 1) {
         (void)npcResetDateTimeIfNeeded();
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         date.hour = 19;
         date.minute = 0;
         SetCurrentDateTimeTo(date);
@@ -269,15 +269,15 @@ void QyssEndStalkCallback(void *parameter) {
         EVT_AT_SetMot_Callback(&yuanMotion);
         (void)GetMotionFrameCount(0xf002);
     }
-    (void)hndlSetFlags(FindCharacterByScenarioName(QYSS_YUAN));
-    (void)hndlSetFlags(FindCharacterByScenarioName(QYSS_REN));
+    (void)hndlSetFlags(ctrlGetScenarioChara(QYSS_YUAN));
+    (void)hndlSetFlags(ctrlGetScenarioChara(QYSS_REN));
     (void)SetDoorSubjectEnabled(QYSS_ELEVATOR, 1);
     ET_AT_KillWork(work->characters);
     EV_CleanupMapControlTask();
     HLKillOtherHierarchyTask(work->self);
     SetScenarioCharacterKillMode(QYSS_BASE, 1);
     (void)EV_FreeAuthorPak(0, "0235");
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QYSS"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QYSS"), 0);
     scenFreeEvent("QYSS.EV3");
     (void)EV_NPC_NewLoadSw(1);
     (void)npcSetCycleTimeLimitExpiry(QYSS_CYCLE, 17);

@@ -165,7 +165,7 @@ void ScenarioSequenceMotionChild_Callback(void *data) {
         return;
     ScenarioSequenceTaskData *const parent = SequenceTaskData();
     Character *const character =
-        parent && parent->scenario ? scenFindChara(parent->scenario->task, child->character) : FindCharacterByScenarioName(child->character);
+        parent && parent->scenario ? scenFindChara(parent->scenario->task, child->character) : ctrlGetScenarioChara(child->character);
     MotionWork *const motionWork = FindMotionWork(character);
     if (!motionWork)
         return;
@@ -411,9 +411,9 @@ void ScenarioSequenceTask_Callback(void *data) {
                 return;
             }
             Character *const character = task->scenario ? scenFindChara(task->scenario->task, scenarioSequenceRuntime.motionCharacter) :
-                                                          FindCharacterByScenarioName(scenarioSequenceRuntime.motionCharacter);
+                                                          ctrlGetScenarioChara(scenarioSequenceRuntime.motionCharacter);
             MotionWork *const motionWork = FindMotionWork(character);
-            if (!motionWork || !SetMotionRegionFlag(motionWork, 65, 1, static_cast<MotionRegion>(scenarioSequenceRuntime.motionRegion))) {
+            if (!motionWork || !mtwkSetRegionFlag(motionWork, 65, 1, static_cast<MotionRegion>(scenarioSequenceRuntime.motionRegion))) {
                 return;
             }
             if (!AdvanceSequenceRecord(*task)) {

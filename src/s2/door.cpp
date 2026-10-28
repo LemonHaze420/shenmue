@@ -574,7 +574,7 @@ void SetLeafState(DoorEntry &entry, DoorLeafState state) {
 
 void PublishDoorBlocker(DoorEntry &entry) {
     if (entry.state.family == 5 || entry.state.family == 7 || entry.taskEntry->blockingRadius <= 0.0f || !entry.taskEntry->claimant.name ||
-        !FindCharacterByScenarioName(entry.taskEntry->claimant)) {
+        !ctrlGetScenarioChara(entry.taskEntry->claimant)) {
         return;
     }
 
@@ -589,7 +589,7 @@ void PublishDoorBlocker(DoorEntry &entry) {
             return;
 
         shenApplyTranslationToAll(&character->entity.node, entry.state.interactionPoint);
-        control->flags = 0x000840d9U | CharacterControlPreserveCollisionRadius;
+        control->flags = 0x000840d9U | CCMF_PreserveCollisionRadius;
         control->collisionCenterRadius = entry.taskEntry->blockingRadius;
         return;
     }
@@ -1426,8 +1426,8 @@ std::int64_t manage_alpha(std::int32_t nextState, std::int32_t scriptBits) {
             const float remaining = 1.0f - charaGetAlphaDraw(ryo);
             if ((remaining >= 0.0f ? remaining : -remaining) <= 0.00000011920929f) {
                 shenToggleAreaFlags(0);
-                toggleCCMflagsByAmt(ryo, CharacterControlStairMode);
-                ccmSetFlagsFor(ryo, CharacterControlFineRaycast);
+                toggleCCMflagsByAmt(ryo, CCMF_StairMode);
+                ccmSetFlagsFor(ryo, CCMF_FineRaycast);
                 drEntryState = nextState;
                 return drRunEntryScripts(scriptBits);
             }
@@ -1488,22 +1488,22 @@ std::int64_t drWalkThroughDoor(std::int32_t nextState, std::int32_t scriptBits) 
         SelectMagicRoomAtPosition(&doorPosition);
         const auto yaw = static_cast<std::int16_t>(g_doorIngressRotation.y);
         (void)camCtrlSwitchToEventCam(30, &target, yaw);
-        (void)RequestMotionPositionTransition(
+        (void)mtwkRequestPositionTransition(
             FindMotionWork(ryo), &target, static_cast<std::uint16_t>(yaw), drEntryMotion, mtwkGetAnimLoopStartFrm(drEntryMotion));
         drEntryWaitFrames = 0;
         ResetScenarioFreeTalkResumeFlags();
         ++drEntryState;
     } else if (drEntryState == 18) {
         const auto frames = static_cast<float>(GetMotionFrameCount(static_cast<std::uint16_t>(drEntryMotion)));
-        const float frame = GetMotionFrame(FindMotionWork(ryo), MotionRegion::LowerBody);
+        const float frame = mtwkGetFrame(FindMotionWork(ryo), MotionRegion::LowerBody);
         if ((mtwkGetAnimLoopStartFrm(drEntryMotion) + frames) * 0.5f <= frame) {
             DoorTaskEntry *const task = drFindTaskEntry(doorSearchRegion);
             const auto count = static_cast<float>(GetMotionFrameCount(static_cast<std::uint16_t>(drEntryMotion)));
             task->motionScale = task->motionScale - 2.0f / (count - mtwkGetAnimLoopStartFrm(drEntryMotion));
-            if (SetMotionRegionFlag(FindMotionWork(ryo), 65, 1, MotionRegion::LowerBody) != 0) {
+            if (mtwkSetRegionFlag(FindMotionWork(ryo), 65, 1, MotionRegion::LowerBody) != 0) {
                 drFindTaskEntry(doorSearchRegion)->motionScale = 1.0f;
-                toggleCCMflagsByAmt(ryo, CharacterControlFineRaycast);
-                ccmSetFlagsFor(ryo, CharacterControlStairMode);
+                toggleCCMflagsByAmt(ryo, CCMF_FineRaycast);
+                ccmSetFlagsFor(ryo, CCMF_StairMode);
                 (void)SetPlayerControlEnabled(1);
                 doorSearchRegion = {};
                 drEntryState = nextState;
@@ -1517,7 +1517,7 @@ std::int64_t drWalkThroughDoor(std::int32_t nextState, std::int32_t scriptBits) 
         camCtrlApplyNextAndTargetPos();
         return 0;
     } else if (drEntryState == 19) {
-        ccmSetFlagsFor(ryo, CharacterControlEvaluateMotion);
+        ccmSetFlagsFor(ryo, CCMF_EvaluateMotion);
         charaToggleFlag(ryo, 0);
         drEntryState = nextState;
         doorSearchRegion = {};
@@ -1540,12 +1540,12 @@ std::int64_t drWalkThroughDoor(std::int32_t nextState, std::int32_t scriptBits) 
     } else {
         const float startFrame = mtwkGetAnimLoopStartFrm(drEntryMotion) + 1.0f;
         (void)BeginDoorAnimation(
-            static_cast<std::int32_t>(doorSearchRegion.name), GetCharacterScenarioName(ryo), static_cast<std::int32_t>(drEntryMotion), startFrame, 1.0f);
+            static_cast<std::int32_t>(doorSearchRegion.name), ctrlGetScenarioCharaName(ryo), static_cast<std::int32_t>(drEntryMotion), startFrame, 1.0f);
         EV_NPC_NewLoadSw(static_cast<std::uint32_t>(drEntryNpcLoadState));
         if (drRunEntryScripts(scriptBits) != 0)
             return 1;
         EV_NPC_NewLoadSw(0);
-        if (doorTriggerTransition(doorSearchRegion, GetCharacterScenarioName(ryo)) != 0) {
+        if (doorTriggerTransition(doorSearchRegion, ctrlGetScenarioCharaName(ryo)) != 0) {
             camCtrlSetState(doorRuntime.previousCameraState);
             drEntryState += 2;
         } else {
@@ -1557,8 +1557,8 @@ std::int64_t drWalkThroughDoor(std::int32_t nextState, std::int32_t scriptBits) 
             Matrix4x4::preTranslate(location.x, location.y, location.z);
             SetDoorViewSpaceEuler({0, playerGetRotY(), 0});
             const auto motion = static_cast<std::uint16_t>(drEntryMotion);
-            (void)SampleNativeMotionRoot(motion, GetMotionRigBoneId(FindMotionWork(ryo)), -1.0f, location);
-            (void)SampleNativeMotionRoot(motion, GetMotionRigBoneId(FindMotionWork(ryo)), mtwkGetAnimLoopStartFrm(drEntryMotion) + 1.0f, target);
+            (void)SampleNativeMotionRoot(motion, mtwkGetRigBoneId(FindMotionWork(ryo)), -1.0f, location);
+            (void)SampleNativeMotionRoot(motion, mtwkGetRigBoneId(FindMotionWork(ryo)), mtwkGetAnimLoopStartFrm(drEntryMotion) + 1.0f, target);
             Matrix4x4::preTranslate(location.x - target.x, 0.0f, location.z - target.z);
             target = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
             Matrix4x4::Pop(1);
@@ -1604,12 +1604,12 @@ std::int64_t drTryDoor(std::int32_t nextState, std::int32_t scriptBits) {
         Matrix4x4::Pop(1);
         drEntryMotion = 0xf00a;
         const auto yaw = static_cast<std::int16_t>(g_doorIngressRotation.y);
-        (void)RequestMotionPositionTransition(FindMotionWork(ryo), &location, static_cast<std::uint16_t>(yaw), 0xf00a, 11.0f);
+        (void)mtwkRequestPositionTransition(FindMotionWork(ryo), &location, static_cast<std::uint16_t>(yaw), 0xf00a, 11.0f);
         drEntryWaitFrames = 0;
         Matrix4x4_PushActiveTransform();
         Matrix4x4::preTranslate(location.x, location.y, location.z);
         SetDoorViewSpaceEuler({0, yaw, 0});
-        (void)SampleNativeMotionRoot(static_cast<std::uint16_t>(drEntryMotion), GetMotionRigBoneId(FindMotionWork(ryo)), -1.0f, location);
+        (void)SampleNativeMotionRoot(static_cast<std::uint16_t>(drEntryMotion), mtwkGetRigBoneId(FindMotionWork(ryo)), -1.0f, location);
         Matrix4x4::preTranslate(location.x, 0.0f, location.z);
         location = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         Matrix4x4::Pop(1);
@@ -1626,7 +1626,7 @@ std::int64_t drTryDoor(std::int32_t nextState, std::int32_t scriptBits) {
                 (void)doorPlayRigidMotionRange(doorSearchRegion, 0xf0fc, 12.0f, 1.0f, -1.0f);
                 drEntryState += 2;
             }
-            if (SetMotionRegionFlag(FindMotionWork(ryo), 65, 1, MotionRegion::LowerBody) != 0) {
+            if (mtwkSetRegionFlag(FindMotionWork(ryo), 65, 1, MotionRegion::LowerBody) != 0) {
                 drEntryState = nextState;
                 camCtrlSetState(doorRuntime.previousCameraState);
                 return drRunEntryScripts(scriptBits);
@@ -1642,14 +1642,14 @@ std::int64_t drTryDoor(std::int32_t nextState, std::int32_t scriptBits) {
         }
         break;
     case 34:
-        if (SetMotionRegionFlag(FindMotionWork(ryo), 65, 1, MotionRegion::LowerBody) != 0) {
+        if (mtwkSetRegionFlag(FindMotionWork(ryo), 65, 1, MotionRegion::LowerBody) != 0) {
             drEntryState = nextState;
             camCtrlSetState(doorRuntime.previousCameraState);
             return drRunEntryScripts(scriptBits);
         }
         break;
     case 35:
-        if (GetMotionFrame(FindMotionWork(ryo), MotionRegion::LowerBody) >= 46.0f) {
+        if (mtwkGetFrame(FindMotionWork(ryo), MotionRegion::LowerBody) >= 46.0f) {
             drEntryState = nextState;
             camCtrlSetState(doorRuntime.previousCameraState);
             return drRunEntryScripts(scriptBits);
@@ -1698,12 +1698,12 @@ std::int64_t drKnockOnDoor(std::int32_t nextState, std::int32_t variant, std::in
         location = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         Matrix4x4::Pop(1);
         const auto yaw = static_cast<std::int16_t>(g_doorIngressRotation.y);
-        (void)RequestMotionPositionTransition(FindMotionWork(ryo), &location, static_cast<std::uint16_t>(yaw), drEntryMotion, variant ? 17.0f : 75.0f);
+        (void)mtwkRequestPositionTransition(FindMotionWork(ryo), &location, static_cast<std::uint16_t>(yaw), drEntryMotion, variant ? 17.0f : 75.0f);
         drEntryWaitFrames = 0;
         Matrix4x4_PushActiveTransform();
         Matrix4x4::preTranslate(location.x, location.y, location.z);
         SetDoorViewSpaceEuler({0, yaw, 0});
-        (void)SampleNativeMotionRoot(static_cast<std::uint16_t>(drEntryMotion), GetMotionRigBoneId(FindMotionWork(ryo)), -1.0f, location);
+        (void)SampleNativeMotionRoot(static_cast<std::uint16_t>(drEntryMotion), mtwkGetRigBoneId(FindMotionWork(ryo)), -1.0f, location);
         Matrix4x4::preTranslate(location.x, 0.0f, location.z);
         location = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         Matrix4x4::Pop(1);
@@ -1749,7 +1749,7 @@ std::int64_t drKnockOnDoor(std::int32_t nextState, std::int32_t variant, std::in
         break;
     }
     (void)doorPlayRigidMotion(doorSearchRegion, leafMotion, variant ? 18.0f : 76.0f, 1.0f);
-    if (SetMotionRegionFlag(FindMotionWork(ryo), 65, 1, MotionRegion::LowerBody) == 0) {
+    if (mtwkSetRegionFlag(FindMotionWork(ryo), 65, 1, MotionRegion::LowerBody) == 0) {
         camCtrlApplyNextAndTargetPos();
         return 0;
     }
@@ -1792,10 +1792,10 @@ std::int64_t drFinishEntry(std::int32_t nextState) {
     }
     if (drEntryState == -1) {
         Character *const ryo = ctrlGetRootNode();
-        toggleCCMflagsByAmt(ryo, CharacterControlFineRaycast);
-        ccmSetFlagsFor(ryo, CharacterControlStairMode);
+        toggleCCMflagsByAmt(ryo, CCMF_FineRaycast);
+        ccmSetFlagsFor(ryo, CCMF_StairMode);
         (void)SetPlayerControlEnabled(1);
-        (void)ReleaseDoor(static_cast<std::int32_t>(doorSearchRegion.name), GetCharacterScenarioName(ryo));
+        (void)ReleaseDoor(static_cast<std::int32_t>(doorSearchRegion.name), ctrlGetScenarioCharaName(ryo));
         --drEntryState;
     }
     return 0;
@@ -1834,7 +1834,7 @@ std::int64_t drOccupantAnswers(std::int32_t nextState) {
                 g_doorIngressRotation.y += 0x8000;
             }
             location = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
-            (void)RequestMotionPositionTransition(FindMotionWork(ryo), &location, static_cast<std::uint16_t>(g_doorIngressRotation.y), 61442, 0.0f);
+            (void)mtwkRequestPositionTransition(FindMotionWork(ryo), &location, static_cast<std::uint16_t>(g_doorIngressRotation.y), 61442, 0.0f);
         } else {
             (void)mtwkRequestMotion(FindMotionWork(ryo), 0xf002, MotionRegion::LowerBody);
         }
@@ -1866,19 +1866,19 @@ std::int64_t drOccupantAnswers(std::int32_t nextState) {
     case 81: {
         if (EV_ForceLoadNpc(drAnswerNpc) == 0)
             return 0;
-        Character *const npc = FindCharacterByScenarioName(drAnswerNpc);
+        Character *const npc = ctrlGetScenarioChara(drAnswerNpc);
         MotionWork *const work = FindMotionWork(npc);
-        toggleCCMflagsByAmt(npc, CharacterControlStairMode);
-        ccmSetFlagsFor(npc, CharacterControlFineRaycast);
-        ccmSetFlagsFor(npc, CharacterControlEvaluateMotion);
-        (void)SetMotionRegionFlag(work, 71, 0, MotionRegion::LowerBody);
+        toggleCCMflagsByAmt(npc, CCMF_StairMode);
+        ccmSetFlagsFor(npc, CCMF_FineRaycast);
+        ccmSetFlagsFor(npc, CCMF_EvaluateMotion);
+        (void)mtwkSetRegionFlag(work, 71, 0, MotionRegion::LowerBody);
         shenApplyTranslationToAll(&npc->entity.node, drAnswerPosition);
-        SetCharacterWorldRotation(npc, drAnswerRotation);
+        charaSetWorldRot(npc, drAnswerRotation);
         drAnswerMotion = GetNpcDoorAnimation(static_cast<std::int32_t>(doorSearchRegion.name), npc, &drAnswerPosition);
         (void)mtwkRequestMotion(work, static_cast<std::uint16_t>(drAnswerMotion), MotionRegion::LowerBody);
         (void)drSetAnswerMotion(drAnswerMotion);
-        SetMotionSpeed(work, 0.89999998f, MotionRegion::LowerBody);
-        SetMotionLayerEndFrame(work, drAnswerFrame, MotionRegion::LowerBody);
+        mtwkSetSpeed(work, 0.89999998f, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(work, drAnswerFrame, MotionRegion::LowerBody);
         (void)doorLoopRigidMotion(doorSearchRegion, npcGetRemappedAnimId(drAnswerMotion), 0.0f, 0.89999998f);
         ++drEntryState;
         return 0;
@@ -1887,16 +1887,16 @@ std::int64_t drOccupantAnswers(std::int32_t nextState) {
         ++drEntryState;
         [[fallthrough]];
     case 83: {
-        Character *const npc = FindCharacterByScenarioName(drAnswerNpc);
+        Character *const npc = ctrlGetScenarioChara(drAnswerNpc);
         MotionWork *const work = FindMotionWork(npc);
-        if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody) == 0)
+        if (mtwkSetRegionFlag(work, 65, 1, MotionRegion::LowerBody) == 0)
             return 0;
         (void)StartScenarioFreeTalkRecord(drAnswerNpc, -1);
         Vector3 position{};
-        (void)GetMotionBonePosition(work, MB_Head, &position);
-        (void)UpdateMotionWorkWithPosition(FindMotionWork(ryo), &position, 0);
-        (void)GetMotionBonePosition(FindMotionWork(ryo), MB_Head, &position);
-        (void)UpdateMotionWorkWithPosition(work, &position, 0);
+        (void)mtwkGetBonePosition(work, MB_Head, &position);
+        (void)mtwkUpdateWithPosition(FindMotionWork(ryo), &position, 0);
+        (void)mtwkGetBonePosition(FindMotionWork(ryo), MB_Head, &position);
+        (void)mtwkUpdateWithPosition(work, &position, 0);
         (void)mtwkRequestMotion(work, static_cast<std::uint16_t>(drAnswerDoorMotion), MotionRegion::LowerBody);
         (void)doorLoopRigidMotion(doorSearchRegion, npcGetRemappedAnimId(drAnswerMotion), drAnswerFrame, 0.0f);
         ++drEntryState;
@@ -1905,26 +1905,26 @@ std::int64_t drOccupantAnswers(std::int32_t nextState) {
     case 84:
         if (!IsScenarioBusy()) {
             (void)StopScenarioFreeTalkRecord();
-            MotionWork *const work = FindMotionWork(FindCharacterByScenarioName(drAnswerNpc));
-            (void)RequestMotionPositionTransition(work, &drAnswerPosition, static_cast<std::uint16_t>(drAnswerRotation.y), drAnswerMotion, drAnswerFrame);
-            (void)UpdateMotionWorkWithPosition(work, nullptr, 0);
+            MotionWork *const work = FindMotionWork(ctrlGetScenarioChara(drAnswerNpc));
+            (void)mtwkRequestPositionTransition(work, &drAnswerPosition, static_cast<std::uint16_t>(drAnswerRotation.y), drAnswerMotion, drAnswerFrame);
+            (void)mtwkUpdateWithPosition(work, nullptr, 0);
             ++drEntryState;
         }
         return 0;
     case 85: {
-        MotionWork *const work = FindMotionWork(FindCharacterByScenarioName(drAnswerNpc));
+        MotionWork *const work = FindMotionWork(ctrlGetScenarioChara(drAnswerNpc));
         if (mtwkSetExtraFlag(work, 0x3a, 1) != 0)
             return 0;
-        SetMotionSpeed(work, 0.0f, MotionRegion::LowerBody);
+        mtwkSetSpeed(work, 0.0f, MotionRegion::LowerBody);
         drAnswerDoorSounded = 0;
         (void)doorLoopRigidMotion(doorSearchRegion, npcGetRemappedAnimId(drAnswerMotion), drAnswerFrame - 1.0f, -1.0f);
         ++drEntryState;
         [[fallthrough]];
     }
     case 86: {
-        Character *const npc = FindCharacterByScenarioName(drAnswerNpc);
+        Character *const npc = ctrlGetScenarioChara(drAnswerNpc);
         MotionWork *const work = FindMotionWork(npc);
-        const float frame = GetMotionFrame(work, MotionRegion::LowerBody) - 1.0f;
+        const float frame = mtwkGetFrame(work, MotionRegion::LowerBody) - 1.0f;
         if (drAnswerDoorSounded == 0) {
             DoorEntry *const entry = FindDoorEntry(doorSearchRegion.name);
             const auto yaw = static_cast<std::int16_t>(entry->taskEntry->motionNode.rotation.y);
@@ -1941,23 +1941,23 @@ std::int64_t drOccupantAnswers(std::int32_t nextState) {
         Matrix4x4_PushActiveTransform();
         Matrix4x4::preTranslate(drAnswerPosition.x, drAnswerPosition.y, drAnswerPosition.z);
         SetDoorViewSpaceEuler(drAnswerRotation);
-        (void)SampleNativeMotionRoot(static_cast<std::uint16_t>(drAnswerMotion), GetMotionRigBoneId(work), frame - 1.0f, position);
+        (void)SampleNativeMotionRoot(static_cast<std::uint16_t>(drAnswerMotion), mtwkGetRigBoneId(work), frame - 1.0f, position);
         Matrix4x4::preTranslate(position.x, 0.0f, position.z);
         position = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         Matrix4x4::Pop(1);
-        (void)SetMotionRegionFlag(work, 71, 0, MotionRegion::LowerBody);
+        (void)mtwkSetRegionFlag(work, 71, 0, MotionRegion::LowerBody);
         shenApplyTranslationToAll(&npc->entity.node, position);
         (void)mtwkRequestMotion(work, static_cast<std::uint16_t>(drAnswerMotion), MotionRegion::LowerBody);
-        SetMotionRegionEvalTime(work, frame, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(work, frame, MotionRegion::LowerBody);
         return 0;
     }
     case 87:
         if ((drFindTaskEntry(doorSearchRegion)->flags & 3U) == 0) {
             LeaveMagicRoom();
-            Character *const npc = FindCharacterByScenarioName(drAnswerNpc);
-            ccmSetFlagsFor(npc, CharacterControlStairMode);
-            toggleCCMflagsByAmt(npc, CharacterControlFineRaycast);
-            toggleCCMflagsByAmt(npc, CharacterControlEvaluateMotion);
+            Character *const npc = ctrlGetScenarioChara(drAnswerNpc);
+            ccmSetFlagsFor(npc, CCMF_StairMode);
+            toggleCCMflagsByAmt(npc, CCMF_FineRaycast);
+            toggleCCMflagsByAmt(npc, CCMF_EvaluateMotion);
             (void)npcSetDoorAnswerMode(drAnswerNpc, 0);
             EV_NPC_NewLoadSw(1);
             (void)EV_npcFree(drAnswerNpc);
@@ -2358,7 +2358,7 @@ void RestoreDoorMapReadersAndCamera() {
 void ReleaseDoorAuthorPackage() {
     char package[8]{};
     std::memcpy(package, &doorRuntime.temporaryAuthor, sizeof(shen_name));
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
 }
 
 std::int64_t RestoreDoorAuthor(std::int32_t restoreMedia) {
@@ -2414,7 +2414,7 @@ std::int64_t LoadDoorAuthor(shen_name author, std::int32_t withAudio) {
     if (FindPakByEntryName(package))
         return 0;
     LoadMapPackage(Filepath_Gen(FilepathGenMode::SceneDirectory), package);
-    LoadPak();
+    pakLoadFlush();
     SetupDoorAreaCallbacks();
     DoorSceneCleanup(withAudio ? 0 : 1);
     EV_NPC_NewLoadSw(1);
@@ -2436,13 +2436,13 @@ void CompleteDoorPlayerPlacement(DoorEntry &entry) {
     SetPlayerControlEnabled(0);
     Vector3 position = GetCharacterWorldPosition(player);
     if (entry.state.family != 7) {
-        const std::uint16_t animation = GetMotionAnimationId(motion, MotionRegion::LowerBody);
+        const std::uint16_t animation = mtwkGetAnimationId(motion, MotionRegion::LowerBody);
         float current{}, maximum{};
-        CopyMotionRegionTimes(motion, nullptr, &current, &maximum, nullptr, MotionRegion::LowerBody);
+        mtwkCopyRegionTimes(motion, nullptr, &current, &maximum, nullptr, MotionRegion::LowerBody);
         (void)plymFinishRegionInteraction();
         Vector3 first{}, last{};
-        SampleNativeMotionRoot(animation, GetMotionRigBoneId(motion), current, first);
-        SampleNativeMotionRoot(animation, GetMotionRigBoneId(motion), maximum, last);
+        SampleNativeMotionRoot(animation, mtwkGetRigBoneId(motion), current, first);
+        SampleNativeMotionRoot(animation, mtwkGetRigBoneId(motion), maximum, last);
         Vector3i rotation{};
         GetScenarioCharacterEulerAngles(kDoorPlayerName, &rotation, EventTransformFlags::World);
         Matrix4x4_PushActiveTransform();
@@ -2469,7 +2469,7 @@ void CompleteDoorPlayerPlacement(DoorEntry &entry) {
     position.y = shenFindIntersectionWithScene(position, position.y);
     if (std::fabs(position.y - height) > 0.5f)
         position.y = height;
-    SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
     shenApplyTranslationToAll(&player->entity.node, position);
     mtwkRequestMotion(motion, 0xf002U, MotionRegion::LowerBody);
 }
@@ -2498,9 +2498,9 @@ void FinishDoorAuthorLeaf() {
 void RestoreDoorPlayerControl() {
     CharacterControlModel *const control = FindCharacterControlModel(g_playerRuntime.character);
     if (control) {
-        control->flags |= CharacterControlFineRaycast;
-        control->flags &= ~CharacterControlStairMode;
-        control->flags |= CharacterControlEvaluateMotion;
+        control->flags |= CCMF_FineRaycast;
+        control->flags &= ~CCMF_StairMode;
+        control->flags |= CCMF_EvaluateMotion;
     }
     SetPlayerControlEnabled(1);
 }
@@ -2566,7 +2566,7 @@ void UpdateDoorAuthorController() {
         std::memcpy(package, &doorRuntime.temporaryAuthor, sizeof(shen_name));
         if (FindPakByEntryName(package) || !LoadMapPackage(Filepath_Gen(FilepathGenMode::SceneDirectory), package))
             return;
-        LoadPak();
+        pakLoadFlush();
         SetupDoorAreaCallbacks();
         EV_NPC_NewLoadSw(1);
         SetDoorAuthorSecondaryNodes(doorRuntime.temporaryAuthor, 0);
@@ -2699,7 +2699,7 @@ void DoorTask_Callback(void *) {
         return;
 
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
 
     if (EV_GetShenmueFlag(0xff) != 0 && doorRuntime.cachedSceneId == 0) {
         doorRuntime.cachedSceneId = 1;
@@ -2818,7 +2818,7 @@ std::int64_t drBeginEntry(shen_name searchRegion) {
         drEntryKind = drGetEntryKind(searchRegion);
         return 1;
     }
-    const shen_name ryo = GetCharacterScenarioName(ctrlGetRootNode());
+    const shen_name ryo = ctrlGetScenarioCharaName(ctrlGetRootNode());
     if (DoorEntry *const entry = FindDoorEntry(searchRegion.name); entry && (entry->taskEntry->flags & 3U) == 0) {
         if (!entry->taskEntry->claimant.name || entry->taskEntry->claimant.name == ryo.name)
             entry->taskEntry->claimant = {};
@@ -2848,10 +2848,10 @@ shen_name drGetCurrentAuthorId() {
 void ResetDoorInteraction() {
     Character *const ryo = ctrlGetRootNode();
     charaToggleFlag(ryo, 1);
-    toggleCCMflagsByAmt(ryo, CharacterControlEvaluateMotion);
-    toggleCCMflagsByAmt(ryo, CharacterControlFineRaycast);
-    ccmSetFlagsFor(ryo, CharacterControlStairMode);
-    const shen_name name = GetCharacterScenarioName(ryo);
+    toggleCCMflagsByAmt(ryo, CCMF_EvaluateMotion);
+    toggleCCMflagsByAmt(ryo, CCMF_FineRaycast);
+    ccmSetFlagsFor(ryo, CCMF_StairMode);
+    const shen_name name = ctrlGetScenarioCharaName(ryo);
     if (DoorEntry *const entry = FindDoorEntry(doorSearchRegion.name); entry && (entry->taskEntry->flags & 3U) == 0) {
         if (!entry->taskEntry->claimant.name || entry->taskEntry->claimant.name == name.name)
             entry->taskEntry->claimant = {};
@@ -2869,7 +2869,7 @@ std::int32_t GetDoorOpeningState(shen_name doorId) {
         return 2;
 
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     const std::uint32_t time = static_cast<std::uint32_t>(dateTime.minute + 100 * dateTime.hour);
     if (metadata->opens == metadata->closes)
         return 3;
@@ -2937,7 +2937,7 @@ bool ClaimDoor(shen_name doorId, shen_name scenarioName) {
     }
     const DoorLeafState state = GetLeafState(*entry);
     if (automatic || state == DoorLeafState::StableA) {
-        if (scenarioName.name != kDoorTaskToken.name && FindCharacterByScenarioName(scenarioName) != g_playerRuntime.character &&
+        if (scenarioName.name != kDoorTaskToken.name && ctrlGetScenarioChara(scenarioName) != g_playerRuntime.character &&
             !doorRuntime.sortedEntries.empty() && entry == &doorRuntime.entries[doorRuntime.sortedEntries.front()] &&
             entry->taskEntry->sortKey < kDoorInteractionRadiusSquared) {
             return false;
@@ -3274,7 +3274,7 @@ void InitializeDoorRuntime(const MapInfoChunk *doorChunk) {
     doorRuntime.entries.reserve(static_cast<std::size_t>(entryCount));
     LoadDoorNumberModel();
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     doorRuntime.cachedSceneId = EV_GetShenmueFlag(0xff) != 0;
     std::size_t primaryResolved = 0;
     std::size_t pairedResolved = 0;
@@ -3433,7 +3433,7 @@ std::int64_t doorTriggerTransition(shen_name subject, shen_name character) {
     DoorEntry *const entry = FindDoorEntry(subject.name);
     if (!entry)
         return 0;
-    Character *const owner = FindCharacterByScenarioName(character);
+    Character *const owner = ctrlGetScenarioChara(character);
     if (owner != g_playerRuntime.character && character.name != kDoorTaskToken.name)
         return 0;
     DoorTaskEntry *const data = entry->taskEntry;

@@ -37,7 +37,7 @@ void SetEventCharacterReadFlag(bool enabled) {
 } // namespace
 
 void AT_SetLocalBaseChara(shen_name name, shen_name base) {
-    Character *const character = FindCharacterByScenarioName(name);
+    Character *const character = ctrlGetScenarioChara(name);
     if (!character)
         return;
     const Vector3 position = GetCharacterWorldPosition(character);
@@ -45,17 +45,17 @@ void AT_SetLocalBaseChara(shen_name name, shen_name base) {
     CharacterNode *parent = nullptr;
     if (base.name != EVENT_CHARACTER_INVALID.name) {
         if (base.name > 31)
-            parent = GetCharacterNode(FindCharacterByScenarioName(base));
+            parent = GetCharacterNode(ctrlGetScenarioChara(base));
         else
             parent = reinterpret_cast<CharacterNode *>(GetCharacterInMapControlTask(static_cast<std::int32_t>(base.name)));
     }
     character->entity.node.child = parent;
     shenApplyTranslationToAll(&character->entity.node, position);
-    SetCharacterWorldRotation(character, rotation);
+    charaSetWorldRot(character, rotation);
 }
 
 shen_name EV_SCEN_FindChar_Wrapper(shen_name name) {
-    Character *const character = FindCharacterByScenarioName(name);
+    Character *const character = ctrlGetScenarioChara(name);
     if (!character || !character->entity.node.child)
         return EVENT_CHARACTER_INVALID;
     CharacterNode *const parent = character->entity.node.child;
@@ -114,7 +114,7 @@ std::int64_t LoadOneNpcAndAdvance(EventReadCharactersWork *work, shen_name name)
     switch (record.state) {
     case 0:
         record.character = name;
-        if (FindCharacterByScenarioName(name)) {
+        if (ctrlGetScenarioChara(name)) {
             record.state = 2;
             record.newlyLoaded = 0;
             return 0;
@@ -136,7 +136,7 @@ std::int64_t LoadOneNpcAndAdvance(EventReadCharactersWork *work, shen_name name)
     case 2: {
         record.restoreHeightGravity = 1;
         record.restoreGravity = 1;
-        MotionWork *const motion = FindMotionWork(FindCharacterByScenarioName(name));
+        MotionWork *const motion = FindMotionWork(ctrlGetScenarioChara(name));
         record.motionRootMode = GetEventCharacterMotionRootMode(motion);
         record.previousBase = EV_SCEN_FindChar_Wrapper(name);
         EV_SetRefBoardParamsFor(name, 1);
@@ -146,14 +146,14 @@ std::int64_t LoadOneNpcAndAdvance(EventReadCharactersWork *work, shen_name name)
         EV_SetCharaControllerFlags(name, UpdateHeight, NpcCharacterControllerState::Disabled);
         AT_SetLocalBaseChara(name, EVENT_CHARACTER_INVALID);
         figpSetFlagsBlendForBlur(name, 2, 1);
-        EV_mtwkSetEnabled(motion, true);
+        mtwkSetEnabled(motion, true);
         mtwkSetExtraFlag(motion, 0, 0);
         mtwkSetExtraFlag(motion, 3, 2);
         mtwkSetRequestedRootMode(motion, 3);
-        SetMotionFrameTime(motion, 7, MotionRegion::LowerBody);
-        SetMotionRegionFlag(motion, 66, 2, MotionRegion::LowerBody);
-        SetMotionRegionFlag(motion, 69, 2, MotionRegion::LowerBody);
-        SetMotionRegionFlag(motion, 71, 2, MotionRegion::LowerBody);
+        mtwkSetFrameTime(motion, 7, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(motion, 66, 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(motion, 69, 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(motion, 71, 2, MotionRegion::LowerBody);
         ++work->characterIndex;
         record.state = 3;
         break;
@@ -168,25 +168,25 @@ std::int64_t RestoreEventCharacter(EventReadCharactersWork *work) {
     EventReadCharacterRecord &record = work->characters[static_cast<std::size_t>(--work->characterIndex)];
     const shen_name name = record.character;
     record.state = 0;
-    Character *const character = FindCharacterByScenarioName(name);
+    Character *const character = ctrlGetScenarioChara(name);
     if (!character)
         return 0;
     figpSetFlagsBlendForBlur(name, 5, 2);
     MotionWork *const motion = FindMotionWork(character);
-    EV_mtwkSetEnabled(motion, true);
+    mtwkSetEnabled(motion, true);
     mtwkSetExtraFlag(motion, 0, 0);
     mtwkSetExtraFlag(motion, 3, 2);
     mtwkSetRequestedRootMode(motion, record.motionRootMode);
-    SetMotionFrameTime(motion, 5, MotionRegion::LowerBody);
-    SetMotionRegionFlag(motion, 66, 2, MotionRegion::LowerBody);
-    SetMotionRegionFlag(motion, 69, 2, MotionRegion::LowerBody);
-    SetMotionRegionFlag(motion, 71, 2, MotionRegion::LowerBody);
+    mtwkSetFrameTime(motion, 5, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 66, 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 69, 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 71, 2, MotionRegion::LowerBody);
     mtwkRequestMotion(motion, EVENT_CHARACTER_STAND_MOTION, MotionRegion::LowerBody);
     EV_SetRefBoardParamsFor(name, 0);
     EV_SetCharacterAlphaEnabled(name, true);
     EV_SetCharaControllerFlags(name, UpdateHeight, NpcCharacterControllerState::Enabled);
     AT_SetLocalBaseChara(name, record.previousBase);
-    UpdateMotionWorkWithPosition(motion, nullptr, 0);
+    mtwkUpdateWithPosition(motion, nullptr, 0);
     if (record.restoreHeightGravity) {
         EV_SetCharaControllerFlags(name, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     }

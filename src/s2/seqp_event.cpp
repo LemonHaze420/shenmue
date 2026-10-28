@@ -123,7 +123,7 @@ std::int64_t UpdateCompiledSequenceWait(CompiledSequenceWork *work) {
         ctrlStopSubtitles();
         break;
     case 5:
-        if (!SetMotionRegionFlag(scenFindMotionwork(work->waitCharacter), 65, 1, MotionRegion::LowerBody))
+        if (!mtwkSetRegionFlag(scenFindMotionwork(work->waitCharacter), 65, 1, MotionRegion::LowerBody))
             return 0;
         break;
     case 6:
@@ -188,7 +188,7 @@ void ResetAuthorCharacterForSequence(shen_name character) {
     EV_SetCharacterAlphaEnabled(character, false);
     SetScenarioReflectorBoardValues(character, &values);
     EV_SetRefBoardParamsFor(character, 1);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(character), 0, 8, 16);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(character), 1, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(character), 0, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(character), 1, 8, 16);
 }
 }

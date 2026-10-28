@@ -38,7 +38,7 @@ void AreaQCAEMain(std::uint32_t) {
     data->field20 = 0;
     data->callback = QCAEMainloopNullsub;
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     if (static_cast<std::uint8_t>(dateTime.hour - 6) > 12U) {
         EV_SetWeatherInstruction(0x780, 0);
         EV_SetWeatherInstruction(0x0c, 0);

@@ -16,8 +16,8 @@ void Failure(YtqbWork &work, float angle, std::int32_t delay) {
     YtqbTransition(work, YtqbRetry, 0, YtqbWaitMotion);
 }
 void SetHands(std::byte *pose, std::uint32_t frames) {
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(YTQB_RYO_), 0, pose, frames);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(YTQB_RYO_), 1, pose, frames);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(YTQB_RYO_), 0, pose, frames);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(YTQB_RYO_), 1, pose, frames);
 }
 void QueueCamera(std::int32_t camera, float delay) {
     HLib::Task *task = HLib::EnqueueTaskWithParameter(EVT_AT_SetCam_Callback, 6, 11, sizeof(EventSetCamera), YTQB_EVNT);
@@ -70,12 +70,12 @@ void YtqbSboAttack(void *data) {
         SelectPostFxBank(3, 1);
         UploadBlurStrength(.5f);
         EV_lightLoad(YTQB_0000);
-        SetHighModelXYZ(FindCharacterByScenarioName(YTQB_CHO_), 0, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(YTQB_CHO_), 0, 1, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(YTQB_RYO_), 1, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(YTQB_RYO_), 1, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(YTQB_CHO_), 0, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(YTQB_CHO_), 0, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(YTQB_RYO_), 1, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(YTQB_RYO_), 1, 1, 0);
         SetHands(reinterpret_cast<std::byte *>(ryoQteHandPose), 0);
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(YTQB_RYO_), static_cast<std::int32_t>(FacialExpressionId::Angry), 1, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(YTQB_RYO_), static_cast<std::int32_t>(FacialExpressionId::Angry), 1, 1);
         YtqbPosition(YTQB_RYO_, YTQB_BASE, {});
         YtqbAngle(YTQB_RYO_, YTQB_BASE, 0);
         YtqbPosition(YTQB_YOH_, YTQB_BASE, YTQB_YohWaiting);

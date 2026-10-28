@@ -50,7 +50,7 @@ void SetE0061Characters(bool restore) {
 // @verified - p: CleanupE0061.
 void CleanupE0061(AreaAuthorTaskParameter *work) {
     for (const shen_name *character = AREA_0061_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

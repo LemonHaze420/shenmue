@@ -11,11 +11,11 @@ void ANBDInit() {
 
 // @verified - p
 void ANBDMain(std::uintptr_t) {
-    (void)EV_ControlPackageResources(PakCategory::Package, ANBD_PACKAGE_WAIT_MODE, 0, 0, 0);
+    (void)EV_pakUtils(PakCategory::Package, ANBD_PACKAGE_WAIT_MODE, 0, 0, 0);
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    (void)EV_ControlPackageResources(
+    (void)EV_pakUtils(
         PakCategory::Package, ANBD_PACKAGE_LOAD_MODE, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(ANBD_BOARD_PACKAGE), 0);
-    (void)EV_ControlPackageResources(PakCategory::Package, ANBD_PACKAGE_WAIT_MODE, 0, 0, 0);
+    (void)EV_pakUtils(PakCategory::Package, ANBD_PACKAGE_WAIT_MODE, 0, 0, 0);
     Vector3 position = ANBD_BOARD_LOCAL_POSITION;
     Vector3i rotation = ANBD_BOARD_ROTATION;
     ApplyScenarioTranslationAndRotation(&ANBD_BOARD_ORIGIN, &rotation, &position);

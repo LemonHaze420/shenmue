@@ -59,7 +59,7 @@ void WbbrCompleteAuthorCallback(void *) {
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     SetPlayerControlEnabled(1);
     HLib::DestroyCurrentTask();
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WBBR"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WBBR"), 0);
     (void)EV_LoadCutsceneFromCurrentScene("WB00");
     (void)EV_LoadAudio("WB00_000", EV_GetShenmueFlag(0xff));
     (void)EV_spmBeginSampleExecute();

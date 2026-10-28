@@ -124,8 +124,8 @@ void PawnWaitPackage(void *parameter) {
         HLib::SetCurrentTaskTo(PawnDone);
         return;
     }
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
     EV_LoadCutsceneFromCurrentScene("01210000");
     const shen_name characters[]{FindPawnShopScene(work->shop).owner, shen_name{0}};
     HLib::SetCurrentTaskTo(PawnWaitOwner);
@@ -201,7 +201,7 @@ void PawnDone(void *parameter) {
     if (!scene.owner.name)
         return;
     if (work->package[0])
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
     const shen_name characters[]{scene.owner, shen_name{0}};
     RestoreAreaLoopCharacters(characters);
     camCtrlSetState(SnapYawTarget);
@@ -387,7 +387,7 @@ void RestorePawnTransactionPose(PawnEventWork &work) {
     constexpr std::uint32_t motions[]{7324, 7328, 7325, 7324, 7325, 7322, 7324, 7324, 7324, 7325, 7322, 7325};
     if (index >= 12)
         return;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work.package), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work.package), 0);
     EVS_LoopCamera(cameras[index], PAWN_BASE, PAWN_BASE);
     camCtrlDisableFilmBars();
     HLib::Task *ownerTask = HLib::EnqueueTaskWithParameter(AreaLoopMotionCallback, 4, 0x0b, sizeof(AreaLoopMotionWork), PAWN_EVENT);

@@ -36,7 +36,7 @@ void Prepare0500Character(shen_name character, bool motion) {
     EV_SetCharaControllerFlags(character, 1, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Disabled);
     if (motion)
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 6, 2);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 2);
     EV_SetCharacterAlphaEnabled(character, false);
 }
 void Restore0500Character(shen_name character, bool motion) {
@@ -45,7 +45,7 @@ void Restore0500Character(shen_name character, bool motion) {
     EV_SetCharaControllerFlags(character, 2, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(character, 3, NpcCharacterControllerState::Enabled);
     if (motion)
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 6, 0);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 0);
     EV_SetCharacterAlphaEnabled(character, true);
 }
 } // namespace
@@ -68,7 +68,7 @@ void Start0500(std::uintptr_t) {
 }
 void Setup0500Environment() {
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 8;
     date.minute = 0;
     SetCurrentDateTimeTo(date);
@@ -169,7 +169,7 @@ void Update0500Author(void *data) {
     case 1141:
         EV_lightLoad(AREA_0500_LIGHT);
         SetIsSkySetup(0);
-        SetClothFlag(FindCharacterByScenarioName(AREA_0500_SGT), 4, 1);
+        SetClothFlag(ctrlGetScenarioChara(AREA_0500_SGT), 4, 1);
         camCtrlSetFarDistance(700.0f);
         camCtrlSetNearDistance(700.0f);
         break;
@@ -178,7 +178,7 @@ void Update0500Author(void *data) {
         EV_SetLightFlagForIndex(0, 2);
         EV_SetIndexForLightEntry(0, 1);
         SetIsSkySetup(1);
-        SetClothFlag(FindCharacterByScenarioName(AREA_0500_SGT), 4, 0);
+        SetClothFlag(ctrlGetScenarioChara(AREA_0500_SGT), 4, 0);
         break;
     }
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
@@ -226,7 +226,7 @@ void Cleanup0500(Area0500Parameter *parent) {
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 8;
     date.minute = 30;
     SetCurrentDateTimeTo(date);

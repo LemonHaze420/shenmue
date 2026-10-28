@@ -27,7 +27,7 @@ void SetupE0076Environment() {
     EV_SetNewSceneIndex();
     if (g_currentMap.name != AREA_0076_AR03.name) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         if (time.hour < 19) {
             EV_ReinitLights(1);
             EV_SetLightFlagForIndex(0, 2);
@@ -79,19 +79,19 @@ void SetupE0076Characters() {
 // @verified - p
 void RestoreE0076Characters() {
     EV_npcLockUnlock(AREA_0076_PIN);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 0);
     EV_EnsureCharacterDraw(AREA_AUTHOR_RYO);
     mtwkSetExtraFlag(scenFindMotionwork(AREA_AUTHOR_RYO), 6, 0);
     EV_SetCharacterAlphaEnabled(AREA_AUTHOR_RYO, true);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_0076_JOP), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_0076_JOP), 0);
     EV_EnsureCharacterDraw(AREA_0076_JOP);
     mtwkSetExtraFlag(scenFindMotionwork(AREA_0076_JOP), 6, 0);
     EV_SetCharacterAlphaEnabled(AREA_0076_JOP, true);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_0076_GOI), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_0076_GOI), 0);
     EV_EnsureCharacterDraw(AREA_0076_GOI);
     mtwkSetExtraFlag(scenFindMotionwork(AREA_0076_GOI), 6, 0);
     EV_SetCharacterAlphaEnabled(AREA_0076_GOI, true);
-    SetPluralControlFor(FindCharacterByScenarioName(AREA_0076_HTK), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(AREA_0076_HTK), 0);
     EV_EnsureCharacterDraw(AREA_0076_HTK);
     mtwkSetExtraFlag(scenFindMotionwork(AREA_0076_HTK), 6, 0);
     EV_SetCharacterAlphaEnabled(AREA_0076_HTK, true);
@@ -105,13 +105,13 @@ void RestoreE0076Characters() {
 void CleanupE0076(AreaAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0076_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     EV_NPC_NewLoadSw(1);
     EV_FreeAuthorPak(0, "0076");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0076A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0076A"), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0076_AR03.name) {
@@ -119,7 +119,7 @@ void CleanupE0076(AreaAuthorTaskParameter *parent) {
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 16566, 0}, 0};
         EVT_AT_SetAng_Callback(&angle);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);
@@ -149,10 +149,10 @@ void E0076LoopCallback(void *taskData) {
     case 1:
         camCtrlSetFarDistance(40);
         camCtrlSetNearDistance(40);
-        SetPluralControlFor(FindCharacterByScenarioName(AREA_0076_JOP), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(AREA_0076_GOI), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(AREA_0076_HTK), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(AREA_0076_JOP), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(AREA_0076_GOI), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(AREA_0076_HTK), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 1);
         EV_ToggleCharacterFlag(AREA_0076_JOP);
         EV_DisableCharacterDisplay(AREA_0076_JOP);
         break;

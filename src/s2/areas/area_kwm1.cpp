@@ -73,7 +73,7 @@ void AreaKWM1Main(std::uint32_t) {
     HLib::EnqueueTaskWithoutParameter(eKWM1_EVT_KWM1_mainloop_Callback, 4, 0x0b, static_cast<std::int32_t>(TASK_KWM1.name));
 
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     CheckIsArgEquZero(1);
 
     EV_ReinitLights(1);

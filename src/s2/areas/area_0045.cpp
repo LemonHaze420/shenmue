@@ -73,7 +73,7 @@ void RestoreE0045Characters() {
 // @verified - p
 void CleanupE0045(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0045_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -127,9 +127,9 @@ void E0045LoopCallback(void *taskData) {
     const std::int32_t frame = static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     if (static_cast<AreaAuthorLoopTaskParameter *>(taskData)->parent->selection == 2) {
         if (frame == 1)
-            hmdlSetFlagsFor(FindCharacterByScenarioName(AREA_0045_SJN_), 0, 1, 0);
+            hmdlSetFlagsFor(ctrlGetScenarioChara(AREA_0045_SJN_), 0, 1, 0);
         else if (frame == 180)
-            hmdlSetFlagsFor(FindCharacterByScenarioName(AREA_0045_SJN_), 0, 8, 16);
+            hmdlSetFlagsFor(ctrlGetScenarioChara(AREA_0045_SJN_), 0, 8, 16);
     }
     if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) != 0)
         return;

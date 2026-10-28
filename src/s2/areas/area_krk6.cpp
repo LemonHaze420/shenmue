@@ -34,7 +34,7 @@ void AreaKRK6Main(std::uint32_t) {
     EV_UpdateWeatherForMinute(1, 0, 0, 0);
     HLib::EnqueueTaskWithoutParameter(KRK6MainLoopCallback, 4, 0xb, static_cast<std::int32_t>(SHEN_NAME(EVNT)));
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (static_cast<std::uint32_t>(date.hour - 8) > 14U) {
         date.hour = 8;
         date.minute = 0;

@@ -60,9 +60,9 @@ void Cleanup0297(AuthorViewerTaskParameter *parent) {
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     EV_FreeAuthorPak(0, AREA_0297_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0297A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0297A"), 0);
     if (g_currentMap.name == AREA_0297_RETURN.name) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);

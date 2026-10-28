@@ -221,7 +221,7 @@ void plymUpdateHeldState(PlayerModelState &state) {
             }
             return;
         case 2:
-            if (SetMotionRegionFlag(state.motionWork, 72, 1, MotionRegion::LowerBody) != 0) {
+            if (mtwkSetRegionFlag(state.motionWork, 72, 1, MotionRegion::LowerBody) != 0) {
                 state.heldStateStep += 2;
                 return;
             }
@@ -230,10 +230,10 @@ void plymUpdateHeldState(PlayerModelState &state) {
                 mtwkRequestMotion(state.motionWork, 0xf0f5, static_cast<MotionRegion>(region));
             }
             for (std::uint32_t region = 1; region <= 4; ++region) {
-                SetMotionRegionEvalTime(state.motionWork, 0.0f, static_cast<MotionRegion>(region));
+                mtwkSetRegionEvalTime(state.motionWork, 0.0f, static_cast<MotionRegion>(region));
             }
             for (std::uint32_t region = 1; region <= 4; ++region) {
-                SetMotionFrameTime(state.motionWork, 40, static_cast<MotionRegion>(region));
+                mtwkSetFrameTime(state.motionWork, 40, static_cast<MotionRegion>(region));
             }
             state.heldStateTimer = 0;
             return;
@@ -318,7 +318,7 @@ void plymUpdateHeldState(PlayerModelState &state) {
         case 5: {
             if ((state.heldStateFlags & heldApplyRequestedClock) != 0) {
                 DateTime dateTime{};
-                GetCurrentDateTime(dateTime);
+                shenGetCurrentDateTime(dateTime);
                 dateTime.hour = static_cast<std::int8_t>(state.requestedClockHour);
                 dateTime.minute = static_cast<std::int8_t>(state.requestedClockMinute);
                 dateTime.second = 0;
@@ -372,7 +372,7 @@ void plymUpdateHeldState(PlayerModelState &state) {
         case 5: {
             state.heldStateFlags |= heldTimeAdvanced;
             DateTime target{};
-            GetCurrentDateTime(target);
+            shenGetCurrentDateTime(target);
             target.hour = static_cast<std::int8_t>(state.timeAdvanceTargetHour);
             target.minute = static_cast<std::int8_t>(state.timeAdvanceTargetMinute);
             target.second = 0;
@@ -547,7 +547,7 @@ std::int32_t BuildTargetDateFromFrameClock(PlayerTargetDate &target) {
     const PlayerModelState *const state = g_playerRuntime.model;
     if (!state)
         return -1;
-    GetCurrentDateTime(target.dateTime);
+    shenGetCurrentDateTime(target.dateTime);
     const std::int32_t hour = state->holdWindowEndMinute / 60;
     const std::int32_t minute = state->holdWindowEndMinute % 60;
     if (hour >= 6) {

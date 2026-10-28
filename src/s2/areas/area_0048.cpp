@@ -36,7 +36,7 @@ void SetupE0048Environment() {
     SetParticleEffectSize(4, fire0048, 0.02500000037252903f, 0.05000000074505806f);
     if ((g_entryPoint & 0xfffffffdU) != 0) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 21;
         time.minute = 0;
         SetCurrentDateTimeTo(time);
@@ -153,7 +153,7 @@ void UpdateE0048Lighting() {
 // @verified - p
 void CleanupE0048(AreaImmediateAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0048_CHARACTERS[parent->selection]; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -168,7 +168,7 @@ void CleanupE0048(AreaImmediateAuthorTaskParameter *parent) {
         HLib::DestroyTask(task);
         shenUpdateCurrentDateTime();
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 8;
         time.minute = 30;
         SetCurrentDateTimeTo(time);

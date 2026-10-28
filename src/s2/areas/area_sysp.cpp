@@ -44,7 +44,7 @@ void SyspStartEvent(SyspEventType type, std::uintptr_t, const char *voice, const
     const char *item) {
     using enum CameraState;
     if (!syspPackageLoaded)
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SYSP"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SYSP"), 0);
     syspPackageLoaded = 1;
     syspWaitTicks = 0;
     syspNextEvent = 0;
@@ -91,7 +91,7 @@ void SyspStartEvent(SyspEventType type, std::uintptr_t, const char *voice, const
         EV_debug_log("SYSP\\eSYSP_et_sys.c", 226, "eSYSP_Item = %s\n", syspAttachedItem);
         if (syspAttachedItem) {
             const char *const path = Filepath_Gen(FilepathGenMode::PackDirectory);
-            EV_ControlPackageResources(
+            EV_pakUtils(
                 PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>(syspAttachedItem));
         }
         callback = SyspItemCallback;
@@ -181,13 +181,13 @@ void SyspSimpleCallback(void *) {
     switch (syspEventMode) {
     case SyspFinished:
         if (syspNpc.name) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(syspNpc), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(syspNpc), nullptr, 0);
             if (!syspNpcWasVisible)
                 EV_npcLockUnlock(syspNpc);
             EV_PTYCUtils(syspNpc, 3, 0);
         }
         camCtrlSetState(Init);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
         SyspEndCallback(nullptr);
         return;
     case SyspInitialize: {
@@ -233,14 +233,14 @@ void SyspSimpleCallback(void *) {
                 EV_AT_SetPos(syspNpc, SYSP_RELATIVE_XYZ_RECURSIVE, *syspTargetNpcPosition);
             EV_GetCharaPosition(syspNpc, CHARACTER_TRANSLATION_ROOT, &syspSavedNpcPosition, EventTransformFlags::World);
             GetScenarioCharacterEulerAngles(syspNpc, &syspSavedNpcRotation, EventTransformFlags::World);
-            GetMotionBonePosition(scenFindMotionwork(SYSP_RYO_), MB_Eyes, &position);
+            mtwkGetBonePosition(scenFindMotionwork(SYSP_RYO_), MB_Eyes, &position);
             const std::int16_t difference =
                 static_cast<std::int16_t>(InverseFixedAtan2(position.x - syspSavedNpcPosition.x, position.z - syspSavedNpcPosition.z) - syspSavedNpcRotation.y);
             const std::int32_t turn =
                 difference < 0 ? (difference + 0x2000 < 0 ? difference + 0x2000 : 0) : (difference - 0x2000 > 0 ? difference - 0x2000 : 0);
             if (turn)
-                CopyMotionTransition(scenFindMotionwork(syspNpc), nullptr, static_cast<std::uint16_t>(syspSavedNpcRotation.y + turn), 13, 0);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(syspNpc), &position, 1);
+                mtwkCopyTransition(scenFindMotionwork(syspNpc), nullptr, static_cast<std::uint16_t>(syspSavedNpcRotation.y + turn), 13, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(syspNpc), &position, 1);
         }
         EV_GetCharaPosition(SYSP_RYO_, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(SYSP_RYO_, &rotation, EventTransformFlags::World);
@@ -248,8 +248,8 @@ void SyspSimpleCallback(void *) {
             static_cast<std::int16_t>(InverseFixedAtan2(syspTargetPosition.x - position.x, syspTargetPosition.z - position.z) - rotation.y);
         const std::int32_t turn = difference < 0 ? (difference + 0x2000 < 0 ? difference + 0x2000 : 0) : (difference - 0x2000 > 0 ? difference - 0x2000 : 0);
         if (turn)
-            CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(rotation.y + turn), 13, 0);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), &syspTargetPosition, 1);
+            mtwkCopyTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(rotation.y + turn), 13, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), &syspTargetPosition, 1);
         SyspSwitchToEventCamera();
         syspEventMode = SyspBlendIn;
         return;
@@ -285,7 +285,7 @@ void SyspSimpleCallback(void *) {
 void SyspNpcCallback(void *) {
     switch (syspEventMode) {
     case SyspFinished:
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
         SyspEndCallback(nullptr);
         return;
     case SyspInitialize:
@@ -304,7 +304,7 @@ void SyspNpcCallback(void *) {
             syspEventMode = SyspBlendIn;
         return;
     case SyspDialogueStart:
-        CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
+        mtwkCopyTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
         syspEventMode = SyspDialogueActive;
         return;
     case SyspDialogueActive:
@@ -321,7 +321,7 @@ void SyspNpcCallback(void *) {
                 syspNpcWasVisible = static_cast<std::int32_t>(IsNpcLoadedOrVisible(syspNpc));
                 EV_CheckWarmStartNpcRoute(syspNpc);
                 EV_PTYCUtils(syspNpc, 3, 1);
-                CopyMotionTransition(scenFindMotionwork(SYSP_REN_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
+                mtwkCopyTransition(scenFindMotionwork(SYSP_REN_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
             }
         }
         syspEventMode = SyspWaitOrBranch;
@@ -365,7 +365,7 @@ void SyspNpcCallback(void *) {
         position.y = (transform.rows[1].y * dy + transform.rows[1].x * dx) + transform.rows[1].z * dz;
         position.z = (transform.rows[2].y * dy + transform.rows[2].x * dx) + transform.rows[2].z * dz;
         if (position.z > 1.0f || (syspElapsedFrames > 180 && position.z > 0.15000001f)) {
-            CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, yaw, 13, 0);
+            mtwkCopyTransition(scenFindMotionwork(SYSP_RYO_), nullptr, yaw, 13, 0);
             syspEventMode = SyspPostRotate;
         }
         return;
@@ -373,7 +373,7 @@ void SyspNpcCallback(void *) {
     case SyspPostRotate:
         if (!mtwkSetExtraFlag(scenFindMotionwork(SYSP_RYO_), 58, 1)) {
             syspEventMode = SyspFinished;
-            UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
             SyspEndCallback(nullptr);
         }
         return;
@@ -429,16 +429,16 @@ void SyspNpcCharacterCallback(void *) {
         EV_debug_log("SYSP\\eSYSP_et_sys.c", 650, "type 2 chara %p\n", static_cast<const void *>(syspTargetNpcPosition));
         EV_GetCharaPosition(syspNpc, CHARACTER_TRANSLATION_ROOT, &syspSavedNpcPosition, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(syspNpc, &syspSavedNpcRotation, EventTransformFlags::World);
-        syspSavedMotion = GetMotionAnimationId(scenFindMotionwork(syspNpc), MotionRegion::LowerBody);
-        syspSavedMotionFrame = GetMotionFrame(scenFindMotionwork(syspNpc), MotionRegion::LowerBody);
+        syspSavedMotion = mtwkGetAnimationId(scenFindMotionwork(syspNpc), MotionRegion::LowerBody);
+        syspSavedMotionFrame = mtwkGetFrame(scenFindMotionwork(syspNpc), MotionRegion::LowerBody);
         Vector3 position;
-        GetMotionBonePosition(scenFindMotionwork(SYSP_RYO_), MB_Eyes, &position);
+        mtwkGetBonePosition(scenFindMotionwork(SYSP_RYO_), MB_Eyes, &position);
         const std::int16_t difference =
             static_cast<std::int16_t>(InverseFixedAtan2(position.x - syspSavedNpcPosition.x, position.z - syspSavedNpcPosition.z) - syspSavedNpcRotation.y);
         const std::int32_t turn = difference < 0 ? (difference + 0x2000 < 0 ? difference + 0x2000 : 0) : (difference - 0x2000 > 0 ? difference - 0x2000 : 0);
         if (turn)
-            CopyMotionTransition(scenFindMotionwork(syspNpc), nullptr, static_cast<std::uint16_t>(syspSavedNpcRotation.y + turn), 13, 0);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(syspNpc), &position, 1);
+            mtwkCopyTransition(scenFindMotionwork(syspNpc), nullptr, static_cast<std::uint16_t>(syspSavedNpcRotation.y + turn), 13, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(syspNpc), &position, 1);
         syspEventMode = SyspBlendIn;
         [[fallthrough]];
     }
@@ -447,14 +447,14 @@ void SyspNpcCharacterCallback(void *) {
             return;
         Vector3 target, position;
         Vector3i rotation;
-        GetMotionBonePosition(scenFindMotionwork(syspNpc), MB_Eyes, &target);
+        mtwkGetBonePosition(scenFindMotionwork(syspNpc), MB_Eyes, &target);
         EV_GetCharaPosition(SYSP_RYO_, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(SYSP_RYO_, &rotation, EventTransformFlags::World);
         const std::int16_t difference = static_cast<std::int16_t>(InverseFixedAtan2(target.x - position.x, target.z - position.z) - rotation.y);
         const std::int32_t turn = difference < 0 ? (difference + 0x2000 < 0 ? difference + 0x2000 : 0) : (difference - 0x2000 > 0 ? difference - 0x2000 : 0);
         if (turn)
-            CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(rotation.y + turn), 13, 0);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), &target, 1);
+            mtwkCopyTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(rotation.y + turn), 13, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), &target, 1);
         syspEventMode = SyspDialogueStart;
         return;
     }
@@ -476,8 +476,8 @@ void SyspNpcCharacterCallback(void *) {
             const shen_name other = speaker.name == SYSP_RYO_.name ? syspNpc : SYSP_RYO_;
             camCtrlSetState(Event);
             Vector3 position, target;
-            GetMotionBonePosition(scenFindMotionwork(other), static_cast<MotionBoneId>(SYSP_RIGHT_UPPER_LEG), &position);
-            GetMotionBonePosition(scenFindMotionwork(speaker), MB_Eyes, &target);
+            mtwkGetBonePosition(scenFindMotionwork(other), static_cast<MotionBoneId>(SYSP_RIGHT_UPPER_LEG), &position);
+            mtwkGetBonePosition(scenFindMotionwork(speaker), MB_Eyes, &target);
             Vector3 direction{.x = position.x - target.x, .y = position.y - target.y, .z = position.z - target.z};
             const float dz = direction.z;
             Vector3::NormalizeInPlace(direction);
@@ -494,8 +494,8 @@ void SyspNpcCharacterCallback(void *) {
         return;
     }
     case SyspWaitOrBranch:
-        CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
+        mtwkCopyTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
         camCtrlSetState(Init);
         syspEventMode = SyspCheckBattle;
         return;
@@ -504,19 +504,19 @@ void SyspNpcCharacterCallback(void *) {
             return;
         if (syspNpc.name) {
             if (syspNpc.name == SYSP_REN_.name) {
-                UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_REN_), nullptr, 0);
+                mtwkUpdateWithPosition(scenFindMotionwork(SYSP_REN_), nullptr, 0);
                 Vector3 ryo, ren;
                 EV_GetCharaPosition(SYSP_RYO_, CHARACTER_TRANSLATION_ROOT, &ryo, EventTransformFlags::World);
                 EV_GetCharaPosition(SYSP_REN_, CHARACTER_TRANSLATION_ROOT, &ren, EventTransformFlags::World);
                 const float distance = ((ryo.x - ren.x) * (ryo.x - ren.x) + (ryo.y - ren.y) * (ryo.y - ren.y)) + (ryo.z - ren.z) * (ryo.z - ren.z);
                 EV_debug_log("SYSP\\eSYSP_et_sys.c", 769, "DDD %f\n", distance);
                 if (distance < 2.5600002f)
-                    CopyMotionTransition(scenFindMotionwork(SYSP_REN_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
+                    mtwkCopyTransition(scenFindMotionwork(SYSP_REN_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
             } else {
-                UpdateMotionWorkWithPosition(scenFindMotionwork(syspNpc), nullptr, 0);
-                CopyMotionTransition(scenFindMotionwork(syspNpc), &syspSavedNpcPosition, static_cast<std::uint16_t>(syspSavedNpcRotation.y), 0, 0);
-                SetMotionTimeRelated(scenFindMotionwork(syspNpc), 1, 5, static_cast<std::uint16_t>(syspSavedMotion));
-                SetMotionRegionEvalTime(scenFindMotionwork(syspNpc), syspSavedMotionFrame, MotionRegion::LowerBody);
+                mtwkUpdateWithPosition(scenFindMotionwork(syspNpc), nullptr, 0);
+                mtwkCopyTransition(scenFindMotionwork(syspNpc), &syspSavedNpcPosition, static_cast<std::uint16_t>(syspSavedNpcRotation.y), 0, 0);
+                mtwkSetTimeRelated(scenFindMotionwork(syspNpc), 1, 5, static_cast<std::uint16_t>(syspSavedMotion));
+                mtwkSetRegionEvalTime(scenFindMotionwork(syspNpc), syspSavedMotionFrame, MotionRegion::LowerBody);
             }
         }
         syspEventMode = SyspPostRotate;
@@ -558,7 +558,7 @@ void SyspNpcCharacterCallback(void *) {
         position.y = (transform.rows[1].y * dy + transform.rows[1].x * dx) + transform.rows[1].z * dz;
         position.z = (transform.rows[2].y * dy + transform.rows[2].x * dx) + transform.rows[2].z * dz;
         if (position.z > 1.0f || (syspElapsedFrames > 180 && position.z > 0.15000001f)) {
-            CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, yaw, 13, 0);
+            mtwkCopyTransition(scenFindMotionwork(SYSP_RYO_), nullptr, yaw, 13, 0);
             syspEventMode = SyspFinalRotate;
         }
         return;
@@ -609,7 +609,7 @@ void SyspItemCallback(void *) {
     }
     case SyspBlendIn:
         SyspUpdateCameraBlendAndRyoFade(1);
-        if (GetMotionFrame(scenFindMotionwork(SYSP_RYO_), MotionRegion::LowerBody) < 40.0f)
+        if (mtwkGetFrame(scenFindMotionwork(SYSP_RYO_), MotionRegion::LowerBody) < 40.0f)
             break;
         SetLowQualityHands(ctrlGetCharaByName(SYSP_RYO_));
         SetHandRegionXYZWithFlags(ctrlGetCharaByName(SYSP_RYO_), 1, 0, 0, -1);
@@ -617,7 +617,7 @@ void SyspItemCallback(void *) {
         ++syspEventMode;
         break;
     case SyspRyoSetup:
-        if (SetMotionRegionFlag(scenFindMotionwork(SYSP_RYO_), 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(scenFindMotionwork(SYSP_RYO_), 65, 1, MotionRegion::LowerBody)) {
             mtwkRequestMotion(scenFindMotionwork(SYSP_RYO_), SYSP_ITEM_LOOP_MOTION, MotionRegion::LowerBody);
             ++syspEventMode;
         }
@@ -645,7 +645,7 @@ void SyspItemCallback(void *) {
         SyspUpdateCameraBlendAndRyoFade(1);
         if (GetBattleDataConfig(2, SYSP_CANCEL_BUTTON) || GetCurrentControlInput(INPUT_PRESSED) == 1 || std::bit_cast<std::int32_t>(syspWaitTicks) >= 1800) {
             mtwkSetRequestedRootMode(scenFindMotionwork(SYSP_RYO_), 1);
-            SetMotionFrameTime(scenFindMotionwork(SYSP_RYO_), 4, MotionRegion::LowerBody);
+            mtwkSetFrameTime(scenFindMotionwork(SYSP_RYO_), 4, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(SYSP_RYO_), SYSP_ITEM_END_MOTION, MotionRegion::LowerBody);
             camCtrlSetState(Init);
             ++syspEventMode;
@@ -655,10 +655,10 @@ void SyspItemCallback(void *) {
         }
         break;
     case SyspPostRotate:
-        if (GetMotionFrame(scenFindMotionwork(SYSP_RYO_), MotionRegion::LowerBody) < 6.0f)
+        if (mtwkGetFrame(scenFindMotionwork(SYSP_RYO_), MotionRegion::LowerBody) < 6.0f)
             break;
         syspItemAlphaState = SyspItemFadeOut;
-        if (GetMotionFrame(scenFindMotionwork(SYSP_RYO_), MotionRegion::LowerBody) < 20.0f)
+        if (mtwkGetFrame(scenFindMotionwork(SYSP_RYO_), MotionRegion::LowerBody) < 20.0f)
             break;
         SetHandRegionXYZWithFlags(ctrlGetCharaByName(SYSP_RYO_), 0, 0, 0, -1);
         SetHandRegionXYZWithFlags(ctrlGetCharaByName(SYSP_RYO_), 0, 1, 0, -1);
@@ -666,9 +666,9 @@ void SyspItemCallback(void *) {
         ++syspEventMode;
         break;
     case SyspTrackRyoMove:
-        if (!SetMotionRegionFlag(scenFindMotionwork(SYSP_RYO_), 65, 1, MotionRegion::LowerBody))
+        if (!mtwkSetRegionFlag(scenFindMotionwork(SYSP_RYO_), 65, 1, MotionRegion::LowerBody))
             break;
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(syspAttachedItem), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(syspAttachedItem), 0);
         syspEventMode = SyspFinished;
         SyspEndCallback(nullptr);
         return;
@@ -717,7 +717,7 @@ void SyspRyoCallback(void *) {
     using enum CameraState;
     switch (syspEventMode) {
     case SyspFinished:
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
         SyspEndCallback(nullptr);
         return;
     case SyspInitialize: {
@@ -729,8 +729,8 @@ void SyspRyoCallback(void *) {
             static_cast<std::int16_t>(InverseFixedAtan2(syspTargetPosition.x - position.x, syspTargetPosition.z - position.z) - rotation.y);
         const std::int32_t turn = difference < 0 ? (difference + 0x2000 < 0 ? difference + 0x2000 : 0) : (difference - 0x2000 > 0 ? difference - 0x2000 : 0);
         if (turn)
-            CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(rotation.y + turn), 13, 0);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), &syspTargetPosition, 1);
+            mtwkCopyTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(rotation.y + turn), 13, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), &syspTargetPosition, 1);
         SyspSwitchToEventCamera();
         syspEventMode = SyspBlendIn;
         return;
@@ -769,8 +769,8 @@ void SyspRyoCallback(void *) {
             EV_PTYCUtils(syspNpc, 3, 0);
         }
         camCtrlSetState(Init);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
-        CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
+        mtwkCopyTransition(scenFindMotionwork(SYSP_RYO_), nullptr, static_cast<std::uint16_t>(syspEventYaw), 5, 2);
         syspEventMode = SyspCheckBattle;
         return;
     case SyspCheckBattle:
@@ -809,7 +809,7 @@ void SyspRyoCallback(void *) {
         position.y = (transform.rows[1].y * dy + transform.rows[1].x * dx) + transform.rows[1].z * dz;
         position.z = (transform.rows[2].y * dy + transform.rows[2].x * dx) + transform.rows[2].z * dz;
         if (position.z > 1.0f) {
-            CopyMotionTransition(scenFindMotionwork(SYSP_RYO_), nullptr, yaw, 13, 0);
+            mtwkCopyTransition(scenFindMotionwork(SYSP_RYO_), nullptr, yaw, 13, 0);
             syspEventMode = SyspFinalRotate;
         }
         return;
@@ -817,7 +817,7 @@ void SyspRyoCallback(void *) {
     case SyspFinalRotate:
         if (!mtwkSetExtraFlag(scenFindMotionwork(SYSP_RYO_), 58, 1)) {
             syspEventMode = SyspFinished;
-            UpdateMotionWorkWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(SYSP_RYO_), nullptr, 0);
             SyspEndCallback(nullptr);
         }
         return;
@@ -828,10 +828,10 @@ void SyspRyoCallback(void *) {
                 const shen_name other = speaker.name == SYSP_RYO_.name ? syspNpc : SYSP_RYO_;
                 camCtrlSetState(Event);
                 Vector3 position;
-                GetMotionBonePosition(scenFindMotionwork(other), static_cast<MotionBoneId>(SYSP_RIGHT_UPPER_LEG), &position);
+                mtwkGetBonePosition(scenFindMotionwork(other), static_cast<MotionBoneId>(SYSP_RIGHT_UPPER_LEG), &position);
                 camCtrlSetNextPosition(position);
                 modelSetCharaAlpha(ctrlGetCharaByName(other), 0.0f);
-                GetMotionBonePosition(scenFindMotionwork(speaker), MB_Eyes, &position);
+                mtwkGetBonePosition(scenFindMotionwork(speaker), MB_Eyes, &position);
                 camCtrlSetTargetPosition(position);
                 modelSetCharaAlpha(ctrlGetCharaByName(speaker), 1.0f);
             }
@@ -885,7 +885,7 @@ bool SyspUpdateCameraBlendAndRyoFade(std::int32_t skipRyoFade) {
     camCtrlSetPerspective(static_cast<std::uint16_t>(TruncateToInt32(perspective)));
     if (syspFovPercent < 900) {
         if (!skipRyoFade)
-            GetMotionBonePosition(scenFindMotionwork(SYSP_RYO_), MB_Eyes, &syspRyoTargetPosition);
+            mtwkGetBonePosition(scenFindMotionwork(SYSP_RYO_), MB_Eyes, &syspRyoTargetPosition);
         const float relativePhase = static_cast<float>(std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(syspCameraPhase) - 16384U));
         const float secondaryPhase = relativePhase * syspSecondaryPhaseScale + 16384.0f;
         const std::uint16_t angle = secondaryPhase < 49152.0f ? static_cast<std::uint16_t>(TruncateToInt32(secondaryPhase)) : 49152U;

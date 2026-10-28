@@ -100,10 +100,10 @@ void HideList(const shen_name *names) {
     }
 }
 void EnsurePackage(const char *name) {
-    if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0)) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (!EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(name), 0)) {
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(name));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     }
 }
 void LoadBattleAudio(CwonEventWork *work, std::uint8_t state, std::int32_t scene) {
@@ -216,9 +216,9 @@ void PlaceStreetProps() {
 }
 void InitializeBattle(CwonEventWork *work) {
     using enum CameraState;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("BATLPACK"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     shenStartFGST(10, 10, 0, 0);
     if (work->entry <= 6) {
         PlaceStreetProps();
@@ -279,7 +279,7 @@ std::int32_t UpdateMarketWin(CwonEventWork *) {
     case 1: {
         EV_DisableCharacterDisplay(CWON_WON);
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         if (date.hour < 19)
             return 0;
         SetHands(CWON_RYO, 0);
@@ -545,7 +545,7 @@ void CwonInitializeBattleCallback(void *data) {
         return;
     }
     if (work->entry >= 7)
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("CWONBATL"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("CWONBATL"), 0);
     ++work->authorState;
 }
 void CwonBattleAuthorCallback(void *data) {
@@ -558,12 +558,12 @@ void CwonBattleAuthorCallback(void *data) {
 
 void CwonRestoreBattlePoses(CwonEventWork *work) {
     for (auto name : fighters)
-        SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(CWON_RYO), 0x132, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(sam), 0x630, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(lly), 0x610, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(CWON_RYO), 69, 0, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(sam), 69, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(CWON_RYO), 69, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(sam), 69, 0, MotionRegion::LowerBody);
     constexpr float angles[3][3]{{278.29998779296875f, 132.60000610351562f, 98.30000305175781f}, {1.7000000476837158f, 181.6999969482422f, 215.39999389648438f},
         {63.400001525878906f, 211, 243.5f}};
     const int index = work->entry == 7 ? 1 : work->entry == 8 ? 2 : 0;
@@ -637,8 +637,8 @@ void CwonBattleEndCallback(void *data) {
             EV_GetCharaPosition(CWON_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
             position.y += 1.6f;
             for (auto name : {clj, CWON_WON}) {
-                UpdateMotionWorkWithPosition(scenFindMotionwork(name), nullptr, 3);
-                UpdateMotionWorkWithPosition(scenFindMotionwork(name), &position, 1);
+                mtwkUpdateWithPosition(scenFindMotionwork(name), nullptr, 3);
+                mtwkUpdateWithPosition(scenFindMotionwork(name), &position, 1);
             }
         }
         return;
@@ -646,13 +646,13 @@ void CwonBattleEndCallback(void *data) {
     CwonRestoreBattleProps(work, 1);
     if (work->entry <= 6)
         for (auto name : {clj, CWON_WON})
-            UpdateMotionWorkWithPosition(scenFindMotionwork(name), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(name), nullptr, 0);
     if (work->entry == 7) {
         flddSetPointFlagOnGrid(SHEN_NAME(BTC1), 0);
         flddSetPointFlagOnGrid(SHEN_NAME(PROP), 1);
         flddSetPointFlagOnGrid(SHEN_NAME(0000), 1);
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BATLPACK"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BATLPACK"), 0);
     if (DoesScenarioCharacterExist(bag))
         ResetScenarioCharacterAttachment(bag);
     SetScenarioCharacterKillMode(base, 1);
@@ -740,7 +740,7 @@ void CwonBattleLostChoiceCallback(void *data) {
         ClearBattleMotionFlagsAndFaces();
         Place(CWON_RYO, CWON_CENTER, work->routePass == 10 ? marketLostPosition : warehouseLostPosition);
         Turn(CWON_RYO, CWON_CENTER, 0);
-        SetMotionRegionFlag(scenFindMotionwork(CWON_RYO), 69, 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(CWON_RYO), 69, 2, MotionRegion::LowerBody);
         EVT_AT_SetMot(CWON_RYO, 0x7f09, 0, 0, 0, 0);
         QueueLoadingFade();
         break;

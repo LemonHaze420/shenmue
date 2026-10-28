@@ -50,7 +50,7 @@ void TimeOverSetupCallback(void *);
 void TimeOverExitCallback(void *);
 void ResetActorMotion(shen_name actor, std::uint16_t animation) {
     mtwkSetExtraFlag(scenFindMotionwork(actor), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(actor), 13, 0);
     mtwkRequestMotion(scenFindMotionwork(actor), animation, MotionRegion::LowerBody);
 }
@@ -69,7 +69,7 @@ void EnableSkipCallback(void *) {
 void AssignMazeEvent(std::int32_t state, Vector3 position, std::uint32_t yaw, std::uint32_t unit) {
     shenToggleAreaFlags(0);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 13, 0);
     EV_PTYCUtils(shenhua, 3, 1);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0xf003, MotionRegion::LowerBody);
@@ -177,7 +177,7 @@ void LeaveForestCallback(void *) {
     EV_scenQueueLoad(g_actNumber, KMZ1_NEXT_MAP, 0);
 }
 void CompanionPatchCallback(void *) {
-    if (!FindCharacterByScenarioName(shenhua))
+    if (!ctrlGetScenarioChara(shenhua))
         return;
     EV_PTYCUtils(shenhua, 3, 1);
     EV_PTYCUtils(shenhua, 1, 45);
@@ -189,18 +189,18 @@ void CompanionPatchCallback(void *) {
 void UpdatePlayerFlags() {
     constexpr std::int32_t resetMarkers[]{4, 5, 6}, admitMarkers[]{13, 22, 24};
     for (std::int32_t marker : resetMarkers) {
-        if (IsCharacterWithinMazeMarkerRadius(FindCharacterByScenarioName(ryo), marker, 10) && EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1441) == 1) {
+        if (IsCharacterWithinMazeMarkerRadius(ctrlGetScenarioChara(ryo), marker, 10) && EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1441) == 1) {
             EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1440, 0);
             EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1675, 0);
             EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1441, 0);
         }
     }
     for (std::int32_t marker : admitMarkers) {
-        if (IsCharacterWithinMazeMarkerRadius(FindCharacterByScenarioName(ryo), marker, 20) && !EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1441)) {
+        if (IsCharacterWithinMazeMarkerRadius(ctrlGetScenarioChara(ryo), marker, 20) && !EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1441)) {
             EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1440, 1);
             EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1441, 1);
         }
-        if (IsCharacterWithinMazeMarkerRadius(FindCharacterByScenarioName(ryo), marker, 7)) {
+        if (IsCharacterWithinMazeMarkerRadius(ctrlGetScenarioChara(ryo), marker, 7)) {
             if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1441)) {
                 EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1440, 1);
                 EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1441, 1);
@@ -249,7 +249,7 @@ bool TryAuthoredEvent() {
         {45, 2, 0x34d, FollowSetupCallback}, {46, 2, 0x1b9, CollapseSetupCallback}, {10, 3.5f, 0x3a5, IntroSetupCallback}, {1, 2, 0xde, LeaveForestCallback}};
     for (std::int32_t i = 0; i < 4; ++i) {
         const auto &row = rows[i];
-        if (!IsCharacterWithinMazeMarkerRadius(FindCharacterByScenarioName(ryo), row.marker, row.radius) || !EV_GetShenmueFlag(row.story))
+        if (!IsCharacterWithinMazeMarkerRadius(ctrlGetScenarioChara(ryo), row.marker, row.radius) || !EV_GetShenmueFlag(row.story))
             continue;
         shenToggleAreaFlags(2);
         SetPlayerControlEnabled(0);
@@ -278,7 +278,7 @@ bool TryTimeOver() {
     if (!EV_GetShenmueFlag(0x459))
         return false;
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 902)) {
         if ((date.hour < 16 || date.minute < 30) && date.hour < 17)
             return false;
@@ -312,14 +312,14 @@ void ChangePositionCallback(void *) {
     position.y = shenFindIntersectionWithScene(position, position.y);
     EV_AT_SetPos(shenhua, EventTransformFlags::AllAxes, position);
     mtwkSetExtraFlag(scenFindMotionwork(shenhua), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(shenhua), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(shenhua), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(shenhua), 13, 0);
     mazeGetMarkerPosition(playerMarker, &position);
     position.y = 100;
     position.y = shenFindIntersectionWithScene(position, position.y);
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, position);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 13, 0);
     hasRunIntro = 1;
     HLib::SetCurrentTaskTo(EventBombCallback);
@@ -340,7 +340,7 @@ void TimeOverSetupCallback(void *) {
     shenToggleAreaFlags(0);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0xf003, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 13, 0);
     EV_PTYCUtils(shenhua, 3, 1);
     ResetActorMotion(shenhua, 0x9502);
@@ -413,7 +413,7 @@ void AreaKMZ1Main(std::uint32_t) {
     EV_UpdateWeatherForMinute(1, 0, 0, 0);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1495, 0);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (static_cast<std::uint32_t>(date.hour - 8) > 14U) {
         date.hour = 8;
         date.minute = 0;

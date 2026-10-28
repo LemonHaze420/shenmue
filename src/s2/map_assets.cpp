@@ -1101,7 +1101,7 @@ bool Mapinfo_MAP_Reader(std::int32_t actNumber, shen_name areaName,
                     LoadMapPackage(folder.data(), packageName.data());
                 resourcesReady = requested && resourcesReady;
                 loaded = requested || loaded;
-                LoadPak();
+                pakLoadFlush();
             }
         } else {
             // LoadMapPacks includes MAP.MT7 plus MAP01..MAPnn, inclusive.

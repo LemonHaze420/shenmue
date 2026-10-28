@@ -33,10 +33,10 @@ void PrepareTejoQteResources() {
     EventSetPosition position{0, REN_QTE_PLAYER, REN_QTE_INVALID, firstQte ? TEJO_FIRST_QTE_POSITION : TEJO_SECOND_QTE_POSITION, 0};
     EVT_AT_SetPosRot(&position);
     EV_FreeAuthorPak(1, "0209");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("TEJO"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("TEJO"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("TEJO"), 0);
     EV_LoadCutsceneFromCurrentScene("0209A000");
     EV_LoadAudio("0209A000", 1);
     Loop3DSoundEffect(0x8eb);
@@ -115,7 +115,7 @@ void CleanupTejoQte() {
     tejoQteWork.state = REN_QTE_INIT;
     SetNaviDisplayOverride(false);
     EV_FreeAuthorPak(0, "0209");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TEJO"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TEJO"), 0);
     for (const shen_name *character = TEJO_QTE_CHARACTERS; character->name != REN_QTE_INVALID.name; ++character) {
         if (!DoesScenarioCharacterExist(*character))
             continue;

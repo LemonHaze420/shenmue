@@ -35,7 +35,7 @@ void E0142Main(std::uintptr_t argument) {
     parent->selection = 0;
     parent->state = 1;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 22;
     SetCurrentDateTimeTo(time);
     SetPlayerControlEnabled(0);
@@ -68,7 +68,7 @@ void RestoreE0142Characters() {
 // @verified - p
 void CleanupE0142(E0142TaskParameter *parent) {
     for (const shen_name *character = AREA_0142_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -78,7 +78,7 @@ void CleanupE0142(E0142TaskParameter *parent) {
     HLib::DestroyTask(parent->self);
     shenUpdateCurrentDateTime();
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 8;
     time.minute = 0;
     SetCurrentDateTimeTo(time);

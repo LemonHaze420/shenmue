@@ -20,7 +20,7 @@ void ApplyPatiWeather(PatiBallWork *ball) {
     else if (weather == 2)
         humidity = 0.98000002f;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     const float hour = (static_cast<float>(time.minute) / 60.0f + static_cast<float>(time.hour)) + static_cast<float>(time.second) / 3600.0f;
     const float angle = ((((hour - 13.0f) / 24.0f) * 360.0f) * 8192.0f) / 45.0f;
     const float cosine = sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(static_cast<std::int32_t>(angle)))));

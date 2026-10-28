@@ -68,11 +68,11 @@ void BookStartCallback(void *) {
     if (next >= 5)
         next = 4;
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 10, next | (EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 10) & 0xf0));
-    SetLowQualityHands(FindCharacterByScenarioName(BOOK_RYO));
-    SetHighModelXYZ(FindCharacterByScenarioName(BOOK_RYO), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(BOOK_RYO), 1, 0, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(BOOK_RYO), 1, reinterpret_cast<std::byte *>(bookHandCommand), 10);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(BOOK_RYO), 0, reinterpret_cast<std::byte *>(bookHandCommand), 10);
+    SetLowQualityHands(ctrlGetScenarioChara(BOOK_RYO));
+    SetHighModelXYZ(ctrlGetScenarioChara(BOOK_RYO), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(BOOK_RYO), 1, 0, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(BOOK_RYO), 1, reinterpret_cast<std::byte *>(bookHandCommand), 10);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(BOOK_RYO), 0, reinterpret_cast<std::byte *>(bookHandCommand), 10);
     EV_stepSetFlags(0, 0x29);
     EV_EventSetUpHelpIcon_0(0x4d, 0);
     CreateBookSmoke();
@@ -246,17 +246,17 @@ void BookMainCallback(void *) {
                 EV_DisableCharacterDisplay(SHEN_NAME(a092));
             ResetBookMotionLayers();
             SetBookActorMotion(BOOK_RYO, 0xf002);
-            SetMotionSpeed(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
-            EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlUpdateHeight, NpcCharacterControllerState::Enabled);
-            EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
-            EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
+            mtwkSetSpeed(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
+            EV_SetCharaControllerFlags(BOOK_RYO, CCMF_UpdateHeight, NpcCharacterControllerState::Enabled);
+            EV_SetCharaControllerFlags(BOOK_RYO, CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
+            EV_SetCharaControllerFlags(BOOK_RYO, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
             camCtrlSetFovTransitionTo(true);
             camCtrlSetState(Init);
             ++bookEventPhase.phase;
             break;
         case 1:
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(BOOK_RYO), 1, reinterpret_cast<std::byte *>(bookHandCommand), 10);
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(BOOK_RYO), 0, reinterpret_cast<std::byte *>(bookHandCommand), 10);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(BOOK_RYO), 1, reinterpret_cast<std::byte *>(bookHandCommand), 10);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(BOOK_RYO), 0, reinterpret_cast<std::byte *>(bookHandCommand), 10);
             EV_EventSetUpHelpIcon_0(0x4d, 0);
             SetPlayerControlEnabled(1);
             bookCarryIdleFrames = 0;
@@ -300,12 +300,12 @@ void BookMainCallback(void *) {
             if (bookEventPhase.frame == 1) {
                 ResetBookMotionLayers();
                 SetBookActorMotion(BOOK_RYO, 6273);
-                SetMotionSpeed(scenFindMotionwork(BOOK_RYO), 1.3f, MotionRegion::LowerBody);
-                SetMotionRegionEvalTime(scenFindMotionwork(BOOK_RYO), 538, MotionRegion::LowerBody);
+                mtwkSetSpeed(scenFindMotionwork(BOOK_RYO), 1.3f, MotionRegion::LowerBody);
+                mtwkSetRegionEvalTime(scenFindMotionwork(BOOK_RYO), 538, MotionRegion::LowerBody);
                 QueueBookDialogue(6, bookModelState.currentBook + 1);
                 Vector3 position;
                 EV_GetCharaPosition(BOOK_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
-                UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_SAI), &position, 1);
+                mtwkUpdateWithPosition(scenFindMotionwork(BOOK_SAI), &position, 1);
             }
             if (bookEventPhase.frame == 2) {
                 camCtrlToggleSmoothing(0);
@@ -333,7 +333,7 @@ void BookMainCallback(void *) {
             }
             if (bookEventPhase.frame != 146)
                 return;
-            UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_SAI), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(BOOK_SAI), nullptr, 0);
             shenSetClockAndCompassRenderTo(0);
             EV_DisableCharacterDisplay(bookModelState.stacks[bookModelState.currentStack + 1]);
             EV_AT_SetAngY(BOOK_RYO, EventTransformFlags::AllAxes, {.x = 0, .y = 49152, .z = 0});

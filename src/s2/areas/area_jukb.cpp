@@ -53,8 +53,8 @@ void ReadPosition(shen_name name, Vector3 &position, std::uint32_t flags = 0x400
 void EyeAndMotionTarget(shen_name name) {
     Vector3 position;
     ReadPosition(name, position);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(JUKB_PLAYER), &position, 1);
-    SetEyeToChara(FindCharacterByScenarioName(JUKB_PLAYER), &position, 0, 2);
+    mtwkUpdateWithPosition(scenFindMotionwork(JUKB_PLAYER), &position, 1);
+    SetEyeToChara(ctrlGetScenarioChara(JUKB_PLAYER), &position, 0, 2);
 }
 void QueueSelection(JukbTaskData &work, std::uint32_t input) {
     if (input == 0x8000 && work.selection < 9) {
@@ -103,7 +103,7 @@ void AreaJUKBMain(std::uintptr_t parameter) {
     EV_SetCharaControllerFlags(JUKB_PLAYER, ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(JUKB_PLAYER, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     SetPlayerControlEnabled(0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("JUKB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("JUKB"), 0);
     EV_FreeAuthorPak(1, "0107");
     EV_SetNewSceneIndex();
     camCtrlCacheUtil(2);
@@ -136,13 +136,13 @@ void JUKBMainCallback(void *data) {
         GetScenarioCharacterEulerAngles(JUKB_BOX, &rotation, EventTransformFlags::Local);
         EV_AT_SetAngY(JUKB_PLAYER, EventTransformFlags::AllAxes, rotation);
         EVS_LoopCamera(1200, JUKB_TARGETS[0], JUKB_TARGETS[0]);
-        SetReflectorBoardValues(FindCharacterByScenarioName(JUKB_PLAYER), Vector4{1, 1, 1, 1});
+        SetReflectorBoardValues(ctrlGetScenarioChara(JUKB_PLAYER), Vector4{1, 1, 1, 1});
         EV_SetRefBoardParamsFor(JUKB_PLAYER, 1);
         EV_SetRefBoardParamsFor(JUKB_PLAYER, 1);
-        SetLowQualityHands(FindCharacterByScenarioName(JUKB_PLAYER));
-        SetHighModelXYZ(FindCharacterByScenarioName(JUKB_PLAYER), 1, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(JUKB_PLAYER), 1, 1, 0);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(JUKB_PLAYER), 0, reinterpret_cast<std::byte *>(handCommand), 0);
+        SetLowQualityHands(ctrlGetScenarioChara(JUKB_PLAYER));
+        SetHighModelXYZ(ctrlGetScenarioChara(JUKB_PLAYER), 1, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(JUKB_PLAYER), 1, 1, 0);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(JUKB_PLAYER), 0, reinterpret_cast<std::byte *>(handCommand), 0);
         EventCling cling{0, JUKB_COIN, JUKB_PLAYER, 14, {std::bit_cast<float>(0x3e041893U), std::bit_cast<float>(0x3cdd2f1bU), -.07f}, {20024, 12743, 0}, 0, 0};
         EVT_AT_Cling(&cling);
         EV_EnableCharacterDisplay(JUKB_PLAYER);
@@ -218,10 +218,10 @@ void JUKBUseMoneyCallback(void *data) {
             ProcessAicaCommand(0xaa0, 30);
         break;
     case 10: {
-        UpdateMotionWorkWithPosition(scenFindMotionwork(JUKB_PLAYER), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(JUKB_PLAYER), nullptr, 0);
         Vector3 position;
         ReadPosition(JUKB_TARGETS[6], position);
-        SetEyeToChara(FindCharacterByScenarioName(JUKB_PLAYER), &position, 0, 2);
+        SetEyeToChara(ctrlGetScenarioChara(JUKB_PLAYER), &position, 0, 2);
         break;
     }
     case 50:
@@ -233,9 +233,9 @@ void JUKBUseMoneyCallback(void *data) {
         Loop3DSoundEffect(0x163);
         Vector3 position;
         ReadPosition(JUKB_TARGETS[0], position);
-        SetEyeToChara(FindCharacterByScenarioName(JUKB_PLAYER), &position, 0, 2);
+        SetEyeToChara(ctrlGetScenarioChara(JUKB_PLAYER), &position, 0, 2);
         ReadPosition(JUKB_TARGETS[0], position);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(JUKB_PLAYER), &position, 1);
+        mtwkUpdateWithPosition(scenFindMotionwork(JUKB_PLAYER), &position, 1);
         break;
     }
     case 180:
@@ -530,8 +530,8 @@ void JUKBExitCallback(void *data) {
     EventCling cling{0, JUKB_COIN, {}, 0, {}, {}, 1, 0};
     EVT_AT_Cling(&cling);
     EV_DisableCharacterDisplay(JUKB_COIN);
-    SetEyeToChara(FindCharacterByScenarioName(JUKB_PLAYER), nullptr, 16, 0);
-    hndlSetFlags(FindCharacterByScenarioName(JUKB_PLAYER));
+    SetEyeToChara(ctrlGetScenarioChara(JUKB_PLAYER), nullptr, 16, 0);
+    hndlSetFlags(ctrlGetScenarioChara(JUKB_PLAYER));
     EV_SetCharaControllerFlags(JUKB_PLAYER, ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(JUKB_PLAYER, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Enabled);
     for (std::int32_t i = 5; i != 9; ++i)
@@ -548,10 +548,10 @@ void JUKBExitCallback(void *data) {
     EV_scenApplyPosOrRotToPartOf(JUKB_BOX, 0xa1, nullptr, &zeroRotation, EventCharacterPartTransformMode::Absolute);
     ScalePart(0xa1, 0);
     ScalePart(0xa0, 1);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(JUKB_PLAYER), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(JUKB_PLAYER), nullptr, 0);
     SetPlayerControlEnabled(1);
     EV_FreeAuthorPak(0, "0107");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("JBEV"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("JBEV"), 0);
     CleanupMapControlCharacters();
     EV_HLKillOtherHierarchyTask(work.self);
 }

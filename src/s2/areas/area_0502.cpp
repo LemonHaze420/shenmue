@@ -27,11 +27,11 @@ namespace {
 std::uint32_t splash0502;
 float splashAge0502;
 void Prepare0502Character(shen_name character) {
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 6, 2);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 2);
     EV_SetCharacterAlphaEnabled(character, false);
 }
 void Restore0502Character(shen_name character) {
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 6, 0);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 0);
     EV_SetCharacterAlphaEnabled(character, true);
 }
 } // namespace
@@ -218,18 +218,18 @@ void Cleanup0502(Area0502Parameter *parent) {
         SetScenarioCharacterKillMode(AREA_0502_PROPS[index], 1);
     SetScenarioCharacterKillMode(AREA_0502_PROPS[0], 1);
     hsFadeVoice(parent->voice, 30);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_LoadAudio(shenGetCurrentSbt(), 0);
     EV_spmBeginSampleExecute();
-    MotionWork *const motion = FindMotionWork(FindCharacterByScenarioName(AREA_0502_RYO));
+    MotionWork *const motion = FindMotionWork(ctrlGetScenarioChara(AREA_0502_RYO));
     mtwkRequestMotion(motion, 0xf003, MotionRegion::LowerBody);
-    SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(motion, 13, 0);
-    SetMotionSpeed(motion, 1.0f, MotionRegion::LowerBody);
+    mtwkSetSpeed(motion, 1.0f, MotionRegion::LowerBody);
     EV_AT_SetPos(AREA_0502_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3{1427.8f, 100.6f, 809.1f});
     EV_AT_SetAngY(AREA_0502_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, 16384, 0}, nullptr);
     mtwkSetExtraFlag(motion, 17, 0);
-    SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
     camCtrlSetFovTransitionTo(true);
     camCtrlUtil(CameraUtilityMode::ResetPlayerDistance, 0);
     camCtrlSetState(Init);

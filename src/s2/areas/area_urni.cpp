@@ -56,11 +56,11 @@ void InitializeUranai(UranaiWork *work) {
     uranaiCharacters[1] = work->selection->reader;
     work->characters = Queue_EVT_AT_ReadChr(work->task, uranaiCharacters);
     work->package = "SUISYO";
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("URNI"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("URNI"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("URNI"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("URNI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("URNI"), 0);
     EV_FreeAuthorPak(1, "0120");
     std::strcpy(eventVoicePrefix, "0120");
     if (work->selection->mode != 1) {
@@ -108,9 +108,9 @@ void ConfigureUranai(UranaiWork *work, shen_name reader) {
     case SHEN_NAME(SRI_):
         work->configuration = &URNI_SRI_CONFIGURATION;
         work->package = URNI_SRI_PACKAGES[UranaiStoryPackageIndex()];
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(work->package));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         break;
     case SHEN_NAME(RCD_):
         work->configuration = &URNI_RCD_CONFIGURATION;
@@ -248,13 +248,13 @@ void CleanupUranai(UranaiWork *work) {
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
     if (work->selection->mode != 1) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
     }
     EV_FreeAuthorPak(0, "0120");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("URNI"), 0);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work->package), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("URNI"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work->package), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
     ET_AT_KillWork(work->characters);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     EV_NPC_NewLoadSw(1);

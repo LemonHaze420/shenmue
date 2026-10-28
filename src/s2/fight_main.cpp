@@ -640,7 +640,7 @@ void UpdateDefeatAndRespawn(VFMA_t *game) {
         if (!game->characters[i])
             continue;
         auto *const actor = game->actors[i];
-        if ((actor->moveFlags & (VFMF_Airborne | VFMF_ForceDefeat)) == 0x20 && SetMotionRegionFlag(actor->motion, 65, 1, MotionRegion::LowerBody)) {
+        if ((actor->moveFlags & (VFMF_Airborne | VFMF_ForceDefeat)) == 0x20 && mtwkSetRegionFlag(actor->motion, 65, 1, MotionRegion::LowerBody)) {
             auto *const slot = game->enemySlots[i];
             vfTransitionEnemySlotToCooldown(game, slot);
             if (static_cast<std::uint8_t>(g_pFightStage->groupCounters[0] + g_pFightStage->groupCounters[1]) > game->maximumActiveEnemies)
@@ -796,7 +796,7 @@ void AdvanceFightFrame(VFMA_t *game) {
         if (slot.flags & 1) {
             Vector3 discarded;
             auto &output = slot.fighter && slot.state == 2 ? slot.fighter->moveDelta : discarded;
-            vfClsampleCurrentMotion(slot.motion, 0, output);
+            mtwkSampleCurrentMotion(slot.motion, 0, output);
         }
     }
     if (!(g_pFightStage->battleFlags & 2))
@@ -831,7 +831,7 @@ void ReleaseFight(VFMA_t *game) {
     if (game->type == 9)
         vfFreeVFHDSpace(game);
     FreeFightCameraDialogue(game);
-    SetMotionEnvironmentEnabled(1);
+    mtwkSetEnvironmentEnabled(1);
     g_hasColouredText = 0;
     if (game->inputBuffer)
         BindPadControlEntry(game->inputBuffer);
@@ -868,7 +868,7 @@ void ReleaseFight(VFMA_t *game) {
             SetHighModelAndFaceFlagsForChara(slot.character, 1, 1, 1);
     }
     vfRestorePostFightUIState(game);
-    SetMotionEnvironmentEnabled(1);
+    mtwkSetEnvironmentEnabled(1);
     g_fightActive = g_fightUiActive = 0;
     HLib::DestroyTask(game->gameInfoTask);
     HLib::DestroyTask(game->collisionTask);
@@ -1725,7 +1725,7 @@ void vfm_Callback_FightTaskEntry_Callback(void *parameter) {
             auto *motion = FindMotionWork(game->characters[i]);
             if (!mtwkSetExtraFlag(motion, 3, 1) &&
                 (!(actor->hitStateFlags & VFHSF_MidAirRecovery) ||
-                    GetMotionEndFrame(motion, MotionRegion::LowerBody) <= GetMotionFrame(motion, MotionRegion::LowerBody)))
+                    mtwkGetEndFrame(motion, MotionRegion::LowerBody) <= mtwkGetFrame(motion, MotionRegion::LowerBody)))
                 ++settled;
         }
         if (settled == 6 || ++postBattleWaitFrames > 90) {

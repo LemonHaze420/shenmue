@@ -59,9 +59,9 @@ static_assert(sizeof(AR02State::secondKernel) == 0x100);
 AR02State state{};
 
 void LoadRobBagPackage() {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("ROBBAG"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 
 void EnableMapControlMotionSetZero() {
@@ -150,7 +150,7 @@ void AR02WaveCallback(void *) {
 
     const std::int32_t initialFrame = state.initFlag;
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     bool applyFrame = ((dateTime.minute & 7) == 0 && dateTime.second == 0) || initialFrame != 0;
     if (!applyFrame) {
         Vector3 position{};

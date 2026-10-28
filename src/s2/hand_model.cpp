@@ -856,7 +856,7 @@ bool CalculateHandScaleRatios(HandParams &hand) {
     for (float &value : hand.retainedUnitValues)
         value = 1.0f;
     const auto *const measurements = static_cast<const MhndComponent *>(FindModelComponent(hand.owner, kHandPoseToken));
-    Character *const ryo = FindCharacterByScenarioName(SHEN_NAME(RYO_));
+    Character *const ryo = ctrlGetScenarioChara(SHEN_NAME(RYO_));
     const auto *const reference = ryo ? static_cast<const MhndComponent *>(FindModelComponent(ryo, kHandPoseToken)) : nullptr;
     if (!measurements || !reference)
         return false;
@@ -979,7 +979,7 @@ void ApplyHandNodeTransform(const MT7Node &node) {
 
 void ApplyHandBodyTransform(Character &character, const HandParams &hand) {
     if (hand.selector == 1 || hand.selector == 2) {
-        Matrix4x4::SetActiveTransform(charaGetBoneTransform(FindMotionWork(&character), hand.selector == 1 ? 21 : 14));
+        Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(FindMotionWork(&character), hand.selector == 1 ? 21 : 14));
         if (hand.primaryNode)
             ApplyHandNodeTransform(*hand.primaryNode);
         return;

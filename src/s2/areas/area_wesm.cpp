@@ -25,9 +25,9 @@ std::uint32_t fireId{};
 std::int16_t previousFloorMode = 1;
 void WESMFireBreatherLoop(void *) {
     MotionWork *work = scenFindMotionwork(fireBreather);
-    if (SetMotionRegionFlag(work, 65, 1, MotionRegion::LowerBody))
+    if (mtwkSetRegionFlag(work, 65, 1, MotionRegion::LowerBody))
         EV_AT_SetPos(fireBreather, EventTransformFlags::World | EventTransformFlags::AllAxes, breatherPosition);
-    const float frame = GetMotionFrame(scenFindMotionwork(fireBreather), MotionRegion::LowerBody);
+    const float frame = mtwkGetFrame(scenFindMotionwork(fireBreather), MotionRegion::LowerBody);
     Vector3 position;
     if (firePhase == 0) {
         if (frame > 430.0f) {
@@ -53,9 +53,9 @@ void InitializeWESMFireBreather() {
     EV_AT_SetPos(fireBreather, EventTransformFlags::World | EventTransformFlags::AllAxes, breatherPosition);
     EV_AT_SetAngY(fireBreather, EventTransformFlags::AllAxes, Vector3i{0, 16384, 0}, nullptr);
     mtwkRequestMotion(scenFindMotionwork(fireBreather), 0x2644, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(fireBreather), 66, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(fireBreather), 66, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(fireBreather), 0, 0);
-    SetMotionEnvironmentEnabled(scenFindMotionwork(fireBreather), 1);
+    mtwkSetEnvironmentEnabled(scenFindMotionwork(fireBreather), 1);
     EV_SetCharaControllerFlags(fireBreather, ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(fireBreather, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     AttachScenarioCharacter(fireProp, fireBreather, 14, &propOffset, &propRotation);
@@ -105,7 +105,7 @@ void AreaWESMMain(std::uint32_t) {
     EV_ResetFreeTalkFlags();
     EV_CheckWarmStartNpcRoute(fireBreather);
     EV_ForceLoadNpc(fireBreather);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     InitializeWESMFireBreather();
     EV_NPC_NewLoadSw(1);
     firePhase = 0;

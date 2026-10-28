@@ -1298,7 +1298,7 @@ FacialModelResource *FindFacialModel(const Character *character) {
 // @verified - p
 std::int16_t GetEyeLookHeadYaw(Character *character) {
     Matrix4x4_Push();
-    Matrix4x4::SetActiveTransform(charaGetBoneTransform(FindMotionWork(character), 5));
+    Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(FindMotionWork(character), 5));
     const Vector4 origin = workTransformMatrix.rows[3];
     Matrix4x4::preTranslate(100.0f, 0.0f, 0.0f);
     const float x = workTransformMatrix.rows[3].x - origin.x;
@@ -1312,12 +1312,12 @@ std::int16_t GetEyeLookHeadYaw(Character *character) {
 // setEyeLookFlags: the target is measured from the solved head rig, not from the drawn node.
 // @verified - p
 void ResolveFacialEyeTarget(Character *character, FacialEyeControl &eyes) {
-    if (!charaGetBoneTransform(FindMotionWork(character), 5) || !eyes.headNode)
+    if (!mtwkGetBoneTransform(FindMotionWork(character), 5) || !eyes.headNode)
         return;
 
     if ((eyes.rotationFlags & 0x7fU) != 0) {
         Matrix4x4_Push();
-        Matrix4x4::SetActiveTransform(charaGetBoneTransform(FindMotionWork(character), 5));
+        Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(FindMotionWork(character), 5));
         Vector3 origin{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         const Vector3 &offset = eyes.headNode->position;
         Matrix4x4::preTranslate(offset.x, offset.y, offset.z);

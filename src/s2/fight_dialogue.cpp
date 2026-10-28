@@ -858,7 +858,7 @@ void ConvergeInstructionYaw(Character *character, const Vector3 &target, std::in
         delta = rotation.y - desired;
     if (std::abs(delta) > maximumStep)
         rotation.y += delta < 0 ? maximumStep : -maximumStep;
-    SetCharacterWorldRotation(character, rotation);
+    charaSetWorldRot(character, rotation);
 }
 void AdjustInstructionPairPosition(VFActor *actor, const Vector3 &start, const Vector3 &otherStart) {
     if ((actor->motionFlags & (VFMOF_Unknown200 | VFMOF_Unknown4000)) != 0x200 &&
@@ -876,10 +876,10 @@ void AdjustInstructionPairPosition(VFActor *actor, const Vector3 &start, const V
     }
 }
 bool InstructionMotionEnded(Character *character) {
-    return static_cast<std::uint16_t>(SetMotionRegionFlag(FindMotionWork(character), 65, 1, MotionRegion::LowerBody)) != 0;
+    return static_cast<std::uint16_t>(mtwkSetRegionFlag(FindMotionWork(character), 65, 1, MotionRegion::LowerBody)) != 0;
 }
 std::uint16_t InstructionAnimation(Character *character) {
-    return GetMotionAnimationId(FindMotionWork(character), MotionRegion::LowerBody);
+    return mtwkGetAnimationId(FindMotionWork(character), MotionRegion::LowerBody);
 }
 // Real FGTM reaction publication, FIGP playback and paired pose retention.
 // @verified - p
@@ -976,9 +976,9 @@ std::uint8_t UpdateInstructionPose(VFActor *actor) {
         InstructionStore(owner, 0x4a0, std::uint8_t{0});
         const float start = InstructionValue<float>(owner, 0x450), end = InstructionValue<float>(owner, 0x454);
         if (start > 0)
-            SetMotionRegionEvalTime(FindMotionWork(owner->character), start, MotionRegion::LowerBody);
+            mtwkSetRegionEvalTime(FindMotionWork(owner->character), start, MotionRegion::LowerBody);
         if (end > 0)
-            SetMotionLayerEndFrame(FindMotionWork(owner->character), end, MotionRegion::LowerBody);
+            mtwkSetLayerEndFrame(FindMotionWork(owner->character), end, MotionRegion::LowerBody);
         owner->currentMotion = owner->requestedMotion;
         InstructionStore(owner, 0x450, -1.0f);
         InstructionStore(owner, 0x454, -1.0f);
@@ -1225,7 +1225,7 @@ bool SuccessfulInstruction(const VFHD_t *owner, const InstructionState &first, c
 bool InstructionPreviewPastEnd(VFHD_t *owner, const InstructionState &first, const InstructionState &second) {
     return SuccessfulInstruction(owner, first, second) && first.endFrame > 0 &&
         (static_cast<std::uint32_t>(first.motion) & 0xf7ffffff) == InstructionAnimation(owner->character) &&
-        GetMotionFrame(FindMotionWork(owner->character), MotionRegion::LowerBody) > first.endFrame;
+        mtwkGetFrame(FindMotionWork(owner->character), MotionRegion::LowerBody) > first.endFrame;
 }
 void ResetInstructionPreview(VFHD_t *owner) {
     EV_figpAssignFlagsFor(owner->character, 0, 0);

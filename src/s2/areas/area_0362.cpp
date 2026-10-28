@@ -60,7 +60,7 @@ void Setup0362() {
 // @verified - p
 void Cleanup0362(Area0273Parameter *parent) {
     for (const shen_name *character = AREA_0362_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

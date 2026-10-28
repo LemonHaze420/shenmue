@@ -61,7 +61,7 @@ void InitializeTgbtResources() {
     doorLoadAuthorWithAudio(TGBT_PACKAGE);
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0280A000.smp");
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("TGBT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("TGBT"), 0);
     SetDoorSubjectEnabled(TGBT_PROP, 0);
     EV_LoadAudio("0280A000", 0);
     EV_FreeAuthorPak(1, "0280");
@@ -146,7 +146,7 @@ void CleanupTgbtEvent(TgbtEventWork *work) {
     }
     ET_AT_KillWork(work->characters);
     EV_setHoldStatesFlags(1);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     doorLoadAuthorSilently(shen_name{});
     EV_FreeAuthorPak(0, "0280");
     EV_CleanupMapControlTask();
@@ -186,16 +186,16 @@ void TgbtEventCallback(void *data) {
         [[fallthrough]];
     case 2:
         shenStartFGST(10, 10, 0, 0);
-        shenInitFightData(FindCharacterByScenarioName(TGBT_PLAYER), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (work->retries + 2)), 0);
-        shenInitFightData(FindCharacterByScenarioName(TGBT_FIRST_FIGHTER), nullptr, 1, 1, 100, 2);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(TGBT_FIRST_FIGHTER), 0, 0x400000, 128);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(TGBT_FIRST_FIGHTER), 0, 0x200000, 2048);
-        shenInitFightData(FindCharacterByScenarioName(TGBT_SECOND_FIGHTER), nullptr, 1, 1, 60, 3);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(TGBT_SECOND_FIGHTER), 0, 0x400000, 128);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(TGBT_SECOND_FIGHTER), 0, 0x200000, 2048);
-        shenInitFightData(FindCharacterByScenarioName(TGBT_THIRD_FIGHTER), nullptr, 1, 1, 60, 4);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(TGBT_THIRD_FIGHTER), 0, 0x400000, 128);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(TGBT_THIRD_FIGHTER), 0, 0x200000, 2048);
+        shenInitFightData(ctrlGetScenarioChara(TGBT_PLAYER), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (work->retries + 2)), 0);
+        shenInitFightData(ctrlGetScenarioChara(TGBT_FIRST_FIGHTER), nullptr, 1, 1, 100, 2);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(TGBT_FIRST_FIGHTER), 0, 0x400000, 128);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(TGBT_FIRST_FIGHTER), 0, 0x200000, 2048);
+        shenInitFightData(ctrlGetScenarioChara(TGBT_SECOND_FIGHTER), nullptr, 1, 1, 60, 3);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(TGBT_SECOND_FIGHTER), 0, 0x400000, 128);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(TGBT_SECOND_FIGHTER), 0, 0x200000, 2048);
+        shenInitFightData(ctrlGetScenarioChara(TGBT_THIRD_FIGHTER), nullptr, 1, 1, 60, 4);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(TGBT_THIRD_FIGHTER), 0, 0x400000, 128);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(TGBT_THIRD_FIGHTER), 0, 0x200000, 2048);
         vfCopyPosFromEntity(0, nullptr, 243.66000366210938f, 152.77000427246094f, 3.9000000953674316f);
         [[fallthrough]];
     case 3:
@@ -311,7 +311,7 @@ void TgbtEventCallback(void *data) {
         return;
     case 14:
         if (!IsFightActive()) {
-            if (GetBtlStatus(FindCharacterByScenarioName(TGBT_PLAYER)) == 3)
+            if (GetBtlStatus(ctrlGetScenarioChara(TGBT_PLAYER)) == 3)
                 work->state = 17;
             else {
                 ++work->retries;

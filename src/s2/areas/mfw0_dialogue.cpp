@@ -53,14 +53,14 @@ void Mfw0SimpleLookTurnSequence(void *data) {
             work.turning = 1;
             Vector3 position;
             EV_GetCharaPosition(target, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(actor), &position, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(actor), &position, 0);
             Mfw0Wait(sequence, 2, 101, static_cast<std::int32_t>(delay));
             break;
         }
         case 101: {
             Vector3 position;
             EV_GetCharaPosition(target, 5, &position, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(actor), &position, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(actor), &position, 0);
             work.turning = 0;
             Mfw0Complete(sequence);
             return;
@@ -271,14 +271,14 @@ void Mfw0LastDemonstrationSequence(void *data) {
             EV_AT_SetPos(MFW0_TKR, EventTransformFlags::World | EventTransformFlags::AllAxes, MFW0_TEACHER_POSITION);
             SetTrainingCharacterYaw(MFW0_TKR, 41264);
             Mfw0TeacherIdle(false);
-            SetMotionRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(MFW0_TKR), 5003, MotionRegion::LowerBody);
             EV_AT_SetPos(MFW0_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, MFW0_RYO_POSITION);
             SetTrainingCharacterYaw(MFW0_RYO, 8192);
             Vector3i rotation;
             GetScenarioCharacterEulerAngles(MFW0_RYO, &rotation, EventTransformFlags::MotionYaw);
             SetTrainingCharacterYaw(MFW0_RYO, static_cast<std::uint16_t>(rotation.y));
-            SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(MFW0_RYO), 0xf003, MotionRegion::LowerBody);
             if (work.restCount < 2)
                 Mfw0Advance(sequence, 111);

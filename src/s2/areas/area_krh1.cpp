@@ -67,7 +67,7 @@ void AreaKRH1Main(std::uint32_t startParameters) {
     }
 
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     if (static_cast<std::uint8_t>(dateTime.hour - 8) > 14U) {
         dateTime.hour = 8;
         dateTime.minute = 0;

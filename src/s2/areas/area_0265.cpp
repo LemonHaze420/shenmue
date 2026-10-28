@@ -82,13 +82,13 @@ void RestoreE0265Characters() {
 void CleanupE0265(AreaImmediateAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0265_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_0265_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0265A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0265A"), 0);
 
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
@@ -104,7 +104,7 @@ void CleanupE0265(AreaImmediateAuthorTaskParameter *parent) {
         PushGlobalLightingProgram();
         SetAreaFogParams();
         EV_NPC_NewLoadSw(1);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);

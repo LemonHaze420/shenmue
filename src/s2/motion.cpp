@@ -687,7 +687,7 @@ void ReleaseMotionPropTracks(const MotionWork &work) {
 
 void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable) {
     const bool previousBusy = SetLegacyBusyPreparingDraw(true);
-    const shen_name name = GetCharacterScenarioName(&character);
+    const shen_name name = ctrlGetScenarioCharaName(&character);
     const bool blend = g_currentMap.name != SHEN_NAME(AR01) || (name.name != SHEN_NAME(SZY_) && name.name != SHEN_NAME(SDN_));
     const auto drawTrack = [&](std::uint32_t region, bool previous) {
         const MotionRuntimeState &state = work.runtime;
@@ -697,7 +697,7 @@ void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable) 
                 const std::uint16_t begin = ReadMotionU16(windows + window * 2);
                 if (!(begin & 0x8000U))
                     continue;
-                const float frame = GetMotionFrame(&work, static_cast<MotionRegion>(region));
+                const float frame = mtwkGetFrame(&work, static_cast<MotionRegion>(region));
                 const bool transitioning = (state.regionFlags[region] & MRF_Transition) != 0;
                 const float time =
                     previous ? state.regionPreviousTicksTime[region] : (transitioning && blend ? std::fmax(0.0f, state.layerSampleFrame[region]) : frame);
@@ -709,7 +709,7 @@ void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable) 
                     continue;
                 MT7Model *const model = FindMotionProp(descriptor.prop);
                 const auto boneId = static_cast<std::uint8_t>(descriptor.bone);
-                const Matrix4x4 *bone = charaGetBoneTransform(&work, boneId);
+                const Matrix4x4 *bone = mtwkGetBoneTransform(&work, boneId);
 
 
                 Matrix4x4 modelSpace;
@@ -1278,7 +1278,7 @@ bool RestoreMotionSnapshotPlacement(shen_name name, std::uint32_t slot) {
         return false;
     RestoreMotionWorkConfiguration(*work, *snapshot);
     shenApplyTranslationToAll(&character->entity.node, (snapshot->motionFlags & 0x200U) ? snapshot->worldPosition : snapshot->rootPosition);
-    SetCharacterWorldRotation(character, snapshot->worldRotation);
+    charaSetWorldRot(character, snapshot->worldRotation);
     MotionRuntimeState &state = work->runtime;
     state.motnFlags = (state.motnFlags & 0xfffd9fffU) | 0x2000U;
     state.regionFlags[0] = (state.regionFlags[0] & ~(MRF_Reinitialize | MRF_FollowLowerBody | MRF_ReturnToLowerBody)) | 0x80U;
@@ -1288,7 +1288,7 @@ bool RestoreMotionSnapshotPlacement(shen_name name, std::uint32_t slot) {
     state.layerEndFrame[0] = snapshot->maxTime[0];
     if (snapshot->regionFlags[0] & MRF_Loop)
         state.regionFlags[0] |= MRF_Unknown1000;
-    if (SetMotionRegionFlag(work, 70, 1, MotionRegion::LowerBody))
+    if (mtwkSetRegionFlag(work, 70, 1, MotionRegion::LowerBody))
         state.regionFlags[0] |= MRF_LeadFoot;
     for (std::uint32_t region = 1; region < 5; ++region) {
         if (!(snapshot->regionFlags[region] & MRF_Independent))
@@ -1300,7 +1300,7 @@ bool RestoreMotionSnapshotPlacement(shen_name name, std::uint32_t slot) {
         state.layerEndFrame[region] = snapshot->maxTime[region];
         if (snapshot->regionFlags[region] & MRF_Loop)
             state.regionFlags[region] |= MRF_Unknown1000;
-        if (SetMotionRegionFlag(work, 70, 1, static_cast<MotionRegion>(region)))
+        if (mtwkSetRegionFlag(work, 70, 1, static_cast<MotionRegion>(region)))
             state.regionFlags[region] |= MRF_LeadFoot;
     }
     return true;

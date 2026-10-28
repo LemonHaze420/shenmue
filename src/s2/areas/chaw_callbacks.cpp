@@ -29,7 +29,7 @@ void ChawStartCallback(void *data) {
     EVS_LoopCamera(1, CHAW_BASE, CHAW_BASE);
     if (!work->alternate)
         EV_PlayDialogue("0038A034");
-    SetMotionRegionFlag(scenFindMotionwork(CHAW_RYO), 69, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(CHAW_RYO), 69, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0x17c8, MotionRegion::LowerBody);
     HLib::Task *fade = HLib::EnqueueTaskWithoutParameter(ChawFadeOutCallback, 6, 11, static_cast<std::int32_t>(CHAW_EVENT_TASK.name));
     HLib::SetupTimedTask(fade, 100);
@@ -56,7 +56,7 @@ void ChawInitCallback(void *data) {
     EV_AT_SetPos(CHAW_BASE, EventTransformFlags::AllAxes, {0, 10, 0});
     EV_EnableCharacterDisplay(CHAW_FACE);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (CHAW_MODELS[work->entry].lighting.name || date.hour >= 19 || g_currentMap.name == SHEN_NAME(AKS0))
         EV_lightLoad(CHAW_AREA);
     if (work->entry != 21)
@@ -85,7 +85,7 @@ void ChawPlayCallback(void *data) {
         EV_EnableCharacterDisplay(CHAW_HAND);
     if (ChawLectureAllowsInput(work)) {
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         if (static_cast<std::uint8_t>(date.hour - 7) > 15) {
             if (work->entry != 21 && !IsModeBitActive(1)) {
                 ChawQueueExit(work);
@@ -258,7 +258,7 @@ void ChawCheckChoiceCallback(void *data) {
     EV_ResetFreeTalkFlags();
     npcResetDateTimeIfNeeded();
     work->advanceTime = 1;
-    GetCurrentDateTime(chawTargetDate);
+    shenGetCurrentDateTime(chawTargetDate);
     float scale;
     if (work->progression > 1) {
         chawTargetDate.minute += 30;
@@ -285,7 +285,7 @@ void ChawSuccessBurinCallback(void *) {
 void ChawFailCallback(void *data) {
     ChawEventWork *work = static_cast<ChawEventWork *>(data);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     const std::uint32_t time = date.minute + 100 * date.hour;
     if (time < static_cast<std::uint32_t>(chawTargetDate.minute + 100 * chawTargetDate.hour) && time <= 2300)
         return;
@@ -296,7 +296,7 @@ void ChawFailCallback(void *data) {
         EV_stepSetFlags(2, 49);
         EV_scenQueueLoad(g_actNumber, SHEN_NAME(TOFB), 0);
     } else {
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(CHAW_RYO), FacialExpressionId::Sad, 0, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(CHAW_RYO), FacialExpressionId::Sad, 0, 1);
         EVS_LoopCamera(4, CHAW_BASE, CHAW_BASE);
         if (work->wrongSign) {
             EV_PlayDialogue("0038A037");
@@ -321,7 +321,7 @@ void ChawStandUpCallback(void *data) {
     if (camCtrlCheckIsEventCam() || filmCheckFadeTrackColour() || cvsHasValidConverseData(nullptr))
         return;
     EV_NPC_NewLoadSw(1);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(CHAW_RYO), FacialExpressionId::Normal, 0, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(CHAW_RYO), FacialExpressionId::Normal, 0, 1);
     EV_AT_SetPos(CHAW_BASE, EventTransformFlags::AllAxes, chawPlacements[work->entry].position);
     EV_DisableCharacterDisplay(CHAW_FACE);
     if (work->progression != 1) {
@@ -330,9 +330,9 @@ void ChawStandUpCallback(void *data) {
     }
     EVS_LoopCamera(5, CHAW_BASE, CHAW_BASE);
     EV_DisableCharacterDisplay(CHAW_HAND);
-    SetMotionRegionFlag(scenFindMotionwork(CHAW_RYO), 69, 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(CHAW_RYO), 69, 2, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0x17c6, MotionRegion::LowerBody);
-    ChawQueueFadeAudioOut(static_cast<std::int32_t>(GetMotionEndFrame(scenFindMotionwork(CHAW_RYO), MotionRegion::LowerBody) - 10));
+    ChawQueueFadeAudioOut(static_cast<std::int32_t>(mtwkGetEndFrame(scenFindMotionwork(CHAW_RYO), MotionRegion::LowerBody) - 10));
     HLib::SetCurrentTaskTo(ChawFinishCallback);
 }
 void ChawFinishCallback(void *data) {
@@ -341,7 +341,7 @@ void ChawFinishCallback(void *data) {
         AddInventoryItem(chawPrize, 1, 1);
         chawPrize = 0;
     }
-    if (SetMotionRegionFlag(scenFindMotionwork(CHAW_RYO), 65, 1, MotionRegion::LowerBody) && !filmCheckFadeTrackColour()) {
+    if (mtwkSetRegionFlag(scenFindMotionwork(CHAW_RYO), 65, 1, MotionRegion::LowerBody) && !filmCheckFadeTrackColour()) {
         ChawCleanup(work, true);
         if (work->state)
             SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);

@@ -27,7 +27,7 @@ constexpr std::uint16_t palette0509[]{
 void Setup0509Fire() {
     const Vector3 position{154.74000549316406f, 100.125f, 392.17999267578125f};
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.minute = 0;
     SetPlayerControlEnabled(0);
     fire0509 = static_cast<std::uint32_t>(CreateFireEffect(position, 0.5f, 0.5f, 0, 0));
@@ -99,11 +99,11 @@ void Update0509(void *taskData) {
 
 // @verified - p
 void Cleanup0509(AuthorViewerPairTaskParameter *parent) {
-    clmdUtil(FindCharacterByScenarioName(AREA_0509_SIN_), 0);
+    clmdUtil(ctrlGetScenarioChara(AREA_0509_SIN_), 0);
     SuspendParticleEffect(4, fire0509);
     FreeParticleEffect(4, fire0509);
     for (const shen_name *character = AREA_0509_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -121,9 +121,9 @@ std::int64_t Queue0509Author(AuthorViewerPairTaskParameter *parent) {
     static_cast<AuthorViewer519ELoopTaskParameter *>(HLib::GetTaskParameter(task))->parent = parent;
     EV_LoadAudio("0509A000", 0);
     if (parent->selection == 1)
-        clmdUtil(FindCharacterByScenarioName(AREA_0509_SIN_), 8);
+        clmdUtil(ctrlGetScenarioChara(AREA_0509_SIN_), 8);
     else if (parent->selection == 0 || parent->selection == 3)
-        clmdUtil(FindCharacterByScenarioName(AREA_0509_SIN_), 5);
+        clmdUtil(ctrlGetScenarioChara(AREA_0509_SIN_), 5);
     EV_authSceneCtrl((parent->selection & 0xfffffffcU) != 0 || parent->selection == 2 ? AuthSceneCtrl::ShowFilmBars : AuthSceneCtrl::HideFilmBars);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     Prepare0509Characters();

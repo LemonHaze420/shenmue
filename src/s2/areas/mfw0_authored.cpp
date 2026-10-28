@@ -24,8 +24,8 @@ void Mfw0AuthorCharacter(shen_name character) {
     EV_SetCharacterAlphaEnabled(character, false);
     SetScenarioReflectorBoardValues(character, &MFW0_REFLECTOR);
     EV_SetRefBoardParamsFor(character, 1);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(character), 0, 8, 16);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(character), 1, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(character), 0, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(character), 1, 8, 16);
 }
 void Mfw0PrepareAuthorCharacters() {
     Mfw0AuthorCharacter(MFW0_RYO);
@@ -35,10 +35,10 @@ void Mfw0PrepareAuthorCharacters() {
         EV_SetCharaControllerFlags(prop, 3, NpcCharacterControllerState::Disabled);
         EV_SetCharacterAlphaEnabled(prop, false);
     }
-    SetHighModelXYZ(FindCharacterByScenarioName(MFW0_RYO), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MFW0_RYO), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MFW0_TKR), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MFW0_TKR), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MFW0_RYO), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MFW0_RYO), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MFW0_TKR), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MFW0_TKR), 1, 1, 0);
     Mfw0AuthorCharacter(MFW0_TKR);
     const Vector3 zero{.x = 0, .y = 0, .z = 0};
     EV_AT_SetPos(MFW0_AB10, EventTransformFlags::World | EventTransformFlags::AllAxes, zero);
@@ -99,8 +99,8 @@ void Mfw0AuthorLoop(void *data) {
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         SelectPostFxBank(3, work.postFxBank);
         if (work.author.name == MFW0_FIRST_AUTHOR.name || work.author.name == MFW0_REPEAT_AUTHOR.name) {
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 1, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 0, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MFW0_RYO), 1, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MFW0_RYO), 0, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
         }
         Mfw0RestoreAuthorCharacters();
         work.phase = 3;

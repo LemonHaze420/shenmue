@@ -79,8 +79,8 @@ std::uint32_t SampleBookCarryTrack(const BookPoseKey *track, Vector3 &position, 
 Vector3 &SampleBookMotionRoot(std::int32_t preset, float frame) {
     static Vector3 root;
     MotionWork *motion = scenFindMotionwork(BOOK_RYO);
-    const std::uint16_t animation = GetMotionAnimationId(motion, MotionRegion::LowerBody);
-    const std::int32_t bone = GetMotionRigBoneId(motion);
+    const std::uint16_t animation = mtwkGetAnimationId(motion, MotionRegion::LowerBody);
+    const std::int32_t bone = mtwkGetRigBoneId(motion);
     if (preset == 9)
         root = {.x = 0, .y = 0, .z = 0};
     else
@@ -90,9 +90,9 @@ Vector3 &SampleBookMotionRoot(std::int32_t preset, float frame) {
 bool IsBookMotionComplete(std::int16_t preset) {
     const BookMotionPreset &definition = bookMotionPresets[preset];
     MotionWork *motion = scenFindMotionwork(BOOK_RYO);
-    bool complete = definition.lastFrame >= 0 ? GetMotionFrame(motion, MotionRegion::LowerBody) == definition.lastFrame :
-                                                SetMotionRegionFlag(motion, 65, 1, MotionRegion::LowerBody) != 0;
-    if (bookMotionPresets[bookCarryMotion.current].sideFrame > 0 && GetMotionFrame(motion, MotionRegion::LowerBody) == definition.sideFrame) {
+    bool complete = definition.lastFrame >= 0 ? mtwkGetFrame(motion, MotionRegion::LowerBody) == definition.lastFrame :
+                                                mtwkSetRegionFlag(motion, 65, 1, MotionRegion::LowerBody) != 0;
+    if (bookMotionPresets[bookCarryMotion.current].sideFrame > 0 && mtwkGetFrame(motion, MotionRegion::LowerBody) == definition.sideFrame) {
         complete = true;
         bookCarryMotion.side ^= 1;
     }
@@ -113,13 +113,13 @@ void ChangeBookCarryMotion(std::int32_t preset, std::int8_t transition) {
             mtwkRequestMotion(motion, bookMotionPresets[1].motion, MotionRegion::LeftArm);
         }
     } else if (old.flags & 1) {
-        SetMotionRegionFlag(motion, 73, 0, MotionRegion::RightArm);
-        SetMotionRegionFlag(motion, 73, 0, MotionRegion::LeftArm);
+        mtwkSetRegionFlag(motion, 73, 0, MotionRegion::RightArm);
+        mtwkSetRegionFlag(motion, 73, 0, MotionRegion::LeftArm);
     }
     if (bookCarryMotion.side)
-        SetMotionRegionFlag(motion, 69, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(motion, 69, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(motion, next.motion, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(motion, next.firstFrame, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(motion, next.firstFrame, MotionRegion::LowerBody);
     bookCarryMotion.current = static_cast<std::int16_t>(preset);
     bookCarryMotion.frame = next.firstFrame;
     bookCarryMotion.previousRootX = 0;
@@ -202,7 +202,7 @@ void PositionBookCarrier(Vector3 &position, std::int32_t yaw) {
 }
 void UpdateBookCarryLoop() {
     bookCarryMotion.transition = 0;
-    bookCarryMotion.frame = GetMotionFrame(scenFindMotionwork(BOOK_RYO), MotionRegion::LowerBody);
+    bookCarryMotion.frame = mtwkGetFrame(scenFindMotionwork(BOOK_RYO), MotionRegion::LowerBody);
     SelectBookCarryInput();
     if (bookCarryVariant == 3 && bookCarryDistance > bookQteTimings[bookQteTimingIndex]) {
         ++bookQteTimingIndex;
@@ -228,9 +228,9 @@ void UpdateBookCarryLoop() {
         bookCarryPhase = 8;
         bookModelState.animationFrame = 0;
         mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_RYO), 1);
-        SetMotionFrameTime(scenFindMotionwork(BOOK_RYO), 10, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(BOOK_RYO), 10, MotionRegion::LowerBody);
         mtwkRequestMotion(scenFindMotionwork(BOOK_RYO), 0x188c, MotionRegion::LowerBody);
-        SetMotionRegionEvalTime(scenFindMotionwork(BOOK_RYO), 40, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(scenFindMotionwork(BOOK_RYO), 40, MotionRegion::LowerBody);
         return;
     }
     if (CheckBookCarryQte() == 1) {
@@ -263,14 +263,14 @@ void UpdateBookCarryLoop() {
     bookCarryDistance -= (nextZ - SampleBookMotionRoot(bookCarryMotion.current, bookCarryMotion.frame).z) * 25;
     switch (bookCarryMotion.transition) {
     case 1:
-        SetMotionFrameTime(scenFindMotionwork(BOOK_RYO), 3, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(BOOK_RYO), 3, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_RYO), 1);
         break;
     case 2:
-        SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 71, 0, MotionRegion::LowerBody);
         break;
     case 3:
-        SetMotionFrameTime(scenFindMotionwork(BOOK_RYO), 5, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(BOOK_RYO), 5, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_RYO), 2);
         break;
     default:

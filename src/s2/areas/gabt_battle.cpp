@@ -64,8 +64,8 @@ void GabtBattleSequenceCallback(void *data) {
             EV_AT_SetAngY(GABT_MOLE_SCENERY, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
             mtwkRequestMotion(scenFindMotionwork(GABT_MOLE_RYO), 306, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(GABT_MOLE_GAI), 306, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(GABT_MOLE_RYO), 71, 0, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(GABT_MOLE_GAI), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(GABT_MOLE_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(GABT_MOLE_GAI), 71, 0, MotionRegion::LowerBody);
             EV_EnableCharacterDisplay(GABT_MOLE_RYO);
             EV_EnableCharacterDisplay(GABT_MOLE_GAI);
             BattleWait(work, 2, 100, 6);
@@ -84,9 +84,9 @@ void GabtBattleSequenceCallback(void *data) {
             SetScreenFilmFade(30, 255, 0, 0, 0, 70, 0, 0, 0);
             shenStartFGST(10, 10, 0, 0);
             vfmDispatchControl(FightControlOp::Package, shen_name{}, reinterpret_cast<std::uintptr_t>("GABT"), 1);
-            shenInitFightData(FindCharacterByScenarioName(GABT_MOLE_RYO), nullptr, 0, 0, 0, 0);
-            shenInitFightData(FindCharacterByScenarioName(GABT_MOLE_GAI), nullptr, 1, 1, 20000, 0x2c);
-            vfUpdateFlagsFor(FindCharacterByScenarioName(GABT_MOLE_RYO), 0, 0x20000, 30);
+            shenInitFightData(ctrlGetScenarioChara(GABT_MOLE_RYO), nullptr, 0, 0, 0, 0);
+            shenInitFightData(ctrlGetScenarioChara(GABT_MOLE_GAI), nullptr, 1, 1, 20000, 0x2c);
+            vfUpdateFlagsFor(ctrlGetScenarioChara(GABT_MOLE_RYO), 0, 0x20000, 30);
             vfCopyPosFromEntity(0, nullptr, 287.619995f, 76.4599991f, 2.2f);
             EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x200}, 1);
             EV_vfBattleUtil(FightBattleUtilOp::CombatCameraFlags, shen_name{2}, 1);

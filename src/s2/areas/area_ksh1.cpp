@@ -81,7 +81,7 @@ void KSH1StartCallback(void *) {
     EV_AT_SetPos(shenhua, relativeXyz, position);
     EV_AT_SetAngY(shenhua, relativeXyz, rotation, nullptr);
     mtwkSetExtraFlag(scenFindMotionwork(shenhua), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(shenhua), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(shenhua), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(shenhua), 13, 0);
     mtwkRequestMotion(scenFindMotionwork(shenhua), shenhuaAreaMotion, MotionRegion::LowerBody);
     EV_PTYCUtils(shenhua, 3, 0);
@@ -135,7 +135,7 @@ void KSH1SetupLightsForCurrentTime(std::uint32_t *requestedMode) {
     currentLightMode = static_cast<std::int32_t>(*requestedMode);
 
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     SetMapModelDataDefaultVertexShader();
     SetDefaultVS();
     EV_AssignLightParams(0, 0);

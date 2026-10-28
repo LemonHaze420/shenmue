@@ -45,18 +45,18 @@ void BookIntroduction() {
     case 1: {
         const shen_name actors[]{SHEN_NAME(SYE_), SHEN_NAME(KUN_), SHEN_NAME(KNK_)};
         for (const shen_name actor : actors)
-            if (FindCharacterByScenarioName(actor)) {
+            if (ctrlGetScenarioChara(actor)) {
                 EV_DisableCharacterDisplay(actor);
                 EV_ToggleCharacterFlag(actor);
             }
-        EV_SetCharaControllerFlags(BOOK_SAI, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
-        EV_SetCharaControllerFlags(BOOK_SAI, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
+        EV_SetCharaControllerFlags(BOOK_SAI, CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
+        EV_SetCharaControllerFlags(BOOK_SAI, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
         EV_npcUnknownFunc(BOOK_SAI);
         ++bookEventPhase.phase;
         return;
     }
     case 2:
-        EV_SetCharaControllerFlags(BOOK_SAI, CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(BOOK_SAI, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
         bookEntrySelection = 0;
         if (EV_GetShenmueFlag(0x3a)) {
             PrepareBookAuthoredActor(BOOK_RYO);
@@ -68,7 +68,7 @@ void BookIntroduction() {
         return;
     case 3: {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 9;
         time.minute = 0;
         SetCurrentDateTimeTo(time);

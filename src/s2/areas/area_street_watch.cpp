@@ -31,15 +31,15 @@ namespace shenmue::s2::areas {
 namespace {
 constexpr shen_name invalid{0xffffffffU};
 void LoadStreetWatchPackage(const char *package, bool waitFirst) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
         return;
     if (waitFirst)
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     if (waitFirst)
         EV_debug_log("D:\\Mango\\sm2\\src\\event\\common\\et_street_watch.c", 305, "PACK LOAD START\n");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     if (waitFirst)
         EV_debug_log("D:\\Mango\\sm2\\src\\event\\common\\et_street_watch.c", 308, "PACK LOAD END\n");
 }
@@ -271,17 +271,17 @@ void StreetWatchMainCallback(void *payload, StreetWatchState &owner) {
         EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{2}, 1);
         DestroyElementByIndex(UIElement::StreetFighterHud);
         vfmDispatchControl(FightControlOp::Package, shen_name{0}, reinterpret_cast<std::uintptr_t>(owner.package), 1);
-        shenInitFightData(FindCharacterByScenarioName(owner.fighter), nullptr, 1, 0, 500, owner.fighterStyle);
-        shenInitFightData(FindCharacterByScenarioName(owner.partner), nullptr, 1, 1, 500, owner.partnerStyle);
+        shenInitFightData(ctrlGetScenarioChara(owner.fighter), nullptr, 1, 0, 500, owner.fighterStyle);
+        shenInitFightData(ctrlGetScenarioChara(owner.partner), nullptr, 1, 1, 500, owner.partnerStyle);
         if (owner.formationAssignments == 2)
-            vfUpdateFlagsFor(FindCharacterByScenarioName(owner.fighter), 0, 0x8000000, 2);
+            vfUpdateFlagsFor(ctrlGetScenarioChara(owner.fighter), 0, 0x8000000, 2);
         if (owner.formationAssignments)
-            vfUpdateFlagsFor(FindCharacterByScenarioName(owner.fighter), 0, 0x8000000, 1);
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(STREET_WATCH_RYO), FacialNodeOriginal);
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(owner.fighter), FacialNodeOriginal);
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(owner.partner), FacialNodeOriginal);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(owner.fighter), 0, 0x10000, 0);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(owner.partner), 0, 0x10000, 0);
+            vfUpdateFlagsFor(ctrlGetScenarioChara(owner.fighter), 0, 0x8000000, 1);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(STREET_WATCH_RYO), FacialNodeOriginal);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(owner.fighter), FacialNodeOriginal);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(owner.partner), FacialNodeOriginal);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(owner.fighter), 0, 0x10000, 0);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(owner.partner), 0, 0x10000, 0);
         vfCopyPosFromEntity(0, nullptr, owner.centre.x, owner.centre.z, 2.75f);
         EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x800}, 1);
         vfmQueueFightStart(2, 99, 1.0f, 0, -1);
@@ -421,7 +421,7 @@ void StreetWatchMainCallback(void *payload, StreetWatchState &owner) {
         }
         Vector3 position;
         EV_GetCharaPosition(STREET_WATCH_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-        const Vector3i rotation = GetCharacterWorldRotation(FindCharacterByScenarioName(STREET_WATCH_RYO));
+        const Vector3i rotation = GetCharacterWorldRotation(ctrlGetScenarioChara(STREET_WATCH_RYO));
         if (g_currentMap.name == SHEN_NAME(QKBT)) {
             if (GetSquaredDistanceXZ(&owner.rooftopCentre, &position) < 4.0f && position.y > 83.5f && position.y < 84.5f) {
                 if (!owner.iconPrepared)
@@ -488,7 +488,7 @@ void StreetWatchMainCallback(void *payload, StreetWatchState &owner) {
         owner.speechStarted = 1;
         EVT_AT_SetMot(STREET_WATCH_ANNOUNCER, 0x25c3, 0.0f, 1.0f, 0, 0);
         EVT_AT_SetVoice("0255A001", 90); // @text EN: "That's him!" | JA: "…あいつだ！"
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(owner.package), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(owner.package), 0);
         work.state = 14;
         HLib::SetupTaskDelay(30);
         return;
@@ -523,7 +523,7 @@ void StreetWatchMainCallback(void *payload, StreetWatchState &owner) {
         owner.speechStarted = 1;
         PrepareStreetWatchPlayerAngle(owner);
         EVT_AT_SetMot(STREET_WATCH_RYO, 0x25c4, 0.0f, 1.0f, 0, 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(owner.package), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(owner.package), 0);
         EventSetCamera camera{0, 0x26ac, STREET_WATCH_RYO, STREET_WATCH_RYO, 0, {}, 0.0f, 0.0f};
         EVT_AT_SetCam_Callback(&camera);
         camCtrlSetFilmBarEnabled(0);

@@ -127,11 +127,11 @@ void Handcuffs_Render(void *taskData) {
     HandcuffsTaskData &data = *static_cast<HandcuffsTaskData *>(taskData);
     MotionWork *const firstMotion = FindMotionWork(data.first.character);
     MotionWork *const secondMotion = FindMotionWork(data.second.character);
-    const Matrix4x4 *const firstBone = charaGetBoneTransform(firstMotion, data.first.bone == 17 ? 21 : 14);
-    const Matrix4x4 *const secondBone = charaGetBoneTransform(secondMotion, data.second.bone == 17 ? 21 : 14);
+    const Matrix4x4 *const firstBone = mtwkGetBoneTransform(firstMotion, data.first.bone == 17 ? 21 : 14);
+    const Matrix4x4 *const secondBone = mtwkGetBoneTransform(secondMotion, data.second.bone == 17 ? 21 : 14);
     Vector3 firstWrist{}, secondWrist{};
-    GetMotionBonePosition(firstMotion, static_cast<MotionBoneId>(data.first.bone), &firstWrist);
-    GetMotionBonePosition(secondMotion, static_cast<MotionBoneId>(data.second.bone), &secondWrist);
+    mtwkGetBonePosition(firstMotion, static_cast<MotionBoneId>(data.first.bone), &firstWrist);
+    mtwkGetBonePosition(secondMotion, static_cast<MotionBoneId>(data.second.bone), &secondWrist);
     const Vector3 midpoint{(firstWrist.x + secondWrist.x) * 0.5f, (firstWrist.y + secondWrist.y) * 0.5f, (firstWrist.z + secondWrist.z) * 0.5f};
     Vector3 viewMidpoint{};
     Matrix4x4::TransformPoint(midpoint, viewMidpoint);
@@ -189,7 +189,7 @@ void Handcuffs_Callback(void *taskData) {
 void Handcuffs_ConstrainWrist(std::uint32_t, Vector3 *position, MotionWork *, void *parameter) {
     const HandcuffConstraint &constraint = *static_cast<const HandcuffConstraint *>(parameter);
     Vector3 peerPosition{};
-    GetMotionBonePosition(FindMotionWork(constraint.peer->character), static_cast<MotionBoneId>(constraint.peer->bone), &peerPosition);
+    mtwkGetBonePosition(FindMotionWork(constraint.peer->character), static_cast<MotionBoneId>(constraint.peer->bone), &peerPosition);
     const Vector3 delta = Vector3::Subtract(*position, peerPosition);
     const float distance = Vector3::CalcMagnitude(delta);
     if (distance > constraint.maximumDistance && distance < 3.0f) {
@@ -202,8 +202,8 @@ void Handcuffs_ConstrainWrist(std::uint32_t, Vector3 *position, MotionWork *, vo
 std::int32_t Handcuffs_Attach(shen_name firstCharacter, std::int32_t firstHand, shen_name secondCharacter, std::int32_t secondHand, float maximumDistance) {
     if (!g_Handcuffs_Task)
         return -1;
-    Character *const first = FindCharacterByScenarioName(firstCharacter);
-    Character *const second = FindCharacterByScenarioName(secondCharacter);
+    Character *const first = ctrlGetScenarioChara(firstCharacter);
+    Character *const second = ctrlGetScenarioChara(secondCharacter);
     HandcuffsTaskData *const data = static_cast<HandcuffsTaskData *>(HLib::GetTaskParameter(g_Handcuffs_Task));
     if (!first || !second || !data)
         return -1;
@@ -224,13 +224,13 @@ std::int32_t Handcuffs_Attach(shen_name firstCharacter, std::int32_t firstHand, 
     data->second.model = data->highModel;
     MotionWork *const firstMotion = FindMotionWork(first);
     MotionWork *const secondMotion = FindMotionWork(second);
-    AssignMotionTargetParameter(firstMotion, &data->first, data->first.bone);
-    AssignMotionTargetParameter(secondMotion, &data->second, data->second.bone);
-    AssignMotionTargetCallback(firstMotion, Handcuffs_ConstrainWrist, data->first.bone);
-    AssignMotionTargetCallback(secondMotion, Handcuffs_ConstrainWrist, data->second.bone);
+    mtwkAssignTargetParameter(firstMotion, &data->first, data->first.bone);
+    mtwkAssignTargetParameter(secondMotion, &data->second, data->second.bone);
+    mtwkAssignTargetCallback(firstMotion, Handcuffs_ConstrainWrist, data->first.bone);
+    mtwkAssignTargetCallback(secondMotion, Handcuffs_ConstrainWrist, data->second.bone);
     Vector3 firstPosition{}, secondPosition{};
-    GetMotionBonePosition(firstMotion, static_cast<MotionBoneId>(data->first.bone), &firstPosition);
-    GetMotionBonePosition(secondMotion, static_cast<MotionBoneId>(data->second.bone), &secondPosition);
+    mtwkGetBonePosition(firstMotion, static_cast<MotionBoneId>(data->first.bone), &firstPosition);
+    mtwkGetBonePosition(secondMotion, static_cast<MotionBoneId>(data->second.bone), &secondPosition);
     chainMidpoint = {(firstPosition.x + secondPosition.x) * 0.5f, (firstPosition.y + secondPosition.y) * 0.5f, (firstPosition.z + secondPosition.z) * 0.5f};
     chainAnchor = chainMidpoint;
     chainAnchor.y -= 2.0f;
@@ -248,10 +248,10 @@ void cuffsSetFlags() {
     data.active = 0;
     MotionWork *const firstMotion = FindMotionWork(data.first.character);
     MotionWork *const secondMotion = FindMotionWork(data.second.character);
-    AssignMotionTargetParameter(firstMotion, nullptr, data.first.bone);
-    AssignMotionTargetParameter(secondMotion, nullptr, data.second.bone);
-    AssignMotionTargetCallback(firstMotion, nullptr, data.first.bone);
-    AssignMotionTargetCallback(secondMotion, nullptr, data.second.bone);
+    mtwkAssignTargetParameter(firstMotion, nullptr, data.first.bone);
+    mtwkAssignTargetParameter(secondMotion, nullptr, data.second.bone);
+    mtwkAssignTargetCallback(firstMotion, nullptr, data.first.bone);
+    mtwkAssignTargetCallback(secondMotion, nullptr, data.second.bone);
 }
 
 void Handcuffs_Enqueue() {

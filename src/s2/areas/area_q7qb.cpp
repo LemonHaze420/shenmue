@@ -42,20 +42,20 @@ void Q7QbSetupNullsub() {
 void Q7QbSetup(Q7QbWork &work) {
     EVT_SetQteRetryFrames(24);
     EVT_SetQteFailureCount(0);
-    GetCurrentDateTime(eventTemporaryDateTime);
+    shenGetCurrentDateTime(eventTemporaryDateTime);
     Vector3 position;
     EV_GetCharaPosition(Q7QB_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     work.baseHeight = position.y;
     work.characters = Queue_EVT_AT_ReadChr(work.task, Q7QB_CHARACTERS);
     work.succeeded = 1;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("0290"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("Q7QB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("Q7QB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("Q7QB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("Q7QB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("Q7QB"), 0);
     EV_FreeAuthorPak(1, "S2BV");
     EV_FreeAuthorPak(1, "0290");
     EV_SetNewSceneIndex();
@@ -70,7 +70,7 @@ void Q7QbStartCallback(void *data) {
     work.resultParameters = {.player = Q7QB_RYO, .firstOpponent = Q7QB_KK9, .secondOpponent = Q7QB_KK7, .motionFlags = 0x44000000U};
     work.continuation = Q7QbFirstAttackCallback;
     work.phase = 0;
-    SetLowQualityHands(FindCharacterByScenarioName(Q7QB_RYO));
+    SetLowQualityHands(ctrlGetScenarioChara(Q7QB_RYO));
     EventSetPosition position{
         .cleanup = 0, .character = Q7QB_BASE, .parent = Q7QB_INVALID, .position = {.x = 198.1f, .y = work.baseHeight, .z = 161.9f}, .delay = 0};
     EVT_AT_SetPosRot(&position);
@@ -110,7 +110,7 @@ void Q7QbStartCallback(void *data) {
         GetMotionFrameCount(13);
     }
     for (shen_name character : Q7QB_PLURAL_CHARACTERS)
-        SetPluralControlFor(FindCharacterByScenarioName(character), 0);
+        SetPluralControlFor(ctrlGetScenarioChara(character), 0);
     EV_LoadAudio("0290A000", 1);
     EV_spmBeginSampleExecute();
     EV_authSceneCtrl(static_cast<AuthSceneCtrl>(SHEN_NAME(ATH1)));
@@ -120,7 +120,7 @@ void Q7QbWaitIntroCallback(void *data) {
     if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded))
         return;
     Q7QbWork &work = *static_cast<Q7QbWork *>(data);
-    Character *character = FindCharacterByScenarioName(Q7QB_RYO);
+    Character *character = ctrlGetScenarioChara(Q7QB_RYO);
     SetHighModelXYZ(character, 1, 0, 0);
     SetHighModelXYZ(character, 1, 1, 0);
     ApplyCharacterHandPoseCommand(character, 0, reinterpret_cast<std::byte *>(ryoQteHandPose), 0);
@@ -251,7 +251,7 @@ void Q7QbFinalAttackCallback(void *data) {
     const std::int32_t phase = work.phase++;
     if (!phase) {
         for (shen_name character : Q7QB_PLURAL_CHARACTERS)
-            SetPluralControlFor(FindCharacterByScenarioName(character), 1);
+            SetPluralControlFor(ctrlGetScenarioChara(character), 1);
         work.resultParameters.firstOpponent = Q7QB_RIK;
         work.resultParameters.secondOpponent = Q7QB_SBK;
         HLib::SetupTaskDelay(static_cast<std::int32_t>(Queue_EVT_AT_ResultQTE(&work.succeeded, &work.resultParameters, &Q7QB_QTE_DATA[6])));
@@ -309,7 +309,7 @@ void Q7QbFinalAttackCallback(void *data) {
     }
 }
 void Q7QbWaitMotionCallback(void *data) {
-    if (SetMotionRegionFlag(scenFindMotionwork(Q7QB_RYO), 65, 1, MotionRegion::LowerBody))
+    if (mtwkSetRegionFlag(scenFindMotionwork(Q7QB_RYO), 65, 1, MotionRegion::LowerBody))
         HLib::SetCurrentTaskTo(static_cast<Q7QbWork *>(data)->continuation);
 }
 void Q7QbStartResultAuthorCallback(void *data) {
@@ -329,16 +329,16 @@ void Q7QbWaitResultAuthorCallback(void *data) {
     }
 }
 void Q7QbCleanup(Q7QbWork &work) {
-    hndlSetFlags(FindCharacterByScenarioName(Q7QB_RYO));
+    hndlSetFlags(ctrlGetScenarioChara(Q7QB_RYO));
     qteBattleUtil(BattleQteMode::RetireAndFree);
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0290");
     EV_FreeAuthorPak(0, "S2BV");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("Q7QB"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0290"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("Q7QB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0290"), 0);
     ET_AT_KillWork(work.characters);
     EventFilmControl film{.cleanup = 0,
         .frames = 30,

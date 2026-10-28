@@ -65,13 +65,13 @@ void SleepSelectionCallback(void *) {
 }
 
 void SleepPackageRetryCallback(void *) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(sleepEventData.package)))
         HLib::SetCurrentTaskTo(SleepPackageWaitCallback);
 }
 
 void SleepPackageWaitCallback(void *) {
-    if ((sleepEventData.pendingResources & 1U) != 0 && !EV_ControlPackageResources(PakCategory::Package, PakPackageOp::LoadAfs, 0, 0))
+    if ((sleepEventData.pendingResources & 1U) != 0 && !EV_pakUtils(PakCategory::Package, PakPackageOp::LoadAfs, 0, 0))
         sleepEventData.pendingResources &= ~1U;
     for (std::uint32_t index = 0; sleepEventData.actors[index].name; ++index) {
         const shen_name actor = sleepEventData.actors[index];
@@ -159,7 +159,7 @@ void QueueSleepCallback(HLib::TaskCallback accepted, HLib::TaskCallback cancelle
     sleepEventData.flags = 2;
     sleepEventData.cancelled = cancelled;
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     std::int32_t icon = 2;
     if (shenGetMinutesUntilNextFrameMinute()) {
         icon = 1;
@@ -203,7 +203,7 @@ void QueueSleepPackageActors(const char *package, const shen_name *actors, HLib:
 
 void FreeSleepPackageActors() {
     if (sleepEventData.package[0])
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(sleepEventData.package), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(sleepEventData.package), 0);
     for (const shen_name *actor = sleepEventData.actors; actor->name; ++actor) {
         if ((actor->name & 0xff000000U) == 0x5f000000U) {
             EV_npcFree(*actor);
@@ -216,12 +216,12 @@ void FreeSleepPackageActors() {
 void HideSleepActor(shen_name actor) {
     if ((actor.name & 0xff000000U) == 0x5f000000U) {
         EV_SetCharacterAlphaEnabled(actor, false);
-        EV_mtwkSetEnabled(FindMotionWork(FindCharacterByScenarioName(actor)), 0);
-        SetMotionRegionFlag(FindMotionWork(FindCharacterByScenarioName(actor)), 71, 0, MotionRegion::LowerBody);
+        mtwkSetEnabled(FindMotionWork(ctrlGetScenarioChara(actor)), 0);
+        mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(actor)), 71, 0, MotionRegion::LowerBody);
     }
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(actor, CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_AT_SetPos(actor, EventTransformFlags::AllAxes, Vector3{-1000, -1000, -1000});
 }
 
@@ -246,7 +246,7 @@ void SleepAuthorWaitCallback(void *) {
 
 std::int32_t GetBadEndingState() {
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (date.year < 87)
         return 0;
     if (date.month >= 7 && EV_GetShenmueFlag(0x3a1)) {
@@ -297,7 +297,7 @@ void QueueSleepSceneChange(shen_name scene, std::int32_t entry) {
 std::uint32_t shenTrySleepTrigger(SleepTriggerBox *box) {
     std::uint32_t result = 0;
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     Vector3 position;
     Vector3i rotation;
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);

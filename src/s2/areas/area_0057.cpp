@@ -84,7 +84,7 @@ void RestoreE0057Characters() {
 // @verified - p
 void CleanupE0057(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0057_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -143,7 +143,7 @@ void E0057MainCallback(void *taskData) {
 // @verified - p
 void E0057FirstLoopCallback(void *taskData) {
     if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame)) == 1505) {
-        AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0057_AB20), 1, 1, 0.5f, 0);
+        AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0057_AB20), 1, 1, 0.5f, 0);
     }
     if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) != 0)
         return;

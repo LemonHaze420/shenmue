@@ -81,7 +81,7 @@ void SetupObjectXForms(Character *character, void *payload) {
     } else {
         if (objectXForms->mode == 1) {
             if (MotionWork *const motion = FindMotionWork(objectXForms->sourceCharacter))
-                source = charaGetBoneTransform(motion, objectXForms->source.motion.boneIndex);
+                source = mtwkGetBoneTransform(motion, objectXForms->source.motion.boneIndex);
         }
         if (!source) {
             Matrix4x4_PushActiveTransform();
@@ -141,7 +141,7 @@ void SetFixoDataForMotionWork(
     ObjectXFormsParams *const objectXForms = FindObjectXForms(target);
     MotionWork *const motion = FindMotionWork(source);
     std::int16_t mode = 3;
-    if (motion && charaGetBoneTransform(motion, boneIndex)) {
+    if (motion && mtwkGetBoneTransform(motion, boneIndex)) {
         objectXForms->source.motion.boneIndex = boneIndex;
         mode = 1;
     }
@@ -260,7 +260,7 @@ void AttachFixoPreservingPlacement(Character *target, Character *source, std::in
     ObjectXFormsParams *const attachment = FindObjectXForms(target);
     const Matrix4x4 *transform = nullptr;
     if (MotionWork *const motion = FindMotionWork(source))
-        transform = charaGetBoneTransform(motion, boneIndex);
+        transform = mtwkGetBoneTransform(motion, boneIndex);
     Matrix4x4 fallback;
     if (transform) {
         attachment->source.motion.boneIndex = boneIndex;

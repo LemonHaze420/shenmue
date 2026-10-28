@@ -252,25 +252,25 @@ void IdleMotionCallback(void *data) {
     if (!(work->flags & 0x40000000U)) {
         mtwkRequestMotion(scenFindMotionwork(work->character), static_cast<std::uint16_t>(work->motion), MotionRegion::LowerBody);
         if (work->flags & 1)
-            SetMotionRegionFlag(scenFindMotionwork(work->character), 69, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(work->character), 69, 0, MotionRegion::LowerBody);
         if (work->flags & 2)
             mtwkSetRequestedRootMode(scenFindMotionwork(work->character), 0);
         else {
             mtwkSetRequestedRootMode(scenFindMotionwork(work->character), 1);
-            SetMotionFrameTime(scenFindMotionwork(work->character), work->frameTime, MotionRegion::LowerBody);
+            mtwkSetFrameTime(scenFindMotionwork(work->character), work->frameTime, MotionRegion::LowerBody);
         }
         if (work->flags & 8)
-            SetMotionRegionFlag(scenFindMotionwork(work->character), 66, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(work->character), 66, 0, MotionRegion::LowerBody);
         if (work->completion)
             work->completion(0, work->character.name, work->parent);
         work->flags |= 0x40000000U;
     }
 
-    EV_mtwkSetEnabled(scenFindMotionwork(work->character), work->flags & 4);
+    mtwkSetEnabled(scenFindMotionwork(work->character), work->flags & 4);
     if (work->completion)
         work->completion(2, work->elapsed, work->parent);
     if ((work->duration < static_cast<std::int32_t>(++work->elapsed) && !(work->flags & 0x10)) ||
-        (SetMotionRegionFlag(scenFindMotionwork(work->character), 65, 1, MotionRegion::LowerBody) && (work->flags & 0x10))) {
+        (mtwkSetRegionFlag(scenFindMotionwork(work->character), 65, 1, MotionRegion::LowerBody) && (work->flags & 0x10))) {
         if (work->completion)
             work->completion(1, 0, work->parent);
         if (work->flags & 0x80000000U)
@@ -371,7 +371,7 @@ void QueueRestorePosition() {
 void BeginPackage(const char *package) {
     if (!package || !*package)
         return;
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0)) {
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0)) {
         SetupAuthorOfIdAtTime(1);
         return;
     }
@@ -597,9 +597,9 @@ void MdtpPackageCallback(void *data) {
     MdtpPackageWork *const work = static_cast<MdtpPackageWork *>(data);
     if (!work)
         return;
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(work + 1))) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         SetupAuthorOfIdAtTime(work->recorder);
         if (work->npcState == 1)
             EV_NPC_NewLoadSw(1);
@@ -674,13 +674,13 @@ void MdtpInitializeFlagsCallback(void *data) {
     MaintainMdtpMotion(0);
     mtwkRequestMotion(scenFindMotionwork(MDTP_PLAYER), MDTP_MOTION, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(MDTP_PLAYER), 0);
-    SetMotionLayerLoopStartTime(scenFindMotionwork(MDTP_PLAYER), 0, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(MDTP_PLAYER), 0, MotionRegion::LowerBody);
-    SetMotionLayerEndFrame(scenFindMotionwork(MDTP_PLAYER), 114, MotionRegion::LowerBody);
+    mtwkSetLayerLoopStartTime(scenFindMotionwork(MDTP_PLAYER), 0, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(scenFindMotionwork(MDTP_PLAYER), 0, MotionRegion::LowerBody);
+    mtwkSetLayerEndFrame(scenFindMotionwork(MDTP_PLAYER), 114, MotionRegion::LowerBody);
     QueueCamera(work->package, 3000);
     EV_LoadCutsceneFromCurrentScene(work->media);
     EV_LoadAudio(work->media, 1);
-    GetMotionBonePosition(scenFindMotionwork(MDTP_PLAYER), MB_RightHand, &work->handPosition);
+    mtwkGetBonePosition(scenFindMotionwork(MDTP_PLAYER), MB_RightHand, &work->handPosition);
     work->button = 156;
     for (std::int32_t &frame : work->buttonFrames)
         frame = 0;
@@ -704,7 +704,7 @@ void MdtpInitializeFlagsCallback(void *data) {
 void MdtpRecorderCallback(void *data) {
     MdtpWork *const work = static_cast<MdtpWork *>(data);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (!shenGetMinutesUntilNextFrameMinute()) {
         if (work->button != 154 || !(TapeEntries(work->tape)[FindMdtpTapeClip(work->tape, work->tapeFrame)].flags & 1)) {
             HLib::SetCurrentTaskTo(MdtpQuitCallback);
@@ -913,7 +913,7 @@ void MdtpQuitCallback(void *data) {
         if (work->tape && work->bank)
             EV_FreeAuthorPak(0, work->bank);
         if (work->flags & 0x80000000U) {
-            LoadCutsceneAndSoundProgramForArea();
+            sbtLoadProgram();
             work->flags &= 0x7fffffffU;
         }
         if (work->flags & 2) {

@@ -64,7 +64,7 @@ void HIDEWaitAuthor(void *) {
 // @verified - p
 void HIDEEndRoom(void *) {
     (void)SetDoorSubjectEnabled(HIDE_DOOR, 1);
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HIDE"), 0, 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HIDE"), 0, 0);
     EV_FreeAuthorPak(0, HIDE_PACKAGE);
     EV_stepSetFlags(0, 0x274);
     HLib::DestroyCurrentTask();

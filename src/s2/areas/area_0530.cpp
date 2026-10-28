@@ -64,13 +64,13 @@ void Cleanup0530(Area0530Parameter *parent) {
         EV_AT_SetPos(AREA_0530_RYO_, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
         EV_AT_SetAngY(AREA_0530_RYO_, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
         mtwkSetExtraFlag(scenFindMotionwork(AREA_0530_RYO_), 17, 0);
-        SetMotionRegionFlag(scenFindMotionwork(AREA_0530_RYO_), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(AREA_0530_RYO_), 71, 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(scenFindMotionwork(AREA_0530_RYO_), 13, 0);
         HLib::DestroyTask(parent->self);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0530"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0530"), 0);
     } else {
         for (const shen_name *character = AREA_0530_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-            if (FindCharacterByScenarioName(*character)) {
+            if (ctrlGetScenarioChara(*character)) {
                 EV_npcLockUnlock(*character);
                 EV_npcFree(*character);
             }
@@ -197,8 +197,8 @@ void Setup0530Scene() {
     EV_SetIndexForLightEntry(0, 1);
     EV_SetWeatherInstruction(0x780, 0);
     if (g_currentMap.name == AREA_0530_RUNTIME_MAP.name) {
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("0530"), 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("0530"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("0530"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("0530"), 0);
         EV_LoadCutsceneFromCurrentScene("0530A000");
     } else {
         HLib::EnqueueTaskWithoutParameter(Update0530Waves, 3, 2, static_cast<std::int32_t>(AUTHOR_VIEWER_TASK.name));

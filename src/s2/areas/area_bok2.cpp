@@ -40,18 +40,18 @@ void Walk3_Callback(void *);
 void EndFade_Callback(void *);
 void End_Callback(void *);
 void Pose(std::int32_t side, std::int32_t *data, std::int16_t ticks) {
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ryo), side, reinterpret_cast<std::byte *>(data), ticks);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ryo), side, reinterpret_cast<std::byte *>(data), ticks);
 }
 void ResetMotion(shen_name name) {
-    SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
-    SetMotionFrameTime(scenFindMotionwork(name), 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(name), 0, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(name), 0);
 }
 
 void Move(shen_name name, const Vector3 &pos, std::int32_t yaw) {
-    SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(name), 0);
-    SetMotionFrameTime(scenFindMotionwork(name), 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(name), 0, MotionRegion::LowerBody);
     EV_AT_SetPos(name, EventTransformFlags::AllAxes, pos);
     EV_AT_SetAngY(name, EventTransformFlags::AllAxes, Vector3i{0, yaw, 0});
 }
@@ -65,8 +65,8 @@ void Restore() {
     EV_SetCharacterAlphaEnabled(ryo, true);
     EV_SetCharaControllerFlags(ryo, 2, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(ryo, 3, NpcCharacterControllerState::Enabled);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 1, 0);
     SetPlayerControlEnabled(1);
     EV_NPC_NewLoadSw(1);
     SetCharaKill(localBase, 1);
@@ -82,7 +82,7 @@ void End_Callback(void *) {
     AT_SetLocalBaseChara(ryo, invalid);
     Move(ryo, Vector3{335.85f, 126.97f, 275.56f}, 0x8000);
     if (sapEventData.packageName[0])
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(sapEventData.packageName), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(sapEventData.packageName), 0);
     for (auto *name = sapEventData.characters; name->name; ++name) {
         EV_npcFree(*name);
         EV_npcLockUnlock(*name);
@@ -90,7 +90,7 @@ void End_Callback(void *) {
     if (sapEventData.authorBank[0])
         EV_FreeAuthorPak(0, sapEventData.authorBank);
     HLib::DestroyCurrentTask();
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
 }
 void EndFade_Callback(void *) {
     SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
@@ -99,54 +99,54 @@ void EndFade_Callback(void *) {
 }
 
 void Walk3_Callback(void *) {
-    if (GetMotionFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) > 50) {
+    if (mtwkGetFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) > 50) {
         EV_DisableCharacterDisplay(itemModel);
         EV_EnsureCharacterDraw(itemModel);
     }
-    if (GetMotionFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) <= 325)
+    if (mtwkGetFrame(scenFindMotionwork(ryo), MotionRegion::LowerBody) <= 325)
         return;
     EVT_AT_SetCam(1006, localBase, localBase, 0, 6, 0);
     EV_DisableCharacterDisplay(itemModel);
     EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, Vector3i{0, 0x8000, 0});
     mtwkSetRequestedRootMode(scenFindMotionwork(ryo), 1);
-    SetMotionFrameTime(scenFindMotionwork(ryo), 20, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(ryo), 20, MotionRegion::LowerBody);
     Pose(1, handRest, 0);
     ResetMotion(ryo);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0xf005, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ryo), .9f, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ryo), .9f, MotionRegion::LowerBody);
     HLib::SetCurrentTaskTo(EndFade_Callback);
     HLib::SetupTaskDelay(100);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 1, 0);
 }
 void Walk2_Callback(void *) {
     ResetMotion(ryo);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0x18aa, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ryo), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ryo), 1, MotionRegion::LowerBody);
     EVS_LoopCamera(1005, localBase, localBase);
     Pose(1, handBow, 30);
     Pose(0, handRest, 30);
-    ApplyCharacterHandRotation(FindCharacterByScenarioName(ryo), 0, 21, &bowRotation);
+    ApplyCharacterHandRotation(ctrlGetScenarioChara(ryo), 0, 21, &bowRotation);
     HLib::SetCurrentTaskTo(Walk3_Callback);
 }
 void Walk_Callback(void *) {
-    SetMotionSpeed(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ryo), 0, MotionRegion::LowerBody);
     EVS_LoopCamera(1004, localBase, localBase);
     HLib::SetCurrentTaskTo(Walk2_Callback);
     HLib::SetupTaskDelay(60);
 }
 void Start_Callback(void *) {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
     Move(ryo, Vector3{0, 0, .8f}, 0);
     Move(npc, Vector3{0, 0, -.8f}, 0x8000);
     mtwkRequestMotion(scenFindMotionwork(npc), 0x18ab, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(npc), 28, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(npc), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(scenFindMotionwork(npc), 28, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(npc), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(npc), 17, 0);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0x18ac, MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(scenFindMotionwork(ryo), 80, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ryo), 1, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(scenFindMotionwork(ryo), 80, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ryo), 1, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(ryo), 17, 0);
     EVS_LoopCamera(1002, localBase, localBase);
     HLib::SetCurrentTaskTo(Walk_Callback);
@@ -155,7 +155,7 @@ void Start_Callback(void *) {
     HLib::SetupTimedTask(task, 120);
 }
 void Prepare_Callback(void *) {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
     EV_EnableCharacterDisplay(itemModel);
     Pose(0, handHold, 10);
     AT_SetLocalBaseChara(ryo, localBase);
@@ -166,8 +166,8 @@ void Prepare_Callback(void *) {
     mtwkRequestMotion(scenFindMotionwork(npc), 0x1897, MotionRegion::LowerBody);
     ResetMotion(ryo);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0x1897, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ryo), 1, MotionRegion::LowerBody);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+    mtwkSetSpeed(scenFindMotionwork(ryo), 1, MotionRegion::LowerBody);
+    mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
     EVT_AT_SetCam(1001, localBase, localBase, 0, 6, 0);
     constexpr const char *voices[]{"0035C011", "0035C012", "0035A056", "0035C013", "0035A057", "0035C014", "0035C015", "0035A058"}; // @text 0035C011 EN: "You're doing what Master Tao\ninstructed you to do." | JA: "老師の言うとおり、\nやっているようだな。" ; 0035C012 EN: "That is a good sign." | JA: "良い心がけだ。" ; 0035A056 EN: "Yes." | JA: "はい…" ; 0035C013 EN: "Here." | JA: "これを。" ; 0035A057 EN: "What is this?" | JA: "これは？" ; 0035C014 EN: "A book of moves." | JA: "技書だ。" ; 0035C015 EN: "Use it to practice." | JA: "…修行の励みにしなさい。" ; 0035A058 EN: "Thank you." | JA: "ありがとうございます。"
     constexpr int frames[]{0, 102, 154, 185, 217, 248, 292, 479};
@@ -177,7 +177,7 @@ void Prepare_Callback(void *) {
     HLib::SetupTaskDelay(185);
 }
 void Setup_Callback(void *) {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
     EVS_LoopCamera(1000, invalid, invalid);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     Move(ryo, Vector3{330.8f, 126.97f, 266.38f}, 41870);
@@ -186,19 +186,19 @@ void Setup_Callback(void *) {
     mtwkRequestMotion(scenFindMotionwork(npc), 0xf03f, MotionRegion::LowerBody);
     ResetMotion(ryo);
     mtwkRequestMotion(scenFindMotionwork(ryo), 0xf005, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(ryo), .9f, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(ryo), .9f, MotionRegion::LowerBody);
     Vector3 position;
     EV_GetCharaPosition(npc, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::TurnMotion);
     position.y += 1.6f;
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &position, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(ryo), &position, 0);
     HLib::SetCurrentTaskTo(Prepare_Callback);
     HLib::SetupTaskDelay(90);
 }
 void Initialize_Callback(void *) {
-    SetLowQualityHands(FindCharacterByScenarioName(ryo));
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 0, 0);
-    ApplyCharacterHandRotation(FindCharacterByScenarioName(ryo), 0, 21, &holdRotation);
+    SetLowQualityHands(ctrlGetScenarioChara(ryo));
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 0, 0);
+    ApplyCharacterHandRotation(ctrlGetScenarioChara(ryo), 0, 21, &holdRotation);
     constexpr shen_name loaded[]{npc, shen_name{0}};
     InitializeSapAuthorEvent("", 0, loaded, Setup_Callback);
 }
@@ -240,7 +240,7 @@ void AreaBOK2Main(std::uintptr_t) {
     } else {
         Restore();
         Move(ryo, Vector3{335.85f, 126.97f, 275.56f}, 0x8000);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BOK2"), 0);
     }
 }
 const ScriptAreaDefinition areaBOK2ScriptDefinition{.areaId = SHEN_NAME(BOK2), .field04 = 0, .init = AreaBOK2Init, .main = AreaBOK2Main};

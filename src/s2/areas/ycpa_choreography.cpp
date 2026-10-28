@@ -310,12 +310,12 @@ std::int32_t YcpaElevatorDeparture() {
 
 
 std::int32_t YcpaStreetCorner(YcpaWork &work) {
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(RYO_)), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(RYO_)), 0, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(REN_)), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(REN_)), 0, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(YUA_)), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(SHEN_NAME(YUA_)), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(RYO_)), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(RYO_)), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(REN_)), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(REN_)), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(YUA_)), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(SHEN_NAME(YUA_)), 0, 1, 0);
     {
         EventSetPosition cue{.cleanup = 0, .character = YCPA_RYO, .parent = YCPA_INVALID, .position = {.x = 177.5f, .y = 100.0f, .z = 137.0f}, .delay = 0.0f};
         EVT_AT_SetPosRot(&cue);

@@ -35,7 +35,7 @@ void ConfigureEnvironment() {
     EV_stepSetFlags(0, 5);
     SetPlayerGameFlags(PlayerGameFlagMode::Bit5, nullptr);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (g_currentMap.name == SHEN_NAME(0009)) {
         if (time.hour < 19) {
             EV_ReinitLights(1);
@@ -81,13 +81,13 @@ void Cleanup(AreaAuthorTaskParameter *parent) {
         IncrementSteamStat(12);
     SetPlayerStat(PlayerStatsId::Cash, 0);
     for (const shen_name *name = characters; name->name != AREA_AUTHOR_INVALID.name; ++name)
-        if (FindCharacterByScenarioName(*name)) {
+        if (ctrlGetScenarioChara(*name)) {
             EV_npcLockUnlock(*name);
             EV_npcFree(*name);
         }
     shenSetTimeSimulationTo(1);
     EV_FreeAuthorPak(0, "0009");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0009A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0009A"), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == SHEN_NAME(AR02))

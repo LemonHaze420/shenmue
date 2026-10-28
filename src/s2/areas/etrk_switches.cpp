@@ -96,8 +96,8 @@ void EtrkPrepareSwitches(EtrkWork &work) {
     AT_SetLocalBaseChara(ETRK_HAND, work.board);
     EV_AT_SetPos(ETRK_HAND, EventTransformFlags::AllAxes, work.switches[work.selection].position);
     EV_AT_SetAngY(ETRK_HAND, EventTransformFlags::AllAxes, work.switches[work.selection].rotation, nullptr);
-    ApplyCharacterHandRotation(FindCharacterByScenarioName(ETRK_HAND), 0, 21, &etrkSelectorHandRotation);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ETRK_HAND), 0, reinterpret_cast<std::byte *>(etrkRelaxedHand), 0);
+    ApplyCharacterHandRotation(ctrlGetScenarioChara(ETRK_HAND), 0, 21, &etrkSelectorHandRotation);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ETRK_HAND), 0, reinterpret_cast<std::byte *>(etrkRelaxedHand), 0);
     work.moving = 0;
     work.remaining = 1800;
     EVT_AT_SetCam(1200, ETRK_HAND, ETRK_HAND, 0, 0, 0);
@@ -141,7 +141,7 @@ std::int32_t EtrkPollSwitches(EtrkWork &work) {
 void EtrkPressSwitch(EtrkWork &work) {
     EV_DisableCharacterDisplay(ETRK_RYO);
     EV_EnableCharacterDisplay(ETRK_HAND);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ETRK_HAND), 0, reinterpret_cast<std::byte *>(etrkPressHand), 10);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ETRK_HAND), 0, reinterpret_cast<std::byte *>(etrkPressHand), 10);
     for (std::int32_t index = 0; index < 10; ++index) {
         EVT_AT_SetPos(ETRK_HAND, ETRK_HAND, Vector3{0, 0, -.003f}, index);
         EVT_AT_SetAngY(ETRK_HAND, ETRK_HAND, 0, index);

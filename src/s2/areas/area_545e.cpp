@@ -28,7 +28,7 @@ void Setup545E() {
     EV_FreeAuthorPak(1, AREA_545E_CONVERSATION);
     EV_authSceneCtrl(AuthSceneCtrl::HideFilmBars);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 20;
     SetCurrentDateTimeTo(time);
     EV_SetWeatherInstruction(15, 0);
@@ -89,7 +89,7 @@ void Update545E(void *taskData) {
 // @verified - p
 void Cleanup545E(AuthorViewerPairTaskParameter *parent) {
     for (const shen_name *character = AREA_545E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

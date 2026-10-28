@@ -50,7 +50,7 @@ void Pose(shen_name character, shen_name parent, const Vector3 &position, float 
     EVT_AT_SetAngY(character, parent, yaw, delay);
 }
 void Hand(shen_name character, std::int32_t side, std::int32_t *command, std::int32_t ticks) {
-    (void)ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(character), side, reinterpret_cast<std::byte *>(command), static_cast<std::int16_t>(ticks));
+    (void)ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(character), side, reinterpret_cast<std::byte *>(command), static_cast<std::int16_t>(ticks));
 }
 void Film(std::int32_t delay) {
     EventFilmControl request{};
@@ -80,7 +80,7 @@ bool Daytime(const DateTime &date) {
 void SetupLights(shen_name light) {
     EV_SetModelDataDefaultVertexShader();
     DateTime now{};
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     if (Daytime(now)) {
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
@@ -97,11 +97,11 @@ void SetupLights(shen_name light) {
 }
 std::int32_t Initialize(WtkqWork &work) {
     (void)EV_SetNewSceneIndex();
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("WTKQ"));
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WTKQ"), 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("WTKQ"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WTKQ"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("WTKQ"), 0);
     (void)EV_FreeAuthorPak(1, "0146");
     (void)EV_LoadCutsceneFromCurrentScene("0146A000");
     (void)qteBattleUtil(BattleQteMode::SetWait, 0, 6, 16);
@@ -111,13 +111,13 @@ std::int32_t Initialize(WtkqWork &work) {
     (void)qteBattleUtil(BattleQteMode::Load);
     (void)qteBattleUtil(BattleQteMode::Queue);
     (void)SetDoorSubjectEnabled(SHEN_NAME(R709), 0);
-    (void)SetLowQualityHands(FindCharacterByScenarioName(ryo));
-    (void)SetLowQualityHands(FindCharacterByScenarioName(kun));
-    (void)FindMotionWork(FindCharacterByScenarioName(ryo));
-    (void)FindMotionWork(FindCharacterByScenarioName(kun));
+    (void)SetLowQualityHands(ctrlGetScenarioChara(ryo));
+    (void)SetLowQualityHands(ctrlGetScenarioChara(kun));
+    (void)FindMotionWork(ctrlGetScenarioChara(ryo));
+    (void)FindMotionWork(ctrlGetScenarioChara(kun));
     for (auto character : {ryo, kun})
         for (std::int32_t side = 0; side < 2; ++side)
-            (void)SetHighModelXYZ(FindCharacterByScenarioName(character), 1, side, 0);
+            (void)SetHighModelXYZ(ctrlGetScenarioChara(character), 1, side, 0);
     for (auto name : furniture)
         EV_DisableCharacterDisplay(name);
     SetupLights(SHEN_NAME(l002));
@@ -125,7 +125,7 @@ std::int32_t Initialize(WtkqWork &work) {
     (void)CreateEventCharacter(CharacterCreationHighModel, nullptr, dummy);
     Pose(base, shen_name{0xffffffffU}, {266.700012f, 115.300003f, 329.200012f}, 0);
     work.phase = 4;
-    GetCurrentDateTime(eventSavedCurrentDateTime);
+    shenGetCurrentDateTime(eventSavedCurrentDateTime);
     work.retried = 0;
     return 0;
 }
@@ -191,7 +191,7 @@ std::int32_t Win(WtkqWork &work) {
     Cam(1001, 40);
     Cam(1002, 70);
     EVT_AT_DispBlur(ryo, 1, 10, 3, 50, 10);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), 1, 16, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ryo), 1, 16, 1);
     Hand(ryo, 0, ryoQteHandPose, 0);
     Hand(ryo, 1, ryoQteHandPose, 0);
     Hand(kun, 0, crateGripHandPose, 0);
@@ -205,7 +205,7 @@ std::int32_t Win(WtkqWork &work) {
 std::int32_t EndAuthor(WtkqWork &work) {
     SetupLights(SHEN_NAME(WTS3));
     DateTime now{};
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     if (Daytime(now))
         EV_ReinitLights(1);
     else
@@ -332,10 +332,10 @@ std::int32_t WtkqQteFailure() {
 // @verified - p
 void WtkqEndCallback(void *data) {
     auto &work = *static_cast<WtkqWork *>(data);
-    (void)FindMotionWork(FindCharacterByScenarioName(ryo));
-    (void)FindMotionWork(FindCharacterByScenarioName(kun));
-    (void)hndlSetFlags(FindCharacterByScenarioName(ryo));
-    (void)hndlSetFlags(FindCharacterByScenarioName(kun));
+    (void)FindMotionWork(ctrlGetScenarioChara(ryo));
+    (void)FindMotionWork(ctrlGetScenarioChara(kun));
+    (void)hndlSetFlags(ctrlGetScenarioChara(ryo));
+    (void)hndlSetFlags(ctrlGetScenarioChara(kun));
     (void)qteBattleUtil(BattleQteMode::RetireAndFree);
     (void)ExecuteCleanupFuncForAreaWithCachedScene();
     (void)SetDoorSubjectEnabled(SHEN_NAME(R709), 1);
@@ -345,12 +345,12 @@ void WtkqEndCallback(void *data) {
     SetCharaKill(dummy, 1);
     ET_AT_KillWork(work.characters);
     (void)EV_FreeAuthorPak(0, "0146");
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WTKQ"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WTKQ"), 0);
     HLib::EV_HLKillOtherHierarchyTask(work.self);
     scenFreeEvent("WTKQ.EV3");
     (void)doorLoadAuthorWithAudio(shen_name{});
     Fade(30, 255, 0);
-    (void)LoadCutsceneAndSoundProgramForArea();
+    (void)sbtLoadProgram();
     (void)EV_spmBeginSampleExecute();
     (void)EV_NPC_NewLoadSw(1);
     EV_stepSetFlags(0, 512);

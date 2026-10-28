@@ -36,7 +36,7 @@ void SetupE0055Environment() {
     EV_FreeAuthorPak(1, "0055");
     if (g_entryPoint == 0 || g_entryPoint == 1 || g_entryPoint == 2 || g_entryPoint == 6) {
         DateTime time{};
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 22;
         time.minute = 0;
         SetCurrentDateTimeTo(time);
@@ -48,7 +48,7 @@ void SetupE0055Environment() {
         EV_SetObjectFlagByIndex(12, 0);
     } else if (g_entryPoint == 3 || g_entryPoint == 4 || g_entryPoint == 5 || g_entryPoint == 7) {
         DateTime time{};
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 8;
         time.minute = 0;
         SetCurrentDateTimeTo(time);
@@ -87,7 +87,7 @@ void E0055Main(std::uintptr_t) {
 // @verified - p
 void SetupE0055Evening() {
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 22;
     time.minute = 0;
     SetCurrentDateTimeTo(time);
@@ -200,7 +200,7 @@ void E0055LoopCallback(void *parameter) {
 }
 // @verified - p
 void CleanupE0055(E0055TaskParameter *parent) {
-    if (FindCharacterByScenarioName(AREA_0055_WON)) {
+    if (ctrlGetScenarioChara(AREA_0055_WON)) {
         EV_npcLockUnlock(AREA_0055_WON);
         EV_npcFree(AREA_0055_WON);
     }

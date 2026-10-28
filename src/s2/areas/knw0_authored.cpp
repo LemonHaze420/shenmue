@@ -14,8 +14,8 @@ namespace shenmue::s2::areas {
 void Knw0PrepareAuthorCharacter(shen_name character) {
     mtwkSetExtraFlag(scenFindMotionwork(character), 6, 2);
     EV_SetCharacterAlphaEnabled(character, false);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(character), 0, 0, 16);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(character), 1, 0, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(character), 0, 0, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(character), 1, 0, 16);
 }
 // @verified - p
 void Knw0PrepareAuthorCharacters() {
@@ -57,8 +57,8 @@ void Knw0AuthorLoopCallback(void *data) {
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         SelectPostFxBank(3, work.savedPostFx);
         if (work.author.name == KNW0_AUTHOR_THIRD.name) {
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(KNW0_AUTHOR_RYO), 0, reinterpret_cast<std::byte *>(chestHandPoseCommand), 0);
-            ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(KNW0_AUTHOR_RYO), 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 0);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(KNW0_AUTHOR_RYO), 0, reinterpret_cast<std::byte *>(chestHandPoseCommand), 0);
+            ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(KNW0_AUTHOR_RYO), 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 0);
         }
         mtwkSetExtraFlag(scenFindMotionwork(KNW0_AUTHOR_RYO), 6, 0);
         mtwkSetExtraFlag(scenFindMotionwork(KNW0_AUTHOR_KNK), 6, 0);

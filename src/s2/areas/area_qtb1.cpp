@@ -58,7 +58,7 @@ void AreaQTB1Cleanup(std::int32_t night, std::uint32_t) {
         CheckIsArgEquZero(1);
         EV_SetObjectFlagByIndex(1, 1);
         ResumeParticleEffect(4, fire);
-        SetPluralControlFor(FindCharacterByScenarioName(STREET_WATCH_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(STREET_WATCH_RYO), 1);
     } else {
         CheckIsArgEquZero(1);
         EV_ReinitLights(1);

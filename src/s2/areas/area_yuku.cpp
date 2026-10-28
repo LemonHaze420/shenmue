@@ -47,14 +47,14 @@ void YukuInitializeTask(void *) {
     EV_set_debug_text_pos(2, 10);
     EV_debug_log_to_screen("%d", std::bit_cast<std::int32_t>(frame));
     if (yukuState != 0) {
-        if (yukuState == 1 && !EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0)) {
+        if (yukuState == 1 && !EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0)) {
             yukuFrameCounter &= 0xffffffff00000000ULL;
             yukuState = 0;
             HLib::SetCurrentTaskTo(yukuEntry.name == YUKU_STOP.name ? YukuStopCallback : YukuEventCallback);
         }
     } else {
         const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-        (void)EV_ControlPackageResources(
+        (void)EV_pakUtils(
             PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("YUKU"));
         ++yukuState;
     }
@@ -77,14 +77,14 @@ void YukuEventCallback(void *) {
         break;
     case 1:
         (void)mtwkSetRequestedRootMode(scenFindMotionwork(YUKU_RYO), 0);
-        (void)SetMotionFrameTime(scenFindMotionwork(YUKU_RYO), 0, MotionRegion::LowerBody);
-        (void)SetMotionRegionFlag(scenFindMotionwork(YUKU_RYO), 71, 0, MotionRegion::LowerBody);
+        (void)mtwkSetFrameTime(scenFindMotionwork(YUKU_RYO), 0, MotionRegion::LowerBody);
+        (void)mtwkSetRegionFlag(scenFindMotionwork(YUKU_RYO), 71, 0, MotionRegion::LowerBody);
         (void)mtwkSetExtraFlag(scenFindMotionwork(YUKU_RYO), 17, 0);
         EV_AT_SetPos(YUKU_RYO, EventTransformFlags::AllAxes, YUKU_LOOK_POSITION);
         (void)EV_AT_SetAngY(YUKU_RYO, EventTransformFlags::AllAxes, YUKU_LOOK_ROTATION, nullptr);
-        (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("YUKU"), 0);
+        (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("YUKU"), 0);
         (void)EVS_LoopCamera(1000, YUKU_INVALID, YUKU_INVALID);
-        (void)CopyMotionTransition(scenFindMotionwork(YUKU_RYO), &YUKU_WALK_POSITION, 10922, 0, 1);
+        (void)mtwkCopyTransition(scenFindMotionwork(YUKU_RYO), &YUKU_WALK_POSITION, 10922, 0, 1);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         ++yukuState;
         break;
@@ -99,7 +99,7 @@ void YukuEventCallback(void *) {
     case 3:
         (void)camCtrlSetFovTransitionTo(true);
         (void)camCtrlSetState(Init);
-        (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YUKU"), 0);
+        (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YUKU"), 0);
         (void)EV_FreeAuthorPak(0, "0503");
         SetPlayerControlEnabled(1);
         (void)HLib::DestroyCurrentTask();
@@ -118,38 +118,38 @@ void YukuStopCallback(void *) {
     EV_debug_log_to_screen("%d", std::bit_cast<std::int32_t>(frame));
     switch (yukuState) {
     case 0:
-        (void)SetMotionRegionFlag(scenFindMotionwork(YUKU_RYO), 71, 0, MotionRegion::LowerBody);
+        (void)mtwkSetRegionFlag(scenFindMotionwork(YUKU_RYO), 71, 0, MotionRegion::LowerBody);
         (void)mtwkSetExtraFlag(scenFindMotionwork(YUKU_RYO), 17, 0);
         EV_AT_SetPos(YUKU_RYO, EventTransformFlags::AllAxes, YUKU_STOP_POSITION);
         (void)EV_AT_SetAngY(YUKU_RYO, EventTransformFlags::AllAxes, YUKU_STOP_ROTATION, nullptr);
-        (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("YUKU"), 0);
+        (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("YUKU"), 0);
         (void)EVS_LoopCamera(1000, YUKU_INVALID, YUKU_INVALID);
         (void)mtwkRequestMotion(scenFindMotionwork(YUKU_RYO), 0xf005, MotionRegion::LowerBody);
-        (void)SetMotionRegionFlag(scenFindMotionwork(YUKU_RYO), 66, 2, MotionRegion::LowerBody);
+        (void)mtwkSetRegionFlag(scenFindMotionwork(YUKU_RYO), 66, 2, MotionRegion::LowerBody);
         (void)mtwkSetRequestedRootMode(scenFindMotionwork(YUKU_RYO), 1);
-        (void)SetMotionFrameTime(scenFindMotionwork(YUKU_RYO), 15, MotionRegion::LowerBody);
+        (void)mtwkSetFrameTime(scenFindMotionwork(YUKU_RYO), 15, MotionRegion::LowerBody);
         ++yukuState;
         break;
     case 1:
-        if (SetMotionRegionFlag(scenFindMotionwork(YUKU_RYO), 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(scenFindMotionwork(YUKU_RYO), 65, 1, MotionRegion::LowerBody)) {
             (void)mtwkRequestMotion(scenFindMotionwork(YUKU_RYO), 0xf003, MotionRegion::LowerBody);
             (void)EV_PlayDialogue("0503A003");
-            (void)SetMotionRegionFlag(scenFindMotionwork(YUKU_RYO), 66, 2, MotionRegion::LowerBody);
+            (void)mtwkSetRegionFlag(scenFindMotionwork(YUKU_RYO), 66, 2, MotionRegion::LowerBody);
             HLib::SetupTaskDelay(70);
             ++yukuState;
         }
         break;
     case 2:
-        if (SetMotionRegionFlag(scenFindMotionwork(YUKU_RYO), 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(scenFindMotionwork(YUKU_RYO), 65, 1, MotionRegion::LowerBody)) {
             (void)mtwkRequestMotion(scenFindMotionwork(YUKU_RYO), 0xf024, MotionRegion::LowerBody);
             ++yukuState;
         }
         break;
     case 3:
-        if (SetMotionRegionFlag(scenFindMotionwork(YUKU_RYO), 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(scenFindMotionwork(YUKU_RYO), 65, 1, MotionRegion::LowerBody)) {
             (void)camCtrlSetFovTransitionTo(false);
             (void)camCtrlSetState(Init);
-            (void)CopyMotionTransition(scenFindMotionwork(YUKU_RYO), &YUKU_RETURN_POSITION, 10686, 5, 1);
+            (void)mtwkCopyTransition(scenFindMotionwork(YUKU_RYO), &YUKU_RETURN_POSITION, 10686, 5, 1);
             ++yukuState;
         }
         break;
@@ -158,7 +158,7 @@ void YukuStopCallback(void *) {
             ++yukuState;
         break;
     case 5:
-        (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YUKU"), 0);
+        (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YUKU"), 0);
         (void)EV_FreeAuthorPak(0, "0503");
         SetPlayerControlEnabled(1);
         (void)HLib::DestroyCurrentTask();

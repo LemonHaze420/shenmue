@@ -35,14 +35,14 @@ void BookIdleInput() {
     if (static_cast<std::int16_t>(EVT_GetControllerInput(0, INPUT_HELD)))
         bookCarryIdleFrames = 0;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (srchHasActiveLockonTarget() && time.hour >= 12)
         srchRequestLockonExit();
     if (ryoNotBusy()) {
         if (IsBookTimeExpired()) {
             mtwkRequestMotion(scenFindMotionwork(BOOK_RYO), 0xf002, MotionRegion::LowerBody);
             mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_RYO), 1);
-            SetMotionFrameTime(scenFindMotionwork(BOOK_RYO), 20, MotionRegion::LowerBody);
+            mtwkSetFrameTime(scenFindMotionwork(BOOK_RYO), 20, MotionRegion::LowerBody);
         }
         if (bookCarryIdleFrames++ > 900) {
             QueueBookDialogue(8, 0);

@@ -60,15 +60,15 @@ void LockPatiEvent(PatiEventWork *work, const char *argument) {
 bool LoadPatiEvent(PatiEventWork *work) {
     if (g_currentMap.name == PATI_CHALLENGE_MAP.name && EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1234))
         return false;
-    if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("PATI"), 0)) {
-        if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load,
+    if (!EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("PATI"), 0)) {
+        if (!EV_pakUtils(PakCategory::Package, PakPackageOp::Load,
                 reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)), reinterpret_cast<std::uintptr_t>("PATI")))
             return false;
-        if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0))
+        if (!EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0))
             return false;
     }
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
     EV_LoadCutsceneFromCurrentScene("01040000.smp");
     EV_LoadAudio("01040000", 0);
     PATI_TBL_Parser(&work->tables);
@@ -96,33 +96,33 @@ void CreatePatiEventResources(PatiEventWork *work) {
         ++voice;
     if (!voice->name)
         std::sprintf(work->game.voicePrefix, "0104");
-    const std::int64_t partition = EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Mount,
+    const std::int64_t partition = EV_pakUtils(PakCategory::Partition, PakPartitionOp::Mount,
         reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)), reinterpret_cast<std::uintptr_t>("PATI.afs"));
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::LoadAfs, static_cast<std::uintptr_t>(partition), static_cast<std::uint32_t>(voice->text), voice->sound);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(
         PakCategory::Task, PakTaskOp::SetCurrentAfs, static_cast<std::uintptr_t>(partition), static_cast<std::uint32_t>(voice->text), voice->sound);
     const void *source = LoadCurrentPakBinary(work->game.voicePrefix);
     const std::int32_t bytes = static_cast<std::int32_t>(GetCurrentPakBinarySize(work->game.voicePrefix));
     const std::int32_t rounded = (bytes + ((bytes >> 31) & 3)) & ~3;
     work->game.voiceLengths = static_cast<PatiVoiceLength *>(HLib::AllocateTaskData(static_cast<std::uint64_t>(rounded), PATI_AREA));
     std::memcpy(work->game.voiceLengths, source, static_cast<std::size_t>(rounded));
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::FreeAfs, static_cast<std::uintptr_t>(partition), static_cast<std::uint32_t>(voice->text), voice->sound);
-    EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Unmount, static_cast<std::uintptr_t>(partition), 0);
+    EV_pakUtils(PakCategory::Partition, PakPartitionOp::Unmount, static_cast<std::uintptr_t>(partition), 0);
     EV_FreeAuthorPak(1, work->game.voicePrefix);
-    UpdateMotionWorkWithPosition(FindMotionWork(FindCharacterByScenarioName(PATI_PLAYER)), nullptr, 0);
-    UpdateMotionWorkWithPosition(FindMotionWork(FindCharacterByScenarioName(work->dealer)), nullptr, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    mtwkUpdateWithPosition(FindMotionWork(ctrlGetScenarioChara(PATI_PLAYER)), nullptr, 0);
+    mtwkUpdateWithPosition(FindMotionWork(ctrlGetScenarioChara(work->dealer)), nullptr, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
     EV_SetCharacterAlphaEnabled(work->dealer, false);
     EV_SetRefBoardParamsFor(PATI_PLAYER, 1);
     EV_SetRefBoardParamsFor(work->dealer, 1);
-    FindMotionWork(FindCharacterByScenarioName(PATI_PLAYER));
-    FindMotionWork(FindCharacterByScenarioName(work->dealer));
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(PATI_PLAYER), 0, 10.0f, 1.0f);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(work->dealer), 0, 10.0f, 1.0f);
+    FindMotionWork(ctrlGetScenarioChara(PATI_PLAYER));
+    FindMotionWork(ctrlGetScenarioChara(work->dealer));
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(PATI_PLAYER), 0, 10.0f, 1.0f);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(work->dealer), 0, 10.0f, 1.0f);
 }
 // @verified - p
 void PositionPatiPlayer(PatiEventWork *work) {
@@ -188,10 +188,10 @@ bool RestorePatiEvent(PatiEventWork *work) {
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
     }
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(PATI_PLAYER), 0, 10.0f, 1.0f);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(work->dealer), 0, 10.0f, 1.0f);
-    FindMotionWork(FindCharacterByScenarioName(PATI_PLAYER));
-    FindMotionWork(FindCharacterByScenarioName(work->dealer));
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(PATI_PLAYER), 0, 10.0f, 1.0f);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(work->dealer), 0, 10.0f, 1.0f);
+    FindMotionWork(ctrlGetScenarioChara(PATI_PLAYER));
+    FindMotionWork(ctrlGetScenarioChara(work->dealer));
     RemoveConversationSpeakerAlias(work->dealer);
     EV_FreeAuthorPak(0, work->game.voicePrefix);
     EV_LoadCutsceneFromCurrentScene(work->bgm);
@@ -208,7 +208,7 @@ void FreePatiEvent(PatiEventWork *work) {
     if (g_currentMap.name != PATI_CHALLENGE_MAP.name && !work->challengeComplete)
         SetScreenFilmFade(1, 255, 0, 0, 0, 0, 0, 0, 0);
     if (std::memcmp(work->argument, "PVSJ", 4)) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("PATI"), 0);
         if (work->dealer.name)
             EV_npcLockUnlock(work->dealer);
         EV_NPC_NewLoadSw(1);

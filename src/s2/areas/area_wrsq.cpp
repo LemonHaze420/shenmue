@@ -137,11 +137,11 @@ std::int32_t FailureC(std::int32_t delay) {
     return 150;
 }
 std::int32_t Initialize(WrsqWork &work) {
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("WRSQ"));
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WRSQ"), 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("WRSQ"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("WRSQ"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("WRSQ"), 0);
     (void)CreateEventCharacter(CharacterCreationHighModel, nullptr, base);
     (void)EV_FreeAuthorPak(1, "0045");
     SetPose(base, shen_name{0xffffffffU}, {181.3f, 102.25f, 196.60001f}, 270, 0);
@@ -155,8 +155,8 @@ std::int32_t Initialize(WrsqWork &work) {
     (void)qteBattleUtil(BattleQteMode::Load);
     (void)qteBattleUtil(BattleQteMode::Queue);
     work.phase = 1;
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 0, 0);
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 1, 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 0, 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 1, 0);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 481, 1);
     return 0;
 }
@@ -195,7 +195,7 @@ std::int32_t AdvanceTime(WrsqWork &work) {
     switch (work.step) {
     case 0: {
         DateTime now{};
-        GetCurrentDateTime(now);
+        shenGetCurrentDateTime(now);
         now.hour = static_cast<std::int8_t>(now.hour + 2);
         SetCurrentDateTimeTo(now);
         Queue_ST_LoadTitleFadeIn(shen_name{});
@@ -212,7 +212,7 @@ std::int32_t AdvanceTime(WrsqWork &work) {
         (void)EV_spmBeginSampleExecute();
         Cam(125, 0);
         (void)EVT_AT_SetMot(ryo, 0x1b4e, 200, 1, 0x40000000U, 0);
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), 6, 10, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ryo), 6, 10, 1);
         EVT_AT_SetFaceLooks(ryo, FacialExpressionId::Normal, 10, 1, 220);
         delay = 220;
         break;
@@ -233,7 +233,7 @@ std::int32_t Battle(WrsqWork &work) {
         return 0;
     (void)EV_LoadAudio("0045A000", 1);
     for (auto name : {ryo, iii, see, sjn})
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(name), 1, 0, 1);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(name), 1, 0, 1);
     for (auto name : {a244, a245, gnb, myu})
         EV_DisableCharacterDisplay(name);
     Hand(0, ryoQteHandPose, 0, 0);
@@ -291,9 +291,9 @@ void QueueWrsq(void *) {
 void WrsqLoseAuthorCallback(void *) {
     const auto frame = EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame);
     if (frame == 1)
-        hmdlSetFlagsFor(FindCharacterByScenarioName(sjn), 0, 1, 0);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(sjn), 0, 1, 0);
     else if (frame == 180)
-        hmdlSetFlagsFor(FindCharacterByScenarioName(sjn), 0, 8, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(sjn), 0, 8, 16);
 }
 // @verified - p
 void WrsqMainCallback(void *data) {
@@ -341,16 +341,16 @@ void WrsqMainCallback(void *data) {
 void WrsqEndCallback(void *data) {
     auto &work = *static_cast<WrsqWork *>(data);
     EV_stepSetFlags(work.won != 0, 0x4f);
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 0, 0);
-    (void)SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 1, 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 0, 0);
+    (void)SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 1, 0);
     SetCharaKill(base, 1);
     ET_AT_KillWork(work.characters);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.self);
     FinishLoading();
     (void)EV_FreeAuthorPak(0, "0045");
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WRSQ"), 0);
-    (void)LoadCutsceneAndSoundProgramForArea();
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WRSQ"), 0);
+    (void)sbtLoadProgram();
     (void)EV_spmBeginSampleExecute();
     (void)EV_NPC_NewLoadSw(1);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 481, 0);

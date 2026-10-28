@@ -95,8 +95,8 @@ void CleanupE0201(E0201TaskParameter *parent) {
     npcSetAreaName(AREA_0201_ANP1, nullptr, 0.0f, 0);
     const char *const package = g_currentMap.name == AREA_0201_AREA.name ? "0201A" : parent->selection == 1 ? "0201A2" : "0201A1";
     if (g_currentMap.name == AREA_0201_AREA.name ||
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0201_AREA.name)

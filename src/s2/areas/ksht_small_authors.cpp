@@ -115,7 +115,7 @@ void ExitKshtConversationAuthor(KshtAuthorController *parent) {
     ResetKshtMotion(KSHT_RYO);
     *parent->result = -1;
     HLib::DestroyTask(parent->task);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_LoadAudio("KSH1_000", 1);
     FreeKshtCharacters(kshtCompanionList);
 }
@@ -135,7 +135,7 @@ void SetupKshtMorningAuthor() {
 void ExitKshtMorningAuthor(KshtAuthorController *parent) {
     EV_FreeAuthorPak(0, "0543");
     EV_authSceneCtrl(AuthSceneCtrl::ShowFilmBars);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     FinishAuthor(parent);
 }
 void QueueKshtRabbitDropAuthor(KshtAuthorController *parent) {

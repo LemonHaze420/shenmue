@@ -150,22 +150,22 @@ void EVT_AT_SetMot_Callback(void *data) {
         p.delay -= HLib::GetScaledDeltaTick();
         return;
     }
-    MotionWork *const work = FindMotionWork(FindCharacterByScenarioName(p.character));
+    MotionWork *const work = FindMotionWork(ctrlGetScenarioChara(p.character));
     if ((p.flags & 0x80000000U) == 0) {
-        SetMotionRegionFlag(work, 71, (p.flags & 0x40000000U) ? 0 : 2, MotionRegion::LowerBody);
-        SetMotionRegionFlag(work, 69, (p.flags & 0x20000000U) ? 0 : 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(work, 71, (p.flags & 0x40000000U) ? 0 : 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(work, 69, (p.flags & 0x20000000U) ? 0 : 2, MotionRegion::LowerBody);
         mtwkSetExtraFlag(work, 14, (p.flags & 0x04000000U) ? 0 : 2);
         mtwkSetExtraFlag(work, 17, (p.flags & 0x02000000U) ? 2 : 0);
         if (p.flags & 0x01000000U)
-            SetMotionRegionFlag(work, 66, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(work, 66, 0, MotionRegion::LowerBody);
         if (p.flags & 0x00800000U)
-            SetMotionRegionFlag(work, 66, 2, MotionRegion::LowerBody);
-        EV_mtwkSetEnabled(work, (p.flags & 0x10000000U) == 0);
+            mtwkSetRegionFlag(work, 66, 2, MotionRegion::LowerBody);
+        mtwkSetEnabled(work, (p.flags & 0x10000000U) == 0);
         mtwkSetExtraFlag(work, 0, (p.flags & 0x10000000U) ? 2 : 0);
     }
     mtwkRequestMotion(work, static_cast<std::uint16_t>(p.animation), MotionRegion::LowerBody);
-    SetMotionRegionEvalTime(work, p.frame, MotionRegion::LowerBody);
-    SetMotionSpeed(work, p.speed, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(work, p.frame, MotionRegion::LowerBody);
+    mtwkSetSpeed(work, p.speed, MotionRegion::LowerBody);
     Complete(p.cleanup);
 }
 void EVT_AT_SetCam_Callback(void *data) {
@@ -372,12 +372,12 @@ void EVT_AT_SetPoint_Callback(void *data) {
         EV_GetCharaPosition(parameter.target, static_cast<std::uint32_t>(parameter.targetBone), &position, EventTransformFlags::World);
         if ((parameter.flags & 0x08000000U) == 0) {
             if (parameter.frame == 0 && (parameter.flags & 0x80000000U) != 0)
-                UpdateMotionWorkWithPosition(scenFindMotionwork(parameter.character), nullptr, 3);
+                mtwkUpdateWithPosition(scenFindMotionwork(parameter.character), nullptr, 3);
             const std::uint32_t operation = static_cast<std::uint32_t>(parameter.positionMode) + (static_cast<std::uint32_t>(parameter.trackingMode) << 8);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(parameter.character), &position, static_cast<std::uint16_t>(operation));
+            mtwkUpdateWithPosition(scenFindMotionwork(parameter.character), &position, static_cast<std::uint16_t>(operation));
         }
         if ((parameter.flags & 0x04000000U) == 0)
-            SetEyeToChara(FindCharacterByScenarioName(parameter.character), &position, EVENT_POINT_EYE_FRAMES[parameter.trackingMode], 2);
+            SetEyeToChara(ctrlGetScenarioChara(parameter.character), &position, EVENT_POINT_EYE_FRAMES[parameter.trackingMode], 2);
         if ((parameter.flags & 0x20000000U) != 0 && parameter.cleanup != 0)
             Complete(parameter.cleanup);
     }
@@ -386,11 +386,11 @@ void EVT_AT_SetPoint_Callback(void *data) {
         if ((parameter.flags & 0x20000000U) == 0) {
             if ((parameter.flags & 0x08000000U) == 0) {
                 if ((parameter.flags & 0x40000000U) != 0)
-                    UpdateMotionWorkWithPosition(scenFindMotionwork(parameter.character), nullptr, 3);
-                UpdateMotionWorkWithPosition(scenFindMotionwork(parameter.character), nullptr, 0);
+                    mtwkUpdateWithPosition(scenFindMotionwork(parameter.character), nullptr, 3);
+                mtwkUpdateWithPosition(scenFindMotionwork(parameter.character), nullptr, 0);
             }
             if ((parameter.flags & 0x04000000U) == 0)
-                SetEyeToChara(FindCharacterByScenarioName(parameter.character), nullptr, 16, 0);
+                SetEyeToChara(ctrlGetScenarioChara(parameter.character), nullptr, 16, 0);
             if (parameter.cleanup != 0)
                 Complete(parameter.cleanup);
         }
@@ -425,7 +425,7 @@ void EVT_AT_CtrlHandUp_Callback(void *data) {
     EventControlHand &parameter = *static_cast<EventControlHand *>(data);
     if (Waiting(parameter.delay))
         return;
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(parameter.character), static_cast<std::int32_t>(parameter.side), parameter.command,
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(parameter.character), static_cast<std::int32_t>(parameter.side), parameter.command,
         static_cast<std::int16_t>(parameter.ticks));
     Complete(parameter.cleanup);
 }
@@ -434,7 +434,7 @@ void EVT_AT_CtrlHandUp_Callback(void *data) {
 std::uintptr_t Queue_EVT_AT_CtrlHandUp_1(shen_name character, std::uint32_t side, std::byte *command, std::uint32_t ticks, std::int32_t delay) {
     if (delay == 0)
         return ApplyCharacterHandPoseCommand(
-            FindCharacterByScenarioName(character), static_cast<std::int32_t>(side), command, static_cast<std::int16_t>(ticks));
+            ctrlGetScenarioChara(character), static_cast<std::int32_t>(side), command, static_cast<std::int16_t>(ticks));
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(EVT_AT_CtrlHandUp_Callback, 6, 0x0b, 0x20, EVENT_QUEUED_HAND_TASK);
     RegisterEventTask(task);
     EventControlHand *const parameter = static_cast<EventControlHand *>(HLib::GetTaskParameter(task));

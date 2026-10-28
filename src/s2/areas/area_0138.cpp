@@ -43,7 +43,7 @@ void E0138Main(std::uintptr_t) {
     parent->selection = 0;
     parent->state = 0;
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 22;
     time.minute = 0;
     SetCurrentDateTimeTo(time);
@@ -85,14 +85,14 @@ void RestoreE0138Characters() {
 // @verified - p
 void CleanupE0138(E0138TaskParameter *parent) {
     for (const shen_name *character = AREA_0138_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     for (const char *package : AREA_0138_PACKAGES)
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
     EV_FreeAuthorPak(0, AREA_0138_CONVERSATION);
     for (std::uint32_t motion : parent->motions)
         DeleteMotion(std::bit_cast<std::int32_t>(motion));
@@ -105,11 +105,11 @@ void CleanupE0138(E0138TaskParameter *parent) {
 void ConfigureE0138Environment(std::int16_t selection) {
     const char *const oldPackage = selection != 0 ? "AKA3" : "AB00";
     const char *const package = selection != 0 ? "AB00" : "AKA3";
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(oldPackage), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(oldPackage), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(oldPackage), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(oldPackage), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_SetModelDataDefaultVertexShader();
     if (selection == 0 || selection == 1) {
         SetWeatherUpdateEnabledTo(1);

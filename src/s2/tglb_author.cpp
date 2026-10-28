@@ -78,7 +78,7 @@ void TglbAuthorLoop_Callback(void *taskData) {
         spmFadeOut();
     if (context->authorCmd.name == TGLB_AUTHOR_AU_8.name) {
         if (frame == 242) {
-            EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TGLB"), 0);
+            EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TGLB"), 0);
             EV_lightLoad(TGLB_AUTHOR_LIGHT);
         } else if (frame == 510) {
             EV_ReinitLights(1);

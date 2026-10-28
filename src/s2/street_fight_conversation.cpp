@@ -930,7 +930,7 @@ std::int32_t StreetFightDefeatConversation(void *arguments) {
     EVT_AT_SetPos(fighter, STREET_FIGHT_CONVERSATION_BASE, Vector3{-0.98799998F, 0.0F, -1.2F}, 1);
     EVT_AT_SetAngY(fighter, STREET_FIGHT_CONVERSATION_BASE, 17.0F, 1);
     (void)EVT_AT_SetMot(fighter, 0x1af2, 0.0F, 1.0F, 0x40000000U, 0);
-    SetMotionLayerEndFrame(scenFindMotionwork(fighter), 1.0F, MotionRegion::LowerBody);
+    mtwkSetLayerEndFrame(scenFindMotionwork(fighter), 1.0F, MotionRegion::LowerBody);
     (void)EVT_AT_SetMot(fighter, 0x1af2, 1.0F, 1.0F, 0x40000000U, 60);
     EVT_AT_MenCtrl(EventFilmControl{1, 30, 255, 0, 0, 0, 0, 0, 0, 0, 5.0F});
     EVT_AT_SetVoice("0100B077", 1, 35); // @text EN: "いやあ、惜しかったなあ、\n次はがんばんな。" | JA: "いやあ、惜しかったなあ、\n次はがんばんな。"

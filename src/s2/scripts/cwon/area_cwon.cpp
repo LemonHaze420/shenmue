@@ -50,7 +50,7 @@ void ApplyLighting() {
     RefreshWeatherForCurrentTime(0);
     EV_UpdateWeather();
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (static_cast<std::uint8_t>(date.hour - 5) > 13U) {
         EV_lightLoad(SHEN_NAME(0000));
         PushGlobalLightingProgram();
@@ -105,7 +105,7 @@ void AreaCWONMain(std::uintptr_t argument) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 2228, 1);
     } else {
         entry = g_entryPoint;
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("MPK00"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("MPK00"), 0);
     }
     if (entry >= 9) {
         EV_debug_log("CWON\\eCWON_et_ChaseWon.c", 422, "Entry Error\n");
@@ -179,7 +179,7 @@ void CwonInitialize(CwonEventWork *work, HLib::Task *task, std::int32_t entry) {
     EV_FreeAuthorPak(1, "0011");
     EV_FreeAuthorPak(1, "0012");
     if (g_currentMap.name != SHEN_NAME(AR02)) {
-        cwonPack = reinterpret_cast<PakAfsPartition *>(EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Mount,
+        cwonPack = reinterpret_cast<PakAfsPartition *>(EV_pakUtils(PakCategory::Partition, PakPartitionOp::Mount,
             reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)), reinterpret_cast<std::uintptr_t>("CWONPACK.afs")));
         cwonPackState = -1;
         cwonPackIndex = -1;
@@ -188,10 +188,10 @@ void CwonInitialize(CwonEventWork *work, HLib::Task *task, std::int32_t entry) {
 }
 void CwonInitializePlayer(CwonEventWork *work) {
     CwonStartPlayerAt(work->entry);
-    EV_mtwkSetEnabled(scenFindMotionwork(CWON_RYO), 1);
+    mtwkSetEnabled(scenFindMotionwork(CWON_RYO), 1);
     EV_SetCharacterAlphaEnabled(CWON_RYO, false);
     SetScenarioCharacterRadius(CWON_RYO, 20.0f);
-    Character *player = FindCharacterByScenarioName(CWON_RYO);
+    Character *player = ctrlGetScenarioChara(CWON_RYO);
     SetFaceFlagsForChara_0(player, FacialNodeReplacement);
     SetHighModelAndFaceFlagsForChara(player, FacialExpressionId::Angry, 1, 1);
     SetLowQualityHands(player);
@@ -209,7 +209,7 @@ void CwonPrepareCharacters(const shen_name *names) {
         if (DoesScenarioCharacterExist(*names)) {
             EV_EnableCharacterDisplay(*names);
             EV_EnsureCharacterDraw(*names);
-            Character *character = FindCharacterByScenarioName(*names);
+            Character *character = ctrlGetScenarioChara(*names);
             SetFaceFlagsForChara_0(character, FacialNodeReplacement);
             SetHighModelAndFaceFlagsForChara(character, FacialExpressionId::Normal, 1, 1);
             mtwkSetRequestedRootMode(scenFindMotionwork(*names), 3);

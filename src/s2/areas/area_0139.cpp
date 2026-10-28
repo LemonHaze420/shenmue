@@ -63,12 +63,12 @@ void E0139Main(std::uintptr_t) {
 void CleanupE0139(AreaImmediateAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0139_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0139A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0139A"), 0);
     EV_FreeAuthorPak(0, AREA_0139_CONVERSATION);
 
     EV_CleanupMapControlTask();

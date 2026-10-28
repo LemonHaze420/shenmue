@@ -53,11 +53,11 @@ void QueueGabtAuthor(shen_name author) {
 }
 void PrepareGabtHands() {
     for (shen_name character : {GABT_MOLE_RYO, GABT_MOLE_GAI}) {
-        HasCharacterMotionWork(FindCharacterByScenarioName(character));
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 1, 0);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(character), 0, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(character), 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
+        HasCharacterMotionWork(ctrlGetScenarioChara(character));
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 1, 0);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(character), 0, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(character), 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
     }
 }
 void ResetGabtBase() {
@@ -70,8 +70,8 @@ void PrepareGabtResources(GabtEventWork &work) {
     if (IsFightActive())
         check_dead_status(1);
     work.motions[0] = 0;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, GABT_MOLE_BASE);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, GABT_ATTACHMENT);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, GABT_PIVOT);
@@ -84,21 +84,21 @@ void PrepareGabtResources(GabtEventWork &work) {
     shenSetClockAndCompassRenderTo(1);
 }
 void RetireGabtEvent(GabtEventWork &work) {
-    HasCharacterMotionWork(FindCharacterByScenarioName(GABT_MOLE_RYO));
-    HasCharacterMotionWork(FindCharacterByScenarioName(GABT_MOLE_GAI));
-    hndlSetFlags(FindCharacterByScenarioName(GABT_MOLE_RYO));
-    hndlSetFlags(FindCharacterByScenarioName(GABT_MOLE_GAI));
+    HasCharacterMotionWork(ctrlGetScenarioChara(GABT_MOLE_RYO));
+    HasCharacterMotionWork(ctrlGetScenarioChara(GABT_MOLE_GAI));
+    hndlSetFlags(ctrlGetScenarioChara(GABT_MOLE_RYO));
+    hndlSetFlags(ctrlGetScenarioChara(GABT_MOLE_GAI));
     ET_AT_KillWork(work.characters);
     SetPlayerControlEnabled(0);
     SetScenarioCharacterKillMode(GABT_MOLE_BASE, 1);
     SetScenarioCharacterKillMode(GABT_PIVOT, 1);
     SetScenarioCharacterKillMode(GABT_ATTACHMENT, 1);
-    SetMotionRegionFlag(scenFindMotionwork(GABT_MOLE_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(GABT_MOLE_RYO), 71, 0, MotionRegion::LowerBody);
     for (std::size_t index = 0; work.motions[index]; ++index)
         DeleteMotion(static_cast<std::int32_t>(work.motions[index]));
     EV_FreeAuthorPak(0, "0232");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GABT"), 0);
-    LoadCutsceneAndSoundProgramForArea();
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("GABT"), 0);
+    sbtLoadProgram();
     shenSetClockAndCompassRenderTo(0);
     SetQeDoorSceneState(1);
     RemoveInventoryItem(39, 1);
@@ -153,7 +153,7 @@ void GabtRootSequenceCallback(void *data) {
         case 103: {
             EV_ReinitLights(0);
             EV_SetModelDataDefaultVertexShader();
-            EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
+            EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
             EV_lightLoad(GABT_AUTHOR_LIGHT_INTRO);
             PushGlobalLightingProgram();
             CompiledSequenceWork *child = QueueCompiledSequence(GabtBattleSequenceCallback, GABT_BATTLE, &event);
@@ -191,7 +191,7 @@ void GabtRootSequenceCallback(void *data) {
         case 109:
             SetWeatherUpdateEnabledTo(0);
             EV_SetModelDataDefaultVertexShader();
-            EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
+            EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
             EV_lightLoad(GABT_AUTHOR_LIGHT_INTRO);
             PushGlobalLightingProgram();
             GabtSequenceSetupNullsub();
@@ -289,12 +289,12 @@ void GabtRootCallback(void *data) {
         work.state = 3;
         break;
     case 3:
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("GABT"), 0);
         LoadBlurModelForCharacter(GABT_MOLE_RYO, "RYO_B.MT7", 1);
-        HasCharacterMotionWork(FindCharacterByScenarioName(GABT_MOLE_RYO));
-        HasCharacterMotionWork(FindCharacterByScenarioName(GABT_MOLE_GAI));
-        SetLowQualityHands(FindCharacterByScenarioName(GABT_MOLE_RYO));
-        SetLowQualityHands(FindCharacterByScenarioName(GABT_MOLE_GAI));
+        HasCharacterMotionWork(ctrlGetScenarioChara(GABT_MOLE_RYO));
+        HasCharacterMotionWork(ctrlGetScenarioChara(GABT_MOLE_GAI));
+        SetLowQualityHands(ctrlGetScenarioChara(GABT_MOLE_RYO));
+        SetLowQualityHands(ctrlGetScenarioChara(GABT_MOLE_GAI));
         PrepareGabtHands();
         work.sequence = QueueCompiledSequence(GabtRootSequenceCallback, GABT_SEQUENCE, &work);
         work.active = 1;
@@ -340,9 +340,9 @@ void InitializeGabtEvent() {
 // @verified - p: GABTmain1062f0 ignores its formal ABI parameter and uses EntryPoint.
 void RunGabtEvent(std::uintptr_t) {
     if (g_entryPoint == 99) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("GABT"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         QueueGabtMoleAttack(99);
     } else
         QueueGabtEvent(g_entryPoint);

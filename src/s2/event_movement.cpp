@@ -65,8 +65,8 @@ void evntInit(EventMovementWork *work) {
         }
         if ((work->flags & 0x80000U) != 0)
             commandFlags = 0x40000000U;
-        else if (animation == GetMotionAnimationId(scenFindMotionwork(work->character), MotionRegion::LowerBody)) {
-            frame = GetMotionFrame(scenFindMotionwork(work->character), MotionRegion::LowerBody);
+        else if (animation == mtwkGetAnimationId(scenFindMotionwork(work->character), MotionRegion::LowerBody)) {
+            frame = mtwkGetFrame(scenFindMotionwork(work->character), MotionRegion::LowerBody);
             commandFlags = 0x40000000U;
         }
         EVT_AT_SetMot(work->character, animation, frame, work->speed, commandFlags, 0);
@@ -93,11 +93,11 @@ void StartEventMovementSegment(EventMovementWork *work) {
     else
         operation = 0;
     const std::uint16_t yaw = static_cast<std::uint16_t>(static_cast<std::int32_t>(waypoint->yawDegrees * 8192.0f / 45.0f));
-    CopyMotionTransition(scenFindMotionwork(work->character), &waypoint->position, yaw, operation, copyType);
-    CopyMotionTransition(scenFindMotionwork(work->character), nullptr, 0, (work->flags & 0x80000000U) ? 8 : 14, 0);
+    mtwkCopyTransition(scenFindMotionwork(work->character), &waypoint->position, yaw, operation, copyType);
+    mtwkCopyTransition(scenFindMotionwork(work->character), nullptr, 0, (work->flags & 0x80000000U) ? 8 : 14, 0);
     if (work->flags & 0x40000000U)
-        CopyMotionTransition(scenFindMotionwork(work->character), nullptr, 0, 11, 0);
-    SetMotionSpeed(scenFindMotionwork(work->character), work->speed, MotionRegion::LowerBody);
+        mtwkCopyTransition(scenFindMotionwork(work->character), nullptr, 0, 11, 0);
+    mtwkSetSpeed(scenFindMotionwork(work->character), work->speed, MotionRegion::LowerBody);
 }
 // @verified - p
 void ConfigureEventMovementMotions(EventMovementWork *work) {
@@ -105,13 +105,13 @@ void ConfigureEventMovementMotions(EventMovementWork *work) {
         return;
     const std::uint16_t defaultMotion = static_cast<std::uint16_t>(work->motions->defaultMotion);
     if (defaultMotion)
-        SetMotionTimeRelated(scenFindMotionwork(work->character), 1, 0, defaultMotion);
+        mtwkSetTimeRelated(scenFindMotionwork(work->character), 1, 0, defaultMotion);
     if (work->motions->forwardMotion)
-        SetMotionTimeRelated(scenFindMotionwork(work->character), 1, 1, static_cast<std::uint16_t>(work->motions->forwardMotion));
+        mtwkSetTimeRelated(scenFindMotionwork(work->character), 1, 1, static_cast<std::uint16_t>(work->motions->forwardMotion));
     if (work->motions->backwardMotion)
-        SetMotionTimeRelated(scenFindMotionwork(work->character), 1, 4, static_cast<std::uint16_t>(work->motions->backwardMotion));
+        mtwkSetTimeRelated(scenFindMotionwork(work->character), 1, 4, static_cast<std::uint16_t>(work->motions->backwardMotion));
     if (work->motions->stopMotion)
-        SetMotionTimeRelated(scenFindMotionwork(work->character), 1, 5, static_cast<std::uint16_t>(work->motions->stopMotion));
+        mtwkSetTimeRelated(scenFindMotionwork(work->character), 1, 5, static_cast<std::uint16_t>(work->motions->stopMotion));
 }
 // @verified - p
 void EventMovementCallback(void *taskData) {
@@ -125,7 +125,7 @@ void EventMovementCallback(void *taskData) {
         if (work->waypoints[work->index + 1].position.y <= 0.0f) {
             if (work->parent)
                 HLib::ResolveDeferredCallback(work->parent);
-            SetMotionTimeRelated(scenFindMotionwork(work->character), 0, 0, 0);
+            mtwkSetTimeRelated(scenFindMotionwork(work->character), 0, 0, 0);
             eventMovementStates[work->slot] = 0;
             HLib::DestroyCurrentTask();
         } else
@@ -147,8 +147,8 @@ void CancelEventMovement(std::int32_t slot) {
     if (eventMovementStates[slot] == 0)
         return;
     EventMovementWork *const work = static_cast<EventMovementWork *>(HLib::GetTaskParameter(eventMovementTasks[slot]));
-    CopyMotionTransition(scenFindMotionwork(work->character), nullptr, 0, 1, 0);
-    SetMotionTimeRelated(scenFindMotionwork(work->character), 0, 0, 0);
+    mtwkCopyTransition(scenFindMotionwork(work->character), nullptr, 0, 1, 0);
+    mtwkSetTimeRelated(scenFindMotionwork(work->character), 0, 0, 0);
     if (work->parent)
         HLib::ResolveDeferredCallback(work->parent);
     HLib::Task *const task = eventMovementTasks[slot];
@@ -166,15 +166,15 @@ void AdmitEventReadCharacter(shen_name character) {
     SetScenarioCharacterDrawControl(character, 1, 1);
     AT_SetLocalBaseChara(character, EVENT_MOVEMENT_INVALID);
     figpSetFlagsBlendForBlur(character, 2, 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(character), 1);
+    mtwkSetEnabled(scenFindMotionwork(character), 1);
     mtwkSetExtraFlag(scenFindMotionwork(character), 0, 0);
     mtwkSetExtraFlag(scenFindMotionwork(character), 3, 2);
     mtwkSetRequestedRootMode(scenFindMotionwork(character), 3);
-    SetMotionFrameTime(scenFindMotionwork(character), 7, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(character), 66, 2, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(character), 69, 2, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(character), 71, 2, MotionRegion::LowerBody);
-    SetPluralControlFor(FindCharacterByScenarioName(character), 1);
+    mtwkSetFrameTime(scenFindMotionwork(character), 7, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(character), 66, 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(character), 69, 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(character), 71, 2, MotionRegion::LowerBody);
+    SetPluralControlFor(ctrlGetScenarioChara(character), 1);
 }
 }
 // @verified - p

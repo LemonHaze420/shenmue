@@ -82,7 +82,7 @@ void Knw0Decision(void *data) {
             Knw0ResetActors(static_cast<std::int32_t>(practice));
             EV_AT_SetPos(KNW0_KNK, EventTransformFlags::World | EventTransformFlags::AllAxes, KNW0_TEACHER_POSITION);
             EV_AT_SetAngY(KNW0_KNK, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{.x = 0, .y = 14563, .z = 0});
-            SetMotionRegionFlag(scenFindMotionwork(KNW0_KNK), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(KNW0_KNK), 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(KNW0_KNK), 0x1902, MotionRegion::LowerBody);
             Knw0Value(data, 0x250, std::int32_t{1});
             Knw0Advance(sequence, 101);

@@ -135,9 +135,9 @@ void CreatePlacedBookStack(float x, float z) {
     EV_EnsureCharacterDraw(actor);
     EV_EnableCharacterDisplay(actor);
     AT_SetLocalBaseChara(actor, shen_name{});
-    EV_SetCharaControllerFlags(actor, CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
     EV_AT_SetPos(actor, EventTransformFlags::AllAxes, {.x = x, .y = 127.5f, .z = z});
     EV_AT_SetAngY(actor, EventTransformFlags::AllAxes, {.x = 0, .y = 0, .z = 0});
 }

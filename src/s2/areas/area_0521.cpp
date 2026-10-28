@@ -89,7 +89,7 @@ void Update0521(void *taskData) {
 // @verified - p
 void Cleanup0521(AuthorViewerPairTaskParameter *parent) {
     for (const shen_name *character = AREA_0521_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

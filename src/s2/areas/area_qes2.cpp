@@ -318,8 +318,8 @@ std::int32_t Qes2ShopFailure() {
     return 250;
 }
 std::int32_t Qes2Initialize(Qes2EventWork *work) {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QES2"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QES2"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QES2"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QES2"), 0);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, QES_BASE);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, QES_DUMMY);
     eventSavedSoundScene = GetSelectedSoundSceneIndex();
@@ -364,7 +364,7 @@ std::int32_t Qes2Initialize(Qes2EventWork *work) {
         .delay = 0};
     EVT_AT_Cling(&cling);
     work->phase = 1;
-    GetCurrentDateTime(eventTemporaryDateTime);
+    shenGetCurrentDateTime(eventTemporaryDateTime);
     return 0;
 }
 std::int32_t Qes2FirstChase(Qes2EventWork *work) {
@@ -1178,8 +1178,8 @@ void Qes2Cleanup(void *data) {
     EV_LoadCutsceneFromCurrentScene(eventSavedBgmName.data());
     EV_LoadAudio(eventSavedSoundBankName.data(), eventSavedSoundScene);
     EV_spmBeginSampleExecute();
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QES2"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QES2"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QES2"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QES2"), 0);
     scenFreeEvent("QES2.EV3");
     EV_NPC_NewLoadSw(1);
     FinishLoading();

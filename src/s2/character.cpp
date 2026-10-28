@@ -134,7 +134,7 @@ void SetCharacterMirrorPlane(const CharacterMirrorPlane *plane, const Vector3i *
 }
 
 // @verified - p
-void BindMirroredMotionControllerMatricesToModelNodes(MotionWork *work, MT7Model *model) {
+void mtwkBindMirroredControllerMatricesToModelNodes(MotionWork *work, MT7Model *model) {
     (void)Matrix4x4_Push();
     ClearMT7NodeTransformOverrides(model->nodes.data());
     IKRig &rig = work->rig;
@@ -256,7 +256,7 @@ void AddCharacterChildSpacePosition(Character *character, const Vector3 *delta) 
 }
 
 // @verified - p
-void UpdateMotionRootDeltaVector(const MotionWork *work, Vector4 *vector) {
+void mtwkUpdateRootDeltaVector(const MotionWork *work, Vector4 *vector) {
     if (work->runtime.motnFlags & 1U) {
         vector->x = work->runtime.rootPosition.x - work->runtime.previousRootPosition.x;
         vector->y = work->runtime.rootDelta.y;
@@ -277,7 +277,7 @@ void SetCharaTargetTransformOffset(shen_name name, const Vector3 *factor, std::i
     if (!work)
         return;
     Vector4 rootDelta;
-    UpdateMotionRootDeltaVector(work, &rootDelta);
+    mtwkUpdateRootDeltaVector(work, &rootDelta);
     Vector3 delta{rootDelta.x, rootDelta.y, rootDelta.z};
     if (rotation) {
         Vector3i angles{};
@@ -756,7 +756,7 @@ void SetCharacterNodeWorldRotation(CharacterNode *node, const Vector3i &rotation
 }
 
 // @verified - p
-void SetCharacterWorldRotation(Character *character, const Vector3i &rotation) {
+void charaSetWorldRot(Character *character, const Vector3i &rotation) {
     if (character)
         SetCharacterNodeWorldRotation(&character->entity.node, rotation);
 }
@@ -989,7 +989,7 @@ void mtwkDrawCharacterCore(Character *character) {
     g_motionDeformationControllers = {&motionWork->rig.chest.upperChestWorld, &motionWork->rig.rightArm.shoulderWorld, &motionWork->rig.rightArm.upperArmWorld,
         &motionWork->rig.leftArm.shoulderWorld, &motionWork->rig.leftArm.upperArmWorld, &motionWork->rig.rightArm.wristWorld,
         &motionWork->rig.leftArm.wristWorld};
-    g_motionDrawOverrideFlags = GetCustomMotionOverrideFlags(motionWork);
+    g_motionDrawOverrideFlags = mtwkGetCustomOverrideFlags(motionWork);
     if (!character->model) {
         g_motionDrawOverrideFlags = 0;
         return;
@@ -1001,7 +1001,7 @@ void mtwkDrawCharacterCore(Character *character) {
     CharacterCoreDrawContext *context = currentCharacterCoreDrawContext;
     if (!context || context->character != character || !context->model) {
         drawBase = workTransformMatrix;
-        const Matrix4x4 *const frames = IsCharacterMirroredForDraw(character) ? nullptr : GetMotionDrawOverrideData(motionWork);
+        const Matrix4x4 *const frames = IsCharacterMirroredForDraw(character) ? nullptr : mtwkGetDrawOverrideData(motionWork);
         if (frames)
             entityTransform = MultiplyTransforms(CharacterEntityTransform(*character, false), drawBase);
         standalone = {.character = character, .model = model, .entityTransform = frames ? &entityTransform : nullptr, .drawBase = &drawBase, .draws = 0};
@@ -1010,7 +1010,7 @@ void mtwkDrawCharacterCore(Character *character) {
     SetScriptedModelEntity(character);
     const bool motionDraw = motionWork != nullptr;
     const bool mirrored = IsCharacterMirroredForDraw(character);
-    const Matrix4x4 *const matrixFrames = mirrored ? nullptr : GetMotionDrawOverrideData(motionWork);
+    const Matrix4x4 *const matrixFrames = mirrored ? nullptr : mtwkGetDrawOverrideData(motionWork);
     const bool scripted = !motionDraw || FindModelComponent(character, TASK_TMNM) ||
         (character->applyScale && character->applyScale != charaApplyScale && character->applyScale != mtUpdateTransparencyCallback);
     if (motionDraw) {
@@ -1036,13 +1036,13 @@ void mtwkDrawCharacterCore(Character *character) {
                 Matrix4x4::Scale(character->scale.x, character->scale.y, character->scale.z);
             Matrix4x4 local = CharacterEntityTransform(*character);
             Matrix4x4 rootRebase;
-            if (motionWork && BuildMotionRootRebaseTransform(motionWork, rootRebase))
+            if (motionWork && mtwkBuildRootRebaseTransform(motionWork, rootRebase))
                 local = MultiplyTransforms(local, rootRebase);
             mirroredEntity = MultiplyTransforms(MultiplyTransforms(local, characterMirrorMatrix), *context->drawBase);
             if (originalEntityTransform)
                 context->entityTransform = &mirroredEntity;
             if (motionWork) {
-                BindMirroredMotionControllerMatricesToModelNodes(motionWork, const_cast<MT7Model *>(context->model));
+                mtwkBindMirroredControllerMatricesToModelNodes(motionWork, const_cast<MT7Model *>(context->model));
                 motionWork->runtime.seqFlags &= ~MSF_ModelMatricesBound;
                 Matrix4x4::SetActiveTransform(context->drawBase);
             }
@@ -1545,7 +1545,7 @@ bool ApplyCharacterTableNodeRecord(std::byte *node, const Record &record, std::u
             const std::int32_t index = value >= -2147483648.0f && value < 2147483648.0f ? static_cast<std::int32_t>(value) : INT32_MIN;
             parent = GetCharacterInMapControlTask(index);
         } else
-            parent = GetCharacterNode(FindCharacterByScenarioName(shen_name{argument.value}));
+            parent = GetCharacterNode(ctrlGetScenarioChara(shen_name{argument.value}));
         std::memcpy(node, &parent, sizeof(parent));
         mask |= 8;
     } else if (EqualCharacterToken(record.token, "HasColi")) {
@@ -1705,7 +1705,7 @@ void scenCreateModel(Character *character, const Record &shadow) {
     const std::vector<Record> *const records = FindNestedRecords(shadow);
     if (!records)
         return;
-    const shen_name name = GetCharacterScenarioName(character);
+    const shen_name name = ctrlGetScenarioCharaName(character);
     const bool hat = name.characters[0] == 'h' && name.characters[1] == 'a' && name.characters[2] == 't';
     for (const Record &record : *records) {
         if (EqualCharacterToken(record.token, "Image")) {
@@ -1807,13 +1807,13 @@ void ApplyCharacterTableCollisionFlags(Character *character, const Record *recor
             continue;
         for (const Argument &argument : child.arguments) {
             if (EqualCharacterToken(argument.string, "MAP"))
-                control->flags |= CharacterControlEvaluateMotion;
+                control->flags |= CCMF_EvaluateMotion;
             else if (EqualCharacterToken(argument.string, "CHAR"))
-                control->flags |= CharacterControlVoxelSweep;
+                control->flags |= CCMF_VoxelSweep;
             else if (EqualCharacterToken(argument.string, "FLOAT"))
-                control->flags &= ~CharacterControlApplyGravity;
+                control->flags &= ~CCMF_ApplyGravity;
             else if (EqualCharacterToken(argument.string, "GRAVITY"))
-                control->flags |= CharacterControlApplyGravity;
+                control->flags |= CCMF_ApplyGravity;
             else if (EqualCharacterToken(argument.string, "NONE")) {
                 control->flags &= 0xfffffff2U;
                 break;
@@ -1921,7 +1921,7 @@ bool ApplyCharacterTableComponents(CharacterResource *resource, const std::vecto
             return false;
         }
         if (hasPlayerComponent)
-            EV_mtwkSetEnabled(motionWork, 1);
+            mtwkSetEnabled(motionWork, 1);
         if (hasPlayerComponent || resource->scenarioName.name == CHARACTER_SHENHUA.name)
             SetPluralControlFor(&character, 0);
         if (resource->scenarioName.name == CHARACTER_BLUR_RYO.name)
@@ -2002,7 +2002,7 @@ bool ApplyCharacterTableComponents(CharacterResource *resource, const std::vecto
             ApplyCharacterTableCollisionFlags(&character, FindRecord(*components, "Coli"));
             if (!hasHumanComponent)
                 FindCharacterControlModel(&character)->flags |=
-                    CharacterControlUpdateHeight | CharacterControlVoxelSweep | CharacterControlUnknown10 | CharacterControlStairMode;
+                    CCMF_UpdateHeight | CCMF_VoxelSweep | CCMF_Unknown10 | CCMF_StairMode;
         }
         if (const Record *const hand = FindRecord(*components, "Hand"); hand || (hasHumanComponent && hasPlayerComponent)) {
             const std::uint8_t handFlags =
@@ -2070,7 +2070,7 @@ bool CreateCharacter(const Record &record, shen_name owner, std::int32_t entryId
             break;
         case ArgumentType::Records:
             if (named)
-                character = FindCharacterByScenarioName(currentCharacterTableName);
+                character = ctrlGetScenarioChara(currentCharacterTableName);
             if (!character) {
                 CharacterResource *const resource = AllocateCharacterTableResource(characterType, named);
                 if (!resource || !ApplyCharacterTableComponents(resource, argument.records, owner, entryId))
@@ -2120,7 +2120,7 @@ bool ResolveCharacterDrawNodeTransform(const Character *character, std::uint32_t
         return false;
 
     const CharacterCoreDrawContext *const context = currentCharacterCoreDrawContext;
-    if (const Matrix4x4 *const frame = GetMotionDrawOverrideData(FindMotionWork(character))) {
+    if (const Matrix4x4 *const frame = mtwkGetDrawOverrideData(FindMotionWork(character))) {
         if (!character->model)
             return false;
         const auto &model = *static_cast<const MT7Model *>(character->model);
@@ -2134,7 +2134,7 @@ bool ResolveCharacterDrawNodeTransform(const Character *character, std::uint32_t
     }
     if (const MotionWork *const motionWork = FindMotionWork(character)) {
         MotionPose pose{};
-        if (EvaluateCurrentMotionPose(motionWork, pose) && nodeId < pose.hasNodeMatrix.size() && pose.hasNodeMatrix[nodeId]) {
+        if (mtwkEvaluateCurrentPose(motionWork, pose) && nodeId < pose.hasNodeMatrix.size() && pose.hasNodeMatrix[nodeId]) {
             transform = MultiplyTransforms(pose.nodeMatrices[nodeId], CharacterEntityTransform(*character));
             return true;
         }
@@ -2349,12 +2349,12 @@ std::int32_t GetCharacterBoneId(const Character *character) {
 }
 
 // @verified - p
-shen_name GetCharacterScenarioName(const Character *character) {
+shen_name ctrlGetScenarioCharaName(const Character *character) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return control ? scenGetCharaName(control->scenarioTask, const_cast<Character *>(character)) : shen_name{};
 }
 
-Character *FindCharacterByScenarioName(shen_name name) {
+Character *ctrlGetScenarioChara(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return control ? scenFindChara(control->scenarioTask, name) : nullptr;
 }
@@ -2366,7 +2366,7 @@ MotionWork *scenFindMotionwork(shen_name name) {
 }
 
 void EV_SetCharacterScale(shen_name name, const Vector3 &scale) {
-    Character *const character = FindCharacterByScenarioName(name);
+    Character *const character = ctrlGetScenarioChara(name);
     if (character && !FindMotionWork(character))
         character->scale = scale;
 }
@@ -2478,7 +2478,7 @@ std::int32_t npcLogDisplayChange(Character *character, std::int32_t visible) {
     if (!npcLogFile)
         return result;
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     std::array<char, 0x80> gameTime{};
     std::snprintf(gameTime.data(), gameTime.size(), "%02d:%02d:%02d, %02d:%02d:%02d", dateTime.hour, dateTime.minute, dateTime.second, dateTime.day,
         dateTime.month, dateTime.year);
@@ -2563,7 +2563,7 @@ void DrawLights(Character *character) {
         character->fieldEc[0] = -1;
     character->fieldE8 = (character->fieldE8 & ~0xff00U) | 0x100U;
     Vector3 position;
-    GetCharacterMotionWorldPosition(character, 1, &position);
+    charaGetMotWorldPos(character, 1, &position);
     struct Candidate {
         std::int16_t id;
         float score;
@@ -2687,7 +2687,7 @@ void shenDrawCharaLighting(Character *character) {
     if (!GetControllerForNode(character))
         return;
     Vector3 hip;
-    GetCharacterMotionWorldPosition(character, 1, &hip);
+    charaGetMotWorldPos(character, 1, &hip);
     std::uint32_t destination = 1;
     if (character->fieldEc[0] == 0) {
         SetCurrentActiveLight(1);
@@ -2878,7 +2878,7 @@ std::uint32_t DrawCharacterResource(Character *character) {
     const MotionWork *const motionWork = FindMotionWork(character);
     const MT7Model &model = *static_cast<const MT7Model *>(character->model);
     const Matrix4x4 saved = workTransformMatrix;
-    const Matrix4x4 *const matrixFrames = IsCharacterMirroredForDraw(character) ? nullptr : GetMotionDrawOverrideData(motionWork);
+    const Matrix4x4 *const matrixFrames = IsCharacterMirroredForDraw(character) ? nullptr : mtwkGetDrawOverrideData(motionWork);
     Matrix4x4 entityTransform;
     if (matrixFrames)
         entityTransform = MultiplyTransforms(CharacterEntityTransform(*character, false), saved);
@@ -2980,7 +2980,7 @@ std::uint32_t DrawCharacterHumanPhase(Character *character) {
     if (model) {
         PrepareClothForDraw(character);
         RecursivePrepareChildMatrices(model->nodes.data(), model->nodes.data());
-        if (!(character->alpha <= 0.0f && !GetCustomMotionOverrideFlags(motionWork))) {
+        if (!(character->alpha <= 0.0f && !mtwkGetCustomOverrideFlags(motionWork))) {
             const d3t::ModelRuntimeState *const state = d3t::GetModelRuntimeState(GetMT7ReaderData(model));
             if (state && state->nodeTableAvailable && state->nodesAssigned)
                 handled = d3t::HashModelWithAlpha(GetMT7ReaderData(model), character->alpha, GetLegacyPerspectiveProjection());

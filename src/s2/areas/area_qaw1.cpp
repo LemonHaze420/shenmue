@@ -23,7 +23,7 @@ void AreaQAW1MainLoop(void *) {
 void AreaQAW1Main(std::uint32_t) {
     (void)SetMapControlStatusFlag(0, 0);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (EV_GetShenmueFlag(0xffU) != 0) {
         EV_SetWeatherInstruction(0x0cU, 0);
         EV_SetWeatherInstruction(0x780U, 0);

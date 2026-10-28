@@ -95,8 +95,8 @@ void Start(void *data) {
     EVT_AT_SetAngY(renDummy, ren, 0, 0);
     EVT_AT_SetPos(ryo, start, {0, 0, 0}, 0);
     EVT_AT_SetPos(ren, start, {0, 0, 0}, 0);
-    SetPluralControlFor(FindCharacterByScenarioName(ryo), 1);
-    SetPluralControlFor(FindCharacterByScenarioName(ren), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(ryo), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(ren), 1);
     EV_LoadAudio("0263A000", 0);
     EV_spmBeginSampleExecute();
     Film(30, 255, 0);
@@ -150,7 +150,7 @@ void RunLecture(void *data) {
         if (authGetFinished() || (work.retry && HasPressedCancel()))
             FinishLecture(work);
     } else {
-        SetMotionRegionFlag(scenFindMotionwork(ren), 71, 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(ren), 71, 2, MotionRegion::LowerBody);
         work.movement = static_cast<std::int32_t>(QueueEventMovement(nullptr, ren, work.course->route, &routeMotions, 1, 0x80420000U));
         if (eventMovementStates[work.movement]) {
             EventMovementWork *movement = static_cast<EventMovementWork *>(HLib::GetTaskParameter(eventMovementTasks[work.movement]));
@@ -185,7 +185,7 @@ void WaitLecture(void *data) {
         HLib::SetupTaskDelay(frames - 30);
     } else if (work.course->routeActions[waypoint + 1] == 1) {
         CancelEventMovement(work.movement);
-        SetMotionRegionFlag(scenFindMotionwork(ren), 71, 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(ren), 71, 2, MotionRegion::LowerBody);
         work.movement = static_cast<std::int32_t>(QueueEventMovement(nullptr, ren, work.course->route, &routeMotions, 1, 0x80220000U));
         SetEventMovementSegment(work.movement, work.waypoint);
     }

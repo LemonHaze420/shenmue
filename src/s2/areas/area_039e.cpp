@@ -33,7 +33,7 @@ void Start039E(std::uintptr_t) {
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(1, AREA_039E_CONVERSATION);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 20;
     SetCurrentDateTimeTo(time);
     Queue_EVT_UTL_LoadNPCChara_3(AREA_039E_CHARACTERS, parent->self);
@@ -76,7 +76,7 @@ void Update039E(void *taskData) {
 // @verified - p
 void Cleanup039E(AuthorViewerPairTaskParameter *parent) {
     for (const shen_name *character = AREA_039E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

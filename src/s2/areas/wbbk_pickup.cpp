@@ -21,13 +21,13 @@ void BookPickUpStack() {
     switch (bookEventPhase.phase) {
     case 0: {
         SetPlayerControlEnabled(0);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(BOOK_RYO), 1, reinterpret_cast<std::byte *>(bookPickupLeftHand), 10);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(BOOK_RYO), 0, reinterpret_cast<std::byte *>(bookPickupRightHand), 10);
-        EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-        EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-        EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
-        EV_SetCharaControllerFlags(BOOK_BASE, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
-        SetMotionSpeed(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(BOOK_RYO), 1, reinterpret_cast<std::byte *>(bookPickupLeftHand), 10);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(BOOK_RYO), 0, reinterpret_cast<std::byte *>(bookPickupRightHand), 10);
+        EV_SetCharaControllerFlags(BOOK_RYO, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(BOOK_RYO, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(BOOK_RYO, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(BOOK_BASE, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
+        mtwkSetSpeed(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
         mtwkRequestMotion(scenFindMotionwork(BOOK_RYO), 0xf002, MotionRegion::LowerBody);
         const BookStackPlacement &placement = bookStackPlacements[bookModelState.currentStack];
         Vector3 camera = placement.position;
@@ -44,12 +44,12 @@ void BookPickUpStack() {
         const Vector3i rotation{.x = 0, .y = placement.yaw + 32768, .z = 0};
         ApplyScenarioTranslationAndRotation(&origin, &rotation, &offset);
         mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_RYO), 1);
-        SetMotionFrameTime(scenFindMotionwork(BOOK_RYO), 15, MotionRegion::LowerBody);
-        CopyMotionTransition(scenFindMotionwork(BOOK_RYO), &offset, placement.yaw, 0, 0);
+        mtwkSetFrameTime(scenFindMotionwork(BOOK_RYO), 15, MotionRegion::LowerBody);
+        mtwkCopyTransition(scenFindMotionwork(BOOK_RYO), &offset, placement.yaw, 0, 0);
         const std::uint16_t animation = placement.yaw == 32768 ? 6291 : 6276;
-        SetMotionTimeRelated(scenFindMotionwork(BOOK_RYO), 1, 5, animation);
+        mtwkSetTimeRelated(scenFindMotionwork(BOOK_RYO), 1, 5, animation);
         mtwkSetExtraFlag(scenFindMotionwork(BOOK_RYO), 15, 0);
-        SetMotionRegionEvalTime(scenFindMotionwork(BOOK_RYO), 29, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(scenFindMotionwork(BOOK_RYO), 29, MotionRegion::LowerBody);
         ++bookEventPhase.phase;
         break;
     }
@@ -69,7 +69,7 @@ void BookPickUpStack() {
     case 3:
         if (bookEventPhase.frame == 28)
             Loop3DSoundEffect(930);
-        if (GetMotionFrame(scenFindMotionwork(BOOK_RYO), MotionRegion::LowerBody) >= 76) {
+        if (mtwkGetFrame(scenFindMotionwork(BOOK_RYO), MotionRegion::LowerBody) >= 76) {
             EV_GetCharaPosition(stack, CHARACTER_TRANSLATION_ROOT, &bookCarryAnchor, EventTransformFlags::Local);
             bookCarryAnchorBlend = 0;
             AT_SetLocalBaseChara(stack, bookStackAnchor);
@@ -106,9 +106,9 @@ void BookPickUpStack() {
         EV_AT_SetAngY(BOOK_RYO, EventTransformFlags::AllAxes, {.x = 0, .y = static_cast<std::int32_t>(yaw), .z = 0});
         const BookMotionPreset &preset = bookMotionPresets[bookCarryMotion.current];
         mtwkRequestMotion(scenFindMotionwork(BOOK_RYO), preset.motion, MotionRegion::LowerBody);
-        SetMotionRegionEvalTime(scenFindMotionwork(BOOK_RYO), preset.firstFrame, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(scenFindMotionwork(BOOK_RYO), preset.firstFrame, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_RYO), 1);
-        SetMotionFrameTime(scenFindMotionwork(BOOK_RYO), 10, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(BOOK_RYO), 10, MotionRegion::LowerBody);
         ++bookEventPhase.phase;
         bookEventPhase.frame = 0;
         break;
@@ -118,9 +118,9 @@ void BookPickUpStack() {
             const BookCompanionPlacement &placement = bookCompanionPlacements[bookModelState.currentBook - 1];
             SetBookCompanionPose(placement.position, placement.yaw);
             mtwkRequestMotion(scenFindMotionwork(BOOK_SAI), 0x1899, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(BOOK_SAI), 66, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BOOK_SAI), 66, 0, MotionRegion::LowerBody);
             mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_SAI), 1);
-            SetMotionFrameTime(scenFindMotionwork(BOOK_SAI), 20, MotionRegion::LowerBody);
+            mtwkSetFrameTime(scenFindMotionwork(BOOK_SAI), 20, MotionRegion::LowerBody);
             bookCompanionTarget = placement.position;
         }
         UpdateBookCarryAnchor();
@@ -129,7 +129,7 @@ void BookPickUpStack() {
             bookCurrentCamera = 0;
             AttachBookStackToPlayer();
             bookEventPhase.phase = 100;
-            SetMotionSpeed(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(BOOK_RYO), 1, MotionRegion::LowerBody);
             SelectBookStoryVariant();
             if (bookStoryVariant == 4 && bookModelState.currentBook == 13) {
                 bookCarryExitTicks = 30;

@@ -39,7 +39,7 @@ void TomaWaitNpcsFirstTalk(void *) {
     QueueTomaNpcs(characters);
 }
 void TomaInitializeTalkAuthor(void *) {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0);
     EV_LoadCutsceneFromCurrentScene("0122E000");
     EV_LoadAudio("0122E000", 1);
     EV_spmBeginSampleExecute();
@@ -75,7 +75,7 @@ void TomaGoRaceFirstTalk(void *) {
 void TomaGoRace(void *) {
     EV_FreeAuthorPak(0, "0122");
     spmFadeOut();
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_scenQueueLoad(g_actNumber, TOMA_RACE_AREA, tomaRaceEntry);
 }
@@ -85,7 +85,7 @@ void TomaExitPlus(void *) {
         return;
     SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
     spmFadeOut();
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     const shen_name characters[]{TOMA_XGH, {}};
     RestoreAreaLoopCharacters(characters);
@@ -97,8 +97,8 @@ void TomaExitPlus(void *) {
     camCtrlSetState(Init);
     EV_CleanupMapControlTask();
     HLib::MarkCurrentTaskForCleanup();
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0);
     SetAreaLoopCharacterControl(TOMA_PLAYER, 0);
     EV_SetModelDataDefaultVertexShader();
     EV_AssignLightParams(1, 1);
@@ -148,7 +148,7 @@ void TomaWaitNpcsBye(void *) {
     QueueTomaNpcs(characters);
 }
 void TomaBye(void *) {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0);
     EV_LoadCutsceneFromCurrentScene("0122E000");
     EV_LoadAudio("0122E000", 1);
     EV_spmBeginSampleExecute();
@@ -171,7 +171,7 @@ void TomaWaitNpcsHaveFirstTalk(void *) {
     QueueTomaNpcs(characters);
 }
 void TomaInitializeHaveTalkAuthor(void *) {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("TOMAPLUS"), 0);
     EV_LoadCutsceneFromCurrentScene("0122E000");
     EV_LoadAudio("0122E000", 1);
     EV_spmBeginSampleExecute();

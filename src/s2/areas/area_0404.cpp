@@ -93,7 +93,7 @@ void Update0404(void *parameter) {
 }
 void Setup0404Environment() {
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 20;
     time.minute = 0;
     SetCurrentDateTimeTo(time);
@@ -155,8 +155,8 @@ void Prepare0404Character(shen_name name) {
     EV_SetCharacterAlphaEnabled(name, false);
     SetScenarioReflectorBoardValues(name, &reflector);
     EV_SetRefBoardParamsFor(name, 1);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(name), 0, 8, 16);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(name), 1, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(name), 0, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(name), 1, 8, 16);
 }
 void Restore0404Characters() {
     EnableCharDisplayAndSetMotionworkData(AREA_0404_RYO);
@@ -169,7 +169,7 @@ void Restore0404Characters() {
 }
 void Cleanup0404(Area0404Parameter *parent) {
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 9;
     time.minute = 0;
     SetCurrentDateTimeTo(time);

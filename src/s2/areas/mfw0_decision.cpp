@@ -101,7 +101,7 @@ void Mfw0PracticeDecisionSequence(void *data) {
             Vector3i rotation;
             GetScenarioCharacterEulerAngles(MFW0_TKR, &rotation, EventTransformFlags::MotionYaw);
             SetTrainingCharacterYaw(MFW0_TKR, static_cast<std::uint16_t>(rotation.y + 10923));
-            SetMotionRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
             mtwkRequestMotion(scenFindMotionwork(MFW0_TKR), 5003, MotionRegion::LowerBody);
             Mfw0Value(data, 0x250, std::int32_t{1});
             Mfw0Advance(sequence, 101);

@@ -74,8 +74,8 @@ void QueueScmnSceneCallback(void *) {
 // @verified - p
 void LoadScmnScene() {
     (void)EV_FreeAuthorPak(1, "0255");
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
     (void)CreateEventCharacter(CharacterCreationHighModel, nullptr, SCMN_BASE);
     (void)EV_SetNewSceneIndex();
     (void)EV_LoadCutsceneFromCurrentScene("0255E000");
@@ -142,7 +142,7 @@ void ScmnMainCallback(void *parameter) {
         }
         spmFadeOut();
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         date.minute = static_cast<std::uint8_t>(date.minute + 30U);
         SetCurrentDateTimeTo(date);
         work->changeScene = 1;
@@ -212,12 +212,12 @@ void PrepareScmnCharacters() {
     AT_SetLocalBaseChara(SCMN_CHUNYAN, SCMN_BASE);
     SetScenarioCharacterType(SCMN_PLAYER, CharacterTypeStencilShadow);
     SetScenarioCharacterType(SCMN_CHUNYAN, CharacterTypeStencilShadow);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(SCMN_CHUNYAN), FacialNodeReplacement);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(SCMN_CHUNYAN), FacialNodeReplacement);
 }
 // @verified - p
 std::int32_t PlayScmnInvitationVoice(void *) {
     (void)EV_PlayDialogue("0255A005");
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
     EVT_AT_MenCtrl(EventFilmControl{1, 30, 0, 0, 0, 0, 255, 0, 0, 0, 90.0F});
     return 210;
 }
@@ -248,7 +248,7 @@ std::int32_t PlayScmnInvitationScene(void *) {
     HLib::Task *const hideTask = HLib::EnqueueTaskWithParameter(EVT_AT_ObjectDisp_Callback, 6, 0x0b, sizeof(StepObjectDisplayWork), SCMN_TASK);
     (void)RegisterEventTask(hideTask);
     *static_cast<StepObjectDisplayWork *>(HLib::GetTaskParameter(hideTask)) = {1, SCMN_CHUNYAN, 1, 290.0F};
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
     EVT_AT_SetCam(2051, SCMN_BASE, SCMN_BASE, 0, 0, 1);
     EVT_AT_SetCam(2054, SCMN_BASE, SCMN_BASE, 0, 0, 50);
     EVT_AT_SetCam(2052, SCMN_BASE, SCMN_BASE, 0, 0, 100);
@@ -293,9 +293,9 @@ void ScmnEyeControlCallback(void *) {
     if (scmnEyeFrame == 95) {
         Vector3 position;
         EV_GetCharaPosition(SCMN_CHUNYAN, 7, &position, EventTransformFlags::World);
-        SetEyeToChara(FindCharacterByScenarioName(SCMN_PLAYER), &position, 15, 2);
+        SetEyeToChara(ctrlGetScenarioChara(SCMN_PLAYER), &position, 15, 2);
     } else if (scmnEyeFrame == 379) {
-        SetEyeToChara(FindCharacterByScenarioName(SCMN_PLAYER), nullptr, 16, 0);
+        SetEyeToChara(ctrlGetScenarioChara(SCMN_PLAYER), nullptr, 16, 0);
         (void)HLib::DestroyCurrentTask();
     }
     ++scmnEyeFrame;
@@ -306,7 +306,7 @@ void ScmnCleanupCallback(void *parameter) {
     ET_AT_KillWork(work->characters);
     SetPlayerControlEnabled(0);
     SetScenarioCharacterKillMode(SCMN_BASE, 1);
-    SetEyeToChara(FindCharacterByScenarioName(SCMN_PLAYER), nullptr, 16, 0);
+    SetEyeToChara(ctrlGetScenarioChara(SCMN_PLAYER), nullptr, 16, 0);
     if (!scmnEntryMode) {
         EV_AT_SetPos(SCMN_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, scmnSavedPlayerPosition);
         (void)EV_AT_SetAngY(SCMN_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, scmnSavedPlayerRotation, nullptr);
@@ -314,12 +314,12 @@ void ScmnCleanupCallback(void *parameter) {
             (void)RepositionPlayerForQronFloor(static_cast<std::int32_t>(scmnSavedFloor));
     }
     (void)mtwkRequestMotion(scenFindMotionwork(SCMN_PLAYER), 0xf004, MotionRegion::LowerBody);
-    (void)SetMotionRegionFlag(scenFindMotionwork(SCMN_PLAYER), 71, 0, MotionRegion::LowerBody);
+    (void)mtwkSetRegionFlag(scenFindMotionwork(SCMN_PLAYER), 71, 0, MotionRegion::LowerBody);
     (void)GetNpcBatchCountOverride(work->previousNpcBatchCount);
     for (std::uint32_t *motion = work->motions; *motion; ++motion)
         (void)DeleteMotion(*motion);
     (void)EV_FreeAuthorPak(0, "0255");
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SCMN"), 0);
     shenSetClockAndCompassRenderTo(0);
     EV_CleanupMapControlTask();
     HLKillOtherHierarchyTask(work->self);
@@ -328,7 +328,7 @@ void ScmnCleanupCallback(void *parameter) {
     if (work->changeScene)
         EV_scenQueueLoad(g_actNumber, SCMN_QR00, 81);
     else {
-        (void)LoadCutsceneAndSoundProgramForArea();
+        (void)sbtLoadProgram();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         SetPlayerControlEnabled(1);
         (void)camCtrlSetState(Init);

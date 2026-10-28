@@ -56,32 +56,32 @@ void AreaLoopMotionCallback(void *parameter) {
     if (!(work->flags & 0x40000000U)) {
         mtwkRequestMotion(scenFindMotionwork(work->character), static_cast<std::uint16_t>(work->motion), MotionRegion::LowerBody);
         if (work->flags & 1)
-            SetMotionRegionFlag(scenFindMotionwork(work->character), 69, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(work->character), 69, 0, MotionRegion::LowerBody);
         if (work->flags & 2)
             mtwkSetRequestedRootMode(scenFindMotionwork(work->character), 0);
         else {
             mtwkSetRequestedRootMode(scenFindMotionwork(work->character), 1);
-            SetMotionFrameTime(scenFindMotionwork(work->character), work->frameTime, MotionRegion::LowerBody);
+            mtwkSetFrameTime(scenFindMotionwork(work->character), work->frameTime, MotionRegion::LowerBody);
         }
         if (work->flags & 8)
-            SetMotionRegionFlag(scenFindMotionwork(work->character), 66, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(work->character), 66, 0, MotionRegion::LowerBody);
         if (std::fabs(work->startFrame) >= 0.00000011920929f) {
-            SetMotionLayerLoopStartTime(scenFindMotionwork(work->character), work->startFrame, MotionRegion::LowerBody);
-            SetMotionRegionEvalTime(scenFindMotionwork(work->character), work->startFrame, MotionRegion::LowerBody);
+            mtwkSetLayerLoopStartTime(scenFindMotionwork(work->character), work->startFrame, MotionRegion::LowerBody);
+            mtwkSetRegionEvalTime(scenFindMotionwork(work->character), work->startFrame, MotionRegion::LowerBody);
         }
         if (work->endFrame > 0)
-            SetMotionLayerEndFrame(scenFindMotionwork(work->character), work->endFrame, MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(work->character), work->speed, MotionRegion::LowerBody);
+            mtwkSetLayerEndFrame(scenFindMotionwork(work->character), work->endFrame, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(work->character), work->speed, MotionRegion::LowerBody);
         if (work->completion)
             work->completion(0, work->character.name, work->parent);
         work->flags |= 0x40000000U;
     }
-    EV_mtwkSetEnabled(scenFindMotionwork(work->character), work->flags & 4);
+    mtwkSetEnabled(scenFindMotionwork(work->character), work->flags & 4);
     if (work->completion)
         work->completion(2, work->elapsed, work->parent);
     ++work->elapsed;
     if ((work->duration < static_cast<std::int32_t>(work->elapsed) && !(work->flags & 0x10)) ||
-        (SetMotionRegionFlag(scenFindMotionwork(work->character), 65, 1, MotionRegion::LowerBody) && (work->flags & 0x10))) {
+        (mtwkSetRegionFlag(scenFindMotionwork(work->character), 65, 1, MotionRegion::LowerBody) && (work->flags & 0x10))) {
         if (work->completion)
             work->completion(1, 0, work->parent);
         Complete(work->flags);
@@ -132,7 +132,7 @@ void AreaLoopCameraCallback(void *parameter) {
         return;
     }
     if (work->area && work->area[0])
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->area), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->area), 0);
     EVS_LoopCamera(work->camera, work->character, work->character);
     if (work->completion)
         work->completion(0, 0, work->parent);
@@ -170,10 +170,10 @@ void AreaLoopLookAtCallback(void *parameter) {
         if (work->bone < 0)
             EV_GetCharaPosition(work->target, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         else
-            GetMotionBonePosition(scenFindMotionwork(work->target), static_cast<MotionBoneId>(work->bone), &position);
+            mtwkGetBonePosition(scenFindMotionwork(work->target), static_cast<MotionBoneId>(work->bone), &position);
     } else
         position = work->position;
-    UpdateMotionWorkWithPosition(scenFindMotionwork(work->character), &position, 3);
+    mtwkUpdateWithPosition(scenFindMotionwork(work->character), &position, 3);
     SetEyeToChara(ctrlGetCharaByName(work->character), nullptr, 16, 0);
     SetEyeToChara(ctrlGetCharaByName(work->character), &position, 0, 2);
     if (!(work->flags & 0x40000000U)) {
@@ -185,7 +185,7 @@ void AreaLoopLookAtCallback(void *parameter) {
         work->completion(2, work->elapsed, work->parent);
     if (static_cast<std::int32_t>(++work->elapsed) > work->duration) {
         SetEyeToChara(ctrlGetCharaByName(work->character), nullptr, 16, 0);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(work->character), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(work->character), nullptr, 0);
         if (work->completion)
             work->completion(1, 0, work->parent);
         Complete(work->flags);
@@ -194,10 +194,10 @@ void AreaLoopLookAtCallback(void *parameter) {
 void AreaLoopAuthorCallback(void *parameter) {
     AreaLoopAuthorWork *const work = static_cast<AreaLoopAuthorWork *>(parameter);
     if (!(work->flags & 1U)) {
-        if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load,
+        if (!EV_pakUtils(PakCategory::Package, PakPackageOp::Load,
                 reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)), reinterpret_cast<std::uintptr_t>(work->package)))
             return;
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         work->flags |= 1U;
     }
     if (!(work->flags & 2U)) {
@@ -215,8 +215,8 @@ void AreaLoopAuthorCallback(void *parameter) {
             work->completion(1, 0, work->parent);
         if (!finished)
             EV_authSceneCtrl(AuthSceneCtrl::RefreshAndEnqueue);
-        if (work->package && EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work->package), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
+        if (work->package && EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work->package), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
         Complete(work->flags);
     }
 }
@@ -264,9 +264,9 @@ void AreaLoopPackageCallback(void *parameter) {
     }
     if (work->completion)
         work->completion(2, 0, work->parent);
-    if (EV_ControlPackageResources(
+    if (EV_pakUtils(
             PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(work->folder), reinterpret_cast<std::uintptr_t>(work->package))) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         if (work->completion)
             work->completion(1, 0, work->parent);
         Complete(work->flags);

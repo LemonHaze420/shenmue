@@ -80,8 +80,8 @@ std::int32_t Intro(shen_name enemy, std::int32_t mode) {
     const std::int32_t delay = EVT_AT_SetMot(ryo, 8193, 2, 1, 0x20000000U, 120);
     EVT_AT_SetMot(ryo, 8194, 2, 1, 0x20000000U, delay);
     Motion(enemy, 8219, 2);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ryo), 1, 1, 1);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(ren), 1, 1, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ryo), 1, 1, 1);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(ren), 1, 1, 1);
     return delay + 80;
 }
 
@@ -102,7 +102,7 @@ std::int32_t Failure(shen_name enemy, std::int32_t mode) {
 }
 
 std::int32_t Success(shen_name enemy, std::int32_t mode) {
-    Character *const character = FindCharacterByScenarioName(ryo);
+    Character *const character = ctrlGetScenarioChara(ryo);
     ApplyCharacterHandPoseCommand(character, 0, reinterpret_cast<std::byte *>(handCommandOpen), 10);
     ApplyCharacterHandPoseCommand(character, 1, reinterpret_cast<std::byte *>(handCommandClosed), 10);
     switch (mode) {
@@ -166,16 +166,16 @@ void Setup(QKQBEventWork &work) {
     EV_ResetFreeTalkFlags();
     EVT_SetQteFailureCount(0);
     EVT_SetQteRetryFrames(work.authored->retryQteFrames);
-    GetCurrentDateTime(savedDateTime);
+    shenGetCurrentDateTime(savedDateTime);
     for (std::int32_t i = 0; i < work.authored->enemyCount; ++i)
         characterNames.data()[2 + i] = qkqbEnemyNames.data()[*work.entry];
     work.characters = Queue_EVT_AT_ReadChr(work.task, characterNames.data());
     work.motionHandle = static_cast<std::uint32_t>(ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QKQB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QKQB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QKQB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QKQB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QKQB"), 0);
     EV_FreeAuthorPak(1, "0299");
     EV_SetNewSceneIndex();
     LoadCutsceneSoundProgram("0299E000", g_actNumber);
@@ -189,13 +189,13 @@ void Cleanup(QKQBEventWork &work) {
     Position(ryo, invalid, {authored.returnPosition.x, work.playerY, authored.returnPosition.z});
     Angle(ryo, invalid, authored.returnYaw);
     Motion(ryo, 0xf003, 1);
-    hndlSetFlags(FindCharacterByScenarioName(ryo));
+    hndlSetFlags(ctrlGetScenarioChara(ryo));
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0299");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QKQB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QKQB"), 0);
     DeleteMotion(static_cast<std::int32_t>(work.motionHandle));
     ET_AT_KillWork(work.characters);
     FadeFromBlack();
@@ -218,7 +218,7 @@ void Queue_eQKQB_EVT_StartQKuro(std::uintptr_t entry) {
 void eQKQB_EVT_StartQKuro_Callback(void *data) {
     auto &work = *static_cast<QKQBEventWork *>(data);
     const auto &authored = *work.authored;
-    Character *const character = FindCharacterByScenarioName(ryo);
+    Character *const character = ctrlGetScenarioChara(ryo);
     SetLowQualityHands(character);
     SetHighModelXYZ(character, true, 0, 0);
     SetHighModelXYZ(character, true, 1, 0);
@@ -274,12 +274,12 @@ void eQKQB_EVT_StartBattle_Callback(void *data) {
     auto &work = *static_cast<QKQBEventWork *>(data);
     const auto &authored = *work.authored;
     shenStartFGST(10, 10, 0, 0);
-    PublishFightFormation(FindCharacterByScenarioName(ryo), nullptr, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    PublishFightFormation(ctrlGetScenarioChara(ryo), nullptr, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     Position(ryo, ryo, {0, 0.2f, 0});
     for (std::int32_t i = 0; i < authored.enemyCount; ++i) {
         const shen_name enemy = characterNames.data()[2 + i];
         Position(enemy, enemy, {0, 0.2f, 0});
-        PublishFightFormation(FindCharacterByScenarioName(enemy), nullptr, 1, 1, static_cast<std::uint16_t>(authored.enemyHp),
+        PublishFightFormation(ctrlGetScenarioChara(enemy), nullptr, 1, 1, static_cast<std::uint16_t>(authored.enemyHp),
             static_cast<std::uint8_t>(authored.fightStyle), 0, 0, 0, 0, 0);
     }
     vfCopyPosFromEntity(0, nullptr, authored.battlePosition.x, authored.battlePosition.z, authored.battleRadius);
@@ -295,7 +295,7 @@ void eQKQB_EVT_PlayBattle_Callback(void *data) {
     EventFilmControl fade{0, 30, 0, 0, 0, 0, 255, 0, 0, 0, 0};
     EVT_AT_MenCtrl_Callback(&fade);
     spmFadeOut();
-    if (GetBtlStatus(FindCharacterByScenarioName(ryo)) == 3) {
+    if (GetBtlStatus(ctrlGetScenarioChara(ryo)) == 3) {
         EVT_AT_SetPos(ryo, invalid, {work.authored->returnPosition.x, work.playerY, work.authored->returnPosition.z}, 30);
         EVT_AT_SetAngY(ryo, invalid, work.authored->returnYaw, 30);
         EVT_AT_SetMot(ryo, 0xf003, 1, 1, 0x40000000U, 30);

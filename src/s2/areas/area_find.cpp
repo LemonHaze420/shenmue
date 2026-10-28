@@ -41,7 +41,7 @@ void AreaFINDInit() {
 // @verified - p
 void FINDBeginSignSearchCallback(void *) {
     scenCvsCtrlFree(nullptr);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FINDCHAW"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FINDCHAW"), 0);
     Vector3 playerPosition;
     EV_GetCharaPosition(FIND_PLAYER, CHARACTER_TRANSLATION_ROOT, &playerPosition, EventTransformFlags::World);
     const float x = findPlacements[findPlacement].position.x - playerPosition.x;
@@ -54,7 +54,7 @@ void FINDBeginSignSearchCallback(void *) {
         findFarSign = 0;
     }
     const Vector3i rotation{0, static_cast<std::uint16_t>(InverseFixedAtan2(x, z)), 0};
-    SetMotionRegionFlag(FindMotionWork(FindCharacterByScenarioName(FIND_PLAYER)), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(FIND_PLAYER)), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetAngY(FIND_PLAYER, EventTransformFlags::AllAxes, rotation, nullptr);
     EVS_LoopCamera(findCamera, FIND_PLAYER, FIND_BASE);
     EV_PlayDialogue("0038A027");
@@ -100,7 +100,7 @@ void FINDFinishChoiceCallback(void *) {
     if (cvsHasValidConverseData(nullptr))
         return;
     SetCharaKill(FIND_BASE, 1);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("FINDCHAW"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("FINDCHAW"), 0);
     EV_FreeAuthorPak(0, "0038");
     if (findAccepted) {
         SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
@@ -122,9 +122,9 @@ void FINDEnterChawanCallback(void *) {
         return;
     EV_EnableCharacterDisplay(FIND_PLAYER);
     HLib::DestroyCurrentTask();
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("CHAWAN"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     ExecuteCurrAreaMainFunc(FIND_CHAWAN_SLOT, static_cast<std::uintptr_t>(findPlacement + 22));
 }
 
@@ -132,7 +132,7 @@ void FINDEnterChawanCallback(void *) {
 void AreaFINDMain(std::uintptr_t argument) {
     const std::int32_t placementIndex = static_cast<std::int32_t>(argument);
     SetPlayerControlEnabled(0);
-    mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(FIND_PLAYER)), 0xf003, MotionRegion::LowerBody);
+    mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(FIND_PLAYER)), 0xf003, MotionRegion::LowerBody);
     EV_FreeAuthorPak(1, "0038");
     HLib::EnqueueTaskWithoutParameter(FINDBeginSignSearchCallback, 4, 0x0b, static_cast<std::int32_t>(FIND_TASK.name));
     CreateEventCharacter(CharacterCreationHighModel, nullptr, FIND_BASE);

@@ -101,7 +101,7 @@ void EndTopaEvent() {
         (void)EV_npcLockUnlock(*character);
         (void)EV_npcFree(*character);
     }
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TOPA"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TOPA"), 0);
     (void)EV_FreeAuthorPak(0, "0213");
     EV_stepSetFlags(0, 0x272);
     (void)HLib::DestroyCurrentTask();

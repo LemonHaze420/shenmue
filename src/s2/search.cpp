@@ -116,7 +116,7 @@ void CollectSnapshotCandidate(Character *character, void *context) {
     if (!output)
         return;
     Vector3 point{};
-    GetCharacterMotionWorldPosition(character, 5, &point);
+    charaGetMotWorldPos(character, 5, &point);
     const Vector3 view = TransformSearchPoint(workTransformMatrix, point);
     if (!(view.z < -0.1f))
         return;
@@ -138,7 +138,7 @@ void CollectSnapshotCandidate(Character *character, void *context) {
 void GetScenarioSearchPosition(const ScenarioFreeTalkCandidate &candidate, Vector3 &position) {
     // GetScenarioSearchPosition prefers drawable-node matrix banks over the IK joint.
     auto *motion = static_cast<MotionWork *>(candidate.motionWork);
-    if (const Matrix4x4 *matrices = GetMotionDrawOverrideData(motion)) {
+    if (const Matrix4x4 *matrices = mtwkGetDrawOverrideData(motion)) {
         position = GetCharacterWorldPosition(candidate.character);
         const Vector3i rotation = GetCharacterWorldRotation(candidate.character);
         Matrix4x4_Push(&transformMatrix_prePass);
@@ -147,7 +147,7 @@ void GetScenarioSearchPosition(const ScenarioFreeTalkCandidate &candidate, Vecto
         Matrix4x4::MultiplyWithPrePassMatrix(&matrices[candidate.flags]);
         position = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         Matrix4x4::Pop(1);
-    } else if (!motion || !GetMotionBonePosition(motion, MB_Head, &position)) {
+    } else if (!motion || !mtwkGetBonePosition(motion, MB_Head, &position)) {
         position = GetCharacterWorldPosition(candidate.character);
     }
 }
@@ -459,7 +459,7 @@ ScenarioFreeTalkCandidate *srchEvaluateSearchTarget() {
     const auto *control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     if (scenario && control && control->ryo && plymCanEvaluateSearchTargets()) {
         auto *player = static_cast<Character *>(control->ryo);
-        GetCharacterMotionWorldPosition(player, 5, &scenarioPlayerPosition);
+        charaGetMotWorldPos(player, 5, &scenarioPlayerPosition);
         scenarioPlayerYaw = static_cast<std::int16_t>(GetCharacterWorldRotation(player).y);
         scenarioFocusPosition = scenarioPlayerPosition;
         for (auto *candidate = GetScenarioCandidateList(); candidate; candidate = candidate->previous) {

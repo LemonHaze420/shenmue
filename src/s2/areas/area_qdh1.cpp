@@ -354,7 +354,7 @@ void Qdh1EventCallback(void *data) {
             work->state = work->actions[work->action].qte == static_cast<std::uint32_t>(EV_GetCurrentQteStatus() & 0xfff) ? 3 : 8;
         break;
     case 3:
-        if (GetMotionFrame(scenFindMotionwork(QDH_RYO), MotionRegion::LowerBody) >= 110.0f / work->speed)
+        if (mtwkGetFrame(scenFindMotionwork(QDH_RYO), MotionRegion::LowerBody) >= 110.0f / work->speed)
             work->state = 4;
         break;
     case 4:
@@ -455,7 +455,7 @@ void Qdh1EventCallback(void *data) {
             EVT_AT_ObjectDisp_1(QDH_BRIDGE_2, 0, 0);
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
         ExecuteCleanupFuncForAreaWithCachedScene();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -482,7 +482,7 @@ void Qdh1EventCallback(void *data) {
             EV_AT_SetAngY(QDH_BRIDGE_1, EventTransformFlags::World | EventTransformFlags::AllAxes, {0, 7281, 0}, nullptr);
         }
         EV_FreeAuthorPak(0, "0289");
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDH1"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDH1"), 0);
         scenFreeEvent("QDH1.EV3");
         EV_CleanupMapControlTask();
         HLib::MarkCurrentTaskForCleanup();
@@ -532,8 +532,8 @@ void Qdh1Init() {
 void Qdh1Main(std::uintptr_t argument) {
     SetPlayerControlEnabled(0);
     Qdh1AdmissionNullsub();
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDH1"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDH1"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDH1"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDH1"), 0);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(Qdh1EventCallback, 4, 0x0b, sizeof(QdhEventWork), BRIDGE_BENDING_TASK);
     InitializeQdh1Event(task, std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(argument)));
 }

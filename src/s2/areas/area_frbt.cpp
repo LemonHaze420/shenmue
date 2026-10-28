@@ -79,12 +79,12 @@ void FrbtStartCallback(void *) {
 }
 void FrbtInitializeResources() {
     CreateEventCharacter(CharacterCreationHighModel, nullptr, FRBT_BASE);
-    SetLowQualityHands(FindCharacterByScenarioName(FRBT_RYO));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    SetLowQualityHands(ctrlGetScenarioChara(FRBT_RYO));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("FRBT"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("FRBT"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FRBT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("FRBT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("FRBT"), 0);
     EV_FreeAuthorPak(1, "0052");
     EV_FreeAuthorPak(1, "S2BV");
     const char *cutscene = g_currentMap.name == FRBT_AB00.name ? "0052E010" : "0073E000";
@@ -102,9 +102,9 @@ void FrbtSetupEnemies(FrbtWork &work) {
         std::int32_t definition = 0;
         while (FRBT_ENEMY_DEFINITIONS[definition].character.name && FRBT_ENEMY_DEFINITIONS[definition].character.name != work.enemies[i].name)
             ++definition;
-        shenInitFightData(FindCharacterByScenarioName(work.enemies[i]), nullptr, 1, 1, i == 0 && frbtVariant <= 6 ? 120 : 60, 2);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(work.enemies[i]), 0, 0x400000, 128);
-        vfUpdateFlagsFor(FindCharacterByScenarioName(work.enemies[i]), 0, 0x200000, 2048);
+        shenInitFightData(ctrlGetScenarioChara(work.enemies[i]), nullptr, 1, 1, i == 0 && frbtVariant <= 6 ? 120 : 60, 2);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(work.enemies[i]), 0, 0x400000, 128);
+        vfUpdateFlagsFor(ctrlGetScenarioChara(work.enemies[i]), 0, 0x200000, 2048);
         const unsigned char *name = reinterpret_cast<const unsigned char *>(&work.enemies[i]);
         EV_debug_log("FRBT\\eFRBT_et_talkbattle.c", 850, "ID : %c%c%c%c", name[0], name[1], name[2], name[3]);
         if (!FRBT_ENEMY_DEFINITIONS[definition].character.name)
@@ -115,7 +115,7 @@ void FrbtSetupBattle(FrbtWork &work) {
     work.motion = ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
     shenStartFGST(10, 10, 0, 0);
     EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x80}, 1);
-    shenInitFightData(FindCharacterByScenarioName(FRBT_RYO), nullptr, 0, 0, 0, 0);
+    shenInitFightData(ctrlGetScenarioChara(FRBT_RYO), nullptr, 0, 0, 0, 0);
     FrbtSetupEnemies(work);
 }
 void FrbtInitializeCallback(void *data) {
@@ -168,7 +168,7 @@ void FrbtStartBattleCallback(void *data) {
     FrbtWork &work = *static_cast<FrbtWork *>(data);
     if (frbtVariant <= 6)
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-    vfCopyPosFromEntity(1, FindCharacterByScenarioName(FRBT_RYO), 0, 0, 5.0f);
+    vfCopyPosFromEntity(1, ctrlGetScenarioChara(FRBT_RYO), 0, 0, 5.0f);
     vfmQueueFightStart(static_cast<std::uint8_t>(work.enemyCount + 1), 2, 1, 1, -1);
     HLib::SetCurrentTaskTo(FrbtWaitBattleCallback);
 }
@@ -176,7 +176,7 @@ void FrbtWaitBattleCallback(void *data) {
     if (IsFightActive())
         return;
     FrbtWork &work = *static_cast<FrbtWork *>(data);
-    if (GetBtlStatus(FindCharacterByScenarioName(FRBT_RYO)) == 3) {
+    if (GetBtlStatus(ctrlGetScenarioChara(FRBT_RYO)) == 3) {
         if (frbtResponse == 3)
             HLib::SetCurrentTaskTo(FrbtMapGetCallback);
         else if (frbtResponse <= 1 || frbtResponse == 6)
@@ -216,7 +216,7 @@ void FrbtLoseCallback(void *data) {
         EV_DisableCharacterDisplay(work.enemies[i]);
     if (FRBT_OUTCOMES[frbtVariant].advanceTime) {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = static_cast<std::int8_t>(time.hour + 2);
         SetCurrentDateTimeTo(time);
         FrbtPositionBase();
@@ -274,8 +274,8 @@ void FrbtApplyWonFlags(FrbtWork &work) {
 void FrbtEndCallback(void *data) {
     FrbtWork &work = *static_cast<FrbtWork *>(data);
     DeleteMotion(work.motion);
-    SetHighModelXYZ(FindCharacterByScenarioName(FRBT_RYO), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(FRBT_RYO), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(FRBT_RYO), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(FRBT_RYO), 0, 1, 0);
     SetCharaKill(FRBT_BASE, 1);
     EV_FreeAuthorPak(0, "0052");
     EV_FreeAuthorPak(0, "S2BV");
@@ -289,11 +289,11 @@ void FrbtEndCallback(void *data) {
     }
     ET_AT_KillWork(work.characters);
     SetPlayerControlEnabled(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     flddSetPointFlagOnGrid(FRBT_DEFAULT_GRID, 1);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("FRBT"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("FRBT"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("FRBT"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("FRBT"), 0);
     EV_NPC_NewLoadSw(1);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);

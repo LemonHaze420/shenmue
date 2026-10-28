@@ -464,7 +464,7 @@ void StartSale_Callback(void *data) {
         rotation.y += 0x8000;
         EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes | EventTransformFlags::TurnMotion, rotation);
         if (work->package[0])
-            EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
+            EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
         EVS_LoopCamera(1000, work->seller, work->seller);
     }
     dbgPrintEventMessage("おっ、兄ちゃん。見てってくれよ");
@@ -521,11 +521,11 @@ void WaitPackage_Callback(void *data) {
         HLib::SetCurrentTaskTo(Done_Callback);
         return;
     }
-    if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (!EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(work->package)))
         return;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
     work->board = static_cast<const Board *>(LoadCurrentPakBinary("main.bin"));
     if (!work->board) {
         HLib::SetCurrentTaskTo(Done_Callback);
@@ -595,8 +595,8 @@ void Done_Callback(void *data) {
             EV_FreeAuthorPak(0, work->board->authorBank);
             work->flags &= ~8U;
         }
-        if (work->package[0] && EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work->package), 0))
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
+        if (work->package[0] && EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work->package), 0))
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
     }
@@ -606,7 +606,7 @@ void Done_Callback(void *data) {
         HLib::ResolveDeferredCallback(parent);
     else {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = 23;
         time.minute = 30;
         SetCurrentDateTimeTo(time);

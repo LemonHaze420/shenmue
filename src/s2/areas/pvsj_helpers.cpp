@@ -34,10 +34,10 @@ void PvsjLoadVoice(PvsjEventWork *work, shen_name character) {
         EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 1038, "NoVoiceFile:%s!!\n", work->voicePrefix);
         std::strcpy(work->voicePrefix, "0104");
     }
-    EV_ControlPackageResources(PakCategory::LoadAfsWithMode, reinterpret_cast<std::uintptr_t>(work->voiceLoadBuffer),
+    EV_pakUtils(PakCategory::LoadAfsWithMode, reinterpret_cast<std::uintptr_t>(work->voiceLoadBuffer),
         reinterpret_cast<std::uintptr_t>(work->gamePartition), static_cast<std::uintptr_t>(voice->text), static_cast<std::uint32_t>(voice->sound));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentAfs, reinterpret_cast<std::uintptr_t>(work->gamePartition),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentAfs, reinterpret_cast<std::uintptr_t>(work->gamePartition),
         static_cast<std::uintptr_t>(voice->text), static_cast<std::uint32_t>(voice->sound));
     const void *source = LoadCurrentPakBinary(work->voicePrefix);
     const auto bytes = static_cast<std::int32_t>(GetCurrentPakBinarySize(work->voicePrefix));
@@ -45,11 +45,11 @@ void PvsjLoadVoice(PvsjEventWork *work, shen_name character) {
     if (size >= 0x4000)
         EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 1055, "SIZE OVER\n");
     std::memcpy(work->voiceLengths, source, size);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(work->gamePartition),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(work->gamePartition),
         static_cast<std::uintptr_t>(voice->text), static_cast<std::uint32_t>(voice->sound));
     EV_FreeAuthorPak(1, work->voicePrefix);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
 }
 
 

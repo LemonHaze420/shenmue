@@ -47,7 +47,7 @@ void E0143WaveCallback(void *) {
 // @verified - p
 void SetupE0143Wave() {
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 23;
     time.minute = 0;
     SetCurrentDateTimeTo(time);
@@ -78,7 +78,7 @@ void E0143Main(std::uintptr_t) {
 
 // @verified - p
 void CleanupE0143(AreaAuthorTaskParameter *parent) {
-    if (FindCharacterByScenarioName(AREA_0143_WON)) {
+    if (ctrlGetScenarioChara(AREA_0143_WON)) {
         EV_npcLockUnlock(AREA_0143_WON);
         EV_npcFree(AREA_0143_WON);
     }
@@ -127,9 +127,9 @@ void E0143MainCallback(void *taskData) {
 void E0143LoopCallback(void *taskData) {
     const std::int32_t frame = EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame);
     if (frame == 570)
-        SetChildObjectFlagByIndex(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 4);
+        SetChildObjectFlagByIndex(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 4);
     else if (frame == 802)
-        SetChildObjectFlagByIndex(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 0);
+        SetChildObjectFlagByIndex(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 0);
     if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded) != 0)
         return;
     SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);

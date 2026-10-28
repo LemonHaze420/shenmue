@@ -88,7 +88,7 @@ void RestoreE0059Characters() {
 void CleanupE0059(AreaAuthorTaskParameter *parent) {
     shenUpdateCurrentDateTime();
     for (const shen_name *character = AREA_0059_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -117,10 +117,10 @@ void E0059LoopCallback(void *taskData) {
     if (frame == 1)
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     else if (frame == 1731)
-        SetChildObjectFlagByIndex(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 3);
+        SetChildObjectFlagByIndex(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 3);
     if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded) != 0)
         return;
-    SetChildObjectFlagByIndex(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 0);
+    SetChildObjectFlagByIndex(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 0);
     RestoreE0059Characters();
     static_cast<AreaAuthorLoopTaskParameter *>(taskData)->parent->state = 3;
     SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);

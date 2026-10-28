@@ -133,10 +133,10 @@ void YcpaWaitStartupCallback(void *) {
 }
 void YcpaSetup() {
     eventMovementStates.fill(0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("YCPAMAIN"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
     EV_FreeAuthorPak(1, "0235");
     if (ycpaEvent >= 100)
         EV_LoadCutsceneFromCurrentScene("0235E000");
@@ -152,19 +152,19 @@ void YcpaSetup() {
     qteBattleUtil(BattleQteMode::Load);
     qteBattleUtil(BattleQteMode::Queue);
     if (DoesScenarioCharacterExist(YCPA_REN))
-        SetLowQualityHands(FindCharacterByScenarioName(YCPA_REN));
+        SetLowQualityHands(ctrlGetScenarioChara(YCPA_REN));
     if (DoesScenarioCharacterExist(YCPA_YUA))
-        SetLowQualityHands(FindCharacterByScenarioName(YCPA_YUA));
+        SetLowQualityHands(ctrlGetScenarioChara(YCPA_YUA));
     for (shen_name character : {YCPA_RYO, YCPA_REN, YCPA_YUA}) {
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 1, 0);
     }
     for (shen_name character : {YCPA_RYO, YCPA_REN, YCPA_YUA}) {
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(character), 0, reinterpret_cast<std::byte *>(openHandPoseCommand), 0);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(character), 1, reinterpret_cast<std::byte *>(openHandPoseCommand), 0);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(character), 0, reinterpret_cast<std::byte *>(openHandPoseCommand), 0);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(character), 1, reinterpret_cast<std::byte *>(openHandPoseCommand), 0);
     }
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(YCPA_RYO), FacialNodeReplacement);
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(YCPA_RYO), FacialExpressionId::Angry, 16, 0.800000011920928955f);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(YCPA_RYO), FacialNodeReplacement);
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(YCPA_RYO), FacialExpressionId::Angry, 16, 0.800000011920928955f);
     for (shen_name character : {YCPA_BASE, YCPA_RYOB, YCPA_YUAB, YCPA_RENB, YCPA_RYOD})
         CreateEventCharacter(CharacterCreationHighModel, nullptr, character);
     ycpaPhase = 1;

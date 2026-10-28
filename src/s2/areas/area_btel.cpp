@@ -96,17 +96,17 @@ void AuthorMain_Callback(void *data) {
 }
 void PreparePackage() {
     SetPlayerControlEnabled(0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("BTEL"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0309A000");
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BTEL"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("BTEL"), 0);
     EV_LoadAudio("0309A000", 0);
     EV_spmBeginSampleExecute();
 }
 void Exit(BattleWork *work) {
-    SetPluralControlFor(FindCharacterByScenarioName(ryo), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(ryo), 0);
     flddSetPointFlagOnGrid(SHEN_NAME(BTEL), 0);
     flddSetPointFlagOnGrid(SHEN_NAME(0000), 1);
     EV_EnsureCharacterDraw(propA);
@@ -114,8 +114,8 @@ void Exit(BattleWork *work) {
     EV_EnsureCharacterDraw(propB);
     EV_DisableCharacterDisplay(propB);
     ET_AT_KillWork(work->characters);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BTEL"), 0);
-    LoadCutsceneAndSoundProgramForArea();
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("BTEL"), 0);
+    sbtLoadProgram();
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->self);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -141,9 +141,9 @@ void Battle_Callback(void *data) {
     case 1: {
         shenStartFGST(10, 10, 0, 0);
         vfmDispatchControl(FightControlOp::Package, shen_name{}, reinterpret_cast<std::uintptr_t>("BTEL"), 1);
-        shenInitFightData(FindCharacterByScenarioName(ryo), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (work->retries + 2)), 0);
+        shenInitFightData(ctrlGetScenarioChara(ryo), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (work->retries + 2)), 0);
         for (int i = 1; i < 7; ++i)
-            shenInitFightData(FindCharacterByScenarioName(names[i]), nullptr, 1, 1, health[i], styles[i]);
+            shenInitFightData(ctrlGetScenarioChara(names[i]), nullptr, 1, 1, health[i], styles[i]);
         LoadBlurModelForCharacter(ryo, "RYO_B.MT7", 1);
         SetDoorSubjectEnabled(lift, 0);
         auto *task = HLib::EnqueueTaskWithParameter(AuthorMain_Callback, 4, 0x0b, sizeof(AuthorWork), event);
@@ -191,13 +191,13 @@ void Battle_Callback(void *data) {
             return;
         FinishLoading();
         for (int i = 0; i < 7; ++i) {
-            auto *character = FindCharacterByScenarioName(names[i]);
+            auto *character = ctrlGetScenarioChara(names[i]);
             SetPluralControlFor(character, 1);
             SetScenarioCharacterType(names[i], CharacterTypeDefault);
             SetFaceFlagsForChara_0(character, FacialNodeOriginal);
         }
-        SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 1, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(ryo), 0, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(ryo), 0, 0, 0);
         EV_DisableCharacterDisplay(propA);
         EV_ToggleCharacterFlag(propA);
         EV_DisableCharacterDisplay(propB);
@@ -212,7 +212,7 @@ void Battle_Callback(void *data) {
     case 6:
         if (IsFightActive())
             return;
-        work->result = static_cast<std::uint8_t>(GetBtlStatus(FindCharacterByScenarioName(ryo)));
+        work->result = static_cast<std::uint8_t>(GetBtlStatus(ctrlGetScenarioChara(ryo)));
         SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
         spmFadeOut();
         if (work->result == 3) {

@@ -195,9 +195,9 @@ void FinishFirstConversation(KrctAuthorWork *work) {
     ProcessAicaCommand(0xaa0, 1);
 }
 void FinishTorchConversation(KrctAuthorWork *work) {
-    clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(KRCT_SHENHUA), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(KRCT_RYO), 0);
+    clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(KRCT_SHENHUA), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(KRCT_RYO), 0);
     EV_SetWeatherInstruction(12, 1);
     SuspendParticleEffect(4, krctFire);
     SuspendParticleEffect(4, krctHandFire);
@@ -208,14 +208,14 @@ void FinishTorchConversation(KrctAuthorWork *work) {
     ProcessAicaCommand(0xaa0, 1);
 }
 void FinishPhotoConversation(KrctAuthorWork *work) {
-    clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 0);
+    clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 0);
     *work->result = -1;
     HLib::DestroyTask(work->task);
 }
 void FinishBranchConversation(KrctAuthorWork *work) {
     EV_SetWeatherInstruction(0x780, 1);
     EV_SetWeatherInstruction(12, 1);
-    clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 0);
+    clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 0);
     *work->result = -1;
     HLib::DestroyTask(work->task);
 }
@@ -265,8 +265,8 @@ void TorchConversationLoop(void *data) {
         ResumeParticleEffect(4, krctHandFire);
     } else if (frame < 624)
         plural = 0;
-    SetPluralControlFor(FindCharacterByScenarioName(KRCT_SHENHUA), plural);
-    SetPluralControlFor(FindCharacterByScenarioName(KRCT_RYO), plural);
+    SetPluralControlFor(ctrlGetScenarioChara(KRCT_SHENHUA), plural);
+    SetPluralControlFor(ctrlGetScenarioChara(KRCT_RYO), plural);
     if (static_cast<std::uint32_t>(frame - 1240) <= 259) {
         krctFireHeight += .0015384615f;
         SetLightSceneIntensity(27, krctFireHeight);
@@ -336,7 +336,7 @@ void BranchConversationLoop(void *data) {
         work->state = 3;
     else if (loop->frame == 1501) {
         if (work->selection == 10)
-            clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 2);
+            clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 2);
         SuspendParty();
     } else if (loop->frame == 2450 && work->selection == 10)
         work->state = 2;
@@ -434,7 +434,7 @@ void BeginFirstConversation(KrctAuthorWork *work) {
 void BeginTorchConversation(KrctAuthorWork *work) {
     QueueLoop(work, TorchConversationLoop);
     Reveal();
-    clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 11);
+    clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 11);
     EV_authSceneCtrl(static_cast<AuthSceneCtrl>(krctAuthorNames[1].name));
     work->state = 2;
 }
@@ -442,10 +442,10 @@ void BeginPhotoConversation(KrctAuthorWork *work) {
     QueueLoop(work, PhotoConversationLoop);
     if (work->selection == 2 || work->selection == 5) {
         EV_authSceneCtrl(AuthSceneCtrl::HideFilmBars);
-        clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 5);
+        clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 5);
     } else if (work->selection == 3) {
         EV_authSceneCtrl(AuthSceneCtrl::HideFilmBars);
-        clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 8);
+        clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 8);
     }
     if (work->selection == 2)
         Reveal();
@@ -463,7 +463,7 @@ void BeginLateConversation(KrctAuthorWork *work) {
 }
 void BeginBranchConversation(KrctAuthorWork *work) {
     QueueLoop(work, BranchConversationLoop);
-    clmdUtil(FindCharacterByScenarioName(KRCT_SHENHUA), 1);
+    clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 1);
     if (work->selection == 9) {
         EV_LoadAudio("0525A000", 0);
         EV_spmBeginSampleExecute();

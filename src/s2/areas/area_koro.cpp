@@ -51,16 +51,16 @@ MotionWork *RyoMotion() {
 }
 void Gravity(shen_name name, bool enabled) {
     const auto mode = enabled ? NpcCharacterControllerState::Enabled : NpcCharacterControllerState::Disabled;
-    EV_SetCharaControllerFlags(name, CharacterControlApplyGravity, mode);
-    EV_SetCharaControllerFlags(name, CharacterControlApplyGravity | CharacterControlUpdateHeight, mode);
+    EV_SetCharaControllerFlags(name, CCMF_ApplyGravity, mode);
+    EV_SetCharaControllerFlags(name, CCMF_ApplyGravity | CCMF_UpdateHeight, mode);
 }
 void RestoreControls() {
     SetPlayerControlEnabled(1);
     Gravity(ryo, true);
 }
 void PlayRyo(std::uint16_t motion) {
-    SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
-    SetMotionFrameTime(RyoMotion(), 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(RyoMotion(), 0, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(RyoMotion(), 0);
     mtwkRequestMotion(RyoMotion(), motion, MotionRegion::LowerBody);
 }
@@ -68,7 +68,7 @@ void LoopCamera(std::int32_t camera, shen_name eye, shen_name target) {
     EVS_LoopCamera(camera, eye, target);
 }
 void WaitPackage() {
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KORO"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KORO"), 0);
 }
 void InterpolateLights(float alpha) {
     const float inverse = 1.0f - alpha;
@@ -111,7 +111,7 @@ void Door_Callback(void *) {
     camCtrlSetState(Init);
     HLib::SetCurrentTaskTo(DoorDone_Callback);
     mtwkSetRequestedRootMode(RyoMotion(), 1);
-    SetMotionFrameTime(RyoMotion(), 15, MotionRegion::LowerBody);
+    mtwkSetFrameTime(RyoMotion(), 15, MotionRegion::LowerBody);
     mtwkRequestMotion(RyoMotion(), 0xf002, MotionRegion::LowerBody);
     EVT_AT_SetVoice("0224A210", 1, 0); // @text EN: "I've got to find a clue=@" | JA: "手がかりを探さないとな…"
     HLib::SetupTaskDelay(73);
@@ -136,7 +136,7 @@ void SwitchDone_Callback(void *) {
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 962, 1);
-    SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
     RestoreControls();
     HLib::DestroyCurrentTask();
 }
@@ -150,7 +150,7 @@ void PushSwitch() {
     SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
     auto *task = HLib::EnqueueTaskWithoutParameter(SwitchReveal_Callback, 4, 0x0d, token.name);
     HLib::SetupTimedTask(task, 1);
-    EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
     Gravity(ryo, false);
     WaitPackage();
     LoopCamera(2000, ryo, ryo);
@@ -159,10 +159,10 @@ void PushSwitch() {
     const Vector3i rotation{};
     ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
     PlayRyo(0x2086);
-    SetMotionRegionEvalTime(RyoMotion(), 60.0f, MotionRegion::LowerBody);
-    SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(RyoMotion(), 60.0f, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(RyoMotion(), 0);
-    SetMotionFrameTime(RyoMotion(), 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(RyoMotion(), 0, MotionRegion::LowerBody);
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, rotation);
     EV_EnableCharacterDisplay(ryo);
@@ -180,7 +180,7 @@ void DustBox_Callback(void *) {
     }
     switch (phase) {
     case 0: {
-        SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(RyoMotion(), 0);
         mtwkSetExtraFlag(RyoMotion(), 17, 0);
         Gravity(trash, false);
@@ -190,7 +190,7 @@ void DustBox_Callback(void *) {
         EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, rotation);
         WaitPackage();
         mtwkRequestMotion(RyoMotion(), 0x2083, MotionRegion::LowerBody);
-        SetMotionRegionEvalTime(RyoMotion(), 120.0f, MotionRegion::LowerBody);
+        mtwkSetRegionEvalTime(RyoMotion(), 120.0f, MotionRegion::LowerBody);
         srchSetLookMode();
         SetDisplayFlagForProp(SHEN_NAME(M736), 0);
         ++phase;
@@ -203,9 +203,9 @@ void DustBox_Callback(void *) {
     case 2: {
         const Vector3 position{0.12287f, -0.26031199f, -0.17556299f};
         const std::array<std::int32_t, 3> rotation{-7260, -17515, 7113};
-        EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity | CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
-        EV_SetCharaControllerFlags(trash, CharacterControlApplyGravity | CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
-        SetFixoDataForMotionWork(FindCharacterByScenarioName(trash), FindCharacterByScenarioName(ryo), 14, position, rotation);
+        EV_SetCharaControllerFlags(ryo, CCMF_ApplyGravity | CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(trash, CCMF_ApplyGravity | CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
+        SetFixoDataForMotionWork(ctrlGetScenarioChara(trash), ctrlGetScenarioChara(ryo), 14, position, rotation);
         ++phase;
         break;
     }
@@ -219,11 +219,11 @@ void DustBox_Callback(void *) {
         HLib::SetupTaskDelay(30);
         break;
     case 5: {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KORO"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KORO"), 0);
         EV_stepSetFlags(0, 267);
         HLib::DestroyCurrentTask();
         DateTime time{};
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         const int minutes = 60 * time.hour + time.minute + 30;
         time.hour = static_cast<std::int8_t>(minutes / 60);
         time.minute = static_cast<std::int8_t>(minutes % 60);
@@ -248,14 +248,14 @@ void DarkFree_Callback(void *) {
         RestoreControls();
     }
     if (darkPhase == 1) {
-        CopyMotionTransition(RyoMotion(), &position, 0, 0, 0);
+        mtwkCopyTransition(RyoMotion(), &position, 0, 0, 0);
         darkPhase = 2;
     }
     if (!ComputeAngle(position, 1.5f, 0x4000, 0x8000, current) && ryoNotBusy()) {
         SetPlayerControlEnabled(0);
         mtwkRequestMotion(RyoMotion(), 0xf002, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(RyoMotion(), 1);
-        SetMotionFrameTime(RyoMotion(), 15, MotionRegion::LowerBody);
+        mtwkSetFrameTime(RyoMotion(), 15, MotionRegion::LowerBody);
         HLib::SetupTaskDelay(KORO_PlayDialogue(2));
         darkPhase = 1;
     }
@@ -272,15 +272,15 @@ void SearchStart_Callback(void *) {
         EV_ResetFreeTalkFlags();
         CameraUtilityParameters camera{1, 0};
         camCtrlUtil(CameraUtilityMode::ForceSearchCam, reinterpret_cast<std::intptr_t>(&camera));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("KORO"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         controlsRestored = 1;
         lightOn = 0;
         ptycCharaUnlock(SHEN_NAME(REN_));
         DeactivatePartyCompanion(SHEN_NAME(REN_));
         Gravity(trash, false);
-        SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
         WaitPackage();
         constexpr const char *models[]{"T1G", "T2G", "T3G", "T4G"};
         for (std::size_t i = 0; i < scraps.size(); ++i) {
@@ -316,8 +316,8 @@ void SearchStart_Callback(void *) {
     case 3:
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
-        SetMotionRegionFlag(RyoMotion(), 73, 0, MotionRegion::LeftArm);
-        SetMotionRegionFlag(RyoMotion(), 73, 0, MotionRegion::RightArm);
+        mtwkSetRegionFlag(RyoMotion(), 73, 0, MotionRegion::LeftArm);
+        mtwkSetRegionFlag(RyoMotion(), 73, 0, MotionRegion::RightArm);
         PlayRyo(0xf002);
         RestoreControls();
         HLib::SetCurrentTaskTo(DarkFree_Callback);
@@ -394,9 +394,9 @@ void AreaKOROInit() {
 void AreaKOROMain(std::uintptr_t parameter) {
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(1, "0224");
-    SetLowQualityHands(FindCharacterByScenarioName(ryo));
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(ryo), 1, 0, 0);
+    SetLowQualityHands(ctrlGetScenarioChara(ryo));
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(ryo), 1, 0, 0);
     EV_EnableCharacterDisplay(ryo);
     state = static_cast<std::int32_t>(parameter);
     phase = 0;
@@ -416,11 +416,11 @@ void AreaKOROMain(std::uintptr_t parameter) {
         PushSwitch();
         return;
     } else {
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ryo), 1, reinterpret_cast<std::byte *>(leftHand.data()), 10);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(ryo), 0, reinterpret_cast<std::byte *>(rightHand.data()), 10);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ryo), 1, reinterpret_cast<std::byte *>(leftHand.data()), 10);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(ryo), 0, reinterpret_cast<std::byte *>(rightHand.data()), 10);
         const Vector3i left{0, 2730, 0}, right{0, 63898, 0};
-        ApplyCharacterHandRotation(FindCharacterByScenarioName(ryo), 1, 4, &left);
-        ApplyCharacterHandRotation(FindCharacterByScenarioName(ryo), 0, 4, &right);
+        ApplyCharacterHandRotation(ctrlGetScenarioChara(ryo), 1, 4, &left);
+        ApplyCharacterHandRotation(ctrlGetScenarioChara(ryo), 0, 4, &right);
         LoopCamera(1030, cameraOwner, cameraOwner);
         SetDisplayFlagForProp(SHEN_NAME(M736), 0);
         callback = DustBox_Callback;

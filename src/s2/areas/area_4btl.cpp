@@ -71,7 +71,7 @@ struct ClearNpcTask {
 };
 static_assert(sizeof(ClearNpcTask) == 0x20);
 Character *CharacterFor(shen_name name) {
-    return FindCharacterByScenarioName(name);
+    return ctrlGetScenarioChara(name);
 }
 void Camera(std::int32_t index, shen_name eye = cam, shen_name target = cam, std::int32_t delay = 0) {
     EVT_AT_SetCam(index, eye, target, 0, 0, delay);
@@ -311,11 +311,11 @@ std::int32_t Lost(BattleTask &task) {
 void InitializeBattle(BattleTask &task) {
     EV_SetNewSceneIndex();
     const char *const package = task.opponent.name == sam.name ? "4NIN_SAM" : "4NIN_LLY";
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(package), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(package), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(package), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(package), 0);
     EV_FreeAuthorPak(1, task.opponent.name == sam.name ? "0082" : "0083");
     CreateEventCharacter(CharacterCreationHighModel, nullptr, dummyModel);
     CreateEventCharacter(CharacterCreationHighModel, nullptr, ball);
@@ -418,7 +418,7 @@ void FinishBattle(BattleTask &task) {
     if (EV_GetShenmueFlag(0x378))
         EV_stepSetFlags(0, 0x378);
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (outcome == 7 && ((time.hour == 2 && time.minute >= 30) || (time.hour >= 3 && time.hour <= 8))) {
         EV_stepSetFlags(2, opponent.name == sam.name ? 0x81 : 0x82);
         EV_scenQueueLoad(g_actNumber, SHEN_NAME(AR02) | 0x1000000U, 1);
@@ -432,7 +432,7 @@ void FinishBattle(BattleTask &task) {
         EV_debug_log("4BTL\\e4BTL_et_battle_four.c", 401, "======================================\n");
     }
     EV_FreeAuthorPak(0, opponent.name == sam.name ? "0082" : "0083");
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(opponent.name == sam.name ? "4NIN_SAM" : "4NIN_LLY"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(task.self);
@@ -444,12 +444,12 @@ void FinishBattle(BattleTask &task) {
         if (opponent.name == lly.name)
             EVT_AT_SetAngY(ryo, ryo, 180, 0);
         EVT_AT_SetMot(ryo, 0xf003, 0, 1, 0x40000000U, 0);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_LoadNPCRoute("NPC_AR02.BIN");
         Film(255, 0, 30);
     } else {
         EVT_AT_SetAngY(ryo, ryo, 90, 0);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
     }
     SetCharaKill(dummyModel, 1);

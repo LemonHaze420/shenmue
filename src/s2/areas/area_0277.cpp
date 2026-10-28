@@ -54,12 +54,12 @@ void Cleanup0277(Area0277Parameter *parent) {
     AddInventoryItem(11, 1, 0);
     AddInventoryItem(12, 1, 0);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 22;
     date.minute = 0;
     SetCurrentDateTimeTo(date);
     for (const shen_name *character = AREA_0277_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -192,7 +192,7 @@ void Restore0277Characters() {
 // @verified - p
 void Setup0277Scene() {
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 17;
     date.minute = 25;
     SetCurrentDateTimeTo(date);

@@ -88,10 +88,10 @@ void AnanLoadBoard(void *data) {
     if (!work)
         return;
     const char *directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    if (!EV_ControlPackageResources(
+    if (!EV_pakUtils(
             PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(ANBD_BOARD_PACKAGE)))
         return;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     Vector3 position = ANBD_BOARD_LOCAL_POSITION;
     Vector3i rotation = ANBD_BOARD_ROTATION;
     ApplyScenarioTranslationAndRotation(&ANBD_BOARD_ORIGIN, &rotation, &position);
@@ -116,7 +116,7 @@ void AnanTrackRyo(void *data) {
     }
     if (work->lifecycle & 0x10000000U) {
         if (work->lifecycle & 0x40000000U) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(ANAN_RYO), nullptr, 0);
             work->lifecycle &= ~0x40000000U;
         }
         work->ryoTask = nullptr;
@@ -125,19 +125,19 @@ void AnanTrackRyo(void *data) {
     }
     if (work->targets[0].name == ANAN_INVALID.name) {
         if (work->lifecycle & 0x40000000U) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(ANAN_RYO), nullptr, 0);
             work->lifecycle &= ~0x40000000U;
         }
         return;
     }
     Vector3 point;
     if (work->targets[0].name)
-        GetMotionBonePosition(scenFindMotionwork(work->targets[0]), MB_Head, &point);
+        mtwkGetBonePosition(scenFindMotionwork(work->targets[0]), MB_Head, &point);
     else
         point = work->positions[0];
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_RYO), &point, static_cast<std::uint16_t>(work->positionModes[0]));
+    mtwkUpdateWithPosition(scenFindMotionwork(ANAN_RYO), &point, static_cast<std::uint16_t>(work->positionModes[0]));
     const std::uint16_t operation = work->transitionFrames[0] ? static_cast<std::uint16_t>((work->transitionFrames[0] << 8) + 4) : 3;
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_RYO), nullptr, operation);
+    mtwkUpdateWithPosition(scenFindMotionwork(ANAN_RYO), nullptr, operation);
     work->lifecycle |= 0x40000000U;
 }
 void AnanTrackMan(void *data) {
@@ -148,7 +148,7 @@ void AnanTrackMan(void *data) {
     }
     if (work->lifecycle & 0x20000000U) {
         if (work->lifecycle & 0x80000000U) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_MAN), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(ANAN_MAN), nullptr, 0);
             work->lifecycle &= ~0x80000000U;
         }
         work->ananTask = nullptr;
@@ -157,19 +157,19 @@ void AnanTrackMan(void *data) {
     }
     if (work->targets[1].name == ANAN_INVALID.name) {
         if (work->lifecycle & 0x80000000U) {
-            UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_MAN), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(ANAN_MAN), nullptr, 0);
             work->lifecycle &= ~0x80000000U;
         }
         return;
     }
     Vector3 point;
     if (work->targets[1].name)
-        GetMotionBonePosition(scenFindMotionwork(work->targets[1]), MB_Head, &point);
+        mtwkGetBonePosition(scenFindMotionwork(work->targets[1]), MB_Head, &point);
     else
         point = work->positions[1];
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_MAN), &point, static_cast<std::uint16_t>(work->positionModes[1]));
+    mtwkUpdateWithPosition(scenFindMotionwork(ANAN_MAN), &point, static_cast<std::uint16_t>(work->positionModes[1]));
     const std::uint16_t operation = work->transitionFrames[1] ? static_cast<std::uint16_t>((work->transitionFrames[1] << 8) + 4) : 3;
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ANAN_MAN), nullptr, operation);
+    mtwkUpdateWithPosition(scenFindMotionwork(ANAN_MAN), nullptr, operation);
     work->lifecycle |= 0x80000000U;
 }
 const ScriptAreaDefinition ananScriptDefinition{.areaId = ANAN_AREA, .field04 = 0, .init = InitializeAnan, .main = RunAnan};

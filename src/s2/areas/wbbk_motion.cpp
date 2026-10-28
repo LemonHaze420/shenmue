@@ -28,14 +28,14 @@ void BookCompanionWaitCopy(void *) {
 void BookCompanionChangeSide(void *) {
     if (bookCompanionControl.frame == 1) {
         mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_SAI), 0);
-        SetMotionFrameTime(scenFindMotionwork(BOOK_SAI), 0, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(BOOK_SAI), 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(scenFindMotionwork(BOOK_SAI), 17, 0);
         const Vector3 position{.x = bookCompanionControl.side ? 328.29999f : 332.70001f, .y = 126.98f, .z = 232.81f};
         SetBookActorPose(BOOK_SAI, position, bookCompanionControl.side ? 32768 : 26214);
         mtwkRequestMotion(scenFindMotionwork(BOOK_SAI), 0xf006, MotionRegion::LowerBody);
     } else if (bookCompanionControl.frame == 10) {
         mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_SAI), 1);
-        SetMotionFrameTime(scenFindMotionwork(BOOK_SAI), 20, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(BOOK_SAI), 20, MotionRegion::LowerBody);
         mtwkRequestMotion(scenFindMotionwork(BOOK_SAI), 0x1897, MotionRegion::LowerBody);
     }
 }
@@ -43,21 +43,21 @@ void BookCompanionChangeSide(void *) {
 
 void SetBookActorPose(shen_name actor, const Vector3 &position, std::int32_t yaw) {
     const Vector3i rotation{.x = 0, .y = yaw, .z = 0};
-    SetMotionRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(actor), 0);
-    SetMotionFrameTime(scenFindMotionwork(actor), 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(actor), 0, MotionRegion::LowerBody);
     EV_AT_SetPos(actor, EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(actor, EventTransformFlags::AllAxes, rotation);
 }
 void SetBookActorMotion(shen_name actor, std::uint16_t motion) {
-    SetMotionRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
-    SetMotionFrameTime(scenFindMotionwork(actor), 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(actor), 0, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(actor), 0);
     mtwkRequestMotion(scenFindMotionwork(actor), motion, MotionRegion::LowerBody);
 }
 void SetBookCompanionPose(const Vector3 &position, std::int32_t yaw) {
     if (mtwkSetExtraFlag(scenFindMotionwork(BOOK_SAI), 58, 1))
-        CopyMotionTransition(scenFindMotionwork(BOOK_SAI), nullptr, 0, 1, 0);
+        mtwkCopyTransition(scenFindMotionwork(BOOK_SAI), nullptr, 0, 1, 0);
     SetBookActorPose(BOOK_SAI, position, yaw);
     mtwkRequestMotion(scenFindMotionwork(BOOK_SAI), 0x1897, MotionRegion::LowerBody);
     bookCompanionControl.state = 0;

@@ -63,11 +63,11 @@ void InitializeKsht() {
 void StartKsht(std::uintptr_t argument) {
     const std::int32_t state = static_cast<std::int32_t>(argument);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     camCtrlCacheTransform();
     if (state >= 5100 && state <= 5107) {
         EV_PTYCUtils(KSHT_SIN, 3, 1);
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         date.hour = 17;
         date.minute = 12;
         SetCurrentDateTimeTo(date);

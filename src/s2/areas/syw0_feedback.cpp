@@ -17,33 +17,33 @@ void Syw0PlaceTeacher(std::int32_t practice) {
 }
 void Syw0BeginTeacherGesture(CompiledSequenceWork &sequence) {
     void *event = sequence.event;
-    if (GetMotionAnimationId(scenFindMotionwork(SYW0_SYE), MotionRegion::LowerBody) != 8841 &&
-        !SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 65, 1, MotionRegion::LowerBody))
+    if (mtwkGetAnimationId(scenFindMotionwork(SYW0_SYE), MotionRegion::LowerBody) != 8841 &&
+        !mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 65, 1, MotionRegion::LowerBody))
         return;
     const std::uint32_t gesture = Syw0Value<std::uint32_t>(event, 0x65c);
     if (gesture <= 2) {
         Syw0PlaceTeacher(Syw0Value<std::int32_t>(event, 0x5e8));
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYW0_SYE), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYW0_SYE), nullptr, 0);
         mtwkRequestMotion(scenFindMotionwork(SYW0_SYE), static_cast<std::uint16_t>(8838 + gesture), MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 66, 2, MotionRegion::LowerBody);
-    } else if (gesture == 3 && SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 65, 1, MotionRegion::LowerBody)) {
+        mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 66, 2, MotionRegion::LowerBody);
+    } else if (gesture == 3 && mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 65, 1, MotionRegion::LowerBody)) {
         Syw0PlaceTeacher(Syw0Value<std::int32_t>(event, 0x5e8));
         Vector3 target;
         EV_GetCharaPosition(SYW0_RYO, 5, &target, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
         mtwkRequestMotion(scenFindMotionwork(SYW0_SYE), 8841, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 66, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 66, 0, MotionRegion::LowerBody);
     }
     Syw0Value(event, 0x65c, gesture + 1 > 2 ? std::uint32_t{0} : gesture + 1);
 }
 void Syw0EndTeacherGesture() {
-    if (!SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 65, 1, MotionRegion::LowerBody))
+    if (!mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 65, 1, MotionRegion::LowerBody))
         return;
     Vector3 target;
     EV_GetCharaPosition(SYW0_RYO, 5, &target, EventTransformFlags::World);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(SYW0_SYE), &target, 0);
     mtwkRequestMotion(scenFindMotionwork(SYW0_SYE), 8841, MotionRegion::LowerBody);
 }
 namespace {

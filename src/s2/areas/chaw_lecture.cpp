@@ -143,14 +143,14 @@ void ChawEndLectureCallback(void *data) {
         } else {
             if (!EV_GetPlayerFlag(static_cast<PlayerFlagReadMode>(3), 97)) {
                 DateTime date;
-                GetCurrentDateTime(date);
+                shenGetCurrentDateTime(date);
                 date.hour = 23;
                 date.minute = 0;
                 SetCurrentDateTimeTo(date);
             }
             SuspendParticleEffect(0, chawSmoke);
             FreeParticleEffect(0, chawSmoke);
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("LECTURE"), 0);
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("LECTURE"), 0);
             EV_AT_SetPos(CHAW_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, {59.6f, 103.4f, 308.7f});
             EV_AT_SetAngY(CHAW_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, {0, 57344, 0});
             mtwkRequestMotion(scenFindMotionwork(CHAW_RYO), 0xf003, MotionRegion::LowerBody);

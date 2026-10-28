@@ -111,17 +111,17 @@ void WakeAuthorCallback(void *) {
 }
 void WakeAfterAuthorCallback(void *) {
     using enum CameraState;
-    EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
-    SetMotionRegionFlag(FindMotionWork(FindCharacterByScenarioName(ryo)), 71, 0, MotionRegion::LowerBody);
+    EV_SetCharaControllerFlags(ryo, CCMF_UpdateHeight, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
+    mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, {230.75999450683594f, 111.69999694824219f, 226.75f});
     EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, {0, 63192, 0});
-    mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
+    mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0xf002, MotionRegion::LowerBody);
     EV_FreeAuthorPak(0, "0033");
     if (EV_GetShenmueFlag(0x2a)) {
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         date.hour = 8;
         date.minute = 45;
         SetCurrentDateTimeTo(date);
@@ -130,7 +130,7 @@ void WakeAfterAuthorCallback(void *) {
         HLib::DestroyCurrentTask();
     } else if (EV_GetShenmueFlag(0x29)) {
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         date.hour = 9;
         date.minute = 0;
         SetCurrentDateTimeTo(date);
@@ -159,7 +159,7 @@ void MainCallback(void *) {
     if (ryoNotBusy() && shenTrySleepTrigger(&sleepBox)) {
         SetPlayerControlEnabled(0);
         EV_setHoldStatesFlags(0);
-        mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
+        mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0xf002, MotionRegion::LowerBody);
         HLib::EnqueueTaskWithoutParameter(SleepRunCallback, 4, 0xb, static_cast<std::int32_t>(sleepTask.name));
     }
     Vector3i rotation{0, 65172, 0};
@@ -203,7 +203,7 @@ void AreaWTA0Main(std::uint32_t startParameters) {
         areaFlags |= 1U;
         SetPlayerControlEnabled(0);
         EV_setHoldStatesFlags(0);
-        mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
+        mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0xf002, MotionRegion::LowerBody);
         HLib::Task *task = HLib::EnqueueTaskWithoutParameter(SleepAdmissionCallback, 4, 0xb, static_cast<std::int32_t>(sleepTask.name));
         HLib::SetupTimedTask(task, 10);
     }

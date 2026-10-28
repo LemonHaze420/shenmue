@@ -74,7 +74,7 @@ bool IsNight(const DateTime &time) {
 }
 void ApplyKRC1Lighting(std::int32_t insideCave) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     SetMapModelDataDefaultVertexShader();
     SetDefaultVS();
     ReinitFogTasks(0);
@@ -83,7 +83,7 @@ void ApplyKRC1Lighting(std::int32_t insideCave) {
     for (std::int32_t index = 0; index != 9; ++index)
         SetMapModelCommandRoutingEnabled(1, index);
     DateTime secondTime;
-    GetCurrentDateTime(secondTime);
+    shenGetCurrentDateTime(secondTime);
     if (insideCave) {
         runtime.waveEnabled = 0;
         EV_SetObjectFlagByIndex(6, 0);
@@ -188,7 +188,7 @@ void SetKRC1EffectVisibility(std::int32_t hidden) {
 }
 void SetKRC1WaveState(std::int32_t enabled) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     runtime.waveEnabled = enabled;
     if (!enabled) {
         EV_SetObjectFlagByIndex(6, 0);
@@ -280,7 +280,7 @@ void AreaKRC1Main(std::uint32_t) {
     EV_UpdateWeatherForMinute(0, 0, 0, 0.1f);
     EV_UpdateWeatherForMinute(1, 0, 0, 0.0f);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     ApplyKRC1Lighting(runtime.insideCave);
     EV_LoadAudio("KRC1_000", IsNight(time) ? 1 : 0);
     HLib::EnqueueTaskWithoutParameter(KRC1MainLoop, 4, 0x0b, static_cast<std::int32_t>(SHEN_NAME(krc1)));

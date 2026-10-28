@@ -57,7 +57,7 @@ void InitializeQtnjEvent(QtnjEventWork *work) {
     EV_ResetFreeTalkFlags();
     EVT_SetQteRetryFrames(36);
     EVT_SetQteFailureCount(0);
-    GetCurrentDateTime(eventTemporaryDateTime);
+    shenGetCurrentDateTime(eventTemporaryDateTime);
     eventMovementStates.fill(0);
     Vector3 position{};
     EV_GetCharaPosition(QTNJ_RYO, 0, &position, EventTransformFlags::World);
@@ -66,13 +66,13 @@ void InitializeQtnjEvent(QtnjEventWork *work) {
     work->trialRecord = QTNJ_TRIALS + work->selection[0];
     work->admission = Queue_EVT_AT_ReadChr(work->task, QTNJ_ADMISSION_CHARACTERS);
     const char *directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("284E"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("284E"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("QTNJ"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QTNJ"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QTNJ"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("QTNJ"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QTNJ"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QTNJ"), 0);
     EV_FreeAuthorPak(1, "0284");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0284A000");
@@ -88,9 +88,9 @@ void QtnjStartCallback(void *parameter) {
     work->state = 0;
     work->trial = 0;
     work->cooldown = 0;
-    SetLowQualityHands(FindCharacterByScenarioName(QTNJ_RYO));
-    SetLowQualityHands(FindCharacterByScenarioName(QTNJ_REN));
-    EV_mtwkSetEnabled(scenFindMotionwork(QTNJ_RYO), 1);
+    SetLowQualityHands(ctrlGetScenarioChara(QTNJ_RYO));
+    SetLowQualityHands(ctrlGetScenarioChara(QTNJ_REN));
+    mtwkSetEnabled(scenFindMotionwork(QTNJ_RYO), 1);
     mtwkSetExtraFlag(scenFindMotionwork(QTNJ_RYO), 0, 0);
     if (work->npcReader)
         for (std::int32_t &request : work->npcReader->requests)
@@ -169,14 +169,14 @@ void QtnjNextTrialCallback(void *parameter) {
     motion.character = QTNJ_RYO;
     EVT_AT_SetMot_Callback(&motion);
     GetMotionFrameCount(0xf002);
-    SetHighModelXYZ(FindCharacterByScenarioName(QTNJ_RYO), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(QTNJ_RYO), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QTNJ_RYO), 0, reinterpret_cast<std::byte *>(commonAuthoredHandPose), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QTNJ_RYO), 1, reinterpret_cast<std::byte *>(commonAuthoredHandPose), 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(QTNJ_REN), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(QTNJ_REN), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QTNJ_REN), 0, reinterpret_cast<std::byte *>(commonAuthoredHandPose), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QTNJ_REN), 1, reinterpret_cast<std::byte *>(commonAuthoredHandPose), 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(QTNJ_RYO), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(QTNJ_RYO), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QTNJ_RYO), 0, reinterpret_cast<std::byte *>(commonAuthoredHandPose), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QTNJ_RYO), 1, reinterpret_cast<std::byte *>(commonAuthoredHandPose), 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(QTNJ_REN), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(QTNJ_REN), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QTNJ_REN), 0, reinterpret_cast<std::byte *>(commonAuthoredHandPose), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QTNJ_REN), 1, reinterpret_cast<std::byte *>(commonAuthoredHandPose), 0);
     work->chase.source = QTNJ_REN;
     work->chase.target = QTNJ_RYO;
     work->chase.delay = 1;
@@ -362,7 +362,7 @@ void QtnjCheckTrialCallback(void *parameter) {
         ++work->trialRecord;
         HLib::SetCurrentTaskTo(QtnjNextTrialCallback);
     } else if (work->success != 0) {
-        EV_mtwkSetEnabled(scenFindMotionwork(QTNJ_RYO), 1);
+        mtwkSetEnabled(scenFindMotionwork(QTNJ_RYO), 1);
         mtwkSetExtraFlag(scenFindMotionwork(QTNJ_RYO), 0, 0);
         EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
         EV_authSceneCtrl(static_cast<AuthSceneCtrl>(QTNJ_AUTH_SUCCESS.name));
@@ -400,7 +400,7 @@ void QtnjStartFailureAuthorCallback(void *parameter) {
         return;
     }
     CancelEventMovement(work->movementSlot);
-    EV_mtwkSetEnabled(scenFindMotionwork(QTNJ_RYO), 1);
+    mtwkSetEnabled(scenFindMotionwork(QTNJ_RYO), 1);
     mtwkSetExtraFlag(scenFindMotionwork(QTNJ_RYO), 0, 0);
     shen_name author = QTNJ_AUTH_LAST_FAILURE;
     if (work->trial != 3) {
@@ -465,17 +465,17 @@ void QueueQtnjEvent(const std::int32_t *selection) {
 void CleanupQtnjEvent(QtnjEventWork *work) {
     EventSetPositionAngle position{0, QTNJ_RYO, QTNJ_INVALID, {251.5f, 0, 140.4f}, -90, 0};
     EVT_AT_SetPosAng_Callback(&position);
-    hndlSetFlags(FindCharacterByScenarioName(QTNJ_REN));
-    hndlSetFlags(FindCharacterByScenarioName(QTNJ_RYO));
+    hndlSetFlags(ctrlGetScenarioChara(QTNJ_REN));
+    hndlSetFlags(ctrlGetScenarioChara(QTNJ_RYO));
     qteBattleUtil(BattleQteMode::RetireAndFree);
     EV_authSceneCtrl(AuthSceneCtrl::ShowFilmBars);
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0284");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QTNJ"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("284E"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QTNJ"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("284E"), 0);
     ET_AT_KillWork(work->admission);
     for (std::int32_t slot = 0; slot < 20; ++slot)
         CancelEventMovement(slot);

@@ -53,22 +53,22 @@ void KEBIMainCallback(void *data) {
     case 1:
         if (EV_ForceLoadNpc(KEBI_GUARD)) {
             const Vector4 reflector{1, .30000001f, .30000001f, .30000001f};
-            SetReflectorBoardValues(FindCharacterByScenarioName(KEBI_PLAYER), reflector);
+            SetReflectorBoardValues(ctrlGetScenarioChara(KEBI_PLAYER), reflector);
             EV_SetRefBoardParamsFor(KEBI_PLAYER, 1);
-            SetReflectorBoardValues(FindCharacterByScenarioName(KEBI_GUARD), reflector);
+            SetReflectorBoardValues(ctrlGetScenarioChara(KEBI_GUARD), reflector);
             EV_SetRefBoardParamsFor(KEBI_GUARD, 1);
             EV_SetRefBoardParamsFor(KEBI_PLAYER, 1);
             EV_SetRefBoardParamsFor(KEBI_GUARD, 1);
             EV_SetCharacterAlphaEnabled(KEBI_GUARD, false);
             Vector3 playerPosition;
             EV_GetCharaPosition(KEBI_PLAYER, 5, &playerPosition, EventTransformFlags::Local);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_GUARD), &playerPosition, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KEBI_GUARD), &playerPosition, 0);
             EV_GetCharaPosition(KEBI_PLAYER, CHARACTER_TRANSLATION_ROOT, &playerPosition, EventTransformFlags::World);
             Vector3 guardPosition;
             EV_GetCharaPosition(KEBI_GUARD, CHARACTER_TRANSLATION_ROOT, &guardPosition, EventTransformFlags::World);
             const std::int32_t yaw = InverseFixedAtan2(playerPosition.x - guardPosition.x, playerPosition.z - guardPosition.z);
             EV_GetCharaPosition(KEBI_GUARD, CHARACTER_TRANSLATION_ROOT, &guardPosition, EventTransformFlags::World);
-            CopyMotionTransition(scenFindMotionwork(KEBI_GUARD), &guardPosition, static_cast<std::uint16_t>(yaw), 0, 0);
+            mtwkCopyTransition(scenFindMotionwork(KEBI_GUARD), &guardPosition, static_cast<std::uint16_t>(yaw), 0, 0);
             ++work.frame;
             EventSetCamera camera{0, 3150, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, {}, 0, 0};
             EVT_AT_SetCam_Callback(&camera);
@@ -83,7 +83,7 @@ void KEBIMainCallback(void *data) {
             EVT_AT_SetMot(KEBI_GUARD, KEBI_STOP_MOTION, 0, 1, 0x80000000U, 0);
             Vector3 position;
             EV_GetCharaPosition(KEBI_GUARD, 5, &position, EventTransformFlags::Local);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_PLAYER), &position, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(KEBI_PLAYER), &position, 0);
             EVT_AT_SetCam(3160, KEBI_GUARD, KEBI_GUARD, 0, 0, 20);
             EVT_AT_SetCam(3170, KEBI_GUARD, KEBI_GUARD, 0, 0, 241);
             const std::uint8_t choice = static_cast<std::uint8_t>(static_cast<std::int64_t>(GetRandomNumberInRange(3.0f)));
@@ -107,8 +107,8 @@ void KEBIMainCallback(void *data) {
         Vector3 position;
         EV_GetCharaPosition(KEBI_PLAYER, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         position.z = 306.0f;
-        CopyMotionTransition(scenFindMotionwork(KEBI_PLAYER), &position, 0x8000, 0, 0);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_PLAYER), nullptr, 0);
+        mtwkCopyTransition(scenFindMotionwork(KEBI_PLAYER), &position, 0x8000, 0, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(KEBI_PLAYER), nullptr, 0);
         break;
     }
     case 244: {
@@ -140,8 +140,8 @@ void KEBIExitCallback(void *data) {
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_PLAYER), nullptr, 0);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(KEBI_GUARD), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(KEBI_PLAYER), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(KEBI_GUARD), nullptr, 0);
     EV_CleanupMapControlTask();
     EV_HLKillOtherHierarchyTask(work.self);
 }

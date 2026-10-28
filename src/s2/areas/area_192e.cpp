@@ -76,13 +76,13 @@ void Update192E(void *taskData) {
 // @verified - p
 void Cleanup192E(Area192EParameter *parent) {
     for (const shen_name *character = AREA_192E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_192E_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_192E_ARCHIVE), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_192E_ARCHIVE), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_192E_SOURCE.name)
@@ -125,15 +125,15 @@ void Update192EAuthorTask(void *taskData) {
 
 // @verified - p
 std::int64_t Select192EPackage(std::int32_t selection) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(AREA_192E_FIRST_PACKAGE), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_192E_FIRST_PACKAGE), 0);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(AREA_192E_SECOND_PACKAGE), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_192E_SECOND_PACKAGE), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(AREA_192E_FIRST_PACKAGE), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_192E_FIRST_PACKAGE), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(AREA_192E_SECOND_PACKAGE), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_192E_SECOND_PACKAGE), 0);
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
     const char *const package = selection ? AREA_192E_SECOND_PACKAGE : AREA_192E_FIRST_PACKAGE;
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(package));
-    return EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    return EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 
 const ScriptAreaDefinition area192EScriptDefinition{.areaId = AREA_192E, .field04 = 0, .init = Initialize192E, .main = Start192E};

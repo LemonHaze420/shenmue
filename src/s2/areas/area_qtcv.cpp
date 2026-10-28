@@ -52,21 +52,21 @@ void InitializeQtcvResources(QtcvEventWork *work) {
     work->changedFlag330 = 0;
     work->placement = &QTCV_PLACEMENTS[work->configuration->kind];
     work->characters = Queue_EVT_AT_ReadChr(work->task, QTCV_LOAD_CHARACTERS);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("301E"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QTCV"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QTCV"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QTCV"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QTCV"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QTCV"), 0);
     EV_FreeAuthorPak(1, "0301");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0301E000");
     shenSetClockAndCompassRenderTo(1);
     QtcvDormantBoundary();
-    SetPluralControlFor(FindCharacterByScenarioName(QTCV_PLAYER), 1);
-    SetPluralControlFor(FindCharacterByScenarioName(QTCV_REN), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(QTCV_PLAYER), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(QTCV_REN), 1);
 }
 // @verified - p
 void QtcvStartCallback(void *data) {
@@ -76,16 +76,16 @@ void QtcvStartCallback(void *data) {
     EVT_AT_SetAngY(QTCV_STAGE, QTCV_INVALID, work.placement->yaw, 0);
     EVT_AT_SetPos(QTCV_SECOND_STAGE, QTCV_INVALID, {}, 0);
     EVT_AT_SetAngY(QTCV_SECOND_STAGE, QTCV_INVALID, 0, 0);
-    SetLowQualityHands(FindCharacterByScenarioName(QTCV_PLAYER));
-    SetLowQualityHands(FindCharacterByScenarioName(QTCV_REN));
-    SetHighModelXYZ(FindCharacterByScenarioName(QTCV_PLAYER), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(QTCV_PLAYER), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QTCV_PLAYER), 0, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QTCV_PLAYER), 1, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(QTCV_REN), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(QTCV_REN), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QTCV_REN), 0, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(QTCV_REN), 1, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
+    SetLowQualityHands(ctrlGetScenarioChara(QTCV_PLAYER));
+    SetLowQualityHands(ctrlGetScenarioChara(QTCV_REN));
+    SetHighModelXYZ(ctrlGetScenarioChara(QTCV_PLAYER), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(QTCV_PLAYER), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QTCV_PLAYER), 0, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QTCV_PLAYER), 1, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(QTCV_REN), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(QTCV_REN), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QTCV_REN), 0, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(QTCV_REN), 1, reinterpret_cast<std::byte *>(crateGripHandPose), 0);
     AT_SetLocalBaseChara(QTCV_DUMMY_PLAYER, QTCV_PLAYER);
     AT_SetLocalBaseChara(QTCV_DUMMY_REN, QTCV_REN);
     EVT_AT_SetPos(QTCV_DUMMY_PLAYER, QTCV_PLAYER, {}, 0);
@@ -190,17 +190,17 @@ void QtcvEndCallback(void *data) {
 // @verified - p
 void CleanupQtcvResources(QtcvEventWork *work) {
     EVT_AT_SetPosAng(QTCV_PLAYER, QTCV_STAGE, 0, 2, 180, 0);
-    SetPluralControlFor(FindCharacterByScenarioName(QTCV_PLAYER), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(QTCV_REN), 0);
-    hndlSetFlags(FindCharacterByScenarioName(QTCV_REN));
-    hndlSetFlags(FindCharacterByScenarioName(QTCV_PLAYER));
+    SetPluralControlFor(ctrlGetScenarioChara(QTCV_PLAYER), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(QTCV_REN), 0);
+    hndlSetFlags(ctrlGetScenarioChara(QTCV_REN));
+    hndlSetFlags(ctrlGetScenarioChara(QTCV_PLAYER));
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0301");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QTCV"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("301E"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QTCV"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("301E"), 0);
     ET_AT_KillWork(work->characters);
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     EV_NPC_NewLoadSw(1);

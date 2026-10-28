@@ -955,7 +955,7 @@ void InitializeMazeFrameEnvironment() {
     mazeClearWeather = false;
     mazeHeavyWeather = false;
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     if (static_cast<std::uint8_t>(date.hour - 7) <= 9) {
         mazeHeavyWeather = GetWeatherPressure() > 0.69999999f;
         if (GetWeatherPressure() < 0.30000001f)
@@ -1687,13 +1687,13 @@ void DrawMazeAuthoredAnimatedObject(MazeAuthoredObject &object) {
 
 void DrawMazeAuthoredHourObject(MazeAuthoredObject &object) {
     DateTime current{};
-    GetCurrentDateTime(current);
+    shenGetCurrentDateTime(current);
     if (current.hour != mazeHourDate.hour && current.minute == mazeHourDate.minute) {
         mazeHourBlend = 0.99998999f;
         mazePreviousHourFrame = mazeHourFrame;
         if (++mazeHourFrame >= 5)
             mazeHourFrame = 0;
-        GetCurrentDateTime(mazeHourDate);
+        shenGetCurrentDateTime(mazeHourDate);
     }
     ApplyMazeAuthoredUV(object);
     if ((g_loadingFlag & 2U) == 0)
@@ -2497,7 +2497,7 @@ bool InitializeMazeRuntime(std::int32_t act, shen_name area) {
             return false;
         }
         ownsTerrainPackage = true;
-        LoadPak();
+        pakLoadFlush();
         for (const LoadedMapPackage &loaded : GetLoadedMapPackages()) {
             if (std::strncmp(loaded.name.data(), terrainPackage, loaded.name.size()) == 0) {
                 package = &loaded;
@@ -2533,7 +2533,7 @@ bool InitializeMazeRuntime(std::int32_t act, shen_name area) {
     mazeHourBlend = 0.0000099999997f;
     mazeHourFrame = 2;
     mazePreviousHourFrame = 2;
-    GetCurrentDateTime(mazeHourDate);
+    shenGetCurrentDateTime(mazeHourDate);
     if (!InitializeMazeRoadCommandCopies()) {
         ResetMazeState(true);
         return false;
@@ -2956,7 +2956,7 @@ void ResetMazeHourAnimation(std::int32_t frame) {
     mazeHourFrame = frame;
     mazePreviousHourFrame = frame;
     mazeHourBlend = 0.0000099999997f;
-    GetCurrentDateTime(mazeHourDate);
+    shenGetCurrentDateTime(mazeHourDate);
 }
 
 
@@ -2964,7 +2964,7 @@ void SetMazeHourAnimationFrame(std::int32_t frame) {
     mazePreviousHourFrame = mazeHourFrame;
     mazeHourFrame = frame;
     mazeHourBlend = 0.99998999f;
-    GetCurrentDateTime(mazeHourDate);
+    shenGetCurrentDateTime(mazeHourDate);
 }
 
 } // namespace shenmue::s2

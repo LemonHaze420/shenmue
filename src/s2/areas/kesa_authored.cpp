@@ -266,7 +266,7 @@ void KesaSwordPreparationLoop(void *) {
         break;
     case 1935:
         SetNewWindPhaseAndSpeed(16384, 0);
-        SetClothFlag(FindCharacterByScenarioName(KESA_SHENHUA), 16, 1);
+        SetClothFlag(ctrlGetScenarioChara(KESA_SHENHUA), 16, 1);
         break;
     case 1945:
         SetLightSceneIntensity(3, preparationLight);
@@ -323,7 +323,7 @@ void KesaSwordPreparationLoop(void *) {
     SetFireAlpha(kesaTorchEffect, 0);
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         SetNewWindPhaseAndSpeed(16384, 0);
-        SetClothFlag(FindCharacterByScenarioName(KESA_SHENHUA), 16, 1);
+        SetClothFlag(ctrlGetScenarioChara(KESA_SHENHUA), 16, 1);
         SetScenarioCharacterTransparency(sword, 1);
         Black();
         EV_stepSetFlags(0, 227);
@@ -332,8 +332,8 @@ void KesaSwordPreparationLoop(void *) {
     }
 }
 void KesaPrepareEnding(void *) {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MPK01"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AUTHOR5"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MPK01"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AUTHOR5"), 0);
     EV_npcLockUnlock(KESA_SHENHUA);
     EV_npcFree(KESA_SHENHUA);
     EV_ResetFreeTalkFlags();
@@ -341,12 +341,12 @@ void KesaPrepareEnding(void *) {
     SuspendParticleEffect(4, kesaTorchEffect);
     FreeParticleEffect(4, kesaTorchEffect);
     kesaTorchEffect = -1;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("AUTHOR6"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_CheckWarmStartNpcRoute(KESA_SHENHUA);
     EV_ForceLoadNpc(KESA_SHENHUA);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_EnableCharacterDisplay(KESA_SHENHUA);
     EV_SetCharaControllerFlags(KESA_SHENHUA, 1, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(KESA_SHENHUA, 3, NpcCharacterControllerState::Disabled);

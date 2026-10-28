@@ -234,7 +234,7 @@ void HasiAuthCallback(void *data) {
         break;
     case 3:
         camCtrlSetState(Init);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         EV_SetCharaControllerFlags(HASI_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
@@ -246,7 +246,7 @@ void HasiAuthCallback(void *data) {
         SetNaviDisplayOverride(false);
         EV_FreeAuthorPak(0, "0289");
         EV_FreeAuthorPak(0, "0332");
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HASI"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HASI"), 0);
         scenFreeEvent("HASI.EV3");
         EV_CleanupMapControlTask();
         HLib::MarkCurrentTaskForCleanup();
@@ -363,7 +363,7 @@ void HasiEventCallback(void *data) {
             work->state = work->actions[work->action].qte == static_cast<std::uint32_t>(EV_GetCurrentQteStatus() & 0xfff) ? 3 : 8;
         break;
     case 3:
-        if (GetMotionFrame(scenFindMotionwork(HASI_RYO), MotionRegion::LowerBody) >= 110)
+        if (mtwkGetFrame(scenFindMotionwork(HASI_RYO), MotionRegion::LowerBody) >= 110)
             work->state = 4;
         break;
     case 4:
@@ -448,7 +448,7 @@ void HasiEventCallback(void *data) {
         if (EV_GetShenmueFlag(0x1a8) && work->definition->character.name == HASI_STAGE_6.name)
             EV_stepSetFlags(0, 0x1a8);
         camCtrlSetState(Init);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         EV_spmBeginSampleExecute();
         EV_SetCharaControllerFlags(HASI_RYO, ApplyGravity, NpcCharacterControllerState::Enabled);
@@ -460,7 +460,7 @@ void HasiEventCallback(void *data) {
         EV_NPC_NewLoadSw(1);
         EV_FreeAuthorPak(0, "0289");
         EV_FreeAuthorPak(0, "0332");
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HASI"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HASI"), 0);
         scenFreeEvent("HASI.EV3");
         EV_CleanupMapControlTask();
         HLib::MarkCurrentTaskForCleanup();
@@ -494,8 +494,8 @@ void HasiMain(std::uintptr_t argument) {
     if (entry >= 0) {
         SetPlayerControlEnabled(0);
         HasiAdmissionNullsub();
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("HASI"), 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("HASI"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("HASI"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("HASI"), 0);
         if (entry == 10) {
             HLib::Task *const task = HLib::EnqueueTaskWithParameter(HasiAuthCallback, 4, 0x0b, sizeof(HasiEventWork), BRIDGE_BENDING_TASK);
             InitializeHasiAuth(task, 10);
@@ -506,7 +506,7 @@ void HasiMain(std::uintptr_t argument) {
                 EV_stepSetFlags(0, 0x141);
         }
     } else {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HASI"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HASI"), 0);
         RestoreHasiStages();
         scenFreeEvent("HASI.EV3");
         SetPlayerControlEnabled(1);

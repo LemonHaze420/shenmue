@@ -148,7 +148,7 @@ void RelocateRyo() {
     Vector3 position;
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     if (position.z < 277.8999938964844f && position.x > 326.29998779296875f) {
-        SetMotionRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(ryo), 71, 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(scenFindMotionwork(ryo), 17, 0);
         EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, Vector3{337.07000732421875f, 126.97000122070312f, 280.3699951171875f});
         EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, Vector3i{0, 12196, 0}, nullptr);
@@ -232,7 +232,7 @@ void ApplyLighting(std::int32_t night) {
 }
 void WB00MainLoop(void *) {
     DateTime now;
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     Vector3 position;
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     if (now.hour >= 19) {

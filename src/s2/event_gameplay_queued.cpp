@@ -18,12 +18,12 @@ void EVT_AT_Cling(void *taskData) {
         return;
     }
     if (!parameter->mode) {
-        Character *const target = FindCharacterByScenarioName(parameter->target);
-        Character *const character = FindCharacterByScenarioName(parameter->character);
+        Character *const target = ctrlGetScenarioChara(parameter->target);
+        Character *const character = ctrlGetScenarioChara(parameter->character);
         const std::array<std::int32_t, 3> rotation{parameter->rotation.x, parameter->rotation.y, parameter->rotation.z};
         SetFixoDataForMotionWork(target, character, parameter->bone, parameter->position, rotation);
     } else if (parameter->mode == 1) {
-        ResetCharaFixo(FindCharacterByScenarioName(parameter->target));
+        ResetCharaFixo(ctrlGetScenarioChara(parameter->target));
     }
     if (parameter->cleanup) {
         UnregisterEventTask(HLib::GetCurrentTask());
@@ -65,7 +65,7 @@ void EVT_AT_SetFaceLooks_Callback(void *taskData) {
         parameter.delay -= HLib::GetScaledDeltaTick();
         return;
     }
-    SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(parameter.character), static_cast<std::int32_t>(parameter.expression),
+    SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(parameter.character), static_cast<std::int32_t>(parameter.expression),
         static_cast<float>(parameter.duration), parameter.intensity);
     if (parameter.cleanup) {
         UnregisterEventTask(HLib::GetCurrentTask());
@@ -76,7 +76,7 @@ void EVT_AT_SetFaceLooks_Callback(void *taskData) {
 void EVT_AT_SetFaceLooks(shen_name character, std::uint32_t expression, std::int32_t duration, float intensity, std::int32_t delay) {
     if (delay == 0) {
         SetHighModelAndFaceFlagsForChara(
-            FindCharacterByScenarioName(character), static_cast<std::int32_t>(expression), static_cast<float>(duration), intensity);
+            ctrlGetScenarioChara(character), static_cast<std::int32_t>(expression), static_cast<float>(duration), intensity);
         return;
     }
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(EVT_AT_SetFaceLooks_Callback, 6, 0x0b, sizeof(EventFaceLooks), GAMEPLAY_QUEUED_TASK);

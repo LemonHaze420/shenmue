@@ -44,20 +44,20 @@ constexpr BookAuthoredDefinition bookAuthoredDefinitions[]{
 } // namespace
 
 void PrepareBookAuthoredActor(shen_name actor) {
-    if (!FindCharacterByScenarioName(actor))
+    if (!ctrlGetScenarioChara(actor))
         return;
     EV_EnableCharacterDisplay(actor);
     EV_EnsureCharacterDraw(actor);
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
     if ((actor.name & 0xff000000U) == 0x5f000000U) {
         const Vector4 reflector{.x = 1, .y = .3f, .z = .3f, .w = .3f};
         mtwkSetExtraFlag(scenFindMotionwork(actor), 6, 2);
         EV_SetCharacterAlphaEnabled(actor, false);
         SetScenarioReflectorBoardValues(actor, &reflector);
         EV_SetRefBoardParamsFor(actor, 1);
-        hmdlSetFlagsFor(FindCharacterByScenarioName(actor), 0, 8, 16);
-        hmdlSetFlagsFor(FindCharacterByScenarioName(actor), 1, 8, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(actor), 0, 8, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(actor), 1, 8, 16);
     }
 }
 void QueueBookAuthoredScene(std::int32_t scene) {
@@ -103,7 +103,7 @@ bool CompleteBookAuthoredScene() {
     if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded))
         return false;
     for (const shen_name *actor = bookAuthoredActors; actor->name; ++actor) {
-        if (actor->name != BOOK_SAI.name && FindCharacterByScenarioName(*actor)) {
+        if (actor->name != BOOK_SAI.name && ctrlGetScenarioChara(*actor)) {
             EV_DisableCharacterDisplay(*actor);
             EV_ToggleCharacterFlag(*actor);
         }

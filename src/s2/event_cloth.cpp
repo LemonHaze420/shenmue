@@ -21,7 +21,7 @@ void ET_ClothControl_Callback(void *data) {
     for (; entry->frame == work.frame; ++entry) {
         if (!DoesScenarioCharacterExist(entry->character))
             continue;
-        SetClothFlag(FindCharacterByScenarioName(entry->character), static_cast<std::uint8_t>(entry->flag), entry->enabled);
+        SetClothFlag(ctrlGetScenarioChara(entry->character), static_cast<std::uint8_t>(entry->flag), entry->enabled);
         EV_debug_log("common\\et_cloth.c", 59, "*** SetClothFlag:%x %x %x\n", entry->character.name, entry->flag, entry->enabled);
     }
     ++work.frame;

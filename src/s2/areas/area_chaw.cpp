@@ -51,15 +51,15 @@ void AreaCHAWMain(std::uintptr_t argument) {
     if (g_currentMap.name == CHAW_AREA.name) {
         EV_NPC_NewLoadSw(0);
         EV_ResetFreeTalkFlags();
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
             reinterpret_cast<std::uintptr_t>("CHAWAN"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     }
     HLib::Task *task;
     if (entry == 21) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("LECTURE"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         task = HLib::EnqueueTaskWithParameter(ChawPreLectureCallback, 4, 11, sizeof(ChawEventWork), CHAW_TASK);
         Queue_EVT_UTL_LoadNPCChara_3(CHAW_LECTURE_CHARACTERS, task);
     } else
@@ -74,7 +74,7 @@ const ScriptAreaDefinition areaCHAWScriptDefinition{CHAW_AREA, 0, AreaCHAWInit, 
 
 void ChawInitialize(ChawEventWork *work) {
     EV_EventSetUpHelpIcon_0(0x43, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("CHAWAN"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("CHAWAN"), 0);
     SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
     EV_FreeAuthorPak(1, "0038");
     nullsub();
@@ -169,7 +169,7 @@ void ChawRestoreLighting(ChawEventWork *work) {
         AssignLightProgram(static_cast<std::uint32_t>(index - 1));
     } else {
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         if (date.hour >= 19 || g_currentMap.name == SHEN_NAME(AKS0)) {
             EV_lightLoad(SHEN_NAME(0000));
             PushGlobalLightingProgram();
@@ -213,8 +213,8 @@ void ChawSetupAuthorCharacter(shen_name name) {
     EV_SetCharacterAlphaEnabled(name, false);
     SetScenarioReflectorBoardValues(name, &reflector);
     EV_SetRefBoardParamsFor(name, 1);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(name), 0, 8, 16);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(name), 1, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(name), 0, 8, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(name), 1, 8, 16);
     AT_SetLocalBaseChara(name, CHAW_INVALID);
 }
 void ChawFadeOutCallback(void *) {
@@ -233,7 +233,7 @@ void ChawQueueFadeAudioOut(std::int32_t delay) {
 }
 void ChawForwardTimeCallback(void *data) {
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     const std::int32_t minutes = *static_cast<std::int32_t *>(data), hours = minutes / 60;
     date.hour += hours;
     date.minute += minutes - 60 * hours;

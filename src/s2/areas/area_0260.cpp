@@ -230,7 +230,7 @@ void E0260LoopCallback(void *parameter) {
     RestoreE0260Characters(loop->parent->selection);
     loop->parent->state = 0;
     for (const shen_name *character = AREA_0260_CHARACTER_TABLES[loop->parent->selection]; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

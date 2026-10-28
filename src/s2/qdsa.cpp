@@ -66,10 +66,10 @@ void BeginQdsaAuthor(HLib::Task *parent, std::int32_t selector) {
     authorState = 0;
     authorActors = nullptr;
     authorProps = nullptr;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QDSA"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDSA"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDSA"), 0);
     if (selector == 0) {
         authorActors = entranceActors;
         authorProps = entranceProps;
@@ -100,7 +100,7 @@ std::int32_t UpdateQdsaAuthor() {
         if (authorState == 4) {
             ExecuteCleanupFuncForAreaWithCachedScene();
             RestoreQdsaCharacters();
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDSA"), 0);
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDSA"), 0);
             return 1;
         }
         return 0;
@@ -151,7 +151,7 @@ std::int32_t UpdateQdsaAuthor() {
     case 4:
         EV_FreeAuthorPak(0, "0248");
         RestoreQdsaCharacters();
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDSA"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDSA"), 0);
         return 1;
     default:
         return 0;

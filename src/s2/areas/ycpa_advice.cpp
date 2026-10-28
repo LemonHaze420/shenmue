@@ -27,19 +27,19 @@ void YcpaPrepareAdvice() {
     EV_npcLockUnlock(YCPA_YUA);
     EV_CheckWarmStartNpcRoute(YCPA_REN);
     EV_ForceLoadNpc(YCPA_REN);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_SetCharacterAlphaEnabled(YCPA_REN, false);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(YCPA_REN), nullptr, 3);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(YCPA_REN), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(YCPA_REN), nullptr, 3);
+    mtwkUpdateWithPosition(scenFindMotionwork(YCPA_REN), nullptr, 0);
     mtwkSetRequestedRootMode(scenFindMotionwork(YCPA_REN), 3);
-    SetMotionFrameTime(scenFindMotionwork(YCPA_REN), 7, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(YCPA_REN), 7, MotionRegion::LowerBody);
     EV_SetRefBoardParamsFor(YCPA_REN, 1);
     EV_SetCharaControllerFlags(YCPA_REN, UpdateHeight, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(YCPA_REN, 0, NpcCharacterControllerState::Disabled);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("YCPAMAIN"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("YCPA"), 0);
     EV_FreeAuthorPak(1, "0235");
     for (shen_name character : {YCPA_BASE, YCPA_RYOD, YCPA_YUAB, YCPA_RENB})
         CreateEventCharacter(CharacterCreationHighModel, nullptr, character);
@@ -57,8 +57,8 @@ void YcpaAdviceCallback(void *) {
     EV_GetCharaPosition(YCPA_RYO, CHARACTER_TRANSLATION_ROOT, &player, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(YCPA_RYO, &rotation, EventTransformFlags::World);
     EV_GetCharaPosition(YCPA_REN, CHARACTER_TRANSLATION_ROOT, &companion, EventTransformFlags::World);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(YCPA_RYO), nullptr, 3);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(YCPA_RYO), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(YCPA_RYO), nullptr, 3);
+    mtwkUpdateWithPosition(scenFindMotionwork(YCPA_RYO), nullptr, 0);
     for (std::int32_t index = 0; index < 24; ++index) {
         Vector3 offset{.x = 0, .y = 0, .z = 2};
         rotation.x = 0;

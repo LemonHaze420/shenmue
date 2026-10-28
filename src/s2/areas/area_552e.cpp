@@ -57,7 +57,7 @@ void Update552E(void *taskData) {
 // @verified - p
 void Cleanup552E() {
     for (const shen_name *character = AREA_552E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -151,7 +151,7 @@ void Exit552EC(void *taskData) {
     }
     EV_stepSetFlags(0, flag);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = hour;
     time.minute = minute;
     SetCurrentDateTimeTo(time);

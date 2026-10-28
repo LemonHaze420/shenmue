@@ -405,7 +405,7 @@ void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player) {
                 (g_shouldSleep & kPromptTriggered) == 0 && minutes >= g_sleepPromptWindowStartMinutes && minutes <= g_sleepPromptWindowEndMinutes;
             if (promptWindow && SCEN_HasSleepTransitionFinished(player, 0)) {
                 g_shouldSleep |= kPromptTriggered;
-                navRequestNewMode(1);
+                ryoRequestNewMode(1);
                 g_suppressDefaultHudPromptIcons = 1;
                 player.blockedCanControl = 0;
                 player.state = 2;

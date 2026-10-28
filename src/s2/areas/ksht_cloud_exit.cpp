@@ -14,9 +14,9 @@ namespace shenmue::s2::areas {
 void SelectKshtCloudPackage(std::int32_t);
 void ExitKshtCloudAuthor(KshtAuthorController *parent) {
     using enum CameraState;
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     if (parent->selection != 7)
-        clmdUtil(FindCharacterByScenarioName(KSHT_SIN), 0);
+        clmdUtil(ctrlGetScenarioChara(KSHT_SIN), 0);
     EV_SetWeatherInstruction(12, 1);
     EV_FreeAuthorPak(0, "0509");
     EV_FreeAuthorPak(0, "0510");

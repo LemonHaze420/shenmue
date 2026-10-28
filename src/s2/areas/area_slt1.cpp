@@ -98,9 +98,9 @@ void TrackEye(bool enabled) {
     Vector3 position;
     if (enabled) {
         EV_GetCharaPosition(CHAR_SLOT_EYE, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), &position, 1);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), &position, 1);
     } else
-        UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
 }
 void Lamp(std::int8_t index, std::int32_t enabled) {
     std::uint16_t part;
@@ -534,7 +534,7 @@ void InitializeMachine(Slt1Work *work) {
     EV_AT_SetPos(CHAR_SLOT_EYE, EventTransformFlags::AllAxes, Vector3{0.30000001f, 1.25f, 0.25f});
     TrackEye(true);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (static_cast<std::uint32_t>(time.hour - 5) <= 4 && !EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 2061) &&
         sltOdds[22 * EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 35) + 48 + OddsEntry(work)] == 99) {
         constexpr int angles[]{41692, 59560, 29780};
@@ -1425,13 +1425,13 @@ void Exit(void *data) {
     AT_SetLocalBaseChara(hand, invalid);
     hndlSetFlags(ctrlGetCharaByName(ryo));
     hndlSetFlags(ctrlGetCharaByName(hand));
-    UpdateMotionWorkWithPosition(scenFindMotionwork(ryo), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(ryo), nullptr, 0);
     AT_SetLocalBaseChara(CHAR_SLOT_EYE, invalid);
     SetScenarioCharacterKillMode(CHAR_SLOT_EYE, 1);
     EV_EnableCharacterDisplay(ryo);
     EV_EnableCharacterDisplay(work->machine);
     EV_DisableCharacterDisplay(slot);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_FreeAuthorPak(0, "0112");
     Gravity(ryo, true);
     EV_NPC_NewLoadSw(1);
@@ -1439,7 +1439,7 @@ void Exit(void *data) {
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     SetPlayerControlEnabled(1);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SLT1"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("SLT1"), 0);
     HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->task);
@@ -1483,7 +1483,7 @@ void QueueSlt1(std::uintptr_t argument) {
     HLib::SetupTimedTask(fade, -1);
     Gravity(ryo, false);
     EV_SetCharacterAlphaEnabled(ryo, false);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SLT1"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SLT1"), 0);
     EV_FreeAuthorPak(1, "0112");
     EV_LoadCutsceneFromCurrentScene("01120000");
     EV_EventSetUpHelpIcon_0(EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014) ? 0x94 : 0x1c, 0);

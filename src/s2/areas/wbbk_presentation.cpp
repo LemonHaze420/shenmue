@@ -29,8 +29,8 @@ void BookMotionSoundCallback(void *) {
         {.animation = 6304, .frame = 14, .reserved = 0},
         {.animation = 0, .frame = 0, .reserved = 0},
     };
-    const std::int32_t animation = GetMotionAnimationId(scenFindMotionwork(BOOK_RYO), MotionRegion::LowerBody);
-    const std::int32_t frame = static_cast<std::int32_t>(GetMotionFrame(scenFindMotionwork(BOOK_RYO), MotionRegion::LowerBody));
+    const std::int32_t animation = mtwkGetAnimationId(scenFindMotionwork(BOOK_RYO), MotionRegion::LowerBody);
+    const std::int32_t frame = static_cast<std::int32_t>(mtwkGetFrame(scenFindMotionwork(BOOK_RYO), MotionRegion::LowerBody));
     for (std::int32_t index = 0; cues[index].animation; ++index)
         if (animation == cues[index].animation && frame == cues[index].frame)
             Loop3DSoundEffect(bookCarryVariant == 1 ? 705 : 1399);
@@ -40,11 +40,11 @@ void BookFaceLooksCallback(void *) {
     if (bookFaceControl.previousPlayer != bookFaceControl.player) {
         if (bookFaceControl.player == 14)
             amount = .5f;
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(BOOK_RYO), bookFaceControl.player, 10, amount);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(BOOK_RYO), bookFaceControl.player, 10, amount);
         bookFaceControl.previousPlayer = bookFaceControl.player;
     }
     if (bookFaceControl.previousCompanion != bookFaceControl.companion) {
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(BOOK_SAI), bookFaceControl.companion, 10, amount);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(BOOK_SAI), bookFaceControl.companion, 10, amount);
         bookFaceControl.previousCompanion = bookFaceControl.companion;
     }
 }

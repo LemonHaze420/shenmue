@@ -76,7 +76,7 @@ void AreaOP02Init() {
 // @verified - p
 void OP02SetHourAndMinute(std::int8_t hour, std::int8_t minute) {
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = hour;
     date.minute = minute;
     SetCurrentDateTimeTo(date);

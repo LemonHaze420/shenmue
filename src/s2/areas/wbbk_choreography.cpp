@@ -57,10 +57,10 @@ constexpr Vector3 placedPositions[14]{
 };
 } // namespace
 void ResetBookMotionLayers() {
-    SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 73, 0, MotionRegion::RightArm);
-    SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 73, 0, MotionRegion::LeftArm);
-    SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 73, 0, MotionRegion::Chest);
-    SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 73, 0, MotionRegion::Head);
+    mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 73, 0, MotionRegion::RightArm);
+    mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 73, 0, MotionRegion::LeftArm);
+    mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 73, 0, MotionRegion::Chest);
+    mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 73, 0, MotionRegion::Head);
 }
 void SelectBookStoryVariant() {
     if (EV_GetShenmueFlag(0x2e))
@@ -97,9 +97,9 @@ void InitializeBookCarryState() {
     bookCarryExitTicks = 0;
     ResetBookMotionLayers();
     mtwkRequestMotion(scenFindMotionwork(BOOK_RYO), bookMotionPresets[0].motion, MotionRegion::LowerBody);
-    EV_SetCharaControllerFlags(BOOK_BASE, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(BOOK_BASE, CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_SetCharaControllerFlags(BOOK_BASE, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(BOOK_BASE, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(BOOK_BASE, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+    EV_SetCharaControllerFlags(BOOK_BASE, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
     InitializeBookCarryQte();
 }
 void InitializeBookActors() {
@@ -111,18 +111,18 @@ void InitializeBookActors() {
     bookCarryMode = 0;
     bookCarryPhase = 0;
     bookCarryIdleFrames = 0;
-    EV_SetCharaControllerFlags(BOOK_RYO, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetFlags, 0, 0);
+    EV_SetCharaControllerFlags(BOOK_RYO, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetFlags, 0, 0);
     shen_name actor = BOOK_FIRST;
     for (std::int32_t index = 0; index < 20; ++index, ++actor.name) {
         SetScenarioImageModule(actor, bookModelTypes[bookHeldPlacements[index].type].model);
-        EV_SetCharaControllerFlags(actor, CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-        EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Disabled);
-        EV_SetCharaControllerFlags(actor, CharacterControlUpdateHeight, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(actor, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
+        EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
     }
 }
 void UpdateBookCompanionPosition() {
-    if (GetMotionAnimationId(scenFindMotionwork(BOOK_SAI), MotionRegion::LowerBody) != 0x1899)
+    if (mtwkGetAnimationId(scenFindMotionwork(BOOK_SAI), MotionRegion::LowerBody) != 0x1899)
         return;
     Vector3 position;
     EV_GetCharaPosition(BOOK_SAI, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
@@ -167,9 +167,9 @@ void ResetBookRound() {
         const BookCompanionPlacement &placement = bookCompanionPlacements[bookModelState.currentBook - 1];
         SetBookCompanionPose(placement.position, placement.yaw);
         mtwkRequestMotion(scenFindMotionwork(BOOK_SAI), 0x1899, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(BOOK_SAI), 66, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(BOOK_SAI), 66, 0, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_SAI), 1);
-        SetMotionFrameTime(scenFindMotionwork(BOOK_SAI), 20, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(BOOK_SAI), 20, MotionRegion::LowerBody);
         bookCompanionTarget = placement.position;
     }
     if (bookModelState.currentBook >= 2) {
@@ -204,7 +204,7 @@ void BookLeaveShelf() {
         if (position.x > 329) {
             position.x = 329;
             EV_AT_SetPos(BOOK_RYO, EventTransformFlags::AllAxes, position);
-            SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 71, 0, MotionRegion::LowerBody);
         }
         EVS_LoopCamera(2004, BOOK_RYO, BOOK_RYO);
         QueueBookDialogue(7, 0);
@@ -222,14 +222,14 @@ void BookLeaveShelf() {
         ++bookEventPhase.phase;
         return;
     case 2:
-        if (!SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 65, 1, MotionRegion::LowerBody))
+        if (!mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 65, 1, MotionRegion::LowerBody))
             return;
         mtwkRequestMotion(scenFindMotionwork(BOOK_RYO), 0xf005, MotionRegion::LowerBody);
         EV_AT_SetAngY(BOOK_RYO, EventTransformFlags::AllAxes, {.x = 0, .y = 0, .z = 0});
         ++bookEventPhase.phase;
         return;
     case 3:
-        if (!SetMotionRegionFlag(scenFindMotionwork(BOOK_RYO), 65, 1, MotionRegion::LowerBody))
+        if (!mtwkSetRegionFlag(scenFindMotionwork(BOOK_RYO), 65, 1, MotionRegion::LowerBody))
             return;
         SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
         HLib::SetupTaskDelay(30);
@@ -241,9 +241,9 @@ void BookLeaveShelf() {
         SetBookCompanionPose(placement.position, placement.yaw);
         if (bookModelState.currentBook >= 2) {
             mtwkRequestMotion(scenFindMotionwork(BOOK_SAI), 0x1899, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(BOOK_SAI), 66, 0, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(BOOK_SAI), 66, 0, MotionRegion::LowerBody);
             mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_SAI), 1);
-            SetMotionFrameTime(scenFindMotionwork(BOOK_SAI), 20, MotionRegion::LowerBody);
+            mtwkSetFrameTime(scenFindMotionwork(BOOK_SAI), 20, MotionRegion::LowerBody);
         }
         bookCompanionTarget = placement.position;
         ChangeBookEventState(5);

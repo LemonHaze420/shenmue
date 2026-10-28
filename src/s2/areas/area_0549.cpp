@@ -92,7 +92,7 @@ void Update0549(void *taskData) {
 // @verified - p
 void Cleanup0549(Area0549Parameter *parent) {
     for (const shen_name *character = AREA_0549_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -216,7 +216,7 @@ void Restore0549Characters() {
 void Setup0549Environment() {
     EV_SetWeatherInstruction(12, 0);
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 18;
     time.minute = 50;
     SetCurrentDateTimeTo(time);

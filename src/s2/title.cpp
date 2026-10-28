@@ -159,7 +159,7 @@ void SelectTitleArea(const TitleSceneEntry *scenes) {
 // @verified - p
 void SetTitleDebugStartTime(shen_name area) {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (area == TITLE_AREA_0200) {
         time.hour = 10;
         time.minute = 0;

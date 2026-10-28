@@ -113,7 +113,7 @@ void RestoreCharacter(shen_name name) {
 }
 void SetAuthorCharacterMode(const shen_name *names, bool restore) {
     for (; names->name != invalidCharacter.name; ++names) {
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(*names)), 6, restore ? 0 : 2);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(*names)), 6, restore ? 0 : 2);
         EV_SetCharacterAlphaEnabled(*names, restore);
     }
 }
@@ -135,7 +135,7 @@ void RestoreArrivalCharacters() {
 
 void PrepareLighterCharacters() {
     for (const shen_name name : std::array<shen_name, 4>{{SHEN_NAME(RE1_), SHEN_NAME(VCN_), SHEN_NAME(CHW_), SHEN_NAME(SHK_)}}) {
-        SetLowQualityHands(FindCharacterByScenarioName(name));
+        SetLowQualityHands(ctrlGetScenarioChara(name));
     }
     PrepareCharacter(SHEN_NAME(a010));
     SetAuthorCharacterMode(authorCharacters1, false);
@@ -220,10 +220,10 @@ void e0005_EVT_Auth_Loop_0005A010_Callback(void *taskData) {
         SuspendParticleEffect(0, child->smoke);
         break;
     case 1335:
-        hmdlSetFlagsFor(FindCharacterByScenarioName(SHEN_NAME(SYM_)), 0, 1, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(SHEN_NAME(SYM_)), 0, 1, 16);
         break;
     case 1385:
-        hmdlSetFlagsFor(FindCharacterByScenarioName(SHEN_NAME(SYM_)), 0, 8, 16);
+        hmdlSetFlagsFor(ctrlGetScenarioChara(SHEN_NAME(SYM_)), 0, 8, 16);
         break;
     default:
         break;
@@ -403,7 +403,7 @@ void e0005_EVT_Exit_NpcChara2_Callback(void *) {
 
 void CompleteEvent(EventTaskParameter *event) {
     using enum CameraState;
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(ryo)), 6, 0);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 6, 0);
     EV_SetCharacterAlphaEnabled(ryo, true);
     EV_EnableCharacterDisplay(ryo);
     EV_NPC_NewLoadSw(1);
@@ -425,7 +425,7 @@ void CompleteEvent(EventTaskParameter *event) {
         shenQueueChangeModuleAndScene(SystemModule::Game, g_actNumber, g_currentMap, entry);
         return;
     }
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     if (entry > 0 && entry <= 2) {
         EV_stepSetFlags(0, 97);
         EV_stepSetFlags(0, 98);
@@ -499,7 +499,7 @@ void InitializeEventEnvironment() {
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(1, "0005");
     EV_SetNewSceneIndex();
-    MotionWork *const motion = FindMotionWork(FindCharacterByScenarioName(ryo));
+    MotionWork *const motion = FindMotionWork(ctrlGetScenarioChara(ryo));
     mtwkSetExtraFlag(motion, 6, 2);
     EV_SetCharacterAlphaEnabled(ryo, false);
     mtwkRequestMotion(motion, 0xf003, MotionRegion::LowerBody);

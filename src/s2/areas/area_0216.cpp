@@ -40,7 +40,7 @@ void E0216Main(std::uintptr_t) {
     parent->state = 0;
     SetPlayerControlEnabled(0);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 22;
     time.minute = 0;
     SetCurrentDateTimeTo(time);
@@ -52,7 +52,7 @@ void E0216Main(std::uintptr_t) {
 // @verified - p
 void CleanupE0216(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0216_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

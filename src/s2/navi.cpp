@@ -628,7 +628,7 @@ void DrawNaviMarkers(const NaviDrawState &draw, float aspect) {
                 icon.atlas->textureHandle, 1.0f - ComputeNaviAlphaLoss(layer), icon.uv);
     }
     const shen_name name = FindNavigationPartyCompanion({});
-    if (Character *const character = FindCharacterByScenarioName(name)) {
+    if (Character *const character = ctrlGetScenarioChara(name)) {
         const Vector3 position = GetCharacterWorldPosition(character);
         const Vector2 point =
             TransformNaviPoint(draw.transform, position.x - task.config->originX + draw.offsetX, position.z - task.config->originZ + draw.offsetZ);

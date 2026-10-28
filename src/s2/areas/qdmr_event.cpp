@@ -153,7 +153,7 @@ std::int64_t QdmrStoryAuthorCompletion(std::int32_t phase, std::int64_t, HLib::T
 }
 std::int64_t QdmrYuanAuthorCompletion(std::int32_t phase, std::int64_t, HLib::Task *parent) {
     if (phase == 0) {
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QES3END"), 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QES3END"), 0);
         EV_LoadCutsceneFromCurrentScene("0364A000");
         EV_LoadAudio("0364A000", 0);
         EV_spmBeginSampleExecute();
@@ -429,8 +429,8 @@ void QdmrDoneCallback(void *parameter) {
     }
     SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
     EV_EventSetUpHelpIcon_0(0, 0);
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMR"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMR"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QDMR"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDMR"), 0);
     EV_LoadCutsceneFromCurrentScene("QFIX");
     EV_LoadAudio("QFIX", 0);
     EV_spmBeginSampleExecute();

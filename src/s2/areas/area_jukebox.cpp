@@ -13,14 +13,14 @@ inline constexpr shen_name JUKEBOX_CHARACTER{SHEN_NAME(JBOX)};
 void EVT_JB_InitWk_Callback(void *) {
     if (GetNpcNewLoadState() != 1)
         return;
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("JUKB"), 0))
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("JUKB"), 0))
         return;
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
     const char *const directory = Filepath_Gen(FilepathGenMode::PackDirectory);
-    if (EV_ControlPackageResources(
+    if (EV_pakUtils(
             PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("JUKB"))) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         HLib::EnqueueTaskWithoutParameter(EVT_Juke_revolve_Callback, 6, 0x0b, static_cast<std::int32_t>(AREA_JUKEBOX_TASK.name));
         Vector3 position{};
         EV_scenApplyPosOrRotToPartOf(JUKEBOX_CHARACTER, 161, &position, nullptr, EventCharacterPartTransformMode::Set);

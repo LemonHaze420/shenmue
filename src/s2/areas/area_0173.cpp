@@ -56,18 +56,18 @@ void E0173Main(std::uintptr_t) {
 void CleanupE0173(AreaImmediateAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0173_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, "0173");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0173A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0173A"), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     npcSetAreaName(AREA_0173_ANP1, nullptr, 0.0f, 0);
     if (g_currentMap.name == AREA_0173_WB00.name) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EventSetPosition position{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {269.1000061035156f, 114.5999984741211f, 279.0f}, 0.0f};
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 17021, 0}, 0.0f};

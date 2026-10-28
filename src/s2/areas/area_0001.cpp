@@ -222,7 +222,7 @@ void Prepare0001Characters() {
         EV_SetCharacterAlphaEnabled(character, false);
         SetScenarioCharacterRadius(character, 1000.0f);
         SetScenarioCharacterTransparency(character, 0.0f);
-        SetPluralControlFor(FindCharacterByScenarioName(character), 0);
+        SetPluralControlFor(ctrlGetScenarioChara(character), 0);
     }
     for (const shen_name character : AREA_0001_FOREGROUND_CHARACTERS) {
         EV_ToggleCharacterFlag(character);

@@ -80,11 +80,11 @@ void Cleanup(E0027TaskParameter *parent) {
     if (IsGameplayMap()) {
         *parent->requestCommand = -1;
         HLib::DestroyTask(parent->self);
-        SetPluralControlFor(FindCharacterByScenarioName(AREA_AUTHOR_RYO), 0);
-        SetPluralControlFor(FindCharacterByScenarioName(chy), 0);
+        SetPluralControlFor(ctrlGetScenarioChara(AREA_AUTHOR_RYO), 0);
+        SetPluralControlFor(ctrlGetScenarioChara(chy), 0);
     } else {
         for (const shen_name *name = characters; name->name != AREA_AUTHOR_INVALID.name; ++name)
-            if (FindCharacterByScenarioName(*name)) {
+            if (ctrlGetScenarioChara(*name)) {
                 EV_npcLockUnlock(*name);
                 EV_npcFree(*name);
             }
@@ -137,7 +137,7 @@ void QueueLoop(E0027TaskParameter *parent) {
     parent->state = 2;
 }
 void Plural(shen_name name, bool enabled) {
-    SetPluralControlFor(FindCharacterByScenarioName(name), enabled ? 1 : 0);
+    SetPluralControlFor(ctrlGetScenarioChara(name), enabled ? 1 : 0);
 }
 void AttachDummyAt(const Vector3 &position) {
     ResetScenarioCharacterAttachment(dummy);

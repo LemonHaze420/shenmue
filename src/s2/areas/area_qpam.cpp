@@ -267,7 +267,7 @@ std::int32_t QpamBuy(MapStandEventWork &work) {
         ApplyCharacterHandPoseCommand(character, 0, reinterpret_cast<std::byte *>(hand.data()), 120);
         Vector3 standPosition;
         EV_GetCharaPosition(work.stand, CHARACTER_TRANSLATION_ROOT, &standPosition, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(QPAM_RYO), &standPosition, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(QPAM_RYO), &standPosition, 0);
         EV_SetRefBoardParamsFor(work.map, 1);
         AddThisToCashOrSegaCoins(-work.cost, ECashOrCoins::Cash2);
         QueueEventRepeatedFunction(map_stand::GiveMap, &work.item, 120, 1);
@@ -356,7 +356,7 @@ void QpamMain(std::uintptr_t request) {
     HLib::SetupTaskDelay(-1);
     EV_SetCharaControllerFlags(QPAM_RYO, 2, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(QPAM_RYO, 3, NpcCharacterControllerState::Disabled);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QPAM"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QPAM"), 0);
     EV_FreeAuthorPak(1, "0099");
     EV_LoadCutsceneFromCurrentScene("0099E000.smp");
 }
@@ -387,7 +387,7 @@ void QpamCallback(void *data) {
 void QpamExitCallback(void *data) {
     using enum CameraState;
     MapStandEventWork &work = *static_cast<MapStandEventWork *>(data);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EventFilmControl film{.cleanup = 0,
         .frames = 8,
         .startAlpha = 255,
@@ -403,7 +403,7 @@ void QpamExitCallback(void *data) {
     EnableScenarioCharacterDisplay(QPAM_RYO);
     EV_SetRefBoardParamsFor(QPAM_RYO, 0);
     hndlSetFlags(ctrlGetCharaByName(QPAM_RYO));
-    UpdateMotionWorkWithPosition(scenFindMotionwork(QPAM_RYO), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(QPAM_RYO), nullptr, 0);
     if (work.map.name)
         EV_SetRefBoardParamsFor(work.map, 0);
     EV_SetCharaControllerFlags(QPAM_RYO, 2, NpcCharacterControllerState::Enabled);
@@ -417,7 +417,7 @@ void QpamExitCallback(void *data) {
     HLib::ResolveDeferredCallback(HLib::GetCurrentParentTask());
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QPAM"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QPAM"), 0);
 }
 
 const ScriptAreaDefinition qpamScriptDefinition{.areaId = AREA_QPAM, .field04 = 0, .init = QpamInitNullsub, .main = QpamMain};

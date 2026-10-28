@@ -66,8 +66,8 @@ void WaitShopPackage(void *parameter) {
         return;
     HLib::SetCurrentTaskTo(WaitShopOwner);
     HLib::SetupTaskDelay(-1);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(work->package), 0);
     CreateRo10PriceBoards(*work);
     Vector3 position;
     GetRo10ItemTransform(*work->definition, 0, 0, &position, nullptr, nullptr, false);
@@ -406,8 +406,8 @@ void Ro10Quit(void *parameter) {
             EV_FreeAuthorPak(0, work->audio);
             work->flags &= ~2U;
         }
-        if (work->package[0] && EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work->package), 0)) {
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
+        if (work->package[0] && EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(work->package), 0)) {
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(work->package), 0);
             work->package[0] = 0;
         }
         const std::int32_t flag = work->flags & 0x10U ? work->definition->purchasedFlag : work->definition->declinedFlag;

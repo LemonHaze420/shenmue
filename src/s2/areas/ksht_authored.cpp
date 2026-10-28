@@ -98,7 +98,7 @@ void RestoreKshtProp(shen_name actor) {
 }
 void ResetKshtMotion(shen_name actor) {
     mtwkSetExtraFlag(scenFindMotionwork(actor), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(actor), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(actor), 13, 0);
 }
 void ResetKshtCamera() {

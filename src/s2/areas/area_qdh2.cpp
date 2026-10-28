@@ -337,7 +337,7 @@ void Qdh2EventCallback(void *data) {
             work->state = work->actions[work->action].qte == static_cast<std::uint32_t>(EV_GetCurrentQteStatus() & 0xfff) ? 3 : 8;
         break;
     case 3:
-        if (GetMotionFrame(scenFindMotionwork(QDH_RYO), MotionRegion::LowerBody) >= 110.0f / work->speed)
+        if (mtwkGetFrame(scenFindMotionwork(QDH_RYO), MotionRegion::LowerBody) >= 110.0f / work->speed)
             work->state = 4;
         break;
     case 4:
@@ -438,7 +438,7 @@ void Qdh2EventCallback(void *data) {
             EVT_AT_ObjectDisp_1(QDH_BRIDGE_2, 0, 0);
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
         ExecuteCleanupFuncForAreaWithCachedScene();
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -461,7 +461,7 @@ void Qdh2EventCallback(void *data) {
             }
         EV_NPC_NewLoadSw(1);
         EV_FreeAuthorPak(0, "0289");
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDH2"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QDH2"), 0);
         scenFreeEvent("QDH2.EV3");
         EV_CleanupMapControlTask();
         HLib::MarkCurrentTaskForCleanup();
@@ -501,8 +501,8 @@ void Qdh2Init() {
 void Qdh2Main(std::uintptr_t argument) {
     SetPlayerControlEnabled(0);
     Qdh2AdmissionNullsub();
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDH2"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDH2"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QDH2"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QDH2"), 0);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(Qdh2EventCallback, 4, 0x0b, sizeof(QdhEventWork), BRIDGE_BENDING_TASK);
     InitializeQdh2Event(task, std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(argument)));
 }

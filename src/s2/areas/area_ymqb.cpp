@@ -39,17 +39,17 @@ void YmqbSetup(YmqbWork *work) {
     work->characters = Queue_EVT_AT_ReadChr(work->task, YMQB_CHARACTERS.data());
     work->motion = static_cast<std::uint32_t>(ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT"));
     work->won = 1;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("039E"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("0039"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("YMQB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("YMQB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("YMQB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("YMQB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("YMQB"), 0);
     EV_FreeAuthorPak(1, "0039");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0039A000");
@@ -129,7 +129,7 @@ void YmqbStartBattleCallback(void *data) {
     EVT_AT_SetPosRot(&position);
     EventSetAngle angle{.cleanup = 0, .character = YMQB_RYO, .parent = YMQB_RYO, .degrees = 180.0f, .delay = 0};
     EVT_AT_SetAngY_Callback(&angle);
-    PublishFightFormation(FindCharacterByScenarioName(YMQB_RYO), nullptr, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    PublishFightFormation(ctrlGetScenarioChara(YMQB_RYO), nullptr, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     Vector3 basePosition;
     EV_GetCharaPosition(YMQB_BASE, CHARACTER_TRANSLATION_ROOT, &basePosition, EventTransformFlags::World);
     vfCopyPosFromEntity(0, nullptr, basePosition.x, basePosition.z, 5.0f);
@@ -140,7 +140,7 @@ void YmqbStartBattleCallback(void *data) {
         position.character = character;
         position.parent = character;
         EVT_AT_SetPosRot(&position);
-        PublishFightFormation(FindCharacterByScenarioName(character), nullptr, 1, 1, 200, 2, 0, 0, 0, 0, 0);
+        PublishFightFormation(ctrlGetScenarioChara(character), nullptr, 1, 1, 200, 2, 0, 0, 0, 0, 0);
     }
     vfmQueueFightStart(static_cast<std::uint8_t>(count + 1), 2, 1.0f, 1, -1);
     EV_camCtrlToggleCombatCamera(2, 1);
@@ -152,7 +152,7 @@ void YmqbBattleCallback(void *data) {
     if (g_fightActive)
         return;
     YmqbWork *const work = static_cast<YmqbWork *>(data);
-    if (GetBtlStatus(FindCharacterByScenarioName(YMQB_RYO)) == 3) {
+    if (GetBtlStatus(ctrlGetScenarioChara(YMQB_RYO)) == 3) {
         work->won = 1;
         EV_stepSetFlags(0, 0x32);
         HLib::SetCurrentTaskTo(YmqbWinAuthorCallback);
@@ -200,7 +200,7 @@ void YmqbLoseAuthorCallback(void *) {
 void YmqbResultAuthorCallback(void *) {
     if (EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame) == 1) {
         for (std::size_t index = 0; index < 6; ++index)
-            SetPluralControlFor(FindCharacterByScenarioName(YMQB_CHARACTERS[index]), 1);
+            SetPluralControlFor(ctrlGetScenarioChara(YMQB_CHARACTERS[index]), 1);
     }
     if (!EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) {
         spmFadeOut();
@@ -214,15 +214,15 @@ void YmqbCleanup(YmqbWork *work) {
         shenUpdateCurrentDateTime();
     flddSetPointFlagOnGrid(YMQB_DEFAULT_GRID, 1);
     flddSetPointFlagOnGrid(YMQB_FIGHT_GRID, 0);
-    SetPluralControlFor(FindCharacterByScenarioName(YMQB_RYO), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(YMQB_RYO), 0);
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0039");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YMQB"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0039"), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("039E"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("YMQB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0039"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("039E"), 0);
     DeleteMotion(static_cast<std::int32_t>(work->motion));
     ET_AT_KillWork(work->characters);
     SetPlayerControlEnabled(0);

@@ -61,16 +61,16 @@ void Update0307(void *taskData) {
 void Cleanup0307(Area0307Parameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0307_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, AREA_0307_CONVERSATION);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_0307_ARCHIVE), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_0307_ARCHIVE), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     if (g_currentMap.name == AREA_0307_RETURN.name) {
         EventSetPosition position{0, AREA_0307_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {264.79998779296875f, 100.0f, 183.5800018310547f}, 0.0f};
         EVT_AT_SetPosRot(&position);
@@ -78,7 +78,7 @@ void Cleanup0307(Area0307Parameter *parent) {
         EVT_AT_SetAng_Callback(&angle);
         EV_NPC_NewLoadSw(1);
         EV_EnableCharacterDisplay(AREA_0307_BIKE);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         camCtrlSetFovTransitionTo(true);
         camCtrlSetState(Init);
         SetPlayerControlEnabled(1);

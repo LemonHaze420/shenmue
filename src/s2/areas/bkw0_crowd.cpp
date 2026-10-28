@@ -21,14 +21,14 @@ void Bkw0TrainCrowd(std::int32_t includeSisters, std::int32_t fixed) {
         const shen_name character = bkw0Characters[bkw0CrowdOffset + i];
         if (!includeSisters && ((character.name - BKW0_S01.name) & 0xfffeffffU) == 0)
             continue;
-        EV_mtwkSetEnabled(scenFindMotionwork(character), 1);
+        mtwkSetEnabled(scenFindMotionwork(character), 1);
         mtwkSetRequestedRootMode(scenFindMotionwork(character), 1);
-        SetMotionFrameTime(scenFindMotionwork(character), 30, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(character), 30, MotionRegion::LowerBody);
         const float frame = GetRandomNumberInRange(6);
         mtwkRequestMotion(scenFindMotionwork(character), character.name == BKW0_K04.name ? 7951 : 7956, MotionRegion::LowerBody);
-        SetMotionLayerFrameRange(scenFindMotionwork(character), -1, frame, -1, MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(character), 71, fixed ? 0 : 2, MotionRegion::LowerBody);
+        mtwkSetLayerFrameRange(scenFindMotionwork(character), -1, frame, -1, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(character), 71, fixed ? 0 : 2, MotionRegion::LowerBody);
     }
 }
 void Bkw0RandomizeCrowdPractice() {
@@ -38,14 +38,14 @@ void Bkw0RandomizeCrowdPractice() {
         const shen_name character = bkw0Characters[bkw0CrowdOffset + i];
         if (((character.name - BKW0_S01.name) & 0xfffeffffU) == 0)
             continue;
-        EV_mtwkSetEnabled(scenFindMotionwork(character), 1);
+        mtwkSetEnabled(scenFindMotionwork(character), 1);
         const std::int32_t motion = shenGetRandomInt32(6);
         if (motion >= 0 && motion <= 5) {
             mtwkRequestMotion(scenFindMotionwork(character), static_cast<std::uint16_t>(7944 + motion), MotionRegion::LowerBody);
-            SetMotionLayerFrameRange(scenFindMotionwork(character), -1, -1, -1, MotionRegion::LowerBody);
-            SetMotionSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
+            mtwkSetLayerFrameRange(scenFindMotionwork(character), -1, -1, -1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
         }
-        UpdateMotionWorkWithPosition(scenFindMotionwork(character), &position, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(character), &position, 0);
     }
 }
 void Bkw0IdleCrowd() {
@@ -53,12 +53,12 @@ void Bkw0IdleCrowd() {
         const shen_name character = bkw0Characters[bkw0CrowdOffset + i];
         if (((character.name - BKW0_S01.name) & 0xfffeffffU) == 0)
             continue;
-        EV_mtwkSetEnabled(scenFindMotionwork(character), 1);
-        SetMotionFrameTime(scenFindMotionwork(character), 30, MotionRegion::LowerBody);
+        mtwkSetEnabled(scenFindMotionwork(character), 1);
+        mtwkSetFrameTime(scenFindMotionwork(character), 30, MotionRegion::LowerBody);
         const float frame = GetRandomNumberInRange(6);
         mtwkRequestMotion(scenFindMotionwork(character), 7950, MotionRegion::LowerBody);
-        SetMotionLayerFrameRange(scenFindMotionwork(character), -1, frame, -1, MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
+        mtwkSetLayerFrameRange(scenFindMotionwork(character), -1, frame, -1, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(character), 1, MotionRegion::LowerBody);
     }
 }
 void Bkw0LookSequence(void *data) {
@@ -76,7 +76,7 @@ void Bkw0LookSequence(void *data) {
             if (frames == 1) {
                 Vector3 position;
                 EV_GetCharaPosition(target, 5, &position, EventTransformFlags::World);
-                UpdateMotionWorkWithPosition(scenFindMotionwork(character), &position, 0);
+                mtwkUpdateWithPosition(scenFindMotionwork(character), &position, 0);
                 Bkw0SequenceValue(work, 0x1d0, std::int32_t{10});
             }
         } else

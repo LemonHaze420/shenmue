@@ -86,7 +86,7 @@ void StartBookCarryQte(std::int32_t type) {
     Vector3 target;
     EV_GetCharaPosition(BOOK_RYO, CHARACTER_TRANSLATION_ROOT, &target, EventTransformFlags::Local);
     target.y += 1.5f;
-    UpdateMotionWorkWithPosition(scenFindMotionwork(BOOK_SAI), &target, 1);
+    mtwkUpdateWithPosition(scenFindMotionwork(BOOK_SAI), &target, 1);
     qteMaximumFrames = type == 2 ? 18 : 20;
     RandomizeBookQteCommands(type == 2 ? 1 : 0);
     AdvanceBookQteCommand();

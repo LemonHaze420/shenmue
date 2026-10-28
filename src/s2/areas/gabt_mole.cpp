@@ -135,8 +135,8 @@ void RetireMole(GabtMoleWork &work) {
     SetGlobalState(-1);
     mtwkSetRequestedRootMode(scenFindMotionwork(GABT_MOLE_RYO), 0);
     mtwkSetRequestedRootMode(scenFindMotionwork(GABT_MOLE_GAI), 0);
-    SetMotionFrameTime(scenFindMotionwork(GABT_MOLE_RYO), 0, MotionRegion::LowerBody);
-    SetMotionFrameTime(scenFindMotionwork(GABT_MOLE_GAI), 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(GABT_MOLE_RYO), 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(GABT_MOLE_GAI), 0, MotionRegion::LowerBody);
     figpAssignModeFor(GABT_MOLE_RYO, 0);
     figpAssignModeFor(GABT_MOLE_GAI, 0);
     if (DoesScenarioCharacterExist(GABT_MOLE_REFLECTOR))
@@ -190,7 +190,7 @@ bool BeginMoleAttack(GabtMoleWork &work, std::uint32_t direction, std::uint32_t 
     const Vector3i rotation{.x = 0, .y = static_cast<std::int32_t>(GABT_MOLE_ANGLES[work.currentDirection] * 8192.0f / 45.0f) - 0x4000, .z = 0};
     EV_AT_SetAngY(GABT_MOLE_RYO, recursivePosition, rotation);
     SetMoleMotion(GABT_MOLE_RYO, animation, 0x40000000U);
-    SetMotionSpeed(scenFindMotionwork(GABT_MOLE_RYO), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_RYO), 1, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(GABT_MOLE_RYO), 0, 2);
     work.inputFrames = 15;
     return true;
@@ -258,8 +258,8 @@ void QueueGabtMoleAttack(std::int32_t entry) {
     if (entry != 99) {
         mtwkSetRequestedRootMode(scenFindMotionwork(GABT_MOLE_RYO), 1);
         mtwkSetRequestedRootMode(scenFindMotionwork(GABT_MOLE_GAI), 1);
-        SetMotionFrameTime(scenFindMotionwork(GABT_MOLE_RYO), 6, MotionRegion::LowerBody);
-        SetMotionFrameTime(scenFindMotionwork(GABT_MOLE_GAI), 6, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(GABT_MOLE_RYO), 6, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(GABT_MOLE_GAI), 6, MotionRegion::LowerBody);
     }
     gabtLatchedButtons = 0;
     gabtInputArmed = 1;
@@ -342,7 +342,7 @@ std::int32_t GabtProcessMoleInput(GabtMoleWork *pointer) {
     case 1:
         if (BeginMoleAttack(work, held, attack))
             work.inputState = 2;
-        else if (SetMotionRegionFlag(scenFindMotionwork(GABT_MOLE_RYO), 65, 1, MotionRegion::LowerBody) && !work.interpolationFrames) {
+        else if (mtwkSetRegionFlag(scenFindMotionwork(GABT_MOLE_RYO), 65, 1, MotionRegion::LowerBody) && !work.interpolationFrames) {
             work.currentDirection = work.targetDirection;
             SetMoleMotion(GABT_MOLE_RYO, 306, 0);
             work.inputState = 0;
@@ -435,12 +435,12 @@ void GabtUpdateMoleOpponent(GabtMoleWork *pointer) {
             ((shenGetRandomInt32(2) & 1) || work.enemyWait > waitBits)) {
             EVT_AT_SetMot(GABT_MOLE_GAI, 0x163, 0, 1, 0, 0);
             const float speed = std::fmax(0.0f, (work.ticksLeft - 900) / 3600.0f * .54999995f) + .75f;
-            SetMotionSpeed(scenFindMotionwork(GABT_MOLE_GAI), speed, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_GAI), speed, MotionRegion::LowerBody);
             work.randomSector = shenGetRandomInt32(5);
             work.opponentState = 3;
-        } else if (SetMotionRegionFlag(scenFindMotionwork(GABT_MOLE_GAI), 65, 1, MotionRegion::LowerBody)) {
+        } else if (mtwkSetRegionFlag(scenFindMotionwork(GABT_MOLE_GAI), 65, 1, MotionRegion::LowerBody)) {
             EVT_AT_SetMot(GABT_MOLE_GAI, work.orbitSpeed >= 0 ? 0x248 : 0x249, 0, 1, 0, 0);
-            SetMotionSpeed(scenFindMotionwork(GABT_MOLE_GAI), .5f, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_GAI), .5f, MotionRegion::LowerBody);
         }
         break;
     }
@@ -453,7 +453,7 @@ void GabtUpdateMoleOpponent(GabtMoleWork *pointer) {
         }
         break;
     case 3:
-        if (SetMotionRegionFlag(scenFindMotionwork(GABT_MOLE_GAI), 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(scenFindMotionwork(GABT_MOLE_GAI), 65, 1, MotionRegion::LowerBody)) {
             work.enemyWait = 0;
             const float distance = MoleCharacterDistance();
             work.radius = distance + .25f;
@@ -572,7 +572,7 @@ void GabtMoleCallback(void *data) {
             if (work.orbitSign != 1)
                 work.orbitSign = -1;
             EVT_AT_SetMot(GABT_MOLE_GAI, animation, 0, 1, 0, 0);
-            SetMotionSpeed(scenFindMotionwork(GABT_MOLE_GAI), .5f, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_GAI), .5f, MotionRegion::LowerBody);
             EV_PlayDialogue("0232B053");
             work.framesElapsed = 0;
             work.voiceIndex = 0;
@@ -588,10 +588,10 @@ void GabtMoleCallback(void *data) {
             Loop3DSoundEffect(0xb0d);
             work.result = 1;
 
-            gabtPlayerEndFrame = GetMotionFrame(scenFindMotionwork(GABT_MOLE_RYO), MotionRegion::LowerBody);
+            gabtPlayerEndFrame = mtwkGetFrame(scenFindMotionwork(GABT_MOLE_RYO), MotionRegion::LowerBody);
             if (gabtPlayerEndFrame < 9)
                 gabtPlayerEndFrame = 9;
-            gabtOpponentEndFrame = GetMotionFrame(scenFindMotionwork(GABT_MOLE_GAI), MotionRegion::LowerBody);
+            gabtOpponentEndFrame = mtwkGetFrame(scenFindMotionwork(GABT_MOLE_GAI), MotionRegion::LowerBody);
             finish = true;
         } else {
             if (work.framesElapsed % 450 == 0) {
@@ -624,10 +624,10 @@ void GabtMoleCallback(void *data) {
         break;
     }
     case 6:
-        if (GetMotionFrame(scenFindMotionwork(GABT_MOLE_RYO), MotionRegion::LowerBody) > gabtPlayerEndFrame)
-            SetMotionSpeed(scenFindMotionwork(GABT_MOLE_RYO), 0, MotionRegion::LowerBody);
-        if (GetMotionFrame(scenFindMotionwork(GABT_MOLE_GAI), MotionRegion::LowerBody) > gabtOpponentEndFrame)
-            SetMotionSpeed(scenFindMotionwork(GABT_MOLE_GAI), 0, MotionRegion::LowerBody);
+        if (mtwkGetFrame(scenFindMotionwork(GABT_MOLE_RYO), MotionRegion::LowerBody) > gabtPlayerEndFrame)
+            mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_RYO), 0, MotionRegion::LowerBody);
+        if (mtwkGetFrame(scenFindMotionwork(GABT_MOLE_GAI), MotionRegion::LowerBody) > gabtOpponentEndFrame)
+            mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_GAI), 0, MotionRegion::LowerBody);
         if (!filmCheckFadeTrackColour()) {
             ctrlStopSubtitles();
             CheckHelpIcon(0, 0, CheckHelpIconOp::Set);

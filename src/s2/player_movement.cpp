@@ -89,7 +89,7 @@ void ResetPlayerMotionFlagCursor(PlayerMovementState &movement) {
 // @verified - p
 float mtwkSampleCurrentRemainingTime(const PlayerMovementState &movement) {
     Vector3 root{};
-    SampleNativeMotionRoot(0xf005U, GetMotionRigBoneId(movement.motionWork), -1.0f, root);
+    SampleNativeMotionRoot(0xf005U, mtwkGetRigBoneId(movement.motionWork), -1.0f, root);
     return (std::fabs(root.z) / static_cast<float>(static_cast<std::int32_t>(GetMotionFrameCount(0xf005U)) - 1)) * 1.3f;
 }
 
@@ -105,7 +105,7 @@ void SynchronizePlayerModelState(Character *character, PlayerModelState &state) 
         plymInitializeMotionBinding(state.embeddedMovementState);
         state.remainingMotionTime = mtwkSampleCurrentRemainingTime(state.embeddedMovementState);
     }
-    if (state.motionWork && GetMotionAnimationId(state.motionWork, MotionRegion::LowerBody)) {
+    if (state.motionWork && mtwkGetAnimationId(state.motionWork, MotionRegion::LowerBody)) {
         state.padFlags |= 2U;
     }
     UpdatePlayerMovementState(*state.movementState, previousMotionWork != state.motionWork);
@@ -237,10 +237,10 @@ float ReachedMotionSpeed(std::uint32_t motionId) {
 // @verified - p
 bool CanRequestPlayerMotion(PlayerMovementState &movement, std::int32_t requested, float frame, float frameCount) {
     MotionWork *const work = movement.motionWork;
-    if ((movement.flags & 4U) || SetMotionRegionFlag(work, 65U, 1, MotionRegion::LowerBody))
+    if ((movement.flags & 4U) || mtwkSetRegionFlag(work, 65U, 1, MotionRegion::LowerBody))
         return true;
-    const std::uint16_t current = GetMotionAnimationId(work, MotionRegion::LowerBody);
-    bool tracked = SetMotionRegionFlag(work, 68U, 1, MotionRegion::LowerBody) != 0;
+    const std::uint16_t current = mtwkGetAnimationId(work, MotionRegion::LowerBody);
+    bool tracked = mtwkSetRegionFlag(work, 68U, 1, MotionRegion::LowerBody) != 0;
     if (current == 0xf005U && (requested == 0xf006 || static_cast<std::uint32_t>(requested - 0xf035) <= 8U))
         tracked = false;
     else if (current == 0xfa1aU || current == 0xfa20U)
@@ -270,7 +270,7 @@ bool CanRequestPlayerMotion(PlayerMovementState &movement, std::int32_t requeste
                 (requested != -2 && (requested <= 0xf004 || requested > 0xf006 && static_cast<std::uint32_t>(requested - 0xf035) > 8U)) ||
                 ((movement.flags & 8U) != 0 && frame < 10.0f) || frame <= 2.0f));
     case 10:
-        return !tracked && SetMotionRegionFlag(work, 66U, 1, MotionRegion::LowerBody) != 0;
+        return !tracked && mtwkSetRegionFlag(work, 66U, 1, MotionRegion::LowerBody) != 0;
     default:
         return true;
     }
@@ -278,12 +278,12 @@ bool CanRequestPlayerMotion(PlayerMovementState &movement, std::int32_t requeste
 
 std::uint16_t SelectPlayerIdleMotion(PlayerMovementState &movement, bool &mirrored) {
     MotionWork *const work = movement.motionWork;
-    const std::uint16_t current = GetMotionAnimationId(work, MotionRegion::LowerBody);
+    const std::uint16_t current = mtwkGetAnimationId(work, MotionRegion::LowerBody);
     std::uint16_t selected = 0xf002U;
     mirrored = false;
     switch (current) {
     case 0xf002U:
-        mirrored = SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
+        mirrored = mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
         if ((g_playerRuntime.flags & 0x00080000U) == 0 &&
             static_cast<std::int8_t>(movement.field05f) > static_cast<std::int32_t>(IncrementSharedPrngUInt16() % 4U + 2U)) {
             selected = 0xf004U;
@@ -293,10 +293,10 @@ std::uint16_t SelectPlayerIdleMotion(PlayerMovementState &movement, bool &mirror
         selected = 0xf003U;
         break;
     case 0xf004U:
-        mirrored = SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody) == 0;
+        mirrored = mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody) == 0;
         break;
     default:
-        mirrored = !GetIsRHandAboveShoulder(work);
+        mirrored = !mtwkIsRightHandAboveShoulder(work);
         break;
     }
     if ((g_playerRuntime.flags & 0x00080000U) == 0)
@@ -315,13 +315,13 @@ void plymAdjustControllerGroundTarget(std::uint32_t controller, Vector3 *positio
         return;
     if (controller == 5U && !(state.field436 & 4U))
         return;
-    const std::uint32_t motion = GetMotionAnimationId(work, MotionRegion::LowerBody);
+    const std::uint32_t motion = mtwkGetAnimationId(work, MotionRegion::LowerBody);
     const std::uint32_t range = motion - 0xf008U;
     if (range <= 0x23U && ((0xc00000003ULL >> range) & 1U))
         return;
     if (motion - 0xf12eU <= 1U)
         return;
-    const Vector3 root = GetMotionRootPosition(work);
+    const Vector3 root = mtwkGetRootPosition(work);
     const Vector3 probe{position->x, (position->y - 0.117f) + 1.5f, position->z};
     float ground = shenFindIntersectionWithScene(probe, probe.z);
     if (ground == -std::numeric_limits<float>::max())
@@ -363,15 +363,15 @@ void plymInitializeMotionBinding(PlayerMovementState &movement) {
     movement.field160 = 1.0f;
     movement.field16c = 1.0f;
     mtwkSetExtraFlag(work, 55U, 0);
-    AssignMotionTargetCallback(work, plymAdjustControllerGroundTarget, 25);
-    AssignMotionTargetCallback(work, plymAdjustControllerGroundTarget, 30);
-    SetMotionTimeRelated(work, 1U, 0U, 0xf002U);
-    SetMotionTimeRelated(work, 1U, 1U, 0xf005U);
-    SetMotionTimeRelated(work, 1U, 4U, 0xf006U);
+    mtwkAssignTargetCallback(work, plymAdjustControllerGroundTarget, 25);
+    mtwkAssignTargetCallback(work, plymAdjustControllerGroundTarget, 30);
+    mtwkSetTimeRelated(work, 1U, 0U, 0xf002U);
+    mtwkSetTimeRelated(work, 1U, 1U, 0xf005U);
+    mtwkSetTimeRelated(work, 1U, 4U, 0xf006U);
     const Vector3 location = GetCharacterWorldPosition(movement.character);
     Vector3 first{}, second{};
-    GetMotionControllerTargetPosition(work, 6U, first);
-    GetMotionControllerTargetPosition(work, 5U, second);
+    mtwkGetControllerTargetPosition(work, 6U, first);
+    mtwkGetControllerTargetPosition(work, 5U, second);
     Matrix4x4_Push(&transformMatrix_prePass);
     Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(-GetAllAngYForNode(&movement.character->entity.node)));
     Matrix4x4::preTranslate(-location.x, -location.y, -location.z);
@@ -395,20 +395,20 @@ void ResetPlayerMovementMotion(PlayerMovementState *movement, std::int32_t retai
     movement->rootYawOffset = 0;
     movement->motionTransitionParameter = 0;
     movement->motionStartFrame = 0.0f;
-    SetMotionTimeRelated(work, 1, 0, 0xf002);
-    SetMotionTimeRelated(work, 1, 1, 0xf005);
-    SetMotionTimeRelated(work, 1, 4, 0xf006);
+    mtwkSetTimeRelated(work, 1, 0, 0xf002);
+    mtwkSetTimeRelated(work, 1, 1, 0xf005);
+    mtwkSetTimeRelated(work, 1, 4, 0xf006);
     if (retainMotion == 0) {
         bool mirrored = false;
         const std::uint16_t motion = SelectPlayerIdleMotion(*movement, mirrored);
-        SetMotionSpeed(work, 1.0f, MotionRegion::LowerBody);
-        SetMotionRigScale(work, 1.0f);
-        if (GetMotionAnimationId(work, MotionRegion::LowerBody) != motion) {
+        mtwkSetSpeed(work, 1.0f, MotionRegion::LowerBody);
+        mtwkSetRigScale(work, 1.0f);
+        if (mtwkGetAnimationId(work, MotionRegion::LowerBody) != motion) {
             mtwkSetRequestedRootMode(work, 1);
-            SetMotionFrameTime(work, 20, MotionRegion::LowerBody);
+            mtwkSetFrameTime(work, 20, MotionRegion::LowerBody);
             mtwkRequestMotion(work, motion, MotionRegion::LowerBody);
             if (mirrored)
-                SetMotionRegionFlag(work, 69, 0, MotionRegion::LowerBody);
+                mtwkSetRegionFlag(work, 69, 0, MotionRegion::LowerBody);
         }
     }
 }
@@ -431,20 +431,20 @@ void ConfigurePlayerGaitRequest(PlayerMotionRequest &request, MotionWork *work) 
     if (previous == 0xf002U || previous == 0xf004U) {
         bool secondHalf = false;
         if (previous == 0xf002U) {
-            request.parentSelector = GetIsRHandAboveShoulder(work) ? 1 : -1;
+            request.parentSelector = mtwkIsRightHandAboveShoulder(work) ? 1 : -1;
         } else {
             secondHalf = request.previousFrame >= 20.0f;
-            if (SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody))
+            if (mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody))
                 secondHalf = !secondHalf;
             request.parentSelector = secondHalf ? -1 : 1;
         }
         request.rootMode = 2;
         if (targetStairs) {
             request.blendFrames = 2;
-            request.mirrored = SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
+            request.mirrored = mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
         } else {
             if (previous == 0xf002U)
-                secondHalf = SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
+                secondHalf = mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
             request.blendFrames = 4;
             request.sampleFrame = request.frameCount * (secondHalf ? 0.51351351f : 0.027027028f);
         }
@@ -462,9 +462,9 @@ void ConfigurePlayerGaitRequest(PlayerMotionRequest &request, MotionWork *work) 
         if (targetStairs) {
             request.rootMode = 2;
             request.blendFrames = 4;
-            request.mirrored = middleHalf != (SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0);
+            request.mirrored = middleHalf != (mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0);
         } else if (IsPlayerOrdinaryGait(request.motion)) {
-            const bool secondHalf = middleHalf != (SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0);
+            const bool secondHalf = middleHalf != (mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0);
             request.rootMode = 2;
             if (request.motion == 0xf005U) {
                 request.sampleFrame = secondHalf ? 21.0f : 3.0f;
@@ -474,10 +474,10 @@ void ConfigurePlayerGaitRequest(PlayerMotionRequest &request, MotionWork *work) 
                 request.sampleFrame = request.frameCount * (secondHalf ? 9.0f : 1.0f) / 18.0f;
             }
         } else {
-            request.mirrored = SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
+            request.mirrored = mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
         }
     } else if (previous == 0xf12eU || previous == 0xf12fU) {
-        const bool leadFoot = SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
+        const bool leadFoot = mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
         if (request.motion == 0xf005U || request.motion == 0xf006U) {
             request.rootMode = 2;
             request.sampleFrame = request.motion == 0xf005U ? (leadFoot ? 3.0f : 21.0f) : (leadFoot ? 1.0f : 9.0f);
@@ -535,9 +535,9 @@ void ConfigurePlayerMotionRequest(PlayerMotionRequest &request, PlayerMovementSt
             request.blendFrames = 8;
             request.sampleFrame = request.frameCount * request.previousFraction;
         }
-        request.mirrored = SetMotionRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
+        request.mirrored = mtwkSetRegionFlag(work, 70U, 1, MotionRegion::LowerBody) != 0;
     }
-    if (SetMotionRegionFlag(work, 66U, 1, MotionRegion::LowerBody)) {
+    if (mtwkSetRegionFlag(work, 66U, 1, MotionRegion::LowerBody)) {
         if (request.sampleFrame >= request.frameCount) {
             request.sampleFrame -= request.frameCount;
         }
@@ -550,16 +550,16 @@ void ConfigurePlayerMotionRequest(PlayerMotionRequest &request, PlayerMovementSt
         if (request.sampleFrame < 0.0f)
             request.sampleFrame = 0.0f;
     }
-    SetMotionRegionEvalTime(work, request.sampleFrame, MotionRegion::LowerBody);
+    mtwkSetRegionEvalTime(work, request.sampleFrame, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(work, request.rootMode);
-    SetMotionFrameTime(work, request.blendFrames, MotionRegion::LowerBody);
+    mtwkSetFrameTime(work, request.blendFrames, MotionRegion::LowerBody);
 }
 
 void ApplyPlayerIdleStop(PlayerMovementState &movement) {
     MotionWork *work = movement.motionWork;
-    const std::uint16_t previousMotion = GetMotionAnimationId(work, MotionRegion::LowerBody);
+    const std::uint16_t previousMotion = mtwkGetAnimationId(work, MotionRegion::LowerBody);
     Vector3 terminal{};
-    SampleNativeMotionRoot(previousMotion, GetMotionRigBoneId(work), -1.0f, terminal);
+    SampleNativeMotionRoot(previousMotion, mtwkGetRigBoneId(work), -1.0f, terminal);
     const float distance = std::fabs(terminal.z) / (static_cast<float>(GetMotionFrameCount(previousMotion)) - 1.0f);
     Vector3 origin = GetCharacterWorldPosition(movement.character);
     Vector3 backward{0.0f, 0.0f, -1.0f};
@@ -590,20 +590,20 @@ void ApplyPlayerIdleStop(PlayerMovementState &movement) {
     target.y -= 0.40000001f;
     shenApplyTranslationToAll(&movement.character->entity.node, target);
     mtwkSetExtraFlag(work, 15U, 0);
-    mtwkSetExtraFlag(work, 16U, GetIsRHandBelowShoulder(work) ? 2 : 0);
+    mtwkSetExtraFlag(work, 16U, mtwkIsRightHandBelowShoulder(work) ? 2 : 0);
 }
 
 void ApplyPlayerMotionRequest(PlayerMovementState &movement, std::uint32_t motionId, float previousFrame, float previousFrameCount, bool mirrored,
     std::int16_t requestedYaw, std::int16_t authoredYaw) {
     MotionWork *const motionWork = movement.motionWork;
-    const std::uint16_t previousMotion = GetMotionAnimationId(motionWork, MotionRegion::LowerBody);
+    const std::uint16_t previousMotion = mtwkGetAnimationId(motionWork, MotionRegion::LowerBody);
     const float fraction = std::fabs(previousFrameCount) >= std::numeric_limits<float>::epsilon() ? previousFrame / (previousFrameCount - 1.0f) : 0.0f;
     PlayerMotionRequest request{previousMotion, motionId, movement.rootYawMode, previousFrame, fraction, 0.0f};
     request.mirrored = mirrored;
 
     movement.playerMotionId = motionId;
     const bool preserveRootYaw =
-        SetMotionRegionFlag(motionWork, 65U, 1, MotionRegion::LowerBody) != 0 || (movement.flags & 0x2000U) != 0 || movement.motionTransitionParameter != 0;
+        mtwkSetRegionFlag(motionWork, 65U, 1, MotionRegion::LowerBody) != 0 || (movement.flags & 0x2000U) != 0 || movement.motionTransitionParameter != 0;
     const std::int32_t correction = preserveRootYaw ? movement.rootYawOffset : static_cast<std::int32_t>(static_cast<float>(movement.rootYawOffset) * fraction);
     movement.pendingYawCorrection = static_cast<std::int16_t>(movement.pendingYawCorrection + correction);
     movement.rootYawOffset = requestedYaw;
@@ -615,15 +615,15 @@ void ApplyPlayerMotionRequest(PlayerMovementState &movement, std::uint32_t motio
     ConfigurePlayerMotionRequest(request, movement);
     const float speed = ReachedMotionSpeed(motionId);
     mtwkRequestMotion(motionWork, motionId, MotionRegion::LowerBody);
-    SetMotionSpeed(motionWork, speed, MotionRegion::LowerBody);
+    mtwkSetSpeed(motionWork, speed, MotionRegion::LowerBody);
     if (authoredYaw != 0) {
-        AssignMotionRigYawOffset(motionWork, static_cast<std::uint32_t>(static_cast<std::int16_t>(requestedYaw - authoredYaw)));
+        mtwkAssignRigYawOffset(motionWork, static_cast<std::uint32_t>(static_cast<std::int16_t>(requestedYaw - authoredYaw)));
         movement.motionTransitionParameter = 0;
     } else {
         movement.motionTransitionParameter = requestedYaw;
     }
     movement.motionStartFrame = request.sampleFrame;
-    SetMotionRegionFlag(motionWork, 69U, request.mirrored ? 0 : 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motionWork, 69U, request.mirrored ? 0 : 2, MotionRegion::LowerBody);
     movement.flags |= 0x0900U;
     movement.field160 = speed;
     movement.playerMotionFrame = request.sampleFrame;
@@ -633,23 +633,23 @@ void ApplyPlayerMotionRequest(PlayerMovementState &movement, std::uint32_t motio
     switch (motionId) {
     case 0xf020U:
     case 0xf025U:
-        SetMotionLayerEndFrame(motionWork, 19.0f, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(motionWork, 19.0f, MotionRegion::LowerBody);
         break;
     case 0xf021U:
     case 0xf026U:
-        SetMotionLayerEndFrame(motionWork, 23.0f, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(motionWork, 23.0f, MotionRegion::LowerBody);
         break;
     case 0xf022U:
     case 0xf027U:
-        SetMotionLayerEndFrame(motionWork, 27.0f, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(motionWork, 27.0f, MotionRegion::LowerBody);
         break;
     case 0xf023U:
     case 0xf028U:
-        SetMotionLayerEndFrame(motionWork, 29.0f, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(motionWork, 29.0f, MotionRegion::LowerBody);
         break;
     case 0xf024U:
     case 0xf029U:
-        SetMotionLayerEndFrame(motionWork, 41.0f, MotionRegion::LowerBody);
+        mtwkSetLayerEndFrame(motionWork, 41.0f, MotionRegion::LowerBody);
         break;
     case 0xfa08U:
         movement.rootYawOffset = static_cast<std::int16_t>(0x8000U);
@@ -754,7 +754,7 @@ bool ApplyReachedRootConsumerTranslation(PlayerMovementState &movement, std::uin
 void UpdateReachedRootConsumer(PlayerMovementState &movement) {
     MotionWork *const motionWork = movement.motionWork;
     std::int8_t stepDirection = movement.stepDirection;
-    const std::uint16_t animationId = GetMotionAnimationId(motionWork, MotionRegion::LowerBody);
+    const std::uint16_t animationId = mtwkGetAnimationId(motionWork, MotionRegion::LowerBody);
     const std::uint32_t selectedMotion = (movement.flags & 0x100U) != 0 ? movement.playerMotionId : animationId;
     if (selectedMotion - 0xf005U > 1U && selectedMotion - 0xf035U > 8U && ((animationId - 0xf02cU) & 0xfffffffaU) != 0 &&
         !IsReachedRootConsumerTranslationMotion(static_cast<std::uint16_t>(selectedMotion)) && !IsReachedRootConsumerTranslationMotion(animationId))
@@ -781,7 +781,7 @@ void UpdateReachedRootConsumer(PlayerMovementState &movement) {
         RequestPlayerMotion(movement, plymGaitMotions[static_cast<std::size_t>(index)]);
     }
 
-    const bool publishRoot = (movement.flags & 0x100U) != 0 || SetMotionRegionFlag(motionWork, 65U, 1, MotionRegion::LowerBody) != 0;
+    const bool publishRoot = (movement.flags & 0x100U) != 0 || mtwkSetRegionFlag(motionWork, 65U, 1, MotionRegion::LowerBody) != 0;
     if (!publishRoot)
         return;
     ApplyReachedRootConsumerTranslation(movement, animationId);
@@ -792,30 +792,30 @@ void FinalizeReachedRootConsumerScale(PlayerMovementState &movement) {
     if (!motionWork)
         return;
 
-    SetMotionSpeed(motionWork, movement.field160 * movement.field15c, MotionRegion::LowerBody);
+    mtwkSetSpeed(motionWork, movement.field160 * movement.field15c, MotionRegion::LowerBody);
     movement.previousField15c = movement.field15c;
-    SetMotionRigScale(motionWork, movement.field16c);
+    mtwkSetRigScale(motionWork, movement.field16c);
     // ApplyPlayerRootMotion retains the previous rig scale in the shared movement owner.
     movement.previousRigScale = movement.field16c;
 
     if (movement.parentBoneSelector != 0) {
-        const bool parentRegionActive = SetMotionRegionFlag(motionWork, 68U, 1, MotionRegion::LowerBody) != 0;
+        const bool parentRegionActive = mtwkSetRegionFlag(motionWork, 68U, 1, MotionRegion::LowerBody) != 0;
         if (!parentRegionActive && (movement.flags & 0x100U) == 0) {
             movement.parentBoneSelector = 0;
         } else {
             if (movement.parentBoneSelector > 0) {
-                GetParentBoneWrapper(motionWork, movement.parentBoneSelector);
+                mtwkGetParentBoneWrapper(motionWork, movement.parentBoneSelector);
             }
             if (movement.parentBoneSelector < 0) {
-                GetParentBoneWrapper(motionWork, movement.parentBoneSelector);
+                mtwkGetParentBoneWrapper(motionWork, movement.parentBoneSelector);
             }
-            if (parentRegionActive && GetMotionFrame(motionWork, MotionRegion::LowerBody) > 2.0f) {
+            if (parentRegionActive && mtwkGetFrame(motionWork, MotionRegion::LowerBody) > 2.0f) {
                 movement.parentBoneSelector = 0;
             }
         }
     }
 
-    if ((movement.flags & 0x1000U) != 0 && SetMotionRegionFlag(motionWork, 68U, 1, MotionRegion::LowerBody) == 0 && (movement.flags & 0x100U) == 0) {
+    if ((movement.flags & 0x1000U) != 0 && mtwkSetRegionFlag(motionWork, 68U, 1, MotionRegion::LowerBody) == 0 && (movement.flags & 0x100U) == 0) {
         mtwkSetExtraFlag(motionWork, 15U, 2);
         movement.flags &= ~0x1000U;
     }
@@ -839,7 +839,7 @@ std::int16_t LerpFixedAngle(std::int16_t target, std::int16_t base, float amount
 void UpdatePlayerCollisionSpeedScale(PlayerMovementState &movement) {
     if (std::fabs(movement.movementResult) < 0.00000011920929f)
         return;
-    const auto motion = GetMotionAnimationId(movement.motionWork, MotionRegion::LowerBody);
+    const auto motion = mtwkGetAnimationId(movement.motionWork, MotionRegion::LowerBody);
     if (!IsPlayerOrdinaryGait(motion))
         return;
     const MotnSequence *sequence = FindLoadedMotionSequence(motion);
@@ -879,13 +879,13 @@ void UpdatePlayerLocomotionRequest(PlayerMovementState &movement) {
         return;
     } else if (movement.requestedMode == 10U) {
         if (movement.flags & 0xc000U) {
-            CopyMotionTransition(movement.motionWork, &movement.transitionTargetPosition, movement.transitionTargetYaw, 0, 0);
+            mtwkCopyTransition(movement.motionWork, &movement.transitionTargetPosition, movement.transitionTargetYaw, 0, 0);
         } else if (movement.flags & 0x4000U) {
-            CopyMotionTransition(movement.motionWork, &movement.transitionTargetPosition, movement.transitionTargetYaw, 0, 2);
+            mtwkCopyTransition(movement.motionWork, &movement.transitionTargetPosition, movement.transitionTargetYaw, 0, 2);
         } else if (movement.flags & 0x8000U) {
-            CopyMotionTransition(movement.motionWork, &movement.transitionTargetPosition, movement.transitionTargetYaw, 0, 1);
+            mtwkCopyTransition(movement.motionWork, &movement.transitionTargetPosition, movement.transitionTargetYaw, 0, 1);
         }
-        CopyMotionTransition(movement.motionWork, nullptr, 0, 2, 0);
+        mtwkCopyTransition(movement.motionWork, nullptr, 0, 2, 0);
     }
     UpdatePlayerTargetYaw(movement);
 }
@@ -1032,11 +1032,11 @@ void UpdateReachedPlayerYawWriteback(PlayerModelState &state) {
     state.yaw = static_cast<std::uint16_t>(yaw);
     // UpdatePlayerMountYaw rotates mounting/dismounting relative to the frame's node yaw.
     if (state.motionWork) {
-        const auto motion = GetMotionAnimationId(state.motionWork, MotionRegion::LowerBody);
+        const auto motion = mtwkGetAnimationId(state.motionWork, MotionRegion::LowerBody);
         if (motion == 0xfa21U || motion == 0xfa22U) {
-            const int frame = std::clamp(static_cast<int>(GetMotionFrame(state.motionWork, MotionRegion::LowerBody) - 170.0f), 0, 30);
+            const int frame = std::clamp(static_cast<int>(mtwkGetFrame(state.motionWork, MotionRegion::LowerBody) - 170.0f), 0, 30);
             const int offset = (frame << 14) / 30;
-            const bool mirrored = SetMotionRegionFlag(state.motionWork, 70U, 1, MotionRegion::LowerBody) != 0;
+            const bool mirrored = mtwkSetRegionFlag(state.motionWork, 70U, 1, MotionRegion::LowerBody) != 0;
             state.yaw = static_cast<std::uint16_t>(state.currentYaw + ((motion == 0xfa21U) != mirrored ? offset : -offset));
         }
     }
@@ -1119,9 +1119,9 @@ std::int32_t RequestPlayerMotion(PlayerMovementState &movement, std::int32_t req
     MotionWork *const work = movement.motionWork;
     if (!work || !movement.character)
         return -1;
-    const float frameCount = static_cast<float>(GetMotionFrameCount(GetMotionAnimationId(work, MotionRegion::LowerBody)));
-    float frame = GetMotionFrame(work, MotionRegion::LowerBody);
-    if (SetMotionRegionFlag(work, 68U, 1, MotionRegion::LowerBody) && work->runtime.currentRootMode != 2U && work->runtime.currentRootMode != 3U) {
+    const float frameCount = static_cast<float>(GetMotionFrameCount(mtwkGetAnimationId(work, MotionRegion::LowerBody)));
+    float frame = mtwkGetFrame(work, MotionRegion::LowerBody);
+    if (mtwkSetRegionFlag(work, 68U, 1, MotionRegion::LowerBody) && work->runtime.currentRootMode != 2U && work->runtime.currentRootMode != 3U) {
         const float current = work->runtime.layerSampleFrame[0];
         if (current >= 0.0f)
             frame = current;
@@ -1168,7 +1168,7 @@ std::int32_t RequestPlayerMotion(PlayerMovementState &movement, std::int32_t req
         requested = 0xf005;
     if (requested < 0)
         return requested;
-    if (requested == GetMotionAnimationId(work, MotionRegion::LowerBody) && SetMotionRegionFlag(work, 66U, 1, MotionRegion::LowerBody))
+    if (requested == mtwkGetAnimationId(work, MotionRegion::LowerBody) && mtwkSetRegionFlag(work, 66U, 1, MotionRegion::LowerBody))
         return -1;
     ApplyPlayerMotionRequest(movement, static_cast<std::uint32_t>(requested), frame, frameCount, mirrored, requestedYaw, authoredYaw);
     return requested;
@@ -1217,7 +1217,7 @@ void UpdatePlayerMovementState(PlayerMovementState &movement, bool) {
     if (movement.flags & 0x700U)
         movement.field05e = movement.field05d;
     movement.field05d = movement.rootYawMode;
-    movement.rootYawMode = ReachedMotionRootMode(GetMotionAnimationId(work, MotionRegion::LowerBody));
+    movement.rootYawMode = ReachedMotionRootMode(mtwkGetAnimationId(work, MotionRegion::LowerBody));
     const std::uint8_t mode = movement.rootYawMode;
     if (static_cast<std::uint8_t>(mode - 1U) <= 2U || static_cast<std::uint8_t>(mode - 5U) <= 2U) {
         if (movingFrames < 10000)
@@ -1245,24 +1245,24 @@ void UpdatePlayerMovementState(PlayerMovementState &movement, bool) {
     }
     movement.flags &= 0xffe738fbU;
     movement.pendingYawCorrection = 0;
-    movement.motionAnimationId = GetMotionAnimationId(work, MotionRegion::LowerBody);
+    movement.motionAnimationId = mtwkGetAnimationId(work, MotionRegion::LowerBody);
     movement.leadFootDirection = 0;
     movement.yawInterpolationRate = 1.0f;
     movement.field15c = 1.0f;
     movement.field16c = 1.0f;
-    if (SetMotionRegionFlag(work, 65U, 1, MotionRegion::LowerBody)) {
+    if (mtwkSetRegionFlag(work, 65U, 1, MotionRegion::LowerBody)) {
         movement.flags |= 0x400U;
     }
-    movement.playerMotionFrame = GetMotionFrame(work, MotionRegion::LowerBody);
+    movement.playerMotionFrame = mtwkGetFrame(work, MotionRegion::LowerBody);
     Vector3 terminalRoot;
-    SampleNativeMotionRoot(movement.motionAnimationId, GetMotionRigBoneId(work), -1.0f, terminalRoot);
+    SampleNativeMotionRoot(movement.motionAnimationId, mtwkGetRigBoneId(work), -1.0f, terminalRoot);
     movement.rootMotionStep = std::fabs(terminalRoot.z) / static_cast<float>(static_cast<std::int32_t>(GetMotionFrameCount(movement.motionAnimationId)) - 1);
     movement.movementResult = 0.0f;
     movement.motionSpeed = movement.rootMotionStep * movement.field160;
     ProcessPlayerMotionFlagCursor(movement);
-    if (movement.motionTransitionParameter && !SetMotionRegionFlag(work, 68U, 1, MotionRegion::LowerBody)) {
+    if (movement.motionTransitionParameter && !mtwkSetRegionFlag(work, 68U, 1, MotionRegion::LowerBody)) {
         const std::int16_t rate = static_cast<std::int16_t>(
-            static_cast<std::int32_t>(movement.motionTransitionParameter / (GetMotionEndFrame(work, MotionRegion::LowerBody) - movement.motionStartFrame)));
+            static_cast<std::int32_t>(movement.motionTransitionParameter / (mtwkGetEndFrame(work, MotionRegion::LowerBody) - movement.motionStartFrame)));
         const std::int32_t correction = static_cast<std::int32_t>(rate * (movement.previousField15c * movement.field160));
         movement.pendingYawCorrection = static_cast<std::int16_t>(movement.pendingYawCorrection + correction);
         std::int16_t remainder = static_cast<std::int16_t>(movement.rootYawOffset - correction);
@@ -1270,12 +1270,12 @@ void UpdatePlayerMovementState(PlayerMovementState &movement, bool) {
             remainder = 0;
         movement.rootYawOffset = remainder;
     }
-    if (SetMotionRegionFlag(work, 66U, 1, MotionRegion::LowerBody) && (movement.flags & 0x400U)) {
+    if (mtwkSetRegionFlag(work, 66U, 1, MotionRegion::LowerBody) && (movement.flags & 0x400U)) {
         movement.playerMotionFlagCursor = movement.playerMotionFlagCommands;
         movement.rootYawOffset = 0;
         movement.motionTransitionParameter = 0;
     }
-    GetMotionAnimationId(work, MotionRegion::LowerBody);
+    mtwkGetAnimationId(work, MotionRegion::LowerBody);
 }
 
 void plymGetControllerVerticalAxis(float *vertical, float *verticalSecond) {

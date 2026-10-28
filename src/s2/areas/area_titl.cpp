@@ -48,7 +48,7 @@ void RunTitle(std::uintptr_t argument) {
     UpdateGameNodeFlags(QTE_GAME_TITLE, work->score, &QTE_TITLE_SCORE_POSITIONS[0], 1, nullptr);
     UpdateGameNodeFlags(QTE_GAME_TITLE, work->bestScore, &QTE_TITLE_SCORE_POSITIONS[1], 1, nullptr);
     UpdateGameNodeFlags(QTE_GAME_TITLE, work->previousScore, &QTE_TITLE_SCORE_POSITIONS[2], 1, nullptr);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("TITL"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("TITL"), 0);
     EV_FreeAuthorPak(1, "0115");
     SetLowQualityHands(ctrlGetCharaByName(TITL_RYO));
     SetHighModelXYZ(ctrlGetCharaByName(TITL_RYO), 1, 0, 0);
@@ -205,7 +205,7 @@ void FinishTitleMotion(TitleWork *work) {
 void TitleRewardCallback(void *) {
     if (!filmCheckFadeTrackColour()) {
         EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1733, 1);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TITL"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TITL"), 0);
         HLib::MarkCurrentTaskForCleanup();
         scenFreeEvent("TITL.EV3");
     }
@@ -226,7 +226,7 @@ void ExitTitle(TitleWork *work) {
         EV_SetNewSceneIndex();
     spmFadeOut();
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1014)) {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EV_spmBeginSampleExecute();
     }
     EV_FreeAuthorPak(0, "0115");
@@ -243,7 +243,7 @@ void ExitTitle(TitleWork *work) {
             HLib::MarkCurrentTaskForCleanup();
             SetPlayerControlEnabled(1);
             scenFreeEvent("TITL.EV3");
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TITL"), 0);
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("TITL"), 0);
             SetScreenFilmFade(15, 255, 0, 0, 0, 0, 0, 0, 0);
         } else
             HLib::SetCurrentTaskTo(TitleRewardCallback);

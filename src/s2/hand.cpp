@@ -813,7 +813,7 @@ void ResetSearchHandState() {
     pairedTarget = false;
 }
 bool EvaluateSearchHandArm(MotionWork &work, std::uint8_t side, std::uint32_t interpolationMode) {
-    if (!GetCustomMotionOverrideFlags(&work) || side >= 2 || !(g_searchHandMotionOverride.flags & (1U << side)))
+    if (!mtwkGetCustomOverrideFlags(&work) || side >= 2 || !(g_searchHandMotionOverride.flags & (1U << side)))
         return false;
     if (chestOverride) {
         chestPrevious = workTransformMatrix;
@@ -836,16 +836,16 @@ void MotionCommonCallback(std::int64_t mode, std::int32_t interpolationMode) {
         EvaluateSearchHandArm(*handWork, 1, static_cast<std::uint32_t>(interpolationMode));
 }
 // @verified - p
-void AssignMotionCallbacks(MotionWork *work) {
+void mtwkAssignCallbacks(MotionWork *work) {
     if (work == handWork && (work->runtime.seqFlags & MSF_SearchHand))
         SetCustomMotionOverride(&g_searchHandMotionOverride);
     previousSolveStatus = currentSolveStatus;
     currentSolveStatus = 0;
 }
-std::uint32_t GetCustomMotionOverrideFlags(const MotionWork *work) {
+std::uint32_t mtwkGetCustomOverrideFlags(const MotionWork *work) {
     return work && work == handWork && (work->runtime.seqFlags & MSF_SearchHand) && overrideEnabled ? g_searchHandMotionOverride.flags : 0;
 }
-bool ClearSearchHandMotionRequests(MotionWork *work) {
+bool mtwkClearSearchHandRequests(MotionWork *work) {
     if (!work || work != handWork || !(work->runtime.seqFlags & MSF_SearchHand))
         return false;
     auto &state = work->runtime;
@@ -865,7 +865,7 @@ bool ClearSearchHandMotionRequests(MotionWork *work) {
 // @verified - p
 void GetSearchHandWristAngles(MotionWork &work, std::int16_t (&angles)[4]) {
     g_motionInterpolationType = (work.runtime.seqFlags >> motionSequenceInterpolationShift) & motionInterpolationLinear;
-    const std::uint32_t flags = GetCustomMotionOverrideFlags(&work);
+    const std::uint32_t flags = mtwkGetCustomOverrideFlags(&work);
     for (std::uint8_t side = 0; side < 2; ++side) {
         MotionArmRig &arm = Arm(work, side);
         float yaw, roll;

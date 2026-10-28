@@ -112,10 +112,10 @@ void B102_main_func(std::uintptr_t argument) {
 }
 void BayItemShopWaitPackageCallback(void *parameter) {
     auto *work = static_cast<BayItemShopWork *>(parameter);
-    if (!EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (!EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>("B102")))
         return;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     EV_NPC_NewLoadSw(1);
     HLib::SetCurrentTaskTo(BayItemShopStartCallback);
     if (const auto *shop = FindBayItemShop(work->area)) {
@@ -228,8 +228,8 @@ void BayItemShopDoneCallback(void *parameter) {
     EV_CleanupMapControlTask();
     HLib::MarkCurrentTaskForCleanup();
     hndlSetFlags(ctrlGetCharaByName(ryo));
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("B102"), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("B102"), 0);
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("B102"), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("B102"), 0);
     FinishLoading();
     SetAreaLoopCharacterControl(ryo, 0);
     SetPlayerControlEnabled(1);

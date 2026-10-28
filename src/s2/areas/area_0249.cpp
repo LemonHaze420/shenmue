@@ -22,7 +22,7 @@ void E0249LoopCallback(void *);
 // @verified - p
 void CleanupE0249(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0249_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -128,7 +128,7 @@ void E0249LoopCallback(void *taskData) {
         } else if (child->currentFrame == 140)
             EV_DisableCharacterDisplay(AREA_0249_TENT);
     } else if (child->parent->selection == 0 && child->currentFrame == 22) {
-        AssignImageModuleParameters(FindCharacterByScenarioName(AREA_0249_TENT), 1, 1, 1.0f, 0);
+        AssignImageModuleParameters(ctrlGetScenarioChara(AREA_0249_TENT), 1, 1, 1.0f, 0);
     }
     if (EV_authSceneCtrl(AuthSceneCtrl::IsLoaded) != 0)
         return;

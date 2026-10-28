@@ -47,10 +47,10 @@ void ApplyLighting() {
     for (std::int32_t index = 2; index < 7; ++index)
         AssignLightProgram(index);
     SetupLightConfig();
-    SetPluralControlFor(FindCharacterByScenarioName(SHEN_NAME(DRT0)), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(SHEN_NAME(DRT1)), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(SHEN_NAME(DRT2)), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(SHEN_NAME(TITL)), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(SHEN_NAME(DRT0)), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(SHEN_NAME(DRT1)), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(SHEN_NAME(DRT2)), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(SHEN_NAME(TITL)), 0);
     const Vector4 reflection{1.0f, 0.800000011920929f, 0.800000011920929f, 0.800000011920929f};
     for (std::int32_t index = 1; index <= 19; index += 2) {
         const shen_name name{make_shen_name('S', 'T', static_cast<char>('0' + index / 10), static_cast<char>('0' + index % 10))};
@@ -60,19 +60,19 @@ void ApplyLighting() {
         const shen_name name{make_shen_name('S', 'T', static_cast<char>('0' + index / 10), static_cast<char>('0' + index % 10))};
         SetScenarioReflectorBoardValues(name, &reflection);
     }
-    SetPluralControlFor(FindCharacterByScenarioName(SHEN_NAME(RYO_)), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(SHEN_NAME(RYO_)), 1);
 }
 void DispatchKhin() {
     std::uint64_t work = 0x2000000000ULL;
     if (!shenGetMinutesUntilNextFrameMinute() && EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1809) &&
-        !EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("KHIN"), 0)) {
+        !EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("KHIN"), 0)) {
         SetPlayerControlEnabled(0);
         EV_NPC_NewLoadSw(0);
         EV_ResetFreeTalkFlags();
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
             reinterpret_cast<std::uintptr_t>("KHIN"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-        EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KHIN"), 0);
         ExecuteAreaMainFunction("KHIN.EV3", reinterpret_cast<std::uintptr_t>(&work));
     }
 }

@@ -527,7 +527,7 @@ std::int32_t SearchCommandTurnPlayer(SearchTaskData &search) {
     }
     if (!(context.flags & 0x40U)) {
         mtwkRequestMotion(motion, 0, MotionRegion::LowerBody);
-        CopyMotionTransition(motion, nullptr, requested, 13, 0);
+        mtwkCopyTransition(motion, nullptr, requested, 13, 0);
         camCtrlSwitchToLockedOn(6);
         AcquireCommandControl(context);
         context.flags |= 0x40U;

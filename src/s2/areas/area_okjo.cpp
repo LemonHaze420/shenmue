@@ -53,7 +53,7 @@ void AreaOKJOMain(std::uintptr_t) {
     mtwkRequestMotion(scenFindMotionwork(OKJO_PLAYER), 0xf003, MotionRegion::LowerBody);
     SetIsSkySetup(1);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 21;
     date.minute = 0;
     SetCurrentDateTimeTo(date);
@@ -83,10 +83,10 @@ void OKJOSetupCharacters() {
     EV_SetCharaControllerFlags(OKJO_PLAYER, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharacterAlphaEnabled(OKJO_PLAYER, false);
     EV_SetRefBoardParamsFor(OKJO_PLAYER, 1);
-    SetReflectorBoardValues(FindCharacterByScenarioName(OKJO_PLAYER), reflector);
-    SetReflectorBoardValues(FindCharacterByScenarioName(OKJO_REN), reflector);
-    charaSetDisplayEnabledFlag(FindCharacterByScenarioName(OKJO_PLAYER), 1);
-    charaSetDisplayEnabledFlag(FindCharacterByScenarioName(OKJO_REN), 1);
+    SetReflectorBoardValues(ctrlGetScenarioChara(OKJO_PLAYER), reflector);
+    SetReflectorBoardValues(ctrlGetScenarioChara(OKJO_REN), reflector);
+    charaSetDisplayEnabledFlag(ctrlGetScenarioChara(OKJO_PLAYER), 1);
+    charaSetDisplayEnabledFlag(ctrlGetScenarioChara(OKJO_REN), 1);
     Handcuffs_Attach(OKJO_PLAYER, 1, OKJO_REN, 0, .30000001f);
     for (std::int32_t i = 0; i != 6; ++i)
         EV_SetObjectFlagByIndex(i, i & 1);
@@ -94,11 +94,11 @@ void OKJOSetupCharacters() {
 // @verified - p
 void OKJOStartAuthor() {
     if (currentScene->releasePackage)
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(currentScene->releasePackage), 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(currentScene->releasePackage), 0);
     if (currentScene->loadPackage) {
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(currentScene->loadPackage));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     }
     if (currentScene->audio)
         EV_LoadCutsceneFromCurrentScene(currentScene->audio);
@@ -121,7 +121,7 @@ void OKJOStartAuthor() {
     if (currentScene->author.name == OKJO_AUTHORS[2].name) {
         SetOkjoScreenFilm();
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         ++date.day;
         date.hour = 7;
         date.minute = 0;
@@ -172,12 +172,12 @@ void OKJOWaitDisplayCallback(void *) {
 void OKJOReleaseScene() {
     EV_cuffsSetFlags();
     for (const shen_name *character = characters; character->name != OKJO_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(currentScene->releasePackage), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(currentScene->releasePackage), 0);
     EV_FreeAuthorPak(0, "0214");
     EV_FreeAuthorPak(0, "0215");
     EV_FreeAuthorPak(0, "0216");

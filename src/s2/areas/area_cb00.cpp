@@ -51,8 +51,8 @@ void QueuePrompt(Cb00EventWork *work, std::int16_t status, std::int32_t extensio
     QueueCb00Qte(work->task, status, static_cast<std::int16_t>(cb00QteFrames + extension), work->frames - cb00QteFrames - 7);
 }
 void DisplayCheck(std::int32_t enabled) {
-    charaSetDisplayEnabledFlag(FindCharacterByScenarioName(CB00_RYO), enabled);
-    charaSetDisplayEnabledFlag(FindCharacterByScenarioName(CB00_REN), enabled);
+    charaSetDisplayEnabledFlag(ctrlGetScenarioChara(CB00_RYO), enabled);
+    charaSetDisplayEnabledFlag(ctrlGetScenarioChara(CB00_REN), enabled);
 }
 void TruckPosition() {
     EventSetPosition position{.cleanup = 0, .character = CB00_TRUCK, .parent = CB00_CENTRE, .position = CB00_TRUCK_EXIT_POSITION, .delay = 0};
@@ -90,7 +90,7 @@ void Cb00Initialize(HLib::Task *task) {
     work->smoke = -1;
     const Vector3 scale{1, 1, 1.5f};
     mtwkSetMotionworkScale3(CB00_BRIDGE, &scale);
-    GetCurrentDateTime(work->date);
+    shenGetCurrentDateTime(work->date);
     Cb00InitializationNullsub();
     shenSetClockAndCompassRenderTo(1);
     EV_setHoldStatesFlags(0);
@@ -231,7 +231,7 @@ void Cb00Callback(void *data) {
         work->phase = 18;
         break;
     case 17:
-        charaSetDisplayEnabledFlag(FindCharacterByScenarioName(CB00_RYO), 0);
+        charaSetDisplayEnabledFlag(ctrlGetScenarioChara(CB00_RYO), 0);
         PlayAuthor(work, 8);
         work->phase = 18;
         break;
@@ -489,7 +489,7 @@ void Cb00WaitFrameCallback(void *data) {
 }
 void Cb00Exit(Cb00EventWork *work) {
     DateTime current;
-    GetCurrentDateTime(current);
+    shenGetCurrentDateTime(current);
     if (static_cast<std::uint8_t>(work->date.hour - 5) > 17) {
         work->date.minute = std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(static_cast<std::uint8_t>(work->date.minute) + 30));
         SetCurrentDateTimeTo(work->date);

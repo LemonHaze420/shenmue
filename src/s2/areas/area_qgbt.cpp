@@ -83,9 +83,9 @@ void AreaQGBTCleanup(std::int32_t night, std::uint32_t) {
         EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
         PushGlobalLightingProgram();
         CheckIsArgEquZero(1);
-        SetPluralControlFor(FindCharacterByScenarioName(STREET_WATCH_RYO), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(fighter), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(partner), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(STREET_WATCH_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(fighter), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(partner), 1);
     } else {
         CheckIsArgEquZero(1);
         EV_ReinitLights(1);

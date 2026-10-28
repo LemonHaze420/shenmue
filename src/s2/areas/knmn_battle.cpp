@@ -111,8 +111,8 @@ void KnmnInstallButokuEndConditions() {
 void KnmnWaitBattleRegularCallback(void *data) {
     KnmnGameWork &work = *static_cast<KnmnGameWork *>(data);
     if (!work.state) {
-        const std::int32_t player = static_cast<std::int32_t>(GetFightCharacterFlag(1, FindCharacterByScenarioName(KNMN_RYO), 0));
-        const std::int32_t opponent = static_cast<std::int32_t>(GetFightCharacterFlag(1, FindCharacterByScenarioName(KNMN_KEM), 0));
+        const std::int32_t player = static_cast<std::int32_t>(GetFightCharacterFlag(1, ctrlGetScenarioChara(KNMN_RYO), 0));
+        const std::int32_t opponent = static_cast<std::int32_t>(GetFightCharacterFlag(1, ctrlGetScenarioChara(KNMN_KEM), 0));
         if (!IsFightActive() || player <= 30 || opponent <= 30) {
             if (IsFightActive())
                 check_dead_status(0);

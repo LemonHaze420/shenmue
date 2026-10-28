@@ -70,9 +70,9 @@ void Load0276Characters(void *data) {
         parent->loadState = 1;
     } else if (parent->loadState == 1 && EV_ForceLoadNpc(character) == 1) {
         SetScenarioCharacterRadius(character, 40.0f);
-        mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(character)), 6, 2);
+        mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 2);
         EV_SetCharacterAlphaEnabled(character, false);
-        SetLowQualityHands(FindCharacterByScenarioName(character));
+        SetLowQualityHands(ctrlGetScenarioChara(character));
         ++parent->characterIndex;
         parent->loadState = 0;
         if (AREA_0276_CHARACTERS[parent->characterIndex].name == 0xffffffffU) {
@@ -103,12 +103,12 @@ void Setup0276Environment() {
 }
 void Prepare0276Characters() {
     SetScenarioCharacterRadius(AREA_0276_RYO, 40.0f);
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(AREA_0276_RYO)), 6, 2);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(AREA_0276_RYO)), 6, 2);
     EV_SetCharacterAlphaEnabled(AREA_0276_RYO, false);
     Set0276Props(AREA_0276_INITIAL_PROPS, std::size(AREA_0276_INITIAL_PROPS), false);
 }
 void Restore0276Characters() {
-    mtwkSetExtraFlag(FindMotionWork(FindCharacterByScenarioName(AREA_0276_RYO)), 6, 0);
+    mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(AREA_0276_RYO)), 6, 0);
     EV_SetCharacterAlphaEnabled(AREA_0276_RYO, true);
     Set0276Props(AREA_0276_INITIAL_PROPS, std::size(AREA_0276_INITIAL_PROPS), true);
 }
@@ -130,12 +130,12 @@ void Update0276(void *data) {
         break;
     case 6:
         for (const char *package : {"0276A", "0277A"}) {
-            if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
-                EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+            if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0))
+                EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
         }
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
             reinterpret_cast<std::uintptr_t>(parent->selection > 2 ? "0277A" : "0276A"));
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         parent->state = 1;
         break;
     }
@@ -149,7 +149,7 @@ void Queue0276Author(Area0276Parameter *parent) {
     if (parent->selection == 0) {
         EV_LoadCutsceneFromCurrentScene("0276A000");
         Prepare0276FirstScene();
-        SetCharacterOsageMode(FindCharacterByScenarioName(AREA_0276_REN), 4);
+        SetCharacterOsageMode(ctrlGetScenarioChara(AREA_0276_REN), 4);
     } else if (parent->selection == 3) {
         EV_LoadCutsceneFromCurrentScene("0277A000");
         SetIsSkySetup(0);
@@ -282,7 +282,7 @@ void Cleanup0276(Area0276Parameter *parent) {
     AddInventoryItem(11, 1, 0);
     AddInventoryItem(12, 1, 0);
     DateTime date{};
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 22;
     date.minute = 0;
     SetCurrentDateTimeTo(date);

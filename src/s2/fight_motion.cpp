@@ -415,7 +415,7 @@ void vfApplyMotionDescriptor(VFActor *self) {
 
 // @verified - p
 void vfUpdateMoveVelocityWithKnockback(VFActor *self, float acceleration) {
-    SetMotionSpeed(self->motion, acceleration, MotionRegion::LowerBody);
+    mtwkSetSpeed(self->motion, acceleration, MotionRegion::LowerBody);
     const float ratio = self->knockbackAcceleration / acceleration;
     self->inverseScale = 1.0f / acceleration;
     self->scale = acceleration;
@@ -618,10 +618,10 @@ std::int8_t vfUpdatePredicate_40_41_44_50_51_54() {
 void vfInitializeActorMotionState(VFActor *self) {
     self->moveFlags = self->stateFlags = 0;
     MotionWork *const motion = FindMotionWork(self->character);
-    SetMotionSpeed(motion, 1, MotionRegion::LowerBody);
-    const float requested = GetMotionSpeed(motion, MotionRegion::LowerBody) * self->game->knockbackAmount;
+    mtwkSetSpeed(motion, 1, MotionRegion::LowerBody);
+    const float requested = mtwkGetSpeed(motion, MotionRegion::LowerBody) * self->game->knockbackAmount;
     const float scale = 0.2f > requested ? 0.2f : 1.5f < requested ? 1.5f : requested;
-    SetMotionSpeed(motion, scale, MotionRegion::LowerBody);
+    mtwkSetSpeed(motion, scale, MotionRegion::LowerBody);
     self->knockbackAcceleration = 0;
     self->scale = self->timeScale = scale;
     self->inverseScale = 1 / scale;
@@ -635,8 +635,8 @@ void vfInitializeActorMotionState(VFActor *self) {
     if (!style)
         style = static_cast<const std::byte *>(g_pFightStage->styles[0].file);
     mtwkSetExtraFlag(motion, 6, 0);
-    vfRegisterGroundTargetCallbacks(motion, self);
-    vfmaSetAngleFor(motion, 0x800);
+    mtwkRegisterGroundTargetCallbacks(motion, self);
+    mtwkSetAngle(motion, 0x800);
     self->motionParameters[0] = style + AuthoredOffset(style + 4);
     self->motionParameters[1] = style + AuthoredOffset(style + 8);
     self->motionParameters[2] = style + AuthoredOffset(style + 12);
@@ -714,7 +714,7 @@ void vfInitializeActorMotionState(VFActor *self) {
     for (std::uint8_t index = 0; index < 7; ++index)
         self->previousContactHeights[index] = self->previousGroundSamples[index] = -10000;
     vfRefreshContactReactionState(self);
-    if (SetMotionRegionFlag(self->motion, 70, 1, MotionRegion::LowerBody))
+    if (mtwkSetRegionFlag(self->motion, 70, 1, MotionRegion::LowerBody))
         self->moveFlags |= VFMF_MirrorReactionAngle;
     FRMG_t *const group = self->game->groups[self->groupIndex];
     if (self->game->mode & 0x800) {
@@ -768,7 +768,7 @@ void vfUpdateMotionTransitionFrames(VFActor *self) {
     if ((self->game->gameFlags & 0x1000000) || (self->secondaryMotionFlags & VFSMF_Unknown8000))
         frames = 1;
     self->motionTimer = static_cast<std::int16_t>(frames);
-    SetMotionFrameTime(self->motion, frames, MotionRegion::LowerBody);
+    mtwkSetFrameTime(self->motion, frames, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(self->motion, 2);
 }
 
@@ -1087,7 +1087,7 @@ void vfPlayFightSfx(std::uint32_t sound, VFActor *self, std::uint8_t mode) {
 void vfForceActorDefeat(VFActor *self) {
     if (!(self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_GuardState | VFHSF_AlignedToGround))) {
         mtwkSetExtraFlag(self->motion, 0, 0);
-        motRemoveCallback(self->motion);
+        mtwkRemoveCallback(self->motion);
         vfUpdateDefaultReactionAnim(self->game->enemySlots[self->groupIndex], 198);
         self->pendingAnimation = 198;
         vfApplyMotionDescriptor(self);
@@ -1615,13 +1615,13 @@ void vfUpdateAnimFlagsAndEvents(VFActor *self) {
         vfUpdateMotionTransitionFrames(self);
         if (self->moveFlags & VFMF_ForceFightingStyleTransition) {
             self->moveFlags &= ~VFMF_ForceFightingStyleTransition;
-            self->pendingAnimation = GetMotionAnimationId(motion, MotionRegion::LowerBody);
+            self->pendingAnimation = mtwkGetAnimationId(motion, MotionRegion::LowerBody);
             vfApplyMotionDescriptor(self);
         } else
             mtwkRequestMotion(motion, self->parameter4c4 & 0xfff, MotionRegion::LowerBody);
     }
     DecrementFrame(self->motionTimer);
-    SetMotionRegionFlag(motion, 69, (self->moveFlags & VFMF_MirrorReactionAngle) ? 0 : 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(motion, 69, (self->moveFlags & VFMF_MirrorReactionAngle) ? 0 : 2, MotionRegion::LowerBody);
     if (self->fightStyle == 16 && (self->motionFlags & VFMOF_ContactCategoryA)) {
         std::int32_t selector = 0;
         if (self->cameraMotionFlags & 0x28)
@@ -1629,9 +1629,9 @@ void vfUpdateAnimFlagsAndEvents(VFActor *self) {
         else if (self->cameraMotionFlags & 0x50)
             selector = (self->moveFlags & VFMF_MirroredStance) ? 30 : 25;
         if (std::bit_cast<std::uint32_t>(self->reactionDepth))
-            GetParentBoneWrapper(motion, selector);
+            mtwkGetParentBoneWrapper(motion, selector);
     }
-    vfClsampleCurrentMotion(motion, self->animationTime, self->moveDelta);
+    mtwkSampleCurrentMotion(motion, self->animationTime, self->moveDelta);
     auto hit = self->hitStateFlags;
     switch (self->actionTriggerPhase) {
     case 1:
@@ -1698,20 +1698,20 @@ void vfUpdateMotionTargetPointAndParams(VFActor *self) {
         g_currentMap.name != SHEN_NAME(GABT) &&
         (((hit & 1) && (active & 0x10000)) || !(hit & 0x101) || (active & 0x200000) ||
             (self->fightStyle == 30 && std::abs(int(self->contactAngles[target]) - int(static_cast<std::int16_t>(self->temporaryFacingAngle))) < 8192))) {
-        vfmaSetAngleFor(self->motion, 2048);
+        mtwkSetAngle(self->motion, 2048);
         Vector3 position;
-        GetCharacterMotionWorldPosition(self->targetingCharacter, 5, &position);
-        LatchMotionBoneTarget(FindMotionWork(self->character), 7, &position);
+        charaGetMotWorldPos(self->targetingCharacter, 5, &position);
+        mtwkLatchBoneTarget(FindMotionWork(self->character), 7, &position);
         return;
     }
     if (self->savedMarkerMask & 2)
-        vfmaSetAngleFor(self->motion, 0x8000);
+        mtwkSetAngle(self->motion, 0x8000);
     else if (vfHasDialoguePlayerFocus()) {
         const Vector3 position{0, 1.3f, -1};
-        vfmaSetAngleFor(self->motion, 0x8000);
-        SetMotionBoneTarget(self->motion, 7, &position);
+        mtwkSetAngle(self->motion, 0x8000);
+        mtwkSetBoneTarget(self->motion, 7, &position);
     } else
-        vfmaSetAngleFor(self->motion, 4096);
+        mtwkSetAngle(self->motion, 4096);
 }
 
 // The distance envelope lives in the actor's groundReactionScale word.
@@ -2035,7 +2035,7 @@ void vfUpdateFightFloorReaction(VFActor *self) {
     else
         self->stateFlags |= VFSF_Unknown100;
     if (self->stateFlags & VFSF_Unknown80) {
-        if (SetMotionRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody) && FloorWinner(game) == static_cast<std::int8_t>(self->groupIndex))
+        if (mtwkSetRegionFlag(self->motion, 65, 1, MotionRegion::LowerBody) && FloorWinner(game) == static_cast<std::int8_t>(self->groupIndex))
             self->moveFlags |= VFMF_ForceDefeat;
         return;
     }

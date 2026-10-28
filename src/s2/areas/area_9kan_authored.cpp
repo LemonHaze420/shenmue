@@ -283,7 +283,7 @@ void NineKanShelfSuccess() {
     QueueCameraShake(0, .3f, .7f, 92);
     EVT_AT_SetMot(NINE_KAN_REN, 0x1f97, 40, 2, 0x40000000U, 60);
     NineKanVoice("0237A037", 40);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetFlags, 1, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetFlags, 1, 0);
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(EVT_AT_PlayDynamix_Callback, 6, 0x0b, sizeof(EventPlayDynamics), NINE_KAN_TASK);
     RegisterEventTask(task);
     EventPlayDynamics *const work = static_cast<EventPlayDynamics *>(HLib::GetTaskParameter(task));

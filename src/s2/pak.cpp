@@ -2034,7 +2034,7 @@ PakGlobalData *FindPakByEntryName(const char *name) {
     return nullptr;
 }
 
-std::int64_t EV_ControlPackageResources(std::int32_t category, std::uint64_t mode, std::uintptr_t source, std::uintptr_t target, std::int32_t secondaryIndex) {
+std::int64_t EV_pakUtils(std::int32_t category, std::uint64_t mode, std::uintptr_t source, std::uintptr_t target, std::int32_t secondaryIndex) {
     const char *const name = reinterpret_cast<const char *>(source);
     auto *const partition = reinterpret_cast<PakAfsPartition *>(source);
     const std::int32_t firstIndex = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(target));
@@ -2058,7 +2058,7 @@ std::int64_t EV_ControlPackageResources(std::int32_t category, std::uint64_t mod
         case PakPackageOp::FinishLoading: {
             const std::int64_t previousBudget = pakLoadTaskData->timeBudget;
             SetupPakSpace(-1);
-            LoadPak();
+            pakLoadFlush();
             SetupPakSpace(previousBudget);
             break;
         }
@@ -2280,7 +2280,7 @@ const LoadedMapPackage *LoadPakPackageFromMemory(const char *packageName, std::s
     return index < loadedMapPackageCount && pakRuntimes[index].phase == PakPhase::Ready ? &loadedMapPackages[index] : nullptr;
 }
 
-void LoadPak() {
+void pakLoadFlush() {
     if (!pakLoadTaskData)
         return;
     while (pakLoadTaskData->pakBuffer || pakLoadTaskData->pakt || pakLoadTaskData->next || !HasThreadHandle(pakLoadTaskData->renderThreadHandle)) {
@@ -2299,7 +2299,7 @@ void FreePakLoadTask() {
         return;
 
 
-    LoadPak();
+    pakLoadFlush();
     for (std::size_t index = 0; index < nativePakSlotCount; ++index) {
         if (pakSlots[index].name.name && (pakSlots[index].flags & 0x10U) == 0)
             RemovePackage(index);

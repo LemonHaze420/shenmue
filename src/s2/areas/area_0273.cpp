@@ -43,12 +43,12 @@ void Update0273(void *taskData) {
 // @verified - p
 void Cleanup0273(Area0273Parameter *parent) {
     for (const shen_name *character = AREA_0273_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_0273_ARCHIVE), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_0273_ARCHIVE), 0);
     EV_FreeAuthorPak(0, AREA_0273_CONVERSATION);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->task);

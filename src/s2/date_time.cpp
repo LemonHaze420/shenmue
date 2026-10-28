@@ -155,7 +155,7 @@ bool SetupHandWatchCamera() {
     light->scale = {};
     const Vector3 position = GetCharacterWorldPosition(player);
     Vector3 cameraPosition{};
-    GetCharacterMotionWorldPosition(player, 5, &cameraPosition);
+    charaGetMotWorldPos(player, 5, &cameraPosition);
     cameraPosition.x = position.x;
     cameraPosition.y += 0.12f;
     cameraPosition.z = position.z;
@@ -163,7 +163,7 @@ bool SetupHandWatchCamera() {
     camCtrlSetNextPosition(cameraPosition);
     const std::int32_t inverseYaw = -GetAllAngYForNode(&player->entity.node);
     Vector3 hip{};
-    GetCharacterMotionWorldPosition(player, 1, &hip);
+    charaGetMotWorldPos(player, 1, &hip);
     handWatch.armPosition = {
         sin_fixed16(static_cast<std::int16_t>(inverseYaw)) * 0.2f + position.x,
         hip.y,
@@ -586,7 +586,7 @@ void InitTimeProgram_Callback(void*) {
 } // namespace
 
 // @verified - p
-void GetCurrentDateTime(DateTime& dateTime) {
+void shenGetCurrentDateTime(DateTime& dateTime) {
     dateTime = g_currentDateTime;
 }
 
@@ -782,7 +782,7 @@ std::int64_t shenAdjustCurrentTimeByMinutes(std::int16_t minutes) {
 
 std::int64_t shenUpdateCurrentDateTime() {
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     if (dateTime.hour >= 8) ++dateTime.day;
     dateTime.hour = 8;
     dateTime.minute = 0;
@@ -1067,7 +1067,7 @@ std::uint32_t UpdateTempHourMinTimeScale(std::int32_t hour,
 // @verified - p
 std::int32_t IsCurrentTimeRange(std::uint16_t start, std::uint16_t end) {
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     std::int8_t hour = dateTime.hour;
     if (hour < 7) hour = static_cast<std::int8_t>(hour + 24);
     const std::uint16_t current = static_cast<std::uint16_t>(

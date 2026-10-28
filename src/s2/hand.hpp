@@ -405,10 +405,10 @@ void ResetSearchHandState();
 
 extern MotionOverride g_searchHandMotionOverride;
 void MotionCommonCallback(std::int64_t mode, std::int32_t interpolationMode);
-void AssignMotionCallbacks(MotionWork *work);
+void mtwkAssignCallbacks(MotionWork *work);
 bool EvaluateSearchHandArm(MotionWork &work, std::uint8_t side, std::uint32_t interpolationMode);
-std::uint32_t GetCustomMotionOverrideFlags(const MotionWork *work);
-bool ClearSearchHandMotionRequests(MotionWork *work);
+std::uint32_t mtwkGetCustomOverrideFlags(const MotionWork *work);
+bool mtwkClearSearchHandRequests(MotionWork *work);
 void GetSearchHandWristAngles(MotionWork &work, std::int16_t (&angles)[4]);
 inline std::int16_t g_characterHandWristAngles[4]{};
 

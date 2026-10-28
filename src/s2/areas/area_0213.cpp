@@ -38,8 +38,8 @@ void ConfigureE0213Environment() {
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(1, AREA_0213_CONVERSATION);
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("MAP"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("MAP"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     const Vector3 position{0.0f, 14.4f, 0.0f};
     for (std::int32_t index = 0; index < 9; ++index)
         SetMapModelSlotTransform(index, &position, 0);
@@ -100,12 +100,12 @@ void RestoreE0213Characters() {
 // @verified - p
 void CleanupE0213(AreaAuthorTaskParameter *parent) {
     for (const shen_name *character = AREA_0213_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MAP"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MAP"), 0);
     EV_FreeAuthorPak(0, AREA_0213_CONVERSATION);
     DeleteMotion(std::bit_cast<std::int32_t>(parent->motion));
     EV_CleanupMapControlTask();

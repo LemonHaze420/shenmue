@@ -60,7 +60,7 @@ bool IsBattleMotionAvailable() {
     const Vector3 first{244.0f, 0.0f, 123.5f}, second{244.75f, 0.0f, 132.0f};
     Vector3 position;
     EV_GetCharaPosition(STREET_WATCH_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-    const Vector3i rotation = GetCharacterWorldRotation(FindCharacterByScenarioName(STREET_WATCH_RYO));
+    const Vector3i rotation = GetCharacterWorldRotation(ctrlGetScenarioChara(STREET_WATCH_RYO));
     return TestCharaPositionWithinRange(STREET_WATCH_RYO, &first, &second, shen_name{0}) && position.y > 89.0f &&
         static_cast<std::uint32_t>(rotation.y) - 5463U <= 21842U;
 }
@@ -117,7 +117,7 @@ void AreaQKBTMain(std::uint32_t parameters) {
     shenSetTimeSimulationTo(0);
     shenSetClockAndCompassRenderTo(1);
     InitializeDropParticles();
-    EV_SetCharaControllerFlags(STREET_WATCH_RYO, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(STREET_WATCH_RYO, CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
     HLib::EnqueueTaskWithoutParameter(MainCallback, 4, 0xb, static_cast<std::int32_t>(STREET_WATCH_TASK.name));
     if (!parameters) {
         SetFightModeFlags(static_cast<std::uint16_t>(GetFightModeFlags() | 1U));

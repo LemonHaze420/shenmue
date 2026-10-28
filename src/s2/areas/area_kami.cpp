@@ -41,8 +41,8 @@ std::int32_t barberHand[57]{0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546
 void KAMIDebugNullsub() {
 }
 void DisablePluralControl() {
-    SetPluralControlFor(FindCharacterByScenarioName(KAMI_PLAYER), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(KAMI_BARBER), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(KAMI_PLAYER), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(KAMI_BARBER), 0);
 }
 void DisableControllers(shen_name character) {
     EV_EnableCharacterDisplay(character);
@@ -61,17 +61,17 @@ void EnablePlayerControllers() {
 }
 void RetireCharacters() {
     for (const shen_name *character = characters; character->name != KAMI_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
 }
 void ResetFaceModels() {
-    SetHighModelXYZ(FindCharacterByScenarioName(KAMI_BARBER), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(KAMI_BARBER), 0, 1, 0);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(KAMI_PLAYER), FacialNodeOriginal);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(KAMI_BARBER), FacialNodeOriginal);
+    SetHighModelXYZ(ctrlGetScenarioChara(KAMI_BARBER), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(KAMI_BARBER), 0, 1, 0);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(KAMI_PLAYER), FacialNodeOriginal);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(KAMI_BARBER), FacialNodeOriginal);
 }
 void RevealScene() {
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -94,8 +94,8 @@ void AreaKAMIMain(std::uintptr_t parameter) {
     kami.parent = HLib::GetCurrentTask();
     kami.request.command = -1;
     kami.request.nextState = *reinterpret_cast<const std::int32_t *>(parameter) != 0 ? 4 : 6;
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KAMI"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KAMI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("KAMI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("KAMI"), 0);
     HLib::SetupTimedTask(kami.self, 0);
     AssignGenericNpcLoadContext(characters, kami.self);
     EV_NPC_NewLoadSw(0);
@@ -165,31 +165,31 @@ void KAMIStateCallback(void *) {
         EV_AT_SetAngY(KAMI_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, 0x4000, 0});
         mtwkSetExtraFlag(scenFindMotionwork(KAMI_PLAYER), 17, 0);
         mtwkRequestMotion(scenFindMotionwork(KAMI_PLAYER), KAMI_PLAYER_SEATED_MOTION, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(KAMI_PLAYER), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(KAMI_PLAYER), 71, 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(scenFindMotionwork(KAMI_PLAYER), 13, 0);
         const Vector4 reflector{1, .30000001f, .30000001f, .30000001f};
-        SetReflectorBoardValues(FindCharacterByScenarioName(KAMI_PLAYER), reflector);
+        SetReflectorBoardValues(ctrlGetScenarioChara(KAMI_PLAYER), reflector);
         EV_SetRefBoardParamsFor(KAMI_PLAYER, 1);
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(KAMI_PLAYER), FacialNodeReplacement);
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(KAMI_PLAYER), 4, 30, 1);
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(KAMI_PLAYER), FacialNodeReplacement);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(KAMI_PLAYER), 4, 30, 1);
         DisableControllers(KAMI_BARBER);
-        SetReflectorBoardValues(FindCharacterByScenarioName(KAMI_BARBER), reflector);
+        SetReflectorBoardValues(ctrlGetScenarioChara(KAMI_BARBER), reflector);
         EV_SetRefBoardParamsFor(KAMI_BARBER, 1);
-        SetHighModelXYZ(FindCharacterByScenarioName(KAMI_BARBER), 1, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(KAMI_BARBER), 0, 1, 0);
-        ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(KAMI_BARBER), 0, reinterpret_cast<std::byte *>(barberHand), 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(KAMI_BARBER), 1, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(KAMI_BARBER), 0, 1, 0);
+        ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(KAMI_BARBER), 0, reinterpret_cast<std::byte *>(barberHand), 0);
         EV_AT_SetPos(KAMI_BARBER, EventTransformFlags::World | EventTransformFlags::AllAxes,
             Vector3{std::bit_cast<float>(0x435a6b85U), std::bit_cast<float>(0x42d10000U), 175.06999f});
         EV_AT_SetAngY(KAMI_BARBER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, 18021, 0});
         mtwkSetExtraFlag(scenFindMotionwork(KAMI_BARBER), 17, 0);
-        SetFaceFlagsForChara_0(FindCharacterByScenarioName(KAMI_BARBER), FacialNodeReplacement);
-        SetHighModelAndFaceFlagsForChara(FindCharacterByScenarioName(KAMI_BARBER), 1, 1, 1);
-        SetFixoDataForMotionWork(FindCharacterByScenarioName(KAMI_RAZOR), FindCharacterByScenarioName(KAMI_BARBER), 14,
+        SetFaceFlagsForChara_0(ctrlGetScenarioChara(KAMI_BARBER), FacialNodeReplacement);
+        SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(KAMI_BARBER), 1, 1, 1);
+        SetFixoDataForMotionWork(ctrlGetScenarioChara(KAMI_RAZOR), ctrlGetScenarioChara(KAMI_BARBER), 14,
             Vector3{std::bit_cast<float>(0x3de76c8bU), std::bit_cast<float>(0x3cf5c28fU), -.033f}, std::array<std::int32_t, 3>{18204, 31493, 5825});
         mtwkRequestMotion(scenFindMotionwork(KAMI_BARBER), KAMI_RAZOR_APPROACH_MOTION, MotionRegion::LowerBody);
-        SetMotionLayerLoopStartTime(scenFindMotionwork(KAMI_BARBER), 80, MotionRegion::LowerBody);
-        SetMotionSpeed(scenFindMotionwork(KAMI_BARBER), 2, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(KAMI_BARBER), 71, 0, MotionRegion::LowerBody);
+        mtwkSetLayerLoopStartTime(scenFindMotionwork(KAMI_BARBER), 80, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(KAMI_BARBER), 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(KAMI_BARBER), 71, 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(scenFindMotionwork(KAMI_BARBER), 13, 0);
         kami.request.timer = (GetMotionFrameCount(KAMI_RAZOR_APPROACH_MOTION) - 70) / 2;
         EVS_LoopCamera(200, {}, {});
@@ -202,9 +202,9 @@ void KAMIStateCallback(void *) {
     }
     case 11:
         mtwkRequestMotion(scenFindMotionwork(KAMI_BARBER), KAMI_RAZOR_HOLD_MOTION, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(KAMI_BARBER), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(KAMI_BARBER), 71, 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(scenFindMotionwork(KAMI_BARBER), 13, 0);
-        SetMotionSpeed(scenFindMotionwork(KAMI_BARBER), 1, MotionRegion::LowerBody);
+        mtwkSetSpeed(scenFindMotionwork(KAMI_BARBER), 1, MotionRegion::LowerBody);
         kami.request.timer = 200;
         kami.request.state = 3;
         kami.request.nextState = 15;
@@ -214,7 +214,7 @@ void KAMIStateCallback(void *) {
     case 16: {
         const std::uint8_t failed = kami.request.state == 16;
         camCtrlSetFlags();
-        ResetCharaFixo(FindCharacterByScenarioName(KAMI_RAZOR));
+        ResetCharaFixo(ctrlGetScenarioChara(KAMI_RAZOR));
         kami.request.command = failed ? 4 : 5;
         SetPlayerControlEnabled(0);
         DispatchAuthor();
@@ -234,8 +234,8 @@ void KAMIStateCallback(void *) {
         SetPlayerControlEnabled(1);
         FinishLoading();
         shenSetClockAndCompassRenderTo(0);
-        SetPluralControlFor(FindCharacterByScenarioName(KAMI_PLAYER), 1);
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KAMI"), 0);
+        SetPluralControlFor(ctrlGetScenarioChara(KAMI_PLAYER), 1);
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KAMI"), 0);
         HLib::DestroyTask(kami.self);
         break;
     case 20:
@@ -289,9 +289,9 @@ void KAMIRestoreSuccessfulGameplay() {
     }
     mtwkRequestMotion(scenFindMotionwork(KAMI_PLAYER), 0xf002, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(KAMI_PLAYER), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(KAMI_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(KAMI_PLAYER), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(KAMI_PLAYER), 13, 0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_FreeAuthorPak(0, "0027");
     RetireCharacters();
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 141))
@@ -312,14 +312,14 @@ void KAMIRestoreFailedGameplay() {
         Vector3{std::bit_cast<float>(0x4364b333U), std::bit_cast<float>(0x42d10000U), 177.8f});
     EV_AT_SetAngY(KAMI_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, 10693, 0});
     mtwkSetExtraFlag(scenFindMotionwork(KAMI_PLAYER), 17, 0);
-    SetMotionRegionFlag(scenFindMotionwork(KAMI_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(KAMI_PLAYER), 71, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(KAMI_PLAYER), 13, 0);
     EnablePlayerControllers();
     EV_FreeAuthorPak(0, "0027");
     RetireCharacters();
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EnablePlayerControllers();
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KAMI"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("KAMI"), 0);
     doorLoadAuthorWithAudio({});
     EV_NPC_NewLoadSw(1);
     KAMIFinish();
@@ -332,7 +332,7 @@ void KAMIFinish() {
     SetPlayerControlEnabled(1);
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    SetPluralControlFor(FindCharacterByScenarioName(KAMI_PLAYER), 1);
+    SetPluralControlFor(ctrlGetScenarioChara(KAMI_PLAYER), 1);
     camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     HLib::DestroyTask(kami.self);

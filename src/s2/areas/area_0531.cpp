@@ -30,7 +30,7 @@ constexpr std::uint16_t palette0531[]{
 void Setup0531Fire() {
     const Vector3 position{154.74000549316406f, 100.125f, 392.17999267578125f};
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     date.hour = 22;
     date.minute = 0;
     SetCurrentDateTimeTo(date);
@@ -110,7 +110,7 @@ void Update0531(void *taskData) {
 // @verified - p
 void Cleanup0531(AuthorViewerPairTaskParameter *parent) {
     for (const shen_name *character = AREA_0531_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }

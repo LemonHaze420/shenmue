@@ -72,12 +72,12 @@ void AuthoredFlags(bool enabled) {
 void SelectAuthorPackage(std::uint16_t author) {
     const char *discard = author ? "AKA3" : "AB00";
     const char *load = author ? "AB00" : "AKA3";
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(discard), 0))
-        EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(discard), 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(discard), 0))
+        EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(discard), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(load));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(load), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(load), 0);
 }
 void AuthorLoopCallback(void *parameter) {
     auto &work = *static_cast<AuthorLoopWork *>(parameter);
@@ -217,7 +217,7 @@ void BeginFight(AlleyBattleWork &work) {
     for (auto name : characters) {
         if (name.name == 0xffffffffU)
             break;
-        SetCharacterType(FindCharacterByScenarioName(name), CharacterTypeDefault);
+        SetCharacterType(ctrlGetScenarioChara(name), CharacterTypeDefault);
     }
     vfmQueueFightStart(6, 2, 1, 1, -1);
     work.elapsed = 690;
@@ -292,7 +292,7 @@ void Exit(AlleyBattleWork &work) {
     colourBlendInitialized = false;
     ET_AT_KillWork(work.characters);
     GetNpcBatchCountOverride(work.npcBatchCount);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ABLB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("ABLB"), 0);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work.task);
     EV_scenQueueLoad(2, SHEN_NAME(0055), 6);
@@ -329,11 +329,11 @@ void ABLB_main_func(std::uintptr_t) {
     work->colours[2][0] = work->colours[2][1] = 20;
     work->fadeOutSeconds = 12;
     work->fadeInSeconds = 1;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("ABLB"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("ABLB"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ABLB"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("ABLB"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("ABLB"), 0);
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0138A010");
     FinishLoading();

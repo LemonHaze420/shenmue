@@ -190,8 +190,8 @@ void DartsResetRound(DartsEventWork *work) {
     work->usedBands = {};
 }
 void DartsInitializeGame(DartsEventWork *work) {
-    EV_mtwkSetEnabled(scenFindMotionwork(DART_PLAYER), 0);
-    EV_mtwkSetEnabled(scenFindMotionwork(work->entry->enemy->name), 0);
+    mtwkSetEnabled(scenFindMotionwork(DART_PLAYER), 0);
+    mtwkSetEnabled(scenFindMotionwork(work->entry->enemy->name), 0);
     EV_EnsureCharacterDraw(DartsSelectBoard(work, {}));
     EV_EnableCharacterDisplay(DartsSelectBoard(work, {}));
     for (std::int32_t index = 0; index < 5; ++index) {
@@ -224,7 +224,7 @@ void DartsInitStart(void *data) {
         HLib::DestroyCurrentTask();
         return;
     }
-    GetCurrentDateTime(work->previousTime);
+    shenGetCurrentDateTime(work->previousTime);
     shenSetTimeSimulationTo(0);
     shenSetClockAndCompassRenderTo(1);
     SetPlayerControlEnabled(0);
@@ -300,7 +300,7 @@ void DartsInitStart2(void *data) {
         EV_spmBeginSampleExecute();
         const Vector3 position{.x = 0, .y = 0, .z = 0.60000002f};
         const Vector3i rotation{};
-        SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
         QueueDartsPosition(DART_PLAYER, DartsSelectBoard(work, {}), &position, &rotation, 0);
         const shen_name board = DartsSelectBoard(work, {});
         EVT_AT_SetCam(7200, board, board, 0, 0, 0);
@@ -345,7 +345,7 @@ void DartsAskPlay(void *data) {
 
     } else if (work->nextState == 1) {
         work->nextState = 2;
-        SetMotionFrameTime(scenFindMotionwork(DART_PLAYER), 5, MotionRegion::LowerBody);
+        mtwkSetFrameTime(scenFindMotionwork(DART_PLAYER), 5, MotionRegion::LowerBody);
         std::int16_t choices[4]{-1, 36, 23, -1};
         SetupControlSpeakAndUI(choices, 1800, 23, 2);
     } else if (work->nextState == 2 && !GetShouldRenderIcons(RenderIconSlot::ActionSelector)) {
@@ -392,19 +392,19 @@ void DartsInsertCoin(void *data) {
         SetPlayerGameFlags(PlayerGameFlagMode::Bit5, nullptr);
         const Vector3 position{.x = 0, .y = 0, .z = 0.60000002f};
         const Vector3i rotation{};
-        SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
         QueueDartsPosition(DART_PLAYER, DartsSelectBoard(work, {}), &position, &rotation, 0);
         EventSetMotion motion{.cleanup = 0, .character = DART_PLAYER, .animation = 6369, .frame = -1, .speed = 1, .flags = 0x80000000U, .delay = 0};
         EVT_AT_SetMot_Callback(&motion);
         GetMotionFrameCount(6369);
-        EV_mtwkSetEnabled(scenFindMotionwork(DART_PLAYER), 1);
+        mtwkSetEnabled(scenFindMotionwork(DART_PLAYER), 1);
         const shen_name board = DartsSelectBoard(work, {});
         EVT_AT_SetCam(7203, board, board, 0, 0, 0);
         DartsQueueCameraWait(work, 7204, board, board);
         AddThisToCashOrSegaCoins(-5, ECashOrCoins::Cash2);
     }
     if (work->gameState == 1) {
-        const std::int32_t frame = static_cast<std::int32_t>(GetMotionFrame(scenFindMotionwork(DART_PLAYER), MotionRegion::LowerBody));
+        const std::int32_t frame = static_cast<std::int32_t>(mtwkGetFrame(scenFindMotionwork(DART_PLAYER), MotionRegion::LowerBody));
         Vector3 position;
         Vector3i rotation;
         if (frame == 30) {
@@ -445,12 +445,12 @@ void DartsInsertCoin(void *data) {
         const Vector3 offset{.x = 1, .y = 1, .z = 1};
         SetCharaTargetTransformOffset(DART_PLAYER, &offset, 1);
     } else if (work->gameState == 2) {
-        if (SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 65, 1, MotionRegion::LowerBody)) {
+        if (mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 65, 1, MotionRegion::LowerBody)) {
             ++work->gameState;
-            EV_mtwkSetEnabled(scenFindMotionwork(DART_PLAYER), 0);
+            mtwkSetEnabled(scenFindMotionwork(DART_PLAYER), 0);
             return;
         }
-        const std::int32_t frame = static_cast<std::int32_t>(GetMotionFrame(scenFindMotionwork(DART_PLAYER), MotionRegion::LowerBody));
+        const std::int32_t frame = static_cast<std::int32_t>(mtwkGetFrame(scenFindMotionwork(DART_PLAYER), MotionRegion::LowerBody));
         Vector3 position;
         if (frame == 55) {
             Loop3DSoundEffect(0x181, frame);
@@ -584,7 +584,7 @@ void DartsProjectImpact(DartsEventWork *work, Vector3 *impact) {
     EV_AT_SetPos(DART_COIN, EventTransformFlags::AllAxes, current);
 }
 void DartsComputeCompactImpact(DartsEventWork *work, Vector3 *impact) {
-    const float frame = GetMotionFrame(scenFindMotionwork(DART_PLAYER), MotionRegion::LowerBody);
+    const float frame = mtwkGetFrame(scenFindMotionwork(DART_PLAYER), MotionRegion::LowerBody);
     const std::int32_t phase = static_cast<std::int32_t>(work->wobblePhaseY);
     if (phase <= 22)
         impact->x = phase * 0.0090909088f;
@@ -686,8 +686,8 @@ void DartsPlayingLoop(void *data) {
         DartsComputeCompactImpact(work, &work->impactPosition);
     DartsPositionActors(work);
     mtwkRequestMotion(scenFindMotionwork(DART_PLAYER), 6370, MotionRegion::LowerBody);
-    SetMotionLayerEndFrame(scenFindMotionwork(DART_PLAYER), 70, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(DART_PLAYER), 1, MotionRegion::LowerBody);
+    mtwkSetLayerEndFrame(scenFindMotionwork(DART_PLAYER), 70, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(DART_PLAYER), 1, MotionRegion::LowerBody);
     HLib::SetCurrentTaskTo(DartsGameMain);
 }
 void DartsPlaying(void *data) {
@@ -718,7 +718,7 @@ void DartsPlaying(void *data) {
         const shen_name board = DartsSelectBoard(work, {});
         Vector3 position{.x = work->standardBoard ? -0.015f : 0.010000001f, .y = -0.0020000001f, .z = 1.8f};
         const Vector3i zero{};
-        SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
         QueueDartsPosition(DART_PLAYER, board, &position, &zero, 0);
         if (work->standardBoard) {
             EVT_AT_SetMot(DART_PLAYER, 6371, 27, 0, 0x80000000U, 0);
@@ -738,7 +738,7 @@ void DartsPlaying(void *data) {
             EV_AT_SetPos(DART_COIN, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
         } else {
             EVT_AT_SetMot(DART_PLAYER, 6371, 44, 0, 0x80000000U, 0);
-            SetMotionSpeed(scenFindMotionwork(DART_PLAYER), 1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(DART_PLAYER), 1, MotionRegion::LowerBody);
         }
         if (work->entry->opponentMode == 2 && work->enemyTurn)
             DartsSelectAiTargetBand(work);
@@ -810,7 +810,7 @@ void DartsQueueProjectile(shen_name board, shen_name arrow, std::int32_t score, 
     GetScenarioCharacterEulerAngles(arrow, &rotation, EventTransformFlags::Local);
     const Vector3 target = work->target;
     const Vector3i boardRotation{.x = 0, .y = 49152, .z = 0};
-    SetMotionRegionFlag(scenFindMotionwork(arrow), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(arrow), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(arrow, board, &target, &boardRotation, 0);
     EV_GetCharaPosition(arrow, CHARACTER_TRANSLATION_ROOT, &work->target, EventTransformFlags::Local);
     GetScenarioCharacterEulerAngles(arrow, &work->targetRotation, EventTransformFlags::Local);
@@ -825,7 +825,7 @@ void DartsQueueProjectile(shen_name board, shen_name arrow, std::int32_t score, 
 }
 void DartsGameMain(void *data) {
     DartsEventWork *const work = static_cast<DartsEventWork *>(data);
-    if (GetMotionFrame(scenFindMotionwork(DART_PLAYER), MotionRegion::LowerBody) < 26)
+    if (mtwkGetFrame(scenFindMotionwork(DART_PLAYER), MotionRegion::LowerBody) < 26)
         return;
     const shen_name arrow = DartsArrowName(work->state % 5, false);
     ResetCharaFixo(ctrlGetCharaByName(arrow));
@@ -856,11 +856,11 @@ void DartsEnemyShot(void *data) {
         PlayDartsThrowStartResponse(0, true, EVENT_CHARACTER_INVALID);
     const Vector3 position{.x = 0, .y = 0, .z = 4};
     const Vector3i rotation{};
-    SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(opponent, board, &position, &rotation, 0);
     const Vector3 ryoPosition{.x = 0.80000001f, .y = 0, .z = 4.6999998f};
     const Vector3i ryoRotation{.x = 0, .y = 1820, .z = 0};
-    SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(DART_PLAYER, board, &ryoPosition, &ryoRotation, 0);
     EventSetMotion motion{.cleanup = 0, .character = DART_PLAYER, .animation = 61442, .frame = -1, .speed = 1, .flags = 0x80000000U, .delay = 0};
     EVT_AT_SetMot_Callback(&motion);
@@ -901,11 +901,11 @@ void DartsEnemyPlaying(void *data) {
         const shen_name board = DartsSelectBoard(work, {});
         const Vector3 position{.x = 0, .y = 0, .z = 4};
         const Vector3i rotation{};
-        SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
         QueueDartsPosition(opponent, board, &position, &rotation, 0);
         const Vector3 ryoPosition{.x = 0.80000001f, .y = 0, .z = 4.6999998f};
         const Vector3i ryoRotation{.x = 0, .y = 1820, .z = 0};
-        SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
         QueueDartsPosition(DART_PLAYER, board, &ryoPosition, &ryoRotation, 0);
         EventSetMotion motion{.cleanup = 0, .character = DART_PLAYER, .animation = 61442, .frame = -1, .speed = 1, .flags = 0x80000000U, .delay = 0};
         EVT_AT_SetMot_Callback(&motion);
@@ -923,7 +923,7 @@ void DartsEnemyPlaying(void *data) {
         work->opponentScore.impactIterations = DartsComputeAiImpactPoint(work);
         work->gameState = 100;
         work->resetFrame = DartsBeginOpponentThrow(opponent, work->difficulty);
-        SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     }
 }
 void DartsRyoShot(void *data) {
@@ -941,13 +941,13 @@ void DartsRyoShot(void *data) {
     DartsResponse(work, 28);
     const Vector3 opponentPosition{.x = -1, .y = 0, .z = 3.5f};
     const Vector3i opponentRotation{.x = 0, .y = 40960, .z = 0};
-    SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(opponent, board, &opponentPosition, &opponentRotation, 0);
-    SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(opponent, board, &opponentPosition, &opponentRotation, 60);
     const Vector3 position{.x = 0, .y = 0, .z = 4};
     const Vector3i rotation{};
-    SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(DART_PLAYER, board, &position, &rotation, 0);
     EventSetMotion motion{.cleanup = 0, .character = DART_PLAYER, .animation = 6371, .frame = -1, .speed = 1, .flags = 0x80000000U, .delay = 0};
     EVT_AT_SetMot_Callback(&motion);
@@ -1235,11 +1235,11 @@ std::int32_t DartsAdmissionIntroduction(DartsEventWork *work) {
     const shen_name board = work->entry->placements[work->entry->placementIndex].character;
     const Vector3 playerPosition{.x = 1, .y = 0, .z = 4};
     const Vector3i playerRotation{.x = 0, .y = 0x4000, .z = 0};
-    SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(DART_PLAYER, board, &playerPosition, &playerRotation, 0);
     const Vector3 opponentPosition{.x = 0, .y = 0, .z = 4.1999998f};
     const Vector3i opponentRotation{};
-    SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(opponent, board, &opponentPosition, &opponentRotation, 0);
     EVT_AT_SetMot(DART_PLAYER, 61442, -1, 1, 0x80000000U, 0);
     EVT_AT_SetMot(opponent, DART_OPPONENT_WORDS[index][9], -1, 1, 0x80000000U, 0);
@@ -1286,7 +1286,7 @@ std::int32_t DartsAdmissionOffer(DartsEventWork *work) {
     EV_DisableCharacterDisplay(DART_ADMISSION_ARROW);
     const Vector3 position{.x = 0, .y = 0, .z = 4};
     const Vector3i rotation{};
-    SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(opponent, board, &position, &rotation, 0);
     EVT_AT_SetMot(opponent, DART_OPPONENT_WORDS[index][11], -1, 1, 0x80000000U, 0);
     return frames;
@@ -1317,7 +1317,7 @@ std::int32_t DartsAcceptBet(DartsEventWork *work) {
     const shen_name board = work->entry->placements[work->entry->placementIndex].character;
     const Vector3 position{.x = 0, .y = 0, .z = 4};
     const Vector3i rotation{};
-    SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(opponent, board, &position, &rotation, 0);
     EVT_AT_SetMot(opponent, DART_OPPONENT_WORDS[index][7], -1, 1, 0x80000000U, 0);
     EVT_AT_SetCam(static_cast<std::int32_t>(index) + 7550, board, board, 0, 0, delay);
@@ -1379,7 +1379,7 @@ void DartsOpponentAdmission(void *data) {
     }
     case 4:
         if (GetShouldRenderIcons(RenderIconSlot::ActionSelector)) {
-            if (SetMotionRegionFlag(scenFindMotionwork(work->entry->enemy->name), 65, 1, MotionRegion::LowerBody))
+            if (mtwkSetRegionFlag(scenFindMotionwork(work->entry->enemy->name), 65, 1, MotionRegion::LowerBody))
                 EVT_AT_SetMot(work->entry->enemy->name, DART_OPPONENT_WORDS[DartsOpponentIndex(work->entry->enemy->name)][10], -1, 1, 0x80000000U, 0);
         } else {
             work->gameState = 0;
@@ -1550,11 +1550,11 @@ void DartsPlayEnd(void *data) {
         return;
     }
     SetScenarioCharacterTransparency(DART_PLAYER, 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(DART_PLAYER), 1);
+    mtwkSetEnabled(scenFindMotionwork(DART_PLAYER), 1);
     EVT_AT_SetMot(DART_PLAYER, 61442, -1, 1, 0x80000000U, 0);
     const Vector3 position{.x = -0.015f, .y = -0.0020000001f, .z = 1.8f};
     const Vector3i rotation{};
-    SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(DART_PLAYER, DartsSelectBoard(work, {}), &position, &rotation, 0);
     DartsRetireChildren(work);
     work->previousTime.minute = static_cast<std::uint8_t>(work->previousTime.minute + 15);
@@ -1563,7 +1563,7 @@ void DartsPlayEnd(void *data) {
     if (work->entry->opponentMode == 2) {
         const shen_name opponent = work->entry->enemy->name;
         SetScenarioCharacterTransparency(opponent, 1);
-        EV_mtwkSetEnabled(scenFindMotionwork(opponent), 1);
+        mtwkSetEnabled(scenFindMotionwork(opponent), 1);
         EVT_AT_SetMot(opponent, 61442, -1, 1, 0x80000000U, 0);
         HLib::AssignCallbackForTask(work->task, DartsExitBattle);
     } else
@@ -1674,19 +1674,19 @@ void DartsExitBattle(void *data) {
     EVT_AT_ObjectDisp_1(DART_PLAYER, duration, 0);
     Vector3 position{.x = playerX, .y = 0, .z = playerZ};
     Vector3i rotation{.x = 0, .y = 0x4000, .z = 0};
-    SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(DART_PLAYER, board, &position, &rotation, 0);
     position = {.x = 0, .y = 0, .z = 4};
     rotation.y = 60074;
-    SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(opponent, board, &position, &rotation, 0);
     position = {.x = 1.2f, .y = 0, .z = 4.1999998f};
     rotation.y = 0x4000;
-    SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(DART_PLAYER, board, &position, &rotation, duration);
     position = {.x = 0, .y = 0, .z = 4};
     rotation.y = 60074;
-    SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(opponent, board, &position, &rotation, duration);
     DartsCamera(work, static_cast<std::int32_t>(index) + 7540, board, board, duration);
     HLib::SetCurrentTaskTo(DartsContinuePrompt);
@@ -1852,7 +1852,7 @@ void DartsRestorePlayer(DartsEventWork *work) {
     SetScenarioCharacterFlag40(DART_PLAYER, 1);
     AT_SetLocalBaseChara(DART_PLAYER, EVENT_CHARACTER_INVALID);
     EV_EnableCharacterDisplay(DART_PLAYER);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(DART_PLAYER), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(DART_PLAYER), nullptr, 0);
     EV_SetCharacterAlphaEnabled(DART_PLAYER, true);
     EV_SetCharaControllerFlags(DART_PLAYER, ApplyGravity, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(DART_PLAYER, ApplyGravity | UpdateHeight, NpcCharacterControllerState::Enabled);
@@ -1864,7 +1864,7 @@ void DartsRestorePlayer(DartsEventWork *work) {
     } else {
         const Vector3 position{.x = 0, .y = 0, .z = 1.5f};
         const Vector3i rotation{};
-        SetMotionRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(DART_PLAYER), 71, 0, MotionRegion::LowerBody);
         QueueDartsPosition(DART_PLAYER, work->entry->placements[work->entry->placementIndex].character, &position, &rotation, 0);
     }
     if (work->gameFlag)
@@ -1877,14 +1877,14 @@ void DartsRestoreOpponent(DartsEventWork *work) {
     SetScenarioCharacterFlag40(opponent, 1);
     AT_SetLocalBaseChara(opponent, EVENT_CHARACTER_INVALID);
     EV_EnableCharacterDisplay(opponent);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(opponent), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(opponent), nullptr, 0);
     EV_SetCharacterAlphaEnabled(opponent, true);
     DartsBeginOpponentThrow(opponent, work->difficulty);
     InitiateCleanupForSceneChara(opponent);
     hndlSetFlags(ctrlGetCharaByName(opponent));
     const Vector3 position{.x = g_currentMap.name == DART_AKS0.name && opponent.name == DART_XHO.name ? -0.30000001f : 0, .y = 0, .z = 3.5999999f};
     const Vector3i rotation{};
-    SetMotionRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(opponent), 71, 0, MotionRegion::LowerBody);
     QueueDartsPosition(opponent, work->entry->placements[work->entry->placementIndex].character, &position, &rotation, 0);
 }
 void DartsRetireCoinAndArrows(DartsEventWork *work) {
@@ -1986,7 +1986,7 @@ void DartsInitializeRoot(DartsEventWork *work, HLib::Task *task, DartsGameEntry 
     CheckHelpIcon(1, 0, CheckHelpIconOp::Set);
     FinishLoading();
     EV_SetRefBoardParamsFor(DART_PLAYER, 1);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("DARTS"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("DARTS"), 0);
     DartsInitializeScoreBanks(work);
     DartsPlaceCameraDummies(work);
 }

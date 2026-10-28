@@ -46,7 +46,7 @@ void RatiMain(std::uintptr_t argument) {
     ratiSequence = RATI_SEQUENCES + 5LL * ratiMode;
     SetPlayerControlEnabled(0);
     (void)mtwkRequestMotion(scenFindMotionwork(RATI_RYO), 0xf003, MotionRegion::LowerBody);
-    GetCurrentDateTime(ratiStartDate);
+    shenGetCurrentDateTime(ratiStartDate);
     ratiTask = HLib::EnqueueTaskWithoutParameter(RatiPlayImprisonmentCallback, 6, 0x0b, static_cast<std::int32_t>(RATI_TASK.name));
     (void)HLib::EnqueueTaskWithoutParameter(RatiTitleCallback, 6, 0x0b, static_cast<std::int32_t>(RATI_TITLE_TASK.name));
     (void)Queue_EVT_UTL_LoadNPCChara_3(RATI_CHARACTERS, ratiTask);
@@ -201,7 +201,7 @@ HLib::Task *EndRatiEvent() {
         (void)EV_npcLockUnlock(*character);
         (void)EV_npcFree(*character);
     }
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("RATI"), 0);
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("RATI"), 0);
     (void)EV_FreeAuthorPak(0, "0210");
     EV_stepSetFlags(0, 0x138);
     EV_CleanupMapControlTask();

@@ -14,7 +14,7 @@
 namespace shenmue::s2 {
 void CwonSetPositionMasked(shen_name name, std::uint8_t flags, const Vector3 &value) {
     if (!(flags & 0x40))
-        SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
     Vector3 position;
     EV_GetCharaPosition(name, CHARACTER_TRANSLATION_ROOT, &position, (flags & 0x80) ? EventTransformFlags::World : EventTransformFlags::Local);
     if (flags & 8)
@@ -33,7 +33,7 @@ void CwonSetPositionMasked(shen_name name, std::uint8_t flags, const Vector3 &va
 }
 void CwonSetRotationMasked(shen_name name, std::uint8_t flags, const Vector3i &value) {
     if (!(flags & 0x40))
-        SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
     Vector3i rotation;
     GetScenarioCharacterEulerAngles(name, &rotation, (flags & 0x80) ? EventTransformFlags::World : EventTransformFlags::Local);
     if (flags & 1)
@@ -54,7 +54,7 @@ void CwonSetRotationMasked(shen_name name, std::uint8_t flags, const Vector3i &v
 }
 void CwonRotateDoorCallback(void *) {
     const shen_name door{SHEN_NAME(DDOR)};
-    SetMotionRegionFlag(scenFindMotionwork(door), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(door), 71, 0, MotionRegion::LowerBody);
     Vector3i rotation;
     GetScenarioCharacterEulerAngles(door, &rotation, EventTransformFlags::Local);
     rotation.y -= 910;
@@ -62,7 +62,7 @@ void CwonRotateDoorCallback(void *) {
 }
 void CwonHideAtOrigin(shen_name name) {
     if (DoesScenarioCharacterExist(name)) {
-        SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
         Vector3 position;
         EV_GetCharaPosition(name, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
         position = {};
@@ -75,7 +75,7 @@ void CwonMoveBackward(shen_name name, float distance) {
     Vector3i rotation;
     GetScenarioCharacterEulerAngles(name, &rotation, EventTransformFlags::Local);
     const float x = -(sin_fixed16(static_cast<std::int16_t>(rotation.y)) * distance), z = -(cos_fixed16(static_cast<std::uint16_t>(rotation.y)) * distance);
-    SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
     Vector3 position;
     EV_GetCharaPosition(name, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     position.x += x;
@@ -95,7 +95,7 @@ std::int32_t CwonTurnTowardYaw(shen_name name, std::int32_t target, std::int32_t
     const bool reached = reverse ? (static_cast<std::int32_t>(static_cast<std::uint16_t>(yaw - target)) <= step) :
                                    (static_cast<std::int32_t>(static_cast<std::uint16_t>(target - yaw)) <= step);
     const std::int32_t next = reached ? target : (reverse ? previous.y - step : previous.y + step);
-    SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
     Vector3i rotation;
     GetScenarioCharacterEulerAngles(name, &rotation, EventTransformFlags::Local);
     rotation.y = next;
@@ -103,11 +103,11 @@ std::int32_t CwonTurnTowardYaw(shen_name name, std::int32_t target, std::int32_t
     return reached;
 }
 void CwonSetPositionAnglesDegrees(shen_name name, const Vector3 &position, const Vector3 &angles) {
-    SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
     Vector3 previous;
     EV_GetCharaPosition(name, CHARACTER_TRANSLATION_ROOT, &previous, EventTransformFlags::Local);
     EV_AT_SetPos(name, EventTransformFlags::AllAxes, position);
-    SetMotionRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(name), 71, 0, MotionRegion::LowerBody);
     Vector3i rotation;
     GetScenarioCharacterEulerAngles(name, &rotation, EventTransformFlags::Local);
     rotation = {static_cast<std::uint16_t>(static_cast<std::int32_t>(angles.x * 8192.0f / 45.0f)),
@@ -152,15 +152,15 @@ void CwonPrepareMotionCharacters(const shen_name *names) {
         CwonDisableGravity(*names);
         auto *motion = scenFindMotionwork(*names);
         mtwkSetRequestedRootMode(motion, 0);
-        SetMotionRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
-        SetMotionRegionFlag(motion, 69, 2, MotionRegion::LowerBody);
-        EV_mtwkSetEnabled(motion, 0);
+        mtwkSetRegionFlag(motion, 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(motion, 69, 2, MotionRegion::LowerBody);
+        mtwkSetEnabled(motion, 0);
         EV_SetCharacterAlphaEnabled(*names, false);
     }
 }
 void CwonRestoreMotionCharacters(const shen_name *names) {
     for (; names->name; ++names) {
-        EV_mtwkSetEnabled(scenFindMotionwork(*names), 1);
+        mtwkSetEnabled(scenFindMotionwork(*names), 1);
         mtwkSetRequestedRootMode(scenFindMotionwork(*names), 3);
         EV_SetRefBoardParamsFor(*names, 1);
     }
@@ -216,19 +216,19 @@ void CwonLookCallback(void *data) {
     auto *work = static_cast<CwonLookWork *>(data);
     if (!work || work->state == 0) {
         if (work)
-            UpdateMotionWorkWithPosition(scenFindMotionwork(work->character), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(work->character), nullptr, 0);
         HLib::DestroyCurrentTask();
         return;
     }
     work->state = 0;
     const std::uint32_t operation = work->operation + (work->flags << 8);
     if (!work->target.name)
-        UpdateMotionWorkWithPosition(scenFindMotionwork(work->character), &work->position, operation);
+        mtwkUpdateWithPosition(scenFindMotionwork(work->character), &work->position, operation);
     else if (DoesScenarioCharacterExist(work->target)) {
         Vector3 position;
         EV_GetCharaPosition(
             work->target, work->bone ? static_cast<std::uint32_t>(work->bone) : CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(work->character), &position, operation);
+        mtwkUpdateWithPosition(scenFindMotionwork(work->character), &position, operation);
     }
     HLib::SetupTaskDelay(work->duration);
 }
@@ -293,9 +293,9 @@ void CwonMotionWaitCallback(void *data) {
     if (work) {
         auto *motion = scenFindMotionwork(work->character);
         if (work->frame == 0) {
-            if (!SetMotionRegionFlag(motion, 65, 1, MotionRegion::LowerBody))
+            if (!mtwkSetRegionFlag(motion, 65, 1, MotionRegion::LowerBody))
                 return;
-        } else if (GetMotionFrame(motion, MotionRegion::LowerBody) < work->frame)
+        } else if (mtwkGetFrame(motion, MotionRegion::LowerBody) < work->frame)
             return;
         HLib::ResolveDeferredCallback(work->parent);
     }

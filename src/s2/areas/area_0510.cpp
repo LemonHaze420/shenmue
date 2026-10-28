@@ -84,7 +84,7 @@ void Update0510(void *taskData) {
 // @verified - p
 void Cleanup0510(AuthorViewerPairTaskParameter *parent) {
     for (const shen_name *character = AREA_0510_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -129,7 +129,7 @@ std::int64_t Queue0510Author(AuthorViewerPairTaskParameter *parent) {
         EV_LoadAudio("0511A000", 2);
         break;
     case 5:
-        clmdUtil(FindCharacterByScenarioName(AREA_0510_SIN_), 14);
+        clmdUtil(ctrlGetScenarioChara(AREA_0510_SIN_), 14);
         [[fallthrough]];
     case 6:
         EV_LoadCutsceneFromCurrentScene("0511A000");
@@ -235,7 +235,7 @@ void Update0510AuthorTask(void *taskData) {
 void Setup0510Environment() {
     SetPlayerControlEnabled(0);
     DateTime time{};
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     time.hour = 17;
     time.minute = 12;
     SetCurrentDateTimeTo(time);
@@ -252,14 +252,14 @@ void Setup0510Environment() {
 
 void Select0510Package(std::int32_t selection) {
     for (const char *package : {"KSH1", "KSH3", "KSH5"}) {
-        if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0) != 0)
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>(package), 0) != 0)
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
     }
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
     const char *const package = selection == 1 ? "KSH3" : selection == 7 ? "KSH5" : "KSH1";
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 
 void Create0510FallingLeaves(bool alternate) {

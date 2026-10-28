@@ -86,19 +86,19 @@ void RestoreE0141Characters() {
 void CleanupE0141(AreaImmediateAuthorTaskParameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0141_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_authSceneCtrl(AuthSceneCtrl::AllowSkipAuthor);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0141A"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0141A"), 0);
     EV_FreeAuthorPak(0, "0141");
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0141_WB00.name) {
         EV_NPC_NewLoadSw(1);
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EventSetPosition position{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {330.57000732421875f, 127.0f, 234.25f}, 0.0f};
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, {0, 28253, 0}, 0.0f};
@@ -154,23 +154,23 @@ void E0141LoopCallback(void *taskData) {
         const std::array<std::int32_t, 3> leftRotation{38229, 63879, 14195};
         if (e0141Choice != 0) {
             SetFixoDataForMotionWork(
-                FindCharacterByScenarioName(AREA_0141_A542), FindCharacterByScenarioName(AREA_0141_KUN_), 21, rightPosition, rightRotation);
-            SetFixoDataForMotionWork(FindCharacterByScenarioName(AREA_0141_A544), FindCharacterByScenarioName(AREA_0141_KUN_), 14, leftPosition, leftRotation);
+                ctrlGetScenarioChara(AREA_0141_A542), ctrlGetScenarioChara(AREA_0141_KUN_), 21, rightPosition, rightRotation);
+            SetFixoDataForMotionWork(ctrlGetScenarioChara(AREA_0141_A544), ctrlGetScenarioChara(AREA_0141_KUN_), 14, leftPosition, leftRotation);
         } else {
-            SetFixoDataForMotionWork(FindCharacterByScenarioName(AREA_0141_A542), FindCharacterByScenarioName(AREA_0141_KUN_), 14, leftPosition, leftRotation);
+            SetFixoDataForMotionWork(ctrlGetScenarioChara(AREA_0141_A542), ctrlGetScenarioChara(AREA_0141_KUN_), 14, leftPosition, leftRotation);
             SetFixoDataForMotionWork(
-                FindCharacterByScenarioName(AREA_0141_A544), FindCharacterByScenarioName(AREA_0141_KUN_), 21, rightPosition, rightRotation);
+                ctrlGetScenarioChara(AREA_0141_A544), ctrlGetScenarioChara(AREA_0141_KUN_), 21, rightPosition, rightRotation);
         }
     } else if (frame == 3717) {
-        ResetCharaFixo(FindCharacterByScenarioName(e0141Choice ? AREA_0141_A544 : AREA_0141_A542));
+        ResetCharaFixo(ctrlGetScenarioChara(e0141Choice ? AREA_0141_A544 : AREA_0141_A542));
     } else if (frame == 3725) {
         const Vector3 position{0.133f, 0.0f, -0.052f};
         const std::array<std::int32_t, 3> rotation{41852, 11616, 15654};
         SetFixoDataForMotionWork(
-            FindCharacterByScenarioName(e0141Choice ? AREA_0141_A544 : AREA_0141_A542), FindCharacterByScenarioName(AREA_AUTHOR_RYO), 14, position, rotation);
+            ctrlGetScenarioChara(e0141Choice ? AREA_0141_A544 : AREA_0141_A542), ctrlGetScenarioChara(AREA_AUTHOR_RYO), 14, position, rotation);
     } else if (frame == 3895) {
         const shen_name object = e0141Choice ? AREA_0141_A544 : AREA_0141_A542;
-        ResetCharaFixo(FindCharacterByScenarioName(object));
+        ResetCharaFixo(ctrlGetScenarioChara(object));
         DisableScenarioCharacterDisplay(object);
     }
     if (child->state == 1 && !GetShouldRenderIcons(RenderIconSlot::ActionSelector)) {

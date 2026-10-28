@@ -118,7 +118,7 @@ void UpdateGameplayFlags() {
         scenarioGameplayFlags.initialized = 1;
     }
     DateTime now{};
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     if (scenarioGameplayFlags.day != now.day) {
         for (std::uint32_t &word : scenarioGameplayFlags.words)
             word &= 0xfe0fffffU;

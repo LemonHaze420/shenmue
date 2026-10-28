@@ -18,8 +18,8 @@ namespace shenmue::s2::areas {
 namespace {
 inline constexpr shen_name MFW0_ATTACK{SHEN_NAME(BATT)};
 void Mfw0NeutralHands() {
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 1, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 0, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MFW0_RYO), 1, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MFW0_RYO), 0, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
 }
 void Mfw0Place(shen_name character, const Vector3 &position, std::int32_t yaw) {
     EV_AT_SetPos(character, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
@@ -53,10 +53,10 @@ void Mfw0Demonstration(void *data, std::int32_t kind) {
         case 101:
             figpSetFlagsBlendForBlur(MFW0_RYO, 8, 2);
             figpAssignModeFor(MFW0_RYO, 4);
-            SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
-            EV_mtwkSetEnabled(scenFindMotionwork(MFW0_RYO), 1);
+            mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetEnabled(scenFindMotionwork(MFW0_RYO), 1);
             mtwkRequestMotion(scenFindMotionwork(MFW0_RYO), kind == 1 ? 5022 : 5016, MotionRegion::LowerBody);
-            SetMotionLayerFrameRange(scenFindMotionwork(MFW0_RYO), -1,
+            mtwkSetLayerFrameRange(scenFindMotionwork(MFW0_RYO), -1,
                 kind == 1     ? 90 :
                     kind == 2 ? 26 :
                                 10,
@@ -64,10 +64,10 @@ void Mfw0Demonstration(void *data, std::int32_t kind) {
                     kind == 2 ? 38 :
                                 40,
                 MotionRegion::LowerBody);
-            SetMotionSpeed(scenFindMotionwork(MFW0_RYO), kind == 1 ? 1 : .69999999f, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(MFW0_RYO), kind == 1 ? 1 : .69999999f, MotionRegion::LowerBody);
             if (kind == 1)
-                SetMotionSpeed(scenFindMotionwork(MFW0_RYO), 1, MotionRegion::LowerBody);
-            SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 69, 0, MotionRegion::LowerBody);
+                mtwkSetSpeed(scenFindMotionwork(MFW0_RYO), 1, MotionRegion::LowerBody);
+            mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 69, 0, MotionRegion::LowerBody);
             if (kind == 1)
                 Mfw0Wait(sequence, 2, 103, 49);
             else {
@@ -80,7 +80,7 @@ void Mfw0Demonstration(void *data, std::int32_t kind) {
                 UpdateCompiledSequenceWait(&sequence);
                 break;
             }
-            SetMotionSpeed(scenFindMotionwork(MFW0_RYO), 1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(MFW0_RYO), 1, MotionRegion::LowerBody);
             figpAssignModeFor(MFW0_RYO, 0);
             Mfw0Complete(sequence);
             return;
@@ -100,7 +100,7 @@ void Mfw0Demonstration(void *data, std::int32_t kind) {
             }
             ProcessAicaCommand(0x1200a0, 0);
             QueueExtraTelop("HHHHHHHHHHHH", 2);
-            SetMotionSpeed(scenFindMotionwork(MFW0_RYO), 1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(MFW0_RYO), 1, MotionRegion::LowerBody);
             figpAssignModeFor(MFW0_RYO, 0);
             sequence.previousMode = sequence.mode;
             sequence.mode = 105;
@@ -130,16 +130,16 @@ void Mfw0InitializeActorsSequence(void *data) {
     EV_DisableCharacterDisplay(MFW0_DEKU);
     EV_SetCharacterAlphaEnabled(MFW0_RYO, false);
     EV_SetCharacterAlphaEnabled(MFW0_TKR, false);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(MFW0_RYO), 0, 0, 16);
-    hmdlSetFlagsFor(FindCharacterByScenarioName(MFW0_RYO), 1, 0, 16);
-    SetHighModelXYZ(FindCharacterByScenarioName(MFW0_RYO), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MFW0_RYO), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 0, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_RYO), 1, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MFW0_TKR), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MFW0_TKR), 1, 1, 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_TKR), 1, reinterpret_cast<std::byte *>(openHandPoseCommand), 0);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(MFW0_TKR), 0, reinterpret_cast<std::byte *>(openHandPoseCommand), 0);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(MFW0_RYO), 0, 0, 16);
+    hmdlSetFlagsFor(ctrlGetScenarioChara(MFW0_RYO), 1, 0, 16);
+    SetHighModelXYZ(ctrlGetScenarioChara(MFW0_RYO), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MFW0_RYO), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MFW0_RYO), 0, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MFW0_RYO), 1, reinterpret_cast<std::byte *>(MFW0_HAND_POSE), 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MFW0_TKR), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MFW0_TKR), 1, 1, 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MFW0_TKR), 1, reinterpret_cast<std::byte *>(openHandPoseCommand), 0);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(MFW0_TKR), 0, reinterpret_cast<std::byte *>(openHandPoseCommand), 0);
     for (shen_name name : {MFW0_RYO, MFW0_TKR, MFW0_DEKU}) {
         EV_SetCharaControllerFlags(name, 1, NpcCharacterControllerState::Disabled);
         EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
@@ -148,22 +148,22 @@ void Mfw0InitializeActorsSequence(void *data) {
     EV_SetCharaControllerFlags(MFW0_TKR, 2, NpcCharacterControllerState::Disabled);
     SetScenarioCharacterDrawControl(MFW0_RYO, 1, 1);
     SetScenarioCharacterDrawControl(MFW0_TKR, 1, 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(MFW0_RYO), 1);
-    EV_mtwkSetEnabled(scenFindMotionwork(MFW0_TKR), 0);
-    SetMotionSpeed(scenFindMotionwork(MFW0_RYO), 1, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(MFW0_TKR), 1, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(MFW0_RYO), 1);
+    mtwkSetEnabled(scenFindMotionwork(MFW0_TKR), 0);
+    mtwkSetSpeed(scenFindMotionwork(MFW0_RYO), 1, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(MFW0_TKR), 1, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(scenFindMotionwork(MFW0_RYO), 1);
     mtwkSetRequestedRootMode(scenFindMotionwork(MFW0_TKR), 1);
-    SetMotionFrameTime(scenFindMotionwork(MFW0_RYO), 8, MotionRegion::LowerBody);
-    SetMotionFrameTime(scenFindMotionwork(MFW0_TKR), 8, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(MFW0_RYO), 8, MotionRegion::LowerBody);
+    mtwkSetFrameTime(scenFindMotionwork(MFW0_TKR), 8, MotionRegion::LowerBody);
     SetScenarioReflectorBoardValues(MFW0_RYO, &MFW0_REFLECTOR);
     SetScenarioReflectorBoardValues(MFW0_TKR, &MFW0_REFLECTOR);
     EV_SetRefBoardParamsFor(MFW0_RYO, 1);
     EV_SetRefBoardParamsFor(MFW0_TKR, 1);
     Mfw0Place(MFW0_RYO, MFW0_INITIAL_RYO_POSITION, 8192);
-    SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
     Mfw0Place(MFW0_TKR, MFW0_INITIAL_TEACHER_POSITION, 16384);
-    SetMotionRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(MFW0_TKR), 4999, MotionRegion::LowerBody);
     Mfw0Complete(sequence);
 }
@@ -183,35 +183,35 @@ void Mfw0ResetPlayer(std::int32_t kind) {
     } else if (kind == 0) {
         Mfw0Place(MFW0_RYO, MFW0_RYO_POSITION, 8192);
         Mfw0RotateSampled(MFW0_RYO, 0);
-        SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
         mtwkRequestMotion(scenFindMotionwork(MFW0_RYO), 0xf003, MotionRegion::LowerBody);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(MFW0_RYO), nullptr, 3);
+        mtwkUpdateWithPosition(scenFindMotionwork(MFW0_RYO), nullptr, 3);
     }
 }
 void Mfw0ResetTeacher() {
     Mfw0Place(MFW0_TKR, MFW0_TEACHER_POSITION, 41264);
     Mfw0RotateSampled(MFW0_TKR, 10923);
-    SetMotionRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(MFW0_TKR), 5003, MotionRegion::LowerBody);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(MFW0_TKR), nullptr, 3);
+    mtwkUpdateWithPosition(scenFindMotionwork(MFW0_TKR), nullptr, 3);
 }
 void Mfw0ResetActors(std::int32_t practice) {
     if (!(practice & ~9) && practice != 8) {
         Mfw0Place(MFW0_RYO, MFW0_RYO_POSITION, 8192);
-        SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
     }
-    if (GetMotionAnimationId(scenFindMotionwork(MFW0_RYO), MotionRegion::LowerBody) != 306) {
-        SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(MFW0_RYO), nullptr, 0);
+    if (mtwkGetAnimationId(scenFindMotionwork(MFW0_RYO), MotionRegion::LowerBody) != 306) {
+        mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkUpdateWithPosition(scenFindMotionwork(MFW0_RYO), nullptr, 0);
         mtwkRequestMotion(scenFindMotionwork(MFW0_RYO), 306, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
-        SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 69, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 69, 0, MotionRegion::LowerBody);
     }
-    EV_mtwkSetEnabled(scenFindMotionwork(MFW0_RYO), 1);
-    SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 69, 0, MotionRegion::LowerBody);
+    mtwkSetEnabled(scenFindMotionwork(MFW0_RYO), 1);
+    mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 69, 0, MotionRegion::LowerBody);
     Mfw0Place(MFW0_TKR, MFW0_TEACHER_POSITION, 41264);
     Mfw0RotateSampled(MFW0_TKR, 10923);
-    SetMotionRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(MFW0_TKR), 71, 0, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(MFW0_TKR), 5003, MotionRegion::LowerBody);
 }
 bool Mfw0NeedsFacingReset(std::int32_t practice) {
@@ -232,15 +232,15 @@ void Mfw0PracticeSequence(void *data) {
         switch (sequence.mode) {
         case 0:
             work.practiceReady = 0;
-            UpdateMotionWorkWithPosition(scenFindMotionwork(MFW0_RYO), nullptr, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(MFW0_RYO), nullptr, 0);
             for (shen_name name : {MFW0_RYO, MFW0_DEKU}) {
                 EV_SetCharaControllerFlags(name, 1, NpcCharacterControllerState::Enabled);
                 EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Enabled);
             }
-            EV_mtwkSetEnabled(scenFindMotionwork(MFW0_RYO), 1);
-            EV_mtwkSetEnabled(scenFindMotionwork(MFW0_TKR), 1);
-            EV_mtwkSetEnabled(scenFindMotionwork(MFW0_DEKU), 1);
-            SetMotionRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
+            mtwkSetEnabled(scenFindMotionwork(MFW0_RYO), 1);
+            mtwkSetEnabled(scenFindMotionwork(MFW0_TKR), 1);
+            mtwkSetEnabled(scenFindMotionwork(MFW0_DEKU), 1);
+            mtwkSetRegionFlag(scenFindMotionwork(MFW0_RYO), 71, 0, MotionRegion::LowerBody);
             FinishLoading();
             CheckHelpIcon(1, 0, CheckHelpIconOp::Add);
             Mfw0Advance(sequence, 100);
@@ -254,7 +254,7 @@ void Mfw0PracticeSequence(void *data) {
                 MFW0_RYO, MFW0_TKR, static_cast<std::int16_t>(instruction), static_cast<std::int16_t>(second), reinterpret_cast<std::byte *>(&work.results[0]));
             Vector3 position;
             EV_GetCharaPosition(MFW0_RYO, 5, &position, EventTransformFlags::World);
-            UpdateMotionWorkWithPosition(scenFindMotionwork(MFW0_TKR), &position, 0);
+            mtwkUpdateWithPosition(scenFindMotionwork(MFW0_TKR), &position, 0);
             CompiledSequenceWork *attack = Mfw0Child(sequence, TrainingAttackSequence, MFW0_ATTACK, 0);
             Mfw0Value(attack, 0x138, std::int32_t{static_cast<std::int32_t>(MFW0_RYO.name)});
             Mfw0Value(attack, 0x140, std::int32_t{static_cast<std::int32_t>(MFW0_DEKU.name)});

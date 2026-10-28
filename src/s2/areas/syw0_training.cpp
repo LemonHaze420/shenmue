@@ -58,10 +58,10 @@ void Syw0DetachActor(shen_name name) {
     EV_AT_SetAngY(name, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
 }
 void Syw0LoadStagePackage(const char *name) {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(name));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(name), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>(name), 0);
 }
 void Syw0StopLcd(CompiledSequenceWork &sequence, Syw0Work &work) {
     if (Syw0Value<CompiledSequenceWork *>(&work, 0x5e0)) {
@@ -76,7 +76,7 @@ void Syw0RestoreTeacher(const Vector3 &position, std::int32_t yaw) {
     const Vector3i rotation{.x = 0, .y = yaw, .z = 0};
     EV_AT_SetAngY(SYW0_SYE, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
     mtwkRequestMotion(scenFindMotionwork(SYW0_SYE), 8841, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(SYW0_SYE), 71, 0, MotionRegion::LowerBody);
 }
 } // namespace
 void Syw0TrainingSequence(void *data) {
@@ -124,7 +124,7 @@ void Syw0TrainingSequence(void *data) {
             Syw0Wait(sequence, 13, 103, 5, 0);
             break;
         case 103:
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WB00"), 0);
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WB00"), 0);
             Syw0RestoreTrainingCharacters();
             EV_SetCinemaBarVisibility(FilmControlFlag::Show, 1);
             Syw0Wait(sequence, 2, 104, 32);
@@ -139,16 +139,16 @@ void Syw0TrainingSequence(void *data) {
             break;
         case 105:
             UpdateWeatherForMinute(1, 1, 0, 0);
-            EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WBK1"), 0);
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("WBK1"), 0);
             for (std::int32_t i = 0; i < 5; ++i)
-                hndlSetFlags(FindCharacterByScenarioName(SYW0_CHARACTERS[i]));
+                hndlSetFlags(ctrlGetScenarioChara(SYW0_CHARACTERS[i]));
             EV_SetCinemaBarVisibility(FilmControlFlag::Show, 1);
             Syw0LoadStagePackage("WB00");
             EV_SetObjectFlagByIndex(2, 0);
             EV_SetObjectFlagByIndex(5, 0);
             PushGlobalLightingProgram();
             for (std::int32_t i = 0; i < 5; ++i)
-                SetLowQualityHands(FindCharacterByScenarioName(SYW0_CHARACTERS[i]));
+                SetLowQualityHands(ctrlGetScenarioChara(SYW0_CHARACTERS[i]));
             Syw0RestoreTrainingCharacters();
             Syw0Wait(sequence, 2, 106, 32);
             break;
@@ -257,7 +257,7 @@ void Syw0TrainingSequence(void *data) {
                 Syw0Advance(sequence, 128);
             else {
                 DateTime time;
-                GetCurrentDateTime(time);
+                shenGetCurrentDateTime(time);
                 ++time.hour;
                 SetCurrentDateTimeTo(time);
                 Syw0Advance(sequence, 129);

@@ -2553,7 +2553,7 @@ std::uint64_t S2Save_CheckData() {
     std::tm systemTime{};
     GetLocalTime(systemTime);
     DateTime gameTime{};
-    GetCurrentDateTime(gameTime);
+    shenGetCurrentDateTime(gameTime);
     const std::uint64_t saveCount = CaptureSaveImageContent(activeSaveImage, static_cast<std::uint8_t>(IsSaveAllowed()),
         systemTime, gameTime, false);
     activeSaveImageInitialized = true;
@@ -2573,7 +2573,7 @@ std::uint32_t SaveGame(std::uint32_t slot) {
         std::tm systemTime{};
         GetLocalTime(systemTime);
         DateTime gameTime{};
-        GetCurrentDateTime(gameTime);
+        shenGetCurrentDateTime(gameTime);
         CaptureGameSaveData(activeSaveImage, static_cast<std::uint8_t>(IsSaveAllowed()), systemTime, gameTime,
             saveTaskData->initializationMode == 0);
     }
@@ -2604,7 +2604,7 @@ S2SaveResult S2Save_Capture(S2SaveImage& image,
     std::tm systemTime{};
     if (!GetLocalTime(systemTime)) return S2SaveResult::ReadFailed;
     DateTime gameTime{};
-    GetCurrentDateTime(gameTime);
+    shenGetCurrentDateTime(gameTime);
     if (!GameDateTimeIsValid(gameTime))
         return S2SaveResult::BadGameHeader;
     const S2SaveResult validation = S2Save_Validate(image);

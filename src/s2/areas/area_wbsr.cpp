@@ -49,7 +49,7 @@ HLib::Task *Queue(HLib::TaskCallback callback) {
     return HLib::EnqueueTaskWithoutParameter(callback, 4, 0x0b, taskName);
 }
 MotionWork *RyoMotion() {
-    return FindMotionWork(FindCharacterByScenarioName(ryo));
+    return FindMotionWork(ctrlGetScenarioChara(ryo));
 }
 void ExecuteBase() {
     (void)ExecuteCurrAreaMainFunc_Wrapper(1, reinterpret_cast<std::uintptr_t>(&baseEntry));
@@ -106,7 +106,7 @@ void Choose(std::int32_t choice) {
         ExecuteBase();
         mtwkRequestMotion(RyoMotion(), 0xf002, MotionRegion::LowerBody);
         mtwkSetExtraFlag(RyoMotion(), 17, 0);
-        SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
         (void)EV_AT_SetAngY(ryo, localXYZ, {0, 0x4000, 0});
         EV_AT_SetPos(ryo, localXYZ, {336.013f, 126.97f, 269.26001f});
         EV_AT_SetPos(a048, localXYZ, {334.519989f, 128.177001f, 269.390015f});
@@ -128,16 +128,16 @@ void OpeningAuthorDone() {
     (void)Queue(WbsrChoiceWaitCallback);
 }
 void PositionRyo(const Vector3 &position) {
-    SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(RyoMotion(), 0);
-    SetMotionFrameTime(RyoMotion(), 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(RyoMotion(), 0, MotionRegion::LowerBody);
     EV_AT_SetPos(ryo, localXYZ, position);
     (void)EV_AT_SetAngY(ryo, localXYZ, {0, 0x8000, 0});
 }
 void PackageReady() {
     using enum CameraState;
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SUS1"), 0);
-    (void)EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS1"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("SUS1"), 0);
+    (void)EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("SUS1"), 0);
     EV_SetCharacterAlphaEnabled(sai, false);
     EV_SetCharaControllerFlags(sai, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     if (entry[0] == 1) {
@@ -171,7 +171,7 @@ void QueueScenarioA() {
     EV_stepSetFlags(0, 0x46);
     ExecuteBase();
     EVT_AT_SetAngY(ryo, shen_name{0xffffffffU}, 0, 0);
-    SetMotionFrameTime(RyoMotion(), 12, MotionRegion::LowerBody);
+    mtwkSetFrameTime(RyoMotion(), 12, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(RyoMotion(), 1);
     mtwkSetExtraFlag(RyoMotion(), 15, 0);
     mtwkRequestMotion(RyoMotion(), 0xf002, MotionRegion::LowerBody);
@@ -185,14 +185,14 @@ void StartTomorrow() {
     camCtrlSetFovTransitionTo(true);
     (void)camCtrlSetState(Init);
     mtwkSetExtraFlag(RyoMotion(), 17, 0);
-    SetMotionRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(ryo, localXYZ, {337.67001f, 126.97f, 280.07001f});
     (void)EV_AT_SetAngY(ryo, localXYZ, {0, 10922, 0});
     Fade(60, 255, 0);
     (void)EV_FreeAuthorPak(1, "0401");
     (void)EV_PlayDialogue("0401A001");
     SetPlayerControlEnabled(0);
-    SetMotionFrameTime(RyoMotion(), 0, MotionRegion::LowerBody);
+    mtwkSetFrameTime(RyoMotion(), 0, MotionRegion::LowerBody);
     mtwkSetRequestedRootMode(RyoMotion(), 0);
     mtwkRequestMotion(RyoMotion(), 0xf002, MotionRegion::LowerBody);
     HLib::SetupTimedTask(Queue(WbsrExit2Callback), 30);
@@ -234,7 +234,7 @@ void WbsrInitializeCallback(void *) {
     nextCallback = PackageReady;
     package = "SUS1";
     characterList = characters;
-    (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(package));
     for (const auto *p = characterList; p->name; ++p) {
         (void)EV_CheckWarmStartNpcRoute(*p);
@@ -245,7 +245,7 @@ void WbsrInitializeCallback(void *) {
 }
 // @verified - p
 void WbsrPackageWaitCallback(void *) {
-    if (EV_ControlPackageResources(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
+    if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoadPending, 0, 0))
         return;
     if (characterList)
         for (const auto *p = characterList; p->name; ++p)
@@ -281,7 +281,7 @@ void WbsrScenarioBCallback(void *) {
             EV_stepSetFlags(1, 0x37c);
             ExecuteBase();
             ResetCounters(200);
-            SetMotionSpeed(RyoMotion(), 0, MotionRegion::LowerBody);
+            mtwkSetSpeed(RyoMotion(), 0, MotionRegion::LowerBody);
             ClearGameFlag(31);
             Fade(60, 0, 255);
             HLib::SetupTaskDelay(60);
@@ -330,7 +330,7 @@ void WbsrScenarioACallback(void *) {
             break;
         }
     } else if (state.phase == 19) {
-        SetMotionFrameTime(RyoMotion(), 12, MotionRegion::LowerBody);
+        mtwkSetFrameTime(RyoMotion(), 12, MotionRegion::LowerBody);
         mtwkSetRequestedRootMode(RyoMotion(), 1);
         mtwkSetExtraFlag(RyoMotion(), 15, 0);
         mtwkRequestMotion(RyoMotion(), 0xf005, MotionRegion::LowerBody);
@@ -424,7 +424,7 @@ void WbsrExit4Callback(void *) {
     SetPlayerControlEnabled(1);
     (void)EV_FreeAuthorPak(0, "0031");
     if (package)
-        (void)EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
+        (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(package), 0);
     if (characterList)
         for (const auto *p = characterList; p->name; ++p)
             (void)EV_npcLockUnlock(*p);

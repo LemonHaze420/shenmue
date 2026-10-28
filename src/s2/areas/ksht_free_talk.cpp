@@ -28,8 +28,8 @@ void KshtFreeTalkCallback(void *) {
         HLib::SetupTaskDelay(31);
         break;
     case 1:
-        ResetCharaFixo(FindCharacterByScenarioName(SHEN_NAME(a726)));
-        ResetCharaFixo(FindCharacterByScenarioName(SHEN_NAME(a728)));
+        ResetCharaFixo(ctrlGetScenarioChara(SHEN_NAME(a726)));
+        ResetCharaFixo(ctrlGetScenarioChara(SHEN_NAME(a728)));
         FreeKshtCharacters(kshtCompanionList);
         kshtFreeTalkSelection = 7;
         kshtPhase = 7;
@@ -45,15 +45,15 @@ void KshtFreeTalkCallback(void *) {
         HLib::SetupTaskDelay(16);
         break;
     case 3:
-        ResetCharaFixo(FindCharacterByScenarioName(SHEN_NAME(a726)));
-        ResetCharaFixo(FindCharacterByScenarioName(SHEN_NAME(a728)));
+        ResetCharaFixo(ctrlGetScenarioChara(SHEN_NAME(a726)));
+        ResetCharaFixo(ctrlGetScenarioChara(SHEN_NAME(a728)));
         kshtFreeTalkSelection = 6;
         kshtPhase = 4;
         QueueKshtAuthor(&kshtFreeTalkSelection);
         break;
     case 4:
-        SetPluralControlFor(FindCharacterByScenarioName(KSHT_SIN), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(KSHT_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(KSHT_SIN), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(KSHT_RYO), 1);
         FinishLoading();
         shenSetClockAndCompassRenderTo(0);
         kshtFreeTalkSelection = 0;

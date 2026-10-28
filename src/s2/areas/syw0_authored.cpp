@@ -29,7 +29,7 @@ void Syw0AuthorCharacter(shen_name character) {
     EV_SetCharacterAlphaEnabled(character, false);
     SetScenarioReflectorBoardValues(character, &values);
     EV_SetRefBoardParamsFor(character, 1);
-    SetFaceFlagsForChara(FindCharacterByScenarioName(character), 0);
+    SetFaceFlagsForChara(ctrlGetScenarioChara(character), 0);
 }
 void Syw0FinishAuthorCharacters() {
     EV_EnableCharacterDisplay(SYW0_RYO);
@@ -44,9 +44,9 @@ void Syw0AuthorLoop(void *data) {
     Syw0AuthorWork &work = *loop.parent;
     loop.frame = static_cast<std::uint16_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
     if (loop.frame == 1) {
-        SetPluralControlFor(FindCharacterByScenarioName(SYW0_RYO), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(SYW0_SYE), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(SYW0_KNK), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(SYW0_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(SYW0_SYE), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(SYW0_KNK), 1);
         Syw0AuthorCharacter(SYW0_RYO);
         for (const shen_name *name = SYW0_AUTHOR_CHARACTERS; name->name != SYW0_INVALID.name; ++name)
             Syw0AuthorCharacter(*name);
@@ -80,9 +80,9 @@ void Syw0AuthorLoop(void *data) {
             SetScenarioCharacterDrawControl(SYW0_SYE, 1, 0);
             SetScenarioCharacterDrawControl(SYW0_KNK, 1, 0);
         }
-        SetPluralControlFor(FindCharacterByScenarioName(SYW0_RYO), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(SYW0_SYE), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(SYW0_KNK), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(SYW0_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(SYW0_SYE), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(SYW0_KNK), 1);
         Syw0FinishAuthorCharacters();
         work.phase = 3;
         HLib::DestroyCurrentTask();
@@ -205,7 +205,7 @@ void Syw0AwardSequence(void *data) {
                 SetNewEwzoTypeForMoveLearned(learned ? 0 : 2, 1, 24);
             }
             for (shen_name name : {SYW0_RYO, SYW0_SYE, SYW0_KNK})
-                SetClothFlag(FindCharacterByScenarioName(name), 4, 1);
+                SetClothFlag(ctrlGetScenarioChara(name), 4, 1);
             Syw0Value(event, 0x76, std::int16_t{150});
             Syw0Value(&sequence, 0x248, std::int32_t{1});
             Syw0Advance(sequence, 103);
@@ -216,7 +216,7 @@ void Syw0AwardSequence(void *data) {
             if (GetCurrentControlInput(INPUT_PRESSED) == 512 || !frames) {
                 EV_authSceneCtrl(AuthSceneCtrl::ResetAuthorStopped);
                 for (shen_name name : {SYW0_RYO, SYW0_SYE, SYW0_KNK})
-                    SetClothFlag(FindCharacterByScenarioName(name), 4, 0);
+                    SetClothFlag(ctrlGetScenarioChara(name), 4, 0);
                 SetNewEwzoTypeForMoveLearned(1, 0, 0);
                 Syw0Advance(sequence, 104);
             } else
@@ -242,7 +242,7 @@ void Syw0NightSequence(void *data) {
             SetPlayerControlEnabled(0);
             Syw0CreateFire();
             DateTime time;
-            GetCurrentDateTime(time);
+            shenGetCurrentDateTime(time);
             time.hour = 20;
             time.minute = 0;
             SetCurrentDateTimeTo(time);

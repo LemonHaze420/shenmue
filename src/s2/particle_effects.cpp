@@ -2530,7 +2530,7 @@ void UpdateFireAttachment(Character *character, std::int16_t bone, const Vector3
         return;
     MotionWork *const motion = FindMotionWork(character);
     Matrix4x4 transform;
-    const Matrix4x4 *const source = motion                                                        ? charaGetBoneTransform(motion, bone) :
+    const Matrix4x4 *const source = motion                                                        ? mtwkGetBoneTransform(motion, bone) :
         ResolveCharacterDrawNodeTransform(character, static_cast<std::uint16_t>(bone), transform) ? &transform :
                                                                                                     nullptr;
     Matrix4x4_Push();
@@ -4195,7 +4195,7 @@ std::uint32_t SetFirePosition(std::uint32_t index, std::int32_t instance, const 
 // @verified - p
 Character *AttachFireEffect(std::uint32_t index, shen_name name, std::int16_t bone, float offset) {
     FireEffect &effect = *fireEffects[static_cast<std::int32_t>(index)];
-    Character *const character = name.name ? FindCharacterByScenarioName(name) : nullptr;
+    Character *const character = name.name ? ctrlGetScenarioChara(name) : nullptr;
     effect.cameraOffset = offset;
     effect.character = character;
     effect.bone = bone;
@@ -4210,7 +4210,7 @@ void SetFireAlpha(std::uint32_t index, float alpha) {
 // @verified - p
 Character *AttachFireInstance(std::uint32_t index, std::int32_t instance, shen_name name, std::int16_t bone, std::int32_t offsetBits) {
     FireInstance &target = fireEffects[static_cast<std::int32_t>(index)]->instances[instance];
-    Character *const character = name.name ? FindCharacterByScenarioName(name) : nullptr;
+    Character *const character = name.name ? ctrlGetScenarioChara(name) : nullptr;
     target.cameraOffset = std::bit_cast<float>(offsetBits);
     target.character = character;
     target.bone = bone;

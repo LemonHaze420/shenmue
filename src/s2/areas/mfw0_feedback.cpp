@@ -506,7 +506,7 @@ void Mfw0CorrectivePose(std::int32_t delta, bool step) {
     SetTrainingCharacterYaw(MFW0_TKR, static_cast<std::uint16_t>(rotation.y + delta));
     mtwkRequestMotion(scenFindMotionwork(MFW0_TKR), 5000, MotionRegion::LowerBody);
     if (step)
-        SetMotionLayerFrameRange(scenFindMotionwork(MFW0_TKR), -1, 300, -1, MotionRegion::LowerBody);
+        mtwkSetLayerFrameRange(scenFindMotionwork(MFW0_TKR), -1, 300, -1, MotionRegion::LowerBody);
     GetScenarioCharacterEulerAngles(MFW0_RYO, &rotation, EventTransformFlags::MotionYaw);
     SetTrainingCharacterYaw(MFW0_RYO, static_cast<std::uint16_t>(rotation.y));
     mtwkRequestMotion(scenFindMotionwork(MFW0_RYO), 0xf003, MotionRegion::LowerBody);

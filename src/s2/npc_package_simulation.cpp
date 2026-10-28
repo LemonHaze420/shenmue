@@ -101,7 +101,7 @@ void TickNpcRouteEntry(NpcRouteLiveEntry &entry, std::int32_t currentTime) {
             if (!(entry.stateContext.routeFlags & 0x20U))
                 entry.controlFlags &= ~2U;
             if (static_cast<std::size_t>(entry.poolIndex) >= npcAuthoredEntryCount) {
-                entry.node = FindCharacterByScenarioName(entry.name);
+                entry.node = ctrlGetScenarioChara(entry.name);
                 if (entry.node) {
                     entry.motionWork = FindMotionWork(entry.node);
                     npcSlotFlags[entry.poolIndex] |= 1U;
@@ -142,9 +142,9 @@ void TickNpcRouteEntry(NpcRouteLiveEntry &entry, std::int32_t currentTime) {
     } else if (entry.liveState == 10 && entry.node) {
         if (currentTime % 60 == 0)
             mtwkRequestMotion(entry.motionWork, entry.recordBase[4] == std::byte{} ? 0x8032 : 0x8063, MotionRegion::RightArm);
-        else if (SetMotionRegionFlag(entry.motionWork, 65, 1, MotionRegion::LowerBody))
-            RequestMotionRegionDetach(entry.motionWork, MotionRegion::LowerBody);
-    } else if (entry.liveState == 11 && entry.node && SetMotionRegionFlag(entry.motionWork, 65, 1, MotionRegion::LowerBody)) {
+        else if (mtwkSetRegionFlag(entry.motionWork, 65, 1, MotionRegion::LowerBody))
+            mtwkRequestRegionDetach(entry.motionWork, MotionRegion::LowerBody);
+    } else if (entry.liveState == 11 && entry.node && mtwkSetRegionFlag(entry.motionWork, 65, 1, MotionRegion::LowerBody)) {
         entry.currentMotionId = SelectNpcIdleMotion(entry);
         mtwkRequestMotion(entry.motionWork, entry.currentMotionId, MotionRegion::LowerBody);
     }
@@ -162,7 +162,7 @@ void TickNpcRouteEntry(NpcRouteLiveEntry &entry, std::int32_t currentTime) {
 }
 
 void UpdateNpcStreamThrottle(bool forceForecast) {
-    GetCurrentDateTime(npcCurrentDateTime);
+    shenGetCurrentDateTime(npcCurrentDateTime);
     npcCurrentSeconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(npcCurrentDateTime));
     if (forceForecast || npcFrameCount % 7200 == 0)
         npcEndOfDayWeatherForecast = UpdateWeatherAndTime(1439 - 60 * npcCurrentDateTime.hour - npcCurrentDateTime.minute);
@@ -256,14 +256,14 @@ void TickNpcRouteLiveEntries() {
             entry->node->renderFlags |= CRF_All;
             if ((entry->flags & 0x8000000U) || entry->streamCost != 1) {
                 if (CharacterControlModel *const control = FindCharacterControlModel(entry->node))
-                    control->flags |= CharacterControlVoxelSweep;
+                    control->flags |= CCMF_VoxelSweep;
             }
             entry->flags &= ~0x80000000U;
             modelSetCharaAlpha(entry->node, 0.0f);
             npcSetAlphaOnOff(entry->node, true);
         }
         if (entry->node)
-            SetMotionEnvironmentEnabled(entry->motionWork, (entry->flags & 8U) || environmentCount++ < 5);
+            mtwkSetEnvironmentEnabled(entry->motionWork, (entry->flags & 8U) || environmentCount++ < 5);
     }
     NpcRouteLiveEntry *entry = npcCrowdHead;
     while (entry) {
@@ -295,7 +295,7 @@ std::int64_t npcResetDateTimeIfNeeded() {
     const std::int64_t result = npcGetCurrentTimeSimState();
     if (result == 1)
         return result;
-    GetCurrentDateTime(npcPausedDateTime);
+    shenGetCurrentDateTime(npcPausedDateTime);
     return npcSetCurrentTimeSimStateEnabled();
 }
 
@@ -305,7 +305,7 @@ std::int64_t npcAdvanceTime(std::int32_t hour, std::int32_t minute) {
         return result;
     if (hour < 0 || minute < 0) {
         DateTime now;
-        GetCurrentDateTime(now);
+        shenGetCurrentDateTime(now);
         hour = now.hour;
         minute = now.minute;
     }

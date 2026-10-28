@@ -170,13 +170,13 @@ void eAR01_SleepData_PlaceAfterWake(void *) {
     SetPlayerGameFlags(PlayerGameFlagMode::Bit5, reinterpret_cast<void *>(1));
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
-    EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(ryo, CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
-    EV_SetCharaControllerFlags(ryo, CharacterControlUpdateHeight | CharacterControlApplyGravity, NpcCharacterControllerState::Enabled);
-    SetMotionRegionFlag(FindMotionWork(FindCharacterByScenarioName(ryo)), 71, 0, MotionRegion::LowerBody);
+    EV_SetCharaControllerFlags(ryo, CCMF_UpdateHeight, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
+    EV_SetCharaControllerFlags(ryo, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Enabled);
+    mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 71, 0, MotionRegion::LowerBody);
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, {180.89999f, 100.22f, 309.5f});
     EV_AT_SetAngY(ryo, EventTransformFlags::AllAxes, {0, 10922, 0});
-    mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
+    mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0xf002, MotionRegion::LowerBody);
     sleepEventData.flags = 1;
     sleepEventData.continuation = eAR01_SleepData_Finish;
     SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -204,7 +204,7 @@ void eAR01_EVT_CallSleepEvent2_Callback(void *) {
 void Queue_eAR01_EVT_CallSleepEvent2() {
     SetPlayerControlEnabled(0);
     EV_setHoldStatesFlags(0);
-    mtwkRequestMotion(FindMotionWork(FindCharacterByScenarioName(ryo)), 0xf002, MotionRegion::LowerBody);
+    mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0xf002, MotionRegion::LowerBody);
     CameraUtilityParameters parameters{1, 0};
     camCtrlUtil(CameraUtilityMode::ForceSearchCam, reinterpret_cast<std::intptr_t>(&parameters));
     HLib::EnqueueTaskWithoutParameter(eAR01_EVT_CallSleepEvent2_Callback, 4, 0x0b, static_cast<std::int32_t>(SLEEP_EVENT_TASK.name));
@@ -281,11 +281,11 @@ void Queue_eAR01_EVT_ChangeInn() {
     const bool destinationIsInsideInn = !isInsideInn;
 
     MotionWork *const motionWork = g_playerRuntime.model ? g_playerRuntime.model->motionWork : nullptr;
-    BeginMotionPositionTransition(motionWork, targetPosition, targetYaw);
+    mtwkBeginPositionTransition(motionWork, targetPosition, targetYaw);
 
     SetAR01InnSide(destinationIsInsideInn);
 
-    CompleteMotionPositionTransitionRequest(motionWork);
+    mtwkCompletePositionTransitionRequest(motionWork);
     HLib::EnqueueTaskWithoutParameter(eAR01_EVT_ChangeInn_Callback, 6, 0x0b, changeInnTaskToken);
     WaitForNextTask_0(GetCurrentAreaScreenFilmTask(), 1, 90);
 }

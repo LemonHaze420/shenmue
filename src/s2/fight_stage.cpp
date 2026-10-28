@@ -237,7 +237,7 @@ void AdjustActiveGroundTarget(std::uint32_t controller, Vector3 *position, Motio
     const auto category = fightMoveCategoryMasks[actor->moveId];
     if (controller == 5) {
         Vector3 otherFoot, pelvis;
-        TransformWithoutIKEnabled(motion, &otherFoot, &pelvis);
+        mtwkTransformWithoutIKEnabled(motion, &otherFoot, &pelvis);
         actor->groundHeights[1] = vfFieldGetIntersection(actor, otherFoot);
         if (addNearby)
             actor->groundHeights[1] += vfAccumEnemyGroundOffsetAndMask(&otherFoot, &actor->nearbyGroundActors[1]);
@@ -293,16 +293,16 @@ void AdjustActiveGroundTarget(std::uint32_t controller, Vector3 *position, Motio
 }
 
 // @verified - p
-void motRemoveCallback(MotionWork *motion) {
+void mtwkRemoveCallback(MotionWork *motion) {
     for (const auto selector : fightMotionSelectors)
-        AssignMotionTargetCallback(motion, nullptr, selector);
+        mtwkAssignTargetCallback(motion, nullptr, selector);
 }
 
 // @verified - p
-void vfRegisterGroundTargetCallbacks(MotionWork *motion, VFActor *actor) {
+void mtwkRegisterGroundTargetCallbacks(MotionWork *motion, VFActor *actor) {
     for (const auto selector : fightMotionSelectors) {
-        AssignMotionTargetCallback(motion, AdjustActiveGroundTarget, selector);
-        AssignMotionTargetParameter(motion, actor, selector);
+        mtwkAssignTargetCallback(motion, AdjustActiveGroundTarget, selector);
+        mtwkAssignTargetParameter(motion, actor, selector);
     }
 }
 
@@ -364,7 +364,7 @@ std::uint8_t vfRegisterContactSlot(VFMA_t *game, FCMG_t *slot) {
     actor->hitStateFlags = 0;
     actor->moveFlags = 0;
     actor->motionFlags = actor->secondaryMotionFlags = 0;
-    vfRegisterGroundTargetCallbacks(slot->motion, actor);
+    mtwkRegisterGroundTargetCallbacks(slot->motion, actor);
     game->slotTeams[index] = formation->team;
     game->slotPoolModes[index] = formation->poolMode;
     if (formation->poolMode == 0)
@@ -509,9 +509,9 @@ void vfUpdateGroundHeightAndEnemyContacts(VFActor *self) {
         if (!group.character || group.state != 3 || (nearby & (1U << i)) == 0 || (group.collisionFlags & 8U) != 0 || (group.collisionFlags & 1U) == 0)
             continue;
         group.collisionFlags |= 8U;
-        const float frame = GetMotionFrame(group.motion, MotionRegion::LowerBody);
-        const float end = GetMotionEndFrame(group.motion, MotionRegion::LowerBody);
-        const MotnSequence *const sequence = FindLoadedMotionSequence(GetMotionAnimationId(group.motion, MotionRegion::LowerBody));
+        const float frame = mtwkGetFrame(group.motion, MotionRegion::LowerBody);
+        const float end = mtwkGetEndFrame(group.motion, MotionRegion::LowerBody);
+        const MotnSequence *const sequence = FindLoadedMotionSequence(mtwkGetAnimationId(group.motion, MotionRegion::LowerBody));
         if ((group.collisionFlags & 0x10U) != 0 || (frame != end && !(sequence && sequence->allowsFrameOverflow)))
             continue;
         const std::uint16_t animation = (group.collisionFlags & 0x20U) != 0 ? 455 :
@@ -519,7 +519,7 @@ void vfUpdateGroundHeightAndEnemyContacts(VFActor *self) {
             (group.collisionFlags & 2U) != 0                                ? 108 :
                                                                               107;
         vfUpdateDefaultReactionAnim(&group, animation);
-        SetMotionRegionFlag(group.motion, 69, (group.collisionFlags & 0x80U) != 0 ? 0 : 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(group.motion, 69, (group.collisionFlags & 0x80U) != 0 ? 0 : 2, MotionRegion::LowerBody);
     }
 }
 
@@ -552,7 +552,7 @@ std::uint16_t PredictFightKnockbackFrames(const VFActor &actor, float height) {
 
 
 Vector3 FightBoneLocalPosition(Character *character, std::int32_t bone) {
-    Matrix4x4 *const matrix = charaGetBoneTransform(FindMotionWork(character), bone);
+    Matrix4x4 *const matrix = mtwkGetBoneTransform(FindMotionWork(character), bone);
     if (!matrix)
         return GetCharacterWorldPosition(character);
     Vector3 position{matrix->rows[3].x, matrix->rows[3].y, matrix->rows[3].z};
@@ -574,7 +574,7 @@ Vector3 FightBoneLocalPosition(Character *character, std::int32_t bone) {
 void CaptureFightHitTransform(Character *character, std::int32_t bone, Matrix4x4 &output) {
     Matrix4x4_Push();
     Matrix4x4::SetPrePassToTempTransform();
-    Matrix4x4::MultiplyWithPrePassMatrix(charaGetBoneTransform(FindMotionWork(character), bone));
+    Matrix4x4::MultiplyWithPrePassMatrix(mtwkGetBoneTransform(FindMotionWork(character), bone));
     Matrix4x4::GetTransformMatrix(&output);
     Matrix4x4::Pop();
     output.rows[3].x = output.rows[3].y = output.rows[3].z = 0.0f;
@@ -597,7 +597,7 @@ std::uint16_t FightFootFacingAngle() {
 void vfUpdateHitFacingAndKnockback(VFActor *self) {
     self->contactVectors[0] = self->contactPosition;
     const auto readPosition = [self](std::int32_t bone, Vector3 &position) {
-        const Matrix4x4 *const transform = charaGetBoneTransform(self->motion, bone);
+        const Matrix4x4 *const transform = mtwkGetBoneTransform(self->motion, bone);
         if (transform)
             position = {transform->rows[3].x, transform->rows[3].y, transform->rows[3].z};
     };
@@ -1136,14 +1136,14 @@ void vfPrepareEnemySlotMotion(FCMG_t *group) {
     if ((motion->runtime.callbackFlags & 1U) != 0)
         flags |= 8U;
     else
-        EV_mtwkSetEnabled(motion, true);
+        mtwkSetEnabled(motion, true);
     if (mtwkSetExtraFlag(motion, 6, 0) != 0)
         flags |= 0x20U;
     if (shenCheckCharaHasAlphaManager(character))
         flags |= 0x80U;
     group->savedControlFlags = flags;
-    group->savedMotionScale = GetMotionSpeed(motion, MotionRegion::LowerBody);
-    SetMotionSpeed(motion, 1.0f, MotionRegion::LowerBody);
+    group->savedMotionScale = mtwkGetSpeed(motion, MotionRegion::LowerBody);
+    mtwkSetSpeed(motion, 1.0f, MotionRegion::LowerBody);
     group->savedRootMode = 0;
     for (const auto regionFlags : motion->runtime.regionFlags) {
         if ((regionFlags & 0x10U) != 0) {
@@ -1161,8 +1161,8 @@ void vfPrepareEnemySlotMotion(FCMG_t *group) {
     group->savedExtraMotionFlag = mtwkSetExtraFlag(motion, 0x37, 1);
     mtwkSetExtraFlag(motion, 0x37, 0);
     for (std::uint8_t i = 0; i < 7; ++i) {
-        group->savedMotionCallbacks[i] = GetMotionTargetCallback(motion, fightMotionSelectors[i]);
-        group->savedMotionParameters[i] = GetMotionTargetParameter(motion, fightMotionSelectors[i]);
+        group->savedMotionCallbacks[i] = mtwkGetTargetCallback(motion, fightMotionSelectors[i]);
+        group->savedMotionParameters[i] = mtwkGetTargetParameter(motion, fightMotionSelectors[i]);
     }
 }
 
@@ -1179,21 +1179,21 @@ void vfRestoreEnemySlotMotion(FCMG_t *group) {
         }
     }
     if ((flags & 8U) == 0)
-        EV_mtwkSetEnabled(motion, false);
+        mtwkSetEnabled(motion, false);
     if ((flags & 0x20U) == 0)
         mtwkSetExtraFlag(motion, 6, 2);
     cpamSetFlag(character, (flags & 0x80U) != 0);
-    SetMotionSpeed(motion, group->savedMotionScale, MotionRegion::LowerBody);
+    mtwkSetSpeed(motion, group->savedMotionScale, MotionRegion::LowerBody);
     if ((group->flags & 2U) != 0)
-        SetMotionWorkCulled(motion, true);
+        mtwkSetCulled(motion, true);
     mtwkSetRequestedRootMode(motion, group->savedRootMode);
     motion->runtime.constraintStepLimit[2] = static_cast<float>(group->savedConstraintAngle) / 10430.378f;
     const auto projection = static_cast<std::uint16_t>(group->savedProjectionAngle);
     motion->runtime.projectionCotangentNear = cos_fixed16(projection) / sin_fixed16(static_cast<std::int16_t>(projection));
     mtwkSetExtraFlag(motion, 0x37, group->savedExtraMotionFlag != 0 ? 0 : 2);
     for (std::uint8_t i = 0; i < 7; ++i) {
-        AssignMotionTargetCallback(motion, group->savedMotionCallbacks[i], fightMotionSelectors[i]);
-        AssignMotionTargetParameter(motion, group->savedMotionParameters[i], fightMotionSelectors[i]);
+        mtwkAssignTargetCallback(motion, group->savedMotionCallbacks[i], fightMotionSelectors[i]);
+        mtwkAssignTargetParameter(motion, group->savedMotionParameters[i], fightMotionSelectors[i]);
     }
     mtwkSetExtraFlag(motion, 1, 2);
 }
@@ -1221,10 +1221,10 @@ void vfSelectDefaultReactionAndGuardAnims(VFActor *actor) {
 
 // @verified - p
 void vfUpdateDefaultReactionAnim(FCMG_t *group, std::uint16_t animation) {
-    SetMotionFrameTime(group->motion, 5, MotionRegion::LowerBody);
+    mtwkSetFrameTime(group->motion, 5, MotionRegion::LowerBody);
     mtwkRequestMotion(group->motion, animation, MotionRegion::LowerBody);
     if (group->fighter && group->state == 2)
-        SetMotionRegionFlag(group->motion, 69, (group->fighter->moveFlags & 0x40U) != 0 ? 0 : 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(group->motion, 69, (group->fighter->moveFlags & 0x40U) != 0 ? 0 : 2, MotionRegion::LowerBody);
     group->flags |= 1U;
 }
 
@@ -1262,9 +1262,9 @@ void vfUpdateEnemySlotFormationAndYaw(VFMA_t *) {
         FCMG_t &group = g_pFightStage->enemySlots[i];
         if (!group.character || !group.group || group.state != 3 || (group.collisionFlags & 1U) == 0)
             continue;
-        if (SetMotionRegionFlag(group.motion, 65, 1, MotionRegion::LowerBody) == 0)
+        if (mtwkSetRegionFlag(group.motion, 65, 1, MotionRegion::LowerBody) == 0)
             continue;
-        const MotnSequence *const sequence = FindLoadedMotionSequence(GetMotionAnimationId(group.motion, MotionRegion::LowerBody));
+        const MotnSequence *const sequence = FindLoadedMotionSequence(mtwkGetAnimationId(group.motion, MotionRegion::LowerBody));
         if (sequence && sequence->allowsFrameOverflow)
             continue;
         const std::uint16_t animation = (group.collisionFlags & 0x20U) != 0 ? 453 :
@@ -1272,7 +1272,7 @@ void vfUpdateEnemySlotFormationAndYaw(VFMA_t *) {
             (group.collisionFlags & 2U) != 0                                ? 101 :
                                                                               104;
         vfUpdateDefaultReactionAnim(&group, animation);
-        SetMotionRegionFlag(group.motion, 69, (group.collisionFlags & 0x80U) != 0 ? 0 : 2, MotionRegion::LowerBody);
+        mtwkSetRegionFlag(group.motion, 69, (group.collisionFlags & 0x80U) != 0 ? 0 : 2, MotionRegion::LowerBody);
         if (group.savedFacingAngle != 0) {
             const auto yaw = GetAllAngYForNode(&group.character->entity.node);
             shenDecrementRotYAllNodes(&group.character->entity.node, static_cast<std::int16_t>(yaw + group.savedFacingAngle));
@@ -1303,7 +1303,7 @@ bool ReactToDead(VFMA_t *game, FCMG_t *slot) {
     }
     if (!formation)
         return false;
-    motRemoveCallback(slot->motion);
+    mtwkRemoveCallback(slot->motion);
     mtwkSetExtraFlag(slot->motion, 0, 0);
     mtwkSetExtraFlag(slot->motion, 3, 2);
     formation->character = slot->character;
@@ -1316,7 +1316,7 @@ bool ReactToDead(VFMA_t *game, FCMG_t *slot) {
     slot->position = formation->spawnPosition;
     shenDecrementRotYAllNodes(&formation->character->entity.node, static_cast<std::int16_t>(yaw));
     vfUpdateDefaultReactionAnim(slot, formation->spawnWords[0]);
-    SetMotionFrameTime(slot->motion, 1, MotionRegion::LowerBody);
+    mtwkSetFrameTime(slot->motion, 1, MotionRegion::LowerBody);
 
     slot->quadrant = -1;
     slot->group = formation;
@@ -1346,7 +1346,7 @@ bool vfEnemySlotResetAndRestartCycle(VFMA_t *game, FCMG_t *group) {
         group->accumulatedYaw = static_cast<std::uint16_t>(GetAllAngYForNode(&group->character->entity.node));
         vfSelectDefaultReactionAndGuardAnims(group->fighter);
         vfUpdateDefaultReactionAnim(group, group->fighter->defaultAnimations[0]);
-        motRemoveCallback(group->motion);
+        mtwkRemoveCallback(group->motion);
         vfRemoveCharaFromGroup(game, group);
         group->group->state = 0;
         g_activeFightData[group->fightEntryIndex].status = 0;
@@ -1406,8 +1406,8 @@ void vfCaptureGroundForCooldown(VFMA_t *game, VFActor *actor) {
     }
     group->stackReferenceMask = mask;
     for (const auto selector : fightMotionSelectors) {
-        AssignMotionTargetCallback(actor->motion, AdjustCooldownGroundTarget, selector);
-        AssignMotionTargetParameter(actor->motion, group, selector);
+        mtwkAssignTargetCallback(actor->motion, AdjustCooldownGroundTarget, selector);
+        mtwkAssignTargetParameter(actor->motion, group, selector);
     }
 }
 
@@ -1416,7 +1416,7 @@ bool vfTransitionEnemySlotToCooldown(VFMA_t *game, FCMG_t *group) {
     const auto state = group->state;
     const auto team = group->counterGroup;
     group->position = GetCharacterWorldPosition(group->character);
-    motRemoveCallback(group->motion);
+    mtwkRemoveCallback(group->motion);
     switch (state) {
     case 1:
         --g_pFightStage->readyEnemySlots[team];
@@ -2103,7 +2103,7 @@ void vfStageObjectAssignPosXYZ(std::int32_t slot, float x, float y, float z) {
 void vfStageObjectAssignRotXYZ(std::int32_t slot, std::uint16_t x, std::uint16_t y, std::uint16_t z) {
     FightStageObjectRuntime &object = g_fightStageObjects[slot]->object;
     object.rotation = {x, y, z};
-    SetCharacterWorldRotation(object.model, object.rotation);
+    charaSetWorldRot(object.model, object.rotation);
 }
 
 // @verified - p
@@ -2271,7 +2271,7 @@ void EmitFightSmoke(std::uint8_t profile, VFActor *actor) {
         paletteIndex = 12;
     else {
         DateTime time;
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         const std::uint8_t hour = static_cast<std::uint8_t>(time.hour);
         const std::size_t timeIndex = hour < 7 || hour >= 19 ? 9 : hour < 11 ? 0 : hour < 15 ? 3 : 6;
         const std::uint16_t material = static_cast<std::uint16_t>(QueryGroundMaterialToken(position, position.y));
@@ -2544,11 +2544,11 @@ void SuspendFight() {
         return;
     for (std::uint8_t i = 0; i < 6; ++i)
         if (game->characters[i] && game->actors[i])
-            motRemoveCallback(game->actors[i]->motion);
+            mtwkRemoveCallback(game->actors[i]->motion);
     for (std::uint8_t i = 0; i < g_pFightStage->enemyCount; ++i) {
         FCMG_t &slot = g_pFightStage->enemySlots[i];
         if (slot.character && slot.group && slot.state == 3)
-            motRemoveCallback(slot.motion);
+            mtwkRemoveCallback(slot.motion);
     }
     for (std::uint8_t i = 0; i < g_pFightStage->enemyCount; ++i) {
         FCMG_t &slot = g_pFightStage->enemySlots[i];
@@ -2581,14 +2581,14 @@ std::int32_t ResumeFight(std::int32_t resetActors) {
     HLib::ResolveDeferredCallback(game->gameInfoTask);
     for (std::uint8_t i = 0; i < 6; ++i)
         if (game->characters[i] && game->actors[i])
-            vfRegisterGroundTargetCallbacks(game->actors[i]->motion, game->actors[i]);
+            mtwkRegisterGroundTargetCallbacks(game->actors[i]->motion, game->actors[i]);
     for (std::uint8_t i = 0; i < g_pFightStage->enemyCount; ++i) {
         FCMG_t &slot = g_pFightStage->enemySlots[i];
         if (!slot.character || !slot.group || slot.state != 3)
             continue;
         for (std::uint32_t selector : fightMotionSelectors) {
-            AssignMotionTargetCallback(slot.motion, AdjustCooldownGroundTarget, selector);
-            AssignMotionTargetParameter(slot.motion, &slot, selector);
+            mtwkAssignTargetCallback(slot.motion, AdjustCooldownGroundTarget, selector);
+            mtwkAssignTargetParameter(slot.motion, &slot, selector);
         }
     }
     for (std::uint8_t i = 0; i < g_pFightStage->enemyCount; ++i) {
@@ -2630,12 +2630,12 @@ std::int32_t ResumeFight(std::int32_t resetActors) {
             actor.secondaryMotionFlags = 0;
             actor.markerMask = 0;
             actor.motionFlags = 0;
-            if (SetMotionRegionFlag(motion, 70, 1, MotionRegion::LowerBody))
+            if (mtwkSetRegionFlag(motion, 70, 1, MotionRegion::LowerBody))
                 actor.moveFlags |= VFMF_MirrorReactionAngle;
             else
                 actor.moveFlags &= ~VFMF_MirrorReactionAngle;
-            const float frame = GetMotionFrame(motion, MotionRegion::LowerBody);
-            if (actor.currentAnimation != GetMotionAnimationId(motion, MotionRegion::LowerBody))
+            const float frame = mtwkGetFrame(motion, MotionRegion::LowerBody);
+            if (actor.currentAnimation != mtwkGetAnimationId(motion, MotionRegion::LowerBody))
                 vfSelectDefaultMotion(&actor, 0);
             result = static_cast<std::int32_t>(mtwkSetExtraFlag(motion, 1, 2));
             actor.stateFlags |= VFSF_Unknown80000;

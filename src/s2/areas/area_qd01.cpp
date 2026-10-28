@@ -77,7 +77,7 @@ void AreaQD01Cleanup(std::int32_t afternoon, std::uint32_t) {
 void AreaQD01Main(std::uint32_t) {
     SetMapControlStatusFlag(0, 0);
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     AreaQD01Cleanup(EV_GetShenmueFlag(0xff), 0);
     QueueStreetWatch(street, MinigameCallback, StreetCallback);
     HLib::EnqueueTaskWithoutParameter(MainCallback, 4, 0xb, static_cast<std::int32_t>(STREET_WATCH_TASK.name));

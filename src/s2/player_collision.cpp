@@ -419,7 +419,7 @@ void ProbeReachedOrdinaryMovementCollision(PlayerMovementState &movement) {
     MotionWork *const motionWork = movement.motionWork;
     if (!motionWork)
         return;
-    const std::uint16_t motionId = GetMotionAnimationId(motionWork, MotionRegion::LowerBody);
+    const std::uint16_t motionId = mtwkGetAnimationId(motionWork, MotionRegion::LowerBody);
     const bool correctionMotion = motionId == 0xf005U || motionId == 0xf006U || (motionId >= 0xf035U && motionId <= 0xf03dU);
 
     if (!correctionMotion ||
@@ -430,9 +430,9 @@ void ProbeReachedOrdinaryMovementCollision(PlayerMovementState &movement) {
 
     const float scale = movement.field160 * movement.field15c;
     Vector3 terminalRoot;
-    SampleNativeMotionRoot(motionId, GetMotionRigBoneId(motionWork), -1.0f, terminalRoot);
+    SampleNativeMotionRoot(motionId, mtwkGetRigBoneId(motionWork), -1.0f, terminalRoot);
     const float trackDistance = std::fabs(terminalRoot.z);
-    const float sampleFrame = GetMotionFrame(motionWork, MotionRegion::LowerBody);
+    const float sampleFrame = mtwkGetFrame(motionWork, MotionRegion::LowerBody);
     const float frameCount = static_cast<float>(GetMotionFrameCount(motionId)) - 1.0f;
 
     const float halfCycle = frameCount * 0.5f;
@@ -473,7 +473,7 @@ void UpdateReachedFloorStairCollision(PlayerMovementState &movement) {
     bool retainTarget = false;
     ProbeReachedOrdinaryMovementCollision(movement);
     MotionWork *const motionWork = movement.motionWork;
-    GetMotionAnimationId(motionWork, MotionRegion::LowerBody);
+    mtwkGetAnimationId(motionWork, MotionRegion::LowerBody);
     Vector3 location = GetCharacterWorldPosition(character);
     location.y += 1.0f;
     movement.flags &= ~0x10000U;
@@ -565,11 +565,11 @@ void UpdateReachedFloorStairCollision(PlayerMovementState &movement) {
     if (stepCount > 0) {
         Vector3 rightFootBone{};
         Vector3 leftFootBone{};
-        GetMotionControllerTargetPosition(motionWork, 6, rightFoot);
-        GetMotionControllerTargetPosition(motionWork, 5, leftFoot);
-        GetMotionBonePosition(motionWork, MB_RightFoot, &rightFootBone);
-        GetMotionBonePosition(motionWork, MB_LeftFoot, &leftFootBone);
-        const Vector3 &probeFoot = GetIsRHandAboveShoulder(motionWork) ? leftFoot : rightFoot;
+        mtwkGetControllerTargetPosition(motionWork, 6, rightFoot);
+        mtwkGetControllerTargetPosition(motionWork, 5, leftFoot);
+        mtwkGetBonePosition(motionWork, MB_RightFoot, &rightFootBone);
+        mtwkGetBonePosition(motionWork, MB_LeftFoot, &leftFootBone);
+        const Vector3 &probeFoot = mtwkIsRightHandAboveShoulder(motionWork) ? leftFoot : rightFoot;
         Vector3 footProbe{probeFoot.x, static_cast<float>(static_cast<double>(probeFoot.y) + 1.0), probeFoot.z};
         footProbe.y = shenFindIntersectionWithScene(footProbe, footProbe.y);
         Matrix4x4_PushActiveTransform();
@@ -639,7 +639,7 @@ void UpdateReachedFloorStairCollision(PlayerMovementState &movement) {
 // @verified - p
 void PrepareReachedStairPhaseCorrection(PlayerMovementState &movement) {
     MotionWork *const motionWork = movement.motionWork;
-    const std::uint16_t motionId = GetMotionAnimationId(motionWork, MotionRegion::LowerBody);
+    const std::uint16_t motionId = mtwkGetAnimationId(motionWork, MotionRegion::LowerBody);
     const bool standardStairMotion = motionId == 0xf008U || motionId == 0xf009U || motionId == 0xf02aU || motionId == 0xf02bU;
     const bool trackedStairMotion = motionId == 0xf12eU || motionId == 0xf12fU;
     if ((!standardStairMotion && !trackedStairMotion) || (movement.flags & 8U) == 0 || movement.targetHeightScale == 0)
@@ -647,9 +647,9 @@ void PrepareReachedStairPhaseCorrection(PlayerMovementState &movement) {
 
     movement.correctionCycleDistance = 0.0f;
     Vector3 terminalRoot;
-    SampleNativeMotionRoot(motionId, GetMotionRigBoneId(motionWork), -1.0f, terminalRoot);
+    SampleNativeMotionRoot(motionId, mtwkGetRigBoneId(motionWork), -1.0f, terminalRoot);
     const float trackDistance = std::fabs(terminalRoot.z);
-    const float sampleFrame = GetMotionFrame(motionWork, MotionRegion::LowerBody);
+    const float sampleFrame = mtwkGetFrame(motionWork, MotionRegion::LowerBody);
     const float frameCount = static_cast<float>(GetMotionFrameCount(motionId)) - 1.0f;
     const float perFrameDistance = trackDistance / frameCount;
     const std::int32_t stepsPerPhase = trackedStairMotion || motionId == 0xf008U || motionId == 0xf02aU ? 2 : 1;
@@ -852,7 +852,7 @@ void plymMatchCharacterSpeed(PlayerModelState &state) {
     if (state.limitingCollisionDistance > 3.0f || state.normalizedMotionInput > 0.0f)
         return;
     Character *const character = state.limitingCollisionCharacter;
-    const shen_name name = GetCharacterScenarioName(character);
+    const shen_name name = ctrlGetScenarioCharaName(character);
     if (!character)
         return;
     NpcRouteStateContext *const route = FindNpcRouteStateContext(name);
@@ -953,7 +953,7 @@ void plymResolveCollisionSteering(PlayerModelState &state) {
     if (symmetric) {
         side = limitYaw <= 0 ? 1 : -1;
         if (character) {
-            const std::int32_t avoidance = -NpcAvoidanceSide(GetCharacterScenarioName(character));
+            const std::int32_t avoidance = -NpcAvoidanceSide(ctrlGetScenarioCharaName(character));
             if (avoidance < 0)
                 side = 1;
             if (avoidance > 0)

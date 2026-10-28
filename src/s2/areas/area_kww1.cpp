@@ -19,7 +19,7 @@ void AreaKWW1Main(std::uint32_t) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1495, 0);
 
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     const std::uint8_t hourDelta = static_cast<std::uint8_t>(static_cast<std::uint8_t>(dateTime.hour) - 8U);
     if (hourDelta > 14U) {
         dateTime.hour = 8;

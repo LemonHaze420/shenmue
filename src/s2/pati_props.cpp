@@ -101,11 +101,11 @@ void InitPati() {
     PatiModelCache cache;
     cache.count = 0;
     PatiTableData data;
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
         reinterpret_cast<std::uintptr_t>("PATI"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     PATI_TBL_Parser(&data);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("PATI"), 0);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1721, static_cast<std::uint8_t>(GetItemState(3021)) == 0);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1722, static_cast<std::uint8_t>(GetItemState(3022)) == 0);
     std::int32_t expandedRadius = 0;

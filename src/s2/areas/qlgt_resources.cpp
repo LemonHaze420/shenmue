@@ -96,7 +96,7 @@ void Prepare(Work &work) {
     EV_DisableCharacterDisplay(hiddenDoors[work.entry->course]);
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
-    GetCurrentDateTime(eventTemporaryDateTime);
+    shenGetCurrentDateTime(eventTemporaryDateTime);
 
     eventMovementStates.fill(0);
     for (shen_name door : doors)
@@ -111,11 +111,11 @@ void Prepare(Work &work) {
     work.flash = QueueFlash(work.course->pattern);
     work.motionBank = ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
     work.previousNavigation = SetNaviDisplayOverride(false);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("QLGT"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QLGT"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QLGT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("QLGT"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("QLGT"), 0);
     EV_FreeAuthorPak(1, "0263");
     EV_SetNewSceneIndex();
     EV_LoadCutsceneFromCurrentScene("0263A000");
@@ -134,8 +134,8 @@ void Prepare(Work &work) {
 }
 void Cleanup(Work &work) {
     const Course &course = *work.course;
-    SetPluralControlFor(FindCharacterByScenarioName(ryo), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(ren), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(ryo), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(ren), 0);
     EventSetPositionAngle position{0, ryo, invalid, {course.ryoExit.position.x, 0, course.ryoExit.position.z}, course.ryoExit.yaw, 0};
     EVT_AT_SetPosAng_Callback(&position);
     position.character = ren;
@@ -155,10 +155,10 @@ void Cleanup(Work &work) {
     ExecuteCleanupFuncForAreaWithCachedScene();
     FinishLoading();
     shenSetClockAndCompassRenderTo(0);
-    LoadCutsceneAndSoundProgramForArea();
+    sbtLoadProgram();
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(0, "0263");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QLGT"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("QLGT"), 0);
     SetNaviDisplayOverride(work.previousNavigation != 0);
     DeleteMotion(work.motionBank);
     for (shen_name door : doors)
@@ -176,7 +176,7 @@ void Cleanup(Work &work) {
 void TrackDrumTransparency(bool opaque) {
     Vector3 camera;
     camCtrlGetNextCamPos(&camera);
-    if (!FindCharacterByScenarioName(drum))
+    if (!ctrlGetScenarioChara(drum))
         return;
     float alpha = 1;
     if (!opaque) {
@@ -202,7 +202,7 @@ void PlaceEnemies(Work &work, float radius) {
         EVT_AT_SetAngY(actors[2 + i], enemy, degrees + 90, 0);
         EVT_AT_SetMot(actors[2 + i], idleMotions[i], 0, 1, 0x40000000U, 0);
         SetScenarioCharacterDrawControl(actors[2 + i], 0, 0);
-        SetPluralControlFor(FindCharacterByScenarioName(actors[2 + i]), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(actors[2 + i]), 1);
     }
 }
 void PlaceBattleEnemies(Work &work, float radius) {

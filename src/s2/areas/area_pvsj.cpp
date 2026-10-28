@@ -72,14 +72,14 @@ void AreaPVSJMain(std::uintptr_t argument) {
     work->voiceLengths = static_cast<PatiVoiceLength *>(HLib::AllocateTaskData(0x4000, PVSJ_AREA));
     SetPlayerControlEnabled(0);
     const auto directory = reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, directory, reinterpret_cast<std::uintptr_t>("PVSJ"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, directory, reinterpret_cast<std::uintptr_t>("PATI"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, directory, reinterpret_cast<std::uintptr_t>("PVSJ"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, directory, reinterpret_cast<std::uintptr_t>("PATI"));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     work->jobPartition = reinterpret_cast<PakAfsPartition *>(
-        EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Mount, directory, reinterpret_cast<std::uintptr_t>("PVSJ.afs")));
+        EV_pakUtils(PakCategory::Partition, PakPartitionOp::Mount, directory, reinterpret_cast<std::uintptr_t>("PVSJ.afs")));
     work->gamePartition = reinterpret_cast<PakAfsPartition *>(
-        EV_ControlPackageResources(PakCategory::Partition, PakPartitionOp::Mount, directory, reinterpret_cast<std::uintptr_t>("PATI.afs")));
+        EV_pakUtils(PakCategory::Partition, PakPartitionOp::Mount, directory, reinterpret_cast<std::uintptr_t>("PATI.afs")));
     shenLoadEventFrom("PATI.EV3", EventFunctionType::Event3);
     PvsjInitializeBoards(work);
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);

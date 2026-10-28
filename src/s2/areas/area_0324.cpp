@@ -62,7 +62,7 @@ void Update0324(void *taskData) {
         parent->state = 1;
     } else if (parent->state == 0) {
         DateTime time{};
-        GetCurrentDateTime(time);
+        shenGetCurrentDateTime(time);
         time.hour = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 32));
         time.minute = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 33));
         time.day = static_cast<std::int8_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 34));
@@ -84,20 +84,20 @@ void Update0324(void *taskData) {
 void Cleanup0324(Area0324Parameter *parent) {
     using enum CameraState;
     for (const shen_name *character = AREA_0324_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
     }
     EV_FreeAuthorPak(0, "0324");
     EV_FreeAuthorPak(0, "0262");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_0324_ARCHIVE), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(AREA_0324_ARCHIVE), 0);
     EV_CleanupMapControlTask();
     HLib::DestroyTask(parent->self);
     if (g_currentMap.name == AREA_0324.name) {
         EV_scenQueueLoad(g_actNumber, AREA_0324, g_entryPoint);
     } else {
-        LoadCutsceneAndSoundProgramForArea();
+        sbtLoadProgram();
         EventSetPosition position{0, AREA_0324_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {215.3f, 92.8f, 129.8f}, 0.0f};
         EVT_AT_SetPosRot(&position);
         EventSetRawAngle angle{0, AREA_0324_RYO_, AUTHOR_VIEWER_INVALID_CHARACTER, {0, 49152, 0}, 0.0f};

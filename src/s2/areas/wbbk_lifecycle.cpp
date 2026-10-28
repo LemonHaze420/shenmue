@@ -125,7 +125,7 @@ void ChangeBookEventState(std::int8_t state) {
 }
 bool IsBookTimeExpired() {
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.minute + 60 * time.hour <= 719)
         return false;
     SetPlayerControlEnabled(0);
@@ -135,7 +135,7 @@ bool IsBookTimeExpired() {
 void CleanupBookActors() {
     EV_FreeAuthorPak(0, "0035");
     EV_NPC_NewLoadSw(0);
-    SetFaceFlagsForChara_0(FindCharacterByScenarioName(BOOK_SAI), FacialNodeOriginal);
+    SetFaceFlagsForChara_0(ctrlGetScenarioChara(BOOK_SAI), FacialNodeOriginal);
     const shen_name knk{SHEN_NAME(KNK_)}, kun{SHEN_NAME(KUN_)};
     EV_npcFree(knk);
     EV_npcFree(BOOK_SAI);

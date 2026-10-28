@@ -40,18 +40,18 @@ void QueueChoreographyCamera(std::int32_t camera, float delay) {
     work = {.cleanup = 1, .camera = camera, .eye = GABT_MOLE_BASE, .target = GABT_MOLE_BASE, .context = 0, .reserved11 = {}, .angle = 0, .delay = delay};
 }
 void PrepareChoreographyCharacters() {
-    HasCharacterMotionWork(FindCharacterByScenarioName(GABT_MOLE_RYO));
-    HasCharacterMotionWork(FindCharacterByScenarioName(GABT_MOLE_GAI));
+    HasCharacterMotionWork(ctrlGetScenarioChara(GABT_MOLE_RYO));
+    HasCharacterMotionWork(ctrlGetScenarioChara(GABT_MOLE_GAI));
     for (shen_name character : {GABT_MOLE_RYO, GABT_MOLE_GAI}) {
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 0, 0);
-        SetHighModelXYZ(FindCharacterByScenarioName(character), 1, 1, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 0, 0);
+        SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 1, 0);
     }
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(GABT_MOLE_RYO), 0, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(GABT_MOLE_RYO), 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(GABT_MOLE_GAI), 0, reinterpret_cast<std::byte *>(gabtOpponentLeftHandPose), 1);
-    ApplyCharacterHandPoseCommand(FindCharacterByScenarioName(GABT_MOLE_GAI), 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
-    AT_SetEyeCtrl(FindCharacterByScenarioName(GABT_MOLE_RYO), 0, 1, 1);
-    AT_SetEyeCtrl(FindCharacterByScenarioName(GABT_MOLE_GAI), 0, 1, 1);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(GABT_MOLE_RYO), 0, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(GABT_MOLE_RYO), 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(GABT_MOLE_GAI), 0, reinterpret_cast<std::byte *>(gabtOpponentLeftHandPose), 1);
+    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(GABT_MOLE_GAI), 1, reinterpret_cast<std::byte *>(chestHandPoseCommand), 1);
+    AT_SetEyeCtrl(ctrlGetScenarioChara(GABT_MOLE_RYO), 0, 1, 1);
+    AT_SetEyeCtrl(ctrlGetScenarioChara(GABT_MOLE_GAI), 0, 1, 1);
     AT_SetLocalBaseChara(GABT_ATTACHMENT, GABT_PIVOT);
     AT_SetLocalBaseChara(GABT_MOLE_RYO, GABT_ATTACHMENT);
     AT_SetLocalBaseChara(GABT_MOLE_GAI, GABT_ATTACHMENT);
@@ -93,8 +93,8 @@ void GabtReflectorNullsub(std::int32_t value) {
 } // namespace
 // @verified - p: GabtPrepareReflectors.
 void GabtPrepareReflectors() {
-    SetPluralControlFor(FindCharacterByScenarioName(GABT_MOLE_RYO), 0);
-    SetPluralControlFor(FindCharacterByScenarioName(GABT_MOLE_GAI), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(GABT_MOLE_RYO), 0);
+    SetPluralControlFor(ctrlGetScenarioChara(GABT_MOLE_GAI), 0);
     GabtReflectorNullsub(1);
     EV_SetRefBoardParamsFor(GABT_MOLE_RYO, 1);
     EV_SetRefBoardParamsFor(GABT_MOLE_GAI, 1);
@@ -107,9 +107,9 @@ void GabtPrepareReflectors() {
 // @verified - p: QteMiss_Callback107bb0.
 void GabtFailureChoreographyCallback(void *) {
     if (choreographyFrame == 160)
-        AT_SetEyeCtrl(FindCharacterByScenarioName(GABT_MOLE_RYO), 15, .1f, .1f);
+        AT_SetEyeCtrl(ctrlGetScenarioChara(GABT_MOLE_RYO), 15, .1f, .1f);
     else if (choreographyFrame == 200) {
-        SetFacialBlinkDelay(FindCharacterByScenarioName(GABT_MOLE_RYO), 90);
+        SetFacialBlinkDelay(ctrlGetScenarioChara(GABT_MOLE_RYO), 90);
         HLib::DestroyCurrentTask();
     }
     ++choreographyFrame;
@@ -127,8 +127,8 @@ void GabtSuccessChoreographyCallback(void *) {
             Loop3DSoundEffect(0xb0d);
             break;
         case 30:
-            SetMotionSpeed(scenFindMotionwork(GABT_MOLE_RYO), 0, MotionRegion::LowerBody);
-            SetMotionSpeed(scenFindMotionwork(GABT_MOLE_GAI), 0, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_RYO), 0, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_GAI), 0, MotionRegion::LowerBody);
             break;
         case 45:
             QueueExtraTelop("BBBB", static_cast<std::int32_t>(0xc0000000U));
@@ -139,14 +139,14 @@ void GabtSuccessChoreographyCallback(void *) {
     } else
         switch (choreographyFrame) {
         case 150:
-            SetMotionSpeed(scenFindMotionwork(GABT_MOLE_RYO), 1, MotionRegion::LowerBody);
-            SetMotionSpeed(scenFindMotionwork(GABT_MOLE_GAI), 1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_RYO), 1, MotionRegion::LowerBody);
+            mtwkSetSpeed(scenFindMotionwork(GABT_MOLE_GAI), 1, MotionRegion::LowerBody);
             break;
         case 220:
-            AT_SetEyeCtrl(FindCharacterByScenarioName(GABT_MOLE_RYO), 15, .1f, .1f);
+            AT_SetEyeCtrl(ctrlGetScenarioChara(GABT_MOLE_RYO), 15, .1f, .1f);
             break;
         case 320:
-            SetFacialBlinkDelay(FindCharacterByScenarioName(GABT_MOLE_RYO), 90);
+            SetFacialBlinkDelay(ctrlGetScenarioChara(GABT_MOLE_RYO), 90);
             HLib::DestroyCurrentTask();
             break;
         default:

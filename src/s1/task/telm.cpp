@@ -1548,7 +1548,7 @@ void TELM_Cleanup(TelephoneWork *phone) {
     }
     phone->currentPeerNode = nullptr;
     phone->currentPeerMode = -1;
-    navRequestNewMode(phone->savedCpctAnimState);
+    ryoRequestNewMode(phone->savedCpctAnimState);
     if (phone->cameraSequence.coefficientPool) {
         HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(phone->cameraSequence.coefficientPool), kTelmCameraPoolToken);
         phone->cameraSequence.coefficientPool = nullptr;
@@ -1675,7 +1675,7 @@ void TELM_LoadHandMotionAndSetup(TelephoneWork *phone, std::uint32_t ownerId) {
 
     phone->playerOwnedFrame = ShouldRun() ? 1 : 0;
     phone->savedCpctAnimState = cpctGetCurrentMode();
-    navRequestNewMode(0x10002);
+    ryoRequestNewMode(0x10002);
     phone->mainRanLastFrame = 0;
 }
 
@@ -1762,14 +1762,14 @@ void Script_TELMUtils(ScenarioContext *context, void *rawParams) {
         break;
     case 15:
         phone->savedCpctAnimState = cpctGetCurrentMode();
-        navRequestNewMode(0x10002);
+        ryoRequestNewMode(0x10002);
         break;
     case 16:
-        navRequestNewMode(phone->savedCpctAnimState);
+        ryoRequestNewMode(phone->savedCpctAnimState);
         break;
     case 17:
         if (cpctGetCurrentMode() != 0x10002)
-            navRequestNewMode(0x10002);
+            ryoRequestNewMode(0x10002);
         break;
     default:
         break;

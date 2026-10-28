@@ -29,14 +29,14 @@ void CloudAuthorCallback(void *data) {
     if (parent->selection == 0) {
         if (!frame)
             EV_SetObjectFlagByIndex(4, 0);
-        SetPluralControlFor(FindCharacterByScenarioName(KSHT_SIN), frame <= 480);
-        SetPluralControlFor(FindCharacterByScenarioName(KSHT_RYO), frame <= 480);
+        SetPluralControlFor(ctrlGetScenarioChara(KSHT_SIN), frame <= 480);
+        SetPluralControlFor(ctrlGetScenarioChara(KSHT_RYO), frame <= 480);
     } else if (parent->selection == 5) {
-        SetPluralControlFor(FindCharacterByScenarioName(KSHT_RYO), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(KSHT_SIN), frame > 244);
+        SetPluralControlFor(ctrlGetScenarioChara(KSHT_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(KSHT_SIN), frame > 244);
     } else if (parent->selection == 6) {
-        SetPluralControlFor(FindCharacterByScenarioName(KSHT_SIN), 1);
-        SetPluralControlFor(FindCharacterByScenarioName(KSHT_RYO), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(KSHT_SIN), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(KSHT_RYO), 1);
     }
     if (parent->selection == 7) {
         const Vector3 velocity{0, 0.003f, 0};
@@ -152,7 +152,7 @@ void QueueKshtCloudAuthor(KshtAuthorController *parent) {
         EV_LoadAudio("0511A000", 2);
         break;
     case 5:
-        clmdUtil(FindCharacterByScenarioName(KSHT_SIN), 14);
+        clmdUtil(ctrlGetScenarioChara(KSHT_SIN), 14);
         EV_LoadCutsceneFromCurrentScene("0511A000");
         EV_LoadAudio("0511A000", 3);
         break;

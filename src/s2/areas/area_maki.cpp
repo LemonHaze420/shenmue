@@ -52,20 +52,20 @@ void MakiExit() {
     using enum CameraState;
     *makiRuntime.result = -1;
     if (mtwkSetExtraFlag(scenFindMotionwork(MAKI_RYO), 59, 1))
-        UpdateMotionWorkWithPosition(scenFindMotionwork(MAKI_RYO), nullptr, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(MAKI_RYO), nullptr, 0);
     if (mtwkSetExtraFlag(scenFindMotionwork(MAKI_SHENHUA), 59, 1))
-        UpdateMotionWorkWithPosition(scenFindMotionwork(MAKI_SHENHUA), nullptr, 0);
-    clmdUtil(FindCharacterByScenarioName(MAKI_SHENHUA), 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(MAKI_SHENHUA), nullptr, 0);
+    clmdUtil(ctrlGetScenarioChara(MAKI_SHENHUA), 0);
     EV_EventSetUpHelpIcon_0(0, 0);
-    SetMotionRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::LeftArm);
-    SetMotionRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::RightArm);
+    mtwkSetRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::LeftArm);
+    mtwkSetRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::RightArm);
     for (std::int32_t i = 0; makiFirewoodPlacements[i].type != 3; ++i)
         SetCharaKill(makiFirewoodTargets[i].name, 1);
     EV_npcUpdateFlags(MAKI_SHENHUA);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAKI_RYO), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAKI_RYO), 0, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAKI_SHENHUA), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAKI_SHENHUA), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAKI_RYO), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAKI_RYO), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAKI_SHENHUA), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAKI_SHENHUA), 0, 1, 0);
     ResetScenarioCharacterAttachment(MAKI_LIGHTER);
     EV_DisableCharacterDisplay(MAKI_LIGHTER);
     SetLightEntryIndex(14, 0);
@@ -73,7 +73,7 @@ void MakiExit() {
     CheckHelpIcon(0, 0, CheckHelpIconOp::Set);
     SetPlayerControlEnabled(0);
     EV_FreeAuthorPak(0, "0518");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MAKI"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("MAKI"), 0);
     camCtrlSetState(Init);
     camCtrlSetFovTransitionTo(true);
     const CameraUtilityParameters parameters{.first = 0, .second = 0};
@@ -96,7 +96,7 @@ void MakiBeginWalk() {
         EVT_AT_SetMot(MAKI_SHENHUA, 0x4008, 0, 1, 0x40000000U, 0);
         mtwkRequestMotion(scenFindMotionwork(MAKI_RYO), 0x4004, MotionRegion::RightArm);
         MakiAttachLighter(0);
-        SetMotionSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
+        mtwkSetSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
         camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -129,7 +129,7 @@ void MakiFindFirewood() {
         makiRuntime.phase = 0;
     }
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.hour >= 21 && (time.minute >= 30 || time.hour > 21))
         makiRuntime.state = 5;
     Vector3 position;
@@ -161,8 +161,8 @@ void MakiFindFirewood() {
                 makiRuntime.state = 2;
         }
     }
-    SetMotionSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::RightArm);
-    SetMotionSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
+    mtwkSetSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::RightArm);
+    mtwkSetSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
 }
 void RunMakiEvent(std::uintptr_t argument) {
     SetPlayerControlEnabled(0);
@@ -170,10 +170,10 @@ void RunMakiEvent(std::uintptr_t argument) {
     CheckHelpIcon(1, 0, CheckHelpIconOp::Set);
     EV_EventSetUpHelpIcon_0(5, 0);
     EV_npcUnknownFunc(MAKI_SHENHUA);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAKI_RYO), 1, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAKI_RYO), 1, 1, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAKI_SHENHUA), 0, 0, 0);
-    SetHighModelXYZ(FindCharacterByScenarioName(MAKI_SHENHUA), 0, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAKI_RYO), 1, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAKI_RYO), 1, 1, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAKI_SHENHUA), 0, 0, 0);
+    SetHighModelXYZ(ctrlGetScenarioChara(MAKI_SHENHUA), 0, 1, 0);
     makiRuntime.result = reinterpret_cast<std::int32_t *>(argument);
     makiRuntime.state = 0;
     makiRuntime.heldCount = 0;
@@ -226,9 +226,9 @@ void RunMakiEvent(std::uintptr_t argument) {
     EV_FreeAuthorPak(1, "0518");
     makiRuntime.mainTask = HLib::EnqueueTaskWithoutParameter(MakiMainCallback, 4, 0x0b, static_cast<std::int32_t>(MAKI_TASK.name));
     makiRuntime.lightTask = QueueMakiLighterLight();
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MAKI"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("MAKI"), 0);
-    clmdUtil(FindCharacterByScenarioName(MAKI_SHENHUA), 15);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("MAKI"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("MAKI"), 0);
+    clmdUtil(ctrlGetScenarioChara(MAKI_SHENHUA), 15);
     makiRuntime.characters = Queue_EVT_AT_ReadChr(makiRuntime.mainTask, makiReadCharacters);
 }
 } // namespace
@@ -271,12 +271,12 @@ void MakiLockPlayerForSequence() {
     EV_SetCharaControllerFlags(MAKI_RYO, 3, NpcCharacterControllerState::Disabled);
     makiSavedCameraContext = static_cast<std::int32_t>(camCtrlUtil(CameraUtilityMode::GetContext, 0));
     EV_EnableCharacterDisplay(MAKI_RYO);
-    makiSavedRootMode = static_cast<std::int32_t>(GetMotionTrackedRootMode(scenFindMotionwork(MAKI_RYO)));
-    makiSavedBlendFrames = static_cast<std::int32_t>(GetMotionTransitionFramesRemaining(scenFindMotionwork(MAKI_RYO), MotionRegion::LowerBody));
+    makiSavedRootMode = static_cast<std::int32_t>(mtwkGetTrackedRootMode(scenFindMotionwork(MAKI_RYO)));
+    makiSavedBlendFrames = static_cast<std::int32_t>(mtwkGetTransitionFramesRemaining(scenFindMotionwork(MAKI_RYO), MotionRegion::LowerBody));
     mtwkSetRequestedRootMode(scenFindMotionwork(MAKI_RYO), 3);
-    SetMotionFrameTime(scenFindMotionwork(MAKI_RYO), 7, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::LeftArm);
-    SetMotionRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::RightArm);
+    mtwkSetFrameTime(scenFindMotionwork(MAKI_RYO), 7, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::LeftArm);
+    mtwkSetRegionFlag(scenFindMotionwork(MAKI_RYO), 73, 0, MotionRegion::RightArm);
 }
 void MakiRestorePlayerAfterSequence() {
     using enum CameraState;
@@ -285,9 +285,9 @@ void MakiRestorePlayerAfterSequence() {
     camCtrlSetFovTransitionTo(true);
     camCtrlSetState(Init);
     mtwkSetRequestedRootMode(scenFindMotionwork(MAKI_RYO), makiSavedRootMode);
-    SetMotionFrameTime(scenFindMotionwork(MAKI_RYO), makiSavedBlendFrames, MotionRegion::LowerBody);
-    SetMotionSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::RightArm);
-    SetMotionSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
+    mtwkSetFrameTime(scenFindMotionwork(MAKI_RYO), makiSavedBlendFrames, MotionRegion::LowerBody);
+    mtwkSetSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::RightArm);
+    mtwkSetSpeed(scenFindMotionwork(MAKI_RYO), .1f, MotionRegion::LeftArm);
     EV_SetCharaControllerFlags(MAKI_RYO, 2, NpcCharacterControllerState::Enabled);
     EV_SetCharaControllerFlags(MAKI_RYO, 3, NpcCharacterControllerState::Enabled);
     SetPlayerControlEnabled(1);

@@ -57,15 +57,15 @@ void AuthorFrame_Callback(void *) {
 }
 
 void ResetOpponent(shen_name name) {
-    SetMotionRegionFlag(scenFindMotionwork(name), 69, 2, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(name), 69, 2, MotionRegion::LowerBody);
     EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(name, 0, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(name, 2, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
     EV_SetCharacterAlphaEnabled(name, false);
     mtwkSetExtraFlag(scenFindMotionwork(name), 55, 2);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(name), nullptr, 0);
-    UpdateMotionWorkWithPosition(scenFindMotionwork(name), nullptr, 3);
+    mtwkUpdateWithPosition(scenFindMotionwork(name), nullptr, 0);
+    mtwkUpdateWithPosition(scenFindMotionwork(name), nullptr, 3);
 }
 
 void End_Callback(void *data) {
@@ -79,8 +79,8 @@ void End_Callback(void *data) {
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(work->self);
     EV_FreeAuthorPak(0, "0053");
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AKTM"), 0);
-    LoadCutsceneAndSoundProgramForArea();
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("AKTM"), 0);
+    sbtLoadProgram();
     EV_NPC_NewLoadSw(1);
     EV_scenQueueLoad(g_actNumber, SHEN_NAME(ABLB), 0);
     scenFreeEvent("AKTM.EV3");
@@ -88,11 +88,11 @@ void End_Callback(void *data) {
 
 void Setup(BattleWork *work) {
     EV_SetNewSceneIndex();
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>("AKTM"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("AKTM"), 0);
-    EV_ControlPackageResources(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("AKTM"), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("AKTM"), 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("AKTM"), 0);
     motionHandle = ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
     EV_FreeAuthorPak(1, "0053");
     EV_FreeAuthorPak(1, "0138");
@@ -100,7 +100,7 @@ void Setup(BattleWork *work) {
     CreateEventCharacter(CharacterCreationHighModel, nullptr, prop);
     EVT_AT_SetPos(base, invalid, Vector3{267.4f, 100, 230.9f}, 0);
     EVT_AT_SetAngY(base, invalid, 0, 0);
-    GetCurrentDateTime(savedTime);
+    shenGetCurrentDateTime(savedTime);
     work->phase = 1;
     retries = 0;
 }
@@ -109,10 +109,10 @@ void InitializeFight(BattleWork *work) {
     for (int i = 0; i < 7; ++i)
         EVT_AT_SetAngY(names[i], invalid, initialYaws[i], 0);
     shenStartFGST(10, 10, 0, 0);
-    shenInitFightData(FindCharacterByScenarioName(names[0]), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (retries + 2)), 0);
-    vfCopyPosFromEntity(1, FindCharacterByScenarioName(names[0]), 0, 0, 10);
+    shenInitFightData(ctrlGetScenarioChara(names[0]), nullptr, 0, 0, static_cast<std::uint16_t>(100 * (retries + 2)), 0);
+    vfCopyPosFromEntity(1, ctrlGetScenarioChara(names[0]), 0, 0, 10);
     for (int i = 1; i < 7; ++i) {
-        auto *character = FindCharacterByScenarioName(names[i]);
+        auto *character = ctrlGetScenarioChara(names[i]);
         shenInitFightData(character, nullptr, 1, 1, i == 1 ? 80 : i == 2 ? 60 : 40, 2);
         if (i >= 3) {
             vfUpdateFlagsFor(character, 0, 0x400000, 128);
@@ -154,13 +154,13 @@ void Battle_Callback(void *data) {
         EV_vfBattleUtil(FightBattleUtilOp::StageBattleFlags, shen_name{0x800}, 1);
         vfmQueueFightStart(2, 2, 1, 1, -1);
         vfmDispatchControl(FightControlOp::CameraParameter, shen_name{}, 13, 1);
-        SetPluralControlFor(FindCharacterByScenarioName(names[0]), 1);
+        SetPluralControlFor(ctrlGetScenarioChara(names[0]), 1);
         work->phase = 4;
         break;
     case 4:
         if (IsFightActive())
             return;
-        if (GetBtlStatus(FindCharacterByScenarioName(names[0])) == 3)
+        if (GetBtlStatus(ctrlGetScenarioChara(names[0])) == 3)
             work->phase = 7;
         else {
             work->phase = 6;

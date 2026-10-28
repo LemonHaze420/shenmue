@@ -623,7 +623,7 @@ void SetupAuthorViewer295E() {
 // @verified - p
 void CleanupAuthorViewer295E(AuthorViewerTaskParameter *parent) {
     for (const shen_name *character = AUTHOR_VIEWER_295E_CHARACTERS; character->name != AUTHOR_VIEWER_295E_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             (void)EV_npcLockUnlock(*character);
             (void)EV_npcFree(*character);
         }
@@ -765,7 +765,7 @@ void AuthorViewer035ELoopTaskCallback(void *taskData) {
 // @verified - p
 void CleanupAuthorViewer035E(AuthorViewerTaskParameter *parent) {
     for (const shen_name *character = AUTHOR_VIEWER_035E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             (void)EV_npcLockUnlock(*character);
             (void)EV_npcFree(*character);
         }
@@ -878,7 +878,7 @@ void AuthorViewer061ELoopTaskCallback(void *taskData) {
 // @verified - p
 void CleanupAuthorViewer061E(AuthorViewerTaskParameter *parent) {
     for (const shen_name *character = AUTHOR_VIEWER_061E_CHARACTERS; character->name != AUTHOR_VIEWER_INVALID_CHARACTER.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             (void)EV_npcLockUnlock(*character);
             (void)EV_npcFree(*character);
         }
@@ -951,7 +951,7 @@ void QueueAuthorViewer0006Loop(AuthorViewerTaskParameter *parent) {
     AuthorViewerLoopTaskParameter *const params = static_cast<AuthorViewerLoopTaskParameter *>(HLib::GetTaskParameter(task));
     params->parent = parent;
     DateTime dateTime;
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     EV_SetModelDataDefaultVertexShader();
     if (dateTime.hour < 19) {
         (void)EV_SetObjectFlagByIndex(5, 0);

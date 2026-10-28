@@ -41,9 +41,9 @@ KES1State state{};
 
 void LoadKES1MapPackage() {
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(directory), reinterpret_cast<std::uintptr_t>("MPK01"));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 
 void CreateKES1Fire() {
@@ -102,7 +102,7 @@ void KES1MainLoopCallback(void *) {
 
     if (ryoNotBusy() || state.transitionPending != 0) {
         DateTime dateTime{};
-        GetCurrentDateTime(dateTime);
+        shenGetCurrentDateTime(dateTime);
         if (dateTime.hour >= 23 && EV_GetShenmueFlag(0x1ce) != 0)
             RunKES1AreaTransition(2);
         else if (dateTime.hour >= 19 && EV_GetShenmueFlag(0x2dc) != 0)
@@ -146,7 +146,7 @@ void AreaKES1Main(std::uint32_t) {
     HLib::SetupTimedTask(task, 10);
 
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     EV_FreeWAIR();
     EV_UpdateWeatherForMinute(0, 0, 0, 0.0f);
     EV_UpdateWeatherForMinute(1, 0, 0, 0.0f);

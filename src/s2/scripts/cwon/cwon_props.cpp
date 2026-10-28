@@ -59,7 +59,7 @@ std::uint32_t CwonFinishEscape(CwonEventWork *work) {
     return GetMotionFrameCount(4178);
 }
 void CwonEnablePositionedCharacter(shen_name name, const Vector3 &position, float yaw) {
-    EV_mtwkSetEnabled(scenFindMotionwork(name), 1);
+    mtwkSetEnabled(scenFindMotionwork(name), 1);
     EV_SetCharaControllerFlags(name, 2, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(name, 3, NpcCharacterControllerState::Disabled);
     Show(name);
@@ -79,7 +79,7 @@ void CwonGetDodgeCallback(void *data) {
     EV_SetCharacterAlphaEnabled(get, false);
     CwonEnablePositionedCharacter(get, {256.60001f, 100.9f, 383.39999f}, 0);
     EV_PlayDialogue("0011E002");
-    SetMotionEnvironmentEnabled(scenFindMotionwork(get), 0);
+    mtwkSetEnvironmentEnabled(scenFindMotionwork(get), 0);
     SetMotion(get, 4153, -1, 1, 0);
     CwonQueueLook(get, CWON_RYO, 0, 0, 0, 3, 60, 0);
     Show(get);
@@ -181,7 +181,7 @@ void CwonFallingWorkerCallback(void *data) {
         position.y = 100.9f;
         SetPosition(ana, CWON_CENTER, position);
         SetYaw(ana, CWON_CENTER, 270);
-        EV_mtwkSetEnabled(scenFindMotionwork(ana), 0);
+        mtwkSetEnabled(scenFindMotionwork(ana), 0);
         Loop3DSoundEffect(669);
         EVT_AT_SetSound(670, 20);
         EVT_AT_SetMot(ana, 4181, 20, 1, 0x40000000U, 0);
@@ -255,7 +255,7 @@ void CwonOpeningDoorCallback(void *data) {
             CwonQueueMotionWait(task, CWON_RYO, 0);
         else
             EV_debug_log("CWON\\eCWON_et_ChaseWon_jama.c", 421, "Taskid Error\n");
-        SetMotionEnvironmentEnabled(scenFindMotionwork(kjn), 0);
+        mtwkSetEnvironmentEnabled(scenFindMotionwork(kjn), 0);
         EVT_AT_SetMot(kjn, 4154, -1, 1, 0x20000000U, 0);
         CwonDestroyTemporary(work->root, static_cast<std::int32_t>(work->slot));
     }

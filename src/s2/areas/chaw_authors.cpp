@@ -21,9 +21,9 @@
 namespace shenmue::s2 {
 namespace {
 void LoadPack(const char *name, FilepathGenMode directory) {
-    EV_ControlPackageResources(
+    EV_pakUtils(
         PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(directory)), reinterpret_cast<std::uintptr_t>(name));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 void RestoreCharacter(shen_name name) {
     EV_EnableCharacterDisplay(name);
@@ -40,7 +40,7 @@ void FreeCharacters(const shen_name *list) {
         }
 }
 void ReleasePack(const char *name) {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(name), 0);
 }
 } // namespace
 
@@ -123,7 +123,7 @@ void ChawGotoYamiutiCallback(void *data) {
         chawAmbushCharacters[0] = SHEN_NAME(CLY_);
         chawMapProp = SHEN_NAME(aa83);
         DateTime date;
-        GetCurrentDateTime(date);
+        shenGetCurrentDateTime(date);
         replace = date.hour < 19;
         chawPrize = replace ? 40 : 38;
         EV_stepSetFlags(replace ? 0 : 1, 0x302);
@@ -194,7 +194,7 @@ void ChawGotoDokuhebiCallback(void *data) {
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     npcAdvanceTime(date.hour, date.minute);
     LoadPack("AHQB", FilepathGenMode::PackDirectory);
     ExecuteCurrAreaMainFunc("AHQB.EV2", 0);
@@ -208,7 +208,7 @@ void ChawGotoSeiyaCallback(void *data) {
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
     DateTime date;
-    GetCurrentDateTime(date);
+    shenGetCurrentDateTime(date);
     npcAdvanceTime(date.hour, date.minute);
     shenLoadEventFrom("WRSQ.EV2", EventFunctionType::Event2);
     ExecuteCurrAreaMainFunc("WRSQ.EV2", 0);

@@ -38,9 +38,9 @@ constexpr std::array<HLib::TaskCallback, 8> authorCallbacks{KesaOpeningTorchLoop
 const std::uint32_t *postEffects;
 std::uint32_t postEffectCount;
 void LoadCharacterPackage(const char *package) {
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::SceneDirectory)),
         reinterpret_cast<std::uintptr_t>(package));
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
 }
 void SetAuthorCharacters() {
     for (shen_name name : {KESA_RYO, KESA_SHENHUA}) {
@@ -113,7 +113,7 @@ void AreaKESAMain(std::uintptr_t argument) {
     EV_ResetFreeTalkFlags();
     SetPlayerControlEnabled(0);
     LoadCharacterPackage(author.characterPackage);
-    SetMotionRegionFlag(scenFindMotionwork(KESA_RYO), 73, 0, MotionRegion::LeftArm);
+    mtwkSetRegionFlag(scenFindMotionwork(KESA_RYO), 73, 0, MotionRegion::LeftArm);
     EV_LoadCutsceneFromCurrentScene(author.cutscene);
     EV_FreeAuthorPak(1, author.authorPackage);
     kesaFireEffects.fill(-1);
@@ -215,7 +215,7 @@ void KesaFinishAuthor() {
         SetScenarioCharacterDrawControl(shen_name{0}, 1, 0);
     }
     EV_npcLockUnlock(KESA_SHENHUA);
-    EV_ControlPackageResources(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(author.characterPackage), 0);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>(author.characterPackage), 0);
     constexpr std::uint8_t cleanupOrder[]{0, 2, 3, 4, 1, 5};
     for (auto index : cleanupOrder)
         if (kesaFireEffects[index] != -1) {

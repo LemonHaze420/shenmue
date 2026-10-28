@@ -16,20 +16,20 @@ std::int32_t bkw0MasterDialogueYaw;
 void Bkw0PrepareAdviceFacing(CompiledSequenceWork &sequence) {
     Bkw0Work &work = *static_cast<Bkw0Work *>(sequence.event);
     if (work.adviceFacingCycle == 0 || work.adviceFacingCycle == 1)
-        UpdateMotionWorkWithPosition(scenFindMotionwork(BKW0_LKN), nullptr, 0);
-    else if (work.adviceFacingCycle == 2 && SetMotionRegionFlag(scenFindMotionwork(BKW0_LKN), 65, 1, MotionRegion::LowerBody)) {
+        mtwkUpdateWithPosition(scenFindMotionwork(BKW0_LKN), nullptr, 0);
+    else if (work.adviceFacingCycle == 2 && mtwkSetRegionFlag(scenFindMotionwork(BKW0_LKN), 65, 1, MotionRegion::LowerBody)) {
         Vector3 position;
         EV_GetCharaPosition(BKW0_RYO, 5, &position, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(BKW0_LKN), &position, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(BKW0_LKN), &position, 0);
     }
     if (++work.adviceFacingCycle > 2)
         work.adviceFacingCycle = 0;
 }
 void Bkw0CompleteAdviceFacing(CompiledSequenceWork &sequence) {
-    if (SetMotionRegionFlag(scenFindMotionwork(BKW0_LKN), 65, 1, MotionRegion::LowerBody)) {
+    if (mtwkSetRegionFlag(scenFindMotionwork(BKW0_LKN), 65, 1, MotionRegion::LowerBody)) {
         Vector3 position;
         EV_GetCharaPosition(BKW0_RYO, 5, &position, EventTransformFlags::World);
-        UpdateMotionWorkWithPosition(scenFindMotionwork(BKW0_LKN), &position, 0);
+        mtwkUpdateWithPosition(scenFindMotionwork(BKW0_LKN), &position, 0);
     }
     Bkw0Complete(sequence);
 }
@@ -286,10 +286,10 @@ void Bkw0ArrangeDismissal(Bkw0Work &work) {
     EV_AT_SetAngY(BKW0_BKN, EventTransformFlags::World | EventTransformFlags::AllAxes, bknRotation);
     mtwkRequestMotion(scenFindMotionwork(BKW0_RYO), 7952, MotionRegion::LowerBody);
     mtwkRequestMotion(scenFindMotionwork(BKW0_BKN), 7953, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
-    SetMotionRegionFlag(scenFindMotionwork(BKW0_BKN), 71, 0, MotionRegion::LowerBody);
-    SetMotionLayerFrameRange(scenFindMotionwork(BKW0_RYO), -1, 280, -1, MotionRegion::LowerBody);
-    SetMotionLayerFrameRange(scenFindMotionwork(BKW0_BKN), -1, 280, -1, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(BKW0_RYO), 71, 0, MotionRegion::LowerBody);
+    mtwkSetRegionFlag(scenFindMotionwork(BKW0_BKN), 71, 0, MotionRegion::LowerBody);
+    mtwkSetLayerFrameRange(scenFindMotionwork(BKW0_RYO), -1, 280, -1, MotionRegion::LowerBody);
+    mtwkSetLayerFrameRange(scenFindMotionwork(BKW0_BKN), -1, 280, -1, MotionRegion::LowerBody);
 }
 } // namespace
 void Bkw0PracticeFeedbackSequence(void *data) {

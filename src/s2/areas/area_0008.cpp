@@ -38,7 +38,7 @@ void E0008Init() {
 void ConfigureE0008Environment() {
     SetPlayerControlEnabled(0);
     DateTime time;
-    GetCurrentDateTime(time);
+    shenGetCurrentDateTime(time);
     if (time.hour < 19) {
         EV_ReinitLights(1);
         EV_SetLightFlagForIndex(0, 2);
@@ -94,7 +94,7 @@ void RestoreE0008Characters() {
 // @verified - p
 void CleanupE0008(E0008TaskParameter *parent) {
     for (const shen_name *character = AREA_0008_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
-        if (FindCharacterByScenarioName(*character)) {
+        if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
@@ -148,10 +148,10 @@ void E0008MainCallback(void *taskData) {
 // @verified - p
 void E0008LoopCallback(void *taskData) {
     if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame)) == 1) {
-        HandParams *const firstHand = GetCharacterHand(FindCharacterByScenarioName(AREA_0008_HNG_), 0);
+        HandParams *const firstHand = GetCharacterHand(ctrlGetScenarioChara(AREA_0008_HNG_), 0);
         if (firstHand)
             ConfigureHandPoseSequence(*firstHand, 1025, 0, 1, 0, 4, 1.0f, 0);
-        HandParams *const secondHand = GetCharacterHand(FindCharacterByScenarioName(AREA_0008_SYO_), 0);
+        HandParams *const secondHand = GetCharacterHand(ctrlGetScenarioChara(AREA_0008_SYO_), 0);
         if (secondHand)
             ConfigureHandPoseSequence(*secondHand, 1033, 0, 1, 0, 4, 1.0f, 0);
     }

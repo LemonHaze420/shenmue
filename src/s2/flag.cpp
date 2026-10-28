@@ -419,7 +419,7 @@ void AnimateFlagCallback(Character *character, void *payload) {
             Matrix4x4::Pop(1);
         } else {
             shenApplyTranslationToAll(&character->entity.node, placement.translation);
-            SetCharacterWorldRotation(character, Vector3i{.x = 0, .y = placement.rotationY, .z = placement.rotationZ});
+            charaSetWorldRot(character, Vector3i{.x = 0, .y = placement.rotationY, .z = placement.rotationZ});
         }
     }
 }
@@ -697,7 +697,7 @@ bool TestCharaPositionWithinRange(shen_name charaA, const Vector3 &first, const 
 
 Vector3 FlagCharaBone(Character *character) {
     Vector3 position{};
-    GetCharacterMotionWorldPosition(character, 5, &position);
+    charaGetMotWorldPos(character, 5, &position);
     return position;
 }
 
@@ -905,7 +905,7 @@ void SetHelpIconTopic(std::int16_t topic) {
         if (shenPlayerData.requestedHelpTopic == shenPlayerData.helpTopic)
             return;
         EV_EventSetUpHelpIcon_0(static_cast<std::uint8_t>(topic), 0);
-        shenPlayerData.flags |= ShenPlayerFlag_HelpIconShown;
+        shenPlayerData.flags |= SPF_HelpIconShown;
         shenPlayerData.helpTopic = shenPlayerData.requestedHelpTopic;
     } else if (shenPlayerData.helpTopic != 0) {
         EV_EventSetUpHelpIcon_0(0, 0);
@@ -1040,11 +1040,11 @@ std::int32_t stepRandomizeStats(const std::int32_t *arguments) {
 }
 
 std::int32_t stepUpdateCurfewFlag(const std::int32_t *flags) {
-    shenPlayerData.flags &= ~ShenPlayerFlag_CurfewReached;
+    shenPlayerData.flags &= ~SPF_CurfewReached;
     std::int32_t consumed = 0;
     for (const std::int32_t *flag = flags; *flag != -1; ++flag, ++consumed) {
         if (GetShenmueFlag(*flag))
-            shenPlayerData.flags |= ShenPlayerFlag_CurfewReached;
+            shenPlayerData.flags |= SPF_CurfewReached;
     }
     return consumed + 1;
 }
@@ -1408,7 +1408,7 @@ std::int32_t flagInitContext(ShenPlayerData &data, shen_name context) {
     entry = FindFlagContext(context);
     data.targets = entry ? reinterpret_cast<SearchTarget *>(table + entry->targetTable) : nullptr;
     if (plymConsumeFlags8())
-        data.flags |= ShenPlayerFlag_CurfewSceneChange;
+        data.flags |= SPF_CurfewSceneChange;
     selectedFlagCandidate = nullptr;
     return 1;
 }
@@ -1420,7 +1420,7 @@ std::int32_t flagRelated(shen_name map) {
     stepScheduleFlagCallback();
     if (!initialized)
         return initialized;
-    shenPlayerData.flags |= ShenPlayerFlag_Active;
+    shenPlayerData.flags |= SPF_Active;
     srchSetTarget(1, shenPlayerData.targets);
     for (const FlagContextSelector *selector = flagContextSelectors.data(); selector->context.name != 0; ++selector) {
         if (!GetShenmueFlag(selector->flag))
@@ -1433,11 +1433,11 @@ std::int32_t flagRelated(shen_name map) {
 }
 
 std::int32_t shenUpdatePlayerDataFlags(std::int32_t active) {
-    const std::int32_t previous = (shenPlayerData.flags & ShenPlayerFlag_Active) != 0;
+    const std::int32_t previous = (shenPlayerData.flags & SPF_Active) != 0;
     if (active != 0)
-        shenPlayerData.flags |= ShenPlayerFlag_Active;
+        shenPlayerData.flags |= SPF_Active;
     else
-        shenPlayerData.flags &= ~ShenPlayerFlag_Active;
+        shenPlayerData.flags &= ~SPF_Active;
     return previous;
 }
 
@@ -1460,7 +1460,7 @@ std::int32_t npcSetCycleTimeLimitExpiry(shen_name, std::int16_t timeLimit) {
         return plymScheduleCycleFlagCallback(0);
     }
     DateTime dateTime{};
-    GetCurrentDateTime(dateTime);
+    shenGetCurrentDateTime(dateTime);
     const std::int16_t minute = static_cast<std::int16_t>(dateTime.hour * 60 + dateTime.minute + timeLimit);
     plymSetCallback(shenRestartPlayerDataFlagEvaluation);
     return plymScheduleCycleFlagCallback(minute);
@@ -1487,12 +1487,12 @@ std::int32_t ryoIsCurrentScenarioFlagSatisfied() {
 }
 
 std::int32_t shenGetMinutesUntilNextFrameMinute() {
-    if ((shenPlayerData.flags & ShenPlayerFlag_CurfewReached) != 0)
+    if ((shenPlayerData.flags & SPF_CurfewReached) != 0)
         return 0;
     if (shenPlayerData.sleepScheduleFlag == 670)
         return 999;
     DateTime now{};
-    GetCurrentDateTime(now);
+    shenGetCurrentDateTime(now);
     PlayerTargetDate target{};
     BuildTargetDateFromFrameClock(target);
     DateTime_AddMinutesInPlace(target.dateTime, 1);
@@ -1505,7 +1505,7 @@ std::int16_t shenGetSleepScheduleFlag() {
 }
 
 std::uint32_t shenIsCurfewSceneChange() {
-    return shenPlayerData.flags & ShenPlayerFlag_CurfewSceneChange;
+    return shenPlayerData.flags & SPF_CurfewSceneChange;
 }
 
 void shenSetFreeQuestInactive() {
@@ -1542,49 +1542,49 @@ std::int32_t shenUpdateFlagEvaluation(std::int32_t mode) {
     flagCandidateCount = 0;
     shenPlayerData.queryId = 0;
     shenPlayerData.queryArgument = 0;
-    if ((flags & ShenPlayerFlag_Active) == 0 || !shenPlayerData.record)
+    if ((flags & SPF_Active) == 0 || !shenPlayerData.record)
         return 0;
     if (mode == 1) {
         shenUpdateFlagTargets(shenPlayerData.targets);
         flags = shenPlayerData.flags;
     }
-    if ((flags & ShenPlayerFlag_FadeHold) != 0 && --shenPlayerData.fadeHoldFrames == 0) {
-        flags &= ~ShenPlayerFlag_FadeHold;
+    if ((flags & SPF_FadeHold) != 0 && --shenPlayerData.fadeHoldFrames == 0) {
+        flags &= ~SPF_FadeHold;
         shenPlayerData.flags = flags;
     }
-    if ((flags & ShenPlayerFlag_EventMessageShown) != 0) {
+    if ((flags & SPF_EventMessageShown) != 0) {
         if (--shenPlayerData.messageFrames == 0) {
             scenDestroySubtitles(static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->scenarioTask);
-            shenPlayerData.flags &= ~ShenPlayerFlag_EventMessageShown;
+            shenPlayerData.flags &= ~SPF_EventMessageShown;
         }
         return 0;
     }
-    if ((flags & ShenPlayerFlag_SearchReleasePending) != 0) {
+    if ((flags & SPF_SearchReleasePending) != 0) {
         if (srchHasActiveLockonTarget())
             return 0;
-        flags = shenPlayerData.flags & ~ShenPlayerFlag_SearchReleasePending;
+        flags = shenPlayerData.flags & ~SPF_SearchReleasePending;
         shenPlayerData.flags = flags;
     }
-    if ((flags & ShenPlayerFlag_DetachedVoicePending) != 0)
+    if ((flags & SPF_DetachedVoicePending) != 0)
         return 0;
-    if ((flags & ShenPlayerFlag_VoicePending) != 0) {
+    if ((flags & SPF_VoicePending) != 0) {
         if (!cvsHasValidConverseData(shenPlayerData.voice)) {
             std::array<std::int32_t, 2> bank{shenPlayerData.record->argument[0], 0};
             EV_FreeAuthorPak(0, reinterpret_cast<const char *>(bank.data()));
             FlagRecord *const record = shenPlayerData.record;
-            shenPlayerData.flags &= ~ShenPlayerFlag_VoicePending;
+            shenPlayerData.flags &= ~SPF_VoicePending;
             shenPlayerData.record = FlagBranch(record, true);
         }
         return 0;
     }
-    if ((flags & ShenPlayerFlag_PackLoadPending) != 0) {
+    if ((flags & SPF_PackLoadPending) != 0) {
         if (PakLoadWait() || !plymGetSpecialFlag() || flagCameraFrame != 0)
             return 1;
-        flags = (shenPlayerData.flags & ~ShenPlayerFlag_PackLoadPending) | ShenPlayerFlag_PackExecutePending;
+        flags = (shenPlayerData.flags & ~SPF_PackLoadPending) | SPF_PackExecutePending;
         shenPlayerData.flags = flags;
     }
-    if ((flags & ShenPlayerFlag_PackExecutePending) != 0) {
-        shenPlayerData.flags = flags & ~ShenPlayerFlag_PackExecutePending;
+    if ((flags & SPF_PackExecutePending) != 0) {
+        shenPlayerData.flags = flags & ~SPF_PackExecutePending;
         shenMoveToFreeQuest();
         FlagRecord *record = shenPlayerData.record;
         const std::uintptr_t argument = record->opcode == static_cast<std::uint8_t>(FlagOp::DeferEventPackNext) ?
@@ -1600,15 +1600,15 @@ std::int32_t shenUpdateFlagEvaluation(std::int32_t mode) {
         shenPlayerData.record = FlagBranch(record, true);
         return 1;
     }
-    if ((flags & ShenPlayerFlag_NpcReleasePending) != 0) {
+    if ((flags & SPF_NpcReleasePending) != 0) {
         if (PrepareNpcAllFromArray())
-            shenPlayerData.flags &= ~ShenPlayerFlag_NpcReleasePending;
+            shenPlayerData.flags &= ~SPF_NpcReleasePending;
         return 1;
     }
-    if ((flags & ShenPlayerFlag_SpecialPosePending) != 0) {
+    if ((flags & SPF_SpecialPosePending) != 0) {
         if (!plymGetSpecialFlag())
             return 1;
-        shenPlayerData.flags &= ~ShenPlayerFlag_SpecialPosePending;
+        shenPlayerData.flags &= ~SPF_SpecialPosePending;
     }
     flagCandidateCount = 0;
     shenPlayerData.requestedHelpTopic = 0;
@@ -1643,34 +1643,34 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
     using enum CameraState;
     std::uint32_t flags = shenPlayerData.flags;
     FlagRecord *record = shenPlayerData.record;
-    if ((flags & ShenPlayerFlag_FadeHold) != 0)
+    if ((flags & SPF_FadeHold) != 0)
         return 1;
-    if ((flags & ShenPlayerFlag_WaitTimeAdvance) != 0) {
+    if ((flags & SPF_WaitTimeAdvance) != 0) {
         FlagRecord *const deadline = shenPlayerData.deadlineRecord;
         const std::uint64_t held = plymGetAreaExitState();
         if (held == 0xffffffffULL)
             return 1;
         if (held == 0) {
-            flags = shenPlayerData.flags & ~ShenPlayerFlag_WaitTimeAdvance;
+            flags = shenPlayerData.flags & ~SPF_WaitTimeAdvance;
             shenPlayerData.flags = flags;
             shenPlayerData.idleEvaluations = 0;
             record = FlagAdvance(deadline, static_cast<std::uint32_t>(deadline->argument[3]));
         } else {
             if (held == 1) {
-                shenPlayerData.flags &= ~ShenPlayerFlag_WaitTimeAdvance;
+                shenPlayerData.flags &= ~SPF_WaitTimeAdvance;
                 data.deferredRecord = nullptr;
                 record = FlagAdvance(deadline, static_cast<std::uint32_t>(deadline->argument[2]));
             }
             flags = shenPlayerData.flags;
         }
     }
-    if ((flags & ShenPlayerFlag_ActionChoicePending) != 0) {
+    if ((flags & SPF_ActionChoicePending) != 0) {
         if (GetShouldRenderIcons(RenderIconSlot::ActionSelector))
             return 1;
         const std::uint16_t choice = static_cast<std::uint16_t>(shenGetCtrlSpeakIconFlag());
         shenPlayerData.idleEvaluations = 0;
         const std::int32_t offset = choice == static_cast<std::uint32_t>(record->argument[0]) ? record->argument[3] : record->argument[4];
-        shenPlayerData.flags &= ~ShenPlayerFlag_ActionChoicePending;
+        shenPlayerData.flags &= ~SPF_ActionChoicePending;
         record = FlagAdvance(record, static_cast<std::uint32_t>(offset));
     }
 
@@ -1867,7 +1867,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
             break;
         case FlagOp::FadeOutSoundAndHold:
         case FlagOp::FadeOutAndHold: {
-            shenPlayerData.flags |= ShenPlayerFlag_FadeHold;
+            shenPlayerData.flags |= SPF_FadeHold;
             shenPlayerData.fadeHoldFrames = 30;
             shenPlayerData.record = FlagAdvance(record, record->length);
             if (plymIsSearchStartRequested()) {
@@ -1887,7 +1887,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
             break;
         case FlagOp::SetTimeOfDay: {
             DateTime dateTime{};
-            GetCurrentDateTime(dateTime);
+            shenGetCurrentDateTime(dateTime);
             dateTime.hour = static_cast<std::int8_t>(static_cast<std::uint8_t>(arguments[0]));
             dateTime.minute = static_cast<std::int8_t>(static_cast<std::uint8_t>(arguments[1]));
             SetCurrentDateTimeTo(dateTime);
@@ -1942,7 +1942,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
                     SetPlayerControlEnabled(0);
                     shenToggleAreaFlags(1);
                 }
-                shenPlayerData.flags |= ShenPlayerFlag_PackLoadPending;
+                shenPlayerData.flags |= SPF_PackLoadPending;
                 shenPlayerData.pendingPack = pack;
                 shenPlayerData.pendingEventType = arguments[3];
                 shenPlayerData.record = record;
@@ -1950,7 +1950,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
                 result = 1;
                 break;
             }
-            LoadPak();
+            pakLoadFlush();
             if (arguments[3] == 0) {
                 result = 1;
                 break;
@@ -2022,7 +2022,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
             break;
         }
         case FlagOp::ShowEventMessage:
-            shenPlayerData.flags |= ShenPlayerFlag_EventMessageShown;
+            shenPlayerData.flags |= SPF_EventMessageShown;
             shenPlayerData.messageFrames = 60;
             shenPlayerData.record = FlagAdvance(record, record->length);
             SCEN_ShowEventMessage(control->scenarioTask, 1, reinterpret_cast<const char *>(&arguments[0]));
@@ -2042,7 +2042,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
             mtwkSetRequestedRootMode(motionWork, 1);
             mtwkSetExtraFlag(motionWork, 15, 0);
             mtwkRequestMotion(motionWork, 0xf003, MotionRegion::LowerBody);
-            SetMotionFrameTime(motionWork, 16, MotionRegion::LowerBody);
+            mtwkSetFrameTime(motionWork, 16, MotionRegion::LowerBody);
             result = 1;
             record = FlagBranch(record, true);
             break;
@@ -2182,7 +2182,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
         }
         case FlagOp::IfTimeReached: {
             DateTime dateTime{};
-            GetCurrentDateTime(dateTime);
+            shenGetCurrentDateTime(dateTime);
             std::uint8_t hour = static_cast<std::uint8_t>(dateTime.hour);
             if (dateTime.hour <= 6)
                 hour = static_cast<std::uint8_t>(hour + 24);
@@ -2206,7 +2206,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
             plymAdvanceTime(static_cast<std::uint8_t>(deadline->argument[0]), static_cast<std::uint8_t>(deadline->argument[1]));
             SetScenarioFollowCharacter(shen_name{});
             ReleaseNpcScriptRouteOwner();
-            shenPlayerData.flags |= ShenPlayerFlag_WaitTimeAdvance;
+            shenPlayerData.flags |= SPF_WaitTimeAdvance;
             data.deferredRecord = deadline;
             shenPlayerData.record = deadline;
             return 1;
@@ -2216,7 +2216,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
                 SetPlayerControlEnabled(0);
                 shenToggleAreaFlags(1);
             }
-            shenPlayerData.flags |= ShenPlayerFlag_NpcReleasePending;
+            shenPlayerData.flags |= SPF_NpcReleasePending;
             shenPlayerData.record = FlagBranch(record, true);
             return 1;
         case FlagOp::WaitSpecialPose:
@@ -2224,7 +2224,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
                 SetPlayerControlEnabled(0);
                 shenToggleAreaFlags(1);
             }
-            shenPlayerData.flags |= ShenPlayerFlag_SpecialPosePending;
+            shenPlayerData.flags |= SPF_SpecialPosePending;
             shenPlayerData.record = FlagBranch(record, true);
             return 1;
         case FlagOp::ChooseAction: {
@@ -2234,7 +2234,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
             }
             std::array<std::int16_t, 4> choices{-1, static_cast<std::int16_t>(arguments[0]), static_cast<std::int16_t>(arguments[1]), -1};
             SetupControlSpeakAndUI(choices.data(), 9999, static_cast<std::int16_t>(arguments[2]), 2);
-            shenPlayerData.flags |= ShenPlayerFlag_ActionChoicePending;
+            shenPlayerData.flags |= SPF_ActionChoicePending;
             data.deferredRecord = record;
             shenPlayerData.record = record;
             return 1;
@@ -2258,15 +2258,15 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
                 break;
             }
             shenPlayerData.voice = EV_PlayDialogue(reinterpret_cast<const char *>(voiceCode.data()));
-            if ((shenPlayerData.flags & ShenPlayerFlag_Active) != 0 && shenPlayerData.record)
-                shenPlayerData.flags |= ShenPlayerFlag_VoicePending;
+            if ((shenPlayerData.flags & SPF_Active) != 0 && shenPlayerData.record)
+                shenPlayerData.flags |= SPF_VoicePending;
             else
-                shenPlayerData.flags |= ShenPlayerFlag_DetachedVoicePending;
+                shenPlayerData.flags |= SPF_DetachedVoicePending;
             shenPlayerData.record = record;
             return 1;
         }
         case FlagOp::IfCurfewSceneChange:
-            record = FlagBranch(record, (shenPlayerData.flags & ShenPlayerFlag_CurfewSceneChange) != 0);
+            record = FlagBranch(record, (shenPlayerData.flags & SPF_CurfewSceneChange) != 0);
             break;
         case FlagOp::UnlockPartyCharas:
             if (record->length > 1) {
@@ -2289,7 +2289,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
             if (!srchHasActiveLockonTarget())
                 break;
             srchRequestLockonExit();
-            shenPlayerData.flags |= ShenPlayerFlag_SearchReleasePending;
+            shenPlayerData.flags |= SPF_SearchReleasePending;
             shenPlayerData.record = record;
             return 1;
         case FlagOp::IfActEquals:
@@ -2372,7 +2372,7 @@ void FLAG_CheckTask_Callback(void *) {
             Vector3 position = GetCharacterWorldPosition(player);
             const std::int16_t yaw = static_cast<std::int16_t>(GetCharacterWorldRotation(player).y);
             camCtrlComputeOrbitCameraFromTarget(&position, yaw, &orbitCameraPosition, &orbitCameraTarget);
-            GetCharacterMotionWorldPosition(player, 5, &position);
+            charaGetMotWorldPos(player, 5, &position);
             if (0.5f > FlagDistanceSquared(currentCameraPosition, position)) {
                 flagPlayerAlpha = 0.0f;
                 modelSetCharaAlpha(player, 0.0f);
@@ -2396,12 +2396,12 @@ void FLAG_CheckTask_Callback(void *) {
         }
     }
 
-    if ((shenPlayerData.flags & ShenPlayerFlag_DetachedVoicePending) == 0 || cvsHasValidConverseData(shenPlayerData.voice))
+    if ((shenPlayerData.flags & SPF_DetachedVoicePending) == 0 || cvsHasValidConverseData(shenPlayerData.voice))
         return;
     const std::array<std::int32_t, 2> bank{shenPlayerData.record->argument[0], 0};
     EV_FreeAuthorPak(0, reinterpret_cast<const char *>(bank.data()));
     FlagRecord *const record = shenPlayerData.record;
-    shenPlayerData.flags &= ~ShenPlayerFlag_DetachedVoicePending;
+    shenPlayerData.flags &= ~SPF_DetachedVoicePending;
     shenPlayerData.record = FlagBranch(record, true);
     shenToggleAreaFlags(0);
     SetPlayerControlEnabled(1);
