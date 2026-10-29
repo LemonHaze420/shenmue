@@ -41,7 +41,7 @@ std::int32_t EV_ActivatePartyCompanion(shen_name character);
 std::int32_t EV_PTYCUtils(shen_name character, std::int32_t command, std::int32_t argument);
 void GetScenarioCharacterEulerAngles(shen_name character, Vector3i *rotation, std::uint32_t flags);
 void EV_scenApplyPosOrRotToPartOf(shen_name character, std::uint16_t part, Vector3 *position, Vector3i *rotation, EventCharacterPartTransformMode mode);
-void ApplyScenarioTranslationAndRotation(const Vector3 *position, const Vector3i *rotation, Vector3 *point);
+void scenApplyTransRot(const Vector3 *position, const Vector3i *rotation, Vector3 *point);
 void TransformScenarioDirection(const Vector3 *position, const Vector3i *rotation, Vector3 *direction);
 void GetCharacterHandRotation(Character *character, std::int32_t side, Vector3i *rotation);
 MT7Node *ApplyCharacterHandRotation(Character *character, std::int32_t side, std::uint8_t flags, const Vector3i *rotation);

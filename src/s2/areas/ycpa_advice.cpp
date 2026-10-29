@@ -64,7 +64,7 @@ void YcpaAdviceCallback(void *) {
         rotation.x = 0;
         rotation.z = 0;
         rotation.y = static_cast<std::int32_t>((adviceDirections[index] * 8192.0f) / 45.0f);
-        ApplyScenarioTranslationAndRotation(&player, &rotation, &offset);
+        scenApplyTransRot(&player, &rotation, &offset);
         companion = offset;
         Vector3 intersection, corrected;
         if (!FindNearestRayIntersection(&intersection, &player, &companion) && !FindNearestRayIntersection(&intersection, &companion, &player) &&

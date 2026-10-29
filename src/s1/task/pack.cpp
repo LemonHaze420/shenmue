@@ -42,11 +42,11 @@ void decompress(void *source, void *destination, std::int64_t reserved0, std::in
     std::uint32_t compressedSize);
 PackModel *PAKF_Mallocs(PakChunkHeader *chunk, std::int32_t *textureIds, void *keepRenderEnabled, char *entityName, char *formattedPath);
 void Shenmue_FileRead_ALL(std::int64_t model, char *formattedPath, std::uint32_t readMode, std::int16_t flags);
-void HMDL_NormalizeNodeCommandHeaders(void *model);
-void *HMDL_AllocateAttachmentTables(void *model);
+void hmdlNormalizeNodeCommandHeaders(void *model);
+void *hmdlAllocateAttachmentTables(void *model);
 void LoadSCRL(void *data, char *chunkName);
 char *LoadSCR(void *data, char *chunkName, std::int32_t slot);
-void HMDL_UnlinkSceneEntriesRecursive(void *modelTree);
+void hmdlUnlinkSceneEntriesRecursive(void *modelTree);
 void FreePVR(void *model);
 void FreeClip_PREP(std::int32_t mapIndex);
 void PACK_ReleaseSlotCharacters(PackSlot *slot);
@@ -105,58 +105,58 @@ char g_chunkName[9]{};
 
 void PACK_RegisterDynamicMap(std::int32_t mapIndex, PackModel *model);
 
-HmdlNode *HMDL_NodeFromOffset(std::byte *modelBase, std::int32_t offset) {
+HmdlNode *hmdlNodeFromOffset(std::byte *modelBase, std::int32_t offset) {
     return offset ? reinterpret_cast<HmdlNode *>(modelBase + offset) : nullptr;
 }
 
-HmdlSceneBinding *HMDL_Binding(std::byte *modelBase, HmdlNode *node) {
+HmdlSceneBinding *hmdlBinding(std::byte *modelBase, HmdlNode *node) {
     return node->sceneBindingOffset ? reinterpret_cast<HmdlSceneBinding *>(modelBase + node->sceneBindingOffset) : nullptr;
 }
 
-HmdlNode *HMDL_NodeFromOffset(std::int32_t offset) {
-    return HMDL_NodeFromOffset(g_pCurrentTaskData, offset);
+HmdlNode *hmdlNodeFromOffset(std::int32_t offset) {
+    return hmdlNodeFromOffset(g_pCurrentTaskData, offset);
 }
 
-HmdlSceneBinding *HMDL_Binding(HmdlNode *node) {
-    return HMDL_Binding(g_pCurrentTaskData, node);
+HmdlSceneBinding *hmdlBinding(HmdlNode *node) {
+    return hmdlBinding(g_pCurrentTaskData, node);
 }
 
-void HMDL_NormalizeNodeCommandHeadersRecursive(std::byte *modelBase, HmdlNode *node) {
+void hmdlNormalizeNodeCommandHeadersRecursive(std::byte *modelBase, HmdlNode *node) {
     do {
-        if (HmdlSceneBinding *const binding = HMDL_Binding(modelBase, node)) {
-            HMDL_NormalizeCommandHeader(binding, modelBase);
+        if (HmdlSceneBinding *const binding = hmdlBinding(modelBase, node)) {
+            hmdlNormalizeCommandHeader(binding, modelBase);
         }
-        if (HmdlNode *const child = HMDL_NodeFromOffset(modelBase, node->childOffset)) {
-            HMDL_NormalizeNodeCommandHeadersRecursive(modelBase, child);
+        if (HmdlNode *const child = hmdlNodeFromOffset(modelBase, node->childOffset)) {
+            hmdlNormalizeNodeCommandHeadersRecursive(modelBase, child);
         }
-        node = HMDL_NodeFromOffset(modelBase, node->siblingOffset);
+        node = hmdlNodeFromOffset(modelBase, node->siblingOffset);
     } while (node);
 }
 
-std::size_t HMDL_CountAttachmentBytesRecursive(HmdlNode *node) {
+std::size_t hmdlCountAttachmentBytesRecursive(HmdlNode *node) {
     std::size_t size = 0;
     do {
-        if (HmdlSceneBinding *const binding = HMDL_Binding(node)) {
+        if (HmdlSceneBinding *const binding = hmdlBinding(node)) {
             size += sizeof(std::uint32_t) * binding->attachmentCount;
         }
-        if (HmdlNode *const child = HMDL_NodeFromOffset(node->childOffset)) {
-            size += HMDL_CountAttachmentBytesRecursive(child);
+        if (HmdlNode *const child = hmdlNodeFromOffset(node->childOffset)) {
+            size += hmdlCountAttachmentBytesRecursive(child);
         }
-        node = HMDL_NodeFromOffset(node->siblingOffset);
+        node = hmdlNodeFromOffset(node->siblingOffset);
     } while (node);
     return size;
 }
 
-std::byte *HMDL_AssignAttachmentTablesRecursive(HmdlNode *node, std::byte *output) {
+std::byte *hmdlAssignAttachmentTablesRecursive(HmdlNode *node, std::byte *output) {
     do {
-        if (HmdlSceneBinding *const binding = HMDL_Binding(node)) {
+        if (HmdlSceneBinding *const binding = hmdlBinding(node)) {
             node->attachmentOffset = output ? static_cast<std::int32_t>(output - g_pCurrentTaskData) : 0;
             output += sizeof(std::uint32_t) * binding->attachmentCount;
         }
-        if (HmdlNode *const child = HMDL_NodeFromOffset(node->childOffset)) {
-            output = HMDL_AssignAttachmentTablesRecursive(child, output);
+        if (HmdlNode *const child = hmdlNodeFromOffset(node->childOffset)) {
+            output = hmdlAssignAttachmentTablesRecursive(child, output);
         }
-        node = HMDL_NodeFromOffset(node->siblingOffset);
+        node = hmdlNodeFromOffset(node->siblingOffset);
     } while (node);
     return output;
 }
@@ -241,9 +241,9 @@ void PACK_RegisterDynamicMap(std::int32_t mapIndex, PackModel *model) {
     }
     if (model->model) {
         BuildMapPackClipRuntimeTables(model->model, mapIndex);
-        HMDL_NormalizeNodeCommandHeaders(model->model);
+        hmdlNormalizeNodeCommandHeaders(model->model);
         if (!entry.prepClone) {
-            entry.prepClone = HMDL_AllocateAttachmentTables(model->model);
+            entry.prepClone = hmdlAllocateAttachmentTables(model->model);
         }
         auto *const transform = static_cast<HmdlTransform *>(model->model);
         transform->position[0] = 0.0f;
@@ -329,7 +329,7 @@ void PACK_FreeMapStorage(PackSlot *slot) {
 
 } // namespace
 
-void HMDL_NormalizeCommandHeader(void *rawBinding, std::byte *modelBase) {
+void hmdlNormalizeCommandHeader(void *rawBinding, std::byte *modelBase) {
     const HmdlSceneBinding *const binding = static_cast<const HmdlSceneBinding *>(rawBinding);
     if (!binding || !modelBase || !binding->commandStreamOffset)
         return;
@@ -459,20 +459,20 @@ void ReadMAPR(const char *rootDirectory, const char *filename, std::int32_t mapI
     g_dynamicMapSlots[mapIndex].sourceKind = 1;
 }
 
-void HMDL_NormalizeNodeCommandHeaders(void *model) {
+void hmdlNormalizeNodeCommandHeaders(void *model) {
     if (!model)
         return;
     std::byte *const modelBase = MT5_ModelBaseForNode(model);
-    HMDL_NormalizeNodeCommandHeadersRecursive(modelBase, static_cast<HmdlNode *>(model));
+    hmdlNormalizeNodeCommandHeadersRecursive(modelBase, static_cast<HmdlNode *>(model));
 }
 
-void *HMDL_AllocateAttachmentTables(void *model) {
+void *hmdlAllocateAttachmentTables(void *model) {
     auto *const node = static_cast<HmdlNode *>(model);
-    const std::size_t size = HMDL_CountAttachmentBytesRecursive(node);
+    const std::size_t size = hmdlCountAttachmentBytesRecursive(node);
     constexpr std::int32_t kPrepareToken = SHEN_NAME(PRER);
     auto *const allocation = static_cast<std::byte *>(HLib_AllocHeapMemBlock(static_cast<std::int64_t>(size), kPrepareToken));
     if (allocation) {
-        HMDL_AssignAttachmentTablesRecursive(node, allocation);
+        hmdlAssignAttachmentTablesRecursive(node, allocation);
     }
     return allocation;
 }
@@ -483,7 +483,7 @@ void PACK_EnsureMapPreparationStorage(std::int32_t mapIndex) {
     DynamicMapEntry &entry = g_dynamicMapSlots[mapIndex];
     if (!entry.mapAsset || !entry.mapAsset->model || entry.prepClone)
         return;
-    entry.prepClone = HMDL_AllocateAttachmentTables(entry.mapAsset->model);
+    entry.prepClone = hmdlAllocateAttachmentTables(entry.mapAsset->model);
 }
 
 void PACK_EnsureAllMapPreparationStorage() {
@@ -492,7 +492,7 @@ void PACK_EnsureAllMapPreparationStorage() {
     }
 }
 
-void HMDL_UnlinkSceneEntriesRecursive(void *modelTree) {
+void hmdlUnlinkSceneEntriesRecursive(void *modelTree) {
     auto *node = static_cast<HmdlNode *>(modelTree);
     do {
         std::byte *const modelBase = MT5_ModelBaseForNode(node);
@@ -501,10 +501,10 @@ void HMDL_UnlinkSceneEntriesRecursive(void *modelTree) {
             MT5_RemoveSceneModel(sceneKey);
             EFFE_RemoveQueuedSceneObjectReferences(binding);
         }
-        if (HmdlNode *const child = HMDL_NodeFromOffset(modelBase, node->childOffset)) {
-            HMDL_UnlinkSceneEntriesRecursive(child);
+        if (HmdlNode *const child = hmdlNodeFromOffset(modelBase, node->childOffset)) {
+            hmdlUnlinkSceneEntriesRecursive(child);
         }
-        node = HMDL_NodeFromOffset(modelBase, node->siblingOffset);
+        node = hmdlNodeFromOffset(modelBase, node->siblingOffset);
     } while (node);
 }
 
@@ -523,7 +523,7 @@ void FreePVR(void *modelPointer) {
     const std::uintptr_t hmdl = reinterpret_cast<std::uintptr_t>(model->model);
     ReleaseHmdlRuntimeObject(hmdl);
     ReleaseHmdlRuntimeObject(hmdl + 1);
-    HMDL_UnlinkSceneEntriesRecursive(model->model);
+    hmdlUnlinkSceneEntriesRecursive(model->model);
     if (!allocationToken) {
         return;
     }
@@ -707,7 +707,7 @@ void MAPMLoad(PackSlot *slot) {
             continue;
         case SHEN_NAME(CHRM):
             model = slot->pakfResults[modelIndex];
-            HMDL_UnlinkSceneEntriesRecursive(model->model);
+            hmdlUnlinkSceneEntriesRecursive(model->model);
             break;
         case SHEN_NAME(MOTN):
             AllocateUNFO_2(slot->motionHeaders[motionIndex++]);

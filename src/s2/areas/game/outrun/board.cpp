@@ -32,13 +32,13 @@ std::uint8_t ReadRoadControl(std::uint32_t address) {
         g_outRunRoadBank = (g_outRunRoadBank - 1) & 1;
         return 0;
     }
-    return s1::Emu68_UnmappedRead8(address + 0x90000);
+    return s1::emu68::UnmappedRead8(address + 0x90000);
 }
 void WriteRoadControl(std::uint32_t address, std::uint8_t value) {
     if (address == 1)
         g_arcadeRoadControl = value & 3;
     else
-        s1::Emu68_IgnoreWrite8(address + 0x90000, value);
+        s1::emu68::IgnoreWrite8(address + 0x90000, value);
 }
 std::uint8_t ReadSoundByte(std::uint32_t address) {
     return s1::Harrier_ReadMemory8(address + 0xf0000);
@@ -276,21 +276,21 @@ s1::reg68_page_map_entry_t RamPage(std::uint32_t base, std::uint32_t mask) {
 }
 s1::reg68_page_map_entry_t RomPage(std::uint32_t base) {
     return {.read8 = s1::Harrier_ReadMemory8,
-        .write8 = s1::Emu68_IgnoreWrite8,
+        .write8 = s1::emu68::IgnoreWrite8,
         .read16 = s1::Harrier_ReadMemory16BigEndian,
-        .write16 = s1::Emu68_IgnoreWrite16,
+        .write16 = s1::emu68::IgnoreWrite16,
         .read32 = s1::Harrier_ReadMemory32BigEndian,
-        .write32 = s1::Emu68_IgnoreWrite32,
+        .write32 = s1::emu68::IgnoreWrite32,
         .base = base,
         .mask = 0xffff};
 }
 void BuildPageMaps() {
-    const s1::reg68_page_map_entry_t empty{.read8 = s1::Emu68_UnmappedRead8,
-        .write8 = s1::Emu68_IgnoreWrite8,
-        .read16 = s1::Emu68_UnmappedRead16,
-        .write16 = s1::Emu68_IgnoreWrite16,
-        .read32 = s1::Emu68_UnmappedRead32,
-        .write32 = s1::Emu68_IgnoreWrite32,
+    const s1::reg68_page_map_entry_t empty{.read8 = s1::emu68::UnmappedRead8,
+        .write8 = s1::emu68::IgnoreWrite8,
+        .read16 = s1::emu68::UnmappedRead16,
+        .write16 = s1::emu68::IgnoreWrite16,
+        .read32 = s1::emu68::UnmappedRead32,
+        .write32 = s1::emu68::IgnoreWrite32,
         .base = 0,
         .mask = 0xffffffffu};
     for (std::uint32_t page = 0; page < 256; ++page) {
@@ -459,9 +459,9 @@ void InitializeOutRunBoard(GameArcadeRuntime &runtime, const std::uint8_t *ranki
     s1::g_reg68_ctx.map = primaryPages.data();
     s1::g_reg68_ctx_2.map = secondaryPages.data();
     s1::reg68 = &s1::g_reg68_ctx;
-    s1::Emu68_ResetContext();
+    s1::emu68::ResetContext();
     s1::reg68 = &s1::g_reg68_ctx_2;
-    s1::Emu68_ResetContext();
+    s1::emu68::ResetContext();
     s1::reg68 = &s1::g_reg68_ctx;
     for (std::uint32_t record = 0; s1::emu68_insn_defs[record].asm_string; ++record) {
         s1::emu68_ctx_t &target = s1::emu68_insn_defs[record + 1];
@@ -506,7 +506,7 @@ void UpdateOutRunBoard(GameArcadeRuntime &runtime) {
     std::memcpy(g_outRunRoadSnapshot.data(), s1::g_harrierMemory + 0xc0000, 0x800);
     g_outRunRoadOffset0 = s1::Harrier_ReadMemory16BigEndian(0xa0e90);
     g_outRunRoadOffset1 = s1::Harrier_ReadMemory16BigEndian(0xa0e92);
-    s1::emu68_Run();
+    s1::emu68::Run();
     if (runtime.controlsActive)
         ++runtime.playedFrames;
 }

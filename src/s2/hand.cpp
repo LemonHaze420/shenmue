@@ -500,7 +500,7 @@ void EvaluateArm(MotionWork &work, std::uint8_t side, std::uint32_t interpolatio
     g_motionInterpolationType = interpolationMode;
     g_motionCurrentAnimTime = arm.clock.current.ticksTime * 0.033333335f;
     g_motionMaximumAnimTime = arm.clock.authored.maxTime * 0.033333335f;
-    if (arm.poseMode == motionPoseFromAxisAngle)
+    if (arm.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = arm.clock.current.maxTime * 0.033333335f;
     Matrix4x4::preTranslate(arm.shoulder.axes[0].dimensions[0], 0, arm.shoulder.axes[2].dimensions[0]);
     if (config.flags & HandIKEnabled) {
@@ -596,7 +596,7 @@ bool BeginSearchHand(Character *character, std::int32_t handSelection, std::uint
         if (!(g_searchHandMotionOverride.flags & (1U << side)))
             continue;
         Matrix4x4_Push(&handWork->rig.chest.upperChestWorld);
-        EvaluateArm(*handWork, side, motionInterpolationHermiteAuto);
+        EvaluateArm(*handWork, side, MI_HermiteAuto);
         CaptureTarget(config, Arm(*handWork, side).handWorld);
         Matrix4x4::Pop(1);
         config.flags |= HandIKEnabled;
@@ -787,7 +787,7 @@ void SetSearchHandChestTransform(const Vector3 *position, const Vector3i *rotati
         if (g_searchHandMotionOverride.flags & (1U << side)) {
             configurations[side].flags &= static_cast<std::uint8_t>(~HandIKEnabled);
             Matrix4x4_Push(&chest);
-            EvaluateArm(*handWork, side, motionInterpolationHermiteAuto);
+            EvaluateArm(*handWork, side, MI_HermiteAuto);
             CaptureTarget(configurations[side], Arm(*handWork, side).handWorld);
             configurations[side].flags |= HandIKEnabled;
             Matrix4x4::Pop(1);
@@ -864,7 +864,7 @@ bool mtwkClearSearchHandRequests(MotionWork *work) {
 }
 // @verified - p
 void GetSearchHandWristAngles(MotionWork &work, std::int16_t (&angles)[4]) {
-    g_motionInterpolationType = (work.runtime.seqFlags >> motionSequenceInterpolationShift) & motionInterpolationLinear;
+    g_motionInterpolationType = (work.runtime.seqFlags >> motionSequenceInterpolationShift) & MI_Linear;
     const std::uint32_t flags = mtwkGetCustomOverrideFlags(&work);
     for (std::uint8_t side = 0; side < 2; ++side) {
         MotionArmRig &arm = Arm(work, side);

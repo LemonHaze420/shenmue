@@ -37,9 +37,9 @@ void faceBindNewPhoneme(FaceClipControllerState *clip);
 std::int16_t faceAdvanceSequence(FaceClipControllerState *clip);
 void faceApplyMorph(void *model, std::int32_t morphIndex, float speed, float weight);
 void FACE_UpdateEyeLookAtModelTarget(void *model, std::uint32_t channel, const Vector3 *origin, const Vector3 *target);
-void HMDL_PerformBlink(RenderArrayEntry &entry, std::int32_t side);
-void HMDL_PerformFacialExpressions(RenderArrayEntry &entry);
-void HMDL_InitCEWP(RenderArrayEntry &entry);
+void hmdlPerformBlink(RenderArrayEntry &entry, std::int32_t side);
+void hmdlPerformFacialExpressions(RenderArrayEntry &entry);
+void hmdlInitCEWP(RenderArrayEntry &entry);
 bool faceHasRemainingDuration(Character *character);
 bool faceSetGeneratedLipCues(Character *character, FaceLipCue *cues, bool enabled);
 

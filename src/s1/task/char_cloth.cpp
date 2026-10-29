@@ -127,7 +127,7 @@ void SetClothBindingVertices(Mt5RuntimeNode *model, std::byte *binding, const Cl
     std::memcpy(binding + 4, &relative, sizeof(relative));
 }
 ClothChain *ClothChainForNode(Mt5RuntimeNode *model) {
-    return static_cast<ClothChain *>(HMDL_CycleDataForNode(model));
+    return static_cast<ClothChain *>(hmdlCycleDataForNode(model));
 }
 
 const Matrix4x4 *ClothMotionNodeTransform(const ClothModelWork &work, std::uint8_t nodeId) {
@@ -881,7 +881,7 @@ bool AllocateClothChain(ClothModelWork &work, Mt5RuntimeNode *model, std::int16_
     chain->nodeKind = kind;
     chain->collisionMask = 0xffff;
     chain->model = model;
-    HMDL_SetCycleDataForNode(model, chain);
+    hmdlSetCycleDataForNode(model, chain);
     std::byte *const binding = ClothBinding(model);
     chain->originalBinding = binding;
     std::memcpy(chain->binding, binding, sizeof(chain->binding));
@@ -950,7 +950,7 @@ void DestroyClothChains(ClothModelWork &work) {
         FreeClothBuffer(chain->previous);
         FreeClothBuffer(chain->sourceVertices);
         FreeClothBuffer(chain->nodes);
-        HMDL_SetCycleDataForNode(chain->model, nullptr);
+        hmdlSetCycleDataForNode(chain->model, nullptr);
         if (ClothRenderLink *const link = chain->renderLink) {
             FreeClothBuffer(link->current);
             FreeClothBuffer(link->links);
@@ -1075,7 +1075,7 @@ bool UpdateClothMesh(ClothChain &chain) {
 }
 
 void ApplyClothNodeTransform(const Mt5RuntimeNode &node) {
-    if (const Matrix4x4 *const transform = HMDL_TransformForNode(&node, node.transformOffset)) {
+    if (const Matrix4x4 *const transform = hmdlTransformForNode(&node, node.transformOffset)) {
         workTransformMatrix = *transform;
         return;
     }
@@ -1157,7 +1157,7 @@ void UpdateCharacterClothPose(Character &character) {
     MotionManagerWork *const manager = MOTM_GetWork(&character);
     if (!model || !manager)
         return;
-    auto *const work = static_cast<ClothModelWork *>(HMDL_CycleDataForNode(model));
+    auto *const work = static_cast<ClothModelWork *>(hmdlCycleDataForNode(model));
     if (work) {
         work->character = &character;
         work->motion = &manager->motion;
@@ -1202,7 +1202,7 @@ void RebuildClothModel(Character *character) {
     CLMD_Cleanup(character, work);
     work->imageName = (IMGM_GetImageName(character) & 0x00ffffffU) | 0x20000000U;
     work->model = model;
-    HMDL_SetCycleDataForNode(model, work);
+    hmdlSetCycleDataForNode(model, work);
     static_cast<void>(SetupClothChains(*work));
 }
 } // namespace
@@ -1273,7 +1273,7 @@ void CLMD_Cleanup(Character *character, void *payload) {
     FreeClothBuffer(work->clothData);
     work->clothData = nullptr;
     DestroyClothChains(*work);
-    HMDL_SetCycleDataForNode(character->model, nullptr);
+    hmdlSetCycleDataForNode(character->model, nullptr);
 }
 
 ClothModelWork *CLMD_Flag(Character *character) {
@@ -1313,7 +1313,7 @@ void CLMD_RestoreModelBindings(Character *character) {
 }
 
 void CLMD_SetFlags(Character *character, std::uint8_t flags, std::int32_t enable) {
-    auto *const work = static_cast<ClothModelWork *>(HMDL_CycleDataForNode(character->model));
+    auto *const work = static_cast<ClothModelWork *>(hmdlCycleDataForNode(character->model));
     if (!work)
         return;
     if (enable)
@@ -1330,7 +1330,7 @@ void CLMD_Alloc(Character *character, std::uint8_t setupMode) {
     work->imageName = (IMGM_GetImageName(character) & 0x00ffffffU) | 0x20000000U;
     work->model = model;
     work->setupMode = setupMode;
-    HMDL_SetCycleDataForNode(model, work);
+    hmdlSetCycleDataForNode(model, work);
     const auto *const control = g_mapControlTask ? reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
     if (control && control->ryo == character) {
         g_ryoClothMovementMode = 0;
@@ -1343,7 +1343,7 @@ void CLMD_Alloc(Character *character, std::uint8_t setupMode) {
 void CLMD_Setup(Character *character, std::uint8_t setupMode) {
     if (!character || !character->model)
         return;
-    auto *const work = static_cast<ClothModelWork *>(HMDL_CycleDataForNode(character->model));
+    auto *const work = static_cast<ClothModelWork *>(hmdlCycleDataForNode(character->model));
     if (!work)
         return;
     work->setupMode = setupMode;

@@ -147,7 +147,7 @@ void MT5_PrepareStaticCharacterModel(void *model) {
     while (node) {
         std::byte *bindingBase = nullptr;
         void *const binding = MT5_SceneBindingForNode(node, &bindingBase);
-        HMDL_NormalizeCommandHeader(binding, bindingBase);
+        hmdlNormalizeCommandHeader(binding, bindingBase);
         std::byte *const nodeBase = MT5_ModelBaseForNode(node);
         if (!nodeBase)
             return;
@@ -158,11 +158,11 @@ void MT5_PrepareStaticCharacterModel(void *model) {
     }
 }
 
-bool HMDL_NodeOffsetsUseTaskData(const void *nodePointer) {
+bool hmdlNodeOffsetsUseTaskData(const void *nodePointer) {
     return g_mt5CopiedBindings.contains(nodePointer);
 }
 
-void HMDL_SetTemporaryTaskRelativeOffsets(const void *nodePointer, bool enabled) {
+void hmdlSetTemporaryTaskRelativeOffsets(const void *nodePointer, bool enabled) {
     if (!nodePointer)
         return;
     if (enabled)
@@ -171,7 +171,7 @@ void HMDL_SetTemporaryTaskRelativeOffsets(const void *nodePointer, bool enabled)
         g_mt5TemporaryTaskRelativeNodes.erase(nodePointer);
 }
 
-void *HMDL_CycleDataForNode(const void *nodePointer) {
+void *hmdlCycleDataForNode(const void *nodePointer) {
     if (!nodePointer)
         return nullptr;
     std::int32_t cycleOffset = 0;
@@ -181,7 +181,7 @@ void *HMDL_CycleDataForNode(const void *nodePointer) {
     return cycleOffset && base ? base + cycleOffset : nullptr;
 }
 
-bool HMDL_SetCycleDataForNode(void *nodePointer, void *cycleData) {
+bool hmdlSetCycleDataForNode(void *nodePointer, void *cycleData) {
     if (!nodePointer)
         return false;
     std::int32_t cycleOffset = 0;
@@ -197,7 +197,7 @@ bool HMDL_SetCycleDataForNode(void *nodePointer, void *cycleData) {
     return true;
 }
 
-const Matrix4x4 *HMDL_TransformForNode(const void *nodePointer, std::int32_t transformOffset) {
+const Matrix4x4 *hmdlTransformForNode(const void *nodePointer, std::int32_t transformOffset) {
     if (!nodePointer || !transformOffset)
         return nullptr;
     // Runtime HMDL nodes and replacement roots temporarily borrowing one of
@@ -208,8 +208,8 @@ const Matrix4x4 *HMDL_TransformForNode(const void *nodePointer, std::int32_t tra
     return reinterpret_cast<const Matrix4x4 *>(base + transformOffset);
 }
 
-// The offset through which HMDL_TransformForNode resolves this node to the transform (0 when it lies out of offset range).
-std::int32_t HMDL_TransformOffsetForNode(const void *nodePointer, const Matrix4x4 *transform) {
+// The offset through which hmdlTransformForNode resolves this node to the transform (0 when it lies out of offset range).
+std::int32_t hmdlTransformOffsetForNode(const void *nodePointer, const Matrix4x4 *transform) {
     if (!nodePointer || !transform)
         return 0;
     const bool taskRelative = g_mt5CopiedBindings.contains(nodePointer) || g_mt5TemporaryTaskRelativeNodes.contains(nodePointer);
@@ -218,7 +218,7 @@ std::int32_t HMDL_TransformOffsetForNode(const void *nodePointer, const Matrix4x
     return offset >= INT32_MIN && offset <= INT32_MAX ? static_cast<std::int32_t>(offset) : 0;
 }
 
-void HMDL_ClearPreparationFlagRecursive(void *nodePointer) {
+void hmdlClearPreparationFlagRecursive(void *nodePointer) {
     if (!nodePointer)
         return;
 
@@ -265,25 +265,25 @@ constexpr std::int32_t kModelToken = 0x2049414d;
 constexpr std::int32_t kTempToken = SHEN_NAME(TEMP);
 
 using Mt5Node = Mt5RuntimeNode;
-std::size_t HMDL_CountNodeChain(const Mt5Node *node, const std::byte *sourceBase) {
+std::size_t hmdlCountNodeChain(const Mt5Node *node, const std::byte *sourceBase) {
     std::size_t count = 0;
     while (node) {
         ++count;
         if (node->childOffset) {
-            count += HMDL_CountNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + node->childOffset), sourceBase);
+            count += hmdlCountNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + node->childOffset), sourceBase);
         }
         node = node->siblingOffset ? reinterpret_cast<const Mt5Node *>(sourceBase + node->siblingOffset) : nullptr;
     }
     return count;
 }
 
-Mt5Node *HMDL_AppendNodeChain(const Mt5Node *source, const std::byte *sourceBase, Mt5Node *&destinationCursor, Mt5Node *destinationParent) {
+Mt5Node *hmdlAppendNodeChain(const Mt5Node *source, const std::byte *sourceBase, Mt5Node *&destinationCursor, Mt5Node *destinationParent) {
     Mt5Node *first = nullptr;
     Mt5Node *previous = nullptr;
     while (source) {
         Mt5Node *const destination = destinationCursor++;
         std::memcpy(destination, source, sizeof(*destination));
-        HMDL_SetCycleDataForNode(destination, HMDL_CycleDataForNode(source));
+        hmdlSetCycleDataForNode(destination, hmdlCycleDataForNode(source));
         g_mt5CopiedBindings[destination] = {
             source->sceneBindingOffset ? const_cast<std::byte *>(sourceBase) + source->sceneBindingOffset : nullptr, const_cast<std::byte *>(sourceBase)};
         if (!first)
@@ -295,7 +295,7 @@ Mt5Node *HMDL_AppendNodeChain(const Mt5Node *source, const std::byte *sourceBase
         destination->siblingOffset = 0;
         if (source->childOffset) {
             Mt5Node *const child =
-                HMDL_AppendNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + source->childOffset), sourceBase, destinationCursor, destination);
+                hmdlAppendNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + source->childOffset), sourceBase, destinationCursor, destination);
             destination->childOffset = static_cast<std::int32_t>(reinterpret_cast<std::byte *>(child) - g_pCurrentTaskData);
         } else {
             destination->childOffset = 0;
@@ -354,7 +354,7 @@ void *hmdlAssignFor(PackModel *sourceModel, std::int32_t childIndex, std::int32_
 
 
     const std::size_t nodeCount =
-        1 + (source->childOffset ? HMDL_CountNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + source->childOffset), sourceBase) : 0);
+        1 + (source->childOffset ? hmdlCountNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + source->childOffset), sourceBase) : 0);
     auto *const allocation = static_cast<Mt5Node *>(HLib_AllocHeapMemBlock(static_cast<std::int64_t>(nodeCount * sizeof(Mt5Node)), SHEN_NAME(HMDL)));
     if (!allocation)
         return nullptr;
@@ -362,7 +362,7 @@ void *hmdlAssignFor(PackModel *sourceModel, std::int32_t childIndex, std::int32_
     Mt5Node *cursor = allocation;
     std::memcpy(cursor, source, sizeof(*cursor));
     Mt5Node *const root = cursor++;
-    HMDL_SetCycleDataForNode(root, HMDL_CycleDataForNode(source));
+    hmdlSetCycleDataForNode(root, hmdlCycleDataForNode(source));
     g_mt5CopiedBindings[root] = {
         source->sceneBindingOffset ? const_cast<std::byte *>(sourceBase) + source->sceneBindingOffset : nullptr, const_cast<std::byte *>(sourceBase)};
     root->parentOffset = 0;
@@ -373,7 +373,7 @@ void *hmdlAssignFor(PackModel *sourceModel, std::int32_t childIndex, std::int32_
 
     root->transformOffset = 0;
     if (source->childOffset) {
-        Mt5Node *const child = HMDL_AppendNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + source->childOffset), sourceBase, cursor, root);
+        Mt5Node *const child = hmdlAppendNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + source->childOffset), sourceBase, cursor, root);
         root->childOffset = static_cast<std::int32_t>(reinterpret_cast<std::byte *>(child) - g_pCurrentTaskData);
     } else {
         root->childOffset = 0;
@@ -383,20 +383,20 @@ void *hmdlAssignFor(PackModel *sourceModel, std::int32_t childIndex, std::int32_
 }
 
 
-std::size_t HMDL_CountModelNodes(const Mt5Node *model, const std::byte *sourceBase) {
+std::size_t hmdlCountModelNodes(const Mt5Node *model, const std::byte *sourceBase) {
     if (!model)
         return 0;
     std::size_t count = 1;
     if (model->childOffset)
-        count += HMDL_CountNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + model->childOffset), sourceBase);
+        count += hmdlCountNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + model->childOffset), sourceBase);
     if (model->siblingOffset)
-        count += HMDL_CountNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + model->siblingOffset), sourceBase);
+        count += hmdlCountNodeChain(reinterpret_cast<const Mt5Node *>(sourceBase + model->siblingOffset), sourceBase);
     return count;
 }
 
 
 
-void *HMDL_CloneNodeTree(const void *sourceNode) {
+void *hmdlCloneNodeTree(const void *sourceNode) {
     const auto *const source = static_cast<const Mt5Node *>(sourceNode);
     if (!source)
         return nullptr;
@@ -404,20 +404,20 @@ void *HMDL_CloneNodeTree(const void *sourceNode) {
     if (!sourceBase)
         return nullptr;
 
-    const std::size_t nodeCount = HMDL_CountModelNodes(source, sourceBase);
+    const std::size_t nodeCount = hmdlCountModelNodes(source, sourceBase);
     auto *const allocation = static_cast<Mt5Node *>(HLib_AllocHeapMemBlock(static_cast<std::int64_t>(nodeCount * sizeof(Mt5Node)), SHEN_NAME(HMDL)));
     if (!allocation)
         return nullptr;
 
     Mt5Node *cursor = allocation;
-    Mt5Node *const root = HMDL_AppendNodeChain(source, sourceBase, cursor, nullptr);
+    Mt5Node *const root = hmdlAppendNodeChain(source, sourceBase, cursor, nullptr);
     g_mt5ModelBases[root] = g_pCurrentTaskData;
     return root;
 }
 
 
 
-void HMDL_FreeAssignedModel(void *model) {
+void hmdlFreeAssignedModel(void *model) {
     if (!model)
         return;
     auto *const header = reinterpret_cast<HLib::TaskData *>(model) - 1;
@@ -438,11 +438,11 @@ namespace {
 
 
 
-void HMDL_AliasModelTree(const Mt5Node *node, std::uintptr_t modelHandle, std::uintptr_t leg, const std::byte *base) {
+void hmdlAliasModelTree(const Mt5Node *node, std::uintptr_t modelHandle, std::uintptr_t leg, const std::byte *base) {
     while (node) {
         InsertLargeHmdlMapping(g_renderIndexStorageA, reinterpret_cast<std::uintptr_t>(node) + leg, modelHandle + leg);
         if (node->childOffset)
-            HMDL_AliasModelTree(reinterpret_cast<const Mt5Node *>(base + node->childOffset), modelHandle, leg, base);
+            hmdlAliasModelTree(reinterpret_cast<const Mt5Node *>(base + node->childOffset), modelHandle, leg, base);
         node = node->siblingOffset ? reinterpret_cast<const Mt5Node *>(base + node->siblingOffset) : nullptr;
     }
 }
@@ -456,9 +456,9 @@ void Shenmue_FileRead_ALL(std::int64_t model, char *formattedPath, std::uint32_t
     const Mt5Node *const root = reinterpret_cast<const Mt5Node *>(handle);
     const std::byte *const base = MT5_ModelBaseForNode(root);
     if (d3t::FileRead_ALL(handle, formattedPath, readMode, static_cast<std::uint16_t>(flags)))
-        HMDL_AliasModelTree(root, handle, 0, base);
+        hmdlAliasModelTree(root, handle, 0, base);
     if (d3t::FileRead_ALL(handle + 1, formattedPath, readMode, static_cast<std::uint16_t>(flags | 0x110)))
-        HMDL_AliasModelTree(root, handle, 1, base);
+        hmdlAliasModelTree(root, handle, 1, base);
 }
 
 void MT5_PrepassNodeTreeTexturesAndStrips(void **node, std::int32_t *textureIds, std::uint32_t *depth) {
@@ -1142,7 +1142,7 @@ void RebindHmdlRenderEntry(std::uintptr_t modelData, RenderArrayEntry &entry) {
             AssignHmdlWeatherSprites(entry.handle, entry);
             SetupHmdlOwnerProbes(entry);
             if (entry.owner->remapType == 1)
-                HMDL_InitCEWP(entry);
+                hmdlInitCEWP(entry);
 
             if (entry.owner->flags & 4U)
                 AllocateHmdlReflectionSlot(entry);
@@ -1547,7 +1547,7 @@ bool SetupEngineObject(std::uintptr_t modelFileData, std::uintptr_t modelData, s
 void *InitChara(void *modelFileData, void *sourceModel) {
     if (!sourceModel)
         return nullptr;
-    void *const model = HMDL_CloneNodeTree(sourceModel);
+    void *const model = hmdlCloneNodeTree(sourceModel);
     if (!model)
         return nullptr;
     SetupEngineObject(reinterpret_cast<std::uintptr_t>(modelFileData), reinterpret_cast<std::uintptr_t>(model), 0);

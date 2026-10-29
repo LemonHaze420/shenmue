@@ -1545,7 +1545,7 @@ void FACE_UpdateModelChannel(void *model, std::int32_t eventId, std::uint32_t ch
 
 
 // @verified - p
-void HMDL_InitCEWP(RenderArrayEntry &entry) {
+void hmdlInitCEWP(RenderArrayEntry &entry) {
     std::uint8_t &initialized = *reinterpret_cast<std::uint8_t *>(&entry.cewpInitialized);
     if (initialized)
         return;
@@ -1678,7 +1678,7 @@ void FACE_UpdateEyeLookAtModelTarget(void *model, std::uint32_t channel, const V
 
 
 
-void HMDL_PerformBlink(RenderArrayEntry &entry, std::int32_t side) {
+void hmdlPerformBlink(RenderArrayEntry &entry, std::int32_t side) {
     const std::uint64_t *const nodes = entry.headRigNodes;
     if (!nodes)
         return;
@@ -1716,7 +1716,7 @@ void HMDL_PerformBlink(RenderArrayEntry &entry, std::int32_t side) {
 
 
 
-void HMDL_PerformFacialExpression(RenderArrayEntry &entry, const std::uint32_t (&masks)[6], std::uint32_t eyeMode) {
+void hmdlPerformFacialExpression(RenderArrayEntry &entry, const std::uint32_t (&masks)[6], std::uint32_t eyeMode) {
     FaceHmdlChannelRuntime &eye = *reinterpret_cast<FaceHmdlChannelRuntime *>(reinterpret_cast<std::byte *>(&entry) + (eyeMode == 3 ? 0x5c : 0x90));
     if (!eye.blinkPending)
         return;
@@ -1741,7 +1741,7 @@ void HMDL_PerformFacialExpression(RenderArrayEntry &entry, const std::uint32_t (
 
 
 
-void HMDL_PerformFacialExpressions(RenderArrayEntry &entry) {
+void hmdlPerformFacialExpressions(RenderArrayEntry &entry) {
     std::uint32_t modelType = 0;
     std::memcpy(&modelType, entry.rigState, sizeof(modelType));
     if (modelType == 500)
@@ -1807,8 +1807,8 @@ void HMDL_PerformFacialExpressions(RenderArrayEntry &entry) {
         static_cast<void>(StartFacialExpressionWork(entry.handle, &request));
         slots[2].pending = 0;
     }
-    HMDL_PerformFacialExpression(entry, masks, 3);
-    HMDL_PerformFacialExpression(entry, masks, 4);
+    hmdlPerformFacialExpression(entry, masks, 3);
+    hmdlPerformFacialExpression(entry, masks, 4);
 }
 
 std::uint8_t FACE_FindCacheSlotByModelName(const char *filename) {

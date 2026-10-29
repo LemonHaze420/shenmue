@@ -23,6 +23,8 @@ struct ConversationResource {
 static_assert(sizeof(ConversationResource) == 0x28);
 static_assert(offsetof(ConversationResource, index) == 0x08 && offsetof(ConversationResource, bankName) == 0x10);
 
+enum ScenarioTalkControlFlag : std::uint32_t { TalkWaitForCast = 0x20U };
+
 enum ScenarioTalkResumeSlot : std::uint8_t { TalkSelectedSection = 0, TalkWaitPoint = 1, TalkResumeMark = 2 };
 struct ScenarioFreeTalkControl {
     std::array<std::uint16_t, 3> resumeOffsets;

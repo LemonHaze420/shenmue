@@ -166,13 +166,13 @@ void Update0538FireLighting() {
     Vector3i rotation;
     EV_GetCharaPosition(AREA_0538_a287, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(AREA_0538_a287, &rotation, EventTransformFlags::World);
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+    scenApplyTransRot(&position, &rotation, &offset);
     SetLightRuntimePosition(1, offset);
     SetLightSceneIntensity(1, intensity);
     offset = {-0.01f, 0.35f, -0.013f};
     EV_GetCharaPosition(AREA_0538_a288, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(AREA_0538_a288, &rotation, EventTransformFlags::World);
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+    scenApplyTransRot(&position, &rotation, &offset);
     SetLightRuntimePosition(2, offset);
     SetLightSceneIntensity(2, intensity);
     PrioritizeLight(1);

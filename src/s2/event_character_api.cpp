@@ -126,7 +126,7 @@ void EV_scenApplyPosOrRotToPartOf(shen_name character, std::uint16_t part, Vecto
     }
 }
 // @verified - p
-void ApplyScenarioTranslationAndRotation(const Vector3 *position, const Vector3i *rotation, Vector3 *point) {
+void scenApplyTransRot(const Vector3 *position, const Vector3i *rotation, Vector3 *point) {
     const Vector3 input = *point;
     Matrix4x4_Push(&transformMatrix_prePass);
     if (position)

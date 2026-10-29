@@ -192,7 +192,7 @@ void RecordInstructionInput(VFActor *actor) {
     if (!owner)
         return;
     const auto pressed = DecodeInstructionInput(owner, static_cast<std::uint8_t>(actor->followupFlags));
-    const auto held = DecodeInstructionInput(owner, static_cast<std::uint8_t>(actor->cameraControlFlags));
+    const auto held = DecodeInstructionInput(owner, static_cast<std::uint8_t>(actor->inputFlags));
     auto index = InstructionValue<std::int8_t>(owner, 0x438);
     InstructionStore(owner, 0x78 + 8 * index, held);
     InstructionStore(owner, 0x7a + 8 * index, pressed);

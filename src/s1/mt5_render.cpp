@@ -228,7 +228,7 @@ static_assert(sizeof(HmdlRigState) == sizeof(RenderArrayEntry::rigState));
 
 
 
-void HMDL_SetRigNodeVisibility(std::uint64_t handle, const HmdlRigState &rig, std::int32_t operation) {
+void hmdlSetRigNodeVisibility(std::uint64_t handle, const HmdlRigState &rig, std::int32_t operation) {
     SetSkinningNodeDrawFlag(handle, operation != 0 ? 1 : 0);
     const std::uint32_t childCount = handle && (handle >> 32U) ? GetSkinningNodeChildCount(handle) : 0U;
     for (std::uint32_t index = 0; index < childCount; ++index) {
@@ -237,7 +237,7 @@ void HMDL_SetRigNodeVisibility(std::uint64_t handle, const HmdlRigState &rig, st
         for (std::uint32_t entry = 0; entry < rig.recordCount && !record; ++entry)
             record = rig.records[entry].nodeHash == static_cast<std::uint32_t>(child >> 32U);
         if (!record)
-            HMDL_SetRigNodeVisibility(child, rig, operation);
+            hmdlSetRigNodeVisibility(child, rig, operation);
     }
 }
 
@@ -623,7 +623,7 @@ void PopMatrix() {
 void ApplyNodeTransform(const Mt5Node &node) {
     if (node.transformOffset) {
         workTransformMatrix = g_mt5RootTransform;
-        Matrix4x4::Multiply(HMDL_TransformForNode(&node, node.transformOffset));
+        Matrix4x4::Multiply(hmdlTransformForNode(&node, node.transformOffset));
     } else {
         Matrix4x4::preTranslate(node.posX, node.posY, node.posZ);
         if (node.rotZ)
@@ -651,7 +651,7 @@ void ApplyNodeTransform(const Mt5Node &node) {
 
 void ApplyCachedNodeTransform(const Mt5Node &node) {
     if (node.transformOffset) {
-        if (const Matrix4x4 *const transform = HMDL_TransformForNode(&node, node.transformOffset)) {
+        if (const Matrix4x4 *const transform = hmdlTransformForNode(&node, node.transformOffset)) {
             workTransformMatrix = *transform;
         }
         return;
@@ -752,7 +752,7 @@ bool SubmitHandReplacement(Mt5Node &bodyNode, float alpha) {
     if (!g_characterShadowPass && !g_alphaMaskedDepthPass) {
         const void *const mutableVertices = selector > 0 ? hand->mutableVertices : nullptr;
 
-        HMDL_SetTemporaryTaskRelativeOffsets(root, true);
+        hmdlSetTemporaryTaskRelativeOffsets(root, true);
         const std::int32_t previousParent = root->parentOffset;
         const std::int32_t previousTransform = root->transformOffset;
         root->parentOffset = bodyNode.parentOffset;
@@ -768,7 +768,7 @@ bool SubmitHandReplacement(Mt5Node &bodyNode, float alpha) {
         }
         root->parentOffset = previousParent;
         root->transformOffset = previousTransform;
-        HMDL_SetTemporaryTaskRelativeOffsets(root, false);
+        hmdlSetTemporaryTaskRelativeOffsets(root, false);
     }
 
     SubmitReplacementNodeTree(root, alpha, true);
@@ -806,7 +806,7 @@ void SyncFaceReplacementMesh(Mt5Node &bodyNode, FaceWork &face) {
 
     const void *const mutableVertices = face.field118 ? reinterpret_cast<const void *>(face.field118) : nullptr;
 
-    HMDL_SetTemporaryTaskRelativeOffsets(primary, true);
+    hmdlSetTemporaryTaskRelativeOffsets(primary, true);
     const std::int32_t previousParent = primary->parentOffset;
     const std::int32_t previousTransform = primary->transformOffset;
     primary->parentOffset = bodyNode.parentOffset;
@@ -841,13 +841,13 @@ void SyncFaceReplacementMesh(Mt5Node &bodyNode, FaceWork &face) {
 
     primary->parentOffset = previousParent;
     primary->transformOffset = previousTransform;
-    HMDL_SetTemporaryTaskRelativeOffsets(primary, false);
+    hmdlSetTemporaryTaskRelativeOffsets(primary, false);
     g_syncedFaceRoot = primary;
     g_syncedFaceSecondary = secondary;
 }
 
 const std::byte *OsageAttachmentForNode(Mt5Node &node) {
-    return static_cast<const std::byte *>(HMDL_CycleDataForNode(&node));
+    return static_cast<const std::byte *>(hmdlCycleDataForNode(&node));
 }
 
 std::uint32_t ProcessOsageSlot(OsageRenderSlot &slot) {
@@ -1348,10 +1348,10 @@ void ApplySceneAttachmentTransform(const Vector3 &rootPosition, const Vector3i &
 
 
 
-void HMDL_PublishRigNodeTransforms(HmdlRigState &rig, Mt5Node *node, std::uint32_t flags) {
+void hmdlPublishRigNodeTransforms(HmdlRigState &rig, Mt5Node *node, std::uint32_t flags) {
     while (node) {
         PushMatrix();
-        if (const Matrix4x4 *const stored = node->transformOffset ? HMDL_TransformForNode(node, node->transformOffset) : nullptr) {
+        if (const Matrix4x4 *const stored = node->transformOffset ? hmdlTransformForNode(node, node->transformOffset) : nullptr) {
             workTransformMatrix = *stored;
         } else {
             Matrix4x4::preTranslate(node->posX, node->posY, node->posZ);
@@ -1371,12 +1371,12 @@ void HMDL_PublishRigNodeTransforms(HmdlRigState &rig, Mt5Node *node, std::uint32
             const std::uint64_t handle = rig.cacheHandle | (static_cast<std::uint64_t>(rig.records[index].nodeHash) << 32U);
             if (rig.cacheHandle && rig.records[index].nodeHash) {
                 const Matrix4x4 transposed = TransposeAttachmentTransform(workTransformMatrix);
-                HMDL_SetRigNodeVisibility(handle, rig, operation);
+                hmdlSetRigNodeVisibility(handle, rig, operation);
                 static_cast<void>(AppendHashForSkinningBuffer(handle, transposed));
             }
             break;
         }
-        HMDL_PublishRigNodeTransforms(rig, OffsetNode(node->childOffset), flags);
+        hmdlPublishRigNodeTransforms(rig, OffsetNode(node->childOffset), flags);
         PopMatrix();
         node = OffsetNode(node->siblingOffset);
     }
@@ -1384,7 +1384,7 @@ void HMDL_PublishRigNodeTransforms(HmdlRigState &rig, Mt5Node *node, std::uint32
 
 
 
-void HMDL_ConvertRigNodesToSkinSpace(const HmdlRigState &rig, std::int32_t mode) {
+void hmdlConvertRigNodesToSkinSpace(const HmdlRigState &rig, std::int32_t mode) {
     std::uint64_t rootHandle = 0;
     Matrix4x4 rootWorld{};
     for (std::uint32_t index = 0; index < rig.recordCount; ++index) {
@@ -1404,7 +1404,7 @@ void HMDL_ConvertRigNodesToSkinSpace(const HmdlRigState &rig, std::int32_t mode)
 
 
 
-OsageRenderSlot *HMDL_AcquireRigOsageSlot(HmdlRigState &rig, Mt5Node *node, std::uint32_t &slotIndex) {
+OsageRenderSlot *hmdlAcquireRigOsageSlot(HmdlRigState &rig, Mt5Node *node, std::uint32_t &slotIndex) {
     if (!node)
         return nullptr;
     for (std::uint32_t index = 0; index < 8; ++index) {
@@ -1430,7 +1430,7 @@ OsageRenderSlot *HMDL_AcquireRigOsageSlot(HmdlRigState &rig, Mt5Node *node, std:
 
 
 
-void HMDL_CollectRigRecords(Mt5Node *node, Character *character, HmdlRigState &rig, std::uint32_t flags) {
+void hmdlCollectRigRecords(Mt5Node *node, Character *character, HmdlRigState &rig, std::uint32_t flags) {
     while (node) {
         const std::uint32_t count = rig.recordCount;
         if (count >= 300)
@@ -1447,7 +1447,7 @@ void HMDL_CollectRigRecords(Mt5Node *node, Character *character, HmdlRigState &r
             record.state = 1;
             const std::byte *const attachment = OsageAttachmentForNode(*node);
             if (attachment && static_cast<std::uint16_t>(node->nodeKind + 0x4e) <= 8U && std::memcmp(attachment, "OSAG", 4) != 0) {
-                if (OsageRenderSlot *const slot = HMDL_AcquireRigOsageSlot(rig, node, record.slotIndex)) {
+                if (OsageRenderSlot *const slot = hmdlAcquireRigOsageSlot(rig, node, record.slotIndex)) {
                     if (!slot->active) {
                         slot->active = 1;
                         std::memcpy(&slot->attachmentValue, attachment + 8, sizeof(slot->attachmentValue));
@@ -1457,7 +1457,7 @@ void HMDL_CollectRigRecords(Mt5Node *node, Character *character, HmdlRigState &r
                 }
             }
             if (character) {
-                HMDL_CreateHandAttachmentRecords(node, character, rig.handRecords, record.state, record.slotIndex, flags);
+                hmdlCreateHandAttachmentRecords(node, character, rig.handRecords, record.state, record.slotIndex, flags);
                 if (kind == -67) {
                     record.state = 4;
                     std::memset(&rig.headRig, 0, sizeof(rig.headRig));
@@ -1465,14 +1465,14 @@ void HMDL_CollectRigRecords(Mt5Node *node, Character *character, HmdlRigState &r
                 }
             }
         }
-        HMDL_CollectRigRecords(OffsetNode(node->childOffset), character, rig, flags);
+        hmdlCollectRigRecords(OffsetNode(node->childOffset), character, rig, flags);
         node = OffsetNode(node->siblingOffset);
     }
 }
 
 
 
-std::uint32_t HMDL_SkeletonNodeVersion(const char *name, const char *boneName) {
+std::uint32_t hmdlSkeletonNodeVersion(const char *name, const char *boneName) {
     if (!name || !std::strstr(name, "CSESkeleton"))
         return 0;
     const char *const version = std::strstr(name, "VERSION");
@@ -1486,14 +1486,14 @@ std::uint32_t HMDL_SkeletonNodeVersion(const char *name, const char *boneName) {
 }
 
 
-std::uint64_t HMDL_FindSkeletonRoot(const char *boneName, std::uint32_t &modelType, std::uint64_t handle) {
-    if (const std::uint32_t version = HMDL_SkeletonNodeVersion(GetSkinningNodeName(handle), boneName)) {
+std::uint64_t hmdlFindSkeletonRoot(const char *boneName, std::uint32_t &modelType, std::uint64_t handle) {
+    if (const std::uint32_t version = hmdlSkeletonNodeVersion(GetSkinningNodeName(handle), boneName)) {
         modelType = version;
         return handle;
     }
     const std::uint32_t childCount = handle && (handle >> 32U) ? GetSkinningNodeChildCount(handle) : 0U;
     for (std::uint32_t child = 0; child < childCount; ++child) {
-        const std::uint64_t found = HMDL_FindSkeletonRoot(boneName, modelType, GetSkinningNodeChild(handle, child));
+        const std::uint64_t found = hmdlFindSkeletonRoot(boneName, modelType, GetSkinningNodeChild(handle, child));
         if (found && (found >> 32U))
             return found;
     }
@@ -1509,7 +1509,7 @@ constexpr std::array<std::array<const char *, 7>, 3> kSharedSkeletonGroups{{
 
 
 
-std::uint64_t HMDL_FindSharedSkeletonRoot(HmdlRigState &rig, std::uint64_t handle) {
+std::uint64_t hmdlFindSharedSkeletonRoot(HmdlRigState &rig, std::uint64_t handle) {
     for (const std::array<const char *, 7> &group : kSharedSkeletonGroups) {
         bool member = false;
         for (const char *const name : group) {
@@ -1528,7 +1528,7 @@ std::uint64_t HMDL_FindSharedSkeletonRoot(HmdlRigState &rig, std::uint64_t handl
         for (const char *const name : group) {
             if (!name)
                 continue;
-            const std::uint64_t found = HMDL_FindSkeletonRoot(name, rig.modelType, handle);
+            const std::uint64_t found = hmdlFindSkeletonRoot(name, rig.modelType, handle);
             if (found && (found >> 32U)) {
                 std::strcpy(rig.boneName, name);
                 return found;
@@ -1540,7 +1540,7 @@ std::uint64_t HMDL_FindSharedSkeletonRoot(HmdlRigState &rig, std::uint64_t handl
 
 
 
-std::uint32_t HMDL_InitRigState(RenderArrayEntry &entry) {
+std::uint32_t hmdlInitRigState(RenderArrayEntry &entry) {
     if (entry.state != 1 || !entry.handle || !(entry.handle >> 32U))
         return 0;
     HmdlRigState &rig = *reinterpret_cast<HmdlRigState *>(entry.rigState);
@@ -1557,9 +1557,9 @@ std::uint32_t HMDL_InitRigState(RenderArrayEntry &entry) {
     std::snprintf(rig.boneName, sizeof(rig.boneName), "%s", stem);
     if (char *const dot = std::strchr(rig.boneName, '.'))
         *dot = '\0';
-    std::uint64_t root = HMDL_FindSkeletonRoot(rig.boneName, rig.modelType, entry.handle);
+    std::uint64_t root = hmdlFindSkeletonRoot(rig.boneName, rig.modelType, entry.handle);
     if (!root || !(root >> 32U))
-        root = HMDL_FindSharedSkeletonRoot(rig, entry.handle);
+        root = hmdlFindSharedSkeletonRoot(rig, entry.handle);
     if (!root || !(root >> 32U) || !rig.modelType)
         return 0;
     rig.cacheHandle = static_cast<std::uint32_t>(entry.handle);
@@ -1634,19 +1634,19 @@ constexpr std::array<std::array<const char *, 2>, 61> kRigNodeNameAliases{{
 }};
 
 
-std::uint64_t HMDL_FindSkinNodeWithText(const char *text, std::uint64_t handle) {
+std::uint64_t hmdlFindSkinNodeWithText(const char *text, std::uint64_t handle) {
     const char *const name = GetSkinningNodeName(handle);
     if (name && std::strstr(name, text))
         return handle;
     const std::uint32_t childCount = handle && (handle >> 32U) ? GetSkinningNodeChildCount(handle) : 0U;
     for (std::uint32_t child = 0; child < childCount; ++child) {
-        if (const std::uint64_t found = HMDL_FindSkinNodeWithText(text, GetSkinningNodeChild(handle, child)))
+        if (const std::uint64_t found = hmdlFindSkinNodeWithText(text, GetSkinningNodeChild(handle, child)))
             return found;
     }
     return 0;
 }
 
-bool HMDL_RigHasNodeHash(const HmdlRigState &rig, std::uint32_t hash) {
+bool hmdlRigHasNodeHash(const HmdlRigState &rig, std::uint32_t hash) {
     for (std::uint32_t index = 0; index < rig.recordCount; ++index) {
         if (rig.records[index].nodeHash == hash)
             return true;
@@ -1654,7 +1654,7 @@ bool HMDL_RigHasNodeHash(const HmdlRigState &rig, std::uint32_t hash) {
     return false;
 }
 
-bool HMDL_NamesMatch(const char *left, const char *right) {
+bool hmdlNamesMatch(const char *left, const char *right) {
     std::size_t index = 0;
     while (std::tolower(static_cast<unsigned char>(left[index])) == std::tolower(static_cast<unsigned char>(right[index])) && right[index])
         ++index;
@@ -1664,30 +1664,30 @@ bool HMDL_NamesMatch(const char *left, const char *right) {
 
 
 
-std::uint64_t HMDL_AssignRigNodeHash(const char *name, const HmdlRigState &rig, const RenderArrayEntry &entry, std::int32_t nodeKind) {
+std::uint64_t hmdlAssignRigNodeHash(const char *name, const HmdlRigState &rig, const RenderArrayEntry &entry, std::int32_t nodeKind) {
     std::uint64_t result = AssignNode(entry.handle, name);
-    if (result && (result >> 32U) && !HMDL_RigHasNodeHash(rig, static_cast<std::uint32_t>(result >> 32U)))
+    if (result && (result >> 32U) && !hmdlRigHasNodeHash(rig, static_cast<std::uint32_t>(result >> 32U)))
         return result;
     for (const std::array<const char *, 2> &alias : kRigNodeNameAliases) {
-        if (!HMDL_NamesMatch(alias[0], name))
+        if (!hmdlNamesMatch(alias[0], name))
             continue;
         result = AssignNode(entry.handle, alias[1]);
-        if (result && (result >> 32U) && !HMDL_RigHasNodeHash(rig, static_cast<std::uint32_t>(result >> 32U)))
+        if (result && (result >> 32U) && !hmdlRigHasNodeHash(rig, static_cast<std::uint32_t>(result >> 32U)))
             return result;
     }
     if (!entry.owner || entry.owner->remapType != 1 || nodeKind == -1)
         return 0;
     char suffix[256]{};
     std::snprintf(suffix, sizeof(suffix), "_K%s%05u", nodeKind < 0 ? "M" : "P", static_cast<unsigned>(nodeKind < 0 ? -nodeKind : nodeKind));
-    result = HMDL_FindSkinNodeWithText(suffix, entry.handle);
-    if (result && (result >> 32U) && !HMDL_RigHasNodeHash(rig, static_cast<std::uint32_t>(result >> 32U)))
+    result = hmdlFindSkinNodeWithText(suffix, entry.handle);
+    if (result && (result >> 32U) && !hmdlRigHasNodeHash(rig, static_cast<std::uint32_t>(result >> 32U)))
         return result;
     return 0;
 }
 
 
 
-void HMDL_RigNodeName(char (&name)[256], std::uint32_t recordIndex, std::int32_t nodeKind, const char *boneName, std::uint32_t modelType) {
+void hmdlRigNodeName(char (&name)[256], std::uint32_t recordIndex, std::int32_t nodeKind, const char *boneName, std::uint32_t modelType) {
     const char *const sign = nodeKind < 0 ? "M" : "P";
     const unsigned magnitude = static_cast<unsigned>(static_cast<std::uint16_t>(nodeKind < 0 ? -nodeKind : nodeKind));
     if (modelType == 1)
@@ -1698,7 +1698,7 @@ void HMDL_RigNodeName(char (&name)[256], std::uint32_t recordIndex, std::int32_t
 
 
 
-void HMDL_NameHandNodes(HandSkinningAttachmentRecord &hand, std::uint32_t modelType, const char *boneName) {
+void hmdlNameHandNodes(HandSkinningAttachmentRecord &hand, std::uint32_t modelType, const char *boneName) {
     if (hand.ready)
         return;
     hand.ready = 1;
@@ -1722,7 +1722,7 @@ void HMDL_NameHandNodes(HandSkinningAttachmentRecord &hand, std::uint32_t modelT
 }
 
 
-void HMDL_NameFlagNodes(HmdlRigFlagSlot &slot, std::uint32_t slotIndex, const char *boneName) {
+void hmdlNameFlagNodes(HmdlRigFlagSlot &slot, std::uint32_t slotIndex, const char *boneName) {
     if (slot.assigned)
         return;
     slot.assigned = 1;
@@ -1741,7 +1741,7 @@ void HMDL_NameFlagNodes(HmdlRigFlagSlot &slot, std::uint32_t slotIndex, const ch
 }
 
 
-void HMDL_NameClothNodes(OsageRenderSlot &slot, std::uint32_t slotIndex, const char *boneName, std::uint32_t modelType) {
+void hmdlNameClothNodes(OsageRenderSlot &slot, std::uint32_t slotIndex, const char *boneName, std::uint32_t modelType) {
     if (slot.assigned)
         return;
     slot.assigned = 1;
@@ -1765,7 +1765,7 @@ void HMDL_NameClothNodes(OsageRenderSlot &slot, std::uint32_t slotIndex, const c
 
 
 
-void HMDL_NameRigRecords(RenderArrayEntry &entry) {
+void hmdlNameRigRecords(RenderArrayEntry &entry) {
     HmdlRigState &rig = *reinterpret_cast<HmdlRigState *>(entry.rigState);
     if (!rig.initialized || rig.ready || !entry.handle || !(entry.handle >> 32U))
         return;
@@ -1783,19 +1783,19 @@ void HMDL_NameRigRecords(RenderArrayEntry &entry) {
                 std::snprintf(name, sizeof(name), "Node_Hand_%d_%03u_%03u", handId, 0U, matrix);
             else
                 std::snprintf(name, sizeof(name), "Node_%s_Hand_%02u_%03u_%03u", rig.boneName, static_cast<unsigned>(handId), 0U, matrix);
-            const std::uint64_t node = HMDL_AssignRigNodeHash(name, rig, entry, record.nodeKind);
+            const std::uint64_t node = hmdlAssignRigNodeHash(name, rig, entry, record.nodeKind);
             if (node && (node >> 32U)) {
                 record.nodeHash = static_cast<std::uint32_t>(node >> 32U);
                 hand.cacheHandle = rig.cacheHandle;
                 hand.nodeHash = record.nodeHash;
-                HMDL_NameHandNodes(hand, rig.modelType, rig.boneName);
+                hmdlNameHandNodes(hand, rig.modelType, rig.boneName);
             }
         }
         if (!record.node)
             continue;
         if (record.state == 4) {
-            HMDL_RigNodeName(name, index, record.nodeKind, rig.boneName, rig.modelType);
-            const std::uint64_t node = HMDL_AssignRigNodeHash(name, rig, entry, record.nodeKind);
+            hmdlRigNodeName(name, index, record.nodeKind, rig.boneName, rig.modelType);
+            const std::uint64_t node = hmdlAssignRigNodeHash(name, rig, entry, record.nodeKind);
             if (node && (node >> 32U)) {
                 record.nodeHash = static_cast<std::uint32_t>(node >> 32U);
                 rig.headRig.cacheHandle = rig.cacheHandle;
@@ -1803,8 +1803,8 @@ void HMDL_NameRigRecords(RenderArrayEntry &entry) {
                 HeadRig_Init(&rig.headRig, static_cast<std::uint32_t>(entry.handle >> 32U));
             }
         }
-        HMDL_RigNodeName(name, index, record.nodeKind, rig.boneName, rig.modelType);
-        const std::uint64_t node = HMDL_AssignRigNodeHash(name, rig, entry, record.nodeKind);
+        hmdlRigNodeName(name, index, record.nodeKind, rig.boneName, rig.modelType);
+        const std::uint64_t node = hmdlAssignRigNodeHash(name, rig, entry, record.nodeKind);
         if (node && (node >> 32U))
             record.nodeHash = static_cast<std::uint32_t>(node >> 32U);
         else if (record.state == 1)
@@ -1815,13 +1815,13 @@ void HMDL_NameRigRecords(RenderArrayEntry &entry) {
             HmdlRigFlagSlot &slot = rig.flagSlots[record.slotIndex];
             slot.cacheHandle = rig.cacheHandle;
             slot.baseHash = record.nodeHash;
-            HMDL_NameFlagNodes(slot, record.slotIndex, rig.boneName);
+            hmdlNameFlagNodes(slot, record.slotIndex, rig.boneName);
         }
         if (record.node && record.state == 2 && record.slotIndex < 8) {
             OsageRenderSlot &slot = rig.osageSlots[record.slotIndex];
             slot.cacheHandle = rig.cacheHandle;
             slot.baseHash = record.nodeHash;
-            HMDL_NameClothNodes(slot, record.slotIndex, rig.boneName, rig.modelType);
+            hmdlNameClothNodes(slot, record.slotIndex, rig.boneName, rig.modelType);
         }
     }
 }
@@ -1849,10 +1849,10 @@ void DrawActiveRiggedNodeTree(Mt5Node *node, float alpha, const Matrix4x4 &absol
 
 
 
-void HMDL_TransformObjectTree(void *model, Mt5Node *node) {
+void hmdlTransformObjectTree(void *model, Mt5Node *node) {
     while (node) {
         PushMatrix();
-        if (const Matrix4x4 *const stored = node->transformOffset ? HMDL_TransformForNode(node, node->transformOffset) : nullptr) {
+        if (const Matrix4x4 *const stored = node->transformOffset ? hmdlTransformForNode(node, node->transformOffset) : nullptr) {
             workTransformMatrix = *stored;
         } else {
             Matrix4x4::preTranslate(node->posX, node->posY, node->posZ);
@@ -1866,16 +1866,16 @@ void HMDL_TransformObjectTree(void *model, Mt5Node *node) {
         }
         if (static_cast<std::int16_t>(node->nodeKind) == -67 && g_pCurrentFaceActor)
             UpdateDebugFaceEyeTargets(model, *static_cast<const FaceWork *>(g_pCurrentFaceActor));
-        HMDL_TransformObjectTree(model, OffsetNode(node->childOffset));
+        hmdlTransformObjectTree(model, OffsetNode(node->childOffset));
         PopMatrix();
         node = OffsetNode(node->siblingOffset);
     }
 }
 
 
-void HMDL_UpdateMutableFaceGeometry(void *model) {
+void hmdlUpdateMutableFaceGeometry(void *model) {
     Matrix4x4::SetActiveTransformToPrePass();
-    HMDL_TransformObjectTree(model, static_cast<Mt5Node *>(model));
+    hmdlTransformObjectTree(model, static_cast<Mt5Node *>(model));
     PopMatrix();
 }
 
@@ -1897,19 +1897,19 @@ std::uint32_t SubmitRiggedSceneObjectForDrawing(void *model, Character *characte
     GAME_BindModelOffsets(tree, character);
     if (tree && model && !rig.initialized) {
         rig.initialized = 1;
-        rig.modelType = HMDL_InitRigState(*entry);
+        rig.modelType = hmdlInitRigState(*entry);
         if (rig.modelType)
-            HMDL_CollectRigRecords(static_cast<Mt5Node *>(tree), character, rig, flags);
+            hmdlCollectRigRecords(static_cast<Mt5Node *>(tree), character, rig, flags);
     }
     std::uint32_t result = 0;
     if (rig.initialized) {
-        HMDL_NameRigRecords(*entry);
+        hmdlNameRigRecords(*entry);
         if (rig.ready && rig.modelType && (flags & 4U) == 0U) {
             PushMatrix();
             workTransformMatrix = transformMatrix_prePass;
-            HMDL_PublishRigNodeTransforms(rig, static_cast<Mt5Node *>(tree), flags);
+            hmdlPublishRigNodeTransforms(rig, static_cast<Mt5Node *>(tree), flags);
             PopMatrix();
-            HMDL_ConvertRigNodesToSkinSpace(rig, mode);
+            hmdlConvertRigNodesToSkinSpace(rig, mode);
             std::uint32_t activeSlots = 0;
             std::uint32_t writes = 0;
             for (OsageRenderSlot &slot : rig.osageSlots) {
@@ -1923,11 +1923,11 @@ std::uint32_t SubmitRiggedSceneObjectForDrawing(void *model, Character *characte
                 g_characterDrawDiagnostics.ryoOsageWrites = writes;
             }
             HeadRig_Publish(&rig.headRig);
-            HMDL_UpdateMutableFaceGeometry(model);
+            hmdlUpdateMutableFaceGeometry(model);
             if (entry->cewpInitialized) {
-                HMDL_PerformFacialExpressions(*entry);
-                HMDL_PerformBlink(*entry, 0);
-                HMDL_PerformBlink(*entry, 1);
+                hmdlPerformFacialExpressions(*entry);
+                hmdlPerformBlink(*entry, 0);
+                hmdlPerformBlink(*entry, 1);
             }
             result = 1;
         }
@@ -1937,27 +1937,27 @@ std::uint32_t SubmitRiggedSceneObjectForDrawing(void *model, Character *characte
 }
 
 
-void HMDL_ClearNodeTransformLinks(Mt5RuntimeNode *node) {
+void hmdlClearNodeTransformLinks(Mt5RuntimeNode *node) {
     while (node) {
         node->transformOffset = 0;
         std::byte *const base = MT5_ModelBaseForNode(node);
         if (node->childOffset)
-            HMDL_ClearNodeTransformLinks(reinterpret_cast<Mt5RuntimeNode *>(base + node->childOffset));
+            hmdlClearNodeTransformLinks(reinterpret_cast<Mt5RuntimeNode *>(base + node->childOffset));
         node = node->siblingOffset ? reinterpret_cast<Mt5RuntimeNode *>(base + node->siblingOffset) : nullptr;
     }
 }
 
 
 
-void HMDL_LinkNodeTransformsByKind(Mt5RuntimeNode *source, Mt5RuntimeNode *target) {
+void hmdlLinkNodeTransformsByKind(Mt5RuntimeNode *source, Mt5RuntimeNode *target) {
     while (target) {
         if (target->nodeKind != 0xffffU) {
             if (const Mt5RuntimeNode *const node = shenGetNodeByChildIdx(source, static_cast<std::int16_t>(target->nodeKind)))
-                target->transformOffset = node->transformOffset ? HMDL_TransformOffsetForNode(target, HMDL_TransformForNode(node, node->transformOffset)) : 0;
+                target->transformOffset = node->transformOffset ? hmdlTransformOffsetForNode(target, hmdlTransformForNode(node, node->transformOffset)) : 0;
         }
         std::byte *const base = MT5_ModelBaseForNode(target);
         if (target->childOffset)
-            HMDL_LinkNodeTransformsByKind(source, reinterpret_cast<Mt5RuntimeNode *>(base + target->childOffset));
+            hmdlLinkNodeTransformsByKind(source, reinterpret_cast<Mt5RuntimeNode *>(base + target->childOffset));
         target = target->siblingOffset ? reinterpret_cast<Mt5RuntimeNode *>(base + target->siblingOffset) : nullptr;
     }
 }
@@ -1977,10 +1977,10 @@ void SubmitCharacterShadowInternal(Character *character, void *posedModel, void 
     // relink them from a distinct posed model (MOTM passes one model).
     auto *const shadowRoot = static_cast<Mt5RuntimeNode *>(model);
     if (!posed || posedModel != model)
-        HMDL_ClearNodeTransformLinks(shadowRoot);
+        hmdlClearNodeTransformLinks(shadowRoot);
     if (posedModel && posedModel != model) {
-        HMDL_ClearNodeTransformLinks(shadowRoot);
-        HMDL_LinkNodeTransformsByKind(static_cast<Mt5RuntimeNode *>(posedModel), shadowRoot);
+        hmdlClearNodeTransformLinks(shadowRoot);
+        hmdlLinkNodeTransformsByKind(static_cast<Mt5RuntimeNode *>(posedModel), shadowRoot);
     }
 
     CharacterShadowState *const state = shadowState ? shadowState : character ? &character->shadowState : nullptr;
@@ -2156,14 +2156,14 @@ std::int32_t ModelCopyToGPU(void *binding, std::int32_t *attachment, EffectLight
 
 
 
-void HMDL_PrelightNodeRecursive(Mt5RuntimeNode *node, EffectLightRenderSlot *lights, std::int32_t count) {
+void hmdlPrelightNodeRecursive(Mt5RuntimeNode *node, EffectLightRenderSlot *lights, std::int32_t count) {
     std::byte *const modelBase = MT5_ModelBaseForNode(node);
     for (;;) {
         if (node->siblingOffset)
             PushMatrix();
         if (node->transformOffset) {
             workTransformMatrix = g_mt5RootTransform;
-            Matrix4x4::Multiply(HMDL_TransformForNode(node, node->transformOffset));
+            Matrix4x4::Multiply(hmdlTransformForNode(node, node->transformOffset));
         } else {
             Matrix4x4::preTranslate(node->position.x, node->position.y, node->position.z);
             if (node->rotation.z)
@@ -2181,7 +2181,7 @@ void HMDL_PrelightNodeRecursive(Mt5RuntimeNode *node, EffectLightRenderSlot *lig
                 ModelCopyToGPU(binding, reinterpret_cast<std::int32_t *>(g_pCurrentTaskData + node->attachmentOffset), lights, count);
         }
         if (node->childOffset)
-            HMDL_PrelightNodeRecursive(reinterpret_cast<Mt5RuntimeNode *>(modelBase + node->childOffset), lights, count);
+            hmdlPrelightNodeRecursive(reinterpret_cast<Mt5RuntimeNode *>(modelBase + node->childOffset), lights, count);
         if (!node->siblingOffset)
             return;
         PopMatrix();
@@ -2190,12 +2190,12 @@ void HMDL_PrelightNodeRecursive(Mt5RuntimeNode *node, EffectLightRenderSlot *lig
 }
 
 
-void HMDL_PrelightSpotLights(void *model, EffectLightRenderSlot *lights, std::int32_t count) {
+void hmdlPrelightSpotLights(void *model, EffectLightRenderSlot *lights, std::int32_t count) {
     if (!model)
         return;
     PushMatrix();
     g_mt5RootTransform = workTransformMatrix;
-    HMDL_PrelightNodeRecursive(static_cast<Mt5RuntimeNode *>(model), lights, count);
+    hmdlPrelightNodeRecursive(static_cast<Mt5RuntimeNode *>(model), lights, count);
     PopMatrix();
 }
 
@@ -2745,7 +2745,7 @@ void SubmitCycleForDrawing(Mt5RuntimeNode *node) {
             PushMatrix();
         if (node->transformOffset) {
             workTransformMatrix = g_mt5RootTransform;
-            Matrix4x4::Multiply(HMDL_TransformForNode(node, node->transformOffset));
+            Matrix4x4::Multiply(hmdlTransformForNode(node, node->transformOffset));
         } else {
             Matrix4x4::preTranslate(node->position.x, node->position.y, node->position.z);
             if (node->rotation.z)

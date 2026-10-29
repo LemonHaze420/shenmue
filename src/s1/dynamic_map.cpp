@@ -452,7 +452,7 @@ void DYNM_ClearMapPreparation(std::int32_t mapIndex, bool requireAllocatedStorag
     if (!entry.mapAsset || !entry.mapAsset->model || (requireAllocatedStorage && !entry.prepClone)) {
         return;
     }
-    HMDL_ClearPreparationFlagRecursive(entry.mapAsset->model);
+    hmdlClearPreparationFlagRecursive(entry.mapAsset->model);
     entry.prepReady = 0;
 }
 
@@ -480,7 +480,7 @@ void DYNM_PrepareMapLighting(std::int32_t mapIndex) {
     Matrix4x4_Push();
     Matrix4x4::preTranslate(transform.position.x, transform.position.y, transform.position.z);
     Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(transform.yaw));
-    HMDL_PrelightSpotLights(entry.mapAsset->model, lights.data(), count);
+    hmdlPrelightSpotLights(entry.mapAsset->model, lights.data(), count);
     Matrix4x4::Pop(1);
     entry.prepReady = 1;
 }
@@ -501,7 +501,7 @@ void DYNM_PrepareAllMapLighting() {
         Matrix4x4_Push();
         Matrix4x4::preTranslate(transform.position.x, transform.position.y, transform.position.z);
         Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(transform.yaw));
-        HMDL_PrelightSpotLights(entry.mapAsset->model, lights.data(), count);
+        hmdlPrelightSpotLights(entry.mapAsset->model, lights.data(), count);
         Matrix4x4::Pop(1);
         entry.prepReady = 1;
     }

@@ -29,18 +29,22 @@ std::uint8_t g_harrierIrqLevel4{};
 std::uint8_t g_harrierIrqFrame{};
 static char g_emu68DebugText[512]{};
 
-static std::uint32_t &Emu68_Register(reg68_ctx_t *context, unsigned index) {
+namespace emu68 {
+
+static std::uint32_t &Register(reg68_ctx_t *context, unsigned index) {
     return index < 8 ? context->d[index] : context->a[index - 8];
 }
 
-static inline std::int32_t Emu68_Add32(std::int32_t left, std::int32_t right) {
+static inline std::int32_t Add32(std::int32_t left, std::int32_t right) {
     return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(left) + static_cast<std::uint32_t>(right));
 }
-static inline std::int32_t Emu68_Subtract32(std::int32_t left, std::int32_t right) {
+static inline std::int32_t Subtract32(std::int32_t left, std::int32_t right) {
     return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(left) - static_cast<std::uint32_t>(right));
 }
-static inline std::int32_t Emu68_Multiply32(std::int32_t left, std::int32_t right) {
+static inline std::int32_t Multiply32(std::int32_t left, std::int32_t right) {
     return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(left) * static_cast<std::uint32_t>(right));
+}
+
 }
 
 std::uint8_t Harrier_ReadMemory8(std::uint32_t address) {
@@ -66,29 +70,32 @@ void Harrier_WriteMemory32BigEndian(std::uint32_t address, std::uint32_t value) 
     g_harrierMemory[address + 3] = static_cast<std::uint8_t>(value);
     g_harrierMemory[address] = static_cast<std::uint8_t>(value >> 24);
 }
-std::uint8_t Emu68_UnmappedRead8(std::uint32_t) {
+
+namespace emu68 {
+
+std::uint8_t UnmappedRead8(std::uint32_t) {
     return 0;
 }
-std::uint16_t Emu68_UnmappedRead16(std::uint32_t) {
+std::uint16_t UnmappedRead16(std::uint32_t) {
     return 0;
 }
-std::uint32_t Emu68_UnmappedRead32(std::uint32_t) {
+std::uint32_t UnmappedRead32(std::uint32_t) {
     return 0;
 }
-void Emu68_IgnoreWrite8(std::uint32_t, std::uint8_t) {
+void IgnoreWrite8(std::uint32_t, std::uint8_t) {
 }
-void Emu68_IgnoreWrite16(std::uint32_t, std::uint16_t) {
+void IgnoreWrite16(std::uint32_t, std::uint16_t) {
 }
-void Emu68_IgnoreWrite32(std::uint32_t, std::uint32_t) {
+void IgnoreWrite32(std::uint32_t, std::uint32_t) {
 }
-std::intptr_t Emu68_NullOperand(int) {
+std::intptr_t NullOperand(int) {
     return 0;
 }
-std::intptr_t Emu68_ReportWriteModeError(int index, std::uint32_t) {
-    return Emu68_ReportWriteModeError(index);
+std::intptr_t ReportWriteModeError(int index, std::uint32_t) {
+    return ReportWriteModeError(index);
 }
 
-void Emu68_ReportLineFError() {
+void ReportLineFError() {
 
     std::snprintf(g_emu68DebugText, sizeof(g_emu68DebugText), "error fxxx\n");
     (Harrier_DebugPrint(g_emu68DebugText), 0);
@@ -97,7 +104,7 @@ void Emu68_ReportLineFError() {
     return;
 }
 
-std::intptr_t Emu68_ReportRuntimeError(const char *reason, int instructionWord) {
+std::intptr_t ReportRuntimeError(const char *reason, int instructionWord) {
 
     std::snprintf(g_emu68DebugText, sizeof(g_emu68DebugText), "emu68 runtime error [%s];%d\n", reason, instructionWord);
     (Harrier_DebugPrint(g_emu68DebugText), 0);
@@ -105,24 +112,24 @@ std::intptr_t Emu68_ReportRuntimeError(const char *reason, int instructionWord) 
     return (Harrier_DebugPrint(g_emu68DebugText), 0);
 }
 
-std::intptr_t Emu68_ResetOtherCpu() {
+std::intptr_t ResetOtherCpu() {
     reg68_ctx_t *context3;
 
     context3 = reg68;
     if (reg68 == &g_reg68_ctx) {
         reg68 = &g_reg68_ctx_2;
-        Emu68_ResetContext();
+        ResetContext();
     }
     if (context3 == &g_reg68_ctx_2) {
         reg68 = &g_reg68_ctx;
-        Emu68_ResetContext();
+        ResetContext();
     }
     reg68 = context3;
     std::snprintf(g_emu68DebugText, sizeof(g_emu68DebugText), "reset instruction encount\n");
     return (Harrier_DebugPrint(g_emu68DebugText), 0);
 }
 
-std::intptr_t Emu68_FetchWord() {
+std::intptr_t FetchWord() {
     reg68_page_map_entry_t *page0;
     int64_t result;
     reg68_ctx_t *context2;
@@ -135,7 +142,7 @@ std::intptr_t Emu68_FetchWord() {
     return result;
 }
 
-std::intptr_t Emu68_DecodeBriefIndex(uint16_t operand) {
+std::intptr_t DecodeBriefIndex(uint16_t operand) {
     if ((operand & 0x8000u) == 0) {
         if ((operand & 0x800) != 0)
             return reg68->d[((uint64_t)operand >> 12) & 7] + (int8_t)operand;
@@ -148,7 +155,7 @@ std::intptr_t Emu68_DecodeBriefIndex(uint16_t operand) {
     }
 }
 
-std::intptr_t Emu68_ReportAddressModeError(int operand) {
+std::intptr_t ReportAddressModeError(int operand) {
 
     std::snprintf(g_emu68DebugText, sizeof(g_emu68DebugText), "emu68 runtime error [%s];%d\n", "ADR", operand);
     (Harrier_DebugPrint(g_emu68DebugText), 0);
@@ -157,11 +164,11 @@ std::intptr_t Emu68_ReportAddressModeError(int operand) {
     return 0;
 }
 
-std::intptr_t Emu68_ReadAddressRegister(int operand) {
+std::intptr_t ReadAddressRegister(int operand) {
     return reg68->a[operand];
 }
 
-std::intptr_t Emu68_AddressDisplacement(int operand) {
+std::intptr_t AddressDisplacement(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int16_t value3;
@@ -176,7 +183,7 @@ std::intptr_t Emu68_AddressDisplacement(int operand) {
     return context4->a[value1] + value3;
 }
 
-std::intptr_t Emu68_AddressIndexed(int operand) {
+std::intptr_t AddressIndexed(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint16_t value3;
@@ -189,11 +196,11 @@ std::intptr_t Emu68_AddressIndexed(int operand) {
     context4 = reg68;
     ++reg68->bus_word_count;
     context4->pc += 2;
-    value5 = Emu68_DecodeBriefIndex(value3);
+    value5 = DecodeBriefIndex(value3);
     return (unsigned int)(reg68->a[value1] + value5);
 }
 
-std::intptr_t Emu68_AddressExtended(int operand) {
+std::intptr_t AddressExtended(int operand) {
 
     uint32_t result;
     uint32_t value4;
@@ -233,7 +240,7 @@ std::intptr_t Emu68_AddressExtended(int operand) {
             context7 = reg68;
             ++reg68->bus_word_count;
             context7->pc += 2;
-            return value4 + Emu68_DecodeBriefIndex(value6);
+            return value4 + DecodeBriefIndex(value6);
         default:
             std::snprintf(g_emu68DebugText, sizeof(g_emu68DebugText), "emu68 runtime error [%s];%d\n", "ADR", operand);
             (Harrier_DebugPrint(g_emu68DebugText), 0);
@@ -252,7 +259,7 @@ std::intptr_t Emu68_AddressExtended(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReportByteReadModeError(int operand) {
+std::intptr_t ReportByteReadModeError(int operand) {
 
     std::snprintf(g_emu68DebugText, sizeof(g_emu68DebugText), "emu68 runtime error [%s];%d\n", "ADR", operand);
     (Harrier_DebugPrint(g_emu68DebugText), 0);
@@ -261,11 +268,11 @@ std::intptr_t Emu68_ReportByteReadModeError(int operand) {
     return 0;
 }
 
-std::intptr_t Emu68_ReadDataByte(int operand) {
+std::intptr_t ReadDataByte(int operand) {
     return static_cast<uint8_t>(reg68->d[operand]);
 }
 
-std::intptr_t Emu68_ReadIndirectByte(int operand) {
+std::intptr_t ReadIndirectByte(int operand) {
     reg68_page_map_entry_t *page1;
     int64_t result;
 
@@ -275,7 +282,7 @@ std::intptr_t Emu68_ReadIndirectByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadPostincrementByte(int operand) {
+std::intptr_t ReadPostincrementByte(int operand) {
     int64_t value2;
     reg68_page_map_entry_t *page3;
     int64_t result;
@@ -290,7 +297,7 @@ std::intptr_t Emu68_ReadPostincrementByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadPredecrementByte(int operand) {
+std::intptr_t ReadPredecrementByte(int operand) {
     reg68_ctx_t *context1;
     uint32_t *value2;
     reg68_page_map_entry_t *page3;
@@ -305,7 +312,7 @@ std::intptr_t Emu68_ReadPredecrementByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadDisplacementByte(int operand) {
+std::intptr_t ReadDisplacementByte(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int16_t value3;
@@ -325,7 +332,7 @@ std::intptr_t Emu68_ReadDisplacementByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadIndexedByte(int operand) {
+std::intptr_t ReadIndexedByte(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint16_t value3;
@@ -342,7 +349,7 @@ std::intptr_t Emu68_ReadIndexedByte(int operand) {
     context4 = reg68;
     ++reg68->bus_word_count;
     context4->pc += 2;
-    value5 = Emu68_DecodeBriefIndex(value3);
+    value5 = DecodeBriefIndex(value3);
     value7 = reg68->a[value1] + value5;
     page8 = &reg68->map[static_cast<uint8_t>((value7) >> 16)];
     result = page8->read8(page8->base + (value7 & page8->mask));
@@ -350,7 +357,7 @@ std::intptr_t Emu68_ReadIndexedByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadExtendedByte(int operand) {
+std::intptr_t ReadExtendedByte(int operand) {
 
     int8_t result;
     reg68_page_map_entry_t *page4;
@@ -414,7 +421,7 @@ std::intptr_t Emu68_ReadExtendedByte(int operand) {
         context9 = reg68;
         ++reg68->bus_word_count;
         context9->pc += 2;
-        value10 = value6 + Emu68_DecodeBriefIndex(value8);
+        value10 = value6 + DecodeBriefIndex(value8);
         page12 = &reg68->map[static_cast<uint8_t>((value10) >> 16)];
         value13 = value10 & page12->mask;
     LABEL_9:
@@ -438,15 +445,15 @@ std::intptr_t Emu68_ReadExtendedByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadDataWord(int operand) {
+std::intptr_t ReadDataWord(int operand) {
     return static_cast<uint16_t>(reg68->d[operand]);
 }
 
-std::intptr_t Emu68_ReadAddressWord(int operand) {
+std::intptr_t ReadAddressWord(int operand) {
     return static_cast<uint16_t>(reg68->a[operand]);
 }
 
-std::intptr_t Emu68_ReadIndirectWord(int operand) {
+std::intptr_t ReadIndirectWord(int operand) {
     reg68_page_map_entry_t *page1;
     int64_t result;
 
@@ -456,7 +463,7 @@ std::intptr_t Emu68_ReadIndirectWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadPostincrementWord(int operand) {
+std::intptr_t ReadPostincrementWord(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int64_t result;
@@ -471,7 +478,7 @@ std::intptr_t Emu68_ReadPostincrementWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadPredecrementWord(int operand) {
+std::intptr_t ReadPredecrementWord(int operand) {
     int64_t value1;
     reg68_ctx_t *context2;
     reg68_page_map_entry_t *page3;
@@ -486,7 +493,7 @@ std::intptr_t Emu68_ReadPredecrementWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadDisplacementWord(int operand) {
+std::intptr_t ReadDisplacementWord(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int16_t value3;
@@ -506,7 +513,7 @@ std::intptr_t Emu68_ReadDisplacementWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadIndexedWord(int operand) {
+std::intptr_t ReadIndexedWord(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint16_t value3;
@@ -523,7 +530,7 @@ std::intptr_t Emu68_ReadIndexedWord(int operand) {
     context4 = reg68;
     ++reg68->bus_word_count;
     context4->pc += 2;
-    value5 = Emu68_DecodeBriefIndex(value3);
+    value5 = DecodeBriefIndex(value3);
     value7 = reg68->a[value1] + value5;
     page8 = &reg68->map[static_cast<uint8_t>((value7) >> 16)];
     result = page8->read16(page8->base + (value7 & page8->mask));
@@ -531,7 +538,7 @@ std::intptr_t Emu68_ReadIndexedWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadExtendedWord(int operand) {
+std::intptr_t ReadExtendedWord(int operand) {
 
     int64_t result;
     reg68_page_map_entry_t *page4;
@@ -595,7 +602,7 @@ std::intptr_t Emu68_ReadExtendedWord(int operand) {
         context9 = reg68;
         ++reg68->bus_word_count;
         context9->pc += 2;
-        value10 = value6 + Emu68_DecodeBriefIndex(value8);
+        value10 = value6 + DecodeBriefIndex(value8);
         page12 = &reg68->map[static_cast<uint8_t>((value10) >> 16)];
         value13 = value10 & page12->mask;
     LABEL_10:
@@ -619,11 +626,11 @@ std::intptr_t Emu68_ReadExtendedWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadDataLong(int operand) {
+std::intptr_t ReadDataLong(int operand) {
     return reg68->d[operand];
 }
 
-std::intptr_t Emu68_ReadIndirectLong(int operand) {
+std::intptr_t ReadIndirectLong(int operand) {
     reg68_page_map_entry_t *page1;
     int64_t result;
 
@@ -633,7 +640,7 @@ std::intptr_t Emu68_ReadIndirectLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadPostincrementLong(int operand) {
+std::intptr_t ReadPostincrementLong(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int64_t result;
@@ -648,7 +655,7 @@ std::intptr_t Emu68_ReadPostincrementLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadPredecrementLong(int operand) {
+std::intptr_t ReadPredecrementLong(int operand) {
     int64_t value1;
     reg68_ctx_t *context2;
     reg68_page_map_entry_t *page3;
@@ -663,7 +670,7 @@ std::intptr_t Emu68_ReadPredecrementLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadDisplacementLong(int operand) {
+std::intptr_t ReadDisplacementLong(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int16_t value3;
@@ -683,7 +690,7 @@ std::intptr_t Emu68_ReadDisplacementLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadIndexedLong(int operand) {
+std::intptr_t ReadIndexedLong(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint16_t value3;
@@ -700,7 +707,7 @@ std::intptr_t Emu68_ReadIndexedLong(int operand) {
     context4 = reg68;
     ++reg68->bus_word_count;
     context4->pc += 2;
-    value5 = Emu68_DecodeBriefIndex(value3);
+    value5 = DecodeBriefIndex(value3);
     value7 = reg68->a[value1] + value5;
     page8 = &reg68->map[static_cast<uint8_t>((value7) >> 16)];
     result = page8->read32(page8->base + (value7 & page8->mask));
@@ -708,7 +715,7 @@ std::intptr_t Emu68_ReadIndexedLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadExtendedLong(int operand) {
+std::intptr_t ReadExtendedLong(int operand) {
 
     int64_t result;
     reg68_page_map_entry_t *page4;
@@ -772,7 +779,7 @@ std::intptr_t Emu68_ReadExtendedLong(int operand) {
         context9 = reg68;
         ++reg68->bus_word_count;
         context9->pc += 2;
-        value10 = value6 + Emu68_DecodeBriefIndex(value8);
+        value10 = value6 + DecodeBriefIndex(value8);
         page12 = &reg68->map[static_cast<uint8_t>((value10) >> 16)];
         value13 = value10 & page12->mask;
     LABEL_10:
@@ -796,7 +803,7 @@ std::intptr_t Emu68_ReadExtendedLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyIndirectByte(int operand) {
+std::intptr_t ReadModifyIndirectByte(int operand) {
     int64_t value1;
     int64_t result;
 
@@ -807,7 +814,7 @@ std::intptr_t Emu68_ReadModifyIndirectByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyPredecrementByte(int operand) {
+std::intptr_t ReadModifyPredecrementByte(int operand) {
     reg68_ctx_t *context1;
     uint32_t *value2;
     int64_t value3;
@@ -823,7 +830,7 @@ std::intptr_t Emu68_ReadModifyPredecrementByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyDisplacementByte(int operand) {
+std::intptr_t ReadModifyDisplacementByte(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int16_t value3;
@@ -844,7 +851,7 @@ std::intptr_t Emu68_ReadModifyDisplacementByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyIndexedByte(int operand) {
+std::intptr_t ReadModifyIndexedByte(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint16_t value3;
@@ -860,7 +867,7 @@ std::intptr_t Emu68_ReadModifyIndexedByte(int operand) {
     context4 = reg68;
     ++reg68->bus_word_count;
     context4->pc += 2;
-    value5 = Emu68_DecodeBriefIndex(value3);
+    value5 = DecodeBriefIndex(value3);
     g_emu68_ea = reg68->a[value1] + value5;
     page7 = &reg68->map[static_cast<uint8_t>((g_emu68_ea) >> 16)];
     result = page7->read8(page7->base + (g_emu68_ea & page7->mask));
@@ -868,7 +875,7 @@ std::intptr_t Emu68_ReadModifyIndexedByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyExtendedByte(int operand) {
+std::intptr_t ReadModifyExtendedByte(int operand) {
 
     int8_t result;
     uint32_t value4;
@@ -929,7 +936,7 @@ std::intptr_t Emu68_ReadModifyExtendedByte(int operand) {
                 context7 = reg68;
                 ++reg68->bus_word_count;
                 context7->pc += 2;
-                g_emu68_ea = value4 + Emu68_DecodeBriefIndex(value6);
+                g_emu68_ea = value4 + DecodeBriefIndex(value6);
                 page9 = &reg68->map[static_cast<uint8_t>((g_emu68_ea) >> 16)];
                 value10 = g_emu68_ea & page9->mask;
             }
@@ -950,7 +957,7 @@ std::intptr_t Emu68_ReadModifyExtendedByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyIndirectWord(int operand) {
+std::intptr_t ReadModifyIndirectWord(int operand) {
     int64_t value1;
     int64_t result;
 
@@ -961,7 +968,7 @@ std::intptr_t Emu68_ReadModifyIndirectWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyPredecrementWord(int operand) {
+std::intptr_t ReadModifyPredecrementWord(int operand) {
     int64_t value1;
     reg68_ctx_t *context2;
     uint32_t value3;
@@ -978,7 +985,7 @@ std::intptr_t Emu68_ReadModifyPredecrementWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyDisplacementWord(int operand) {
+std::intptr_t ReadModifyDisplacementWord(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int16_t value3;
@@ -999,7 +1006,7 @@ std::intptr_t Emu68_ReadModifyDisplacementWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyIndexedWord(int operand) {
+std::intptr_t ReadModifyIndexedWord(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint16_t value3;
@@ -1015,7 +1022,7 @@ std::intptr_t Emu68_ReadModifyIndexedWord(int operand) {
     context4 = reg68;
     ++reg68->bus_word_count;
     context4->pc += 2;
-    value5 = Emu68_DecodeBriefIndex(value3);
+    value5 = DecodeBriefIndex(value3);
     g_emu68_ea = reg68->a[value1] + value5;
     page7 = &reg68->map[static_cast<uint8_t>((g_emu68_ea) >> 16)];
     result = page7->read16(page7->base + (g_emu68_ea & page7->mask));
@@ -1023,7 +1030,7 @@ std::intptr_t Emu68_ReadModifyIndexedWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyExtendedWord(int operand) {
+std::intptr_t ReadModifyExtendedWord(int operand) {
 
     int64_t result;
     uint32_t value4;
@@ -1076,7 +1083,7 @@ std::intptr_t Emu68_ReadModifyExtendedWord(int operand) {
             context7 = reg68;
             ++reg68->bus_word_count;
             context7->pc += 2;
-            g_emu68_ea = value4 + Emu68_DecodeBriefIndex(value6);
+            g_emu68_ea = value4 + DecodeBriefIndex(value6);
             page9 = &reg68->map[static_cast<uint8_t>((g_emu68_ea) >> 16)];
             value10 = g_emu68_ea & page9->mask;
             break;
@@ -1102,7 +1109,7 @@ std::intptr_t Emu68_ReadModifyExtendedWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyIndirectLong(int operand) {
+std::intptr_t ReadModifyIndirectLong(int operand) {
     int64_t value1;
     int64_t result;
 
@@ -1113,7 +1120,7 @@ std::intptr_t Emu68_ReadModifyIndirectLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyPredecrementLong(int operand) {
+std::intptr_t ReadModifyPredecrementLong(int operand) {
     int64_t value1;
     reg68_ctx_t *context2;
     uint32_t value3;
@@ -1130,7 +1137,7 @@ std::intptr_t Emu68_ReadModifyPredecrementLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyDisplacementLong(int operand) {
+std::intptr_t ReadModifyDisplacementLong(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int16_t value3;
@@ -1151,7 +1158,7 @@ std::intptr_t Emu68_ReadModifyDisplacementLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyIndexedLong(int operand) {
+std::intptr_t ReadModifyIndexedLong(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint16_t value3;
@@ -1167,7 +1174,7 @@ std::intptr_t Emu68_ReadModifyIndexedLong(int operand) {
     context4 = reg68;
     ++reg68->bus_word_count;
     context4->pc += 2;
-    value5 = Emu68_DecodeBriefIndex(value3);
+    value5 = DecodeBriefIndex(value3);
     g_emu68_ea = reg68->a[value1] + value5;
     page7 = &reg68->map[static_cast<uint8_t>((g_emu68_ea) >> 16)];
     result = page7->read32(page7->base + (g_emu68_ea & page7->mask));
@@ -1175,7 +1182,7 @@ std::intptr_t Emu68_ReadModifyIndexedLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ReadModifyExtendedLong(int operand) {
+std::intptr_t ReadModifyExtendedLong(int operand) {
 
     int64_t result;
     uint32_t value4;
@@ -1228,7 +1235,7 @@ std::intptr_t Emu68_ReadModifyExtendedLong(int operand) {
             context7 = reg68;
             ++reg68->bus_word_count;
             context7->pc += 2;
-            g_emu68_ea = value4 + Emu68_DecodeBriefIndex(value6);
+            g_emu68_ea = value4 + DecodeBriefIndex(value6);
             page9 = &reg68->map[static_cast<uint8_t>((g_emu68_ea) >> 16)];
             value10 = g_emu68_ea & page9->mask;
             break;
@@ -1254,7 +1261,7 @@ std::intptr_t Emu68_ReadModifyExtendedLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_WriteDataByte(int index, uint32_t value) {
+std::intptr_t WriteDataByte(int index, uint32_t value) {
     reg68_ctx_t *result;
 
     result = reg68;
@@ -1262,7 +1269,7 @@ std::intptr_t Emu68_WriteDataByte(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_ReportWriteModeError(int operand) {
+std::intptr_t ReportWriteModeError(int operand) {
 
     std::snprintf(g_emu68DebugText, sizeof(g_emu68DebugText), "emu68 runtime error [%s];%d\n", "ADR", operand);
     (Harrier_DebugPrint(g_emu68DebugText), 0);
@@ -1270,7 +1277,7 @@ std::intptr_t Emu68_ReportWriteModeError(int operand) {
     return (Harrier_DebugPrint(g_emu68DebugText), 0);
 }
 
-std::intptr_t Emu68_WriteEffectiveByte(int index, uint32_t value) {
+std::intptr_t WriteEffectiveByte(int index, uint32_t value) {
     reg68_page_map_entry_t *page0;
     reg68_ctx_t *result;
 
@@ -1281,7 +1288,7 @@ std::intptr_t Emu68_WriteEffectiveByte(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_WritePostincrementByte(int index, uint32_t value) {
+std::intptr_t WritePostincrementByte(int index, uint32_t value) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint32_t *value3;
@@ -1297,7 +1304,7 @@ std::intptr_t Emu68_WritePostincrementByte(int index, uint32_t value) {
     return result;
 }
 
-std::intptr_t Emu68_WriteExtendedByte(int index, uint32_t value) {
+std::intptr_t WriteExtendedByte(int index, uint32_t value) {
 
     reg68_ctx_t *result;
     reg68_page_map_entry_t *page5;
@@ -1316,7 +1323,7 @@ std::intptr_t Emu68_WriteExtendedByte(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_WriteDataWord(int index, uint32_t value) {
+std::intptr_t WriteDataWord(int index, uint32_t value) {
     reg68_ctx_t *result;
 
     result = reg68;
@@ -1324,7 +1331,7 @@ std::intptr_t Emu68_WriteDataWord(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_WriteAddressWord(int index, uint32_t value) {
+std::intptr_t WriteAddressWord(int index, uint32_t value) {
     reg68_ctx_t *result;
 
     result = reg68;
@@ -1332,7 +1339,7 @@ std::intptr_t Emu68_WriteAddressWord(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_WriteEffectiveWord(int index, uint32_t value) {
+std::intptr_t WriteEffectiveWord(int index, uint32_t value) {
     reg68_page_map_entry_t *page0;
     reg68_ctx_t *result;
 
@@ -1343,7 +1350,7 @@ std::intptr_t Emu68_WriteEffectiveWord(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_WritePostincrementWord(int index, uint32_t value) {
+std::intptr_t WritePostincrementWord(int index, uint32_t value) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int64_t result;
@@ -1358,7 +1365,7 @@ std::intptr_t Emu68_WritePostincrementWord(int index, uint32_t value) {
     return result;
 }
 
-std::intptr_t Emu68_WriteExtendedWord(int index, uint32_t value) {
+std::intptr_t WriteExtendedWord(int index, uint32_t value) {
 
     reg68_ctx_t *result;
     reg68_page_map_entry_t *map;
@@ -1377,7 +1384,7 @@ std::intptr_t Emu68_WriteExtendedWord(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_WriteDataLong(int index, uint32_t value) {
+std::intptr_t WriteDataLong(int index, uint32_t value) {
     reg68_ctx_t *result;
 
     result = reg68;
@@ -1385,7 +1392,7 @@ std::intptr_t Emu68_WriteDataLong(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_WriteAddressLong(int index, uint32_t value) {
+std::intptr_t WriteAddressLong(int index, uint32_t value) {
     reg68_ctx_t *result;
 
     result = reg68;
@@ -1393,7 +1400,7 @@ std::intptr_t Emu68_WriteAddressLong(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_WriteEffectiveLong(int index, uint32_t value) {
+std::intptr_t WriteEffectiveLong(int index, uint32_t value) {
     reg68_page_map_entry_t *page0;
     reg68_ctx_t *result;
 
@@ -1404,7 +1411,7 @@ std::intptr_t Emu68_WriteEffectiveLong(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_WritePostincrementLong(int index, uint32_t value) {
+std::intptr_t WritePostincrementLong(int index, uint32_t value) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int64_t result;
@@ -1419,7 +1426,7 @@ std::intptr_t Emu68_WritePostincrementLong(int index, uint32_t value) {
     return result;
 }
 
-std::intptr_t Emu68_WriteExtendedLong(int index, uint32_t value) {
+std::intptr_t WriteExtendedLong(int index, uint32_t value) {
 
     reg68_ctx_t *result;
     reg68_page_map_entry_t *page4;
@@ -1438,12 +1445,12 @@ std::intptr_t Emu68_WriteExtendedLong(int index, uint32_t value) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_SetEffectiveIndirect(int operand) {
+std::intptr_t SetEffectiveIndirect(int operand) {
     g_emu68_ea = reg68->a[operand];
     return reinterpret_cast<std::intptr_t>(reg68);
 }
 
-std::intptr_t Emu68_SetEffectivePredecrementByte(int operand) {
+std::intptr_t SetEffectivePredecrementByte(int operand) {
     uint32_t *value1;
     int64_t result;
 
@@ -1454,7 +1461,7 @@ std::intptr_t Emu68_SetEffectivePredecrementByte(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_SetEffectiveDisplacement(int operand) {
+std::intptr_t SetEffectiveDisplacement(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     int16_t value3;
@@ -1472,7 +1479,7 @@ std::intptr_t Emu68_SetEffectiveDisplacement(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_SetEffectiveIndexed(int operand) {
+std::intptr_t SetEffectiveIndexed(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint16_t value3;
@@ -1487,13 +1494,13 @@ std::intptr_t Emu68_SetEffectiveIndexed(int operand) {
     context4 = reg68;
     ++reg68->bus_word_count;
     context4->pc += 2;
-    value5 = Emu68_DecodeBriefIndex(value3);
+    value5 = DecodeBriefIndex(value3);
     result = (unsigned int)(reg68->a[value1] + value5);
     g_emu68_ea = result;
     return result;
 }
 
-std::intptr_t Emu68_SetEffectiveExtended(int operand) {
+std::intptr_t SetEffectiveExtended(int operand) {
 
     uint32_t result;
     uint32_t value4;
@@ -1536,7 +1543,7 @@ std::intptr_t Emu68_SetEffectiveExtended(int operand) {
             context7 = reg68;
             ++reg68->bus_word_count;
             context7->pc += 2;
-            result = value4 + Emu68_DecodeBriefIndex(value6);
+            result = value4 + DecodeBriefIndex(value6);
             g_emu68_ea = result;
             break;
         default:
@@ -1557,7 +1564,7 @@ std::intptr_t Emu68_SetEffectiveExtended(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_SetEffectivePredecrementWord(int operand) {
+std::intptr_t SetEffectivePredecrementWord(int operand) {
     reg68_ctx_t *context1;
     int64_t result;
 
@@ -1568,7 +1575,7 @@ std::intptr_t Emu68_SetEffectivePredecrementWord(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_SetEffectivePredecrementLong(int operand) {
+std::intptr_t SetEffectivePredecrementLong(int operand) {
     reg68_ctx_t *context1;
     int64_t result;
 
@@ -1579,7 +1586,7 @@ std::intptr_t Emu68_SetEffectivePredecrementLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_CompareFlags(int value, int destination, int signMask) {
+std::intptr_t CompareFlags(int value, int destination, int signMask) {
     reg68_ctx_t *context3;
     int64_t result;
     int8_t value5;
@@ -1587,7 +1594,7 @@ std::intptr_t Emu68_CompareFlags(int value, int destination, int signMask) {
     context3 = reg68;
     reg68->sr.raw[0] &= 0xF0u;
     result = 0;
-    const int difference = Emu68_Subtract32(destination, value);
+    const int difference = Subtract32(destination, value);
     value5 = ((signMask & difference) != 0 ? 8 : 0) | (((value & difference | ~destination & (value | difference)) & signMask) != 0) |
         ((signMask & (value & difference & ~destination | destination & ~(value | difference))) != 0 ? 2 : 0);
     if (destination == value)
@@ -1596,7 +1603,7 @@ std::intptr_t Emu68_CompareFlags(int value, int destination, int signMask) {
     return result;
 }
 
-std::intptr_t Emu68_PushLong(unsigned int operand) {
+std::intptr_t PushLong(unsigned int operand) {
     reg68_ctx_t *context1;
     reg68_page_map_entry_t *page2;
     reg68_ctx_t *result;
@@ -1610,7 +1617,7 @@ std::intptr_t Emu68_PushLong(unsigned int operand) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_PopWord() {
+std::intptr_t PopWord() {
     reg68_page_map_entry_t *page0;
     int64_t result;
     reg68_ctx_t *context2;
@@ -1623,7 +1630,7 @@ std::intptr_t Emu68_PopWord() {
     return result;
 }
 
-std::intptr_t Emu68_PopLong() {
+std::intptr_t PopLong() {
     reg68_page_map_entry_t *page0;
     int64_t result;
     reg68_ctx_t *context2;
@@ -1636,19 +1643,19 @@ std::intptr_t Emu68_PopLong() {
     return result;
 }
 
-std::intptr_t Emu68_SetStatusRegister(reg68_sr_bits_t operand) {
+std::intptr_t SetStatusRegister(reg68_sr_bits_t operand) {
     reg68_ctx_t *context1;
 
     context1 = reg68;
     if ((reg68->sr.raw[1] & 0x20) == 0) {
-        emu68_HandleInterruptRequest(8u);
+        HandleInterruptRequest(8u);
         context1 = reg68;
     }
     context1->sr = operand;
     return operand.bits >> 8;
 }
 
-std::intptr_t Emu68_AddToEffectiveByte(int8_t operand) {
+std::intptr_t AddToEffectiveByte(int8_t operand) {
     int8_t value5;
     reg68_ctx_t *context6;
     int value7;
@@ -1673,7 +1680,7 @@ std::intptr_t Emu68_AddToEffectiveByte(int8_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_AddToEffectiveWord(int16_t operand) {
+std::intptr_t AddToEffectiveWord(int16_t operand) {
     int16_t value2;
     reg68_ctx_t *context3;
     int value4;
@@ -1698,20 +1705,20 @@ std::intptr_t Emu68_AddToEffectiveWord(int16_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_AddToEffectiveLong(int operand) {
+std::intptr_t AddToEffectiveLong(int operand) {
     int value2;
     int value3;
     reg68_ctx_t *context4;
     int64_t result;
 
     value2 = kEmu68_ReadModifyLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-    value3 = Emu68_Add32(value2, operand);
-    kEmu68_WriteLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7), (unsigned int)(Emu68_Add32(value2, operand)));
+    value3 = Add32(value2, operand);
+    kEmu68_WriteLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7), (unsigned int)(Add32(value2, operand)));
     context4 = reg68;
     reg68->sr.raw[0] &= 0xECu;
     if ((operand & value2 & ~value3 | value3 & ~(operand | value2)) < 0)
         context4->sr.raw[0] |= 2u;
-    if ((operand & value2 | ~(Emu68_Add32(value2, operand)) & (operand | value2)) < 0)
+    if ((operand & value2 | ~(Add32(value2, operand)) & (operand | value2)) < 0)
         context4->sr.raw[0] |= 0x11u;
     context4->sr.raw[0] &= 0xF3u;
     result = 0;
@@ -1721,7 +1728,7 @@ std::intptr_t Emu68_AddToEffectiveLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_SubtractFromEffectiveByte(int8_t operand) {
+std::intptr_t SubtractFromEffectiveByte(int8_t operand) {
     int8_t value5;
     reg68_ctx_t *context6;
     int8_t value7;
@@ -1750,7 +1757,7 @@ std::intptr_t Emu68_SubtractFromEffectiveByte(int8_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_SubtractFromEffectiveWord(int16_t operand) {
+std::intptr_t SubtractFromEffectiveWord(int16_t operand) {
     int16_t value2;
     reg68_ctx_t *context3;
     int16_t value4;
@@ -1760,11 +1767,11 @@ std::intptr_t Emu68_SubtractFromEffectiveWord(int16_t operand) {
     int64_t result;
 
     value2 = kEmu68_ReadModifyWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-    kEmu68_WriteWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7, Emu68_Subtract32(value2, operand));
+    kEmu68_WriteWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7, Subtract32(value2, operand));
     context3 = reg68;
     value4 = value2;
-    value5 = (int16_t)(Emu68_Subtract32(value2, operand));
-    value6 = (Emu68_Subtract32(value2, operand)) | operand;
+    value5 = (int16_t)(Subtract32(value2, operand));
+    value6 = (Subtract32(value2, operand)) | operand;
     value7 = ~value2;
     reg68->sr.raw[0] &= 0xECu;
     if ((((uint16_t)(value4 & ~(value5 | operand)) | (uint16_t)(value5 & operand & value7)) & 0x8000) != 0)
@@ -1779,7 +1786,7 @@ std::intptr_t Emu68_SubtractFromEffectiveWord(int16_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_SubtractFromEffectiveLong(int operand) {
+std::intptr_t SubtractFromEffectiveLong(int operand) {
     int value2;
     int value3;
     int value4;
@@ -1787,9 +1794,9 @@ std::intptr_t Emu68_SubtractFromEffectiveLong(int operand) {
     int64_t result;
 
     value2 = kEmu68_ReadModifyLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-    value3 = Emu68_Subtract32(value2, operand);
+    value3 = Subtract32(value2, operand);
     value4 = value2;
-    kEmu68_WriteLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7), (unsigned int)(Emu68_Subtract32(value2, operand)));
+    kEmu68_WriteLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7), (unsigned int)(Subtract32(value2, operand)));
     context5 = reg68;
     reg68->sr.raw[0] &= 0xECu;
     if ((operand & value3 & ~value4 | value4 & ~(operand | value3)) < 0)
@@ -1804,7 +1811,7 @@ std::intptr_t Emu68_SubtractFromEffectiveLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_AddDataToEffectiveByte() {
+std::intptr_t AddDataToEffectiveByte() {
     int8_t value4;
     int8_t value5;
     reg68_ctx_t *context6;
@@ -1831,7 +1838,7 @@ std::intptr_t Emu68_AddDataToEffectiveByte() {
     return result;
 }
 
-std::intptr_t Emu68_AddDataToEffectiveWord() {
+std::intptr_t AddDataToEffectiveWord() {
     int16_t value0;
     int16_t value1;
     reg68_ctx_t *context2;
@@ -1858,7 +1865,7 @@ std::intptr_t Emu68_AddDataToEffectiveWord() {
     return result;
 }
 
-std::intptr_t Emu68_AddDataToEffectiveLong() {
+std::intptr_t AddDataToEffectiveLong() {
     uint32_t value0;
     int value1;
     int value2;
@@ -1883,7 +1890,7 @@ std::intptr_t Emu68_AddDataToEffectiveLong() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractDataFromEffectiveByte() {
+std::intptr_t SubtractDataFromEffectiveByte() {
     int8_t value4;
     int8_t value5;
     reg68_ctx_t *context6;
@@ -1914,7 +1921,7 @@ std::intptr_t Emu68_SubtractDataFromEffectiveByte() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractDataFromEffectiveWord() {
+std::intptr_t SubtractDataFromEffectiveWord() {
     int16_t value0;
     int16_t value1;
     reg68_ctx_t *context2;
@@ -1945,7 +1952,7 @@ std::intptr_t Emu68_SubtractDataFromEffectiveWord() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractDataFromEffectiveLong() {
+std::intptr_t SubtractDataFromEffectiveLong() {
     uint32_t value0;
     int value1;
     int value2;
@@ -1972,7 +1979,7 @@ std::intptr_t Emu68_SubtractDataFromEffectiveLong() {
     return result;
 }
 
-std::intptr_t Emu68_AddEffectiveToDataByte() {
+std::intptr_t AddEffectiveToDataByte() {
     uint64_t value4;
     int8_t value5;
     reg68_ctx_t *context6;
@@ -2001,7 +2008,7 @@ std::intptr_t Emu68_AddEffectiveToDataByte() {
     return result;
 }
 
-std::intptr_t Emu68_AddEffectiveToDataWord() {
+std::intptr_t AddEffectiveToDataWord() {
     uint64_t value0;
     int16_t value1;
     reg68_ctx_t *context2;
@@ -2030,7 +2037,7 @@ std::intptr_t Emu68_AddEffectiveToDataWord() {
     return result;
 }
 
-std::intptr_t Emu68_AddEffectiveToDataLong() {
+std::intptr_t AddEffectiveToDataLong() {
     uint64_t value0;
     int value1;
     reg68_ctx_t *context2;
@@ -2059,7 +2066,7 @@ std::intptr_t Emu68_AddEffectiveToDataLong() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractEffectiveFromDataByte() {
+std::intptr_t SubtractEffectiveFromDataByte() {
     uint64_t value4;
     int8_t value5;
     reg68_ctx_t *context6;
@@ -2088,7 +2095,7 @@ std::intptr_t Emu68_SubtractEffectiveFromDataByte() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractEffectiveFromDataWord() {
+std::intptr_t SubtractEffectiveFromDataWord() {
     uint64_t value0;
     int16_t value1;
     reg68_ctx_t *context2;
@@ -2117,7 +2124,7 @@ std::intptr_t Emu68_SubtractEffectiveFromDataWord() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractEffectiveFromDataLong() {
+std::intptr_t SubtractEffectiveFromDataLong() {
     uint64_t value0;
     int value1;
     reg68_ctx_t *context2;
@@ -2146,7 +2153,7 @@ std::intptr_t Emu68_SubtractEffectiveFromDataLong() {
     return result;
 }
 
-std::intptr_t Emu68_AndEffectiveByte(int8_t operand) {
+std::intptr_t AndEffectiveByte(int8_t operand) {
     int8_t value4;
     reg68_ctx_t *context5;
     int64_t result;
@@ -2162,7 +2169,7 @@ std::intptr_t Emu68_AndEffectiveByte(int8_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_AndEffectiveWord(int16_t operand) {
+std::intptr_t AndEffectiveWord(int16_t operand) {
     int16_t value1;
     reg68_ctx_t *context2;
     int64_t result;
@@ -2178,7 +2185,7 @@ std::intptr_t Emu68_AndEffectiveWord(int16_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_AndEffectiveLong(int operand) {
+std::intptr_t AndEffectiveLong(int operand) {
     int value1;
     reg68_ctx_t *context2;
     int64_t result;
@@ -2194,7 +2201,7 @@ std::intptr_t Emu68_AndEffectiveLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_OrEffectiveByte(int8_t operand) {
+std::intptr_t OrEffectiveByte(int8_t operand) {
     int8_t value4;
     reg68_ctx_t *context5;
     int64_t result;
@@ -2210,7 +2217,7 @@ std::intptr_t Emu68_OrEffectiveByte(int8_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_OrEffectiveWord(int16_t operand) {
+std::intptr_t OrEffectiveWord(int16_t operand) {
     int16_t value1;
     reg68_ctx_t *context2;
     int64_t result;
@@ -2226,7 +2233,7 @@ std::intptr_t Emu68_OrEffectiveWord(int16_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_OrEffectiveLong(int operand) {
+std::intptr_t OrEffectiveLong(int operand) {
     int value1;
     reg68_ctx_t *context2;
     int64_t result;
@@ -2242,7 +2249,7 @@ std::intptr_t Emu68_OrEffectiveLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_XorEffectiveByte(int8_t operand) {
+std::intptr_t XorEffectiveByte(int8_t operand) {
     int8_t value4;
     reg68_ctx_t *context5;
     int64_t result;
@@ -2258,7 +2265,7 @@ std::intptr_t Emu68_XorEffectiveByte(int8_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_XorEffectiveWord(int16_t operand) {
+std::intptr_t XorEffectiveWord(int16_t operand) {
     int16_t value1;
     reg68_ctx_t *context2;
     int64_t result;
@@ -2274,7 +2281,7 @@ std::intptr_t Emu68_XorEffectiveWord(int16_t operand) {
     return result;
 }
 
-std::intptr_t Emu68_XorEffectiveLong(int operand) {
+std::intptr_t XorEffectiveLong(int operand) {
     int value1;
     reg68_ctx_t *context2;
     int64_t result;
@@ -2290,7 +2297,7 @@ std::intptr_t Emu68_XorEffectiveLong(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_NegateEffectiveByte() {
+std::intptr_t NegateEffectiveByte() {
     int8_t value4;
     reg68_sr_bits_t *p_sr;
     int8_t value6;
@@ -2313,7 +2320,7 @@ std::intptr_t Emu68_NegateEffectiveByte() {
     return result;
 }
 
-std::intptr_t Emu68_NegateEffectiveWord() {
+std::intptr_t NegateEffectiveWord() {
     uint16_t value0;
     reg68_sr_bits_t *p_sr;
     int8_t value2;
@@ -2321,22 +2328,22 @@ std::intptr_t Emu68_NegateEffectiveWord() {
     int8_t result;
 
     value0 = kEmu68_ReadModifyWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-    kEmu68_WriteWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7, Emu68_Subtract32(0, value0));
+    kEmu68_WriteWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7, Subtract32(0, value0));
     p_sr = &reg68->sr;
-    if (((uint16_t)Emu68_Subtract32(0, value0) & value0 & 0x8000) != 0)
+    if (((uint16_t)Subtract32(0, value0) & value0 & 0x8000) != 0)
         p_sr->raw[0] |= 2u;
     else
         p_sr->raw[0] &= ~2u;
     value2 = 0;
     if (!value0)
         value2 = 4;
-    value3 = value2 | (8 * ((Emu68_Subtract32(0, value0) & 0x8000u) != 0));
+    value3 = value2 | (8 * ((Subtract32(0, value0) & 0x8000u) != 0));
     result = p_sr->raw[0] & 0xF3;
     p_sr->raw[0] = result | value3 | 0x11;
     return result;
 }
 
-std::intptr_t Emu68_NegateEffectiveLong() {
+std::intptr_t NegateEffectiveLong() {
     int value0;
     int value1;
     int value2;
@@ -2346,9 +2353,9 @@ std::intptr_t Emu68_NegateEffectiveLong() {
     int8_t result;
 
     value0 = kEmu68_ReadModifyLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-    value1 = Emu68_Subtract32(0, value0);
+    value1 = Subtract32(0, value0);
     value2 = value0;
-    kEmu68_WriteLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7), (unsigned int)Emu68_Subtract32(0, value0));
+    kEmu68_WriteLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7), (unsigned int)Subtract32(0, value0));
     p_sr = &reg68->sr;
     if ((value1 & value2) >= 0)
         p_sr->raw[0] &= ~2u;
@@ -2363,7 +2370,7 @@ std::intptr_t Emu68_NegateEffectiveLong() {
     return result;
 }
 
-std::intptr_t Emu68_NegateExtendEffectiveByte() {
+std::intptr_t NegateExtendEffectiveByte() {
     int8_t value4;
     int8_t value5;
     reg68_sr_bits_t *result;
@@ -2393,7 +2400,7 @@ LABEL_8:
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_NegateExtendEffectiveWord() {
+std::intptr_t NegateExtendEffectiveWord() {
     uint16_t value0;
     uint16_t value1;
     reg68_sr_bits_t *result;
@@ -2423,14 +2430,14 @@ LABEL_8:
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_NegateExtendEffectiveLong() {
+std::intptr_t NegateExtendEffectiveLong() {
     int value0;
     int value1;
     reg68_sr_bits_t *result;
     bool value3;
 
     value0 = kEmu68_ReadModifyLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-    value1 = Emu68_Subtract32(0, Emu68_Add32(value0, (((uint8_t)reg68->sr.raw[0] >> 4) & 1)));
+    value1 = Subtract32(0, Add32(value0, (((uint8_t)reg68->sr.raw[0] >> 4) & 1)));
     kEmu68_WriteLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7), (unsigned int)value1);
     result = &reg68->sr;
     if ((value1 & value0) >= 0)
@@ -2453,7 +2460,7 @@ LABEL_8:
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_NotEffectiveByte() {
+std::intptr_t NotEffectiveByte() {
     int8_t value4;
     reg68_ctx_t *context5;
     int64_t result;
@@ -2469,7 +2476,7 @@ std::intptr_t Emu68_NotEffectiveByte() {
     return result;
 }
 
-std::intptr_t Emu68_NotEffectiveWord() {
+std::intptr_t NotEffectiveWord() {
     int16_t value0;
     reg68_ctx_t *context1;
     int64_t result;
@@ -2485,7 +2492,7 @@ std::intptr_t Emu68_NotEffectiveWord() {
     return result;
 }
 
-std::intptr_t Emu68_NotEffectiveLong() {
+std::intptr_t NotEffectiveLong() {
     signed int value0;
     reg68_ctx_t *context1;
     int64_t result;
@@ -2501,7 +2508,7 @@ std::intptr_t Emu68_NotEffectiveLong() {
     return result;
 }
 
-std::intptr_t Emu68_AddBcd() {
+std::intptr_t AddBcd() {
     uint8_t value4;
     uint8_t value5;
     int8_t value6;
@@ -2533,7 +2540,7 @@ std::intptr_t Emu68_AddBcd() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractBcd() {
+std::intptr_t SubtractBcd() {
     uint8_t value4;
     uint8_t value5;
     int8_t value6;
@@ -2565,7 +2572,7 @@ std::intptr_t Emu68_SubtractBcd() {
     return result;
 }
 
-std::intptr_t Emu68_NegateBcd() {
+std::intptr_t NegateBcd() {
     uint8_t value4;
     int8_t value5;
     int8_t value6;
@@ -2595,7 +2602,7 @@ std::intptr_t Emu68_NegateBcd() {
     return result;
 }
 
-std::intptr_t Emu68_AddExtendByte() {
+std::intptr_t AddExtendByte() {
     unsigned int value4;
     int8_t value5;
     int value6;
@@ -2632,7 +2639,7 @@ std::intptr_t Emu68_AddExtendByte() {
     return result;
 }
 
-std::intptr_t Emu68_AddExtendWord() {
+std::intptr_t AddExtendWord() {
     int16_t value4;
     unsigned int value5;
     int16_t value6;
@@ -2669,7 +2676,7 @@ std::intptr_t Emu68_AddExtendWord() {
     return result;
 }
 
-std::intptr_t Emu68_AddExtendLong() {
+std::intptr_t AddExtendLong() {
     int value0;
     int value1;
     int value2;
@@ -2681,7 +2688,7 @@ std::intptr_t Emu68_AddExtendLong() {
 
     value0 = kEmu68_CompareMemoryLongSource[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 1](g_emu68Instruction & 7);
     value1 = kEmu68_PredecrementLongDestination[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 1](((uint16_t)g_emu68Instruction >> 9) & 7);
-    value2 = Emu68_Add32(Emu68_Add32(value0, value1), (((uint8_t)reg68->sr.raw[0] >> 4) & 1));
+    value2 = Add32(Add32(value0, value1), (((uint8_t)reg68->sr.raw[0] >> 4) & 1));
     kEmu68_WriteLongPair[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 1](((uint16_t)g_emu68Instruction >> 9) & 7, value2);
     context3 = reg68;
     value4 = 0;
@@ -2698,7 +2705,7 @@ std::intptr_t Emu68_AddExtendLong() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractExtendByte() {
+std::intptr_t SubtractExtendByte() {
     unsigned int value4;
     int8_t value5;
     int value6;
@@ -2731,7 +2738,7 @@ std::intptr_t Emu68_SubtractExtendByte() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractExtendWord() {
+std::intptr_t SubtractExtendWord() {
     int16_t value4;
     unsigned int value5;
     int16_t value6;
@@ -2766,7 +2773,7 @@ std::intptr_t Emu68_SubtractExtendWord() {
     return result;
 }
 
-std::intptr_t Emu68_SubtractExtendLong() {
+std::intptr_t SubtractExtendLong() {
     int value0;
     int value1;
     int value2;
@@ -2778,7 +2785,7 @@ std::intptr_t Emu68_SubtractExtendLong() {
 
     value0 = kEmu68_CompareMemoryLongSource[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 1](g_emu68Instruction & 7);
     value1 = kEmu68_PredecrementLongDestination[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 1](((uint16_t)g_emu68Instruction >> 9) & 7);
-    value2 = Emu68_Subtract32(Emu68_Subtract32(value1, (((uint8_t)reg68->sr.raw[0] >> 4) & 1)), value0);
+    value2 = Subtract32(Subtract32(value1, (((uint8_t)reg68->sr.raw[0] >> 4) & 1)), value0);
     kEmu68_WriteLongPair[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 1](((uint16_t)g_emu68Instruction >> 9) & 7, value2);
     context3 = reg68;
     value4 = 0;
@@ -2795,7 +2802,7 @@ std::intptr_t Emu68_SubtractExtendLong() {
     return result;
 }
 
-std::intptr_t Emu68_CompareMemoryByte() {
+std::intptr_t CompareMemoryByte() {
     unsigned int value0;
     int8_t value1;
     reg68_ctx_t *context2;
@@ -2808,8 +2815,8 @@ std::intptr_t Emu68_CompareMemoryByte() {
     int8_t value9;
     int8_t result;
 
-    value0 = (int8_t)Emu68_ReadPostincrementByte(g_emu68Instruction & 7);
-    value1 = Emu68_ReadPostincrementByte(((uint16_t)g_emu68Instruction >> 9) & 7);
+    value0 = (int8_t)ReadPostincrementByte(g_emu68Instruction & 7);
+    value1 = ReadPostincrementByte(((uint16_t)g_emu68Instruction >> 9) & 7);
     context2 = reg68;
     value3 = value0 >> 7;
     reg68->sr.raw[0] &= 0xF0u;
@@ -2826,7 +2833,7 @@ std::intptr_t Emu68_CompareMemoryByte() {
     return result;
 }
 
-std::intptr_t Emu68_CompareMemoryWord() {
+std::intptr_t CompareMemoryWord() {
     int64_t value0;
     reg68_page_map_entry_t *page1;
     int16_t value2;
@@ -2855,7 +2862,7 @@ std::intptr_t Emu68_CompareMemoryWord() {
     value7 = page6->read16(page6->base + (context3->a[value5] & page6->mask));
     context8 = reg68;
     ++reg68->bus_word_count;
-    value9 = Emu68_Subtract32(value7, value4);
+    value9 = Subtract32(value7, value4);
     context8->a[value5] += 2;
     context8->sr.raw[0] &= 0xF0u;
     value10 = (unsigned int)~value7 >> 15;
@@ -2870,7 +2877,7 @@ std::intptr_t Emu68_CompareMemoryWord() {
     return result;
 }
 
-std::intptr_t Emu68_CompareMemoryLong() {
+std::intptr_t CompareMemoryLong() {
     int64_t value0;
     reg68_page_map_entry_t *page1;
     int value2;
@@ -2899,11 +2906,11 @@ std::intptr_t Emu68_CompareMemoryLong() {
     page6 = &context3->map[(uint8_t) static_cast<uint8_t>((context3->a[value5]) >> 16)];
     value7 = page6->read32(page6->base + (context3->a[value5] & page6->mask));
     context8 = reg68;
-    value9 = Emu68_Subtract32(value7, value4);
+    value9 = Subtract32(value7, value4);
     reg68->bus_word_count += 2;
     context8->a[value5] += 4;
     context8->sr.raw[0] &= 0xF0u;
-    value10 = (unsigned int)(Emu68_Subtract32(value7, value4)) >> 31;
+    value10 = (unsigned int)(Subtract32(value7, value4)) >> 31;
     value11 = value7 >= 0;
     value12 = (4 * (value9 < 0)) | (value4 < 0 && value7 >= 0 && value9 < 0 || value7 < 0 && value4 >= 0 && value9 >= 0);
     value13 = 0;
@@ -2915,7 +2922,7 @@ std::intptr_t Emu68_CompareMemoryLong() {
     return result;
 }
 
-std::intptr_t Emu68_ArithmeticShiftLeft(int value, int count, int signMask) {
+std::intptr_t ArithmeticShiftLeft(int value, int count, int signMask) {
     reg68_ctx_t *context3;
 
     context3 = reg68;
@@ -2929,7 +2936,7 @@ std::intptr_t Emu68_ArithmeticShiftLeft(int value, int count, int signMask) {
     return value;
 }
 
-std::intptr_t Emu68_LogicalShiftLeft(int value, int count, int signMask) {
+std::intptr_t LogicalShiftLeft(int value, int count, int signMask) {
     reg68_ctx_t *context3;
     unsigned int value4;
 
@@ -2946,7 +2953,7 @@ std::intptr_t Emu68_LogicalShiftLeft(int value, int count, int signMask) {
     return value4;
 }
 
-std::intptr_t Emu68_ArithmeticShiftRight(int value, int count, int signMask) {
+std::intptr_t ArithmeticShiftRight(int value, int count, int signMask) {
     reg68_ctx_t *context4;
 
     if (count) {
@@ -2963,7 +2970,7 @@ std::intptr_t Emu68_ArithmeticShiftRight(int value, int count, int signMask) {
     }
 }
 
-std::intptr_t Emu68_LogicalShiftRight(int value, int count, int signMask) {
+std::intptr_t LogicalShiftRight(int value, int count, int signMask) {
     int value3;
     reg68_sr_bits_t *p_sr;
 
@@ -2984,7 +2991,7 @@ std::intptr_t Emu68_LogicalShiftRight(int value, int count, int signMask) {
     }
 }
 
-std::intptr_t Emu68_RotateRight(int value, int count, int signMask) {
+std::intptr_t RotateRight(int value, int count, int signMask) {
     reg68_ctx_t *context3;
 
     context3 = reg68;
@@ -3011,7 +3018,7 @@ std::intptr_t Emu68_RotateRight(int value, int count, int signMask) {
     }
 }
 
-std::intptr_t Emu68_RotateLeft(int value, int count, int signMask) {
+std::intptr_t RotateLeft(int value, int count, int signMask) {
     reg68_ctx_t *context3;
 
     context3 = reg68;
@@ -3038,7 +3045,7 @@ std::intptr_t Emu68_RotateLeft(int value, int count, int signMask) {
     }
 }
 
-std::intptr_t Emu68_RotateExtendRight(int value, int count, int signMask) {
+std::intptr_t RotateExtendRight(int value, int count, int signMask) {
     reg68_ctx_t *context3;
     int64_t value5;
     int8_t value6;
@@ -3081,7 +3088,7 @@ std::intptr_t Emu68_RotateExtendRight(int value, int count, int signMask) {
     }
 }
 
-std::intptr_t Emu68_RotateExtendLeft(int value, int count, int signMask) {
+std::intptr_t RotateExtendLeft(int value, int count, int signMask) {
     reg68_ctx_t *context3;
     int8_t value5;
     uint8_t value7;
@@ -3117,7 +3124,7 @@ std::intptr_t Emu68_RotateExtendLeft(int value, int count, int signMask) {
     }
 }
 
-std::intptr_t Emu68_MoveMultiple(int operand) {
+std::intptr_t MoveMultiple(int operand) {
     int64_t value1;
     reg68_page_map_entry_t *page2;
     uint16_t value3;
@@ -3173,7 +3180,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
         for (i = 0; i < 8; ++i) {
             if ((value5 & 1) != 0) {
                 page9 = &context4->map[static_cast<uint8_t>((value7) >> 16)];
-                value6 = static_cast<uint32_t>((page9->write16(page9->base + (value7 & page9->mask), static_cast<uint16_t>(Emu68_Register(context4, i))), 0));
+                value6 = static_cast<uint32_t>((page9->write16(page9->base + (value7 & page9->mask), static_cast<uint16_t>(Register(context4, i))), 0));
                 context4 = reg68;
                 ++reg68->bus_word_count;
                 value7 += 2;
@@ -3184,7 +3191,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
             if ((value5 & 1) != 0) {
                 page11 = &context4->map[static_cast<uint8_t>((value7) >> 16)];
                 value6 =
-                    static_cast<uint32_t>((page11->write16(page11->base + (value7 & page11->mask), static_cast<uint16_t>(Emu68_Register(context4, j))), 0));
+                    static_cast<uint32_t>((page11->write16(page11->base + (value7 & page11->mask), static_cast<uint16_t>(Register(context4, j))), 0));
                 context4 = reg68;
                 ++reg68->bus_word_count;
                 value7 += 2;
@@ -3198,7 +3205,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
                 value7 -= 2;
                 page13 = &context4->map[static_cast<uint8_t>((value7) >> 16)];
                 value6 =
-                    static_cast<uint32_t>((page13->write16(page13->base + (value7 & page13->mask), static_cast<uint16_t>(Emu68_Register(context4, k))), 0));
+                    static_cast<uint32_t>((page13->write16(page13->base + (value7 & page13->mask), static_cast<uint16_t>(Register(context4, k))), 0));
                 context4 = reg68;
                 ++reg68->bus_word_count;
             }
@@ -3209,7 +3216,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
                 value7 -= 2;
                 page15 = &context4->map[static_cast<uint8_t>((value7) >> 16)];
                 value6 =
-                    static_cast<uint32_t>((page15->write16(page15->base + (value7 & page15->mask), static_cast<uint16_t>(Emu68_Register(context4, m))), 0));
+                    static_cast<uint32_t>((page15->write16(page15->base + (value7 & page15->mask), static_cast<uint16_t>(Register(context4, m))), 0));
                 context4 = reg68;
                 ++reg68->bus_word_count;
             }
@@ -3220,7 +3227,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
         for (n = 0; n < 8; ++n) {
             if ((value5 & 1) != 0) {
                 page17 = &context4->map[static_cast<uint8_t>((value7) >> 16)];
-                value6 = static_cast<uint32_t>((page17->write32(page17->base + (value7 & page17->mask), Emu68_Register(context4, n)), 0));
+                value6 = static_cast<uint32_t>((page17->write32(page17->base + (value7 & page17->mask), Register(context4, n)), 0));
                 context4 = reg68;
                 reg68->bus_word_count += 2;
                 value7 += 4;
@@ -3230,7 +3237,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
         for (ii = 8; ii < 16; ++ii) {
             if ((value5 & 1) != 0) {
                 page19 = &context4->map[static_cast<uint8_t>((value7) >> 16)];
-                value6 = static_cast<uint32_t>((page19->write32(page19->base + (value7 & page19->mask), Emu68_Register(context4, ii)), 0));
+                value6 = static_cast<uint32_t>((page19->write32(page19->base + (value7 & page19->mask), Register(context4, ii)), 0));
                 context4 = reg68;
                 reg68->bus_word_count += 2;
                 value7 += 4;
@@ -3243,7 +3250,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
             if ((value5 & 1) != 0) {
                 value7 -= 4;
                 page21 = &context4->map[static_cast<uint8_t>((value7) >> 16)];
-                value6 = static_cast<uint32_t>((page21->write32(page21->base + (value7 & page21->mask), Emu68_Register(context4, jj)), 0));
+                value6 = static_cast<uint32_t>((page21->write32(page21->base + (value7 & page21->mask), Register(context4, jj)), 0));
                 context4 = reg68;
                 reg68->bus_word_count += 2;
             }
@@ -3253,7 +3260,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
             if ((value5 & 1) != 0) {
                 value7 -= 4;
                 page23 = &context4->map[static_cast<uint8_t>((value7) >> 16)];
-                value6 = static_cast<uint32_t>((page23->write32(page23->base + (value7 & page23->mask), Emu68_Register(context4, kk)), 0));
+                value6 = static_cast<uint32_t>((page23->write32(page23->base + (value7 & page23->mask), Register(context4, kk)), 0));
                 context4 = reg68;
                 reg68->bus_word_count += 2;
             }
@@ -3269,7 +3276,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
                 context4 = reg68;
                 ++reg68->bus_word_count;
                 value7 += 2;
-                Emu68_Register(context4, mm) = (Emu68_Register(context4, mm) & ~uint32_t{0xFFFF}) | static_cast<uint16_t>(value6);
+                Register(context4, mm) = (Register(context4, mm) & ~uint32_t{0xFFFF}) | static_cast<uint16_t>(value6);
             }
             value5 >>= 1;
         }
@@ -3281,7 +3288,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
                 value6 = static_cast<uint32_t>((int16_t)value6);
                 ++reg68->bus_word_count;
                 value7 += 2;
-                Emu68_Register(context4, nn) = (int16_t)value6;
+                Register(context4, nn) = (int16_t)value6;
             }
             value5 >>= 1;
         }
@@ -3295,7 +3302,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
                 context4 = reg68;
                 reg68->bus_word_count += 2;
                 value7 += 4;
-                Emu68_Register(context4, i1) = value6;
+                Register(context4, i1) = value6;
             }
             value5 >>= 1;
         }
@@ -3306,7 +3313,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
                 context4 = reg68;
                 reg68->bus_word_count += 2;
                 value7 += 4;
-                Emu68_Register(context4, i2) = value6;
+                Register(context4, i2) = value6;
             }
             value5 >>= 1;
         }
@@ -3322,7 +3329,7 @@ std::intptr_t Emu68_MoveMultiple(int operand) {
     return value6;
 }
 
-std::intptr_t Emu68_BitTest(uint8_t operand) {
+std::intptr_t BitTest(uint8_t operand) {
     uint64_t value5;
     int value6;
     int value7;
@@ -3346,7 +3353,7 @@ std::intptr_t Emu68_BitTest(uint8_t operand) {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_BitChange(int8_t operand) {
+std::intptr_t BitChange(int8_t operand) {
     uint64_t value4;
     int8_t value5;
     int value6;
@@ -3373,7 +3380,7 @@ std::intptr_t Emu68_BitChange(int8_t operand) {
         return kEmu68_WriteLong[value8](g_emu68Instruction & 7, value6 ^ (unsigned int)value7);
 }
 
-std::intptr_t Emu68_BitClear(int8_t operand) {
+std::intptr_t BitClear(int8_t operand) {
     uint64_t value4;
     int8_t value5;
     int value6;
@@ -3400,7 +3407,7 @@ std::intptr_t Emu68_BitClear(int8_t operand) {
         return kEmu68_WriteLong[value8](g_emu68Instruction & 7, value6 & (unsigned int)~value7);
 }
 
-std::intptr_t Emu68_BitSet(int8_t operand) {
+std::intptr_t BitSet(int8_t operand) {
     uint64_t value4;
     int8_t value5;
     int value6;
@@ -3427,7 +3434,7 @@ std::intptr_t Emu68_BitSet(int8_t operand) {
         return kEmu68_WriteLong[value8](g_emu68Instruction & 7, value6 | (unsigned int)value7);
 }
 
-std::intptr_t Emu68_MovePeripheral() {
+std::intptr_t MovePeripheral() {
     reg68_page_map_entry_t *page0;
     int16_t value1;
     uint8_t value2;
@@ -3547,7 +3554,7 @@ std::intptr_t Emu68_MovePeripheral() {
     return result;
 }
 
-std::intptr_t Emu68_DivideUnsigned(int operand) {
+std::intptr_t DivideUnsigned(int operand) {
     int64_t value1;
     uint16_t value2;
     reg68_ctx_t *context3;
@@ -3573,7 +3580,7 @@ std::intptr_t Emu68_DivideUnsigned(int operand) {
     return result;
 }
 
-std::intptr_t Emu68_DivideSigned(int operand) {
+std::intptr_t DivideSigned(int operand) {
     int64_t value1;
     int16_t value2;
     reg68_ctx_t *context3;
@@ -3599,7 +3606,7 @@ std::intptr_t Emu68_DivideSigned(int operand) {
     return result;
 }
 
-std::intptr_t emu68_HandleInterruptRequest(unsigned int operand) {
+std::intptr_t HandleInterruptRequest(unsigned int operand) {
     reg68_ctx_t *context1;
     int64_t pc;
     reg68_page_map_entry_t *reg68_page_map_entry_t_1;
@@ -3636,7 +3643,7 @@ std::intptr_t emu68_HandleInterruptRequest(unsigned int operand) {
     return result;
 }
 
-std::intptr_t Emu68_ResetContext() {
+std::intptr_t ResetContext() {
     reg68_ctx_t *context0;
     uint32_t value1;
     reg68_ctx_t *context2;
@@ -3660,7 +3667,7 @@ std::intptr_t Emu68_ResetContext() {
     return result;
 }
 
-std::intptr_t Emu68_ReturnException() {
+std::intptr_t ReturnException() {
     reg68_page_map_entry_t *page0;
     uint16_t value1;
     reg68_ctx_t *context2;
@@ -3676,7 +3683,7 @@ std::intptr_t Emu68_ReturnException() {
     ++reg68->bus_word_count;
     context2->a[7] += 2;
     if ((context2->sr.raw[1] & 0x20) == 0) {
-        emu68_HandleInterruptRequest(8u);
+        HandleInterruptRequest(8u);
         context2 = reg68;
     }
     context2->sr = status3;
@@ -3689,7 +3696,7 @@ std::intptr_t Emu68_ReturnException() {
     return result;
 }
 
-std::intptr_t Emu68_OrImmediateByte() {
+std::intptr_t OrImmediateByte() {
     uint32_t pc;
     int8_t value1;
     int8_t value2;
@@ -3715,12 +3722,12 @@ std::intptr_t Emu68_OrImmediateByte() {
         context7 = reg68;
         ++reg68->bus_word_count;
         context7->pc += 2;
-        return Emu68_OrEffectiveByte(value6);
+        return OrEffectiveByte(value6);
     }
     return result;
 }
 
-std::intptr_t Emu68_OrImmediateWord() {
+std::intptr_t OrImmediateWord() {
     uint32_t pc;
     reg68_sr_bits_t status1;
     reg68_page_map_entry_t *page2;
@@ -3741,7 +3748,7 @@ std::intptr_t Emu68_OrImmediateWord() {
         ++reg68->bus_word_count;
         context4->pc += 2;
         if ((context4->sr.raw[1] & 0x20) == 0) {
-            emu68_HandleInterruptRequest(8u);
+            HandleInterruptRequest(8u);
             context4 = reg68;
         }
         context4->sr = status5;
@@ -3752,11 +3759,11 @@ std::intptr_t Emu68_OrImmediateWord() {
         context9 = reg68;
         ++reg68->bus_word_count;
         context9->pc += 2;
-        return Emu68_OrEffectiveWord(value8);
+        return OrEffectiveWord(value8);
     }
 }
 
-std::intptr_t Emu68_OrImmediateLong() {
+std::intptr_t OrImmediateLong() {
     reg68_page_map_entry_t *page0;
     int value1;
     reg68_ctx_t *context2;
@@ -3766,10 +3773,10 @@ std::intptr_t Emu68_OrImmediateLong() {
     context2 = reg68;
     reg68->bus_word_count += 2;
     context2->pc += 4;
-    return Emu68_OrEffectiveLong(value1);
+    return OrEffectiveLong(value1);
 }
 
-std::intptr_t Emu68_AndImmediateByte() {
+std::intptr_t AndImmediateByte() {
     uint32_t pc;
     int8_t value1;
     int8_t value2;
@@ -3795,12 +3802,12 @@ std::intptr_t Emu68_AndImmediateByte() {
         context7 = reg68;
         ++reg68->bus_word_count;
         context7->pc += 2;
-        return Emu68_AndEffectiveByte(value6);
+        return AndEffectiveByte(value6);
     }
     return result;
 }
 
-std::intptr_t Emu68_AndImmediateWord() {
+std::intptr_t AndImmediateWord() {
     uint32_t pc;
     reg68_sr_bits_t status1;
     reg68_page_map_entry_t *page2;
@@ -3821,7 +3828,7 @@ std::intptr_t Emu68_AndImmediateWord() {
         ++reg68->bus_word_count;
         context4->pc += 2;
         if ((context4->sr.raw[1] & 0x20) == 0) {
-            emu68_HandleInterruptRequest(8u);
+            HandleInterruptRequest(8u);
             context4 = reg68;
         }
         context4->sr = status5;
@@ -3832,11 +3839,11 @@ std::intptr_t Emu68_AndImmediateWord() {
         context9 = reg68;
         ++reg68->bus_word_count;
         context9->pc += 2;
-        return Emu68_AndEffectiveWord(value8);
+        return AndEffectiveWord(value8);
     }
 }
 
-std::intptr_t Emu68_AndImmediateLong() {
+std::intptr_t AndImmediateLong() {
     reg68_page_map_entry_t *page0;
     int value1;
     reg68_ctx_t *context2;
@@ -3846,10 +3853,10 @@ std::intptr_t Emu68_AndImmediateLong() {
     context2 = reg68;
     reg68->bus_word_count += 2;
     context2->pc += 4;
-    return Emu68_AndEffectiveLong(value1);
+    return AndEffectiveLong(value1);
 }
 
-std::intptr_t Emu68_XorImmediateByte() {
+std::intptr_t XorImmediateByte() {
     uint32_t pc;
     int8_t value1;
     int8_t value2;
@@ -3875,12 +3882,12 @@ std::intptr_t Emu68_XorImmediateByte() {
         context7 = reg68;
         ++reg68->bus_word_count;
         context7->pc += 2;
-        return Emu68_XorEffectiveByte(value6);
+        return XorEffectiveByte(value6);
     }
     return result;
 }
 
-std::intptr_t Emu68_XorImmediateWord() {
+std::intptr_t XorImmediateWord() {
     uint32_t pc;
     reg68_sr_bits_t status1;
     reg68_page_map_entry_t *page2;
@@ -3901,7 +3908,7 @@ std::intptr_t Emu68_XorImmediateWord() {
         ++reg68->bus_word_count;
         context4->pc += 2;
         if ((context4->sr.raw[1] & 0x20) == 0) {
-            emu68_HandleInterruptRequest(8u);
+            HandleInterruptRequest(8u);
             context4 = reg68;
         }
         context4->sr = status5;
@@ -3912,11 +3919,11 @@ std::intptr_t Emu68_XorImmediateWord() {
         context9 = reg68;
         ++reg68->bus_word_count;
         context9->pc += 2;
-        return Emu68_XorEffectiveWord(value8);
+        return XorEffectiveWord(value8);
     }
 }
 
-std::intptr_t Emu68_XorImmediateLong() {
+std::intptr_t XorImmediateLong() {
     reg68_page_map_entry_t *page0;
     int value1;
     reg68_ctx_t *context2;
@@ -3926,10 +3933,10 @@ std::intptr_t Emu68_XorImmediateLong() {
     context2 = reg68;
     reg68->bus_word_count += 2;
     context2->pc += 4;
-    return Emu68_XorEffectiveLong(value1);
+    return XorEffectiveLong(value1);
 }
 
-std::intptr_t Emu68_SubtractImmediateByte() {
+std::intptr_t SubtractImmediateByte() {
     reg68_page_map_entry_t *page0;
     int8_t value1;
     reg68_ctx_t *context2;
@@ -3939,10 +3946,10 @@ std::intptr_t Emu68_SubtractImmediateByte() {
     context2 = reg68;
     ++reg68->bus_word_count;
     context2->pc += 2;
-    return Emu68_SubtractFromEffectiveByte(value1);
+    return SubtractFromEffectiveByte(value1);
 }
 
-std::intptr_t Emu68_SubtractImmediateWord() {
+std::intptr_t SubtractImmediateWord() {
     reg68_page_map_entry_t *page0;
     int16_t value1;
     reg68_ctx_t *context2;
@@ -3952,10 +3959,10 @@ std::intptr_t Emu68_SubtractImmediateWord() {
     context2 = reg68;
     ++reg68->bus_word_count;
     context2->pc += 2;
-    return Emu68_SubtractFromEffectiveWord(value1);
+    return SubtractFromEffectiveWord(value1);
 }
 
-std::intptr_t Emu68_SubtractImmediateLong() {
+std::intptr_t SubtractImmediateLong() {
     reg68_page_map_entry_t *page0;
     int value1;
     reg68_ctx_t *context2;
@@ -3965,10 +3972,10 @@ std::intptr_t Emu68_SubtractImmediateLong() {
     context2 = reg68;
     reg68->bus_word_count += 2;
     context2->pc += 4;
-    return Emu68_SubtractFromEffectiveLong(value1);
+    return SubtractFromEffectiveLong(value1);
 }
 
-std::intptr_t Emu68_AddImmediateByte() {
+std::intptr_t AddImmediateByte() {
     reg68_page_map_entry_t *page0;
     int8_t value1;
     reg68_ctx_t *context2;
@@ -3978,10 +3985,10 @@ std::intptr_t Emu68_AddImmediateByte() {
     context2 = reg68;
     ++reg68->bus_word_count;
     context2->pc += 2;
-    return Emu68_AddToEffectiveByte(value1);
+    return AddToEffectiveByte(value1);
 }
 
-std::intptr_t Emu68_AddImmediateWord() {
+std::intptr_t AddImmediateWord() {
     reg68_page_map_entry_t *page0;
     int16_t value1;
     reg68_ctx_t *context2;
@@ -3991,10 +3998,10 @@ std::intptr_t Emu68_AddImmediateWord() {
     context2 = reg68;
     ++reg68->bus_word_count;
     context2->pc += 2;
-    return Emu68_AddToEffectiveWord(value1);
+    return AddToEffectiveWord(value1);
 }
 
-std::intptr_t Emu68_AddImmediateLong() {
+std::intptr_t AddImmediateLong() {
     reg68_page_map_entry_t *page0;
     int value1;
     reg68_ctx_t *context2;
@@ -4004,10 +4011,10 @@ std::intptr_t Emu68_AddImmediateLong() {
     context2 = reg68;
     reg68->bus_word_count += 2;
     context2->pc += 4;
-    return Emu68_AddToEffectiveLong(value1);
+    return AddToEffectiveLong(value1);
 }
 
-std::intptr_t Emu68_CompareImmediateByte() {
+std::intptr_t CompareImmediateByte() {
     reg68_page_map_entry_t *page0;
     int8_t value1;
     reg68_ctx_t *context2;
@@ -4046,7 +4053,7 @@ std::intptr_t Emu68_CompareImmediateByte() {
     return result;
 }
 
-std::intptr_t Emu68_CompareImmediateWord() {
+std::intptr_t CompareImmediateWord() {
     reg68_page_map_entry_t *page0;
     int16_t value1;
     reg68_ctx_t *context2;
@@ -4084,7 +4091,7 @@ std::intptr_t Emu68_CompareImmediateWord() {
     return result;
 }
 
-std::intptr_t Emu68_CompareImmediateLong() {
+std::intptr_t CompareImmediateLong() {
     reg68_page_map_entry_t *page0;
     int value1;
     reg68_ctx_t *context2;
@@ -4107,7 +4114,7 @@ std::intptr_t Emu68_CompareImmediateLong() {
     context2->pc += 4;
     value4 = kEmu68_ReadLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
     context5 = reg68;
-    value6 = Emu68_Subtract32(value4, value3);
+    value6 = Subtract32(value4, value3);
     reg68->sr.raw[0] &= 0xF0u;
     value7 = value4 >= 0;
     value8 = static_cast<unsigned int>(value6) >> 31;
@@ -4121,7 +4128,7 @@ std::intptr_t Emu68_CompareImmediateLong() {
     return result;
 }
 
-std::intptr_t Emu68_BitTestImmediate() {
+std::intptr_t BitTestImmediate() {
     reg68_page_map_entry_t *page0;
     uint8_t value1;
     reg68_ctx_t *context2;
@@ -4131,10 +4138,10 @@ std::intptr_t Emu68_BitTestImmediate() {
     context2 = reg68;
     ++reg68->bus_word_count;
     context2->pc += 2;
-    return Emu68_BitTest(value1);
+    return BitTest(value1);
 }
 
-std::intptr_t Emu68_BitChangeImmediate() {
+std::intptr_t BitChangeImmediate() {
     reg68_page_map_entry_t *page0;
     int8_t value1;
     reg68_ctx_t *context2;
@@ -4144,10 +4151,10 @@ std::intptr_t Emu68_BitChangeImmediate() {
     context2 = reg68;
     ++reg68->bus_word_count;
     context2->pc += 2;
-    return Emu68_BitChange(value1);
+    return BitChange(value1);
 }
 
-std::intptr_t Emu68_BitClearImmediate() {
+std::intptr_t BitClearImmediate() {
     reg68_page_map_entry_t *page0;
     int8_t value1;
     reg68_ctx_t *context2;
@@ -4157,10 +4164,10 @@ std::intptr_t Emu68_BitClearImmediate() {
     context2 = reg68;
     ++reg68->bus_word_count;
     context2->pc += 2;
-    return Emu68_BitClear(value1);
+    return BitClear(value1);
 }
 
-std::intptr_t Emu68_BitSetImmediate() {
+std::intptr_t BitSetImmediate() {
     reg68_page_map_entry_t *page0;
     int8_t value1;
     reg68_ctx_t *context2;
@@ -4170,38 +4177,38 @@ std::intptr_t Emu68_BitSetImmediate() {
     context2 = reg68;
     ++reg68->bus_word_count;
     context2->pc += 2;
-    return Emu68_BitSet(value1);
+    return BitSet(value1);
 }
 
-std::intptr_t Emu68_BitTestDataOrMovePeripheral() {
+std::intptr_t BitTestDataOrMovePeripheral() {
     if ((g_emu68Instruction & 0x38) == 8)
-        return Emu68_MovePeripheral();
+        return MovePeripheral();
     else
-        return Emu68_BitTest(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return BitTest(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
 }
 
-std::intptr_t Emu68_BitChangeDataOrMovePeripheral() {
+std::intptr_t BitChangeDataOrMovePeripheral() {
     if ((g_emu68Instruction & 0x38) == 8)
-        return Emu68_MovePeripheral();
+        return MovePeripheral();
     else
-        return Emu68_BitChange(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return BitChange(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
 }
 
-std::intptr_t Emu68_BitClearDataOrMovePeripheral() {
+std::intptr_t BitClearDataOrMovePeripheral() {
     if ((g_emu68Instruction & 0x38) == 8)
-        return Emu68_MovePeripheral();
+        return MovePeripheral();
     else
-        return Emu68_BitClear(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return BitClear(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
 }
 
-std::intptr_t Emu68_BitSetDataOrMovePeripheral() {
+std::intptr_t BitSetDataOrMovePeripheral() {
     if ((g_emu68Instruction & 0x38) == 8)
-        return Emu68_MovePeripheral();
+        return MovePeripheral();
     else
-        return Emu68_BitSet(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return BitSet(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
 }
 
-std::intptr_t Emu68_ReportInstructionError() {
+std::intptr_t ReportInstructionError() {
 
     std::snprintf(g_emu68DebugText, sizeof(g_emu68DebugText), "emu68 runtime error [%s];%d\n", "INST", (uint16_t)g_emu68Instruction);
     (Harrier_DebugPrint(g_emu68DebugText), 0);
@@ -4209,11 +4216,11 @@ std::intptr_t Emu68_ReportInstructionError() {
     return (Harrier_DebugPrint(g_emu68DebugText), 0);
 }
 
-void Emu68_DispatchGroup0() {
+void DispatchGroup0() {
     kEmu68_Group0[((uint64_t)(uint16_t)g_emu68Instruction >> 6) & 0x3F]();
 }
 
-void Emu68_MoveByte() {
+void MoveByte() {
     int value4;
     reg68_ctx_t *context5;
     int64_t result;
@@ -4230,7 +4237,7 @@ void Emu68_MoveByte() {
     return;
 }
 
-void Emu68_MoveLong() {
+void MoveLong() {
     int value0;
     reg68_ctx_t *context1;
 
@@ -4243,7 +4250,7 @@ void Emu68_MoveLong() {
     return;
 }
 
-void Emu68_MoveWord() {
+void MoveWord() {
     int value0;
     reg68_ctx_t *context1;
     int64_t result;
@@ -4260,29 +4267,29 @@ void Emu68_MoveWord() {
     return;
 }
 
-std::intptr_t Emu68_NegateExtendByteThunk() {
-    return Emu68_NegateExtendEffectiveByte();
+std::intptr_t NegateExtendByteThunk() {
+    return NegateExtendEffectiveByte();
 }
 
-std::intptr_t Emu68_NegateExtendWordThunk() {
-    return Emu68_NegateExtendEffectiveWord();
+std::intptr_t NegateExtendWordThunk() {
+    return NegateExtendEffectiveWord();
 }
 
-std::intptr_t Emu68_NegateExtendLongThunk() {
-    return Emu68_NegateExtendEffectiveLong();
+std::intptr_t NegateExtendLongThunk() {
+    return NegateExtendEffectiveLong();
 }
 
-std::intptr_t Emu68_MoveFromStatus() {
+std::intptr_t MoveFromStatus() {
     kEmu68_SetEffectiveWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7));
     return kEmu68_WriteWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7, reg68->sr.bits);
 }
 
-std::intptr_t Emu68_MoveFromConditionCodes() {
+std::intptr_t MoveFromConditionCodes() {
     kEmu68_SetEffectiveWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7));
     return kEmu68_WriteWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7, (uint8_t)reg68->sr.raw[0]);
 }
 
-std::intptr_t Emu68_MoveToStatus() {
+std::intptr_t MoveToStatus() {
     int64_t result;
     reg68_ctx_t *context1;
     reg68_sr_bits_t status2;
@@ -4291,14 +4298,14 @@ std::intptr_t Emu68_MoveToStatus() {
     context1 = reg68;
     status2.bits = result;
     if ((reg68->sr.raw[1] & 0x20) == 0) {
-        result = emu68_HandleInterruptRequest(8u);
+        result = HandleInterruptRequest(8u);
         context1 = reg68;
     }
     context1->sr = status2;
     return result;
 }
 
-std::intptr_t Emu68_MoveToConditionCodes() {
+std::intptr_t MoveToConditionCodes() {
     int64_t result;
 
     result = kEmu68_ReadWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -4306,29 +4313,29 @@ std::intptr_t Emu68_MoveToConditionCodes() {
     return result;
 }
 
-std::intptr_t Emu68_CheckLongBounds() {
+std::intptr_t CheckLongBounds() {
     int64_t result;
     int value1;
 
     result = kEmu68_ReadLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
     value1 = reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7];
     if (value1 < 0 || (int)result < value1)
-        return emu68_HandleInterruptRequest(6u);
+        return HandleInterruptRequest(6u);
     return result;
 }
 
-std::intptr_t Emu68_CheckWordBounds() {
+std::intptr_t CheckWordBounds() {
     int64_t result;
     int16_t value1;
 
     result = kEmu68_ReadWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
     value1 = reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7];
     if (value1 < 0 || (int16_t)result < value1)
-        return emu68_HandleInterruptRequest(6u);
+        return HandleInterruptRequest(6u);
     return result;
 }
 
-std::intptr_t Emu68_LoadEffectiveAddressA0() {
+std::intptr_t LoadEffectiveAddressA0() {
     int64_t result;
 
     result = kEmu68_Address[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -4336,7 +4343,7 @@ std::intptr_t Emu68_LoadEffectiveAddressA0() {
     return result;
 }
 
-std::intptr_t Emu68_LoadEffectiveAddressA1() {
+std::intptr_t LoadEffectiveAddressA1() {
     int64_t result;
 
     result = kEmu68_Address[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -4344,7 +4351,7 @@ std::intptr_t Emu68_LoadEffectiveAddressA1() {
     return result;
 }
 
-std::intptr_t Emu68_LoadEffectiveAddressA2() {
+std::intptr_t LoadEffectiveAddressA2() {
     int64_t result;
 
     result = kEmu68_Address[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -4352,7 +4359,7 @@ std::intptr_t Emu68_LoadEffectiveAddressA2() {
     return result;
 }
 
-std::intptr_t Emu68_LoadEffectiveAddressA3() {
+std::intptr_t LoadEffectiveAddressA3() {
     int64_t result;
 
     result = kEmu68_Address[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -4360,7 +4367,7 @@ std::intptr_t Emu68_LoadEffectiveAddressA3() {
     return result;
 }
 
-std::intptr_t Emu68_LoadEffectiveAddressA4() {
+std::intptr_t LoadEffectiveAddressA4() {
     int64_t result;
 
     result = kEmu68_Address[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -4368,7 +4375,7 @@ std::intptr_t Emu68_LoadEffectiveAddressA4() {
     return result;
 }
 
-std::intptr_t Emu68_LoadEffectiveAddressA5() {
+std::intptr_t LoadEffectiveAddressA5() {
     int64_t result;
 
     result = kEmu68_Address[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -4376,7 +4383,7 @@ std::intptr_t Emu68_LoadEffectiveAddressA5() {
     return result;
 }
 
-std::intptr_t Emu68_LoadEffectiveAddressA6() {
+std::intptr_t LoadEffectiveAddressA6() {
     int64_t result;
 
     result = kEmu68_Address[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -4384,7 +4391,7 @@ std::intptr_t Emu68_LoadEffectiveAddressA6() {
     return result;
 }
 
-std::intptr_t Emu68_LoadEffectiveAddressA7() {
+std::intptr_t LoadEffectiveAddressA7() {
     int64_t result;
 
     result = kEmu68_Address[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -4392,7 +4399,7 @@ std::intptr_t Emu68_LoadEffectiveAddressA7() {
     return result;
 }
 
-std::intptr_t Emu68_ClearByte() {
+std::intptr_t ClearByte() {
     reg68_ctx_t *result;
 
     kEmu68_SetEffectiveByte[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7));
@@ -4403,7 +4410,7 @@ std::intptr_t Emu68_ClearByte() {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_ClearWord() {
+std::intptr_t ClearWord() {
     reg68_ctx_t *result;
 
     kEmu68_SetEffectiveWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7));
@@ -4414,7 +4421,7 @@ std::intptr_t Emu68_ClearWord() {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_ClearLong() {
+std::intptr_t ClearLong() {
     reg68_ctx_t *result;
 
     kEmu68_SetEffectiveLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7));
@@ -4425,31 +4432,31 @@ std::intptr_t Emu68_ClearLong() {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_NegateByteThunk() {
-    return Emu68_NegateEffectiveByte();
+std::intptr_t NegateByteThunk() {
+    return NegateEffectiveByte();
 }
 
-std::intptr_t Emu68_NegateWordThunk() {
-    return Emu68_NegateEffectiveWord();
+std::intptr_t NegateWordThunk() {
+    return NegateEffectiveWord();
 }
 
-std::intptr_t Emu68_NegateLongThunk() {
-    return Emu68_NegateEffectiveLong();
+std::intptr_t NegateLongThunk() {
+    return NegateEffectiveLong();
 }
 
-std::intptr_t Emu68_NotByteThunk() {
-    return Emu68_NotEffectiveByte();
+std::intptr_t NotByteThunk() {
+    return NotEffectiveByte();
 }
 
-std::intptr_t Emu68_NotWordThunk() {
-    return Emu68_NotEffectiveWord();
+std::intptr_t NotWordThunk() {
+    return NotEffectiveWord();
 }
 
-std::intptr_t Emu68_NotLongThunk() {
-    return Emu68_NotEffectiveLong();
+std::intptr_t NotLongThunk() {
+    return NotEffectiveLong();
 }
 
-std::intptr_t Emu68_TestByte() {
+std::intptr_t TestByte() {
     int8_t value4;
     reg68_ctx_t *context5;
     int value6;
@@ -4466,7 +4473,7 @@ std::intptr_t Emu68_TestByte() {
     return result;
 }
 
-std::intptr_t Emu68_TestWord() {
+std::intptr_t TestWord() {
     int16_t value0;
     reg68_ctx_t *context1;
     int value2;
@@ -4483,7 +4490,7 @@ std::intptr_t Emu68_TestWord() {
     return result;
 }
 
-std::intptr_t Emu68_TestLong() {
+std::intptr_t TestLong() {
     int value0;
     reg68_ctx_t *context1;
     int8_t value2;
@@ -4498,11 +4505,11 @@ std::intptr_t Emu68_TestLong() {
     return result;
 }
 
-std::intptr_t Emu68_NegateBcdThunk() {
-    return Emu68_NegateBcd();
+std::intptr_t NegateBcdThunk() {
+    return NegateBcd();
 }
 
-std::intptr_t Emu68_SwapOrPushEffectiveAddress() {
+std::intptr_t SwapOrPushEffectiveAddress() {
     reg68_ctx_t *context0;
     int64_t value1;
     int value2;
@@ -4531,7 +4538,7 @@ std::intptr_t Emu68_SwapOrPushEffectiveAddress() {
     return result;
 }
 
-std::intptr_t Emu68_ExtendByteOrMoveMultipleWord() {
+std::intptr_t ExtendByteOrMoveMultipleWord() {
     unsigned int value0;
     int result;
     reg68_page_map_entry_t *page2;
@@ -4553,9 +4560,9 @@ std::intptr_t Emu68_ExtendByteOrMoveMultipleWord() {
     if (value0) {
         if (value0 != 2) {
             if (value0 == 4)
-                return Emu68_MoveMultiple(1);
+                return MoveMultiple(1);
             if (value0 <= 4)
-                return Emu68_ReportRuntimeError("INST", (uint16_t)g_emu68Instruction);
+                return ReportRuntimeError("INST", (uint16_t)g_emu68Instruction);
         }
         page2 = &reg68->map[(uint8_t) static_cast<uint8_t>((reg68->pc) >> 16)];
         value3 = page2->read16(page2->base + (reg68->pc & page2->mask));
@@ -4570,7 +4577,7 @@ std::intptr_t Emu68_ExtendByteOrMoveMultipleWord() {
         do {
             if ((value5 & 1) != 0) {
                 page9 = &context6->map[static_cast<uint8_t>((value8) >> 16)];
-                result = (page9->write16(page9->base + ((unsigned int)value8 & page9->mask), static_cast<uint16_t>(Emu68_Register(context6, value7))), 0);
+                result = (page9->write16(page9->base + ((unsigned int)value8 & page9->mask), static_cast<uint16_t>(Register(context6, value7))), 0);
                 context6 = reg68;
                 ++reg68->bus_word_count;
                 value8 += 2;
@@ -4581,7 +4588,7 @@ std::intptr_t Emu68_ExtendByteOrMoveMultipleWord() {
         for (i = 8; i < 16; ++i) {
             if ((value5 & 1) != 0) {
                 page11 = &context6->map[static_cast<uint8_t>((value8) >> 16)];
-                result = (page11->write16(page11->base + ((unsigned int)value8 & page11->mask), static_cast<uint16_t>(Emu68_Register(context6, i))), 0);
+                result = (page11->write16(page11->base + ((unsigned int)value8 & page11->mask), static_cast<uint16_t>(Register(context6, i))), 0);
                 context6 = reg68;
                 ++reg68->bus_word_count;
                 value8 += 2;
@@ -4592,8 +4599,8 @@ std::intptr_t Emu68_ExtendByteOrMoveMultipleWord() {
         context12 = reg68;
         value13 = 0;
         value14 = g_emu68Instruction & 7;
-        value15 = static_cast<int8_t>(Emu68_Register(reg68, value14));
-        Emu68_Register(reg68, value14) = (Emu68_Register(reg68, value14) & ~uint32_t{0xFFFF}) | static_cast<uint16_t>(value15);
+        value15 = static_cast<int8_t>(Register(reg68, value14));
+        Register(reg68, value14) = (Register(reg68, value14) & ~uint32_t{0xFFFF}) | static_cast<uint16_t>(value15);
         result = value15;
         context12->sr.raw[0] &= 0xF0u;
         if (!value15)
@@ -4603,7 +4610,7 @@ std::intptr_t Emu68_ExtendByteOrMoveMultipleWord() {
     return result;
 }
 
-std::intptr_t Emu68_ExtendWordOrMoveMultipleLong() {
+std::intptr_t ExtendWordOrMoveMultipleLong() {
     unsigned int value0;
     int64_t value1;
     reg68_page_map_entry_t *page2;
@@ -4648,7 +4655,7 @@ std::intptr_t Emu68_ExtendWordOrMoveMultipleLong() {
             do {
                 if ((value15 & 1) != 0) {
                     page19 = &context16->map[static_cast<uint8_t>((value18) >> 16)];
-                    value1 = static_cast<uint8_t>((page19->write32(page19->base + (value18 & page19->mask), Emu68_Register(context16, value17)), 0));
+                    value1 = static_cast<uint8_t>((page19->write32(page19->base + (value18 & page19->mask), Register(context16, value17)), 0));
                     context16 = reg68;
                     reg68->bus_word_count += 2;
                     value18 += 4;
@@ -4659,7 +4666,7 @@ std::intptr_t Emu68_ExtendWordOrMoveMultipleLong() {
             for (i = 8; i < 16; ++i) {
                 if ((value15 & 1) != 0) {
                     page21 = &context16->map[static_cast<uint8_t>((value18) >> 16)];
-                    value1 = static_cast<uint8_t>((page21->write32(page21->base + (value18 & page21->mask), Emu68_Register(context16, i)), 0));
+                    value1 = static_cast<uint8_t>((page21->write32(page21->base + (value18 & page21->mask), Register(context16, i)), 0));
                     context16 = reg68;
                     reg68->bus_word_count += 2;
                     value18 += 4;
@@ -4670,7 +4677,7 @@ std::intptr_t Emu68_ExtendWordOrMoveMultipleLong() {
         }
         if (value0 != 4) {
             if (value0 <= 4) {
-                value1 = static_cast<uint8_t>(Emu68_ReportRuntimeError("INST", (uint16_t)g_emu68Instruction));
+                value1 = static_cast<uint8_t>(ReportRuntimeError("INST", (uint16_t)g_emu68Instruction));
                 return value1;
             }
             goto LABEL_15;
@@ -4688,7 +4695,7 @@ std::intptr_t Emu68_ExtendWordOrMoveMultipleLong() {
             if ((value7 & 1) != 0) {
                 value8 -= 4;
                 page9 = &context4->map[static_cast<uint8_t>((value8) >> 16)];
-                (page9->write32(page9->base + (value8 & page9->mask), Emu68_Register(context4, value5)), 0);
+                (page9->write32(page9->base + (value8 & page9->mask), Register(context4, value5)), 0);
                 context4 = reg68;
                 reg68->bus_word_count += 2;
             }
@@ -4699,7 +4706,7 @@ std::intptr_t Emu68_ExtendWordOrMoveMultipleLong() {
             if ((value7 & 1) != 0) {
                 value8 -= 4;
                 page11 = &context4->map[static_cast<uint8_t>((value8) >> 16)];
-                (page11->write32(page11->base + (value8 & page11->mask), Emu68_Register(context4, j)), 0);
+                (page11->write32(page11->base + (value8 & page11->mask), Register(context4, j)), 0);
                 context4 = reg68;
                 reg68->bus_word_count += 2;
             }
@@ -4711,8 +4718,8 @@ std::intptr_t Emu68_ExtendWordOrMoveMultipleLong() {
         context22 = reg68;
         value23 = 0;
         value24 = g_emu68Instruction & 7;
-        value25 = static_cast<int16_t>(Emu68_Register(reg68, value24));
-        Emu68_Register(reg68, value24) = value25;
+        value25 = static_cast<int16_t>(Register(reg68, value24));
+        Register(reg68, value24) = value25;
         context22->sr.raw[0] &= 0xF0u;
         if (!value25)
             value23 = 4;
@@ -4722,7 +4729,7 @@ std::intptr_t Emu68_ExtendWordOrMoveMultipleLong() {
     return value1;
 }
 
-std::intptr_t Emu68_MoveMultipleWordToRegisters() {
+std::intptr_t MoveMultipleWordToRegisters() {
     uint32_t pc;
     reg68_page_map_entry_t *page1;
     uint16_t value2;
@@ -4765,7 +4772,7 @@ std::intptr_t Emu68_MoveMultipleWordToRegisters() {
                 context3 = reg68;
                 ++reg68->bus_word_count;
                 value6 += 2;
-                Emu68_Register(context3, i) = (Emu68_Register(context3, i) & ~uint32_t{0xFFFF}) | static_cast<uint16_t>(value9);
+                Register(context3, i) = (Register(context3, i) & ~uint32_t{0xFFFF}) | static_cast<uint16_t>(value9);
             }
             value4 >>= 1;
         }
@@ -4776,7 +4783,7 @@ std::intptr_t Emu68_MoveMultipleWordToRegisters() {
                 context3 = reg68;
                 ++reg68->bus_word_count;
                 value6 += 2;
-                Emu68_Register(context3, j) = value12;
+                Register(context3, j) = value12;
             }
             value4 >>= 1;
         }
@@ -4800,7 +4807,7 @@ std::intptr_t Emu68_MoveMultipleWordToRegisters() {
                 context18 = reg68;
                 ++reg68->bus_word_count;
                 value20 += 2;
-                Emu68_Register(context18, value19) = (Emu68_Register(context18, value19) & ~uint32_t{0xFFFF}) | static_cast<uint16_t>(value13);
+                Register(context18, value19) = (Register(context18, value19) & ~uint32_t{0xFFFF}) | static_cast<uint16_t>(value13);
             }
             value17 >>= 1;
             ++value19;
@@ -4813,7 +4820,7 @@ std::intptr_t Emu68_MoveMultipleWordToRegisters() {
                 value13 = static_cast<uint32_t>((int16_t)value13);
                 ++reg68->bus_word_count;
                 value20 += 2;
-                Emu68_Register(context18, k) = (int16_t)value13;
+                Register(context18, k) = (int16_t)value13;
             }
             value17 >>= 1;
         }
@@ -4821,7 +4828,7 @@ std::intptr_t Emu68_MoveMultipleWordToRegisters() {
     return value13;
 }
 
-std::intptr_t Emu68_MoveMultipleLongToRegisters() {
+std::intptr_t MoveMultipleLongToRegisters() {
     uint32_t pc;
     reg68_page_map_entry_t *page1;
     uint16_t value2;
@@ -4864,7 +4871,7 @@ std::intptr_t Emu68_MoveMultipleLongToRegisters() {
                 context3 = reg68;
                 reg68->bus_word_count += 2;
                 value6 += 4;
-                Emu68_Register(context3, i) = value9;
+                Register(context3, i) = value9;
             }
             value4 >>= 1;
         }
@@ -4875,7 +4882,7 @@ std::intptr_t Emu68_MoveMultipleLongToRegisters() {
                 context3 = reg68;
                 reg68->bus_word_count += 2;
                 value6 += 4;
-                Emu68_Register(context3, j) = value12;
+                Register(context3, j) = value12;
             }
             value4 >>= 1;
         }
@@ -4899,7 +4906,7 @@ std::intptr_t Emu68_MoveMultipleLongToRegisters() {
                 context18 = reg68;
                 reg68->bus_word_count += 2;
                 value20 += 4;
-                Emu68_Register(context18, value19) = result;
+                Register(context18, value19) = result;
             }
             value17 >>= 1;
             ++value19;
@@ -4911,7 +4918,7 @@ std::intptr_t Emu68_MoveMultipleLongToRegisters() {
                 context18 = reg68;
                 reg68->bus_word_count += 2;
                 value20 += 4;
-                Emu68_Register(context18, k) = result;
+                Register(context18, k) = result;
             }
             value17 >>= 1;
         }
@@ -4919,7 +4926,7 @@ std::intptr_t Emu68_MoveMultipleLongToRegisters() {
     return result;
 }
 
-std::intptr_t Emu68_TestAndSet() {
+std::intptr_t TestAndSet() {
     int8_t value5;
     reg68_ctx_t *context6;
     int8_t value7;
@@ -4928,7 +4935,7 @@ std::intptr_t Emu68_TestAndSet() {
     unsigned int value10;
 
     if ((g_emu68Instruction & 0x3F) == 0x3C)
-        return emu68_HandleInterruptRequest(4u);
+        return HandleInterruptRequest(4u);
     value5 = (int8_t)kEmu68_ReadModifyByte[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7));
     context6 = reg68;
     value7 = 0;
@@ -4942,7 +4949,7 @@ std::intptr_t Emu68_TestAndSet() {
     return kEmu68_WriteByte[(value10 >> 3) & 7](value10 & 7, value8 | 0x80u);
 }
 
-std::intptr_t Emu68_SystemInstruction() {
+std::intptr_t SystemInstruction() {
     int64_t result;
     int16_t value4;
     reg68_ctx_t *context5;
@@ -4977,7 +4984,7 @@ std::intptr_t Emu68_SystemInstruction() {
     case 0xD:
     case 0xE:
     case 0xF:
-        result = emu68_HandleInterruptRequest((g_emu68Instruction & 0xFu) + 32);
+        result = HandleInterruptRequest((g_emu68Instruction & 0xFu) + 32);
         break;
     case 0x10:
     case 0x11:
@@ -4987,7 +4994,7 @@ std::intptr_t Emu68_SystemInstruction() {
     case 0x15:
     case 0x16:
     case 0x17:
-        value4 = Emu68_FetchWord();
+        value4 = FetchWord();
         context5 = reg68;
         value6 = g_emu68Instruction & 7;
         value7 = value4;
@@ -5036,34 +5043,34 @@ std::intptr_t Emu68_SystemInstruction() {
     case 0x2D:
     case 0x2E:
     case 0x2F:
-        result = Emu68_ReportRuntimeError("USP", (uint16_t)g_emu68Instruction);
+        result = ReportRuntimeError("USP", (uint16_t)g_emu68Instruction);
         break;
     case 0x30:
-        result = Emu68_ResetOtherCpu();
+        result = ResetOtherCpu();
         break;
     case 0x31:
         return result;
     case 0x32:
-        status16.bits = Emu68_FetchWord();
-        Emu68_SetStatusRegister(status16);
-        result = Emu68_ReportRuntimeError("STOP", (uint16_t)g_emu68Instruction);
+        status16.bits = FetchWord();
+        SetStatusRegister(status16);
+        result = ReportRuntimeError("STOP", (uint16_t)g_emu68Instruction);
         break;
     case 0x33:
-        result = Emu68_ReturnException();
+        result = ReturnException();
         break;
     case 0x35:
-        result = Emu68_PopLong();
+        result = PopLong();
         reg68->pc = result;
         break;
     case 0x36:
         result = (int64_t)reg68;
         if ((reg68->sr.raw[0] & 2) != 0)
-            result = emu68_HandleInterruptRequest(7u);
+            result = HandleInterruptRequest(7u);
         break;
     case 0x37:
-        status17.bits = Emu68_PopWord();
-        Emu68_SetStatusRegister(status17);
-        result = Emu68_PopLong();
+        status17.bits = PopWord();
+        SetStatusRegister(status17);
+        result = PopLong();
         reg68->pc = result;
         break;
     default:
@@ -5076,7 +5083,7 @@ std::intptr_t Emu68_SystemInstruction() {
     return result;
 }
 
-std::intptr_t Emu68_JumpSubroutine() {
+std::intptr_t JumpSubroutine() {
     uint32_t value0;
     reg68_ctx_t *context1;
     uint32_t value2;
@@ -5097,7 +5104,7 @@ std::intptr_t Emu68_JumpSubroutine() {
     return reinterpret_cast<std::intptr_t>(result);
 }
 
-std::intptr_t Emu68_Jump() {
+std::intptr_t Jump() {
     int64_t result;
 
     result = kEmu68_Address[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -5105,72 +5112,72 @@ std::intptr_t Emu68_Jump() {
     return result;
 }
 
-void Emu68_DispatchGroup4() {
+void DispatchGroup4() {
     kEmu68_Group4[(g_emu68Instruction >> 6) & 0x3F]();
 }
 
-std::intptr_t Emu68_AddQuickByte() {
+std::intptr_t AddQuickByte() {
     int64_t result;
 
     if ((g_emu68Instruction & 0x38) != 8)
-        return Emu68_AddToEffectiveByte(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return AddToEffectiveByte(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
     result = (unsigned int)kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7];
     reg68->a[g_emu68Instruction & 7] += result;
     return result;
 }
 
-std::intptr_t Emu68_AddQuickWord() {
+std::intptr_t AddQuickWord() {
     int64_t result;
 
     if ((g_emu68Instruction & 0x38) != 8)
-        return Emu68_AddToEffectiveWord(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return AddToEffectiveWord(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
     result = (unsigned int)kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7];
     reg68->a[g_emu68Instruction & 7] += result;
     return result;
 }
 
-std::intptr_t Emu68_AddQuickLong() {
+std::intptr_t AddQuickLong() {
     int64_t result;
 
     if ((g_emu68Instruction & 0x38) != 8)
-        return Emu68_AddToEffectiveLong(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return AddToEffectiveLong(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
     result = (unsigned int)kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7];
     reg68->a[g_emu68Instruction & 7] += result;
     return result;
 }
 
-std::intptr_t Emu68_SubtractQuickByte() {
+std::intptr_t SubtractQuickByte() {
     int64_t result;
 
     if ((g_emu68Instruction & 0x38) != 8)
-        return Emu68_SubtractFromEffectiveByte(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return SubtractFromEffectiveByte(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
 
     result = (unsigned int)kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7];
     reg68->a[g_emu68Instruction & 7] -= result;
     return result;
 }
 
-std::intptr_t Emu68_SubtractQuickWord() {
+std::intptr_t SubtractQuickWord() {
     int64_t result;
 
     if ((g_emu68Instruction & 0x38) != 8)
-        return Emu68_SubtractFromEffectiveWord(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return SubtractFromEffectiveWord(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
     result = (unsigned int)kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7];
     reg68->a[g_emu68Instruction & 7] -= result;
     return result;
 }
 
-std::intptr_t Emu68_SubtractQuickLong() {
+std::intptr_t SubtractQuickLong() {
     int64_t result;
 
     if ((g_emu68Instruction & 0x38) != 8)
-        return Emu68_SubtractFromEffectiveLong(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+        return SubtractFromEffectiveLong(kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
     result = (unsigned int)kEmu68_QuickCount[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7];
     reg68->a[g_emu68Instruction & 7] -= result;
     return result;
 }
 
-std::intptr_t Emu68_SetOrDecrementCondition() {
+std::intptr_t SetOrDecrementCondition() {
     reg68_ctx_t *context4;
     int value5;
     uint8_t value6;
@@ -5246,7 +5253,7 @@ std::intptr_t Emu68_SetOrDecrementCondition() {
             reg68->pc += 2;
         } else {
             if (static_cast<uint16_t>(reg68->d[value8])) {
-                value10 = Emu68_FetchWord();
+                value10 = FetchWord();
                 context4 = reg68;
                 value9 = value10 - 2;
                 reg68->pc += value9;
@@ -5262,12 +5269,12 @@ std::intptr_t Emu68_SetOrDecrementCondition() {
     return value9;
 }
 
-void Emu68_DispatchGroup5() {
+void DispatchGroup5() {
     kEmu68_Group5[((uint64_t)(uint16_t)g_emu68Instruction >> 6) & 7]();
     return;
 }
 
-void Emu68_Branch() {
+void Branch() {
     reg68_ctx_t *context0;
     uint16_t value1;
     uint32_t pc;
@@ -5299,7 +5306,7 @@ void Emu68_Branch() {
     case 0:
         goto LABEL_30;
     case 1:
-        Emu68_PushLong(context0->pc);
+        PushLong(context0->pc);
         reg68->pc = value5;
         return;
     case 2:
@@ -5364,7 +5371,7 @@ void Emu68_Branch() {
     }
 }
 
-void Emu68_MoveQuick() {
+void MoveQuick() {
     reg68_ctx_t *context0;
     int value1;
     int64_t result;
@@ -5380,7 +5387,7 @@ void Emu68_MoveQuick() {
     return;
 }
 
-void Emu68_DispatchGroup8() {
+void DispatchGroup8() {
     int64_t value4;
     int8_t value5;
     reg68_ctx_t *context6;
@@ -5431,27 +5438,27 @@ void Emu68_DispatchGroup8() {
         context14->sr.raw[0] |= value15 | (uint8_t)(8 * (value16 < 0));
         break;
     case 3:
-        Emu68_DivideUnsigned(value4);
+        DivideUnsigned(value4);
         break;
     case 4:
         if ((g_emu68Instruction & 0x30) != 0)
-            Emu68_OrEffectiveByte(reg68->d[value4]);
+            OrEffectiveByte(reg68->d[value4]);
         else
-            Emu68_SubtractBcd();
+            SubtractBcd();
         break;
     case 5:
-        Emu68_OrEffectiveWord(reg68->d[value4]);
+        OrEffectiveWord(reg68->d[value4]);
         break;
     case 6:
-        Emu68_OrEffectiveLong(reg68->d[value4]);
+        OrEffectiveLong(reg68->d[value4]);
         break;
     case 7:
-        Emu68_DivideSigned(value4);
+        DivideSigned(value4);
         break;
     }
 }
 
-void Emu68_DispatchGroupC() {
+void DispatchGroupC() {
     int64_t value3;
     int8_t value4;
     reg68_ctx_t *context5;
@@ -5519,13 +5526,13 @@ void Emu68_DispatchGroupC() {
         goto LABEL_23;
     case 4:
         if ((g_emu68Instruction & 0x30) != 0)
-            value9 = static_cast<uint8_t>(Emu68_AndEffectiveByte(reg68->d[value3]));
+            value9 = static_cast<uint8_t>(AndEffectiveByte(reg68->d[value3]));
         else
-            value9 = static_cast<uint8_t>(Emu68_AddBcd());
+            value9 = static_cast<uint8_t>(AddBcd());
         return;
     case 5:
         if ((g_emu68Instruction & 0x30) != 0) {
-            value9 = static_cast<uint8_t>(Emu68_AndEffectiveWord(reg68->d[value3]));
+            value9 = static_cast<uint8_t>(AndEffectiveWord(reg68->d[value3]));
         } else {
             value18 = &reg68->d[value3];
             value19 = (signed int *)&reg68->d[g_emu68Instruction & 7];
@@ -5550,7 +5557,7 @@ void Emu68_DispatchGroupC() {
             reg68->d[value3] = value9;
             *value23 = value22;
         } else {
-            value9 = static_cast<uint8_t>(Emu68_AndEffectiveLong(reg68->d[value3]));
+            value9 = static_cast<uint8_t>(AndEffectiveLong(reg68->d[value3]));
         }
         return;
     case 7:
@@ -5559,7 +5566,7 @@ void Emu68_DispatchGroupC() {
         value17 = value24;
         value16 = static_cast<int16_t>(reg68->d[value3]);
     LABEL_23:
-        value25 = Emu68_Multiply32(value16, value17);
+        value25 = Multiply32(value16, value17);
         value26 = 0;
         context15->d[value3] = value25;
         context15->sr.raw[0] &= 0xF0u;
@@ -5571,7 +5578,7 @@ void Emu68_DispatchGroupC() {
     }
 }
 
-void Emu68_DispatchGroupB() {
+void DispatchGroupB() {
     int64_t value4;
     int8_t value5;
     int8_t result;
@@ -5584,59 +5591,59 @@ void Emu68_DispatchGroupB() {
     switch (((uint16_t)g_emu68Instruction >> 6) & 7) {
     case 0:
         value5 = (int8_t)kEmu68_ReadByte[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7]((g_emu68Instruction & 7));
-        result = Emu68_CompareFlags(value5, static_cast<int8_t>(reg68->d[value4]), 128);
+        result = CompareFlags(value5, static_cast<int8_t>(reg68->d[value4]), 128);
         break;
     case 1:
         value7 = kEmu68_ReadWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-        result = Emu68_CompareFlags(value7, static_cast<int16_t>(reg68->d[value4]), 0x8000);
+        result = CompareFlags(value7, static_cast<int16_t>(reg68->d[value4]), 0x8000);
         break;
     case 2:
         value8 = kEmu68_ReadLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-        result = Emu68_CompareFlags(value8, reg68->d[value4], 0x80000000);
+        result = CompareFlags(value8, reg68->d[value4], 0x80000000);
         break;
     case 3:
         value9 = kEmu68_ReadWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-        result = Emu68_CompareFlags(value9, reg68->a[value4], 0x80000000);
+        result = CompareFlags(value9, reg68->a[value4], 0x80000000);
         break;
     case 4:
         if ((g_emu68Instruction & 0x38) == 8)
-            result = Emu68_CompareMemoryByte();
+            result = CompareMemoryByte();
         else
-            result = Emu68_XorEffectiveByte(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+            result = XorEffectiveByte(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
         break;
     case 5:
         if ((g_emu68Instruction & 0x38) == 8)
-            result = Emu68_CompareMemoryWord();
+            result = CompareMemoryWord();
         else
-            result = Emu68_XorEffectiveWord(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+            result = XorEffectiveWord(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
         break;
     case 6:
         if ((g_emu68Instruction & 0x38) == 8)
-            result = Emu68_CompareMemoryLong();
+            result = CompareMemoryLong();
         else
-            result = Emu68_XorEffectiveLong(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
+            result = XorEffectiveLong(reg68->d[((uint64_t)(uint16_t)g_emu68Instruction >> 9) & 7]);
         break;
     case 7:
         value10 = kEmu68_ReadLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
-        result = Emu68_CompareFlags(value10, reg68->a[value4], 0x80000000);
+        result = CompareFlags(value10, reg68->a[value4], 0x80000000);
         break;
     }
     return;
 }
 
-void Emu68_DispatchGroup9() {
+void DispatchGroup9() {
     int64_t result;
     int value5;
 
     switch (((uint16_t)g_emu68Instruction >> 6) & 7) {
     case 0:
-        result = Emu68_SubtractEffectiveFromDataByte();
+        result = SubtractEffectiveFromDataByte();
         break;
     case 1:
-        result = Emu68_SubtractEffectiveFromDataWord();
+        result = SubtractEffectiveFromDataWord();
         break;
     case 2:
-        result = Emu68_SubtractEffectiveFromDataLong();
+        result = SubtractEffectiveFromDataLong();
         break;
     case 3:
         value5 = (int16_t)kEmu68_ReadWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -5645,21 +5652,21 @@ void Emu68_DispatchGroup9() {
         break;
     case 4:
         if ((g_emu68Instruction & 0x30) != 0)
-            result = Emu68_SubtractDataFromEffectiveByte();
+            result = SubtractDataFromEffectiveByte();
         else
-            result = Emu68_SubtractExtendByte();
+            result = SubtractExtendByte();
         break;
     case 5:
         if ((g_emu68Instruction & 0x30) != 0)
-            result = Emu68_SubtractDataFromEffectiveWord();
+            result = SubtractDataFromEffectiveWord();
         else
-            result = Emu68_SubtractExtendWord();
+            result = SubtractExtendWord();
         break;
     case 6:
         if ((g_emu68Instruction & 0x30) != 0)
-            result = Emu68_SubtractDataFromEffectiveLong();
+            result = SubtractDataFromEffectiveLong();
         else
-            result = Emu68_SubtractExtendLong();
+            result = SubtractExtendLong();
         break;
     case 7:
         result = kEmu68_ReadLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -5669,19 +5676,19 @@ void Emu68_DispatchGroup9() {
     return;
 }
 
-void Emu68_DispatchGroupD() {
+void DispatchGroupD() {
     int64_t result;
     int value5;
 
     switch (((uint16_t)g_emu68Instruction >> 6) & 7) {
     case 0:
-        result = Emu68_AddEffectiveToDataByte();
+        result = AddEffectiveToDataByte();
         break;
     case 1:
-        result = Emu68_AddEffectiveToDataWord();
+        result = AddEffectiveToDataWord();
         break;
     case 2:
-        result = Emu68_AddEffectiveToDataLong();
+        result = AddEffectiveToDataLong();
         break;
     case 3:
         value5 = (int16_t)kEmu68_ReadWord[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -5690,21 +5697,21 @@ void Emu68_DispatchGroupD() {
         break;
     case 4:
         if ((g_emu68Instruction & 0x30) != 0)
-            result = Emu68_AddDataToEffectiveByte();
+            result = AddDataToEffectiveByte();
         else
-            result = Emu68_AddExtendByte();
+            result = AddExtendByte();
         break;
     case 5:
         if ((g_emu68Instruction & 0x30) != 0)
-            result = Emu68_AddDataToEffectiveWord();
+            result = AddDataToEffectiveWord();
         else
-            result = Emu68_AddExtendWord();
+            result = AddExtendWord();
         break;
     case 6:
         if ((g_emu68Instruction & 0x30) != 0)
-            result = Emu68_AddDataToEffectiveLong();
+            result = AddDataToEffectiveLong();
         else
-            result = Emu68_AddExtendLong();
+            result = AddExtendLong();
         break;
     case 7:
         result = kEmu68_ReadLong[((uint64_t)(uint16_t)g_emu68Instruction >> 3) & 7](g_emu68Instruction & 7);
@@ -5714,7 +5721,7 @@ void Emu68_DispatchGroupD() {
     return;
 }
 
-void Emu68_ShiftRotate() {
+void ShiftRotate() {
     int64_t value0;
     int64_t value1;
     int64_t value2;
@@ -5732,18 +5739,18 @@ void Emu68_ShiftRotate() {
     int64_t value14;
     int8_t value15;
     int8_t value16;
-    Emu68ShiftHandler shiftHandlers[9];
+    ShiftHandler shiftHandlers[9];
 
-    shiftHandlers[0] = Emu68_ArithmeticShiftRight;
-    shiftHandlers[1] = Emu68_LogicalShiftRight;
+    shiftHandlers[0] = ArithmeticShiftRight;
+    shiftHandlers[1] = LogicalShiftRight;
     value0 = g_emu68Instruction & 7;
-    shiftHandlers[2] = Emu68_RotateExtendRight;
+    shiftHandlers[2] = RotateExtendRight;
     value1 = ((uint16_t)g_emu68Instruction >> 9) & 7;
-    shiftHandlers[3] = Emu68_RotateRight;
-    shiftHandlers[4] = Emu68_ArithmeticShiftLeft;
-    shiftHandlers[5] = Emu68_LogicalShiftLeft;
-    shiftHandlers[6] = Emu68_RotateExtendLeft;
-    shiftHandlers[7] = Emu68_RotateLeft;
+    shiftHandlers[3] = RotateRight;
+    shiftHandlers[4] = ArithmeticShiftLeft;
+    shiftHandlers[5] = LogicalShiftLeft;
+    shiftHandlers[6] = RotateExtendLeft;
+    shiftHandlers[7] = RotateLeft;
     if ((g_emu68Instruction & 0x20) != 0)
         value2 = reg68->d[value1] & 0x3F;
     else
@@ -5795,7 +5802,7 @@ void Emu68_ShiftRotate() {
     return;
 }
 
-void emu68_Run() {
+void Run() {
     g_reg68_ctx.bus_word_count = 0;
     for (unsigned phase = 0; phase < 6; ++phase) {
         do {
@@ -5819,19 +5826,21 @@ void emu68_Run() {
         if (level) {
             reg68 = &g_reg68_ctx;
             if (level == 7 || (g_reg68_ctx.sr.raw[1] & 7) < level) {
-                emu68_HandleInterruptRequest(level + 24);
+                HandleInterruptRequest(level + 24);
                 reg68->sr.raw[1] &= 0xA0;
                 reg68->sr.raw[1] |= level;
             }
             level = *request;
             reg68 = &g_reg68_ctx_2;
             if (level == 7 || (g_reg68_ctx_2.sr.raw[1] & 7) < level) {
-                emu68_HandleInterruptRequest(level + 24);
+                HandleInterruptRequest(level + 24);
                 reg68->sr.raw[1] &= 0xA0;
                 reg68->sr.raw[1] |= level;
             }
         }
     }
+}
+
 }
 
 void HarrierInit() {
@@ -5858,9 +5867,9 @@ void HarrierInit() {
     g_reg68_ctx.map = g_reg68_ctx_map_funcs.data();
     g_reg68_ctx_2.map = g_reg68_ctx_map_funcs_2.data();
     reg68 = &g_reg68_ctx;
-    Emu68_ResetContext();
+    emu68::ResetContext();
     reg68 = &g_reg68_ctx_2;
-    Emu68_ResetContext();
+    emu68::ResetContext();
     reg68 = &g_reg68_ctx;
 
     for (unsigned record = 0; emu68_insn_defs[record].asm_string; ++record) {

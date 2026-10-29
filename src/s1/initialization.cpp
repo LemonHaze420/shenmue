@@ -1,3 +1,4 @@
+#include "auto_test.hpp"
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -272,6 +273,11 @@ std::int64_t InitShenmue(GameConfig *config) {
         GetCurrentDirectoryA(static_cast<DWORD>(std::size(currentDirectory)), currentDirectory);
     }
 
+#if SHEN_AUTO_TEST_ENABLED
+    g_skipFrontendSplash = true;
+    g_hideValidationWindow = true;
+    g_currentSettings.display.windowMode = 0;
+#endif
     DisplayModeInfo *const screenResolution = GetScreenResolution();
     if (!screenResolution) {
         return -1;

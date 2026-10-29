@@ -55,7 +55,7 @@ shen_name FindNearestQdmrDoor(const std::uint32_t *roomFlags) {
         if (std::fabs(direction.z) < 1.1920929e-7f)
             direction.z = 0;
         const Vector3i yaw{0, rotation.y - door.yaw, 0};
-        ApplyScenarioTranslationAndRotation(nullptr, &yaw, &direction);
+        scenApplyTransRot(nullptr, &yaw, &direction);
         if (direction.z >= nearest) {
             nearest = direction.z;
             if (direction.z > -0.1f)
@@ -350,7 +350,7 @@ bool FindClearRotationPathForAngY(std::int32_t *yaw) {
         EV_GetCharaPosition(QDMR_PLAYER, CHARACTER_TRANSLATION_ROOT, &origin, EventTransformFlags::Local);
         Vector3 destination{0, 0.30000001f, -1.8f};
         rotation.y = static_cast<std::uint16_t>(static_cast<std::int32_t>((static_cast<float>(firstSector + index) * 45.0f * 8192.0f) / 45.0f));
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &destination);
+        scenApplyTransRot(&origin, &rotation, &destination);
         intersections[index] = (FindNearestRayIntersection(&intersection, &destination, &origin) & 1) == 0;
     }
     std::int32_t start = 0, current = 1;

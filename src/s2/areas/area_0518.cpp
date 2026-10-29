@@ -160,7 +160,7 @@ std::int64_t Update0518Author(AuthorViewer517ELoopTaskParameter *child) {
     Vector3 offset{0.0f, 0.03f, 0.0f};
     EV_GetCharaPosition(AREA_0518_a435, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(AREA_0518_a435, &rotation, EventTransformFlags::World);
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+    scenApplyTransRot(&position, &rotation, &offset);
     SetParticleEffectPosition(4, carriedFire0518, &offset, &offset);
     if (static_cast<std::uint32_t>(frame - 1003) <= 66U || frame >= 2679 || frame == 1070) {
         if (frame == 1070)

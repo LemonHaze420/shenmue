@@ -380,7 +380,7 @@ void AvoidDuckRaceCourseMarkers(DuckRaceActor *actor) {
             actor->steerTimer = 0;
             Vector3 offset{0, 0, radius};
             Vector3i rotation{0, CourseYaw(x, z), 0};
-            ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+            scenApplyTransRot(&position, &rotation, &offset);
             actor->position.x = offset.x;
             actor->position.z = offset.z;
             float response = .2f;
@@ -536,8 +536,8 @@ void ResolveDuckRaceActorCollisions(DuckRaceActor *actor) {
         const float displacement = FlushSmall((radius - distance) * .5f);
         Vector3 first{0, 0, displacement}, second{0, 0, -displacement};
         Vector3i rotation{0, CourseYaw(x, z), 0};
-        ApplyScenarioTranslationAndRotation(&actor->position, &rotation, &first);
-        ApplyScenarioTranslationAndRotation(&other->position, &rotation, &second);
+        scenApplyTransRot(&actor->position, &rotation, &first);
+        scenApplyTransRot(&other->position, &rotation, &second);
         actor->position = first;
         other->position = second;
         EV_AT_SetPos(other->name, EventTransformFlags::World | EventTransformFlags::AllAxes, other->position);
@@ -737,7 +737,7 @@ void SnapDuckRaceCameraTarget() {
     EV_GetCharaPosition(name, CHARACTER_TRANSLATION_ROOT, &duckRaceRuntime.cameraTarget, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(name, &rotation, EventTransformFlags::World);
     duckRaceRuntime.cameraProbe = {0.0f, 1.0f, 1.0f};
-    ApplyScenarioTranslationAndRotation(&duckRaceRuntime.cameraTarget, &rotation, &duckRaceRuntime.cameraProbe);
+    scenApplyTransRot(&duckRaceRuntime.cameraTarget, &rotation, &duckRaceRuntime.cameraProbe);
 }
 void SetDuckRacePreviewCameraTarget(std::int32_t actor) {
     duckRaceRuntime.followedActor = actor % duckRaceRuntime.actorCount;
@@ -754,7 +754,7 @@ void UpdateDuckRaceFollowCamera() {
     target.x += (position.x - target.x) * 0.3f;
     target.z += (position.z - target.z) * 0.3f;
     target.y += (position.y - target.y) * 0.3f;
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+    scenApplyTransRot(&position, &rotation, &offset);
     constexpr float factors[]{0.1f, 0.1f, 0.5f, 0.45454543828964233f};
     const auto factor = factors[duckRaceRuntime.cameraIndex];
     auto &probe = duckRaceRuntime.cameraProbe;

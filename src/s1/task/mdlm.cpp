@@ -147,7 +147,7 @@ void MDLM_ReleaseSlot(MdlmTaskData *data, MdlmImageSlot *slot) {
         if (scoped)
             MDLM_RemoveRecord(data, scoped);
     }
-    HMDL_FreeAssignedModel(slot->activeModel);
+    hmdlFreeAssignedModel(slot->activeModel);
     slot->activeModel = nullptr;
     slot->flags = 0;
 }
@@ -382,7 +382,7 @@ void *MDLM_CreateAssignedImage(MdlmImageSlot *slot) {
     MdlmImageEntry *const entry = MDLM_SelectImage(slot->record, slot->selectionMetric);
     PackModel *const source = entry ? entry->model : nullptr;
     if ((slot->flags & 2U) != 0 || source != slot->selectedModel) {
-        HMDL_FreeAssignedModel(slot->activeModel);
+        hmdlFreeAssignedModel(slot->activeModel);
         slot->activeModel = source ? hmdlAssignFor(source, slot->childIndex, slot->nodeKind, slot->occurrence) : nullptr;
         slot->flags &= ~2U;
         slot->selectedModel = source;

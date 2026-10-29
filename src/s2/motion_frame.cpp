@@ -32,9 +32,9 @@ void ApplyRotationChannelsZYX(MotionRigChannel *const (&channels)[3]) {
 // The callbacks' "copy channels or slerp toward the channel pose" body.
 void EvaluateRotationParameters(MotionRotationParameters &parameters, std::uint32_t poseMode, float blend) {
     if (std::fabs(blend - 1.0f) <= 0.00000011920929f) {
-        if (poseMode == motionPoseFromChannels)
+        if (poseMode == MP_FromChannels)
             ApplyRotationChannelsZYX(parameters.channels);
-        else if (poseMode == motionPoseFromAxisAngle)
+        else if (poseMode == MP_FromAxisAngle)
             AxisAngleToBasisSlerp(*parameters.basis);
     } else {
         cbEvaluateTargetRotOverride(&parameters);
@@ -822,7 +822,7 @@ bool SampleNativeMotionRoot(std::uint16_t animation, std::int32_t boneId, float 
     g_motionMaximumAnimTime = static_cast<float>(header[2] - 1) * motionFrameSeconds;
     for (MotionRigAxis &channel : channels)
         ReadMotionKeyBlock(channel.channel);
-    g_motionInterpolationType = motionInterpolationHermiteAuto;
+    g_motionInterpolationType = MI_HermiteAuto;
     g_motionCurrentAnimTime = 0.0f > frame ? g_motionMaximumAnimTime : frame * motionFrameSeconds;
     float sampled[3];
     for (std::size_t axis = 0; axis < 3; ++axis)
@@ -1031,7 +1031,7 @@ void mtwkRigRunOverrideBlendPass(MotionWork *work) {
         if (static_cast<std::uint8_t>(evaluated))
             mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
     }
-    TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
+    TranslatePelvisFromChannels(work->rig.lowerBody, MI_Hermite);
     state.overrideBlendTime = -1.0f;
 }
 
@@ -1727,18 +1727,18 @@ std::int32_t mtwkProcessLayers(MotionWork *work) {
                 if (state.currentRootMode == 2) {
                     if (0.0f > state.layerSampleFrame[0]) {
                         if (state.motnFlags & 0x2000U)
-                            TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
+                            TranslatePelvisFromChannels(work->rig.lowerBody, MI_Hermite);
                     } else if (!(state.motnFlags & 0x4000U)) {
-                        TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
+                        TranslatePelvisFromChannels(work->rig.lowerBody, MI_Hermite);
                     }
                 }
             } else {
                 const float start = state.layerSampleFrame[0];
                 if (0.0f > start) {
                     if (state.motnFlags & 0x2000U)
-                        TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
+                        TranslatePelvisFromChannels(work->rig.lowerBody, MI_Hermite);
                 } else if (!(state.motnFlags & 0x4000U)) {
-                    TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
+                    TranslatePelvisFromChannels(work->rig.lowerBody, MI_Hermite);
                     Vector3 end, begin;
                     SampleNativeMotionRoot(state.currentMotionId[0], work->rig.boneId, start, end);
                     float scale = 1.0f;
@@ -1807,28 +1807,28 @@ void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
     Matrix4x4 channels;
     Vector4 &pelvis = work->rig.lowerBody.pelvisTransform.rows[3];
     if (result == 4) {
-        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.maxTime, motionInterpolationHermiteAuto);
+        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.maxTime, MI_HermiteAuto);
         const float endX = channels.rows[3].x + pelvis.x;
         const float endZ = channels.rows[3].z + pelvis.z;
         g_motionRegionClocks[0]->current.ticksTime = 0.0f;
         mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, MotionRegion::LowerBody);
-        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, motionInterpolationHermiteAuto);
+        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
         state.regionFlags[0] |= MRF_Unknown01;
         pelvis.x = -(channels.rows[3].x - endX);
         pelvis.z = -(channels.rows[3].z - endZ);
         reread = true;
     } else if (result == 3) {
-        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, ceil_float(g_motionRegionClocks[0]->current.maxTime), motionInterpolationHermiteAuto);
+        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, ceil_float(g_motionRegionClocks[0]->current.maxTime), MI_HermiteAuto);
         const float endX = channels.rows[3].x + pelvis.x;
         const float endZ = channels.rows[3].z + pelvis.z;
         mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, MotionRegion::LowerBody);
-        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, motionInterpolationHermiteAuto);
+        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
         pelvis.x = -(channels.rows[3].x - endX);
         pelvis.z = -(channels.rows[3].z - endZ);
         reread = true;
     } else if (result == 2) {
         mtwkRigEvaluateControllers(work, nullptr, 0.0f, 0.0f, motionInitChannels, MotionRegion::LowerBody);
-        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, motionInterpolationHermiteAuto);
+        BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
         pelvis.x = -channels.rows[3].x;
         pelvis.z = -channels.rows[3].z;
         reread = true;
@@ -1986,10 +1986,10 @@ void mtwkApplySequenceCommands(MotionWork *work) {
                     const float z = pelvis.z;
                     Matrix4x4 channels;
                     BuildChannelTransformAtTime(
-                        work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, motionInterpolationHermiteAuto);
+                        work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
                     const float translatedX = x + channels.rows[3].x;
                     const float translatedZ = z + channels.rows[3].z;
-                    TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
+                    TranslatePelvisFromChannels(work->rig.lowerBody, MI_Hermite);
                     pelvis.x = translatedX + pelvis.x;
                     pelvis.z = translatedZ + pelvis.z;
                 } else {
@@ -1998,7 +1998,7 @@ void mtwkApplySequenceCommands(MotionWork *work) {
                     mtwkTimePairClampAndPropagate(work, -1.0f, earlier > 0.0f ? earlier : 0.0f, -1.0f, MotionRegion::LowerBody);
                     if (state.regionFlags[0] & MRF_Transition)
                         state.layerBlendAlpha[0] = 1.0f - static_cast<float>(state.blendRemainingFrames[0] + 1) / static_cast<float>(state.blendTotalFrames[0]);
-                    TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
+                    TranslatePelvisFromChannels(work->rig.lowerBody, MI_Hermite);
                     mtwkTimePairClampAndPropagate(work, -1.0f, current, -1.0f, MotionRegion::LowerBody);
                     state.layerBlendAlpha[0] = alpha;
                 }
@@ -2359,12 +2359,12 @@ std::int32_t mtwkEvaluateMotionFrame(MotionWork *work) {
     mtwkApplySequenceCommands(work);
     mtwkUpdateOverrideCallbacks(work);
     mtwkAssignCallbacks(work);
-    const std::uint32_t interpolationMode = ((state.seqFlags >> motionSequenceInterpolationShift) & motionInterpolationLinear) | motionInterpolationHermite;
+    const std::uint32_t interpolationMode = ((state.seqFlags >> motionSequenceInterpolationShift) & MI_Linear) | MI_Hermite;
     if ((state.motnFlags & 9U) != 1U) {
-        TranslatePelvisFromChannels(work->rig.lowerBody, motionInterpolationHermite);
+        TranslatePelvisFromChannels(work->rig.lowerBody, MI_Hermite);
         if (state.motnFlags & 8U) {
             Matrix4x4 channels;
-            BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.ticksTime, motionInterpolationHermiteAuto);
+            BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.ticksTime, MI_HermiteAuto);
             work->rig.lowerBody.pelvisTransform.rows[3].y = -channels.rows[3].y;
         } else {
             work->rig.lowerBody.pelvisTransform.rows[3].y = 0.0f;

@@ -7,6 +7,12 @@
 #include <cstdint>
 
 namespace shenmue::s1 {
+
+enum FreeTalkCommandCode : std::int32_t {
+#define SHENMUE_S1_FREE_TALK_COMMAND(name, value) FT_##name = value,
+#include "common/free_talk_commands.def"
+#undef SHENMUE_S1_FREE_TALK_COMMAND
+};
 namespace HLib {
 struct TaskData;
 struct Task;

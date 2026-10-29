@@ -1,3 +1,4 @@
+#include "auto_test.hpp"
 #include "s2/ui.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
@@ -376,6 +377,9 @@ std::int64_t PressStartSelected() {
 }
 
 std::int64_t PressStartInput() {
+#if SHEN_AUTO_TEST_ENABLED
+    return 0;
+#else
     const std::uint16_t pressed = g_inputBuffer[0].pressedPriority;
     if (pressStartRuntime.frozen || (!enterPressed && (pressed & 0x0400U) == 0))
         return 0;
@@ -387,12 +391,17 @@ std::int64_t PressStartInput() {
     enterPressed = false;
     g_inputBuffer[0].pressedPriority &= 0xfbffU;
     return 0;
+#endif
 }
 
 // @verified - p
 std::int64_t PressStartRender() {
     PressStartRuntime &runtime = pressStartRuntime;
+#if SHEN_AUTO_TEST_ENABLED
+    constexpr bool keyboard = true;
+#else
     const bool keyboard = GetIsKeyboardActive() != 0;
+#endif
     for (std::size_t index = 0; index < runtime.icons.size(); ++index) {
         UIButtonIconWidget *const icon = runtime.icons[index];
         if (icon) {
@@ -405,6 +414,10 @@ std::int64_t PressStartRender() {
         bool visible = false;
         if (!runtime.frozen)
             visible = GetUIIntegerTransitionValue(runtime.blinkTransition) % 4 != 0;
+#if SHEN_AUTO_TEST_ENABLED
+        if (auto_test::TitleLatched())
+            visible = true;
+#endif
         if (runtime.prompt)
             runtime.prompt->field44 = visible;
         if (runtime.windows[22])
@@ -415,6 +428,24 @@ std::int64_t PressStartRender() {
     UpdatePressStartLight(runtime.lights[1], 17);
     const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::PressStart)];
     DrawUIEntity(*GetNativeUiContext(), element.config.uiHandleIndex, element.index);
+#if SHEN_AUTO_TEST_ENABLED
+    const d3t::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(element.config.uiHandleIndex);
+    bool imagesReady = view && view->inUse && view->imagesLoading == 1;
+    std::size_t imageCount = 0;
+    if (view) {
+        for (const d3t::UIViewImage &image : view->images) {
+            if (!image.name || !*image.name)
+                continue;
+            ++imageCount;
+            imagesReady = imagesReady && image.ready == 1 && image.textureHandle != -1 && image.width && image.height;
+        }
+    }
+    const bool promptVisible = runtime.blinkTransition != -1 && GetUIIntegerTransitionValue(runtime.blinkTransition) % 4 != 0;
+    static std::uint32_t titleFrames = 0;
+    const bool titleReady = SplashSequenceComplete() && element.config.init == 3 && element.isVisible && !runtime.frozen && imagesReady && imageCount != 0;
+    titleFrames = titleReady ? titleFrames + 1 : 0;
+    auto_test::LatchTitleFrame(titleFrames >= 150 && promptVisible);
+#endif
     return 0;
 }
 
@@ -1402,8 +1433,12 @@ void UpdatePressStartLight(PressStartLightState &light, std::int32_t firstWindow
     }
     if (!(light.duration > 0.0f))
         return;
+#if SHEN_AUTO_TEST_ENABLED
+    light.phase = PRESS_START_LIGHT_INITIAL[&light == &runtime.lights[0] ? 0 : 1].phase;
+#else
     if (light.paused == 0)
-        light.phase = std::fmax(0.0f, std ::fmin(1.0f, ((1.0f / light.duration) * (GetFrameTime() * static_cast<float>(light.direction))) + light.phase));
+        light.phase = std::fmax(0.0f, std::fmin(1.0f, ((1.0f / light.duration) * (GetFrameTime() * static_cast<float>(light.direction))) + light.phase));
+#endif
     const float noise = EvaluateTitleNoise(light.phase);
     const float wave = std::sin((noise + light.phase) * 3.1415927f);
     d3t::UIWindow &shadow = *runtime.windows[static_cast<std::size_t>(light.shadowWindow)];
@@ -1415,7 +1450,7 @@ void UpdatePressStartLight(PressStartLightState &light, std::int32_t firstWindow
         if (width <= 0.0f)
             band.value = 0.0f;
         else
-            band.value = std ::fmax(0.0f, std::fmin(1.0f, (wave - band.begin) / width));
+            band.value = std::fmax(0.0f, std::fmin(1.0f, (wave - band.begin) / width));
         float amount;
         if (index == 0)
             amount = 1.0f - (std::sin((band.value * 3.1415927f) + 1.5707964f) + 1.0f) * 0.5f;

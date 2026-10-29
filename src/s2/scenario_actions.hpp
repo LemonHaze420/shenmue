@@ -17,6 +17,12 @@
 
 namespace shenmue::s2 {
 
+enum FreeTalkCommandCode : std::int32_t {
+#define SHENMUE_S2_FREE_TALK_COMMAND(name, value) FT_##name = value,
+#include "common/free_talk_commands.def"
+#undef SHENMUE_S2_FREE_TALK_COMMAND
+};
+
 
 
 namespace event_runtime_detail {

@@ -999,12 +999,12 @@ void vfUpdateSlotReactionHistory(VFActor *self) {
     if ((self->previousHitStateFlags & VFHSF_AirborneOrDowned) == 0 && (self->hitStateFlags & VFHSF_AirborneOrDowned) != 0 && second &&
         second->fightStyle == 0 && second->pairContactPriority != 0) {
         auto index = static_cast<std::uint8_t>(slot.parameterA4);
-        slot.reactionHistory[index++] = static_cast<std::uint16_t>(static_cast<std::int16_t>(reactionByte(*second)));
+        slot.inputHistory[index++] = static_cast<std::uint16_t>(static_cast<std::int16_t>(reactionByte(*second)));
         slot.parameterA4 = static_cast<std::int8_t>(index == 3 ? 0 : index);
     }
     slot.parameterA2 = 0;
-    if (second && second->fightStyle == 0 && slot.reactionHistory[1] != 0) {
-        for (const auto reaction : slot.reactionHistory)
+    if (second && second->fightStyle == 0 && slot.inputHistory[1] != 0) {
+        for (const auto reaction : slot.inputHistory)
             if (static_cast<std::int32_t>(reactionByte(*second)) == static_cast<std::int32_t>(reaction))
                 ++slot.parameterA2;
     }
@@ -2024,9 +2024,9 @@ std::uint64_t vfStageDefinitionSetAttachment(
 
 // @verified - p
 std::uint32_t ToggleVOBJArrayIndex(
-    std::int32_t slot, std::int8_t guardStrength, std::int8_t guardState, std::int16_t hitParameter, std::uint32_t hitSound) {
+    std::int32_t slot, std::int8_t hitDamage, std::int8_t guardState, std::int16_t hitParameter, std::uint32_t hitSound) {
     FightStageObjectDefinition &definition = *g_fightStageObjectDefinitions[slot];
-    definition.guardStrength = guardStrength;
+    definition.hitDamage = hitDamage;
     definition.guardState = guardState;
     definition.hitParameter = hitParameter;
     definition.hitSound = hitSound;

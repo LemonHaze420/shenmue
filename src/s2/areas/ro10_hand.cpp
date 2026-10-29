@@ -66,7 +66,7 @@ void MoveShopHand(Ro10Work &work, const Vector3 &offset, bool retract) {
     }
     translated.z = Ro10FlushSmall(z + .16f);
     const Vector3i handRotation{32768, 27306 - shop.rotation.y, 32768};
-    ApplyScenarioTranslationAndRotation(&position, &shop.rotation, &translated);
+    scenApplyTransRot(&position, &shop.rotation, &translated);
     EV_AT_SetPos(RO10_HAND, EventTransformFlags::World | EventTransformFlags::AllAxes, translated);
     EV_AT_SetAngY(RO10_HAND, EventTransformFlags::World | EventTransformFlags::AllAxes, handRotation);
 }

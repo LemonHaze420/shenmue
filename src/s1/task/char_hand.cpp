@@ -1277,7 +1277,7 @@ void HND_ApplyRootRotationToInverse(const HandModelWork &hand) {
 
 
 
-void HMDL_AppendHandAttachmentMatrices(const HandSkinningAttachmentRecord *record) {
+void hmdlAppendHandAttachmentMatrices(const HandSkinningAttachmentRecord *record) {
     if (!record || !record->enabled || !record->ready || !record->node)
         return;
     const std::byte *const recordBytes = reinterpret_cast<const std::byte *>(record);
@@ -1308,7 +1308,7 @@ void HND_CollectSkinnedJoints(const HandFingerNode *&cursor, HandSkinningAttachm
 }
 
 
-HandSkinningAttachmentRecord *HMDL_AcquireHandAttachmentRecord(HandSkinningAttachmentRecord *records, Mt5RuntimeNode *node, std::uint32_t &slotIndex) {
+HandSkinningAttachmentRecord *hmdlAcquireHandAttachmentRecord(HandSkinningAttachmentRecord *records, Mt5RuntimeNode *node, std::uint32_t &slotIndex) {
     if (!records || !node)
         return nullptr;
     for (std::uint32_t index = 0; index < 2; ++index) {
@@ -1332,7 +1332,7 @@ HandSkinningAttachmentRecord *HMDL_AcquireHandAttachmentRecord(HandSkinningAttac
 
 
 
-bool HMDL_PublishHandSkinning(const HandModelWork &hand, Character *character, void *model) {
+bool hmdlPublishHandSkinning(const HandModelWork &hand, Character *character, void *model) {
     static_cast<void>(SubmitRiggedSceneObjectForDrawing(character->model, character, 0, 12));
     std::byte *const entry = ResolveHmdlEntry(reinterpret_cast<std::uintptr_t>(model));
     if (!entry)
@@ -1349,7 +1349,7 @@ bool HMDL_PublishHandSkinning(const HandModelWork &hand, Character *character, v
     const HandSkinningAttachmentRecord *const records = reinterpret_cast<const HandSkinningAttachmentRecord *>(entry + 0x3f28);
     for (std::size_t index = 0; index < 2; ++index) {
         if (records[index].nodeHash && records[index].nodeKind == nodeKind)
-            HMDL_AppendHandAttachmentMatrices(records + index);
+            hmdlAppendHandAttachmentMatrices(records + index);
     }
     return true;
 }
@@ -1366,7 +1366,7 @@ void HND_PublishSkinning(Character *character, HandModelWork &hand) {
         return;
     if (static_cast<std::uint8_t>(hand.side - 3U) > 1U)
         HND_ApplyRootRotationToInverse(hand);
-    HMDL_PublishHandSkinning(hand, character, character->model);
+    hmdlPublishHandSkinning(hand, character, character->model);
 }
 
 
@@ -1536,7 +1536,7 @@ void HND_ApplyAuthoredPose(Character *character, HandModelWork &hand) {
     Matrix4x4 root{};
     HND_CaptureRootTransform(character, hand, &root);
     if (Mt5RuntimeNode *const node = shenGetNodeByChildIdx(model, static_cast<std::int16_t>(nodeKind)); node && node->transformOffset) {
-        if (const Matrix4x4 *const transform = HMDL_TransformForNode(node, node->transformOffset))
+        if (const Matrix4x4 *const transform = hmdlTransformForNode(node, node->transformOffset))
             root = *transform;
     }
     const HandFingerNode *cursor = hierarchy;
@@ -1844,7 +1844,7 @@ void HND_Callback(Character *character, void *payload) {
             HND_CaptureRootTransform(character, *hand, &root);
             Mt5RuntimeNode *const model = character ? static_cast<Mt5RuntimeNode *>(character->model) : nullptr;
             if (Mt5RuntimeNode *const node = shenGetNodeByChildIdx(model, left ? -66 : -65); node && node->transformOffset) {
-                if (const Matrix4x4 *const transform = HMDL_TransformForNode(node, node->transformOffset))
+                if (const Matrix4x4 *const transform = hmdlTransformForNode(node, node->transformOffset))
                     root = *transform;
             }
             const HandFingerNode *cursor = hierarchy;
@@ -2194,7 +2194,7 @@ HandModelWork *AllocateHandModelWork(Character *character, bool leftComponent, c
 
 
 
-void HMDL_CreateHandAttachmentRecords(
+void hmdlCreateHandAttachmentRecords(
     void *nodePointer, Character *character, HandSkinningAttachmentRecord *records, std::uint32_t &recordType, std::uint32_t &slotIndex, std::uint32_t flags) {
     Mt5RuntimeNode *const node = static_cast<Mt5RuntimeNode *>(nodePointer);
     const std::uint16_t kind = static_cast<std::uint16_t>(node->nodeKind);
@@ -2205,7 +2205,7 @@ void HMDL_CreateHandAttachmentRecords(
     HandModelWork *const hand = character ? HND_GetWork(character, kind == 0xffbeU || kind == 13U) : nullptr;
     if (!hand)
         return;
-    HandSkinningAttachmentRecord *const record = HMDL_AcquireHandAttachmentRecord(records, node, slotIndex);
+    HandSkinningAttachmentRecord *const record = hmdlAcquireHandAttachmentRecord(records, node, slotIndex);
     if (!record)
         return;
     const HandFingerNode *cursor = HandHierarchy(*hand);

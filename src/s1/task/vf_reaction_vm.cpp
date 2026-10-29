@@ -36,17 +36,17 @@ std::uint8_t vfReactScaleFrames(const VFActor &actor, std::int32_t frames) {
 
 std::uint16_t vfReactAliasMask(const VFActor &actor, std::uint16_t operand, std::uint16_t mask) {
     if ((operand & 0x400U) != 0)
-        mask = static_cast<std::uint16_t>(mask | actor.reactionPriorityMaskA);
+        mask = static_cast<std::uint16_t>(mask | actor.inputAliasMaskA);
     if ((operand & 0x800U) != 0)
-        mask = static_cast<std::uint16_t>(mask | actor.reactionPriorityMaskB);
+        mask = static_cast<std::uint16_t>(mask | actor.inputAliasMaskB);
     return mask;
 }
 
 std::uint32_t vfReactSelectAliasMask(const VFActor &actor, std::uint16_t operand) {
     if ((operand & 0x400U) != 0)
-        return actor.reactionPriorityMaskA;
+        return actor.inputAliasMaskA;
     if ((operand & 0x800U) != 0)
-        return static_cast<std::uint32_t>(actor.reactionPriorityMaskB);
+        return static_cast<std::uint32_t>(actor.inputAliasMaskB);
     return operand;
 }
 
@@ -65,8 +65,8 @@ float vfReactAbsYaw(std::int32_t yaw) {
     return std::fabs(static_cast<float>(static_cast<std::int16_t>(yaw)));
 }
 
-VFReactResponse vfReactContinueOrScan(const VFActor &actor, std::uint16_t priorityMask) {
-    return priorityMask != actor.lastPriorityMaskSnapshot ? VFReactResponse::CheckPriorityWindow : VFReactResponse::ContinuePriorityScan;
+VFReactResponse vfReactContinueOrScan(const VFActor &actor, std::uint16_t inputMask) {
+    return inputMask != actor.lastInputMaskSnapshot ? VFReactResponse::CheckPriorityWindow : VFReactResponse::ContinuePriorityScan;
 }
 
 bool PopReactionState(VFActor &actor) {
@@ -74,27 +74,27 @@ bool PopReactionState(VFActor &actor) {
         return false;
     const VFReactionStateStackEntry &entry = actor.reactionStateStack[static_cast<std::uint8_t>(actor.reactionStateStackDepth)];
     if (entry.skipPriorityRestore == 0) {
-        actor.priorityFlags = entry.savedPriorityFlags;
-        actor.priorityMask = static_cast<std::int16_t>(entry.savedPriorityMask);
-        actor.lastPriorityMaskSnapshot = entry.savedLastPriorityMask;
-        actor.reactionPriorityIndex = entry.savedPriorityIndex;
-        actor.priorityWindowAllowedMask = entry.savedWindowAllowedMask;
-        actor.priorityWindowFramesRemaining = entry.savedWindowFramesRemaining;
-        actor.priorityScanCounter = static_cast<std::uint32_t>(entry.savedPriorityScanCounter);
+        actor.inputPressed = entry.savedInputPressed;
+        actor.inputMask = static_cast<std::int16_t>(entry.savedInputMask);
+        actor.lastInputMaskSnapshot = entry.savedLastInputMask;
+        actor.inputHistoryIndex = entry.savedInputHistoryIndex;
+        actor.inputWindowAllowedMask = entry.savedWindowAllowedMask;
+        actor.inputWindowFramesRemaining = entry.savedWindowFramesRemaining;
+        actor.inputScanCounter = static_cast<std::uint32_t>(entry.savedInputScanCounter);
     }
     actor.reactionVmProgramCounter = entry.savedProgramCounter;
     return actor.reactionVmProgramCounter != nullptr;
 }
 
 VFReactResponse vfReactAdvanceIfPrioFlagsAndMaskMatch(VFActor &actor) {
-    const std::uint16_t flags = actor.priorityFlags;
+    const std::uint16_t flags = actor.inputPressed;
     if (!flags)
         return VFReactResponse::ContinuePriorityScan;
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
     const std::uint16_t mask = static_cast<std::uint8_t>(vfReactAliasMask(actor, vfReactOperand(*instruction), instruction->state));
-    if (mask != flags || mask != static_cast<std::uint16_t>(actor.priorityMask))
+    if (mask != flags || mask != static_cast<std::uint16_t>(actor.inputMask))
         return VFReactResponse::PopState;
-    actor.lastPriorityMaskSnapshot = mask;
+    actor.lastInputMaskSnapshot = mask;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
     return VFReactResponse::Continue;
 }
@@ -104,10 +104,10 @@ VFReactResponse vfReactAdvanceIfPrioMaskMatches(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
     const std::uint16_t operand = vfReactOperand(*instruction);
     const std::uint16_t mask = vfReactAliasMask(actor, operand, operand & 0xffU);
-    const auto priorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    if (mask != priorityMask)
-        return vfReactContinueOrScan(actor, priorityMask);
-    actor.lastPriorityMaskSnapshot = mask;
+    const auto inputMask = static_cast<std::uint16_t>(actor.inputMask);
+    if (mask != inputMask)
+        return vfReactContinueOrScan(actor, inputMask);
+    actor.lastInputMaskSnapshot = mask;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
     return VFReactResponse::Custom2;
 }
@@ -115,10 +115,10 @@ VFReactResponse vfReactAdvanceIfPrioMaskMatches(VFActor &actor) {
 
 VFReactResponse vfReactAdvanceIfPrioMaskIntersects(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
-    const auto priorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    if ((vfReactSelectAliasMask(actor, vfReactOperand(*instruction)) & priorityMask) == 0)
-        return vfReactContinueOrScan(actor, priorityMask);
-    actor.lastPriorityMaskSnapshot = priorityMask;
+    const auto inputMask = static_cast<std::uint16_t>(actor.inputMask);
+    if ((vfReactSelectAliasMask(actor, vfReactOperand(*instruction)) & inputMask) == 0)
+        return vfReactContinueOrScan(actor, inputMask);
+    actor.lastInputMaskSnapshot = inputMask;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
     return VFReactResponse::Custom2;
 }
@@ -128,11 +128,11 @@ VFReactResponse vfReactOpenPriorityWindow(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
     const std::uint8_t mask = static_cast<std::uint8_t>(vfReactAliasMask(actor, vfReactOperand(*instruction), instruction->state));
     const std::uint8_t frames = vfReactScaleFrames(actor, static_cast<std::int8_t>(instruction->index));
-    actor.priorityWindowAllowedMask = mask;
+    actor.inputWindowAllowedMask = mask;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
-    const auto priorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    actor.priorityWindowFramesRemaining = frames;
-    if (actor.lastPriorityMaskSnapshot != priorityMask && (~static_cast<std::uint32_t>(mask) & priorityMask) != 0)
+    const auto inputMask = static_cast<std::uint16_t>(actor.inputMask);
+    actor.inputWindowFramesRemaining = frames;
+    if (actor.lastInputMaskSnapshot != inputMask && (~static_cast<std::uint32_t>(mask) & inputMask) != 0)
         return VFReactResponse::PopState;
     return VFReactResponse::Continue;
 }
@@ -142,7 +142,7 @@ VFReactResponse vfReactSetPriorityScanDuration(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
     const std::uint8_t frames = vfReactScaleFrames(actor, static_cast<std::int8_t>(instruction->index));
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
-    actor.priorityScanCounter = frames;
+    actor.inputScanCounter = frames;
     return VFReactResponse::Continue;
 }
 
@@ -281,12 +281,12 @@ VFReactResponse vfReactBranchIfConditionFlagsMatch(VFActor &actor) {
 }
 
 void vfReactSaveStackEntry(VFActor &actor, VFReactionStateStackEntry &entry) {
-    entry.savedPriorityFlags = actor.priorityFlags;
-    entry.savedPriorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    entry.savedLastPriorityMask = actor.lastPriorityMaskSnapshot;
-    entry.savedPriorityIndex = actor.reactionPriorityIndex;
-    entry.savedWindowAllowedMask = actor.priorityWindowAllowedMask;
-    entry.savedWindowFramesRemaining = vfReactScaleFrames(actor, actor.priorityWindowFramesRemaining);
+    entry.savedInputPressed = actor.inputPressed;
+    entry.savedInputMask = static_cast<std::uint16_t>(actor.inputMask);
+    entry.savedLastInputMask = actor.lastInputMaskSnapshot;
+    entry.savedInputHistoryIndex = actor.inputHistoryIndex;
+    entry.savedWindowAllowedMask = actor.inputWindowAllowedMask;
+    entry.savedWindowFramesRemaining = vfReactScaleFrames(actor, actor.inputWindowFramesRemaining);
 }
 
 
@@ -294,7 +294,7 @@ VFReactResponse vfReactPushState(VFActor &actor) {
     VFReactionStateStackEntry &entry = actor.reactionStateStack[static_cast<std::uint8_t>(actor.reactionStateStackDepth)];
     vfReactSaveStackEntry(actor, entry);
     entry.savedProgramCounter = vfReactBranch(actor, static_cast<std::int16_t>(vfReactOperand(*actor.reactionVmProgramCounter)));
-    entry.savedPriorityScanCounter = static_cast<std::int32_t>(actor.priorityScanCounter);
+    entry.savedInputScanCounter = static_cast<std::int32_t>(actor.inputScanCounter);
     entry.skipPriorityRestore = 0;
     ++actor.reactionStateStackDepth;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(actor.reactionVmProgramCounter->parameters);
@@ -448,10 +448,10 @@ VFReactResponse vfReactRequireBeforeReactionMidFrame(VFActor &actor) {
 
 VFReactResponse vfReactAdvanceIfPrioFlagsIntersect(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
-    if ((vfReactOperand(*instruction) & actor.priorityFlags) == 0)
+    if ((vfReactOperand(*instruction) & actor.inputPressed) == 0)
         return VFReactResponse::ContinuePriorityScan;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
-    actor.lastPriorityMaskSnapshot = static_cast<std::uint16_t>(actor.priorityMask);
+    actor.lastInputMaskSnapshot = static_cast<std::uint16_t>(actor.inputMask);
     return VFReactResponse::Continue;
 }
 
@@ -511,7 +511,7 @@ VFReactResponse vfReactSavePriorityWindowContext(VFActor &actor) {
     vfReactSaveStackEntry(actor, entry);
     entry.savedProgramCounter = nullptr;
     entry.skipPriorityRestore = 1;
-    entry.savedPriorityScanCounter = static_cast<std::int32_t>(actor.priorityScanCounter);
+    entry.savedInputScanCounter = static_cast<std::int32_t>(actor.inputScanCounter);
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(actor.reactionVmProgramCounter->parameters);
     return VFReactResponse::Continue;
 }
@@ -529,10 +529,10 @@ VFReactResponse vfReactPushStateWithoutPriorityRestore(VFActor &actor) {
 
 VFReactResponse vfReactBranchByScannedDirection(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
-    const std::uint32_t mask2 = actor.reactionPriority[actor.reactionPriorityIndex].mask2;
-    if ((mask2 & actor.reactionPriorityMaskA) != 0)
+    const std::uint32_t mask2 = actor.inputHistory[actor.inputHistoryIndex].sectorMask;
+    if ((mask2 & actor.inputAliasMaskA) != 0)
         actor.reactionVmProgramCounter = vfReactBranch(actor, static_cast<std::int16_t>(vfReactOperand(*instruction)));
-    else if ((mask2 & static_cast<std::uint32_t>(actor.reactionPriorityMaskB)) != 0)
+    else if ((mask2 & static_cast<std::uint32_t>(actor.inputAliasMaskB)) != 0)
         actor.reactionVmProgramCounter = vfReactBranch(actor, vfReactS16(instruction->parameters));
     else
         actor.reactionVmProgramCounter = vfReactBranch(actor, vfReactS16(instruction->parameters + 2));
@@ -552,10 +552,10 @@ VFReactResponse vfReactRequireTargetHitStateFlags2(VFActor &actor) {
 
 VFReactResponse vfReactAdvanceIfPrioMaskExcludes(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
-    const auto priorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    if ((vfReactSelectAliasMask(actor, vfReactOperand(*instruction)) & priorityMask) != 0)
-        return vfReactContinueOrScan(actor, priorityMask);
-    actor.lastPriorityMaskSnapshot = priorityMask;
+    const auto inputMask = static_cast<std::uint16_t>(actor.inputMask);
+    if ((vfReactSelectAliasMask(actor, vfReactOperand(*instruction)) & inputMask) != 0)
+        return vfReactContinueOrScan(actor, inputMask);
+    actor.lastInputMaskSnapshot = inputMask;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
     return VFReactResponse::Custom2;
 }
@@ -774,7 +774,7 @@ VFReactResponse vfOnCounterHitFollowup(VFActor &actor) {
 
 
 VFReactResponse vfReactRequireTargetGuardCoversHp(VFActor &actor) {
-    if (static_cast<std::int16_t>(actor.targetActor->guardStrength) < actor.currentHp)
+    if (static_cast<std::int16_t>(actor.targetActor->hitDamage) < actor.currentHp)
         return VFReactResponse::PopState;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(actor.reactionVmProgramCounter->parameters);
     return VFReactResponse::Continue;
@@ -811,28 +811,28 @@ VFReactResponse vfReactAdvanceIfPrioMaskCameraYawWithinParam(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
     const std::uint16_t operand = vfReactOperand(*instruction);
     const std::uint16_t mask = vfReactAliasMask(actor, operand, operand & 0xffU);
-    const auto priorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    if (!priorityMask) {
+    const auto inputMask = static_cast<std::uint16_t>(actor.inputMask);
+    if (!inputMask) {
         if (mask)
             return VFReactResponse::ContinuePriorityScan;
-        actor.lastPriorityMaskSnapshot = 0;
+        actor.lastInputMaskSnapshot = 0;
         actor.reactionVmProgramCounter = instruction + 1;
         return VFReactResponse::Custom2;
     }
     if (!mask)
         return VFReactResponse::ContinuePriorityScan;
-    if ((priorityMask & 0xfc0fU) != 0)
+    if ((inputMask & 0xfc0fU) != 0)
         return VFReactResponse::PopState;
-    const std::int32_t yaw = vfReactContactYaw(actor, priorityMask) - static_cast<std::int16_t>(g_fCamAccumYaw) - g_vfCameraYawAngles[(mask >> 4U) & 0x0fU];
+    const std::int32_t yaw = vfReactContactYaw(actor, inputMask) - static_cast<std::int16_t>(g_fCamAccumYaw) - g_vfCameraYawAngles[(mask >> 4U) & 0x0fU];
     if (!(static_cast<float>(vfReactS16(instruction->parameters)) >= vfReactAbsYaw(yaw)))
-        return vfReactContinueOrScan(actor, priorityMask);
-    actor.lastPriorityMaskSnapshot = priorityMask;
+        return vfReactContinueOrScan(actor, inputMask);
+    actor.lastInputMaskSnapshot = inputMask;
     actor.reactionVmProgramCounter = instruction + 1;
     return VFReactResponse::Custom2;
 }
 
 VFReactResponse vfReactAdvanceIfPrioMaskCameraAndFacingYawWithinParam(VFActor &actor) {
-    const std::uint16_t flags = actor.priorityFlags;
+    const std::uint16_t flags = actor.inputPressed;
     if (!flags)
         return VFReactResponse::ContinuePriorityScan;
     if ((flags & 0xfe0fU) != 0)
@@ -845,11 +845,11 @@ VFReactResponse vfReactAdvanceIfPrioMaskCameraAndFacingYawWithinParam(VFActor &a
     const auto limit = static_cast<float>(vfReactS16(instruction->parameters));
     if (!(limit >= vfReactAbsYaw(yaw - 0x8000)))
         return VFReactResponse::PopState;
-    const auto priorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    if (!(limit >= vfReactAbsYaw(vfCalcFacingYawDelta(actor, priorityMask) - cameraYaw)))
+    const auto inputMask = static_cast<std::uint16_t>(actor.inputMask);
+    if (!(limit >= vfReactAbsYaw(vfCalcFacingYawDelta(actor, inputMask) - cameraYaw)))
         return VFReactResponse::PopState;
     actor.reactionVmProgramCounter = instruction + 1;
-    actor.lastPriorityMaskSnapshot = priorityMask;
+    actor.lastInputMaskSnapshot = inputMask;
     return VFReactResponse::Continue;
 }
 
@@ -857,22 +857,22 @@ VFReactResponse vfReactBranchIfPrioMaskCameraYawWithin90Deg(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
     const std::uint16_t operand = vfReactOperand(*instruction);
     const std::uint16_t mask = vfReactAliasMask(actor, operand, operand & 0xffU);
-    const auto priorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    if (!priorityMask) {
+    const auto inputMask = static_cast<std::uint16_t>(actor.inputMask);
+    if (!inputMask) {
         if (mask)
             return VFReactResponse::ContinuePriorityScan;
-        actor.lastPriorityMaskSnapshot = 0;
+        actor.lastInputMaskSnapshot = 0;
         actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
         return VFReactResponse::Custom2;
     }
     if (!mask)
         return VFReactResponse::ContinuePriorityScan;
-    if ((priorityMask & 0xfc0fU) != 0)
+    if ((inputMask & 0xfc0fU) != 0)
         return VFReactResponse::PopState;
-    const std::int32_t yaw = vfReactContactYaw(actor, priorityMask) - static_cast<std::int16_t>(g_fCamAccumYaw) - g_vfCameraYawAngles[(mask >> 4U) & 0x0fU];
+    const std::int32_t yaw = vfReactContactYaw(actor, inputMask) - static_cast<std::int16_t>(g_fCamAccumYaw) - g_vfCameraYawAngles[(mask >> 4U) & 0x0fU];
     if (!(16384.0f >= vfReactAbsYaw(yaw)))
-        return vfReactContinueOrScan(actor, priorityMask);
-    actor.lastPriorityMaskSnapshot = priorityMask;
+        return vfReactContinueOrScan(actor, inputMask);
+    actor.lastInputMaskSnapshot = inputMask;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
     return VFReactResponse::Custom2;
 }
@@ -882,18 +882,18 @@ VFReactResponse vfReactAdvanceIfPrioMaskCameraYawOutside90Deg(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
     const std::uint16_t operand = vfReactOperand(*instruction);
     const std::uint16_t mask = vfReactAliasMask(actor, operand, operand & 0xffU);
-    const auto priorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    const std::int32_t yaw = vfReactContactYaw(actor, priorityMask) - static_cast<std::int16_t>(g_fCamAccumYaw) - g_vfCameraYawAngles[(mask >> 4U) & 0x0fU];
+    const auto inputMask = static_cast<std::uint16_t>(actor.inputMask);
+    const std::int32_t yaw = vfReactContactYaw(actor, inputMask) - static_cast<std::int16_t>(g_fCamAccumYaw) - g_vfCameraYawAngles[(mask >> 4U) & 0x0fU];
     if (16384.0f >= vfReactAbsYaw(yaw))
-        return vfReactContinueOrScan(actor, priorityMask);
-    actor.lastPriorityMaskSnapshot = priorityMask;
+        return vfReactContinueOrScan(actor, inputMask);
+    actor.lastInputMaskSnapshot = inputMask;
     actor.reactionVmProgramCounter = reinterpret_cast<VFActionDescriptor *>(instruction->parameters);
     return VFReactResponse::Custom2;
 }
 
 
 VFReactResponse vfReactBranchByScannedCameraYaw(VFActor &actor) {
-    const std::uint16_t sector = actor.reactionPriority[actor.reactionPriorityIndex].value;
+    const std::uint16_t sector = actor.inputHistory[actor.inputHistoryIndex].directionMask;
     const std::int32_t yaw = vfReactContactYaw(actor, sector) - static_cast<std::int16_t>(g_fCamAccumYaw) + 0x8000;
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
     const auto *const bytes = reinterpret_cast<const std::byte *>(instruction);
@@ -910,15 +910,15 @@ VFReactResponse vfReactBranchByScannedCameraYaw(VFActor &actor) {
 VFReactResponse vfReactOpenCameraYawPriorityWindow(VFActor &actor) {
     VFActionDescriptor *const instruction = actor.reactionVmProgramCounter;
     const std::uint16_t operand = vfReactOperand(*instruction);
-    actor.priorityWindowAllowedMask = vfReactAliasMask(actor, operand, operand & 0xf0U);
+    actor.inputWindowAllowedMask = vfReactAliasMask(actor, operand, operand & 0xf0U);
     VFActionDescriptor *const next = instruction + 1;
     actor.reactionVmProgramCounter = next;
-    actor.priorityWindowFramesRemaining = vfReactScaleFrames(actor, static_cast<std::int8_t>(instruction->index));
-    const auto priorityMask = static_cast<std::uint16_t>(actor.priorityMask);
-    const std::int32_t yaw = vfReactContactYaw(actor, priorityMask) - static_cast<std::int16_t>(g_fCamAccumYaw);
-    if (priorityMask == actor.lastPriorityMaskSnapshot)
+    actor.inputWindowFramesRemaining = vfReactScaleFrames(actor, static_cast<std::int8_t>(instruction->index));
+    const auto inputMask = static_cast<std::uint16_t>(actor.inputMask);
+    const std::int32_t yaw = vfReactContactYaw(actor, inputMask) - static_cast<std::int16_t>(g_fCamAccumYaw);
+    if (inputMask == actor.lastInputMaskSnapshot)
         return VFReactResponse::Continue;
-    if ((priorityMask & 0xf0U) == 0)
+    if ((inputMask & 0xf0U) == 0)
         return VFReactResponse::PopState;
     const auto limit = static_cast<float>(static_cast<std::int16_t>(0x8000 - vfReactS16(next->parameters)));
     return limit < vfReactAbsYaw(yaw) ? VFReactResponse::Continue : VFReactResponse::PopState;
@@ -1176,48 +1176,48 @@ constexpr VFReactResponse (*g_vfReactCallbacks[93])(VFActor &){
 VFStateMachineResult RunReactionStateMachine(VFActor &actor) {
     if (!actor.reactionVmProgramCounter)
         return VFStateMachineResult::Finished;
-    const std::int16_t savedPriorityMask = actor.priorityMask;
-    const std::uint16_t savedLastPriorityMask = actor.lastPriorityMaskSnapshot;
-    const std::uint16_t savedPriorityFlags = actor.priorityFlags;
+    const std::int16_t savedInputMask = actor.inputMask;
+    const std::uint16_t savedLastInputMask = actor.lastInputMaskSnapshot;
+    const std::uint16_t savedInputPressed = actor.inputPressed;
     VFActionDescriptor *const savedProgramCounter = actor.reactionVmProgramCounter;
     const std::int64_t savedOverride = actor.reactionOverrideActive;
     actor.reactionStateStackDepth = 0;
-    actor.reactionPriorityIndex = static_cast<std::uint8_t>((static_cast<std::uint8_t>(actor.reactionRingTail) - 1U) & 31U);
+    actor.inputHistoryIndex = static_cast<std::uint8_t>((static_cast<std::uint8_t>(actor.reactionRingTail) - 1U) & 31U);
     const std::uint16_t scanMask = actor.queuedAction.state == 13 ? 0x01f2U : 0x00f0U;
-    actor.priorityMask = static_cast<std::int16_t>(static_cast<std::uint16_t>(actor.priorityMask) & scanMask);
-    actor.priorityFlags &= scanMask;
-    actor.lastPriorityMaskSnapshot = static_cast<std::uint16_t>(actor.priorityMask);
-    actor.priorityScanCounter = (actor.reactionPriorityIndex - static_cast<std::uint8_t>(actor.otherPriorityFlags)) & 31U;
-    actor.priorityWindowFramesRemaining = 0;
-    actor.priorityWindowAllowedMask = 0;
+    actor.inputMask = static_cast<std::int16_t>(static_cast<std::uint16_t>(actor.inputMask) & scanMask);
+    actor.inputPressed &= scanMask;
+    actor.lastInputMaskSnapshot = static_cast<std::uint16_t>(actor.inputMask);
+    actor.inputScanCounter = (actor.inputHistoryIndex - static_cast<std::uint8_t>(actor.otherPriorityFlags)) & 31U;
+    actor.inputWindowFramesRemaining = 0;
+    actor.inputWindowAllowedMask = 0;
     const auto restore = [&] {
-        actor.lastPriorityMaskSnapshot = savedLastPriorityMask;
-        actor.priorityMask = savedPriorityMask;
-        actor.priorityFlags = savedPriorityFlags;
+        actor.lastInputMaskSnapshot = savedLastInputMask;
+        actor.inputMask = savedInputMask;
+        actor.inputPressed = savedInputPressed;
         actor.reactionVmProgramCounter = savedProgramCounter;
         actor.reactionOverrideActive = savedOverride;
     };
     for (;;) {
         VFReactResponse response = g_vfReactCallbacks[actor.reactionVmProgramCounter->opcode](actor);
         if (response == VFReactResponse::CheckPriorityWindow) {
-            if (actor.priorityWindowAllowedMask != 0) {
-                const std::uint16_t remaining = actor.priorityWindowFramesRemaining;
-                actor.priorityWindowFramesRemaining = static_cast<std::uint16_t>(remaining - 1U);
+            if (actor.inputWindowAllowedMask != 0) {
+                const std::uint16_t remaining = actor.inputWindowFramesRemaining;
+                actor.inputWindowFramesRemaining = static_cast<std::uint16_t>(remaining - 1U);
                 if (remaining == 0) {
                     response = VFReactResponse::PopState;
                 } else {
-                    actor.lastPriorityMaskSnapshot = static_cast<std::uint16_t>(actor.priorityMask);
-                    if (actor.priorityMask != 0 && ((~actor.priorityWindowAllowedMask & static_cast<std::uint16_t>(actor.priorityMask)) != 0)) {
+                    actor.lastInputMaskSnapshot = static_cast<std::uint16_t>(actor.inputMask);
+                    if (actor.inputMask != 0 && ((~actor.inputWindowAllowedMask & static_cast<std::uint16_t>(actor.inputMask)) != 0)) {
                         response = VFReactResponse::PopState;
                     } else {
-                        if (actor.priorityMask != 0) {
-                            actor.priorityWindowAllowedMask = static_cast<std::uint16_t>(actor.priorityMask);
+                        if (actor.inputMask != 0) {
+                            actor.inputWindowAllowedMask = static_cast<std::uint16_t>(actor.inputMask);
                         }
                         response = VFReactResponse::ContinuePriorityScan;
                     }
                 }
             } else {
-                response = actor.priorityMask != static_cast<std::int16_t>(actor.lastPriorityMaskSnapshot) ? VFReactResponse::ContinuePriorityScan :
+                response = actor.inputMask != static_cast<std::int16_t>(actor.lastInputMaskSnapshot) ? VFReactResponse::ContinuePriorityScan :
                                                                                                              VFReactResponse::PopState;
             }
         }
@@ -1225,24 +1225,24 @@ VFStateMachineResult RunReactionStateMachine(VFActor &actor) {
             continue;
         }
         if (response == VFReactResponse::ContinuePriorityScan) {
-            const std::int32_t scanCounter = static_cast<std::int32_t>(actor.priorityScanCounter);
-            --actor.priorityScanCounter;
+            const std::int32_t scanCounter = static_cast<std::int32_t>(actor.inputScanCounter);
+            --actor.inputScanCounter;
             const auto stopIndex = static_cast<std::uint8_t>(actor.functionReactionSlotIndex);
-            bool pop = scanCounter < 0 || actor.reactionPriorityIndex == stopIndex;
+            bool pop = scanCounter < 0 || actor.inputHistoryIndex == stopIndex;
             if (!pop) {
                 const auto oldestIndex = static_cast<std::uint8_t>(actor.otherPriorityFlags);
-                const auto index = static_cast<std::uint8_t>((actor.reactionPriorityIndex - 1U) & 31U);
-                actor.reactionPriorityIndex = index;
-                const VFReactionPriorityMeta &priority = actor.reactionPriority[index];
-                actor.priorityMask = static_cast<std::int16_t>(priority.mask1 & 0xf0U);
+                const auto index = static_cast<std::uint8_t>((actor.inputHistoryIndex - 1U) & 31U);
+                actor.inputHistoryIndex = index;
+                const VFInputHistoryEntry &priority = actor.inputHistory[index];
+                actor.inputMask = static_cast<std::int16_t>(priority.mask & 0xf0U);
                 const std::uint8_t wrapped = oldestIndex >= index ? 1U : 0U;
                 const std::uint8_t windowCount = stopIndex <= oldestIndex ? wrapped : static_cast<std::uint8_t>(wrapped + 1U);
                 const std::uint8_t position = stopIndex <= index ? windowCount : static_cast<std::uint8_t>(windowCount - 1U);
                 if (static_cast<std::int8_t>(position) < 1) {
-                    actor.priorityFlags = priority.flags & actor.currentReactionFlagFilter;
-                    pop = (priority.flags & actor.previousReactionFlagFilter) != actor.priorityFlags;
+                    actor.inputPressed = priority.pressed & actor.currentReactionFlagFilter;
+                    pop = (priority.pressed & actor.previousReactionFlagFilter) != actor.inputPressed;
                 } else {
-                    actor.priorityFlags = priority.flags & 0xf0U;
+                    actor.inputPressed = priority.pressed & 0xf0U;
                 }
             }
             if (pop && !PopReactionState(actor)) {

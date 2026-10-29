@@ -665,7 +665,7 @@ void BuildShadowCasterVB(Mt5RuntimeNode *model, ShadowCaster *caster) {
         const Vector3 *normals = TaskDataAt<Vector3>(caster->sourceNormals);
         ShadowFace *const faces = TaskDataAt<ShadowFace>(caster->volume.faces);
         if (Mt5RuntimeNode *const node = shenGetNodeByChildIdx(model, caster->nodeId)) {
-            const Matrix4x4 *const transform = HMDL_TransformForNode(node, node->transformOffset);
+            const Matrix4x4 *const transform = hmdlTransformForNode(node, node->transformOffset);
             workTransformMatrix = transform ? *transform : *g_matrixStack.top.stack;
         }
         for (std::int32_t index = 0; index < caster->volume.vertexCount; ++index)

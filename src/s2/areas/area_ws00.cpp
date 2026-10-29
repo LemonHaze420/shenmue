@@ -45,7 +45,7 @@ void AreaWS00Main(std::uint32_t) {
     const Vector3 origin{95.21690368652344f, 98.19999694824219f, 130.5460968017578f};
     Vector3i rotation{0, 24576, 0};
     Vector3 position{1.2300000190734863f, 3.2300000190734863f, 0.0f};
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+    scenApplyTransRot(&origin, &rotation, &position);
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 29))
         rotation.z = 1092;
     constexpr shen_name placedBoard{SHEN_NAME(brd_)};

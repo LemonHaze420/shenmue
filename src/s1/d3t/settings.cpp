@@ -1,3 +1,4 @@
+#include "auto_test.hpp"
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -538,6 +539,11 @@ std::uint32_t GetDisplayInfoByIdx(std::uint32_t displayOutput) {
 }
 
 DisplayModeInfo *GetScreenResolution() {
+#if SHEN_AUTO_TEST_ENABLED
+    g_currentSettings.display.windowMode = 0;
+    static DisplayModeInfo resolution{1280, 720, 60, 1, "1280 x 720"};
+    return &resolution;
+#else
     const std::uint32_t displayOutput = static_cast<std::uint32_t>(g_currentSettings.display.displayOutput);
     const std::uint32_t displayMode = static_cast<std::uint32_t>(g_currentSettings.display.antiAliasingMode);
 
@@ -578,6 +584,7 @@ DisplayModeInfo *GetScreenResolution() {
     }
 #endif
     return &desktopFallback;
+#endif
 }
 
 #if defined(_WIN32)

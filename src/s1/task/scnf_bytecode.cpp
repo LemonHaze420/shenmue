@@ -1,4 +1,5 @@
 #include "s1/task/scen_state.hpp"
+#include "s1/task/scnt.hpp"
 
 namespace shenmue::s1::scen_detail {
 
@@ -509,7 +510,7 @@ std::byte *DecodeScenLowOpcode(ScenRuntimeObject &object, std::byte *ip, bool &s
         return markerEnd;
     }
     case 0x30:
-        if (index == 16)
+        if (index == FT_AllowWalkerResume)
             g_bGlobalFlag = 1;
         else {
             SCNF_LogStateChange(object, static_cast<std::int32_t>(index));

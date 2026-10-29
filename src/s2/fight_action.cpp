@@ -217,8 +217,8 @@ void UpdateApproachContact(VFActor *self) {
         self->moveFlags |= VFMF_Unknown200;
         self->parameter1b6 = static_cast<std::uint16_t>(angle);
         const float distance = std::sqrt(x * x + z * z);
-        if (distance > self->impulseMagnitude)
-            x *= self->impulseMagnitude / distance;
+        if (distance > self->attackReach)
+            x *= self->attackReach / distance;
         const float rotatedX = cos_fixed16(static_cast<std::uint16_t>(angle)) * self->hitVector.x - sin_fixed16(angle) * self->hitVector.y;
         ++self->hitPhase;
         const float step = (x - rotatedX) / (float(static_cast<std::uint16_t>(self->parameter2d0)) - self->animationTime + self->scale);
@@ -254,7 +254,7 @@ void UpdateContactAttackAdmission(VFActor *self) {
     self->hitStateFlags &= ~VFHSF_AttackActive;
     if (float(static_cast<std::uint16_t>(self->parameter2d0)) > self->animationTime)
         return;
-    if (self->contactDistances[self->actionIndex] <= self->impulseMagnitude) {
+    if (self->contactDistances[self->actionIndex] <= self->attackReach) {
         const auto animation = static_cast<std::int16_t>(self->queuedAction);
         self->pendingAnimation = animation;
         self->queuedAction = static_cast<std::uint32_t>(animation + 0x09000000);
@@ -393,9 +393,9 @@ void UpdateLocomotion(VFActor *self) {
         self->reactionMovement.state.mode = mode;
     }
     if (mode == 3) {
-        if (!(self->cameraControlFlags & 0xf0)) {
+        if (!(self->inputFlags & 0xf0)) {
             previous = 0;
-            self->cameraControlFlags = 32;
+            self->inputFlags = 32;
         }
         const auto &game = *self->game;
         const auto &input = g_inputBuffer[(game.gameFlags & 0x40000) ? self->groupIndex : 0];
@@ -405,9 +405,9 @@ void UpdateLocomotion(VFActor *self) {
         }
     }
     if (mode == 2)
-        self->cameraControlFlags = 0;
+        self->inputFlags = 0;
     std::int32_t animation;
-    if (self->cameraControlFlags & 0xf0) {
+    if (self->inputFlags & 0xf0) {
         if ((self->activeMotionFlags & VFSMF_Unknown8000000) && (self->reactionEvaluationPhase != 1 || (self->motionFlags & VFMOF_Unknown4)) &&
             (mode != 3 || (self->motionFlags & VFMOF_Unknown20000000))) {
             const auto id = self->currentAnimation & 0xfff;
@@ -686,7 +686,7 @@ void UpdatePairedDamage(VFActor *self) {
         if (self->motionFlags & VFMOF_Unknown4000)
             self->hitStateFlags |= VFHSF_SpecialGuardOrParry;
         const auto strength = (source->secondaryMotionFlags & VFSMF_Unknown400) ? static_cast<std::uint8_t>(source->guardHitParameter) :
-                                                                                  static_cast<std::uint8_t>(source->guardStrength);
+                                                                                  static_cast<std::uint8_t>(source->hitDamage);
         auto damage = static_cast<std::int16_t>(strength + source->parameter350);
         const auto flags = game->groups[self->groupIndex]->selectFlags;
         if ((((flags & 0x80) && (source->secondaryMotionFlags & (VFSMF_Unknown8 | VFSMF_Unknown4000000))) ||
@@ -956,7 +956,7 @@ void UpdateDirectionalMotion(VFActor *self) {
             self->stateFlags &= ~VFSF_UseLeftFootTarget;
     }
     if ((self->hitStateFlags & VFHSF_CameraAssistLock) && self->animationTime <= float(self->reactionEndFrame)) {
-        if (sector == self->relativeInputSectors[1] || !((self->cameraControlFlags ^ self->previousReactionInputBytes[0]) & 0xf0))
+        if (sector == self->relativeInputSectors[1] || !((self->inputFlags ^ self->previousReactionInputBytes[0]) & 0xf0))
             return;
         self->relativeInputSectors[1] = sector;
         self->previousCameraMotionFlags = self->cameraMotionFlags;

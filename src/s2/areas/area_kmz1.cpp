@@ -80,7 +80,7 @@ void AssignMazeEvent(std::int32_t state, Vector3 position, std::uint32_t yaw, st
     Vector3 unitPosition;
     GetMazeUnitPosition(static_cast<std::int32_t>(unit), &unitPosition);
     const Vector3i unitRotation{0, static_cast<std::int32_t>(GetMazeUnitYaw(static_cast<std::int32_t>(unit))), 0};
-    ApplyScenarioTranslationAndRotation(&unitPosition, &unitRotation, &eventParameters.position);
+    scenApplyTransRot(&unitPosition, &unitRotation, &eventParameters.position);
     eventParameters.yaw += unitRotation.y;
     EV_authSceneCtrl(AuthSceneCtrl::DisallowSkipAuthor);
     EVT_AT_MenCtrl(EventFilmControl{1, 0, 0, 0, 0, 0, 255, 0, 0, 0, 2});

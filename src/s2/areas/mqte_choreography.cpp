@@ -123,7 +123,7 @@ void PositionForestQteReaction(float distance) {
     GetScenarioCharacterEulerAngles(MQTE_BASE, &rotation, EventTransformFlags::Local);
     EV_GetCharaPosition(MQTE_RYO, CHARACTER_TRANSLATION_ROOT, &world, EventTransformFlags::World);
     const float x = local.x;
-    ApplyScenarioTranslationAndRotation(&forestObstaclePosition, &rotation, &offset);
+    scenApplyTransRot(&forestObstaclePosition, &rotation, &offset);
     EVT_AT_SetPos(MQTE_RYO, MQTE_INVALID, {offset.x, world.y, offset.z}, 0);
     EV_GetCharaPosition(MQTE_RYO, CHARACTER_TRANSLATION_ROOT, &local, EventTransformFlags::Local);
     local.x = x;

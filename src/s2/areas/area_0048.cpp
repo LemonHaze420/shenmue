@@ -215,7 +215,7 @@ void E0048LoopCallback(void *taskData) {
             Vector3i rotation{};
             EV_GetCharaPosition(AREA_0048_A412, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
             GetScenarioCharacterEulerAngles(AREA_0048_A412, &rotation, EventTransformFlags::World);
-            ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+            scenApplyTransRot(&position, &rotation, &offset);
             SetParticleEffectPosition(4, fire0048, &offset, &offset);
         }
     }

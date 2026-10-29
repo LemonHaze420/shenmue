@@ -1584,7 +1584,7 @@ void SubmitFightPoseSample(FightPoseWork &work, std::size_t sample) {
         const std::ptrdiff_t offset = reinterpret_cast<std::byte *>(&work.poseCache[sample][bone]) - g_pCurrentTaskData;
         if (offset < INT32_MIN || offset > INT32_MAX)
             continue;
-        HMDL_SetTemporaryTaskRelativeOffsets(node, true);
+        hmdlSetTemporaryTaskRelativeOffsets(node, true);
         node->transformOffset = static_cast<std::int32_t>(offset);
     }
 
@@ -1679,7 +1679,7 @@ void FIGP_Callback(Character *character) {
 }
 
 void ReleaseFightPoseBlurModel(FightPoseWork &work) {
-    HMDL_FreeAssignedModel(work.model);
+    hmdlFreeAssignedModel(work.model);
     if (work.modelOwner && !PACK_FindModelOwner(work.modelOwner))
         FreePVR(work.modelOwner);
     work.model = nullptr;
@@ -2280,7 +2280,7 @@ void MapMotionMatricesToModel(MotionInformationWork &motion, void *model) {
 
 
 
-    HMDL_ClearNodeTransformLinks(root);
+    hmdlClearNodeTransformLinks(root);
     for (const MotionToModelBone &mapping : kMotionToModelBones) {
         MotionNodeRuntime *node = nodes;
         while (node->nodeId != 0xff && node->nodeId != mapping.motionNodeId)
@@ -2348,7 +2348,7 @@ void MOTM_Callback(Character *character, void *payload) {
     if (character->model) {
         manager->motion.basePoseTemplateIndex = getIMGM(character);
 
-        manager->motion.frameContactOverlay = reinterpret_cast<std::uintptr_t>(HMDL_CycleDataForNode(character->model));
+        manager->motion.frameContactOverlay = reinterpret_cast<std::uintptr_t>(hmdlCycleDataForNode(character->model));
         g_motnClipAngle = character->clipAngle;
         g_pMotion = &manager->motion;
         g_motnBasePoseOnly = 0;
@@ -2483,7 +2483,7 @@ void MOTM_DrawPlayerHuman(void *model, float alpha) {
     const Matrix4x4 cameraTransform = workTransformMatrix;
     const auto *const root = static_cast<const Mt5RuntimeNode *>(model);
     if (root->transformOffset) {
-        if (const Matrix4x4 *const transform = HMDL_TransformForNode(root, root->transformOffset))
+        if (const Matrix4x4 *const transform = hmdlTransformForNode(root, root->transformOffset))
             workTransformMatrix = *transform;
     }
     if (g_drawingImageModel && !CachedAttachmentOwnsSubmission(model, alpha, workTransformMatrix))
@@ -2549,12 +2549,12 @@ void MOTM_Update(Character *character) {
     if (character->drawCallback && mirrored) {
         MotionManagerWork *const manager = FindMotionManagerWork(character);
         if (Shenmue_nPauseState != 0 && manager) {
-            HMDL_ClearNodeTransformLinks(static_cast<Mt5RuntimeNode *>(model));
+            hmdlClearNodeTransformLinks(static_cast<Mt5RuntimeNode *>(model));
             MapMotionMatricesToModel(manager->motion, model);
         }
         character->drawCallback(model, character->renderOpacity);
         if (manager) {
-            HMDL_ClearNodeTransformLinks(static_cast<Mt5RuntimeNode *>(model));
+            hmdlClearNodeTransformLinks(static_cast<Mt5RuntimeNode *>(model));
             MapMirroredMotionMatricesToModel(manager->motion, model);
         }
         g_is_busy_transform = 1;
@@ -3466,7 +3466,7 @@ void CharacterHandler_AlphaDraw(void *model, float opacity) {
 
 void VEND_ReleaseModels() {
     for (Mt5RuntimeNode *&model : g_loadedSelectModels) {
-        HMDL_FreeAssignedModel(model);
+        hmdlFreeAssignedModel(model);
         model = nullptr;
     }
 }

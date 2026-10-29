@@ -365,7 +365,7 @@ void SwitchCallback(std::uint32_t *) {
     EV_SetCharaControllerFlags(ryo, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(ryo, CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(ryo, CCMF_UpdateHeight | CCMF_ApplyGravity, NpcCharacterControllerState::Disabled);
-    ApplyScenarioTranslationAndRotation(&location, &rotation, &offset);
+    scenApplyTransRot(&location, &rotation, &offset);
     mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 71, 0, MotionRegion::LowerBody);
     mtwkSetFrameTime(FindMotionWork(ctrlGetScenarioChara(ryo)), 0, MotionRegion::LowerBody);
     mtwkSetEnabled(FindMotionWork(ctrlGetScenarioChara(ryo)), 0);

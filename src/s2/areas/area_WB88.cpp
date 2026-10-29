@@ -310,7 +310,7 @@ void MoveLeaves(void *) {
             EV_GetCharaPosition(rude, CHARACTER_TRANSLATION_ROOT, &position, recursive);
             GetScenarioCharacterEulerAngles(rude, &rotation, recursive);
             EV_scenApplyPosOrRotToPartOf(rude, 152, &point, nullptr, EventCharacterPartTransformMode::Get);
-            ApplyScenarioTranslationAndRotation(&position, &rotation, &point);
+            scenApplyTransRot(&position, &rotation, &point);
             EV_AT_SetPos(name, local | recursive, point);
             EV_AT_SetAngY(name, local | recursive, rotation);
         } else if (leaf.state == 2) {
@@ -502,7 +502,7 @@ void AimHand(bool hit, Vector3 &handPosition) {
         TruncateToInt32((((static_cast<float>(yaw) / 182.04445f) / 1.5f) + (20 + (640 - screen.x) * .0625f)) * 8192 / 45), 0};
     EV_AT_SetAngY(rude, local | recursive, rotation);
     EV_scenApplyPosOrRotToPartOf(rude, 152, &endpoint, nullptr, EventCharacterPartTransformMode::Get);
-    ApplyScenarioTranslationAndRotation(&handPosition, &rotation, &endpoint);
+    scenApplyTransRot(&handPosition, &rotation, &endpoint);
     work.delta = {target.x - endpoint.x, target.y - endpoint.y, target.z - endpoint.z};
     const float divisor = work.approach ? static_cast<float>(work.approach) : 1;
     handPosition = {handPosition.x + work.delta.x / divisor, handPosition.y + work.delta.y / divisor, handPosition.z + work.delta.z / divisor};
@@ -617,7 +617,7 @@ void CatchLoop(void *) {
             EV_GetCharaPosition(rude, CHARACTER_TRANSLATION_ROOT, &position, recursive);
             EV_scenApplyPosOrRotToPartOf(rude, 152, &endpoint, nullptr, EventCharacterPartTransformMode::Get);
             const Vector3i rotation{};
-            ApplyScenarioTranslationAndRotation(&position, &rotation, &endpoint);
+            scenApplyTransRot(&position, &rotation, &endpoint);
             EV_GetCharaPosition(leafNames[work.selected], CHARACTER_TRANSLATION_ROOT, &next, recursive);
             ++caughtCount;
             work.delta = {next.x - endpoint.x, next.y - endpoint.y, next.z - endpoint.z};

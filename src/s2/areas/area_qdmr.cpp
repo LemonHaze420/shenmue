@@ -1020,11 +1020,11 @@ void QdmrFirstRoomPresentation(void *parameter) {
     QueueAreaLoopPosition(
         {.parent = HLib::GetCurrentTask(), .character = QDMR_DUMMY, .flags = 3, .position = origin, .rotation = rotation, .completion = nullptr}, 0);
     Vector3 position{0, 0, -0.5f};
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+    scenApplyTransRot(&origin, &rotation, &position);
     QueueAreaLoopPosition(
         {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
     position = {0, 0, -0.69999999f};
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+    scenApplyTransRot(&origin, &rotation, &position);
     QueueAreaLoopPosition(
         {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 260);
     QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -1150,11 +1150,11 @@ void QdmrSecondRoomPresentation(void *parameter) {
     QueueAreaLoopPosition(
         {.parent = HLib::GetCurrentTask(), .character = QDMR_DUMMY, .flags = 3, .position = origin, .rotation = rotation, .completion = nullptr}, 0);
     Vector3 position{0, 0, -0.5f};
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+    scenApplyTransRot(&origin, &rotation, &position);
     QueueAreaLoopPosition(
         {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
     position = {0, 0, -0.69999999f};
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+    scenApplyTransRot(&origin, &rotation, &position);
     QueueAreaLoopPosition(
         {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 260);
     QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -1280,11 +1280,11 @@ void QdmrThirdRoomPresentation(void *parameter) {
     QueueAreaLoopPosition(
         {.parent = HLib::GetCurrentTask(), .character = QDMR_DUMMY, .flags = 3, .position = origin, .rotation = rotation, .completion = nullptr}, 0);
     Vector3 position{0, 0, -0.5f};
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+    scenApplyTransRot(&origin, &rotation, &position);
     QueueAreaLoopPosition(
         {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
     position = {0, 0, -0.69999999f};
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+    scenApplyTransRot(&origin, &rotation, &position);
     QueueAreaLoopPosition(
         {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 260);
     QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -1459,11 +1459,11 @@ void QdmrFirstRepeatPresentation(void *parameter) {
     const shen_name door{work->door.name & 0xffffffdfU};
     if (work->doorQteButtons & 0x400U) {
         position = {-0.40000001f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 80);
         position = {1.4f, 0, 0.80000001f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         rotation.y += 0x4000;
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
@@ -1518,7 +1518,7 @@ void QdmrFirstRepeatPresentation(void *parameter) {
         }
     } else if (work->doorQteButtons & 4U) {
         position = {-0.40000001f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -1552,7 +1552,7 @@ void QdmrFirstRepeatPresentation(void *parameter) {
         }
     } else {
         position = {-0.1f, 0, 1.5f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -1651,11 +1651,11 @@ void QdmrSecondRepeatPresentation(void *parameter) {
     const shen_name door{work->door.name & 0xffffffdfU};
     if (work->doorQteButtons & 0x400U) {
         position = {-0.40000001f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 80);
         position = {1.4f, 0, 0.80000001f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         rotation.y += 0x4000;
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
@@ -1710,7 +1710,7 @@ void QdmrSecondRepeatPresentation(void *parameter) {
         }
     } else if (work->doorQteButtons & 4U) {
         position = {-0.40000001f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -1744,7 +1744,7 @@ void QdmrSecondRepeatPresentation(void *parameter) {
         }
     } else {
         position = {-0.1f, 0, 1.5f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -1843,11 +1843,11 @@ void QdmrThirdRepeatPresentation(void *parameter) {
     const shen_name door{work->door.name & 0xffffffdfU};
     if (work->doorQteButtons & 0x400U) {
         position = {-0.40000001f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 80);
         position = {1.4f, 0, 0.80000001f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         rotation.y += 0x4000;
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
@@ -1902,7 +1902,7 @@ void QdmrThirdRepeatPresentation(void *parameter) {
         }
     } else if (work->doorQteButtons & 4U) {
         position = {-0.40000001f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -1936,7 +1936,7 @@ void QdmrThirdRepeatPresentation(void *parameter) {
         }
     } else {
         position = {-0.1f, 0, 1.5f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -1998,11 +1998,11 @@ void QdmrNormalRoomPresentation(void *parameter) {
     const shen_name door{work->door.name & 0xffffffdfU};
     if (work->doorQteButtons & 0x400U) {
         position = {-0.40000001f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 80);
         position = {1.4f, 0, 0.80000001f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         rotation.y += 0x4000;
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
@@ -2057,7 +2057,7 @@ void QdmrNormalRoomPresentation(void *parameter) {
         }
     } else if (work->doorQteButtons & 4U) {
         position = {-0.40000001f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -2091,7 +2091,7 @@ void QdmrNormalRoomPresentation(void *parameter) {
         }
     } else {
         position = {-0.1f, 0, 1.5f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         QueueAreaLoopPosition(
             {.parent = HLib::GetCurrentTask(), .character = QDMR_PLAYER, .flags = 3, .position = position, .rotation = rotation, .completion = nullptr}, 0);
         QueueAreaLoopMotion({.parent = HLib::GetCurrentTask(),
@@ -2214,7 +2214,7 @@ void QdmrFirstRoomFight(void *parameter) {
         rotation.z = 0;
         GetQdmrDoorPlacement(work->door, &origin, &rotation.y);
         Vector3 position{0.5f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         EV_AT_SetPos(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
         rotation.y += 0x8000;
         EV_AT_SetAngY(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation, nullptr);
@@ -2388,7 +2388,7 @@ void QdmrSecondRoomFight(void *parameter) {
         rotation.z = 0;
         GetQdmrDoorPlacement(work->door, &origin, &rotation.y);
         Vector3 position{0.5f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         EV_AT_SetPos(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
         rotation.y += 0x8000;
         EV_AT_SetAngY(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation, nullptr);
@@ -2562,7 +2562,7 @@ void QdmrThirdRoomFight(void *parameter) {
         rotation.z = 0;
         GetQdmrDoorPlacement(work->door, &origin, &rotation.y);
         Vector3 position{0.5f, 0, 0.69999999f};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        scenApplyTransRot(&origin, &rotation, &position);
         EV_AT_SetPos(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
         rotation.y += 0x8000;
         EV_AT_SetAngY(QDMR_PLAYER, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation, nullptr);

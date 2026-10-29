@@ -407,7 +407,7 @@ void vfResolveActorStageObjectPenetration(VFActor *actor, VOBJ_t *owner) {
 
 
 // @verified - p
-void vfProcessStageObjectHitOutcome(VOBJ_t *owner, VFActor *self, std::int8_t guardState, std::int16_t hitParameter, std::int8_t guardStrength) {
+void vfProcessStageObjectHitOutcome(VOBJ_t *owner, VFActor *self, std::int8_t guardState, std::int16_t hitParameter, std::int8_t hitDamage) {
     g_vf_hit_object_handled |= std::uint32_t{1} << self->groupIndex;
     FightStageObjectRuntime &object = owner->object;
     VFActor *const source = ObjectActor(self->game, object.reactingCharacter);
@@ -444,7 +444,7 @@ void vfProcessStageObjectHitOutcome(VOBJ_t *owner, VFActor *self, std::int8_t gu
     else if (guardState == 2)
         attacker.hitParameter |= 0x20;
     attacker.hitDirection = FixedAtan2(object.contactPosition.x - self->contactPosition.x, object.contactPosition.z - self->contactPosition.z);
-    attacker.guardStrength = guardStrength;
+    attacker.hitDamage = hitDamage;
     attacker.requestedAnimation = 104;
     attacker.guardLevel = 100;
     vfclApplyHitResolution(&attacker, self);
@@ -486,7 +486,7 @@ void vfclFilterObjectHit(VFActor *actor, VOBJ_t *owner) {
             0)
             return;
     }
-    vfProcessStageObjectHitOutcome(owner, actor, definition->guardState, definition->hitParameter, definition->guardStrength);
+    vfProcessStageObjectHitOutcome(owner, actor, definition->guardState, definition->hitParameter, definition->hitDamage);
     const std::uint32_t flags = definition->hitSound;
     if (flags)
         vfClAicaReact(object.contactPosition, flags);

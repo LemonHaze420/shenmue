@@ -281,7 +281,7 @@ void Update0516FireLighting(std::int16_t firstLight) {
     if (firstLight != -1) {
         EV_GetCharaPosition(AREA_0516_EVENT_a287, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(AREA_0516_EVENT_a287, &rotation, EventTransformFlags::World);
-        ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+        scenApplyTransRot(&position, &rotation, &offset);
         SetLightRuntimePosition(static_cast<std::uint32_t>(firstLight), offset);
         PrioritizeLight(firstLight);
         SetLightSceneIntensity(static_cast<std::uint32_t>(firstLight), intensity);
@@ -289,7 +289,7 @@ void Update0516FireLighting(std::int16_t firstLight) {
     offset = Vector3{-0.01f, 0.35f, -0.013f};
     EV_GetCharaPosition(AREA_0516_EVENT_a288, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(AREA_0516_EVENT_a288, &rotation, EventTransformFlags::World);
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+    scenApplyTransRot(&position, &rotation, &offset);
     SetLightRuntimePosition(2, offset);
     PrioritizeLight(2);
     SetLightSceneIntensity(2, intensity);

@@ -13,6 +13,7 @@ inline constexpr std::size_t kBattleSlots = 6;
 struct Character;
 struct Mt5RuntimeNode;
 struct VFActor;
+struct VFReactionEventEntry;
 struct VFSlotRuntimeState;
 struct VFFormationGroup;
 struct BTPKTaskData;
@@ -358,7 +359,7 @@ struct VFSlotRuntimeState {
     std::uint8_t phaseConfig[14];
     std::byte reserved36[2];
     float assistWindowCurrent;
-    std::uint32_t updateCamera;
+    std::uint32_t aiFlags;
     std::int16_t healthDifferences[kBattleSlots];
     std::byte reserved4c[4];
     std::uint8_t field50;
@@ -377,11 +378,11 @@ struct VFSlotRuntimeState {
     std::uint16_t facingAngleDifferences[kBattleSlots];
     std::byte reserved70[4];
     std::uint8_t currentHpRegenerationPhase;
-    std::uint8_t hpPhase;
-    std::uint8_t cameraScriptStep;
+    std::uint8_t aiCommand;
+    std::uint8_t aiInputStep;
     std::uint8_t unknown77;
-    std::uint16_t cameraScriptWait;
-    std::uint16_t savedCameraControlFlags;
+    std::uint16_t aiInputWait;
+    std::uint16_t savedInputFlags;
     std::uint16_t reactionAnimationHistory[4];
     std::uint16_t rankHistory[3];
     std::uint16_t downedFrames;
@@ -413,11 +414,11 @@ struct VFSlotRuntimeState {
     std::byte reservedbe[2];
 };
 
-struct VFCameraScriptRow {
+struct VFAIInputSequence {
     std::uint8_t sectorCode[10];
     std::uint8_t holdFrames[10];
 };
-static_assert(sizeof(VFCameraScriptRow) == 0x14);
+static_assert(sizeof(VFAIInputSequence) == 0x14);
 
 struct VFActionDescriptor {
     std::uint8_t opcode;
@@ -447,13 +448,13 @@ enum class VFStateMachineResult : std::uint8_t {
     YieldToCaller = 0x7f,
 };
 
-struct VFReactionPriorityMeta {
-    std::uint16_t mask1;
-    std::uint16_t mask2;
-    std::uint16_t flags;
-    std::uint16_t unknownFlags;
-    std::uint16_t value;
-    std::uint16_t unknownValue;
+struct VFInputHistoryEntry {
+    std::uint16_t mask;
+    std::uint16_t sectorMask;
+    std::uint16_t pressed;
+    std::uint16_t released;
+    std::uint16_t directionMask;
+    std::uint16_t reserved0a;
 };
 
 
@@ -507,18 +508,18 @@ static_assert(offsetof(VFGW, pulseLocked) == 0x32);
 
 struct VFReactionStateStackEntry {
     VFActionDescriptor *savedProgramCounter;
-    std::int32_t savedPriorityScanCounter;
+    std::int32_t savedInputScanCounter;
     std::uint32_t skipPriorityRestore;
-    std::uint16_t savedPriorityFlags;
-    std::uint16_t savedPriorityMask;
-    std::uint16_t savedLastPriorityMask;
+    std::uint16_t savedInputPressed;
+    std::uint16_t savedInputMask;
+    std::uint16_t savedLastInputMask;
     std::uint16_t savedWindowAllowedMask;
     std::uint16_t savedWindowFramesRemaining;
-    std::uint8_t savedPriorityIndex;
+    std::uint8_t savedInputHistoryIndex;
     std::byte reserved[5];
 };
 
-static_assert(sizeof(VFReactionPriorityMeta) == 0x0c);
+static_assert(sizeof(VFInputHistoryEntry) == 0x0c);
 static_assert(sizeof(VFReactionStateStackEntry) == 0x20);
 
 struct VFActor {
@@ -536,11 +537,11 @@ struct VFActor {
     VFActor *targetActor;
     VFActor *hitSourceActor;
     void *reactionScriptBase;
-    void *cameraScriptTable;
-    void *styleTuning;
+    void *aiInputSequences;
+    void *aiProfile;
     void *contactProfile;
     std::uint8_t *animationTable;
-    void *cameraPhaseTable;
+    void *aiCommandTable;
     Vector3 position;
     Vector3 moveDelta;
     Vector3 relativeMoveDelta;
@@ -605,15 +606,15 @@ struct VFActor {
     float knockbackReactionTime;
     std::uint8_t moveId;
     std::uint8_t guardState;
-    std::uint8_t guardStrength;
+    std::uint8_t hitDamage;
     std::int8_t hitAttributeFlags;
-    float hitDamageScale;
+    float attackReach;
     std::uint16_t hitParameter;
     std::uint16_t hitDirectionAngle;
     float hitReactionScaleX;
     float hitReactionScaleZ;
     std::int32_t reserved304;
-    void *reactionEventTable;
+    const VFReactionEventEntry *reactionEventTable;
     std::int16_t skipAlignment;
     std::uint16_t reactionState02EndFrame;
     std::int16_t field314;
@@ -740,11 +741,11 @@ struct VFActor {
     float trackingSlideStepX;
     float trackingSlideStepZ;
     std::int64_t reactionOverrideActive;
-    std::uint16_t cameraControlFlags;
-    std::int16_t priorityMask;
-    std::uint16_t priorityFlags2;
-    std::uint16_t priorityFlags;
-    VFReactionPriorityMeta reactionPriority[32];
+    std::uint16_t inputFlags;
+    std::int16_t inputMask;
+    std::uint16_t frameInputPressed;
+    std::uint16_t inputPressed;
+    VFInputHistoryEntry inputHistory[32];
     std::uint8_t reactionRingHead;
     std::int8_t reactionRingTail;
     union {
@@ -781,18 +782,18 @@ struct VFActor {
     std::byte reserved6aa[6];
     VFActionDescriptor *alternateRootReactionProgram;
     std::int8_t reactionStateStackDepth;
-    std::uint8_t reactionPriorityIndex;
+    std::uint8_t inputHistoryIndex;
     std::int16_t functionReactionSlotIndex;
-    std::uint16_t lastPriorityMaskSnapshot;
+    std::uint16_t lastInputMaskSnapshot;
     std::int16_t reserved6be;
-    std::uint32_t priorityScanCounter;
+    std::uint32_t inputScanCounter;
     std::uint32_t field6c4;
     std::byte reserved6c8[4];
-    std::uint16_t priorityMaskDifference;
+    std::uint16_t releasedInputMask;
     std::uint16_t currentReactionFlagFilter;
     std::uint16_t previousReactionFlagFilter;
-    std::uint16_t priorityWindowFramesRemaining;
-    std::uint16_t priorityWindowAllowedMask;
+    std::uint16_t inputWindowFramesRemaining;
+    std::uint16_t inputWindowAllowedMask;
     std::uint16_t reserved6d6;
     VFReactionStateStackEntry reactionStateStack[16];
     std::uint32_t reactionConditionFlags;
@@ -800,8 +801,8 @@ struct VFActor {
     std::int8_t reactionChainFrames;
     std::int8_t reactionCounters[7];
     std::int32_t reactionStateFlags;
-    std::uint32_t reactionPriorityMaskA;
-    std::int32_t reactionPriorityMaskB;
+    std::uint32_t inputAliasMaskA;
+    std::int32_t inputAliasMaskB;
     std::uint32_t field8f4;
     std::int32_t moveCategory;
     std::uint32_t contactMetadataFilter;

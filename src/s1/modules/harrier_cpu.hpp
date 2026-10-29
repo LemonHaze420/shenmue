@@ -81,257 +81,265 @@ extern std::uint8_t g_harrierIrqLevel2;
 extern std::uint8_t g_harrierIrqLevel4;
 extern std::uint8_t g_harrierIrqFrame;
 
-void emu68_Run();
+namespace emu68 {
+void Run();
+}
+
 std::uint8_t Harrier_ReadMemory8(std::uint32_t address);
 std::uint16_t Harrier_ReadMemory16BigEndian(std::uint32_t address);
 std::uint32_t Harrier_ReadMemory32BigEndian(std::uint32_t address);
 void Harrier_WriteMemory8(std::uint32_t address, std::uint8_t value);
 void Harrier_WriteMemory16BigEndian(std::uint32_t address, std::uint16_t value);
 void Harrier_WriteMemory32BigEndian(std::uint32_t address, std::uint32_t value);
-std::uint8_t Emu68_UnmappedRead8(std::uint32_t address);
-std::uint16_t Emu68_UnmappedRead16(std::uint32_t address);
-std::uint32_t Emu68_UnmappedRead32(std::uint32_t address);
-void Emu68_IgnoreWrite8(std::uint32_t address, std::uint8_t value);
-void Emu68_IgnoreWrite16(std::uint32_t address, std::uint16_t value);
-void Emu68_IgnoreWrite32(std::uint32_t address, std::uint32_t value);
-std::intptr_t Emu68_NullOperand(int index);
-std::intptr_t Emu68_ReportWriteModeError(int index, std::uint32_t value);
 
-using Emu68ReadOperand = std::intptr_t (*)(int);
-using Emu68WriteOperand = std::intptr_t (*)(int, std::uint32_t);
-using Emu68Operation = std::intptr_t (*)();
-using Emu68OpcodeHandler = void (*)();
-using Emu68ShiftHandler = std::intptr_t (*)(int, int, int);
+namespace emu68 {
 
-void Emu68_ReportLineFError();
-std::intptr_t Emu68_ReportRuntimeError(const char *Args, int a2);
-std::intptr_t Emu68_ResetOtherCpu();
-std::intptr_t Emu68_FetchWord();
-std::intptr_t Emu68_DecodeBriefIndex(std::uint16_t a1);
-std::intptr_t Emu68_ReportAddressModeError(int a1);
-std::intptr_t Emu68_ReadAddressRegister(int a1);
-std::intptr_t Emu68_AddressDisplacement(int a1);
-std::intptr_t Emu68_AddressIndexed(int a1);
-std::intptr_t Emu68_AddressExtended(int a1);
-std::intptr_t Emu68_ReportByteReadModeError(int a1);
-std::intptr_t Emu68_ReadDataByte(int a1);
-std::intptr_t Emu68_ReadIndirectByte(int a1);
-std::intptr_t Emu68_ReadPostincrementByte(int a1);
-std::intptr_t Emu68_ReadPredecrementByte(int a1);
-std::intptr_t Emu68_ReadDisplacementByte(int a1);
-std::intptr_t Emu68_ReadIndexedByte(int a1);
-std::intptr_t Emu68_ReadExtendedByte(int a1);
-std::intptr_t Emu68_ReadDataWord(int a1);
-std::intptr_t Emu68_ReadAddressWord(int a1);
-std::intptr_t Emu68_ReadIndirectWord(int a1);
-std::intptr_t Emu68_ReadPostincrementWord(int a1);
-std::intptr_t Emu68_ReadPredecrementWord(int a1);
-std::intptr_t Emu68_ReadDisplacementWord(int a1);
-std::intptr_t Emu68_ReadIndexedWord(int a1);
-std::intptr_t Emu68_ReadExtendedWord(int a1);
-std::intptr_t Emu68_ReadDataLong(int a1);
-std::intptr_t Emu68_ReadIndirectLong(int a1);
-std::intptr_t Emu68_ReadPostincrementLong(int a1);
-std::intptr_t Emu68_ReadPredecrementLong(int a1);
-std::intptr_t Emu68_ReadDisplacementLong(int a1);
-std::intptr_t Emu68_ReadIndexedLong(int a1);
-std::intptr_t Emu68_ReadExtendedLong(int a1);
-std::intptr_t Emu68_ReadModifyIndirectByte(int a1);
-std::intptr_t Emu68_ReadModifyPredecrementByte(int a1);
-std::intptr_t Emu68_ReadModifyDisplacementByte(int a1);
-std::intptr_t Emu68_ReadModifyIndexedByte(int a1);
-std::intptr_t Emu68_ReadModifyExtendedByte(int a1);
-std::intptr_t Emu68_ReadModifyIndirectWord(int a1);
-std::intptr_t Emu68_ReadModifyPredecrementWord(int a1);
-std::intptr_t Emu68_ReadModifyDisplacementWord(int a1);
-std::intptr_t Emu68_ReadModifyIndexedWord(int a1);
-std::intptr_t Emu68_ReadModifyExtendedWord(int a1);
-std::intptr_t Emu68_ReadModifyIndirectLong(int a1);
-std::intptr_t Emu68_ReadModifyPredecrementLong(int a1);
-std::intptr_t Emu68_ReadModifyDisplacementLong(int a1);
-std::intptr_t Emu68_ReadModifyIndexedLong(int a1);
-std::intptr_t Emu68_ReadModifyExtendedLong(int a1);
-std::intptr_t Emu68_WriteDataByte(int a1, std::uint32_t a2);
-std::intptr_t Emu68_ReportWriteModeError(int a1);
-std::intptr_t Emu68_WriteEffectiveByte(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WritePostincrementByte(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WriteExtendedByte(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WriteDataWord(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WriteAddressWord(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WriteEffectiveWord(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WritePostincrementWord(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WriteExtendedWord(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WriteDataLong(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WriteAddressLong(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WriteEffectiveLong(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WritePostincrementLong(int a1, std::uint32_t a2);
-std::intptr_t Emu68_WriteExtendedLong(int a1, std::uint32_t a2);
-std::intptr_t Emu68_SetEffectiveIndirect(int a1);
-std::intptr_t Emu68_SetEffectivePredecrementByte(int a1);
-std::intptr_t Emu68_SetEffectiveDisplacement(int a1);
-std::intptr_t Emu68_SetEffectiveIndexed(int a1);
-std::intptr_t Emu68_SetEffectiveExtended(int a1);
-std::intptr_t Emu68_SetEffectivePredecrementWord(int a1);
-std::intptr_t Emu68_SetEffectivePredecrementLong(int a1);
-std::intptr_t Emu68_CompareFlags(int a1, int a2, int a3);
-std::intptr_t Emu68_PushLong(unsigned int a1);
-std::intptr_t Emu68_PopWord();
-std::intptr_t Emu68_PopLong();
-std::intptr_t Emu68_SetStatusRegister(reg68_sr_bits_t a1);
-std::intptr_t Emu68_AddToEffectiveByte(std::int8_t a1);
-std::intptr_t Emu68_AddToEffectiveWord(std::int16_t a1);
-std::intptr_t Emu68_AddToEffectiveLong(int a1);
-std::intptr_t Emu68_SubtractFromEffectiveByte(std::int8_t a1);
-std::intptr_t Emu68_SubtractFromEffectiveWord(std::int16_t a1);
-std::intptr_t Emu68_SubtractFromEffectiveLong(int a1);
-std::intptr_t Emu68_AddDataToEffectiveByte();
-std::intptr_t Emu68_AddDataToEffectiveWord();
-std::intptr_t Emu68_AddDataToEffectiveLong();
-std::intptr_t Emu68_SubtractDataFromEffectiveByte();
-std::intptr_t Emu68_SubtractDataFromEffectiveWord();
-std::intptr_t Emu68_SubtractDataFromEffectiveLong();
-std::intptr_t Emu68_AddEffectiveToDataByte();
-std::intptr_t Emu68_AddEffectiveToDataWord();
-std::intptr_t Emu68_AddEffectiveToDataLong();
-std::intptr_t Emu68_SubtractEffectiveFromDataByte();
-std::intptr_t Emu68_SubtractEffectiveFromDataWord();
-std::intptr_t Emu68_SubtractEffectiveFromDataLong();
-std::intptr_t Emu68_AndEffectiveByte(std::int8_t a1);
-std::intptr_t Emu68_AndEffectiveWord(std::int16_t a1);
-std::intptr_t Emu68_AndEffectiveLong(int a1);
-std::intptr_t Emu68_OrEffectiveByte(std::int8_t a1);
-std::intptr_t Emu68_OrEffectiveWord(std::int16_t a1);
-std::intptr_t Emu68_OrEffectiveLong(int a1);
-std::intptr_t Emu68_XorEffectiveByte(std::int8_t a1);
-std::intptr_t Emu68_XorEffectiveWord(std::int16_t a1);
-std::intptr_t Emu68_XorEffectiveLong(int a1);
-std::intptr_t Emu68_NegateEffectiveByte();
-std::intptr_t Emu68_NegateEffectiveWord();
-std::intptr_t Emu68_NegateEffectiveLong();
-std::intptr_t Emu68_NegateExtendEffectiveByte();
-std::intptr_t Emu68_NegateExtendEffectiveWord();
-std::intptr_t Emu68_NegateExtendEffectiveLong();
-std::intptr_t Emu68_NotEffectiveByte();
-std::intptr_t Emu68_NotEffectiveWord();
-std::intptr_t Emu68_NotEffectiveLong();
-std::intptr_t Emu68_AddBcd();
-std::intptr_t Emu68_SubtractBcd();
-std::intptr_t Emu68_NegateBcd();
-std::intptr_t Emu68_AddExtendByte();
-std::intptr_t Emu68_AddExtendWord();
-std::intptr_t Emu68_AddExtendLong();
-std::intptr_t Emu68_SubtractExtendByte();
-std::intptr_t Emu68_SubtractExtendWord();
-std::intptr_t Emu68_SubtractExtendLong();
-std::intptr_t Emu68_CompareMemoryByte();
-std::intptr_t Emu68_CompareMemoryWord();
-std::intptr_t Emu68_CompareMemoryLong();
-std::intptr_t Emu68_ArithmeticShiftLeft(int a1, int a2, int a3);
-std::intptr_t Emu68_LogicalShiftLeft(int a1, int a2, int a3);
-std::intptr_t Emu68_ArithmeticShiftRight(int a1, int a2, int a3);
-std::intptr_t Emu68_LogicalShiftRight(int a1, int a2, int a3);
-std::intptr_t Emu68_RotateRight(int a1, int a2, int a3);
-std::intptr_t Emu68_RotateLeft(int a1, int a2, int a3);
-std::intptr_t Emu68_RotateExtendRight(int a1, int a2, int a3);
-std::intptr_t Emu68_RotateExtendLeft(int a1, int a2, int a3);
-std::intptr_t Emu68_MoveMultiple(int a1);
-std::intptr_t Emu68_BitTest(std::uint8_t a1);
-std::intptr_t Emu68_BitChange(std::int8_t a1);
-std::intptr_t Emu68_BitClear(std::int8_t a1);
-std::intptr_t Emu68_BitSet(std::int8_t a1);
-std::intptr_t Emu68_MovePeripheral();
-std::intptr_t Emu68_DivideUnsigned(int a1);
-std::intptr_t Emu68_DivideSigned(int a1);
-std::intptr_t emu68_HandleInterruptRequest(unsigned int a1);
-std::intptr_t Emu68_ResetContext();
-std::intptr_t Emu68_ReturnException();
-std::intptr_t Emu68_OrImmediateByte();
-std::intptr_t Emu68_OrImmediateWord();
-std::intptr_t Emu68_OrImmediateLong();
-std::intptr_t Emu68_AndImmediateByte();
-std::intptr_t Emu68_AndImmediateWord();
-std::intptr_t Emu68_AndImmediateLong();
-std::intptr_t Emu68_XorImmediateByte();
-std::intptr_t Emu68_XorImmediateWord();
-std::intptr_t Emu68_XorImmediateLong();
-std::intptr_t Emu68_SubtractImmediateByte();
-std::intptr_t Emu68_SubtractImmediateWord();
-std::intptr_t Emu68_SubtractImmediateLong();
-std::intptr_t Emu68_AddImmediateByte();
-std::intptr_t Emu68_AddImmediateWord();
-std::intptr_t Emu68_AddImmediateLong();
-std::intptr_t Emu68_CompareImmediateByte();
-std::intptr_t Emu68_CompareImmediateWord();
-std::intptr_t Emu68_CompareImmediateLong();
-std::intptr_t Emu68_BitTestImmediate();
-std::intptr_t Emu68_BitChangeImmediate();
-std::intptr_t Emu68_BitClearImmediate();
-std::intptr_t Emu68_BitSetImmediate();
-std::intptr_t Emu68_BitTestDataOrMovePeripheral();
-std::intptr_t Emu68_BitChangeDataOrMovePeripheral();
-std::intptr_t Emu68_BitClearDataOrMovePeripheral();
-std::intptr_t Emu68_BitSetDataOrMovePeripheral();
-std::intptr_t Emu68_ReportInstructionError();
-void Emu68_DispatchGroup0();
-void Emu68_MoveByte();
-void Emu68_MoveLong();
-void Emu68_MoveWord();
-std::intptr_t Emu68_NegateExtendByteThunk();
-std::intptr_t Emu68_NegateExtendWordThunk();
-std::intptr_t Emu68_NegateExtendLongThunk();
-std::intptr_t Emu68_MoveFromStatus();
-std::intptr_t Emu68_MoveFromConditionCodes();
-std::intptr_t Emu68_MoveToStatus();
-std::intptr_t Emu68_MoveToConditionCodes();
-std::intptr_t Emu68_CheckLongBounds();
-std::intptr_t Emu68_CheckWordBounds();
-std::intptr_t Emu68_LoadEffectiveAddressA0();
-std::intptr_t Emu68_LoadEffectiveAddressA1();
-std::intptr_t Emu68_LoadEffectiveAddressA2();
-std::intptr_t Emu68_LoadEffectiveAddressA3();
-std::intptr_t Emu68_LoadEffectiveAddressA4();
-std::intptr_t Emu68_LoadEffectiveAddressA5();
-std::intptr_t Emu68_LoadEffectiveAddressA6();
-std::intptr_t Emu68_LoadEffectiveAddressA7();
-std::intptr_t Emu68_ClearByte();
-std::intptr_t Emu68_ClearWord();
-std::intptr_t Emu68_ClearLong();
-std::intptr_t Emu68_NegateByteThunk();
-std::intptr_t Emu68_NegateWordThunk();
-std::intptr_t Emu68_NegateLongThunk();
-std::intptr_t Emu68_NotByteThunk();
-std::intptr_t Emu68_NotWordThunk();
-std::intptr_t Emu68_NotLongThunk();
-std::intptr_t Emu68_TestByte();
-std::intptr_t Emu68_TestWord();
-std::intptr_t Emu68_TestLong();
-std::intptr_t Emu68_NegateBcdThunk();
-std::intptr_t Emu68_SwapOrPushEffectiveAddress();
-std::intptr_t Emu68_ExtendByteOrMoveMultipleWord();
-std::intptr_t Emu68_ExtendWordOrMoveMultipleLong();
-std::intptr_t Emu68_MoveMultipleWordToRegisters();
-std::intptr_t Emu68_MoveMultipleLongToRegisters();
-std::intptr_t Emu68_TestAndSet();
-std::intptr_t Emu68_SystemInstruction();
-std::intptr_t Emu68_JumpSubroutine();
-std::intptr_t Emu68_Jump();
-void Emu68_DispatchGroup4();
-std::intptr_t Emu68_AddQuickByte();
-std::intptr_t Emu68_AddQuickWord();
-std::intptr_t Emu68_AddQuickLong();
-std::intptr_t Emu68_SubtractQuickByte();
-std::intptr_t Emu68_SubtractQuickWord();
-std::intptr_t Emu68_SubtractQuickLong();
-std::intptr_t Emu68_SetOrDecrementCondition();
-void Emu68_DispatchGroup5();
-void Emu68_Branch();
-void Emu68_MoveQuick();
-void Emu68_DispatchGroup8();
-void Emu68_DispatchGroupC();
-void Emu68_DispatchGroupB();
-void Emu68_DispatchGroup9();
-void Emu68_DispatchGroupD();
-void Emu68_ShiftRotate();
+std::uint8_t UnmappedRead8(std::uint32_t address);
+std::uint16_t UnmappedRead16(std::uint32_t address);
+std::uint32_t UnmappedRead32(std::uint32_t address);
+void IgnoreWrite8(std::uint32_t address, std::uint8_t value);
+void IgnoreWrite16(std::uint32_t address, std::uint16_t value);
+void IgnoreWrite32(std::uint32_t address, std::uint32_t value);
+std::intptr_t NullOperand(int index);
+std::intptr_t ReportWriteModeError(int index, std::uint32_t value);
+
+using ReadOperand = std::intptr_t (*)(int);
+using WriteOperand = std::intptr_t (*)(int, std::uint32_t);
+using Operation = std::intptr_t (*)();
+using OpcodeHandler = void (*)();
+using ShiftHandler = std::intptr_t (*)(int, int, int);
+
+void ReportLineFError();
+std::intptr_t ReportRuntimeError(const char *Args, int a2);
+std::intptr_t ResetOtherCpu();
+std::intptr_t FetchWord();
+std::intptr_t DecodeBriefIndex(std::uint16_t a1);
+std::intptr_t ReportAddressModeError(int a1);
+std::intptr_t ReadAddressRegister(int a1);
+std::intptr_t AddressDisplacement(int a1);
+std::intptr_t AddressIndexed(int a1);
+std::intptr_t AddressExtended(int a1);
+std::intptr_t ReportByteReadModeError(int a1);
+std::intptr_t ReadDataByte(int a1);
+std::intptr_t ReadIndirectByte(int a1);
+std::intptr_t ReadPostincrementByte(int a1);
+std::intptr_t ReadPredecrementByte(int a1);
+std::intptr_t ReadDisplacementByte(int a1);
+std::intptr_t ReadIndexedByte(int a1);
+std::intptr_t ReadExtendedByte(int a1);
+std::intptr_t ReadDataWord(int a1);
+std::intptr_t ReadAddressWord(int a1);
+std::intptr_t ReadIndirectWord(int a1);
+std::intptr_t ReadPostincrementWord(int a1);
+std::intptr_t ReadPredecrementWord(int a1);
+std::intptr_t ReadDisplacementWord(int a1);
+std::intptr_t ReadIndexedWord(int a1);
+std::intptr_t ReadExtendedWord(int a1);
+std::intptr_t ReadDataLong(int a1);
+std::intptr_t ReadIndirectLong(int a1);
+std::intptr_t ReadPostincrementLong(int a1);
+std::intptr_t ReadPredecrementLong(int a1);
+std::intptr_t ReadDisplacementLong(int a1);
+std::intptr_t ReadIndexedLong(int a1);
+std::intptr_t ReadExtendedLong(int a1);
+std::intptr_t ReadModifyIndirectByte(int a1);
+std::intptr_t ReadModifyPredecrementByte(int a1);
+std::intptr_t ReadModifyDisplacementByte(int a1);
+std::intptr_t ReadModifyIndexedByte(int a1);
+std::intptr_t ReadModifyExtendedByte(int a1);
+std::intptr_t ReadModifyIndirectWord(int a1);
+std::intptr_t ReadModifyPredecrementWord(int a1);
+std::intptr_t ReadModifyDisplacementWord(int a1);
+std::intptr_t ReadModifyIndexedWord(int a1);
+std::intptr_t ReadModifyExtendedWord(int a1);
+std::intptr_t ReadModifyIndirectLong(int a1);
+std::intptr_t ReadModifyPredecrementLong(int a1);
+std::intptr_t ReadModifyDisplacementLong(int a1);
+std::intptr_t ReadModifyIndexedLong(int a1);
+std::intptr_t ReadModifyExtendedLong(int a1);
+std::intptr_t WriteDataByte(int a1, std::uint32_t a2);
+std::intptr_t ReportWriteModeError(int a1);
+std::intptr_t WriteEffectiveByte(int a1, std::uint32_t a2);
+std::intptr_t WritePostincrementByte(int a1, std::uint32_t a2);
+std::intptr_t WriteExtendedByte(int a1, std::uint32_t a2);
+std::intptr_t WriteDataWord(int a1, std::uint32_t a2);
+std::intptr_t WriteAddressWord(int a1, std::uint32_t a2);
+std::intptr_t WriteEffectiveWord(int a1, std::uint32_t a2);
+std::intptr_t WritePostincrementWord(int a1, std::uint32_t a2);
+std::intptr_t WriteExtendedWord(int a1, std::uint32_t a2);
+std::intptr_t WriteDataLong(int a1, std::uint32_t a2);
+std::intptr_t WriteAddressLong(int a1, std::uint32_t a2);
+std::intptr_t WriteEffectiveLong(int a1, std::uint32_t a2);
+std::intptr_t WritePostincrementLong(int a1, std::uint32_t a2);
+std::intptr_t WriteExtendedLong(int a1, std::uint32_t a2);
+std::intptr_t SetEffectiveIndirect(int a1);
+std::intptr_t SetEffectivePredecrementByte(int a1);
+std::intptr_t SetEffectiveDisplacement(int a1);
+std::intptr_t SetEffectiveIndexed(int a1);
+std::intptr_t SetEffectiveExtended(int a1);
+std::intptr_t SetEffectivePredecrementWord(int a1);
+std::intptr_t SetEffectivePredecrementLong(int a1);
+std::intptr_t CompareFlags(int a1, int a2, int a3);
+std::intptr_t PushLong(unsigned int a1);
+std::intptr_t PopWord();
+std::intptr_t PopLong();
+std::intptr_t SetStatusRegister(reg68_sr_bits_t a1);
+std::intptr_t AddToEffectiveByte(std::int8_t a1);
+std::intptr_t AddToEffectiveWord(std::int16_t a1);
+std::intptr_t AddToEffectiveLong(int a1);
+std::intptr_t SubtractFromEffectiveByte(std::int8_t a1);
+std::intptr_t SubtractFromEffectiveWord(std::int16_t a1);
+std::intptr_t SubtractFromEffectiveLong(int a1);
+std::intptr_t AddDataToEffectiveByte();
+std::intptr_t AddDataToEffectiveWord();
+std::intptr_t AddDataToEffectiveLong();
+std::intptr_t SubtractDataFromEffectiveByte();
+std::intptr_t SubtractDataFromEffectiveWord();
+std::intptr_t SubtractDataFromEffectiveLong();
+std::intptr_t AddEffectiveToDataByte();
+std::intptr_t AddEffectiveToDataWord();
+std::intptr_t AddEffectiveToDataLong();
+std::intptr_t SubtractEffectiveFromDataByte();
+std::intptr_t SubtractEffectiveFromDataWord();
+std::intptr_t SubtractEffectiveFromDataLong();
+std::intptr_t AndEffectiveByte(std::int8_t a1);
+std::intptr_t AndEffectiveWord(std::int16_t a1);
+std::intptr_t AndEffectiveLong(int a1);
+std::intptr_t OrEffectiveByte(std::int8_t a1);
+std::intptr_t OrEffectiveWord(std::int16_t a1);
+std::intptr_t OrEffectiveLong(int a1);
+std::intptr_t XorEffectiveByte(std::int8_t a1);
+std::intptr_t XorEffectiveWord(std::int16_t a1);
+std::intptr_t XorEffectiveLong(int a1);
+std::intptr_t NegateEffectiveByte();
+std::intptr_t NegateEffectiveWord();
+std::intptr_t NegateEffectiveLong();
+std::intptr_t NegateExtendEffectiveByte();
+std::intptr_t NegateExtendEffectiveWord();
+std::intptr_t NegateExtendEffectiveLong();
+std::intptr_t NotEffectiveByte();
+std::intptr_t NotEffectiveWord();
+std::intptr_t NotEffectiveLong();
+std::intptr_t AddBcd();
+std::intptr_t SubtractBcd();
+std::intptr_t NegateBcd();
+std::intptr_t AddExtendByte();
+std::intptr_t AddExtendWord();
+std::intptr_t AddExtendLong();
+std::intptr_t SubtractExtendByte();
+std::intptr_t SubtractExtendWord();
+std::intptr_t SubtractExtendLong();
+std::intptr_t CompareMemoryByte();
+std::intptr_t CompareMemoryWord();
+std::intptr_t CompareMemoryLong();
+std::intptr_t ArithmeticShiftLeft(int a1, int a2, int a3);
+std::intptr_t LogicalShiftLeft(int a1, int a2, int a3);
+std::intptr_t ArithmeticShiftRight(int a1, int a2, int a3);
+std::intptr_t LogicalShiftRight(int a1, int a2, int a3);
+std::intptr_t RotateRight(int a1, int a2, int a3);
+std::intptr_t RotateLeft(int a1, int a2, int a3);
+std::intptr_t RotateExtendRight(int a1, int a2, int a3);
+std::intptr_t RotateExtendLeft(int a1, int a2, int a3);
+std::intptr_t MoveMultiple(int a1);
+std::intptr_t BitTest(std::uint8_t a1);
+std::intptr_t BitChange(std::int8_t a1);
+std::intptr_t BitClear(std::int8_t a1);
+std::intptr_t BitSet(std::int8_t a1);
+std::intptr_t MovePeripheral();
+std::intptr_t DivideUnsigned(int a1);
+std::intptr_t DivideSigned(int a1);
+std::intptr_t HandleInterruptRequest(unsigned int a1);
+std::intptr_t ResetContext();
+std::intptr_t ReturnException();
+std::intptr_t OrImmediateByte();
+std::intptr_t OrImmediateWord();
+std::intptr_t OrImmediateLong();
+std::intptr_t AndImmediateByte();
+std::intptr_t AndImmediateWord();
+std::intptr_t AndImmediateLong();
+std::intptr_t XorImmediateByte();
+std::intptr_t XorImmediateWord();
+std::intptr_t XorImmediateLong();
+std::intptr_t SubtractImmediateByte();
+std::intptr_t SubtractImmediateWord();
+std::intptr_t SubtractImmediateLong();
+std::intptr_t AddImmediateByte();
+std::intptr_t AddImmediateWord();
+std::intptr_t AddImmediateLong();
+std::intptr_t CompareImmediateByte();
+std::intptr_t CompareImmediateWord();
+std::intptr_t CompareImmediateLong();
+std::intptr_t BitTestImmediate();
+std::intptr_t BitChangeImmediate();
+std::intptr_t BitClearImmediate();
+std::intptr_t BitSetImmediate();
+std::intptr_t BitTestDataOrMovePeripheral();
+std::intptr_t BitChangeDataOrMovePeripheral();
+std::intptr_t BitClearDataOrMovePeripheral();
+std::intptr_t BitSetDataOrMovePeripheral();
+std::intptr_t ReportInstructionError();
+void DispatchGroup0();
+void MoveByte();
+void MoveLong();
+void MoveWord();
+std::intptr_t NegateExtendByteThunk();
+std::intptr_t NegateExtendWordThunk();
+std::intptr_t NegateExtendLongThunk();
+std::intptr_t MoveFromStatus();
+std::intptr_t MoveFromConditionCodes();
+std::intptr_t MoveToStatus();
+std::intptr_t MoveToConditionCodes();
+std::intptr_t CheckLongBounds();
+std::intptr_t CheckWordBounds();
+std::intptr_t LoadEffectiveAddressA0();
+std::intptr_t LoadEffectiveAddressA1();
+std::intptr_t LoadEffectiveAddressA2();
+std::intptr_t LoadEffectiveAddressA3();
+std::intptr_t LoadEffectiveAddressA4();
+std::intptr_t LoadEffectiveAddressA5();
+std::intptr_t LoadEffectiveAddressA6();
+std::intptr_t LoadEffectiveAddressA7();
+std::intptr_t ClearByte();
+std::intptr_t ClearWord();
+std::intptr_t ClearLong();
+std::intptr_t NegateByteThunk();
+std::intptr_t NegateWordThunk();
+std::intptr_t NegateLongThunk();
+std::intptr_t NotByteThunk();
+std::intptr_t NotWordThunk();
+std::intptr_t NotLongThunk();
+std::intptr_t TestByte();
+std::intptr_t TestWord();
+std::intptr_t TestLong();
+std::intptr_t NegateBcdThunk();
+std::intptr_t SwapOrPushEffectiveAddress();
+std::intptr_t ExtendByteOrMoveMultipleWord();
+std::intptr_t ExtendWordOrMoveMultipleLong();
+std::intptr_t MoveMultipleWordToRegisters();
+std::intptr_t MoveMultipleLongToRegisters();
+std::intptr_t TestAndSet();
+std::intptr_t SystemInstruction();
+std::intptr_t JumpSubroutine();
+std::intptr_t Jump();
+void DispatchGroup4();
+std::intptr_t AddQuickByte();
+std::intptr_t AddQuickWord();
+std::intptr_t AddQuickLong();
+std::intptr_t SubtractQuickByte();
+std::intptr_t SubtractQuickWord();
+std::intptr_t SubtractQuickLong();
+std::intptr_t SetOrDecrementCondition();
+void DispatchGroup5();
+void Branch();
+void MoveQuick();
+void DispatchGroup8();
+void DispatchGroupC();
+void DispatchGroupB();
+void DispatchGroup9();
+void DispatchGroupD();
+void ShiftRotate();
+
+}
 
 inline emu68_ctx_t emu68_insn_defs[91] = {
     {.a = 1, .pattern = 1, .bitmask = 1, .b = 0, .bits = "0000000000111100", .asm_string = "ori.%s\t%i,ccr"},
@@ -442,400 +450,400 @@ inline constexpr std::int32_t kHarrierRomPatches[] = {
     36084, -1, 26696, 36022, -1, 25452, 33130, -1, 25516, 32988, -1, -1,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_CompareMemoryWordSource[2] = {
-    &Emu68_ReadDataWord,
-    &Emu68_ReadPredecrementWord,
+inline constexpr emu68::ReadOperand kEmu68_CompareMemoryWordSource[2] = {
+    &emu68::ReadDataWord,
+    &emu68::ReadPredecrementWord,
 };
 
-inline constexpr Emu68WriteOperand kEmu68_WriteLong[8] = {
-    &Emu68_WriteDataLong,
-    &Emu68_WriteAddressLong,
-    &Emu68_WriteEffectiveLong,
-    &Emu68_WritePostincrementLong,
-    &Emu68_WriteEffectiveLong,
-    &Emu68_WriteEffectiveLong,
-    &Emu68_WriteEffectiveLong,
-    &Emu68_WriteExtendedLong,
+inline constexpr emu68::WriteOperand kEmu68_WriteLong[8] = {
+    &emu68::WriteDataLong,
+    &emu68::WriteAddressLong,
+    &emu68::WriteEffectiveLong,
+    &emu68::WritePostincrementLong,
+    &emu68::WriteEffectiveLong,
+    &emu68::WriteEffectiveLong,
+    &emu68::WriteEffectiveLong,
+    &emu68::WriteExtendedLong,
 };
 
-inline constexpr Emu68Operation kEmu68_Group0[64] = {
-    &Emu68_OrImmediateByte,
-    &Emu68_OrImmediateWord,
-    &Emu68_OrImmediateLong,
-    &Emu68_ReportInstructionError,
-    &Emu68_BitTestDataOrMovePeripheral,
-    &Emu68_BitChangeDataOrMovePeripheral,
-    &Emu68_BitClearDataOrMovePeripheral,
-    &Emu68_BitSetDataOrMovePeripheral,
-    &Emu68_AndImmediateByte,
-    &Emu68_AndImmediateWord,
-    &Emu68_AndImmediateLong,
-    &Emu68_ReportInstructionError,
-    &Emu68_BitTestDataOrMovePeripheral,
-    &Emu68_BitChangeDataOrMovePeripheral,
-    &Emu68_BitClearDataOrMovePeripheral,
-    &Emu68_BitSetDataOrMovePeripheral,
-    &Emu68_SubtractImmediateByte,
-    &Emu68_SubtractImmediateWord,
-    &Emu68_SubtractImmediateLong,
-    &Emu68_ReportInstructionError,
-    &Emu68_BitTestDataOrMovePeripheral,
-    &Emu68_BitChangeDataOrMovePeripheral,
-    &Emu68_BitClearDataOrMovePeripheral,
-    &Emu68_BitSetDataOrMovePeripheral,
-    &Emu68_AddImmediateByte,
-    &Emu68_AddImmediateWord,
-    &Emu68_AddImmediateLong,
-    &Emu68_ReportInstructionError,
-    &Emu68_BitTestDataOrMovePeripheral,
-    &Emu68_BitChangeDataOrMovePeripheral,
-    &Emu68_BitClearDataOrMovePeripheral,
-    &Emu68_BitSetDataOrMovePeripheral,
-    &Emu68_BitTestImmediate,
-    &Emu68_BitChangeImmediate,
-    &Emu68_BitClearImmediate,
-    &Emu68_BitSetImmediate,
-    &Emu68_BitTestDataOrMovePeripheral,
-    &Emu68_BitChangeDataOrMovePeripheral,
-    &Emu68_BitClearDataOrMovePeripheral,
-    &Emu68_BitSetDataOrMovePeripheral,
-    &Emu68_XorImmediateByte,
-    &Emu68_XorImmediateWord,
-    &Emu68_XorImmediateLong,
-    &Emu68_ReportInstructionError,
-    &Emu68_BitTestDataOrMovePeripheral,
-    &Emu68_BitChangeDataOrMovePeripheral,
-    &Emu68_BitClearDataOrMovePeripheral,
-    &Emu68_BitSetDataOrMovePeripheral,
-    &Emu68_CompareImmediateByte,
-    &Emu68_CompareImmediateWord,
-    &Emu68_CompareImmediateLong,
-    &Emu68_ReportInstructionError,
-    &Emu68_BitTestDataOrMovePeripheral,
-    &Emu68_BitChangeDataOrMovePeripheral,
-    &Emu68_BitClearDataOrMovePeripheral,
-    &Emu68_BitSetDataOrMovePeripheral,
-    &Emu68_ReportInstructionError,
-    &Emu68_ReportInstructionError,
-    &Emu68_ReportInstructionError,
-    &Emu68_ReportInstructionError,
-    &Emu68_BitTestDataOrMovePeripheral,
-    &Emu68_BitChangeDataOrMovePeripheral,
-    &Emu68_BitClearDataOrMovePeripheral,
-    &Emu68_BitSetDataOrMovePeripheral,
+inline constexpr emu68::Operation kEmu68_Group0[64] = {
+    &emu68::OrImmediateByte,
+    &emu68::OrImmediateWord,
+    &emu68::OrImmediateLong,
+    &emu68::ReportInstructionError,
+    &emu68::BitTestDataOrMovePeripheral,
+    &emu68::BitChangeDataOrMovePeripheral,
+    &emu68::BitClearDataOrMovePeripheral,
+    &emu68::BitSetDataOrMovePeripheral,
+    &emu68::AndImmediateByte,
+    &emu68::AndImmediateWord,
+    &emu68::AndImmediateLong,
+    &emu68::ReportInstructionError,
+    &emu68::BitTestDataOrMovePeripheral,
+    &emu68::BitChangeDataOrMovePeripheral,
+    &emu68::BitClearDataOrMovePeripheral,
+    &emu68::BitSetDataOrMovePeripheral,
+    &emu68::SubtractImmediateByte,
+    &emu68::SubtractImmediateWord,
+    &emu68::SubtractImmediateLong,
+    &emu68::ReportInstructionError,
+    &emu68::BitTestDataOrMovePeripheral,
+    &emu68::BitChangeDataOrMovePeripheral,
+    &emu68::BitClearDataOrMovePeripheral,
+    &emu68::BitSetDataOrMovePeripheral,
+    &emu68::AddImmediateByte,
+    &emu68::AddImmediateWord,
+    &emu68::AddImmediateLong,
+    &emu68::ReportInstructionError,
+    &emu68::BitTestDataOrMovePeripheral,
+    &emu68::BitChangeDataOrMovePeripheral,
+    &emu68::BitClearDataOrMovePeripheral,
+    &emu68::BitSetDataOrMovePeripheral,
+    &emu68::BitTestImmediate,
+    &emu68::BitChangeImmediate,
+    &emu68::BitClearImmediate,
+    &emu68::BitSetImmediate,
+    &emu68::BitTestDataOrMovePeripheral,
+    &emu68::BitChangeDataOrMovePeripheral,
+    &emu68::BitClearDataOrMovePeripheral,
+    &emu68::BitSetDataOrMovePeripheral,
+    &emu68::XorImmediateByte,
+    &emu68::XorImmediateWord,
+    &emu68::XorImmediateLong,
+    &emu68::ReportInstructionError,
+    &emu68::BitTestDataOrMovePeripheral,
+    &emu68::BitChangeDataOrMovePeripheral,
+    &emu68::BitClearDataOrMovePeripheral,
+    &emu68::BitSetDataOrMovePeripheral,
+    &emu68::CompareImmediateByte,
+    &emu68::CompareImmediateWord,
+    &emu68::CompareImmediateLong,
+    &emu68::ReportInstructionError,
+    &emu68::BitTestDataOrMovePeripheral,
+    &emu68::BitChangeDataOrMovePeripheral,
+    &emu68::BitClearDataOrMovePeripheral,
+    &emu68::BitSetDataOrMovePeripheral,
+    &emu68::ReportInstructionError,
+    &emu68::ReportInstructionError,
+    &emu68::ReportInstructionError,
+    &emu68::ReportInstructionError,
+    &emu68::BitTestDataOrMovePeripheral,
+    &emu68::BitChangeDataOrMovePeripheral,
+    &emu68::BitClearDataOrMovePeripheral,
+    &emu68::BitSetDataOrMovePeripheral,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_ReadModifyByte[8] = {
-    &Emu68_ReadDataByte,
-    &Emu68_ReportByteReadModeError,
-    &Emu68_ReadModifyIndirectByte,
-    &Emu68_ReadModifyIndirectByte,
-    &Emu68_ReadModifyPredecrementByte,
-    &Emu68_ReadModifyDisplacementByte,
-    &Emu68_ReadModifyIndexedByte,
-    &Emu68_ReadModifyExtendedByte,
+inline constexpr emu68::ReadOperand kEmu68_ReadModifyByte[8] = {
+    &emu68::ReadDataByte,
+    &emu68::ReportByteReadModeError,
+    &emu68::ReadModifyIndirectByte,
+    &emu68::ReadModifyIndirectByte,
+    &emu68::ReadModifyPredecrementByte,
+    &emu68::ReadModifyDisplacementByte,
+    &emu68::ReadModifyIndexedByte,
+    &emu68::ReadModifyExtendedByte,
 };
 
-inline constexpr Emu68WriteOperand kEmu68_WriteByte[8] = {
-    &Emu68_WriteDataByte,
-    &Emu68_ReportWriteModeError,
-    &Emu68_WriteEffectiveByte,
-    &Emu68_WritePostincrementByte,
-    &Emu68_WriteEffectiveByte,
-    &Emu68_WriteEffectiveByte,
-    &Emu68_WriteEffectiveByte,
-    &Emu68_WriteExtendedByte,
+inline constexpr emu68::WriteOperand kEmu68_WriteByte[8] = {
+    &emu68::WriteDataByte,
+    &emu68::ReportWriteModeError,
+    &emu68::WriteEffectiveByte,
+    &emu68::WritePostincrementByte,
+    &emu68::WriteEffectiveByte,
+    &emu68::WriteEffectiveByte,
+    &emu68::WriteEffectiveByte,
+    &emu68::WriteExtendedByte,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_ReadModifyWord[8] = {
-    &Emu68_ReadDataWord,
-    &Emu68_ReadAddressWord,
-    &Emu68_ReadModifyIndirectWord,
-    &Emu68_ReadModifyIndirectWord,
-    &Emu68_ReadModifyPredecrementWord,
-    &Emu68_ReadModifyDisplacementWord,
-    &Emu68_ReadModifyIndexedWord,
-    &Emu68_ReadModifyExtendedWord,
+inline constexpr emu68::ReadOperand kEmu68_ReadModifyWord[8] = {
+    &emu68::ReadDataWord,
+    &emu68::ReadAddressWord,
+    &emu68::ReadModifyIndirectWord,
+    &emu68::ReadModifyIndirectWord,
+    &emu68::ReadModifyPredecrementWord,
+    &emu68::ReadModifyDisplacementWord,
+    &emu68::ReadModifyIndexedWord,
+    &emu68::ReadModifyExtendedWord,
 };
 
-inline constexpr Emu68WriteOperand kEmu68_WriteWord[8] = {
-    &Emu68_WriteDataWord,
-    &Emu68_WriteAddressWord,
-    &Emu68_WriteEffectiveWord,
-    &Emu68_WritePostincrementWord,
-    &Emu68_WriteEffectiveWord,
-    &Emu68_WriteEffectiveWord,
-    &Emu68_WriteEffectiveWord,
-    &Emu68_WriteExtendedWord,
+inline constexpr emu68::WriteOperand kEmu68_WriteWord[8] = {
+    &emu68::WriteDataWord,
+    &emu68::WriteAddressWord,
+    &emu68::WriteEffectiveWord,
+    &emu68::WritePostincrementWord,
+    &emu68::WriteEffectiveWord,
+    &emu68::WriteEffectiveWord,
+    &emu68::WriteEffectiveWord,
+    &emu68::WriteExtendedWord,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_ReadModifyLong[8] = {
-    &Emu68_ReadDataLong,
-    &Emu68_ReadAddressRegister,
-    &Emu68_ReadModifyIndirectLong,
-    &Emu68_ReadModifyIndirectLong,
-    &Emu68_ReadModifyPredecrementLong,
-    &Emu68_ReadModifyDisplacementLong,
-    &Emu68_ReadModifyIndexedLong,
-    &Emu68_ReadModifyExtendedLong,
+inline constexpr emu68::ReadOperand kEmu68_ReadModifyLong[8] = {
+    &emu68::ReadDataLong,
+    &emu68::ReadAddressRegister,
+    &emu68::ReadModifyIndirectLong,
+    &emu68::ReadModifyIndirectLong,
+    &emu68::ReadModifyPredecrementLong,
+    &emu68::ReadModifyDisplacementLong,
+    &emu68::ReadModifyIndexedLong,
+    &emu68::ReadModifyExtendedLong,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_ReadByte[8] = {
-    &Emu68_ReadDataByte,
-    &Emu68_ReportByteReadModeError,
-    &Emu68_ReadIndirectByte,
-    &Emu68_ReadPostincrementByte,
-    &Emu68_ReadPredecrementByte,
-    &Emu68_ReadDisplacementByte,
-    &Emu68_ReadIndexedByte,
-    &Emu68_ReadExtendedByte,
+inline constexpr emu68::ReadOperand kEmu68_ReadByte[8] = {
+    &emu68::ReadDataByte,
+    &emu68::ReportByteReadModeError,
+    &emu68::ReadIndirectByte,
+    &emu68::ReadPostincrementByte,
+    &emu68::ReadPredecrementByte,
+    &emu68::ReadDisplacementByte,
+    &emu68::ReadIndexedByte,
+    &emu68::ReadExtendedByte,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_ReadWord[8] = {
-    &Emu68_ReadDataWord,
-    &Emu68_ReadAddressWord,
-    &Emu68_ReadIndirectWord,
-    &Emu68_ReadPostincrementWord,
-    &Emu68_ReadPredecrementWord,
-    &Emu68_ReadDisplacementWord,
-    &Emu68_ReadIndexedWord,
-    &Emu68_ReadExtendedWord,
+inline constexpr emu68::ReadOperand kEmu68_ReadWord[8] = {
+    &emu68::ReadDataWord,
+    &emu68::ReadAddressWord,
+    &emu68::ReadIndirectWord,
+    &emu68::ReadPostincrementWord,
+    &emu68::ReadPredecrementWord,
+    &emu68::ReadDisplacementWord,
+    &emu68::ReadIndexedWord,
+    &emu68::ReadExtendedWord,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_ReadLong[8] = {
-    &Emu68_ReadDataLong,
-    &Emu68_ReadAddressRegister,
-    &Emu68_ReadIndirectLong,
-    &Emu68_ReadPostincrementLong,
-    &Emu68_ReadPredecrementLong,
-    &Emu68_ReadDisplacementLong,
-    &Emu68_ReadIndexedLong,
-    &Emu68_ReadExtendedLong,
+inline constexpr emu68::ReadOperand kEmu68_ReadLong[8] = {
+    &emu68::ReadDataLong,
+    &emu68::ReadAddressRegister,
+    &emu68::ReadIndirectLong,
+    &emu68::ReadPostincrementLong,
+    &emu68::ReadPredecrementLong,
+    &emu68::ReadDisplacementLong,
+    &emu68::ReadIndexedLong,
+    &emu68::ReadExtendedLong,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_CompareMemoryByteSource[2] = {
-    &Emu68_ReadDataByte,
-    &Emu68_ReadPredecrementByte,
+inline constexpr emu68::ReadOperand kEmu68_CompareMemoryByteSource[2] = {
+    &emu68::ReadDataByte,
+    &emu68::ReadPredecrementByte,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_PredecrementByteDestination[2] = {
-    &Emu68_ReadDataByte,
-    &Emu68_ReadModifyPredecrementByte,
+inline constexpr emu68::ReadOperand kEmu68_PredecrementByteDestination[2] = {
+    &emu68::ReadDataByte,
+    &emu68::ReadModifyPredecrementByte,
 };
 
-inline constexpr Emu68WriteOperand kEmu68_WriteBytePair[2] = {
-    &Emu68_WriteDataByte,
-    &Emu68_WriteEffectiveByte,
+inline constexpr emu68::WriteOperand kEmu68_WriteBytePair[2] = {
+    &emu68::WriteDataByte,
+    &emu68::WriteEffectiveByte,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_PredecrementWordDestination[2] = {
-    &Emu68_ReadDataWord,
-    &Emu68_ReadModifyPredecrementWord,
+inline constexpr emu68::ReadOperand kEmu68_PredecrementWordDestination[2] = {
+    &emu68::ReadDataWord,
+    &emu68::ReadModifyPredecrementWord,
 };
 
-inline constexpr Emu68WriteOperand kEmu68_WriteWordPair[2] = {
-    &Emu68_WriteDataWord,
-    &Emu68_WriteEffectiveWord,
+inline constexpr emu68::WriteOperand kEmu68_WriteWordPair[2] = {
+    &emu68::WriteDataWord,
+    &emu68::WriteEffectiveWord,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_CompareMemoryLongSource[2] = {
-    &Emu68_ReadDataLong,
-    &Emu68_ReadPredecrementLong,
+inline constexpr emu68::ReadOperand kEmu68_CompareMemoryLongSource[2] = {
+    &emu68::ReadDataLong,
+    &emu68::ReadPredecrementLong,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_PredecrementLongDestination[2] = {
-    &Emu68_ReadDataLong,
-    &Emu68_ReadModifyPredecrementLong,
+inline constexpr emu68::ReadOperand kEmu68_PredecrementLongDestination[2] = {
+    &emu68::ReadDataLong,
+    &emu68::ReadModifyPredecrementLong,
 };
 
-inline constexpr Emu68WriteOperand kEmu68_WriteLongPair[2] = {
-    &Emu68_WriteDataLong,
-    &Emu68_WriteEffectiveLong,
+inline constexpr emu68::WriteOperand kEmu68_WriteLongPair[2] = {
+    &emu68::WriteDataLong,
+    &emu68::WriteEffectiveLong,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_Address[8] = {
-    &Emu68_ReportAddressModeError,
-    &Emu68_ReportAddressModeError,
-    &Emu68_ReadAddressRegister,
-    &Emu68_ReportAddressModeError,
-    &Emu68_ReportAddressModeError,
-    &Emu68_AddressDisplacement,
-    &Emu68_AddressIndexed,
-    &Emu68_AddressExtended,
+inline constexpr emu68::ReadOperand kEmu68_Address[8] = {
+    &emu68::ReportAddressModeError,
+    &emu68::ReportAddressModeError,
+    &emu68::ReadAddressRegister,
+    &emu68::ReportAddressModeError,
+    &emu68::ReportAddressModeError,
+    &emu68::AddressDisplacement,
+    &emu68::AddressIndexed,
+    &emu68::AddressExtended,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_SetEffectiveByte[8] = {
-    &Emu68_NullOperand,
-    &Emu68_ReportWriteModeError,
-    &Emu68_SetEffectiveIndirect,
-    &Emu68_SetEffectiveIndirect,
-    &Emu68_SetEffectivePredecrementByte,
-    &Emu68_SetEffectiveDisplacement,
-    &Emu68_SetEffectiveIndexed,
-    &Emu68_SetEffectiveExtended,
+inline constexpr emu68::ReadOperand kEmu68_SetEffectiveByte[8] = {
+    &emu68::NullOperand,
+    &emu68::ReportWriteModeError,
+    &emu68::SetEffectiveIndirect,
+    &emu68::SetEffectiveIndirect,
+    &emu68::SetEffectivePredecrementByte,
+    &emu68::SetEffectiveDisplacement,
+    &emu68::SetEffectiveIndexed,
+    &emu68::SetEffectiveExtended,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_SetEffectiveLong[8] = {
-    &Emu68_NullOperand,
-    &Emu68_NullOperand,
-    &Emu68_SetEffectiveIndirect,
-    &Emu68_SetEffectiveIndirect,
-    &Emu68_SetEffectivePredecrementLong,
-    &Emu68_SetEffectiveDisplacement,
-    &Emu68_SetEffectiveIndexed,
-    &Emu68_SetEffectiveExtended,
+inline constexpr emu68::ReadOperand kEmu68_SetEffectiveLong[8] = {
+    &emu68::NullOperand,
+    &emu68::NullOperand,
+    &emu68::SetEffectiveIndirect,
+    &emu68::SetEffectiveIndirect,
+    &emu68::SetEffectivePredecrementLong,
+    &emu68::SetEffectiveDisplacement,
+    &emu68::SetEffectiveIndexed,
+    &emu68::SetEffectiveExtended,
 };
 
-inline constexpr Emu68ReadOperand kEmu68_SetEffectiveWord[8] = {
-    &Emu68_NullOperand,
-    &Emu68_NullOperand,
-    &Emu68_SetEffectiveIndirect,
-    &Emu68_SetEffectiveIndirect,
-    &Emu68_SetEffectivePredecrementWord,
-    &Emu68_SetEffectiveDisplacement,
-    &Emu68_SetEffectiveIndexed,
-    &Emu68_SetEffectiveExtended,
+inline constexpr emu68::ReadOperand kEmu68_SetEffectiveWord[8] = {
+    &emu68::NullOperand,
+    &emu68::NullOperand,
+    &emu68::SetEffectiveIndirect,
+    &emu68::SetEffectiveIndirect,
+    &emu68::SetEffectivePredecrementWord,
+    &emu68::SetEffectiveDisplacement,
+    &emu68::SetEffectiveIndexed,
+    &emu68::SetEffectiveExtended,
 };
 
-inline constexpr Emu68Operation kEmu68_Group5[8] = {
-    &Emu68_AddQuickByte,
-    &Emu68_AddQuickWord,
-    &Emu68_AddQuickLong,
-    &Emu68_SetOrDecrementCondition,
-    &Emu68_SubtractQuickByte,
-    &Emu68_SubtractQuickWord,
-    &Emu68_SubtractQuickLong,
-    &Emu68_SetOrDecrementCondition,
+inline constexpr emu68::Operation kEmu68_Group5[8] = {
+    &emu68::AddQuickByte,
+    &emu68::AddQuickWord,
+    &emu68::AddQuickLong,
+    &emu68::SetOrDecrementCondition,
+    &emu68::SubtractQuickByte,
+    &emu68::SubtractQuickWord,
+    &emu68::SubtractQuickLong,
+    &emu68::SetOrDecrementCondition,
 };
 
-inline constexpr Emu68Operation kEmu68_Group4[64] = {
-    &Emu68_NegateExtendByteThunk,
-    &Emu68_NegateExtendWordThunk,
-    &Emu68_NegateExtendLongThunk,
-    &Emu68_MoveFromStatus,
-    &Emu68_CheckLongBounds,
-    &Emu68_ReportInstructionError,
-    &Emu68_CheckWordBounds,
-    &Emu68_LoadEffectiveAddressA0,
-    &Emu68_ClearByte,
-    &Emu68_ClearWord,
-    &Emu68_ClearLong,
-    &Emu68_MoveFromConditionCodes,
-    &Emu68_CheckLongBounds,
-    &Emu68_ReportInstructionError,
-    &Emu68_CheckWordBounds,
-    &Emu68_LoadEffectiveAddressA1,
-    &Emu68_NegateByteThunk,
-    &Emu68_NegateWordThunk,
-    &Emu68_NegateLongThunk,
-    &Emu68_MoveToConditionCodes,
-    &Emu68_CheckLongBounds,
-    &Emu68_ReportInstructionError,
-    &Emu68_CheckWordBounds,
-    &Emu68_LoadEffectiveAddressA2,
-    &Emu68_NotByteThunk,
-    &Emu68_NotWordThunk,
-    &Emu68_NotLongThunk,
-    &Emu68_MoveToStatus,
-    &Emu68_CheckLongBounds,
-    &Emu68_ReportInstructionError,
-    &Emu68_CheckWordBounds,
-    &Emu68_LoadEffectiveAddressA3,
-    &Emu68_NegateBcdThunk,
-    &Emu68_SwapOrPushEffectiveAddress,
-    &Emu68_ExtendByteOrMoveMultipleWord,
-    &Emu68_ExtendWordOrMoveMultipleLong,
-    &Emu68_CheckLongBounds,
-    &Emu68_ReportInstructionError,
-    &Emu68_CheckWordBounds,
-    &Emu68_LoadEffectiveAddressA4,
-    &Emu68_TestByte,
-    &Emu68_TestWord,
-    &Emu68_TestLong,
-    &Emu68_TestAndSet,
-    &Emu68_CheckLongBounds,
-    &Emu68_ReportInstructionError,
-    &Emu68_CheckWordBounds,
-    &Emu68_LoadEffectiveAddressA5,
-    &Emu68_ReportInstructionError,
-    &Emu68_ReportInstructionError,
-    &Emu68_MoveMultipleWordToRegisters,
-    &Emu68_MoveMultipleLongToRegisters,
-    &Emu68_CheckLongBounds,
-    &Emu68_ReportInstructionError,
-    &Emu68_CheckWordBounds,
-    &Emu68_LoadEffectiveAddressA6,
-    &Emu68_ReportInstructionError,
-    &Emu68_SystemInstruction,
-    &Emu68_JumpSubroutine,
-    &Emu68_Jump,
-    &Emu68_CheckLongBounds,
-    &Emu68_ReportInstructionError,
-    &Emu68_CheckWordBounds,
-    &Emu68_LoadEffectiveAddressA7,
+inline constexpr emu68::Operation kEmu68_Group4[64] = {
+    &emu68::NegateExtendByteThunk,
+    &emu68::NegateExtendWordThunk,
+    &emu68::NegateExtendLongThunk,
+    &emu68::MoveFromStatus,
+    &emu68::CheckLongBounds,
+    &emu68::ReportInstructionError,
+    &emu68::CheckWordBounds,
+    &emu68::LoadEffectiveAddressA0,
+    &emu68::ClearByte,
+    &emu68::ClearWord,
+    &emu68::ClearLong,
+    &emu68::MoveFromConditionCodes,
+    &emu68::CheckLongBounds,
+    &emu68::ReportInstructionError,
+    &emu68::CheckWordBounds,
+    &emu68::LoadEffectiveAddressA1,
+    &emu68::NegateByteThunk,
+    &emu68::NegateWordThunk,
+    &emu68::NegateLongThunk,
+    &emu68::MoveToConditionCodes,
+    &emu68::CheckLongBounds,
+    &emu68::ReportInstructionError,
+    &emu68::CheckWordBounds,
+    &emu68::LoadEffectiveAddressA2,
+    &emu68::NotByteThunk,
+    &emu68::NotWordThunk,
+    &emu68::NotLongThunk,
+    &emu68::MoveToStatus,
+    &emu68::CheckLongBounds,
+    &emu68::ReportInstructionError,
+    &emu68::CheckWordBounds,
+    &emu68::LoadEffectiveAddressA3,
+    &emu68::NegateBcdThunk,
+    &emu68::SwapOrPushEffectiveAddress,
+    &emu68::ExtendByteOrMoveMultipleWord,
+    &emu68::ExtendWordOrMoveMultipleLong,
+    &emu68::CheckLongBounds,
+    &emu68::ReportInstructionError,
+    &emu68::CheckWordBounds,
+    &emu68::LoadEffectiveAddressA4,
+    &emu68::TestByte,
+    &emu68::TestWord,
+    &emu68::TestLong,
+    &emu68::TestAndSet,
+    &emu68::CheckLongBounds,
+    &emu68::ReportInstructionError,
+    &emu68::CheckWordBounds,
+    &emu68::LoadEffectiveAddressA5,
+    &emu68::ReportInstructionError,
+    &emu68::ReportInstructionError,
+    &emu68::MoveMultipleWordToRegisters,
+    &emu68::MoveMultipleLongToRegisters,
+    &emu68::CheckLongBounds,
+    &emu68::ReportInstructionError,
+    &emu68::CheckWordBounds,
+    &emu68::LoadEffectiveAddressA6,
+    &emu68::ReportInstructionError,
+    &emu68::SystemInstruction,
+    &emu68::JumpSubroutine,
+    &emu68::Jump,
+    &emu68::CheckLongBounds,
+    &emu68::ReportInstructionError,
+    &emu68::CheckWordBounds,
+    &emu68::LoadEffectiveAddressA7,
 };
 
-inline Emu68OpcodeHandler g_emu68OpcodeDispatch[16] = {
-    &Emu68_DispatchGroup0,
-    &Emu68_MoveByte,
-    &Emu68_MoveLong,
-    &Emu68_MoveWord,
-    &Emu68_DispatchGroup4,
-    &Emu68_DispatchGroup5,
-    &Emu68_Branch,
-    &Emu68_MoveQuick,
-    &Emu68_DispatchGroup8,
-    &Emu68_DispatchGroup9,
+inline emu68::OpcodeHandler g_emu68OpcodeDispatch[16] = {
+    &emu68::DispatchGroup0,
+    &emu68::MoveByte,
+    &emu68::MoveLong,
+    &emu68::MoveWord,
+    &emu68::DispatchGroup4,
+    &emu68::DispatchGroup5,
+    &emu68::Branch,
+    &emu68::MoveQuick,
+    &emu68::DispatchGroup8,
+    &emu68::DispatchGroup9,
     nullptr,
-    &Emu68_DispatchGroupB,
-    &Emu68_DispatchGroupC,
-    &Emu68_DispatchGroupD,
-    &Emu68_ShiftRotate,
-    &Emu68_ReportLineFError,
+    &emu68::DispatchGroupB,
+    &emu68::DispatchGroupC,
+    &emu68::DispatchGroupD,
+    &emu68::ShiftRotate,
+    &emu68::ReportLineFError,
 };
 
 inline std::array<reg68_page_map_entry_t, 256> g_reg68_ctx_map_funcs = [] {
     std::array<reg68_page_map_entry_t, 256> pages{};
     for (reg68_page_map_entry_t &page : pages) {
-        page = {.read8 = &Emu68_UnmappedRead8,
-            .write8 = &Emu68_IgnoreWrite8,
-            .read16 = &Emu68_UnmappedRead16,
-            .write16 = &Emu68_IgnoreWrite16,
-            .read32 = &Emu68_UnmappedRead32,
-            .write32 = &Emu68_IgnoreWrite32,
+        page = {.read8 = &emu68::UnmappedRead8,
+            .write8 = &emu68::IgnoreWrite8,
+            .read16 = &emu68::UnmappedRead16,
+            .write16 = &emu68::IgnoreWrite16,
+            .read32 = &emu68::UnmappedRead32,
+            .write32 = &emu68::IgnoreWrite32,
             .base = 0,
             .mask = 0xFFFFFFFF};
     }
     pages[0x00] = {.read8 = &Harrier_ReadMemory8,
-        .write8 = &Emu68_IgnoreWrite8,
+        .write8 = &emu68::IgnoreWrite8,
         .read16 = &Harrier_ReadMemory16BigEndian,
-        .write16 = &Emu68_IgnoreWrite16,
+        .write16 = &emu68::IgnoreWrite16,
         .read32 = &Harrier_ReadMemory32BigEndian,
-        .write32 = &Emu68_IgnoreWrite32,
+        .write32 = &emu68::IgnoreWrite32,
         .base = 0x0,
         .mask = 0xFFFF};
     pages[0x01] = {.read8 = &Harrier_ReadMemory8,
-        .write8 = &Emu68_IgnoreWrite8,
+        .write8 = &emu68::IgnoreWrite8,
         .read16 = &Harrier_ReadMemory16BigEndian,
-        .write16 = &Emu68_IgnoreWrite16,
+        .write16 = &emu68::IgnoreWrite16,
         .read32 = &Harrier_ReadMemory32BigEndian,
-        .write32 = &Emu68_IgnoreWrite32,
+        .write32 = &emu68::IgnoreWrite32,
         .base = 0x10000,
         .mask = 0xFFFF};
     pages[0x02] = {.read8 = &Harrier_ReadMemory8,
-        .write8 = &Emu68_IgnoreWrite8,
+        .write8 = &emu68::IgnoreWrite8,
         .read16 = &Harrier_ReadMemory16BigEndian,
-        .write16 = &Emu68_IgnoreWrite16,
+        .write16 = &emu68::IgnoreWrite16,
         .read32 = &Harrier_ReadMemory32BigEndian,
-        .write32 = &Emu68_IgnoreWrite32,
+        .write32 = &emu68::IgnoreWrite32,
         .base = 0x20000,
         .mask = 0xFFFF};
     pages[0x03] = {.read8 = &Harrier_ReadMemory8,
-        .write8 = &Emu68_IgnoreWrite8,
+        .write8 = &emu68::IgnoreWrite8,
         .read16 = &Harrier_ReadMemory16BigEndian,
-        .write16 = &Emu68_IgnoreWrite16,
+        .write16 = &emu68::IgnoreWrite16,
         .read32 = &Harrier_ReadMemory32BigEndian,
-        .write32 = &Emu68_IgnoreWrite32,
+        .write32 = &emu68::IgnoreWrite32,
         .base = 0x30000,
         .mask = 0xFFFF};
     pages[0x04] = {.read8 = &Harrier_ReadMemory8,
@@ -900,21 +908,21 @@ inline std::array<reg68_page_map_entry_t, 256> g_reg68_ctx_map_funcs = [] {
 inline std::array<reg68_page_map_entry_t, 256> g_reg68_ctx_map_funcs_2 = [] {
     std::array<reg68_page_map_entry_t, 256> pages{};
     for (reg68_page_map_entry_t &page : pages) {
-        page = {.read8 = &Emu68_UnmappedRead8,
-            .write8 = &Emu68_IgnoreWrite8,
-            .read16 = &Emu68_UnmappedRead16,
-            .write16 = &Emu68_IgnoreWrite16,
-            .read32 = &Emu68_UnmappedRead32,
-            .write32 = &Emu68_IgnoreWrite32,
+        page = {.read8 = &emu68::UnmappedRead8,
+            .write8 = &emu68::IgnoreWrite8,
+            .read16 = &emu68::UnmappedRead16,
+            .write16 = &emu68::IgnoreWrite16,
+            .read32 = &emu68::UnmappedRead32,
+            .write32 = &emu68::IgnoreWrite32,
             .base = 0,
             .mask = 0xFFFFFFFF};
     }
     pages[0x00] = {.read8 = &Harrier_ReadMemory8,
-        .write8 = &Emu68_IgnoreWrite8,
+        .write8 = &emu68::IgnoreWrite8,
         .read16 = &Harrier_ReadMemory16BigEndian,
-        .write16 = &Emu68_IgnoreWrite16,
+        .write16 = &emu68::IgnoreWrite16,
         .read32 = &Harrier_ReadMemory32BigEndian,
-        .write32 = &Emu68_IgnoreWrite32,
+        .write32 = &emu68::IgnoreWrite32,
         .base = 0x40000,
         .mask = 0xFFFF};
     pages[0xC6] = {.read8 = &Harrier_ReadMemory8,

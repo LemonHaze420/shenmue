@@ -86,7 +86,7 @@ void ReleaseRuntime(bool destroyTask) {
     }
     for (void *model : g_birdTypeHmdls) {
         if (model)
-            HMDL_FreeAssignedModel(model);
+            hmdlFreeAssignedModel(model);
     }
 }
 

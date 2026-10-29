@@ -302,7 +302,7 @@ void ArkqKnifeLightCallback(void *) {
     EV_GetCharaPosition(ARKQ_KNIFE, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(ARKQ_KNIFE, &rotation, EventTransformFlags::World);
     point.z = -.05f - static_cast<float>(arkqGlobals.knifeLightFrame) * .01f;
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &point);
+    scenApplyTransRot(&position, &rotation, &point);
     std::uint32_t *effect = &arkqGlobals.glints[arkqGlobals.knifeLightFrame / 3];
     SetParticleEffectPosition(0, *effect, &point, &volume);
     QueueEventCallFunction(ArkqSuspendGlintCallback, effect, 6);
@@ -353,7 +353,7 @@ void ArkqIntroAuthorCallback(void *) {
         EV_GetCharaPosition(ARKQ_HAND_ANCHOR, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(ARKQ_HAND_ANCHOR, &rotation, EventTransformFlags::World);
         point.z = static_cast<float>(1520 - frame) * .006f - .18f;
-        ApplyScenarioTranslationAndRotation(&position, &rotation, &point);
+        scenApplyTransRot(&position, &rotation, &point);
         std::uint32_t *effect = &arkqGlobals.glints[(1520 - frame) / 3];
         SetParticleEffectPosition(0, *effect, &point, &volume);
         QueueEventRepeatedFunction(ArkqSuspendGlintCallback, effect, 4, 1);

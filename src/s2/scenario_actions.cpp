@@ -495,7 +495,7 @@ void scenProcessCharacterActionQueue() {
                 talk.facingApplied[0] = 1;
                 talk.playerTurnTarget = talk.actionParticipants[static_cast<std::size_t>(participant)];
             }
-        } else if (action == 203U) {
+        } else if (action == FT_StopRyoFacing) {
             if (scenario.flags & 0x4000U) {
                 talk.participantFacing[0] = -1;
             } else {
@@ -506,42 +506,42 @@ void scenProcessCharacterActionQueue() {
             LookAtScenarioRecordLocation(static_cast<std::int32_t>(action), talk.actionCharacter);
         } else {
             switch (action) {
-            case 13U:
+            case FT_EndLocationLook:
                 talk.lookReleaseCharacter = talk.actionCharacter;
                 talk.lookReleaseRequested = 1;
                 talk.lookActive = 0;
                 talk.lookCameraState = 0;
                 camCtrlSetConversationFlag4000(0);
                 break;
-            case 10U:
+            case FT_ShowLetter:
                 if (!talk.letterVisible) {
                     talk.letterShowPending = 1;
                     if (talk.actionCharacter.name)
                         plymBeginSpecialTargetMotionSequence(stepVisibleCharacterName);
                 }
                 break;
-            case 15U:
+            case FT_PutAwayLetter:
                 if (talk.letterVisible) {
                     talk.letterHidePending = 1;
                     if (talk.actionCharacter.name)
                         plymContinueSpecialTargetMotionSequence();
                 }
                 break;
-            case 200U:
+            case FT_SuppressSpeakerFacing:
                 talk.suppressNpcFacing = 1;
                 break;
-            case 201U:
+            case FT_SuppressRyoFacing:
                 talk.suppressPlayerFacing = 1;
                 break;
-            case 202U:
+            case FT_LookWithoutCamera:
                 talk.lookTargetReleased = 1;
                 break;
-            case 205U:
+            case FT_PlayRejectSound:
                 ExecuteAicaCommand(0x800ab, 0, 0);
                 break;
             default:
                 if (action - 207U > 9U) {
-                    if (action == 16U)
+                    if (action == FT_FaceBystandersForward)
                         talk.unfocusedFacingRequested = 1;
                 } else {
                     plymRequestSpecialPoseSequence();

@@ -77,11 +77,11 @@ void vfSelectDefaultReactionAndGuardAnims(VFActor &actor) {
 
     const std::array<std::uint16_t, 3> *offsets = &baseOffsets;
     if (actor.fightStyleIndex != 0U) {
-        const std::uint8_t hpPhase = actor.slot ? actor.slot->currentHpRegenerationPhase : 0U;
+        const std::uint8_t aiCommand = actor.slot ? actor.slot->currentHpRegenerationPhase : 0U;
         if (actor.fightStyleIndex == 6U || actor.fightStyleIndex == 0x1bU) {
-            offsets = hpPhase <= 1U ? &defaultOffsets : &lowHpOffsets;
+            offsets = aiCommand <= 1U ? &defaultOffsets : &lowHpOffsets;
         } else if (actor.fightStyleIndex == 0x1cU || actor.fightStyleIndex == 0x1dU) {
-            offsets = hpPhase <= 2U ? &defaultOffsets : &lowHpOffsets;
+            offsets = aiCommand <= 2U ? &defaultOffsets : &lowHpOffsets;
         } else if ((actor.stateFlags & 0x0cU) != 0U) {
             offsets = &defaultOffsets;
         }
@@ -385,7 +385,7 @@ bool vfAssignVoiceFor(VFMAData &game, std::uint8_t voiceCode);
 void UpdateScenarioHpPhaseConfig(VFActor &actor) {
     VFSlotRuntimeState *const slot = actor.slot;
     VFMAData *const game = actor.game;
-    if (!slot || !game || !actor.styleTuning || actor.maximumHp <= 0)
+    if (!slot || !game || !actor.aiProfile || actor.maximumHp <= 0)
         return;
 
     constexpr std::array<std::uint8_t, 56> kChai2{{0x20, 0x20, 0x40, 0x00, 0x00, 0x00, 0xff, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0xc0, 0x60, 0x20, 0x20,
@@ -399,7 +399,7 @@ void UpdateScenarioHpPhaseConfig(VFActor &actor) {
         0x08, 0x00, 0x80, 0x80, 0x80, 0x50, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00}};
 
     const float hpFraction = static_cast<float>(actor.currentHp) / static_cast<float>(actor.maximumHp);
-    const std::uint8_t *config = static_cast<const std::uint8_t *>(actor.styleTuning) + 0x16;
+    const std::uint8_t *config = static_cast<const std::uint8_t *>(actor.aiProfile) + 0x16;
     if (actor.fightStyleIndex == 0x1bU) {
         const std::uint8_t phase = hpFraction < 0.2 ? 3U : hpFraction < 0.5 ? 2U : hpFraction < 0.8 ? 1U : 0U;
         slot->currentHpRegenerationPhase = phase;
@@ -665,7 +665,7 @@ void vfResolvePairInteraction(VFActor &self) {
         (void)ApplyPendingHitReactionMotion(*reactor);
         reactor->hitReactionAnimId = static_cast<std::int16_t>(attacker->currentReactionAnimation);
         reactor->pairFrameOffset = static_cast<std::uint16_t>(attacker->attackWindowEndFrame - reactor->field330);
-        attacker->guardStrength = reactor->guardStrength;
+        attacker->hitDamage = reactor->hitDamage;
         const std::uint32_t reactorMirror = (reactor->moveFlags >> 6U) & 1U;
         const std::uint32_t mirror = (attacker->moveFlags & kRunOrDashMode) != 0 ? reactorMirror ^ 1U : reactorMirror;
         const std::uint64_t reaction = mirror == 1U ? (reactor->hitParameter + 0x11000000U) | 0x8000U : reactor->hitParameter + 0x11000000U;
@@ -852,13 +852,13 @@ void vfInitMoveParamsFromFightStyle(VFActor *self) {
     motion->motionFlags |= 0x4000U;
     const auto styleOffset = [style](std::size_t offset) { return static_cast<std::ptrdiff_t>(static_cast<std::int32_t>(ReadBigEndian32(style + offset))); };
     self->reactionScriptBase = style + styleOffset(4);
-    self->cameraScriptTable = style + styleOffset(8);
+    self->aiInputSequences = style + styleOffset(8);
     auto *const tuning = style + styleOffset(12);
-    self->styleTuning = tuning;
+    self->aiProfile = tuning;
     auto *const profile = style + styleOffset(16);
     self->contactProfile = profile;
     self->animationTable = reinterpret_cast<std::uint8_t *>(style + static_cast<std::int32_t>(ReadBigEndian32(profile)));
-    self->cameraPhaseTable = style + static_cast<std::int32_t>(ReadBigEndian32(tuning));
+    self->aiCommandTable = style + static_cast<std::int32_t>(ReadBigEndian32(tuning));
     self->knockbackBaseParameter = ReadBigEndianFixed16(profile + 24);
     self->contactRangeFrontMin = ReadBigEndianFixed16(profile + 4);
     self->contactRangeFrontMax = ReadBigEndianFixed16(profile + 8);
@@ -910,7 +910,7 @@ void vfInitMoveParamsFromFightStyle(VFActor *self) {
     self->queuedReactionEvent = 0;
     self->hitParameter = 0;
     self->hitStateHoldTimer = 0;
-    self->cameraControlFlags = 0;
+    self->inputFlags = 0;
     self->pairContactPriority = 0;
     self->midFrameQueuedReactionActionWord = 0;
     self->pairFollowupActionWord = 0;
@@ -1027,7 +1027,7 @@ void vfResetActorReactionStateForContact(VFMAData *game, std::uint8_t index) {
     actor->endFrameQueuedReactionActionWord = 0;
     actor->activeContactCount = 0;
     actor->reactionStateFlags = 0;
-    actor->reactionPriorityMaskA = 0;
+    actor->inputAliasMaskA = 0;
     actor->reactionResumeProgramCounter = nullptr;
     actor->rootReactionVmProgramCounter = nullptr;
     actor->otherPriorityFlags &= 0x00ff;
@@ -1035,12 +1035,12 @@ void vfResetActorReactionStateForContact(VFMAData *game, std::uint8_t index) {
     actor->delayedReactionTimer = 0;
     actor->delayedReactionFramesRemaining = 0;
     actor->delayedReactionStateActive = 0;
-    actor->reactionPriorityMaskB = 0;
+    actor->inputAliasMaskB = 0;
     actor->reactionRingHead = 1;
     actor->reactionRingTail = 1;
-    actor->reactionPriority[0].mask1 = actor->cameraControlFlags;
-    actor->reactionPriority[0].mask2 = actor->cameraControlFlags;
-    actor->reactionPriority[0].value = actor->cameraControlFlags;
+    actor->inputHistory[0].mask = actor->inputFlags;
+    actor->inputHistory[0].sectorMask = actor->inputFlags;
+    actor->inputHistory[0].directionMask = actor->inputFlags;
     actor->slots.primary = static_cast<std::uint8_t>(actor->reactionRingTail);
     actor->slots.secondary = actor->reactionRingTail;
     actor->reactionSlotCurrent = static_cast<std::uint8_t>(actor->reactionRingTail);
@@ -1063,8 +1063,8 @@ void vfUpdateGuardLevel(VFMAData *game, std::uint8_t index) {
     slot->word56 = static_cast<std::uint16_t>((slot->word56 & 0xff00U) | 127U);
     slot->byte54 = 127;
     slot->hpPhaseIncrement = 240;
-    slot->updateCamera = 1;
-    const auto *const style = static_cast<const std::byte *>(actor->styleTuning);
+    slot->aiFlags = 1;
+    const auto *const style = static_cast<const std::byte *>(actor->aiProfile);
     const float assistWindow = ReadBigEndianFixed16(style + 4);
     slot->assistWindowCurrent = assistWindow;
     slot->assistWindowDefault = assistWindow;

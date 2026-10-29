@@ -271,10 +271,10 @@ void UpdateOpeningCharacterEffects(std::uint16_t frame) {
         GetScenarioCharacterEulerAngles(a892, &recursiveRotation, EventTransformFlags::World);
         const Vector3 smokeSpawnVolume{0.0f, 0.0545098074f, 0.0f};
         Vector3 smokePosition{0.0f, 15.0f, 11.2f};
-        ApplyScenarioTranslationAndRotation(&recursivePosition, &recursiveRotation, &smokePosition);
+        scenApplyTransRot(&recursivePosition, &recursiveRotation, &smokePosition);
         SetParticleEffectPosition(0, openingSmokeEffects[0], &smokePosition, &smokeSpawnVolume);
         smokePosition = Vector3{-0.04f, 15.0f, 20.969999f};
-        ApplyScenarioTranslationAndRotation(&recursivePosition, &recursiveRotation, &smokePosition);
+        scenApplyTransRot(&recursivePosition, &recursiveRotation, &smokePosition);
         SetParticleEffectPosition(0, openingSmokeEffects[1], &smokePosition, &smokeSpawnVolume);
 
         Vector3 aa87Position{};

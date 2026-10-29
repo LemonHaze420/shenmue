@@ -57,7 +57,7 @@ void EVT_AT_SetPosRot(void *data) {
         Vector3i rotation{};
         EV_GetCharaPosition(p.character, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(p.character, &rotation, EventTransformFlags::World);
-        ApplyScenarioTranslationAndRotation(&position, &rotation, &p.position);
+        scenApplyTransRot(&position, &rotation, &p.position);
         EV_AT_SetPos(p.character, axes | EventTransformFlags::World, p.position);
     } else {
         const shen_name previous = EV_SCEN_FindChar_Wrapper(p.character);
@@ -124,7 +124,7 @@ void EVT_AT_SetPosAng_Callback(void *data) {
         Vector3 position{};
         EV_GetCharaPosition(p.character, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(p.character, &rotation, EventTransformFlags::World);
-        ApplyScenarioTranslationAndRotation(&position, &rotation, &p.position);
+        scenApplyTransRot(&position, &rotation, &p.position);
         EV_AT_SetPos(p.character, axes | EventTransformFlags::World, p.position);
         GetScenarioCharacterEulerAngles(p.character, &rotation, EventTransformFlags::Local);
         rotation.y += FixedAngle(p.degrees);

@@ -383,7 +383,7 @@ void UpdateFightCameraDialogue(VFMA_t *game) {
                 if (admits())
                     TriggerCameraDialogue(game, record);
             }
-            record->idleFrames = (self->cameraControlFlags & 15) ? 0 : record->idleFrames + 1;
+            record->idleFrames = (self->inputFlags & 15) ? 0 : record->idleFrames + 1;
             break;
         case 17:
             if (!self)

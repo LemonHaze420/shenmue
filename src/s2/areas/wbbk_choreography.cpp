@@ -139,7 +139,7 @@ void UpdateBookCarryAnchor() {
     Vector3 centre{.x = (left.x + right.x) * .5f, .y = (left.y + right.y) * .5f, .z = (left.z + right.z) * .5f};
     const Vector3i rotation{.x = 0, .y = yaw, .z = 0};
     Vector3 offset{.x = 0, .y = -.12f, .z = -.1f};
-    ApplyScenarioTranslationAndRotation(&centre, &rotation, &offset);
+    scenApplyTransRot(&centre, &rotation, &offset);
     if (bookCarryVariant == 2)
         offset.y -= .1f;
     const Vector3 anchor{.x = (1 - bookCarryAnchorBlend) * bookCarryAnchor.x + bookCarryAnchorBlend * offset.x,

@@ -445,7 +445,7 @@ void vfStageObjectBreak(VFStageObject &object) {
     object.localVelocity.z = 0.0f;
 }
 
-void vfProcessHitOutcome(VFStageObject &object, VFActor &self, std::uint8_t guardState, std::int16_t hitParameter, std::int8_t guardStrength) {
+void vfProcessHitOutcome(VFStageObject &object, VFActor &self, std::uint8_t guardState, std::int16_t hitParameter, std::int8_t hitDamage) {
     VFMAData &game = *self.game;
     g_vfHitObjectHandled |= 1 << self.slotIndex;
     VFActor *owner = nullptr;
@@ -493,7 +493,7 @@ void vfProcessHitOutcome(VFStageObject &object, VFActor &self, std::uint8_t guar
     else if (guardState == 2)
         attacker.hitParameter = parameter | 0x20U;
     attacker.hitDirectionAngle = Shenmue_Atan2Fixed(object.position.x - self.contactCurrentPosition.x, object.position.z - self.contactCurrentPosition.z);
-    attacker.guardStrength = static_cast<std::uint8_t>(guardStrength);
+    attacker.hitDamage = static_cast<std::uint8_t>(hitDamage);
     attacker.postReactionAnimationId = 284;
     attacker.guardLevel = 100;
     VFCL_ApplyImpact(attacker, self);

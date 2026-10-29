@@ -98,6 +98,7 @@ jobs:
             -DVCPKG_TARGET_TRIPLET=x64-windows-static `
             '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>' `
             -DSHENMUE_STEAM=ON `
+            -DSHEN_AUTO_TEST_ENABLED=OFF `
             -DSHENMUE_ENHANCEMENT_S2_MAP_SEAMS=ON `
             -DSHENMUE_RT_ARCADE=ON `
             -DSHENMUE_LOAD_HANGON_DLL=ON
@@ -156,32 +157,35 @@ jobs:
               throw "SHEN_STEAM_ROOT is missing $game/archives/dx11"
             }
           }
-      - name: Configure scenarios
+          New-Item -ItemType Directory -Force dist/screens | Out-Null
+          Get-ChildItem dist/screens -File -Filter '*.png' | Remove-Item -Force
+      - name: Configure screen captures
         run: |
           $ErrorActionPreference = 'Stop'
           $vcpkg = $env:VCPKG_INSTALLATION_ROOT
           if (!$vcpkg) { $vcpkg = $env:VCPKG_ROOT }
           if (!$vcpkg) { $vcpkg = 'C:\dev\vcpkg' }
           $toolchain = Join-Path $vcpkg 'scripts/buildsystems/vcpkg.cmake'
-          cmake -S . -B build/windows-data -A x64 `
+          cmake -S . -B build/windows-capture -A x64 `
             "-DCMAKE_TOOLCHAIN_FILE=$toolchain" `
             -DVCPKG_TARGET_TRIPLET=x64-windows-static `
             '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>' `
             -DClang_DIR=C:/dev/llvm-20.1.0/lib/cmake/clang `
             -DSHENMUE_STEAM=OFF `
+            -DSHEN_AUTO_TEST_ENABLED=ON `
             -DSHENMUE_ENHANCEMENT_S2_MAP_SEAMS=ON `
             -DSHENMUE_RT_ARCADE=ON `
             -DSHENMUE_LOAD_HANGON_DLL=ON
       - name: Build tools and round-trip scenarios
         run: |
           $ErrorActionPreference = 'Stop'
-          cmake --build build/windows-data --config Release --target shenmue_scenarios --parallel 4
+          cmake --build build/windows-capture --config Release --target shenmue_scenarios --parallel 4
           if ($LASTEXITCODE -ne 0) { throw 'Scenario source generation failed' }
           $scripts = @(Get-ChildItem 'src/s1/scenario' -Recurse -File -Filter '*.scn' | Where-Object { $_.Name -notlike '*.rebuilt.scn' } | Sort-Object FullName)
           if (!$scripts.Count) { throw 'No SCN3 scripts found' }
-          $compiler = (Resolve-Path 'build/windows-data/tools/scn3/Release/scn3cc.exe').Path
+          $compiler = (Resolve-Path 'build/windows-capture/tools/scn3/Release/scn3cc.exe').Path
           $include = (Resolve-Path 'src/s1').Path
-          $work = New-Item -ItemType Directory -Force 'build/windows-data/scenarios/roundtrip'
+          $work = New-Item -ItemType Directory -Force 'build/windows-capture/scenarios/roundtrip'
           function Invoke-Scn3([string[]]$arguments, [string]$log) {
             $quoted = @($arguments | ForEach-Object { '"{0}"' -f $_ })
             $process = Start-Process -FilePath $compiler -ArgumentList $quoted -Wait -PassThru -NoNewWindow `
@@ -199,3 +203,92 @@ jobs:
             if ($process.ExitCode -ne 0) { throw "SCN3 round-trip mismatch: $($file.Name)" }
           }
           Write-Host "Round-tripped $($scripts.Count) SCN3 scripts"
+      - name: Build screen captures
+        run: cmake --build build/windows-capture --config Release --target shenmue1 shenmue2 --parallel 4
+      - name: Build HangOn capture
+        run: |
+          cmake -S src/hangon -B build/hangon-capture -A x64 -DSHEN_AUTO_TEST_ENABLED=ON
+          if ($LASTEXITCODE -ne 0) { throw 'HangOn capture configuration failed' }
+          cmake --build build/hangon-capture --config Release --target shenmue_hangon
+      - name: Capture screens
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.Drawing
+          $screens = New-Item -ItemType Directory -Force dist/screens
+          $previousRoot = $env:SHEN_ROOT
+          $previousCapture = $env:SHEN_AUTO_TEST_CAPTURE
+          try {
+            $env:SHEN_ROOT = $env:SHEN_STEAM_ROOT
+            foreach ($game in 's1', 's2', 'hangon') {
+              $output = Join-Path $screens.FullName "$game-pc.png"
+              if (Test-Path $output) { Remove-Item $output }
+              $env:SHEN_AUTO_TEST_CAPTURE = $output
+              if ($game -eq 'hangon') {
+                $exe = (Resolve-Path 'build/hangon-capture/Release/ShenmueHangon.exe').Path
+                $directory = Join-Path $env:SHEN_STEAM_ROOT 'sm1'
+                if (!(Test-Path "$directory/GameHangon_Winx64_Release.dll")) { throw 'HangOn DLL was not found' }
+                $width = 320; $height = 224
+              } else {
+                $exe = (Resolve-Path "build/windows-capture/Release/shenmue$($game.Substring(1)).exe").Path
+                $directory = Split-Path $exe
+                $width = 1280; $height = 720
+              }
+              $process = Start-Process -FilePath $exe -WorkingDirectory $directory -PassThru
+              $null = $process.Handle
+              if (!$process.WaitForExit(90000)) {
+                $process.Kill()
+                $process.WaitForExit()
+                throw "$game screen capture timed out"
+              }
+              $process.Refresh()
+              if ($process.ExitCode -ne 0 -or !(Test-Path $output)) { throw "$game screen capture failed" }
+              $image = [Drawing.Bitmap]::new($output)
+              try {
+                if ($image.Width -ne $width -or $image.Height -ne $height) { throw "$game screen dimensions differ" }
+                $colours = [Collections.Generic.HashSet[int]]::new()
+                for ($y = 0; $y -lt $image.Height; $y += 20) {
+                  for ($x = 0; $x -lt $image.Width; $x += 20) { [void]$colours.Add($image.GetPixel($x, $y).ToArgb()) }
+                }
+                if ($colours.Count -lt 8) { throw "$game screen is blank" }
+              } finally { $image.Dispose() }
+            }
+          } finally {
+            $env:SHEN_ROOT = $previousRoot
+            $env:SHEN_AUTO_TEST_CAPTURE = $previousCapture
+          }
+      - name: Upload screens
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: screens
+          path: dist/screens/*.png
+          if-no-files-found: error
+      - name: Compare HangOn screenshot
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Add-Type -AssemblyName System.Drawing
+          $reference = $null
+          $image = $null
+          try {
+            $reference = [Drawing.Bitmap]::new((Join-Path $PWD 'docs/hang_on_standalone.png'))
+            $image = [Drawing.Bitmap]::new((Join-Path $PWD 'dist/screens/hangon-pc.png'))
+            if ($image.Width -ne $reference.Width -or $image.Height -ne $reference.Height) {
+              throw 'HangOn reference dimensions differ'
+            }
+            $tolerance = 8
+            $different = 0
+            for ($y = 0; $y -lt $image.Height; ++$y) {
+              for ($x = 0; $x -lt $image.Width; ++$x) {
+                $actual = $image.GetPixel($x, $y)
+                $expected = $reference.GetPixel($x, $y)
+                if ([Math]::Abs([int]$actual.R - $expected.R) -gt $tolerance -or
+                    [Math]::Abs([int]$actual.G - $expected.G) -gt $tolerance -or
+                    [Math]::Abs([int]$actual.B - $expected.B) -gt $tolerance) { ++$different }
+              }
+            }
+            $similarity = 1 - $different / ($image.Width * $image.Height)
+            Write-Host ('HangOn reference similarity: {0:P3}' -f $similarity)
+            if ($similarity -lt 0.999) { throw 'HangOn screenshot differs from the reference' }
+          } finally {
+            if ($image) { $image.Dispose() }
+            if ($reference) { $reference.Dispose() }
+          }

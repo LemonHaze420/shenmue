@@ -173,7 +173,7 @@ void PawnBegin(void *parameter) {
     ownerPosition.z = flyer ? scene.flyerZ : scene.businessZ;
     const Vector3i ownerRotation{0, flyer ? scene.flyerYaw : scene.businessYaw, 0};
     Vector3 playerPosition{flyer ? scene.flyerOffsetX : scene.businessOffsetX, 0, flyer ? scene.flyerOffsetZ : scene.businessOffsetZ};
-    ApplyScenarioTranslationAndRotation(&ownerPosition, &ownerRotation, &playerPosition);
+    scenApplyTransRot(&ownerPosition, &ownerRotation, &playerPosition);
     QueuePawnScenePosition(PAWN_RYO, playerPosition, Vector3i{0, ownerRotation.y + 0x8000, 0});
     QueuePawnScenePosition(scene.owner, ownerPosition, ownerRotation);
     QueuePawnScenePosition(PAWN_BASE, ownerPosition, ownerRotation);
@@ -460,7 +460,7 @@ void PawnBeginSelect(void *parameter) {
     position.z = scene.businessZ;
     const Vector3i rotation{0, scene.businessYaw, 0};
     Vector3 offset{scene.businessOffsetX, 0, scene.businessOffsetZ};
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+    scenApplyTransRot(&position, &rotation, &offset);
     EV_SetCharacterAlphaEnabled(scene.owner, false);
     EV_SetCharacterAlphaEnabled(PAWN_RYO, false);
     SetPlayerGameFlags(PlayerGameFlagMode::Bit26, reinterpret_cast<void *>(1));

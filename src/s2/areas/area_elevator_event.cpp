@@ -790,7 +790,7 @@ template <bool Alternate> void SceneChangeSecond(void *) {
     const ElevatorEventState &state = State<Alternate>();
     const ElevatorEventButton &destination = state.buttons[state.selection];
     Vector3 position{0, 0, 1};
-    ApplyScenarioTranslationAndRotation(&state.position, &state.rotation, &position);
+    scenApplyTransRot(&state.position, &state.rotation, &position);
     QueueQronElevatorSceneChange(destination.area, destination.entry, static_cast<std::int16_t>(state.destination), position, state.rotation.y + 32768);
     if (destination.area.name == SHEN_NAME(QKBT))
         for (const std::int32_t item : {34, 29, 33, 32, 30, 31})

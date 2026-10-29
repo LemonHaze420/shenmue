@@ -204,7 +204,7 @@ extern const std::array<std::uint16_t, 8> g_vfCameraSectors;
 
 extern const std::array<std::uint16_t, 16> g_vfCameraYawAngles;
 
-std::uint8_t AdvanceVFCameraPhaseChain(VFActor &actor);
+std::uint8_t vfAdvanceAICommand(VFActor &actor);
 
 bool vfStageCheckPointInQuadrantXZ(float x, float z, std::int8_t quadrant);
 
@@ -212,20 +212,20 @@ std::uint8_t vfStageResolveQuadrantForPointXZ(float x, float z, std::uint8_t qua
 
 
 
-struct VFStyleTuningBE {
-    std::uint8_t camera_phase_table_off_be[4];
+struct VFAIProfileBE {
+    std::uint8_t command_table_offset_be[4];
     std::uint8_t assist_window_base_fx16_be[4];
-    std::uint8_t assist_window_guard_fx16_be[4];
+    std::uint8_t reserved08[4];
     std::uint8_t assist_angle_limit_be[2];
     std::uint8_t unk_0e_be[2];
     std::uint8_t special_timer_init_be[2];
     std::uint8_t phase_arg_init;
     std::uint8_t base_guard_level;
-    std::uint8_t camera_phase_choice_count;
+    std::uint8_t command_count;
     std::uint8_t style_flags;
     std::uint8_t hp_phase_cfg[14];
-    std::uint8_t camera_phase_pool_24[3][8];
-    std::uint8_t camera_phase_pool_3c[3][8];
+    std::uint8_t command_pool_24[3][8];
+    std::uint8_t command_pool_3c[3][8];
     std::uint8_t phase_select_pool_54[4];
     std::uint8_t phase_select_pool_58[4];
     std::uint8_t phase_select_pool_5c[4];
@@ -243,11 +243,11 @@ struct VFStyleTuningBE {
 void vfResetSfxTimers(VFMAData &game);
 
 using VFMainCallback = std::uint8_t (*)(VFActor *, VFSlotRuntimeState *);
-struct VFMainCallbackPair {
+struct VFAIBehaviour {
     VFMainCallback select;
     VFMainCallback publish;
 };
-extern const VFMainCallbackPair kVFMainCallbacks[58];
+extern const VFAIBehaviour kVFAIBehaviours[58];
 
 enum class VFCollisionCounterEvent : std::uint8_t {
     ContactRegistered,

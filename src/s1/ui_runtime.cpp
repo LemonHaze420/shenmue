@@ -1,3 +1,4 @@
+#include "auto_test.hpp"
 #include "s1/ui_internal.hpp"
 #ifdef _DEBUG
 #include "shenmue_internal.h"
@@ -1654,7 +1655,11 @@ void DrawNuklear() {
     g_uiElements[kUiNotebookPages].isActive = 1;
 
     nk_clear(&GNuklearWindow);
+#if SHEN_AUTO_TEST_ENABLED
+    UIAnim_UpdateDeltaTime(0.033333335f);
+#else
     UIAnim_UpdateDeltaTime(g_bEnableFrameTimeSmoothing ? fFrameTimeMs : 0.033333335f);
+#endif
     UI_UpdateElementEnableStatus();
     UI_UpdateSearchIcons();
     const std::uint32_t uiRenderTarget = g_nuklearTexture;

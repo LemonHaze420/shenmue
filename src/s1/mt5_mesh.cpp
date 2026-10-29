@@ -154,7 +154,7 @@ Matrix4x4 *offsetMatrix(std::int32_t offset) {
 void MT5_ResolveRelativeVertexTransform(Matrix4x4 *output, std::int32_t vertexIndex, void **nodeReference) {
     auto *const sourceNode = static_cast<Mt5Node *>(*nodeReference);
     Mt5Node *ownerNode = sourceNode;
-    const auto offsetBase = [](Mt5Node *node) { return HMDL_NodeOffsetsUseTaskData(node) ? g_pCurrentTaskData : MT5_ModelBaseForNode(node); };
+    const auto offsetBase = [](Mt5Node *node) { return hmdlNodeOffsetsUseTaskData(node) ? g_pCurrentTaskData : MT5_ModelBaseForNode(node); };
     const auto resolveNodeOffset = [&offsetBase](Mt5Node *node, std::int32_t offset) {
         return offset ? reinterpret_cast<Mt5Node *>(offsetBase(node) + offset) : nullptr;
     };
@@ -187,8 +187,8 @@ void MT5_ResolveRelativeVertexTransform(Matrix4x4 *output, std::int32_t vertexIn
     }
     workTransformMatrix = transformMatrix_prePass;
 
-    const Matrix4x4 *const sourceTransform = HMDL_TransformForNode(sourceNode, sourceNode->transformOffset);
-    const Matrix4x4 *const ownerTransform = HMDL_TransformForNode(ownerNode, ownerNode->transformOffset);
+    const Matrix4x4 *const sourceTransform = hmdlTransformForNode(sourceNode, sourceNode->transformOffset);
+    const Matrix4x4 *const ownerTransform = hmdlTransformForNode(ownerNode, ownerNode->transformOffset);
     if (sourceTransform && ownerTransform) {
         workTransformMatrix = *sourceTransform;
         if (((sourceNode->nodeKind - 5u) <= 1u || (sourceNode->nodeKind - 10u) <= 1u)) {
@@ -214,7 +214,7 @@ void MT5_ResolveRelativeVertexTransform(Matrix4x4 *output, std::int32_t vertexIn
         Matrix4x4::InvertInPlace(nullptr);
         Mt5Node *const ownerParent = resolveNodeOffset(ownerNode, ownerNode->parentOffset);
         if (ownerParent) {
-            if (const Matrix4x4 *const parentTransform = HMDL_TransformForNode(ownerParent, ownerParent->transformOffset)) {
+            if (const Matrix4x4 *const parentTransform = hmdlTransformForNode(ownerParent, ownerParent->transformOffset)) {
                 Matrix4x4::Multiply(parentTransform);
             }
         }

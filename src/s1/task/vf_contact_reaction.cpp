@@ -251,7 +251,7 @@ bool VFCL_PublishSpecialCounter(VFActor &attacker, VFActor &defender) {
         std::int16_t responseAnimation = 0;
         std::memcpy(&responseAnimation, counter + 2, sizeof(responseAnimation));
         attacker.action = std::bit_cast<VFActionDescriptor>(static_cast<std::uint64_t>(static_cast<std::int64_t>(responseAnimation) + 0x11000000));
-        attacker.guardStrength = counter[1];
+        attacker.hitDamage = counter[1];
     }
     return true;
 }

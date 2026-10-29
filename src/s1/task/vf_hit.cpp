@@ -139,7 +139,7 @@ float VFCL_CalculateHitImpulse(VFActor &attacker) {
     const VFKnockbackInfo &info = kVFKnockbackInfo[type];
     attacker.hitPowerScale = info.baseScale;
     const float factor = VFCL_CalculateGuardKnockbackFactor(attacker.fighterRankId);
-    const float acceleration = std::sqrt(static_cast<float>(static_cast<double>(factor + static_cast<float>(attacker.guardStrength)) * 0.03333333));
+    const float acceleration = std::sqrt(static_cast<float>(static_cast<double>(factor + static_cast<float>(attacker.hitDamage)) * 0.03333333));
     return static_cast<float>(static_cast<double>(acceleration) * 30.0 * 0.0025) * info.baseScale;
 }
 
@@ -363,7 +363,7 @@ void VFCL_ApplyImpact(VFActor &attacker, VFActor &defender) {
     }
 
     const std::uint16_t facingAngle = static_cast<std::uint16_t>(attacker.facingAngle + attacker.hitDirectionAngle);
-    float guardStrength = static_cast<float>(attacker.guardStrength);
+    float hitDamage = static_cast<float>(attacker.hitDamage);
     float hitImpulse = VFCL_CalculateHitImpulse(attacker);
     if ((attacker.hitStateFlags2 & 0x00001010U) == 0x00001010U && static_cast<std::int16_t>(attacker.moveFacingLimit - facingAngle + 0x4000U) >= 0) {
         attacker.moveVelocity.x *= 0.5f;
@@ -412,11 +412,11 @@ void VFCL_ApplyImpact(VFActor &attacker, VFActor &defender) {
         break;
     case HitResolution::HeavyGuard:
         attacker.hitOutcome = 3;
-        guardStrength *= 0.5f;
+        hitDamage *= 0.5f;
         hitImpulse *= 0.5f;
         break;
     case HitResolution::LightGuard:
-        guardStrength *= 0.75f;
+        hitDamage *= 0.75f;
         hitImpulse *= 0.75f;
         attacker.hitOutcome = 5;
         break;
@@ -461,7 +461,7 @@ void VFCL_ApplyImpact(VFActor &attacker, VFActor &defender) {
 
         std::uint8_t hitStun = static_cast<std::uint8_t>(attacker.hitStunOverride);
         if (hitStun == 0) {
-            hitStun = static_cast<std::uint8_t>(static_cast<float>((static_cast<double>(guardStrength) * 0.6 + 6.0) * 0.5) + 0.5f);
+            hitStun = static_cast<std::uint8_t>(static_cast<float>((static_cast<double>(hitDamage) * 0.6 + 6.0) * 0.5) + 0.5f);
             if (hitStun > 22U)
                 hitStun = 22U;
         }
@@ -492,7 +492,7 @@ void VFCL_ApplyImpact(VFActor &attacker, VFActor &defender) {
             attacker.fighterRankId = 80U;
         }
 
-        impact = VFCL_ResolveImpact(attacker, defender, guardStrength * VF_GetLocalActorAnimScale(attacker));
+        impact = VFCL_ResolveImpact(attacker, defender, hitDamage * VF_GetLocalActorAnimScale(attacker));
         VFCL_PlayImmediateHitCue(impact, attacker);
         vfAssignKnockbackReaction(impact, hitImpulse, attacker, defender);
         const std::uint16_t defenderActionAnimation =
@@ -548,9 +548,9 @@ void vfclResolveHitVsHitOutcome(VFActor &actorA, VFActor &actorB) {
             outcome = 2;
         } else if ((actorB.hitFlags & kHitPriorityMedium) != 0) {
             outcome = 1;
-        } else if (actorA.guardStrength > actorB.guardStrength) {
+        } else if (actorA.hitDamage > actorB.hitDamage) {
             outcome = 2;
-        } else if (actorA.guardStrength < actorB.guardStrength) {
+        } else if (actorA.hitDamage < actorB.hitDamage) {
             outcome = 1;
         } else if (actorA.attackWindowEndFrame < actorB.attackWindowEndFrame) {
             outcome = 2;

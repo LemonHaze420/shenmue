@@ -342,7 +342,7 @@ std::int32_t FindWall(const Vector3 &position) {
     std::int32_t result = -1;
     Vector3 point{0, 0, .5f};
     const auto yaw = Rotation(ryo);
-    ApplyScenarioTranslationAndRotation(&position, &yaw, &point);
+    scenApplyTransRot(&position, &yaw, &point);
     EV_set_debug_text_pos(0, 17);
     for (std::int32_t i = 0; records[i].column; ++i) {
         const auto &record = records[i];
@@ -397,7 +397,7 @@ void BeginWipe(WipeWork &work) {
         Vector3 offset{0, .1f, 0};
         const Vector3 wall = Position(records[areaIndex].character);
         const auto rotation = Rotation(records[areaIndex].character);
-        ApplyScenarioTranslationAndRotation(&wall, &rotation, &offset);
+        scenApplyTransRot(&wall, &rotation, &offset);
         GetBattleDataConfig(0, SHEN_NAME(BTBA));
     }
     if (GetBattleDataConfig(2, SHEN_NAME(BTBA)) && areaIndex != -1 && ryoNotBusy()) {
@@ -415,7 +415,7 @@ void BeginWipe(WipeWork &work) {
     Vector3 target{0, .5f, 0};
     const Vector3 wall = Position(record.character);
     const auto rotation = Rotation(record.character);
-    ApplyScenarioTranslationAndRotation(&wall, &rotation, &target);
+    scenApplyTransRot(&wall, &rotation, &target);
     target.y = Position(ryo).y;
     work.area = areaIndex;
     selectedArea = static_cast<std::uint8_t>(areaIndex);

@@ -199,7 +199,7 @@ void RTArcade_Tick() {
             g_hangOnLibrary.update(g_attractHangOnSession, &g_attractHangOnUpdate);
         if (g_attractHarrierReady) {
             g_harrierInputMask = 0xff;
-            emu68_Run();
+            emu68::Run();
         }
         g_nextAttractTick += std::chrono::nanoseconds{16666667};
     }

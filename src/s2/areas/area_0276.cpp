@@ -40,7 +40,7 @@ void Follow0276Fire() {
     Vector3 offset{0.0f, 0.14f, 0.0f};
     EV_GetCharaPosition(AREA_0276_FIRE_PROP, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(AREA_0276_FIRE_PROP, &rotation, EventTransformFlags::World);
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+    scenApplyTransRot(&position, &rotation, &offset);
     SetParticleEffectPosition(4, fire0276, &offset, &offset);
 }
 void Fade0276Out() {

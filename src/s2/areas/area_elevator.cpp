@@ -69,7 +69,7 @@ Vector3 *UpdateAreaElevatorBindings(const Vector3 *floorPosition, std::uint32_t 
             const shen_name character = row->characters[index];
             if (!character.name)
                 continue;
-            ApplyScenarioTranslationAndRotation(&row->position, &row->rotation, &positions[index]);
+            scenApplyTransRot(&row->position, &row->rotation, &positions[index]);
             positions[index].y += floorPosition->y;
             EV_AT_SetPos(character, EventTransformFlags::AllAxes, positions[index]);
             rotations[index].x += row->rotation.x;

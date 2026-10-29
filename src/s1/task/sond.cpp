@@ -40,8 +40,7 @@
 #if defined(_WIN32) && !defined(SHENMUE_NULL_LIBRARY)
 #include <windows.h>
 #endif
-#if defined(
-_M_X64) || defined(__x86_64__)
+#if defined(_M_X64) || defined(__x86_64__)
 #include <immintrin.h>
 #endif
 

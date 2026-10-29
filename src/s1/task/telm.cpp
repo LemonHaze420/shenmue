@@ -85,7 +85,7 @@ std::uint32_t &ScenarioDialogueFlags(const TelephoneWork &phone) {
 }
 
 std::byte *NodeOffsetBase(const Mt5RuntimeNode *node) {
-    return HMDL_NodeOffsetsUseTaskData(node) ? g_pCurrentTaskData : MT5_ModelBaseForNode(node);
+    return hmdlNodeOffsetsUseTaskData(node) ? g_pCurrentTaskData : MT5_ModelBaseForNode(node);
 }
 
 void CloseSubtitleElement() {
@@ -1166,7 +1166,7 @@ void Transform3DObject(TelephoneUiData &ui, std::byte *modelBase) {
 
 void telmUpdateForReceiver(Character *character, TelephoneWork &phone) {
     Mt5RuntimeNode *const handset = shenGetNodeByChildIdx(phone.hmdl, 3);
-    auto *const handsetTransform = const_cast<Matrix4x4 *>(HMDL_TransformForNode(handset, handset->transformOffset));
+    auto *const handsetTransform = const_cast<Matrix4x4 *>(hmdlTransformForNode(handset, handset->transformOffset));
     if (handsetTransform) {
         Matrix4x4_Push(handsetTransform);
         Matrix4x4::preTranslate(phone.customReceiverOffset.x, phone.customReceiverOffset.y, phone.customReceiverOffset.z);
@@ -1361,7 +1361,7 @@ void telmUpdateMotion(Character *character) {
         } else {
             auto *const peerModel = static_cast<Mt5RuntimeNode *>(phone->currentPeerNode->model);
             Mt5RuntimeNode *const hand = shenGetNodeByChildIdx(peerModel, phone->currentPeerMode == 3 ? -66 : -65);
-            const Matrix4x4 *const handTransform = hand ? HMDL_TransformForNode(hand, hand->transformOffset) : nullptr;
+            const Matrix4x4 *const handTransform = hand ? hmdlTransformForNode(hand, hand->transformOffset) : nullptr;
             Matrix4x4::SetActiveTransformToPrePass();
             TransformCharacterHierarchyZYX(&character->entity.node);
             Matrix4x4::InvertInPlace(nullptr);
@@ -1382,11 +1382,11 @@ void telmUpdateMotion(Character *character) {
             if (static_cast<double>(distance) < 0.0005)
                 receiver->position.y = phone->receiverLiftedY;
         }
-        HMDL_SetTemporaryTaskRelativeOffsets(handset, true);
+        hmdlSetTemporaryTaskRelativeOffsets(handset, true);
         handset->transformOffset = receiverTransform ? static_cast<std::int32_t>(reinterpret_cast<std::byte *>(receiverTransform) - g_pCurrentTaskData) : 0;
     } else {
         handset->transformOffset = 0;
-        HMDL_SetTemporaryTaskRelativeOffsets(handset, false);
+        hmdlSetTemporaryTaskRelativeOffsets(handset, false);
         if (receiver->position.y <= phone->receiverBaseY) {
             receiver->position.y = phone->receiverBaseY;
         } else {

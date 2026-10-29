@@ -320,7 +320,7 @@ void UpdateForestObstacleTarget(ForestQteWork &work) {
     const ForestObstacleCommand &command = obstacle.commands[work.command];
     z += forestQteCommands[command.kind].offset * .5f;
     Vector3 target{0, 0, z};
-    ApplyScenarioTranslationAndRotation(&base, &rotation, &target);
+    scenApplyTransRot(&base, &rotation, &target);
     forestObstaclePosition = target;
     const float x = position.x - target.x, dz = position.z - target.z;
     forestObstacleDistance = std::sqrt(x * x + dz * dz);

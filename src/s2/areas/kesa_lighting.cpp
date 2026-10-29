@@ -24,7 +24,7 @@ void UpdateTorchPosition(std::uint32_t light, shen_name torch) {
     Vector3i rotation;
     EV_GetCharaPosition(torch, CHARACTER_TRANSLATION_ROOT, &root, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(torch, &rotation, EventTransformFlags::World);
-    ApplyScenarioTranslationAndRotation(&root, &rotation, &position);
+    scenApplyTransRot(&root, &rotation, &position);
     SetLightRuntimePosition(light, position);
     PrioritizeLight(static_cast<std::int16_t>(light));
 }

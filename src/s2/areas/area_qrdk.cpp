@@ -416,7 +416,7 @@ void QrdkGetDoorCallback(void *data) {
     rotation = {0, static_cast<std::int32_t>(doorYaw + (side ? 0xc000U : 0x4000U)), 0};
     if (side)
         position.x = 0.8999999761581421f;
-    ApplyScenarioTranslationAndRotation(&doorPosition, &rotation, &position);
+    scenApplyTransRot(&doorPosition, &rotation, &position);
     EV_AT_SetPos(QRDK_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
     EV_AT_SetAngY(QRDK_RYO, EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
     if (side)

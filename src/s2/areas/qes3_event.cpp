@@ -124,7 +124,7 @@ void Qes3SparkCallback(void *data) {
         Vector3i rotation;
         EV_GetCharaPosition(QES3_POLE, 0xffffffffU, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(QES3_POLE, &rotation, EventTransformFlags::World);
-        ApplyScenarioTranslationAndRotation(&position, &rotation, &point);
+        scenApplyTransRot(&position, &rotation, &point);
         UpdateQes3Sparks(work->index, point);
     }
 }

@@ -94,7 +94,7 @@ void AnanLoadBoard(void *data) {
     EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
     Vector3 position = ANBD_BOARD_LOCAL_POSITION;
     Vector3i rotation = ANBD_BOARD_ROTATION;
-    ApplyScenarioTranslationAndRotation(&ANBD_BOARD_ORIGIN, &rotation, &position);
+    scenApplyTransRot(&ANBD_BOARD_ORIGIN, &rotation, &position);
     EV_AT_SetPos(ANAN_BOARD, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
     rotation = ANBD_BOARD_ROTATION;
     if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 29))

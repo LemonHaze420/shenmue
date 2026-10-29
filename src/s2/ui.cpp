@@ -1,3 +1,4 @@
+#include "auto_test.hpp"
 #include "s2/ui_internal.hpp"
 #include "s2/ui_credits.hpp"
 #include "s2/ui.hpp"
@@ -5811,7 +5812,11 @@ std::intptr_t UpdateScreenScaling() {
     }
     UpdateElements();
     RefreshNotebook();
+#if SHEN_AUTO_TEST_ENABLED
+    UIAnim_UpdateDeltaTime(0.033333335f);
+#else
     UIAnim_UpdateDeltaTime(GetFrameTime());
+#endif
     UpdateUI();
     HandleUIStates();
     DrawViews();

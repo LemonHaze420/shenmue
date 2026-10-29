@@ -70,7 +70,7 @@ void UpdateRepeatedReactionHistory(VFActor &actor) {
         slot->reactionAnimationHistoryIndex = static_cast<std::uint8_t>((slot->reactionAnimationHistoryIndex + 1U) & 3U);
     }
 
-    slot->updateCamera &= ~0x400U;
+    slot->aiFlags &= ~0x400U;
     for (std::size_t first = 0; first < 3; ++first) {
         const std::uint16_t animation = slot->reactionAnimationHistory[first];
         if (animation == 0)
@@ -78,11 +78,11 @@ void UpdateRepeatedReactionHistory(VFActor &actor) {
         for (std::size_t second = first + 1; second < 4; ++second) {
             if (slot->reactionAnimationHistory[second] != animation)
                 continue;
-            slot->updateCamera |= 0x400U;
+            slot->aiFlags |= 0x400U;
             slot->repeatedReactionAnimation = animation;
             break;
         }
-        if ((slot->updateCamera & 0x400U) != 0)
+        if ((slot->aiFlags & 0x400U) != 0)
             break;
     }
 
@@ -167,7 +167,7 @@ bool vfclInitReactionProgramAndRunHandlers(VFActor &actor, bool mirrorReaction) 
     VFCoreMotionState motionState{};
     // vfclInitReactionProgramAndRunHandlers resets only its named fields;
     // omitted records retain the actor's existing motion parameters.
-    motionState.reactionEventTable = static_cast<const std::byte *>(actor.reactionEventTable);
+    motionState.reactionEventTable = actor.reactionEventTable;
     motionState.counterReactionAnimationId = actor.counterReactionAnimationId;
     motionState.reactionStateId = actor.reactionStateId;
     motionState.fallLandingWindowStartFrame = actor.fallLandingWindowStartFrame;
@@ -183,7 +183,7 @@ bool vfclInitReactionProgramAndRunHandlers(VFActor &actor, bool mirrorReaction) 
     motionState.pairFollowupActionWord = actor.pairFollowupActionWord;
     motionState.pairActionTriggerFrame = actor.pairActionTriggerFrame;
     motionState.pairContactPriority = actor.pairContactPriority;
-    motionState.hitDamageScale = actor.hitDamageScale;
+    motionState.attackReach = actor.attackReach;
     motionState.hitReactionScaleX = actor.hitReactionScaleX;
     motionState.hitReactionScaleZ = actor.hitReactionScaleZ;
     motionState.knockbackReactionTime = actor.knockbackReactionTime;
@@ -191,7 +191,7 @@ bool vfclInitReactionProgramAndRunHandlers(VFActor &actor, bool mirrorReaction) 
     motionState.knockbackAcceleration = actor.knockbackAcceleration;
     motionState.moveId = actor.moveId;
     motionState.guardState = actor.guardState;
-    motionState.guardStrength = actor.guardStrength;
+    motionState.hitDamage = actor.hitDamage;
     motionState.hitGuardType = actor.hitGuardType;
     motionState.hitStunOverride = actor.hitStunOverride;
     motionState.hitHeightClass = actor.hitHeightClass;
@@ -257,14 +257,14 @@ bool vfclInitReactionProgramAndRunHandlers(VFActor &actor, bool mirrorReaction) 
     actor.pairActionTriggerFrame = motionState.pairActionTriggerFrame;
     actor.pairContactPriority = motionState.pairContactPriority;
     actor.activeContactCount = motionState.activeContactCount;
-    actor.hitDamageScale = motionState.hitDamageScale;
+    actor.attackReach = motionState.attackReach;
     actor.hitReactionScaleX = motionState.hitReactionScaleX;
     actor.hitReactionScaleZ = motionState.hitReactionScaleZ;
     actor.knockbackReactionTime = motionState.knockbackReactionTime;
     actor.knockbackAcceleration = motionState.knockbackAcceleration;
     actor.moveId = motionState.moveId;
     actor.guardState = motionState.guardState;
-    actor.guardStrength = motionState.guardStrength;
+    actor.hitDamage = motionState.hitDamage;
     actor.hitGuardType = motionState.hitGuardType;
     actor.reactionEventCount = static_cast<std::int8_t>(motionState.reactionEventCount);
     actor.reactionRequestedMoveId = motionState.reactionRequestedMoveId;
@@ -279,7 +279,7 @@ bool vfclInitReactionProgramAndRunHandlers(VFActor &actor, bool mirrorReaction) 
     actor.field330 = motionState.field330;
     actor.field322 = static_cast<std::int16_t>((static_cast<std::uint16_t>(actor.field322) & 0xff00U) | motionState.field322Low);
     if (motionState.frameEventProgram) {
-        actor.reactionEventTable = const_cast<std::byte *>(motionState.reactionEventTable);
+        actor.reactionEventTable = motionState.reactionEventTable;
         actor.reactionProgramStart = const_cast<std::byte *>(motionState.frameEventProgram);
         actor.reactionProgram = actor.reactionProgramStart;
         actor.reactionProgramCounter = actor.reactionProgram;
@@ -1184,7 +1184,7 @@ static_assert(offsetof(VFActor, hitSourceActor) == 0x40);
 static_assert(offsetof(VFActor, reactionScriptBase) == 0x48);
 static_assert(offsetof(VFActor, knockbackAcceleration) == 0x2b4);
 static_assert(offsetof(VFActor, attackWindowEndFrame) == 0x2d8);
-static_assert(offsetof(VFActor, guardStrength) == 0x2f2);
+static_assert(offsetof(VFActor, hitDamage) == 0x2f2);
 static_assert(offsetof(VFActor, hitParameter) == 0x2f8);
 static_assert(offsetof(VFActor, field330) == 0x330);
 static_assert(offsetof(VFActor, pairActionTriggerFrame) == 0x342);
@@ -1966,7 +1966,7 @@ void UpdateVFDirectionalMoveAnimation(VFActor &actor) {
 
 
     if ((actor.hitStateFlags2 & 0x400U) != 0 && actor.currentAnimationEndFrame <= actor.reactionEndFrame &&
-        (actor.moveAngleTableIndex == actor.moveAngleTableIndex2 || ((actor.cameraControlFlags ^ actor.previousCameraControlFlags) & 0x00f0U) == 0)) {
+        (actor.moveAngleTableIndex == actor.moveAngleTableIndex2 || ((actor.inputFlags ^ actor.previousCameraControlFlags) & 0x00f0U) == 0)) {
         return;
     }
 
@@ -1999,15 +1999,15 @@ void UpdateVFSelectFollowupAnimation(VFActor &actor) {
         actor.followupState = 1;
 
     const std::uint8_t followup = actor.followupState;
-    if (followup == 3U && (actor.cameraControlFlags & 0x00f0U) == 0) {
+    if (followup == 3U && (actor.inputFlags & 0x00f0U) == 0) {
         moveAngleIndex = 0;
-        actor.cameraControlFlags = 0x20U;
+        actor.inputFlags = 0x20U;
     }
     if (followup == 2U)
-        actor.cameraControlFlags = 0;
+        actor.inputFlags = 0;
 
     const bool primary = followup == 1U;
-    const bool noSector = (actor.cameraControlFlags & 0x00f0U) == 0;
+    const bool noSector = (actor.inputFlags & 0x00f0U) == 0;
     const auto *const motion = static_cast<const MotionInformationWork *>(actor.motion);
     const bool motionEnded = motion && (motion->motionFlags & 2U) != 0;
     std::uint16_t animation;
@@ -2063,20 +2063,20 @@ void UpdateVFAutoFollowup(VFActor &actor) {
 
 
 void UpdateVFCameraAssistStep(VFActor &actor) {
-    if ((actor.cameraControlFlags & 0x00c0U) == 0)
+    if ((actor.inputFlags & 0x00c0U) == 0)
         return;
     VFActor &target = *actor.game->actors[static_cast<std::uint8_t>(actor.targetSlotIndex)];
     const bool mirror = (actor.moveFlags & 0x40U) != 0;
-    const bool sector2 = (actor.cameraControlFlags & 0x80U) != 0;
+    const bool sector2 = (actor.inputFlags & 0x80U) != 0;
     const std::size_t offset = sector2 == mirror ? 250U : 252U;
     const float distance = actor.contactPoints[static_cast<std::uint8_t>(actor.targetSlotIndex)];
     const float scale = 0.005f / distance;
     const float dx = (target.contactCurrentPosition.x - actor.contactCurrentPosition.x) * scale;
     const float dz = (target.contactCurrentPosition.z - actor.contactCurrentPosition.z) * scale;
-    if ((actor.cameraControlFlags & 0x20U) != 0) {
+    if ((actor.inputFlags & 0x20U) != 0) {
         actor.position.x += dx;
         actor.position.z += dz;
-    } else if ((actor.cameraControlFlags & 0x10U) != 0) {
+    } else if ((actor.inputFlags & 0x10U) != 0) {
         actor.position.x -= dx;
         actor.position.z -= dz;
     }
@@ -2183,8 +2183,8 @@ void UpdateVFTrackingSlide(VFActor &actor) {
         actor.moveFlags |= 0x200U;
         actor.trackedContactAngle = angle;
         const float distance = std::sqrt(dz * dz + dx * dx);
-        if (distance > actor.hitDamageScale)
-            dx *= actor.hitDamageScale / distance;
+        if (distance > actor.attackReach)
+            dx *= actor.attackReach / distance;
         const float rootX = sin_fixed16(fixed16_cosine_angle(angle)) * actor.hitReactionScaleX;
         const float rootZ = sin_fixed16(angle) * actor.hitReactionScaleZ;
         ++actor.hitPhase;
@@ -2268,10 +2268,10 @@ void UpdateVFFollowupFacingAndMotion(VFActor &actor) {
     }
 }
 
-const std::uint8_t *vfFindQueuedReactionEventEntry(const VFActor &actor, std::uint8_t event) {
-    const auto *entry = static_cast<const std::uint8_t *>(actor.reactionEventTable);
-    for (std::uint8_t remaining = static_cast<std::uint8_t>(actor.reactionEventCount); remaining != 0; --remaining, entry += 8) {
-        if (static_cast<std::int8_t>(entry[1]) == event || (event == 4 && entry[1] == 1))
+const VFReactionEventEntry *vfFindQueuedReactionEventEntry(const VFActor &actor, std::uint8_t event) {
+    const VFReactionEventEntry *entry = actor.reactionEventTable;
+    for (std::uint8_t remaining = static_cast<std::uint8_t>(actor.reactionEventCount); remaining != 0; --remaining, ++entry) {
+        if (static_cast<std::int8_t>(entry->event) == event || (event == 4 && entry->event == 1))
             return entry;
     }
     return nullptr;
@@ -2402,10 +2402,10 @@ void vfDispatchQueuedReactionEvent(VFActor &actor) {
             actor.queuedReactionEvent = 0;
             return;
         }
-        const std::uint16_t frames = ReadPackedU16(entry + 2);
+        const std::uint16_t frames = ReadPackedU16(&entry->frame);
         const std::uint16_t threshold = actor.animationScale == 1.0f ? frames : static_cast<std::uint16_t>(actor.animationScale * frames + 0.5f);
         if (actor.currentAnimationEndFrame >= threshold) {
-            actor.pendingAnimationId = ReadPackedU16(entry + 4);
+            actor.pendingAnimationId = ReadPackedU16(&entry->animation);
             (void)ApplyPendingHitReactionMotion(actor);
         }
         return;
@@ -2570,7 +2570,7 @@ void vfSelectFallLandingMotion(VFActor &actor) {
     if ((actor.moveFlags & 0x8000U) == 0 || (actor.motionFlags & 1U) != 0)
         return;
     if ((actor.hitStateFlags2 & 0x80000U) != 0 && actor.game->guardEffectTimer != 0) {
-        const std::uint16_t strength = actor.guardStrength;
+        const std::uint16_t strength = actor.hitDamage;
         actor.hitStunFrames = static_cast<std::uint16_t>(actor.guardImpactAccum + (strength >> 1U));
         actor.guardImpactAccum = 0;
         if (strength != 0)
@@ -2639,14 +2639,14 @@ void vfUpdatePairedHitReactionState(VFActor &actor) {
             const bool special = (actor.hitStateFlags2 & 0x4000U) != 0;
             if (special) {
                 actor.hitStunFrames = static_cast<std::uint8_t>(static_cast<std::uint8_t>(actor.guardImpactAccum) +
-                    (static_cast<std::uint8_t>(static_cast<int>(static_cast<std::uint8_t>(actor.guardStrength) * actor.animationScale)) >> 1U));
+                    (static_cast<std::uint8_t>(static_cast<int>(static_cast<std::uint8_t>(actor.hitDamage) * actor.animationScale)) >> 1U));
                 actor.guardImpactAccum = 0;
             }
             if ((actor.hitStateFlags & 0xc00U) != 0) {
                 actor.hitPhase = 4;
             } else {
                 std::int16_t damage = (source.hitStateFlags & 0x400U) != 0 ? static_cast<std::uint8_t>(static_cast<std::uint16_t>(source.skipAlignment) >> 8U) :
-                                                                             static_cast<std::uint8_t>(source.guardStrength);
+                                                                             static_cast<std::uint8_t>(source.hitDamage);
                 const auto selection = static_cast<std::uint8_t>(actor.game->battleMeta.waves[actor.slotIndex]->selectFlags);
                 if (((selection & 0x80U) != 0 && (source.hitStateFlags & 0x4000008U) != 0) ||
                     ((selection & 0x20U) != 0 && (source.hitStateFlags & 0x4000000U) != 0))
@@ -2763,7 +2763,7 @@ void VF_SetHitReactionAndClearAction(VFActor &actor) {
     actor.hitStateFlags2 &= ~0x100U;
     if (actor.currentAnimationEndFrame < actor.attackWindowEndFrame)
         return;
-    if (actor.contactPoints[actor.targetSlotIndex] > actor.hitDamageScale) {
+    if (actor.contactPoints[actor.targetSlotIndex] > actor.attackReach) {
         ClearVFQueuedAction(actor);
         return;
     }
@@ -3341,7 +3341,7 @@ void vfUpdateAnimFlagsAndEvents(VFActor &actor) {
     actor.moveAnimationFlags = animationFlags | (animationFlags != 0 ? actor.moveAnimationFlags & 0x78U : 0);
     if ((actor.hitStateFlags2 & 0x80100U) == 0x80100U)
         actor.motionFlags |= 0x80000000U;
-    if (((actor.priorityFlags2 & 0x30fU) != 0 || (actor.cameraControlFlags & 0x4000U) != 0) && (actor.motionFlags & 0x10000U) != 0) {
+    if (((actor.frameInputPressed & 0x30fU) != 0 || (actor.inputFlags & 0x4000U) != 0) && (actor.motionFlags & 0x10000U) != 0) {
         actor.motionFlags &= ~0x10000U;
         actor.hitStateFlags2 &= ~1U;
     }

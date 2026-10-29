@@ -18,7 +18,7 @@ void ANBDMain(std::uintptr_t) {
     (void)EV_pakUtils(PakCategory::Package, ANBD_PACKAGE_WAIT_MODE, 0, 0, 0);
     Vector3 position = ANBD_BOARD_LOCAL_POSITION;
     Vector3i rotation = ANBD_BOARD_ROTATION;
-    ApplyScenarioTranslationAndRotation(&ANBD_BOARD_ORIGIN, &rotation, &position);
+    scenApplyTransRot(&ANBD_BOARD_ORIGIN, &rotation, &position);
     EV_AT_SetPos(ANBD_BOARD_CHARACTER, ANBD_RECURSIVE_XYZ, position);
     rotation = ANBD_BOARD_ROTATION;
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, ANBD_BOARD_PLAYER_FLAG) == 0) {

@@ -547,7 +547,7 @@ const std::byte *FindScenarioConversationRoot(ScenarioFreeTalkRecord &record, st
                         return nullptr;
                     record.field007 = ScntByte(program, cursor++);
                 } else if (opcode == 0xb2 && result) {
-                    record.control->flags |= 0x20U;
+                    record.control->flags |= TalkWaitForCast;
                 }
             } else if (kind == 0xc0) {
                 if (cursor == program.size())
@@ -743,7 +743,7 @@ shen_name ResolveScenarioParticipant(shen_name participant, const ScenarioFreeTa
 
 
 bool AreScenarioParticipantsPresent(const ScenarioFreeTalkRecord &record) {
-    if (!record.participants || !(record.control->flags & 0x20U))
+    if (!record.participants || !(record.control->flags & TalkWaitForCast))
         return true;
     for (std::int32_t index = 0; index < static_cast<std::int8_t>(record.participantCount); ++index) {
         const shen_name name = ResolveScenarioParticipant(ScenarioParticipants(record)[index], record);
@@ -861,7 +861,7 @@ const std::byte *SCEN_AdvanceCharacterCommandStream(ScenarioFreeTalkRecord &reco
                 continue;
             }
             if (opcode == 0xb2) {
-                record.control->flags |= 0x20U;
+                record.control->flags |= TalkWaitForCast;
                 continue;
             }
             return nullptr;
@@ -1324,7 +1324,7 @@ const std::byte *scenExecuteStreamOpcode(ScenarioFreeTalkRecord &record, const s
             record.field007 = static_cast<std::uint8_t>(*next);
             return next + 1;
         case 2:
-            record.control->flags |= 0x20U;
+            record.control->flags |= TalkWaitForCast;
             return next;
         default:
             return next;
@@ -2249,7 +2249,7 @@ answered:
                     record.field007 = static_cast<std::uint8_t>(cue.reserved14);
                     break;
                 case 0xb2:
-                    record.control->flags |= 0x20U;
+                    record.control->flags |= TalkWaitForCast;
                     break;
                 default:
                     if ((code & 0xf00000U) == 0xa00000U) {
@@ -2322,7 +2322,7 @@ stepProgram : {
             control.resumeOffsets[TalkSelectedSection] = 0;
             control.flags &= ~1U;
         }
-        control.flags &= ~0x20U;
+        control.flags &= ~TalkWaitForCast;
         const std::byte *const section = SCEN_AdvanceCharacterCommandStream(record);
         if (section) {
             if (section - record.script != control.resumeOffsets[TalkSelectedSection]) {
@@ -2338,7 +2338,7 @@ stepProgram : {
                 return;
             }
             if (controlFlags & 0x20U)
-                control.flags |= 0x20U;
+                control.flags |= TalkWaitForCast;
         } else {
             record.executionState = 0;
             control.resumeOffsets[TalkSelectedSection] = 0;

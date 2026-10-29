@@ -97,7 +97,7 @@ void NineKanSetAuthoredControl(std::int32_t enabled) {
 bool NineKanAtIntroductionPoint() {
     Vector3 point{.x = 2.9f, .y = 0, .z = 7.07f}, player;
     EV_GetCharaPosition(NINE_KAN_RYO, CHARACTER_TRANSLATION_ROOT, &player, EventTransformFlags::World);
-    ApplyScenarioTranslationAndRotation(&NINE_KAN_ORIGIN, &NINE_KAN_ROTATION, &point);
+    scenApplyTransRot(&NINE_KAN_ORIGIN, &NINE_KAN_ROTATION, &point);
     const float x = point.x - player.x, z = point.z - player.z;
     return x * x + z * z < 6.25f;
 }
@@ -106,7 +106,7 @@ std::int32_t NineKanChooseHidingPlace() {
     EV_GetCharaPosition(NINE_KAN_RYO, CHARACTER_TRANSLATION_ROOT, &player, EventTransformFlags::World);
     for (const NineKanHidingPlace *place = NINE_KAN_HIDING_PLACES; place->state != 17; ++place) {
         Vector3 point = place->position;
-        ApplyScenarioTranslationAndRotation(&NINE_KAN_ORIGIN, &NINE_KAN_ROTATION, &point);
+        scenApplyTransRot(&NINE_KAN_ORIGIN, &NINE_KAN_ROTATION, &point);
         const float x = point.x - player.x, z = point.z - player.z;
         if (place->radius * place->radius > x * x + z * z)
             return place->state;

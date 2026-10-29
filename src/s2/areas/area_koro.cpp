@@ -157,7 +157,7 @@ void PushSwitch() {
     Vector3 position{-0.35218f, -1.20512f, 0.65925002f};
     const Vector3 origin{279.65399f, 133.58749f, 208.8037f};
     const Vector3i rotation{};
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+    scenApplyTransRot(&origin, &rotation, &position);
     PlayRyo(0x2086);
     mtwkSetRegionEvalTime(RyoMotion(), 60.0f, MotionRegion::LowerBody);
     mtwkSetRegionFlag(RyoMotion(), 71, 0, MotionRegion::LowerBody);

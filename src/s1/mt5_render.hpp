@@ -44,8 +44,8 @@ void SubmitSceneObjectForDrawing(void *commandStreamOwner, void *modelBase);
 
 void TransformPrelightLights(EffectLightRenderSlot *lights, std::int32_t count);
 std::int32_t ModelCopyToGPU(void *binding, std::int32_t *attachment, EffectLightRenderSlot *lights, std::int32_t count);
-void HMDL_PrelightNodeRecursive(Mt5RuntimeNode *node, EffectLightRenderSlot *lights, std::int32_t count);
-void HMDL_PrelightSpotLights(void *model, EffectLightRenderSlot *lights, std::int32_t count);
+void hmdlPrelightNodeRecursive(Mt5RuntimeNode *node, EffectLightRenderSlot *lights, std::int32_t count);
+void hmdlPrelightSpotLights(void *model, EffectLightRenderSlot *lights, std::int32_t count);
 void DrawSceneObjectFromCommandStream(void *commandStreamOwner, float alphaScale, std::uint8_t shaderMode);
 void DrawSceneObjectFromEffectBuffer(void *commandStreamOwner, float alphaScale, std::uint8_t shaderMode, void *modelBase);
 namespace d3t {
@@ -65,8 +65,8 @@ void SubmitRiggedSceneAttachment(
 void SubmitCycleForDrawing(Mt5RuntimeNode *node);
 void SubmitCycleModel(Mt5RuntimeNode *node);
 void SubmitCycleMoveObject(CycleMoveObjectRuntime &runtime);
-void HMDL_ClearNodeTransformLinks(Mt5RuntimeNode *node);
-void HMDL_LinkNodeTransformsByKind(Mt5RuntimeNode *source, Mt5RuntimeNode *target);
+void hmdlClearNodeTransformLinks(Mt5RuntimeNode *node);
+void hmdlLinkNodeTransformsByKind(Mt5RuntimeNode *source, Mt5RuntimeNode *target);
 
 void SubmitCharacterShadow(Character *character, void *posedModel, void *model, const Vector3 &position, const Vector3i &rotation, const Vector3 &scale,
     float groundHeight, float direction, CharacterShadowState *shadowState = nullptr);

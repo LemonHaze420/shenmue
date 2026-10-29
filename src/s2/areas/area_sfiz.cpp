@@ -98,7 +98,7 @@ void UpdateDemonstrationCamera() {
     GetCurrentControlInput(INPUT_LEFT_TRIGGER);
     const std::int32_t zoom = static_cast<std::int32_t>(GetCurrentControlInput(INPUT_RIGHT_TRIGGER));
     Vector3 delta{((x - 128) * 0.0078125f) + ((x - 128) * 0.0078125f), ((y - 128) * 0.0078125f) + ((y - 128) * 0.0078125f), 0};
-    ApplyScenarioTranslationAndRotation(&delta, &demonstrationCameraRotation, &delta);
+    scenApplyTransRot(&delta, &demonstrationCameraRotation, &delta);
     Vector3 target;
     camCtrlGetTargetPosition(&target);
     target.x += ((demonstrationCameraTarget.x + delta.x) - target.x) * 0.039999999f;

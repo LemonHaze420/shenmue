@@ -137,13 +137,13 @@ static_assert(sizeof(VFSlotRuntimeState) == 0xc0);
 
 static_assert(offsetof(VFSlotRuntimeState, currentHpRegenerationPhase) == 0x74);
 
-static_assert(offsetof(VFSlotRuntimeState, hpPhase) == 0x75);
+static_assert(offsetof(VFSlotRuntimeState, aiCommand) == 0x75);
 
-static_assert(offsetof(VFSlotRuntimeState, cameraScriptStep) == 0x76);
+static_assert(offsetof(VFSlotRuntimeState, aiInputStep) == 0x76);
 
-static_assert(offsetof(VFSlotRuntimeState, cameraScriptWait) == 0x78);
+static_assert(offsetof(VFSlotRuntimeState, aiInputWait) == 0x78);
 
-static_assert(offsetof(VFSlotRuntimeState, savedCameraControlFlags) == 0x7a);
+static_assert(offsetof(VFSlotRuntimeState, savedInputFlags) == 0x7a);
 
 static_assert(offsetof(VFSlotRuntimeState, reactionAnimationHistory) == 0x7c);
 
@@ -177,7 +177,7 @@ static_assert(offsetof(VFActor, targetGroundY) == 0x454);
 
 static_assert(offsetof(VFActor, knockbackBaseParameter) == 0x470);
 
-static_assert(offsetof(VFActor, reactionPriority) == 0x4e0);
+static_assert(offsetof(VFActor, inputHistory) == 0x4e0);
 
 static_assert(offsetof(VFActor, reactionRingHead) == 0x660);
 
@@ -1986,7 +1986,7 @@ bool VFMA_HasBoundFightStyles() {
         if (!actor || !game->characters[index])
             continue;
         observedActor = true;
-        if (!actor->reactionScriptBase || !actor->cameraScriptTable || !actor->styleTuning || !actor->contactProfile || !actor->animationTable) {
+        if (!actor->reactionScriptBase || !actor->aiInputSequences || !actor->aiProfile || !actor->contactProfile || !actor->animationTable) {
             return false;
         }
     }

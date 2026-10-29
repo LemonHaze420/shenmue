@@ -55,25 +55,25 @@ namespace vf_detail {
 
 
 // @verified - p
-std::uint8_t ResetAndSelectCameraPhaseChoice(VFActor &actor, std::uint8_t phase, std::int16_t waitFrames) {
+std::uint8_t vfSelectAICommand(VFActor &actor, std::uint8_t phase, std::int16_t waitFrames) {
     VFSlotRuntimeState *const slot = actor.slot;
-    std::uint32_t updateCamera = slot->updateCamera;
-    if ((updateCamera & 1U) == 0) {
-        return static_cast<std::uint8_t>(updateCamera);
+    std::uint32_t aiFlags = slot->aiFlags;
+    if ((aiFlags & 1U) == 0) {
+        return static_cast<std::uint8_t>(aiFlags);
     }
 
-    slot->updateCamera = updateCamera & ~1U;
-    slot->cameraScriptWait = 0;
-    slot->hpPhase = phase;
+    slot->aiFlags = aiFlags & ~1U;
+    slot->aiInputWait = 0;
+    slot->aiCommand = phase;
     slot->fielda8 = static_cast<std::uint16_t>(waitFrames);
-    slot->cameraScriptStep = 0;
+    slot->aiInputStep = 0;
     slot->fieldb7 = 0;
     g_EnvPrngSeed = LcgStep(g_EnvPrngSeed);
     slot->field50 = static_cast<std::uint8_t>(g_EnvPrngSeed >> 16U);
     slot->byte54 = 0x7fU;
     slot->byte55 = 0x7fU;
 
-    const std::uint8_t *row = static_cast<const std::uint8_t *>(actor.cameraPhaseTable);
+    const std::uint8_t *row = static_cast<const std::uint8_t *>(actor.aiCommandTable);
     while (row[0] != 0x7fU && row[0] != phase)
         row += 17;
     if (row[0] == 0x7fU)
@@ -119,18 +119,18 @@ std::uint16_t RotateVFCameraSector(const VFActor &actor, std::uint16_t value) {
 
 
 // @verified - p
-bool UpdateVFCameraScript(VFActor &actor) {
+bool vfUpdateAIInput(VFActor &actor) {
     VFSlotRuntimeState *const slot = g_pFightMain->slotRuntime[static_cast<std::int8_t>(actor.slotIndex)];
-    std::uint16_t wait = slot->cameraScriptWait;
+    std::uint16_t wait = slot->aiInputWait;
     if (wait != 0) {
         if (wait != 1) {
-            actor.cameraControlFlags = slot->savedCameraControlFlags;
-            slot->cameraScriptWait = static_cast<std::uint16_t>(wait - 1U);
+            actor.inputFlags = slot->savedInputFlags;
+            slot->aiInputWait = static_cast<std::uint16_t>(wait - 1U);
             return false;
         }
-        const std::uint8_t previous = slot->cameraScriptStep++;
+        const std::uint8_t previous = slot->aiInputStep++;
         if (previous == 10) {
-            slot->cameraScriptWait = 0;
+            slot->aiInputWait = 0;
             return true;
         }
     }
@@ -540,63 +540,63 @@ bool UpdateVFCameraScript(VFActor &actor) {
 
         0x04,
     };
-    const std::uint8_t *table = static_cast<const std::uint8_t *>(actor.cameraScriptTable);
-    std::size_t rowIndex = slot->hpPhase;
-    if (slot->hpPhase >= 200U) {
+    const std::uint8_t *table = static_cast<const std::uint8_t *>(actor.aiInputSequences);
+    std::size_t rowIndex = slot->aiCommand;
+    if (slot->aiCommand >= 200U) {
         rowIndex -= 200U;
-        const std::size_t lastRead = rowIndex * sizeof(VFCameraScriptRow) + 10U + slot->cameraScriptStep;
+        const std::size_t lastRead = rowIndex * sizeof(VFAIInputSequence) + 10U + slot->aiInputStep;
         if (lastRead >= std::size(kNativeFallback))
             return true;
         table = kNativeFallback;
     }
-    const std::size_t stepOffset = rowIndex * sizeof(VFCameraScriptRow) + slot->cameraScriptStep;
+    const std::size_t stepOffset = rowIndex * sizeof(VFAIInputSequence) + slot->aiInputStep;
     const std::uint8_t sector = table[stepOffset];
     if (sector == 0x7fU)
         return true;
-    actor.cameraControlFlags = RotateVFCameraSector(actor, sector);
-    slot->savedCameraControlFlags = actor.cameraControlFlags;
-    slot->cameraScriptWait = table[stepOffset + 10U];
+    actor.inputFlags = RotateVFCameraSector(actor, sector);
+    slot->savedInputFlags = actor.inputFlags;
+    slot->aiInputWait = table[stepOffset + 10U];
     return false;
 }
 
 
 // @verified - p
-std::uint8_t AdvanceVFCameraPhaseChain(VFActor &actor) {
+std::uint8_t vfAdvanceAICommand(VFActor &actor) {
     VFSlotRuntimeState *const slot = actor.slot;
     if (slot->fielda8 != 0) {
         --slot->fielda8;
         return static_cast<std::uint8_t>(slot->fielda8);
     }
-    if (!UpdateVFCameraScript(actor))
+    if (!vfUpdateAIInput(actor))
         return 0;
-    slot->updateCamera &= ~0x2000U;
+    slot->aiFlags &= ~0x2000U;
     const std::uint8_t chain = slot->fieldb7;
     const std::uint8_t *const bytes = reinterpret_cast<const std::uint8_t *>(slot);
     const std::uint8_t next = bytes[offsetof(VFSlotRuntimeState, byte54) + chain];
     auto reset = [&] {
-        slot->cameraScriptWait = 0;
+        slot->aiInputWait = 0;
         slot->fielda8 = 0;
         slot->fieldb7 = 0;
-        slot->hpPhase = 0;
-        slot->cameraScriptStep = 0;
+        slot->aiCommand = 0;
+        slot->aiInputStep = 0;
         slot->byte54 = 0x7fU;
         slot->byte55 = 0x7fU;
-        slot->updateCamera = (slot->updateCamera & 0xffffdffeU) | 1U;
+        slot->aiFlags = (slot->aiFlags & 0xffffdffeU) | 1U;
     };
     if (next == 0x7fU) {
         reset();
-        return static_cast<std::uint8_t>(slot->updateCamera);
+        return static_cast<std::uint8_t>(slot->aiFlags);
     }
     const std::uint8_t wait = bytes[offsetof(VFSlotRuntimeState, word56) + 1U + chain];
     ++slot->fieldb7;
-    slot->cameraScriptWait = 0;
+    slot->aiInputWait = 0;
     if ((static_cast<std::uint8_t>(slot->reserved51[0]) & 7U) == 0) {
         reset();
-        return ResetAndSelectCameraPhaseChoice(actor, next, wait);
+        return vfSelectAICommand(actor, next, wait);
     }
-    slot->hpPhase = next;
+    slot->aiCommand = next;
     slot->fielda8 = wait;
-    slot->cameraScriptStep = 0;
+    slot->aiInputStep = 0;
     g_EnvPrngSeed = LcgStep(g_EnvPrngSeed);
     slot->field50 = static_cast<std::uint8_t>(g_EnvPrngSeed >> 16U);
     return slot->field50;
@@ -826,7 +826,7 @@ std::uint8_t BuildVFFacingQuadrantPath(VFActor &actor, std::int8_t start, std::i
 
 
 
-std::uint8_t vfMoveCameraPhase(std::uint8_t move) {
+std::uint8_t vfMoveAICommand(std::uint8_t move) {
     static constexpr std::array<std::uint8_t, 32> kSet1{
         0, 1, 2, 3, 4, 5, 6, 14, 15, 16, 17, 18, 213, 1, 15, 31, 32, 33, 36, 0, 7, 8, 9, 10, 11, 12, 13, 19, 20, 214, 215, 9};
     static constexpr std::array<std::uint8_t, 32> kSet2{
@@ -876,9 +876,9 @@ Vector2 VFFacingQuadrantBoundaryTarget(const VFAreaMask &current, const VFAreaMa
         return VFAreaCenter(next);
     }
 }
-static_assert(sizeof(VFStyleTuningBE) == 0x1ce);
-static_assert(offsetof(VFStyleTuningBE, reaction_prog_preset_blob) == 0x7c);
-static_assert(offsetof(VFStyleTuningBE, react_state02_end_pool_near) == 0x73);
+static_assert(sizeof(VFAIProfileBE) == 0x1ce);
+static_assert(offsetof(VFAIProfileBE, reaction_prog_preset_blob) == 0x7c);
+static_assert(offsetof(VFAIProfileBE, react_state02_end_pool_near) == 0x73);
 
 constexpr std::uint8_t kVFMainFallbackPhases[] = {201, 202, 201, 202};
 constexpr std::uint8_t kVFMainFarContactPhases[] = {204, 204, 201, 202};
@@ -891,15 +891,15 @@ constexpr Vector2 kVFMainQuadrantOffsets[] = {{-5.0f, 0.0f}, {-3.1600001f, 3.160
 bool vfPhaseGatePasses(const VFSlotRuntimeState *slot, std::uint8_t value) {
     return value != 0 && value >= slot->field50;
 }
-void vfResetCameraScriptState(VFSlotRuntimeState &slot) {
-    slot.cameraScriptWait = 0;
+void vfResetAIInputState(VFSlotRuntimeState &slot) {
+    slot.aiInputWait = 0;
     slot.fielda8 = 0;
     slot.fieldb7 = 0;
-    slot.hpPhase = 0;
-    slot.cameraScriptStep = 0;
+    slot.aiCommand = 0;
+    slot.aiInputStep = 0;
     slot.byte54 = 0x7f;
     slot.byte55 = 0x7f;
-    slot.updateCamera = (slot.updateCamera & 0xffffdffeU) | 1U;
+    slot.aiFlags = (slot.aiFlags & 0xffffdffeU) | 1U;
 }
 // @verified - p
 std::uint8_t vfCallbackNoOp(VFActor *, VFSlotRuntimeState *) {
@@ -940,12 +940,12 @@ std::uint8_t vfEvalRandomPhaseGate(VFActor *self, VFSlotRuntimeState *slot_runti
     return vfPhaseGatePasses(slot_runtime, phase) ? 1 : 0xffU;
 }
 
-std::uint8_t vfSelectRandomCameraPhaseChoice(VFActor *self, VFSlotRuntimeState *slot_runtime) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+std::uint8_t vfSelectRandomAICommand(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     if (!self || !style || !slot_runtime)
         return 0;
     if ((static_cast<std::uint8_t>(slot_runtime->reserved51[0]) & 0x70) != 0) {
-        const auto &pools = (self->hitStateFlags2 & 0x8) != 0 ? style->camera_phase_pool_3c : style->camera_phase_pool_24;
+        const auto &pools = (self->hitStateFlags2 & 0x8) != 0 ? style->command_pool_3c : style->command_pool_24;
         std::uint8_t slice = 0;
         switch (self->fightStyleIndex) {
         case 0x6:
@@ -960,23 +960,23 @@ std::uint8_t vfSelectRandomCameraPhaseChoice(VFActor *self, VFSlotRuntimeState *
                 slice = 2;
             break;
         case 0x1C: {
-            const std::int8_t hpPhase = static_cast<std::int8_t>(slot_runtime->currentHpRegenerationPhase);
-            if (hpPhase == 1)
+            const std::int8_t aiCommand = static_cast<std::int8_t>(slot_runtime->currentHpRegenerationPhase);
+            if (aiCommand == 1)
                 slice = 1;
-            else if (hpPhase > 1)
+            else if (aiCommand > 1)
                 slice = 2;
             break;
         }
         default:
             break;
         }
-        return ResetAndSelectCameraPhaseChoice(*self, pools[slice][NextVFScaledRandomIndex(8)], 0);
+        return vfSelectAICommand(*self, pools[slice][NextVFScaledRandomIndex(8)], 0);
     }
-    return ResetAndSelectCameraPhaseChoice(*self, NextVFScaledRandomIndex(style->camera_phase_choice_count), 0);
+    return vfSelectAICommand(*self, NextVFScaledRandomIndex(style->command_count), 0);
 }
 
 std::uint8_t vfEvalFollowupHitWindow(VFActor *self, VFSlotRuntimeState *slot_runtime) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     VFActor *target = (self ? self->targetActor : nullptr);
     if (!self || !slot_runtime || !target)
         return 0xffU;
@@ -1006,10 +1006,10 @@ std::uint8_t vfEvalFollowupHitWindow(VFActor *self, VFSlotRuntimeState *slot_run
 std::uint8_t vfSetFollowupHitFor(VFActor *self, VFSlotRuntimeState *slot_runtime) {
     const auto slotIndex = static_cast<std::int8_t>(slot_runtime->slotIndex);
     VFActor *const target = self->game->actors[slotIndex];
-    self->cameraControlFlags = 0x2000U;
+    self->inputFlags = 0x2000U;
     if (self->followupState == 1 && (self->contactPoints[slotIndex] > 5.0f || (target->hitStateFlags2 & 0x20000000U) != 0)) {
         self->followupState = 2;
-        if ((static_cast<const VFStyleTuningBE *>(self->styleTuning)->style_flags & 2) != 0)
+        if ((static_cast<const VFAIProfileBE *>(self->aiProfile)->style_flags & 2) != 0)
             self->followupState = 1;
         constexpr std::uint64_t kForcedPrimaryStyles = 0x0200000000201000ULL;
         if (self->fightStyleIndex <= 57U && ((kForcedPrimaryStyles >> self->fightStyleIndex) & 1U) != 0)
@@ -1031,14 +1031,14 @@ std::uint8_t vfEvalState03GroundedNoPairContact(VFActor *self, VFSlotRuntimeStat
     return target->pairContactPriority ? 0xffU : 3;
 }
 
-std::uint8_t vfResetAndSelectRandomCameraPhaseFromMovePool54OrFallback(VFActor *self, VFSlotRuntimeState *slot_runtime) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+std::uint8_t vfResetAndSelectRandomAICommandFromMovePool54OrFallback(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     if (!self || !slot_runtime || !style)
         return 0;
     if (self->contactPoints[static_cast<std::uint8_t>(self->targetSlotIndex) & 7u] < 2.0f && slot_runtime->phaseConfig[0] != 0 &&
         slot_runtime->phaseConfig[0] >= static_cast<std::uint8_t>(slot_runtime->reserved51[0]))
-        return ResetAndSelectCameraPhaseChoice(*self, style->phase_select_pool_54[NextVFScaledRandomIndex(4)], 0);
-    return ResetAndSelectCameraPhaseChoice(*self, kVFMainFallbackPhases[NextVFScaledRandomIndex(4)], 0);
+        return vfSelectAICommand(*self, style->phase_select_pool_54[NextVFScaledRandomIndex(4)], 0);
+    return vfSelectAICommand(*self, kVFMainFallbackPhases[NextVFScaledRandomIndex(4)], 0);
 }
 
 std::uint8_t vfEvalState04PhaseCfg10Gate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
@@ -1055,21 +1055,21 @@ std::uint8_t vfEvalState04PhaseCfg10Gate(VFActor *self, VFSlotRuntimeState *slot
 std::uint8_t vfSetCamCtrlFlagsByFrameParity(VFActor *self, VFSlotRuntimeState *) {
     if (!self || !self->game)
         return 0;
-    self->cameraControlFlags = static_cast<std::uint16_t>((self->game->frameCount & 2u) == 0 ? 0x10u : 0x20u);
-    return static_cast<std::uint8_t>(self->cameraControlFlags);
+    self->inputFlags = static_cast<std::uint16_t>((self->game->frameCount & 2u) == 0 ? 0x10u : 0x20u);
+    return static_cast<std::uint8_t>(self->inputFlags);
 }
 
 std::uint8_t vfCheckGuardStateFor(VFActor *self, VFSlotRuntimeState *slot_runtime);
 
 std::uint8_t vfEvalState05GuardOrMoveParamGate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     VFActor *target = self ? self->targetActor : nullptr;
     if (!self || !slot_runtime || !target || !style)
         return 0xffU;
     const std::int8_t targetSlot = self->targetSlotIndex;
     if (targetSlot < 0 || static_cast<std::size_t>(targetSlot) >= std::size(self->contactPoints))
         return 0xffU;
-    if ((target->hitStateFlags2 & (0x100 | 0x4)) != 0x100 || (self->hitStateFlags2 & 0x1000) != 0 || (slot_runtime->updateCamera & 0x2000) != 0 ||
+    if ((target->hitStateFlags2 & (0x100 | 0x4)) != 0x100 || (self->hitStateFlags2 & 0x1000) != 0 || (slot_runtime->aiFlags & 0x2000) != 0 ||
         self->contactPoints[static_cast<std::size_t>(targetSlot)] > 2.5f)
         return 0xffU;
     if ((style->style_flags & 2) == 0 && vfCheckGuardStateFor(self, slot_runtime) == 0xffU)
@@ -1106,9 +1106,9 @@ std::uint8_t vfResetCameraStateAndSetCamCtrlByOpponentState(VFActor *self, VFSlo
     VFActor *target = (self ? self->targetActor : nullptr);
     if (!self || !target || !slot_runtime)
         return 0;
-    vfResetCameraScriptState(*slot_runtime);
-    self->cameraControlFlags = (target->counterReactionFlags & 2u) != 0 ? 0x200u : 0x100u;
-    return static_cast<std::uint8_t>(self->cameraControlFlags);
+    vfResetAIInputState(*slot_runtime);
+    self->inputFlags = (target->counterReactionFlags & 2u) != 0 ? 0x200u : 0x100u;
+    return static_cast<std::uint8_t>(self->inputFlags);
 }
 
 std::uint8_t vfEvalState06AirbornePairContactGate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
@@ -1123,14 +1123,14 @@ std::uint8_t vfEvalState06AirbornePairContactGate(VFActor *self, VFSlotRuntimeSt
     return vfPhaseGatePasses(slot_runtime, slot_runtime->phaseConfig[12]) ? 6 : 0xffU;
 }
 
-std::uint8_t vfResetAndSelectRandomCameraPhaseFromMovePool58Or5C(VFActor *self, VFSlotRuntimeState *slot_runtime) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+std::uint8_t vfResetAndSelectRandomAICommandFromMovePool58Or5C(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     if (!self || !style)
         return 0;
     const std::uint8_t *pool = (self->fightStyleIndex == 0x1B && slot_runtime && static_cast<std::int8_t>(slot_runtime->currentHpRegenerationPhase) >= 2) ?
         style->phase_select_pool_5c :
         style->phase_select_pool_58;
-    return ResetAndSelectCameraPhaseChoice(*self, pool[NextVFScaledRandomIndex(4)], slot_runtime ? slot_runtime->phaseArgumentInitial : 0);
+    return vfSelectAICommand(*self, pool[NextVFScaledRandomIndex(4)], slot_runtime ? slot_runtime->phaseArgumentInitial : 0);
 }
 
 std::uint8_t vfEvalState11ContactDecisionBit8Gate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
@@ -1139,20 +1139,20 @@ std::uint8_t vfEvalState11ContactDecisionBit8Gate(VFActor *self, VFSlotRuntimeSt
     return vfPhaseGatePasses(slot_runtime, slot_runtime->phaseConfig[12]) ? 11 : 0xffU;
 }
 
-std::uint8_t vfResetAndSelectRandomCameraPhaseFromStylePool60(VFActor *self, VFSlotRuntimeState *slot_runtime) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+std::uint8_t vfResetAndSelectRandomAICommandFromStylePool60(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     if (!self || !style)
         return 0;
-    return ResetAndSelectCameraPhaseChoice(
+    return vfSelectAICommand(
         *self, style->phase_select_pool_60[NextVFScaledRandomIndex(2)], slot_runtime ? slot_runtime->phaseArgumentInitial : 0);
 }
 
 // @verified - p
-std::uint8_t vfSelectRandomCameraPhaseFromMovePool62(VFActor *self, VFSlotRuntimeState *slot_runtime) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+std::uint8_t vfSelectRandomAICommandFromMovePool62(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     if (!self || !style)
         return 0;
-    return ResetAndSelectCameraPhaseChoice(
+    return vfSelectAICommand(
         *self, style->phase_select_pool_62[NextVFScaledRandomIndex(2)], slot_runtime ? slot_runtime->phaseArgumentInitial : 0);
 }
 
@@ -1172,7 +1172,7 @@ std::uint8_t vfEvalState12LowTargetHpAirContact(VFActor *self, VFSlotRuntimeStat
 
 // @verified - p
 std::uint8_t vfSelectRandomAttackWindowEndPhaseChoice(VFActor *self, VFSlotRuntimeState *) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     VFActor *target = (self ? self->targetActor : nullptr);
     if (!self || !style || !target)
         return 0;
@@ -1180,7 +1180,7 @@ std::uint8_t vfSelectRandomAttackWindowEndPhaseChoice(VFActor *self, VFSlotRunti
         return 0;
 
     (void)NextVFFrameEventRandomWord();
-    return ResetAndSelectCameraPhaseChoice(*self, style->phase_select_pool_6e, 0);
+    return vfSelectAICommand(*self, style->phase_select_pool_6e, 0);
 }
 
 std::uint8_t vfEvalState13AssistAngleGate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
@@ -1200,13 +1200,13 @@ std::uint8_t vfEvalState13AssistAngleGate(VFActor *self, VFSlotRuntimeState *slo
 }
 
 std::uint8_t vfSelectRandomReactState02EndPhaseChoice(VFActor *self, VFSlotRuntimeState *) {
-    const auto *style = static_cast<const VFStyleTuningBE *>(self->styleTuning);
+    const auto *style = static_cast<const VFAIProfileBE *>(self->aiProfile);
     const VFActor *const target = self->game->actors[self->targetSlotIndex];
     if (static_cast<std::int16_t>(target->reactionState02EndFrame) - static_cast<std::int16_t>(target->currentAnimationEndFrame) < 4)
         return 0;
     const std::uint8_t *pool = self->contactPoints[static_cast<std::uint8_t>(self->targetSlotIndex) & 7u] < 2.2f ? style->react_state02_end_pool_near :
                                                                                                                    style->react_state02_end_pool_far;
-    return ResetAndSelectCameraPhaseChoice(*self, pool[NextVFScaledRandomIndex(2)], 0);
+    return vfSelectAICommand(*self, pool[NextVFScaledRandomIndex(2)], 0);
 }
 
 // @verified - p
@@ -1233,7 +1233,7 @@ std::uint8_t vfEvalState01GroundedTargetAssistGate(VFActor *self, VFSlotRuntimeS
 std::uint8_t vfEvalState15AirbornePairContactThreshold(VFActor *self, VFSlotRuntimeState *slot_runtime) {
     if ((self->hitStateFlags2 & 0x80000U) == 0 || !self->hitSourceActor || !self->hitSourceActor->pairContactPriority)
         return 0xffU;
-    if ((static_cast<const VFStyleTuningBE *>(self->styleTuning)->style_flags & 2) != 0 || slot_runtime->downedFrames >= 0xa0U ||
+    if ((static_cast<const VFAIProfileBE *>(self->aiProfile)->style_flags & 2) != 0 || slot_runtime->downedFrames >= 0xa0U ||
         slot_runtime->repeatedRankCount >= 3U || vfPhaseGatePasses(slot_runtime, slot_runtime->phaseConfig[13]))
         return 15;
     return 0xffU;
@@ -1241,12 +1241,12 @@ std::uint8_t vfEvalState15AirbornePairContactThreshold(VFActor *self, VFSlotRunt
 
 std::uint8_t vfResetCameraStateAndSetCamCtrlFlag4(VFActor *self, VFSlotRuntimeState *slot_runtime) {
     if (slot_runtime)
-        vfResetCameraScriptState(*slot_runtime);
+        vfResetAIInputState(*slot_runtime);
     if (self) {
         const std::uint16_t activeTimer = slot_runtime ? ReadPackedU16(&slot_runtime->byteaa) : 0;
-        self->cameraControlFlags = (activeTimer == 1u || activeTimer == 2u) ? 4u : 0u;
+        self->inputFlags = (activeTimer == 1u || activeTimer == 2u) ? 4u : 0u;
     }
-    return self ? static_cast<std::uint8_t>(self->cameraControlFlags) : 0;
+    return self ? static_cast<std::uint8_t>(self->inputFlags) : 0;
 }
 
 std::uint8_t vfCheckConfirmInputForFrontContact(VFActor *self, VFSlotRuntimeState *) {
@@ -1257,27 +1257,27 @@ std::uint8_t vfCheckConfirmInputForFrontContact(VFActor *self, VFSlotRuntimeStat
     return (self->hitStateFlags2 & 0x1d000U) == 0 ? 16 : 0xffU;
 }
 
-std::uint8_t vfSelectCameraPhaseFromAnimSetOrRandomFallback(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+std::uint8_t vfSelectAICommandFromAnimSetOrRandomFallback(VFActor *self, VFSlotRuntimeState *slot_runtime) {
     if (slot_runtime->fielda8)
-        vfResetCameraScriptState(*self->slot);
+        vfResetAIInputState(*self->slot);
     const auto selectedMove = static_cast<std::uint8_t>(g_playerStats.currentMove >> 8);
     std::uint8_t phase = 0xffU;
     if (selectedMove != 0xffU) {
         if (static_cast<std::uint8_t>(selectedMove - 64) <= 15U && static_cast<double>(self->contactPoints[self->targetSlotIndex]) > 3.7)
-            return ResetAndSelectCameraPhaseChoice(*self, 21, 0);
-        phase = vfMoveCameraPhase(selectedMove);
+            return vfSelectAICommand(*self, 21, 0);
+        phase = vfMoveAICommand(selectedMove);
     } else if (static_cast<std::uint8_t>(g_playerStats.currentMove) != 0xffU) {
-        phase = vfMoveCameraPhase(static_cast<std::uint8_t>(g_playerStats.currentMove));
+        phase = vfMoveAICommand(static_cast<std::uint8_t>(g_playerStats.currentMove));
     }
     if (phase != 0xffU)
-        return ResetAndSelectCameraPhaseChoice(*self, phase, 0);
+        return vfSelectAICommand(*self, phase, 0);
     static constexpr std::uint8_t front[] = {24, 25, 26, 23};
     static constexpr std::uint8_t ordinary[] = {17, 18, 15, 3};
     const auto choice = NextVFFrameEventRandomWord() & 3U;
     phase = (self->contactDecisionMask & 1U) != 0 ? front[choice] : ordinary[choice];
     if ((self->contactDecisionMask & 1U) == 0 && (self->groundContactFlags & 1) != 0)
         phase = 7;
-    return ResetAndSelectCameraPhaseChoice(*self, phase, 0);
+    return vfSelectAICommand(*self, phase, 0);
 }
 
 // @verified - p
@@ -1301,7 +1301,7 @@ std::uint8_t vfHandleHpRegenPhasePostUpdate(VFActor *self, VFSlotRuntimeState *s
     switch (slot_runtime->currentHpRegenerationPhase) {
     case 0:
     case 2:
-        return ResetAndSelectCameraPhaseChoice(*self, 209, 0);
+        return vfSelectAICommand(*self, 209, 0);
     case 1:
         (void)vfAssignVoiceFor(*self->game, 4);
         ++slot_runtime->currentHpRegenerationPhase;
@@ -1328,12 +1328,12 @@ std::uint8_t vfEvalState05GuardWindowGateA(VFActor *self, VFSlotRuntimeState *sl
         static_cast<std::size_t>(targetSlot) >= std::size(self->game->actors))
         return 0xffU;
     const std::size_t targetIndex = static_cast<std::size_t>(targetSlot);
-    if ((target->hitStateFlags2 & (0x100 | 0x4)) != 0x100 || (self->hitStateFlags2 & 0x1000) != 0 || (slot_runtime->updateCamera & 0x2000u) != 0 ||
+    if ((target->hitStateFlags2 & (0x100 | 0x4)) != 0x100 || (self->hitStateFlags2 & 0x1000) != 0 || (slot_runtime->aiFlags & 0x2000u) != 0 ||
         self->contactPoints[targetIndex] > 2.5f) {
         return 0xffU;
     }
 
-    const bool sameAnimBypass = (slot_runtime->updateCamera & 0x400u) != 0 &&
+    const bool sameAnimBypass = (slot_runtime->aiFlags & 0x400u) != 0 &&
         (self->game->actors[targetIndex]->currentReactionAnimation & 0x0fffU) == slot_runtime->repeatedReactionAnimation;
     if (!sameAnimBypass && vfCheckGuardStateFor(self, slot_runtime) == 0xffU)
         return 0xffU;
@@ -1348,11 +1348,11 @@ std::uint8_t vfEvalState05GuardWindowGateB(VFActor *self, VFSlotRuntimeState *sl
     const std::int8_t targetSlot = self->targetSlotIndex;
     if (targetSlot < 0 || static_cast<std::size_t>(targetSlot) >= std::size(self->contactPoints))
         return 0xffU;
-    if ((target->hitStateFlags2 & (0x100 | 0x4)) != 0x100 || (self->hitStateFlags2 & 0x1000) != 0 || (slot_runtime->updateCamera & 0x2000u) != 0 ||
+    if ((target->hitStateFlags2 & (0x100 | 0x4)) != 0x100 || (self->hitStateFlags2 & 0x1000) != 0 || (slot_runtime->aiFlags & 0x2000u) != 0 ||
         self->contactPoints[static_cast<std::size_t>(targetSlot)] > 2.5f) {
         return 0xffU;
     }
-    if (target->guardStrength < 0x20u && vfCheckGuardStateFor(self, slot_runtime) == 0xffU) {
+    if (target->hitDamage < 0x20u && vfCheckGuardStateFor(self, slot_runtime) == 0xffU) {
         return 0xffU;
     }
     return 5;
@@ -1409,30 +1409,30 @@ std::uint8_t vfEvalState24ContactAction8800Gate(VFActor *self, VFSlotRuntimeStat
 }
 
 // @verified - p
-std::uint8_t vfSelectCameraPhase205IfMoveFlag100Clear(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+std::uint8_t vfSelectAICommand205IfMoveFlag100Clear(VFActor *self, VFSlotRuntimeState *slot_runtime) {
     if (self && slot_runtime && (self->moveFlags & 0x100) == 0) {
-        const std::uint8_t result = ResetAndSelectCameraPhaseChoice(*self, 205, 0);
-        slot_runtime->updateCamera |= 0x2000u;
+        const std::uint8_t result = vfSelectAICommand(*self, 205, 0);
+        slot_runtime->aiFlags |= 0x2000u;
         return result;
     }
     return 0;
 }
 
 // @verified - p
-std::uint8_t vfSelectCameraPhase206IfMoveFlag100Clear(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+std::uint8_t vfSelectAICommand206IfMoveFlag100Clear(VFActor *self, VFSlotRuntimeState *slot_runtime) {
     if (self && slot_runtime && (self->moveFlags & 0x100) == 0) {
-        const std::uint8_t result = ResetAndSelectCameraPhaseChoice(*self, 206, 0);
-        slot_runtime->updateCamera |= 0x2000u;
+        const std::uint8_t result = vfSelectAICommand(*self, 206, 0);
+        slot_runtime->aiFlags |= 0x2000u;
         return result;
     }
     return 0;
 }
 
 // @verified - p
-std::uint8_t vfSelectCameraPhase207IfMoveFlagSet(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+std::uint8_t vfSelectAICommand207IfMoveFlagSet(VFActor *self, VFSlotRuntimeState *slot_runtime) {
     if (self && slot_runtime && (self->moveFlags & 0x100) != 0) {
-        const std::uint8_t result = ResetAndSelectCameraPhaseChoice(*self, 207, 0);
-        slot_runtime->updateCamera |= 0x2000u;
+        const std::uint8_t result = vfSelectAICommand(*self, 207, 0);
+        slot_runtime->aiFlags |= 0x2000u;
         return result;
     }
     return 0;
@@ -1446,11 +1446,11 @@ std::uint8_t vfEvalState25ContactDecisionBit4Gate(VFActor *self, VFSlotRuntimeSt
 }
 
 // @verified - p
-std::uint8_t vfResetAndSelectRandomCameraPhaseFromMovePool5C(VFActor *self, VFSlotRuntimeState *slot_runtime) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+std::uint8_t vfResetAndSelectRandomAICommandFromMovePool5C(VFActor *self, VFSlotRuntimeState *slot_runtime) {
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     if (!self || !style || !slot_runtime)
         return 0;
-    return ResetAndSelectCameraPhaseChoice(*self, style->phase_select_pool_5c[NextVFScaledRandomIndex(4)], slot_runtime->phaseArgumentInitial);
+    return vfSelectAICommand(*self, style->phase_select_pool_5c[NextVFScaledRandomIndex(4)], slot_runtime->phaseArgumentInitial);
 }
 
 // @verified - p
@@ -1472,9 +1472,9 @@ std::uint8_t vfResetCameraStateAndSetWallSideCamCtrl(VFActor *self, VFSlotRuntim
     if (!self || !self->slot)
         return 0;
     VFActor *target = (self ? self->targetActor : nullptr);
-    vfResetCameraScriptState(*self->slot);
+    vfResetAIInputState(*self->slot);
     if ((self->game && (self->game->frameCount & 1u) == 0) || !target) {
-        self->cameraControlFlags = 0;
+        self->inputFlags = 0;
         return 0;
     }
     std::uint16_t flags = 0x88u;
@@ -1482,9 +1482,9 @@ std::uint8_t vfResetCameraStateAndSetWallSideCamCtrl(VFActor *self, VFSlotRuntim
         flags = self->rightClearance > 3.0f ? 0x88u : 0x48u;
     else
         flags = self->leftClearance <= 3.0f ? 0x88u : 0x48u;
-    self->cameraControlFlags =
+    self->inputFlags =
         static_cast<std::uint16_t>(static_cast<std::int16_t>(target->reactionState02EndFrame - target->currentAnimationEndFrame) >= 4 ? flags : 0x18u);
-    return static_cast<std::uint8_t>(self->cameraControlFlags);
+    return static_cast<std::uint8_t>(self->inputFlags);
 }
 
 std::uint8_t vfEvalState27FarContactNoPairGate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
@@ -1501,12 +1501,12 @@ std::uint8_t vfEvalState27FarContactNoPairGate(VFActor *self, VFSlotRuntimeState
     return distance > static_cast<double>(slot_runtime->assistWindowCurrent) - 1.0 ? 0xffU : 27;
 }
 
-std::uint8_t vfSelectCameraPhase204OrRandom201202(VFActor *self, VFSlotRuntimeState *) {
+std::uint8_t vfSelectAICommand204OrRandom201202(VFActor *self, VFSlotRuntimeState *) {
     if (!self)
         return 0;
     if (self->fightStyleIndex == 0x36)
-        return ResetAndSelectCameraPhaseChoice(*self, 204, 0);
-    return ResetAndSelectCameraPhaseChoice(*self, kVFMainFarContactPhases[NextVFScaledRandomIndex(4)], 0);
+        return vfSelectAICommand(*self, 204, 0);
+    return vfSelectAICommand(*self, kVFMainFarContactPhases[NextVFScaledRandomIndex(4)], 0);
 }
 
 std::uint8_t vfEvalState28FollowupClearanceGate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
@@ -1528,7 +1528,7 @@ std::uint8_t vfEvalState28FollowupClearanceGate(VFActor *self, VFSlotRuntimeStat
     return 28;
 }
 
-std::uint8_t vfSelectCameraPhaseFromContactActionAndSide(VFActor *self, VFSlotRuntimeState *) {
+std::uint8_t vfSelectAICommandFromContactActionAndSide(VFActor *self, VFSlotRuntimeState *) {
     VFActor *target = (self ? self->targetActor : nullptr);
     if (!self || !target)
         return 0;
@@ -1551,7 +1551,7 @@ std::uint8_t vfSelectCameraPhaseFromContactActionAndSide(VFActor *self, VFSlotRu
     } else if (self->leftClearance < 0.5f) {
         ++idx;
     }
-    return ResetAndSelectCameraPhaseChoice(*self, kVFMainContactPhases[idx & 7u], 0);
+    return vfSelectAICommand(*self, kVFMainContactPhases[idx & 7u], 0);
 }
 
 // @verified - p
@@ -1563,8 +1563,8 @@ std::uint8_t vfEvalState29GroundedNoPairContact(VFActor *self, VFSlotRuntimeStat
 }
 
 // @verified - p
-std::uint8_t vfSelectRandomCameraPhaseFromFallbackPool4(VFActor *self, VFSlotRuntimeState *) {
-    return self ? ResetAndSelectCameraPhaseChoice(*self, kVFMainFallbackPhases[NextVFScaledRandomIndex(4)], 0) : 0;
+std::uint8_t vfSelectRandomAICommandFromFallbackPool4(VFActor *self, VFSlotRuntimeState *) {
+    return self ? vfSelectAICommand(*self, kVFMainFallbackPhases[NextVFScaledRandomIndex(4)], 0) : 0;
 }
 
 std::uint8_t vfEvalState30GroundedClearanceGate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
@@ -1581,24 +1581,24 @@ std::uint8_t vfEvalState30GroundedClearanceGate(VFActor *self, VFSlotRuntimeStat
     return vfEvalState06AirbornePairContactGate(self, slot_runtime) != 0xffU ? 30 : 0xffU;
 }
 
-std::uint8_t vfSelectRandomCameraPhaseByClearance(VFActor *self, VFSlotRuntimeState *) {
+std::uint8_t vfSelectRandomAICommandByClearance(VFActor *self, VFSlotRuntimeState *) {
     if (!self)
         return 0;
     std::uint8_t base = 0;
     if (self->backwardClearance <= 2.5f) {
         if (self->forwardClearance < 2.5f)
-            return ResetAndSelectCameraPhaseChoice(*self, 15, 0);
+            return vfSelectAICommand(*self, 15, 0);
     } else if (self->forwardClearance < 1.7f) {
         base = 3;
     } else if (((g_EnvPrngSeed = LcgStep(g_EnvPrngSeed)) & 0x10000u) != 0) {
         base = 3;
     }
-    return ResetAndSelectCameraPhaseChoice(*self, kVFMainClearancePhases[base + NextVFScaledRandomIndex(3)], 0);
+    return vfSelectAICommand(*self, kVFMainClearancePhases[base + NextVFScaledRandomIndex(3)], 0);
 }
 
 std::uint8_t vfEvalState31UpdateCamContactGate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
     VFActor *target = (self ? self->targetActor : nullptr);
-    if (!self || !slot_runtime || !target || (slot_runtime->updateCamera & 1u) == 0)
+    if (!self || !slot_runtime || !target || (slot_runtime->aiFlags & 1u) == 0)
         return 0xffU;
     const std::uint8_t actIdx = static_cast<std::uint8_t>(self->targetSlotIndex) & 7u;
     const std::int16_t angle = static_cast<std::int16_t>(slot_runtime->facingAngleDifferences[actIdx]);
@@ -1611,8 +1611,8 @@ std::uint8_t vfEvalState31UpdateCamContactGate(VFActor *self, VFSlotRuntimeState
 std::uint8_t vfResetCameraStateAndSetCamCtrlFlag20(VFActor *self, VFSlotRuntimeState *) {
     if (!self || !self->slot)
         return 0;
-    vfResetCameraScriptState(*self->slot);
-    self->cameraControlFlags = 0x20u;
+    vfResetAIInputState(*self->slot);
+    self->inputFlags = 0x20u;
     return 0x20u;
 }
 
@@ -1626,12 +1626,12 @@ std::uint8_t vfEvalState32ProbeDistanceGate(VFActor *self, VFSlotRuntimeState *s
 }
 
 // @verified - p
-std::uint8_t vfResetAndSelectRandomCameraPhaseFromStylePool6A(VFActor *self, VFSlotRuntimeState *) {
-    const auto *style = self ? static_cast<const VFStyleTuningBE *>(self->styleTuning) : nullptr;
+std::uint8_t vfResetAndSelectRandomAICommandFromStylePool6A(VFActor *self, VFSlotRuntimeState *) {
+    const auto *style = self ? static_cast<const VFAIProfileBE *>(self->aiProfile) : nullptr;
     if (!self || !style || !self->slot)
         return 0;
-    vfResetCameraScriptState(*self->slot);
-    return ResetAndSelectCameraPhaseChoice(*self, style->phase_select_pool_6a[NextVFScaledRandomIndex(4)], 0);
+    vfResetAIInputState(*self->slot);
+    return vfSelectAICommand(*self, style->phase_select_pool_6a[NextVFScaledRandomIndex(4)], 0);
 }
 
 std::uint8_t vfEvalState05MoveFlag40000GuardGate(VFActor *self, VFSlotRuntimeState *slot_runtime) {
@@ -1642,7 +1642,7 @@ std::uint8_t vfEvalState05MoveFlag40000GuardGate(VFActor *self, VFSlotRuntimeSta
     if (targetSlot < 0 || static_cast<std::size_t>(targetSlot) >= std::size(self->contactPoints))
         return 0xffU;
     if ((self->hitStateFlags2 & 0x40000) != 0 || (target->hitStateFlags2 & 0x100) == 0 || (self->motionFlags & 0x2000000) != 0 ||
-        (slot_runtime->updateCamera & 0x2000u) != 0 || static_cast<std::uint16_t>(target->currentAnimationEndFrame + 2u) < target->attackWindowEndFrame)
+        (slot_runtime->aiFlags & 0x2000u) != 0 || static_cast<std::uint16_t>(target->currentAnimationEndFrame + 2u) < target->attackWindowEndFrame)
         return 0xffU;
     return self->contactPoints[static_cast<std::size_t>(targetSlot)] <= 2.5f ? 5 : 0xffU;
 }
@@ -1661,10 +1661,10 @@ std::uint8_t vfValidateFacingQuadrantForContextAction(VFActor *self, VFSlotRunti
 }
 
 std::uint8_t vfUpdateFollowupHitTargetPosition(VFActor *self, VFSlotRuntimeState *slot_runtime) {
-    const auto *const style = static_cast<const VFStyleTuningBE *>(self->styleTuning);
+    const auto *const style = static_cast<const VFAIProfileBE *>(self->aiProfile);
     const auto *const target = self->game->actors[slot_runtime->slotIndex];
     self->followupState = (style->style_flags & 2U) != 0 ? 1U : 2U;
-    self->cameraControlFlags = 0x2000U;
+    self->inputFlags = 0x2000U;
     if (self->facingQuadrantStep == -1) {
         (void)BuildVFFacingQuadrantPath(*self, static_cast<std::int8_t>(self->cachedQuadrant), static_cast<std::int8_t>(target->cachedQuadrant));
         self->facingQuadrantStep = 0;
@@ -1685,7 +1685,7 @@ std::uint8_t vfUpdateFollowupHitTargetPosition(VFActor *self, VFSlotRuntimeState
     const auto next = self->facingQuadrantPath[nextStep];
     if (current < 0 || next < 0 || current >= g_pFightStage->areaMaskCount || next >= g_pFightStage->areaMaskCount) {
         self->facingQuadrantStep = -1;
-        self->cameraControlFlags = 0;
+        self->inputFlags = 0;
         return 0;
     }
     const auto &currentArea = g_pFightStage->areaMasks[static_cast<std::uint8_t>(current)];
@@ -1761,7 +1761,7 @@ std::uint8_t vfUpdateSfxFollowupSequence(VFActor *self, VFSlotRuntimeState *slot
     VFMAData &game = *self->game;
     const std::uint8_t groupIdx = self->slotIndex;
     const std::uint8_t playerSlot = static_cast<std::uint8_t>(game.playerSlot);
-    self->cameraControlFlags = 0;
+    self->inputFlags = 0;
 
     if (game.soundFrames == 0) {
         if (groupIdx >= std::size(game.soundSlots))
@@ -1881,7 +1881,7 @@ std::uint8_t vfUpdateFollowupProbePointAndCheckQuadrant(VFActor *self, VFSlotRun
         return self->slotIndex;
     }
     self->followupState = 0x2;
-    self->cameraControlFlags = 0x2000U;
+    self->inputFlags = 0x2000U;
     return 0;
 }
 
@@ -1897,10 +1897,10 @@ std::uint8_t VFActor_UpdateCameraAndContactPosition(VFActor *self, VFSlotRuntime
     VFActor *target = self->game->actorIndex < std::size(self->game->actors) ? self->game->actors[self->game->actorIndex] : nullptr;
     if (!target)
         return 0;
-    self->cameraControlFlags = 0x2002u;
+    self->inputFlags = 0x2002u;
     self->followTargetPosition.x = target->contactCurrentPosition.x;
     self->followTargetPosition.z = target->contactCurrentPosition.z;
-    return static_cast<std::uint8_t>(self->cameraControlFlags);
+    return static_cast<std::uint8_t>(self->inputFlags);
 }
 
 // @verified - p
@@ -1967,11 +1967,11 @@ std::uint8_t vfAssignFollowTargetPosForFollowup(VFActor *self, VFSlotRuntimeStat
         if (((object->environmentFlags >> self->slotIndex) & 1) == 0 || relative < 0) {
             self->followTargetPosition.x = object->position.x;
             self->followTargetPosition.z = object->position.z;
-            self->cameraControlFlags = 0x2000U;
+            self->inputFlags = 0x2000U;
             self->followupState = 2;
             return 0;
         }
-        return ResetAndSelectCameraPhaseChoice(*self, 210, 0);
+        return vfSelectAICommand(*self, 210, 0);
     }
     slot_runtime->currentStageHitResponseFrames = 300;
     return 44;
@@ -1992,20 +1992,20 @@ std::uint8_t vfUpdateCameraRelatedBasedOnContactAngles(VFActor *self, VFSlotRunt
     const std::int16_t relativeAngle = static_cast<std::int16_t>(self->temporaryFacingAngle - static_cast<std::uint16_t>(self->contactAngles[targetIndex]));
     const float distance = self->contactPoints[targetIndex];
     if (distance < 4.0f || distance > 15.0f || !self->game || self->game->guardEffectTimer < 300u) {
-        return ResetAndSelectCameraPhaseChoice(*self, 211, 0);
+        return vfSelectAICommand(*self, 211, 0);
     }
 
     if (distance < 7.0f || static_cast<std::uint16_t>(slot_runtime->currentStageHitResponseFrames) > 150u) {
-        (void)ResetAndSelectCameraPhaseChoice(*self, 212, 0);
-        self->cameraControlFlags = 0;
+        (void)vfSelectAICommand(*self, 212, 0);
+        self->inputFlags = 0;
         return 0;
     }
     if (relativeAngle < -1024) {
-        self->cameraControlFlags = 0x80;
+        self->inputFlags = 0x80;
         return static_cast<std::uint8_t>(0x80);
     }
     if (relativeAngle > 1024) {
-        self->cameraControlFlags = 0x40;
+        self->inputFlags = 0x40;
         return static_cast<std::uint8_t>(0x40);
     }
     return 0;
@@ -2040,8 +2040,8 @@ std::uint8_t vfSetCamCtrlFlagsFromSfxSlotOrder(VFActor *self, VFSlotRuntimeState
             side =
                 static_cast<std::uint8_t>((static_cast<std::int16_t>(target->facingAngle) - static_cast<std::int16_t>(target->contactAngles[order]) >= 0) + 1);
     }
-    self->cameraControlFlags = side == 2U ? 0x1040U : 0x1080U;
-    return static_cast<std::uint8_t>(self->cameraControlFlags);
+    self->inputFlags = side == 2U ? 0x1040U : 0x1080U;
+    return static_cast<std::uint8_t>(self->inputFlags);
 }
 
 // @verified - p
@@ -2096,7 +2096,7 @@ std::uint8_t Script_vfUpdateCameraCtrlFlags(VFActor *self, VFSlotRuntimeState *s
     if (!self || !slot_runtime)
         return 0;
     if ((slot_runtime->previousUpdateIndex & 0x20u) != 0) {
-        self->cameraControlFlags = 0;
+        self->inputFlags = 0;
         return 0;
     }
     if ((slot_runtime->previousUpdateIndex & 0x3Fu) == 0) {
@@ -2108,43 +2108,43 @@ std::uint8_t Script_vfUpdateCameraCtrlFlags(VFActor *self, VFSlotRuntimeState *s
                 4;
         slot_runtime->byteb8 = randomSector;
     }
-    self->cameraControlFlags = kVFMainCameraSectors[slot_runtime->byteb8 & 7u];
-    return static_cast<std::uint8_t>(self->cameraControlFlags);
+    self->inputFlags = kVFMainCameraSectors[slot_runtime->byteb8 & 7u];
+    return static_cast<std::uint8_t>(self->inputFlags);
 }
-constexpr VFMainCallbackPair kVFMainCallbacks[] = {
+constexpr VFAIBehaviour kVFAIBehaviours[] = {
     {vfCallbackNoOp, vfRefreshRandomPhaseRoll},
-    {vfEvalRandomPhaseGate, vfSelectRandomCameraPhaseChoice},
+    {vfEvalRandomPhaseGate, vfSelectRandomAICommand},
     {vfEvalFollowupHitWindow, vfSetFollowupHitFor},
-    {vfEvalState03GroundedNoPairContact, vfResetAndSelectRandomCameraPhaseFromMovePool54OrFallback},
+    {vfEvalState03GroundedNoPairContact, vfResetAndSelectRandomAICommandFromMovePool54OrFallback},
     {vfEvalState04PhaseCfg10Gate, vfSetCamCtrlFlagsByFrameParity},
     {vfEvalState05GuardOrMoveParamGate, vfResetCameraStateAndSetCamCtrlByOpponentState},
-    {vfEvalState06AirbornePairContactGate, vfResetAndSelectRandomCameraPhaseFromMovePool58Or5C},
+    {vfEvalState06AirbornePairContactGate, vfResetAndSelectRandomAICommandFromMovePool58Or5C},
     {vfCallbackReject, vfCallbackNoOp},
     {vfCallbackReject, vfCallbackNoOp},
     {vfCallbackReject, vfCallbackNoOp},
     {vfCallbackReject, vfCallbackNoOp},
-    {vfEvalState11ContactDecisionBit8Gate, vfResetAndSelectRandomCameraPhaseFromStylePool60},
+    {vfEvalState11ContactDecisionBit8Gate, vfResetAndSelectRandomAICommandFromStylePool60},
     {vfEvalState12LowTargetHpAirContact, vfSelectRandomAttackWindowEndPhaseChoice},
     {vfEvalState13AssistAngleGate, vfSelectRandomReactState02EndPhaseChoice},
     {vfEvalState01GroundedTargetAssistGate, nullptr},
     {vfEvalState15AirbornePairContactThreshold, vfResetCameraStateAndSetCamCtrlFlag4},
-    {vfCheckConfirmInputForFrontContact, vfSelectCameraPhaseFromAnimSetOrRandomFallback},
+    {vfCheckConfirmInputForFrontContact, vfSelectAICommandFromAnimSetOrRandomFallback},
     {vfEvalState17Slot174FrontContactGate, vfHandleHpRegenPhasePostUpdate},
     {vfEvalState05GuardWindowGateA, nullptr},
     {vfEvalState05GuardWindowGateB, nullptr},
     {vfTriggerFollowupState2OnSfxContact, nullptr},
-    {vfEvalState21ContactDecision6000000Gate, vfSelectRandomCameraPhaseFromMovePool62},
-    {vfEvalState22ContactAction2400Gate, vfSelectCameraPhase205IfMoveFlag100Clear},
-    {vfEvalState23ContactAction5000Gate, vfSelectCameraPhase206IfMoveFlag100Clear},
-    {vfEvalState24ContactAction8800Gate, vfSelectCameraPhase207IfMoveFlagSet},
-    {vfEvalState25ContactDecisionBit4Gate, vfResetAndSelectRandomCameraPhaseFromMovePool5C},
+    {vfEvalState21ContactDecision6000000Gate, vfSelectRandomAICommandFromMovePool62},
+    {vfEvalState22ContactAction2400Gate, vfSelectAICommand205IfMoveFlag100Clear},
+    {vfEvalState23ContactAction5000Gate, vfSelectAICommand206IfMoveFlag100Clear},
+    {vfEvalState24ContactAction8800Gate, vfSelectAICommand207IfMoveFlagSet},
+    {vfEvalState25ContactDecisionBit4Gate, vfResetAndSelectRandomAICommandFromMovePool5C},
     {vfEvalState26CloseAttackContactGate, vfResetCameraStateAndSetWallSideCamCtrl},
-    {vfEvalState27FarContactNoPairGate, vfSelectCameraPhase204OrRandom201202},
-    {vfEvalState28FollowupClearanceGate, vfSelectCameraPhaseFromContactActionAndSide},
-    {vfEvalState29GroundedNoPairContact, vfSelectRandomCameraPhaseFromFallbackPool4},
-    {vfEvalState30GroundedClearanceGate, vfSelectRandomCameraPhaseByClearance},
+    {vfEvalState27FarContactNoPairGate, vfSelectAICommand204OrRandom201202},
+    {vfEvalState28FollowupClearanceGate, vfSelectAICommandFromContactActionAndSide},
+    {vfEvalState29GroundedNoPairContact, vfSelectRandomAICommandFromFallbackPool4},
+    {vfEvalState30GroundedClearanceGate, vfSelectRandomAICommandByClearance},
     {vfEvalState31UpdateCamContactGate, vfResetCameraStateAndSetCamCtrlFlag20},
-    {vfEvalState32ProbeDistanceGate, vfResetAndSelectRandomCameraPhaseFromStylePool6A},
+    {vfEvalState32ProbeDistanceGate, vfResetAndSelectRandomAICommandFromStylePool6A},
     {nullptr, nullptr},
     {nullptr, nullptr},
     {vfEvalState22ContactAction400Gate, nullptr},

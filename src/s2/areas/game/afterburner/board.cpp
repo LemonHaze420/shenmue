@@ -207,7 +207,7 @@ void WriteSound(std::uint32_t address, std::uint8_t value) {
     if (address == 0x8017)
         QueueAfterBurnerSoundCommand(value);
     else
-        s1::Emu68_IgnoreWrite8(address + 0xe0000, value);
+        s1::emu68::IgnoreWrite8(address + 0xe0000, value);
 }
 std::uint16_t ReadPrimaryMathWord(std::uint32_t address) {
     return static_cast<std::uint16_t>(ReadArcadeMathValue(mathDevices[0], address));
@@ -227,13 +227,13 @@ void WriteSpriteByte(std::uint32_t address, std::uint8_t value) {
     if (address == 1)
         spriteBank = (spriteBank - 1) & 1;
     else
-        s1::Emu68_IgnoreWrite8(address + 0x110000, value);
+        s1::emu68::IgnoreWrite8(address + 0x110000, value);
 }
 void WriteSpriteWord(std::uint32_t address, std::uint16_t value) {
     if (!address)
         spriteBank = (spriteBank - 1) & 1;
     else
-        s1::Emu68_IgnoreWrite16(address + 0x110000, value);
+        s1::emu68::IgnoreWrite16(address + 0x110000, value);
 }
 std::uint8_t ReadSecondaryByte(std::uint32_t address) {
     if ((address & 0xfffff000U) == 0xc000)
@@ -243,7 +243,7 @@ std::uint8_t ReadSecondaryByte(std::uint32_t address) {
         SnapshotAfterBurnerRoad();
         return 0xff;
     }
-    return s1::Emu68_UnmappedRead8(address + 0xe0000);
+    return s1::emu68::UnmappedRead8(address + 0xe0000);
 }
 void WriteSecondaryByte(std::uint32_t address, std::uint8_t value) {
     if ((address & 0xfffff000U) == 0xc000)
@@ -251,7 +251,7 @@ void WriteSecondaryByte(std::uint32_t address, std::uint8_t value) {
     else if (address == 0xe001)
         g_arcadeRoadControl = value;
     else
-        s1::Emu68_IgnoreWrite8(address + 0xe0000, value);
+        s1::emu68::IgnoreWrite8(address + 0xe0000, value);
 }
 std::uint32_t ReadSecondaryMathValue(std::uint32_t address) {
     if ((address & 0xfffff000U) == 0xc000)
@@ -283,7 +283,7 @@ void WriteSecondaryLong(std::uint32_t address, std::uint32_t value) {
 }
 std::uint8_t ReadAnalog(std::uint32_t address) {
     if (address != 1)
-        return s1::Emu68_UnmappedRead8(address + 0x130000);
+        return s1::emu68::UnmappedRead8(address + 0x130000);
     const LegacyInputSlot &pad = g_inputBuffer[0];
     switch (adcSelector) {
     case 0:
@@ -300,7 +300,7 @@ void WriteAnalog(std::uint32_t address, std::uint8_t value) {
     if (address == 1)
         adcSelector = value & 0x1c;
     else
-        s1::Emu68_IgnoreWrite8(address + 0x130000, value);
+        s1::emu68::IgnoreWrite8(address + 0x130000, value);
 }
 void UpdatePeripheralAudio() {
     if (!(s1::g_harrierMemory[0xd0005] & 1))
@@ -333,21 +333,21 @@ s1::reg68_page_map_entry_t RamPage(std::uint32_t base, std::uint32_t mask) {
 }
 s1::reg68_page_map_entry_t RomPage(std::uint32_t base) {
     return {.read8 = s1::Harrier_ReadMemory8,
-        .write8 = s1::Emu68_IgnoreWrite8,
+        .write8 = s1::emu68::IgnoreWrite8,
         .read16 = s1::Harrier_ReadMemory16BigEndian,
-        .write16 = s1::Emu68_IgnoreWrite16,
+        .write16 = s1::emu68::IgnoreWrite16,
         .read32 = s1::Harrier_ReadMemory32BigEndian,
-        .write32 = s1::Emu68_IgnoreWrite32,
+        .write32 = s1::emu68::IgnoreWrite32,
         .base = base,
         .mask = 0xffff};
 }
 void BuildPageMaps() {
-    const s1::reg68_page_map_entry_t empty{.read8 = s1::Emu68_UnmappedRead8,
-        .write8 = s1::Emu68_IgnoreWrite8,
-        .read16 = s1::Emu68_UnmappedRead16,
-        .write16 = s1::Emu68_IgnoreWrite16,
-        .read32 = s1::Emu68_UnmappedRead32,
-        .write32 = s1::Emu68_IgnoreWrite32,
+    const s1::reg68_page_map_entry_t empty{.read8 = s1::emu68::UnmappedRead8,
+        .write8 = s1::emu68::IgnoreWrite8,
+        .read16 = s1::emu68::UnmappedRead16,
+        .write16 = s1::emu68::IgnoreWrite16,
+        .read32 = s1::emu68::UnmappedRead32,
+        .write32 = s1::emu68::IgnoreWrite32,
         .base = 0,
         .mask = 0xffffffffU};
     for (std::size_t page = 0; page < 256; ++page) {
@@ -648,9 +648,9 @@ void InitializeAfterBurnerBoard(GameArcadeRuntime &runtime, const std::uint8_t *
     s1::g_reg68_ctx.map = primaryPages.data();
     s1::g_reg68_ctx_2.map = secondaryPages.data();
     s1::reg68 = &s1::g_reg68_ctx;
-    s1::Emu68_ResetContext();
+    s1::emu68::ResetContext();
     s1::reg68 = &s1::g_reg68_ctx_2;
-    s1::Emu68_ResetContext();
+    s1::emu68::ResetContext();
     s1::reg68 = &s1::g_reg68_ctx;
     for (std::uint32_t record = 0; s1::emu68_insn_defs[record].asm_string; ++record) {
         s1::emu68_ctx_t &target = s1::emu68_insn_defs[record + 1];
@@ -692,7 +692,7 @@ void UpdateAfterBurnerBoard(GameArcadeRuntime &runtime) {
     if (g_inputBuffer[0].held & 0x206)
         s1::g_harrierMemory[0xd8001] = input - 32;
     UpdateInput();
-    s1::emu68_Run();
+    s1::emu68::Run();
     if (runtime.controlsActive)
         ++runtime.playedFrames;
 }

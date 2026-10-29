@@ -137,7 +137,7 @@ void ChawEndLectureCallback(void *data) {
             Vector3i rotation;
             EV_GetCharaPosition(source, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
             GetScenarioCharacterEulerAngles(source, &rotation, EventTransformFlags::World);
-            ApplyScenarioTranslationAndRotation(&position, &rotation, &point);
+            scenApplyTransRot(&position, &rotation, &point);
             const Vector3 zero{};
             SetParticleEffectPosition(0, chawSmoke, &point, &zero);
         } else {

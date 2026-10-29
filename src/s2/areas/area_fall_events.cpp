@@ -223,9 +223,9 @@ void QueueFallLookCamera() {
     EV_GetCharaPosition(ryo, 5, &position, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(ryo, &rotation, EventTransformFlags::World | EventTransformFlags::TurnMotion);
     work.eye = {0, -.30000001192092896f, -2};
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &work.eye);
+    scenApplyTransRot(&position, &rotation, &work.eye);
     work.target = {0, -30, -15};
-    ApplyScenarioTranslationAndRotation(&position, &rotation, &work.target);
+    scenApplyTransRot(&position, &rotation, &work.target);
     camCtrlGetNextCamPos(&work.startEye);
     camCtrlGetTargetPosition(&work.startTarget);
     camCtrlSetState(Event);
@@ -408,7 +408,7 @@ void RockyFallCallback(void *) {
             Vector3 origin{rockyFall.intersection.x, rockyFall.savedPosition.y, rockyFall.intersection.z};
             Vector3i rotation{0, rockyFall.intersectionYaw, 0};
             position = {0, 0, .800000011920929f};
-            ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+            scenApplyTransRot(&origin, &rotation, &position);
         }
         EV_AT_SetPos(ryo, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
         rockyFall.cooldown = 60;
@@ -584,7 +584,7 @@ void RoomFallCallback(void *) {
             Vector3 origin{roomFall.intersection.x, roomFall.savedPosition.y, roomFall.intersection.z};
             Vector3i rotation{0, roomFall.intersectionYaw, 0};
             position = {0, 0, .8999999761581421f};
-            ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+            scenApplyTransRot(&origin, &rotation, &position);
         }
         EV_AT_SetPos(ryo, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
         roomFall.cooldown = 60;
@@ -608,7 +608,7 @@ void RoomFallCallback(void *) {
         figpAssignModeFor(ryo, 1);
         AT_SetLocalBaseChara(dummy, ryo);
         Vector3 position{0, -.6000000238418579f, -1.5f};
-        ApplyScenarioTranslationAndRotation(&roomFall.intersection, &roomFall.exitRotation, &position);
+        scenApplyTransRot(&roomFall.intersection, &roomFall.exitRotation, &position);
         EV_AT_SetPos(ryo, EventTransformFlags::World | EventTransformFlags::AllAxes, position);
         EV_AT_SetAngY(ryo, EventTransformFlags::World | EventTransformFlags::AllAxes, roomFall.exitRotation);
         AT_SetLocalBaseChara(dummy, shen_name{});

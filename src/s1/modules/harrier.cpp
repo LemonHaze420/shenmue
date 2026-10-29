@@ -457,7 +457,7 @@ void HarrierExecute() {
         }
         if ((held & 0x0080U) != 0)
             g_harrierInputMask = static_cast<std::uint8_t>(mask + 128U);
-        emu68_Run();
+        emu68::Run();
         if (g_harrierControlsActive) {
             ++g_harrierPlayedFrames;
             g_forceXInputAnalogProcessing = 1;

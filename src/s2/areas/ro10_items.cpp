@@ -18,7 +18,7 @@ bool GetRo10ItemTransform(const Ro10Shop &shop, std::int32_t column, std::int32_
     while (row >= shop.rows)
         row -= shop.rows;
     Vector3 translated{Ro10FlushSmall(shop.columnSpacing * static_cast<float>(column)), 0, shop.rowSpacing * static_cast<float>(row)};
-    ApplyScenarioTranslationAndRotation(&shop.position, &shop.rotation, &translated);
+    scenApplyTransRot(&shop.position, &shop.rotation, &translated);
     if (position)
         *position = translated;
     const std::int32_t style = shop.grips[column + row * shop.columns];
@@ -113,7 +113,7 @@ void RefreshRo10Items(Ro10Work &work) {
 
         if (work.boards[index].name && work.ones[index].name) {
             Vector3 boardPosition{0, -.07f, .0099999998f};
-            ApplyScenarioTranslationAndRotation(&base, &baseRotation, &boardPosition);
+            scenApplyTransRot(&base, &baseRotation, &boardPosition);
             const Vector3i rotation{baseRotation.x - 44055, baseRotation.y, baseRotation.z};
             EV_AT_SetPos(work.boards[index], EventTransformFlags::World | EventTransformFlags::AllAxes, boardPosition);
             EV_AT_SetAngY(work.boards[index], EventTransformFlags::World | EventTransformFlags::AllAxes, rotation);
@@ -133,7 +133,7 @@ void UpdateRo10ItemCamera(const Ro10Shop &shop, std::int32_t column, std::int32_
     GetRo10ItemTransform(shop, column, row, &target, &rotation, nullptr, false);
     rotation.x += 5461;
     Vector3 position{0, 0, distance};
-    ApplyScenarioTranslationAndRotation(&target, &rotation, &position);
+    scenApplyTransRot(&target, &rotation, &position);
     if (frames > 1) {
         Vector3 previousPosition, previousTarget;
         camCtrlGetNextCamPos(&previousPosition);

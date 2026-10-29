@@ -294,7 +294,7 @@ void InitializeHasiEvent(HLib::Task *task, std::int32_t entry) {
     EV_GetCharaPosition(work->definition->character, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(work->definition->character, &work->rotation, EventTransformFlags::World);
     work->rotation.y += work->definition->reversed ? -0x4000 : 0x4000;
-    ApplyScenarioTranslationAndRotation(&position, &work->rotation, &work->translation);
+    scenApplyTransRot(&position, &work->rotation, &work->translation);
     EVT_AT_SetPos(BRIDGE_MODEL, work->definition->character, {}, 0);
     EVT_AT_SetAngY(BRIDGE_MODEL, work->definition->character, 0, 0);
     EVT_AT_SetPos(BRIDGE_DUMMY, work->definition->character, {}, 0);

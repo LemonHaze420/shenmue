@@ -26,10 +26,10 @@ void AnanGetHandPosition(float tilt, Vector3 *output) {
     Vector3 point{-1.23f, -.3f, 0};
     Vector3 origin{0, 0, 0};
     Vector3i rotation{0, 0, static_cast<std::int32_t>(tilt * 1274.0f)};
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &point);
+    scenApplyTransRot(&origin, &rotation, &point);
     EV_GetCharaPosition(ANAN_BOARD, CHARACTER_TRANSLATION_ROOT, &origin, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(ANAN_BOARD, &rotation, EventTransformFlags::World);
-    ApplyScenarioTranslationAndRotation(&origin, &rotation, &point);
+    scenApplyTransRot(&origin, &rotation, &point);
     if (output)
         *output = point;
 }
@@ -72,12 +72,12 @@ void AnanSetTargets(bool includeHand) {
     if (includeHand) {
         Vector3 point{-2.4f, -.65f, .1f};
         Vector3 copy = origin;
-        ApplyScenarioTranslationAndRotation(&copy, &rotation, &point);
+        scenApplyTransRot(&copy, &rotation, &point);
         mtwkSetBoneTarget(scenFindMotionwork(ANAN_MAN), 10, &point);
     }
     Vector3 point{-2.7f, -.4f, .05f};
     Vector3 copy = origin;
-    ApplyScenarioTranslationAndRotation(&copy, &rotation, &point);
+    scenApplyTransRot(&copy, &rotation, &point);
     mtwkSetBoneTargetStepLimit(scenFindMotionwork(ANAN_MAN), 17, 1.0f);
     mtwkSetBoneTarget(scenFindMotionwork(ANAN_MAN), 17, &point);
 }

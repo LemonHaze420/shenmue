@@ -349,9 +349,9 @@ OsageSegmentRuntime *AllocateOsageSegment(OsageWork &osage, Mt5RuntimeNode &node
     segment->next = reinterpret_cast<OsageSegmentRuntime *>(static_cast<std::uintptr_t>(osage.renderChain));
     osage.renderChain = static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(segment));
 
-    HMDL_SetTemporaryTaskRelativeOffsets(&node, true);
-    if (!HMDL_SetCycleDataForNode(&node, segment)) {
-        HMDL_SetTemporaryTaskRelativeOffsets(&node, false);
+    hmdlSetTemporaryTaskRelativeOffsets(&node, true);
+    if (!hmdlSetCycleDataForNode(&node, segment)) {
+        hmdlSetTemporaryTaskRelativeOffsets(&node, false);
         osage.renderChain = static_cast<std::uint64_t>(reinterpret_cast<std::uintptr_t>(segment->next));
         HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(segment), 0);
         return nullptr;
@@ -360,7 +360,7 @@ OsageSegmentRuntime *AllocateOsageSegment(OsageWork &osage, Mt5RuntimeNode &node
     std::byte *const modelBase = MT5_ModelBaseForNode(&node);
     if (node.parentOffset && modelBase) {
         auto *const parentNode = reinterpret_cast<Mt5RuntimeNode *>(modelBase + node.parentOffset);
-        auto *const parent = static_cast<OsageSegmentRuntime *>(HMDL_CycleDataForNode(parentNode));
+        auto *const parent = static_cast<OsageSegmentRuntime *>(hmdlCycleDataForNode(parentNode));
         if (parent && parent->tag == SHEN_NAME(OSAG) && parent->node && parent->node->nodeKind == node.nodeKind) {
             segment->parent = parent;
             segment->linkFlags = static_cast<std::uint8_t>(parent->linkFlags + 1U);
@@ -425,12 +425,12 @@ void OSAGE_Cleanup(Character *, void *payload) {
     while (segment) {
         OsageSegmentRuntime *const next = segment->next;
         if (segment->node) {
-            if (HMDL_TransformForNode(segment->node, segment->node->transformOffset) == &segment->transform) {
+            if (hmdlTransformForNode(segment->node, segment->node->transformOffset) == &segment->transform) {
                 segment->node->transformOffset = 0;
             }
-            if (HMDL_CycleDataForNode(segment->node) == segment)
-                HMDL_SetCycleDataForNode(segment->node, nullptr);
-            HMDL_SetTemporaryTaskRelativeOffsets(segment->node, false);
+            if (hmdlCycleDataForNode(segment->node) == segment)
+                hmdlSetCycleDataForNode(segment->node, nullptr);
+            hmdlSetTemporaryTaskRelativeOffsets(segment->node, false);
 
             if (segment->auxiliaryData && segment->node->sceneBindingOffset) {
                 std::byte *const modelBase = MT5_ModelBaseForNode(segment->node);
@@ -552,7 +552,7 @@ void BindOsageSegment(OsageSegmentRuntime &segment) {
     const std::int32_t offset = OsageTransformOffset(segment);
     if (!offset)
         return;
-    HMDL_SetTemporaryTaskRelativeOffsets(segment.node, true);
+    hmdlSetTemporaryTaskRelativeOffsets(segment.node, true);
     segment.node->transformOffset = offset;
 }
 
@@ -2004,7 +2004,7 @@ void UpdateOsageNodeTree(OsageWork &osage, Mt5RuntimeNode *node, float cameraDis
             workTransformMatrix = segment->transform;
             BindOsageSegment(*segment);
         } else if (node->transformOffset) {
-            if (const Matrix4x4 *const transform = HMDL_TransformForNode(node, node->transformOffset)) {
+            if (const Matrix4x4 *const transform = hmdlTransformForNode(node, node->transformOffset)) {
                 workTransformMatrix = *transform;
             } else {
                 ApplyOsageNodeLocalTransform(*node);

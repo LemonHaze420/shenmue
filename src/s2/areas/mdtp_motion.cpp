@@ -30,7 +30,7 @@ void CalculateMdtpHandTarget(std::int32_t selected, Vector3 *output, std::int32_
     const float pressHeight =
         press <= 8 ? static_cast<float>(press) * -0.00087500003f : CleanFloat(static_cast<float>(press - 8) * 0.00087500003f) - 0.0070000002f;
     Vector3 target{.x = x, .y = CleanFloat(CleanFloat(pressHeight) + 0.068000004f), .z = 0.0080000004f};
-    ApplyScenarioTranslationAndRotation(&recorderPosition, &recorderRotation, &target);
+    scenApplyTransRot(&recorderPosition, &recorderRotation, &target);
     output->x = CleanFloat(CleanFloat(bone.rows[3].x - transformed.x) + target.x);
     output->y = CleanFloat(CleanFloat(bone.rows[3].y - transformed.y) + target.y);
     output->z = CleanFloat(CleanFloat(bone.rows[3].z - transformed.z) + target.z);

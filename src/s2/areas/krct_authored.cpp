@@ -278,7 +278,7 @@ void TorchConversationLoop(void *data) {
     Vector3i rotation;
     EV_GetCharaPosition(handTorch, CHARACTER_TRANSLATION_ROOT, &root, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(handTorch, &rotation, EventTransformFlags::World);
-    ApplyScenarioTranslationAndRotation(&root, &rotation, &position);
+    scenApplyTransRot(&root, &rotation, &position);
     SetParticleEffectPosition(4, krctHandFire, &position, &position);
     if (static_cast<std::uint32_t>(frame - 1003) <= 66 || frame >= 2679)
         SetLightRuntimePosition(32, root);

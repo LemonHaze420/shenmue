@@ -1051,7 +1051,7 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
             ((active & 1) && other->animationTime > float(static_cast<std::uint16_t>(other->reactionMiddleFrame)))))
         return;
     const std::uint16_t direction = self->facingAngle + self->hitDirection;
-    float impact = float(static_cast<std::uint8_t>(self->guardStrength));
+    float impact = float(static_cast<std::uint8_t>(self->hitDamage));
     const float acceleration = std::sqrt(impact * .033333335f);
     const auto &profile = hitProfiles[self->parameter30e];
     const float multiplier = profile.attackScale[(hit & 0x100) != 0];
@@ -1112,7 +1112,7 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
         other->parameter370 = action;
         const auto entry = FindLoadedMotionSecondaryEntry(action & 0xfff, 5);
         self->parameter370 = std::uint32_t(std::int32_t(ReadFightData<std::int16_t>(entry.data(), 2)) + 0x09000000);
-        self->guardStrength = std::to_integer<std::int8_t>(entry[1]);
+        self->hitDamage = std::to_integer<std::int8_t>(entry[1]);
         return;
     }
     default:
@@ -1242,8 +1242,8 @@ void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t s
                 if (b->motionFlags & VFMOF_Unknown8000)
                     result = 1;
             } else {
-                const auto strengthA = static_cast<std::uint8_t>(a->guardStrength);
-                const auto strengthB = static_cast<std::uint8_t>(b->guardStrength);
+                const auto strengthA = static_cast<std::uint8_t>(a->hitDamage);
+                const auto strengthB = static_cast<std::uint8_t>(b->hitDamage);
                 if (strengthA >= strengthB) {
                     result = 1;
                     if (strengthA == strengthB) {

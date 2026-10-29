@@ -50,7 +50,7 @@ struct VFSlotRuntimeState {
     std::uint16_t parameter89;
     std::byte reserved8b;
     std::uint16_t parameter8c, parameter8e;
-    std::uint16_t animationHistory[4], reactionHistory[3];
+    std::uint16_t animationHistory[4], inputHistory[3];
     std::uint16_t pressure, parameterA0;
     std::int8_t parameterA2, parameterA3, parameterA4;
     std::byte reservedA5[9];
@@ -84,7 +84,7 @@ static_assert(offsetof(VFSlotRuntimeState, secondaryMotionTimer) == 0x1b0);
 
 
 
-struct alignas(4) VFReactionPriorityEntry {
+struct alignas(4) VFInputHistoryEntry {
     std::uint16_t mask, sectorMask, pressed, released;
 };
 struct VFReactionCursors {
@@ -121,7 +121,7 @@ struct VFReactionContext {
     const std::uint8_t *program;
     std::int32_t scanRemaining;
     std::uint32_t priorityOnly;
-    std::uint16_t priorityFlags, priorityMask, maskSnapshot, allowedMask, remainingFrames;
+    std::uint16_t inputPressed, inputMask, maskSnapshot, allowedMask, remainingFrames;
     std::uint8_t historyIndex;
     std::byte reserved[5];
 };
@@ -160,11 +160,11 @@ struct VFReactionAssistHistory {
     float currentWindow;
     std::byte reserved[0x40];
 };
-static_assert(sizeof(VFReactionPriorityEntry) == 8 && alignof(VFReactionPriorityEntry) == 4);
-static_assert(offsetof(VFReactionPriorityEntry, sectorMask) == 2 && offsetof(VFReactionPriorityEntry, released) == 6);
+static_assert(sizeof(VFInputHistoryEntry) == 8 && alignof(VFInputHistoryEntry) == 4);
+static_assert(offsetof(VFInputHistoryEntry, sectorMask) == 2 && offsetof(VFInputHistoryEntry, released) == 6);
 static_assert(sizeof(VFReactionCursors) == 8 && offsetof(VFReactionCursors, tracked) == 2);
 static_assert(sizeof(VFReactionContext) == 32 && offsetof(VFReactionContext, priorityOnly) == 12);
-static_assert(offsetof(VFReactionContext, priorityFlags) == 16 && offsetof(VFReactionContext, historyIndex) == 26);
+static_assert(offsetof(VFReactionContext, inputPressed) == 16 && offsetof(VFReactionContext, historyIndex) == 26);
 static_assert(sizeof(VFReactionCounterOperands) == 0x310);
 static_assert(sizeof(VFReactionState) == 0x230 && offsetof(VFReactionState, contexts) == 0x20);
 static_assert(offsetof(VFReactionState, conditionFlags) == 0x220 && offsetof(VFReactionState, counters) == 0x229);
@@ -262,9 +262,9 @@ struct VFActor {
     std::int16_t parameter2e2;
     float groundOffset;
     std::uint8_t moveId;
-    std::int8_t guardState, guardStrength;
+    std::int8_t guardState, hitDamage;
     std::uint8_t parameter2eb;
-    float impulseMagnitude;
+    float attackReach;
     std::uint16_t hitParameter, hitDirection;
     Vector3 hitVector;
     const std::byte *reactionEntries;
@@ -364,8 +364,8 @@ struct VFActor {
     float parameter4c8;
     Vector3 knockbackVelocity, slideVelocity, pendingKnockback, frameMoveDelta, parameter4fc;
     std::uint64_t reactionOverrideActive;
-    std::uint16_t cameraControlFlags, priorityMask, followupFlags, priorityFlags;
-    VFReactionPriorityEntry reactionHistory[32];
+    std::uint16_t inputFlags, inputMask, followupFlags, inputPressed;
+    VFInputHistoryEntry inputHistory[32];
     VFReactionCursors reactionCursors;
     union {
         std::uint16_t deferredPriorityActive;
@@ -537,7 +537,7 @@ struct VFActor {
     float guardHp, guardMaximumHp, regenerationRate, focusedRegenerationScale;
     std::uint32_t reservedB44;
 };
-static_assert(offsetof(VFActor, reactionHistory) == 0x518);
+static_assert(offsetof(VFActor, inputHistory) == 0x518);
 static_assert(offsetof(VFActor, reactionCursors) == 0x618);
 static_assert(offsetof(VFActor, deferredPriorityState) == 0x620);
 static_assert(offsetof(VFActor, deferredPriorityFlags) == 0x622);
@@ -661,7 +661,7 @@ static_assert(offsetof(VFActor, parameter2dc) == 0x2dc);
 static_assert(offsetof(VFActor, parameter2de) == 0x2de);
 static_assert(offsetof(VFActor, parameter2e2) == 0x2e2);
 static_assert(offsetof(VFActor, parameter2eb) == 0x2eb);
-static_assert(offsetof(VFActor, impulseMagnitude) == 0x2ec);
+static_assert(offsetof(VFActor, attackReach) == 0x2ec);
 static_assert(offsetof(VFActor, hitVector) == 0x2f4);
 static_assert(offsetof(VFActor, reactionEntries) == 0x300);
 static_assert(offsetof(VFActor, motionContactFlags) == 0x308);
@@ -719,7 +719,7 @@ static_assert(offsetof(VFActor, parameterB24) == 0xb24);
 static_assert(offsetof(VFActor, parameterB2c) == 0xb2c);
 static_assert(offsetof(VFActor, actionIndex) == 0x1);
 static_assert(offsetof(VFActor, motionParameters) == 0x48);
-static_assert(offsetof(VFActor, cameraControlFlags) == 0x510);
+static_assert(offsetof(VFActor, inputFlags) == 0x510);
 static_assert(offsetof(VFActor, groupIndex) == 0x0);
 static_assert(offsetof(VFActor, character) == 0x10);
 static_assert(offsetof(VFActor, game) == 0x28);
@@ -1096,7 +1096,7 @@ static_assert(offsetof(VFActor, inverseScale) == 0x2a8);
 static_assert(offsetof(VFActor, parameter2d0) == 0x2d0);
 static_assert(offsetof(VFActor, reactionMiddleFrame) == 0x2d2);
 static_assert(offsetof(VFActor, guardState) == 0x2e9);
-static_assert(offsetof(VFActor, guardStrength) == 0x2ea);
+static_assert(offsetof(VFActor, hitDamage) == 0x2ea);
 static_assert(offsetof(VFActor, hitParameter) == 0x2f0);
 static_assert(offsetof(VFActor, hitDirection) == 0x2f2);
 static_assert(offsetof(VFActor, parameter30e) == 0x30e);
@@ -1253,7 +1253,7 @@ struct FightStageObjectDefinition {
     std::uint32_t flags;
     std::int32_t hitboxCount;
     FightStageObjectHitbox hitboxes[8];
-    std::int8_t guardStrength, guardState;
+    std::int8_t hitDamage, guardState;
     std::int16_t hitParameter;
     std::int32_t motionTrackCount, reserved10c;
     const ObjectMotionNode *motionNodes;
@@ -1310,7 +1310,7 @@ static_assert(offsetof(FightStageObjectDefinition, attachmentRotation) == 0x10);
 static_assert(offsetof(FightStageObjectDefinition, flags) == 0x1c);
 static_assert(offsetof(FightStageObjectDefinition, hitboxCount) == 0x20);
 static_assert(offsetof(FightStageObjectDefinition, hitboxes) == 0x24);
-static_assert(offsetof(FightStageObjectDefinition, guardStrength) == 0x104);
+static_assert(offsetof(FightStageObjectDefinition, hitDamage) == 0x104);
 static_assert(offsetof(FightStageObjectDefinition, guardState) == 0x105);
 static_assert(offsetof(FightStageObjectDefinition, hitParameter) == 0x106);
 static_assert(offsetof(FightStageObjectDefinition, motionTrackCount) == 0x108);
@@ -1480,9 +1480,9 @@ void vfResetScriptedFormationMotion(VFActor *actor);
 void vfSnapActorToContact(VFActor *actor);
 void vfPredictLandingGround(VFActor *actor);
 std::uint16_t vfRotateCameraSectorCode(VFActor *actor, std::uint16_t code);
-void vfResetAndSelectCameraPhaseChoice(VFActor *actor, std::uint8_t choice, std::uint16_t delay);
-bool vfUpdateCameraScript(VFActor *actor);
-void vfAdvanceCameraPhaseChain(VFActor *actor);
+void vfSelectAICommand(VFActor *actor, std::uint8_t choice, std::uint16_t delay);
+bool vfUpdateAIInput(VFActor *actor);
+void vfAdvanceAICommand(VFActor *actor);
 void vfResetReactionProgram(VFActor *actor);
 void vfResetActorActionState(VFActor *actor);
 VFActor *vfGetActorFromSlot(VFMA_t *game, shen_name name);
@@ -1501,7 +1501,7 @@ void vfInitStageObjects();
 void vfFreeStageObjects();
 FightStageObjectDefinition **AllocateVOBJ(std::int32_t slot, std::int8_t index);
 std::uint32_t ToggleVOBJArrayIndex(
-    std::int32_t slot, std::int8_t guardStrength, std::int8_t guardState, std::int16_t hitParameter, std::uint32_t hitSound);
+    std::int32_t slot, std::int8_t hitDamage, std::int8_t guardState, std::int16_t hitParameter, std::uint32_t hitSound);
 const std::byte *vfStageDefinitionSetMotion(std::int32_t slot, std::uint32_t name, std::int32_t tracks, const std::uint32_t *nodes, std::int32_t step,
     std::int32_t firstFrame, std::int32_t lastFrame, std::uint32_t sound);
 
@@ -1532,7 +1532,7 @@ void vfRotateStageObjectAboutOffset(VOBJ_t *object, const Vector3 &offset);
 void vfTransformStageObjectHitboxes(VOBJ_t *object);
 bool vfStageObjectOverlapsActor(VOBJ_t *object, VFActor *actor, std::int32_t withVelocity);
 void vfResolveActorStageObjectPenetration(VFActor *actor, VOBJ_t *object);
-void vfProcessStageObjectHitOutcome(VOBJ_t *object, VFActor *actor, std::int8_t guardState, std::int16_t hitParameter, std::int8_t guardStrength);
+void vfProcessStageObjectHitOutcome(VOBJ_t *object, VFActor *actor, std::int8_t guardState, std::int16_t hitParameter, std::int8_t hitDamage);
 void vfclFilterObjectHit(VFActor *actor, VOBJ_t *object);
 void vfUpdateRotationAnglesFromStageObject(VOBJ_t *object, VFMA_t *game);
 void vfBreakStageObject(VOBJ_t *object);

@@ -35,7 +35,7 @@ float VFReadFixed16(const std::byte *data) {
     return static_cast<float>(static_cast<std::int32_t>(value)) / 65536.0f;
 }
 
-std::uint8_t VFScaledGuard(std::uint8_t guardStat, std::uint8_t strength) {
+std::uint8_t VFScaledHitDamage(std::uint8_t guardStat, std::uint8_t strength) {
     const double scale = static_cast<double>(guardStat) * 0.05 + 1.0;
     return static_cast<std::uint8_t>(static_cast<std::int32_t>(scale * static_cast<double>(strength)));
 }
@@ -85,8 +85,8 @@ bool VFActor_InitKnockbackParams(const VFCoreMotionDecodeInput &input, VFCoreMot
 bool vfUpdateFromReactProg(const VFCoreMotionDecodeInput &input, VFCoreMotionState &state, const std::byte *&cursor) {
     state.moveId = std::to_integer<std::uint8_t>(cursor[1]);
     state.guardState = std::to_integer<std::uint8_t>(cursor[2]);
-    std::uint8_t guardStrength = std::to_integer<std::uint8_t>(cursor[3]);
-    state.hitDamageScale = VFReadFixed16(cursor + 4);
+    std::uint8_t hitDamage = std::to_integer<std::uint8_t>(cursor[3]);
+    state.attackReach = VFReadFixed16(cursor + 4);
     state.hitDirectionAngle = VFReadU16(cursor + 8);
     state.hitParameter = VFReadU16(cursor + 10);
     state.hitAttributeFlags = static_cast<std::int8_t>(std::to_integer<std::uint8_t>(cursor[12]));
@@ -97,13 +97,13 @@ bool vfUpdateFromReactProg(const VFCoreMotionDecodeInput &input, VFCoreMotionSta
     state.field322Low = 0;
     if (((input.pendingAnimationId - 502U) & 0xfffbU) == 0U) {
         state.field322Low = 1;
-        guardStrength = 29;
+        hitDamage = 29;
         state.hitParameter &= ~0x4000U;
     } else if (input.pendingAnimationId == 588U) {
-        guardStrength = 29;
+        hitDamage = 29;
         state.hitParameter &= ~0x4000U;
     }
-    state.guardStrength = VFScaledGuard(input.guardStat, guardStrength);
+    state.hitDamage = VFScaledHitDamage(input.guardStat, hitDamage);
     if (state.mirrorReaction && state.moveId < kVFMirroredMoveIds.size()) {
         state.moveId = kVFMirroredMoveIds[state.moveId];
     }
@@ -118,14 +118,14 @@ bool VFActor_UpdateHitState(const VFCoreMotionDecodeInput &input, VFCoreMotionSt
         state.hitParameter = VFReadU16(cursor + 2);
         rawStrength = std::to_integer<std::uint8_t>(cursor[1]);
     }
-    const std::uint8_t scaled = VFScaledGuard(input.guardStat, rawStrength);
+    const std::uint8_t scaled = VFScaledHitDamage(input.guardStat, rawStrength);
     if ((state.hitStateFlags & 0x0400U) != 0) {
         state.skipAlignment =
             static_cast<std::int16_t>((static_cast<std::uint16_t>(state.skipAlignment) & 0x00ffU) | (static_cast<std::uint16_t>(scaled) << 8U));
     } else {
-        state.guardStrength = scaled;
+        state.hitDamage = scaled;
     }
-    state.hitDamageScale = VFReadFixed16(cursor + 4);
+    state.attackReach = VFReadFixed16(cursor + 4);
     state.facingAngleStep = VFReadU16(cursor + 8);
     ++state.activeContactCount;
     cursor += 12;
@@ -175,7 +175,7 @@ bool VFActor_UpdateKnockbackReactData(const VFCoreMotionDecodeInput &input, VFCo
 
 bool VFActor_IncrementReactEvtCnt2AndSetEntryTblIfZero(const VFCoreMotionDecodeInput &input, VFCoreMotionState &state, const std::byte *&cursor) {
     if (state.reactionEventCount == 0)
-        state.reactionEventTable = cursor;
+        state.reactionEventTable = reinterpret_cast<const VFReactionEventEntry *>(cursor);
     ++state.reactionEventCount;
     cursor += 8;
     return false;
@@ -211,7 +211,7 @@ bool VFActor_UpdateReactProgMoveID(const VFCoreMotionDecodeInput &input, VFCoreM
 
 
 bool VFActor_UpdateGuardStrength(const VFCoreMotionDecodeInput &input, VFCoreMotionState &state, const std::byte *&cursor) {
-    const std::uint8_t highDistanceStrength = state.guardStrength;
+    const std::uint8_t highDistanceStrength = state.hitDamage;
     const std::uint8_t lowDistanceStrength = std::to_integer<std::uint8_t>(cursor[1]);
     const std::uint8_t middleStrength = std::to_integer<std::uint8_t>(cursor[2]);
     const float highDistance = VFReadFixed16(cursor + 4);
@@ -235,7 +235,7 @@ bool VFActor_UpdateGuardStrength(const VFCoreMotionDecodeInput &input, VFCoreMot
         std::max(0.0f, span));
     const std::int32_t strength = startStrength +
         static_cast<std::uint8_t>(static_cast<std::int32_t>((static_cast<float>(endStrength) - static_cast<float>(startStrength)) * (clampedOffset / span)));
-    state.guardStrength =
+    state.hitDamage =
         static_cast<std::uint8_t>(static_cast<std::int32_t>(static_cast<double>(strength) * (static_cast<double>(input.guardStat) * 0.05 + 1.0)));
     cursor += 16;
     return false;
@@ -281,7 +281,7 @@ bool vfIncrementReactProgPC4(const VFCoreMotionDecodeInput &input, VFCoreMotionS
 bool VFActor_UpdateGuardOnReactProgMatch(const VFCoreMotionDecodeInput &input, VFCoreMotionState &state, const std::byte *&cursor) {
     if (input.pairedFightStyleIndex == static_cast<std::int8_t>(std::to_integer<std::uint8_t>(cursor[1]))) {
         state.hitParameter = VFReadU16(cursor + 4);
-        state.guardStrength = VFScaledGuard(input.guardStat, std::to_integer<std::uint8_t>(cursor[2]));
+        state.hitDamage = VFScaledHitDamage(input.guardStat, std::to_integer<std::uint8_t>(cursor[2]));
     }
     cursor += 8;
     return false;

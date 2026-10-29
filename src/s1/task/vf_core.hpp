@@ -5,6 +5,17 @@
 
 namespace shenmue::s1 {
 
+struct VFReactionEventEntry {
+    std::uint8_t opcode;
+    std::uint8_t event;
+    std::uint16_t frame;
+    std::uint16_t animation;
+    std::byte reserved06[2];
+};
+static_assert(sizeof(VFReactionEventEntry) == 8);
+static_assert(offsetof(VFReactionEventEntry, event) == 1 && offsetof(VFReactionEventEntry, frame) == 2);
+static_assert(offsetof(VFReactionEventEntry, animation) == 4);
+
 enum class VFCoreMotionGate : std::uint8_t {
     Ready,
     MissingMotionData,
@@ -33,7 +44,7 @@ struct VFCoreMotionState {
     std::uint32_t stateFlags2 = 0;
     std::uint32_t counterReactionAnimationId = 0;
     const std::byte *frameEventProgram = nullptr;
-    const std::byte *reactionEventTable = nullptr;
+    const VFReactionEventEntry *reactionEventTable = nullptr;
     std::uint16_t reactionAnimationEndFrame = 0;
     std::uint16_t reactionStateId = 0;
     std::uint16_t postReactionAnimationId = 0;
@@ -60,7 +71,7 @@ struct VFCoreMotionState {
     std::int16_t pairActionTriggerFrame = 0;
     std::int32_t pairContactPriority = 0;
     std::uint16_t activeContactCount = 0;
-    float hitDamageScale = 0.0f;
+    float attackReach = 0.0f;
     float hitReactionScaleX = 0.0f;
     float hitReactionScaleZ = 0.0f;
     float knockbackReactionTime = 0.0f;
@@ -68,7 +79,7 @@ struct VFCoreMotionState {
     float knockbackAccelerationBias = 0.0f;
     std::uint8_t moveId = 0;
     std::uint8_t guardState = 0;
-    std::uint8_t guardStrength = 0;
+    std::uint8_t hitDamage = 0;
     std::uint8_t hitGuardType = 0;
     std::uint8_t reactionEventCount = 0;
     std::uint8_t reactionRequestedMoveId = 0;

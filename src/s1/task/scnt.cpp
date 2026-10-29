@@ -1212,13 +1212,13 @@ void ProcessFreeTalkEvent(const FreeTalkEvent &event, std::int32_t outbound) {
     if ((event.command >= 20 && event.command <= 29) || (event.command >= 120 && event.command <= 129)) {
         FreeTalk_EvaluateTimeLimitAndUpdateFaceTarget(event.command, event.characterName);
     }
-    if (event.command == 10) {
+    if (event.command == FT_ShowLetter) {
         g_freeTalkDelayedFlagSetPending = 1;
         ryoGiveOrTakeItem(true);
-    } else if (event.command == 15) {
+    } else if (event.command == FT_PutAwayLetter) {
         g_freetalk_flag_0 = 1;
         ryoGiveOrTakeItem(false);
-    } else if (event.command == 13) {
+    } else if (event.command == FT_RecenterFaces) {
         HandleFaceRecenterCommand(event.characterName);
     }
 

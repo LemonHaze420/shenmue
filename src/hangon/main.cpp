@@ -9,6 +9,11 @@
 #include <cstring>
 #include <cwchar>
 
+#if SHEN_AUTO_TEST_ENABLED
+#include <objidl.h>
+#include <gdiplus.h>
+#endif
+
 namespace {
 
 inline constexpr wchar_t kWindowClass[] = L"HangOnStandalone";
@@ -47,7 +52,9 @@ void ReportError(const char *format, ...) {
     va_start(arguments, format);
     std::vsnprintf(message, sizeof(message), format, arguments);
     va_end(arguments);
+#if !SHEN_AUTO_TEST_ENABLED
     MessageBoxA(g_host.window, message, "Shenmue Hang-On", MB_OK | MB_ICONERROR);
+#endif
 }
 
 void AudioError(const char* operation, MMRESULT result) {
@@ -266,6 +273,46 @@ bool Run() {
     return g_host.exitCode == 0;
 }
 
+#if SHEN_AUTO_TEST_ENABLED
+#pragma region AutoTest
+bool CaptureFrame() {
+    constexpr unsigned captureFrame = 1800;
+    char samples[hangon::kAudioBytes]{};
+    for (unsigned frame = 0; frame < captureFrame; ++frame) {
+        g_host.block.startSignal = 0;
+        g_host.block.steering = 127;
+        g_host.block.accelerator = 0;
+        g_host.block.brake = 0;
+        g_host.block.audioData = samples;
+        g_host.block.audioBytes = sizeof(samples);
+        g_host.block.audioPlayLength = hangon::kSampleFrames;
+        g_host.update(g_host.session, &g_host.block);
+        if (!g_host.block.frame || g_host.block.frameBytes != hangon::kFrameWidth * hangon::kFrameHeight * 4 ||
+            g_host.block.audioData != samples || g_host.block.audioBytes != sizeof(samples))
+            return false;
+    }
+    Gdiplus::GdiplusStartupInput input;
+    ULONG_PTR token{};
+    if (Gdiplus::GdiplusStartup(&token, &input, nullptr) != Gdiplus::Ok)
+        return false;
+    bool saved;
+    {
+        const auto *pixels = static_cast<const BYTE *>(g_host.block.frame) + (hangon::kPictureY * hangon::kFrameWidth + hangon::kPictureX) * 4;
+        Gdiplus::Bitmap image(hangon::kPictureWidth, hangon::kPictureHeight, hangon::kFrameWidth * 4,
+            PixelFormat32bppRGB, const_cast<BYTE *>(pixels));
+        const CLSID png{0x557cf406, 0x1a04, 0x11d3, {0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e}};
+        wchar_t path[MAX_PATH]{};
+        const DWORD length = GetEnvironmentVariableW(L"SHEN_AUTO_TEST_CAPTURE", path, MAX_PATH);
+        if (!length)
+            wcscpy_s(path, L"auto-test.png");
+        saved = length < MAX_PATH && image.GetLastStatus() == Gdiplus::Ok && image.Save(path, &png) == Gdiplus::Ok;
+    }
+    Gdiplus::GdiplusShutdown(token);
+    return saved;
+}
+#pragma endregion
+#endif
+
 } // namespace
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
@@ -305,6 +352,9 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
             ReportError("HangOn_Create failed\n");
             break;
         }
+#if SHEN_AUTO_TEST_ENABLED
+        exitCode = CaptureFrame() ? 0 : 1;
+#else
         if (!OpenAudio()) break;
         const HINSTANCE instance = GetModuleHandleW(nullptr);
         WNDCLASSW windowClass{};
@@ -326,6 +376,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
         }
         ShowWindow(g_host.window, SW_SHOW);
         exitCode = Run() ? 0 : 1;
+#endif
     } while (false);
 
     if (g_host.audio) {

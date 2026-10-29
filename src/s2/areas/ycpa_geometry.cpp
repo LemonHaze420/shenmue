@@ -40,12 +40,12 @@ bool YcpaDiscoverySightLinesClear() {
     points[2].y += 1;
     for (std::int32_t index = 0; index < 3; ++index) {
         Vector3 offset{.x = 0, .y = 0, .z = 0.5f};
-        ApplyScenarioTranslationAndRotation(&points[index], &rotations[index], &offset);
+        scenApplyTransRot(&points[index], &rotations[index], &offset);
         points[index] = offset;
     }
     Vector3 discardedOffset{.x = -0.75f, .y = 1.899999976158142090f, .z = 5.5f};
     rotations[0] = {.x = 0, .y = 0, .z = 0};
-    ApplyScenarioTranslationAndRotation(&points[3], &rotations[0], &discardedOffset);
+    scenApplyTransRot(&points[3], &rotations[0], &discardedOffset);
     Vector3 intersection;
     for (std::int32_t first = 0; first < 4; ++first) {
         for (std::int32_t second = first + 1; second < 4; ++second) {

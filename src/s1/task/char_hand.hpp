@@ -146,7 +146,7 @@ static_assert(offsetof(HandSkinningAttachmentRecord, boneHashes) == 0x28);
 static_assert(offsetof(HandSkinningAttachmentRecord, matrixIndices) == 0x78);
 static_assert(offsetof(HandSkinningAttachmentRecord, matrices) == 0x90);
 
-void HMDL_CreateHandAttachmentRecords(
+void hmdlCreateHandAttachmentRecords(
     void *node, Character *character, HandSkinningAttachmentRecord *records, std::uint32_t &recordType, std::uint32_t &slotIndex, std::uint32_t flags);
 HandModelWork *HND_GetWork(Character *character, bool left);
 void AllocateAndLoadArms(

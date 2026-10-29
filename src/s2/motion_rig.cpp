@@ -50,9 +50,9 @@ void ApplyChannelRotationZYX(MotionRigAxis *axes) {
 void EvaluateJointRotation(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::uint32_t poseMode) {
     if (callback.evaluate) {
         callback.evaluate(callback.parameters);
-    } else if (poseMode == motionPoseFromChannels) {
+    } else if (poseMode == MP_FromChannels) {
         ApplyChannelRotationZYX(axes);
-    } else if (poseMode == motionPoseFromAxisAngle) {
+    } else if (poseMode == MP_FromAxisAngle) {
         AxisAngleToBasisSlerp(basis);
     }
 }
@@ -60,10 +60,10 @@ void EvaluateJointRotation(MotionRigAxis *axes, MotionRotationBasis &basis, Moti
 void EvaluateTwoJointRotation(MotionRigTwoJoint &node, std::uint32_t poseMode) {
     if (node.callback.evaluate) {
         node.callback.evaluate(node.callback.parameters);
-    } else if (poseMode == motionPoseFromChannels) {
+    } else if (poseMode == MP_FromChannels) {
         Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(node.axes[0].channel)));
         Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(node.axes[1].channel)));
-    } else if (poseMode == motionPoseFromAxisAngle) {
+    } else if (poseMode == MP_FromAxisAngle) {
         AxisAngleToBasisSlerp(node.basis);
     }
 }
@@ -257,7 +257,7 @@ void SetMotionStreamFlags(std::int32_t channels, std::uint32_t initFlags, std::u
 float EvaluateMotionRigChannelValue(const MotionRigChannel &channel) {
     const float time = g_motionCurrentAnimTime - channel.current.timeSeconds;
     const float inverse = channel.inverseDuration;
-    if (g_motionInterpolationType & motionInterpolationLinear)
+    if (g_motionInterpolationType & MI_Linear)
         return ((channel.next.value - channel.current.value) * inverse) * time + channel.current.value;
     const float timeSquared = time * time;
     const float inverseSquared = inverse * inverse;
@@ -340,7 +340,7 @@ void SampleMotionRigChannelPVA(MotionRigChannel &channel, float *value, float *t
         }
     }
     const float elapsed = now - channel.current.timeSeconds;
-    if (g_motionInterpolationType & motionInterpolationLinear) {
+    if (g_motionInterpolationType & MI_Linear) {
         const float slope = (channel.next.value - channel.current.value) * channel.inverseDuration;
         const float half = slope * 0.5f;
         *value = elapsed * slope + channel.current.value;
@@ -586,7 +586,7 @@ void ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, Moti
             ReadMotionKeyBlock(axes[2].channel);
         }
         callback.evaluate(callback.parameters);
-    } else if (g_motionPoseMode == motionPoseFromChannels) {
+    } else if (g_motionPoseMode == MP_FromChannels) {
         if (joint >= 9 && joint <= 11) {
             ReadMotionKeyBlock(axes[0].channel);
             ReadMotionKeyBlock(axes[1].channel);
@@ -616,7 +616,7 @@ void ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, Moti
 void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
     if (callback.evaluate) {
         callback.evaluate(callback.parameters);
-    } else if (g_motionPoseMode == motionPoseFromChannels) {
+    } else if (g_motionPoseMode == MP_FromChannels) {
         if (joint >= 9 && joint <= 11) {
             Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
             Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
@@ -629,7 +629,7 @@ void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis
         } else {
             ApplyChannelRotationZYX(axes);
         }
-    } else if (g_motionPoseMode == motionPoseFromAxisAngle) {
+    } else if (g_motionPoseMode == MP_FromAxisAngle) {
         AxisAngleToBasisSlerp(basis);
     }
     CaptureSourceColumns(basis);
@@ -647,7 +647,7 @@ void ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCal
             ReadMotionKeyBlock(axes[axis].channel);
         EvaluateTargetCallback(callback, &position);
         world = TransformWorkPoint(position);
-    } else if (g_motionPoseMode == motionPoseFromChannels) {
+    } else if (g_motionPoseMode == MP_FromChannels) {
         for (std::size_t axis = 0; axis < 3; ++axis) {
             ReadMotionKeyBlock(axes[axis].channel);
             SampleMotionRigChannelPVA(axes[axis].channel, &position[axis], &tangentIn[axis], &tangentOut[axis]);
@@ -677,7 +677,7 @@ void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], Mo
     if (callback.evaluate) {
         EvaluateTargetCallback(callback, &position);
         world = TransformWorkPoint(position);
-    } else if (g_motionPoseMode <= motionPoseFromAxisAngle) {
+    } else if (g_motionPoseMode <= MP_FromAxisAngle) {
         for (std::size_t axis = 0; axis < 3; ++axis)
             SampleMotionRigChannelPVA(axes[axis].channel, &position[axis], &tangentIn[axis], &tangentOut[axis]);
         world = TransformWorkPoint(position);
@@ -761,9 +761,9 @@ void ClampLegReach(Vector3 &target, const Matrix4x4 &hip, float reach) {
 // each joint's source columns and target PVA for the transition into a new motion.
 void InitBaseRig(MotionBaseRig &base) {
     g_motionMaximumAnimTime = base.clock.authored.maxTime * motionFrameSeconds;
-    if (base.poseMode == motionPoseFromAxisAngle)
+    if (base.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = base.clock.current.maxTime * motionFrameSeconds;
-    g_motionInterpolationType = motionInterpolationHermiteAuto;
+    g_motionInterpolationType = MI_HermiteAuto;
     g_motionPoseMode = base.poseMode;
     Matrix4x4_Push();
     InvertModelWorkTransform();
@@ -771,7 +771,7 @@ void InitBaseRig(MotionBaseRig &base) {
     Matrix4x4::MultiplyWithPrePassMatrix(&base.pelvisTransform);
     const float time = base.clock.current.ticksTime * motionFrameSeconds;
     float left, right;
-    if (base.poseMode == motionPoseFromAxisAngle && (base.motionFlags & motionInitSplitWindow)) {
+    if (base.poseMode == MP_FromAxisAngle && (base.motionFlags & motionInitSplitWindow)) {
         MotionGaitWindow(time, g_motionMaximumAnimTime, base.motionFlags, left, right);
     } else {
         right = base.clock.current.ticksTime * motionFrameSeconds;
@@ -955,8 +955,8 @@ void BakeRightLeg(MotionBaseRig &base) {
 void BakeBaseChannelsToPose(MotionBaseRig &base, float sourceTime, float time, float frameCount) {
     const float splitFrames = base.clock.authored.splitTimeFrames;
     g_motionInitFlags |= motionInitBaking;
-    g_motionInterpolationType = motionInterpolationHermiteAuto;
-    g_motionPoseMode = motionPoseFromChannels;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPoseMode = MP_FromChannels;
     g_motionPreviousAnimTime = splitFrames * motionFrameSeconds;
     g_motionMaximumAnimTime = (frameCount - 1.0f) * motionFrameSeconds;
     g_motionCurrentAnimTime = time * motionFrameSeconds;
@@ -1003,7 +1003,7 @@ void BakeBaseChannelsToPose(MotionBaseRig &base, float sourceTime, float time, f
     std::int8_t frames = g_motionGraphFrames;
     if (frames < 0)
         frames = 20;
-    base.poseMode = motionPoseFromAxisAngle;
+    base.poseMode = MP_FromAxisAngle;
     base.clock.current.splitTimeFrames = 0.0f;
     base.clock.current.ticksTime = 0.0f;
     g_motionGraphFrames = frames;
@@ -1115,7 +1115,7 @@ void ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *
     }
     const float splitFrames = base.clock.authored.splitTimeFrames;
     base.clock.current.splitTimeFrames = splitFrames;
-    base.poseMode = motionPoseFromChannels;
+    base.poseMode = MP_FromChannels;
     base.clock.current.maxTime = base.clock.authored.ticksTime;
     g_motionPreviousAnimTime = splitFrames * motionFrameSeconds;
     g_motionMaximumAnimTime = base.clock.authored.maxTime * motionFrameSeconds;
@@ -1166,7 +1166,7 @@ void ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *
         ReadMotionKeyBlock(base.rightToe3Node->axes[1].channel);
     }
     g_motionCurrentAnimTime = g_motionPreviousAnimTime;
-    g_motionInterpolationType = motionInterpolationHermiteAuto;
+    g_motionInterpolationType = MI_HermiteAuto;
     Matrix4x4_PushActiveTransform();
     if (g_motionInitFlags & motionInitChannels) {
         const float z = -SampleMotionRigChannelAdvance(base.pelvisPosition[2].channel);
@@ -1182,7 +1182,7 @@ void TranslatePelvisFromChannels(MotionBaseRig &base, std::uint32_t interpolatio
     g_motionInterpolationType = interpolationMode;
     g_motionCurrentAnimTime = base.clock.current.ticksTime * motionFrameSeconds;
     g_motionMaximumAnimTime = base.clock.authored.maxTime * motionFrameSeconds;
-    if (base.poseMode == motionPoseFromAxisAngle)
+    if (base.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = base.clock.current.maxTime * motionFrameSeconds;
     Matrix4x4_PushActiveTransform();
     Vector3 offset;
@@ -1202,7 +1202,7 @@ void BuildChannelTransformAtTime(MotionBaseRig &base, Matrix4x4 *output, float t
     g_motionInterpolationType = interpolationMode;
     g_motionCurrentAnimTime = time * motionFrameSeconds;
     g_motionMaximumAnimTime = base.clock.authored.maxTime * motionFrameSeconds;
-    if (base.poseMode == motionPoseFromAxisAngle)
+    if (base.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = base.clock.current.maxTime * motionFrameSeconds;
     Matrix4x4_PushActiveTransform();
     const float z = SampleMotionRigChannelAdvance(base.pelvisPosition[2].channel);
@@ -1220,13 +1220,13 @@ void SolveBase(MotionBaseRig &base, std::uint32_t interpolationMode) {
     g_motionInterpolationType = interpolationMode;
     float length = base.clock.authored.maxTime * motionFrameSeconds;
     g_motionMaximumAnimTime = length;
-    if (base.poseMode == motionPoseFromAxisAngle) {
+    if (base.poseMode == MP_FromAxisAngle) {
         length = base.clock.current.maxTime * motionFrameSeconds;
         g_motionMaximumAnimTime = length;
     }
     const float time = base.clock.current.ticksTime * motionFrameSeconds;
     float left, right;
-    const bool splitWindow = base.poseMode == motionPoseFromAxisAngle && (base.motionFlags & motionInitSplitWindow);
+    const bool splitWindow = base.poseMode == MP_FromAxisAngle && (base.motionFlags & motionInitSplitWindow);
     if (splitWindow) {
         MotionGaitWindow(time, length, base.motionFlags, left, right);
     } else {
@@ -1410,9 +1410,9 @@ namespace {
 void EvaluateChest(MotionChestRig &chest) {
     g_motionCurrentAnimTime = chest.clock.current.ticksTime * motionFrameSeconds;
     g_motionMaximumAnimTime = chest.clock.authored.maxTime * motionFrameSeconds;
-    if (chest.poseMode == motionPoseFromAxisAngle)
+    if (chest.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = chest.clock.current.maxTime * motionFrameSeconds;
-    g_motionInterpolationType = motionInterpolationHermiteAuto;
+    g_motionInterpolationType = MI_HermiteAuto;
     g_motionPoseMode = chest.poseMode;
     if (g_motionUseOverride) {
         Matrix4x4_Push();
@@ -1437,7 +1437,7 @@ void FinishBake(std::uint32_t &poseMode, MotionRigClock &clock) {
     std::int8_t frames = g_motionGraphFrames;
     if (frames < 0)
         frames = 20;
-    poseMode = motionPoseFromAxisAngle;
+    poseMode = MP_FromAxisAngle;
     clock.current.splitTimeFrames = 0.0f;
     clock.current.ticksTime = 0.0f;
     g_motionGraphFrames = frames;
@@ -1448,10 +1448,10 @@ void FinishBake(std::uint32_t &poseMode, MotionRigClock &clock) {
 void BeginBake(float time, float frameCount) {
     g_motionInitFlags |= motionInitBaking;
     g_motionCurrentAnimTime = time * motionFrameSeconds;
-    g_motionInterpolationType = motionInterpolationHermiteAuto;
+    g_motionInterpolationType = MI_HermiteAuto;
     g_motionPreviousAnimTime = time * motionFrameSeconds;
     g_motionMaximumAnimTime = (frameCount - 1.0f) * motionFrameSeconds;
-    g_motionPoseMode = motionPoseFromChannels;
+    g_motionPoseMode = MP_FromChannels;
     if (g_motionUseOverride) {
         Matrix4x4_Push();
         workTransformMatrix = g_motionOverrideBakeTransform;
@@ -1525,10 +1525,10 @@ namespace {
 void SolveHead(MotionHeadRig &head) {
     g_motionCurrentAnimTime = head.clock.current.ticksTime * motionFrameSeconds;
     g_motionMaximumAnimTime = head.clock.authored.maxTime * motionFrameSeconds;
-    if (head.poseMode == motionPoseFromAxisAngle)
+    if (head.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = head.clock.current.maxTime * motionFrameSeconds;
     std::int32_t useOverride = g_motionUseOverride;
-    g_motionInterpolationType = motionInterpolationHermiteAuto;
+    g_motionInterpolationType = MI_HermiteAuto;
     g_motionPoseMode = head.poseMode;
     if (g_motionUseOverride) {
         Matrix4x4_Push();
@@ -1644,10 +1644,10 @@ namespace {
 void Arm_ChannelsToBasis_Prepass(MotionArmRig &arm) {
     g_motionCurrentAnimTime = arm.clock.current.ticksTime * motionFrameSeconds;
     g_motionMaximumAnimTime = arm.clock.authored.maxTime * motionFrameSeconds;
-    if (arm.poseMode == motionPoseFromAxisAngle)
+    if (arm.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = arm.clock.current.maxTime * motionFrameSeconds;
     std::int32_t useOverride = g_motionUseOverride;
-    g_motionInterpolationType = motionInterpolationHermiteAuto;
+    g_motionInterpolationType = MI_HermiteAuto;
     g_motionPoseMode = arm.poseMode;
     if (g_motionUseOverride) {
         Matrix4x4_Push();
@@ -1777,7 +1777,7 @@ void ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContex
         g_motionGraphFrames = 0;
     }
     chest.clock.current.splitTimeFrames = chest.clock.authored.splitTimeFrames;
-    chest.poseMode = motionPoseFromChannels;
+    chest.poseMode = MP_FromChannels;
     chest.clock.current.maxTime = chest.clock.authored.ticksTime;
     g_motionPreviousAnimTime = time * motionFrameSeconds;
     g_motionMaximumAnimTime = chest.clock.authored.maxTime * motionFrameSeconds;
@@ -1851,7 +1851,7 @@ void ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *
         g_motionGraphFrames = 0;
     }
     head.clock.current.splitTimeFrames = head.clock.authored.splitTimeFrames;
-    head.poseMode = motionPoseFromChannels;
+    head.poseMode = MP_FromChannels;
     head.clock.current.maxTime = head.clock.authored.ticksTime;
     g_motionPreviousAnimTime = time * motionFrameSeconds;
     g_motionMaximumAnimTime = head.clock.authored.maxTime * motionFrameSeconds;
@@ -1940,7 +1940,7 @@ void ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *con
         }
     }
     arm.clock.current.splitTimeFrames = arm.clock.authored.splitTimeFrames;
-    arm.poseMode = motionPoseFromChannels;
+    arm.poseMode = MP_FromChannels;
     arm.clock.current.maxTime = arm.clock.authored.ticksTime;
     g_motionPreviousAnimTime = time * motionFrameSeconds;
     g_motionMaximumAnimTime = arm.clock.authored.maxTime * motionFrameSeconds;
@@ -1959,7 +1959,7 @@ void SolveChestLookAt(MotionChestRig &chest, std::uint32_t interpolationMode) {
     g_motionInterpolationType = interpolationMode;
     g_motionCurrentAnimTime = chest.clock.current.ticksTime * motionFrameSeconds;
     g_motionMaximumAnimTime = chest.clock.authored.maxTime * motionFrameSeconds;
-    if (chest.poseMode == motionPoseFromAxisAngle)
+    if (chest.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = chest.clock.current.maxTime * motionFrameSeconds;
     std::int32_t useOverride = g_motionUseOverride;
     Vector3 target{};
@@ -1982,9 +1982,9 @@ void SolveChestLookAt(MotionChestRig &chest, std::uint32_t interpolationMode) {
     if (chest.rotation.callback.evaluate) {
         chest.rotation.callback.evaluate(chest.rotation.callback.parameters);
         useOverride = g_motionUseOverride;
-    } else if (chest.poseMode == motionPoseFromChannels) {
+    } else if (chest.poseMode == MP_FromChannels) {
         ApplyChannelRotationZYX(chest.rotation.axes);
-    } else if (chest.poseMode == motionPoseFromAxisAngle) {
+    } else if (chest.poseMode == MP_FromAxisAngle) {
         AxisAngleToBasisSlerp(chest.rotation.basis);
     }
     if (useOverride) {
@@ -2012,7 +2012,7 @@ void SolveHeadLookAt(MotionHeadRig &head, std::uint32_t interpolationMode) {
     g_motionInterpolationType = interpolationMode;
     g_motionCurrentAnimTime = head.clock.current.ticksTime * motionFrameSeconds;
     g_motionMaximumAnimTime = head.clock.authored.maxTime * motionFrameSeconds;
-    if (head.poseMode == motionPoseFromAxisAngle)
+    if (head.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = head.clock.current.maxTime * motionFrameSeconds;
     Vector3 aimTarget{};
     if (g_motionUseOverride) {
@@ -2078,7 +2078,7 @@ void SolveArmIK2Bone_FKBlend(MotionArmRig &arm, std::uint32_t interpolationMode)
     g_motionInterpolationType = interpolationMode;
     g_motionCurrentAnimTime = arm.clock.current.ticksTime * motionFrameSeconds;
     g_motionMaximumAnimTime = arm.clock.authored.maxTime * motionFrameSeconds;
-    if (arm.poseMode == motionPoseFromAxisAngle)
+    if (arm.poseMode == MP_FromAxisAngle)
         g_motionMaximumAnimTime = arm.clock.current.maxTime * motionFrameSeconds;
     std::int32_t useOverride = g_motionUseOverride;
     Vector3 target{};
@@ -2107,9 +2107,9 @@ void SolveArmIK2Bone_FKBlend(MotionArmRig &arm, std::uint32_t interpolationMode)
     if (arm.shoulder.callback.evaluate) {
         arm.shoulder.callback.evaluate(arm.shoulder.callback.parameters);
         useOverride = g_motionUseOverride;
-    } else if (arm.poseMode == motionPoseFromChannels) {
+    } else if (arm.poseMode == MP_FromChannels) {
         ApplyChannelRotationZYX(arm.shoulder.axes);
-    } else if (arm.poseMode == motionPoseFromAxisAngle) {
+    } else if (arm.poseMode == MP_FromAxisAngle) {
         AxisAngleToBasisSlerp(arm.shoulder.basis);
     }
     arm.shoulderWorld = workTransformMatrix;
@@ -2122,9 +2122,9 @@ void SolveArmIK2Bone_FKBlend(MotionArmRig &arm, std::uint32_t interpolationMode)
     if (arm.elbow.callback.evaluate) {
         arm.elbow.callback.evaluate(arm.elbow.callback.parameters);
         useOverride = g_motionUseOverride;
-    } else if (arm.poseMode == motionPoseFromChannels) {
+    } else if (arm.poseMode == MP_FromChannels) {
         ApplyChannelRotationZYX(arm.elbow.axes);
-    } else if (arm.poseMode == motionPoseFromAxisAngle) {
+    } else if (arm.poseMode == MP_FromAxisAngle) {
         AxisAngleToBasisSlerp(arm.elbow.basis);
     }
     float distance;
@@ -2161,18 +2161,18 @@ void SolveArmIK2Bone_FKBlend(MotionArmRig &arm, std::uint32_t interpolationMode)
         Matrix4x4::preTranslate(arm.wristRotation[1].dimensions[0], 0.0f, 0.0f);
         if (arm.forearmCallback.evaluate)
             arm.forearmCallback.evaluate(arm.forearmCallback.parameters);
-        else if (arm.poseMode == motionPoseFromChannels)
+        else if (arm.poseMode == MP_FromChannels)
             Matrix4x4::RotateAroundX_Wrapper(RigAngle(SampleMotionRigChannelAdvance(arm.wristRotation[0].channel)));
-        else if (arm.poseMode == motionPoseFromAxisAngle)
+        else if (arm.poseMode == MP_FromAxisAngle)
             AxisAngleToBasisSlerp(arm.forearmBasis);
         arm.wristWorld = workTransformMatrix;
         Matrix4x4::preTranslate(arm.wristRotation[0].dimensions[0], 0.0f, 0.0f);
         if (arm.wristCallback.evaluate) {
             arm.wristCallback.evaluate(arm.wristCallback.parameters);
-        } else if (arm.poseMode == motionPoseFromChannels) {
+        } else if (arm.poseMode == MP_FromChannels) {
             Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(arm.wristRotation[1].channel)));
             Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(arm.wristRotation[2].channel)));
-        } else if (arm.poseMode == motionPoseFromAxisAngle) {
+        } else if (arm.poseMode == MP_FromAxisAngle) {
             AxisAngleToBasisSlerp(arm.wristBasis);
         }
     } else {
@@ -2189,7 +2189,7 @@ void IK_BuildAndSolve(IKRig &rig, std::uint32_t interpolationMode) {
     g_motionRigBoneId = rig.boneId;
     g_motionUseOverride = useOverride;
     Matrix4x4_Push();
-    if (interpolationMode & motionInterpolationHermite)
+    if (interpolationMode & MI_Hermite)
         rig.lowerBody.rootPrepassTransform = workTransformMatrix;
     else
         workTransformMatrix = rig.lowerBody.rootPrepassTransform;

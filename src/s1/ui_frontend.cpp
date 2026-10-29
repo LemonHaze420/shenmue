@@ -1,3 +1,4 @@
+#include "auto_test.hpp"
 #include "s1/ui_internal.hpp"
 
 namespace shenmue::s1::ui_runtime_detail {
@@ -701,6 +702,12 @@ std::int64_t MainMenuWheelDestroy() {
 
 // @verified - p
 void UpdateFrontendEmblemRotation() {
+#if SHEN_AUTO_TEST_ENABLED
+    for (std::int32_t index = 0; index < g_frontendEmblemImageCount; ++index) {
+        if (g_frontendEmblemImages[static_cast<std::size_t>(index)])
+            g_frontendEmblemImages[static_cast<std::size_t>(index)]->angle = 0.0f;
+    }
+#else
     if (g_isInGame == 1) {
         if (g_frontendEmblemAnimSlot != -1) {
             UI_ReleaseAnimSlot(g_frontendEmblemAnimSlot);
@@ -733,6 +740,7 @@ void UpdateFrontendEmblemRotation() {
                 g_frontendEmblemImages[static_cast<std::size_t>(index)]->angle = slot.current[0];
         }
     }
+#endif
 }
 std::int64_t MainMenuSelected() {
     g_mainMenuPulseSlot = UIAnimAllocSlot();
@@ -1017,6 +1025,9 @@ std::int64_t PressStartSelected() {
 
 
 std::int64_t PressStartInput() {
+#if SHEN_AUTO_TEST_ENABLED
+    return 0;
+#else
     if (g_pressStartIntroActive) {
         if ((g_inputState.slots[0].pressedPriority & 0xfec6U) != 0)
             PressStart_EndIntro();
@@ -1038,6 +1049,7 @@ std::int64_t PressStartInput() {
     }
     g_mainMenuOpened = 1;
     return 0;
+#endif
 }
 
 
@@ -1045,7 +1057,11 @@ std::int64_t PressStartInput() {
 
 
 std::int64_t PressStartTick() {
+#if SHEN_AUTO_TEST_ENABLED
+    constexpr std::uint8_t console = 0;
+#else
     const std::uint8_t console = g_keyboardActive != 0 ? 0x00U : 0xffU;
+#endif
     const auto setIconAlpha = [](UIButtonIconWidget *icon, std::uint8_t alpha) {
         if (!icon)
             return;
@@ -1060,7 +1076,11 @@ std::int64_t PressStartTick() {
             if (g_pressStartWindows[window] && g_pressStartFadeSlots[window] != -1)
                 g_pressStartWindows[window]->alpha = g_uiAnimSlots[static_cast<std::size_t>(g_pressStartFadeSlots[window])].current[0];
         }
+#if SHEN_AUTO_TEST_ENABLED
+        g_pressStartIntroTime += 0.033333335f;
+#else
         g_pressStartIntroTime += g_bEnableFrameTimeSmoothing ? fFrameTimeMs : 0.033333335f;
+#endif
         if (g_pressStartIntroTime >= 3.0f)
             PressStart_EndIntro();
         if (g_pressStartLabel)
@@ -1068,7 +1088,12 @@ std::int64_t PressStartTick() {
         if (box)
             box->alpha = 0.0f;
     } else if (g_pressStartBlinkSlot != -1) {
+#if SHEN_AUTO_TEST_ENABLED
+        const std::int32_t step = auto_test::TitleLatched() ? 1 :
+            std::bit_cast<std::int32_t>(g_uiAnimSlots[static_cast<std::size_t>(g_pressStartBlinkSlot)].current[0]) % 4;
+#else
         const std::int32_t step = std::bit_cast<std::int32_t>(g_uiAnimSlots[static_cast<std::size_t>(g_pressStartBlinkSlot)].current[0]) % 4;
+#endif
         if (g_pressStartLabel)
             g_pressStartLabel->field44 = step != 0 ? 1 : 0;
         if (box)
@@ -1079,6 +1104,13 @@ std::int64_t PressStartTick() {
     g_currActiveUIIndex = element.index;
     if (slot <= 0x4bU)
         UI_InputHandler(GNuklearWindow, static_cast<std::int32_t>(slot), 0, g_uiViewSlots[slot].widgetCount);
+#if SHEN_AUTO_TEST_ENABLED
+    const bool promptVisible = g_pressStartBlinkSlot != -1 &&
+        (std::bit_cast<std::int32_t>(g_uiAnimSlots[static_cast<std::size_t>(g_pressStartBlinkSlot)].current[0]) % 4) != 0;
+    auto_test::LatchTitleFrame(UI_IsFrontendCaptureReady() && !g_pressStartIntroActive && promptVisible);
+    if (auto_test::TitleLatched())
+        return 0;
+#endif
     if (--g_pressStartIdleFrames < 0) {
         g_bIsNewGame = 1;
         g_pressStartIdleFrames = 600;

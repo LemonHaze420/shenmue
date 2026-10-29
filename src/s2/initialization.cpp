@@ -1,3 +1,4 @@
+#include "auto_test.hpp"
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -97,6 +98,9 @@ void RootShadowLightingCallback(void *) {
 }
 
 void RootTask_Callback(void *) {
+#if SHEN_AUTO_TEST_ENABLED && defined(_WIN32)
+    bool captured = false;
+#endif
 #if defined(SHENMUE_STEAM)
     ::shenmue::d3t::RunSteamCallbacks();
 #endif
@@ -181,6 +185,11 @@ void RootTask_Callback(void *) {
             d3t::DX11::g_ppD3DDeviceContext = previousContext;
         }
 #endif
+#if SHEN_AUTO_TEST_ENABLED && defined(_WIN32)
+        captured = auto_test::FinishFrame();
+        if (captured)
+            d3t::DumpFramePng(auto_test::CapturePath());
+#endif
         FinishNuklearFrame();
         PresentD3TFrame(GetNumFramesProcessed() == 0 ? 1 : 0);
         if (GetShouldReturnToTitleScreen() != 0) {
@@ -189,6 +198,10 @@ void RootTask_Callback(void *) {
         }
     }
     runtimeActive = ProcessD3TMessages();
+#if SHEN_AUTO_TEST_ENABLED && defined(_WIN32)
+    if (captured)
+        runtimeActive = false;
+#endif
     AdvanceAuthorMultichannelAudio();
     g_previousMainLoopFrameTime = GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta);
     g_postPresentMainLoopFrameTime = GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta);
@@ -247,7 +260,12 @@ bool Initialization(int, char **) {
 
 
 
+#if SHEN_AUTO_TEST_ENABLED
+    SetForceSkipSplashScreens(true);
+    if (!InitializeD3TRenderer(1280, 720, true)) {
+#else
     if (!InitializeD3TRenderer(1280, 720, false)) {
+#endif
         return false;
     }
     d3t::InitializePvrTextureSlotStorage();

@@ -89,7 +89,7 @@ shen_name BoardCell(const Board *board, Vector3 *position, Vector3i *rotation, s
     Vector3i angles{static_cast<std::int32_t>((board->angles.x * 8192) / 45), static_cast<std::int32_t>((board->angles.y * 8192) / 45),
         static_cast<std::int32_t>((board->angles.z * 8192) / 45)};
     Vector3 point{static_cast<float>(x) * board->spacingX, static_cast<float>(y) * board->spacingY, 0};
-    ApplyScenarioTranslationAndRotation(&board->origin, &angles, &point);
+    scenApplyTransRot(&board->origin, &angles, &point);
     if (position)
         *position = point;
     if (rotation) {
@@ -150,7 +150,7 @@ void UpdateCamera(ShopWork *work) {
     Vector3 offset = work->camera >= 1 && work->camera <= 4 ? work->board->cameraOffsets[work->camera - 1] : Vector3{0, 0, .5f};
     for (auto &axis : offset)
         axis = Snap(axis * work->zoom);
-    ApplyScenarioTranslationAndRotation(&target, &angles, &offset);
+    scenApplyTransRot(&target, &angles, &offset);
     camCtrlSetNextPosition(offset);
     camCtrlSetFov(5404);
 }

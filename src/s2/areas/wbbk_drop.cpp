@@ -123,7 +123,7 @@ void RecoverDroppedBooks() {
         EV_GetCharaPosition(BOOK_RYO, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(BOOK_RYO, &rotation, EventTransformFlags::World);
         Vector3 offset{.x = static_cast<float>(bookModelState.mirror), .y = 0, .z = -1};
-        ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+        scenApplyTransRot(&position, &rotation, &offset);
     }
     if (frame == 45)
         Loop3DSoundEffect(1578);
@@ -187,7 +187,7 @@ void RecoverDroppedBooks() {
         EV_GetCharaPosition(bookPlayerAnchor, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(bookPlayerAnchor, &rotation, EventTransformFlags::World);
         Vector3 offset{.x = -.028999999f, .y = .49000001f, .z = -.37799999f};
-        ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+        scenApplyTransRot(&position, &rotation, &offset);
         const Vector3 volume{.x = .1f, .y = .1f, .z = .1f};
         HLib::Task *task = HLib::EnqueueTaskWithoutParameter(BookSmokeStartCallback, 6, 0x0d, static_cast<std::int32_t>(BOOK_TASK.name));
         HLib::SetupTimedTask(task, 5);

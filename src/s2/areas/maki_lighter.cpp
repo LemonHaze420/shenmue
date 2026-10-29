@@ -39,7 +39,7 @@ void MakiLighterLightCallback(void *) {
     EV_GetCharaPosition(MAKI_LIGHTER, CHARACTER_TRANSLATION_ROOT, &lightPosition, EventTransformFlags::World);
     GetScenarioCharacterEulerAngles(MAKI_RYO, &rotation, EventTransformFlags::World);
     Vector3 offset = makiLighterOffset;
-    ApplyScenarioTranslationAndRotation(nullptr, &rotation, &offset);
+    scenApplyTransRot(nullptr, &rotation, &offset);
     lightPosition.x += offset.x;
     lightPosition.y += offset.y;
     lightPosition.z += offset.z;

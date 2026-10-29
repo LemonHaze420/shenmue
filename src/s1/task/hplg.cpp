@@ -1,3 +1,4 @@
+#include "auto_test.hpp"
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -530,7 +531,16 @@ void HLib_mainModule(HLib::TaskData *) {
         SetNewAuthorGameState(0);
     }
     CAME_HandleRootAuthorTransition(GetCurrentInputType() == InputMode::Vehicle);
+#if SHEN_AUTO_TEST_ENABLED && defined(_WIN32)
+    const bool captured = auto_test::FinishFrame();
+    if (captured)
+        d3t_DumpFramePng(auto_test::CapturePath());
+#endif
     PresentLatestFrame();
+#if SHEN_AUTO_TEST_ENABLED && defined(_WIN32)
+    if (captured)
+        Shutdown();
+#endif
 
     InitializeGlobalInput();
     g_viewportInterpolationProgress = std::fmaxf(0.0f, std::fminf(1.0f, g_bufferPassNotBusy ? g_renderPassProgress : g_depthPassProgress));

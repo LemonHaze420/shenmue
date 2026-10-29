@@ -226,14 +226,14 @@ struct MotionOverride {
 };
 
 enum MotionPoseMode : std::uint32_t {
-    motionPoseFromChannels = 0,
-    motionPoseFromAxisAngle = 1,
+    MP_FromChannels = 0,
+    MP_FromAxisAngle = 1,
 };
 
 enum MotionInterpolationMode : std::uint32_t {
-    motionInterpolationHermiteAuto = 0,
-    motionInterpolationLinear = 1,
-    motionInterpolationHermite = 2,
+    MI_HermiteAuto = 0,
+    MI_Linear = 1,
+    MI_Hermite = 2,
 };
 
 inline constexpr std::uint32_t motionInitStream = 0x0001;

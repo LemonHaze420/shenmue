@@ -18,6 +18,14 @@ add_custom_target(shenmue_build_info
   VERBATIM
 )
 
+option(SHEN_AUTO_TEST_ENABLED "Capture a fixed Press Start screenshot" OFF)
+if(SHEN_AUTO_TEST_ENABLED)
+  set_property(SOURCE
+    src/s1/initialization.cpp src/s1/d3t/settings.cpp src/s1/ui_runtime.cpp src/s1/ui_frontend.cpp src/s1/task/hplg.cpp
+    src/s2/ui.cpp src/s2/ui_frontend.cpp src/s2/initialization.cpp
+    APPEND PROPERTY COMPILE_DEFINITIONS SHEN_AUTO_TEST_ENABLED=1)
+endif()
+
 find_package(ZLIB REQUIRED)
 find_package(Threads REQUIRED)
 find_package(jsoncpp CONFIG QUIET)

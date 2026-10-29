@@ -190,7 +190,7 @@ void E0038LoopCallback(void *taskData) {
             offset = {0.0f, 0.1f, 0.0f};
         EV_GetCharaPosition(character, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(character, &rotation, EventTransformFlags::World);
-        ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+        scenApplyTransRot(&position, &rotation, &offset);
         SetParticleEffectPosition(0, child->smoke, &offset, &volume);
     }
     if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) != 0)

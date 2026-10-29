@@ -480,7 +480,7 @@ void HarrierUpdate(EmulatorInfoHeader *, std::uint8_t *, GameArcadeRuntime *run)
         if (held & 0x80U)
             mask += 0x80U;
         s1::g_harrierInputMask = mask;
-        s1::emu68_Run();
+        s1::emu68::Run();
         PullHarrierRuntime();
         if (run->controlsActive) {
             SetXInputAnalogProcessing(1);

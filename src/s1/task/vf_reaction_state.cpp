@@ -31,7 +31,7 @@ std::uint16_t vfFindInputResponse(std::uint8_t slot) {
     return flags;
 }
 
-static_assert(std::size(kVFMainCallbacks) == 58);
+static_assert(std::size(kVFAIBehaviours) == 58);
 
 
 // @verified - p
@@ -39,8 +39,8 @@ void vfUpdateMain(VFActor &actor) {
     VFMAData &game = *actor.game;
     g_pFightMain = &game;
     VFSlotRuntimeState &slot = *game.slotRuntime[actor.slotIndex];
-    actor.previousCameraControlFlags = actor.cameraControlFlags;
-    actor.cameraControlFlags = 0;
+    actor.previousCameraControlFlags = actor.inputFlags;
+    actor.inputFlags = 0;
     if (actor.targetSlotIndex == -1 || game.slotHpPoolMode[actor.slotIndex] > 1U)
         return;
     const VFActor &target = *game.actors[actor.targetSlotIndex];
@@ -50,14 +50,14 @@ void vfUpdateMain(VFActor &actor) {
     UpdateCurrentAssistWindow(actor);
     if ((actor.hitStateFlags2 & 0x000a4000U) != 0) {
         VFSlotRuntimeState &own = *actor.slot;
-        own.hpPhase = 0;
-        own.cameraScriptStep = 0;
-        own.cameraScriptWait = 0;
+        own.aiCommand = 0;
+        own.aiInputStep = 0;
+        own.aiInputWait = 0;
         own.fielda8 = 0;
         own.fieldb7 = 0;
         own.byte54 = 0x7fU;
         own.byte55 = 0x7fU;
-        own.updateCamera = (own.updateCamera & 0xffffdffeU) | 1U;
+        own.aiFlags = (own.aiFlags & 0xffffdffeU) | 1U;
         slot.field9a = 0;
     }
     if ((target.hitStateFlags2 & 0x00014000U) == 0x00010000U) {
@@ -98,11 +98,11 @@ void vfUpdateMain(VFActor &actor) {
         if (game.actorIndex != 0xffU && game.characters[game.actorIndex])
             slot.slotIndex = game.actorIndex;
     } else {
-        program = static_cast<const VFStyleTuningBE *>(actor.styleTuning)->reaction_prog_preset_blob;
+        program = static_cast<const VFAIProfileBE *>(actor.aiProfile)->reaction_prog_preset_blob;
     }
     std::uint8_t selected;
     do {
-        selected = kVFMainCallbacks[*program++].select(&actor, &slot);
+        selected = kVFAIBehaviours[*program++].select(&actor, &slot);
     } while (selected == 0xffU);
     slot.unknown5d[3] = selected;
     if (slot.currentUpdateIndex != selected) {
@@ -110,9 +110,9 @@ void vfUpdateMain(VFActor &actor) {
         slot.byteaa = 0;
         slot.unknownab = 0;
     }
-    (void)kVFMainCallbacks[selected].publish(&actor, &slot);
-    if ((slot.updateCamera & 1U) == 0)
-        (void)AdvanceVFCameraPhaseChain(actor);
+    (void)kVFAIBehaviours[selected].publish(&actor, &slot);
+    if ((slot.aiFlags & 1U) == 0)
+        (void)vfAdvanceAICommand(actor);
 }
 
 void vfmaUpdateCollisionCounter(VFMAData &game, VFCollisionCounterEvent event, std::uint16_t fighterId) {
@@ -218,7 +218,7 @@ static_assert(offsetof(VFActor, reactionCounters) == 0x8e1);
 
 static_assert(offsetof(VFActor, reactionStateFlags) == 0x8e8);
 
-static_assert(offsetof(VFActor, reactionPriorityMaskA) == 0x8ec);
+static_assert(offsetof(VFActor, inputAliasMaskA) == 0x8ec);
 
 static_assert(offsetof(VFActor, fighterRankMin) == 0xa56);
 
@@ -256,7 +256,7 @@ static_assert(offsetof(VFSlotRuntimeState, phaseConfig) == 0x28);
 
 static_assert(offsetof(VFSlotRuntimeState, assistWindowCurrent) == 0x38);
 
-static_assert(offsetof(VFSlotRuntimeState, updateCamera) == 0x3c);
+static_assert(offsetof(VFSlotRuntimeState, aiFlags) == 0x3c);
 
 static_assert(offsetof(VFSlotRuntimeState, field50) == 0x50);
 
@@ -272,22 +272,22 @@ void vfQueueReactionFlagsForFrame(VFActor &actor, bool clearDiff) {
     const std::uint8_t head = actor.reactionRingHead & 31U;
     const std::uint8_t next = (head + 1U) & 31U;
     const std::uint8_t next2 = (head + 2U) & 31U;
-    const VFReactionPriorityMeta &previous = actor.reactionPriority[(head - 1U) & 31U];
-    VFReactionPriorityMeta &current = actor.reactionPriority[head];
-    std::uint16_t flags = actor.cameraControlFlags;
-    actor.priorityMask = static_cast<std::int16_t>(flags);
-    actor.priorityFlags = flags & ~previous.mask1;
-    actor.priorityFlags2 = actor.priorityFlags;
-    current.mask1 = flags;
-    current.flags = clearDiff ? 0 : actor.priorityFlags;
-    current.unknownFlags = previous.mask1 & ~flags;
-    actor.priorityMaskDifference = current.unknownFlags;
-    current.value = flags ? flags : previous.mask2;
+    const VFInputHistoryEntry &previous = actor.inputHistory[(head - 1U) & 31U];
+    VFInputHistoryEntry &current = actor.inputHistory[head];
+    std::uint16_t flags = actor.inputFlags;
+    actor.inputMask = static_cast<std::int16_t>(flags);
+    actor.inputPressed = flags & ~previous.mask;
+    actor.frameInputPressed = actor.inputPressed;
+    current.mask = flags;
+    current.pressed = clearDiff ? 0 : actor.inputPressed;
+    current.released = previous.mask & ~flags;
+    actor.releasedInputMask = current.released;
+    current.directionMask = flags ? flags : previous.sectorMask;
     if ((flags & 0xc0U) == 0)
-        flags |= previous.mask2 & 0xc0U;
+        flags |= previous.sectorMask & 0xc0U;
     if ((flags & 0x30U) == 0)
-        flags |= previous.mask2 & 0x30U;
-    current.mask2 = flags;
+        flags |= previous.sectorMask & 0x30U;
+    current.sectorMask = flags;
     actor.reactionRingHead = next;
     if (next == actor.slots.primary)
         actor.slots.primary = next2;
@@ -304,26 +304,26 @@ void vfClampReactionQueueLength(VFActor &actor) {
 }
 
 void vfUpdateDeferredReactionPriority(VFActor &actor, std::uint8_t index) {
-    const std::int16_t priority = actor.priorityFlags & 0x030fU;
+    const std::int16_t priority = actor.inputPressed & 0x030fU;
     auto *const otherFlags = reinterpret_cast<std::uint8_t *>(&actor.otherPriorityFlags);
     std::uint8_t &pending = otherFlags[index + 1U];
     std::int16_t &deferred = index == 0 ? actor.field66a : actor.field66c;
     std::uint8_t &selected = index == 0 ? actor.selectedReactionSlot : actor.savedReactionQueueTail;
     if (pending) {
-        if ((actor.reactionOverrideActive & 1) != 0 || deferred != 0x0100 || (actor.priorityMask & 0x0100) != 0 || priority != 1) {
+        if ((actor.reactionOverrideActive & 1) != 0 || deferred != 0x0100 || (actor.inputMask & 0x0100) != 0 || priority != 1) {
             pending = 0;
-            actor.priorityFlags |= static_cast<std::uint16_t>(deferred | priority);
+            actor.inputPressed |= static_cast<std::uint16_t>(deferred | priority);
         } else {
             selected = static_cast<std::uint8_t>(actor.reactionRingTail);
             otherFlags[0] = selected;
             pending = 0;
-            actor.priorityFlags |= 1U;
+            actor.inputPressed |= 1U;
         }
     } else {
         if (priority != 0 && priority != 0x030f) {
             pending = 1;
             deferred = priority;
-            actor.priorityFlags &= 0xfcf0U;
+            actor.inputPressed &= 0xfcf0U;
         }
         selected = static_cast<std::uint8_t>(actor.reactionRingTail);
         otherFlags[0] = selected;
@@ -373,16 +373,16 @@ VFStateMachineResult vfHandleSavedCharRootPosReaction(VFActor &actor) {
 }
 
 VFStateMachineResult vfHandlePriorityReactionFlags(VFActor &actor) {
-    if ((actor.reactionOverrideActive & 1) != 0 || (actor.priorityMask & 0x0300) == 0)
+    if ((actor.reactionOverrideActive & 1) != 0 || (actor.inputMask & 0x0300) == 0)
         return VFStateMachineResult::Finished;
     actor.reactionStateFlags &= ~1;
-    if ((actor.reactionPriority[(actor.reactionRingHead - 1U) & 31U].flags & 0x0300U) != 0)
+    if ((actor.inputHistory[(actor.reactionRingHead - 1U) & 31U].pressed & 0x0300U) != 0)
         actor.reactionRingTail = static_cast<std::int8_t>(actor.reactionRingHead);
     if ((actor.hitStateFlags2 & 0x1000U) == 0) {
         actor.nextAction = {};
-        actor.nextAction.state = (actor.priorityMask & 0x0200) != 0 ? 11U : 10U;
+        actor.nextAction.state = (actor.inputMask & 0x0200) != 0 ? 11U : 10U;
         if ((actor.stateFlags & 0x0cU) != 0)
-            actor.nextAction.state = (actor.priorityMask & 0x0200) != 0 ? 41U : 40U;
+            actor.nextAction.state = (actor.inputMask & 0x0200) != 0 ? 41U : 40U;
         vfClampReactionQueueLength(actor);
     }
     return VFStateMachineResult::YieldToCaller;
@@ -391,7 +391,7 @@ VFStateMachineResult vfHandlePriorityReactionFlags(VFActor &actor) {
 VFStateMachineResult vfUpdateReactionQueueState(VFActor &actor) {
     if ((actor.hitStateFlags2 & 0x0001c000U) != 0)
         return VFStateMachineResult::Finished;
-    if ((actor.priorityFlags & 0x0300U) == 0)
+    if ((actor.inputPressed & 0x0300U) == 0)
         return vfHandlePriorityReactionFlags(actor);
     actor.reactionStateFlags &= ~1;
     actor.reactionRingTail = static_cast<std::int8_t>(actor.reactionRingHead);
@@ -431,11 +431,11 @@ void vfmaUpdateNextReaction(VFActor &actor) {
     if (inputMode == 0) {
         const std::uint16_t padFlags = vfAssignPadInfoFor(actor);
         if ((game.gameFlags & 0x40000U) != 0)
-            actor.cameraControlFlags = padFlags;
+            actor.inputFlags = padFlags;
         else
-            actor.cameraControlFlags = static_cast<std::uint16_t>(actor.cameraControlFlags | padFlags);
-        if ((actor.cameraControlFlags & 0xf0U) == 0xf0U)
-            actor.cameraControlFlags = static_cast<std::uint16_t>((actor.cameraControlFlags & 0xff0fU) | 0x4000U);
+            actor.inputFlags = static_cast<std::uint16_t>(actor.inputFlags | padFlags);
+        if ((actor.inputFlags & 0xf0U) == 0xf0U)
+            actor.inputFlags = static_cast<std::uint16_t>((actor.inputFlags & 0xff0fU) | 0x4000U);
         const bool eventStopActive = (g_shenmueFlags[0x320U >> 3U] & static_cast<std::uint8_t>(1U << (0x320U & 7U))) != 0;
         bool sequenceStarted = false;
         std::uint32_t flags = game.flags;
@@ -486,12 +486,12 @@ void vfmaUpdateNextReaction(VFActor &actor) {
         } else {
             const std::uint32_t activeTrigger = actor.triggerMask & 0x100U;
             if (activeTrigger) {
-                if ((actor.cameraControlFlags & 0xf7U) != 0)
+                if ((actor.inputFlags & 0xf7U) != 0)
                     actor.cameraActiveCounterFrames = 0;
                 else
                     actor.cameraActiveCounterFrames = static_cast<std::int16_t>(actor.cameraActiveCounterFrames + 1);
             }
-            if ((activeTrigger || actor.game->battleType == 4) && (actor.cameraControlFlags & 0x0fU) == 0) {
+            if ((activeTrigger || actor.game->battleType == 4) && (actor.inputFlags & 0x0fU) == 0) {
                 if (static_cast<std::uint16_t>(actor.cameraIdleCounterFrames) < 0xffffU)
                     actor.cameraIdleCounterFrames = static_cast<std::int16_t>(actor.cameraIdleCounterFrames + 1);
             } else {
@@ -499,17 +499,17 @@ void vfmaUpdateNextReaction(VFActor &actor) {
             }
         }
     } else if (inputMode == 2) {
-        actor.cameraControlFlags = vfFindInputResponse(1);
+        actor.inputFlags = vfFindInputResponse(1);
     } else if (inputMode == 3) {
-        actor.cameraControlFlags = vfFindInputResponse(2);
+        actor.inputFlags = vfFindInputResponse(2);
     } else if (inputMode == 4) {
-        actor.cameraControlFlags = vfFindInputResponse(3);
+        actor.inputFlags = vfFindInputResponse(3);
     } else if (inputMode == 6) {
-        actor.cameraControlFlags = 0;
+        actor.inputFlags = 0;
     }
     if ((game.flags & (PlayerAggro | FreeBattleExitPrompt | FreeBattleIntroActive | FreeBattleExitActive | BattleCamUiLock)) != 0)
-        actor.cameraControlFlags = 0;
-    const std::uint16_t sector = actor.cameraControlFlags & 0xf0U;
+        actor.inputFlags = 0;
+    const std::uint16_t sector = actor.inputFlags & 0xf0U;
     std::uint8_t sectorIndex = 0;
     while (g_vfCameraSectors[sectorIndex] != sector) {
         if (++sectorIndex >= 8) {
@@ -523,7 +523,7 @@ void vfmaUpdateNextReaction(VFActor &actor) {
     actor.moveAngleTableIndex = static_cast<std::int8_t>(moveIndex);
     const bool playerFrame = actor.slotIndex == static_cast<std::uint8_t>(game.playerSlot) && (game.gameFlags & 0x400000U) == 0;
     actor.moveState = static_cast<std::int8_t>(playerFrame ? moveIndex : sectorIndex);
-    const std::uint16_t inputYaw = g_vfCameraYawAngles[(actor.cameraControlFlags >> 4U) & 0x0fU];
+    const std::uint16_t inputYaw = g_vfCameraYawAngles[(actor.inputFlags >> 4U) & 0x0fU];
     actor.cameraAngle = static_cast<std::uint16_t>(inputYaw + 0x8000U);
     actor.cameraYaw = static_cast<std::int16_t>(inputYaw - accumulatedCameraYaw + 0x8000);
     std::uint16_t contactYaw = actor.facingYaw;
@@ -547,15 +547,15 @@ void vfmaUpdateNextReaction(VFActor &actor) {
     actor.reactionOverrideActive = 0;
     vfQueueReactionFlagsForFrame(actor, inputConsumed);
     vfUpdateReactionOverrideState(actor);
-    actor.reactionPriorityMaskA = 32;
-    actor.reactionPriorityMaskB = 16;
+    actor.inputAliasMaskA = 32;
+    actor.inputAliasMaskB = 16;
     vfUpdateDeferredReactionPriority(actor, 0);
     const std::uint32_t hitState = actor.hitStateFlags2;
     const std::uint32_t move = actor.moveFlags;
     std::uint8_t selection = (hitState & 0x800U) == 0 ? 1U : 0U;
     if ((actor.groundContactFlags & 1) == 0)
         selection |= 2U;
-    if ((actor.priorityMask & 0x20) == 0)
+    if ((actor.inputMask & 0x20) == 0)
         selection |= 4U;
     if ((move & 2U) == 0)
         selection |= 8U;
@@ -581,7 +581,7 @@ void vfmaUpdateNextReaction(VFActor &actor) {
         return;
     }
     if (actor.queuedAction.state == 13 && !actor.reactionResumeProgramCounter) {
-        if (actor.hitPhase < 3U && actor.priorityFlags != 0)
+        if (actor.hitPhase < 3U && actor.inputPressed != 0)
             ++actor.hitPhaseWaitFrames;
         return;
     }
@@ -619,23 +619,23 @@ void vfmaUpdateNextReaction(VFActor &actor) {
     actor.reactionQueuePhase = 1;
     while (static_cast<std::uint8_t>(actor.reactionRingTail) != actor.reactionRingHead) {
         const auto tail = static_cast<std::uint8_t>(actor.reactionRingTail) & 31U;
-        const VFReactionPriorityMeta &priority = actor.reactionPriority[tail];
-        actor.priorityMask = static_cast<std::int16_t>(priority.mask1);
-        const std::uint16_t flags = priority.flags;
-        actor.priorityFlags = flags;
-        actor.field6c4 = priority.unknownFlags;
+        const VFInputHistoryEntry &priority = actor.inputHistory[tail];
+        actor.inputMask = static_cast<std::int16_t>(priority.mask);
+        const std::uint16_t flags = priority.pressed;
+        actor.inputPressed = flags;
+        actor.field6c4 = priority.released;
         vfUpdateDeferredReactionPriority(actor, 1);
         actor.reactionRingTail = static_cast<std::int8_t>((tail + 1U) & 31U);
-        actor.reactionConditionFlags = (actor.priorityFlags & 0x0bU) | ((actor.priorityFlags & 4U) << 2U);
+        actor.reactionConditionFlags = (actor.inputPressed & 0x0bU) | ((actor.inputPressed & 4U) << 2U);
         if (actor.reactionConditionFlags) {
-            if ((actor.priorityFlags & 0x0100U) != 0)
+            if ((actor.inputPressed & 0x0100U) != 0)
                 actor.reactionConditionFlags |= 4U;
             if ((actor.moveFlags & 0x10U) != 0)
                 actor.reactionConditionFlags |= 0x500U;
             if (vfHandleSavedCharRootPosReaction(actor) == VFStateMachineResult::YieldToCaller || actor.reactionChainFrames > 0)
                 return;
         }
-        if ((actor.reactionOverrideActive & 1) == 0 && (flags & 7U) == 0 && (actor.priorityFlags | actor.priorityMaskDifference) != 0) {
+        if ((actor.reactionOverrideActive & 1) == 0 && (flags & 7U) == 0 && (actor.inputPressed | actor.releasedInputMask) != 0) {
             actor.functionReactionSlotIndex = actor.slots.secondary;
             actor.reactionConditionFlags = 0;
             actor.currentReactionFlagFilter = 0x01f0;
@@ -650,7 +650,7 @@ void vfmaUpdateNextReaction(VFActor &actor) {
     if ((actor.reactionOverrideActive & 1) != 0 || (actor.hitStateFlags2 & 0x1000U) != 0)
         return;
     const std::uint32_t motionFlags = actor.motionFlags;
-    const std::uint16_t commands = actor.cameraControlFlags;
+    const std::uint16_t commands = actor.inputFlags;
     if ((motionFlags & 0x00800000U) != 0) {
         if ((commands & 0x40U) != 0)
             actor.facingAngle = static_cast<std::uint16_t>(actor.facingAngle - 1024U);
@@ -701,12 +701,12 @@ void vfmaUpdateNextReaction(VFActor &actor) {
                 break;
             }
         }
-        if (!nearbyEnemy && (actor.priorityMask & 0xf0) != 0 && (actor.hitStateFlags & 0x100U) == 0) {
+        if (!nearbyEnemy && (actor.inputMask & 0xf0) != 0 && (actor.hitStateFlags & 0x100U) == 0) {
             actor.followupState = 1;
             actor.nextAction.state = 38;
             return;
         }
-        if ((actor.priorityMask & 0xf0) != 0) {
+        if ((actor.inputMask & 0xf0) != 0) {
             const auto cameraAngle = static_cast<std::int16_t>(
                 actor.slotIndex != static_cast<std::uint8_t>(game.playerSlot) || (game.gameFlags & 0x400000U) != 0 ? actor.cameraAngle :
                                                                                                                      actor.cameraAngleOffset);

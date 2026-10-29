@@ -78,7 +78,7 @@ void BTPK_Callback(HLib::TaskData *taskData) {
             PACK_LoadFile(slot.humans);
             slot.humans = nullptr;
             slot.characterModel = nullptr;
-            HMDL_FreeAssignedModel(slot.model);
+            hmdlFreeAssignedModel(slot.model);
             slot.model = nullptr;
             slot.objectName[0] = 0;
             slot.state = PKMLS_Empty;
@@ -193,7 +193,7 @@ void FREE_70MB() {
     for (PKMLSlot &slot : battlePack->packModels->slots) {
         if (slot.humans)
             PACK_LoadFile(slot.humans);
-        HMDL_FreeAssignedModel(slot.model);
+        hmdlFreeAssignedModel(slot.model);
         slot.model = nullptr;
         slot.battle70Index = 0xffU;
     }

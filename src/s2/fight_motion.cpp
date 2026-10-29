@@ -220,8 +220,8 @@ void vfMotnDispatch(VFActor *self) {
         case 4:
             self->moveId = MarkerValue<std::uint8_t>(1);
             self->guardState = MarkerValue<std::int8_t>(2);
-            self->guardStrength = MarkerValue<std::int8_t>(3);
-            self->impulseMagnitude = MarkerFixed(4);
+            self->hitDamage = MarkerValue<std::int8_t>(3);
+            self->attackReach = MarkerFixed(4);
             self->hitDirection = MarkerValue<std::uint16_t>(8);
             self->hitParameter = MarkerValue<std::uint16_t>(10);
             self->parameter2eb = MarkerValue<std::uint8_t>(12);
@@ -243,8 +243,8 @@ void vfMotnDispatch(VFActor *self) {
             if (self->secondaryMotionFlags & VFSMF_Unknown400)
                 self->guardHitParameter = strength;
             else
-                self->guardStrength = strength;
-            self->impulseMagnitude = MarkerFixed(4);
+                self->hitDamage = strength;
+            self->attackReach = MarkerFixed(4);
             self->facingAngleDelta = MarkerValue<std::int16_t>(8);
             ++self->activeContactCount;
             self->parameter350 = MarkerValue<std::uint16_t>(10);
@@ -296,7 +296,7 @@ void vfMotnDispatch(VFActor *self) {
         case 14: {
             const float first = MarkerFixed(4), middle = MarkerFixed(12), last = MarkerFixed(8);
             auto target = MarkerValue<std::uint8_t>(1);
-            auto strength = static_cast<std::uint8_t>(self->guardStrength);
+            auto strength = static_cast<std::uint8_t>(self->hitDamage);
             const float distance = self->contactDistances[self->actionIndex];
             float span = first - last, numerator = distance - last;
             const auto second = MarkerValue<std::uint8_t>(2);
@@ -314,7 +314,7 @@ void vfMotnDispatch(VFActor *self) {
             const bool negative = 0.0f > span;
             const float minimum = negative ? span : 0.0f, maximum = negative ? 0.0f : span;
             const float raised = minimum > numerator ? minimum : numerator, clamped = maximum < raised ? maximum : raised;
-            self->guardStrength = static_cast<std::int8_t>(target + static_cast<int>((float(strength) - float(target)) * (clamped / span)));
+            self->hitDamage = static_cast<std::int8_t>(target + static_cast<int>((float(strength) - float(target)) * (clamped / span)));
             break;
         }
         case 15:
@@ -333,7 +333,7 @@ void vfMotnDispatch(VFActor *self) {
         case 26:
             if (self->pairedActor->fightStyle == MarkerValue<std::int8_t>(1)) {
                 self->hitParameter = MarkerValue<std::uint16_t>(4);
-                self->guardStrength = MarkerValue<std::int8_t>(2);
+                self->hitDamage = MarkerValue<std::int8_t>(2);
             }
             break;
         case 27:
@@ -672,7 +672,7 @@ void vfInitializeActorMotionState(VFActor *self) {
     self->queuedReactionEvent = self->hitParameter = 0;
     self->targetGroundY = self->position.y;
     self->hitFacingTimer = 0;
-    self->cameraControlFlags = 0;
+    self->inputFlags = 0;
     self->pairContactPriority = 0;
     self->pairContactMiddleFrame = 0;
     self->parameter33c[0] = self->parameter33c[1] = 0;
@@ -870,7 +870,7 @@ std::uint16_t vfRotateCameraSectorCode(VFActor *self, std::uint16_t code) {
 
 // Select from borrowed 17-byte authored phase-chain records.
 // @verified - p
-void vfResetAndSelectCameraPhaseChoice(VFActor *self, std::uint8_t choice, std::uint16_t delay) {
+void vfSelectAICommand(VFActor *self, std::uint8_t choice, std::uint16_t delay) {
     auto &slot = *self->slot;
     if (!(slot.cameraFlags & 1))
         return;
@@ -907,12 +907,12 @@ void vfResetAndSelectCameraPhaseChoice(VFActor *self, std::uint8_t choice, std::
 
 
 // @verified - p
-bool vfUpdateCameraScript(VFActor *self) {
+bool vfUpdateAIInput(VFActor *self) {
     auto &slot = *g_pFightMain->actorSlots[self->groupIndex];
     auto step = static_cast<std::uint8_t>(slot.parameter89 >> 8);
     if (slot.parameter8c) {
         if (slot.parameter8c != 1) {
-            self->cameraControlFlags = slot.parameter8e;
+            self->inputFlags = slot.parameter8e;
             --slot.parameter8c;
             return false;
         }
@@ -930,7 +930,7 @@ bool vfUpdateCameraScript(VFActor *self) {
         return true;
     if (self->groupIndex == g_pFightMain->playerSlot && !(g_pFightMain->gameFlags & 0x400000) && (code & 0xf0) != 0xf0)
         code = vfRotateCameraSectorCode(self, code);
-    self->cameraControlFlags = code;
+    self->inputFlags = code;
     slot.parameter8e = code;
     slot.parameter8c = record[step + 10];
     return false;
@@ -938,7 +938,7 @@ bool vfUpdateCameraScript(VFActor *self) {
 
 
 // @verified - p
-void vfAdvanceCameraPhaseChain(VFActor *self) {
+void vfAdvanceAICommand(VFActor *self) {
     auto &slot = *self->slot;
     if (slot.parameterCc > 0) {
         slot.parameterCc -= shenGetScaledDeltaTickTime(1);
@@ -946,7 +946,7 @@ void vfAdvanceCameraPhaseChain(VFActor *self) {
             slot.parameterCc = 0;
         return;
     }
-    if (!vfUpdateCameraScript(self))
+    if (!vfUpdateAIInput(self))
         return;
     slot.cameraFlags &= ~0x2000U;
     const auto index = slot.parameter12a;
@@ -965,7 +965,7 @@ void vfAdvanceCameraPhaseChain(VFActor *self) {
         slot.randomBytes[0] = static_cast<std::uint8_t>(IncrementSharedPrngUInt16());
     } else {
         ResetCameraPhase(slot);
-        vfResetAndSelectCameraPhaseChoice(self, choice, delay);
+        vfSelectAICommand(self, choice, delay);
     }
 }
 
@@ -1677,7 +1677,7 @@ void vfUpdateAnimFlagsAndEvents(VFActor *self) {
     self->cameraMotionFlags = soundMode ? static_cast<std::uint8_t>(preserved | soundMode) : 0;
     if ((hit & 0x80100) == 0x80100)
         self->activeMotionFlags |= VFSMF_Unknown80000000;
-    if (((self->followupFlags & 0x30f) || (self->cameraControlFlags & 0x6000)) && (self->activeMotionFlags & VFSMF_Unknown10000)) {
+    if (((self->followupFlags & 0x30f) || (self->inputFlags & 0x6000)) && (self->activeMotionFlags & VFSMF_Unknown10000)) {
         self->activeMotionFlags &= ~VFSMF_Unknown10000;
         self->hitStateFlags &= ~VFHSF_ReactionActive;
     }
@@ -1887,7 +1887,7 @@ void vfUpdateGroundImpactReaction(VFActor *self) {
     if (!(self->moveFlags & VFMF_AirborneOrFalling) || (self->activeMotionFlags & VFSMF_Unknown1))
         return;
     if ((self->hitStateFlags & VFHSF_AirborneOrDowned) && self->game->guardTimer > 0) {
-        const auto damage = static_cast<std::uint8_t>(self->guardStrength);
+        const auto damage = static_cast<std::uint8_t>(self->hitDamage);
         const auto accumulated = static_cast<std::int16_t>(self->parameter40c >> 16);
         self->parameter40c = static_cast<std::uint16_t>(int((float(damage) * 0.5f + float(accumulated)) * self->inverseScale));
         if (damage)

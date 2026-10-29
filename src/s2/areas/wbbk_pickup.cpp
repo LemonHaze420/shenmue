@@ -42,7 +42,7 @@ void BookPickUpStack() {
         Vector3 offset{.x = 0, .y = -.45f, .z = -.69999999f};
         Vector3 origin = placement.position;
         const Vector3i rotation{.x = 0, .y = placement.yaw + 32768, .z = 0};
-        ApplyScenarioTranslationAndRotation(&origin, &rotation, &offset);
+        scenApplyTransRot(&origin, &rotation, &offset);
         mtwkSetRequestedRootMode(scenFindMotionwork(BOOK_RYO), 1);
         mtwkSetFrameTime(scenFindMotionwork(BOOK_RYO), 15, MotionRegion::LowerBody);
         mtwkCopyTransition(scenFindMotionwork(BOOK_RYO), &offset, placement.yaw, 0, 0);
