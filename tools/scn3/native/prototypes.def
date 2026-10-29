@@ -1,0 +1,1313 @@
+
+
+SCN3_PROTOTYPE(Script_TrialTimeQuery, int32_t, void)
+
+SCN3_PROTOTYPE(Script_CaptureTrialSaveState, void, void)
+
+SCN3_PROTOTYPE(Script_SetVfSkillFlags, void, int32_t mode, uint32_t flags)
+
+SCN3_PROTOTYPE(Script_ShowTrialSubtitle, void, void *task, float x, float y, int32_t step)
+
+SCN3_PROTOTYPE(Script_HideTrialSubtitle, void, void *task)
+
+SCN3_PROTOTYPE(Script_TrialReservedMapRequest, void, uint32_t argument)
+
+SCN3_PROTOTYPE(Script_LoadTrialSubtitle, int32_t, const char *filename)
+
+SCN3_PROTOTYPE(Script_DebugTrap, void, void)
+
+SCN3_PROTOTYPE(Script_TrialReservedEffectRequest, void, uint32_t first, uint32_t second, float third, float fourth, uint32_t fifth)
+
+SCN3_PROTOTYPE(Script_ReturnBooleanFalse, int32_t, void)
+
+SCN3_PROTOTYPE(Script_ReturnFloatZero, float, void)
+
+SCN3_PROTOTYPE(Script_sprintf, int32_t, const char *format, ...)
+
+SCN3_PROTOTYPE(Script_scenSetMapEvTbl, int32_t, uint32_t *entryOffsets, int32_t entryCount)
+
+SCN3_PROTOTYPE(Script_SetTaskExecutionSuspended, void, void *stack, int32_t suspended)
+
+SCN3_PROTOTYPE(
+    Script_CheckTargetWithinAngleRange, int32_t, const Vector3 *origin, float maximumDistance, uint32_t direction, int32_t maximumAngle, const Vector3 *target)
+
+SCN3_PROTOTYPE(Script_ccowSetDistanceInteractLimits, void, shen_name chara, float distanceLimit, int32_t interactionHeightBits, int32_t maxAngle)
+
+SCN3_PROTOTYPE(Script_SetHomeArea, void, const void *params)
+
+SCN3_PROTOTYPE(Script_SetShouldSleepFlag, void, int32_t shouldSleep)
+
+SCN3_PROTOTYPE(Script_SpriteUtils, void, int32_t mode, ...)
+SCN3_MODE(Script_SpriteUtils, 0 == 0, int32_t value, const char *filename)
+SCN3_MODE(Script_SpriteUtils, 0 == 1, int32_t value, const char *filename, int32_t slot)
+SCN3_MODE(Script_SpriteUtils, 0 == 2, int32_t shouldFreeSlot, int32_t slot)
+SCN3_MODE(Script_SpriteUtils, 0 == 3, int32_t freesSlot, int32_t slot, int32_t fadeFrames)
+SCN3_MODE(Script_SpriteUtils, 0 == 4, int32_t value)
+SCN3_MODE(Script_SpriteUtils, 0 == 5, int32_t value)
+
+SCN3_PROTOTYPE(Script_ReadModelFormat7, void, shen_name chara, int32_t hand, const int32_t *pose, int32_t frameCount)
+
+SCN3_PROTOTYPE(
+    Script_lightSetGlobalLightAndKey, void, float scene, float directionX, float directionY, float directionZ, float colourR, float colourG, float colourB)
+
+SCN3_PROTOTYPE(Script_StartOrFreeSEQ, void, void *slot)
+
+SCN3_PROTOTYPE(Script_srchSetDistanceTarget, void, float distance)
+
+SCN3_PROTOTYPE(Script_MotStepUtil, void, shen_name chara, uint32_t valueSelector)
+
+SCN3_PROTOTYPE(Script_osagUtil, void, shen_name chara, int32_t value)
+
+SCN3_PROTOTYPE(Script_timeSetUpdateEnabled, void, int32_t enabled)
+
+SCN3_PROTOTYPE(Script_ProcessSubtitle, int32_t, const char *filename, uint32_t unused1)
+
+SCN3_PROTOTYPE(Script_SetLookPointDetails, void, shen_name chara, int32_t angle, const Vector3 *target, int32_t mode)
+
+SCN3_PROTOTYPE(Script_ambSoundUtils, void, int32_t index, int32_t value, const void *source, float positionX, float positionY, float positionZ, uint32_t flags,
+    const void *auxiliary)
+
+SCN3_PROTOTYPE(Script_WeatherUtils_ForFIXC, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_WeatherUtils_ForFIXC, 0 == 1, int32_t kind)
+SCN3_MODE(Script_WeatherUtils_ForFIXC, 0 == 8, int32_t kind)
+SCN3_MODE(Script_WeatherUtils_ForFIXC, 0 == 6, float centerX, float centerY, float centerZ, float a, float b, float c)
+SCN3_MODE(Script_WeatherUtils_ForFIXC, 0 == 7, void *fixc)
+SCN3_MODE(Script_WeatherUtils_ForFIXC, 0 == 12, int32_t value)
+SCN3_MODE(Script_WeatherUtils_ForFIXC, 0 == 13, int32_t value)
+SCN3_MODE(Script_WeatherUtils_ForFIXC, 0 == 14, int32_t value)
+
+SCN3_PROTOTYPE(Script_WeatherUtils, void, int32_t mode, ...)
+
+SCN3_MODE(Script_WeatherUtils, 0 == 2, float value)
+SCN3_MODE(Script_WeatherUtils, 0 == 4, float value)
+SCN3_MODE(Script_WeatherUtils, 0 == 11, float value)
+SCN3_MODE(Script_WeatherUtils, 0 == 13, float value)
+SCN3_MODE(Script_WeatherUtils, 0 == 18, float value)
+SCN3_MODE(Script_WeatherUtils, 0 == 20, float value)
+SCN3_MODE(Script_WeatherUtils, 0 == 22, float value)
+SCN3_MODE(Script_WeatherUtils, 0 == 27, float value)
+SCN3_MODE(Script_WeatherUtils, 0 == 5, float value, int32_t param2)
+SCN3_MODE(Script_WeatherUtils, 0 == 14, float value, int32_t param2)
+SCN3_MODE(Script_WeatherUtils, 0 == 23, float value, int32_t param2)
+SCN3_MODE(Script_WeatherUtils, 0 == 6, float *output)
+SCN3_MODE(Script_WeatherUtils, 0 == 15, float *output)
+SCN3_MODE(Script_WeatherUtils, 0 == 24, float *output)
+SCN3_MODE(Script_WeatherUtils, 0 == 7, uint32_t colour)
+SCN3_MODE(Script_WeatherUtils, 0 == 16, uint32_t colour)
+SCN3_MODE(Script_WeatherUtils, 0 == 25, uint32_t colour)
+SCN3_MODE(Script_WeatherUtils, 0 == 9, float value, float param2)
+SCN3_MODE(Script_WeatherUtils, 0 == 31, void *windData)
+SCN3_MODE(Script_WeatherUtils, 0 == 32, void *windData)
+SCN3_MODE(Script_WeatherUtils, 0 == 33, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float minimumY, float maximumY)
+SCN3_MODE(Script_WeatherUtils, 0 == 34, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float minimumY, float maximumY)
+SCN3_MODE(Script_WeatherUtils, 0 == 35, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float minimumY, float maximumY)
+SCN3_MODE(Script_WeatherUtils, 0 == 38, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float minimumY, float maximumY)
+SCN3_MODE(Script_WeatherUtils, 0 == 43, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float minimumY, float maximumY)
+SCN3_MODE(Script_WeatherUtils, 0 == 36, float x, float y, float z, float dx, float dy, float dz)
+SCN3_MODE(Script_WeatherUtils, 0 == 37, float x, float y, float z, float dx, float dy, float dz)
+SCN3_MODE(Script_WeatherUtils, 0 == 39, const void *records, uint32_t count)
+SCN3_MODE(Script_WeatherUtils, 0 == 44, const void *records, uint32_t count)
+SCN3_MODE(Script_WeatherUtils, 0 == 41, uint32_t enabled)
+SCN3_MODE(Script_WeatherUtils, 0 == 46, uint32_t enabled)
+SCN3_MODE(Script_WeatherUtils, 0 == 42, int32_t record, uint32_t active)
+SCN3_MODE(Script_WeatherUtils, 0 == 47, int32_t record, uint32_t active)
+
+SCN3_PROTOTYPE(Script_SetActionSelectorHUDElementVisibility, void, int32_t disabled)
+
+SCN3_PROTOTYPE(Script_cdttLoadScrUtils, void, int32_t mode, ...)
+SCN3_MODE(Script_cdttLoadScrUtils, 0 == 2, int32_t setting)
+
+SCN3_PROTOTYPE(Script_SetRefBoardValues, void, shen_name chara, int32_t type, const int32_t *field024)
+
+SCN3_PROTOTYPE(Script_PlayerStatsUtils, int32_t, uint32_t op, ...)
+
+SCN3_PROTOTYPE(Script_SetNewDateTimeWrapper, void, GameDateTime *current, const GameDateTime *maximum, uint32_t unused2)
+
+SCN3_PROTOTYPE(Script_CompareDates, int32_t, const GameDateTime *source)
+
+SCN3_PROTOTYPE(Script_convGetIsActive, int32_t, const void *taskData)
+
+SCN3_PROTOTYPE(Script_SetEffectParams, void, uint32_t mode, ...)
+SCN3_MODE(Script_SetEffectParams, 0 == 0, uint32_t value)
+SCN3_MODE(Script_SetEffectParams, 0 == 1, uint32_t value)
+SCN3_MODE(Script_SetEffectParams, 0 == 2, const Vector4 *value)
+SCN3_MODE(Script_SetEffectParams, 0 == 3, const Vector3 *value)
+SCN3_MODE(Script_SetEffectParams, 0 == 4, const Vector3 *value)
+SCN3_MODE(Script_SetEffectParams, 0 == 5, float value)
+SCN3_MODE(Script_SetEffectParams, 0 == 6, float value)
+SCN3_MODE(Script_SetEffectParams, 0 == 7, float value)
+
+SCN3_PROTOTYPE(Script_LoadSND_Wrapper, void, const char *filename0, const char *filename1, const char *filename2, const char *filename3, const char *filename4,
+    const char *filename5, const char *filename6, const char *filename7)
+
+SCN3_PROTOTYPE(Script_BeginClipTween, void, shen_name chara, int32_t enable, ...)
+
+SCN3_PROTOTYPE(Script_GetCycleManagerState, int32_t, uint32_t *position, uint32_t *rotation)
+
+SCN3_PROTOTYPE(Script_SetCycleManagerData, void, int32_t index, const uint32_t *position, const uint32_t *rotation, uint32_t field20, uint32_t querySetName)
+
+SCN3_PROTOTYPE(Script_ScenDataUtil, int32_t, void *data, int32_t op, int32_t index, ...)
+SCN3_MODE(Script_ScenDataUtil, 1 == 11, uint32_t value)
+SCN3_MODE(Script_ScenDataUtil, 1 == 12, uint32_t value)
+SCN3_MODE(Script_ScenDataUtil, 1 == 14, uint32_t value)
+SCN3_MODE(Script_ScenDataUtil, 1 == 15, uint32_t value)
+SCN3_MODE(Script_ScenDataUtil, 1 == 18, uint32_t value)
+
+SCN3_PROTOTYPE(Script_shenCashUtils, void, int32_t show)
+
+SCN3_PROTOTYPE(Script_maprLoadRes, void, int32_t mode, ...)
+SCN3_MODE(Script_maprLoadRes, 0 == 6, const char *mapName, const char *resourceName, int32_t slot)
+SCN3_MODE(Script_maprLoadRes, 0 == 7, int32_t slot)
+
+SCN3_PROTOTYPE(Script_RunAuthorAndSetState, void, uint32_t flags, float duration, const Vector3 *targetStart, const Vector3 *targetEnd, const Vector3 *eyeStart,
+    const Vector3 *eyeEnd, int32_t flag6, float channel7, shen_name eyeOwner, shen_name targetOwner)
+
+SCN3_PROTOTYPE(Script_walk3D, int32_t, uint32_t opcode, ...)
+
+SCN3_MODE(Script_walk3D, 0 == 1462977536, shen_name chara, const void *path, uint32_t pointCount)
+SCN3_MODE(Script_walk3D, 0 == 1462977537, shen_name chara, float speed)
+SCN3_MODE(Script_walk3D, 0 == 1462977538, shen_name chara)
+SCN3_MODE(Script_walk3D, 0 == 1462977539, void *path, int32_t index, uint32_t v0, uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4)
+SCN3_MODE(Script_walk3D, 0 == 1462977540, shen_name chara)
+SCN3_MODE(Script_walk3D, 0 == 1462977541, shen_name chara)
+SCN3_MODE(Script_walk3D, 0 == 1462977542, shen_name chara, int32_t segment)
+
+SCN3_PROTOTYPE(Script_ReinitFightState, void, uint32_t reserved, shen_name ryoCharacterId, shen_name opponentCharacterId, int32_t ryoCommandId,
+    int32_t opponentCommandId, void *result)
+
+SCN3_PROTOTYPE(Script_EVT_ApplyRot, void, void *matrix, const Vector3i *rotation)
+
+SCN3_PROTOTYPE(Script_srchUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_srchUtils, 0 == 0, const void *entries)
+SCN3_MODE(Script_srchUtils, 0 == 4, int32_t selectorFilter)
+SCN3_MODE(Script_srchUtils, 0 == 5, int32_t mapInfoId)
+
+SCN3_PROTOTYPE(Script_UpdatePathConstraints, int32_t, Vector3 *position, Vector3 *velocity, const Vector3 *origin, uint32_t yaw)
+
+SCN3_PROTOTYPE(Script_InvestigationUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_InvestigationUtils, 0 == 0, shen_name chara, shen_name chara2)
+SCN3_MODE(Script_InvestigationUtils, 0 == 1, shen_name chara)
+SCN3_MODE(Script_InvestigationUtils, 0 == 6, shen_name chara, uint32_t target)
+SCN3_MODE(Script_InvestigationUtils, 0 == 11 && 2 == 60, void *owner, int32_t type)
+SCN3_MODE(Script_InvestigationUtils, 0 == 11, shen_name chara, int32_t type)
+SCN3_MODE(Script_InvestigationUtils, 0 == 14, const void *records)
+SCN3_MODE(Script_InvestigationUtils, 0 == 16, void *assetList)
+SCN3_MODE(Script_InvestigationUtils, 0 == 21, uint32_t soundCommand0, uint32_t soundCommand1)
+
+SCN3_PROTOTYPE(Script_gachaponUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_gachaponUtils, 0 == 0, const char *modelTable)
+SCN3_MODE(Script_gachaponUtils, 0 == 1, shen_name chara, int32_t modelIndex)
+SCN3_MODE(Script_gachaponUtils, 0 == 5, shen_name chara, int32_t modelIndex)
+SCN3_MODE(Script_gachaponUtils, 0 == 2, shen_name chara)
+SCN3_MODE(Script_gachaponUtils, 0 == 4, shen_name chara)
+SCN3_MODE(Script_gachaponUtils, 0 == 3, shen_name chara, const Vector3 *cameraOffset)
+
+SCN3_PROTOTYPE(Script_TimedTransitionUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_TimedTransitionUtils, 0 == 2, int32_t enabled)
+SCN3_MODE(Script_TimedTransitionUtils, 0 == 4, uint32_t sceneId, shen_name areaId, uint32_t entryId, const void *conditions, int32_t timeRange, uint32_t flags)
+
+SCN3_PROTOTYPE(Script_AddCharacterHandler, int32_t, shen_name characterType, const char *modelName, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_fixoSetAttachmentOffset, void, shen_name chara, int32_t useModelNode, ...)
+SCN3_MODE(Script_fixoSetAttachmentOffset, 1 == 0, const Vector3 *position, const Vector3i *rotation)
+
+SCN3_PROTOTYPE(Script_PlayCharaMotion, void, shen_name chara, MotionId motion, scn3_word startFrame, scn3_word endFrame, scn3_word frameTime, float rate, ...)
+
+SCN3_PROTOTYPE(Script_SetCharaLookAtPosition, void, shen_name chara, int32_t angle, const Vector3 *target, int32_t mode)
+
+SCN3_PROTOTYPE(Script_handGetNamed, void, shen_name chara, int32_t side, uint32_t namedIndex, Vector3i *output)
+
+SCN3_PROTOTYPE(Script_SetMotnFlags, void, shen_name chara, int32_t nodeId, const Vector3 *target, uint32_t flags)
+
+SCN3_PROTOTYPE(Script_SetOsageFlags, void, int32_t mode, ...)
+SCN3_MODE(Script_SetOsageFlags, 0 == 2, float value)
+SCN3_MODE(Script_SetOsageFlags, 0 == 3, float value)
+SCN3_MODE(Script_SetOsageFlags, 0 == 0, float value)
+SCN3_MODE(Script_SetOsageFlags, 0 == 1, float value)
+SCN3_MODE(Script_SetOsageFlags, 0 == 10, int32_t value)
+SCN3_MODE(Script_SetOsageFlags, 0 == 11, int32_t value)
+SCN3_MODE(Script_SetOsageFlags, 0 == 20, int32_t value)
+SCN3_MODE(Script_SetOsageFlags, 0 == 21, int32_t value)
+SCN3_MODE(Script_SetOsageFlags, 0 == 30, int32_t value)
+SCN3_MODE(Script_SetOsageFlags, 0 == 31, int32_t value)
+
+SCN3_PROTOTYPE(Script_SetupTransformMatrixForMotionTask, void, shen_name targetChara, int32_t targetAnchorNodeId, shen_name sourceChara,
+    uint32_t sourceModelNodeKind, Vector3 *translation, Vector3i *euler)
+
+SCN3_PROTOTYPE(Script_motmGetCharaFlags, int32_t, shen_name chara, int32_t stage, int32_t query)
+
+SCN3_PROTOTYPE(Script_CEWPRelated, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_cpctStateUtils, void, int32_t mode, uint32_t value)
+
+SCN3_PROTOTYPE(Script_GetHandPosition, int32_t, shen_name chara, int32_t rightHand)
+
+SCN3_PROTOTYPE(Script_scenCharaSubmitMoveTargetRequest, int32_t, shen_name chara, const Vector3 *target, int32_t targetYaw, MotionId animationId,
+    const uint32_t *locomotionPayload)
+
+SCN3_PROTOTYPE(Script_SetCharaMoveTarget, void, shen_name chara, const Vector3 *target, int32_t targetYaw, MotionId animationId)
+
+SCN3_PROTOTYPE(Script_KaidanUtils, int32_t, int32_t command, ...)
+SCN3_MODE(Script_KaidanUtils, 0 == 0, shen_name chara, uint32_t guideCount, const void *guides, const void *events, uint32_t maxYawDelta)
+SCN3_MODE(Script_KaidanUtils, 0 == 2, shen_name chara, uint32_t guideCount, const void *guides)
+SCN3_MODE(Script_KaidanUtils, 0 == 3, shen_name chara, void *guide, int32_t maxAngle)
+SCN3_MODE(Script_KaidanUtils, 0 == 4, shen_name chara, const void *guide)
+
+SCN3_PROTOTYPE(Script_HandleLookPointAnimationUpdate, int32_t, shen_name chara, int32_t angle, const Vector3 *target, int32_t mode)
+
+SCN3_PROTOTYPE(Script_charaSubmitMoveRequestEx, void, shen_name chara, const Vector3 *target, int32_t targetYaw, MotionId animationId,
+    const uint32_t *locomotionPayload, float playbackRate)
+
+SCN3_PROTOTYPE(Script_SubmitCharaMoveTarget, void, shen_name chara, const Vector3 *target, int32_t targetYaw, MotionId animationId, float playbackRate)
+
+SCN3_PROTOTYPE(Script_KaidanSetY, void, shen_name chara, float groundDropLimit)
+
+SCN3_PROTOTYPE(Script_SetCCOW_Flags, void, shen_name chara, uint32_t flags, ...)
+
+SCN3_PROTOTYPE(Script_ccowUnknown, float, shen_name chara, int32_t mode, float value)
+
+SCN3_PROTOTYPE(Script_motnUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_motnUtils, 0 == 0, int32_t capacity)
+SCN3_MODE(Script_motnUtils, 0 == 1, shen_name chara, int32_t enable)
+SCN3_MODE(Script_motnUtils, 0 == 2, uint32_t chara)
+
+SCN3_PROTOTYPE(Script_CewpFind, void, int32_t groupId, int32_t keepActive)
+
+SCN3_PROTOTYPE(Script_SetHandMotionTargetChara, void, shen_name chara, int32_t hand, shen_name target)
+
+SCN3_PROTOTYPE(Script_RotateAllAxisWrapper, void, shen_name chara, int32_t hand, Vector3i *rotationOut)
+
+SCN3_PROTOTYPE(Script_SetHandEulerRotationMasked, void, shen_name chara, int32_t hand, uint32_t mask, const Vector3i *rotation)
+
+SCN3_PROTOTYPE(Script_osageSetTarget, void, shen_name chara, shen_name target)
+
+SCN3_PROTOTYPE(CHAR_SCNFApplyFacingTowardPoint, void, shen_name chara, const Vector3 *target, const uint16_t *motionData, float turnRateOut,
+    uint32_t targetYawOut, uint32_t flags)
+
+SCN3_PROTOTYPE(
+    CHAR_SCNFAssignStand, void, shen_name chara, int32_t targetYaw, const uint16_t *motionData, float turnRateOut, uint32_t targetYawOut, uint32_t flags)
+
+SCN3_PROTOTYPE(Script_seqEnterEvtCam, void, int32_t sequenceIndex, shen_name targetChara, shen_name eyeChara)
+
+SCN3_PROTOTYPE(Script_GetHighestIntersectionAtLocalPoint, float, const Vector3 *localPoint)
+
+SCN3_PROTOTYPE(Script_GetHighestCollisionBelow, float, shen_name chara, const Vector3 *localPoint)
+
+SCN3_PROTOTYPE(Script_ScreenToWorldAssign, void, const Vector3 *world, void *screen)
+
+SCN3_PROTOTYPE(Script_EffectUtils_0, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_EffectUtils_0, 0 == 0, const Vector3 *position, const Vector3 *range, int32_t count, float speed, uint32_t flags, const char *textureName,
+    const char *paletteName)
+SCN3_MODE(Script_EffectUtils_0, 0 == 10, const Vector3 *position, const Vector3 *range, int32_t count, float speed, uint32_t flags, const char *textureName,
+    const char *paletteName, float floor)
+SCN3_MODE(Script_EffectUtils_0, 0 == 1, int32_t slot)
+SCN3_MODE(Script_EffectUtils_0, 0 == 2, int32_t slot)
+SCN3_MODE(Script_EffectUtils_0, 0 == 3, int32_t slot)
+SCN3_MODE(Script_EffectUtils_0, 0 == 4, int32_t slot)
+SCN3_MODE(Script_EffectUtils_0, 0 == 5, int32_t slot, const Vector3 *position, const Vector3 *range)
+SCN3_MODE(Script_EffectUtils_0, 0 == 6, int32_t slot, const Vector3 *velocity, const Vector3 *range)
+SCN3_MODE(Script_EffectUtils_0, 0 == 7, int32_t slot, float probability)
+SCN3_MODE(Script_EffectUtils_0, 0 == 8, int32_t slot, float width, float height)
+SCN3_MODE(Script_EffectUtils_0, 0 == 9, int32_t slot, float particleScale)
+SCN3_MODE(Script_EffectUtils_0, 0 == 50, int32_t slot, const Vector3 *amount)
+
+SCN3_PROTOTYPE(Script_SetEFPT, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_SetEFPT, 0 == 0, const Vector3 *position, const Vector3 *range, int32_t count, float speed, uint32_t flags, const char *textureName,
+    const char *paletteName)
+SCN3_MODE(Script_SetEFPT, 0 == 10, const Vector3 *position, const Vector3 *range, int32_t count, float speed, uint32_t flags, float floor,
+    const char *textureName, const char *paletteName)
+SCN3_MODE(Script_SetEFPT, 0 == 1, int32_t slot)
+SCN3_MODE(Script_SetEFPT, 0 == 2, int32_t slot)
+SCN3_MODE(Script_SetEFPT, 0 == 3, int32_t slot)
+SCN3_MODE(Script_SetEFPT, 0 == 4, int32_t slot)
+SCN3_MODE(Script_SetEFPT, 0 == 5, int32_t slot, const Vector3 *position, const Vector3 *range)
+SCN3_MODE(Script_SetEFPT, 0 == 6, int32_t slot, const Vector3 *velocity, const Vector3 *range)
+SCN3_MODE(Script_SetEFPT, 0 == 7, int32_t slot, float probability)
+SCN3_MODE(Script_SetEFPT, 0 == 8, int32_t slot, float size)
+
+SCN3_MODE(Script_SetEFPT, 0 == 9, int32_t slot, uint32_t value)
+SCN3_MODE(Script_SetEFPT, 0 == 11, int32_t slot, int32_t alpha, int32_t red, int32_t green, int32_t blue)
+SCN3_MODE(Script_SetEFPT, 0 == 18, int32_t slot, float floor)
+SCN3_MODE(Script_SetEFPT, 0 == 50, int32_t slot, const Vector3 *amount)
+
+SCN3_PROTOTYPE(Script_MT5Loader_TRWV_TRWAVE, int32_t, uint32_t command, ...)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 0, const Vector3 *origin, const char *textureDirectory, const char *textureFilename, const char *waveformDirectory,
+    const char *waveformFilename, float scale, uint32_t flags)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 19, const Vector3 *origin, const Vector3 *endpoint, const Vector3 *span)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 20, uint32_t unused, const Vector3 *left, const Vector3 *right)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 210, uint32_t unused, uint32_t a, uint32_t r, uint32_t g, uint32_t b)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 1, uint32_t slot)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 2, uint32_t slot)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 3, uint32_t slot)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 401, uint32_t slot)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 402, uint32_t slot)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 403, uint32_t slot)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 5, uint32_t slot, const Vector3 *position)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 23, uint32_t slot, const Vector3 *position)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 201, uint32_t slot, const Vector3 *position)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 9, uint32_t slot, float x, float y, float z)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 11, uint32_t slot, float x, float y, float z)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 10, uint32_t slot, float patchSizeX, float patchSizeZ, int32_t positiveExtentX, int32_t negativeExtentX,
+    int32_t positiveExtentZ, int32_t negativeExtentZ)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 12, uint32_t slot, int32_t yaw)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 13, uint32_t slot, float a, float b)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 14, uint32_t slot, float a, float b)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 15, uint32_t slot, const char *directory, const char *filename)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 17, uint32_t slot, const char *directory, const char *filename)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 310, uint32_t slot, const char *directory, const char *filename)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 16, uint32_t slot, int32_t u, int32_t v)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 21, uint32_t slot, int32_t u, int32_t v)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 311, uint32_t slot, int32_t u, int32_t v)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 312, uint32_t slot, int32_t u, int32_t v)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 18, uint32_t slot, const Vector3 *point)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 22, uint32_t slot, int32_t flagSelector, int32_t operation)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 24, uint32_t slot, uint32_t a, uint32_t r, uint32_t g, uint32_t b)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 200, uint32_t slot, const Vector3 *position, const char *directory, const char *filename)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 300, uint32_t slot, const char *dir0, const char *file0, const char *dir1, const char *file1)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 400, uint32_t slot, const char *dir0, const char *file0, const char *dir1, const char *file1)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 500, uint32_t slot, shen_name chara)
+SCN3_MODE(Script_MT5Loader_TRWV_TRWAVE, 0 == 1000, uint32_t slot, shen_name chara)
+
+SCN3_PROTOTYPE(Script_SetSequenceAudioVolume, void, int32_t mode, void *slot, int32_t value)
+
+SCN3_PROTOTYPE(Script_LCDM_Utils, void, int32_t mode, const void *data)
+
+SCN3_PROTOTYPE(Script_EDTKUtils, void, int32_t mode, ...)
+SCN3_MODE(Script_EDTKUtils, 0 == 3, float scrollX, float scrollY)
+
+SCN3_PROTOTYPE(Script_SetMITKFlags, void, int32_t command, ...)
+SCN3_MODE(Script_SetMITKFlags, 0 == 0, int32_t timeOfDay, int32_t fadeFrames)
+SCN3_MODE(Script_SetMITKFlags, 0 == 1, int32_t unused, int32_t fadeFrames)
+
+SCN3_PROTOTYPE(Script_CtrlTimeLimit, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_CtrlTimeLimit, 0 == 1, int32_t seconds)
+
+SCN3_PROTOTYPE(Script_SetSfxOverlayTimeoutTuning, void, int32_t value, int32_t mode)
+
+SCN3_PROTOTYPE(Script_HATO_Funcs, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_HATO_Funcs, 0 == 1, const Vector3 *center, float maxDistance)
+SCN3_MODE(Script_HATO_Funcs, 0 == 2, int32_t radius, int32_t totalNum)
+
+SCN3_PROTOTYPE(Script_GULLProgram_Utils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_GULLProgram_Utils, 0 == 0, int32_t maxGulls, int32_t maxSplines)
+SCN3_MODE(
+    Script_GULLProgram_Utils, 0 == 1, const Vector3 *position, int32_t keyCount, void *spline, const float *xValues, const float *yValues, const float *zValues)
+
+SCN3_PROTOTYPE(Script_ComputeBoneMidpoint, int32_t, shen_name sourceChara, int32_t sourceNodeSelector, shen_name targetChara, int32_t targetNodeSelector,
+    float maximumDistance)
+
+SCN3_PROTOTYPE(Script_GameUtils, void, shen_name owner, int32_t command, ...)
+SCN3_MODE(Script_GameUtils, 1 == 1, uint32_t nodeId, const Vector3 *positionOffset, float scale, const Vector3 *basisOffset)
+SCN3_MODE(Script_GameUtils, 1 == 2, uint32_t baseNodeId, const Vector3 *digitStep, uint32_t maxValue, int32_t decimalShift)
+SCN3_MODE(Script_GameUtils, 1 == 3, uint32_t value, const Vector3 *digitOrigin, float scale, const Vector3 *basisOffset)
+
+SCN3_PROTOTYPE(Script_forkAttachLoadActor, int32_t, shen_name chara, const float *goalPosition, float speed, int32_t goalDriveMode, int32_t stopOnGoalArrival)
+
+SCN3_PROTOTYPE(Script_vehiUtils, int32_t, int32_t mode, ...)
+
+SCN3_MODE(Script_vehiUtils, 0 == 0, shen_name target, shen_name rider, int32_t attachMode)
+SCN3_MODE(Script_vehiUtils, 0 == 2, shen_name target, int32_t riderPoseMode)
+SCN3_MODE(Script_vehiUtils, 0 == 3, shen_name target, const void *pathPoints, int32_t pathCount, int32_t stopAtPathEnd)
+SCN3_MODE(Script_vehiUtils, 0 == 4, shen_name target, float maxSpeed)
+SCN3_MODE(Script_vehiUtils, 0 == 5, shen_name target, int32_t slot, uint32_t rideMotionId)
+SCN3_MODE(Script_vehiUtils, 0 == 6, shen_name target, int32_t state, float profile)
+SCN3_MODE(Script_vehiUtils, 0 == 8, shen_name target, int32_t centerConstraintEnabled)
+SCN3_MODE(Script_vehiUtils, 0 == 11, float *gaugeOut)
+SCN3_MODE(Script_vehiUtils, 0 == 12, shen_name target, uint32_t tier)
+SCN3_MODE(Script_vehiUtils, 0 == 13, shen_name target, Vector3 *positionOut, Vector3i *rotationOut)
+SCN3_MODE(Script_vehiUtils, 0 == 17, shen_name target, Vector3 *positionOut, Vector3i *rotationOut)
+SCN3_MODE(Script_vehiUtils, 0 == 15, shen_name target, Vector3 *positionOut)
+
+SCN3_PROTOTYPE(Script_flmwSetFollowerLoadIdList, int32_t, shen_name chara, ...)
+
+SCN3_PROTOTYPE(Script_ForkliftUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_ForkliftUtils, 1 == -108, int32_t command, const float *startLineTime, const float *crossingTime)
+SCN3_MODE(Script_ForkliftUtils, 1 == -106, int32_t command, const void *points)
+SCN3_MODE(Script_ForkliftUtils, 1 == -104, int32_t command, int32_t argument0, int32_t argument1, const void *points)
+SCN3_MODE(Script_ForkliftUtils, 1 == -100, int32_t command, int32_t argument0, int32_t argument1, const void *points)
+SCN3_MODE(Script_ForkliftUtils, 1 == -102, int32_t command, float goalSpeedStep)
+SCN3_MODE(Script_ForkliftUtils, 1 == -4, int32_t command, float forkHeight)
+SCN3_MODE(Script_ForkliftUtils, 0 == -21, int32_t command)
+
+SCN3_PROTOTYPE(Script_atckUtils, void, int32_t mode, ...)
+SCN3_MODE(Script_atckUtils, 0 == 1, const void *raceDial)
+SCN3_MODE(Script_atckUtils, 0 == 3, int32_t bit, int32_t enable)
+SCN3_MODE(Script_atckUtils, 0 == 4, const float *gaugeValue)
+SCN3_MODE(Script_atckUtils, 0 == 5, int32_t raceDialMode)
+SCN3_MODE(Script_atckUtils, 0 == 6, int32_t frames, float adjustment, int32_t lapIndex)
+SCN3_MODE(Script_atckUtils, 0 == 7, int32_t blinkEnabled)
+SCN3_MODE(Script_atckUtils, 0 == 8, int32_t composite, int32_t segmentIndex)
+
+SCN3_PROTOTYPE(Script_patrolUtils, int32_t, shen_name chara, int32_t command, ...)
+SCN3_MODE(
+    Script_patrolUtils, 1 == 0, const void *pathNodes, const void *motionParameters, const uint16_t *turnMotions, int32_t initFlags, int32_t pathNodeIndex)
+SCN3_MODE(Script_patrolUtils, 1 == 3, int32_t enable)
+SCN3_MODE(Script_patrolUtils, 1 == 4, int32_t enable)
+
+SCN3_PROTOTYPE(Script_vfTransitionToInactive, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_vfUtils, int32_t, const void *setup)
+
+SCN3_PROTOTYPE(SCN_Enqueue_VFGI, int32_t, int32_t startSlot, int32_t maximumEnemies, float knockbackAmount, int32_t battleType, int32_t guardEffectSeconds)
+
+SCN3_PROTOTYPE(Script_CPCTRelated, void, shen_name chara, int32_t index, uint32_t value)
+
+SCN3_PROTOTYPE(Script_vfSetup, int32_t, uint32_t unused, int32_t enemies, int32_t groups, int32_t areaMasks, int32_t generators)
+
+SCN3_PROTOTYPE(Script_ptmvSetFollowTuning, void, shen_name chara, uint32_t mode, float value, ...)
+SCN3_MODE(Script_ptmvSetFollowTuning, 1 == 2, float run)
+
+SCN3_PROTOTYPE(Script_GetFightingStats, int32_t, uint32_t id, int32_t mode)
+
+SCN3_PROTOTYPE(Script_InterpolateAndScaleAngles, void, int32_t group, int32_t frame, Vector3 *position, Vector3i *rotation, const void *dynaId)
+
+SCN3_PROTOTYPE(Script_CheckIsInsideCullVolume, int32_t, const Vector3 *point, float radius)
+
+SCN3_PROTOTYPE(Script_vfToggleBattleState, void, int32_t mode)
+
+SCN3_PROTOTYPE(Script_vfConfigureFormationGroup, int32_t, shen_name chara, int32_t mode, uint32_t flags, int32_t value)
+
+SCN3_PROTOTYPE(Script_FGTM_Utils, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_vfStageAssignRingBoundary, void, const Vector3 *point, float boundaryX)
+
+SCN3_PROTOTYPE(Script_CPCT_related_0, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_CPCT_related_0, 0 == 2, uint32_t operand)
+SCN3_MODE(Script_CPCT_related_0, 0 == 3, uint32_t operand)
+
+SCN3_PROTOTYPE(Script_vfStageObjectUtils, void, uint32_t command, ...)
+SCN3_MODE(Script_vfStageObjectUtils, 0 == 1, int32_t index, const void *dynaDescriptor, int32_t intc, const int16_t *table, uint32_t dword14, int32_t dword18,
+    uint32_t uint1c, uint32_t uint20)
+SCN3_MODE(Script_vfStageObjectUtils, 0 == 5, int32_t index, int32_t boneId, const Vector3 *position, const Vector3i *rotation)
+SCN3_MODE(Script_vfStageObjectUtils, 0 == 9, int32_t index, float x, float y, float z)
+SCN3_MODE(Script_vfStageObjectUtils, 0 == 15, int32_t index, float vx, float vy, float vz)
+SCN3_MODE(Script_vfStageObjectUtils, 0 == 4, int32_t index, int32_t landingSoundCommand, uint32_t soundCommand, uint32_t entityFlags, int32_t axisRotateStep,
+    int32_t rotationAmount, float timeScale, float groundOffset)
+SCN3_MODE(Script_vfStageObjectUtils, 0 == 7, int32_t index, shen_name chara, int32_t intc)
+SCN3_MODE(Script_vfStageObjectUtils, 0 == 8, int32_t index, shen_name chara, uint32_t intc)
+SCN3_MODE(Script_vfStageObjectUtils, 0 == 14, int32_t index, shen_name chara)
+
+SCN3_PROTOTYPE(Script_vfSetupAreaMasks, int32_t, int32_t index, const void *source)
+
+SCN3_PROTOTYPE(SCNT_ShowSCNFSubtitleText, void, const char *text)
+
+SCN3_PROTOTYPE(SCNF_UIUtils, int32_t, uint32_t expectedMask, int32_t timeoutFrames, int32_t promptMode, int32_t bonusFrames, uint32_t reserved, int32_t command)
+
+SCN3_PROTOTYPE(SCNF_ReservedActionSelectorBegin, void, void)
+SCN3_PROTOTYPE(SCNF_ReservedActionSelectorEnd, void, void)
+SCN3_PROTOTYPE(SCNF_ReservedHelpSelectorBegin, void, void)
+SCN3_PROTOTYPE(SCNF_ReservedHelpSelectorEnd, void, void)
+SCN3_PROTOTYPE(SCNF_ReservedAlternateHelpSelectorBegin, void, void)
+SCN3_PROTOTYPE(SCNF_ReservedAlternateHelpSelectorEnd, void, void)
+SCN3_PROTOTYPE(SCNF_ReservedHelpMessageBegin, void, void)
+SCN3_PROTOTYPE(SCNF_ReservedHelpMessageEnd, void, void)
+SCN3_PROTOTYPE(SCNF_ReservedCassetteBegin, void, void)
+SCN3_PROTOTYPE(SCNF_ReservedCassetteEnd, void, void)
+
+SCN3_PROTOTYPE(SCNF_ShowHelpMessage, int32_t, uint32_t mode, void *choices, int32_t timeoutFrames)
+
+SCN3_PROTOTYPE(SCNF_GetSelectedChoiceIndex, int32_t, uint32_t unused, const void *choices)
+
+SCN3_PROTOTYPE(DSWK_BindTablesAndInitState, void, DSWKDoorEntry *doorEntries, int32_t *doorIdLookupChains, DoorResourceDescriptor *resourceNameTable,
+    MapObjectRecord *mapObjectRecords, DoorSlotState *systemState, int32_t *slotStates, int32_t *candidateDoorEntryIndices, shen_name *ownerActorArray,
+    int32_t *progressArray, shen_name actorLookupKey, int32_t maxCandidates, DoorMotionSelectorBlock *auxTable0, ScnDoorMotionDescriptor *auxTable1,
+    shen_name *doorActorHandles)
+
+SCN3_PROTOTYPE(DSWK_DoorUtils, int32_t, int32_t command, ...)
+SCN3_MODE(DSWK_DoorUtils, 0 == 3, int32_t doorEntryIndex, int32_t kind)
+SCN3_MODE(DSWK_DoorUtils, 0 == 5, const Vector3 *position)
+SCN3_MODE(DSWK_DoorUtils, 0 == 6, uint32_t actorId, int32_t entry)
+SCN3_MODE(DSWK_DoorUtils, 0 == 7, uint32_t actorId, const Vector3 *position, int32_t motionId)
+SCN3_MODE(DSWK_DoorUtils, 0 == 8, Vector3 *position, int32_t *yaw)
+SCN3_MODE(DSWK_DoorUtils, 0 == 9, const Vector3 *end, const Vector3 *start)
+SCN3_MODE(DSWK_DoorUtils, 0 == 13, int32_t requestSlot)
+SCN3_MODE(DSWK_DoorUtils, 0 == 14, int32_t candidate, Vector3 *position, int32_t *yaw)
+
+SCN3_PROTOTYPE(DSWK_RebindDoorSystemTables, void, DSWKDoorEntry *doorEntries, int32_t *doorIdLookupChains, DoorResourceDescriptor *resourceNameTable,
+    MapObjectRecord *mapObjectRecords, int32_t maxCandidates)
+
+SCN3_PROTOTYPE(DSWK_AllocDoorMapcRenderState, void, shen_name chara)
+
+SCN3_PROTOTYPE(DSWK_SetActorOpacityAndDrawCallback, void, shen_name actorKey, float opacity)
+
+SCN3_PROTOTYPE(CHAR_SCNFApplyFacing, void, shen_name chara, uint32_t unused1, const uint16_t *motionData, float turnRate, int32_t targetYaw, uint32_t flags)
+
+SCN3_PROTOTYPE(SAVE_Script_UpdateForSaveData, int32_t, uint32_t mode, uint32_t offset, ...)
+
+SCN3_PROTOTYPE(SCNF_RequestIconNotification, void, uint32_t inputMask, int32_t timeoutFrames, int32_t alphaFrames, int32_t owner)
+
+SCN3_PROTOTYPE(SCNF_StartIconSystemMenu, void, uint32_t itemId)
+
+SCN3_PROTOTYPE(Script_Ambient1SoundUtils, void, int32_t mode, uint32_t command)
+
+SCN3_PROTOTYPE(Script_CharHandlers, int32_t, shen_name characterId, int32_t mode, ...)
+SCN3_MODE(Script_CharHandlers, 1 == -3, int32_t poseIndex)
+
+SCN3_PROTOTYPE(Script_ConfigureClipFlags, void, shen_name chara, int32_t mode, int32_t flag)
+
+SCN3_PROTOTYPE(Script_CreateNPCImageModule, void, shen_name chara, const char *modelName, uint32_t imageCount)
+
+SCN3_PROTOTYPE(Script_EVT_SetFacingTowardPoint, int32_t, shen_name chara, int32_t signedFlags, const Vector3 *target, uint32_t unused3)
+
+SCN3_PROTOTYPE(Script_EV_PAK_AFS_Utils, int32_t, int32_t mode, int32_t operation, ...)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 0 && 1 == 0, const char *root, const char *package)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 0 && 1 == 5, const char *packName)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 0 && 1 == 6, const char *packName)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 0 && 1 == 9, const char *packName)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 0 && 1 == 8, void *owner, int32_t index, int32_t value)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 0 && 1 == 10, int32_t callbackBudget)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 1 && 1 == 0, const char *afsName, const char *entryName)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 1 && 1 == 1, void *owner)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 2 && 1 == 1, uint32_t usePackCache)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 2 && 1 == 2, const char *packName)
+SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 2 && 1 == 3, const char *packName)
+
+SCN3_PROTOTYPE(Script_Execute3DSoundCommand_Wrapper, void, uint32_t baseCommand, uint32_t bank, const Vector3 *position, float minimumDistance,
+    float fadeDistance, uint32_t releaseVolume)
+
+SCN3_PROTOTYPE(Script_FaceEx, void, shen_name characterId, int32_t eyeMode, int32_t eyePatternId, int32_t timing)
+
+SCN3_PROTOTYPE(Script_GetAuthorState_And_SetCamPos, int32_t, Vector3 *eye, Vector3 *target)
+
+SCN3_PROTOTYPE(Script_GetCameraInputDetails, void, int32_t lightIndex)
+
+SCN3_PROTOTYPE(Script_GetCharaMoveStatus, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_GetConversationDetails, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_GetConversationDetails, 0 == 8, int32_t itemId)
+
+SCN3_PROTOTYPE(Script_GetEngineInfo, int32_t, int32_t mode)
+
+SCN3_PROTOTYPE(Script_GetHighScoreValue, int32_t, uint32_t slot)
+
+SCN3_PROTOTYPE(Script_GetOrResetScenarioStepUniqueItemCount, int32_t, uint32_t mode)
+
+SCN3_PROTOTYPE(Script_GetTempAngleInDegrees, float, int32_t secondary)
+
+SCN3_PROTOTYPE(Script_IncrementQTEMinigameRand16, float, int32_t mode, ...)
+SCN3_MODE(Script_IncrementQTEMinigameRand16, 0 == 0, uint32_t seed)
+SCN3_MODE(Script_IncrementQTEMinigameRand16, 0 != 0, float scale)
+
+SCN3_PROTOTYPE(Script_InsertObjectIntoXFormStack, int32_t, int32_t index, int32_t enabled)
+
+SCN3_PROTOTYPE(Script_LODUtils, float, int32_t mode, ...)
+SCN3_MODE(Script_LODUtils, 0 == 0, float value)
+SCN3_MODE(Script_LODUtils, 0 == 2, float value)
+SCN3_MODE(Script_LODUtils, 0 == 4, float value)
+
+SCN3_PROTOTYPE(Script_LoadHandMot, int32_t, int32_t sceneId, shen_name areaId, const char *filename)
+
+SCN3_PROTOTYPE(Script_MoveObjectToObject, void, shen_name object, uint32_t parentId)
+
+SCN3_PROTOTYPE(Script_PrintDebugString, void, int32_t x, int32_t y, const char *format, ...)
+
+SCN3_PROTOTYPE(Script_ReadMOTNPositionAtFrame, void, shen_name chara, MotionId animationId, float frame, Vector3 *output)
+
+SCN3_PROTOTYPE(Script_ReturnTimeDate, void, GameDateTime *output)
+
+SCN3_PROTOTYPE(Script_SetBaseMotionScale, void, shen_name chara, float scale)
+
+SCN3_PROTOTYPE(Script_SetCameraCollisionEnabled, int32_t, int32_t mode)
+
+SCN3_PROTOTYPE(Script_SetCharaFlags, int32_t, shen_name characterId, int32_t mode, ...)
+SCN3_MODE(Script_SetCharaFlags, 1 == 100 && 2 == 0, int32_t value, const Vector3 *shadowPosition)
+SCN3_MODE(Script_SetCharaFlags, 1 == 100 && 2 == 1, int32_t value, const Vector3 *shadowScale)
+SCN3_MODE(Script_SetCharaFlags, 1 == 100 && 2 == 2, int32_t value, uint32_t shadowYaw)
+SCN3_MODE(Script_SetCharaFlags, 1 == 101, int32_t value, float shadowHeight)
+
+SCN3_PROTOTYPE(Script_SetCharaVisibility, int32_t, shen_name characterId, int32_t mode)
+
+SCN3_PROTOTYPE(Script_SetCurrentScrollEnabled, void, int32_t enabled)
+
+SCN3_PROTOTYPE(Script_SetDynamicMapTransform, void, int32_t index, const Vector3 *position, int32_t field44)
+
+SCN3_PROTOTYPE(Script_SetFogEnabled, void, int32_t enabled)
+
+SCN3_PROTOTYPE(Script_SetHandRootRotation, void, shen_name characterId, int32_t side, uint32_t mask, const Vector3i *rotation)
+
+SCN3_PROTOTYPE(Script_SetMapControlTaskFlag, void, shen_name chara, int32_t value)
+
+SCN3_PROTOTYPE(Script_SetMaxNPCsNear, int32_t, int32_t maxEntities)
+
+SCN3_PROTOTYPE(Script_SetNewDateTime, void, GameDateTime *dateTime)
+
+SCN3_PROTOTYPE(Script_SetPackTaskFlags, void, int32_t index)
+
+SCN3_PROTOTYPE(Script_SetShadowFlags, void, shen_name characterId, int32_t mode, ...)
+SCN3_MODE(Script_SetShadowFlags, 1 == 0, uint32_t bit)
+SCN3_MODE(Script_SetShadowFlags, 1 == 1, uint32_t bit)
+SCN3_MODE(Script_SetShadowFlags, 1 == 2, uint32_t bitCount)
+SCN3_MODE(Script_SetShadowFlags, 1 == 3, float radius)
+SCN3_MODE(Script_SetShadowFlags, 1 == 6, float blackness)
+
+SCN3_PROTOTYPE(Script_SetStats, void, uint32_t command, uint32_t value)
+
+SCN3_PROTOTYPE(Script_SetupLightFromTable, void, uint32_t index)
+
+SCN3_PROTOTYPE(Script_TELMUtils, int32_t, int32_t command, shen_name owner, ...)
+SCN3_MODE(Script_TELMUtils, 0 == 0, shen_name targetId, int32_t mode)
+SCN3_MODE(Script_TELMUtils, 0 == 5, const char *number)
+SCN3_MODE(Script_TELMUtils, 0 == 8, int32_t argument2)
+SCN3_MODE(Script_TELMUtils, 0 == 9, int32_t argument2)
+SCN3_MODE(Script_TELMUtils, 0 == 11, const Vector3 *receiverOffset)
+SCN3_MODE(Script_TELMUtils, 0 == 12, const Vector3i *receiverRotation)
+SCN3_MODE(Script_TELMUtils, 0 == 14, int32_t helpTokenId)
+
+SCN3_PROTOTYPE(Script_UpdateCCOWCandidateObjects, int32_t, shen_name chara, int32_t mode, uint32_t objectId)
+
+SCN3_PROTOTYPE(Script_WeatherUtils_0, int32_t, uint32_t mode, uint32_t year, ...)
+
+SCN3_PROTOTYPE(Script_ccowSetFlag80, void, shen_name chara, int32_t mode)
+
+SCN3_PROTOTYPE(Script_charaPosRotUtils, void, shen_name characterId, int32_t childIndex, Vector3 *position, Vector3i *rotation, int32_t mode)
+
+SCN3_PROTOTYPE(Script_charaSetupXForm, void, shen_name chara, uint32_t nodeKind, Vector3 *output)
+
+SCN3_PROTOTYPE(Script_convCtrlCamApply, void, int32_t mode)
+
+SCN3_PROTOTYPE(Script_executeAicaCommand, void, uint32_t command, uint32_t bank, int32_t value)
+
+SCN3_PROTOTYPE(Script_filmCheckOrSetTransitionUtil, int32_t, int32_t mode, ...)
+
+SCN3_PROTOTYPE(Script_flmwFinalizeLoadDetach, int32_t, shen_name fork)
+
+SCN3_PROTOTYPE(Script_flmwTriggerInteraction, void, shen_name fork, shen_name owner)
+
+SCN3_PROTOTYPE(Script_forkSetSoundBankDetails, void, shen_name fork)
+
+SCN3_PROTOTYPE(Script_handSetFor, void, shen_name characterId, int32_t side, Vector3i *output)
+
+SCN3_PROTOTYPE(Script_lightEnablePointLightAt, void, uint32_t lightIndex, const Vector3 *position)
+
+SCN3_PROTOTYPE(Script_lightSetSlotEnabled, int32_t, uint32_t lightIndex, int32_t enabled)
+
+SCN3_PROTOTYPE(Script_mapEvUtils, int32_t, uint32_t mode, shen_name characterId, ...)
+
+SCN3_PROTOTYPE(Script_motiLoad, int32_t, int32_t sceneId, shen_name areaId, const char *filename)
+
+SCN3_PROTOTYPE(Script_motmUtilsEx, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_motmUtilsEx, 0 == 5, uint32_t unused1, MotionId animId)
+SCN3_MODE(Script_motmUtilsEx, 0 == 7, uint32_t unused1, MotionId animId)
+SCN3_MODE(Script_motmUtilsEx, 0 == 0, shen_name chara, uint32_t blendMode)
+SCN3_MODE(Script_motmUtilsEx, 0 == 6, shen_name chara, int32_t yawDelta)
+SCN3_MODE(Script_motmUtilsEx, 0 == 14, shen_name chara, uint32_t blendBits)
+SCN3_MODE(Script_motmUtilsEx, 0 == 1, shen_name chara)
+SCN3_MODE(Script_motmUtilsEx, 0 == 2, shen_name chara)
+SCN3_MODE(Script_motmUtilsEx, 0 == 3, shen_name chara)
+SCN3_MODE(Script_motmUtilsEx, 0 == 4, shen_name chara)
+SCN3_MODE(Script_motmUtilsEx, 0 == 8, shen_name chara)
+SCN3_MODE(Script_motmUtilsEx, 0 == 9, shen_name chara)
+SCN3_MODE(Script_motmUtilsEx, 0 == 10, shen_name chara)
+SCN3_MODE(Script_motmUtilsEx, 0 == 11, shen_name chara)
+SCN3_MODE(Script_motmUtilsEx, 0 == 12, shen_name chara)
+SCN3_MODE(Script_motmUtilsEx, 0 == 13, shen_name chara)
+
+SCN3_PROTOTYPE(Script_refbSetActive, void, uint32_t value)
+
+SCN3_PROTOTYPE(Script_scenCharaGetMotAnimId, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_scenToggleCharaFlag, void, uint32_t unused0, uint32_t bit, int32_t set)
+
+SCN3_PROTOTYPE(Script_set_val_to_1, void, uint32_t value0, int32_t value1)
+
+SCN3_PROTOTYPE(Script_shenSeqUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_shenSeqUtils, 0 == -12, int32_t slot, uint32_t enabled)
+SCN3_MODE(Script_shenSeqUtils, 0 == -8, int32_t slot)
+SCN3_MODE(Script_shenSeqUtils, 0 == -3, int32_t trackIndex)
+
+SCN3_PROTOTYPE(Script_sicnUtils, void, int32_t mode, uint32_t state, int32_t pausePolicy)
+
+SCN3_PROTOTYPE(Script_tmnmReset, void, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_wmptUtils, int32_t, shen_name chara, const Vector3 *target, MotionId animId)
+
+SCN3_PROTOTYPE(DSWK_AssignDoorEntryConfig, void, int32_t doorEntryIndex, uint32_t group, uint32_t global1, uint32_t global2, uint32_t global3,
+    uint32_t sndCommandId, uint32_t global5, uint32_t global6)
+
+SCN3_PROTOTYPE(SCNF_CopyScenario, int32_t, int32_t mode, ...)
+SCN3_MODE(SCNF_CopyScenario, 0 == 0, uint32_t tag)
+SCN3_MODE(SCNF_CopyScenario, 0 == 1, uint32_t handle, const void *source, int32_t size)
+SCN3_MODE(SCNF_CopyScenario, 0 == 2, uint32_t handle, void *destination, int32_t capacity)
+
+SCN3_PROTOTYPE(SCNF_RequestSleepSaveTraining, int32_t, int32_t flags)
+
+SCN3_PROTOTYPE(SCNF_WaitFrames, void, uint32_t frames)
+
+SCN3_PROTOTYPE(Script_AuthorUtils, void, int32_t mode, int32_t index, ...)
+SCN3_MODE(Script_AuthorUtils, 0 == 0, const char *identifier, const char *packageName)
+
+SCN3_PROTOTYPE(Script_CheckTaskStatus, int32_t, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_ConstructColourPair, int32_t, uint32_t interpolationFrames, ...)
+
+SCN3_PROTOTYPE(Script_EVT_SetPosition, void, shen_name characterId, int32_t flags, const Vector3 *position)
+
+SCN3_PROTOTYPE(Script_EffectUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_EffectUtils, 0 == 0, const Vector3 *position, const Vector3 *range, int32_t count, float probability, uint32_t flags, int32_t subtype)
+SCN3_MODE(Script_EffectUtils, 0 == 1, int32_t slot)
+SCN3_MODE(Script_EffectUtils, 0 == 2, int32_t slot)
+SCN3_MODE(Script_EffectUtils, 0 == 3, int32_t slot)
+SCN3_MODE(Script_EffectUtils, 0 == 4, int32_t slot)
+SCN3_MODE(Script_EffectUtils, 0 == 5, int32_t slot, const Vector3 *position, const Vector3 *range)
+SCN3_MODE(Script_EffectUtils, 0 == 6, int32_t slot, const Vector3 *velocity, const Vector3 *range)
+SCN3_MODE(Script_EffectUtils, 0 == 7, int32_t slot, float probability)
+SCN3_MODE(Script_EffectUtils, 0 == 8, int32_t slot, float width, float height)
+SCN3_MODE(Script_EffectUtils, 0 == 9, int32_t slot, uint32_t red, uint32_t green, uint32_t blue)
+SCN3_MODE(Script_EffectUtils, 0 == 10, int32_t slot, float particleScale)
+SCN3_MODE(Script_EffectUtils, 0 == 11, int32_t slot, int32_t intensity)
+SCN3_MODE(Script_EffectUtils, 0 == 12, int32_t slot, int32_t intensity)
+SCN3_MODE(Script_EffectUtils, 0 == 13, int32_t slot, int32_t intensity)
+SCN3_MODE(Script_EffectUtils, 0 == 14, int32_t slot, float radial, float damping)
+SCN3_MODE(Script_EffectUtils, 0 == 15, int32_t slot, float fade, float multiplier)
+SCN3_MODE(Script_EffectUtils, 0 == 16, int32_t slot, float phaseRateScale)
+SCN3_MODE(Script_EffectUtils, 0 == 17, int32_t slot, float base, float scale)
+SCN3_MODE(Script_EffectUtils, 0 == 50, int32_t slot, const Vector3 *amount)
+
+SCN3_PROTOTYPE(Script_ExecuteAicaCommand, int32_t, int32_t mode, uint32_t value)
+
+SCN3_PROTOTYPE(Script_FaceLookAtTargetUtils, void, shen_name characterId, int32_t mode, ...)
+SCN3_MODE(Script_FaceLookAtTargetUtils, 1 == 1, int32_t blendFrames)
+SCN3_MODE(Script_FaceLookAtTargetUtils, 1 == 2, const Vector3 *target, uint32_t blendFrames)
+
+SCN3_PROTOTYPE(Script_GetBatteryLifePair, int32_t, int32_t mode, uint32_t index, ...)
+
+SCN3_PROTOTYPE(Script_GetCassetteFlags, int32_t, uint32_t id, uint32_t amount, uint32_t reserved, int32_t isCassette)
+
+SCN3_PROTOTYPE(Script_GetCharaPos, void, shen_name characterId, int32_t keepPosition)
+
+SCN3_PROTOTYPE(Script_GetCurrentDrawMode, int32_t, uint32_t mode, int32_t value)
+
+SCN3_PROTOTYPE(Script_GetFogColour, void, FogColourData *fog)
+
+SCN3_PROTOTYPE(Script_GetInputData, int32_t, int32_t inputIndex, uint32_t inputType)
+
+SCN3_PROTOTYPE(Script_GetSetMotionScale, float, shen_name characterId, int32_t mode, ...)
+SCN3_MODE(Script_GetSetMotionScale, 1 == 1, float value)
+SCN3_MODE(Script_GetSetMotionScale, 1 == 3, float value)
+
+SCN3_PROTOTYPE(Script_HandleLookPoint, int32_t, shen_name characterId, int32_t angle, const Vector3 *target, int32_t mode)
+
+SCN3_PROTOTYPE(Script_InitINSHForScene, int32_t, Vector3 *position, Vector3i *rotation, shen_name areaId)
+
+SCN3_PROTOTYPE(Script_IsCharaMotionFinished, int32_t, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_LightUtils, void, uint32_t lightIndex, int32_t mode, ...)
+SCN3_MODE(Script_LightUtils, 1 == 0, uint32_t type)
+SCN3_MODE(Script_LightUtils, 1 == 2, const Vector4 *colour)
+SCN3_MODE(Script_LightUtils, 1 == 4, float intensity)
+SCN3_MODE(Script_LightUtils, 1 == 5, float falloffRange)
+SCN3_MODE(Script_LightUtils, 1 == 6, const float *falloff)
+SCN3_MODE(Script_LightUtils, 1 == 7, const Vector3 *direction)
+SCN3_MODE(Script_LightUtils, 1 == 8, const Vector3 *transform)
+SCN3_MODE(Script_LightUtils, 1 == 10, int32_t angle)
+SCN3_MODE(Script_LightUtils, 1 == 11, int32_t specialFlag)
+
+SCN3_PROTOTYPE(Script_LoadSND, int32_t, uint32_t reserved, int32_t bank, const char *filename, uint32_t unused3)
+
+SCN3_PROTOTYPE(Script_PREP_Related, void, int32_t mapIndex, int32_t operation)
+
+SCN3_PROTOTYPE(Script_ProcessDialogueData, int32_t, int32_t mode)
+
+SCN3_PROTOTYPE(Script_ReallocateUNFO, void, int32_t handle)
+
+SCN3_PROTOTYPE(Script_RotateNodeUtils, void, shen_name characterId, const Vector3 *scale, int32_t overwrite)
+
+SCN3_PROTOTYPE(Script_SetCPAMFlags, void, shen_name characterId, int32_t enabled)
+
+SCN3_PROTOTYPE(Script_SetCameraFieldOfView, void, int32_t fieldOfView)
+
+SCN3_PROTOTYPE(Script_SetCharaMotionPlaybackRate, void, shen_name characterId, float playbackRate)
+
+SCN3_PROTOTYPE(Script_SetCharaXMPTMode, int32_t, shen_name characterId, int32_t mode)
+
+SCN3_PROTOTYPE(
+    Script_SetDateAndTime_Wrapper, void, uint32_t currentHours, uint32_t currentMinutes, uint32_t maximumHours, uint32_t maximumMinutes, uint32_t unused4)
+
+SCN3_PROTOTYPE(Script_SetEmulatorFlags, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_SetEmulatorFlags, 0 == 0, int32_t credits)
+
+SCN3_PROTOTYPE(Script_SetFogFlags, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_SetFogFlags, 0 == 0, const uint32_t *source)
+SCN3_MODE(Script_SetFogFlags, 0 == 1, uint32_t *destination)
+SCN3_MODE(Script_SetFogFlags, 0 == 2, uint32_t clearColour)
+SCN3_MODE(Script_SetFogFlags, 0 == 4, int32_t overrideEnabled)
+
+SCN3_PROTOTYPE(Script_SetHighScoreValue, void, uint32_t slot, uint32_t score)
+
+SCN3_PROTOTYPE(Script_SetMapFlags, void, uint32_t flagIndex, int32_t enabled)
+
+SCN3_PROTOTYPE(Script_SetMotnFlag, void, shen_name characterId, int32_t mode)
+
+SCN3_PROTOTYPE(Script_SetNewHandMotion, void, shen_name characterId, int32_t side, int32_t sequenceId, int32_t startFrame, int32_t endFrame,
+    int32_t initialFrame, uint32_t control, float frameStep, int32_t blendFrames)
+
+SCN3_PROTOTYPE(Script_SetRyoMotionDetails, void, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_SetShadowRange, float, float range)
+
+SCN3_PROTOTYPE(Script_SetTaskDataValue, int32_t, shen_name characterId, const Vector3 *firstCorner, const Vector3 *secondCorner, shen_name anchorCharacterId)
+
+SCN3_PROTOTYPE(Script_ShowUIMessageFromID, int32_t, const char *filename)
+
+SCN3_PROTOTYPE(Script_TMEXUtilities, int32_t, int32_t operation, ...)
+SCN3_MODE(Script_TMEXUtilities, 0 == 0, uint32_t mode)
+
+SCN3_PROTOTYPE(Script_UpdateCharaSelectionScene, int32_t, uint32_t unused0, uint32_t unused1, uint32_t unused2, int32_t mode)
+
+SCN3_PROTOTYPE(Script_Weather_WindUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_Weather_WindUtils, 0 == 3, uint32_t angle)
+SCN3_MODE(Script_Weather_WindUtils, 0 == 4, uint32_t strength)
+SCN3_MODE(Script_Weather_WindUtils, 0 == 10, void *wind)
+SCN3_MODE(Script_Weather_WindUtils, 0 == 12, void *wind, uint32_t angle)
+SCN3_MODE(Script_Weather_WindUtils, 0 == 13, void *wind, uint32_t strength)
+
+SCN3_PROTOTYPE(Script_ccowUtils, int32_t, shen_name characterId, int32_t mode)
+
+SCN3_PROTOTYPE(Script_charaSetClipAngle, float, shen_name characterId, float value)
+
+SCN3_PROTOTYPE(Script_charaToggleMotEnabled, void, shen_name characterId, int32_t enabled)
+
+SCN3_PROTOTYPE(Script_convSetCamInactiveFlag, void, int32_t inactive)
+
+SCN3_PROTOTYPE(Script_faceSetGeneratedLipCues, void, FaceLipCue *cues)
+
+SCN3_PROTOTYPE(
+    Script_fixoAttachEx, void, shen_name targetCharacterId, shen_name ownerCharacterId, int32_t nodeId, const Vector3 *position, const Vector3i *rotation)
+
+SCN3_PROTOTYPE(Script_flmwFreeFollowerLoadIds, void, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_forkAdjustCharacterMovementBasedOnDistance, int32_t, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_forkUpdateForkHeightLerp, int32_t, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_hmdlApplyScale, void, shen_name characterId, const Vector3 *scale)
+
+SCN3_PROTOTYPE(Script_lightResetAndEnableDefaultSlot, void, uint32_t lightIndex)
+
+SCN3_PROTOTYPE(Script_lightSpotLightEnable, void, uint32_t lightIndex, const Vector3 *position, const Vector3 *direction)
+
+SCN3_PROTOTYPE(Script_mapmSetCamFlags, int32_t, int32_t mode, int32_t mapIndexOrValue, ...)
+SCN3_MODE(Script_mapmSetCamFlags, 0 == 1, int32_t value)
+SCN3_MODE(Script_mapmSetCamFlags, 0 == 2, int32_t value)
+
+SCN3_PROTOTYPE(Script_motiSetAngFlags, void, shen_name characterId, int32_t mode)
+
+SCN3_PROTOTYPE(Script_mtwkGetSetRotation, void, shen_name characterId, Vector3i *rotation, uint32_t mode)
+
+SCN3_PROTOTYPE(Script_ryoSleepUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_ryoSleepUtils, 0 == 2, int32_t operation)
+SCN3_MODE(Script_ryoSleepUtils, 0 == 3 && 1 == 0, int32_t operation, int32_t offset)
+SCN3_MODE(Script_ryoSleepUtils, 0 == 3 && 1 == 1, int32_t operation, int32_t offset, uint32_t value)
+SCN3_MODE(Script_ryoSleepUtils, 0 == 3 && 1 == 2, int32_t operation, int32_t offset)
+SCN3_MODE(Script_ryoSleepUtils, 0 == 3 && 1 == 3, int32_t operation, int32_t offset, uint32_t value)
+
+SCN3_PROTOTYPE(Script_scenCheckCharaExist, int32_t, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_scenToggleVisibleFor, int32_t, shen_name characterId, int32_t mode)
+
+SCN3_PROTOTYPE(Script_shenGetNode, int32_t, shen_name characterId, int32_t nodeKind)
+
+SCN3_PROTOTYPE(Script_shenSetCameraPosAndTarget, void, shen_name eyeCharacterId, shen_name targetCharacterId)
+
+SCN3_PROTOTYPE(Script_skyCtrlLuminance, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_skyCtrlLuminance, 0 == 0, int32_t enabled)
+SCN3_MODE(Script_skyCtrlLuminance, 0 == 1, uint32_t high, uint32_t middle, uint32_t low)
+
+SCN3_PROTOTYPE(
+    Script_tmnmUtils, void, shen_name characterId, uint32_t animationId, float startFrame, float endFrame, float currentFrame, float frameStep, int32_t flags)
+
+SCN3_PROTOTYPE(MMTK_ScriptMemoToggle, int32_t, int32_t mode, ...)
+
+SCN3_PROTOTYPE(SCNF_RequestActionSelector, int32_t, int32_t timeoutFrames, int32_t mode, int32_t timeoutHelpToken)
+
+SCN3_PROTOTYPE(SCNF_SetCashValue, void, int32_t value, int32_t useCash)
+
+SCN3_PROTOTYPE(Script_ASEQGlobalFloat, void, float playDistance)
+
+SCN3_PROTOTYPE(
+    Script_CalculateMatrixRotationFromParams, void, shen_name target, shen_name source, int32_t mode, const Vector3 *position, const Vector3i *rotation)
+
+SCN3_PROTOTYPE(Script_ClearAccumulatorIfArgumentZero, int32_t, uint32_t argument, uint32_t unused1)
+
+SCN3_PROTOTYPE(Script_ConversationUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_ConversationUtils, 0 == 0, int32_t state, shen_name participantA, shen_name participantB, float mirrorSign, float durationFrames)
+SCN3_MODE(Script_ConversationUtils, 0 == 1, int32_t cueParticipantSign)
+
+SCN3_PROTOTYPE(Script_CycleManagerUtils, int32_t, int32_t command, ...)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 0, const char *filename, uint32_t offset, shen_name areaId)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 1, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 5, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 9, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 10, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 11, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 12, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 17, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 23, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 24, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 27, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 30, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 600, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 666, shen_name chara)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 2, int32_t stackIndex)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 4, shen_name chara, int32_t flag)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 6, uint32_t packSlot)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 7, uint32_t packSlot)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 8, int32_t enabled)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 13, shen_name chara, uint32_t contextValue)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 14, uint32_t operand, void *timeFlag)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 19, const Vector3 *point, float radius)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 20, const Vector3 *quad)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 21, shen_name chara, uint32_t timetableIndex)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 22, float turningRadius, float turningBoxHalfDepthZ, float angYOffset)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 25, shen_name chara, float x, float y, float z, int32_t desiredPathYaw)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 26, shen_name chara, int32_t activeAnimId)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 31, uint32_t operand, uint32_t offset, uint32_t dwordC, uint32_t dword10, uint32_t dword14, uint32_t dword18,
+    uint32_t dword1C)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 601, shen_name chara, int32_t selector)
+SCN3_MODE(Script_CycleManagerUtils, 0 == 602, shen_name chara, int32_t morsCommandArg)
+
+SCN3_PROTOTYPE(Script_EVT_SetRotation, int32_t, shen_name chara, int32_t flags, const Vector3i *rotation, uint32_t unused3)
+
+SCN3_PROTOTYPE(Script_EnqueueSCNT, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_EnqueueSCNT, 0 == 1, shen_name chara, int32_t step)
+
+SCN3_PROTOTYPE(Script_FACE, void, shen_name chara, int32_t channel, int32_t morph, int32_t timing)
+
+SCN3_PROTOTYPE(Script_FloatUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_FloatUtils, 0 == 0, float value1, float value2)
+SCN3_MODE(Script_FloatUtils, 0 == 1, float value1, float value2)
+SCN3_MODE(Script_FloatUtils, 0 == 2, float value1, float value2)
+SCN3_MODE(Script_FloatUtils, 0 == 3, float value1, float value2)
+SCN3_MODE(Script_FloatUtils, 0 == 5, float value1, float value2)
+SCN3_MODE(Script_FloatUtils, 0 == 4, float value1)
+SCN3_MODE(Script_FloatUtils, 0 == 6, int32_t value1)
+
+SCN3_PROTOTYPE(Script_GetBlurModel, void, shen_name chara, const char *filename)
+
+SCN3_PROTOTYPE(Script_GetCassetteFlags_0, int32_t, int32_t id, int32_t amount, int32_t isCassette)
+
+SCN3_PROTOTYPE(Script_GetChidPositionAndRotation, void, uint32_t characterIndex, uint32_t *position, uint32_t *rotation)
+
+SCN3_PROTOTYPE(Script_GetDataFromFightProgram, void, shen_name chara, int32_t active)
+
+SCN3_PROTOTYPE(Script_GetFrameTime, float, float value)
+
+SCN3_PROTOTYPE(Script_GetLightPosition, void, uint32_t lightIndex, Vector3 *output)
+
+SCN3_PROTOTYPE(Script_GetSetWeatherSettings, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_GetSetWeatherSettings, 0 == 1, int32_t disableWeather)
+
+SCN3_PROTOTYPE(Script_HasMotionRootAngleFlags2003, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_InitMOTMGlobalState, void, shen_name owner, shen_name rig, shen_name selected)
+
+SCN3_PROTOTYPE(Script_IsMoveTargetRequestActive, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_LineWalkUtils, int32_t, uint32_t mode, ...)
+SCN3_MODE(Script_LineWalkUtils, 0 == 1280770048, shen_name chara, const void *path, int32_t yawTableOffsetOrLimit, uint32_t flags)
+SCN3_MODE(Script_LineWalkUtils, 0 == 1280770049, shen_name chara, float moveScale)
+SCN3_MODE(Script_LineWalkUtils, 0 == 1280770050, shen_name chara)
+SCN3_MODE(Script_LineWalkUtils, 0 == 1280770051, void *path, int32_t nodeIndex, uint32_t xBits, uint32_t zBits, uint32_t radiusBits, uint32_t typeBits)
+SCN3_MODE(Script_LineWalkUtils, 0 == 1280770052, shen_name chara, int32_t yawBase)
+
+SCN3_PROTOTYPE(Script_LoadVoiceFile, int32_t, int32_t mode, const char *name)
+
+SCN3_PROTOTYPE(Script_PTTMRelated, void, shen_name source, shen_name follower, ...)
+
+SCN3_PROTOTYPE(Script_ProcessFogFromTable, void, uint32_t index)
+
+SCN3_PROTOTYPE(Script_RequestFightAnimation, int32_t, shen_name chara, int32_t animationId, float startFrame, int32_t nodeId, uint32_t flags)
+
+SCN3_PROTOTYPE(Script_SetAnimatedCameraFov, void, int32_t mode, ...)
+SCN3_MODE(Script_SetAnimatedCameraFov, 0 == 2, int32_t horizontalFov, int32_t stepCount)
+
+SCN3_PROTOTYPE(Script_SetCamFactor, void, float factor)
+
+SCN3_PROTOTYPE(Script_SetCameraFlags, void, int32_t flags)
+
+SCN3_PROTOTYPE(Script_SetCharaMoveTargetEx, void, shen_name chara, const Vector3 *target, int32_t targetYaw, int32_t animationId,
+    const uint32_t *locomotionPayload, float playbackRate, int32_t mode)
+
+SCN3_PROTOTYPE(Script_SetClampedParameterValue, void, uint32_t mapIndex, float scale)
+
+SCN3_PROTOTYPE(Script_SetDynamicMapDebugDrawFlag, void, int32_t mapIndex, uint32_t debugDrawFlag)
+
+SCN3_PROTOTYPE(Script_SetFightProgramStateBytes, void, shen_name chara, int32_t poseCacheColumns, int32_t poseCacheRows)
+
+SCN3_PROTOTYPE(Script_SetGameStateTo, void, int32_t state)
+
+SCN3_PROTOTYPE(Script_SetImageModuleTaskDataFlag, void, shen_name chara, int32_t requestedImage)
+
+SCN3_PROTOTYPE(Script_SetMaxCharaSearchExtent, void, int32_t primary, float extent)
+
+SCN3_PROTOTYPE(Script_SetMotnFlag_0, void, shen_name chara, int32_t nodeId)
+
+SCN3_PROTOTYPE(Script_SetOrGetWOCCValue, int32_t, shen_name chara, int32_t value)
+
+SCN3_PROTOTYPE(Script_SetScrollU, void, int32_t adjustSky, ...)
+
+SCN3_PROTOTYPE(Script_SetStaticSceneObjectTransform, void, int32_t index, const Vector3 *position, int32_t yaw)
+
+SCN3_PROTOTYPE(Script_SetVector4ByOffset, void, const Vector4 *position)
+
+SCN3_PROTOTYPE(Script_StartNozomiBikeSeq, int32_t, int32_t start, uint32_t unused1, uint32_t unused2)
+
+SCN3_PROTOTYPE(Script_ToggleCPCTForChara, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_UpdateTaskCollisionCache, int32_t, int32_t slot, int32_t onlyIfChanged, const Vector3 *point)
+
+SCN3_PROTOTYPE(Script_aicaGetOrSetState, int32_t, uint32_t ownerId)
+
+SCN3_PROTOTYPE(Script_cdttUtil, void, int32_t mode)
+
+SCN3_PROTOTYPE(Script_charaSetRefboardFlagTo, void, shen_name chara, uint32_t sector)
+
+SCN3_PROTOTYPE(Script_charaVisUtils, int32_t, shen_name chara, int32_t visible)
+
+SCN3_PROTOTYPE(Script_cpctFlagUtil, void, uint32_t walkMode)
+
+SCN3_PROTOTYPE(Script_faceUpdateFor, void, shen_name chara, int32_t mode, uint32_t unused2)
+
+SCN3_PROTOTYPE(Script_fixoClearAttachment, void, shen_name chara)
+
+SCN3_PROTOTYPE(Script_flmwHandleInteractionState, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_forkSetForkHeightStepRate, void, shen_name chara, float stepRate, int32_t useDefault)
+
+SCN3_PROTOTYPE(Script_get_WOCC_0, int32_t, shen_name chara)
+
+SCN3_PROTOTYPE(Script_lightCreatePoint, void, uint32_t lightIndex, void *pointLight)
+
+SCN3_PROTOTYPE(Script_lightResetSlotToDefaults, void, uint32_t lightIndex)
+
+SCN3_PROTOTYPE(Script_lightUtils, void, uint32_t lightIndex, int32_t mode, const void *lightData)
+
+SCN3_PROTOTYPE(Script_mapmSetRenderFlag, int32_t, uint32_t mapIndex, int32_t enabled)
+
+SCN3_PROTOTYPE(Script_motmSetBlendFrames, void, shen_name chara, int32_t blendFrames)
+
+SCN3_PROTOTYPE(Script_navSetCurrentPos, void, Vector3 *output)
+
+SCN3_PROTOTYPE(Script_sakuraUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_sakuraUtils, 0 == 0, const Vector3 *position, const Vector3 *range, int32_t count, float probability, uint32_t flags)
+SCN3_MODE(Script_sakuraUtils, 0 == 1, int32_t slot)
+SCN3_MODE(Script_sakuraUtils, 0 == 2, int32_t slot)
+SCN3_MODE(Script_sakuraUtils, 0 == 3, int32_t slot)
+SCN3_MODE(Script_sakuraUtils, 0 == 4, int32_t slot)
+SCN3_MODE(Script_sakuraUtils, 0 == 5, int32_t slot, const Vector3 *position, const Vector3 *range)
+SCN3_MODE(Script_sakuraUtils, 0 == 6, int32_t slot, const Vector3 *velocity, const Vector3 *range)
+SCN3_MODE(Script_sakuraUtils, 0 == 7, int32_t slot, float probability)
+SCN3_MODE(Script_sakuraUtils, 0 == 8, int32_t slot, float size)
+SCN3_MODE(Script_sakuraUtils, 0 == 10, int32_t slot, float particleScale)
+SCN3_MODE(Script_sakuraUtils, 0 == 13, int32_t slot, float width, float height)
+SCN3_MODE(Script_sakuraUtils, 0 == 50, int32_t slot, const Vector3 *amount)
+
+SCN3_PROTOTYPE(Script_scenSetAssignCVWK, int32_t, shen_name chara, int32_t mode, ...)
+SCN3_MODE(Script_scenSetAssignCVWK, 1 == 0, uint32_t eventGroup)
+
+SCN3_PROTOTYPE(Script_scenUtils, int32_t, int32_t command, ...)
+SCN3_MODE(Script_scenUtils, 0 == 6, int32_t enable)
+SCN3_MODE(Script_scenUtils, 0 == 27, int32_t enable)
+SCN3_MODE(Script_scenUtils, 0 == 7, shen_name chara, int32_t step)
+SCN3_MODE(Script_scenUtils, 0 == 9, shen_name name, uint32_t rangeMode, uint32_t center, uint32_t radius)
+SCN3_MODE(Script_scenUtils, 0 == 10, shen_name chara, float radius)
+SCN3_MODE(Script_scenUtils, 0 == 11, ShenmueFlag id)
+SCN3_MODE(Script_scenUtils, 0 == 13, int32_t id)
+SCN3_MODE(Script_scenUtils, 0 == 15, int32_t id)
+SCN3_MODE(Script_scenUtils, 0 == 12, ShenmueFlag id, int32_t value)
+SCN3_MODE(Script_scenUtils, 0 == 14, int32_t id, int32_t value)
+SCN3_MODE(Script_scenUtils, 0 == 16, int32_t id, int32_t value)
+SCN3_MODE(Script_scenUtils, 0 == 17, uint32_t query)
+SCN3_MODE(Script_scenUtils, 0 == 24, shen_name name)
+SCN3_MODE(Script_scenUtils, 0 == 18, shen_name name, uint32_t query)
+SCN3_MODE(Script_scenUtils, 0 == 19, shen_name name, uint32_t query, uint32_t auxiliary)
+SCN3_MODE(Script_scenUtils, 0 == 20, shen_name name, int32_t flag)
+SCN3_MODE(Script_scenUtils, 0 == 30, uint32_t helpPromptOverride)
+
+SCN3_PROTOTYPE(Script_shenGetStats, int32_t, uint32_t command)
+
+SCN3_PROTOTYPE(Script_shenSetCurrentDate, void, const GameDateTime *date)
+
+SCN3_PROTOTYPE(Script_srchControl, int32_t, void *stack)
+
+SCN3_PROTOTYPE(Script_uiUtils, void, int32_t mode, int32_t helpIconId, int32_t buttonId)
+
+SCN3_PROTOTYPE(MODU_Script_shenRequestGameModule, void, int32_t module, int32_t sceneId, uint32_t areaId, uint32_t entryPoint)
+
+SCN3_PROTOTYPE(SCNF_RequestActionSelectorFromParams, int32_t, int32_t up, int32_t left, int32_t right, int32_t down, uint32_t timeoutFrames,
+    int32_t timeoutHelpToken, int32_t mode)
+
+SCN3_PROTOTYPE(SCNF_StartCashOverlaySelector, int32_t, int32_t maximumValue, uint32_t timeoutFrames, uint32_t unused2, uint32_t unused3)
+
+SCN3_PROTOTYPE(Script_AllocSpline, void, int32_t frame)
+
+SCN3_PROTOTYPE(Script_CamCtrl, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_CamCtrl, 0 == 1, float rotX, float rotY, float rotZ)
+SCN3_MODE(Script_CamCtrl, 0 == 2, uint32_t unused, int32_t rotZAdjust)
+SCN3_MODE(Script_CamCtrl, 0 == 3, int32_t offsX, int32_t offsY, int32_t offsZ)
+SCN3_MODE(Script_CamCtrl, 0 == 4, int32_t offsX, int32_t offsY, int32_t offsZ)
+
+SCN3_PROTOTYPE(Script_ConfigHandMotionIK, void, shen_name characterId, int32_t side, int32_t mode, ...)
+SCN3_MODE(Script_ConfigHandMotionIK, 2 == 0, uint32_t value, uint32_t mask)
+SCN3_MODE(Script_ConfigHandMotionIK, 2 == 1, float value)
+
+SCN3_PROTOTYPE(Script_CopyAndModifyChid, void, const char *name)
+
+SCN3_PROTOTYPE(Script_EVT_GetPosition, void, shen_name characterId, int32_t nodeId, Vector3 *position, uint32_t flags)
+
+SCN3_PROTOTYPE(Script_EVT_ryoToggleFreeState, void, int32_t value)
+
+SCN3_PROTOTYPE(Script_EventCamReader, int32_t, int32_t sequenceIndex, shen_name eyeOwner, shen_name targetOwner, shen_name character)
+
+SCN3_PROTOTYPE(Script_FACE_LCG, void, shen_name characterId, int32_t valueA, int32_t valueB, int32_t timing)
+
+SCN3_PROTOTYPE(Script_FreeTaskData, void, uint32_t handle)
+
+SCN3_PROTOTYPE(Script_GetCPCTFlags, int32_t, int32_t mode)
+
+SCN3_PROTOTYPE(Script_GetCharaMotionRemainingFramesScaled, float, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_GetControllerInput, int32_t, uint32_t mode)
+
+SCN3_PROTOTYPE(Script_GetDateTimeUpdateHistory, void, uint8_t *output)
+
+SCN3_PROTOTYPE(Script_GetHandControlBit3, int32_t, shen_name characterId, int32_t side)
+
+SCN3_PROTOTYPE(Script_GetMotionFlag200, int32_t, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_GetOwnedItemCount, int32_t, uint32_t id, int32_t isCassette)
+
+SCN3_PROTOTYPE(Script_IncrementDateTimeByNum, void, int32_t days)
+
+SCN3_PROTOTYPE(Script_InitializeOsag, void, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_LODSnapshotUtils, void, int32_t command)
+
+SCN3_PROTOTYPE(Script_LoadCharacterDefinition, void, uint32_t token)
+
+SCN3_PROTOTYPE(Script_MathUtils, float, int32_t mode, ...)
+SCN3_MODE(Script_MathUtils, 0 == 0, float value1, float value2)
+SCN3_MODE(Script_MathUtils, 0 == 1, float value1, float value2)
+SCN3_MODE(Script_MathUtils, 0 == 2, float value1, float value2)
+SCN3_MODE(Script_MathUtils, 0 == 3, float value1, float value2)
+SCN3_MODE(Script_MathUtils, 0 == 4, float value1, float value2)
+SCN3_MODE(Script_MathUtils, 0 == 5, float value1, float value2)
+SCN3_MODE(Script_MathUtils, 0 == 6, float value1, float value2)
+SCN3_MODE(Script_MathUtils, 0 == 7, float value1, float value2)
+SCN3_MODE(Script_MathUtils, 0 == 14, float value1, float value2)
+SCN3_MODE(Script_MathUtils, 0 == 8, int32_t value1)
+SCN3_MODE(Script_MathUtils, 0 == 10, int32_t value1)
+SCN3_MODE(Script_MathUtils, 0 == 11, int32_t value1)
+SCN3_MODE(Script_MathUtils, 0 == 9, float value1)
+SCN3_MODE(Script_MathUtils, 0 == 12, float value1)
+SCN3_MODE(Script_MathUtils, 0 == 13, float value1)
+SCN3_MODE(Script_MathUtils, 0 == 16, float value1)
+SCN3_MODE(Script_MathUtils, 0 == 15, const Vector3 *value1, const Vector3 *value2)
+SCN3_MODE(Script_MathUtils, 0 == 17, const Vector3 *origin, int32_t angle, Vector3 *point)
+
+SCN3_PROTOTYPE(Script_PlayerControlUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_PlayerControlUtils, 0 == 7, int32_t argument)
+SCN3_MODE(Script_PlayerControlUtils, 0 == 9, uint32_t argument)
+SCN3_MODE(Script_PlayerControlUtils, 0 == 12, uint32_t argument)
+SCN3_MODE(Script_PlayerControlUtils, 0 == 13, uint32_t argument)
+SCN3_MODE(Script_PlayerControlUtils, 0 == 14, shen_name argument, int32_t argument2)
+SCN3_MODE(Script_PlayerControlUtils, 0 == 16, shen_name argument)
+SCN3_MODE(Script_PlayerControlUtils, 0 == 17, uint32_t argument)
+
+SCN3_PROTOTYPE(Script_ProcessSubtitleText, void, const char *text)
+
+SCN3_PROTOTYPE(Script_ResetHandMotion, void, shen_name characterId, int32_t status, int32_t side, int32_t sequenceId)
+
+SCN3_PROTOTYPE(Script_SetAnimatedSequenceCollisionCheckDisabled, int32_t, uint32_t mode)
+
+SCN3_PROTOTYPE(Script_SetCamShake, void, float previous, float current, float damping)
+
+SCN3_PROTOTYPE(Script_SetCameraSettings, float, int32_t mode, ...)
+SCN3_MODE(Script_SetCameraSettings, 0 == 0, float value)
+SCN3_MODE(Script_SetCameraSettings, 0 == 1, float value)
+SCN3_MODE(Script_SetCameraSettings, 0 == 2, float value)
+
+SCN3_PROTOTYPE(Script_SetCharaRefBoardPos, void, shen_name characterId, const Vector4 *colour)
+
+SCN3_PROTOTYPE(Script_SetClipperFlag, void, int32_t value)
+
+SCN3_PROTOTYPE(Script_SetDynamicMapStaticSceneMode, int32_t, int32_t index, uint32_t staticSceneMode)
+
+SCN3_PROTOTYPE(Script_SetFogColour, void, const FogColourData *fog)
+
+SCN3_PROTOTYPE(Script_SetGlobalSceneSlotValue34, void, uint32_t slot, uint32_t value)
+
+SCN3_PROTOTYPE(Script_SetLampState, void, uint32_t mode, shen_name characterId, uint32_t value)
+
+SCN3_PROTOTYPE(Script_SetMaxInterpSpeed, void, float blend)
+
+SCN3_PROTOTYPE(Script_SetNewCameraState, void, int32_t state)
+
+SCN3_PROTOTYPE(Script_SetOwnedItemMenuFlagIfOwned, int32_t, int32_t mode, uint32_t itemId, uint32_t value)
+
+SCN3_PROTOTYPE(Script_SetSearchFov, void, int32_t mode)
+
+SCN3_PROTOTYPE(Script_SetStaticSceneObjectTransformSource, int32_t, int32_t transformIndex, int32_t sourceMapSlot)
+
+SCN3_PROTOTYPE(Script_SetupClothData, void, shen_name characterId, int32_t setupMode)
+
+SCN3_PROTOTYPE(Script_StepUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_StepUtils, 0 == 2, int32_t requestedStep)
+
+SCN3_PROTOTYPE(
+    Script_TranslateRotateScale_Wrapper, void, uint32_t unused0, uint32_t unused1, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale)
+
+SCN3_PROTOTYPE(Script_WeatherTaskUtil, void, uint32_t mode, ...)
+SCN3_MODE(Script_WeatherTaskUtil, 0 == 20, uint32_t flags)
+SCN3_MODE(Script_WeatherTaskUtil, 0 == 21, uint32_t flags)
+
+SCN3_PROTOTYPE(Script_camSetRotationStepSize, void, uint32_t value)
+
+SCN3_PROTOTYPE(Script_charaHasMotionwork, int32_t, shen_name identifier)
+
+SCN3_PROTOTYPE(Script_charaSetRenderOpacity, void, shen_name characterId, float opacity)
+
+SCN3_PROTOTYPE(Script_clmdSetFlags, void, shen_name characterId, uint32_t value, int32_t operation)
+
+SCN3_PROTOTYPE(Script_dynamicStuff, void, shen_name characterId, const char *modelName, uint32_t imageCount)
+
+SCN3_PROTOTYPE(Script_facemotUtils, int32_t, shen_name characterId, int32_t mode, uint32_t unused2)
+
+SCN3_PROTOTYPE(Script_flmwAttachLoadActor, int32_t, shen_name forkId, shen_name loadId)
+
+SCN3_PROTOTYPE(Script_flmwSetInputMask, void, shen_name forkId, uint32_t mask)
+
+SCN3_PROTOTYPE(Script_forkSetForkHeightTarget, int32_t, shen_name forkId, int32_t level)
+
+SCN3_PROTOTYPE(Script_handSetFloatsFor, void, shen_name characterId, int32_t side, const int32_t *angles, int32_t blendFrames)
+
+SCN3_PROTOTYPE(Script_lightDirLightEnable, void, uint32_t lightIndex, const Vector3 *direction)
+
+SCN3_PROTOTYPE(Script_lightSetGlobalSceneLighting, void, const Vector4 *colour)
+
+SCN3_PROTOTYPE(Script_mapEvGetCurrentEvt, int32_t, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_motDetailFlagUtil, int32_t, shen_name characterId, int32_t query, uint32_t value)
+
+SCN3_PROTOTYPE(Script_motmToggleFlags, void, shen_name characterId, int32_t operation, uint32_t flags)
+
+SCN3_PROTOTYPE(Script_ptmvControlTrailFollow, void, int32_t sourceKey, shen_name owner, int32_t mode)
+
+SCN3_PROTOTYPE(Script_saveDisplayUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_saveDisplayUtils, 0 == 2, int32_t sceneId, shen_name areaId, uint32_t entryPoint)
+SCN3_MODE(Script_saveDisplayUtils, 0 == 3, int32_t sceneId, shen_name areaId, uint32_t entryPoint)
+
+SCN3_PROTOTYPE(Script_scenToggleActiveFor, void, shen_name characterId, int32_t mode)
+
+SCN3_PROTOTYPE(Script_seqSetPlayRoot, void, const Vector3 *position, const Vector3i *rotation)
+
+SCN3_PROTOTYPE(Script_shenRequestGameModuleTransition, void, int32_t sceneId, shen_name areaId, uint32_t entryPoint)
+
+SCN3_PROTOTYPE(Script_shenSetLightingMode, void, int32_t index)
+
+SCN3_PROTOTYPE(Script_tmnmCheckState, int32_t, shen_name characterId)
+
+SCN3_PROTOTYPE(Script_wazaUtils, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_wazaUtils, 0 == 2, int32_t animationSet, int32_t moveId, int32_t skill)
+SCN3_MODE(Script_wazaUtils, 0 == 3, int32_t animationSet, int32_t moveId)
+SCN3_MODE(Script_wazaUtils, 0 == 6, int32_t animationSet, int32_t moveId)

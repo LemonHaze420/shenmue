@@ -1317,7 +1317,7 @@ void Script_GetCassetteFlags(ScenarioContext *context, void *rawParams);
 
 void Script_GetCassetteFlags_0(ScenarioContext *context, void *rawParams);
 
-void Script_GetShenmueCassette(ScenarioContext *context, void *rawParams);
+void Script_GetOwnedItemCount(ScenarioContext *context, void *rawParams);
 
 void Script_SetCharaMotionPlaybackRate(ScenarioContext *context, void *rawParams);
 

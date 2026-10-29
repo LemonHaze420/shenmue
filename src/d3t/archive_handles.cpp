@@ -103,9 +103,13 @@ std::int32_t OpenArchiveSlotBackingFile(std::uint32_t handle, const char *path, 
     if (CheckArchiveHandleOpen(handle))
         Archive_ClosePlatformHandle(handle);
     ArchiveSourceDesc source = archive_data::EMPTY_ARCHIVE_SOURCE;
-    if (!(entry->archiveLookupFlag & 1U))
-        ArchiveData_GetSourceDesc(path, source);
     char backing[260];
+    if (!(entry->archiveLookupFlag & 1U)) {
+        if ((mode & AOF_Read) && !(mode & AOF_Write) && archive_data::ArchiveData_GetScenarioOverridePath(path, backing, sizeof(backing)))
+            path = backing;
+        else
+            ArchiveData_GetSourceDesc(path, source);
+    }
     if (IsArchiveSourceDescActive(source)) {
         if (mode & AOF_Write)
             return 1;
@@ -606,6 +610,9 @@ const char *GetFileExtension(const char *path) {
     return path[length - 1] == '.' ? path + length : nullptr;
 }
 bool Archive_FileExists(const char *path) {
+    char overridePath[260];
+    if (archive_data::ArchiveData_GetScenarioOverridePath(path, overridePath, sizeof(overridePath)))
+        return true;
     ArchiveSourceDesc source;
     ArchiveData_GetSourceDesc(path, source);
     if (IsArchiveSourceDescActive(source))

@@ -421,6 +421,32 @@ void ensureIndex() {
     g_indexAttempted = true;
 }
 
+std::optional<fs::path> scenarioOverridePath(const char *path) {
+    if (!path)
+        return std::nullopt;
+    const fs::path relative = fs::path(cleanFilePath(path)).relative_path().lexically_normal();
+    if (relative.parent_path() != "scenario" || relative.extension() != ".scn")
+        return std::nullopt;
+    static const fs::path directory = [] {
+#ifdef _WIN32
+        HMODULE module{};
+        if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                reinterpret_cast<LPCWSTR>(&ArchiveData_GetScenarioOverridePath), &module))
+            return fs::path{};
+        std::array<wchar_t, 32768> path{};
+        const DWORD length = GetModuleFileNameW(module, path.data(), static_cast<DWORD>(path.size()));
+        return length && length < path.size() ? fs::path(path.data(), path.data() + length).parent_path() : fs::path{};
+#else
+        return executableDirectory();
+#endif
+    }();
+    if (directory.empty())
+        return std::nullopt;
+    const fs::path file = directory / relative;
+    std::error_code error;
+    return fs::is_regular_file(file, error) ? std::optional<fs::path>(file) : std::nullopt;
+}
+
 std::optional<fs::path> looseFilePath(const char *path) {
     if (g_shenRoot.empty() || !path) {
         return std::nullopt;
@@ -566,6 +592,11 @@ std::uint64_t ArchiveData_GetPathHash(const char *path) {
 }
 
 std::uint64_t ArchiveData_GetFileSize(const char *path) {
+    if (const std::optional<fs::path> file = scenarioOverridePath(path)) {
+        std::error_code error;
+        const std::uint64_t size = fs::file_size(*file, error);
+        return error ? 0 : size;
+    }
     ensureIndex();
     const auto named = g_namedEntries.find(cleanFilePath(path));
     if (named != g_namedEntries.end()) {
@@ -583,6 +614,8 @@ std::uint64_t ArchiveData_GetFileSize(const char *path) {
     return 0;
 }
 bool ArchiveData_IsPackedFile(const char *path) {
+    if (scenarioOverridePath(path))
+        return false;
     ensureIndex();
     const std::unordered_map<std::string, TadEntry>::const_iterator named = g_namedEntries.find(cleanFilePath(path));
     if (named != g_namedEntries.end())
@@ -591,7 +624,22 @@ bool ArchiveData_IsPackedFile(const char *path) {
     return found != g_tadEntries.end() && found->second.size != 0;
 }
 
+bool ArchiveData_GetScenarioOverridePath(const char *path, char *output, std::size_t capacity) {
+    const std::optional<fs::path> file = scenarioOverridePath(path);
+    if (!file || !output)
+        return false;
+    const std::string name = file->string();
+    if (name.size() >= capacity)
+        return false;
+    std::memcpy(output, name.c_str(), name.size() + 1);
+    return true;
+}
+
 void ArchiveData_GetSourceDesc(const char *path, ArchiveSourceDesc &source) {
+    if (scenarioOverridePath(path)) {
+        source = EMPTY_ARCHIVE_SOURCE;
+        return;
+    }
     ensureIndex();
     const TadEntry *entry = nullptr;
     const std::unordered_map<std::string, TadEntry>::const_iterator named = g_namedEntries.find(cleanFilePath(path));
@@ -626,6 +674,12 @@ bool ArchiveData_GetSourceBackingPath(const ArchiveSourceDesc &source, char *pat
 bool ArchiveData_Read(const char *path, std::uint64_t offset, void *destination, std::uint64_t size) {
     if (!destination) {
         return false;
+    }
+    if (const std::optional<fs::path> file = scenarioOverridePath(path)) {
+        std::ifstream input(*file, std::ios::binary);
+        input.seekg(static_cast<std::streamoff>(offset));
+        input.read(static_cast<char *>(destination), static_cast<std::streamsize>(size));
+        return input.gcount() == static_cast<std::streamsize>(size);
     }
     ensureIndex();
     fs::path source;

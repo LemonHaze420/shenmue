@@ -1,0 +1,13 @@
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  cmake_minimum_required(VERSION 3.22)
+  project(motextract LANGUAGES CXX)
+endif()
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/CompilerWarnings.cmake")
+if(NOT TARGET ShenmueDKStatic)
+  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../../libs/ShenmueDK" "${CMAKE_CURRENT_BINARY_DIR}/shendk" EXCLUDE_FROM_ALL)
+endif()
+add_executable(motextract extract.cpp)
+target_compile_features(motextract PRIVATE cxx_std_20)
+target_link_libraries(motextract PRIVATE ShenmueDKStatic)
+shenmue_set_project_warnings(motextract)

@@ -136,14 +136,18 @@ struct ScenarioHeader {
     std::int32_t flags;
     std::int32_t functionOffset;
     std::int32_t dataSegmentOffset;
-    std::int32_t lastBlockOffset;
-    std::int32_t secondFunctionOffset;
+    std::int32_t dataEndOffset;
+    std::int32_t workspaceSize;
     std::int32_t unknownOffset;
     std::int32_t entrypoint;
-    std::int32_t duplicateLastBlockOffset;
+    std::int32_t relocationTableOffset;
     std::int32_t unknown1;
     std::int32_t unknown2;
 };
+
+static_assert(offsetof(ScenarioHeader, dataEndOffset) == 0x14);
+static_assert(offsetof(ScenarioHeader, workspaceSize) == 0x18);
+static_assert(offsetof(ScenarioHeader, relocationTableOffset) == 0x24);
 
 struct ScenarioRegisters {
     std::uint32_t r0;

@@ -728,7 +728,7 @@ void Script_GetCassetteFlags_0(ScenarioContext *context, void *rawParams) {
     }
 }
 
-void Script_GetShenmueCassette(ScenarioContext *context, void *rawParams) {
+void Script_GetOwnedItemCount(ScenarioContext *context, void *rawParams) {
     const auto *const params = static_cast<const InventoryQueryParameters *>(rawParams);
     if (!context || !context->stack || !params)
         return;

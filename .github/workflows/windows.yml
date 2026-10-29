@@ -3,25 +3,96 @@ name: Windows
 on:
   push:
     branches: [master]
-  pull_request:
-    branches: [master]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  asi:
+  hangon:
+    if: github.ref == 'refs/heads/master'
     runs-on: windows-2022
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    defaults:
+      run:
+        shell: pwsh
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Checkout Shenmue
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Configure HangOn
+        run: cmake -S src/hangon -B build/hangon -A x64
+      - name: Build HangOn
+        run: cmake --build build/hangon --config Release --target shenmue_hangon
+      - name: Prepare HangOn
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item build/hangon/Release/ShenmueHangon.exe dist/HangOn.exe
+      - name: Sign CI executables
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        env:
+          SIGNING_PFX: ${{ secrets.SIGNING_PFX }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pfx = Join-Path $env:RUNNER_TEMP 'lemonhaze-ci.pfx'
+          $imported = @()
+          try {
+            if (!$env:SIGNING_PFX) { throw 'SIGNING_PFX is not configured' }
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGNING_PFX))
+            $password = [Security.SecureString]::new()
+            if ($env:SIGNING_PASSWORD) { $password = ConvertTo-SecureString $env:SIGNING_PASSWORD -AsPlainText -Force }
+            $imported = @(Import-PfxCertificate $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password)
+            $certificate = @($imported | Where-Object HasPrivateKey)
+            if ($certificate.Count -ne 1) { throw 'Expected one signing certificate with a private key' }
+            Remove-Item Env:SIGNING_PFX, Env:SIGNING_PASSWORD -ErrorAction SilentlyContinue
+            $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}/Windows Kits/10/bin/*/x64/signtool.exe" | Select-Object -First 1).FullName
+            if (!$signtool) { throw 'Windows SDK SignTool was not found' }
+            foreach ($file in @('dist/HangOn.exe')) {
+              & $signtool sign /s My /sha1 $certificate[0].Thumbprint /fd SHA256 $file
+              if ($LASTEXITCODE -ne 0) { throw "Signing failed: $file" }
+            }
+          } finally {
+            Remove-Item Env:SIGNING_PFX, Env:SIGNING_PASSWORD -ErrorAction SilentlyContinue
+            foreach ($certificate in $imported) { Remove-Item "Cert:\CurrentUser\My\$($certificate.Thumbprint)" -DeleteKey -Force }
+            if (Test-Path $pfx) { Remove-Item $pfx -Force }
+          }
+      - name: Attest HangOn
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: dist/HangOn.exe
+      - name: Upload HangOn
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: HangOn
+          path: dist/HangOn.exe
+          if-no-files-found: error
+
+  build:
+    needs: hangon
+    runs-on: windows-2022
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout Shenmue
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           submodules: recursive
           persist-credentials: false
-      - name: Configure
-        shell: pwsh
+      - name: Configure games
         run: |
-          $toolchain = Join-Path $env:VCPKG_INSTALLATION_ROOT 'scripts/buildsystems/vcpkg.cmake'
+          $ErrorActionPreference = 'Stop'
+          $vcpkg = $env:VCPKG_INSTALLATION_ROOT
+          if (!$vcpkg) { $vcpkg = $env:VCPKG_ROOT }
+          if (!$vcpkg) { $vcpkg = 'C:\dev\vcpkg' }
+          $toolchain = Join-Path $vcpkg 'scripts/buildsystems/vcpkg.cmake'
           cmake -S . -B build/windows-asi -A x64 `
             "-DCMAKE_TOOLCHAIN_FILE=$toolchain" `
             -DVCPKG_TARGET_TRIPLET=x64-windows-static `
@@ -30,26 +101,101 @@ jobs:
             -DSHENMUE_ENHANCEMENT_S2_MAP_SEAMS=ON `
             -DSHENMUE_RT_ARCADE=ON `
             -DSHENMUE_LOAD_HANGON_DLL=ON
-      - name: Build
-        run: cmake --build build/windows-asi --config Release --target shenmue1_asi shenmue2_asi --parallel 4
-      - name: Check outputs
-        shell: pwsh
+      - name: Build games
+        run: cmake --build build/windows-asi --config Release --target shenmue1_asi shenmue2_asi shenmue1 shenmue2 --parallel 4
+      - name: Sign CI executables
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        env:
+          SIGNING_PFX: ${{ secrets.SIGNING_PFX }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
-          foreach ($name in @('shenmue1e.asi', 'shenmue2e.asi')) {
-            if (!(Test-Path "build/windows-asi/Release/$name")) { throw "Missing $name" }
+          $ErrorActionPreference = 'Stop'
+          $pfx = Join-Path $env:RUNNER_TEMP 'lemonhaze-ci.pfx'
+          $imported = @()
+          try {
+            if (!$env:SIGNING_PFX) { throw 'SIGNING_PFX is not configured' }
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGNING_PFX))
+            $password = [Security.SecureString]::new()
+            if ($env:SIGNING_PASSWORD) { $password = ConvertTo-SecureString $env:SIGNING_PASSWORD -AsPlainText -Force }
+            $imported = @(Import-PfxCertificate $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password)
+            $certificate = @($imported | Where-Object HasPrivateKey)
+            if ($certificate.Count -ne 1) { throw 'Expected one signing certificate with a private key' }
+            Remove-Item Env:SIGNING_PFX, Env:SIGNING_PASSWORD -ErrorAction SilentlyContinue
+            $signtool = (Get-ChildItem "${env:ProgramFiles(x86)}/Windows Kits/10/bin/*/x64/signtool.exe" | Select-Object -First 1).FullName
+            if (!$signtool) { throw 'Windows SDK SignTool was not found' }
+            foreach ($file in @('build/windows-asi/Release/shenmue1e.asi', 'build/windows-asi/Release/shenmue2e.asi',
+              'build/windows-asi/Release/shenmue1.exe', 'build/windows-asi/Release/shenmue2.exe')) {
+              & $signtool sign /s My /sha1 $certificate[0].Thumbprint /fd SHA256 $file
+              if ($LASTEXITCODE -ne 0) { throw "Signing failed: $file" }
+            }
+          } finally {
+            Remove-Item Env:SIGNING_PFX, Env:SIGNING_PASSWORD -ErrorAction SilentlyContinue
+            foreach ($certificate in $imported) { Remove-Item "Cert:\CurrentUser\My\$($certificate.Thumbprint)" -DeleteKey -Force }
+            if (Test-Path $pfx) { Remove-Item $pfx -Force }
           }
 
-  hangon:
-    runs-on: windows-2022
+  data:
+    needs: build
+    runs-on: [self-hosted, Windows, X64, shenmue-data]
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: powershell
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Checkout Shenmue
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          submodules: recursive
           persist-credentials: false
-      - name: Configure
-        run: cmake -S src/hangon -B build/hangon -A x64
-      - name: Build
-        run: cmake --build build/hangon --config Release --target shenmue_hangon
-      - name: Check output
-        shell: pwsh
+          clean: false
+      - name: Check game data
         run: |
-          if (!(Test-Path 'build/hangon/Release/ShenmueHangon.exe')) { throw 'Missing ShenmueHangon.exe' }
+          if (!$env:SHEN_STEAM_ROOT) { throw 'SHEN_STEAM_ROOT is not configured' }
+          foreach ($game in 'sm1', 'sm2') {
+            if (!(Test-Path (Join-Path $env:SHEN_STEAM_ROOT "$game/archives/dx11"))) {
+              throw "SHEN_STEAM_ROOT is missing $game/archives/dx11"
+            }
+          }
+      - name: Configure scenarios
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $vcpkg = $env:VCPKG_INSTALLATION_ROOT
+          if (!$vcpkg) { $vcpkg = $env:VCPKG_ROOT }
+          if (!$vcpkg) { $vcpkg = 'C:\dev\vcpkg' }
+          $toolchain = Join-Path $vcpkg 'scripts/buildsystems/vcpkg.cmake'
+          cmake -S . -B build/windows-data -A x64 `
+            "-DCMAKE_TOOLCHAIN_FILE=$toolchain" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+            '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>' `
+            -DClang_DIR=C:/dev/llvm-20.1.0/lib/cmake/clang `
+            -DSHENMUE_STEAM=OFF `
+            -DSHENMUE_ENHANCEMENT_S2_MAP_SEAMS=ON `
+            -DSHENMUE_RT_ARCADE=ON `
+            -DSHENMUE_LOAD_HANGON_DLL=ON
+      - name: Build tools and round-trip scenarios
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cmake --build build/windows-data --config Release --target shenmue_scenarios --parallel 4
+          if ($LASTEXITCODE -ne 0) { throw 'Scenario source generation failed' }
+          $scripts = @(Get-ChildItem 'src/s1/scenario' -Recurse -File -Filter '*.scn' | Where-Object { $_.Name -notlike '*.rebuilt.scn' } | Sort-Object FullName)
+          if (!$scripts.Count) { throw 'No SCN3 scripts found' }
+          $compiler = (Resolve-Path 'build/windows-data/tools/scn3/Release/scn3cc.exe').Path
+          $include = (Resolve-Path 'src/s1').Path
+          $work = New-Item -ItemType Directory -Force 'build/windows-data/scenarios/roundtrip'
+          function Invoke-Scn3([string[]]$arguments, [string]$log) {
+            $quoted = @($arguments | ForEach-Object { '"{0}"' -f $_ })
+            $process = Start-Process -FilePath $compiler -ArgumentList $quoted -Wait -PassThru -NoNewWindow `
+              -RedirectStandardOutput "$log.log" -RedirectStandardError "$log.err.log"
+            if ($process.ExitCode -ne 0) { throw "SCN3 failed: $log" }
+          }
+          foreach ($file in $scripts) {
+            $source = Join-Path $work.FullName "$($file.BaseName).c"
+            $rebuilt = Join-Path $work.FullName "$($file.BaseName).rebuilt.scn"
+            Invoke-Scn3 @($file.FullName, '--export-c', $source) (Join-Path $work.FullName "$($file.BaseName).export")
+            Invoke-Scn3 @($source, '-I', $include, '--target', 'pc', '--emit', 'vm', '-o', $rebuilt) (Join-Path $work.FullName "$($file.BaseName).compile")
+            $arguments = @('/b', ('"{0}"' -f $file.FullName), ('"{0}"' -f $rebuilt))
+            $process = Start-Process -FilePath "$env:SystemRoot/System32/fc.exe" -ArgumentList $arguments -Wait -PassThru -NoNewWindow `
+              -RedirectStandardOutput (Join-Path $work.FullName "$($file.BaseName).compare.log")
+            if ($process.ExitCode -ne 0) { throw "SCN3 round-trip mismatch: $($file.Name)" }
+          }
+          Write-Host "Round-tripped $($scripts.Count) SCN3 scripts"

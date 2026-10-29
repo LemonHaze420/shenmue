@@ -66,6 +66,10 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)
+option(SHENMUE_BUILD_SCN3CC "Build the SCN3 compiler" OFF)
+if(SHENMUE_BUILD_SCN3CC)
+  add_subdirectory(tools/scn3)
+endif()
 if(WIN32)
   add_compile_definitions(NOMINMAX)
 endif()
@@ -1479,3 +1483,5 @@ END
     shenmue_set_project_warnings(shenmue${title}_asi)
   endforeach()
 endif()
+
+include(cmake/Scenarios.cmake)

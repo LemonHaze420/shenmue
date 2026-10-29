@@ -39,6 +39,7 @@ std::uint64_t ArchiveData_GetPathHash(const char *path);
 std::uint64_t ArchiveData_GetFileSize(const char *path);
 
 bool ArchiveData_IsPackedFile(const char *path);
+bool ArchiveData_GetScenarioOverridePath(const char *path, char *output, std::size_t capacity);
 void ArchiveData_GetSourceDesc(const char *path, ArchiveSourceDesc &source);
 bool ArchiveData_GetSourceBackingPath(const ArchiveSourceDesc &source, char *path, std::size_t capacity);
 bool ArchiveData_Read(const char *path, std::uint64_t offset, void *destination, std::uint64_t size);
