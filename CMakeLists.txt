@@ -466,11 +466,6 @@ if(MSVC)
   target_link_options(shenmue1 PRIVATE /MAP)
 endif()
 shenmue_set_project_warnings(shenmue1)
-add_custom_command(TARGET shenmue1 POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${CMAKE_CURRENT_SOURCE_DIR}/reference/filename_database.json"
-          "$<TARGET_FILE_DIR:shenmue1>/filename_database.json"
-)
 
 # PC/Xbox area and event implementation objects (native event subroutines compiled into the executable). Kept as an object
 # library so the DC event modules can later build the same sources into separately linked EV overlays.
@@ -1437,11 +1432,6 @@ else()
   target_link_options(shenmue2 PRIVATE -Wl,--gc-sections)
 endif()
 shenmue_set_project_warnings(shenmue2)
-add_custom_command(TARGET shenmue2 POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-          "${CMAKE_CURRENT_SOURCE_DIR}/reference/filename_database.json"
-          "$<TARGET_FILE_DIR:shenmue2>/filename_database.json"
-)
 
 
 
@@ -1450,16 +1440,14 @@ if(SHENMUE_STEAM)
     message(FATAL_ERROR "Steam ASIs require Windows x64")
   endif()
   enable_language(RC)
-  set(steam_names_resource "${CMAKE_CURRENT_BINARY_DIR}/steam_names.rc")
-  file(GENERATE OUTPUT "${steam_names_resource}" CONTENT
+  set(steam_build_resource "${CMAKE_CURRENT_BINARY_DIR}/steam_build_info.rc")
+  file(GENERATE OUTPUT "${steam_build_resource}" CONTENT
 "#include \"shenmue_internal.h\"
-101 RCDATA \"${CMAKE_CURRENT_SOURCE_DIR}/reference/filename_database.json\"
 STRINGTABLE
 BEGIN
   102 SHENMUE_COMMIT_HASH
 END
 ")
-  set_source_files_properties("${steam_names_resource}" PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/reference/filename_database.json")
   foreach(title IN ITEMS 1 2)
     get_target_property(steam_sources shenmue${title}_game SOURCES)
     add_library(shenmue${title}_steam_game STATIC ${steam_sources})
@@ -1474,7 +1462,7 @@ END
     endforeach()
     target_compile_definitions(shenmue${title}_steam_game PRIVATE SHENMUE_STEAM=1 SHENMUE_LOAD_HANGON_DLL=1)
     add_library(shenmue${title}_asi MODULE src/d3t/steam_entry.cpp src/d3t/steam.cpp src/d3t/steam_storage.cpp
-      src/common/archive_data.cpp "${steam_names_resource}")
+      src/common/archive_data.cpp "${steam_build_resource}")
     target_compile_features(shenmue${title}_asi PRIVATE cxx_std_20)
     target_compile_definitions(shenmue${title}_asi PRIVATE SHENMUE_STEAM=1 SHENMUE_TARGET_S${title}_PC=1)
     target_include_directories(shenmue${title}_asi PRIVATE src)

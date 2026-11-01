@@ -1,8 +1,6 @@
 #include "common/archive_data.hpp"
 #include <shendk/files/container/tad_reader.h>
 
-#include <json/json.h>
-
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -14,9 +12,6 @@
 #include <fstream>
 #include <mutex>
 #include <optional>
-#if defined(SHENMUE_STEAM)
-#include <sstream>
-#endif
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -51,12 +46,8 @@ struct TadArchive {
 std::mutex g_indexMutex;
 bool g_indexAttempted = false;
 fs::path g_shenRoot;
+std::string g_archiveRootPrefix;
 std::unordered_map<std::uint64_t, TadEntry> g_tadEntries;
-std::unordered_map<std::string, TadEntry> g_namedEntries;
-#if defined(SHENMUE_STEAM)
-const char *g_embeddedNameDatabase;
-std::size_t g_embeddedNameDatabaseSize;
-#endif
 
 std::uint64_t hashKey(std::uint32_t primary, std::uint32_t secondary);
 std::uint64_t normalHash(const char *path);
@@ -72,50 +63,6 @@ fs::path executableDirectory() {
     const ssize_t length = readlink("/proc/self/exe", path.data(), path.size());
     return length > 0 && static_cast<std::size_t>(length) < path.size() ? fs::path(path.data(), path.data() + length).parent_path() : fs::path{};
 #endif
-}
-
-void addNamedAliases(const fs::path &databasePath) {
-#if defined(SHENMUE_STEAM)
-    static_cast<void>(databasePath);
-    std::istringstream input(std::string(g_embeddedNameDatabase, g_embeddedNameDatabaseSize));
-#else
-    std::ifstream input(databasePath, std::ios::binary);
-    if (!input) {
-        return;
-    }
-#endif
-    Json::CharReaderBuilder builder;
-    Json::Value root;
-    std::string errors;
-    if (!Json::parseFromStream(builder, input, &root, &errors) || !root.isArray()) {
-        return;
-    }
-
-    for (const Json::Value &value : root) {
-        if (!value["Hash"].isUInt() || !value["HashPath"].isUInt() || !value["Path"].isString()) {
-            continue;
-        }
-        const auto found = g_tadEntries.find(hashKey(value["Hash"].asUInt(), value["HashPath"].asUInt()));
-        if (found == g_tadEntries.end()) {
-            continue;
-        }
-        const TadEntry entry = found->second;
-
-        const std::string path = value["Path"].asString();
-        const auto addAlias = [&](const std::string &alias) {
-            g_tadEntries.emplace(normalHash(alias.c_str()), entry);
-            g_namedEntries.emplace(cleanFilePath(alias.c_str()), entry);
-        };
-        addAlias(path);
-        addAlias('.' + path);
-
-        const std::size_t finalDot = path.rfind('.');
-        if (finalDot != std::string::npos && path.size() - finalDot - 1 == 8) {
-            const std::string twoHashPath = path + ".00000000";
-            addAlias(twoHashPath);
-            addAlias('.' + twoHashPath);
-        }
-    }
 }
 
 std::uint64_t hashKey(std::uint32_t primary, std::uint32_t secondary) {
@@ -247,8 +194,14 @@ std::uint32_t generatePathHash(const std::string &path) {
 }
 
 std::uint64_t normalHash(const char *path) {
-#if 0
     std::string normalized = cleanFilePath(path);
+    const std::size_t root = g_archiveRootPrefix.empty() ? std::string::npos : normalized.find(g_archiveRootPrefix);
+    if (root != std::string::npos) {
+        normalized.erase(0, root + g_archiveRootPrefix.size());
+    } else if (const std::size_t relative = normalized.find("./"); relative != std::string::npos) {
+        normalized.erase(0, relative + 2);
+    }
+#if 0
     std::uint32_t secondary = 0;
     if (const auto suffix = findHashedSuffix(normalized)) {
         const std::string first = normalized.substr(*suffix + 1, 8);
@@ -257,7 +210,7 @@ std::uint64_t normalHash(const char *path) {
     }
     return hashKey(generatePathHash(normalized), secondary);
 #else
-    return shendk::GetPathHash(path ? path : "");
+    return shendk::GetPathHash(normalized);
 #endif
 }
 
@@ -514,8 +467,8 @@ bool ArchiveData_LoadArchives(const char *root, const char *backend, std::uint32
     std::scoped_lock lock(g_indexMutex);
     g_indexAttempted = true;
     g_tadEntries.clear();
-    g_namedEntries.clear();
     g_shenRoot = root ? fs::path(root) : fs::path{};
+    g_archiveRootPrefix = cleanFilePath(root);
 
     ArchiveDataLoadResult loaded{};
     if (!root || !*root || !backend || !*backend) {
@@ -543,43 +496,18 @@ bool ArchiveData_LoadArchives(const char *root, const char *backend, std::uint32
             ++loaded.archiveCount;
         }
     }
-#if defined(SHENMUE_STEAM)
-    addNamedAliases(fs::path{});
-#else
-    const std::array nameDatabases{
-        executableDirectory() / "filename_database.json",
-        fs::path{"filename_database.json"},
-        fs::path{"reference"} / "filename_database.json",
-        g_shenRoot / "filename_database.json",
-    };
-    for (const fs::path &database : nameDatabases) {
-        if (fs::is_regular_file(database, error)) {
-            addNamedAliases(database);
-            break;
-        }
-        error.clear();
-    }
-#endif
     if (result) {
         *result = loaded;
     }
     return loaded.archiveCount != 0;
 }
 
-#if defined(SHENMUE_STEAM)
-void ArchiveData_SetEmbeddedNameDatabase(const char *bytes, std::size_t size) {
-    const std::lock_guard<std::mutex> lock(g_indexMutex);
-    g_embeddedNameDatabase = bytes;
-    g_embeddedNameDatabaseSize = size;
-}
-#endif
-
 void ArchiveData_ClearArchives() {
     std::scoped_lock lock(g_indexMutex);
     g_indexAttempted = true;
     g_shenRoot.clear();
+    g_archiveRootPrefix.clear();
     g_tadEntries.clear();
-    g_namedEntries.clear();
 }
 
 bool ArchiveData_HasArchives() {
@@ -598,10 +526,6 @@ std::uint64_t ArchiveData_GetFileSize(const char *path) {
         return error ? 0 : size;
     }
     ensureIndex();
-    const auto named = g_namedEntries.find(cleanFilePath(path));
-    if (named != g_namedEntries.end()) {
-        return named->second.size;
-    }
     const auto found = g_tadEntries.find(normalHash(path));
     if (found != g_tadEntries.end()) {
         return found->second.size;
@@ -617,9 +541,6 @@ bool ArchiveData_IsPackedFile(const char *path) {
     if (scenarioOverridePath(path))
         return false;
     ensureIndex();
-    const std::unordered_map<std::string, TadEntry>::const_iterator named = g_namedEntries.find(cleanFilePath(path));
-    if (named != g_namedEntries.end())
-        return named->second.size != 0;
     const std::unordered_map<std::uint64_t, TadEntry>::const_iterator found = g_tadEntries.find(normalHash(path));
     return found != g_tadEntries.end() && found->second.size != 0;
 }
@@ -642,14 +563,9 @@ void ArchiveData_GetSourceDesc(const char *path, ArchiveSourceDesc &source) {
     }
     ensureIndex();
     const TadEntry *entry = nullptr;
-    const std::unordered_map<std::string, TadEntry>::const_iterator named = g_namedEntries.find(cleanFilePath(path));
-    if (named != g_namedEntries.end())
-        entry = &named->second;
-    else {
-        const std::unordered_map<std::uint64_t, TadEntry>::const_iterator found = g_tadEntries.find(normalHash(path));
-        if (found != g_tadEntries.end())
-            entry = &found->second;
-    }
+    const std::unordered_map<std::uint64_t, TadEntry>::const_iterator found = g_tadEntries.find(normalHash(path));
+    if (found != g_tadEntries.end())
+        entry = &found->second;
     if (!entry || (entry->flags & 0x10000U)) {
         source = {};
         return;
@@ -685,15 +601,9 @@ bool ArchiveData_Read(const char *path, std::uint64_t offset, void *destination,
     fs::path source;
     std::uint64_t fileOffset = offset;
     const TadEntry *entry = nullptr;
-    const auto named = g_namedEntries.find(cleanFilePath(path));
-    if (named != g_namedEntries.end()) {
-        entry = &named->second;
-    } else {
-        const auto found = g_tadEntries.find(normalHash(path));
-        if (found != g_tadEntries.end()) {
-            entry = &found->second;
-        }
-    }
+    const auto found = g_tadEntries.find(normalHash(path));
+    if (found != g_tadEntries.end())
+        entry = &found->second;
     if (entry) {
         source = entry->tacPath;
         fileOffset += entry->offset;

@@ -6,7 +6,6 @@
 #endif
 
 #include "d3t/threads.hpp"
-#include "common/archive_data.hpp"
 
 #include <atomic>
 #include <cstring>
@@ -107,13 +106,6 @@ void ShutdownOriginalRenderer() {
         if (OriginalGlobal<std::int32_t>(ExeInfo.statCount) != expectedStats ||
             OriginalGlobal<std::int32_t>(ExeInfo.achievementCount) != expectedStats - 1)
             throw std::exception{};
-        HRSRC const resource = FindResourceW(gameModule, MAKEINTRESOURCEW(101), MAKEINTRESOURCEW(10));
-        HGLOBAL const resourceData = resource ? LoadResource(gameModule, resource) : nullptr;
-        const char *const names = resourceData ? static_cast<const char *>(LockResource(resourceData)) : nullptr;
-        const DWORD nameSize = resource ? SizeofResource(gameModule, resource) : 0;
-        if (!names || !nameSize)
-            throw std::exception{};
-        archive_data::ArchiveData_SetEmbeddedNameDatabase(names, nameSize);
         steamInitialized = true;
         ShutdownOriginalRenderer();
         if (!SetCurrentDirectoryW(GetExecutableDirectory().c_str()))
