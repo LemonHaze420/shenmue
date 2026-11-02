@@ -12,7 +12,7 @@
 #include "s1/task/char.hpp"
 #include "s1/task/ctrl.hpp"
 #include "s1/task/cycle_man.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/ui_runtime.hpp"
 
 #include <bit>

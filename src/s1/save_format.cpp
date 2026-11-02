@@ -7,7 +7,7 @@
 #include "s1/player_control.hpp"
 #include "s1/player_stats.hpp"
 #include "s1/task/ctrl.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/save.hpp"
 #include "s1/task/fbgg.hpp"
 #include "s1/task/modu.hpp"

@@ -1,5 +1,5 @@
 #pragma once
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/conv.hpp"
 #include "logging.hpp"
 
@@ -1238,7 +1238,7 @@ void Script_shenRequestGameModuleTransition(ScenarioContext *, void *rawParams);
 
 void Script_ctrlProcessReqScene(ScenarioContext *, void *);
 
-void Script_CreateScenarioTask(ScenarioContext *context, void *rawParams);
+void Script_scenCreateTask(ScenarioContext *context, void *rawParams);
 
 void Script_srchControl(ScenarioContext *context, void *rawParams);
 
@@ -1249,11 +1249,11 @@ void Script_StepUtils(ScenarioContext *context, void *rawParams);
 void Script_SetCameraSettings(ScenarioContext *context, void *rawParams);
 
 Character *ScenarioCharacter(ScenarioContext *context, std::uint32_t identifier);
-void Script_PlayerControlUtils(ScenarioContext *context, void *rawParams);
+void Script_ryoControl(ScenarioContext *context, void *rawParams);
 
 void Script_uiUtils(ScenarioContext *, void *rawParams);
 
-void Script_ToggleCPCTForChara(ScenarioContext *context, void *rawParams);
+void Script_ryoSetChara(ScenarioContext *context, void *rawParams);
 
 void Script_SetMapControlTaskFlag(ScenarioContext *context, void *rawParams);
 
@@ -1343,11 +1343,11 @@ void Script_SetFogEnabled(ScenarioContext *, void *rawParams);
 
 void Script_filmCheckOrSetTransitionUtil(ScenarioContext *context, void *rawParams);
 
-void Script_EVT_ryoToggleFreeState(ScenarioContext *, void *rawParams);
+void Script_shenClearFreeState(ScenarioContext *, void *rawParams);
 
 void Script_SetActionSelectorHUDElementVisibility(ScenarioContext *, void *rawParams);
 
-void Script_SetCharaVisibility(ScenarioContext *context, void *rawParams);
+void Script_charaDisplay(ScenarioContext *context, void *rawParams);
 
 void Script_scenToggleVisibleFor(ScenarioContext *context, void *rawParams);
 
@@ -2021,12 +2021,6 @@ enum class TimedTransitionState : std::uint8_t {
     CommitMapTransition = 15,
 };
 
-enum TimedTransitionFlags : std::uint8_t {
-    TimedTransitionRollbackToPreviousDay2330 = 0x01,
-    TimedTransitionAreaScopedPrunable = 0x02,
-    TimedTransitionCaptureCurrentArea = 0x04,
-    TimedTransitionUpdateMemoItem150 = 0x08,
-};
 #pragma pack(push, 1)
 
 struct TimedTransitionParameters {

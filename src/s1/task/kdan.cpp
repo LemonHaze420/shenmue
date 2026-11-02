@@ -13,7 +13,7 @@
 #include "s1/task/mmtk.hpp"
 #include "s1/task/cycle_man.hpp"
 #include "s1/task/save.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/srch.hpp"
 #include "s1/task/wexe.hpp"
 #include "s1/ui_runtime.hpp"

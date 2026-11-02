@@ -23,7 +23,7 @@
 #include "s1/task/char.hpp"
 #include "s1/task/ctrl.hpp"
 #include "s1/task/mdlm.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/date_time.hpp"
 #include "s1/lighting.hpp"
 #include "s1/modern_lighting.hpp"

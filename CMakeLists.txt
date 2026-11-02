@@ -372,20 +372,20 @@ add_library(shenmue1_game STATIC
   src/s1/simple_shader.cpp
   src/s1/skinning_cache.cpp
   src/s1/task/save.cpp
-  src/s1/task/scen.cpp
-  src/s1/task/scen_dialogue.cpp
-  src/s1/task/scen_interaction.cpp
-  src/s1/task/scen_objects.cpp
-  src/s1/task/scen_selection.cpp
-  src/s1/task/scen_text.cpp
-  src/s1/task/scen_transitions.cpp
-  src/s1/task/scen_vm.cpp
+  src/s1/task/scen/scen.cpp
+  src/s1/task/scen/dialogue.cpp
+  src/s1/task/scen/interaction.cpp
+  src/s1/task/scen/objects.cpp
+  src/s1/task/scen/selection.cpp
+  src/s1/task/scen/text.cpp
+  src/s1/task/scen/transitions.cpp
+  src/s1/task/scen/vm.cpp
   src/s1/task/scnf_bytecode.cpp
   src/s1/task/scenario_sequence.cpp
-  src/s1/task/scen_sleep.cpp
-  src/s1/task/scen_commands_character.cpp
-  src/s1/task/scen_commands_camera.cpp
-  src/s1/task/scen_commands_system.cpp
+  src/s1/task/scen/sleep.cpp
+  src/s1/task/scen/commands_character.cpp
+  src/s1/task/scen/commands_camera.cpp
+  src/s1/task/scen/commands_system.cpp
   src/s1/task/scnt.cpp
   src/s1/screen_space.cpp
   src/s1/task/scrl.cpp

@@ -5,7 +5,7 @@
 #include "s1/save_format.hpp"
 #include "s1/task/mmtk.hpp"
 #include "s1/task/modu.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/fbgg.hpp"
 #include "s1/task/sygh.hpp"
 #include "s1/task/vfma.hpp"

@@ -7,7 +7,7 @@
 #include "s1/task/ctrl.hpp"
 #include "s1/task/pack.hpp"
 #include "s1/task/padc.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 #include <cmath>
 #include <cstdio>

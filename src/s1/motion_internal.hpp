@@ -11,7 +11,7 @@
 #include "s1/task/came.hpp"
 #include "s1/task/motf.hpp"
 #include "s1/task/mbst.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/pack.hpp"
 #include "s1/player_control.hpp"
 #include "s1/task/cycle_man.hpp"

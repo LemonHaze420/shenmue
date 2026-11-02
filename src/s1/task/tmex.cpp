@@ -14,7 +14,7 @@
 #include "s1/matrix_stack.hpp"
 #include "s1/task/pack.hpp"
 #include "s1/task/padc.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/srch.hpp"
 #include "s1/task/time.hpp"
 #include "s1/ui_runtime.hpp"

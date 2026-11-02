@@ -22,6 +22,7 @@ SCN3_VALUE_TABLE(CameraCollisionStairCommand, ValueTableFlags::None, "CameraColl
 SCN3_VALUE_TABLE(CameraSettingsMode, ValueTableFlags::None, "CameraSettingsMode")
 SCN3_VALUE_TABLE(CameraUtilMode, ValueTableFlags::None, "CameraUtilMode")
 SCN3_VALUE_TABLE(CharaSelectState, ValueTableFlags::None, "CharaSelectState")
+SCN3_VALUE_TABLE(CharacterDisplayMode, ValueTableFlags::None, "CharacterDisplayMode")
 SCN3_VALUE_TABLE(ConversationDetailsMode, ValueTableFlags::None, "ConversationDetailsMode")
 SCN3_VALUE_TABLE(CycleManagerCommand, ValueTableFlags::None, "CycleManagerCommand")
 SCN3_VALUE_TABLE(DoorCommand, ValueTableFlags::None, "DoorCommand")
@@ -86,6 +87,8 @@ SCN3_VALUE_TABLE(eLNWKScriptMode, ValueTableFlags::None, "eLNWKScriptMode")
 SCN3_VALUE_TABLE(eMoveSkillAndUiCommand, ValueTableFlags::None, "eMoveSkillAndUiCommand")
 SCN3_VALUE_TABLE(eScenarioRuntimeCommand, ValueTableFlags::None, "eScenarioRuntimeCommand")
 SCN3_VALUE_TABLE(vfStageSetupScriptCommand, ValueTableFlags::None, "vfStageSetupScriptCommand")
+SCN3_VALUE_TABLE(TimedTransitionCommand, ValueTableFlags::None, "TimedTransitionCommand")
+SCN3_VALUE_TABLE(TimedTransitionFlags, ValueTableFlags::Bitmask, "TimedTransitionFlags")
 #endif
 
 #if defined(SCN3_ALIAS)
@@ -161,7 +164,7 @@ SCN3_ARG(Shenmue, 29, 0, 1, "flags", ArgKind::FlagsValue, 0, ValueTableId::Matri
 SCN3_ARG(Shenmue, 29, 0, 2, "vec", ArgKind::Vector3Ptr, 0, ValueTableId::None, ArgFlags::None)
 SCN3_ARG(Shenmue, 29, 0, 3, "unused", ArgKind::Opaque, 0, ValueTableId::None, ArgFlags::None)
 SCN3_ARG(Shenmue, 31, 0, 0, "chara_id", ArgKind::CharaId, 0, ValueTableId::None, ArgFlags::None)
-SCN3_ARG(Shenmue, 31, 0, 1, "value", ArgKind::Opaque, 0, ValueTableId::None, ArgFlags::None) SCN3_ARG(Shenmue, 32, 0, 0, "unused", ArgKind::Opaque, 0,
+SCN3_ARG(Shenmue, 31, 0, 1, "mode", ArgKind::EnumValue, 0, ValueTableId::CharacterDisplayMode, ArgFlags::None) SCN3_ARG(Shenmue, 32, 0, 0, "unused", ArgKind::Opaque, 0,
     ValueTableId::None, ArgFlags::None) SCN3_ARG(Shenmue, 32, 0, 1, "flag_index", ArgKind::Opaque, 0, ValueTableId::None, ArgFlags::None) SCN3_ARG(Shenmue, 32,
     0, 2, "value", ArgKind::Opaque, 0, ValueTableId::None,
     ArgFlags::None) SCN3_ARG(Shenmue, 45, 0, 0, "Mode", ArgKind::EnumValue, 0, ValueTableId::ScriptPlayerControlMode, ArgFlags::None) SCN3_ARG(Shenmue, 54, 0,
@@ -243,6 +246,8 @@ SCN3_ARG(Shenmue, 31, 0, 1, "value", ArgKind::Opaque, 0, ValueTableId::None, Arg
     ValueTableId::DoorCommand, ArgFlags::None) SCN3_ARG(SCNF, 8, 0, 6, "mode", ArgKind::EnumValue, 0, ValueTableId::eActionSelectorMode,
     ArgFlags::None) SCN3_ARG(SCNF, 32, 0, 6, "mode", ArgKind::EnumValue, 0, ValueTableId::eActionSelectorMode,
     ArgFlags::None) SCN3_ARG(SCNF, 34, 0, 6, "mode", ArgKind::EnumValue, 0, ValueTableId::eActionSelectorMode, ArgFlags::None)
+SCN3_ARG(Shenmue, 414, 0, 0, "mode", ArgKind::EnumValue, 0, ValueTableId::TimedTransitionCommand, ArgFlags::None)
+SCN3_ARG(Shenmue, 414, 0, 6, "flags", ArgKind::EnumValue, 0, ValueTableId::TimedTransitionFlags, ArgFlags::None)
 #endif
 
 #if defined(SCN3_RULE)
@@ -395,15 +400,15 @@ SCN3_ARG(Shenmue, 31, 0, 1, "value", ArgKind::Opaque, 0, ValueTableId::None, Arg
             "CYCLE_CMD_PARSE_PROGRAM_FOR_CHARA") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_PROCESS_SND,
             "CYCLE_CMD_PROCESS_SND") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_PROCESS_SND_EXTRA,
             "CYCLE_CMD_PROCESS_SND_EXTRA") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_QUEUE_INTERSECTION_ENTRY,
-            "CYCLE_CMD_QUEUE_INTERSECTION_ENTRY") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_RESET_COUNTER_149E38484,
-            "CYCLE_CMD_RESET_COUNTER_149E38484") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_SETUP, "CYCLE_CMD_SETUP") SCN3_VALUE_NAME(CycleManagerCommand,
+            "CYCLE_CMD_QUEUE_INTERSECTION_ENTRY") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_RESET_LOAD_SETTLE,
+            "CYCLE_CMD_RESET_LOAD_SETTLE") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_SETUP, "CYCLE_CMD_SETUP") SCN3_VALUE_NAME(CycleManagerCommand,
             CYCLE_CMD_SET_CYCLE_MANAGER_ENABLED, "CYCLE_CMD_SET_CYCLE_MANAGER_ENABLED") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_SET_GLOBAL_CYCLE_PTR,
             "CYCLE_CMD_SET_GLOBAL_CYCLE_PTR") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_SET_MOBJ_FIELD_108_BOOL,
             "CYCLE_CMD_SET_MOBJ_FIELD_108_BOOL") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_SET_MOVEMENT_GLOBALS,
             "CYCLE_CMD_SET_MOVEMENT_GLOBALS") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_SET_RUNNING_PROGRAM_FIELD_B8,
             "CYCLE_CMD_SET_RUNNING_PROGRAM_FIELD_B8") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_SIMSET_GLOBALFLAG_CHECK,
-            "CYCLE_CMD_SIMSET_GLOBALFLAG_CHECK") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_TICK_COUNTER_149E38484,
-            "CYCLE_CMD_TICK_COUNTER_149E38484") SCN3_VALUE_NAME(DoorCommand, DOOR_CMD_ALLOC_ENTRY_SLOT,
+            "CYCLE_CMD_SIMSET_GLOBALFLAG_CHECK") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_TICK_LOAD_SETTLE_COUNT,
+            "CYCLE_CMD_TICK_LOAD_SETTLE_COUNT") SCN3_VALUE_NAME(DoorCommand, DOOR_CMD_ALLOC_ENTRY_SLOT,
             "DOOR_CMD_ALLOC_ENTRY_SLOT") SCN3_VALUE_NAME(DoorCommand, DOOR_CMD_CALC_VECTOR_FROM_ANGLE,
             "DOOR_CMD_CALC_VECTOR_FROM_ANGLE") SCN3_VALUE_NAME(DoorCommand, DOOR_CMD_CLEAR_STATE,
             "DOOR_CMD_CLEAR_STATE") SCN3_VALUE_NAME(DoorCommand, DOOR_CMD_FIND_CLOSEST_ELEMENT,
@@ -592,14 +597,14 @@ SCN3_ARG(Shenmue, 31, 0, 1, "value", ArgKind::Opaque, 0, ValueTableId::None, Arg
             "CYCLE_CMD_PARSE_FOR_SCRIPT_INTERNAL_HUMAN") SCN3_VALUE_NAME(ScriptCycleCommand, 0x15u,
             "CYCLE_CMD_PARSE_PROGRAM_FOR_CHARA") SCN3_VALUE_NAME(ScriptCycleCommand, 0x3u, "CYCLE_CMD_PROCESS_SND") SCN3_VALUE_NAME(ScriptCycleCommand, 0x12u,
             "CYCLE_CMD_PROCESS_SND_EXTRA") SCN3_VALUE_NAME(ScriptCycleCommand, 0x1Fu, "CYCLE_CMD_QUEUE_INTERSECTION_ENTRY") SCN3_VALUE_NAME(ScriptCycleCommand,
-            0x1Cu, "CYCLE_CMD_RESET_COUNTER_149E38484") SCN3_VALUE_NAME(ScriptCycleCommand, 0x0u,
+            0x1Cu, "CYCLE_CMD_RESET_LOAD_SETTLE") SCN3_VALUE_NAME(ScriptCycleCommand, 0x0u,
             "CYCLE_CMD_SETUP") SCN3_VALUE_NAME(ScriptCycleCommand, 0x8u, "CYCLE_CMD_SET_CYCLE_MANAGER_ENABLED") SCN3_VALUE_NAME(ScriptCycleCommand, 0xEu,
             "CYCLE_CMD_SET_GLOBAL_CYCLE_PTR") SCN3_VALUE_NAME(ScriptCycleCommand, 0x25Au,
             "CYCLE_CMD_SET_MOBJ_FIELD_108_BOOL") SCN3_VALUE_NAME(ScriptCycleCommand, 0x16u,
             "CYCLE_CMD_SET_MOVEMENT_GLOBALS") SCN3_VALUE_NAME(ScriptCycleCommand, 0xDu,
             "CYCLE_CMD_SET_RUNNING_PROGRAM_FIELD_B8") SCN3_VALUE_NAME(ScriptCycleCommand, 0x9u,
             "CYCLE_CMD_SIMSET_GLOBALFLAG_CHECK") SCN3_VALUE_NAME(ScriptCycleCommand, 0x1Du,
-            "CYCLE_CMD_TICK_COUNTER_149E38484") SCN3_VALUE_NAME(ScriptMathMode, SCRIPT_MATH_ABS,
+            "CYCLE_CMD_TICK_LOAD_SETTLE_COUNT") SCN3_VALUE_NAME(ScriptMathMode, SCRIPT_MATH_ABS,
             "SCRIPT_MATH_ABS") SCN3_VALUE_NAME(ScriptMathMode, SCRIPT_MATH_ADD,
             "SCRIPT_MATH_ADD") SCN3_VALUE_NAME(ScriptMathMode, SCRIPT_MATH_COS_FIXED16,
             "SCRIPT_MATH_COS_FIXED16") SCN3_VALUE_NAME(ScriptMathMode, SCRIPT_MATH_DIVIDE, "SCRIPT_MATH_DIVIDE") SCN3_VALUE_NAME(ScriptMathMode,
@@ -630,7 +635,7 @@ SCN3_ARG(Shenmue, 31, 0, 1, "value", ArgKind::Opaque, 0, ValueTableId::None, Arg
             "PCCTL_QueryRequestIdle") SCN3_VALUE_NAME(ScriptPlayerControlMode, 0x2u, "PCCTL_QueryShouldRun") SCN3_VALUE_NAME(ScriptPlayerControlMode, 0xAu,
             "PCCTL_QueryUnknownCPCTStateA") SCN3_VALUE_NAME(ScriptPlayerControlMode, 0x7u,
             "PCCTL_RequestNewMode") SCN3_VALUE_NAME(ScriptPlayerControlMode, 0x1u,
-            "PCCTL_ResetAuthAndInputStates") SCN3_VALUE_NAME(ScriptPlayerControlMode, 0x9u,
+            "RYO_RestoreControl") SCN3_VALUE_NAME(ScriptPlayerControlMode, 0x9u,
             "PCCTL_SetCPCTFlag400") SCN3_VALUE_NAME(ScriptPlayerControlMode, 0xDu,
             "PCCTL_SetCPCTFlag800Inverted") SCN3_VALUE_NAME(ScriptPlayerControlMode, 0x6u,
             "PCCTL_SkipNavRegionFiltering") SCN3_VALUE_NAME(ScriptPlayerControlMode, 0xCu,
@@ -1117,4 +1122,14 @@ SCN3_ARG(Shenmue, 31, 0, 1, "value", ArgKind::Opaque, 0, ValueTableId::None, Arg
 #define SHENMUE_S1_FLAG(name, value) SCN3_VALUE_NAME(ShenmueFlag, value, "SHENMUE_FLAG_" #name)
 #include "common/script_catalogue.def"
 #undef SHENMUE_S1_FLAG
+SCN3_VALUE_NAME(CharacterDisplayMode, CDM_Hide, "CDM_Hide")
+SCN3_VALUE_NAME(CharacterDisplayMode, CDM_Query, "CDM_Query")
+SCN3_VALUE_NAME(CharacterDisplayMode, CDM_Show, "CDM_Show")
+SCN3_VALUE_NAME(TimedTransitionCommand, TIMED_TRANSITION_GET_ENABLED, "TIMED_TRANSITION_GET_ENABLED")
+SCN3_VALUE_NAME(TimedTransitionCommand, TIMED_TRANSITION_REGISTER, "TIMED_TRANSITION_REGISTER")
+SCN3_VALUE_NAME(TimedTransitionCommand, TIMED_TRANSITION_SET_ENABLED, "TIMED_TRANSITION_SET_ENABLED")
+SCN3_VALUE_NAME(TimedTransitionFlags, TimedTransitionAreaScopedPrunable, "TimedTransitionAreaScopedPrunable")
+SCN3_VALUE_NAME(TimedTransitionFlags, TimedTransitionCaptureCurrentArea, "TimedTransitionCaptureCurrentArea")
+SCN3_VALUE_NAME(TimedTransitionFlags, TimedTransitionRollbackToPreviousDay2330, "TimedTransitionRollbackToPreviousDay2330")
+SCN3_VALUE_NAME(TimedTransitionFlags, TimedTransitionUpdateMemoItem150, "TimedTransitionUpdateMemoItem150")
 #endif

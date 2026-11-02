@@ -1,4 +1,4 @@
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/vfma.hpp"
 #include "s1/input.hpp"
 #include "s1/motion.hpp"

@@ -15,7 +15,7 @@
 #include "s1/task/lamp.hpp"
 #include "s1/task/mdlm.hpp"
 #include "s1/task/pack.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/telm.hpp"
 #include "common/utility.hpp"
 

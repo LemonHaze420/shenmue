@@ -1,5 +1,5 @@
 #include "scn3/native/data.hpp"
-#include "s1/task/scen_internal.hpp"
+#include "s1/task/scen/internal.hpp"
 #include "s1/face.hpp"
 #include "s1/date_time.hpp"
 #include "scn3/native/fields.hpp"

@@ -1,4 +1,4 @@
-#include "s1/task/scen_state.hpp"
+#include "s1/task/scen/state.hpp"
 
 namespace shenmue::s1::scen_detail {
 

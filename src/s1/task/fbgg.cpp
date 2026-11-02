@@ -14,7 +14,7 @@
 #include "s1/task/ctrl.hpp"
 #include "s1/task/lamp.hpp"
 #include "s1/task/pack.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/sond.hpp"
 #include "s1/ui_runtime.hpp"
 

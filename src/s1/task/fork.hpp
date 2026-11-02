@@ -1,7 +1,7 @@
 #pragma once
 
 #include "s1/task/char.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 #include <cstddef>
 #include <cstdint>

@@ -3,7 +3,7 @@
 #include "s1/frame_pipeline.hpp"
 #include "s1/hlib.hpp"
 #include "s1/subtitles.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 #include <bit>
 #include <cstddef>

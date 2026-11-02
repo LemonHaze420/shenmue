@@ -15,7 +15,7 @@
 #include "s1/task/wexe.hpp"
 #include "s1/file_loader.hpp"
 #include "s1/save_format.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/audio_stream.hpp"
 #include "s1/subtitles.hpp"
 #include "s1/date_time.hpp"

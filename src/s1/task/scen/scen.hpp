@@ -15,6 +15,35 @@
 
 namespace shenmue::s1 {
 
+enum CharacterDisplayMode : std::int32_t {
+    CDM_Query = 0,
+    CDM_Show = 1,
+    CDM_Hide = 2,
+};
+
+enum RyoControlCommand : std::uint32_t {
+    RYO_RestoreControl = 1,
+};
+
+enum ScenarioCycleCommand : std::uint32_t {
+    CYCLE_CMD_RESET_LOAD_SETTLE = 0x1c,
+    CYCLE_CMD_TICK_LOAD_SETTLE_COUNT = 0x1d,
+};
+
+enum TimedTransitionCommand : std::uint32_t {
+    TIMED_TRANSITION_SET_ENABLED = 2,
+    TIMED_TRANSITION_GET_ENABLED = 3,
+    TIMED_TRANSITION_REGISTER = 4,
+};
+
+enum TimedTransitionFlags : std::uint8_t {
+    TimedTransitionRollbackToPreviousDay2330 = 0x01,
+    TimedTransitionAreaScopedPrunable = 0x02,
+    TimedTransitionCaptureCurrentArea = 0x04,
+    TimedTransitionUpdateMemoItem150 = 0x08,
+};
+
+
 bool GetFlag(std::uint32_t flag);
 struct ScenarioRegisters;
 struct ScenarioContext;

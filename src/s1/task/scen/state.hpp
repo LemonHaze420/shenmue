@@ -1,6 +1,6 @@
 #pragma once
-#include "s1/task/scen_internal.hpp"
-#include "s1/task/scen_transitions.hpp"
+#include "s1/task/scen/internal.hpp"
+#include "s1/task/scen/transitions.hpp"
 
 namespace shenmue::s1::scen_detail {
 

@@ -2,11 +2,23 @@
 
 #include <cstdint>
 
+#include "s1/task/scen/scen.hpp"
+
 #include "s1/boot.hpp"
 #include "s1/task/dswk.hpp"
 #include "s1/task/scrl.hpp"
 
 namespace shenmue::scenario {
+inline constexpr std::uint32_t CDM_Hide = s1::CDM_Hide;
+inline constexpr std::uint32_t CDM_Query = s1::CDM_Query;
+inline constexpr std::uint32_t CDM_Show = s1::CDM_Show;
+inline constexpr std::uint32_t TIMED_TRANSITION_GET_ENABLED = s1::TIMED_TRANSITION_GET_ENABLED;
+inline constexpr std::uint32_t TIMED_TRANSITION_REGISTER = s1::TIMED_TRANSITION_REGISTER;
+inline constexpr std::uint32_t TIMED_TRANSITION_SET_ENABLED = s1::TIMED_TRANSITION_SET_ENABLED;
+inline constexpr std::uint32_t TimedTransitionAreaScopedPrunable = s1::TimedTransitionAreaScopedPrunable;
+inline constexpr std::uint32_t TimedTransitionCaptureCurrentArea = s1::TimedTransitionCaptureCurrentArea;
+inline constexpr std::uint32_t TimedTransitionRollbackToPreviousDay2330 = s1::TimedTransitionRollbackToPreviousDay2330;
+inline constexpr std::uint32_t TimedTransitionUpdateMemoItem150 = s1::TimedTransitionUpdateMemoItem150;
 inline constexpr std::uint32_t UP = 0x00001000U;
 inline constexpr std::uint32_t DOWN = 0x00002000U;
 inline constexpr std::uint32_t LEFT = 0x00004000U;
@@ -47,8 +59,8 @@ inline constexpr std::uint32_t CYCLE_CMD_MOBJ_POP_TEMP_STATE_41 = 0x00000018U;
 inline constexpr std::uint32_t CYCLE_CMD_MOBJ_SET_TEMP_STATE_41_POS = 0x00000019U;
 inline constexpr std::uint32_t CYCLE_CMD_MOBJ_SET_TEMP_STATE_41_WORD5 = 0x0000001AU;
 inline constexpr std::uint32_t CYCLE_CMD_PARSE_FOR_SCRIPT_INTERNAL_HUMAN = 0x0000001BU;
-inline constexpr std::uint32_t CYCLE_CMD_RESET_COUNTER_149E38484 = 0x0000001CU;
-inline constexpr std::uint32_t CYCLE_CMD_TICK_COUNTER_149E38484 = 0x0000001DU;
+inline constexpr std::uint32_t CYCLE_CMD_RESET_LOAD_SETTLE = s1::CYCLE_CMD_RESET_LOAD_SETTLE;
+inline constexpr std::uint32_t CYCLE_CMD_TICK_LOAD_SETTLE_COUNT = s1::CYCLE_CMD_TICK_LOAD_SETTLE_COUNT;
 inline constexpr std::uint32_t CYCLE_CMD_IS_DOOR_OR_MOBJ_TYPE2 = 0x0000001EU;
 inline constexpr std::uint32_t CYCLE_CMD_QUEUE_INTERSECTION_ENTRY = 0x0000001FU;
 inline constexpr std::uint32_t CYCLE_CMD_GET_MOBJ_PRIMARY_DOOR_OPEN_PERCENT = 0x00000258U;
@@ -291,7 +303,7 @@ inline constexpr std::uint32_t scnPostResultsSetup = 0x00000000U;
 inline constexpr std::uint32_t scnPostBattleDelay = 0x00000001U;
 inline constexpr std::uint32_t scnExitConfirmPending = 0x00000002U;
 inline constexpr std::uint32_t PCCTL_DisablePlayerControl = 0x00000000U;
-inline constexpr std::uint32_t PCCTL_ResetAuthAndInputStates = 0x00000001U;
+inline constexpr std::uint32_t RYO_RestoreControl = s1::RYO_RestoreControl;
 inline constexpr std::uint32_t PCCTL_QueryShouldRun = 0x00000002U;
 inline constexpr std::uint32_t PCCTL_DisableForcedYawSnap = 0x00000003U;
 inline constexpr std::uint32_t PCCTL_EnableForcedYawSnap = 0x00000004U;

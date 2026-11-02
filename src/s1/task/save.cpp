@@ -19,7 +19,7 @@
 #include "s1/player_stats.hpp"
 #include "s1/task/lcdm.hpp"
 #include "s1/texture_cache.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/disp.hpp"
 #include "s1/task/cycle_man.hpp"
 

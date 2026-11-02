@@ -16,7 +16,7 @@
 #include "s1/task/save.hpp"
 #include "s1/save_format.hpp"
 #include "s1/task/sond.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/time.hpp"
 #include "s1/task/tmlt.hpp"
 #include "s1/task/updb.hpp"

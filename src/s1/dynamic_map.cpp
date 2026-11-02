@@ -6,7 +6,7 @@
 #include "s1/mt5_render.hpp"
 #include "s1/task/came.hpp"
 #include "s1/task/pack.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 #include <algorithm>
 #include <array>

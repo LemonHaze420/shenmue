@@ -2,7 +2,7 @@
 #include "scn3/native/abi.hpp"
 #include "scn3/native/data.hpp"
 #include "scn3/native/fields.hpp"
-#include "s1/task/scen_internal.hpp"
+#include "s1/task/scen/internal.hpp"
 #include "s1/lighting.hpp"
 
 #include <array>
@@ -28,7 +28,7 @@ namespace {
 
 constexpr NativeParameterRead taskEntryReads[] = {{.byteOffset = offsetof(s1::scen_detail::CreateScenarioTaskParameters, argumentCount), .guards = {}},
     {.byteOffset = offsetof(s1::scen_detail::CreateScenarioTaskParameters, functionOffset), .guards = {}}};
-constexpr NativeArgumentLayout taskEntryLayout{.command = "Script_CreateScenarioTask",
+constexpr NativeArgumentLayout taskEntryLayout{.command = "Script_scenCreateTask",
     .reads = taskEntryReads,
     .callbackOffset = offsetof(s1::scen_detail::CreateScenarioTaskParameters, functionOffset),
     .countOffset = offsetof(s1::scen_detail::CreateScenarioTaskParameters, argumentCount),

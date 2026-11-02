@@ -15,7 +15,7 @@
 #include "s1/task/sygh.hpp"
 
 #include "s1/task/cycle_man.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/tmex.hpp"
 #include "s1/task/wzog.hpp"
 #include "s1/ui_runtime.hpp"

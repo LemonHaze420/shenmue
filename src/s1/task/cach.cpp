@@ -2,7 +2,7 @@
 #include "s1/task/esop.hpp"
 #include "s1/task/came.hpp"
 #include "s1/task/srch.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/updb.hpp"
 
 #include "s1/boot.hpp"

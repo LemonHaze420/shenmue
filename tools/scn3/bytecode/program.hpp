@@ -4,7 +4,7 @@
 #include "scn3/bytecode/isa.hpp"
 #include "scn3/bytecode/value.hpp"
 
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 namespace shenmue::scenario {
 

@@ -1,4 +1,4 @@
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/conv.hpp"
 #include "logging.hpp"
 
@@ -98,7 +98,7 @@
 #include <deque>
 #include <utility>
 
-#include "s1/task/scen_internal.hpp"
+#include "s1/task/scen/internal.hpp"
 
 namespace shenmue::s1 {
 using namespace scen_detail;

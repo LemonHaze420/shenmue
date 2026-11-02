@@ -27,7 +27,7 @@
 #include "s1/scene.hpp"
 #include "s1/render_passes.hpp"
 #include "s1/render_array.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/scrl.hpp"
 #include "s1/task/trwv.hpp"
 #include "s1/input.hpp"

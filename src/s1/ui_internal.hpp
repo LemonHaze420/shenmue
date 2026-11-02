@@ -71,7 +71,7 @@
 #include "s1/task/wzog.hpp"
 #include "s1/task/time.hpp"
 #include "s1/task/tmex.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/wind.hpp"
 #include "s1/player_control.hpp"
 #include "s1/player_stats.hpp"

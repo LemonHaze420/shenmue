@@ -17,7 +17,7 @@
 #include "s1/task/mmtk.hpp"
 #include "s1/task/pack.hpp"
 #include "s1/task/padc.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/sond.hpp"
 #include "s1/task/srch.hpp"
 #include "s1/timing.hpp"

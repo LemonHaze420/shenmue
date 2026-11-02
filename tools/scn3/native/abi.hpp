@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string_view>
 #include "scn3/native/constants.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 namespace shenmue::scenario::abi {
 
@@ -145,6 +145,7 @@ enum class ValueTableId : std::uint16_t {
     CameraSettingsMode,
     CameraUtilMode,
     CharaSelectState,
+    CharacterDisplayMode,
     ConversationDetailsMode,
     CycleManagerCommand,
     DoorCommand,
@@ -196,6 +197,8 @@ enum class ValueTableId : std::uint16_t {
     VFActorFlags,
     VFFightStyle,
     VFFormationMode,
+    TimedTransitionCommand,
+    TimedTransitionFlags,
     VehicleCommand,
     VirtualFighterCommand,
     W3D_Opcode,

@@ -1,5 +1,5 @@
 #include "s1/task/updb.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/sygh.hpp"
 
 #include "s1/player_stats.hpp"

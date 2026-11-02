@@ -156,7 +156,7 @@ void SourceParser::parseIncludeDirective() {
         fail("Unsupported preprocessor directive #" + directive);
     }
     const std::string header = expectString();
-    if (mode_ == SourceParserMode::Source && header != "scenario.h" && header != "s1/task/scen.hpp" && header != "s1/task/dswk.hpp" &&
+    if (mode_ == SourceParserMode::Source && header != "scenario.h" && header != "s1/task/scen/scen.hpp" && header != "s1/task/dswk.hpp" &&
         !loadMotionInclude(header))
         fail("Header has no compile-time scenario binding: " + header);
     matchPunct(";");

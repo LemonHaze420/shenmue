@@ -758,7 +758,7 @@ CRecovery recoverC(const Program &program, const std::string &profile, const std
     const auto callee = [&](const SourceExpr &call) -> std::pair<std::string, size_t> {
         if (unit.functions.count(call.text))
             return {call.text, 0};
-        if (call.text == "Script_CreateScenarioTask" && call.args.size() >= 2 && call.args[0].kind == SourceExprKind::Identifier &&
+        if (call.text == "Script_scenCreateTask" && call.args.size() >= 2 && call.args[0].kind == SourceExprKind::Identifier &&
             unit.functions.count(call.args[0].text))
             return {call.args[0].text, 2};
         return {};

@@ -19,7 +19,7 @@
 #include "s1/task/padc.hpp"
 #include "s1/task/mdlm.hpp"
 
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/vfma.hpp"
 #include "s1/task/srch.hpp"
 #include "s1/task/esop.hpp"

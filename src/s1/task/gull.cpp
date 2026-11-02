@@ -8,7 +8,7 @@
 #include "s1/mt5_types.hpp"
 #include "s1/task/ctrl.hpp"
 #include "s1/task/pack.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/came.hpp"
 #include "s1/task/drwp.hpp"
 #include "common/types.hpp"

@@ -22,7 +22,7 @@
 #include "s1/task/fork.hpp"
 #include "s1/task/esop.hpp"
 #include "s1/task/conv.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/obje.hpp"
 #include "s1/task/sond.hpp"
 #include "s1/task/time.hpp"

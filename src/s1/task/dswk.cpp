@@ -10,7 +10,7 @@
 #include "s1/task/mdlm.hpp"
 #include "s1/task/cycle_man.hpp"
 #include "s1/task/obje.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/srch.hpp"
 
 #include <algorithm>

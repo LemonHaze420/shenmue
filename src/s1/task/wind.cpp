@@ -4,7 +4,7 @@
 #include "s1/d3t/d3t_texture.hpp"
 #include "s1/frame_pipeline.hpp"
 #include "s1/screen_space.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/effe.hpp"
 #include "s1/timing.hpp"
 

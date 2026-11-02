@@ -550,7 +550,7 @@ struct SimNode {
 #include "s1/file_state.hpp"
 #include "s1/task/pack.hpp"
 #include "s1/motion.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 #include <algorithm>
 #include <array>

@@ -5,7 +5,7 @@
 #include "s1/hlib.hpp"
 #include "s1/mt5_types.hpp"
 #include "s1/task/char.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 namespace shenmue::s1 {
 

@@ -7,7 +7,7 @@
 #include "s1/mt5_types.hpp"
 #include "s1/task/char.hpp"
 #include "s1/task/pack.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 #include <bit>
 #include <array>

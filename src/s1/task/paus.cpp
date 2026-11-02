@@ -13,7 +13,7 @@
 #include "s1/ui_runtime.hpp"
 #include "s1/task/effe.hpp"
 #include "s1/task/sond.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/timing.hpp"
 
 #include <bit>

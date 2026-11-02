@@ -19,7 +19,7 @@
 #include "s1/task/modu.hpp"
 #include "s1/task/ppad.hpp"
 #include "s1/task/srch.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/scnt.hpp"
 #include "s1/task/sond.hpp"
 #include "s1/task/tmex.hpp"

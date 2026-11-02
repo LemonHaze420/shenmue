@@ -7,7 +7,7 @@
 #include "s1/motion.hpp"
 
 #include "s1/subtitles.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/screen_space.hpp"
 #include "s1/task/cycle_man.hpp"
 #include "s1/task/wind.hpp"

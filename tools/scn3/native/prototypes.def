@@ -615,7 +615,7 @@ SCN3_MODE(Script_SetCharaFlags, 1 == 100 && 2 == 1, int32_t value, const Vector3
 SCN3_MODE(Script_SetCharaFlags, 1 == 100 && 2 == 2, int32_t value, uint32_t shadowYaw)
 SCN3_MODE(Script_SetCharaFlags, 1 == 101, int32_t value, float shadowHeight)
 
-SCN3_PROTOTYPE(Script_SetCharaVisibility, int32_t, shen_name characterId, int32_t mode)
+SCN3_PROTOTYPE(Script_charaDisplay, int32_t, shen_name characterId, int32_t mode)
 
 SCN3_PROTOTYPE(Script_SetCurrentScrollEnabled, void, int32_t enabled)
 
@@ -1052,7 +1052,7 @@ SCN3_PROTOTYPE(Script_SetVector4ByOffset, void, const Vector4 *position)
 
 SCN3_PROTOTYPE(Script_StartNozomiBikeSeq, int32_t, int32_t start, uint32_t unused1, uint32_t unused2)
 
-SCN3_PROTOTYPE(Script_ToggleCPCTForChara, int32_t, shen_name chara)
+SCN3_PROTOTYPE(Script_ryoSetChara, int32_t, shen_name chara)
 
 SCN3_PROTOTYPE(Script_UpdateTaskCollisionCache, int32_t, int32_t slot, int32_t onlyIfChanged, const Vector3 *point)
 
@@ -1155,7 +1155,7 @@ SCN3_PROTOTYPE(Script_CopyAndModifyChid, void, const char *name)
 
 SCN3_PROTOTYPE(Script_EVT_GetPosition, void, shen_name characterId, int32_t nodeId, Vector3 *position, uint32_t flags)
 
-SCN3_PROTOTYPE(Script_EVT_ryoToggleFreeState, void, int32_t value)
+SCN3_PROTOTYPE(Script_shenClearFreeState, void, int32_t value)
 
 SCN3_PROTOTYPE(Script_EventCamReader, int32_t, int32_t sequenceIndex, shen_name eyeOwner, shen_name targetOwner, shen_name character)
 
@@ -1205,14 +1205,14 @@ SCN3_MODE(Script_MathUtils, 0 == 16, float value1)
 SCN3_MODE(Script_MathUtils, 0 == 15, const Vector3 *value1, const Vector3 *value2)
 SCN3_MODE(Script_MathUtils, 0 == 17, const Vector3 *origin, int32_t angle, Vector3 *point)
 
-SCN3_PROTOTYPE(Script_PlayerControlUtils, int32_t, int32_t mode, ...)
-SCN3_MODE(Script_PlayerControlUtils, 0 == 7, int32_t argument)
-SCN3_MODE(Script_PlayerControlUtils, 0 == 9, uint32_t argument)
-SCN3_MODE(Script_PlayerControlUtils, 0 == 12, uint32_t argument)
-SCN3_MODE(Script_PlayerControlUtils, 0 == 13, uint32_t argument)
-SCN3_MODE(Script_PlayerControlUtils, 0 == 14, shen_name argument, int32_t argument2)
-SCN3_MODE(Script_PlayerControlUtils, 0 == 16, shen_name argument)
-SCN3_MODE(Script_PlayerControlUtils, 0 == 17, uint32_t argument)
+SCN3_PROTOTYPE(Script_ryoControl, int32_t, int32_t mode, ...)
+SCN3_MODE(Script_ryoControl, 0 == 7, int32_t argument)
+SCN3_MODE(Script_ryoControl, 0 == 9, uint32_t argument)
+SCN3_MODE(Script_ryoControl, 0 == 12, uint32_t argument)
+SCN3_MODE(Script_ryoControl, 0 == 13, uint32_t argument)
+SCN3_MODE(Script_ryoControl, 0 == 14, shen_name argument, int32_t argument2)
+SCN3_MODE(Script_ryoControl, 0 == 16, shen_name argument)
+SCN3_MODE(Script_ryoControl, 0 == 17, uint32_t argument)
 
 SCN3_PROTOTYPE(Script_ProcessSubtitleText, void, const char *text)
 

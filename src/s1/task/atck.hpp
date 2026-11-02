@@ -2,7 +2,7 @@
 
 #include "s1/hlib.hpp"
 #include "s1/task/film.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>

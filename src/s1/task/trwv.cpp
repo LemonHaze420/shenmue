@@ -21,7 +21,7 @@
 #include "s1/task/drwp.hpp"
 #include "s1/task/effe.hpp"
 #include "s1/task/obje.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/timing.hpp"
 #include "d3t/image_texture_loader.hpp"
 #include "common/utility.hpp"

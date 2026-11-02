@@ -1,7 +1,7 @@
 #include "s1/scene.hpp"
 
 #include "s1/d3t/d3t_buffer.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 #include "s1/hlib.hpp"
 

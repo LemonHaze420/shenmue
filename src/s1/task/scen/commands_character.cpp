@@ -1,4 +1,4 @@
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/conv.hpp"
 #include "logging.hpp"
 
@@ -98,7 +98,7 @@
 #include <deque>
 #include <utility>
 
-#include "s1/task/scen_internal.hpp"
+#include "s1/task/scen/internal.hpp"
 
 namespace shenmue::s1 {
 using namespace scen_detail;
@@ -140,7 +140,7 @@ void Script_fixoSetAttachmentOffset(ScenarioContext *context, void *rawParams) {
         character, ScenarioPointer<const Vector3>(params->positionOffsetOrNodeKind), ScenarioPointer<const Vector3i>(params->rotationOffset));
 }
 
-void Script_ToggleCPCTForChara(ScenarioContext *context, void *rawParams) {
+void Script_ryoSetChara(ScenarioContext *context, void *rawParams) {
     if (!context || !rawParams)
         return;
     const std::uint32_t characterId = *static_cast<const std::uint32_t *>(rawParams);
@@ -477,19 +477,19 @@ void Script_hmdlApplyScale(ScenarioContext *context, void *rawParams) {
         character->scale = *scale;
 }
 
-void Script_EVT_ryoToggleFreeState(ScenarioContext *, void *rawParams) {
+void Script_shenClearFreeState(ScenarioContext *, void *rawParams) {
     if (*static_cast<const std::uint32_t *>(rawParams))
         Shenmue_nPauseState &= ~0x20;
 }
 
-void Script_SetCharaVisibility(ScenarioContext *context, void *rawParams) {
+void Script_charaDisplay(ScenarioContext *context, void *rawParams) {
     const auto *const params = static_cast<const CharacterVisibilityParameters *>(rawParams);
     Character *const character = params->characterId.name ? CHID_Find(context->task->task, params->characterId.name) : nullptr;
     switch (params->mode) {
-    case 0:
+    case CDM_Query:
         context->stack->accumulator = character && (character->motionFlags & 4) ? 0xffffffffU : 0;
         break;
-    case 1:
+    case CDM_Show:
         if (character) {
             const bool wasVisible = (character->motionFlags & 4U) != 0;
             character->motionFlags |= 4U;
@@ -499,7 +499,7 @@ void Script_SetCharaVisibility(ScenarioContext *context, void *rawParams) {
         }
         context->stack->accumulator = 0xffffffffU;
         break;
-    case 2:
+    case CDM_Hide:
         if (character) {
             const bool wasVisible = (character->motionFlags & 4U) != 0;
             character->motionFlags &= static_cast<std::uint8_t>(~4U);

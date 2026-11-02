@@ -1,4 +1,4 @@
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 #include "s1/task/conv.hpp"
 #include "logging.hpp"
 
@@ -98,7 +98,7 @@
 #include <deque>
 #include <utility>
 
-#include "s1/task/scen_internal.hpp"
+#include "s1/task/scen/internal.hpp"
 
 namespace shenmue::s1 {
 using namespace scen_detail;
@@ -255,7 +255,7 @@ void Script_ctrlProcessReqScene(ScenarioContext *, void *) {
     }
 }
 
-void Script_CreateScenarioTask(ScenarioContext *context, void *rawParams) {
+void Script_scenCreateTask(ScenarioContext *context, void *rawParams) {
     if (!context || !context->task || !context->stack || !rawParams)
         return;
     const auto *const params = static_cast<const CreateScenarioTaskParameters *>(rawParams);
@@ -322,7 +322,7 @@ void Script_StepUtils(ScenarioContext *context, void *rawParams) {
     }
 }
 
-void Script_PlayerControlUtils(ScenarioContext *context, void *rawParams) {
+void Script_ryoControl(ScenarioContext *context, void *rawParams) {
     const auto *const params = static_cast<const PlayerControlParameters *>(rawParams);
     if (!context || !context->stack || !params)
         return;
@@ -338,7 +338,7 @@ void Script_PlayerControlUtils(ScenarioContext *context, void *rawParams) {
     case 0:
         navDisablePlayerControl();
         return;
-    case 1:
+    case RYO_RestoreControl:
         navResetAuthAndInputStates();
         return;
     case 2:
@@ -2225,11 +2225,11 @@ void Script_CycleManagerUtils(ScenarioContext *context, void *rawParams) {
     case 0x1b:
         context->stack->accumulator = ScriptPackSlotWord(CycleManager::ParseForScript_InternalForHuman(params->operand));
         break;
-    case 0x1c:
+    case CYCLE_CMD_RESET_LOAD_SETTLE:
         g_cycleManagerRuntime.cycleLoadSettleFrameCounter = 0;
         context->stack->accumulator = 0;
         break;
-    case 0x1d:
+    case CYCLE_CMD_TICK_LOAD_SETTLE_COUNT:
         ++g_cycleManagerRuntime.cycleLoadSettleFrameCounter;
         context->stack->accumulator = g_cycleManagerRuntime.cycleLoadSettleFrameCounter < 5 ?
             1U :
@@ -3483,14 +3483,14 @@ void Script_gachaponUtils(ScenarioContext *context, void *rawParams) {
 void Script_TimedTransitionUtils(ScenarioContext *context, void *rawParams) {
     const ScriptArguments arguments(context, rawParams);
     switch (arguments.word(0)) {
-    case 2:
+    case TIMED_TRANSITION_SET_ENABLED:
         g_scenarioTimedTransitionEnabled = arguments.word(1) != 0;
         arguments.result(g_scenarioTimedTransitionEnabled);
         break;
-    case 3:
+    case TIMED_TRANSITION_GET_ENABLED:
         arguments.result(g_scenarioTimedTransitionEnabled);
         break;
-    case 4: {
+    case TIMED_TRANSITION_REGISTER: {
         TimedTransitionParameters parameters{};
         if (rawParams)
             std::memcpy(&parameters, rawParams, sizeof(parameters));

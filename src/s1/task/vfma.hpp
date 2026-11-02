@@ -5,7 +5,7 @@
 #include <cstdint>
 
 #include "s1/hlib.hpp"
-#include "s1/task/scen.hpp"
+#include "s1/task/scen/scen.hpp"
 
 namespace shenmue::s1 {
 inline constexpr std::size_t kBattleSlots = 6;
