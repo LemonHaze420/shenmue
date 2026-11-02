@@ -1,3 +1,10 @@
+option(SHENMUE_BUILD_SCENARIOS
+  "Build and compile Shenmue scenario scripts" OFF)
+
+if(NOT SHENMUE_BUILD_SCENARIOS)
+  return()
+endif()
+
 if(CMAKE_CROSSCOMPILING)
   return()
 endif()

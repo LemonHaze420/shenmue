@@ -1,5 +1,7 @@
 # Shenmue I & II 
 
+[![S1 - Roundtrip](docs/s1-roundtrip.svg)](https://github.com/LemonHaze420/shenmue/actions/workflows/windows.yml)
+
 
 This repository contains a C++ reimplementation of Shenmue I & II for PC and Dreamcast, including the What's Shenmue promotional demo. 
 

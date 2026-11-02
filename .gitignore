@@ -15,9 +15,7 @@ compile_commands.json
 /decomp/*.i64
 /src/s1/temp/
 
-/src/s1/scenario/*.scn*
-/src/s1/scenario/*.c
-/src/s1/scenario/*.h
+/src/s1/scenario/*.scn
 /src/s1/scene/**/m_*.bin
 /src/s1/scene/**/m_*.h
 /src/s1/motion/motion.bin
