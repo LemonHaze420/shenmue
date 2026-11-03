@@ -39,6 +39,7 @@ try {
     $header = Join-Path $directory "$($file.BaseName).h"
     $rebuilt = Join-Path $directory "$($file.BaseName).rebuilt.scn"
     $stage = 'export'
+    Write-Host "[scenario] $relative started"
     try {
       Remove-Item $source, $header, $rebuilt -Force -ErrorAction SilentlyContinue
       Invoke-Scn3 @($file.FullName, '--export-c', $source) (Join-Path $directory "$($file.BaseName).export")
@@ -53,9 +54,10 @@ try {
         -RedirectStandardOutput (Join-Path $directory "$($file.BaseName).compare.log")
       if ($process.ExitCode -ne 0) { throw "SCN3 round-trip mismatch: $($file.Name)" }
       $results.Add(@{ script = $relative; success = $true; stage = 'complete' })
+      Write-Host "[scenario] $relative successfully round-tripped"
     } catch {
       $results.Add(@{ script = $relative; success = $false; stage = $stage; error = $_.Exception.Message })
-      Write-Host "FAILED ($stage): $relative - $($_.Exception.Message)"
+      Write-Host "[scenario] $relative failed ($stage): $($_.Exception.Message)"
       continue
     }
     $target = Join-Path $file.DirectoryName "$($file.BaseName).c"

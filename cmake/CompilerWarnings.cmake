@@ -4,7 +4,7 @@ endif()
 
 function(shenmue_set_project_warnings target)
     if(MSVC)
-        target_compile_options(${target} PRIVATE /W4 /permissive- /EHsc)
+        target_compile_options(${target} PRIVATE /W4 /permissive- /EHsc /MP2)
         if(SHENMUE_WARNINGS_AS_ERRORS)
             target_compile_options(${target} PRIVATE /WX)
         endif()

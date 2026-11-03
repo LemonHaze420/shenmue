@@ -29,9 +29,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Cannot stage generated files' }
 git diff --cached --quiet -- @paths
 if ($LASTEXITCODE -eq 0) { exit 0 }
 if ($LASTEXITCODE -ne 1) { throw 'Cannot compare generated files' }
-$message = "chore(scn3): update roundtrip results from $env:GITHUB_SHA"
-if ($IncludeSources -and (Test-Path $manifest)) { $message = "chore(scn3): sync decompiled scripts from $env:GITHUB_SHA" }
-git -c user.name=github-actions[bot] -c user.email=41898282+github-actions[bot]@users.noreply.github.com `
+$message = "chore(scn3-ci): update roundtrip results from $env:GITHUB_SHA"
+if ($IncludeSources -and (Test-Path $manifest)) { $message = "chore(scn3-ci): sync decompiled scripts from $env:GITHUB_SHA" }
+git -c user.name=LemonHaze420 -c user.email=35783139+LemonHaze420@users.noreply.github.com `
   -c commit.gpgsign=false commit --only -m $message -- @paths
 if ($LASTEXITCODE -ne 0) { throw 'Cannot commit generated files' }
 git push --no-follow-tags --recurse-submodules=no origin HEAD:refs/heads/master

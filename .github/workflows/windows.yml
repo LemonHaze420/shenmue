@@ -62,9 +62,13 @@ jobs:
           if-no-files-found: error
 
   build:
+    name: Build Shenmue ${{ matrix.game }}
     needs: hangon
     runs-on: windows-2022
     timeout-minutes: 120
+    strategy:
+      matrix:
+        game: [1, 2]
     defaults:
       run:
         shell: pwsh
@@ -77,15 +81,15 @@ jobs:
       - name: Configure games
         run: ./.github/scripts/configure-games.ps1 -BuildDirectory build/windows-asi
       - name: Build games
-        run: cmake --build build/windows-asi --config Release --target shenmue1_asi shenmue2_asi shenmue1 shenmue2 --parallel 4
+        run: cmake --build build/windows-asi --config Release --target shenmue${{ matrix.game }}_asi shenmue${{ matrix.game }} --parallel 4
       - name: Sign CI executables
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
           SIGNING_PFX: ${{ secrets.SIGNING_PFX }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
-          ./.github/scripts/sign-executables.ps1 -Files @('build/windows-asi/Release/shenmue1e.asi', 'build/windows-asi/Release/shenmue2e.asi',
-            'build/windows-asi/Release/shenmue1.exe', 'build/windows-asi/Release/shenmue2.exe')
+          ./.github/scripts/sign-executables.ps1 -Files @('build/windows-asi/Release/shenmue${{ matrix.game }}e.asi',
+            'build/windows-asi/Release/shenmue${{ matrix.game }}.exe')
 
   data:
     needs: build
