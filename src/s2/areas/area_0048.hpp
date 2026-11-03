@@ -1,4 +1,51 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/numeric_event_dc.h"
+#include "s2/event_sleep_dc.h"
+
+#define AREA_0048_YTQB SHEN_NAME4('Y', 'T', 'Q', 'B')
+#define AREA_0048_WB00 SHEN_NAME4('W', 'B', '0', '0')
+#define AREA_0048_SYE SHEN_NAME4('S', 'Y', 'E', '_')
+#define AREA_0048_A047 SHEN_NAME4('a', '0', '4', '7')
+#define AREA_0048_A021_SHIFT ((shen_name)(SHEN_NAME4('a', '0', '2', '1') | 0x400U))
+#define AREA_0048_A020_SHIFT ((shen_name)(SHEN_NAME4('a', '0', '2', '0') | 0x400U))
+#define AREA_0048_A073 SHEN_NAME4('a', '0', '7', '3')
+#define AREA_0048_A020 SHEN_NAME4('a', '0', '2', '0')
+#define AREA_0048_A022 SHEN_NAME4('a', '0', '2', '2')
+#define AREA_0048_A127 ((shen_name)(SHEN_NAME4('a', '1', '2', '7') | 0x10000U))
+#define AREA_0048_A128 ((shen_name)(SHEN_NAME4('a', '1', '2', '8') | 0x10000U))
+#define AREA_0048_A009 ((shen_name)(SHEN_NAME4('a', '0', '0', '9') | 0x30100U))
+#define AREA_0048_A041 ((shen_name)(SHEN_NAME4('a', '0', '4', '1') | 0x100U))
+#define AREA_0048_A021 SHEN_NAME4('a', '0', '2', '1')
+#define AREA_0048_A417 ((shen_name)(SHEN_NAME4('a', '4', '1', '7') | 0x20000U))
+#define AREA_0048_AA84 ((shen_name)(SHEN_NAME4('a', 'a', '8', '4') | 0x2010000U))
+#define AREA_0048_A412 SHEN_NAME4('a', '4', '1', '2')
+#define AREA_0048_AA63 ((shen_name)(SHEN_NAME4('a', 'a', '6', '3') | 0x10000U))
+#define AREA_0048_L001 SHEN_NAME4('l', '0', '0', '1')
+#define AREA_0048_L201 SHEN_NAME4('l', '2', '0', '1')
+#define AREA_0048_L701 SHEN_NAME4('l', '7', '0', '1')
+#define AREA_0048_L301 SHEN_NAME4('l', '3', '0', '1')
+#define AREA_0048_L401 SHEN_NAME4('l', '4', '0', '1')
+#define AREA_0048_L501 SHEN_NAME4('l', '5', '0', '1')
+typedef struct E0048TaskParameter {
+    HLibTask *self;
+    short selection, state;
+} E0048TaskParameter;
+typedef struct E0048LoopTaskParameter {
+    E0048TaskParameter *parent;
+} E0048LoopTaskParameter;
+extern shen_name *area0048Characters[];
+void E0048Main(void);
+void E0048MainCallback(void *taskData);
+void QueueE0048Loop(E0048TaskParameter *parent);
+void E0048LoopCallback(void *taskData);
+void SetupE0048Environment(void);
+void CleanupE0048(E0048TaskParameter *parent);
+void SetupE0048Characters(short selection);
+void RestoreE0048Characters(short selection);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/areas/numeric_event.hpp"
 namespace shenmue::s2::areas {
@@ -162,3 +209,4 @@ inline constexpr E0048TimedLights AREA_0048_TIMED_LIGHTS[]{
 };
 extern const ScriptAreaDefinition area0048ScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

@@ -1,3 +1,502 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_armw.hpp"
+
+#if defined(SHENMUE_EVENT_ARMW_SCENES)
+const unsigned int armwRefereeMotions[14][2] = {{9419, 9099}, {9413, 9093}, {9409, 9089}, {9421, 9100}, {9416, 9096}, {9417, 9097}, {9418, 9098},
+    {9420, 9102}, {9414, 9094}, {9415, 9095}, {9412, 9092}, {9411, 9091}, {9410, 9090}, {9423, 9103}};
+const unsigned int armwOpponentMotions[11][4] = {{9353, 9288, 9306, 9224}, {9356, 9291, 9307, 9227}, {9357, 9292, 9292, 9228},
+    {9358, 9293, 9293, 9229}, {9350, 9294, 9294, 9230}, {9354, 9289, 9289, 9225}, {9351, 9286, 9286, 9222}, {9345, 9281, 9281, 9217},
+    {9346, 9282, 9282, 9218}, {9347, 9283, 9283, 9219}, {9348, 9284, 9284, 9220}};
+
+int ArmwIntroduceHong(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    EVT_AT_SetPos(player, ARMW_BASE, 0.0f, 0.0f, -1.0f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, 0.0f, 0.0f, 0.8f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.6f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, 9305, 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetCam(2502, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    return 220;
+}
+
+int ArmwIntroduceSf8(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    EVT_AT_SetPos(player, ARMW_BASE, 0.0f, 0.0f, -1.0f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, 0.0f, 0.0f, 0.8f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.6f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, 9235, 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetCam(2501, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    return 210;
+}
+
+int ArmwIntroduceSfc(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    EVT_AT_SetPos(player, ARMW_BASE, 0.0f, 0.0f, -1.0f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, 0.0f, 0.0f, 0.8f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.6f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, 9304, 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetCam(2502, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    return 220;
+}
+
+int ArmwIntroduceKzn(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    EVT_AT_SetPos(player, ARMW_BASE, 0.0f, 0.0f, -1.0f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, 0.0f, 0.0f, 0.8f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.6f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, 9363, 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetCam(2503, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    return 120;
+}
+
+int ArmwOfferRematch(shen_name player, shen_name opponent, shen_name referee)
+{
+    int frames = 0;
+    EVT_AT_SetPos(player, ARMW_BASE, 0.5f, 0.0f, -0.8f, 0);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 157.5f, 0.0f, 0);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.3f, 0.0f, 0.6f, 0);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetMot(player, 0xf002, 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+    if (FTBL.shenGetRandomInt32(2)) {
+        EVT_AT_SetPos(opponent, ARMW_BASE, -0.7f, 0.0f, 3.0f, 0);
+        EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 337.5f, 0.0f, 0);
+        EVT_AT_SetMot(referee, armwRefereeMotions[8][armwRefereeVariant], 90.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+        EVT_AT_SetMot(opponent, armwOpponentMotions[9][armwOpponentVariant], 0.0f, 0.0f, ARMW_MOTION_FLAGS, 0);
+        EVT_AT_SetMot(opponent, armwOpponentMotions[9][armwOpponentVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 50);
+        EVT_AT_SetCam(3200, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+        EVT_AT_SetCam(3201, ARMW_BASE, ARMW_BASE, 0, 0, 60);
+        frames = 210;
+    } else {
+        EVT_AT_CharaDisp(ARMW_BOX, 0, 0);
+        EVT_AT_CharaDisp(ARMW_BOX, 300, 1);
+        FTBL.AT_SetLocalBaseChara(ARMW_BOX, ARMW_BASE);
+        EVT_AT_SetPos(ARMW_BOX, ARMW_BASE, 0.3f, 0.0f, 2.8f, 0);
+        EVT_AT_SetAng(ARMW_BOX, ARMW_BASE, 0.0f, 67.5f, 0.0f, 0);
+        EVT_AT_SetPos(opponent, ARMW_BASE, -0.3f, 0.0f, 3.5f, 0);
+        EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 45.0f, 0.0f, 0);
+        EVT_AT_SetMot(referee, armwRefereeMotions[9][armwRefereeVariant], 90.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+        EVT_AT_SetMot(opponent, armwOpponentMotions[10][armwOpponentVariant], 0.0f, 0.0f, ARMW_MOTION_FLAGS, 0);
+        EVT_AT_SetMot(opponent, armwOpponentMotions[10][armwOpponentVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 50);
+        EVT_AT_SetCam(3202, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+        EVT_AT_SetCam(3203, ARMW_BASE, ARMW_BASE, 0, 0, 60);
+        EVT_AT_SetCam(3204, ARMW_BASE, ARMW_BASE, 0, 0, 180);
+        frames = 260;
+    }
+    return frames;
+}
+
+int ArmwWarnFalseStart(shen_name player, shen_name opponent, shen_name referee, int count)
+{
+    int frames;
+    EVT_AT_SetMot(player, 9155, 80.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+    EVT_AT_SetMot(opponent, armwOpponentMotions[6][armwOpponentVariant], 80.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+    EVT_AT_SetMot(referee, armwRefereeMotions[0][armwRefereeVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+    EVT_AT_SetPos(opponent, player, -0.15f, 0.0f, -1.4f, 0);
+    EVT_AT_SetAng(opponent, player, 0.0f, 180.0f, 0.0f, 0);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.8f, 0.0f, 0.3f, 0);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 45.0f, 0.0f, 0);
+    EVT_AT_SetCam(2000, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+    EVT_AT_SetSound(345, 60);
+    EVT_AT_SetSound(188, 70);
+    EVT_AT_SetSound(271, 80);
+    frames = 30;
+    switch (count) {
+    case 0:
+        frames += ArmwFirstFalseStart(referee, opponent, frames);
+        ArmwVoice(0, "012", 10);
+        break;
+    case 1:
+        frames += ArmwSecondFalseStart(referee, opponent, frames);
+        ArmwVoice(0, "007", 10);
+        break;
+    case 2:
+        frames += ArmwThirdFalseStart(referee, opponent, frames);
+        ArmwVoice(0, "010", 10);
+        break;
+    }
+    frames += 30;
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, frames - 30);
+    return frames;
+}
+
+int ArmwFirstFalseStart(shen_name referee, shen_name opponent, int delay)
+{
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.8f, 0.0f, 0.3f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 90.0f, 0.0f, delay);
+    EVT_AT_SetMot(referee, armwRefereeMotions[4][armwRefereeVariant], 45.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    ArmwVoice(1, "023", delay);
+    ArmwVoice(1, "024", delay + 140);
+    EVT_AT_SetCam(2001, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    EVT_AT_SetCam(2002, ARMW_BASE, ARMW_BASE, 0, 0, delay + 90);
+    EVT_AT_CharaDisp(opponent, delay + 90, 1);
+    EVT_AT_CharaDisp(opponent, delay + 240, 0);
+    return 240;
+}
+
+int ArmwSecondFalseStart(shen_name referee, shen_name opponent, int delay)
+{
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.6f, 0.0f, 0.4f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 67.5f, 0.0f, delay);
+    EVT_AT_SetMot(referee, armwRefereeMotions[5][armwRefereeVariant], 80.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    ArmwVoice(1, "025", delay);
+    ArmwVoice(1, "026", delay + 70);
+    EVT_AT_SetCam(2003, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    EVT_AT_SetCam(2002, ARMW_BASE, ARMW_BASE, 0, 0, delay + 70);
+    EVT_AT_CharaDisp(opponent, delay + 70, 1);
+    EVT_AT_CharaDisp(opponent, delay + 160, 0);
+    return 160;
+}
+
+int ArmwThirdFalseStart(shen_name referee, shen_name opponent, int delay)
+{
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.7f, 0.0f, 0.4f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetMot(referee, armwRefereeMotions[6][armwRefereeVariant], 70.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    ArmwVoice(1, "027", delay);
+    ArmwVoice(1, "028", delay + 90);
+    EVT_AT_SetCam(2004, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    return 160;
+}
+
+int ArmwAnnounceBet(shen_name player, shen_name opponent, shen_name referee)
+{
+    const char *bets[18] = {"031", "032", "033", "034", "035", "036", "037", "038", "039", "036", "041", "042", "043", "044", "037", "046", "047", "048"};
+    int index;
+    EVT_AT_CharaDisp(opponent, 0, 1);
+    EVT_AT_CharaDisp(opponent, 300, 0);
+    EVT_AT_SetCam(3400, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+    EVT_AT_SetPos(player, ARMW_BASE, 0.5f, 0.0f, -0.8f, 0);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 157.5f, 0.0f, 0);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.3f, 0.0f, 0.6f, 0);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetMot(player, 0xf002, 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+    EVT_AT_SetMot(referee, armwRefereeMotions[3][armwRefereeVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+    ArmwVoice(1, "019", 0);
+    index = armwWager / 10;
+    if (index - 2 < 17)
+        ArmwVoice(1, bets[index - 2], 40);
+    ArmwVoice(1, "003", 130);
+    ArmwVoice(1, "020", 250);
+    return 300;
+}
+
+int ArmwHongCollects(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    Vector3 position = {0.05f, 0.0f, -0.04f};
+    Vector3i rotation = {16384, 34679, 14563};
+    EVT_AT_SetCam(3300, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    EVT_AT_SetPos(player, ARMW_BASE, 0.5f, 0.0f, -0.8f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 157.5f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.75f, 0.0f, -0.1f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, -0.6f, 0.0f, 0.6f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetPos(ARMW_MONEY, ARMW_BASE, 0.07f, 0.9f, 0.24f, delay);
+    EVT_AT_SetAng(ARMW_MONEY, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 20.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, 9300, 20.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    Queue_EVT_AT_Cling(ARMW_MONEY, opponent, 14, &position, &rotation, delay + 20, 0);
+    EVT_AT_StartMoneyCount(-armwWager, delay + 20);
+    return 80;
+}
+
+int ArmwSf8Collects(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    Vector3 position = {0.05f, 0.0f, -0.04f};
+    Vector3i rotation = {16384, 34679, 14563};
+    EVT_AT_SetCam(3300, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    EVT_AT_SetPos(player, ARMW_BASE, 0.5f, 0.0f, -0.8f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 157.5f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.75f, 0.0f, -0.1f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, -0.6f, 0.0f, 0.6f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetPos(ARMW_MONEY, ARMW_BASE, 0.2f, 0.9f, 0.2f, delay);
+    EVT_AT_SetAng(ARMW_MONEY, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 20.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, 9233, 30.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    Queue_EVT_AT_Cling(ARMW_MONEY, opponent, 14, &position, &rotation, delay + 23, 0);
+    EVT_AT_StartMoneyCount(-armwWager, delay + 20);
+    return 130;
+}
+
+int ArmwSfcCollects(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    Vector3 position = {0.05f, 0.0f, -0.04f};
+    Vector3i rotation = {16384, 34679, 14563};
+    EVT_AT_SetCam(3300, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    EVT_AT_SetPos(player, ARMW_BASE, 0.5f, 0.0f, -0.8f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 157.5f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.75f, 0.0f, -0.1f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, -0.6f, 0.0f, 0.6f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetPos(ARMW_MONEY, ARMW_BASE, 0.2f, 0.9f, 0.15f, delay);
+    EVT_AT_SetAng(ARMW_MONEY, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 20.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, 9298, 80.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    Queue_EVT_AT_Cling(ARMW_MONEY, opponent, 14, &position, &rotation, delay + 110, 0);
+    EVT_AT_StartMoneyCount(-armwWager, delay + 110);
+    return 160;
+}
+
+int ArmwDgyCollects(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    Vector3 position = {0.05f, 0.0f, -0.04f};
+    Vector3i rotation = {16384, 34679, 14563};
+    EVT_AT_SetCam(3300, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+    EVT_AT_SetPos(player, ARMW_BASE, 0.5f, 0.0f, -0.8f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 157.5f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.75f, 0.0f, -0.1f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, -0.6f, 0.0f, 0.6f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetPos(ARMW_MONEY, ARMW_BASE, 0.14f, 0.9f, 0.2f, delay);
+    EVT_AT_SetAng(ARMW_MONEY, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 20.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, 9296, 20.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    Queue_EVT_AT_Cling(ARMW_MONEY, opponent, 14, &position, &rotation, delay + 10, 0);
+    EVT_AT_StartMoneyCount(-armwWager, delay + 10);
+    return 160;
+}
+
+int ArmwKznCollects(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    Vector3 position = {0.05f, 0.0f, -0.04f};
+    Vector3i rotation = {16384, 34679, 14563};
+    EVT_AT_SetCam(3300, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    EVT_AT_SetPos(player, ARMW_BASE, 0.5f, 0.0f, -0.8f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 157.5f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.75f, 0.0f, -0.1f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 45.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, -0.6f, 0.0f, 0.6f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 315.0f, 0.0f, delay);
+    EVT_AT_SetPos(ARMW_MONEY, ARMW_BASE, 0.3f, 0.9f, 0.3f, delay);
+    EVT_AT_SetAng(ARMW_MONEY, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(ARMW_MONEY, ARMW_BASE, 0.2f, 0.9f, 0.2f, delay);
+    EVT_AT_SetAng(ARMW_MONEY, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 20.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, 9361, 80.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    Queue_EVT_AT_Cling(ARMW_MONEY, opponent, 14, &position, &rotation, delay + 90, 0);
+    EVT_AT_StartMoneyCount(-armwWager, delay + 90);
+    return 130;
+}
+
+int ArmwRefereeCollects(shen_name player, shen_name opponent, shen_name referee, int delay)
+{
+    EVT_AT_SetPos(player, ARMW_BASE, 0.5f, 0.0f, -0.8f, delay);
+    EVT_AT_SetAng(player, ARMW_BASE, 0.0f, 157.5f, 0.0f, delay);
+    EVT_AT_SetPos(referee, ARMW_BASE, 0.5f, 0.0f, 0.5f, delay);
+    EVT_AT_SetAng(referee, ARMW_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetPos(opponent, ARMW_BASE, -0.6f, 0.0f, 0.6f, delay);
+    EVT_AT_SetAng(opponent, ARMW_BASE, 0.0f, 315.0f, 0.0f, delay);
+    EVT_AT_SetMot(player, 9159, 100.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(referee, armwRefereeMotions[3][armwRefereeVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetMot(opponent, armwOpponentMotions[1][armwOpponentVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, delay);
+    EVT_AT_SetCam(3390, ARMW_BASE, ARMW_BASE, 0, 0, delay);
+    ArmwAppendVoice(1, "021");
+    ArmwAppendVoice(1, "004");
+    return 260;
+}
+#else
+static char armwVoicePrefixes[4][16];
+static char armwVoices[16][12];
+int armwVoiceCount = 0;
+int armwVoiceSkipped = 0;
+
+void ArmwSetVoicePrefixes(shen_name referee, shen_name opponent)
+{
+    if (referee == ARMW_WD1)
+        strcpy(armwVoicePrefixes[0], "0368A");
+    else
+        strcpy(armwVoicePrefixes[0], "0008A");
+    switch (referee) {
+    case ARMW_GAU:
+        strcpy(armwVoicePrefixes[1], "0008E");
+        break;
+    case ARMW_WD3:
+        strcpy(armwVoicePrefixes[1], "0008G");
+        break;
+    case ARMW_AD2:
+        strcpy(armwVoicePrefixes[1], "0008I");
+        break;
+    case ARMW_SD1:
+        strcpy(armwVoicePrefixes[1], "0008M");
+        break;
+    case ARMW_WD1:
+        strcpy(armwVoicePrefixes[1], "0368I");
+        break;
+    }
+    if (opponent == ARMW_HONG) {
+        if (referee == ARMW_WD1) {
+            strcpy(armwVoicePrefixes[2], "0368J");
+            strcpy(armwVoicePrefixes[3], "0368D");
+        } else {
+            strcpy(armwVoicePrefixes[2], "0008E");
+            strcpy(armwVoicePrefixes[3], "0008D");
+        }
+    }
+    switch (opponent) {
+    case ARMW_SF8:
+        strcpy(armwVoicePrefixes[2], "0008G");
+        break;
+    case ARMW_SFC:
+        strcpy(armwVoicePrefixes[2], "0008I");
+        break;
+    case ARMW_KZN:
+        strcpy(armwVoicePrefixes[2], "0008M");
+        break;
+    case ARMW_SSY:
+        strcpy(armwVoicePrefixes[2], "0008N");
+        break;
+    case ARMW_SF2:
+        strcpy(armwVoicePrefixes[2], "0008O");
+        break;
+    case ARMW_FRS:
+        strcpy(armwVoicePrefixes[2], "0368I");
+        break;
+    case ARMW_MHK:
+        strcpy(armwVoicePrefixes[2], "0368K");
+        break;
+    case ARMW_DML:
+        strcpy(armwVoicePrefixes[2], "0368L");
+        break;
+    case ARMW_MSH:
+        strcpy(armwVoicePrefixes[2], "0368M");
+        break;
+    case ARMW_DGY:
+        strcpy(armwVoicePrefixes[2], "0368N");
+        break;
+    }
+    switch (opponent) {
+    case ARMW_SF8:
+        strcpy(armwVoicePrefixes[3], "0008F");
+        break;
+    case ARMW_SFC:
+        strcpy(armwVoicePrefixes[3], "0008H");
+        break;
+    case ARMW_KZN:
+        strcpy(armwVoicePrefixes[3], "0008J");
+        break;
+    case ARMW_SSY:
+        strcpy(armwVoicePrefixes[3], "0008K");
+        break;
+    case ARMW_SF2:
+        strcpy(armwVoicePrefixes[3], "0008L");
+        break;
+    case ARMW_FRS:
+        strcpy(armwVoicePrefixes[3], "0368C");
+        break;
+    case ARMW_MHK:
+        strcpy(armwVoicePrefixes[3], "0368E");
+        break;
+    case ARMW_DML:
+        strcpy(armwVoicePrefixes[3], "0368F");
+        break;
+    case ARMW_MSH:
+        strcpy(armwVoicePrefixes[3], "0368G");
+        break;
+    case ARMW_DGY:
+        strcpy(armwVoicePrefixes[3], "0368H");
+        break;
+    }
+}
+
+void ArmwVoiceWaitCallback(void *data)
+{
+    ArmwVoiceWait *work = (ArmwVoiceWait *)data;
+    if (!FTBL.cvsHasValidConverseData(0)) {
+        if (armwVoices[work->index][0]) {
+            EVT_AT_SetVoice(armwVoices[work->index], work->delay);
+            if (work->delay > 0)
+                FTBL.HLib_SetupTaskDelay(work->delay);
+            work->index++;
+            work->timeout = 0;
+        } else {
+            if (work->parent)
+                FTBL.HLib_ResolveDeferredCallback(work->parent);
+            FTBL.HLib_DestroyCurrentTask();
+        }
+    } else {
+        if (work->timeout++ > 150)
+            FTBL.scenCvsCtrlFree(0);
+        if (FTBL.CheckMediatedDoublePress()) {
+            if (work->flags & 0x40000000U)
+                FTBL.scenCvsCtrlFree(0);
+            if (work->flags & 0x80000000U) {
+                FTBL.scenCvsCtrlFree(0);
+                armwVoiceSkipped = 1;
+                if (work->parent)
+                    FTBL.HLib_ResolveDeferredCallback(work->parent);
+                FTBL.HLib_DestroyCurrentTask();
+            }
+        }
+    }
+    if ((work->flags & 0x80000000U) && FTBL.CheckMediatedDoublePress()) {
+        FTBL.scenCvsCtrlFree(0);
+        armwVoiceSkipped = 1;
+        if (work->parent)
+            FTBL.HLib_ResolveDeferredCallback(work->parent);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void ArmwWaitVoices(HLibTask *parent, int delay, unsigned int flags, int wait)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(ArmwVoiceWaitCallback, 6, 11, sizeof(ArmwVoiceWait), TASK_EVNT);
+    ArmwVoiceWait *work;
+    if (wait > 0)
+        FTBL.HLib_SetupTimedTask(task, wait);
+    work = (ArmwVoiceWait *)FTBL.HLib_GetTaskParameter(task);
+    work->delay = delay;
+    work->flags = flags;
+    work->parent = parent;
+    work->index = 0;
+    work->reserved0c = 0;
+    work->timeout = 0;
+    armwVoices[armwVoiceCount][0] = 0;
+    armwVoiceCount = 0;
+    armwVoiceSkipped = 0;
+    if (work->parent)
+        FTBL.HLib_SetupTimedTask(work->parent, 0);
+}
+
+void ArmwAppendVoice(int speaker, const char *suffix)
+{
+    strcpy(armwVoices[armwVoiceCount], armwVoicePrefixes[speaker]);
+    strcat(armwVoices[armwVoiceCount], suffix);
+    armwVoiceCount++;
+}
+
+void ArmwVoice(int speaker, const char *suffix, int delay)
+{
+    char voice[64];
+    strcpy(voice, armwVoicePrefixes[speaker]);
+    strcat(voice, suffix);
+    EVT_AT_SetVoice(voice, delay);
+}
+
+int ArmwGetVoiceSkipped(void)
+{
+    return armwVoiceSkipped;
+}
+#endif
+#else
 #include "s2/areas/area_armw.hpp"
 #include "s2/camera.hpp"
 #include "s2/conversation.hpp"
@@ -401,3 +900,4 @@ std::int32_t ArmwRefereeCollects(ArmwWork &work) {
     return 260;
 }
 } // namespace shenmue::s2::areas
+#endif

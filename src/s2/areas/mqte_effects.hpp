@@ -1,4 +1,9 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_mqte.hpp"
+#else
+#pragma once
 #include "s2/areas/area_mqte.hpp"
 namespace shenmue::s2::areas {
 struct ForestCameraWork {
@@ -33,3 +38,4 @@ inline constexpr std::int32_t forestShenfaCameras[18][4]{{2500, -1, 2500, 2500},
 inline constexpr std::int32_t forestFireflyTiming[4][4]{{4, 120, 5, 3}, {4, 150, 7, 3}, {4, 200, 10, 3}, {4, 300, 30, 3}};
 inline constexpr shen_name forestAuthorFireflies[]{SHEN_NAME(a850), SHEN_NAME(a852), SHEN_NAME(a856)};
 } // namespace shenmue::s2::areas
+#endif

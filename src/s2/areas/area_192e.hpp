@@ -1,3 +1,29 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_utility_dc.h"
+
+#define AREA_192E_SYE_ SHEN_NAME4('S', 'Y', 'E', '_')
+#define AREA_192E_SOURCE SHEN_NAME4('W', 'T', '0', '0')
+#define AREA_192E_RETURN SHEN_NAME4('W', 'T', 'A', '0')
+typedef struct Area192EParameter {
+    HLibTask *self;
+    short selection;
+    short state;
+} Area192EParameter;
+typedef struct Area192EAuthorParameter {
+    Area192EParameter *parent;
+} Area192EAuthorParameter;
+extern const shen_name area192ECharacters[];
+
+void Start192E(void);
+void Update192E(void *taskData);
+void Queue192EAuthor(Area192EParameter *parent);
+void Select192EPackage(int selection);
+void Update192EAuthor(void *taskData);
+void Setup192E(void);
+void Cleanup192E(Area192EParameter *parent);
+void Hide192ECharacters(void);
+void Show192ECharacters(void);
+#else
 #pragma once
 
 #include "s2/area_event.hpp"
@@ -38,3 +64,4 @@ void Update192EAuthorTask(void *taskData);
 extern const ScriptAreaDefinition area192EScriptDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

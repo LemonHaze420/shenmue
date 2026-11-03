@@ -1,3 +1,241 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/qt_nj_obstacles.hpp"
+#include "s2/event_smoke.hpp"
+
+#if defined(SHENMUE_EVENT_QTNJ_PLAY)
+int PlayQtnjObstacle(QtnjObstacleWork *work, int delay)
+{
+    int duration;
+    int result;
+    switch (work->trial) {
+    case 0:
+        EVT_AT_SetVoice("0284A005", 0);
+        EVT_AT_SetVoice("0284F002", 80);
+        EVT_AT_SetPos(work->npcs[0], QTNJ_OBSTACLE_BASE, -1.0f, 0.0f, 6.0f, delay + 90);
+        EVT_AT_SetAngY(work->npcs[0], QTNJ_OBSTACLE_BASE, 0.0f, delay + 90);
+        duration = EVT_AT_SetMot(work->npcs[0], QTNJ_STAGGER_MOTION, 2.0f, 1.0f, 0x60000000U, delay + 90);
+        break;
+    case 1:
+        EVT_AT_SetVoice("0284A002", 0);
+        EVT_AT_SetVoice("0284G002", 80);
+        EVT_AT_SetPos(work->npcs[0], QTNJ_OBSTACLE_BASE, -1.0f, 0.0f, 7.0f, delay);
+        EVT_AT_SetAngY(work->npcs[0], QTNJ_OBSTACLE_BASE, 0.0f, delay);
+        duration = EVT_AT_SetMot(work->npcs[0], QTNJ_STAGGER_MOTION, 2.0f, 1.0f, 0x60000000U, delay);
+        break;
+    case 2:
+        EVT_AT_SetVoice("0284A005", 0);
+        EVT_AT_SetVoice("0284H002", 80);
+        EVT_AT_SetPos(work->npcs[0], QTNJ_OBSTACLE_BASE, -1.0f, 0.0f, 6.0f, delay + 90);
+        EVT_AT_SetAngY(work->npcs[0], QTNJ_OBSTACLE_BASE, 0.0f, delay + 90);
+        duration = EVT_AT_SetMot(work->npcs[0], QTNJ_STAGGER_MOTION, 2.0f, 1.0f, 0x60000000U, delay + 90);
+        break;
+    default:
+        EVT_AT_SetVoice("0284A002", 0);
+        EVT_AT_SetVoice("0284I002", 80);
+        EVT_AT_SetPos(work->npcs[0], QTNJ_OBSTACLE_BASE, -1.0f, 0.0f, 7.5f, delay + 38);
+        EVT_AT_SetAngY(work->npcs[0], QTNJ_OBSTACLE_BASE, 0.0f, delay + 38);
+        EVT_AT_SetPos(work->npcs[1], QTNJ_OBSTACLE_INVALID, 1000.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetPos(work->npcs[2], QTNJ_OBSTACLE_INVALID, 1000.0f, 0.0f, 0.0f, 0);
+        duration = EVT_AT_SetMot(work->npcs[0], QTNJ_STAGGER_MOTION, 2.0f, 1.0f, 0x60000000U, delay + 38);
+        break;
+    }
+    EVT_AT_DispBlur(QTNJ_OBSTACLE_RYO, 1, 6, 1, 0, 40, delay + 10);
+    EVT_AT_SetPos(QTNJ_OBSTACLE_REN, QTNJ_OBSTACLE_BASE, 0.0f, 0.0f, -4.0f, delay);
+    EVT_AT_SetAngY(QTNJ_OBSTACLE_REN, QTNJ_OBSTACLE_BASE, 0.0f, delay);
+    EVT_AT_SetMot(QTNJ_OBSTACLE_REN, QTNJ_REN_COME_ON_MOTION, 2.0f, 1.0f, 0x40000000U, delay);
+    EVT_AT_SetMot(QTNJ_OBSTACLE_REN, QTNJ_REN_COME_ON_MOTION, 2.0f, 1.0f, 0x40000000U, delay + 60);
+    EVT_AT_SetMot(work->npcs[0], QTNJ_STAGGER_LOOP_MOTION, 2.0f, 1.0f, 0x20000000U, duration);
+    result = DispatchQtnjObstacleImpact(work->obstacle, work->trial, delay);
+    work->waitFrames = 160;
+    return result;
+}
+#else
+const int qtnjFirstObstacleParts[] = {175, 170, 152, 163, 158, 172, 167, 174, 169, 155, 162, 157, 166, 154, 173, 168, 153, 207, 208, 165, 160, 176, 171, 164,
+    159, 161, 156, 197, 196, 195, 205, 206, 204, 203, 202, 201, 200, 199, 198, 194, 193, 192, 182, 181, 180, 191, 190, 189, 188, 187, 186, 185, 184, 183,
+    179, 178, 177};
+const int qtnjSecondObstacleParts[] = {175, 170, 152, 163, 158, 172, 167, 174, 169, 155, 162, 157, 166, 154, 173, 168, 153, 165, 160, 176, 171, 164, 159, 161,
+    156, 195, 196, 192, 193, 194, 180, 181, 182, 189, 190, 191, 186, 187, 188, 183, 184, 185, 177, 178, 179};
+const int qtnjFourthObstacleParts[] = {152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+    176, 177, 178, 179, 180, 181, 182, 183, 184, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206};
+
+void InitializeQtnjObstacle(shen_name obstacle)
+{
+    switch (obstacle) {
+    case QTNJ_OBSTACLE_0:
+        EVT_AT_SetPos(obstacle, QTNJ_OBSTACLE_BASE, 0.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetAngY(obstacle, QTNJ_OBSTACLE_BASE, 0.0f, 0);
+        Queue_EVT_AT_PlayDynamix(obstacle, "TNJ0", 4.0f, 5.0f, 57, qtnjFirstObstacleParts, 1.0f, 0);
+        break;
+    case QTNJ_OBSTACLE_1:
+        EVT_AT_SetPos(obstacle, QTNJ_OBSTACLE_BASE, 0.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetAngY(obstacle, QTNJ_OBSTACLE_BASE, 0.0f, 0);
+        Queue_EVT_AT_PlayDynamix(obstacle, "TNJ1", 4.0f, 5.0f, 45, qtnjSecondObstacleParts, 1.0f, 0);
+        break;
+    case QTNJ_OBSTACLE_2:
+        EVT_AT_SetPos(obstacle, QTNJ_OBSTACLE_BASE, 0.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetAngY(obstacle, QTNJ_OBSTACLE_BASE, 180.0f, 0);
+        Queue_EVT_AT_PlayDynamix(obstacle, "TNJ2", 4.0f, 5.0f, 48, 0, 1.0f, 0);
+        break;
+    case QTNJ_OBSTACLE_3:
+        EVT_AT_SetPos(obstacle, QTNJ_OBSTACLE_BASE, 0.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetAngY(obstacle, QTNJ_OBSTACLE_BASE, 0.0f, 0);
+        Queue_EVT_AT_PlayDynamix(obstacle, "TNJ3", 4.0f, 5.0f, 54, qtnjFourthObstacleParts, 1.0f, 0);
+        break;
+    }
+}
+
+int DispatchQtnjObstacleImpact(shen_name obstacle, int trial, int delay)
+{
+    int result = 1;
+    int duration = 1;
+    switch (obstacle) {
+    case QTNJ_OBSTACLE_0:
+        switch (trial) {
+        case 1:
+            EVT_AT_SetCam(7423, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, (int)0x80000000U, delay);
+            EVT_AT_SetCam(7424, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, (int)0x80000000U, delay + 38);
+            EVT_AT_SetCamRot(0.2f, 0.4f, 0.7f, delay + 80);
+            break;
+        case 3:
+            EVT_AT_SetCam(7427, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, (int)0x80000000U, delay);
+            EVT_AT_SetCam(7424, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, (int)0x80000000U, delay + 38);
+            EVT_AT_SetCamRot(0.2f, 0.4f, 0.7f, delay + 80);
+            break;
+        }
+        EVT_AT_SetPos(QTNJ_OBSTACLE_RYO, QTNJ_OBSTACLE_BASE, 0.5f, 0.0f, 2.6f, delay);
+        EVT_AT_SetAngY(QTNJ_OBSTACLE_RYO, QTNJ_OBSTACLE_BASE, 0.0f, delay);
+        EVT_AT_SetSound(1636, delay + 10);
+        duration = EVT_AT_SetMot(QTNJ_OBSTACLE_RYO, QTNJ_BREAK_STICK_MOTION, 2.0f, 1.0f, 0x60000000U, delay);
+        result = QueueQtnjFirstObstacleImpact(obstacle, QTNJ_OBSTACLE_INVALID, delay + 25);
+        break;
+    case QTNJ_OBSTACLE_1:
+        EVT_AT_SetCam(7402, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, 0, delay);
+        EVT_AT_SetCamRot(0.2f, 0.4f, 0.7f, delay + 80);
+        EVT_AT_SetPos(QTNJ_OBSTACLE_RYO, QTNJ_OBSTACLE_BASE, 0.5f, 0.0f, 3.0f, delay);
+        EVT_AT_SetAngY(QTNJ_OBSTACLE_RYO, QTNJ_OBSTACLE_BASE, 0.0f, delay);
+        duration = EVT_AT_SetMot(QTNJ_OBSTACLE_RYO, QTNJ_BREAK_STICK_MOTION, 2.0f, 1.0f, 0x60000000U, delay);
+        result = QueueQtnjSecondObstacleImpact(obstacle, QTNJ_OBSTACLE_INVALID, delay + 25);
+        break;
+    case QTNJ_OBSTACLE_2:
+        EVT_AT_SetCam(7423, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, 0, delay);
+        EVT_AT_SetCam(7424, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, 0, delay + 38);
+        EVT_AT_SetCamRot(0.2f, 0.4f, 0.7f, delay + 80);
+        EVT_AT_SetPos(QTNJ_OBSTACLE_RYO, QTNJ_OBSTACLE_BASE, -0.5f, 0.0f, 2.4f, delay);
+        EVT_AT_SetAngY(QTNJ_OBSTACLE_RYO, QTNJ_OBSTACLE_BASE, 0.0f, delay);
+        EVT_AT_SetPos(QTNJ_OBSTACLE_RYO, QTNJ_OBSTACLE_RYO, 0.0f, 0.0f, -0.3f, delay + 38);
+        duration = EVT_AT_SetMot(QTNJ_OBSTACLE_RYO, QTNJ_BREAK_STICK_MOTION, 2.0f, 1.0f, 0x40000000U, delay);
+        result = QueueQtnjThirdObstacleImpact(obstacle, QTNJ_OBSTACLE_INVALID, delay + 25);
+        break;
+    case QTNJ_OBSTACLE_3:
+        switch (trial) {
+        case 0:
+            EVT_AT_SetCam(7421, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, 0, delay);
+            EVT_AT_SetCam(7422, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, 0, delay + 60);
+            EVT_AT_SetCamRot(0.2f, 0.4f, 0.7f, delay + 80);
+            break;
+        case 2:
+            EVT_AT_SetCam(7425, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, 0, delay);
+            EVT_AT_SetCam(7426, QTNJ_OBSTACLE_BASE, QTNJ_OBSTACLE_BASE, 0, 0, delay + 60);
+            EVT_AT_SetCamRot(0.2f, 0.4f, 0.7f, delay + 80);
+            break;
+        }
+        EVT_AT_SetPos(QTNJ_OBSTACLE_RYO, QTNJ_OBSTACLE_BASE, 0.5f, 0.0f, 2.4f, delay);
+        EVT_AT_SetAngY(QTNJ_OBSTACLE_RYO, QTNJ_OBSTACLE_BASE, 0.0f, delay);
+        EVT_AT_SetSound(1636, delay + 10);
+        duration = EVT_AT_SetMot(QTNJ_OBSTACLE_RYO, QTNJ_BREAK_STICK_MOTION, 2.0f, 1.0f, 0x60000000U, delay);
+        result = QueueQtnjFourthObstacleImpact(obstacle, QTNJ_OBSTACLE_INVALID, delay + 25);
+        break;
+    }
+    EVT_AT_SetMot(QTNJ_OBSTACLE_RYO, 0xf006, 2.0f, 1.0f, 0, duration);
+    return result;
+}
+
+int QueueQtnjFirstObstacleImpact(shen_name obstacle, shen_name hidden, int delay)
+{
+    Vector3 position;
+    if (obstacle != QTNJ_OBSTACLE_INVALID)
+        EVT_AT_CharaDisp(obstacle, delay, 0);
+    if (hidden != QTNJ_OBSTACLE_INVALID)
+        EVT_AT_CharaDisp(hidden, delay, 1);
+    Queue_EVT_AT_PlayDynamix(obstacle, "TNJ0", 4.0f, 250.0f, 57, qtnjFirstObstacleParts, 1.0f, delay);
+    FTBL.GetCharaPosition(obstacle, -1, &position, 0x40000000);
+    QueueEventSmoke(0, QTNJ_OBSTACLE_BASE, -1, delay + 60, 4, 0, 108);
+    EVT_AT_SetSound(649, delay);
+    EVT_AT_SetSound(2654, delay + 20);
+    EVT_AT_SetSound(1431, delay + 15);
+    EVT_AT_SetSound(1432, delay + 20);
+    EVT_AT_SetSound(1431, delay + 30);
+    EVT_AT_SetSound(1432, delay + 40);
+    EVT_AT_SetSound(1211, delay + 60);
+    EVT_AT_SetSound(648, delay + 61);
+    EVT_AT_SetSound(647, delay + 62);
+    EVT_AT_SetSound(647, delay + 67);
+    EVT_AT_SetSound(648, delay + 80);
+    return delay + 246.0f;
+}
+
+int QueueQtnjSecondObstacleImpact(shen_name obstacle, shen_name hidden, int delay)
+{
+    Vector3 position;
+    if (obstacle != QTNJ_OBSTACLE_INVALID)
+        EVT_AT_CharaDisp(obstacle, delay, 0);
+    if (hidden != QTNJ_OBSTACLE_INVALID)
+        EVT_AT_CharaDisp(hidden, delay, 1);
+    Queue_EVT_AT_PlayDynamix(obstacle, "TNJ1", 4.0f, 250.0f, 45, qtnjSecondObstacleParts, 1.0f, delay);
+    FTBL.GetCharaPosition(obstacle, -1, &position, 0x40000000);
+    QueueEventSmoke(0, QTNJ_OBSTACLE_BASE, -1, delay + 60, 4, 0, 108);
+    EVT_AT_SetSound(649, delay);
+    EVT_AT_SetSound(1211, delay + 60);
+    EVT_AT_SetSound(648, delay + 61);
+    EVT_AT_SetSound(647, delay + 62);
+    EVT_AT_SetSound(1431, delay + 30);
+    EVT_AT_SetSound(1432, delay + 33);
+    return delay + 246.0f;
+}
+
+int QueueQtnjThirdObstacleImpact(shen_name obstacle, shen_name hidden, int delay)
+{
+    Vector3 position;
+    if (obstacle != QTNJ_OBSTACLE_INVALID)
+        EVT_AT_CharaDisp(obstacle, delay, 0);
+    if (hidden != QTNJ_OBSTACLE_INVALID)
+        EVT_AT_CharaDisp(hidden, delay, 1);
+    Queue_EVT_AT_PlayDynamix(obstacle, "TNJ2", 4.0f, 250.0f, 48, 0, 1.0f, delay);
+    FTBL.GetCharaPosition(obstacle, -1, &position, 0x40000000);
+    QueueEventSmoke(0, QTNJ_OBSTACLE_BASE, -1, delay + 60, 4, 0, 108);
+    EVT_AT_SetSound(649, delay);
+    EVT_AT_SetSound(1211, delay + 60);
+    EVT_AT_SetSound(648, delay + 61);
+    EVT_AT_SetSound(647, delay + 62);
+    EVT_AT_SetSound(1431, delay + 30);
+    EVT_AT_SetSound(1432, delay + 33);
+    return delay + 246.0f;
+}
+
+int QueueQtnjFourthObstacleImpact(shen_name obstacle, shen_name hidden, int delay)
+{
+    Vector3 position;
+    if (obstacle != QTNJ_OBSTACLE_INVALID)
+        EVT_AT_CharaDisp(obstacle, delay, 0);
+    if (hidden != QTNJ_OBSTACLE_INVALID)
+        EVT_AT_CharaDisp(hidden, delay, 1);
+    Queue_EVT_AT_PlayDynamix(obstacle, "TNJ3", 4.0f, 250.0f, 54, qtnjFourthObstacleParts, 1.0f, delay);
+    FTBL.GetCharaPosition(obstacle, -1, &position, 0x40000000);
+    QueueEventSmoke(1, QTNJ_OBSTACLE_BASE, -1, delay + 60, 4, 0, 108);
+    EVT_AT_SetSound(649, delay);
+    EVT_AT_SetSound(1431, delay + 15);
+    EVT_AT_SetSound(1432, delay + 20);
+    EVT_AT_SetSound(1432, delay + 40);
+    EVT_AT_SetSound(2654, delay + 28);
+    EVT_AT_SetSound(1211, delay + 55);
+    EVT_AT_SetSound(648, delay + 56);
+    EVT_AT_SetSound(647, delay + 57);
+    EVT_AT_SetSound(647, delay + 62);
+    EVT_AT_SetSound(1211, delay + 80);
+    return delay + 246.0f;
+}
+#endif
+#else
 #include "s2/qt_nj_obstacles.hpp"
 #include "s2/event_queued.hpp"
 #include "s2/event_runtime.hpp"
@@ -287,3 +525,4 @@ std::uint32_t PlayQtnjObstacle(QtnjObstacleWork *work) {
 }
 
 } // namespace shenmue::s2
+#endif

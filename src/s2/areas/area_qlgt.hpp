@@ -1,4 +1,148 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_movement.hpp"
+#include "s2/areas/common/et_movesp.h"
+
+#define QLGT_AREA SHEN_NAME4('Q', 'L', 'G', 'T')
+#define QLGT_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define QLGT_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QLGT_START SHEN_NAME4('S', 'T', 'R', 'B')
+#define QLGT_END SHEN_NAME4('E', 'N', 'D', 'B')
+#define QLGT_ENEMY SHEN_NAME4('E', 'M', 'Y', 'B')
+#define QLGT_BATTLE SHEN_NAME4('B', 'T', 'L', 'B')
+#define QLGT_LIGHT SHEN_NAME4('L', 'G', 'T', 'B')
+#define QLGT_DRUM SHEN_NAME4('D', 'R', 'M', '0')
+#define QLGT_RYO_DUMMY SHEN_NAME4('D', 'U', 'M', 'R')
+#define QLGT_REN_DUMMY SHEN_NAME4('D', 'U', 'M', 'L')
+#define QLGT_DOOR_OWNER SHEN_NAME4('$', 'f', 'r', 'e')
+#define QLGT_BATTLE_DATA SHEN_NAME4('B', 'T', 'B', 'A')
+#define QLGT_RETRY_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+#define QLGT_FIRST_PROP SHEN_NAME4('F', '0', '6', '0')
+#define QLGT_INVALID 0xffffffffU
+#define QLGT_DEBUG_ID 3
+#define QLGT_DOOR_COUNT 25
+#define QLGT_NEGATIVE_ZERO 0x80000000
+#define QLGT_SQRT(x) ({ float root_; root_ = __builtin_sqrtf(x); root_; })
+#define QLGT_SET_RYO_GRAVITY(operation) \
+    do { \
+        FTBL.EV_SetCharaControllerFlags(QLGT_RYO, 2, operation); \
+        FTBL.EV_SetCharaControllerFlags(QLGT_RYO, 3, operation); \
+    } while (0)
+
+typedef struct QlgtEntry {
+    int course, step;
+} QlgtEntry;
+typedef struct QlgtFlashPattern {
+    int lights;
+    signed char states[16], frames[16];
+} QlgtFlashPattern;
+typedef struct QlgtFlashWork {
+    HLibTask *task;
+    const QlgtFlashPattern *pattern;
+    int state, transition, index, remaining, reserved18;
+} QlgtFlashWork;
+typedef struct QlgtPose {
+    Vector3 position;
+    float yaw;
+} QlgtPose;
+typedef struct QlgtSafeZone {
+    int enabled;
+    Vector3 centre;
+    float radius;
+} QlgtSafeZone;
+typedef struct QlgtCourse {
+    QlgtFlashPattern *pattern;
+    Vector3 boundsFirst, boundsSecond;
+    QlgtPose start;
+    float startRadius;
+    QlgtPose end;
+    float endRadius;
+    Vector3 goal;
+    float goalRadius;
+    QlgtPose enemy;
+    float enemyRadius;
+    QlgtPose battle;
+    Vector3 fail;
+    float failRadius;
+    int enemyCount, reserved8c;
+    Vector3 failBattle;
+    float failBattleRadius;
+    QlgtPose ryoExit, renExit, returnPosition;
+    const shen_name *enemies;
+    const QlgtSafeZone *safeZones;
+    const EventMoveWaypoint *route;
+    const signed char *routeActions;
+} QlgtCourse;
+typedef struct QlgtSequence {
+    int reserved00;
+    EventChaseWork chase;
+    int startSide, endSide, movement, waypoint, grace;
+} QlgtSequence;
+typedef struct QlgtWork {
+    EventReadCharactersWork *characters;
+    HLibTask *subtask, *task;
+    void *motionBank;
+    int previousNavigation;
+    QlgtSequence sequence;
+    const QlgtEntry *entry;
+    const QlgtCourse *course;
+    QlgtFlashWork *flash;
+    float height;
+} QlgtWork;
+
+extern QlgtFlashPattern qlgtPatterns[];
+extern shen_name qlgtActors[];
+extern shen_name qlgtDrums[];
+
+void QlgtMain(void *argument);
+void QueueQlgtEvent(const QlgtEntry *entry);
+void QlgtDebugExitCallback(void *data);
+void QlgtFinish(QlgtWork *work);
+void QlgtSubtaskCallback(void *data);
+void QlgtComputeSides(QlgtSequence *sequence);
+void QlgtPlaceEnemies(QlgtWork *work, shen_name parent, float radius, const unsigned short *motions, int delay);
+void QlgtPlaceBattleEnemies(QlgtWork *work, shen_name parent, float radius, const unsigned short *motions, int delay);
+int QlgtIsInSafeZone(const QlgtSafeZone *zones);
+void QlgtStart(void *data);
+void QlgtStartLecture(void *data);
+void QlgtRunLecture(void *data);
+void QlgtWaitLecture(void *data);
+void QlgtEndLecture(void *data);
+void QlgtPlay(void *data);
+void QlgtSearch(void *data);
+void QlgtSuccess(void *data);
+void QlgtFail(void *data);
+void QlgtStartBattle(void *data);
+void QlgtPlayBattle(void *data);
+void QlgtWin(void *data);
+void QlgtRetry(void *data);
+void QlgtEnd(void *data);
+QlgtFlashWork *QlgtQueueFlash(const QlgtFlashPattern *pattern);
+void QlgtKillFlash(QlgtFlashWork *flash);
+void QlgtSetFlashLights(QlgtFlashWork *flash, int enabled);
+void QlgtResetFlash(QlgtFlashWork *flash);
+void QlgtFlash(void *data);
+void QlgtPrepare(QlgtWork *work);
+void QlgtCleanup(QlgtWork *work);
+void QlgtClaimDoors(QlgtWork *work);
+void QlgtReleaseDoors(QlgtWork *work);
+void QlgtTrackDrumTransparency(int mode);
+void QlgtQueueSearchPose(shen_name character, shen_name parent, int side, int delay);
+int QlgtFirstIntroduction(int side);
+int QlgtIntroduction(int side, int course);
+int QlgtStartLectureCamera(int enemyCount);
+int QlgtLectureFinish(int side);
+int QlgtSuccessDialogue(int side, int course, int delay);
+int QlgtFailDialogue(int side, int course);
+int QlgtCallFailDialogue(int side, int course);
+int QlgtWinDialogue(int side, int course);
+int QlgtEmptyDialogue(void);
+int QlgtReturnDialogue(int delay);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_movement.hpp"
 #include "s2/event_characters.hpp"
@@ -129,3 +273,4 @@ std::int32_t WinDialogue(std::int32_t side, std::int32_t course);
 std::int32_t ReturnDialogue();
 } // namespace qlgt
 } // namespace shenmue::s2::areas
+#endif

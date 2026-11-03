@@ -1,5 +1,31 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_utility_dc.h"
+
+#define AREA_0273_JOP SHEN_NAME4('J', 'O', 'P', '_')
+#define AREA_0273_SOURCE SHEN_NAME4('Q', 'F', '4', '0')
+#define AREA_0273_DESTINATION SHEN_NAME4('Q', 'F', 'R', 'R')
+#define AREA_0273_AUTHOR SHEN_NAME4('0', '2', '7', '3')
+extern const shen_name area0273Characters[];
+typedef struct Area0273Parameter {
+    HLibTask *task;
+    short author, state;
+} Area0273Parameter;
+typedef struct Area0273AuthorParameter {
+    Area0273Parameter *parent;
+} Area0273AuthorParameter;
+void Start0273(void);
+void Update0273(void *taskData);
+void Queue0273Author(Area0273Parameter *parent);
+void Update0273Author(void *taskData);
+void Setup0273(void);
+void Cleanup0273(Area0273Parameter *parent);
+void Prepare0273Characters(void);
+void Restore0273Characters(void);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/author_viewer_event.hpp"
 #include "s2/area_names.hpp"
@@ -31,3 +57,4 @@ void Update0273AuthorTask(void *taskData);
 extern const ScriptAreaDefinition area0273ScriptDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

@@ -1,3 +1,963 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_sfs2.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void Sfs2Main(StreetFightStartParameters *start)
+{
+    if (start->scene == 99)
+        QueueDebug(start);
+    else
+        QueueNormal(start);
+}
+#else
+static const shen_name sfs2Characters[] = {STREET_FIGHT_RYO, SFS2_CYC, SFS2_VNE, SFS2_CHN, STREET_FIGHT_INVALID};
+static const Vector3 sfs2PlayerPosition = {-4.8f, -0.0f, -5.0f};
+static const Vector3 sfs2BookiePosition = {-2.36f, 0.5f, -0.8f};
+static const int sfs2EntryFees[] = {10, 20, 30, 40, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50};
+static Vector3 sfs2ExitPosition = {331.09f, 84.25f, 84.46f};
+static Vector3i sfs2ExitRotation = {0, 54613, 0};
+static Sfs2QteDefinition sfs2QteDefinitions[16] = {
+    {{10, 7, 45, 0}, {4, 4, 512, 0, 0, 0, 0, 0}},
+    {{10, 7, 44, 0}, {4, 4, 512, 4, 0, 0, 0, 0}},
+    {{10, 7, 43, 0}, {4, 4, 512, 256, 4, 0, 0, 0}},
+    {{10, 7, 42, 0}, {4, 4, 512, 1024, 256, 0, 0, 0}},
+    {{10, 7, 41, 0}, {4, 4, 512, 16, 512, 0, 0, 0}},
+    {{10, 7, 40, 0}, {4, 4, 512, 64, 4, 0, 0, 0}},
+    {{10, 6, 39, 0}, {4, 4, 512, 2048, 1024, 0, 0, 0}},
+    {{10, 6, 38, 0}, {4, 4, 512, 256, 1024, 2048, 0, 0}},
+    {{10, 6, 37, 0}, {4, 4, 512, 1024, 2048, 256, 0, 0}},
+    {{10, 6, 36, 0}, {4, 4, 512, 256, 2048, 16, 256, 0}},
+    {{10, 6, 35, 0}, {4, 4, 512, 1024, 2048, 1024, 2048, 0}},
+    {{10, 6, 34, 0}, {4, 4, 512, 16, 2048, 64, 256, 0}},
+    {{10, 5, 33, 0}, {4, 4, 512, 1, 64, 16, 4, 0}},
+    {{10, 5, 32, 0}, {4, 4, 512, 64, 2048, 512, 4, 0}},
+    {{10, 5, 31, 0}, {4, 4, 512, 1, 1024, 4, 256, 0}},
+    {{10, 5, 30, 0}, {4, 4, 512, 16, 1024, 1, 2048, 256}},
+};
+static unsigned char sfs2QtePhase = 0;
+static unsigned char sfs2UnusedPhase = 0;
+static unsigned char sfs2TauntPollFrames = 20;
+static unsigned char sfs2IdleVoiceFrames = 0;
+static unsigned int sfs2LastSpokenAnimation = 0;
+static int sfs2FirstStoryMatch = 1;
+
+void QueueNormal(StreetFightStartParameters *start)
+{
+    HLibTask *task;
+    StreetFightEventWork *work;
+    if (start->signal)
+        *start->signal = 1;
+    FTBL.SetScreenFilmFade(1, 0, 0, 0, 0, 255, 0, 0, 0);
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    task = FTBL.HLib_EnqueueTaskWithParameter(MainCallback, 5, 11, sizeof(StreetFightEventWork), TASK_EVNT);
+    work = InitializeNormal(task);
+    work->startParameters = start;
+    LoadNormalResources(work);
+    EventDebugRegister(3, NormalDebugCallback, work, 36000);
+    work->fadeFrames = start->scene;
+}
+
+void LoadNormalResources(StreetFightEventWork *work)
+{
+    work->motions[0] = 0;
+    FTBL.EV_FreeAuthorPak(1, "0100");
+    if (!FTBL.EV_ControlPackageResources(0, 5, "QSFB", 0, 0)) {
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"QSFB", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    }
+    FTBL.EV_ControlPackageResources(2, 4, "QSFB", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "QSFB", 0, 0);
+    FTBL.CreateEventCharacter(3, 0, STREET_FIGHT_BASE);
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0100E000");
+    FTBL.EV_LoadAudio("0100E000", 0);
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.flddSetPointFlagOnGrid(SFS2_BTC1, 1);
+    FTBL.flddSetPointFlagOnGrid(SFS2_GRID_ORIGIN, 0);
+    if (FTBL.EV_GetShenmueFlag(255))
+        FTBL.SetNewNpcBatchCountOverride(1, 10);
+}
+
+void PlaceNormal(StreetFightEventWork *work)
+{
+    shen_name fighter = work->fighters[work->fighterIndex];
+    SetStreetFightCharacterVisible(fighter, 1);
+    work->playerPosition.x = sfs2PlayerPosition.x;
+    work->playerPosition.y = sfs2PlayerPosition.y;
+    work->playerPosition.z = sfs2PlayerPosition.z;
+    work->bookiePosition.x = sfs2BookiePosition.x;
+    work->bookiePosition.y = sfs2BookiePosition.y;
+    work->bookiePosition.z = sfs2BookiePosition.z;
+    EVT_AT_SetPos(STREET_FIGHT_BASE, STREET_FIGHT_INVALID, 334.5f, 84.25f, 80.72f, 0);
+    EVT_AT_SetAngY(STREET_FIGHT_BASE, STREET_FIGHT_INVALID, 90.0f, 0);
+    FTBL.AT_SetLocalBaseChara(STREET_FIGHT_RYO, STREET_FIGHT_BASE);
+    FTBL.AT_SetLocalBaseChara(SFS2_CYC, STREET_FIGHT_BASE);
+    FTBL.AT_SetLocalBaseChara(fighter, STREET_FIGHT_BASE);
+    FTBL.AT_SetLocalBaseChara(SFS2_STAG, STREET_FIGHT_BASE);
+    EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, -9.2f, -0.5f, -10.4f, 0);
+    EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 225.0f, 0);
+    EVT_AT_SetPos(SFS2_CYC, STREET_FIGHT_BASE, work->bookiePosition.x, work->bookiePosition.y, work->bookiePosition.z, 0);
+    EVT_AT_SetAngY(SFS2_CYC, STREET_FIGHT_BASE, 0.0f, 0);
+    EVT_AT_SetPos(fighter, STREET_FIGHT_BASE, -0.5f, 0.0f, -1.0f, 0);
+    EVT_AT_SetAngY(fighter, STREET_FIGHT_BASE, 17.0f, 0);
+    FTBL.SetScenarioCharacterType(STREET_FIGHT_RYO, 4);
+    FTBL.SetScenarioCharacterType(SFS2_CYC, 4);
+    FTBL.SetScenarioCharacterType(fighter, 4);
+    FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFS2_CYC), 1);
+    FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(fighter), 1);
+    FTBL.adfsSetCameraIdxForChara(SFS2_CYC, SFS2_BOOKIE_CAMERA);
+    FTBL.adfsSetCameraIdxForChara(fighter, SFS2_FIGHTER_CAMERA);
+    FTBL.EV_SetPlayerFlag(12, 1292, 0);
+    sfs2QtePhase = 0;
+    sfs2UnusedPhase = 0;
+    sfs2IdleVoiceFrames = 0;
+}
+
+StreetFightEventWork *InitializeNormal(HLibTask *task)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    work->state = 0;
+    work->battleStatus = 0;
+    work->fighterIndex = 0;
+    work->fighters[0] = SFS2_VNE;
+    work->fighters[1] = STREET_FIGHT_INVALID;
+    work->area = SFS2_PACKAGE;
+    work->battleFrames = 53;
+    work->motions[0] = 0;
+    work->auxiliaryState = 0;
+    work->previousNpcBatchCount = FTBL.GetNpcBatchCountOverride(50);
+    work->characterReadTask = Queue_EVT_AT_ReadChr(task, sfs2Characters);
+    work->audienceTask = 0;
+    work->hudEnabled = 0;
+    work->audienceResultPublished = 0;
+    work->stage = GetStreetFightStageForArea(g_currentMap);
+    work->rank = FTBL.vfmDispatchControl(14, work->stage | 64, 0, -1);
+    work->returnToQron = 0;
+    return work;
+}
+
+void NormalDebugCallback(void *data)
+{
+    CleanupNormalCallback(data);
+}
+
+void CleanupNormalCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    StreetFightStartParameters *start = work->startParameters;
+    int i;
+    EventDebugUnregister(3);
+    FTBL.AT_SetLocalBaseChara(SFS2_STAG, STREET_FIGHT_INVALID);
+    ReleaseStreetFightAudience(work->audienceTask);
+    work->audienceTask = 0;
+    ET_AT_KillWork(work->characterReadTask);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.SetScenarioCharacterKillMode(STREET_FIGHT_BASE, 1);
+    FTBL.EV_AT_SetPos(STREET_FIGHT_RYO, 0x78000000, &sfs2ExitPosition);
+    FTBL.EV_AT_SetAngY_0(STREET_FIGHT_RYO, 0x78000000, &sfs2ExitRotation, 0);
+    FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(STREET_FIGHT_RYO), 71, 0, 0);
+    if (work->hudEnabled)
+        FTBL.ToggleStreetFighterUI();
+    FTBL.GetNpcBatchCountOverride(work->previousNpcBatchCount);
+    for (i = 0; work->motions[i]; i++)
+        FTBL.DeleteMotion((void *)work->motions[i]);
+    FTBL.EV_FreeAuthorPak(0, "0100");
+    if (!(start->flags & 1))
+        FTBL.EV_ControlPackageResources(0, 6, "QSFB", 0, 0);
+    if (!IsStreetFightBestOfThree())
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+    else
+        FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    if (IsStreetFightBestOfThree())
+        FTBL.EV_scenQueueLoad(4, SFS2_OMAKE_SCENE, 1);
+    else if (work->returnToQron)
+        FTBL.EV_scenQueueLoad(g_actNumber, SFS2_QRON_SCENE, 81);
+    else {
+        FTBL.camCtrlSetState(0);
+        FTBL.camCtrlSetFovTransitionTo(1);
+    }
+    FTBL.flddSetPointFlagOnGrid(SFS2_GRID_ORIGIN, 1);
+    FTBL.flddSetPointFlagOnGrid(SFS2_BTC1, 0);
+    if (FTBL.EV_GetShenmueFlag(255))
+        FTBL.SetNewNpcBatchCountOverride(1, 6);
+    FTBL.EV_SetPlayerFlag(12, 1233, 1);
+    if (start->signal)
+        *start->signal = 0;
+}
+
+void MainCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    Vector3 position, second, player, bookie;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    unsigned int choice;
+    EventDebugCheck(3, 4);
+    switch (work->state) {
+    case 0:
+        if (!FTBL.EV_GetPlayerFlag(11, 714))
+            sfs2FirstStoryMatch = 1;
+        else
+            sfs2FirstStoryMatch = 0;
+        FTBL.EV_EventSetUpHelpIcon_0(GetHelpIconForArea(g_currentMap), 0);
+        PlaceNormal(work);
+        if (!work->audienceTask) {
+            work->audienceTask = QueueStreetFightAudience(30, 0);
+            AddStreetFightAudienceFighter(work->audienceTask, STREET_FIGHT_RYO);
+            AddStreetFightAudienceFighter(work->audienceTask, fighter);
+        }
+        FTBL.GetCharaPosition(STREET_FIGHT_BASE, -1, &position, 0);
+        position.y -= 0.5f;
+        SetStreetFightAudienceCentre(work->audienceTask, &position);
+        FTBL.GetCharaPosition(STREET_FIGHT_RYO, -1, &player, 0);
+        FTBL.GetCharaPosition(SFS2_CYC, -1, &bookie, 0);
+        FTBL.EV_AT_SetPos(STREET_FIGHT_RYO, 0x38000000, &work->playerPosition);
+        FTBL.EV_AT_SetPos(SFS2_CYC, 0x38000000, &work->bookiePosition);
+        FTBL.GetCharaPosition(STREET_FIGHT_RYO, -1, &position, 0x40000000);
+        FTBL.GetCharaPosition(SFS2_CYC, -1, &second, 0x40000000);
+        SetStreetFightAudienceCorridor(work->audienceTask, &position, &second);
+        FTBL.EV_AT_SetPos(STREET_FIGHT_RYO, 0x38000000, &player);
+        FTBL.EV_AT_SetPos(SFS2_CYC, 0x38000000, &bookie);
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        QueueStreetFightNpcWait(work->startParameters->flags);
+        work->state = 1;
+        break;
+    case 1:
+        if (IsStreetFightAudienceArranged(work->audienceTask)) {
+            if (sfs2FirstStoryMatch)
+                QueueStreetFightSkipWait(FirstIntroConversation, work, 1);
+            else
+                QueueStreetFightSkipWait(RepeatIntroConversation, work, 1);
+            work->state = 2;
+        }
+        break;
+    case 2:
+        FTBL.EV_SetPlayerFlag(12, 714, 1);
+        EVT_AT_KsIcon_Enqueue(0xffff, 38, 39, 470, 0x7fff, 0xffff, 2, 0);
+        FTBL.CheckHelpIcon(1, 0, 1);
+        work->paidEntry = 0;
+        work->state = 3;
+        break;
+    case 3:
+        FTBL.EV_EventSetUpHelpIcon_0(GetHelpIconForArea(g_currentMap), 0);
+        ReadStreetFightCharacterPosition(STREET_FIGHT_RYO, SFS2_CYC, 16);
+        choice = PollStreetFightActionChoice();
+        if (choice) {
+            FTBL.CheckHelpIcon(1, 1, 2);
+            ClearStreetFightLook(STREET_FIGHT_RYO, 15);
+            switch (choice) {
+            case 38:
+                if (FTBL.GetPlayerStat(2) < sfs2EntryFees[work->rank])
+                    work->state = 7;
+                else {
+                    work->state = 5;
+                    work->paidEntry = 1;
+                }
+                break;
+            case 470:
+                FTBL.vfmDispatchControl(21, 0, 0, 1);
+                work->state = 4;
+                break;
+            default:
+                work->state = 6;
+                break;
+            }
+        }
+        break;
+    case 4:
+        if (!FTBL.vfmDispatchControl(21, 0, 0, -1))
+            work->state = 2;
+        break;
+    case 5:
+        QueueStreetFightSkipWait(AcceptConversation, work, 1);
+        work->state = 8;
+        break;
+    case 6:
+        QueueStreetFightSkipWait(DeclineConversation, work, 1);
+        work->state = 16;
+        break;
+    case 7:
+        QueueStreetFightSkipWait(InsufficientConversation, work, 1);
+        work->state = 16;
+        break;
+    case 8:
+        FTBL.HLib_SetCurrentTaskTo(BattleEntryCallback);
+        work->state = 9;
+        break;
+    case 9:
+        if (work->battleStatus == 3)
+            work->state = 10;
+        else
+            work->state = 15;
+        break;
+    case 10:
+        QueueStreetFightSkipWait(VictoryConversation, work, 1);
+        if (!CanPerformForAreaFlags(g_currentMap) || IsStreetFightBestOfThree())
+            work->state = 16;
+        else
+            switch (CommitStreetFightStoryRank(work->stage)) {
+            case 1:
+                work->state = 11;
+                break;
+            case 2:
+                work->state = 11;
+                break;
+            default:
+                work->state = 16;
+                break;
+            }
+        break;
+    case 11:
+        QueueStreetFightSkipWait(VictoryAppearanceConversation, work, 1);
+        if (FTBL.GetStreetFightProgress() > 9)
+            work->state = 16;
+        else
+            work->state = 16;
+        break;
+    case 15:
+        ResetStreetFightStoryFlag(work->stage);
+        QueueStreetFightSkipWait(DefeatConversation, work, 1);
+        work->state = 16;
+        break;
+    case 16:
+        FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.spmFadeOut(0);
+        work->state = 17;
+        break;
+    case 17:
+        if (!FTBL.filmCheckFadeTrackColour()) {
+            if (!IsStreetFightBestOfThree() && work->paidEntry) {
+                if (FTBL.EV_vfBattleUtil(7, 0x40000004, -1)) {
+                    if (!FTBL.vfmDispatchControl(14, 71, 0, -1) && FTBL.vfmDispatchControl(14, 135, 0, -1) == 2)
+                        FTBL.QueueFightAdviceControl(5);
+                } else if (!FTBL.vfmDispatchControl(14, 71, 0, -1) && FTBL.vfmDispatchControl(14, 135, 0, -1) == 2)
+                    FTBL.QueueFightAdviceControl(20);
+            }
+            work->state = 18;
+        }
+        break;
+    case 18:
+        if (work->battleStatus && !IsStreetFightBestOfThree() && work->battleStatus == 3)
+            FTBL.EV_SetPlayerFlag(12, 715, 1);
+        if (IsStreetFightBestOfThree() && work->paidEntry)
+            FTBL.HLib_SetCurrentTaskTo(RetryBeginCallback);
+        else
+            FTBL.HLib_SetCurrentTaskTo(CleanupNormalCallback);
+        break;
+    }
+}
+
+void RetryBeginCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    FTBL.EV_SetPlayerFlag(12, 714, 1);
+    FTBL.dbgPrintEventMessage("「リトライしますか？\n");
+    EVT_AT_KsIcon_Enqueue(0xffff, 38, 39, 0xffff, 0x7fff, 0xffff, 2, 0);
+    ChangeStreetFightAudienceMode(work->audienceTask, 2, 1);
+    FTBL.HLib_SetCurrentTaskTo(RetryChoiceCallback);
+}
+
+void RetryChoiceCallback(void *data)
+{
+    unsigned int choice = PollStreetFightActionChoice();
+    if (choice) {
+        FTBL.ctrlStopSubtitles();
+        if (choice == 38)
+            RetryResetCallback(data);
+        else
+            RetryCancelCallback(data);
+    }
+}
+
+void RetryResetCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    FTBL.EV_ResetFreeTalkFlags();
+    ChangeStreetFightAudienceMode(work->audienceTask, 2, -1);
+    FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(fighter), 1, 1, 1.0f);
+    work->rank = FTBL.vfmDispatchControl(14, work->stage | 64, 0, -1);
+    work->state = 0;
+    work->battleStatus = 0;
+    work->auxiliaryState = 0;
+    FTBL.EV_LoadAudio("0100E000", 0);
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.HLib_SetCurrentTaskTo(MainCallback);
+}
+
+void RetryCancelCallback(void *data)
+{
+    FTBL.HLib_SetCurrentTaskTo(CleanupNormalCallback);
+}
+
+int FirstIntroConversation(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 0);
+    EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 200);
+    EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 225.0f, 0);
+    EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 225.0f, 200);
+    EVT_AT_SetMot(STREET_FIGHT_RYO, 0xf003, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(STREET_FIGHT_RYO, 0xf002, 0.0f, 1.0f, 0, 199);
+    StreetFightNullsub(STREET_FIGHT_RYO, fighter, 16, 800, 605);
+    EVT_AT_SetPos(SFS2_CYC, STREET_FIGHT_BASE, work->bookiePosition.x, work->bookiePosition.y, work->bookiePosition.z, 0);
+    EVT_AT_SetAngY(SFS2_CYC, STREET_FIGHT_BASE, 30.0f, 0);
+    EVT_AT_SetMot(SFS2_CYC, 6855, 0.0f, 1.1f, 0, 0);
+    StreetFightNullsub(SFS2_CYC, STREET_FIGHT_RYO, 15, 877, 535);
+    EVT_AT_SetPos(fighter, STREET_FIGHT_BASE, -0.34f, 0.5f, -0.33f, 0);
+    EVT_AT_SetAngY(fighter, STREET_FIGHT_BASE, 37.0f, 0);
+    EVT_AT_SetPos(fighter, STREET_FIGHT_BASE, -1.4f, 0.5f, -1.5f, 680);
+    EVT_AT_SetAngY(fighter, STREET_FIGHT_BASE, 37.0f, 680);
+    EVT_AT_SetMot(fighter, 6849, 0.0f, 1.2f, 0x40000000, 0);
+    EVT_AT_SetMot(fighter, 6850, 0.0f, 0.8f, 0x50000000, 680);
+    StreetFightNullsub(fighter, STREET_FIGHT_RYO, 16, 790, 605);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 2);
+    EVT_AT_SetVoice("0100I001", 40);
+    EVT_AT_SetVoice("0100I002", 227);
+    EVT_AT_SetVoice("0100I003", 335);
+    EVT_AT_SetVoice("0100I004", 425);
+    EVT_AT_SetVoice("0100I006", 525);
+    switch (sfs2EntryFees[work->rank]) {
+    case 10:
+        EVT_AT_SetVoice("0100I008", 590);
+        break;
+    case 20:
+        EVT_AT_SetVoice("0100I009", 590);
+        break;
+    case 30:
+        EVT_AT_SetVoice("0100I010", 590);
+        break;
+    case 40:
+        EVT_AT_SetVoice("0100I011", 590);
+        break;
+    default:
+        EVT_AT_SetVoice("0100I005", 590);
+        break;
+    }
+    EVT_AT_SetVoice("0100I007", 680);
+    EVT_AT_SetCam(8099, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 0);
+    EVT_AT_SetCam(8100, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 120);
+    EVT_AT_SetCam(600, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 270);
+    EVT_AT_SetCam(610, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 590);
+    EVT_AT_SetCam(1403, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 680);
+    return 750;
+}
+
+int RepeatIntroConversation(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 0);
+    EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 225.0f, 0);
+    EVT_AT_SetMot(STREET_FIGHT_RYO, 0xf002, 0.0f, 1.0f, 0x40000000, 0);
+    QueueStreetFightLook(STREET_FIGHT_RYO, SFS2_CYC, 16, 1, 0, 4352);
+    EVT_AT_SetPos(SFS2_CYC, STREET_FIGHT_BASE, work->bookiePosition.x, work->bookiePosition.y, work->bookiePosition.z, 0);
+    EVT_AT_SetAngY(SFS2_CYC, STREET_FIGHT_BASE, 30.0f, 0);
+    EVT_AT_SetMot(SFS2_CYC, 6855, 0.0f, 1.1f, 0x40000000, 0);
+    QueueStreetFightLook(SFS2_CYC, STREET_FIGHT_RYO, 15, 1, 0, 4352);
+    EVT_AT_SetPos(fighter, STREET_FIGHT_BASE, -1.4f, 0.5f, -1.5f, 0);
+    EVT_AT_SetAngY(fighter, STREET_FIGHT_BASE, 37.0f, 0);
+    EVT_AT_SetMot(fighter, 6850, 0.0f, 0.8f, 0x50000000, 0);
+    QueueStreetFightLook(fighter, STREET_FIGHT_RYO, 16, 1, 0, 4352);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 2);
+    switch (sfs2EntryFees[work->rank]) {
+    case 10:
+        EVT_AT_SetVoice("0100I008", 0);
+        break;
+    case 20:
+        EVT_AT_SetVoice("0100I009", 0);
+        break;
+    case 30:
+        EVT_AT_SetVoice("0100I010", 0);
+        break;
+    case 40:
+        EVT_AT_SetVoice("0100I011", 0);
+        break;
+    default:
+        EVT_AT_SetVoice("0100I005", 0);
+        break;
+    }
+    EVT_AT_SetVoice("0100I007", 80);
+    EVT_AT_SetCam(1403, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 0);
+    return 160;
+}
+
+int AcceptConversation(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    StreetFightNullsub(STREET_FIGHT_RYO, SFS2_CYC, 6, 0, 156);
+    StreetFightNullsub(SFS2_CYC, STREET_FIGHT_RYO, 6, 0, 156);
+    StreetFightNullsub(fighter, STREET_FIGHT_RYO, 6, 0, 156);
+    EVT_AT_SetMot(STREET_FIGHT_RYO, 6852, 0.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetVoice("0100A022", 30);
+    EVT_AT_SetVoice("0100I012", 60);
+    EVT_AT_SetCam(130, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 5);
+    EVT_AT_SetCam(140, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 58);
+    StartStreetFightAudienceOpening(work->audienceTask, 60);
+    return 156;
+}
+
+int DeclineConversation(void *data)
+{
+    switch (FTBL.shenGetRandomInt32(3)) {
+    case 0:
+        EVT_AT_SetVoice("0100A038", 0);
+        break;
+    case 1:
+        EVT_AT_SetVoice("0100A039", 0);
+        break;
+    case 2:
+        EVT_AT_SetVoice("0100A040", 0);
+        break;
+    }
+    EVT_AT_SetCam(132, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 0);
+    return 60;
+}
+
+int InsufficientConversation(void *data)
+{
+    EVT_AT_StartMoneyCount(0, 60);
+    EVT_AT_SetCam(134, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 0);
+    EVT_AT_SetVoice("0100A037", 0);
+    return 150;
+}
+
+void BattleEntryCallback(void *data)
+{
+    if (!IsStreetFightBestOfThree())
+        FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+    FTBL.spmFadeOut(0);
+    FTBL.HLib_SetCurrentTaskTo(BattlePreEventCallback);
+    FTBL.HLib_SetupTaskDelay(30);
+}
+
+void BattlePreEventCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    Vector3 position;
+    Vector3i rotation;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 0.0f, 0.5f, -1.1f, 0);
+    EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 180.0f, 0);
+    EVT_AT_SetPos(SFS2_CYC, STREET_FIGHT_BASE, -3.8f, 0.0f, -2.4f, 0);
+    EVT_AT_SetAngY(SFS2_CYC, STREET_FIGHT_BASE, 220.0f, 0);
+    EVT_AT_SetPos(fighter, STREET_FIGHT_BASE, 0.0f, 0.5f, 1.1f, 0);
+    EVT_AT_SetAngY(fighter, STREET_FIGHT_BASE, 0.0f, 0);
+    EVT_AT_SetMot(STREET_FIGHT_RYO, 13, 0.0f, 0.5f, 0x40000000, 0);
+    EVT_AT_SetMot(fighter, 3090, 0.0f, 0.5f, 0x40000000, 0);
+    FTBL.GetCharaPosition(STREET_FIGHT_RYO, STREET_FIGHT_INVALID, &position, 0x40000000);
+    FTBL.GetScenarioCharacterEulerAngles(STREET_FIGHT_RYO, &rotation, 0x40000000);
+    FTBL.AT_SetLocalBaseChara(STREET_FIGHT_RYO, STREET_FIGHT_INVALID);
+    FTBL.EV_AT_SetPos(STREET_FIGHT_RYO, 0x78000000, &position);
+    FTBL.EV_AT_SetAngY_0(STREET_FIGHT_RYO, 0x78000000, &rotation, 0);
+    ClearStreetFightLook(STREET_FIGHT_RYO, 15);
+    ClearStreetFightLook(SFS2_CYC, 15);
+    ClearStreetFightLook(work->fighters[work->fighterIndex], 15);
+    FTBL.GetScenarioCharacterEulerAngles(work->fighters[work->fighterIndex], &rotation, 0x40000000);
+    FTBL.GetCharaPosition(work->fighters[work->fighterIndex], STREET_FIGHT_INVALID, &position, 0x40000000);
+    FTBL.AT_SetLocalBaseChara(work->fighters[work->fighterIndex], STREET_FIGHT_INVALID);
+    FTBL.EV_AT_SetPos(work->fighters[work->fighterIndex], 0x78000000, &position);
+    FTBL.EV_AT_SetAngY_0(work->fighters[work->fighterIndex], 0x78000000, &rotation, 0);
+    StreetFightNullsub(STREET_FIGHT_RYO, fighter, 16, 0, 260);
+    StreetFightNullsub(SFS2_CYC, STREET_FIGHT_RYO, 15, 0, 260);
+    StreetFightNullsub(fighter, STREET_FIGHT_RYO, 16, 0, 260);
+    EVT_AT_SetMot(STREET_FIGHT_RYO, 13, 0.0f, 0.5f, 0x40000000, 0);
+    work->hudEnabled = 1;
+    if (FTBL.EV_vfBattleUtil(7, 0x40000004, -1))
+        FTBL.qteBattleUtil(0, 0, 0, 0, 0);
+    FTBL.shenStartFGST(10, 10, 0, 0);
+    FTBL.vfmDispatchControl(2, 0, "QSFB", 1);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO), 0, 0, 0, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(fighter), 0, 1, 1, 150, 13);
+    FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO), 0, 8, 0);
+    FTBL.EV_vfBattleUtil(3, 1, 1);
+    FTBL.EV_vfBattleUtil(3, 0x400, 1);
+    FTBL.vfmDispatchControl(16, 0, (const void *)(FTBL.vfmDispatchControl(14, 71, 0, -1) + 1), 1);
+    FTBL.vfCopyPosFromEntity(0, 0, 334.5f, 80.72f, 2.5f);
+    FTBL.EV_SetPlayerFlag(12, 1292, 1);
+    if (sfs2FirstStoryMatch)
+        EVT_AT_SetVoice("0100V004", 30);
+    else
+        EVT_AT_SetVoice("0100V005", 30);
+    EVT_AT_SetCam(1401, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 0);
+    FTBL.EV_LoadAudio("0100E000", 1);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.HLib_SetCurrentTaskTo(BattleStartFirstCallback);
+}
+
+void BattleStartFirstCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    if (!FTBL.camCtrlCheckIsEventCam()) {
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFS2_CYC), 0);
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(work->fighters[work->fighterIndex]), 0);
+        EVT_AT_SetCam(1402, STREET_FIGHT_RYO, STREET_FIGHT_RYO, 0, 0, 0);
+        EVT_AT_SetVoice("0100I013", 30);
+        EVT_AT_SetVoice("0100I014", 80);
+        FTBL.HLib_SetCurrentTaskTo(BattleStartSecondCallback);
+    }
+}
+
+void BattleStartSecondCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    if (!FTBL.camCtrlCheckIsEventCam() && FTBL.cvsHasValidConverseData(0) != 1) {
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO), 0);
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFS2_VNE), 0);
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFS2_CYC), 0);
+        FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO));
+        FTBL.EV_vfBattleUtil(3, 0x800, 1);
+        FTBL.EV_vfBattleUtil(1, 2, 1);
+        FTBL.EV_vfBattleUtil(3, 0x80000, 1);
+        FTBL.vfmQueueFightStart(2, 99, 1.0f, 0, 30);
+        FTBL.EV_SetCharacterAlphaEnabled(SFS2_VNE, 0);
+        if (work->rank > 2)
+            FTBL.EV_vfBattleUtil(9, SFS2_VNE, 1);
+        FTBL.EV_SetPlayerFlag(12, 1786, 1);
+        SetStreetFightStageFlag(work->stage);
+        work->hudEnabled = 0;
+        FTBL.HLib_SetCurrentTaskTo(BattleWaitCallback);
+    }
+}
+
+void BattleWaitCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    if (FTBL.IsFightActive()) {
+        if (FTBL.GetFightRuntime(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO)) & 8)
+            BeginFinishingMotion(work);
+        if (!work->auxiliaryState && FTBL.vfGetPlayerGuardEffeTimer() > 0) {
+            ControlBattleQte(work);
+            if (!--sfs2TauntPollFrames) {
+                sfs2TauntPollFrames = 20;
+                ControlFighterTaunt(work);
+            }
+            if (!(FTBL.EV_vfBattleUtil(2, STREET_FIGHT_RYO, 0) & 0x40000)) {
+                if (FTBL.cvsHasValidConverseData(0) != 1) {
+                    if ((FTBL.EV_vfBattleUtil(2, STREET_FIGHT_RYO, 1) & 4) && (FTBL.EV_vfBattleUtil(2, STREET_FIGHT_RYO, 2) & 0x100) &&
+                        FTBL.vfGetPlayerGuardEffeTimer() > 6 && sfs2LastSpokenAnimation != FTBL.GetMotionAnimationId(FTBL.scenFindMotionwork(STREET_FIGHT_RYO), 0)) {
+                        switch (FTBL.shenGetRandomInt32(4)) {
+                        case 0:
+                            FTBL.EV_PlayDialogue("0100V012");
+                            break;
+                        case 1:
+                            FTBL.EV_PlayDialogue("0100V016");
+                            break;
+                        case 2:
+                            FTBL.EV_PlayDialogue("0100V014");
+                            break;
+                        case 3:
+                            FTBL.EV_PlayDialogue("0100V015");
+                            break;
+                        }
+                        sfs2LastSpokenAnimation = FTBL.GetMotionAnimationId(FTBL.scenFindMotionwork(STREET_FIGHT_RYO), 0);
+                    }
+                    if (sfs2LastSpokenAnimation != FTBL.GetMotionAnimationId(FTBL.scenFindMotionwork(STREET_FIGHT_RYO), 0))
+                        sfs2LastSpokenAnimation = 0;
+                }
+                if (!(FTBL.EV_vfBattleUtil(2, STREET_FIGHT_RYO, 0) & 0x100))
+                    sfs2IdleVoiceFrames++;
+                else
+                    sfs2IdleVoiceFrames = 0;
+                if (FTBL.cvsHasValidConverseData(0) != 1 && FTBL.vfGetPlayerGuardEffeTimer() > 6 && sfs2IdleVoiceFrames > 120) {
+                    switch (FTBL.shenGetRandomInt32(3)) {
+                    case 0:
+                        FTBL.EV_PlayDialogue("0100V001");
+                        break;
+                    case 1:
+                        FTBL.EV_PlayDialogue("0100V002");
+                        break;
+                    case 2:
+                        FTBL.EV_PlayDialogue("0100V003");
+                        break;
+                    }
+                    sfs2IdleVoiceFrames = 0;
+                }
+            }
+            if (!FTBL.EV_vfBattleUtil(7, 0x40000004, -1) && work->rank > 2 && FTBL.vfGetPlayerGuardEffeTimer() == 25 - work->rank)
+                FTBL.EV_vfBattleUtil(9, fighter, 0);
+        }
+        if ((unsigned char)(FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO)) - 5) <= 2 && !work->audienceResultPublished) {
+            StartStreetFightAudienceVictory(work->audienceTask, 5);
+            FTBL.EV_PlayDialogue("0100I020");
+            work->audienceResultPublished++;
+        }
+    } else {
+        if (work->auxiliaryState)
+            work->battleStatus = 3;
+        else {
+            if (FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO)) == 3)
+                work->battleStatus = 3;
+            else
+                work->battleStatus = 2;
+            FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+        }
+        FTBL.spmFadeOut(0);
+        FTBL.HLib_SetupTaskDelay(30);
+        FTBL.HLib_SetCurrentTaskTo(BattleEndCallback);
+    }
+}
+
+void BattleEndCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    if (!FTBL.filmCheckFadeTrackColour()) {
+        FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO), 1, 1, 1.0f);
+        FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(fighter), 1, 1, 1.0f);
+        FTBL.AT_SetLocalBaseChara(STREET_FIGHT_RYO, STREET_FIGHT_BASE);
+        FTBL.AT_SetLocalBaseChara(fighter, STREET_FIGHT_BASE);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO), 1, 1, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO), 1, 0, 0);
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFS2_CYC), 1);
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(fighter), 1);
+        FTBL.SetScenarioCharacterTransparency(SFS2_CYC, 1.0f);
+        FTBL.EV_SetPlayerFlag(12, 1292, 0);
+        if (work->battleStatus == 3)
+            RecordStreetFightVictory(work->stage);
+        else
+            RecordStreetFightDefeat(work->stage);
+        FTBL.HLib_SetCurrentTaskTo(MainCallback);
+    }
+}
+
+int VictoryConversation(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 0);
+    EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 180.0f, 0);
+    EVT_AT_SetMot(STREET_FIGHT_RYO, 6854, 0.0f, 1.0f, 0, 100);
+    EVT_AT_SetPos(SFS2_CYC, STREET_FIGHT_BASE, work->bookiePosition.x, work->bookiePosition.y, work->bookiePosition.z, 0);
+    EVT_AT_SetAngY(SFS2_CYC, STREET_FIGHT_BASE, 0.0f, 0);
+    EVT_AT_SetMot(SFS2_CYC, 6855, 0.0f, 1.1f, 0x40000000, 0);
+    FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(fighter), 6, 1, 1.0f);
+    EVT_AT_SetPos(fighter, STREET_FIGHT_BASE, -1.4f, 0.5f, -1.5f, 0);
+    EVT_AT_SetAngY(fighter, STREET_FIGHT_BASE, 17.0f, 0);
+    EVT_AT_SetMot(fighter, 6850, 0.0f, 0.8f, 0x50000000, 0);
+    EVT_AT_StartMoneyCount(sfs2EntryFees[work->rank], 105);
+    EVT_AT_SetVoice("0100I016", 35);
+    if (sfs2FirstStoryMatch)
+        EVT_AT_SetVoice("0100V006", 120);
+    else
+        EVT_AT_SetVoice("0100V007", 120);
+    EVT_AT_SetCam(200, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 0);
+    EVT_AT_SetCam(210, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 110);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.EV_LoadAudio("0100E000", 0);
+    return 285;
+}
+
+int VictoryAppearanceConversation(void *data)
+{
+    return PlayStreetFightVictoryAppearance();
+}
+
+int DefeatConversation(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 1);
+    EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 180.0f, 1);
+    EVT_AT_SetMot(STREET_FIGHT_RYO, 6853, 0.0f, 1.0f, 0, 110);
+    EVT_AT_SetPos(SFS2_CYC, STREET_FIGHT_BASE, work->bookiePosition.x, work->bookiePosition.y, work->bookiePosition.z, 0);
+    EVT_AT_SetAngY(SFS2_CYC, STREET_FIGHT_BASE, 0.0f, 1);
+    EVT_AT_SetMot(SFS2_CYC, 6855, 0.0f, 1.1f, 0, 0);
+    FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(fighter), 3, 1, 1.0f);
+    EVT_AT_SetPos(fighter, STREET_FIGHT_BASE, -1.488f, 0.5f, -1.1f, 1);
+    EVT_AT_SetAngY(fighter, STREET_FIGHT_BASE, 17.0f, 1);
+    EVT_AT_SetMot(fighter, 6850, 0.0f, 0.8f, 0x50000000, 0);
+    EVT_AT_SetVoice("0100I019", 35);
+    if (sfs2FirstStoryMatch) {
+        EVT_AT_SetVoice("0100V008", 155);
+        EVT_AT_SetVoice("0100V009", 300);
+    } else {
+        EVT_AT_SetVoice("0100V010", 155);
+        EVT_AT_SetVoice("0100V011", 240);
+    }
+    EVT_AT_StartMoneyCount(-sfs2EntryFees[work->rank], 140);
+    EVT_AT_SetCam(300, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 0);
+    EVT_AT_SetCam(310, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 120);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.EV_LoadAudio("0100E000", 0);
+    if (sfs2FirstStoryMatch)
+        return 410;
+    return 345;
+}
+
+void ConfigureBattleQte(int rank)
+{
+    int commands[8];
+    int i;
+    FTBL.qteBattleUtil(8, sfs2QteDefinitions[rank].parameters[0], sfs2QteDefinitions[rank].parameters[1], sfs2QteDefinitions[rank].parameters[2], 0);
+    for (i = 0; i < 8; i++)
+        commands[i] = 0;
+    for (i = 0; i < 8; i++) {
+        commands[i] = sfs2QteDefinitions[rank].commands[i];
+        if (!commands[i])
+            break;
+    }
+    FTBL.qteBattleUtil(9, commands[0], commands[1], commands[2], commands[3]);
+    FTBL.qteBattleUtil(10, commands[4], commands[5], commands[6], commands[7]);
+}
+
+void ControlBattleQte(StreetFightEventWork *work)
+{
+    shen_name fighter = work->fighters[work->fighterIndex];
+    int result;
+    switch (sfs2QtePhase) {
+    case 0:
+        if (CanStartBattleQte(work)) {
+            ConfigureBattleQte((unsigned short)FTBL.vfmDispatchControl(14, 71, 0, -1));
+            FTBL.qteBattleUtil(1, 0, 0, 0, 0);
+            FTBL.qteBattleUtil(2, 0, 0, 0, 0);
+            sfs2QtePhase = 1;
+        }
+        break;
+    case 1:
+        FTBL.qteBattleUtil(3, 0, 0, 0, 0);
+        sfs2QtePhase = 2;
+        break;
+    case 2:
+        result = FTBL.qteBattleUtil(4, 0, 0, 0, 0);
+        if (!result)
+            break;
+        if (result == 1) {
+            FTBL.EV_vfBattleUtil(4, 0x1000, 1);
+            FTBL.EV_vfBattleUtil(3, 0x10, 1);
+            EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_INVALID, 334.5f, 84.25f, 80.72f, 0);
+            EVT_AT_SetPos(fighter, STREET_FIGHT_INVALID, 334.5f, 84.25f, 80.72f, 0);
+            EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_INVALID, 90.0f, 0);
+            EVT_AT_SetAngY(fighter, STREET_FIGHT_INVALID, 90.0f, 0);
+            FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(STREET_FIGHT_RYO), 71, 0, 0);
+            FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(fighter), 71, 0, 0);
+            FTBL.vfmDispatchControl(7, STREET_FIGHT_RYO, (const void *)0x8000c7b, 1);
+            EVT_AT_SetCam(8400, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 0);
+            EVT_AT_SetCamRot(0.0f, 0.25f, 0.85f, 72);
+            StartStreetFightAudienceDefeat(work->audienceTask, 75);
+            switch (work->rank % 3) {
+            case 0:
+                EVT_AT_SetVoice("0100V017", 62);
+                break;
+            case 1:
+                EVT_AT_SetVoice("0100V018", 62);
+                break;
+            case 2:
+                EVT_AT_SetVoice("0100V019", 62);
+                break;
+            }
+            EVT_AT_SetVoice("0100I015", 92);
+            sfs2QtePhase = 3;
+        } else {
+            FTBL.vfmDispatchControl(7, STREET_FIGHT_RYO, (const void *)283, 1);
+            sfs2QtePhase = 4;
+        }
+        break;
+    case 3:
+        if (!FTBL.IsFightActive()) {
+            FTBL.qteBattleUtil(5, 0, 0, 0, 0);
+            sfs2QtePhase = 5;
+        }
+        break;
+    case 4:
+        FTBL.qteBattleUtil(5, 0, 0, 0, 0);
+        sfs2QtePhase++;
+        break;
+    case 5:
+        sfs2QtePhase++;
+        break;
+    }
+}
+
+int CanStartBattleQte(StreetFightEventWork *work)
+{
+    if (FTBL.EV_vfBattleUtil(7, 0x40000004, -1) && FTBL.vfGetPlayerGuardEffeTimer() <= 4)
+        return 1;
+    return 0;
+}
+
+void BeginFinishingMotion(StreetFightEventWork *work)
+{
+    unsigned char rank = work->rank;
+    work->auxiliaryState = 1;
+    StartStreetFightAudienceDefeat(work->audienceTask, 5);
+    switch (rank % 3) {
+    case 0:
+        FTBL.EV_PlayDialogue("0100V017");
+        break;
+    case 1:
+        FTBL.EV_PlayDialogue("0100V018");
+        break;
+    case 2:
+        FTBL.EV_PlayDialogue("0100V019");
+        break;
+    }
+    if (FTBL.EV_vfBattleUtil(2, SFS2_VNE, 12) & 1)
+        FTBL.vfmDispatchControl(7, SFS2_VNE, (const void *)3198, 1);
+    else
+        FTBL.vfmDispatchControl(7, SFS2_VNE, (const void *)3228, 1);
+    EVT_AT_SetVoice("0100I015", 35);
+    FTBL.EV_vfBattleUtil(4, 1, 1);
+    FTBL.HLib_SetCurrentTaskTo(WaitMotionCallback);
+}
+
+void WaitMotionCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    if (FTBL.GetMotionAnimationId(FTBL.scenFindMotionwork(SFS2_VNE), 0) == 3198 || FTBL.GetMotionAnimationId(FTBL.scenFindMotionwork(SFS2_VNE), 0) == 3228) {
+        if (!FTBL.filmCheckFadeTrackColour()) {
+            if (FTBL.GetMotionFrame(FTBL.scenFindMotionwork(SFS2_VNE), 0) > FTBL.GetMotionEndFrame(FTBL.scenFindMotionwork(SFS2_VNE), 0) - 30.0f) {
+                FTBL.vfmDispatchControl(10, 0, 0, 1);
+                FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+            }
+        }
+    }
+    if (FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(SFS2_VNE), 65, 1, 0)) {
+        if (work->auxiliaryState == 1)
+            FTBL.check_dead_status(1);
+        FTBL.HLib_SetCurrentTaskTo(BattleWaitCallback);
+    }
+    if ((FTBL.GetFightRuntime(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO)) & 8) && !work->auxiliaryState)
+        BeginFinishingMotion(work);
+}
+
+void ControlFighterTaunt(StreetFightEventWork *work)
+{
+    shen_name fighter = work->fighters[work->fighterIndex];
+    Vector3 player, opponent;
+    float distance;
+    unsigned char divisor;
+    if (FTBL.cvsHasValidConverseData(0) != 1) {
+        FTBL.GetCharaPosition(STREET_FIGHT_RYO, -1, &player, 0x40000000);
+        FTBL.GetCharaPosition(fighter, -1, &opponent, 0x40000000);
+        distance = FTBL.CalculatePlanarDistanceBetweenPoints(&player, &opponent);
+        if (work->rank <= 3)
+            divisor = FTBL.vfmDispatchControl(14, 71, 0, -1) + 2;
+        else
+            divisor = 99;
+        if (!(FTBL.vfGetPlayerGuardEffeTimer() % divisor) && !(FTBL.EV_vfBattleUtil(2, STREET_FIGHT_RYO, 0) & 1) && distance > 1.5f) {
+            if (work->rank & 1)
+                FTBL.EV_PlayDialogue("0100V020");
+            else
+                FTBL.EV_PlayDialogue("0100V021");
+            FTBL.vfmDispatchControl(7, fighter, (const void *)3193, 1);
+            FTBL.HLib_SetCurrentTaskTo(WaitMotionCallback);
+        }
+    }
+}
+#endif
+#else
 #include "s2/areas/area_sfs2.hpp"
 #include "s2/author.hpp"
 #include "s2/event_call.hpp"
@@ -1582,3 +2542,4 @@ void Main(std::uintptr_t parameter) {
 } // namespace
 const ScriptAreaDefinition areaSfs2ScriptDefinition{.areaId = STREET_FIGHT_SFS2, .field04 = 0, .init = Init, .main = Main};
 } // namespace shenmue::s2
+#endif

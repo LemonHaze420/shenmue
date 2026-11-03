@@ -1,3 +1,104 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_movement.hpp"
+
+#define EVENT_CHASE_ABS(x) ((x) < 0.0f ? -(x) : (x))
+
+void InitEventChase(EventChaseWork *work, const EventChaseParams *params)
+{
+    work->params = *params;
+    work->ticks = 0;
+    work->readIndex = 0;
+    work->writeIndex = 0;
+    FTBL.GetCharaPosition(params->source, -1, &work->positions[work->writeIndex], 0x40000000);
+    FTBL.GetScenarioCharacterEulerAngles(params->source, &work->rotations[work->writeIndex], 0x40000000);
+}
+
+void UpdateEventChase(EventChaseWork *work)
+{
+    Vector3 position;
+    Vector3i rotation;
+    Vector3 *desired;
+    Vector3i *target;
+    float gain, deadzone, delta, correction;
+    if (work->ticks++ >= work->params.delay) {
+        desired = &work->positions[work->readIndex];
+        target = &work->rotations[work->readIndex];
+        gain = EVENT_CHASE_ABS(FTBL.CalculateFixedSine((int)(work->ticks * work->params.positionGainFrequency * 8192.0f / 45.0f) & 0xffff)
+            * work->params.positionGainAmplitude);
+        deadzone = EVENT_CHASE_ABS(FTBL.CalculateFixedSine((int)(work->ticks * work->params.positionDeadzoneFrequency * 8192.0f / 45.0f) & 0xffff)
+            * work->params.positionDeadzoneAmplitude);
+        FTBL.GetCharaPosition(work->params.target, -1, &position, 0x40000000);
+        delta = desired->x - position.x;
+        correction = EVENT_CHASE_ABS(delta) - (deadzone + work->params.positionDeadzone.x);
+        if (correction > 0.0f) {
+            if (delta < 0.0f)
+                correction = -correction;
+            position.x += correction * (gain + work->params.positionGain.x);
+        }
+        delta = desired->y - position.y;
+        correction = EVENT_CHASE_ABS(delta) - (deadzone + work->params.positionDeadzone.y);
+        if (correction > 0.0f) {
+            if (delta < 0.0f)
+                correction = -correction;
+            position.y += correction * (gain + work->params.positionGain.y);
+        }
+        delta = desired->z - position.z;
+        correction = EVENT_CHASE_ABS(delta) - (deadzone + work->params.positionDeadzone.z);
+        if (correction > 0.0f) {
+            if (delta < 0.0f)
+                correction = -correction;
+            position.z += correction * (gain + work->params.positionGain.z);
+        }
+        gain = EVENT_CHASE_ABS(FTBL.CalculateFixedSine((int)(work->ticks * work->params.rotationGainFrequency * 8192.0f / 45.0f) & 0xffff)
+            * work->params.rotationGainAmplitude);
+        deadzone = EVENT_CHASE_ABS(FTBL.CalculateFixedSine((int)(work->ticks * work->params.rotationDeadzoneFrequency * 8192.0f / 45.0f) & 0xffff)
+            * work->params.rotationDeadzoneAmplitude);
+        FTBL.GetScenarioCharacterEulerAngles(work->params.target, &rotation, 0x40000000);
+        delta = (target->x - rotation.x) / 182.04445f;
+        correction = EVENT_CHASE_ABS(delta);
+        if (correction > 180.0f) {
+            delta = -delta;
+            correction = 360.0f - correction;
+        }
+        correction -= work->params.rotationDeadzone.x + deadzone;
+        if (correction > 0.0f) {
+            if (delta < 0.0f)
+                correction = -correction;
+            rotation.x = (unsigned short)(int)((rotation.x / 182.04445f + (work->params.rotationGain.x + gain) * correction) * 8192.0f / 45.0f);
+        }
+        delta = (target->y - rotation.y) / 182.04445f;
+        correction = EVENT_CHASE_ABS(delta);
+        if (correction > 180.0f) {
+            delta = -delta;
+            correction = 360.0f - correction;
+        }
+        correction -= work->params.rotationDeadzone.y + deadzone;
+        if (correction > 0.0f) {
+            if (delta < 0.0f)
+                correction = -correction;
+            rotation.y = (unsigned short)(int)((rotation.y / 182.04445f + (work->params.rotationGain.y + gain) * correction) * 8192.0f / 45.0f);
+        }
+        delta = (target->z - rotation.z) / 182.04445f;
+        correction = EVENT_CHASE_ABS(delta);
+        if (correction > 180.0f) {
+            delta = -delta;
+            correction = 360.0f - correction;
+        }
+        correction -= work->params.rotationDeadzone.z + deadzone;
+        if (correction > 0.0f) {
+            if (delta < 0.0f)
+                correction = -correction;
+            rotation.z = (unsigned short)(int)((rotation.z / 182.04445f + (work->params.rotationGain.z + gain) * correction) * 8192.0f / 45.0f);
+        }
+        FTBL.EV_AT_SetPos(work->params.target, 0x78000000, &position);
+        FTBL.EV_AT_SetAngY_0(work->params.target, 0x78000000, &rotation, 0);
+        work->readIndex = (work->readIndex + 1) % EVENT_CHASE_HISTORY;
+    }
+    work->writeIndex = (work->writeIndex + 1) % EVENT_CHASE_HISTORY;
+    FTBL.GetCharaPosition(work->params.source, -1, &work->positions[work->writeIndex], 0x40000000);
+    FTBL.GetScenarioCharacterEulerAngles(work->params.source, &work->rotations[work->writeIndex], 0x40000000);
+}
+#else
 #include "s2/debug.hpp"
 #include "s2/event_movement.hpp"
 #include "common/math.hpp"
@@ -330,3 +431,4 @@ void UpdateEventChase(EventChaseWork *work) {
     GetScenarioCharacterEulerAngles(work->source, &work->rotations[work->writeIndex], EventTransformFlags::World);
 }
 } // namespace shenmue::s2
+#endif

@@ -1,4 +1,54 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/common/et_street_debug.h"
+
+#define SFKK_SD6 SHEN_NAME4('S', 'D', '6', '_')
+#define SFKK_OXO SHEN_NAME4('O', 'X', 'O', '_')
+#define SFKK_CHN SHEN_NAME4('C', 'H', 'N', '_')
+#define SFKK_OWO SHEN_NAME4('O', 'W', 'O', '_')
+#define SFKK_PACKAGE SHEN_NAME4('Q', '2', '0', '0')
+#define SFKK_BOOKIE_CAMERA SHEN_NAME4('d', 'u', 'm', 'A')
+#define SFKK_FIGHTER_CAMERA SHEN_NAME4('d', 'u', 'm', 'M')
+#define SFKK_OMAKE_SCENE SHEN_NAME4('O', 'M', 'A', 'K')
+#define SFKK_QRON_SCENE SHEN_NAME4('Q', 'R', '0', '0')
+
+void SfkkMain(StreetFightStartParameters *start);
+void QueueNormal(StreetFightStartParameters *start);
+void LoadNormalResources(StreetFightEventWork *work);
+void PlaceNormal(StreetFightEventWork *work);
+StreetFightEventWork *InitializeNormal(HLibTask *task);
+void NormalDebugCallback(void *data);
+void CleanupNormalCallback(void *data);
+void MainCallback(void *data);
+void RetryBeginCallback(void *data);
+void RetryChoiceCallback(void *data);
+void RetryResetCallback(void *data);
+void RetryCancelCallback(void *data);
+int FirstIntroConversation(void *data);
+int RepeatIntroConversation(void *data);
+int AcceptConversation(void *data);
+int DeclineConversation(void *data);
+int InsufficientConversation(void *data);
+void BattleEntryCallback(void *data);
+void BattlePreEventCallback(void *data);
+void BattlePreInitCallback(void *data);
+void BattleStartCallback(void *data);
+void BattleReadyGoCallback(void *data);
+void BattleStartFightCallback(void *data);
+void BattleWaitCallback(void *data);
+void BattleWaitFadeCallback(void *data);
+void BattleEndCallback(void *data);
+int VictoryConversation(void *data);
+int PostVictoryScmanConversation(void *data);
+void ScmanLookCallback(void *data);
+int StoryScmanConversation(void *data);
+int DefeatConversation(void *data);
+int SelectFirstBattleVoice(void *data);
+int SelectSecondBattleVoice(void *data);
+void ControlQteFallback(StreetFightEventWork *work);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/street_fight_event.hpp"
 namespace shenmue::s2 {
@@ -35,3 +85,4 @@ inline constexpr char SFKK_DEBUG_BOOKIE_STOP_PRIZE[] = "\x93\xb7\x8c\xb3\x81\x75
                                                        "\x8f\xdc\x8b\xe0\x82\xbe\x81\x42\x81\x76";
 extern const ScriptAreaDefinition areaSfkkScriptDefinition;
 } // namespace shenmue::s2
+#endif

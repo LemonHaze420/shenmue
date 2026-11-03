@@ -1,4 +1,70 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+
+#define TGBT_AREA SHEN_NAME4('T', 'G', 'B', 'T')
+#define TGBT_AUTHOR_TASK SHEN_NAME4('a', 'u', 't', 'h')
+#define TGBT_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define TGBT_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define TGBT_FIRST_FIGHTER SHEN_NAME4('K', 'T', '1', '_')
+#define TGBT_SECOND_FIGHTER SHEN_NAME4('K', 'T', '2', '_')
+#define TGBT_THIRD_FIGHTER SHEN_NAME4('E', 'H', 'Y', '_')
+#define TGBT_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define TGBT_PROP SHEN_NAME4('R', '1', '1', '0')
+#define TGBT_MAP_PART SHEN_NAME4('0', '0', '0', '0')
+#define TGBT_FIELD_PART SHEN_NAME4('Q', 'F', '0', 'X')
+#define TGBT_RETRY_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+#define TGBT_AUTHOR_0 SHEN_NAME4('A', 'U', '_', '0')
+#define TGBT_AUTHOR_1 SHEN_NAME4('A', 'U', '_', '1')
+#define TGBT_AUTHOR_2 SHEN_NAME4('A', 'U', '_', '2')
+#define TGBT_AUTHOR_3 SHEN_NAME4('A', 'U', '_', '3')
+#define TGBT_AUTHOR_4 SHEN_NAME4('A', 'U', '_', '4')
+#define TGBT_AUTHOR_5 SHEN_NAME4('A', 'U', '_', '5')
+#define TGBT_AUTHOR_CHARACTER_0 SHEN_NAME4('a', 'a', '4', '9')
+#define TGBT_AUTHOR_CHARACTER_1 SHEN_NAME4('a', '4', '5', '2')
+#define TGBT_AUTHOR_CHARACTER_2 SHEN_NAME4('a', 'b', '1', '9')
+#define TGBT_AUTHOR_CHARACTER_3 SHEN_NAME4('a', 'b', '1', '8')
+#define TGBT_INVALID 0xffffffffU
+
+typedef struct TgbtEventWork {
+    HLibTask *task;
+    int state;
+    int frames;
+    EventReadCharactersWork *characters;
+    unsigned char retries;
+} TgbtEventWork;
+typedef struct TgbtAuthorWork {
+    HLibTask *task;
+    int reserved04;
+    shen_name author;
+    short state;
+} TgbtAuthorWork;
+typedef struct TgbtAuthorWaitWork {
+    TgbtAuthorWork *parent;
+    short state;
+} TgbtAuthorWaitWork;
+
+extern const shen_name tgbtLoadCharacters[];
+void TgbtMain(void);
+void QueueTgbtAuthor(shen_name author);
+void TgbtAuthorCallback(void *data);
+void StartTgbtAuthor(TgbtAuthorWork *work);
+void TgbtAuthorWaitCallback(void *data);
+void BeginTgbtAuthor(void);
+void EndTgbtAuthor(TgbtAuthorWork *work);
+void PrepareTgbtAuthoredCharacters(void);
+void RestoreTgbtAuthoredCharacters(void);
+void HideTgbtCharacter(shen_name character);
+void ShowTgbtCharacter(shen_name character);
+void HideTgbtProp(shen_name prop);
+void ShowTgbtProp(shen_name prop);
+void InitializeTgbtResources(TgbtEventWork *work);
+void CleanupTgbtEvent(TgbtEventWork *work);
+void TgbtEventCallback(void *data);
+void UnparentAndSetExistingPosRot(shen_name character);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "common/math.hpp"
@@ -59,3 +125,4 @@ void RestoreTgbtAuthoredCharacters();
 void TgbtDormantBoundary();
 extern const ScriptAreaDefinition tgbtScriptDefinition;
 } // namespace shenmue::s2
+#endif

@@ -1,5 +1,67 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define QKQB_AREA SHEN_NAME4('Q', 'K', 'Q', 'B')
+#define QKQB_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define QKQB_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QKQB_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define QKQB_DUMMY_RYO SHEN_NAME4('D', 'U', 'M', 'R')
+#define QKQB_KF5 SHEN_NAME4('K', 'F', '5', '_')
+#define QKQB_KR3 SHEN_NAME4('K', 'R', '3', '_')
+#define QKQB_KF2 SHEN_NAME4('K', 'F', '2', '_')
+#define QKQB_KF3 SHEN_NAME4('K', 'F', '3', '_')
+#define QKQB_BF7 SHEN_NAME4('B', 'F', '7', '_')
+#define QKQB_RETRY_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+#define QKQB_DEBUG_ID 3
+#define QKQB_OPEN_HAND_POSE 18
+#define QKQB_CLOSED_HAND_POSE 19
+typedef struct QKQBAuthoredEntry {
+    int cutMode;
+    Vector3 basePosition;
+    float baseYaw;
+    Vector3 battlePosition;
+    float battleRadius;
+    int enemyCount, enemyHp, fightStyle;
+    Vector3 returnPosition;
+    float returnYaw;
+    unsigned short commands[4];
+    short maximumQteFrames, retryQteFrames, requiredCommands;
+} QKQBAuthoredEntry;
+typedef struct QKQBEventWork {
+    EventReadCharactersWork *characters;
+    HLibTask *task;
+    void *motion;
+    const int *entry;
+    const QKQBAuthoredEntry *authored;
+    float playerY;
+} QKQBEventWork;
+void QkqbMain(void *argument);
+void Queue_eQKQB_EVT_StartQKuro(const int *entry);
+void QkqbDebugExitCallback(void *data);
+void FinishQkqbEvent(QKQBEventWork *work);
+void eQKQB_EVT_StartQKuro_Callback(void *data);
+void eQKQB_EVT_WaitQTE_Callback(void *data);
+void eQKQB_EVT_StartBattle_Callback(void *data);
+void eQKQB_EVT_PlayBattle_Callback(void *data);
+void eQKQB_EVT_RetryQKuro_Callback(void *data);
+void eQKQB_EVT_EndQKuro_Callback(void *data);
+void InitializeQkqbResources(QKQBEventWork *work);
+void CleanupQkqbResources(QKQBEventWork *work);
+int PlayQkqbIntro(shen_name enemy, int mode);
+int PlayQkqbFailure(shen_name enemy, int mode);
+int PlayQkqbSuccess(shen_name enemy, int mode);
+int PlayQkqbSuccessCut4(shen_name enemy);
+int PlayQkqbSuccessCut2(shen_name enemy);
+int PlayQkqbSuccessCut3(shen_name enemy);
+int PlayQkqbSuccessCut1(shen_name enemy);
+int PlayQkqbSuccessCut0(shen_name enemy);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/hlib.hpp"
@@ -66,3 +128,4 @@ void eQKQB_EVT_RetryQKuro_Callback(void *data);
 void eQKQB_EVT_EndQKuro_Callback(void *data);
 
 } // namespace shenmue::s2
+#endif

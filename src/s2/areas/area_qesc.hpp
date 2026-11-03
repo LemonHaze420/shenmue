@@ -1,5 +1,34 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+
+#define AREA_QESC SHEN_NAME4('Q', 'E', 'S', 'C')
+#define QESC_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define QESC_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define QESC_DUMMY SHEN_NAME4('D', 'U', 'M', 'R')
+#define QESC_DEBUG_ID 3
+typedef struct QescEventWork {
+    EventReadCharactersWork *characters;
+    HLibTask *task;
+    void *motion;
+    int state;
+    const void *arguments;
+} QescEventWork;
+void QescMain(void *argument);
+void QueueQescEscapeEvent(void *argument);
+void QescExitCallback(void *data);
+void FinishQescEscape(QescEventWork *work);
+void ResetQescEscapeState(int *state);
+void QescEscapeCallback(void *data);
+void QescDormantCallback(void *data);
+void FadeOutAndFinishQescEscape(QescEventWork *work);
+void InitializeQescEscape(QescEventWork *work);
+void ReleaseQescEscape(QescEventWork *work);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/hlib.hpp"
@@ -35,3 +64,4 @@ void QescDormantCallback(void *taskData);
 extern const ScriptAreaDefinition qescScriptDefinition;
 
 } // namespace shenmue::s2
+#endif

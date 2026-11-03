@@ -1,3 +1,338 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_b102.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void B102_main_func(const shen_name *argument)
+{
+    shen_name area, prop;
+    int mode;
+    const BayItemShop *shop;
+    while (argument) {
+        area = argument[0];
+        prop = argument[1];
+        mode = argument[2];
+        shop = FindBayItemShop(area);
+        if ((unsigned int)mode <= 1 && !shop)
+            break;
+        switch (mode) {
+        case 0:
+            BayItemShopUpdateAreaItems(area, prop);
+            FTBL.SetPlayerControlEnabled(1);
+            break;
+        case 1:
+            BayItemShopQueueWait(area, prop);
+            FTBL.srchReset();
+            FTBL.SetPlayerControlEnabled(0);
+            FTBL.SetLoadingBusy();
+            break;
+        case 2:
+            FTBL.SetPlayerControlEnabled(1);
+            break;
+        }
+        break;
+    }
+}
+#elif defined(SHENMUE_EVENT_B102_SHOPS)
+#define SHENMUE_AREA_LOOP_SOUND
+#define SHENMUE_AREA_LOOP_MOTION_FRAMES
+#define SHENMUE_AREA_LOOP_VOICE_REVISION 2
+#define SHENMUE_AREA_LOOP_HAND_POSES
+#include "s2/areas/area_loop_dc.c"
+
+static BayItemShop bayItemShops[] = {
+    {SHEN_NAME4('W', 'T', 'R', '0'), SHEN_NAME4('B', 'B', 'T', '_'),
+     {{SHEN_NAME4('M', '4', '0', '1'), 0, 3024, 300},
+      {SHEN_NAME4('M', '4', '0', '2'), 0, 3011, 200},
+      {SHEN_NAME4('M', '4', '0', '3'), 0, 3016, 200},
+      {SHEN_NAME4('M', '4', '0', '4'), 0, 3020, 100},
+      {SHEN_NAME4('M', '4', '0', '5'), 0, 3019, 100},
+      {0, 0, 0, 0}}},
+    {SHEN_NAME4('Q', 'C', 'A', 'C'), SHEN_NAME4('J', 'I', '9', '_'),
+     {{SHEN_NAME4('M', '4', '0', '1'), 0, 3018, 150},
+      {SHEN_NAME4('M', '4', '0', '2'), 0, 3017, 150},
+      {SHEN_NAME4('M', '4', '0', '3'), 0, 3014, 150},
+      {SHEN_NAME4('M', '4', '0', '4'), 0, 3015, 100},
+      {0, 0, 0, 0},
+      {0, 0, 0, 0}}},
+    {SHEN_NAME4('Q', 'C', 'A', 'D'), SHEN_NAME4('Z', 'Y', 'C', '_'),
+     {{SHEN_NAME4('M', '4', '0', '5'), 0, 3023, 500},
+      {SHEN_NAME4('M', '4', '0', '6'), 0, 3012, 250},
+      {SHEN_NAME4('M', '4', '0', '7'), 0, 3013, 200},
+      {0, 0, 0, 0},
+      {0, 0, 0, 0},
+      {0, 0, 0, 0}}},
+    {0, 0, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}},
+};
+
+int BayItemShopUpdateAreaItems(shen_name area, shen_name prop)
+{
+    int result = 0;
+    const BayItemShop *shop;
+    do {
+        shop = FindBayItemShop(area);
+        if (!shop)
+            break;
+        BayItemShopUpdateItems(shop, prop);
+        result = 1;
+    } while (0);
+    return result;
+}
+
+const BayItemShop *FindBayItemShop(shen_name area)
+{
+    const BayItemShop *shop = 0;
+    int index;
+    for (index = 0; bayItemShops[index].area; index++) {
+        if (bayItemShops[index].area == area) {
+            shop = &bayItemShops[index];
+            break;
+        }
+    }
+    return shop;
+}
+
+void BayItemShopUpdateItems(const BayItemShop *shop, shen_name prop)
+{
+    int index;
+    if (!shop)
+        return;
+    for (index = 0; index < 6; index++) {
+        if (!shop->items[index].prop)
+            continue;
+        if (prop && prop != shop->items[index].prop)
+            continue;
+        if (FTBL.GetItemState(shop->items[index].item)) {
+            FTBL.SetDisplayFlagForProp(shop->items[index].prop, 0);
+            if (shop->items[index].target)
+                FTBL.srchSetTargetEnabled(shop->items[index].target, 0);
+        } else {
+            FTBL.SetDisplayFlagForProp(shop->items[index].prop, 1);
+            if (shop->items[index].target)
+                FTBL.srchSetTargetEnabled(shop->items[index].target, 1);
+        }
+    }
+}
+#else
+static char b102Package[] = "B102";
+
+void BayItemShopQueueWait(shen_name area, shen_name prop)
+{
+    HLibTask *task;
+    BayItemShopWork *work;
+    while ((task = FTBL.HLib_EnqueueTaskWithParameter(BayItemShopWaitPackageCallback, 4, 11, sizeof(BayItemShopWork), TASK_EVNT)) &&
+           (work = (BayItemShopWork *)FTBL.HLib_GetTaskParameter(task))) {
+        work->parent = FTBL.HLib_GetCurrentTask();
+        work->task = task;
+        work->flags = 1;
+        work->area = area;
+        work->prop = prop;
+        FTBL.EV_NPC_NewLoadSw_0(0);
+        task = 0;
+        break;
+    }
+    if (task) {
+        FTBL.FinishLoading();
+        FTBL.HLib_DestroyTask(task);
+    }
+}
+
+void BayItemShopWaitPackageCallback(void *data)
+{
+    BayItemShopWork *work = (BayItemShopWork *)data;
+    if (FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)b102Package, 0)) {
+        const BayItemShop *shop;
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        FTBL.HLib_SetCurrentTaskTo(BayItemShopStartCallback);
+        shop = FindBayItemShop(work->area);
+        if (shop) {
+            shen_name names[2];
+            FTBL.HLib_SetupTaskDelay(-1);
+            names[0] = shop->npc;
+            names[1] = 0;
+            QueueAreaLoopNpcs(names, ResolveAreaLoopParent);
+        }
+    }
+}
+
+void BayItemShopStartCallback(void *data)
+{
+    BayItemShopWork *work = (BayItemShopWork *)data;
+    const BayItemShop *shop;
+    Vector3 ryoPosition, npcPosition;
+    Vector3i ryoRotation, npcRotation;
+    shen_name npc;
+    unsigned int npcMotion;
+    while (!FTBL.filmCheckFadeTrackColour() && work && (shop = FindBayItemShop(work->area)) != 0) {
+        FTBL.HLib_SetCurrentTaskTo(BayItemShopWaitItemEffectCallback);
+        FTBL.HLib_SetupTaskDelay(-1);
+        SetAreaLoopCharacterControl(B102_RYO, 1);
+        npc = shop->npc;
+        npcMotion = 11464;
+        FTBL.GetCharaPosition(B102_RYO, -1, &ryoPosition, 0x40000000);
+        npcPosition = ryoPosition;
+        ryoRotation.x = 0;
+        ryoRotation.y = 0;
+        ryoRotation.z = 0;
+        npcRotation.x = 0;
+        npcRotation.y = 0;
+        npcRotation.z = 0;
+        FTBL.EV_FreeAuthorPak(1, "0110");
+        switch (work->area) {
+        case B102_AREA_WTR0:
+            npcMotion = 11460;
+            QueueAreaLoopCamera(b102Package, 1550, B102_ANCHOR, 0, 0);
+            QueueAreaLoopCamera(b102Package, 1551, B102_ANCHOR, 200, 0);
+            SHENMUE_EVENT_CLOBBER("r11");
+            QueueAreaLoopVoice("0110A019", 1, 0, -1, 0);
+            QueueAreaLoopVoice("0110J009", 1, 100, -1, 0);
+            QueueAreaLoopVoice("0110J010", 1, 200, -1, ResolveAreaLoopParent);
+            ryoPosition.x = 221.21f;
+            ryoPosition.z = 276.74f;
+            ryoRotation.y = 16384;
+            npcPosition.x = 219.58f;
+            npcPosition.z = 276.66f;
+            npcRotation.y = 49152;
+            break;
+        case B102_AREA_QCAC:
+            npcMotion = 11460;
+            QueueAreaLoopCamera(b102Package, 1550, B102_ANCHOR, 0, 0);
+            QueueAreaLoopCamera(b102Package, 1551, B102_ANCHOR, 200, 0);
+            QueueAreaLoopVoice("0110A019", 1, 0, -1, 0);
+            QueueAreaLoopVoice("0110K009", 1, 100, -1, 0);
+            QueueAreaLoopVoice("0110K010", 1, 200, -1, ResolveAreaLoopParent);
+            ryoPosition.x = 169.16f;
+            ryoPosition.z = 140.6f;
+            ryoRotation.y = 32768;
+            npcPosition.x = 169.21f;
+            npcPosition.z = 142.28f;
+            npcRotation.y = 0;
+            break;
+        case B102_AREA_QCAD:
+            npcMotion = 11460;
+            QueueAreaLoopCamera(b102Package, 1550, B102_ANCHOR, 0, 0);
+            QueueAreaLoopCamera(b102Package, 1551, B102_ANCHOR, 200, 0);
+            QueueAreaLoopVoice("0110A019", 1, 0, -1, 0);
+            QueueAreaLoopVoice("0110I012", 1, 100, -1, 0);
+            QueueAreaLoopVoice("0110I013", 1, 200, -1, ResolveAreaLoopParent);
+            ryoPosition.x = 174.56f;
+            ryoPosition.z = 140.6f;
+            ryoRotation.y = 32768;
+            npcPosition.x = 174.62f;
+            npcPosition.z = 142.24f;
+            npcRotation.y = 0;
+            break;
+        }
+        do {
+            QueueAreaLoopPosition(B102_RYO, 0, 0, &ryoPosition, &ryoRotation, 0);
+            QueueAreaLoopPosition(npc, 0, 0, &npcPosition, &npcRotation, 0);
+            QueueAreaLoopPosition(B102_ANCHOR, 0, 0, &npcPosition, &npcRotation, 0);
+            FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(B102_RYO));
+            FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(B102_RYO));
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(B102_RYO), 1, 0, 0);
+            FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(B102_RYO), 0, (void *)areaLoopHandPoses[18], 1);
+            QueueAreaLoopMotion(B102_RYO, 11462, 0, -1, -1.0f, -1.0f, 1.0f, 0.0f, 0, 22);
+            QueueAreaLoopMotion(npc, npcMotion, 0, -1, -1.0f, -1.0f, 1.0f, 0.0f, BayItemShopChargeItem, 22);
+            QueueAreaLoopMotion(B102_RYO, 11461, 200, -1, 7.0f, -1.0f, 1.0f, 0.0f, BayItemShopDeliverItem, 22);
+            if (work->flags & 1) {
+                FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+                work->flags &= ~1;
+            }
+        } while (0);
+        break;
+    }
+}
+
+int BayItemShopChargeItem(int phase, int value, HLibTask *parent)
+{
+    BayItemShopWork *work = (BayItemShopWork *)FTBL.HLib_GetTaskParameter(parent);
+    const BayItemShop *shop = 0;
+    if (work)
+        shop = FindBayItemShop(work->area);
+    if (phase == 0 && shop) {
+        int index;
+        for (index = 0; index < 6; index++) {
+            if (shop->items[index].prop == work->prop) {
+                FTBL.AddThisToCashOrSegaCoins(-shop->items[index].cost, 2);
+                break;
+            }
+        }
+    }
+    return 1;
+}
+
+int BayItemShopDeliverItem(int phase, int value, HLibTask *parent)
+{
+    BayItemShopWork *work;
+    const BayItemShop *shop;
+    work = (BayItemShopWork *)FTBL.HLib_GetTaskParameter(parent);
+    shop = work ? FindBayItemShop(work->area) : 0;
+    switch (phase) {
+    case 0:
+        if (shop) {
+            int index;
+            for (index = 0; index < 6; index++) {
+                if (shop->items[index].prop == work->prop) {
+                    FTBL.AddInventoryItem(shop->items[index].item, 1, 1);
+                    break;
+                }
+            }
+        }
+        break;
+    case 1:
+        if (work)
+            BayItemShopUpdateAreaItems(work->area, 0);
+        if (shop) {
+            shen_name names[2];
+            names[0] = shop->npc;
+            names[1] = 0;
+            RestoreAreaLoopCharacters(names, 0);
+        }
+        FTBL.HLib_ResolveDeferredCallback(parent);
+        FTBL.HLib_SetupTimedTask(parent, 1);
+        break;
+    }
+    return 1;
+}
+
+void BayItemShopWaitItemEffectCallback(void *data)
+{
+    if (!FTBL.GetShouldRenderIcons(5)) {
+        FTBL.HLib_SetCurrentTaskTo(BayItemShopDoneCallback);
+        FTBL.SetScreenFilmFade(16, 0, 0, 0, 0, 255, 0, 0, 0);
+        ((BayItemShopWork *)data)->flags |= 1;
+    }
+}
+
+void BayItemShopDoneCallback(void *data)
+{
+    BayItemShopWork *work = (BayItemShopWork *)data;
+    while (!FTBL.GetShouldRenderIcons(5)) {
+        if (work) {
+            if (FTBL.filmCheckFadeTrackColour())
+                break;
+            if (work->flags & 1) {
+                FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+                work->flags &= ~1;
+            }
+            FTBL.EV_FreeAuthorPak(0, "0110");
+        }
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        FTBL.HLib_MarkCurrentTaskForCleanup();
+        FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(B102_RYO));
+        FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(B102_RYO));
+        if (FTBL.EV_ControlPackageResources(0, 5, b102Package, 0, 0))
+            FTBL.EV_ControlPackageResources(0, 6, b102Package, 0, 0);
+        FTBL.FinishLoading();
+        SetAreaLoopCharacterControl(B102_RYO, 0);
+        FTBL.SetPlayerControlEnabled(1);
+        break;
+    }
+}
+
+#endif
+#else
 #include "s2/areas/area_b102.hpp"
 #include "s2/areas/area_b102_data.hpp"
 #include "s2/areas/area_loop.hpp"
@@ -236,3 +571,4 @@ void BayItemShopDoneCallback(void *parameter) {
 }
 const ScriptAreaDefinition areaB102ScriptDefinition{.areaId = SHEN_NAME(B102), .field04 = 0, .init = nullptr, .main = B102_main_func};
 } // namespace shenmue::s2
+#endif

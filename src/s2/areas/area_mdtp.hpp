@@ -1,4 +1,113 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#define SHENMUE_AREA_LOOP_AUTHOR_COUNTER
+#include "s2/areas/area_loop_dc.h"
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+
+#define MDTP_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define MDTP_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define MDTP_RECORDER SHEN_NAME4('r', 'e', 'c', '_')
+#define MDTP_TAPE SHEN_NAME4('t', 'a', 'p', '0')
+#define MDTP_EMPTY_RECORDER SHEN_NAME4('r', 'e', 'c', 'w')
+#define MDTP_LOADED_RECORDER SHEN_NAME4('r', 'e', 'c', 'e')
+#define MDTP_DESK SHEN_NAME4('D', 'E', 'S', 'K')
+#define MDTP_LAMP SHEN_NAME4('L', 'A', 'M', 'P')
+#define MDTP_CHAIR SHEN_NAME4('C', 'H', 'I', 'R')
+#define MDTP_DOOR SHEN_NAME4('R', '1', '0', '1')
+#define MDTP_BASE SHEN_NAME4('m', 'd', 't', 'p')
+#define MDTP_FREE_BASE SHEN_NAME4('$', 'f', 'r', 'e')
+#define MDTP_OUTDOOR SHEN_NAME4('Q', 'R', '0', '0')
+#define MDTP_INIT_AUTHOR SHEN_NAME4('I', 'N', 'I', 'T')
+#define MDTP_QUIT_AUTHOR SHEN_NAME4('Q', 'U', 'I', 'T')
+#define MDTP_NEXT_DAY SHEN_NAME4('N', 'D', 'A', 'Y')
+#define MDTP_ACCEPT SHEN_NAME4('B', 'T', 'E', 'V')
+#define MDTP_CANCEL SHEN_NAME4('B', 'T', 'C', 'C')
+#define MDTP_TAPE_SIGNATURE SHEN_NAME4('T', 'A', 'P', 'E')
+#define MDTP_MOTION 8002
+#define MDTP_REWIND 152
+#define MDTP_PLAY 154
+#define MDTP_FAST_FORWARD 155
+#define MDTP_STOP 156
+#define MDTP_DEBUG_ID 3
+#define MDTP_EPSILON 1.1920929e-07f
+#define MDTP_CLEAN(x) if (fabs(x) < MDTP_EPSILON) (x) = 0.0f
+#define MDTP_CLIP(tape, index) ((tape) && (tape)->entries[index].offset ? (MdtpTapeClip *)((tape)->entries[index].offset + (unsigned int)(tape)) : 0)
+typedef struct MdtpTapeEntry {
+    unsigned int flags, offset;
+} MdtpTapeEntry;
+typedef struct MdtpTape {
+    shen_name signature;
+    int count;
+    MdtpTapeEntry entries[1];
+} MdtpTape;
+typedef struct MdtpTapeClip {
+    int start, duration;
+    unsigned int reserved08, bankOffset, voiceOffset;
+} MdtpTapeClip;
+typedef struct MdtpWork {
+    HLibTask *parent, *task, *pauseTask;
+    unsigned int tapeIndex, flags;
+    int button, buttonFrames[5], tapeFrame;
+    char *bank;
+    void *voice, *pausedVoice;
+    int voiceClip, pausedClip, seekClip, bingoClip;
+    char *package, *media;
+    int selectedButton, handBlendFrames, pressFrames;
+    Vector3 handPosition;
+    MdtpTape *tape;
+} MdtpWork;
+typedef struct MdtpPauseWork {
+    MdtpWork *owner;
+    int phase;
+} MdtpPauseWork;
+typedef struct MdtpPackageWork {
+    HLibTask *parent, *task;
+    int recorder, npcState;
+    char package[1];
+} MdtpPackageWork;
+double fabs(double value);
+extern char mdtpPackage[], mdtpTapePrefix[], mdtpTapeSuffix[], mdtpMedia[], mdtpAuthorPackage[], mdtpConversation[];
+extern int mdtpHandPoses[2][57], mdtpButtonParts[], mdtpCounterParts[];
+void MDTPMain(int *argument);
+void MdtpQuitCallback(void *data);
+void MdtpDebugQuitCallback(void *data);
+void MdtpPauseCallback(void *data);
+int QueueMdtp(int command, unsigned int tape, char *package);
+void MdtpInitializeCallback(void *data);
+void MdtpInitializeAuthorCallback(void *data);
+void MdtpBeginAuthorCallback(void *data);
+int MdtpInitAuthorCompletion(int phase, int value, HLibTask *parent);
+void MdtpInitializeFlagsCallback(void *data);
+void MdtpRecorderCallback(void *data);
+void BeginMdtpRewind(MdtpWork *work, int previous);
+void BeginMdtpPlay(MdtpWork *work);
+void BeginMdtpFastForward(MdtpWork *work, int previous);
+void BeginMdtpStop(MdtpWork *work, int previous);
+void RewindMdtpTape(MdtpWork *work);
+int PlayMdtpTape(MdtpWork *work);
+void FastForwardMdtpTape(MdtpWork *work);
+void StopMdtpTape(MdtpWork *work);
+void MdtpBeginExitQuestionCallback(void *data);
+void MdtpExitQuestionCallback(void *data);
+void MdtpFinishExitCallback(void *data);
+void GetMdtpHandTarget(int selected, Vector3 *target, int press);
+void BlendMdtpHand(Vector3 *current, Vector3 *target, int frames);
+int UpdateMdtpButtons(int selected, int *press, int *active, int *frames, int *stopping);
+void UpdateMdtpHand(MdtpWork *work);
+int QueueMdtpPackage(char *package, int recorder);
+void MdtpPackageCallback(void *data);
+void PlaceMdtpRecorder(int loaded);
+void MdtpBeginBingoCallback(void *data);
+void MdtpBingoCallback(void *data);
+void MdtpOutdoorCallback(void *data);
+int MdtpQuitAuthorCompletion(int phase, int value, HLibTask *parent);
+int FindMdtpTapeClip(MdtpTape *tape, int frame);
+MdtpTape *LoadMdtpTape(char *package, int index);
+void MaintainMdtpMotion(int restart);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/areas/area_loop.hpp"
 #include "common/math.hpp"
@@ -118,3 +227,4 @@ void UpdateMdtpHand(MdtpWork *work);
 bool UpdateMdtpButtons(std::int32_t selected, std::int32_t *press, std::int32_t *active, std::int32_t *frames, std::int32_t *stopping);
 void MaintainMdtpMotion(std::int32_t transition);
 } // namespace shenmue::s2
+#endif

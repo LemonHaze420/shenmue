@@ -1,4 +1,190 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_loop_dc.h"
+
+#define QDMR_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define QDMR_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QDMR_DUMMY SHEN_NAME4('q', 'd', 'm', 'r')
+#define QDMR_TRANSITION_TARGET SHEN_NAME4('t', 'r', 'n', 's')
+#define QDMR_QFBA SHEN_NAME4('Q', 'F', 'B', 'A')
+#define QDMR_TIMEOUT_TITLE SHEN_NAME4('T', 'M', 'O', 'V')
+#define QDMR_BTKK SHEN_NAME4('B', 'T', 'K', 'K')
+#define QDMR_BTPP SHEN_NAME4('B', 'T', 'P', 'P')
+#define QDMR_BTAA SHEN_NAME4('B', 'T', 'A', 'A')
+#define QDMR_QF0X SHEN_NAME4('Q', 'F', '0', 'X')
+#define QDMR_PROP SHEN_NAME4('P', 'R', 'O', 'P')
+#define QDMR_SBK SHEN_NAME4('S', 'B', 'K', '_')
+#define QDMR_ANC SHEN_NAME4('A', 'N', 'C', '_')
+#define QDMR_KU8 SHEN_NAME4('K', 'U', '8', '_')
+#define QDMR_KHO SHEN_NAME4('K', 'H', 'O', '_')
+#define QDMR_UYD SHEN_NAME4('U', 'Y', 'D', '_')
+#define QDMR_KT7 SHEN_NAME4('K', 'T', '7', '_')
+#define QDMR_QF1B SHEN_NAME4('Q', 'F', '1', 'B')
+#define QDMR_QF2B SHEN_NAME4('Q', 'F', '2', 'B')
+#define QDMR_QF3B SHEN_NAME4('Q', 'F', '3', 'B')
+#define QDMR_QFB1 SHEN_NAME4('Q', 'F', 'B', '1')
+#define QDMR_QFB2 SHEN_NAME4('Q', 'F', 'B', '2')
+#define QDMR_QFB3 SHEN_NAME4('Q', 'F', 'B', '3')
+#define QDMR_QFIX SHEN_NAME4('Q', 'F', 'I', 'X')
+#define QDMR_KF4 SHEN_NAME4('K', 'F', '4', '_')
+#define QDMR_P02 SHEN_NAME4('P', '0', '2', '_')
+#define QDMR_P07 SHEN_NAME4('P', '0', '7', '_')
+#define QDMR_P09 SHEN_NAME4('P', '0', '9', '_')
+#define QDMR_AA99 SHEN_NAME4('a', 'a', '9', '9')
+#define QDMR_A020 SHEN_NAME4('a', '0', '2', '0')
+#define QDMR_RETRY_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+
+typedef struct QdmrHudText QdmrHudText;
+struct QdmrHudText {
+    unsigned char reserved00[8];
+    char text[8];
+    unsigned char reserved10[100];
+    float depth;
+    unsigned int colour;
+    unsigned char reserved7c[12];
+    float y;
+    unsigned char reserved8c[4];
+    void (*release)(QdmrHudText *text);
+    void (*draw)(QdmrHudText *text);
+};
+typedef struct QdmrWork {
+    HLibTask *task;
+    HLibTask *timerTask;
+    HLibTask *parent;
+    unsigned int *roomFlags;
+    unsigned int flags;
+    unsigned short doorQteButtons, reserved16;
+    shen_name door;
+    int battleRetries, timer, timerFlags, timerRequests;
+    int timerFadeFrames, timerWarningThreshold;
+    QdmrHudText *timerText;
+    Vector3 savedPosition;
+    int savedYaw;
+} QdmrWork;
+typedef struct QdmrRoom {
+    shen_name door, package;
+} QdmrRoom;
+typedef struct QdmrDoorPlacement {
+    shen_name door;
+    float x, z;
+    int yaw;
+} QdmrDoorPlacement;
+typedef struct QdmrDoorRoute {
+    shen_name door;
+    int variant;
+} QdmrDoorRoute;
+typedef struct QdmrDoorMotionWork {
+    shen_name door;
+    int frames;
+    float startFrame, speed;
+    int motion;
+} QdmrDoorMotionWork;
+
+extern QdmrRoom qdmrRooms[];
+extern char qdmrNormalPackage[];
+extern char qdmrNormalConversation[];
+extern char qdmrFirstPackage[];
+extern char qdmrFirstConversation[];
+extern shen_name qdmrFirstNpcs[];
+extern int qdmrFirstStyles[];
+extern int qdmrFirstHealth[];
+extern char qdmrSecondPackage[];
+extern char qdmrSecondConversation[];
+extern shen_name qdmrSecondNpcs[];
+extern int qdmrSecondStyles[];
+extern int qdmrSecondHealth[];
+extern char qdmrThirdPackage[];
+extern char qdmrThirdConversation[];
+extern shen_name qdmrThirdNpcs[];
+extern int qdmrThirdStyles[];
+extern int qdmrThirdHealth[];
+extern char qdmrBingoPackage[];
+extern Vector3 qdmrEscapePosition;
+extern int qdmrEscapeYaw;
+extern Vector3 qdmrLadderPosition;
+void QdmrMain(void);
+void QdmrDoneCallback(void *data);
+void QdmrInitialize(void *data);
+void QdmrInitialize2(void *data);
+void QdmrStartYuanAuthor(void *data);
+void QdmrWaitYuanNpcs(void *data);
+int QdmrYuanAuthorCompletion(int phase, int value, HLibTask *parent);
+void QdmrEndYuanAuthor(void *data);
+void QdmrExitYuanAuthor(void *data);
+void QdmrStartInitialAuthor(void *data);
+int QdmrInitialAuthorCompletion(int phase, int value, HLibTask *parent);
+void QdmrEndInitialAuthor(void *data);
+void QdmrExitInitialAuthor(void *data);
+void QdmrStartTimeoutAuthor(void *data);
+void QdmrWaitTimeoutNpcs(void *data);
+int QdmrStoryAuthorCompletion(int phase, int value, HLibTask *parent);
+void QdmrEndTimeoutAuthor(void *data);
+void QdmrExitTimeoutAuthor(void *data);
+void QdmrStartTransition(void *data);
+void QdmrMoveToTransition(void *data);
+void QdmrEndTransition(void *data);
+void QdmrInFree(void *data);
+void QdmrTimerCallback(void *data);
+void QdmrStartOpenDoor(void *data);
+void QdmrOpenNormalRoom(void *data);
+void QdmrWaitNormalRoom(void *data);
+void QdmrNormalRoomPresentation(void *data);
+void QdmrEndNormalRoom(void *data);
+void QdmrOpenFirstRoom(void *data);
+void QdmrWaitFirstRoomPackage(void *data);
+void QdmrFirstRoomPresentation(void *data);
+void QdmrBeginFirstRoomFight(void *data);
+void QdmrFirstRoomFight(void *data);
+void QdmrOpenSecondRoom(void *data);
+void QdmrWaitSecondRoomPackage(void *data);
+void QdmrSecondRoomPresentation(void *data);
+void QdmrBeginSecondRoomFight(void *data);
+void QdmrSecondRoomFight(void *data);
+void QdmrOpenThirdRoom(void *data);
+void QdmrWaitThirdRoomPackage(void *data);
+void QdmrThirdRoomPresentation(void *data);
+void QdmrBeginThirdRoomFight(void *data);
+void QdmrThirdRoomFight(void *data);
+void QdmrRepeatFirstRoom(void *data);
+void QdmrWaitFirstRepeatPackage(void *data);
+void QdmrFirstRepeatPresentation(void *data);
+void QdmrEndFirstRepeat(void *data);
+void QdmrRepeatSecondRoom(void *data);
+void QdmrWaitSecondRepeatPackage(void *data);
+void QdmrSecondRepeatPresentation(void *data);
+void QdmrEndSecondRepeat(void *data);
+void QdmrRepeatThirdRoom(void *data);
+void QdmrWaitThirdRepeatPackage(void *data);
+void QdmrThirdRepeatPresentation(void *data);
+void QdmrEndThirdRepeat(void *data);
+void QdmrOpenBingoRoom(void *data);
+void QdmrWaitBingoPackage(void *data);
+void QdmrWaitBingoNpcs(void *data);
+int QdmrBingoOpeningAuthorCompletion(int phase, int value, HLibTask *parent);
+void QdmrEndBingoOpening(void *data);
+void QdmrBingoFight(void *data);
+int QdmrBingoWinAuthorCompletion(int phase, int value, HLibTask *parent);
+void QdmrBingoWin(void *data);
+void QdmrBingoLose(void *data);
+void QdmrBeginRetry(void *data);
+void QdmrRetryTitle(void *data);
+void QdmrEscapeToLadder(void *data);
+void QdmrWaitLadderMotion(void *data);
+shen_name GetQdmrRoomPackage(shen_name door);
+int GetQdmrDoorPlacement(shen_name door, Vector3 *position, int *yaw);
+shen_name FindNearestQdmrDoor(unsigned int *roomFlags);
+int GetQdmrDoorVariant(shen_name door, unsigned int *roomFlags);
+void SetQdmrPlayerHandState(shen_name character, int scripted);
+int FindClearRotationPathForAngY(int *yaw);
+void QueueQdmrDoorMotion(shen_name door, int delay, int motion, float startFrame, float speed);
+void QdmrDoorMotionCallback(void *data);
+void MarkQdmrRoomVisited(shen_name door, unsigned int *roomFlags);
+void SetQdmrRoomProps(int enabled);
+void QueueQdmrFadeOutSound(int delay);
+void QdmrFadeOutSoundCallback(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/legacy_hud_text.hpp"
 #include "common/math.hpp"
@@ -154,3 +340,4 @@ void QdmrFadeOutSoundCallback(void *parameter);
 void QdmrDoneCallback(void *parameter);
 extern const ScriptAreaDefinition qdmrDefinition;
 } // namespace shenmue::s2
+#endif

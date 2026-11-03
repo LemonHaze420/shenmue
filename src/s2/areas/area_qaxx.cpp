@@ -1,3 +1,46 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_qaxx.hpp"
+
+void AreaMain(unsigned int startParameters)
+{
+    EventDateTime dateTime;
+    FTBL.SetMapControlStatusFlag(0, 0);
+    if (FTBL.EV_GetShenmueFlag(0xff))
+        AreaCleanup(1);
+    else
+        AreaCleanup(0);
+    FTBL.GetCurrentDateTime((DateTime *)&dateTime);
+    dateTime.hour = 8;
+    dateTime.minute = 30;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&dateTime);
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(QAXX_WEATHER_CLOUD, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(QAXX_WEATHER_RAIN, 0, 0, 0.0f);
+    FTBL.UpdateWeather();
+    FTBL.EV_SetWeatherInstruction(QAXX_SCENE_LIGHTING_MASK, 0);
+    FTBL.HLib_EnqueueTaskWithoutParameter(AreaQAXXMainLoop, 4, 11, TASK_EVNT);
+}
+
+void AreaCleanup(int afternoon)
+{
+    FTBL.EV_SetWeatherInstruction(QAXX_FOG_EFFECT_MASK, 0);
+    FTBL.EV_SetWeatherInstruction(QAXX_LIGHTING_UPDATE_MASK, 0);
+    FTBL.EV_SetWeatherInstruction(QAXX_SCENE_LIGHTING_MASK, 0);
+    FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+    FTBL.AssignLightProgram(0);
+    FTBL.AssignLightProgram(2);
+    FTBL.AssignLightProgram(3);
+    FTBL.AssignLightParams(1, 1);
+    if (afternoon)
+        FTBL.SetObjectFlagByIndex(5, 1);
+    else
+        FTBL.SetObjectFlagByIndex(5, 0);
+}
+
+void AreaQAXXMainLoop(void *taskData)
+{
+}
+#else
 #include "s2/areas/area_qaxx.hpp"
 #include "s2/date_time.hpp"
 #include "s2/event_characters.hpp"
@@ -81,3 +124,4 @@ const GameplayAreaDefinition areaQAXXGameplayDefinition{
 };
 
 } // namespace shenmue::s2::areas
+#endif

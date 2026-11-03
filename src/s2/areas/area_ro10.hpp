@@ -1,4 +1,88 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_loop_dc.h"
+#include "s2/event_debug_dc.h"
+
+#define RO10_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define RO10_HAND SHEN_NAME4('r', 'y', 'o', 't')
+#define RO10_BASE SHEN_NAME4('r', 'o', '1', '0')
+#define RO10_FREE SHEN_NAME4('$', 'f', 'r', 'e')
+#define RO10_ARDX SHEN_NAME4('A', 'R', 'D', 'X')
+#define RO10_ARX2 SHEN_NAME4('A', 'R', 'X', '2')
+#define RO10_ARXX SHEN_NAME4('A', 'R', 'X', 'X')
+#define RO10_ARSF SHEN_NAME4('A', 'R', 'S', 'F')
+#define RO10_AKX7 SHEN_NAME4('A', 'K', 'X', '7')
+#define RO10_QR00 SHEN_NAME4('Q', 'R', '0', '0')
+#define RO10_CANCEL SHEN_NAME4('B', 'T', 'C', 'C')
+#define RO10_SELECT SHEN_NAME4('B', 'T', 'E', 'V')
+#define RO10_DESCRIBE SHEN_NAME4('B', 'T', 'F', 'T')
+#define RO10_ITEM(tens, ones) SHEN_NAME4('6', '.', tens, ones)
+#define RO10_ITEM_OBJECTS                                                                                                                           \
+    {RO10_ITEM('0', '1'), RO10_ITEM('0', '2'), RO10_ITEM('0', '3'), RO10_ITEM('0', '4'), RO10_ITEM('0', '5'), RO10_ITEM('0', '6'),             \
+     RO10_ITEM('0', '7'), RO10_ITEM('0', '8'), RO10_ITEM('0', '9'), RO10_ITEM('1', '0'), RO10_ITEM('1', '1'), RO10_ITEM('1', '2'),             \
+     RO10_ITEM('1', '3'), RO10_ITEM('1', '4'), RO10_ITEM('1', '5'), RO10_ITEM('1', '6')}
+#define RO10_DEBUG_ID 3
+#define RO10_EPSILON 0.00000011920929f
+#define RO10_FLUSH(value) if (__builtin_fabs(value) < RO10_EPSILON) (value) = 0.0f
+typedef struct Ro10Shop {
+    shen_name shop, owner;
+    int resetFlag, purchasedFlag, declinedFlag;
+    shen_name prop;
+    unsigned char help;
+    float columnSpacing, rowSpacing;
+    Vector3 position;
+    Vector3i rotation;
+    int columns, rows;
+    float playerX, playerZ;
+    int playerYaw;
+    float ownerX, ownerZ;
+    int ownerYaw;
+    unsigned int ownerMotion, reservedMotion;
+    shen_name objects[16];
+    int prices[16], items[16], grips[16], dialogues[16];
+} Ro10Shop;
+typedef struct Ro10Work {
+    HLibTask *parent;
+    HLibTask *self;
+    char package[16];
+    char audio[16];
+    shen_name shop, owner;
+    int column, row, cameraFrames;
+    float cameraDistance;
+    int frames;
+    int purchased[16];
+    shen_name boards[16], ones[16], tens[16], hundreds[16];
+    int flags;
+    const Ro10Shop *definition;
+    int handFrame, grip, awards[3];
+} Ro10Work;
+typedef struct Ro10ExitWork {
+    HLibTask *parent;
+    HLibTask *owner;
+} Ro10ExitWork;
+void RunRo10(const shen_name *argument);
+void Ro10DebugQuit(void *data);
+void Ro10Quit(void *data);
+void ExitAfterFade(void *data);
+void WaitShopReady(void *data);
+void WaitShopPackage(void *data);
+void WaitShopOwner(void *data);
+void Ro10EnterItems(void *data);
+void ShopMain(void *data);
+void ShopSelect(void *data);
+void ShopSelectionIcon(void *data);
+void ShopChoice(void *data);
+void ShopDeclined(void *data);
+void ShopAward(void *data);
+void ShopHand(void *data);
+const Ro10Shop *FindRo10Shop(shen_name shop);
+void RefreshRo10Items(const Ro10Shop *shop, int *purchased, shen_name *boards, shen_name *hundreds, shen_name *tens, shen_name *ones);
+int GetRo10ItemTransform(const Ro10Shop *shop, int column, int row, Vector3 *position, Vector3i *rotation, Vector3 *scale, int grip);
+void UpdateRo10ItemCamera(const Ro10Shop *shop, int column, int row, float distance, int frames);
+void CreateRo10PriceBoards(const Ro10Shop *shop, shen_name *boards, shen_name *hundreds, shen_name *tens, shen_name *ones);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/areas/area_loop.hpp"
 #include "common/math.hpp"
@@ -64,3 +148,4 @@ void Ro10EnterItems(void *parameter);
 void Ro10Quit(void *parameter);
 extern const ScriptAreaDefinition ro10ScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

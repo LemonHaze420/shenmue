@@ -1,4 +1,126 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+#define OMAKE_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define OMAKE_AREA SHEN_NAME4('O', 'M', 'A', 'K')
+#define OMAKE_NO_AREA SHEN_NAME4(' ', ' ', ' ', ' ')
+#define OMAKE_UNKNOWN SHEN_NAME4('?', '?', '?', '_')
+#define OMAKE_SPACE SHEN_NAME4('S', 'P', 'C', '_')
+#define OMAKE_MENU_ROW(row) SHEN_NAME4('M', 'N', 'U', (unsigned char)(row))
+
+typedef struct OmakeWork OmakeWork;
+typedef struct OmakeCommand {
+    shen_name area;
+    int entry;
+} OmakeCommand;
+typedef struct OmakeEntry {
+    void (*callback)(OmakeWork *work, const OmakeCommand *command);
+    OmakeCommand command;
+    unsigned int requiredFlags;
+    int photoTexture, colour;
+    const char *name, *description, *descriptionEnd;
+    int helpTopic;
+} OmakeEntry;
+typedef struct OmakeCategory {
+    int icon;
+    OmakeEntry *entries;
+} OmakeCategory;
+
+typedef struct OmakeSelection {
+    int category, selected[3], scroll[3];
+} OmakeSelection;
+typedef struct OmakeSpriteTexCoords {
+    unsigned int reserved;
+    float uv[4];
+    unsigned int reservedTail;
+} OmakeSpriteTexCoords;
+typedef struct OmakeSpritePacket {
+    unsigned int flags;
+    float corners[8];
+    unsigned int colour, reservedColour[3], secondaryColour, reservedUv[2];
+    OmakeSpriteTexCoords tex;
+} OmakeSpritePacket;
+typedef struct OmakeSprite {
+    shen_name name;
+    OmakeSpritePacket packet;
+    int texture;
+    float depth;
+} OmakeSprite;
+typedef struct OmakeTextTexture {
+    shen_name name;
+    int texture;
+} OmakeTextTexture;
+struct OmakeWork {
+    int state, delay, animationFrames, animationRemaining, animationDirection, refreshDescription;
+    OmakeSelection *selection;
+    int textures[512];
+    OmakeSprite sprites[512];
+    int debugSprite;
+    OmakeTextTexture textTextures[128];
+    HLibTask *currentTask, *mainTask, *drawTask;
+    int entry;
+    void *spriteFile;
+};
+typedef struct OmakeDrawWork {
+    OmakeWork *owner;
+} OmakeDrawWork;
+typedef struct OmakeDeleteTextureWork {
+    OmakeWork *owner;
+    int texture, frames, reserved0c;
+} OmakeDeleteTextureWork;
+typedef struct OmakeModuleCallWork {
+    OmakeWork *owner;
+    int frames;
+    const OmakeCommand *command;
+} OmakeModuleCallWork;
+typedef struct OmakeFightLoadWork {
+    OmakeWork *owner;
+    int delay;
+} OmakeFightLoadWork;
+
+typedef struct OmakeDateTime {
+    signed char year, month, day;
+    unsigned char week;
+    signed char hour, minute, second;
+    short reserved08;
+} OmakeDateTime;
+
+extern int g_storyStep;
+extern int g_hotLoadModule;
+extern const OmakeEntry omakeArcadeEntries[13], omakeVideoEntries[13], omakeMinigameEntries[13], omakeFightEntries[13];
+extern OmakeCommand omakeColdBootCommand;
+extern OmakeCategory omakeCategories[4];
+
+void RunOmake(void);
+void BootOmake(void);
+void InitializeOmakeList(OmakeEntry *destination, const OmakeEntry *source);
+void InitializeOmakeSprites(OmakeWork *work);
+void DeleteOmakeSprites(OmakeWork *work);
+void CreateOmakeSprite(OmakeWork *work, shen_name name);
+void DeleteOmakeSprite(OmakeWork *work, shen_name name);
+OmakeSprite *FindOmakeSprite(OmakeWork *work, shen_name name);
+void OmakeSpriteDrawCallback(void *data);
+void DrawOmakeSprites(OmakeWork *work);
+void InitializeOmakeTexts(OmakeWork *work);
+void DeleteOmakeTexts(OmakeWork *work);
+void OmakeTextDeleteCallback(void *data);
+void CreateOmakeText(OmakeWork *work, shen_name name, const char *text, unsigned short colour);
+void QueueOmakeTextDelete(OmakeWork *work, shen_name name);
+int HasOmakeText(OmakeWork *work, shen_name name);
+int FindOmakeText(OmakeWork *work, shen_name name);
+void OmakeModuleCallCallback(void *data);
+void QueueOmakeModuleCall(OmakeWork *work, const OmakeCommand *command);
+void QueueOmakeVideo(OmakeWork *work, const OmakeCommand *command);
+void QueueOmakeSceneChange(OmakeWork *work, const OmakeCommand *command);
+void GiveDefaultPlayerFlags(OmakeWork *work);
+void OmakeFightLoadCallback(void *data);
+void QueueOmakeFight(OmakeWork *work, const OmakeCommand *command);
+void CreateOmakeMenuSprites(OmakeWork *work);
+void OmakeMainCallback(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/hlib.hpp"
 #include "s2/legacy_sprite.hpp"
@@ -112,3 +234,4 @@ bool IsOmakeSelectionPending();
 void RequestOmakeBack();
 extern const ScriptAreaDefinition omakScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

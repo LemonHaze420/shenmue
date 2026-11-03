@@ -1,3 +1,219 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0200.hpp"
+
+unsigned int bobPhase0200 = 0, bobSpeed0200 = 10;
+Vector3 bobPosition0200 = {0.0f, 0.0f, 0.0f};
+Vector3i handRotation0200 = {56434, 0, 0};
+shen_name area0200Characters[] = {SHEN_NAME4('O', 'J', '5', '_'), SHEN_NAME4('B', 'U', 'S', '_'), INVALID_CHARACTER};
+Vector3i fingerRotation0200 = {0, 0, 0};
+
+void E0200Main(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0200MainCallback, 4, 11, sizeof(AreaImmediateAuthorTaskParameter), TASK_EVNT);
+    AreaImmediateAuthorTaskParameter *parent = (AreaImmediateAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->state = 1;
+    parent->selection = 0;
+    SetupE0200Environment();
+    FTBL.EV_stepSetFlags(133, 0);
+    Queue_EVT_UTL_LoadNPCChara_3(area0200Characters, parent->self);
+}
+
+void E0200MainCallback(void *taskData)
+{
+    AreaImmediateAuthorTaskParameter *parent = (AreaImmediateAuthorTaskParameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        QueueE0200Loop(parent);
+        break;
+    case 3:
+        CleanupE0200(parent);
+        break;
+    }
+}
+
+void QueueE0200Loop(AreaImmediateAuthorTaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0200LoopCallback, 4, 11, sizeof(AreaImmediateAuthorFrameParameter), TASK_EVNT);
+    AreaImmediateAuthorFrameParameter *child = (AreaImmediateAuthorFrameParameter *)FTBL.HLib_GetTaskParameter(task);
+    child->parent = parent;
+    child->state = 0;
+    FTBL.camCtrlSetFarDistance(600.0f);
+    FTBL.camCtrlSetNearDistance(300.0f);
+    FTBL.EV_LoadAudio("0200A000", 0);
+    SetupE0200Characters();
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void E0200LoopCallback(void *taskData)
+{
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    switch (frame) {
+    case 201:
+        FTBL.camCtrlSetNearDistance(200.0f);
+        break;
+    case 530:
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0200_A814), 1, -1, 0.5f, 0);
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0200_A818), 1, -1, 0.5f, 0);
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0200_A820), 1, -1, 0.5f, 0);
+        break;
+    case 535:
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0200_A816), 1, -1, 0.5f, 0);
+        break;
+    case 1940:
+        FTBL.camCtrlSetFarDistance(1200.0f);
+        FTBL.camCtrlSetNearDistance(700.0f);
+        break;
+    case 2710:
+        FTBL.SetClothFlag(FTBL.ctrlGetCharaByName(RYO_CHARACTER), 4, 1);
+        break;
+    case 2880:
+        FTBL.SetClothFlag(FTBL.ctrlGetCharaByName(RYO_CHARACTER), 4, 0);
+        break;
+    case 2872:
+        FTBL.SetAllMapFieldDepthSlotsEnabled(0);
+        break;
+    case 3128:
+        FTBL.SetAllMapFieldDepthSlotsEnabled(1);
+        break;
+    case 3220:
+        FTBL.EV_EnableCharacterDisplay(AREA_0200_A888);
+        break;
+    }
+    AnimateE0200(frame);
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        RestoreE0200Characters();
+        ((AreaImmediateAuthorFrameParameter *)taskData)->parent->state = 3;
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void AnimateE0200(short frame)
+{
+    Vector3 zero = {0.0f, 0.0f, 0.0f};
+    if (bobPhase0200 <= 180) {
+        bobPosition0200.y = FTBL.CalculateFixedSine((unsigned short)(int)((float)(bobPhase0200 * 8192) / 45.0f)) * 0.02f;
+        bobPhase0200 += bobSpeed0200;
+    } else {
+        bobSpeed0200 = FTBL.shenGetRandomInt32(20);
+        if (bobSpeed0200 < 8)
+            bobSpeed0200 = 8;
+        bobPhase0200 = 0;
+    }
+    if (frame <= 3674) {
+        if (frame == 3655)
+            fingerRotation0200.x = 0xfff7;
+        else if (frame == 3665)
+            fingerRotation0200.x = 9;
+        if (frame <= 3654) {
+            FTBL.EV_AT_SetPos(AREA_0200_BASE, AREA_0200_ROOT_POSITION_FLAGS, &zero);
+            FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 153, &zero, 0, 0);
+        } else
+            FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 153, 0, &fingerRotation0200, 1);
+    } else if (frame == 3675) {
+        fingerRotation0200.x = 0;
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 153, 0, &fingerRotation0200, 0);
+    }
+    if (frame >= 3630 && frame <= 3654) {
+        handRotation0200.x += 182;
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 163, 0, &handRotation0200, 1);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 164, 0, &handRotation0200, 1);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 165, 0, &handRotation0200, 1);
+    } else if (frame == 3500) {
+        handRotation0200.x = 0xee39;
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 163, 0, &handRotation0200, 1);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 164, 0, &handRotation0200, 1);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 165, 0, &handRotation0200, 1);
+    } else {
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 163, 0, &handRotation0200, 1);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 164, 0, &handRotation0200, 1);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 165, 0, &handRotation0200, 1);
+    }
+    if ((frame >= 844 && frame <= 1127) || (frame >= 2711 && frame <= 2818) || frame > 3500) {
+        bobPosition0200.y = 0.0f;
+        FTBL.EV_AT_SetPos(AREA_0200_BASE, AREA_0200_ROOT_POSITION_FLAGS, &bobPosition0200);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 153, &bobPosition0200, 0, 0);
+    } else {
+        FTBL.EV_AT_SetPos(AREA_0200_BASE, AREA_0200_ROOT_POSITION_FLAGS, &bobPosition0200);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 153, &bobPosition0200, 0, 0);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 163, 0, &handRotation0200, 1);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 164, 0, &handRotation0200, 1);
+        FTBL.scenApplyPosOrRotToChildId(AREA_0200_A239, 165, 0, &handRotation0200, 1);
+    }
+}
+
+void SetupE0200Environment(void)
+{
+    int index;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.EV_FreeAuthorPak(1, "0200");
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    FTBL.UpdateWeather();
+    FTBL.CreateEventCharacter(3, 0, AREA_0200_BASE);
+    FTBL.AT_SetLocalBaseChara(AREA_0200_A237, AREA_0200_BASE);
+    FTBL.AT_SetLocalBaseChara(AREA_0200_A238, AREA_0200_BASE);
+    for (index = 0; index < 9; index++)
+        FTBL.SetMapModelEnabled(0, index);
+}
+
+void CleanupE0200(AreaImmediateAuthorTaskParameter *parent)
+{
+    EVT_UTL_FreeNPCChara(area0200Characters);
+    FTBL.EV_FreeAuthorPak(0, "0200");
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0200_QR00, 1);
+}
+
+void SetupE0200Characters(void)
+{
+    int index;
+    HideAuthorCharacter(RYO_CHARACTER);
+    HideAuthorProp(AREA_0200_A888);
+    HideAuthorProp(AREA_0200_A237);
+    HideAuthorProp(AREA_0200_A238);
+    HideAuthorProp(AREA_0200_A342);
+    HideAuthorProp(AREA_0200_A343);
+    HideAuthorProp(AREA_0200_A239);
+    HideAuthorProp(AREA_0200_AB32);
+    HideAuthorProp(AREA_0200_A814);
+    HideAuthorProp(AREA_0200_A816);
+    HideAuthorProp(AREA_0200_A818);
+    HideAuthorProp(AREA_0200_A820);
+    FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0200_A814), 1, -1, 1.0f, 1);
+    FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0200_A816), 1, -1, 1.0f, 1);
+    FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0200_A818), 1, -1, 1.0f, 1);
+    FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0200_A820), 1, -1, 1.0f, 1);
+    for (index = 0; area0200Characters[index] != INVALID_CHARACTER; index++)
+        HideAuthorCharacter(area0200Characters[index]);
+}
+
+void RestoreE0200Characters(void)
+{
+    int index;
+    ShowAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorProp(AREA_0200_A888);
+    ShowAuthorProp(AREA_0200_A237);
+    ShowAuthorProp(AREA_0200_A238);
+    ShowAuthorProp(AREA_0200_A342);
+    ShowAuthorProp(AREA_0200_A343);
+    ShowAuthorProp(AREA_0200_A239);
+    ShowAuthorProp(AREA_0200_AB32);
+    ShowAuthorProp(AREA_0200_A814);
+    ShowAuthorProp(AREA_0200_A816);
+    ShowAuthorProp(AREA_0200_A818);
+    ShowAuthorProp(AREA_0200_A820);
+    for (index = 0; area0200Characters[index] != INVALID_CHARACTER; index++)
+        HideAuthorCharacter(area0200Characters[index]);
+}
+
+#define SHENMUE_EVENT_AUTHOR_PROPS
+#include "s2/events/event_author_dc.h"
+#else
 #include "s2/areas/area_0200.hpp"
 #include "s2/lighting.hpp"
 #include "common/math.hpp"
@@ -238,3 +454,4 @@ void E0200LoopCallback(void *taskData) {
 } // namespace
 const ScriptAreaDefinition area0200ScriptDefinition{.areaId = AREA_0200_AREA, .field04 = 0, .init = E0200Init, .main = E0200Main};
 } // namespace shenmue::s2::areas
+#endif

@@ -1,4 +1,40 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_loop_dc.h"
+
+#define B102_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define B102_ANCHOR SHEN_NAME4('b', '1', '0', '2')
+#define B102_AREA_WTR0 SHEN_NAME4('W', 'T', 'R', '0')
+#define B102_AREA_QCAC SHEN_NAME4('Q', 'C', 'A', 'C')
+#define B102_AREA_QCAD SHEN_NAME4('Q', 'C', 'A', 'D')
+typedef struct BayItemShopEntry {
+    shen_name prop, target;
+    short item, cost;
+} BayItemShopEntry;
+typedef struct BayItemShop {
+    shen_name area, npc;
+    BayItemShopEntry items[6];
+} BayItemShop;
+typedef struct BayItemShopWork {
+    HLibTask *parent;
+    HLibTask *task;
+    unsigned int flags;
+    shen_name area, prop;
+} BayItemShopWork;
+const BayItemShop *FindBayItemShop(shen_name area);
+void B102_main_func(const shen_name *argument);
+void BayItemShopWaitPackageCallback(void *data);
+void BayItemShopStartCallback(void *data);
+void BayItemShopWaitItemEffectCallback(void *data);
+void BayItemShopDoneCallback(void *data);
+void BayItemShopQueueWait(shen_name area, shen_name prop);
+int BayItemShopChargeItem(int phase, int value, HLibTask *parent);
+int BayItemShopDeliverItem(int phase, int value, HLibTask *parent);
+int BayItemShopUpdateAreaItems(shen_name area, shen_name prop);
+void BayItemShopUpdateItems(const BayItemShop *shop, shen_name prop);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/hlib.hpp"
 #include "common/types.hpp"
@@ -34,3 +70,4 @@ void BayItemShopWaitItemEffectCallback(void *);
 void BayItemShopDoneCallback(void *);
 extern const ScriptAreaDefinition areaB102ScriptDefinition;
 } // namespace shenmue::s2
+#endif

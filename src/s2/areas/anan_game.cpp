@@ -1,3 +1,575 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_anan.hpp"
+
+double fabs(double value);
+
+int AnanUpdateGame(AnanWork *work)
+{
+    AnanGame *game;
+    EventDateTime now;
+    int input, previous, result = 0, clear;
+    float step;
+    unsigned inputLocked;
+    AnanVoiceCallback callback;
+    callback = AnanVoiceUnlockInput;
+    do {
+        if (!work)
+            break;
+        game = &work->game;
+        if (game->responseVoice && !FTBL.cvsHasValidConverseData(game->responseVoice))
+            game->responseVoice = 0;
+        AnanHistoryInput(game, 0);
+        input = AnanHistoryInput(game, 1);
+        previous = AnanHistoryInput(game, 2);
+        clear = 0;
+        if ((int)game->gameFlags >= 0) {
+            step = AnanInputStep(game);
+            switch (input) {
+            case 0:
+                FTBL.GetCurrentDateTime((DateTime *)&now);
+                if (now.hour > 18 && now.minute > 29) {
+                    result = 1;
+                    AnanStopLift(0, 1);
+                    QueueAnanCamera(ananPackage, 1912, ANAN_BASE, 0);
+                    FTBL.HLib_SetCurrentTaskTo(AnanBeginTimeOver);
+                } else if (game->idleFrames > 750) {
+                    result = 2;
+                    AnanStopLift(0, 1);
+                    QueueAnanCamera(ananPackage, 1912, ANAN_BASE, 0);
+                    game->idleFrames = 0;
+                    FTBL.HLib_SetCurrentTaskTo(AnanBeginAngry);
+                    clear = 1;
+                } else if (game->idleFrames > 300 && !(inputLocked = game->gameFlags & 1)) {
+                    result = 3;
+                    AnanStopLift(0, 0);
+                    FTBL.HLib_SetCurrentTaskTo(AnanRestartGame);
+                    clear = 1;
+                    FTBL.HLib_SetupTaskDelay(-1);
+                    QueueAnanWait(0);
+                    {
+                        unsigned flags = game->gameFlags, mask;
+                        do { mask = 0x80000001U; } while (0);
+                        game->gameFlags = flags | mask;
+                    }
+                    QueueAnanVoice("0020B026", clear, 0, 80, (AnanVoiceCallback)inputLocked);
+                    QueueAnanVoice("0020B027", clear, 100, 200, callback);
+                }
+                break;
+            case 1:
+                game->idleFrames = 0;
+                game->gameFlags &= ~0x8000U;
+                FTBL.HLib_SetCurrentTaskTo(AnanAskStraight);
+                result = 4;
+                AnanStopLift(1, 0);
+                QueueAnanVoice("0020B012", 1, 20, 70, 0);
+                clear = 1;
+                break;
+            case 2:
+                game->idleFrames = 0;
+                if (fabs(game->tilt + 1.0) < 1.1920929e-07) {
+                    game->gameFlags |= 0x80000000U;
+                    FTBL.HLib_SetCurrentTaskTo(AnanRestartGame);
+                    result = 5;
+                    FTBL.HLib_SetupTaskDelay(-1);
+                    QueueAnanWait(0);
+                    game->gameFlags |= 1;
+                    AnanStopLift(0, 0);
+                    if (game->responseVoice) {
+                        FTBL.scenCvsCtrlFree(game->responseVoice);
+                        game->responseVoice = 0;
+                    }
+                    QueueAnanVoice("0020B010", 1, 0, 130, callback);
+                    game->tilt = -1.0f;
+                    clear = 1;
+                    game->endHoldFrames = 0;
+                } else {
+                    game->tilt = step + game->tilt;
+                    result = 6;
+                    if (fabs(game->tilt) < ANAN_EPSILON)
+                        game->tilt = 0;
+                    if (game->tilt <= -1.0f) {
+                        game->endHoldFrames++;
+                        if (previous != input || game->endHoldFrames > 30)
+                            game->tilt = -1.0f;
+                        else
+                            game->tilt = -0.99900001f;
+                    } else {
+                        game->endHoldFrames = 0;
+                        if (!game->responseVoice && FTBL.GetRandomNumberInRange(100.0f) > 90.0f)
+                            game->responseVoice = FTBL.EV_PlayDialogue("0020B008");
+                    }
+                }
+                break;
+            case 3:
+                game->idleFrames = 0;
+                if (fabs(game->tilt - 1.0f) < ANAN_EPSILON) {
+                    game->gameFlags |= 0x80000000U;
+                    FTBL.HLib_SetCurrentTaskTo(AnanRestartGame);
+                    result = 7;
+                    FTBL.HLib_SetupTaskDelay(-1);
+                    QueueAnanWait(0);
+                    game->gameFlags |= 1;
+                    AnanStopLift(0, 0);
+                    if (game->responseVoice) {
+                        FTBL.scenCvsCtrlFree(game->responseVoice);
+                        game->responseVoice = 0;
+                    }
+                    QueueAnanVoice("0020B011", 1, 0, 160, callback);
+                    game->tilt = 1.0f;
+                    clear = 1;
+                    game->endHoldFrames = 0;
+                } else {
+                    game->tilt = step + game->tilt;
+                    result = 8;
+                    if (fabs(game->tilt) < ANAN_EPSILON)
+                        game->tilt = 0;
+                    if (game->tilt >= 1.0f) {
+                        game->endHoldFrames++;
+                        if (previous != input || game->endHoldFrames > 30)
+                            game->tilt = 1.0f;
+                        else
+                            game->tilt = 0.99900001f;
+                    } else {
+                        game->endHoldFrames = 0;
+                        if (!game->responseVoice && FTBL.GetRandomNumberInRange(100.0f) > 90.0f)
+                            game->responseVoice = FTBL.EV_PlayDialogue("0020B009");
+                    }
+                }
+                break;
+            }
+        }
+        else
+            result = -1;
+        if (clear)
+            AnanClearInput(game);
+    } while (0);
+    return result;
+}
+
+void AnanStopLift(int confirming, int fixedCamera)
+{
+    MotionWork *motion;
+    int camera, index;
+    shen_name character;
+    motion = FTBL.scenFindMotionwork(ANAN_MAN);
+    if (!motion)
+        return;
+    FTBL.mtwkSetExtraFlag(motion, 9, 2);
+    FTBL.mtwkSetSpeed(motion, 1.0f, 0);
+    FTBL.mtwkRequestMotion(motion, 0x67c6, 0);
+    FTBL.EV_mtwkSetEnabled(motion, 1);
+    FTBL.SetMotionLayerLoopStartTime(motion, 170.0f, 0);
+    FTBL.SetMotionRegionEvalTime(motion, 170.0f, 0);
+    FTBL.SetMotionLayerEndFrame(motion, 200.0f, 0);
+    if (!fixedCamera) {
+        switch (FTBL.shenGetRandomInt32(!confirming ? 5 : 3)) {
+        case 0:
+            camera = 1907;
+            break;
+        case 1:
+            camera = 1908;
+            break;
+        case 3:
+            camera = 1910;
+            break;
+        case 4:
+            camera = 1911;
+            break;
+        default:
+            camera = 1909;
+            break;
+        }
+        QueueAnanCamera(ananPackage, camera, ANAN_BASE, 0);
+    }
+    for (index = 0; (character = ananStoppedPlacement[index].character) != ANAN_INVALID; index++) {
+        FTBL.EV_AT_SetPos(character, ANAN_ALL_AXES, &ananStoppedPlacement[index].position);
+        FTBL.EV_AT_SetAngY_0(character, ANAN_ALL_AXES, &ananStoppedPlacement[index].rotation, 0);
+    }
+}
+
+void AnanRetry(void *data)
+{
+    AnanWork *work = (AnanWork *)data;
+    int index, finish = 1;
+    while (work) {
+        if (FTBL.filmCheckFadeTrackColour()) {
+            finish = 0;
+            break;
+        }
+        if (work->lifecycle & 2) {
+            FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+            work->lifecycle &= ~2U;
+            finish = 0;
+            break;
+        } else {
+            FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+            work->lifecycle |= 2;
+            FTBL.HLib_SetCurrentTaskTo(AnanRestartGame);
+            FTBL.HLib_SetupTaskDelay(-1);
+            QueueAnanWait(0);
+            AnanStopLift(0, 1);
+            QueueAnanCamera(ananPackage, 1911, ANAN_BASE, 0);
+            QueueAnanVoice("0020B023", 1, 32, 142, AnanVoiceUnlockInput);
+            work->game.gameFlags |= 0x80000000U;
+            work->targets[0] = ANAN_MAN;
+            work->targets[1] = ANAN_RYO;
+            for (index = 0; ananGamePlacement[index].character != ANAN_INVALID; index++) {
+                FTBL.EV_AT_SetPos(ananGamePlacement[index].character, ANAN_ALL_AXES, &ananGamePlacement[index].position);
+                FTBL.EV_AT_SetAngY_0(ananGamePlacement[index].character, ANAN_ALL_AXES, &ananGamePlacement[index].rotation, 0);
+            }
+        }
+        finish = 0;
+        break;
+    }
+    if (finish)
+        FTBL.HLib_SetCurrentTaskTo(AnanFinish);
+}
+
+void AnanSetLiftPose(float tilt)
+{
+    FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(ANAN_MAN), 0);
+    FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(ANAN_MAN), 71, 0, 0);
+    AnanSetLiftFrame(tilt);
+    FTBL.mtwkSetSpeed(FTBL.scenFindMotionwork(ANAN_MAN), 0.0f, 0);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ANAN_MAN), 9, 0);
+}
+
+void AnanSetLiftFrame(float tilt)
+{
+    float frame;
+    int index;
+    if (fabs(tilt) < ANAN_EPSILON)
+        tilt = 0;
+    if (tilt > 1.0f)
+        tilt = 1.0f;
+    tilt += 1.0f;
+    if (fabs(tilt) < ANAN_EPSILON)
+        tilt = 0;
+    tilt *= 0.5f;
+    if (fabs(tilt) < ANAN_EPSILON)
+        tilt = 0;
+    frame = tilt * 41.0f;
+    if (fabs(frame) < ANAN_EPSILON)
+        frame = 0;
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(ANAN_MAN), 0x67cb, 0);
+    FTBL.SetMotionLayerLoopStartTime(FTBL.scenFindMotionwork(ANAN_MAN), frame, 0);
+    FTBL.SetMotionRegionEvalTime(FTBL.scenFindMotionwork(ANAN_MAN), frame, 0);
+    FTBL.SetMotionLayerEndFrame(FTBL.scenFindMotionwork(ANAN_MAN), frame, 0);
+    for (index = 0; ananGamePlacement[index].character != ANAN_INVALID; index++) {
+        if (ananGamePlacement[index].character == ANAN_MAN) {
+            FTBL.EV_AT_SetPos(ananGamePlacement[index].character, ANAN_ALL_AXES, &ananGamePlacement[index].position);
+            FTBL.EV_AT_SetAngY_0(ananGamePlacement[index].character, ANAN_ALL_AXES, &ananGamePlacement[index].rotation, 0);
+        }
+    }
+}
+
+void AnanSetTargets(float tilt, int hand, int body)
+{
+    Vector3 origin, copy;
+    Vector3i rotation;
+    Vector3 handPoint, bodyPoint;
+    do {
+        if (!hand && !body)
+            break;
+        FTBL.GetCharaPosition(ANAN_BOARD, 0xffffffffU, &origin, ANAN_WORLD);
+        FTBL.GetScenarioCharacterEulerAngles(ANAN_BOARD, &rotation, ANAN_WORLD);
+        FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ANAN_MAN), 55, 0);
+        if (hand) {
+            handPoint.x = -2.4f;
+            handPoint.y = -0.65f;
+            handPoint.z = 0.1f;
+            copy = origin;
+            FTBL.ApplyScenarioTranslationAndRotation(&copy, &rotation, &handPoint);
+            FTBL.LatchMotionBoneTarget(FTBL.scenFindMotionwork(ANAN_MAN), 10, &handPoint);
+        }
+        if (body) {
+            bodyPoint.x = -2.7f;
+            bodyPoint.y = -0.4f;
+            bodyPoint.z = 0.05f;
+            copy = origin;
+            FTBL.ApplyScenarioTranslationAndRotation(&copy, &rotation, &bodyPoint);
+            FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ANAN_MAN), 17, 1.0f);
+            FTBL.LatchMotionBoneTarget(FTBL.scenFindMotionwork(ANAN_MAN), 17, &bodyPoint);
+        }
+    } while (0);
+}
+
+void AnanClearInput(AnanGame *game)
+{
+    int index;
+    if (game) {
+        game->inputPulse = 0;
+        for (index = 0; index <= 5; index++)
+            game->inputHistory[index] = 0;
+    }
+}
+
+int AnanHistoryInput(AnanGame *game, int index)
+{
+    int value = 0, shift, bits, byte;
+    if (game) {
+        if (index > 23)
+            index = 23;
+        if (index >= 0) {
+            shift = (index & 3) * 2;
+            index >>= 2;
+            byte = game->inputHistory[index];
+            bits = byte >> shift;
+            value = bits & 3;
+        }
+    }
+    return value;
+}
+
+void AnanReadInput(AnanGame *game)
+{
+    unsigned int input;
+    unsigned char carry, old;
+    int direction;
+    int index;
+    while (game) {
+        if (!(game->gameFlags & 0x80008000U)) {
+            input = FTBL.GetCurrentControlInput(0);
+            input &= 0xfbff;
+            if (FTBL.GetBattleDataConfig(1, ANAN_BUTTON) && FTBL.GetBattleDataConfig(2, ANAN_BUTTON))
+                input |= 0x400;
+            else
+                FTBL.GetBattleDataConfig(0, ANAN_BUTTON);
+        } else
+            input = 0;
+        if (input >> 10 & 1)
+            direction = 1;
+        else if (input & 0x1000)
+            direction = 2;
+        else if (input & 0x2000)
+            direction = 3;
+        else
+            direction = 0;
+        carry = direction << 6;
+        for (index = 5; index >= 0; index--) {
+            old = game->inputHistory[index];
+            game->inputHistory[index] = old >> 2 | carry;
+            carry = (old & 3) << 6;
+        }
+        break;
+    }
+}
+
+float AnanInputStep(AnanGame *game)
+{
+    int input, index;
+    short state;
+    float step = 0.0f;
+    if (game) {
+        input = AnanHistoryInput(game, 1);
+        state = game->inputPulse;
+        goto check_state;
+process_state:
+        {
+            if (state) {
+                for (index = 2; index <= 10; index++)
+                    if (input != AnanHistoryInput(game, index))
+                        break;
+                if (input == 2) {
+                    if (index <= 10)
+                        state = 0;
+                    else
+                        state = 101;
+                } else if (input == 3) {
+                    if (index <= 10)
+                        state = 0;
+                    else
+                        state = 102;
+                } else if (state == -1)
+                    state = 201;
+                else {
+                    state = 0;
+                    goto done;
+                }
+            } else {
+                if (input == 2)
+                    state = 1;
+                else if (input == 3)
+                    state = 51;
+                else
+                    goto done;
+                goto check_state;
+            }
+        }
+check_state:
+        if ((unsigned short)(state + 2) <= 2)
+            goto process_state;
+        switch (state) {
+        case 1:
+        case 6:
+            step = -0.012857144f;
+            break;
+        case 2:
+        case 5:
+            step = -0.035714287f;
+            break;
+        case 3:
+        case 4:
+            step = -0.044285715f;
+            break;
+        case 51:
+        case 56:
+            step = 0.010714286f;
+            break;
+        case 52:
+        case 55:
+            step = 0.03357143f;
+            break;
+        case 53:
+        case 54:
+            step = 0.043571431f;
+            break;
+        case 101:
+            step = -0.01f;
+            break;
+        case 102:
+            step = 0.01f;
+            break;
+        case 201:
+        case 202:
+        case 205:
+        case 206:
+            step = 0.0f;
+            break;
+        case 203:
+        case 204:
+            step = 0.0071428572f;
+            break;
+        }
+        if (state == 6 || state == 101)
+            state = -1;
+        else if (state == 56 || state == 102 || state == 206)
+            state = -2;
+        else
+            state++;
+done:
+        game->inputPulse = state;
+    }
+    return step;
+}
+
+void AnanUpdatePose(AnanGame *game)
+{
+    if (game) {
+        AnanSetLiftPose(game->tilt);
+        AnanSetBoardTilt(game->tilt);
+    }
+}
+
+void AnanAskStraight(void *data)
+{
+    AnanWork *work = (AnanWork *)data;
+    short choices[4];
+    if (work) {
+        if ((int)work->game.gameFlags >= 0) {
+            choices[0] = -1;
+            choices[3] = -1;
+            choices[1] = 82;
+            choices[2] = 83;
+            FTBL.SetupControlSpeakAndUI(choices, 800, 83, 2);
+            FTBL.HLib_SetCurrentTaskTo(AnanWaitStraight);
+            AnanGetHandPosition(work->game.tilt, &work->positions[0]);
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(AnanFinish);
+}
+
+void AnanWaitStraight(void *data)
+{
+    AnanWork *work = (AnanWork *)data;
+    HLibTaskCallback next;
+    AnanVoiceCallback callback;
+    callback = AnanVoiceUnlockInput;
+    if (work) {
+        if (!FTBL.GetShouldRenderIcons(2)) {
+            QueueAnanWait(0);
+            work->game.gameFlags |= 0x80000000U;
+            if (FTBL.shenGetCtrlSpeakIconFlag() == 82) {
+                work->targets[1] = ANAN_RYO;
+                QueueAnanCamera(ananPackage, 1716, ANAN_BASE, 0);
+                QueueAnanVoice("0020A012", 1, 10, 90, AnanVoiceUnlockInput);
+                QueueAnanCamera(ananPackage, 1904, ANAN_BASE, 0);
+                if (AnanIsStraight(&work->game))
+                    next = AnanSuccess;
+                else {
+                    work->game.failures++;
+                    next = AnanFailure;
+                }
+            } else {
+                work->targets[0] = ANAN_INVALID;
+                work->targets[1] = ANAN_INVALID;
+                QueueAnanCamera(ananPackage, 1757, ANAN_BASE, 0);
+                next = AnanRestartGame;
+                QueueAnanVoice("0020B023", 1, 0, 110, callback);
+                FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(ANAN_MAN), 0);
+                FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ANAN_MAN), 9, 2);
+                AnanSetLiftFrame(work->game.tilt);
+                AnanGetHandPosition(work->game.tilt, &work->positions[1]);
+                work->targets[0] = 0;
+                work->positionModes[0] = 0;
+                work->targets[1] = ANAN_INVALID;
+                work->positionModes[1] = 0;
+            }
+            FTBL.HLib_SetCurrentTaskTo(next);
+            FTBL.HLib_SetupTaskDelay(-1);
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(AnanFinish);
+}
+
+void QueueAnanWait(int updatePose)
+{
+    HLibTask *caller, *task;
+    AnanWaitWork *wait;
+    caller = FTBL.HLib_GetCurrentTask();
+    if (caller) {
+        task = FTBL.HLib_EnqueueTaskWithParameter(AnanWait, 4, 11, sizeof(AnanWaitWork), ANAN_TASK);
+        if (task) {
+            wait = (AnanWaitWork *)FTBL.HLib_GetTaskParameter(task);
+            if (wait) {
+                wait->caller = caller;
+                wait->updatePose = updatePose;
+            } else
+                FTBL.HLib_DestroyTask(task);
+        }
+    }
+}
+
+void AnanWait(void *data)
+{
+    AnanWaitWork *wait = (AnanWaitWork *)data;
+    AnanWork *work;
+    int done = 1;
+    if (wait && wait->caller) {
+        work = (AnanWork *)FTBL.HLib_GetTaskParameter(wait->caller);
+        if (work) {
+            if (wait->updatePose)
+                AnanUpdatePose(&work->game);
+            done = !(work->game.gameFlags & 0x80000000U);
+        }
+    }
+    if (done) {
+        if (wait && wait->caller)
+            FTBL.HLib_ResolveDeferredCallback(wait->caller);
+        FTBL.HLib_DestroyCurrentEventTask();
+    }
+}
+
+int AnanIsStraight(AnanGame *game)
+{
+    int straight = 0;
+    if (game && game->tilt < 0.084285714f && game->tilt > -0.084285714f)
+        straight = 1;
+    return straight;
+}
+
+AnanPlacement ananStoppedPlacement[] = {{ANAN_MAN, {-1.35f, 1.27f, 0.63f}, {0, 0xfddd, 0}}, {ANAN_INVALID, {0.0f, 0.0f, 0.0f}, {0, 0, 0}}};
+#else
 #include "s2/areas/area_anan.hpp"
 #include "s2/areas/anan_tables.hpp"
 #include "s2/character.hpp"
@@ -420,3 +992,4 @@ void AnanRunGame(void *data) {
     }
 }
 } // namespace shenmue::s2::areas
+#endif

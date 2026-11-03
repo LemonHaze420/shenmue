@@ -1,3 +1,7 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_qabt.hpp"
+#include "s2/areas/area_arbt.cpp"
+#else
 #include "s2/areas/area_qabt.hpp"
 #include "s2/author.hpp"
 #include "s2/character.hpp"
@@ -701,3 +705,4 @@ void RunQabtEvent(std::uintptr_t argument) {
 }
 const ScriptAreaDefinition qabtScriptDefinition{.areaId = QABT_AREA, .field04 = 0, .init = InitializeQabtEvent, .main = RunQabtEvent};
 } // namespace shenmue::s2::areas
+#endif

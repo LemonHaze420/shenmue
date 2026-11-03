@@ -1,3 +1,275 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_qyss.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void QyssMain(int argument)
+{
+    qyssEntryMode = argument;
+    FTBL.SetScreenFilmFade(1, 0, 0, 0, 0, 255, 0, 0, 0);
+    FTBL.SetLoadingBusy();
+    FTBL.SetPlayerControlEnabled(0);
+    QueueClearNpcs(QueueQyssStalkCallback, 0);
+}
+#else
+static shen_name qyssCharacters[] = {QYSS_PLAYER, QYSS_REN, QYSS_YUAN, QYSS_OHS, QYSS_JIA, 0xffffffffU};
+int qyssEntryMode __attribute__((section(".bss")));
+
+void QueueQyssStalkCallback(void *data)
+{
+    HLibTask *task;
+    QyssStalkWork *work;
+    task = FTBL.HLib_EnqueueTaskWithParameter(QyssStalkCallback, 5, 11, sizeof(QyssStalkWork), TASK_EVNT);
+    work = (QyssStalkWork *)FTBL.HLib_GetTaskParameter(task);
+    *(int *)&work->authorState = 0;
+    work->characters = 0;
+    work->self = task;
+    work->authorState = 0;
+    work->characters = Queue_EVT_AT_ReadChr(task, qyssCharacters);
+    EventDebugRegister(QYSS_DEBUG_ID, QyssEndStalkCallback, work, 100000);
+}
+
+int InitializeQyssStalk(QyssStalkWork *work)
+{
+    FTBL.SetDoorSubjectEnabled(QYSS_ELEVATOR, 0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"QYSS", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "QYSS", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "QYSS", 0, 0);
+    if (qyssEntryMode != 2) {
+        FTBL.EV_LoadCutsceneFromCurrentScene("0235A000");
+        FTBL.EV_LoadAudio("023AE000", 0);
+    } else {
+        FTBL.EV_LoadCutsceneFromCurrentScene("0235A012");
+        FTBL.EV_LoadAudio("023AE000", 0);
+    }
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.EV_FreeAuthorPak(1, "0235");
+    FTBL.CreateEventCharacter(3, 0, QYSS_BASE);
+    EventDebugCheck(QYSS_DEBUG_ID, 4);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QYSS_REN));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QYSS_YUAN));
+    switch (qyssEntryMode) {
+    case 0:
+        work->authorState = 3;
+        break;
+    case 1:
+        work->authorState = 3;
+        work->state = 1;
+        break;
+    case 2:
+        work->authorState = 3;
+        work->state = 2;
+        break;
+    }
+    return 0;
+}
+
+int FinishQyssStalk(QyssStalkWork *work)
+{
+    FTBL.spmFadeOut(0);
+    FTBL.HLib_SetCurrentTaskTo(QyssEndStalkCallback);
+    return 30;
+}
+
+void QyssEndStalkCallback(void *data)
+{
+    QyssStalkWork *work = (QyssStalkWork *)data;
+    if (qyssEntryMode == 2) {
+        EVT_AT_SetPos(QYSS_YUAN, 0xffffffffU, 235.8f, 121.6f, 219.2f, 0);
+        EVT_AT_SetAngY(QYSS_YUAN, 0xffffffffU, 270.0f, 0);
+        EVT_AT_SetMot(QYSS_YUAN, 0xf002, 0.0f, 1.0f, 0x40000000U, 0);
+    }
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QYSS_YUAN));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QYSS_REN));
+    FTBL.SetDoorSubjectEnabled(QYSS_ELEVATOR, 1);
+    ET_AT_KillWork(work->characters);
+    FTBL.EV_HLKillOtherHierarchyTask(work->self);
+    FTBL.SetScenarioCharacterKillMode(QYSS_BASE, 1);
+    EventDebugUnregister(QYSS_DEBUG_ID);
+    FTBL.EV_FreeAuthorPak(0, "0235");
+    FTBL.EV_ControlPackageResources(0, 6, "QYSS", 0, 0);
+    FTBL.scenFreeEvent("QYSS.EV3");
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.npcSetCycleTimeLimitExpiry(QYSS_CYCLE, 17);
+    FTBL.FinishLoading();
+    FTBL.EV_SetPlayerFlag(12, 2068, 0);
+    FTBL.SetScenarioFollowCharacter(0);
+    if (qyssEntryMode != 2) {
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.EV_scenQueueLoad(g_actNumber, QYSS_QAE6, 0);
+    } else {
+        FTBL.EV_stepSetFlags(1132, 0);
+        FTBL.ExecuteCleanupFuncForAreaWithCachedScene();
+        FTBL.EV_spmBeginSampleExecute(0);
+        EVT_AT_SetPos(QYSS_PLAYER, 0xffffffffU, 227.5f, 121.6f, 221.39999f, 0);
+        EVT_AT_SetAngY(QYSS_PLAYER, 0xffffffffU, 292.5f, 0);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    }
+}
+
+void QyssStalkCallback(void *data)
+{
+    QyssStalkWork *work = (QyssStalkWork *)data;
+    int frames = 0;
+    switch (work->authorState) {
+    case 0:
+        frames = InitializeQyssStalk(work);
+        break;
+    case 1:
+        frames = ChooseQyssWaiting(work);
+        break;
+    case 3:
+        frames = PlayQyssElevatorAuthor(work);
+        break;
+    case 2:
+        frames = FadeQyssWaiting(work);
+        break;
+    case 4:
+        frames = FinishQyssStalk(work);
+        break;
+    }
+    if (frames > 0)
+        FTBL.HLib_SetupTaskDelay(frames);
+}
+
+int ChooseQyssWaiting(QyssStalkWork *work)
+{
+    switch (work->state) {
+    case 0:
+        EVT_AT_CharaDisp(QYSS_YUAN, 0, 1);
+        EVT_AT_SetMot(QYSS_PLAYER, 0xf002, 0.0f, 1.0f, 0x40000000U, 0);
+        EVT_AT_SetMot(QYSS_REN, 0xf002, 0.0f, 1.0f, 0x40000000U, 0);
+        EVT_AT_SetPos(QYSS_PLAYER, 0xffffffffU, 241.5f, 139.6f, 218.3f, 0);
+        EVT_AT_SetAngY(QYSS_PLAYER, 0xffffffffU, 45.0f, 0);
+        EVT_AT_SetPos(QYSS_REN, 0xffffffffU, 240.5f, 139.6f, 217.5f, 0);
+        EVT_AT_SetAngY(QYSS_REN, 0xffffffffU, 225.0f, 0);
+        EVT_AT_SetCam(1000, QYSS_REN, QYSS_REN, 0, 0, 1);
+        EVT_AT_SetCam(2000, QYSS_PLAYER, QYSS_PLAYER, 0, 0, 60);
+        QueueEventMessage("ここでユアンを待ってみるか？", 0, 60);
+        QueueSkChoiceWait(work->self, 0xffff, 149, 155, 0xffff, 155, 32767, 60);
+        work->state++;
+        break;
+    case 1:
+        if (FTBL.shenGetCtrlSpeakIconFlag() == 149)
+            work->authorState = 2;
+        else
+            work->authorState = 4;
+        work->state = 0;
+        break;
+    }
+    return 0;
+}
+
+int FadeQyssWaiting(QyssStalkWork *work)
+{
+    EventDateTime date;
+    int frames = 0;
+    switch (work->state) {
+    case 0:
+        FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+        frames = 30;
+        work->state++;
+        break;
+    case 1:
+        FTBL.npcResetDateTimeIfNeeded();
+        FTBL.GetCurrentDateTime((DateTime *)&date);
+        date.hour = 19;
+        date.minute = 0;
+        FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&date);
+        FTBL.npcAdvanceTime(date.hour, date.minute);
+        work->authorState = 3;
+        work->state = 0;
+        frames = 90;
+        break;
+    }
+    return frames;
+}
+
+int PlayQyssElevatorAuthor(QyssStalkWork *work)
+{
+    switch (work->state) {
+    case 0:
+        if (!FTBL.EV_GetScreenFilmIsNotShowing())
+            FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        EVT_AT_CharaDisp(QYSS_YUAN, 0, 0);
+        QueueSkAuthorStart(work->self, QYSS_AUTHOR_START, 0, 0, 0);
+        work->state++;
+        break;
+    case 1:
+        if (!FTBL.EV_GetScreenFilmIsNotShowing())
+            FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        QueueSkAuthorStart(work->self, QYSS_AUTHOR_ELV1, QyssElevatorAuthorFrameCallback, 0, 0);
+        FTBL.EV_stepSetFlags(276, 0);
+        work->authorState = 4;
+        work->state = 0;
+        break;
+    case 2:
+        if (!FTBL.EV_GetScreenFilmIsNotShowing())
+            FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 6);
+        QueueSkAuthorStart(work->self, QYSS_AUTHOR_ELV2, 0, 0, 0);
+        work->authorState = 4;
+        work->state = 0;
+        break;
+    }
+    return 0;
+}
+
+void QyssElevatorAuthorFrameCallback(void *data)
+{
+    switch (FTBL.EV_authSceneCtrl(-6)) {
+    case 0:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 11);
+        break;
+    case 1:
+        FTBL.SetAnimatedObjectFlags(QYSS_ELEVATOR, 1, 1);
+        FTBL.SetAnimatedObjectFlags(QYSS_ELEVATOR, 3, 1);
+        break;
+    case 140:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 10);
+        break;
+    case 170:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 9);
+        break;
+    case 200:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 8);
+        break;
+    case 230:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 7);
+        break;
+    case 260:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 6);
+        FTBL.SetAnimatedObjectFlags(QYSS_ELEVATOR, 1, 0);
+        FTBL.SetAnimatedObjectFlags(QYSS_ELEVATOR, 3, 0);
+        break;
+    case 690:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 6);
+        FTBL.SetAnimatedObjectFlags(QYSS_ELEVATOR, 1, 1);
+        FTBL.SetAnimatedObjectFlags(QYSS_ELEVATOR, 2, 1);
+        break;
+    case 830:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 7);
+        break;
+    case 860:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 8);
+        break;
+    case 890:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 9);
+        break;
+    case 920:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 10);
+        break;
+    case 950:
+        FTBL.SetAnimatedObjectState(QYSS_ELEVATOR, 11);
+        break;
+    case 980:
+        FTBL.SetAnimatedObjectFlags(QYSS_ELEVATOR, 1, 0);
+        FTBL.SetAnimatedObjectFlags(QYSS_ELEVATOR, 2, 0);
+        break;
+    }
+}
+#endif
+#else
 #include "s2/areas/area_qyss.hpp"
 #include "s2/scene_data.hpp"
 #include "s2/map_control.hpp"
@@ -300,3 +572,4 @@ void QyssEndStalkCallback(void *parameter) {
 }
 const ScriptAreaDefinition qyssScriptDefinition{.areaId = AREA_QYSS, .field04 = 0, .init = QyssInit, .main = QyssMain};
 } // namespace shenmue::s2
+#endif

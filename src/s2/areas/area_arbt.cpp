@@ -1,3 +1,1135 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_arbt.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void ArbtEntry(void *argument)
+{
+    StartArbt(argument);
+}
+#else
+const shen_name arbtCharacters[] = {ARBT_RYO, ARBT_PARTNER, ARBT_FOREMAN, ARBT_KNT, ARBT_AA1, ARBT_LYO, ARBT_HAK, ARBT_EIN, EVENT_CHARACTER_INVALID};
+const ArbtRouteStep arbtCarryRoutes[3][3][6][16] = {
+    {
+        {
+            {{2, 3, 45.0f, 0x8000}, {2, 2, 45.0f, 0x8000}, {2, 2, 45.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {2, 2, 45.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{2, 4, 45.0f, 0x8000}, {1, 2, 40.0f, 0x8000}, {1, 2, 40.0f, 0x8000}, {2, 2, 45.0f, 0x4000}, {2, 0, 35.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {2, 2, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000},
+             {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {1, 0, 30.0f, 0x4000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000},
+             {3, 1, 45.0f, 0x8000}, {1, 1, 40.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x4000}, {4, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {1, 0, 30.0f, 0x4000},
+             {1, 1, 40.0f, 0x8000}, {3, 0, 40.0f, 0x8000}, {4, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 45.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {3, 0, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000}, {5, 1, 45.0f, 0x4000}, {3, 0, 40.0f, 0x8000},
+             {4, 1, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {5, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}}
+        },
+        {
+            {{2, 3, 45.0f, 0x8000}, {2, 2, 45.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {1, 2, 40.0f, 0x8000}, {2, 2, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 4, 45.0f, 0x4000}, {1, 2, 40.0f, 0x8000}, {1, 0, 40.0f, 0x8000}, {2, 2, 45.0f, 0x4000}, {2, 2, 35.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {1, 2, 40.0f, 0x4000},
+             {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x8000}, {1, 0, 35.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {1, 0, 30.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000},
+             {3, 1, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {1, 1, 35.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x4000}, {4, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {1, 0, 35.0f, 0x4000}, {1, 0, 30.0f, 0x8000},
+             {1, 1, 40.0f, 0x4000}, {3, 0, 40.0f, 0x8000}, {4, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 45.0f, 0x4000}, {2, 1, 45.0f, 0x4000}, {3, 1, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {5, 1, 45.0f, 0x4000}, {3, 0, 40.0f, 0x8000},
+             {4, 1, 45.0f, 0x8000}, {4, 0, 35.0f, 0x4000}, {5, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}}
+        },
+        {
+            {{2, 3, 45.0f, 0x4000}, {2, 2, 45.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {1, 2, 40.0f, 0x8000}, {2, 2, 45.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {1, 2, 40.0f, 0x8000}, {1, 0, 40.0f, 0x8000}, {2, 3, 45.0f, 0x8000}, {2, 2, 35.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{1, 4, 40.0f, 0x8000}, {1, 1, 40.0f, 0x4000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {1, 1, 40.0f, 0x4000},
+             {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x8000}, {1, 0, 35.0f, 0x8000}, {1, 1, 40.0f, 0x4000}, {1, 0, 30.0f, 0x4000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x8000},
+             {3, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000}, {1, 1, 35.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x4000}, {4, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {2, 1, 45.0f, 0x8000}, {1, 0, 35.0f, 0x4000}, {1, 0, 30.0f, 0x8000},
+             {1, 1, 40.0f, 0x4000}, {3, 0, 40.0f, 0x4000}, {4, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 45.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {3, 1, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {5, 0, 45.0f, 0x4000}, {3, 0, 40.0f, 0x8000},
+             {4, 1, 45.0f, 0x4000}, {4, 0, 35.0f, 0x4000}, {5, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}}
+        }
+    },
+    {
+        {
+            {{2, 3, 45.0f, 0x8000}, {2, 1, 45.0f, 0x8000}, {2, 2, 45.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {2, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000},
+             {2, 1, 45.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x8000}, {1, 1, 40.0f, 0x8000}, {1, 2, 40.0f, 0x8000}, {2, 0, 45.0f, 0x4000}, {1, 2, 40.0f, 0x8000}, {2, 1, 45.0f, 0x4000},
+             {2, 0, 35.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {2, 0, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {2, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000},
+             {2, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {1, 0, 30.0f, 0x4000}, {3, 0, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000},
+             {2, 0, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {3, 1, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x4000}, {4, 0, 45.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {2, 0, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000}, {3, 0, 40.0f, 0x8000},
+             {1, 0, 35.0f, 0x4000}, {1, 1, 30.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {3, 0, 40.0f, 0x8000}, {4, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 45.0f, 0x4000}, {2, 0, 45.0f, 0x8000}, {4, 0, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000},
+             {5, 0, 45.0f, 0x4000}, {3, 0, 40.0f, 0x8000}, {4, 0, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {5, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}}
+        },
+        {
+            {{2, 3, 45.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 2, 40.0f, 0x4000}, {2, 0, 45.0f, 0x8000}, {1, 1, 40.0f, 0x8000},
+             {2, 1, 45.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x8000}, {1, 1, 40.0f, 0x8000}, {1, 2, 40.0f, 0x4000}, {2, 0, 45.0f, 0x8000}, {1, 1, 40.0f, 0x8000}, {2, 2, 45.0f, 0x4000},
+             {2, 0, 35.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {1, 0, 35.0f, 0x4000}, {2, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x4000},
+             {2, 0, 45.0f, 0x8000}, {1, 0, 40.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {1, 0, 30.0f, 0x4000}, {3, 0, 45.0f, 0x8000}, {1, 1, 40.0f, 0x4000},
+             {2, 0, 45.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x8000}, {4, 0, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {2, 1, 45.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {3, 0, 40.0f, 0x8000},
+             {1, 0, 35.0f, 0x8000}, {1, 0, 30.0f, 0x4000}, {1, 0, 40.0f, 0x8000}, {3, 0, 40.0f, 0x4000}, {4, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 45.0f, 0x4000}, {2, 0, 45.0f, 0x4000}, {4, 0, 45.0f, 0x8000}, {4, 0, 35.0f, 0x8000}, {3, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x4000},
+             {5, 0, 45.0f, 0x8000}, {3, 0, 40.0f, 0x4000}, {4, 1, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {5, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}}
+        },
+        {
+            {{2, 3, 45.0f, 0x8000}, {2, 1, 45.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {2, 0, 45.0f, 0x8000}, {1, 2, 40.0f, 0x8000},
+             {2, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x8000}, {1, 1, 40.0f, 0x8000}, {1, 2, 40.0f, 0x4000}, {2, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {2, 2, 45.0f, 0x4000},
+             {2, 0, 35.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {2, 0, 45.0f, 0x8000}, {1, 1, 40.0f, 0x4000},
+             {2, 0, 45.0f, 0x8000}, {1, 0, 40.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {1, 1, 40.0f, 0x4000}, {1, 0, 30.0f, 0x4000}, {3, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x4000},
+             {2, 0, 45.0f, 0x8000}, {1, 0, 35.0f, 0x8000}, {3, 0, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{1, 3, 40.0f, 0x8000}, {4, 0, 45.0f, 0x8000}, {1, 0, 35.0f, 0x4000}, {2, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000}, {3, 0, 40.0f, 0x8000},
+             {1, 0, 35.0f, 0x8000}, {1, 0, 30.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {3, 0, 40.0f, 0x4000}, {4, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 45.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {4, 0, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000},
+             {5, 0, 45.0f, 0x8000}, {3, 0, 40.0f, 0x4000}, {4, 0, 45.0f, 0x4000}, {4, 0, 35.0f, 0x4000}, {5, 0, 45.0f, 0x8000}, {8, 3, 0.0f, 0x0}}
+        }
+    },
+    {
+        {
+            {{2, 3, 45.0f, 0x8000}, {2, 0, 45.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000}, {3, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000},
+             {2, 0, 45.0f, 0x8000}, {1, 1, 40.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x8000}, {1, 1, 40.0f, 0x8000}, {3, 1, 40.0f, 0x4000}, {2, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {3, 1, 45.0f, 0x4000},
+             {1, 0, 40.0f, 0x8000}, {4, 0, 45.0f, 0x4000}, {2, 0, 35.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{3, 3, 40.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {4, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {3, 0, 45.0f, 0x8000}, {4, 1, 40.0f, 0x4000},
+             {2, 0, 45.0f, 0x8000}, {1, 0, 40.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {3, 0, 35.0f, 0x8000}, {4, 0, 40.0f, 0x4000}, {1, 0, 30.0f, 0x4000}, {3, 0, 45.0f, 0x4000}, {3, 1, 40.0f, 0x4000},
+             {2, 0, 45.0f, 0x8000}, {4, 0, 35.0f, 0x8000}, {3, 1, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {5, 0, 40.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 40.0f, 0x8000}, {4, 0, 45.0f, 0x8000}, {1, 0, 35.0f, 0x4000}, {3, 1, 45.0f, 0x4000}, {4, 0, 40.0f, 0x4000}, {3, 0, 40.0f, 0x8000},
+             {1, 0, 35.0f, 0x8000}, {5, 0, 40.0f, 0x4000}, {5, 1, 40.0f, 0x4000}, {3, 0, 40.0f, 0x4000}, {4, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 45.0f, 0x4000}, {5, 1, 45.0f, 0x8000}, {4, 0, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {5, 0, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000},
+             {5, 0, 45.0f, 0x8000}, {3, 0, 40.0f, 0x4000}, {4, 1, 45.0f, 0x4000}, {4, 0, 35.0f, 0x4000}, {5, 0, 45.0f, 0x8000}, {8, 3, 0.0f, 0x0}}
+        },
+        {
+            {{2, 3, 45.0f, 0x4000}, {2, 0, 45.0f, 0x8000}, {2, 1, 45.0f, 0x8000}, {1, 1, 40.0f, 0x4000}, {3, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000},
+             {2, 0, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {3, 1, 45.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {3, 1, 40.0f, 0x8000}, {2, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {3, 1, 45.0f, 0x4000},
+             {1, 0, 40.0f, 0x4000}, {4, 0, 45.0f, 0x8000}, {2, 0, 35.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{3, 3, 40.0f, 0x8000}, {1, 1, 40.0f, 0x4000}, {4, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {3, 0, 45.0f, 0x8000}, {4, 0, 40.0f, 0x4000},
+             {2, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {3, 0, 35.0f, 0x8000}, {4, 1, 40.0f, 0x4000}, {1, 0, 30.0f, 0x4000}, {3, 0, 45.0f, 0x8000}, {3, 0, 40.0f, 0x4000},
+             {2, 0, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000}, {5, 0, 40.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 40.0f, 0x8000}, {4, 0, 45.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {4, 0, 40.0f, 0x4000}, {3, 0, 40.0f, 0x8000},
+             {1, 0, 35.0f, 0x4000}, {5, 0, 40.0f, 0x4000}, {5, 1, 40.0f, 0x8000}, {3, 0, 40.0f, 0x4000}, {4, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 45.0f, 0x8000}, {5, 0, 45.0f, 0x4000}, {4, 0, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {5, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x8000},
+             {5, 0, 45.0f, 0x4000}, {3, 0, 40.0f, 0x4000}, {4, 1, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {5, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}}
+        },
+        {
+            {{2, 3, 45.0f, 0x8000}, {2, 1, 45.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x8000}, {3, 0, 45.0f, 0x8000}, {1, 1, 40.0f, 0x8000},
+             {2, 0, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000}, {3, 1, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {3, 1, 40.0f, 0x8000}, {2, 0, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {3, 0, 45.0f, 0x4000},
+             {1, 0, 40.0f, 0x4000}, {4, 1, 45.0f, 0x8000}, {2, 0, 35.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{3, 3, 40.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {4, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {3, 0, 45.0f, 0x8000}, {4, 1, 40.0f, 0x4000},
+             {2, 1, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {3, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{2, 3, 45.0f, 0x4000}, {3, 0, 35.0f, 0x8000}, {4, 0, 40.0f, 0x4000}, {1, 0, 30.0f, 0x8000}, {3, 0, 45.0f, 0x4000}, {3, 1, 40.0f, 0x4000},
+             {2, 0, 45.0f, 0x8000}, {4, 0, 35.0f, 0x4000}, {3, 1, 45.0f, 0x8000}, {1, 0, 40.0f, 0x4000}, {5, 0, 40.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 40.0f, 0x4000}, {4, 0, 45.0f, 0x8000}, {1, 0, 35.0f, 0x4000}, {3, 1, 45.0f, 0x4000}, {4, 1, 40.0f, 0x4000}, {3, 0, 40.0f, 0x4000},
+             {1, 0, 35.0f, 0x8000}, {5, 0, 40.0f, 0x8000}, {5, 0, 40.0f, 0x4000}, {3, 0, 40.0f, 0x4000}, {4, 0, 45.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+            {{4, 3, 45.0f, 0x4000}, {5, 0, 45.0f, 0x8000}, {4, 0, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {5, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000},
+             {5, 0, 45.0f, 0x4000}, {3, 0, 40.0f, 0x8000}, {4, 1, 45.0f, 0x8000}, {4, 0, 35.0f, 0x4000}, {5, 0, 45.0f, 0x4000}, {8, 3, 0.0f, 0x0}}
+        }
+    }
+};
+const float arbtCarrySpeeds[6] = {2.3f, 2.3f, 2.3f, 2.4f, 2.4f, 2.4f};
+const ArbtDescriptor arbtDescriptors[9] = {{0, 0}, {0, 1}, {0, 2}, {0, 3}, {1, 0}, {1, 1}, {1, 2}, {1, 3}, {2, 0}};
+int arbtAuthorFlag = 0;
+Vector3 arbtCameraOffset = {0.0f, 0.0f, 0.0f};
+Vector3 arbtPayAttachPosition = {0.197f, 0.075f, -0.018f};
+Vector3i arbtCameraRotation = {0, 0, 0};
+Vector3i arbtPayAttachRotation = {48423, 42780, 52792};
+Vector3i arbtCrateRotation = {0, 0, 0};
+Vector3 arbtCrateScale = {1.0f, 1.0f, 0.6f};
+Vector3 arbtLowPalletScale = {1.0f, 1.75f, 1.0f};
+Vector3 arbtHighPalletScale = {1.0f, 1.75f, 1.2f};
+Vector3i arbtGuideRotation = {0, 0xc000, 0};
+Vector3i arbtDestinationRotation = {0, 0, 0};
+Vector3 arbtGuideOffset = {-0.9f, 0.0f, -0.08f};
+Vector3 arbtDestinationOffset = {0.0f, 0.0f, 0.0f};
+Vector3 arbtGuideEdge0Right = {0.66f, 0.0305f, -0.272f};
+Vector3 arbtGuideEdge0Left = {0.68f, 0.1f, 0.32f};
+Vector3 arbtGuideEdge1Right = {-0.66f, 0.0305f, 0.272f};
+Vector3 arbtGuideEdge1Left = {-0.66f, 0.0305f, -0.272f};
+Vector3i arbtMoveRotation = {0, 0xc000, 0};
+
+void StartArbt(const ArbtDescriptor *descriptor)
+{
+    HLibTask *task, *helper;
+    ArbtWork *work;
+    task = FTBL.HLib_EnqueueTaskWithParameter(ArbtReadyInit, 4, 11, sizeof(ArbtWork), TASK_EVNT);
+    work = (ArbtWork *)FTBL.HLib_GetTaskParameter(task);
+    helper = FTBL.HLib_EnqueueTaskWithParameter(ArbtHelperNullsub, 3, 11, 4, TASK_EVNT);
+    *(ArbtWork **)FTBL.HLib_GetTaskParameter(helper) = work;
+    work->helper = helper;
+    work->self = task;
+    if (descriptor)
+        work->descriptor = descriptor;
+    else {
+        work->descriptor = arbtDescriptors;
+        if ((unsigned int)(g_entryPoint - 90) <= 8)
+            work->descriptor += g_entryPoint - 90;
+    }
+    ArbtMain(work);
+    EventDebugRegister(ARBT_DEBUG_ID, ArbtDebugExit, work, 3000000);
+}
+
+void ArbtDebugExit(void *data)
+{
+    int stat = FTBL.GetPlayerStat(2);
+    if (stat <= 9)
+        FTBL.SetPlayerStat(2, stat + 20);
+    ArbtLeave((ArbtWork *)data);
+}
+
+void ArbtLeave(ArbtWork *work)
+{
+    ArbtCleanup(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->helper);
+    FTBL.EV_HLKillOtherHierarchyTask(work->self);
+    EventDebugUnregister(ARBT_DEBUG_ID);
+    FTBL.EV_SetPlayerFlag(12, 966, 1);
+    if (FTBL.EV_GetShenmueFlag(1077)) {
+        FTBL.EV_stepSetFlags(1077, 0);
+        FTBL.EV_scenQueueLoad(g_actNumber, ARBT_AK00, 0);
+    } else if (work->descriptor->mode == 1) {
+        FTBL.EV_SetPlayerFlag(12, 1871, 1);
+        FTBL.EV_scenQueueLoad(g_actNumber, ARBT_Q100, 97);
+    } else
+        FTBL.EV_scenQueueLoad(g_actNumber, ARBT_AK00, 92);
+}
+
+void ArbtHelperNullsub(void *data)
+{
+}
+
+void ArbtReadyInit(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    int frames;
+    EventDebugCheck(ARBT_DEBUG_ID, 4);
+    FTBL.CheckHelpIcon(1, 0, 0);
+    FTBL.FinishLoading();
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(ARBT_RYO));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_RYO), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_RYO), 1, 1, 0);
+    Queue_EVT_AT_CtrlHandUp_1(ARBT_RYO, 0, (void *)areaLoopHandPoses[ARBT_GRIP_HAND_POSE], 0, 0);
+    Queue_EVT_AT_CtrlHandUp_1(ARBT_RYO, 1, (void *)areaLoopHandPoses[ARBT_GRIP_HAND_POSE], 0, 0);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(ARBT_PARTNER));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 1, 1, 0);
+    Queue_EVT_AT_CtrlHandUp_1(ARBT_PARTNER, 0, (void *)areaLoopHandPoses[ARBT_GRIP_HAND_POSE], 0, 0);
+    Queue_EVT_AT_CtrlHandUp_1(ARBT_PARTNER, 1, (void *)areaLoopHandPoses[ARBT_GRIP_HAND_POSE], 0, 0);
+    FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(ARBT_RYO), 1);
+    FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(ARBT_PARTNER), 1);
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 10, 2.0f);
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 17, 1.0f);
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_PARTNER), 10, 2.0f);
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_PARTNER), 17, 2.0f);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ARBT_RYO), 55, 0);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ARBT_PARTNER), 55, 0);
+    FTBL.AT_SetLocalBaseChara(ARBT_RYO, ARBT_BASE);
+    FTBL.AT_SetLocalBaseChara(ARBT_PARTNER, ARBT_BASE);
+    FTBL.AT_SetLocalBaseChara(ARBT_FOREMAN, ARBT_BASE);
+    FTBL.AT_SetLocalBaseChara(ARBT_DUMA, ARBT_RYO);
+    FTBL.AT_SetLocalBaseChara(ARBT_DUMT, ARBT_PARTNER);
+    FTBL.AT_SetLocalBaseChara(ARBT_DUMS, ARBT_FOREMAN);
+    FTBL.EV_AT_SetPos(ARBT_DUMA, ARBT_POSITION_FLAGS, &arbtCameraOffset);
+    FTBL.EV_AT_SetPos(ARBT_DUMT, ARBT_POSITION_FLAGS, &arbtCameraOffset);
+    FTBL.EV_AT_SetPos(ARBT_DUMS, ARBT_POSITION_FLAGS, &arbtCameraOffset);
+    FTBL.EV_AT_SetAngY_0(ARBT_DUMA, ARBT_POSITION_FLAGS, &arbtCameraRotation, 0);
+    FTBL.EV_AT_SetAngY_0(ARBT_DUMT, ARBT_POSITION_FLAGS, &arbtCameraRotation, 0);
+    FTBL.EV_AT_SetAngY_0(ARBT_DUMS, ARBT_POSITION_FLAGS, &arbtCameraRotation, 0);
+    EVT_AT_SetPos(ARBT_PARTNER, ARBT_BASE, -1.5f, 0.0f, -1.5f, 0);
+    EVT_AT_SetAng(ARBT_PARTNER, ARBT_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetPos(ARBT_FOREMAN, ARBT_BASE, -1.0f, 0.0f, -6.5f, 0);
+    EVT_AT_SetAng(ARBT_FOREMAN, ARBT_BASE, 0.0f, 160.0f, 0.0f, 0);
+    EVT_AT_SetPos(ARBT_RYO, ARBT_FOREMAN, 0.0f, 0.0f, -1.5f, 0);
+    EVT_AT_SetAng(ARBT_RYO, ARBT_FOREMAN, 0.0f, 180.0f, 0.0f, 0);
+    EVT_AT_CharaDisp(ARBT_KNT, 0, 1);
+    EVT_AT_CharaDisp(ARBT_AA1, 0, 1);
+    EVT_AT_CharaDisp(ARBT_LYO, 0, 1);
+    EVT_AT_CharaDisp(ARBT_HAK, 0, 1);
+    EVT_AT_CharaDisp(ARBT_EIN, 0, 1);
+    FTBL.EV_ToggleCharacterFlag(ARBT_KNT);
+    FTBL.EV_ToggleCharacterFlag(ARBT_AA1);
+    FTBL.EV_ToggleCharacterFlag(ARBT_LYO);
+    FTBL.EV_ToggleCharacterFlag(ARBT_HAK);
+    FTBL.EV_ToggleCharacterFlag(ARBT_EIN);
+    FTBL.AttachScenarioCharacter(ARBT_PAY, ARBT_FOREMAN, 14, &arbtPayAttachPosition, &arbtPayAttachRotation);
+    EVT_AT_CharaDisp(ARBT_PAY, 0, 1);
+    FTBL.BeginSecondarySampleExecution(0);
+    FTBL.EV_LoadAudio("0018E000", 0);
+    EVT_AT_SetSample(0, 0, 0);
+    if (work->firstJob)
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryInit);
+    else {
+        frames = ArbtIntroduceJob();
+        EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+        EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, frames);
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryInit);
+        FTBL.HLib_SetupTaskDelay(frames + 30);
+    }
+}
+
+void SetInitialArbtCarrySettings(ArbtCarryWork *carry, int crate)
+{
+    int random;
+    carry->phase = ArbtCarryTurnInit;
+    carry->forwardSteps = 0;
+    carry->turns = 2;
+    carry->failures = 0;
+    carry->consecutiveFailures = 0;
+    carry->idleCount = 0;
+    carry->speed = arbtCarrySpeeds[crate];
+    random = FTBL.shenGetRandomInt32(3);
+    if (g_actNumber == 1)
+        carry->route = arbtCarryRoutes[0][random][crate];
+    else if (g_actNumber == 2)
+        carry->route = arbtCarryRoutes[1][random][crate];
+    else
+        carry->route = arbtCarryRoutes[2][random][crate];
+    SetArbtQte(&carry->qte, 0, 0, 0);
+}
+
+const signed char arbtPressCounts[8] = {1, 1, 1, 2, 3, 4, 1, 1};
+
+void SetArbtQte(ArbtQte *qte, int frames, unsigned int direction, int intensity)
+{
+    qte->success = 0;
+    qte->frames = frames;
+    qte->direction = direction;
+    qte->intensity = intensity;
+    qte->presses = arbtPressCounts[intensity];
+}
+
+void ArbtCarryInit(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    int frames;
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_DisableCharacterDisplay(ARBT_FOREMAN);
+    SetInitialArbtCarrySettings(carry, work->delivered);
+    if (!work->delivered) {
+        if (work->firstJob)
+            frames = ArbtExplainFirstCarry();
+        else
+            frames = ArbtExplainCarry();
+    } else
+        frames = ArbtIntroduceNextCrate();
+    FTBL.HLib_SetCurrentTaskTo(ArbtCarryLift);
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void ArbtCarryLift(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtQte *qte = &carry->qte;
+    ArbtCrateWork *crates = &work->crates;
+    Vector3 position;
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.GetCharaPosition(crates->crates[crates->index], -1, &position, 0);
+    if (position.y > 0.5f)
+        qte->frames = ArbtLiftHighCrate(crates);
+    else
+        qte->frames = ArbtLiftLowCrate(crates);
+    FTBL.HLib_SetCurrentTaskTo(carry->phase);
+}
+
+void ArbtCarryTurnInit(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtQte *qte = &carry->qte;
+    int turns, delay;
+    FTBL.CheckHelpIcon(0xd020, 0, 1);
+    turns = carry->turns--;
+    if (turns != 0) {
+        delay = qte->frames - 40;
+        if (delay < 0)
+            delay = 0;
+        if (work->delivered > 1)
+            SetArbtQte(qte, 40, 0x8000, 0);
+        else
+            SetArbtQte(qte, 40, 0x4000, 0);
+        ArbtQueueDirection(qte->direction, qte->intensity, delay);
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryQte);
+        if (delay > 0)
+            FTBL.HLib_SetupTaskDelay(delay);
+    } else {
+        carry->phase = ArbtCarryRoute;
+        FTBL.HLib_SetCurrentTaskTo(carry->phase);
+        if (!work->delivered) {
+            delay = ArbtStartWork(qte->frames);
+            qte->frames = 0;
+            FTBL.HLib_SetupTaskDelay(delay);
+        }
+    }
+}
+
+void ArbtCarryFinishTurns(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtQte *qte = &carry->qte;
+    int turns, delay;
+    turns = carry->turns--;
+    if (turns > 0) {
+        FTBL.CheckHelpIcon(0xd020, 0, 1);
+        delay = qte->frames - 40;
+        if (delay < 0)
+            delay = 0;
+        SetArbtQte(qte, 40, 0x8000, 0);
+        ArbtQueueDirection(qte->direction, qte->intensity, delay);
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryQte);
+        if (delay > 0)
+            FTBL.HLib_SetupTaskDelay(delay);
+    } else if (carry->turns < -1) {
+        FTBL.GetCurrentDateTime((DateTime *)&work->time);
+        if (work->time.hour >= work->endTime.hour) {
+            EVT_AT_MenCtrl(60, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+            FTBL.HLib_SetCurrentTaskTo(ArbtCarryAddTime);
+        } else {
+            FTBL.CheckHelpIcon(0xd020, 0xd020, 2);
+            FTBL.CheckHelpIcon(0x2020, 0, 1);
+            SetArbtQte(qte, 50, 0x2000, 7);
+            ArbtQueueDirection(qte->direction, qte->intensity, 0);
+            FTBL.HLib_SetCurrentTaskTo(ArbtCarryPutQte);
+        }
+    } else {
+        delay = ArbtRequestPutDown(qte->frames);
+        FTBL.HLib_SetupTaskDelay(delay);
+    }
+}
+
+void ArbtCarryRoute(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtQte *qte = &carry->qte;
+    const ArbtRouteStep *step = carry->route;
+    int delay;
+    FTBL.CheckHelpIcon(0xd020, 0, 1);
+    if (carry->forwardSteps >= step->forwardSteps) {
+        carry->forwardSteps = 0;
+        carry->route++;
+        if (step->intensity == 8) {
+            carry->turns = 2;
+            carry->phase = ArbtCarryFinishTurns;
+            FTBL.HLib_SetCurrentTaskTo(carry->phase);
+        } else {
+            delay = (float)qte->frames - step->frames;
+            if (delay < 0)
+                delay = 0;
+            SetArbtQte(qte, step->frames, step->direction, step->intensity);
+            ArbtQueueDirection(qte->direction, qte->intensity, delay);
+            FTBL.HLib_SetCurrentTaskTo(ArbtCarryQte);
+            if (delay > 0)
+                FTBL.HLib_SetupTaskDelay(delay);
+        }
+    } else {
+        FTBL.GetCurrentDateTime((DateTime *)&work->time);
+        if (work->time.hour >= work->endTime.hour) {
+            EVT_AT_MenCtrl(60, 0, 0, 0, 0, 255, 0, 0, 0, qte->frames);
+            FTBL.HLib_SetCurrentTaskTo(ArbtCarryAddTime);
+            if (qte->frames > 0)
+                FTBL.HLib_SetupTaskDelay(qte->frames);
+        } else {
+            delay = qte->frames - 30;
+            if (delay < 0)
+                delay = 0;
+            SetArbtQte(qte, 30, 0x1000, 6);
+            ArbtQueueDirection(qte->direction, qte->intensity, delay);
+            FTBL.HLib_SetCurrentTaskTo(ArbtCarryForwardQte);
+            if (delay > 0)
+                FTBL.HLib_SetupTaskDelay(delay);
+        }
+    }
+}
+
+void ArbtCarryQte(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtCrateWork *crates = &work->crates;
+    ArbtQte *qte = &carry->qte;
+    shen_name *crate = &crates->crates[crates->index];
+    unsigned int wrong = qte->direction ^ 0xd000;
+    unsigned int pressed;
+    int frames;
+    if (--qte->frames > 0) {
+        pressed = FTBL.GetCurrentControlInput(1);
+        if (pressed == qte->direction || ((pressed & qte->direction) && qte->direction == 0x1000)) {
+            if (--qte->presses == 0) {
+                EVT_AT_SetSound(0x900ab, 0);
+                qte->success = 1;
+            } else if (qte->presses > 0)
+                EVT_AT_SetSound(0x900ab, 0);
+            else {
+                EVT_AT_SetSound(0xa00ab, 0);
+                FTBL.HLib_SetupTaskDelay(qte->frames);
+                qte->success = 0;
+                qte->frames = 0;
+            }
+        } else if ((pressed & wrong) && qte->frames < 20 && !qte->success) {
+            EVT_AT_SetSound(0xa00ab, 0);
+            FTBL.HLib_SetupTaskDelay(qte->frames);
+            qte->frames = 0;
+        }
+    } else if (qte->success) {
+        carry->consecutiveFailures = 0;
+        qte->frames = ArbtWalkDirection(carry->speed, qte->intensity, qte->direction, 0);
+        FTBL.HLib_SetCurrentTaskTo(carry->phase);
+    } else {
+        carry->failures++;
+        carry->consecutiveFailures++;
+        frames = ArbtFailCarry(crates, crate, qte->intensity, qte->direction);
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryFalse);
+        FTBL.HLib_SetupTaskDelay(frames);
+    }
+}
+
+void ArbtCarryForwardQte(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtQte *qte = &carry->qte;
+    unsigned int wrong = qte->direction ^ 0xd000;
+    unsigned int held, pressed;
+    if (--qte->frames > 0) {
+        held = FTBL.GetCurrentControlInput(0);
+        pressed = FTBL.GetCurrentControlInput(1);
+        if (held & qte->direction) {
+            FTBL.HLib_SetCurrentTaskTo(work->carry.phase);
+            if (carry->idleCount == 0 && qte->frames > 0)
+                FTBL.HLib_SetupTaskDelay(qte->frames);
+            else
+                qte->frames = 0;
+            carry->idleCount = 0;
+            carry->forwardSteps++;
+            qte->frames = ArbtWalkForward(carry->speed, qte->frames);
+        } else if (pressed & wrong) {
+            FTBL.HLib_SetCurrentTaskTo(ArbtCarryQte);
+            if (carry->idleCount == 0 && qte->frames > 0)
+                FTBL.HLib_SetupTaskDelay(qte->frames);
+            qte->frames = 0;
+            carry->idleCount = 0;
+            qte->direction = 0x2000;
+            ArbtWarnWrongDirection(pressed, 0);
+        }
+    } else {
+        FTBL.HLib_SetCurrentTaskTo(carry->phase);
+        if (++carry->idleCount > 3) {
+            carry->idleCount = 0;
+            FTBL.HLib_SetupTaskDelay(ArbtWarnIdleForward(++work->idleWarnings));
+        }
+    }
+}
+
+void ArbtCarryPutQte(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtQte *qte = &carry->qte;
+    if (--qte->frames > 0) {
+        if (FTBL.GetCurrentControlInput(0) & qte->direction) {
+            EVT_AT_SetSound(0x900ab, 0);
+            FTBL.HLib_SetCurrentTaskTo(ArbtCarryPut);
+            carry->idleCount = 0;
+            qte->frames = 0;
+        }
+    } else {
+        FTBL.HLib_SetCurrentTaskTo(carry->phase);
+        if (++carry->idleCount > 3) {
+            carry->idleCount = 0;
+            FTBL.HLib_SetupTaskDelay(ArbtWarnIdlePut(++work->idleWarnings));
+        }
+    }
+}
+
+void ArbtCarryFalse(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtQte *qte = &carry->qte;
+    int frames;
+    switch (qte->intensity) {
+    case 6:
+        frames = ArbtWarnWrongForward();
+        break;
+    case 3:
+        frames = ArbtWarnWrongDouble(qte->direction);
+        break;
+    case 4:
+    case 5:
+        frames = ArbtWarnWrongMultiple(qte->direction);
+        break;
+    default:
+        switch (carry->failures >> 1) {
+        case 0:
+            frames = ArbtWarnCarryOnce();
+            break;
+        case 1:
+            frames = ArbtWarnCarryTwice();
+            break;
+        case 2:
+            frames = ArbtWarnCarryThird();
+            break;
+        case 3:
+            frames = ArbtWarnCarryFourth();
+            break;
+        default:
+            frames = ArbtWarnCarryRepeatedly();
+            break;
+        }
+        break;
+    }
+    FTBL.HLib_SetCurrentTaskTo(ArbtCarryLift);
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void ArbtCarryPut(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtCrateWork *crates = &work->crates;
+    shen_name crate = crates->crates[crates->index], destination = crates->destinations[crates->index];
+    int frames;
+    FTBL.CheckHelpIcon(0x2020, 0x2020, 2);
+    if (carry->failures)
+        work->perfectStreak = 0;
+    else
+        work->perfectStreak++;
+    if (crates->stacked[crates->index]) {
+        EVT_AT_SetPosAng(crate, destination, -0.05f, 0.1f, 0.0f, 0);
+        frames = ArbtPutHighCrate(crates, work->perfectStreak, destination);
+    } else {
+        EVT_AT_SetPosAng(crate, destination, 0.0f, 0.2f, 0.0f, 0);
+        frames = ArbtPutLowCrate(crates, work->perfectStreak, destination);
+    }
+    FTBL.HLib_SetCurrentTaskTo(ArbtCarryEnd);
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void ArbtCarryEnd(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    ArbtCarryWork *carry = &work->carry;
+    ArbtCrateWork *crates = &work->crates;
+    int limit = crates->limit - (carry->failures >> 2);
+    if (limit < work->delivered)
+        limit = work->delivered;
+    crates->limit = limit;
+    work->failures += carry->failures;
+    work->delivered++;
+    if (SelectNextArbtCrate(crates)) {
+        EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryInit);
+        FTBL.HLib_SetupTaskDelay(30);
+    } else {
+        EVT_AT_MenCtrl(60, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryAddTime);
+    }
+}
+
+void ArbtCarryAddTime(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    FTBL.CheckHelpIcon(0, 0, 0);
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.GetCurrentDateTime((DateTime *)&work->time);
+    if (work->time.hour < work->endTime.hour + 1) {
+        if (++work->time.minute > 59) {
+            work->time.minute = 0;
+            work->time.hour++;
+        }
+        FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&work->time);
+    } else if (!FTBL.filmCheckFadeTrackColour())
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryTimeOver);
+}
+
+void ArbtCarryTimeOver(void *data)
+{
+    int frames;
+    FTBL.EV_EnableCharacterDisplay(ARBT_FOREMAN);
+    frames = ArbtAnnounceTimeOver();
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, frames);
+    FTBL.HLib_SetCurrentTaskTo(ArbtPayInit);
+    FTBL.HLib_SetupTaskDelay(frames + 30);
+}
+
+void ArbtPayInit(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    if (work->descriptor->mode == 1) {
+        EVT_AT_SetPos(ARBT_BASE, EVENT_CHARACTER_INVALID, 142.9f, 100.0f, 138.9f, 0);
+        EVT_AT_SetAngY(ARBT_BASE, EVENT_CHARACTER_INVALID, 270.0f, 0);
+    } else {
+        EVT_AT_SetPos(ARBT_BASE, EVENT_CHARACTER_INVALID, 225.2f, 100.0f, 247.5f, 0);
+        EVT_AT_SetAngY(ARBT_BASE, EVENT_CHARACTER_INVALID, 270.0f, 0);
+        FTBL.SetMapModelDataDefaultVertexShader();
+        FTBL.FreeWAIR();
+        FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+        FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+        FTBL.UpdateWeather();
+        FTBL.EV_SetWeatherInstruction(12, 0);
+        FTBL.EV_SetWeatherInstruction(1920, 0);
+        FTBL.EV_lightLoad(ARBT_LIGHT_AKB0);
+        FTBL.PushGlobalLightingProgram();
+        HideArbtDockProps();
+    }
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_RYO), 1);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 1);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_KNT), 1);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_AA1), 1);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_LYO), 1);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_HAK), 1);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_EIN), 1);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ARBT_RYO), 55, 2);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ARBT_PARTNER), 55, 2);
+    EVT_AT_CharaDisp(ARBT_KNT, 0, 0);
+    EVT_AT_CharaDisp(ARBT_AA1, 0, 0);
+    EVT_AT_CharaDisp(ARBT_LYO, 0, 0);
+    EVT_AT_CharaDisp(ARBT_HAK, 0, 0);
+    EVT_AT_CharaDisp(ARBT_EIN, 0, 0);
+    FTBL.EV_EnsureCharacterDraw(ARBT_KNT);
+    FTBL.EV_EnsureCharacterDraw(ARBT_AA1);
+    FTBL.EV_EnsureCharacterDraw(ARBT_LYO);
+    FTBL.EV_EnsureCharacterDraw(ARBT_HAK);
+    FTBL.EV_EnsureCharacterDraw(ARBT_EIN);
+    StopArbtMoveBox(&work->crates, 0);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    if (work->delivered <= 5)
+        work->delivered++;
+    FTBL.HLib_SetCurrentTaskTo(ArbtPayAuto);
+}
+
+void ArbtPayAuto(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    int cash = work->delivered * 10;
+    int frames;
+    if (work->firstJob)
+        frames = ArbtPayFirstJob(cash, work->delivered);
+    else if (work->delivered > 4)
+        frames = ArbtPayGoodJob(cash, work->delivered);
+    else if (work->delivered > 2)
+        frames = ArbtPayAverageJob(cash, work->delivered);
+    else
+        frames = ArbtPayPoorJob(cash, work->delivered);
+    EVT_AT_SetSample(0, 1, frames - 60);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, frames - 30);
+    FTBL.HLib_SetCurrentTaskTo(ArbtPayEnd);
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void ArbtPayEnd(void *data)
+{
+    ArbtWork *work = (ArbtWork *)data;
+    FTBL.ResetScenarioCharacterAttachment(ARBT_PAY);
+    if (work->descriptor->mode == 2)
+        FTBL.HLib_SetCurrentTaskTo(ArbtReadyInit);
+    else
+        ArbtLeave(work);
+}
+
+void CreateArbtCrates(ArbtCrateWork *const crates)
+{
+    Vector3 position;
+    int i, first, second, unit;
+    shen_name name;
+    crates->moveTask = 0;
+    crates->moveFrames = 0;
+    crates->dropTask = 0;
+    crates->dropHeight = 0.0f;
+    crates->index = -1;
+    crates->limit = 6;
+    first = 0;
+    do {
+        second = 0;
+    } while (0);
+    for (i = 0, name = ARBT_CRATE_FIRST; i < 16; i++, name += 0x1000000) {
+        crates->crates[i] = name;
+        FTBL.GetRandomNumberInRange(100.0f);
+        if (first <= 7) {
+            position.x = -6.5f;
+            position.y = 0.7f - (first & 1) * 0.4f;
+            position.z = (first >> 1) * 2.1f + -1.2f;
+            if (first > 1) {
+                if ((first & 1) == 0)
+                    position.z -= 0.08f;
+                else
+                    position.z += 0.04f;
+            }
+            first++;
+        } else {
+            position.x = -4.5f;
+            position.y = 0.7f - (second & 1) * 0.4f;
+            position.z = (second >> 1) * 2.1f + -1.2f;
+            if (first > 1) {
+                if ((first & 1) == 0)
+                    position.z -= 0.08f;
+                else
+                    position.z += 0.04f;
+            }
+            second++;
+        }
+        FTBL.AT_SetLocalBaseChara(name, ARBT_BASE);
+        FTBL.EV_AT_SetPos(name, ARBT_POSITION_FLAGS, &position);
+        FTBL.EV_AT_SetAngY_0(name, ARBT_POSITION_FLAGS, &arbtCrateRotation, 0);
+        FTBL.AT_SetLocalBaseChara(name, EVENT_CHARACTER_INVALID);
+        FTBL.EV_EnableCharacterDisplay(name);
+        FTBL.EV_SetCharaControllerFlags(name, 1, 0);
+        FTBL.mtwkSetMotionworkScale3(name, &arbtCrateScale);
+        FTBL.SetScenarioCharacterDrawControl(name, 2, 1, 0.0f);
+    }
+    for (i = 0, name = ARBT_PALLET_FIRST; i < 16; i++, name += 0x1000000) {
+        FTBL.CreateEventCharacter(3, "PLT0H01G", name);
+        crates->pallets[i] = name;
+        if (i < 8) {
+            if (i < 4) {
+                position.x = -16.8f;
+                position.y = 0.05f;
+                position.z = i * 2.1f + -1.2f - 0.7f;
+                FTBL.EV_EnableCharacterDisplay(name);
+            } else {
+                position.x = -14.8f;
+                position.y = 0.05f;
+                position.z = (i - 4) * 2.1f + -1.2f - 0.7f;
+                FTBL.EV_DisableCharacterDisplay(name);
+            }
+            FTBL.mtwkSetMotionworkScale3(name, &arbtLowPalletScale);
+        } else {
+            if (i < 12) {
+                position.x = -6.5f;
+                position.y = 0.05f;
+                position.z = (i - 8) * 2.1f + -1.2f;
+            } else {
+                position.x = -4.5f;
+                position.y = 0.05f;
+                position.z = (i - 12) * 2.1f + -1.2f;
+            }
+            FTBL.EV_EnableCharacterDisplay(name);
+            FTBL.mtwkSetMotionworkScale3(name, &arbtHighPalletScale);
+        }
+        FTBL.EV_SetCharaControllerFlags(name, 1, 0);
+        FTBL.AT_SetLocalBaseChara(name, ARBT_BASE);
+        FTBL.EV_AT_SetPos(name, ARBT_POSITION_FLAGS, &position);
+        FTBL.EV_AT_SetAngY_0(name, ARBT_POSITION_FLAGS, &arbtCrateRotation, 0);
+    }
+    first = 0;
+    second = 0;
+    unit = 0x1000000;
+    for (i = 0; i < 16; i++) {
+        FTBL.GetRandomNumberInRange(100.0f);
+        if (first <= 7) {
+            crates->destinations[i] = ARBT_PALLET_FIRST + (first >> 1) * unit;
+            crates->stacked[i] = first & 1;
+            first++;
+        } else {
+            crates->destinations[i] = ARBT_PALLET_FIRST + unit * 4 + (second >> 1) * unit;
+            crates->stacked[i] = second & 1;
+            second++;
+        }
+    }
+    SelectNextArbtCrate(crates);
+}
+
+void KillArbtPallets(ArbtCrateWork *crates)
+{
+    int i;
+    for (i = 0; i < 16; i++)
+        FTBL.SetScenarioCharacterKillMode(crates->pallets[i], 1);
+}
+
+int SelectNextArbtCrate(ArbtCrateWork *crates)
+{
+    StopArbtMoveBox(crates, 0);
+    if (crates->index >= crates->limit)
+        return crates->limit - crates->index;
+    crates->index++;
+    FTBL.AT_SetLocalBaseChara(crates->crates[crates->index], ARBT_BASE);
+    FTBL.AT_SetLocalBaseChara(ARBT_DUMB, crates->crates[crates->index]);
+    FTBL.AT_SetLocalBaseChara(ARBT_EG0R, crates->crates[crates->index]);
+    FTBL.AT_SetLocalBaseChara(ARBT_EG0L, crates->crates[crates->index]);
+    FTBL.AT_SetLocalBaseChara(ARBT_EG1R, crates->crates[crates->index]);
+    FTBL.AT_SetLocalBaseChara(ARBT_EG1L, crates->crates[crates->index]);
+    FTBL.EV_AT_SetPos(ARBT_DUMB, ARBT_POSITION_FLAGS, &arbtGuideOffset);
+    FTBL.EV_AT_SetPos(ARBT_EG0R, ARBT_POSITION_FLAGS, &arbtGuideEdge0Right);
+    FTBL.EV_AT_SetPos(ARBT_EG0L, ARBT_POSITION_FLAGS, &arbtGuideEdge0Left);
+    FTBL.EV_AT_SetPos(ARBT_EG1R, ARBT_POSITION_FLAGS, &arbtGuideEdge1Right);
+    FTBL.EV_AT_SetPos(ARBT_EG1L, ARBT_POSITION_FLAGS, &arbtGuideEdge1Left);
+    FTBL.EV_AT_SetAngY_0(ARBT_DUMB, ARBT_POSITION_FLAGS, &arbtGuideRotation, 0);
+    FTBL.EV_AT_SetAngY_0(ARBT_EG0R, ARBT_POSITION_FLAGS, &arbtGuideRotation, 0);
+    FTBL.EV_AT_SetAngY_0(ARBT_EG0L, ARBT_POSITION_FLAGS, &arbtGuideRotation, 0);
+    FTBL.EV_AT_SetAngY_0(ARBT_EG1R, ARBT_POSITION_FLAGS, &arbtGuideRotation, 0);
+    FTBL.EV_AT_SetAngY_0(ARBT_EG1L, ARBT_POSITION_FLAGS, &arbtGuideRotation, 0);
+    FTBL.AT_SetLocalBaseChara(ARBT_DUMN, crates->destinations[crates->index]);
+    FTBL.EV_AT_SetPos(ARBT_DUMN, ARBT_POSITION_FLAGS, &arbtDestinationOffset);
+    FTBL.EV_AT_SetAngY_0(ARBT_DUMN, ARBT_POSITION_FLAGS, &arbtDestinationRotation, 0);
+    return crates->limit - crates->index;
+}
+
+void QueueArbtMoveBox(ArbtCrateWork *crates, int delay)
+{
+    if (crates->moveTask == 0) {
+        crates->moveFrames = 100000000;
+        crates->moveTask = FTBL.HLib_EnqueueTaskWithParameter(ArbtMoveBox, 3, 11, 4, TASK_EVNT);
+        *(ArbtCrateWork **)FTBL.HLib_GetTaskParameter(crates->moveTask) = crates;
+        if (delay > 0)
+            FTBL.HLib_SetupTimedTask(crates->moveTask, delay);
+    }
+}
+
+void StopArbtMoveBox(ArbtCrateWork *crates, int frames)
+{
+    if (crates->moveTask) {
+        crates->moveFrames = frames;
+        if (!frames) {
+            FTBL.HLib_DestroyTaskInternal(crates->moveTask);
+            crates->moveTask = 0;
+        }
+    }
+}
+
+void ArbtMoveBox(void *data)
+{
+    ArbtCrateWork *crates = *(ArbtCrateWork **)data;
+    shen_name crate = crates->crates[crates->index];
+    shen_name base;
+    Vector3 hand, position;
+    base = FTBL.SCEN_FindChar_Wrapper(crate);
+    FTBL.AT_SetLocalBaseChara(crate, ARBT_RYO);
+    FTBL.GetCharaPosition(ARBT_RYO, 17, &hand, 0x1000000);
+    position.x = hand.x + 0.32f;
+    position.y = hand.y - 0.1f;
+    position.z = hand.z - 0.68f;
+    FTBL.EV_AT_SetPos(crate, ARBT_POSITION_FLAGS, &position);
+    FTBL.EV_AT_SetAngY_0(crate, ARBT_POSITION_FLAGS, &arbtMoveRotation, 0);
+    FTBL.AT_SetLocalBaseChara(crate, base);
+    if (--crates->moveFrames < 0) {
+        FTBL.HLib_DestroyCurrentTask();
+        crates->moveTask = 0;
+    }
+}
+
+void QueueArbtDropBox(ArbtCrateWork *crates, int delay)
+{
+    shen_name crate = crates->crates[crates->index], destination = crates->destinations[crates->index];
+    int stacked = crates->stacked[crates->index];
+    Vector3 position, target;
+    float dx, dz;
+    int frames;
+    if (crates->dropTask == 0) {
+        FTBL.GetCharaPosition(crate, -1, &position, 0);
+        FTBL.GetCharaPosition(destination, -1, &target, 0);
+        dx = position.x - target.x;
+        dz = position.z - (target.z + 0.7f);
+        if (dz < 0.0f)
+            dz = -dz;
+        crates->dropHeight = 0.0f;
+        frames = 10;
+        if (dx > 9.0f) {
+            if (dz < 0.3f) {
+                crates->dropHeight = 0.3f;
+                frames = 8;
+            }
+        } else if (dx < 1.0f) {
+            if (dz < 0.3f && stacked) {
+                crates->dropHeight = 0.7f;
+                frames = 5;
+            } else {
+                crates->dropHeight = 0.3f;
+                frames = 8;
+            }
+        }
+        EVT_AT_SetSound(257, delay + frames);
+        crates->dropTask = FTBL.HLib_EnqueueTaskWithParameter(ArbtDropBox, 4, 11, 4, TASK_EVNT);
+        *(ArbtCrateWork **)FTBL.HLib_GetTaskParameter(crates->dropTask) = crates;
+        if (delay > 0)
+            FTBL.HLib_SetupTimedTask(crates->dropTask, delay);
+    }
+}
+
+void ArbtDropBox(void *data)
+{
+    ArbtCrateWork *crates = *(ArbtCrateWork **)data;
+    shen_name crate = crates->crates[crates->index];
+    Vector3 position;
+    FTBL.GetCharaPosition(crate, -1, &position, 0);
+    if (position.y > 0.0f) {
+        position.y -= 0.08f;
+        if (crates->dropHeight > position.y) {
+            position.y = crates->dropHeight;
+            FTBL.HLib_DestroyCurrentTask();
+            crates->dropTask = 0;
+        }
+        FTBL.EV_AT_SetPos(crate, ARBT_POSITION_FLAGS, &position);
+    }
+}
+
+void ArbtMain(ArbtWork *work)
+{
+    int i;
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    work->characters = Queue_EVT_AT_ReadChr(work->self, arbtCharacters);
+    work->delivered = 0;
+    work->failures = 0;
+    work->idleWarnings = 0;
+    work->perfectStreak = 0;
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"ARBT", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "ARBT", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "ARBT", 0, 0);
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0018E000");
+    if (work->descriptor->mode == 1)
+        FTBL.EV_FreeAuthorPak(1, "0360");
+    else
+        FTBL.EV_FreeAuthorPak(1, "0018");
+    FTBL.GetCurrentDateTime((DateTime *)&work->time);
+    FTBL.GetCurrentDateTime((DateTime *)&work->endTime);
+    if (FTBL.EV_GetShenmueFlag(18)) {
+        FTBL.EV_stepSetFlags(18, 0);
+        work->firstJob = 1;
+        work->time.hour = 10;
+    } else {
+        work->firstJob = 0;
+        if (work->descriptor->shift == 0)
+            work->time.hour = 10;
+        else if (work->descriptor->shift == 1)
+            work->time.hour = 13;
+        else if (work->descriptor->shift == 2)
+            work->time.hour = 16;
+        else
+            work->time.hour = 20;
+    }
+    work->time.minute = 0;
+    work->time.second = 0;
+    work->endTime.minute = 0;
+    work->endTime.second = 0;
+    work->endTime.hour = work->time.hour + 1;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&work->time);
+    FTBL.shenSetTimeSimulationTo(1);
+    FTBL.EV_stepSetFlags(65, 0);
+    if (work->descriptor->mode == 1) {
+        EVT_AT_SetPos(ARBT_BASE, EVENT_CHARACTER_INVALID, 175.7f, 100.0f, 177.0f, 0);
+        EVT_AT_SetAngY(ARBT_BASE, EVENT_CHARACTER_INVALID, 270.0f, 0);
+        FTBL.FreeWAIR();
+        FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+        FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+        FTBL.UpdateWeather();
+        FTBL.EV_SetWeatherInstruction(12, 0);
+        FTBL.EV_SetWeatherInstruction(1920, 0);
+        FTBL.EV_lightLoad(ARBT_LIGHT_QCAE);
+        FTBL.PushGlobalLightingProgram();
+        FTBL.SetMapFieldDepthSlotEnabled(0, 2);
+        FTBL.SetMapFieldDepthSlotEnabled(0, 8);
+        FTBL.SetMapFieldDepthSlotEnabled(0, 9);
+        for (i = 0; i < 10; i++)
+            FTBL.SetObjectFlagByIndex(i, 0);
+    } else if (work->descriptor->shift == 3) {
+        EVT_AT_SetPosAng(ARBT_BASE, EVENT_CHARACTER_INVALID, 266.8f, 260.5f, 0.0f, 0);
+        FTBL.RefreshWeatherForCurrentTime(0);
+        FTBL.UpdateWeather();
+        FTBL.EV_SetWeatherInstruction(12, 0);
+        FTBL.EV_SetWeatherInstruction(1920, 0);
+        FTBL.EV_lightLoad(ARBT_AK00);
+        FTBL.PushGlobalLightingProgram();
+        FTBL.SetMapFieldDepthSlotEnabled(0, 8);
+        FTBL.SetMapFieldDepthSlotEnabled(0, 9);
+        FTBL.SetMapFieldDepthSlotEnabled(0, 10);
+        FTBL.SetObjectFlagByIndex(5, 0);
+        FTBL.SetObjectFlagByIndex(6, 0);
+        FTBL.SetObjectFlagByIndex(8, 0);
+        FTBL.SetObjectFlagByIndex(10, 0);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_RYO), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 1);
+    } else if (work->descriptor->shift == 1) {
+        EVT_AT_SetPosAng(ARBT_BASE, EVENT_CHARACTER_INVALID, 270.0f, 238.7f, 270.0f, 0);
+        FTBL.FreeWAIR();
+        FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+        FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+        FTBL.UpdateWeather();
+        FTBL.EV_SetWeatherInstruction(12, 0);
+        FTBL.EV_SetWeatherInstruction(1920, 0);
+        FTBL.EV_lightLoad(ARBT_LIGHT_AKA3);
+        FTBL.PushGlobalLightingProgram();
+        FTBL.SetMapFieldDepthSlotEnabled(0, 2);
+        FTBL.SetMapFieldDepthSlotEnabled(0, 9);
+        FTBL.SetMapFieldDepthSlotEnabled(0, 10);
+        FTBL.SetObjectFlagByIndex(10, 0);
+        HideArbtDockProps();
+        for (i = 0; i < 8; i++)
+            FTBL.SetObjectFlagByIndex(i, 0);
+    } else {
+        EVT_AT_SetPos(ARBT_BASE, EVENT_CHARACTER_INVALID, 225.2f, 100.0f, 247.5f, 0);
+        EVT_AT_SetAngY(ARBT_BASE, EVENT_CHARACTER_INVALID, 270.0f, 0);
+        FTBL.RefreshWeatherForCurrentTime(0);
+        FTBL.UpdateWeather();
+        FTBL.ReinitializeLights(1);
+        FTBL.SetLightFlagForIndex(0, 2);
+        FTBL.SetLightEntryIndex(0, 1);
+        FTBL.SetMapFieldDepthSlotEnabled(0, 8);
+        FTBL.SetMapFieldDepthSlotEnabled(0, 9);
+        FTBL.SetMapFieldDepthSlotEnabled(0, 10);
+        FTBL.SetObjectFlagByIndex(5, 0);
+        FTBL.SetObjectFlagByIndex(7, 0);
+        FTBL.SetObjectFlagByIndex(8, 0);
+        FTBL.SetObjectFlagByIndex(10, 0);
+    }
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+    FTBL.EV_EventSetUpHelpIcon_0(70, 0);
+    SetInitialArbtCarrySettings(&work->carry, 0);
+    CreateArbtCrates(&work->crates);
+}
+
+void ArbtCleanup(ArbtWork *work)
+{
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_RYO), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(ARBT_RYO));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(ARBT_PARTNER));
+    KillArbtPallets(&work->crates);
+    FTBL.EV_EventSetUpHelpIcon_0(0, 0);
+    FTBL.CheckHelpIcon(0, 0, 0);
+    FTBL.SetLoadingBusy();
+    FTBL.SetRenderClockAndCompassTo(0);
+    if (work->descriptor->mode == 1)
+        FTBL.EV_FreeAuthorPak(0, "0360");
+    else
+        FTBL.EV_FreeAuthorPak(0, "0018");
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_ControlPackageResources(0, 6, "ARBT", 0, 0);
+    ET_AT_KillWork(work->characters);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.SetPlayerControlEnabled(0);
+}
+
+void HideArbtDockProps(void)
+{
+    FTBL.SetDisplayFlagForProp(ARBT_PROP_R024, 0);
+    FTBL.SetDisplayFlagForProp(ARBT_PROP_R005, 0);
+    FTBL.SetDisplayFlagForProp(ARBT_PROP_R018, 0);
+    FTBL.SetDisplayFlagForProp(ARBT_PROP_R007, 0);
+    FTBL.SetDisplayFlagForProp(ARBT_PROP_R010, 0);
+    FTBL.SetDisplayFlagForProp(ARBT_PROP_R014, 0);
+    FTBL.SetDisplayFlagForProp(ARBT_PROP_R013, 0);
+    FTBL.SetDisplayFlagForProp(ARBT_PROP_R012, 0);
+    FTBL.SetDisplayFlagForProp(ARBT_PROP_R030, 0);
+}
+#endif
+#else
 #include "s2/areas/area_arbt.hpp"
 #include "s2/author.hpp"
 #include "s2/battle_qte_ui.hpp"
@@ -703,3 +1835,4 @@ void RunArbtEvent(std::uintptr_t argument) {
 }
 const ScriptAreaDefinition arbtScriptDefinition{.areaId = ARBT_AREA, .field04 = 0, .init = InitializeArbtEvent, .main = RunArbtEvent};
 } // namespace shenmue::s2::areas
+#endif

@@ -1,5 +1,27 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+#define AREA_ENTITY_BASE SHEN_NAME4('c', 'w', 'b', 's')
+#define AREA_ENTITY_PACKAGE SHEN_NAME4('C', 'H', 'A', 'W')
+typedef struct AreaEntityPlacement {
+    shen_name area;
+    Vector3 position;
+    int yaw;
+    int field14;
+    int field18;
+    shen_name character;
+} AreaEntityPlacement;
+
+extern const Vector3 areaEntityOffsets[3];
+extern AreaEntityPlacement areaEntityPlacements[22];
+void areaClearAreaEntities(void);
+void PlaceAreaEntityGroup(int placementIndex);
+void PlaceAreaEntity(int placementIndex, int characterIndex);
+#else
+#pragma once
+
 #include "common/types.hpp"
 #include "common/math.hpp"
 
@@ -63,3 +85,4 @@ void PlaceAreaEntityGroup(std::int32_t placementIndex);
 void PlaceAreaEntity(std::int32_t placementIndex, std::int32_t characterIndex);
 
 } // namespace shenmue::s2
+#endif

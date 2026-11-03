@@ -1,4 +1,59 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define QTCV_AREA SHEN_NAME4('Q', 'T', 'C', 'V')
+#define QTCV_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define QTCV_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QTCV_STAGE SHEN_NAME4('S', 'T', 'R', 'B')
+#define QTCV_SECOND_STAGE SHEN_NAME4('S', 'T', 'P', 'B')
+#define QTCV_DUMMY_PLAYER SHEN_NAME4('D', 'U', 'M', 'R')
+#define QTCV_DUMMY_REN SHEN_NAME4('D', 'U', 'M', 'L')
+#define QTCV_AUTHOR_1 SHEN_NAME4('A', 'T', 'H', '1')
+#define QTCV_AUTHOR_2 SHEN_NAME4('A', 'T', 'H', '2')
+#define QTCV_AUTHOR_0 SHEN_NAME4('A', 'T', 'H', '0')
+#define QTCV_DEBUG_ID 3
+#define QTCV_GRIP_HAND_POSE 11
+typedef struct QtcvConfiguration {
+    int kind, tail;
+} QtcvConfiguration;
+typedef struct QtcvPlacement {
+    Vector3 position;
+    float yaw;
+} QtcvPlacement;
+typedef struct QtcvEventWork {
+    EventReadCharactersWork *characters;
+    HLibTask *debugTask;
+    HLibTask *task;
+    HLibTaskCallback authorContinuation;
+    const QtcvConfiguration *configuration;
+    const QtcvPlacement *placement;
+    int dialogue;
+    float playerHeight;
+    int changedFlag330;
+} QtcvEventWork;
+extern int qtcvCarryState;
+void QtcvMain(void *argument);
+void QueueQtcvEvent(const QtcvConfiguration *configuration);
+void QtcvDebugExitCallback(void *data);
+void QtcvEndCallback(void *data);
+void QtcvDebugDisplayCallback(void *data);
+void SetQtcvEndContinuation(HLibTaskCallback *continuation);
+void QtcvStartCallback(void *data);
+void QtcvAlternateAuthorCallback(void *data);
+void AuthoredEventContinuationCallback(void *data);
+void QtcvAlternateFinishCallback(void *data);
+void QtcvEndThunkCallback(void *data);
+void InitializeQtcvResources(QtcvEventWork *work);
+void CleanupQtcvResources(QtcvEventWork *work);
+int PlayPlankCarryAuthoredTransition(int kind, int dialogue);
+int PlayPlankCarryAuthoredTransitionTail(int kind, int dialogue);
+int StartQtcvAlternateCamera(void);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/hlib.hpp"
@@ -54,3 +109,4 @@ void CleanupQtcvResources(QtcvEventWork *);
 void QtcvDormantBoundary();
 extern const ScriptAreaDefinition qtcvScriptDefinition;
 } // namespace shenmue::s2
+#endif

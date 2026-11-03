@@ -1,3 +1,406 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_knmn.hpp"
+#include "s2/training_seqp.hpp"
+
+void KnmnStartPracticeSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ KnmnPracticeWork *work=(KnmnPracticeWork*)ThrGetWork(thr);
+ KnmnPracticeControl *control=&work->control;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:ThrChangeSeq(thr,100,1);break;
+  case 100:
+   control->firstFailures[0]=0;control->firstFailures[1]=0;control->firstFailures[2]=0;
+   work->greeting=0;work->learnedMove=0;control->restCount=0;control->elapsed=0;
+   control->conversationActive=0;control->retained5a0=0;control->demonstrationCamera=0;
+   TrainingClearFailures(work);
+   FTBL.SetScreenFilmFade(30,255,0,0,0,0,0,0,0);
+   ThrMakeChild(thr,KnmnInitializeDemonstrationSequence,SHEN_NAME4('I','W','D','E'),work,0);
+   ThrSetChildDone(thr,0,0);ThrWaitChildResult(thr,105,1,0);break;
+  case 105:ThrSignalParent(thr,1);ThrKillOwn(thr);break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnFinishPracticeSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:ThrChangeSeq(thr,100,1);break;
+  case 100:
+   FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO),0,0);
+   FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_KEM),0,0);
+   ThrSignalParent(thr,1);ThrKillOwn(thr);break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnAwardMoveSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ KnmnPracticeWork *work=(KnmnPracticeWork*)ThrGetWork(thr);
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:ThrChangeSeq(thr,100,1);break;
+  case 100:ThrWaitFade(thr,101,1);break;
+  case 101:
+   if(work->learnedMove==-1)ThrChangeSeq(thr,103,1);
+   else{
+    FTBL.SetMoveLearningEntry(0,1,21,12);FTBL.SetNewEwzoTypeForMoveLearned(0,1,21);
+    work->resultFrames=150;ThrChangeSeq(thr,102,1);
+   }
+   break;
+  case 102:
+   work->resultFrames--;
+   if(FTBL.GetCurrentControlInput(1)==512||!work->resultFrames){FTBL.SetNewEwzoTypeForMoveLearned(1,0,0);ThrChangeSeq(thr,103,1);}break;
+  case 103:ThrSignalParent(thr,1);ThrKillOwn(thr);break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnFollowTeacher(void)
+{
+ Vector3 target;
+ FTBL.GetCharaPosition(KNMN_RYO,5,&target,0x40000000);
+ FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_KEM),&target,0);
+}
+
+void KnmnFeedbackOpening(void *data)
+{
+ KnmnPracticeWork *work=(KnmnPracticeWork*)ThrGetWork((Thr*)data);
+ switch(work->greeting){
+ case 0:
+  FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_KEM),0,0);
+  FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5195,0);break;
+ case 1:
+  FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_KEM),0,0);
+  FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5196,0);break;
+ case 2:
+  FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_KEM),0,0);
+  FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5197,0);break;
+ case 3:
+  if(FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(KNMN_KEM),65,1,0)){
+   KnmnFollowTeacher();
+   FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5193,0);
+  }
+  break;
+ }
+ work->greeting++;
+ if(work->greeting>3)work->greeting=0;
+}
+
+void KnmnFeedbackClosing(void *data)
+{
+ if(FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(KNMN_KEM),65,1,0)){
+  KnmnFollowTeacher();
+  FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5193,0);
+ }
+}
+
+void KnmnQteFailureSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ int mode=(unsigned short)ThrGetUser(thr,0);const char *dialogue;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   KnmnFeedbackOpening(thr);
+   ThrWaitFrames(thr,100,1,30);
+   break;
+  case 100:
+   switch(mode){case 0:dialogue="0026B056";break;case 1:dialogue="0026B056";break;default:dialogue="0026B056";break;}
+   FTBL.EV_PlayDialogue("0026B056");(void)dialogue;
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   KnmnFeedbackClosing(thr);
+   ThrSignalParent(thr,1);
+   knmnQteDialogue=0;
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnIdleAdviceSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B039");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnStayAndStrikeSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   KnmnFeedbackOpening(thr);
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B038");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   KnmnFeedbackClosing(thr);
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnRelaxShouldersSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   KnmnFeedbackOpening(thr);
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B056");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   KnmnFeedbackClosing(thr);
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnRelaxShouldersLegsSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   KnmnFeedbackOpening(thr);
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B056");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   KnmnFeedbackClosing(thr);
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnRelaxShouldersArmsSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   KnmnFeedbackOpening(thr);
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B056");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   KnmnFeedbackClosing(thr);
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnRelaxWithoutGestureSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B056");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnUseHandsSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   KnmnFeedbackOpening(thr);
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B037");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   KnmnFeedbackClosing(thr);
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnUseLegsSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   KnmnFeedbackOpening(thr);
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B036");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   KnmnFeedbackClosing(thr);
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnHandsSlowSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   KnmnFeedbackOpening(thr);
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B040");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   KnmnFeedbackClosing(thr);
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnHandsLegsTogetherSequence(void *data)
+{
+ Thr *thr=(Thr*)data;
+ ThrResetLoopCount(thr);
+ do{
+  ThrBeginStep(thr);
+  switch(ThrGetSeq(thr)){
+  case 0:
+   KnmnFeedbackOpening(thr);
+   ThrChangeSeq(thr,100,1);
+   break;
+  case 100:
+   FTBL.EV_PlayDialogue("0026B041");
+   ThrWaitConversation(thr,0xffff,1,60);
+   break;
+  case 101:
+   KnmnFeedbackClosing(thr);
+   ThrSignalParent(thr,1);
+   ThrKillOwn(thr);
+   break;
+  default:ThrProcess(thr);break;
+  }
+  ThrEndStep(thr);
+ }while(ThrIsContinue(thr));
+}
+
+void KnmnUnclassifiedFeedbackSequence(void *data)
+{
+ KnmnRelaxWithoutGestureSequence(data);
+}
+#else
 #include "s2/areas/knmn_practice.hpp"
 #include "s2/blur_figure_pose.hpp"
 #include "s2/character.hpp"
@@ -259,3 +662,4 @@ void KnmnRepeatFeedbackSequence(void *data) {
     } while (sequence.continueLoop);
 }
 } // namespace shenmue::s2::areas
+#endif

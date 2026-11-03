@@ -1,3 +1,231 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0048.hpp"
+#include "s2/event_queued_dc.h"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void E0048Main(void)
+{
+    HLibTask *task;
+    E0048TaskParameter *parent;
+    FTBL.SetPlayerControlEnabled(0);
+    task = FTBL.HLib_EnqueueTaskWithParameter(E0048MainCallback, 4, 11, sizeof(E0048TaskParameter), TASK_EVNT);
+    parent = (E0048TaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->state = 1;
+    parent->selection = (unsigned int)g_entryPoint > 5 ? 0 : g_entryPoint;
+    SetupE0048Environment();
+    Queue_EVT_UTL_LoadNPCChara_3(area0048Characters[parent->selection], parent->self);
+}
+#else
+unsigned short area0048FirePalette[] = {
+    0x311, 0x311, 0x411, 0x511, 0x612, 0x712, 0xa32, 0xb32, 0xb42, 0xc50, 0xd70, 0xe70, 0xe80, 0xfa0, 0xfc3, 0xfd6};
+shen_name area0048Characters0[] = {SHEN_NAME4('R', 'K', 'N', '_'), SHEN_NAME4('S', 'B', 'K', '_'), SHEN_NAME4('S', 'K', 'H', '_'), INVALID_CHARACTER};
+shen_name area0048Characters1[] = {SHEN_NAME4('C', 'H', 'O', '_'), SHEN_NAME4('S', 'B', 'O', '_'), SHEN_NAME4('S', 'C', 'X', '_'),
+    SHEN_NAME4('Y', 'O', 'H', '_'), SHEN_NAME4('G', 'E', 'N', '_'), SHEN_NAME4('E', 'S', 'Y', '_'), INVALID_CHARACTER};
+shen_name area0048Characters2[] = {SHEN_NAME4('C', 'H', 'O', '_'), INVALID_CHARACTER};
+shen_name area0048Characters3[] = {SHEN_NAME4('C', 'H', 'O', '_'), SHEN_NAME4('S', 'E', 'E', '_'), SHEN_NAME4('I', 'I', 'I', '_'),
+    SHEN_NAME4('E', 'S', 'Y', '_'), SHEN_NAME4('G', 'E', 'N', '_'), SHEN_NAME4('Y', 'U', 'A', '_'), INVALID_CHARACTER};
+shen_name area0048Characters4[] = {SHEN_NAME4('C', 'H', 'O', '_'), SHEN_NAME4('E', 'S', 'Y', '_'), SHEN_NAME4('G', 'E', 'N', '_'),
+    SHEN_NAME4('I', 'I', 'I', '_'), SHEN_NAME4('S', 'E', 'E', '_'), SHEN_NAME4('M', 'R', 'C', '_'), SHEN_NAME4('R', 'K', 'N', '_'),
+    SHEN_NAME4('S', 'Y', 'E', '_'), SHEN_NAME4('Y', 'U', 'A', '_'), INVALID_CHARACTER};
+shen_name area0048Characters5[] = {SHEN_NAME4('C', 'H', 'O', '_'), SHEN_NAME4('S', 'E', 'E', '_'), SHEN_NAME4('I', 'I', 'I', '_'),
+    SHEN_NAME4('E', 'S', 'Y', '_'), SHEN_NAME4('G', 'E', 'N', '_'), SHEN_NAME4('Y', 'U', 'A', '_'), INVALID_CHARACTER};
+shen_name *area0048Characters[10] = {area0048Characters0, area0048Characters1, area0048Characters2, area0048Characters3, area0048Characters4,
+    area0048Characters5};
+static unsigned int fire0048;
+
+void E0048MainCallback(void *taskData)
+{
+    E0048TaskParameter *parent = (E0048TaskParameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        QueueE0048Loop(parent);
+        break;
+    case 3:
+        CleanupE0048(parent);
+        break;
+    }
+}
+
+void QueueE0048Loop(E0048TaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0048LoopCallback, 4, 11, sizeof(E0048LoopTaskParameter), TASK_EVNT);
+    E0048LoopTaskParameter *child = (E0048LoopTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    child->parent = parent;
+    switch (parent->selection) {
+    case 0:
+        FTBL.EV_lightLoad(AREA_0048_L001);
+        break;
+    case 1:
+        FTBL.EV_lightLoad(AREA_0048_L201);
+        break;
+    case 2:
+        FTBL.SetMapModelDataDefaultVertexShader();
+        FTBL.EV_lightLoad(AREA_0048_L701);
+        FTBL.PushGlobalLightingProgram();
+        break;
+    case 3:
+        FTBL.EV_lightLoad(AREA_0048_L301);
+        break;
+    case 4:
+        FTBL.EV_lightLoad(AREA_0048_L401);
+        break;
+    case 5:
+        FTBL.EV_lightLoad(AREA_0048_L501);
+        break;
+    }
+    SetupE0048Characters(child->parent->selection);
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void E0048LoopCallback(void *taskData)
+{
+    E0048LoopTaskParameter *child = (E0048LoopTaskParameter *)taskData;
+    Vector3 position;
+    Vector3 offset;
+    Vector3i rotation;
+    short frame;
+    offset.x = 0.0f;
+    offset.y = 0.14f;
+    offset.z = 0.0f;
+    frame = FTBL.EV_authSceneCtrl(-6);
+    if (frame == 1)
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    if (child->parent->selection == 2) {
+        if (frame == 1)
+            FTBL.ResumeParticleEffect(4, fire0048);
+        else if (frame > 1) {
+            FTBL.GetCharaPosition(AREA_0048_A412, -1, &position, 0x40000000);
+            FTBL.GetScenarioCharacterEulerAngles(AREA_0048_A412, &rotation, 0x40000000);
+            FTBL.ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+            FTBL.SetParticleEffectPosition(4, fire0048, &offset, &offset);
+        }
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        child->parent->state = 3;
+        RestoreE0048Characters(child->parent->selection);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void SetupE0048Environment(void)
+{
+    EventDateTime time;
+    Vector3 position;
+    position.x = 106.46f;
+    position.y = 90.1f;
+    position.z = 152.23f;
+    fire0048 = FTBL.CreateFireEffect(&position, 0.5f, 0.5f, 0, 0);
+    FTBL.SetFirePalette(fire0048, area0048FirePalette);
+    FTBL.SetFireFalloffScalar(fire0048, -0.05f);
+    FTBL.SetFireFalloff(fire0048, 3.14f, 4.94f, 0.78f);
+    FTBL.SetParticleEffectSize(4, fire0048, 0.025f, 0.05f);
+    if ((unsigned int)g_entryPoint > 2 || g_entryPoint == 1) {
+        FTBL.GetCurrentDateTime((DateTime *)&time);
+        time.hour = 21;
+        time.minute = 0;
+        FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+    }
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    FTBL.EV_SetWeatherInstruction(1920, 0);
+    FTBL.SetMapModelDataDefaultVertexShader();
+    FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+    FTBL.PushGlobalLightingProgram();
+    FTBL.EV_FreeAuthorPak(1, "0048");
+}
+
+void CleanupE0048(E0048TaskParameter *parent)
+{
+    EventDateTime time;
+    EVT_UTL_FreeNPCChara(area0048Characters[parent->selection]);
+    FTBL.FreeParticleEffect(4, fire0048);
+    FTBL.EV_FreeAuthorPak(0, "0048");
+    switch (parent->selection) {
+    case 0:
+        FTBL.HLib_DestroyTask(parent->self);
+        FTBL.EV_scenQueueLoad(g_actNumber, AREA_0048_YTQB, 0);
+        break;
+    case 2:
+        FTBL.HLib_DestroyTask(parent->self);
+        AdvanceSleepToMorning();
+        FTBL.GetCurrentDateTime((DateTime *)&time);
+        time.hour = 8;
+        time.minute = 30;
+        FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+        FTBL.EV_scenQueueLoad(g_actNumber, AREA_0048_WB00, 33);
+        break;
+    default:
+        FTBL.HLib_DestroyTask(parent->self);
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+        break;
+    }
+}
+
+void SetupE0048Characters(short selection)
+{
+    int i;
+    HideAuthorCharacter(RYO_CHARACTER);
+    HideAuthorProp(AREA_0048_A047);
+    HideAuthorProp(AREA_0048_A021_SHIFT);
+    HideAuthorProp(AREA_0048_A020_SHIFT);
+    HideAuthorProp(AREA_0048_A073);
+    HideAuthorProp(AREA_0048_A020);
+    HideAuthorProp(AREA_0048_A022);
+    HideAuthorProp(AREA_0048_A127);
+    HideAuthorProp(AREA_0048_A128);
+    HideAuthorProp(AREA_0048_A009);
+    HideAuthorProp(AREA_0048_A041);
+    HideAuthorProp(AREA_0048_A021);
+    HideAuthorProp(AREA_0048_A417);
+    HideAuthorProp(AREA_0048_AA84);
+    HideAuthorProp(AREA_0048_A412);
+    HideAuthorProp(AREA_0048_AA63);
+    if (selection == 4)
+        FTBL.LoadBlurModelForCharacter_0(AREA_0048_SYE, "SYE_B.MT7", 1.0f);
+    for (i = 0; area0048Characters[selection][i] != INVALID_CHARACTER; i++)
+        HideAuthorCharacter(area0048Characters[selection][i]);
+}
+
+void RestoreE0048Characters(short selection)
+{
+    int i;
+    ShowAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorProp(AREA_0048_A047);
+    ShowAuthorProp(AREA_0048_A021_SHIFT);
+    ShowAuthorProp(AREA_0048_A020_SHIFT);
+    ShowAuthorProp(AREA_0048_A073);
+    ShowAuthorProp(AREA_0048_A020);
+    ShowAuthorProp(AREA_0048_A022);
+    ShowAuthorProp(AREA_0048_A127);
+    ShowAuthorProp(AREA_0048_A128);
+    ShowAuthorProp(AREA_0048_A009);
+    ShowAuthorProp(AREA_0048_A041);
+    ShowAuthorProp(AREA_0048_A021);
+    ShowAuthorProp(AREA_0048_A417);
+    ShowAuthorProp(AREA_0048_AA84);
+    ShowAuthorProp(AREA_0048_A412);
+    ShowAuthorProp(AREA_0048_AA63);
+    for (i = 0; area0048Characters[selection][i] != INVALID_CHARACTER; i++)
+        ShowAuthorCharacter(area0048Characters[selection][i]);
+}
+
+#include "s2/events/event_author_dc.h"
+
+void HideAuthorProp(shen_name prop)
+{
+    Vector3 position = {0.0f, 0.0f, 0.0f};
+    FTBL.EV_AT_SetPos(prop, 0x78000000, &position);
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 0);
+}
+
+void ShowAuthorProp(shen_name prop)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 1);
+}
+#endif
+#else
 #include "s2/areas/area_0048.hpp"
 #include "s2/areas/area_0047.hpp"
 #include "common/math.hpp"
@@ -231,3 +459,4 @@ void E0048LoopCallback(void *taskData) {
 } // namespace
 const ScriptAreaDefinition area0048ScriptDefinition{.areaId = AREA_0048_AREA, .field04 = 0, .init = E0048Init, .main = E0048Main};
 } // namespace shenmue::s2::areas
+#endif

@@ -1,4 +1,45 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+
+#define EXQT_MACHINE SHEN_NAME4('Q', 'T', 'E', 'M')
+#define EXQT_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+typedef struct ExciteInput {
+    unsigned int reserved00[2];
+    unsigned int required, pressed, reserved10, window, reserved18, elapsed;
+    int attempts;
+    unsigned int part;
+} ExciteInput;
+typedef struct ExciteState {
+    unsigned int reserved00;
+    void *motion;
+    int score, best, continued, successes;
+    float cumulativeBonus, timingBonus;
+    unsigned int state, waitElapsed;
+    int waitTarget;
+    unsigned int reserved2c, cycle;
+    unsigned char lives, reserved35[7];
+    float timeScale, patternScale;
+    int tier, retryFrames;
+    unsigned short patternStage;
+    unsigned char patternByte, reserved4f;
+    int immediateAdvance;
+    ExciteInput input;
+} ExciteState;
+typedef struct ExcitePartWork {
+    int part, enabled;
+} ExcitePartWork;
+typedef struct ExciteScoreWork {
+    int ticks, score;
+    Vector3 position;
+} ExciteScoreWork;
+void ClearExciteInput(ExciteInput *input);
+void SetExciteRequiredInput(ExciteInput *input, unsigned int mask);
+int PollGameCenterInput(ExciteInput *input);
+int ConsumeGameCenterInput(ExciteInput *input);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/hlib.hpp"
 #include "common/math.hpp"
@@ -97,3 +138,4 @@ void ExciteHighScoreReaction();
 void ExciteFinishedReaction(std::int32_t, std::int32_t);
 extern const ScriptAreaDefinition exqtScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

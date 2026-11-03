@@ -1,4 +1,62 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/common/et_street_debug.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define SFTC_WD2 SHEN_NAME4('W', 'D', '2', '_')
+#define SFTC_SF5 SHEN_NAME4('S', 'F', '5', '_')
+#define SFTC_CHN SHEN_NAME4('C', 'H', 'N', '_')
+#define SFTC_STAG SHEN_NAME4('S', 'T', 'A', 'G')
+#define SFTC_PACKAGE SHEN_NAME4('Q', '1', '0', '0')
+#define SFTC_OMAKE_SCENE SHEN_NAME4('O', 'M', 'A', 'K')
+#define SFTC_QRON_SCENE SHEN_NAME4('Q', 'R', '0', '0')
+#define SFTC_ACCEPT_HAND_POSE 41
+
+typedef struct SftcSmokeWork {
+    int frame;
+    StreetFightEventWork *event;
+} SftcSmokeWork;
+
+void SftcMain(StreetFightStartParameters *start);
+void QueueNormal(StreetFightStartParameters *start);
+void LoadNormalResources(StreetFightEventWork *work);
+void PlaceNormal(StreetFightEventWork *work);
+StreetFightEventWork *InitializeNormal(HLibTask *task);
+void NormalDebugCallback(void *data);
+void CleanupNormalCallback(void *data);
+void MainCallback(void *data);
+void RetryBeginCallback(void *data);
+void RetryChoiceCallback(void *data);
+void RetryResetCallback(void *data);
+void RetryCancelCallback(void *data);
+int FirstIntroConversation(void *data);
+int RepeatIntroConversation(void *data);
+int AcceptConversation(void *data);
+int DeclineConversation(void *data);
+int InsufficientConversation(void *data);
+void BattleEntryCallback(void *data);
+void BattlePreEventCallback(void *data);
+void BattlePreInitCallback(void *data);
+void BattleStartCallback(void *data);
+void BattleReadyGoCallback(void *data);
+void BattleReleaseCallback(void *data);
+void BattleWaitCallback(void *data);
+void SmokeControlCallback(void *data);
+void BattleRingOutCallback(void *data);
+void BattleWaitFadeCallback(void *data);
+void BattleEndCallback(void *data);
+int VictoryConversation(void *data);
+int VictoryAppearanceConversation(void *data);
+int DefeatConversation(void *data);
+int TimeoutConversation(void *data);
+void AllocateBattleVoices(StreetFightEventWork *work);
+short SelectBattleVoice(unsigned short *voices, unsigned short *index, int count);
+int SelectFighterBattleVoice(void *data);
+int SelectMotionBattleVoice(void *data);
+int SelectForcedBattleVoice(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/street_fight_event.hpp"
 namespace shenmue::s2 {
@@ -37,3 +95,4 @@ inline constexpr Vector3 SFTC_FIGHTER_VICTORY_POSITION{-0.5879999995231628f, 0.0
 inline constexpr Vector3 SFTC_VICTORY_APPEARANCE_POSITION{132.5500030517578f, 100.0f, 106.63999938964844f};
 extern const ScriptAreaDefinition areaSftcScriptDefinition;
 } // namespace shenmue::s2
+#endif

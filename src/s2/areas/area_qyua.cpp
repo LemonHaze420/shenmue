@@ -1,3 +1,436 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_qyua.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void QyuaEntry(void *argument)
+{
+    QyuaMain(argument);
+}
+#elif defined(SHENMUE_EVENT_QYUA_SEGMENTS)
+int BeginQyuaKnifeQte(int delay)
+{
+    int frames = delay + 60;
+    qyuaSegmentState = 0;
+    EVT_AT_SetVoice("0217C002", delay + 35);
+    EVT_AT_SetPos(QYUA_PLAYER, QYUA_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAngY(QYUA_PLAYER, QYUA_BASE, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_REN, QYUA_PLAYER, -0.15029f, 0.0f, 0.38437f, delay);
+    EVT_AT_SetAngY(QYUA_REN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_YUAN, QYUA_PLAYER, -1.97384f, 0.0f, 0.02722f, delay);
+    EVT_AT_SetAngY(QYUA_YUAN, QYUA_PLAYER, 0.0f, delay);
+    FTBL.SetClothFlag(FTBL.ctrlGetCharaByName(QYUA_PLAYER), 16, 1);
+    FTBL.toggleOsagFlags(FTBL.ctrlGetCharaByName(QYUA_REN));
+    EVT_AT_SetCam(7800, QYUA_DUMMY_RYO, QYUA_DUMMY_RYO, 0, 0, delay);
+    EVT_AT_SetMot(QYUA_PLAYER, 0x2565, 0.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetMot(QYUA_REN, 0x2545, 0.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetMot(QYUA_YUAN, 0x2590, 0.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetFaceLooks(QYUA_PLAYER, 1, 1, 1.0f, delay);
+    EVT_AT_SetFaceLooks(QYUA_REN, 1, 1, 1.0f, delay);
+    EVT_AT_SetFaceLooks(QYUA_YUAN, 13, 1, 1.0f, delay);
+    return frames;
+}
+
+int BeginQyuaSecondKnifeQte(int delay)
+{
+    int frames = delay + 70;
+    qyuaSegmentState = 0;
+    EVT_AT_SetVoice("0217C003", delay + 50);
+    EVT_AT_SetPos(QYUA_PLAYER, QYUA_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAngY(QYUA_PLAYER, QYUA_BASE, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_REN, QYUA_PLAYER, -0.15029f, 0.0f, 0.38437f, delay);
+    EVT_AT_SetAngY(QYUA_REN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_YUAN, QYUA_PLAYER, -1.97384f, 0.0f, 0.02722f, delay);
+    EVT_AT_SetAngY(QYUA_YUAN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetCam(7801, QYUA_DUMMY_RYO, QYUA_DUMMY_RYO, 0, 0, delay);
+    EVT_AT_SetCam(7804, QYUA_BASE, QYUA_BASE, 0, 0, delay + 60);
+    EVT_AT_SetMot(QYUA_PLAYER, 0x2565, 60.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_REN, 0x2545, 60.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_YUAN, 0x2590, 60.0f, 1.0f, 0x44000000, delay);
+    return frames;
+}
+
+int PlayQyuaFirstKnifeFailure(int delay)
+{
+    int frames = delay + 60;
+    qyuaSegmentState = 0;
+    EVT_AT_SetPos(QYUA_PLAYER, QYUA_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAngY(QYUA_PLAYER, QYUA_BASE, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_REN, QYUA_PLAYER, -0.17183f, 0.0f, 0.42309001f, delay);
+    EVT_AT_SetAngY(QYUA_REN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_YUAN, QYUA_PLAYER, -1.77588f, 0.0f, -0.12269f, delay);
+    EVT_AT_SetAngY(QYUA_YUAN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetCam(7802, QYUA_DUMMY_YUAN, QYUA_DUMMY_YUAN, 0, 0, delay);
+    EVT_AT_SetMot(QYUA_PLAYER, 0x2562, 36.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_REN, 0x2542, 36.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_YUAN, 0x258d, 36.0f, 1.0f, 0x44000000, delay);
+    return frames;
+}
+
+int HoldQyuaSecondKnifeQte(int delay)
+{
+    qyuaSegmentState = 0;
+    return delay;
+}
+
+int BeginQyuaThirdKnifeQte(int delay)
+{
+    int frames = delay + 115;
+    qyuaSegmentState = 0;
+    EVT_AT_SetVoice("0217C004", delay + 25);
+    EVT_AT_SetVoice("0217C007", delay + 80);
+    EVT_AT_SetPos(QYUA_PLAYER, QYUA_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAngY(QYUA_PLAYER, QYUA_BASE, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_REN, QYUA_PLAYER, -0.15029f, 0.0f, 0.38437f, delay);
+    EVT_AT_SetAngY(QYUA_REN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_YUAN, QYUA_PLAYER, -1.97384f, 0.0f, 0.02722f, delay);
+    EVT_AT_SetAngY(QYUA_YUAN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetCam(7805, QYUA_BASE, QYUA_BASE, 0, 0, delay);
+    EVT_AT_SetCam(7807, QYUA_BASE, QYUA_BASE, 0, 0, delay + 20);
+    EVT_AT_SetCam(7808, QYUA_DUMMY_YUAN, QYUA_DUMMY_YUAN, 0, 0, delay + 60);
+    EVT_AT_SetCam(7817, QYUA_DUMMY_YUAN, QYUA_DUMMY_YUAN, 0, 0, delay + 92);
+    EVT_AT_SetMot(QYUA_PLAYER, 0x2565, 130.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_REN, 0x2545, 130.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_YUAN, 0x2590, 130.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_DispBlur(QYUA_REN, 7, 12, 1, 0, 25, delay + 10);
+    return frames;
+}
+
+int PlayQyuaSecondKnifeFailure(int delay)
+{
+    int frames = delay + 45;
+    qyuaSegmentState = 0;
+    EVT_AT_SetPos(QYUA_PLAYER, QYUA_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAngY(QYUA_PLAYER, QYUA_BASE, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_REN, QYUA_PLAYER, -0.079530001f, 0.0f, 0.42789f, delay);
+    EVT_AT_SetAngY(QYUA_REN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_YUAN, QYUA_PLAYER, -2.0088601f, 0.0f, 0.31832999f, delay);
+    EVT_AT_SetAngY(QYUA_YUAN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetCam(7809, QYUA_DUMMY_RYO, QYUA_DUMMY_RYO, 0, 0, delay);
+    EVT_AT_SetMot(QYUA_PLAYER, 0x2563, 112.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_REN, 0x2543, 112.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_YUAN, 0x258e, 112.0f, 1.0f, 0x44000000, delay);
+    return frames;
+}
+
+int HoldQyuaThirdKnifeQte(int delay)
+{
+    qyuaSegmentState = 0;
+    return delay;
+}
+
+int PlayQyuaKnifeSuccess(int delay)
+{
+    int frames = delay + 135;
+    qyuaSegmentState = 0;
+    EVT_AT_SetVoice("0217A002", delay + 5);
+    EVT_AT_SetVoice("0217B002", delay + 40);
+    EVT_AT_SetVoice("0217C006", delay + 70);
+    EVT_AT_CharaDisp(QYUA_KNIFE, delay + 20, 1);
+    EVT_AT_SetSound(1954, delay + 30);
+    EVT_AT_SetPos(QYUA_PLAYER, QYUA_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAngY(QYUA_PLAYER, QYUA_BASE, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_PLAYER, QYUA_BASE, 0.0f, 0.0f, 0.0f, delay + 15);
+    EVT_AT_SetAngY(QYUA_PLAYER, QYUA_BASE, 0.0f, delay + 15);
+    EVT_AT_SetPos(QYUA_REN, QYUA_PLAYER, -0.15029f, 0.0f, 0.38437f, delay);
+    EVT_AT_SetAngY(QYUA_REN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_REN, QYUA_PLAYER, -0.15029f, 0.0f, 0.38437f, delay + 15);
+    EVT_AT_SetAngY(QYUA_REN, QYUA_PLAYER, 0.0f, delay + 15);
+    EVT_AT_SetPos(QYUA_YUAN, QYUA_PLAYER, -1.97384f, 0.0f, 0.02722f, delay);
+    EVT_AT_SetAngY(QYUA_YUAN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_YUAN, QYUA_PLAYER, -1.97384f, 0.0f, 0.02722f, delay + 15);
+    EVT_AT_SetAngY(QYUA_YUAN, QYUA_PLAYER, 0.0f, delay + 15);
+    EVT_AT_SetCam(7816, QYUA_DUMMY_RYO, QYUA_DUMMY_RYO, 0, 0, delay);
+    EVT_AT_SetCam(7811, QYUA_DUMMY_RYO, QYUA_DUMMY_RYO, 0, 0, delay + 15);
+    EVT_AT_SetCam(7812, QYUA_DUMMY_REN, QYUA_DUMMY_REN, 0, 0, delay + 40);
+    EVT_AT_SetCam(7813, QYUA_DUMMY_RYO, QYUA_DUMMY_RYO, 0, 0, delay + 95);
+    EVT_AT_SetMot(QYUA_PLAYER, 0x2565, 245.0f, 0.1f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_PLAYER, 0x2565, 245.0f, 1.0f, 0x44000000, delay + 15);
+    EVT_AT_SetMot(QYUA_REN, 0x2545, 245.0f, 0.1f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_REN, 0x2545, 245.0f, 1.0f, 0x44000000, delay + 15);
+    EVT_AT_SetMot(QYUA_YUAN, 0x2590, 245.0f, 0.1f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_YUAN, 0x2590, 245.0f, 1.0f, 0x44000000, delay + 15);
+    EVT_AT_DispBlur(QYUA_PLAYER, 6, 12, 1, 0, 8, delay + 15);
+    EVT_AT_DispBlur(QYUA_REN, 7, 12, 1, 0, 18, delay + 38);
+    return frames;
+}
+
+int PlayQyuaKnifeRecovery(int delay)
+{
+    int frames = delay + 50;
+    qyuaSegmentState = 0;
+    EVT_AT_SetPos(QYUA_PLAYER, QYUA_BASE, 0.0f, 0.0f, 0.0f, delay);
+    EVT_AT_SetAngY(QYUA_PLAYER, QYUA_BASE, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_REN, QYUA_PLAYER, 0.13912f, 0.0f, 0.36248001f, delay);
+    EVT_AT_SetAngY(QYUA_REN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetPos(QYUA_YUAN, QYUA_PLAYER, -1.28835f, 0.0f, 0.32345f, delay);
+    EVT_AT_SetAngY(QYUA_YUAN, QYUA_PLAYER, 0.0f, delay);
+    EVT_AT_SetCam(7814, QYUA_BASE, QYUA_BASE, 0, 0, delay);
+    EVT_AT_SetMot(QYUA_PLAYER, 0x2564, 235.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_REN, 0x2544, 235.0f, 1.0f, 0x44000000, delay);
+    EVT_AT_SetMot(QYUA_YUAN, 0x258f, 235.0f, 1.0f, 0x44000000, delay);
+    return frames;
+}
+#else
+static const int qyuaDefaultArguments[1] = {0};
+
+void QyuaMain(void *argument)
+{
+    HLibTask *task;
+    QyuaEventWork *work;
+    HLibTask *debugTask;
+    task = FTBL.HLib_EnqueueTaskWithParameter(QyuaStartCallback, 4, 11, sizeof(QyuaEventWork), TASK_EVNT);
+    work = (QyuaEventWork *)FTBL.HLib_GetTaskParameter(task);
+    debugTask = FTBL.HLib_EnqueueTaskWithParameter(QyuaDebugDisplayCallback, 3, 11, sizeof(QyuaEventWork *), TASK_EVNT);
+    *(QyuaEventWork **)FTBL.HLib_GetTaskParameter(debugTask) = work;
+    work->self = task;
+    work->debugTask = debugTask;
+    if (argument)
+        work->arguments = argument;
+    else
+        work->arguments = qyuaDefaultArguments;
+    InitializeQyuaResources(work);
+    EventDebugRegister(QYUA_DEBUG_ID, QyuaDebugExitCallback, work, 2000000000);
+}
+
+void QyuaDebugExitCallback(void *data)
+{
+    FinishQyuaEvent((QyuaEventWork *)data);
+}
+
+void FinishQyuaEvent(QyuaEventWork *work)
+{
+    RestoreQyuaResources(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->debugTask);
+    FTBL.EV_HLKillOtherHierarchyTask(work->self);
+    EventDebugUnregister(QYUA_DEBUG_ID);
+    FTBL.EV_stepSetFlags(QYUA_FINISHED_STEP_FLAG, 0);
+    if (g_currentMap == AREA_QYUA) {
+        FTBL.scenSetTaskFlags(6);
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+    }
+}
+
+void QyuaDebugDisplayCallback(void *data)
+{
+    FTBL.SetDebugScreenTextPosition(2, 23);
+}
+
+void ResetQyuaFight(QyuaFight *fight)
+{
+    fight->nextCallback = QyuaWaitOpeningAuthorCallback;
+    fight->succeeded = 0;
+}
+
+shen_name qyuaCharacters[] = {QYUA_PLAYER, QYUA_REN, QYUA_YUAN, QYUA_TOGYU, EVENT_CHARACTER_INVALID};
+int qyuaSegmentState = 0;
+Vector3 qyuaKnifePosition = {0.071784f, -0.023756f, -0.01023f};
+Vector3i qyuaKnifeRotation = {-16690, 2613, -11462};
+
+void QyuaStartCallback(void *data)
+{
+    QyuaEventWork *work = (QyuaEventWork *)data;
+    EventDebugCheck(QYUA_DEBUG_ID, 4);
+    ResetQyuaFight(&work->fight);
+    FTBL.LoadBlurModelForCharacter_0(QYUA_REN, "REN_B.MT7", 1.0f);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QYUA_PLAYER));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QYUA_REN));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QYUA_YUAN));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QYUA_TOGYU));
+    Queue_EVT_AT_Cling(QYUA_KNIFE, QYUA_YUAN, 14, &qyuaKnifePosition, &qyuaKnifeRotation, 0, 0);
+    FTBL.EV_cuffsAttach(QYUA_PLAYER, 1, QYUA_REN, 0, 0.3f);
+    FTBL.AT_SetLocalBaseChara(QYUA_DUMMY_RYO, QYUA_PLAYER);
+    FTBL.AT_SetLocalBaseChara(QYUA_DUMMY_REN, QYUA_REN);
+    FTBL.AT_SetLocalBaseChara(QYUA_DUMMY_YUAN, QYUA_YUAN);
+    FTBL.AT_SetLocalBaseChara(QYUA_DUMMY_TOGYU, QYUA_TOGYU);
+    EVT_AT_SetPos(QYUA_BASE, EVENT_CHARACTER_INVALID, 218.2f, 110.8f, 217.6f, 0);
+    EVT_AT_SetAngY(QYUA_BASE, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(QYUA_DUMMY_RYO, QYUA_PLAYER, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QYUA_DUMMY_RYO, QYUA_PLAYER, 0.0f, 0);
+    EVT_AT_SetPos(QYUA_DUMMY_REN, QYUA_REN, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QYUA_DUMMY_REN, QYUA_REN, 0.0f, 0);
+    EVT_AT_SetPos(QYUA_DUMMY_YUAN, QYUA_YUAN, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QYUA_DUMMY_YUAN, QYUA_YUAN, 0.0f, 0);
+    EVT_AT_SetPos(QYUA_DUMMY_TOGYU, QYUA_TOGYU, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QYUA_DUMMY_TOGYU, QYUA_TOGYU, 0.0f, 0);
+    EVT_AT_SetPos(QYUA_TOGYU, QYUA_BASE, -1000.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QYUA_TOGYU, QYUA_BASE, 0.0f, 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QYUA_PLAYER), 0);
+    EVT_AT_CharaDisp(QYUA_PLAYER, 0, 0);
+    EVT_AT_CharaDisp(QYUA_REN, 0, 0);
+    EVT_AT_CharaDisp(QYUA_YUAN, 0, 0);
+    EVT_AT_CharaDisp(QYUA_AUTHOR_KNIFE, 0, 0);
+    EVT_AT_CharaDisp(QYUA_KNIFE, 0, 1);
+    FTBL.EV_LoadAudio("0217A000", 1);
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_authSceneCtrl(QYUA_AUTHOR_START);
+    FTBL.HLib_SetCurrentTaskTo(QyuaWaitOpeningAuthorCallback);
+}
+
+void QyuaWaitOpeningAuthorCallback(void *data)
+{
+    int frames;
+    int playing = FTBL.EV_authSceneCtrl(-1);
+    if (playing)
+        return;
+    EVT_AT_CharaDisp(QYUA_AUTHOR_KNIFE, 0, 1);
+    EVT_AT_CharaDisp(QYUA_KNIFE, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QYUA_PLAYER), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QYUA_PLAYER), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QYUA_PLAYER), 0, (void *)areaLoopHandPoses[QYUA_REPLACEMENT_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QYUA_PLAYER), 1, (void *)areaLoopHandPoses[QYUA_REPLACEMENT_HAND_POSE], 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QYUA_REN), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QYUA_REN), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QYUA_REN), 0, (void *)areaLoopHandPoses[QYUA_REPLACEMENT_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QYUA_REN), 1, (void *)areaLoopHandPoses[QYUA_REPLACEMENT_HAND_POSE], 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QYUA_YUAN), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QYUA_YUAN), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QYUA_YUAN), 0, (void *)areaLoopHandPoses[QYUA_KNIFE_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QYUA_YUAN), 1, (void *)areaLoopHandPoses[QYUA_CRATE_GRIP_HAND_POSE], 0);
+    frames = BeginQyuaKnifeQte(0);
+    EVT_AT_QTE(16, 16, 0, frames - 29, playing);
+    FTBL.HLib_SetCurrentTaskTo(QyuaFirstResultCallback);
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void QyuaFirstResultCallback(void *data)
+{
+    int frames;
+    unsigned int status = FTBL.GetCurrentQteStatus() & 0xfff;
+    if (status == 16) {
+        frames = BeginQyuaSecondKnifeQte(0);
+        frames = HoldQyuaSecondKnifeQte(frames);
+        EVT_AT_QTE(4, status, 0, frames - 29, 0);
+        FTBL.HLib_SetCurrentTaskTo(QyuaSecondResultCallback);
+    } else {
+        frames = PlayQyuaFirstKnifeFailure(0);
+        FTBL.HLib_SetCurrentTaskTo(QyuaFailureAuthorCallback);
+    }
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void QyuaSecondResultCallback(void *data)
+{
+    int frames;
+    if ((FTBL.GetCurrentQteStatus() & 0xfff) == 4) {
+        frames = BeginQyuaThirdKnifeQte(0);
+        frames = HoldQyuaThirdKnifeQte(frames);
+        EVT_AT_QTE(256, 16, 0, frames - 29, 0);
+        FTBL.HLib_SetCurrentTaskTo(QyuaThirdResultCallback);
+    } else {
+        frames = PlayQyuaSecondKnifeFailure(0);
+        FTBL.HLib_SetCurrentTaskTo(QyuaFailureAuthorCallback);
+    }
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void QyuaThirdResultCallback(void *data)
+{
+    int frames;
+    if ((FTBL.GetCurrentQteStatus() & 0xfff) == 256) {
+        frames = PlayQyuaKnifeSuccess(0);
+        FTBL.HLib_SetCurrentTaskTo(QyuaSuccessAuthorCallback);
+    } else {
+        frames = PlayQyuaFirstKnifeFailure(0);
+        FTBL.HLib_SetCurrentTaskTo(QyuaFailureAuthorCallback);
+    }
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void QyuaSuccessAuthorCallback(void *data)
+{
+    QyuaEventWork *work = (QyuaEventWork *)data;
+    QyuaFight *fight = &work->fight;
+    EVT_AT_CharaDisp(QYUA_YUAN, 0, 0);
+    EVT_AT_CharaDisp(QYUA_KNIFE, 0, 1);
+    EVT_AT_CharaDisp(QYUA_AUTHOR_KNIFE, 0, 1);
+    FTBL.EV_authSceneCtrl(QYUA_AUTHOR_SUCCESS);
+    fight->succeeded = 1;
+    work->fight.nextCallback = QyuaRetryOrFinishCallback;
+    FTBL.HLib_SetCurrentTaskTo(QyuaWaitResultAuthorCallback);
+}
+
+void QyuaFailureAuthorCallback(void *data)
+{
+    QyuaEventWork *work = (QyuaEventWork *)data;
+    QyuaFight *fight = &work->fight;
+    EVT_AT_CharaDisp(QYUA_YUAN, 0, 0);
+    EVT_AT_CharaDisp(QYUA_KNIFE, 0, 1);
+    EVT_AT_CharaDisp(QYUA_AUTHOR_KNIFE, 0, 0);
+    FTBL.EV_authSceneCtrl(QYUA_AUTHOR_FAILURE);
+    fight->succeeded = 0;
+    work->fight.nextCallback = QyuaRetryOrFinishCallback;
+    FTBL.HLib_SetCurrentTaskTo(QyuaWaitResultAuthorCallback);
+}
+
+void QyuaWaitResultAuthorCallback(void *data)
+{
+    QyuaFight *fight = &((QyuaEventWork *)data)->fight;
+    int frame = FTBL.EV_authSceneCtrl(-6);
+    if (frame == 1)
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QYUA_PLAYER), frame);
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        EVT_AT_SetSample(0, 1, 0);
+        FTBL.HLib_SetCurrentTaskTo(fight->nextCallback);
+        FTBL.HLib_SetupTaskDelay(60);
+    }
+}
+
+void QyuaRetryOrFinishCallback(void *data)
+{
+    QyuaEventWork *work = (QyuaEventWork *)data;
+    if (!work->fight.succeeded || g_currentMap == AREA_QYUA) {
+        EVT_IncrementQteFailureCount();
+        RestoreEventDateTime();
+        FTBL.HLib_SetCurrentTaskTo(QyuaStartCallback);
+    } else {
+        FinishQyuaEvent(work);
+    }
+}
+
+void InitializeQyuaResources(QyuaEventWork *work)
+{
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    SaveEventDateTime();
+    EVT_SetQteRetryFrames(24);
+    work->characters = Queue_EVT_AT_ReadChr(work->self, qyuaCharacters);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0217", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"QYUA", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "QYUA", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "QYUA", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0217");
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0217A000");
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+    FTBL.SetObjectFlagByIndex(1, 0);
+    FTBL.SetObjectFlagByIndex(3, 0);
+}
+
+void RestoreQyuaResources(QyuaEventWork *work)
+{
+    FTBL.EV_cuffsSetFlags();
+    Queue_EVT_AT_Cling(QYUA_KNIFE, 0, 0, 0, 0, 0, 1);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QYUA_PLAYER), 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QYUA_TOGYU));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QYUA_YUAN));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QYUA_REN));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QYUA_PLAYER));
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0217");
+    FTBL.EV_ControlPackageResources(0, 6, "QYUA", 0, 0);
+    FTBL.EV_ControlPackageResources(0, 6, "0217", 0, 0);
+    ET_AT_KillWork(work->characters);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+}
+#endif
+#else
 #include "s2/areas/area_qyua.hpp"
 #include "s2/step_event.hpp"
 #include "s2/map_control.hpp"
@@ -362,3 +795,4 @@ void RestoreQyuaResources(QyuaEventWork *work) {
 }
 const ScriptAreaDefinition qyuaScriptDefinition{.areaId = AREA_QYUA, .field04 = 0, .init = QyuaInit, .main = QyuaMain};
 } // namespace shenmue::s2
+#endif

@@ -1,5 +1,34 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/numeric_event_dc.h"
+#include "s2/event_sleep_dc.h"
+
+#define AREA_0308_A209 SHEN_NAME4('a', '2', '0', '9')
+#define AREA_0308_A207 SHEN_NAME4('a', '2', '0', '7')
+#define AREA_0308_A208 SHEN_NAME4('a', '2', '0', '8')
+#define AREA_0308_A270 SHEN_NAME4('a', '2', '7', '0')
+#define AREA_0308_A047 SHEN_NAME4('a', '0', '4', '7')
+#define AREA_0308_A520 SHEN_NAME4('a', '5', '2', '0')
+#define AREA_0308_A014 SHEN_NAME4('a', '0', '1', '4')
+#define AREA_0308_CLJ SHEN_NAME4('C', 'L', 'J', '_')
+#define AREA_0308_WON SHEN_NAME4('W', 'O', 'N', '_')
+#define AREA_0308_JOP SHEN_NAME4('J', 'O', 'P', '_')
+#define AREA_0308_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define AREA_0308_LIGHT SHEN_NAME4('l', '0', '0', '1')
+#define AREA_0308_RETURN SHEN_NAME4('Q', 'R', 'R', '0')
+extern shen_name area0308Characters[];
+void Start0308(void);
+void Update0308(void *taskData);
+void Queue0308Author(AreaAuthorTaskParameter *parent);
+void Update0308Author(void *taskData);
+void Setup0308Environment(void);
+void Cleanup0308(AreaAuthorTaskParameter *parent);
+void Prepare0308Characters(void);
+void Restore0308Characters(void);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/author_viewer_event.hpp"
 #include "s2/area_names.hpp"
@@ -39,3 +68,4 @@ void Restore0308Characters();
 extern const ScriptAreaDefinition area0308ScriptDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

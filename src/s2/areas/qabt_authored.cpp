@@ -1,3 +1,718 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_qabt.hpp"
+
+int ArbtIntroduceJob(void)
+{
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_BASE, -2.9f, 3.1f, 10.0f, 0);
+    EVT_AT_SetPosAng(ARBT_FOREMAN, ARBT_BASE, -4.1f, -0.1f, -40.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_FOREMAN, 0.0f, -1.5f, 180.0f, 0);
+    EVT_AT_SetMot(ARBT_RYO, 11124, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_FOREMAN, 11075, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetCam(1101, ARBT_BASE, ARBT_BASE, 0, 0, 0);
+    EVT_AT_SetVoice("0360B001", 30);
+    return 120;
+}
+
+int ArbtExplainFirstCarry(void)
+{
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, -1.8f, 180.0f, 0);
+    EVT_AT_SetMot(ARBT_RYO, 11137, 2.0f, 1.2f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11102, 2.0f, 1.2f, 0x40000000, 0);
+    EVT_AT_SetCam(1127, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+    EVT_AT_SetCam(1104, ARBT_DUMT, ARBT_DUMT, 0, 0, 150);
+    EVT_AT_SetCam(1114, ARBT_DUMT, ARBT_DUMT, 0, 0, 230);
+    EVT_AT_SetCam(1115, ARBT_DUMT, ARBT_DUMT, 0, 0, 400);
+    EVT_AT_SetCam(1128, ARBT_DUMT, ARBT_DUMT, 0, 0, 430);
+    EVT_AT_SetCam(1103, ARBT_DUMT, ARBT_DUMT, 0, 0, 530);
+    EVT_AT_SetVoice("0360C001", 50);
+    EVT_AT_SetVoice("0360A002", 150);
+    EVT_AT_SetVoice("0360C002", 230);
+    EVT_AT_SetVoice("0360C003", 310);
+    EVT_AT_SetVoice("0360A001", 400);
+    EVT_AT_SetVoice("0360C004", 430);
+    EVT_AT_SetVoice("0360C005", 530);
+    return 630;
+}
+
+int ArbtExplainCarry(void)
+{
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, -1.8f, 180.0f, 0);
+    EVT_AT_SetMot(ARBT_RYO, 11112, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11103, 2.0f, 1.2f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11099, 2.0f, 1.2f, 0, 140);
+    EVT_AT_SetCam(1122, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+    EVT_AT_SetCam(1121, ARBT_DUMT, ARBT_DUMT, 0, 0, 160);
+    EVT_AT_SetCam(1104, ARBT_DUMT, ARBT_DUMT, 0, 0, 250);
+    EVT_AT_SetVoice("0360C006", 0);
+    EVT_AT_SetVoice("0360C007", 100);
+    EVT_AT_SetVoice("0360C004", 160);
+    EVT_AT_SetVoice("0360A001", 250);
+    return 284;
+}
+
+int ArbtIntroduceNextCrate(void)
+{
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, -1.8f, 180.0f, 0);
+    EVT_AT_SetMot(ARBT_RYO, 11112, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11080, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetCam(1103, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+    EVT_AT_SetVoice("0360C008", 0);
+    EVT_AT_SetVoice("0360A001", 80);
+    return 110;
+}
+
+int ArbtStartWork(int delay)
+{
+    arbtAuthorFlag = 0;
+    EVT_AT_SetAngY(ARBT_DUMT, ARBT_DUMT, 180.0f, delay);
+    EVT_AT_SetAngY(ARBT_DUMT, ARBT_DUMT, 180.0f, delay + 160);
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_RYO, 0.0f, -1.95f, 0.0f, delay + 160);
+    EVT_AT_SetCam(1123, ARBT_DUMT, ARBT_DUMT, 0, 0, delay);
+    EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, delay + 160);
+    EVT_AT_SetVoice("0360C010", delay);
+    EVT_AT_SetVoice("0360A001", delay + 130);
+    return delay + 160;
+}
+
+int ArbtLiftHighCrate(ArbtCrateWork *crates)
+{
+    int frames;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.15f, 180.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.95f, 0.0f, 0);
+    EVT_AT_SetMot(ARBT_RYO, 11118, 2.0f, 1.5f, 0x40000000, 0);
+    frames = EVT_AT_SetMot(ARBT_PARTNER, 11082, 2.0f, 1.5f, 0x40000000, 0);
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 17, 1.0f);
+    EVT_RepeatCall(ArbtTurnHead, 0, 20, 30);
+    QueueArbtMoveBox(crates, 50);
+    EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
+    EVT_AT_SetVoice("0360C009", 20);
+    EVT_AT_SetSound(255, 20);
+    return frames;
+}
+
+int ArbtLiftLowCrate(ArbtCrateWork *crates)
+{
+    int frames;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.15f, 180.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.95f, 0.0f, 0);
+    EVT_AT_SetMot(ARBT_RYO, 11117, 5.0f, 1.5f, 0x40000000, 0);
+    frames = EVT_AT_SetMot(ARBT_PARTNER, 11081, 2.0f, 1.5f, 0x40000000, 0);
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 17, 1.0f);
+    EVT_RepeatCall(ArbtTurnHead, 0, 59, 30);
+    QueueArbtMoveBox(crates, 89);
+    EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
+    EVT_AT_SetVoice("0360C009", 60);
+    EVT_AT_SetSound(255, 60);
+    return frames;
+}
+
+int ArbtPutHighCrate(ArbtCrateWork *crates, int streak, shen_name destination)
+{
+    int frames;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_PARTNER, destination, -0.9f, 0.1f, 90.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.8f, 0.0f, 0);
+    EVT_AT_SetAngY(ARBT_PARTNER, ARBT_PARTNER, 180.0f, 120);
+    EVT_AT_SetMot(ARBT_RYO, 11130, 2.0f, 1.6f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, 11112, 2.0f, 1.0f, 0x40000000, 120);
+    EVT_AT_SetMot(ARBT_PARTNER, 11094, 2.0f, 1.6f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11103, 2.0f, 1.0f, 0x40000000, 120);
+    StopArbtMoveBox(crates, 65);
+    frames = ArbtPraiseCarry(streak, 120);
+    EVT_AT_SetCam(1111, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
+    EVT_AT_SetCam(1130, ARBT_DUMT, ARBT_DUMT, 0, 0, 120);
+    EVT_AT_SetCam(1131, ARBT_DUMA, ARBT_DUMA, 0, 0, frames + 55);
+    EVT_AT_SetVoice("0360C009", 50);
+    EVT_AT_SetVoice("0360C031", frames);
+    EVT_AT_SetVoice("0360A001", frames + 60);
+    EVT_AT_SetSound(256, 35);
+    return frames + 90;
+}
+
+int ArbtPutLowCrate(ArbtCrateWork *crates, int streak, shen_name destination)
+{
+    int frames;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_PARTNER, destination, -0.9f, 0.2f, 90.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.85f, 0.0f, 0);
+    EVT_AT_SetAngY(ARBT_PARTNER, ARBT_PARTNER, 180.0f, 225);
+    EVT_AT_SetMot(ARBT_RYO, 11129, 2.0f, 1.5f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, 11112, 2.0f, 1.0f, 0x40000000, 225);
+    EVT_AT_SetMot(ARBT_PARTNER, 11093, 2.0f, 1.5f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11103, 2.0f, 1.0f, 0x40000000, 225);
+    StopArbtMoveBox(crates, 61);
+    frames = ArbtPraiseCarry(streak, 225);
+    EVT_AT_SetCam(1132, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
+    EVT_AT_SetCam(1130, ARBT_DUMT, ARBT_DUMT, 0, 0, 225);
+    EVT_AT_SetCam(1131, ARBT_DUMA, ARBT_DUMA, 0, 0, frames + 55);
+    EVT_AT_SetVoice("0360C009", 50);
+    EVT_AT_SetVoice("0360C031", frames);
+    EVT_AT_SetVoice("0360A001", frames + 60);
+    EVT_AT_SetSound(256, 65);
+    return frames + 90;
+}
+
+int ArbtPraiseCarry(int streak, int delay)
+{
+    int frames = delay;
+    float random = FTBL.GetRandomNumberInRange(100.0f);
+    switch (streak) {
+    case 1:
+        frames += 110;
+        if (random < 50.0f)
+            EVT_AT_SetVoice("0360C063", delay);
+        else
+            EVT_AT_SetVoice("0360C064", delay);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 3, 30, 1.0f, delay);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+        break;
+    case 2:
+        frames += 105;
+        if (random < 50.0f)
+            EVT_AT_SetVoice("0360C066", delay);
+        else
+            EVT_AT_SetVoice("0360C067", delay);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 3, 30, 1.0f, delay);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+        break;
+    case 4:
+        frames += 90;
+        EVT_AT_SetVoice("0360C070", delay);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 3, 30, 1.0f, delay);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+        break;
+    }
+    return frames;
+}
+
+int ArbtWarnCarryOnce(void)
+{
+    int frames;
+    float random;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11104, 2.0f, 1.0f, 0x40000000, 0);
+    random = FTBL.GetRandomNumberInRange(100.0f);
+    if (random < 30.0f) {
+        frames = 60;
+        EVT_AT_SetCam(1125, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C040", 0);
+    } else if (random < 60.0f) {
+        frames = 110;
+        EVT_AT_SetCam(1125, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C032", 0);
+    } else {
+        frames = 50;
+        EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C033", 0);
+    }
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    return frames;
+}
+
+int ArbtWarnCarryTwice(void)
+{
+    int frames;
+    float random;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11105, 2.0f, 1.0f, 0x40000000, 0);
+    random = FTBL.GetRandomNumberInRange(100.0f);
+    if (random < 50.0f) {
+        frames = 160;
+        EVT_AT_SetCam(1125, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetCam(1112, ARBT_DUMT, ARBT_DUMT, 0, 0, 100);
+        EVT_AT_SetVoice("0360C034", 0);
+        EVT_AT_SetVoice("0360C035", 90);
+    } else if (random < 60.0f) {
+        frames = 150;
+        EVT_AT_SetCam(1125, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetCam(1112, ARBT_DUMT, ARBT_DUMT, 0, 0, 100);
+        EVT_AT_SetVoice("0360C038", 0);
+        EVT_AT_SetVoice("0360C036", 70);
+    } else {
+        frames = 185;
+        EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetCam(1112, ARBT_DUMT, ARBT_DUMT, 0, 0, 100);
+        EVT_AT_SetVoice("0360C040", 0);
+        EVT_AT_SetVoice("0360C043", 75);
+    }
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    return frames;
+}
+
+int ArbtWarnCarryThird(void)
+{
+    int frames;
+    float random;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11105, 2.0f, 1.0f, 0x40000000, 0);
+    random = FTBL.GetRandomNumberInRange(100.0f);
+    if (random < 30.0f) {
+        frames = 150;
+        EVT_AT_SetCam(1109, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C040", 0);
+        EVT_AT_SetVoice("0360C037", 70);
+    } else if (random < 60.0f) {
+        frames = 200;
+        EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C039", 0);
+        EVT_AT_SetVoice("0360C047", 100);
+    } else {
+        frames = 230;
+        EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C044", 0);
+        EVT_AT_SetVoice("0360C042", 90);
+    }
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    return frames;
+}
+
+int ArbtWarnCarryFourth(void)
+{
+    int frames;
+    float random;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11106, 2.0f, 1.0f, 0x40000000, 0);
+    random = FTBL.GetRandomNumberInRange(100.0f);
+    if (random < 30.0f) {
+        frames = 220;
+        EVT_AT_SetCam(1109, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C046", 0);
+        EVT_AT_SetVoice("0360C050", 90);
+    } else if (random < 60.0f) {
+        frames = 210;
+        EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C048", 0);
+        EVT_AT_SetVoice("0360C043", 100);
+    } else {
+        frames = 220;
+        EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C044", 0);
+        EVT_AT_SetVoice("0360C042", 90);
+    }
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    return frames;
+}
+
+int ArbtWarnCarryRepeatedly(void)
+{
+    int frames;
+    float random;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11107, 2.0f, 1.0f, 0x40000000, 0);
+    random = FTBL.GetRandomNumberInRange(100.0f);
+    if (random < 30.0f) {
+        frames = 220;
+        EVT_AT_SetCam(1109, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C045", 0);
+        EVT_AT_SetVoice("0360C051", 90);
+    } else if (random < 60.0f) {
+        frames = 250;
+        EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C048", 0);
+        EVT_AT_SetVoice("0360C052", 100);
+    } else {
+        frames = 250;
+        EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C039", 0);
+        EVT_AT_SetVoice("0360C041", 100);
+    }
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    return frames;
+}
+
+int ArbtWarnWrongForward(void)
+{
+    float random;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11104, 2.0f, 1.0f, 0x40000000, 0);
+    random = FTBL.GetRandomNumberInRange(100.0f);
+    if (random < 30.0f)
+        EVT_AT_SetCam(1125, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+    else if (random < 60.0f)
+        EVT_AT_SetCam(1125, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+    else
+        EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+    if (FTBL.GetRandomNumberInRange(100.0f) < 50.0f)
+        EVT_AT_SetVoice("0360C029", 0);
+    else
+        EVT_AT_SetVoice("0360C030", 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, 100);
+    return 100;
+}
+
+int ArbtWarnWrongDouble(unsigned int direction)
+{
+    int frames;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11104, 2.0f, 1.0f, 0x40000000, 0);
+    FTBL.GetRandomNumberInRange(100.0f);
+    if (direction == 0x8000) {
+        frames = 140;
+        EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C086", 0);
+    } else {
+        frames = 155;
+        EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+        EVT_AT_SetVoice("0360C087", 0);
+    }
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    return frames;
+}
+
+int ArbtWarnWrongMultiple(unsigned int direction)
+{
+    int frames;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_PARTNER, 11104, 2.0f, 1.0f, 0x40000000, 0);
+    FTBL.GetRandomNumberInRange(100.0f);
+    frames = 110;
+    EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+    EVT_AT_SetVoice("0360C089", 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    return frames;
+}
+
+int ArbtWarnIdleForward(int count)
+{
+    arbtAuthorFlag = 0;
+    EVT_AT_SetAngY(ARBT_DUMT, ARBT_DUMT, 180.0f, 0);
+    EVT_AT_SetAngY(ARBT_DUMT, ARBT_DUMT, 180.0f, 90);
+    EVT_AT_SetCam(1123, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+    EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 130);
+    if (count > 3)
+        EVT_AT_SetVoice("0360C028", 30);
+    else
+        EVT_AT_SetVoice("0360C028", 30);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, 150);
+    return 150;
+}
+
+int ArbtWarnIdlePut(int count)
+{
+    arbtAuthorFlag = 0;
+    EVT_AT_SetAngY(ARBT_DUMT, ARBT_DUMT, 180.0f, 0);
+    EVT_AT_SetAngY(ARBT_DUMT, ARBT_DUMT, 180.0f, 90);
+    EVT_AT_SetCam(1123, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
+    EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 130);
+    if (count > 3)
+        EVT_AT_SetVoice("0360C091", 30);
+    else
+        EVT_AT_SetVoice("0360C092", 30);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, 150);
+    return 150;
+}
+
+int ArbtWalkForward(float speed, int delay)
+{
+    int frames;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetMot(ARBT_RYO, 11115, 2.0f, speed, 0, delay);
+    EVT_AT_SetMot(ARBT_PARTNER, 11078, 2.0f, speed, 0, delay);
+    frames = 115.0f / speed;
+    EVT_AT_SetSound(254, delay + 20);
+    return frames;
+}
+
+int ArbtRequestPutDown(int delay)
+{
+    int frames = delay + 100;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetVoice("0360C090", delay);
+    return frames;
+}
+
+int ArbtQueueDirection(unsigned int direction, int intensity, int delay)
+{
+    int frames = delay;
+    arbtAuthorFlag = 0;
+    switch (intensity) {
+    case 0:
+    case 1:
+    case 2:
+        switch (direction) {
+        case 0x8000:
+            EVT_AT_SetVoice("0360C015", delay);
+            break;
+        case 0x4000:
+            EVT_AT_SetVoice("0360C014", delay);
+            break;
+        default:
+            EVT_AT_SetVoice("0360C013", delay);
+            break;
+        }
+        break;
+    case 3:
+        if (direction == 0x8000)
+            EVT_AT_SetVoice("0360C080", delay);
+        else
+            EVT_AT_SetVoice("0360C083", delay);
+        break;
+    case 4:
+        if (direction == 0x8000)
+            EVT_AT_SetVoice("0360C081", delay);
+        else
+            EVT_AT_SetVoice("0360C084", delay);
+        break;
+    case 5:
+        if (direction == 0x8000)
+            EVT_AT_SetVoice("0360C082", delay);
+        else
+            EVT_AT_SetVoice("0360C085", delay);
+        break;
+    case 6:
+    case 7:
+        frames = 52;
+        if (FTBL.GetRandomNumberInRange(100.0f) < 50.0f)
+            EVT_AT_SetVoiceOutsideConversation("0360C017", delay);
+        else
+            EVT_AT_SetVoiceOutsideConversation("0360C017", delay);
+        break;
+    }
+    return frames;
+}
+
+int ArbtWalkDirection(float speed, int intensity, unsigned int direction, int delay)
+{
+    int frames;
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_RYO, 0.0f, -1.95f, 0.0f, delay);
+    switch (direction) {
+    case 0x8000:
+        if (intensity == 0) {
+            frames = 90.0f / speed;
+            EVT_AT_SetMot(ARBT_RYO, 11133, 2.0f, speed, 0, delay);
+            EVT_AT_SetMot(ARBT_PARTNER, 11097, 2.0f, speed, 0x2000000, delay);
+        } else {
+            frames = 90.0f / speed;
+            EVT_AT_SetMot(ARBT_RYO, 11120, 2.0f, speed, 0, delay);
+            EVT_AT_SetMot(ARBT_PARTNER, 11085, 2.0f, speed, 0x2000000, delay);
+        }
+        break;
+    case 0x4000:
+        if (intensity == 0) {
+            frames = 100.0f / speed;
+            EVT_AT_SetMot(ARBT_RYO, 11121, 2.0f, speed, 0, delay);
+            EVT_AT_SetMot(ARBT_PARTNER, 11086, 2.0f, speed, 0x2000000, delay);
+        } else {
+            frames = 90.0f / speed;
+            EVT_AT_SetMot(ARBT_RYO, 11119, 2.0f, speed, 0, delay);
+            EVT_AT_SetMot(ARBT_PARTNER, 11084, 2.0f, speed, 0x2000000, delay);
+        }
+        break;
+    default:
+        frames = 115.0f / speed;
+        EVT_AT_SetMot(ARBT_RYO, 11115, 2.0f, speed, 0, delay);
+        EVT_AT_SetMot(ARBT_PARTNER, 11078, 2.0f, speed, 0x2000000, delay);
+        break;
+    }
+    return frames;
+}
+
+int ArbtFailCarry(ArbtCrateWork *crates, shen_name *crate, int intensity, int direction)
+{
+    Vector3 ryo, position;
+    Vector3i rotation;
+    int frames, drop;
+    arbtAuthorFlag = 0;
+    FTBL.GetCharaPosition(ARBT_RYO, -1, &ryo, 0);
+    FTBL.GetCharaPosition(*crate, -1, &position, 0);
+    FTBL.GetScenarioCharacterEulerAngles(*crate, &rotation, 0);
+    switch (direction) {
+    case 0x8000:
+        if (intensity == 0) {
+            position.x += 0.112350464f;
+            position.z += -0.407287121f;
+        } else {
+            position.x += -0.381591797f;
+            position.z += -0.429046035f;
+        }
+        frames = 100;
+        drop = 37;
+        EVT_AT_SetMot(ARBT_RYO, 11128, 2.0f, 1.4f, 0, 0);
+        EVT_AT_SetMot(ARBT_PARTNER, 11092, 2.0f, 1.4f, 0, 12);
+        break;
+    case 0x4000:
+        if (intensity == 0) {
+            position.x += 0.113952637f;
+            position.z += 0.650390983f;
+        } else {
+            position.x += -0.380264282f;
+            position.z += 0.644867003f;
+        }
+        frames = 100;
+        drop = 37;
+        EVT_AT_SetMot(ARBT_RYO, 11127, 2.0f, 1.4f, 0, 0);
+        EVT_AT_SetMot(ARBT_PARTNER, 11091, 2.0f, 1.4f, 0, 12);
+        break;
+    case 0x1000:
+        frames = 100;
+        drop = 37;
+        position.x = ryo.x + -0.585906982f - 0.9f;
+        position.z = ryo.z + 0.16f;
+        EVT_AT_SetMot(ARBT_RYO, 11125, 25.0f, 1.4f, 0, 0);
+        EVT_AT_SetMot(ARBT_PARTNER, 11089, 25.0f, 1.4f, 0, 0);
+        break;
+    default:
+        frames = 100;
+        drop = 37;
+        position.x += 0.116600037f;
+        position.z += 0.112100005f;
+        EVT_AT_SetMot(ARBT_RYO, 11125, 25.0f, 1.4f, 0, 0);
+        EVT_AT_SetMot(ARBT_PARTNER, 11089, 25.0f, 1.4f, 0, 0);
+        break;
+    }
+    StopArbtMoveBox(crates, drop);
+    QueueArbtDropBox(crates, drop);
+    EVT_AT_SetPosAng(*crate, ARBT_BASE, position.x, position.z, rotation.y, frames - 40.0f + 1.0f);
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_PARTNER, -0.1f, 0.0f, 0.35f, 0);
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.0f, 0.0f, frames - 40.0f + 1.0f);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, -1.95f, 180.0f, frames - 40.0f + 1.0f);
+    EVT_AT_SetCam(1107, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
+    return frames - 40.0f;
+}
+
+int ArbtWarnWrongDirection(unsigned int pressed, int delay)
+{
+    arbtAuthorFlag = 0;
+    if (pressed & 0x8000)
+        EVT_AT_SetVoice("0360A003", delay);
+    else if (pressed & 0x4000)
+        EVT_AT_SetVoice("0360A005", delay);
+    else
+        EVT_AT_SetVoice("0360A006", delay);
+    return 0;
+}
+
+void ArbtTurnHead(void *argument)
+{
+    Vector3 target;
+    FTBL.GetCharaPosition(ARBT_EG0L, -1, &target, 0x40000000);
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 17, 0.01f);
+    FTBL.LatchMotionBoneTarget(FTBL.scenFindMotionwork(ARBT_RYO), 17, &target);
+}
+
+int ArbtAnnounceTimeOver(void)
+{
+    arbtAuthorFlag = 0;
+    EVT_AT_SetPosAng(ARBT_FOREMAN, ARBT_BASE, -4.1f, -0.1f, 140.0f, 0);
+    EVT_AT_SetMot(ARBT_FOREMAN, 11073, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetCam(1001, ARBT_DUMS, ARBT_DUMS, 0, 0, 0);
+    EVT_AT_SetSound(1577, 0);
+    EVT_AT_SetVoice("0360B005", 0);
+    EVT_AT_SetVoice("0360C061", 215);
+    return 260;
+}
+
+#define ARBT_PAY_SCENE(voice0, voice1, voice2, voice4)                                                                     \
+    int frames;                                                                                                            \
+    arbtAuthorFlag = 0;                                                                                                    \
+    EVT_AT_StartMoneyCount(cash, 220);                                                                                     \
+    EVT_AT_CharaDisp(ARBT_PAY, 120, 0);                                                                                    \
+    EVT_AT_CharaDisp(ARBT_PAY, 240, 1);                                                                                    \
+    EVT_AT_SetPosAng(ARBT_FOREMAN, ARBT_BASE, 27.1f, -28.25f, 140.0f, 0);                                                  \
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_FOREMAN, -2.0f, -0.6f, -90.0f, 0);                                                 \
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_FOREMAN, 0.0f, -1.5f, 180.0f, 0);                                                      \
+    EVT_AT_SetPos(ARBT_KNT, ARBT_FOREMAN, 5.4f, 0.0f, -0.4f, 0);                                                           \
+    EVT_AT_SetAngY(ARBT_KNT, ARBT_FOREMAN, 90.0f, 0);                                                                      \
+    EVT_AT_SetPos(ARBT_AA1, ARBT_FOREMAN, 4.2f, 0.0f, 1.14f, 0);                                                           \
+    EVT_AT_SetAngY(ARBT_AA1, ARBT_FOREMAN, 60.0f, 0);                                                                      \
+    EVT_AT_SetPos(ARBT_LYO, ARBT_FOREMAN, 1.4f, 0.0f, 1.16f, 0);                                                           \
+    EVT_AT_SetAngY(ARBT_LYO, ARBT_FOREMAN, -30.0f, 0);                                                                     \
+    EVT_AT_SetPos(ARBT_HAK, ARBT_FOREMAN, 1.58f, 0.0f, 0.13f, 0);                                                          \
+    EVT_AT_SetAngY(ARBT_HAK, ARBT_FOREMAN, -100.0f, 0);                                                                    \
+    EVT_AT_SetPos(ARBT_EIN, ARBT_FOREMAN, 3.6f, 0.0f, -2.3f, 0);                                                           \
+    EVT_AT_SetAngY(ARBT_EIN, ARBT_FOREMAN, 1.0f, 0);                                                                       \
+    EVT_AT_SetAngY(ARBT_FOREMAN, ARBT_FOREMAN, 180.0f, 110);                                                               \
+    EVT_AT_SetAngY(ARBT_FOREMAN, ARBT_FOREMAN, 180.0f, 320);                                                               \
+    EVT_AT_SetAngY(ARBT_DUMS, ARBT_DUMS, 180.0f, 0);                                                                       \
+    EVT_AT_SetAngY(ARBT_DUMS, ARBT_DUMS, 180.0f, 110);                                                                     \
+    EVT_AT_SetAngY(ARBT_DUMS, ARBT_DUMS, 180.0f, 320);                                                                     \
+    EVT_AT_SetMot(ARBT_PARTNER, 11075, 2.0f, 1.0f, 0x40000000, 0);                                                         \
+    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);                                                            \
+    EVT_AT_SetMot(ARBT_RYO, 11123, 2.0f, 1.0f, 0, 110);                                                                    \
+    EVT_AT_SetMot(ARBT_FOREMAN, 11075, 2.0f, 1.0f, 0x40000000, 0);                                                         \
+    EVT_AT_SetMot(ARBT_FOREMAN, 11088, 2.0f, 1.0f, 0, 110);                                                                \
+    EVT_AT_SetMot(ARBT_FOREMAN, 11103, 2.0f, 1.0f, 0, 320);                                                                \
+    EVT_AT_SetMot(ARBT_KNT, 11139, 2.0f, 1.0f, 0x40000000, 0);                                                             \
+    EVT_AT_SetMot(ARBT_AA1, 11140, 2.0f, 1.0f, 0x40000000, 0);                                                             \
+    EVT_AT_SetMot(ARBT_LYO, 11141, 2.0f, 1.0f, 0x40000000, 0);                                                             \
+    EVT_AT_SetMot(ARBT_HAK, 11142, 2.0f, 1.0f, 0x40000000, 0);                                                             \
+    EVT_AT_SetMot(ARBT_EIN, 11143, 2.0f, 1.0f, 0x40000000, 0);                                                             \
+    EVT_AT_SetCam(1116, ARBT_DUMS, ARBT_DUMS, 0, 0, 0);                                                                    \
+    EVT_AT_SetCam(1117, ARBT_DUMS, ARBT_DUMS, 0, 0, 180);                                                                  \
+    EVT_AT_SetCam(1118, ARBT_DUMA, ARBT_DUMA, 0, 0, 240);                                                                  \
+    EVT_AT_SetCam(1119, ARBT_DUMA, ARBT_DUMA, 0, 0, 360);                                                                  \
+    EVT_AT_SetCam(1120, ARBT_DUMS, ARBT_DUMS, 0, 0, 415);                                                                  \
+    EVT_AT_SetVoice(voice0, 0);                                                                                            \
+    EVT_AT_SetVoice(voice1, 100);                                                                                          \
+    EVT_AT_SetVoice(voice2, 190);                                                                                          \
+    frames = ArbtSayCrateCount(crates, 280);                                                                               \
+    EVT_AT_SetVoice("0360A009", frames + 280);                                                                             \
+    EVT_AT_SetVoice(voice4, frames + 320);                                                                                 \
+    EVT_AT_SetVoice("0360A001", frames + 390);                                                                             \
+    return frames + 440
+
+int ArbtPayFirstJob(int cash, int crates)
+{
+    ARBT_PAY_SCENE("0360B006", "0360B007", "0360B008", "0360B009");
+}
+
+int ArbtPayGoodJob(int cash, int crates)
+{
+    ARBT_PAY_SCENE("0360B010", "0360B011", "0360B008", "0360B009");
+}
+
+int ArbtPayAverageJob(int cash, int crates)
+{
+    ARBT_PAY_SCENE("0360B012", "0360B013", "0360B008", "0360B014");
+}
+
+int ArbtPayPoorJob(int cash, int crates)
+{
+    ARBT_PAY_SCENE("0360B015", "0360B016", "0360B017", "0360B018");
+}
+
+char *arbtCountVoices[] = {"0360B027", "0360B028", "0360B029", "0360B030", "0360B031", "0360B032", "0360B033", "0360B034"};
+
+int ArbtSayCrateCount(int count, int delay)
+{
+    int frames;
+    if (count == 0)
+        frames = 1;
+    else {
+        EVT_AT_SetVoice(arbtCountVoices[count - 1], delay);
+        frames = 100;
+    }
+    return frames;
+}
+#else
 #include "s2/areas/area_qabt.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
@@ -443,3 +1158,4 @@ std::int32_t QabtPayPoorJob(std::int32_t cash, std::int32_t crates) {
     return PayRyo(cash, crates, "0360B015", "0360B016", "0360B017", "0360B018"); // @text 0360B015 EN: "I'm not too impressed, you know=@" | JA: "困るのよね、あんなんじゃ…" ; 0360B016 EN: "You've got to be more serious.\nGet your act together!" | JA: "ちゃんとやってくれないと…" ; 0360B017 EN: "I will pay you, though." | JA: "まあバイト代は出すけど…" ; 0360B018 EN: "Try harder next time." | JA: "次はしっかりね。"
 }
 } // namespace shenmue::s2::areas
+#endif

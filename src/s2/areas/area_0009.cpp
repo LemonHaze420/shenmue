@@ -1,3 +1,177 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0009.hpp"
+
+static const shen_name scenes0009[] = {SHEN_NAME4('A', 'U', '0', '1'), SHEN_NAME4('A', 'U', '0', '2')};
+static shen_name characters0009[] = {SHEN_NAME4('C', 'L', 'J', '_'), SHEN_NAME4('L', 'L', 'Y', '_'), SHEN_NAME4('S', 'A', 'M', '_'),
+    SHEN_NAME4('W', 'O', 'N', '_'), INVALID_CHARACTER};
+
+void Main0009(void)
+{
+    HLibTask *task;
+    AreaAuthorTaskParameter *parent;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    task = FTBL.HLib_EnqueueTaskWithParameter(MainCallback0009, 4, 11, sizeof(AreaAuthorTaskParameter), TASK_EVNT);
+    parent = (AreaAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->state = 1;
+    parent->selection = (unsigned int)g_entryPoint > 1 ? 0 : g_entryPoint;
+    ConfigureEnvironment0009();
+    Queue_EVT_UTL_LoadNPCChara_3(characters0009, parent->self);
+}
+
+void MainCallback0009(void *data)
+{
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)data;
+    switch (parent->state) {
+    case 1:
+        QueueLoop0009(parent);
+        break;
+    case 3:
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(AREA_0009_RYO_), 0xf003, 0);
+        Cleanup0009(parent);
+        break;
+    }
+}
+
+void QueueLoop0009(AreaAuthorTaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(LoopCallback0009, 4, 11, sizeof(AreaAuthorLoopTaskParameter), TASK_EVNT);
+    ((AreaAuthorLoopTaskParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+    switch (parent->selection) {
+    case 0:
+        FTBL.EV_LoadAudio("0009A010", 0);
+    case 1:
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        break;
+    }
+    FTBL.EV_spmBeginSampleExecute(0);
+    SetupCharacters0009();
+    FTBL.EV_authSceneCtrl(scenes0009[parent->selection]);
+    parent->state = 2;
+}
+
+void LoopCallback0009(void *data)
+{
+    AreaAuthorLoopTaskParameter *child = (AreaAuthorLoopTaskParameter *)data;
+    int loaded = FTBL.EV_authSceneCtrl(-1);
+    if (!loaded) {
+        if (child->parent->selection == 1) {
+            FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+            RestoreCharacters0009();
+            child->parent->state = 3;
+            FTBL.HLib_DestroyCurrentEventTask();
+        } else {
+            child->parent->selection++;
+            FTBL.EV_authSceneCtrl(scenes0009[1]);
+        }
+    }
+}
+
+void ConfigureEnvironment0009(void)
+{
+    EventDateTime dateTime;
+    FTBL.EV_stepSetFlags(5, 0);
+    FTBL.SetPlayerStat(2, 0);
+    FTBL.SetPlayerGameFlags(4, 0);
+    if (g_currentMap == AREA_0009_AREA) {
+        FTBL.GetCurrentDateTime((DateTime *)&dateTime);
+        if (dateTime.hour > 18) {
+            FTBL.EV_lightLoad(AREA_0009_LIGHT);
+            FTBL.PushGlobalLightingProgram();
+            FTBL.CheckIsArgEquZero(1, 1);
+            FTBL.SetObjectFlagByIndex(14, 1);
+            FTBL.SetObjectFlagByIndex(15, 0);
+            FTBL.EV_nlSetVertexColourType(1);
+        } else {
+            FTBL.ReinitializeLights(1);
+            FTBL.SetLightFlagForIndex(0, 2);
+            FTBL.SetLightEntryIndex(0, 1);
+            FTBL.SetObjectFlagByIndex(14, 0);
+            FTBL.SetObjectFlagByIndex(15, 1);
+            FTBL.EV_nlSetVertexColourType(2);
+        }
+    }
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0009A", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_LoadCutsceneFromCurrentScene("0009A010");
+    FTBL.EV_FreeAuthorPak(1, "0009");
+}
+
+void Cleanup0009(AreaAuthorTaskParameter *parent)
+{
+    EVT_UTL_FreeNPCChara(characters0009);
+    FTBL.EV_FreeAuthorPak(0, "0009");
+    FTBL.EV_ControlPackageResources(0, 6, "0009A", 0, 0);
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.SetScenarioFollowCharacter(0);
+    if (g_currentMap == AREA_0009_AR02) {
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        FTBL.EV_LoadCutsceneFromCurrentScene("AR02");
+        FTBL.EV_LoadAudio("AR02_000", 2);
+        EVT_AT_SetPos(AREA_0009_RYO_, EVENT_CHARACTER_INVALID, 250.2f, 100.0f, 434.8f, 0);
+        EVT_AT_SetAng(AREA_0009_RYO_, EVENT_CHARACTER_INVALID, 0.0f, 230.0f, 0.0f, 0);
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.EV_spmBeginSampleExecute(0);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    } else
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+}
+
+void SetupCharacters0009(void)
+{
+    int i;
+    SetupAuthorCharacter0009(AREA_0009_RYO_);
+    HideCharacter0009(SHEN_NAME4('a', '0', '1', '4'));
+    HideCharacter0009(SHEN_NAME4('a', '0', '1', '5'));
+    HideCharacter0009(SHEN_NAME4('a', '0', '1', '6'));
+    HideCharacter0009(SHEN_NAME4('a', '0', '1', '7'));
+    HideCharacter0009(SHEN_NAME4('a', '0', '1', '8'));
+    HideCharacter0009(SHEN_NAME4('a', '0', '1', '9'));
+    for (i = 0; characters0009[i] != INVALID_CHARACTER; i++)
+        SetupAuthorCharacter0009(characters0009[i]);
+}
+
+void RestoreCharacters0009(void)
+{
+    int i;
+    RestoreAuthorCharacter0009(AREA_0009_RYO_);
+    ShowCharacter0009(SHEN_NAME4('a', '0', '1', '4'));
+    ShowCharacter0009(SHEN_NAME4('a', '0', '1', '5'));
+    ShowCharacter0009(SHEN_NAME4('a', '0', '1', '6'));
+    ShowCharacter0009(SHEN_NAME4('a', '0', '1', '7'));
+    ShowCharacter0009(SHEN_NAME4('a', '0', '1', '8'));
+    ShowCharacter0009(SHEN_NAME4('a', '0', '1', '9'));
+    for (i = 0; characters0009[i] != INVALID_CHARACTER; i++)
+        RestoreAuthorCharacter0009(characters0009[i]);
+}
+
+void SetupAuthorCharacter0009(shen_name character)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void RestoreAuthorCharacter0009(shen_name character)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void HideCharacter0009(shen_name character)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void ShowCharacter0009(shen_name character)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+#else
 #include "s2/areas/area_0009.hpp"
 #include "s2/author.hpp"
 #include "s2/camera.hpp"
@@ -177,3 +351,4 @@ void Main(std::uintptr_t) {
 } // namespace
 const ScriptAreaDefinition area0009ScriptDefinition{.areaId = SHEN_NAME(0009), .field04 = 0, .init = InitNullsub, .main = Main};
 } // namespace shenmue::s2::areas
+#endif

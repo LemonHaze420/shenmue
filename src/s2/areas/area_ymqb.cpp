@@ -1,3 +1,247 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_ymqb.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void YmqbEntry(void)
+{
+    YmqbMain();
+}
+#else
+const shen_name ymqbCharacters[] = {YMQB_RYO, YMQB_GEN, YMQB_SBO, YMQB_CHR, YMQB_ANC, YMQB_SYE, EVENT_CHARACTER_INVALID};
+Vector3 ymqbBattleEye = {241.5115966796875f, 117.04940032958984f, 348.73779296875f};
+Vector3 ymqbBattleTarget = {246.410400390625f, 116.04640197753906f, 349.1564025878906f};
+
+void YmqbMain(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(YmqbStartCallback, 4, 11, sizeof(YmqbWork), TASK_EVNT);
+    YmqbWork *work = (YmqbWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    YmqbSetup(work);
+    EventDebugRegister(YMQB_DEBUG_ID, YmqbDebugWinCallback, work, 2000000000);
+}
+
+void YmqbDebugWinCallback(void *data)
+{
+    FTBL.EV_stepSetFlags(50, 0);
+    YmqbEnd((YmqbWork *)data);
+}
+
+void YmqbEnd(YmqbWork *work)
+{
+    int won = work->won;
+    YmqbCleanup(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    EventDebugUnregister(YMQB_DEBUG_ID);
+    if (g_currentMap == YMQB_AREA) {
+        if (won) {
+            FTBL.scenSetTaskFlags(8);
+            FTBL.EV_scenQueueLoad(g_actNumber, YMQB_WIN_AREA, 58);
+        } else
+            FTBL.EV_scenQueueLoad(g_actNumber, YMQB_LOSE_AREA, 5);
+    }
+}
+
+void YmqbResetFight(YmqbFight *fight)
+{
+    fight->nextCallback = YmqbStartBattleCallback;
+    fight->qteSucceeded = 0;
+}
+
+void YmqbStartCallback(void *data)
+{
+    YmqbWork *work = (YmqbWork *)data;
+    EventDebugCheck(YMQB_DEBUG_ID, 4);
+    YmqbResetFight(&work->fight);
+    FTBL.AT_SetLocalBaseChara(YMQB_DUMMY, YMQB_RYO);
+    EVT_AT_SetPos(YMQB_BASE, EVENT_CHARACTER_INVALID, 244.7f, 115.15f, 347.7f, 0);
+    EVT_AT_SetAngY(YMQB_BASE, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(YMQB_DUMMY, YMQB_RYO, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(YMQB_DUMMY, YMQB_RYO, 0.0f, 0);
+    FTBL.EV_LoadAudio("0039A000", 2);
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_authSceneCtrl(-11);
+    FTBL.EV_authSceneCtrl(SHEN_NAME4('A', 'T', 'H', '2'));
+    FTBL.HLib_SetCurrentTaskTo(YmqbIntroCallback);
+}
+
+void YmqbIntroCallback(void *data)
+{
+    int frame = FTBL.EV_authSceneCtrl(-6);
+    int end = FTBL.EV_authSceneCtrl(-5);
+    if (frame > end - 40 || !FTBL.EV_authSceneCtrl(-1)) {
+        EVT_AT_QTE(4, 16, 0, 0, 0);
+        FTBL.HLib_SetCurrentTaskTo(YmqbQteResultCallback);
+        FTBL.HLib_SetupTaskDelay(21);
+    }
+}
+
+void YmqbQteResultCallback(void *data)
+{
+    YmqbFight *fight = &((YmqbWork *)data)->fight;
+    FTBL.EV_authSceneCtrl(-10);
+    FTBL.EV_LoadAudio("0039A000", 2);
+    EVT_AT_SetSample(0, 0, 0);
+    if ((FTBL.GetCurrentQteStatus() & 0xfff) == 4) {
+        fight->qteSucceeded = 1;
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('Q', 'T', 'E', 'S'));
+    } else {
+        fight->qteSucceeded = 0;
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('Q', 'T', 'E', 'F'));
+    }
+    fight->nextCallback = YmqbStartBattleCallback;
+    FTBL.HLib_SetCurrentTaskTo(YmqbWaitAuthorCallback);
+}
+
+void YmqbWaitAuthorCallback(void *data)
+{
+    if (!FTBL.EV_authSceneCtrl(-1))
+        FTBL.HLib_SetCurrentTaskTo(((YmqbWork *)data)->fight.nextCallback);
+}
+
+void YmqbStartBattleCallback(void *data)
+{
+    YmqbFight *fight = &((YmqbWork *)data)->fight;
+    Vector3 basePosition;
+    int i;
+    EVT_AT_CharaDisp(YMQB_A128, 0, 1);
+    EVT_AT_CharaDisp(YMQB_ANC, 0, 1);
+    FTBL.camCtrlSetState(9);
+    FTBL.camCtrlSetNextPosition(&ymqbBattleEye);
+    FTBL.camCtrlSetTargetPosition(&ymqbBattleTarget);
+    FTBL.shenStartFGST(10, 10, 0, 0);
+    EVT_AT_SetPos(YMQB_RYO, YMQB_RYO, 0.0f, 0.2f, 0.0f, 0);
+    EVT_AT_SetAngY(YMQB_RYO, YMQB_RYO, 180.0f, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(YMQB_RYO), 0, 0, 0, 0, 0);
+    FTBL.GetCharaPosition(YMQB_BASE, -1, &basePosition, 0x40000000);
+    FTBL.vfCopyPosFromEntity(0, 0, basePosition.x, basePosition.z, 5.0f);
+    if (fight->qteSucceeded) {
+        for (i = 2; i < 4; i++) {
+            shen_name character = ymqbCharacters[i];
+            EVT_AT_SetPos(character, character, 0.0f, 0.2f, 0.0f, 0);
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(character), 0, 1, 1, 200, 2);
+        }
+        FTBL.vfmQueueFightStart(3, 2, 1, 1.0f, -1);
+    } else {
+        for (i = 1; i < 4; i++) {
+            shen_name character = ymqbCharacters[i];
+            EVT_AT_SetPos(character, character, 0.0f, 0.2f, 0.0f, 0);
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(character), 0, 1, 1, 200, 2);
+        }
+        FTBL.vfmQueueFightStart(4, 2, 1, 1.0f, -1);
+    }
+    FTBL.EV_vfBattleUtil(1, 2, 1);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.HLib_SetCurrentTaskTo(YmqbBattleCallback);
+}
+
+void YmqbBattleCallback(void *data)
+{
+    YmqbWork *work = (YmqbWork *)data;
+    if (FTBL.IsFightActive())
+        return;
+    if (FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(YMQB_RYO)) == 3) {
+        work->won = 1;
+        FTBL.EV_stepSetFlags(50, 0);
+        FTBL.HLib_SetCurrentTaskTo(YmqbWinAuthorCallback);
+    } else {
+        work->won = 0;
+        FTBL.EV_stepSetFlags(50, 1);
+        FTBL.HLib_SetCurrentTaskTo(YmqbLoseAuthorCallback);
+    }
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+    EVT_AT_SetSample(0, 1, 0);
+    FTBL.HLib_SetupTaskDelay(60);
+}
+
+void YmqbWinAuthorCallback(void *data)
+{
+    EVT_AT_CharaDisp(YMQB_A128, 0, 0);
+    EVT_AT_CharaDisp(YMQB_GEN, 0, 0);
+    EVT_AT_CharaDisp(YMQB_ANC, 0, 0);
+    FTBL.EV_LoadAudio("0039A000", 3);
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_authSceneCtrl(SHEN_NAME4('A', 'T', 'H', '3'));
+    FTBL.HLib_SetCurrentTaskTo(YmqbResultAuthorCallback);
+}
+
+void YmqbLoseAuthorCallback(void *data)
+{
+    EVT_AT_CharaDisp(YMQB_A128, 0, 0);
+    EVT_AT_CharaDisp(YMQB_GEN, 0, 0);
+    EVT_AT_CharaDisp(YMQB_ANC, 0, 0);
+    FTBL.EV_LoadAudio("0039A000", 3);
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_authSceneCtrl(SHEN_NAME4('A', 'T', 'H', '4'));
+    FTBL.HLib_SetCurrentTaskTo(YmqbResultAuthorCallback);
+}
+
+void YmqbResultAuthorCallback(void *data)
+{
+    int i;
+    if (FTBL.EV_authSceneCtrl(-6) == 1)
+        for (i = 0; i < 6; i++)
+            FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ymqbCharacters[i]), 1);
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        EVT_AT_SetSample(0, 1, 0);
+        FTBL.HLib_SetCurrentTaskTo(YmqbEndCallback);
+        FTBL.HLib_SetupTaskDelay(60);
+    }
+}
+
+void YmqbEndCallback(void *data)
+{
+    YmqbEnd((YmqbWork *)data);
+}
+
+void YmqbSetup(YmqbWork *work)
+{
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    work->characters = Queue_EVT_AT_ReadChr(work->task, ymqbCharacters);
+    work->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
+    work->won = 1;
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"039E", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(7), (int)"0039", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"YMQB", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "YMQB", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "YMQB", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0039");
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0039A000");
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    FTBL.camCtrlSetFarDistance(60.0f);
+    FTBL.camCtrlSetNearDistance(20.0f);
+    FTBL.flddSetPointFlagOnGrid(YMQB_FIGHT_GRID, 1);
+    FTBL.flddSetPointFlagOnGrid(YMQB_DEFAULT_GRID, 0);
+}
+
+void YmqbCleanup(YmqbWork *work)
+{
+    if (!work->won)
+        AdvanceSleepToMorning();
+    FTBL.flddSetPointFlagOnGrid(YMQB_DEFAULT_GRID, 1);
+    FTBL.flddSetPointFlagOnGrid(YMQB_FIGHT_GRID, 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(YMQB_RYO), 0);
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0039");
+    FTBL.EV_ControlPackageResources(0, 6, "YMQB", 0, 0);
+    FTBL.EV_ControlPackageResources(0, 6, "0039", 0, 0);
+    FTBL.EV_ControlPackageResources(0, 6, "039E", 0, 0);
+    FTBL.DeleteMotion(work->motion);
+    ET_AT_KillWork(work->characters);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+}
+#endif
+#else
 #include "s2/areas/area_ymqb.hpp"
 #include "s2/author.hpp"
 #include "s2/camera.hpp"
@@ -248,3 +492,4 @@ void YmqbEndCallback(void *data) {
 
 const ScriptAreaDefinition ymqbScriptDefinition{.areaId = AREA_YMQB, .field04 = 0, .init = YmqbInitNullsub, .main = YmqbMain};
 } // namespace shenmue::s2::areas
+#endif

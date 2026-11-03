@@ -1,3 +1,28 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_kwwq.hpp"
+
+void AreaMain(unsigned int startParameters)
+{
+    FTBL.HLib_EnqueueTaskWithoutParameter(KWWQMainLoopCallback, 4, 11, TASK_EVNT);
+}
+
+void AreaCleanup(int afternoon)
+{
+    FTBL.CheckIsArgEquZero(1, 1);
+    FTBL.ReinitializeLights(1);
+    FTBL.SetLightFlagForIndex(0, 2);
+    FTBL.SetLightEntryIndex(0, 1);
+    AreaKWWQCleanupNullsub(afternoon);
+}
+
+void AreaKWWQCleanupNullsub(int afternoon)
+{
+}
+
+void KWWQMainLoopCallback(void *taskData)
+{
+}
+#else
 #include "s2/areas/area_kwwq.hpp"
 
 #include "s2/event_runtime.hpp"
@@ -42,3 +67,4 @@ const GameplayAreaDefinition areaKWWQGameplayDefinition{
 };
 
 } // namespace shenmue::s2::areas
+#endif

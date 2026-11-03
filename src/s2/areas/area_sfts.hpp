@@ -1,4 +1,63 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/common/et_street_debug.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define SFTS_VCN SHEN_NAME4('V', 'C', 'N', '_')
+#define SFTS_KFT SHEN_NAME4('K', 'F', 'T', '_')
+#define SFTS_CHN SHEN_NAME4('C', 'H', 'N', '_')
+#define SFTS_PACKAGE SHEN_NAME4('Q', '1', '0', '0')
+#define SFTS_BOOKIE_CAMERA SHEN_NAME4('d', 'u', 'm', 'A')
+#define SFTS_FIGHTER_CAMERA SHEN_NAME4('d', 'u', 'm', 'P')
+#define SFTS_OMAKE_SCENE SHEN_NAME4('O', 'M', 'A', 'K')
+#define SFTS_QRON_SCENE SHEN_NAME4('Q', 'R', '0', '0')
+#define SFTS_OPEN_HAND_POSE 11
+#define SFTS_CLOSED_HAND_POSE 12
+#define SFTS_CHEST_HAND_POSE 18
+#define SFTS_SUMO_HAND_POSE 37
+
+typedef struct SftsQteDefinition {
+    unsigned short parameters[4];
+    int commands[8];
+} SftsQteDefinition;
+
+void SftsMain(StreetFightStartParameters *start);
+void QueueNormal(StreetFightStartParameters *start);
+void LoadNormalResources(StreetFightEventWork *work);
+void PlaceNormal(StreetFightEventWork *work);
+StreetFightEventWork *InitializeNormal(HLibTask *task);
+void NormalDebugCallback(void *data);
+void CleanupNormalCallback(void *data);
+void MainCallback(void *data);
+void RetryBeginCallback(void *data);
+void RetryChoiceCallback(void *data);
+void RetryResetCallback(void *data);
+void RetryCancelCallback(void *data);
+int FirstIntroConversation(void *data);
+int RepeatIntroConversation(void *data);
+int AcceptConversation(void *data);
+int SecondAcceptConversation(void *data);
+int DeclineConversation(void *data);
+int InsufficientConversation(void *data);
+void BattleEntryCallback(void *data);
+void BattlePreEventCallback(void *data);
+void BattlePreInitCallback(void *data);
+void BattleStartCallback(void *data);
+void BattleWaitCallback(void *data);
+void BattleEndCallback(void *data);
+int VictoryConversation(void *data);
+int VictoryAppearanceConversation(void *data);
+int DefeatConversation(void *data);
+void ConfigureBattleQte(int rank);
+int ControlBattleQte(StreetFightEventWork *work);
+void PrepareLowRankQte(StreetFightEventWork *work);
+void PrepareHighRankQte(StreetFightEventWork *work);
+int PollBattlePrompt(void);
+void ResetQtePositions(StreetFightEventWork *work);
+void RandomQteVoice(void);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/street_fight_event.hpp"
 namespace shenmue::s2 {
@@ -91,3 +150,4 @@ inline constexpr Vector3 SFTS_CHEST_PLAYER_POSITION{-3.2100000381469727f, 0.0f, 
 inline constexpr Vector3 SFTS_CHEST_FIGHTER_POSITION{0.36000001430511475f, 0.0f, 1.7000000476837158f};
 extern const ScriptAreaDefinition areaSftsScriptDefinition;
 } // namespace shenmue::s2
+#endif

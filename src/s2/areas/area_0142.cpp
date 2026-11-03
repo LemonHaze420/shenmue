@@ -1,3 +1,109 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0142.hpp"
+#include "s2/event_queued_dc.h"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void E0142Main(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0142MainCallback, 4, 11, sizeof(E0142TaskParameter), TASK_EVNT);
+    E0142TaskParameter *parent = (E0142TaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->state = 1;
+    parent->selection = 0;
+    SetupE0142Environment();
+    Queue_EVT_UTL_LoadNPCChara_3(area0142Characters, parent->self);
+}
+#else
+shen_name area0142Characters[] = {AREA_0142_KUN_, INVALID_CHARACTER};
+
+void E0142MainCallback(void *taskData)
+{
+    E0142TaskParameter *parent = (E0142TaskParameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        QueueE0142Loop(parent);
+        break;
+    case 3:
+        CleanupE0142(parent);
+        break;
+    }
+}
+
+void QueueE0142Loop(E0142TaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0142LoopCallback, 4, 11, sizeof(E0142LoopParameter), TASK_EVNT);
+    E0142LoopParameter *child = (E0142LoopParameter *)FTBL.HLib_GetTaskParameter(task);
+    child->parent = parent;
+    child->frame = 0;
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    SetupE0142Characters();
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void E0142LoopCallback(void *taskData)
+{
+    E0142LoopParameter *child = (E0142LoopParameter *)taskData;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_SetupTimedTask(child->parent->self, 180);
+        RestoreE0142Characters();
+        child->parent->state = 3;
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void SetupE0142Environment(void)
+{
+    EventDateTime time;
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    time.hour = 22;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0142");
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    FTBL.EV_lightLoad(AREA_0142_LIGHT);
+    FTBL.PushGlobalLightingProgram();
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    FTBL.UpdateWeather();
+}
+
+void CleanupE0142(E0142TaskParameter *parent)
+{
+    EventDateTime time;
+    EVT_UTL_FreeNPCChara(area0142Characters);
+    FTBL.AddInventoryItem(0x1f4c, 1, 0);
+    FTBL.EV_FreeAuthorPak(0, "0142");
+    FTBL.HLib_DestroyTask(parent->self);
+    AdvanceSleepToMorning();
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    time.hour = 8;
+    time.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+    FTBL.SetSceneInfos(3, AREA_0142_NEXT_MAP, 0);
+    FTBL.StartShowScreenOfId(4);
+}
+
+void SetupE0142Characters(void)
+{
+    HideAuthorCharacter(RYO_CHARACTER);
+    HideAuthorCharacter(AREA_0142_KUN_);
+    HideAuthorProp(AREA_0142_A540);
+}
+
+void RestoreE0142Characters(void)
+{
+    ShowAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorCharacter(AREA_0142_KUN_);
+    ShowAuthorProp(AREA_0142_A540);
+}
+
+#define SHENMUE_EVENT_AUTHOR_PROPS
+#include "s2/events/event_author_dc.h"
+#endif
+#else
 #include "s2/areas/area_0142.hpp"
 #include "s2/inventory.hpp"
 #include "s2/author.hpp"
@@ -119,3 +225,4 @@ void E0142LoopCallback(void *data) {
 } // namespace
 const ScriptAreaDefinition area0142ScriptDefinition{.areaId = AREA_0142_AREA, .field04 = 0, .init = E0142Init, .main = E0142Main};
 } // namespace shenmue::s2::areas
+#endif

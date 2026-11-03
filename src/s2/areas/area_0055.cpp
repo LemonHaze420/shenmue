@@ -1,3 +1,301 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0055.hpp"
+#include "s2/event_queued_dc.h"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void E0055Main(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0055MainCallback, 4, 11, sizeof(E0055TaskParameter), TASK_EVNT);
+    E0055TaskParameter *parent = (E0055TaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0055A.MOT");
+    parent->state = 1;
+    parent->selection = (unsigned int)g_entryPoint > 7 ? 0 : g_entryPoint;
+    SetupE0055Environment();
+    Queue_EVT_UTL_LoadNPCChara_3(area0055Characters, parent->self);
+}
+#else
+shen_name area0055Characters[] = {AREA_0055_WON, INVALID_CHARACTER};
+HarborFloatingModel harborFloatingModels0055[] = {{5, {132.1f, 93.928f, 492.16f}}, {6, {132.1f, 93.928f, 524.16f}}, {7, {132.1f, 93.928f, 556.16f}},
+    {8, {100.1f, 93.928f, 524.16f}}, {9, {100.1f, 93.928f, 556.16f}}, {-1, {0.0f, 0.0f, 0.0f}}};
+static unsigned char distance0055[0x100];
+static unsigned char kernel0055First[0x100];
+static unsigned char kernel0055Second[0x100];
+
+void E0055MainCallback(void *taskData)
+{
+    E0055TaskParameter *parent = (E0055TaskParameter *)taskData;
+    switch (parent->state) {
+    case 4:
+        AdvanceSleepToMorning();
+        FTBL.Queue_ST_LoadTitleFadeIn(AREA_0055_NDAY);
+        FTBL.HLib_SetupTimedTask(parent->self, 60);
+        parent->state = 5;
+        break;
+    case 5:
+        FTBL.ST_LoadTitleFade();
+        FTBL.HLib_SetupTimedTask(parent->self, 60);
+        parent->state = 1;
+        break;
+    case 1:
+        QueueE0055Loop(parent);
+        break;
+    case 3:
+        CleanupE0055(parent);
+        break;
+    }
+}
+
+void QueueE0055Loop(E0055TaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0055LoopCallback, 4, 11, sizeof(E0055LoopTaskParameter), TASK_EVNT);
+    E0055LoopTaskParameter *loop = (E0055LoopTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    loop->parent = parent;
+    loop->currentFrame = 0;
+    if (loop->parent->selection == 6) {
+        FTBL.EV_LoadCutsceneFromCurrentScene("0055A000");
+        SetupE0055Evening();
+    } else if (loop->parent->selection == 7) {
+        FTBL.EV_LoadCutsceneFromCurrentScene("0055A005");
+        parent->voice = FTBL.shenPlayAudioWithFlags("wonjunk", 1);
+        SetupE0055Morning();
+    } else
+        FTBL.EV_LoadCutsceneFromCurrentScene("0055A010");
+    FTBL.EV_spmBeginSampleExecute(0);
+    SetupE0055Characters(parent->selection);
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void E0055LoopCallback(void *taskData)
+{
+    E0055LoopTaskParameter *loop = (E0055LoopTaskParameter *)taskData;
+    if (FTBL.EV_authSceneCtrl(-6) == 1)
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        RestoreE0055Characters(loop->parent->selection);
+        if (loop->parent->selection == 6) {
+            FTBL.HLib_SetupTimedTask(loop->parent->self, 30);
+            loop->parent->state = 4;
+            loop->parent->selection++;
+        } else {
+            if (loop->parent->selection == 7) {
+                FTBL.hsFadeVoice(loop->parent->voice, 30);
+                FTBL.HLib_SetupTimedTask(loop->parent->self, 130);
+                FTBL.AddInventoryItem(24, 1, 1);
+            } else
+                FTBL.HLib_SetupTimedTask(loop->parent->self, 30);
+            loop->parent->state = 3;
+        }
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void SetupE0055Environment(void)
+{
+    EventDateTime time;
+    Vector3 direction;
+    const float *first;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0055");
+    switch (g_entryPoint) {
+    case 0:
+    case 1:
+    case 2:
+    case 6:
+        FTBL.GetCurrentDateTime((DateTime *)&time);
+        time.hour = 22;
+        time.minute = 0;
+        FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+        FTBL.SetMapModelDataDefaultVertexShader();
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+        FTBL.PushGlobalLightingProgram();
+        FTBL.SetObjectFlagByIndex(10, 0);
+        FTBL.SetObjectFlagByIndex(11, 1);
+        FTBL.SetObjectFlagByIndex(12, 0);
+        break;
+    case 3:
+    case 4:
+    case 5:
+    case 7:
+        FTBL.GetCurrentDateTime((DateTime *)&time);
+        time.hour = 8;
+        time.minute = 0;
+        FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+        FTBL.ReinitializeLights(1);
+        FTBL.SetLightFlagForIndex(0, 2);
+        FTBL.SetLightEntryIndex(0, 1);
+        FTBL.SetObjectFlagByIndex(10, 1);
+        FTBL.SetObjectFlagByIndex(11, 0);
+        break;
+    }
+    FTBL.EV_authSceneCtrl(-11);
+    FTBL.SetRenderClockAndCompassTo(1);
+    if ((unsigned int)g_entryPoint < 6)
+        FTBL.EV_authSceneCtrl(-8);
+    FTBL.GenerateFFT(2.0f);
+    FTBL.fft_fill_dist(FTBL.fft_fill_krn(10.0f, FTBL.generate_distance_falloff_row_major(1.717f, distance0055)));
+    first = (const float *)(FTBL.fft_fill_krn(0.061f, FTBL.generate_distance_falloff_kernel_8x8(0.376f, kernel0055First)));
+    FTBL.fft_bins_load_pairwise_tables(
+        first, (const float *)(FTBL.fft_fill_krn(0.073f, FTBL.generate_distance_falloff_kernel_8x8(0.647f, kernel0055Second))));
+    FTBL.FFTUtil(0.001f, 0.001f);
+    direction.x = -0.1632f;
+    direction.y = 0.9818f;
+    direction.z = -0.0969f;
+    FTBL.set_lighting_flags(0.1f, &direction);
+    FTBL.HLib_EnqueueTaskWithoutParameter(HarborAuthorWaveCallback, 3, 2, TASK_EVNT);
+    FTBL.HLib_EnqueueTaskWithoutParameter(HarborAuthorShipCallback, 3, 2, TASK_EVNT);
+}
+
+void CleanupE0055(E0055TaskParameter *parent)
+{
+    EVT_UTL_FreeNPCChara(area0055Characters);
+    FTBL.EV_authSceneCtrl(-10);
+    FTBL.EV_FreeAuthorPak(0, "0055");
+    FTBL.DeleteMotion(parent->motion);
+    FTBL.HLib_DestroyTask(parent->self);
+    if (g_entryPoint == 6)
+        FTBL.EV_scenQueueLoad(g_actNumber, AREA_0055_AB00, 51);
+    else
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+}
+
+void SetupE0055Evening(void)
+{
+    EventDateTime time;
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    time.hour = 22;
+    time.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+    FTBL.SetObjectFlagByIndex(2, 0);
+    FTBL.SetObjectFlagByIndex(3, 1);
+    FTBL.SetObjectFlagByIndex(12, 1);
+    FTBL.SetMapModelVertexShaderType(3, 1);
+    FTBL.SetMapModelVertexShaderType(12, 1);
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+}
+
+void SetupE0055Morning(void)
+{
+    FTBL.SetObjectFlagByIndex(2, 0);
+    FTBL.SetObjectFlagByIndex(3, 1);
+    FTBL.SetObjectFlagByIndex(10, 1);
+    FTBL.SetObjectFlagByIndex(11, 0);
+    FTBL.SetObjectFlagByIndex(12, 1);
+    FTBL.SetMapModelVertexShaderType(3, 1);
+    FTBL.SetMapModelVertexShaderType(12, 1);
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+}
+
+void SetupE0055Characters(short selection)
+{
+    HideAuthorCharacterDisplay(RYO_CHARACTER);
+    HideAuthorCharacterDisplay(AREA_0055_WON);
+    switch (selection) {
+    case 6:
+        HideAuthorPropDisplay(AREA_0055_A126);
+        HideAuthorPropDisplay(AREA_0055_A142);
+        break;
+    case 7:
+        HideAuthorPropDisplay(AREA_0055_A142);
+        HideAuthorPropDisplay(AREA_0055_A506);
+        HideAuthorPropDisplay(AREA_0055_AA50);
+        HideAuthorPropDisplay(AREA_0055_A504);
+        break;
+    default:
+        HideAuthorPropDisplay(AREA_0055_A016);
+        HideAuthorPropDisplay(AREA_0055_A298);
+        break;
+    }
+}
+
+void RestoreE0055Characters(short selection)
+{
+    ShowAuthorCharacterDisplay(RYO_CHARACTER);
+    ShowAuthorCharacterDisplay(AREA_0055_WON);
+    switch (selection) {
+    case 6:
+        ShowAuthorPropDisplay(AREA_0055_A126);
+        ShowAuthorPropDisplay(AREA_0055_A142);
+        break;
+    case 7:
+        ShowAuthorPropDisplay(AREA_0055_A142);
+        ShowAuthorPropDisplay(AREA_0055_A506);
+        ShowAuthorPropDisplay(AREA_0055_AA50);
+        ShowAuthorPropDisplay(AREA_0055_A504);
+        break;
+    default:
+        ShowAuthorPropDisplay(AREA_0055_A016);
+        ShowAuthorPropDisplay(AREA_0055_A298);
+        break;
+    }
+}
+
+void HideAuthorCharacterDisplay(shen_name character)
+{
+    FTBL.EV_EnsureCharacterDraw(character);
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void ShowAuthorCharacterDisplay(shen_name character)
+{
+    FTBL.EV_ToggleCharacterFlag(character);
+    FTBL.EV_DisableCharacterDisplay(character);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void HideAuthorPropDisplay(shen_name prop)
+{
+    FTBL.EV_EnsureCharacterDraw(prop);
+    FTBL.EV_EnableCharacterDisplay(prop);
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 0);
+}
+
+void ShowAuthorPropDisplay(shen_name prop)
+{
+    FTBL.EV_ToggleCharacterFlag(prop);
+    FTBL.EV_DisableCharacterDisplay(prop);
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 1);
+}
+
+void HarborAuthorWaveCallback(void *taskData)
+{
+    HarborWeatherColours *colours = &((HarborWeatherValues *)FTBL.GetInterpolatedWeatherValues())->colours;
+    float diffuseRed = (unsigned char)(colours->diffuse >> 16) / 255.0f;
+    float diffuseGreen = (unsigned char)(colours->diffuse >> 8) / 255.0f;
+    float diffuseBlue = (unsigned char)colours->diffuse / 255.0f;
+    float specularRed = (unsigned char)(colours->specular >> 16) / 255.0f;
+    float specularGreen = (unsigned char)(colours->specular >> 8) / 255.0f;
+    float specularBlue = (unsigned char)colours->specular / 255.0f;
+    float power;
+    void *model;
+    diffuseRed *= 0.3607f;
+    diffuseGreen *= 0.3725f;
+    diffuseBlue *= 0.4352f;
+    specularRed *= 0.2549f;
+    specularGreen *= 0.38f;
+    specularBlue *= 0.2862f;
+    power = 42.54f;
+    FTBL.BuildLightingTableFrom(1, 1.0f, 1.0f, diffuseRed, diffuseGreen, diffuseBlue, specularRed, specularGreen, specularBlue, power, 1.0f);
+    FTBL.CalculateFieldCollision(((HarborMapModelRoot *)FTBL.GetMapModelRoot(12))->model->collision);
+    FTBL.nlSetTexanimUV(0.0f, 0.0001f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(3));
+    model = FTBL.GetMapModelRoot(3);
+    FTBL.TransformFieldCollisionForModel(model);
+}
+
+void HarborAuthorShipCallback(void *taskData)
+{
+    FTBL.ApplyMapModelTransforms(2, harborFloatingModels0055);
+}
+#endif
+#else
 #include "s2/areas/area_0055.hpp"
 #include "s2/map_assets.hpp"
 #include "s2/sound_program.hpp"
@@ -242,3 +540,4 @@ void E0055MainCallback(void *parameter) {
 } // namespace
 const ScriptAreaDefinition area0055ScriptDefinition{AREA_0055_AREA, 0, E0055Init, E0055Main};
 } // namespace shenmue::s2::areas
+#endif

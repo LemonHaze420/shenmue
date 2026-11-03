@@ -1,4 +1,78 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_utility_dc.h"
+#include "s2/sk_event_dc.h"
+
+#define STEP_AREA SHEN_NAME4('S', 'T', 'E', 'P')
+#define STEP_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define STEP_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define STEP_CHD SHEN_NAME4('C', 'H', 'D', '_')
+#define STEP_ISN SHEN_NAME4('I', 'S', 'N', '_')
+#define STEP_KRD SHEN_NAME4('K', 'R', 'D', '_')
+#define STEP_KR4 SHEN_NAME4('K', 'R', '4', '_')
+#define STEP_KF4 SHEN_NAME4('K', 'F', '4', '_')
+#define STEP_TGY SHEN_NAME4('T', 'G', 'Y', '_')
+#define STEP_AUTHOR SHEN_NAME4('A', 'U', 'T', 'H')
+#define STEP_DEBUG_ID 3
+#define STEP_ENEMY_RIG 7
+typedef struct StepEventWork {
+    HLibTask *task;
+    short state;
+    short phase;
+    EventReadCharactersWork *characters;
+    int qteElapsed;
+    int reserved10;
+    unsigned short qteStatus, reserved16;
+    int qteSucceeded;
+} StepEventWork;
+typedef struct StepDescentWork {
+    HLibTask *task;
+    shen_name character;
+    short phase;
+    short steps;
+} StepDescentWork;
+extern shen_name stepCharacterNames[];
+extern shen_name stepAuthorCharacterNames[];
+void Queue_EVT_AT_NPCClear(void *argument);
+void Queue_eSTEP_EVT_KaidanQteMain(void *data);
+int STEP_SetupKaidanQte(StepEventWork *work);
+int STEP_FinishKaidanAuthor(StepEventWork *work);
+void eSTEP_EVT_EndKaidanQte_Callback(void *data);
+void eSTEP_EVT_KaidanQteMain_Callback(void *data);
+int STEP_RunKaidanQte(StepEventWork *work);
+int STEP_BeginFirstOpponent(StepEventWork *work);
+int STEP_FirstDodgeSuccess(void);
+int STEP_FirstDodgeFailure(void);
+int STEP_FirstCounterSuccess(void);
+int STEP_FirstCounterFailure(void);
+int STEP_BeginSecondOpponent(StepEventWork *work);
+int STEP_SecondDodgeSuccess(void);
+int STEP_SecondDodgeFailure(void);
+int STEP_SecondCounterSuccess(void);
+int STEP_SecondCounterFailure(void);
+int STEP_BeginThirdOpponent(StepEventWork *work);
+int STEP_ThirdCounterSuccess(void);
+int STEP_ThirdCounterFailure(void);
+int STEP_BeginFourthOpponent(StepEventWork *work);
+int STEP_FourthDodgeSuccess(void);
+int STEP_FourthDodgeFailure(void);
+int STEP_FourthComboSuccess(void);
+int STEP_FourthComboFailure(void);
+int STEP_FourthCounterSuccess(void);
+int STEP_FourthCounterFailure(void);
+int STEP_BeginFinalOpponent(StepEventWork *work);
+int STEP_FinalDodgeSuccess(void);
+int STEP_FinalDodgeFailure(void);
+void STEP_PositionRunningOpponent(shen_name character, float offset, int delay);
+void QueueStepDescent(shen_name character, short steps, int delay);
+void eSTEP_EVT_Step(void *data);
+int STEP_RunKaidanAuthor(StepEventWork *work);
+void STEP_AuthorFrameCallback(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include <array>
@@ -86,3 +160,4 @@ void EVT_SK_AuthStart_Callback(void *taskData);
 void EVT_SK_WaitQTE_Callback(void *taskData);
 extern const ScriptAreaDefinition stepScriptDefinition;
 } // namespace shenmue::s2
+#endif

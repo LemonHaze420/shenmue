@@ -1,3 +1,263 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_urni.hpp"
+
+const UranaiConfiguration uranaiSykConfiguration = {{246.39999389648438f, 104.5f, 167.25999450683594f}, 0.0f, 10, UranaiSykSetup, UranaiSykModeOne,
+    UranaiSykIntroduction, UranaiSykSame, UranaiSykDecline, UranaiSykBeginReading, UranaiSykReading, UranaiSykResult, UranaiSykPayment,
+    UranaiSykInsufficientCash};
+const UranaiConfiguration uranaiKlnConfiguration = {{277.70999145507812f, 100.0f, 135.83999633789062f}, -90.0f, 20, UranaiKlnSetup, UranaiKlnModeOne,
+    UranaiKlnIntroduction, UranaiKlnSame, UranaiKlnDecline, UranaiKlnBeginReading, UranaiKlnReading, UranaiKlnResult, UranaiKlnPayment,
+    UranaiKlnInsufficientCash};
+const UranaiConfiguration uranaiMm5Ar01Configuration = {{177.89999389648438f, 100.34999847412109f, 314.20001220703125f}, 180.0f, 20, UranaiMm5Setup,
+    UranaiMm5ModeOne, UranaiMm5Introduction, UranaiMm5Same, UranaiMm5Decline, UranaiMm5BeginReading, UranaiMm5Reading, UranaiMm5Result,
+    UranaiMm5Payment, UranaiMm5InsufficientCash};
+const UranaiConfiguration uranaiMm5Ws00Configuration = {{71.860000610351562f, 98.199996948242188f, 118.94000244140625f}, 180.0f, 20, UranaiMm5Setup,
+    UranaiMm5ModeOne, UranaiMm5Introduction, UranaiMm5Same, UranaiMm5Decline, UranaiMm5BeginReading, UranaiMm5Reading, UranaiMm5Result,
+    UranaiMm5Payment, UranaiMm5InsufficientCash};
+const UranaiConfiguration uranaiMm5OtherConfiguration = {{293.35000610351562f, 100.0f, 153.72999572753906f}, 90.0f, 20, UranaiMm5Setup,
+    UranaiMm5ModeOne, UranaiMm5Introduction, UranaiMm5Same, UranaiMm5Decline, UranaiMm5BeginReading, UranaiMm5Reading, UranaiMm5Result,
+    UranaiMm5Payment, UranaiMm5InsufficientCash};
+const UranaiConfiguration uranaiSehConfiguration = {{291.73001098632812f, 100.0f, 164.89999389648438f}, 0.0f, 20, UranaiSehSetup, UranaiSehModeOne,
+    UranaiSehIntroduction, UranaiSehSame, UranaiSehDecline, UranaiSehBeginReading, UranaiSehReading, UranaiSehResult, UranaiSehPayment,
+    UranaiSehInsufficientCash};
+const UranaiConfiguration uranaiSriConfiguration = {{122.23000335693359f, 93.019996643066406f, 165.41999816894531f}, 100.0f, 20, UranaiSriSetup,
+    UranaiSriModeOne, UranaiSriIntroduction, UranaiSriSame, UranaiSriDecline, UranaiSriBeginReading, UranaiSriReading, UranaiSriResult,
+    UranaiSriPayment, UranaiSriInsufficientCash};
+const UranaiConfiguration uranaiRcdConfiguration = {{332.67001342773438f, 126.98999786376953f, 290.32000732421875f}, 0.0f, 20, UranaiRcdSetup,
+    UranaiRcdModeOne, UranaiRcdIntroduction, UranaiRcdSame, UranaiRcdDecline, UranaiRcdBeginReading, UranaiRcdReading, UranaiRcdResult,
+    UranaiRcdPayment, UranaiRcdInsufficientCash};
+static shen_name uranaiCharacters[] = {URNI_PLAYER, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID};
+static UranaiSelection uranaiSelections[] = {{URNI_SYK, 2}, {URNI_KLN, 2}, {URNI_MM5, 2}, {URNI_SEH, 2}, {URNI_SRI, 2}, {URNI_RCD, 2}};
+
+void AreaURNIMain(void *argument)
+{
+    QueueClearNpcs(QueueUranaiStart, argument);
+}
+
+void QueueUranaiStart(void *parameter)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(UranaiStart, 4, 11, sizeof(UranaiWork), TASK_EVNT);
+    UranaiWork *work = (UranaiWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    work->selection = parameter ? (const UranaiSelection *)parameter : &uranaiSelections[g_entryPoint];
+    InitializeUranai(work);
+    EventDebugRegister(URNI_DEBUG_ID, UranaiDebugEnd, work, 2000000000);
+}
+
+void UranaiDebugEnd(void *data)
+{
+    UranaiEnd(data);
+}
+
+void UranaiEnd(void *data)
+{
+    UranaiWork *work = (UranaiWork *)data;
+    CleanupUranai(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    EventDebugUnregister(URNI_DEBUG_ID);
+}
+
+void UranaiStart(void *data)
+{
+    UranaiWork *work = (UranaiWork *)data;
+    const UranaiSelection *selection = work->selection;
+    int delay;
+    EventDebugCheck(URNI_DEBUG_ID, 4);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(URNI_PLAYER));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(URNI_PLAYER), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(URNI_PLAYER), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(URNI_PLAYER), 0, (void *)areaLoopHandPoses[URNI_GRIP_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(URNI_PLAYER), 1, (void *)areaLoopHandPoses[URNI_GRIP_HAND_POSE], 0);
+    ConfigureUranai(work, selection->reader);
+    FTBL.AT_SetLocalBaseChara(URNI_PLAYER, URNI_BASE);
+    FTBL.AT_SetLocalBaseChara(URNI_PLAYER_DUMMY, URNI_PLAYER);
+    FTBL.AT_SetLocalBaseChara(selection->reader, URNI_BASE);
+    FTBL.AT_SetLocalBaseChara(URNI_READER_DUMMY, selection->reader);
+    EVT_AT_SetPos(URNI_PLAYER_DUMMY, URNI_PLAYER, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(URNI_PLAYER_DUMMY, URNI_PLAYER, 0.0f, 0);
+    EVT_AT_SetPos(URNI_READER_DUMMY, selection->reader, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(URNI_READER_DUMMY, selection->reader, 0.0f, 0);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    if (selection->mode == 1) {
+        EVT_AT_SetSample(0, 0, 0);
+        delay = work->configuration->modeOne(selection->reader, 0);
+        FTBL.HLib_SetCurrentTaskTo(UranaiFade);
+        FTBL.HLib_SetupTaskDelay(delay);
+    } else {
+        FTBL.EV_LoadAudio("01200000", 0);
+        EVT_AT_SetSample(0, 0, 0);
+        delay = work->configuration->introduction(selection->reader, 0);
+        if (delay) {
+            FTBL.FinishLoading();
+            FTBL.CheckHelpIcon(1, 0, 0);
+            EVT_AT_KsIcon_Enqueue(0xffff, 49, 154, 0xffff, 1800, 154, 2, delay);
+            FTBL.HLib_SetCurrentTaskTo(UranaiSelect);
+            FTBL.HLib_SetupTaskDelay(delay);
+        } else
+            FTBL.HLib_SetCurrentTaskTo(UranaiSame);
+    }
+}
+
+void UranaiSelect(void *data)
+{
+    UranaiWork *work = (UranaiWork *)data;
+    const UranaiSelection *selection = work->selection;
+    const UranaiConfiguration *configuration = work->configuration;
+    int delay;
+    if (FTBL.GetShouldRenderIcons(2))
+        return;
+    FTBL.FinishLoading();
+    FTBL.CheckHelpIcon(0, 0, 0);
+    if (FTBL.shenGetCtrlSpeakIconFlag() == 49) {
+        if (FTBL.GetPlayerStat(2) >= configuration->price) {
+            delay = configuration->beginReading(selection->reader, 0);
+            delay = configuration->reading(selection->reader, delay);
+            FTBL.HLib_SetCurrentTaskTo(UranaiResult);
+            FTBL.HLib_SetupTaskDelay(delay);
+        } else {
+            delay = configuration->insufficientCash(selection->reader, 0);
+            FTBL.HLib_SetCurrentTaskTo(UranaiFade);
+            FTBL.HLib_SetupTaskDelay(delay - 60);
+        }
+    } else {
+        delay = configuration->decline(selection->reader, 0);
+        FTBL.HLib_SetCurrentTaskTo(UranaiFade);
+        FTBL.HLib_SetupTaskDelay(delay - 60);
+    }
+}
+
+void UranaiResult(void *data)
+{
+    UranaiWork *work = (UranaiWork *)data;
+    const UranaiSelection *selection = work->selection;
+    int delay = work->configuration->result(selection->reader, 0);
+    if (delay < 0)
+        FTBL.HLib_SetCurrentTaskTo(UranaiSame);
+    else {
+        FTBL.HLib_SetCurrentTaskTo(UranaiMoney);
+        FTBL.HLib_SetupTaskDelay(delay);
+    }
+}
+
+void UranaiSame(void *data)
+{
+    UranaiWork *work = (UranaiWork *)data;
+    const UranaiSelection *selection = work->selection;
+    int delay = work->configuration->same(selection->reader, 0);
+    FTBL.HLib_SetCurrentTaskTo(UranaiFade);
+    FTBL.HLib_SetupTaskDelay(delay - 60);
+}
+
+void UranaiMoney(void *data)
+{
+    UranaiWork *work = (UranaiWork *)data;
+    const UranaiSelection *selection = work->selection;
+    const UranaiConfiguration *configuration = work->configuration;
+    int delay = configuration->payment(selection->reader, 0);
+    EVT_AT_StartMoneyCount(-configuration->price, delay - 150);
+    FTBL.HLib_SetCurrentTaskTo(UranaiFade);
+    FTBL.HLib_SetupTaskDelay(delay - 60);
+}
+
+void UranaiFade(void *data)
+{
+    UranaiWork *work = (UranaiWork *)data;
+    if (work->selection->mode != 1)
+        EVT_AT_SetSample(0, 1, 0);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+    FTBL.HLib_SetCurrentTaskTo(UranaiFadeEnd);
+    FTBL.HLib_SetupTaskDelay(60);
+}
+
+void UranaiFadeEnd(void *data)
+{
+    UranaiEnd(data);
+}
+
+void InitializeUranai(UranaiWork *work)
+{
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    uranaiCharacters[1] = work->selection->reader;
+    work->characters = Queue_EVT_AT_ReadChr(work->task, uranaiCharacters);
+    work->package = "SUISYO";
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(7), (int)"URNI", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "URNI", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "URNI", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0120");
+    SetEventVoicePrefix("0120");
+    if (work->selection->mode != 1) {
+        FTBL.EV_SetNewSceneIndex();
+        FTBL.EV_LoadCutsceneFromCurrentScene("01200000");
+    }
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+    FTBL.EV_EventSetUpHelpIcon_0(54, 0);
+}
+
+void CleanupUranai(UranaiWork *work)
+{
+    FTBL.EV_EnableCharacterDisplay(URNI_PLAYER);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(work->selection->reader));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(URNI_PLAYER));
+    FTBL.EV_EventSetUpHelpIcon_0(0, 0);
+    FTBL.CheckHelpIcon(0, 0, 0);
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(0);
+    if (work->selection->mode != 1) {
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+        EVT_AT_SetSample(0, 0, 0);
+    }
+    FTBL.EV_FreeAuthorPak(0, "0120");
+    FTBL.EV_ControlPackageResources(0, 6, "URNI", 0, 0);
+    if (FTBL.EV_ControlPackageResources(0, 5, work->package, 0, 0))
+        FTBL.EV_ControlPackageResources(0, 6, work->package, 0, 0);
+    ET_AT_KillWork(work->characters);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+}
+
+void ConfigureUranai(UranaiWork *work, shen_name reader)
+{
+    switch (reader) {
+    case URNI_SYK:
+        work->configuration = &uranaiSykConfiguration;
+        break;
+    case URNI_KLN:
+        work->configuration = &uranaiKlnConfiguration;
+        break;
+    case URNI_MM5:
+        if (g_currentMap == URNI_AR01)
+            work->configuration = &uranaiMm5Ar01Configuration;
+        else if (g_currentMap == URNI_WS00)
+            work->configuration = &uranaiMm5Ws00Configuration;
+        else
+            work->configuration = &uranaiMm5OtherConfiguration;
+        break;
+    case URNI_SEH:
+        work->configuration = &uranaiSehConfiguration;
+        break;
+    case URNI_SRI:
+        work->configuration = &uranaiSriConfiguration;
+        work->package = UranaiStoryPackage();
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)work->package, 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        break;
+    case URNI_RCD:
+        work->configuration = &uranaiRcdConfiguration;
+        break;
+    }
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(reader));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(reader), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(reader), 1, 1, 0);
+    EVT_AT_SetPos(URNI_BASE, EVENT_CHARACTER_INVALID, work->configuration->position.x, work->configuration->position.y,
+        work->configuration->position.z, 0);
+    EVT_AT_SetAngY(URNI_BASE, EVENT_CHARACTER_INVALID, work->configuration->yaw, 0);
+    EVT_AT_SetPos(uranaiCharacters[1], URNI_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(uranaiCharacters[1], URNI_BASE, 0.0f, 0);
+    work->configuration->setup(reader, 0);
+}
+#else
 #include "s2/areas/area_urni.hpp"
 #include "s2/author.hpp"
 #include "s2/character.hpp"
@@ -268,3 +528,4 @@ void UranaiEnd(void *parameter) {
 } // namespace
 const ScriptAreaDefinition urniDefinition{.areaId = URNI_AREA, .field04 = 0, .init = UranaiAdmissionNoop, .main = UranaiMain};
 } // namespace shenmue::s2
+#endif

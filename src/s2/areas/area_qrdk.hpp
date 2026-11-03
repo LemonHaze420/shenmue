@@ -1,4 +1,92 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_debug_dc.h"
+
+#define QRDK_TASK SHEN_NAME4('E', 'V', 'N', 'T')
+#define QRDK_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define QRDK_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QRDK_INVALID 0xffffffffU
+#define QRDK_R102 SHEN_NAME4('R', '1', '0', '2')
+#define QRDK_R104 SHEN_NAME4('R', '1', '0', '4')
+#define QRDK_R117 SHEN_NAME4('R', '1', '1', '7')
+#define QRDK_R122 SHEN_NAME4('R', '1', '2', '2')
+#define QRDK_WORLD 0x40000000U
+#define QRDK_WORLD_ALL_AXES 0x78000000U
+#define QRDK_TRANSLATION_ROOT 0xffffffffU
+#define QRDK_DEBUG_ID 3
+typedef struct QrdkRoutePoint {
+    float x, z;
+    int marker;
+} QrdkRoutePoint;
+typedef struct QrdkDoorPoint {
+    shen_name door;
+    float x, z;
+    unsigned int yaw;
+} QrdkDoorPoint;
+typedef struct QrdkEnemy {
+    shen_name character, door;
+    float x, z;
+    unsigned int yaw, style;
+} QrdkEnemy;
+typedef struct QrdkWork {
+    HLibTask *parent;
+    HLibTask *task;
+    unsigned int flags, action;
+    int routeCounter;
+    shen_name door;
+    Vector3 savedPosition;
+    Vector3i savedRotation;
+    unsigned char reserved30[0x14];
+    unsigned int loadIndex, enemyCount;
+    unsigned int defeated[1];
+} QrdkWork;
+typedef void (*QrdkSerifCallback)(int event, int argument);
+typedef struct QrdkSerifWork {
+    HLibTask *parent;
+    void *conversation;
+    int startTicks, endTicks;
+    QrdkSerifCallback callback;
+    int voice;
+    char text[4];
+} QrdkSerifWork;
+extern char qrdkPackage[];
+extern QrdkRoutePoint qrdkRoute[];
+extern QrdkDoorPoint qrdkDoors[];
+extern QrdkEnemy qrdkEnemies[];
+extern shen_name qrdkCharacters[];
+void QrdkMain(void);
+void QrdkInitializeCallback(void *data);
+void QrdkWaitPackageCallback(void *data);
+void QrdkLoadCharactersCallback(void *data);
+void QrdkExitCallback(void *data);
+void QrdkDebugSkipCallback(void *data);
+void QrdkBeginGameCallback(void *data);
+void QrdkStartRouteCallback(void *data);
+void QrdkRunCallback(void *data);
+void QrdkBeginDoorCallback(void *data);
+void QrdkGetDoorCallback(void *data);
+void QrdkBattleMessageCallback(void *data);
+void QrdkPlaceEnemiesCallback(void *data);
+void QrdkStartBattleCallback(void *data);
+void QrdkBattleCallback(void *data);
+void QrdkWrongRoomCallback(void *data);
+void QrdkReturnToRouteCallback(void *data);
+void QrdkFoundCallback(void *data);
+void QrdkRetryCallback(void *data);
+void QrdkPlaceOnRoute(QrdkWork *work);
+const QrdkRoutePoint *QrdkGetRoutePoint(int counter);
+int QrdkPassedRoutePoint(int counter);
+void QrdkGetDoorPoint(shen_name door, Vector3 *position, unsigned int *yaw);
+shen_name QrdkFindClosestDoor(float *distance);
+int QrdkIsDoorMotionFinished(QrdkWork *work);
+void QrdkQueueSerif(const char *text, int voice, int startTicks, int endTicks, QrdkSerifCallback callback);
+void QrdkSerifCallbackLoop(void *data);
+void QrdkResumeOnSerifFinished(int event, int argument);
+void QrdkHideCharacter(shen_name character);
+void QrdkShowCharacter(shen_name character);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/conversation.hpp"
 #include "s2/hlib.hpp"
@@ -111,3 +199,4 @@ void QrdkExitCallback(void *data);
 void QrdkSerifCallbackLoop(void *data);
 extern const ScriptAreaDefinition qrdkScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

@@ -1,4 +1,31 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+
+#include "s2/events/event_dc.h"
+
+#define EVENT_CHASE_HISTORY 32
+
+typedef struct EventChaseParams {
+    shen_name source, target;
+    int delay;
+    Vector3 positionGain, rotationGain;
+    float positionGainAmplitude, rotationGainAmplitude, positionGainFrequency, rotationGainFrequency;
+    Vector3 positionDeadzone, rotationDeadzone;
+    float positionDeadzoneAmplitude, rotationDeadzoneAmplitude, positionDeadzoneFrequency, rotationDeadzoneFrequency;
+} EventChaseParams;
+typedef struct EventChaseWork {
+    EventChaseParams params;
+    int ticks;
+    short readIndex, writeIndex;
+    Vector3 positions[EVENT_CHASE_HISTORY];
+    Vector3i rotations[EVENT_CHASE_HISTORY];
+} EventChaseWork;
+
+void InitEventChase(EventChaseWork *work, const EventChaseParams *params);
+void UpdateEventChase(EventChaseWork *work);
+#else
+#pragma once
 #include "common/types.hpp"
 #include "common/math.hpp"
 #include "s2/hlib.hpp"
@@ -72,3 +99,4 @@ void RequestEventNpcCharacters(EventNpcReadWork *, const shen_name *characters);
 void EventNpcReadCallback(void *);
 void UpdateEventChase(EventChaseWork *);
 } // namespace shenmue::s2
+#endif

@@ -1,5 +1,19 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+
+#define QAXX_FOG_EFFECT_MASK 0x780
+#define QAXX_LIGHTING_UPDATE_MASK 0x0f
+#define QAXX_SCENE_LIGHTING_MASK 0x0c
+#define QAXX_WEATHER_CLOUD 0
+#define QAXX_WEATHER_RAIN 1
+void AreaMain(unsigned int startParameters);
+void AreaCleanup(int afternoon);
+void AreaQAXXMainLoop(void *taskData);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/area_names.hpp"
 
@@ -17,3 +31,4 @@ void AreaQAXXCleanup(std::int32_t afternoon, std::uint32_t areaIndex);
 extern const GameplayAreaDefinition areaQAXXGameplayDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

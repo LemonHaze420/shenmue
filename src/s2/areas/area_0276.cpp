@@ -1,3 +1,387 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0276.hpp"
+
+#define AREA_0276_CHARACTER(parent) area0276Characters[(parent)->characterIndex]
+unsigned short firePalette0276[] = {
+    0x311, 0x311, 0x411, 0x511, 0x612, 0x712, 0xa32, 0xb32, 0xb42, 0xc50, 0xd70, 0xe70, 0xe80, 0xfa0, 0xfc3, 0xfd6};
+shen_name area0276Characters[] = {AREA_0276_SRY, AREA_0276_WON, AREA_0276_REN, AREA_0276_JOP, AREA_0276_CHO, AREA_0276_SGT, INVALID_CHARACTER};
+shen_name area0276ReleaseCharacters[] = {AREA_0276_SRY, AREA_0276_WON, AREA_0276_REN, AREA_0276_JOP, AREA_0276_CHO, AREA_0276_SGT, INVALID_CHARACTER};
+shen_name area0276RemainingCharacters[] = {AREA_0276_WON, AREA_0276_REN, AREA_0276_JOP, INVALID_CHARACTER};
+float transparency0276 = 0.0f;
+static unsigned int fire0276;
+
+void Start0276(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Load0276Characters, 4, 11, sizeof(Area0276Parameter), TASK_EVNT);
+    Area0276Parameter *parent = (Area0276Parameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->state = 6;
+    parent->selection = 0;
+    parent->loadState = 0;
+    parent->characterIndex = 0;
+    Setup0276Environment();
+}
+
+void Update0276(void *data)
+{
+    Area0276Parameter *parent = (Area0276Parameter *)data;
+    switch (parent->state) {
+    case 6:
+        if (FTBL.EV_ControlPackageResources(0, 5, "0276A", 0, 0))
+            FTBL.EV_ControlPackageResources(0, 6, "0276A", 0, 0);
+        if (FTBL.EV_ControlPackageResources(0, 5, "0277A", 0, 0))
+            FTBL.EV_ControlPackageResources(0, 6, "0277A", 0, 0);
+        if (parent->selection <= 2)
+            FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0276A", 0);
+        else
+            FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0277A", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        parent->state = 1;
+        break;
+    case 1:
+        Queue0276Author(parent);
+        break;
+    case 3:
+        Cleanup0276(parent);
+        break;
+    }
+}
+
+void Load0276Characters(void *data)
+{
+    Area0276Parameter *parent = (Area0276Parameter *)data;
+    if (parent->loadState == 1) {
+        FTBL.DebugLogToFileRemoved("%d ID : [%c%c%c%c]\n", parent->characterIndex, AREA_0276_CHARACTER(parent) & 0xff,
+            AREA_0276_CHARACTER(parent) >> 8 & 0xff, AREA_0276_CHARACTER(parent) >> 16 & 0xff, AREA_0276_CHARACTER(parent) >> 24);
+        if (FTBL.ForceLoadNpc(AREA_0276_CHARACTER(parent)) == 1) {
+            HideAuthorCharacter(AREA_0276_CHARACTER(parent));
+            FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(AREA_0276_CHARACTER(parent)));
+            parent->characterIndex++;
+            do {
+                parent->loadState = 0;
+                if (AREA_0276_CHARACTER(parent) == INVALID_CHARACTER) {
+                    parent->characterIndex = 0;
+                    FTBL.HLib_SetCurrentTaskTo(Update0276);
+                }
+            } while (0);
+        }
+    } else if (parent->loadState == 0) {
+        FTBL.CheckWarmStartNpcRoute(AREA_0276_CHARACTER(parent));
+        FTBL.ForceLoadNpc(AREA_0276_CHARACTER(parent));
+        parent->loadState = 1;
+    }
+}
+
+void Release0276Characters(void *data)
+{
+    Area0276Parameter *parent = (Area0276Parameter *)data;
+    int visible;
+    if (parent->loadState == 1) {
+        FTBL.DebugLogToFileRemoved("%d ID : [%c%c%c%c]\n", parent->characterIndex, AREA_0276_CHARACTER(parent) & 0xff,
+            AREA_0276_CHARACTER(parent) >> 8 & 0xff, AREA_0276_CHARACTER(parent) >> 16 & 0xff, AREA_0276_CHARACTER(parent) >> 24);
+        visible = FTBL.IsNpcRouteLoadedOrVisible(AREA_0276_CHARACTER(parent));
+        if (!visible) {
+            ShowAuthorCharacter(AREA_0276_CHARACTER(parent));
+            parent->characterIndex++;
+            parent->loadState = 0;
+            if (AREA_0276_CHARACTER(parent) == INVALID_CHARACTER)
+                FTBL.HLib_SetCurrentTaskTo(Update0276);
+        }
+    } else if (parent->loadState == 0) {
+        if (!FTBL.npcLockUnlock(AREA_0276_CHARACTER(parent)))
+            FTBL.npcFree(AREA_0276_CHARACTER(parent));
+        parent->loadState = 1;
+    }
+}
+
+void Queue0276Author(Area0276Parameter *parent)
+{
+    HLibTaskCallback callbacks[2] = {Update0276FirstAuthor, Update0276SecondAuthor};
+    int second = parent->selection > 2;
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(callbacks[second], 4, 11, sizeof(Area0276AuthorParameter), TASK_EVNT);
+    Area0276AuthorParameter *child = (Area0276AuthorParameter *)FTBL.HLib_GetTaskParameter(task);
+    child->parent = parent;
+    child->frame = 0;
+    if (parent->selection == 0) {
+        FTBL.EV_LoadCutsceneFromCurrentScene("0276A000");
+        Prepare0276FirstScene();
+        FTBL.OSAG_0(FTBL.ctrlGetCharaByName(AREA_0276_REN), 4);
+    } else if (parent->selection == 3) {
+        FTBL.EV_LoadCutsceneFromCurrentScene("0277A000");
+        FTBL.SetIsSkySetup(0);
+        FTBL.SetAllMapFieldDepthSlotsEnabled(1);
+        FTBL.SetObjectFlagByIndex(0, 1);
+        FTBL.SetObjectFlagByIndex(1, 0);
+        FTBL.SetObjectFlagByIndex(2, 1);
+        FTBL.SetObjectFlagByIndex(3, 1);
+        FTBL.SetMapModelDataDefaultVertexShader();
+        FTBL.ReinitializeLights(1);
+        FTBL.SetLightFlagForIndex(0, 2);
+        FTBL.SetLightEntryIndex(0, 1);
+        Hide0276IndoorProps();
+    } else if (parent->selection == 5) {
+        FTBL.SetObjectFlagByIndex(0, 0);
+        FTBL.SetObjectFlagByIndex(1, 1);
+        FTBL.SetObjectFlagByIndex(2, 0);
+        FTBL.SetObjectFlagByIndex(3, 0);
+        FTBL.SetAllMapFieldDepthSlotsEnabled(0);
+        FTBL.EV_SetWeatherInstruction(12, 0);
+        FTBL.SetMapModelDataDefaultVertexShader();
+        FTBL.EV_lightLoad(AREA_0276_LIGHT);
+        FTBL.PushGlobalLightingProgram();
+    }
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void Update0276FirstAuthor(void *data)
+{
+    Area0276AuthorParameter *child = (Area0276AuthorParameter *)data;
+    Vector3 position;
+    Vector3 offset = {0.0f, 0.14f, 0.0f};
+    Vector3i rotation;
+    child->frame = FTBL.EV_authSceneCtrl(-6);
+    switch (child->parent->selection) {
+    case 0:
+        switch (child->frame) {
+        case 1:
+            FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+            break;
+        case 1156:
+            FTBL.SetObjectFlagByIndex(1, 0);
+            FTBL.SetIsSkySetup(0);
+            break;
+        case 1451:
+            FTBL.SetObjectFlagByIndex(1, 1);
+            FTBL.SetIsSkySetup(1);
+            break;
+        }
+        break;
+    case 1:
+        if (child->frame == 2630)
+            FTBL.ResumeParticleEffect(4, fire0276);
+        else if (child->frame > 2630) {
+            FTBL.GetCharaPosition(AREA_0276_FIRE_PROP, -1, &position, 0x40000000);
+            FTBL.GetScenarioCharacterEulerAngles(AREA_0276_FIRE_PROP, &rotation, 0x40000000);
+            FTBL.ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+            FTBL.SetParticleEffectPosition(4, fire0276, &offset, &offset);
+        }
+        break;
+    case 2:
+        if (child->frame == 1) {
+            FTBL.ResumeParticleEffect(4, fire0276);
+            FTBL.SetScenarioCharacterTransparency(AREA_0276_TRANSPARENT_PROP, 0.0f);
+        } else if (child->frame >= 390 && child->frame < 450) {
+            transparency0276 += 0.016f;
+            FTBL.SetScenarioCharacterTransparency(AREA_0276_TRANSPARENT_PROP, transparency0276);
+        } else if (child->frame == 450) {
+            transparency0276 = 1.0f;
+            FTBL.SetScenarioCharacterTransparency(AREA_0276_TRANSPARENT_PROP, transparency0276);
+        } else if (child->frame >= 720 && child->frame < 780) {
+            transparency0276 -= 0.016f;
+            FTBL.SetScenarioCharacterTransparency(AREA_0276_TRANSPARENT_PROP, transparency0276);
+        } else if (child->frame == 780) {
+            transparency0276 = 0.0f;
+            FTBL.SetScenarioCharacterTransparency(AREA_0276_TRANSPARENT_PROP, transparency0276);
+        }
+        FTBL.GetCharaPosition(AREA_0276_FIRE_PROP, -1, &position, 0x40000000);
+        FTBL.GetScenarioCharacterEulerAngles(AREA_0276_FIRE_PROP, &rotation, 0x40000000);
+        FTBL.ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+        FTBL.SetParticleEffectPosition(4, fire0276, &offset, &offset);
+        break;
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        if (child->parent->selection == 2) {
+            FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+            Restore0276FirstScene();
+            child->parent->selection = 3;
+            child->parent->state = 6;
+            FTBL.npcFree(AREA_0276_SRY);
+            FTBL.npcFree(AREA_0276_SGT);
+            FTBL.npcFree(AREA_0276_CHO);
+            FTBL.SuspendParticleEffect(4, fire0276);
+            FTBL.FreeParticleEffect(4, fire0276);
+            FTBL.HLib_DestroyCurrentTask();
+        } else {
+            child->parent->selection++;
+            FTBL.EV_authSceneCtrl(child->parent->selection);
+        }
+    }
+}
+
+void Update0276SecondAuthor(void *data)
+{
+    Area0276AuthorParameter *child = (Area0276AuthorParameter *)data;
+    Vector3 position;
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    if (!child->parent->selection) {
+        FTBL.GetCharaPosition(RYO_CHARACTER, -1, &position, 0x40000000);
+        position.y = 500.0f;
+        position.y = FTBL.shenFindIntersectionWithScene(&position);
+        FTBL.EV_AT_SetPos(RYO_CHARACTER, 0x38000000, &position);
+        switch (frame) {
+        case 1:
+            FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+            break;
+        case 2180:
+            FTBL.SetNewWindPhaseAndSpeed(60334, 1.82f);
+            break;
+        case 2290:
+            FTBL.SyncWindWithWDATWeatherState();
+            break;
+        }
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        switch (child->parent->selection) {
+        case 3:
+            FTBL.SyncWindWithWDATWeatherState();
+            child->parent->selection++;
+            FTBL.EV_authSceneCtrl(child->parent->selection);
+            break;
+        case 4:
+            child->parent->selection++;
+            child->parent->state = 1;
+            FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+            FTBL.HLib_DestroyCurrentTask();
+            break;
+        case 5:
+            child->parent->state = 3;
+            FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+            FTBL.HLib_DestroyCurrentTask();
+            Show0276IndoorProps();
+            break;
+        }
+    }
+}
+
+void Setup0276Environment(void)
+{
+    Vector3 position = {106.46f, 90.1f, 152.23f};
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    FTBL.UpdateWeather();
+    fire0276 = FTBL.CreateFireEffect(&position, 0.5f, 0.5f, 0, 0);
+    FTBL.SetFirePalette(fire0276, firePalette0276);
+    FTBL.SetFireFalloffScalar(fire0276, -0.05f);
+    FTBL.SetFireFalloff(fire0276, 3.14f, 4.94f, 0.78f);
+    FTBL.SetParticleEffectSize(4, fire0276, 0.025f, 0.05f);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0276");
+    FTBL.EV_FreeAuthorPak(1, "0277");
+    FTBL.SetObjectFlagByIndex(0, 0);
+    FTBL.SetObjectFlagByIndex(1, 1);
+    FTBL.SetObjectFlagByIndex(2, 0);
+    FTBL.SetObjectFlagByIndex(3, 0);
+    FTBL.SetAllMapFieldDepthSlotsEnabled(0);
+    Prepare0276Characters();
+}
+
+void Cleanup0276(Area0276Parameter *parent)
+{
+    EventDateTime time;
+    Restore0276Characters();
+    FTBL.AddInventoryItem(11, 1, 0);
+    FTBL.AddInventoryItem(12, 1, 0);
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    time.hour = 22;
+    time.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+    FTBL.EV_FreeAuthorPak(0, "0276");
+    FTBL.EV_FreeAuthorPak(0, "0277");
+    FTBL.HLib_DestroyTask(parent->self);
+    if (FTBL.EV_GetShenmueFlag(1076))
+        FTBL.EV_scenQueueLoad(g_actNumber, AREA_0276_RETURN_FLAGGED, 0);
+    else
+        FTBL.EV_scenQueueLoad(g_actNumber, AREA_0276_RETURN_CLEAR, 0);
+}
+
+void Prepare0276Characters(void)
+{
+    HideAuthorCharacter(RYO_CHARACTER);
+    HideAuthorProp(AREA_0276_A209);
+    HideAuthorProp(AREA_0276_A207);
+    HideAuthorProp(AREA_0276_A208);
+    HideAuthorProp(AREA_0276_A326);
+    HideAuthorProp(AREA_0276_A270);
+    HideAuthorProp(AREA_0276_A325);
+}
+
+void Restore0276Characters(void)
+{
+    ShowAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorProp(AREA_0276_A209);
+    ShowAuthorProp(AREA_0276_A207);
+    ShowAuthorProp(AREA_0276_A208);
+    ShowAuthorProp(AREA_0276_A326);
+    ShowAuthorProp(AREA_0276_A270);
+    ShowAuthorProp(AREA_0276_A325);
+}
+
+void Prepare0276FirstScene(void)
+{
+    HideAuthorProp(AREA_0276_A300);
+    HideAuthorProp(AREA_0276_A067);
+    HideAuthorProp(AREA_0276_A393);
+    HideAuthorProp(AREA_0276_A394);
+    HideAuthorProp(AREA_0276_A395);
+    HideAuthorProp(AREA_0276_FIRE_PROP);
+    HideAuthorProp(AREA_0276_TRANSPARENT_PROP);
+    FTBL.SetScenarioCharacterTransparency(AREA_0276_TRANSPARENT_PROP, 0.0f);
+}
+
+void Restore0276FirstScene(void)
+{
+    ShowAuthorProp(AREA_0276_A300);
+    ShowAuthorProp(AREA_0276_A067);
+    ShowAuthorProp(AREA_0276_A393);
+    ShowAuthorProp(AREA_0276_A394);
+    ShowAuthorProp(AREA_0276_A395);
+    ShowAuthorProp(AREA_0276_FIRE_PROP);
+    ShowAuthorProp(AREA_0276_TRANSPARENT_PROP);
+}
+
+void Hide0276IndoorProps(void)
+{
+    HideAuthorProp(AREA_0276_A342);
+    HideAuthorProp(AREA_0276_A343);
+    HideAuthorProp(AREA_0276_AB19);
+    HideAuthorProp(AREA_0276_AB18);
+    HideAuthorProp(AREA_0276_AA23);
+}
+
+void Show0276IndoorProps(void)
+{
+    ShowAuthorProp(AREA_0276_A342);
+    ShowAuthorProp(AREA_0276_A343);
+    ShowAuthorProp(AREA_0276_AB19);
+    ShowAuthorProp(AREA_0276_AB18);
+    ShowAuthorProp(AREA_0276_AA23);
+}
+
+void HideAuthorCharacter(shen_name character)
+{
+    FTBL.SetScenarioCharacterRadius(character, 40.0f);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void ShowAuthorCharacter(shen_name character)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void HideAuthorProp(shen_name prop)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 0);
+}
+
+void ShowAuthorProp(shen_name prop)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 1);
+}
+#else
 #include "s2/areas/area_0276.hpp"
 #include "s2/snapshot.hpp"
 #include "s2/sound_program.hpp"
@@ -294,3 +678,4 @@ void Cleanup0276(Area0276Parameter *parent) {
 }
 const ScriptAreaDefinition area0276ScriptDefinition{AREA_0276, 0, Initialize0276, Start0276};
 } // namespace shenmue::s2::areas
+#endif

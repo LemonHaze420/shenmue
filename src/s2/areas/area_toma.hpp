@@ -1,4 +1,84 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_loop_dc.h"
+
+#define TOMA_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define TOMA_PROP SHEN_NAME4('1', '0', 'm', 't')
+#define TOMA_RACE_AREA SHEN_NAME4('W', 'T', '0', '0')
+#define TOMA_ARZ0 SHEN_NAME4('A', 'R', 'Z', '0')
+#define TOMA_WET0 SHEN_NAME4('W', 'E', 'T', '0')
+#define TOMA_LYH SHEN_NAME4('L', 'Y', 'H', '_')
+#define TOMA_XGH SHEN_NAME4('X', 'G', 'H', '_')
+#define TOMA_DEFAULT_LIGHT SHEN_NAME4('0', '0', '0', '0')
+#define TOMA_INIT_AUTHOR SHEN_NAME4('I', 'N', 'I', 'T')
+#define TOMA_HAVE_INIT_AUTHOR SHEN_NAME4('i', 'n', 'i', 't')
+#define TOMA_DECLINE_AUTHOR SHEN_NAME4('A', 'S', 'N', 'T')
+#define TOMA_GO_AUTHOR SHEN_NAME4('A', 'S', 'G', 'O')
+#define TOMA_HAVE_GO_AUTHOR SHEN_NAME4('A', 'S', 'g', 'o')
+#define TOMA_BYE_AUTHOR SHEN_NAME4('B', 'Y', 'E', '_')
+typedef struct TomaRequest {
+    shen_name map;
+    unsigned int argument;
+    int selector;
+} TomaRequest;
+typedef struct TomaWork {
+    HLibTask *parent;
+    HLibTask *task;
+    unsigned int flags;
+    shen_name map;
+    unsigned int argument;
+} TomaWork;
+typedef struct TomaOffer {
+    shen_name motion, target;
+    short item, price;
+} TomaOffer;
+typedef struct TomaMapEntry {
+    shen_name map, npc;
+    TomaOffer offers[6];
+} TomaMapEntry;
+extern int tomaRaceEntry;
+void TomaMain(const TomaRequest *request);
+int TomaUpdateAreaItems(shen_name map, shen_name motion);
+const TomaMapEntry *FindTomaMap(shen_name map);
+void TomaUpdateItems(const TomaMapEntry *row, shen_name motion);
+void QueueTomaWaitPackage(shen_name map, unsigned int argument);
+void TomaWaitPackage(void *data);
+void TomaStart(void *data);
+int TomaChargeCompletion(int phase, int value, HLibTask *parent);
+int TomaRewardCompletion(int phase, int value, HLibTask *parent);
+void TomaDone(void *data);
+void QueueTomaFirstTalk(void);
+void TomaWaitPackageFirstTalk(void *data);
+void TomaWaitNpcsFirstTalk(void *data);
+void TomaInitializeTalkAuthor(void *data);
+void TomaStartFirstTalkChoices(void *data);
+void TomaCheckFirstTalkChoices(void *data);
+void TomaGoRaceFirstTalk(void *data);
+void TomaGoRace(void *data);
+void TomaExitPlus(void *data);
+void QueueTomaTalk(void);
+void TomaWaitPackageTalk(void *data);
+void TomaWaitNpcsTalk(void *data);
+void TomaInitializeRepeatTalkAuthor(void *data);
+void QueueTomaBye(void);
+void TomaWaitPackageBye(void *data);
+void TomaWaitNpcsBye(void *data);
+void TomaBye(void *data);
+void QueueTomaHaveFirstTalk(void);
+void TomaWaitPackageHaveFirstTalk(void *data);
+void TomaWaitNpcsHaveFirstTalk(void *data);
+void TomaInitializeHaveTalkAuthor(void *data);
+void TomaStartHaveFirstTalkChoices(void *data);
+void TomaCheckHaveFirstTalkChoices(void *data);
+void TomaGoRaceHaveFirstTalk(void *data);
+void TomaGoRaceHave(void *data);
+void QueueTomaHaveTalk(void);
+void TomaWaitPackageHaveTalk(void *data);
+void TomaWaitNpcsHaveTalk(void *data);
+void TomaInitializeRepeatHaveTalkAuthor(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/areas/area_loop.hpp"
 #include <array>
@@ -96,3 +176,4 @@ bool QueueTomaPlusPackage(const char *folder);
 void QueueTomaMotion(shen_name character, std::uint32_t motion, AreaLoopCompletion completion, std::int32_t delay);
 extern const ScriptAreaDefinition tomaScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

@@ -1,3 +1,22 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/wnpc_event.hpp"
+
+void WNPCMain(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.HLib_EnqueueTaskWithoutParameter(WNPCWaitNpc, 4, 11, WNPC_TASK);
+    FTBL.DebugLogToFileRemoved("NpcWaitStart\n");
+}
+void WNPCWaitNpc(void *taskData)
+{
+    if (!FTBL.NpcWait()) {
+        FTBL.DebugLogToFileRemoved("NpcWaitEnd\n");
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+#else
 #include "s2/wnpc_event.hpp"
 #include "s2/debug.hpp"
 #include "s2/flag.hpp"
@@ -37,3 +56,4 @@ const ScriptAreaDefinition wnpcScriptDefinition{
 };
 
 } // namespace shenmue::s2
+#endif

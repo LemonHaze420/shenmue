@@ -1,3 +1,112 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0308.hpp"
+#include "s2/event_queued_dc.h"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void Start0308(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0308, 4, 11, sizeof(AreaAuthorTaskParameter), TASK_EVNT);
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0308A.MOT");
+    parent->state = 1;
+    parent->selection = 0;
+    Queue_EVT_UTL_LoadNPCChara_3(area0308Characters, parent->self);
+    Setup0308Environment();
+}
+#else
+#define SHENMUE_EVENT_AUTHOR_PROPS
+shen_name area0308Characters[] = {AREA_0308_CLJ, AREA_0308_WON, AREA_0308_JOP, AREA_0308_REN, INVALID_CHARACTER};
+
+void Update0308(void *taskData)
+{
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        Queue0308Author(parent);
+        break;
+    case 3:
+        Cleanup0308(parent);
+        break;
+    }
+}
+
+void Queue0308Author(AreaAuthorTaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0308Author, 4, 11, sizeof(AreaAuthorFrameTaskParameter), TASK_EVNT);
+    AreaAuthorFrameTaskParameter *child = (AreaAuthorFrameTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    child->parent = parent;
+    child->currentFrame = 0;
+    Prepare0308Characters();
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void Update0308Author(void *taskData)
+{
+    AreaAuthorFrameTaskParameter *child = (AreaAuthorFrameTaskParameter *)taskData;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        child->parent->state = 3;
+        Restore0308Characters();
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void Setup0308Environment(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0308");
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    FTBL.SetMapModelDataDefaultVertexShader();
+    FTBL.EV_lightLoad(AREA_0308_LIGHT);
+    FTBL.PushGlobalLightingProgram();
+}
+
+void Cleanup0308(AreaAuthorTaskParameter *parent)
+{
+    AdvanceSleepToMorning();
+    EVT_UTL_FreeNPCChara(area0308Characters);
+    FTBL.EV_FreeAuthorPak(0, "0308");
+    FTBL.DeleteMotion(parent->motion);
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.scenSetTaskFlags(8);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0308_RETURN, 70);
+}
+
+void Prepare0308Characters(void)
+{
+    int i;
+    HideAuthorCharacter(RYO_CHARACTER);
+    HideAuthorProp(AREA_0308_A209);
+    HideAuthorProp(AREA_0308_A207);
+    HideAuthorProp(AREA_0308_A208);
+    HideAuthorProp(AREA_0308_A270);
+    HideAuthorProp(AREA_0308_A047);
+    HideAuthorProp(AREA_0308_A520);
+    HideAuthorProp(AREA_0308_A014);
+    for (i = 0; area0308Characters[i] != INVALID_CHARACTER; i++)
+        HideAuthorCharacter(area0308Characters[i]);
+}
+
+void Restore0308Characters(void)
+{
+    int i;
+    ShowAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorProp(AREA_0308_A209);
+    ShowAuthorProp(AREA_0308_A207);
+    ShowAuthorProp(AREA_0308_A208);
+    ShowAuthorProp(AREA_0308_A270);
+    ShowAuthorProp(AREA_0308_A047);
+    ShowAuthorProp(AREA_0308_A520);
+    ShowAuthorProp(AREA_0308_A014);
+    for (i = 0; area0308Characters[i] != INVALID_CHARACTER; i++)
+        ShowAuthorCharacter(area0308Characters[i]);
+}
+
+#include "s2/events/event_author_dc.h"
+#endif
+#else
 #include "s2/areas/area_0308.hpp"
 #include "s2/character.hpp"
 #include "s2/author.hpp"
@@ -129,3 +238,4 @@ void Restore0308Characters() {
 const ScriptAreaDefinition area0308ScriptDefinition{.areaId = AREA_0308, .field04 = 0, .init = Initialize0308, .main = Start0308};
 
 } // namespace shenmue::s2::areas
+#endif

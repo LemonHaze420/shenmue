@@ -1,3 +1,40 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_krk2.hpp"
+#include "s2/event_queued_dc.h"
+
+void AreaMain(unsigned int startParameters)
+{
+    FTBL.WSCN_LoadWeatherData(FTBL.Filepath_Gen(0), "W_COND.BIN");
+    FTBL.HLib_EnqueueTaskWithoutParameter(eKRH2_ET_WAVE_KRK2_Callback, 3, 2, KRK2_EVENT_TASK);
+    FTBL.BeginSecondarySampleExecution(0);
+    FTBL.EV_LoadAudio("0519E000.sbt", 0);
+    FTBL.EV_SetWeatherInstruction(KRK2_ENABLE_FOG_EFFECT, 0);
+    FTBL.SetFogRed(6.0f);
+    FTBL.SetFogGreen(1000.0f);
+    FTBL.SetFogBlue(1.0f);
+    FTBL.SetFogDistance(0xffb0e0e0U);
+    FTBL.ReinitFogTasks(1);
+    SHENMUE_EVENT_BOUNDARY();
+    FTBL.ReinitFogTasks(1);
+    FTBL.CreateEventCharacter(3, 0, KRK2_CHARACTER);
+    EVT_AT_SetPos(KRK2_CHARACTER, 0, 30.0f, 100.0f, 50.0f, 0);
+    EVT_AT_SetAngY(KRK2_CHARACTER, 0, 0.0f, 0);
+}
+
+void AreaCleanup(int afternoon)
+{
+}
+
+void eKRH2_ET_WAVE_KRK2_Callback(void *taskData)
+{
+    FTBL.nlSetTexanimUV(0.0f, 0.0046999999f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(1));
+    FTBL.nlSetTexanimUV(0.0f, 0.0046999999f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(0));
+    FTBL.nlSetTexanimUV(0.0f, -0.039999999f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(3));
+}
+#else
 #include "s2/areas/area_krk2.hpp"
 
 #include "s2/event_runtime.hpp"
@@ -66,3 +103,4 @@ const GameplayAreaDefinition areaKRK2GameplayDefinition{
 };
 
 } // namespace shenmue::s2::areas
+#endif

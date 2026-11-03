@@ -1,3 +1,146 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0505.hpp"
+#include "s2/event_queued_dc.h"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void Start0505(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0505, 4, 11, sizeof(AreaAuthorTaskParameter), TASK_EVNT);
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0505A.MOT");
+    parent->state = 1;
+    parent->selection = 0;
+    Queue_EVT_UTL_LoadNPCChara_3(area0505Characters, parent->self);
+    Setup0505Waves();
+}
+#else
+void Update0505(void *taskData)
+{
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        Queue0505Author(parent);
+        break;
+    case 3:
+        Cleanup0505(parent);
+        break;
+    }
+}
+
+void Queue0505Author(AreaAuthorTaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0505Author, 4, 11, sizeof(Area0505AuthorParameter), TASK_EVNT);
+    Area0505AuthorParameter *child = (Area0505AuthorParameter *)FTBL.HLib_GetTaskParameter(task);
+    child->parent = parent;
+    child->currentFrame = 0;
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void Update0505Author(void *taskData)
+{
+    Area0505AuthorParameter *child = (Area0505AuthorParameter *)taskData;
+    child->currentFrame = FTBL.EV_authSceneCtrl(-6);
+    if (child->currentFrame == 0) {
+        FTBL.FreeWAIR();
+        FTBL.UpdateWeatherForMinute(0, 0, 160, 0.0f);
+        FTBL.UpdateWeather();
+        Prepare0505Characters();
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        Restore0505Characters();
+        child->parent->state = 3;
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void Setup0505Waves(void)
+{
+    EventDateTime date;
+    unsigned char distance[256], second[256], first[256];
+    Vector3 colour;
+    void *secondKernel, *firstKernel;
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    date.hour = 14;
+    date.minute = 30;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&date);
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.5f);
+    FTBL.UpdateWeather();
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.SetPlayerGameFlags(4, 0);
+    FTBL.EV_FreeAuthorPak(1, "0505");
+    colour.x = 0.3f;
+    colour.y = 0.8f;
+    colour.z = 0.5f;
+    FTBL.GenerateFFT(0.5f);
+    FTBL.fft_fill_dist(FTBL.fft_fill_krn(3.92f, FTBL.generate_distance_falloff_row_major(1.29f, distance)));
+    secondKernel = FTBL.fft_fill_krn(0.06f, FTBL.generate_distance_falloff_kernel_8x8(1.035f, second));
+    firstKernel = FTBL.fft_fill_krn(0.073f, FTBL.generate_distance_falloff_kernel_8x8(0.564f, first));
+    FTBL.fft_bins_load_pairwise_tables((const float *)secondKernel, (const float *)firstKernel);
+    FTBL.FFTUtil(0.0f, 0.0047f);
+    FTBL.set_lighting_flags(0.1f, &colour);
+    FTBL.HLib_EnqueueTaskWithoutParameter(Update0505Waves, 3, 2, TASK_EVNT);
+}
+
+void Cleanup0505(AreaAuthorTaskParameter *parent)
+{
+    EVT_UTL_FreeNPCChara(area0505Characters);
+    FTBL.EV_FreeAuthorPak(0, "0505");
+    FTBL.DeleteMotion(parent->motion);
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0505_RETURN, 0);
+}
+
+const shen_name area0505Characters[] = {AREA_0505_SIN_, AREA_0505_BN0_, INVALID_CHARACTER};
+
+void Prepare0505Characters(void)
+{
+    PrepareAuthorCharacterDisplay(RYO_CHARACTER);
+    PrepareAuthorCharacterDisplay(AREA_0505_SIN_);
+    PrepareAuthorCharacterDisplay(AREA_0505_BN0_);
+}
+
+void Restore0505Characters(void)
+{
+    EnableCharDisplayAndSetMotionworkData(RYO_CHARACTER);
+    EnableCharDisplayAndSetMotionworkData(AREA_0505_SIN_);
+    EnableCharDisplayAndSetMotionworkData(AREA_0505_BN0_);
+}
+
+void PrepareAuthorCharacterDisplay(shen_name character)
+{
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.EV_SetCharaControllerFlags(character, 1, 0);
+    FTBL.EV_SetCharaControllerFlags(character, 3, 0);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void EnableCharDisplayAndSetMotionworkData(shen_name character)
+{
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.EV_SetCharaControllerFlags(character, 1, 1);
+    FTBL.EV_SetCharaControllerFlags(character, 2, 1);
+    FTBL.EV_SetCharaControllerFlags(character, 3, 1);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    SHENMUE_EVENT_BOUNDARY();
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void Update0505Waves(void *taskData)
+{
+    float scale = 1.0f;
+    FTBL.BuildLightingTableFrom(0, scale, scale, scale, scale, scale, scale, scale, scale, 50.0f, scale);
+    FTBL.ApplyFFTWaveformToStripTree(FTBL.GetMapModelRoot(1));
+    FTBL.nlSetTexanimUV(0.0f, 0.0047f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(0));
+}
+#endif
+#else
 #include "s2/areas/area_0505.hpp"
 #include "s2/author.hpp"
 #include "s2/character.hpp"
@@ -146,3 +289,4 @@ void Update0505Waves(void *) {
 const ScriptAreaDefinition area0505ScriptDefinition{.areaId = AREA_0505, .field04 = 0, .init = Initialize0505, .main = Start0505};
 
 } // namespace shenmue::s2::areas
+#endif

@@ -1,3 +1,114 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0252.hpp"
+#include "s2/event_queued_dc.h"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void E0252Main(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0252MainCallback, 4, 11, sizeof(AreaAuthorTaskParameter), TASK_EVNT);
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0252A.MOT");
+    parent->state = 1;
+    parent->selection = 0;
+    ConfigureE0252Environment();
+    Queue_EVT_UTL_LoadNPCChara_3(area0252Characters, parent->self);
+}
+#else
+void E0252MainCallback(void *taskData)
+{
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        QueueE0252Author(parent);
+        break;
+    case 3:
+        CleanupE0252(parent);
+        break;
+    }
+}
+
+void QueueE0252Author(AreaAuthorTaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0252LoopCallback, 4, 11, sizeof(AreaAuthorLoopTaskParameter), TASK_EVNT);
+    ((AreaAuthorLoopTaskParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+    FTBL.EV_spmBeginSampleExecute(0);
+    SetupE0252Characters();
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void E0252LoopCallback(void *taskData)
+{
+    AreaAuthorLoopTaskParameter *child = (AreaAuthorLoopTaskParameter *)taskData;
+    if (FTBL.EV_authSceneCtrl(-6) == 1)
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        RestoreE0252Characters();
+        child->parent->state = 3;
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void ConfigureE0252Environment(void)
+{
+    EventDateTime time;
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    time.hour = 11;
+    time.minute = 30;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0252");
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    FTBL.SetMapModelDataDefaultVertexShader();
+    FTBL.EV_lightLoad(AREA_0252_L001);
+    FTBL.PushGlobalLightingProgram();
+}
+
+void CleanupE0252(AreaAuthorTaskParameter *parent)
+{
+    EVT_UTL_FreeNPCChara(area0252Characters);
+    FTBL.EV_FreeAuthorPak(0, "0252");
+    FTBL.DeleteMotion(parent->motion);
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0252_QR00, 97);
+}
+
+const shen_name area0252Characters[] = {AREA_0252_CLJ_, AREA_0252_WON_, AREA_0252_JOP_, AREA_0252_REN_, AREA_0252_CHO_, INVALID_CHARACTER};
+
+void SetupE0252Characters(void)
+{
+    int i;
+    HideAuthorCharacter(RYO_CHARACTER);
+    HideAuthorProp(AREA_0252_A209);
+    HideAuthorProp(AREA_0252_A207);
+    HideAuthorProp(AREA_0252_A208);
+    HideAuthorProp(AREA_0252_A270);
+    HideAuthorProp(AREA_0252_A326);
+    HideAuthorProp(AREA_0252_A300);
+    for (i = 0; area0252Characters[i] != INVALID_CHARACTER; i++)
+        HideAuthorCharacter(area0252Characters[i]);
+}
+
+void RestoreE0252Characters(void)
+{
+    int i;
+    ShowAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorProp(AREA_0252_A209);
+    ShowAuthorProp(AREA_0252_A207);
+    ShowAuthorProp(AREA_0252_A208);
+    ShowAuthorProp(AREA_0252_A270);
+    ShowAuthorProp(AREA_0252_A326);
+    ShowAuthorProp(AREA_0252_A300);
+    for (i = 0; area0252Characters[i] != INVALID_CHARACTER; i++)
+        ShowAuthorCharacter(area0252Characters[i]);
+}
+
+#define SHENMUE_EVENT_AUTHOR_PROPS
+#include "s2/events/event_author_dc.h"
+#endif
+#else
 #include "s2/areas/area_0252.hpp"
 #include "s2/character.hpp"
 #include "s2/sound_program.hpp"
@@ -136,3 +247,4 @@ void E0252LoopCallback(void *taskData) {
 const ScriptAreaDefinition area0252ScriptDefinition{.areaId = AREA_0252_AREA, .field04 = 0, .init = E0252Init, .main = E0252Main};
 
 } // namespace shenmue::s2::areas
+#endif

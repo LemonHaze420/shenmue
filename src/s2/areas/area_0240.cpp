@@ -1,3 +1,158 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0240.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void E0240Main(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0240MainCallback, 4, 11, sizeof(AreaAuthorTaskParameter), TASK_EVNT);
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0240A.MOT");
+    parent->state = 4;
+    parent->selection = 0;
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    ConfigureE0240Environment();
+    Queue_EVT_UTL_LoadNPCChara_3(area0240Characters, parent->self);
+}
+#else
+void E0240MainCallback(void *taskData)
+{
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)taskData;
+    switch (parent->state) {
+    case 4:
+        FTBL.SetScreenFilmFade(15, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.SetIsSkySetup(0);
+        FTBL.RefreshPadTaskData(0);
+        FTBL.FinishLoading();
+        parent->state = 5;
+        break;
+    case 5:
+        if (!FTBL.IsItemSelectable()) {
+            FTBL.SetRenderClockAndCompassTo(1);
+            FTBL.SetLoadingBusy();
+            parent->state = 1;
+            FTBL.HLib_SetupTaskDelay(60);
+        }
+        break;
+    case 1:
+        FTBL.SetIsSkySetup(1);
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        QueueE0240Loop(parent);
+        break;
+    case 3:
+        CleanupE0240(parent);
+        break;
+    }
+}
+
+void QueueE0240Loop(AreaAuthorTaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0240LoopCallback, 4, 11, sizeof(AreaAuthorLoopTaskParameter), TASK_EVNT);
+    ((AreaAuthorLoopTaskParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+    FTBL.RefreshWeatherForCurrentTime(0);
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeather();
+    SetupE0240Characters();
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void E0240LoopCallback(void *taskData)
+{
+    AreaAuthorLoopTaskParameter *child = (AreaAuthorLoopTaskParameter *)taskData;
+    if (FTBL.EV_authSceneCtrl(-6) == 1)
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.AddInventoryItem(72, 1, 1);
+        FTBL.HLib_SetupTimedTask(child->parent->self, 130);
+        RestoreE0240Characters();
+        child->parent->state = 3;
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void ConfigureE0240Environment(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0240");
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    FTBL.SetMapModelDataDefaultVertexShader();
+    FTBL.EV_lightLoad(AREA_0240_LIGHT);
+    FTBL.PushGlobalLightingProgram();
+    FTBL.EV_DisableCharacterDisplay(RYO_CHARACTER);
+}
+
+const shen_name area0240Characters[] = {AREA_0240_REN_, AREA_0240_CHO_, AREA_0240_CLJ_, AREA_0240_JOP_, INVALID_CHARACTER};
+
+void CleanupE0240(AreaAuthorTaskParameter *parent)
+{
+    EVT_UTL_FreeNPCChara(area0240Characters);
+    FTBL.EV_stepSetFlags(0x119, 0);
+    FTBL.EV_FreeAuthorPak(0, "0240");
+    FTBL.DeleteMotion(parent->motion);
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0240_QR00, 99);
+}
+
+void SetupE0240Characters(void)
+{
+    int i;
+    HideAuthorCharacter(RYO_CHARACTER);
+    HideAuthorProp(AREA_0240_A207);
+    HideAuthorProp(AREA_0240_A209);
+    HideAuthorProp(AREA_0240_A014);
+    HideAuthorProp(AREA_0240_A326);
+    HideAuthorProp(AREA_0240_A045);
+    HideAuthorProp(AREA_0240_A208);
+    HideAuthorProp(AREA_0240_A270);
+    HideAuthorProp(AREA_0240_A806);
+    HideAuthorProp(AREA_0240_A341);
+    for (i = 0; area0240Characters[i] != INVALID_CHARACTER; i++)
+        HideAuthorCharacter(area0240Characters[i]);
+}
+
+void RestoreE0240Characters(void)
+{
+    int i;
+    ShowAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorProp(AREA_0240_A207);
+    ShowAuthorProp(AREA_0240_A209);
+    ShowAuthorProp(AREA_0240_A014);
+    ShowAuthorProp(AREA_0240_A326);
+    ShowAuthorProp(AREA_0240_A045);
+    ShowAuthorProp(AREA_0240_A208);
+    ShowAuthorProp(AREA_0240_A270);
+    ShowAuthorProp(AREA_0240_A806);
+    ShowAuthorProp(AREA_0240_A341);
+    for (i = 0; area0240Characters[i] != INVALID_CHARACTER; i++)
+        ShowAuthorCharacter(area0240Characters[i]);
+}
+
+void HideAuthorCharacter(shen_name character)
+{
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void ShowAuthorCharacter(shen_name character)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void HideAuthorProp(shen_name prop)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 0);
+}
+
+void ShowAuthorProp(shen_name prop)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 1);
+}
+#endif
+#else
 #include "s2/areas/area_0240.hpp"
 #include "s2/character.hpp"
 #include "s2/inventory.hpp"
@@ -176,3 +331,4 @@ void E0240LoopCallback(void *taskData) {
 const ScriptAreaDefinition area0240ScriptDefinition{.areaId = AREA_0240_AREA, .field04 = 0, .init = E0240Init, .main = E0240Main};
 
 } // namespace shenmue::s2::areas
+#endif

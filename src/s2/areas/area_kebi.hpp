@@ -1,4 +1,30 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+
+#define KEBI_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define KEBI_GUARD SHEN_NAME4('D', 'E', 'Y', '_')
+#define KEBI_MOTION_MAP SHEN_NAME4('A', 'R', '0', '2')
+#define KEBI_DISMISS_MOTION 0x1942
+#define KEBI_STOP_MOTION 0x1943
+#define KEBI_IDLE_MOTION 0x1945
+#define KEBI_DEBUG_ID 3
+typedef struct KebiTaskData {
+    HLibTask *reservedTask;
+    HLibTask *self;
+    void *motionBank;
+    unsigned int frame;
+    int reserved10;
+} KebiTaskData;
+void AreaKEBIMain(void *argument);
+void KEBICheckCallback(void *data);
+void KEBIMainCallback(void *data);
+void KEBIDebugExitCallback(void *data);
+void KEBIExitCallback(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/area_names.hpp"
 namespace shenmue::s2::areas {
@@ -25,3 +51,4 @@ void KEBIMainCallback(void *data);
 void KEBIExitCallback(void *data);
 extern const ScriptAreaDefinition areaKEBIScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

@@ -1,3 +1,162 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_kebi.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void AreaKEBIMain(void *argument)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(KEBICheckCallback, 5, 11, sizeof(KebiTaskData), TASK_EVNT);
+    KebiTaskData *work = (KebiTaskData *)FTBL.HLib_GetTaskParameter(task);
+    work->self = task;
+    work->frame = 0;
+    work->motionBank = FTBL.ReadMotiFromDirectory(g_actNumber, KEBI_MOTION_MAP, "0075E.MOT");
+    FTBL.EV_FreeAuthorPak(1, "0075");
+    EventDebugRegister(KEBI_DEBUG_ID, KEBIDebugExitCallback, work, 2000000000);
+}
+#else
+void KEBICheckCallback(void *data)
+{
+    FTBL.HLib_SetCurrentTaskTo(KEBIMainCallback);
+}
+
+void KEBIMainCallback(void *data)
+{
+    KebiTaskData *work = (KebiTaskData *)data;
+    Vector3 position, guardPosition, playerPosition;
+    Vector3i rotation;
+    float reflector[4] = {1.0f, 0.3f, 0.3f, 0.3f};
+    unsigned char dismissal;
+    switch (work->frame) {
+    case 0:
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.EV_NPC_NewLoadSw_0(0);
+        FTBL.CheckWarmStartNpcRoute(KEBI_GUARD);
+        FTBL.EV_ResetFreeTalkFlags();
+        FTBL.GetCharaPosition(KEBI_PLAYER, -1, &position, 0x40000000);
+        position.x = 245.3f;
+        position.z = 303.9f;
+        rotation.x = 0;
+        rotation.y = 0;
+        rotation.z = 0;
+        FTBL.EV_AT_SetPos(KEBI_PLAYER, 0x78000000, &position);
+        FTBL.EV_AT_SetAngY_0(KEBI_PLAYER, 0x78000000, &rotation, 0);
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KEBI_PLAYER), 0xf002, 0);
+        ++work->frame;
+        break;
+    case 1:
+        if (FTBL.ForceLoadNpc(KEBI_GUARD)) {
+            EventDebugCheck(KEBI_DEBUG_ID, 4);
+            FTBL.SetScenarioReflectorBoardValues(KEBI_PLAYER, reflector);
+            FTBL.SetRefBoardParamsForCharaById(KEBI_PLAYER, 1);
+            FTBL.SetScenarioReflectorBoardValues(KEBI_GUARD, reflector);
+            FTBL.SetRefBoardParamsForCharaById(KEBI_GUARD, 1);
+            FTBL.SetRefBoardParamsForCharaById(KEBI_PLAYER, 1);
+            FTBL.SetRefBoardParamsForCharaById(KEBI_GUARD, 1);
+            FTBL.EV_SetCharacterAlphaEnabled(KEBI_GUARD, 0);
+            FTBL.GetCharaPosition(KEBI_PLAYER, 5, &position, 0);
+            FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KEBI_GUARD), &position, 0);
+            FTBL.GetCharaPosition(KEBI_PLAYER, -1, &playerPosition, 0x40000000);
+            FTBL.GetCharaPosition(KEBI_GUARD, -1, &guardPosition, 0x40000000);
+            playerPosition.x -= guardPosition.x;
+            playerPosition.z -= guardPosition.z;
+            rotation.y = (unsigned short)FTBL.InverseFixedAtan2(playerPosition.x, playerPosition.z);
+            rotation.z = 0;
+            rotation.x = 0;
+            FTBL.GetCharaPosition(KEBI_GUARD, -1, &playerPosition, 0x40000000);
+            FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(KEBI_GUARD), &playerPosition, rotation.y, 0, 0);
+            ++work->frame;
+            EVT_AT_SetCam(3150, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, 0, 0);
+            (unsigned char)FTBL.GetRandomNumberInRange(2.0f) == 0 ? EVT_AT_SetVoice("0075B001", 0) : EVT_AT_SetVoice("0075B002", 0);
+        }
+        break;
+    case 2:
+        if (!FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(KEBI_GUARD), 58, 1)) {
+            EVT_AT_SetMot(KEBI_GUARD, KEBI_STOP_MOTION, 0.0f, 1.0f, 0x80000000U, 0);
+            FTBL.GetCharaPosition(KEBI_GUARD, 5, &position, 0);
+            FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KEBI_PLAYER), &position, 0);
+            EVT_AT_SetCam(3160, KEBI_GUARD, KEBI_GUARD, 0, 0, 20);
+            EVT_AT_SetCam(3170, KEBI_GUARD, KEBI_GUARD, 0, 0, 241);
+            switch ((unsigned char)FTBL.GetRandomNumberInRange(3.0f)) {
+            case 0:
+                EVT_AT_SetVoice("0075B003", 50);
+                break;
+            case 1:
+                EVT_AT_SetVoice("0075B004", 50);
+                break;
+            default:
+                EVT_AT_SetVoice("0075B005", 50);
+                break;
+            }
+            dismissal = (unsigned char)FTBL.GetRandomNumberInRange(2.0f);
+            if (dismissal == 0)
+                EVT_AT_SetVoice("0075B006", 140);
+            else
+                EVT_AT_SetVoice("0075B007", 140);
+            ++work->frame;
+        }
+        break;
+    case 23:
+        FTBL.EV_DisableCharacterDisplay(KEBI_PLAYER);
+        break;
+    case 80:
+        EVT_AT_SetMot(KEBI_GUARD, KEBI_DISMISS_MOTION, 0.0f, 1.6f, 0x80000000U, 0);
+        break;
+    case 230:
+        FTBL.GetCharaPosition(KEBI_PLAYER, -1, &position, 0x40000000);
+        position.z = 306.0f;
+        rotation.x = 0;
+        rotation.y = 0x8000;
+        rotation.z = 0;
+        FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(KEBI_PLAYER), &position, rotation.y, 0, 0);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KEBI_PLAYER), 0, 0);
+        break;
+    case 244:
+        EVT_AT_SetMot(KEBI_GUARD, KEBI_IDLE_MOTION, 0.0f, 1.0f, 0x80000000U, 0);
+        FTBL.EV_EnableCharacterDisplay(KEBI_PLAYER);
+        break;
+    case 270:
+        FTBL.HLib_SetCurrentTaskTo(KEBIExitCallback);
+        break;
+    }
+    if (work->frame >= 3)
+        ++work->frame;
+}
+
+void KEBIDebugExitCallback(void *data)
+{
+    Vector3 position;
+    Vector3i rotation;
+    FTBL.GetCharaPosition(KEBI_PLAYER, -1, &position, 0x40000000);
+    position.z = 306.0f;
+    rotation.x = 0;
+    rotation.y = 0x8000;
+    rotation.z = 0;
+    FTBL.EV_AT_SetPos(KEBI_PLAYER, 0x78000000, &position);
+    FTBL.EV_AT_SetAngY_0(KEBI_PLAYER, 0x78000000, &rotation, 0);
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KEBI_PLAYER), 0, 0);
+    FTBL.EV_EnableCharacterDisplay(KEBI_PLAYER);
+    KEBIExitCallback(data);
+}
+
+void KEBIExitCallback(void *data)
+{
+    KebiTaskData *work = (KebiTaskData *)data;
+    FTBL.SetRefBoardParamsForCharaById(KEBI_PLAYER, 0);
+    FTBL.SetRefBoardParamsForCharaById(KEBI_GUARD, 0);
+    FTBL.npcFree(KEBI_GUARD);
+    FTBL.npcLockUnlock(KEBI_GUARD);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    EventDebugUnregister(KEBI_DEBUG_ID);
+    FTBL.DeleteMotion(work->motionBank);
+    FTBL.EVS_LoopCamera(0, 0, 0);
+    FTBL.camCtrlSetFovTransitionTo(1);
+    FTBL.camCtrlSetState(0);
+    FTBL.SetPlayerControlEnabled(1);
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KEBI_PLAYER), 0, 0);
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KEBI_GUARD), 0, 0);
+    FTBL.EV_HLKillOtherHierarchyTask(work->self);
+}
+#endif
+#else
 #include "s2/areas/area_kebi.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
@@ -147,3 +306,4 @@ void KEBIExitCallback(void *data) {
 }
 const ScriptAreaDefinition areaKEBIScriptDefinition{.areaId = AREA_KEBI, .field04 = 0, .init = AreaKEBIInit, .main = AreaKEBIMain};
 } // namespace shenmue::s2::areas
+#endif

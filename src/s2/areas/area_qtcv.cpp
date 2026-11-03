@@ -1,3 +1,252 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_qtcv.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void QtcvMain(void *argument)
+{
+    QueueQtcvEvent((const QtcvConfiguration *)argument);
+}
+#elif defined(SHENMUE_EVENT_QTCV_CARRY)
+static const short qtcvCarryCameraDelays[3][5] = {{0, 170, 417, 417, 417}, {0, 60, 180, 180, 180}, {0, 200, 340, 340, 340}};
+static const unsigned short qtcvCarryCameras[3][5] = {{7010, 7012, 7015, 7015, 7015}, {7000, 7001, 7002, 7002, 7002}, {7005, 7006, 7007, 7007, 7007}};
+static const Vector3 qtcvCarryRenOffsets[3] = {{-0.67113f, 0.0f, 1.84862f}, {0.54767f, 0.0f, 1.26767f}, {-0.31364f, 0.0f, 0.7248f}};
+static const unsigned short qtcvCarryMotions[3][2] = {{0x21e2, 0x21df}, {0x21e3, 0x21e0}, {0x21e1, 0x21de}};
+static const short qtcvCarryVoiceDelays[3][3][5] = {{{27, 55, 189, 223, 342}, {27, 55, 132, 173, 314}, {87, 104, 298, 350, 498}},
+    {{27, 55, 164, 220, 302}, {27, 56, 129, 178, 319}, {87, 104, 282, 350, 450}},
+    {{63, 98, 164, 220, 310}, {49, 80, 129, 190, 299}, {95, 146, 294, 350, 485}}};
+static const char *qtcvCarryVoices[3][5] = {{"0301A005", "0301B004", "0301B005", "0301A004", "0301B006"},
+    {"0301A005", "0301B007", "0301B008", "0301A006", "0301B009"}, {"0301A007", "0301B010", "0301B011", "0301A008", "0301B012"}};
+static const float qtcvCarryTailFrames[3] = {120.0f, 100.0f, 200.0f};
+static const short qtcvCarryTailCameraDelays[3][3] = {{0, 85, 297}, {0, 150, 150}, {0, 200, 200}};
+static const unsigned short qtcvCarryTailCameras[3][3] = {{7011, 7012, 7015}, {7003, 7002, 7002}, {7008, 7009, 7009}};
+static const Vector3 qtcvCarryTailRenOffsets[3] = {{-0.77113f, 0.0f, 1.84862f}, {0.54767f, 0.0f, 1.26767f}, {-0.31364f, 0.0f, 0.7248f}};
+static const unsigned short qtcvCarryTailMotions[3][2] = {{0x21e2, 0x21df}, {0x21e3, 0x21e0}, {0x21e1, 0x21de}};
+static const int qtcvCarryTailVoiceDelays[3][3] = {{43, 103, 194}, {22, 86, 194}, {67, 150, 263}};
+static const char *qtcvCarryTailVoices[3][3] = {{"0301B014", "0301A009", "0301B015"}, {"0301B014", "0301A009", "0301B015"},
+    {"0301B014", "0301A009", "0301B015"}};
+
+int PlayPlankCarryAuthoredTransition(int kind, int dialogue)
+{
+    int frames;
+    int index;
+    qtcvCarryState = 0;
+    EVT_AT_SetPosAng(QTCV_PLAYER, QTCV_STAGE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetPosAng(QTCV_REN, QTCV_PLAYER, qtcvCarryRenOffsets[kind].x, qtcvCarryRenOffsets[kind].z, 0.0f, 0);
+    frames = EVT_AT_SetMot(QTCV_PLAYER, qtcvCarryMotions[kind][0], 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(QTCV_REN, qtcvCarryMotions[kind][1], 0.0f, 1.0f, 0x40000000U, 0);
+    for (index = 0; index < 5; index++)
+        EVT_AT_SetCam(qtcvCarryCameras[kind][index], QTCV_STAGE, QTCV_STAGE, 0, 0, qtcvCarryCameraDelays[kind][index]);
+    for (index = 0; index < 5; index++)
+        EVT_AT_SetVoice(qtcvCarryVoices[dialogue][index], qtcvCarryVoiceDelays[dialogue][kind][index]);
+    return frames;
+}
+
+int PlayPlankCarryAuthoredTransitionTail(int kind, int dialogue)
+{
+    int frames;
+    int index;
+    qtcvCarryState = 0;
+    EVT_AT_SetPosAng(QTCV_PLAYER, QTCV_STAGE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetPosAng(QTCV_REN, QTCV_PLAYER, qtcvCarryTailRenOffsets[kind].x, qtcvCarryTailRenOffsets[kind].z, 0.0f, 0);
+    frames = EVT_AT_SetMot(QTCV_PLAYER, qtcvCarryTailMotions[kind][0], qtcvCarryTailFrames[kind], 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(QTCV_REN, qtcvCarryTailMotions[kind][1], qtcvCarryTailFrames[kind], 1.0f, 0x44000000U, 0);
+    for (index = 0; index < 3; index++)
+        EVT_AT_SetCam(qtcvCarryTailCameras[kind][index], QTCV_STAGE, QTCV_STAGE, 0, 0, qtcvCarryTailCameraDelays[kind][index]);
+    for (index = 0; index < 3; index++)
+        EVT_AT_SetVoice(qtcvCarryTailVoices[dialogue][index], qtcvCarryTailVoiceDelays[kind][index]);
+    return frames;
+}
+
+int StartQtcvAlternateCamera(void)
+{
+    EVT_AT_SetCam(7016, QTCV_SECOND_STAGE, QTCV_SECOND_STAGE, 0, 0, 0);
+    EVT_AT_SetSound(0x0da8, 0);
+    return 200;
+}
+#else
+static const QtcvPlacement qtcvPlacements[] = {{{221.8f, 110.8f, 162.4f}, 180.0f}, {{202.0f, 110.8f, 148.4f}, 90.0f}, {{245.3f, 110.8f, 148.7f}, 270.0f}};
+static const QtcvConfiguration qtcvConfigurations[] = {{0, 0}, {1, 0}, {2, 0}};
+static shen_name qtcvLoadCharacters[] = {QTCV_PLAYER, QTCV_REN, EVENT_CHARACTER_INVALID};
+int qtcvCarryState = 0;
+static int qtcvAuthorFlags[] = {2062, 2063, 2064};
+static shen_name qtcvAuthors[] = {QTCV_AUTHOR_1, QTCV_AUTHOR_2, QTCV_AUTHOR_0};
+
+void QueueQtcvEvent(const QtcvConfiguration *configuration)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(QtcvStartCallback, 4, 11, sizeof(QtcvEventWork), TASK_EVNT);
+    QtcvEventWork *work = (QtcvEventWork *)FTBL.HLib_GetTaskParameter(task);
+    HLibTask *debugTask = FTBL.HLib_EnqueueTaskWithParameter(QtcvDebugDisplayCallback, 3, 11, sizeof(QtcvEventWork *), TASK_EVNT);
+    *(QtcvEventWork **)FTBL.HLib_GetTaskParameter(debugTask) = work;
+    work->debugTask = debugTask;
+    work->task = task;
+    if (configuration)
+        work->configuration = configuration;
+    else
+        work->configuration = &qtcvConfigurations[g_entryPoint];
+    InitializeQtcvResources(work);
+    EventDebugRegister(QTCV_DEBUG_ID, QtcvDebugExitCallback, work, 2000000000);
+}
+
+void QtcvDebugExitCallback(void *data)
+{
+    QtcvEndCallback(data);
+}
+
+void QtcvEndCallback(void *data)
+{
+    QtcvEventWork *work = (QtcvEventWork *)data;
+    int changedFlag330 = work->changedFlag330;
+    CleanupQtcvResources(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->debugTask);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    EventDebugUnregister(QTCV_DEBUG_ID);
+    FTBL.EV_SetPlayerFlag(12, 1320, 0);
+    if (changedFlag330)
+        FTBL.EV_stepSetFlags(330, 0);
+    if (g_currentMap == QTCV_AREA) {
+        FTBL.scenSetTaskFlags(6);
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+    } else
+        FTBL.qronRepositionPlayerForFloor(7);
+}
+
+void QtcvDebugDisplayCallback(void *data)
+{
+    FTBL.SetDebugScreenTextPosition(2, 23);
+}
+
+void SetQtcvEndContinuation(HLibTaskCallback *continuation)
+{
+    *continuation = QtcvEndThunkCallback;
+}
+
+void QtcvStartCallback(void *data)
+{
+    QtcvEventWork *work = (QtcvEventWork *)data;
+    HLibTaskCallback *continuation = &work->authorContinuation;
+    const QtcvPlacement *placement = work->placement;
+    int frames;
+    EventDebugCheck(QTCV_DEBUG_ID, 4);
+    SetQtcvEndContinuation(continuation);
+    EVT_AT_SetPos(QTCV_STAGE, EVENT_CHARACTER_INVALID, placement->position.x, work->playerHeight, placement->position.z, 0);
+    EVT_AT_SetAngY(QTCV_STAGE, EVENT_CHARACTER_INVALID, placement->yaw, 0);
+    EVT_AT_SetPos(QTCV_SECOND_STAGE, EVENT_CHARACTER_INVALID, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QTCV_SECOND_STAGE, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QTCV_PLAYER));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QTCV_REN));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QTCV_PLAYER), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QTCV_PLAYER), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QTCV_PLAYER), 0, (void *)areaLoopHandPoses[QTCV_GRIP_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QTCV_PLAYER), 1, (void *)areaLoopHandPoses[QTCV_GRIP_HAND_POSE], 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QTCV_REN), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QTCV_REN), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QTCV_REN), 0, (void *)areaLoopHandPoses[QTCV_GRIP_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QTCV_REN), 1, (void *)areaLoopHandPoses[QTCV_GRIP_HAND_POSE], 0);
+    FTBL.AT_SetLocalBaseChara(QTCV_DUMMY_PLAYER, QTCV_PLAYER);
+    FTBL.AT_SetLocalBaseChara(QTCV_DUMMY_REN, QTCV_REN);
+    EVT_AT_SetPos(QTCV_DUMMY_PLAYER, QTCV_PLAYER, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QTCV_DUMMY_PLAYER, QTCV_PLAYER, 0.0f, 0);
+    EVT_AT_SetPos(QTCV_DUMMY_REN, QTCV_REN, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QTCV_DUMMY_REN, QTCV_REN, 0.0f, 0);
+    EVT_AT_SetPos(QTCV_PLAYER, QTCV_STAGE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetPos(QTCV_REN, QTCV_STAGE, 0.0f, 0.0f, 0.0f, 0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    if (work->configuration->tail)
+        frames = PlayPlankCarryAuthoredTransitionTail(work->configuration->kind, work->dialogue);
+    else
+        frames = PlayPlankCarryAuthoredTransition(work->configuration->kind, work->dialogue);
+    if (FTBL.EV_GetShenmueFlag(330)) {
+        work->changedFlag330 = 1;
+        FTBL.EV_stepSetFlags(330, 1);
+        FTBL.HLib_SetCurrentTaskTo(QtcvAlternateAuthorCallback);
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QtcvEndThunkCallback);
+    FTBL.EV_LoadAudio("0301E000", 0);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, frames - 30);
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void QtcvAlternateAuthorCallback(void *data)
+{
+    QtcvEventWork *work = (QtcvEventWork *)data;
+    FTBL.EV_SetPlayerFlag(12, qtcvAuthorFlags[work->configuration->kind], 1);
+    FTBL.EV_authSceneCtrl(qtcvAuthors[work->configuration->kind]);
+    work->authorContinuation = QtcvAlternateFinishCallback;
+    FTBL.HLib_SetCurrentTaskTo(AuthoredEventContinuationCallback);
+}
+
+void AuthoredEventContinuationCallback(void *data)
+{
+    if (!FTBL.EV_authSceneCtrl(-1))
+        FTBL.HLib_SetCurrentTaskTo(((QtcvEventWork *)data)->authorContinuation);
+}
+
+void QtcvAlternateFinishCallback(void *data)
+{
+    int frames = StartQtcvAlternateCamera();
+    FTBL.EV_SetPlayerFlag(12, 1320, 1);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    EVT_AT_MenCtrl(60, 0, 0, 0, 0, 255, 0, 0, 0, frames - 60);
+    FTBL.HLib_SetCurrentTaskTo(QtcvEndThunkCallback);
+    FTBL.HLib_SetupTaskDelay(frames);
+}
+
+void QtcvEndThunkCallback(void *data)
+{
+    QtcvEndCallback(data);
+}
+
+void InitializeQtcvResources(QtcvEventWork *work)
+{
+    int flags[3] = {331, 332, 333};
+    Vector3 position;
+    int index;
+    for (index = 0, work->dialogue = -1; index <= 2; index++)
+        if (!FTBL.EV_GetShenmueFlag(flags[index]))
+            work->dialogue++;
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    FTBL.GetCharaPosition(QTCV_PLAYER, 0xffffffffU, &position, 0x40000000U);
+    work->playerHeight = position.y;
+    work->changedFlag330 = 0;
+    work->placement = &qtcvPlacements[work->configuration->kind];
+    work->characters = Queue_EVT_AT_ReadChr(work->task, qtcvLoadCharacters);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"301E", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"QTCV", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "QTCV", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "QTCV", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0301");
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0301E000");
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QTCV_PLAYER), 1);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QTCV_REN), 1);
+}
+
+void CleanupQtcvResources(QtcvEventWork *work)
+{
+    EVT_AT_SetPosAng(QTCV_PLAYER, QTCV_STAGE, 0.0f, 2.0f, 180.0f, 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QTCV_PLAYER), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QTCV_REN), 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QTCV_REN));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QTCV_PLAYER));
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0301");
+    FTBL.EV_ControlPackageResources(0, 6, "QTCV", 0, 0);
+    FTBL.EV_ControlPackageResources(0, 6, "301E", 0, 0);
+    ET_AT_KillWork(work->characters);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+}
+#endif
+#else
 #include "s2/areas/area_qtcv.hpp"
 #include "s2/author.hpp"
 #include "s2/camera.hpp"
@@ -207,3 +456,4 @@ void CleanupQtcvResources(QtcvEventWork *work) {
 }
 const ScriptAreaDefinition qtcvScriptDefinition{QTCV_AREA, 0, QtcvInit, QtcvMain};
 } // namespace shenmue::s2
+#endif

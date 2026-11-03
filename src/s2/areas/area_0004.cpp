@@ -1,3 +1,405 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0004.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void e0004_EVT_Auth_Main(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(e0004_EVT_Auth_Main_Callback, 4, 11, sizeof(Area0004EventWork), TASK_EVNT);
+    Area0004EventWork *event = (Area0004EventWork *)FTBL.HLib_GetTaskParameter(task);
+    event->task = task;
+    event->state = 1;
+    event->debugSelection = 0;
+    FTBL.InitializeShipSpray();
+    FTBL.HIKI_Enqueue();
+    InitializeOpeningEnvironment();
+    EVT_UTL_SetNPCLowQualityHands(0);
+    Queue_EVT_UTL_LoadNPCChara_3(openingTemporaryCharacters, event->task);
+}
+#else
+shen_name openingTemporaryCharacters[] = {
+    SHEN_NAME4('F', 'T', '1', '_'), SHEN_NAME4('F', 'T', '2', '_'), SHEN_NAME4('F', 'T', '3', '_'), SHEN_NAME4('F', 'T', '4', '_'),
+    SHEN_NAME4('F', 'T', '5', '_'), SHEN_NAME4('F', 'T', '6', '_'), SHEN_NAME4('F', 'T', '7', '_'), SHEN_NAME4('F', 'T', '8', '_'), INVALID_CHARACTER};
+static int openingWavePhase = 0;
+static unsigned char openingWaveDistance[0x100];
+static unsigned char openingWaveFirstKernel[0x100];
+static unsigned char openingWaveSecondKernel[0x100];
+static unsigned int openingSmokeEffects[2];
+
+void e0004_EVT_Auth_Main_Callback(void *taskData)
+{
+    Area0004EventWork *event = (Area0004EventWork *)taskData;
+    unsigned int input;
+    switch (event->state) {
+    case 0:
+        input = FTBL.EVT_GetControllerInput(0, 1);
+        if (input == 0x400)
+            event->state = 1;
+        else if (input == 64) {
+            if (--event->debugSelection < 0)
+                event->debugSelection = 0;
+        } else if (input == 128) {
+            if (++event->debugSelection > 0)
+                event->debugSelection = 0;
+        }
+        switch (event->debugSelection) {
+        case 0:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A001.c\n");
+            break;
+        case 1:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A089.c\n");
+            break;
+        case 2:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A090.c\n");
+            break;
+        case 3:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A091.c\n");
+            break;
+        case 4:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A092.c\n");
+            break;
+        case 5:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A093.c\n");
+            break;
+        case 6:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A094.c\n");
+            break;
+        case 7:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A095.c\n");
+            break;
+        case 8:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A096.c\n");
+            break;
+        case 9:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A097.c\n");
+            break;
+        case 10:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0004A098.c\n");
+            break;
+        }
+        FTBL.SetDebugScreenTextPosition(2, 5);
+        FTBL.DebugLogToScreen("seqdata%d.avb\n", event->debugSelection);
+        break;
+    case 1:
+        Queue_e0004_EVT_Auth_Loop_0004A000(event);
+        break;
+    case 3:
+        CompleteOpening(event);
+        break;
+    }
+}
+
+void Queue_e0004_EVT_Auth_Loop_0004A000(Area0004EventWork *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(e0004_EVT_Auth_Loop_0004A000_Callback, 4, 11, sizeof(Area0004LoopWork), TASK_EVNT);
+    Area0004LoopWork *child = (Area0004LoopWork *)FTBL.HLib_GetTaskParameter(task);
+    child->parent = parent;
+    child->state = 0;
+    SetupOpeningSmoke();
+    FTBL.EV_LoadAudio("0004A000", 0);
+    PrepareOpeningAuthorCharacters();
+    FTBL.Queue_OP_StaffRoll();
+    FTBL.EV_authSceneCtrl(parent->debugSelection);
+    parent->state = 2;
+}
+
+void e0004_EVT_Auth_Loop_0004A000_Callback(void *taskData)
+{
+    Area0004LoopWork *child = (Area0004LoopWork *)taskData;
+    Vector3 position;
+    Vector3 smokePosition;
+    Vector3 spawnVolume = {0.0f, 0.0545098074f, 0.0f};
+    Vector3i rotation;
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    if (frame <= 2369) {
+        FTBL.GetCharaPosition(AREA_0004_A892, -1, &position, 0);
+        FTBL.GetScenarioCharacterEulerAngles(AREA_0004_A892, &rotation, 0);
+        rotation.y += 0x8000;
+        position.y = 95.83f;
+        FTBL.AssignShipSprayPosition(&position);
+        FTBL.AssignShipSprayYaw(rotation.y);
+        position.y = 95.9f;
+        FTBL.AssignHikiPosition(&position);
+        FTBL.AssignHikiRotation(rotation.y);
+        FTBL.GetCharaPosition(AREA_0004_A892, -1, &position, 0x40000000);
+        FTBL.GetScenarioCharacterEulerAngles(AREA_0004_A892, &rotation, 0x40000000);
+        smokePosition.x = 0.0f;
+        smokePosition.y = 15.0f;
+        smokePosition.z = 11.2f;
+        FTBL.ApplyScenarioTranslationAndRotation(&position, &rotation, &smokePosition);
+        FTBL.SetParticleEffectPosition(0, openingSmokeEffects[0], &smokePosition, &spawnVolume);
+        smokePosition.x = -0.04f;
+        smokePosition.y = 15.0f;
+        smokePosition.z = 20.97f;
+        FTBL.ApplyScenarioTranslationAndRotation(&position, &rotation, &smokePosition);
+        FTBL.SetParticleEffectPosition(0, openingSmokeEffects[1], &smokePosition, &spawnVolume);
+    }
+    switch (frame) {
+    case 1:
+        position.x = 0.0f;
+        position.y = 0.0f;
+        position.z = 0.0f;
+        FTBL.SetMapModelSlotTransform(16, &position, 0);
+        position.y = -0.8f;
+        FTBL.SetMapModelSlotTransform(1, &position, 0);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        break;
+    case 2370:
+        position.x = 1000.0f;
+        FTBL.AssignHikiPosition(&position);
+        FTBL.AssignShipSprayPosition(&position);
+        FTBL.SuspendParticleEffect(0, openingSmokeEffects[0]);
+        FTBL.SuspendParticleEffect(0, openingSmokeEffects[1]);
+        FTBL.FreeParticleEffect(0, openingSmokeEffects[0]);
+        FTBL.FreeParticleEffect(0, openingSmokeEffects[1]);
+        openingSmokeEffects[0] = openingSmokeEffects[1] = AREA_0004_INVALID_EFFECT;
+        break;
+    case 2539:
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0004_A820), 1, -1, 0.5f, 0);
+        break;
+    case 2548:
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0004_A814), 1, -1, 0.5f, 0);
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0004_A816), 1, -1, 0.5f, 0);
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0004_A822), 1, -1, 0.5f, 0);
+        break;
+    case 2555:
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(AREA_0004_A818), 1, -1, 0.5f, 0);
+        break;
+    case 2861:
+        FTBL.SetObjectFlagByIndex(22, 1);
+        break;
+    case 2946:
+        FTBL.SetObjectFlagByIndex(22, 0);
+        break;
+    }
+    if ((frame >= 2362 && frame <= 2410) || (frame >= 2514 && frame <= 2714)) {
+        FTBL.nlSetTexanimUV(0.0f, 0.055f);
+        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(17));
+        FTBL.nlSetTexanimUV(0.0f, 0.027f);
+        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(18));
+    }
+    if (frame == 2706) {
+        position.x = 0.0f;
+        position.y = 1.15f;
+        position.z = 0.0f;
+        FTBL.SetMapModelSlotTransform(16, &position, 0);
+    } else if (frame >= 2707 && frame <= 2779)
+        UpdateOpeningWave();
+    else if (frame == 2780) {
+        position.x = 0.0f;
+        position.y = 0.0f;
+        position.z = 0.0f;
+        FTBL.SetMapModelSlotTransform(16, &position, 0);
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        RestoreOpeningAuthorCharacters();
+        FTBL.camCtrlSetFarDistance(0.0f);
+        child->parent->state = 3;
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void SetupOpeningSmoke(void)
+{
+    Vector3 position = {0.0f, 0.0f, 0.0f};
+    Vector3 spawnVolume = {0.0f, 0.0545098074f, 0.0f};
+    Vector3 velocity = {0.0f, 0.0815686285f, 0.0f};
+    Vector3 acceleration = {0.0f, 0.0545098074f, 0.0f};
+    int i;
+    for (i = 0; i < 2; i++) {
+        openingSmokeEffects[i] = FTBL.CreateSmokeEffect(&position, &spawnVolume, 300, 0.018431373f, 0, 0);
+        FTBL.SetParticleEffectVelocity(0, openingSmokeEffects[i], &velocity, &acceleration);
+        FTBL.SetParticleEffectColour(0, openingSmokeEffects[i], 0, 3, 8, 5);
+        FTBL.SetParticleEffectSize(0, openingSmokeEffects[i], 7.1764708f, 7.1764708f);
+        FTBL.SetParticleEffectInitialScale(0, openingSmokeEffects[i], 0.28823531f);
+        FTBL.SetSmokeEffectFalloff(openingSmokeEffects[i], 112);
+        FTBL.SetSmokeEffectFadeFactor(openingSmokeEffects[i], 21);
+        FTBL.SetSmokeEffectPhaseRate(openingSmokeEffects[i], 0.0f);
+        FTBL.ResumeParticleEffect(0, openingSmokeEffects[i]);
+    }
+}
+
+void UpdateOpeningWave(void)
+{
+    Vector3 position = {0.0f, 0.0f, 0.0f};
+    Vector3 loweredPosition = {0.0f, 0.0f, 0.0f};
+    if (openingWavePhase <= 180) {
+        position.y = FTBL.CalculateFixedSine((unsigned short)(int)((float)(openingWavePhase * 8192) / 45.0f)) * 0.7f;
+        loweredPosition.y = position.y - 0.8f;
+        openingWavePhase++;
+    } else {
+        openingWavePhase = 0;
+        loweredPosition.y = -0.8f;
+    }
+    FTBL.SetMapModelSlotTransform(0, &position, 0);
+    FTBL.SetMapModelSlotTransform(1, &loweredPosition, 0);
+    FTBL.SetMapModelSlotTransform(2, &position, 0);
+    FTBL.SetMapModelSlotTransform(3, &position, 0);
+}
+
+void InitializeOpeningEnvironment(void)
+{
+    EventDateTime dateTime;
+    Vector3 direction;
+    void *firstKernel;
+    FTBL.GetCurrentDateTime((DateTime *)&dateTime);
+    dateTime.hour = 8;
+    dateTime.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&dateTime);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    FTBL.UpdateWeather();
+    FTBL.EV_SetPlayerFlag(12, 123, 1);
+    FTBL.camCtrlSetFarDistance(400.0f);
+    FTBL.GenerateFFT(2.0f);
+    FTBL.fft_fill_dist(FTBL.fft_fill_krn(10.0f, FTBL.generate_distance_falloff_row_major(2.082f, openingWaveDistance)));
+    firstKernel = FTBL.fft_fill_krn(0.0564f, FTBL.generate_distance_falloff_kernel_8x8(0.94f, openingWaveFirstKernel));
+    FTBL.fft_bins_load_pairwise_tables(firstKernel, FTBL.fft_fill_krn(0.035f, FTBL.generate_distance_falloff_kernel_8x8(0.952f, openingWaveSecondKernel)));
+    FTBL.FFTUtil(0.001f, 0.001f);
+    direction.x = 0.0598f;
+    direction.y = 0.9768f;
+    direction.z = 0.2054f;
+    FTBL.set_lighting_flags(0.1f, &direction);
+    FTBL.HLib_EnqueueTaskWithoutParameter(e0004_ET_WAVE_AR00_Callback, 3, 2, AREA_0004_WAVE);
+    FTBL.SetMapModelVertexShaderType(16, 1);
+    FTBL.SetObjectFlagByIndex(22, 0);
+}
+
+void CompleteOpening(Area0004EventWork *event)
+{
+    EventDateTime dateTime;
+    if (openingSmokeEffects[0] != AREA_0004_INVALID_EFFECT) {
+        FTBL.SuspendParticleEffect(0, openingSmokeEffects[0]);
+        FTBL.FreeParticleEffect(0, openingSmokeEffects[0]);
+    }
+    if (openingSmokeEffects[1] != AREA_0004_INVALID_EFFECT) {
+        FTBL.SuspendParticleEffect(0, openingSmokeEffects[1]);
+        FTBL.FreeParticleEffect(0, openingSmokeEffects[1]);
+    }
+    FTBL.GetCurrentDateTime((DateTime *)&dateTime);
+    dateTime.hour = 13;
+    dateTime.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&dateTime);
+    EVT_UTL_FreeNPCChara(openingTemporaryCharacters);
+    FTBL.HLib_DestroyTask(event->task);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0004_AR01, 0);
+}
+
+void PrepareOpeningAuthorCharacters(void)
+{
+    int i;
+    PrepareOpeningAuthorCharacter(AREA_0004_AA87);
+    PrepareOpeningAuthorCharacter(AREA_0004_AA88);
+    PrepareOpeningAuthorCharacter(AREA_0004_AA90);
+    PrepareOpeningAuthorCharacter(AREA_0004_AA91);
+    PrepareOpeningAuthorCharacter(AREA_0004_AA92);
+    PrepareOpeningAuthorCharacter(AREA_0004_A892);
+    PrepareOpeningAuthorCharacter(AREA_0004_A259);
+    PrepareOpeningAuthorCharacter(AREA_0004_A814);
+    PrepareOpeningAuthorCharacter(AREA_0004_A816);
+    PrepareOpeningAuthorCharacter(AREA_0004_A818);
+    PrepareOpeningAuthorCharacter(AREA_0004_A820);
+    PrepareOpeningAuthorCharacter(AREA_0004_A822);
+    PrepareOpeningAuthorCharacter(AREA_0004_A954);
+    PrepareOpeningAuthorCharacter(AREA_0004_AA08);
+    PrepareOpeningAuthorCharacter(AREA_0004_AA10);
+    PrepareOpeningAuthorCharacter(AREA_0004_A892);
+    PrepareOpeningAuthorCharacter(AREA_0004_A796);
+    for (i = 0; openingTemporaryCharacters[i] != INVALID_CHARACTER; i++)
+        PrepareOpeningTemporaryCharacter(openingTemporaryCharacters[i]);
+}
+
+void RestoreOpeningAuthorCharacters(void)
+{
+    int i;
+    RestoreOpeningAuthorCharacter(AREA_0004_A892);
+    RestoreOpeningAuthorCharacter(AREA_0004_AA87);
+    RestoreOpeningAuthorCharacter(AREA_0004_AA88);
+    RestoreOpeningAuthorCharacter(AREA_0004_AA90);
+    RestoreOpeningAuthorCharacter(AREA_0004_AA91);
+    RestoreOpeningAuthorCharacter(AREA_0004_AA92);
+    RestoreOpeningAuthorCharacter(AREA_0004_A892);
+    RestoreOpeningAuthorCharacter(AREA_0004_A259);
+    RestoreOpeningAuthorCharacter(AREA_0004_A814);
+    RestoreOpeningAuthorCharacter(AREA_0004_A816);
+    RestoreOpeningAuthorCharacter(AREA_0004_A818);
+    RestoreOpeningAuthorCharacter(AREA_0004_A820);
+    RestoreOpeningAuthorCharacter(AREA_0004_A822);
+    RestoreOpeningAuthorCharacter(AREA_0004_A954);
+    RestoreOpeningAuthorCharacter(AREA_0004_AA08);
+    RestoreOpeningAuthorCharacter(AREA_0004_AA10);
+    RestoreOpeningAuthorCharacter(AREA_0004_A892);
+    RestoreOpeningAuthorCharacter(AREA_0004_A796);
+    for (i = 0; openingTemporaryCharacters[i] != INVALID_CHARACTER; i++)
+        RestoreOpeningTemporaryCharacter(openingTemporaryCharacters[i]);
+}
+
+void PrepareOpeningTemporaryCharacter(shen_name character)
+{
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void RestoreOpeningTemporaryCharacter(shen_name character)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void PrepareOpeningAuthorCharacter(shen_name character)
+{
+    FTBL.EV_EnsureCharacterDraw(character);
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void RestoreOpeningAuthorCharacter(shen_name character)
+{
+    FTBL.EV_ToggleCharacterFlag(character);
+    FTBL.EV_DisableCharacterDisplay(character);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void e0004_ET_WAVE_AR00_Callback(void *taskData)
+{
+    Area0004WaveColours *weather = (Area0004WaveColours *)((char *)FTBL.GetInterpolatedWeatherValues() + 52);
+    float diffuseRed = (unsigned char)(weather->diffuse >> 16) / 255.0f;
+    float diffuseGreen = (unsigned char)(weather->diffuse >> 8) / 255.0f;
+    float diffuseBlue = (unsigned char)weather->diffuse / 255.0f;
+    float specularRed = (unsigned char)(weather->specular >> 16) / 255.0f;
+    float specularGreen = (unsigned char)(weather->specular >> 8) / 255.0f;
+    float specularBlue = (unsigned char)weather->specular / 255.0f;
+    float shininess;
+    void *root;
+    diffuseRed *= 0.3607f;
+    diffuseGreen *= 0.3725f;
+    diffuseBlue *= 0.4352f;
+    specularRed *= 0.2549f;
+    specularGreen *= 0.38f;
+    specularBlue *= 0.2862f;
+    shininess = 42.54f;
+    FTBL.BuildLightingTableFrom(1, 1.0f, 1.0f, diffuseRed, diffuseGreen, diffuseBlue, specularRed, specularGreen, specularBlue, shininess, 1.0f);
+    root = FTBL.GetMapModelRoot(16);
+    FTBL.TransformFieldCollisionForModel(root);
+    FTBL.nlSetTexanimUV(0.00035f, 0.0003f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(16));
+}
+#endif
+#else
 #include "s2/areas/area_0004.hpp"
 
 #include "s2/author.hpp"
@@ -457,3 +859,4 @@ void e0004_EVT_Auth_Main(std::uintptr_t) {
 const ScriptAreaDefinition area0004ScriptDefinition{SHEN_NAME(0004), 0, e0004_EVT_Auth_Init, e0004_EVT_Auth_Main};
 
 } // namespace shenmue::s2::areas
+#endif

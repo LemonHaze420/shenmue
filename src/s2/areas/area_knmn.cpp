@@ -1,3 +1,514 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_knmn.hpp"
+#if defined(SHENMUE_EVENT_ENTRY)
+void RunKnmnEvent(void) {
+    HLibTask *task;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.SetScreenFilmFade(1, 0, 0, 0, 0, 255, 0, 0, 0);
+    task = FTBL.HLib_EnqueueTaskWithoutParameter(KnmnMakeGameCallback, 4, 11, TASK_EVNT);
+    FTBL.HLib_SetupTimedTask(task, 30);
+    FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('B', 'T', 'C', '1'), 1);
+    FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('0', '0', '0', '0'), 0);
+}
+#else
+const shen_name knmnCharacters[] = {KNMN_RYO, KNMN_KEM, KNMN_INVALID};
+const char knmnMasterMotion[] = "MASTER.MOT";
+const char knmnAuthorPackage[] = "0026";
+const char knmnPackage[] = "KNMN";
+const char knmnAuthPackage[] = "KNMNAUTH";
+const char knmnAuthor[] = "0026A000";
+const char knmnFilename[] = "KNMN.EV3";
+const char knmnReturnOverlay[] = "WKKT.EV2";
+const char knmnBlurModel[] = "KEM_B.MT7";
+const char knmnAudio[] = "0026A000.sbt";
+const char knmnWazaTitle[] = "小擒打";
+const char knmnLeafDirectory[] = "misc";
+const char knmnLeafTexture[] = "REDLEAF.pvr";
+int knmnLeafEffect = -1;
+
+void KnmnOwnerNullsub(void *data) {
+}
+void KnmnMakeGameCallback(void *data) {
+    short entry = g_entryPoint;
+    HLibTask *owner, *child;
+    unsigned char mode;
+    KnmnOwnerWork *retained;
+    KnmnGameWork *work;
+    owner = FTBL.HLib_EnqueueTaskWithParameter(KnmnOwnerNullsub, 3, 11, sizeof(KnmnOwnerWork), TASK_EVNT);
+    if (g_currentMap == KNMN_AREA) {
+        switch (entry) {
+        case 96:
+            if (g_currentMap == KNMN_AREA)
+                EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 5);
+            child = FTBL.HLib_EnqueueTaskWithParameter(KnmnAuthWazaCallback, 5, 11, sizeof(KnmnGameWork), TASK_EVNT);
+            mode = 2;
+            break;
+        case 97:
+            child = FTBL.HLib_EnqueueTaskWithParameter(KnmnAutoCallback, 5, 11, sizeof(KnmnGameWork), TASK_EVNT);
+            mode = 2;
+            break;
+        case 98:
+            child = FTBL.HLib_EnqueueTaskWithParameter(KnmnAuthFirstCallback, 5, 11, sizeof(KnmnGameWork), TASK_EVNT);
+            mode = 0;
+            break;
+        default:
+            child = FTBL.HLib_EnqueueTaskWithParameter(KnmnAutoCallback, 5, 11, sizeof(KnmnGameWork), TASK_EVNT);
+            mode = 3;
+            break;
+        }
+    } else if (FTBL.EV_GetShenmueFlag(0xa1)) {
+        child = FTBL.HLib_EnqueueTaskWithParameter(KnmnAutoCallback, 5, 11, sizeof(KnmnGameWork), TASK_EVNT);
+        mode = 2;
+    } else if (FTBL.EV_GetShenmueFlag(0x95)) {
+        child = FTBL.HLib_EnqueueTaskWithParameter(KnmnAuthFirstCallback, 5, 11, sizeof(KnmnGameWork), TASK_EVNT);
+        mode = 0;
+    } else if (FTBL.EV_GetShenmueFlag(0x19)) {
+        child = FTBL.HLib_EnqueueTaskWithParameter(KnmnAuthFirstCallback, 5, 11, sizeof(KnmnGameWork), TASK_EVNT);
+        mode = 1;
+    } else {
+        child = FTBL.HLib_EnqueueTaskWithParameter(KnmnAutoCallback, 5, 11, sizeof(KnmnGameWork), TASK_EVNT);
+        mode = 3;
+    }
+    retained = (KnmnOwnerWork *)FTBL.HLib_GetTaskParameter(owner);
+    work = (KnmnGameWork *)FTBL.HLib_GetTaskParameter(child);
+    retained->task = owner;
+    retained->child = child;
+    work->owner = owner;
+    work->task = child;
+    work->state = 0;
+    work->mode = mode;
+    work->round = 0;
+    knmnLeafEffect = -1;
+    work->characters = Queue_EVT_AT_ReadChr(child, knmnCharacters);
+    if (g_currentMap == KNMN_AREA)
+        EVT_AT_MenCtrl(0, 255, 0, 0, 0, 0, 0, 0, 0, -1);
+    KnmnLoadPackages(work);
+    EventDebugRegister(3, KnmnDebugEndCallback, work, 18000);
+    FTBL.HLib_DestroyCurrentTask();
+}
+void KnmnLoadPackages(KnmnGameWork *work) {
+    FTBL.SetScenarioFollowCharacter(0);
+    FTBL.EV_SetNewSceneIndex();
+    work->masterMotion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, knmnMasterMotion);
+    FTBL.EV_FreeAuthorPak(1, knmnAuthorPackage);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)knmnPackage, 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    if (work->mode != 3) {
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)knmnAuthPackage, 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    }
+    FTBL.EV_ControlPackageResources(2, 4, (void *)knmnPackage, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, (void *)knmnPackage, 0, 0);
+    FTBL.EV_LoadCutsceneFromCurrentScene(knmnAuthor);
+}
+void KnmnStopCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    if (g_currentMap == KNMN_AREA) {
+        if (work->mode == 0 || work->mode == 2)
+            FTBL.HLib_SetCurrentTaskTo(KnmnAuthFirstCallback);
+        else
+            FTBL.HLib_SetCurrentTaskTo(KnmnAutoCallback);
+    } else {
+        FTBL.spmFadeOut(0);
+        FTBL.HLib_SetCurrentTaskTo(KnmnEndCallback);
+        if (FTBL.EV_GetScreenFilmIsNotShowing()) {
+            if (work->mode != 2)
+                FTBL.SetScreenFilmFade(60, 0, 0, 0, 0, 255, 0, 0, 0);
+            FTBL.HLib_SetupTaskDelay(60);
+        }
+    }
+}
+void KnmnDebugEndCallback(void *data) {
+    if (knmnLeafEffect != -1)
+        FTBL.FreeParticleEffect(3, knmnLeafEffect);
+    KnmnEndCallback(data);
+}
+void KnmnEndCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    HLibTask *task;
+    if (knmnLeafEffect != -1) {
+        FTBL.FreeParticleEffect(3, knmnLeafEffect);
+        knmnLeafEffect = -1;
+    }
+    switch (work->mode) {
+    case 3:
+        FTBL.EV_stepSetFlags(0x42, 0);
+        break;
+    case 0:
+        FTBL.EV_stepSetFlags(0x95, 0);
+        break;
+    case 1:
+        FTBL.EV_stepSetFlags(0x19, 0);
+        break;
+    case 2:
+        FTBL.EV_stepSetFlags(0xa1, 0);
+        break;
+    }
+    FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('0', '0', '0', '0'), 1);
+    FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('B', 'T', 'C', '1'), 0);
+    FTBL.InitiateCleanupForSceneChara(KNMN_KEM);
+    ET_AT_KillWork(work->characters);
+    if (FTBL.EV_ControlPackageResources(0, 5, (void *)knmnPackage, 0, 0))
+        FTBL.EV_ControlPackageResources(0, 6, (void *)knmnPackage, 0, 0);
+    if (FTBL.EV_ControlPackageResources(0, 5, (void *)knmnAuthPackage, 0, 0))
+        FTBL.EV_ControlPackageResources(0, 6, (void *)knmnAuthPackage, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, knmnAuthorPackage);
+    FTBL.DeleteMotion(work->masterMotion);
+    FTBL.EV_HLKillOtherHierarchyTask(work->owner);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    FTBL.SetPlayerControlEnabled(0);
+    EventDebugUnregister(3);
+    FTBL.scenFreeEvent(knmnFilename);
+    if (work->mode == 2) {
+        FTBL.LoadAreaFunc_Wrapper_0(knmnReturnOverlay, 0);
+        FTBL.ExecuteCurrAreaMainFunc(knmnReturnOverlay, (void *)1);
+    } else {
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+        FTBL.EV_spmBeginSampleExecute(0);
+        EVT_AT_SetMot(KNMN_RYO, 0xf003, 0, 1, 0x40000000U, 0);
+        if (work->mode == 0) {
+            EVT_AT_SetPos(KNMN_RYO, KNMN_INVALID, 46.9f, 102.3f, 247.7f, 0);
+            EVT_AT_SetAngY(KNMN_RYO, KNMN_INVALID, 62, 0);
+        } else {
+            EVT_AT_SetPos(KNMN_RYO, KNMN_INVALID, 43.1f, 102.3f, 243.1f, 0);
+            EVT_AT_SetAngY(KNMN_RYO, KNMN_INVALID, 90, 0);
+        }
+        FTBL.EV_NPC_NewLoadSw_0(0);
+        task = FTBL.HLib_EnqueueTaskWithoutParameter(KnmnWaitNpcCallback, 4, 11, SHEN_NAME4('w', 'n', 'p', 'c'));
+        FTBL.HLib_SetupTimedTask(task, 30);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.CheckWarmStartNpcRoute(KNMN_KEM);
+        FTBL.ForceLoadNpc(KNMN_KEM);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    }
+}
+void KnmnWaitNpcCallback(void *data) {
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.npcLockUnlock(KNMN_KEM);
+    FTBL.SetPlayerControlEnabled(1);
+    FTBL.HLib_DestroyCurrentTask();
+}
+void KnmnInitBattleCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    work->state = 0;
+    EVT_AT_SetPos(KNMN_RYO, KNMN_INVALID, 47.2f, 102.5f, 242.4f, 0);
+    EVT_AT_SetPos(KNMN_KEM, KNMN_INVALID, 42.4f, 102.5f, 242.5f, 0);
+    EVT_AT_SetAngY(KNMN_RYO, KNMN_INVALID, 90, 0);
+    EVT_AT_SetAngY(KNMN_KEM, KNMN_INVALID, 270, 0);
+    EVT_AT_SetCam(1007, KNMN_INVALID, KNMN_INVALID, 0, 0, 0);
+    FTBL.shenStartFGST(10, 10, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(KNMN_RYO), 0, 0, 0, 0, 0);
+    FTBL.vfCopyPosFromEntity(0, 0, 43.2f, 249.3f, 5);
+    work->battleFrames = 0;
+    FTBL.LoadBlurModelForCharacter_0(KNMN_KEM, knmnBlurModel, 1);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(KNMN_KEM));
+    if ((unsigned char)work->mode <= 1) {
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(KNMN_KEM), 0, 1, 1, 200, 9);
+        FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(KNMN_KEM), 0, 0x08000000U, 0);
+        FTBL.vfmQueueFightStart(2, 99, 1, 0, -1);
+        KnmnInstallBattleDialogues(810);
+        KnmnInstallFirstEndConditions();
+        FTBL.HLib_SetCurrentTaskTo(KnmnWaitBattleFirstCallback);
+    } else {
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(KNMN_KEM), 0, 1, 1, 200, 9);
+        FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(KNMN_KEM), 0, 0x08000000U, 0);
+        FTBL.vfmQueueFightStart(2, 99, 1, 0, 60);
+        KnmnInstallBattleDialogues(810);
+        FTBL.HLib_SetCurrentTaskTo(KnmnWaitBattleRegularCallback);
+    }
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+}
+void KnmnWaitBattleRegularCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    int player, opponent;
+    switch (work->state) {
+    case 0:
+        player = FTBL.btlGetCharaFlag(1, FTBL.ctrlGetCharaByName(KNMN_RYO), 0);
+        opponent = FTBL.btlGetCharaFlag(1, FTBL.ctrlGetCharaByName(KNMN_KEM), 0);
+        if (!FTBL.IsFightActive() || player <= 30 || opponent <= 30) {
+            if (FTBL.IsFightActive())
+                FTBL.check_dead_status(0);
+            work->state++;
+        }
+        break;
+    case 1:
+        if (!FTBL.IsFightActive()) {
+            work->state = 0;
+            FTBL.HLib_SetCurrentTaskTo(KnmnStopCallback);
+        }
+        break;
+    }
+    if (work->battleFrames == 5400)
+        FTBL.check_dead_status(1);
+    else
+        work->battleFrames++;
+}
+void KnmnWaitBattleFirstCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    if (!FTBL.IsFightActive()) {
+        if (FTBL.IsFightActive())
+            FTBL.check_dead_status(0);
+        if (work->mode == 0) {
+            FTBL.HLib_SetCurrentTaskTo(KnmnStopCallback);
+            QueueSkAuthorStart(work->task, SHEN_NAME4('E', 'N', 'D', '_'), 0, 0, 0);
+        } else {
+            FTBL.HLib_SetCurrentTaskTo(KnmnAuthFirstEndCallback);
+        }
+        FTBL.SetScreenFilmFade(10, 255, 0, 0, 0, 0, 0, 0, 0);
+        work->state = 0;
+    }
+    if (KnmnTickFirstEndTimer() || work->battleFrames == 5400) {
+        FTBL.check_dead_status(1);
+    } else {
+        work->battleFrames++;
+        if (work->battleFrames == 5385 && !FTBL.filmCheckFadeTrackColour())
+            FTBL.SetScreenFilmFade(10, 0, 0, 0, 0, 255, 0, 0, 0);
+    }
+}
+void KnmnInitButokuCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    if (work->round == 0) {
+        EVT_AT_SetCam(1007, KNMN_INVALID, KNMN_INVALID, 0, 0, 0);
+        EVT_AT_SetPos(KNMN_RYO, KNMN_INVALID, 47.2f, 102.3f, 242.4f, 0);
+        EVT_AT_SetPos(KNMN_KEM, KNMN_INVALID, 42.4f, 102.3f, 242.5f, 0);
+        EVT_AT_SetAngY(KNMN_RYO, KNMN_INVALID, 90, 0);
+        EVT_AT_SetAngY(KNMN_KEM, KNMN_INVALID, 270, 0);
+    } else {
+        EVT_AT_SetAngY(KNMN_RYO, KNMN_RYO, 180, 0);
+    }
+    FTBL.LoadBlurModelForCharacter_0(KNMN_KEM, knmnBlurModel, 1);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(KNMN_KEM));
+    FTBL.shenStartFGST(10, 10, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(KNMN_RYO), 0, 0, 0, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(KNMN_KEM), 0, 1, 1, 200, 9);
+    work->battleFrames = 0;
+    FTBL.vfCopyPosFromEntity(0, 0, 43.2f, 249.3f, 5);
+    FTBL.vfmQueueFightStart(2, 99, 1, 0, -1);
+    KnmnInstallBattleDialogues(810);
+    if (work->round == 0)
+        KnmnInstallButokuEndConditions();
+    else
+        KnmnRequestButokuBattleEnd();
+    work->state = 0;
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.HLib_SetCurrentTaskTo(KnmnWaitButokuCallback);
+}
+void KnmnWaitButokuCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    switch (work->state) {
+    case 0:
+        if (!FTBL.IsFightActive()) {
+            if (FTBL.IsFightActive())
+                FTBL.check_dead_status(0);
+            work->state++;
+        }
+        break;
+    case 1:
+        if (!FTBL.IsFightActive()) {
+            work->state = 0;
+            if (work->round == 0)
+                FTBL.HLib_SetCurrentTaskTo(KnmnAuthTomoCallback);
+            else
+                FTBL.HLib_SetCurrentTaskTo(KnmnAuthShoukindaCallback);
+            FTBL.SetScreenFilmFade(10, 255, 0, 0, 0, 0, 0, 0, 0);
+        }
+        break;
+    }
+    if (KnmnTickButokuEndTimer() || work->battleFrames == 5400) {
+        FTBL.check_dead_status(1);
+    } else {
+        work->battleFrames++;
+        if (work->battleFrames == 5385 && !FTBL.filmCheckFadeTrackColour())
+            FTBL.SetScreenFilmFade(10, 0, 0, 0, 0, 255, 0, 0, 0);
+        work->battleFrames++;
+    }
+}
+void KnmnAutoCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    EventDebugCheck(3, 4);
+    FTBL.EV_LoadAudio(knmnAudio, 0);
+    FTBL.EV_spmBeginSampleExecute(0);
+    EVT_AT_SetPos(KNMN_RYO, KNMN_INVALID, 45.4f, 102.2f, 244.1f, 0);
+    EVT_AT_SetPos(KNMN_KEM, KNMN_INVALID, 45.4f, 102.2f, 245.1f, 0);
+    EVT_AT_SetAngY(KNMN_RYO, KNMN_INVALID, 180, 0);
+    EVT_AT_SetAngY(KNMN_KEM, KNMN_INVALID, 0, 0);
+    EVT_AT_SetMot(KNMN_RYO, 5194, 0, 1, 0x40000000U, 0);
+    EVT_AT_SetMot(KNMN_KEM, 5193, 0, 1, 0x40000000U, 0);
+    work->state = 0;
+    if (work->mode != 2)
+        FTBL.HLib_SetCurrentTaskTo(KnmnInitBattleCallback);
+    else
+        FTBL.HLib_SetCurrentTaskTo(KnmnInitButokuCallback);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 30);
+    FTBL.HLib_SetupTaskDelay(30);
+}
+void KnmnButokuCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    switch (work->state) {
+    case 0:
+        if (FTBL.filmCheckFadeTrackColour())
+            return;
+        work->practiceTask = KnmnQueuePractice(work);
+        knmnLeafEffect = -1;
+        work->state++;
+        break;
+    case 1:
+        if (!KnmnFinishPractice(work->practiceTask))
+            return;
+        if (knmnLeafEffect != -1) {
+            FTBL.FreeParticleEffect(3, knmnLeafEffect);
+            knmnLeafEffect = -1;
+        }
+        work->state++;
+        break;
+    default:
+        work->state = 0;
+        FTBL.HLib_SetCurrentTaskTo(KnmnStopCallback);
+        break;
+    }
+}
+void KnmnAuthFirstCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    if (work->state == 0) {
+        FTBL.SetScreenFilmFade(60, 255, 0, 0, 0, 0, 0, 0, 0);
+        EventDebugCheck(3, 4);
+        FTBL.EV_LoadAudio(knmnAudio, 0);
+        FTBL.EV_spmBeginSampleExecute(0);
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('F', 'I', 'R', 'S'));
+        work->state++;
+    } else if (!FTBL.EV_authSceneCtrl(-1)) {
+        work->state = 0;
+        if (work->mode != 2)
+            FTBL.HLib_SetCurrentTaskTo(KnmnInitBattleCallback);
+        else
+            FTBL.HLib_SetCurrentTaskTo(KnmnInitButokuCallback);
+    }
+}
+void KnmnAuthFirstEndCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    switch (work->state) {
+    case 0:
+        QueueSkAuthorStart(work->task, SHEN_NAME4('B', 'T', 'F', 'I'), 0, 0, 0);
+        work->state++;
+        break;
+    case 1:
+        work->state = 0;
+        work->mode = 2;
+        FTBL.EV_stepSetFlags(0x19, 0);
+        FTBL.HLib_SetCurrentTaskTo(KnmnButokuCallback);
+        QueueSkAuthorStart(work->task, SHEN_NAME4('S', 'H', 'O', '2'), 0, 0, 0);
+        break;
+    }
+}
+void KnmnAuthTomoCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    Vector3 target;
+    switch (work->state) {
+    case 0:
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), 0, 3);
+        FTBL.GetCharaPosition(KNMN_KEM, 5, &target, 0x40000000);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), &target, 0);
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('T', 'O', 'M', 'O'));
+        work->state++;
+        break;
+    case 1:
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), 0, 3);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), 0, 0);
+        work->state++;
+    default:
+        if (!FTBL.EV_authSceneCtrl(-1)) {
+            work->state = 0;
+            work->round++;
+            FTBL.EV_LoadAudio(knmnAudio, 0);
+            FTBL.EV_spmBeginSampleExecute(0);
+            FTBL.HLib_SetCurrentTaskTo(KnmnInitButokuCallback);
+        }
+        break;
+    }
+}
+void KnmnAuthShoukindaCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    Vector3 target;
+    switch (work->state) {
+    case 0:
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), 0, 3);
+        FTBL.GetCharaPosition(KNMN_KEM, 5, &target, 0x40000000);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), &target, 0);
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('S', 'H', 'O', 'U'));
+        work->state++;
+        break;
+    case 1:
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), 0, 3);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), 0, 0);
+        work->state++;
+    case 2:
+        if (!FTBL.EV_authSceneCtrl(-1))
+            work->state++;
+        break;
+    case 3:
+        QueueSkAuthorStart(work->task, SHEN_NAME4('S', 'H', 'O', '2'), 0, 0, 0);
+        work->state++;
+        break;
+    default:
+        work->state = 0;
+        FTBL.HLib_SetCurrentTaskTo(KnmnButokuCallback);
+        break;
+    }
+}
+void KnmnAuthWazaCallback(void *data) {
+    KnmnGameWork *work = (KnmnGameWork *)data;
+    if (work->state == 0) {
+        work->state++;
+        knmnLeafEffect = -1;
+    } else if (!FTBL.EV_authSceneCtrl(-1)) {
+        work->state = 0;
+        if (knmnLeafEffect != -1) {
+            FTBL.FreeParticleEffect(3, knmnLeafEffect);
+            knmnLeafEffect = -1;
+        }
+        FTBL.HLib_SetCurrentTaskTo(KnmnStopCallback);
+    } else
+        KnmnWazaFrameEvents(work);
+}
+
+void KnmnWazaFrameEvents(void *data) {
+    Vector3 size = {.022f, .05f, .022f};
+    switch (FTBL.EV_authSceneCtrl(-6)) {
+    case 50:
+        KnmnCreateLeafEmitter(&knmnLeafEffect, 80, .5f);
+        FTBL.ResumeParticleEffect(3, knmnLeafEffect);
+        size.y = .04f;
+        return;
+    case 68:
+        FTBL.ProcessAicaCommand(0x1200a0, 0);
+        return;
+    case 70:
+        FTBL.QueueExtraTelop(knmnWazaTitle, 0);
+        return;
+    case 71:
+        FTBL.EV_LoadAudio(knmnAuthor, 0);
+        return;
+    case 200:
+        FTBL.SetParticleEffectBirthRate(3, knmnLeafEffect, 0);
+        return;
+    case 420:
+        FTBL.SuspendParticleEffect(3, knmnLeafEffect);
+        return;
+    }
+}
+void KnmnCreateLeafEmitter(int *effect, int count, float birthRate) {
+    Vector3 position = {39.31f, 105.8f, 240.9f};
+    Vector3 volume = {1.5f, .02f, 2};
+    Vector3 velocity = {0, -.04f, 0};
+    Vector3 variance = {.012f, -.01f, .012f};
+    *effect = FTBL.CreateFallingParticleEffect(&position, &volume, count, birthRate, 0x400, knmnLeafDirectory, knmnLeafTexture, -1);
+    FTBL.SetParticleEffectVelocity(3, *effect, &velocity, &variance);
+    FTBL.SetParticleEffectSize(3, *effect, .02f, .06f);
+}
+
+#endif
+
+#else
 #include "s2/areas/area_knmn.hpp"
 #include "s2/author.hpp"
 #include "s2/blur_figure_pose.hpp"
@@ -484,3 +995,4 @@ void KnmnAuthWazaCallback(void *data) {
 }
 const ScriptAreaDefinition knmnScriptDefinition{.areaId = KNMN_AREA, .field04 = 0, .init = InitializeKnmnEvent, .main = RunKnmnEvent};
 } // namespace shenmue::s2::areas
+#endif

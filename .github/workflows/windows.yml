@@ -163,6 +163,8 @@ jobs:
       - name: Build tools and round-trip scenarios
         id: roundtrip
         run: ./.github/scripts/roundtrip-scn3.ps1
+      - name: Build and round-trip S2 event overlays
+        run: ./.github/scripts/roundtrip-events.ps1
       - name: Build screen captures
         run: cmake --build build/windows-capture --config Release --target shenmue1 shenmue2 --parallel 4
       - name: Build WS capture

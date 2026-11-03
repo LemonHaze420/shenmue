@@ -1,4 +1,254 @@
 #pragma once
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_pati.hpp"
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include <stddef.h>
+#define PATI_PLAYER SHEN_NAME4('R','Y','O','_')
+#define PATI_BACKPACK SHEN_NAME4('R','U','C','K')
+#define PATI_AREA SHEN_NAME4('P','A','T','I')
+#define PATI_CAMERA SHEN_NAME4('C','M','D','M')
+#define PATI_PIN SHEN_NAME4('P','I','N','_')
+#define PATI_OPPONENT_HAND SHEN_NAME4('V','S','C','H')
+#define PATI_ACCEPT SHEN_NAME4('B','T','B','A')
+#define PATI_CANCEL SHEN_NAME4('B','T','C','C')
+#define PATI_INSPECT SHEN_NAME4('B','T','I','F')
+
+typedef struct PatiDealerMotion { int idle, speak, concern, lose, reply, finish; } PatiDealerMotion;
+typedef struct PatiHeldPrize { int item, count; } PatiHeldPrize;
+typedef struct PatiBoardChoice {
+    shen_name character;
+    Vector3 position;
+    Vector3i rotation;
+    char size, reserved1d[3];
+    const char *nailFile;
+    unsigned char option, type;
+    char reserved26[2];
+} PatiBoardChoice;
+typedef struct PatiEventWork {
+    HLibTask *parent, *task;
+    char bgm[13], sbt[15];
+    int soundScene, selectedBoard, selectionFrames;
+    char selectedName[8], argument[8], opponent[8], versusBoard[8], dealerGroup[8], previousBoard[8], board[8], nextBoard[8], excludedBoard[8];
+    shen_name nearbyDealer, dealer;
+    int savedMotion;
+    const PatiDealerMotion *motions;
+    unsigned char state;
+    char reserved89[3];
+    int delay;
+    unsigned char entryFlag;
+    char reserved91[3];
+    int played;
+    unsigned char option, type, wagerMode, payoutMode;
+    float scale;
+    int intro, totalBet, payout, bet, remainingGames, pendingMoney, round, challengeComplete, totalRounds, playerWins, dealerWins;
+    unsigned int prizeCount;
+    int prizeIndex;
+    PatiHeldPrize heldPrizes[5];
+    PatiTableData tables;
+    PatiGameWork game;
+    PatiPlacementNode nailPlacements[512];
+    PatiBoardChoice choices[20];
+} PatiEventWork;
+typedef char PatiEventDealerOffset[(offsetof(PatiEventWork,dealer)==0x7c)?1:-1];
+typedef char PatiEventMotionsOffset[(offsetof(PatiEventWork,motions)==0x84)?1:-1];
+typedef char PatiEventStateOffset[(offsetof(PatiEventWork,state)==0x88)?1:-1];
+typedef char PatiEventOptionOffset[(offsetof(PatiEventWork,option)==0x98)?1:-1];
+typedef char PatiEventTablesOffset[(offsetof(PatiEventWork,tables)==0xfc)?1:-1];
+typedef char PatiEventGameOffset[(offsetof(PatiEventWork,game)==0x8694)?1:-1];
+typedef char PatiEventSavedPositionOffset[(offsetof(PatiEventWork,game)+offsetof(PatiGameWork,savedPlayerPosition)==0xe76c)?1:-1];
+typedef char PatiEventWorkSize[(sizeof(PatiEventWork)==0x16aa4)?1:-1];
+
+typedef struct PatiMotionCache { shen_name character; int motion; unsigned int age; } PatiMotionCache;
+typedef struct PatiDealer { shen_name character; int playedFlag; const PatiDealerMotion *motions; int camera; } PatiDealer;
+typedef struct PatiHelpTopic { char option, type; short topic; } PatiHelpTopic;
+typedef struct PatiWagerMode { char name[4]; unsigned char mode; } PatiWagerMode;
+typedef struct PatiPayoutMode { char name[9]; unsigned char mode; } PatiPayoutMode;
+typedef struct PatiFallbackVoice { shen_name code; const char *text; } PatiFallbackVoice;
+typedef struct PatiVoicePartition { const char *name; int text, sound; } PatiVoicePartition;
+
+extern int g_patiVersus, g_patiOddsVisible;
+extern float g_patiModelAlpha;
+extern const PatiHelpTopic patiHelpTopics[];
+extern const PatiDealer patiDealers[];
+extern PatiFallbackVoice patiFallbackVoices[];
+extern const PatiWagerMode patiWagerModes[];
+extern const PatiPayoutMode patiPayoutModes[];
+extern PatiDealerMotion patiDealerMotions, patiAlternateDealerMotions;
+extern PatiVoicePartition patiVoicePartitions[];
+extern shen_name patiHandModel;
+extern PatiPlacementNode *patiDetachedNailNode;
+
+void SetPatiHelpTopic(int option, int type, int delay);
+void QueuePatiEvent(const char *argument);
+void PatiEventCallback(void *data);
+void QueuePatiVoice(PatiGameWork *game, const char *code, int *frame);
+void PatiPlayVoiceCode(const char *prefix, const char *code, int delay);
+void ShowPatiChoiceIcons(int first,int second,int third,int fourth,PatiEventWork *work);
+void ShowPatiPlayerChoiceIcons(int first,int second,int third,int fourth,PatiEventWork *work);
+void PlacePatiBet(PatiEventWork *work);
+void PayPatiWinnings(PatiEventWork *work);
+void RefundPatiBet(PatiEventWork *work);
+void SelectPatiGameCount(PatiEventWork *work);
+void ReadPatiBetResult(PatiEventWork *work);
+void KeepPatiPrize(PatiEventWork *work);
+int AwardPatiPrize(PatiEventWork *work);
+void AccumulatePatiDoubleWinnings(PatiEventWork *work);
+void PayPendingPatiWinnings(PatiEventWork *work);
+int GetPatiPayout(const PatiEventWork *work);
+void SetPatiCamera(int camera, shen_name eye, shen_name target, int delay);
+void ResetPatiMotionCache(void);
+void SetPatiMotion(shen_name character,int motion,float frame,float speed,int flags,int delay);
+void PatiShowVoiceFallback(void *data);
+void LockPatiEvent(PatiEventWork *work,const char *argument);
+int LoadPatiEvent(PatiEventWork *work);
+void CreatePatiEventResources(PatiEventWork *work);
+void CommitPatiBoardSelection(PatiEventWork *work);
+void PositionPatiPlayer(PatiEventWork *work);
+void BeginPatiExit(PatiEventWork *work);
+int RestorePatiEvent(PatiEventWork *work);
+void FreePatiEvent(PatiEventWork *work);
+void ResumePatiEvent(void *data);
+void SetPatiBet(PatiEventWork *work);
+int HasPatiWon(PatiEventWork *work);
+void ShowPatiBoardOdds(PatiEventWork *work);
+int SelectPatiBoardInput(PatiEventWork *work);
+void AttachPatiNails(PatiEventWork *work,shen_name board,const char *nailFile);
+void RestorePatiNailModels(void);
+void ResetPatiNailModelState(void);
+void ConfigurePatiEventBoard(PatiEventWork *work,const char *name);
+void FindPatiDealerBoards(PatiEventWork *work,const char *dealer);
+shen_name FindNearestPatiDealer(void);
+shen_name FindPatiDealer(PatiEventWork *work);
+void InitializePatiBoardCamera(PatiEventWork *work);
+void UpdatePatiBoardCamera(PatiEventWork *work);
+void SelectPatiBoard(PatiEventWork *work,const char *name);
+void SetupPatiBoardSize(int mode);
+void SetupPatiBoard(int mode);
+char *strcpy(char *target,const char *source);
+int strcmp(const char *first,const char *second);
+int strncmp(const char *first,const char *second,unsigned int count);
+int sprintf(char *target,const char *format,...);
+void *memcpy(void *target,const void *source,unsigned int size);
+
+typedef struct PatiModelCharacter { char reserved00[0x40]; PatiPlacementNode *model; } PatiModelCharacter;
+typedef struct PatiDealerInput { unsigned int input; int duration,pause; } PatiDealerInput;
+extern const PatiDealerInput PATI_DEALER_INPUTS[];
+extern Vector3i PATI_HAND_ROTATION;
+extern int patiHandPoseCommand[19][3];
+
+void SetPatiHelpTopic(int option,int type,int delay);
+void QueuePatiEvent(const char *argument);
+void QueuePatiVoice(PatiGameWork *game,const char *code,int *frame);
+void PatiGreeting(PatiEventWork *ctx);
+void PatiExplainRules(PatiEventWork *ctx);
+void PatiExplainMuseumBoard(PatiEventWork *ctx);
+void PatiCancel(PatiEventWork *ctx);
+void PatiAcceptPlay(PatiEventWork *ctx);
+void PatiChooseBoard(PatiEventWork *ctx);
+void PatiSelectionReminder(PatiEventWork *ctx);
+void PatiBoardSelected(PatiEventWork *ctx);
+void PatiInsufficientFunds(PatiEventWork *ctx);
+void PatiLowerStake(PatiEventWork *ctx);
+void PatiWin(PatiEventWork *ctx);
+void PatiFirstDoubleWin(PatiEventWork *ctx);
+void PatiDoubleWin(PatiEventWork *ctx);
+void PatiFinalDoubleWin(PatiEventWork *ctx);
+void PatiFirstChallengeWin(PatiEventWork *ctx);
+void PatiChallengeWin(PatiEventWork *ctx);
+void PatiFinalChallengeWin(PatiEventWork *ctx);
+void PatiLose(PatiEventWork *ctx);
+void PatiDoubleLose(PatiEventWork *ctx);
+void PatiFirstChallengeLose(PatiEventWork *ctx);
+void PatiChallengeLose(PatiEventWork *ctx);
+void PatiFinalChallengeLose(PatiEventWork *ctx);
+void PatiOfferReplay(PatiEventWork *ctx);
+void PatiOfferDouble(PatiEventWork *ctx);
+void PatiAcceptContinue(PatiEventWork *ctx);
+void PatiDeclineContinue(PatiEventWork *ctx);
+void PatiOfferChallenge(PatiEventWork *ctx);
+void PatiFinalChallengeRound(PatiEventWork *ctx);
+void PatiAfterDouble(PatiEventWork *ctx);
+void PatiAfterChallenge(PatiEventWork *ctx);
+void PatiPrizeExhausted(PatiEventWork *ctx);
+void PatiRejectSameDoubleBoard(PatiEventWork *ctx);
+void PatiRejectOtherChallengeBoard(PatiEventWork *ctx);
+void PatiStuck(PatiEventWork *ctx);
+void PatiStuckFollowup(void *data);
+void PatiClosing(PatiEventWork *ctx);
+void PatiSelectGameCount(PatiEventWork *ctx);
+void PatiPrizeResult(PatiEventWork *ctx);
+void PatiMissingDealer(PatiEventWork *ctx);
+void PatiDealerVersusWin(PatiEventWork *ctx);
+void PatiDealerVersusLose(PatiEventWork *ctx);
+void PatiPlayerTurn(PatiEventWork *ctx);
+void PatiPlayerVersusWin(PatiEventWork *ctx);
+void PatiPlayerVersusLose(PatiEventWork *ctx);
+void PatiNextVersusRound(PatiEventWork *ctx);
+void PatiVersusSuddenDeath(PatiEventWork *ctx);
+void PatiVersusWin(PatiEventWork *ctx);
+void PatiVersusLose(PatiEventWork *ctx);
+void PatiMuseumIntro(PatiEventWork *ctx);
+void PatiMuseumBoardSelected(PatiEventWork *ctx);
+void PatiMuseumPlay(PatiEventWork *ctx);
+void PatiMuseumReselect(PatiEventWork *ctx);
+void PatiVersusStuck(PatiEventWork *ctx);
+void PatiVersusClosing(PatiEventWork *ctx);
+void ShowPatiChoiceIcons(int first,int second,int third,int fourth,PatiEventWork *work);
+void ShowPatiPlayerChoiceIcons(int first,int second,int third,int fourth,PatiEventWork *work);
+void PlacePatiBet(PatiEventWork *work);
+void PayPatiWinnings(PatiEventWork *work);
+void RefundPatiBet(PatiEventWork *work);
+void SelectPatiGameCount(PatiEventWork *work);
+void ReadPatiBetResult(PatiEventWork *work);
+void KeepPatiPrize(PatiEventWork *work);
+int AwardPatiPrize(PatiEventWork *work);
+void AccumulatePatiDoubleWinnings(PatiEventWork *work);
+void PayPendingPatiWinnings(PatiEventWork *work);
+int GetPatiPayout(const PatiEventWork *work);
+void SetPatiCamera(int camera,shen_name eye,shen_name target,int delay);
+void ResetPatiMotionCache(void);
+void SetPatiMotion(shen_name character,int motion,float frame,float speed,int flags,int delay);
+void PatiPlayVoiceCode(const char *prefix,const char *code,int delay);
+void PatiEventCallback(void *data);
+void CreatePatiEventResources(PatiEventWork *work);
+void CommitPatiBoardSelection(PatiEventWork *work);
+void PositionPatiPlayer(PatiEventWork *work);
+void ResetPatiNailModelState(void);
+void AttachPatiNails(PatiEventWork *work,shen_name board,const char *nailFile);
+void InitializePatiBoardCamera(PatiEventWork *work);
+void SelectPatiBoard(PatiEventWork *work,const char *name);
+void UpdatePatiBoardCamera(PatiEventWork *work);
+void SetupPatiBoardSize(int mode);
+void SetupPatiBoard(int mode);
+void FindPatiDealerBoards(PatiEventWork *work,const char *dealer);
+int SelectPatiBoardInput(PatiEventWork *work);
+void LockPatiEvent(PatiEventWork *work,const char *argument);
+int LoadPatiEvent(PatiEventWork *work);
+void ConfigurePatiEventBoard(PatiEventWork *work,const char *name);
+void ResumePatiEvent(void *data);
+void BeginPatiExit(PatiEventWork *work);
+int RestorePatiEvent(PatiEventWork *work);
+void FreePatiEvent(PatiEventWork *work);
+void SetPatiBet(PatiEventWork *work);
+shen_name FindNearestPatiDealer(void);
+shen_name FindPatiDealer(PatiEventWork *work);
+void PatiShowVoiceFallback(void *data);
+int HasPatiWon(PatiEventWork *work);
+int CanAffordPatiBet(PatiEventWork *work);
+void QueuePatiBall(PatiGameWork *game);
+void InitializePatiBall(PatiBallWork *ball, HLibTask *task);
+void InitializePatiBallCharacters(PatiBallWork *ball);
+void PatiBallCallback(void *data);
+void DestroyPatiBall(PatiBallWork *ball);
+int HandlePatiBallInput(PatiBallWork *ball, unsigned int input);
+void UpdatePatiBallPosition(PatiBallWork *ball);
+void UpdatePatiHandPosition(PatiBallWork *ball);
+void PatiCopyVector(Vector3 *target, const Vector3 *source);
+void PatiSetVector(Vector3 *target, float x, float y, float z);
+
+#else
+#pragma once
 #include "s2/areas/area_pati.hpp"
 namespace shenmue::s2 {
 struct PatiMotionCache {
@@ -106,3 +356,4 @@ void PatiMuseumReselect(PatiEventWork *work);
 void PatiVersusStuck(PatiEventWork *work);
 void PatiVersusClosing(PatiEventWork *work);
 } // namespace shenmue::s2
+#endif

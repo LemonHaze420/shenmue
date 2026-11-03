@@ -1,3 +1,390 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_ytqb.hpp"
+
+Vector3 ytqbSplashVolume = {0.1f, 0.0f, 0.1f};
+Vector3 ytqbFineSplashVolume = {0.05f, 0.0f, 0.05f};
+Vector3 ytqbSplashVelocity = {0.0f, 0.1f, 0.0f};
+Vector3 ytqbFineSplashVelocity = {0.05f, 0.03f, 0.0f};
+Vector3 ytqbSplashVariance = {0.5f, 0.5f, 0.5f};
+Vector3 ytqbFineSplashVariance = {0.02f, 0.02f, 0.02f};
+Vector3 ytqbSplashTrailVolume = {0.1f, 0.0f, 0.1f};
+Vector3 ytqbFineSplashTrailVolume = {0.05f, 0.0f, 0.05f};
+Vector3 ytqbSplashMovementVelocity = {0.05f, 0.03f, 0.0f};
+Vector3 ytqbFineSplashTrailVariance = {0.02f, 0.02f, 0.02f};
+Vector3 ytqbAmbientPositions[] = {{179.0f, 103.1f, 198.0f}, {182.4f, 103.1f, 190.2f}, {186.5f, 102.9f, 185.4f}, {188.5f, 102.9f, 179.2f}};
+int ytqbAmbientSmoke = -1;
+
+const int ytqbLanternParts[] = {175, 170, 152, 163, 158, 172, 167, 174, 169, 155, 162, 157, 166, 154, 173, 168, 153, 165, 160, 176, 171, 164, 159, 161, 156,
+    180, 181, 182, 177, 178, 179};
+
+void YtqbSetupLantern(shen_name lantern, shen_name broken)
+{
+    EVT_AT_SetPos(lantern, YTQB_INVALID, 193.9f, 102.25f, 175.0f, 0);
+    EVT_AT_SetAngY(lantern, YTQB_INVALID, 30.0f, 0);
+    FTBL.SetScenarioCharacterDrawControl(lantern, 0, 0, 0.0f);
+    Queue_EVT_AT_PlayDynamix(lantern, "LDYN", 2.0f, 4.0f, 31, ytqbLanternParts, 2.0f, 0);
+}
+
+int YtqbBreakLantern(shen_name lantern, shen_name broken, int delay)
+{
+    if (lantern != YTQB_INVALID)
+        EVT_AT_CharaDisp(lantern, delay, 0);
+    if (broken != YTQB_INVALID)
+        EVT_AT_CharaDisp(broken, delay, 1);
+    EVT_AT_SetSound(2557, delay + -10.0f);
+    Queue_EVT_AT_PlayDynamix(lantern, "LDYN", 40.0f, 172.0f, 31, ytqbLanternParts, 3.0f, delay);
+    return delay + 44.0f;
+}
+
+const int ytqbBucketParts[] = {152, 153, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177,
+    178, 179, 180, 181, 182, 183, 185, 184, 186, 187, 188, 189};
+
+void YtqbSetupBucket(shen_name bucket, shen_name broken)
+{
+    if (bucket != YTQB_INVALID) {
+        EVT_AT_CharaDisp(bucket, 0, 1);
+        FTBL.SetScenarioCharacterDrawControl(bucket, 0, 0, 0.0f);
+        EVT_AT_SetPos(bucket, YTQB_INVALID, 191.4f, 102.25f, 167.5f, 0);
+        EVT_AT_SetAngY(bucket, YTQB_INVALID, 285.0f, 0);
+    }
+    if (broken != YTQB_INVALID) {
+        EVT_AT_CharaDisp(broken, 0, 0);
+        FTBL.SetScenarioCharacterDrawControl(broken, 0, 0, 0.0f);
+        EVT_AT_SetPos(broken, YTQB_INVALID, 191.4f, 102.25f, 167.5f, 0);
+        EVT_AT_SetAngY(broken, YTQB_INVALID, 285.0f, 0);
+    }
+}
+
+int YtqbBreakBucket(shen_name bucket, shen_name broken, int delay)
+{
+    if (bucket != YTQB_INVALID)
+        EVT_AT_CharaDisp(bucket, delay, 0);
+    if (broken != YTQB_INVALID)
+        EVT_AT_CharaDisp(broken, delay, 1);
+    EVT_AT_SetSound(643, delay + 8.0f);
+    QueueEventSmoke(0, bucket, -1, delay + 8.0f, 4, 0, 108);
+    Queue_EVT_AT_PlayDynamix(bucket, "KADY", 2.0f, 100.0f, 37, ytqbBucketParts, 1.0f, delay);
+    return delay + 98.0f;
+}
+
+void YtqbResetWater(shen_name water, shen_name spray)
+{
+    if (water != YTQB_INVALID) {
+        EVT_AT_CharaDisp(water, 0, 1);
+        FTBL.SetScenarioCharacterDrawControl(water, 0, 0, 0.0f);
+        FTBL.SetScenarioCharacterRadius(water, 100.0f);
+        EVT_AT_SetPos(water, YTQB_INVALID, 189.7f, 101.55f, 178.5f, 0);
+        EVT_AT_SetAng(water, YTQB_INVALID, 0.0f, 325.0f, 330.0f, 0);
+    }
+    if (spray != YTQB_INVALID) {
+        EVT_AT_CharaDisp(spray, 0, 1);
+        FTBL.SetScenarioCharacterDrawControl(spray, 0, 0, 0.0f);
+        EVT_AT_SetPos(spray, YTQB_INVALID, 189.7f, 101.55f, 178.5f, 0);
+        EVT_AT_SetAng(spray, YTQB_INVALID, 0.0f, 325.0f, 330.0f, 0);
+    }
+}
+
+const int ytqbWaterParts[] = {152, 158, 155, 157, 154, 153, 160, 159, 156, 161};
+
+int QueueYtqbWaterSplash(shen_name water, shen_name spray, int delay)
+{
+    if (water != YTQB_INVALID)
+        EVT_AT_CharaDisp(water, delay, 0);
+    if (spray != YTQB_INVALID)
+        EVT_AT_CharaDisp(spray, delay, 1);
+    Queue_EVT_AT_PlayDynamix(water, "SUDY", 2.0f, 140.0f, 10, ytqbWaterParts, 2.0f, delay);
+    BeginYtqbSplash(YTQB_RYO, 80, delay);
+    return delay + 69.0f;
+}
+
+void YtqbSetupWater(shen_name water, shen_name spray)
+{
+    if (water != YTQB_INVALID) {
+        EVT_AT_CharaDisp(water, 0, 1);
+        FTBL.SetScenarioCharacterDrawControl(water, 0, 0, 0.0f);
+        FTBL.SetScenarioCharacterRadius(water, 100.0f);
+        EVT_AT_SetPos(water, YTQB_INVALID, 191.05f, 102.28f, 178.15f, 0);
+        EVT_AT_SetAng(water, YTQB_INVALID, 0.0f, 147.68f, 0.0f, 0);
+    }
+    if (spray != YTQB_INVALID) {
+        EVT_AT_CharaDisp(spray, 0, 1);
+        FTBL.SetScenarioCharacterDrawControl(spray, 0, 0, 0.0f);
+        EVT_AT_SetPos(water, YTQB_INVALID, 191.05f, 102.28f, 178.15f, 0);
+        EVT_AT_SetAng(water, YTQB_INVALID, 0.0f, 147.68f, 0.0f, 0);
+    }
+}
+
+const int ytqbStillWaterParts[] = {152, 158, 155, 157, 154, 153, 160, 159, 156, 161};
+
+int YtqbSpillWater(shen_name water, shen_name spray, int delay)
+{
+    if (water != YTQB_INVALID)
+        EVT_AT_CharaDisp(water, delay, 0);
+    if (spray != YTQB_INVALID)
+        EVT_AT_CharaDisp(spray, delay, 1);
+    Queue_EVT_AT_PlayDynamix(water, "SNDY", 2.0f, 492.0f, 10, ytqbStillWaterParts, 2.0f, delay);
+    return delay + 245.0f;
+}
+
+const float ytqbSplashStrength = 4.0f;
+
+int BeginYtqbSplash(shen_name character, int duration, int delay)
+{
+    float lifetime = duration;
+    Vector3 position;
+    YtqbSplashWork *work;
+    FTBL.GetCharaPosition(character, 14, &position, 0x40000000);
+    work = (YtqbSplashWork *)EVT_RepeatCallData((EventRepeatDataFunction)YtqbSplashUpdate, sizeof(YtqbSplashWork), delay, duration);
+    work->character = character;
+    work->strength = 4.0f;
+    work->previousPosition = position;
+    work->coarse = FTBL.CreateSplashEffect(&position, &ytqbSplashVolume, 300, 0.0f, 0, lifetime, 0, 0);
+    FTBL.SetParticleEffectColour(1, work->coarse, 255, 255, 0, 16);
+    FTBL.SetParticleEffectVelocity(1, work->coarse, &ytqbSplashVelocity, &ytqbSplashVariance);
+    FTBL.SetParticleEffectSize(1, work->coarse, 0.0f, 0.0f);
+    FTBL.ResumeParticleEffect(1, work->coarse);
+    work->fine = FTBL.CreateSplashEffect(&position, &ytqbFineSplashVolume, 1000, 0.0f, 0, lifetime, 0, 0);
+    FTBL.SetParticleEffectColour(1, work->fine, 255, 255, 32, 32);
+    FTBL.SetParticleEffectVelocity(1, work->fine, &ytqbFineSplashVelocity, &ytqbFineSplashVariance);
+    FTBL.SetParticleEffectSize(1, work->fine, 0.0f, 0.0f);
+    FTBL.ResumeParticleEffect(1, work->fine);
+    return delay + duration;
+}
+
+void YtqbSplashUpdate(YtqbSplashWork *work, int index)
+{
+    Vector3 camera, position;
+    float distance, moved;
+    if (work->coarse == -1)
+        return;
+    FTBL.GetCharaPosition(work->character, 14, &position, 0x40000000);
+    FTBL.camCtrlGetNextCamPos(&camera);
+    distance = FTBL.GetEuclideanDistance(&position, &camera);
+    moved = FTBL.CalculatePlanarDistanceBetweenPoints(&work->previousPosition, &position);
+    FTBL.SetParticleEffectPosition(1, work->coarse, &position, &ytqbSplashTrailVolume);
+    FTBL.SetParticleEffectBirthRate(1, work->coarse, moved * moved * 0.3f * work->strength);
+    ytqbSplashMovementVelocity.x = (position.x - work->previousPosition.x) * 0.5f;
+    ytqbSplashMovementVelocity.y = 0.03f;
+    ytqbSplashMovementVelocity.z = (position.z - work->previousPosition.z) * 0.5f;
+    FTBL.SetParticleEffectPosition(1, work->fine, &position, &ytqbFineSplashTrailVolume);
+    FTBL.SetParticleEffectVelocity(1, work->fine, &ytqbSplashMovementVelocity, &ytqbFineSplashTrailVariance);
+    FTBL.SetParticleEffectBirthRate(1, work->fine, 0.1f);
+    work->previousPosition = position;
+    if (index > 19) {
+        if (index <= 24) {
+            FTBL.SetParticleEffectSize(1, work->coarse, distance * 0.005f, distance * 0.005f);
+            FTBL.SetParticleEffectSize(1, work->fine, distance * 0.007f, distance * 0.007f);
+        } else if (index <= 69) {
+            FTBL.SetParticleEffectBirthRate(1, work->coarse, 0.0f);
+            FTBL.SetParticleEffectBirthRate(1, work->fine, 0.0f);
+        } else {
+            FTBL.FreeParticleEffect(1, work->coarse);
+            FTBL.FreeParticleEffect(1, work->fine);
+            work->coarse = -1;
+            work->fine = -1;
+        }
+    }
+}
+
+void YtqbSetupFrontStall(shen_name stall, shen_name broken)
+{
+    if (stall != YTQB_INVALID)
+        EVT_AT_CharaDisp(stall, 0, 1);
+    if (broken != YTQB_INVALID)
+        EVT_AT_CharaDisp(broken, 0, 0);
+    FTBL.SetScenarioCharacterDrawControl(stall, 0, 0, 0.0f);
+    FTBL.SetScenarioCharacterDrawControl(broken, 0, 0, 0.0f);
+}
+
+const int ytqbFrontStallParts[] = {173, 172, 171, 170, 169, 168, 167, 174, 180, 179, 178, 177, 176, 175, 166, 158, 157, 156, 155, 154, 153, 152, 159, 165, 164,
+    163, 162, 161, 160, 181, 202, 201, 200, 199, 198, 197, 203, 209, 208, 207, 206, 205, 204, 196, 188, 187, 186, 185, 184, 183, 182, 189, 195, 194, 193, 192,
+    191, 190};
+
+int YtqbBreakFrontStall(shen_name stall, shen_name broken, int delay)
+{
+    if (stall != YTQB_INVALID)
+        EVT_AT_CharaDisp(stall, delay, 0);
+    if (broken != YTQB_INVALID)
+        EVT_AT_CharaDisp(broken, delay, 1);
+    EVT_AT_SetSound(647, delay + 4.0f);
+    QueueEventSmoke(1, stall, -1, delay + 4.0f, 4, 0, 108);
+    Queue_EVT_AT_PlayDynamix(stall, "FDYN", 2.0f, 504.0f, 58, ytqbFrontStallParts, 2.0f, delay);
+    return delay + 251.0f;
+}
+
+void YtqbSetupNearStall(shen_name stall, shen_name broken)
+{
+    if (stall != YTQB_INVALID)
+        EVT_AT_CharaDisp(stall, 0, 1);
+    if (broken != YTQB_INVALID)
+        EVT_AT_CharaDisp(broken, 0, 0);
+    FTBL.SetScenarioCharacterDrawControl(stall, 0, 0, 0.0f);
+    FTBL.SetScenarioCharacterDrawControl(broken, 0, 0, 0.0f);
+}
+
+const int ytqbNearStallParts[] = {165, 164, 163, 167, 171, 170, 169, 168, 166, 172, 180, 179, 178, 177, 173, 174, 175, 176, 162, 156, 155, 154, 153, 152, 161,
+    160, 159, 157, 158};
+
+int YtqbBreakNearStall(shen_name stall, shen_name broken, int delay)
+{
+    if (stall != YTQB_INVALID)
+        EVT_AT_CharaDisp(stall, delay, 0);
+    if (broken != YTQB_INVALID)
+        EVT_AT_CharaDisp(broken, delay, 1);
+    EVT_AT_SetSound(647, delay + 4.0f);
+    QueueEventSmoke(1, stall, -1, delay + 4.0f, 4, 0, 130);
+    Queue_EVT_AT_PlayDynamix(stall, "NDYN", 2.0f, 270.0f, 29, ytqbNearStallParts, 2.0f, delay);
+    return delay + 134.0f;
+}
+
+void YtqbSetupStallObjects(shen_name stall, shen_name broken)
+{
+    if (stall != YTQB_INVALID)
+        EVT_AT_CharaDisp(stall, 0, 1);
+    if (broken != YTQB_INVALID)
+        EVT_AT_CharaDisp(broken, 0, 0);
+    FTBL.SetScenarioCharacterDrawControl(stall, 0, 0, 0.0f);
+    FTBL.SetScenarioCharacterDrawControl(broken, 0, 0, 0.0f);
+    FTBL.SetScenarioCharacterDrawControl(YTQB_NIW0, 0, 0, 0.0f);
+    FTBL.SetScenarioCharacterDrawControl(YTQB_NIW1, 0, 0, 0.0f);
+    FTBL.SetScenarioCharacterDrawControl(YTQB_NIW2, 0, 0, 0.0f);
+    FTBL.AT_SetLocalBaseChara(YTQB_NIW0, stall);
+    FTBL.AT_SetLocalBaseChara(YTQB_NIW1, stall);
+    FTBL.AT_SetLocalBaseChara(YTQB_NIW2, stall);
+    FTBL.AT_SetLocalBaseChara(YTQB_AHI0, stall);
+    FTBL.AT_SetLocalBaseChara(YTQB_AHI1, stall);
+    EVT_AT_SetPos(YTQB_NIW0, stall, -2.45f, 1.55f, 0.04f, 0);
+    EVT_AT_SetAngY(YTQB_NIW0, stall, 180.0f, 0);
+    EVT_AT_SetPos(YTQB_NIW1, stall, -1.89f, 1.55f, 0.04f, 0);
+    EVT_AT_SetAngY(YTQB_NIW1, stall, 180.0f, 0);
+    EVT_AT_SetPos(YTQB_NIW2, stall, -1.08f, 1.55f, 0.04f, 0);
+    EVT_AT_SetAngY(YTQB_NIW2, stall, 180.0f, 0);
+    EVT_AT_SetPos(YTQB_AHI0, stall, -2.05f, 0.2f, -0.53f, 0);
+    EVT_AT_SetAngY(YTQB_AHI0, stall, 180.0f, 0);
+    EVT_AT_SetPos(YTQB_AHI1, stall, -2.45f, 0.2f, -0.53f, 0);
+    EVT_AT_SetAngY(YTQB_AHI1, stall, 180.0f, 0);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_NIW0, 5724, 0.0f, 32767.0f, 0.0f, 1.0f, 0);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_NIW0, 0, -1.0f, -1.0f, -1.0f, 32767.0f, 4);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_NIW0, 0, -1.0f, -1.0f, -1.0f, 1.0f, -1);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_NIW1, 5724, 0.0f, 32767.0f, 0.0f, 1.0f, 0);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_NIW1, 0, -1.0f, -1.0f, -1.0f, 32767.0f, 4);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_NIW1, 0, -1.0f, -1.0f, -1.0f, 0.9f, -1);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_NIW2, 5724, 0.0f, 32767.0f, 0.0f, 1.0f, 0);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_NIW2, 0, -1.0f, -1.0f, -1.0f, 32767.0f, 4);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_NIW2, 0, -1.0f, -1.0f, -1.0f, 1.2f, -1);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_AHI0, 5722, 0.0f, 32767.0f, 0.0f, 1.0f, 0);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_AHI0, 0, -1.0f, -1.0f, -1.0f, 32767.0f, 4);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_AHI0, 0, -1.0f, -1.0f, -1.0f, 1.0f, -1);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_AHI1, 5723, 0.0f, 32767.0f, 0.0f, 1.0f, 0);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_AHI1, 0, -1.0f, -1.0f, -1.0f, 32767.0f, 4);
+    FTBL.ConfigureScenarioNodeMotion(YTQB_AHI1, 0, -1.0f, -1.0f, -1.0f, 1.0f, -1);
+}
+
+const int ytqbBirdStallParts[] = {172, 178, 162, 183, 158, 167, 168, 170, 171, 173, 175, 177, 180, 184, 190, 181, 161, 194, 152, 157, 153, 160, 159, 156, 155,
+    154, 163, 176, 179, 169, 164, 174, 195, 193, 199, 192, 198, 191, 166, 165, 187, 186, 197, 185, 182, 196, 188, 189};
+
+int YtqbBreakBirdStall(shen_name stall, shen_name broken, int delay)
+{
+    if (stall != YTQB_INVALID)
+        EVT_AT_CharaDisp(stall, delay, 0);
+    if (broken != YTQB_INVALID)
+        EVT_AT_CharaDisp(broken, delay, 1);
+    QueueYtqbBirdStallUpdate(delay + 18);
+    QueueYtqbPaperStallUpdate(delay);
+    EVT_AT_SetSound(648, delay + 4.0f);
+    EVT_AT_SetSound(644, delay + 18.0f);
+    EVT_AT_SetSound(645, delay + 26.5f);
+    EVT_AT_SetSound(2558, delay + 49.0f);
+    EVT_AT_SetSound(2559, delay + 49.0f);
+    EVT_AT_SetSound(2560, delay + 49.0f);
+    QueueEventSmoke(0, stall, -1, delay + 4.0f, 4, 0, 108);
+    Queue_EVT_AT_PlayDynamix(stall, "TDYN", 2.0f, 374.0f, 48, ytqbBirdStallParts, 2.0f, delay);
+    return delay + 186.0f;
+}
+
+int QueueYtqbBirdStallUpdate(int delay)
+{
+    EVT_RepeatCallData(YtqbBirdStallUpdate, 0, delay, 150);
+    return delay + 150;
+}
+
+void YtqbBirdStallUpdate(void *data, int ticks)
+{
+    if (data)
+        return;
+    if (!ticks) {
+        FTBL.ConfigureScenarioNodeMotion(YTQB_AHI0, 5721, 0.0f, 32767.0f, 0.0f, 1.0f, 0);
+        FTBL.ConfigureScenarioNodeMotion(YTQB_AHI0, 0, -1.0f, -1.0f, -1.0f, 32767.0f, 4);
+        FTBL.ConfigureScenarioNodeMotion(YTQB_AHI0, 0, -1.0f, -1.0f, -1.0f, 1.6f, -1);
+        FTBL.ConfigureScenarioNodeMotion(YTQB_AHI1, 5721, 0.0f, 32767.0f, 0.0f, 1.0f, 0);
+        FTBL.ConfigureScenarioNodeMotion(YTQB_AHI1, 0, -1.0f, -1.0f, -1.0f, 32767.0f, 4);
+        FTBL.ConfigureScenarioNodeMotion(YTQB_AHI1, 0, -1.0f, -1.0f, -1.0f, 2.1f, -1);
+    } else {
+        EVT_AT_SetPosAng(YTQB_AHI0, YTQB_AHI0, 0.0f, -0.08f, 6.0f, 0);
+        EVT_AT_SetPosAng(YTQB_AHI1, YTQB_AHI1, 0.0f, -0.1f, -2.0f, 0);
+    }
+}
+
+int QueueYtqbPaperStallUpdate(int delay)
+{
+    EVT_RepeatCallData(YtqbPaperStallUpdate, 0, delay, 120);
+    return delay + 120;
+}
+
+void YtqbPaperStallUpdate(void *data, int ticks)
+{
+    Vector3 position;
+    if (data)
+        return;
+    if (!ticks) {
+        FTBL.ConfigureScenarioNodeMotion(YTQB_NIW0, 0, -1.0f, -1.0f, -1.0f, 2.0f, -1);
+        FTBL.ConfigureScenarioNodeMotion(YTQB_NIW1, 0, -1.0f, -1.0f, -1.0f, 1.3f, -1);
+        FTBL.ConfigureScenarioNodeMotion(YTQB_NIW2, 0, -1.0f, -1.0f, -1.0f, 1.7f, -1);
+    } else {
+        FTBL.scenApplyPosOrRotToChildId(YTQB_YAD1, 188, &position, 0, 2);
+        EVT_AT_SetPos(YTQB_NIW0, YTQB_YAD1, position.x, position.y - 0.2f, position.z, 0);
+        FTBL.scenApplyPosOrRotToChildId(YTQB_YAD1, 172, &position, 0, 2);
+        EVT_AT_SetPos(YTQB_NIW1, YTQB_YAD1, position.x, position.y - 0.2f, position.z, 0);
+        FTBL.scenApplyPosOrRotToChildId(YTQB_YAD1, 181, &position, 0, 2);
+        EVT_AT_SetPos(YTQB_NIW2, YTQB_YAD1, position.x, position.y - 0.2f, position.z, 0);
+    }
+}
+
+int QueueYtqbAmbientSmoke(int delay)
+{
+    EVT_RepeatCallData(YtqbAmbientSmoke, 0, delay, 200000000);
+    return delay + 200000000;
+}
+
+void YtqbAmbientSmoke(void *data, int ticks)
+{
+    Vector3 volume;
+    int *smoke;
+    volume.x = 0.005f;
+    volume.y = 0.0f;
+    volume.z = 0.005f;
+    if (data)
+        return;
+    switch (ticks) {
+    case 0:
+        smoke = &ytqbAmbientSmoke;
+        *smoke = FTBL.CreateSmokeEffect(&ytqbAmbientPositions[0], &volume, 15, 0.2f, 0, 0);
+        FTBL.SetSmokeEffectFadeFactor(*smoke, 64);
+        FTBL.SetParticleEffectColour(0, *smoke, 0, 108, 100, 82);
+        FTBL.ResumeParticleEffect(0, *smoke);
+        break;
+    case 29900000:
+        FTBL.SuspendParticleEffect(0, ytqbAmbientSmoke);
+        FTBL.FreeParticleEffect(0, ytqbAmbientSmoke);
+        ytqbAmbientSmoke = -1;
+        break;
+    default:
+        if (ticks < 29000000)
+            FTBL.SetParticleEffectPosition(0, ytqbAmbientSmoke, &ytqbAmbientPositions[(unsigned int)ticks >> 3 & 3], &volume);
+        break;
+    }
+}
+#else
 #include "s2/areas/area_ytqb.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
@@ -384,3 +771,4 @@ std::int32_t YtqbWaterFailure() {
     return delay;
 }
 } // namespace shenmue::s2::areas
+#endif

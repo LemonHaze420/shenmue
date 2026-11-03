@@ -1,4 +1,51 @@
 #pragma once
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_pati.hpp"
+void AdvancePatiBall(PatiBallWork *ball);
+void IntegratePatiBall(PatiBallWork *ball);
+void FindPatiCollision(PatiBallWork *ball);
+float PatiCrossingTime(float previous, float current, float edge);
+float ProbePatiPoint(PatiBallWork *ball, const Vector3 *point);
+void FindPatiFloorCollision(PatiBallWork *ball);
+void FindPatiRightCollision(PatiBallWork *ball);
+void FindPatiLeftCollision(PatiBallWork *ball);
+void FindPatiDividerCollision(PatiBallWork *ball);
+void FindPatiCenterCollision(PatiBallWork *ball);
+void FindPatiNailCollision(PatiBallWork *ball);
+unsigned char IntersectPatiSegments(const Vector3 *current, const Vector3 *previous, const Vector3 *first, const Vector3 *second);
+void MarkPatiCollisionSound(PatiBallWork *ball);
+void PlayPatiCollisionSounds(PatiBallWork *ball);
+void ResolvePatiCollision(PatiBallWork *ball);
+void BouncePatiFloor(PatiBallWork *ball);
+void BouncePatiLeft(PatiBallWork *ball);
+void BouncePatiRight(PatiBallWork *ball);
+void BouncePatiDivider(PatiBallWork *ball);
+void BouncePatiDividerLeft(PatiBallWork *ball);
+void BouncePatiDividerRight(PatiBallWork *ball);
+void BouncePatiDividerRightPoint(PatiBallWork *ball);
+void BouncePatiDividerLeftPoint(PatiBallWork *ball);
+void BouncePatiPocketFloor(PatiBallWork *ball);
+void BouncePatiCenterFloor(PatiBallWork *ball);
+void BouncePatiCenterTop(PatiBallWork *ball);
+void BouncePatiCenterLeft(PatiBallWork *ball);
+void BouncePatiCenterRight(PatiBallWork *ball);
+void BouncePatiCenterLowerLeft(PatiBallWork *ball);
+void BouncePatiCenterLowerRight(PatiBallWork *ball);
+void BouncePatiCenterOuterUpperLeft(PatiBallWork *ball);
+void BouncePatiCenterUpperLeft(PatiBallWork *ball);
+void BouncePatiCenterUpperRight(PatiBallWork *ball);
+void BouncePatiCenterOuterUpperRight(PatiBallWork *ball);
+void BouncePatiNail(PatiBallWork *ball);
+void BouncePatiPoint(PatiBallWork *ball, const Vector3 *point, float restitution);
+void UpdatePatiBallSettled(PatiBallWork *ball);
+int IsPatiBallSettled(PatiBallWork *ball);
+void PlayPatiCollisionSound(PatiBallWork *ball, short material);
+void FollowPatiBall(PatiBallWork *ball);
+void PatiPhysicsCopyVector(Vector3 *target, const Vector3 *source);
+void PatiPhysicsSetVector(Vector3 *target, float x, float y, float z);
+
+#else
+#pragma once
 #include "s2/pati.hpp"
 #include "s2/pati_nails.hpp"
 #include "s2/hlib.hpp"
@@ -92,3 +139,4 @@ bool IsPatiBallSettled(PatiBallWork *ball);
 void PlayPatiCollisionSound(PatiBallWork *ball, std::int16_t material);
 void FollowPatiBall(PatiBallWork *ball);
 } // namespace shenmue::s2
+#endif

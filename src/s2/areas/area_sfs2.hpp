@@ -1,4 +1,59 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/common/et_street_debug.h"
+
+#define SFS2_CYC SHEN_NAME4('C', 'Y', 'C', '_')
+#define SFS2_VNE SHEN_NAME4('V', 'N', 'E', '_')
+#define SFS2_CHN SHEN_NAME4('C', 'H', 'N', '_')
+#define SFS2_STAG SHEN_NAME4('S', 'T', 'A', 'G')
+#define SFS2_BTC1 SHEN_NAME4('B', 'T', 'C', '1')
+#define SFS2_GRID_ORIGIN SHEN_NAME4('0', '0', '0', '0')
+#define SFS2_PACKAGE SHEN_NAME4('Q', '2', '0', '0')
+#define SFS2_BOOKIE_CAMERA SHEN_NAME4('d', 'u', 'm', 'A')
+#define SFS2_FIGHTER_CAMERA SHEN_NAME4('d', 'u', 'm', 'G')
+#define SFS2_OMAKE_SCENE SHEN_NAME4('O', 'M', 'A', 'K')
+#define SFS2_QRON_SCENE SHEN_NAME4('Q', 'R', '0', '0')
+
+typedef struct Sfs2QteDefinition {
+    unsigned short parameters[4];
+    int commands[8];
+} Sfs2QteDefinition;
+
+void Sfs2Main(StreetFightStartParameters *start);
+void QueueNormal(StreetFightStartParameters *start);
+void LoadNormalResources(StreetFightEventWork *work);
+void PlaceNormal(StreetFightEventWork *work);
+StreetFightEventWork *InitializeNormal(HLibTask *task);
+void NormalDebugCallback(void *data);
+void CleanupNormalCallback(void *data);
+void MainCallback(void *data);
+void RetryBeginCallback(void *data);
+void RetryChoiceCallback(void *data);
+void RetryResetCallback(void *data);
+void RetryCancelCallback(void *data);
+int FirstIntroConversation(void *data);
+int RepeatIntroConversation(void *data);
+int AcceptConversation(void *data);
+int DeclineConversation(void *data);
+int InsufficientConversation(void *data);
+void BattleEntryCallback(void *data);
+void BattlePreEventCallback(void *data);
+void BattleStartFirstCallback(void *data);
+void BattleStartSecondCallback(void *data);
+void BattleWaitCallback(void *data);
+void BattleEndCallback(void *data);
+int VictoryConversation(void *data);
+int VictoryAppearanceConversation(void *data);
+int DefeatConversation(void *data);
+void ConfigureBattleQte(int rank);
+void ControlBattleQte(StreetFightEventWork *work);
+int CanStartBattleQte(StreetFightEventWork *work);
+void BeginFinishingMotion(StreetFightEventWork *work);
+void WaitMotionCallback(void *data);
+void ControlFighterTaunt(StreetFightEventWork *work);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/street_fight_event.hpp"
 namespace shenmue::s2 {
@@ -50,3 +105,4 @@ inline constexpr shen_name SFS2_RETRY_AREA{SHEN_NAME(OMAK)}, SFS2_RETURN_AREA{SH
 inline constexpr Vector3 SFS2_VICTORY_APPEARANCE_POSITION{335.8699951171875f, 84.25f, 85.83000183105469f};
 extern const ScriptAreaDefinition areaSfs2ScriptDefinition;
 } // namespace shenmue::s2
+#endif

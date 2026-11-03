@@ -1,3 +1,558 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0504.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void Start0504(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0504, 4, 11, sizeof(Area0504Parameter), AREA_0504_EVENT);
+    Area0504Parameter *parent = (Area0504Parameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->state = 1;
+    parent->selection = 0;
+    FTBL.InitializeShipSpray();
+    Setup0504Environment();
+    Queue_EVT_UTL_LoadNPCChara_3(area0504Characters, parent->self);
+}
+#else
+#define AREA_0504_SQRT(x) ({ float root_ = (x); root_ = __builtin_sqrtf(root_); root_; })
+static float ryoHeight0504 = 0.0f;
+static float shenhuaHeight0504 = 0.0f;
+static int cameraRide0504 = 1;
+static int previousCameraRide0504 = 0;
+static shen_name sprayCharacter0504 = AREA_0504_BOAT;
+shen_name area0504Characters[] = {AREA_0504_BOAT, INVALID_CHARACTER};
+static unsigned short splashFrame0504 = 0;
+static Vector3 characterPositions0504[2], previousEye0504, previousTarget0504;
+
+void Update0504(void *data)
+{
+    Area0504Parameter *parent = (Area0504Parameter *)data;
+    switch (parent->state) {
+    case 1:
+        Queue0504Author(parent);
+        break;
+    case 3:
+        Cleanup0504(parent);
+        break;
+    }
+}
+
+void Queue0504Author(Area0504Parameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0504Author, 5, 11, sizeof(Area0504AuthorParameter), AREA_0504_AUTHOR);
+    ((Area0504AuthorParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+    Prepare0504Characters();
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void Update0504Author(void *data)
+{
+    Area0504AuthorParameter *child = (Area0504AuthorParameter *)data;
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    FTBL.GetCharaPosition(AREA_0504_RYO, -1, &characterPositions0504[0], 0);
+    FTBL.GetCharaPosition(AREA_0504_SIN, -1, &characterPositions0504[1], 0);
+    switch (frame) {
+    case 1:
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.SyncWindWithWDATWeatherState();
+        break;
+    case 821:
+        FTBL.SetNewWindPhaseAndSpeed(0xf10c, 0.2f);
+        break;
+    case 1011:
+        FTBL.SyncWindWithWDATWeatherState();
+        break;
+    case 1486:
+        cameraRide0504 = 0;
+        break;
+    case 1516:
+        cameraRide0504 = 1;
+        break;
+    case 1538:
+        FTBL.EV_SetupImageModule(AREA_0504_SIN, "WSH_M");
+        FTBL.FindOSAG(FTBL.ctrlGetCharaByName(AREA_0504_SIN));
+        break;
+    case 1776:
+        FTBL.SetPlayerGameFlags(4, 0);
+        break;
+    case 1850:
+        FTBL.EV_SetupImageModule(AREA_0504_RYO, "WRY_M");
+        break;
+    }
+    switch (frame) {
+    case 471:
+        FTBL.EV_WeatherEffectUtil_Impl(25486, 1.5f, 1.15f, 0.95f, 0.8f, 7.8f);
+        break;
+    case 541:
+        FTBL.EV_WeatherEffectUtil_Impl(21845, 1.5f, 1.15f, 0.95f, 1.5f, 7.8f);
+        break;
+    case 671:
+        FTBL.EV_WeatherEffectUtil_Impl(25486, 1.5f, 1.15f, 0.95f, 0.8f, 7.8f);
+        break;
+    case 821:
+        FTBL.EV_WeatherEffectUtil_Impl(21845, 1.5f, 1.15f, 0.95f, 1.5f, 7.8f);
+        break;
+    case 1306:
+        FTBL.EV_WeatherEffectUtil_Impl(25486, 1.5f, 1.15f, 0.95f, 0.8f, 7.8f);
+        break;
+    case 1336:
+        FTBL.EV_WeatherEffectUtil_Impl(21845, 1.5f, 1.15f, 0.95f, 1.5f, 7.8f);
+        break;
+    case 1371:
+        FTBL.EV_WeatherEffectUtil_Impl(29127, 1.5f, 1.15f, 0.95f, 0.4f, 7.8f);
+        break;
+    case 1451:
+        FTBL.EV_WeatherEffectUtil_Impl(21845, 1.5f, 1.15f, 0.95f, 1.5f, 7.8f);
+        break;
+    case 2556:
+        FTBL.EV_WeatherEffectUtil_Impl(25486, 1.5f, 1.15f, 0.95f, 0.8f, 7.8f);
+        break;
+    case 2596:
+        FTBL.EV_WeatherEffectUtil_Impl(21845, 1.5f, 1.15f, 0.95f, 1.5f, 7.8f);
+        break;
+    case 3266:
+        FTBL.EV_WeatherEffectUtil_Impl(25486, 1.5f, 1.15f, 0.95f, 0.5f, 7.8f);
+        break;
+    case 3326:
+        FTBL.EV_WeatherEffectUtil_Impl(21845, 1.5f, 1.15f, 0.95f, 1.5f, 7.8f);
+        break;
+    case 3536:
+        FTBL.EV_WeatherEffectUtil_Impl(29127, 1.5f, 1.15f, 0.95f, 0.8f, 7.8f);
+        break;
+    case 3566:
+        FTBL.EV_WeatherEffectUtil_Impl(21845, 1.5f, 1.15f, 0.95f, 1.5f, 7.8f);
+        break;
+    }
+    if (frame == 2052)
+        Create0504Splash(AREA_0504_BOAT, 100, 0.010588235f, 21);
+    switch (frame) {
+    case 1520:
+        Create0504Splash(AREA_0504_SIN, 2000, 0.023137255f, 5);
+        break;
+    case 1614:
+        Create0504Splash(AREA_0504_SIN, 100, 0.010588235f, 14);
+        break;
+    case 1629:
+        Create0504Splash(AREA_0504_SIN, 100, 0.010588235f, 21);
+        break;
+    case 1664:
+        Create0504Splash(AREA_0504_SIN, 100, 0.010588235f, 14);
+        break;
+    case 2090:
+        Create0504Splash(AREA_0504_SIN, 100, 0.010588235f, 21);
+        break;
+    case 2178:
+        Create0504Splash(AREA_0504_SIN, 100, 0.010588235f, 21);
+        break;
+    case 2197:
+        Create0504Splash(AREA_0504_SIN, 100, 0.010588235f, 14);
+        break;
+    case 2213:
+        Create0504Splash(AREA_0504_SIN, 100, 0.010588235f, 21);
+        break;
+    case 2227:
+        Create0504Splash(AREA_0504_SIN, 100, 0.010588235f, 14);
+        break;
+    }
+    switch (frame) {
+    case 1840:
+        Create0504Splash(AREA_0504_RYO, 2000, 0.023137255f, 5);
+        break;
+    case 1942:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 21);
+        break;
+    case 1966:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 14);
+        break;
+    case 1981:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 21);
+        break;
+    case 2007:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 14);
+        break;
+    case 2139:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 14);
+        break;
+    case 2158:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 21);
+        break;
+    case 2259:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 14);
+        break;
+    case 2441:
+        Create0504Splash(AREA_0504_RYO, 300, 0.0043137255f, 5);
+        break;
+    case 2473:
+        Create0504Splash(AREA_0504_RYO, 300, 0.0043137255f, 5);
+        break;
+    case 2498:
+        Create0504Splash(AREA_0504_RYO, 300, 0.0043137255f, 5);
+        break;
+    case 2513:
+        Create0504Splash(AREA_0504_RYO, 300, 0.0043137255f, 5);
+        break;
+    case 2536:
+        Create0504Splash(AREA_0504_RYO, 300, 0.0043137255f, 5);
+        break;
+    case 2627:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 14);
+        break;
+    case 2663:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 21);
+        break;
+    case 2697:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 21);
+        break;
+    case 2744:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 21);
+        break;
+    case 2786:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 21);
+        break;
+    case 2851:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 14);
+        break;
+    case 2878:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 14);
+        break;
+    case 2907:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 14);
+        break;
+    case 3133:
+        Create0504Splash(AREA_0504_RYO, 500, 0.023137255f, 3);
+        break;
+    case 3266:
+        Create0504Splash(AREA_0504_RYO, 300, 0.010588235f, 5);
+        break;
+    case 3440:
+        Create0504Splash(AREA_0504_RYO, 300, 0.010588235f, 5);
+        break;
+    case 3442:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 21);
+        break;
+    case 3485:
+        Create0504Splash(AREA_0504_RYO, 300, 0.010588235f, 5);
+        break;
+    case 3530:
+        Create0504Splash(AREA_0504_RYO, 300, 0.0043137255f, 5);
+        break;
+    case 3555:
+        Create0504Splash(AREA_0504_RYO, 300, 0.0043137255f, 5);
+        break;
+    case 3585:
+        Create0504Splash(AREA_0504_RYO, 300, 0.0043137255f, 5);
+        break;
+    case 3598:
+        Create0504Splash(AREA_0504_RYO, 100, 0.010588235f, 21);
+        break;
+    case 3600:
+        Create0504Splash(AREA_0504_RYO, 300, 0.010588235f, 5);
+        break;
+    case 3626:
+        Create0504Splash(AREA_0504_RYO, 300, 0.010588235f, 5);
+        break;
+    case 3665:
+        Create0504Splash(AREA_0504_RYO, 300, 0.010588235f, 5);
+        break;
+    case 3701:
+        Create0504Splash(AREA_0504_RYO, 300, 0.010588235f, 5);
+        break;
+    case 3811:
+        Create0504Splash(AREA_0504_RYO, 300, 0.010588235f, 5);
+        break;
+    }
+    switch (frame) {
+    case 1:
+        sprayCharacter0504 = AREA_0504_BOAT;
+        break;
+    case 1590:
+        sprayCharacter0504 = AREA_0504_SIN;
+        break;
+    case 1686:
+        sprayCharacter0504 = AREA_0504_BOAT;
+        break;
+    case 2026:
+        sprayCharacter0504 = AREA_0504_BOAT;
+        break;
+    case 2061:
+        sprayCharacter0504 = AREA_0504_SIN;
+        break;
+    case 2165:
+        sprayCharacter0504 = AREA_0504_SIN;
+        break;
+    case 2286:
+        sprayCharacter0504 = AREA_0504_BOAT;
+        break;
+    case 1928:
+    case 2106:
+    case 2436:
+        sprayCharacter0504 = AREA_0504_RYO;
+        break;
+    }
+    if (frame > 1850)
+        Update0504CharacterHeight(AREA_0504_RYO, 0);
+    if (frame > 1570 && frame < 3326)
+        Update0504CharacterHeight(AREA_0504_SIN, 0);
+    else if (frame > 3325)
+        Update0504CharacterHeight(AREA_0504_SIN, AREA_0504_RYO);
+    if (frame > 2286)
+        Update0504CharacterHeight(AREA_0504_BOAT, AREA_0504_SIN);
+    else
+        Update0504CharacterHeight(AREA_0504_BOAT, 0);
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        Restore0504Characters();
+        child->parent->state = 3;
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void Update0504CharacterHeight(shen_name character, shen_name heightSource)
+{
+    Vector3 samples[5], position;
+    float height = 0.0f;
+    void *root = FTBL.GetMapModelRoot(1);
+    int i;
+    FTBL.GetCharaPosition(character, -1, &samples[0], 0);
+    FTBL.GetCharaPosition(character, -1, &position, 0);
+    for (i = 1; i <= 4; i++) {
+        samples[i].x = samples[0].x;
+        samples[i].y = samples[0].y;
+        samples[i].z = samples[0].z;
+    }
+    samples[1].x += 0.5f;
+    samples[2].x -= 0.5f;
+    samples[3].z += 0.5f;
+    samples[4].z -= 0.5f;
+    for (i = 0; i <= 4; i++)
+        height += FTBL.FindFieldGroundHeight(samples[i], root) - 95.995003f;
+    switch (character) {
+    case AREA_0504_RYO:
+        ryoHeight0504 = height / 5.0f;
+        break;
+    case AREA_0504_SIN:
+        shenhuaHeight0504 = height / 5.0f;
+        break;
+    }
+    switch (heightSource) {
+    case AREA_0504_RYO:
+        position.y += ryoHeight0504;
+        break;
+    case AREA_0504_SIN:
+        position.y += shenhuaHeight0504;
+        break;
+    default:
+        position.y += height / 5.0f;
+        break;
+    }
+    if (position.y > 100.0f)
+        position.y = 100.0f;
+    FTBL.EV_AT_SetPos(character, AREA_0504_RECURSIVE_XYZ, &position);
+    {
+        Vector3 spray, offset = {0.0f, -0.1f, 0.0f};
+        Vector3i rotation;
+        if (character == sprayCharacter0504) {
+            FTBL.GetCharaPosition(character, 5, &spray, 0);
+            FTBL.GetScenarioCharacterEulerAngles(AREA_0504_BOAT, &rotation, 0);
+            rotation.y += 0x8000;
+            spray.y = FTBL.FindFieldGroundHeight(spray, root);
+            FTBL.EventFunction862(&offset);
+            FTBL.AssignShipSprayPosition(&spray);
+            FTBL.AssignShipSprayYaw(rotation.y);
+        }
+    }
+}
+
+void Create0504Splash(shen_name character, int count, float size, unsigned int bone)
+{
+    Vector3 position;
+    Vector3 spawn = {0.2f, 0.0f, 0.2f};
+    Vector3 velocity = {-0.0050980374f, 0.047450982f, 0.028627448f};
+    Vector3 variance = {0.02784314f, 0.041176476f, 0.052156858f};
+    void *root = FTBL.GetMapModelRoot(1);
+    float height;
+    HLibTask *task;
+    Area0504SplashParameter *child;
+    FTBL.GetCharaPosition(character, bone, &position, 0);
+    height = FTBL.FindFieldGroundHeight(position, root);
+    if (character == AREA_0504_SIN)
+        position.y = height - 0.3f;
+    else
+        position.y = height;
+    task = FTBL.HLib_EnqueueTaskWithParameter(Update0504Splash, 4, 11, sizeof(Area0504SplashParameter), AREA_0504_SPLASH);
+    child = (Area0504SplashParameter *)FTBL.HLib_GetTaskParameter(task);
+    child->effect = FTBL.CreateSplashEffect(&position, &spawn, count, 0.02f, 0, 95.995003f, 0, 0);
+    child->birthFrame = 20;
+    child->freeFrame = 70;
+    FTBL.SetParticleEffectColour(1, child->effect, 77, 227, 212, 142);
+    FTBL.SetParticleEffectPosition(1, child->effect, &position, &spawn);
+    FTBL.SetParticleEffectVelocity(1, child->effect, &velocity, &variance);
+    FTBL.SetParticleEffectBirthRate(1, child->effect, 0.078431375f);
+    FTBL.SetParticleEffectSize(1, child->effect, size, size);
+    FTBL.ResumeParticleEffect(1, child->effect);
+}
+
+void Update0504Splash(void *data)
+{
+    Area0504SplashParameter *child = (Area0504SplashParameter *)data;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SuspendParticleEffect(1, child->effect);
+        FTBL.FreeParticleEffect(1, child->effect);
+        FTBL.HLib_DestroyCurrentTask();
+    } else if (splashFrame0504 == child->birthFrame) {
+        FTBL.SetParticleEffectBirthRate(1, child->effect, 0.0f);
+        splashFrame0504++;
+    } else if (splashFrame0504 == child->freeFrame) {
+        splashFrame0504 = 0;
+        FTBL.SuspendParticleEffect(1, child->effect);
+        FTBL.FreeParticleEffect(1, child->effect);
+        FTBL.HLib_DestroyCurrentTask();
+    } else
+        splashFrame0504++;
+}
+
+void Setup0504Environment(void)
+{
+    EventDateTime date;
+    unsigned char distance[256], second[256], first[256];
+    Vector3 direction;
+    void *secondKernel;
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    date.hour = 12;
+    date.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&date);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.EV_SetWeatherInstruction(0x780, 0);
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 1.0f);
+    FTBL.UpdateWeather();
+    FTBL.EV_WeatherEffectUtil_Impl(21845, 1.5f, 1.15f, 0.95f, 1.5f, 7.8f);
+    FTBL.EV_FreeAuthorPak(1, "0504");
+    direction.x = 0.0f;
+    direction.y = 0.872f;
+    direction.z = -0.489f;
+    FTBL.GenerateFFT(1.0f);
+    FTBL.fft_fill_dist(FTBL.fft_fill_krn(31.4f, FTBL.generate_distance_falloff_row_major(1.5f, distance)));
+    secondKernel = FTBL.fft_fill_krn(0.06f, FTBL.generate_distance_falloff_kernel_8x8(-0.85f, second));
+    FTBL.fft_bins_load_pairwise_tables((const float *)secondKernel, (const float *)FTBL.fft_fill_krn(0.0f, FTBL.generate_distance_falloff_kernel_8x8(-1.15f, first)));
+    FTBL.FFTUtil(0.0f, 0.008f);
+    FTBL.set_lighting_flags(0.1f, &direction);
+    previousEye0504.x = previousEye0504.y = previousEye0504.z = 0.0f;
+    previousTarget0504.x = previousTarget0504.y = previousTarget0504.z = 0.0f;
+    FTBL.camCtrlSetRotationCallback(Update0504CameraRideHeight);
+    FTBL.HLib_EnqueueTaskWithoutParameter(Update0504Waves, 15, 2, AREA_0504_WAVE);
+}
+
+void Cleanup0504(Area0504Parameter *parent)
+{
+    EVT_UTL_FreeNPCChara(area0504Characters);
+    FTBL.camCtrlSetRotationCallback(0);
+    FTBL.camCtrlSetRotation(0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0504");
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0504_RETURN, 0);
+}
+
+void Prepare0504Characters(void)
+{
+    HideAuthorCharacter(AREA_0504_RYO);
+    HideAuthorCharacter(AREA_0504_SIN);
+    HideAuthorCharacter(AREA_0504_BOAT);
+    HideAuthorProp(AREA_0504_PROP);
+    FTBL.clmdUtil(FTBL.ctrlGetCharaByName(AREA_0504_SIN), 6);
+}
+
+void Restore0504Characters(void)
+{
+    ShowAuthorCharacter(AREA_0504_RYO);
+    ShowAuthorCharacter(AREA_0504_SIN);
+    ShowAuthorCharacter(AREA_0504_BOAT);
+    ShowAuthorProp(AREA_0504_PROP);
+    FTBL.clmdUtil(FTBL.ctrlGetCharaByName(AREA_0504_SIN), 0);
+}
+
+#define SHENMUE_EVENT_AUTHOR_PROPS
+#include "s2/events/event_author_dc.h"
+
+void Update0504Waves(void *data)
+{
+    if (!FTBL.shenIsGamePaused()) {
+        float scale = 1.0f;
+        FTBL.BuildLightingTableFrom(0, scale, scale, scale, scale, scale, scale, scale, scale, 10.0f, scale);
+        FTBL.ApplyFFTWaveformToStripTree(FTBL.GetMapModelRoot(1));
+    }
+}
+
+void Update0504CameraRideHeight(void)
+{
+    Vector3 eye, target, translation;
+    Area0504Rotation correction, rotation;
+    Vector3 ryo, shenhua, eyeDelta, targetDelta, delta;
+    short pitch = 0;
+    int reset = cameraRide0504 != 0 && previousCameraRide0504 == 0;
+    float characterHeight, surface, height, ryoDistance, shenhuaDistance, level;
+    void *root;
+    previousCameraRide0504 = cameraRide0504;
+    if (cameraRide0504 != 1 || !(root = FTBL.GetMapModelRoot(1)))
+        return;
+    FTBL.camCtrlGetRot(&rotation.pitch);
+    FTBL.camCtrlGetNextCamPos(&eye);
+    FTBL.camCtrlGetTargetPosition(&target);
+    eyeDelta.x = eye.x - previousEye0504.x;
+    eyeDelta.y = eye.y - previousEye0504.y;
+    eyeDelta.z = eye.z - previousEye0504.z;
+    targetDelta.x = target.x - previousTarget0504.x;
+    targetDelta.y = target.y - previousTarget0504.y;
+    targetDelta.z = target.z - previousTarget0504.z;
+    previousEye0504 = eye;
+    previousTarget0504 = target;
+    if (eyeDelta.x * eyeDelta.x + eyeDelta.y * eyeDelta.y + eyeDelta.z * eyeDelta.z > 0.25f)
+        reset = 1;
+    else if (targetDelta.x * targetDelta.x + targetDelta.y * targetDelta.y + targetDelta.z * targetDelta.z > 0.25f)
+        reset = 1;
+    FTBL.GetCharaPosition(AREA_0504_RYO, -1, &ryo, 0);
+    FTBL.GetCharaPosition(AREA_0504_SIN, -1, &shenhua, 0);
+    ryoDistance = FTBL.GetEuclideanDistance(&characterPositions0504[0], &target);
+    shenhuaDistance = FTBL.GetEuclideanDistance(&characterPositions0504[1], &target);
+    characterHeight = shenhuaDistance > ryoDistance ? ryo.y - characterPositions0504[0].y : shenhua.y - characterPositions0504[1].y;
+    surface = FTBL.FindFieldGroundHeight(eye, root);
+    FTBL.camCtrlGetRotationXform(&translation, &correction.pitch);
+    if (surface != 9999.0f) {
+        height = 0.0f;
+        level = surface + 0.3f;
+        if (level > eye.y)
+            height = level - eye.y;
+        if (height > 0.0f && characterHeight > 0.2f) {
+            target.y += characterHeight;
+            eye.y += height;
+            delta.x = target.x - eye.x;
+            delta.y = target.y - eye.y;
+            delta.z = target.z - eye.z;
+            pitch = FTBL.InverseFixedAtan2(-delta.y, -AREA_0504_SQRT(delta.x * delta.x + delta.z * delta.z));
+            pitch -= rotation.pitch;
+        }
+        if ((translation.y - height < 0.0f ? -(translation.y - height) : translation.y - height) > 1.0f)
+            reset = 1;
+        translation.x = 0.0f;
+        translation.y += (height - translation.y) * 0.3f;
+        if (reset)
+            translation.y = height;
+        translation.z = 0.0f;
+        correction.pitch = (int)((pitch - correction.pitch) * 0.3f) + correction.pitch;
+        if (reset)
+            correction.pitch = pitch;
+        correction.yaw = 0;
+        correction.roll = 0;
+    } else {
+        translation.x = translation.y = translation.z = 0.0f;
+        correction.pitch = correction.yaw = correction.roll = 0;
+    }
+    FTBL.camCtrlSetRotation(&translation, &correction.pitch);
+}
+#endif
+#else
 #include "s2/areas/area_0504.hpp"
 #include "s2/author.hpp"
 #include "s2/author_viewer_event.hpp"
@@ -377,3 +932,4 @@ void Cleanup0504(Area0504Parameter *parent) {
 }
 const ScriptAreaDefinition area0504ScriptDefinition{AREA_0504, 0, Initialize0504, Start0504};
 } // namespace shenmue::s2::areas
+#endif

@@ -1,3 +1,187 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_ar02.hpp"
+
+static float ar02DistanceFalloff[64];
+static float ar02FirstKernel[64];
+static float ar02SecondKernel[64];
+static AreaPigeon areaPigeons1[10];
+static int ar02InitFlag;
+
+void AreaMain(unsigned int startParameters)
+{
+    Vector3 pigeonOrigin;
+    Vector3 waveColour;
+    void *firstKernel;
+    void *secondKernel;
+    pigeonOrigin.x = 236.25f;
+    pigeonOrigin.y = 100.325f;
+    pigeonOrigin.z = 430.0f;
+    ar02InitFlag = 1;
+    if (FTBL.EV_GetShenmueFlag(255))
+        AreaCleanup(1);
+    else
+        AreaCleanup(0);
+    LoadRobBagPackage();
+    FTBL.SetMapControlStatusFlag(0, 1);
+    QueueAreaPigeons(&pigeonOrigin, 4.5f, areaPigeons1, AR02_FIRST_PIGEON, 10);
+    ApplyAR02Gate();
+    PrepareAR02NpcState();
+    areaClearAreaEntities();
+    FTBL.EV_SetPlayerFlag(12, 2228, 0);
+    FTBL.GenerateFFT(2.0f);
+    FTBL.fft_fill_dist(FTBL.fft_fill_krn(10.0f, FTBL.generate_distance_falloff_row_major(2.082f, ar02DistanceFalloff)));
+    firstKernel = FTBL.fft_fill_krn(0.0564f, FTBL.generate_distance_falloff_kernel_8x8(0.94f, ar02FirstKernel));
+    secondKernel = FTBL.fft_fill_krn(0.035f, FTBL.generate_distance_falloff_kernel_8x8(0.952f, ar02SecondKernel));
+    FTBL.fft_bins_load_pairwise_tables(firstKernel, secondKernel);
+    FTBL.FFTUtil(0.001f, 0.001f);
+    waveColour.x = 0.0598f;
+    waveColour.y = 0.9768f;
+    waveColour.z = 0.2054f;
+    FTBL.set_lighting_flags(0.1f, &waveColour);
+    FTBL.HLib_EnqueueTaskWithoutParameter((HLibTaskCallback)AR02WaveCallback, 3, 2, TASK_AR02_WAVE);
+    FTBL.SetMapModelVertexShaderType(15, 1);
+    FTBL.SetMapModelVertexShaderType(16, 1);
+    AR02WaveCallback();
+    FTBL.HLib_EnqueueTaskWithoutParameter(AR02SpringCallback, 3, 2, TASK_AR02_SPRING);
+    ar02InitFlag = 0;
+    if (FTBL.EV_GetShenmueFlag(964))
+        FTBL.ToggleFlagOnFieldEntity(AR02_ARMW, 0);
+    FTBL.flddSetPointFlagOnGrid(AR02_BTC1, 0);
+}
+
+void AreaCleanup(int afternoon)
+{
+    FTBL.SetMapModelDataDefaultVertexShader();
+    if (afternoon) {
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+        FTBL.PushGlobalLightingProgram();
+        FTBL.CheckIsArgEquZero(1, 1);
+        FTBL.SetObjectFlagByIndex(12, 1);
+        FTBL.SetObjectFlagByIndex(13, 0);
+    } else {
+        FTBL.ReinitializeLights(1);
+        FTBL.SetLightFlagForIndex(0, 2);
+        FTBL.SetLightEntryIndex(0, 1);
+        FTBL.SetObjectFlagByIndex(12, 0);
+        FTBL.SetObjectFlagByIndex(13, 1);
+    }
+    if (ar02InitFlag == 0)
+        LoadAR02Audio(afternoon);
+}
+
+void LoadAR02Audio(int afternoon)
+{
+    if (FTBL.EV_GetShenmueFlag(211))
+        FTBL.EV_LoadAudio("AR02_000", 2);
+    else if (FTBL.EV_GetShenmueFlag(212))
+        FTBL.EV_LoadAudio("AR02_000", 3);
+    else if (FTBL.EV_GetShenmueFlag(127))
+        FTBL.EV_LoadAudio("0061A000", 0);
+    else if (FTBL.EV_GetShenmueFlag(132))
+        FTBL.EV_LoadAudio("0061A000", 1);
+    else if (afternoon)
+        FTBL.EV_LoadAudio("AR02_000", 1);
+    else
+        FTBL.EV_LoadAudio("AR02_000", 0);
+}
+
+void LoadRobBagPackage(void)
+{
+    if (FTBL.EV_GetShenmueFlag(139)) {
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"ROBBAG", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    }
+}
+
+void ApplyAR02Gate(void)
+{
+    if (FTBL.EV_GetShenmueFlag(143)) {
+        FTBL.SetObjectFlagByIndex(19, 1);
+        FTBL.ToggleFlagOnFieldEntity(AR02_GATE1, 1);
+        FTBL.ToggleFlagOnFieldEntity(AR02_GATE2, 1);
+    } else {
+        FTBL.SetObjectFlagByIndex(19, 0);
+        FTBL.ToggleFlagOnFieldEntity(AR02_GATE1, 0);
+        FTBL.ToggleFlagOnFieldEntity(AR02_GATE2, 0);
+    }
+}
+
+void PrepareAR02NpcState(void)
+{
+    int npcState = 7;
+    if (FTBL.EV_GetShenmueFlag(9))
+        npcState = 0;
+    if (FTBL.EV_GetShenmueFlag(10))
+        npcState = 1;
+    if (FTBL.EV_GetShenmueFlag(13))
+        npcState = 4;
+    if (FTBL.EV_GetShenmueFlag(14))
+        npcState = 5;
+    if (FTBL.EV_GetShenmueFlag(27))
+        npcState = 6;
+    if (FTBL.EV_GetShenmueFlag(734))
+        FTBL.LoadNPCRoute("NPC_AR02.BIN");
+    if (FTBL.EV_GetShenmueFlag(127) || FTBL.EV_GetShenmueFlag(132))
+        FTBL.EventFunction857(0);
+    if (npcState != 7) {
+        FTBL.EV_NPC_NewLoadSw_0(0);
+        FTBL.EV_ResetFreeTalkFlags();
+        FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0012E.MOT");
+        FTBL.EV_NPC_NewLoadSw_0(1);
+    }
+}
+
+void AR02WaveCallback(void)
+{
+    Vector3 position;
+    EventDateTime dateTime;
+    int applyFrame;
+    unsigned char *weather;
+    unsigned int *colours;
+    float diffuseR, diffuseG, diffuseB, specularR, specularG, specularB, specularPower;
+    void *model;
+    if (FTBL.EV_GetPlayerFlag(11, 2228))
+        return;
+    applyFrame = ar02InitFlag;
+    FTBL.GetCurrentDateTime((DateTime *)&dateTime);
+    if ((dateTime.minute & 7) == 0 && dateTime.second == 0)
+        applyFrame = 1;
+    if (!applyFrame) {
+        FTBL.GetCharaPosition(AR02_RYO, 0xffffffffU, &position, 0x40000000);
+        if (position.x > 244.0f && (position.z < 446.0f || position.x > 249.0f))
+            return;
+    }
+    weather = (unsigned char *)FTBL.GetInterpolatedWeatherValues();
+    colours = (unsigned int *)(weather + 52);
+    diffuseR = (unsigned char)(colours[7] >> 16) / 255.0f;
+    diffuseG = (unsigned char)(colours[7] >> 8) / 255.0f;
+    diffuseB = (unsigned char)colours[7] / 255.0f;
+    specularR = (unsigned char)(colours[5] >> 16) / 255.0f;
+    specularG = (unsigned char)(colours[5] >> 8) / 255.0f;
+    specularB = (unsigned char)colours[5] / 255.0f;
+    diffuseR *= 0.3607f;
+    diffuseG *= 0.3725f;
+    diffuseB *= 0.4352f;
+    specularR *= 0.2549f;
+    specularG *= 0.38f;
+    specularB *= 0.2862f;
+    specularPower = 42.54f;
+    FTBL.BuildLightingTableFrom(1, 1.0f, 1.0f, diffuseR, diffuseG, diffuseB, specularR, specularG, specularB, specularPower, 1.0f);
+    FTBL.CalculateFieldCollision(*(void **)(*(char **)((char *)FTBL.GetMapModelRoot(15) + 44) + 40));
+    model = FTBL.GetMapModelRoot(16);
+    FTBL.TransformFieldCollisionForModel(model);
+    FTBL.nlSetTexanimUV(0.00015f, 0.0001f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(16));
+}
+
+void AR02SpringCallback(void *taskData)
+{
+    FTBL.nlSetTexanimUV(0.0f, 0.055f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(17));
+    FTBL.nlSetTexanimUV(0.0f, 0.027f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(18));
+}
+#else
 #include "s2/areas/area_ar02.hpp"
 #include "s2/areas/area_entities.hpp"
 #include "s2/areas/area_pigeons.hpp"
@@ -249,3 +433,4 @@ void AreaAR02Cleanup(std::int32_t afternoon, std::uint32_t) {
 const GameplayAreaDefinition areaAR02GameplayDefinition{SHEN_NAME(AR02), 0, AreaAR02Init, AreaAR02Main, AreaAR02Cleanup};
 
 } // namespace shenmue::s2::areas
+#endif

@@ -1,0 +1,48 @@
+--- a/gcc/config/i386/xm-i386.h
++++ b/gcc/config/i386/xm-i386.h
+@@ -30,7 +30,7 @@
+ #define HOST_BITS_PER_CHAR 8
+ #define HOST_BITS_PER_SHORT 16
+ #define HOST_BITS_PER_INT 32
+-#define HOST_BITS_PER_LONG 32
++#define HOST_BITS_PER_LONG (__SIZEOF_LONG__ * 8)
+ #define HOST_BITS_PER_LONGLONG 64
+ 
+ /* Arguments to use with `exit'.  */
+--- a/include/obstack.h
++++ b/include/obstack.h
+@@ -417,7 +417,7 @@
+ ({ struct obstack *__o = (OBSTACK);					\
+    if (__o->next_free + sizeof (void *) > __o->chunk_limit)		\
+      _obstack_newchunk (__o, sizeof (void *));				\
+-   *((void **)__o->next_free)++ = ((void *)datum);			\
++   *((void **)__o->next_free) = ((void *)datum); __o->next_free += sizeof (void *);			\
+    (void) 0; })
+ 
+ # define obstack_int_grow(OBSTACK,datum)				\
+@@ -425,11 +425,11 @@
+ ({ struct obstack *__o = (OBSTACK);					\
+    if (__o->next_free + sizeof (int) > __o->chunk_limit)		\
+      _obstack_newchunk (__o, sizeof (int));				\
+-   *((int *)__o->next_free)++ = ((int)datum);				\
++   *((int *)__o->next_free) = ((int)datum); __o->next_free += sizeof (int);				\
+    (void) 0; })
+ 
+-# define obstack_ptr_grow_fast(h,aptr) (*((void **) (h)->next_free)++ = (void *)aptr)
+-# define obstack_int_grow_fast(h,aint) (*((int *) (h)->next_free)++ = (int) aint)
++# define obstack_ptr_grow_fast(h,aptr) (*((void **) (h)->next_free) = (void *)aptr, (h)->next_free += sizeof (void *))
++# define obstack_int_grow_fast(h,aint) (*((int *) (h)->next_free) = (int) aint, (h)->next_free += sizeof (int))
+ 
+ # define obstack_blank(OBSTACK,length)					\
+ __extension__								\
+@@ -536,8 +536,8 @@
+    ? (_obstack_newchunk ((h), sizeof (int)), 0) : 0),			\
+   (*((int *) (((h)->next_free+=sizeof(int))-sizeof(int))) = ((int) datum)))
+ 
+-# define obstack_ptr_grow_fast(h,aptr) (*((char **) (h)->next_free)++ = (char *) aptr)
+-# define obstack_int_grow_fast(h,aint) (*((int *) (h)->next_free)++ = (int) aint)
++# define obstack_ptr_grow_fast(h,aptr) (*((char **) (h)->next_free) = (char *) aptr, (h)->next_free += sizeof (char *))
++# define obstack_int_grow_fast(h,aint) (*((int *) (h)->next_free) = (int) aint, (h)->next_free += sizeof (int))
+ 
+ # define obstack_blank(h,length)					\
+ ( (h)->temp = (length),							\

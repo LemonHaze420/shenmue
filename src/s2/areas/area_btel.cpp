@@ -1,3 +1,323 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_btel.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void AreaBTELMain(void *argument)
+{
+    HLibTask *task;
+    BtelBattleWork *work;
+    FTBL.SetPlayerControlEnabled(0);
+    task = FTBL.HLib_EnqueueTaskWithParameter(Battle_Callback, 4, 11, sizeof(BtelBattleWork), TASK_EVNT);
+    work = (BtelBattleWork *)FTBL.HLib_GetTaskParameter(task);
+    work->self = task;
+    work->phase = 0;
+    work->characters = Queue_EVT_AT_ReadChr(task, btelCharacters);
+    work->delay = 0;
+    work->retries = 0;
+    PreparePackage();
+    FTBL.SetRenderClockAndCompassTo(1);
+    EventDebugRegister(BTEL_DEBUG_ID, BtelDebugExitCallback, work, 36000);
+}
+#elif defined(SHENMUE_EVENT_BTEL_BATTLE)
+shen_name btelCharacters[] = {BTEL_RYO, BTEL_BF1, BTEL_BF7, BTEL_BF8, BTEL_KF5, BTEL_BF9, BTEL_KR3, EVENT_CHARACTER_INVALID};
+Vector3 btelRyoPosition = {245.56f, 164.8f, 119.24f};
+Vector3 btelBf1Position = {248.18f, 164.8f, 118.83f};
+Vector3 btelBf7Position = {247.25f, 164.8f, 120.96f};
+Vector3 btelBf8Position = {248.05f, 164.8f, 117.6f};
+Vector3 btelKf5Position = {245.72f, 164.8f, 117.73f};
+Vector3 btelBf9Position = {248.5f, 164.8f, 120.19f};
+Vector3 btelKr3Position = {245.38f, 164.8f, 120.55f};
+Vector3i btelRyoRotation = {0, 52308, 0};
+Vector3i btelBf1Rotation = {0, 16384, 0};
+Vector3i btelBf7Rotation = {0, 5679, 0};
+Vector3i btelBf8Rotation = {0, 23185, 0};
+Vector3i btelKf5Rotation = {0, 28253, 0};
+Vector3i btelBf9Rotation = {0, 12743, 0};
+Vector3i btelKr3Rotation = {0, 1092, 0};
+Vector3 btelExitPosition = {248.69f, 164.8f, 118.81f};
+Vector3i btelExitRotation = {0, 50112, 0};
+
+void PreparePackage(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"BTEL", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0309A000");
+    FTBL.EV_ControlPackageResources(2, 4, "BTEL", 0, 0);
+    FTBL.EV_LoadAudio("0309A000", 0);
+    FTBL.EV_spmBeginSampleExecute(0);
+}
+
+void BtelDebugExitCallback(void *data)
+{
+    Exit((BtelBattleWork *)data);
+}
+
+void Exit(BtelBattleWork *work)
+{
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(BTEL_RYO), 0);
+    FTBL.flddSetPointFlagOnGrid(AREA_BTEL, 0);
+    FTBL.flddSetPointFlagOnGrid(BTEL_DEFAULT_GRID, 1);
+    FTBL.EV_EnsureCharacterDraw(BTEL_PROP_A);
+    FTBL.EV_DisableCharacterDisplay(BTEL_PROP_A);
+    FTBL.EV_EnsureCharacterDraw(BTEL_PROP_B);
+    FTBL.EV_DisableCharacterDisplay(BTEL_PROP_B);
+    ET_AT_KillWork(work->characters);
+    EventDebugUnregister(BTEL_DEBUG_ID);
+    FTBL.EV_ControlPackageResources(0, 6, "BTEL", 0, 0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    FTBL.EV_HLKillOtherHierarchyTask(work->self);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.SetPlayerControlEnabled(1);
+    FTBL.HLib_DestroyCurrentEventTask();
+    FTBL.scenFreeEvent("BTEL.EV3");
+}
+
+void Battle_Callback(void *data)
+{
+    BtelBattleWork *work = (BtelBattleWork *)data;
+    unsigned char index;
+    if (work->delay)
+        work->delay--;
+    else
+        switch (work->phase) {
+        case 0:
+            if (FTBL.NpcWait())
+                break;
+            work->phase = 1;
+        case 1:
+            FTBL.shenStartFGST(10, 10, 0, 0);
+            FTBL.vfmDispatchControl(2, 0, "BTEL", 1);
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(BTEL_RYO), 0, 0, 0, work->retries * 100 + 200, 0);
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(BTEL_BF1), 0, 1, 1, 120, 2);
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(BTEL_BF7), 0, 1, 1, 80, 3);
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(BTEL_BF8), 0, 1, 1, 60, 4);
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(BTEL_KF5), 0, 1, 1, 60, 2);
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(BTEL_BF9), 0, 1, 1, 80, 3);
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(BTEL_KR3), 0, 1, 1, 100, 4);
+            FTBL.LoadBlurModelForCharacter_0(BTEL_RYO, "RYO_B.MT7", 1.0f);
+            FTBL.SetDoorSubjectEnabled(BTEL_LIFT, 0);
+            StartBtelAuthor();
+            FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+            FTBL.EV_spmBeginSampleExecute(0);
+            work->phase = 2;
+            break;
+        case 2:
+            if (FTBL.EV_authSceneCtrl(-1))
+                work->phase = 3;
+            break;
+        case 3:
+            if (!FTBL.EV_authSceneCtrl(-1))
+                work->phase = 4;
+            break;
+        case 4:
+            FTBL.SetLoadingBusy();
+            FTBL.SetDoorSubjectEnabled(BTEL_LIFT, 1);
+            FTBL.EV_AT_SetPos(BTEL_RYO, 0x78000000, &btelRyoPosition);
+            FTBL.EV_AT_SetPos(BTEL_BF1, 0x78000000, &btelBf1Position);
+            FTBL.EV_AT_SetPos(BTEL_BF7, 0x78000000, &btelBf7Position);
+            FTBL.EV_AT_SetPos(BTEL_BF8, 0x78000000, &btelBf8Position);
+            FTBL.EV_AT_SetPos(BTEL_KF5, 0x78000000, &btelKf5Position);
+            FTBL.EV_AT_SetPos(BTEL_BF9, 0x78000000, &btelBf9Position);
+            FTBL.EV_AT_SetPos(BTEL_KR3, 0x78000000, &btelKr3Position);
+            FTBL.EV_AT_SetAngY_0(BTEL_RYO, 0x78000000, &btelRyoRotation, 0);
+            FTBL.EV_AT_SetAngY_0(BTEL_BF1, 0x78000000, &btelBf1Rotation, 0);
+            FTBL.EV_AT_SetAngY_0(BTEL_BF7, 0x78000000, &btelBf7Rotation, 0);
+            FTBL.EV_AT_SetAngY_0(BTEL_BF8, 0x78000000, &btelBf8Rotation, 0);
+            FTBL.EV_AT_SetAngY_0(BTEL_KF5, 0x78000000, &btelKf5Rotation, 0);
+            FTBL.EV_AT_SetAngY_0(BTEL_BF9, 0x78000000, &btelBf9Rotation, 0);
+            FTBL.EV_AT_SetAngY_0(BTEL_KR3, 0x78000000, &btelKr3Rotation, 0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BTEL_RYO), 0x132, 0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BTEL_BF1), 0xe30, 0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BTEL_BF7), 0xe34, 0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BTEL_BF8), 0xe38, 0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BTEL_KF5), 0xe30, 0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BTEL_BF9), 0xe34, 0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BTEL_KR3), 0xe38, 0);
+            FTBL.vfCopyPosFromEntity(0, 0, 244.37f, 121.8f, 6.8f);
+            FTBL.EV_LoadCutsceneFromCurrentScene("0309E000");
+            FTBL.EV_LoadAudio("0309E000", 0);
+            EVT_AT_SetCam(1000, BTEL_RYO, BTEL_RYO, 0, 0, 0);
+            FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+            FTBL.EV_spmBeginSampleExecute(0);
+            work->phase = 5;
+            break;
+        case 5:
+            if (FTBL.camCtrlCheckIsEventCam())
+                break;
+            FTBL.FinishLoading();
+            for (index = 0; btelCharacters[index] != EVENT_CHARACTER_INVALID; index++) {
+                FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(btelCharacters[index]), 1);
+                FTBL.SetScenarioCharacterType(btelCharacters[index], 0);
+                FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(btelCharacters[index]), 0);
+            }
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTEL_RYO), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTEL_RYO), 0, 0, 0);
+            FTBL.EV_DisableCharacterDisplay(BTEL_PROP_A);
+            FTBL.EV_ToggleCharacterFlag(BTEL_PROP_A);
+            FTBL.EV_DisableCharacterDisplay(BTEL_PROP_B);
+            FTBL.EV_ToggleCharacterFlag(BTEL_PROP_B);
+            FTBL.flddSetPointFlagOnGrid(BTEL_DEFAULT_GRID, 0);
+            FTBL.flddSetPointFlagOnGrid(AREA_BTEL, 1);
+            FTBL.EV_vfBattleUtil(3, 0x800, 1);
+            FTBL.vfmQueueFightStart(7, 2, 1.0f, 1, -1);
+            FTBL.vfmDispatchControl(8, 0, (const void *)12, 1);
+            work->phase = 6;
+            break;
+        case 6:
+            if (FTBL.IsFightActive())
+                break;
+            work->result = FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(BTEL_RYO));
+            FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+            FTBL.spmFadeOut(0);
+            if (work->result == 3) {
+                work->phase = 9;
+                work->delay = 30;
+            } else {
+                FTBL.Queue_ST_LoadTitleFadeIn(BTEL_RETRY_TITLE);
+                work->phase = 7;
+                work->delay = 60;
+            }
+            break;
+        case 7:
+            FTBL.ST_LoadTitleFade();
+            work->phase = 8;
+            work->delay = 30;
+            break;
+        case 8:
+            FTBL.EV_LoadCutsceneFromCurrentScene("0309A000");
+            FTBL.EV_LoadAudio("0309A000", 0);
+            work->phase = 1;
+            if (++work->retries > 10)
+                work->retries = 10;
+            break;
+        case 9:
+            FTBL.EV_AT_SetPos(BTEL_RYO, 0x78000000, &btelExitPosition);
+            FTBL.EV_AT_SetAngY_0(BTEL_RYO, 0x78000000, &btelExitRotation, 0);
+            work->phase = 10;
+            work->delay = 5;
+            break;
+        case 10:
+            Exit(work);
+            break;
+        }
+}
+#else
+shen_name btelAuthorCharacters[] = {BTEL_BF1, BTEL_BF7, BTEL_BF8, BTEL_KF5, BTEL_BF9, BTEL_KR3, EVENT_CHARACTER_INVALID};
+BtelLiftFrame btelLiftFrames[] = {{BTEL_LIFT, 0, 0}, {BTEL_LIFT, 30, 1}, {BTEL_LIFT, 60, 2}, {BTEL_LIFT, 90, 3}, {BTEL_LIFT, 120, 4},
+    {BTEL_LIFT, 240, 4}, {BTEL_LIFT, 270, 5}, {BTEL_LIFT, 300, 6}, {BTEL_LIFT, 330, 7}, {BTEL_LIFT, 360, 8}, {BTEL_LIFT, 410, 16},
+    {BTEL_LIFT, 440, 17}, {BTEL_LIFT, 470, 18}, {EVENT_CHARACTER_INVALID, 0, 0}};
+
+void StartBtelAuthor(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(AuthorMain_Callback, 4, 11, sizeof(BtelAuthorWork), TASK_EVNT);
+    BtelAuthorWork *author = (BtelAuthorWork *)FTBL.HLib_GetTaskParameter(task);
+    author->self = task;
+    author->phase = 1;
+    author->author = BTEL_AUTHOR;
+    PrepareBtelAuthor();
+}
+
+void AuthorMain_Callback(void *data)
+{
+    BtelAuthorWork *owner = (BtelAuthorWork *)data;
+    switch (owner->phase) {
+    case 1:
+        StartBtelAuthorLoop(owner);
+        break;
+    case 3:
+        FinishBtelAuthor(owner);
+        break;
+    }
+}
+
+void StartBtelAuthorLoop(BtelAuthorWork *owner)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(AuthorLoop_Callback, 4, 11, sizeof(BtelAuthorWork *), TASK_EVNT);
+    *(BtelAuthorWork **)FTBL.HLib_GetTaskParameter(task) = owner;
+    FTBL.EV_spmBeginSampleExecute(0);
+    HideBtelCharacters();
+    FTBL.adfsSetCameraIdxForChara(BTEL_BF1, BTEL_CAMERA_DUMMY);
+    FTBL.EV_authSceneCtrl(owner->author);
+    owner->phase = 2;
+}
+
+void AuthorLoop_Callback(void *data)
+{
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    short index;
+    int loaded;
+    for (index = 0; btelLiftFrames[index].lift != EVENT_CHARACTER_INVALID; index++)
+        if (btelLiftFrames[index].frame == frame)
+            FTBL.SetAnimatedObjectState(btelLiftFrames[index].lift, btelLiftFrames[index].floor);
+    loaded = FTBL.EV_authSceneCtrl(-1);
+    if (!loaded) {
+        FTBL.SetAnimatedObjectState(BTEL_LIFT, 18);
+        ShowBtelCharacters();
+        (*(BtelAuthorWork **)data)->phase = loaded;
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void PrepareBtelAuthor(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0309");
+}
+
+void FinishBtelAuthor(BtelAuthorWork *owner)
+{
+    FTBL.EV_FreeAuthorPak(0, "0309");
+    FTBL.HLib_DestroyTask(owner->self);
+}
+
+void HideBtelCharacters(void)
+{
+    int index;
+    HideBtelCharacter(BTEL_RYO);
+    HideBtelProp(BTEL_PROP_A);
+    HideBtelProp(BTEL_PROP_B);
+    for (index = 0; btelAuthorCharacters[index] != EVENT_CHARACTER_INVALID; index++)
+        HideBtelCharacter(btelAuthorCharacters[index]);
+}
+
+void ShowBtelCharacters(void)
+{
+    int index;
+    ShowBtelCharacter(BTEL_RYO);
+    ShowBtelProp(BTEL_PROP_A);
+    ShowBtelProp(BTEL_PROP_B);
+    for (index = 0; btelAuthorCharacters[index] != EVENT_CHARACTER_INVALID; index++)
+        ShowBtelCharacter(btelAuthorCharacters[index]);
+}
+
+void HideBtelCharacter(shen_name name)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 0);
+}
+
+void ShowBtelCharacter(shen_name name)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 1);
+}
+
+void HideBtelProp(shen_name name)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(name, 0);
+}
+
+void ShowBtelProp(shen_name name)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(name, 1);
+}
+#endif
+#else
 #include "s2/areas/area_btel.hpp"
 #include "s2/pause.hpp"
 #include "s2/hand.hpp"
@@ -267,3 +587,4 @@ void AreaBTELMain(std::uintptr_t) {
 }
 const ScriptAreaDefinition areaBTELScriptDefinition{.areaId = SHEN_NAME(BTEL), .field04 = 0, .init = AreaBTELInit, .main = AreaBTELMain};
 } // namespace shenmue::s2::areas
+#endif

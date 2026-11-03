@@ -1,4 +1,10 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#define SHENMUE_EVENT_QABT 1
+#include "s2/areas/area_arbt.hpp"
+#else
+#pragma once
 #include "s2/areas/area_arbt.hpp"
 namespace shenmue::s2::areas {
 inline constexpr shen_name QABT_AREA{SHEN_NAME(QABT)}, QABT_AW2{SHEN_NAME(AW2_)}, QABT_RNP{SHEN_NAME(RNP_)};
@@ -78,3 +84,4 @@ std::int32_t QabtPayGoodJob(std::int32_t cash, std::int32_t crates);
 std::int32_t QabtPayAverageJob(std::int32_t cash, std::int32_t crates);
 std::int32_t QabtPayPoorJob(std::int32_t cash, std::int32_t crates);
 } // namespace shenmue::s2::areas
+#endif

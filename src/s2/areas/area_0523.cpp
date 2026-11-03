@@ -1,3 +1,233 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0523.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void Start0523(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0523, 4, 11, sizeof(AreaAuthorTaskParameter), TASK_EVNT);
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0523A.MOT");
+    parent->state = 1;
+    parent->selection = 0;
+    FTBL.EV_stepSetFlags(0xf1, 0);
+    FTBL.EV_stepSetFlags(0xda, 0);
+    Setup0523Waves();
+}
+#else
+
+static int colourWork0523[3];
+static int firstPlanetColour0523[4], secondPlanetColour0523[4], skyColour0523[4], cloudColour0523[4], fogColour0523[4];
+static float fogRed0523, fogGreen0523, fogBlue0523;
+
+void Update0523(void *parameter)
+{
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)parameter;
+    switch (parent->state) {
+    case 1:
+        Queue0523Author(parent);
+        break;
+    case 3:
+        Cleanup0523(parent);
+        break;
+    }
+}
+
+void Queue0523Author(AreaAuthorTaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0523Author, 4, 11, sizeof(AreaAuthorLoopTaskParameter), TASK_EVNT);
+    ((AreaAuthorLoopTaskParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+    FTBL.EV_spmBeginSampleExecute(0);
+    Setup0523Characters();
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void Update0523Author(void *parameter)
+{
+    AreaAuthorLoopTaskParameter *child = (AreaAuthorLoopTaskParameter *)parameter;
+
+    float blue = 0.0f, green = 0.0f, red = 0.0f;
+    unsigned int firstPlanet, secondPlanet, cloud, fog;
+    int frame = FTBL.EV_authSceneCtrl(-6);
+    switch (frame) {
+    case 1:
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.FreeWAIR();
+        FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+        FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+        FTBL.UpdateWeather();
+        break;
+    case 340:
+        FTBL.FreeWAIR();
+        FTBL.UpdateWeatherForMinute(0, 0, 60, 1.0f);
+        FTBL.UpdateWeather();
+        break;
+    case 692:
+        FTBL.UpdateWeatherForMinute(1, 0, 120, 0.1f);
+        break;
+    case 822:
+        FTBL.UpdateWeatherForMinute(1, 0, 130, 1.0f);
+        break;
+    }
+    if (frame == 460) {
+        unsigned int sky;
+        firstPlanet = FTBL.GetPlanetLayerColour(0, 0);
+        secondPlanet = FTBL.GetPlanetLayerColour(1, 0);
+        sky = FTBL.GetWeatherCloudOrSkyColour(0);
+        cloud = FTBL.GetWeatherCloudOrSkyColour(1);
+        red = FTBL.GetFogRed();
+        SHENMUE_EVENT_CLOBBER("r9");
+        green = FTBL.GetFogGreen();
+        blue = FTBL.GetFogBlue();
+        fog = FTBL.GetFogColour();
+        fogColour0523[0] = fog >> 24;
+        fogColour0523[1] = (fog & 0xff0000) >> 16;
+        fogColour0523[2] = (fog & 0xff00) >> 8;
+        fogColour0523[3] = fog & 0xff;
+        firstPlanetColour0523[0] = firstPlanet >> 24;
+        firstPlanetColour0523[1] = (firstPlanet & 0xff0000) >> 16;
+        firstPlanetColour0523[2] = (firstPlanet & 0xff00) >> 8;
+        firstPlanetColour0523[3] = firstPlanet & 0xff;
+        secondPlanetColour0523[0] = secondPlanet >> 24;
+        secondPlanetColour0523[1] = (secondPlanet & 0xff0000) >> 16;
+        secondPlanetColour0523[2] = (secondPlanet & 0xff00) >> 8;
+        secondPlanetColour0523[3] = secondPlanet & 0xff;
+        skyColour0523[0] = sky >> 24;
+        skyColour0523[1] = (sky & 0xff0000) >> 16;
+        skyColour0523[2] = (sky & 0xff00) >> 8;
+        skyColour0523[3] = sky & 0xff;
+        cloudColour0523[0] = cloud >> 24;
+        cloudColour0523[1] = (cloud & 0xff0000) >> 16;
+        cloudColour0523[2] = (cloud & 0xff00) >> 8;
+        cloudColour0523[3] = cloud & 0xff;
+    } else if (frame > 460 && frame < 550) {
+        int *work = colourWork0523;
+        int a, b, g, r, skyA, skyB, skyG, skyR;
+        unsigned int sky;
+        a = firstPlanetColour0523[0];
+        b = firstPlanetColour0523[1] + (80 - firstPlanetColour0523[1]) * (frame - 460) / 90;
+        g = firstPlanetColour0523[2] + (80 - firstPlanetColour0523[2]) * (frame - 460) / 90;
+        r = firstPlanetColour0523[3] + (80 - firstPlanetColour0523[3]) * (frame - 460) / 90;
+        a <<= 24;
+        firstPlanet = a + (b << 16) + (g << 8) + r;
+        work[0] = secondPlanetColour0523[0];
+        work[1] = secondPlanetColour0523[1] + (196 - secondPlanetColour0523[1]) * (frame - 460) / 90;
+        work[2] = secondPlanetColour0523[2] + (184 - secondPlanetColour0523[2]) * (frame - 460) / 90;
+        work[3] = secondPlanetColour0523[3] + (130 - secondPlanetColour0523[3]) * (frame - 460) / 90;
+        a = work[0] << 24;
+        secondPlanet = a + (work[1] << 16) + (work[2] << 8) + work[3];
+        FTBL.EV_SetPlanetLayerColours_Impl(firstPlanet, secondPlanet, 0);
+        FTBL.EV_SetPlanetLayerColours_Impl(firstPlanet, secondPlanet, 1);
+        skyA = skyColour0523[0];
+        skyB = skyColour0523[1] + (160 - skyColour0523[1]) * (frame - 460) / 90;
+        skyG = skyColour0523[2] + (160 - skyColour0523[2]) * (frame - 460) / 90;
+        skyR = skyColour0523[3] + (160 - skyColour0523[3]) * (frame - 460) / 90;
+        sky = (skyA << 24) + (skyB << 16) + (skyG << 8) + skyR;
+        work[0] = cloudColour0523[0];
+        work[1] = cloudColour0523[1] + (48 - cloudColour0523[1]) * (frame - 460) / 90;
+        work[2] = cloudColour0523[2] + (48 - cloudColour0523[2]) * (frame - 460) / 90;
+        work[3] = cloudColour0523[3] + (48 - cloudColour0523[3]) * (frame - 460) / 90;
+        a = work[0] << 24;
+        cloud = a + (work[1] << 16) + (work[2] << 8) + work[3];
+        FTBL.SetCloudAndSkyColour(sky, cloud);
+        work[0] = fogColour0523[0];
+        work[1] = fogColour0523[1] + (58 - fogColour0523[1]) * (frame - 460) / 90;
+        work[2] = fogColour0523[2] + (58 - fogColour0523[2]) * (frame - 460) / 90;
+        work[3] = fogColour0523[3] + (58 - fogColour0523[3]) * (frame - 460) / 90;
+        a = work[0] << 24;
+        fog = a + (work[1] << 16) + (work[2] << 8) + work[3];
+        fogRed0523 = red + (0.1f - red) * (frame - 460) / 90.0f;
+        fogGreen0523 = green + (100.0f - green) * (frame - 460) / 90.0f;
+        fogBlue0523 = blue + (0.68f - blue) * (frame - 460) / 90.0f;
+        FTBL.SetFogRed(fogRed0523);
+        FTBL.SetFogGreen(fogGreen0523);
+        FTBL.SetFogBlue(fogBlue0523);
+        FTBL.SetFogDistance(fog);
+        FTBL.ReinitFogTasks(1);
+    } else if (frame == 550) {
+        FTBL.SetCloudAndSkyColour(0xa0a0a0, 0x303030);
+        FTBL.EV_SetPlanetLayerColours_Impl(0x505042, 0xc4b882, 0);
+        FTBL.EV_SetPlanetLayerColours_Impl(0x505042, 0xc4b882, 1);
+        FTBL.SetFogRed(0.1f);
+        FTBL.SetFogGreen(100.0f);
+        FTBL.SetFogBlue(0.68f);
+        FTBL.SetFogDistance(0x3a3a3a);
+        FTBL.ReinitFogTasks(1);
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        Restore0523Characters();
+        child->parent->state = 3;
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void Setup0523Waves(void)
+{
+    unsigned char distance[256], second[256], first[256];
+    Vector3 colour;
+    void *secondKernel;
+    void *firstKernel;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0523");
+    FTBL.EV_SetWeatherInstruction(0x1800, 0);
+    FTBL.EV_SetWeatherInstruction(0x780, 0);
+    colour.x = 0.3f;
+    colour.y = 0.8f;
+    colour.z = 0.5f;
+    FTBL.GenerateFFT(0.5f);
+    FTBL.fft_fill_dist(FTBL.fft_fill_krn(3.92f, FTBL.generate_distance_falloff_row_major(1.29f, distance)));
+    secondKernel = FTBL.fft_fill_krn(0.06f, FTBL.generate_distance_falloff_kernel_8x8(1.035f, second));
+    firstKernel = FTBL.fft_fill_krn(0.073f, FTBL.generate_distance_falloff_kernel_8x8(0.564f, first));
+    FTBL.fft_bins_load_pairwise_tables((const float *)secondKernel, (const float *)firstKernel);
+    FTBL.FFTUtil(0.0f, 0.0047f);
+    FTBL.set_lighting_flags(0.1f, &colour);
+    FTBL.HLib_EnqueueTaskWithoutParameter(Update0523Waves, 3, 2, TASK_EVNT);
+}
+
+void Cleanup0523(AreaAuthorTaskParameter *parent)
+{
+    FTBL.EV_FreeAuthorPak(0, "0523");
+    FTBL.DeleteMotion(parent->motion);
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0523_RETURN_MAP, 0);
+}
+
+const shen_name area0523Props[] = {AREA_0523_a150, AREA_0523_a149, AREA_0523_a151, AREA_0523_a152, AREA_0523_a153, AREA_0523_a154, AREA_0523_a155,
+    AREA_0523_a156, AREA_0523_a157, AREA_0523_a158, AREA_0523_a159, AREA_0523_a160, AREA_0523_a161, AREA_0523_a162, AREA_0523_a179, AREA_0523_a178,
+    AREA_0523_a175, AREA_0523_a176, AREA_0523_a177, AREA_0523_a180, AREA_0523_a181, AREA_0523_a182, AREA_0523_a183, AREA_0523_a184, AREA_0523_a188,
+    AREA_0523_a189, AREA_0523_a186, AREA_0523_a185, AREA_0523_a187, AREA_0523_a174, INVALID_CHARACTER};
+
+void Setup0523Characters(void)
+{
+    int i;
+    HideAuthorCharacter(RYO_CHARACTER);
+    for (i = 0; area0523Props[i] != INVALID_CHARACTER; i++)
+        HideAuthorProp(area0523Props[i]);
+}
+
+void Restore0523Characters(void)
+{
+    int i;
+    ShowAuthorCharacter(RYO_CHARACTER);
+    for (i = 0; area0523Props[i] != INVALID_CHARACTER; i++)
+        ShowAuthorProp(area0523Props[i]);
+}
+
+#define SHENMUE_EVENT_AUTHOR_PROPS
+#include "s2/events/event_author_dc.h"
+
+void Update0523Waves(void *parameter)
+{
+    float scale = 1.0f;
+    FTBL.BuildLightingTableFrom(0, scale, scale, scale, scale, scale, scale, scale, scale, 50.0f, scale);
+    FTBL.ApplyFFTWaveformToStripTree(FTBL.GetMapModelRoot(1));
+    FTBL.nlSetTexanimUV(0.0f, 0.0047f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(0));
+}
+#endif
+#else
 #include "s2/areas/area_0523.hpp"
 #include "s2/author.hpp"
 #include "s2/sound_program.hpp"
@@ -141,3 +371,4 @@ void Update0523Author(void *parameter) {
 }
 const ScriptAreaDefinition area0523ScriptDefinition{.areaId = AREA_0523, .field04 = 0, .init = Initialize0523, .main = Start0523};
 } // namespace shenmue::s2::areas
+#endif

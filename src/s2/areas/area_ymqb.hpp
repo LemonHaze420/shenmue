@@ -1,5 +1,57 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_sleep_dc.h"
+
+#define YMQB_AREA SHEN_NAME4('Y', 'M', 'Q', 'B')
+#define YMQB_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define YMQB_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define YMQB_DUMMY SHEN_NAME4('D', 'U', 'M', 'R')
+#define YMQB_ANC SHEN_NAME4('A', 'N', 'C', '_')
+#define YMQB_A128 SHEN_NAME4('a', '1', '2', '8')
+#define YMQB_GEN SHEN_NAME4('G', 'E', 'N', '_')
+#define YMQB_SBO SHEN_NAME4('S', 'B', 'O', '_')
+#define YMQB_CHR SHEN_NAME4('C', 'H', 'R', '_')
+#define YMQB_SYE SHEN_NAME4('S', 'Y', 'E', '_')
+#define YMQB_DEFAULT_GRID SHEN_NAME4('0', '0', '0', '0')
+#define YMQB_FIGHT_GRID SHEN_NAME4('B', 'T', 'C', '1')
+#define YMQB_WIN_AREA SHEN_NAME4('W', 'T', '0', '0')
+#define YMQB_LOSE_AREA SHEN_NAME4('0', '0', '3', '9')
+#define YMQB_DEBUG_ID 3
+typedef struct YmqbFight {
+    HLibTaskCallback nextCallback;
+    int qteSucceeded;
+} YmqbFight;
+typedef struct YmqbWork {
+    EventReadCharactersWork *characters;
+    HLibTask *task;
+    void *motion;
+    int won;
+    YmqbFight fight;
+} YmqbWork;
+extern const shen_name ymqbCharacters[];
+void YmqbEntry(void);
+void YmqbMain(void);
+void YmqbDebugWinCallback(void *data);
+void YmqbEnd(YmqbWork *work);
+void YmqbResetFight(YmqbFight *fight);
+void YmqbStartCallback(void *data);
+void YmqbIntroCallback(void *data);
+void YmqbQteResultCallback(void *data);
+void YmqbWaitAuthorCallback(void *data);
+void YmqbStartBattleCallback(void *data);
+void YmqbBattleCallback(void *data);
+void YmqbWinAuthorCallback(void *data);
+void YmqbLoseAuthorCallback(void *data);
+void YmqbResultAuthorCallback(void *data);
+void YmqbEndCallback(void *data);
+void YmqbSetup(YmqbWork *work);
+void YmqbCleanup(YmqbWork *work);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/hlib.hpp"
@@ -51,3 +103,4 @@ void YmqbResultAuthorCallback(void *data);
 void YmqbEndCallback(void *data);
 extern const ScriptAreaDefinition ymqbScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

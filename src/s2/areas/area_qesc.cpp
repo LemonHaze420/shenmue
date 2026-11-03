@@ -1,3 +1,103 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_qesc.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void QescMain(void *argument)
+{
+    if (g_currentMap == AREA_QESC)
+        FTBL.SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
+    QueueClearNpcs(QueueQescEscapeEvent, argument);
+}
+#else
+const shen_name qescInvalidCharacter = EVENT_CHARACTER_INVALID;
+const int qescDefaultArguments[] = {0};
+static shen_name qescCharacters[] = {
+    QESC_RYO, SHEN_NAME4('Y', 'U', 'N', '_'), SHEN_NAME4('G', 'O', 'I', '_'), SHEN_NAME4('H', 'T', 'K', '_'), SHEN_NAME4('S', 'A', 'M', '_'),
+    SHEN_NAME4('L', 'L', 'Y', '_'), EVENT_CHARACTER_INVALID};
+
+void QueueQescEscapeEvent(void *argument)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(QescEscapeCallback, 4, 11, sizeof(QescEventWork), TASK_EVNT);
+    QescEventWork *work = (QescEventWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    if (argument)
+        work->arguments = argument;
+    else
+        work->arguments = &qescDefaultArguments[g_entryPoint];
+    InitializeQescEscape(work);
+    EventDebugRegister(QESC_DEBUG_ID, QescExitCallback, work, 2000000000);
+}
+
+void QescExitCallback(void *data)
+{
+    FinishQescEscape((QescEventWork *)data);
+}
+
+void FinishQescEscape(QescEventWork *work)
+{
+    ReleaseQescEscape(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    EventDebugUnregister(QESC_DEBUG_ID);
+    if (g_currentMap == AREA_QESC) {
+        FTBL.scenSetTaskFlags(6);
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+    }
+}
+
+void ResetQescEscapeState(int *state)
+{
+}
+
+void QescEscapeCallback(void *data)
+{
+    EventDebugCheck(QESC_DEBUG_ID, 4);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.AT_SetLocalBaseChara(QESC_DUMMY, QESC_RYO);
+    EVT_AT_SetPos(QESC_BASE, EVENT_CHARACTER_INVALID, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QESC_BASE, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(QESC_DUMMY, QESC_RYO, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QESC_DUMMY, QESC_RYO, 0.0f, 0);
+    FTBL.HLib_SetCurrentTaskTo(QescDormantCallback);
+}
+
+void QescDormantCallback(void *data)
+{
+}
+
+void FadeOutAndFinishQescEscape(QescEventWork *work)
+{
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+    FinishQescEscape(work);
+}
+
+void InitializeQescEscape(QescEventWork *work)
+{
+    float colour[4] = {0.0f, 0.25f, 0.24f, 0.23f};
+    const char *directory;
+    work->characters = Queue_EVT_AT_ReadChr(work->task, qescCharacters);
+    work->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
+    ResetQescEscapeState(&work->state);
+    directory = FTBL.Filepath_Gen(0);
+    FTBL.EV_ControlPackageResources(0, 0, directory, (int)"QESC", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "QESC", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "QESC", 0, 0);
+    if (g_currentMap == AREA_QESC) {
+        FTBL.SetWeatherUpdateEnabledTo(0);
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+        FTBL.PushGlobalLightingProgram();
+        FTBL.UpdateGlobalLighting(colour);
+    }
+}
+
+void ReleaseQescEscape(QescEventWork *work)
+{
+    FTBL.DeleteMotion(work->motion);
+    FTBL.EV_ControlPackageResources(0, 6, "QESC", 0, 0);
+    ET_AT_KillWork(work->characters);
+}
+#endif
+#else
 #include "s2/areas/area_qesc.hpp"
 #include "s2/scene_data.hpp"
 #include "s2/event_queued.hpp"
@@ -97,3 +197,4 @@ void QescDormantCallback(void *) {
 const ScriptAreaDefinition qescScriptDefinition{.areaId = AREA_QESC, .field04 = 0, .init = QescInit, .main = QescMain};
 
 } // namespace shenmue::s2
+#endif

@@ -1,4 +1,50 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/common/et_street_debug.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define SFKM_OD2 SHEN_NAME4('O', 'D', '2', '_')
+#define SFKM_AW1 SHEN_NAME4('A', 'W', '1', '_')
+#define SFKM_CHN SHEN_NAME4('C', 'H', 'N', '_')
+#define SFKM_PACKAGE SHEN_NAME4('Q', 'S', 'F', 'C')
+#define SFKM_BOOKIE_CAMERA SHEN_NAME4('d', 'u', 'm', 'A')
+#define SFKM_FIGHTER_CAMERA SHEN_NAME4('d', 'u', 'm', 'Q')
+#define SFKM_OMAKE_SCENE SHEN_NAME4('O', 'M', 'A', 'K')
+#define SFKM_QRON_SCENE SHEN_NAME4('Q', 'R', '0', '0')
+#define SFKM_INTRO_HAND_POSE 41
+#define SFKM_VICTORY_HAND_POSE 12
+#define SFKM_DEFEAT_HAND_POSE 40
+
+void SfkmMain(StreetFightStartParameters *start);
+void QueueNormal(StreetFightStartParameters *start);
+void PlaceNormal(StreetFightEventWork *work);
+void NormalDebugCallback(void *data);
+void CleanupNormalCallback(void *data);
+void MainCallback(void *data);
+void RetryBeginCallback(void *data);
+void RetryChoiceCallback(void *data);
+void RetryResetCallback(void *data);
+void RetryCancelCallback(void *data);
+int FirstIntroConversation(void *data);
+int RepeatIntroConversation(void *data);
+int AcceptConversation(void *data);
+int DeclineConversation(void *data);
+int InsufficientConversation(void *data);
+void BattleEntryCallback(void *data);
+void BattlePreEventCallback(void *data);
+void BattlePreInitCallback(void *data);
+void BattleStartCallback(void *data);
+short SelectFirstBattleVoice(void *data);
+short SelectSecondBattleVoice(void *data);
+void BattleWaitCallback(void *data);
+void BattleEndCallback(void *data);
+int VictoryConversation(void *data);
+int PostVictoryConversation(void *data);
+int DefeatConversation(void *data);
+int TimeoutConversation(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/street_fight_event.hpp"
 namespace shenmue::s2 {
@@ -91,3 +137,4 @@ inline std::int32_t SFKM_DEFEAT_HAND[19][3]{
 inline constexpr shen_name SFKM_RETRY_AREA{SHEN_NAME(OMAK)}, SFKM_RETURN_AREA{SHEN_NAME(QR00)};
 extern const ScriptAreaDefinition areaSfkmScriptDefinition;
 } // namespace shenmue::s2
+#endif

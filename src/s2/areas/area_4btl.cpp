@@ -1,3 +1,769 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_4btl.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+extern int btlArgument;
+
+void Start4Btl(void *argument)
+{
+    btlArgument = (int)argument;
+    FTBL.SetPlayerControlEnabled(0);
+    QueueClearNpcs(Queue4Btl, 0);
+}
+#else
+#if defined(SHENMUE_EVENT_4BTL_SCENE01)
+#define BTL4_ANCHOR_7_X 260.4f
+#define BTL4_ANCHOR_15 {247.8f, 100.2f, 379.8f, 0.0f}
+#else
+#define BTL4_ANCHOR_7_X 261.9f
+#define BTL4_ANCHOR_15 {245.8f, 100.2f, 379.8f, 90.0f}
+#endif
+static const Btl4Spot btlAnchors[] = {{237.3f, 98.35f, 463.0f, 0.0f}, {234.6f, 98.35f, 463.3f, 0.0f}, {234.8f, 98.35f, 467.6f, 0.0f},
+    {230.3f, 98.35f, 467.0f, 0.0f}, {241.0f, 98.35f, 466.0f, 0.0f}, {233.2f, 101.6f, 458.6f, 0.0f}, {233.1f, 101.6f, 454.0f, 0.0f},
+    {BTL4_ANCHOR_7_X, 100.9f, 418.8f, 270.0f}, {265.3f, 100.9f, 418.6f, 270.0f}, {270.2f, 100.9f, 414.5f, 0.0f}, {267.1f, 100.9f, 405.7f, 45.0f},
+    {259.3f, 101.0f, 400.0f, 0.0f}, {259.2f, 100.9f, 390.9f, 15.0f}, {258.1f, 100.9f, 384.8f, 0.0f}, {256.8f, 100.9f, 379.8f, 0.0f},
+    BTL4_ANCHOR_15, {238.8f, 100.2f, 377.4f, 60.0f}, {230.8f, 100.2f, 372.6f, 70.0f}, {221.9f, 100.2f, 367.6f, 30.0f},
+    {220.2f, 100.2f, 354.9f, 0.0f}, {220.8f, 100.2f, 341.8f, 0.0f}, {224.0f, 100.2f, 328.0f, 315.0f}, {237.6f, 100.2f, 324.0f, 270.0f},
+    {246.0f, 100.2f, 328.5f, 225.0f}, {249.6f, 100.2f, 341.8f, 180.0f}, {251.6f, 100.2f, 353.0f, 180.0f}, {251.5f, 100.2f, 362.6f, 180.0f},
+    {-1.0f, 0.0f, 0.0f, 0.0f}};
+static shen_name btlCharacters[] = {BTL4_RYO, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID};
+
+static void *btlMotion __attribute__((section(".bss")));
+static Vector3 btlChairPositions[BTL4_CHAIR_COUNT] __attribute__((section(".bss")));
+static Vector3i btlChairRotations[BTL4_CHAIR_COUNT] __attribute__((section(".bss")));
+int btlArgument __attribute__((section(".bss")));
+static unsigned int btlAnchor __attribute__((section(".bss")));
+
+void Queue4Btl(void *argument)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Btl4Callback, 6, 11, sizeof(Btl4Work), TASK_EVNT);
+    Btl4Work *work = (Btl4Work *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    work->phase = 0;
+    work->step = 0;
+    if (btlArgument < 2)
+        work->partner = BTL4_SAM;
+    else
+        work->partner = BTL4_LLY;
+    btlCharacters[1] = work->partner;
+    work->characters = Queue_EVT_AT_ReadChr(task, btlCharacters);
+    EventDebugRegister(BTL4_DEBUG_ID, Btl4DebugExitCallback, work, 10000);
+}
+
+int Btl4Initialize(Btl4Work *work)
+{
+    FTBL.EV_SetNewSceneIndex();
+    if (work->partner == BTL4_SAM) {
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"4NIN_SAM", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        FTBL.EV_ControlPackageResources(2, 2, "4NIN_SAM", 0, 0);
+        FTBL.EV_ControlPackageResources(2, 4, "4NIN_SAM", 0, 0);
+        FTBL.EV_FreeAuthorPak(1, "0082");
+    } else {
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"4NIN_LLY", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        FTBL.EV_ControlPackageResources(2, 2, "4NIN_LLY", 0, 0);
+        FTBL.EV_ControlPackageResources(2, 4, "4NIN_LLY", 0, 0);
+        FTBL.EV_FreeAuthorPak(1, "0083");
+    }
+    FTBL.CreateEventCharacter(3, 0, BTL4_DUMMY);
+    FTBL.CreateEventCharacter(3, 0, BTL4_CAMERA);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(BTL4_RYO));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(work->partner));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTL4_RYO), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTL4_RYO), 1, 1, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->partner), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->partner), 1, 1, 0);
+    FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(BTL4_RYO));
+    FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(work->partner));
+    FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(BTL4_RYO), 1);
+    FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(work->partner), 1);
+    Btl4ChairState(0);
+    EventDebugCheck(BTL4_DEBUG_ID, 4);
+    if (FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_A) || FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_B)) {
+        btlAnchor = FTBL.EV_GetPlayerFlag(15, 39);
+        work->phase = 3;
+    } else
+        work->phase = 1;
+    FTBL.SetScreenFilmFade(15, 255, 0, 0, 0, 0, 0, 0, 0);
+    return 0;
+}
+
+void Btl4DebugExitCallback(void *data)
+{
+    ((Btl4Work *)data)->phase = 6;
+    Btl4Finish((Btl4Work *)data);
+}
+
+void Btl4Finish(Btl4Work *work)
+{
+    EventDateTime date;
+    shen_name partner = work->partner;
+    int phase = work->phase;
+#if !defined(SHENMUE_EVENT_4BTL_SCENE01)
+    if (FTBL.DoesScenarioCharacterExist(BTL4_REN)) {
+        FTBL.EV_EnableCharacterDisplay(BTL4_REN);
+        FTBL.EV_EnsureCharacterDraw(BTL4_REN);
+    }
+    if (FTBL.DoesScenarioCharacterExist(BTL4_CLJ)) {
+        FTBL.EV_EnableCharacterDisplay(BTL4_CLJ);
+        FTBL.EV_EnsureCharacterDraw(BTL4_CLJ);
+    }
+    if (work->partner == BTL4_SAM) {
+        if (FTBL.DoesScenarioCharacterExist(BTL4_LLY)) {
+            FTBL.EV_EnableCharacterDisplay(BTL4_LLY);
+            FTBL.EV_EnsureCharacterDraw(BTL4_LLY);
+        }
+    } else {
+        if (FTBL.DoesScenarioCharacterExist(BTL4_SAM)) {
+            FTBL.EV_EnableCharacterDisplay(BTL4_SAM);
+            FTBL.EV_EnsureCharacterDraw(BTL4_SAM);
+        }
+    }
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(BTL4_RYO), 0);
+#endif
+    FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(BTL4_RYO));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(BTL4_RYO));
+    FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(work->partner));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(work->partner));
+    EventDebugUnregister(BTL4_DEBUG_ID);
+    FTBL.npcStartPlayEntityAtPos(partner, 0, 0, 0);
+#if !defined(SHENMUE_EVENT_4BTL_SCENE01)
+    FTBL.SetScenarioFollowCharacter(partner);
+#endif
+    ET_AT_KillWork(work->characters);
+    if (!FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_A) && !FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_B))
+        Btl4ChairState(1);
+    if (FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_A))
+        FTBL.EV_stepSetFlags(BTL4_FLAG_ROUTE_A, 0);
+    if (FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_B))
+        FTBL.EV_stepSetFlags(BTL4_FLAG_ROUTE_B, 0);
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    if ((date.hour > 2 || (date.hour == 2 && date.minute > 29)) && date.hour <= 8 && work->phase == 6) {
+        if (partner == BTL4_SAM)
+            FTBL.EV_stepSetFlags(129, 2);
+        else
+            FTBL.EV_stepSetFlags(130, 2);
+        FTBL.EV_scenQueueLoad(g_actNumber, BTL4_NEXT_AREA, 1);
+        return;
+    }
+    if (partner == BTL4_SAM) {
+        FTBL.EV_SetPlayerFlag(16, 39, 0);
+        if (work->phase == 6)
+            FTBL.EV_stepSetFlags(129, 0);
+        else
+            FTBL.EV_stepSetFlags(129, 1);
+    } else {
+        FTBL.EV_SetPlayerFlag(16, 39, btlAnchor);
+        if (work->phase == 6)
+            FTBL.EV_stepSetFlags(130, 0);
+        else
+            FTBL.EV_stepSetFlags(130, 1);
+        FTBL.DebugLogToFileRemoved("======================================\n");
+        FTBL.DebugLogToFileRemoved("    SetFreeTalkCounterNo = %d\n", btlAnchor);
+        FTBL.DebugLogToFileRemoved("======================================\n");
+    }
+    if (partner == BTL4_SAM) {
+        FTBL.EV_FreeAuthorPak(0, "0082");
+        FTBL.EV_ControlPackageResources(0, 6, "4NIN_SAM", 0, 0);
+    } else {
+        FTBL.EV_FreeAuthorPak(0, "0083");
+        FTBL.EV_ControlPackageResources(0, 6, "4NIN_LLY", 0, 0);
+    }
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    FTBL.scenFreeEvent("BTL4.EV3");
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.SetPlayerControlEnabled(1);
+    if (phase == 6) {
+        Btl4SelectAnchor(BTL4_RYO);
+#if !defined(SHENMUE_EVENT_4BTL_SCENE01)
+        if (partner == BTL4_LLY)
+            EVT_AT_SetAngY(BTL4_RYO, BTL4_RYO, 180.0f, 0);
+#endif
+        EVT_AT_SetMot(BTL4_RYO, 0xf003, 0.0f, 1.0f, 0x40000000U, 0);
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+        FTBL.LoadNPCRoute("NPC_AR02.BIN");
+#if defined(SHENMUE_EVENT_4BTL_SCENE01)
+        FTBL.CheckWarmStartNpcRoute(partner);
+        FTBL.ForceLoadNpc(partner);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        FTBL.SetScenarioFollowCharacter(partner);
+        FTBL.npcLockUnlock(partner);
+#endif
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    } else {
+#if !defined(SHENMUE_EVENT_4BTL_SCENE01)
+        EVT_AT_SetAngY(BTL4_RYO, BTL4_RYO, 90.0f, 0);
+#endif
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+        FTBL.EV_spmBeginSampleExecute(0);
+    }
+    FTBL.SetScenarioCharacterKillMode(BTL4_DUMMY, 1);
+    FTBL.SetScenarioCharacterKillMode(BTL4_CAMERA, 1);
+}
+
+void Btl4Callback(void *data)
+{
+    Btl4Work *work = (Btl4Work *)data;
+    int delay = 0;
+    switch (work->phase) {
+    case 0:
+        delay = Btl4Initialize(work);
+        break;
+    case 1:
+        delay = Btl4Intro(work);
+        break;
+    case 2:
+        delay = Btl4RunFight(work);
+        break;
+    case 3:
+        delay = Btl4Won(work);
+        break;
+    case 4:
+        delay = Btl4Lost(work);
+        break;
+    case 5:
+        Btl4Finish(work);
+        break;
+    case 6:
+        Btl4Finish(work);
+        break;
+    }
+    if (delay > 0)
+        FTBL.HLib_SetupTaskDelay(delay);
+}
+
+int Btl4RunFight(Btl4Work *work)
+{
+    int delay = 0;
+    shen_name partner;
+    switch (work->step) {
+    case 0:
+        EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+        btlMotion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "REN.MOT");
+        partner = work->partner;
+#if defined(SHENMUE_EVENT_4BTL_SCENE01)
+        if (partner == BTL4_SAM)
+            Btl4SetupSamFight(partner);
+        else
+            Btl4SetupLlyFight(work->partner);
+#else
+        if (partner == BTL4_SAM) {
+            Btl4SetupSamFight(partner);
+            FTBL.EV_vfBattleUtil(8, partner, 1);
+        } else
+            Btl4SetupLlyFight(work->partner);
+#endif
+        EVT_AT_SetAngY(work->partner, BTL4_RYO, 180.0f, 0);
+        if (work->partner == BTL4_SAM)
+            FTBL.vfCopyPosFromEntity(1, FTBL.ctrlGetCharaByName(BTL4_RYO), 0.0f, 0.0f, 5.0f);
+        else if (btlAnchor == 12)
+            FTBL.vfCopyPosFromEntity(0, 0, 259.74f, 388.47f, 4.0f);
+#if !defined(SHENMUE_EVENT_4BTL_SCENE01)
+        else if (btlAnchor == 14)
+            FTBL.vfCopyPosFromEntity(1, FTBL.ctrlGetCharaByName(BTL4_RYO), 0.0f, 0.0f, 3.8f);
+#endif
+        else if (btlAnchor == 11) {
+            FTBL.vfCopyPosFromEntity(0, 0, 260.4f, 399.1f, 5.0f);
+            FTBL.flddSetPointFlagOnGrid(BTL4_GRID, 1);
+            FTBL.flddSetPointFlagOnGrid(BTL4_PROP_GRID, 0);
+            FTBL.flddSetPointFlagOnGrid(BTL4_DEFAULT_GRID, 0);
+        } else
+            FTBL.vfCopyPosFromEntity(1, FTBL.ctrlGetCharaByName(BTL4_RYO), 0.0f, 0.0f, 5.0f);
+#if !defined(SHENMUE_EVENT_4BTL_SCENE01)
+        FTBL.EV_vfBattleUtil(1, 2, 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(BTL4_RYO), 1);
+        FTBL.SetScenarioCharacterType(BTL4_RYO, 0);
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(BTL4_RYO), 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTL4_RYO), 0, 1, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTL4_RYO), 0, 0, 0);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(work->partner), 1);
+        FTBL.SetScenarioCharacterType(work->partner, 0);
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(work->partner), 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->partner), 0, 1, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->partner), 0, 0, 0);
+        FTBL.EV_vfBattleUtil(3, 0x800, 1);
+        if (FTBL.DoesScenarioCharacterExist(BTL4_REN)) {
+            FTBL.EV_DisableCharacterDisplay(BTL4_REN);
+            FTBL.EV_ToggleCharacterFlag(BTL4_REN);
+        }
+        if (FTBL.DoesScenarioCharacterExist(BTL4_CLJ)) {
+            FTBL.EV_DisableCharacterDisplay(BTL4_CLJ);
+            FTBL.EV_ToggleCharacterFlag(BTL4_CLJ);
+        }
+        if (work->partner == BTL4_SAM) {
+            if (FTBL.DoesScenarioCharacterExist(BTL4_LLY)) {
+                FTBL.EV_DisableCharacterDisplay(BTL4_LLY);
+                FTBL.EV_ToggleCharacterFlag(BTL4_LLY);
+            }
+        } else {
+            if (FTBL.DoesScenarioCharacterExist(BTL4_SAM)) {
+                FTBL.EV_DisableCharacterDisplay(BTL4_SAM);
+                FTBL.EV_ToggleCharacterFlag(BTL4_SAM);
+            }
+        }
+#endif
+        FTBL.vfmQueueFightStart(2, 99, 1.0f, 0, -1);
+        work->step++;
+        break;
+    case 1:
+        if (!FTBL.IsFightActive()) {
+            FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+            delay = 30;
+            work->step++;
+        }
+        break;
+    case 2:
+        FTBL.DeleteMotion(btlMotion);
+        if (FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(BTL4_RYO)) == 3)
+            work->phase = 3;
+        else
+            work->phase = 4;
+        work->step = 0;
+#if defined(SHENMUE_EVENT_4BTL_SCENE01)
+        if (work->partner == BTL4_SAM)
+            EVT_AT_CharaDisp(BTL4_KEIB, 0, 1);
+        FTBL.EV_SetCharacterAlphaEnabled(work->partner, 0);
+        FTBL.EV_SetCharacterAlphaEnabled(BTL4_RYO, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTL4_RYO), 1, 0, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTL4_RYO), 1, 1, 0);
+#else
+        partner = work->partner;
+        if (partner == BTL4_SAM) {
+            EVT_AT_CharaDisp(BTL4_KEIB, 0, 1);
+            FTBL.EV_vfBattleUtil(8, partner, 0);
+        }
+        FTBL.EV_SetCharacterAlphaEnabled(work->partner, 0);
+        FTBL.EV_SetCharacterAlphaEnabled(BTL4_RYO, 0);
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(BTL4_RYO), 1);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTL4_RYO), 1, 0, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BTL4_RYO), 1, 1, 0);
+        FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(work->partner), 1);
+#endif
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->partner), 1, 0, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->partner), 1, 1, 0);
+        if (btlAnchor == 11) {
+            FTBL.flddSetPointFlagOnGrid(BTL4_GRID, 0);
+            FTBL.flddSetPointFlagOnGrid(BTL4_PROP_GRID, 1);
+            FTBL.flddSetPointFlagOnGrid(BTL4_DEFAULT_GRID, 1);
+        }
+        break;
+    }
+    return delay;
+}
+
+int Btl4Intro(Btl4Work *work)
+{
+    int delay;
+    if (work->partner == BTL4_SAM) {
+        if (btlArgument == 0)
+            delay = Btl4SamIntro(work);
+        else
+            delay = Btl4SamIntroRepeat(work);
+    } else {
+        if (btlArgument == 2)
+            delay = Btl4LlyIntroRepeat(work);
+        else
+            delay = Btl4LlyIntro(work);
+    }
+    work->phase = 2;
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, delay - 30);
+    return delay;
+}
+
+int Btl4SamIntroRepeat(Btl4Work *work)
+{
+    EVT_AT_SetPos(BTL4_RYO, EVENT_CHARACTER_INVALID, 236.0f, 98.5f, 465.3f, 0);
+    EVT_AT_SetAngY(BTL4_RYO, EVENT_CHARACTER_INVALID, 337.5f, 0);
+    EVT_AT_SetPos(BTL4_CAMERA, BTL4_RYO, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(BTL4_CAMERA, BTL4_RYO, 0.0f, 0);
+    EVT_AT_SetPos(work->partner, EVENT_CHARACTER_INVALID, 237.5f, 98.3f, 461.9f, 0);
+    EVT_AT_SetAngY(work->partner, EVENT_CHARACTER_INVALID, 180.0f, 0);
+    EVT_AT_SetMot(BTL4_RYO, 0xf003, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(work->partner, 6662, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetCam(1300, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 0);
+    EVT_AT_SetVoice("0082B004", 0);
+    EVT_AT_SetVoice("0082B002", 110);
+    return 200;
+}
+
+int Btl4LlyIntro(Btl4Work *work)
+{
+    btlAnchor = 26;
+    EVT_AT_SetPos(BTL4_RYO, EVENT_CHARACTER_INVALID, 252.1f, 100.3f, 363.9f, 0);
+    EVT_AT_SetAngY(BTL4_RYO, EVENT_CHARACTER_INVALID, 180.0f, 0);
+    EVT_AT_SetPos(work->partner, EVENT_CHARACTER_INVALID, 252.6f, 100.22f, 366.73f, 0);
+    EVT_AT_SetAngY(work->partner, EVENT_CHARACTER_INVALID, 270.0f, 0);
+    EVT_AT_SetPos(BTL4_CAMERA, BTL4_RYO, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(BTL4_CAMERA, BTL4_RYO, 0.0f, 0);
+    EVT_AT_SetMot(BTL4_RYO, 0xf003, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(work->partner, 6979, 0.0f, 0.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(work->partner, 6977, 0.0f, 1.0f, 0, 280);
+    EVT_AT_SetCam(1400, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 0);
+    EVT_AT_SetCam(1401, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 60);
+    EVT_AT_SetCam(1402, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 135);
+    EVT_AT_SetFaceLooks(BTL4_RYO, 0, 10, 1.0f, 0);
+    EVT_AT_SetFaceLooks(BTL4_RYO, 1, 7, 1.0f, 70);
+    EVT_AT_SetFaceLooks(work->partner, 1, 10, 1.0f, 0);
+    EVT_AT_SetFaceLooks(work->partner, 13, 10, 1.0f, 135);
+    EVT_AT_SetFaceLooks(work->partner, 1, 10, 1.0f, 370);
+    EVT_AT_SetPoint(work->partner, BTL4_RYO, 5, 3, 1, 0, 280, 0x80000000U);
+    EVT_AT_SetVoice("0083B001", 0);
+    EVT_AT_SetVoice("0083A001", 60);
+    EVT_AT_SetVoice("0083B002", 150);
+    EVT_AT_SetVoice("0083B003", 210);
+    EVT_AT_SetVoice("0083B004", 370);
+    EVT_AT_SetVoice("0083B020", 480);
+    return 490;
+}
+
+int Btl4SamIntro(Btl4Work *work)
+{
+    Btl4SelectAnchor(work->partner);
+    EVT_AT_SetPos(work->partner, work->partner, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(work->partner, work->partner, 180.0f, 0);
+    EVT_AT_SetPos(BTL4_RYO, work->partner, -0.1f, 0.0f, -2.6f, 0);
+    EVT_AT_SetAngY(BTL4_RYO, work->partner, 180.0f, 0);
+    EVT_AT_SetMot(BTL4_RYO, 6660, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(work->partner, 6664, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetCam(1500, work->partner, work->partner, 0, 0, 0);
+    EVT_AT_SetVoice("0082A001", 0);
+#if defined(SHENMUE_EVENT_4BTL_SCENE01)
+    EVT_AT_SetVoice("0082B001", 90);
+    EVT_AT_SetVoice("0082B002", 140);
+    return 180;
+#else
+    EVT_AT_SetVoice("0082B001", 60);
+    EVT_AT_SetVoice("0082B002", 140);
+    return 220;
+#endif
+}
+
+int Btl4LlyIntroRepeat(Btl4Work *work)
+{
+    Btl4SelectAnchor(work->partner);
+    EVT_AT_SetPos(work->partner, work->partner, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(work->partner, work->partner, 180.0f, 0);
+    EVT_AT_SetPos(BTL4_RYO, work->partner, -0.1f, 0.0f, -2.6f, 0);
+    EVT_AT_SetAngY(BTL4_RYO, work->partner, 180.0f, 0);
+    EVT_AT_SetMot(BTL4_RYO, 6985, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(work->partner, 6981, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetCam(1500, work->partner, work->partner, 0, 0, 0);
+    EVT_AT_SetVoice("0083A007", 0);
+    EVT_AT_SetVoice("0083B001", 90);
+    EVT_AT_SetVoice("0083B004", 150);
+    return 220;
+}
+
+void Btl4SetupSamFight(shen_name partner)
+{
+    FTBL.EV_LoadCutsceneFromCurrentScene("0082E000");
+    FTBL.EV_LoadAudio("0082E000", 0);
+    EVT_AT_SetCam(1301, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 0);
+    FTBL.shenStartFGST(10, 10, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(BTL4_RYO), 0, 0, 0, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(partner), 0, 1, 1, 300, 11);
+    FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(partner), 0, 0x8000000, 1);
+    FTBL.AllocateVOBJ(0, 4);
+    FTBL.vfStageDefinitionAddHitbox(0, 2, 1, 0.0f, 0.0f, 0.0f, 0.3f, 0.0f, 0.0f);
+    FTBL.vfStageDefinitionAddHitbox(0, 2, 1, -0.3f, 0.0f, 0.0f, 0.3f, 0.0f, 0.0f);
+    FTBL.vfStageDefinitionAddHitbox(0, 2, 1, -0.6f, 0.0f, 0.0f, 0.3f, 0.0f, 0.0f);
+    FTBL.ToggleVOBJArrayIndex(0, 15, 255, 0, 0);
+    FTBL.vfStageDefinitionSetHitResponse(0, 0, 0, 2560, 1.0f, 0.01f, 0, 0);
+    FTBL.vfStageDefinitionSetAttachment(0, 14, 0.05f, 0.0f, -0.05f, 0.0f, 0.0f, 61440.0f);
+    FTBL.vfAllocateVOBJ(0, FTBL.ctrlGetCharaByName(BTL4_KEIB), 0);
+    FTBL.vfStageObjectAssignMotFlags(0, 0x405000);
+    FTBL.vfStageObjectReset(0, FTBL.ctrlGetCharaByName(BTL4_SAM));
+    FTBL.vfInitializeStageObjectHitboxes();
+    EVT_AT_CharaDisp(BTL4_KEIB, 0, 1);
+    FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(BTL4_SAM), 0, 0x8000, 1604);
+}
+
+void Btl4SetupLlyFight(shen_name partner)
+{
+    FTBL.EV_LoadCutsceneFromCurrentScene("0083E000");
+    FTBL.EV_LoadAudio("0083E000", 0);
+    EVT_AT_SetCam(1403, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 0);
+    FTBL.shenStartFGST(10, 10, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(BTL4_RYO), 0, 0, 0, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(partner), 0, 1, 1, 300, 12);
+    Btl4CreateStageObjects();
+    FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(partner), 0, 0x8000000, 1);
+}
+
+int Btl4Won(Btl4Work *work)
+{
+    int delay;
+    if (work->partner == BTL4_SAM)
+        delay = Btl4SamWon(work);
+    else
+        delay = Btl4LlyWon(work);
+    EVT_AT_SetSample(30, 1, delay - 30);
+    return delay;
+}
+
+int Btl4SamWon(Btl4Work *work)
+{
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    EVT_AT_SetPos(work->partner, EVENT_CHARACTER_INVALID, 237.6f, 98.3f, 466.53f, 0);
+    EVT_AT_SetAngY(work->partner, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(work->partner, EVENT_CHARACTER_INVALID, 237.9f, 98.3f, 465.7f, 1060);
+    EVT_AT_SetAngY(work->partner, EVENT_CHARACTER_INVALID, 180.0f, 1060);
+    EVT_AT_SetPos(BTL4_DUMMY, EVENT_CHARACTER_INVALID, 237.6f, 98.3f, 466.53f, 0);
+    EVT_AT_SetAngY(BTL4_DUMMY, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(BTL4_CAMERA, BTL4_DUMMY, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(BTL4_CAMERA, BTL4_DUMMY, 0.0f, 0);
+    EVT_AT_SetPos(BTL4_RYO, work->partner, 0.16f, 0.0f, 2.7f, 0);
+    EVT_AT_SetAngY(BTL4_RYO, work->partner, 0.0f, 0);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 1170);
+    EVT_AT_SetMot(BTL4_RYO, 6666, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(work->partner, 6667, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(work->partner, 6668, 330.0f, 1.0f, 0x40000000U, 1060);
+    EVT_AT_SetCam(1200, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 0);
+    EVT_AT_SetCam(1201, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 560);
+    EVT_AT_SetCam(1202, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 800);
+    EVT_AT_SetCam(1203, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 940);
+    EVT_AT_SetCam(1204, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 1060);
+    EVT_AT_SetVoice("0082B016", 0);
+    EVT_AT_SetVoice("0082A001", 80);
+    EVT_AT_SetVoice("0082B006", 200);
+    EVT_AT_SetVoice("0082B017", 260);
+    EVT_AT_SetVoice("0082A002", 380);
+    EVT_AT_SetVoice("0082B007", 420);
+    EVT_AT_SetVoice("0082A003", 560);
+    EVT_AT_SetVoice("0082B008", 600);
+    EVT_AT_SetVoice("0082B009", 740);
+    EVT_AT_SetVoice("0082A004", 940);
+    EVT_AT_SetVoice("0082A011", 1000);
+    EVT_AT_SetVoice("0082B018", 1120);
+    EVT_AT_SetPoint(BTL4_RYO, work->partner, 0, 3, 0, 940, 260, 0xc0000000U);
+    work->phase = 6;
+    return 1230;
+}
+
+int Btl4LlyWon(Btl4Work *work)
+{
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    Btl4ApplyAnchor(work->partner);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 840);
+    EVT_AT_SetPos(BTL4_RYO, work->partner, -1.4f, 0.0f, -0.7f, 0);
+    EVT_AT_SetAngY(BTL4_RYO, work->partner, 270.0f, 0);
+    EVT_AT_SetPos(work->partner, BTL4_RYO, 1.2f, 0.0f, -1.2f, 700);
+    EVT_AT_SetAngY(work->partner, BTL4_RYO, 180.0f, 700);
+    EVT_AT_SetMot(BTL4_RYO, 6986, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(work->partner, 6980, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(work->partner, 6987, 280.0f, 1.0f, 0x40000000U, 700);
+    EVT_AT_SetCam(1000, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 0);
+    EVT_AT_SetCam(1001, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 40);
+    EVT_AT_SetCam(1002, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 145);
+    EVT_AT_SetCam(1003, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 250);
+    EVT_AT_SetCam(1004, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 440);
+    EVT_AT_SetCam(1005, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 485);
+    EVT_AT_SetCam(1006, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 660);
+    EVT_AT_SetCam(1007, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 700);
+    EVT_AT_SetVoice("0083B005", 55);
+    EVT_AT_SetVoice("0083A003", 150);
+    EVT_AT_SetVoice("0083B006", 255);
+    EVT_AT_SetVoice("0083B007", 320);
+    EVT_AT_SetVoice("0083A004", 445);
+    EVT_AT_SetVoice("0083B008", 490);
+    EVT_AT_SetVoice("0083B021", 550);
+    EVT_AT_SetVoice("0083A015", 660);
+    EVT_AT_SetVoice("0083B023", 750);
+    EVT_AT_SetFaceLooks(BTL4_RYO, 0, 10, 1.0f, 0);
+    EVT_AT_SetFaceLooks(BTL4_RYO, 1, 7, 1.0f, 160);
+    EVT_AT_SetFaceLooks(work->partner, 6, 10, 1.0f, 0);
+    work->phase = 6;
+    return 870;
+}
+
+int Btl4Lost(Btl4Work *work)
+{
+    int delay;
+    if (work->partner == BTL4_SAM)
+        delay = Btl4SamLost(work);
+    else
+        delay = Btl4LlyLost(work);
+    EVT_AT_SetSample(30, 1, delay - 30);
+    return delay;
+}
+
+int Btl4SamLost(Btl4Work *work)
+{
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    EVT_AT_SetPos(BTL4_RYO, EVENT_CHARACTER_INVALID, 236.8f, 98.4f, 466.4f, 0);
+    EVT_AT_SetAngY(BTL4_RYO, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(work->partner, EVENT_CHARACTER_INVALID, 236.7f, 98.3f, 467.2f, 0);
+    EVT_AT_SetAngY(work->partner, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(BTL4_DUMMY, EVENT_CHARACTER_INVALID, 236.8f, 98.4f, 466.4f, 0);
+    EVT_AT_SetAngY(BTL4_DUMMY, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(BTL4_CAMERA, BTL4_DUMMY, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(BTL4_CAMERA, BTL4_DUMMY, 0.0f, 0);
+    EVT_AT_SetAngY(work->partner, work->partner, 180.0f, 90);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 390);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 420);
+    EVT_AT_SetMot(BTL4_RYO, 6658, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(BTL4_RYO, 6659, 0.0f, 1.0f, 0, 420);
+    EVT_AT_SetMot(work->partner, 6659, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(work->partner, 0xf005, 0.0f, 1.0f, 0, 90);
+    EVT_AT_SetPoint(work->partner, BTL4_RYO, 0, 3, 0, 0, 90, 0);
+    EVT_AT_SetCam(1100, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 0);
+    EVT_AT_SetCam(1101, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 90);
+#if !defined(SHENMUE_EVENT_4BTL_SCENE01)
+    Queue_EVT_AT_CtrlHandUp_1(BTL4_RYO, 0, (void *)areaLoopHandPoses[BTL4_GRIP_HAND_POSE], 8, 0);
+    Queue_EVT_AT_CtrlHandUp_1(BTL4_RYO, 1, (void *)areaLoopHandPoses[BTL4_GRIP_HAND_POSE], 8, 0);
+#endif
+    EVT_AT_SetFaceLooks(BTL4_RYO, 6, 0, 1.0f, 0);
+    EVT_AT_SetFaceLooks(BTL4_RYO, 0, 7, 1.0f, 420);
+    EVT_AT_SetVoice("0082A005", 0);
+    EVT_AT_SetVoice("0082B010", 120);
+    work->phase = 5;
+    return 420;
+}
+
+int Btl4LlyLost(Btl4Work *work)
+{
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 390);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 420);
+    Btl4ApplyAnchor(BTL4_RYO);
+#if !defined(SHENMUE_EVENT_4BTL_SCENE01)
+    EVT_AT_SetAngY(BTL4_RYO, BTL4_RYO, -90.0f, 0);
+    EVT_AT_SetAngY(BTL4_CAMERA, BTL4_CAMERA, -90.0f, 0);
+#endif
+    EVT_AT_SetPos(work->partner, BTL4_RYO, 0.0f, 0.0f, -1.0f, 0);
+    EVT_AT_SetAngY(work->partner, BTL4_RYO, 180.0f, 0);
+    EVT_AT_SetAngY(work->partner, work->partner, -70.0f, 90);
+#if !defined(SHENMUE_EVENT_4BTL_SCENE01)
+    Queue_EVT_AT_CtrlHandUp_1(BTL4_RYO, 0, (void *)areaLoopHandPoses[BTL4_GRIP_HAND_POSE], 8, 0);
+    Queue_EVT_AT_CtrlHandUp_1(BTL4_RYO, 1, (void *)areaLoopHandPoses[BTL4_GRIP_HAND_POSE], 8, 0);
+#endif
+    EVT_AT_SetMot(BTL4_RYO, 6983, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(BTL4_RYO, 6984, 0.0f, 1.0f, 0, 420);
+    EVT_AT_SetMot(work->partner, 6984, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(work->partner, 0xf005, 0.0f, 1.0f, 0, 90);
+    EVT_AT_SetPoint(work->partner, BTL4_RYO, 0, 3, 0, 0, 90, 0);
+    EVT_AT_SetCam(1100, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 0);
+    EVT_AT_SetCam(1101, BTL4_CAMERA, BTL4_CAMERA, 0, 0, 90);
+    EVT_AT_SetFaceLooks(BTL4_RYO, 6, 0, 1.0f, 0);
+    EVT_AT_SetFaceLooks(BTL4_RYO, 0, 7, 1.0f, 420);
+    EVT_AT_SetVoice("0083B010", 0);
+    EVT_AT_SetVoice("0083A014", 300);
+    work->phase = 5;
+    return 420;
+}
+
+unsigned int Btl4FindAnchor(void)
+{
+    Vector3 position;
+    int nearest = 0;
+    float distance = 500.0f;
+    unsigned short i;
+    FTBL.GetCharaPosition(BTL4_RYO, -1, &position, 0x40000000);
+    for (i = 0; btlAnchors[i].x > 0.0f; i++) {
+        if (FTBL.CalculatePlanarDistanceBetweenPoints(&position, (const Vector3 *)&btlAnchors[i]) < distance) {
+            distance = FTBL.CalculatePlanarDistanceBetweenPoints(&position, (const Vector3 *)&btlAnchors[i]);
+            nearest = i;
+        }
+    }
+    return nearest;
+}
+
+void Btl4SelectAnchor(shen_name character)
+{
+    Vector3 position;
+    Vector3i rotation;
+    unsigned int anchor;
+    anchor = Btl4FindAnchor();
+    btlAnchor = anchor;
+    if (btlAnchors[anchor].x > 0.0f) {
+        EVT_AT_SetPos(character, EVENT_CHARACTER_INVALID, btlAnchors[anchor].x, btlAnchors[anchor].y, btlAnchors[anchor].z, 0);
+        EVT_AT_SetAngY(character, EVENT_CHARACTER_INVALID, btlAnchors[anchor].angle, 0);
+        EVT_AT_SetPos(BTL4_DUMMY, EVENT_CHARACTER_INVALID, btlAnchors[anchor].x, btlAnchors[anchor].y, btlAnchors[anchor].z, 0);
+        EVT_AT_SetAngY(BTL4_DUMMY, EVENT_CHARACTER_INVALID, btlAnchors[anchor].angle, 0);
+    } else {
+        FTBL.GetCharaPosition(character, -1, &position, 0x40000000);
+        FTBL.GetScenarioCharacterEulerAngles(character, &rotation, 0x40000000);
+        FTBL.EV_AT_SetPos(BTL4_DUMMY, 0x78000000, &position);
+        FTBL.EV_AT_SetAngY_0(BTL4_DUMMY, 0x78000000, &rotation, 0);
+    }
+    EVT_AT_SetPos(BTL4_CAMERA, BTL4_DUMMY, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(BTL4_CAMERA, BTL4_DUMMY, 0.0f, 0);
+}
+
+void Btl4ApplyAnchor(shen_name character)
+{
+    unsigned short anchor = btlAnchor;
+    EVT_AT_SetPos(character, EVENT_CHARACTER_INVALID, btlAnchors[anchor].x, btlAnchors[anchor].y, btlAnchors[anchor].z, 0);
+    EVT_AT_SetAngY(character, EVENT_CHARACTER_INVALID, btlAnchors[anchor].angle, 0);
+    EVT_AT_SetPos(BTL4_DUMMY, EVENT_CHARACTER_INVALID, btlAnchors[anchor].x, btlAnchors[anchor].y, btlAnchors[anchor].z, 0);
+    EVT_AT_SetAngY(BTL4_DUMMY, EVENT_CHARACTER_INVALID, btlAnchors[anchor].angle, 0);
+    EVT_AT_SetPos(BTL4_CAMERA, BTL4_DUMMY, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(BTL4_CAMERA, BTL4_DUMMY, 0.0f, 0);
+}
+
+void Btl4CreateStageObjects(void)
+{
+    shen_name tables[6] = {SHEN_NAME4('T', 'B', 'L', 'a'), SHEN_NAME4('T', 'B', 'L', 'b'), SHEN_NAME4('T', 'B', 'L', 'c'), SHEN_NAME4('T', 'B', 'L', 'd'),
+        SHEN_NAME4('T', 'B', 'L', 'e'), 0};
+    shen_name brokenTables[6] = {SHEN_NAME4('b', 'T', 'K', '0'), SHEN_NAME4('b', 'T', 'K', '1'), SHEN_NAME4('b', 'T', 'K', '2'),
+        SHEN_NAME4('b', 'T', 'K', '3'), SHEN_NAME4('b', 'T', 'K', '4'), 0};
+    shen_name chairs[10] = {SHEN_NAME4('I', 'S', '_', '5'), SHEN_NAME4('I', 'S', '_', '7'), SHEN_NAME4('I', 'S', '_', '8'), SHEN_NAME4('I', 'S', '_', '9'),
+        SHEN_NAME4('I', 'S', '1', '2'), SHEN_NAME4('I', 'S', '1', '7'), SHEN_NAME4('I', 'S', '1', '8'), SHEN_NAME4('I', 'S', '2', '0'),
+        SHEN_NAME4('I', 'S', '2', '3'), 0};
+    int i;
+    FTBL.AllocateVOBJ(0, 1);
+    FTBL.vfStageDefinitionAddHitbox(0, 2, 1, 0.0f, 0.3f, 0.0f, 0.6f, 0.0f, 0.0f);
+    FTBL.vfStageDefinitionAddHitbox(0, 2, 0x8001, 0.9f, 0.5f, 0.0f, 0.5f, 0.0f, 0.0f);
+    FTBL.vfStageDefinitionSetMotion(0, BTL4_TABLE_MOTION, 17, 0, 2, 2, 299, 117);
+    for (i = 0; tables[i]; i++) {
+        FTBL.vfAllocateVOBJ(i, FTBL.ctrlGetCharaByName(tables[i]), 0);
+        FTBL.vfStageObjectSetBrokenModel(i, FTBL.ctrlGetCharaByName(brokenTables[i]), 720);
+    }
+    FTBL.AllocateVOBJ(1, 7);
+    FTBL.vfStageDefinitionAddHitbox(1, 2, 1, 0.0f, 0.2f, 0.0f, 0.4f, 0.0f, 0.0f);
+    FTBL.vfStageDefinitionSetHitResponse(1, 2916, 2914, 0x60000, 17.0f, 0.0f, 8192, 0);
+    FTBL.ToggleVOBJArrayIndex(1, 10, 255, 14, 2913);
+    for (i = 0; chairs[i]; i++) {
+        FTBL.vfAllocateVOBJ(i, FTBL.ctrlGetCharaByName(chairs[i]), 1);
+        FTBL.vfStageObjectAssignMotFlagsAlternative(i, 3);
+        FTBL.vfStageObjectAssignMotFlags(i, 4096);
+    }
+    FTBL.vfInitializeStageObjectHitboxes();
+}
+
+void Btl4ChairState(int restore)
+{
+    shen_name tables[6] = {SHEN_NAME4('T', 'B', 'L', 'a'), SHEN_NAME4('T', 'B', 'L', 'b'), SHEN_NAME4('T', 'B', 'L', 'c'), SHEN_NAME4('T', 'B', 'L', 'd'),
+        SHEN_NAME4('T', 'B', 'L', 'e'), 0};
+    shen_name brokenTables[6] = {SHEN_NAME4('b', 'T', 'K', '0'), SHEN_NAME4('b', 'T', 'K', '1'), SHEN_NAME4('b', 'T', 'K', '2'),
+        SHEN_NAME4('b', 'T', 'K', '3'), SHEN_NAME4('b', 'T', 'K', '4'), 0};
+    shen_name chairs[10] = {SHEN_NAME4('I', 'S', '_', '5'), SHEN_NAME4('I', 'S', '_', '7'), SHEN_NAME4('I', 'S', '_', '8'), SHEN_NAME4('I', 'S', '_', '9'),
+        SHEN_NAME4('I', 'S', '1', '2'), SHEN_NAME4('I', 'S', '1', '7'), SHEN_NAME4('I', 'S', '1', '8'), SHEN_NAME4('I', 'S', '2', '0'),
+        SHEN_NAME4('I', 'S', '2', '3'), 0};
+    int i;
+    if (restore) {
+        for (i = 0; tables[i]; i++)
+            if (FTBL.DoesScenarioCharacterExist(tables[i]))
+                FTBL.EV_EnableCharacterDisplay(tables[i]);
+        for (i = 0; brokenTables[i]; i++)
+            if (FTBL.DoesScenarioCharacterExist(brokenTables[i]))
+                FTBL.EV_DisableCharacterDisplay(brokenTables[i]);
+        for (i = 0; chairs[i]; i++)
+            if (FTBL.DoesScenarioCharacterExist(chairs[i])) {
+                FTBL.EV_AT_SetPos(chairs[i], 0x78000000, &btlChairPositions[i]);
+                FTBL.EV_AT_SetAngY_0(chairs[i], 0x78000000, &btlChairRotations[i], 0);
+            }
+    } else {
+        for (i = 0; chairs[i]; i++)
+            if (FTBL.DoesScenarioCharacterExist(chairs[i])) {
+                FTBL.GetCharaPosition(chairs[i], -1, &btlChairPositions[i], 0x40000000);
+                FTBL.GetScenarioCharacterEulerAngles(chairs[i], &btlChairRotations[i], 0x40000000);
+            }
+    }
+}
+#endif
+#else
 #include "s2/areas/area_4btl.hpp"
 #include "s2/scene_data.hpp"
 #include "s2/author.hpp"
@@ -547,3 +1313,4 @@ void Start4Btl(std::uintptr_t argument) {
 } // namespace
 const ScriptAreaDefinition area4BtlScriptDefinition{.areaId = SHEN_NAME(4BTL), .field04 = 0, .init = Initialize4Btl, .main = Start4Btl};
 } // namespace shenmue::s2::areas
+#endif

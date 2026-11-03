@@ -1,5 +1,98 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define Q7QB_AREA SHEN_NAME4('Q', '7', 'Q', 'B')
+#define Q7QB_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define Q7QB_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define Q7QB_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define Q7QB_DUMMY SHEN_NAME4('D', 'U', 'M', 'R')
+#define Q7QB_CAMERA_DUMMY SHEN_NAME4('D', 'U', 'M', 'E')
+#define Q7QB_KK9 SHEN_NAME4('K', 'K', '9', '_')
+#define Q7QB_KK7 SHEN_NAME4('K', 'K', '7', '_')
+#define Q7QB_KK8 SHEN_NAME4('K', 'K', '8', '_')
+#define Q7QB_KKA SHEN_NAME4('K', 'K', 'A', '_')
+#define Q7QB_KN1 SHEN_NAME4('K', 'N', '1', '_')
+#define Q7QB_KN2 SHEN_NAME4('K', 'N', '2', '_')
+#define Q7QB_RIK SHEN_NAME4('R', 'I', 'K', '_')
+#define Q7QB_SBK SHEN_NAME4('S', 'B', 'K', '_')
+#define Q7QB_AUTHOR_INTRO SHEN_NAME4('A', 'T', 'H', '1')
+#define Q7QB_AUTHOR_RESULT SHEN_NAME4('A', 'T', 'H', '2')
+#define Q7QB_INVALID 0xffffffffU
+#define Q7QB_DEBUG_ID 3
+#define Q7QB_QTE_HAND_POSE 13
+#define Q7QB_MIRRORED 0x20000000U
+
+typedef struct Q7QbResultParameters {
+    shen_name player, firstOpponent, secondOpponent;
+    unsigned int motionFlags;
+} Q7QbResultParameters;
+typedef struct Q7QbSequence {
+    HLibTaskCallback continuation;
+    Q7QbResultParameters result;
+    int phase;
+} Q7QbSequence;
+typedef struct Q7QbWork {
+    EventReadCharactersWork *characters;
+    HLibTask *task;
+    int succeeded;
+    Q7QbSequence sequence;
+    float baseHeight;
+} Q7QbWork;
+
+extern const EventQteData q7qbQteData[];
+void StartQ7Qb(void *argument);
+void QueueQ7Qb(void);
+void Q7QbDebugExitCallback(void *data);
+void Q7QbFinish(Q7QbWork *work);
+void Q7QbResetSequence(Q7QbSequence *sequence);
+void Q7QbStartCallback(void *data);
+void Q7QbWaitIntroCallback(void *data);
+void Q7QbFirstAttackCallback(void *data);
+void Q7QbSecondAttackCallback(void *data);
+void Q7QbThirdAttackCallback(void *data);
+void Q7QbFourthAttackCallback(void *data);
+void Q7QbFifthAttackCallback(void *data);
+void Q7QbSixthAttackCallback(void *data);
+void Q7QbFinalAttackCallback(void *data);
+void Q7QbWaitMotionCallback(void *data);
+void Q7QbStartResultAuthorCallback(void *data);
+void Q7QbWaitResultAuthorCallback(void *data);
+void Q7QbEndCallback(void *data);
+int PlayStandingQteRetryVoices(int delay);
+void Q7QbSetup(Q7QbWork *work);
+void Q7QbCleanup(Q7QbWork *work);
+void Q7QbFirstAttackBegin(void *data, int delay);
+void Q7QbFirstAttackSuccess(void *data, int delay);
+void Q7QbFirstAttackFailure(void *data, int delay);
+void Q7QbSecondAttackBegin(void *data, int delay);
+void Q7QbSecondAttackSuccess(void *data, int delay);
+void Q7QbSecondAttackFailure(void *data, int delay);
+void Q7QbThirdAttackBegin(void *data, int delay);
+void Q7QbThirdAttackSuccess(void *data, int delay);
+void Q7QbThirdAttackFailure(void *data, int delay);
+void Q7QbFourthAttackBegin(void *data, int delay);
+void Q7QbFourthAttackSuccess(void *data, int delay);
+void Q7QbFourthAttackFailure(void *data, int delay);
+void Q7QbFifthAttackBegin(void *data, int delay);
+void Q7QbFifthAttackSuccess(void *data, int delay);
+void Q7QbFifthAttackFailure(void *data, int delay);
+void Q7QbSixthAttackBegin(void *data, int delay);
+void Q7QbSixthAttackSuccess(void *data, int delay);
+void Q7QbSixthAttackFailure(void *data, int delay);
+void Q7QbFinalAttackBegin(void *data, int delay);
+void Q7QbFinalAttackSuccess(void *data, int delay);
+void Q7QbFinalAttackFailure(void *data, int delay);
+void Q7QbFinalCounterSuccess(void *data, int delay);
+void Q7QbFinalCounterFailure(void *data, int delay);
+void Q7QbBattleSuccess(void *data, int delay);
+void Q7QbBattleFailure(void *data, int delay);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/event_runtime.hpp"
@@ -160,3 +253,4 @@ void InitializeQ7QbEvent();
 void RunQ7QbEvent(std::uintptr_t argument);
 extern const ScriptAreaDefinition q7qbScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

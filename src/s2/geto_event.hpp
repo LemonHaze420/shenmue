@@ -1,5 +1,18 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+typedef struct GetoEventWork {
+    shen_name prop, searchTarget;
+    int enabled;
+    HLibTask *caller;
+} GetoEventWork;
+void GetoMain(const shen_name *parameters);
+void GetoLoop(void *taskData);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/hlib.hpp"
 
@@ -24,3 +37,4 @@ void GetoLoop(void *taskData);
 extern const ScriptAreaDefinition getoScriptDefinition;
 
 } // namespace shenmue::s2
+#endif

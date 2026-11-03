@@ -1,4 +1,126 @@
 #pragma once
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/common/et_pati.h"
+typedef struct Vector2 {float x,y;} Vector2;
+typedef struct PatiVoiceLength {
+    shen_name code;
+    int frames;
+} PatiVoiceLength;
+typedef struct PatiBallCharacter {
+    shen_name character;
+    Vector3 position;
+} PatiBallCharacter;
+typedef struct PatiGameWork {
+    unsigned int reserved00;
+    shen_name area, table, board;
+    HLibTask *parent;
+    int balls, wins, pocket, prize, result, mode;
+    unsigned short ballLimit, winLimit, missLimit, reserved36;
+    int targetVariation, targetX;
+    PatiNailData nails;
+    char voicePrefix[16];
+    int activeBall;
+    PatiBallCharacter ballCharacters[5];
+    PatiVoiceLength *voiceLengths;
+    Vector3 savedPlayerPosition;
+    Vector3i savedPlayerRotation;
+} PatiGameWork;
+
+typedef struct PatiCenterPocket {
+    float x, y, halfWidth, height;
+    int type;
+    unsigned int reserved14, reserved18;
+} PatiCenterPocket;
+typedef struct PatiBallState {
+    Vector3 position, velocity;
+} PatiBallState;
+typedef struct PatiNailContact {
+    unsigned int age;
+    int nail;
+    unsigned int count;
+} PatiNailContact;
+typedef struct PatiBallWork {
+    PatiGameWork *game;
+    HLibTask *task;
+    HLibTask *nailTask;
+    PatiTableData tables;
+    float scale;
+    unsigned short phase, reserved85b6;
+    float tangentialRetention, wallRestitution, nailRestitution, surfaceFriction, gravity;
+    const char *ballModel;
+    float radiusScale;
+    int releaseX, releaseJitter;
+    float radius;
+    const char *labelModel;
+    Vector3 boardPosition;
+    Vector3i boardRotation;
+    float top, bottom, left, right;
+    char reserved8618[8];
+    const char *nailFile;
+    PatiNailData *nails;
+    short pocketCount;
+    unsigned short reserved863a;
+    Vector3 dividers[10];
+    float dividerWidth, dividerHeight;
+    char reserved86bc[80];
+    char *prizes;
+    PatiCenterPocket centerPockets[6];
+    const char *centerModes;
+    const char *centerPrizes;
+    unsigned short gameType;
+    short option;
+    unsigned short ballLimit, winLimit, missLimit, winMask, deathMask, reserved87de;
+    int settled;
+    float cameraHeight, remainingTime, turningFraction;
+    unsigned short collision, reserved87f2, collisionIndex, reserved87f6;
+    float collisionTime;
+    PatiBallState previous, segment, current, beforeCollision;
+    unsigned int frames;
+    unsigned short repeatFrames, reserved8862;
+    int historyCursor;
+    Vector2 history[90];
+    float movement[90];
+    PatiNailContact contacts[8];
+    short boardSize;
+    unsigned short reserved8d02;
+    unsigned int soundFlags;
+    int previousSound;
+    signed char soundFrames;
+    char reserved8d0d[3];
+} PatiBallWork;
+void ApplyPatiWeather(PatiBallWork *ball);
+void AdvancePatiBall(PatiBallWork *ball);
+void IntegratePatiBall(PatiBallWork *ball);
+void FindPatiCollision(PatiBallWork *ball);
+float ProbePatiPoint(PatiBallWork *ball, const Vector3 *point);
+void FindPatiDividerCollision(PatiBallWork *ball);
+void FindPatiCenterCollision(PatiBallWork *ball);
+void FindPatiNailCollision(PatiBallWork *ball);
+unsigned char IntersectPatiSegments(const Vector3 *current, const Vector3 *previous, const Vector3 *first, const Vector3 *second);
+void MarkPatiCollisionSound(PatiBallWork *ball);
+void ResolvePatiCollision(PatiBallWork *ball);
+void BouncePatiFloor(PatiBallWork *ball);
+void BouncePatiDivider(PatiBallWork *ball);
+void BouncePatiPocketFloor(PatiBallWork *ball);
+void BouncePatiNail(PatiBallWork *ball);
+void BouncePatiPoint(PatiBallWork *ball, const Vector3 *point, float restitution);
+int IsPatiBallSettled(PatiBallWork *ball);
+void PlayPatiCollisionSound(PatiBallWork *ball, short material);
+void FollowPatiBall(PatiBallWork *ball);
+
+extern shen_name patiHandModel;
+void PatiCopyVector(Vector3 *target,const Vector3 *source);
+void PatiSetVector(Vector3 *target,float x,float y,float z);
+void UpdatePatiBallPosition(PatiBallWork *ball);
+void UpdatePatiHandPosition(PatiBallWork *ball);
+
+void InitializePatiBallNails(PatiBallWork *ball);
+void ConfigurePatiBallBoard(PatiBallWork *ball,const char *tableName);
+void ConfigurePatiPrizes(PatiBallWork *ball);
+void PatiBallCleanup(PatiBallWork *ball);
+
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/areas/pati_physics.hpp"
 #include <cstddef>
@@ -95,3 +217,4 @@ void InitializePatiBallNails(PatiBallWork *ball);
 void ConfigurePatiPrizes(PatiBallWork *ball);
 void QueuePatiVoice(PatiGameWork *game, const char *code, std::int32_t *frame);
 } // namespace shenmue::s2
+#endif

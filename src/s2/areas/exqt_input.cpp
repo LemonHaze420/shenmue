@@ -1,3 +1,106 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_exqt.hpp"
+
+void ClearExciteInput(ExciteInput *input)
+{
+    input->required = 0;
+    input->pressed = 0;
+    input->window = 0;
+    input->elapsed = 0;
+    input->attempts = 0;
+}
+void SetExciteRequiredInput(ExciteInput *input, unsigned int mask)
+{
+    float position[3] = {0.0f, 1.46f, 0.0f};
+    int rotation[4][3] = {{0, 0, 0}, {0, 0, 0x8000}, {0, 0, 0x4000}, {0, 0, 0xc000}};
+    input->required = mask;
+    input->pressed = 0;
+    input->elapsed = 0;
+    switch (mask) {
+    case 1:
+    case 4:
+    case 16:
+    case 64:
+        input->part = 187;
+        break;
+    case 256:
+        input->part = 183;
+        break;
+    case 512:
+        input->part = 184;
+        break;
+    case 1024:
+        input->part = 185;
+        break;
+    case 2048:
+        input->part = 186;
+        break;
+    }
+    if (mask == 4)
+        FTBL.scenApplyPosOrRotToChildId(EXQT_MACHINE, 187, (Vector3 *)position, (Vector3i *)rotation[3], 0);
+    else if (mask == 64)
+        FTBL.scenApplyPosOrRotToChildId(EXQT_MACHINE, 187, (Vector3 *)position, (Vector3i *)rotation[2], 0);
+    else if (mask == 1)
+        FTBL.scenApplyPosOrRotToChildId(EXQT_MACHINE, 187, (Vector3 *)position, (Vector3i *)rotation[0], 0);
+    else if (mask == 16)
+        FTBL.scenApplyPosOrRotToChildId(EXQT_MACHINE, 187, (Vector3 *)position, (Vector3i *)rotation[1], 0);
+}
+int PollGameCenterInput(ExciteInput *input)
+{
+    float lit[3] = {0.0f, 1.46f, 0.015f};
+    float unlit[3] = {0.0f, 1.46f, 0.0f};
+    if (FTBL.GetCurrentControlInput(7)) {
+        if (FTBL.GetCurrentControlInput(7) == 1024)
+            input->pressed |= 0x100;
+        if (FTBL.GetCurrentControlInput(7) == 512)
+            input->pressed |= 0x200;
+        if (FTBL.GetCurrentControlInput(7) == 4)
+            input->pressed |= 0x400;
+        if (FTBL.GetCurrentControlInput(7) == 2)
+            input->pressed |= 0x800;
+        if (FTBL.GetCurrentControlInput(7) == 32768)
+            input->pressed |= 4;
+        if (FTBL.GetCurrentControlInput(7) == 16384)
+            input->pressed |= 64;
+        if (FTBL.GetCurrentControlInput(7) == 4096)
+            input->pressed |= 1;
+        if (FTBL.GetCurrentControlInput(7) == 8192)
+            input->pressed |= 16;
+        return 1;
+    }
+    if (input->elapsed >= input->window) {
+        input->pressed = 0xa000;
+        return 1;
+    }
+    switch (input->elapsed % 5) {
+    case 0:
+    case 1:
+        FTBL.scenApplyPosOrRotToChildId(EXQT_MACHINE, input->part, (Vector3 *)unlit, 0, 0);
+        break;
+    case 2:
+        FTBL.Loop3DSoundEffect(0xab);
+        FTBL.scenApplyPosOrRotToChildId(EXQT_MACHINE, input->part, (Vector3 *)lit, 0, 0);
+        break;
+    case 3:
+    case 4:
+        FTBL.scenApplyPosOrRotToChildId(EXQT_MACHINE, input->part, (Vector3 *)lit, 0, 0);
+        break;
+    }
+    input->elapsed++;
+    return 0;
+}
+int ConsumeGameCenterInput(ExciteInput *input)
+{
+    float unlit[3] = {0.0f, 1.46f, 0.0f};
+    FTBL.scenApplyPosOrRotToChildId(EXQT_MACHINE, input->part, (Vector3 *)unlit, 0, 0);
+    if (input->required & input->pressed) {
+        FTBL.Loop3DSoundEffect(0x900ab);
+        return 1;
+    }
+    FTBL.Loop3DSoundEffect(0xa00ab);
+    return 0;
+}
+#else
 #include "s2/areas/area_exqt.hpp"
 #include "s2/areas/area_dgct.hpp"
 #include "s2/event_runtime.hpp"
@@ -253,3 +356,4 @@ void BuildGameCenterInput(ExciteState &state) {
     state.immediateAdvance = (scale - 1.0f) == random * scale;
 }
 } // namespace shenmue::s2::areas
+#endif

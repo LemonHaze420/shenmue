@@ -1,4 +1,22 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+typedef struct EventSmokeWork {
+    shen_name character;
+    unsigned int bone;
+    unsigned int effect;
+    int startDelay, remaining, finishDelay, profile, state;
+    float birthFraction, birthStep;
+} EventSmokeWork;
+void QueueEventSmoke(int profile, shen_name character, unsigned int bone, int delay, int startDelay, int remaining, int finishDelay);
+void EventSmokeCallback(void *data);
+void CreateEventSmokeAtCharacter(EventSmokeWork *work);
+void FadeEventSmoke(EventSmokeWork *work);
+void FreeEventSmoke(EventSmokeWork *work);
+#else
+#pragma once
 #include "common/types.hpp"
 #include <cstddef>
 namespace shenmue::s2 {
@@ -21,3 +39,4 @@ void CreateEventSmokeAtCharacter(EventSmokeWork *work);
 void EventSmokeCallback(void *work);
 void InitializeWarehouseFallingLeaves(std::uint32_t *effect);
 } // namespace shenmue::s2
+#endif

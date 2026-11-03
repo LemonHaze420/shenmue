@@ -1,4 +1,44 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_library_tail_dc.h"
+#include "s2/sk_event_dc.h"
+
+#define QYSS_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define QYSS_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QYSS_YUAN SHEN_NAME4('Y', 'U', 'A', '_')
+#define QYSS_OHS SHEN_NAME4('O', 'H', 'S', '_')
+#define QYSS_JIA SHEN_NAME4('J', 'I', 'A', '_')
+#define QYSS_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define QYSS_ELEVATOR SHEN_NAME4('R', '5', '9', '7')
+#define QYSS_CYCLE SHEN_NAME4('c', 'y', 'l', 'f')
+#define QYSS_QAE6 SHEN_NAME4('Q', 'A', 'E', '6')
+#define QYSS_AUTHOR_START SHEN_NAME4('S', 'T', 'R', 'T')
+#define QYSS_AUTHOR_ELV1 SHEN_NAME4('E', 'L', 'V', '1')
+#define QYSS_AUTHOR_ELV2 SHEN_NAME4('E', 'L', 'V', '2')
+#define QYSS_DEBUG_ID 3
+
+typedef struct QyssStalkWork {
+    HLibTask *self;
+    short authorState, state;
+    EventReadCharactersWork *characters;
+} QyssStalkWork;
+
+extern int qyssEntryMode;
+void QyssMain(int argument);
+void QueueQyssStalkCallback(void *data);
+int InitializeQyssStalk(QyssStalkWork *work);
+int FinishQyssStalk(QyssStalkWork *work);
+void QyssEndStalkCallback(void *data);
+void QyssStalkCallback(void *data);
+int ChooseQyssWaiting(QyssStalkWork *work);
+int FadeQyssWaiting(QyssStalkWork *work);
+int PlayQyssElevatorAuthor(QyssStalkWork *work);
+void QyssElevatorAuthorFrameCallback(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "common/math.hpp"
@@ -39,3 +79,4 @@ void QyssElevatorAuthorFrameCallback(void *);
 void QyssDormantNullsub();
 extern const ScriptAreaDefinition qyssScriptDefinition;
 } // namespace shenmue::s2
+#endif

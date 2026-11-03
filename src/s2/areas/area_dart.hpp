@@ -1,4 +1,268 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+ 
+#include "s2/areas/common/et_darts.h"
+#include "s2/event_debug_dc.h"
+
+int CalculateDartsPositionOrScore(char score, Vector3 *position);
+void SetDartsTemporaryCharacter(shen_name character);
+void SetDartsPosition(shen_name parent, shen_name character, float x, float y, float z, int yaw, int delay);
+void UpdateDartsScoreDisplay(shen_name board, int score, int row);
+void UpdateDartsCompactScoreDisplay(shen_name board, int score, int row);
+void QueueDartsPosition(shen_name parent, shen_name character, Vector3 *position, Vector3i *rotation, int delay);
+HLibTask *QueueDartsArrow(shen_name character, shen_name arrow);
+void RestoreOpponentDartsScores(shen_name character, int save, int *bestScore, int *opponentScore);
+shen_name GetDartsArrowName(int set, int index);
+
+#define DART_TASK TASK_EVNT
+#define DART_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define DART_FCJ SHEN_NAME4('F', 'C', 'J', '_')
+#define DART_HCY SHEN_NAME4('H', 'C', 'Y', '_')
+#define DART_HLN SHEN_NAME4('H', 'L', 'N', '_')
+#define DART_JON SHEN_NAME4('J', 'O', 'N', '_')
+#define DART_XHO SHEN_NAME4('X', 'H', 'O', '_')
+#define DART_AKS0 SHEN_NAME4('A', 'K', 'S', '0')
+#define DART_AKS1 SHEN_NAME4('A', 'K', 'S', '1')
+#define DART_COIN SHEN_NAME4('C', 'o', 'i', 'n')
+#define DART_DUMMY0 SHEN_NAME4('D', 'U', 'M', '0')
+#define DART_DUMMY1 SHEN_NAME4('D', 'U', 'M', '1')
+#define DART_REWARD_AREA SHEN_NAME4('O', 'M', 'A', 'K')
+#define DART_DEBUG_ID 3
+#define DART_AIM_X (-0.119f)
+#define DART_AIM_Y 1.5891f
+#define DART_FSQRT(x) ((x) = __builtin_sqrtf(x))
+#define DART_FSQRT_OF(out, in) ((out) = __builtin_sqrtf(in))
+
+typedef struct DartsOpponentInfo {
+    shen_name name;
+    float height;
+    int bone;
+    int motions[16];
+    float loseFrame[2];
+    float loseX, loseZ;
+    int winMotion, winTotal;
+    float winFrame, winX, winZ;
+    int drawMotion;
+    HLibTaskCallback throwCallback;
+} DartsOpponentInfo;
+typedef struct DartsVoiceWaitWork {
+    int frames;
+    void *conversation;
+    HLibTask *parent;
+} DartsVoiceWaitWork;
+typedef struct DartsCameraWaitWork {
+    struct DartsEventWork *root;
+    int camera;
+    shen_name eye, target;
+} DartsCameraWaitWork;
+ 
+typedef struct DartsScoreBank {
+    int bestScore, previousScore, ticker, throws;
+    int score[4];
+    int bullseyes;
+} DartsScoreBank;
+typedef struct DartsAdmissionScoreWork {
+    int soundStarted;
+    shen_name board;
+    int scores[4];
+    int remaining;
+} DartsAdmissionScoreWork;
+typedef struct DartsProjectileWork {
+    Vector3 step, target;
+    unsigned int arcPhase;
+    int arcStep;
+    Vector3i targetRotation;
+    int frames;
+    shen_name board, arrow;
+} DartsProjectileWork;
+typedef struct DartsChildTaskWork {
+    HLibTask *root;
+    struct DartsEventWork *work;
+    int reserved;
+} DartsChildTaskWork;
+typedef struct DartsEventWork {
+    char nextGameText[8];
+    unsigned char field08, field09, standardBoard;
+    signed char state, scoreStep;
+    unsigned char scoreUiFlags, field0e;
+    signed char pendingReset;
+    unsigned char field10;
+    unsigned char usedBands[5];
+    signed char enemyTurn, playerWon;
+    signed char actorControl[4];
+    float targetBand;
+    char previousBgm[16], previousSbt[16];
+    Vector3 ryoRotation;
+    Vector3i previousRotation;
+    Vector3 dartPosition, impactPosition, previousPosition;
+    int previousSoundProgram;
+    int difficulty, gameFlag;
+    int scoreAnimationActive, requestIcon;
+    int pendingScore;
+    int *scoreTarget;
+    int scoreTickInterval;
+    int scoreTick[4];
+    int wobblePhaseX, wobblePhaseY;
+    DartsScoreBank banks[3];
+    int gameState, nextState, frames, audioBank;
+    HLibTask *task;
+    HLibTask *childTasks[4];
+    EventDartsGame *entry;
+    EventDateTime previousTime;
+} DartsEventWork;
+
+void DartsAreaMain(EventDartsGame *entry);
+void DartsInitializeRoot(DartsEventWork *work, HLibTask *task, EventDartsGame *entry);
+void DartsDebugExitCallback(void *data);
+void DartsExit(void *data);
+void DartsRestorePlayer(DartsEventWork *work);
+void DartsRestoreOpponent(DartsEventWork *work);
+void DartsRetireCoinAndArrows(DartsEventWork *work);
+void DartsPlaceCameraDummies(DartsEventWork *work);
+void DartsInitializeScoreBanks(DartsEventWork *work);
+void DartsInitStart(void *data);
+void DartsPositionOpponentHands(void *data);
+void DartsInitStart2(void *data);
+void DartsInitializeGame(DartsEventWork *work);
+void DartsEnemyShot(void *data);
+void DartsMain(void *data);
+void DartsResetScoring(DartsEventWork *work);
+void DartsResetRound(DartsEventWork *work);
+void DartsStartChildTask(DartsEventWork *work, int kind);
+void DartsScoreDisplayTask(void *data);
+void DartsFrameCounterTask(void *data);
+void DartsScoreTickerTask(void *data);
+void DartsOpponentChatterTask(void *data);
+void DartsPlayOpponentChatter(shen_name opponent);
+extern const char *dartsFcjChatter[4][4];
+extern const char *dartsHcyChatter[3][2];
+extern const char *dartsHlnChatter[3][2];
+extern const char *dartsJonChatter[3][2];
+extern const char *dartsXhoChatter[4][4];
+void DartsOpponentAdmission(void *data);
+int DartsAdmissionIntroduction(DartsEventWork *work);
+int DartsAdmissionDemonstration(DartsEventWork *work);
+HLibTask *DartsQueueAdmissionScore(shen_name board, int best, int previous, int current, int amount, int delay);
+void DartsAdmissionScoreTask(void *data);
+int DartsAdmissionOffer(DartsEventWork *work);
+int DartsAcceptBet(DartsEventWork *work);
+int DartsDeclineBet(DartsEventWork *work);
+int DartsCheckBet(DartsEventWork *work);
+void PrepareDartsOpponentAdmission(shen_name opponent);
+int PlayDartsOpponentAdmission(shen_name opponent);
+int PlayDartsBetResponse(shen_name opponent, int difficulty, int bet);
+int PlayDartsOpponentResult(shen_name opponent, int bet);
+extern Vector3i dartsHandRotation;
+extern int dartsHandPoseCommand[19][3];
+void DartsEnemyPlaying(void *data);
+void DartsPlaying(void *data);
+void DartsAttachTurnArrows(DartsEventWork *work);
+void DartsAskPlay(void *data);
+void DartsMainOk(void *data);
+void DartsInsertCoin(void *data);
+extern Vector3 dartsReadyArrowOffsets[5];
+int DartsPlaySample(unsigned int sample);
+void DartsNextGameGlyph(char code, int index, shen_name board);
+void DartsShotEndRecord(void *data);
+int DartsRecordBest(DartsEventWork *work);
+void DartsPlayEnd(void *data);
+void DartsExitBattle(void *data);
+void DartsContinuePrompt(void *data);
+void DartsContinueOk(void *data);
+void DartsDoubleUp(void *data);
+int PlayDartsOpponentExit(shen_name opponent);
+void DartsSaveScores(DartsEventWork *work);
+void DartsNextGame(void *data);
+int DartsScoreImpact(DartsEventWork *work);
+void DartsShotEnd(void *data);
+void DartsShotEndBlink(void *data);
+void DartsRyoShot(void *data);
+int DartsComputeAiImpactPoint(DartsEventWork *work);
+float DartsVerticalWobble(int phase);
+void DartsQueueProjectile(shen_name board, shen_name arrow, int score, Vector3 *impact, float duration, int arc);
+void DartsProjectileTask(void *data);
+typedef void *(*DartsResponseCallback)(int opponentMatch, int playerTurn, shen_name opponent);
+extern const DartsResponseCallback dartsResponseCallbacks[30];
+void *PlayDartsOpeningResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsReadyResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsExitResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsContinueResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsLastThrowResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsZeroScoreResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsLowScoreResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsLowerMiddleScoreResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsMiddleScoreResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsUpperMiddleScoreResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsUpperScoreResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsBullseyeResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsHighScoreResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsEndThrowsResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsBonusResultResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsGameOverResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsReplayResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsStopResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsDeclineOpponentResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsWonBetResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsOpponentPaymentResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsLostBetResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsOpponentReplayResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsOpponentBonusReplayResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsOpponentFinalResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsThrowStartResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsThrowResponse(int mode, int playerTurn, shen_name opponent);
+void *PlayDartsRoundOverResponse(int mode, int playerTurn, shen_name opponent);
+void DartsGameMain(void *data);
+extern Vector3i dartsGameArrowRotation;
+extern Vector3 dartsJonGameArrowOffset;
+extern Vector3 dartsGameArrowOffsets[5];
+int DartsAiTriggerReady(DartsEventWork *work);
+void DartsBeginScoreTransfer(DartsEventWork *work, int *score);
+int DartsAdvanceScore(DartsEventWork *work, int *score);
+void DartsScoreAdd(void *data);
+void DartsProjectImpact(DartsEventWork *work, Vector3 *impact);
+void DartsComputeCompactImpact(DartsEventWork *work, Vector3 *impact);
+void DartsProjectileStart(void *data);
+void DartsWobbleVertical(DartsEventWork *work);
+void DartsWobbleHorizontal(DartsEventWork *work);
+void DartsRotateAimingArrow(DartsEventWork *work);
+void DartsCompactWobble(DartsEventWork *work);
+int DartsCompactScore(Vector3 *position);
+extern float dartsAiBands[5];
+void DartsComputeAiTarget(DartsEventWork *work);
+void DartsPlayingLoop(void *data);
+void DartsHideBoardArrow(shen_name board, char index, char hidden);
+int DartsIsPlayerTurn(DartsEventWork *work);
+shen_name DartsTurnCharacter(DartsEventWork *work);
+int DartsIsOpponentMatch(DartsEventWork *work);
+shen_name DartsSelectBoard(DartsEventWork *work, shen_name actor);
+int DartsOpponentIndex(shen_name opponent);
+shen_name DartsTurnArrowName(DartsEventWork *work, int index);
+int DartsIsMatchDecided(DartsEventWork *work);
+int DartsBattleResult(DartsEventWork *work);
+void DartsShowTurnActor(DartsEventWork *work);
+void DartsSetTurn(DartsEventWork *work, char enemyTurn);
+int DartsSwitchTurn(DartsEventWork *work);
+void DartsStoreTurnBank(DartsEventWork *work);
+void DartsLoadAudioBank(DartsEventWork *work, int bankMode);
+void DartsShowBankScore(DartsEventWork *work, int row);
+void DartsShowCompactScore(DartsEventWork *work, int row);
+HLibTask *DartsQueueVoiceWait(HLibTask *parent, void *conversation);
+void DartsWaitVoice(void *data);
+void *DartsResponse(DartsEventWork *work, int index);
+void *DartsExecuteResponse(int index, int opponentMatch, int playerTurn, int playerWon, shen_name opponent);
+HLibTask *DartsQueueCameraWait(DartsEventWork *root, int camera, shen_name eye, shen_name target);
+void DartsCameraWait(void *data);
+void DartsCamera(DartsEventWork *work, int camera, shen_name eye, shen_name target, int delay);
+HLibTaskCallback DartsOpponentThrowCallback(shen_name opponent);
+void DartsOpponentAdmission(void *data);
+int DartsIsHardJon(shen_name opponent, int difficulty);
+int DartsOpponentAttachBone(shen_name opponent, int difficulty);
+unsigned int DartsBeginOpponentThrow(shen_name opponent, int mode, int difficulty);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/date_time.hpp"
 #include "s2/event_runtime.hpp"
@@ -149,3 +413,4 @@ void DartsInitializeScoreBanks(DartsEventWork *work);
 void DartsPlaceCameraDummies(DartsEventWork *work);
 extern const ScriptAreaDefinition dartScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

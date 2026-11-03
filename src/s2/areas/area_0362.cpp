@@ -1,3 +1,99 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0362.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void Start0362(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0362, 4, 11, sizeof(Area0273Parameter), TASK_EVNT);
+    Area0273Parameter *parent = (Area0273Parameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->task = task;
+    parent->state = 1;
+    parent->author = 0;
+    Setup0362();
+    Queue_EVT_UTL_LoadNPCChara_3(area0362Characters, parent->task);
+}
+#else
+void Update0362(void *taskData)
+{
+    Area0273Parameter *parent = (Area0273Parameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        Queue0362Author(parent);
+        break;
+    case 3:
+        Cleanup0362(parent);
+        break;
+    }
+}
+
+void Queue0362Author(Area0273Parameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0362Author, 4, 11, sizeof(Area0362AuthorParameter), TASK_EVNT);
+    Area0362AuthorParameter *child = (Area0362AuthorParameter *)FTBL.HLib_GetTaskParameter(task);
+    child->parent = parent;
+    child->frame = 0;
+    Prepare0362Characters();
+    FTBL.EV_authSceneCtrl(parent->author);
+    parent->state = 2;
+}
+
+void Update0362Author(void *taskData)
+{
+    Area0362AuthorParameter *child = (Area0362AuthorParameter *)taskData;
+    if (FTBL.EV_authSceneCtrl(-6) == 1)
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        child->parent->state = 3;
+        Restore0362Characters();
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void Setup0362(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0362");
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    FTBL.SetMapModelDataDefaultVertexShader();
+    FTBL.EV_lightLoad(AREA_0362_LIGHT);
+    FTBL.PushGlobalLightingProgram();
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    FTBL.UpdateWeather();
+}
+
+void Cleanup0362(Area0273Parameter *parent)
+{
+    EVT_UTL_FreeNPCChara(area0362Characters);
+    FTBL.EV_FreeAuthorPak(0, "0362");
+    FTBL.HLib_DestroyTask(parent->task);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0362_DESTINATION, 0);
+}
+
+const shen_name area0362Characters[] = {AREA_0362_KUN, INVALID_CHARACTER};
+
+void Prepare0362Characters(void)
+{
+    HideAuthorCharacter(RYO_CHARACTER);
+    HideAuthorCharacter(AREA_0362_KUN);
+    HideAuthorProp(AREA_0362_PROP_A047);
+    HideAuthorProp(AREA_0362_PROP_AA76);
+}
+
+void Restore0362Characters(void)
+{
+    ShowAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorCharacter(AREA_0362_KUN);
+    ShowAuthorProp(AREA_0362_PROP_A047);
+    ShowAuthorProp(AREA_0362_PROP_AA76);
+}
+
+#define SHENMUE_EVENT_AUTHOR_PROPS
+#include "s2/events/event_author_dc.h"
+#endif
+#else
 #include "s2/areas/area_0362.hpp"
 #include "s2/author.hpp"
 #include "s2/character.hpp"
@@ -113,3 +209,4 @@ void Restore0362Characters() {
 const ScriptAreaDefinition area0362ScriptDefinition{.areaId = AREA_0362, .field04 = 0, .init = Initialize0362, .main = Start0362};
 
 } // namespace shenmue::s2::areas
+#endif

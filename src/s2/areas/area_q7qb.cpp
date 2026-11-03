@@ -1,3 +1,476 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_q7qb.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void StartQ7Qb(void *argument)
+{
+    QueueQ7Qb();
+}
+#else
+static const shen_name q7qbCharacters[] = {Q7QB_RYO, Q7QB_REN, Q7QB_KK9, Q7QB_KK8, Q7QB_KN1, Q7QB_RIK, Q7QB_SBK, Q7QB_KKA, Q7QB_KN2, Q7QB_KK7, Q7QB_INVALID};
+
+void QueueQ7Qb(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Q7QbStartCallback, 4, 11, sizeof(Q7QbWork), TASK_EVNT);
+    Q7QbWork *work = (Q7QbWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    Q7QbSetup(work);
+    EventDebugRegister(Q7QB_DEBUG_ID, Q7QbDebugExitCallback, work, 2000000000);
+}
+
+void Q7QbDebugExitCallback(void *data)
+{
+    Q7QbFinish((Q7QbWork *)data);
+}
+
+void Q7QbFinish(Q7QbWork *work)
+{
+    Q7QbCleanup(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    EventDebugUnregister(Q7QB_DEBUG_ID);
+    if (g_currentMap == Q7QB_AREA) {
+        FTBL.scenSetTaskFlags(6);
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+    }
+}
+
+void Q7QbResetSequence(Q7QbSequence *sequence)
+{
+    sequence->continuation = Q7QbFirstAttackCallback;
+    sequence->result.player = Q7QB_RYO;
+    sequence->result.firstOpponent = Q7QB_KK9;
+    sequence->result.secondOpponent = Q7QB_KK7;
+    sequence->result.motionFlags = 0x44000000U;
+    sequence->phase = 0;
+}
+
+void Q7QbStartCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    Q7QbSequence *sequence = &work->sequence;
+    EventDebugCheck(Q7QB_DEBUG_ID, 4);
+    Q7QbResetSequence(sequence);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(Q7QB_RYO));
+    EVT_AT_SetPos(Q7QB_BASE, Q7QB_INVALID, 198.1f, work->baseHeight, 161.9f, 0);
+    EVT_AT_SetAngY(Q7QB_BASE, Q7QB_INVALID, 180.0f, 0);
+    EVT_AT_SetPos(Q7QB_RYO, Q7QB_BASE, -1.0f, 0.0f, -0.5f, 0);
+    EVT_AT_SetAngY(Q7QB_RYO, Q7QB_BASE, 0.0f, 0);
+    EVT_AT_SetPos(Q7QB_REN, Q7QB_BASE, -10000.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_REN, Q7QB_BASE, 0.0f, 0);
+    EVT_AT_SetPos(Q7QB_CAMERA_DUMMY, Q7QB_BASE, -2.55f, 0.0f, 5.2f, 0);
+    EVT_AT_SetAngY(Q7QB_CAMERA_DUMMY, Q7QB_BASE, -90.0f, 0);
+    EVT_AT_SetPos(Q7QB_KK9, Q7QB_BASE, 100.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_KK9, Q7QB_BASE, 0.0f, 0);
+    EVT_AT_SetPos(Q7QB_KK7, Q7QB_BASE, 100.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_KK7, Q7QB_BASE, 0.0f, 0);
+    EVT_AT_SetPos(Q7QB_KK8, Q7QB_BASE, 100.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_KK8, Q7QB_BASE, 0.0f, 0);
+    EVT_AT_SetPos(Q7QB_KKA, Q7QB_BASE, 100.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_KKA, Q7QB_BASE, 0.0f, 0);
+    EVT_AT_SetPos(Q7QB_KN1, Q7QB_BASE, 100.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_KN1, Q7QB_BASE, 180.0f, 0);
+    EVT_AT_SetPos(Q7QB_KN2, Q7QB_BASE, 100.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_KN2, Q7QB_BASE, 0.0f, 0);
+    EVT_AT_SetPos(Q7QB_RIK, Q7QB_BASE, 100.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_RIK, Q7QB_BASE, 180.0f, 0);
+    EVT_AT_SetPos(Q7QB_SBK, Q7QB_BASE, 100.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_SBK, Q7QB_BASE, 180.0f, 0);
+    FTBL.AT_SetLocalBaseChara(Q7QB_DUMMY, Q7QB_RYO);
+    EVT_AT_SetPos(Q7QB_DUMMY, Q7QB_RYO, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(Q7QB_DUMMY, Q7QB_RYO, 0.0f, 0);
+    EVT_AT_SetMot(Q7QB_RYO, 13, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(Q7QB_KK9, 13, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(Q7QB_KK7, 13, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(Q7QB_KK8, 13, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(Q7QB_KKA, 13, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(Q7QB_KN1, 13, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(Q7QB_KN2, 13, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(Q7QB_RIK, 13, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(Q7QB_SBK, 13, 0.0f, 1.0f, 0x40000000U, 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KK9), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KK7), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KK8), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KKA), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KN1), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KN2), 0);
+    FTBL.EV_LoadAudio("0290A000", 1);
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_authSceneCtrl(Q7QB_AUTHOR_INTRO);
+    FTBL.HLib_SetCurrentTaskTo(Q7QbWaitIntroCallback);
+}
+
+void Q7QbWaitIntroCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    int playing = FTBL.EV_authSceneCtrl(-1);
+    if (!playing) {
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(Q7QB_RYO), 1, 0, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(Q7QB_RYO), 1, 1, 0);
+        Queue_EVT_AT_CtrlHandUp_1(Q7QB_RYO, 0, (void *)areaLoopHandPoses[Q7QB_QTE_HAND_POSE], 0, playing);
+        Queue_EVT_AT_CtrlHandUp_1(Q7QB_RYO, 1, (void *)areaLoopHandPoses[Q7QB_QTE_HAND_POSE], 0, playing);
+        EVT_AT_SetFaceLooks(Q7QB_RYO, 1, 0, 1.0f, 0);
+        EVT_AT_SetPosAng(Q7QB_KK8, Q7QB_BASE, -1000.0f, 0.0f, 0.0f, 0);
+        FTBL.HLib_SetCurrentTaskTo(work->sequence.continuation);
+    }
+}
+
+void Q7QbFirstAttackCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    Q7QbSequence *sequence = &work->sequence;
+    int delay;
+    switch (sequence->phase++) {
+    case 0:
+        sequence->result.firstOpponent = Q7QB_KK9;
+        delay = Queue_EVT_AT_ResultQTE(&work->succeeded, &sequence->result, &q7qbQteData[0], 0);
+        FTBL.HLib_SetupTaskDelay(delay);
+        break;
+    case 1:
+        if (!work->succeeded) {
+            FTBL.HLib_SetCurrentTaskTo(Q7QbEndCallback);
+            FTBL.HLib_SetupTaskDelay(60);
+        }
+        break;
+    default:
+        sequence->phase = 0;
+        sequence->continuation = Q7QbSecondAttackCallback;
+        FTBL.HLib_SetCurrentTaskTo(sequence->continuation);
+        FTBL.HLib_SetupTaskDelay(15);
+        break;
+    }
+}
+
+void Q7QbSecondAttackCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    Q7QbSequence *sequence = &work->sequence;
+    int delay;
+    switch (sequence->phase++) {
+    case 0:
+        sequence->result.firstOpponent = Q7QB_KK7;
+        delay = Queue_EVT_AT_ResultQTE(&work->succeeded, &sequence->result, &q7qbQteData[1], 0);
+        FTBL.HLib_SetupTaskDelay(delay);
+        break;
+    case 1:
+        if (!work->succeeded) {
+            FTBL.HLib_SetCurrentTaskTo(Q7QbEndCallback);
+            FTBL.HLib_SetupTaskDelay(60);
+        }
+        break;
+    default:
+        sequence->phase = 0;
+        sequence->continuation = Q7QbThirdAttackCallback;
+        FTBL.HLib_SetCurrentTaskTo(sequence->continuation);
+        FTBL.HLib_SetupTaskDelay(30);
+        break;
+    }
+}
+
+void Q7QbThirdAttackCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    Q7QbSequence *sequence = &work->sequence;
+    int delay;
+    switch (sequence->phase++) {
+    case 0:
+        sequence->result.firstOpponent = Q7QB_KK8;
+        delay = Queue_EVT_AT_ResultQTE(&work->succeeded, &sequence->result, &q7qbQteData[2], 0);
+        FTBL.HLib_SetupTaskDelay(delay);
+        break;
+    case 1:
+        if (!work->succeeded) {
+            FTBL.HLib_SetCurrentTaskTo(Q7QbEndCallback);
+            FTBL.HLib_SetupTaskDelay(60);
+        }
+        break;
+    default:
+        sequence->phase = 0;
+        sequence->continuation = Q7QbFourthAttackCallback;
+        FTBL.HLib_SetCurrentTaskTo(sequence->continuation);
+        FTBL.HLib_SetupTaskDelay(30);
+        break;
+    }
+}
+
+void Q7QbFourthAttackCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    Q7QbSequence *sequence = &work->sequence;
+    int delay;
+    switch (sequence->phase++) {
+    case 0:
+        sequence->result.firstOpponent = Q7QB_KKA;
+        delay = Queue_EVT_AT_ResultQTE(&work->succeeded, &sequence->result, &q7qbQteData[3], 0);
+        FTBL.HLib_SetupTaskDelay(delay);
+        break;
+    case 1:
+        if (!work->succeeded) {
+            FTBL.HLib_SetCurrentTaskTo(Q7QbEndCallback);
+            FTBL.HLib_SetupTaskDelay(60);
+        }
+        break;
+    default:
+        sequence->phase = 0;
+        sequence->continuation = Q7QbFifthAttackCallback;
+        FTBL.HLib_SetCurrentTaskTo(sequence->continuation);
+        FTBL.HLib_SetupTaskDelay(30);
+        break;
+    }
+}
+
+void Q7QbFifthAttackCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    Q7QbSequence *sequence = &work->sequence;
+    int delay;
+    switch (sequence->phase++) {
+    case 0:
+        sequence->result.firstOpponent = Q7QB_KN1;
+        delay = Queue_EVT_AT_ResultQTE(&work->succeeded, &sequence->result, &q7qbQteData[4], 0);
+        FTBL.HLib_SetupTaskDelay(delay);
+        break;
+    case 1:
+        if (!work->succeeded) {
+            FTBL.HLib_SetCurrentTaskTo(Q7QbEndCallback);
+            FTBL.HLib_SetupTaskDelay(60);
+        }
+        break;
+    default:
+        sequence->phase = 0;
+        sequence->continuation = Q7QbSixthAttackCallback;
+        FTBL.HLib_SetCurrentTaskTo(sequence->continuation);
+        FTBL.HLib_SetupTaskDelay(60);
+        break;
+    }
+}
+
+void Q7QbSixthAttackCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    Q7QbSequence *sequence = &work->sequence;
+    int delay;
+    switch (sequence->phase++) {
+    case 0:
+        sequence->result.firstOpponent = Q7QB_KN1;
+        sequence->result.secondOpponent = Q7QB_KN2;
+        delay = Queue_EVT_AT_ResultQTE(&work->succeeded, &sequence->result, &q7qbQteData[5], 0);
+        FTBL.HLib_SetupTaskDelay(delay);
+        break;
+    case 1:
+        if (!work->succeeded) {
+            FTBL.HLib_SetCurrentTaskTo(Q7QbEndCallback);
+            FTBL.HLib_SetupTaskDelay(60);
+        }
+        break;
+    default:
+        sequence->phase = 0;
+        sequence->continuation = Q7QbFinalAttackCallback;
+        FTBL.HLib_SetCurrentTaskTo(sequence->continuation);
+        FTBL.HLib_SetupTaskDelay(60);
+        break;
+    }
+}
+
+void Q7QbFinalAttackCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    Q7QbSequence *sequence = &work->sequence;
+    int delay;
+    switch (sequence->phase++) {
+    case 0:
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KK9), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KK7), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KK8), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KKA), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KN1), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(Q7QB_KN2), 1);
+        sequence->result.firstOpponent = Q7QB_RIK;
+        sequence->result.secondOpponent = Q7QB_SBK;
+        delay = Queue_EVT_AT_ResultQTE(&work->succeeded, &sequence->result, &q7qbQteData[6], 0);
+        FTBL.HLib_SetupTaskDelay(delay);
+        break;
+    case 1:
+        if (work->succeeded) {
+            delay = Queue_EVT_AT_ResultQTE(&work->succeeded, &sequence->result, &q7qbQteData[7], 0);
+            FTBL.HLib_SetupTaskDelay(delay);
+        } else {
+            FTBL.HLib_SetCurrentTaskTo(Q7QbEndCallback);
+            FTBL.HLib_SetupTaskDelay(120);
+        }
+        break;
+    case 2:
+        if (!work->succeeded) {
+            FTBL.HLib_SetCurrentTaskTo(Q7QbEndCallback);
+            FTBL.HLib_SetupTaskDelay(120);
+        } else
+            FTBL.HLib_SetupTaskDelay(25);
+        break;
+    case 3:
+        FTBL.qteBattleUtil(9, 1, 256, 0, 0);
+        EVT_AT_QTE(0, 16, 0, 0, 4);
+        break;
+    default:
+        if (FTBL.qteBattleUtil(4, 0, 0, 0, 0)) {
+            if (FTBL.qteBattleUtil(6, 0, 0, 0, 0) == 2) {
+                work->succeeded = 1;
+                sequence->phase = 0;
+                sequence->continuation = Q7QbStartResultAuthorCallback;
+                Q7QbBattleSuccess(&sequence->result, 0);
+                EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 70);
+                FTBL.HLib_SetCurrentTaskTo(Q7QbWaitMotionCallback);
+                FTBL.HLib_SetupTaskDelay(100);
+            } else {
+                work->succeeded = 0;
+                Q7QbBattleFailure(&sequence->result, 0);
+                FTBL.HLib_SetCurrentTaskTo(Q7QbEndCallback);
+                FTBL.HLib_SetupTaskDelay(120);
+            }
+        }
+        break;
+    }
+}
+
+void Q7QbWaitMotionCallback(void *data)
+{
+    if (FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(Q7QB_RYO), 65, 1, 0))
+        FTBL.HLib_SetCurrentTaskTo(((Q7QbWork *)data)->sequence.continuation);
+}
+
+void Q7QbStartResultAuthorCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    RestoreEventCharacter(work->characters);
+    RestoreEventCharacter(work->characters);
+    RestoreEventCharacter(work->characters);
+    FTBL.EV_authSceneCtrl(Q7QB_AUTHOR_RESULT);
+    work->sequence.continuation = Q7QbEndCallback;
+    FTBL.HLib_SetCurrentTaskTo(Q7QbWaitResultAuthorCallback);
+}
+
+void Q7QbWaitResultAuthorCallback(void *data)
+{
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        EVT_AT_SetSample(0, 1, 0);
+        FTBL.HLib_SetCurrentTaskTo(((Q7QbWork *)data)->sequence.continuation);
+        FTBL.HLib_SetupTaskDelay(60);
+    }
+}
+
+void Q7QbEndCallback(void *data)
+{
+    Q7QbWork *work = (Q7QbWork *)data;
+    int delay;
+    if (work->succeeded)
+        Q7QbFinish(work);
+    else {
+        delay = PlayStandingQteRetryVoices(0);
+        EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+        EVT_AT_SetSample(0, 1, delay - 60);
+        EVT_IncrementQteFailureCount();
+        RestoreEventDateTime();
+        FTBL.HLib_SetCurrentTaskTo(Q7QbStartCallback);
+        FTBL.HLib_SetupTaskDelay(delay);
+    }
+}
+
+int PlayStandingQteRetryVoices(int delay)
+{
+    int frames = delay;
+    if (FTBL.GetRandomNumberInRange(100.0f) < 50.0f) {
+        EVT_AT_SetVoice("S2BVB010", delay + 23);
+        EVT_AT_SetVoice("S2BVA010", delay + 92);
+        EVT_AT_SetSound(653, delay + 53);
+        EVT_AT_SetSound(651, delay + 85);
+        EVT_AT_SetSound(652, delay + 115);
+        EVT_AT_SetSound(652, delay + 131);
+        EVT_AT_SetSound(650, delay + 142);
+        EVT_AT_SetSound(649, delay + 158);
+        EVT_AT_SetSound(628, delay + 45);
+        EVT_AT_SetSound(629, delay + 51);
+        EVT_AT_SetSound(649, delay + 58);
+        EVT_AT_SetSound(650, delay + 70);
+        frames += 225;
+    } else {
+        EVT_AT_SetVoice("S2BVC007", delay + 21);
+        EVT_AT_SetVoice("S2BVC009", delay + 57);
+        EVT_AT_SetVoice("S2BVA012", delay + 105);
+        EVT_AT_SetSound(649, delay + 62);
+        EVT_AT_SetSound(650, delay + 76);
+        EVT_AT_SetSound(132, delay + 87);
+        EVT_AT_SetSound(653, delay + 98);
+        EVT_AT_SetSound(651, delay + 114);
+        EVT_AT_SetSound(652, delay + 130);
+        EVT_AT_SetSound(649, delay + 140);
+        EVT_AT_SetSound(628, delay + 155);
+        EVT_AT_SetSound(652, delay + 160);
+        EVT_AT_SetSound(650, delay + 187);
+        EVT_AT_SetSound(628, delay + 52);
+        EVT_AT_SetSound(629, delay + 58);
+        EVT_AT_SetSound(132, delay + 127);
+        EVT_AT_SetSound(133, delay + 165);
+        EVT_AT_SetSound(649, delay + 194);
+        EVT_AT_SetSound(628, delay + 160);
+        EVT_AT_SetSound(629, delay + 166);
+        frames += 260;
+    }
+    return frames;
+}
+
+void Q7QbSetup(Q7QbWork *work)
+{
+    Vector3 position;
+    EVT_SetQteRetryFrames(24);
+    SaveEventDateTime();
+    FTBL.GetCharaPosition(Q7QB_RYO, -1, &position, 0x40000000);
+    work->baseHeight = position.y;
+    work->characters = Queue_EVT_AT_ReadChr(work->task, q7qbCharacters);
+    work->succeeded = 1;
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0290", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"Q7QB", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "Q7QB", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "Q7QB", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0290");
+    FTBL.EV_FreeAuthorPak(1, "S2BV");
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0290A000");
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+    FTBL.qteBattleUtil(0, 0, 0, 0, 0);
+    FTBL.qteBattleUtil(2, 0, 0, 0, 0);
+}
+
+void Q7QbCleanup(Q7QbWork *work)
+{
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(Q7QB_RYO));
+    FTBL.qteBattleUtil(5, 0, 0, 0, 0);
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0290");
+    FTBL.EV_FreeAuthorPak(0, "S2BV");
+    FTBL.EV_ControlPackageResources(0, 6, "Q7QB", 0, 0);
+    FTBL.EV_ControlPackageResources(0, 6, "0290", 0, 0);
+    ET_AT_KillWork(work->characters);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+}
+
+const EventQteData q7qbQteData[] = {
+    {0x400, 23, 16, 2, 0, 15, 0, Q7QbFirstAttackBegin, Q7QbFirstAttackSuccess, Q7QbFirstAttackFailure},
+    {0x100, 23, 16, 2, 0, 8, 0, Q7QbSecondAttackBegin, Q7QbSecondAttackSuccess, Q7QbSecondAttackFailure},
+    {0x200, 23, 16, 3, 12, 0, 0, Q7QbThirdAttackBegin, Q7QbThirdAttackSuccess, Q7QbThirdAttackFailure},
+    {0x100, 23, 16, 4, 0, 8, 0, Q7QbFourthAttackBegin, Q7QbFourthAttackSuccess, Q7QbFourthAttackFailure},
+    {0x800, 23, 16, 0, 0, 5, 0, Q7QbFifthAttackBegin, Q7QbFifthAttackSuccess, Q7QbFifthAttackFailure},
+    {0x100, 23, 16, 4, 0, 6, 0, Q7QbSixthAttackBegin, Q7QbSixthAttackSuccess, Q7QbSixthAttackFailure},
+    {0x800, 23, 16, 0, 0, 10, 0, Q7QbFinalAttackBegin, Q7QbFinalAttackSuccess, Q7QbFinalAttackFailure},
+    {0x100, 14, 14, 0, 0, 0, 0, 0, Q7QbFinalCounterSuccess, Q7QbFinalCounterFailure},
+    {0x100, 23, 16, 0, 0, 0, 0, 0, Q7QbBattleSuccess, Q7QbBattleFailure},
+};
+#endif
+#else
 #include "s2/areas/area_q7qb.hpp"
 #include "s2/author.hpp"
 #include "s2/battle_qte.hpp"
@@ -437,3 +910,4 @@ void RunQ7QbEvent(std::uintptr_t) {
 }
 const ScriptAreaDefinition q7qbScriptDefinition{.areaId = Q7QB_AREA, .field04 = 0, .init = InitializeQ7QbEvent, .main = RunQ7QbEvent};
 } // namespace shenmue::s2::areas
+#endif

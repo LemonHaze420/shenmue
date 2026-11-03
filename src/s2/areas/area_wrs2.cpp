@@ -1,3 +1,58 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_wrs2.hpp"
+
+ConditionalNpcLoadEntry areaWRS2DartsNpcLoads[3] = {
+    {SHEN_NAME4('F', 'C', 'J', '_'), {10000.0f, 0.0f, 0.0f}, 0, 0xf002, -1, AreConditionalNpcLoadsPending},
+    {SHEN_NAME4('J', 'O', 'N', '_'), {10000.0f, 0.0f, 0.0f}, 0, 0xf002, -1, AreConditionalNpcLoadsPending},
+    {0xffffffffU},
+};
+EventDartsPlacement areaWRS2DartsPlacements[3] = {
+    {0, {0, 0, 0}, {173.9f, 101.35f, 156.0f}, SHEN_NAME4('D', 'A', 'R', '1'), SHEN_NAME4('D', 'A', 'R', '2')},
+    {1, {0, 0, 0}, {174.9f, 101.35f, 156.0f}, SHEN_NAME4('D', 'A', 'R', '2'), SHEN_NAME4('D', 'A', 'R', '2')},
+    {1, {0, 0, 0}, {173.9f, 101.35f, 156.0f}, SHEN_NAME4('D', 'A', 'R', '1'), SHEN_NAME4('D', 'A', 'R', '1')},
+};
+EventDartsEnemy areaWRS2FirstEnemy = {SHEN_NAME4('F', 'C', 'J', '_'), 0, 0, 0};
+EventDartsEnemy areaWRS2SecondEnemy = {SHEN_NAME4('J', 'O', 'N', '_'), 3, 0, 0};
+
+void AreaMain(unsigned int startParameters)
+{
+    EventDateTime dateTime;
+    FTBL.HLib_EnqueueTaskWithoutParameter(WRS2MainLoopNullsub, 4, 11, WRS2_EVENT_TASK);
+    FTBL.GetCurrentDateTime((DateTime *)&dateTime);
+    if ((unsigned char)(dateTime.hour - 19) <= 5)
+        AreaCleanup(1);
+    else
+        AreaCleanup(0);
+    if (FTBL.EV_GetShenmueFlag(0x394)) {
+        EVT_SetEnemyDarts(areaWRS2DartsPlacements, &areaWRS2FirstEnemy, 0);
+        EVT_DartsEasySingle(areaWRS2DartsPlacements + 1, 1);
+        QueueConditionalNpcLoads(areaWRS2DartsNpcLoads);
+    } else if (FTBL.EV_GetShenmueFlag(0x33d)) {
+        EVT_SetEnemyDarts(areaWRS2DartsPlacements, &areaWRS2SecondEnemy, 0);
+        EVT_DartsEasySingle(areaWRS2DartsPlacements + 1, 1);
+        QueueConditionalNpcLoads(areaWRS2DartsNpcLoads);
+    } else {
+        EVT_DartsEasySingle(areaWRS2DartsPlacements + 1, 2);
+        FTBL.ToggleFlagOnFieldEntity(WRS2_DARTS_ENTITY, 0);
+    }
+}
+
+void AreaCleanup(int afternoon)
+{
+    FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+    FTBL.PushGlobalLightingProgram();
+    FTBL.CheckIsArgEquZero(1, 1);
+    AreaWRS2CleanupNullsub(afternoon);
+}
+
+void AreaWRS2CleanupNullsub(int afternoon)
+{
+}
+
+void WRS2MainLoopNullsub(void *taskData)
+{
+}
+#else
 #include "s2/areas/area_wrs2.hpp"
 #include "s2/areas/area_dart.hpp"
 #include "s2/field_collision.hpp"
@@ -51,3 +106,4 @@ void AreaWRS2Cleanup(std::int32_t, std::uint32_t) {
 }
 const GameplayAreaDefinition areaWRS2GameplayDefinition{SHEN_NAME(WRS2), 0, AreaWRS2Init, AreaWRS2Main, AreaWRS2Cleanup};
 } // namespace shenmue::s2::areas
+#endif

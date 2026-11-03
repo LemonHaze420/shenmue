@@ -1,4 +1,48 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+typedef struct GamblingFreeBoardPlacement {
+    shen_name area;
+    Vector3 position;
+    float angleX, angleY, angleZ;
+    int firstDigits, secondDigits;
+} GamblingFreeBoardPlacement;
+typedef struct GamblingBoardPlacement {
+    shen_name area;
+    Vector3 position;
+    float angleY;
+    int firstDigits, secondDigits;
+} GamblingBoardPlacement;
+typedef struct GamblingTablePlacement {
+    shen_name area;
+    Vector3 position;
+    float angleY;
+    int firstDigits, secondDigits;
+    short objectKinds[2];
+} GamblingTablePlacement;
+#define GAMBLING_ANGLE(degrees) ((int)((degrees) * 8192.0f / 45.0f) & 0xffff)
+#define GAMBLING_PACKAGE(archive)                                                                                    \
+    if (!FTBL.EV_ControlPackageResources(0, 5, archive, 0, 0)) {                                                     \
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(7), (int)archive, 0);                              \
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);                                                              \
+    }
+#define GAMBLING_BOARD_BASE SHEN_NAME4('m', 'b', '0', '0')
+#define GAMBLING_NO_PARENT 0xffffffffU
+
+extern unsigned int g_areaBoardCharacterIndex;
+void SetGamble(void);
+void GamblePrepareNullsub(void);
+void GambleInit(void);
+void PlaceGamblingBoardDigits(shen_name parent, int digits, short axis);
+void SetupObjects(short index);
+int IsNotInGamblingHouse(void);
+void FreeGambleEvent(void);
+void SetGamblingLocalPlacement(shen_name character, shen_name parent, float x, float y, float z);
+void LoadBoardSet(shen_name parent, float x, float y, float z, float angleX, float angleY, float angleZ, int firstDigits, int secondDigits);
+#else
+#pragma once
 #include "common/types.hpp"
 #include "common/math.hpp"
 #include "s2/area_event.hpp"
@@ -97,3 +141,4 @@ void SetupObjects(std::int16_t index);
 bool IsNotInGamblingHouse();
 void PlaceGamblingBoardDigits(shen_name parent, std::int32_t digits, std::int16_t axis);
 } // namespace shenmue::s2
+#endif

@@ -1,3 +1,93 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0273.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void Start0273(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0273, 4, 11, sizeof(Area0273Parameter), TASK_EVNT);
+    Area0273Parameter *parent = (Area0273Parameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->task = task;
+    parent->state = 1;
+    parent->author = 0;
+    Setup0273();
+    Queue_EVT_UTL_LoadNPCChara_3(area0273Characters, parent->task);
+}
+#else
+void Update0273(void *taskData)
+{
+    Area0273Parameter *parent = (Area0273Parameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        Queue0273Author(parent);
+        break;
+    case 3:
+        Cleanup0273(parent);
+        break;
+    }
+}
+
+void Queue0273Author(Area0273Parameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0273Author, 4, 11, sizeof(Area0273AuthorParameter), TASK_EVNT);
+    ((Area0273AuthorParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    Prepare0273Characters();
+    FTBL.EV_authSceneCtrl(AREA_0273_AUTHOR);
+    parent->state = 2;
+}
+
+void Update0273Author(void *taskData)
+{
+    Area0273AuthorParameter *child = (Area0273AuthorParameter *)taskData;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        child->parent->state = 3;
+        Restore0273Characters();
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void Setup0273(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_FreeAuthorPak(1, "0273");
+    FTBL.EV_LoadCutsceneFromCurrentScene("0273A000");
+}
+
+void Cleanup0273(Area0273Parameter *parent)
+{
+    EVT_UTL_FreeNPCChara(area0273Characters);
+    FTBL.EV_ControlPackageResources(0, 6, "0273A", 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0273");
+    FTBL.HLib_DestroyTask(parent->task);
+    if (g_currentMap != AREA_0273_SOURCE) {
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+    } else {
+        FTBL.scenSetTaskFlags(8);
+        FTBL.EV_scenQueueLoad(g_actNumber, AREA_0273_DESTINATION, 0);
+    }
+}
+
+const shen_name area0273Characters[] = {AREA_0273_JOP, INVALID_CHARACTER};
+
+void Prepare0273Characters(void)
+{
+    HideAuthorCharacter(RYO_CHARACTER);
+    HideAuthorCharacter(AREA_0273_JOP);
+}
+
+void Restore0273Characters(void)
+{
+    ShowAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorCharacter(AREA_0273_JOP);
+}
+
+#include "s2/events/event_author_dc.h"
+#endif
+#if !defined(SHENMUE_EVENT_ENTRY)
+#include "s2/event_utility_dc.c"
+#endif
+#else
 #include "s2/areas/area_0273.hpp"
 #include "s2/author.hpp"
 #include "s2/character.hpp"
@@ -100,3 +190,4 @@ void Update0273AuthorTask(void *taskData) {
 const ScriptAreaDefinition area0273ScriptDefinition{.areaId = AREA_0273, .field04 = 0, .init = Initialize0273, .main = Start0273};
 
 } // namespace shenmue::s2::areas
+#endif

@@ -1,3 +1,36 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_utility_dc.h"
+#include "s2/event_queued_dc.h"
+
+#define OP02_SHENHUA SHEN_NAME4('S', 'I', 'N', '_')
+#define OP02_AREA SHEN_NAME4('O', 'P', '0', '2')
+#define OP02_LIGHT_DAY SHEN_NAME4('l', '1', '0', '1')
+#define OP02_LIGHT_NIGHT SHEN_NAME4('l', '1', '0', '2')
+#define OP02_WAVE_TASK SHEN_NAME4('w', 'a', 'v', 'e')
+typedef struct Op02EventWork {
+    HLibTask *task;
+    short mode;
+} Op02EventWork;
+extern const shen_name op02AuthorCharacters[];
+extern const float op02PairwiseKernel[64];
+
+void AreaOP02Main(void);
+void OP02MainCallback(void *data);
+void OP02QueueAuthor(Op02EventWork *work);
+void OP02AuthorLoopCallback(void *data);
+void OP02SetHourAndMinute(short hour, short minute);
+void OP02SetLightingAndWeather(short mode);
+void OP02ResetWeather(void);
+void OP02Prepare(void);
+void OP02Release(Op02EventWork *work);
+void OP02PrepareSceneCharacters(void);
+void OP02RestoreSceneCharacters(void);
+void OP02PrepareCharacter(shen_name character);
+void OP02RestoreCharacter(shen_name character);
+void OP02PrepareProp(shen_name prop);
+void OP02RestoreProp(shen_name prop);
+void OP02WaveCallback(void *data);
+#else
 #pragma once
 #include "s2/area_event.hpp"
 #include "s2/hlib.hpp"
@@ -38,3 +71,4 @@ void OP02SetLightingAndWeather(std::int16_t mode);
 void OP02ResetWeather();
 extern const ScriptAreaDefinition areaOP02ScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

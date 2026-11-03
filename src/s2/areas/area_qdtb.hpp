@@ -1,4 +1,96 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/areas/common/et_thr.h"
+
+#define QDTB_TASK TASK_EVNT
+#define QDTB_SEQUENCE SHEN_NAME4('S', 'E', 'Q', 'P')
+#define QDTB_BATTLE SHEN_NAME4('B', 'S', 'B', 'T')
+#define QDTB_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define QDTB_RETURN_AREA SHEN_NAME4('0', '2', '5', '0')
+#define QDTB_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define QDTB_TGY SHEN_NAME4('T', 'G', 'Y', '_')
+#define QDTB_YOH SHEN_NAME4('Y', 'O', 'H', '_')
+#define QDTB_RKN SHEN_NAME4('R', 'K', 'N', '_')
+#define QDTB_III SHEN_NAME4('I', 'I', 'I', '_')
+#define QDTB_SEE SHEN_NAME4('S', 'E', 'E', '_')
+#define QDTB_SYE SHEN_NAME4('S', 'Y', 'E', '_')
+#define QDTB_TENT SHEN_NAME4('T', 'E', 'N', 'T')
+#define QDTB_A235 SHEN_NAME4('a', '2', '3', '5')
+#define QDTB_A352 SHEN_NAME4('a', '3', '5', '2')
+#define QDTB_A397 SHEN_NAME4('a', '3', '9', '7')
+#define QDTB_A398 SHEN_NAME4('a', '3', '9', '8')
+#define QDTB_A401 SHEN_NAME4('a', '4', '0', '1')
+#define QDTB_AUTHOR_0 SHEN_NAME4('A', 'U', '_', '0')
+#define QDTB_AUTHOR_1 SHEN_NAME4('A', 'U', '_', '1')
+#define QDTB_AUTHOR_2 SHEN_NAME4('A', 'U', '_', '2')
+#define QDTB_INVALID 0xffffffffU
+#define QDTB_DEBUG_ID 3
+#define QDTB_MOTION_SLOTS 16
+
+typedef struct QdtbAuthorWork {
+    HLibTask *task;
+    unsigned int reserved04;
+    shen_name author;
+    short state;
+} QdtbAuthorWork;
+typedef struct QdtbAuthorLoopWork {
+    QdtbAuthorWork *parent;
+    short frame;
+} QdtbAuthorLoopWork;
+typedef struct QdtbEventWork {
+    Thr *thread;
+    HLibTask *task;
+    int threadActive, mode, reserved10, reserved14;
+    void *motions[QDTB_MOTION_SLOTS];
+    EventReadCharactersWork *characters;
+    int reserved5c[3];
+    unsigned int fightFrames;
+    int frames;
+    unsigned char fade, exitFade, retries, reserved73;
+} QdtbEventWork;
+typedef struct QdtbSkyFadeWork {
+    HLibTask *task;
+    unsigned char state, started, reserved06[2];
+    unsigned int frames, cloud, sky;
+    int alpha[3], red[3], green[3], blue[3];
+    float cloudStep[4], cloudValue[4], skyStep[4], skyValue[4];
+} QdtbSkyFadeWork;
+
+extern const shen_name qdtbCharacters[];
+extern Vector3 qdtbRyoPosition, qdtbTgyPosition, qdtbRknPosition, qdtbSeePosition, qdtbYohPosition, qdtbIiiPosition;
+extern Vector3i qdtbRyoRotation, qdtbTgyRotation, qdtbRknRotation, qdtbSeeRotation, qdtbYohRotation, qdtbIiiRotation;
+extern unsigned char qdtbGangFightLost;
+extern HLibTask *qdtbSkyFadeTask;
+void QdtbMain(void);
+void QueueBoutAuthor(shen_name author);
+void BoutAuthorCallback(void *data);
+void QueueBoutAuthorLoop(QdtbAuthorWork *parent);
+void BoutAuthorLoopCallback(void *data);
+void DisableBoutAuthorPlayerControl(void);
+void DestroyBoutAuthor(QdtbAuthorWork *work);
+void BeginBoutAuthorCharacters(void);
+void EndBoutAuthorCharacters(void);
+void HideAuthorCharacter(shen_name character);
+void ShowAuthorCharacter(shen_name character);
+void HideAuthorProp(shen_name prop);
+void ShowAuthorProp(shen_name prop);
+void QueueQdtbEvent(void);
+void InitializeQdtbEvent(QdtbEventWork *work);
+void QdtbDebugExitCallback(void *data);
+void FinishQdtbEvent(QdtbEventWork *work);
+void QdtbEventCallback(void *data);
+void QdtbSequenceThread(void *data);
+void QdtbGangFightThread(void *data);
+void QdtbTgyFightThread(void *data);
+void QueueQdtbSkyFade(unsigned int minutes, int red, int green, int blue);
+void QdtbSkyFadeCallback(void *data);
+void BeginQdtbSkyFade(QdtbSkyFadeWork *work);
+void UpdateQdtbSkyFade(QdtbSkyFadeWork *work);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/seqp_event.hpp"
@@ -57,3 +149,4 @@ void QdtbInit();
 void QdtbMain(std::uintptr_t);
 extern const ScriptAreaDefinition qdtbScriptDefinition;
 } // namespace shenmue::s2
+#endif

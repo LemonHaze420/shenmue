@@ -1,3 +1,906 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_sfwf.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void SfwfMain(StreetFightStartParameters *start)
+{
+    if (start->scene == 99)
+        QueueDebug(start);
+    else
+        QueueNormal(start);
+}
+#elif defined(SHENMUE_EVENT_SFWF_AUTHOR)
+static shen_name sfwfAuthorCharacters[] = {SFWF_CHN, SFWF_CYC, SFWF_REN, SFWF_EEN, SFWF_SFA, SFWF_FIGHTER, SFWF_INVALID};
+
+void QueueAuthor(shen_name author)
+{
+    HLibTask *task;
+    SfwfAuthorWork *work;
+    task = FTBL.HLib_EnqueueTaskWithParameter(AuthorMainCallback, 4, 11, sizeof(SfwfAuthorWork), TASK_EVNT);
+    work = (SfwfAuthorWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    work->state = 1;
+    work->author = author;
+    BeginAuthor();
+}
+
+void AuthorMainCallback(void *data)
+{
+    SfwfAuthorWork *work = (SfwfAuthorWork *)data;
+    switch (work->state) {
+    case 1:
+        QueueAuthorLoop(work);
+        break;
+    case 3:
+        EndAuthor(work);
+        break;
+    }
+}
+
+void QueueAuthorLoop(SfwfAuthorWork *work)
+{
+    HLibTask *task;
+    SfwfAuthorLoopWork *loop;
+    task = FTBL.HLib_EnqueueTaskWithParameter(AuthorLoopCallback, 4, 11, sizeof(SfwfAuthorLoopWork), TASK_EVNT);
+    loop = (SfwfAuthorLoopWork *)FTBL.HLib_GetTaskParameter(task);
+    loop->parent = work;
+    loop->frame = 0;
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_authSceneCtrl(work->author);
+    work->state = 2;
+}
+
+void AuthorLoopCallback(void *data)
+{
+    SfwfAuthorLoopWork *loop = (SfwfAuthorLoopWork *)data;
+    loop->frame = FTBL.EV_authSceneCtrl(-6);
+    if (!loop->frame)
+        PrepareAuthorCharacters();
+    switch (loop->parent->author) {
+    case SFWF_AUTHOR_0:
+        if (loop->frame == FTBL.EV_authSceneCtrl(-5) - 30)
+            FTBL.spmFadeOut(0);
+        break;
+    case SFWF_AUTHOR_1:
+        switch (loop->frame) {
+        case 744:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 0, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_EEN), 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0);
+            FTBL.SetScenarioCharacterType(SFWF_PLAYER, 0);
+            FTBL.SetScenarioCharacterType(SFWF_REN, 0);
+            FTBL.SetScenarioCharacterType(SFWF_EEN, 4);
+            FTBL.SetScenarioCharacterType(SFWF_FIGHTER, 4);
+            break;
+        case 874:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 1, 1, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_EEN, 1, sfwfOpenHandPose, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_FIGHTER, 0, sfwfOpenHandPose, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 0, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_EEN), 1);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_REN), 0);
+            break;
+        case 927:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 1, 0);
+            break;
+        case 1094:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 1, 0, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_REN), 1);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_FIGHTER, 1, sfwfOpenHandPose, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_FIGHTER, 0, sfwfOpenHandPose, 0, 0);
+            break;
+        case 1149:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_FIGHTER, 1, sfwfOpenHandPose, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_FIGHTER, 0, sfwfOpenHandPose, 0, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_EEN), 0);
+            break;
+        case 1150:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_FIGHTER, 1, sfwfOpenHandPose, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_FIGHTER, 0, sfwfOpenHandPose, 0, 0);
+            break;
+        case 1439:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 1, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 1, 0, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 1);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_REN), 1);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_EEN), 1);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_PLAYER, 1, sfwfOpenHandPose, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_PLAYER, 0, sfwfOpenHandPose, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 1, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 1, 0, 0);
+            break;
+        case 1599:
+            break;
+        case 1839:
+            break;
+        case 1899:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 0, 0);
+            break;
+        case 2029:
+            break;
+        case 2273:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 1, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_REN), 0);
+            FTBL.SetScenarioCharacterType(SFWF_PLAYER, 4);
+            break;
+        case 2321:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 0, 0);
+            break;
+        case 2422:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 1, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 1, 0, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_REN), 1);
+            break;
+        case 2607:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1, 0, 0);
+            FTBL.SetScenarioCharacterType(SFWF_EEN, 0);
+            break;
+        case 2809:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 0, 0);
+            FTBL.SetScenarioCharacterType(SFWF_PLAYER, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0);
+            break;
+        }
+        break;
+    case SFWF_AUTHOR_2:
+        switch (loop->frame) {
+        case 646:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_CHN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_CHN), 0, 0, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_EEN), 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_REN), 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_CHN), 0);
+            FTBL.SetScenarioCharacterType(SFWF_PLAYER, 0);
+            FTBL.SetScenarioCharacterType(SFWF_REN, 4);
+            FTBL.SetScenarioCharacterType(SFWF_EEN, 0);
+            FTBL.SetScenarioCharacterType(SFWF_FIGHTER, 0);
+            FTBL.SetScenarioCharacterType(SFWF_CHN, 0);
+            break;
+        case 726:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 0, 0);
+            break;
+        case 906:
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_PLAYER, 1, sfwfOpenHandPose, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_PLAYER, 0, sfwfOpenHandPose, 0, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 1, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 1, 0, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_REN), 1);
+            break;
+        case 999:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_EEN), 0, 0, 0);
+            FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(SFWF_EEN), 0);
+            break;
+        case 1109:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 0, 0, 0);
+            break;
+        case 1400:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 0, 0);
+            break;
+        case 1480:
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 1, 1, 0);
+            FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SFWF_REN), 1, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_REN, 1, sfwfOpenHandPose, 0, 0);
+            Queue_EVT_AT_CtrlHandUp_1(SFWF_REN, 0, sfwfOpenHandPose, 0, 0);
+            break;
+        }
+        break;
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        RestoreAuthorCharacters();
+        loop->parent->state = 3;
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentEventTask();
+    }
+}
+
+void BeginAuthor(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+}
+
+void EndAuthor(SfwfAuthorWork *work)
+{
+    FTBL.HLib_DestroyTask(work->task);
+}
+
+void PrepareAuthorCharacters(void)
+{
+    int i;
+    HideAuthorCharacter(SFWF_PLAYER);
+    HideAuthorProp(SFWF_PROP_A428);
+    HideAuthorProp(SFWF_PROP_A118);
+    for (i = 0; sfwfAuthorCharacters[i] != SFWF_INVALID; i++)
+        HideAuthorCharacter(sfwfAuthorCharacters[i]);
+}
+
+void RestoreAuthorCharacters(void)
+{
+    int i;
+    ShowAuthorCharacter(SFWF_PLAYER);
+    ShowAuthorProp(SFWF_PROP_A428);
+    ShowAuthorProp(SFWF_PROP_A118);
+    for (i = 0; sfwfAuthorCharacters[i] != SFWF_INVALID; i++)
+        ShowAuthorCharacter(sfwfAuthorCharacters[i]);
+}
+
+void HideAuthorCharacter(shen_name character)
+{
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.EV_SetCharaControllerFlags(character, 1, 0);
+    FTBL.EV_SetCharaControllerFlags(character, 3, 0);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void ShowAuthorCharacter(shen_name character)
+{
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void HideAuthorProp(shen_name prop)
+{
+    FTBL.EV_EnableCharacterDisplay(prop);
+    FTBL.EV_SetCharaControllerFlags(prop, 1, 0);
+    FTBL.EV_SetCharaControllerFlags(prop, 3, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 0);
+}
+
+void ShowAuthorProp(shen_name prop)
+{
+    FTBL.EV_DisableCharacterDisplay(prop);
+}
+#else
+static const shen_name sfwfCharacters[] = {SFWF_PLAYER, SFWF_CHN, SFWF_CYC, SFWF_REN, SFWF_EEN, SFWF_SFA, SFWF_FIGHTER, SFWF_INVALID};
+static const Vector3 sfwfPlayerPosition = {-3.3f, -0.5f, -5.5f};
+static const Vector3 sfwfBookiePosition = {-1.864f, 0.0f, -1.8f};
+static unsigned char sfwfFighterParameters[6][12] = {
+    {85, 69, 69, 69, 32, 32, 80, 80, 112},
+    {72, 101, 101, 101, 32, 48, 96, 106, 116},
+    {58, 120, 120, 120, 32, 64, 104, 117, 120},
+    {40, 128, 128, 128, 32, 80, 112, 128, 136},
+    {19, 144, 144, 144, 32, 88, 120, 159, 152},
+    {5, 159, 159, 159, 32, 80, 127, 175, 160},
+};
+static Vector3 sfwfEenPosition = {367.0f, 76.1f, 121.16f};
+static Vector3i sfwfEenRotation = {0, 51190, 0};
+static Vector3 sfwfAuthorExitPosition = {339.04f, 82.28f, 120.71f};
+static Vector3i sfwfAuthorExitRotation = {0, 49152, 0};
+static Vector3 sfwfExitPosition = {365.1f, 76.14f, 121.5f};
+static Vector3i sfwfExitRotation = {0, 49152, 0};
+static PluralControlEntry sfwfPreviewPluralControl[] = {
+    {385, SFWF_PLAYER, 1}, {385, SFWF_FIGHTER, 1}, {385, SFWF_SFA, 1}, {645, SFWF_PLAYER, 0}, {645, SFWF_FIGHTER, 0},
+    {645, SFWF_SFA, 0}, {1050, SFWF_SFA, 1}, {1050, SFWF_EEN, 1}, {-1, 0, 0},
+};
+static PluralControlEntry sfwfFirstPluralControl[] = {
+    {874, SFWF_PLAYER, 1}, {874, SFWF_REN, 1}, {874, SFWF_FIGHTER, 1}, {1094, SFWF_REN, 0}, {1149, SFWF_REN, 1},
+    {1149, SFWF_FIGHTER, 1}, {1149, SFWF_EEN, 1}, {1439, SFWF_FIGHTER, 0}, {1599, SFWF_FIGHTER, 1}, {1599, SFWF_REN, 0},
+    {1599, SFWF_PLAYER, 1}, {1839, SFWF_FIGHTER, 0}, {1899, SFWF_REN, 0}, {1899, SFWF_FIGHTER, 1}, {2029, SFWF_REN, 0},
+    {2273, SFWF_REN, 1}, {2422, SFWF_PLAYER, 0}, {2422, SFWF_REN, 0}, {2607, SFWF_FIGHTER, 1}, {-1, 0, 0},
+};
+static PluralControlEntry sfwfVictoryPluralControl[] = {
+    {646, SFWF_PLAYER, 1}, {646, SFWF_REN, 1}, {646, SFWF_EEN, 0}, {646, SFWF_FIGHTER, 1}, {999, SFWF_PLAYER, 1},
+    {999, SFWF_FIGHTER, 1}, {1109, SFWF_PLAYER, 1}, {1109, SFWF_REN, 0}, {1109, SFWF_FIGHTER, 1}, {1480, SFWF_PLAYER, 0},
+    {1480, SFWF_REN, 0}, {-1, 0, 0},
+};
+
+void QueueNormal(StreetFightStartParameters *start)
+{
+    HLibTask *task;
+    StreetFightEventWork *work;
+    if (start->signal)
+        *start->signal = 1;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.SetScreenFilmFade(1, 0, 0, 0, 0, 255, 0, 0, 0);
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    task = FTBL.HLib_EnqueueTaskWithParameter(MainCallback, 5, 11, sizeof(StreetFightEventWork), TASK_EVNT);
+    work = InitializeNormal(task);
+    work->startParameters = start;
+    work->returnToQron = 0;
+    LoadNormalResources(work);
+    EventDebugRegister(3, NormalDebugCallback, work, 36000);
+}
+
+void LoadNormalResources(StreetFightEventWork *work)
+{
+    if (FTBL.IsFightActive())
+        FTBL.check_dead_status(1);
+    work->motions[0] = 0;
+    FTBL.EV_FreeAuthorPak(1, "0258");
+    if (!FTBL.EV_ControlPackageResources(0, 5, "QGBT", 0, 0)) {
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"QGBT", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    }
+    FTBL.EV_ControlPackageResources(2, 4, "QGBT", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "QGBT", 0, 0);
+    FTBL.CreateEventCharacter(3, 0, STREET_FIGHT_BASE);
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0258A000");
+    work->previousFarClip = FTBL.camCtrlGetFarDistance();
+    work->previousNearClip = FTBL.camCtrlGetNearDistance();
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(1);
+}
+
+void PlaceNormal(StreetFightEventWork *work)
+{
+    int i;
+    SetStreetFightCharacterVisible(SFWF_FIGHTER, 1);
+    work->playerPosition.x = sfwfPlayerPosition.x;
+    work->playerPosition.y = sfwfPlayerPosition.y;
+    work->playerPosition.z = sfwfPlayerPosition.z;
+    work->bookiePosition.x = sfwfBookiePosition.x;
+    work->bookiePosition.y = sfwfBookiePosition.y;
+    work->bookiePosition.z = sfwfBookiePosition.z;
+    EVT_AT_SetPos(STREET_FIGHT_BASE, STREET_FIGHT_INVALID, 371.78f, 76.65f, 120.78f, 0);
+    EVT_AT_SetAngY(STREET_FIGHT_BASE, STREET_FIGHT_INVALID, 0.0f, 0);
+    FTBL.AT_SetLocalBaseChara(SFWF_PLAYER, STREET_FIGHT_BASE);
+    FTBL.AT_SetLocalBaseChara(SFWF_FIGHTER, STREET_FIGHT_BASE);
+    FTBL.AT_SetLocalBaseChara(SFWF_STAG, STREET_FIGHT_BASE);
+    EVT_AT_SetMot(SFWF_PLAYER, 306, 0.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(work->fighters[work->fighterIndex], 2901, 0.0f, -1.0f, 0x40000000, 0);
+    EVT_AT_SetPos(SFWF_PLAYER, STREET_FIGHT_BASE, 0.0f, 0.0f, -1.1f, 0);
+    EVT_AT_SetAngY(SFWF_PLAYER, STREET_FIGHT_BASE, 180.0f, 0);
+    EVT_AT_SetPos(work->fighters[work->fighterIndex], STREET_FIGHT_BASE, 0.0f, 0.0f, 1.1f, 0);
+    EVT_AT_SetAngY(work->fighters[work->fighterIndex], STREET_FIGHT_BASE, 0.0f, 0);
+    FTBL.vfmDispatchControl(20, 0, 0, 1);
+    FTBL.LoadBlurModelForCharacter_0(SFWF_PLAYER, "RYO_B.MT7", 1.0f);
+    FTBL.LoadBlurModelForCharacter_0(SFWF_FIGHTER, "SF6_B.MT7", 1.0f);
+    for (i = 0; sfwfCharacters[i] != SFWF_INVALID; i++)
+        FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(sfwfCharacters[i]));
+    FTBL.adfsSetCameraIdxForChara(SFWF_EEN, SFWF_EEN_CAMERA);
+}
+
+void UnparentStreetFightCharacter(shen_name character)
+{
+    Vector3 position;
+    Vector3i rotation;
+    FTBL.GetCharaPosition(character, STREET_FIGHT_INVALID, &position, 0x40000000);
+    FTBL.GetScenarioCharacterEulerAngles(character, &rotation, 0x40000000);
+    FTBL.AT_SetLocalBaseChara(character, STREET_FIGHT_INVALID);
+    FTBL.EV_AT_SetPos(character, 0x78000000, &position);
+    FTBL.EV_AT_SetAngY_0(character, 0x78000000, &rotation, 0);
+}
+
+StreetFightEventWork *InitializeNormal(HLibTask *task)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    work->state = 0;
+    work->battleStatus = 0;
+    work->previousNpcBatchCount = FTBL.GetNpcBatchCountOverride(35);
+    work->fighterIndex = 0;
+    work->fighters[0] = SFWF_FIGHTER;
+    work->fighters[1] = SFWF_INVALID;
+    work->characterReadTask = Queue_EVT_AT_ReadChr(task, sfwfCharacters);
+    work->audienceTask = 0;
+    work->fadeFrames = 0;
+    work->attempts = 0;
+    work->audienceResultPublished = 0;
+    work->stage = GetStreetFightStageForArea(g_currentMap);
+    work->rank = FTBL.vfmDispatchControl(14, work->stage | 64, 0, -1);
+    work->frameCounter = 60;
+    return work;
+}
+
+void MainCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    Vector3 position;
+    int index = 0;
+    int difficulty, result, active;
+    switch (work->state) {
+    case 0:
+        EventDebugCheck(3, 4);
+        PlaceNormal(work);
+        FTBL.SetMapControlStatusFlag(0, 0);
+        if (!work->audienceTask) {
+            work->audienceTask = QueueStreetFightAudience(30, 0);
+            AddStreetFightAudienceFighter(work->audienceTask, SFWF_PLAYER);
+            AddStreetFightAudienceFighter(work->audienceTask, SFWF_FIGHTER);
+        }
+        work->state++;
+        break;
+    case 1:
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->fighters[work->fighterIndex]), 0, 1, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->fighters[work->fighterIndex]), 0, 0, 0);
+        ResetStreetFightRounds(work);
+        work->state++;
+        break;
+    case 2:
+        if (work->startParameters->subScene != 99) {
+            FTBL.EV_EventSetUpHelpIcon_0(GetHelpIconForArea(g_currentMap), 0);
+            FTBL.shenStartFGST(10, 10, 0, 0);
+            FTBL.vfmDispatchControl(2, 0, "QGBT", 1);
+        }
+        FTBL.GetCharaPosition(STREET_FIGHT_BASE, -1, &position, 0);
+        SetStreetFightAudienceCentre(work->audienceTask, &position);
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        work->state++;
+        break;
+    case 3:
+        if (IsStreetFightBestOfThree())
+            work->state = 7;
+        else if (work->startParameters->subScene == 99)
+            work->state = 28;
+        else if (!work->round)
+            work->state++;
+        else
+            work->state = 7;
+        break;
+    case 4:
+        UnparentStreetFightCharacter(SFWF_PLAYER);
+        UnparentStreetFightCharacter(work->fighters[work->fighterIndex]);
+        if (FTBL.EV_GetPlayerFlag(11, 1792))
+            FTBL.EV_authSceneCtrl(-16);
+        Queue_ET_PluralControl(sfwfFirstPluralControl);
+        QueueAuthor(SFWF_AUTHOR_1);
+        FTBL.EV_SetPlayerFlag(12, 1292, 0);
+        work->state++;
+        break;
+    case 5:
+        if (FTBL.EV_authSceneCtrl(-1))
+            work->state++;
+        break;
+    case 6:
+        if (!FTBL.EV_authSceneCtrl(-1))
+            work->state++;
+        break;
+    case 7:
+        EVT_AT_SetMot(SFWF_PLAYER, 306, 0.0f, 1.0f, 0x40000000, 0);
+        EVT_AT_SetMot(work->fighters[work->fighterIndex], 2901, 0.0f, -1.0f, 0x40000000, 0);
+        EVT_AT_SetMot(SFWF_REN, 0xf003, 0.0f, 1.0f, 0x40000000, 0);
+        FTBL.EV_AT_SetPos(SFWF_EEN, 0x78000000, &sfwfEenPosition);
+        FTBL.EV_AT_SetAngY_0(SFWF_EEN, 0x78000000, &sfwfEenRotation, 0);
+        EVT_AT_SetMot(SFWF_EEN, 0xf003, 0.0f, 1.0f, 0x40000000, 0);
+        EVT_AT_SetPos(SFWF_PLAYER, STREET_FIGHT_BASE, 0.0f, 0.0f, -1.1f, 0);
+        EVT_AT_SetAngY(SFWF_PLAYER, STREET_FIGHT_BASE, 180.0f, 0);
+        EVT_AT_SetPos(work->fighters[work->fighterIndex], STREET_FIGHT_BASE, 0.0f, 0.0f, 1.1f, 0);
+        EVT_AT_SetAngY(work->fighters[work->fighterIndex], STREET_FIGHT_BASE, 0.0f, 0);
+        FTBL.SetScenarioCharacterType(SFWF_PLAYER, 4);
+        FTBL.SetScenarioCharacterType(SFWF_FIGHTER, 4);
+        FTBL.EV_SetCharaControllerFlags(SFWF_PLAYER, 2, 0);
+        FTBL.EV_SetCharaControllerFlags(SFWF_PLAYER, 3, 0);
+        SHENMUE_EVENT_BOUNDARY();
+        FTBL.EV_SetCharaControllerFlags(SFWF_FIGHTER, 2, 0);
+        FTBL.EV_SetCharaControllerFlags(SFWF_FIGHTER, 3, 0);
+        SHENMUE_EVENT_BOUNDARY();
+        FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 1, 1, 1.0f);
+        FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1, 1, 1.0f);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1);
+        SetStreetFightCharacterVisible(SFWF_EEN, 0);
+        SetStreetFightCharacterVisible(SFWF_CYC, 0);
+        SetStreetFightCharacterVisible(SFWF_SFA, 0);
+        SetStreetFightCharacterVisible(SFWF_REN, 0);
+        work->rank = FTBL.vfmDispatchControl(14, work->stage | 64, 0, -1);
+        difficulty = FTBL.vfmDispatchControl(14, 140, 0, -1);
+        if (difficulty > 2)
+            difficulty = 2;
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 0, 0, 0, 300, 0);
+        if (!IsStreetFightBestOfThree())
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 1, 1, 500 - difficulty * 100, 24);
+        else
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 1, 1, work->rank * 80 + 300, 24);
+        FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 0, 0x8000000, difficulty);
+        if (IsStreetFightBestOfThree())
+            FTBL.vfmDispatchControl(16, 0, (const void *)(FTBL.vfmDispatchControl(14, 76, 0, -1) + 1), 1);
+        FTBL.vfCopyPosFromEntity(0, 0, 371.78f, 120.78f, 2.5f);
+        FTBL.vfmDispatchControl(15, work->wins, (const void *)work->losses, 1);
+        FTBL.EV_vfBattleUtil(3, 0x8000, 1);
+        work->fadeFrames = 30;
+        FTBL.EV_SetPlayerFlag(12, 1292, 1);
+        EVT_AT_MenCtrl(work->fadeFrames, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+        EVT_AT_SetCam(1400, SFWF_PLAYER, SFWF_PLAYER, 0, 0, 0);
+        work->state++;
+        break;
+    case 8:
+        FTBL.EV_LoadAudio("0258A000", 2);
+        FTBL.EV_spmBeginSampleExecute(0);
+        FTBL.HLib_SetupTaskDelay(work->fadeFrames);
+        work->state++;
+        break;
+    case 9:
+        EVT_AT_SetVoice("0258G001", 30);
+        switch (work->round) {
+        case 0:
+            QueueEventMessage("「ＲＯＵＮＤ １」", 0, 60);
+            break;
+        case 1:
+            QueueEventMessage("「ＲＯＵＮＤ ２」", 0, 60);
+            break;
+        case 2:
+            QueueEventMessage("「ＦＩＮＡＬ ＲＯＵＮＤ」", 0, 60);
+            break;
+        }
+        UnparentStreetFightCharacter(SFWF_PLAYER);
+        UnparentStreetFightCharacter(work->fighters[work->fighterIndex]);
+        FTBL.HLib_SetupTaskDelay(10);
+        ResumeStreetFightAudienceOpening(work->audienceTask);
+        work->audienceResultPublished = 0;
+        work->state++;
+        break;
+    case 10:
+        if (!FTBL.camCtrlCheckIsEventCam()) {
+            FTBL.EV_PlayDialogue("0258G002");
+            FTBL.HLib_SetupTaskDelay(10);
+            work->state++;
+        }
+        break;
+    case 11:
+        FTBL.EV_vfBattleUtil(3, 0x800, 1);
+        FTBL.EV_vfBattleUtil(3, 0x80000, 1);
+        FTBL.vfmQueueFightStart(2, 99, 1.0f, 8, -1);
+        FTBL.EV_SetCharacterAlphaEnabled(SFWF_FIGHTER, 0);
+        ResumeStreetFightAudienceOpening(work->audienceTask);
+        FTBL.EV_vfBattleUtil(1, 2, 1);
+        FTBL.EV_SetPlayerFlag(12, 1792, 1);
+        SetStreetFightStageFlag(work->stage);
+        work->audienceResultPublished = 0;
+        if (IsStreetFightBestOfThree()) {
+            if (work->rank <= 1)
+                index = 0;
+            else if (work->rank <= 3)
+                index = 1;
+            else if (work->rank <= 6)
+                index = 2;
+            else if (work->rank <= 9)
+                index = 3;
+            else if (work->rank <= 12)
+                index = 4;
+            else if (work->rank <= 15)
+                index = 5;
+            FTBL.btlSetCharaFlagBatch(SFWF_FIGHTER, sfwfFighterParameters[index]);
+        }
+        work->state++;
+        break;
+    case 12:
+        active = FTBL.IsFightActive();
+        if (!active) {
+            work->battleStatus = FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(SFWF_PLAYER));
+            result = RecordStreetFightRound(work);
+            if (IsStreetFightBestOfThree()) {
+                if (result) {
+                    FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+                    FTBL.spmFadeOut(0);
+                    FTBL.HLib_SetupTaskDelay(30);
+                    if (result == 1)
+                        work->state = 23;
+                    else
+                        work->state = 13;
+                } else {
+                    FTBL.shenStartFGST(10, 10, 0, 0);
+                    FTBL.vfmDispatchControl(2, 0, "QGBT", 1);
+                    work->state = 7;
+                }
+            } else {
+                switch (result) {
+                case 1:
+                    FTBL.spmFadeOut(0);
+                    work->state++;
+                    break;
+                case 0:
+                    work->state = 2;
+                    break;
+                case 2:
+                    work->attempts++;
+                    work->state++;
+                    break;
+                }
+                FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+                FTBL.HLib_SetupTaskDelay(30);
+                FTBL.EV_NPC_NewLoadSw_0(0);
+            }
+        } else if (!work->audienceResultPublished)
+            switch (FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(SFWF_PLAYER))) {
+            case 3:
+                StartStreetFightAudienceDefeat(work->audienceTask, 0);
+                work->audienceResultPublished++;
+                break;
+            case 2:
+                StartStreetFightAudienceVictory(work->audienceTask, 0);
+                work->audienceResultPublished++;
+                break;
+            }
+        break;
+    case 13:
+        if (!FTBL.filmCheckFadeTrackColour()) {
+            FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 1, 1, 1.0f);
+            FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1, 1, 1.0f);
+            SetStreetFightCharacterVisible(SFWF_EEN, 1);
+            SetStreetFightCharacterVisible(SFWF_CYC, 1);
+            SetStreetFightCharacterVisible(SFWF_SFA, 1);
+            SetStreetFightCharacterVisible(SFWF_REN, 1);
+            if (work->battleStatus != 3) {
+                if (!IsStreetFightBestOfThree())
+                    RecordStreetFightDefeat(work->stage);
+                work->state = 24;
+            } else
+                work->state++;
+        }
+        break;
+    case 14:
+        FTBL.EV_SetPlayerFlag(12, 1292, 0);
+        UnparentStreetFightCharacter(SFWF_PLAYER);
+        UnparentStreetFightCharacter(work->fighters[work->fighterIndex]);
+        EVT_AT_SetPos(SFWF_FIGHTER, STREET_FIGHT_INVALID, 334.5f, 84.25f, 80.72f, 0);
+        EVT_AT_SetPos(SFWF_CYC, STREET_FIGHT_INVALID, 334.5f, 84.25f, 90.72f, 0);
+        FTBL.EV_authSceneCtrl(-11);
+        Queue_ET_PluralControl(sfwfVictoryPluralControl);
+        QueueAuthor(SFWF_AUTHOR_2);
+        work->state++;
+        break;
+    case 15:
+        if (FTBL.EV_authSceneCtrl(-1))
+            work->state++;
+        break;
+    case 16:
+        if (!FTBL.EV_authSceneCtrl(-1)) {
+            FTBL.EV_authSceneCtrl(-10);
+            work->state++;
+        } else if (FTBL.EV_authSceneCtrl(-6) == 730)
+            FTBL.EventFunction875(2000, 2, 100);
+        break;
+    case 17:
+        if (!FTBL.filmCheckFadeTrackColour()) {
+            FTBL.AT_SetLocalBaseChara(SFWF_PLAYER, STREET_FIGHT_INVALID);
+            FTBL.AT_SetLocalBaseChara(work->fighters[work->fighterIndex], STREET_FIGHT_INVALID);
+            if (work->startParameters->subScene == 99)
+                work->state = 23;
+            else
+                work->state++;
+        }
+        break;
+    case 18:
+        if (CanPerformForAreaFlags(g_currentMap)) {
+            if (CommitStreetFightStoryRank(work->stage) == 2)
+                work->state = 23;
+            else
+                work->state = 23;
+        } else
+            work->state = 23;
+        break;
+    case 23:
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SFWF_PLAYER), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SFWF_FIGHTER), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SFWF_SFA), 1);
+        if (IsStreetFightBestOfThree())
+            FTBL.HLib_SetCurrentTaskTo(RetryBeginCallback);
+        else
+            FTBL.HLib_SetCurrentTaskTo(CleanupNormalCallback);
+        break;
+    case 24:
+        if (!FTBL.filmCheckFadeTrackColour())
+            work->state = 25;
+        break;
+    case 25:
+        QueueStreetFightSkipWait(DefeatConversation, work, 1);
+        work->state = 26;
+        break;
+    case 26:
+        FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.spmFadeOut(0);
+        ChangeStreetFightAudienceMode(work->audienceTask, 2, 1);
+        work->state = 27;
+        break;
+    case 27:
+        if (!FTBL.filmCheckFadeTrackColour()) {
+            EVT_AT_CharaDisp(SFWF_PLAYER, 0, 0);
+            if (!IsStreetFightBestOfThree()) {
+                FTBL.EV_ResetFreeTalkFlags();
+                work->state = 31;
+            } else
+                work->state = 23;
+        }
+        break;
+    case 31:
+        FTBL.Queue_ST_LoadTitleFadeIn(SFWF_RETRY_TITLE);
+        work->state = 32;
+        work->frameCounter = 60;
+        break;
+    case 32:
+        if (!--work->frameCounter) {
+            FTBL.ST_LoadTitleFade();
+            work->frameCounter = 60;
+            work->state = 33;
+        }
+        break;
+    case 33:
+        if (!--work->frameCounter)
+            work->state = 23;
+        break;
+    case 28:
+        UnparentStreetFightCharacter(SFWF_PLAYER);
+        UnparentStreetFightCharacter(work->fighters[work->fighterIndex]);
+        if (FTBL.EV_GetPlayerFlag(11, 1792))
+            FTBL.EV_authSceneCtrl(-16);
+        Queue_ET_PluralControl(sfwfPreviewPluralControl);
+        QueueAuthor(SFWF_AUTHOR_0);
+        work->state++;
+        break;
+    case 29:
+        if (FTBL.EV_authSceneCtrl(-1))
+            work->state++;
+        break;
+    case 30:
+        if (!FTBL.EV_authSceneCtrl(-1))
+            work->state = 17;
+        break;
+    }
+}
+
+int DefeatConversation(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    shen_name fighter = work->fighters[work->fighterIndex];
+    EVT_AT_CharaDisp(SFWF_PLAYER, 0, 1);
+    FTBL.EV_SetCharacterAlphaEnabled(fighter, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(fighter), 1, 1, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(fighter), 1, 0, 0);
+    EVT_AT_SetPos(fighter, STREET_FIGHT_BASE, 0.0f, 0.1f, 0.0f, 0);
+    EVT_AT_SetAngY(fighter, STREET_FIGHT_BASE, 0.0f, 0);
+    EVT_AT_SetMot(fighter, 10945, 0.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetVoice("0258E006", 41);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 2);
+    FTBL.EV_spmBeginSampleExecute(0);
+    EVT_AT_SetCam(8099, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 1);
+    return 120;
+}
+
+void RetryBeginCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    if (work->battleStatus == 3)
+        RecordStreetFightVictory(work->stage);
+    else
+        RecordStreetFightDefeat(work->stage);
+    FTBL.dbgPrintEventMessage("「リトライしますか？\n");
+    EVT_AT_KsIcon_Enqueue(0xffff, 38, 39, 0xffff, 0x7fff, 0xffff, 2, 0);
+    ChangeStreetFightAudienceMode(work->audienceTask, 2, 1);
+    FTBL.HLib_SetCurrentTaskTo(RetryChoiceCallback);
+}
+
+void RetryChoiceCallback(void *data)
+{
+    unsigned int choice = PollStreetFightActionChoice();
+    if (choice) {
+        FTBL.ctrlStopSubtitles();
+        if (choice == 38)
+            RetryResetCallback(data);
+        else
+            RetryCancelCallback(data);
+    }
+}
+
+void RetryResetCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    FTBL.EV_ResetFreeTalkFlags();
+    work->state = 1;
+    work->battleStatus = 0;
+    work->auxiliaryState = 0;
+    FTBL.HLib_SetCurrentTaskTo(MainCallback);
+    ChangeStreetFightAudienceMode(work->audienceTask, 2, -1);
+    FTBL.EV_LoadAudio("0258A000", 2);
+    FTBL.EV_spmBeginSampleExecute(0);
+}
+
+void RetryCancelCallback(void *data)
+{
+    FTBL.HLib_SetCurrentTaskTo(CleanupNormalCallback);
+}
+
+void NormalDebugCallback(void *data)
+{
+    CleanupNormalCallback(data);
+}
+
+void CleanupNormalCallback(void *data)
+{
+    StreetFightEventWork *work = (StreetFightEventWork *)data;
+    StreetFightStartParameters *start = work->startParameters;
+    int returnToQron = work->returnToQron;
+    int i;
+    EventDebugUnregister(3);
+    FTBL.vfmDispatchControl(20, 0, 0, 0);
+    for (i = 0; sfwfCharacters[i] != SFWF_INVALID; i++)
+        FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(sfwfCharacters[i]));
+    FTBL.EV_SetCharaControllerFlags(SFWF_PLAYER, 2, 1);
+    FTBL.EV_SetCharaControllerFlags(SFWF_PLAYER, 3, 1);
+    FTBL.EV_SetCharaControllerFlags(SFWF_FIGHTER, 2, 1);
+    FTBL.EV_SetCharaControllerFlags(SFWF_FIGHTER, 3, 1);
+    SHENMUE_EVENT_BOUNDARY();
+    FTBL.AT_SetLocalBaseChara(SFWF_STAG, STREET_FIGHT_INVALID);
+    ReleaseStreetFightAudience(work->audienceTask);
+    work->audienceTask = 0;
+    ET_AT_KillWork(work->characterReadTask);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.SetScenarioCharacterKillMode(STREET_FIGHT_BASE, 1);
+    if (work->startParameters->subScene == 99) {
+        FTBL.EV_AT_SetPos(SFWF_PLAYER, 0x78000000, &sfwfAuthorExitPosition);
+        FTBL.EV_AT_SetAngY_0(SFWF_PLAYER, 0x78000000, &sfwfAuthorExitRotation, 0);
+    } else {
+        FTBL.EV_AT_SetPos(SFWF_PLAYER, 0x78000000, &sfwfExitPosition);
+        FTBL.EV_AT_SetAngY_0(SFWF_PLAYER, 0x78000000, &sfwfExitRotation, 0);
+    }
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(SFWF_PLAYER), 0xf002, 0);
+    FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(SFWF_PLAYER), 71, 0, 0);
+    FTBL.EV_EnableCharacterDisplay(SFWF_PLAYER);
+    FTBL.GetNpcBatchCountOverride(work->previousNpcBatchCount);
+    for (i = 0; work->motions[i]; i++)
+        FTBL.DeleteMotion((void *)work->motions[i]);
+    FTBL.EV_FreeAuthorPak(0, "0258");
+    if (!(start->flags & 1))
+        FTBL.EV_ControlPackageResources(0, 6, "QGBT", 0, 0);
+    if (!IsStreetFightBestOfThree())
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+    else
+        FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.camCtrlSetFarDistance(work->previousFarClip);
+    FTBL.camCtrlSetNearDistance(work->previousNearClip);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    if (IsStreetFightBestOfThree())
+        FTBL.EV_scenQueueLoad(4, SFWF_OMAKE_SCENE, 1);
+    else if (returnToQron)
+        FTBL.EV_scenQueueLoad(g_actNumber, SFWF_QRON_SCENE, 81);
+    else {
+        FTBL.camCtrlSetState(0);
+        FTBL.camCtrlSetFovTransitionTo(1);
+    }
+    FTBL.EV_EventSetUpHelpIcon_0(0, 0);
+    FTBL.EV_SetPlayerFlag(12, 1233, 1);
+    if (start->signal)
+        *start->signal = 0;
+}
+#endif
+#else
 #include "s2/areas/area_sfwf.hpp"
 #include "s2/author.hpp"
 #include "s2/character.hpp"
@@ -1546,3 +2449,4 @@ void Main(std::uintptr_t argument) {
 } // namespace
 const ScriptAreaDefinition areaSfwfScriptDefinition{.areaId = SHEN_NAME(SFWF), .field04 = 0, .init = SfwfInitNullsub, .main = Main};
 } // namespace shenmue::s2
+#endif

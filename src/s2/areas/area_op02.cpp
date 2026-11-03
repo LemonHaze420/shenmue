@@ -1,3 +1,250 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_op02.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void AreaOP02Main(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(OP02MainCallback, 4, 11, sizeof(Op02EventWork), TASK_EVNT);
+    Op02EventWork *work = (Op02EventWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    work->mode = 1;
+    Queue_EVT_UTL_LoadNPCChara_3(op02AuthorCharacters, work->task);
+    OP02Prepare();
+}
+#else
+static HLibTask *op02WaveTask;
+static int op02WaveEnabled;
+
+void OP02MainCallback(void *data)
+{
+    Op02EventWork *work = (Op02EventWork *)data;
+    switch (work->mode) {
+    case 1:
+        OP02QueueAuthor(work);
+        break;
+    case 3:
+    case 4:
+        OP02Release(work);
+        break;
+    }
+}
+
+void OP02QueueAuthor(Op02EventWork *work)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(OP02AuthorLoopCallback, 4, 11, sizeof(Op02EventWork *), TASK_EVNT);
+    *(Op02EventWork **)FTBL.HLib_GetTaskParameter(task) = work;
+    OP02PrepareSceneCharacters();
+    FTBL.shenPlayAudioWithFlags("adv", 1);
+    FTBL.EV_authSceneCtrl(0);
+    work->mode = 2;
+}
+
+void OP02AuthorLoopCallback(void *data)
+{
+    switch ((short)FTBL.EV_authSceneCtrl(-6)) {
+    case 0:
+        OP02SetLightingAndWeather(2);
+        break;
+    case 165:
+        OP02SetHourAndMinute(12, 40);
+        OP02SetLightingAndWeather(1);
+        break;
+    case 274:
+        OP02SetLightingAndWeather(2);
+        break;
+    case 394:
+        OP02SetHourAndMinute(12, 45);
+        OP02ResetWeather();
+        break;
+    case 812:
+        OP02SetLightingAndWeather(1);
+        break;
+    case 965:
+        FTBL.SetIsSkySetup(1);
+        OP02SetHourAndMinute(9, 45);
+        OP02ResetWeather();
+        break;
+    case 1051:
+        FTBL.SetIsSkySetup(0);
+        OP02SetLightingAndWeather(1);
+        break;
+    case 1168:
+        OP02SetLightingAndWeather(2);
+        break;
+    case 1420:
+        OP02SetLightingAndWeather(1);
+        break;
+    case 1490:
+        OP02SetLightingAndWeather(2);
+        break;
+    case 1665:
+        OP02SetHourAndMinute(12, 0);
+        OP02ResetWeather();
+        break;
+    case 2014:
+        OP02SetLightingAndWeather(1);
+        break;
+    case 2111:
+        OP02SetHourAndMinute(9, 45);
+        OP02ResetWeather();
+        break;
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        OP02RestoreSceneCharacters();
+        (*(Op02EventWork **)data)->mode = 3;
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+    if (FTBL.EVT_GetControllerInput(0, 1) == 0x800) {
+        OP02RestoreSceneCharacters();
+        FTBL.EV_authSceneCtrl(-4);
+        (*(Op02EventWork **)data)->mode = 4;
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void OP02SetHourAndMinute(short hour, short minute)
+{
+    EventDateTime date;
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    date.hour = hour;
+    date.minute = minute;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&date);
+}
+
+void OP02SetLightingAndWeather(short mode)
+{
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    if (mode == 1)
+        FTBL.EV_lightLoad(OP02_LIGHT_DAY);
+    else
+        FTBL.EV_lightLoad(OP02_LIGHT_NIGHT);
+}
+
+void OP02ResetWeather(void)
+{
+    FTBL.EV_SetWeatherInstruction(12, 1);
+    FTBL.ReinitializeLights(1);
+    FTBL.SetLightFlagForIndex(0, 2);
+    FTBL.SetLightEntryIndex(0, 1);
+}
+
+void OP02Prepare(void)
+{
+    unsigned char distanceKernel[0x100];
+    Vector3 direction;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_authSceneCtrl(-11);
+    FTBL.EV_ToggleCharacterFlag(RYO_CHARACTER);
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+    FTBL.SetIsSkySetup(0);
+    FTBL.ReinitializeLights(1);
+    FTBL.SetLightFlagForIndex(0, 2);
+    FTBL.SetLightEntryIndex(0, 1);
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    FTBL.UpdateWeather();
+    FTBL.EV_FreeAuthorPak(1, "0001");
+    direction.x = 0.0f;
+    direction.y = 0.872f;
+    direction.z = -0.489f;
+    FTBL.GenerateFFT(1.25f);
+    FTBL.fft_fill_dist(FTBL.fft_fill_krn(184.0f, FTBL.generate_distance_falloff_row_major(2.0f, distanceKernel)));
+    FTBL.fft_bins_load_pairwise_tables(op02PairwiseKernel, op02PairwiseKernel);
+    FTBL.FFTUtil(0.0149f, 0.0f);
+    FTBL.set_lighting_flags(0.1f, &direction);
+    op02WaveEnabled = 1;
+    op02WaveTask = FTBL.HLib_EnqueueTaskWithoutParameter(OP02WaveCallback, 3, 2, OP02_WAVE_TASK);
+}
+
+const float op02PairwiseKernel[64] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.0216f, -0.0451f, -0.102f, -0.202f, -0.451f};
+const shen_name op02AuthorCharacters[] = {OP02_SHENHUA, INVALID_CHARACTER};
+
+void OP02Release(Op02EventWork *work)
+{
+    FTBL.EV_FreeAuthorPak(0, "0001");
+    EVT_UTL_FreeNPCChara(op02AuthorCharacters);
+    FTBL.HLib_DestroyTaskInternal(work->task);
+    FTBL.EV_authSceneCtrl(-10);
+    if (work->mode == 3)
+        FTBL.shenQueueChangeModuleAndScene(4, 1, OP02_AREA, 0);
+    else
+        FTBL.shenQueueChangeModuleAndScene(4, 1, OP02_AREA, 49);
+}
+
+void OP02PrepareSceneCharacters(void)
+{
+    OP02PrepareCharacter(OP02_SHENHUA);
+    OP02PrepareProp(SHEN_NAME4('a', '3', '5', '0'));
+    OP02PrepareProp(SHEN_NAME4('a', 'b', '2', '4'));
+    OP02PrepareProp(SHEN_NAME4('a', 'b', '2', '5'));
+    OP02PrepareProp(SHEN_NAME4('a', 'b', '2', '6'));
+    OP02PrepareProp(SHEN_NAME4('a', 'b', '2', '2'));
+}
+
+void OP02RestoreSceneCharacters(void)
+{
+    OP02RestoreCharacter(OP02_SHENHUA);
+    OP02RestoreProp(SHEN_NAME4('a', '3', '5', '0'));
+    OP02RestoreProp(SHEN_NAME4('a', 'b', '2', '4'));
+    OP02RestoreProp(SHEN_NAME4('a', 'b', '2', '5'));
+    OP02RestoreProp(SHEN_NAME4('a', 'b', '2', '6'));
+    OP02RestoreProp(SHEN_NAME4('a', 'b', '2', '2'));
+}
+
+void OP02PrepareCharacter(shen_name character)
+{
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.EV_SetCharaControllerFlags(character, 1, 0);
+    FTBL.EV_SetCharaControllerFlags(character, 3, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void OP02RestoreCharacter(shen_name character)
+{
+    FTBL.EV_EnableCharacterDisplay(character);
+    FTBL.EV_SetCharaControllerFlags(character, 1, 1);
+    FTBL.EV_SetCharaControllerFlags(character, 2, 1);
+    FTBL.EV_SetCharaControllerFlags(character, 3, 1);
+    SHENMUE_EVENT_BOUNDARY();
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void OP02PrepareProp(shen_name prop)
+{
+    FTBL.EV_EnableCharacterDisplay(prop);
+    FTBL.EV_SetCharaControllerFlags(prop, 1, 0);
+    FTBL.EV_SetCharaControllerFlags(prop, 3, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 0);
+}
+
+void OP02RestoreProp(shen_name prop)
+{
+    FTBL.EV_EnableCharacterDisplay(prop);
+    FTBL.EV_SetCharaControllerFlags(prop, 1, 1);
+    FTBL.EV_SetCharaControllerFlags(prop, 2, 1);
+    FTBL.EV_SetCharaControllerFlags(prop, 3, 1);
+    SHENMUE_EVENT_BOUNDARY();
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 1);
+}
+
+void OP02WaveCallback(void *data)
+{
+    float unit = 1.0f;
+    FTBL.BuildLightingTableFrom(1, unit, unit, unit, unit, unit, unit, unit, unit, 10.0f, unit);
+    if (op02WaveEnabled) {
+        FTBL.nlSetTexanimUV(0.015f, 0.0f);
+        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(2));
+        FTBL.nlSetTexanimUV(0.0f, 0.015f);
+        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(3));
+    }
+}
+#endif
+#else
 #include "s2/areas/area_op02.hpp"
 #include "s2/author.hpp"
 #include "s2/conversation.hpp"
@@ -331,3 +578,4 @@ void AreaOP02Main(std::uintptr_t) {
 
 const ScriptAreaDefinition areaOP02ScriptDefinition{.areaId = AREA_OP02, .field04 = 0, .init = AreaOP02Init, .main = AreaOP02Main};
 } // namespace shenmue::s2::areas
+#endif

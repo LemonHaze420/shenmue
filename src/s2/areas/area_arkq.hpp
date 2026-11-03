@@ -1,4 +1,81 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_library_tail_dc.h"
+#include "s2/sk_event_dc.h"
+
+#define ARKQ_TASK SHEN_NAME4('a', 'r', 'k', 'q')
+#define ARKQ_TURN_TASK SHEN_NAME4('k', 'n', 'i', 'f')
+#define ARKQ_LIGHT_TASK SHEN_NAME4('l', 'g', 'h', 't')
+#define ARKQ_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define ARKQ_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define ARKQ_SAM SHEN_NAME4('S', 'A', 'M', '_')
+#define ARKQ_LLY SHEN_NAME4('L', 'L', 'Y', '_')
+#define ARKQ_CLJ SHEN_NAME4('C', 'L', 'J', '_')
+#define ARKQ_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define ARKQ_DUMMY SHEN_NAME4('D', 'U', 'M', 'M')
+#define ARKQ_KNIFE SHEN_NAME4('a', '3', '2', '0')
+#define ARKQ_HAND_ANCHOR SHEN_NAME4('a', '0', '9', '5')
+#define ARKQ_LIGHT_ANCHOR SHEN_NAME4('a', '3', '1', '6')
+#define ARKQ_MONEY SHEN_NAME4('a', '1', '1', '8')
+#define ARKQ_KNIFE_IMAGE SHEN_NAME4('a', 'b', '2', '0')
+#define ARKQ_INTRO SHEN_NAME4('S', 'T', 'R', 'T')
+#define ARKQ_SUCCESS_AUTHOR SHEN_NAME4('L', 'O', 'S', 'E')
+#define ARKQ_FAILURE_AUTHOR SHEN_NAME4('W', 'O', 'N', '_')
+#define ARKQ_LIGHT SHEN_NAME4('l', '1', '0', '3')
+#define ARKQ_SUCCESS_LIGHT SHEN_NAME4('l', '0', '4', '6')
+#define ARKQ_SUCCESS_MAP SHEN_NAME4('A', 'B', '0', '0')
+#define ARKQ_FAILURE_MAP SHEN_NAME4('0', '0', '5', '9')
+#define ARKQ_INVALID 0xffffffffU
+#define ARKQ_DEBUG_ID 3
+#define ARKQ_GLINT_COUNT 10
+#define ARKQ_MOTION_FLAGS 0x40000000U
+#define ARKQ_WORLD 0x40000000U
+
+typedef struct ArkqWork {
+    HLibTask *task;
+    int reserved04[2];
+    unsigned short commandPhase;
+    unsigned short inputMasks[3];
+    unsigned short state;
+    int scratch[2];
+    EventReadCharactersWork *characters;
+    int reserved24[4];
+} ArkqWork;
+
+void RunArkqEvent(void);
+void InitializeArkqWork(ArkqWork *work, HLibTask *task);
+int ReadArkqCharacters(ArkqWork *work);
+int SetupArkqResources(ArkqWork *work);
+void SetupArkqCharacters(void);
+void LoadArkqPackages(ArkqWork *work);
+int FinishArkqResult(ArkqWork *work);
+void ArkqDebugExitCallback(void *data);
+void ArkqCleanupCallback(void *data);
+void ArkqMainCallback(void *data);
+int BeginArkqIntro(ArkqWork *work);
+int ArkqBeginKnifeDisplay(ArkqWork *work);
+void ArkqTurnKnifeCallback(void *data);
+void ArkqKnifeLightCallback(void *data);
+int WaitArkqQte(ArkqWork *work);
+int PlayArkqResult(ArkqWork *work);
+int ArkqFirstDodge(int delay);
+int ArkqFirstFailure(int delay);
+int ArkqSecondDodge(int delay);
+int ArkqSecondFailure(int delay);
+int ArkqThirdFailure(int delay);
+int ArkqAllDodges(int delay);
+int BeginArkqSuccessAuthor(ArkqWork *work);
+void ArkqSuccessAuthorNullsub(void *data);
+int BeginArkqFailureAuthor(ArkqWork *work);
+unsigned int CreateArkqKnifeGlint(void);
+void ArkqIntroAuthorCallback(void *data);
+void ArkqFreeGlintsCallback(void *data);
+void ArkqSuspendGlintCallback(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/hlib.hpp"
@@ -75,3 +152,4 @@ std::int32_t ArkqThirdFailure(std::int32_t delay);
 std::int32_t ArkqAllDodges();
 extern const ScriptAreaDefinition arkqScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

@@ -1,4 +1,85 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_movement.hpp"
+#include "s2/areas/area_loop_dc.h"
+#include "s2/areas/common/et_movesp.h"
+#include "s2/areas/common/et_readnpc.h"
+#include "s2/qt_nj_obstacles.hpp"
+
+#define QTNJ_AREA SHEN_NAME4('Q', 'T', 'N', 'J')
+#define QTNJ_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define QTNJ_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QTNJ_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define QTNJ_DUMMY_RIGHT SHEN_NAME4('D', 'U', 'M', 'R')
+#define QTNJ_DUMMY_LEFT SHEN_NAME4('D', 'U', 'M', 'L')
+#define QTNJ_AUTH_START SHEN_NAME4('A', 'T', 'H', '0')
+#define QTNJ_AUTH_LAST_FAILURE SHEN_NAME4('A', 'T', 'H', '5')
+#define QTNJ_AUTH_SUCCESS SHEN_NAME4('A', 'T', 'H', '6')
+#define QTNJ_AUTH_FAILURE SHEN_NAME4('A', 'T', 'H', '7')
+#define QTNJ_INVALID 0xffffffffU
+#define QTNJ_DEBUG_ID 3
+#define QTNJ_TRIAL_COUNT 4
+#define QTNJ_LAST_TRIAL 3
+#define QTNJ_FINAL_WAYPOINT 23
+#define QTNJ_HAND_POSE 40
+#define QTNJ_RUN_MOTION 0x2171
+#define QTNJ_MOVE_FLAGS 0xc8480000U
+
+typedef struct QtnjTrial {
+    shen_name obstacle;
+    int approachState, escapeState, successState;
+    Vector3 position;
+    float yawDegrees;
+    const shen_name *characters;
+    shen_name author;
+    unsigned short buttons[4];
+    short maximumFrames, requiredCommands;
+} QtnjTrial;
+typedef struct QtnjSequence {
+    HLibTaskCallback continuation;
+    QtnjObstacleWork obstacle;
+    int success;
+    EventChaseWork chase;
+    int movementSlot, state, trial, cooldown;
+} QtnjSequence;
+typedef struct QtnjEventWork {
+    EventReadCharactersWork *admission;
+    HLibTask *task;
+    QtnjSequence sequence;
+    const int *selection;
+    const QtnjTrial *trialRecord;
+    EventNpcReadWork *npcReader;
+    float baseHeight;
+} QtnjEventWork;
+typedef struct QtnjMatrix {
+    float m[16];
+} QtnjMatrix;
+
+void QtnjMain(void *argument);
+void QueueQtnjEvent(const int *selection);
+void QtnjDebugExitCallback(void *data);
+void QtnjFinish(QtnjEventWork *work);
+void QtnjResetSequence(QtnjSequence *sequence);
+void QtnjStartCallback(void *data);
+void QtnjStartAuthorCallback(void *data);
+void QtnjPlayAuthorCallback(void *data);
+void QtnjNextTrialCallback(void *data);
+void QtnjStartRunCallback(void *data);
+void QtnjWaitRunCallback(void *data);
+void QtnjCheckAuthorCallback(void *data);
+void QtnjWaitQteCallback(void *data);
+void QtnjReadFailureCharactersCallback(void *data);
+void QtnjStartFailureAuthorCallback(void *data);
+void QtnjCheckTrialCallback(void *data);
+void QtnjPlayOutcomeAuthorCallback(void *data);
+void QtnjFinishCallback(void *data);
+void InitializeQtnjEvent(QtnjEventWork *work);
+void CleanupQtnjEvent(QtnjEventWork *work);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/event_movement.hpp"
@@ -102,3 +183,4 @@ inline constexpr Vector3 QTNJ_FAILURE_OFFSETS[]{
     {9.199996948242188f, 0.0f, -18.99999237060547f},
 };
 } // namespace shenmue::s2
+#endif

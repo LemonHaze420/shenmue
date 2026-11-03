@@ -1,3 +1,428 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/qt_nj_event.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void QtnjMain(void *argument)
+{
+    QueueQtnjEvent(argument);
+}
+#else
+const EventMoveWaypoint qtnjWaypoints[] = {
+    {{249.7f, 132.4f, 167.4f}, 0.0f},
+    {{249.3f, 132.4f, 147.8f}, 90.0f},
+    {{236.2f, 132.4f, 147.4f}, 90.0f},
+    {{231.8f, 132.4f, 147.4f}, 90.0f},
+    {{224.4f, 132.4f, 147.0f}, 180.0f},
+    {{223.9f, 132.4f, 156.0f}, 135.0f},
+    {{220.8f, 132.4f, 160.9f}, 180.0f},
+    {{220.3f, 132.4f, 170.2f}, 135.0f},
+    {{215.5f, 132.4f, 177.7f}, 90.0f},
+    {{209.2f, 132.4f, 178.4f}, 90.0f},
+    {{199.3f, 132.4f, 178.0f}, 0.0f},
+    {{198.9f, 132.4f, 163.0f}, 0.0f},
+    {{198.8f, 132.4f, 153.0f}, 0.0f},
+    {{198.8f, 132.4f, 152.0f}, 0.0f},
+    {{198.9f, 132.4f, 147.4f}, 270.0f},
+    {{216.3f, 132.4f, 147.4f}, 0.0f},
+    {{216.7f, 132.4f, 132.4f}, 0.0f},
+    {{217.0f, 132.4f, 126.5f}, 270.0f},
+    {{236.6f, 132.4f, 126.0f}, 270.0f},
+    {{239.0f, 132.4f, 126.0f}, 270.0f},
+    {{240.8f, 132.4f, 126.0f}, 270.0f},
+    {{244.7f, 132.4f, 126.5f}, 180.0f},
+    {{247.5f, 132.4f, 140.0f}, 270.0f},
+    {{-1.0f, -1.0f, -1.0f}, 0.0f}};
+const EventChaseParams qtnjChaseParams = {QTNJ_REN, QTNJ_RYO, 1, {0.5f, 1.0f, 0.5f}, {1.0f, 0.3f, 1.0f}, 0.05f, 0.03f, 1.0f, 2.0f, {0.6f, 0.0f, 0.5f},
+    {0.0f, 0.0f, 0.0f}, 0.1f, 0.0f, 1.0f, 1.0f};
+const shen_name qtnjStartCharacters[] = {SHEN_NAME4('R', 'N', 'T', '_'), SHEN_NAME4('K', 'T', '9', '_'), QTNJ_INVALID};
+const shen_name qtnjTrial0Characters[] = {SHEN_NAME4('A', 'N', 'C', '_'), SHEN_NAME4('S', 'J', 'N', '_'), SHEN_NAME4('K', 'U', '7', '_'), QTNJ_INVALID};
+const shen_name qtnjTrial1Characters[] = {SHEN_NAME4('V', 'U', 'N', '_'), SHEN_NAME4('K', 'K', '5', '_'), SHEN_NAME4('K', 'K', '1', '_'), QTNJ_INVALID};
+const shen_name qtnjTrial2Characters[] = {SHEN_NAME4('K', 'U', '7', '_'), SHEN_NAME4('M', 'O', 'K', '_'), SHEN_NAME4('P', '0', '6', '_'), QTNJ_INVALID};
+const shen_name qtnjTrial3Characters[] = {SHEN_NAME4('I', 'K', 'O', '_'), SHEN_NAME4('P', '0', '7', '_'), SHEN_NAME4('K', 'U', '6', '_'), QTNJ_INVALID};
+const shen_name qtnjFailureCharacters[] = {SHEN_NAME4('A', 'N', 'C', '_'), SHEN_NAME4('K', 'K', '1', '_'), SHEN_NAME4('K', 'T', '9', '_'),
+    SHEN_NAME4('K', 'U', '6', '_'), SHEN_NAME4('R', 'N', 'T', '_'), QTNJ_INVALID};
+const shen_name qtnjLastFailureCharacters[] = {SHEN_NAME4('I', 'K', 'O', '_'), SHEN_NAME4('K', 'K', '1', '_'), SHEN_NAME4('P', '0', '7', '_'),
+    SHEN_NAME4('K', 'U', '6', '_'), SHEN_NAME4('R', 'N', 'T', '_'), QTNJ_INVALID};
+const QtnjTrial qtnjTrials[QTNJ_TRIAL_COUNT] = {
+    {QTNJ_OBSTACLE_3, 2, 3, 5, {224.1f, 132.4f, 151.05f}, 180.0f, qtnjTrial0Characters, SHEN_NAME4('A', 'T', 'H', '1'), {1, 256, 0, 0}, 16, 2},
+    {QTNJ_OBSTACLE_0, 8, 9, 11, {198.9f, 132.4f, 169.2f}, 0.0f, qtnjTrial1Characters, SHEN_NAME4('A', 'T', 'H', '2'), {4, 256, 0, 0}, 16, 2},
+    {QTNJ_OBSTACLE_3, 13, 14, 16, {216.9f, 132.4f, 137.1f}, 0.0f, qtnjTrial2Characters, SHEN_NAME4('A', 'T', 'H', '3'), {64, 1, 256, 0}, 24, 3},
+    {QTNJ_OBSTACLE_0, 19, 20, 21, {247.5f, 132.4f, 135.6f}, 180.0f, qtnjTrial3Characters, SHEN_NAME4('A', 'T', 'H', '4'), {16, 1, 256, 0}, 24, 3}};
+const shen_name qtnjAdmissionCharacters[] = {QTNJ_RYO, QTNJ_REN, QTNJ_INVALID};
+const int qtnjDefaultSelection[] = {0};
+Vector3 qtnjFailureOffsets[] = {
+    {-17.600006f, 0.0f, 33.200012f}, {-40.300003f, 0.0f, 10.900009f}, {9.199997f, 0.0f, -18.999992f}};
+static QtnjMatrix qtnjAuthorPlacement;
+
+void QueueQtnjEvent(const int *selection)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(QtnjStartCallback, 4, 11, sizeof(QtnjEventWork), TASK_EVNT);
+    QtnjEventWork *work = (QtnjEventWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    if (selection)
+        work->selection = selection;
+    else
+        work->selection = qtnjDefaultSelection;
+    InitializeQtnjEvent(work);
+    EventDebugRegister(QTNJ_DEBUG_ID, QtnjDebugExitCallback, work, 2000000000);
+}
+
+void QtnjDebugExitCallback(void *data)
+{
+    QtnjFinish((QtnjEventWork *)data);
+}
+
+void QtnjFinish(QtnjEventWork *work)
+{
+    CleanupQtnjEvent(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    EventDebugUnregister(QTNJ_DEBUG_ID);
+    if (g_currentMap == QTNJ_AREA) {
+        FTBL.scenSetTaskFlags(6);
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+    }
+}
+
+void QtnjResetSequence(QtnjSequence *sequence)
+{
+    sequence->trial = 0;
+    sequence->state = 0;
+    sequence->cooldown = 0;
+}
+
+void QtnjStartCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    EventDebugCheck(QTNJ_DEBUG_ID, 4);
+    QtnjResetSequence(&work->sequence);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QTNJ_RYO));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QTNJ_REN));
+    FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(QTNJ_RYO), 1);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(QTNJ_RYO), 0, 0);
+    if (!work->npcReader)
+        work->npcReader = QueueEventNpcRead();
+    else
+        ReleaseEventNpcRequests(work->npcReader);
+    RequestEventNpcCharacters(work->npcReader, qtnjStartCharacters);
+    FTBL.HLib_SetCurrentTaskTo(QtnjStartAuthorCallback);
+}
+
+void QtnjStartAuthorCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    if (!IsEventNpcReadBusy(work->npcReader)) {
+        FTBL.EV_LoadAudio("0284A000", 0);
+        EVT_AT_SetSample(0, 0, 0);
+        FTBL.EV_authSceneCtrl(QTNJ_AUTH_START);
+        work->sequence.continuation = QtnjNextTrialCallback;
+        FTBL.HLib_SetCurrentTaskTo(QtnjPlayAuthorCallback);
+    }
+}
+
+void QtnjPlayAuthorCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.EV_authSceneCtrl(-10);
+        FTBL.HLib_SetCurrentTaskTo(work->sequence.continuation);
+    }
+}
+
+void QtnjNextTrialCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    QtnjSequence *sequence = &work->sequence;
+    const QtnjTrial *trial = work->trialRecord;
+    EVT_AT_SetPos(QTNJ_BASE, QTNJ_INVALID, qtnjWaypoints[sequence->state].position.x, work->baseHeight, qtnjWaypoints[sequence->state].position.z, 0);
+    EVT_AT_SetAngY(QTNJ_BASE, QTNJ_INVALID, qtnjWaypoints[sequence->state].yaw, 0);
+    EVT_AT_SetPos(QTNJ_OBSTACLE_BASE, QTNJ_INVALID, trial->position.x, work->baseHeight, trial->position.z, 0);
+    EVT_AT_SetAngY(QTNJ_OBSTACLE_BASE, QTNJ_INVALID, trial->yawDegrees, 0);
+    EVT_AT_SetPos(QTNJ_DUMMY_RIGHT, QTNJ_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QTNJ_DUMMY_RIGHT, QTNJ_BASE, 0.0f, 0);
+    EVT_AT_SetPos(QTNJ_REN, QTNJ_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QTNJ_REN, QTNJ_BASE, 0.0f, 0);
+    EVT_AT_SetPos(QTNJ_RYO, QTNJ_REN, 0.0f, 0.0f, 1.5f, 0);
+    EVT_AT_SetAngY(QTNJ_RYO, QTNJ_REN, 0.0f, 0);
+    EVT_AT_SetPos(QTNJ_DUMMY_LEFT, QTNJ_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QTNJ_DUMMY_LEFT, QTNJ_BASE, 0.0f, 0);
+    EVT_AT_SetMot(QTNJ_REN, 0xf002, 1.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(QTNJ_RYO, 0xf002, 1.0f, 1.0f, 0x40000000U, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QTNJ_RYO), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QTNJ_RYO), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QTNJ_RYO), 0, (void *)areaLoopHandPoses[QTNJ_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QTNJ_RYO), 1, (void *)areaLoopHandPoses[QTNJ_HAND_POSE], 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QTNJ_REN), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QTNJ_REN), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QTNJ_REN), 0, (void *)areaLoopHandPoses[QTNJ_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QTNJ_REN), 1, (void *)areaLoopHandPoses[QTNJ_HAND_POSE], 0);
+    InitEventChase(&work->sequence.chase, &qtnjChaseParams);
+    sequence->obstacle.obstacle = trial->obstacle;
+    sequence->obstacle.trial = sequence->trial;
+    sequence->obstacle.npcs = trial->characters;
+    sequence->obstacle.waitFrames = 1;
+    sequence->cooldown = 0;
+    InitializeQtnjObstacle(sequence->obstacle.obstacle);
+    ReleaseEventNpcRequests(work->npcReader);
+    RequestEventNpcCharacters(work->npcReader, trial->characters);
+    sequence->state++;
+    FTBL.HLib_SetCurrentTaskTo(QtnjStartRunCallback);
+}
+
+void QtnjStartRunCallback(void *data)
+{
+    static const unsigned int motions[] = {0xf002, 0xf002, 0xf002, 0xf002, 0x216c, 0xf002, 0xf002};
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    QtnjSequence *sequence = &work->sequence;
+    if (IsEventNpcReadBusy(work->npcReader))
+        return;
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 10);
+    sequence->movementSlot = EVT_MV_MoveMain_Enqueue(0, QTNJ_REN, qtnjWaypoints, motions, 0.9f, QTNJ_MOVE_FLAGS, 0);
+    EVT_MV_SetMoveMainIndex(sequence->movementSlot, sequence->state);
+    EVT_AT_SetMot(QTNJ_RYO, QTNJ_RUN_MOTION, 1.0f, 0.9f, 0x50000000U, 0);
+    switch (sequence->state) {
+    case 1:
+        EVT_AT_SetCam(7410, QTNJ_BASE, QTNJ_BASE, 0, 0, 10);
+        EVT_AT_SetCam(7411, QTNJ_BASE, QTNJ_BASE, 0, 0, 55);
+        break;
+    case 3:
+        EVT_AT_SetVoice("0284C005", 10);
+        EVT_AT_SetCam(7412, QTNJ_BASE, QTNJ_BASE, 0, 0, 10);
+        break;
+    case 6:
+        EVT_AT_SetCam(7413, QTNJ_BASE, QTNJ_BASE, 0, 0, 10);
+        EVT_AT_SetCam(7414, QTNJ_BASE, QTNJ_BASE, 0, 0, 55);
+        break;
+    case 9:
+        EVT_AT_SetVoice("0284C004", 45);
+        EVT_AT_SetCam(7401, QTNJ_RYO, QTNJ_RYO, 0, 0, 10);
+        break;
+    case 12:
+        EVT_AT_SetCam(7415, QTNJ_BASE, QTNJ_BASE, 0, 0, 10);
+        break;
+    case 14:
+        EVT_AT_SetVoice("0284C003", 20);
+        EVT_AT_SetVoice("0284C002", 100);
+        EVT_AT_SetCam(7416, QTNJ_BASE, QTNJ_BASE, 0, 0, 10);
+        EVT_AT_SetCam(7417, QTNJ_BASE, QTNJ_BASE, 0, 0, 70);
+        break;
+    case 17:
+        EVT_AT_SetCam(7418, QTNJ_BASE, QTNJ_BASE, 0, 0, 10);
+        EVT_AT_SetCam(7419, QTNJ_BASE, QTNJ_BASE, 0, 0, 60);
+        break;
+    case 20:
+        EVT_AT_SetVoice("0284C008", 40);
+        EVT_AT_SetCam(7420, QTNJ_BASE, QTNJ_BASE, 0, 0, 10);
+        break;
+    default:
+        EVT_AT_SetCam(7401, QTNJ_RYO, QTNJ_RYO, 0, 0, 10);
+        break;
+    }
+    FTBL.HLib_SetCurrentTaskTo(QtnjWaitRunCallback);
+}
+
+void QtnjWaitRunCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    QtnjSequence *sequence = &work->sequence;
+    const QtnjTrial *trial = work->trialRecord;
+    Vector3 position;
+    sequence->state = EVT_MV_GetMoveMainIndex(sequence->movementSlot);
+    if (sequence->state != QTNJ_FINAL_WAYPOINT) {
+        UpdateEventChase(&work->sequence.chase);
+        FTBL.GetCharaPosition(QTNJ_RYO, -1, &position, 0x40000000);
+        if (FTBL.ComputeAngle(&position, 3.0f, 0, 0xff49, &trial->position)) {
+            FTBL.qteBattleUtil(9, trial->buttons[0], trial->buttons[1], trial->buttons[2], trial->buttons[3]);
+            FTBL.qteBattleUtil(10, 0, 0, 0, 0);
+            EVT_AT_QTE(0, trial->maximumFrames, 0, 0, 4);
+            FTBL.HLib_SetCurrentTaskTo(QtnjWaitQteCallback);
+        } else if (sequence->cooldown) {
+            if (sequence->cooldown != 1)
+                sequence->cooldown--;
+        } else if (sequence->state == trial->approachState) {
+            EVT_MV_CancelMoveMain(sequence->movementSlot);
+            FTBL.EV_authSceneCtrl(-11);
+            FTBL.EV_authSceneCtrl(-14);
+            FTBL.EV_authSceneCtrl(trial->author);
+            sequence->state = trial->escapeState;
+            sequence->continuation = QtnjStartRunCallback;
+            FTBL.HLib_SetCurrentTaskTo(QtnjCheckAuthorCallback);
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QtnjCheckTrialCallback);
+}
+
+void QtnjCheckAuthorCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    QtnjSequence *sequence = &work->sequence;
+    if (FTBL.EV_authSceneCtrl(-1))
+        return;
+    FTBL.EV_authSceneCtrl(-10);
+    EVT_AT_SetPos(QTNJ_BASE, QTNJ_INVALID, qtnjWaypoints[sequence->state].position.x, work->baseHeight, qtnjWaypoints[sequence->state].position.z, 0);
+    EVT_AT_SetAngY(QTNJ_BASE, QTNJ_INVALID, qtnjWaypoints[sequence->state].yaw, 0);
+    EVT_AT_SetPos(QTNJ_REN, QTNJ_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QTNJ_REN, QTNJ_BASE, 0.0f, 0);
+    EVT_AT_SetPos(QTNJ_RYO, QTNJ_REN, 0.0f, 0.0f, 1.5f, 0);
+    EVT_AT_SetAngY(QTNJ_RYO, QTNJ_REN, 0.0f, 0);
+    EVT_AT_CharaDisp(QTNJ_RYO, 10, 0);
+    EVT_AT_CharaDisp(QTNJ_REN, 10, 0);
+    FTBL.HLib_SetCurrentTaskTo(sequence->continuation);
+}
+
+void QtnjWaitQteCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    QtnjSequence *sequence = &work->sequence;
+    const QtnjTrial *trial = work->trialRecord;
+    if (FTBL.qteBattleUtil(4, 0, 0, 0, 0)) {
+        if (FTBL.qteBattleUtil(6, 0, 0, 0, 0) == trial->requiredCommands) {
+            sequence->success = 1;
+            sequence->state = trial->successState;
+            EVT_MV_CancelMoveMain(sequence->movementSlot);
+            PlayQtnjObstacle(&work->sequence.obstacle, 0);
+            EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, sequence->obstacle.waitFrames - 30);
+            FTBL.HLib_SetCurrentTaskTo(QtnjCheckTrialCallback);
+            FTBL.HLib_SetupTaskDelay(sequence->obstacle.waitFrames);
+        } else {
+            sequence->success = 0;
+            UpdateEventChase(&sequence->chase);
+            ReleaseEventNpcRequests(work->npcReader);
+            FTBL.HLib_SetCurrentTaskTo(QtnjReadFailureCharactersCallback);
+        }
+    } else
+        UpdateEventChase(&sequence->chase);
+}
+
+void QtnjReadFailureCharactersCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    QtnjSequence *sequence = &work->sequence;
+    if (AreEventNpcReadsFree(work->npcReader)) {
+        if (sequence->trial == QTNJ_LAST_TRIAL)
+            RequestEventNpcCharacters(work->npcReader, qtnjLastFailureCharacters);
+        else
+            RequestEventNpcCharacters(work->npcReader, qtnjFailureCharacters);
+        EVT_AT_MenCtrl(60, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+        FTBL.HLib_SetCurrentTaskTo(QtnjStartFailureAuthorCallback);
+    } else
+        UpdateEventChase(&sequence->chase);
+}
+
+void QtnjStartFailureAuthorCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    QtnjSequence *sequence = &work->sequence;
+    if (!IsEventNpcReadBusy(work->npcReader) && !FTBL.filmCheckFadeTrackColour()) {
+        EVT_MV_CancelMoveMain(sequence->movementSlot);
+        FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(QTNJ_RYO), 1);
+        FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(QTNJ_RYO), 0, 0);
+        if (sequence->trial == QTNJ_LAST_TRIAL)
+            FTBL.EV_authSceneCtrl(QTNJ_AUTH_LAST_FAILURE);
+        else {
+            FTBL.matrix_stack_Matrix4x4_Push(0);
+            FTBL.matrix_stack_UnitCurrentMatrix();
+            FTBL.SetCurrentMatrixTranslation(&qtnjFailureOffsets[sequence->trial]);
+            FTBL.Matrix4x4_GetTransformMatrix(&qtnjAuthorPlacement);
+            FTBL.PopCurrentMatrix(0);
+            FTBL.Author_SetPlacementMatrix(&qtnjAuthorPlacement);
+            FTBL.EV_authSceneCtrl(QTNJ_AUTH_FAILURE);
+        }
+        sequence->trial = QTNJ_TRIAL_COUNT;
+        sequence->continuation = QtnjCheckTrialCallback;
+        FTBL.HLib_SetCurrentTaskTo(QtnjPlayOutcomeAuthorCallback);
+    } else
+        UpdateEventChase(&sequence->chase);
+}
+
+void QtnjCheckTrialCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    QtnjSequence *sequence = &work->sequence;
+    if (++sequence->trial > QTNJ_LAST_TRIAL) {
+        if (!sequence->success) {
+            work->trialRecord = &qtnjTrials[*work->selection];
+            EVT_IncrementQteFailureCount();
+            RestoreEventDateTime();
+            FTBL.HLib_SetCurrentTaskTo(QtnjStartCallback);
+        } else {
+            FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(QTNJ_RYO), 1);
+            FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(QTNJ_RYO), 0, 0);
+            FTBL.EV_authSceneCtrl(QTNJ_AUTH_SUCCESS);
+            sequence->continuation = QtnjFinishCallback;
+            FTBL.HLib_SetCurrentTaskTo(QtnjPlayOutcomeAuthorCallback);
+        }
+    } else {
+        work->trialRecord++;
+        FTBL.HLib_SetCurrentTaskTo(QtnjNextTrialCallback);
+    }
+}
+
+void QtnjPlayOutcomeAuthorCallback(void *data)
+{
+    QtnjEventWork *work = (QtnjEventWork *)data;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        ReleaseEventNpcRequests(work->npcReader);
+        EVT_AT_SetSample(0, 1, 0);
+        FTBL.HLib_SetCurrentTaskTo(work->sequence.continuation);
+        FTBL.HLib_SetupTaskDelay(60);
+    }
+}
+
+void QtnjFinishCallback(void *data)
+{
+    QtnjFinish((QtnjEventWork *)data);
+}
+
+void InitializeQtnjEvent(QtnjEventWork *work)
+{
+    Vector3 position;
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    EVT_SetQteRetryFrames(36);
+    SaveEventDateTime();
+    EVT_MV_ResetMoveMain();
+    FTBL.GetCharaPosition(QTNJ_RYO, -1, &position, 0x40000000);
+    work->baseHeight = position.y;
+    work->npcReader = 0;
+    work->trialRecord = &qtnjTrials[*work->selection];
+    work->admission = Queue_EVT_AT_ReadChr(work->task, qtnjAdmissionCharacters);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"284E", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"QTNJ", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "QTNJ", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "QTNJ", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0284");
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0284A000");
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+    FTBL.EV_authSceneCtrl(-8);
+    FTBL.qteBattleUtil(0, 0, 0, 0, 0);
+    FTBL.qteBattleUtil(2, 0, 0, 0, 0);
+}
+
+void CleanupQtnjEvent(QtnjEventWork *work)
+{
+    EVT_AT_SetPosAng(QTNJ_RYO, QTNJ_INVALID, 251.5f, 140.4f, -90.0f, 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QTNJ_REN));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QTNJ_RYO));
+    FTBL.qteBattleUtil(5, 0, 0, 0, 0);
+    FTBL.EV_authSceneCtrl(-7);
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0284");
+    FTBL.EV_ControlPackageResources(0, 6, "QTNJ", 0, 0);
+    FTBL.EV_ControlPackageResources(0, 6, "284E", 0, 0);
+    ET_AT_KillWork(work->admission);
+    EVT_MV_CancelAllMoveMain();
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+}
+#endif
+#else
 #include "s2/qt_nj_event.hpp"
 #include "s2/author.hpp"
 #include "s2/battle_qte.hpp"
@@ -485,3 +910,4 @@ void CleanupQtnjEvent(QtnjEventWork *work) {
 }
 const ScriptAreaDefinition qtnjScriptDefinition{QTNJ_AREA, 0, QtnjInit, QtnjMain};
 } // namespace shenmue::s2
+#endif

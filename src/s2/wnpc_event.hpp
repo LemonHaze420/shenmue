@@ -1,5 +1,14 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+#define WNPC_TASK SHEN_NAME4('w', 'n', 'p', 'c')
+void WNPCMain(void);
+void WNPCWaitNpc(void *taskData);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 
 namespace shenmue::s2 {
@@ -12,3 +21,4 @@ void WNPCWaitNpc(void *taskData);
 extern const ScriptAreaDefinition wnpcScriptDefinition;
 
 } // namespace shenmue::s2
+#endif

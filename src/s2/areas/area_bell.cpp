@@ -1,3 +1,503 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_bell.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+static BellWork *bellWork;
+
+void BellMain(const unsigned int *argument)
+{
+    HLibTask *task;
+    FTBL.DebugLogToFileRemoved("BELL_EVENT mode[%d]\n", *argument);
+    if (*argument == 0) {
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.EV_SetNewSceneIndex();
+        FTBL.EV_setHoldStatesFlags(0);
+        FTBL.DebugLogToFileRemoved("=============== YAN_KANPOUYA_BELL ==============\n");
+        task = FTBL.HLib_EnqueueTaskWithParameter(BellLoadNpcCallback, 5, 11, sizeof(BellWork), TASK_EVNT);
+        bellWork = (BellWork *)FTBL.HLib_GetTaskParameter(task);
+        bellWork->task = task;
+        bellWork->elapsed = 0;
+        bellWork->busy = 0;
+        bellWork->escapeTalks = 0;
+        bellWork->conversations = 0;
+        FTBL.EV_SetPlayerFlag(12, 679, 1);
+        FTBL.EV_NPC_NewLoadSw_0(0);
+        FTBL.CheckWarmStartNpcRoute(BELL_REN);
+        FTBL.CheckWarmStartNpcRoute(BELL_YANG);
+        BELL_SET_GRAVITY(BELL_RYO, 0);
+        FTBL.EV_LoadCutsceneFromCurrentScene("0202A000.smp");
+        FTBL.EV_FreeAuthorPak(1, bellAuthorPak);
+        FTBL.EV_FreeAuthorPak(1, bellYangAuthorPak);
+        FTBL.EV_SetCanDoAreaJumpTo(0);
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)bellPackage, 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        FTBL.EV_ControlPackageResources(2, 4, bellPackage, 0, 0);
+        FTBL.EV_setHoldStatesFlags(0);
+    }
+    bellWork->command = *argument;
+}
+
+const char bellAuthorPak[] = "0202";
+const char bellYangAuthorPak[] = "0203";
+const char bellPackage[] = "BELL";
+#else
+static BellSearchTarget bellTargets[2];
+
+void BellLoadNpcCallback(void *data)
+{
+    if (FTBL.ForceLoadNpc(BELL_REN)) {
+        FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(BELL_REN));
+        FTBL.EV_SetCharacterAlphaEnabled(BELL_REN, 0);
+        FTBL.HLib_SetCurrentTaskTo(BellInteractionInitCallback);
+        QueueSkAuthorStart(((BellWork *)data)->task, BELL_AUTHOR_START, 0, 0, 0);
+    }
+}
+
+void BellInteractionInitCallback(void *data)
+{
+    BellWork *work = (BellWork *)data;
+    Vector3 position;
+    Vector3i rotation;
+    position.x = 207.65f;
+    position.y = 103.6f;
+    position.z = 195.1f;
+    rotation.x = 0;
+    rotation.y = 0xe666;
+    rotation.z = 0;
+    FTBL.EV_AT_SetAngY_0(BELL_REN, BELL_ROTATION_FLAGS, &rotation, 0);
+    FTBL.EV_AT_SetPos(BELL_REN, BELL_POSITION_FLAGS, &position);
+    position.x = 208.73f;
+    position.y = 103.6f;
+    position.z = 195.91f;
+    rotation.x = 0;
+    rotation.y = 0xe000;
+    rotation.z = 0;
+    FTBL.EV_AT_SetAngY_0(BELL_RYO, BELL_ROTATION_FLAGS, &rotation, 0);
+    FTBL.EV_AT_SetPos(BELL_RYO, BELL_POSITION_FLAGS, &position);
+    EVT_AT_SetMot(BELL_REN, 0x2182, 0.0f, 1.0f, 0x41000000U, 0);
+    EVT_AT_SetMot(BELL_RYO, 0xf003, 0.0f, 1.0f, 0x40000000U, 0);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(BELL_REN));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BELL_REN), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BELL_REN), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(BELL_REN), 0, (void *)areaLoopHandPoses[BELL_RESTING_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(BELL_REN), 1, (void *)areaLoopHandPoses[BELL_RESTING_HAND_POSE], 0);
+    bellTargets[0].name = BELL_TARGET;
+    bellTargets[0].flags = 0;
+    bellTargets[0].field08 = 0;
+    bellTargets[0].position.x = 208.64f;
+    bellTargets[0].position.y = 104.5f;
+    bellTargets[0].position.z = 194.73f;
+    bellTargets[0].lockonAngle = 0.3f;
+    bellTargets[0].yaw = -32768;
+    bellTargets[0].yawLimit = -32768;
+    bellTargets[1].name = 0;
+    bellTargets[1].flags = 0;
+    bellTargets[1].field08 = 0;
+    bellTargets[1].position.x = 0.0f;
+    bellTargets[1].position.y = 0.0f;
+    bellTargets[1].position.z = 0.0f;
+    bellTargets[1].lockonAngle = 0.0f;
+    bellTargets[1].yaw = 0;
+    bellTargets[1].yawLimit = 0;
+    FTBL.srchSetTarget(2, bellTargets);
+    position.x = 208.64f;
+    position.y = 104.5f;
+    position.z = 194.73f;
+    rotation.x = 0;
+    rotation.y = 0;
+    rotation.z = 0;
+    FTBL.EV_AT_SetAngY_0(BELL_ANCHOR, BELL_ROTATION_FLAGS, &rotation, 0);
+    FTBL.EV_AT_SetPos(BELL_ANCHOR, BELL_POSITION_FLAGS, &position);
+    FTBL.EV_DisableCharacterDisplay(BELL_SHUTTER);
+    FTBL.EVS_LoopCamera(0, 0, 0);
+    FTBL.camCtrlSetFovTransitionTo(1);
+    FTBL.camCtrlSetState(0);
+    work->renRouteCompletion = FTBL.IsNpcAnimationActive(BELL_REN);
+    FTBL.UnknownCharaFunc(BELL_REN);
+    BELL_SET_GRAVITY(BELL_RYO, 1);
+    EVT_AT_MenCtrl(10, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.SetPlayerControlEnabled(1);
+    FTBL.HLib_SetCurrentTaskTo(BellInteractionCallback);
+}
+
+void BellInteractionCallback(void *data)
+{
+    BellWork *work = (BellWork *)data;
+    Vector3 position;
+    Vector3i rotation;
+    float reflector[4] = {1.0f, 0.3f, 0.3f, 0.3f};
+    int duration;
+    switch (work->command) {
+    case 0:
+        if (!work->busy && !FTBL.GetShouldRenderIcons(0))
+            work->elapsed++;
+        switch (work->elapsed) {
+        case 900:
+            FTBL.SetPlayerControlEnabled(0);
+            if (FTBL.IsItemSelectable())
+                FTBL.EV_SetMemoStateTo(1);
+            EVT_AT_SetMot(BELL_RYO, 0xf003, 0.0f, 1.0f, 0x80000000U, 0);
+            EVT_AT_SetVoice("0202C032", 0);
+            EVT_AT_SetVoice("0202C026", 70);
+            break;
+        case 1030:
+            FTBL.SetPlayerControlEnabled(1);
+            break;
+        case 1800:
+            FTBL.SetPlayerControlEnabled(0);
+            if (FTBL.IsItemSelectable())
+                FTBL.EV_SetMemoStateTo(1);
+            EVT_AT_SetMot(BELL_RYO, 0xf003, 0.0f, 1.0f, 0x80000000U, 0);
+            EVT_AT_SetVoice("0202C033", 0);
+            EVT_AT_SetVoice("0202C025", 60);
+            break;
+        case 1920:
+            FTBL.SetPlayerControlEnabled(1);
+            break;
+        case 2700:
+            FTBL.SetPlayerControlEnabled(0);
+            if (FTBL.IsItemSelectable())
+                FTBL.EV_SetMemoStateTo(1);
+            EVT_AT_SetMot(BELL_RYO, 0xf003, 0.0f, 1.0f, 0x80000000U, 0);
+            EVT_AT_SetVoice("0202C034", 0);
+            EVT_AT_SetVoice("0202C035", 70);
+            break;
+        case 2840:
+            FTBL.SetPlayerControlEnabled(1);
+            break;
+        }
+        if (work->elapsed < 3600)
+            return;
+        if (FTBL.IsItemSelectable())
+            FTBL.EV_SetMemoStateTo(1);
+        FTBL.srchReset();
+        FTBL.EV_refreshPadControlData(0, 1);
+        FTBL.SetPlayerControlEnabled(0);
+        position.x = 207.7f;
+        position.y = 103.6f;
+        position.z = 194.96f;
+        rotation.x = 0;
+        rotation.y = 0xe666;
+        rotation.z = 0;
+        FTBL.EV_AT_SetAngY_0(BELL_REN, BELL_ROTATION_FLAGS, &rotation, 0);
+        FTBL.EV_AT_SetPos(BELL_REN, BELL_POSITION_FLAGS, &position);
+        FTBL.EV_DisableCharacterDisplay(BELL_RYO);
+        FTBL.GetCharaPosition(BELL_ANCHOR, -1, &position, 0x40000000U);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(BELL_REN), &position, 1);
+        FTBL.SetScenarioReflectorBoardValues(BELL_REN, reflector);
+        FTBL.SetRefBoardParamsForCharaById(BELL_REN, 1);
+        FTBL.EV_PlayDialogue("0202C031");
+        EVT_AT_SetMot(BELL_REN, 0x2183, 0.0f, 1.0f, 0x40000000U, 0);
+        work->phase = 4;
+        FTBL.EV_stepSetFlags(412, 0);
+        FTBL.EVS_LoopCamera(110, BELL_ANCHOR, BELL_ANCHOR);
+        EVT_AT_SetSample(30, 1, 120);
+        EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 120);
+        FTBL.HLib_SetCurrentTaskTo(BellRingCallback);
+        FTBL.HLib_SetupTaskDelay(150);
+        break;
+    case 1:
+        FTBL.EV_stepSetFlags(411, 0);
+        FTBL.SetPlayerControlEnabled(0);
+        work->phase = 0;
+        work->busy = 1;
+        FTBL.HLib_SetCurrentTaskTo(BellRingCallback);
+        break;
+    case 2:
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.srchReset();
+        position.x = 208.2f;
+        position.y = 103.6f;
+        position.z = 196.0f;
+        rotation.x = 0;
+        rotation.y = 0x6000;
+        rotation.z = 0;
+        FTBL.EV_AT_SetAngY_0(BELL_RYO, BELL_ROTATION_FLAGS, &rotation, 0);
+        FTBL.EV_AT_SetPos(BELL_RYO, BELL_POSITION_FLAGS, &position);
+        switch (work->escapeTalks) {
+        case 0:
+            EVT_AT_SetVoice("0202C028", 0);
+            EVT_AT_SetVoice("0202C036", 60);
+            FTBL.EVS_LoopCamera(120, BELL_ANCHOR, BELL_ANCHOR);
+            break;
+        case 1:
+            EVT_AT_SetVoice("0202C037", 0);
+            EVT_AT_SetVoice("0202C038", 70);
+            FTBL.EVS_LoopCamera(121, BELL_ANCHOR, BELL_ANCHOR);
+            break;
+        case 2:
+            EVT_AT_SetVoice("0202C039", 0);
+            EVT_AT_SetVoice("0202C025", 70);
+            FTBL.EVS_LoopCamera(122, BELL_ANCHOR, BELL_ANCHOR);
+            break;
+        default:
+            EVT_AT_SetVoice("0202C039", 0);
+            EVT_AT_SetVoice("0202C025", 70);
+            switch ((unsigned char)FTBL.GetRandomNumberInRange(3.0f)) {
+            case 0:
+                FTBL.EVS_LoopCamera(120, BELL_ANCHOR, BELL_ANCHOR);
+                break;
+            case 1:
+                FTBL.EVS_LoopCamera(121, BELL_ANCHOR, BELL_ANCHOR);
+                break;
+            default:
+                FTBL.EVS_LoopCamera(122, BELL_ANCHOR, BELL_ANCHOR);
+                break;
+            }
+            break;
+        }
+        work->escapeTalks++;
+        work->command = 0;
+        work->busy = 1;
+        EVT_RepeatCall(BellEyeTowardBell, 0, 30, 1);
+        EVT_RepeatCall(BellResetEye, 0, 120, 1);
+        EVT_AT_SetPoint(BELL_RYO, BELL_REN, 5, 1, 0, 30, 0, 0x20000000U);
+        EVT_AT_SetPoint(BELL_RYO, 0, 0, 1, 0, 120, 0, 0x10000000U);
+        EVT_AT_SetPoint(BELL_REN, BELL_RYO, 5, 1, 0, 1, 0, 0x20000000U);
+        EVT_AT_SetPoint(BELL_REN, 0, 0, 1, 0, 120, 0, 0x10000000U);
+        EVT_AT_SetMot(BELL_RYO, 0xf003, 0.0f, 1.0f, 0x40000000U, 0);
+        EVT_RepeatCall(BellRestoreControl, work, 120, 1);
+        break;
+    case 3:
+        if (work->busy || !FTBL.ryoNotBusy())
+            break;
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.srchReset();
+        switch (work->conversations) {
+        case 0:
+            EVT_AT_SetCam(210, BELL_RYO, BELL_RYO, 0, 0, 0);
+            EVT_AT_SetVoice("0202A018", 0);
+            EVT_AT_SetCam(220, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 80);
+            EVT_AT_SetVoice("0202C013", 80);
+            duration = 170;
+            break;
+        case 1:
+            EVT_AT_SetCam(210, BELL_RYO, BELL_RYO, 0, 0, 0);
+            EVT_AT_SetVoice("0202A019", 0);
+            EVT_AT_SetVoice("0202A020", 20);
+            EVT_AT_SetCam(250, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 100);
+            EVT_AT_SetVoice("0202C014", 100);
+            EVT_AT_SetCam(230, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 180);
+            EVT_AT_SetVoice("0202C015", 180);
+            duration = 280;
+            break;
+        case 2:
+            EVT_AT_SetCam(200, BELL_RYO, BELL_RYO, 0, 0, 0);
+            EVT_AT_SetVoice("0202A019", 0);
+            EVT_AT_SetVoice("0202A022", 20);
+            EVT_AT_SetCam(220, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 90);
+            EVT_AT_SetVoice("0202C017", 90);
+            EVT_AT_SetCam(210, BELL_RYO, BELL_RYO, 0, 0, 160);
+            EVT_AT_SetVoice("0202A023", 160);
+            EVT_AT_SetCam(230, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 220);
+            EVT_AT_SetVoice("0202C018", 220);
+            duration = 310;
+            break;
+        case 3:
+            EVT_AT_SetCam(200, BELL_RYO, BELL_RYO, 0, 0, 0);
+            EVT_AT_SetVoice("0202A019", 0);
+            EVT_AT_SetVoice("0202A024", 20);
+            EVT_AT_SetCam(250, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 80);
+            EVT_AT_SetVoice("0202C019", 80);
+            EVT_AT_SetVoice("0202A025", 210);
+            EVT_AT_SetCam(240, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 250);
+            EVT_AT_SetVoice("0202C020", 250);
+            EVT_AT_SetVoice("0202C021", 350);
+            EVT_AT_SetCam(210, BELL_RYO, BELL_RYO, 0, 0, 480);
+            EVT_AT_SetVoice("0202A026", 480);
+            EVT_AT_SetVoice("0202A027", 540);
+            EVT_AT_SetCam(230, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 610);
+            EVT_AT_SetVoice("0202C022", 610);
+            EVT_AT_SetVoice("0202C023", 680);
+            duration = 850;
+            break;
+        case 4:
+            EVT_AT_SetCam(250, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 0);
+            EVT_AT_SetVoice("0202A019", 0);
+            EVT_AT_SetVoice("0202C024", 20);
+            EVT_AT_SetCam(220, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 130);
+            EVT_AT_SetVoice("0202C025", 130);
+            EVT_AT_SetVoice("0202A009", 200);
+            duration = 240;
+            break;
+        default:
+            if ((unsigned char)FTBL.GetRandomNumberInRange(2.0f) == 0)
+                EVT_AT_SetVoice("0202A019", 0);
+            else
+                EVT_AT_SetVoice("0202A028", 0);
+            switch ((unsigned char)FTBL.GetRandomNumberInRange(3.0f)) {
+            case 0:
+                EVT_AT_SetCam(240, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 20);
+                EVT_AT_SetVoice("0202C024", 20);
+                duration = 140;
+                break;
+            case 1:
+                EVT_AT_SetCam(230, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 20);
+                EVT_AT_SetVoice("0202C026", 20);
+                duration = 110;
+                break;
+            default:
+                EVT_AT_SetCam(220, BELL_ANCHOR, BELL_ANCHOR, 0, 0, 20);
+                EVT_AT_SetVoice("0202C025", 20);
+                duration = 100;
+                break;
+            }
+            break;
+        }
+        work->conversations++;
+        work->command = 0;
+        work->busy = 1;
+        EVT_RepeatCall(BellEyeTowardBell, 0, 30, 1);
+        EVT_RepeatCall(BellResetEye, 0, 100, 1);
+        EVT_AT_SetPoint(BELL_RYO, BELL_REN, 5, 1, 0, 30, 0, 0x20000000U);
+        EVT_AT_SetPoint(BELL_RYO, BELL_REN, 5, 1, 0, duration, 0, 0x10000000U);
+        EVT_AT_SetMot(BELL_RYO, 0xf003, 0.0f, 1.0f, 0x40000000U, 0);
+        EVT_RepeatCall(BellRestoreControl, work, duration, 1);
+        FTBL.HLib_SetupTaskDelay(duration);
+        break;
+    }
+}
+
+void BellRingCallback(void *data)
+{
+    BellWork *work = (BellWork *)data;
+    Vector3 position;
+    Vector3i rotation, handRotation;
+    switch (work->phase) {
+    case 0:
+        FTBL.EVS_LoopCamera(100, BELL_ANCHOR, BELL_ANCHOR);
+        FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(BELL_RYO));
+        FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(BELL_REN));
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BELL_RYO), 1, 1, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BELL_REN), 1, 0, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BELL_REN), 1, 1, 0);
+        FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(BELL_REN), 0, (void *)areaLoopHandPoses[BELL_RINGING_HAND_POSE], 0);
+        FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(BELL_REN), 1, (void *)areaLoopHandPoses[BELL_RINGING_HAND_POSE], 0);
+        handRotation.x = 0;
+        handRotation.y = 4732;
+        handRotation.z = 1820;
+        FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(BELL_RYO), 1, 21, &handRotation);
+        FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(BELL_RYO), 1, (void *)areaLoopHandPoses[BELL_RINGING_HAND_POSE], 10);
+        position.x = 208.5f;
+        position.y = 104.5f;
+        position.z = 194.5f;
+        FTBL.SetEyeToChara(FTBL.ctrlGetCharaByName(BELL_RYO), &position, 20, 2);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(BELL_RYO), &position, 1);
+        EVT_RepeatCall(BellResetEye, 0, 170, 1);
+        BELL_SET_GRAVITY(BELL_RYO, 0);
+        BELL_SET_GRAVITY(BELL_REN, 0);
+        position.x = 209.1f;
+        position.y = 103.57f;
+        position.z = 194.75f;
+        rotation.x = 0;
+        rotation.y = 6189;
+        rotation.z = 0;
+        FTBL.EV_AT_SetAngY_0(BELL_RYO, BELL_ROTATION_FLAGS, &rotation, 0);
+        FTBL.EV_AT_SetPos(BELL_RYO, BELL_POSITION_FLAGS, &position);
+        EVT_AT_SetMot(BELL_RYO, 0x2185, 0.0f, 1.0f, 0x40000000U, 0);
+        EVT_AT_MenCtrl(10, 0, 0, 0, 0, 255, 0, 0, 0, 100);
+        EVT_AT_SetSample(30, 1, 80);
+        FTBL.HLib_SetupTaskDelay(110);
+        work->phase = 4;
+        break;
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+        if (!FTBL.ForceLoadNpc(BELL_YANG))
+            return;
+        FTBL.EV_SetCharacterAlphaEnabled(BELL_YANG, 0);
+        FTBL.EV_SetCharacterAlphaEnabled(BELL_REN, 0);
+        FTBL.EV_SetCharacterAlphaEnabled(BELL_RYO, 0);
+        FTBL.EV_stepSetFlags(305, 0);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(BELL_RYO), 0, 0);
+        FTBL.EV_EnableCharacterDisplay(BELL_REN);
+        FTBL.EV_EnableCharacterDisplay(BELL_RYO);
+        FTBL.EV_DisableCharacterDisplay(BELL_SHUTTER);
+        FTBL.EV_DisableCharacterDisplay(BELL_SIGN);
+        FTBL.SetDoorSubjectEnabled(BELL_DOOR, 0);
+        FTBL.TelCode_Enqueue();
+        if (work->renRouteCompletion)
+            FTBL.npcUpdateFlags(BELL_REN);
+        else
+            FTBL.UnknownCharaFunc(BELL_REN);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        EVT_AT_SetSample(30, 0, 0);
+        FTBL.EV_LoadAudio("0202A000", 0);
+        FTBL.EV_LoadCutsceneFromCurrentScene("0202A000");
+        QueueSkAuthorStart(work->task, BELL_AUTHOR_RING, 0, 0, 0);
+        work->phase++;
+        break;
+    case 5:
+        FTBL.EV_LoadAudio("0203A000", 0);
+        FTBL.EV_LoadCutsceneFromCurrentScene("0203A000");
+        QueueSkAuthorStart(work->task, BELL_AUTHOR_YANG, 0, 0, 0);
+        work->phase++;
+        break;
+    case 6:
+        FTBL.HLib_SetCurrentTaskTo(BellExitCallback);
+        work->phase++;
+        break;
+    }
+}
+
+void BellRestoreControl(void *data)
+{
+    ((BellWork *)data)->busy = 0;
+    FTBL.SetPlayerControlEnabled(1);
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(BELL_RYO), 0, 0);
+    FTBL.EVS_LoopCamera(0, 0, 0);
+    FTBL.camCtrlSetFovTransitionTo(1);
+    FTBL.camCtrlSetState(0);
+}
+
+void BellEyeTowardBell(void *data)
+{
+    Vector3 point;
+    point.x = 208.1f;
+    point.y = 105.0f;
+    point.z = 194.9f;
+    FTBL.SetEyeToChara(FTBL.ctrlGetCharaByName(BELL_RYO), &point, 10, 2);
+}
+
+void BellResetEye(void *data)
+{
+    FTBL.SetEyeToChara(FTBL.ctrlGetCharaByName(BELL_RYO), 0, 16, 0);
+}
+
+void BellExitCallback(void *data)
+{
+    BellWork *work = (BellWork *)data;
+    FTBL.DebugLogToFileRemoved("=============== YAN_KANPOUYA_BELL_END ==============\n");
+    FTBL.EV_setHoldStatesFlags(1);
+    FTBL.SetDoorSubjectEnabled(BELL_DOOR, 1);
+    FTBL.EV_FreeAuthorPak(0, bellAuthorPak);
+    FTBL.EV_FreeAuthorPak(0, bellYangAuthorPak);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    FTBL.EV_setHoldStatesFlags(1);
+    FTBL.srchClearTarget(2);
+    FTBL.EV_SetCanDoAreaJumpTo(1);
+    BELL_SET_GRAVITY(BELL_RYO, 1);
+    BELL_SET_GRAVITY(BELL_REN, 1);
+    FTBL.EV_SetCharacterAlphaEnabled(BELL_REN, 1);
+    FTBL.EV_SetCharacterAlphaEnabled(BELL_YANG, 1);
+    FTBL.EV_SetCharacterAlphaEnabled(BELL_RYO, 1);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(BELL_REN));
+    FTBL.npcLockUnlock(BELL_REN);
+    FTBL.npcLockUnlock(BELL_YANG);
+    FTBL.npcFree(BELL_REN);
+    FTBL.npcFree(BELL_YANG);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.DeleteMotion(work->motion);
+    FTBL.EVS_LoopCamera(0, 0, 0);
+    FTBL.camCtrlSetFovTransitionTo(1);
+    FTBL.camCtrlSetState(0);
+    FTBL.EV_ControlPackageResources(0, 6, bellPackage, 0, 0);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    FTBL.EV_scenQueueLoad(g_actNumber, BELL_RETURN_SCENE, 51);
+}
+#endif
+#else
 #include "s2/areas/area_bell.hpp"
 #include "s2/areas/area_bell_data.hpp"
 #include "s2/author.hpp"
@@ -448,3 +948,4 @@ void BellExitCallback(void *parameter) {
 }
 const ScriptAreaDefinition areaBELLScriptDefinition{.areaId = SHEN_NAME(BELL), .field04 = 0, .init = BELL_init_func, .main = BELL_main_func};
 } // namespace shenmue::s2
+#endif

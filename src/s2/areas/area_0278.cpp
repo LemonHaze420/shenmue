@@ -1,3 +1,322 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0278.hpp"
+#include "s2/event_queued_dc.h"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void AreaMain(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(EventMain, 4, 11, sizeof(AreaImmediateAuthorTaskParameter), TASK_EVNT);
+    AreaImmediateAuthorTaskParameter *parent = (AreaImmediateAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->state = 1;
+    parent->selection = (unsigned int)g_entryPoint > 3 ? 0 : g_entryPoint;
+    PrepareEnvironment();
+    Queue_EVT_UTL_LoadNPCChara_3(area0278Characters, parent->self);
+}
+#else
+Vector3 smokePositions[] = {{330.64f, 128.05f, 268.0f}, {341.21f, 128.05f, 268.0f}};
+unsigned short candlePalette[] = {
+    0x311, 0x311, 0x411, 0x511, 0x612, 0x712, 0xa32, 0xb32, 0xb42, 0xc50, 0xd70, 0xe70, 0xe80, 0xfa0, 0xfc3, 0xfd6};
+Vector3 candlePositions[] = {{159.66f, 100.33f, 133.7f}, {159.42f, 100.33f, 133.71f}};
+shen_name area0278Characters[] = {AREA_0278_HUNHUI, AREA_0278_ZHOUSHAN, AREA_0278_SYUEI, AREA_0278_FANGMEI, INVALID_CHARACTER};
+static unsigned int smokeEffects[2];
+static unsigned int candleEffects[2];
+static unsigned int templeFire;
+
+void EventMain(void *taskData)
+{
+    AreaImmediateAuthorTaskParameter *parent = (AreaImmediateAuthorTaskParameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        QueueAuthor(parent);
+        break;
+    case 3:
+        FinishEvent(parent);
+        break;
+    }
+}
+
+void QueueAuthor(AreaImmediateAuthorTaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(AuthorLoop, 4, 11, sizeof(Area0278LoopParameter), TASK_EVNT);
+    ((Area0278LoopParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+    FTBL.SetMapModelDataDefaultVertexShader();
+    switch (parent->selection) {
+    case 0:
+        FTBL.EV_lightLoad(AREA_0278_L001);
+        break;
+    case 1:
+        FTBL.EV_lightLoad(AREA_0278_L101);
+        break;
+    case 2:
+        CreateCandles();
+        FTBL.SetClothFlag(FTBL.ctrlGetCharaByName(AREA_0278_HUNHUI), 2, 1);
+        break;
+    case 3:
+        FTBL.EV_lightLoad(AREA_0278_L301);
+        break;
+    }
+    FTBL.PushGlobalLightingProgram();
+    PrepareAuthorCharacters(parent->selection);
+    FTBL.EV_authSceneCtrl(parent->selection);
+    parent->state = 2;
+}
+
+void AuthorLoop(void *taskData)
+{
+    Area0278LoopParameter *child = (Area0278LoopParameter *)taskData;
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    if (child->parent->selection == 0 && frame == 1)
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    if (child->parent->selection == 1 && frame == 545)
+        FTBL.SetPlayerGameFlags(4, (void *)0);
+    else if (child->parent->selection == 3 && frame == 2080)
+        FTBL.SetPlayerGameFlags(4, (void *)1);
+    if (child->parent->selection == 2 && frame == 350) {
+        candlePositions[0].x = 159.45f;
+        candlePositions[0].y = 100.34f;
+        candlePositions[0].z = 133.56f;
+        candlePositions[1].x = 159.54f;
+        candlePositions[1].y = 100.32f;
+        candlePositions[1].z = 133.45f;
+        FTBL.SetParticleEffectPosition(4, candleEffects[0], &candlePositions[0], &candlePositions[0]);
+        FTBL.SetParticleEffectPosition(4, candleEffects[1], &candlePositions[1], &candlePositions[1]);
+    } else if (child->parent->selection == 2 && frame == 800) {
+        FTBL.SuspendParticleEffect(4, candleEffects[0]);
+        FTBL.SuspendParticleEffect(4, candleEffects[1]);
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        if (child->parent->selection == 3) {
+            FTBL.HLib_SetupTimedTask(child->parent->self, 60);
+            FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+            RestoreAuthorCharacters();
+            child->parent->state = 3;
+            child->parent->selection = 0;
+            if (child->parent->selection == 2)
+                FreeCandles();
+        } else {
+            child->parent->selection++;
+            child->parent->state = 1;
+        }
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void CreateCandles(void)
+{
+    int i;
+    for (i = 0; i < 2; i++) {
+        candleEffects[i] = FTBL.CreateFireEffect(&candlePositions[i], 0.2f, 0.5f, 0, 0);
+        FTBL.SetFirePalette(candleEffects[i], candlePalette);
+        FTBL.SetParticleEffectPosition(4, candleEffects[i], &candlePositions[i], &candlePositions[i]);
+        FTBL.SetFireFalloff(candleEffects[i], 3.1764705f, 6.7843137f, 0.7058824f);
+        FTBL.SetFireFalloffScalar(candleEffects[i], -0.29803923f);
+        FTBL.SetParticleEffectSize(4, candleEffects[i], 0.3529412f, 0.47058824f);
+        FTBL.ResumeParticleEffect(4, candleEffects[i]);
+    }
+}
+
+void FreeCandles(void)
+{
+    int i;
+    for (i = 0; i < 2; i++) {
+        FTBL.SuspendParticleEffect(4, candleEffects[i]);
+        FTBL.FreeParticleEffect(4, candleEffects[i]);
+    }
+}
+
+void PrepareEnvironment(void)
+{
+    EventDateTime time;
+    Vector3 offset = {0.0f, -2000.0f, 0.0f};
+    FTBL.SetPlanetLayerOffset(&offset, 0);
+    FTBL.SetPlanetLayerOffset(&offset, 1);
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    time.hour = 20;
+    time.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    FTBL.EV_SetPlayerFlag(12, 123, 1);
+    FTBL.SetPlayerGameFlags(4, (void *)1);
+    FTBL.SetPlanetLayerParameter(0.0f, 0);
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    FTBL.UpdateWeather();
+    FTBL.EV_FreeAuthorPak(1, "0278");
+    CreateTempleFire();
+    CreateTempleSmoke();
+}
+
+void FinishEvent(AreaImmediateAuthorTaskParameter *parent)
+{
+    EventDateTime time;
+    FTBL.AddInventoryItem(3025, 1, 1);
+    AdvanceSleepToMorning();
+    FTBL.EV_stepSetFlags(300, 0);
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    time.day += 2;
+    time.hour = 8;
+    time.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+    FTBL.AddInventoryItem(22, 1, 0);
+    EVT_UTL_FreeNPCChara(area0278Characters);
+    FTBL.EV_FreeAuthorPak(0, "0278");
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.SetSceneInfos(4, AREA_0278_RETURN, 0);
+    FTBL.StartShowScreenOfId(4);
+}
+
+void PrepareAuthorCharacters(short author)
+{
+    Vector3 scale;
+    HideAuthorDisplay(RYO_CHARACTER);
+    HideAuthorDisplay(AREA_0278_FANGMEI);
+    HideAuthorDisplay(AREA_0278_SYUEI);
+    HideAuthorDisplay(AREA_0278_HUNHUI);
+    HideAuthorDisplay(AREA_0278_ZHOUSHAN);
+    HideAuthorProp(AREA_0278_A015);
+    HideAuthorProp(AREA_0278_A016);
+    HideAuthorProp(AREA_0278_A236);
+    HideAuthorProp(AREA_0278_A411);
+    HideAuthorProp(AREA_0278_A410);
+    HideAuthorProp(AREA_0278_A716);
+    HideAuthorProp(AREA_0278_AA34);
+    switch (author) {
+    case 0:
+        PrepareAuthorCharacter(RYO_CHARACTER);
+        PrepareAuthorCharacter(AREA_0278_SYUEI);
+        FTBL.LoadBlurModelForCharacter_0(AREA_0278_SYUEI, "SYE_B.MT7", 1.0f);
+        break;
+    case 3:
+        PrepareAuthorCharacter(RYO_CHARACTER);
+        PrepareAuthorCharacter(AREA_0278_SYUEI);
+        break;
+    case 1:
+        PrepareAuthorCharacter(RYO_CHARACTER);
+        PrepareAuthorCharacter(AREA_0278_SYUEI);
+        PrepareAuthorCharacter(AREA_0278_FANGMEI);
+        break;
+    case 2:
+        PrepareAuthorCharacter(AREA_0278_HUNHUI);
+        PrepareAuthorCharacter(AREA_0278_ZHOUSHAN);
+        break;
+    }
+    if (author == 2) {
+        scale.x = scale.y = scale.z = 0.7f;
+        FTBL.mtwkSetMotionworkScale3(AREA_0278_A411, &scale);
+        FTBL.mtwkSetMotionworkScale3(AREA_0278_A410, &scale);
+    } else {
+        scale.x = scale.y = scale.z = 1.0f;
+        FTBL.mtwkSetMotionworkScale3(AREA_0278_A411, &scale);
+        FTBL.mtwkSetMotionworkScale3(AREA_0278_A410, &scale);
+    }
+}
+
+void RestoreAuthorCharacters(void)
+{
+    int i;
+    RestoreAuthorCharacter(RYO_CHARACTER);
+    ShowAuthorProp(AREA_0278_A015);
+    ShowAuthorProp(AREA_0278_A016);
+    ShowAuthorProp(AREA_0278_A236);
+    ShowAuthorProp(AREA_0278_A411);
+    ShowAuthorProp(AREA_0278_A410);
+    ShowAuthorProp(AREA_0278_A716);
+    ShowAuthorProp(AREA_0278_AA34);
+    for (i = 0; area0278Characters[i] != INVALID_CHARACTER; i++)
+        RestoreAuthorCharacter(area0278Characters[i]);
+}
+
+void HideAuthorDisplay(shen_name name)
+{
+    FTBL.EV_ToggleCharacterFlag(name);
+    FTBL.EV_DisableCharacterDisplay(name);
+}
+
+void PrepareAuthorCharacter(shen_name name)
+{
+    FTBL.EV_EnsureCharacterDraw(name);
+    FTBL.EV_EnableCharacterDisplay(name);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 0);
+}
+
+void RestoreAuthorCharacter(shen_name name)
+{
+    FTBL.EV_EnableCharacterDisplay(name);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 1);
+}
+
+void HideAuthorProp(shen_name prop)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 0);
+}
+
+void ShowAuthorProp(shen_name prop)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 1);
+}
+
+void CreateTempleSmoke(void)
+{
+    int i;
+    for (i = 0; i < 2; i++) {
+        Vector3 position = {333.1508f, 127.9809f, 247.705f};
+        Vector3 spawnVolume = {0.1f, 0.0f, 0.1f};
+        Vector3 variance = {0};
+        Vector3 velocity = {0.0f, 0.016f, 0.0f};
+        position.x = smokePositions[i].x;
+        position.y = smokePositions[i].y;
+        position.z = smokePositions[i].z;
+        smokeEffects[i] = FTBL.CreateSmokeEffect(&position, &spawnVolume, 40, 0.05f, 0, 0);
+        FTBL.SetSmokeEffectFadeFactor(smokeEffects[i], 21);
+        FTBL.SetSmokeEffectFalloff(smokeEffects[i], 110);
+        FTBL.SetParticleEffectColour(0, smokeEffects[i], 0, 144, 144, 144);
+        FTBL.SetParticleEffectInitialScale(0, smokeEffects[i], 0.329f);
+        FTBL.SetParticleEffectSize(0, smokeEffects[i], 1.56f, 1.41f);
+        FTBL.SetParticleEffectBirthRate(0, smokeEffects[i], 0.0078f);
+        FTBL.SetParticleEffectVelocity(0, smokeEffects[i], &velocity, &variance);
+        FTBL.ResumeParticleEffect(0, smokeEffects[i]);
+    }
+}
+
+void CreateTempleFire(void)
+{
+    int i;
+    Vector3 positions[10];
+    positions[0].x = 343.5f;
+    positions[0].z = 228.3f;
+    positions[1].x = 343.5f;
+    positions[1].z = 235.5f;
+    positions[2].x = 327.1f;
+    positions[2].z = 276.0f;
+    positions[3].x = 343.7f;
+    positions[3].z = 267.9f;
+    positions[4].x = 343.7f;
+    positions[4].z = 276.0f;
+    positions[5].x = 327.1f;
+    positions[5].z = 228.3f;
+    positions[6].x = 327.1f;
+    positions[6].z = 236.4f;
+    positions[7].x = 327.1f;
+    positions[7].z = 247.2f;
+    positions[8].x = 327.1f;
+    positions[8].z = 257.1f;
+    positions[9].x = 327.1f;
+    positions[9].z = 267.9f;
+    positions[0].y = positions[1].y = 129.1f;
+    positions[2].y = positions[3].y = positions[4].y = positions[5].y = 128.4f;
+    positions[6].y = positions[7].y = positions[8].y = positions[9].y = 128.4f;
+    templeFire = FTBL.CreateFireEffect(&positions[0], 0.3f, 0.4f, 0, 4);
+    FTBL.ResumeParticleEffect(4, templeFire);
+    for (i = 1; i < 10; i++)
+        FTBL.SetFirePosition(templeFire, i, &positions[i]);
+}
+#endif
+#else
 #include "s2/areas/area_0278.hpp"
 #include "s2/lighting.hpp"
 #include "s2/blur_figure_pose.hpp"
@@ -311,3 +630,4 @@ void AreaMain(std::uintptr_t) {
 const ScriptAreaDefinition area0278ScriptDefinition{.areaId = AREA_0278, .field04 = 0, .init = AreaInit, .main = AreaMain};
 
 } // namespace shenmue::s2::areas
+#endif

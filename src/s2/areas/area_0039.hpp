@@ -1,5 +1,48 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/numeric_event_dc.h"
+
+#define AREA_0039_A128 SHEN_NAME4('a', '1', '2', '8')
+#define AREA_0039_A474 SHEN_NAME4('a', '4', '7', '4')
+#define AREA_0039_A052 SHEN_NAME4('a', '0', '5', '2')
+#define AREA_0039_A053 SHEN_NAME4('a', '0', '5', '3')
+#define AREA_0039_A035 SHEN_NAME4('a', '0', '3', '5')
+#define AREA_0039_A030 SHEN_NAME4('a', '0', '3', '0')
+#define AREA_0039_AA83 SHEN_NAME4('a', 'a', '8', '3')
+#define AREA_0039_A034 SHEN_NAME4('a', '0', '3', '4')
+#define AREA_0039_A033 SHEN_NAME4('a', '0', '3', '3')
+#define AREA_0039_TKM_ SHEN_NAME4('T', 'K', 'M', '_')
+#define AREA_0039_TNZ_ SHEN_NAME4('T', 'N', 'Z', '_')
+#define AREA_0039_ANC_ SHEN_NAME4('A', 'N', 'C', '_')
+#define AREA_0039_GEN_ SHEN_NAME4('G', 'E', 'N', '_')
+#define AREA_0039_SBO_ SHEN_NAME4('S', 'B', 'O', '_')
+#define AREA_0039_CHR_ SHEN_NAME4('C', 'H', 'R', '_')
+#define AREA_0039_SYE_ SHEN_NAME4('S', 'Y', 'E', '_')
+#define AREA_0039_KUN_ SHEN_NAME4('K', 'U', 'N', '_')
+#define AREA_0039_KIC_ SHEN_NAME4('K', 'I', 'C', '_')
+#define AREA_0039_CLY_ SHEN_NAME4('C', 'L', 'Y', '_')
+#define AREA_0039_HUR_ SHEN_NAME4('H', 'U', 'R', '_')
+#define AREA_0039_0000 SHEN_NAME4('0', '0', '0', '0')
+#define AREA_0039_0002 SHEN_NAME4('0', '0', '0', '2')
+#define AREA_0039_0003 SHEN_NAME4('0', '0', '0', '3')
+#define AREA_0039_0004 SHEN_NAME4('0', '0', '0', '4')
+#define AREA_0039_0005 SHEN_NAME4('0', '0', '0', '5')
+#define AREA_0039_WS00 SHEN_NAME4('W', 'S', '0', '0')
+#define AREA_0039_WBBK SHEN_NAME4('W', 'B', 'B', 'K')
+extern shen_name *area0039Characters[];
+void E0039Main(void);
+void E0039MainCallback(void *taskData);
+void QueueE0039Loop(AreaAuthorTaskParameter *parent);
+void E0039LoopCallback(void *taskData);
+void LoadE0039ScenePackages(int selection);
+void SetupE0039Environment(void);
+void CleanupE0039(AreaAuthorTaskParameter *parent);
+void SetupE0039Characters(short selection);
+void RestoreE0039Characters(short selection);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/areas/numeric_event.hpp"
 
@@ -48,3 +91,4 @@ inline constexpr const shen_name *AREA_0039_CHARACTER_TABLES[]{AREA_0039_CHARACT
 extern const ScriptAreaDefinition area0039ScriptDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

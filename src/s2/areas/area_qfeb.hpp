@@ -1,4 +1,101 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+
+#define QFEB_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define QFEB_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define QFEB_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QFEB_RKN SHEN_NAME4('R', 'K', 'N', '_')
+#define QFEB_KHO SHEN_NAME4('K', 'H', 'O', '_')
+#define QFEB_SOY SHEN_NAME4('S', 'O', 'Y', '_')
+#define QFEB_KIC SHEN_NAME4('K', 'I', 'C', '_')
+#define QFEB_ANC SHEN_NAME4('A', 'N', 'C', '_')
+#define QFEB_MRC SHEN_NAME4('M', 'R', 'C', '_')
+#define QFEB_DEAD SHEN_NAME4('D', 'E', 'A', 'D')
+#define QFEB_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+#define QFEB_EXIT_TITLE SHEN_NAME4('Q', 'F', '1', '0')
+#define QFEB_CAMERA_RKN SHEN_NAME4('d', 'a', 'm', 'A')
+#define QFEB_CAMERA_ANC SHEN_NAME4('d', 'a', 'm', 'B')
+#define QFEB_CAMERA_MRC SHEN_NAME4('d', 'a', 'm', 'E')
+#define QFEB_AUTHOR_0 SHEN_NAME4('A', 'U', '_', '0')
+#define QFEB_AUTHOR_1 SHEN_NAME4('A', 'U', '_', '1')
+#define QFEB_AUTHOR_2 SHEN_NAME4('A', 'U', '_', '2')
+#define QFEB_DEBUG_ID 3
+typedef struct QfebEventWork {
+    HLibTask *task;
+    int unused04[11];
+    int phase, reserved34;
+    int unused38[15];
+    int npcBatchOverride;
+    EventReadCharactersWork *characters;
+    unsigned char entry, delay, reserved7e[2];
+    unsigned int battleUpdates, battleFrames;
+    unsigned char battleFade, exitFade, reserved8a[2];
+    int idleFrames, phaseFrames;
+    unsigned char voiceFrames, previousVoice, reserved96[2];
+} QfebEventWork;
+typedef struct QfebAuthorWork {
+    HLibTask *task;
+    int reserved04;
+    shen_name author;
+    short state, reserved0e;
+} QfebAuthorWork;
+typedef struct QfebAuthorLoopWork {
+    QfebAuthorWork *parent;
+    short frame, reserved06;
+} QfebAuthorLoopWork;
+typedef struct QfebPlace {
+    float x, z, yaw;
+} QfebPlace;
+typedef struct QfebNpcPlace {
+    float x, z, yaw;
+    shen_name character;
+} QfebNpcPlace;
+typedef struct QfebRenExit {
+    Vector3 position;
+    int yaw;
+} QfebRenExit;
+typedef struct QfebAuthorReturnPose {
+    Vector3 position;
+    Vector3i rotation;
+} QfebAuthorReturnPose;
+extern const char qfebAuthorScene[];
+extern const shen_name qfebCharacters[];
+extern const char qfebPackage[];
+extern Vector3i qfebAuthorReturnRotation, qfebAuthorDefaultRotation;
+extern int qfebReturnArguments[3][3];
+extern QfebPlace qfebBasePositions[3];
+extern QfebPlace qfebChoreographyPositions[3][2];
+extern QfebNpcPlace qfebChoreographyNpcs[3][2];
+extern QfebPlace qfebExitPositions[4];
+extern QfebRenExit qfebRenExitPositions[4];
+extern QfebAuthorReturnPose qfebAuthorReturnPoses[3];
+extern Vector3 qfebProximityEntry1, qfebProximityEntry2, qfebProximityEntry3;
+void QfebMain(unsigned char entry);
+void QueueQfebAuthor(shen_name author);
+void QfebAuthorCallback(void *data);
+void StartQfebAuthorLoop(QfebAuthorWork *work);
+void QfebAuthorLoopCallback(void *data);
+void PrepareQfebAuthor(void);
+void FinishQfebAuthor(QfebAuthorWork *work);
+void HideQfebAuthorCharacters(void);
+void ShowQfebAuthorCharacters(void);
+void HideAuthorCharacter(shen_name character);
+void ShowAuthorCharacter(shen_name character);
+void QfebMainCallback(void *data);
+void PrepareQfebBattleStances(QfebEventWork *work);
+void StartQfebBattle(QfebEventWork *work);
+void AddQfebGenerators(QfebEventWork *work);
+void PrepareQfebBattleChoreography(QfebEventWork *work);
+void UpdateQfebBattleTaunts(QfebEventWork *work);
+void QueueQfebAftermath(void);
+void QfebDebugExitCallback(void *data);
+void FinishQfebDefeat(QfebEventWork *work);
+void FinishQfebEscape(QfebEventWork *work);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/hlib.hpp"
@@ -102,3 +199,4 @@ void QfebInit();
 void QfebMain(std::uintptr_t argument);
 extern const ScriptAreaDefinition qfebScriptDefinition;
 } // namespace shenmue::s2
+#endif

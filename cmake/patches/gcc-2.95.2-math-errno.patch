@@ -1,0 +1,11 @@
+--- a/gcc/toplev.c
++++ b/gcc/toplev.c
+@@ -839,6 +839,8 @@
+ 
+ lang_independent_options f_options[] =
+ {
++  {"math-errno", &flag_errno_math, 1,
++   "Set errno after builtin math functions"},
+   {"float-store", &flag_float_store, 1,
+    "Do not store floats in registers" },
+   {"volatile", &flag_volatile, 1,

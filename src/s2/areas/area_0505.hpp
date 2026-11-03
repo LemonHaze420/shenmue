@@ -1,5 +1,30 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/numeric_event_dc.h"
+
+#define AREA_0505_SIN_ SHEN_NAME4('S', 'I', 'N', '_')
+#define AREA_0505_BN0_ SHEN_NAME4('B', 'N', '0', '_')
+#define AREA_0505_RETURN SHEN_NAME4('K', 'R', 'M', '3')
+typedef struct Area0505AuthorParameter {
+    AreaAuthorTaskParameter *parent;
+    short currentFrame;
+} Area0505AuthorParameter;
+extern const shen_name area0505Characters[];
+void Start0505(void);
+void Update0505(void *taskData);
+void Queue0505Author(AreaAuthorTaskParameter *parent);
+void Update0505Author(void *taskData);
+void Setup0505Waves(void);
+void Cleanup0505(AreaAuthorTaskParameter *parent);
+void Prepare0505Characters(void);
+void Restore0505Characters(void);
+void PrepareAuthorCharacterDisplay(shen_name character);
+void EnableCharDisplayAndSetMotionworkData(shen_name character);
+void Update0505Waves(void *taskData);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/author_viewer_event.hpp"
 #include "s2/area_names.hpp"
@@ -29,3 +54,4 @@ void Prepare0505Characters();
 extern const ScriptAreaDefinition area0505ScriptDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

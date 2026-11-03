@@ -1,3 +1,194 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+
+#include "s2/areas/area_pigeons.hpp"
+
+double fabs(double value);
+
+static Vector3 areaPigeonPlayerPosition;
+static Vector3i areaPigeonPlayerRotation;
+static int areaPigeonsActive;
+
+void QueueAreaPigeons(const Vector3 *origin, float radius, AreaPigeon *pigeons, shen_name firstCharacter, int count)
+{
+    Vector3 position;
+    Vector3i rotation;
+    int i;
+    shen_name name;
+    HLibTask *task;
+    position.y = origin->y;
+    rotation.x = 0;
+    rotation.z = 0;
+    for (i = 0; i < count; i++) {
+        position.x = FTBL.GetRandomNumberInRange(radius) + origin->x - radius * 0.5f;
+        position.z = FTBL.GetRandomNumberInRange(radius) + origin->z - radius * 0.5f;
+        rotation.y = FTBL.shenGetRandomInt32(0xffff);
+        name = firstCharacter + (i << 24);
+        FTBL.EV_AT_SetPos(name, 0x38000000, &position);
+        FTBL.EV_AT_SetAngY_0(name, 0x38000000, &rotation, 0);
+        FTBL.EV_EnableCharacterDisplay(name);
+        FTBL.EV_EnsureCharacterDraw(name);
+        pigeons[i].name = name;
+        pigeons[i].origin = *origin;
+        pigeons[i].roamRadius = radius;
+        pigeons[i].position = position;
+        pigeons[i].rotation.x = 0;
+        pigeons[i].rotation.y = rotation.y;
+        pigeons[i].rotation.z = 0;
+        pigeons[i].distanceToPlayer = 100.0f;
+        pigeons[i].distanceToOrigin = 0.0f;
+        pigeons[i].state = PigeonState_Wander;
+        pigeons[i].randomWaitFrames = FTBL.shenGetRandomInt32(1000);
+        pigeons[i].bobPhase = 0;
+        pigeons[i].birdCount = count;
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(name), 1, -1, 3.0f, 1);
+    }
+    task = FTBL.HLib_EnqueueTaskWithParameter(AreaPigeonsCallback, 3, 11, 4, PIGEON_TASK);
+    *(AreaPigeon **)FTBL.HLib_GetTaskParameter(task) = pigeons;
+    areaPigeonsActive = 1;
+}
+
+void AreaPigeonsCallback(void *taskData)
+{
+    AreaPigeon *pigeon;
+    int count;
+    int i;
+    count = (*(AreaPigeon **)taskData)->birdCount;
+    pigeon = *(AreaPigeon **)taskData;
+    FTBL.GetCharaPosition(PIGEON_PLAYER, 0xffffffffU, &areaPigeonPlayerPosition, 0x40000000);
+    FTBL.GetScenarioCharacterEulerAngles(PIGEON_PLAYER, &areaPigeonPlayerRotation, 0);
+    if (g_currentMap == PIGEON_ABERDEEN_AREA) {
+        if ((areaPigeonPlayerPosition.x > 218.0f && areaPigeonPlayerPosition.z > 420.0f && areaPigeonPlayerPosition.x < 270.0f
+                && areaPigeonPlayerPosition.z < 450.0f)
+            || (areaPigeonPlayerPosition.x > 225.0f && areaPigeonPlayerPosition.z > 390.0f && areaPigeonPlayerPosition.x < 240.0f
+                && areaPigeonPlayerPosition.z < 440.0f)) {
+            if (!areaPigeonsActive) {
+                for (i = 0; i < count; i++) {
+                    FTBL.EV_EnableCharacterDisplay(pigeon->name);
+                    FTBL.EV_EnsureCharacterDraw(pigeon->name);
+                    pigeon++;
+                }
+                pigeon = *(AreaPigeon **)taskData;
+                areaPigeonsActive = 1;
+            }
+        } else {
+            if (areaPigeonsActive) {
+                for (i = 0; i < count; i++) {
+                    FTBL.EV_DisableCharacterDisplay(pigeon->name);
+                    FTBL.EV_ToggleCharacterFlag(pigeon->name);
+                    pigeon++;
+                }
+                areaPigeonsActive = 0;
+            }
+            return;
+        }
+    }
+    for (i = 0; i < count; i++) {
+        pigeon->distanceToPlayer = FTBL.CalculatePlanarDistanceBetweenPoints(&pigeon->position, &areaPigeonPlayerPosition);
+        pigeon->distanceToOrigin = FTBL.CalculatePlanarDistanceBetweenPoints(&pigeon->position, &pigeon->origin);
+        areaPigeonStateCallbacks[pigeon->state](pigeon);
+        FTBL.EV_AT_SetPos(pigeon->name, 0x38000000, &pigeon->position);
+        FTBL.EV_AT_SetAngY_0(pigeon->name, 0x38000000, &pigeon->rotation, 0);
+        pigeon++;
+    }
+}
+
+void EvaluatePigeonRoam(AreaPigeon *pigeon)
+{
+    float degrees;
+    if (pigeon->distanceToOrigin > pigeon->roamRadius + 0.5f) {
+        pigeon->rotation.y = (unsigned short)FTBL.InverseFixedAtan2(pigeon->origin.x - pigeon->position.x, pigeon->origin.z - pigeon->position.z);
+    } else {
+        if (pigeon->distanceToOrigin > pigeon->roamRadius)
+            degrees = 10.0f;
+        else if (fabs(pigeon->distanceToOrigin) < 1.1920929e-07f)
+            degrees = 0.0f;
+        else
+            degrees = pigeon->distanceToOrigin / (pigeon->roamRadius + pigeon->roamRadius);
+        ComputePigeonRotation(pigeon, &pigeon->origin, &pigeon->position, degrees);
+    }
+}
+
+void ComputePigeonRotation(AreaPigeon *pigeon, const Vector3 *origin, const Vector3 *position, float degrees)
+{
+    short yaw = pigeon->rotation.y;
+    short difference;
+    difference = (short)FTBL.InverseFixedAtan2(origin->x - position->x, origin->z - position->z);
+    difference -= yaw;
+    if (difference > 3640)
+        pigeon->rotation.y += (unsigned short)(degrees * 8192.0f / 45.0f);
+    else if (difference < -3640)
+        pigeon->rotation.y -= (unsigned short)(degrees * 8192.0f / 45.0f);
+}
+
+void PigeonCooldown(AreaPigeon *pigeon)
+{
+    if (pigeon->distanceToPlayer < 2.5f) {
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 1);
+        pigeon->state = PigeonState_Approach;
+    } else {
+        if (--pigeon->randomWaitFrames > 0)
+            return;
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 1);
+        pigeon->state = PigeonState_Wander;
+    }
+    pigeon->randomWaitFrames = FTBL.shenGetRandomInt32(1000);
+}
+
+void PigeonWander(AreaPigeon *pigeon)
+{
+    EvaluatePigeonRoam(pigeon);
+    pigeon->position.x -= FTBL.CalculateFixedSine(pigeon->rotation.y) * 0.01f;
+    pigeon->position.z -= FTBL.CalculateFixedCosine(pigeon->rotation.y) * 0.01f;
+    if (pigeon->distanceToOrigin > pigeon->roamRadius) {
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 0.5f, 0);
+        FTBL.Shenmue_Execute3DSoundCommand(839, &pigeon->position, 4.0f, 40.0f);
+        pigeon->state = PigeonState_HoverBob;
+        pigeon->bobPhase = 0;
+    } else if (pigeon->distanceToPlayer < 2.5f) {
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 1);
+        pigeon->state = PigeonState_Approach;
+    } else if (--pigeon->randomWaitFrames < 10) {
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 2);
+        pigeon->state = PigeonState_Cooldown;
+        pigeon->randomWaitFrames = 30;
+    }
+}
+
+void PigeonApproach(AreaPigeon *pigeon)
+{
+    ComputePigeonRotation(pigeon, &pigeon->position, &areaPigeonPlayerPosition, 10.0f);
+    pigeon->position.x -= FTBL.CalculateFixedSine(pigeon->rotation.y) * 0.1f;
+    pigeon->position.z -= FTBL.CalculateFixedCosine(pigeon->rotation.y) * 0.1f;
+    if (pigeon->distanceToPlayer > 3.0f) {
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 1);
+        pigeon->state = PigeonState_Wander;
+    } else if (pigeon->distanceToPlayer < 1.5f || pigeon->distanceToOrigin > pigeon->roamRadius) {
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 0.5f, 0);
+        FTBL.Shenmue_Execute3DSoundCommand(839, &pigeon->position, 4.0f, 40.0f);
+        pigeon->state = PigeonState_HoverBob;
+        pigeon->bobPhase = 0;
+    }
+}
+
+void PigeonHoverBob(AreaPigeon *pigeon)
+{
+    if (pigeon->distanceToOrigin < pigeon->roamRadius - 1.0f)
+        ComputePigeonRotation(pigeon, &pigeon->position, &areaPigeonPlayerPosition, 10.0f);
+    else
+        EvaluatePigeonRoam(pigeon);
+    pigeon->bobPhase += 512;
+    if (pigeon->bobPhase > 0x8000) {
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 1);
+        pigeon->state = PigeonState_Wander;
+        pigeon->bobPhase = 0;
+    }
+    pigeon->position.x -= FTBL.CalculateFixedSine(pigeon->rotation.y) * 0.2f;
+    pigeon->position.z -= FTBL.CalculateFixedCosine(pigeon->rotation.y) * 0.2f;
+    pigeon->position.y = FTBL.CalculateFixedSine(pigeon->bobPhase) * 1.5f + pigeon->origin.y;
+}
+
+AreaPigeonStateCallback areaPigeonStateCallbacks[4] = {PigeonWander, PigeonApproach, PigeonHoverBob, PigeonCooldown};
+#else
 #include "s2/areas/area_pigeons.hpp"
 #include "s2/area_event.hpp"
 #include "s2/character.hpp"
@@ -235,3 +426,4 @@ std::int16_t ComputePigeonRotation(AreaPigeon *pigeon, const Vector3 *origin, co
 }
 
 } // namespace shenmue::s2
+#endif

@@ -1,3 +1,373 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_q7qb.hpp"
+
+#define Q7QB_RESULT ((Q7QbResultParameters *)data)
+
+void Q7QbFirstAttackBegin(void *data, int delay)
+{
+    EVT_AT_SetPos(Q7QB_RESULT->player, Q7QB_BASE, -1.0f, 0.0f, -0.5f, delay);
+    EVT_AT_SetAngY(Q7QB_RESULT->player, Q7QB_BASE, 0.0f, delay);
+    EVT_AT_SetPos(Q7QB_RESULT->firstOpponent, Q7QB_BASE, -1.4f, 0.0f, -4.4f, delay);
+    EVT_AT_SetAngY(Q7QB_RESULT->firstOpponent, Q7QB_BASE, 180.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 13, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0xf006, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7700, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+}
+
+void Q7QbFirstAttackSuccess(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.3347f, -1.94273f, -180.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.3347f, -1.94273f, 180.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc1, 13.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1be1, 13.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 4, 12, 1, 0, 10, delay + 20);
+    EVT_AT_SetCam(7701, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVA002", 20);
+    EVT_AT_SetVoice("S2BVB019", 30);
+}
+
+void Q7QbFirstAttackFailure(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.34f, -2.18f, -180.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.34f, -2.18f, 180.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1c1c, 37.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1bec, 9.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetSound(651, delay + 6);
+    EVT_AT_SetCam(7715, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVB001", 5);
+    EVT_AT_SetVoice("S2BVA008", 30);
+}
+
+void Q7QbSecondAttackBegin(void *data, int delay)
+{
+    EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_BASE, -0.8f, 6.8f, 0.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0xf006, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+}
+
+void Q7QbSecondAttackSuccess(void *data, int delay)
+{
+    EVT_AT_SetAngY(Q7QB_RESULT->player, Q7QB_RESULT->player, 180.0f, delay);
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.41f, -1.71f, -180.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.41f, -1.71f, 180.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc2, 30.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1be2, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 6, 12, 1, 0, 20, delay + 13);
+    EVT_AT_SetCam(7702, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVA001", 0);
+    EVT_AT_SetVoice("S2BVB017", 15);
+}
+
+void Q7QbSecondAttackFailure(void *data, int delay)
+{
+    EVT_AT_SetPos(Q7QB_RESULT->player, Q7QB_BASE, -1.0f, 0.0f, -0.5f, delay);
+    EVT_AT_SetAngY(Q7QB_RESULT->player, Q7QB_BASE, 0.0f, delay);
+    EVT_AT_SetAngY(Q7QB_RESULT->player, Q7QB_RESULT->player, 180.0f, delay);
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.24f, -1.79f, -180.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.24f, -1.79f, 180.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1c1c, 26.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1bef, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7716, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVB009", 15);
+    EVT_AT_SetVoice("S2BVA006", 45);
+}
+
+void Q7QbThirdAttackBegin(void *data, int delay)
+{
+    EVT_AT_SetPosAng(Q7QB_RESULT->player, Q7QB_BASE, -1.25f, -0.87f, 180.0f, delay);
+    EVT_AT_SetPos(Q7QB_RESULT->firstOpponent, Q7QB_BASE, -1.25f, 0.0f, -10.6f, delay);
+    EVT_AT_SetAngY(Q7QB_RESULT->firstOpponent, Q7QB_BASE, 180.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0xf006, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7703, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+}
+
+void Q7QbThirdAttackSuccess(void *data, int delay)
+{
+    EVT_AT_SetPos(Q7QB_RESULT->player, Q7QB_BASE, -1.0f, 0.0f, 0.5f, delay);
+    EVT_AT_SetAngY(Q7QB_RESULT->player, Q7QB_BASE, 180.0f, delay);
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.07f, 3.33287f, 0.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.07f, 3.33287f, 0.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc3, 49.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1be3, 5.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 2, 6, 1, 0, 12, delay + 5);
+    EVT_AT_SetCam(7704, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVA004", 5);
+    EVT_AT_SetVoice("S2BVB023", 35);
+}
+
+void Q7QbThirdAttackFailure(void *data, int delay)
+{
+    EVT_AT_SetAngY(Q7QB_RESULT->player, Q7QB_RESULT->player, 180.0f, delay);
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.46434f, -5.3143f, 0.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.46434f, -5.3143f, 0.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1c20, 1.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1bf2, 1.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7717, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVB008", 20);
+    EVT_AT_SetVoice("S2BVA012", 50);
+}
+
+void Q7QbFourthAttackBegin(void *data, int delay)
+{
+    EVT_AT_SetPosAng(Q7QB_RESULT->player, Q7QB_BASE, -1.4f, -2.78f, 180.0f, delay);
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.0f, -3.67f, -180.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.0f, -3.67f, 180.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc4, 3.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1be4, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7705, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+}
+
+void Q7QbFourthAttackSuccess(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.0f, -3.67f, -180.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.0f, -3.67f, 180.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc4, 23.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1be4, 20.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 6, 12, 1, 0, 12, delay + 7);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 3, 8, 1, 0, 15, delay + 20);
+    EVT_AT_SetCam(7706, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVA003", 5);
+    EVT_AT_SetVoice("S2BVB025", 30);
+}
+
+void Q7QbFourthAttackFailure(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.1054f, -1.623f, -180.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.1054f, -1.623f, 180.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bd5, 29.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1bf5, 3.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetSound(650, delay + 8);
+    EVT_AT_SetCam(7718, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVB001", 5);
+    EVT_AT_SetVoice("S2BVA011", 15);
+}
+
+void Q7QbFifthAttackBegin(void *data, int delay)
+{
+    EVT_AT_SetPosAng(Q7QB_RESULT->player, Q7QB_BASE, -0.48f, -3.79f, 180.0f, delay);
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.77329f, 5.11953f, 0.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.77329f, 5.11953f, 0.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc5, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1be5, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7707, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+}
+
+void Q7QbFifthAttackSuccess(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.77329f, 5.11953f, 0.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.77329f, 5.11953f, 0.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc5, 23.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1be5, 23.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 1, 6, 1, 0, 15, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 3, 6, 1, 0, 15, delay + 30);
+    EVT_AT_SetCam(7708, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVB007", 15);
+    EVT_AT_SetVoice("S2BVA005", 30);
+    EVT_AT_SetVoice("S2BVB017", 60);
+}
+
+void Q7QbFifthAttackFailure(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.39917f, -5.33619f, 0.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.39917f, 5.33619f, 0.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bd8, 23.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1bf7, 23.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7719, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVB013", 5);
+    EVT_AT_SetVoice("S2BVA006", 50);
+}
+
+void Q7QbSixthAttackBegin(void *data, int delay)
+{
+    EVT_AT_SetPosAng(Q7QB_RESULT->player, Q7QB_RESULT->player, 0.5f, 0.0f, 0.0f, delay);
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED) {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.69143f, 0.00154f, 0.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, 0.21262f, -7.3741f, 0.0f, delay);
+    } else {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.69143f, 0.00154f, 0.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, -0.21262f, -7.3741f, 0.0f, delay);
+    }
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc6, 22.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1bfe, 22.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 0x1bff, 22.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7709, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+}
+
+void Q7QbSixthAttackSuccess(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED) {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.69143f, 0.00154f, 0.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, 0.21262f, -7.3741f, 0.0f, delay);
+    } else {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.69143f, 0.00154f, 0.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, -0.21262f, -7.3741f, 0.0f, delay);
+    }
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc6, 42.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1bfe, 42.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 0x1bff, 42.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 6, 12, 1, 0, 15, delay + 5);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 1, 8, 1, 0, 20, delay + 20);
+    EVT_AT_SetCam(7710, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetCam(7724, Q7QB_CAMERA_DUMMY, Q7QB_CAMERA_DUMMY, 0, 0, delay + 30);
+    EVT_AT_SetVoice("S2BVA004", 5);
+    EVT_AT_SetVoice("S2BVB018", 10);
+    EVT_AT_SetVoice("S2BVB024", 50);
+}
+
+void Q7QbSixthAttackFailure(void *data, int delay)
+{
+    EVT_AT_SetAngY(Q7QB_RESULT->player, Q7QB_RESULT->player, 90.0f, delay);
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED)
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, -7.00693f, -0.29555f, 0.0f, delay);
+    else
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, 7.00693f, -0.29555f, 0.0f, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1c1d, 30.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1bfe, 30.0f, 0.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 0x1bfa, 33.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7720, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVB006", 0);
+    EVT_AT_SetVoice("S2BVA011", 50);
+}
+
+void Q7QbFinalAttackBegin(void *data, int delay)
+{
+    EVT_AT_SetPosAng(Q7QB_RESULT->player, Q7QB_BASE, -0.89f, -4.82f, 0.0f, delay);
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED) {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.91827f, -1.24702f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, -0.37f, -1.96f, 180.0f, delay);
+    } else {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.91827f, -1.24702f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, 0.37f, -1.96f, 180.0f, delay);
+    }
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc9, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1c02, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 0x1c06, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7711, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+}
+
+void Q7QbFinalAttackSuccess(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED) {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.91827f, -1.24702f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, -0.37f, -1.96f, 180.0f, delay);
+    } else {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.91827f, -1.24702f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, 0.37f, -1.96f, 180.0f, delay);
+    }
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc9, 18.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1c02, 18.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 0x1c06, 18.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 2, 12, 1, 0, 10, delay + 10);
+    EVT_AT_SetCam(7712, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVA005", 5);
+    EVT_AT_SetVoice("S2BVA002", 15);
+}
+
+void Q7QbFinalAttackFailure(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED) {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.56f, -1.15f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.16286f, -1.52514f, 180.0f, delay + 23);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, -0.57f, -1.81f, -165.0f, delay);
+    } else {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.56f, -1.15f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.16286f, -1.52514f, 180.0f, delay + 23);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, 0.57f, -1.81f, 165.0f, delay);
+    }
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bdf, 18.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1c1a, 60.0f, 1.0f, Q7QB_RESULT->motionFlags & 0xfbffffffU, delay + 23);
+    EVT_AT_SetSound(650, delay + 17);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1c02, 18.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1c13, 13.0f, 1.0f, Q7QB_RESULT->motionFlags ^ Q7QB_MIRRORED, delay + 23);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 0x1c06, 18.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 13, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay + 23);
+    EVT_AT_SetCam(7721, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetCam(7722, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay + 23);
+    EVT_AT_SetVoice("S2BVB001", 5);
+    EVT_AT_SetVoice("S2BVC004", 15);
+    EVT_AT_SetVoice("S2BVB013", 30);
+    EVT_AT_SetVoice("S2BVA011", 55);
+}
+
+void Q7QbFinalCounterSuccess(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED) {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.72f, -1.49f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, -0.21f, -0.85f, 180.0f, delay);
+    } else {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.72f, -1.49f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, 0.21f, -0.85f, 180.0f, delay);
+    }
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bc8, 6.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1c01, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 0x1c05, 1.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 3, 12, 1, 0, 10, delay);
+    EVT_AT_SetCam(7713, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+}
+
+void Q7QbFinalCounterFailure(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED) {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.16286f, -1.52514f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, -0.57f, -1.81f, -165.0f, delay);
+    } else {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.16286f, -1.52514f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, 0.57f, -1.81f, 165.0f, delay);
+    }
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1c1a, 60.0f, 1.0f, Q7QB_RESULT->motionFlags & 0xfbffffffU, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1c13, 13.0f, 1.0f, Q7QB_RESULT->motionFlags ^ Q7QB_MIRRORED, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 13, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetCam(7722, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVB013", 5);
+    EVT_AT_SetVoice("S2BVA011", 20);
+}
+
+void Q7QbBattleSuccess(void *data, int delay)
+{
+    if (Q7QB_RESULT->motionFlags & Q7QB_MIRRORED) {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, 0.07f, -1.23f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, -1.16f, -0.63f, 180.0f, delay);
+    } else {
+        EVT_AT_SetPosAng(Q7QB_RESULT->firstOpponent, Q7QB_RESULT->player, -0.07f, -1.23f, 180.0f, delay);
+        EVT_AT_SetPosAng(Q7QB_RESULT->secondOpponent, Q7QB_RESULT->player, 1.16f, -0.63f, 180.0f, delay);
+    }
+    EVT_AT_SetMot(Q7QB_RESULT->player, 0x1bca, 2.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->firstOpponent, 0x1c03, 0.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_SetMot(Q7QB_RESULT->secondOpponent, 0x1c07, 2.0f, 1.0f, Q7QB_RESULT->motionFlags, delay);
+    EVT_AT_DispBlur(Q7QB_RESULT->player, 3, 12, 1, 0, 15, delay + 5);
+    EVT_AT_SetCam(7714, Q7QB_DUMMY, Q7QB_DUMMY, 0, 0, delay);
+    EVT_AT_SetVoice("S2BVA004", 5);
+    EVT_AT_SetVoice("S2BVB031", 20);
+}
+
+void Q7QbBattleFailure(void *data, int delay)
+{
+    Q7QbFinalCounterFailure(data, delay);
+}
+#else
 #include "s2/areas/area_q7qb.hpp"
 #include "s2/event_queued.hpp"
 #include "s2/conversation.hpp"
@@ -307,3 +677,4 @@ void Q7QbBattleSuccess(void *data, std::uint32_t delayFrames) {
     EVT_AT_SetVoice("S2BVB031", 1, 20);
 }
 } // namespace shenmue::s2::areas
+#endif

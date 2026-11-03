@@ -1,3 +1,73 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+#define AREA_0001_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define AREA_0001_FIGURE_FIRST SHEN_NAME4('a', '0', '7', '7')
+#define AREA_0001_FIGURE_SECOND SHEN_NAME4('a', '0', '6', '7')
+#define AREA_0001_PRESS_MODEL SHEN_NAME4('a', '0', '8', '8')
+#define AREA_0001_A075 SHEN_NAME4('a', '0', '7', '5')
+#define AREA_0001_A076 SHEN_NAME4('a', '0', '7', '6')
+#define AREA_0001_A079 SHEN_NAME4('a', '0', '7', '9')
+#define AREA_0001_A083 SHEN_NAME4('a', '0', '8', '3')
+#define AREA_0001_A084 SHEN_NAME4('a', '0', '8', '4')
+#define AREA_0001_A085 SHEN_NAME4('a', '0', '8', '5')
+#define AREA_0001_A086 SHEN_NAME4('a', '0', '8', '6')
+#define AREA_0001_A089 SHEN_NAME4('a', '0', '8', '9')
+#define AREA_0001_A090 SHEN_NAME4('a', '0', '9', '0')
+extern const shen_name area0001AuthorCharacters[];
+extern const shen_name area0001CleanupCharacters[];
+
+typedef struct Title0001TaskParameter {
+    HLibTask *self;
+    short state;
+    short mainState;
+} Title0001TaskParameter;
+typedef struct Title0001AuthorTaskParameter {
+    Title0001TaskParameter *parent;
+    short currentFrame;
+    short blinkFrames;
+    short blinkVisible;
+} Title0001AuthorTaskParameter;
+typedef struct Title0001AlphaTaskParameter {
+    shen_name character;
+    short increasing;
+    short remaining;
+    float current;
+    float target;
+    float step;
+} Title0001AlphaTaskParameter;
+typedef struct Title0001LightingTaskParameter {
+    unsigned short firstRemaining;
+    unsigned short secondRemaining;
+    short firstState;
+    short secondState;
+    float firstDelta;
+    float secondDelta;
+    float firstRange;
+    float secondRange;
+    float firstUpper;
+    float secondUpper;
+    float firstLower;
+    float secondLower;
+} Title0001LightingTaskParameter;
+
+void Area0001Main(void);
+void Update0001(void *taskData);
+void Queue0001Author(Title0001TaskParameter *parent);
+void Update0001Author(void *taskData);
+void Update0001Prompt(void *taskData);
+void Queue0001Alpha(shen_name character, short frames, float from, float to, short increasing);
+void Update0001Alpha(void *taskData);
+void Queue0001Lighting(void);
+void Update0001Lighting(void *taskData);
+void Setup0001(void);
+void Prepare0001Characters(void);
+void Present0001PromptCharacters(void);
+void Clear0001Characters(void);
+void Cleanup0001Characters(void);
+void Prepare0001Character(shen_name character);
+void Hide0001Character(shen_name character);
+#else
 #pragma once
 
 #include "s2/area_event.hpp"
@@ -90,3 +160,4 @@ void Update0001Alpha(void *taskData);
 void Finish0001Noop(void *taskData);
 extern const ScriptAreaDefinition area0001ScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

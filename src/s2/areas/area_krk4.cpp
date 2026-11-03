@@ -1,3 +1,26 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_krk4.hpp"
+
+void AreaMain(unsigned int startParameters)
+{
+    FTBL.WSCN_LoadWeatherData(FTBL.Filepath_Gen(0), "W_COND.BIN");
+    FTBL.HLib_EnqueueTaskWithoutParameter(AreaKRK4WaveCallback, 3, 2, TASK_KRK4_WAVE);
+}
+
+void AreaCleanup(int afternoon)
+{
+}
+
+void AreaKRK4WaveCallback(void *taskData)
+{
+    FTBL.nlSetTexanimUV(0.0f, 0.0049999999f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(2));
+    FTBL.nlSetTexanimUV(0.0f, -0.0040000002f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(3));
+    FTBL.nlSetTexanimUV(0.0f, 0.02f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(4));
+}
+#else
 #include "s2/areas/area_krk4.hpp"
 
 #include "s2/hlib.hpp"
@@ -39,3 +62,4 @@ const GameplayAreaDefinition areaKRK4GameplayDefinition{
     .cleanup = &AreaKRK4Cleanup,
 };
 } // namespace shenmue::s2::areas
+#endif

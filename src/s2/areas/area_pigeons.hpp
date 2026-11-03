@@ -1,5 +1,42 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+#define PIGEON_TASK SHEN_NAME4('h', 'a', 't', 'o')
+#define PIGEON_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define PIGEON_ABERDEEN_AREA SHEN_NAME4('A', 'R', '0', '2')
+#define PigeonState_Wander 0
+#define PigeonState_Approach 1
+#define PigeonState_HoverBob 2
+#define PigeonState_Cooldown 3
+typedef struct AreaPigeon {
+    shen_name name;
+    Vector3 origin;
+    float roamRadius;
+    Vector3 position;
+    Vector3i rotation;
+    float distanceToPlayer;
+    float distanceToOrigin;
+    int state;
+    int randomWaitFrames;
+    int bobPhase;
+    int birdCount;
+} AreaPigeon;
+typedef void (*AreaPigeonStateCallback)(AreaPigeon *pigeon);
+
+extern AreaPigeonStateCallback areaPigeonStateCallbacks[4];
+void QueueAreaPigeons(const Vector3 *origin, float radius, AreaPigeon *pigeons, shen_name firstCharacter, int count);
+void AreaPigeonsCallback(void *taskData);
+void EvaluatePigeonRoam(AreaPigeon *pigeon);
+void ComputePigeonRotation(AreaPigeon *pigeon, const Vector3 *origin, const Vector3 *position, float degrees);
+void PigeonCooldown(AreaPigeon *pigeon);
+void PigeonWander(AreaPigeon *pigeon);
+void PigeonApproach(AreaPigeon *pigeon);
+void PigeonHoverBob(AreaPigeon *pigeon);
+#else
+#pragma once
+
 #include "s2/hlib.hpp"
 #include "common/types.hpp"
 #include "common/math.hpp"
@@ -56,3 +93,4 @@ inline constexpr std::array<void (*)(AreaPigeon *), 4> AREA_PIGEON_STATE_CALLBAC
 };
 
 } // namespace shenmue::s2
+#endif

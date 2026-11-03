@@ -1,3 +1,350 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_brib.hpp"
+
+void RunBribEvent(int argument)
+{
+    FTBL.DebugLogToFileRemoved("BRIB(%d)\n", argument);
+    switch (argument) {
+    case 0:
+        QueueBribRen();
+        break;
+    case 2:
+        QueueBribSense();
+        break;
+    }
+}
+
+void QueueBribRen(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(BribRenGetNpcs, 4, 11, sizeof(BribWork), TASK_EVNT);
+    BribWork *work;
+    while (task && (work = (BribWork *)FTBL.HLib_GetTaskParameter(task))) {
+        FTBL.EV_FreeAuthorPak(1, bribConversation);
+        work->parent = FTBL.HLib_GetCurrentTask();
+        work->flags = 0;
+        FTBL.HLib_SetupTaskDelay(-1);
+        FTBL.SetPlayerControlEnabled(0);
+        task = 0;
+        break;
+    }
+    if (task)
+        FTBL.HLib_DestroyTask(task);
+}
+
+void BribRenGetNpcs(void *data)
+{
+    if (!FTBL.filmCheckFadeTrackColour()) {
+        FTBL.HLib_SetCurrentTaskTo(BribRenGetPackage);
+        FTBL.HLib_SetupTaskDelay(-1);
+        QueueAreaLoopNpcs(bribRenCharacters, ResolveAreaLoopParent);
+    }
+}
+
+void BribRenGetPackage(void *data)
+{
+    FTBL.HLib_SetCurrentTaskTo(BribRenStart);
+    FTBL.HLib_SetupTaskDelay(-1);
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.PrepareNpcAllFromArray();
+    QueueAreaLoopPackage(FTBL.Filepath_Gen(0), bribPackage, ResolveAreaLoopParent);
+}
+
+void BribRenStart(void *data)
+{
+    Vector3 offset, position;
+    Vector3i rotation;
+    int i;
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.EV_ControlPackageResources(2, 2, bribPackage, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, bribPackage, 0, 0);
+    if (!data)
+        return;
+    FTBL.HLib_SetCurrentTaskTo(BribRenLoop);
+    FTBL.HLib_SetupTaskDelay(914);
+    offset.x = 0.3f;
+    offset.y = 0.3f;
+    offset.z = 0.3f;
+    FTBL.mtwkSetMotionworkScale3(BRIB_GREN, &offset);
+    SetAreaLoopCharacterControl(BRIB_GREN, 1);
+    SetAreaLoopCharacterControl(BRIB_RYO, 1);
+    FTBL.SetEyeToChara(FTBL.ctrlGetCharaByName(BRIB_RYO), 0, 16, 0);
+    FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(BRIB_RYO));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(BRIB_RYO));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BRIB_RYO), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(BRIB_RYO), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(BRIB_RYO), 1, (void *)areaLoopHandPoses[BRIB_READING_HAND_POSE], 1);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(BRIB_RYO), 0, (void *)areaLoopHandPoses[BRIB_GRIP_HAND_POSE], 1);
+    for (i = 0; bribRenCharacters[i]; i++) {
+        FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(bribRenCharacters[i]));
+        FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(bribRenCharacters[i]));
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(bribRenCharacters[i]), 1, 0, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(bribRenCharacters[i]), 1, 1, 0);
+        FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(bribRenCharacters[i]), 1, (void *)areaLoopHandPoses[BRIB_READING_HAND_POSE], 1);
+        FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(bribRenCharacters[i]), 0, (void *)areaLoopHandPoses[BRIB_READING_HAND_POSE], 1);
+    }
+    QueueAreaLoopMotion(BRIB_RYO, 28679, 0, -1, -1.0f, -1.0f, -1.0f, 0.0f, 0, 22);
+    QueueAreaLoopMotion(BRIB_REN, 28678, 0, -1, -1.0f, -1.0f, -1.0f, 0.0f, 0, 22);
+    QueueAreaLoopMotion(BRIB_KUK, 28680, 0, -1, -1.0f, -1.0f, -1.0f, 0.0f, BribKukMotionCallback, 22);
+    QueueAreaLoopMotion(BRIB_RYO, 0xf003, 760, -1, -1.0f, -1.0f, -1.0f, 0.0f, 0, 22);
+    position = bribKukPlacement.position;
+    rotation.x = bribKukPlacement.rotation.x;
+    rotation.y = bribKukPlacement.rotation.y;
+    rotation.z = bribKukPlacement.rotation.z;
+    QueueAreaLoopPosition(BRIB_KUK, 0, 0, &position, &rotation, 0);
+    QueueAreaLoopPosition(BRIB_CAMERA_TARGET, 0, 0, &position, &rotation, 0);
+    offset.x = 0.098f;
+    offset.y = 0.0f;
+    offset.z = 1.083f;
+    FTBL.ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+    rotation.x = bribKukPlacement.rotation.x;
+    rotation.y = bribKukPlacement.rotation.y;
+    rotation.z = bribKukPlacement.rotation.z;
+    QueueAreaLoopPosition(BRIB_RYO, 0, 0, &offset, &rotation, 0);
+    position = offset;
+    rotation.x = bribKukPlacement.rotation.x;
+    rotation.y = bribKukPlacement.rotation.y;
+    rotation.z = bribKukPlacement.rotation.z;
+    offset.x = 0.939f;
+    offset.y = 0.0f;
+    offset.z = -0.289f;
+    FTBL.ApplyScenarioTranslationAndRotation(&position, &rotation, &offset);
+    rotation.x = bribKukPlacement.rotation.x;
+    rotation.y = bribKukPlacement.rotation.y;
+    rotation.z = bribKukPlacement.rotation.z;
+    QueueAreaLoopPosition(BRIB_REN, 0, 0, &offset, &rotation, 0);
+    FTBL.camCtrlSetFovTransitionTo(1);
+    FTBL.camCtrlUtil(15, 0);
+    QueueAreaLoopCamera("BRIB", 2100, BRIB_CAMERA_TARGET, 0, 0);
+    QueueAreaLoopCamera("BRIB", 2109, BRIB_CAMERA_TARGET, 160, 0);
+    QueueAreaLoopCamera("BRIB", 2102, BRIB_CAMERA_TARGET, 242, 0);
+    QueueAreaLoopCamera("BRIB", 2103, BRIB_CAMERA_TARGET, 360, 0);
+    QueueAreaLoopCamera("BRIB", 2107, BRIB_CAMERA_TARGET, 470, 0);
+    QueueAreaLoopCamera("BRIB", 2104, BRIB_CAMERA_TARGET, 605, 0);
+    QueueAreaLoopCamera("BRIB", 2105, BRIB_CAMERA_TARGET, 700, 0);
+    QueueAreaLoopCamera("BRIB", 2108, BRIB_CAMERA_TARGET, 760, 0);
+    QueueAreaLoopCamera("BRIB", 2106, BRIB_CAMERA_TARGET, 810, 0);
+    QueueAreaLoopLookAt(BRIB_RYO, BRIB_REN, 5, 0, 103, 200, 0);
+    QueueAreaLoopLookAt(BRIB_REN, BRIB_RYO, 5, 0, 103, 200, 0);
+    QueueAreaLoopLookAt(BRIB_RYO, BRIB_RYO, 14, 0, 360, 157, 0);
+    QueueAreaLoopLookAt(BRIB_REN, BRIB_KUK, 5, 0, 700, 160, 0);
+    offset.x = 0.06f;
+    offset.y = 0.004f;
+    offset.z = -0.023f;
+    rotation.x = 13835;
+    rotation.y = 50244;
+    rotation.z = 33860;
+    QueueAreaLoopAttachment(BRIB_REN, 14, BRIB_GREN, 318, 210, &offset, &rotation, BribRenHandCallback);
+    offset.x = 0.099f;
+    offset.y = 0.0f;
+    offset.z = -0.029f;
+    rotation.x = 14381;
+    rotation.y = 33860;
+    rotation.z = 32039;
+    QueueAreaLoopAttachment(BRIB_RYO, 14, BRIB_GREN, 535, 199, &offset, &rotation, 0);
+    offset.x = 0.03f;
+    offset.y = -0.006f;
+    offset.z = -0.027f;
+    rotation.x = 10012;
+    rotation.y = 48969;
+    rotation.z = 45875;
+    QueueAreaLoopAttachment(BRIB_KUK, 14, BRIB_GREN, 735, 100, &offset, &rotation, 0);
+    QueueAreaLoopVoice("0234E001", 1, 103, -1, 0);
+    QueueAreaLoopVoice("0234A005", 1, 170, -1, 0);
+    QueueAreaLoopVoice("0234E002", 1, 222, -1, 0);
+    QueueAreaLoopVoice("0234E003", 1, 360, -1, 0);
+    QueueAreaLoopVoice("0234A006", 1, 605, -1, 0);
+    QueueAreaLoopVoice("0234E004", 1, 700, -1, 0);
+    QueueAreaLoopVoice("0234B008", 1, 750, -1, 0);
+    FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+}
+
+int BribRenHandCallback(int phase, int value, HLibTask *parent)
+{
+    if (phase == 2 && value == 80)
+        FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(BRIB_REN), 0, (void *)areaLoopHandPoses[BRIB_GRIP_HAND_POSE], 20);
+    return 1;
+}
+
+int BribKukMotionCallback(int phase, int value, HLibTask *parent)
+{
+    switch (phase) {
+    case 2:
+        switch (value) {
+        case 220:
+            FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(BRIB_REN), 2, 10, 0.2f);
+            break;
+        case 340:
+            FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(BRIB_REN), 0, 10, 0.4f);
+            break;
+        case 820:
+            FTBL.DebugLogToFileRemoved("Exec Close Eyes\n");
+            FTBL.SetCharacterFaceSecondaryParameters(FTBL.ctrlGetCharaByName(BRIB_REN), 1, 8, 0);
+            break;
+        case 830:
+            FTBL.DebugLogToFileRemoved("Exec Open Eyes\n");
+            FTBL.SetCharacterFaceSecondaryParameters(FTBL.ctrlGetCharaByName(BRIB_REN), 2, 8, 0);
+            FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(BRIB_REN), 3, 15, 0.3f);
+            break;
+        }
+        break;
+    case 1:
+        FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+        break;
+    }
+    return 1;
+}
+
+void BribRenLoop(void *data)
+{
+    BribWork *work = (BribWork *)data;
+    shen_name retained[3];
+    Vector3 position;
+    while (!FTBL.filmCheckFadeTrackColour()) {
+        if (!(work->flags & 1)) {
+            work->flags |= 1;
+            FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+        }
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlUtil(15, 0);
+        FTBL.camCtrlSetState(0);
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BRIB_RYO), 0xf003, 0);
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BRIB_REN), 0xf003, 0);
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BRIB_KUK), 0xf09f, 0);
+        SetAreaLoopCharacterControl(BRIB_GREN, 0);
+        FTBL.EV_DisableCharacterDisplay(BRIB_GREN);
+        SetAreaLoopCharacterControl(BRIB_RYO, 0);
+        FTBL.InitiateCleanupForSceneChara(BRIB_KUK);
+        FTBL.InitiateCleanupForSceneChara(BRIB_REN);
+        retained[0] = BRIB_KUK;
+        retained[1] = BRIB_REN;
+        retained[2] = 0;
+        RestoreAreaLoopCharacters(bribRenCharacters, retained);
+        FTBL.EV_SetCharaControllerFlags(BRIB_KUK, 0, 0);
+        FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(BRIB_KUK), 17, 0);
+        FTBL.GetCharaPosition(BRIB_KUK, -1, &position, 0x40000000);
+        position.y += 0.45f;
+        FTBL.EV_AT_SetPos(BRIB_KUK, 0x78000000, &position);
+        FTBL.HLib_ResolveDeferredCallback(work->parent);
+        FTBL.HLib_SetupTimedTask(work->parent, 1);
+        FTBL.HLib_MarkCurrentTaskForCleanup();
+        FTBL.scenFreeEvent("BRIB.EV3");
+        if (FTBL.EV_ControlPackageResources(0, 5, "BRIB", 0, 0))
+            FTBL.EV_ControlPackageResources(0, 6, "BRIB", 0, 0);
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        FTBL.EV_SetPlayerFlag(12, 1869, 1);
+        break;
+    }
+}
+
+void QueueBribSense(void)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(BribSenseGetNpcs, 4, 11, sizeof(BribWork), TASK_EVNT);
+    BribWork *work;
+    while (task && (work = (BribWork *)FTBL.HLib_GetTaskParameter(task))) {
+        FTBL.EV_FreeAuthorPak(1, bribConversation);
+        work->parent = FTBL.HLib_GetCurrentTask();
+        work->flags = 0;
+        FTBL.HLib_SetupTaskDelay(-1);
+        FTBL.SetPlayerControlEnabled(0);
+        task = 0;
+        break;
+    }
+    if (task)
+        FTBL.HLib_DestroyTask(task);
+}
+
+void BribSenseGetNpcs(void *data)
+{
+    if (!FTBL.filmCheckFadeTrackColour()) {
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.HLib_SetCurrentTaskTo(BribSenseGetPackage);
+        FTBL.HLib_SetupTaskDelay(-1);
+        QueueAreaLoopNpcs(bribSenseCharacters, ResolveAreaLoopParent);
+    }
+}
+
+void BribSenseGetPackage(void *data)
+{
+    FTBL.HLib_SetCurrentTaskTo(BribSenseStart);
+    FTBL.HLib_SetupTaskDelay(-1);
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.PrepareNpcAllFromArray();
+    QueueAreaLoopPackage(FTBL.Filepath_Gen(0), bribPackage, ResolveAreaLoopParent);
+}
+
+void BribSenseStart(void *data)
+{
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.EV_ControlPackageResources(2, 2, bribPackage, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, bribPackage, 0, 0);
+    FTBL.HLib_SetCurrentTaskTo(BribSenseLoop);
+    if (data) {
+        SetAreaLoopCharacterControl(BRIB_RYO, 1);
+        FTBL.HLib_SetupTaskDelay(-1);
+        QueueAreaLoopAuthor(0, BRIB_SENSE, 0, 1000000, BribSenseAuthorCallback);
+    }
+}
+
+void BribSenseLoop(void *data)
+{
+    BribWork *work = (BribWork *)data;
+    while (!FTBL.filmCheckFadeTrackColour()) {
+        if (!(work->flags & 1)) {
+            work->flags |= 1;
+            FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+        }
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlUtil(15, 0);
+        FTBL.camCtrlSetState(0);
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BRIB_RYO), 0xf003, 0);
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(BRIB_REN), 0xf003, 0);
+        FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(BRIB_RYO), 17, 0);
+        SetAreaLoopCharacterControl(BRIB_RYO, 0);
+        FTBL.InitiateCleanupForSceneChara(BRIB_KUK);
+        FTBL.InitiateCleanupForSceneChara(BRIB_REN);
+        RestoreAreaLoopCharacters(bribSenseCharacters, 0);
+        FTBL.HLib_ResolveDeferredCallback(work->parent);
+        FTBL.HLib_SetupTimedTask(work->parent, 1);
+        FTBL.HLib_MarkCurrentTaskForCleanup();
+        FTBL.scenFreeEvent("BRIB.EV3");
+        if (FTBL.EV_ControlPackageResources(0, 5, "BRIB", 0, 0))
+            FTBL.EV_ControlPackageResources(0, 6, "BRIB", 0, 0);
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        break;
+    }
+}
+
+int BribSenseAuthorCallback(int phase, int value, HLibTask *parent)
+{
+    int result = 1;
+    switch (phase) {
+    case 0:
+        FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+        break;
+    case 2:
+        if (value == 1200)
+            FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+        break;
+    case 1:
+        result = ResolveAreaLoopParent(phase, value, parent);
+        break;
+    }
+    return result;
+}
+
+#define SHENMUE_AREA_LOOP_VOICE_REVISION 3
+#define SHENMUE_AREA_LOOP_CONTROL_REVISION 1
+#define SHENMUE_AREA_LOOP_HAND_POSES
+#include "s2/areas/area_loop_dc.c"
+
+char bribPackage[] = "BRIB";
+char bribConversation[] = "0234";
+BribPlacement bribKukPlacement = {{301.2f, 128.8f, 72.56f}, {0, 49152, 0}};
+shen_name bribRenCharacters[] = {BRIB_REN, BRIB_KUK, 0};
+shen_name bribSenseCharacters[] = {BRIB_REN, BRIB_KUK, BRIB_WTE, 0};
+#else
 #include "s2/areas/area_brib.hpp"
 #include "s2/author.hpp"
 #include "s2/camera.hpp"
@@ -448,3 +795,4 @@ void RunBribEvent(std::uintptr_t argument) {
 }
 const ScriptAreaDefinition bribScriptDefinition{.areaId = BRIB_AREA, .field04 = 0, .init = InitializeBribEvent, .main = RunBribEvent};
 } // namespace shenmue::s2::areas
+#endif

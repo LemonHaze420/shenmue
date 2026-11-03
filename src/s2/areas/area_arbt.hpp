@@ -1,4 +1,186 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+
+#include "s2/events/event_dc.h"
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define ARBT_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define ARBT_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define ARBT_TKR SHEN_NAME4('T', 'K', 'R', '_')
+#define ARBT_QLN SHEN_NAME4('Q', 'L', 'N', '_')
+#define QABT_AW2 SHEN_NAME4('A', 'W', '2', '_')
+#define QABT_RNP SHEN_NAME4('R', 'N', 'P', '_')
+#define ARBT_KNT SHEN_NAME4('K', 'N', 'T', '_')
+#define ARBT_AA1 SHEN_NAME4('A', 'A', '1', '_')
+#define ARBT_LYO SHEN_NAME4('L', 'Y', 'O', '_')
+#define ARBT_HAK SHEN_NAME4('H', 'A', 'K', '_')
+#define ARBT_EIN SHEN_NAME4('E', 'I', 'N', '_')
+#define ARBT_PAY SHEN_NAME4('P', 'A', 'Y', '_')
+#define ARBT_DUMA SHEN_NAME4('D', 'U', 'M', 'A')
+#define ARBT_DUMT SHEN_NAME4('D', 'U', 'M', 'T')
+#define ARBT_DUMS SHEN_NAME4('D', 'U', 'M', 'S')
+#define ARBT_DUMB SHEN_NAME4('D', 'U', 'M', 'B')
+#define ARBT_DUMN SHEN_NAME4('D', 'U', 'M', 'N')
+#define ARBT_EG0R SHEN_NAME4('E', 'G', '0', 'R')
+#define ARBT_EG0L SHEN_NAME4('E', 'G', '0', 'L')
+#define ARBT_EG1R SHEN_NAME4('E', 'G', '1', 'R')
+#define ARBT_EG1L SHEN_NAME4('E', 'G', '1', 'L')
+#define ARBT_CRATE_FIRST SHEN_NAME4('A', 'B', 'B', 'A')
+#define ARBT_PALLET_FIRST SHEN_NAME4('A', 'B', 'N', 'A')
+#define ARBT_AK00 SHEN_NAME4('A', 'K', '0', '0')
+#define ARBT_Q100 SHEN_NAME4('Q', '1', '0', '0')
+#define ARBT_LIGHT_QCAE SHEN_NAME4('Q', 'C', 'A', 'E')
+#define ARBT_LIGHT_AKA3 SHEN_NAME4('A', 'K', 'A', '3')
+#define ARBT_LIGHT_AKB0 SHEN_NAME4('A', 'K', 'B', '0')
+#define ARBT_PROP_R024 SHEN_NAME4('R', '0', '2', '4')
+#define ARBT_PROP_R005 SHEN_NAME4('R', '0', '0', '5')
+#define ARBT_PROP_R018 SHEN_NAME4('R', '0', '1', '8')
+#define ARBT_PROP_R007 SHEN_NAME4('R', '0', '0', '7')
+#define ARBT_PROP_R010 SHEN_NAME4('R', '0', '1', '0')
+#define ARBT_PROP_R014 SHEN_NAME4('R', '0', '1', '4')
+#define ARBT_PROP_R013 SHEN_NAME4('R', '0', '1', '3')
+#define ARBT_PROP_R012 SHEN_NAME4('R', '0', '1', '2')
+#define ARBT_PROP_R030 SHEN_NAME4('R', '0', '3', '0')
+#if defined(SHENMUE_EVENT_QABT)
+#define ARBT_PARTNER QABT_AW2
+#define ARBT_FOREMAN QABT_RNP
+#else
+#define ARBT_PARTNER ARBT_TKR
+#define ARBT_FOREMAN ARBT_QLN
+#endif
+#define ARBT_DEBUG_ID 3
+#define ARBT_POSITION_FLAGS 0x38000000
+#define ARBT_GRIP_HAND_POSE 11
+
+typedef struct ArbtDescriptor {
+    int mode, shift;
+} ArbtDescriptor;
+typedef struct ArbtRouteStep {
+    short intensity, forwardSteps;
+    float frames;
+    unsigned int direction;
+} ArbtRouteStep;
+typedef struct ArbtQte {
+    int success, frames;
+    unsigned int direction;
+    int presses, intensity;
+} ArbtQte;
+typedef struct ArbtCarryWork {
+    HLibTaskCallback phase;
+    ArbtQte qte;
+    float speed;
+    int forwardSteps, turns, failures, consecutiveFailures, idleCount;
+    const ArbtRouteStep *route;
+} ArbtCarryWork;
+typedef struct ArbtCrateWork {
+    HLibTask *moveTask;
+    int moveFrames;
+    HLibTask *dropTask;
+    float dropHeight;
+    int index, limit;
+    shen_name crates[16], pallets[16], destinations[16];
+    int stacked[16];
+} ArbtCrateWork;
+typedef struct ArbtTime {
+    signed char year, month, day;
+    unsigned char week;
+    signed char hour, minute, second;
+    signed char reserved07[3];
+} ArbtTime;
+typedef struct ArbtWork {
+    EventReadCharactersWork *characters;
+    ArbtCarryWork carry;
+    ArbtCrateWork crates;
+    HLibTask *helper, *self;
+    int reserved158;
+    int firstJob;
+    ArbtTime time, endTime;
+    int delivered, failures, idleWarnings, perfectStreak;
+    const ArbtDescriptor *descriptor;
+} ArbtWork;
+
+extern int arbtAuthorFlag;
+extern Vector3 arbtCameraOffset, arbtPayAttachPosition;
+extern Vector3i arbtCameraRotation, arbtPayAttachRotation, arbtCrateRotation;
+extern Vector3 arbtCrateScale, arbtLowPalletScale, arbtHighPalletScale;
+extern Vector3i arbtGuideRotation, arbtDestinationRotation;
+extern Vector3 arbtGuideOffset, arbtDestinationOffset, arbtGuideEdge0Right, arbtGuideEdge0Left, arbtGuideEdge1Right, arbtGuideEdge1Left;
+extern Vector3i arbtMoveRotation;
+
+void ArbtEntry(void *argument);
+void StartArbt(const ArbtDescriptor *descriptor);
+void ArbtDebugExit(void *data);
+void ArbtLeave(ArbtWork *work);
+void ArbtHelperNullsub(void *data);
+void ArbtReadyInit(void *data);
+void SetInitialArbtCarrySettings(ArbtCarryWork *carry, int crate);
+void SetArbtQte(ArbtQte *qte, int frames, unsigned int direction, int intensity);
+void ArbtCarryInit(void *data);
+void ArbtCarryLift(void *data);
+void ArbtCarryTurnInit(void *data);
+void ArbtCarryFinishTurns(void *data);
+void ArbtCarryRoute(void *data);
+void ArbtCarryQte(void *data);
+void ArbtCarryForwardQte(void *data);
+void ArbtCarryPutQte(void *data);
+void ArbtCarryFalse(void *data);
+void ArbtCarryPut(void *data);
+void ArbtCarryEnd(void *data);
+void ArbtCarryAddTime(void *data);
+void ArbtCarryTimeOver(void *data);
+void ArbtPayInit(void *data);
+void ArbtPayAuto(void *data);
+void ArbtPayEnd(void *data);
+void CreateArbtCrates(ArbtCrateWork *crates);
+void KillArbtPallets(ArbtCrateWork *crates);
+int SelectNextArbtCrate(ArbtCrateWork *crates);
+void QueueArbtMoveBox(ArbtCrateWork *crates, int delay);
+void StopArbtMoveBox(ArbtCrateWork *crates, int frames);
+void ArbtMoveBox(void *data);
+void QueueArbtDropBox(ArbtCrateWork *crates, int delay);
+void ArbtDropBox(void *data);
+void ArbtMain(ArbtWork *work);
+void ArbtCleanup(ArbtWork *work);
+void HideArbtDockProps(void);
+
+int ArbtIntroduceJob(void);
+int ArbtExplainFirstCarry(void);
+int ArbtExplainCarry(void);
+int ArbtIntroduceNextCrate(void);
+int ArbtStartWork(int delay);
+int ArbtLiftHighCrate(ArbtCrateWork *crates);
+int ArbtLiftLowCrate(ArbtCrateWork *crates);
+int ArbtPutHighCrate(ArbtCrateWork *crates, int streak, shen_name destination);
+int ArbtPutLowCrate(ArbtCrateWork *crates, int streak, shen_name destination);
+int ArbtPraiseCarry(int streak, int delay);
+int ArbtWarnCarryOnce(void);
+int ArbtWarnCarryTwice(void);
+int ArbtWarnCarryThird(void);
+int ArbtWarnCarryFourth(void);
+int ArbtWarnCarryRepeatedly(void);
+int ArbtWarnWrongForward(void);
+int ArbtWarnWrongDouble(unsigned int direction);
+int ArbtWarnWrongMultiple(unsigned int direction);
+int ArbtWarnIdleForward(int count);
+int ArbtWarnIdlePut(int count);
+int ArbtWalkForward(float speed, int delay);
+int ArbtRequestPutDown(int delay);
+int ArbtQueueDirection(unsigned int direction, int intensity, int delay);
+int ArbtWalkDirection(float speed, int intensity, unsigned int direction, int delay);
+int ArbtFailCarry(ArbtCrateWork *crates, shen_name *crate, int intensity, int direction);
+int ArbtWarnWrongDirection(unsigned int pressed, int delay);
+void ArbtTurnHead(void *argument);
+int ArbtAnnounceTimeOver(void);
+int ArbtPayFirstJob(int cash, int crates);
+int ArbtPayGoodJob(int cash, int crates);
+int ArbtPayAverageJob(int cash, int crates);
+int ArbtPayPoorJob(int cash, int crates);
+int ArbtSayCrateCount(int count, int delay);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/date_time.hpp"
 #include "s2/event_characters.hpp"
@@ -125,3 +307,4 @@ std::int32_t ArbtPayGoodJob(std::int32_t cash, std::int32_t crates);
 std::int32_t ArbtPayAverageJob(std::int32_t cash, std::int32_t crates);
 std::int32_t ArbtPayPoorJob(std::int32_t cash, std::int32_t crates);
 } // namespace shenmue::s2::areas
+#endif

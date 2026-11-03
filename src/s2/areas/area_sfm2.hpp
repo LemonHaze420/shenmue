@@ -1,4 +1,64 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/common/et_street_debug.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define SFM2_SHS SHEN_NAME4('S', 'H', 'S', '_')
+#define SFM2_KZN SHEN_NAME4('K', 'Z', 'N', '_')
+#define SFM2_SSY SHEN_NAME4('S', 'S', 'Y', '_')
+#define SFM2_SF2 SHEN_NAME4('S', 'F', '2', '_')
+#define SFM2_CHN SHEN_NAME4('C', 'H', 'N', '_')
+#define SFM2_PACKAGE SHEN_NAME4('Q', 'S', 'F', 'A')
+#define SFM2_BOOKIE_CAMERA SHEN_NAME4('d', 'u', 'm', 'A')
+#define SFM2_KZN_CAMERA SHEN_NAME4('d', 'u', 'm', 'J')
+#define SFM2_SSY_CAMERA SHEN_NAME4('d', 'u', 'm', 'K')
+#define SFM2_SF2_CAMERA SHEN_NAME4('d', 'u', 'm', 'L')
+#define SFM2_OMAKE_SCENE SHEN_NAME4('O', 'M', 'A', 'K')
+#define SFM2_QRON_SCENE SHEN_NAME4('Q', 'R', '0', '0')
+#define SFM2_OPEN_HAND_POSE 11
+#define SFM2_CHEST_HAND_POSE 18
+#define SFM2_GREETING_HAND_POSE 41
+
+void Sfm2Main(StreetFightStartParameters *start);
+void QueueNormal(StreetFightStartParameters *start);
+void LoadNormalResources(StreetFightEventWork *work);
+void PlaceNormal(StreetFightEventWork *work);
+StreetFightEventWork *InitializeNormal(HLibTask *task);
+void NormalDebugCallback(void *data);
+void CleanupNormalCallback(void *data);
+void SetFighterIndex(StreetFightEventWork *work, int rank);
+void MainCallback(void *data);
+void RetryBeginCallback(void *data);
+void RetryChoiceCallback(void *data);
+void RetryResetCallback(void *data);
+void RetryCancelCallback(void *data);
+int FirstIntroConversation(void *data);
+int RepeatIntroConversation(void *data);
+int AcceptConversation(void *data);
+int NextAcceptConversation(void *data);
+int StopConversation(void *data);
+int FirstBattleConversation(void *data);
+int NextBattleConversation(void *data);
+int DeclineConversation(void *data);
+int InsufficientConversation(void *data);
+void BattleEntryCallback(void *data);
+void BattlePreEventCallback(void *data);
+void BattlePreInitCallback(void *data);
+void BattleStartCallback(void *data);
+void BattleReadyGoCallback(void *data);
+void BattleReleaseCallback(void *data);
+void BattleWaitCallback(void *data);
+void BattleWaitFadeCallback(void *data);
+void BattleEndCallback(void *data);
+int VictoryConversation(void *data);
+int VictoryAppearanceConversation(void *data);
+int DefeatConversation(void *data);
+short SelectKznBattleVoice(void *data);
+short SelectSsyBattleVoice(void *data);
+short SelectSf2BattleVoice(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/street_fight_event.hpp"
 namespace shenmue::s2 {
@@ -32,3 +92,4 @@ inline constexpr Vector3 SFM2_VICTORY_APPEARANCE_POSITION{182.52000427246094f, 1
 inline constexpr shen_name SFM2_NORMAL_PACKAGE{SHEN_NAME(QSFA)};
 extern const ScriptAreaDefinition areaSfm2ScriptDefinition;
 } // namespace shenmue::s2
+#endif

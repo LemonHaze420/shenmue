@@ -1,4 +1,200 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY) && defined(SHENMUE_EVENT_FRBT_AB00)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_library_tail_dc.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define FRBT_TASK SHEN_NAME4('f', 'r', 'b', 't')
+#define FRBT_WAIT_TASK SHEN_NAME4('w', 'a', 'i', 't')
+#define FRBT_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define FRBT_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define FRBT_MAP_PROP SHEN_NAME4('m', 'a', 'p', '_')
+#define FRBT_AB00 SHEN_NAME4('A', 'B', '0', '0')
+#define FRBT_BATTLE_GRID SHEN_NAME4('B', 'T', 'L', 'F')
+#define FRBT_DEFAULT_GRID SHEN_NAME4('0', '0', '0', '0')
+#define FRBT_INVALID 0xffffffffU
+#define FRBT_DEBUG_SLOT 3
+#define FRBT_DEBUG_FRAMES 30000
+#define FRBT_IDLE_MOTION 0xf003
+#define FRBT_VARIANT_COUNT 18
+#define FRBT_RESPONSE_COUNT 9
+#define FRBT_VOICE_PREFIX_COUNT 4
+#define FRBT_VOICE_PREFIX_LENGTH 16
+#define FRBT_VOICE_COUNT 16
+#define FRBT_VOICE_LENGTH 12
+#define FRBT_VOICE_REPEAT 0x20000000U
+#define FRBT_VOICE_SKIPPABLE 0x40000000U
+#define FRBT_REWARD_ITEM 6014
+#define FRBT_OUTCOME_LOST 0
+#define FRBT_OUTCOME_WON 1
+#define FRBT_OUTCOME_HINT 2
+
+typedef struct FrbtMessage {
+    const char *text;
+    int frames, delay;
+} FrbtMessage;
+typedef struct FrbtEnemyDefinition {
+    shen_name character;
+    int health, style;
+} FrbtEnemyDefinition;
+typedef struct FrbtOutcomeRecord {
+    int flag, won, lost, advanceTime;
+    const char *voicePrefix;
+} FrbtOutcomeRecord;
+typedef struct FrbtPlacement {
+    Vector3 position;
+    float yaw;
+} FrbtPlacement;
+typedef struct FrbtOffset {
+    float x, z;
+} FrbtOffset;
+typedef struct FrbtWork {
+    HLibTask *task;
+    EventReadCharactersWork *characters;
+    void *reserved08;
+    shen_name enemies[6];
+    void *motion;
+    int stage;
+    int enemyCount;
+    int outcome;
+} FrbtWork;
+typedef struct FrbtVoiceWork {
+    HLibTask *parent;
+    int delay;
+    int index;
+    int reserved0c;
+    int ticks;
+    unsigned int mode;
+} FrbtVoiceWork;
+
+extern const shen_name frbtEnemyGroups[FRBT_VARIANT_COUNT][6];
+extern shen_name frbtCharacters[10];
+extern int frbtActive;
+extern int frbtVariant;
+
+void RunFrbtEvent(int argument);
+void FrbtStartCallback(void *data);
+void FrbtChooseResponse(void);
+void FrbtInitializeResources(void);
+void FrbtCopyEnemies(FrbtWork *work);
+void FrbtInitializeCallback(void *data);
+void FrbtStopCallback(void *data);
+void FrbtAbortCallback(void *data);
+void FrbtEndCallback(void *data);
+void FrbtAutoCallback(void *data);
+int FrbtBeginMessage(FrbtWork *work);
+void FrbtMoneyHint(FrbtWork *work);
+void FrbtSetupBattle(FrbtWork *work);
+void FrbtStartBattleCallback(void *data);
+void FrbtSetupEnemies(FrbtWork *work);
+void FrbtWaitBattleCallback(void *data);
+void FrbtWonCallback(void *data);
+void FrbtLoseCallback(void *data);
+int FrbtApplyWonFlags(FrbtWork *work);
+int FrbtApplyLostFlags(FrbtWork *work);
+int FrbtWinMessage(FrbtWork *work);
+int FrbtStartAuthor(FrbtWork *work);
+void FrbtVictoryAuthorCallback(void *data);
+void FrbtMapGetCallback(void *data);
+int FrbtRunAway(FrbtWork *work);
+void FrbtPositionBase(void);
+int FrbtQueueMessages(const FrbtMessage *messages, int delay);
+void FrbtResetEnemy(shen_name character);
+void FrbtFacePlayer(shen_name character, shen_name target);
+void FrbtGiveReward(void *argument);
+void FrbtVoiceSequenceCallback(void *data);
+void FrbtQueueVoiceSequence(HLibTask *parent, int delay, unsigned int mode, int timer);
+void FrbtSetVoicePrefix(int prefix, const char *text);
+void FrbtAddVoice(int prefix, const char *suffix);
+void FrbtPlayPrefixVoice(int prefix, const char *suffix, int delay);
+#elif defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_library_tail_dc.h"
+#include "s2/sk_event_dc.h"
+#include "s2/areas/common/et_abort.h"
+
+#define FRBT_TASK SHEN_NAME4('f', 'r', 'b', 't')
+#define FRBT_WAIT_TASK SHEN_NAME4('w', 'a', 'i', 't')
+#define FRBT_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define FRBT_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define FRBT_MAP_PROP SHEN_NAME4('m', 'a', 'p', '_')
+#define FRBT_AB00 SHEN_NAME4('A', 'B', '0', '0')
+#define FRBT_ABLB SHEN_NAME4('A', 'B', 'L', 'B')
+#define FRBT_AR02 SHEN_NAME4('A', 'R', '0', '2')
+#define FRBT_WS00 SHEN_NAME4('W', 'S', '0', '0')
+#define FRBT_KEI SHEN_NAME4('K', 'E', 'I', '_')
+#define FRBT_TYZ SHEN_NAME4('T', 'Y', 'Z', '_')
+#define FRBT_TRAP1_AUTHOR SHEN_NAME4('T', 'R', 'P', '1')
+#define FRBT_TRAP2_AUTHOR SHEN_NAME4('T', 'R', 'P', '2')
+#define FRBT_INVALID 0xffffffffU
+#define FRBT_ABORT_SLOT 3
+#define FRBT_ABORT_FRAMES 30000
+#define FRBT_IDLE_MOTION 0xf003
+#define FRBT_ENCOUNTER_COUNT 23
+#define FRBT_VARIANT_COUNT 12
+#define FRBT_BASE_POSITION_COUNT 10
+#define FRBT_REWARD_ITEM 6014
+#define FRBT_OUTCOME_LOST 0
+#define FRBT_OUTCOME_WON 1
+#define FRBT_OUTCOME_HINT 2
+
+typedef struct FrbtMessage {
+    const char *text;
+    int frames, delay;
+} FrbtMessage;
+typedef struct FrbtEnemyDefinition {
+    shen_name character;
+    int health, style;
+} FrbtEnemyDefinition;
+typedef struct FrbtOutcomeRecord {
+    int flag, won, lost, advanceTime;
+} FrbtOutcomeRecord;
+typedef struct FrbtPlacement {
+    Vector3 position;
+    float yaw;
+} FrbtPlacement;
+typedef struct FrbtWork {
+    HLibTask *task;
+    EventReadCharactersWork *characters;
+    EventReadCharactersWork *trapCharacters;
+    shen_name enemies[6];
+    void *motion;
+    int stage;
+    int enemyCount;
+    int outcome;
+} FrbtWork;
+
+void RunFrbtEvent(int encounter);
+void FrbtWaitCallback(void *data);
+void FrbtSelectVariant(void);
+void FrbtLoadResources(void);
+void FrbtLogEnemies(FrbtWork *work);
+void FrbtStartCallback(void *data);
+void FrbtFinishCallback(void *data);
+void FrbtAbortCallback(void *data);
+void FrbtExitCallback(void *data);
+void FrbtIntroCallback(void *data);
+void FrbtStartFight(FrbtWork *work);
+void FrbtStartHint(FrbtWork *work);
+void FrbtFightCallback(void *data);
+void FrbtInitializeEnemies(FrbtWork *work);
+void FrbtFightWaitCallback(void *data);
+void FrbtWonCallback(void *data);
+void FrbtLostCallback(void *data);
+int FrbtWonExit(FrbtWork *work);
+int FrbtLostExit(FrbtWork *work);
+int FrbtWinMessage(FrbtWork *work);
+int FrbtWinCutscene(FrbtWork *work);
+int FrbtMapCutscene(FrbtWork *work);
+void FrbtTrapCallback(void *data);
+void FrbtPositionBase(void);
+int FrbtQueueMessages(const FrbtMessage *messages, int delay);
+void FrbtResetEnemy(shen_name character);
+void FrbtGiveReward(void *argument);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/event_queued.hpp"
@@ -286,3 +482,4 @@ void InitializeFrbtEvent();
 void RunFrbtEvent(std::uintptr_t argument);
 extern const ScriptAreaDefinition frbtScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

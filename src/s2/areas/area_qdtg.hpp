@@ -1,4 +1,93 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_smoke.hpp"
+#include "s2/areas/area_loop_dc.h"
+
+#define QDTG_AREA SHEN_NAME4('Q', 'D', 'T', 'G')
+#define QDTG_RETURN_AREA SHEN_NAME4('Q', 'F', '0', '0')
+#define QDTG_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define QDTG_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QDTG_TGY SHEN_NAME4('T', 'G', 'Y', '_')
+#define QDTG_SOY SHEN_NAME4('S', 'O', 'Y', '_')
+#define QDTG_SEE SHEN_NAME4('S', 'E', 'E', '_')
+#define QDTG_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define QDTG_YUKA SHEN_NAME4('Y', 'U', 'K', 'A')
+#define QDTG_YUKB SHEN_NAME4('Y', 'U', 'K', 'B')
+#define QDTG_HIBI SHEN_NAME4('H', 'I', 'B', 'I')
+#define QDTG_A896 SHEN_NAME4('a', '8', '9', '6')
+#define QDTG_BOX0 SHEN_NAME4('B', 'O', 'X', '0')
+#define QDTG_DUMR SHEN_NAME4('D', 'U', 'M', 'R')
+#define QDTG_DUML SHEN_NAME4('D', 'U', 'M', 'L')
+#define QDTG_DUMT SHEN_NAME4('D', 'U', 'M', 'T')
+#define QDTG_ATH0 SHEN_NAME4('A', 'T', 'H', '0')
+#define QDTG_QTES SHEN_NAME4('Q', 'T', 'E', 'S')
+#define QDTG_QTEF SHEN_NAME4('Q', 'T', 'E', 'F')
+#define QDTG_TOGS SHEN_NAME4('T', 'O', 'G', 'S')
+#define QDTG_TOGF SHEN_NAME4('T', 'O', 'G', 'F')
+#define QDTG_TOG0 SHEN_NAME4('T', 'O', 'G', '0')
+#define QDTG_WIN0 SHEN_NAME4('W', 'I', 'N', '0')
+#define QDTG_RETRY_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+#define QDTG_DEBUG_ID 3
+#define QDTG_STEP_FLAG 351
+#define QDTG_HAND_POSE 40
+#define QDTG_REN_RUN 8778
+#define QDTG_RYO_RUN 8792
+#define QDTG_TOGYU_STUCK 8830
+#define QDTG_CRUSH 8832
+#define QDTG_ARM_D 8833
+#define QDTG_ARM_E 8834
+#define QDTG_COIN_TOSS 8835
+#define QDTG_SEE_STANCE 3632
+typedef struct QdtgEventWork {
+    EventReadCharactersWork *characters;
+    HLibTask *debugTask;
+    HLibTask *task;
+    void *motion;
+    int state;
+    int savedNavi;
+    HLibTaskCallback continuation;
+    const int *entry;
+} QdtgEventWork;
+extern shen_name qdtgCharacters[];
+extern int qdtgSequenceState;
+void QdtgMain(void *argument);
+void QueueQdtgEvent(const int *entry);
+void QdtgDebugExitCallback(void *data);
+void FinishTogyuCallback(void *data);
+void QdtgDebugDisplayCallback(void *data);
+void SetTogyuStartContinuation(HLibTaskCallback *continuation);
+void StartTogyuCallback(void *data);
+void AuthorWaitCallback(void *data);
+void RunRyoRenCallback(void *data);
+void Qte2Callback(void *data);
+void Qte0Callback(void *data);
+void Qte0ResultCallback(void *data);
+void ComQteCallback(void *data);
+void ComQteResultCallback(void *data);
+void StartFloorBattleCallback(void *data);
+void FloorBattleCallback(void *data);
+void WinAuthorCallback(void *data);
+void Author1Callback(void *data);
+void Author2Callback(void *data);
+void RetryTogyuCallback(void *data);
+void FinishAuthorThunk(void *data);
+void InitializeTogyu(QdtgEventWork *work);
+void CleanupTogyu(QdtgEventWork *work);
+int DoRyoRenSequence(int delay);
+int Qte2MotionSuccess(int delay);
+int Qte2MotionFailure(int delay);
+int Qte0MotionSuccess(int delay);
+int Qte0MotionFailure(int delay);
+void ResetTogyuObject(shen_name name);
+int QueueTogyuObjectCollapse(shen_name name, shen_name hidden, int delay);
+int QueueHibiDisplay(shen_name character, shen_name hidden, int delay);
+int QueueFloorCollapse(shen_name character, shen_name hidden, int delay);
+int QueueBoxCollapse(shen_name character, shen_name hidden, int delay);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/event_queued.hpp"
@@ -47,3 +136,4 @@ void QdtgInit();
 void QdtgMain(std::uintptr_t argument);
 extern const ScriptAreaDefinition qdtgScriptDefinition;
 } // namespace shenmue::s2
+#endif

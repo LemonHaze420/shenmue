@@ -1,4 +1,102 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_library_tail_dc.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define URNI_DEBUG_ID 3
+#define URNI_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define URNI_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define URNI_PLAYER_DUMMY SHEN_NAME4('D', 'U', 'M', 'R')
+#define URNI_READER_DUMMY SHEN_NAME4('D', 'U', 'M', 'T')
+#define URNI_SYK SHEN_NAME4('S', 'Y', 'K', '_')
+#define URNI_KLN SHEN_NAME4('K', 'L', 'N', '_')
+#define URNI_MM5 SHEN_NAME4('M', 'M', '5', '_')
+#define URNI_SEH SHEN_NAME4('S', 'E', 'H', '_')
+#define URNI_SRI SHEN_NAME4('S', 'R', 'I', '_')
+#define URNI_RCD SHEN_NAME4('R', 'C', 'D', '_')
+#define URNI_AR01 SHEN_NAME4('A', 'R', '0', '1')
+#define URNI_WS00 SHEN_NAME4('W', 'S', '0', '0')
+#define URNI_GRIP_HAND_POSE 11
+
+#define URNI_STICK_CUP SHEN_NAME4('Z', 'C', 'U', 'P')
+#define URNI_STICK_HAND SHEN_NAME4('Z', 'E', 'I', 'Z')
+#define URNI_STICK_TABLE_FIRST SHEN_NAME4('Z', 'E', 'I', 'A')
+#define URNI_STICK_HELD_FIRST SHEN_NAME4('Z', 'E', 'I', '0')
+#define URNI_STICK_IDLE_FIRST SHEN_NAME4('Z', 'E', 'I', '5')
+#define URNI_STAND_MOTION 0xf002
+#define URNI_TURN_MOTION 0xf02f
+#define URNI_WALK_MOTION 0xf005
+#define URNI_EMPTY_WALLET_MOTION 0xf019
+#define URNI_TALK_MOTION 6615
+#define URNI_SIT_MOTION 6534
+#define URNI_SITTING_MOTION 6533
+#define URNI_STAND_FROM_CHAIR_MOTION 6535
+#define URNI_SHIFT_LEFT_MOTION 6623
+#define URNI_SEH_READING_MOTION 6659
+#define URNI_READING_HAND_POSE 19
+#define URNI_LEFT_READING_HAND_POSE 12
+
+typedef struct UranaiSelection {
+    shen_name reader;
+    int mode;
+} UranaiSelection;
+
+typedef int (*UranaiCallback)(shen_name reader, int delay);
+
+typedef struct UranaiConfiguration {
+    Vector3 position;
+    float yaw;
+    int price;
+    UranaiCallback setup, modeOne, introduction, same, decline, beginReading, reading, result, payment, insufficientCash;
+} UranaiConfiguration;
+
+typedef struct UranaiWork {
+    EventReadCharactersWork *characters;
+    HLibTask *task;
+    const UranaiSelection *selection;
+    const UranaiConfiguration *configuration;
+    const char *package;
+} UranaiWork;
+
+#define URNI_READER_CALLBACKS(Reader)                                                                                                  \
+    int Uranai##Reader##Setup(shen_name reader, int delay);                                                                            \
+    int Uranai##Reader##ModeOne(shen_name reader, int delay);                                                                          \
+    int Uranai##Reader##Introduction(shen_name reader, int delay);                                                                     \
+    int Uranai##Reader##Same(shen_name reader, int delay);                                                                             \
+    int Uranai##Reader##Decline(shen_name reader, int delay);                                                                          \
+    int Uranai##Reader##BeginReading(shen_name reader, int delay);                                                                     \
+    int Uranai##Reader##Reading(shen_name reader, int delay);                                                                          \
+    int Uranai##Reader##Result(shen_name reader, int delay);                                                                           \
+    int Uranai##Reader##Payment(shen_name reader, int delay);                                                                          \
+    int Uranai##Reader##InsufficientCash(shen_name reader, int delay);
+URNI_READER_CALLBACKS(Syk)
+URNI_READER_CALLBACKS(Kln)
+URNI_READER_CALLBACKS(Mm5)
+URNI_READER_CALLBACKS(Seh)
+URNI_READER_CALLBACKS(Sri)
+URNI_READER_CALLBACKS(Rcd)
+
+const char *UranaiStoryPackage(void);
+
+void AreaURNIMain(void *argument);
+void QueueUranaiStart(void *parameter);
+void UranaiDebugEnd(void *data);
+void UranaiEnd(void *data);
+void UranaiStart(void *data);
+void UranaiSelect(void *data);
+void UranaiResult(void *data);
+void UranaiSame(void *data);
+void UranaiMoney(void *data);
+void UranaiFade(void *data);
+void UranaiFadeEnd(void *data);
+void InitializeUranai(UranaiWork *work);
+void CleanupUranai(UranaiWork *work);
+void ConfigureUranai(UranaiWork *work, shen_name reader);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "common/math.hpp"
@@ -503,3 +601,4 @@ inline constexpr std::int32_t URNI_SRI_STORY_FLAGS[]{1524, 1525, 1527, 1528, 152
 std::int32_t UranaiStoryPackageIndex();
 extern const ScriptAreaDefinition urniDefinition;
 } // namespace shenmue::s2
+#endif

@@ -1,5 +1,13 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+void Tes2Main(void);
+void Tes2MainLoopCallback(void *taskData);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/area_names.hpp"
 
@@ -12,3 +20,4 @@ void Tes2MainLoopCallback(void *taskData);
 extern const ScriptAreaDefinition tes2ScriptDefinition;
 
 } // namespace shenmue::s2
+#endif

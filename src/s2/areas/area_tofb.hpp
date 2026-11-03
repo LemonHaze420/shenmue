@@ -1,4 +1,56 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+
+#define TOFB_AREA SHEN_NAME4('T', 'O', 'F', 'B')
+#define TOFB_NEXT_AREA SHEN_NAME4('Y', 'T', 'Q', 'B')
+#define TOFB_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define TOFB_CHO SHEN_NAME4('C', 'H', 'O', '_')
+#define TOFB_SBO SHEN_NAME4('S', 'B', 'O', '_')
+#define TOFB_MRC SHEN_NAME4('M', 'R', 'C', '_')
+#define TOFB_SCX SHEN_NAME4('S', 'C', 'X', '_')
+#define TOFB_CHR SHEN_NAME4('C', 'H', 'R', '_')
+#define TOFB_RKN SHEN_NAME4('R', 'K', 'N', '_')
+#define TOFB_SBK SHEN_NAME4('S', 'B', 'K', '_')
+#define TOFB_SKH SHEN_NAME4('S', 'K', 'H', '_')
+#define TOFB_A412 SHEN_NAME4('a', '4', '1', '2')
+#define TOFB_FR00 SHEN_NAME4('F', 'R', '0', '0')
+#define TOFB_A021 SHEN_NAME4('a', '0', '2', '1')
+#define TOFB_A418 SHEN_NAME4('a', '4', '1', '8')
+#define TOFB_TABLE SHEN_NAME4('T', 'B', 'L', '0')
+#define TOFB_BROKEN_TABLE SHEN_NAME4('T', 'B', 'L', 'B')
+#define TOFB_GRID SHEN_NAME4('B', 'T', 'C', '1')
+#define TOFB_DEFAULT_GRID SHEN_NAME4('0', '0', '0', '0')
+#define TOFB_LIGHT SHEN_NAME4('l', '0', '0', '1')
+#define TOFB_AUTHOR SHEN_NAME4('A', 'T', 'H', '0')
+#define TOFB_RETRY_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+#define TOFB_TABLE_MOTION SHEN_NAME4('T', 'U', 'K', 'U')
+#define TOFB_DEBUG_ID 3
+#define TOFB_FSQRT(value) ((value) = __builtin_sqrtf(value))
+typedef struct TofbEventWork {
+    EventReadCharactersWork *characters;
+    HLibTask *task;
+    void *motion;
+} TofbEventWork;
+void TofbMain(void *argument);
+void QueueTofbEvent(void);
+void TofbDebugExitCallback(void *data);
+void FinishTofbEvent(TofbEventWork *work);
+void TofbStartCallback(void *data);
+void TofbOpeningAuthorCallback(void *data);
+void TofbBattleStartCallback(void *data);
+void TofbBattleCallback(void *data);
+void TofbRetryCallback(void *data);
+void TofbVictoryAuthorCallback(void *data);
+void TofbEndingAuthorCallback(void *data);
+void TofbEndCallback(void *data);
+void InitializeTofbResources(TofbEventWork *work);
+void CleanupTofbResources(TofbEventWork *work);
+void MaintainTofbBattleCamera(int mode);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/hlib.hpp"
@@ -49,3 +101,4 @@ void CleanupTofbResources(TofbEventWork *);
 void TofbDormantBoundary();
 extern const ScriptAreaDefinition tofbScriptDefinition;
 } // namespace shenmue::s2
+#endif

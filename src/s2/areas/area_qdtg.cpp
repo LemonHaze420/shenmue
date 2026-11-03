@@ -1,3 +1,591 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_qdtg.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void QdtgMain(void *argument)
+{
+    QueueQdtgEvent((const int *)argument);
+}
+#elif defined(SHENMUE_EVENT_QDTG_MOTIONS)
+int qdtgSequenceState = 0;
+
+int DoRyoRenSequence(int delay)
+{
+    int time;
+    qdtgSequenceState = 0;
+    EVT_AT_SetPos(QDTG_RYO, QDTG_BASE, -17.0f, 0.0f, 23.0f, delay);
+    EVT_AT_SetAngY(QDTG_RYO, QDTG_BASE, 0.0f, delay);
+    EVT_AT_SetPos(QDTG_RYO, QDTG_BASE, -17.0f, 0.0f, 12.8f, delay + 37);
+    EVT_AT_SetAngY(QDTG_RYO, QDTG_BASE, 0.0f, delay + 37);
+    EVT_AT_SetPos(QDTG_REN, QDTG_BASE, -18.2f, 0.0f, 18.5f, delay);
+    EVT_AT_SetAngY(QDTG_REN, QDTG_BASE, 0.0f, delay);
+    EVT_AT_SetCam(7638, QDTG_BASE, QDTG_BASE, 0, 0, delay);
+    EVT_AT_SetCam(7639, QDTG_BASE, QDTG_BASE, 0, 0, delay + 37);
+    EVT_AT_SetMot(QDTG_REN, QDTG_REN_RUN, 0.0f, 1.0f, 0x40000000U, delay);
+    time = EVT_AT_SetMot(QDTG_REN, QDTG_ARM_D, 0.0f, 1.0f, 0x20000000U, delay + 25);
+    EVT_AT_SetAngY(QDTG_REN, QDTG_REN, -90.0f, time);
+    EVT_AT_SetMot(QDTG_REN, QDTG_REN_RUN, 0.0f, 1.0f, 0, time);
+    EVT_AT_SetMot(QDTG_RYO, QDTG_RYO_RUN, 0.0f, 1.0f, 0x40000000U, delay);
+    time = EVT_AT_SetMot(QDTG_RYO, QDTG_ARM_D, 0.0f, 1.0f, 0x60000000U, delay + 37);
+    EVT_AT_SetFaceLooks(QDTG_RYO, 1, 1, 1.0f, 0);
+    EVT_AT_SetFaceLooks(QDTG_REN, 1, 1, 1.0f, 0);
+    return time;
+}
+
+int Qte2MotionSuccess(int delay)
+{
+    int end = delay + 73;
+    int time;
+    qdtgSequenceState = 0;
+    EVT_AT_SetPos(QDTG_RYO, QDTG_BASE, -12.2f, 0.0f, 10.7f, delay);
+    EVT_AT_SetAngY(QDTG_RYO, QDTG_BASE, -90.0f, delay);
+    EVT_AT_SetPos(QDTG_REN, QDTG_BASE, -12.5f, 0.0f, 9.6f, delay);
+    EVT_AT_SetAngY(QDTG_REN, QDTG_BASE, -90.0f, delay);
+    EVT_AT_SetPos(QDTG_RYO, QDTG_RYO, 0.0f, 0.0f, 3.0f, delay + 40);
+    EVT_AT_SetCam(7640, QDTG_BASE, QDTG_BASE, 0, 0, delay);
+    EVT_AT_SetCam(7641, QDTG_BASE, QDTG_BASE, 0, 0, delay + 40);
+    EVT_AT_SetMot(QDTG_REN, QDTG_REN_RUN, 0.0f, 1.0f, 0x40000000U, delay);
+    EVT_AT_SetMot(QDTG_REN, QDTG_ARM_D, 0.0f, 1.0f, 0, delay + 37);
+    time = EVT_AT_SetMot(QDTG_RYO, QDTG_ARM_E, 0.0f, 1.0f, 0x60000000U, delay);
+    EVT_AT_SetMot(QDTG_RYO, QDTG_RYO_RUN, 0.0f, 1.0f, 0, time);
+    EVT_AT_SetVoice("0282A005", delay);
+    return end;
+}
+
+int Qte2MotionFailure(int delay)
+{
+    int end = delay + 73;
+    int time;
+    qdtgSequenceState = 0;
+    EVT_AT_SetPos(QDTG_RYO, QDTG_BASE, -14.2f, 0.0f, 10.7f, delay);
+    EVT_AT_SetAngY(QDTG_RYO, QDTG_BASE, -90.0f, delay);
+    EVT_AT_SetPos(QDTG_REN, QDTG_BASE, -12.5f, 0.0f, 9.6f, delay);
+    EVT_AT_SetAngY(QDTG_REN, QDTG_BASE, -90.0f, delay);
+    EVT_AT_SetCam(7640, QDTG_BASE, QDTG_BASE, 0, 0, delay);
+    EVT_AT_SetCam(7641, QDTG_BASE, QDTG_BASE, 0, 0, delay + 40);
+    EVT_AT_SetMot(QDTG_REN, QDTG_REN_RUN, 0.0f, 1.0f, 0x40000000U, delay);
+    EVT_AT_SetMot(QDTG_REN, QDTG_ARM_D, 0.0f, 1.0f, 0, delay + 37);
+    time = EVT_AT_SetMot(QDTG_RYO, QDTG_CRUSH, 30.0f, 1.0f, 0x40000000U, delay);
+    EVT_AT_SetMot(QDTG_RYO, QDTG_RYO_RUN, 0.0f, 1.0f, 0, time);
+    EVT_AT_SetVoice("0282A014", delay);
+    return end;
+}
+
+int Qte0MotionSuccess(int delay)
+{
+    int end = delay + 70;
+    int time;
+    qdtgSequenceState = 0;
+    EVT_AT_SetPos(QDTG_RYO, QDTG_BASE, -2.0f, 0.0f, 9.5f, delay);
+    EVT_AT_SetAngY(QDTG_RYO, QDTG_BASE, -90.0f, delay);
+    EVT_AT_SetPos(QDTG_REN, QDTG_BASE, -0.8f, 0.0f, 7.8f, delay);
+    EVT_AT_SetAngY(QDTG_REN, QDTG_BASE, 0.0f, delay);
+    EVT_AT_SetCam(7642, QDTG_BASE, QDTG_BASE, 0, 0, delay);
+    EVT_AT_SetMot(QDTG_REN, QDTG_REN_RUN, 0.0f, 1.0f, 0x40000000U, delay);
+    time = EVT_AT_SetMot(QDTG_RYO, QDTG_ARM_D, 0.0f, 1.0f, 0x40000000U, delay);
+    EVT_AT_SetAngY(QDTG_RYO, QDTG_RYO, 90.0f, time);
+    EVT_AT_SetMot(QDTG_RYO, QDTG_RYO_RUN, 0.0f, 1.0f, 0, time);
+    EVT_AT_SetVoice("0282A005", delay);
+    return end;
+}
+
+int Qte0MotionFailure(int delay)
+{
+    int end = delay + 150;
+    qdtgSequenceState = 0;
+    EVT_AT_SetPos(QDTG_RYO, QDTG_BASE, -1.9f, 0.0f, 9.5f, delay);
+    EVT_AT_SetAngY(QDTG_RYO, QDTG_BASE, -90.0f, delay);
+    EVT_AT_SetPos(QDTG_REN, QDTG_BASE, -0.8f, 0.0f, 7.8f, delay);
+    EVT_AT_SetAngY(QDTG_REN, QDTG_BASE, 0.0f, delay);
+    EVT_AT_SetPos(QDTG_REN, QDTG_BASE, -0.8f, 0.0f, 7.8f, delay + 100);
+    EVT_AT_SetAngY(QDTG_REN, QDTG_BASE, 0.0f, delay + 100);
+    EVT_AT_SetCam(7643, QDTG_BASE, QDTG_BASE, 0, 0, delay);
+    EVT_AT_SetCam(7644, QDTG_BASE, QDTG_BASE, 0, 0, delay + 120);
+    EVT_AT_SetMot(QDTG_REN, QDTG_REN_RUN, 0.0f, 1.0f, 0x40000000U, delay);
+    EVT_AT_SetMot(QDTG_REN, QDTG_REN_RUN, 0.0f, 1.0f, 0x40000000U, delay + 120);
+    EVT_AT_SetMot(QDTG_RYO, QDTG_COIN_TOSS, 0.0f, 1.0f, 0x40000000U, delay);
+    EVT_AT_SetMot(QDTG_RYO, QDTG_COIN_TOSS, 30.0f, 1.2f, 0, delay + 30);
+    EVT_AT_SetAngY(QDTG_RYO, QDTG_RYO, 90.0f, delay + 120);
+    EVT_AT_SetMot(QDTG_RYO, QDTG_RYO_RUN, 0.0f, 1.0f, 0x40000000U, delay + 120);
+    QueueTogyuObjectCollapse(QDTG_BOX0, EVENT_CHARACTER_INVALID, delay + 30);
+    EVT_AT_SetVoice("0282A013", delay + 10);
+    return end;
+}
+#elif defined(SHENMUE_EVENT_QDTG_OBJECTS)
+static const int qdtgBoxParts[] = {161, 160, 159, 158, 157, 156, 155, 154, 153, 152};
+
+void ResetTogyuObject(shen_name name)
+{
+    switch (name) {
+    case QDTG_HIBI:
+        EVT_AT_CharaDisp(name, 0, 1);
+        break;
+    case QDTG_YUKA:
+        FTBL.SetObjectFlagByIndex(1, 1);
+        EVT_AT_CharaDisp(name, 0, 1);
+        Queue_EVT_AT_PlayDynamix(name, "YUKA", 2.0f, 4.0f, 76, 0, 2.0f, 0);
+        break;
+    case QDTG_BOX0:
+        Queue_EVT_AT_PlayDynamix(name, "BOX0", 2.0f, 4.0f, 10, qdtgBoxParts, 2.0f, 0);
+        break;
+    }
+}
+
+int QueueTogyuObjectCollapse(shen_name name, shen_name hidden, int delay)
+{
+    int time = 1;
+    switch (name) {
+    case QDTG_HIBI:
+        time = QueueHibiDisplay(name, hidden, delay);
+        break;
+    case QDTG_YUKA:
+        time = QueueFloorCollapse(name, hidden, delay);
+        break;
+    case QDTG_BOX0:
+        time = QueueBoxCollapse(name, hidden, delay);
+        break;
+    }
+    return time;
+}
+
+int QueueHibiDisplay(shen_name character, shen_name hidden, int delay)
+{
+    if (character != EVENT_CHARACTER_INVALID)
+        EVT_AT_CharaDisp(character, delay, 0);
+    if (hidden != EVENT_CHARACTER_INVALID)
+        EVT_AT_CharaDisp(hidden, delay, 1);
+    return 1;
+}
+
+int QueueFloorCollapse(shen_name character, shen_name hidden, int delay)
+{
+    if (character != EVENT_CHARACTER_INVALID)
+        EVT_AT_CharaDisp(character, delay, 0);
+    if (hidden != EVENT_CHARACTER_INVALID)
+        EVT_AT_CharaDisp(hidden, delay, 1);
+    FTBL.SetObjectFlagByIndex(1, 0);
+    Queue_EVT_AT_PlayDynamix(character, "YUKA", 2.0f, 56.0f, 76, 0, 2.0f, delay);
+    Queue_EVT_AT_PlayDynamix(character, "YUKA", 12.0f, 250.0f, 76, 0, 2.0f, delay + 28);
+    EVT_AT_SetPos(QDTG_YUKA, QDTG_YUKA, 0.0f, -1.0f, 0.0f, delay + 59);
+    EVT_AT_SetAngY(QDTG_YUKA, QDTG_YUKA, 0.0f, delay + 59);
+    EVT_AT_SetPos(QDTG_YUKB, QDTG_YUKA, 0.0f, -3.6f, 0.0f, delay);
+    EVT_AT_SetAngY(QDTG_YUKB, QDTG_YUKA, 0.0f, delay);
+    QueueEventSmoke(1, QDTG_YUKB, EVENT_CHARACTER_INVALID, delay, 2, 0, 140);
+    return delay + 146.0f;
+}
+
+int QueueBoxCollapse(shen_name character, shen_name hidden, int delay)
+{
+    if (character != EVENT_CHARACTER_INVALID)
+        EVT_AT_CharaDisp(character, delay, 0);
+    if (hidden != EVENT_CHARACTER_INVALID)
+        EVT_AT_CharaDisp(hidden, delay, 1);
+    Queue_EVT_AT_PlayDynamix(character, "BOX0", 2.0f, 500.0f, 10, qdtgBoxParts, 1.0f, delay);
+    return delay + 498.0f;
+}
+#else
+static const int qdtgDefaultEntry = 0;
+shen_name qdtgCharacters[] = {QDTG_RYO, QDTG_REN, QDTG_TGY, QDTG_SOY, QDTG_SEE, EVENT_CHARACTER_INVALID};
+
+void QueueQdtgEvent(const int *entry)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(StartTogyuCallback, 4, 11, sizeof(QdtgEventWork), TASK_EVNT);
+    QdtgEventWork *work = (QdtgEventWork *)FTBL.HLib_GetTaskParameter(task);
+    HLibTask *debugTask = FTBL.HLib_EnqueueTaskWithParameter(QdtgDebugDisplayCallback, 3, 11, sizeof(QdtgEventWork *), TASK_EVNT);
+    *(QdtgEventWork **)FTBL.HLib_GetTaskParameter(debugTask) = work;
+    work->debugTask = debugTask;
+    work->task = task;
+    if (entry)
+        work->entry = entry;
+    else
+        work->entry = &qdtgDefaultEntry;
+    InitializeTogyu(work);
+    EventDebugRegister(QDTG_DEBUG_ID, QdtgDebugExitCallback, work, 2000000000);
+}
+
+void QdtgDebugExitCallback(void *data)
+{
+    FinishTogyuCallback(data);
+}
+
+void FinishTogyuCallback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    int state = work->state;
+    CleanupTogyu(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->debugTask);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    EventDebugUnregister(QDTG_DEBUG_ID);
+    if (g_currentMap == QDTG_AREA) {
+        FTBL.scenSetTaskFlags(8);
+        if (state)
+            FTBL.EV_scenQueueLoad(g_actNumber, QDTG_RETURN_AREA, 56);
+        else
+            FTBL.EV_scenQueueLoad(g_actNumber, QDTG_RETURN_AREA, 57);
+    }
+}
+
+void QdtgDebugDisplayCallback(void *data)
+{
+    FTBL.SetDebugScreenTextPosition(2, 23);
+}
+
+void SetTogyuStartContinuation(HLibTaskCallback *continuation)
+{
+    *continuation = RunRyoRenCallback;
+}
+
+void StartTogyuCallback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    HLibTaskCallback *continuation = &work->continuation;
+    EventDebugCheck(QDTG_DEBUG_ID, 4);
+    SetTogyuStartContinuation(continuation);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QDTG_RYO));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QDTG_REN));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QDTG_TGY));
+    EVT_AT_CharaDisp(QDTG_YUKB, 0, 1);
+    EVT_AT_CharaDisp(QDTG_A896, 0, 1);
+    EVT_AT_SetPos(QDTG_BASE, EVENT_CHARACTER_INVALID, 199.0f, 154.0f, 157.5f, 0);
+    EVT_AT_SetAngY(QDTG_BASE, EVENT_CHARACTER_INVALID, 180.0f, 0);
+    ResetTogyuObject(QDTG_BOX0);
+    EVT_AT_SetPos(QDTG_YUKA, EVENT_CHARACTER_INVALID, 198.91f, 154.0f, 169.16f, 0);
+    EVT_AT_SetAngY(QDTG_YUKA, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(QDTG_YUKB, EVENT_CHARACTER_INVALID, 198.91f, 153.0f, 169.16f, 0);
+    EVT_AT_SetAngY(QDTG_YUKB, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    ResetTogyuObject(QDTG_YUKA);
+    EVT_AT_SetPos(QDTG_HIBI, EVENT_CHARACTER_INVALID, 198.91f, 154.002f, 169.2f, 0);
+    EVT_AT_SetAngY(QDTG_HIBI, EVENT_CHARACTER_INVALID, 180.0f, 0);
+    ResetTogyuObject(QDTG_HIBI);
+    FTBL.AT_SetLocalBaseChara(QDTG_DUMR, QDTG_RYO);
+    FTBL.AT_SetLocalBaseChara(QDTG_DUML, QDTG_REN);
+    FTBL.AT_SetLocalBaseChara(QDTG_DUMT, QDTG_TGY);
+    EVT_AT_SetPos(QDTG_DUMR, QDTG_RYO, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QDTG_DUMR, QDTG_RYO, 0.0f, 0);
+    EVT_AT_SetPos(QDTG_DUML, QDTG_REN, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QDTG_DUML, QDTG_REN, 0.0f, 0);
+    EVT_AT_SetPos(QDTG_DUMT, QDTG_TGY, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QDTG_DUMT, QDTG_TGY, 0.0f, 0);
+    EVT_AT_SetPos(QDTG_SOY, QDTG_BASE, 1000.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetPos(QDTG_SEE, QDTG_BASE, 1000.0f, 0.0f, 0.0f, 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_RYO), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_REN), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_TGY), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_SOY), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_SEE), 0);
+    FTBL.EV_LoadCutsceneFromCurrentScene("0282E000");
+    FTBL.EV_LoadAudio("0282E000", 0);
+    EVT_AT_SetSample(0, 0, 0);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_authSceneCtrl(QDTG_ATH0);
+    work->continuation = RunRyoRenCallback;
+    FTBL.HLib_SetCurrentTaskTo(AuthorWaitCallback);
+}
+
+void AuthorWaitCallback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        EVT_AT_SetPos(QDTG_TGY, EVENT_CHARACTER_INVALID, 1000.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetAngY(QDTG_TGY, EVENT_CHARACTER_INVALID, 0.0f, 0);
+        FTBL.SetMapModelDataDefaultVertexShader();
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+        FTBL.PushGlobalLightingProgram();
+        EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.HLib_SetCurrentTaskTo(work->continuation);
+    }
+}
+
+void RunRyoRenCallback(void *data)
+{
+    int time;
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QDTG_RYO), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QDTG_RYO), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QDTG_RYO), 0, (void *)areaLoopHandPoses[QDTG_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QDTG_RYO), 1, (void *)areaLoopHandPoses[QDTG_HAND_POSE], 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QDTG_REN), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QDTG_REN), 1, 1, 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QDTG_REN), 0, (void *)areaLoopHandPoses[QDTG_HAND_POSE], 0);
+    FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(QDTG_REN), 1, (void *)areaLoopHandPoses[QDTG_HAND_POSE], 0);
+    time = DoRyoRenSequence(0);
+    EVT_AT_QTE(64, 8, 0, time - 29, 0);
+    FTBL.HLib_SetCurrentTaskTo(Qte2Callback);
+    FTBL.HLib_SetupTaskDelay(time);
+}
+
+void Qte2Callback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    int time;
+    if ((FTBL.GetCurrentQteStatus() & 0xfff) == 0x40) {
+        work->state = 1;
+        time = Qte2MotionSuccess(0);
+    } else {
+        work->state = 0;
+        time = Qte2MotionFailure(0);
+    }
+    EVT_AT_QTE(64, 8, 0, time - 29, 0);
+    FTBL.HLib_SetCurrentTaskTo(Qte0Callback);
+    FTBL.HLib_SetupTaskDelay(time);
+}
+
+void Qte0Callback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    int time;
+    if ((FTBL.GetCurrentQteStatus() & 0xfff) == 0x40) {
+        work->state++;
+        time = Qte0MotionSuccess(0);
+    } else
+        time = Qte0MotionFailure(0);
+    FTBL.HLib_SetCurrentTaskTo(Qte0ResultCallback);
+    FTBL.HLib_SetupTaskDelay(time);
+}
+
+void Qte0ResultCallback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    HLibTaskCallback *continuation = &work->continuation;
+    if (work->state < 2) {
+        work->state = 0;
+        FTBL.EV_authSceneCtrl(QDTG_QTEF);
+        work->continuation = ComQteResultCallback;
+        FTBL.HLib_SetCurrentTaskTo(ComQteCallback);
+    } else {
+        FTBL.EV_stepSetFlags(QDTG_STEP_FLAG, 0);
+        work->state = 1;
+        FTBL.EV_authSceneCtrl(QDTG_QTES);
+        *continuation = FinishAuthorThunk;
+        FTBL.HLib_SetCurrentTaskTo(Author1Callback);
+    }
+}
+
+void ComQteCallback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    HLibTaskCallback *continuation = &work->continuation;
+    if (FTBL.EV_authSceneCtrl(-6) == 1) {
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_RYO), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_REN), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_SOY), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_SEE), 1);
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.qteBattleUtil(0, 0, 0, 0, 0);
+        FTBL.qteBattleUtil(2, 0, 0, 0, 0);
+        FTBL.qteBattleUtil(9, 16, 2048, 0, 0);
+        EVT_AT_QTE(0, 16, 0, 0, 4);
+        FTBL.HLib_SetCurrentTaskTo(*continuation);
+    }
+}
+
+void ComQteResultCallback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    HLibTaskCallback *continuation = &work->continuation;
+    if (FTBL.qteBattleUtil(4, 0, 0, 0, 0)) {
+        if (FTBL.qteBattleUtil(6, 0, 0, 0, 0) == 2) {
+            FTBL.EV_stepSetFlags(QDTG_STEP_FLAG, 1);
+            work->state = 1;
+            FTBL.qteBattleUtil(5, 0, 0, 0, 0);
+            QueueTogyuObjectCollapse(QDTG_HIBI, EVENT_CHARACTER_INVALID, 0);
+            QueueTogyuObjectCollapse(QDTG_YUKA, QDTG_HIBI, 64);
+            FTBL.EV_authSceneCtrl(-8);
+            FTBL.EV_authSceneCtrl(-11);
+            FTBL.EV_authSceneCtrl(QDTG_TOGS);
+            work->continuation = FinishAuthorThunk;
+            FTBL.HLib_SetCurrentTaskTo(Author1Callback);
+        } else {
+            work->state = 0;
+            FTBL.qteBattleUtil(5, 0, 0, 0, 0);
+            EVT_AT_CharaDisp(QDTG_YUKA, 193, 1);
+            EVT_AT_CharaDisp(QDTG_YUKB, 193, 0);
+            QueueTogyuObjectCollapse(QDTG_HIBI, EVENT_CHARACTER_INVALID, 0);
+            QueueTogyuObjectCollapse(QDTG_YUKA, QDTG_HIBI, 64);
+            FTBL.EV_authSceneCtrl(-8);
+            FTBL.EV_authSceneCtrl(-11);
+            FTBL.EV_authSceneCtrl(QDTG_TOGF);
+            *continuation = StartFloorBattleCallback;
+            FTBL.HLib_SetCurrentTaskTo(Author1Callback);
+        }
+    }
+}
+
+void StartFloorBattleCallback(void *data)
+{
+    int index;
+    EVT_AT_SetPos(QDTG_A896, QDTG_YUKB, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAng(QDTG_A896, QDTG_YUKB, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_CharaDisp(QDTG_A896, 0, 0);
+    EVT_AT_CharaDisp(QDTG_YUKB, 0, 1);
+    EVT_AT_SetMot(QDTG_TGY, QDTG_TOGYU_STUCK, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(qdtgCharacters[4], QDTG_SEE_STANCE, 0.0f, 1.0f, 0x20000000U, 0);
+    EVT_AT_SetAng(QDTG_RYO, EVENT_CHARACTER_INVALID, 0.0f, 180.0f, 0.0f, 0);
+    EVT_AT_SetAng(qdtgCharacters[3], EVENT_CHARACTER_INVALID, 0.0f, 15.996094f, 0.0f, 0);
+    EVT_AT_SetAng(qdtgCharacters[4], EVENT_CHARACTER_INVALID, 0.0f, 357.8302f, 0.0f, 0);
+    FTBL.shenStartFGST(10, 10, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(QDTG_RYO), 0, 0, 0, 0, 0);
+    for (index = 3; index < 5; index++)
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(qdtgCharacters[index]), 0, 1, 1, 200, 2);
+    FTBL.vfCopyPosFromEntity(0, 0, 195.8f, 173.8f, 6.5f);
+    FTBL.vfmQueueFightStart(3, 2, 1.0f, 1, -1);
+    FTBL.EV_vfBattleUtil(1, 2, 1);
+    FTBL.EV_LoadAudio("0282E000", 0);
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.HLib_SetCurrentTaskTo(FloorBattleCallback);
+}
+
+void FloorBattleCallback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    HLibTaskCallback *continuation = &work->continuation;
+    Vector3 ryo;
+    Vector3 togyu;
+    if (!FTBL.IsFightActive()) {
+        if (FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(QDTG_RYO)) == 3) {
+            FTBL.EV_stepSetFlags(QDTG_STEP_FLAG, 2);
+            FTBL.HLib_SetCurrentTaskTo(WinAuthorCallback);
+        } else {
+            EVT_IncrementQteFailureCount();
+            RestoreEventDateTime();
+            FTBL.Queue_ST_LoadTitleFadeIn(QDTG_RETRY_TITLE);
+            FTBL.HLib_SetCurrentTaskTo(RetryTogyuCallback);
+        }
+        EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+        EVT_AT_SetSample(0, 1, 0);
+        FTBL.HLib_SetupTaskDelay(60);
+    } else {
+        FTBL.GetCharaPosition(QDTG_RYO, EVENT_CHARACTER_INVALID, &ryo, 0x40000000U);
+        FTBL.GetCharaPosition(QDTG_TGY, EVENT_CHARACTER_INVALID, &togyu, 0x40000000U);
+        if (FTBL.CalculatePlanarDistanceBetweenPoints(&ryo, &togyu) < 1.0f) {
+            FTBL.check_dead_status(1);
+            EVT_IncrementQteFailureCount();
+            RestoreEventDateTime();
+            EVT_AT_SetPos(QDTG_SOY, QDTG_BASE, 1000.0f, 0.0f, 0.0f, 1);
+            EVT_AT_SetPos(QDTG_SEE, QDTG_BASE, 1000.0f, 0.0f, 0.0f, 1);
+            FTBL.EV_authSceneCtrl(QDTG_TOG0);
+            *continuation = RetryTogyuCallback;
+            FTBL.HLib_SetCurrentTaskTo(Author2Callback);
+        }
+    }
+}
+
+void WinAuthorCallback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    FTBL.EV_LoadCutsceneFromCurrentScene("0282E000");
+    FTBL.EV_LoadAudio("0282E000", 0);
+    EVT_AT_SetSample(0, 0, 0);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_authSceneCtrl(QDTG_WIN0);
+    work->continuation = FinishAuthorThunk;
+    FTBL.HLib_SetCurrentTaskTo(Author1Callback);
+}
+
+void Author1Callback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    HLibTaskCallback *continuation = &work->continuation;
+    if (FTBL.EV_authSceneCtrl(-6) == 1) {
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_RYO), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_REN), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_SOY), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_SEE), 1);
+    }
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.EV_authSceneCtrl(-7);
+        FTBL.EV_authSceneCtrl(-10);
+        EVT_AT_SetSample(0, 1, 0);
+        FTBL.HLib_SetCurrentTaskTo(*continuation);
+        FTBL.HLib_SetupTaskDelay(60);
+    }
+}
+
+void Author2Callback(void *data)
+{
+    QdtgEventWork *work = (QdtgEventWork *)data;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.Queue_ST_LoadTitleFadeIn(QDTG_RETRY_TITLE);
+        FTBL.EV_authSceneCtrl(-7);
+        FTBL.EV_authSceneCtrl(-10);
+        EVT_AT_SetSample(0, 1, 0);
+        FTBL.HLib_SetCurrentTaskTo(work->continuation);
+        FTBL.HLib_SetupTaskDelay(60);
+    }
+}
+
+void RetryTogyuCallback(void *data)
+{
+    FTBL.ST_LoadTitleFade();
+    FTBL.HLib_SetCurrentTaskTo(StartTogyuCallback);
+    FTBL.HLib_SetupTaskDelay(30);
+}
+
+void FinishAuthorThunk(void *data)
+{
+    FinishTogyuCallback(data);
+}
+
+void InitializeTogyu(QdtgEventWork *work)
+{
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    EVT_SetQteRetryFrames(24);
+    SaveEventDateTime();
+    work->state = 1;
+    work->characters = Queue_EVT_AT_ReadChr(work->task, qdtgCharacters);
+    work->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
+    work->savedNavi = FTBL.naviSetFlag(1);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"282E", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0282", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"QDTG", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "QDTG", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "QDTG", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0282");
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.SetWeatherUpdateEnabledTo(0);
+    FTBL.SetIsSkySetup(0);
+    FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+    FTBL.PushGlobalLightingProgram();
+    EVT_AT_SetPos(QDTG_YUKA, EVENT_CHARACTER_INVALID, 198.91f, 154.0f, 169.16f, 0);
+    EVT_AT_SetAngY(QDTG_YUKA, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(QDTG_HIBI, EVENT_CHARACTER_INVALID, 198.91f, 154.002f, 169.2f, 0);
+    EVT_AT_SetAngY(QDTG_HIBI, EVENT_CHARACTER_INVALID, 180.0f, 0);
+    FTBL.ApplyCharacterGeometryLighting(FTBL.ctrlGetCharaByName(QDTG_HIBI), 0);
+    FTBL.ApplyCharacterGeometryLighting(FTBL.ctrlGetCharaByName(QDTG_YUKA), 0);
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+}
+
+void CleanupTogyu(QdtgEventWork *work)
+{
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_RYO), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_REN), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_TGY), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_SOY), 0);
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(QDTG_SEE), 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QDTG_TGY));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QDTG_REN));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QDTG_RYO));
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0282");
+    FTBL.EV_ControlPackageResources(0, 6, "QDTG", 0, 0);
+    FTBL.EV_ControlPackageResources(0, 6, "0282", 0, 0);
+    FTBL.EV_ControlPackageResources(0, 6, "282E", 0, 0);
+    FTBL.naviSetFlag(work->savedNavi);
+    FTBL.DeleteMotion(work->motion);
+    ET_AT_KillWork(work->characters);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+}
+#endif
+#else
 #include "s2/areas/area_qdtg.hpp"
 #include "s2/author.hpp"
 #include "s2/battle_qte.hpp"
@@ -562,3 +1150,4 @@ void QdtgMain(std::uintptr_t argument) {
 }
 const ScriptAreaDefinition qdtgScriptDefinition{.areaId = AREA_QDTG, .field04 = 0, .init = QdtgInit, .main = QdtgMain};
 } // namespace shenmue::s2
+#endif

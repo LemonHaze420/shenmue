@@ -1,3 +1,354 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/qkqb_event.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void QkqbMain(void *argument)
+{
+    Queue_eQKQB_EVT_StartQKuro((const int *)argument);
+}
+#elif defined(SHENMUE_EVENT_QKQB_CUTS)
+int PlayQkqbIntro(shen_name enemy, int mode)
+{
+    int delay;
+    EVT_AT_SetPos(QKQB_RYO, QKQB_BASE, 5.2f, 0.0f, 1.2f, 0);
+    EVT_AT_SetAngY(QKQB_RYO, QKQB_BASE, 90.0f, 0);
+    EVT_AT_SetPos(enemy, QKQB_BASE, -1.3f, 0.0f, -12.3f, 0);
+    EVT_AT_SetAngY(enemy, QKQB_BASE, 180.0f, 0);
+    if (mode == 3)
+        EVT_AT_SetCam(7311, QKQB_BASE, QKQB_BASE, 0, 0, 125);
+    else
+        EVT_AT_SetCam(7305, QKQB_BASE, QKQB_BASE, 0, 0, 125);
+    EVT_AT_SetCam(7301, QKQB_BASE, QKQB_BASE, 0, 0, 0);
+    EVT_AT_SetCam(7304, QKQB_BASE, QKQB_BASE, 0, 0, 70);
+    EVT_AT_SetMot(QKQB_RYO, 0xf005, 2.0f, 1.0f, 0x40000000U, 0);
+    delay = EVT_AT_SetMot(QKQB_RYO, 8193, 2.0f, 1.0f, 0x20000000U, 120);
+    EVT_AT_SetMot(QKQB_RYO, 8194, 2.0f, 1.0f, 0x20000000U, delay);
+    EVT_AT_SetMot(enemy, 8219, 2.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetFaceLooks(QKQB_RYO, 1, 1, 1.0f, 0);
+    EVT_AT_SetFaceLooks(QKQB_REN, 1, 1, 1.0f, 0);
+    return delay + 80;
+}
+
+int PlayQkqbFailure(shen_name enemy, int mode)
+{
+    switch (mode) {
+    case 0:
+        EVT_AT_SetVoice("0299A003", 55);
+        EVT_AT_SetVoice("0299D001", 70);
+        EVT_AT_SetVoice("0299A007", 95);
+        break;
+    case 1:
+        EVT_AT_SetVoice("0299A004", 50);
+        EVT_AT_SetVoice("0299E001", 70);
+        EVT_AT_SetVoice("0299A009", 110);
+        break;
+    case 2:
+        EVT_AT_SetVoice("0299A003", 55);
+        EVT_AT_SetVoice("0299F001", 70);
+        EVT_AT_SetVoice("0299A010", 110);
+        break;
+    case 3:
+        EVT_AT_SetVoice("0299A003", 55);
+        EVT_AT_SetVoice("0299G001", 70);
+        EVT_AT_SetVoice("0299A011", 110);
+        break;
+    default:
+        EVT_AT_SetVoice("0299A004", 50);
+        EVT_AT_SetVoice("0299H001", 70);
+        EVT_AT_SetVoice("0299A012", 120);
+        break;
+    }
+    EVT_AT_SetPosAng(QKQB_RYO, QKQB_RYO, 0.0f, -0.3f, -90.0f, 0);
+    EVT_AT_SetPosAng(enemy, QKQB_RYO, -1.608f, -2.52417f, 0.0f, 0);
+    EVT_AT_SetCam(7302, QKQB_BASE, QKQB_BASE, 0, 0, 0);
+    EVT_AT_SetMot(QKQB_RYO, 8208, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(enemy, 8202, 0.0f, 1.0f, 0x40000000U, 0);
+    return 160;
+}
+
+int PlayQkqbSuccess(shen_name enemy, int mode)
+{
+    int frames;
+    Queue_EVT_AT_CtrlHandUp_1(QKQB_RYO, 0, (void *)areaLoopHandPoses[QKQB_OPEN_HAND_POSE], 10, 0);
+    Queue_EVT_AT_CtrlHandUp_1(QKQB_RYO, 1, (void *)areaLoopHandPoses[QKQB_CLOSED_HAND_POSE], 10, 0);
+    switch (mode) {
+    case 0:
+        frames = PlayQkqbSuccessCut0(enemy);
+        break;
+    case 1:
+        frames = PlayQkqbSuccessCut1(enemy);
+        break;
+    case 2:
+        frames = PlayQkqbSuccessCut2(enemy);
+        break;
+    case 3:
+        frames = PlayQkqbSuccessCut3(enemy);
+        break;
+    default:
+        frames = PlayQkqbSuccessCut4(enemy);
+        break;
+    }
+    return frames;
+}
+
+int PlayQkqbSuccessCut4(shen_name enemy)
+{
+    EVT_AT_SetPosAng(QKQB_RYO, QKQB_RYO, 0.0f, -0.3f, -90.0f, 0);
+    EVT_AT_SetPosAng(enemy, QKQB_RYO, -1.08371f, -1.93784f, 0.0f, 0);
+    EVT_AT_SetCam(7306, QKQB_BASE, QKQB_BASE, 0, 0, 0);
+    EVT_AT_SetMot(QKQB_RYO, 8207, 2.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(enemy, 8201, 2.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_DispBlur(QKQB_RYO, 1, 6, 1, 0, 10, 75);
+    EVT_AT_DispBlur(QKQB_RYO, 4, 12, 1, 0, 10, 105);
+    EVT_AT_DispBlur(QKQB_RYO, 1, 8, 1, 0, 5, 147);
+    EVT_AT_DispBlur(QKQB_RYO, 2, 6, 1, 0, 10, 201);
+    return 300;
+}
+
+int PlayQkqbSuccessCut2(shen_name enemy)
+{
+    EVT_AT_SetPosAng(QKQB_RYO, QKQB_RYO, 0.0f, -0.3f, -90.0f, 0);
+    EVT_AT_SetPosAng(enemy, QKQB_RYO, -1.49543f, -2.30519f, 0.0f, 0);
+    EVT_AT_SetCam(7307, QKQB_BASE, QKQB_BASE, 0, 0, 0);
+    EVT_AT_SetMot(QKQB_RYO, 8205, 70.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(enemy, 8200, 70.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_DispBlur(QKQB_RYO, 1, 6, 1, 0, 10, 62);
+    EVT_AT_DispBlur(QKQB_RYO, 1, 8, 1, 0, 12, 88);
+    return 170;
+}
+
+int PlayQkqbSuccessCut3(shen_name enemy)
+{
+    EVT_AT_SetPosAng(QKQB_RYO, QKQB_RYO, 0.0f, -0.3f, -90.0f, 0);
+    EVT_AT_SetPosAng(enemy, QKQB_RYO, -1.82542f, -2.21864f, 0.0f, 0);
+    EVT_AT_SetCam(7308, QKQB_BASE, QKQB_BASE, 0, 0, 0);
+    EVT_AT_SetMot(QKQB_RYO, 8206, 125.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(enemy, 8210, 125.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_DispBlur(QKQB_RYO, 1, 6, 1, 0, 10, 45);
+    EVT_AT_DispBlur(QKQB_RYO, 7, 12, 1, 0, 10, 60);
+    EVT_AT_DispBlur(QKQB_RYO, 1, 6, 1, 0, 10, 98);
+    return 150;
+}
+
+int PlayQkqbSuccessCut1(shen_name enemy)
+{
+    EVT_AT_SetPosAng(QKQB_RYO, QKQB_RYO, 0.0f, -0.3f, -90.0f, 0);
+    EVT_AT_SetPosAng(enemy, QKQB_RYO, -1.608f, -2.52417f, 0.0f, 0);
+    EVT_AT_SetCam(7309, QKQB_BASE, QKQB_BASE, 0, 0, 0);
+    EVT_AT_SetMot(QKQB_RYO, 8204, 60.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(enemy, 8199, 60.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_DispBlur(QKQB_RYO, 7, 12, 1, 0, 12, 75);
+    EVT_AT_DispBlur(QKQB_RYO, 1, 8, 1, 0, 10, 100);
+    return 200;
+}
+
+int PlayQkqbSuccessCut0(shen_name enemy)
+{
+    EVT_AT_SetPosAng(enemy, QKQB_RYO, 1.5f, -1.5f, 90.0f, 0);
+    EVT_AT_SetPosAng(enemy, enemy, 1.0f, 1.0f, 0.0f, 50);
+    EVT_AT_SetPosAng(QKQB_RYO, enemy, -0.5f, -1.5f, 180.0f, 50);
+    EVT_AT_SetCam(7310, QKQB_BASE, QKQB_BASE, 0, 0, 0);
+    EVT_AT_SetCam(7303, QKQB_BASE, QKQB_BASE, 0, 0, 50);
+    EVT_AT_SetMot(QKQB_RYO, 8196, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(QKQB_RYO, 8195, 2.0f, 1.0f, 0x40000000U, 50);
+    EVT_AT_SetMot(enemy, 8197, 0.0f, 1.0f, 0, 36);
+    EVT_AT_SetMot(enemy, 8198, 2.0f, 1.0f, 0x40000000U, 50);
+    EVT_AT_DispBlur(QKQB_RYO, 4, 12, 1, 0, 15, 20);
+    EVT_AT_DispBlur(QKQB_RYO, 1, 8, 1, 0, 10, 50);
+    return 100;
+}
+#else
+static const QKQBAuthoredEntry qkqbAuthoredEntries[] = {
+    {4, {216.1f, 0.0f, 145.8f}, 90.0f, {217.4f, 0.0f, 149.0f}, 5.0f, 1, 200, 2, {214.0f, 0.0f, 147.0f}, 90.0f, {16, 512, 0, 0}, 16, 24, 2},
+    {2, {247.5f, 0.0f, 149.3f}, 180.0f, {250.2f, 0.0f, 147.7f}, 5.0f, 1, 300, 2, {248.6f, 0.0f, 149.5f}, 180.0f, {4, 512, 256, 0}, 24, 36, 3},
+    {3, {250.4f, 0.0f, 165.5f}, 0.0f, {248.7f, 0.0f, 166.4f}, 3.0f, 1, 400, 2, {248.7f, 0.0f, 165.2f}, 0.0f, {256, 1, 256, 0}, 24, 36, 3},
+    {1, {199.8f, 0.0f, 176.4f}, 0.0f, {197.5f, 0.0f, 177.9f}, 5.0f, 1, 500, 5, {199.0f, 0.0f, 176.3f}, 0.0f, {256, 64, 1024, 0}, 24, 36, 3},
+    {0, {218.8f, 0.0f, 127.3f}, 270.0f, {217.6f, 0.0f, 124.2f}, 5.0f, 1, 600, 6, {219.0f, 0.0f, 125.9f}, -90.0f, {1024, 4, 4, 1024}, 32, 48, 4}};
+static const shen_name qkqbEnemyNames[] = {QKQB_KF5, QKQB_KR3, QKQB_KF2, QKQB_KF3, QKQB_BF7};
+static const int qkqbEntryPoints[] = {0, 1, 2, 3, 4};
+static const int qkqbAudioVariants[] = {0, 0, 1, 1, 2};
+static shen_name qkqbCharacterNames[] = {QKQB_RYO, QKQB_REN, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID,
+    EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID};
+
+void Queue_eQKQB_EVT_StartQKuro(const int *entry)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(eQKQB_EVT_StartQKuro_Callback, 4, 11, sizeof(QKQBEventWork), TASK_EVNT);
+    QKQBEventWork *work = (QKQBEventWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    if (entry)
+        work->entry = entry;
+    else
+        work->entry = &qkqbEntryPoints[g_entryPoint];
+    InitializeQkqbResources(work);
+    EventDebugRegister(QKQB_DEBUG_ID, QkqbDebugExitCallback, work, 2000000000);
+}
+
+void QkqbDebugExitCallback(void *data)
+{
+    FinishQkqbEvent((QKQBEventWork *)data);
+}
+
+void FinishQkqbEvent(QKQBEventWork *work)
+{
+    CleanupQkqbResources(work);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    EventDebugUnregister(QKQB_DEBUG_ID);
+    if (g_currentMap == QKQB_AREA) {
+        FTBL.scenSetTaskFlags(6);
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+    }
+}
+
+void eQKQB_EVT_StartQKuro_Callback(void *data)
+{
+    QKQBEventWork *work = (QKQBEventWork *)data;
+    const QKQBAuthoredEntry *authored = work->authored;
+    int delay;
+    EventDebugCheck(QKQB_DEBUG_ID, 4);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(QKQB_RYO));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QKQB_RYO), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(QKQB_RYO), 1, 1, 0);
+    Queue_EVT_AT_CtrlHandUp_1(QKQB_RYO, 0, (void *)areaLoopHandPoses[QKQB_OPEN_HAND_POSE], 0, 0);
+    Queue_EVT_AT_CtrlHandUp_1(QKQB_RYO, 1, (void *)areaLoopHandPoses[QKQB_OPEN_HAND_POSE], 0, 0);
+    FTBL.AT_SetLocalBaseChara(QKQB_DUMMY_RYO, QKQB_RYO);
+    EVT_AT_SetPos(QKQB_BASE, EVENT_CHARACTER_INVALID, authored->basePosition.x, work->playerY, authored->basePosition.z, 0);
+    EVT_AT_SetAngY(QKQB_BASE, EVENT_CHARACTER_INVALID, authored->baseYaw, 0);
+    EVT_AT_SetPos(QKQB_DUMMY_RYO, QKQB_RYO, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QKQB_DUMMY_RYO, QKQB_RYO, 0.0f, 0);
+    EVT_AT_SetPos(QKQB_REN, QKQB_BASE, 1000.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(QKQB_REN, QKQB_BASE, 0.0f, 0);
+    FTBL.EV_LoadAudio("0299E000", qkqbAudioVariants[*work->entry]);
+    EVT_AT_SetSample(0, 0, 0);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    delay = PlayQkqbIntro(qkqbCharacterNames[2], authored->cutMode);
+    FTBL.qteBattleUtil(0, 0, 0, 0, 0);
+    FTBL.qteBattleUtil(2, 0, 0, 0, 0);
+    FTBL.qteBattleUtil(9, authored->commands[0], authored->commands[1], authored->commands[2], authored->commands[3]);
+    FTBL.qteBattleUtil(10, 0, 0, 0, 0);
+    EVT_AT_QTE(0, authored->maximumQteFrames, 0, delay, 4);
+    FTBL.HLib_SetCurrentTaskTo(eQKQB_EVT_WaitQTE_Callback);
+    FTBL.HLib_SetupTaskDelay(delay);
+}
+
+void eQKQB_EVT_WaitQTE_Callback(void *data)
+{
+    const QKQBAuthoredEntry *authored = ((QKQBEventWork *)data)->authored;
+    int delay;
+    if (FTBL.qteBattleUtil(4, 0, 0, 0, 0)) {
+        if (FTBL.qteBattleUtil(6, 0, 0, 0, 0) == authored->requiredCommands) {
+            delay = PlayQkqbSuccess(qkqbCharacterNames[2], authored->cutMode);
+            EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, delay);
+            EVT_AT_SetSample(0, 1, delay);
+            FTBL.qteBattleUtil(5, 0, 0, 0, 0);
+            FTBL.HLib_SetCurrentTaskTo(eQKQB_EVT_EndQKuro_Callback);
+            FTBL.HLib_SetupTaskDelay(delay + 60);
+        } else {
+            delay = PlayQkqbFailure(qkqbCharacterNames[2], authored->cutMode);
+            FTBL.qteBattleUtil(5, 0, 0, 0, 0);
+            FTBL.HLib_SetCurrentTaskTo(eQKQB_EVT_StartBattle_Callback);
+            FTBL.HLib_SetupTaskDelay(delay);
+        }
+    }
+}
+
+void eQKQB_EVT_StartBattle_Callback(void *data)
+{
+    const QKQBAuthoredEntry *authored = ((QKQBEventWork *)data)->authored;
+    int index;
+    FTBL.shenStartFGST(10, 10, 0, 0);
+    FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(QKQB_RYO), 0, 0, 0, 0, 0);
+    EVT_AT_SetPos(QKQB_RYO, QKQB_RYO, 0.0f, 0.2f, 0.0f, 0);
+    for (index = 0; index < authored->enemyCount; index++) {
+        EVT_AT_SetPos(qkqbCharacterNames[index + 2], qkqbCharacterNames[index + 2], 0.0f, 0.2f, 0.0f, 0);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(qkqbCharacterNames[index + 2]), 0, 1, 1, authored->enemyHp, authored->fightStyle);
+    }
+    FTBL.vfCopyPosFromEntity(0, 0, authored->battlePosition.x, authored->battlePosition.z, authored->battleRadius);
+    FTBL.EV_vfBattleUtil(3, 0x80, 1);
+    FTBL.vfmQueueFightStart(authored->enemyCount + 1, 2, 1.0f, 1, -1);
+    FTBL.EV_vfBattleUtil(1, 2, 1);
+    FTBL.HLib_SetCurrentTaskTo(eQKQB_EVT_PlayBattle_Callback);
+}
+
+void eQKQB_EVT_PlayBattle_Callback(void *data)
+{
+    QKQBEventWork *work = (QKQBEventWork *)data;
+    const QKQBAuthoredEntry *authored = work->authored;
+    if (FTBL.IsFightActive())
+        return;
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+    EVT_AT_SetSample(0, 1, 0);
+    if (FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(QKQB_RYO)) == 3) {
+        EVT_AT_SetPos(QKQB_RYO, EVENT_CHARACTER_INVALID, authored->returnPosition.x, work->playerY, authored->returnPosition.z, 30);
+        EVT_AT_SetAngY(QKQB_RYO, EVENT_CHARACTER_INVALID, authored->returnYaw, 30);
+        EVT_AT_SetMot(QKQB_RYO, 0xf003, 1.0f, 1.0f, 0x40000000U, 30);
+        FTBL.HLib_SetCurrentTaskTo(eQKQB_EVT_EndQKuro_Callback);
+    } else {
+        EVT_IncrementQteFailureCount();
+        RestoreEventDateTime();
+        FTBL.Queue_ST_LoadTitleFadeIn(QKQB_RETRY_TITLE);
+        FTBL.HLib_SetCurrentTaskTo(eQKQB_EVT_RetryQKuro_Callback);
+    }
+    FTBL.HLib_SetupTaskDelay(60);
+}
+
+void eQKQB_EVT_RetryQKuro_Callback(void *data)
+{
+    FTBL.ST_LoadTitleFade();
+    FTBL.HLib_SetCurrentTaskTo(eQKQB_EVT_StartQKuro_Callback);
+    FTBL.HLib_SetupTaskDelay(30);
+}
+
+void eQKQB_EVT_EndQKuro_Callback(void *data)
+{
+    FinishQkqbEvent((QKQBEventWork *)data);
+}
+
+void InitializeQkqbResources(QKQBEventWork *work)
+{
+    Vector3 position;
+    int index;
+    work->authored = &qkqbAuthoredEntries[*work->entry];
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    EVT_SetQteRetryFrames(work->authored->retryQteFrames);
+    SaveEventDateTime();
+    for (index = 0; index < work->authored->enemyCount; index++)
+        qkqbCharacterNames[index + 2] = qkqbEnemyNames[*work->entry];
+    work->characters = Queue_EVT_AT_ReadChr(work->task, qkqbCharacterNames);
+    work->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "ZAKO.MOT");
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"QKQB", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "QKQB", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "QKQB", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0299");
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0299E000");
+    FTBL.SetRenderClockAndCompassTo(1);
+    FTBL.SetLoadingBusy();
+    FTBL.GetCharaPosition(QKQB_RYO, 0xffffffffU, &position, 0x40000000U);
+    work->playerY = position.y;
+}
+
+void CleanupQkqbResources(QKQBEventWork *work)
+{
+    const QKQBAuthoredEntry *authored = work->authored;
+    EVT_AT_SetPos(QKQB_RYO, EVENT_CHARACTER_INVALID, authored->returnPosition.x, work->playerY, authored->returnPosition.z, 0);
+    EVT_AT_SetAngY(QKQB_RYO, EVENT_CHARACTER_INVALID, authored->returnYaw, 0);
+    EVT_AT_SetMot(QKQB_RYO, 0xf003, 1.0f, 1.0f, 0x40000000U, 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(QKQB_RYO));
+    FTBL.FinishLoading();
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0299");
+    FTBL.EV_ControlPackageResources(0, 6, "QKQB", 0, 0);
+    FTBL.DeleteMotion(work->motion);
+    ET_AT_KillWork(work->characters);
+    EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+}
+#endif
+#else
 #include "s2/qkqb_event.hpp"
 #include "s2/author.hpp"
 #include "s2/battle_qte.hpp"
@@ -330,3 +681,4 @@ void eQKQB_EVT_EndQKuro_Callback(void *data) {
     }
 }
 } // namespace shenmue::s2
+#endif

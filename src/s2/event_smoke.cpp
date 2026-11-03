@@ -1,3 +1,97 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_smoke.hpp"
+
+typedef struct SmokeProfile {
+    Vector3 volume, velocity, variance;
+    int count;
+    float birthFraction, initialScale, width, height;
+    int red, green, blue, falloff, fade;
+} SmokeProfile;
+
+const SmokeProfile smokeProfiles[] = {
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.014509805f, 0.0f, 0.014117648f}, 100, 0.1f, 0.35490197f, 2.235294f, 2.4313726f, 192, 186, 130, 156, 35},
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.023921568f, 0.0f, 0.016078431f}, 100, 0.05f, 0.12156863f, 5.3333335f, 3.137255f, 248, 240, 161, 122, 62},
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.007058824f, 0.0f, 0.0050980393f}, 100, 0.1f, 0.29607844f, 0.74509805f, 1.372549f, 255, 255, 255, 255, 64},
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.007058824f, 0.0f, 0.0050980393f}, 100, 0.1f, 0.29411766f, 0.74509805f, 1.372549f, 255, 254, 176, 255, 64}};
+
+void QueueEventSmoke(int profile, shen_name character, unsigned int bone, int delay, int startDelay, int remaining, int finishDelay)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(EventSmokeCallback, 6, 11, sizeof(EventSmokeWork), TASK_EVNT);
+    EventSmokeWork *work;
+    if (delay > 0)
+        FTBL.HLib_SetupTimedTask(task, delay);
+    work = (EventSmokeWork *)FTBL.HLib_GetTaskParameter(task);
+    work->profile = profile;
+    work->character = character;
+    work->bone = bone;
+    work->startDelay = startDelay;
+    work->remaining = remaining;
+    work->finishDelay = finishDelay;
+    work->state = 0;
+    work->birthFraction = smokeProfiles[profile].birthFraction;
+    if (remaining <= 0)
+        work->birthStep = work->birthFraction;
+    else
+        work->birthStep = work->birthFraction / remaining;
+}
+
+void EventSmokeCallback(void *data)
+{
+    EventSmokeWork *work = (EventSmokeWork *)data;
+    switch (work->state) {
+    case 0:
+        CreateEventSmokeAtCharacter(work);
+        break;
+    case 1:
+        FadeEventSmoke(work);
+        break;
+    case 2:
+        FreeEventSmoke(work);
+        break;
+    }
+}
+
+void CreateEventSmokeAtCharacter(EventSmokeWork *work)
+{
+    Vector3 position;
+    int profile = work->profile;
+    if (work->bone == -1)
+        FTBL.GetCharaPosition(work->character, -1, &position, 0x40000000);
+    else
+        FTBL.GetCharaPosition(work->character, work->bone, &position, 0x40000000);
+    work->effect = FTBL.CreateSmokeEffect(&position, &smokeProfiles[profile].volume, smokeProfiles[profile].count, smokeProfiles[profile].birthFraction, 0, 0);
+    FTBL.SetParticleEffectVelocity(0, work->effect, &smokeProfiles[profile].velocity, &smokeProfiles[profile].variance);
+    FTBL.SetParticleEffectSize(0, work->effect, smokeProfiles[profile].width, smokeProfiles[profile].height);
+    FTBL.SetParticleEffectColour(0, work->effect, 0, smokeProfiles[profile].red, smokeProfiles[profile].green, smokeProfiles[profile].blue);
+    FTBL.SetParticleEffectInitialScale(0, work->effect, smokeProfiles[profile].initialScale);
+    FTBL.SetSmokeEffectFalloff(work->effect, smokeProfiles[profile].falloff);
+    FTBL.SetSmokeEffectFadeFactor(work->effect, smokeProfiles[profile].fade);
+    FTBL.ResumeParticleEffect(0, work->effect);
+    work->state++;
+    if (work->startDelay > 0)
+        FTBL.HLib_SetupTaskDelay(work->startDelay);
+}
+
+void FadeEventSmoke(EventSmokeWork *work)
+{
+    if (work->remaining-- > 0) {
+        work->birthFraction -= work->birthStep;
+        FTBL.SetParticleEffectBirthRate(0, work->effect, work->birthFraction);
+    } else {
+        work->birthFraction = 0.0f;
+        FTBL.SetParticleEffectBirthRate(0, work->effect, 0.0f);
+        work->state++;
+        if (work->finishDelay > 0)
+            FTBL.HLib_SetupTaskDelay(work->finishDelay);
+    }
+}
+
+void FreeEventSmoke(EventSmokeWork *work)
+{
+    FTBL.FreeParticleEffect(0, work->effect);
+    FTBL.HLib_DestroyCurrentTask();
+}
+#else
 #include "s2/event_smoke.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/hlib.hpp"
@@ -82,3 +176,4 @@ void EventSmokeCallback(void *parameter) {
     }
 }
 } // namespace shenmue::s2
+#endif

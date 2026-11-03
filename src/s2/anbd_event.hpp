@@ -1,5 +1,14 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+#define ANBD_BOARD_CHARACTER SHEN_NAME4('b', 'r', 'd', '_')
+#define ANBD_RECURSIVE_XYZ 0x78000000U
+void ANBDMain(void);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "common/math.hpp"
 
@@ -24,3 +33,4 @@ void ANBDMain(std::uintptr_t argument);
 extern const ScriptAreaDefinition anbdScriptDefinition;
 
 } // namespace shenmue::s2
+#endif

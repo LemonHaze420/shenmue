@@ -1,4 +1,71 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/common/et_street_debug.h"
+#include "s2/areas/common/et_plural_control.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define SFWF_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define SFWF_CHN SHEN_NAME4('C', 'H', 'N', '_')
+#define SFWF_CYC SHEN_NAME4('C', 'Y', 'C', '_')
+#define SFWF_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define SFWF_EEN SHEN_NAME4('E', 'E', 'N', '_')
+#define SFWF_SFA SHEN_NAME4('S', 'F', 'A', '_')
+#define SFWF_FIGHTER SHEN_NAME4('S', 'F', '6', '_')
+#define SFWF_PROP_A428 SHEN_NAME4('a', '4', '2', '8')
+#define SFWF_PROP_A118 SHEN_NAME4('a', '1', '1', '8')
+#define SFWF_AUTHOR_0 SHEN_NAME4('A', 'U', '_', '0')
+#define SFWF_AUTHOR_1 SHEN_NAME4('A', 'U', '_', '1')
+#define SFWF_AUTHOR_2 SHEN_NAME4('A', 'U', '_', '2')
+#define SFWF_INVALID 0xffffffffU
+#define SFWF_STAG SHEN_NAME4('S', 'T', 'A', 'G')
+#define SFWF_EEN_CAMERA SHEN_NAME4('d', 'a', 'm', 'B')
+#define SFWF_RETRY_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+#define SFWF_OMAKE_SCENE SHEN_NAME4('O', 'M', 'A', 'K')
+#define SFWF_QRON_SCENE SHEN_NAME4('Q', 'R', '0', '0')
+#define SFWF_OPEN_HAND_POSE 11
+
+typedef struct SfwfAuthorWork {
+    HLibTask *task;
+    int reserved04;
+    shen_name author;
+    short state;
+} SfwfAuthorWork;
+typedef struct SfwfAuthorLoopWork {
+    SfwfAuthorWork *parent;
+    short frame;
+} SfwfAuthorLoopWork;
+
+#define sfwfOpenHandPose ((void *)areaLoopHandPoses[SFWF_OPEN_HAND_POSE])
+
+void SfwfMain(StreetFightStartParameters *start);
+void QueueAuthor(shen_name author);
+void AuthorMainCallback(void *data);
+void QueueAuthorLoop(SfwfAuthorWork *work);
+void AuthorLoopCallback(void *data);
+void BeginAuthor(void);
+void EndAuthor(SfwfAuthorWork *work);
+void PrepareAuthorCharacters(void);
+void RestoreAuthorCharacters(void);
+void HideAuthorCharacter(shen_name character);
+void ShowAuthorCharacter(shen_name character);
+void HideAuthorProp(shen_name prop);
+void ShowAuthorProp(shen_name prop);
+void QueueNormal(StreetFightStartParameters *start);
+void LoadNormalResources(StreetFightEventWork *work);
+void PlaceNormal(StreetFightEventWork *work);
+void UnparentStreetFightCharacter(shen_name character);
+StreetFightEventWork *InitializeNormal(HLibTask *task);
+void MainCallback(void *data);
+int DefeatConversation(void *data);
+void RetryBeginCallback(void *data);
+void RetryChoiceCallback(void *data);
+void RetryResetCallback(void *data);
+void RetryCancelCallback(void *data);
+void NormalDebugCallback(void *data);
+void CleanupNormalCallback(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/street_fight_event.hpp"
 #include "s2/event_characters.hpp"
@@ -84,3 +151,4 @@ inline constexpr char SFWF_FINAL_ROUND_TEXT[] = "\xa1\xd6\xa3\xc6\xa3\xc9\xa3\xc
 inline constexpr shen_name SFWF_RETRY_TITLE{SHEN_NAME(RTR2)}, SFWF_EXIT_AREA{SHEN_NAME(QR00)}, SFWF_MINIGAME_AREA{SHEN_NAME(OMAK)};
 extern const ScriptAreaDefinition areaSfwfScriptDefinition;
 } // namespace shenmue::s2
+#endif

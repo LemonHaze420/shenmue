@@ -1,3 +1,64 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_q200.hpp"
+
+static int areaMainActive;
+
+void AreaMain(unsigned int startParameters)
+{
+    areaMainActive = 1;
+    FTBL.HLib_EnqueueTaskWithoutParameter(Q200MainloopNullsub, 4, 11, Q200_EVENT_TASK);
+    if (FTBL.EV_GetShenmueFlag(0xff))
+        AreaCleanup(1);
+    else
+        AreaCleanup(0);
+    FTBL.HLib_EnqueueTaskWithoutParameter(Q200FountainCallback, 3, 2, Q200_FOUNTAIN_TASK);
+    if (FTBL.EV_GetShenmueFlag(322) || FTBL.EV_GetShenmueFlag(270)) {
+        FTBL.EV_EnableCharacterDisplay(Q200_WORKER_1);
+        FTBL.EV_EnableCharacterDisplay(Q200_WORKER_2);
+        FTBL.EV_EnableCharacterDisplay(Q200_WORKER_3);
+        FTBL.EV_EnableCharacterDisplay(Q200_WORKER_4);
+    }
+    areaMainActive = 0;
+}
+
+void AreaCleanup(int afternoon)
+{
+    if (afternoon) {
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+        FTBL.PushGlobalLightingProgram();
+        FTBL.CheckIsArgEquZero(1, 1);
+        FTBL.SetObjectFlagByIndex(5, 1);
+    } else {
+        FTBL.CheckIsArgEquZero(1, 1);
+        FTBL.ReinitializeLights(1);
+        FTBL.SetLightFlagForIndex(0, 2);
+        FTBL.SetLightEntryIndex(0, 1);
+        FTBL.SetObjectFlagByIndex(5, 0);
+    }
+    Q200LoadSceneAssets(afternoon);
+}
+
+void Q200LoadSceneAssets(int afternoon)
+{
+    FTBL.EV_LoadCutsceneFromCurrentScene("Q200");
+    if (afternoon)
+        FTBL.EV_LoadAudio("Q200_000", 1);
+    else
+        FTBL.EV_LoadAudio("Q200_000", 0);
+}
+
+void Q200MainloopNullsub(void *taskData)
+{
+}
+
+void Q200FountainCallback(void *taskData)
+{
+    FTBL.nlSetTexanimUV(0.0f, 0.055f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(2));
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(3));
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(4));
+}
+#else
 #include "s2/areas/area_q200.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/hlib.hpp"
@@ -72,3 +133,4 @@ const GameplayAreaDefinition areaQ200GameplayDefinition{
 };
 
 } // namespace shenmue::s2::areas
+#endif

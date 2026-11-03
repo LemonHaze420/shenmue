@@ -1,4 +1,85 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/common/et_street_debug.h"
+#include "s2/areas/common/et_plural_control.h"
+
+#define SFSR_SF3 SHEN_NAME4('S', 'F', '3', '_')
+#define SFSR_SFB SHEN_NAME4('S', 'F', 'B', '_')
+#define SFSR_CHN SHEN_NAME4('C', 'H', 'N', '_')
+#define SFSR_AW5 SHEN_NAME4('A', 'W', '5', '_')
+#define SFSR_SHADER_CHARACTER SHEN_NAME4('a', '4', '3', '8')
+#define SFSR_LIGHT_LEFT SHEN_NAME4('L', 'G', 'T', '1')
+#define SFSR_LIGHT_CENTRE SHEN_NAME4('L', 'G', 'T', '2')
+#define SFSR_LIGHT_RIGHT SHEN_NAME4('L', 'G', 'T', '3')
+#define SFSR_SPOTLIGHT_TASK SHEN_NAME4('s', 'p', 'o', 't')
+#define SFSR_AUTH_INTRO SHEN_NAME4('A', 'U', '_', '0')
+#define SFSR_AUTH_DECLINE SHEN_NAME4('A', 'U', '_', '1')
+#define SFSR_AUTH_ACCEPT SHEN_NAME4('A', 'U', '_', '2')
+#define SFSR_AUTH_RESULT SHEN_NAME4('A', 'U', '_', '3')
+#define SFSR_LIGHT_001 SHEN_NAME4('l', '0', '0', '1')
+#define SFSR_LIGHT_012 SHEN_NAME4('l', '0', '1', '2')
+#define SFSR_LIGHT_023 SHEN_NAME4('l', '0', '2', '3')
+#define SFSR_LIGHT_204 SHEN_NAME4('l', '2', '0', '4')
+#define SFSR_RETRY_AREA SHEN_NAME4('O', 'M', 'A', 'K')
+#define SFSR_RETURN_AREA SHEN_NAME4('Q', 'R', '0', '0')
+#define SFSR_RETRY_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+
+typedef struct SfsrAuthorWork {
+    HLibTask *task;
+    int reserved04;
+    shen_name author;
+    short state;
+} SfsrAuthorWork;
+typedef struct SfsrAuthorLoopWork {
+    SfsrAuthorWork *parent;
+    int reserved04;
+} SfsrAuthorLoopWork;
+
+extern int sfsrSavedModelColour[4];
+extern StreetFightStartParameters *sfsrOwnerEntry;
+extern shen_name sfsrSpotlightSubjects[2];
+extern Vector3 sfsrSpotlightPositions[2];
+extern int sfsrSpotlightConfigured;
+
+void SfsrMain(StreetFightStartParameters *start);
+void QueueAuthor(shen_name author);
+void AuthorMainCallback(void *data);
+void QueueAuthorLoop(SfsrAuthorWork *work);
+void AuthorLoopCallback(void *data);
+void BeginAuthor(void);
+void EndAuthor(SfsrAuthorWork *work);
+void PrepareAuthorCharacters(void);
+void RestoreAuthorCharacters(void);
+void HideAuthorCharacter(shen_name character);
+void ShowAuthorCharacter(shen_name character);
+void HideAuthorProp(shen_name prop);
+void ShowAuthorProp(shen_name prop);
+void SetupSpotlights(void);
+void SpotlightCallback(void *data);
+void GetSpotlightRotation(const Vector3 *direction, Vector3i *rotation);
+void ResetSpotlightPositioned(void);
+shen_name GetSpotlightTarget(int index);
+void SetSpotlightTarget(int index, shen_name character);
+void QueueNormal(StreetFightStartParameters *start);
+void LoadNormalResources(StreetFightEventWork *work);
+void PlaceNormal(StreetFightEventWork *work);
+void UnparentStreetFightCharacter(shen_name character);
+StreetFightEventWork *InitializeNormal(HLibTask *task);
+void InitializeBattle(StreetFightEventWork *work);
+void MainCallback(void *data);
+int DefeatConversation(void *data);
+int RoundVictoryConversation(void *data);
+void RetryBeginCallback(void *data);
+void RetryChoiceCallback(void *data);
+void RetryResetCallback(void *data);
+void RetryCancelCallback(void *data);
+void NormalDebugCallback(void *data);
+void CleanupNormalCallback(void *data);
+void CleanupWaitCallback(void *data);
+void UpdateBattleQte(void);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/street_fight_event.hpp"
 #include "s2/event_characters.hpp"
@@ -62,3 +143,4 @@ inline constexpr Vector3 SFSR_LOSS_EXIT_POSITION{240.60000610351562f, 128.800003
 inline constexpr Vector3i SFSR_LOSS_EXIT_ROTATION{0, 16384, 0};
 extern const ScriptAreaDefinition areaSfsrScriptDefinition;
 } // namespace shenmue::s2
+#endif

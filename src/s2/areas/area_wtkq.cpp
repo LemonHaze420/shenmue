@@ -1,3 +1,360 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_wtkq.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void WtkqMain(void *argument)
+{
+    FTBL.SetScreenFilmFade(1, 0, 0, 0, 0, 255, 0, 0, 0);
+    FTBL.SetPlayerControlEnabled(0);
+    QueueClearNpcs(QueueWtkq, 0);
+}
+#else
+static shen_name wtkqCharacters[] = {WTKQ_RYO, WTKQ_KUN, WTKQ_III, WTKQ_SEE, WTKQ_SYG, WTKQ_TKM, EVENT_CHARACTER_INVALID};
+
+void QueueWtkq(void *argument)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(WtkqMainCallback, 4, 11, sizeof(WtkqWork), TASK_EVNT);
+    WtkqWork *work = (WtkqWork *)FTBL.HLib_GetTaskParameter(task);
+    *(int *)&work->phase = 0;
+    work->characters = 0;
+    work->qte[0] = 0;
+    work->qte[1] = 0;
+    work->qte[2] = 0;
+    work->qte[3] = 0;
+    work->task = task;
+    work->phase = 0;
+    work->step = 0;
+    work->characters = Queue_EVT_AT_ReadChr(task, wtkqCharacters);
+    EventDebugRegister(WTKQ_DEBUG_ID, WtkqEndCallback, work, 100000);
+}
+
+int WtkqInitialize(WtkqWork *work)
+{
+    EventDateTime date;
+    int slot;
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"WTKQ", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "WTKQ", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "WTKQ", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0146");
+    FTBL.EV_LoadCutsceneFromCurrentScene("0146A000");
+    FTBL.qteBattleUtil(8, 0, 6, 16, 0);
+    FTBL.qteBattleUtil(9, 16, 1024, 0, 0);
+    FTBL.qteBattleUtil(10, 0, 0, 0, 0);
+    FTBL.qteBattleUtil(1, 0, 0, 0, 0);
+    FTBL.qteBattleUtil(0, 0, 0, 0, 0);
+    FTBL.qteBattleUtil(2, 0, 0, 0, 0);
+    FTBL.SetDoorSubjectEnabled(WTKQ_DOOR, 0);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(WTKQ_RYO));
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(WTKQ_KUN));
+    FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(WTKQ_RYO));
+    FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(WTKQ_KUN));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(WTKQ_RYO), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(WTKQ_RYO), 1, 1, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(WTKQ_KUN), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(WTKQ_KUN), 1, 1, 0);
+    EVT_AT_CharaDisp(WTKQ_TABLE0, 0, 1);
+    EVT_AT_CharaDisp(WTKQ_TABLE1, 0, 1);
+    EVT_AT_CharaDisp(WTKQ_CHAIR0, 0, 1);
+    EVT_AT_CharaDisp(WTKQ_CHAIR1, 0, 1);
+    EVT_AT_CharaDisp(WTKQ_CHAIR2, 0, 1);
+    EVT_AT_CharaDisp(WTKQ_CHAIR3, 0, 1);
+    FTBL.SetMapModelDataDefaultVertexShader();
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    if (date.hour >= 19 && date.hour <= 24) {
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+        FTBL.PushGlobalLightingProgram();
+    } else {
+        FTBL.ReinitializeLights(1);
+        FTBL.SetLightFlagForIndex(0, 2);
+        FTBL.SetLightEntryIndex(0, 1);
+    }
+    FTBL.EV_lightLoad(WTKQ_LIGHT);
+    slot = 0;
+    while (FTBL.HasMapModelReader(slot))
+        slot++;
+    FTBL.AssignLightProgram(slot - 1);
+    FTBL.CreateEventCharacter(3, 0, WTKQ_BASE);
+    FTBL.CreateEventCharacter(3, 0, WTKQ_DUMMY);
+    EVT_AT_SetPos(WTKQ_BASE, EVENT_CHARACTER_INVALID, 266.7f, 115.3f, 329.2f, 0);
+    EVT_AT_SetAngY(WTKQ_BASE, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    work->phase = 4;
+    EventDebugCheck(WTKQ_DEBUG_ID, 4);
+    EVT_UTL_SaveDateTime();
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    return 0;
+}
+
+int WtkqFinish(WtkqWork *work)
+{
+    FTBL.spmFadeOut(0);
+    FTBL.HLib_SetCurrentTaskTo(WtkqEndCallback);
+    return 30;
+}
+
+void WtkqEndCallback(void *data)
+{
+    WtkqWork *work = (WtkqWork *)data;
+    FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(WTKQ_RYO));
+    FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(WTKQ_KUN));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(WTKQ_RYO));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(WTKQ_KUN));
+    FTBL.qteBattleUtil(5, 0, 0, 0, 0);
+    FTBL.ExecuteCleanupFuncForAreaWithCachedScene();
+    FTBL.SetDoorSubjectEnabled(WTKQ_DOOR, 1);
+    EVT_AT_CharaDisp(WTKQ_TABLE0, 0, 0);
+    EVT_AT_CharaDisp(WTKQ_TABLE1, 0, 0);
+    EVT_AT_CharaDisp(WTKQ_CHAIR0, 0, 0);
+    EVT_AT_CharaDisp(WTKQ_CHAIR1, 0, 0);
+    EVT_AT_CharaDisp(WTKQ_CHAIR2, 0, 0);
+    EVT_AT_CharaDisp(WTKQ_CHAIR3, 0, 0);
+    FTBL.SetScenarioCharacterKillMode(WTKQ_BASE, 1);
+    FTBL.SetScenarioCharacterKillMode(WTKQ_DUMMY, 1);
+    ET_AT_KillWork(work->characters);
+    EventDebugUnregister(WTKQ_DEBUG_ID);
+    FTBL.EV_FreeAuthorPak(0, "0146");
+    FTBL.EV_ControlPackageResources(0, 6, "WTKQ", 0, 0);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    FTBL.scenFreeEvent("WTKQ.EV3");
+    FTBL.EnterDoorSubscene(0);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.EV_stepSetFlags(512, 0);
+}
+
+void WtkqMainCallback(void *data)
+{
+    WtkqWork *work = (WtkqWork *)data;
+    int delay = 0;
+    switch (work->phase) {
+    case 0:
+        delay = WtkqInitialize(work);
+        break;
+    case 4:
+        delay = WtkqStartAuthor(work);
+        break;
+    case 2:
+        delay = WtkqBattle(work);
+        break;
+    case 3:
+        delay = WtkqRetry(work);
+        break;
+    case 1:
+        delay = WtkqWin(work);
+        break;
+    case 5:
+        delay = WtkqEndAuthor(work);
+        break;
+    case 6:
+        delay = WtkqFinish(work);
+        break;
+    }
+    if (delay > 0)
+        FTBL.HLib_SetupTaskDelay(delay);
+}
+
+int WtkqBattle(WtkqWork *work)
+{
+    int delay = 0;
+    int result;
+    if (work->step == 0) {
+        FTBL.EV_LoadAudio("0146A000", 1);
+        EVT_AT_SetPos(WTKQ_RYO, WTKQ_BASE, 0.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetAngY(WTKQ_RYO, WTKQ_BASE, 180.0f, 0);
+        EVT_AT_SetPos(WTKQ_III, WTKQ_RYO, 0.4f, 0.0f, -1.7f, 0);
+        EVT_AT_SetAngY(WTKQ_III, WTKQ_RYO, 0.0f, 0);
+        EVT_AT_SetMot(WTKQ_RYO, 9227, 0.0f, 0.8f, 0x40000000U, 0);
+        EVT_AT_SetMot(WTKQ_III, 9228, 0.0f, 0.8f, 0x40000000U, 0);
+        EVT_AT_SetCam(4000, WTKQ_BASE, WTKQ_BASE, 0, delay, delay);
+        EVT_AT_QTE(0, 16, 0, 20, 4);
+        work->step++;
+        delay = 20;
+    } else {
+        result = FTBL.qteBattleUtil(4, 0, 0, 0, 0);
+        if (result) {
+            if (result == 1)
+                work->phase = 1;
+            else
+                work->phase = 3;
+            work->step = 0;
+        }
+    }
+    return delay;
+}
+
+int WtkqRetry(WtkqWork *work)
+{
+    EVT_AT_SetPos(WTKQ_III, WTKQ_RYO, 0.4f, 0.0f, -1.7f, 0);
+    EVT_AT_SetAngY(WTKQ_III, WTKQ_RYO, 0.0f, 0);
+    EVT_AT_SetMot(WTKQ_RYO, 9227, 15.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(WTKQ_III, 9228, 15.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetCam(4500, WTKQ_BASE, WTKQ_BASE, 0, 0, 0);
+    EVT_AT_SetVoice("0146A012", 5);
+    EVT_AT_SetVoice("0146C011", 30);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 60);
+    work->phase = 4;
+    return 150;
+}
+
+int WtkqWin(WtkqWork *work)
+{
+    EVT_AT_CharaDisp(WTKQ_OTAM, 0, 1);
+    EVT_AT_CharaDisp(WTKQ_FLYP, 0, 1);
+    EVT_AT_CharaDisp(WTKQ_SYG, 0, 1);
+    EVT_AT_CharaDisp(WTKQ_TKM, 0, 1);
+    Queue_EVT_AT_Cling(WTKQ_OTAM, 0, 0, 0, 0, 0, 1);
+    Queue_EVT_AT_Cling(WTKQ_FLYP, 0, 0, 0, 0, 0, 1);
+    EVT_AT_SetPos(WTKQ_RYO, WTKQ_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(WTKQ_RYO, WTKQ_BASE, 180.0f, 0);
+    EVT_AT_SetPos(WTKQ_III, WTKQ_RYO, 0.1f, 0.0f, -2.6f, 0);
+    EVT_AT_SetAngY(WTKQ_III, WTKQ_RYO, 0.0f, 0);
+    EVT_AT_SetPos(WTKQ_SEE, WTKQ_RYO, 0.5f, 0.0f, -1.3f, 40);
+    EVT_AT_SetAngY(WTKQ_SEE, WTKQ_RYO, 0.0f, 40);
+    EVT_AT_SetMot(WTKQ_RYO, 9223, 40.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(WTKQ_RYO, 9224, 140.0f, 1.0f, 0x40000000U, 40);
+    EVT_AT_SetMot(WTKQ_III, 9219, 40.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(WTKQ_SEE, 9222, 100.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetCam(1000, WTKQ_BASE, WTKQ_BASE, 0, 0, 0);
+    EVT_AT_SetCam(1001, WTKQ_BASE, WTKQ_BASE, 0, 0, 40);
+    EVT_AT_SetCam(1002, WTKQ_BASE, WTKQ_BASE, 0, 0, 70);
+    EVT_AT_DispBlur(WTKQ_RYO, 1, 10, 3, 0, 50, 10);
+    EVT_AT_SetFaceLooks(WTKQ_RYO, 1, 16, 1.0f, 0);
+    Queue_EVT_AT_CtrlHandUp_1(WTKQ_RYO, 0, (void *)areaLoopHandPoses[WTKQ_RYO_QTE_HAND_POSE], 0, 0);
+    Queue_EVT_AT_CtrlHandUp_1(WTKQ_RYO, 1, (void *)areaLoopHandPoses[WTKQ_RYO_QTE_HAND_POSE], 0, 0);
+    Queue_EVT_AT_CtrlHandUp_1(WTKQ_KUN, 0, (void *)areaLoopHandPoses[WTKQ_KUN_GRIP_HAND_POSE], 0, 0);
+    Queue_EVT_AT_CtrlHandUp_1(WTKQ_KUN, 1, (void *)areaLoopHandPoses[WTKQ_KUN_GRIP_HAND_POSE], 0, 0);
+    EVT_AT_SetVoice("0146A013", 10);
+    EVT_AT_SetVoice("0146D015", 50);
+    QueueSkQteWait(work->qte, 256, 24, 20, WtkqQteSuccess, WtkqQteFailure, 70);
+    work->phase = 5;
+    return 0;
+}
+
+int WtkqQteSuccess(void)
+{
+    Vector3 position;
+    Vector3i rotation;
+    position.x = 0.058f;
+    position.y = -0.037f;
+    position.z = -0.023f;
+    rotation.x = 26068;
+    rotation.y = 0xb778;
+    rotation.z = 0xc78a;
+    Queue_EVT_AT_Cling(WTKQ_FLYP, WTKQ_KUN, 14, &position, &rotation, 0, 0);
+    EVT_AT_CharaDisp(WTKQ_FLYP, 0, 0);
+    EVT_AT_SetAngY(WTKQ_RYO, WTKQ_RYO, -75.5f, 0);
+    EVT_AT_SetPos(WTKQ_III, WTKQ_RYO, 1.7f, 0.0f, 0.8f, 0);
+    EVT_AT_SetAngY(WTKQ_III, WTKQ_RYO, 0.0f, 0);
+    EVT_AT_SetPos(WTKQ_KUN, WTKQ_RYO, 2.6f, 0.0f, 1.3f, 0);
+    EVT_AT_SetAngY(WTKQ_KUN, WTKQ_RYO, 0.0f, 0);
+    EVT_AT_SetMot(WTKQ_RYO, 9225, 60.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(WTKQ_III, 9220, 60.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(WTKQ_KUN, 9217, 60.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetVoice("0146F021", 145);
+    EVT_AT_SetCam(2000, WTKQ_BASE, WTKQ_BASE, 0, 0, 0);
+    EVT_AT_SetCam(2001, WTKQ_BASE, WTKQ_BASE, 0, 0, 60);
+    EVT_AT_SetCam(2002, WTKQ_BASE, WTKQ_BASE, 0, 0, 110);
+    EVT_AT_DispBlur(WTKQ_RYO, 4, 20, 1, 0, 30, 0);
+    EVT_AT_SetFaceLooks(WTKQ_KUN, 0, 15, 1.0f, 110);
+    EVT_AT_SetFaceLooks(WTKQ_KUN, 19, 30, 1.0f, 145);
+    EVT_AT_SetVoice("0146C015", 15);
+    EVT_AT_SetVoice("0146C013", 30);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 200);
+    return 230;
+}
+
+int WtkqQteFailure(void)
+{
+    Vector3 position;
+    Vector3i rotation;
+    position.x = 0.05f;
+    position.y = -0.04f;
+    position.z = -0.04f;
+    rotation.x = 20534;
+    rotation.y = 0xe432;
+    rotation.z = 0xe38e;
+    Queue_EVT_AT_Cling(WTKQ_OTAM, WTKQ_KUN, 14, &position, &rotation, 0, 0);
+    EVT_AT_CharaDisp(WTKQ_OTAM, 0, 0);
+    EVT_AT_SetAngY(WTKQ_RYO, WTKQ_RYO, 112.5f, 0);
+    EVT_AT_SetPos(WTKQ_III, WTKQ_RYO, -1.6f, 0.0f, -0.7f, 0);
+    EVT_AT_SetAngY(WTKQ_III, WTKQ_RYO, 0.0f, 0);
+    EVT_AT_SetPos(WTKQ_KUN, WTKQ_RYO, -3.8f, 0.0f, 0.4f, 0);
+    EVT_AT_SetAngY(WTKQ_KUN, WTKQ_RYO, 0.0f, 0);
+    EVT_AT_SetPos(WTKQ_DUMMY, WTKQ_BASE, 0.0f, 1.9f, -0.6f, 0);
+    EVT_AT_SetAngY(WTKQ_DUMMY, WTKQ_BASE, 0.0f, 0);
+    EVT_AT_SetMot(WTKQ_RYO, 9226, 60.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(WTKQ_III, 9221, 60.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(WTKQ_KUN, 9218, 60.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetVoice("0146C012", 10);
+    EVT_AT_SetVoice("0146F019", 115);
+    EVT_AT_SetVoice("0146C015", 170);
+    EVT_AT_SetVoice("0146F020", 240);
+    Queue_EVT_AT_CtrlHandUp_1(WTKQ_KUN, 0, (void *)areaLoopHandPoses[WTKQ_KUN_FAILURE_HAND_POSE], 8, 0);
+    EVT_AT_SetCam(3000, WTKQ_BASE, WTKQ_BASE, 0, 0, 0);
+    EVT_AT_SetCam(3001, WTKQ_BASE, WTKQ_BASE, 0, 0, 75);
+    EVT_AT_SetCam(3002, WTKQ_BASE, WTKQ_BASE, 0, 0, 150);
+    EVT_AT_SetCam(3003, WTKQ_BASE, WTKQ_BASE, 0, 0, 240);
+    EVT_AT_DispBlur(WTKQ_RYO, 1, 20, 2, 0, 20, 160);
+    EVT_AT_SetFaceLooks(WTKQ_RYO, 6, 16, 1.0f, 30);
+    EVT_AT_SetFaceLooks(WTKQ_RYO, 1, 16, 1.0f, 160);
+    EVT_AT_SetFaceLooks(WTKQ_KUN, 1, 16, 1.0f, 60);
+    EVT_AT_SetFaceLooks(WTKQ_KUN, 19, 16, 1.0f, 240);
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 315);
+    return 345;
+}
+
+int WtkqStartAuthor(WtkqWork *work)
+{
+    FTBL.EV_LoadCutsceneFromCurrentScene("0146A000");
+    FTBL.EV_LoadAudio("0146A000", 0);
+    FTBL.EV_spmBeginSampleExecute(0);
+    EVT_AT_CharaDisp(WTKQ_SYG, 0, 0);
+    EVT_AT_CharaDisp(WTKQ_TKM, 0, 0);
+    EVT_UTL_RestoreDateTime();
+    QueueSkAuthorStart(work->task, WTKQ_AUTHOR_START, 0, 0, 0);
+    work->phase = 2;
+    return 0;
+}
+
+int WtkqEndAuthor(WtkqWork *work)
+{
+    EventDateTime date;
+    int slot;
+    FTBL.SetMapModelDataDefaultVertexShader();
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    if (date.hour >= 19 && date.hour <= 24) {
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+        FTBL.PushGlobalLightingProgram();
+    } else {
+        FTBL.ReinitializeLights(1);
+        FTBL.SetLightFlagForIndex(0, 2);
+        FTBL.SetLightEntryIndex(0, 1);
+    }
+    FTBL.EV_lightLoad(WTKQ_END_LIGHT);
+    slot = 0;
+    while (FTBL.HasMapModelReader(slot))
+        slot++;
+    FTBL.AssignLightProgram(slot - 1);
+    if (date.hour < 19 || date.hour > 24)
+        FTBL.ReinitializeLights(1);
+    else
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+    FTBL.EV_LoadCutsceneFromCurrentScene("0146A020");
+    FTBL.EV_LoadAudio("0146A000", 2);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    EVT_AT_CharaDisp(WTKQ_OTAM, 0, 1);
+    EVT_AT_CharaDisp(WTKQ_FLYP, 0, 1);
+    Queue_EVT_AT_Cling(WTKQ_OTAM, 0, 0, 0, 0, 0, 1);
+    Queue_EVT_AT_Cling(WTKQ_FLYP, 0, 0, 0, 0, 0, 1);
+    QueueSkAuthorStart(work->task, WTKQ_AUTHOR_END, 0, 0, 0);
+    work->phase = 6;
+    return 0;
+}
+#endif
+#else
 #include "s2/areas/area_wtkq.hpp"
 #include "s2/author.hpp"
 #include "s2/battle_qte.hpp"
@@ -358,3 +715,4 @@ void WtkqEndCallback(void *data) {
 }
 const ScriptAreaDefinition wtkqScriptDefinition{.areaId = AREA_WTKQ, .field04 = 0, .init = WtkqInit, .main = WtkqMain};
 } // namespace shenmue::s2
+#endif

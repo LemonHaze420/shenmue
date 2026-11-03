@@ -1,4 +1,188 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_debug_dc.h"
+#include "s2/event_queued_dc.h"
+#include "s2/event_library_tail_dc.h"
+#include "s2/sk_event_dc.h"
+#include "s2/event_utility_dc.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define ARMW_AREA SHEN_NAME4('A', 'R', 'M', 'W')
+#define ARMW_TASK SHEN_NAME4('a', 'r', 'm', 'w')
+#define ARMW_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define ARMW_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define ARMW_MONEY SHEN_NAME4('a', '0', '1', '2')
+#define ARMW_BOX SHEN_NAME4('B', 'O', 'X', '_')
+#define ARMW_SHIYO SHEN_NAME4('S', 'Y', 'O', '_')
+#define ARMW_HONG SHEN_NAME4('H', 'N', 'G', '_')
+#define ARMW_SF8 SHEN_NAME4('S', 'F', '8', '_')
+#define ARMW_SFC SHEN_NAME4('S', 'F', 'C', '_')
+#define ARMW_KZN SHEN_NAME4('K', 'Z', 'N', '_')
+#define ARMW_SSY SHEN_NAME4('S', 'S', 'Y', '_')
+#define ARMW_SF2 SHEN_NAME4('S', 'F', '2', '_')
+#define ARMW_FRS SHEN_NAME4('F', 'R', 'S', '_')
+#define ARMW_MHK SHEN_NAME4('M', 'H', 'K', '_')
+#define ARMW_DML SHEN_NAME4('D', 'M', 'L', '_')
+#define ARMW_MSH SHEN_NAME4('M', 'S', 'H', '_')
+#define ARMW_DGY SHEN_NAME4('D', 'G', 'Y', '_')
+#define ARMW_SD1 SHEN_NAME4('S', 'D', '1', '_')
+#define ARMW_WD1 SHEN_NAME4('W', 'D', '1', '_')
+#define ARMW_AD2 SHEN_NAME4('A', 'D', '2', '_')
+#define ARMW_WD3 SHEN_NAME4('W', 'D', '3', '_')
+#define ARMW_GAU SHEN_NAME4('G', 'A', 'U', '_')
+#define ARMW_INVALID 0xffffffffU
+#define ARMW_MOTION_FLAGS 0x40000000U
+#define ARMW_AR02 SHEN_NAME4('A', 'R', '0', '2')
+#define ARMW_QTB4 SHEN_NAME4('Q', 'T', 'B', '4')
+#define ARMW_YASA SHEN_NAME4('Y', 'A', 'S', 'A')
+#define ARMW_WON SHEN_NAME4('W', 'O', 'N', '_')
+#define ARMW_BATTLE_INPUT SHEN_NAME4('B', 'T', 'B', 'A')
+#define ARMW_EPSILON 1.1920929e-7f
+#define ARMW_SNAP(value) if (__builtin_fabs(value) < ARMW_EPSILON) value = 0.0f
+#define ARMW_SNAP_VALUE(value) (__builtin_fabs(value) < ARMW_EPSILON ? 0.0f : (value))
+#define ARMW_MAX(a, b) ((a) < (b) ? (b) : (a))
+#define ARMW_MIN(a, b) ((a) < (b) ? (a) : (b))
+
+typedef struct ArmwVoiceWait {
+    HLibTask *parent;
+    int delay, index, reserved0c, timeout;
+    unsigned int flags;
+} ArmwVoiceWait;
+
+typedef struct ArmwOpponent {
+    shen_name character;
+    int strength, minimumStrength, maximumStrength, stamina;
+    short strategy, warmupFrames, buttonA, buttonLeft, buttonDown, buttonUp, finishQte, reserved22;
+} ArmwOpponent;
+
+typedef struct ArmwWork {
+    HLibTask *self;
+    EventReadCharactersWork *characters;
+    shen_name nextScene;
+    int nextEntry, falseStarts, day, rotation, opponentIndex;
+    unsigned int flags;
+    short step, phase;
+    unsigned int playerHistory, opponentHistory, strategyFlags;
+    int stamina, initialStamina, strategy, strength, minimumStrength, maximumStrength;
+    int opponentRate, playerFace, opponentFace;
+    float shake, target, position, acceleration;
+    int stalemate, settling;
+    shen_name player, opponent, secondOpponent, thirdOpponent, referee;
+    int presses;
+    unsigned int frames, recentRate;
+    int reserved90;
+    short reserved94, fatigueFrames;
+    short warmupFrames, buttonA, buttonLeft, buttonDown, buttonUp, finishQte;
+    float fatigueRate;
+    int fatigueVoice, staminaVoice;
+} ArmwWork;
+
+extern unsigned int armwIntroductionVariant;
+extern float armwQtePenalty;
+extern int armwQteButton;
+extern int armwQteSpeaker;
+extern int armwHandMotion;
+extern int armwStarted;
+extern int armwStartFrames;
+extern int armwArgument;
+extern short armwLocation;
+
+typedef struct ArmwCrowdPosition {
+    float x, y, z, yaw;
+} ArmwCrowdPosition;
+
+extern const unsigned int armwRefereeMotions[14][2];
+extern const unsigned int armwOpponentMotions[11][4];
+
+int armwWager;
+unsigned short armwOpponentVariant;
+unsigned short armwRefereeVariant;
+int armwLosingBet;
+
+void ArmwPlaceCrowd(const shen_name *names);
+int ArmwIntroduceHong(shen_name player, shen_name opponent, shen_name referee, int delay);
+int ArmwIntroduceSf8(shen_name player, shen_name opponent, shen_name referee, int delay);
+int ArmwIntroduceSfc(shen_name player, shen_name opponent, shen_name referee, int delay);
+int ArmwIntroduceKzn(shen_name player, shen_name opponent, shen_name referee, int delay);
+int ArmwOfferRematch(shen_name player, shen_name opponent, shen_name referee);
+int ArmwWarnFalseStart(shen_name player, shen_name opponent, shen_name referee, int count);
+int ArmwFirstFalseStart(shen_name referee, shen_name opponent, int delay);
+int ArmwSecondFalseStart(shen_name referee, shen_name opponent, int delay);
+int ArmwThirdFalseStart(shen_name referee, shen_name opponent, int delay);
+int ArmwAnnounceBet(shen_name player, shen_name opponent, shen_name referee);
+int ArmwHongCollects(shen_name player, shen_name opponent, shen_name referee, int delay);
+int ArmwSf8Collects(shen_name player, shen_name opponent, shen_name referee, int delay);
+int ArmwSfcCollects(shen_name player, shen_name opponent, shen_name referee, int delay);
+int ArmwDgyCollects(shen_name player, shen_name opponent, shen_name referee, int delay);
+int ArmwKznCollects(shen_name player, shen_name opponent, shen_name referee, int delay);
+int ArmwRefereeCollects(shen_name player, shen_name opponent, shen_name referee, int delay);
+
+void ArmwSetVoicePrefixes(shen_name referee, shen_name opponent);
+void ArmwVoiceWaitCallback(void *data);
+void ArmwWaitVoices(HLibTask *parent, int delay, unsigned int flags, int wait);
+void ArmwAppendVoice(int speaker, const char *suffix);
+void ArmwVoice(int speaker, const char *suffix, int delay);
+int ArmwGetVoiceSkipped(void);
+
+void ArmwStart(void *parameter);
+extern shen_name armwCharacters[15];
+extern shen_name armwTutorialCharacters[2];
+extern int armwBets[12][5];
+extern const float armwBases[12][4];
+extern const int armwExits[12][2];
+extern const shen_name armwReferees[12][2];
+extern const int armwFlagIds[12];
+extern const ArmwOpponent armwOpponents[60];
+extern const short armwOrder[12][6];
+extern const short armwRotations[7][2][3];
+void ArmwMainCallback(void *data);
+void ArmwInitializeResources(ArmwWork *work);
+void ArmwLoadRefereePackage(int variant);
+void ArmwFreeRefereePackages(void);
+void ArmwLoadOpponentPackage(int variant);
+void ArmwFreeOpponentPackages(void);
+int ArmwBeginExit(ArmwWork *work);
+void ArmwSetExitStep(ArmwWork *work);
+void ArmwDebugExit(void *data);
+void ArmwEndCallback(void *data);
+void ArmwSelectCharacters(ArmwWork *work);
+void ArmwSelectOpponent(ArmwWork *work);
+int ArmwGetDay(void);
+int ArmwGetRotation(void);
+int ArmwGetOpponentIndex(void);
+void ArmwFinishLadderFlags(void);
+void ArmwResetAuthFlags(void);
+short ArmwGetLadder(ArmwWork *work);
+int ArmwReady(ArmwWork *work);
+int ArmwNextOpponent(ArmwWork *work);
+void ArmwReplaceOpponent(ArmwWork *work);
+int ArmwOpponentLoaded(shen_name name);
+int ArmwAskTutorial(ArmwWork *work);
+int ArmwExplain(ArmwWork *work);
+int ArmwWalkAway(ArmwWork *work);
+int ArmwRefuse(ArmwWork *work);
+int ArmwPrepareMatch(ArmwWork *work);
+int ArmwOfferNextMatch(ArmwWork *work);
+int ArmwFalseStart(ArmwWork *work);
+int ArmwWin(ArmwWork *work);
+int ArmwEndLadder(ArmwWork *work);
+int ArmwLose(ArmwWork *work);
+int ArmwTutorial(ArmwWork *work);
+int ArmwTutorialResult(ArmwWork *work);
+void ArmwResetMatch(ArmwWork *work);
+int ArmwPlayMatch(ArmwWork *work);
+unsigned int ArmwButtons(ArmwWork *work);
+void ArmwUpdatePose(ArmwWork *work, int mode);
+void ArmwUpdateFaces(ArmwWork *work);
+int ArmwDirectionQte(ArmwWork *work);
+int ArmwFinishQte(ArmwWork *work);
+void ArmwMatchHands(ArmwWork *work);
+void ArmwRestoreHands(ArmwWork *work);
+int ArmwWinAnimation(ArmwWork *work);
+int ArmwLoseAnimation(ArmwWork *work);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/math.hpp"
@@ -101,3 +285,4 @@ std::int32_t ArmwOfferRematch(ArmwWork &work);
 std::int32_t ArmwOpponentCollects(ArmwWork &work);
 std::int32_t ArmwRefereeCollects(ArmwWork &work);
 } // namespace shenmue::s2::areas
+#endif

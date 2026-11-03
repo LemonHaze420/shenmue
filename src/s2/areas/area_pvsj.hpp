@@ -1,4 +1,159 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_library_tail_dc.h"
+#include "s2/areas/common/et_pati.h"
+
+#define AREA_PVSJ SHEN_NAME4('P', 'V', 'S', 'J')
+#define PVSJ_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define PVSJ_BACKPACK SHEN_NAME4('R', 'U', 'C', 'K')
+#define PVSJ_OPPONENT_HAND SHEN_NAME4('V', 'S', 'C', 'H')
+#define PVSJ_BATTLE_FONT SHEN_NAME4('B', 'T', 'F', 'T')
+#define PVSJ_GOAL_POINT 0x4c4f47
+#define PVSJ_DEBUG_ID 2
+#define PVSJ_INVALID_PARTITION ((void *)-1)
+#define PVSJ_READ_NAME(s) \
+    (((unsigned char)(s)[3] << 24 & 0xff000000) | ((unsigned char)(s)[2] << 16 & 0xff0000) | ((unsigned char)(s)[1] << 8 & 0xff00) | (unsigned char)(s)[0])
+
+typedef struct PvsjVoiceLength {
+    shen_name code;
+    int frames;
+} PvsjVoiceLength;
+typedef struct PvsjVoiceMessage {
+    shen_name code;
+    const char *text;
+} PvsjVoiceMessage;
+typedef struct PvsjVoicePartition {
+    const char *name;
+    int text, sound;
+} PvsjVoicePartition;
+typedef struct PvsjCustomer {
+    shen_name character, initialPoint, currentPoint;
+    int kind;
+} PvsjCustomer;
+typedef struct PvsjBoardGroup {
+    shen_name area, owner;
+    shen_name *points;
+    PvsjCustomer *customers;
+    char *greetings;
+    int yaw;
+    int *motions;
+} PvsjBoardGroup;
+typedef struct PvsjCustomerPartition {
+    shen_name character;
+    int models, hands;
+    char highHands;
+} PvsjCustomerPartition;
+typedef struct PvsjDealer {
+    shen_name character;
+    int playedFlag;
+    int *motions;
+    int camera;
+} PvsjDealer;
+typedef struct PatiMotionCacheEntry {
+    shen_name character;
+    int motion;
+    unsigned int age;
+} PatiMotionCacheEntry;
+typedef struct PvsjBoardPosition {
+    Vector3 position;
+    shen_name character;
+} PvsjBoardPosition;
+typedef struct PvsjEventWork {
+    HLibTask *parent;
+    HLibTask *task;
+    HLibTask *hintTask;
+    shen_name argument;
+    char bgm[13];
+    char sbt[15];
+    int soundScene;
+    int previousCash;
+    int state;
+    int sessionCash;
+    int newCash;
+    int delay;
+    shen_name owner;
+    shen_name customer;
+    int pointCount;
+    int admittedCustomers;
+    int missingCustomers;
+    int customerActive;
+    PvsjBoardGroup *boards;
+    void *jobPartition;
+    int customerPartition;
+    int greetingIndex;
+    int greeting;
+    int stateTicks;
+    int startMinute;
+    int firstCustomer;
+    int callFrames;
+    int cameraId;
+    shen_name cameraEye, cameraTarget;
+    char voicePrefix[16];
+    PvsjVoiceLength *voiceLengths;
+    void *voiceLoadBuffer;
+    void *gamePartition;
+} PvsjEventWork;
+
+extern PatiMotionCacheEntry g_patiMotionCache[4];
+extern PvsjBoardGroup pvsjBoardGroups[];
+extern PvsjCustomerPartition pvsjCustomerPartitions[];
+extern PvsjVoicePartition pvsjVoicePartitions[];
+extern const PvsjDealer pvsjDealers[];
+extern int pvsjCustomerModelIndex;
+
+int sprintf(char *buffer, const char *format, ...);
+int strcmp(const char *first, const char *second);
+double fabs(double value);
+
+void PvsjEntry(void *argument);
+void PvsjReleaseVoice(PvsjEventWork *work);
+void PvsjLoadVoice(PvsjEventWork *work, shen_name character);
+void SetPatiVoice(const char *prefix, const char *code, int delay);
+void PvsjQueueVoice(PvsjEventWork *work, const char *code, int *frame);
+void PvsjOfferJob(PvsjEventWork *work);
+void PvsjBeginShift(PvsjEventWork *work);
+void PvsjCallCustomer(PvsjEventWork *work);
+void PvsjWelcomeCustomer(PvsjEventWork *work);
+void PvsjExplainPartTimeJob(PvsjEventWork *work);
+void PvsjStartCustomerGame(PvsjEventWork *work);
+void PvsjCustomerDeclines(PvsjEventWork *work);
+void PvsjHandleCustomerInquiry(PvsjEventWork *work);
+void PvsjReportShift(PvsjEventWork *work);
+void PvsjAskToContinue(PvsjEventWork *work);
+void PvsjClosingReport(PvsjEventWork *work);
+void PvsjTimeExpired(PvsjEventWork *work);
+void PvsjContinueShift(PvsjEventWork *work);
+void PvsjOfferPay(PvsjEventWork *work);
+void PvsjDeclineContinue(PvsjEventWork *work);
+void PvsjAskWithoutProfit(PvsjEventWork *work);
+void PvsjRestoreSpeech(PvsjEventWork *work);
+void PvsjFinishWithoutProfit(PvsjEventWork *work);
+void PvsjShowSessionCash(PvsjEventWork *work);
+void PvsjShowWallet(PvsjEventWork *work);
+void AreaPVSJMain(void *argument);
+void PvsjDebugExitCallback(void *data);
+void PvsjFinish(PvsjEventWork *work);
+void PvsjShowChoice(int first, int second, int third, int fourth, PvsjEventWork *work);
+void PvsjSetCamera(int id, shen_name eye, shen_name target, int delay, PvsjEventWork *work);
+void ShowPatiVoiceMessage(void *text);
+void PvsjHintCallback(void *data);
+int PvsjMoveCustomer(shen_name character, shen_name target, PvsjEventWork *work);
+int PvsjRestoreCustomerRoute(shen_name character, PvsjEventWork *work);
+void PvsjChooseCustomer(PvsjEventWork *work);
+void PvsjMainCallback(void *data);
+void PvsjInitializeBoards(PvsjEventWork *work);
+void ResetPatiMotionCache(void);
+void PvsjSetMotion(shen_name character, int motion, float frame, float speed, unsigned int flags, int delay);
+void PvsjSavePlayerRotation(void);
+void PvsjRefreshOverlay(int mode, PvsjEventWork *work);
+void PvsjSetOverlay(int mode, PvsjEventWork *work);
+void PvsjUpdateOverlay(int mode, PvsjEventWork *work);
+void PvsjBeginGame(void *argument, PvsjEventWork *work);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/areas/area_pati.hpp"
 #include "s2/hlib.hpp"
@@ -103,3 +258,4 @@ void PvsjRestoreSpeech(PvsjEventWork *);
 void PvsjFinishWithoutProfit(PvsjEventWork *);
 void PvsjShowWallet(PvsjEventWork *);
 } // namespace shenmue::s2
+#endif

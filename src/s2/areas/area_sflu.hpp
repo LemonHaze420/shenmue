@@ -1,3 +1,97 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#ifndef SHENMUE_AREA_SFLU_DC_H
+#define SHENMUE_AREA_SFLU_DC_H
+#include "s2/areas/common/et_street.h"
+#include "s2/areas/common/et_street_debug.h"
+#include "s2/areas/common/et_plural_control.h"
+#include "s2/areas/area_loop_dc.h"
+#define SFLU_BASE SHEN_NAME4('B', 'A', 'S', 'X')
+#define SFLU_FUY SHEN_NAME4('F', 'U', 'Y', '_')
+#define SFLU_DEBUG_PACKAGE SHEN_NAME4('Q', 'K', 'B', 'T')
+#define SFLU_RESOURCE_PACKAGE SHEN_NAME4('Q', '2', '0', '0')
+#define SFLU_RETRY_TITLE SHEN_NAME4('R', 'T', 'R', '2')
+#define SFLU_SF4 SHEN_NAME4('S', 'F', '4', '_')
+#define SFLU_JOP SHEN_NAME4('J', 'O', 'P', '_')
+#define SFLU_KF1 SHEN_NAME4('K', 'F', '1', '_')
+#define SFLU_KF2 SHEN_NAME4('K', 'F', '2', '_')
+#define SFLU_KF3 SHEN_NAME4('K', 'F', '3', '_')
+#define SFLU_KR1 SHEN_NAME4('K', 'R', '1', '_')
+#define SFLU_KR2 SHEN_NAME4('K', 'R', '2', '_')
+#define SFLU_SF9 SHEN_NAME4('S', 'F', '9', '_')
+#define SFLU_BF6 SHEN_NAME4('B', 'F', '6', '_')
+#define SFLU_GOI SHEN_NAME4('G', 'O', 'I', '_')
+#define SFLU_AMI1 SHEN_NAME4('a', 'm', 'i', '1')
+#define SFLU_AMI2 SHEN_NAME4('a', 'm', 'i', '2')
+#define SFLU_AMI3 SHEN_NAME4('a', 'm', 'i', '3')
+#define SFLU_AMI4 SHEN_NAME4('a', 'm', 'i', '4')
+#define SFLU_AMI5 SHEN_NAME4('a', 'm', 'i', '5')
+#define SFLU_A734 SHEN_NAME4('a', '7', '3', '4')
+#define SFLU_A800 SHEN_NAME4('a', '8', '0', '0')
+#define SFLU_A798 SHEN_NAME4('a', '7', '9', '8')
+#define SFLU_A516 SHEN_NAME4('a', '5', '1', '6')
+#define SFLU_A512 SHEN_NAME4('a', '5', '1', '2')
+#define SFLU_AUTH_0 SHEN_NAME4('A', 'U', '_', '0')
+#define SFLU_AUTH_1 SHEN_NAME4('A', 'U', '_', '1')
+#define SFLU_AUTH_2 SHEN_NAME4('A', 'U', '_', '2')
+#define SFLU_AUTH_3 SHEN_NAME4('A', 'U', '_', '3')
+#define SFLU_AUTH_4 SHEN_NAME4('A', 'U', '_', '4')
+#define SFLU_AUTH_5 SHEN_NAME4('A', 'U', '_', '5')
+#define SFLU_AUTH_6 SHEN_NAME4('A', 'U', '_', '6')
+#define SFLU_STORY_NEXT_AREA SHEN_NAME4('Q', 'F', '3', '9')
+#define SFLU_STORY_EXIT_AREA SHEN_NAME4('Q', 'K', 'B', 'T')
+typedef struct SfluAuthorWork {
+    HLibTask *task;
+    unsigned int reserved04;
+    shen_name command;
+    short state, reserved0e;
+} SfluAuthorWork;
+typedef struct SfluAuthorLoopWork {
+    SfluAuthorWork *owner;
+    short frame;
+    unsigned short reserved06;
+} SfluAuthorLoopWork;
+typedef struct SfluElevatorPanelWork {
+    int start, end, next, tens, delay;
+} SfluElevatorPanelWork;
+void SfluMain(StreetFightStartParameters *start);
+void QueueAuthor(shen_name command);
+void AuthorCallback(void *data);
+void QueueAuthorLoop(SfluAuthorWork *work);
+void AuthorLoopCallback(void *data);
+void PrepareAuthor(shen_name command);
+void InitializeElevatorCharacters(void);
+void QueueElevatorPanel(int start, int end);
+void ElevatorPanelCallback(void *data);
+void EndAuthor(SfluAuthorWork *work);
+void LoadAuthorCharacters(shen_name command);
+void UnloadAuthorCharacters(shen_name command);
+void HideAuthorCharacter(shen_name character);
+void ShowAuthorCharacter(shen_name character);
+void HideAuthorProp(shen_name character);
+void ShowAuthorProp(shen_name character);
+void ShowElevatorPart(shen_name character, int part, int visible);
+void QueueNormal(StreetFightStartParameters *start);
+StreetFightEventWork *InitializeNormal(HLibTask *task);
+void PlaceNormal(StreetFightEventWork *work);
+void MainCallback(void *data);
+void NormalDebugCallback(void *data);
+void CleanupNormalCallback(void *data);
+void RetryBeginCallback(void *data);
+void RetryChoiceCallback(void *data);
+void ResetMain(StreetFightEventWork *work);
+void RetryCancelCallback(void *data);
+void UpdateBattleQte(StreetFightEventWork *work);
+void ToggleTrainingAudience(int enabled);
+void ToggleFence(int enabled);
+void UpdateFenceAlpha(void);
+void LostExpressionCallback(void *data);
+int DefeatConversation(void *data);
+void ConfigureTrainingHands(void);
+void ConfigureVictoryHands(void);
+void ResetQteCharacters(StreetFightEventWork *work);
+extern int trainingInputFailed;
+#endif
+#else
 #pragma once
 #include "s2/area_event.hpp"
 #include "s2/street_fight_event.hpp"
@@ -117,3 +211,4 @@ inline constexpr Vector3 SFLU_DEBUG_CONVERSATION_FIGHTER_POSITION{-0.58799999952
 inline constexpr Vector3 SFLU_DEBUG_DEFEAT_FIGHTER_POSITION{-0.988f, 0.0f, -1.2f};
 extern const ScriptAreaDefinition areaSfluScriptDefinition;
 } // namespace shenmue::s2
+#endif

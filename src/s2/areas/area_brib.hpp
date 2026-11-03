@@ -1,4 +1,44 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_loop_dc.h"
+
+#define BRIB_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define BRIB_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define BRIB_KUK SHEN_NAME4('K', 'U', 'K', '_')
+#define BRIB_WTE SHEN_NAME4('W', 'T', 'E', '_')
+#define BRIB_GREN SHEN_NAME4('G', 'R', 'E', 'N')
+#define BRIB_SENSE SHEN_NAME4('S', 'E', 'N', 'S')
+#define BRIB_CAMERA_TARGET SHEN_NAME4('c', 'a', 'm', 'd')
+#define BRIB_GRIP_HAND_POSE 11
+#define BRIB_READING_HAND_POSE 19
+typedef struct BribWork {
+    HLibTask *parent;
+    unsigned int flags;
+} BribWork;
+typedef struct BribPlacement {
+    Vector3 position;
+    Vector3i rotation;
+} BribPlacement;
+extern char bribPackage[], bribConversation[];
+extern BribPlacement bribKukPlacement;
+extern shen_name bribRenCharacters[], bribSenseCharacters[];
+void RunBribEvent(int argument);
+void QueueBribRen(void);
+void BribRenGetNpcs(void *data);
+void BribRenGetPackage(void *data);
+void BribRenStart(void *data);
+int BribRenHandCallback(int phase, int value, HLibTask *parent);
+int BribKukMotionCallback(int phase, int value, HLibTask *parent);
+void BribRenLoop(void *data);
+void QueueBribSense(void);
+void BribSenseGetNpcs(void *data);
+void BribSenseGetPackage(void *data);
+void BribSenseStart(void *data);
+void BribSenseLoop(void *data);
+int BribSenseAuthorCallback(int phase, int value, HLibTask *parent);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/areas/area_loop.hpp"
 #include <cstddef>
@@ -23,3 +63,4 @@ void InitializeBribEvent();
 void RunBribEvent(std::uintptr_t argument);
 extern const ScriptAreaDefinition bribScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif

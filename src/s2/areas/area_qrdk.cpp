@@ -1,3 +1,889 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_qrdk.hpp"
+
+void QrdkMain(void)
+{
+    HLibTask *task;
+    QrdkWork *work;
+    char *bytes;
+    int started = 0, count = 0, index;
+    do {
+        while (qrdkEnemies[count].character != QRDK_INVALID)
+            count++;
+        task = FTBL.HLib_EnqueueTaskWithParameter(QrdkInitializeCallback, 4, 11, count * 4 + 76, QRDK_TASK);
+        if (!task)
+            break;
+        work = (QrdkWork *)(FTBL.HLib_GetTaskParameter(task));
+        if (!work)
+            break;
+        bytes = (char *)work;
+        for (index = 0; index < count * 4 + 76; index++)
+            bytes[index] = 0;
+        started = 1;
+        work->parent = FTBL.HLib_GetCurrentTask();
+        work->task = task;
+        work->enemyCount = count;
+        QrdkHideCharacter(QRDK_RYO);
+        FTBL.mtwkSetSpeed(FTBL.scenFindMotionwork(QRDK_RYO), 1.0f, 0);
+        EventDebugRegister(QRDK_DEBUG_ID, QrdkDebugSkipCallback, work, 0x7fffffff);
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.HLib_SetupTaskDelay(-1);
+    } while (0);
+    if (!started && task)
+        FTBL.HLib_DestroyTask(task);
+}
+
+void QrdkInitializeCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    for (;;) {
+        if (!work) {
+            FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+            break;
+        }
+        if (FTBL.filmCheckFadeTrackColour())
+            break;
+        if (work->flags & 3) {
+            FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+            work->flags &= ~3;
+        } else {
+            EventDebugGetState(QRDK_DEBUG_ID, 1);
+            EventDebugCheck(QRDK_DEBUG_ID, 4);
+            FTBL.FinishLoading();
+            FTBL.EV_NPC_NewLoadSw_0(0);
+            FTBL.HLib_SetCurrentTaskTo(QrdkWaitPackageCallback);
+        }
+        break;
+    }
+}
+
+void QrdkWaitPackageCallback(void *data)
+{
+    if (FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)qrdkPackage, 0)) {
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        FTBL.EV_ControlPackageResources(2, 2, qrdkPackage, 0, 0);
+        FTBL.EV_ControlPackageResources(2, 4, qrdkPackage, 0, 0);
+        FTBL.HLib_SetCurrentTaskTo(QrdkLoadCharactersCallback);
+    }
+}
+
+void QrdkLoadCharactersCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    shen_name character;
+    int index;
+    if (work) {
+        if (work->loadIndex) {
+            character = qrdkCharacters[work->loadIndex - 1];
+            if (character != QRDK_INVALID) {
+                if (FTBL.ForceLoadNpc(character)) {
+                    QrdkHideCharacter(character);
+                    work->loadIndex++;
+                }
+            } else {
+                work->loadIndex--;
+                FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+                work->flags |= 3;
+                FTBL.HLib_SetCurrentTaskTo(QrdkBeginGameCallback);
+            }
+        } else {
+            for (index = 0; qrdkCharacters[index] != QRDK_INVALID; index++)
+                FTBL.CheckWarmStartNpcRoute(qrdkCharacters[index]);
+            FTBL.EV_ResetFreeTalkFlags();
+            work->loadIndex = 1;
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkExitCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    QrdkWork copy;
+    char *bytes;
+    int index;
+    for (;;) {
+        if (FTBL.filmCheckFadeTrackColour())
+            break;
+        if (work)
+            copy = *work;
+        else {
+            bytes = (char *)&copy;
+            for (index = 0; index < (int)(sizeof(copy)); index++)
+                bytes[index] = 0;
+        }
+        if (copy.flags & 3) {
+            FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+            if (work)
+                work->flags &= ~3;
+            break;
+        }
+        FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+        EventDebugUnregister(QRDK_DEBUG_ID);
+        QrdkShowCharacter(QRDK_RYO);
+        if (copy.flags & 4)
+            FTBL.ReleaseDoor(copy.door, QRDK_RYO);
+        for (index = 0; qrdkCharacters[index] != QRDK_INVALID; index++) {
+            QrdkShowCharacter(qrdkCharacters[index]);
+            FTBL.npcLockUnlock(qrdkCharacters[index]);
+        }
+        if (FTBL.EV_ControlPackageResources(0, 5, qrdkPackage, 0, 0))
+            FTBL.EV_ControlPackageResources(0, 6, qrdkPackage, 0, 0);
+        FTBL.HLib_MarkCurrentTaskForCleanup();
+        if (copy.parent)
+            FTBL.HLib_ResolveDeferredCallback(copy.parent);
+        FTBL.SetPlayerControlEnabled(1);
+        break;
+    }
+}
+
+void QrdkDebugSkipCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    Vector3 position;
+    Vector3i rotation;
+    if (!work)
+        return;
+    FTBL.HLib_AssignCallbackForTask(work->task, QrdkExitCallback);
+    FTBL.HLib_SetupTimedTask(work->task, 1);
+    QrdkGetDoorPoint(QRDK_R122, &position, (unsigned int *)&rotation.y);
+    rotation.x = 0;
+    rotation.z = 0;
+    FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(QRDK_RYO), 0, rotation.y, 13, 0);
+    FTBL.EV_AT_SetPos(QRDK_RYO, QRDK_WORLD_ALL_AXES, &position);
+    FTBL.EV_AT_SetAngY_0(QRDK_RYO, QRDK_WORLD_ALL_AXES, &rotation, 0);
+}
+
+void QrdkBeginGameCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    Vector3 position;
+    if (work) {
+        work->flags = (work->flags & ~3) | 1;
+        position.x = 10000.0f;
+        position.y = 10000.0f;
+        position.z = 10000.0f;
+        FTBL.EV_AT_SetPos(QRDK_REN, QRDK_WORLD_ALL_AXES, &position);
+        FTBL.HLib_SetCurrentTaskTo(QrdkStartRouteCallback);
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkStartRouteCallback(void *data)
+{
+    if (data) {
+        QrdkPlaceOnRoute((QrdkWork *)data);
+        FTBL.HLib_SetCurrentTaskTo(QrdkRunCallback);
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkRunCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    float distance;
+    shen_name door;
+    int counter, route, index, defeated, hasEnemies;
+    if (work) {
+        counter = work->routeCounter;
+        route = 0;
+        while (counter) {
+            counter--;
+            if (qrdkRoute[route].marker == 2) {
+                route = 0;
+                while (qrdkRoute[route].marker != 1)
+                    route++;
+            } else
+                route++;
+        }
+        if ((FTBL.GetCurrentControlInput(2) >> 10) & 1)
+            work->action |= 1;
+        for (;;) {
+            if (work->action & 1) {
+                door = QrdkFindClosestDoor(&distance);
+                if (door == QRDK_INVALID)
+                    break;
+                if (door != QRDK_INVALID && distance < 5.0f) {
+                    work->action &= ~1;
+                    defeated = 0;
+                    hasEnemies = 0;
+                    for (index = 0; qrdkEnemies[index].character != QRDK_INVALID; index++) {
+                        if (qrdkEnemies[index].door == door) {
+                            defeated = defeated || work->defeated[index];
+                            hasEnemies = 1;
+                        }
+                    }
+                    if (defeated && hasEnemies)
+                        QrdkQueueSerif("ここはまずいな", 0, 1, 50, 0); 
+                    else {
+                        work->door = door;
+                        FTBL.GetCharaPosition(QRDK_RYO, QRDK_TRANSLATION_ROOT, &work->savedPosition, QRDK_WORLD);
+                        FTBL.GetScenarioCharacterEulerAngles(QRDK_RYO, &work->savedRotation, QRDK_WORLD);
+                        if (FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(QRDK_RYO), 58, 1))
+                            FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(QRDK_RYO), 0, work->savedRotation.y, 13, 0);
+                        FTBL.HLib_SetCurrentTaskTo(QrdkBeginDoorCallback);
+                        break;
+                    }
+                }
+            }
+            if (!FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(QRDK_RYO), 58, 1)) {
+                work->routeCounter++;
+                QrdkPlaceOnRoute(work);
+            }
+            if ((work->action & 1) == 0)
+                FTBL.CheckHelpIcon(4, 0, 3);
+            break;
+        }
+    } else {
+        FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(QRDK_RYO), 0, 0, 13, 0);
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+    }
+}
+
+void QrdkBeginDoorCallback(void *data)
+{
+    if (data)
+        FTBL.HLib_SetCurrentTaskTo(QrdkGetDoorCallback);
+    else {
+        FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(QRDK_RYO), 0, 0, 13, 0);
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+    }
+}
+
+void QrdkGetDoorCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    Vector3 ryo, doorPosition;
+    Vector3i rotation;
+    Vector3 position;
+    unsigned int doorYaw;
+    unsigned int motion;
+    int side;
+    float start, end;
+    unsigned int doorMotion = 0xf0ca;
+    if (work) {
+        if (FTBL.ClaimDoor(work->door, 0)) {
+            work->flags |= 4;
+            FTBL.GetCharaPosition(QRDK_RYO, QRDK_TRANSLATION_ROOT, &ryo, QRDK_WORLD);
+            QrdkGetDoorPoint(work->door, &doorPosition, &doorYaw);
+            FTBL.GetScenarioCharacterEulerAngles(QRDK_RYO, &rotation, QRDK_WORLD);
+            side = FTBL.ComputeAngle(&ryo, 10.0f, rotation.y + 0x4000, 0x4000, &doorPosition);
+            FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(QRDK_RYO), 0, 0, 1, 0);
+            switch (FTBL.shenGetRandomInt32(4)) {
+            case 0:
+                motion = 0x1c44;
+                start = 19.0f;
+                end = 70.0f;
+                position.x = -0.9f;
+                position.z = 1.0f;
+                break;
+            case 1:
+                motion = 0x1c42;
+                start = 314.0f;
+                end = 360.0f;
+                position.x = -0.9f;
+                position.z = 1.5f;
+                break;
+            case 2:
+                motion = 0x1c41;
+                start = 26.0f;
+                end = 74.0f;
+                position.x = -0.9f;
+                position.z = 2.0f;
+                break;
+            default:
+                motion = 0x1c43;
+                start = 36.0f;
+                end = 87.0f;
+                position.x = -0.9f;
+                position.z = 2.0f;
+                break;
+            }
+            position.y = 0.0f;
+            rotation.x = 0;
+            rotation.z = 0;
+            if (side) {
+                rotation.y = doorYaw + 0xc000;
+                position.x = -position.x;
+            } else
+                rotation.y = doorYaw + 0x4000;
+            FTBL.ApplyScenarioTranslationAndRotation(&doorPosition, &rotation, &position);
+            FTBL.EV_AT_SetPos(QRDK_RYO, QRDK_WORLD_ALL_AXES, &position);
+            FTBL.EV_AT_SetAngY_0(QRDK_RYO, QRDK_WORLD_ALL_AXES, &rotation, 0);
+            if (side)
+                FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(QRDK_RYO), 69, 0, 0);
+            work->action |= 2;
+            FTBL.doorPlayRigidMotion(work->door, doorMotion, 0.0f, 1.0f);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(QRDK_RYO), motion, 0);
+            FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(QRDK_RYO), 0);
+            FTBL.SetMotionLayerLoopStartTime(FTBL.scenFindMotionwork(QRDK_RYO), start, 0);
+            FTBL.SetMotionRegionEvalTime(FTBL.scenFindMotionwork(QRDK_RYO), start, 0);
+            FTBL.SetMotionLayerEndFrame(FTBL.scenFindMotionwork(QRDK_RYO), end, 0);
+            switch (work->door) {
+            case QRDK_R122:
+                FTBL.HLib_SetCurrentTaskTo(QrdkFoundCallback);
+                break;
+            case QRDK_R102:
+            case QRDK_R104:
+            case QRDK_R117:
+                FTBL.HLib_SetCurrentTaskTo(QrdkBattleMessageCallback);
+                break;
+            default:
+                FTBL.HLib_SetCurrentTaskTo(QrdkWrongRoomCallback);
+                break;
+            }
+            if (QrdkPassedRoutePoint(work->routeCounter))
+                work->routeCounter++;
+        } else {
+            FTBL.EV_AT_SetPos(QRDK_RYO, QRDK_WORLD_ALL_AXES, &work->savedPosition);
+            FTBL.EV_AT_SetAngY_0(QRDK_RYO, QRDK_WORLD_ALL_AXES, &work->savedRotation, 0);
+            FTBL.HLib_SetCurrentTaskTo(QrdkRunCallback);
+        }
+    } else {
+        FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(QRDK_RYO), 0, 0, 13, 0);
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+    }
+}
+
+void QrdkBattleMessageCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    if (work) {
+        if (QrdkIsDoorMotionFinished(work)) {
+            FTBL.ReleaseDoor(work->door, 0);
+            work->flags &= ~4;
+            switch (work->door) {
+            case QRDK_R104:
+                QrdkQueueSerif("なんだ、てめえは！", 0, 1, 100, QrdkResumeOnSerifFinished); 
+                break;
+            case QRDK_R102:
+                QrdkQueueSerif("ネズミが飛び込んできたか！", 0, 1, 100, QrdkResumeOnSerifFinished); 
+                break;
+            case QRDK_R117:
+                QrdkQueueSerif("てめえは、あの時の！", 0, 1, 100, QrdkResumeOnSerifFinished); 
+                break;
+            }
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(QRDK_RYO), 0xf003, 0);
+            FTBL.HLib_SetCurrentTaskTo(QrdkPlaceEnemiesCallback);
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkPlaceEnemiesCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    Vector3 door, position;
+    Vector3i rotation;
+    unsigned int yaw;
+    float x, z;
+    int index;
+    if (work) {
+        if (!FTBL.filmCheckFadeTrackColour()) {
+            if (work->flags & 3) {
+                work->flags &= ~3;
+                FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+            } else {
+                work->flags |= 3;
+                FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+                for (index = 0; qrdkEnemies[index].character != QRDK_INVALID; index++) {
+                    if (work->defeated[index])
+                        continue;
+                    if (qrdkEnemies[index].door != work->door)
+                        continue;
+                    QrdkGetDoorPoint(work->door, &door, &yaw);
+                    x = qrdkEnemies[index].x;
+                    z = qrdkEnemies[index].z;
+                    position.y = door.y + 0.3f;
+                    position.x = -z * FTBL.CalculateFixedSine(yaw);
+                    position.z = -z * FTBL.CalculateFixedCosine(yaw);
+                    if (__builtin_fabs(position.x) < 1.1920929e-07f)
+                        position.x = 0.0f;
+                    if (__builtin_fabs(position.z) < 1.1920929e-07f)
+                        position.z = 0.0f;
+                    position.x -= x * FTBL.CalculateFixedCosine(yaw);
+                    position.z += x * FTBL.CalculateFixedSine(yaw);
+                    if (__builtin_fabs(position.x) < 1.1920929e-07f)
+                        position.x = 0.0f;
+                    if (__builtin_fabs(position.z) < 1.1920929e-07f)
+                        position.z = 0.0f;
+                    position.x += door.x;
+                    position.z += door.z;
+                    if (__builtin_fabs(position.x) < 1.1920929e-07f)
+                        position.x = 0.0f;
+                    if (__builtin_fabs(position.z) < 1.1920929e-07f)
+                        position.z = 0.0f;
+                    rotation.x = 0;
+                    rotation.y = (yaw + qrdkEnemies[index].yaw) & 0xffff;
+                    rotation.z = 0;
+                    FTBL.EV_AT_SetPos(qrdkEnemies[index].character, QRDK_WORLD_ALL_AXES, &position);
+                    FTBL.EV_AT_SetAngY_0(qrdkEnemies[index].character, QRDK_WORLD_ALL_AXES, &rotation, 0);
+                    FTBL.EV_SetCharaControllerFlags(qrdkEnemies[index].character, 0, 1);
+                    FTBL.EV_SetCharaControllerFlags(qrdkEnemies[index].character, 1, 1);
+                }
+                FTBL.HLib_SetCurrentTaskTo(QrdkStartBattleCallback);
+            }
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkStartBattleCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    Vector3 position;
+    int index;
+    if (work) {
+        QrdkGetDoorPoint(work->door, &position, 0);
+        FTBL.shenStartFGST(10, 10, 0, 0);
+        FTBL.vfmDispatchControl(2, 0, qrdkPackage, 1);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(QRDK_RYO), 0, 0, 0, 0, 0);
+        for (index = 0; qrdkEnemies[index].character != QRDK_INVALID; index++) {
+            if (work->defeated[index])
+                continue;
+            if (qrdkEnemies[index].door != work->door)
+                continue;
+            FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(qrdkEnemies[index].character), 0, 1, 1, 40, qrdkEnemies[index].style);
+            FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(qrdkEnemies[index].character), 0, 0x400000, 128);
+            FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(qrdkEnemies[index].character), 0, 0x200000, 2048);
+            FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(qrdkEnemies[index].character), 0, 0x8000000, 1);
+        }
+        FTBL.vfCopyPosFromEntity(0, 0, position.x, position.z, 7.0f);
+        FTBL.vfmQueueFightStart(2, 2, 1, 1.0f, -1);
+        FTBL.HLib_SetCurrentTaskTo(QrdkBattleCallback);
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkBattleCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    Vector3 position;
+    Vector3i rotation;
+    int index;
+    for (;;) {
+        if (FTBL.IsFightActive() || FTBL.filmCheckFadeTrackColour())
+            break;
+        if (work->flags & 3) {
+            work->flags &= ~3;
+            FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+            break;
+        }
+        for (index = 0; qrdkEnemies[index].character != QRDK_INVALID; index++) {
+            if (qrdkEnemies[index].door != work->door)
+                continue;
+            position.x = 10000.0f;
+            position.y = 10000.0f;
+            position.z = 10000.0f;
+            rotation.x = 0;
+            rotation.y = 0;
+            rotation.z = 0;
+            FTBL.EV_AT_SetPos(qrdkEnemies[index].character, QRDK_WORLD_ALL_AXES, &position);
+            FTBL.EV_AT_SetAngY_0(qrdkEnemies[index].character, QRDK_WORLD_ALL_AXES, &rotation, 0);
+            work->defeated[index] = 1;
+        }
+        FTBL.FinishLoading();
+        if (FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(QRDK_RYO)) == 3) {
+            work->flags |= 3;
+            FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+            QrdkPlaceOnRoute(work);
+            FTBL.HLib_SetCurrentTaskTo(QrdkRunCallback);
+        } else
+            FTBL.HLib_SetCurrentTaskTo(QrdkRetryCallback);
+        break;
+    }
+}
+
+void QrdkWrongRoomCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    if (work) {
+        if (QrdkIsDoorMotionFinished(work)) {
+            switch (FTBL.shenGetRandomInt32(5)) {
+            case 0:
+                QrdkQueueSerif("違う。", 0, 0, 50, 0); 
+                break;
+            case 1:
+                QrdkQueueSerif("いない。", 0, 0, 50, 0); 
+                break;
+            case 2:
+                QrdkQueueSerif("くそっ。", 0, 0, 50, 0); 
+                break;
+            case 3:
+                QrdkQueueSerif("違ったか。", 0, 0, 50, 0); 
+                break;
+            default:
+                QrdkQueueSerif("ここじゃない。", 0, 0, 50, 0); 
+                break;
+            }
+            FTBL.HLib_SetCurrentTaskTo(QrdkReturnToRouteCallback);
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkReturnToRouteCallback(void *data)
+{
+    if (data) {
+        QrdkPlaceOnRoute((QrdkWork *)data);
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        FTBL.HLib_SetCurrentTaskTo(QrdkRunCallback);
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkFoundCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    if (work) {
+        if (QrdkIsDoorMotionFinished(work)) {
+            QrdkQueueSerif("発見　イベント終了", 0, 1, 100, QrdkResumeOnSerifFinished); 
+            FTBL.camCtrlSetFovTransitionTo(1);
+            FTBL.camCtrlSetState(0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(QRDK_RYO), 0xf003, 0);
+            FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+            FTBL.HLib_SetupTaskDelay(-1);
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkRetryCallback(void *data)
+{
+    QrdkWork *work = (QrdkWork *)data;
+    const QrdkRoutePoint *point;
+    Vector3 position;
+    Vector3i rotation;
+    float x, z;
+    int index;
+    if (work) {
+        for (index = 0; qrdkEnemies[index].character != QRDK_INVALID; index++) {
+            position.x = 10000.0f;
+            position.y = 10000.0f;
+            position.z = 10000.0f;
+            rotation.x = 0;
+            rotation.y = 0;
+            rotation.z = 0;
+            FTBL.EV_AT_SetPos(qrdkEnemies[index].character, QRDK_WORLD_ALL_AXES, &position);
+            FTBL.EV_AT_SetAngY_0(qrdkEnemies[index].character, QRDK_WORLD_ALL_AXES, &rotation, 0);
+            work->defeated[index] = 0;
+        }
+        QrdkQueueSerif("りとらい", 0, 0, 50, 0); 
+        point = QrdkGetRoutePoint(0);
+        FTBL.GetCharaPosition(QRDK_RYO, QRDK_TRANSLATION_ROOT, &position, QRDK_WORLD);
+        position.x = point->x;
+        position.z = point->z;
+        FTBL.EV_AT_SetPos(QRDK_RYO, QRDK_WORLD_ALL_AXES, &position);
+        point = QrdkGetRoutePoint(1);
+        x = point->x - position.x;
+        z = point->z - position.z;
+        if (__builtin_fabs(x) < 1.1920929e-07f)
+            x = 0.0f;
+        if (__builtin_fabs(z) < 1.1920929e-07f)
+            z = 0.0f;
+        rotation.x = 0;
+        rotation.y = FTBL.InverseFixedAtan2(x, z);
+        rotation.z = 0;
+        work->routeCounter = 1;
+        work->flags |= 3;
+        FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+        QrdkPlaceOnRoute(work);
+        FTBL.HLib_SetCurrentTaskTo(QrdkRunCallback);
+    } else
+        FTBL.HLib_SetCurrentTaskTo(QrdkExitCallback);
+}
+
+void QrdkPlaceOnRoute(QrdkWork *work)
+{
+    const QrdkRoutePoint *point, *next;
+    Vector3 position;
+    float x, z;
+    int yaw;
+    if (work) {
+        FTBL.GetCharaPosition(QRDK_RYO, QRDK_TRANSLATION_ROOT, &position, QRDK_WORLD);
+        point = QrdkGetRoutePoint(work->routeCounter);
+        position.x = point->x;
+        position.z = point->z;
+        next = QrdkGetRoutePoint(work->routeCounter + 1);
+        x = next->x - point->x;
+        z = next->z - point->z;
+        if (__builtin_fabs(x) < 1.1920929e-07f)
+            x = 0.0f;
+        if (__builtin_fabs(z) < 1.1920929e-07f)
+            z = 0.0f;
+        yaw = FTBL.InverseFixedAtan2(x, z);
+        FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(QRDK_RYO), &position, yaw, 5, 0);
+        FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(QRDK_RYO), &position, yaw, 8, 0);
+        FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(QRDK_RYO), 0, 0, 12, 0);
+    }
+}
+
+const QrdkRoutePoint *QrdkGetRoutePoint(int counter)
+{
+    int start, length, index;
+    if (counter < 0) {
+        start = 0;
+        length = 1;
+        while (!qrdkRoute[start].marker)
+            start++;
+        while (!qrdkRoute[start + length].marker)
+            length++;
+        length++;
+        while (counter < 0)
+            counter += length;
+    }
+    index = 0;
+    while (counter) {
+        index++;
+        counter--;
+        if (qrdkRoute[index].marker == 2) {
+            index = 0;
+            while (!qrdkRoute[index].marker)
+                index++;
+        }
+    }
+    return &qrdkRoute[index];
+}
+
+int QrdkPassedRoutePoint(int counter)
+{
+    const QrdkRoutePoint *neighbour, *point;
+    Vector3 ryo, route, offset;
+    float backward;
+    FTBL.GetCharaPosition(QRDK_RYO, QRDK_TRANSLATION_ROOT, &ryo, QRDK_WORLD);
+    neighbour = QrdkGetRoutePoint(counter - 1);
+    point = QrdkGetRoutePoint(counter);
+    route.x = neighbour->x - point->x;
+    route.y = 0.0f;
+    route.z = neighbour->z - point->z;
+    offset.x = ryo.x - point->x;
+    route.y = 0.0f;
+    offset.z = ryo.z - point->z;
+    if (__builtin_fabs(route.x) < 1.1920929e-07f)
+        route.x = 0.0f;
+    if (__builtin_fabs(route.z) < 1.1920929e-07f)
+        route.z = 0.0f;
+    if (__builtin_fabs(offset.x) < 1.1920929e-07f)
+        offset.x = 0.0f;
+    if (__builtin_fabs(offset.z) < 1.1920929e-07f)
+        offset.z = 0.0f;
+    backward = FTBL.GetVector3DotProduct(&offset, &route);
+    neighbour = QrdkGetRoutePoint(counter + 1);
+    route.x = neighbour->x - point->x;
+    route.z = neighbour->z - point->z;
+    if (__builtin_fabs(route.x) < 1.1920929e-07f)
+        route.x = 0.0f;
+    if (__builtin_fabs(route.z) < 1.1920929e-07f)
+        route.z = 0.0f;
+    return FTBL.GetVector3DotProduct(&offset, &route) > backward;
+}
+
+void QrdkGetDoorPoint(shen_name door, Vector3 *position, unsigned int *yaw)
+{
+    Vector3 ryo;
+    int index;
+    for (index = 0; qrdkDoors[index].door != QRDK_INVALID; index++) {
+        if (qrdkDoors[index].door != door)
+            continue;
+        if (position) {
+            FTBL.GetCharaPosition(QRDK_RYO, QRDK_TRANSLATION_ROOT, &ryo, QRDK_WORLD);
+            position->x = qrdkDoors[index].x;
+            position->y = ryo.y;
+            position->z = qrdkDoors[index].z;
+        }
+        if (yaw)
+            *yaw = qrdkDoors[index].yaw;
+        return;
+    }
+}
+
+shen_name QrdkFindClosestDoor(float *distance)
+{
+    Vector3 ryo, position;
+    Vector3i rotation;
+    unsigned int yaw;
+    float best, candidate;
+    shen_name result;
+    int index;
+    FTBL.GetCharaPosition(QRDK_RYO, QRDK_TRANSLATION_ROOT, &ryo, QRDK_WORLD);
+    FTBL.GetScenarioCharacterEulerAngles(QRDK_RYO, &rotation, QRDK_WORLD);
+    best = 10000.0f;
+    result = QRDK_INVALID;
+    for (index = 0; qrdkDoors[index].door != QRDK_INVALID; index++) {
+        QrdkGetDoorPoint(qrdkDoors[index].door, &position, &yaw);
+        if (FTBL.ComputeAngle(&ryo, best, rotation.y, 0x2000, &position) && FTBL.ComputeAngle(&position, 8.0f, yaw - 0x8000, 10012, &ryo)) {
+            candidate = FTBL.CalculatePlanarDistanceBetweenPoints(&ryo, &position);
+            if (best > candidate) {
+                best = candidate;
+                result = qrdkDoors[index].door;
+            }
+        }
+    }
+    if (distance)
+        *distance = best;
+    return result;
+}
+
+int QrdkIsDoorMotionFinished(QrdkWork *work)
+{
+    int finished;
+    if (work) {
+        finished = !(work->action & 2) || FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(QRDK_RYO), 65, 1, 0);
+        if (finished)
+            work->action &= ~2;
+    } else
+        finished = 1;
+    return finished;
+}
+
+void QrdkQueueSerif(const char *text, int voice, int startTicks, int endTicks, QrdkSerifCallback callback)
+{
+    HLibTask *parent, *task;
+    QrdkSerifWork *work;
+    int length, index;
+    parent = FTBL.HLib_GetCurrentTask();
+    if (text && endTicks > 0) {
+        for (length = 0; text[length]; length++)
+            ;
+        task = FTBL.HLib_EnqueueTaskWithParameter(QrdkSerifCallbackLoop, 4, 11, startTicks > 0 ? length + 28 : 27, QRDK_TASK);
+        if (task) {
+            work = (QrdkSerifWork *)(FTBL.HLib_GetTaskParameter(task));
+            if (work) {
+                work->parent = parent;
+                work->startTicks = startTicks;
+                work->endTicks = endTicks;
+                work->voice = voice;
+                work->callback = callback;
+                work->conversation = 0;
+                if (startTicks <= 0) {
+                    if (voice) {
+                        work->conversation = FTBL.EV_PlayDialogue(text);
+                        if (!work->conversation) {
+                            FTBL.HLib_DestroyTask(task);
+                            if (callback)
+                                callback(0, (int)parent);
+                        } else if (callback)
+                            callback(1, 0);
+                    } else {
+                        FTBL.dbgPrintEventMessage(text);
+                        if (callback)
+                            callback(1, 0);
+                    }
+                } else {
+                    for (index = 0; text[index]; index++)
+                        work->text[index] = text[index];
+                    work->text[index] = 0;
+                }
+            } else {
+                FTBL.HLib_DestroyTask(task);
+                if (callback)
+                    callback(0, (int)parent);
+            }
+        }
+    } else if (callback)
+        callback(0, (int)parent);
+}
+
+void QrdkSerifCallbackLoop(void *data)
+{
+    QrdkSerifWork *work = (QrdkSerifWork *)data;
+    if (work) {
+    if ((FTBL.GetCurrentControlInput(2) >> 9) & 1) {
+        if (work->startTicks > 1)
+            work->startTicks = 1;
+        else if (work->endTicks > 1)
+            work->endTicks = 1;
+    }
+    if (!--work->startTicks) {
+        if (work->voice) {
+            work->conversation = FTBL.EV_PlayDialogue(work->text);
+            if (!work->conversation) {
+                FTBL.HLib_DestroyCurrentEventTask();
+                if (work->callback)
+                    work->callback(0, (int)work->parent);
+            } else if (work->callback)
+                work->callback(1, 0);
+        } else {
+            FTBL.dbgPrintEventMessage(work->text);
+            if (work->callback)
+                work->callback(1, 0);
+        }
+    }
+    if (!--work->endTicks) {
+        if (work->startTicks <= 0) {
+            if (work->voice) {
+                if (work->conversation && FTBL.cvsHasValidConverseData(work->conversation))
+                    FTBL.scenCvsCtrlFree(work->conversation);
+                work->conversation = 0;
+            } else
+                FTBL.ctrlStopSubtitles();
+        }
+        FTBL.HLib_DestroyCurrentTask();
+        if (work->callback)
+            work->callback(3, (int)work->parent);
+    }
+    if (work->callback)
+        work->callback(2, work->endTicks);
+    } else
+        FTBL.HLib_DestroyCurrentTask();
+}
+
+void QrdkResumeOnSerifFinished(int event, int argument)
+{
+    if (event == 3)
+        FTBL.HLib_ResolveDeferredCallback((HLibTask *)argument);
+}
+
+void QrdkHideCharacter(shen_name character)
+{
+    float reflector[4];
+    int hasMotion = FTBL.scenFindMotionwork(character) != 0;
+    if (hasMotion) {
+        reflector[0] = 1.0f;
+        reflector[1] = 1.0f;
+        reflector[2] = 1.0f;
+        reflector[3] = 1.0f;
+        FTBL.SetScenarioReflectorBoardValues(character, reflector);
+        FTBL.SetRefBoardParamsForCharaById(character, 1);
+    }
+    FTBL.EV_SetCharaControllerFlags(character, 1, 0);
+    FTBL.EV_SetCharaControllerFlags(character, 0, 0);
+    if (hasMotion)
+        FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void QrdkShowCharacter(shen_name character)
+{
+    int hasMotion = FTBL.scenFindMotionwork(character) != 0;
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+    if (hasMotion)
+        FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    FTBL.EV_SetCharaControllerFlags(character, 0, 1);
+    FTBL.EV_SetCharaControllerFlags(character, 1, 1);
+    if (hasMotion)
+        FTBL.SetRefBoardParamsForCharaById(character, 0);
+}
+
+char qrdkPackage[] = "QRDK";
+QrdkRoutePoint qrdkRoute[] = {{209.0f, 177.7f, 0}, {200.0f, 179.0f, 0}, {199.2f, 176.0f, 1}, {199.2f, 150.0f, 0},
+    {200.5f, 147.3f, 0}, {214.2f, 148.2f, 0}, {216.2f, 145.2f, 0}, {217.5f, 126.0f, 0}, {236.4f, 126.0f, 0}, {232.6f, 125.8f, 0},
+    {217.0f, 126.4f, 0}, {216.8f, 131.6f, 0}, {216.8f, 144.8f, 0}, {214.84f, 147.2f, 0}, {198.9f, 147.8f, 0}, {199.0f, 150.6f, 2}};
+QrdkDoorPoint qrdkDoors[] = {{SHEN_NAME4('R', '1', '0', '1'), 200.0f, 152.0f, 0xc000}, {QRDK_R102, 200.0f, 157.5f, 0xc000},
+    {SHEN_NAME4('R', '1', '0', '3'), 200.0f, 163.0f, 0xc000}, {QRDK_R104, 200.0f, 168.4f, 0xc000},
+    {SHEN_NAME4('R', '1', '0', '5'), 200.0f, 173.7f, 0xc000}, {SHEN_NAME4('R', '1', '1', '6'), 215.0f, 143.0f, 0x4000},
+    {QRDK_R117, 215.0f, 138.0f, 0x4000}, {SHEN_NAME4('R', '1', '1', '8'), 215.0f, 132.0f, 0x4000},
+    {SHEN_NAME4('R', '1', '1', '9'), 215.0f, 127.0f, 0x4000}, {SHEN_NAME4('R', '1', '2', '0'), 218.0f, 124.0f, 0},
+    {SHEN_NAME4('R', '1', '2', '1'), 223.3f, 124.0f, 0}, {QRDK_R122, 228.6f, 124.0f, 0}, {SHEN_NAME4('R', '1', '2', '3'), 234.0f, 124.0f, 0},
+    {QRDK_INVALID, 0.0f, 0.0f, 0}};
+QrdkEnemy qrdkEnemies[] = {{SHEN_NAME4('P', '0', '5', 'Q'), QRDK_R102, 1.0f, -1.0f, 0, 2},
+    {SHEN_NAME4('P', '0', '4', 'Q'), QRDK_R102, -1.0f, -1.0f, 0, 3}, {SHEN_NAME4('P', '0', '7', 'Q'), QRDK_R104, 1.0f, -1.0f, 0, 2},
+    {SHEN_NAME4('P', '0', '1', 'Q'), QRDK_R104, -1.0f, -1.0f, 0, 3}, {SHEN_NAME4('P', '0', '8', 'Q'), QRDK_R117, 1.0f, -1.0f, 0, 2},
+    {SHEN_NAME4('P', '0', '3', 'Q'), QRDK_R117, -1.0f, -1.0f, 0, 3}, {QRDK_INVALID, QRDK_INVALID, 0.0f, 0.0f, 0, 0}};
+shen_name qrdkCharacters[] = {QRDK_REN, SHEN_NAME4('P', '0', '5', 'Q'), SHEN_NAME4('P', '0', '4', 'Q'), SHEN_NAME4('P', '0', '7', 'Q'),
+    SHEN_NAME4('P', '0', '1', 'Q'), SHEN_NAME4('P', '0', '8', 'Q'), SHEN_NAME4('P', '0', '3', 'Q'), QRDK_INVALID};
+#else
 #include "s2/areas/area_qrdk.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
@@ -718,3 +1604,4 @@ void QrdkExitCallback(void *data) {
 
 const ScriptAreaDefinition qrdkScriptDefinition{.areaId = AREA_QRDK, .field04 = 0, .init = QrdkInitNullsub, .main = QrdkMain};
 } // namespace shenmue::s2::areas
+#endif

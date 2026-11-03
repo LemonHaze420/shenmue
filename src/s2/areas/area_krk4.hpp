@@ -1,5 +1,15 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+
+#define TASK_KRK4_WAVE SHEN_NAME4('w', 'a', 'v', 'e')
+void AreaMain(unsigned int startParameters);
+void AreaCleanup(int afternoon);
+void AreaKRK4WaveCallback(void *taskData);
+#else
+#pragma once
+
 #include "s2/area_event.hpp"
 #include "s2/area_names.hpp"
 
@@ -14,3 +24,4 @@ void AreaKRK4WaveCallback(void *taskData);
 extern const GameplayAreaDefinition areaKRK4GameplayDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

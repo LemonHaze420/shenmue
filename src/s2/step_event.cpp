@@ -1,3 +1,659 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/step_event.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void Queue_EVT_AT_NPCClear(void *argument)
+{
+    EventDateTime date;
+    FTBL.SetLoadingBusy();
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    date.hour = 17;
+    date.minute = 30;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&date);
+    FTBL.FreeWAIR();
+    FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
+    FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
+    FTBL.UpdateWeather();
+    if (g_currentMap == STEP_AREA)
+        FTBL.SetScreenFilmFade(1, 0, 0, 0, 0, 255, 0, 0, 0);
+    FTBL.SetPlayerControlEnabled(0);
+    QueueClearNpcs(Queue_eSTEP_EVT_KaidanQteMain, 0);
+}
+#else
+shen_name stepCharacterNames[] = {STEP_RYO, STEP_CHD, STEP_ISN, STEP_KRD, STEP_KR4, STEP_KF4, EVENT_CHARACTER_INVALID};
+shen_name stepAuthorCharacterNames[] = {SHEN_NAME4('R', 'E', 'N', '_'), SHEN_NAME4('S', 'R', 'Y', '_'), SHEN_NAME4('J', 'O', 'P', '_'),
+    SHEN_NAME4('S', 'G', 'T', '_'), STEP_TGY, SHEN_NAME4('W', 'O', 'N', '_'), SHEN_NAME4('E', 'S', 'Y', '_'), SHEN_NAME4('B', 'F', '8', '_'),
+    SHEN_NAME4('B', 'F', '7', '_'), SHEN_NAME4('B', 'F', '1', '_'), SHEN_NAME4('B', 'F', '9', '_'), SHEN_NAME4('K', 'F', '5', '_'), EVENT_CHARACTER_INVALID};
+static int secondOpponentThrown;
+static int fourthCounterCombo;
+
+void Queue_eSTEP_EVT_KaidanQteMain(void *data)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(eSTEP_EVT_KaidanQteMain_Callback, 4, 11, sizeof(StepEventWork), TASK_EVNT);
+    StepEventWork *work = (StepEventWork *)FTBL.HLib_GetTaskParameter(task);
+    *work = (StepEventWork){0};
+    work->task = task;
+    work->phase = 0;
+    work->state = 0;
+    work->characters = Queue_EVT_AT_ReadChr(task, stepCharacterNames);
+    EventDebugRegister(STEP_DEBUG_ID, eSTEP_EVT_EndKaidanQte_Callback, work, 3000000);
+}
+
+int STEP_SetupKaidanQte(StepEventWork *work)
+{
+    int index;
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"STEP", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "STEP", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "STEP", 0, 0);
+    FTBL.CreateEventCharacter(3, 0, STEP_BASE);
+    EVT_AT_SetPos(STEP_BASE, EVENT_CHARACTER_INVALID, 264.7f, 241.3f, 137.51999f, 0);
+    EVT_AT_SetAngY(STEP_BASE, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    EVT_AT_SetPos(STEP_RYO, STEP_BASE, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(STEP_RYO, STEP_BASE, 0.0f, 0);
+    FTBL.SetIsSkySetup(0);
+    ResetSkQteRetryCount();
+    FTBL.SetLoadingBusy();
+    FTBL.SetPlayerGameFlags(2, 0);
+    FTBL.EV_FreeAuthorPak(1, "S2BV");
+    FTBL.EV_FreeAuthorPak(1, "0274");
+    work->phase = 1;
+    EventDebugCheck(STEP_DEBUG_ID, 4);
+    FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(STEP_RYO));
+    FTBL.SelectCharacterFacialNode(FTBL.ctrlGetCharaByName(STEP_RYO), 1);
+    for (index = 0; stepCharacterNames[index] != EVENT_CHARACTER_INVALID; index++) {
+        FTBL.SetScenarioCharacterType(stepCharacterNames[index], 4);
+        EVT_AT_SetFaceLooks(stepCharacterNames[index], 1, 0, 1.0f, 0);
+    }
+    return 0;
+}
+
+int STEP_FinishKaidanAuthor(StepEventWork *work)
+{
+    if (g_currentMap == STEP_AREA && (unsigned int)g_entryPoint > 90) {
+        work->phase = 1;
+        work->state = 0;
+    } else
+        FTBL.HLib_SetCurrentTaskTo(eSTEP_EVT_EndKaidanQte_Callback);
+    FTBL.SetScenarioCharacterType(STEP_TGY, 7);
+    FTBL.SetMapModelEnabled(1, 4);
+    FTBL.spmFadeOut(0);
+    FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+    return 30;
+}
+
+void eSTEP_EVT_EndKaidanQte_Callback(void *data)
+{
+    StepEventWork *work = (StepEventWork *)data;
+    FTBL.FinishLoading();
+    FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(STEP_RYO));
+    EVT_UTL_FreeNPCChara(stepAuthorCharacterNames);
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    FTBL.SetScenarioCharacterKillMode(STEP_BASE, 1);
+    FTBL.EV_FreeAuthorPak(0, "S2BV");
+    FTBL.EV_FreeAuthorPak(0, "0274");
+    if (FTBL.EV_ControlPackageResources(0, 5, "STEPAUTH", 0, 0))
+        FTBL.EV_ControlPackageResources(0, 6, "STEPAUTH", 0, 0);
+    FTBL.scenFreeEvent("STEP.EV3");
+    EventDebugUnregister(STEP_DEBUG_ID);
+    FTBL.scenSetTaskFlags(8);
+    FTBL.Queue_ST_LoadTitleFadeIn(0);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"TGLB", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.ExecuteCurrAreaMainFunc_Wrapper(2, 0);
+}
+
+void eSTEP_EVT_KaidanQteMain_Callback(void *data)
+{
+    StepEventWork *work = (StepEventWork *)data;
+    int delay = 0;
+    switch (work->phase) {
+    case 0:
+        delay = STEP_SetupKaidanQte(work);
+        break;
+    case 1:
+        delay = STEP_RunKaidanQte(work);
+        break;
+    case 2:
+        delay = STEP_RunKaidanAuthor(work);
+        break;
+    case 3:
+        delay = STEP_FinishKaidanAuthor(work);
+        break;
+    }
+    if (delay > 0)
+        FTBL.HLib_SetupTaskDelay(delay);
+}
+
+int STEP_RunKaidanQte(StepEventWork *work)
+{
+    int delay = 0;
+    int index;
+    switch (work->state) {
+    case 0:
+        FTBL.EV_LoadAudio("0273A000", 0);
+        FTBL.EV_spmBeginSampleExecute(0);
+        EVT_AT_SetFaceLooks(STEP_RYO, 1, 0, 1.0f, 0);
+        for (index = 0; stepCharacterNames[index] != EVENT_CHARACTER_INVALID; index++) {
+            FTBL.EV_DisableCharacterDisplay(stepCharacterNames[index]);
+            EVT_AT_SetFaceLooks(stepCharacterNames[index], 1, 0, 1.0f, 0);
+        }
+        FTBL.EV_EnableCharacterDisplay(STEP_RYO);
+        delay = STEP_BeginFirstOpponent(work);
+        work->state = 1;
+        break;
+    case 1:
+        if (!work->qteSucceeded) {
+            EVT_AT_SetVoice("S2BVA006", 20);
+            QueueSkQteWait(&work->qteElapsed, 1024, 24, 16, STEP_FirstCounterSuccess, STEP_FirstCounterFailure, 20);
+            work->state = 3;
+        } else
+            work->state = 4;
+        break;
+    case 3:
+        if (work->qteSucceeded)
+            work->state = 4;
+        else
+            work->state = 50;
+        break;
+    case 4:
+        delay = STEP_BeginSecondOpponent(work);
+        work->state++;
+        break;
+    case 5:
+        if (work->qteSucceeded)
+            work->state = 8;
+        else {
+            EVT_AT_SetCam(3305, STEP_BASE, STEP_BASE, 0, 0, 0);
+            QueueSkQteWait(&work->qteElapsed, 2048, 24, 16, STEP_SecondCounterSuccess, STEP_SecondCounterFailure, 0);
+            work->state = 7;
+        }
+        break;
+    case 7:
+        if (work->qteSucceeded)
+            work->state = 8;
+        else
+            work->state = 50;
+        break;
+    case 8:
+        delay = STEP_BeginThirdOpponent(work);
+        work->state = 9;
+        break;
+    case 9:
+        if (!work->qteSucceeded)
+            work->state = 50;
+        else
+            work->state = 10;
+        break;
+    case 10:
+        delay = STEP_BeginFourthOpponent(work);
+        work->state = 11;
+        break;
+    case 11:
+        if (work->qteSucceeded)
+            QueueSkQteWait(&work->qteElapsed, 1, 24, 16, STEP_FourthComboSuccess, STEP_FourthComboFailure, 0);
+        else
+            QueueSkQteWait(&work->qteElapsed, 1, 24, 16, STEP_FourthCounterSuccess, STEP_FourthCounterFailure, 0);
+        work->state++;
+        break;
+    case 12:
+        EVT_AT_SetFaceLooks(STEP_RYO, 6, 8, 1.0f, 0);
+        if (work->qteSucceeded) {
+            delay = STEP_BeginFinalOpponent(work);
+            work->state = 13;
+        } else
+            work->state = 50;
+        break;
+    case 13:
+        if (work->qteSucceeded)
+            work->state = 14;
+        else
+            work->state = 50;
+        break;
+    case 14:
+        if (g_currentMap == STEP_AREA && (unsigned int)g_entryPoint > 90) {
+            work->phase = 1;
+            FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+            delay = 30;
+        } else {
+            work->phase = 2;
+            FTBL.spmFadeOut(0);
+        }
+        work->state = 0;
+        break;
+    case 50:
+        EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+        IncrementSkQteRetryCount();
+        delay = 60;
+        work->state = 0;
+        break;
+    }
+    return delay;
+}
+
+int STEP_BeginFirstOpponent(StepEventWork *work)
+{
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    EVT_AT_SetPos(STEP_RYO, STEP_BASE, 0.2f, 0.0f, -1.0f, 0);
+    EVT_AT_SetAngY(STEP_RYO, STEP_BASE, 0.0f, 0);
+    STEP_PositionRunningOpponent(STEP_KR4, 0.0f, 0);
+    STEP_PositionRunningOpponent(STEP_ISN, 0.0f, 120);
+    QueueStepDescent(STEP_KR4, 2, 40);
+    EVT_AT_SetMot(STEP_RYO, 7064, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetCam(3000, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetCam(3001, STEP_BASE, STEP_BASE, 0, 0, 40);
+    QueueSkQteWait(&work->qteElapsed, 16, 24, 16, STEP_FirstDodgeSuccess, STEP_FirstDodgeFailure, 80);
+    return 0;
+}
+
+int STEP_FirstDodgeSuccess(void)
+{
+    EVT_AT_SetCam(3100, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_DispBlur(STEP_RYO, 1, 10, 2, 0, 15, 0);
+    EVT_AT_DispBlur(STEP_RYO, 6, 10, 2, 0, 10, 30);
+    EVT_AT_SetPos(STEP_RYO, STEP_BASE, -0.1f, 0.0f, -1.6f, 0);
+    EVT_AT_SetPos(STEP_KR4, STEP_RYO, 0.0f, 1.6f, -2.3f, 0);
+    EVT_AT_SetAngY(STEP_KR4, STEP_RYO, 0.0f, 0);
+    EVT_AT_SetMot(STEP_RYO, 7055, 0.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(STEP_KR4, 7095, 16.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetVoice("S2BVB001", 0);
+    EVT_AT_SetVoice("S2BVB020", 30);
+    return 30;
+}
+
+int STEP_FirstDodgeFailure(void)
+{
+    EVT_AT_SetCam(3101, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetPos(STEP_KR4, STEP_RYO, -0.2f, 1.8f, -2.5f, 0);
+    EVT_AT_SetAngY(STEP_KR4, STEP_RYO, 0.0f, 0);
+    EVT_AT_SetMot(STEP_RYO, 7060, 0.0f, 0.8f, 0x44000000U, 0);
+    EVT_AT_SetMot(STEP_KR4, 7096, 31.0f, 0.8f, 0x44000000U, 0);
+    EVT_AT_SetFaceLooks(STEP_RYO, 6, 8, 1.0f, 0);
+    EVT_AT_SetVoice("S2BVA009", 0);
+    return 45;
+}
+
+int STEP_FirstCounterSuccess(void)
+{
+    EVT_AT_SetCam(3102, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetPosAng(STEP_KR4, STEP_RYO, 0.2f, 0.3f, 0.0f, 0);
+    EVT_AT_DispBlur(STEP_RYO, 5, 10, 2, 0, 30, 0);
+    EVT_AT_SetFaceLooks(STEP_RYO, 1, 8, 1.0f, 10);
+    EVT_AT_SetFaceLooks(STEP_KR4, 6, 8, 1.0f, 10);
+    EVT_AT_SetMot(STEP_RYO, 7041, 0.0f, 1.0f, 0x4000000U, 0);
+    EVT_AT_SetMot(STEP_KR4, 7092, 0.0f, 1.0f, 0x4000000U, 0);
+    EVT_AT_SetVoice("S2BVA003", 10);
+    return 15;
+}
+
+int STEP_FirstCounterFailure(void)
+{
+    EVT_AT_SetCam(3103, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetMot(STEP_RYO, 7044, 0.0f, 1.0f, 0x4000000U, 0);
+    EVT_AT_SetMot(STEP_KR4, 7093, 0.0f, 1.0f, 0x4000000U, 0);
+    EVT_AT_SetVoice("S2BVA012", 0);
+    return 15;
+}
+
+int STEP_BeginSecondOpponent(StepEventWork *work)
+{
+    STEP_PositionRunningOpponent(STEP_KRD, 0.2f, 30);
+    QueueStepDescent(STEP_ISN, 2, 0);
+    EVT_AT_SetPos(STEP_RYO, STEP_BASE, 0.0f, 0.0f, -1.6f, 20);
+    EVT_AT_SetPos(STEP_RYO, STEP_RYO, 0.0f, 0.456f, 0.0f, 41);
+    EVT_AT_SetMot(STEP_RYO, 7051, 0.0f, 1.0f, 0, 20);
+    EVT_AT_SetMot(STEP_RYO, 7050, 0.0f, 1.0f, 0x40000000U, 41);
+    EVT_AT_SetCam(3300, STEP_BASE, STEP_BASE, 0, 0, 20);
+    QueueSkQteWait(&work->qteElapsed, 2048, 24, 16, STEP_SecondDodgeSuccess, STEP_SecondDodgeFailure, 35);
+    return 0;
+}
+
+int STEP_SecondDodgeSuccess(void)
+{
+    EVT_AT_SetCam(3301, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetPos(STEP_ISN, STEP_RYO, 0.0f, 1.6f, -2.1f, 0);
+    EVT_AT_SetAngY(STEP_ISN, STEP_RYO, 0.0f, 0);
+    EVT_AT_DispBlur(STEP_RYO, 1, 10, 2, 0, 15, 20);
+    EVT_AT_SetMot(STEP_RYO, 7056, 0.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(STEP_ISN, 7101, 6.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetVoice("S2BVA001", 30);
+    secondOpponentThrown = 1;
+    return 5;
+}
+
+int STEP_SecondDodgeFailure(void)
+{
+    EVT_AT_SetCam(3302, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetFaceLooks(STEP_RYO, 6, 8, 1.0f, 15);
+    EVT_AT_SetPos(STEP_ISN, STEP_RYO, 0.0f, 1.6f, -1.8f, 0);
+    EVT_AT_SetAngY(STEP_ISN, STEP_RYO, 0.0f, 0);
+    EVT_AT_SetMot(STEP_RYO, 7063, 0.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(STEP_ISN, 7103, 22.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetVoice("S2BVC009", 10);
+    secondOpponentThrown = 0;
+    return 20;
+}
+
+int STEP_SecondCounterSuccess(void)
+{
+    EVT_AT_SetCam(3303, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetCam(3306, STEP_BASE, STEP_BASE, 0, 0, 60);
+    EVT_AT_SetFaceLooks(STEP_RYO, 1, 8, 1.0f, 0);
+    EVT_AT_SetFaceLooks(STEP_KR4, 6, 8, 1.0f, 20);
+    EVT_AT_DispBlur(STEP_RYO, 6, 10, 2, 0, 15, 0);
+    EVT_AT_SetMot(STEP_RYO, 7042, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(STEP_ISN, 7097, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetVoice("S2BVA002", 30);
+    return 70;
+}
+
+int STEP_SecondCounterFailure(void)
+{
+    EVT_AT_SetCam(3304, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetVoice("S2BVC008", 0);
+    EVT_AT_SetMot(STEP_RYO, 7045, 30.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(STEP_ISN, 7099, 30.0f, 1.0f, 0x44000000U, 0);
+    return 30;
+}
+
+int STEP_BeginThirdOpponent(StepEventWork *work)
+{
+    STEP_PositionRunningOpponent(STEP_KF4, 0.1f, 0);
+    QueueStepDescent(STEP_KRD, 1, 0);
+    QueueSkQteWait(&work->qteElapsed, 512, 24, 16, STEP_ThirdCounterSuccess, STEP_ThirdCounterFailure, 15);
+    return 0;
+}
+
+int STEP_ThirdCounterSuccess(void)
+{
+    EVT_AT_SetCam(3400, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetPos(STEP_RYO, STEP_RYO, -0.4f, 0.45f, 0.0f, 0);
+    EVT_AT_SetPos(STEP_KRD, STEP_RYO, -0.4f, 1.53f, -2.0f, 0);
+    EVT_AT_SetAngY(STEP_KRD, STEP_RYO, 0.0f, 0);
+    EVT_AT_SetMot(STEP_RYO, 7057, 0.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(STEP_KRD, 7083, 20.0f, 1.0f, 0x44000000U, 0);
+    if (secondOpponentThrown) {
+        EVT_AT_SetPos(STEP_ISN, STEP_ISN, 0.0f, -1.5f, 0.0f, 45);
+        EVT_AT_SetMot(STEP_ISN, 7091, 40.0f, 1.0f, 0x40000000U, 45);
+    } else {
+        EVT_AT_SetPos(STEP_ISN, EVENT_CHARACTER_INVALID, 264.5f, 243.4f, 136.2f, 0);
+        EVT_AT_SetAngY(STEP_ISN, EVENT_CHARACTER_INVALID, 0.0f, 0);
+    }
+    EVT_AT_SetVoice("S2BVA003", 10);
+    EVT_AT_SetVoice("S2BVB023", 50);
+    return 70;
+}
+
+int STEP_ThirdCounterFailure(void)
+{
+    EVT_AT_SetCam(3401, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetPos(STEP_RYO, STEP_RYO, 0.0f, 0.45f, 0.0f, 0);
+    EVT_AT_SetPos(STEP_RYO, STEP_BASE, 0.27f, 0.9f, -2.6f, 0);
+    EVT_AT_SetPos(STEP_KRD, STEP_RYO, -0.4f, 1.53f, -2.0f, 0);
+    EVT_AT_SetAngY(STEP_KRD, STEP_RYO, 0.0f, 0);
+    EVT_AT_SetMot(STEP_RYO, 7046, 0.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(STEP_KRD, 7080, 26.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetVoice("S2BVB007", 0);
+    EVT_AT_SetVoice("S2BVA011", 30);
+    return 40;
+}
+
+int STEP_BeginFourthOpponent(StepEventWork *work)
+{
+    STEP_PositionRunningOpponent(STEP_CHD, -0.1f, 0);
+    EVT_AT_SetMot(STEP_KF4, 7104, 0.0f, 1.0f, 0x4000000U, 0);
+    EVT_AT_SetPos(STEP_RYO, STEP_BASE, 0.26f, 0.9f, -2.9f, 0);
+    EVT_AT_SetAngY(STEP_KF4, STEP_KF4, 90.0f, 0);
+    EVT_AT_SetCam(3500, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetPos(STEP_KR4, STEP_BASE, -0.4f, 0.0f, -1.0f, 0);
+    EVT_AT_SetAngY(STEP_KR4, STEP_BASE, 0.0f, 0);
+    EVT_AT_SetPos(STEP_KRD, STEP_BASE, -0.1f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(STEP_KRD, STEP_BASE, 315.0f, 0);
+    EVT_AT_SetPos(STEP_ISN, STEP_BASE, 0.4f, 0.0f, -1.3f, 0);
+    EVT_AT_SetAngY(STEP_ISN, STEP_BASE, 45.0f, 0);
+    EVT_AT_SetMot(STEP_KR4, 7088, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(STEP_KRD, 7066, 0.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(STEP_ISN, 7088, 0.0f, 1.0f, 0x40000000U, 0);
+    QueueSkQteWait(&work->qteElapsed, 1024, 24, 16, STEP_FourthDodgeSuccess, STEP_FourthDodgeFailure, 10);
+    return 0;
+}
+
+int STEP_FourthDodgeSuccess(void)
+{
+    EVT_AT_DispBlur(STEP_RYO, 5, 10, 2, 0, 10, 0);
+    EVT_AT_DispBlur(STEP_RYO, 4, 10, 2, 0, 10, 10);
+    EVT_AT_SetMot(STEP_RYO, 7058, 0.0f, 1.0f, 0x4000000U, 0);
+    EVT_AT_SetCam(3505, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetVoice("S2BVA003", 0);
+    return 20;
+}
+
+int STEP_FourthDodgeFailure(void)
+{
+    EVT_AT_SetCam(3502, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetPos(STEP_KF4, STEP_RYO, -0.3f, 1.56f, -2.3f, 0);
+    EVT_AT_SetAngY(STEP_KF4, STEP_RYO, 0.0f, 0);
+    EVT_AT_SetMot(STEP_RYO, 7061, 0.0f, 1.0f, 0x4000000U, 0);
+    EVT_AT_SetMot(STEP_KF4, 7102, 64.0f, 1.0f, 0x4000000U, 0);
+    EVT_AT_SetVoice("S2BVC004", 0);
+    EVT_AT_SetVoice("S2BVA010", 30);
+    return 20;
+}
+
+int STEP_FourthComboSuccess(void)
+{
+    EVT_AT_DispBlur(STEP_RYO, 1, 10, 3, 0, 30, 0);
+    EVT_AT_SetMot(STEP_RYO, 7053, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetVoice("S2BVA001", 0);
+    fourthCounterCombo = 1;
+    return 0;
+}
+
+int STEP_FourthComboFailure(void)
+{
+    EVT_AT_SetCam(3504, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetMot(STEP_RYO, 7054, 0.0f, 0.9f, 0, 0);
+    EVT_AT_SetVoice("S2BVA007", 0);
+    EVT_AT_CharaDisp(STEP_ISN, 0, 1);
+    return 0;
+}
+
+int STEP_FourthCounterSuccess(void)
+{
+    EVT_AT_SetCam(3503, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetMot(STEP_RYO, 7043, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(STEP_KF4, 7098, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetVoice("S2BVA002", 0);
+    fourthCounterCombo = 0;
+    return 10;
+}
+
+int STEP_FourthCounterFailure(void)
+{
+    EVT_AT_SetPos(STEP_KF4, STEP_KF4, 0.0f, -0.2f, 0.0f, 0);
+    EVT_AT_SetMot(STEP_RYO, 7047, 0.0f, 1.0f, 0, 10);
+    EVT_AT_SetMot(STEP_KF4, 7100, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetVoice("S2BVC006", 0);
+    return 15;
+}
+
+int STEP_BeginFinalOpponent(StepEventWork *work)
+{
+    float x, y, z;
+    shen_name base, camera;
+    if (fourthCounterCombo) {
+        base = STEP_BASE;
+        x = -0.05f;
+        y = 1.15f;
+        z = -3.1f;
+    } else {
+        base = STEP_BASE;
+        x = 0.25f;
+        y = 1.15f;
+        z = -3.4f;
+    }
+    EVT_AT_SetPos(STEP_RYO, base, x, y, z, 0);
+    camera = base;
+    SHENMUE_EVENT_BOUNDARY();
+    EVT_AT_SetCam(3600, camera, camera, 0, 0, 0);
+    EVT_AT_SetCam(3601, camera, camera, 0, 0, 50);
+    SHENMUE_EVENT_BOUNDARY();
+    EVT_AT_SetVoice("S2BVA013", 50);
+    EVT_AT_SetAngY(STEP_CHD, STEP_CHD, 270.0f, 0);
+    EVT_AT_SetPos(STEP_CHD, STEP_CHD, 0.0f, -0.3f, 0.0f, 20);
+    EVT_AT_SetPos(STEP_CHD, STEP_CHD, 0.0f, -0.45f, 0.0f, 36);
+    EVT_AT_SetPos(STEP_CHD, STEP_RYO, -1.074f, 1.598f, -2.28f, 50);
+    EVT_AT_SetAngY(STEP_CHD, STEP_RYO, 0.0f, 50);
+    EVT_AT_SetMot(STEP_RYO, 7062, 0.0f, 1.0f, 0x44000000U, 50);
+    EVT_AT_SetMot(STEP_CHD, 7068, 0.0f, 1.0f, 0, 0);
+    EVT_AT_SetMot(STEP_CHD, 7067, 0.0f, 1.0f, 0x40000000U, 20);
+    EVT_AT_SetMot(STEP_CHD, 7086, 38.0f, 1.0f, 0x44000000U, 50);
+    EVT_AT_SetPos(STEP_KF4, STEP_BASE, 0.0f, 2.4f, -2.6f, 50);
+    EVT_AT_SetAngY(STEP_KF4, STEP_BASE, 0.0f, 50);
+    QueueSkQteWait(&work->qteElapsed, 1024, 24, 16, STEP_FinalDodgeSuccess, STEP_FinalDodgeFailure, 100);
+    return 0;
+}
+
+int STEP_FinalDodgeSuccess(void)
+{
+    EVT_AT_SetFaceLooks(STEP_RYO, 1, 8, 1.0f, 0);
+    EVT_AT_SetPos(STEP_RYO, STEP_RYO, -0.2f, 0.0f, 0.4f, 0);
+    EVT_AT_SetPos(STEP_RYO, STEP_RYO, -0.3f, 0.0f, 0.0f, 80);
+    EVT_AT_SetPos(STEP_CHD, STEP_RYO, -0.8f, 1.5f, -2.26f, 0);
+    EVT_AT_SetAngY(STEP_CHD, STEP_RYO, 0.0f, 0);
+    EVT_AT_SetMot(STEP_RYO, 7059, 170.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(STEP_RYO, 7107, 0.0f, 0.8f, 0, 80);
+    EVT_AT_SetMot(STEP_CHD, 7084, 208.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_DispBlur(STEP_RYO, 4, 10, 1, 0, 10, 0);
+    EVT_AT_DispBlur(STEP_RYO, 5, 10, 1, 0, 10, 20);
+    EVT_AT_DispBlur(STEP_RYO, 6, 10, 1, 0, 15, 50);
+    EVT_AT_SetCam(3603, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetCam(3605, STEP_BASE, STEP_BASE, 0, 0, 45);
+    EVT_AT_SetCam(3604, STEP_BASE, STEP_BASE, 0, 0, 80);
+    EVT_AT_SetVoice("S2BVA001", 0);
+    EVT_AT_SetVoice("S2BVC021", 30);
+    EVT_AT_SetVoice("S2BVA004", 50);
+    return 100;
+}
+
+int STEP_FinalDodgeFailure(void)
+{
+    EVT_AT_SetPos(STEP_RYO, STEP_RYO, -0.3f, 0.0f, 0.0f, 0);
+    EVT_AT_SetPos(STEP_CHD, STEP_RYO, -0.974f, 1.5f, -2.26f, 0);
+    EVT_AT_SetAngY(STEP_CHD, STEP_RYO, 0.0f, 0);
+    EVT_AT_SetMot(STEP_RYO, 7062, 160.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetMot(STEP_CHD, 7086, 198.0f, 1.0f, 0x44000000U, 0);
+    EVT_AT_SetCam(3602, STEP_BASE, STEP_BASE, 0, 0, 0);
+    EVT_AT_SetVoice("S2BVA010", 0);
+    EVT_AT_SetVoice("S2BVA012", 50);
+    return 60;
+}
+
+void STEP_PositionRunningOpponent(shen_name character, float offset, int delay)
+{
+    EVT_AT_CharaDisp(character, delay, 0);
+    EVT_AT_SetPos(character, STEP_BASE, offset + -1.5f, 2.7f, -5.8f, delay);
+    EVT_AT_SetAngY(character, STEP_BASE, 270.0f, delay);
+    if (FTBL.GetMotionRigBoneId(FTBL.scenFindMotionwork(character)) == STEP_ENEMY_RIG)
+        EVT_AT_SetMot(character, 7069, 0.0f, 1.0f, 0x40000000U, delay);
+    else
+        EVT_AT_SetMot(character, 7105, 0.0f, 1.0f, 0x40000000U, delay);
+}
+
+void QueueStepDescent(shen_name character, short steps, int delay)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(eSTEP_EVT_Step, 4, 11, sizeof(StepDescentWork), TASK_EVNT);
+    StepDescentWork *work = (StepDescentWork *)FTBL.HLib_GetTaskParameter(task);
+    *work = (StepDescentWork){0};
+    work->task = task;
+    work->character = character;
+    work->phase = 0;
+    work->steps = steps;
+    if (delay > 0)
+        FTBL.HLib_SetupTimedTask(task, delay);
+}
+
+void eSTEP_EVT_Step(void *data)
+{
+    StepDescentWork *work = (StepDescentWork *)data;
+    if (work->phase == 0) {
+        FTBL.EV_EnableCharacterDisplay(work->character);
+        if (FTBL.GetMotionRigBoneId(FTBL.scenFindMotionwork(work->character)) == STEP_ENEMY_RIG) {
+            EVT_AT_SetMot(work->character, 7068, 0.0f, 1.0f, 0, 0);
+            EVT_AT_SetMot(work->character, 7067, 0.0f, 1.0f, 0x40000000U, 20);
+        } else {
+            EVT_AT_SetMot(work->character, 7090, 0.0f, 1.0f, 0, 0);
+            EVT_AT_SetMot(work->character, 7089, 0.0f, 1.0f, 0x40000000U, 20);
+        }
+        EVT_AT_SetPos(work->character, work->character, 0.0f, -0.25f, 0.0f, 20);
+        EVT_AT_SetAngY(work->character, work->character, 270.0f, 0);
+        FTBL.HLib_SetupTaskDelay(25);
+        work->phase++;
+    } else if (FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(work->character), 65, 1, 0)) {
+        if (FTBL.GetMotionRigBoneId(FTBL.scenFindMotionwork(work->character)) == STEP_ENEMY_RIG)
+            EVT_AT_SetMot(work->character, 7067, 0.0f, 1.0f, 0x40000000U, 0);
+        else
+            EVT_AT_SetMot(work->character, 7089, 0.0f, 1.0f, 0x40000000U, 0);
+        EVT_AT_SetPos(work->character, work->character, 0.0f, -0.45f, 0.0f, 0);
+        if (++work->phase - 1 >= work->steps)
+            FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+int STEP_RunKaidanAuthor(StepEventWork *work)
+{
+    int delay = 0;
+    switch (work->state) {
+    case 0:
+        FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+        work->state++;
+        delay = 30;
+        break;
+    case 1:
+        ET_AT_KillWork(work->characters);
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.EV_ControlPackageResources(0, 6, "STEP", 0, 0);
+        FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"STEPAUTH", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        Queue_EVT_UTL_LoadNPCChara_3(stepAuthorCharacterNames, work->task);
+        FTBL.EV_LoadCutsceneFromCurrentScene("0274A000");
+        FTBL.EV_LoadAudio("0274A000", 0);
+        FTBL.EV_spmBeginSampleExecute(0);
+        work->state++;
+        break;
+    case 2:
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        QueueSkAuthorStart(work->task, STEP_AUTHOR, STEP_AuthorFrameCallback, 0, 0);
+        work->state = 0;
+        work->phase = 3;
+        break;
+    }
+    return delay;
+}
+
+void STEP_AuthorFrameCallback(void *data)
+{
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    switch (frame) {
+    case 1630:
+        FTBL.SetScenarioCharacterType(STEP_TGY, 7);
+        break;
+    case 1790:
+        FTBL.SetScenarioCharacterType(STEP_TGY, 0);
+        break;
+    case 3511:
+        FTBL.SetMapModelEnabled(0, 4);
+        break;
+    case 3622:
+        FTBL.SetMapModelEnabled(1, 4);
+        break;
+    case 5145:
+        FTBL.SetScenarioCharacterType(STEP_TGY, 7);
+        break;
+    }
+}
+#endif
+#else
 #include "s2/step_event.hpp"
 #include "s2/author.hpp"
 #include "s2/audio_data.hpp"
@@ -778,3 +1434,4 @@ void Queue_EVT_AT_NPCClear(std::uintptr_t) {
 } // namespace
 const ScriptAreaDefinition stepScriptDefinition{.areaId = STEP_AREA, .field04 = 0, .init = STEP_init_func, .main = Queue_EVT_AT_NPCClear};
 } // namespace shenmue::s2
+#endif

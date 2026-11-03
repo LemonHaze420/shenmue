@@ -1,3 +1,49 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/geto_event.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void GetoMain(const shen_name *parameters)
+{
+    if (!parameters)
+        return;
+    if (!parameters[0] && !parameters[1] && !parameters[2]) {
+        FTBL.SetPlayerControlEnabled(1);
+    } else {
+        HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(GetoLoop, 4, 11, sizeof(GetoEventWork), TASK_EVNT);
+        if (task) {
+            shen_name *work = (shen_name *)FTBL.HLib_GetTaskParameter(task);
+            if (work) {
+                *work++ = parameters[0];
+                *work++ = parameters[1];
+                *work++ = parameters[2];
+                *(HLibTask **)work = FTBL.HLib_GetCurrentTask();
+                FTBL.SetPlayerControlEnabled(0);
+                FTBL.HLib_SetupTaskDelay(-1);
+            } else {
+                FTBL.HLib_DestroyTask(task);
+            }
+        }
+    }
+}
+#else
+void GetoLoop(void *taskData)
+{
+    GetoEventWork *work = (GetoEventWork *)taskData;
+    if (work && !FTBL.filmCheckFadeTrackColour()) {
+        FTBL.SetDisplayFlagForProp(work->prop, work->enabled);
+        if (work->searchTarget)
+            FTBL.srchSetTargetEnabled(work->searchTarget, work->enabled);
+        FTBL.SetScreenFilmFade(8, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.HLib_ResolveDeferredCallback(work->caller);
+        FTBL.HLib_SetupTimedTask(work->caller, 1);
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.HLib_MarkCurrentTaskForCleanup();
+    }
+}
+#endif
+#else
 #include "s2/geto_event.hpp"
 #include "s2/camera.hpp"
 #include "s2/event_characters.hpp"
@@ -64,3 +110,4 @@ const ScriptAreaDefinition getoScriptDefinition{
 };
 
 } // namespace shenmue::s2
+#endif

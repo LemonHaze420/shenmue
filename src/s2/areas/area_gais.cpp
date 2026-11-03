@@ -1,3 +1,32 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_gais.hpp"
+
+void AreaGAISMain(void *argument)
+{
+    FTBL.HLib_EnqueueTaskWithoutParameter(GAISStopperCallback, 4, 13, GAIS_TASK);
+    FTBL.CheckWarmStartNpcRoute(GAIS_STOPPER);
+}
+
+void GAISStopperCallback(void *data)
+{
+    if (FTBL.ForceLoadNpc(GAIS_STOPPER)) {
+        FTBL.InitiateCleanupForSceneChara(GAIS_STOPPER);
+        FTBL.npcLockUnlock(GAIS_STOPPER);
+        EVT_AT_SetPos(GAIS_PLAYER, EVENT_CHARACTER_INVALID, 121.3f, 92.8f, 184.9f, 0);
+        EVT_AT_SetAngY(GAIS_PLAYER, EVENT_CHARACTER_INVALID, 292.5f, 0);
+        EVT_AT_SetMot(GAIS_PLAYER, 0xf003, 0.0f, 1.0f, 0x40000000U, 0);
+        FTBL.HLib_SetCurrentTaskTo(GAISWakeCallback);
+        FTBL.HLib_SetupTaskDelay(30);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    }
+}
+
+void GAISWakeCallback(void *data)
+{
+    FTBL.SetPlayerControlEnabled(1);
+    FTBL.HLib_DestroyCurrentTask();
+}
+#else
 #include "s2/areas/area_gais.hpp"
 #include "s2/areas/area_0547.hpp"
 #include "s2/event_characters.hpp"
@@ -45,3 +74,4 @@ void AreaGAISMain(std::uintptr_t) {
 const ScriptAreaDefinition areaGAISScriptDefinition{.areaId = AREA_GAIS, .field04 = 0, .init = AreaGAISInit, .main = AreaGAISMain};
 
 } // namespace shenmue::s2::areas
+#endif

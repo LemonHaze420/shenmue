@@ -1,3 +1,97 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_ytqb.hpp"
+
+int YtqbKnockdown(float angle, int delay)
+{
+    EVT_AT_SetAngY(YTQB_RYO, YTQB_RYO, angle, delay + 25);
+    if (angle < 0.0f) {
+        EVT_AT_SetMot(YTQB_RYO, 5674, 19.0f, 1.0f, 0x40000000U, delay + 25);
+        EVT_AT_SetCam(7907, YTQB_DUMR, YTQB_DUMR, 0, 0, 0);
+        EVT_AT_SetCam(7910, YTQB_DUMR, YTQB_DUMR, 0, 0, delay + 25);
+    } else {
+        EVT_AT_SetMot(YTQB_RYO, 5674, 19.0f, 1.0f, 0x60000000U, delay + 25);
+        EVT_AT_SetCam(7907, YTQB_DUMR, YTQB_DUMR, 0, (int)0x80000000U, 0);
+        EVT_AT_SetCam(7910, YTQB_DUMR, YTQB_DUMR, 0, (int)0x80000000U, delay + 25);
+    }
+    EVT_AT_SetSound(642, delay + 45);
+    EVT_AT_SetFaceLooks(YTQB_RYO, 6, 15, 1.0f, delay + 25);
+    return 0;
+}
+
+int YtqbBackKnockdown(float angle, int delay)
+{
+    EVT_AT_SetAngY(YTQB_RYO, YTQB_RYO, angle, delay + 25);
+    EVT_AT_SetCam(7915, YTQB_DUMR, YTQB_DUMR, 0, 0, 0);
+    EVT_AT_SetCam(7933, YTQB_DUMR, YTQB_DUMR, 0, 0, delay + 25);
+    EVT_AT_SetMot(YTQB_RYO, 5708, 2.0f, 1.0f, 0, delay + 25);
+    EVT_AT_SetSound(642, delay + 65);
+    EVT_AT_SetFaceLooks(YTQB_RYO, 6, 15, 1.0f, delay + 25);
+    return 0;
+}
+
+int YtqbSideKnockdown(float angle, int delay)
+{
+    EVT_AT_SetAngY(YTQB_RYO, YTQB_RYO, angle, delay + 25);
+    EVT_AT_SetCam(7909, YTQB_DUMR, YTQB_DUMR, 0, 0, 0);
+    EVT_AT_SetCam(7935, YTQB_DUMR, YTQB_DUMR, 0, 0, delay + 25);
+    EVT_AT_SetFaceLooks(YTQB_RYO, 6, 15, 1.0f, delay + 25);
+    EVT_AT_SetMot(YTQB_RYO, 5709, 2.0f, 1.0f, 0, delay + 25);
+    EVT_AT_SetSound(642, delay + 70);
+    return 0;
+}
+
+int YtqbFinalKnockdown(float angle, int delay)
+{
+    EVT_AT_SetAngY(YTQB_RYO, YTQB_RYO, angle, delay + 40);
+    EVT_AT_SetCam(7934, YTQB_DUMR, YTQB_DUMR, 0, 0, delay + 40);
+    EVT_AT_SetMot(YTQB_RYO, 5710, 2.0f, 1.0f, 0, delay + 40);
+    EVT_AT_SetSound(642, delay + 110);
+    EVT_AT_SetFaceLooks(YTQB_RYO, 6, 15, 1.0f, delay + 40);
+    return 0;
+}
+
+int YtqbWaterSuccess(void)
+{
+    int duration;
+    ytqbAttackState = 0;
+    EVT_AT_SetPos(YTQB_RYO, YTQB_BASE, 7.0f, 0.0f, -16.3f, 0);
+    EVT_AT_SetAngY(YTQB_RYO, YTQB_BASE, -45.0f, 0);
+    EVT_AT_SetPos(YTQB_KIC, YTQB_RYO, 0.5f, 0.0f, -300.6f, 0);
+    EVT_AT_SetAngY(YTQB_KIC, YTQB_RYO, 180.0f, 0);
+    duration = EVT_AT_SetMot(YTQB_RYO, 5691, 19.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetMot(YTQB_KIC, 13, 2.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetCam(7937, YTQB_DUMR, YTQB_DUMR, 0, 0, 0);
+    EVT_AT_SetCam(7938, YTQB_DUMR, YTQB_DUMR, 0, 0, 21);
+    EVT_AT_SetVoice("S2BVA005", 16);
+    EVT_AT_SetSound(3366, 19);
+    QueueYtqbWaterSplash(YTQB_SUI0, YTQB_SUI1, 0);
+    EVT_AT_CharaDisp(YTQB_SUI0, duration, 1);
+    return duration;
+}
+
+int YtqbWaterFailure(void)
+{
+    int duration;
+    ytqbAttackState = 0;
+    EVT_AT_SetPos(YTQB_RYO, YTQB_BASE, 7.0f, 0.0f, -16.3f, 0);
+    EVT_AT_SetAngY(YTQB_RYO, YTQB_BASE, -45.0f, 0);
+    EVT_AT_SetPos(YTQB_KIC, YTQB_RYO, 0.5f, 0.0f, -300.6f, 0);
+    EVT_AT_SetAngY(YTQB_KIC, YTQB_RYO, 180.0f, 0);
+    EVT_AT_SetPos(YTQB_SUI0, YTQB_INVALID, 189.1f, 101.45f, 178.6f, 0);
+    EVT_AT_SetMot(YTQB_RYO, 0xf002, 0.0f, 1.0f, 0x40000000U, 0);
+    duration = EVT_AT_SetMot(YTQB_RYO, 5660, 0.0f, 1.0f, 0, 17);
+    EVT_AT_SetMot(YTQB_KIC, 13, 2.0f, 1.0f, 0x40000000U, 0);
+    EVT_AT_SetCam(7937, YTQB_DUMR, YTQB_DUMR, 0, 0, 0);
+    EVT_AT_SetCam(7938, YTQB_DUMR, YTQB_DUMR, 0, 0, 21);
+    EVT_AT_SetFaceLooks(YTQB_RYO, 6, 5, 1.0f, 23);
+    EVT_AT_SetFaceLooks(YTQB_RYO, 1, 15, 1.0f, duration);
+    EVT_AT_SetVoice("S2BVA010", 23);
+    EVT_AT_SetSound(3366, 19);
+    QueueYtqbWaterSplash(YTQB_SUI0, YTQB_SUI1, 0);
+    EVT_AT_CharaDisp(YTQB_SUI0, duration, 1);
+    return duration;
+}
+#else
 #include "s2/areas/area_ytqb.hpp"
 #include "s2/author.hpp"
 #include "s2/character.hpp"
@@ -615,3 +709,4 @@ void YtqbFinalEhyAttack(void *data) {
     }
 }
 } // namespace shenmue::s2::areas
+#endif

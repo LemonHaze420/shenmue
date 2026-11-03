@@ -1,3 +1,387 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_tgbt.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+const shen_name tgbtLoadCharacters[] = {TGBT_REN, TGBT_FIRST_FIGHTER, TGBT_SECOND_FIGHTER, TGBT_THIRD_FIGHTER, TGBT_INVALID};
+
+void TgbtMain(void)
+{
+    HLibTask *task;
+    TgbtEventWork *work;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    if (FTBL.DoesScenarioCharacterExist(TGBT_REN)) {
+        if (FTBL.IsNpcRouteLoadedOrVisible(TGBT_REN))
+            FTBL.npcLockUnlock(TGBT_REN);
+        FTBL.npcFree(TGBT_REN);
+    }
+    task = FTBL.HLib_EnqueueTaskWithParameter(TgbtEventCallback, 4, 11, sizeof(TgbtEventWork), TASK_EVNT);
+    work = (TgbtEventWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    work->state = 1;
+    work->characters = Queue_EVT_AT_ReadChr(task, tgbtLoadCharacters);
+    work->frames = 0;
+    work->retries = 0;
+    InitializeTgbtResources(work);
+    FTBL.SetRenderClockAndCompassTo(1);
+}
+#elif defined(SHENMUE_EVENT_TGBT_AUTHOR)
+static shen_name tgbtHiddenCharacters[] = {TGBT_REN, TGBT_SECOND_FIGHTER, TGBT_FIRST_FIGHTER, TGBT_THIRD_FIGHTER, TGBT_INVALID};
+
+void QueueTgbtAuthor(shen_name author)
+{
+    HLibTask *task;
+    TgbtAuthorWork *work;
+    task = FTBL.HLib_EnqueueTaskWithParameter(TgbtAuthorCallback, 4, 11, sizeof(TgbtAuthorWork), TGBT_AUTHOR_TASK);
+    work = (TgbtAuthorWork *)FTBL.HLib_GetTaskParameter(task);
+    work->task = task;
+    work->state = 1;
+    BeginTgbtAuthor();
+    work->author = author;
+}
+
+void TgbtAuthorCallback(void *data)
+{
+    TgbtAuthorWork *work = (TgbtAuthorWork *)data;
+    switch (work->state) {
+    case 0:
+        FTBL.HLib_DestroyCurrentTask();
+        break;
+    case 1:
+        StartTgbtAuthor(work);
+        break;
+    case 3:
+        EndTgbtAuthor(work);
+        break;
+    }
+}
+
+void StartTgbtAuthor(TgbtAuthorWork *work)
+{
+    HLibTask *task;
+    TgbtAuthorWaitWork *wait;
+    task = FTBL.HLib_EnqueueTaskWithParameter(TgbtAuthorWaitCallback, 4, 11, sizeof(TgbtAuthorWaitWork), TGBT_AUTHOR_TASK);
+    wait = (TgbtAuthorWaitWork *)FTBL.HLib_GetTaskParameter(task);
+    wait->parent = work;
+    wait->state = 0;
+    PrepareTgbtAuthoredCharacters();
+    FTBL.EV_authSceneCtrl(work->author);
+    work->state = 2;
+}
+
+void TgbtAuthorWaitCallback(void *data)
+{
+    TgbtAuthorWaitWork *work = (TgbtAuthorWaitWork *)data;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        work->parent->state = 0;
+        RestoreTgbtAuthoredCharacters();
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void BeginTgbtAuthor(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_authSceneCtrl(-8);
+    FTBL.EV_SetWeatherInstruction(12, 0);
+}
+
+void EndTgbtAuthor(TgbtAuthorWork *work)
+{
+    FTBL.HLib_DestroyTask(work->task);
+}
+
+void PrepareTgbtAuthoredCharacters(void)
+{
+    int i;
+    HideTgbtCharacter(TGBT_PLAYER);
+    HideTgbtCharacter(TGBT_FIRST_FIGHTER);
+    HideTgbtProp(TGBT_AUTHOR_CHARACTER_0);
+    HideTgbtProp(TGBT_AUTHOR_CHARACTER_1);
+    HideTgbtProp(TGBT_AUTHOR_CHARACTER_2);
+    HideTgbtProp(TGBT_AUTHOR_CHARACTER_3);
+    for (i = 0; tgbtHiddenCharacters[i] != TGBT_INVALID; i++)
+        HideTgbtCharacter(tgbtHiddenCharacters[i]);
+}
+
+void RestoreTgbtAuthoredCharacters(void)
+{
+    int i;
+    ShowTgbtCharacter(TGBT_PLAYER);
+    ShowTgbtProp(TGBT_AUTHOR_CHARACTER_0);
+    ShowTgbtProp(TGBT_AUTHOR_CHARACTER_1);
+    ShowTgbtProp(TGBT_AUTHOR_CHARACTER_2);
+    ShowTgbtProp(TGBT_AUTHOR_CHARACTER_3);
+    for (i = 0; tgbtHiddenCharacters[i] != TGBT_INVALID; i++)
+        ShowTgbtCharacter(tgbtHiddenCharacters[i]);
+}
+
+void HideTgbtCharacter(shen_name character)
+{
+    Vector3 position = {0.0f, 0.0f, 0.0f};
+    FTBL.EV_AT_SetPos(character, 0x78000000U, &position);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void ShowTgbtCharacter(shen_name character)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void HideTgbtProp(shen_name prop)
+{
+    Vector3 position = {0.0f, 0.0f, 0.0f};
+    FTBL.EV_AT_SetPos(prop, 0x78000000U, &position);
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 0);
+}
+
+void ShowTgbtProp(shen_name prop)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(prop, 1);
+}
+#else
+static Vector3 tgbtExitPosition = {242.03f, 118.0f, 147.9f};
+static Vector3i tgbtExitRotation = {0, 0, 0};
+static short tgbtChoices[] = {-1, 231, 232, -1};
+
+void InitializeTgbtResources(TgbtEventWork *work)
+{
+    FTBL.EnterDoorSubscene(TGBT_AREA);
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0280A000.smp");
+    FTBL.EV_ControlPackageResources(2, 4, "TGBT", 0, 0);
+    FTBL.SetDoorSubjectEnabled(TGBT_PROP, 0);
+    FTBL.EV_LoadAudio("0280A000", 0);
+    FTBL.EV_FreeAuthorPak(1, "0280");
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.CreateEventCharacter(3, 0, TGBT_BASE);
+    EVT_AT_SetPos(TGBT_BASE, TGBT_INVALID, 244.77f, 118.0f, 153.15f, 0);
+    EVT_AT_SetAngY(TGBT_BASE, TGBT_INVALID, 0.0f, 0);
+}
+
+void CleanupTgbtEvent(TgbtEventWork *work)
+{
+    int i;
+    for (i = 0; tgbtLoadCharacters[i] != TGBT_INVALID; i++)
+        FTBL.npcLockUnlock(tgbtLoadCharacters[i]);
+    ET_AT_KillWork(work->characters);
+    FTBL.EV_setHoldStatesFlags(1);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    FTBL.LeaveDoorSubscene(0);
+    FTBL.EV_FreeAuthorPak(0, "0280");
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    FTBL.SetDoorSubjectEnabled(TGBT_PROP, 1);
+    FTBL.EV_AT_SetPos(TGBT_PLAYER, 0x78000000U, &tgbtExitPosition);
+    FTBL.EV_AT_SetAngY_0(TGBT_PLAYER, 0x78000000U, &tgbtExitRotation, 0);
+    FTBL.SetScenarioCharacterKillMode(TGBT_BASE, 1);
+    FTBL.SetRenderClockAndCompassTo(0);
+    FTBL.EV_spmBeginSampleExecute(0);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.FinishLoading();
+    FTBL.scenFreeEvent("TGBT.EV3");
+}
+
+void TgbtEventCallback(void *data)
+{
+    TgbtEventWork *work = (TgbtEventWork *)data;
+    int i;
+    if (work->frames) {
+        work->frames--;
+        return;
+    }
+    switch (work->state) {
+    case 0:
+        FTBL.EV_LoadAudio("0280A000", 0);
+        FTBL.EV_spmBeginSampleExecute(0);
+        work->state = 1;
+    case 1:
+        if (FTBL.NpcWait())
+            break;
+        for (i = 0; tgbtLoadCharacters[i] != TGBT_INVALID; i++)
+            FTBL.CheckWarmStartNpcRoute(tgbtLoadCharacters[i]);
+        work->state = 2;
+    case 2:
+        FTBL.shenStartFGST(10, 10, 0, 0);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(TGBT_PLAYER), 0, 0, 0, work->retries * 100 + 200, 0);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(TGBT_FIRST_FIGHTER), 0, 1, 1, 100, 2);
+        FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(TGBT_FIRST_FIGHTER), 0, 0x400000, 128);
+        FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(TGBT_FIRST_FIGHTER), 0, 0x200000, 2048);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(TGBT_SECOND_FIGHTER), 0, 1, 1, 60, 3);
+        FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(TGBT_SECOND_FIGHTER), 0, 0x400000, 128);
+        FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(TGBT_SECOND_FIGHTER), 0, 0x200000, 2048);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(TGBT_THIRD_FIGHTER), 0, 1, 1, 60, 4);
+        FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(TGBT_THIRD_FIGHTER), 0, 0x400000, 128);
+        FTBL.j_vfUpdateFlagsFor(FTBL.ctrlGetCharaByName(TGBT_THIRD_FIGHTER), 0, 0x200000, 2048);
+        FTBL.vfCopyPosFromEntity(0, 0, 243.66f, 152.77f, 3.9f);
+    case 3:
+        FTBL.EV_authSceneCtrl(-11);
+        QueueTgbtAuthor(TGBT_AUTHOR_0);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        work->state = 4;
+        break;
+    case 4:
+        if (FTBL.EV_authSceneCtrl(-1))
+            work->state = 5;
+        break;
+    case 5:
+        if (!FTBL.EV_authSceneCtrl(-1))
+            work->state = 6;
+        else if (FTBL.EV_authSceneCtrl(-6) == 849) {
+            FTBL.EV_authSceneCtrl(-2);
+            work->state = 6;
+        }
+        break;
+    case 6:
+        FTBL.SetupControlSpeakAndUI(tgbtChoices, 600, 0xffff, 2);
+        FTBL.FinishLoading();
+        work->state = 7;
+        break;
+    case 7:
+        if (!FTBL.GetShouldRenderIcons(2)) {
+            if (FTBL.EV_authSceneCtrl(-1))
+                FTBL.EV_authSceneCtrl(-4);
+            FTBL.EV_authSceneCtrl(-10);
+            switch (FTBL.shenGetCtrlSpeakIconFlag()) {
+            case 231:
+                QueueTgbtAuthor(TGBT_AUTHOR_2);
+                break;
+            case 232:
+                QueueTgbtAuthor(TGBT_AUTHOR_3);
+                break;
+            default:
+                QueueTgbtAuthor(TGBT_AUTHOR_1);
+                break;
+            }
+            work->state = 8;
+        }
+        break;
+    case 8:
+        if (FTBL.EV_authSceneCtrl(-1))
+            work->state = 9;
+        break;
+    case 9:
+        if (!FTBL.EV_authSceneCtrl(-1)) {
+            QueueTgbtAuthor(TGBT_AUTHOR_4);
+            work->state = 10;
+        }
+        break;
+    case 10:
+        if (FTBL.EV_authSceneCtrl(-1))
+            work->state = 11;
+        break;
+    case 11:
+        if (!FTBL.EV_authSceneCtrl(-1)) {
+            FTBL.SetLoadingBusy();
+            FTBL.spmFadeOut(0);
+            work->state = 12;
+            work->frames = 30;
+        }
+        break;
+    case 12:
+        FTBL.EV_LoadAudio("0280A000", 1);
+        FTBL.AT_SetLocalBaseChara(TGBT_PLAYER, TGBT_BASE);
+        FTBL.AT_SetLocalBaseChara(TGBT_FIRST_FIGHTER, TGBT_BASE);
+        FTBL.AT_SetLocalBaseChara(TGBT_SECOND_FIGHTER, TGBT_BASE);
+        FTBL.AT_SetLocalBaseChara(TGBT_THIRD_FIGHTER, TGBT_BASE);
+        EVT_AT_SetPos(TGBT_PLAYER, TGBT_BASE, -1.64f, 0.0f, -1.65f, 0);
+        EVT_AT_SetAngY(TGBT_PLAYER, TGBT_BASE, 230.0f, 0);
+        EVT_AT_SetPos(TGBT_FIRST_FIGHTER, TGBT_BASE, 1.31f, 0.0f, -0.89f, 0);
+        EVT_AT_SetAngY(TGBT_FIRST_FIGHTER, TGBT_BASE, 75.0f, 0);
+        EVT_AT_SetPos(TGBT_SECOND_FIGHTER, TGBT_BASE, -1.46f, 0.0f, 0.89f, 0);
+        EVT_AT_SetAngY(TGBT_SECOND_FIGHTER, TGBT_BASE, 339.0f, 0);
+        EVT_AT_SetPos(TGBT_THIRD_FIGHTER, TGBT_BASE, 0.61f, 0.0f, 0.93f, 0);
+        EVT_AT_SetAngY(TGBT_THIRD_FIGHTER, TGBT_BASE, 40.0f, 0);
+        EVT_AT_SetMot(TGBT_PLAYER, 0x132, 0.0f, 1.0f, 0x40000000U, 0);
+        EVT_AT_SetMot(TGBT_FIRST_FIGHTER, 0xe30, 0.0f, 1.0f, 0x40000000U, 0);
+        EVT_AT_SetMot(TGBT_SECOND_FIGHTER, 0xe34, 0.0f, 1.0f, 0x40000000U, 0);
+        EVT_AT_SetMot(TGBT_THIRD_FIGHTER, 0xe38, 0.0f, 1.0f, 0x40000000U, 0);
+        UnparentAndSetExistingPosRot(TGBT_PLAYER);
+        UnparentAndSetExistingPosRot(TGBT_FIRST_FIGHTER);
+        UnparentAndSetExistingPosRot(TGBT_SECOND_FIGHTER);
+        UnparentAndSetExistingPosRot(TGBT_THIRD_FIGHTER);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.EV_spmBeginSampleExecute(0);
+        EVT_AT_SetCam(100, TGBT_PLAYER, TGBT_PLAYER, 0, 0, 0);
+        work->state = 13;
+        break;
+    case 13:
+        if (!FTBL.camCtrlCheckIsEventCam()) {
+            FTBL.flddSetPointFlagOnGrid(TGBT_MAP_PART, 0);
+            FTBL.flddSetPointFlagOnGrid(TGBT_FIELD_PART, 0);
+            FTBL.EV_vfBattleUtil(1, 2, 1);
+            FTBL.vfmQueueFightStart(4, 99, 1.0f, 0, -1);
+            FTBL.EV_vfBattleUtil(4, 0x80000000U, 1);
+            EVT_AT_SetAngY(TGBT_AUTHOR_CHARACTER_0, TGBT_INVALID, 0.0f, 0);
+            work->state = 14;
+        }
+        break;
+    case 14:
+        if (!FTBL.IsFightActive()) {
+            if (FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(TGBT_PLAYER)) == 3)
+                work->state = 17;
+            else {
+                if (++work->retries > 15)
+                    work->retries = 15;
+                work->state = 15;
+            }
+            FTBL.spmFadeOut(0);
+            FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+            work->frames = 30;
+        }
+        break;
+    case 15:
+        FTBL.Queue_ST_LoadTitleFadeIn(TGBT_RETRY_TITLE);
+        work->state = 16;
+        work->frames = 60;
+        break;
+    case 16:
+        FTBL.ST_LoadTitleFade();
+        work->state = 0;
+        break;
+    case 17:
+        FTBL.flddSetPointFlagOnGrid(TGBT_MAP_PART, 1);
+        FTBL.flddSetPointFlagOnGrid(TGBT_FIELD_PART, 1);
+        QueueTgbtAuthor(TGBT_AUTHOR_5);
+        FTBL.EV_spmBeginSampleExecute(0);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        work->state = 18;
+        break;
+    case 18:
+        if (FTBL.EV_authSceneCtrl(-1))
+            work->state = 19;
+        break;
+    case 19:
+        if (!FTBL.EV_authSceneCtrl(-1))
+            work->state = 20;
+        break;
+    case 20:
+        EVT_AT_SetSound(1467, 0);
+        EVT_AT_SetSound(1468, 30);
+        work->frames = 45;
+        work->state = 21;
+        break;
+    case 21:
+        FTBL.spmFadeOut(0);
+        CleanupTgbtEvent(work);
+        break;
+    }
+}
+
+void UnparentAndSetExistingPosRot(shen_name character)
+{
+    Vector3 position;
+    Vector3i rotation;
+    FTBL.GetCharaPosition(character, 0xffffffffU, &position, 0x40000000U);
+    FTBL.GetScenarioCharacterEulerAngles(character, &rotation, 0x40000000U);
+    FTBL.AT_SetLocalBaseChara(character, 0xffffffffU);
+    FTBL.EV_AT_SetPos(character, 0x78000000U, &position);
+    FTBL.EV_AT_SetAngY_0(character, 0x78000000U, &rotation, 0);
+}
+#endif
+#else
 #include "s2/areas/area_tgbt.hpp"
 #include "s2/author.hpp"
 #include "s2/camera.hpp"
@@ -365,3 +749,4 @@ void TgbtEventCallback(void *data) {
 }
 const ScriptAreaDefinition tgbtScriptDefinition{TGBT_AREA, 0, TgbtInit, TgbtMain};
 } // namespace shenmue::s2
+#endif

@@ -1,4 +1,189 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/areas/area_loop_dc.h"
+#include "s2/areas/common/et_readnpc.h"
+#include "s2/event_smoke.hpp"
+
+#define YTQB_AREA SHEN_NAME4('Y', 'T', 'Q', 'B')
+#define YTQB_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define YTQB_DUMR SHEN_NAME4('D', 'U', 'M', 'R')
+#define YTQB_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define YTQB_KIC SHEN_NAME4('K', 'I', 'C', '_')
+#define YTQB_SUI0 SHEN_NAME4('S', 'U', 'I', '0')
+#define YTQB_SUI1 SHEN_NAME4('S', 'U', 'I', '1')
+#define YTQB_YAD1 SHEN_NAME4('Y', 'A', 'D', '1')
+#define YTQB_NIW0 SHEN_NAME4('N', 'I', 'W', '0')
+#define YTQB_NIW1 SHEN_NAME4('N', 'I', 'W', '1')
+#define YTQB_NIW2 SHEN_NAME4('N', 'I', 'W', '2')
+#define YTQB_AHI0 SHEN_NAME4('A', 'H', 'I', '0')
+#define YTQB_AHI1 SHEN_NAME4('A', 'H', 'I', '1')
+#define YTQB_RETURN_AREA SHEN_NAME4('0', '0', '4', '8')
+#define YTQB_SUI2 SHEN_NAME4('S', 'U', 'I', '2')
+#define YTQB_CAG0 SHEN_NAME4('C', 'A', 'G', '0')
+#define YTQB_KBK0 SHEN_NAME4('K', 'B', 'K', '0')
+#define YTQB_KBK1 SHEN_NAME4('K', 'B', 'K', '1')
+#define YTQB_YAT1 SHEN_NAME4('Y', 'A', 'T', '1')
+#define YTQB_YAD2 SHEN_NAME4('Y', 'A', 'D', '2')
+#define YTQB_YAT2 SHEN_NAME4('Y', 'A', 'T', '2')
+#define YTQB_YAD3 SHEN_NAME4('Y', 'A', 'D', '3')
+#define YTQB_YAT3 SHEN_NAME4('Y', 'A', 'T', '3')
+#define YTQB_SYE SHEN_NAME4('S', 'Y', 'E', '_')
+#define YTQB_CHO SHEN_NAME4('C', 'H', 'O', '_')
+#define YTQB_DEBUG_ID 3
+#define YTQB_POSE_GUARD 13
+#define YTQB_POSE_OPEN 11
+#define YTQB_MIRRORED 0x20000000U
+#define YTQB_INVALID 0xffffffffU
+
+typedef struct YtqbResultParameters {
+    shen_name player, firstOpponent, secondOpponent;
+    unsigned int motionFlags;
+} YtqbResultParameters;
+typedef struct YtqbSplashWork {
+    short coarse, fine;
+    Vector3 previousPosition;
+    float strength;
+    shen_name character;
+} YtqbSplashWork;
+typedef struct YtqbSequence {
+    HLibTaskCallback continuation;
+    YtqbResultParameters parameters;
+    int phase, result;
+    const EventQteData *prompt, *authored;
+} YtqbSequence;
+typedef struct YtqbWork {
+    EventReadCharactersWork *characters;
+    HLibTask *task, *keeper;
+    YtqbSequence sequence;
+    EventNpcReadWork *npcs;
+} YtqbWork;
+
+extern const shen_name ytqbFirstNames[], ytqbSecondNames[], ytqbWaterNames[], ytqbThirdNames[], ytqbLastNames[], ytqbFinalNames[], ytqbPlayerNames[];
+extern Vector3 ytqbBucketClingPosition;
+extern Vector3i ytqbBucketClingRotation;
+void YtqbMain(void *argument);
+void QueueYtqb(void);
+void YtqbDebugExitCallback(void *data);
+void YtqbExit(YtqbWork *work);
+void YtqbKeeperCallback(void *data);
+void YtqbResetSequence(YtqbSequence *sequence);
+int YtqbPrompt(YtqbSequence *sequence, int index, int delay);
+void YtqbApplyResult(YtqbSequence *sequence);
+void YtqbStart(void *data);
+void YtqbStartIntroAuthor(void *data);
+void YtqbStartWaterAuthor(void *data);
+void YtqbWaitWaterAuthor(void *data);
+void YtqbWaterResult(void *data);
+void YtqbStartFinalAuthor(void *data);
+void YtqbWaitFinalAuthor(void *data);
+void YtqbFinalResult(void *data);
+void YtqbWaitResultAuthor(void *data);
+void YtqbFinish(void *data);
+void YtqbSboAttack(void *data);
+void YtqbYohAttack(void *data);
+void YtqbScxAttack(void *data);
+void YtqbSbkAttack(void *data);
+void YtqbVunAttack(void *data);
+void YtqbIkoAttack(void *data);
+void YtqbStartSecondGroup(void *data);
+void YtqbRikThgAttack(void *data);
+void YtqbSoyAttack(void *data);
+void YtqbKicAttack(void *data);
+void YtqbKt2Attack(void *data);
+void YtqbRntAttack(void *data);
+void YtqbKt3Attack(void *data);
+void YtqbAncAttack(void *data);
+void YtqbKt5Attack(void *data);
+void YtqbCjuAttack(void *data);
+void YtqbKt7Attack(void *data);
+void YtqbFinalEhyAttack(void *data);
+int YtqbPlayRetryVoices(int delay);
+void YtqbWaitMotion(void *data);
+void YtqbNextQte(void *data);
+void YtqbRetry(void *data);
+void YtqbLoadFinalCharacters(void *data);
+void InitializeYtqb(YtqbWork *work);
+void CleanupYtqb(YtqbWork *work);
+extern const EventQteData ytqbAuthoredQte[];
+extern const EventQteData ytqbPromptQte[];
+void YtqbBeginKick(void *data, int delay);
+void YtqbKickSuccess(void *data, int delay);
+void YtqbKickFailure(void *data, int delay);
+void YtqbKickCounterSuccess(void *data, int delay);
+void YtqbKickCounterFailure(void *data, int delay);
+void YtqbBeginRearKick(void *data, int delay);
+void YtqbRearKickSuccess(void *data, int delay);
+void YtqbRearKickFailure(void *data, int delay);
+void YtqbBeginWristTwist(void *data, int delay);
+void YtqbWristTwistSuccess(void *data, int delay);
+void YtqbBeginBackfist(void *data, int delay);
+void YtqbBackfistSuccess(void *data, int delay);
+void YtqbBackfistFailure(void *data, int delay);
+void YtqbKneeCounterSuccess(void *data, int delay);
+void YtqbKneeCounterFailure(void *data, int delay);
+void YtqbBeginPin(void *data, int delay);
+void YtqbPinSuccess(void *data, int delay);
+void YtqbPinFailure(void *data, int delay);
+void YtqbPinKickSuccess(void *data, int delay);
+void YtqbPinKickFailure(void *data, int delay);
+void YtqbBeginGrabEvadeA(void *data, int delay);
+void YtqbGrabEvadeASuccess(void *data, int delay);
+void YtqbGrabEvadeAFailure(void *data, int delay);
+void YtqbBeginGrabEvadeB(void *data, int delay);
+void YtqbGrabEvadeBSuccess(void *data, int delay);
+void YtqbGrabEvadeBFailure(void *data, int delay);
+void YtqbThrowASuccess(void *data, int delay);
+void YtqbThrowAFailure(void *data, int delay);
+void YtqbThrowBSuccess(void *data, int delay);
+void YtqbThrowBFailure(void *data, int delay);
+void YtqbBeginKickDodge(void *data, int delay);
+void YtqbKickDodgeSuccess(void *data, int delay);
+void YtqbKickDodgeFailure(void *data, int delay);
+void YtqbKickDodgeCounterSuccess(void *data, int delay);
+void YtqbKickDodgeCounterFailure(void *data, int delay);
+void YtqbFlyingKickSuccess(void *data, int delay);
+void YtqbFinishingBackfistSuccess(void *data, int delay);
+void YtqbBeginRearKickAssist(void *data, int delay);
+void YtqbRearKickAssistSuccess(void *data, int delay);
+void YtqbRearKickAssistFailure(void *data, int delay);
+void YtqbBeginBackfistAssist(void *data, int delay);
+void YtqbBackfistAssistSuccess(void *data, int delay);
+void YtqbBackfistAssistFailure(void *data, int delay);
+extern int ytqbAttackState;
+int YtqbKnockdown(float angle, int delay);
+int YtqbBackKnockdown(float angle, int delay);
+int YtqbSideKnockdown(float angle, int delay);
+int YtqbFinalKnockdown(float angle, int delay);
+int YtqbWaterSuccess(void);
+int YtqbWaterFailure(void);
+extern int ytqbAmbientSmoke;
+void YtqbSetupLantern(shen_name lantern, shen_name broken);
+int YtqbBreakLantern(shen_name lantern, shen_name broken, int delay);
+void YtqbSetupBucket(shen_name bucket, shen_name broken);
+int YtqbBreakBucket(shen_name bucket, shen_name broken, int delay);
+void YtqbResetWater(shen_name water, shen_name spray);
+int QueueYtqbWaterSplash(shen_name water, shen_name spray, int delay);
+void YtqbSetupWater(shen_name water, shen_name spray);
+int YtqbSpillWater(shen_name water, shen_name spray, int delay);
+int BeginYtqbSplash(shen_name character, int duration, int delay);
+void YtqbSplashUpdate(YtqbSplashWork *work, int index);
+void YtqbSetupFrontStall(shen_name stall, shen_name broken);
+int YtqbBreakFrontStall(shen_name stall, shen_name broken, int delay);
+void YtqbSetupNearStall(shen_name stall, shen_name broken);
+int YtqbBreakNearStall(shen_name stall, shen_name broken, int delay);
+void YtqbSetupStallObjects(shen_name stall, shen_name broken);
+int YtqbBreakBirdStall(shen_name stall, shen_name broken, int delay);
+int QueueYtqbBirdStallUpdate(int delay);
+void YtqbBirdStallUpdate(void *data, int ticks);
+int QueueYtqbPaperStallUpdate(int delay);
+void YtqbPaperStallUpdate(void *data, int ticks);
+int QueueYtqbAmbientSmoke(int delay);
+void YtqbAmbientSmoke(void *data, int ticks);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/event_characters.hpp"
@@ -773,3 +958,4 @@ void YtqbPrompt(YtqbWork &, const EventQteData &, const EventQteData &);
 void YtqbApplyResult(YtqbWork &);
 void YtqbTransition(YtqbWork &, HLib::TaskCallback, std::int32_t, HLib::TaskCallback = nullptr);
 } // namespace shenmue::s2::areas
+#endif

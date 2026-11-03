@@ -1,3 +1,130 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0175.hpp"
+
+static shen_name area0175Characters[] = {AREA_0175_JOP_, AREA_0175_WON_, INVALID_CHARACTER};
+
+void E0175Main(void *argument)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0175MainCallback, 4, 11, sizeof(AreaImmediateAuthorTaskParameter), TASK_EVNT);
+    AreaImmediateAuthorTaskParameter *parent = (AreaImmediateAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    parent->self = task;
+    parent->state = 1;
+    if (g_currentMap == AREA_0175_AREA)
+        parent->selection = (unsigned int)g_entryPoint > 1 ? 0 : g_entryPoint;
+    else
+        parent->selection = *(short *)argument;
+    ConfigureE0175Environment();
+    Queue_EVT_UTL_LoadNPCChara_3(area0175Characters, parent->self);
+}
+
+void E0175MainCallback(void *taskData)
+{
+    AreaImmediateAuthorTaskParameter *parent = (AreaImmediateAuthorTaskParameter *)taskData;
+    switch (parent->state) {
+    case 1:
+        QueueE0175Loop(parent);
+        break;
+    case 3:
+        CleanupE0175(parent);
+        break;
+    }
+}
+
+void QueueE0175Loop(AreaImmediateAuthorTaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0175LoopCallback, 4, 11, sizeof(E0175LoopParameter), TASK_EVNT);
+    ((E0175LoopParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+    SetupE0175Characters();
+    FTBL.EV_spmBeginSampleExecute(0);
+    if (parent->selection)
+        FTBL.EV_authSceneCtrl(AREA_0175_AUTHOR_B);
+    else
+        FTBL.EV_authSceneCtrl(AREA_0175_AUTHOR_A);
+    parent->state = 2;
+}
+
+void E0175LoopCallback(void *taskData)
+{
+    E0175LoopParameter *child = (E0175LoopParameter *)taskData;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        RestoreE0175Characters();
+        child->parent->state = 3;
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void ConfigureE0175Environment(void)
+{
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_FreeAuthorPak(1, "0175");
+    FTBL.EV_LoadCutsceneFromCurrentScene("0175A000");
+}
+
+void CleanupE0175(AreaImmediateAuthorTaskParameter *parent)
+{
+    EVT_UTL_FreeNPCChara(area0175Characters);
+    FTBL.EV_FreeAuthorPak(0, "0175");
+    FTBL.EV_ControlPackageResources(0, 6, "0175A", 0, 0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    FTBL.HLib_DestroyTask(parent->self);
+    if (g_currentMap == AREA_0175_AREA)
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+    else if (g_currentMap == AREA_0175_AB00)
+        FTBL.EV_scenQueueLoad(g_actNumber, AREA_0175_AR02, 26);
+    else {
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        EVT_AT_SetPos(AREA_0175_RYO_, EVENT_CHARACTER_INVALID, 280.0f, 100.0f, 248.0f, 0);
+        EVT_AT_SetAng(AREA_0175_RYO_, EVENT_CHARACTER_INVALID, 0.0f, 45.0f, 0.0f, 0);
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.EV_spmBeginSampleExecute(0);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    }
+}
+
+void SetupE0175Characters(void)
+{
+    SetupE0175AuthorCharacter(AREA_0175_RYO_);
+    SetupE0175AuthorCharacter(AREA_0175_JOP_);
+    SetupE0175AuthorCharacter(AREA_0175_WON_);
+    HideE0175Character(AREA_0175_A396);
+    HideE0175Character(AREA_0175_A417);
+}
+
+void RestoreE0175Characters(void)
+{
+    RestoreE0175AuthorCharacter(AREA_0175_RYO_);
+    RestoreE0175AuthorCharacter(AREA_0175_JOP_);
+    RestoreE0175AuthorCharacter(AREA_0175_WON_);
+    ShowE0175Character(AREA_0175_A396);
+    ShowE0175Character(AREA_0175_A417);
+}
+
+void SetupE0175AuthorCharacter(shen_name character)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void RestoreE0175AuthorCharacter(shen_name character)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+
+void HideE0175Character(shen_name character)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+}
+
+void ShowE0175Character(shen_name character)
+{
+    FTBL.EV_SetCharacterAlphaEnabled(character, 1);
+}
+#else
 #include "s2/areas/area_0175.hpp"
 #include "s2/character.hpp"
 #include "s2/pak.hpp"
@@ -141,3 +268,4 @@ void E0175LoopCallback(void *taskData) {
 const ScriptAreaDefinition area0175ScriptDefinition{.areaId = AREA_0175_AREA, .field04 = 0, .init = E0175Init, .main = E0175Main};
 
 } // namespace shenmue::s2::areas
+#endif

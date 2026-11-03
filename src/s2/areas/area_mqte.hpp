@@ -1,4 +1,158 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/sk_event_dc.h"
+#include "s2/areas/area_loop_dc.h"
+
+#define MQTE_AREA SHEN_NAME4('M', 'Q', 'T', 'E')
+#define MQTE_TASK SHEN_NAME4('m', 'q', 't', 'e')
+#define MQTE_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define MQTE_SHENFA SHEN_NAME4('S', 'I', 'N', '_')
+#define MQTE_BASE SHEN_NAME4('B', 'A', 'S', 'E')
+#define MQTE_CAMERA SHEN_NAME4('C', 'A', 'M', '_')
+#define MQTE_DUMMY_RYO SHEN_NAME4('D', 'U', 'M', '1')
+#define MQTE_DUMMY_SHENFA SHEN_NAME4('D', 'U', 'M', '2')
+#define MQTE_DUMMY_TASK SHEN_NAME4('d', 'u', 'm', 'c')
+#define MQTE_RUN_TASK SHEN_NAME4('r', 'u', 'n', 's')
+#define MQTE_FIRE_TASK SHEN_NAME4('f', 'i', 'r', 'e')
+#define MQTE_FIREFLY SHEN_NAME4('F', 'F', 'L', 'Y')
+#define MQTE_FIRE_DUMMY SHEN_NAME4('d', 'u', 'm', 'y')
+#define MQTE_SUCCESS SHEN_NAME4('S', 'U', 'C', 'S')
+#define MQTE_FAILURE SHEN_NAME4('F', 'A', 'I', 'L')
+#define MQTE_RETRY SHEN_NAME4('R', 'T', 'R', '1')
+#define MQTE_DESTINATION SHEN_NAME4('K', 'R', 'C', '1')
+#define MQTE_FAILURE_LIGHT SHEN_NAME4('l', '1', '5', '1')
+#define MQTE_SUCCESS_LIGHT SHEN_NAME4('l', '1', '4', '1')
+#define MQTE_INVALID 0xffffffffU
+#define MQTE_DEBUG_ID 3
+#define MQTE_HAND_POSE 40
+#define MQTE_RUN_MOTION 61446
+#define MQTE_SHENFA_RUN_MOTION 7514
+#define MQTE_ANGLE_UNITS 182.04445f
+
+typedef struct ForestQteWork {
+    HLibTask *task;
+    short phase, state, obstacle, previousUnit, command, completedUnits;
+    shen_name character;
+    EventReadCharactersWork *characters;
+    int result[4];
+} ForestQteWork;
+typedef struct ForestObstacleCommand {
+    short kind, reserved;
+    float cameraOffset;
+} ForestObstacleCommand;
+typedef struct ForestObstacle {
+    float x, z;
+    ForestObstacleCommand commands[4];
+} ForestObstacle;
+typedef struct ForestShenfaMotion {
+    unsigned int animation;
+    int end;
+    float start, distance, speed;
+    int mirrored;
+} ForestShenfaMotion;
+typedef struct ForestQteCommand {
+    unsigned int button;
+    SkQteCallback success, failure;
+    float distance, offset;
+} ForestQteCommand;
+typedef struct ForestFirefly {
+    Vector3 position;
+    char reserved0c[36];
+    float alpha;
+    int angle, reserved38, frame, state, onFrames, offFrames, fadeOutFrames, fadeInFrames;
+} ForestFirefly;
+typedef struct ForestFireflyWork {
+    ForestFirefly particles[500];
+} ForestFireflyWork;
+typedef struct ForestFireflyProfile {
+    Vector3 centers[4], extent;
+    float amplitude, scale;
+    int count;
+} ForestFireflyProfile;
+typedef struct ForestCameraWork {
+    int camera;
+    shen_name eye, target;
+    int cleanup;
+} ForestCameraWork;
+typedef struct ForestRoadCamera {
+    int camera, frames;
+} ForestRoadCamera;
+typedef struct ForestRoadCameraSequence {
+    ForestRoadCamera cameras[5];
+} ForestRoadCameraSequence;
+
+void *memset(void *destination, int value, unsigned int size);
+double fabs(double value);
+
+extern int forestTestObstacle, forestTestSelection;
+extern Vector3 forestObstaclePosition;
+extern float forestObstacleDistance;
+extern int forestShenfaTicks, forestLastCommand;
+extern HLibTask *forestDummyTask;
+extern int forestFailures, forestRetries, forestRainStarted, forestStage;
+extern HLibTask *forestShenfaTask, *forestFireflyTask;
+extern float forestFireflyAmplitude, forestFireflyScale;
+extern int forestFireflyCount, forestSelectedCamera;
+
+void RunMqte(void);
+void ForestFireflyAuthor(void *data);
+void ForestFireflyStart(void);
+void ForestFireflyStop(void);
+void ForestFireflyLoop(void *data);
+void InitializeForestFireflies(int profile);
+void QueueForestQte(void *data);
+int SetupForest(ForestQteWork *work);
+void ForestDebugSkip(void *data);
+int ForestFinish(ForestQteWork *work);
+void ForestEnd(void *data);
+void ForestQteMain(void *data);
+int PositionForestRunners(ForestQteWork *work);
+int RunForestRoute(ForestQteWork *work);
+void ForestQteDummyControl(void *data);
+int ForestCharacterRoadIndex(shen_name name);
+void RealignForestDummy(shen_name dummy, shen_name character);
+void UpdateForestCharacterRoute(shen_name name);
+void UpdateForestShenfaSpacing(void);
+void EnterForestObstacle(ForestQteWork *work);
+void SelectForestObstacle(ForestQteWork *work);
+int BeginForestObstacle(ForestQteWork *work);
+int ApproachForestObstacle(ForestQteWork *work);
+void UpdateForestObstacleTarget(ForestQteWork *work);
+int BeginForestQte(ForestQteWork *work);
+int ResumeForestObstacle(ForestQteWork *work);
+int FinishForestObstacle(ForestQteWork *work);
+void ForestQteRunShenfa(void *data);
+int DodgeLeftSuccess(void);
+int DodgeLeftFailure(void);
+int DodgeRightSuccess(void);
+int DodgeRightFailure(void);
+int PitJumpSuccess(void);
+int PitJumpFailure(void);
+int HurdleJumpSuccess(void);
+int HurdleJumpFailure(void);
+int RootJumpSuccess(void);
+int RootJumpFailure(void);
+int DuckSuccess(void);
+int DuckFailure(void);
+void PositionForestQteReaction(float distance);
+short ForestBlendAngle(int target, int current, float rate);
+float ForestLerp(float target, float current, float rate);
+void QueueForestQteWait(int *result, unsigned int button, int referenceFrames, int maximumFrames, SkQteCallback success, SkQteCallback failure,
+    int delay);
+void ForestQteWait_Callback(void *data);
+void ForestQteRainCheck(void);
+int RunForestAuthor(ForestQteWork *work, int failure);
+int ForestRetry(ForestQteWork *work);
+int ForestFinalFailure(ForestQteWork *work);
+void QueueForestRoadCameras(int unit, int delay);
+void SetForestObstacleCamera(shen_name dummy, int obstacle);
+void QueueForestCamera(int camera, shen_name eye, shen_name target, int delay);
+void ForestCamera(void *data);
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/step_event.hpp"
@@ -117,3 +271,4 @@ void PositionForestQteReaction(float);
 std::int32_t ForestFinalFailure(ForestQteWork &);
 extern const ScriptAreaDefinition mqteScriptDefinition;
 } // namespace shenmue::s2::areas
+#endif
