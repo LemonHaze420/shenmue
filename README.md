@@ -2,7 +2,6 @@
 
 [![S1 - Roundtrip](docs/s1-roundtrip.svg)](https://github.com/LemonHaze420/shenmue/actions/workflows/windows.yml)
 
-
 This repository contains a C++ reimplementation of Shenmue I & II for PC and Dreamcast, including the What's Shenmue promotional demo. 
 
 The original code is derived from a C decompilation project which began in 2018. In total there are ~14 executables which have been surfaced. The purpose of this reimplementation is to maintain a codebase which shares as much as possible while maintaining modern interoperability with the original releases, the Demo and the PC versions. 
@@ -19,6 +18,16 @@ The original code is derived from a C decompilation project which began in 2018.
 ### Build
 
 `git submodule update --init --recursive && cmake -S . -B build/windows-asi -G "Visual Studio 17 2022" -A x64 "-DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows-static "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>" -DSHENMUE_STEAM=ON -DSHENMUE_RT_ARCADE=ON -DSHENMUE_LOAD_HANGON_DLL=ON && cmake --build build/windows-asi --config Release --target shenmue1_asi shenmue2_asi --parallel 4`
+
+
+### Hang-On Standalone
+
+![](docs/hang_on_standalone.png)
+
+
+This repository also provides a standalone executable that uses the included Hang-On emulator that is distributed with the 2018 re-releases of Shenmue I & II. 
+
+To use it, download the prebuilt binaries or build from source, and place the executable in either the `sm1` or `sm2` directory and run it. 
 
 
 ### Contributing
