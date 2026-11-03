@@ -6,6 +6,22 @@
 
 namespace shenmue::s1::ui_runtime_detail {
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+struct ActionMenuWork {
+    UIActionSelectorState state{UIActionSelectorState::Idle};
+    std::uint8_t reserved01{};
+    std::int16_t selection{-1};
+    std::uint16_t mode{0x7fff};
+    std::int8_t previousHelpToken{};
+    std::uint8_t previousHelpButton{};
+};
+
+static_assert(sizeof(ActionMenuWork) == 8);
+
+#pragma endregion
+#endif
+
 struct ActionSelectorLegacySprite {
     float x;
     float y;
@@ -26,7 +42,13 @@ static_assert(sizeof(ActionSelectorLegacySprite) == 0x24);
 static_assert(offsetof(ActionSelectorLegacySprite, surface) == 0x1c);
 static_assert(offsetof(ActionSelectorLegacySprite, mode) == 0x22);
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+inline constexpr std::array<Vector2, 4> kActionSelectorLegacyChoiceOffsets{{{0.0f, -35.0f}, {-61.0f, 0.0f}, {0.0f, 36.0f}, {62.0f, 0.0f}}};
+#pragma endregion
+#else
 inline constexpr std::array<Vector2, 4> kActionSelectorLegacyChoiceOffsets{{{0.0f, -36.0f}, {-62.0f, 0.0f}, {0.0f, 36.0f}, {62.0f, 0.0f}}};
+#endif
 inline constexpr std::array<float, 4> kActionSelectorLegacyLabelDepths{5.0f, 5.0f, 6.0f, 6.0f};
 inline constexpr std::array<float, 4> kActionSelectorLegacyIconDepths{2.0f, 3.0f, 2.0f, 4.0f};
 inline constexpr std::array<const char *, 2> kActionSelectorBinaryLabelIds{"YES", "NO"};
@@ -71,6 +93,12 @@ struct ActionSelectorOwner {
     bool labelsDirty{};
 
     std::int32_t useValueLabels{};
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    std::uint8_t page{};
+    std::uint8_t labelTransition{};
+#pragma endregion
+#endif
 };
 
 struct ActionSelectorChoiceUISlot {

@@ -28,6 +28,9 @@
 #include <cmath>
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+bool g_faceHasHighPolyMap = false;
+#endif
 
 extern void *g_YKBE;
 extern void *g_FMOT;
@@ -81,7 +84,7 @@ constexpr std::array<const char *, 8> kRandomTalkTables{
     "TALK_KC.BIN",
 };
 
-std::array<FaceMotionProgram, 5> g_faceMotionPrograms{};
+std::array<FaceMotionProgram, SHENMUE_IS_DEMO ? 12 : 5> g_faceMotionPrograms{};
 
 std::uint16_t g_faceMotionProgramCount{};
 constexpr std::size_t kFaceRigChannelCount = 25;
@@ -309,8 +312,10 @@ std::uint8_t faceLoadModelIntoCacheSlot(const char *filename, std::uint8_t index
 
 
 std::byte *LoadFaceTable(const char *filename) {
+#if !SHENMUE_IS_DEMO
     if (std::strcmp(filename, "YKB_FTBL.BIN") == 0)
         return static_cast<std::byte *>(g_YKBE);
+#endif
     PackTaskData *pack = g_packTaskData;
     if (!pack && g_packTask)
         pack = reinterpret_cast<PackTaskData *>(HLib_GetTaskDataForTask(g_packTask));
@@ -759,6 +764,8 @@ std::uint8_t facemot(FaceWork &face) {
         blend->weightsOffset = FaceTaskOffset(tables.influenceWeights);
     const std::byte *const table = g_faceTableFiles[index];
     std::memcpy(&face.field30, table, sizeof(face.field30));
+#if SHENMUE_IS_DEMO
+#else
     // The eight random NPC faces take the free-talk program AllocateFACE loaded instead of their table's.
     for (const char *const model : kRandomTalkModels) {
         if (EqualInsensitive(faceName, model)) {
@@ -766,6 +773,7 @@ std::uint8_t facemot(FaceWork &face) {
             break;
         }
     }
+#endif
     std::memcpy(&face.fieldC8, table + 0x0c, 3 * sizeof(face.fieldC8));
     std::memcpy(&face.field100, mesh + 8, sizeof(face.field100));
     face.field118 = reinterpret_cast<std::uint64_t>(g_faceVertexCopies[index]);
@@ -1358,7 +1366,11 @@ void FACE_Callback(Character *character, void *payload) {
         const auto *const eyeFrames = reinterpret_cast<const std::int16_t *>(&face->field5c);
         const std::int32_t eyeFrame = face->eyePatternMode + eyeFrames[faceState[2] & 1U];
         const std::int32_t mouthFrame = face->eyePatternMode + (clip ? (clip->alternatingShape ? clip->visemeIndex : clip->field32) : 0);
-        const FaceMotionProgram &motion = g_faceMotionPrograms[face->field30];
+        const FaceMotionProgram &motion = g_faceMotionPrograms[face->field30
+#if SHENMUE_IS_DEMO
+            + (g_faceHasHighPolyMap ? 4U : 0U)
+#endif
+        ];
         g_faceCalcContext.channelRigs = g_faceTables[cacheIndex].channelRigs;
         g_faceCalcContext.program = motion.program;
         g_faceCalcContext.eyeChannels = motion.eyeChannels;
@@ -1581,6 +1593,37 @@ void FACE_Init() {
     g_faceCalcContext.mouthChannels = nullptr;
     std::uint32_t hgmlSize = 0;
     const bool hgml = MAPINFO_FindChunkPayload(SHEN_NAME(HGML), &hgmlSize) != nullptr;
+#if SHENMUE_IS_DEMO
+    g_faceHasHighPolyMap = hgml;
+    const std::size_t slotCount = hgml ? (SHENMUE_IS_DEMO ? 1 : 2) : 8;
+    const std::int64_t vertexCount = hgml ? 5000 : 400;
+    for (std::size_t index = 0; index < slotCount; ++index) {
+        const char slot = static_cast<char>('0' + index);
+        g_faceVertexCopies[index] = static_cast<FaceVertexRecord *>(AllocateProtectedFaceBlock(vertexCount * 24, make_shen_name('F', 'F', slot, '0')));
+        g_faceRestPositions[index] = static_cast<Vector3 *>(AllocateProtectedFaceBlock(vertexCount * 12, make_shen_name('F', 'F', slot, '1')));
+        g_faceTargetPositions[index] = static_cast<Vector3 *>(AllocateProtectedFaceBlock(vertexCount * 12, make_shen_name('F', 'F', slot, '2')));
+        g_faceBlendDeltas[index] = static_cast<Vector3 *>(AllocateProtectedFaceBlock(vertexCount * 12, make_shen_name('F', 'F', slot, '3')));
+        const char flagSlot = SHENMUE_IS_DEMO && index == 6 ? '3' : '4';
+        g_faceEyeVertexFlags[index] = static_cast<std::uint8_t *>(AllocateProtectedFaceBlock(vertexCount, make_shen_name('F', 'F', slot, flagSlot)));
+    }
+    g_faceEyePassPositions = static_cast<Vector3 *>(AllocateProtectedFaceBlock(hgml ? 7500 * 12 : 600 * 12, SHEN_NAME(FF80)));
+    g_faceTableFiles = {};
+    g_faceTables = {};
+    g_faceBlendStates = {};
+    if (hgml) {
+        for (std::size_t index = 0; index < kTrialFaceDemoPrograms.size(); ++index) {
+            const char *const filename = kTrialFaceDemoPrograms[index];
+            const std::uint32_t size = static_cast<std::uint32_t>(shenOpenFile(g_faceDirectory.data(), filename));
+            std::byte *const program = static_cast<std::byte *>(AllocateProtectedFaceBlock(size, kFaceTalkBankToken));
+            shenLoadFile(g_faceDirectory.data(), filename, program, static_cast<std::int32_t>(size));
+            const FmotProgramHeader *const header = reinterpret_cast<const FmotProgramHeader *>(program);
+            g_faceMotionPrograms[index + 4] = {.program = program,
+                .keyRecordCount = header->keyRecordCount,
+                .eyeChannels = reinterpret_cast<const FmotChannelDescriptor *>(program + header->eyeChannelTableOffset),
+                .mouthChannels = reinterpret_cast<const FmotChannelDescriptor *>(program + header->mouthChannelTableOffset)};
+        }
+    }
+#else
     const std::size_t slotCount = hgml ? 2 : 8;
     const std::int64_t vertexCount = hgml ? 5000 : 400;
     for (std::size_t index = 0; index < slotCount; ++index) {
@@ -1606,6 +1649,7 @@ void FACE_Init() {
         program += header->nextProgramOffset;
     }
     EnsureFaceTalkBank();
+#endif
 }
 
 
@@ -2023,7 +2067,9 @@ FaceWork *AllocateFACE(Character *character, const char *faceName) {
     reinterpret_cast<char *>(face->faceTableName)[3] = '\0';
     std::strcpy(reinterpret_cast<char *>(face->faceTableName) + 3, "_FTBL.BIN");
     FACE_InitializeWork(*face);
+#if !SHENMUE_IS_DEMO
     LoadRandomTalkBank(reinterpret_cast<const char *>(face->faceName));
+#endif
     return face;
 }
 
@@ -2217,5 +2263,23 @@ bool faceSetGeneratedLipCues(Character *character, FaceLipCue *cues, bool enable
     clip->enabled = enabled ? 1 : 0;
     return true;
 }
+
+#if SHENMUE_IS_DEMO
+void FACE_LoadStartupPrograms() {
+    std::snprintf(g_faceDirectory.data(), g_faceDirectory.size(), "scene/80/model/face");
+    for (std::size_t index = 0; index < kTrialFaceStartupPrograms.size(); ++index) {
+        const char *const filename = kTrialFaceStartupPrograms[index];
+        const std::uint32_t size = static_cast<std::uint32_t>(shenOpenFile(g_faceDirectory.data(), filename));
+        std::byte *const program = static_cast<std::byte *>(HLib_AllocHeapMemBlock(size, kFaceTalkBankToken));
+        (reinterpret_cast<HLib::TaskData *>(program) - 1)->alignment |= 1;
+        shenLoadFile(g_faceDirectory.data(), filename, program, static_cast<std::int32_t>(size));
+        const FmotProgramHeader *const header = reinterpret_cast<const FmotProgramHeader *>(program);
+        g_faceMotionPrograms[index] = {.program = program,
+            .keyRecordCount = header->keyRecordCount,
+            .eyeChannels = reinterpret_cast<const FmotChannelDescriptor *>(program + header->eyeChannelTableOffset),
+            .mouthChannels = reinterpret_cast<const FmotChannelDescriptor *>(program + header->mouthChannelTableOffset)};
+    }
+}
+#endif
 
 } // namespace shenmue::s1

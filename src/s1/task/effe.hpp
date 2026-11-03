@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/matrix_stack.hpp"
 #include "s1/hlib.hpp"
@@ -13,6 +14,9 @@ struct Character;
 struct ScenarioContext;
 struct VFActor;
 
+#if SHENMUE_IS_DEMO
+void EFFE_TrialReservedRequest(std::uint32_t first, std::uint32_t second, float third, float fourth, std::uint32_t fifth);
+#endif
 enum class EffectQueueEntryKind : std::int32_t {
     Empty = 0,
     ObjectPass = 2,

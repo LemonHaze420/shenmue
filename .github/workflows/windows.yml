@@ -25,7 +25,7 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
       id-token: write
       attestations: write
     defaults:
@@ -37,13 +37,14 @@ jobs:
         with:
           persist-credentials: false
       - name: Configure HangOn
-        run: cmake -S src/hangon -B build/hangon -A x64
+        run: cmake -S src/hangon -B build/hangon -A x64 -DCMAKE_EXE_LINKER_FLAGS=/Brepro
       - name: Build HangOn
         run: cmake --build build/hangon --config Release --target shenmue_hangon
       - name: Prepare HangOn
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item build/hangon/Release/ShenmueHangon.exe dist/HangOn.exe
+          "HANGON_HASH=$((Get-FileHash dist/HangOn.exe -Algorithm SHA256).Hash.ToLowerInvariant())" >> $env:GITHUB_ENV
       - name: Sign CI executables
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
@@ -60,6 +61,23 @@ jobs:
           name: HangOn
           path: dist/HangOn.exe
           if-no-files-found: error
+      - name: Release HangOn if changed
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "hangon-$env:HANGON_HASH"
+          gh release view $tag --json tagName 2>$null | Out-Null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Identical build already released."
+            exit 0
+          }
+          gh release create $tag dist/HangOn.exe `
+            --title "HangOn ($($env:GITHUB_SHA.Substring(0, 7)))" `
+            --notes "Automated HangOn build." `
+            --target $env:GITHUB_SHA `
+            --prerelease --latest=false
+          if ($LASTEXITCODE -ne 0) { throw "Release failed" }
 
   build:
     name: Build Shenmue ${{ matrix.game }}
@@ -68,7 +86,7 @@ jobs:
     timeout-minutes: 120
     strategy:
       matrix:
-        game: [1, 2]
+        game: [1, 2, WS]
     defaults:
       run:
         shell: pwsh
@@ -79,17 +97,35 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - name: Configure games
-        run: ./.github/scripts/configure-games.ps1 -BuildDirectory build/windows-asi
+        run: |
+          $game = if ('${{ matrix.game }}' -eq 'WS') { 'WHATS' } else { 'S1' }
+          ./.github/scripts/configure-games.ps1 -BuildDirectory build/windows-asi -Game $game
       - name: Build games
-        run: cmake --build build/windows-asi --config Release --target shenmue${{ matrix.game }}_asi shenmue${{ matrix.game }} --parallel 4
+        run: |
+          $targets = if ('${{ matrix.game }}' -eq 'WS') { @('shenmue1') } else { @('shenmue${{ matrix.game }}_asi', 'shenmue${{ matrix.game }}') }
+          cmake --build build/windows-asi --config Release --target @targets --parallel 4
       - name: Sign CI executables
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
           SIGNING_PFX: ${{ secrets.SIGNING_PFX }}
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
-          ./.github/scripts/sign-executables.ps1 -Files @('build/windows-asi/Release/shenmue${{ matrix.game }}e.asi',
-            'build/windows-asi/Release/shenmue${{ matrix.game }}.exe')
+          $files = if ('${{ matrix.game }}' -eq 'WS') { @('build/windows-asi/Release/shenmue1.exe') } else {
+            @('build/windows-asi/Release/shenmue${{ matrix.game }}e.asi', 'build/windows-asi/Release/shenmue${{ matrix.game }}.exe')
+          }
+          ./.github/scripts/sign-executables.ps1 -Files $files
+      - name: Prepare WS executable
+        if: matrix.game == 'WS'
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item build/windows-asi/Release/shenmue1.exe dist/WhatsShenmue.exe
+      - name: Upload WS executable
+        if: matrix.game == 'WS'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: WhatsShenmue
+          path: dist/WhatsShenmue.exe
+          if-no-files-found: error
 
   data:
     needs: build
@@ -115,6 +151,9 @@ jobs:
               throw "SHEN_STEAM_ROOT is missing $game/archives/dx11"
             }
           }
+          if (!$env:SHEN_WS_ROOT -or !(Test-Path (Join-Path $env:SHEN_WS_ROOT 'sprite/TNTITLE.SPR'))) {
+            throw 'SHEN_WS_ROOT is missing sprite/TNTITLE.SPR'
+          }
           New-Item -ItemType Directory -Force dist/screens | Out-Null
           Get-ChildItem dist/screens -File -Filter '*.png' | Remove-Item -Force
       - name: Configure screen captures
@@ -124,6 +163,11 @@ jobs:
         run: ./.github/scripts/roundtrip-scn3.ps1
       - name: Build screen captures
         run: cmake --build build/windows-capture --config Release --target shenmue1 shenmue2 --parallel 4
+      - name: Build WS capture
+        run: |
+          ./.github/scripts/configure-games.ps1 -BuildDirectory build/ws-capture -Capture -Game WHATS
+          cmake --build build/ws-capture --config Release --target shenmue1 --parallel 4
+          if ($LASTEXITCODE -ne 0) { throw 'WS capture build failed' }
       - name: Build HangOn capture
         run: |
           cmake -S src/hangon -B build/hangon-capture -A x64 -DSHEN_AUTO_TEST_ENABLED=ON

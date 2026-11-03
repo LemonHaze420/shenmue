@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 #include "s1/task/scen/scen.hpp"
 #include "s1/task/conv.hpp"
 #include "logging.hpp"
@@ -192,7 +193,7 @@ extern ScenarioFunctionWork *g_scenarioFunctionWork;
 
 namespace scen_detail {
 
-extern std::int16_t g_currentScenarioStep;
+extern ScenarioStepValue g_currentScenarioStep;
 
 template <typename T> T *ScenarioPointer(std::uint32_t offset);
 extern GameDateTime g_scenarioDateScratch;
@@ -293,7 +294,11 @@ struct CameraSettingsParameters {
 
 struct StepUtilityParameters {
     std::int32_t mode;
+#if SHENMUE_IS_DEMO
+    std::uint32_t requestedStep;
+#else
     std::uint16_t requestedStep;
+#endif
 };
 #pragma pack(pop)
 
@@ -604,6 +609,15 @@ struct OwnedItemMenuParameters {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+
+#if SHENMUE_IS_DEMO
+struct TrialInventoryChangeParameters {
+    std::uint32_t itemId;
+    std::int32_t amount;
+    std::int32_t attribute;
+};
+static_assert(sizeof(TrialInventoryChangeParameters) == 12);
+#endif
 
 struct InventoryChangeParameters {
     std::uint16_t id;
@@ -1234,6 +1248,18 @@ void Script_seqGetCamInterpActive(ScenarioContext *context, void *);
 
 void Script_SetTaskExecutionSuspended(ScenarioContext *context, void *rawParams);
 
+#if SHENMUE_IS_DEMO
+void Script_ReturnBooleanFalse(ScenarioContext *context, void *);
+void Script_ReturnFloatZero(ScenarioContext *context, void *);
+void Script_TrialTimeQuery(ScenarioContext *context, void *rawParams);
+void Script_SetVfSkillFlags(ScenarioContext *context, void *rawParams);
+void Script_TrialReservedMapRequest(ScenarioContext *context, void *rawParams);
+void Script_TrialReservedEffectRequest(ScenarioContext *context, void *rawParams);
+void Script_DebugTrap(ScenarioContext *context, void *rawParams);
+void Script_LoadTrialSubtitle(ScenarioContext *context, void *rawParams);
+void Script_ShowTrialSubtitle(ScenarioContext *context, void *rawParams);
+void Script_HideTrialSubtitle(ScenarioContext *context, void *rawParams);
+#endif
 void Script_shenRequestGameModuleTransition(ScenarioContext *, void *rawParams);
 
 void Script_ctrlProcessReqScene(ScenarioContext *, void *);
@@ -1590,6 +1616,9 @@ std::uint32_t GeneralGetDebugLogFlag(std::uint32_t, std::uint32_t, std::uint32_t
 
 void Script_PreserveAccumulator(ScenarioContext *, void *);
 
+#if SHENMUE_IS_DEMO
+void Script_CaptureTrialSaveState(ScenarioContext *, void *);
+#endif
 void Script_ClearAccumulator(ScenarioContext *context, void *);
 
 void Script_shenGetTaskBase(ScenarioContext *context, void *);
@@ -2082,7 +2111,7 @@ bool SCEN_HasSleepTransitionFinished(const PlayerControlWork &player, std::int32
 
 void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player);
 
-void SCEN_SetCurrentScenarioStep(std::int16_t step) noexcept;
+void SCEN_SetCurrentScenarioStep(ScenarioStepValue step) noexcept;
 
 void SCEN_SetHelpToken(std::uint8_t token, std::uint8_t button) noexcept;
 
@@ -2343,3 +2372,37 @@ struct ScenExprValue {
 };
 
 } // namespace shenmue::s1::scen_detail
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1::scen_detail {
+void Script_ReturnTimeDate(ScenarioContext *, void *rawParams);
+void Script_ReturnBooleanFalse(ScenarioContext *context, void *);
+void Script_ReturnFloatZero(ScenarioContext *context, void *);
+void Script_TrialTimeQuery(ScenarioContext *context, void *rawParams);
+void Script_TrialReservedMapRequest(ScenarioContext *context, void *rawParams);
+void Script_TrialReservedEffectRequest(ScenarioContext *context, void *rawParams);
+void Script_LoadTrialSubtitle(ScenarioContext *context, void *rawParams);
+void Script_ShowTrialSubtitle(ScenarioContext *context, void *rawParams);
+void Script_HideTrialSubtitle(ScenarioContext *context, void *rawParams);
+void Script_CaptureTrialSaveState(ScenarioContext *, void *);
+void Script_SetVfSkillFlags(ScenarioContext *, void *rawParams);
+void Script_TrialReservedMotionScale(ScenarioContext *, void *);
+void Script_TrialReservedCameraState(ScenarioContext *, void *);
+void Script_TrialReservedSceneId(ScenarioContext *, void *);
+void Script_TrialReservedGachapon(ScenarioContext *, void *);
+void Script_TrialReservedTimedTransition(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedActionSelectorBegin(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedActionSelectorEnd(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedHelpSelectorBegin(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedHelpSelectorEnd(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedAlternateHelpSelectorBegin(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedAlternateHelpSelectorEnd(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedHelpMessageBegin(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedHelpMessageEnd(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedCassetteBegin(ScenarioContext *, void *);
+std::int64_t SCNF_ReservedCassetteEnd(ScenarioContext *, void *);
+void Script_TrialTimeQuery(ScenarioContext *context, void *);
+void Script_TrialReservedMapRequest(ScenarioContext *, void *rawParams);
+void Script_TrialReservedEffectRequest(ScenarioContext *, void *rawParams);
+} // namespace shenmue::s1::scen_detail
+#endif

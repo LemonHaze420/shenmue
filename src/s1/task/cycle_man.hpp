@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 #include "logging.hpp"
 
 #include "common/types.hpp"
@@ -12,6 +13,13 @@ namespace shenmue::s1 {
 struct Character;
 struct AuxiliaryCollisionEntry;
 namespace CycleManager {
+#if SHENMUE_IS_DEMO
+struct MobjData;
+void Setup(const char *InFilename, const char *cycleFilename = nullptr);
+std::uint32_t ProgramClassCode(const MobjData *program);
+std::uint16_t ProgramMotionId(const MobjData *program, std::size_t index);
+float ProgramPlaybackRate(const MobjData *program);
+#endif
 
 struct TaggedPayload;
 } // namespace CycleManager
@@ -216,7 +224,29 @@ enum CycleSteeringCommand : uint8_t {
 };
 namespace CycleManager {
 
+#if SHENMUE_IS_DEMO
+struct TrialCycleMotionResource {
+    shen_name characterId;
+    char filename[12];
+};
+struct TrialCycleProgram {
+    std::int32_t currentBranchOfs;
+    shen_name characterId;
+    shen_name programKind;
+    std::uint32_t cycleClassCode;
+    std::uint32_t reserved10;
+    float playbackRate;
+    std::uint32_t motionIds[10];
+    TrialCycleMotionResource motionResources[8];
+};
+static_assert(sizeof(TrialCycleProgram) == 0xc0);
+static_assert(offsetof(TrialCycleProgram, cycleClassCode) == 0x0c);
+static_assert(offsetof(TrialCycleProgram, motionIds) == 0x18);
+static_assert(offsetof(TrialCycleProgram, motionResources) == 0x40);
+inline constexpr shen_name kTrialCycleProgramKind = SHEN_NAME(PRG0);
+extern std::uint32_t g_trialCycleRandomSeed;
 
+#endif
 
 struct MobjData {
     int32_t currentBranchOfs;

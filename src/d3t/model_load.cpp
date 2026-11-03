@@ -4,7 +4,7 @@
 #include "d3t/shader_load.hpp"
 #include "shenmue.h"
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 #include "s1/initialization.hpp"
 #elif SHENMUE_IS_S2
 #include "s2/renderer_initialization.hpp"
@@ -13,7 +13,7 @@
 #include <mutex>
 
 namespace shenmue::d3t {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 using s1::g_doLowMipsOnly;
 #elif SHENMUE_IS_S2
 using s2::g_doLowMipsOnly;

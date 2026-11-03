@@ -13,6 +13,9 @@
 #include "s1/modules/harrier_audio.hpp"
 #include "s1/modules/harrier_render.hpp"
 #include "s1/legacy_renderer.hpp"
+#if defined(SHENMUE_TARGET_WHATS_PC)
+#include "s1/launch_options.hpp"
+#endif
 #include "s1/screen_space.hpp"
 #include "s1/simple_shader.hpp"
 #include "d3t/render_state.hpp"
@@ -352,7 +355,7 @@ void HangOn_DestroySession(HLib::TaskData *taskData) {
 }
 } // namespace
 bool LoadHangOnLibrary() {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(SHENMUE_WS_STANDALONE)
     if (g_hangOnLibrary.create)
         return true;
 #if !defined(SHENMUE_LOAD_HANGON_DLL)
@@ -360,7 +363,11 @@ bool LoadHangOnLibrary() {
     return true;
 #else
     const char *const shenRoot = std::getenv("SHEN_ROOT");
-    const std::filesystem::path directory = shenRoot && *shenRoot ? std::filesystem::path(shenRoot) / "sm1" : std::filesystem::current_path();
+    const std::filesystem::path directory =
+#if defined(SHENMUE_TARGET_WHATS_PC)
+        !g_trialLaunchOptions.hostDirectory.empty() ? g_trialLaunchOptions.hostDirectory :
+#endif
+        shenRoot && *shenRoot ? std::filesystem::path(shenRoot) / "sm1" : std::filesystem::current_path();
     const HMODULE module = LoadLibraryW((directory / L"GameHangon_Winx64_Release.dll").c_str());
     if (!module)
         return false;

@@ -2244,8 +2244,16 @@ bool InitTimedPathMotion(CycleManager::NpcRecord &npc, uint32_t recordOffset, bo
     npc.cycle->animMoveSpeedScale = steeringActive ? getFloatValueFromLUT_Wrapper(npc.cycle->mot, npc.cycle->activeAnimId) : 0.0f;
     if (npc.cycle->animMoveSpeedScale == 0.0f)
         npc.cycle->animMoveSpeedScale = 0.041666668f;
+#if SHENMUE_IS_DEMO
+    float speed = 0.0f;
+    if (!ReadValue(g_cycleManagerRuntime.bytes, recordOffset + 16U, speed))
+        return false;
+    npc.cycle->pathMoveSpeed = speed;
+    npc.cycle->baseMoveSpeed = speed;
+#else
     npc.cycle->pathMoveSpeed = npc.cycle->moveConfig->motionRadiusTimingScalar;
     npc.cycle->baseMoveSpeed = npc.cycle->moveConfig->motionRadiusTimingScalar;
+#endif
     const Vector3 first = npc.cycle->pathPoints[0];
     const float distance = CycleManager::Distance(npc.cycle->pos, first);
     if (npc.cycle->snapToPathStart || distance > 16.0f || 0.30000001f > distance) {

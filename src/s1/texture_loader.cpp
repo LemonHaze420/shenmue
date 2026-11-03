@@ -31,6 +31,24 @@
 #include <json/json.h>
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+std::int32_t LoadSpriteTextureList(void *data, std::uint32_t size, std::int32_t *surfaces) {
+    std::byte *cursor = static_cast<std::byte *>(data);
+    const std::byte *const end = cursor + size;
+    std::int32_t count = 0;
+    while (cursor < end) {
+        std::uint32_t tag;
+        std::uint32_t length;
+        std::memcpy(&tag, cursor, sizeof(tag));
+        if (!tag)
+            break;
+        surfaces[count++] = LoadTEXN(cursor);
+        std::memcpy(&length, cursor + 4, sizeof(length));
+        cursor += length;
+    }
+    return count;
+}
+#endif
 
 namespace {
 

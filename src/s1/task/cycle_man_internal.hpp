@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 #include "s1/task/mobj.hpp"
 #include "s1/task/kdan.hpp"
 #include "s1/motion.hpp"
@@ -702,7 +703,12 @@ bool DispatchSceneTask(uint32_t token, uint32_t dispatchState, uint32_t currentT
 
 bool SelectBranchByFlagsAndDate(uint32_t charaHeaderOffset, timeContextType_t type, const TimeContext &context);
 
-int32_t ReadCyclemanForScene(const char *InFilename);
+int32_t ReadCyclemanForScene(const char *InFilename
+#if SHENMUE_IS_DEMO
+    ,
+    const char *cycleFilename
+#endif
+);
 } // namespace CycleManager
 
 
@@ -867,7 +873,12 @@ extern std::array<std::byte, kMobjDynamicAllocationSize> g_mobjDynamicAllocation
 #endif
 void ClearProgramLists();
 void ReleaseWorldOwnersForTeardown();
-void Setup(const char *InFilename);
+void Setup(const char *InFilename
+#if SHENMUE_IS_DEMO
+    ,
+    const char *cycleFilename
+#endif
+);
 void CoreCallback_Mo_Exec(HLibTaskData *);
 void MotionCallback_Mo_Exec2(HLibTaskData *);
 

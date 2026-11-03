@@ -38,6 +38,9 @@
 #endif
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+TrialSavedGameState g_trialSavedGameState{};
+#endif
 
 extern std::int32_t g_actNumber;
 extern std::array<std::uint8_t, 128> g_shenmueFlags;
@@ -1297,3 +1300,50 @@ void S1SettingsFlags_Set(std::uint32_t flags) noexcept {
 }
 
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {
+void S1Save_CaptureTrialState() {
+    TrialSavedGameState &save = g_trialSavedGameState;
+    const PlayerStatsRuntimeState &stats = g_playerStats;
+    save.version = 1.03f;
+    save.sceneId = g_sceneId;
+    save.areaId = g_areaId;
+    save.entryPoint = g_entryPoint;
+    std::uint8_t *const basic = save.playerStats;
+    WritePacked(basic, 0, stats.savedFlags);
+    std::memcpy(basic + 4, stats.currentVfSkill.data(), 16);
+    WritePacked(basic, 0x14, stats.runtimeFlags);
+    WritePacked(basic, 0x18, stats.cash);
+    WritePacked(basic, 0x1c, stats.segaCoins);
+    WritePacked(basic, 0x20, static_cast<std::uint16_t>(stats.alternateHealth));
+    WritePacked(basic, 0x22, static_cast<std::uint16_t>(stats.defaultHealth));
+    WritePacked(basic, 0x24, static_cast<std::uint16_t>(stats.cameraShakeAmount));
+    WritePacked(basic, 0x26, static_cast<std::uint16_t>(stats.fightAssistScale));
+    WritePacked(basic, 0x28, g_settingsFlags);
+    WritePacked(basic, 0x2c, static_cast<std::uint16_t>(stats.contextActionMode));
+    WritePacked(basic, 0x2e, stats.currentMove);
+    basic[0x30] = stats.vfHpRegenerationProfile;
+    std::memcpy(save.dateTime, &g_currentDateTime, sizeof(g_currentDateTime));
+    WritePacked(save.dateTime, 8, g_currentDateTimeTicks);
+    std::memcpy(save.scenarioBits, g_scenarioStepLut.bitFlags64, sizeof(save.scenarioBits));
+    std::memcpy(save.shenmueFlags, g_shenmueFlags.data(), sizeof(save.shenmueFlags));
+    std::memcpy(save.scenarioSteps, g_scenarioStepLut.steps, sizeof(save.scenarioSteps));
+    std::memcpy(save.inventory, stats.trialInventory.data(), sizeof(save.inventory));
+    save.scenarioStep = SCEN_GetCurrentScenarioStep();
+    std::memcpy(save.arcadeScores, g_arcadeHighScores.data(), sizeof(save.arcadeScores));
+    save.checksum = S1Save_CalculateTrialChecksum(offsetof(TrialSavedGameState, checksum), &save);
+}
+
+std::uint32_t S1Save_CalculateTrialChecksum(std::uint32_t count, const void *data) {
+    const std::uint8_t *const bytes = static_cast<const std::uint8_t *>(data);
+    std::uint32_t crc = 0xffffffffU;
+    for (std::uint32_t index = 0; index < count; ++index) {
+        crc ^= static_cast<std::uint32_t>(bytes[index]) << 24U;
+        for (unsigned bit = 0; bit < 8; ++bit)
+            crc = (crc & 0x80000000U) ? (crc << 1U) ^ 0x04c11db7U : crc << 1U;
+    }
+    return ~crc;
+}
+} // namespace shenmue::s1
+#endif

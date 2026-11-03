@@ -45,6 +45,10 @@
 #endif
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+CddaBackend g_cddaBackend{};
+std::int32_t g_systemAudioOutputMode = 0;
+#endif
 
 extern std::array<std::uint8_t, 128> g_shenmueFlags;
 extern std::int32_t g_actNumber;
@@ -4247,3 +4251,30 @@ void ExecuteCassetteSND(const CassetteSoundState &sound) {
 }
 
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {
+void SOND_PlayCdAudio(std::uint32_t command, std::int32_t fadeFrames) {
+    const std::uint32_t volumeCommand = 0xa3U | ((command >> 16U) & 15U) << 16U;
+    if (SOND_ExecuteRawAicaCommand(volumeCommand) == 0)
+        SOND_ExecuteRawAicaCommand(volumeCommand + 0x100U);
+    if (g_cddaBackend.play)
+        g_cddaBackend.play(command & 0xffU, command & 0xffU, fadeFrames);
+}
+
+void SOND_StopCdAudio() {
+    if (g_cddaBackend.stop)
+        g_cddaBackend.stop();
+}
+
+std::int32_t SOND_GetSystemOutputMode() {
+    return g_systemAudioOutputMode;
+}
+
+void SOND_SetSystemOutputMode(std::int32_t mode) {
+    g_systemAudioOutputMode = mode;
+    shenExecuteAICACommand(mode == 1 ? 0x900a0U : 0x800a0U, 0, 0);
+    SOND_ExecuteRawAicaCommand((static_cast<std::uint32_t>(mode == 1 ? 13 : 15) << 16U) + 0x1ba0U);
+}
+} // namespace shenmue::s1
+#endif

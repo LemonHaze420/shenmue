@@ -1,6 +1,7 @@
 #include "s1/enhancements/rt_arcade.hpp"
 #include "d3t/render_state.hpp"
 
+#include "s1/archive_data.hpp"
 #include "s1/d3t/renderer.hpp"
 #include "s1/d3t/d3t_shader_load.hpp"
 #include "s1/d3t/d3t_texture.hpp"
@@ -127,7 +128,7 @@ void StartHangOnAttract() {
 }
 
 void StartHarrierAttract() {
-    if (g_attractHarrierReady)
+    if (g_attractHarrierReady || archive_data::ArchiveData_GetFileSize("XHAR\\datas\\HAR.ROM") < kHarrierRomSize)
         return;
     g_harrierSession = {.mode = 2, .coreKind = 3};
     std::memcpy(g_harrierSession.rankings, kHarrierDefaultRankings.data(), kHarrierDefaultRankings.size());

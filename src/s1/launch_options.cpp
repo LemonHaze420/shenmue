@@ -2,6 +2,12 @@
 
 namespace shenmue::s1 {
 
+#if defined(SHENMUE_TARGET_WHATS_PC)
+#pragma region WhatsShenmue
+TrialLaunchOptions g_trialLaunchOptions{};
+#pragma endregion
+#endif
+
 MapLaunchOptions g_mapLaunchOptions{};
 MapLaunchOptions g_transitionValidationOptions{};
 FrontendLaunchTarget g_frontendLaunchTarget = FrontendLaunchTarget::None;

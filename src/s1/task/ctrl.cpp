@@ -148,6 +148,14 @@ bool MAPCTRL_SetCharacterIdData(std::int32_t index, const std::array<std::uint32
 void LoadGameModule(SystemModule module, std::int32_t sceneId, std::uint32_t areaId, std::uint32_t entryPoint) {
 
     auto *const control = reinterpret_cast<MapControlData *>(g_mapControlTask->task_data_ptr);
+#if SHENMUE_IS_DEMO
+    control->module = module;
+    control->sceneId = sceneId;
+    control->areaId = areaId;
+    control->entryPoint = entryPoint;
+
+    control->flags |= 1U;
+#else
     control->flags |= 1U;
     control->module = module;
     control->sceneId = sceneId;
@@ -186,6 +194,7 @@ void LoadGameModule(SystemModule module, std::int32_t sceneId, std::uint32_t are
         UpdateSteamStat(Stat_Win_Game);
         UpdateSteamAchievement(Stat_Win_Game);
     }
+#endif
 }
 
 void MapControlInternal() {
@@ -910,6 +919,77 @@ void HLTaskFunc_EnqueueMapControlTask(HLib::TaskData *) {
     control->mbstTask = MBST_Init();
     UI_GUITasksEnqueue();
     WRN_CtrlWarning_Enqueue();
+#if SHENMUE_IS_DEMO
+
+    g_maxHandRotationBlend = 0.5f;
+    MOTN_ResetMapFileRegistrations();
+    g_invalidatedMotionRange = nullptr;
+    g_vfPlayerAggroCombat = 1;
+
+    if (g_sceneId == 80 && g_areaId == SHEN_NAME(TITL)) {
+        MOTN_ReadMOTNHeader(ReadFile("scene/80/TITL", "M_TITL.BIN", SHEN_NAME(MOTI)));
+        SPSS_Init();
+    }
+
+    payloadSize = 0;
+    const std::byte *const mapState = MAPINFO_FindChunkPayload(SHEN_NAME(MSTS), &payloadSize);
+    if (mapState && payloadSize >= sizeof(control->mapRuntimeFlags)) {
+        std::memcpy(&control->mapRuntimeFlags, mapState, sizeof(control->mapRuntimeFlags));
+    }
+    const bool snowParticleBudgetEnabled = InitializeMapEnvironmentParameters();
+    FACE_Init();
+    LGHT_Initialize(control->mapInfo, g_mapInfoSize);
+    InitializeMapShadowParameters();
+    EFFE_ResetScriptLightParametersForMap();
+    if (!DISP_IsOnMainMenu())
+        EnqueueTIME();
+    HLib_EnqueueTaskWithoutParameter(WIND_Callback, 8, 2, SHEN_NAME(WIND));
+    LCDM_Init();
+    SRCH_Init();
+
+    payloadSize = 0;
+    const std::byte *const collision = MAPINFO_FindChunkPayload(SHEN_NAME(COLS), &payloadSize);
+    COLS_Process(collision ? const_cast<std::byte *>(collision - 8) : nullptr);
+    MAPINFO_InitializeSceneParameters(control->mapInfo);
+
+    LoadSceneMapAssets();
+    g_skipNavRegionFiltering = 0;
+    g_navRegionListHead = nullptr;
+    g_navigationRegionCount = 0;
+    payloadSize = 0;
+    g_navigationCollisionDataTable = MAPINFO_FindChunkPayload(SHEN_NAME(PCDT), &payloadSize);
+    if (g_navigationCollisionDataTable) {
+        std::uint32_t regionId = 0;
+        std::memcpy(&regionId, g_navigationCollisionDataTable, sizeof(regionId));
+        navCreateRegion(regionId, nullptr, 0);
+    }
+    g_locomotionInitState = LocomotionInit::Pending;
+    CHRD_InitCurrentMapInfo();
+    EFFE_Init();
+    g_flmwPlayerDriveActive = 0;
+    g_flmwForwardInputPressed = 0;
+    g_defaultHpRegenProfile = 0;
+    g_activeHpRegenProfile = 0;
+    g_playerStats.vfHpRegenerationProfile = 0;
+    g_vfRuntimeAccumFightTicks = 0;
+    EFFE_SetSnowParticleBudgetEnabled(snowParticleBudgetEnabled);
+    SCN3_Process(control->mapInfo);
+    control->sceneId = g_sceneId;
+    control->areaId = g_areaId;
+    control->entryPoint = g_entryPoint;
+    control->module = SystemModule::Map;
+
+    S1Save_ApplyPendingMapStartState();
+    g_pendingSleepResumeLoad = 0;
+
+    control->objectTask = OBJE_Init();
+    control->scrollTask = EnqueueScrollTaskOwner();
+    control->clipTask = HLib_EnqueueTaskWithoutParameter(CLIP_Callback, 12, 2, SHEN_NAME(CLIP));
+    Rendering_n_Init();
+    control->renderTask = DRWP_GetWork();
+    control->dwmzTask = DWMZ_Init();
+    TRWV_Init();
+#else
     if (!DISP_IsOnMainMenu())
         RenderLoadingScreen(0);
     g_maxHandRotationBlend = 0.5f;
@@ -982,6 +1062,7 @@ void HLTaskFunc_EnqueueMapControlTask(HLib::TaskData *) {
     TRWV_Init();
     if (!DISP_IsOnMainMenu())
         CDTT_Init();
+#endif
     CSTC_Init();
     MOTF_Init();
 }
@@ -1017,3 +1098,10 @@ void MapControlTask_Init(HLib::TaskData *) {
 }
 
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {
+void MAPCTRL_TrialReservedRequest(std::uint32_t) {
+}
+} // namespace shenmue::s1
+#endif

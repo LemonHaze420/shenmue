@@ -77,6 +77,26 @@ std::uint8_t g_shouldUpdateClockUi = 0;
 GameDateTime g_currentDateTime{};
 GameDateTime g_temporaryDateTime{};
 std::uint16_t g_temporaryDateTimeWord = 0;
+#if SHENMUE_IS_DEMO
+std::uint16_t g_currentDateTimeTicks = 0;
+std::uint16_t g_maximumDateTimeTicks = 0;
+
+void TIME_ResetTrialClock() {
+    TIME_ResetDateTime(0);
+    TIME_ResetDateTime(1);
+    TIME_ResetDateTime(2);
+    g_newCycleTime = 0.0f;
+    g_timeMultiplier = 1.5f;
+    g_cycleTimeMultiplier = std::bit_cast<float>(0x3f2aaaaaU);
+}
+
+void TIME_InitializeTrialClock() {
+    CDTT_SetMode(CDTTMode::TitleOrIntroDateSetup);
+    CDTT_SetMode(CDTTMode::GameplayDateSetup);
+    TIME_ResetTrialClock();
+}
+
+#endif
 std::uint8_t g_unusedTimeBypass = 0;
 float g_newCycleTime = 0.0f;
 float g_currentDeltaTimeSim = 0.0f;
@@ -680,4 +700,28 @@ void TIME_Callback_0(HLib::TaskData *) {
     TIME_UpdateClockUI();
 }
 
+#if SHENMUE_IS_DEMO
+void TIME_ResetDateTime(std::int8_t index) {
+    GameDateTime *const dates[3]{&g_currentDateTime, &g_maximumDateTime, &g_temporaryDateTime};
+    std::uint16_t *const ticks[3]{&g_currentDateTimeTicks, &g_maximumDateTimeTicks, &g_temporaryDateTimeWord};
+    GameDateTime &date = *dates[index];
+    date.year = 86;
+    date.month = 12;
+    date.day = 3;
+    date.hours = g_sceneId == 80 ? 12 : 8;
+    date.minutes = g_sceneId == 80 ? 0 : 30;
+    date.seconds = 0;
+    *ticks[index] = 0;
+    RecalculateDayInTheWeek(&date);
+}
+#endif
+
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {
+bool TIME_TrialReservedQuery() {
+    return false;
+}
+} // namespace shenmue::s1
+#endif

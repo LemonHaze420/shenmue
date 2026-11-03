@@ -335,7 +335,11 @@ std::byte *ResolveScenBranchPointer(ScenRuntimeObject &object) {
                     return nullptr;
                 }
             } else {
+#if SHENMUE_IS_DEMO
+                ip = object.scriptStart + resumeMark;
+#else
                 ip = object.scriptStart + (std::max)(0, static_cast<int>(resumeMark) - 2);
+#endif
             }
         } else {
             ip = object.scriptStart;
@@ -467,7 +471,11 @@ std::byte *DecodeScenLowOpcode(ScenRuntimeObject &object, std::byte *ip, bool &s
                         next = object.scriptStart + g_scntReentryOffsets[slot];
                     const std::byte *const resumeMark = object.scriptStart + g_scntResumeMarkOffsets[slot];
                     if (next < resumeMark)
+#if SHENMUE_IS_DEMO
+                        next = const_cast<std::byte *>(resumeMark);
+#else
                         next = const_cast<std::byte *>(resumeMark - 2);
+#endif
                     const std::byte *const waitPoint = object.scriptStart + g_scntWaitOffsets[slot];
                     if (next < waitPoint) {
                         object.runtimeState = 5;
@@ -476,8 +484,12 @@ std::byte *DecodeScenLowOpcode(ScenRuntimeObject &object, std::byte *ip, bool &s
                     }
                 } else {
                     const auto offset = next - object.scriptStart;
-                    if (offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max())
+                    if (offset >= 0 && offset <= std::numeric_limits<std::uint16_t>::max()) {
+#if SHENMUE_IS_DEMO
+                        g_scntSelectedStateOffsets[slot] = static_cast<std::uint16_t>(offset);
+#endif
                         g_scntReentryOffsets[slot] = static_cast<std::uint16_t>(offset);
+                    }
                     g_scntResumeMarkOffsets[slot] = 0;
                 }
             }
@@ -725,6 +737,10 @@ std::byte *DecodeScenHighOpcode(ScenRuntimeObject &object, std::byte *ip, bool &
     }
     case 0xf6: {
         std::byte *next = ip + 1;
+#if SHENMUE_IS_DEMO
+        SCNF_LogStateChange(object, -3);
+        object.runtimeState = 1;
+#else
         if (object.scriptSlot >= kScntScriptSlotCount || (object.runtimeFlags & 0x2000U) != 0) {
             SCNF_LogStateChange(object, -3);
             object.runtimeState = 1;
@@ -735,6 +751,7 @@ std::byte *DecodeScenHighOpcode(ScenRuntimeObject &object, std::byte *ip, bool &
             object.instructionPtr = next;
             object.runtimeState = 3;
         }
+#endif
         object.runtimeFlags = (object.runtimeFlags & 0xff7ffd7fU) | 0x800000U;
         stop = true;
         return next;

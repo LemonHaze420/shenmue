@@ -140,6 +140,63 @@ void HLib_PauseTaskRangeExecution(std::uint16_t firstIndex, std::uint16_t lastIn
 }
 
 std::int64_t HLib_DestroyTask(HLib::Task *task) {
+#if SHENMUE_IS_DEMO
+    if (!task || !task->mainTaskCallbackFnPtr) {
+        return 0;
+    }
+
+    const bool wasPaused = g_TaskInfo.bTaskPauseEnqueue != 0;
+    if (wasPaused) {
+        return 0;
+    }
+
+    if (task->taskIndex < 16) {
+        for (std::int32_t index = task->taskIndex; index < 16; ++index) {
+            if (g_TaskInfo.moduleTaskQueue[index] == task) {
+                g_TaskInfo.moduleTaskQueue[index] = task->next;
+            }
+        }
+    }
+
+    task->next->nextInQueue = task->nextInQueue;
+    task->nextInQueue->next = task->next;
+    task->next = HLib::NextTask;
+    HLib::NextTask = task;
+    task->mainTaskCallbackFnPtr = nullptr;
+
+    for (HLib::Task *child = task->child; child; child = child->nextSibling) {
+        child->parent = nullptr;
+    }
+    if (task->parent) {
+        if (task->parent->child == task) {
+            task->parent->child = task->nextSibling;
+        }
+        if (task->parent->cleanupParent == task) {
+            task->parent->cleanupParent = task->prevSibling;
+        }
+    }
+    if (task->prevSibling) {
+        task->prevSibling->nextSibling = task->nextSibling;
+    }
+    if (task->nextSibling) {
+        task->nextSibling->prevSibling = task->prevSibling;
+    }
+
+    HLib::TaskData *const taskData = task->task_data_ptr;
+    task->prevSibling = nullptr;
+    task->nextSibling = nullptr;
+    task->child = nullptr;
+    task->cleanupParent = nullptr;
+    if (taskData) {
+        HLib_FreeTaskData(taskData, static_cast<std::int32_t>(kTaskDataToken));
+        task->task_data_ptr = nullptr;
+    }
+    if (wasPaused) {
+        HLib_PauseTaskRangeExecution(static_cast<std::uint16_t>(g_TaskInfo.CurrTaskIdx), static_cast<std::uint16_t>(g_TaskInfo.NextTaskIdx));
+    }
+    return 1;
+
+#else
     if (!task || !task->mainTaskCallbackFnPtr) {
         return 0;
     }
@@ -194,6 +251,9 @@ std::int64_t HLib_DestroyTask(HLib::Task *task) {
         HLib_PauseTaskRangeExecution(static_cast<std::uint16_t>(g_TaskInfo.CurrTaskIdx), static_cast<std::uint16_t>(g_TaskInfo.NextTaskIdx));
     }
     return 1;
+
+
+#endif
 }
 
 std::int64_t HLib_DestroyCurrentTask() {
@@ -281,3 +341,36 @@ void HLib_DisableTokenCheck(void *taskData) {
 }
 
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {
+HLib::TaskData *HLib_AllocateTaskData(HLib::Task *task, std::uint32_t size) {
+    HLib::TaskData *data = nullptr;
+    if (!task->task_data_ptr) {
+        data = static_cast<HLib::TaskData *>(HLib_AllocHeapMemBlock(size, kTaskDataToken));
+        if (data)
+            task->task_data_ptr = data;
+    }
+    return data;
+}
+
+void HLib_FreeTaskDataForTask(HLib::Task *task) {
+    if (task && task->task_data_ptr) {
+        HLib_FreeTaskData(task->task_data_ptr, 0);
+        task->task_data_ptr = nullptr;
+    }
+}
+
+void HLib_SetTaskMainCallback(HLib::Task *task, HLib::TaskCallback callback) {
+    if (task) {
+        task->mainTaskCallbackFnPtr = callback;
+        task->initCallbackFnPtr = nullptr;
+        task->autoInitTaskCallbackFnPtr = nullptr;
+    }
+}
+
+void HLib_SetCurrentTaskMainCallback(HLib::TaskCallback callback) {
+    HLib_SetTaskMainCallback(CurrentTask, callback);
+}
+} // namespace shenmue::s1
+#endif

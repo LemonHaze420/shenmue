@@ -1,5 +1,8 @@
 #include "logging.hpp"
 #include "s1/boot.hpp"
+#include "s1/face.hpp"
+#include "s1/font.hpp"
+#include "s1/shadow_volume.hpp"
 #include "s1/launch_options.hpp"
 #include "s1/save_format.hpp"
 #include "s1/task/ctrl.hpp"
@@ -22,6 +25,7 @@ static_assert(sizeof(AudioModuleContext) == 0xc);
 static_assert(offsetof(AudioModuleContext, mode) == 0x8);
 
 void InitMain();
+void ReadMOTI();
 void PauseGameAudioSequence();
 
 void *VFMA_TaskPtr = nullptr;
@@ -43,6 +47,12 @@ std::int64_t SetToDisplayModule(HLib::TaskData *) {
 
 std::int64_t Audio_Module(HLib::TaskData *taskData) {
     PauseGameAudioSequence();
+#if SHENMUE_IS_DEMO
+    ReadMOTI();
+    FACE_LoadStartupPrograms();
+    SetupMoveShadow();
+    AllocFONTs();
+#endif
     VFMA_TaskPtr = nullptr;
     if (g_mapLaunchOptions.active) {
         const std::int32_t requestedScene = g_mapLaunchOptions.sceneId;

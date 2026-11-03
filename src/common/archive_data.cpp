@@ -2,6 +2,11 @@
 #include <shendk/files/container/tad_reader.h>
 
 #include <algorithm>
+#if defined(SHENMUE_TARGET_WHATS_PC)
+#include <json/json.h>
+#include <memory>
+#include <cstdio>
+#endif
 #include <array>
 #include <cctype>
 #include <cstddef>
@@ -48,6 +53,9 @@ bool g_indexAttempted = false;
 fs::path g_shenRoot;
 std::string g_archiveRootPrefix;
 std::unordered_map<std::uint64_t, TadEntry> g_tadEntries;
+#if defined(SHENMUE_TARGET_WHATS_PC)
+std::unordered_map<std::uint64_t, TadEntry> g_hostShaderEntries;
+#endif
 
 std::uint64_t hashKey(std::uint32_t primary, std::uint32_t secondary);
 std::uint64_t normalHash(const char *path);
@@ -282,7 +290,7 @@ bool readTadHeader(const fs::path &tadPath, const char *backend, std::uint32_t t
 #endif
 }
 
-bool indexTad(const TadArchive &archive, std::uint32_t &entryCount, std::uint64_t &packedSize) {
+bool indexTad(const TadArchive &archive, std::uint32_t &entryCount, std::uint64_t &packedSize, std::unordered_map<std::uint64_t, TadEntry> &entries = g_tadEntries) {
 #if 0
     std::ifstream tad(archive.tadPath, std::ios::binary);
     if (!tad) {
@@ -321,7 +329,7 @@ bool indexTad(const TadArchive &archive, std::uint32_t &entryCount, std::uint64_
         if (entry[0] == 0) {
             continue;
         }
-        if (g_tadEntries.emplace(hashKey(entry[0], entry[1]), TadEntry{archive.tacPath, entry[4], entry[6], archive.sourceIndex, entry[7]}).second) {
+        if (entries.emplace(hashKey(entry[0], entry[1]), TadEntry{archive.tacPath, entry[4], entry[6], archive.sourceIndex, entry[7]}).second) {
             ++entryCount;
         }
     }
@@ -356,7 +364,7 @@ bool indexTad(const TadArchive &archive, std::uint32_t &entryCount, std::uint64_
             return false;
         if (!entry.hash1)
             continue;
-        if (g_tadEntries
+        if (entries
                 .emplace(hashKey(entry.hash1, entry.hash2), TadEntry{archive.tacPath, entry.fileOffset, entry.fileSize, archive.sourceIndex, entry.reserved1c})
                 .second)
             ++entryCount;
@@ -364,6 +372,98 @@ bool indexTad(const TadArchive &archive, std::uint32_t &entryCount, std::uint64_
     packedSize += tacSize;
     return true;
 #endif
+}
+
+#if defined(SHENMUE_TARGET_WHATS_PC)
+void findArchiveSources(const fs::path &root, const char *backend, std::uint32_t type, std::vector<TadArchive> &archives);
+bool readArchiveDirectory(
+    const fs::path &root, const char *backend, std::uint32_t type, std::unordered_map<std::uint64_t, TadEntry> &entries, ArchiveDataLoadResult &loaded) {
+    const std::optional<fs::path> archivesDirectory = childPathCaseInsensitive(root, "Archives");
+    const std::optional<fs::path> archiveRoot = archivesDirectory ? childPathCaseInsensitive(*archivesDirectory, backend) : std::nullopt;
+    std::error_code error;
+    if (!archiveRoot || !fs::is_directory(*archiveRoot, error)) {
+        return false;
+    }
+
+    std::vector<TadArchive> archives;
+    findArchiveSources(*archiveRoot, backend, type, archives);
+    std::sort(archives.begin(), archives.end(), [](const TadArchive &left, const TadArchive &right) { return left.order > right.order; });
+    for (const TadArchive &archive : archives) {
+        if (indexTad(archive, loaded.entryCount, loaded.packedSize, entries)) {
+            ++loaded.archiveCount;
+        }
+    }
+    return loaded.archiveCount != 0;
+}
+
+void indexHostShaderAliases() {
+    const std::unordered_map<std::uint64_t, TadEntry>::const_iterator remap = g_hostShaderEntries.find(normalHash("/tex/assets/Remap/AssetRemapping.json"));
+    if (remap == g_hostShaderEntries.end())
+        return;
+    const TadEntry entry = remap->second;
+    std::vector<char> bytes(entry.size);
+    std::ifstream input(entry.tacPath, std::ios::binary);
+    const shendk::TadEntry member{.fileOffset = entry.offset, .fileSize = entry.size};
+    if (!shendk::ReadTacAsset(input, member, 0, {reinterpret_cast<std::byte *>(bytes.data()), bytes.size()}))
+        return;
+    Json::CharReaderBuilder builder;
+    Json::Value root;
+    std::string errors;
+    std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+    if (!reader->parse(bytes.data(), bytes.data() + bytes.size(), &root, &errors) || !root["HasFullLocationPaths"].asBool())
+        return;
+    const std::string paths = root["HashCollisionStrings"].asString();
+    const Json::Value &uniques = root["Uniques"];
+    for (const Json::Value &location : root["Locations"]) {
+        if (!location["LocStrIdx"].isUInt() || !location["UniqueIdx"].isUInt())
+            continue;
+        const std::size_t start = location["LocStrIdx"].asUInt();
+        const Json::ArrayIndex uniqueIndex = location["UniqueIdx"].asUInt();
+        if (start >= paths.size() || uniqueIndex >= uniques.size())
+            continue;
+        const std::size_t end = paths.find('!', start);
+        const std::string path = paths.substr(start, end == std::string::npos ? end : end - start);
+        if (!path.starts_with("/shaders/") && !path.starts_with("/engine/assets/shaders/"))
+            continue;
+        const Json::Value &unique = uniques[uniqueIndex];
+        const Json::Value &md5 = unique["ContHashMD5"];
+        if (!md5.isArray() || md5.size() != 4)
+            continue;
+        const std::uint64_t low =
+            static_cast<std::uint32_t>(md5[0].asInt64()) | (static_cast<std::uint64_t>(static_cast<std::uint32_t>(md5[1].asInt64())) << 32U);
+        const std::uint64_t high =
+            static_cast<std::uint32_t>(md5[2].asInt64()) | (static_cast<std::uint64_t>(static_cast<std::uint32_t>(md5[3].asInt64())) << 32U);
+        char content[260];
+        std::snprintf(content, sizeof(content), "/remap/%llx-%llx-%x-%u.rmp", static_cast<unsigned long long>(low), static_cast<unsigned long long>(high),
+            unique["ContHashTex"].asUInt(), unique["FileSize"].asUInt());
+        char packed[320];
+        std::snprintf(packed, sizeof(packed), "/tex/assets%s.%08x.00000000", content, d3t_HashData(content, std::strlen(content)));
+        const std::unordered_map<std::uint64_t, TadEntry>::const_iterator found = g_hostShaderEntries.find(normalHash(packed));
+        const std::size_t suffix = path.rfind('.');
+        if (found != g_hostShaderEntries.end() && suffix != std::string::npos) {
+            const TadEntry shader = found->second;
+            const std::string source = "/tex/assets" + path.substr(0, suffix) + ".00000000";
+            g_hostShaderEntries.insert_or_assign(normalHash(source.c_str()), shader);
+        }
+    }
+}
+
+#endif
+
+const TadEntry *findPackedEntry(const char *path) {
+    const std::uint64_t hash = normalHash(path);
+    const auto found = g_tadEntries.find(hash);
+    if (found != g_tadEntries.end())
+        return &found->second;
+#if defined(SHENMUE_TARGET_WHATS_PC)
+    const std::string cleaned = cleanFilePath(path);
+    if (cleaned.starts_with("/tex/assets/shaders/") || cleaned.starts_with("/tex/assets/engine/assets/shaders/")) {
+        const auto shader = g_hostShaderEntries.find(hash);
+        if (shader != g_hostShaderEntries.end())
+            return &shader->second;
+    }
+#endif
+    return nullptr;
 }
 
 void ensureIndex() {
@@ -467,6 +567,9 @@ bool ArchiveData_LoadArchives(const char *root, const char *backend, std::uint32
     std::scoped_lock lock(g_indexMutex);
     g_indexAttempted = true;
     g_tadEntries.clear();
+#if defined(SHENMUE_TARGET_WHATS_PC)
+    g_hostShaderEntries.clear();
+#endif
     g_shenRoot = root ? fs::path(root) : fs::path{};
     g_archiveRootPrefix = cleanFilePath(root);
 
@@ -502,17 +605,38 @@ bool ArchiveData_LoadArchives(const char *root, const char *backend, std::uint32
     return loaded.archiveCount != 0;
 }
 
+#if defined(SHENMUE_TARGET_WHATS_PC)
+bool ArchiveData_LoadHostShaders(const char *root, ArchiveDataLoadResult *result) {
+    std::scoped_lock lock(g_indexMutex);
+    g_hostShaderEntries.clear();
+    ArchiveDataLoadResult loaded{};
+    if (root && *root)
+        readArchiveDirectory(fs::path(root), "dx11", 2, g_hostShaderEntries, loaded);
+    indexHostShaderAliases();
+    if (result)
+        *result = loaded;
+    return loaded.archiveCount != 0;
+}
+#endif
+
 void ArchiveData_ClearArchives() {
     std::scoped_lock lock(g_indexMutex);
     g_indexAttempted = true;
     g_shenRoot.clear();
     g_archiveRootPrefix.clear();
     g_tadEntries.clear();
+#if defined(SHENMUE_TARGET_WHATS_PC)
+    g_hostShaderEntries.clear();
+#endif
 }
 
 bool ArchiveData_HasArchives() {
     std::scoped_lock lock(g_indexMutex);
-    return !g_tadEntries.empty();
+    return !g_tadEntries.empty()
+#if defined(SHENMUE_TARGET_WHATS_PC)
+        || !g_hostShaderEntries.empty()
+#endif
+        ;
 }
 
 std::uint64_t ArchiveData_GetPathHash(const char *path) {
@@ -526,10 +650,8 @@ std::uint64_t ArchiveData_GetFileSize(const char *path) {
         return error ? 0 : size;
     }
     ensureIndex();
-    const auto found = g_tadEntries.find(normalHash(path));
-    if (found != g_tadEntries.end()) {
-        return found->second.size;
-    }
+    if (const TadEntry *const entry = findPackedEntry(path))
+        return entry->size;
     if (const auto loose = looseFilePath(path)) {
         std::error_code error;
         const std::uint64_t size = fs::file_size(*loose, error);
@@ -541,8 +663,8 @@ bool ArchiveData_IsPackedFile(const char *path) {
     if (scenarioOverridePath(path))
         return false;
     ensureIndex();
-    const std::unordered_map<std::uint64_t, TadEntry>::const_iterator found = g_tadEntries.find(normalHash(path));
-    return found != g_tadEntries.end() && found->second.size != 0;
+    const TadEntry *const entry = findPackedEntry(path);
+    return entry && entry->size != 0;
 }
 
 bool ArchiveData_GetScenarioOverridePath(const char *path, char *output, std::size_t capacity) {
@@ -562,10 +684,7 @@ void ArchiveData_GetSourceDesc(const char *path, ArchiveSourceDesc &source) {
         return;
     }
     ensureIndex();
-    const TadEntry *entry = nullptr;
-    const std::unordered_map<std::uint64_t, TadEntry>::const_iterator found = g_tadEntries.find(normalHash(path));
-    if (found != g_tadEntries.end())
-        entry = &found->second;
+    const TadEntry *const entry = findPackedEntry(path);
     if (!entry || (entry->flags & 0x10000U)) {
         source = {};
         return;
@@ -600,10 +719,7 @@ bool ArchiveData_Read(const char *path, std::uint64_t offset, void *destination,
     ensureIndex();
     fs::path source;
     std::uint64_t fileOffset = offset;
-    const TadEntry *entry = nullptr;
-    const auto found = g_tadEntries.find(normalHash(path));
-    if (found != g_tadEntries.end())
-        entry = &found->second;
+    const TadEntry *const entry = findPackedEntry(path);
     if (entry) {
         source = entry->tacPath;
         fileOffset += entry->offset;

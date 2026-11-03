@@ -3,10 +3,13 @@ Add-Type -AssemblyName System.Drawing
 $screens = New-Item -ItemType Directory -Force dist/screens
 $previousRoot = $env:SHEN_ROOT
 $previousCapture = $env:SHEN_AUTO_TEST_CAPTURE
+$previousScene = $env:SHEN_AUTO_TEST_SCENE
 try {
   $env:SHEN_ROOT = $env:SHEN_STEAM_ROOT
-  foreach ($game in 's1', 's2', 'hangon') {
-    $output = Join-Path $screens.FullName "$game-pc.png"
+  foreach ($game in 's1', 's2', 'ws', 'ws-face-ryo', 'hangon') {
+    $name = if ($game -eq 'ws-face-ryo') { 'ws-face-ryo' } else { "$game-pc" }
+    $output = Join-Path $screens.FullName "$name.png"
+    $env:SHEN_AUTO_TEST_SCENE = if ($game -eq 'ws-face-ryo') { 'ws-face-ryo' } else { '' }
     if (Test-Path $output) { Remove-Item $output }
     $env:SHEN_AUTO_TEST_CAPTURE = $output
     if ($game -eq 'hangon') {
@@ -14,6 +17,10 @@ try {
       $directory = Join-Path $env:SHEN_STEAM_ROOT 'sm1'
       if (!(Test-Path "$directory/GameHangon_Winx64_Release.dll")) { throw 'HangOn DLL was not found' }
       $width = 320; $height = 224
+    } elseif ($game -eq 'ws' -or $game -eq 'ws-face-ryo') {
+      $exe = (Resolve-Path 'build/ws-capture/Release/shenmue1.exe').Path
+      $directory = $env:SHEN_WS_ROOT
+      $width = 1280; $height = 720
     } else {
       $exe = (Resolve-Path "build/windows-capture/Release/shenmue$($game.Substring(1)).exe").Path
       $directory = Split-Path $exe
@@ -41,4 +48,5 @@ try {
 } finally {
   $env:SHEN_ROOT = $previousRoot
   $env:SHEN_AUTO_TEST_CAPTURE = $previousCapture
+  $env:SHEN_AUTO_TEST_SCENE = $previousScene
 }

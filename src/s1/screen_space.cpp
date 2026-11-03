@@ -9,6 +9,12 @@
 #include "s1/texture_cache.hpp"
 #include "s1/d3t/d3t_texture.hpp"
 #include "s1/render_passes.hpp"
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+#include "s1/ui_assets.hpp"
+#include "s1/ui_sprite_data_trial.hpp"
+#pragma endregion
+#endif
 #include "common/math.hpp"
 
 #include <algorithm>
@@ -242,10 +248,22 @@ void AdjustScreenSpaceWithParams_0(const ScreenSpaceParams *params, std::int32_t
     OriginalStrip strip{.corner0 = 0xffffffffU, .normalizedY2 = 1.0f, .normalizedX3 = 1.0f};
     UILayout_BuildQuad(&strip, params->alignmentType, static_cast<std::int32_t>(params->halfScreenX), static_cast<std::int32_t>(params->halfScreenY),
         params->scaledWidth, params->scaledHeight, params->positionScaleX, params->positionScaleY, params->angle, screenMode);
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    strip.flags |= params->flags14 | 0x400U;
+    SetRenderFlags_UnmapAndDraw_0(&strip, params->pvrSurfaceIndex, params->depthOrScale);
+#pragma endregion
+#endif
 }
 
 // @verified - p
 void AdjustDefaultScreenSpace(const ScreenSpaceParams *params) {
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    AdjustScreenSpaceWithParams(params, 0xff000000U, 0);
+    return;
+#pragma endregion
+#endif
     if (!g_updateRenderFrameMode)
         return;
     OriginalStrip strip;
@@ -264,12 +282,31 @@ void AdjustScreenSpaceWithParams(const ScreenSpaceParams *params, std::uint32_t 
         return;
     OriginalStrip strip;
     strip.flags = 0;
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    strip.corner0 = (flags & 0xff000000U) | 0x00ffffffU;
+    strip.vertexCount = flags & 0x00ffffffU;
+#pragma endregion
+#else
     strip.corner0 = flags | 0x00ffffffU;
     strip.vertexCount = flags & 0x00ffffffU;
+#endif
     strip.normalizedY1 = strip.normalizedX2 = strip.normalizedY3 = 0.0f;
     strip.normalizedY2 = strip.normalizedX3 = 1.0f;
     UILayout_BuildQuad(&strip, params->alignmentType, static_cast<std::int32_t>(params->halfScreenX), static_cast<std::int32_t>(params->halfScreenY),
         params->scaledWidth, params->scaledHeight, params->positionScaleX, params->positionScaleY, params->angle, screenMode);
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    const IconSpriteFrame &frame = kIconSpriteFrames[params->pvrSurfaceIndex];
+    strip.normalizedY1 = frame.u0;
+    strip.normalizedX2 = frame.v0;
+    strip.normalizedY2 = frame.u1;
+    strip.normalizedX3 = frame.v1;
+    strip.flags |= params->flags14 | 0x400U;
+    const std::int32_t surface = frame.bank > 14 ? 0 : ui_runtime_detail::g_commonIconSprites.assets[frame.bank].surface;
+    SetRenderFlags_UnmapAndDraw_0(&strip, surface, params->depthOrScale);
+#pragma endregion
+#endif
 }
 
 void AdjustScreenSpaceWithRenderFlags(const ScreenSpaceFillParams *params, std::int32_t screenMode) {

@@ -5,7 +5,7 @@
 #include <new>
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 #include "s1/d3t/d3t_texture.hpp"
 #include "s1/d3t/d3t_render_handles.hpp"
 #include "s1/texture_loader.hpp"
@@ -14,13 +14,13 @@
 #include "s1/d3t/d3t_content.hpp"
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
 #endif
 
-#if !SHENMUE_IS_S1
+#if !SHENMUE_IS_S1_FAMILY
 
 char *g_uiReloadFileMemory{};
 
@@ -231,7 +231,7 @@ void ResetUIViewSlot(std::int32_t slotIndex) {
         image.heightScale = 0.0f;
         if (slot.inUse == 1) {
             std::uint32_t &texture = g_uiViewTextures[static_cast<std::size_t>(image.textureIndex)];
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             std::uint32_t width = 0;
             std::uint32_t height = 0;
             if (texture && GetTexture2DDimensions(texture, &width, &height) && width && height)
@@ -272,7 +272,7 @@ void ReadImages(d3t::UIViewSlot<kUIViewImageCapacity> &slot) {
     for (int index = 0; index < count; ++index) {
         const cJSON *const member = cJSON_GetArrayItem(table, index);
         d3t::UIViewImage &image = slot.images[static_cast<std::size_t>(index)];
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         const std::uint32_t texture = LoadTextureFromFilepath_Wrapper(member->valuestring, g_activeRenderHandle);
 #else
         const std::uint32_t texture = SetupUsageForTexture(member->valuestring, 0);
@@ -381,14 +381,14 @@ std::int32_t TryFinalizeUIViewTextures(std::int32_t slotIndex) {
         if (!request)
             break;
         if (image.ready != 1) {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             const std::uint32_t texture = request;
 #else
             std::uint32_t texture = GetShaderDataByIndex(request);
 #endif
             std::uint32_t width = 0;
             std::uint32_t height = 0;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             if (!GetTexture2DDimensions(texture, &width, &height) || !width || !height) {
                 ++total;
                 continue;
@@ -450,7 +450,7 @@ std::int32_t UI_FindViewImage(std::uint32_t slot, const char *name) {
     return -1;
 }
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

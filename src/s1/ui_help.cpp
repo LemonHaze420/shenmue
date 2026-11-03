@@ -1,4 +1,7 @@
 #include "s1/ui_internal.hpp"
+#if SHENMUE_IS_DEMO
+#include "s1/ui_help_trial.hpp"
+#endif
 
 namespace shenmue::s1::ui_runtime_detail {
 void Queue_HP_SetUpHelpIcon();
@@ -952,9 +955,13 @@ bool HELP_TextExceedsHeapRoom() {
 void RenderHelpOverlay() {
     if (!GetInputStateForHelp() && g_controllerHelpOverlayState != 1)
         return;
+#if SHENMUE_IS_DEMO
+    UI_HELPDrawTrialPage();
+#else
     g_uiElements[69].isActive = 1;
     g_uiElements[kUiHelpNew].isActive = 1;
     TryInvokeRegisteredCallback(kUiHelpNew);
+#endif
 }
 }
 
@@ -1112,6 +1119,14 @@ void UI_HELPCallback(HLib::TaskData *) {
             if (index >= 0)
                 g_helpIconSurfaceIds[static_cast<std::size_t>(index)] = -1;
         }
+#if SHENMUE_IS_DEMO
+        UI_HELPPrepareTrialPage(g_helpOverlayPageTokenId);
+        help.iconFlags |= 0x80U;
+        g_helpOverlayState = UIHelpWidgetState::Active;
+        ++help.onScreenCount;
+        g_currentHelpIconState = 0;
+        break;
+#else
         std::uint8_t page = g_helpOverlayPageTokenId;
         g_helpTextRunLength = 0;
         g_helpTextWidth = 0;
@@ -1157,6 +1172,7 @@ void UI_HELPCallback(HLib::TaskData *) {
         ++help.onScreenCount;
         g_currentHelpIconState = 0;
         break;
+#endif
     }
     case UIHelpWidgetState::Active: {
         SEQ_Cleanup();

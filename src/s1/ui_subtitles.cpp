@@ -1,4 +1,5 @@
 #include "s1/ui_internal.hpp"
+#include "s1/texture_loader.hpp"
 
 #include "s1/steam.hpp"
 
@@ -36,6 +37,9 @@ void SubtitleAuxLoadCallback(CVWKRuntimeSlot *slot);
 }
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+std::int32_t g_trialSubtitleSurface{};
+#endif
 void SEQ_FreeFileHandles(CVWKRuntimeSlot &slot);
 
 void CVWK_SetAudioPauseState(bool paused);
@@ -528,6 +532,40 @@ Character *FindSubtitleCharacter(std::uint32_t id) {
 }
 
 void SubtitlePlaybackCallback(CVWKRuntimeSlot *slot) {
+#if SHENMUE_IS_DEMO
+    if (!slot)
+        return;
+    if (g_currentSubtitleSlot == slot && g_cvwkReadSubtitleOnPlay) {
+        const MapControlData *const map = g_mapControlTask ? reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
+        ReadSubtitleByID(map ? map->scenarioTask : nullptr, *slot);
+        g_cvwkReadSubtitleOnPlay = 0;
+    }
+    if (DialogueVoiceIsPlaying(slot->audioContext))
+        return;
+    if (!Audio_HasMasteringVoice() && faceHasRemainingDuration(FindSubtitleCharacter(slot->participantId)))
+        return;
+    if (g_currentSubtitleSlot == slot) {
+        const MapControlData *const map = g_mapControlTask ? reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
+        if (SCNT_WaitForSubtitleText(map ? map->scenarioTask : nullptr))
+            return;
+        g_currentSubtitleSlot = nullptr;
+    }
+    DestroyDialogueVoice(slot->audioContext);
+    bool participantStillOwned = false;
+    if (g_pCVWK && slot->participantId) {
+        for (CVWKRuntimeSlot &candidate : g_pCVWK->slots) {
+            if (&candidate != slot && candidate.callback && candidate.participantId == slot->participantId) {
+                participantStillOwned = true;
+                break;
+            }
+        }
+    }
+    if (!participantStillOwned) {
+        faceSetGeneratedLipCues(FindSubtitleCharacter(slot->participantId), nullptr, true);
+    }
+    slot->callback = nullptr;
+
+#else
     if (!slot)
         return;
     if (g_currentSubtitleSlot == slot && g_cvwkReadSubtitleOnPlay) {
@@ -557,6 +595,9 @@ void SubtitlePlaybackCallback(CVWKRuntimeSlot *slot) {
         faceSetGeneratedLipCues(FindSubtitleCharacter(slot->participantId), nullptr, true);
     }
     slot->callback = nullptr;
+
+
+#endif
 }
 
 void SubtitleFadeCallback(CVWKRuntimeSlot *slot) {
@@ -574,6 +615,21 @@ void SubtitleFadeCallback(CVWKRuntimeSlot *slot) {
 }
 
 void FreeSequenceFileHandles(CVWKRuntimeSlot &slot) {
+#if SHENMUE_IS_DEMO
+    DestroyDialogueVoice(slot.audioContext);
+    if (slot.fileHandle)
+        ReadCachedFile(slot.fileHandle);
+    if (slot.participantId) {
+        faceSetGeneratedLipCues(FindSubtitleCharacter(slot.participantId), nullptr, true);
+    }
+    if (g_currentSubtitleSlot == &slot) {
+        SCNT_ClearSubtitleText();
+        g_currentSubtitleSlot = nullptr;
+    }
+    slot.fileHandle = nullptr;
+    slot.callback = nullptr;
+
+#else
     DestroyDialogueVoice(slot.audioContext);
     if (slot.fileHandle)
         ReadCachedFile(slot.fileHandle);
@@ -586,12 +642,82 @@ void FreeSequenceFileHandles(CVWKRuntimeSlot &slot) {
     }
     slot.fileHandle = nullptr;
     slot.callback = nullptr;
+
+
+#endif
 }
 
-
-
-
 void SubtitleAuxLoadCallback(CVWKRuntimeSlot *slot) {
+#if SHENMUE_IS_DEMO
+    LargeFileHandle *const handle = slot->fileHandle;
+    if (handle) {
+        const std::int32_t fileState = CheckFileInfo(handle);
+        if (fileState != 0 && static_cast<std::uint32_t>(fileState - 3) > 1U)
+            return;
+        ReadCachedFile(handle);
+    }
+    slot->fileHandle = nullptr;
+    slot->japaneseText = nullptr;
+    auto *const base = static_cast<std::byte *>(slot->cvfbBlock);
+    std::uint32_t tag{};
+    std::memcpy(&tag, base, sizeof(tag));
+    if (tag == SHEN_NAME(SEGA)) {
+        std::uint32_t entry{};
+        std::uint32_t block{};
+        std::memcpy(&entry, base + 0x818, sizeof(entry));
+        std::memcpy(&block, base + 0x81c, sizeof(block));
+        PackAdfsWrapper *const afs = static_cast<PackAdfsWrapper *>(static_cast<CVRSEntry *>(slot->fileOrSequence)->afs);
+        if (LargeFileHandle *const reread = afs ? LargeFile_OpenTocEntryHandle(afs->status, static_cast<std::int32_t>(entry)) : nullptr) {
+            reread->offsetBytes = static_cast<std::int64_t>(block) << 11;
+            (void)GetFileFromCachedBuffer(reread, 1, base, 0);
+            slot->fileHandle = reread;
+            return;
+        }
+    } else {
+        const std::uint32_t landed = 0;
+        std::memcpy(base + 0x820, &landed, sizeof(landed));
+    }
+    const std::size_t capacity = 0x800;
+    const std::size_t firstOffset = std::min<std::size_t>(slot->stateOrOwner & ~3U, capacity);
+    auto *const first = reinterpret_cast<std::uint32_t *>(base + firstOffset);
+    if (!slot->participantId && firstOffset + 8 <= capacity)
+        slot->participantId = first[1];
+    const std::size_t firstSize = firstOffset + 4 <= capacity ? static_cast<std::size_t>(first[0] & ~3U) : capacity;
+    if (firstSize <= capacity - firstOffset) {
+        auto *const second = reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(first) + firstSize);
+        const std::size_t secondOffset = firstOffset + firstSize;
+        if (secondOffset + 4 <= capacity) {
+            const std::size_t secondSize = second[0] & ~3U;
+            if (secondSize <= capacity - secondOffset) {
+                std::byte *const payload = reinterpret_cast<std::byte *>(second + 1);
+                if (second[0] > 8 || (second[0] == 8 && payload[0] != std::byte{})) {
+                    slot->japaneseText = payload;
+                }
+                auto *const third = reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(second) + secondSize);
+                const std::size_t thirdOffset = secondOffset + secondSize;
+                if (thirdOffset + 4 <= capacity) {
+                    const std::size_t thirdSize = third[0] & ~3U;
+                    if (thirdSize <= capacity - thirdOffset) {
+                        if (third[0] >= 0x10U) {
+                            faceSetGeneratedLipCues(FindSubtitleCharacter(slot->participantId), reinterpret_cast<FaceLipCue *>(third + 1), true);
+                        }
+                    }
+                    if (thirdSize <= capacity - thirdOffset && thirdOffset + thirdSize + 8 <= capacity) {
+                        std::uint32_t nestedTag{};
+                        std::memcpy(&nestedTag, reinterpret_cast<std::byte *>(third) + thirdSize, sizeof(nestedTag));
+                        if (nestedTag == SHEN_NAME(TXTJ)) {
+                            slot->japaneseText = reinterpret_cast<std::byte *>(third) + thirdSize + 8;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    const MapControlData *const map = g_mapControlTask ? reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
+    ReadSubtitleByID(map ? map->scenarioTask : nullptr, *slot);
+    slot->callback = SubtitlePlaybackCallback;
+
+#else
     LargeFileHandle *const handle = slot->fileHandle;
     if (handle) {
         const std::int32_t fileState = CheckFileInfo(handle);
@@ -658,6 +784,9 @@ void SubtitleAuxLoadCallback(CVWKRuntimeSlot *slot) {
     const MapControlData *const map = g_mapControlTask ? reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
     ReadSubtitleByID(map ? map->scenarioTask : nullptr, *slot);
     slot->callback = SubtitlePlaybackCallback;
+
+
+#endif
 }
 
 // CVWK_IsSlotActive: a specific voice slot is active while its callback is set; without one, any CVWK slot counts.
@@ -708,6 +837,20 @@ void CVWK_SetAudioPauseState(bool paused) {
 }
 
 void SEQ_ResetSubtitleAudioSlots() {
+#if SHENMUE_IS_DEMO
+    g_currentSubtitleSlot = nullptr;
+    SCNT_ClearSubtitleText();
+    if (!g_pCVWK)
+        return;
+    for (CVWKRuntimeSlot &slot : g_pCVWK->slots) {
+        if (!slot.callback)
+            continue;
+        slot.fadeFrame = 0;
+        slot.fadeFrames = 10;
+        slot.callback = SubtitleFadeCallback;
+    }
+
+#else
     g_currentSubtitleSlot = nullptr;
     ProcessSubtitleText(nullptr);
     if (!g_pCVWK)
@@ -719,6 +862,9 @@ void SEQ_ResetSubtitleAudioSlots() {
         slot.fadeFrames = 10;
         slot.callback = SubtitleFadeCallback;
     }
+
+
+#endif
 }
 
 void SEQ_EndActiveScenarioSubtitles() {
@@ -735,10 +881,17 @@ void SEQ_EndActiveScenarioSubtitles() {
 
 
 void DisableSubtitles() {
+#if SHENMUE_IS_DEMO
+    SCNT_ClearSubtitleText();
+
+#else
     UIBaseRuntime &subtitles = g_uiElements[kSubtitleUiStorageIndex];
     if ((g_currUIState == -1 || g_currUIState == kSubtitleUiState) &&
         (!subtitles.isVisible || !subtitles.destroy || subtitles.destroy() == 1 || g_busy_reset == 1))
         subtitles.isVisible = 0;
+
+
+#endif
 }
 
 
@@ -774,11 +927,19 @@ bool CVWK_IsSlotActive(const CVWKRuntimeSlot *slot) {
 
 
 void ReadSubtitleByID(HLib::Task *scenarioTask, CVWKRuntimeSlot &slot) {
+#if SHENMUE_IS_DEMO
+    if (slot.japaneseText)
+        SCNT_ShowSubtitleText(scenarioTask, static_cast<const char *>(slot.japaneseText), scntCheckHasParticipant(slot.participantId), 1);
+
+#else
     SubtitleStringId id{};
     std::memcpy(&id, slot.voiceId, sizeof(id));
     const char *const text = ReadSubtitleStringById(id, g_usingJapaneseAudio == 1);
     if (text)
         SCNT_ShowSubtitleText(scenarioTask, text, scntCheckHasParticipant(slot.participantId));
+
+
+#endif
 }
 
 
@@ -1426,4 +1587,74 @@ void RetireLegacyUIFont(std::int32_t language) {
     FreeUIFontDefinition(language);
     g_uiFontPixelSizes[previous] = {};
 }
+} // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {
+void TrialSubtitle_Idle(HLib::TaskData *) {
 }
+
+void TrialSubtitle_Draw(TrialSubtitleTaskData *work) {
+    OriginalStrip &strip = work->strip;
+    strip.flags = 0;
+    strip.corner0 = static_cast<std::uint32_t>(static_cast<std::int32_t>(work->alpha)) << 24U | 0x00ffffffU;
+    strip.vertexCount = 0;
+    strip.normalizedY1 = 0.0f;
+    strip.normalizedX2 = 0.0f;
+    strip.normalizedY2 = 1.0f;
+    strip.normalizedX3 = 1.0f;
+    strip.normalizedY3 = 0.0f;
+    AdjustAspectRatioMatrix(&strip, 5, static_cast<std::int32_t>(work->x), static_cast<std::int32_t>(work->y), 512, 128, 0);
+    strip.flags |= 0x400U;
+    SetRenderFlags_UnmapAndDraw_0(&strip, g_trialSubtitleSurface, 1.0f);
+}
+
+void TrialSubtitle_FadeIn(HLib::TaskData *taskData) {
+    TrialSubtitleTaskData &work = *reinterpret_cast<TrialSubtitleTaskData *>(taskData);
+    work.alpha = static_cast<std::int16_t>(work.alpha + work.fadeStep);
+    if (work.alpha > 255)
+        work.alpha = 255;
+    TrialSubtitle_Draw(&work);
+}
+
+void TrialSubtitle_FadeOut(HLib::TaskData *taskData) {
+    TrialSubtitleTaskData &work = *reinterpret_cast<TrialSubtitleTaskData *>(taskData);
+    work.alpha = static_cast<std::int16_t>(work.alpha - work.fadeStep);
+    if (work.alpha < 0) {
+        work.alpha = 0;
+        PVR_FreeAllocatedSurfaceByIndex(g_trialSubtitleSurface);
+        HLib::Task *const task = work.task;
+        HLib_FreeTaskDataForTask(task);
+        HLib_DestroyTask(task);
+    } else
+        TrialSubtitle_Draw(&work);
+}
+
+std::uint32_t TrialSubtitle_Show(HLib::Task *task, float x, float y, std::int16_t step) {
+    HLib_SetTaskMainCallback(task, TrialSubtitle_FadeIn);
+    TrialSubtitleTaskData &work = *reinterpret_cast<TrialSubtitleTaskData *>(HLib_GetTaskDataForTask(task));
+    work.x = x;
+    work.y = y;
+    work.alpha = 0;
+    work.fadeStep = step;
+    return 1;
+}
+
+std::uint32_t TrialSubtitle_Hide(HLib::Task *task) {
+    HLib_SetTaskMainCallback(task, TrialSubtitle_FadeOut);
+    return 1;
+}
+
+HLib::Task *TrialSubtitle_Load(const char *filename) {
+    const std::uint32_t size = static_cast<std::uint32_t>(shenOpenFile("title", filename));
+    void *const bytes = HLib_AllocHeapMemBlock(size, kTrialSubtitleToken.name);
+    shenLoadFile("title", filename, bytes, static_cast<std::int32_t>(size));
+    LoadSpriteTextureList(bytes, size, &g_trialSubtitleSurface);
+    HLib_FreeTaskData(static_cast<HLib::TaskData *>(bytes), 0);
+    HLib::Task *const task = HLib_EnqueueTaskWithoutParameter(TrialSubtitle_Idle, 8, 10, kTrialSubtitleToken.name);
+    TrialSubtitleTaskData *const work = reinterpret_cast<TrialSubtitleTaskData *>(HLib_AllocateTaskData(task, sizeof(TrialSubtitleTaskData)));
+    work->task = task;
+    return task;
+}
+} // namespace shenmue::s1
+#endif

@@ -1,6 +1,6 @@
 #include "d3t/ui_internal.hpp"
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
@@ -414,7 +414,7 @@ void UIAnim_UpdateDeltaTime(float deltaTime) {
     UIWidget_ApplyAnimations();
 }
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

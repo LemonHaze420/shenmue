@@ -388,7 +388,11 @@ void stampGlyph(WindEntry &entry, std::uint16_t glyphCode, std::int16_t column, 
             continue;
         }
 
+#if SHENMUE_IS_DEMO
+        const std::ptrdiff_t horizontal = 13 * column;
+#else
         const std::ptrdiff_t horizontal = 13 * (column / 2) + 6 * (column % 2);
+#endif
         std::uint8_t *destination = glyphCode < 0x2100U ? entry.workBuffer + horizontal + (pixel & 0x0f) + 608 * (17 * row + (pixel >> 4)) :
                                                           entry.workBuffer + horizontal + (pixel % 24) + 608 * (17 * row + pixel / 24);
         const std::uint8_t *stamp = kGlyphStamp.data();
@@ -696,6 +700,27 @@ void WIND_DrawGlyphs(void *entryPointer, std::int64_t, std::int32_t skippedState
         return;
     }
 
+#if SHENMUE_IS_DEMO
+    std::uint8_t *control = entry.cellBufferA + skippedStates * entry.cellWidthPixels;
+    std::uint8_t *glyph = entry.cellBufferB + skippedStates * entry.cellWidthPixels;
+    for (std::int32_t processed = 0; processed < entry.cellWidthPixels;) {
+        std::int32_t step = 1;
+        if (static_cast<std::int8_t>(*control) < 0) {
+            *control &= 0x7fU;
+            std::uint16_t glyphCode = 0;
+            if ((*control & 1U) != 0) {
+                if ((control[1] & 2U) != 0) {
+                    control[1] &= 0x7fU;
+                    step = 2;
+                    glyphCode = static_cast<std::uint16_t>((static_cast<std::uint16_t>(glyph[0]) << 8) | glyph[1]);
+                } else {
+                    glyphCode = 0x0120;
+                }
+            } else {
+                glyphCode = static_cast<std::uint16_t>(glyph[0] | 0x0100U);
+            }
+            stampGlyph(entry, glyphCode, static_cast<std::int16_t>(processed), static_cast<std::int16_t>(previousIndex % 2));
+#else
     std::int32_t columnOffset = 0;
     if (skippedStates != 0) {
         if (entry.rowEndColumns[0] > entry.rowEndColumns[1]) {
@@ -729,6 +754,7 @@ void WIND_DrawGlyphs(void *entryPointer, std::int64_t, std::int32_t skippedState
 #else
             stampGlyph(entry, glyphCode, static_cast<std::int16_t>(position / 92), static_cast<std::int16_t>(previousIndex % 2));
 #endif
+#endif
         }
         processed += step;
         control += step;
@@ -752,6 +778,33 @@ void WIND_DrawGlyphs(void *entryPointer, std::int64_t, std::int32_t skippedState
 }
 
 void WIND_AspectRatioPass(void *entryPointer) {
+#if SHENMUE_IS_DEMO
+    WindEntry &entry = *static_cast<WindEntry *>(entryPointer);
+    if (!entry.rowDirtyFlags || entry.cellHeightPixels <= 0)
+        return;
+
+    entry.rowEndColumns[static_cast<std::int16_t>(entry.packedCursor >> 16)] = static_cast<std::uint8_t>(entry.packedCursor);
+    const std::int32_t widest = std::max(entry.rowEndColumns[0], entry.rowEndColumns[1]);
+    const std::int32_t left = widest < 30 ? 124 : widest < 38 ? 72 : 32;
+    const std::int32_t top = entry.rowEndColumns[1] ? 376 : 410;
+
+    std::int32_t index = entry.rowScrollOrigin;
+    for (std::int32_t visited = 0; visited < entry.cellHeightPixels; ++visited) {
+        if ((entry.rowDirtyFlags[index] & 1U) != 0) {
+            OriginalStrip quad{};
+            quad.corner0 = 0xffffffffU;
+            quad.normalizedY2 = 1.0f;
+            quad.normalizedX3 = 1.0f;
+            AdjustAspectRatioMatrix(&quad, 0, left, top, 1024, 128, 1);
+            std::swap(quad.y0, quad.y2);
+            std::swap(quad.y1, quad.y3);
+            quad.normalizedY2 = 1.0f;
+            quad.normalizedX3 = 1.0f;
+            const ShenmueSurfaceBuffer *const surface = reinterpret_cast<const ShenmueSurfaceBuffer *>(*entry.surfaceHandleSlot);
+            const std::int32_t shownSurface = surface->mapped ? surface->primarySurface : surface->secondarySurface;
+            quad.flags |= 0x400U;
+            SetRenderFlags_UnmapAndDraw_0(&quad, shownSurface, 9.0f);
+#else
     if (!g_updateRenderFrameMode)
         return;
     WindEntry &entry = *static_cast<WindEntry *>(entryPointer);
@@ -775,6 +828,7 @@ void WIND_AspectRatioPass(void *entryPointer) {
             std::swap(quad.y1, quad.y3);
             quad.normalizedY2 = 1.0f;
             quad.normalizedX3 = 1.0f;
+#endif
         }
         if (++index >= entry.cellHeightPixels)
             index = 0;

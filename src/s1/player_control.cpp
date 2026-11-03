@@ -2087,6 +2087,31 @@ bool cpctUpdateFacingFromNavAndYawDelta(PlayerControlWork &state, std::int32_t d
 
 bool ryoUpdateTatehizaStateAndControlLock(PlayerControlWork &control, const InputSlot *input) {
     MotionInformationWork *const motion = g_playerMotion;
+#if SHENMUE_IS_DEMO
+    switch (control.tatehizaState) {
+    case 0:
+        if ((g_pControlPadController->flags & 0x0800U) != 0 || (input->pressedPriority & WS_CROUCH_INPUT) == 0)
+            return false;
+        SetLocalYawFromWorld(CurrentRyo(), motion->entityEuler.y);
+        control.previousAutoRotateYawDelta = 0;
+        control.inputYawDelta8 = 0;
+        control.previousInputYawPair = 0;
+        control.wasRunning = 0;
+        control.isRunning = 0;
+        control.numActiveFrames = 0;
+        control.autoRotateYawDelta = 0;
+        control.inputYawDelta = 0;
+        g_playerMovementState = PlayerMovementState::Idle;
+        g_inputStateHoldFrames = 0;
+        motion->playbackRate = 1.0F;
+        motion->pendingAnimId = WS_CROUCH_ENTER_ANIMATION;
+        motion->motionFlags &= ~kMotionStuck;
+        motion->blendMode = 1;
+        motion->trackedNodeIndex = 10;
+        motion->motionFlags |= kMotionFrameBlendReady;
+        control.tatehizaState = 2;
+        return true;
+#else
     if (!ShouldRun()) {
         const PlayerControlWork *const ryoControl = PlayerControl();
         return ryoControl && ryoControl->tatehizaState != 0;
@@ -2094,6 +2119,7 @@ bool ryoUpdateTatehizaStateAndControlLock(PlayerControlWork &control, const Inpu
     switch (control.tatehizaState) {
     case 0:
         return false;
+#endif
     case 2:
         if ((motion->motionFlags & kMotionStuck) != 0) {
             motion->playbackRate = 1.0F;

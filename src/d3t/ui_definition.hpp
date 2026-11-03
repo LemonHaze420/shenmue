@@ -195,7 +195,7 @@ class UIDefinition {
 #include <array>
 #include <cstdint>
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
@@ -209,7 +209,7 @@ inline constexpr std::array<std::int32_t, 26> kTextBlockCellActions{
     60, 57, 0, 1, 2, 3, 8, 9, 7, -1, -1, 4, 5, 24, 22, 23, 25, 16, 17, 14, 15, 62, 61, 67, 68, 63};
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

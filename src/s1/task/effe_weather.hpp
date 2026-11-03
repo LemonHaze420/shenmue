@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/task/effe.hpp"
 #include "s1/task/char.hpp"
@@ -8,6 +9,9 @@
 #include <cstring>
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+inline constexpr shen_name WEATHER_SNOW_MODEL = SHEN_NAME(DROP);
+#endif
 
 struct WeatherNodeData;
 struct WeatherDataEntry;

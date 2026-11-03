@@ -1319,6 +1319,14 @@ struct IconPresentationOwner {
     std::int8_t inventorySelectionSlot{};
     std::int8_t inventoryPageCount{1};
     std::int8_t inventorySlotsPerPage{8};
+#if SHENMUE_IS_DEMO
+    std::array<ScreenSpaceParams, 10> inventorySprites{};
+    ScreenSpaceParams inventoryCursor{};
+    ScreenSpaceParams inventoryCaption{};
+    ScreenSpaceParams inventoryMarker{};
+    std::uint8_t inventoryPulse{};
+    bool inventoryPulseRising{true};
+#endif
     bool active{};
     bool clockSlotReserved{};
     float notificationDrawX{};
@@ -1429,6 +1437,9 @@ bool UI_ICMCBegin();
 void UI_StopPlayingCassettes();
 bool UI_ICMCWaitForClosed(std::int32_t &result);
 
+#if SHENMUE_IS_DEMO
+void UI_ICMoSetCurrency(std::int8_t currency);
+#endif
 void UI_ICMoRequest(std::int32_t value, bool useCash);
 void UI_ICMoShowCurrentBalance(bool show);
 void UI_ICMoBeginSelector(std::int32_t maximumValue, std::uint16_t timeoutFrames);
@@ -1442,6 +1453,15 @@ bool UI_ICSpIsIdle();
 bool UI_ICSpPeekSelectedHelpToken(std::int16_t &helpToken);
 bool UI_ICSpPeekSelectedChoiceIndex(std::int32_t &choiceIndex);
 void UI_ICSpCancel();
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+void UI_ICQuInitializePrompt();
+void UI_ICQuUpdatePrompt();
+void UI_ICSpRequestActionMenu(std::uint32_t mode);
+bool UI_ICSpActionMenuComplete();
+std::int16_t UI_ICSpActionMenuResult();
+#pragma endregion
+#endif
 void UI_ICSpCallback(HLib::TaskData *taskData);
 
 void UI_ICSVRequest(std::int8_t flags);

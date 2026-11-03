@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "common/types.hpp"
 #include <array>
@@ -128,7 +129,49 @@ struct MoveSetRuntimeState {
 
 static_assert(sizeof(MoveSetRuntimeState) == 0x52);
 
+#if SHENMUE_IS_DEMO
+struct TrialInventoryEntry {
+    std::int16_t itemId;
+    std::int16_t count;
+};
+struct TrialInventoryMetadata {
+    std::int16_t values[3];
+};
+struct TrialMoveSetState {
+    float learnValue[16];
+    std::int16_t moveId[16];
+    std::uint8_t count;
+    std::uint8_t selection;
+    std::uint16_t reserved;
+};
+static_assert(sizeof(TrialInventoryEntry) == 4);
+static_assert(sizeof(TrialInventoryMetadata) == 6);
+static_assert(sizeof(TrialMoveSetState) == 0x64);
+static_assert(offsetof(TrialMoveSetState, count) == 0x60);
+inline constexpr std::array<std::array<float, 13>, 3> kTrialMoveProgress{
+    {{0.95f, 0.9f, 0.65f, 0.98999995f, 0.7f, 0.7f, 0.79999995f, 0.65f, 0.7f, 0.65f, 0.65f, 0.79999995f, 0.7f},
+        {0.7f, 0.79999995f, 0.84999996f, 0.84999996f, 0.7f, 0.7f, 0.75f, 0.65f, 0.65f, 0.65f, 0.75f},
+        {1.0f, 1.0f, 0.84999996f, 0.84999996f, 0.84999996f, 0.79999995f, 0.79999995f}}};
+bool AddTrialInventoryItem(std::uint8_t itemId, std::int16_t amount, std::int16_t attribute);
+void RebuildTrialInventory();
+extern std::int32_t g_trialInventoryControl;
+extern std::int16_t g_inventoryOwnedEntryCount;
+extern std::int16_t g_inventoryOwnedItemCount;
+extern std::int16_t g_inventorySlotsPerPage;
+extern std::int8_t g_inventorySelectionPage;
+extern std::int8_t g_inventorySelectionSlot;
+extern std::int8_t g_inventoryPageCount;
+extern std::int8_t g_inventorySelectedItem;
+extern std::int32_t g_inventoryDirty;
+
+#endif
+
 struct PlayerStatsRuntimeState {
+#if SHENMUE_IS_DEMO
+    std::array<TrialInventoryEntry, 64> trialInventory{};
+    std::array<TrialInventoryMetadata, 64> trialInventoryMetadata{};
+    std::array<TrialMoveSetState, 3> trialMoveSets{};
+#endif
     std::uint32_t currentSaveProgress{};
     std::array<std::uint8_t, 16> step{};
     std::array<std::uint8_t, 320> statBank4A0{};
@@ -274,4 +317,13 @@ inline constexpr std::int16_t kInventoryGroupTable[] = {
     -1, 979, 300, -1, 181, 300, -1, 818, 300, -1, -1, 0
 };
 
+#if SHENMUE_IS_DEMO
+extern std::array<std::uint8_t, 3> g_fightInputSettings;
+extern std::int32_t g_trialInventoryControl;
+void SetVfSkillFlags(std::int8_t mode, std::uint32_t flags);
+void SetAreaJumpEnabled(std::uint8_t enabled);
+std::uint8_t GetAreaJumpEnabled();
+void SetDialogueMode(std::uint8_t mode);
+std::uint8_t GetDialogueMode();
+#endif
 } // namespace shenmue::s1

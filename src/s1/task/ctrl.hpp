@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "common/types.hpp"
 #include "s1/boot.hpp"
@@ -81,6 +82,9 @@ bool MAPCTRL_SetCharacterIdData(std::int32_t index, const std::array<std::uint32
 std::uint16_t CTRL_EvaluateWeatherSoundEnvironment(Character *character, float x, float z);
 void LoadGameModule(SystemModule module, std::int32_t sceneId, std::uint32_t areaId, std::uint32_t entryPoint);
 void MapControlInternal();
+#if SHENMUE_IS_DEMO
+void MAPCTRL_TrialReservedRequest(std::uint32_t argument);
+#endif
 void CEWP_RetireGroup(std::int32_t groupId, bool immediate);
 void HLTaskFunc_MapControlTask_Callback(HLib::TaskData *taskData);
 

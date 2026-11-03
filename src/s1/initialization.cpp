@@ -348,7 +348,11 @@ std::int64_t ShenmueInit(GameConfig *config) {
         request.state.exchange(0, std::memory_order_seq_cst);
     }
     d3t_InitializeOodleZLib();
-#if defined(SHENMUE_STEAM)
+#if SHENMUE_IS_DEMO
+    const char *const wsRoot = std::getenv("SHEN_WS_ROOT");
+    const std::filesystem::path gameRoot = !g_trialLaunchOptions.gameDirectory.empty() ? g_trialLaunchOptions.gameDirectory :
+        wsRoot && *wsRoot ? std::filesystem::path(wsRoot) : std::filesystem::current_path();
+#elif defined(SHENMUE_STEAM)
     const std::filesystem::path gameRoot = ::shenmue::d3t::GetExecutableDirectory();
 #else
     const char *const shenRoot = std::getenv("SHEN_ROOT");
@@ -357,6 +361,21 @@ std::int64_t ShenmueInit(GameConfig *config) {
     const std::string gameRootString = gameRoot.string();
     const D3TArchiveDirectory directory{gameRootString.c_str(), "dx11", 2, 0, 0, 0, {}};
     d3t_ReadArchives(&directory);
+#if SHENMUE_IS_DEMO && !defined(SHENMUE_WS_STANDALONE)
+    const char *hostRoot = std::getenv("SHEN_STEAM_ROOT");
+    if (!hostRoot || !*hostRoot)
+        hostRoot = std::getenv("SHEN_ROOT");
+    const std::filesystem::path hostDirectory = !g_trialLaunchOptions.hostDirectory.empty() ? g_trialLaunchOptions.hostDirectory :
+        hostRoot && *hostRoot ? std::filesystem::path(hostRoot) / "sm1" : std::filesystem::path{};
+    if (!hostDirectory.empty()) {
+        archive_data::ArchiveDataLoadResult hostShaders{};
+        const std::string shaders = hostDirectory.string();
+        if (archive_data::ArchiveData_LoadHostShaders(shaders.c_str(), &hostShaders)) {
+            g_archiveState.archiveCount = (std::max)(g_archiveState.archiveCount, hostShaders.archiveCount);
+            g_archiveState.archiveCapacity = (std::max)(g_archiveState.archiveCapacity, hostShaders.archiveCount);
+        }
+    }
+#endif
     d3t_ReadAssetRemapping();
 
     g_steamSaveFunction = SteamSaveFn;

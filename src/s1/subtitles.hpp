@@ -1,6 +1,10 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/hlib.hpp"
+#if SHENMUE_IS_DEMO
+#include "s1/screen_space.hpp"
+#endif
 
 #include <array>
 #include <cstddef>
@@ -12,7 +16,29 @@ struct LargeFileHandle;
 
 namespace shenmue::s1 {
 
-
+#if SHENMUE_IS_DEMO
+#pragma pack(push, 4)
+struct TrialSubtitleTaskData {
+    HLib::Task *task;
+    OriginalStrip strip;
+    float x;
+    float y;
+    std::int16_t alpha;
+    std::int16_t fadeStep;
+};
+#pragma pack(pop)
+static_assert(sizeof(TrialSubtitleTaskData) == (SHENMUE_IS_DC ? 0x68 : 0x6c));
+static_assert(offsetof(TrialSubtitleTaskData, x) == sizeof(void *) + 0x58);
+inline constexpr shen_name kTrialSubtitleToken = make_name('S', 'B', 'T', 'T');
+extern std::int32_t g_trialSubtitleSurface;
+HLib::Task *TrialSubtitle_Load(const char *filename);
+void TrialSubtitle_Idle(HLib::TaskData *taskData);
+void TrialSubtitle_FadeIn(HLib::TaskData *taskData);
+void TrialSubtitle_FadeOut(HLib::TaskData *taskData);
+void TrialSubtitle_Draw(TrialSubtitleTaskData *work);
+std::uint32_t TrialSubtitle_Show(HLib::Task *task, float x, float y, std::int16_t step);
+std::uint32_t TrialSubtitle_Hide(HLib::Task *task);
+#endif
 struct SubtitleStringId {
     std::uint32_t word0;
     std::uint32_t word1;

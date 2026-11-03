@@ -204,6 +204,28 @@ std::uint32_t WeatherSpriteSizeBits(const WeatherSpriteTexture &texture) {
 
 // AssignTex2D material words around SetTexture2DProperties, which binds the w_snow.pvr texture.
 void AssignSnowTexture(WeatherNodeData &data) {
+#if SHENMUE_IS_DEMO
+    if (!g_weatherSnowTexture.handle) {
+        void *const model = ReadFile("weather", "PATR0YKG.MT5", WEATHER_SNOW_MODEL.name);
+        if (model) {
+            const std::byte *chunk = static_cast<const std::byte *>(model);
+            const void *texture = nullptr;
+            for (;;) {
+                std::uint32_t header[2];
+                std::memcpy(header, chunk, sizeof(header));
+                if (header[0] == SHEN_NAME(TEXN))
+                    texture = chunk + 16;
+                if (header[0] == SHEN_NAME(PTRL))
+                    break;
+                chunk += header[1];
+            }
+            if (texture)
+                CreateDDSorPVR(texture);
+            HLib_FreeTaskData(static_cast<HLib::TaskData *>(model), 0);
+        }
+    }
+#else
+#endif
     data.snow.textureReference.texture = static_cast<void *>(&g_weatherSnowTexture);
     data.snow.material.texture = std::uint32_t{0xa000000aU};
     data.snow.material.render = std::uint32_t{0x8a800000U};
@@ -266,7 +288,10 @@ void InitializeNativeSnowParticles(WeatherNodeData &data, float intensity, RainR
         data.snow.pool.renderCount = std::bit_cast<std::int32_t>(0U);
     data.snow.pool.fade = fade;
     data.snow.pool.availableCount = 0;
+#if SHENMUE_IS_DEMO
+#else
     ReadWeatherParticleModel(particles, "/particles/snow/snow.fbx");
+#endif
     data.snow.colour = std::uint32_t{0xe8cdc8d1U};
     data.snow.size = std::bit_cast<float>(0x3da3d70aU);
     data.snow.velocity = Vector3{0.0f, -0.095f, 0.0f};

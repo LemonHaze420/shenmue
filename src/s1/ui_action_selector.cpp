@@ -1,15 +1,284 @@
 #include "s1/ui_internal.hpp"
+#include <bit>
+#if SHENMUE_IS_DEMO
+#include "s1/ui_sprite_data_trial.hpp"
+#include "s1/player_stats.hpp"
+#endif
 
 namespace shenmue::s1::ui_runtime_detail {
 
 std::array<ActionSelectorLegacySprite, 4> g_actionSelectorLegacyLabelSprites{};
 std::array<ActionSelectorLegacySprite, 4> g_actionSelectorLegacyIconSprites{};
 std::int16_t g_actionSelectorHighlightedChoiceIndex{};
+
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+
+ActionMenuWork g_actionMenuWork{};
+std::array<ScreenSpaceParams, 2> g_actionMenuSprites{};
+float g_actionMenuX = -176.0f;
+float g_actionMenuSpeed = 1.0f;
+std::uint16_t g_actionMenuSelected = 4;
+inline constexpr std::array<float, 2> kActionMenuOffsets{-36.0f, 36.0f};
+inline constexpr std::array<float, 2> kActionMenuDepths{2.0f, 3.0f};
+
+// @verified - d
+std::uint8_t UI_DecodeInputCode(std::uint16_t input, std::uint8_t allowedDirections) {
+    constexpr std::array<std::uint8_t, 16> directions{13, 0, 4, 13, 6, 7, 5, 13, 2, 1, 3, 13, 13, 13, 13, 13};
+    const std::uint8_t direction = directions[input >> 12U];
+    if (direction < 8 && (allowedDirections & (1U << direction)))
+        return direction;
+    if (input & 0x200U)
+        return 9;
+    if (input & 0x400U)
+        return 8;
+    if (input & 2U)
+        return 11;
+    if (input & 4U)
+        return 10;
+    return 13;
+}
+
+// @verified - d
+void UI_ICSpInitializeSprites() {
+    g_actionMenuX = -176.0f;
+    g_actionMenuSpeed = 1.0f;
+    g_actionMenuSelected = 4;
+    for (std::size_t index = 0; index < g_actionMenuSprites.size(); ++index) {
+        ScreenSpaceParams &sprite = g_actionMenuSprites[index];
+        sprite = {};
+        sprite.pvrSurfaceIndex = index == 0 ? 13 : 12;
+        sprite.halfScreenX = g_actionMenuX + kActionMenuOffsets[index];
+        sprite.halfScreenY = 91.0f;
+        sprite.scaledWidth = 64;
+        sprite.scaledHeight = 32;
+        sprite.positionScaleX = sprite.positionScaleY = 1.0f;
+        sprite.depthOrScale = kActionMenuDepths[index];
+        sprite.alignmentType = 5;
+    }
+}
+
+// @verified - d
+void UI_ICSpReadInput() {
+    const std::uint16_t direction = static_cast<std::uint16_t>(g_sfxInputFlags) >> 12U;
+    if (direction == 4 || direction == 8) {
+        const bool yes = direction == 4;
+        shenExecuteAICACommand(yes ? 0x500abU : 0x100abU, 0, 0);
+        g_actionMenuSelected = yes ? 0 : 1;
+        g_actionMenuSprites[g_actionMenuSelected].depthOrScale = yes ? 4.0f : 3.0f;
+        g_actionMenuWork.state = UIActionSelectorState::SelectionCommitted;
+        g_actionMenuWork.selection = yes ? 1 : 0;
+    } else if (g_actionMenuWork.mode != 0x7fff) {
+        --g_actionMenuWork.mode;
+        if (static_cast<std::int16_t>(g_actionMenuWork.mode) <= 0) {
+            g_actionMenuWork.mode = 0x7fff;
+            g_actionMenuWork.state = UIActionSelectorState::SelectionCommitted;
+            g_actionMenuWork.selection = -1;
+        }
+    }
+}
+
+// @verified - d
+void UI_ICSpDraw() {
+    if (!g_updateRenderFrameMode)
+        return;
+    for (std::size_t index = 0; index < g_actionMenuSprites.size(); ++index) {
+        ScreenSpaceParams &sprite = g_actionMenuSprites[index];
+        sprite.halfScreenX = g_actionMenuX + kActionMenuOffsets[index];
+        if (g_actionMenuSelected == index) {
+            sprite.positionScaleX += 0.25f;
+            sprite.positionScaleY += 0.25f;
+            if (sprite.positionScaleX >= 2.0f) {
+                sprite.positionScaleX = sprite.positionScaleY = 1.0f;
+                g_actionMenuSelected = 4;
+                sprite.depthOrScale = kActionMenuDepths[index];
+            }
+        }
+        AdjustDefaultScreenSpace(&sprite);
+    }
+}
+
+// @verified - d
+void UI_ICSpUpdateActionMenu() {
+    IconPresentationOwner &icon = g_iconPresentation;
+    switch (g_actionMenuWork.state) {
+    case UIActionSelectorState::Idle:
+        break;
+    case UIActionSelectorState::Opening:
+        if (!(Shenmue_nPauseState & 2U)) {
+            const float step = std::fabs(90.0f - g_actionMenuX) * 0.5f;
+            g_actionMenuSpeed = std::clamp(step > 64.0f ? g_actionMenuSpeed * 2.0f : step, 1.0f, 64.0f);
+            g_actionMenuX += g_actionMenuSpeed;
+            if (g_actionMenuX >= 90.0f) {
+                g_actionMenuX = 90.0f;
+                g_actionMenuWork.state = UIActionSelectorState::Active;
+                break;
+            }
+        }
+        g_defaultHelpTokenId = g_currentHelpTokenId = 40;
+        g_helpButtonId = 0;
+        g_currentHelpIconState = 0;
+        break;
+    case UIActionSelectorState::OpenRequested:
+        shenExecuteAICACommand(0x400abU, 0, 0);
+        g_actionMenuWork.state = UIActionSelectorState::Opening;
+        icon.overlayMode = 8;
+        icon.iconFlags |= 0x100U;
+        g_isPlayerGameStateActive = 3;
+        CapturePad(icon.input, icon.previousInput);
+        g_actionMenuWork.previousHelpToken = static_cast<std::int8_t>(g_defaultHelpTokenId);
+        g_actionMenuWork.previousHelpButton = g_helpButtonId;
+        break;
+    case UIActionSelectorState::Active:
+        UI_ICSpReadInput();
+        break;
+    case UIActionSelectorState::SelectionCommitted:
+        if (g_actionMenuSelected == 4) {
+            shenExecuteAICACommand(0x400abU, 0, 0);
+            g_actionMenuWork.state = UIActionSelectorState::Closing;
+        }
+        break;
+    case UIActionSelectorState::Closing: {
+        const float step = std::fabs(-176.0f - g_actionMenuX) * 0.5f;
+        g_actionMenuSpeed = std::clamp(step > 64.0f ? g_actionMenuSpeed * 2.0f : step, 1.0f, 64.0f);
+        g_actionMenuX -= g_actionMenuSpeed;
+        if (g_actionMenuX <= -176.0f) {
+            g_actionMenuX = -176.0f;
+            g_actionMenuWork.state = UIActionSelectorState::Idle;
+            icon.overlayMode = 0;
+            icon.iconFlags &= static_cast<std::uint16_t>(~0x100U);
+            iconUpdateInputBuffer();
+            const auto token = g_actionMenuWork.previousHelpToken;
+            g_defaultHelpTokenId = g_currentHelpTokenId = static_cast<std::uint8_t>(token > 98 ? 0 : token);
+            g_helpButtonId = g_actionMenuWork.previousHelpButton;
+            g_currentHelpIconState = 0;
+        }
+        break;
+    }
+    }
+    if (icon.iconFlags & 0x100U)
+        UI_ICSpDraw();
+}
+
+// @verified - d
+void UI_ICQuLoadLabel(std::size_t index) {
+    const ActionSelectorOwner &selector = g_actionSelectorPresentation;
+    const std::array<std::int16_t, 4> choices{selector.request.up, selector.request.left, selector.request.down, selector.request.right};
+    ActionSelectorLegacySprite &label = g_actionSelectorLegacyLabelSprites[index];
+    const std::int32_t width = selector.page ? 256 : 128;
+    label.surface = AllocatePVRSurface(kQuickChoiceTexts[choices[index]][selector.page], width, 0xffff, 0xf000, selector.page ? 0 : 1, true);
+    label.width = static_cast<std::uint16_t>(width);
+}
+
+// @verified - d
+void UI_ICQuUpdateLabels() {
+    ActionSelectorOwner &selector = g_actionSelectorPresentation;
+    const std::uint8_t phase = selector.labelTransition;
+    for (std::size_t index = 0; index < g_actionSelectorLegacyLabelSprites.size(); ++index) {
+        ActionSelectorLegacySprite &label = g_actionSelectorLegacyLabelSprites[index];
+        if (label.surface == -1)
+            continue;
+        if (phase == 1) {
+            const std::int32_t height = static_cast<std::int16_t>(label.height) - 10;
+            if (height < 1) {
+                selector.labelTransition = 2;
+                label.height = 0;
+                PVR_FreeAllocatedSurfaceByIndex(label.surface);
+                UI_ICQuLoadLabel(index);
+            } else {
+                label.height = static_cast<std::uint16_t>(height);
+            }
+        } else if (phase == 2) {
+            label.height += 10;
+            if (label.height >= 32) {
+                label.height = 32;
+                selector.labelTransition = 0;
+            }
+        }
+    }
+}
+
+// @verified - d
+void UI_ICQuReadInput() {
+    ActionSelectorOwner &selector = g_actionSelectorPresentation;
+    const std::uint16_t input = static_cast<std::uint16_t>(g_sfxInputFlags);
+    const std::uint8_t code = UI_DecodeInputCode(input, 0x55);
+    const std::array<std::int16_t, 4> choices{selector.request.up, selector.request.left, selector.request.down, selector.request.right};
+    bool noSelection = code == 13;
+    if (code == 0 || code == 2 || code == 4 || code == 6) {
+        const std::size_t index = kActionSelectorChoiceByInputCode[code];
+        if (choices[index] != -1) {
+            shenExecuteAICACommand(0x500abU, 0, 0);
+            selector.state = UIActionSelectorState::SelectionCommitted;
+            g_actionSelectorHighlightedChoiceIndex = static_cast<std::int16_t>(index);
+            selector.selectedHelpToken = choices[index];
+            g_actionSelectorLegacyIconSprites[index].depth = 5.0f;
+            g_actionSelectorLegacyLabelSprites[index].depth = 6.0f;
+            noSelection = false;
+        } else {
+            noSelection = true;
+        }
+    }
+    if ((input & 0xc0U) && !selector.labelTransition) {
+        selector.labelTransition = 1;
+        selector.page ^= 1U;
+    }
+    if (noSelection && selector.request.timeoutFrames != 0x7fff) {
+        selector.elapsedFrames = static_cast<std::int16_t>(static_cast<std::uint16_t>(selector.elapsedFrames) + 1U);
+        if (selector.elapsedFrames >= static_cast<std::int16_t>(selector.request.timeoutFrames)) {
+            shenExecuteAICACommand(0x500abU, 0, 0);
+            selector.state = UIActionSelectorState::SelectionCommitted;
+            selector.selectedHelpToken = -1;
+        }
+    }
+}
+
+// @verified - d
+void UI_ICQuDraw() {
+    if (!g_updateRenderFrameMode)
+        return;
+    const ActionSelectorOwner &selector = g_actionSelectorPresentation;
+    for (std::size_t index = 0; index < g_actionSelectorLegacyLabelSprites.size(); ++index) {
+        ActionSelectorLegacySprite &label = g_actionSelectorLegacyLabelSprites[index];
+        ActionSelectorLegacySprite &icon = g_actionSelectorLegacyIconSprites[index];
+        const Vector2 &offset = kActionSelectorLegacyChoiceOffsets[index];
+        label.x = icon.x = selector.panelX + offset.x;
+        label.y = icon.y = 91.0f + offset.y;
+        if (g_actionSelectorHighlightedChoiceIndex == index) {
+            label.scaleX += 0.25f;
+            label.scaleY += 0.25f;
+            icon.scaleX += 0.25f;
+            icon.scaleY += 0.25f;
+            if (label.scaleX >= 2.0f) {
+                label.scaleX = label.scaleY = icon.scaleX = icon.scaleY = 1.0f;
+                label.depth = kActionSelectorLegacyLabelDepths[index];
+                icon.depth = kActionSelectorLegacyIconDepths[index];
+                g_actionSelectorHighlightedChoiceIndex = 4;
+            }
+        }
+        if (label.width && label.surface != -1) {
+            const ScreenSpaceParams labelParams = std::bit_cast<ScreenSpaceParams>(label);
+            const ScreenSpaceParams iconParams = std::bit_cast<ScreenSpaceParams>(icon);
+            AdjustScreenSpaceWithParams_0(&labelParams, 0);
+            AdjustDefaultScreenSpace(&iconParams);
+        }
+    }
+}
+
+
+#pragma endregion
+#endif
+
 void ActionSelector_CreateChoiceSurface(std::int8_t choice) {
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
     const std::array<std::int16_t, 4> stored{selector.request.up, selector.request.left, selector.request.down, selector.request.right};
     const std::uint16_t token = static_cast<std::uint16_t>(stored[static_cast<std::size_t>(choice)]);
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    UI_ICQuLoadLabel(static_cast<std::size_t>(choice));
+#pragma endregion
+#else
     const char *const id = static_cast<std::int16_t>(selector.request.mode) < 3 ? kActionSelectorStringIds[token] : kActionSelectorBinaryLabelIds[token];
 
     const char *const text = InitAndRetrieveStringFromID(id);
@@ -18,6 +287,7 @@ void ActionSelector_CreateChoiceSurface(std::int8_t choice) {
     sprite.width = 256;
     if (sprite.surface == -1)
         shenExecuteAICACommand(kActionSelectorSurfaceFailureSound, 0, 0);
+#endif
 }
 
 // A choice shows or hides: its button and label take full or no alpha, its brace shows or not.
@@ -25,10 +295,21 @@ void ActionSelector_BuildChoiceSurfaces() {
     const ActionSelectorOwner &selector = g_actionSelectorPresentation;
     const std::array<std::int16_t, 4> stored{selector.request.up, selector.request.left, selector.request.down, selector.request.right};
     for (std::size_t index = 0; index < stored.size(); ++index) {
-        if (stored[index] == -1)
+        if (stored[index] == -1) {
             g_actionSelectorLegacyLabelSprites[index].surface = -1;
-        else
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+            g_actionSelectorLegacyLabelSprites[index].width = g_actionSelectorLegacyLabelSprites[index].height = 0;
+#pragma endregion
+#endif
+        } else {
             ActionSelector_CreateChoiceSurface(static_cast<std::int8_t>(index));
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+            g_actionSelectorLegacyLabelSprites[index].height = 32;
+#pragma endregion
+#endif
+        }
     }
 }
 
@@ -446,8 +727,153 @@ std::int64_t ActionSelector_GetPromptIconSet() {
 
 namespace shenmue::s1 {
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+
+// @verified - d
+void UI_ICSpRequestActionMenu(std::uint32_t mode) {
+    g_actionMenuWork.mode = static_cast<std::uint16_t>(mode);
+    g_actionMenuWork.state = UIActionSelectorState::OpenRequested;
+    g_actionMenuWork.selection = -1;
+}
+
+// @verified - d
+bool UI_ICSpActionMenuComplete() {
+    return g_actionMenuWork.state == UIActionSelectorState::Idle;
+}
+
+// @verified - d
+std::int16_t UI_ICSpActionMenuResult() {
+    const std::int16_t result = g_actionMenuWork.selection;
+    g_actionMenuWork.selection = -1;
+    return result;
+}
+
+#pragma endregion
+#endif
+
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+
+// @verified - d
+void UI_ICQuInitializePrompt() {
+    ActionSelectorOwner &selector = g_actionSelectorPresentation;
+    selector = {};
+    selector.request = {-1, -1, -1, -1, 0x7fff, -1, 0};
+    g_actionSelectorHighlightedChoiceIndex = 4;
+    for (std::size_t index = 0; index < g_actionSelectorLegacyLabelSprites.size(); ++index) {
+        ActionSelectorLegacySprite &label = g_actionSelectorLegacyLabelSprites[index];
+        ActionSelectorLegacySprite &icon = g_actionSelectorLegacyIconSprites[index];
+        const Vector2 &offset = kActionSelectorLegacyChoiceOffsets[index];
+        label = icon = {};
+        label.x = icon.x = -176.0f + offset.x;
+        label.y = icon.y = 91.0f + offset.y;
+        label.scaleX = label.scaleY = icon.scaleX = icon.scaleY = 1.0f;
+        label.depth = kActionSelectorLegacyLabelDepths[index];
+        icon.depth = kActionSelectorLegacyIconDepths[index];
+        label.surface = -1;
+        icon.surface = 16;
+        label.width = icon.width = 128;
+        label.height = 32;
+        icon.height = 64;
+        label.mode = icon.mode = 5;
+    }
+}
+
+// @verified - d
+void UI_ICQuUpdatePrompt() {
+    ActionSelectorOwner &selector = g_actionSelectorPresentation;
+    IconPresentationOwner &icon = g_iconPresentation;
+    switch (selector.state) {
+    case UIActionSelectorState::Idle:
+        if (selector.openRequested) {
+            shenExecuteAICACommand(0x400abU, 0, 0);
+            g_isPlayerGameStateActive = 4;
+            CapturePad(icon.input, icon.previousInput);
+            selector.state = UIActionSelectorState::Opening;
+            ActionSelector_BuildChoiceSurfaces();
+            icon.overlayMode = 10;
+            icon.iconFlags |= 0x400U;
+            selector.selectedHelpToken = -1;
+            selector.savedHelpToken = g_defaultHelpTokenId;
+            selector.savedHelpButton = g_helpButtonId;
+            selector.panelX = -176.0f;
+        }
+        break;
+    case UIActionSelectorState::Opening:
+        if (!(Shenmue_nPauseState & 2U)) {
+            const float step = std::fabs(144.0f - selector.panelX) * 0.5f;
+            selector.panelVelocity = std::clamp(step > 64.0f ? selector.panelVelocity * 2.0f : step, 1.0f, 64.0f);
+            selector.panelX += selector.panelVelocity;
+            if (selector.panelX >= 144.0f) {
+                selector.panelX = 144.0f;
+                selector.state = UIActionSelectorState::Active;
+                break;
+            }
+        }
+        g_defaultHelpTokenId = g_currentHelpTokenId = 38;
+        g_helpButtonId = 0;
+        g_currentHelpIconState = 0;
+        break;
+    case UIActionSelectorState::Active:
+        if (icon.overlayMode == 10)
+            UI_ICQuReadInput();
+        break;
+    case UIActionSelectorState::SelectionCommitted:
+        if (g_actionSelectorHighlightedChoiceIndex == 4) {
+            shenExecuteAICACommand(0x400abU, 0, 0);
+            selector.state = UIActionSelectorState::Closing;
+        }
+        break;
+    case UIActionSelectorState::Closing: {
+        const float step = std::fabs(-176.0f - selector.panelX) * 0.5f;
+        selector.panelVelocity = std::clamp(step > 64.0f ? selector.panelVelocity * 2.0f : step, 1.0f, 64.0f);
+        selector.panelX -= selector.panelVelocity;
+        if (selector.panelX <= -176.0f) {
+            selector.panelX = -176.0f;
+            iconUpdateInputBuffer();
+            selector.state = UIActionSelectorState::Idle;
+            icon.overlayMode = 0;
+            icon.iconFlags &= static_cast<std::uint16_t>(~0x400U);
+            ActionSelector_FreeChoiceSurfaces();
+            selector.openRequested = false;
+            const auto token = static_cast<std::int8_t>(selector.savedHelpToken);
+            g_defaultHelpTokenId = g_currentHelpTokenId = static_cast<std::uint8_t>(token > 98 ? 0 : token);
+            g_helpButtonId = selector.savedHelpButton;
+            g_currentHelpIconState = 0;
+        }
+        break;
+    }
+    case UIActionSelectorState::OpenRequested:
+        break;
+    }
+    if (selector.labelTransition)
+        UI_ICQuUpdateLabels();
+    if (icon.iconFlags & 0x400U)
+        UI_ICQuDraw();
+}
+
+#pragma endregion
+#endif
+
 bool UI_ICSpRequest(const UIActionSelectorRequest &request) {
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    selector.selectedHelpToken = -1;
+    selector.openRequested = true;
+    selector.request = request;
+    selector.elapsedFrames = 0;
+    for (std::int16_t *choice : {&selector.request.up, &selector.request.left, &selector.request.right, &selector.request.down}) {
+        if (*choice >= 42)
+            *choice = -1;
+    }
+    selector.page = selector.labelTransition = 0;
+    if (GetAreaJumpEnabled() == 1)
+        selector.page = selector.labelTransition = 1;
+    return true;
+#pragma endregion
+#else
     ActionSelectorSetChoiceLabelsFromTokenIds({request.up, request.left, request.right, request.down});
     selector.openRequested = true;
     selector.selectedHelpToken = -1;
@@ -489,6 +915,7 @@ bool UI_ICSpRequest(const UIActionSelectorRequest &request) {
     selector.panelHalfWidth = static_cast<float>(static_cast<double>(extraWidth) * 0.5);
     selector.panelStartX = static_cast<float>(-176.0 - static_cast<double>(extraWidth));
     return true;
+#endif
 }
 
 bool UI_ICSpIsIdle() {
@@ -532,6 +959,15 @@ void UI_ICSpCancel() {
 }
 
 void UI_ICSpCallback(HLib::TaskData *) {
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    g_actionMenuWork = {};
+    UI_ICSpInitializeSprites();
+    g_iconPresentation.actionSelectorTask = CurrentTask;
+    InstallOwnedTaskMain(UI_ICSpMainCallback);
+    return;
+#pragma endregion
+#endif
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
     selector = {};
     selector.request = {-1, -1, -1, -1, 600, -1, 0};
@@ -566,6 +1002,12 @@ void UI_ICSpCallback(HLib::TaskData *) {
 }
 
 void UI_ICSpMainCallback(HLib ::TaskData *) {
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    UI_ICSpUpdateActionMenu();
+    return;
+#pragma endregion
+#endif
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
     IconPresentationOwner &icon = g_iconPresentation;
     switch (selector.state) {

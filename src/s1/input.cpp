@@ -3,6 +3,7 @@
 #endif
 
 #include "s1/input.hpp"
+#include "auto_test.hpp"
 #if defined(SHENMUE_STEAM)
 #include "s1/modules/arcade.hpp"
 #endif
@@ -638,6 +639,12 @@ void UpdateControllerState(std::uint32_t userIndex) {
 }
 
 void UpdateInputsFromInputDevices() {
+#if SHEN_AUTO_TEST_ENABLED && SHENMUE_IS_DEMO
+    if (auto_test::SceneIs("ws-face-ryo")) {
+        g_inputState.slots[0] = {.enabled = 1, .rightStick = 0x8080, .leftStick = 0x8080};
+        return;
+    }
+#endif
     const std::uint32_t userIndex = g_controllerUserIndex < 0 ? 0U : static_cast<std::uint32_t>(g_controllerUserIndex);
 
     if (g_isInputEnabled != 0) {

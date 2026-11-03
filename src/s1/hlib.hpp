@@ -1,4 +1,7 @@
 #pragma once
+#if defined(SHENMUE_TARGET_WHATS_PC)
+#include "shenmue.h"
+#endif
 
 #include "common/types.hpp"
 
@@ -177,5 +180,12 @@ void HLib_DisableTokenCheck(void *taskData);
 
 void ROOT_Callback(HLib::TaskData *params);
 std::uint64_t HLib_FreeTaskData(HLib::TaskData *taskData, std::int32_t token);
+
+#if SHENMUE_IS_DEMO
+HLib::TaskData *HLib_AllocateTaskData(HLib::Task *task, std::uint32_t size);
+void HLib_FreeTaskDataForTask(HLib::Task *task);
+void HLib_SetTaskMainCallback(HLib::Task *task, HLib::TaskCallback callback);
+void HLib_SetCurrentTaskMainCallback(HLib::TaskCallback callback);
+#endif
 
 } // namespace shenmue::s1

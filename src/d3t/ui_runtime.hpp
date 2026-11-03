@@ -8,7 +8,7 @@
 #include "d3t/ui_nuklear.hpp"
 #include "d3t/ui_view.hpp"
 #include "shenmue.h"
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 #include "s1/d3t/namespace.hpp"
 #include "s1/frame_pipeline.hpp"
 #include "s1/hlib.hpp"
@@ -20,13 +20,13 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 #include <vector>
 #endif
 
 struct cJSON;
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
@@ -58,7 +58,7 @@ void CopyNuklearTexToBackBuffer(d3t::D3TDeviceContext *context, const std::uint3
 void CopyNuklearTexToBackBuffer();
 #endif
 // A view slot's image capacity: 128 in S1, 80 in S2.
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 inline constexpr std::size_t kUIViewImageCapacity = d3t::kS1UIViewImageCapacity;
 #else
 inline constexpr std::size_t kUIViewImageCapacity = d3t::kS2UIViewImageCapacity;
@@ -924,7 +924,7 @@ extern std::int32_t g_pendingUIFontLanguage;
 #endif
 inline constexpr std::array<const char *, 7> kUIFontDefinitionPaths{"/ui/font/english.fontdef", "/ui/font/Japanese.fontdef", "/ui/font/French.fontdef",
     "/ui/font/German.fontdef", "/ui/font/Korean.fontdef", "/ui/font/ChineseT.fontdef", "/ui/font/ChineseS.fontdef"};
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 extern std::array<std::vector<std::byte>, 7> g_fontDefinitions;
 void InstallLegacyUIFontRecord(std::uint32_t language, const std::uint32_t *header, const std::byte *record, const char *path, std::uint32_t renderHandle);
 void RetireLegacyUIFont(std::int32_t language);
@@ -954,7 +954,7 @@ extern std::int32_t g_bIs43AspectRatio;
 extern std::int32_t g_currActiveUIIndex;
 extern std::uint64_t g_uiLegacyDrawFrame;
 extern std::array<d3t::UIViewImage *, 3> g_platformButtonIconImages;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 extern std::int64_t g_platformIconsSheet;
 #else
 extern std::int32_t g_platformIconsSheet;
@@ -962,7 +962,7 @@ extern std::int32_t g_platformIconsSheet;
 extern struct nk_image g_uiDefaultImage;
 extern std::array<UIMouseCallbackQueue, 4> g_uiMouseCallbackQueues;
 extern std::int32_t g_mainMenuPulseSlot;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 inline constexpr std::size_t kInventoryIconSheetCount = 24;
 #else
 inline constexpr std::size_t kInventoryIconSheetCount = 32;
@@ -1175,7 +1175,7 @@ void DrawUIEntity(nk_context &context, std::uint32_t slot, std::int32_t element)
 void uiUpdateWithColour(nk_context &context, std::uint32_t slot);
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

@@ -2,6 +2,46 @@
 
 namespace shenmue::s1::ui_runtime_detail {
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+// @verified - d
+void UI_DrawIconFrame(float x, float y, float depth, std::int32_t segments) {
+    constexpr std::int16_t sprites[5]{1, 2, 3, 4, 5};
+    constexpr std::int16_t widths[5]{32, 40, 40, 40, 32};
+    constexpr std::int16_t heights[5]{32, 16, 16, 16, 32};
+    ScreenSpaceParams sprite{.positionScaleX = 1.0f, .positionScaleY = 1.0f, .depthOrScale = depth, .alignmentType = 5};
+    for (std::int32_t index = 0; index <= segments; ++index) {
+        const std::int32_t part = index == 0 ? 0 : index == 1 ? 1 : index == segments - 1 ? 3 : index == segments ? 4 : 2;
+        sprite.pvrSurfaceIndex = sprites[part];
+        sprite.scaledWidth = widths[part];
+        sprite.scaledHeight = heights[part];
+        sprite.depthOrScale = depth;
+        const float column = x + static_cast<float>(index * 32);
+        sprite.halfScreenX = column;
+        sprite.halfScreenY = index == 0 || index == segments ? y : y - 11.0f;
+        sprite.flags14 = 0;
+        AdjustDefaultScreenSpace(&sprite);
+        sprite.flags14 = 0x300;
+        sprite.halfScreenY = index == 0 || index == segments ? y + 32.0f : y + 43.0f;
+        sprite.halfScreenX = x + static_cast<float>((segments - index) * 32);
+        AdjustDefaultScreenSpace(&sprite);
+        sprite.pvrSurfaceIndex = 11;
+        sprite.scaledWidth = 32;
+        sprite.scaledHeight = 54;
+        sprite.halfScreenY = y + 16.0f;
+        sprite.halfScreenX = column;
+        sprite.depthOrScale = depth - 2.0f;
+        AdjustDefaultScreenSpace(&sprite);
+    }
+    OriginalStrip fill{
+        .flags = 8, .corner0 = 0x05000020U, .corner1 = 0x05000020U, .corner2 = 0xbf000000U, .corner3 = 0xbf000000U, .normalizedY2 = 1.0f, .normalizedX3 = 1.0f};
+    AdjustAspectRatioMatrix(&fill, 4, static_cast<std::int32_t>(x - 11.0f), static_cast<std::int32_t>(y + 16.0f),
+        static_cast<std::int32_t>(32.0f * static_cast<float>(segments + 1) - 12.0f), 54, 0);
+    fill.flags |= 0x400U;
+    ApplyFadeToPacket(&fill, depth - 1.0f);
+}
+#pragma endregion
+#endif
 
 UIObjectDefinition *FindUIObject(const char *id) {
     for (UIDefinition &definition : g_parsedUIDefinitions) {
@@ -138,7 +178,7 @@ std::uint32_t LoadPresentationDefinition(std::int32_t index, const char *path) {
 
 namespace shenmue::s1 {
 
-std::int16_t AllocatePVRSurface(const char *, std::int32_t width, std::uint16_t foreground, std::uint16_t background, std::int32_t, bool centered) {
+std::int16_t AllocatePVRSurface(const char *text, std::int32_t width, std::uint16_t foreground, std::uint16_t background, std::int32_t encoding, bool centered) {
     if (width < 12)
         return -1;
     ShenmueSurfaceBuffer *const surface = SurfaceAllocation(static_cast<std::uint32_t>(width), 16);
@@ -146,9 +186,40 @@ std::int16_t AllocatePVRSurface(const char *, std::int32_t width, std::uint16_t 
         return -1;
     surface->formatEncoding += 0x10000U;
     std::uint8_t *const pixels = static_cast<std::uint8_t *>(surface->ddsBuffer) + 0x80;
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    std::memset(pixels, 0, static_cast<std::size_t>(width) * 16 * 4);
+    const std::int32_t length = static_cast<std::int32_t>(std::strlen(text));
+    const std::int32_t textWidth = encoding ? length * 13 - 1 : (length / 2) * 14 - 2;
+    std::uint8_t *destination = pixels + (centered ? ((width - textWidth) / 2) * 4 : 0);
+    const auto *cursor = reinterpret_cast<const std::uint8_t *>(text);
+    while (*cursor) {
+        std::uint16_t glyph;
+        const bool multibyte = *cursor > 0xa0U && *cursor != 0xffU;
+        if (multibyte) {
+            glyph = static_cast<std::uint16_t>((cursor[0] << 8U) | cursor[1]);
+            cursor += 2;
+            glyph = encoding ? static_cast<std::uint16_t>(glyph & 0x7f7fU) : ConvertJisGlyphToKana(glyph);
+            if (glyph < 0x100U)
+                glyph |= 0x100U;
+        } else {
+            glyph = static_cast<std::uint16_t>(*cursor++ | 0x100U);
+        }
+        RasterizeFontGlyph(g_pFont, glyph, destination, width * 4, foreground, background);
+        destination += multibyte && encoding ? 26 * 4 : 14 * 4;
+    }
+    const std::uint32_t texture = GetPVRSurfaceTextureHandle(surface->primarySurface);
+    Texture2DDescription description{};
+    if (GetTexture2DDescription(texture, &description)) {
+        description.initialData = pixels;
+        ReplaceTexture2DResource(texture, &description);
+    }
+#pragma endregion
+#else
     const std::int32_t glyphOffset = centered ? 4 * ((width - 12) / 2) : 0;
     RasterizeFontGlyph(g_pFont, 0x012e, pixels + glyphOffset, 4 * width, foreground, background);
     CreatePVRTextureBufferForSurface(surface->primarySurface, static_cast<std::uint32_t>(width), 16, 0x8089, pixels);
+#endif
     const std::int16_t primary = surface->primarySurface;
     if (surface->secondarySurface != -1)
         PVR_FreeAllocatedSurfaceByIndex(surface->secondarySurface);

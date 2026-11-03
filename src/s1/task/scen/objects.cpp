@@ -737,6 +737,22 @@ bool SCEN_LoadCurrentMapScript(ScenarioWindow *window) {
 
     auto &file = g_scenOwnedRecordStorage.scenarioFile;
     file = static_cast<HLib::TaskData *>(ReadFile("scenario", filename, static_cast<std::int32_t>(SHEN_NAME(INFO))));
+#if SHENMUE_IS_DEMO
+    if (!file) {
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr);
+        const std::byte *const embedded = MAPINFO_FindChunkIn(control->mapInfo, g_mapInfoSize, SHEN_NAME(SCN3));
+        if (embedded && static_cast<const std::byte *>(control->mapInfo) + g_mapInfoSize - embedded >= sizeof(ScenarioHeader)) {
+            const ScenarioHeader &header = *reinterpret_cast<const ScenarioHeader *>(embedded);
+            constexpr std::uint32_t nativeCodeMask = 0x00ff0000U;
+            if (header.wholeSize >= static_cast<std::int32_t>(sizeof(ScenarioHeader)) &&
+                (static_cast<std::uint32_t>(header.flags) & nativeCodeMask) == 0) {
+                file = static_cast<HLib::TaskData *>(HLib_AllocHeapMemBlock(header.wholeSize, SHEN_NAME(INFO)));
+                if (file)
+                    std::memcpy(file, embedded, static_cast<std::size_t>(header.wholeSize));
+            }
+        }
+    }
+#endif
     const auto *const info = reinterpret_cast<const ScenarioHeader *>(file);
     const auto offsetWithinFile = [info](std::int32_t offset) {
         return info && offset >= static_cast<std::int32_t>(sizeof(ScenarioHeader)) && offset < info->wholeSize;

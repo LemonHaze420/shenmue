@@ -1,5 +1,9 @@
 #include "auto_test.hpp"
 #include "s1/ui_internal.hpp"
+#if SHENMUE_IS_DEMO && defined(SHENMUE_DEBUG)
+#include "build_info.hpp"
+#include "d3t/debug_font.hpp"
+#endif
 #ifdef _DEBUG
 #include "shenmue_internal.h"
 #include "d3t/debug_font.hpp"
@@ -1405,6 +1409,11 @@ bool DrawPresentationOwners(std::uint32_t) {
 }
 
 bool DrawDebugTextQueue(std::uint32_t renderTarget) {
+    bool drew = false;
+#if SHENMUE_IS_DEMO && defined(SHENMUE_DEBUG)
+    drew = DrawLegacyDebugText(SHENMUE_BUILD_LABEL, 14.0f, 14.0f, 16.0f, 20.0f, 16.0f, 24.0f, 0xff000000U);
+    drew |= DrawLegacyDebugText(SHENMUE_BUILD_LABEL, 12.0f, 12.0f, 16.0f, 20.0f, 16.0f, 24.0f, 0xffffffffU);
+#endif
 #ifdef _DEBUG
     float line = 1.0f;
     const bool commitQueued = QueueDebugText(1.0f, line, SHENMUE_COMMIT_HASH);
@@ -1414,17 +1423,16 @@ bool DrawDebugTextQueue(std::uint32_t renderTarget) {
     const std::uint32_t recordCount = GetDebugTextQueueCount();
     if (!data || size < sizeof(DebugTextRecordHeader) || recordCount == 0 || g_uiLoadedLanguage < 0 ||
         g_uiLoadedLanguage >= static_cast<std::int32_t>(g_subtitleFonts.size())) {
-        return false;
+        return drew;
     }
 
     const SubtitleFontLayer &font = g_subtitleFonts[static_cast<std::size_t>(g_uiLoadedLanguage)][0];
     const std::uint32_t texture = font.texture.load(std::memory_order_acquire);
     if (!texture)
-        return false;
+        return drew;
 
     std::array<NuklearQuad, 512> quads{};
     std::size_t quadCount = 0;
-    bool drew = false;
     const auto flush = [&]() {
         if (quadCount == 0)
             return;
@@ -1693,6 +1701,10 @@ void DrawNuklear() {
     g_currentUIViewportRect = secondRange.rect;
     g_currentUIViewportDepth = secondRange.depthRange;
     RefreshAll(kUiHelpNew, 80);
+#if SHENMUE_IS_DEMO
+    if (canRender)
+        drewUI |= TrialTitle_DrawFrontend(uiRenderTarget);
+#endif
     NuklearUpdateForAspectRatio(g_bIs43AspectRatio);
     if (std::exchange(g_screenFadeWindowBegun, false) && canRender && g_rendererWhiteTexture) {
         const float scale = static_cast<float>(g_uiScreenHeight) / 1080.0f;
@@ -1833,6 +1845,10 @@ void InitGUIStates() {
 
 void UI_GUITasksEnqueue() {
     EWZO_SetUiHandler(HandleEwzoUiEvent);
+#if SHENMUE_IS_DEMO
+    g_commonIconSprites = {};
+    LoadSpriteSet(g_commonIconSprites, "COMICON.SPR", SHEN_NAME(ICON));
+#endif
     if (g_commonIconSprites.count == 0)
         return;
 

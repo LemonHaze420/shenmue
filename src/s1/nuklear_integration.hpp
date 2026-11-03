@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/d3t/namespace.hpp"
 #include <cstdint>
@@ -12,6 +13,8 @@ enum GameLanguage : std::int32_t {
     ChineseTrad = 0x5,
     ChineseSimp = 0x6,
 };
+
+struct nk_user_font;
 
 namespace shenmue::s1 {
 
@@ -42,4 +45,8 @@ namespace d3t {
 void InitNuklearTexture2D();
 } // namespace d3t
 
+#if SHENMUE_IS_DEMO
+const nk_user_font *PrepareDiscUIFont();
+void ReleaseDiscUIFont();
+#endif
 } // namespace shenmue::s1

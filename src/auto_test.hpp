@@ -8,6 +8,7 @@
 #include <cstdint>
 #if defined(_WIN32)
 #include <cstdlib>
+#include <cstring>
 #endif
 
 struct ShenAutoTestCaptureState {
@@ -43,6 +44,11 @@ inline bool FinishFrame() {
 }
 
 #if defined(_WIN32)
+inline bool SceneIs(const char *name) {
+    const char *const scene = std::getenv("SHEN_AUTO_TEST_SCENE");
+    return scene && std::strcmp(scene, name) == 0;
+}
+
 inline const char *CapturePath() {
     const char *const path = std::getenv("SHEN_AUTO_TEST_CAPTURE");
     return path && *path ? path : "auto-test.png";

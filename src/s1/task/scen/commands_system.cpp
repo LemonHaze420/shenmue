@@ -99,6 +99,7 @@
 #include <utility>
 
 #include "s1/task/scen/internal.hpp"
+#include <csignal>
 
 namespace shenmue::s1 {
 using namespace scen_detail;
@@ -231,7 +232,10 @@ void Script_shenRequestGameModuleTransition(ScenarioContext *, void *rawParams) 
     const auto *const params = static_cast<const GameModuleTransitionParameters *>(rawParams);
     if (!params)
         return;
+#if SHENMUE_IS_DEMO
+#else
     DetermineActNum();
+#endif
     const std::uint32_t sign = static_cast<std::uint32_t>(params->sceneId) >> 31U;
     LoadGameModule(static_cast<SystemModule>(static_cast<std::uint32_t>(SystemModule::Map) + 3U * sign), params->sceneId, params->areaId, params->entryPoint);
 }
@@ -303,6 +307,12 @@ void Script_StepUtils(ScenarioContext *context, void *rawParams) {
     if (!context || !context->stack || !rawParams)
         return;
     const auto *const params = static_cast<const StepUtilityParameters *>(rawParams);
+#if SHENMUE_IS_DEMO
+    if (params->mode == 0)
+        context->stack->accumulator = std::bit_cast<std::uint32_t>(g_currentScenarioStep);
+    else if (params->mode == 1)
+        SCEN_SetCurrentScenarioStep(std::bit_cast<float>(params->requestedStep));
+#else
     switch (params->mode) {
     case 0:
         context->stack->accumulator = static_cast<std::uint32_t>(g_currentScenarioStep % 10);
@@ -320,6 +330,7 @@ void Script_StepUtils(ScenarioContext *context, void *rawParams) {
     default:
         break;
     }
+#endif
 }
 
 void Script_ryoControl(ScenarioContext *context, void *rawParams) {
@@ -685,10 +696,30 @@ void Script_GetInputData(ScenarioContext *context, void *rawParams) {
     if (!context || !context->stack || !params || params->inputIndex < 0 || params->inputIndex >= static_cast<std::int32_t>(std::size(g_inputState.slots))) {
         return;
     }
+#if SHENMUE_IS_DEMO
+    const InputSlot &input = g_inputState.slots[params->inputIndex];
+    switch (params->inputType) {
+    case 4:
+        context->stack->accumulator = static_cast<std::uint8_t>(input.rightStick);
+        break;
+    case 5:
+        context->stack->accumulator = static_cast<std::uint8_t>(input.rightStick >> 8U);
+        break;
+    case 6:
+        context->stack->accumulator = static_cast<std::uint8_t>(input.triggers);
+        break;
+    case 7:
+        context->stack->accumulator = static_cast<std::uint8_t>(input.triggers >> 8U);
+        break;
+    default:
+        context->stack->accumulator = ReadInputSlotMode(static_cast<std::uint32_t>(params->inputIndex), params->inputType);
+        break;
+#else
     context->stack->accumulator = ReadInputSlotMode(static_cast<std::uint32_t>(params->inputIndex), params->inputType);
     if (g_areaId == SHEN_NAME(OP02)) {
         g_cinemaBars[2].isActive = 1;
         RefreshTriggerInputs();
+#endif
     }
 }
 
@@ -707,6 +738,14 @@ void Script_SetOwnedItemMenuFlagIfOwned(ScenarioContext *context, void *rawParam
 }
 
 void Script_GetCassetteFlags(ScenarioContext *context, void *rawParams) {
+#if SHENMUE_IS_DEMO
+    const TrialInventoryChangeParameters *const params = static_cast<const TrialInventoryChangeParameters *>(rawParams);
+    if (!context || !context->stack || !params)
+        return;
+    const bool added = AddTrialInventoryItem(
+        static_cast<std::uint8_t>(params->itemId), static_cast<std::int16_t>(params->amount), static_cast<std::int16_t>(params->attribute));
+    context->stack->accumulator = added ? 1U : 0U;
+#else
     const auto *const params = static_cast<const InventoryChangeParameters *>(rawParams);
     if (!context || !context->stack || !params)
         return;
@@ -715,6 +754,7 @@ void Script_GetCassetteFlags(ScenarioContext *context, void *rawParams) {
     } else {
         context->stack->accumulator = AddInventoryItemCount(params->id, params->amount) ? 1U : 0U;
     }
+#endif
 }
 
 void Script_GetCassetteFlags_0(ScenarioContext *context, void *rawParams) {
@@ -1690,6 +1730,12 @@ std::int64_t SCNF_RequestActionSelectorFromParams(ScenarioContext *, void *rawPa
     if (!rawParams)
         return 0;
     auto *const params = static_cast<std::uint32_t *>(rawParams);
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    UI_ICSpRequest({static_cast<std::int16_t>(params[0]), static_cast<std::int16_t>(params[1]), static_cast<std::int16_t>(params[2]),
+        static_cast<std::int16_t>(params[3]), static_cast<std::uint16_t>(params[4]), -1, 0});
+#pragma endregion
+#else
     std::int32_t mode = static_cast<std::int32_t>(params[6]);
     if (mode >= 6) {
         params[6] = 0;
@@ -1704,6 +1750,7 @@ std::int64_t SCNF_RequestActionSelectorFromParams(ScenarioContext *, void *rawPa
         static_cast<std::int16_t>(params[5]),
         static_cast<std::int16_t>(mode),
     });
+#endif
     return 0;
 }
 
@@ -1721,6 +1768,11 @@ std::int64_t SCNF_RequestActionSelector(ScenarioContext *, void *rawParams) {
     if (!rawParams)
         return 0;
     const auto *const params = static_cast<const std::uint32_t *>(rawParams);
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    UI_ICSpRequestActionMenu(params[0]);
+#pragma endregion
+#else
     std::int16_t mode = static_cast<std::int16_t>(params[1]);
     if (mode == 0)
         mode = 1;
@@ -1735,12 +1787,20 @@ std::int64_t SCNF_RequestActionSelector(ScenarioContext *, void *rawParams) {
         mode,
         static_cast<std::int16_t>(params[2]),
     });
+#endif
     return 0;
 }
 
 std::int64_t SCNF_GetSelectedBinary(ScenarioContext *context, void *) {
     if (!context || !context->stack)
         return 0;
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    if (!UI_ICSpActionMenuComplete())
+        return 0;
+    context->stack->accumulator = static_cast<std::uint16_t>(UI_ICSpActionMenuResult());
+#pragma endregion
+#else
     std::int16_t token = -1;
     if (!UI_ICSpPeekSelectedHelpToken(token))
         return 0;
@@ -1749,6 +1809,7 @@ std::int64_t SCNF_GetSelectedBinary(ScenarioContext *context, void *) {
     else if (token == 1)
         token = 0;
     context->stack->accumulator = static_cast<std::uint32_t>(static_cast<std::int32_t>(token));
+#endif
     return 0x10000;
 }
 
@@ -2026,6 +2087,208 @@ void Script_CycleManagerUtils(ScenarioContext *context, void *rawParams) {
     switch (params->command) {
     case 0: {
         const char *const filename = params->operand ? ScenarioPointer<const char>(params->operand) : nullptr;
+#if SHENMUE_IS_DEMO
+        const char *const cycleFilename = params->offset ? ScenarioPointer<const char>(params->offset) : nullptr;
+        context->stack->accumulator = MOBJ_Setup(filename, cycleFilename, params->areaId) ? 1U : 0U;
+        break;
+    }
+    case 1: {
+        const auto *const control = g_mapControlTask ? reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
+        context->stack->accumulator = control && control->scenarioTask && CHID_Find(control->scenarioTask, params->operand) ? 1U : 0U;
+        break;
+    }
+    case 2:
+        CycleManager::LinkCyclesInStack(static_cast<std::int32_t>(params->operand));
+        context->stack->accumulator = 1;
+        break;
+    case 3:
+        CycleManager::ProcessSNDForCycles();
+        context->stack->accumulator = 1;
+        break;
+    case 4:
+        if (!params->offset && g_cycleManagerRuntime.areaId.name == SHEN_NAME(JHD0)) {
+            KDAN_RemoveOccupancyByCharacterId(SHEN_NAME(FUKU));
+        }
+        CycleManager::ParseForScript(params->operand, params->offset != 0);
+        context->stack->accumulator = 1;
+        break;
+    case 5:
+        context->stack->accumulator = ScriptPackSlotWord(CycleManager::SetCyclePtrByCharaID(params->operand));
+        break;
+    case 6:
+        context->stack->accumulator = CycleManager::GetNextTaskPointer(ScriptPackSlot(params->operand));
+        break;
+    case 7: {
+
+        PackSlot *const slot = ScriptPackSlot(params->operand);
+        CycleManager::MobjEntry *entry = CycleManager::ProgramListHead(CycleProgramList_Running);
+        while (entry && entry->ctx->filename != slot)
+            entry = entry->nextDormantProgram;
+        if (entry) {
+            CycleManager::UpdateSndStreaming(*CycleManager::EntryRecord(entry));
+            entry->ctx->obj = nullptr;
+            entry->ctx->mot = nullptr;
+        } else {
+            LoadFile(slot);
+        }
+        context->stack->accumulator = 1;
+        break;
+    }
+    case 8:
+        MOBJ_SetEnabled(params->operand != 0);
+        context->stack->accumulator = 1;
+        break;
+    case 9: {
+        const CycleManager::NpcRecord *const npc = findInList(params->operand, CycleProgramList_SimSet);
+        context->stack->accumulator = npc && npc->cycle->currentOpcode == CycleOpcode_InitTimedPath && !g_bGlobalFlag ? 1U : 0U;
+        break;
+    }
+    case 10: {
+        const CycleManager::NpcRecord *const npc = findInList(params->operand, CycleProgramList_SimSet);
+        context->stack->accumulator =
+            !npc ? 0xffffffffU : (npc->cycle->currentOpcode == CycleOpcode_DriveForkliftPath2D ? npc->cycle->activeAnimId : npc->cycle->selectedMotionToken);
+        break;
+    }
+    case 11: {
+        const CycleManager::NpcRecord *const npc = findInList(params->operand, CycleProgramList_SimSet);
+        if (!npc) {
+            context->stack->accumulator = 0;
+        } else if (npc->cycle->currentOpcode == CycleOpcode_InitTimedPath) {
+            context->stack->accumulator = g_bGlobalFlag ? 1U : 0xffffffffU;
+        } else if (npc->cycle->currentOpcode == CycleOpcode_StartLinkedCycle) {
+            context->stack->accumulator = npc->cycle->moveObjSubOpcode == CycleOpcode_WalkPath3D ? 1U : 0xfffffffeU;
+        } else if (npc->cycle->currentOpcode == CycleOpcode_DriveForkliftPath2D) {
+            context->stack->accumulator = 0xfffffffdU;
+        } else {
+            context->stack->accumulator = 1;
+        }
+        break;
+    }
+    case 12: {
+        const CycleManager::NpcRecord *const npc = findInList(params->operand, CycleProgramList_SimSet);
+        context->stack->accumulator = npc && npc->cycle->moveConfig->cycleClassCode <= 1 ? npc->cycle->moveConfig->cycleClassCode : 0U;
+        break;
+    }
+    case 13: {
+        CycleManager::NpcRecord *const npc = findInList(params->operand, CycleProgramList_Running);
+        if (npc)
+            npc->cycle->scriptContextValue = params->offset;
+        context->stack->accumulator = npc ? 1U : 0U;
+        break;
+    }
+    case 14:
+        g_pCycleManagerTimeFlag = params->offset ? g_pCurrentTaskData + params->offset : nullptr;
+        context->stack->accumulator = 1;
+        break;
+    case 17: {
+        const CycleManager::NpcRecord *const npc = CycleManager::FindMutableNpcRecord(params->operand);
+        context->stack->accumulator = npc ? npc->cycle->scriptContextValue : 0U;
+        break;
+    }
+    case 15:
+        context->stack->accumulator = static_cast<std::uint32_t>(
+            g_nearQueueCycleCount + numCharactersSimulated + g_promoteListCycleCount + g_midQueueCycleCount + g_farQueueCycleCount + g_perFrameNpcWorkCnt);
+        break;
+    case 16:
+        context->stack->accumulator = static_cast<std::uint32_t>(std::min(MaxNearNPCs, numCharactersSimulated));
+        break;
+    case 0x12:
+        CycleManager::ProcessSNDForCycles();
+        CycleManager::ProcessSNDForCyclesExtra();
+        context->stack->accumulator = 1;
+        break;
+    case 19: {
+        const Vector3 *const point = ScenarioPointer<const Vector3>(params->operand);
+        const float radius = SCN_FloatFromU32(params->offset);
+        const float radiusSquared = radius * radius;
+        std::uint32_t count = 0;
+        if (point) {
+            for (const CycleManager::NpcRecord &npc : g_cycleManagerRuntime.npcRecords) {
+                const bool active = (npc.programList == CycleProgramList_SimSet && npc.cycle->areaID.name == g_areaId) ||
+                    (npc.programList == CycleProgramList_Running && npc.cycle->obj);
+                if (!active)
+                    continue;
+                const float dx = point->x - npc.cycle->pos.x;
+                const float dy = point->y - npc.cycle->pos.y;
+                const float dz = point->z - npc.cycle->pos.z;
+                count += dy * dy + dx * dx + dz * dz < radiusSquared;
+            }
+        }
+        context->stack->accumulator = count;
+        break;
+    }
+    case 20: {
+        const Vector3 *const quad = ScenarioPointer<const Vector3>(params->operand);
+        std::uint32_t count = 0;
+        if (quad) {
+            const Vector3 a{.x = quad[0].x, .y = 0.0f, .z = quad[0].z};
+            const Vector3 b{.x = quad[1].x, .y = 0.0f, .z = quad[0].z};
+            const Vector3 c{.x = quad[1].x, .y = 0.0f, .z = quad[1].z};
+            const Vector3 d{.x = quad[0].x, .y = 0.0f, .z = quad[1].z};
+            for (const CycleManager::NpcRecord &npc : g_cycleManagerRuntime.npcRecords) {
+                const bool active = (npc.programList == CycleProgramList_SimSet && npc.cycle->areaID.name == g_areaId) ||
+                    (npc.programList == CycleProgramList_Running && npc.cycle->obj);
+                count += active && check_if_point_in_quadrilateral(a, b, c, d, npc.cycle->pos);
+            }
+        }
+        context->stack->accumulator = count;
+        break;
+    }
+    case 21:
+        CycleManager::ParseProgramForChara(params->operand, params->offset);
+        context->stack->accumulator = 0;
+        break;
+    case 22:
+        g_fGlobalTurningRadius = SCN_FloatFromU32(params->operand);
+        g_default_turning_box_half_depth_z = SCN_FloatFromU32(params->offset);
+        g_angYoffset = SCN_FloatFromU32(params->areaId.name);
+        context->stack->accumulator = 0;
+        break;
+    case 23: {
+        CycleManager::NpcRecord *const npc = CycleManager::FindMutableNpcRecord(params->operand);
+        if (npc && npc->cycle->currentOpcode != CycleOpcode_ScriptTransformOverride) {
+            npc->cycle->tempState41SavedOpcode = npc->cycle->currentOpcode;
+            npc->cycle->areaID = shen_name{g_areaId};
+            npc->cycle->currentOpcode = CycleOpcode_ScriptTransformOverride;
+        }
+        context->stack->accumulator = 0;
+        break;
+    }
+    case 24: {
+        CycleManager::NpcRecord *const npc = CycleManager::FindMutableNpcRecord(params->operand);
+        if (npc && npc->cycle->currentOpcode == CycleOpcode_ScriptTransformOverride)
+            npc->cycle->currentOpcode = static_cast<CycleOpcode>(npc->cycle->tempState41SavedOpcode);
+        context->stack->accumulator = 0;
+        break;
+    }
+    case 25: {
+        CycleManager::NpcRecord *const npc = CycleManager::FindMutableNpcRecord(params->operand);
+        if (npc && npc->cycle->currentOpcode == CycleOpcode_ScriptTransformOverride) {
+            npc->cycle->areaID = shen_name{g_areaId};
+            npc->cycle->pos = {SCN_FloatFromU32(params->offset), SCN_FloatFromU32(params->areaId.name), SCN_FloatFromU32(params->argument10)};
+            npc->cycle->desiredPathYaw = static_cast<std::int16_t>(params->argument14 & 0xffffU);
+        }
+        context->stack->accumulator = 0;
+        break;
+    }
+    case 26: {
+        CycleManager::NpcRecord *const npc = CycleManager::FindMutableNpcRecord(params->operand);
+        if (npc && npc->cycle->currentOpcode == CycleOpcode_ScriptTransformOverride) {
+            npc->cycle->areaID = shen_name{g_areaId};
+            npc->cycle->activeAnimId = static_cast<std::uint16_t>(params->offset & 0xffffU);
+        }
+        context->stack->accumulator = 0;
+        break;
+    }
+    case 0x1b:
+        context->stack->accumulator = ScriptPackSlotWord(CycleManager::ParseForScript_InternalForHuman(params->operand));
+        break;
+    case 0x1c:
+        g_cycleManagerRuntime.cycleLoadSettleFrameCounter = 0;
+        context->stack->accumulator = 0;
+        break;
+    case 0x1d:
+#else
         context->stack->accumulator = MOBJ_Setup(filename, params->areaId) ? 1U : 0U;
         break;
     }
@@ -2230,6 +2493,7 @@ void Script_CycleManagerUtils(ScenarioContext *context, void *rawParams) {
         context->stack->accumulator = 0;
         break;
     case CYCLE_CMD_TICK_LOAD_SETTLE_COUNT:
+#endif
         ++g_cycleManagerRuntime.cycleLoadSettleFrameCounter;
         context->stack->accumulator = g_cycleManagerRuntime.cycleLoadSettleFrameCounter < 5 ?
             1U :
@@ -2609,8 +2873,14 @@ void Script_SetStats(ScenarioContext *context, void *rawParams) {
     SetPlayerSimpleStat(arguments.word(0), arguments.word(1));
 }
 
-void Script_SetICval(ScenarioContext *, void *) {
+void Script_SetICval(ScenarioContext *, void *rawParams) {
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    UI_ICMoSetCurrency(static_cast<std::int8_t>(*static_cast<const std::int32_t *>(rawParams)));
+#pragma endregion
+#else
     ResetInventoryControlValue9();
+#endif
 }
 
 void Script_GetBatteryLifePair(ScenarioContext *context, void *rawParams) {
@@ -3641,3 +3911,66 @@ void Script_SpriteUtils(ScenarioContext *context, void *rawParams) {
     }
 }
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1::scen_detail {
+void Script_ReturnBooleanFalse(ScenarioContext *context, void *) {
+    context->stack->accumulator = 0;
+}
+
+void Script_ReturnFloatZero(ScenarioContext *context, void *) {
+    context->stack->accumulator = 0;
+}
+
+void Script_ShowTrialSubtitle(ScenarioContext *context, void *rawParams) {
+    const ScriptArguments arguments(context, rawParams);
+    TrialSubtitle_Show(arguments.pointer<HLib::Task>(0), arguments.scalar(1), arguments.scalar(2), static_cast<std::int16_t>(arguments.word(3)));
+}
+
+void Script_HideTrialSubtitle(ScenarioContext *context, void *rawParams) {
+    const ScriptArguments arguments(context, rawParams);
+    TrialSubtitle_Hide(arguments.pointer<HLib::Task>(0));
+}
+
+void Script_CaptureTrialSaveState(ScenarioContext *, void *) {
+    S1Save_CaptureTrialState();
+}
+
+void Script_SetVfSkillFlags(ScenarioContext *, void *rawParams) {
+    const std::uint32_t *const parameters = static_cast<const std::uint32_t *>(rawParams);
+    SetVfSkillFlags(static_cast<std::int8_t>(parameters[0]), parameters[1]);
+}
+} // namespace shenmue::s1::scen_detail
+#endif
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1::scen_detail {
+void Script_TrialTimeQuery(ScenarioContext *context, void *) {
+    context->stack->accumulator = TIME_TrialReservedQuery();
+}
+
+void Script_TrialReservedMapRequest(ScenarioContext *, void *rawParams) {
+    MAPCTRL_TrialReservedRequest(*static_cast<const std::uint32_t *>(rawParams));
+}
+
+void Script_TrialReservedEffectRequest(ScenarioContext *, void *rawParams) {
+    const std::uint32_t *const parameters = static_cast<const std::uint32_t *>(rawParams);
+    EFFE_TrialReservedRequest(parameters[0], parameters[1], std::bit_cast<float>(parameters[2]), std::bit_cast<float>(parameters[3]), parameters[4]);
+}
+
+void Script_LoadTrialSubtitle(ScenarioContext *context, void *rawParams) {
+    const ScriptArguments arguments(context, rawParams);
+    HLib::Task *const task = TrialSubtitle_Load(arguments.pointer<const char>(0));
+    arguments.result(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(task) - reinterpret_cast<std::uintptr_t>(g_pCurrentTaskData)));
+}
+
+// @verified - d
+void Script_DebugTrap(ScenarioContext *, void *) {
+#if defined(_MSC_VER)
+    __debugbreak();
+#else
+    std::raise(SIGTRAP);
+#endif
+}
+} // namespace shenmue::s1::scen_detail
+#endif

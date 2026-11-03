@@ -1,6 +1,6 @@
 #include "d3t/ui_internal.hpp"
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
@@ -55,7 +55,7 @@ void UI_WindowMouseCallbacks(d3t::UIMouseCallbacks &callbacks, std::int32_t elem
     }
 }
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

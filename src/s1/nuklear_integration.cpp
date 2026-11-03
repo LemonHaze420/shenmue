@@ -1,4 +1,5 @@
 #include "s1/nuklear_integration.hpp"
+#include "d3t/ui_nuklear.hpp"
 #include "s1/d3t/namespace.hpp"
 #include "s1/archive_data.hpp"
 
@@ -16,6 +17,64 @@
 #include <cstdlib>
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+namespace {
+nk_font_atlas g_discFontAtlas{};
+nk_font *g_discFont = nullptr;
+std::uint32_t g_discFontTexture = 0;
+
+} // namespace
+const nk_user_font *PrepareDiscUIFont() {
+    if (g_discFont)
+        return &g_discFont->handle;
+    nk_font_atlas_init_default(&g_discFontAtlas);
+    nk_font_atlas_begin(&g_discFontAtlas);
+    nk_font *const font = nk_font_atlas_add_default(&g_discFontAtlas, 28.0f, nullptr);
+    if (!font) {
+        nk_font_atlas_clear(&g_discFontAtlas);
+        return nullptr;
+    }
+
+    font->info = {};
+    font->fallback = nullptr;
+    while (font->config->range[font->info.range_count * 2] != 0)
+        ++font->info.range_count;
+    int width = 0;
+    int height = 0;
+    const void *const pixels = nk_font_atlas_bake(&g_discFontAtlas, &width, &height, NK_FONT_ATLAS_RGBA32);
+    if (!font || !pixels) {
+        nk_font_atlas_clear(&g_discFontAtlas);
+        return nullptr;
+    }
+    const Texture2DDescription description{.width = static_cast<std::uint32_t>(width),
+        .height = static_cast<std::uint32_t>(height),
+        .arraySize = 1,
+        .mipLevels = 1,
+        .format = 2,
+        .bindFlags = 0,
+        .flags = 0,
+        .sampleCount = 1,
+        .initialData = pixels};
+    g_discFontTexture = CreateTexture2D(&description);
+    if (!g_discFontTexture) {
+        nk_font_atlas_clear(&g_discFontAtlas);
+        return nullptr;
+    }
+    nk_font_atlas_end(&g_discFontAtlas, nk_handle_id(static_cast<int>(g_discFontTexture)), nullptr);
+    g_discFont = font;
+    return &g_discFont->handle;
+}
+
+void ReleaseDiscUIFont() {
+    if (g_discFontTexture)
+        InitTexture2DResource(g_discFontTexture);
+    g_discFontTexture = 0;
+    if (g_discFont)
+        nk_font_atlas_clear(&g_discFontAtlas);
+    g_discFont = nullptr;
+}
+
+#endif
 
 const char *UI_Elements_Init();
 std::int64_t LoadSplash();

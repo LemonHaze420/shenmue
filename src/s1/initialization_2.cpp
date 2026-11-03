@@ -65,6 +65,9 @@
 #include <vector>
 #include <json/json.h>
 
+#if SHENMUE_IS_DEMO
+#include "s1/task/time.hpp"
+#endif
 namespace shenmue::s1 {
 
 std::uint8_t g_hmdlEntryDirty = 0;
@@ -461,6 +464,9 @@ void InitSettings() {
     shenInitDefaultStats();
     shenInitDefaultCassetteInventory();
     SCRL_SetLuminanceEnabled(false);
+#if SHENMUE_IS_DEMO
+    TIME_InitializeTrialClock();
+#else
     SCRL_SetLuminanceChannels(0, 0, 0);
     CDTT_SetMode(CDTTMode::TitleOrIntroDateSetup);
     g_scrollCurrentInfo = nullptr;
@@ -469,6 +475,7 @@ void InitSettings() {
     InternalInit();
     Arcade_InitDefaultHangOnRanking();
     Arcade_InitDefaultSpaceHarrierRanking();
+#endif
 }
 
 std::int32_t g_loadingSprite = -1;

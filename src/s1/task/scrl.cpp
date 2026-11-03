@@ -97,7 +97,11 @@ std::int32_t g_sentSkyNumber = 0;
 
 std::array<std::uint32_t, 2> g_mapLumaColours{};
 
+#if SHENMUE_IS_DEMO
+constexpr char kSpriteFolder[] = "scroll";
+#else
 constexpr char kSpriteFolder[] = "sprite";
+#endif
 
 
 const SkyChunk *FindSkyChunk(const void *first, std::uint32_t token) {

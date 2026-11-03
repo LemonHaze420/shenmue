@@ -606,3 +606,10 @@ namespace shenmue::s1::effe_detail {
 float g_inverseGeometryScale = kDefaultInverseGeometryScale;
 
 } // namespace shenmue::s1::effe_detail
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {
+void EFFE_TrialReservedRequest(std::uint32_t, std::uint32_t, float, float, std::uint32_t) {
+}
+} // namespace shenmue::s1
+#endif

@@ -1,5 +1,6 @@
 #pragma once
 #include "d3t/archive_handles.hpp"
+#include "shenmue.h"
 namespace shenmue::s1 {
 using d3t::ArchiveHandleEntry;
 using d3t::ArchiveHandleTable;
@@ -30,5 +31,9 @@ using d3t::LargeFile_OpenTocEntryHandle;
 using d3t::LargeFile_OpenPathHandle;
 using d3t::LoadContent;
 using d3t::ReadCachedFile;
+#if SHENMUE_IS_DEMO
+void ReadFile_0(std::uint64_t unused, std::uint32_t *fileState);
+#else
 using d3t::ReadFile_0;
-}
+#endif
+} // namespace shenmue::s1

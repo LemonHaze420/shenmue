@@ -1,4 +1,5 @@
 #include "s1/task/scnt.hpp"
+#include "s1/save_format.hpp"
 #include "s1/task/char.hpp"
 #include "s1/task/ctrl.hpp"
 #include "s1/face.hpp"
@@ -337,6 +338,8 @@ constexpr std::array<std::uint8_t, 86> kJisKatakanaToKana{{0xa7, 0xb1, 0xa8, 0xb
     0xc7, 0xc8, 0xc9, 0xca, 0x90, 0x91, 0xcb, 0x92, 0x93, 0xcc, 0x94, 0x95, 0xcd, 0x96, 0x97, 0xce, 0x98, 0x99, 0xcf, 0xd0, 0xd1, 0xd2, 0xd3, 0xac, 0xd4, 0xad,
     0xd5, 0xae, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xdb, 0x6e, 0xdc, 0x70, 0x71, 0xa6, 0xdd, 0x9a, 0x9b, 0x9c}};
 
+} // namespace
+
 std::uint16_t ConvertJisGlyphToKana(std::uint16_t token) {
     if (token < 0x100U)
         return token;
@@ -354,6 +357,8 @@ std::uint16_t ConvertJisGlyphToKana(std::uint16_t token) {
     }
     return glyph | 0x8080U;
 }
+
+namespace {
 
 std::uint32_t WriteDialogueGlyph(WindEntry &window, const ScntDialogueTokenReader &reader) {
     std::uint16_t glyph = reader.token;
@@ -421,10 +426,13 @@ void ConsumeDialogueTokens(ScntDialogueWork &dialogue, WindEntry &window) {
 
 void ProcessDialogueRelated(WindEntry *window, std::int64_t reason, void *context) {
     ScntDialogueWork &dialogue = *static_cast<ScntDialogueWork *>(context);
+#if SHENMUE_IS_DEMO
+#else
     if (reason != 0)
         dialogue.mode = static_cast<std::int32_t>(reason);
     if (!dialogue.active || (dialogue.reader.flags & 0x80U) == 0)
         return;
+#endif
     if (reason == 7) {
         if ((dialogue.reader.flags & 1U) != 0) {
             dialogue.reader.flags |= 2U;
@@ -1315,11 +1323,57 @@ void talkClearCharaFaceLookAt(std::uint32_t characterName) {
     ClearCharaFaceLookAt(characterName);
 }
 
-void SCNT_ShowSubtitleText(HLib::Task *scenarioTask, const char *text, std::uint32_t speakerClass) {
+void SCNT_ShowSubtitleText(HLib::Task *scenarioTask, const char *text, std::uint32_t speakerClass
+#if SHENMUE_IS_DEMO
+    ,
+    std::uint32_t encodingMode
+#endif
+) {
     ScntDialogueWork *const dialogue = scenarioTask && scenarioTask->task_data_ptr ?
         &ScenarioField<ScntDialogueWork>(*reinterpret_cast<ScenarioTaskData *>(scenarioTask->task_data_ptr), kDialogueWorkOffset) :
         nullptr;
 
+#if SHENMUE_IS_DEMO
+    ScenarioTaskData *const data = scenarioTask ? reinterpret_cast<ScenarioTaskData *>(scenarioTask->task_data_ptr) : nullptr;
+    WindEntry *const window = data ? ScenarioField<WindEntry *>(*data, kWindowPointerOffset) : nullptr;
+    if (!dialogue || !window || !text)
+        return;
+    if (!dialogue->surfaceAllocated)
+        dialogue->surfaceAllocationDelay = 1;
+    if ((S1SettingsFlags_Get() & 1U) == 0 && (dialogue->reader.flags & 0x40U) == 0 && speakerClass != 2) {
+        dialogue->reader.flags = 0x10U;
+        return;
+    }
+    dialogue->reader.flags = 0;
+    ResetDialogueWindow(*window);
+    window->waitFlag = static_cast<std::int32_t>(speakerClass);
+    char (&source)[188] = ScenarioField<char[188]>(*data, kDialogueSourceOffset);
+    static_assert(kDialogueSourceOffset + sizeof(source) == 0x1a8);
+    std::strcpy(source, text);
+    ScntDialogueTokenReader &reader = dialogue->reader.tokenReader;
+    reader.cursor = reinterpret_cast<const std::uint8_t *>(source);
+    reader.encodingMode = encodingMode;
+    reader.pendingLead = 0;
+    reader.isLeadByte = encodingMode ? +[](std::uint8_t value) { return value >= 0xa1U && value < 0xffU; } : IsShiftJisLeadByte;
+    reader.isTrailByte = encodingMode ? reader.isLeadByte : IsShiftJisTrailByte;
+    bool quoted = false;
+    while (AdvanceDialogueToken(reader)) {
+        if (reader.tokenKind == 2 && DecodeDialogueGlyph(reader) == 0x2156U) {
+            quoted = true;
+            break;
+        }
+        if (reader.tokenKind == 0)
+            break;
+    }
+    if (!quoted) {
+        reader.cursor = reinterpret_cast<const std::uint8_t *>(source);
+        reader.pendingLead = 0;
+    }
+    AdvanceDialogueToken(reader);
+    ConsumeDialogueTokens(*dialogue, *window);
+    window->flags |= 0x24U;
+    dialogue->reader.flags |= 8U;
+#else
     if (dialogue && g_applicationSettings.savedDialogueMode <= 1 && (dialogue->reader.flags & 0x40U) == 0 && speakerClass != 2 && speakerClass != 3) {
         dialogue->reader.flags = 0x10U;
         return;
@@ -1353,10 +1407,22 @@ void SCNT_ShowSubtitleText(HLib::Task *scenarioTask, const char *text, std::uint
 
     ProcessSubtitleText(text);
     ApplySubtitlePresentationClass(speakerClass);
+#endif
 }
 
 void SCNT_ClearSubtitleText() {
+#if SHENMUE_IS_DEMO
+    HLib::Task *const task = CurrentScenarioTask();
+    ScenarioTaskData *const data = task ? reinterpret_cast<ScenarioTaskData *>(task->task_data_ptr) : nullptr;
+    if (data && ScenarioField<WindEntry *>(*data, kWindowPointerOffset)) {
+        ScenarioField<ScntDialogueWork>(*data, kDialogueWorkOffset).reader.flags = 2;
+        ScenarioField<WindEntry *>(*data, kWindowPointerOffset)->flags &= ~0x20U;
+    }
+
+#else
     ProcessSubtitleText(nullptr);
+
+#endif
 }
 
 bool SCNT_IsTimeLimitComplete() {
@@ -1570,9 +1636,12 @@ void SCNT_InitializeScenarioDialogue(ScenarioTaskData &data, HLib::Task *windTas
     dialogue.reader.flags = 2;
     dialogue.surfaceAllocationDelay = 0;
     dialogue.surfaceAllocated = 1;
+#if SHENMUE_IS_DEMO
+#else
     dialogue.active = 1;
     dialogue.mode = 0;
     reinterpret_cast<std::byte *>(&data)[kDialogueSourceOffset] = std::byte{};
+#endif
     window->callback = ProcessDialogueRelated;
     window->callbackContext = &dialogue;
     ProcessDialogueRelated(window, 5, &dialogue);
@@ -1585,3 +1654,26 @@ void SCNT_Enqueue(ScenarioContext *, void *) {
 }
 
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {
+bool SCNT_WaitForSubtitleText(HLib::Task *task) {
+    ScenarioTaskData *const data = task ? reinterpret_cast<ScenarioTaskData *>(task->task_data_ptr) : nullptr;
+    if (!data || !ScenarioField<WindEntry *>(*data, kWindowPointerOffset))
+        return false;
+    std::uint32_t &flags = ScenarioField<ScntDialogueWork>(*data, kDialogueWorkOffset).reader.flags;
+    if ((flags & 0x12U) != 0) {
+        flags = 2;
+        ScenarioField<WindEntry *>(*data, kWindowPointerOffset)->flags &= ~0x20U;
+        return false;
+    }
+    if ((flags & 4U) != 0) {
+        ScenarioField<WindEntry *>(*data, kWindowPointerOffset)->flags |= 0x30U;
+        flags ^= 4U;
+    } else {
+        flags |= 8U;
+    }
+    return true;
+}
+} // namespace shenmue::s1
+#endif

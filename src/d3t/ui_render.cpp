@@ -4,7 +4,7 @@
 #include "s2/frame_pipeline.hpp"
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 #include "s1/d3t/d3t_buffer.hpp"
 #include "s1/d3t/d3t_render_handles.hpp"
 #include "s1/d3t/renderer.hpp"
@@ -29,7 +29,7 @@
 #include <d3d11.h>
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
@@ -280,7 +280,7 @@ void DrawAspectBars(float alpha, const UIViewport &viewport, std::int32_t reveal
     const float buffer = static_cast<float>(bufferWidth);
     const float screenHeight = static_cast<float>(static_cast<std::int32_t>(d3t::g_originalScreenHeight));
     const float scale = (1.0f / (1080.0f / buffer)) * (screenHeight / static_cast<float>(screenWidth));
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     const float frameWidth = static_cast<float>(static_cast<std::int32_t>(buffer / scale));
 #else
     const float frameWidth = static_cast<float>(static_cast<std::uint32_t>(static_cast<std::int64_t>(buffer / scale)));
@@ -308,7 +308,7 @@ void DrawAspectBars(float alpha, const UIViewport &viewport, std::int32_t reveal
         bar(g_aspectBarPanels[1], "Aspect Bar Right - Reveal", nk_rect(frameWidth - alpha * margin - 1.0f, -10.0f, 5.0f, 1090.0f));
     }
     const UIViewport whole{.rect = {.x = 0.0f, .y = 0.0f, .z = buffer, .w = 1080.0f}, .depthRange = {.x = 0.0f, .y = 1.0f}};
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     d3t::D3TRenderState &state = d3t::GetRenderState(*g_RenderDeviceContext);
 #else
     d3t::D3TRenderState &state = d3t::GetRenderState(*g_nuklearRenderDeviceContext);
@@ -339,7 +339,7 @@ void NuklearDrawAspectBars(float alpha, std::int32_t mode, std::int32_t reveal) 
 
 void Nuklear_RenderPass(const UIViewport *viewport) {
 #if defined(_WIN32)
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     D3TDeviceContext *const context = g_RenderDeviceContext;
 #else
     d3t::D3TDeviceContext *const context = g_nuklearRenderDeviceContext;
@@ -441,7 +441,7 @@ void Nuklear_RenderPass(const UIViewport *viewport) {
         if (!command->elem_count)
             continue;
         const std::uint32_t texture = static_cast<std::uint32_t>(command->texture.id);
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         const std::uint32_t blockTexture = command->block_handle.id != -1 ? static_cast<std::uint32_t>(command->block_handle.id) : d3t::g_defaultWhiteTexture;
 #else
         const std::uint32_t blockTexture =
@@ -459,7 +459,7 @@ void Nuklear_RenderPass(const UIViewport *viewport) {
                 state.scissorRect = kFullScissor;
             }
         } else {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             const std::array<std::int32_t, 4> scissor{static_cast<std::int32_t>(clip.x) + static_cast<std::int32_t>(current.rect.x),
                 static_cast<std::int32_t>(clip.y), static_cast<std::int32_t>(clip.x + current.rect.x + clip.w), static_cast<std::int32_t>(clip.y + clip.h)};
 #else
@@ -493,7 +493,7 @@ void Nuklear_RenderPass(const UIViewport *viewport) {
                     WriteState(bytes, viewFlagsOffset, std::uint32_t{0});
                 }
             }
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             if (GetTexture2DDimensions(texture, &width, &height)) {
 #endif
                 const std::uint32_t baseVertex = g_Nuklear_num_verts;
@@ -518,7 +518,7 @@ void Nuklear_RenderPass(const UIViewport *viewport) {
 #endif
     }
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

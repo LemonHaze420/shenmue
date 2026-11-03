@@ -1,7 +1,7 @@
 #include "d3t/ui_internal.hpp"
 
 #include "d3t/ui_runtime.hpp"
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 #include "s1/ui_internal.hpp"
 #include "s1/d3t/d3t_content.hpp"
 #include "s1/d3t/d3t_texture.hpp"
@@ -14,13 +14,13 @@
 #include "s2/renderer_scratch.hpp"
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
 #endif
 
-#if !SHENMUE_IS_S1
+#if !SHENMUE_IS_S1_FAMILY
 
 // @verified - p
 std::int32_t ValidateUITextCodepoint(std::uint32_t *codepoint, std::int32_t encodedLength) {
@@ -136,10 +136,7 @@ const char *ReadStringFromStringTableById(const SubtitleStringId &id) {
 }
 #endif
 
-#if !SHENMUE_IS_S1
-
-
-
+#if !SHENMUE_IS_S1_FAMILY
 
 std::int32_t GetKeyForInputType(std::int32_t action, std::int32_t inputType) {
     const std::int32_t type = inputType == -1 ? GetCurrentUIInputType() : inputType;
@@ -424,7 +421,7 @@ void UI_SetFontFamily(std::uint32_t family) {
 }
 #endif
 void UI_SelectFont() {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     std::int32_t language = g_uiLoadedLanguage;
     if (language == -1) {
         if (g_uiStringTable) {
@@ -466,14 +463,14 @@ void FreeUIFontDefinition(std::int32_t language) {
             std::memset(&face.atlases[image], 0, sizeof(face.atlases[image]));
         }
     }
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     std::vector<std::byte>{}.swap(g_fontDefinitions[language]);
 #else
     std::free(g_uiFontDefinitions[language]);
     g_uiFontDefinitions[language] = nullptr;
 #endif
 }
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 void FontLoader() {
     std::int32_t language = g_requestedUiLanguage;
     if (static_cast<std::uint32_t>(language) > 6U) {
@@ -489,7 +486,7 @@ void LoadUIFontLanguage(std::int32_t language) {
 #endif
     if (g_fontLanguageAvailable[static_cast<std::size_t>(language)] != 1 && g_forceFontLanguageAvailable != 1)
         language = 0;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     if (g_uiLoadedLanguage == -1) {
         if (g_uiStringTable) {
             g_uiStringTable = nullptr;
@@ -504,7 +501,7 @@ void LoadUIFontLanguage(std::int32_t language) {
 #endif
     if (language == previousLanguage)
         return;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     if (g_uiStringTable) {
         g_uiStringTable = nullptr;
         std::free(g_uiStringBuffer);
@@ -517,14 +514,14 @@ void LoadUIFontLanguage(std::int32_t language) {
     FreeUIFontDefinition(previousLanguage);
 #endif
     std::uint32_t handle = d3t::d3t_AllocateRenderHandle();
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     SelectAppropriateFontDefinition(static_cast<GameLanguage>(language), handle);
 #else
     SelectAppropriateFontDefinition(language, handle);
 #endif
     while (d3t::d3t_IsRenderHandlePending(handle))
         d3t::ProcessRemappings();
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     d3t::d3t_ReleaseRenderHandle(handle);
     if (g_uiElements[kUiSubMenuOptions].isVisible) {
         if (g_uiElements[kUiMainMenu].isVisible)
@@ -552,7 +549,7 @@ void FontLoader() {
 }
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace d3t {
 void LoadFont(void *data, std::uint32_t, void *loadedData, std::uint64_t loadedSize, const char *sourcePath) {
 #else
@@ -562,7 +559,7 @@ void LoadUIFont(void *data, std::uint32_t, void *loadedData, std::uint64_t loade
     const std::uint32_t language = words[1];
     const std::byte *const first = static_cast<const std::byte *>(loadedData);
     const std::size_t size = static_cast<std::size_t>(loadedSize);
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     g_fontDefinitions[language].assign(first, first + size);
     const std::byte *const base = g_fontDefinitions[language].data();
 #else
@@ -579,7 +576,7 @@ void LoadUIFont(void *data, std::uint32_t, void *loadedData, std::uint64_t loade
         std::uint32_t header[5]{};
         std::memcpy(header, first + cursor, sizeof(header));
         if (header[0] == kFontDefinitionChunkTag) {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             break;
 #else
             std::memcpy(&glyphBytes, first + cursor + 4, sizeof(glyphBytes));
@@ -596,7 +593,7 @@ void LoadUIFont(void *data, std::uint32_t, void *loadedData, std::uint64_t loade
         const std::byte *const tail = record + kFontRecordHeaderSize + recordBytes;
         std::array<std::uint32_t, 2> textureSize{};
         std::memcpy(textureSize.data(), tail + kFontRecordTextureSizeOffset, sizeof(textureSize));
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         const char *const path = sourcePath ? sourcePath : kUIFontDefinitionPaths[language <= 6 ? language : 0];
 #else
         const char *const path = sourcePath;
@@ -626,7 +623,7 @@ void LoadUIFont(void *data, std::uint32_t, void *loadedData, std::uint64_t loade
         face.configs[image] = *face.atlases[image].config;
         face.sizes[image] = static_cast<float>(header[3]);
         const std::size_t chunkBytes = kFontRecordHeaderSize + recordBytes + kFontRecordTailSize;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         if (recordBytes / sizeof(struct nk_font_glyph) != glyphCount || chunkBytes > size - cursor)
             return;
         InstallLegacyUIFontRecord(language, header, first + cursor, path, words[0]);
@@ -634,7 +631,7 @@ void LoadUIFont(void *data, std::uint32_t, void *loadedData, std::uint64_t loade
         cursor += chunkBytes;
     }
 }
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace d3t
 #endif
 
@@ -948,7 +945,7 @@ void UI_DrawLabel(nk_context &context, std::int32_t labelIndex, std::int32_t wid
     context.style.text.color = savedColour;
 }
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

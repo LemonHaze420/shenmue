@@ -4,7 +4,21 @@
 
 #include <cstdint>
 
+#if defined(SHENMUE_TARGET_WHATS_PC)
+#include <filesystem>
+#endif
+
 namespace shenmue::s1 {
+
+#if defined(SHENMUE_TARGET_WHATS_PC)
+#pragma region WhatsShenmue
+struct TrialLaunchOptions {
+    std::filesystem::path gameDirectory;
+    std::filesystem::path hostDirectory;
+};
+extern TrialLaunchOptions g_trialLaunchOptions;
+#pragma endregion
+#endif
 
 inline constexpr shen_name AREA_OPENING{SHEN_NAME(OP00)};
 

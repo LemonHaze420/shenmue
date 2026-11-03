@@ -4,7 +4,7 @@
 #include "s2/ui_scroll_list.hpp"
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
@@ -1978,7 +1978,7 @@ void UI_DrawMenuBar(nk_context &context, std::int32_t index) {
     }
 }
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/date_time.hpp"
 #include "s1/hlib.hpp"
@@ -137,4 +138,12 @@ void RecalculateDayInTheWeek(GameDateTime *dateTime);
 void UpdateTime();
 void EnqueueTIME();
 
+#if SHENMUE_IS_DEMO
+extern std::uint16_t g_currentDateTimeTicks;
+extern std::uint16_t g_maximumDateTimeTicks;
+void TIME_ResetDateTime(std::int8_t index);
+bool TIME_TrialReservedQuery();
+void TIME_ResetTrialClock();
+void TIME_InitializeTrialClock();
+#endif
 } // namespace shenmue::s1

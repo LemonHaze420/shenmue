@@ -34,7 +34,7 @@ ModuleData g_rootModuleData{};
 
 } // namespace
 
-std::array<SystemModuleEntry, 22> SystemModules{{
+std::array<SystemModuleEntry, kSystemModuleCount> SystemModules{{
     {InitColBar, 0, kModuleReservedData},
     {std::bit_cast<HLib::TaskCallback>(&Shenmue_Init), 0, kModuleReservedData},
     {std::bit_cast<HLib::TaskCallback>(&SetToDisplayModule), 0, kModuleReservedData},
@@ -47,6 +47,9 @@ std::array<SystemModuleEntry, 22> SystemModules{{
     {HarrierModule, 0, kModuleReservedData},
     {Module_STAF, 0, kModuleReservedData},
     {HangOnCreate, 0, kModuleReservedData},
+#if SHENMUE_IS_DEMO
+    {TrialTitle_Module, 0, kModuleReservedData},
+#endif
     {nullptr, 0, kUnusedModuleReservedData},
     {nullptr, 0, kUnusedModuleReservedData},
     {nullptr, 0, kUnusedModuleReservedData},
@@ -90,7 +93,12 @@ void ROOT_Callback(HLib::TaskData *) {
     }
 }
 
-std::int64_t HLib_UpdateTaskQueue(SystemModule module) {
+std::int64_t HLib_UpdateTaskQueue(SystemModule module
+#if SHENMUE_IS_DEMO
+    ,
+    std::uint32_t parameter
+#endif
+) {
     const auto moduleIndex = static_cast<std::uint32_t>(module);
     if (module == SystemModule::Map) {
         g_perspectiveProjection = 0;
@@ -117,7 +125,11 @@ std::int64_t HLib_UpdateTaskQueue(SystemModule module) {
     data->previousModule = data->currentModule;
     data->previousNextModule = static_cast<std::uint32_t>(data->nextModule);
     data->currentModule = module;
+#if SHENMUE_IS_DEMO
+    data->nextModule = static_cast<SystemModule>(parameter);
+#else
     data->nextModule = SystemModule::Colbar;
+#endif
 
     for (std::int16_t taskIndex = 1; taskIndex < 16; ++taskIndex) {
         HLib::Task *task = g_TaskInfo.moduleTaskQueue[taskIndex - 1]->nextInQueue;

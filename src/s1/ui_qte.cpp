@@ -2,6 +2,41 @@
 
 namespace shenmue::s1::ui_runtime_detail {
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+ScreenSpaceParams g_qteSprite{};
+float g_qtePanelX = -176.0f;
+float g_qtePanelSpeed = 1.0f;
+std::int32_t g_qteSessionFrameCount = 0;
+
+// @verified - d
+void UI_QteInitializeSprite() {
+    g_qtePanelX = -176.0f;
+    g_qtePanelSpeed = 1.0f;
+    g_qteSprite = {.halfScreenX = g_qtePanelX, .halfScreenY = 240.0f, .positionScaleX = 1.0f, .positionScaleY = 1.0f,
+        .depthOrScale = 3.0f, .pvrSurfaceIndex = 17, .scaledWidth = 64, .scaledHeight = 64, .alignmentType = 5};
+    g_qteSessionFrameCount = 0;
+}
+
+// @verified - d
+void UI_QteDraw() {
+    g_qteSprite.halfScreenX = g_qtePanelX;
+    if ((g_sfxOverlayFlags & kSfxSubsetMaskMode) != 0) {
+        for (std::uint32_t bit = 0; bit < 8; ++bit) {
+            if ((g_currentSfxMask & (1U << bit)) == 0)
+                continue;
+            g_qteSprite.angle = bit << 13U;
+            g_qteSprite.halfScreenX = std::fma(55.0f, sin_fixed16(static_cast<std::int16_t>(g_qteSprite.angle)), g_qtePanelX);
+            g_qteSprite.halfScreenY = 240.0f - cos_fixed16(static_cast<std::uint16_t>(g_qteSprite.angle)) * 55.0f;
+            AdjustDefaultScreenSpace(&g_qteSprite);
+        }
+    } else {
+        AdjustDefaultScreenSpace(&g_qteSprite);
+    }
+}
+#pragma endregion
+#endif
+
 void EnsureSfxOverlayTask() {
     if (!g_sfxOverlayTask)
         EnsureIconRootTask();
@@ -84,7 +119,9 @@ void TickSfxOverlayTimeout() {
     g_sfxTimedOutMarker = static_cast<std::int32_t>((static_cast<std::uint32_t>(g_sfxTimedOutMarker) & 0xffff0000U) | 0xa000U);
     g_sfxTimeoutFrames = 0;
     PlaySfxOverlayResultSound(false);
+#if !SHENMUE_IS_DEMO
     UpdateAveragedRuntimeStatPageSlot(1, g_sfxFrameCounter);
+#endif
     g_sfxStateDirty = 1;
 }
 
@@ -148,11 +185,23 @@ void HandleSfxOverlayExactInput(std::uint16_t pressed) {
             g_sfxOverlayResult[0] = 0;
             PlaySfxOverlayResultSound(false);
         }
+#if SHENMUE_IS_DEMO
+        if (success && (g_sfxOverlayFlags & kSfxWaitForExternalClose) != 0)
+            g_sfxOverlayFlags |= kSfxCloseImmediately;
+        else if (!success)
+            g_sfxOverlayFlags &= static_cast<std::uint8_t>(~kSfxCloseImmediately);
+#endif
+#if !SHENMUE_IS_DEMO
         UpdateAveragedRuntimeStatPageSlot(success ? 0 : 1, g_sfxFrameCounter);
+#endif
         g_sfxOverlayState = UISfxOverlayState::Resolved;
         g_sfxStateDirty = 1;
     } else {
         TickSfxOverlayTimeout();
+#if SHENMUE_IS_DEMO
+        if (g_sfxOverlayState == UISfxOverlayState::Resolved)
+            g_sfxOverlayFlags &= static_cast<std::uint8_t>(~kSfxCloseImmediately);
+#endif
     }
     AdvanceSfxOverlayFlash();
 }
@@ -180,7 +229,9 @@ void HandleSfxOverlaySubsetInput(std::uint16_t pressed) {
         g_sfxOverlayResult[0] = static_cast<std::int16_t>(inputMask | 0x2000U);
         PlaySfxOverlayResultSound(true);
         g_sfxOverlayState = UISfxOverlayState::Resolved;
+#if !SHENMUE_IS_DEMO
         UpdateAveragedRuntimeStatPageSlot(0, g_sfxFrameCounter);
+#endif
     } else {
         TickSfxOverlayTimeout();
     }
@@ -448,6 +499,7 @@ void UI_SFXOverlayBegin(const UISfxOverlayRequest &request) {
         timeoutFrames = AddSfxOverlayFrames(timeoutFrames, static_cast<std::int16_t>(request.bonusFrames));
     if (timeoutFrames <= 0)
         timeoutFrames = 1;
+#if !SHENMUE_IS_DEMO
     if (timeoutFrames != 0x7fff && g_sfxOverlayTimeoutBoostEnabled && g_sfxOverlayTimeoutBoostCount >= 1) {
         if (g_sfxOverlayTimeoutPendingBonusFrames <= -1) {
             timeoutFrames = AddSfxOverlayFrames(timeoutFrames, g_qteOverlay.accumulatedFrames);
@@ -460,6 +512,7 @@ void UI_SFXOverlayBegin(const UISfxOverlayRequest &request) {
         if (timeoutFrames < 1)
             timeoutFrames = 1;
     }
+#endif
     g_sfxTimeoutFrames = timeoutFrames;
     g_sfxFrameCounter = 0;
     g_sfxOverlayResult[0] = -1;
@@ -467,6 +520,22 @@ void UI_SFXOverlayBegin(const UISfxOverlayRequest &request) {
     g_currentSfxMask = (g_sfxOverlayFlags & kSfxSubsetMaskMode) != 0 ? request.expectedMask : PrioritizeSfxExpectedMask(request.expectedMask);
     g_sfxStateDirty = 1;
     g_sfxFlashCounter = 0;
+#if SHENMUE_IS_DEMO
+    std::uint8_t bit = 0;
+    if ((g_currentSfxMask & 0xffU) != 0) {
+        while (bit < 7 && (g_currentSfxMask & (1U << bit)) == 0)
+            ++bit;
+        g_qteSprite.pvrSurfaceIndex = 27;
+        g_qteSprite.angle = static_cast<std::uint32_t>(bit) << 13U;
+        g_qteSprite.positionScaleY = bit == 0 || bit == 4 ? 0.9f : 1.0f;
+    } else {
+        while (bit < 4 && ((g_currentSfxMask >> 8U) & (1U << bit)) == 0)
+            ++bit;
+        g_qteSprite.pvrSurfaceIndex = kTrialQteButtonSprites[bit];
+        g_qteSprite.angle = 0;
+        g_qteSprite.positionScaleY = 1.0f;
+    }
+#else
     for (std::size_t index = 0; index < g_gameQtePanelOffsets.size(); ++index) {
         if (g_gameQteWindows[kGameQteDefaultPanel + index])
             g_gameQteWindows[kGameQteDefaultPanel + index]->layout.offsetX = g_gameQtePanelOffsets[index];
@@ -477,6 +546,7 @@ void UI_SFXOverlayBegin(const UISfxOverlayRequest &request) {
         slot.elapsed = 0.0f;
         slot.allocated = 1;
     }
+#endif
 }
 
 void UI_SFXOverlayBegin(std::int16_t timeoutFrames) {
@@ -485,7 +555,11 @@ void UI_SFXOverlayBegin(std::int16_t timeoutFrames) {
 
 void UI_SFXOverlayResolve(std::int16_t result) {
     g_sfxOverlayState = UISfxOverlayState::Resolved;
+#if SHENMUE_IS_DEMO
+    g_sfxOverlayResult[0] = -1;
+#else
     g_sfxOverlayResult[0] = result;
+#endif
 }
 
 
@@ -522,6 +596,9 @@ void UI_SFXOverlayCallback(HLib::TaskData *) {
         g_sfxTimedOutMarker = static_cast<std::int32_t>(static_cast<std::uint32_t>(g_sfxTimedOutMarker) | 0xffffU);
         g_sfxOverlayState = UISfxOverlayState::Opening;
         icon.overlayMode = 11;
+#if SHENMUE_IS_DEMO
+        g_qtePanelX = 320.0f;
+#endif
         g_sfxStateDirty = 1;
     } else if (g_sfxOverlayState == UISfxOverlayState::Active) {
         const std::uint16_t pressed = SfxOverlayPressedInput();
@@ -535,23 +612,46 @@ void UI_SFXOverlayCallback(HLib::TaskData *) {
             g_sfxOverlayState = UISfxOverlayState::Idle;
             icon.overlayMode = 0;
             iconUpdateInputBuffer();
+#if SHENMUE_IS_DEMO
+            g_qtePanelX = -176.0f;
+#endif
         } else {
             g_sfxOverlayState = UISfxOverlayState::Closing;
+#if !SHENMUE_IS_DEMO
             if (static_cast<std::uint16_t>(g_sfxTimedOutMarker) == 0xa000U)
                 GameQte_StartSlideOut();
+#endif
         }
-    } else if (g_sfxOverlayState == UISfxOverlayState::Closing &&
-        (((g_sfxOverlayFlags & kSfxWaitForExternalClose) != 0 && static_cast<std::uint16_t>(g_sfxTimedOutMarker) != 0xa000U) || !GameQte_SlideOutRunning())) {
-        iconUpdateInputBuffer();
-        icon.iconFlags &= static_cast<std::uint16_t>(~8U);
-        g_sfxOverlayState = UISfxOverlayState::Idle;
-        icon.overlayMode = 0;
+    } else if (g_sfxOverlayState == UISfxOverlayState::Closing) {
+#if SHENMUE_IS_DEMO
+        if ((Shenmue_nPauseState & 2U) == 0) {
+            const float step = std::fabs(-176.0f - g_qtePanelX) * 0.5f;
+            g_qtePanelSpeed = std::clamp(step > 64.0f ? g_qtePanelSpeed * 2.0f : step, 1.0f, 64.0f);
+            g_qtePanelX -= g_qtePanelSpeed;
+        }
+        const bool closed = g_qtePanelX <= -176.0f;
+        if (closed)
+            g_qtePanelX = -176.0f;
+#else
+        const bool closed = ((g_sfxOverlayFlags & kSfxWaitForExternalClose) != 0 && static_cast<std::uint16_t>(g_sfxTimedOutMarker) != 0xa000U) ||
+            !GameQte_SlideOutRunning();
+#endif
+        if (closed) {
+            iconUpdateInputBuffer();
+            icon.iconFlags &= static_cast<std::uint16_t>(~8U);
+            g_sfxOverlayState = UISfxOverlayState::Idle;
+            icon.overlayMode = 0;
+        }
     }
     if ((g_sfxOverlayFlags & kSfxShowOverlay) != 0 && (icon.iconFlags & 8U) != 0 && g_sfxStateDirty) {
+#if SHENMUE_IS_DEMO
+        UI_QteDraw();
+#else
         GameQte_ShowMask(g_currentSfxMask, g_sfxOverlayFlags);
         g_gameQteHidden = 0;
         TryInvokeRegisteredCallback(kUiGameQte);
         g_uiElements[kUiGameQte].isActive = 1;
+#endif
     } else {
         g_gameQteHidden = 1;
     }
@@ -563,6 +663,23 @@ void Script_SetSfxOverlayTimeoutTuning(ScenarioContext *context, void *rawParams
     (void)context;
     if (!rawParams)
         return;
+#if SHENMUE_IS_DEMO
+    switch (static_cast<std::uint8_t>(*static_cast<const std::uint32_t *>(rawParams))) {
+    case 0:
+        g_qteSessionFrameCount = 0;
+        g_qteSessionActive = 1;
+        Shenmue_nPauseState |= 0x20;
+        break;
+    case 1:
+        g_qteSessionFrameCount = static_cast<std::int32_t>(static_cast<std::uint32_t>(g_qteSessionFrameCount) + 1U);
+        break;
+    case 2:
+        g_qteSessionFrameCount = 0;
+        Shenmue_nPauseState &= ~0x20;
+        g_qteSessionActive = 0;
+        break;
+    }
+#else
     static_assert(sizeof(UISfxOverlayTimeoutTuningParameters) == 8);
 
     const auto &params = *static_cast<const UISfxOverlayTimeoutTuningParameters *>(rawParams);
@@ -602,11 +719,19 @@ void Script_SetSfxOverlayTimeoutTuning(ScenarioContext *context, void *rawParams
         g_qteOverlayTimeoutMaxFrames = static_cast<std::int16_t>(static_cast<std::uint16_t>(params.value));
         break;
     }
+#endif
 }
 
 
 
 void UI_ICQuCallback(HLib::TaskData *) {
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    UI_ICQuInitializePrompt();
+    InstallOwnedTaskMain(UI_ICQuMainCallback);
+    return;
+#pragma endregion
+#endif
     if (g_uiElements[kUiGameQte].parseDefinitionFromFile)
         g_uiElements[kUiGameQte].parseDefinitionFromFile();
     g_sfxOverlayTask = CurrentTask;
@@ -621,7 +746,13 @@ void UI_ICQuCallback(HLib::TaskData *) {
 }
 
 void UI_ICQuMainCallback(HLib::TaskData *taskData) {
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    UI_ICQuUpdatePrompt();
+#pragma endregion
+#else
     UI_SFXOverlayCallback(taskData);
+#endif
 }
 
 } // namespace shenmue::s1

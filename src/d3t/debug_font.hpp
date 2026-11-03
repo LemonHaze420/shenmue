@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <string_view>
 
-#ifdef _DEBUG
-#if SHENMUE_IS_S1
+#if defined(_DEBUG) || SHENMUE_IS_DEMO
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {

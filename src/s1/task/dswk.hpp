@@ -161,12 +161,16 @@ struct DoorSystemInitParams {
     std::int32_t slotStatesOff = 0;
     std::int32_t candidateDoorEntryIndicesOff = 0;
     std::int32_t ownerActorArrayOff = 0;
+#if !SHENMUE_IS_DEMO
     std::int32_t progressArrayOff = 0;
+#endif
     std::int32_t actorLookupKey = 0;
     std::int32_t maxCandidates = 0;
     std::int32_t auxTable0Off = 0;
     std::int32_t auxTable1Off = 0;
+#if !SHENMUE_IS_DEMO
     std::int32_t doorActorHandlesOff = 0;
+#endif
 };
 
 struct DSWKDoorEntry {
@@ -176,6 +180,7 @@ struct DSWKDoorEntry {
     float coarse_metric = 0.0f;
     float selection_metric = 0.0f;
     std::uint32_t view_ang_delta = 0;
+#if !SHENMUE_IS_DEMO
     std::uint32_t group = 0;
     std::uint32_t global1 = 0;
     std::uint32_t global2 = 0;
@@ -183,6 +188,7 @@ struct DSWKDoorEntry {
     std::uint32_t sndCommandId = 0;
     std::uint32_t global5 = 0;
     std::uint32_t global6 = 0;
+#endif
 };
 
 struct DSWKCandidateSlot {
@@ -234,9 +240,9 @@ static_assert(sizeof(DoorResourceDescriptor) == 0x10);
 static_assert(sizeof(DoorSupportCommandParams) == 0x10);
 static_assert(sizeof(DoorActorOpacityParams) == 0x8);
 static_assert(sizeof(DoorEntryConfigParams) == 0x20);
-static_assert(sizeof(DoorSystemInitParams) == 0x38);
+static_assert(sizeof(DoorSystemInitParams) == (SHENMUE_IS_DEMO ? 0x30 : 0x38));
 static_assert(sizeof(MapObjectRecord) == 0x24);
-static_assert(sizeof(DSWKDoorEntry) == 0x34);
+static_assert(sizeof(DSWKDoorEntry) == (SHENMUE_IS_DEMO ? 0x18 : 0x34));
 static_assert(sizeof(DSWKCandidateSlot) == 0x14);
 static_assert(sizeof(DSWKRequestSlot) == 0x18);
 static_assert(offsetof(DSWK_t, state) == 0x6c);
@@ -270,7 +276,11 @@ void DSWK_DoorUtils(ScenarioContext *context, void *params);
 void DSWK_RebindDoorSystemTables(ScenarioContext *context, void *params);
 void DSWK_AllocDoorMapcRenderState(ScenarioContext *context, void *params);
 void DSWK_SetActorOpacityAndDrawCallback(ScenarioContext *context, void *params);
+#if SHENMUE_IS_DEMO
+void DSWK_Nullsub(ScenarioContext *, void *);
+#else
 void DSWK_AssignDoorEntryConfig(ScenarioContext *context, void *params);
+#endif
 void DSWK_GetSettingsFlags(ScenarioContext *context, void *params);
 
 } // namespace shenmue::s1

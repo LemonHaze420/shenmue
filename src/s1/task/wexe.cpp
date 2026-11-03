@@ -1,4 +1,7 @@
 #include "s1/task/wexe.hpp"
+#if SHENMUE_IS_DEMO
+#include "s1/task/trial_weather_data.hpp"
+#endif
 #include "s1/task/wind.hpp"
 #include "s1/task/came.hpp"
 #include "s1/task/effe.hpp"
@@ -1597,6 +1600,12 @@ std::int32_t Weather_GetCurrentWeatherEffectMode() {
 }
 
 HLib::Task *WEXE_Init() {
+#if SHENMUE_IS_DEMO
+    g_cloudRuntime = {.current = kTrialWeatherCloud};
+    g_rainRuntime = {.current = kTrialWeatherRain};
+    g_snowRuntime = {.current = kTrialWeatherSnow};
+    g_fcasRuntime = {.current = kTrialWeatherForecast};
+#endif
     WIND_ResetWeatherDataForScene();
     g_cachedWeatherYear = 0;
     g_cachedWeatherMonth = 0;

@@ -2,12 +2,25 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#if SHENMUE_IS_DEMO
+#include "s1/screen_space.hpp"
+#endif
 
 namespace shenmue::s1::ui_runtime_detail {
 
 
 
 
+
+#if SHENMUE_IS_DEMO
+extern ScreenSpaceParams g_qteSprite;
+extern float g_qtePanelX;
+extern float g_qtePanelSpeed;
+extern std::int32_t g_qteSessionFrameCount;
+inline constexpr std::array<std::uint16_t, 5> kTrialQteButtonSprites{17, 25, 28, 29, 0};
+void UI_QteInitializeSprite();
+void UI_QteDraw();
+#endif
 
 struct SfxOverlayBoostFrames {
     std::int16_t stepFrames;

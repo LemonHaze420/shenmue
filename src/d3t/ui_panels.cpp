@@ -2,7 +2,7 @@
 
 #include "d3t/ui_definition.hpp"
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
@@ -257,7 +257,7 @@ void UI_ReadButtonWheel(cJSON *buttonWheel) {
             wheel->angles[at] = static_cast<float>(static_cast<double>(angle ? static_cast<float>(angle->valuedouble) : 0.0f) / 57.29577951308238);
             UIButtonWheelItem &entry = wheel->items[at];
             const cJSON *const label = labels ? cJSON_GetArrayItem(labels, item) : nullptr;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             entry.label.token = label ? label->valuestring : nullptr;
             UI_SetLabelTokenKey(entry.label);
             const cJSON *const description = descriptions ? cJSON_GetArrayItem(descriptions, item) : nullptr;
@@ -752,7 +752,7 @@ void UI_DrawButtonWheel(nk_context &context, std::int32_t index) {
     for (std::int32_t position = 0; position < count; ++position) {
         const std::int32_t at = order[static_cast<std::size_t>(position)];
         UIButtonWheelItem &item = wheel.items[static_cast<std::size_t>(at)];
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         if (item.field0[1])
             continue;
 #endif
@@ -782,7 +782,7 @@ void UI_DrawButtonWheel(nk_context &context, std::int32_t index) {
         }
         context.style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, 0));
         if (wheel.hasShadow) {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             const float shadowX = scale * 15.0f / 1080.0f * 1080.0f + x;
             const float shadowY =
                 ((wheel.shadowMax - wheel.shadowMin) * (1.0f - scale) + wheel.shadowMin) / 1080.0f * 1080.0f * scale + y + scale * -8.0f / 1080.0f * 1080.0f;
@@ -1557,7 +1557,7 @@ void UI_DrawGauge(nk_context &context, std::int32_t index) {
     }
 }
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

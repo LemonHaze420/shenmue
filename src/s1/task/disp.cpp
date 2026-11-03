@@ -473,6 +473,21 @@ void Script_CtrlTimeLimit(ScenarioContext *context, void *rawParams) {
 }
 
 void DISP_Module(HLib::TaskData *taskData) {
+#if SHENMUE_IS_DEMO
+    (void)taskData;
+    HLTaskFunc_InternalInit();
+    for (std::int32_t index = 0; index < 0x600; ++index)
+        InitPVRTaskData(index);
+    shenExecuteAICACommand(0x100a0, 0, 0);
+    const std::uint16_t first = g_inputState.slots[1].held;
+    const std::uint16_t second = g_inputState.slots[2].held;
+    if ((first & 0x5000U) == 0x5000U && (second & 0xa000U) == 0xa000U && (first & 0x400U) && (second & 0x200U) && !(first & 0x200U) && !(second & 0x400U)) {
+        g_isOnMainMenu = 0;
+        HLib_UpdateTaskQueue(SystemModule::Credits, 0);
+    } else
+        HLib_UpdateTaskQueue(SystemModule::TrialTitle, 0);
+
+#else
     g_actNumber = 1;
     g_isOnMainMenu = 1;
     for (std::int32_t &texture : g_displayTextureResources) {
@@ -573,6 +588,8 @@ void DISP_Module(HLib::TaskData *taskData) {
     }
     g_ClearColour = 0xff000000;
     SAVE_Init(1);
+
+#endif
 }
 
 std::int32_t DISP_GetTitleState() noexcept {

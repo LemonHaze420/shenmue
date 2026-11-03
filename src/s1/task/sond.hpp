@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/hlib.hpp"
 #include "common/math.hpp"
@@ -307,6 +308,19 @@ void SOND_EmitVFSynchronizedReactionSound(Character *character);
 std::uint32_t SOND_AccessAicaMemory(std::uint8_t ownerId);
 std::uint32_t SOND_ConsumeAicaEvent();
 std::int32_t SOND_ExecuteRawAicaCommand(std::uint32_t command);
+#if SHENMUE_IS_DEMO
+
+struct CddaBackend {
+    std::int32_t (*play)(std::uint32_t firstTrack, std::uint32_t lastTrack, std::int32_t fadeFrames);
+    std::int32_t (*stop)();
+};
+extern CddaBackend g_cddaBackend;
+extern std::int32_t g_systemAudioOutputMode;
+void SOND_PlayCdAudio(std::uint32_t command, std::int32_t fadeFrames);
+void SOND_StopCdAudio();
+std::int32_t SOND_GetSystemOutputMode();
+void SOND_SetSystemOutputMode(std::int32_t mode);
+#endif
 std::int64_t ExecuteAicaCommand2Ch(std::int32_t bank, std::int32_t channel, std::uint32_t command, std::int16_t volume);
 std::int32_t shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t volume);
 

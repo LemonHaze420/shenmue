@@ -5,6 +5,9 @@
 #include "s1/steam.hpp"
 #include "s1/modern_material.hpp"
 #include "s1/render_array.hpp"
+#if SHENMUE_IS_DEMO
+#include "s1/ui_sprite_data_trial.hpp"
+#endif
 namespace shenmue::s1::ui_runtime_detail {
 #if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
 namespace {
@@ -781,8 +784,344 @@ void DrawObjectForUI(UIDrawObject *object) {
     g_effeObjectLightColour = savedLightColour;
 }
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+ScreenSpaceParams g_itemPopupName{
+    .positionScaleX = 1.0f, .positionScaleY = 1.0f, .depthOrScale = 3.0f, .pvrSurfaceIndex = -1, .scaledWidth = 256, .scaledHeight = 32, .alignmentType = 5};
+
+std::int32_t UI_GetSelectedInventoryIndex() {
+    const IconPresentationOwner &icon = g_iconPresentation;
+    const std::int32_t selected = icon.inventorySelectionPage * icon.inventorySlotsPerPage + icon.inventorySelectionSlot + 1;
+    std::int32_t count = 0;
+    for (std::int32_t index = 0; index < icon.inventoryOwnedEntryCount; ++index) {
+        count += g_playerStats.trialInventory[index].count;
+        if (selected <= count)
+            return index;
+    }
+    return -1;
+}
+
+void UI_InitializeItemMenuSprites() {
+    IconPresentationOwner &menu = g_iconPresentation;
+    for (std::int32_t index = 0; index < 10; ++index) {
+        ScreenSpaceParams &sprite = menu.inventorySprites[index];
+        sprite.pvrSurfaceIndex = static_cast<std::int16_t>(index + 1);
+        sprite.flags14 = 0;
+        sprite.halfScreenX = menu.itemInfoPopupPosition[0];
+        sprite.halfScreenY = 100.0f;
+        sprite.positionScaleX = 1.0f;
+        sprite.positionScaleY = 1.0f;
+        sprite.angle = 0;
+        sprite.alignmentType = 5;
+        sprite.depthOrScale = 5.0f;
+        sprite.scaledWidth = kItemMenuBorderWidths[index];
+        sprite.scaledHeight = kItemMenuBorderHeights[index];
+    }
+    menu.inventoryMarker.pvrSurfaceIndex = 11;
+    menu.inventoryMarker.positionScaleY = 1.0f;
+    menu.inventoryMarker.flags14 = 0;
+    menu.inventoryMarker.alignmentType = 5;
+    menu.inventoryMarker.scaledWidth = 40;
+    menu.inventoryMarker.scaledHeight = 40;
+    menu.inventoryMarker.positionScaleX = 1.0f;
+    menu.inventoryMarker.depthOrScale = 1.0f;
+    menu.inventoryMarker.angle = 0;
+}
+
+void UI_InitializeItemMenuCaption() {
+    IconPresentationOwner &menu = g_iconPresentation;
+    menu.inventoryCaption.pvrSurfaceIndex = 43;
+    menu.inventoryCaption.depthOrScale = 3.0f;
+    menu.inventoryCaption.angle = 0;
+    menu.inventoryCaption.flags14 = 0;
+    menu.inventoryCaption.scaledWidth = 80;
+    menu.inventoryCaption.scaledHeight = 40;
+    menu.inventoryCaption.positionScaleY = 1.0f;
+    menu.inventoryCaption.positionScaleX = 1.0f;
+    menu.inventoryCaption.halfScreenX = menu.itemInfoPopupPosition[0];
+    menu.inventoryCaption.halfScreenY = menu.itemInfoPopupPosition[1];
+    menu.inventoryCaption.alignmentType = 5;
+}
+
+void UI_DrawItemMenuCursor() {
+    IconPresentationOwner &menu = g_iconPresentation;
+    const std::uint32_t pulse = menu.inventoryPulse;
+    AdjustScreenSpaceWithParams(&menu.inventoryCursor, 0xff000000U | pulse << 16 | pulse << 8 | pulse, 0);
+    if (!(Shenmue_nPauseState & 2)) {
+        if (!menu.inventoryPulseRising) {
+            menu.inventoryPulse = static_cast<std::uint8_t>(menu.inventoryPulse - 5);
+            if (menu.inventoryPulse < 6) {
+                menu.inventoryPulse = 0;
+                menu.inventoryPulseRising = 1;
+            }
+        } else {
+            menu.inventoryPulse = static_cast<std::uint8_t>(menu.inventoryPulse + 5);
+            if (menu.inventoryPulse > 78) {
+                menu.inventoryPulseRising = 0;
+                menu.inventoryPulse = 79;
+            }
+        }
+    }
+}
+void UI_DrawInventoryGrid() {
+    IconPresentationOwner &menu = g_iconPresentation;
+    std::int16_t rows = menu.inventoryPageCount;
+    if (menu.inventorySlotsPerPage < 11)
+        ++rows;
+    ScreenSpaceParams bottom = menu.inventoryMarker;
+    bottom.scaledHeight = static_cast<std::int16_t>(menu.inventoryMarker.scaledHeight / 2);
+    const float height = static_cast<float>(rows + 1) * 40.0f;
+    for (std::int8_t column = 0; column < menu.inventorySlotsPerPage; ++column) {
+        const float x = static_cast<float>(column) * 40.0f;
+        for (std::int8_t row = 0; row <= rows + 1; ++row) {
+            menu.inventoryMarker.halfScreenX = menu.itemInfoPopupPosition[0] + x + 112.0f;
+            menu.inventoryMarker.halfScreenY = std::fma(40.0f, static_cast<float>(row), menu.itemInfoPopupPosition[1]);
+            AdjustDefaultScreenSpace(&menu.inventoryMarker);
+        }
+        bottom.halfScreenX = std::fma(40.0f, static_cast<float>(column), menu.itemInfoPopupPosition[0]) + 112.0f;
+        bottom.halfScreenY = menu.itemInfoPopupPosition[1] + height + 30.0f;
+        AdjustDefaultScreenSpace(&bottom);
+    }
+}
+
+void UI_DrawItemMenuBackground() {
+    IconPresentationOwner &menu = g_iconPresentation;
+    std::int16_t rows = menu.inventoryPageCount;
+    if (menu.inventorySlotsPerPage < 11)
+        ++rows;
+    OriginalStrip strip;
+    strip.flags = 8;
+    strip.corner0 = 0x05000020U;
+    strip.corner1 = 0x05000020U;
+    strip.corner2 = 0xbf000000U;
+    strip.corner3 = 0xbf000000U;
+    strip.vertexCount = 0;
+    strip.normalizedX2 = 0.0f;
+    strip.normalizedY1 = 0.0f;
+    strip.normalizedX3 = 1.0f;
+    strip.normalizedY2 = 1.0f;
+    strip.normalizedY3 = 0.0f;
+    const std::int32_t height = static_cast<std::int32_t>(std::fma(40.0f, static_cast<float>(rows), 104.0f));
+    const std::int32_t width = static_cast<std::int32_t>(std::fma(40.0f, static_cast<float>(menu.inventorySlotsPerPage - 1), 53.0f));
+    const std::int32_t top = static_cast<std::int32_t>(menu.itemInfoPopupPosition[1] - 26.0f);
+    const std::int32_t left = static_cast<std::int32_t>(menu.itemInfoPopupPosition[0] + 86.0f);
+    AdjustAspectRatioMatrix(&strip, 0, left, top, width, height, 0);
+    strip.flags |= 0x400;
+    ApplyFadeToPacket(&strip, 2.0f);
+}
+
+void UI_DrawItemMenuBorder() {
+    IconPresentationOwner &menu = g_iconPresentation;
+    float x = 0.0f;
+    for (std::int16_t column = 0; column <= menu.inventorySlotsPerPage; ++column) {
+        std::int16_t type;
+        if (!column)
+            type = 0;
+        else if (column == 1)
+            type = 1;
+        else if (column == menu.inventorySlotsPerPage - 1)
+            type = 3;
+        else if (column == menu.inventorySlotsPerPage)
+            type = 4;
+        else
+            type = 2;
+        ScreenSpaceParams sprite = menu.inventorySprites[type];
+        x += kItemMenuBorderOffsets[type];
+        sprite.halfScreenX = menu.itemInfoPopupPosition[0] + x + 83.0f;
+        sprite.halfScreenY = menu.itemInfoPopupPosition[1] - 23.5f;
+        if (type == 0 || type == 4)
+            sprite.halfScreenY += 11.0f;
+        AdjustDefaultScreenSpace(&sprite);
+        if (type == 0 || type == 4) {
+            sprite.pvrSurfaceIndex = menu.inventorySprites[9].pvrSurfaceIndex;
+            if (!type)
+                sprite.flags14 = 0x300;
+        } else {
+            sprite.pvrSurfaceIndex = menu.inventorySprites[2].pvrSurfaceIndex;
+        }
+        sprite.halfScreenY = std::fma(40.0f, static_cast<float>(menu.inventoryPageCount), menu.itemInfoPopupPosition[1] + 22.5f);
+        sprite.depthOrScale += 1.0f;
+        AdjustDefaultScreenSpace(&sprite);
+        sprite.depthOrScale -= 1.0f;
+        x += kItemMenuBorderOffsets[type];
+    }
+    x -= 10.0f;
+    float y = 0.0f;
+    for (std::int16_t row = 0; row <= menu.inventoryPageCount; ++row) {
+        const std::int16_t type = !row ? 5 : row == menu.inventoryPageCount ? 6 : 7;
+        y += kItemMenuBorderOffsets[type];
+        ScreenSpaceParams sprite = menu.inventorySprites[type];
+        sprite.halfScreenX = menu.itemInfoPopupPosition[0] + 88.0f;
+        sprite.halfScreenY = menu.itemInfoPopupPosition[1] + y - 7.5f;
+        AdjustDefaultScreenSpace(&sprite);
+        const std::int16_t opposite = !row ? 6 : row == menu.inventoryPageCount ? 5 : 7;
+        sprite.pvrSurfaceIndex = menu.inventorySprites[opposite].pvrSurfaceIndex;
+        sprite.halfScreenX = menu.itemInfoPopupPosition[0] + x + 94.0f;
+        sprite.flags14 = 0x300;
+        AdjustDefaultScreenSpace(&sprite);
+        y += kItemMenuBorderOffsets[opposite];
+    }
+    ScreenSpaceParams sprite = menu.inventorySprites[7];
+    sprite.halfScreenX = menu.itemInfoPopupPosition[0] + 88.0f;
+    sprite.halfScreenY = menu.inventoryCaption.halfScreenY;
+    AdjustDefaultScreenSpace(&sprite);
+    sprite.halfScreenX = menu.itemInfoPopupPosition[0] + x + 94.0f;
+    AdjustDefaultScreenSpace(&sprite);
+    if (menu.inventorySlotsPerPage < 11) {
+        sprite = menu.inventorySprites[7];
+        sprite.halfScreenX = menu.itemInfoPopupPosition[0] + 88.0f;
+        sprite.halfScreenY = g_itemPopupName.halfScreenY;
+        AdjustDefaultScreenSpace(&sprite);
+        sprite.halfScreenX = menu.itemInfoPopupPosition[0] + x + 94.0f;
+        sprite.flags14 = 0x300;
+        AdjustDefaultScreenSpace(&sprite);
+    }
+    x = 0.0f;
+    for (std::int16_t column = 0; column <= menu.inventorySlotsPerPage; ++column) {
+        std::int16_t type;
+        if (menu.inventorySlotsPerPage < 11) {
+            if (!column || column == menu.inventorySlotsPerPage) {
+                type = 9;
+                sprite = menu.inventorySprites[9];
+                if (column)
+                    x -= 6.0f;
+                else
+                    sprite.flags14 = 0x300;
+            } else {
+                type = 2;
+                sprite = menu.inventorySprites[2];
+            }
+        } else {
+            if (!column)
+                type = 0;
+            else if (column == 1)
+                type = 1;
+            else if (column == menu.inventorySlotsPerPage - 1)
+                type = 3;
+            else if (column == menu.inventorySlotsPerPage)
+                type = 4;
+            else
+                type = 2;
+            sprite = menu.inventorySprites[kItemMenuBottomBorder[type]];
+            sprite.flags14 = 0x300;
+        }
+        x += kItemMenuBorderOffsets[type];
+        sprite.halfScreenX = menu.itemInfoPopupPosition[0] + x + 83.0f;
+        sprite.halfScreenY = std::fma(40.0f, static_cast<float>(menu.inventoryPageCount), menu.itemInfoPopupPosition[1] + 72.5f);
+        if (type == 4 || type == 0)
+            sprite.halfScreenY -= 11.0f;
+        AdjustDefaultScreenSpace(&sprite);
+        x += kItemMenuBorderOffsets[type];
+    }
+    if (menu.inventorySlotsPerPage < 11) {
+        x = 0.0f;
+        for (std::int16_t column = 0; column <= menu.inventorySlotsPerPage; ++column) {
+            const std::int16_t type = !column            ? 0 :
+                column == 1                              ? 1 :
+                column == menu.inventorySlotsPerPage - 1 ? 3 :
+                column == menu.inventorySlotsPerPage     ? 4 :
+                                                           2;
+            sprite = menu.inventorySprites[kItemMenuBottomBorder[type]];
+            sprite.flags14 = 0x300;
+            x += kItemMenuBorderOffsets[type];
+            sprite.halfScreenX = menu.itemInfoPopupPosition[0] + x + 83.0f;
+            sprite.halfScreenY = std::fma(40.0f, static_cast<float>(menu.inventoryPageCount), menu.itemInfoPopupPosition[1] + 122.5f);
+            if (type == 0 || type == 4)
+                sprite.halfScreenY -= 11.0f;
+            AdjustDefaultScreenSpace(&sprite);
+            x += kItemMenuBorderOffsets[type];
+        }
+    }
+}
+void UI_DrawItemMenuLabels() {
+    IconPresentationOwner &menu = g_iconPresentation;
+    const ScreenSpaceParams &caption = menu.inventoryCaption;
+    AdjustDefaultScreenSpace(&caption);
+    ScreenSpaceParams digit{.positionScaleX = 1.0f, .positionScaleY = 1.0f, .depthOrScale = 3.0f, .scaledWidth = 16, .scaledHeight = 16, .alignmentType = 5};
+    std::int32_t amount = g_playerStats.cash;
+    bool significant = false;
+    for (std::size_t index = 0; index < std::size(kItemMenuCashPlaces); ++index) {
+        const std::int32_t number = amount / kItemMenuCashPlaces[index];
+        amount %= kItemMenuCashPlaces[index];
+        significant = significant || number != 0 || index == 7;
+        if (!significant)
+            continue;
+        digit.pvrSurfaceIndex = static_cast<std::int16_t>(46 + number);
+        digit.halfScreenX = caption.halfScreenX + 95.0f - static_cast<float>((7 - index) * 16);
+        digit.halfScreenY = caption.halfScreenY + 10.0f;
+        AdjustDefaultScreenSpace(&digit);
+    }
+}
+void UI_DrawItemMenu(void *) {
+    IconPresentationOwner &menu = g_iconPresentation;
+    ScreenSpaceParams icon;
+    icon.scaledWidth = 32;
+    icon.scaledHeight = 32;
+    icon.positionScaleY = 1.0f;
+    icon.positionScaleX = 1.0f;
+    icon.depthOrScale = 3.0f;
+    icon.angle = 0;
+    icon.flags14 = 0;
+    icon.alignmentType = 5;
+    std::int8_t flattened = 0;
+    std::int8_t column = 0;
+    std::int8_t row = 0;
+    for (std::int8_t index = 0; index < menu.inventoryOwnedEntryCount; ++index) {
+        const TrialInventoryEntry &entry = g_playerStats.trialInventory[index];
+        icon.pvrSurfaceIndex = static_cast<std::int16_t>(kTrialItemCatalog[entry.itemId].icon);
+        for (std::int8_t copy = 0; copy < entry.count; ++copy) {
+            if ((row + 1) * menu.inventorySlotsPerPage == flattened)
+                ++row;
+            icon.halfScreenX = std::fma(40.0f, static_cast<float>(column), menu.itemInfoPopupPosition[0]) + 112.0f;
+            icon.halfScreenY = std::fma(40.0f, static_cast<float>(row), menu.itemInfoPopupPosition[1]);
+            if (flattened == menu.inventorySelectionPage * menu.inventorySlotsPerPage + menu.inventorySelectionSlot) {
+                menu.inventoryCursor.halfScreenX = icon.halfScreenX;
+                menu.inventoryCursor.halfScreenY = icon.halfScreenY;
+            }
+            if (++column >= menu.inventorySlotsPerPage)
+                column = 0;
+            if ((g_playerStats.trialInventoryMetadata[index].values[1] & 2) || entry.itemId == 0 || entry.itemId == 14 || entry.itemId == 5 ||
+                entry.itemId == 34 || entry.itemId == 39)
+                AdjustDefaultScreenSpace(&icon);
+            else
+                AdjustScreenSpaceWithParams(&icon, 0x50505050U, 0);
+            ++flattened;
+        }
+    }
+    menu.inventoryPageCount = row;
+    if (menu.inventorySlotsPerPage >= 11) {
+        menu.inventoryCaption.halfScreenX = menu.itemInfoPopupPosition[0] + 152.0f;
+        menu.inventoryCaption.halfScreenY = std::fma(40.0f, static_cast<float>(menu.inventoryPageCount + 1), menu.itemInfoPopupPosition[1]) + 8.5f;
+        g_itemPopupName.halfScreenY = menu.inventoryCaption.halfScreenY;
+        g_itemPopupName.halfScreenX = std::fma(24.0f, static_cast<float>(menu.inventorySlotsPerPage), menu.itemInfoPopupPosition[0]) + 152.0f;
+    } else {
+        menu.inventoryCaption.halfScreenX =
+            menu.itemInfoPopupPosition[0] + static_cast<float>((menu.inventorySlotsPerPage - 5) * menu.inventorySlotsPerPage) + 152.0f;
+        menu.inventoryCaption.halfScreenY = std::fma(40.0f, static_cast<float>(menu.inventoryPageCount + 1), menu.itemInfoPopupPosition[1]) + 9.0f;
+        g_itemPopupName.halfScreenY = menu.inventoryCaption.halfScreenY + 47.0f;
+        g_itemPopupName.halfScreenX = menu.itemInfoPopupPosition[0] + static_cast<float>(menu.inventorySlotsPerPage * menu.inventorySlotsPerPage) + 162.0f;
+    }
+    if (menu.inventoryOwnedEntryCount > 0)
+        UI_DrawItemMenuCursor();
+    UI_DrawItemMenuBorder();
+    UI_DrawInventoryGrid();
+    UI_DrawItemMenuBackground();
+    UI_DrawItemMenuLabels();
+}
+#pragma endregion
+#endif
+
 void UI_ICONRecomputeInventoryGrid() {
     IconPresentationOwner &icon = g_iconPresentation;
+#if SHENMUE_IS_DEMO
+    RebuildTrialInventory();
+    icon.inventorySlotsPerPage = icon.inventoryOwnedItemCount < 78 ? 5 : 11;
+    const std::int32_t rows = icon.inventoryOwnedItemCount < 78 ? 7 : 8;
+    while (rows * icon.inventorySlotsPerPage < icon.inventoryOwnedItemCount && icon.inventorySlotsPerPage < 14)
+        ++icon.inventorySlotsPerPage;
+    icon.inventoryPageCount = icon.inventoryOwnedItemCount ? (icon.inventoryOwnedItemCount - 1) / icon.inventorySlotsPerPage : 0;
+    return;
+#else
     std::int16_t ownedEntries = 0;
     std::uint16_t ownedItems = 0;
     for (std::uint16_t itemId = 0; itemId < 256U; ++itemId) {
@@ -845,11 +1184,48 @@ void UI_ICONRecomputeInventoryGrid() {
         icon.inventorySelectionSlot = 0;
     }
     ++icon.inventoryGridRevision;
+#endif
 }
 
-// scnfStartIconSystemMenu (SCNF 28): announce an obtained item (0-234) or cassette (255-282) through the GameMessage popup.
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+
+// @verified - d
+void UI_DrawItemInfoPopup() {
+    if (!g_updateRenderFrameMode)
+        return;
+    IconPresentationOwner &icon = g_iconPresentation;
+    icon.itemIconParams.halfScreenX = icon.itemInfoPopupPosition[0];
+    icon.itemIconParams.halfScreenY = icon.itemInfoPopupPosition[1];
+    g_itemPopupName.halfScreenX = icon.itemIconParams.halfScreenX + 115.0f;
+    g_itemPopupName.halfScreenY = icon.itemIconParams.halfScreenY;
+    AdjustDefaultScreenSpace(&icon.itemIconParams);
+    UI_DrawIconFrame(icon.itemIconParams.halfScreenX - 15.0f, icon.itemIconParams.halfScreenY - 15.0f, 3.0f, 7);
+    AdjustScreenSpaceWithParams_0(&g_itemPopupName, 0);
+}
+#pragma endregion
+#endif
+
 bool UI_ICONStartItemInfoPopup(std::uint16_t itemId) {
     IconPresentationOwner &icon = g_iconPresentation;
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    icon.itemIconParams = {.halfScreenX = -672.0f, .halfScreenY = 55.0f, .positionScaleX = 1.0f, .positionScaleY = 1.0f,
+        .depthOrScale = 3.0f, .scaledWidth = 32, .scaledHeight = 32, .alignmentType = 5};
+    const TrialItemCatalogEntry &entry = kTrialItemCatalog[static_cast<std::int16_t>(itemId)];
+    icon.itemIconParams.pvrSurfaceIndex = static_cast<std::int16_t>(entry.icon);
+    icon.itemInfoPopupPosition[0] = -672.0f;
+    icon.itemInfoPopupPosition[1] = 340.0f;
+    const char *const name = GetAreaJumpEnabled() && entry.alternateName ? entry.alternateName : entry.name;
+    icon.itemInfoSurface = AllocatePVRSurface(name, 256, 0xcccc, 0xf000, 1, true);
+    g_itemPopupName.pvrSurfaceIndex = icon.itemInfoSurface;
+    g_itemPopupName.halfScreenX = icon.itemInfoPopupPosition[0] + 115.0f;
+    g_itemPopupName.halfScreenY = icon.itemInfoPopupPosition[1];
+    icon.itemInfoPopupPhase = 2;
+    icon.itemInfoPopupVisible = 1;
+    return true;
+#pragma endregion
+#else
     icon.itemIconParams.halfScreenY = 55.0f;
     icon.itemInfoPopupPosition[1] = 340.0f;
     icon.itemIconParams.halfScreenX = -672.0f;
@@ -889,12 +1265,72 @@ bool UI_ICONStartItemInfoPopup(std::uint16_t itemId) {
     if (static_cast<std::uint16_t>(itemId - 67U) <= 167U && GetInventoryItemCount(itemId) == 1)
         RefreshSteamStatForItem(static_cast<std::int16_t>(itemId));
     return true;
+#endif
 }
 
 
 
 bool UI_ICONAdvanceItemInfoPopup() {
     IconPresentationOwner &icon = g_iconPresentation;
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    bool complete = false;
+    auto &position = icon.itemInfoPopupPosition;
+    switch (icon.itemInfoPopupPhase) {
+    case 0:
+        break;
+    case 1: {
+        const float step = std::fabs(50.0f - position[0]) * 0.5f;
+        position[2] = std::clamp(step > 64.0f ? position[2] * 2.0f : step, 1.0f, 64.0f);
+        position[0] += position[2];
+        if (position[0] >= 50.0f) {
+            position[0] = 50.0f;
+            icon.itemInfoPopupPhase = 3;
+        }
+        break;
+    }
+    case 2:
+        g_isPlayerGameStateActive = 6;
+        icon.overlayMode = 7;
+        icon.itemInfoPopupPhase = 1;
+        shenExecuteAICACommand(0x400abU, 0, 0);
+        break;
+    case 3:
+        ++icon.itemInfoPopupFrames;
+        if (static_cast<std::int8_t>(icon.itemInfoPopupFrames) > 29) {
+            icon.itemInfoPopupPhase = 4;
+            icon.itemInfoPopupFrames = 0;
+        }
+        break;
+    case 4: {
+        const float step = std::fabs(-672.0f - position[0]) * 0.5f;
+        position[2] = std::clamp(step > 64.0f ? position[2] * 2.0f : step, 1.0f, 64.0f);
+        position[0] -= position[2];
+        if (position[0] <= -672.0f) {
+            position[0] = -672.0f;
+            icon.itemInfoPopupPhase = 5;
+        }
+        break;
+    }
+    case 5:
+        icon.itemInfoPopupPhase = 0;
+        position[0] = -672.0f;
+        position[1] = 55.0f;
+        complete = true;
+        if (icon.itemInfoSurface != -1)
+            PVR_FreeAllocatedSurfaceByIndex(icon.itemInfoSurface);
+        icon.itemInfoSurface = -1;
+        g_itemPopupName.pvrSurfaceIndex = -1;
+        icon.itemInfoPopupVisible = 0;
+        icon.overlayMode = 0;
+        g_isPlayerGameStateActive = 7;
+        break;
+    }
+    if (icon.itemInfoPopupVisible && icon.itemInfoSurface != -1)
+        UI_DrawItemInfoPopup();
+    return complete;
+#pragma endregion
+#else
     switch (icon.itemInfoPopupPhase) {
     case 0:
         break;
@@ -937,6 +1373,7 @@ bool UI_ICONAdvanceItemInfoPopup() {
     if (icon.itemInfoPopupVisible && icon.itemInfoSurface != -1)
         g_uiElements[kUiGameMessage].isActive = 1;
     return icon.itemInfoPopupPhase == 0;
+#endif
 }
 } // namespace shenmue::s1
 
@@ -1049,6 +1486,10 @@ bool HandleRyoCameraAlpha(IconSystemMenuCameraTransition &transition) {
 
 std::int32_t IconSystemMenu_FindSelectedInventoryItem() {
     const IconPresentationOwner &icon = g_iconPresentation;
+#if SHENMUE_IS_DEMO
+    const std::int32_t index = UI_GetSelectedInventoryIndex();
+    return index < 0 ? -1 : g_playerStats.trialInventory[index].itemId;
+#else
     const std::int16_t selected = static_cast<std::int16_t>(icon.inventorySelectionSlot + icon.inventorySelectionPage * icon.inventorySlotsPerPage);
     std::int16_t owned = 0;
     for (std::int32_t item = 0; item < 256; ++item) {
@@ -1059,20 +1500,21 @@ std::int32_t IconSystemMenu_FindSelectedInventoryItem() {
         ++owned;
     }
     return -1;
+#endif
 }
 
 
 void icsClampSelectionPage() {
     IconPresentationOwner &icon = g_iconPresentation;
-    if (icon.inventoryOwnedEntryCount <= 0 && icon.menuSelection == UIIconSystemMenuSelection::Items) {
+    if (!SHENMUE_IS_DEMO && icon.inventoryOwnedEntryCount <= 0 && icon.menuSelection == UIIconSystemMenuSelection::Items) {
         icon.menuSelection = UIIconSystemMenuSelection::Resume;
         icon.inventorySelectionSlot = 0;
     }
-    if (icon.inventorySelectionPage + 1 > icon.inventoryPageCount) {
+    if (icon.inventorySelectionPage + (SHENMUE_IS_DEMO ? 0 : 1) > icon.inventoryPageCount) {
         icon.inventorySelectionPage = 0;
         icon.inventorySelectionSlot = 0;
     }
-    if (icon.inventorySelectionSlot + 1 + icon.inventorySelectionPage * icon.inventorySlotsPerPage > icon.inventoryOwnedEntryCount ||
+    if (icon.inventorySelectionSlot + 1 + icon.inventorySelectionPage * icon.inventorySlotsPerPage > (SHENMUE_IS_DEMO ? icon.inventoryOwnedItemCount : icon.inventoryOwnedEntryCount) ||
         icon.inventorySelectionSlot < 0 || icon.inventorySelectionPage < 0) {
         icon.inventorySelectionPage = 0;
         icon.inventorySelectionSlot = 0;
@@ -1086,6 +1528,16 @@ void icsmPrepareInfoSurface() {
     if (icon.itemInfoSurface != -1)
         PVR_FreeAllocatedSurfaceByIndex(icon.itemInfoSurface);
     icon.itemInfoSurface = -1;
+#if SHENMUE_IS_DEMO
+    const char *name = "アイテムなし";
+    if (item >= 0 && item < static_cast<std::int32_t>(std::size(kTrialItemCatalog))) {
+        const TrialItemCatalogEntry &entry = kTrialItemCatalog[item];
+        name = GetAreaJumpEnabled() && entry.alternateName ? entry.alternateName : entry.name;
+    }
+    icon.itemInfoSurface = AllocatePVRSurface(name, 256, 0xcccc, 0xf000, 1, true);
+    g_itemPopupName.pvrSurfaceIndex = icon.itemInfoSurface;
+    return;
+#else
     if (icon.menuSelection == UIIconSystemMenuSelection::Items) {
         if (item >= 0 && item < 235) {
             const char *const token = g_ownedItemCatalog[static_cast<std::size_t>(item)].itemNameId;
@@ -1116,6 +1568,7 @@ void icsmPrepareInfoSurface() {
         std::snprintf(message.data(), message.size(), "%s", kMenuItems[static_cast<std::uint8_t>(icon.menuSelection)]);
     }
     icon.itemInfoSurface = AllocatePVRSurface(message.data(), 512, 0xcccc, 0xf000, 0, true);
+#endif
 }
 
 
@@ -1158,8 +1611,97 @@ void HandleCassetteItemEvents() {
 
 
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+std::uint8_t UI_DecodeInputCode(std::uint16_t input, std::uint8_t allowedDirections);
+
+void UI_MoveInventorySelection(std::uint8_t input) {
+    IconPresentationOwner &icon = g_iconPresentation;
+    shenExecuteAICACommand(0x200abU, 0, 0);
+    if (input == 0) {
+        if (--icon.inventorySelectionPage < 0)
+            icon.inventorySelectionPage = icon.inventoryPageCount;
+    } else if (input == 2) {
+        ++icon.inventorySelectionSlot;
+        if (icon.inventorySelectionSlot >= icon.inventorySlotsPerPage || icon.inventorySelectionSlot >= icon.inventoryOwnedItemCount ||
+            icon.inventorySelectionPage * icon.inventorySlotsPerPage + icon.inventorySelectionSlot >= icon.inventoryOwnedItemCount)
+            icon.inventorySelectionSlot = 0;
+    } else if (input == 4) {
+        if (++icon.inventorySelectionPage > icon.inventoryPageCount)
+            icon.inventorySelectionPage = 0;
+    } else if (input == 6) {
+        if (--icon.inventorySelectionSlot < 0)
+            icon.inventorySelectionSlot = icon.inventorySlotsPerPage - 1;
+    }
+    if (icon.inventorySelectionPage * icon.inventorySlotsPerPage + icon.inventorySelectionSlot >= icon.inventoryOwnedItemCount) {
+        if (icon.inventorySelectionPage == icon.inventoryPageCount) {
+            icon.inventorySelectionSlot = icon.inventoryOwnedItemCount - icon.inventorySlotsPerPage * icon.inventoryPageCount - 1;
+        } else {
+            icon.inventorySelectionSlot = 0;
+            icon.inventorySelectionPage = icon.inventoryPageCount;
+        }
+    }
+    icsmPrepareInfoSurface();
+}
+
+void UI_ICISHandleInput() {
+    IconPresentationOwner &icon = g_iconPresentation;
+    const std::uint16_t pressed = (icon.input ? icon.input->pressedPriority : 0U) | icon.bufferedInitialPressMask;
+    icon.bufferedInitialPressMask = 0;
+    const std::uint8_t input = UI_DecodeInputCode(pressed, 0x55);
+    if (input == 9) {
+        shenExecuteAICACommand(0x100abU, 0, 0);
+        icon.menuState = UIIconSystemMenuState::CloseRequested;
+        return;
+    }
+    if (icon.inventoryOwnedEntryCount < 1)
+        return;
+    if (input == 0 || input == 2 || input == 4 || input == 6) {
+        UI_MoveInventorySelection(input);
+        return;
+    }
+    if (input != 8 && input != 11)
+        return;
+    const std::int32_t index = UI_GetSelectedInventoryIndex();
+    if (index < 0)
+        return;
+    const std::int16_t item = g_playerStats.trialInventory[index].itemId;
+    if (input == 8 && !(g_sceneId == 80 && (item == 34 || item == 39)) && !(g_playerStats.trialInventoryMetadata[index].values[1] & 2) && item != 0 &&
+        item != 14 && item != 5) {
+        shenExecuteAICACommand(0x800abU, 0, 0);
+        return;
+    }
+    if (item == 0) {
+        MMTK_BeginManualSession();
+        icon.systemGameState = UIIconSystemGameState::Notebook;
+    } else if (item == 5) {
+        BeginMovesScreenViewTransition();
+        icon.systemGameState = UIIconSystemGameState::MovesScreen;
+    } else if (item == 14) {
+        g_isPlayerGameStateActive = 6;
+        EnqueueTMEX();
+        icon.systemGameState = UIIconSystemGameState::Timex;
+    } else if (input == 11 || (g_sceneId == 80 && (item == 34 || item == 39))) {
+        if (!UI_ICLILoadSharedItemPreview(item)) {
+            shenExecuteAICACommand(0x800abU, 0, 0);
+            return;
+        }
+    } else {
+        g_playerStats.cassetteUtilityResult = static_cast<std::uint32_t>(static_cast<std::uint16_t>(item)) << 16U | 2U;
+        icon.menuState = UIIconSystemMenuState::CloseRequested;
+    }
+    icon.iconFlags &= static_cast<std::uint16_t>(~0x20U);
+    shenExecuteAICACommand(0x500abU, 0, 0);
+}
+#pragma endregion
+#endif
+
 void IconSystemMenu_UpdateMenuCloseState() {
     IconPresentationOwner &icon = g_iconPresentation;
+#if SHENMUE_IS_DEMO
+    UI_ICISHandleInput();
+    return;
+#else
     const std::uint8_t state = static_cast<std::uint8_t>(icon.menuState);
     bool keep = static_cast<std::uint8_t>(state - 5U) <= 2U;
     if (!keep && (g_currUIState == -1 || g_currUIState == kUiGameMenu)) {
@@ -1176,6 +1718,7 @@ void IconSystemMenu_UpdateMenuCloseState() {
         icon.menuState = UIIconSystemMenuState::CloseRequested;
     if (icon.cassetteItemState == 2)
         HandleCassetteItemEvents();
+#endif
 }
 
 // The ICSM_ClosingTeardown/ClosingTransition end: the saved author and temporary game states return and ICON's stage 5 follows.
@@ -1205,7 +1748,15 @@ void UI_ICISCallback(HLib::TaskData *) {
     ICIS_Init();
     CollectionGrid_Reset();
     icon.iconFlags &= static_cast<std::uint16_t>(~0x20U);
-    icon.inventorySlotsPerPage = 8;
+    icon.inventorySlotsPerPage = SHENMUE_IS_DEMO ? 5 : 8;
+#if SHENMUE_IS_DEMO
+    UI_InitializeItemMenuSprites();
+    UI_InitializeItemMenuCaption();
+    icon.inventoryCursor = {.positionScaleX = 1.0f, .positionScaleY = 1.0f, .depthOrScale = 4.0f,
+        .pvrSurfaceIndex = 0, .scaledWidth = 40, .scaledHeight = 40, .alignmentType = 5};
+    icon.inventoryPulse = 0;
+    icon.inventoryPulseRising = true;
+#endif
     icon.menuState = UIIconSystemMenuState::Closed;
     g_playerStats.cassetteUtilityResult = 0;
     icon.inventoryOwnedEntryCount = 0;
@@ -1277,16 +1828,20 @@ void UI_ICISMainCallback(HLib::TaskData *) {
             g_previousHelpTokenId = g_currentHelpTokenId;
             icon.itemInfoPopupPosition[0] = -55.0f;
             icon.menuState = UIIconSystemMenuState::Visible;
-            g_defaultHelpTokenId = 17;
-            g_currentHelpTokenId = 17;
+            g_defaultHelpTokenId = SHENMUE_IS_DEMO ? 18 : 17;
+            g_currentHelpTokenId = g_defaultHelpTokenId;
             g_helpButtonId = 0;
             g_currentHelpIconState = 0;
             if (UI_SICNIsTaskActive())
                 UI_SICNSetState(0x27, UISicnPausePolicy::KeepOnPause);
             else
                 UI_SICNEnqueue(39, UISicnPausePolicy::KeepOnPause);
+#if SHENMUE_IS_DEMO
+            icon.inventoryCaption.pvrSurfaceIndex = kItemMenuCaptionTextures[0];
+#else
             d3t::ActivateElementByIdx(kUiGameMenu);
-            if (icon.bufferedInitialPressMask) {
+#endif
+            if (!SHENMUE_IS_DEMO && icon.bufferedInitialPressMask) {
                 const std::uint16_t selection = static_cast<std::uint8_t>(icon.menuSelection);
                 if (icon.menuSelection == UIIconSystemMenuSelection::Items || IconSystemMenu_FindSelectedInventoryItem() == 3) {
                     const std::int32_t item = IconSystemMenu_FindSelectedInventoryItem();
@@ -1343,10 +1898,18 @@ void UI_ICISMainCallback(HLib::TaskData *) {
             break;
         }
     }
+#if SHENMUE_IS_DEMO
+    if ((icon.iconFlags & 0x20U) != 0 && g_updateRenderFrameMode) {
+        UI_DrawItemMenu(nullptr);
+        if (icon.itemInfoSurface >= 0)
+            AdjustScreenSpaceWithParams_0(&g_itemPopupName, 0);
+    }
+#else
     if ((icon.iconFlags & 0x20U) != 0) {
         UIBaseRuntime &gameMenu = g_uiElements[kUiGameMenu];
         gameMenu.isActive = g_cassetteCollectionUiState == 0 ? 1 : gameMenu.isActive;
     }
+#endif
 }
 
 
@@ -1363,7 +1926,14 @@ void UI_ICSSMainCallback(HLib::TaskData *) {
     IconPresentationOwner &icon = g_iconPresentation;
     switch (icon.systemGameState) {
     case UIIconSystemGameState::Timex:
+#if SHENMUE_IS_DEMO
+        if (g_TMEX_lifecycleState == TMEXLifecycleState::Inactive) {
+            g_isPlayerGameStateActive = 0;
+            icon.systemGameState = UIIconSystemGameState::SystemMenuRefresh;
+        }
+#else
         TMEX_Callback(nullptr);
+#endif
         break;
     case UIIconSystemGameState::Collection:
         if (CollectionGrid_Tick())
@@ -1381,10 +1951,17 @@ void UI_ICSSMainCallback(HLib::TaskData *) {
         }
         break;
     case UIIconSystemGameState::Notebook:
+#if SHENMUE_IS_DEMO
+        if (!MMTK_HasManualSession()) {
+            icon.systemGameState = UIIconSystemGameState::SystemMenuRefresh;
+            icon.savedSicnState &= static_cast<std::uint16_t>(~0x200U);
+        }
+#else
         if (ProcessNotebookStates()) {
             icon.systemGameState = UIIconSystemGameState::SystemMenuRefresh;
             icon.savedSicnState &= static_cast<std::uint16_t>(~0x200U);
         }
+#endif
         break;
     case UIIconSystemGameState::EasyOptions:
         if (g_easyOptionState.state == 0)
@@ -3049,6 +3626,12 @@ bool UI_ICMCWaitForClosed(std::int32_t &result) {
 
 
 void UI_ICMCCallback(HLib::TaskData *) {
+#if SHENMUE_IS_DEMO
+    g_sfxOverlayState = UISfxOverlayState::Idle;
+    UI_QteInitializeSprite();
+    g_qteSessionActive = 0;
+    InstallOwnedTaskMain(UI_ICMCMainCallback);
+#else
 #if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
     g_portableCassettePlaying = false;
     g_cassetteStopKeyHeld = g_windowInput.keyStates[KeyEscape].pressed != 0;
@@ -3067,11 +3650,15 @@ void UI_ICMCCallback(HLib::TaskData *) {
     if (g_icmcInput)
         g_icmcInput->flags |= 1U;
     InstallOwnedTaskMain(UI_ICMCMainCallback);
+#endif
 }
 
 
 
-void UI_ICMCMainCallback(HLib::TaskData *) {
+void UI_ICMCMainCallback(HLib::TaskData *taskData) {
+#if SHENMUE_IS_DEMO
+    UI_SFXOverlayCallback(taskData);
+#else
 #if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
     UpdatePortableCassette();
 #endif
@@ -3144,6 +3731,7 @@ void UI_ICMCMainCallback(HLib::TaskData *) {
     }
     if (g_icmcCassetteIsPlayerActive)
         g_uiElements[kUiSubMenuCassettes].isActive = 1;
+#endif
 }
 
 std::uint16_t RefreshBatteryLifeForCassettes() {

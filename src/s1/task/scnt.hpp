@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "common/math.hpp"
 
@@ -132,8 +133,15 @@ static_assert(offsetof(ScntDialogueWork, active) == 0x44);
 static_assert(offsetof(ScntDialogueWork, mode) == 0x48);
 static_assert(sizeof(FreeTalkEvent) == 8);
 
+#if SHENMUE_IS_DEMO
+void SCNT_ShowSubtitleText(HLib::Task *scenarioTask, const char *text, std::uint32_t speakerClass = 2, std::uint32_t encodingMode = 0);
+#else
 void SCNT_ShowSubtitleText(HLib::Task *scenarioTask, const char *text, std::uint32_t speakerClass = 2);
+#endif
 void SCNT_ClearSubtitleText();
+#if SHENMUE_IS_DEMO
+bool SCNT_WaitForSubtitleText(HLib::Task *scenarioTask);
+#endif
 bool SCNT_IsTimeLimitComplete();
 
 void SCNT_ResetRuntime();

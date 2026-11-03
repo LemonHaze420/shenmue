@@ -24,6 +24,10 @@
 #include "s1/task/srch.hpp"
 #include "s1/task/wexe.hpp"
 #include "s1/ui_runtime.hpp"
+#if SHEN_AUTO_TEST_ENABLED && SHENMUE_IS_DEMO
+#include "s1/task/scen/scen.hpp"
+#include "s1/task/ctrl.hpp"
+#endif
 
 #include <algorithm>
 #include <atomic>
@@ -532,7 +536,12 @@ void HLib_mainModule(HLib::TaskData *) {
     }
     CAME_HandleRootAuthorTransition(GetCurrentInputType() == InputMode::Vehicle);
 #if SHEN_AUTO_TEST_ENABLED && defined(_WIN32)
-    const bool captured = auto_test::FinishFrame();
+    const bool captured =
+#if SHENMUE_IS_DEMO
+        auto_test::SceneIs("ws-face-ryo") ?
+            g_areaId == SHEN_NAME(HGYF) && g_pSCNC && g_pSCNC->header.active == 1 && g_pSCNC->frameIndex == 120 :
+#endif
+            auto_test::FinishFrame();
     if (captured)
         d3t_DumpFramePng(auto_test::CapturePath());
 #endif

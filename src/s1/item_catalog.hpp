@@ -403,3 +403,24 @@ inline const std::array<InventoryIconAtlasRect, 254> g_inventoryIconAtlasRects{{
 }};
 
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+namespace shenmue::s1 {
+
+struct TrialItemCatalogEntry {
+    std::uint16_t icon;
+    std::uint16_t retained02;
+    const char *model;
+    std::uint32_t retained08[5];
+    const char *name;
+    const char *alternateName;
+};
+static_assert(sizeof(TrialItemCatalogEntry) == (sizeof(void *) == 4 ? 0x24 : 0x38));
+static_assert(offsetof(TrialItemCatalogEntry, name) == (sizeof(void *) == 4 ? 0x1c : 0x28));
+static_assert(offsetof(TrialItemCatalogEntry, alternateName) == (sizeof(void *) == 4 ? 0x20 : 0x30));
+extern const TrialItemCatalogEntry kTrialItemCatalog[49];
+
+} // namespace shenmue::s1
+#pragma endregion
+#endif

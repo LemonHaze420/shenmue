@@ -1,6 +1,6 @@
 #include "d3t/ui_internal.hpp"
 
-#if SHENMUE_IS_S1 && defined(_WIN32)
+#if SHENMUE_IS_S1_FAMILY && defined(_WIN32)
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -10,7 +10,7 @@
 #include <windows.h>
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
@@ -454,7 +454,7 @@ void UI_DrawButtonIconLabel(nk_context &context, const UIButtonIconLabel &label)
         case 11:
         case 12:
         case 13:
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         case 56:
         case 57:
         case 58:
@@ -469,7 +469,7 @@ void UI_DrawButtonIconLabel(nk_context &context, const UIButtonIconLabel &label)
         case 15:
         case 16:
         case 17:
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         case 59:
         case 60:
         case 61:
@@ -492,7 +492,7 @@ void UI_DrawButtonIconLabel(nk_context &context, const UIButtonIconLabel &label)
             if (FormatVirtualKeyString(13, name))
                 drawText(name.data(), label.alignment, rect, label.fontWidth, label.fontHeight * 0.5f);
         } else if (static_cast<std::uint32_t>(glyph - 30) <= 5U) {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             constexpr std::int32_t up = 'W';
             constexpr std::int32_t down = 'S';
             constexpr std::int32_t leftKey = 'A';
@@ -527,7 +527,7 @@ void UI_DrawButtonIconLabel(nk_context &context, const UIButtonIconLabel &label)
         }
     } else {
         std::int32_t key = 0;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         switch (label.action) {
         case 50:
             key = 'Q';
@@ -1011,7 +1011,7 @@ void UI_DrawButtonIcon(nk_context &context, UIButtonIconWidget &widget, const UI
     UI_DrawButtonIconLabel(context, label);
 }
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

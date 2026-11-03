@@ -24,6 +24,13 @@ template <std::size_t Capacity> struct OwnedSpriteSet {
     bool loadAttempted{};
 };
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+extern OwnedSpriteSet<32> g_commonIconSprites;
+void UI_DrawIconFrame(float x, float y, float depth, std::int32_t segments);
+#pragma endregion
+#endif
+
 template <std::size_t Capacity> void ReleaseSpriteSet(OwnedSpriteSet<Capacity> &set) {
     for (std::size_t index = 0; index < set.count; ++index) {
         OwnedSpriteAsset &asset = set.assets[index];

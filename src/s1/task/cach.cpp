@@ -2682,6 +2682,22 @@ void CalculateMatrixEulerAngles() {
 
 void TransformMatrixCoordinatesAndCalculateEulerAngles() {
     matrix_stack::Matrix4x4_Push();
+#if SHENMUE_IS_DEMO
+    CameraControlState &control = *static_cast<CameraControlState *>(g_cameraControl);
+    Character *const armA = static_cast<Character *>(g_cameraTargetEntity);
+    HandModelWork &anchorA = *static_cast<HandModelWork *>(g_cameraAnchorA);
+    if (armA)
+        armA->entity.node.rotation = control.armHoldRotation[0];
+    HND_ApplyRootEuler(anchorA, control.handHoldRotation[0]);
+    ApplyHandRootTransform(armA, anchorA);
+    if (armA)
+        ApplyEulerAnglesToNode(armA->entity.node, g_cachArmRotationA);
+    Matrix4x4_ApplyViewTransformAndInverse(armA, anchorA, nullptr);
+    Character *const armB = static_cast<Character *>(g_shenmueCamera0);
+    HandModelWork &anchorB = *static_cast<HandModelWork *>(g_cameraAnchorB);
+    if (armB)
+        armB->entity.node.rotation = control.armHoldRotation[1];
+#else
     auto &control = *static_cast<CameraControlState *>(g_cameraControl);
     auto *const armA = static_cast<Character *>(g_cameraTargetEntity);
     if (armA)
@@ -2696,6 +2712,7 @@ void TransformMatrixCoordinatesAndCalculateEulerAngles() {
     if (armB)
         armB->entity.node.rotation = control.armHoldRotation[1];
     auto &anchorB = *static_cast<HandModelWork *>(g_cameraAnchorB);
+#endif
     HND_ApplyRootEuler(anchorB, control.handHoldRotation[1]);
     ApplyHandRootTransform(armB, anchorB);
     if (armB)
@@ -2754,6 +2771,47 @@ void ResetCurve() {
 bool UpdateCurveAndApply() {
     const bool finished = AdvanceQuadraticCurve(3.0f, 0.2f);
     const float remaining = g_quadraticCurveRemaining;
+#if SHENMUE_IS_DEMO
+    CameraControlState &control = *static_cast<CameraControlState *>(g_cameraControl);
+    control.gripOffset[0] = EvaluateCachCurve(g_cachCurveAnchorA, remaining);
+    const Vector3 eye = EvaluateCachCurve(g_cachCurveStart, remaining);
+    Vector3i gripTarget{};
+    Vector3i armTargetA{};
+    Vector3i armTargetB{};
+    float frames = 0.0f;
+    if (remaining <= kSeqFramesPerSecond || (g_cameraStateFlags & 0x10U) == 0) {
+        ConvertTargetSpeedToEuler(control, gripTarget);
+        armTargetA = control.armMidRotation[0];
+        armTargetB = control.armMidRotation[1];
+        frames = remaining;
+    } else {
+        gripTarget = control.gripRotation;
+        armTargetA = g_cachArmRotationA;
+        armTargetB = g_cachArmRotationB;
+    }
+    const float blend = static_cast<float>(1.0 / (static_cast<double>(frames) + 1.0));
+    BlendEulerAngles(control.gripRotation, gripTarget, blend);
+    BlendEulerAngles(g_cachArmRotationA, armTargetA, blend);
+    BlendEulerAngles(g_cachArmRotationB, armTargetB, blend);
+    Vector3 target = control.gripOffset[0];
+    if (control.inputMode == 5 || control.inputMode == 6) {
+        const Vector3 fingers = HandFingerMidpoint(*static_cast<HandModelWork *>(g_cameraAnchorB));
+        const Vector3 &hold = control.gripOffset[0];
+        float amount = 0.0f;
+        if (!(2.0f > remaining)) {
+            const float fraction = static_cast<float>(static_cast<double>(remaining) / 60.0);
+            amount = 1.0f < fraction ? 1.0f : fraction;
+        }
+        target = {(fingers.x - hold.x) * amount + hold.x, (fingers.y - hold.y) * amount + hold.y, (fingers.z - hold.z) * amount + hold.z};
+    }
+    const std::int32_t currentFov = currentPerspectiveFov;
+    const std::int16_t fovDelta = static_cast<std::int16_t>(control.targetFov - currentFov);
+    CalculateMatrixEulerAngles();
+    TransformMatrixCoordinatesAndCalculateEulerAngles();
+    const float ease = static_cast<float>(1.0 / (static_cast<double>(remaining) + 1.0));
+    ConfigureTargetModeCamera(control, eye, target, static_cast<std::int32_t>(static_cast<float>(fovDelta) * ease + static_cast<float>(currentFov)));
+    Character *const camera0 = static_cast<Character *>(g_shenmueCamera0);
+#else
     auto &control = *static_cast<CameraControlState *>(g_cameraControl);
     control.gripOffset[0] = EvaluateCachCurve(g_cachCurveAnchorA, remaining);
     const Vector3 eye = EvaluateCachCurve(g_cachCurveStart, remaining);
@@ -2793,6 +2851,7 @@ bool UpdateCurveAndApply() {
     const auto ease = static_cast<float>(1.0 / (static_cast<double>(remaining) + 1.0));
     ConfigureTargetModeCamera(control, eye, target, static_cast<std::int32_t>(static_cast<float>(fovDelta) * ease + static_cast<float>(currentFov)));
     auto *const camera0 = static_cast<Character *>(g_shenmueCamera0);
+#endif
     control.camera0Position = camera0 ? GetPositionForEntity(camera0->entity.node) : Vector3{};
     return finished;
 }
@@ -2878,6 +2937,93 @@ bool AdjustCameraPositionAndOrientationBasedOnDistance() {
 
 
 void BuildTargetReleaseCurves() {
+#if SHENMUE_IS_DEMO
+    CameraControlState &control = *static_cast<CameraControlState *>(g_cameraControl);
+    CachContextState &camera = *static_cast<CachContextState *>(g_camera);
+    const float duration = 50.0f;
+    Vector3 sampleTimes{0.0f, duration * 0.65f, duration};
+    g_cachCurveStart.position = g_cameraCurvePosition;
+    g_cachCurveEnd.position = g_temporaryAcceleratedVector;
+    const std::uint32_t flags = g_cameraStateFlags;
+    g_quadraticCurveRemaining = duration;
+    g_quadraticCurveProgress = 0.0f;
+    if (camera.state == 0) {
+        SRCH_UpdateCameraEyeAndTarget(control.savedEye, control.savedTarget);
+    } else {
+        control.savedEye = camera.lastCurvePosition;
+        control.savedTarget = camera.lastAcceleratedTarget;
+        camera.analogDelta = {};
+    }
+    float spread = 0.2f;
+    float forward = 0.2f;
+    const float lowest = g_cachCurveStart.position.y < control.savedEye.y ? g_cachCurveStart.position.y : control.savedEye.y;
+    float drop = static_cast<float>(static_cast<double>(lowest) - 0.35);
+    if ((flags & 2U) != 0) {
+        spread = 0.25f;
+        forward = -0.049999997f;
+        drop = static_cast<float>(static_cast<double>(drop) + 0.1);
+    }
+    const auto toward = [](float from, float to) { return (to - from) * 0.69999999f + from; };
+    g_cachCurveStart.acceleration = control.savedEye;
+    g_cachCurveStart.velocity = {toward(g_cachCurveStart.acceleration.x, g_cachCurveStart.position.x),
+        toward(g_cachCurveStart.acceleration.y, g_cachCurveStart.position.y), toward(g_cachCurveStart.acceleration.z, g_cachCurveStart.position.z)};
+    FitCachQuadraticCurve(sampleTimes, g_cachCurveStart);
+    g_cachCurveEnd.acceleration = control.savedTarget;
+    g_cachCurveEnd.velocity = {toward(g_cachCurveEnd.acceleration.x, g_cachCurveEnd.position.x),
+        toward(g_cachCurveEnd.acceleration.y, g_cachCurveEnd.position.y), toward(g_cachCurveEnd.acceleration.z, g_cachCurveEnd.position.z)};
+    FitCachQuadraticCurve(sampleTimes, g_cachCurveEnd);
+    const float sine = control.yawSine;
+    const float cosine = control.yawCosine;
+    const Vector3 &eye = control.savedEye;
+    const float rise = drop - eye.y;
+    g_cachCurveAnchorA.acceleration = {-spread * cosine + eye.x - forward * sine, rise + eye.y, -spread * sine + eye.z + forward * cosine};
+    g_cachCurveAnchorA.position = HandFingerMidpoint(*static_cast<HandModelWork *>(g_cameraAnchorA));
+    g_cachCurveAnchorA.velocity = {toward(g_cachCurveAnchorA.acceleration.x, g_cachCurveAnchorA.position.x),
+        toward(g_cachCurveAnchorA.acceleration.y, g_cachCurveAnchorA.position.y), toward(g_cachCurveAnchorA.acceleration.z, g_cachCurveAnchorA.position.z)};
+    g_cachCurveAnchorB.acceleration = {spread * cosine + eye.x - forward * sine, rise + eye.y, spread * sine + eye.z + forward * cosine};
+    g_cachCurveAnchorB.position = HandFingerMidpoint(*static_cast<HandModelWork *>(g_cameraAnchorB));
+    g_cachCurveAnchorB.velocity = {toward(g_cachCurveAnchorB.acceleration.x, g_cachCurveAnchorB.position.x),
+        toward(g_cachCurveAnchorB.acceleration.y, g_cachCurveAnchorB.position.y), toward(g_cachCurveAnchorB.acceleration.z, g_cachCurveAnchorB.position.z)};
+    const std::int16_t mode = control.inputMode;
+    if (mode == 2 || mode == 3 || mode == 6) {
+        g_cachCurveAnchorA.velocity.y = static_cast<float>(static_cast<double>(control.handPoint[0].y) + 0.09);
+        g_cachCurveAnchorB.velocity.y = static_cast<float>(static_cast<double>(control.handPoint[1].y) + 0.09);
+    } else {
+        const float dz = g_cachCurveAnchorA.acceleration.z - g_cachCurveAnchorA.position.z;
+        const float dx = g_cachCurveAnchorA.acceleration.x - g_cachCurveAnchorA.position.x;
+        const double reach = std::sqrt(dz * dz + dx * dx);
+        float side = 0.0f;
+        double bow;
+        if (mode == 1) {
+            bow = reach * 0.5f;
+        } else if (mode >= 7) {
+            side = 0.02f;
+            bow = reach * 0.4;
+        } else {
+            side = 0.079999998f;
+            bow = reach * 0.2;
+        }
+        const auto out = static_cast<float>(bow);
+        const Vector3 &pointA = control.handPoint[0];
+        const Vector3 &pointB = control.handPoint[1];
+        const float riseA = g_cachCurveAnchorA.velocity.y - pointA.y;
+        g_cachCurveAnchorA.velocity = {-side * cosine + pointA.x - out * sine, riseA + pointA.y, -side * sine + pointA.z + out * cosine};
+        const float riseB = g_cachCurveAnchorB.velocity.y - pointB.y;
+        g_cachCurveAnchorB.velocity = {side * cosine + pointB.x - out * sine, riseB + pointB.y, side * sine + pointB.z + out * cosine};
+        if ((flags & 0x10U) != 0) {
+            g_cachCurveAnchorA.velocity.y = g_cachCurveAnchorA.position.y;
+            g_cachCurveAnchorB.velocity.y = g_cachCurveAnchorB.position.y;
+        }
+    }
+    float lead = duration * 0.5f;
+    if (control.inputMode >= 7) {
+        g_EnvPrngSeed = LcgStep(g_EnvPrngSeed);
+        lead = static_cast<float>(static_cast<double>((g_EnvPrngSeed >> 16) & 0x7fffU) * 0.000030517578125) > 0.5f ? 17.200001f : 22.799999f;
+    }
+    sampleTimes.y = lead;
+    FitCachQuadraticCurve(sampleTimes, g_cachCurveAnchorA);
+    sampleTimes.y = duration - lead;
+#else
     auto &control = *static_cast<CameraControlState *>(g_cameraControl);
     auto &camera = *static_cast<CachContextState *>(g_camera);
     Vector3 sampleTimes{0.0f, 26.0f, 40.0f};
@@ -2962,6 +3108,7 @@ void BuildTargetReleaseCurves() {
     sampleTimes.y = lead;
     FitCachQuadraticCurve(sampleTimes, g_cachCurveAnchorA);
     sampleTimes.y = 40.0f - lead;
+#endif
     FitCachQuadraticCurve(sampleTimes, g_cachCurveAnchorB);
 }
 
@@ -2975,6 +3122,34 @@ bool UpdateCameraAlongCurve() {
     const Vector3 handB = EvaluateCachCurve(g_cachCurveAnchorB, t);
     const Vector3 eye = EvaluateCachCurve(g_cachCurveStart, t);
     const Vector3 target = EvaluateCachCurve(g_cachCurveEnd, t);
+#if SHENMUE_IS_DEMO
+    const float blend = static_cast<float>(1.0 / (static_cast<double>(t) + 1.0));
+    CameraControlState &control = *static_cast<CameraControlState *>(g_cameraControl);
+    BlendEulerAngles(g_cachArmRotationA, control.armRotation[0], blend);
+    BlendEulerAngles(g_cachArmRotationB, control.armRotation[1], blend);
+    Character *const ryo = static_cast<Character *>(g_cacheTemporaryCharacter);
+    const std::int32_t currentFov = currentPerspectiveFov;
+    const float opacity = ryo->renderOpacity + (control.savedPlayerOpacity - ryo->renderOpacity) * blend;
+    const std::int32_t fov =
+        static_cast<std::int32_t>(static_cast<float>(static_cast<std::int16_t>(control.previousFov - currentFov)) * blend + static_cast<float>(currentFov));
+    matrix_stack::Matrix4x4_Push();
+    Character *const armA = static_cast<Character *>(g_cameraTargetEntity);
+    if (armA)
+        ApplyEulerAnglesToNode(armA->entity.node, g_cachArmRotationA);
+    HandModelWork &anchorA = *static_cast<HandModelWork *>(g_cameraAnchorA);
+    ApplyFingerPositionToEntity(armA, anchorA, handA);
+    Matrix4x4_ApplyViewTransformAndInverse(armA, anchorA, &control.handBaseRotation[0]);
+    Character *const armB = static_cast<Character *>(g_shenmueCamera0);
+    if (armB)
+        ApplyEulerAnglesToNode(armB->entity.node, g_cachArmRotationB);
+    HandModelWork &anchorB = *static_cast<HandModelWork *>(g_cameraAnchorB);
+    ApplyFingerPositionToEntity(armB, anchorB, handB);
+    Matrix4x4_ApplyViewTransformAndInverse(armB, anchorB, &control.handBaseRotation[1]);
+    Matrix4x4::Pop();
+    g_cameraCurvePosition = eye;
+    g_temporaryAcceleratedVector = target;
+    ryo->renderOpacity = opacity;
+#else
     auto &control = *static_cast<CameraControlState *>(g_cameraControl);
     const auto blend = static_cast<float>(1.0 / (static_cast<double>(t) + 1.0));
     BlendEulerAngles(g_cachArmRotationA, control.armRotation[0], blend);
@@ -3002,6 +3177,7 @@ bool UpdateCameraAlongCurve() {
     g_temporaryAcceleratedVector = target;
     ryo->renderOpacity = opacity;
     CAME_SetFieldOfView(fov);
+#endif
     if ((anchorB.control & 8U) != 0)
         camCtrlSetAnchorNodeTo(kTargetGripPoseDefault, t, nullptr);
     return finished;

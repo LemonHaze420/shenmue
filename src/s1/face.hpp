@@ -1,8 +1,10 @@
 #pragma once
+#include "shenmue.h"
 
 #include "common/math.hpp"
 
 #include <cstddef>
+#include <array>
 #include <cstdint>
 
 namespace shenmue::s1 {
@@ -244,5 +246,12 @@ static_assert(sizeof(FmotProgramHeader) == 0x10);
 static_assert(sizeof(FmotChannelDescriptor) == 0x0c);
 static_assert(sizeof(FmotChannelKey) == 8);
 static_assert(sizeof(FaceMotionProgram) == 0x20);
+
+#if SHENMUE_IS_DEMO
+inline constexpr std::array<const char *, 4> kTrialFaceStartupPrograms{"TALK_S.BIN", "TALK_M.BIN", "TALK_B.BIN", "TALK_SS.BIN"};
+inline constexpr std::array<const char *, 8> kTrialFaceDemoPrograms{
+    "TALK_S.BIN", "TALK_Y.BIN", "TALK_R.BIN", "TALK_SS.BIN", "TALK_G.BIN", "TALK_K.BIN", "TALK_C.BIN", "TALK_O.BIN"};
+void FACE_LoadStartupPrograms();
+#endif
 
 } // namespace shenmue::s1

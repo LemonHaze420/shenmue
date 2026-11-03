@@ -218,18 +218,35 @@ void UI_ICMoWaitCloseAnimation() {
         g_cashOverlayPresentation.state = UICashOverlayState::WaitCloseAnimation;
 }
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+// @verified - d
+void UI_ICMoSetCurrency(std::int8_t currency) {
+    g_cashOverlayPresentation.selectorAmountType = static_cast<std::uint8_t>(currency);
+}
+#pragma endregion
+#endif
+
 void UI_ICMoRequest(std::int32_t value, bool useCash) {
     CashOverlayOwner &cash = g_cashOverlayPresentation;
     cash.useCash = useCash;
     const std::int32_t current = useCash ? g_playerStats.cash : static_cast<std::int32_t>(g_playerStats.segaCoins);
     const std::int32_t wrappedTarget = static_cast<std::int32_t>(static_cast<std::uint32_t>(current) + static_cast<std::uint32_t>(value));
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    cash.targetBalance = std::clamp(wrappedTarget, 0, 99999);
+#pragma endregion
+#else
     cash.targetBalance = std::clamp(wrappedTarget, 0, 99999999);
+#endif
     cash.balanceAnimating = true;
     cash.displayMode = UICashOverlayDisplayMode::BalanceDeltaAutoClose;
     cash.state = UICashOverlayState::OpenRequested;
+#if !SHENMUE_IS_DEMO
     GameMessage_SetContent(useCash ? UIGameMessageContentType::Money : UIGameMessageContentType::Token, current, "0");
     if (g_currUIState == -1 || g_currUIState == kUiGameMessage)
         UI_ActivateElement(g_uiElements[kUiGameMessage]);
+#endif
     cash.selectorActive = false;
 }
 
@@ -286,7 +303,139 @@ std::int32_t CashAnimationStep(std::int32_t difference) {
     return difference < 0 ? -step : step;
 }
 
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+// @verified - d
+void UI_ICMoDrawAmount(float x, float y, float depth, std::int32_t value) {
+    CashOverlayOwner &cash = g_cashOverlayPresentation;
+    constexpr std::int32_t denominations[5]{10000, 1000, 100, 10, 1};
+    constexpr std::int16_t suffixes[4]{58, 56, 57, 59};
+    const std::int32_t length = cash.selectorAmountType == 1 ? (value >= 10000 ? 5 : value >= 1000 ? 4 : value >= 100 ? 3 : value >= 10 ? 2 : 1) : 0;
+    const float adjustment = cash.useCash ? 0.0f : 4.0f;
+    ScreenSpaceParams &suffix = cash.selectorAmountPrefix;
+    suffix.depthOrScale = depth;
+    suffix.pvrSurfaceIndex = cash.useCash ? suffixes[cash.selectorAmountType] : 59;
+    suffix.scaledWidth = suffix.scaledHeight = cash.useCash ? 16 : 24;
+    suffix.halfScreenX = (32.0f - static_cast<float>(length) * 16.0f + x) + adjustment;
+    suffix.halfScreenY = y - adjustment;
+    for (std::size_t index = 0; index < 5; ++index) {
+        ScreenSpaceParams &digit = cash.selectorDigits[index];
+        digit.depthOrScale = depth;
+        digit.halfScreenY = y;
+        digit.halfScreenX = x + static_cast<float>(static_cast<std::int32_t>(index) * 16 - 48) + (length ? 16.0f : 0.0f);
+        digit.pvrSurfaceIndex = static_cast<std::int16_t>(46 + value / denominations[index]);
+        value %= denominations[index];
+    }
+    std::size_t first = 0;
+    while (first < 4 && cash.selectorDigits[first].pvrSurfaceIndex == 46)
+        ++first;
+    for (; first < 5; ++first)
+        AdjustDefaultScreenSpace(&cash.selectorDigits[first]);
+    AdjustDefaultScreenSpace(&suffix);
+}
+
+// @verified - d
+void UI_ICMoDrawBalance() {
+    if (!g_updateRenderFrameMode)
+        return;
+    CashOverlayOwner &cash = g_cashOverlayPresentation;
+    const Vector4 &position = cash.selectorMessagePosition;
+    cash.currencyIcon.halfScreenX = position.x - 10.0f;
+    cash.currencyIcon.halfScreenY = position.y;
+    AdjustDefaultScreenSpace(&cash.currencyIcon);
+    UI_DrawIconFrame(position.x - 50.0f, position.y - 15.0f, 2.0f, 6);
+    UI_ICMoDrawAmount(position.x + 80.0f, position.y + 10.0f, cash.selectorMessageDepth, cash.value);
+}
+
+// @verified - d
+void UI_ICMoUpdateBalance() {
+    CashOverlayOwner &cash = g_cashOverlayPresentation;
+    if (cash.balanceAnimating) {
+        const std::int32_t difference = cash.targetBalance - cash.value;
+        if (difference != 0) {
+            const std::int32_t step = CashAnimationStep(difference);
+            cash.lastBalanceAnimationStep = std::abs(step);
+            cash.value += step;
+        }
+        if ((difference < 0 && cash.value < cash.targetBalance) || (difference > 0 && cash.value > cash.targetBalance))
+            cash.value = cash.targetBalance;
+        if (cash.useCash)
+            g_playerStats.cash = cash.value;
+        else
+            g_playerStats.segaCoins = static_cast<std::uint32_t>(cash.value);
+    }
+    if (cash.value == cash.targetBalance) {
+        cash.balanceAnimating = false;
+        if (g_iconPresentation.overlayMode != 13 && ++cash.autoCloseFrames >= 30.0f) {
+            cash.state = UICashOverlayState::CloseRequested;
+            cash.autoCloseFrames = 0.0f;
+        }
+    }
+}
+
+
+#pragma endregion
+#endif
+
 void UI_ICMoCallback(HLib::TaskData *) {
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    if (!g_cashOverlayPresentation.selectorActive) {
+        CashOverlayOwner &cash = g_cashOverlayPresentation;
+        IconPresentationOwner &icon = g_iconPresentation;
+        Vector4 &position = cash.selectorMessagePosition;
+        switch (cash.state) {
+        case UICashOverlayState::OpenRequested:
+            shenExecuteAICACommand(0x400abU, 0, 0);
+            cash.currencyIcon.pvrSurfaceIndex = cash.useCash ? (cash.selectorAmountType == 3 ? 45 : 43) : 45;
+            cash.currencyIcon.scaledWidth = cash.useCash ? 80 : 40;
+            cash.value = cash.useCash ? g_playerStats.cash : static_cast<std::int32_t>(g_playerStats.segaCoins);
+            cash.state = UICashOverlayState::WaitOpenAnimation;
+            icon.iconFlags |= 0x1000U;
+            g_isPlayerGameStateActive = 5;
+            CapturePad(icon.input, icon.previousInput);
+            break;
+        case UICashOverlayState::WaitOpenAnimation: {
+            const float step = std::fabs(80.0f - position.x) * 0.5f;
+            position.z = std::clamp(step > 64.0f ? position.z * 2.0f : step, 1.0f, 64.0f);
+            position.x += position.z;
+            if (position.x >= 80.0f) {
+                position.x = 80.0f;
+                cash.state = UICashOverlayState::DisplayActive;
+            }
+            break;
+        }
+        case UICashOverlayState::DisplayActive:
+            UI_ICMoUpdateBalance();
+            break;
+        case UICashOverlayState::CloseRequested:
+            shenExecuteAICACommand(0x400abU, 0, 0);
+            cash.state = UICashOverlayState::WaitCloseAnimation;
+            break;
+        case UICashOverlayState::WaitCloseAnimation: {
+            const float step = std::fabs(-516.0f - position.x) * 0.5f;
+            position.z = std::clamp(step > 64.0f ? position.z * 2.0f : step, 1.0f, 64.0f);
+            position.x -= position.z;
+            if (position.x <= -516.0f) {
+                position.x = -516.0f;
+                cash.state = UICashOverlayState::Idle;
+                icon.iconFlags &= static_cast<std::uint16_t>(~0x1000U);
+                iconUpdateInputBuffer();
+                icon.overlayMode = 0;
+                cash.balanceAnimating = false;
+                cash.useCash = true;
+            }
+            break;
+        }
+        case UICashOverlayState::Idle:
+            break;
+        }
+        if (icon.iconFlags & 0x1000U)
+            UI_ICMoDrawBalance();
+        return;
+    }
+#pragma endregion
+#endif
     CashOverlayOwner &cash = g_cashOverlayPresentation;
     IconPresentationOwner &icon = g_iconPresentation;
     RefreshBatteryLifeForCassettes();

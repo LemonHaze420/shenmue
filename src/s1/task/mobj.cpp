@@ -1,6 +1,13 @@
 #include "s1/task/cycle_man_internal.hpp"
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+bool MOBJ_Setup(const char *directory, const char *filename, shen_name areaId) {
+    g_cycleManagerRuntime.areaId = areaId;
+    CycleManager::Setup(directory, filename);
+    return g_cycleManagerRuntime.loaded;
+}
+#endif
 using namespace CycleManager;
 
 // @verified - p

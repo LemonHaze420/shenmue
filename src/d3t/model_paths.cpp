@@ -137,7 +137,7 @@ void RemapMiscPath(const char *path, char *destination) {
     char stem[272]{};
     std::memcpy(stem, name, static_cast<std::size_t>(dot - name - 1));
     const char *suffix = "";
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     for (const char *const(&entry)[2] : kModelPathMiscSuffixes) {
         if (std::strstr(path, entry[0])) {
             suffix = entry[1];

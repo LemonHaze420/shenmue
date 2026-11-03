@@ -3,6 +3,7 @@
 #include "s1/hlib.hpp"
 #include "s1/task/ctrl.hpp"
 #include "s1/audio_stream.hpp"
+#include "common/aica_adpcm.hpp"
 #include "s1/archive_handles.hpp"
 #include "s1/d3t/settings.hpp"
 #include "s1/task/pack.hpp"
@@ -51,6 +52,9 @@ bool (*g_releaseEnvelope)(std::uint32_t){};
 #if defined(_WIN32)
 std::array<IXAudio2SourceVoice *, kEncodedAudioVoiceCount> g_dialogueVoices{};
 std::uint32_t g_nextDialogueVoice{};
+#if SHENMUE_IS_DEMO
+std::array<std::vector<std::uint8_t>, kEncodedAudioVoiceCount> g_trialVoicePcm;
+#endif
 std::unique_ptr<XA_VoiceContext[]> g_rawSoundEffectVoices;
 std::array<AudioVoiceRouting, kXAudioVoiceCount> g_voiceRouting{};
 AudioVoiceRouting &Routing(const XA_VoiceContext *owner) {
@@ -568,7 +572,11 @@ HLib::TaskData *FindPreloadedAudioIndex(const char *name) {
 // @verified - p
 PackAdfsWrapper *ReadAFS(const char *name, std::int32_t timeout) {
     char directory[80]{};
+#if SHENMUE_IS_DEMO
+    std::snprintf(directory, sizeof(directory), "SCENE/%02d/STREAM/%s", g_sceneId, name);
+#else
     std::snprintf(directory, sizeof(directory), "SCENE/%02d/STREAM/PC/%s/%s", g_sceneId, g_usingJapaneseAudio ? "JAP" : "ENG", name);
+#endif
     char *const separator = std::strrchr(directory, '/');
     char filename[16]{};
     std::snprintf(filename, sizeof(filename), "%s.AFS", separator + 1);
@@ -578,9 +586,15 @@ PackAdfsWrapper *ReadAFS(const char *name, std::int32_t timeout) {
 
 
 void *LoadAudio(const char *sceneId, std::uint32_t sceneNumber, std::int32_t blockType) {
+#if !SHENMUE_IS_DEMO
     const char *const language = g_usingJapaneseAudio ? "JAP" : "ENG";
+#endif
     char path[80]{};
+#if SHENMUE_IS_DEMO
+    std::snprintf(path, sizeof(path), "SCENE/%02u/STREAM/%s", sceneNumber, sceneId);
+#else
     std::snprintf(path, sizeof(path), "SCENE/%02u/STREAM/PC/%s/%s", sceneNumber, language, sceneId);
+#endif
     char *const separator = std::strrchr(path, '/');
     char filename[16]{};
     std::snprintf(filename, sizeof(filename), "%s.IDX", separator + 1);
@@ -801,8 +815,11 @@ void InitializeSceneDialogueAudio() {
     }
     if (sceneBgm)
         LoadAudioFile_Wrapper(1, sceneBgm);
+#if SHENMUE_IS_DEMO
+#else
 
     SelectFREEAudio_0();
+#endif
 }
 
 // @verified - p
@@ -999,6 +1016,32 @@ std::uint32_t LoadFileWrapper_0(std::int32_t fileId, std::int32_t entryIndex, fl
         ReadCachedFile(file);
         AudioWaveData wave{};
         handle = 5;
+#if SHENMUE_IS_DEMO && defined(_WIN32)
+        if (size >= 0x40 && std::memcmp(bytes, "SPSD", 4) == 0) {
+            std::uint32_t dataBytes{};
+            std::uint16_t sampleRate{}, interleave{};
+            std::memcpy(&dataBytes, bytes + 0x0c, sizeof(dataBytes));
+            std::memcpy(&sampleRate, bytes + 0x2a, sizeof(sampleRate));
+            std::memcpy(&interleave, bytes + 0x0a, sizeof(interleave));
+            if (bytes[8] == std::byte{3} && (std::to_integer<unsigned>(bytes[9]) & 3U) == 0 && interleave == 0 &&
+                dataBytes <= size - 0x40 && sampleRate) {
+                std::vector<std::uint8_t> pcm;
+                DecodeYamahaAdpcm(reinterpret_cast<const std::uint8_t *>(bytes + 0x40), dataBytes, pcm);
+                const WAVEFORMATEX format{.wFormatTag = WAVE_FORMAT_PCM, .nChannels = 1, .nSamplesPerSec = sampleRate,
+                    .nAvgBytesPerSec = static_cast<DWORD>(sampleRate) * 2U, .nBlockAlign = 2, .wBitsPerSample = 16, .cbSize = 0};
+                wave.format = &format;
+                wave.audio = reinterpret_cast<const std::byte *>(pcm.data());
+                wave.audioBytes = static_cast<std::uint32_t>(pcm.size());
+                void *const voice = CreateAndSubmitSourceVoice(wave, volume * 1.5f);
+                if (voice) {
+                    handle = GetCurrentEncodedAudioVoiceHandle();
+                    g_trialVoicePcm[handle - 1] = std::move(pcm);
+                    if (!GetXAudioEffectFlagVal())
+                        SetOutputMatrixVolumeAndChannels(voice, reverb, 1);
+                }
+            }
+        } else
+#endif
         if (ProcessWave(bytes, size, wave) >= 0) {
             void *const voice = CreateAndSubmitSourceVoice(wave, volume * 1.5f);
             if (voice) {
@@ -1169,9 +1212,10 @@ bool GetAudioDeviceDetails() {
         return false;
     IMMDeviceCollection *devices = nullptr;
     result = enumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &devices);
-    enumerator->Release();
-    if (FAILED(result))
+    if (FAILED(result)) {
+        enumerator->Release();
         return false;
+    }
     UINT count = 0;
     devices->GetCount(&count);
     if (count > 12)
@@ -1196,6 +1240,26 @@ bool GetAudioDeviceDetails() {
         device->Release();
     }
     devices->Release();
+#if SHENMUE_IS_DEMO
+#pragma region WhatsShenmue
+    IMMDevice *defaultDevice = nullptr;
+    if (SUCCEEDED(enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &defaultDevice))) {
+        LPWSTR id = nullptr;
+        if (SUCCEEDED(defaultDevice->GetId(&id))) {
+            for (UINT index = 1; index < count; ++index) {
+                if (std::wcscmp(g_audioDeviceIds[index].data(), id) == 0) {
+                    std::swap(g_audioDeviceIds[0], g_audioDeviceIds[index]);
+                    std::swap(g_audioDeviceNames[1], g_audioDeviceNames[index + 1]);
+                    break;
+                }
+            }
+            CoTaskMemFree(id);
+        }
+        defaultDevice->Release();
+    }
+#pragma endregion
+#endif
+    enumerator->Release();
     if (!count)
         return false;
     g_audioDeviceCount = count + 1;

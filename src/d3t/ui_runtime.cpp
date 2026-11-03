@@ -4,19 +4,18 @@
 #include "s2/ui_scroll_list.hpp"
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 #include "s1/d3t/d3t_shader_load.hpp"
 #include "s1/d3t/d3t_texture.hpp"
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
 #endif
 
-#if !SHENMUE_IS_S1
-
+#if !SHENMUE_IS_S1_FAMILY
 
 std::int32_t g_waitingForNextTick = 1;
 
@@ -40,7 +39,7 @@ bool g_nuklearTargetRedirectPending{};
 const std::uint32_t *g_nuklearTargetRedirect{};
 #endif
 
-#if !SHENMUE_IS_S1
+#if !SHENMUE_IS_S1_FAMILY
 std::array<UIAsyncLoadRequest, 8192> g_uiLoadRequests{};
 std::atomic<std::uint16_t> g_uiLoadRequestIndex{};
 std::array<UIViewImageLoadDiagnostic, 83> g_uiImageLoadDiagnostics{};
@@ -54,7 +53,7 @@ nk_context GNuklearWindow{};
 nk_draw_null_texture g_nuklearNullTexture{};
 nk_buffer g_nuklearCommands{};
 std::array<std::array<UIFontFace, 4>, 7> g_uiFonts{};
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 std::array<std::vector<std::byte>, 7> g_fontDefinitions;
 #else
 std::array<std::byte *, 7> g_uiFontDefinitions{};
@@ -76,7 +75,7 @@ std::int32_t g_pendingUIFontLanguage{};
 static_assert(offsetof(nk_context, stacks.fonts.head) == 0x2dd0);
 
 void SetupNuklear() {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     if (g_NuklearInitialized)
         return;
 #endif
@@ -93,7 +92,7 @@ void SetupNuklear() {
         GNuklearWindow.style.button.active = nk_style_item_hide();
         GNuklearWindow.style.window.background = nk_rgba(0, 0, 0, 0);
         GNuklearWindow.style.button.border_color = nk_rgba(0, 0, 0, 0);
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         g_nuklearVertexShader = d3t_GetLoadedShader(g_nuklearShaderLoad, 0);
         g_nuklearPixelShader = d3t_GetLoadedShader(g_nuklearShaderLoad, 1);
 #else
@@ -107,7 +106,7 @@ void SetupNuklear() {
             const d3t::BufferDescription description{.flags = 2, .size = 450560, .count = 0, .flags3 = 2, .buffer = nullptr, .name = "nuklear sIndexBuffer"};
             g_nuklearIndexBuffer = d3t::CreateBuffer(&description);
         }
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
         g_NuklearInitialized = g_nuklearVertexShader != 0 && g_nuklearPixelShader != 0 && g_nuklearVertexBuffer != 0 && g_nuklearIndexBuffer != 0;
 #else
         if (d3t::g_originalScreenWidth > g_uiScreenWidth)
@@ -440,7 +439,7 @@ std::int32_t g_uiLabelSplitting = 0;
 
 std::array<d3t::UIViewImage *, 3> g_platformButtonIconImages{};
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 std::int64_t g_platformIconsSheet = 0;
 #else
 std::int32_t g_platformIconsSheet = 0;
@@ -637,7 +636,7 @@ void uiUpdateWithColour(nk_context &context, std::uint32_t slot) {
 }
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

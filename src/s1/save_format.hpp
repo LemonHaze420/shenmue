@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "common/types.hpp"
 
@@ -8,6 +9,35 @@
 #include <filesystem>
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+#pragma pack(push, 1)
+struct TrialSavedGameState {
+    float version;
+    std::int32_t sceneId;
+    std::uint32_t areaId;
+    std::uint32_t entryPoint;
+    std::uint8_t playerStats[0x34];
+    std::uint8_t dateTime[10];
+    std::uint8_t scenarioBits[8];
+    std::uint8_t shenmueFlags[128];
+    std::uint8_t scenarioSteps[32];
+    std::uint8_t inventory[256];
+    std::uint8_t reserved1f6[2];
+    float scenarioStep;
+    std::uint32_t arcadeScores[8];
+    std::uint32_t checksum;
+};
+#pragma pack(pop)
+static_assert(sizeof(TrialSavedGameState) == 0x220);
+static_assert(offsetof(TrialSavedGameState, dateTime) == 0x44);
+static_assert(offsetof(TrialSavedGameState, inventory) == 0xf6);
+static_assert(offsetof(TrialSavedGameState, scenarioStep) == 0x1f8);
+static_assert(offsetof(TrialSavedGameState, checksum) == 0x21c);
+extern TrialSavedGameState g_trialSavedGameState;
+void S1Save_CaptureTrialState();
+std::uint32_t S1Save_CalculateTrialChecksum(std::uint32_t count, const void *data);
+
+#endif
 
 inline constexpr shen_name kS1SaveIdentifier{SHEN_NAME(SHEE)};
 inline constexpr std::uint32_t kS1SaveVersion = 0x10e;

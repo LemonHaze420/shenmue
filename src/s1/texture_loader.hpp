@@ -18,4 +18,8 @@ extern std::array<TextureLoadRequest, 0x2000> g_textureLoadRequests;
 std::uint32_t LoadTextureFromFilepath(const char *path, std::uint32_t linearColour, std::uint32_t renderHandle);
 std::uint32_t LoadTextureFromFilepathWithUsage(const char *path);
 
+#if SHENMUE_IS_DEMO
+std::int32_t LoadSpriteTextureList(void *data, std::uint32_t size, std::int32_t *surfaces);
+#endif
+
 } // namespace shenmue::s1

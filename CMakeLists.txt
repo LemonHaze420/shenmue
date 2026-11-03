@@ -2,7 +2,16 @@ cmake_minimum_required(VERSION 3.22)
 
 project(shenmue_recovery LANGUAGES CXX)
 
+set(SHENMUE_S1_GAME "S1" CACHE STRING "S1 runtime game: S1 or WHATS")
+set_property(CACHE SHENMUE_S1_GAME PROPERTY STRINGS S1 WHATS)
+if(NOT SHENMUE_S1_GAME MATCHES "^(S1|WHATS)$")
+  message(FATAL_ERROR "SHENMUE_S1_GAME must be S1 or WHATS")
+endif()
+
 option(SHENMUE_STEAM "Build Steam integration modules" OFF)
+if(SHENMUE_S1_GAME STREQUAL "WHATS" AND SHENMUE_STEAM)
+  message(FATAL_ERROR "The What's Shenmue PC target requires SHENMUE_STEAM=OFF")
+endif()
 if(SHENMUE_STEAM AND WIN32 AND DEFINED VCPKG_TARGET_TRIPLET AND NOT VCPKG_TARGET_TRIPLET MATCHES "static")
   message(FATAL_ERROR "Steam ASIs require static third-party libraries; select a static vcpkg triplet")
 endif()
@@ -21,7 +30,7 @@ add_custom_target(shenmue_build_info
 option(SHEN_AUTO_TEST_ENABLED "Capture a fixed Press Start screenshot" OFF)
 if(SHEN_AUTO_TEST_ENABLED)
   set_property(SOURCE
-    src/s1/initialization.cpp src/s1/d3t/settings.cpp src/s1/ui_runtime.cpp src/s1/ui_frontend.cpp src/s1/task/hplg.cpp
+    src/s1/initialization.cpp src/s1/d3t/settings.cpp src/s1/ui_runtime.cpp src/s1/ui_frontend.cpp src/s1/task/hplg.cpp src/s1/task/disp_trial.cpp
     src/s2/ui.cpp src/s2/ui_frontend.cpp src/s2/initialization.cpp
     APPEND PROPERTY COMPILE_DEFINITIONS SHEN_AUTO_TEST_ENABLED=1)
 endif()
@@ -95,6 +104,7 @@ add_subdirectory(libs/ShenmueDK)
 add_library(shenmue_common STATIC
   src/common/archive_data.cpp
   src/common/math.cpp
+  src/common/aica_adpcm.cpp
   src/common/matrix_stack.cpp
   src/platform/performance_counter.cpp
 )
@@ -104,6 +114,9 @@ target_include_directories(shenmue_common PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/ge
 add_dependencies(shenmue_common shenmue_build_info)
 target_link_libraries(shenmue_common PUBLIC ${SHENMUE_JSONCPP_TARGET} ShenmueDKStatic)
 shenmue_set_project_warnings(shenmue_common)
+if(SHENMUE_S1_GAME STREQUAL "WHATS")
+  target_compile_definitions(shenmue_common PRIVATE SHENMUE_TARGET_WHATS_PC=1)
+endif()
 
 
 add_library(shenmue_d3t STATIC
@@ -308,6 +321,7 @@ add_library(shenmue1_game STATIC
   src/s1/task/modu.cpp
   src/s1/task/hplg.cpp
   src/s1/task/disp.cpp
+  src/s1/task/disp_trial.cpp
   src/s1/task/staf.cpp
   src/s1/task/sygh.cpp
   src/s1/task/sygu.cpp
@@ -397,7 +411,20 @@ add_library(shenmue1_game STATIC
   src/s1/task/wzog.cpp
   src/s1/window.cpp
 )
-target_compile_definitions(shenmue1_game PUBLIC SHENMUE_TARGET_S1_PC=1)
+if(SHENMUE_S1_GAME STREQUAL "WHATS")
+  target_compile_definitions(shenmue1_game PUBLIC SHENMUE_TARGET_WHATS_PC=1)
+  set(ws_text_sources src/s1/item_catalog_trial.cpp src/s1/task/mmtk_trial_lines.cpp src/s1/ui_help_trial.cpp)
+  target_sources(shenmue1_game PRIVATE ${ws_text_sources})
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set_property(SOURCE ${ws_text_sources} src/s1/ui_inventory.cpp APPEND PROPERTY COMPILE_OPTIONS /source-charset:utf-8 /execution-charset:.20932)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set_property(SOURCE ${ws_text_sources} src/s1/ui_inventory.cpp APPEND PROPERTY COMPILE_OPTIONS -finput-charset=UTF-8 -fexec-charset=EUC-JP)
+  else()
+    message(FATAL_ERROR "What's Shenmue text tables require MSVC or GCC with EUC-JP execution encoding")
+  endif()
+else()
+  target_compile_definitions(shenmue1_game PUBLIC SHENMUE_TARGET_S1_PC=1)
+endif()
 target_sources(shenmue1_game PRIVATE
   src/s1/modules/harrier.cpp
   src/s1/modules/harrier_cpu.cpp
@@ -433,16 +460,16 @@ set_source_files_properties(src/third_party/stb_image.cpp PROPERTIES
 target_compile_features(shenmue1_game PUBLIC cxx_std_20)
 target_include_directories(shenmue1_game PUBLIC src)
 target_sources(shenmue1_game PRIVATE src/s1/enhancements/enemy_gauge.cpp)
-if(SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX)
+if(SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX AND SHENMUE_S1_GAME STREQUAL "S1")
   target_compile_definitions(shenmue1_game PRIVATE SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX=1)
 endif()
-if(SHENMUE_ENHANCEMENT_S1_SKY_FIX)
+if(SHENMUE_ENHANCEMENT_S1_SKY_FIX AND SHENMUE_S1_GAME STREQUAL "S1")
   target_compile_definitions(shenmue1_game PRIVATE SHENMUE_ENHANCEMENT_S1_SKY_FIX=1)
 endif()
-if(SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE)
+if(SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE AND SHENMUE_S1_GAME STREQUAL "S1")
   target_compile_definitions(shenmue1_game PRIVATE SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE=1)
 endif()
-if(SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE)
+if(SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE AND SHENMUE_S1_GAME STREQUAL "S1")
   target_compile_definitions(shenmue1_game PRIVATE SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE=1)
 endif()
 target_include_directories(shenmue1_game PRIVATE "${SHENMUE_STB_INCLUDE_DIR}")

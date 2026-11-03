@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/hlib.hpp"
 #include "common/math.hpp"
@@ -21,6 +22,9 @@ enum class SystemModule : std::uint32_t {
     Harrier = 9,
     Credits = 10,
     HangOn = 11,
+#if SHENMUE_IS_DEMO
+    TrialTitle = 12,
+#endif
 };
 
 struct SystemModuleEntry {
@@ -48,7 +52,8 @@ static_assert(sizeof(SystemModuleEntry) == 0x18);
 static_assert(sizeof(ModuleData) == 0x100);
 static_assert(sizeof(ModuleTaskData) == 0x24);
 
-extern std::array<SystemModuleEntry, 22> SystemModules;
+inline constexpr std::size_t kSystemModuleCount = SHENMUE_IS_DEMO ? 23 : 22;
+extern std::array<SystemModuleEntry, kSystemModuleCount> SystemModules;
 extern HLib::Task *g_pModuleTask;
 extern std::int32_t g_isRenderSuppressed;
 extern std::int32_t g_perspectiveProjection;
@@ -63,7 +68,11 @@ extern std::uint32_t g_EnvPrngSeed;
 
 int Shenmue_Main(int argc, char **argv);
 int Initialization(int argc, char **argv);
+#if SHENMUE_IS_DEMO
+std::int64_t HLib_UpdateTaskQueue(SystemModule module, std::uint32_t parameter = 0);
+#else
 std::int64_t HLib_UpdateTaskQueue(SystemModule module);
+#endif
 void InitMemory_callback(HLib::TaskData *);
 void Initialization_2();
 

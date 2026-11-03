@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/flags.hpp"
 
@@ -6,6 +7,9 @@
 #include "s1/face.hpp"
 #include "s1/task/char.hpp"
 #include "s1/hlib.hpp"
+#if SHENMUE_IS_DEMO
+#include "s1/task/scnt.hpp"
+#endif
 #include "s1/task/telm.hpp"
 
 #include <array>
@@ -63,9 +67,9 @@ using DoorScenarioFunction = void (*)(ScenarioContext *, void *);
 
 inline constexpr std::size_t kLegacyScenarioFunctionCount = 1;
 inline constexpr std::size_t kGeneralScenarioFunctionCount = 5;
-inline constexpr std::size_t kShenmueScenarioFunctionCount = 467;
+inline constexpr std::size_t kShenmueScenarioFunctionCount = SHENMUE_IS_DEMO ? 415 : 467;
 inline constexpr std::size_t kSCNFScenarioFunctionCount = 50;
-inline constexpr std::size_t kDoorScenarioFunctionCount = 8;
+inline constexpr std::size_t kDoorScenarioFunctionCount = SHENMUE_IS_DEMO ? 5 : 8;
 
 extern std::array<LegacyScenarioFunction, kLegacyScenarioFunctionCount> LegacyFunctions;
 extern std::array<GeneralScenarioFunction, kGeneralScenarioFunctionCount> GeneralPurposeFuncs;
@@ -89,6 +93,7 @@ std::int64_t ExecuteSCNFScriptFn(ScenarioContext *context, std::uint32_t index, 
 std::int64_t ExecuteDoorSupportFunc(ScenarioContext *context, std::uint32_t index, void *params);
 
 #pragma pack(push, 1)
+struct WindEntry;
 struct ScenarioTaskData {
     std::uint32_t name;
     std::uint32_t reserved_004;
@@ -151,6 +156,9 @@ void SCEN_ClearFreeTalkRuntimeFlag() noexcept;
 #pragma once
 
 #include "s1/hlib.hpp"
+#if SHENMUE_IS_DEMO
+#include "s1/task/scnt.hpp"
+#endif
 #include "common/types.hpp"
 
 #include <cstddef>
@@ -410,8 +418,13 @@ void scenParseStackRecursively(ScenarioWindow *scenarioWindow);
 void SCEN_ParseRecursive();
 ScenarioStack *Startup_EventBase(ScenarioWindow *scenarioWindow, ScenarioHeader *info);
 
-std::int16_t SCEN_GetCurrentScenarioStep() noexcept;
-void SCEN_SetCurrentScenarioStep(std::int16_t step) noexcept;
+#if SHENMUE_IS_DEMO
+using ScenarioStepValue = float;
+#else
+using ScenarioStepValue = std::int16_t;
+#endif
+ScenarioStepValue SCEN_GetCurrentScenarioStep() noexcept;
+void SCEN_SetCurrentScenarioStep(ScenarioStepValue step) noexcept;
 std::uint8_t SCEN_GetCurrentHelpToken() noexcept;
 void SCEN_SetHelpToken(std::uint8_t token, std::uint8_t button = 0) noexcept;
 
@@ -420,6 +433,9 @@ void SCEN_SetHelpToken(std::uint8_t token, std::uint8_t button = 0) noexcept;
 #pragma once
 
 #include "s1/hlib.hpp"
+#if SHENMUE_IS_DEMO
+#include "s1/task/scnt.hpp"
+#endif
 
 #include <array>
 #include <cstddef>

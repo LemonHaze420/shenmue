@@ -1652,7 +1652,464 @@ void UpdateCharaCycles() {
     g_lastProximityGroup = -1;
 
     CycleManager::ResetPublishedSceneState();
+#if SHENMUE_IS_DEMO
 
+    g_dynamicTurnCollisionVolumeCount = 0;
+    CycleManager::AppendParkedVehicleSteeringVolumes();
+
+    MOBJ_UpdateTransformsRecursively_0();
+    CycleManager::CollectCollisionObjects();
+    CycleManager::UpdateDobuitaContainment();
+    int32_t activeCycleCount = numCharactersSimulated + g_farQueueCycleCount + g_perFrameNpcWorkCnt + g_midQueueCycleCount + g_promoteListCycleCount;
+    numCharactersSimulated = 0;
+    g_dormantProgramVisitCount = 0;
+    g_nearQueueCycleCount = 0;
+    g_promoteListCycleCount = 0;
+    g_midQueueCycleCount = 0;
+    g_farQueueCycleCount = 0;
+    g_runningProgramCount = 0;
+    cm.umbrellaRainActive = Weather_ProcessRain();
+    const MapControlData *const control = g_mapControlTask ? reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
+    const ScenarioTaskData *const scenario =
+        control && control->scenarioTask ? reinterpret_cast<const ScenarioTaskData *>(control->scenarioTask->task_data_ptr) : nullptr;
+    const bool globalSimulation = CycleManager::IsGlobalSimulationEnabled(scenario ? scenario->scenarioFunctions : nullptr);
+    Character *const mapRyo = CycleManager::MapRyo();
+    if (g_cyclTalkCycleActive) {
+        g_cyclTalkCycleActive = TALK(mapRyo);
+        if (!globalSimulation || !g_cyclTalkCycleActive || ShouldRun()) {
+            g_shouldComputeBetweenTwoEntities = 0;
+            g_cyclTalkCycleActive = 0;
+        }
+    } else if (globalSimulation && !g_bGlobalFlag && CycleManager::CurrentAreaId() == SHEN_NAME(MFSY)) {
+        g_cyclTalkCycleActive = CycleManager::BeginRyoTalkWalk(mapRyo);
+        if (g_cyclTalkCycleActive)
+            g_shouldComputeBetweenTwoEntities = 1;
+    }
+    cm.center = CycleManager::CurrentRyoPosition();
+    ++cm.updateFrames;
+    if (cm.updateFrames == 1) {
+        CycleManager::BindSHUTRowsToSceneObjects();
+    }
+
+    if (!cm.programs.empty()) {
+
+        const int32_t currentDay = g_currentDateTime.day;
+        const int32_t time = static_cast<int32_t>(CycleManager::CurrentTimeSeconds());
+        if (g_tmp_new_day != currentDay && !g_LoadQueue) {
+            g_tmp_new_day = static_cast<std::uint8_t>(currentDay);
+            CycleManager::ProcessCycle(false);
+        }
+        g_prevCycleSeconds = static_cast<uint32_t>(time);
+        ++cm.npcAnimSyncEpoch;
+        if (!cm.npcAnimSyncEpoch)
+            ++cm.npcAnimSyncEpoch;
+
+        for (CycleManager::MobjEntry *entry = g_DormantPrograms; entry;) {
+            CycleTimetableRow *const row = entry->currentScheduleEntry;
+            CycleManager::MobjEntry *const next = entry->nextDormantProgram;
+            if (row && row->timeOrEndMarker < time && row->timeOrEndMarker != -1) {
+                entry->currentScheduleEntry = row + 1;
+                entry->ctx->cycleCommandPtr = CycleManager::FilePointer(static_cast<uint32_t>(row->commandStreamOffset));
+                entry->ctx->branchResumeCommandPtr = nullptr;
+                entry->ctx->pos = {10000.0f, 0.0f, 10000.0f};
+                if (MOBJ_executeTask(entry, time, 0, 0))
+                    CycleManager::MoveProgramToList(*CycleManager::EntryRecord(entry), CycleProgramList_Near, CycleListInsert::Head);
+            }
+            ++g_dormantProgramVisitCount;
+            entry = next;
+        }
+
+        const float taskDistanceThreshold = g_perFrameNpcWorkCnt < 0 ? 25.0f : g_perFrameNpcWorkCnt <= 1 ? 225.0f : g_perFrameNpcWorkCnt <= 3 ? 100.0f : 25.0f;
+        g_PromoteList = nullptr;
+        for (CycleManager::MobjEntry *entry = g_FarQueue; entry;) {
+            CycleManager::MobjEntry *const next = entry->nextDormantProgram;
+            CycleManager::NpcRecord &npc = *CycleManager::EntryRecord(entry);
+            CycleManager::MobjCycle *const ctx = entry->ctx;
+            ++g_farQueueCycleCount;
+            if (!MOBJ_executeTask(entry, time, 0, 0)) {
+                CycleManager::MoveProgramToList(npc, CycleProgramList_Dormant, CycleListInsert::Head);
+                CycleManager::UpdateSndStreaming(npc);
+                entry = next;
+                continue;
+            }
+            if (ctx->obj)
+                ctx->obj->entity.node.position = ctx->pos;
+            if (ctx->modeValue != 1u)
+                ctx->flags &= ~2u;
+            const bool blocked = UpdateNpcSteeringFromMOTN(npc, false);
+            bool nearShown = !shenIsLocalSphereInsideViewCullVolume(ctx->pos, ctx->range) || !shenIsLocalSphereVisibleInScreenDepthTable(ctx->pos, ctx->range);
+            for (CycleManager::MobjEntry *shown = g_SimSetHead; shown && !nearShown; shown = shown->nextDormantProgram)
+                nearShown = shown->ctx->motnSteeringActive && CycleManager::DistanceSquared(ctx->pos, shown->ctx->pos) < 0.5776f;
+            if (!nearShown && CycleManager::DistanceSquared(ctx->pos, cm.center) >= 0.5776f && !blocked) {
+
+                const CycleManager::NpcRecord *const partner =
+                    ctx->currentOpcode == CycleOpcode_BeginTalkMoveToTaggedPosition ? CycleManager::GetTrackedMobj(npc) : nullptr;
+                if (partner) {
+                    bool partnerShown = false;
+                    for (CycleManager::MobjEntry *shown = g_SimSetHead; shown && !partnerShown; shown = shown->nextDormantProgram)
+                        partnerShown = shown->ctx == partner->cycle;
+                    if (!partnerShown) {
+                        entry = next;
+                        continue;
+                    }
+                }
+                const uint32_t classId = ProgramClassCode(ctx->moveConfig);
+                bool crowded = false;
+                if (((classId - 4u) & 0xFFFFFFFCu) == 0 && classId != 6u) {
+                    for (CycleManager::MobjEntry *shown = g_SimSetHead; shown && !crowded; shown = shown->nextDormantProgram)
+                        crowded = shown->ctx->motnSteeringActive && CycleManager::DistanceSquared(ctx->pos, shown->ctx->pos) < 9.0f;
+                }
+                if (!crowded)
+                    CycleManager::MoveProgramToList(npc, CycleProgramList_Promote, CycleListInsert::Head);
+                entry = next;
+                continue;
+            }
+            if (taskDistanceThreshold > CycleManager::DistanceSquared(ctx->pos, g_tmp_cycle_v3)) {
+                const uint32_t classId = ProgramClassCode(ctx->moveConfig);
+                if (blocked && ((classId - 4u) & 0xFFFFFFFCu) == 0 && classId != 6u)
+                    CycleManager::MoveProgramToList(npc, CycleProgramList_Mid, CycleListInsert::Head);
+            } else if (!shenIsLocalSphereInsideViewCullVolume(ctx->pos, ctx->dist) || !shenIsLocalSphereVisibleInScreenDepthTable(ctx->pos, ctx->range)) {
+                CycleManager::MoveProgramToList(npc, CycleProgramList_Near, CycleListInsert::Head);
+                CycleManager::UpdateSndStreaming(npc);
+            }
+            entry = next;
+        }
+
+        g_perFrameNpcWorkCnt = 0;
+        if (CycleManager::MobjEntry *const head = g_LoadQueue) {
+            CycleManager::MobjEntry *const next = head->nextDormantProgram;
+            CycleManager::NpcRecord &npc = *CycleManager::EntryRecord(head);
+            CycleManager::MobjCycle *const ctx = head->ctx;
+            const bool running = MOBJ_executeTask(head, time, 0, 0) != 0;
+            const bool shown =
+                running && shenIsLocalSphereInsideViewCullVolume(ctx->pos, ctx->dist) && shenIsLocalSphereVisibleInScreenDepthTable(ctx->pos, ctx->range);
+            PackSlot *const loaded = g_bHasLoadedHuman ? g_pszTempLoadedHumanSched : nullptr;
+            if (loaded && !PACK_IsValidSlot(loaded)) {
+
+            } else if (!shown || ctx->loadQueueDisposition) {
+                if (ctx->loadQueueDisposition == 1) {
+                    ctx->currentOpcode = CycleOpcode_RemoveCharacter;
+                    CycleManager::MoveProgramToList(npc, CycleProgramList_Running, CycleListInsert::Head);
+                } else {
+                    CycleManager::MoveProgramToList(npc, running ? CycleProgramList_Near : CycleProgramList_Dormant, CycleListInsert::Head);
+                }
+                ctx->loadQueueDisposition = 0;
+                if (loaded) {
+                    LoadFile(loaded);
+                    g_pszTempLoadedHumanSched = nullptr;
+                    g_bHasLoadedHuman = 0;
+                }
+            } else if (!loaded) {
+                if (!PACK_HasValidPack()) {
+                    const int32_t humansIdx = ctx->humansIdx;
+                    const uint32_t *const humansSizes = reinterpret_cast<const uint32_t *>(&HumansIndexTable->name) + HumansIndexTable->numCharas;
+                    const uint64_t size = HumansIndexTable->numCharas <= humansIdx ? 164864u : humansSizes[humansIdx] + 3096u;
+                    if (CycleManager::LargestFreeTaskHeapBlock() > size && static_cast<uint32_t>(HLib_GetLargestMallocFreeBlock()) > size) {
+                        g_pszTempLoadedHumanSched =
+                            PACK_LoadHumanByIndex(HUMANS_AFS_Ptr, static_cast<uint32_t>(2 * humansIdx), static_cast<uint32_t>(2 * humansIdx + 1));
+                        if (g_pszTempLoadedHumanSched) {
+                            g_bHasLoadedHuman = 1;
+                        }
+                    }
+                }
+            } else {
+                ctx->filename = loaded;
+                g_pszTempLoadedHumanSched = nullptr;
+                ctx->obj = CycleManager::FindCharacter(ctx->moveConfig->obj_id.name);
+                if (!ctx->obj) {
+                    uint32_t index = g_TotalActiveCycles;
+                    if (index >= 10u)
+                        index = 0;
+                    g_CycleTable[2u * index] = ctx->moveConfig->obj_id.name;
+                    g_TotalActiveCycles = index + 1;
+                }
+                CycleManager::MoveProgramToList(npc, CycleProgramList_Far, CycleListInsert::Head);
+
+                const uint32_t classId = ProgramClassCode(ctx->moveConfig);
+                Mt5RuntimeNode *const model = classId >= 4u && classId <= 7u && ctx->obj ? static_cast<Mt5RuntimeNode *>(ctx->obj->model) : nullptr;
+                if (model && (ctx->currentOpcode != CycleOpcode_DriveVehiclePath2D || static_cast<uint32_t>(time - 25201) <= 37798u)) {
+                    if (Mt5RuntimeNode *const node = shenGetNodeByChildIdx(model, 196))
+                        node->sceneBindingOffset = 0;
+                }
+                if (model && classId != 6u) {
+                    if (Mt5RuntimeNode *const node = shenGetNodeByChildIdx(model, 195))
+                        node->sceneBindingOffset = 0;
+                }
+                if (ctx->primarySoundBankId == -1)
+                    ctx->primarySoundBankId = CycleManager::GetBikeSoundsForArea(npc);
+                ctx->mot = MOTN_getMOTM(ctx->obj);
+                if (ctx->mot)
+                    CycleManager::CreateCharacter(npc);
+                std::memcpy(g_cycle_file_str, &ctx->moveConfig->obj_id.name, 4);
+                ctx->loadedBinHandle = LoadFileIntoHeapMem(ctx->filename, g_cycle_file_str, make_shen_name('B', 'I', 'N', ' '));
+                npcSetupFace(ctx);
+                if (ctx->pFace) {
+                    FACE_UpdateExpression(ctx->obj, 0, 0, 0);
+                    ctx->faceNearActive = 0;
+                }
+                if (ctx->obj) {
+                    CLMD_SetFlags(ctx->obj, 8, 1);
+                    ccowDisableCharaFlags(ctx->obj, 7);
+                    shenApplyTranslationToAll(ctx->obj->entity.node, ctx->pos);
+                    CycleManager::SetNodeChainYaw(*ctx->obj, ctx->desiredPathYaw);
+                }
+                AttachEntityAndInitCycle(ctx->obj, true);
+                g_bHasLoadedHuman = 0;
+            }
+            ++g_perFrameNpcWorkCnt;
+            if (next) {
+                CycleManager::MobjEntry *sorted = nullptr;
+                if (g_LoadQueue == next) {
+                    sorted = SortLinkedListByDistance(next);
+                    g_LoadQueue = sorted;
+                } else {
+                    sorted = SortLinkedListByDistance(next);
+                    g_LoadQueue->nextDormantProgram = sorted;
+                }
+                for (CycleManager::MobjEntry *entry = sorted; entry;) {
+                    CycleManager::MobjEntry *const after = entry->nextDormantProgram;
+                    CycleManager::NpcRecord &queued = *CycleManager::EntryRecord(entry);
+                    if (!MOBJ_executeTask(entry, time, 0, 0)) {
+                        CycleManager::MoveProgramToList(queued, CycleProgramList_Dormant, CycleListInsert::Head);
+                    } else if (!shenIsLocalSphereInsideViewCullVolume(entry->ctx->pos, entry->ctx->dist) ||
+                        !shenIsLocalSphereVisibleInScreenDepthTable(entry->ctx->pos, entry->ctx->range)) {
+                        CycleManager::MoveProgramToList(queued, CycleProgramList_Near, CycleListInsert::Head);
+                    }
+                    ++g_perFrameNpcWorkCnt;
+                    entry = after;
+                }
+            }
+        }
+
+        if (!g_scntReferencedCycleHeld) {
+            for (CycleManager::MobjEntry *entry = g_NearQueue; entry;) {
+                CycleManager::MobjEntry *const next = entry->nextDormantProgram;
+                CycleManager::NpcRecord &npc = *CycleManager::EntryRecord(entry);
+                CycleManager::MobjCycle *const ctx = entry->ctx;
+                if (!MOBJ_executeTask(entry, time, 0, 0)) {
+                    CycleManager::MoveProgramToList(npc, CycleProgramList_Dormant, CycleListInsert::Head);
+                } else if (g_cm_unk_flag && ctx->areaID.name == CycleManager::CurrentAreaId()) {
+                    const float radius = ProgramClassCode(ctx->moveConfig) <= 3u ? radiusSquared : 6400.0f;
+                    if (radius > CycleManager::DistanceSquared(ctx->pos, g_tmp_cycle_v3) && shenIsLocalSphereInsideViewCullVolume(ctx->pos, ctx->dist) &&
+                        shenIsLocalSphereVisibleInScreenDepthTable(ctx->pos, ctx->range) && activeCycleCount < 12) {
+                        ctx->obj = CycleManager::FindCharacter(ctx->moveConfig->obj_id.name);
+                        if (ctx->obj) {
+                            ctx->mot = MOTN_getMOTM(ctx->obj);
+                            CycleManager::MoveProgramToList(npc, CycleProgramList_Far, CycleListInsert::Head);
+                            ctx->filename = nullptr;
+                        } else {
+                            CycleManager::MoveProgramToList(npc, CycleProgramList_Load, CycleListInsert::Tail);
+                            ++activeCycleCount;
+                        }
+                    }
+                }
+                ++g_nearQueueCycleCount;
+                entry = next;
+            }
+        }
+
+        g_scntReferencedCycleHeld = 0;
+        const ScenarioFunctionWork *const scnf = scenario ? scenario->scenarioFunctions : nullptr;
+        for (CycleManager::MobjEntry *entry = g_SimSetHead; entry;) {
+            CycleManager::MobjEntry *const next = entry->nextDormantProgram;
+            CycleManager::NpcRecord &npc = *CycleManager::EntryRecord(entry);
+            CycleManager::MobjCycle *const ctx = entry->ctx;
+            npc.skipBlend = CycleManager::SimSetSkipBlend(npc, scnf, globalSimulation);
+            ++numCharactersSimulated;
+            if (!MOBJ_executeTask(entry, time, ctx->motnSteeringActive, npc.skipBlend ? 1u : 0u)) {
+                if (ctx->currentOpcode != CycleOpcode_DoorUse) {
+                    if (ctx->loadQueueDisposition == 1) {
+                        ctx->currentOpcode = CycleOpcode_RemoveCharacter;
+                        CycleManager::MoveProgramToList(npc, CycleProgramList_Running, CycleListInsert::Head);
+                    } else {
+                        CycleManager::MoveProgramToList(npc, CycleProgramList_Dormant, CycleListInsert::Head);
+                    }
+                    ctx->loadQueueDisposition = 0;
+                    CycleManager::UpdateSndStreaming(npc);
+                }
+                entry = next;
+                continue;
+            }
+
+            if (!ctx->obj) {
+                CycleManager::MoveProgramToList(npc, CycleProgramList_Near, CycleListInsert::Head);
+                CycleManager::UpdateSndStreaming(npc);
+                entry = next;
+                continue;
+            }
+            const float radius = ProgramClassCode(ctx->moveConfig) <= 3u ? radiusSquared : 3600.0f;
+            const bool inArea = ctx->areaID.name == CycleManager::CurrentAreaId();
+            const bool keep =
+                (inArea && shenIsLocalSphereInsideViewCullVolume(ctx->pos, ctx->range) && shenIsLocalSphereVisibleInScreenDepthTable(ctx->pos, ctx->range) &&
+                    (radius > CycleManager::DistanceSquared(ctx->pos, g_tmp_cycle_v3) || ctx->obj->renderOpacity > 0.0f)) ||
+                npc.skipBlend || CycleManager::DistanceSquared(ctx->pos, cm.center) < 16.0f;
+            if (keep) {
+                if (ctx->prevMotnSteeringActive && std::fabs(ctx->pos.y - ctx->steeringTarget.y) > 2.0f) {
+                    ctx->motnSteeringActive = 0;
+                    CycleManager::MoveProgramToList(npc, CycleProgramList_Near, CycleListInsert::Head);
+                    CycleManager::UpdateSndStreaming(npc);
+                }
+            } else if (static_cast<uint16_t>(ctx->currentOpcode - CycleOpcode_RequestNearestDoorTransition) > 1u) {
+                if (ctx->loadQueueDisposition == 1) {
+                    ctx->currentOpcode = CycleOpcode_RemoveCharacter;
+                    CycleManager::MoveProgramToList(npc, CycleProgramList_Running, CycleListInsert::Head);
+                    ctx->loadQueueDisposition = 0;
+                    CycleManager::UpdateSndStreaming(npc);
+                } else if (ctx->loadQueueDisposition != 0 || !inArea) {
+                    CycleManager::MoveProgramToList(npc, CycleProgramList_Near, CycleListInsert::Head);
+                    ctx->loadQueueDisposition = 0;
+                    CycleManager::UpdateSndStreaming(npc);
+                } else {
+                    CycleManager::MoveProgramToList(npc, CycleProgramList_Far, CycleListInsert::Head);
+                    AttachEntityAndInitCycle(ctx->obj, true);
+                }
+            }
+            entry = next;
+        }
+
+        g_SimSetHead = CycleManager::SortSimSetByCameraDistance();
+        numCharactersSimulated = 0;
+        for (CycleManager::MobjEntry *entry = g_SimSetHead; entry; entry = entry->nextDormantProgram) {
+            if (entry->ctx->motnSteeringActive || entry->ctx->xm_resume_state)
+                ++numCharactersSimulated;
+        }
+        int32_t index = 0;
+        for (CycleManager::MobjEntry *entry = g_SimSetHead; entry; entry = entry->nextDormantProgram, ++index) {
+            CycleManager::NpcRecord &npc = *CycleManager::EntryRecord(entry);
+            CycleManager::MobjCycle *const ctx = entry->ctx;
+            const uint8_t steering = ctx->motnSteeringActive;
+            const bool hidden = !steering && !ctx->xm_resume_state;
+            bool appear = false;
+            bool restoreOpacity = false;
+            if (hidden) {
+                appear = numCharactersSimulated < maxEntitiesToSimulate && !ctx->bikeClearanceBlocked;
+            } else if ((index >= maxEntitiesToSimulate || ctx->bikeClearanceBlocked) && !ctx->xm_resume_state) {
+                const float opacity = ctx->obj->renderOpacity - 0.1f;
+                if (opacity < 0.0f) {
+                    ctx->motnSteeringActive = 0;
+                    AttachEntityAndInitCycle(ctx->obj, true);
+                }
+                ctx->obj->renderOpacity = opacity;
+            } else if (ctx->xm_resume_state && !steering) {
+                appear = true;
+                restoreOpacity = true;
+            }
+            if (appear) {
+                const uint32_t flags = ctx->flags;
+                if (restoreOpacity || ctx->modeValue != 1u)
+                    ctx->flags &= ~2u;
+                const bool blocked = UpdateNpcSteeringFromMOTN(npc, false);
+                if (restoreOpacity || ctx->modeValue != 1u)
+                    ctx->flags = (ctx->flags & ~2u) | (flags & 2u);
+                bool occupied = blocked;
+                for (CycleManager::MobjEntry *shown = g_SimSetHead; shown && !occupied; shown = shown->nextDormantProgram)
+                    occupied = shown->ctx->motnSteeringActive && CycleManager::DistanceSquared(ctx->pos, shown->ctx->pos) < 0.5776f;
+                if (!occupied) {
+                    if (restoreOpacity)
+                        ctx->obj->renderOpacity = 1.0f;
+                    else
+                        ++numCharactersSimulated;
+                    PlayAnim_Wrapper_1(npc, cm.umbrellaRainActive);
+                }
+            }
+            if (!hidden && ctx->motnSteeringActive && ctx->moveObjRuntime) {
+                CycleMoveObjectRuntime &runtime = *ctx->moveObjRuntime;
+                CycleManager::ResolveVisibleBikeModels(runtime);
+                if (runtime.model) {
+                    runtime.renderOpacity = ctx->obj ? ctx->obj->renderOpacity : 0.0f;
+                    runtime.pos = ctx->pos;
+                    runtime.visibleNext = g_visibleMoveObjects;
+                    g_visibleMoveObjects = &runtime;
+                }
+            }
+            if (ctx->motnSteeringActive && ctx->pFace) {
+                const bool nearCamera = CycleManager::DistanceSquared(ctx->pos, g_tmp_cycle_v3) < 25.0f;
+                if (nearCamera != (ctx->faceNearActive != 0)) {
+                    FACE_UpdateExpression(ctx->obj, nearCamera ? 1 : 0, 0, nearCamera ? 2 : 0);
+                    ctx->faceNearActive = nearCamera;
+                }
+            }
+            ctx->prevMotnSteeringActive = ctx->motnSteeringActive;
+        }
+
+        for (CycleManager::MobjEntry *entry = g_PromoteList; entry;) {
+            CycleManager::MobjEntry *const next = entry->nextDormantProgram;
+            CycleManager::NpcRecord &npc = *CycleManager::EntryRecord(entry);
+            CycleManager::MobjCycle *const ctx = entry->ctx;
+            CycleManager::MoveProgramToList(npc, CycleProgramList_SimSet, CycleListInsert::Head);
+            if (ctx->obj) {
+                shenApplyTranslationToAll(ctx->obj->entity.node, ctx->pos);
+                CycleManager::SetNodeChainYaw(*ctx->obj, ctx->desiredPathYaw);
+                ctx->obj->renderOpacity = 0.0f;
+            }
+            ctx->motnSteeringActive = 0;
+            ctx->prevMotnSteeringActive = 0;
+            ++g_promoteListCycleCount;
+            entry = next;
+        }
+
+        for (CycleManager::MobjEntry *entry = g_MidQueue; entry;) {
+            CycleManager::MobjEntry *const next = entry->nextDormantProgram;
+            CycleManager::NpcRecord &npc = *CycleManager::EntryRecord(entry);
+            CycleManager::MobjCycle *const ctx = entry->ctx;
+            if (!MOBJ_executeTask(entry, time, 0, 0)) {
+                CycleManager::MoveProgramToList(npc, CycleProgramList_Dormant, CycleListInsert::Head);
+                CycleManager::UpdateSndStreaming(npc);
+            } else if (!shenIsLocalSphereInsideViewCullVolume(ctx->pos, ctx->range) || !shenIsLocalSphereVisibleInScreenDepthTable(ctx->pos, ctx->range)) {
+                CycleManager::MoveProgramToList(npc, CycleProgramList_Far, CycleListInsert::Head);
+                AttachEntityAndInitCycle(ctx->obj, true);
+            }
+            ++g_midQueueCycleCount;
+            entry = next;
+        }
+
+        for (CycleManager::MobjEntry *entry = g_RunningPrograms; entry; entry = entry->nextDormantProgram) {
+            CycleManager::MobjCycle *const ctx = entry->ctx;
+            if (ctx->obj)
+                ctx->pos = GetPositionForEntity(ctx->obj->entity.node);
+            if (globalSimulation) {
+                if (SCEN_HasActiveRuntimeObject() && scnf && (scnf->flags & 0x20000U) != 0) {
+                    const std::span<const std::uint32_t> referenced = SCEN_ReferencedCharacterIds();
+                    for (size_t i = 0; i < referenced.size() && i < 0x18u && referenced[i]; ++i) {
+                        if (referenced[i] == ctx->moveConfig->obj_id.name) {
+                            g_cycleConversationHoldActive = 1;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                g_bGlobalFlag = 0;
+                g_cycleConversationHoldActive = 0;
+            }
+            ++g_runningProgramCount;
+        }
+    }
+
+    CycleManager::PublishVisibleParkedMoveObjects();
+
+    for (CycleManager::NpcRecord &npc : cm.npcRecords) {
+        if (ProgramClassCode(npc.cycle->moveConfig) != 6u)
+            continue;
+        CycleManager::UpdateClass6DoorNodes(npc);
+
+        float dx = npc.cycle->pos.x - npc.cycle->steeringTarget.x;
+        float dz = npc.cycle->pos.z - npc.cycle->steeringTarget.z;
+        if (std::fabs(dx) < FLT_EPSILON)
+            dx = 0.0f;
+        if (std::fabs(dz) < FLT_EPSILON)
+            dz = 0.0f;
+        if (dx == 0.0f && dz == 0.0f) {
+            npc.motnCycleYawDelta = 0;
+            continue;
+        }
+
+        const int16_t targetYaw = static_cast<int16_t>(atan2_fixed16(dx, dz));
+        npc.motnCycleYawDelta = Angle16Delta(static_cast<uint16_t>(targetYaw), static_cast<uint16_t>(npc.cycle->desiredPathYaw));
+    }
+    for (CycleManager::NpcRecord *npc = CycleManager::NextProgramInList(CycleProgramList_SimSet); npc;
+         npc = CycleManager::NextProgramInList(CycleProgramList_SimSet, npc)) {
+        if (ProgramClassCode(npc->cycle->moveConfig) >= 4u)
+#else
 
     g_dynamicTurnCollisionVolumeCount = 0;
     CycleManager::AppendParkedVehicleSteeringVolumes();
@@ -2135,6 +2592,7 @@ void UpdateCharaCycles() {
     for (CycleManager::NpcRecord *npc = CycleManager::NextProgramInList(CycleProgramList_SimSet); npc;
          npc = CycleManager::NextProgramInList(CycleProgramList_SimSet, npc)) {
         if (npc->cycle->moveConfig->cycleClassCode >= 4u)
+#endif
             CycleManager::UpdateVehicleWheelNodes(*npc);
     }
 }
@@ -2199,6 +2657,189 @@ void Init() {
         cm.npcRecords.clear();
         cm.npcRecords.reserve(static_cast<std::size_t>(g_mobjCycleCapacity));
         MOBJ_ResetDynamicRuntimes();
+#if SHENMUE_IS_DEMO
+        CycleManager::ClearAllMoveObjChairOccupancy();
+        g_tmp_new_day = g_currentDateTime.day;
+        const std::size_t capacity = static_cast<std::size_t>(g_MOBJ_num_entries < g_mobjCycleCapacity ? g_MOBJ_num_entries : g_mobjCycleCapacity);
+        for (uint32_t i = 0; (SHENMUE_IS_DEMO || cm.mscrOffset) && i < cm.mscrCharaCount && cm.npcRecords.size() < capacity; ++i) {
+            uint32_t entryOffset = 0;
+            if (!ReadValue(cm.bytes, cm.mscrOffset + 4 + i * 4, entryOffset))
+                break;
+            const uint32_t headerOffset = cm.mscrOffset + entryOffset;
+            CycleManager::MobjData *const header = reinterpret_cast<CycleManager::MobjData *>(cm.bytes.data() + headerOffset);
+            if (header->programIdSuffix != kTrialCycleProgramKind.name)
+                continue;
+            const std::size_t index = cm.npcRecords.size();
+            CycleManager::MobjCycle *const ctx = &g_MOBJ_Cycles[index];
+            *ctx = CycleManager::MobjCycle{};
+            ctx->modeValue = 2;
+            ctx->bbbbbbbb = 5;
+            ctx->animMoveSpeedScale = 0.041666668f;
+            ctx->primarySoundBankId = -1;
+            ctx->secondarySoundBankId = -1;
+            ctx->baseMoveSpeed = 1.0f;
+            ctx->pathMoveSpeed = 1.0f;
+            ctx->moveConfig = header;
+            ctx->activeAnimId = ProgramMotionId(header, 0);
+            const uint32_t humansName = header->obj_id.name == SHEN_NAME(FUKU) && SCEN_GetCurrentScenarioStep() < 60 ? SHEN_NAME(FUK2) : header->obj_id.name;
+            ctx->humansIdx = Humans_n_GetIndexForCharacter(humansName);
+            CycleManager::MobjEntry *const entry = &g_MOBJ_pData[index];
+            *entry = {.currentScheduleEntry = reinterpret_cast<CycleTimetableRow *>(reinterpret_cast<char *>(header) + header->currentBranchOfs),
+                .ctx = ctx,
+                .prev_or_backlink = index ? &g_MOBJ_pData[index - 1] : nullptr,
+                .nextDormantProgram = nullptr};
+            if (index)
+                g_MOBJ_pData[index - 1].nextDormantProgram = entry;
+            else
+                g_DormantPrograms = entry;
+            CycleManager::NpcRecord &npc = cm.npcRecords.emplace_back();
+            npc.cycle = ctx;
+            npc.entry = entry;
+            npc.headerOffset = headerOffset;
+            npc.moveConfigOffset = headerOffset;
+            ctx->selectedMotionToken = 0;
+            ctx->activeAnimId = ProgramMotionId(header, 0);
+            ctx->requestAnimId = ProgramMotionId(header, 1);
+            ctx->modeValue = 1;
+            ctx->animMoveSpeedScale = 1.0f;
+            ctx->pos = {1000.0f, 1000.0f, 1000.0f};
+            ctx->steeringTarget = ctx->pos;
+            ctx->xmptResumePos = ctx->pos;
+            if (ProgramClassCode(header) == 6) {
+                ctx->dist = 20.0f;
+                ctx->range = 10.0f;
+            } else if (ProgramClassCode(header) == 4 || ProgramClassCode(header) == 5 || ProgramClassCode(header) == 7) {
+                ctx->dist = 12.0f;
+                ctx->range = 6.0f;
+            } else {
+                ctx->dist = 3.0f;
+                ctx->range = 1.5f;
+            }
+            CycleManager::RecomputeSteeringExtents(npc);
+        }
+        CycleManager::TaggedPayload *const payloads = reinterpret_cast<CycleManager::TaggedPayload *>(g_pMOBJ_HeapHead);
+        for (std::size_t index = 0; index < kCycleTaggedPayloadPoolSize; ++index) {
+            payloads[index].model = nullptr;
+            payloads[index].drawNext = nullptr;
+            payloads[index].next = index + 1 < kCycleTaggedPayloadPoolSize ? &payloads[index + 1] : nullptr;
+        }
+        g_CycleManager_Current = payloads;
+        g_CM_obj_list = nullptr;
+    }
+    for (CycleManager::NpcRecord &npc : cm.npcRecords) {
+        if (ProgramClassCode(npc.cycle->moveConfig) != 6u)
+            continue;
+        npc.motnCycleBlend = 0.5f;
+        npc.motnCycleState = 0;
+        npc.cycle->selectedMotionToken = 0;
+        npc.field148 = 0;
+        npc.motnCycleYawDelta = 0;
+    }
+    HUMANS_AFS_Ptr = PACK_ReadAFS(sceneDirectory, "HUMANS.afs");
+    g_pszTempLoadedHumanSched = nullptr;
+    PackTaskData *const pack = g_packTaskData ? g_packTaskData : g_packTask ? reinterpret_cast<PackTaskData *>(HLib_GetTaskDataForTask(g_packTask)) : nullptr;
+    if (pack)
+        pack->callbackBudget = 1024;
+    MaxNearNPCs = SHENMUE_IS_DEMO ? 7 : 5;
+    IsDBYO = (CycleManager::CurrentAreaId() == SHEN_NAME(DBYO) ? 1 : 0) + 4;
+
+    cm.updateFrames = 0;
+    cm.cycleLoadSettleFrameCounter = 0;
+    cm.mobjFrames = 0;
+    cm.mobjLastActive = 0;
+    cm.mobjAdvancedTotal = 0;
+    cm.mobjPathStartedTotal = 0;
+    cm.mobjPathTickedTotal = 0;
+    cm.mobjPathCompletedTotal = 0;
+    cm.mobjNpcAnimAdvances = 0;
+    cm.mobjNpcAnimDuplicateSyncs = 0;
+    cm.moveObjSitBegins = 0;
+    cm.moveObjSitAnchors = 0;
+    cm.moveObjStandBegins = 0;
+    cm.moveObjResumePathStarts = 0;
+    cm.moveObjSitCompletions = 0;
+    cm.steeringChecks = 0;
+    cm.steeringAdjustments = 0;
+    cm.steeringYawChecks = 0;
+    cm.steeringYawAdjustments = 0;
+    cm.steeringYawActorAvoidance = 0;
+    cm.steeringYawRyoAvoidance = 0;
+    cm.steeringYawVolumeAvoidance = 0;
+    cm.steeringYawMapAvoidance = 0;
+    cm.steeringActorClass0To3Hits = 0;
+    cm.steeringActorClass4To7Hits = 0;
+    cm.steeringMoveObjectActorHits = 0;
+    cm.steeringRyoHits = 0;
+    cm.steeringVolumeHits = 0;
+    cm.steeringMotnClampAdjustments = 0;
+    cm.steeringMapFallbackHits = 0;
+    cm.npcAnimSyncEpoch = 0;
+    cm.motnSpeedLookups = 0;
+    cm.motnSpeedLookupHits = 0;
+    cm.motnRootChannelHits = 0;
+    cm.motnRootChannelFallbacks = 0;
+    cm.motnRootLoopBoundarySteps = 0;
+    cm.shutDispatches = 0;
+    cm.shutDispatchMissing = 0;
+    cm.shutDispatchStateChanges = 0;
+    cm.taggedWaitBegins = 0;
+    cm.taggedWaitCompletions = 0;
+    cm.taggedWaitTimeouts = 0;
+    cm.taggedWaitTargetMisses = 0;
+    cm.talkMoveBegins = 0;
+    cm.talkMoveCompletions = 0;
+    cm.talkMoveTargetMisses = 0;
+    cm.originalProgramCreateCharacterCommands = 0;
+    cm.originalProgramCreateCharacterLoads = 0;
+    cm.originalProgramCreateCharacterFailures = 0;
+    cm.doorPseudoRecords = 0;
+    cm.doorRequestAllocations = 0;
+    cm.doorRequestPendingPolls = 0;
+    cm.doorRequestActivePolls = 0;
+    cm.doorRequestDonePolls = 0;
+    cm.doorRequestFailedPolls = 0;
+    cm.doorRequestNotReadyPolls = 0;
+    cm.doorRequestAllocFailures = 0;
+    g_dynamicTurnCollisionVolumeCount = 0;
+    g_steeringIntersectionVolumeCount = 0;
+
+    if (g_MOBJ_needs_new_update) {
+        CycleManager::ZeroFields();
+        CycleManager::ProcessCycleInternal();
+    } else {
+        for (CycleManager::NpcRecord &npc : cm.npcRecords)
+            CycleManager::ClearProgramForStackReset(npc);
+        CycleManager::TaggedPayload *const payloads = reinterpret_cast<CycleManager::TaggedPayload *>(g_pMOBJ_HeapHead);
+        for (std::size_t index = 0; index < kCycleTaggedPayloadPoolSize; ++index)
+            payloads[index].model = nullptr;
+        if (CycleMoveObjectRuntime *const runtimes = MOBJ_DynamicRuntimes()) {
+            for (std::size_t index = 0; index < kMobjDynamicRuntimeCount; ++index) {
+                runtimes[index].model = nullptr;
+                runtimes[index].shadowOrAuxModel = nullptr;
+            }
+        }
+        for (CycleManager::MobjEntry *entry = g_NearQueue; entry;) {
+            CycleManager::MobjEntry *const next = entry->nextDormantProgram;
+            CycleManager::NpcRecord &npc = *CycleManager::EntryRecord(entry);
+            if (CycleManager::SelectBranchByFlagsAndDate(npc.moveConfigOffset, timeContextType, timeContext) || !entry->ctx->areaID.name) {
+                CycleManager::MoveProgramToList(npc, CycleProgramList_Dormant, CycleListInsert::Head);
+                CycleManager::UpdateCurrentCursor(entry->ctx);
+                CycleManager::Update(entry);
+            }
+            entry = next;
+        }
+        for (CycleManager::MobjEntry *entry = g_DormantPrograms; entry;) {
+            CycleManager::MobjEntry *const next = entry->nextDormantProgram;
+            if (CycleManager::SelectBranchByFlagsAndDate(CycleManager::EntryRecord(entry)->moveConfigOffset, timeContextType, timeContext) ||
+                !entry->ctx->areaID.name) {
+                CycleManager::UpdateCurrentCursor(entry->ctx);
+                CycleManager::Update(entry);
+            }
+            entry = next;
+        }
+    }
+
+#else
         CycleManager::LoadMNRBAndMCIR();
         CycleManager::ClearAllMoveObjChairOccupancy();
         g_tmp_new_day = g_currentDateTime.day;
@@ -2383,6 +3024,7 @@ void Init() {
             entry = next;
         }
     }
+#endif
     g_MOBJ_needs_new_update = 0;
 }
 } // namespace CycleManager
@@ -2464,7 +3106,49 @@ int32_t EnsureHeapSpace() {
     return 1;
 }
 
-void Setup(const char *InFilename) {
+void Setup(const char *InFilename
+#if SHENMUE_IS_DEMO
+    ,
+    const char *cycleFilename
+#endif
+) {
+#if SHENMUE_IS_DEMO
+
+    char path[32];
+    std::snprintf(path, sizeof(path), "scene/%02d/stream", g_sceneId);
+    if (!CycleManager::EnsureHeapSpace()) {
+        CycleManager::EnsureHeapSpace();
+        return;
+    }
+    g_MOBJ_num_entries = CycleManager::ReadCyclemanForScene(InFilename, cycleFilename);
+    if (!g_cycleManagerRuntime.loaded)
+        return;
+    g_MOBJ_pData = static_cast<MobjEntry *>(HLib_AllocMemBlock(sizeof(MobjEntry) * g_MOBJ_num_entries, SHEN_NAME(MOBJ)));
+    g_MOBJ_Cycles = static_cast<MobjCycle *>(HLib_AllocMemBlock(sizeof(MobjCycle) * g_MOBJ_num_entries, SHEN_NAME(MOBJ)));
+    const bool payloads = MOBJ_AllocateTaskMemory();
+    const bool dynamicWork = MOBJ_SetupTaskPointer();
+    if (!g_MOBJ_pData || !g_MOBJ_Cycles || !payloads || !dynamicWork) {
+        HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(g_MOBJ_pData), 0);
+        HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(g_MOBJ_Cycles), 0);
+        HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(g_pMOBJ_HeapHead), 0);
+        HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(g_tmp_MOBJ), 0);
+        g_cycleManagerRuntime.loaded = false;
+        return;
+    }
+    g_mobjCycleCapacity = g_MOBJ_num_entries;
+    SetMOBJTaskPtr();
+    std::memset(g_MOBJ_TaskData_6, 0, 0x54);
+    KDAN_ResetOccupancy();
+    HumansIndexTable = static_cast<HumansEntry *>(ReadFile(path, "HUMANS.idx", SHEN_NAME(MOBJ)));
+    gCycleManager = 1;
+    g_bProcessCharaCycles = 0;
+    CycleManager::Init();
+
+    g_mobjCoreTask = CycleManager::EnqueueTask(CycleManager::CoreCallback_Mo_Exec, 4, 2, SHEN_NAME(MOBJ), "CycleManager_CoreCallback_Mo_Exec");
+    g_mobjMotionTask =
+        CycleManager::EnqueueTask(CycleManager::MotionCallback_Mo_Exec2, SHENMUE_IS_DEMO ? 12 : 11, 2, SHEN_NAME(MOBJ), "CycleManager_MotionCallback_Mo_Exec2");
+
+#else
     char path[32];
     std::snprintf(path, sizeof(path), "scene/%02d/stream", g_sceneId);
     if (!CycleManager::EnsureHeapSpace()) {
@@ -2481,6 +3165,8 @@ void Setup(const char *InFilename) {
 
     g_mobjCoreTask = CycleManager::EnqueueTask(CycleManager::CoreCallback_Mo_Exec, 4, 2, SHEN_NAME(MOBJ), "CycleManager_CoreCallback_Mo_Exec");
     g_mobjMotionTask = CycleManager::EnqueueTask(CycleManager::MotionCallback_Mo_Exec2, 11, 2, SHEN_NAME(MOBJ), "CycleManager_MotionCallback_Mo_Exec2");
+
+#endif
 }
 } // namespace CycleManager
 
@@ -2672,3 +3358,27 @@ std::int32_t InitINSHForScene(std::uint32_t areaId, Vector3 &position, std::int3
 
 
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1::CycleManager {
+std::uint32_t g_trialCycleRandomSeed = 1;
+std::uint32_t ProgramClassCode(const MobjData *program) {
+    if (program->programIdSuffix == kTrialCycleProgramKind.name)
+        return reinterpret_cast<const TrialCycleProgram *>(program)->cycleClassCode;
+    return program->cycleClassCode;
+}
+std::uint16_t ProgramMotionId(const MobjData *program, std::size_t index) {
+    if (program->programIdSuffix == kTrialCycleProgramKind.name) {
+        const TrialCycleProgram &trial = *reinterpret_cast<const TrialCycleProgram *>(program);
+        return static_cast<std::uint16_t>(trial.motionIds[index]);
+    }
+    return program->motionParamIds[index];
+}
+float ProgramPlaybackRate(const MobjData *program) {
+    if (program->programIdSuffix == kTrialCycleProgramKind.name)
+        return reinterpret_cast<const TrialCycleProgram *>(program)->playbackRate;
+    return program->motionRadiusTimingScalar;
+}
+
+} // namespace shenmue::s1::CycleManager
+#endif

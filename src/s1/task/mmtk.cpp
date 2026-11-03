@@ -4,7 +4,12 @@
 
 #include "s1/boot.hpp"
 #include "s1/d3t/settings.hpp"
+#include "s1/d3t/d3t_texture.hpp"
 #include "s1/file_loader.hpp"
+#include "s1/font.hpp"
+#if SHENMUE_IS_DEMO
+#include "s1/task/mmtk_trial_lines.hpp"
+#endif
 #include "s1/frame_pipeline.hpp"
 #include "s1/input.hpp"
 #include "s1/motion_registry.hpp"
@@ -37,6 +42,10 @@
 #include <cstring>
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+std::uint8_t g_trialNotebookMode = 0;
+std::uint8_t g_notebookAdvanceRequested = 0;
+#endif
 
 std::int32_t shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t volume);
 void MT5_PrepassNodeTreeTexturesAndStrips(void **node, std::int32_t *textureIds, std::uint32_t *depth);
@@ -55,7 +64,7 @@ std::int32_t g_notebookRequestedEntryPage = -1;
 
 namespace {
 
-constexpr std::uint16_t kCloseButtons = 0x0204U;
+constexpr std::uint16_t kCloseButtons = SHENMUE_IS_DEMO ? 0x0200U : 0x0204U;
 constexpr std::uint16_t kNotebookButton = 0x0004U;
 constexpr std::uint16_t kFirstPageButton = 0x1000U;
 constexpr std::uint16_t kLastPageButton = 0x2000U;
@@ -67,8 +76,8 @@ constexpr std::uint8_t kPlayerDefaultControlMode = 2;
 constexpr std::int32_t kGameHudElement = 65;
 constexpr std::int32_t kSubtitleUiElement = 58;
 constexpr std::int32_t kAuthorScripted = 9;
-constexpr std::int16_t kNotebookLastPage = 101;
-constexpr std::int16_t kNotebookPageCount = 111;
+constexpr std::int16_t kNotebookLastPage = SHENMUE_IS_DEMO ? 61 : 101;
+constexpr std::int16_t kNotebookPageCount = SHENMUE_IS_DEMO ? 71 : 111;
 constexpr double kPageStackScale = 0.009;
 constexpr std::int32_t kMmtkToken = static_cast<std::int32_t>(SHEN_NAME(MMTK));
 constexpr std::int32_t kMemoTextureToken = static_cast<std::int32_t>(SHEN_NAME(MEMT));
@@ -190,7 +199,21 @@ void Notebook_UpdateLastEntryPage(std::uint16_t flag) {
 }
 
 
+#if SHENMUE_IS_DEMO
+const TrialNotebookLine *GetTrialNotebookLines() {
+    return g_sceneId != 80 ? kNotebookFullLines : GetAreaJumpEnabled() ? kNotebookExtendedLines : kNotebookTrialLines;
+}
+#endif
+
 std::uint8_t GetLastEntryPage() {
+#if SHENMUE_IS_DEMO
+    const TrialNotebookLine *const lines = GetTrialNotebookLines();
+    std::int16_t page = 0;
+    for (std::size_t index = 0; lines[index].page != 128; ++index)
+        if (GetFlag(lines[index].flag) && page < lines[index].page)
+            page = lines[index].page;
+    return static_cast<std::uint8_t>(page);
+#else
     if (g_notebookPersistenceWord)
         Notebook_UpdateLastEntryPage(g_notebookPersistenceWord);
     std::int32_t page = g_notebookRequestedEntryPage;
@@ -204,6 +227,7 @@ std::uint8_t GetLastEntryPage() {
         g_notebookRequestedEntryPage = -1;
     }
     return static_cast<std::uint8_t>(page);
+#endif
 }
 
 
@@ -487,7 +511,7 @@ void UpdatePageAngles() {
     g_notebookTurnFrames = 0;
     g_notebookTurnAngle = 0;
     const bool forward = g_notebookState == NotebookTaskState::BeginTurnLeft;
-    if (!g_notebookRepeatedInput) {
+    if (SHENMUE_IS_DEMO || !g_notebookRepeatedInput) {
         g_notebookFinalRotation.w = 1.0f;
         g_notebookCurlMotionId = forward ? 1017 : 1018;
         g_notebookTurnFrameCount = 22;
@@ -781,10 +805,12 @@ bool LoadNotebook() {
         HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(file), 0);
         return !Notebook_AbortLoad();
     }
+#if !SHENMUE_IS_DEMO
     char fbxPath[260]{};
     std::snprintf(fbxPath, sizeof(fbxPath), "%s/%s/%s.fbx", "model/item", "MMA0201G.MT5", "MMA0201G");
 
     d3t::FileRead_ALL(reinterpret_cast<std::uintptr_t>(model->model), fbxPath, 0, 2, CreateNotebookTextures);
+#endif
     g_notebookDrawObject.model = model->model;
     g_notebookModelOwner = model;
     g_notebookTextureCount = static_cast<std::int32_t>(model->textureCount);
@@ -1141,7 +1167,7 @@ void MMTK_Callback_0(HLib::TaskData *) {
             g_currentHelpTokenId = token;
             return;
         }
-    } else if (convCanOpen() && (static_cast<PadCaptureEntry *>(MapControl()->padCaptureEntry)->pressedPriority & kNotebookButton) != 0) {
+    } else if (MMTK_CanOpenFromFreeRoam() && (static_cast<PadCaptureEntry *>(MapControl()->padCaptureEntry)->pressedPriority & kNotebookButton) != 0) {
         MMTK_BeginManualSession();
     }
     if (!g_notebookHelpOverrideActive || g_pControlPadController->controlMode != kPlayerDefaultControlMode)
@@ -1150,7 +1176,6 @@ void MMTK_Callback_0(HLib::TaskData *) {
         ryo->skipRootMotionDelta = 1;
 }
 
-// The X-button open shared by MMTK_Callback_0 and PrepareNotebookBuffers' requested-page path.
 void MMTK_BeginManualSession() {
     shenExecuteAICACommand(0x400abU, 0, 0);
     if ((g_notebookPadEntry->flags & 2U) == 0)
@@ -1162,6 +1187,16 @@ void MMTK_BeginManualSession() {
 
 
 bool ProcessNotebookStates() {
+#if SHENMUE_IS_DEMO
+    if (g_notebookScriptSession && g_trialNotebookMode) {
+        g_inputState.slots[0].pressedPriority &= static_cast<std::uint16_t>(~0x200U);
+        if ((g_inputState.slots[0].pressedPriority & 0x800U) != 0) {
+            if (!g_notebookAdvanceRequested)
+                UI_SICNSetState(12, UISicnPausePolicy::KeepOnPause);
+            g_notebookAdvanceRequested = 1;
+        }
+    }
+#endif
     const std::uint16_t pressed = g_inputState.slots[0].pressedPriority;
     g_notebookPreviousInput = g_notebookInput;
     g_notebookInput = g_inputState.slots[0].repeatedPresses;
@@ -1208,6 +1243,51 @@ bool ProcessNotebookStates() {
 
 
 void PrepareBothNotebookPages(std::int16_t page, std::uint32_t leftTexture, std::uint32_t rightTexture) {
+#if SHENMUE_IS_DEMO
+    const TrialNotebookLine *const lines = GetTrialNotebookLines();
+    std::size_t first = 0;
+    while (lines[first].page != 128 && lines[first].page != page)
+        ++first;
+    const bool noPage = lines[first].page == 128;
+    const std::size_t pair = (page & 1) != 0 ? 2 : 0;
+    for (std::size_t side = 0; side < 2; ++side) {
+        std::array<std::uint32_t, 256 * 128> pixels{};
+        bool stopped = noPage;
+        for (std::size_t row = 0; row < 8 && !stopped; ++row) {
+            const TrialNotebookLine &line = lines[first + row + side * 8];
+            stopped = line.page == 128;
+            if (stopped)
+                break;
+            const bool enabled = !line.flag || GetFlag(line.flag) || (g_sceneId == 80 && line.flag == 380 && GetFlag(370));
+            if (!enabled || !line.text)
+                continue;
+            std::byte *destination = reinterpret_cast<std::byte *>(pixels.data() + (7 - row) * 16 * 256);
+            const auto *text = reinterpret_cast<const std::uint8_t *>(line.text);
+            while (*text) {
+                std::uint16_t glyph;
+                if (*text > 0xa0U && *text != 0xffU) {
+                    glyph = static_cast<std::uint16_t>(((text[0] << 8U) | text[1]) & 0x7f7fU);
+                    text += 2;
+                    RasterizeFontGlyph(g_pFont, glyph, destination, 256 * 4, 0xb110, 0);
+                    destination += 26 * 4;
+                } else {
+                    glyph = static_cast<std::uint16_t>(*text++ | 0x100U);
+                    RasterizeFontGlyph(g_pFont, glyph, destination, 256 * 4, 0xb110, 0);
+                    destination += 14 * 4;
+                }
+            }
+        }
+        const Texture2DDescription description{.width = 256,
+            .height = 128,
+            .arraySize = 1,
+            .mipLevels = 1,
+            .format = DecodeS1LegacyTextureFormat(33161),
+            .sampleCount = 1,
+            .initialData = pixels.data()};
+        const std::uint32_t texture = CreateTexture2D(&description);
+        InitTexture2DResource(UI_SetPVRSurfaceTexture(g_notebookMemoSurfaces[pair + side], texture));
+    }
+#else
     for (std::size_t index = 0; index < g_notebookMemoTextureChunks.size(); ++index)
         g_notebookMemoTextureData[index] = g_notebookMemoTextureChunks[index] + 0x2c;
     const bool odd = (page & 1) != 0;
@@ -1258,6 +1338,7 @@ void PrepareBothNotebookPages(std::int16_t page, std::uint32_t leftTexture, std:
         CreateNotebookTexture2D(g_notebookMemoSurfaces[0], firstChunk);
         CreateNotebookTexture2D(g_notebookMemoSurfaces[1], secondChunk);
     }
+#endif
 }
 
 
@@ -1323,7 +1404,7 @@ PadCaptureEntry *MMTK_GetInputEntry() {
 }
 
 bool MMTK_CanOpenFromFreeRoam() {
-    return !g_notebookManualSession && !g_uiElements[kUiGameMenu].isVisible && convCanOpen();
+    return !SHENMUE_IS_DEMO && !g_notebookManualSession && !g_uiElements[kUiGameMenu].isVisible && convCanOpen();
 }
 
 bool MMTK_IsNotebookActive() {
@@ -1391,12 +1472,25 @@ NotebookPresentationSnapshot MMTK_GetPresentationSnapshot() {
 void MMTK_ScriptMemoToggle(ScenarioContext *context, void *rawParams) {
     const std::uint32_t mode = *static_cast<const std::uint32_t *>(rawParams);
     if (!mode) {
+#if SHENMUE_IS_DEMO
+        if (!g_notebookScriptSession)
+            g_trialNotebookMode = static_cast<std::uint8_t>(static_cast<const std::uint32_t *>(rawParams)[1]);
+#else
+#endif
         shenBeginNotebook();
     } else if (mode == 1) {
         shenEndNotebook();
     } else if (mode == 2) {
+#if SHENMUE_IS_DEMO
+        context->stack->accumulator = g_notebookAdvanceRequested;
+#else
         context->stack->accumulator = g_notebookHelpOverrideActive;
+#endif
     }
 }
 
 } // namespace shenmue::s1
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {} // namespace shenmue::s1
+#endif

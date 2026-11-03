@@ -47,6 +47,15 @@ void EnqueueSCNT(std::uint32_t name, std::int16_t stateValue) {
 namespace shenmue::s1::scen_detail {
 
 void SCNT_InitWrapper() {
+#if SHENMUE_IS_DEMO
+    g_scenarioFunctionWork->active = 0;
+    ScenRuntimeObject *const active = g_scenRuntimeState.activeObject;
+    if (active && (active->runtimeFlags & kRuntimeFlagConversationCamera) != 0) {
+        DisableSubtitles();
+        g_scenarioTaskStartTime = FrameTimeTicks(g_LastFrameTime - QueryFrameTime()) - g_scenarioTaskDeltaTime;
+        g_scenarioFunctionWork->pendingDeltaReset = 1;
+    }
+#else
     ScenFlags() &= ~kScenarioFlagInteractionModal;
     if (g_scenarioFunctionWork) {
         g_scenarioFunctionWork->active = 0;
@@ -75,6 +84,7 @@ void SCNT_InitWrapper() {
         ScenFlags() &= ~kScenarioFlagOneShotPrompt;
         (void)UI_ICONRequestNotification(0x100U, 0, 0, 2);
     }
+#endif
 }
 
 
@@ -361,8 +371,15 @@ void SCNT_Core(ScenRuntimeObject *object) {
                     ((std::to_integer<std::uint8_t>(branch[1]) + (std::to_integer<std::uint8_t>(branch[0]) << 8U)) << 8U);
                 std::byte *const next = branch + 3;
                 const std::int32_t offset = ScenSignExtend(raw, 0x800000U);
+#if SHENMUE_IS_DEMO
+                object->runtimeFlags &= ~kRuntimeFlagPlayerLeftTalkRange;
+#else
                 object->runtimeFlags = (object->runtimeFlags | 0x100U) & ~kRuntimeFlagPlayerLeftTalkRange;
+#endif
                 if (offset) {
+#if SHENMUE_IS_DEMO
+                    object->runtimeFlags |= 0x100U;
+#endif
                     object->instructionPtr = ScenAddRelative(*object, next, offset);
                     if (!object->instructionPtr)
                         return;

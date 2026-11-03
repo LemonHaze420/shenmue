@@ -150,7 +150,7 @@ std::uint32_t g_generatedCharacterId = 0;
 
 std::int32_t g_currentHelpToken = 0;
 
-std::int16_t g_currentScenarioStep = 0;
+ScenarioStepValue g_currentScenarioStep = 0;
 
 template <typename T> T *ScenarioPointer(std::uint32_t offset);
 
@@ -799,7 +799,13 @@ namespace shenmue::s1::scen_detail {
 
 bool g_scenarioTimedTransitionEnabled{true};
 
-constexpr std::array<std::size_t, 55> kNativeAccumulatorPreservingScriptSlots{{
+#if SHENMUE_IS_DEMO
+#define SCENARIO_PRESERVE_SLOT(index) void Script_NoOp_##index(ScenarioContext *, void *) {}
+#include "s1/task/scenario_dispatch.def"
+#undef SCENARIO_PRESERVE_SLOT
+#endif
+
+constexpr std::array<std::size_t, SHENMUE_IS_DEMO ? 32 : 55> kNativeAccumulatorPreservingScriptSlots{{
 #define SCENARIO_PRESERVE_SLOT(index) index,
 #include "s1/task/scenario_dispatch.def"
 #undef SCENARIO_PRESERVE_SLOT
@@ -820,11 +826,11 @@ void SCEN_ParseRecursive() {
     SCEN_ParseRecursive_Impl();
 }
 
-std::int16_t SCEN_GetCurrentScenarioStep() noexcept {
+ScenarioStepValue SCEN_GetCurrentScenarioStep() noexcept {
     return g_currentScenarioStep;
 }
 
-void SCEN_SetCurrentScenarioStep(std::int16_t step) noexcept {
+void SCEN_SetCurrentScenarioStep(ScenarioStepValue step) noexcept {
     g_currentScenarioStep = step;
 }
 
@@ -851,20 +857,41 @@ std::array<GeneralScenarioFunction, kGeneralScenarioFunctionCount> GeneralPurpos
 
 std::array<ShenmueScenarioFunction, kShenmueScenarioFunctionCount> ShenmueScriptFuncs = [] {
     std::array<ShenmueScenarioFunction, kShenmueScenarioFunctionCount> functions{};
+#if SHENMUE_IS_DEMO
+#define SCENARIO_PRESERVE_SLOT(index) functions[index] = Script_NoOp_##index;
+#include "s1/task/scenario_dispatch.def"
+#undef SCENARIO_PRESERVE_SLOT
+#define SCENARIO_SHENMUE_SLOT(index, handler) if (index < functions.size()) functions[index] = handler;
+#else
     for (const std::size_t slot : kNativeAccumulatorPreservingScriptSlots)
         functions[slot] = Script_PreserveAccumulator;
     for (const std::size_t slot : kNativeZeroScriptSlots)
         functions[slot] = Script_ClearAccumulator;
 #define SCENARIO_SHENMUE_SLOT(index, handler) functions[index] = handler;
+#endif
 #include "s1/task/scenario_dispatch.def"
 #undef SCENARIO_SHENMUE_SLOT
+#if SHENMUE_IS_DEMO
+    functions[194] = functions[176];
+    functions[238] = functions[237];
+    for (const std::size_t slot : {283U, 284U, 285U, 286U})
+        functions[slot] = functions[237];
+    functions[400] = nullptr;
+    functions[410] = Script_TrialReservedMotionScale;
+    functions[411] = Script_TrialReservedCameraState;
+    functions[412] = Script_TrialReservedSceneId;
+    functions[413] = Script_TrialReservedGachapon;
+    functions[414] = Script_TrialReservedTimedTransition;
+#endif
     return functions;
 }();
 
 std::array<SCNFScenarioFunction, kSCNFScenarioFunctionCount> SCNF_Functions = [] {
     std::array<SCNFScenarioFunction, kSCNFScenarioFunctionCount> functions{};
 #define SCENARIO_SCNF_SLOT(index, handler) functions[index] = handler;
-#define SCENARIO_SCNF_FILL(first, handler) for (std::size_t slot = first; slot < functions.size(); ++slot) functions[slot] = handler;
+#define SCENARIO_SCNF_FILL(first, handler)                                                                                                                     \
+    for (std::size_t slot = first; slot < functions.size(); ++slot)                                                                                            \
+        functions[slot] = handler;
 #include "s1/task/scenario_dispatch.def"
 #undef SCENARIO_SCNF_SLOT
 #undef SCENARIO_SCNF_FILL
@@ -942,6 +969,21 @@ std::int64_t ExecuteDoorSupportFunc(ScenarioContext *context, std::uint32_t inde
 }
 
 void SCEN_Callback(HLib::TaskData *taskData) {
+#if SHENMUE_IS_DEMO
+    ScenarioTaskData *const scenario = reinterpret_cast<ScenarioTaskData *>(taskData);
+
+    scenParseStackRecursively(scenario->scenarioWindow);
+
+    if (scenario->scenarioFunctions) {
+        g_scenarioFunctionWork = scenario->scenarioFunctions;
+        if (g_scenarioFunctionWork->active == 1)
+            SCEN_ParseRecursive();
+    }
+
+    SEQ_ParseFrame(scenario->scenarioConstants);
+    SEQ_Cleanup();
+
+#else
     auto *const scenario = reinterpret_cast<ScenarioTaskData *>(taskData);
     if (g_bDebugSkipCyclesForCharacters || static_cast<std::uint32_t>(g_NumFramesProcessed - 2) <= 1U)
         return;
@@ -964,6 +1006,8 @@ void SCEN_Callback(HLib::TaskData *taskData) {
     SEQ_ParseFrame(scenario->scenarioConstants);
     SEQ_Cleanup();
     g_uiElements[0x3a].isActive = 1;
+
+#endif
 }
 
 ScenarioFunctionWork *ASEQ_SCNF_Init(HLib::Task *scenarioTask) {
@@ -1082,3 +1126,73 @@ constexpr std::array<AnimatedSequenceFunction, 7> kAnimatedSequenceFunctions{
 };
 
 } // namespace shenmue::s1::scen_detail
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1::scen_detail {
+void Script_TrialReservedMotionScale(ScenarioContext *, void *) {
+}
+
+void Script_TrialReservedCameraState(ScenarioContext *, void *) {
+}
+
+void Script_TrialReservedSceneId(ScenarioContext *, void *) {
+}
+
+void Script_TrialReservedGachapon(ScenarioContext *, void *) {
+}
+
+void Script_TrialReservedTimedTransition(ScenarioContext *, void *) {
+}
+
+std::int64_t SCNF_ReservedActionSelectorBegin(ScenarioContext *, void *) {
+    return 0x10000;
+}
+
+std::int64_t SCNF_ReservedActionSelectorEnd(ScenarioContext *, void *) {
+    return 0x10000;
+}
+
+std::int64_t SCNF_ReservedHelpSelectorBegin(ScenarioContext *, void *) {
+    return 0x10000;
+}
+
+std::int64_t SCNF_ReservedHelpSelectorEnd(ScenarioContext *, void *) {
+    return 0x10000;
+}
+
+std::int64_t SCNF_ReservedAlternateHelpSelectorBegin(ScenarioContext *, void *) {
+    return 0x10000;
+}
+
+std::int64_t SCNF_ReservedAlternateHelpSelectorEnd(ScenarioContext *, void *) {
+    return 0x10000;
+}
+
+std::int64_t SCNF_ReservedHelpMessageBegin(ScenarioContext *, void *) {
+    return 0x10000;
+}
+
+std::int64_t SCNF_ReservedHelpMessageEnd(ScenarioContext *, void *) {
+    return 0x10000;
+}
+
+std::int64_t SCNF_ReservedCassetteBegin(ScenarioContext *, void *) {
+    return 0x10000;
+}
+
+std::int64_t SCNF_ReservedCassetteEnd(ScenarioContext *, void *) {
+    return 0x10000;
+}
+} // namespace shenmue::s1::scen_detail
+#endif
+
+#if SHENMUE_IS_DEMO
+namespace shenmue::s1 {
+// @verified - d
+void ClearScenarioFlags() {
+    std::memset(g_scenarioStepLut.bitFlags64, 0, sizeof(g_scenarioStepLut.bitFlags64));
+    g_shenmueFlags.fill(0);
+    std::memset(g_scenarioStepLut.steps, 0, sizeof(g_scenarioStepLut.steps));
+}
+} // namespace shenmue::s1
+#endif

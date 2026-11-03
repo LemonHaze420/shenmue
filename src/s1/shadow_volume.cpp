@@ -156,8 +156,45 @@ void MoveShadow_RelocateCasters(ShadowCaster *caster, std::byte *file) {
     }
 }
 
-
-
+#if SHENMUE_IS_DEMO
+ShadowCaster *MoveShadow_LoadCasters(const char *modelName) {
+    MoveShadowFile *file = nullptr;
+    char filename[16];
+    char directory[16];
+    std::sprintf(directory, SHENMUE_IS_DEMO ? "model/object" : "misc");
+    std::sprintf(filename, "%s.MVS", modelName);
+    std::int32_t count = g_moveShadowFileCount;
+    const std::int32_t cached = count > 8 ? 8 : count;
+    std::int32_t slot = 0;
+    for (; slot < cached; ++slot) {
+        if (std::strcmp(g_moveShadowFiles[slot].name, filename) == 0)
+            file = g_moveShadowFiles[slot].file;
+    }
+    if (!file) {
+        const auto first = static_cast<char>(g_moveShadowFileCount / 10 + '0');
+        const auto second = static_cast<char>(g_moveShadowFileCount % 10 + '0');
+        const auto token = static_cast<std::int32_t>(make_shen_name('M', 'V', first, second));
+        {
+            file = static_cast<MoveShadowFile *>(ReadFile(directory, filename, token));
+            count = g_moveShadowFileCount;
+        }
+        if (file)
+            (reinterpret_cast<HLib::TaskData *>(file) - 1)->alignment |= 1;
+        if (slot < 8) {
+            g_moveShadowFiles[slot].file = file;
+            std::strcpy(g_moveShadowFiles[slot].name, filename);
+        }
+        g_moveShadowFileCount = count + 1;
+    }
+    if (!file->relocated) {
+        auto *const bytes = reinterpret_cast<std::byte *>(file);
+        MoveShadow_SetRootCaster(file, bytes + file->root);
+        MoveShadow_RelocateCasters(TaskDataAt<ShadowCaster>(file->root), bytes);
+        file->relocated = 1;
+    }
+    return TaskDataAt<ShadowCaster>(file->root);
+}
+#else
 ShadowCaster *MoveShadow_LoadCasters() {
     MoveShadowFile *file = nullptr;
     char filename[16];
@@ -205,8 +242,7 @@ ShadowCaster *MoveShadow_LoadCasters() {
     }
     return TaskDataAt<ShadowCaster>(file->root);
 }
-
-
+#endif
 
 void AddVertices(const ShadowVertex *a, const ShadowVertex *b, const ShadowVertex *c) {
     g_shadowModifierVertex.positions[0] = a->position;
@@ -781,6 +817,43 @@ void SetupShadowVB(void *scratch, const MoveShadowSettings *settings) {
 
 void SetupMoveShadow() {
     g_moveShadowFileCount = 0;
+#if SHENMUE_IS_DEMO
+    g_shadowCasters = MoveShadow_LoadCasters("SYD_MUNE");
+    g_armShadowCasters = MoveShadow_LoadCasters("SYD_HIJI");
+    HLib::TaskData *block = g_pFirstTaskData;
+    while (block && (block->status == HLIB_USED_TOKEN.name || static_cast<std::uint64_t>(block->content_size) < kMoveShadowScratchBlockSize))
+        block = block->next_ptr;
+    void *scratch = nullptr;
+    if (block) {
+        HLib::TaskData *const next = block->next_ptr;
+        const auto size = static_cast<std::uint64_t>(block->content_size);
+        if (size != kMoveShadowScratchBlockSize && size > kMoveShadowScratchBlockSize + 0x40) {
+            auto *const remainder = reinterpret_cast<HLib::TaskData *>(reinterpret_cast<std::byte *>(block) + kMoveShadowScratchBlockSize);
+            remainder->prev_ptr = block;
+            remainder->next_ptr = next;
+            remainder->status = HLIB_FREE_TOKEN.name;
+            remainder->taskToken = HLIB_FREE_TOKEN.name;
+            remainder->content_size = static_cast<std::int64_t>(size - kMoveShadowScratchBlockSize);
+            block->next_ptr = remainder;
+            if (next)
+                next->prev_ptr = remainder;
+            block->taskToken = static_cast<std::int32_t>(SHEN_NAME(MVSW));
+            block->status = HLIB_USED_TOKEN.name;
+            block->alignment = 0;
+            block->content_size = kMoveShadowScratchBlockSize;
+        } else {
+            block->taskToken = static_cast<std::int32_t>(SHEN_NAME(MVSW));
+            block->status = HLIB_USED_TOKEN.name;
+            block->alignment = 0;
+        }
+        scratch = block + 1;
+    }
+    g_moveShadow = kMoveShadowDefaults;
+    g_shadowStrength = 127;
+    g_shadowBlackness = 0.5f;
+    g_shadowFlag = 0;
+    (static_cast<HLib::TaskData *>(scratch) - 1)->alignment |= 1;
+#else
     g_shadowCasters = MoveShadow_LoadCasters();
     g_armShadowCasters = nullptr;
     HLib::TaskData *block = g_pFirstTaskData;
@@ -815,6 +888,7 @@ void SetupMoveShadow() {
     g_shadowStrength = 127;
     g_shadowBlackness = 0.5f;
     g_shadowFlag = 0;
+#endif
     SetupShadowVB(scratch, &g_moveShadow);
 }
 

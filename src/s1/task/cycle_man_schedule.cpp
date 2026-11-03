@@ -960,8 +960,138 @@ bool SelectBranchByFlagsAndDate(uint32_t charaHeaderOffset, timeContextType_t ty
 
 
 
-int32_t ReadCyclemanForScene(const char *InFilename) {
+int32_t ReadCyclemanForScene(const char *InFilename
+#if SHENMUE_IS_DEMO
+    ,
+    const char *cycleFilename
+#endif
+) {
     CycleManager::RuntimeState &cm = g_cycleManagerRuntime;
+#if SHENMUE_IS_DEMO
+    cm.loaded = false;
+    cm.ready = false;
+    cm.bytes.clear();
+    cm.relinkedOffsetFields.clear();
+    cm.sections.clear();
+    cm.schedule.clear();
+    cm.programs.clear();
+    cm.mscrOffset = 0;
+    cm.mscrCharaCount = 0;
+    const std::string path = std::string(InFilename ? InFilename : "") + "/" + (cycleFilename ? cycleFilename : "SCRTEST.BIN");
+    if (!ReadCurrentFile(path, cm.bytes)) {
+
+        return 0;
+    }
+    std::uint32_t count = 0;
+    if (!ReadValue(cm.bytes, 0, count) || 4ULL + 4ULL * count > cm.bytes.size())
+        return 0;
+    cm.sourcePath = path;
+    cm.ready = true;
+    const auto fail = [&cm] {
+        cm.ready = false;
+        return 0;
+    };
+    for (std::uint32_t index = 0; index < count; ++index) {
+        std::uint32_t headerOffset = 0;
+        TrialCycleProgram header{};
+        if (!ReadValue(cm.bytes, 4 + 4 * index, headerOffset) || !ReadValue(cm.bytes, headerOffset, header))
+            return fail();
+        g_trialCycleRandomSeed = LcgStep(g_trialCycleRandomSeed);
+        const std::int32_t jitter = static_cast<std::int32_t>(((g_trialCycleRandomSeed >> 16U) & 0x7fffU) % 600U) - 300;
+        ProgramScan scan{};
+        scan.headerOffset = headerOffset;
+        scan.chara_id = header.characterId;
+        scan.timeTableOffset = headerOffset + static_cast<std::uint32_t>(header.currentBranchOfs);
+        std::uint32_t row = scan.timeTableOffset;
+        for (;;) {
+            CycleTimetableRow timetable{};
+            if (!ReadValue(cm.bytes, row, timetable))
+                return fail();
+            if (timetable.timeOrEndMarker == -1)
+                break;
+            WriteCommandDword(row, static_cast<std::uint32_t>(timetable.timeOrEndMarker) + static_cast<std::uint32_t>(jitter));
+            RelinkRelativeOffsetField(headerOffset, row + 4);
+            const std::uint32_t command = headerOffset + static_cast<std::uint32_t>(timetable.commandStreamOffset);
+            scan.commandStreamOffsets.push_back(command);
+            std::uint32_t cursor = command;
+            for (;;) {
+                std::uint32_t opcode = 0;
+                if (!ReadValue(cm.bytes, cursor, opcode))
+                    return fail();
+                if (opcode == 0 || opcode == 4 || opcode == 0x12 || opcode > 0x1f)
+                    break;
+                std::uint32_t size = 4;
+                std::uint32_t offsetField = 0;
+                switch (opcode) {
+                case 1:
+                case 0x13:
+                case 0x15:
+                case 0x1b:
+                    size = 20;
+                    offsetField = 12;
+                    break;
+                case 3:
+                    size = 20;
+                    break;
+                case 5:
+                    size = 24;
+                    offsetField = 16;
+                    break;
+                case 2:
+                case 7:
+                case 8:
+                case 9:
+                case 0xf:
+                case 0x11:
+                    size = 8;
+                    break;
+                case 0xb:
+                case 0x19:
+                    size = 24;
+                    break;
+                case 0xc:
+                case 0x16:
+                    size = 12;
+                    break;
+                case 0x10:
+                    size = 44;
+                    break;
+                case 0x17:
+                    size = 56;
+                    break;
+                case 0x18:
+                    size = 40;
+                    break;
+                case 0x1a:
+                    size = 16;
+                    break;
+                case 0x1c:
+                    size = 28;
+                    offsetField = 16;
+                    break;
+                case 0x1d:
+                    size = 36;
+                    break;
+                default:
+                    break;
+                }
+                if (cursor > cm.bytes.size() || size > cm.bytes.size() - cursor)
+                    return fail();
+                if (offsetField)
+                    RelinkRelativeOffsetField(headerOffset, cursor + offsetField);
+                cursor += size;
+            }
+            row += sizeof(CycleTimetableRow);
+        }
+        cm.programs.push_back(std::move(scan));
+    }
+    cm.mscrCharaCount = count;
+    cm.loaded = true;
+    cm.ready = true;
+    g_MOBJ_needs_new_update = 1;
+
+    return static_cast<std::int32_t>(count);
+#else
     const char *const path = InFilename ? InFilename : "";
     bool shouldRunCycle = g_MOBJ_needs_new_update != 0;
     if (std::strcmp(g_tmp_cm_path, path) != 0) {
@@ -1023,6 +1153,7 @@ int32_t ReadCyclemanForScene(const char *InFilename) {
 
 
     return static_cast<int32_t>(cm.mscrCharaCount);
+#endif
 }
 
 

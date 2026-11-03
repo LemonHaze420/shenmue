@@ -328,6 +328,22 @@ void AuthorSelectedMove() {
 }
 
 void InitializeMovesScreenRuntimeData() {
+#if SHENMUE_IS_DEMO
+    constexpr std::uint8_t counts[3]{13, 11, 7};
+    for (std::size_t set = 0; set < g_playerStats.trialMoveSets.size(); ++set) {
+        TrialMoveSetState &moves = g_playerStats.trialMoveSets[set];
+        for (float &value : moves.learnValue)
+            value = 0.01f;
+        moves.count = counts[set];
+        moves.selection = 0;
+        for (std::uint8_t index = 0; index < moves.count; ++index) {
+            moves.moveId[index] = index;
+            moves.learnValue[index] = kTrialMoveProgress[set][index];
+        }
+    }
+    g_selectedMove = 0;
+
+#else
     constexpr std::array<std::int16_t, 3> kCounts{13, 11, 9};
     constexpr std::array<std::array<std::int16_t, 20>, 3> kInitialProgress{{
         {{28, 22, 23, 36, 20, 8, 5, 21, 20, 18, 19, 20, 19, 1, 1, 1, 1, 1, 1, 1}},
@@ -360,6 +376,8 @@ void InitializeMovesScreenRuntimeData() {
     g_pendingMovePopupMoveId = 0;
     g_pendingMovePopupAnimSetId = 0;
     g_movesRuntimeInitialized = true;
+
+#endif
 }
 
 HLib::Task *EnqueueSYGH() {

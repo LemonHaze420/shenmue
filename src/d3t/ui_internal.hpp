@@ -3,7 +3,7 @@
 #include "d3t/ui_runtime.hpp"
 #include "shenmue.h"
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 #include "s1/d3t/namespace.hpp"
 #include "s1/d3t/settings.hpp"
 #include "s1/d3t/renderer.hpp"
@@ -46,13 +46,13 @@
 #include <string_view>
 #include <vector>
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
 #endif
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 using d3t::FormatVirtualKeyString;
 #else
 using d3t::g_originalScreenHeight;
@@ -60,7 +60,7 @@ using d3t::g_originalScreenWidth;
 using d3t::GetTexture2DDimensions;
 using d3t::InitTexture2DResource;
 #endif
-#if !SHENMUE_IS_S1
+#if !SHENMUE_IS_S1_FAMILY
 using InputMode = InputType;
 
 inline constexpr bool (&FormatVirtualKeyString)(std::int32_t, std::array<char, 64> &) = FormatUIInputKeyName;
@@ -88,7 +88,7 @@ extern std::array<std::byte *, 7> g_uiFontDefinitions;
 extern std::int32_t g_uiDebugDrawHitAreas;
 extern nk_panel g_uiCollectionSelectorPanel;
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

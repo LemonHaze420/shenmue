@@ -1,4 +1,5 @@
 #include "s1/player_stats.hpp"
+#include "s1/task/disp.hpp"
 #include "s1/item_catalog.hpp"
 #include "s1/d3t/settings.hpp"
 #include "s1/player_control.hpp"
@@ -19,6 +20,9 @@
 #include <cstring>
 
 namespace shenmue::s1 {
+#if SHENMUE_IS_DEMO
+extern std::int32_t g_sceneId;
+#endif
 extern std::int32_t g_debugForceShowAllItems;
 extern std::array<std::uint32_t, 32> g_arcadeHighScores;
 
@@ -663,8 +667,73 @@ void Script_PlayerStatsUtils(ScenarioContext *context, void *rawParams) {
 
 const std::array<std::array<std::uint8_t, 2>, 4> g_dialogueModeVoiceTextEnable{{{1, 0}, {1, 0}, {1, 1}, {0, 1}}};
 
+#if SHENMUE_IS_DEMO
+std::array<std::uint8_t, 3> g_fightInputSettings{};
+std::int32_t g_trialInventoryControl = 0;
 
+bool AddTrialInventoryItem(std::uint8_t itemId, std::int16_t amount, std::int16_t attribute) {
+    std::size_t index = 0;
+    while (index < g_playerStats.trialInventory.size() && g_playerStats.trialInventory[index].itemId != itemId)
+        ++index;
+    if (index == g_playerStats.trialInventory.size()) {
+        index = 0;
+        while (index < g_playerStats.trialInventory.size() && g_playerStats.trialInventory[index].itemId != -1)
+            ++index;
+        if (index == g_playerStats.trialInventory.size())
+            return false;
+        g_playerStats.trialInventory[index].itemId = itemId;
+        g_playerStats.trialInventoryMetadata[index].values[0] = attribute;
+    }
+    TrialInventoryEntry &entry = g_playerStats.trialInventory[index];
+    entry.count = static_cast<std::int16_t>(entry.count + amount);
+    if (entry.count > 63)
+        entry.count = 64;
+    RebuildTrialInventory();
+    return true;
+}
 
+void RebuildTrialInventory() {
+    IconPresentationOwner &icon = g_iconPresentation;
+    std::size_t count = 0;
+    icon.inventoryPageCount = 0;
+    for (std::size_t index = 0; index < g_playerStats.trialInventory.size(); ++index) {
+        if (g_playerStats.trialInventory[index].itemId == -1)
+            continue;
+        if ((icon.inventoryPageCount + 1) * icon.inventorySlotsPerPage == static_cast<std::int32_t>(count))
+            ++icon.inventoryPageCount;
+        g_playerStats.trialInventory[count] = g_playerStats.trialInventory[index];
+        g_playerStats.trialInventoryMetadata[count] = g_playerStats.trialInventoryMetadata[index];
+        ++count;
+    }
+    icon.inventoryOwnedEntryCount = static_cast<std::int16_t>(count);
+    icon.inventoryOwnedItemCount = 0;
+    for (std::size_t index = count; index < g_playerStats.trialInventory.size(); ++index) {
+        g_playerStats.trialInventory[index] = {.itemId = -1, .count = 0};
+        g_playerStats.trialInventoryMetadata[index] = {};
+    }
+    for (std::size_t index = 0; index < count; ++index)
+        icon.inventoryOwnedItemCount = static_cast<std::uint16_t>(icon.inventoryOwnedItemCount + g_playerStats.trialInventory[index].count);
+    const std::int32_t selectedCount = icon.inventorySelectionPage * icon.inventorySlotsPerPage + icon.inventorySelectionSlot + 1;
+    std::int32_t selection = -1;
+    std::int16_t accumulated = 0;
+    for (std::size_t index = 0; index < count; ++index) {
+        accumulated = static_cast<std::int16_t>(accumulated + g_playerStats.trialInventory[index].count);
+        if (selectedCount <= accumulated) {
+            selection = static_cast<std::int32_t>(index);
+            break;
+        }
+    }
+    if (icon.inventoryOwnedEntryCount < 1 || selection < 0) {
+        icon.inventorySelectionPage = 0;
+        icon.inventorySelectionSlot = 0;
+    } else if (icon.inventoryOwnedEntryCount <= selection) {
+        icon.inventorySelectionPage = icon.inventoryPageCount;
+        icon.inventorySelectionSlot = static_cast<std::int8_t>(icon.inventoryOwnedItemCount - icon.inventorySlotsPerPage * icon.inventoryPageCount - 1);
+    }
+    ++icon.inventoryGridRevision;
+}
+
+#endif
 void InitialiseShenmueSettings() {
     const std::size_t mode = static_cast<std::uint8_t>(g_currentSettings.dialogueMode);
     std::uint32_t flags = (S1SettingsFlags_Get() & 0xffffffcfU) | (static_cast<std::uint32_t>(mode) << 4U);
@@ -679,10 +748,18 @@ void InitialiseShenmueSettings() {
 
 
 void shenInitDefaultSettings() {
+#if SHENMUE_IS_DEMO
+    g_fightInputSettings = {1, 11, 17};
+    SetDialogueMode(1);
+    SetAreaJumpEnabled(0);
+
+#else
     g_playerStats.currentMove = 0xff00;
     InitialiseShenmueSettings();
     g_notebookLastEntryPage = 0;
     g_notebookPersistenceWord = 0;
+
+#endif
 }
 
 
@@ -690,6 +767,22 @@ void shenInitDefaultStats() {
     PlayerStatsRuntimeState &stats = g_playerStats;
     stats.alternateHealth = 200;
     stats.defaultHealth = 200;
+#if SHENMUE_IS_DEMO
+    for (std::size_t index = 0; index < (SHENMUE_IS_DEMO ? 8U : 16U); ++index)
+        g_arcadeHighScores[index] = 0;
+    g_arcadeHighScores[0] = 3000;
+    stats.runtimeFlags = 0;
+    stats.contextActionMode = 0;
+    stats.currentVfSkill.fill(0);
+    g_bIsFighting = 0;
+    stats.cameraShakeAmount = 10;
+    stats.fightAssistScale = SHENMUE_IS_DEMO ? 40 : 35;
+    stats.vfHpRegenerationProfile = 0;
+    stats.cash = SHENMUE_IS_DEMO ? 2000 : 9800;
+    stats.segaCoins = 0;
+    InitializeMovesScreenRuntimeData();
+    TrialTitle_ResetState();
+#else
     for (std::size_t index = 0; index < 16; ++index)
         g_arcadeHighScores[index] = 0;
     stats.runtimeFlags = 0;
@@ -732,17 +825,79 @@ void shenInitDefaultStats() {
     g_ctrlInitialized = false;
     g_moduleFrameCount = 0;
     g_pendingSleepResumeLoad = 0;
+#endif
 }
 
-
-
 void shenInitDefaultCassetteInventory() {
+#if SHENMUE_IS_DEMO
+    for (TrialInventoryEntry &entry : g_playerStats.trialInventory)
+        entry = {.itemId = -1, .count = 0};
+    g_playerStats.trialInventoryMetadata = {};
+    AddTrialInventoryItem(0, 1, 6);
+    if (g_sceneId == 80) {
+        AddTrialInventoryItem(14, 1, 6);
+        AddTrialInventoryItem(39, 1, 6);
+        g_trialInventoryControl = 1;
+    } else
+        AddTrialInventoryItem(5, 1, 6);
+
+#else
     g_playerStats.inventoryItemCounts67To234.fill(0);
     g_playerStats.inventoryItemCounts0To66.fill(0);
     static_cast<void>(AddInventoryItemCount(3, 1));
     for (CassetteTapeState &tape : g_playerStats.cassetteTapes)
         tape = {.count = 0, .id = 0xff};
     g_playerStats.batteryLives = {28800, 28800};
+
+#endif
 }
+
+#if SHENMUE_IS_DEMO
+void SetVfSkillFlags(std::int8_t mode, std::uint32_t flags) {
+    const std::size_t bank = ((flags & 0x80000000U) ? 2U : 0U) | ((flags & 0x40000000U) ? 1U : 0U);
+    flags &= 0x3fffffffU;
+    std::int32_t &slot = g_playerStats.currentVfSkill[bank];
+    if (mode == 0)
+        slot = static_cast<std::int32_t>(static_cast<std::uint32_t>(slot) | flags);
+    else if (mode == 1)
+        slot = static_cast<std::int32_t>(static_cast<std::uint32_t>(slot) & ~flags);
+    else if (mode == 2) {
+        if (bank == 3 && flags == 0x3fffffffU)
+            g_playerStats.currentVfSkill.fill(static_cast<std::int32_t>(flags));
+        else
+            slot = static_cast<std::int32_t>(flags);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DEMO
+void SetAreaJumpEnabled(std::uint8_t enabled) {
+    std::uint32_t flags = S1SettingsFlags_Get();
+    constexpr std::uint32_t mask = 4U;
+    flags = enabled ? flags | mask : flags & ~mask;
+    S1SettingsFlags_Set(flags);
+}
+#endif
+
+#if SHENMUE_IS_DEMO
+std::uint8_t GetAreaJumpEnabled() {
+    return (S1SettingsFlags_Get() >> 2U) & 1U;
+}
+#endif
+
+#if SHENMUE_IS_DEMO
+void SetDialogueMode(std::uint8_t mode) {
+    std::uint32_t flags = (S1SettingsFlags_Get() & ~0x30U) | static_cast<std::uint32_t>(mode) << 4U;
+    flags = g_dialogueModeVoiceTextEnable[mode][0] ? flags | 2U : flags & ~2U;
+    flags = g_dialogueModeVoiceTextEnable[mode][1] ? flags | 1U : flags & ~1U;
+    S1SettingsFlags_Set(flags);
+}
+#endif
+
+#if SHENMUE_IS_DEMO
+std::uint8_t GetDialogueMode() {
+    return (S1SettingsFlags_Get() >> 4U) & 3U;
+}
+#endif
 
 } // namespace shenmue::s1

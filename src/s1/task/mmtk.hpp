@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/hlib.hpp"
 
@@ -7,6 +8,8 @@
 
 namespace shenmue::s1 {
 
+#if SHENMUE_IS_DEMO
+#endif
 struct ScenarioContext;
 struct PadCaptureEntry;
 struct CVWKRuntimeSlot;

@@ -1,10 +1,10 @@
 #include "d3t/debug_font.hpp"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) || SHENMUE_IS_DEMO
 #include <array>
 #include <cstddef>
 #include <cstring>
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 #include "s1/font.hpp"
 #include "s1/legacy_renderer.hpp"
 #include "s1/nuklear_integration.hpp"
@@ -20,7 +20,7 @@ namespace shenmue::s2 {
 
 bool DrawLegacyDebugText(std::string_view text, float x, float y, float width, float height, float advance, float lineHeight, std::uint32_t colour) {
     const std::byte *kana = nullptr;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     if (g_pFont)
         std::memcpy(&kana, g_pFont, sizeof(kana));
     std::array<NuklearQuad, 120> quads;
@@ -55,7 +55,7 @@ bool DrawLegacyDebugText(std::string_view text, float x, float y, float width, f
                 const float top = y + static_cast<float>(row) * height / 15.0f;
                 const float runWidth = static_cast<float>(column - first) * width / 13.0f;
                 const float pixelHeight = height / 15.0f;
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
                 quads[count] = {.x = left, .y = top, .width = runWidth, .height = pixelHeight, .u0 = 0, .v0 = 0, .u1 = 1, .v1 = 1, .colour = colour};
 #else
                 const std::uint16_t base = static_cast<std::uint16_t>(4U * count);
@@ -72,7 +72,7 @@ bool DrawLegacyDebugText(std::string_view text, float x, float y, float width, f
             }
         }
         if (count) {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
             drew |= DrawNuklearQuads(g_RenderDeviceContext, g_nuklearTexture, g_rendererWhiteTexture, {quads.data(), count});
 #else
             const std::array<std::int32_t, 4> clip{

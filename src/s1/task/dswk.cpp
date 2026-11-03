@@ -208,6 +208,13 @@ void ResetEntriesAndPublishCtrlMasks(DSWK_t &doorSupport) {
     std::int32_t count = 0;
     while (doorSupport.doorEntries[count].slot != -1) {
         DSWKDoorEntry &entry = doorSupport.doorEntries[count];
+#if SHENMUE_IS_DEMO
+
+        entry.flags = static_cast<DoorEntryFlags>(0);
+        entry.coarse_metric = 0.0f;
+        entry.selection_metric = 0.0f;
+        entry.view_ang_delta = 0;
+#else
         const std::uint32_t masks = entry.ctrl_mask_pair;
         entry.flags = static_cast<DoorEntryFlags>(0);
         entry.coarse_metric = 0.0f;
@@ -229,6 +236,7 @@ void ResetEntriesAndPublishCtrlMasks(DSWK_t &doorSupport) {
                 cycleMask[index >> 3U] = static_cast<std::uint8_t>(cycleMask[index >> 3U] | (1U << (index & 7U)));
             }
         }
+#endif
         ++count;
     }
     doorSupport.numEntries = count;
@@ -465,6 +473,20 @@ void RefreshVisibleActors(DSWK_t &doorSupport) {
             break;
         }
     }
+#if SHENMUE_IS_DEMO
+    for (std::int32_t index = 0; index < count; ++index) {
+        const DSWKCandidateSlot &candidate = doorSupport.slots[index];
+        if (candidate.retainedThisFrame == 1)
+            continue;
+        for (std::int32_t slot = 0; slot < count; ++slot) {
+            if (doorSupport.doorTaskStateBySlot[slot] < 1) {
+                doorSupport.candDoorEntryIndices[slot] = candidate.doorEntryIndex;
+                doorSupport.doorTaskStateBySlot[slot] = 2;
+                break;
+            }
+        }
+    }
+#else
     DSWKCandidateSlot *candidate = &doorSupport.slots[count - 1];
     for (std::int32_t processed = 0; processed < count; ++processed, --candidate) {
 
@@ -498,6 +520,7 @@ void RefreshVisibleActors(DSWK_t &doorSupport) {
             doorSupport.owner_actor_by_slot[openSlot].name = 0;
         doorSupport.doorTaskStateBySlot[openSlot] = 1;
     }
+#endif
 }
 
 std::int32_t FindBestCandidateSlot(const DSWK_t &doorSupport) {
@@ -711,10 +734,15 @@ void DSWK_BindTables(DSWK_t &doorSupport, const DoorSystemInitParams &params, HL
     doorSupport.doorTaskStateBySlot = ScenarioPointer<std::int32_t>(params.slotStatesOff);
     doorSupport.candDoorEntryIndices = ScenarioPointer<std::int32_t>(params.candidateDoorEntryIndicesOff);
     doorSupport.owner_actor_by_slot = ScenarioPointer<shen_name>(params.ownerActorArrayOff);
+#if SHENMUE_IS_DEMO
+    doorSupport.mot_selectors = ScenarioPointer<DoorMotionSelectorBlock>(params.auxTable0Off);
+    doorSupport.mot_descs = ScenarioPointer<ScnDoorMotionDescriptor>(params.auxTable1Off);
+#else
     doorSupport.motion_variant_row_by_slot = ScenarioPointer<std::int32_t>(params.progressArrayOff);
     doorSupport.mot_selectors = ScenarioPointer<DoorMotionSelectorBlock>(params.auxTable0Off);
     doorSupport.mot_descs = ScenarioPointer<ScnDoorMotionDescriptor>(params.auxTable1Off);
     doorSupport.door_actors_by_slot = ScenarioPointer<shen_name>(params.doorActorHandlesOff);
+#endif
     doorSupport.actor = LookupCharacter(scenarioTask, static_cast<std::uint32_t>(params.actorLookupKey));
     doorSupport.lookup_key = params.actorLookupKey;
     doorSupport.state = DSWK_TASK_IDLE;
@@ -994,22 +1022,37 @@ void DSWK_RebindDoorSystemTables(ScenarioContext *, void *rawParams) {
 }
 
 void DSWK_AllocDoorMapcRenderState(ScenarioContext *context, void *rawParams) {
+#if SHENMUE_IS_DEMO
+
+#else
     const auto *params = static_cast<const std::uint32_t *>(rawParams);
     Character *character = params ? LookupCharacter(context && context->task ? context->task->task : nullptr, params[0]) : nullptr;
     if (!character)
         return;
     CPAM_Alloc(character);
+
+#endif
 }
 
 void DSWK_SetActorOpacityAndDrawCallback(ScenarioContext *context, void *rawParams) {
+#if SHENMUE_IS_DEMO
+
+#else
     const auto *params = static_cast<const DoorActorOpacityParams *>(rawParams);
     Character *character = params ? LookupCharacter(context && context->task ? context->task->task : nullptr, params->actorKey) : nullptr;
     if (!character)
         return;
     character->renderOpacity = params->opacity;
     character->drawCallback = CharacterHandler_AlphaDraw;
+
+#endif
 }
 
+#if SHENMUE_IS_DEMO
+// @verified - d
+void DSWK_Nullsub(ScenarioContext *, void *) {
+}
+#else
 void DSWK_AssignDoorEntryConfig(ScenarioContext *, void *rawParams) {
     const auto *params = static_cast<const DoorEntryConfigParams *>(rawParams);
     DSWK_t *data = DoorTaskData();
@@ -1024,6 +1067,7 @@ void DSWK_AssignDoorEntryConfig(ScenarioContext *, void *rawParams) {
     entry.global5 = params->global5;
     entry.global6 = params->global6;
 }
+#endif
 
 void DSWK_GetSettingsFlags(ScenarioContext *context, void *) {
     SetScenarioResult(context, (S1SettingsFlags_Get() >> 3U) & 1U);

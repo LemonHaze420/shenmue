@@ -1,4 +1,5 @@
 #pragma once
+#include "shenmue.h"
 
 #include "s1/hlib.hpp"
 
@@ -32,6 +33,18 @@ static_assert(sizeof(ColourBlendPair) == 0xc);
 static_assert(sizeof(FilmColourInterpolation) == 0x38);
 static_assert(offsetof(FilmColourInterpolation, remainingFrames) == 0x30);
 
+#if SHENMUE_IS_DEMO
+inline constexpr shen_name TASK_SCFT{SHEN_NAME(SCFT)};
+struct TrialFilmTaskData {
+    shen_name token;
+    FilmColourInterpolation interpolation;
+    std::int32_t extentIncreasing;
+    float extent;
+    float extentStep;
+};
+static_assert(sizeof(TrialFilmTaskData) == 0x48);
+static_assert(offsetof(TrialFilmTaskData, extentIncreasing) == 0x3c);
+#endif
 enum class ConstructColourMode : std::uint32_t {
     ApplyImmediately = 0,
     UseTemporaryClearColour = 1,

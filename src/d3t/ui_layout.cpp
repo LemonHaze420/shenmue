@@ -1,12 +1,12 @@
 #include "d3t/ui_internal.hpp"
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 namespace shenmue::s1 {
 #else
 namespace shenmue::s2 {
 #endif
 
-#if !SHENMUE_IS_S1
+#if !SHENMUE_IS_S1_FAMILY
 
 std::uint32_t ConstructColour(std::int32_t red, std::int32_t green, std::int32_t blue, std::int32_t alpha) {
     const auto clamp = [](std::int32_t component) { return static_cast<std::uint32_t>(component < 0 ? 0 : component > 255 ? 255 : component); };
@@ -588,7 +588,7 @@ d3t::UIWindow *UI_FindWindowById(const char *id) {
 
 // The UI safe-area scale, 0.8 at a UISafeArea of 0 up to 1.
 float UI_SafeAreaScale() {
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     const float safeArea = g_currentSettings.display.uiDisplayArea;
     return (1.0f - safeArea) * 0.8f + safeArea;
 #else
@@ -605,7 +605,7 @@ std::int32_t UI_GetAspectWidth() {
     const float buffer = static_cast<float>(bufferWidth);
     const float screenHeight = static_cast<float>(static_cast<std::int32_t>(g_originalScreenHeight));
     const std::int32_t width = static_cast<std::int32_t>(buffer / ((1.0f / (1080.0f / buffer)) * (screenHeight / static_cast<float>(screenWidth))));
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
     if (!g_getAspectRatioModeFunction)
         return width;
     return g_getAspectRatioModeFunction() == 0 ? width : 1439;
@@ -1070,7 +1070,7 @@ void UI_DrawWindowBegin(nk_context &context, std::int32_t index) {
         UI_WindowMouseCallbacks(window->mouseCallbacks, g_currActiveUIIndex, {.x = 0.0f, .y = 0.0f, .width = rect.width, .height = rect.height}, window);
 }
 
-#if SHENMUE_IS_S1
+#if SHENMUE_IS_S1_FAMILY
 } // namespace shenmue::s1
 #else
 } // namespace shenmue::s2

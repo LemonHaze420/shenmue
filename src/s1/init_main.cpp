@@ -171,6 +171,24 @@ HLib::TaskData *SetupSTCH() {
 }
 
 void AllocFONTs() {
+#if SHENMUE_IS_DEMO
+    TrialFontStorage *const font = static_cast<TrialFontStorage *>(HLib_AllocMemBlock(sizeof(TrialFontStorage), HLIB_FONT_TOKEN.name));
+    (static_cast<HLib::TaskData *>(static_cast<void *>(font)) - 1)->alignment |= 1;
+    std::memset(font->kanjiName, 0, sizeof(font->kanjiName));
+    std::memset(font->kanaName, 0, sizeof(font->kanaName));
+    std::memset(font->ryoName, 0, sizeof(font->ryoName));
+    font->kana = HLib_AllocMemBlock(0x1e20, HLIB_FONT_TOKEN.name);
+    (static_cast<HLib::TaskData *>(static_cast<void *>(font->kana)) - 1)->alignment |= 1;
+    font->kanji = HLib_AllocMemBlock(0x55c46, HLIB_FONT_TOKEN.name);
+    (static_cast<HLib::TaskData *>(static_cast<void *>(font->kanji)) - 1)->alignment |= 1;
+    font->ryo = HLib_AllocMemBlock(0x55c46, HLIB_FONT_TOKEN.name);
+    (static_cast<HLib::TaskData *>(static_cast<void *>(font->ryo)) - 1)->alignment |= 1;
+    g_pFont = font;
+    LoadFont("DC_KANJI.FON");
+    LoadKanaFont("DC_KANA.FON");
+    LoadRyoFont("RYOU.FON");
+
+#else
     constexpr std::int64_t kBlockSize = 0xa0;
 
     HLib::TaskData *block = g_pFirstTaskData;
@@ -219,9 +237,34 @@ void AllocFONTs() {
     std::strcpy(reinterpret_cast<char *>(font + 0x28), "DC_KANA.FON");
     std::strcpy(reinterpret_cast<char *>(font + 0x18), "DC_KANJI.FON");
     std::strcpy(reinterpret_cast<char *>(font + 0x38), "RYOU.FON");
+
+#endif
 }
 
 void LoadFont(const char *filename) {
+#if SHENMUE_IS_DEMO
+    std::byte *const font = static_cast<std::byte *>(g_pFont);
+    char *const currentName = reinterpret_cast<char *>(font + 0x18);
+    if (*currentName) {
+        const char *left = filename;
+        const char *right = currentName;
+        for (;;) {
+            char a = *left++;
+            char b = *right++;
+            if (a >= 'a' && a <= 'z')
+                a = static_cast<char>(a - 32);
+            if (b >= 'a' && b <= 'z')
+                b = static_cast<char>(b - 32);
+            if (a != b)
+                break;
+            if (!a)
+                return;
+        }
+    }
+    void *kanji = nullptr;
+    std::memcpy(&kanji, font + 0x08, sizeof(kanji));
+    shenLoadFile("font", filename, kanji, 0x55c46);
+#else
     auto *const font = static_cast<std::byte *>(g_pFont);
     auto *const currentName = reinterpret_cast<char *>(font + 0x18);
     if (*currentName) {
@@ -243,6 +286,7 @@ void LoadFont(const char *filename) {
     void *kanji = nullptr;
     std::memcpy(&kanji, font + 0x08, sizeof(kanji));
     shenLoadFile("misc", filename, kanji, 0x55c46);
+#endif
     std::strcpy(currentName, filename);
 }
 
@@ -305,6 +349,12 @@ void LoadShadowMesh() {
 }
 
 void ReadMOTI() {
+#if SHENMUE_IS_DEMO
+    g_motiData = ReadFile("motion", "motion.bin", SHEN_NAME(MOTI));
+    if (g_motiData) {
+        (static_cast<HLib::TaskData *>(g_motiData) - 1)->alignment |= 1;
+        g_motiSize = static_cast<std::uint32_t>(shenOpenFile("motion", "motion.bin"));
+#else
     if (!g_mobjData)
         return;
     const auto *const mobj = static_cast<const std::byte *>(g_mobjData);
@@ -320,6 +370,7 @@ void ReadMOTI() {
     std::memcpy(g_motiData, mobj + 0x10 + offset, static_cast<std::size_t>(size));
     g_motiSize = static_cast<std::uint32_t>(size);
     if (size >= 8) {
+#endif
         std::memcpy(&g_motiAnimationCount, static_cast<const std::byte *>(g_motiData) + 4, sizeof(g_motiAnimationCount));
     }
     MOTN_SetBaseMotionData(g_motiData);
@@ -419,6 +470,12 @@ void ReadColdStorage() {
 
 void InitMain() {
     InitSettings();
+#if SHENMUE_IS_DEMO
+
+    if (SetupSTCH())
+        (static_cast<HLib::TaskData *>(g_pSTCH) - 1)->alignment |= 1;
+    SIMM_LoadStartupData();
+#else
     InitSpriteBank(1);
 
     char path[256];
@@ -510,6 +567,61 @@ void InitMain() {
         }
     }
     InitializeUiIndexTables();
+#endif
 }
+
+#if SHENMUE_IS_DEMO
+void LoadKanaFont(const char *filename) {
+    std::byte *const font = static_cast<std::byte *>(g_pFont);
+    char *const currentName = reinterpret_cast<char *>(font + 0x28);
+    if (*currentName) {
+        const char *left = filename;
+        const char *right = currentName;
+        for (;;) {
+            char a = *left++;
+            char b = *right++;
+            if (a >= 'a' && a <= 'z')
+                a = static_cast<char>(a - 32);
+            if (b >= 'a' && b <= 'z')
+                b = static_cast<char>(b - 32);
+            if (a != b)
+                break;
+            if (!a)
+                return;
+        }
+    }
+    void *kanji = nullptr;
+    std::memcpy(&kanji, font + 0x00, sizeof(kanji));
+    shenLoadFile("font", filename, kanji, 0x1e20);
+    std::strcpy(currentName, filename);
+}
+#endif
+
+#if SHENMUE_IS_DEMO
+void LoadRyoFont(const char *filename) {
+    std::byte *const font = static_cast<std::byte *>(g_pFont);
+    char *const currentName = reinterpret_cast<char *>(font + 0x38);
+    if (*currentName) {
+        const char *left = filename;
+        const char *right = currentName;
+        for (;;) {
+            char a = *left++;
+            char b = *right++;
+            if (a >= 'a' && a <= 'z')
+                a = static_cast<char>(a - 32);
+            if (b >= 'a' && b <= 'z')
+                b = static_cast<char>(b - 32);
+            if (a != b)
+                break;
+            if (!a)
+                return;
+        }
+    }
+    void *kanji = nullptr;
+    std::memcpy(&kanji, font + 0x10, sizeof(kanji));
+    shenLoadFile("font", filename, kanji, 0x55c46);
+    std::strcpy(currentName, filename);
+}
+#endif
 
 } // namespace shenmue::s1
