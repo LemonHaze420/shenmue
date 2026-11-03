@@ -1415,7 +1415,7 @@ void Script_shenSeqUtils(ScenarioContext *context, void *rawParams);
 
 void Script_ccowUtils(ScenarioContext *context, void *rawParams);
 
-void Script_ccowSetFlag80(ScenarioContext *context, void *rawParams);
+void Script_ccowSetHeightMode(ScenarioContext *context, void *rawParams);
 
 void Script_motmToggleFlags(ScenarioContext *context, void *rawParams);
 
@@ -1552,7 +1552,7 @@ struct ScnfUiUtilsParameters {
 };
 std::int64_t SCNF_UIUtils(ScenarioContext *context, void *rawParams);
 
-std::int64_t SCNF_GetSfxOverlayResultIfIdle(ScenarioContext *context, void *);
+std::int64_t SCNF_GetQteOverlayResultIfIdle(ScenarioContext *context, void *);
 
 std::int64_t SCNF_RequestActionSelectorFromParams(ScenarioContext *, void *rawParams);
 

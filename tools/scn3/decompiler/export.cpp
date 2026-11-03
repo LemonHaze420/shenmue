@@ -478,23 +478,28 @@ void exportExplicitSource(const Program &program, const std::string &path, const
         throw std::runtime_error("A script's header cannot be named scenario.h: " + path);
     if (std::filesystem::exists(output) && std::filesystem::exists(header))
         return;
-    std::string text = renderScenarioSource(program, profile);
-    const std::string include = "#include \"scenario.h\"\n", includes = usedMotionIncludes(text);
-    const size_t at = text.find(include);
+    if (std::filesystem::exists(output))
+        throw std::runtime_error("Script source exists without its header: " + path);
+    ScenarioSource source = renderScenarioSource(program, profile);
+    if (names) {
+        const std::map<std::string, std::string> symbols = readSymbolNames(*names);
+        source.declarations = renameSourceSymbols(source.declarations, symbols);
+        source.definitions = renameSourceSymbols(source.definitions, symbols);
+    }
+    const std::string include = "#include \"scenario.h\"\n", includes = usedMotionIncludes(source.declarations + source.definitions);
+    const size_t at = source.declarations.find(include);
     if (at == std::string::npos)
         throw std::runtime_error("Exported source does not include scenario.h");
-    text.replace(at, include.size(), "#include \"" + header.filename().string() + "\"\n");
+    source.declarations.replace(at, include.size(), include + includes);
+    const std::string text = "#include \"" + header.filename().string() + "\"\n" + source.definitions;
     if (!std::filesystem::exists(header)) {
         std::ofstream headerFile(header, std::ios::binary);
-        if (!headerFile || !(headerFile << include << includes))
+        if (!headerFile || !(headerFile << "#pragma once\n\n" << source.declarations))
             throw std::runtime_error("Failed to write script header: " + header.string());
     }
     setScenarioCIncludeDirectory(output.parent_path());
-    if (names) {
-        text = renameSourceSymbols(text, readSymbolNames(*names));
-        if (emitScn3Module(buildScn3ModuleFromSourceUnit(parseScenarioSourceText(text))) != buildScn3Module(program).originalBlob)
-            throw std::runtime_error("Renamed source no longer reproduces the module");
-    }
+    if (emitScn3Module(buildScn3ModuleFromSourceUnit(parseScenarioSourceText(text))) != buildScn3Module(program).originalBlob)
+        throw std::runtime_error("Exported source and header do not reproduce the module");
     if (!std::filesystem::exists(output)) {
         std::ofstream file(path);
         if (!file || !(file << text))

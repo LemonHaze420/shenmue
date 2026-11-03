@@ -12,6 +12,14 @@ struct SymbolValue {
 };
 
 inline constexpr SymbolValue constantNames[] = {
+#define SCENARIO_ENUM_BEGIN(name)
+#define SCENARIO_ENUM_VALUE(table, symbol, number) {.value = symbol, .name = #symbol},
+#define SCENARIO_ENUM_END(name)
+#include "s1/task/scen/commands.def"
+#undef SCENARIO_ENUM_BEGIN
+#undef SCENARIO_ENUM_VALUE
+#undef SCENARIO_ENUM_END
+
     {.value = A, .name = "A"},
     {.value = AICA_CMD_PLAY, .name = "AICA_CMD_PLAY"},
     {.value = AICA_CMD_RESET, .name = "AICA_CMD_RESET"},
@@ -59,7 +67,7 @@ inline constexpr SymbolValue constantNames[] = {
     {.value = CHARA_SELECT_NONE, .name = "CHARA_SELECT_NONE"},
     {.value = CHARA_SELECT_PRE_DISPATCH_WAIT, .name = "CHARA_SELECT_PRE_DISPATCH_WAIT"},
     {.value = CHARA_SELECT_SWITCH_SLOT, .name = "CHARA_SELECT_SWITCH_SLOT"},
-    {.value = CYCLE_CMD_CHECK_SCNF_HAS_CVWK, .name = "CYCLE_CMD_CHECK_SCNF_HAS_CVWK"},
+    {.value = CYCLE_CMD_HAS_CHARA, .name = "CYCLE_CMD_HAS_CHARA"},
     {.value = CYCLE_CMD_COUNT_CHARACTERS_IN_QUAD, .name = "CYCLE_CMD_COUNT_CHARACTERS_IN_QUAD"},
     {.value = CYCLE_CMD_COUNT_CYCLES_IN_RADIUS, .name = "CYCLE_CMD_COUNT_CYCLES_IN_RADIUS"},
     {.value = CYCLE_CMD_GET_CYCLE_PTR_BY_CHARA_ID, .name = "CYCLE_CMD_GET_CYCLE_PTR_BY_CHARA_ID"},

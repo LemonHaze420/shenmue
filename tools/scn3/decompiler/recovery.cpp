@@ -1538,7 +1538,7 @@ Json analyzeFunction(CRecovery &recovery, const std::string &name, bool includeS
     return result;
 }
 
-std::string moduleSource(const CRecovery &recovery, const Scn3Module &original) {
+ScenarioSource moduleSource(const CRecovery &recovery, const Scn3Module &original) {
     const SourceUnit &unit = recovery.unit;
     const std::string entry = unit.startupFunctionSymbol.value_or("");
     std::ostringstream out;
@@ -1622,6 +1622,8 @@ std::string moduleSource(const CRecovery &recovery, const Scn3Module &original) 
             throw std::runtime_error("Workspace object lies beyond the module workspace: " + object.second.first);
     const std::map<std::string, SourceExpr> strings = cStringLiterals(recovery, original);
     printCModuleData(out, unit, original, moduleDataEnd(original), recovery.readOnlyData, prototypes, strings);
+    std::string declarations = out.str();
+    out.str("");
     for (const std::string &name : unit.functionOrder) {
         SourceFunctionAst function = unit.functions.at(name);
         function.externalDefinition = name == entry;
@@ -1629,7 +1631,7 @@ std::string moduleSource(const CRecovery &recovery, const Scn3Module &original) 
         out << "\n";
         functionDefinition(out, function);
     }
-    return out.str();
+    return {std::move(declarations), out.str()};
 }
 
 CRecovery recoverPlacedC(const Program &program, const std::string &profile) {
@@ -1638,7 +1640,7 @@ CRecovery recoverPlacedC(const Program &program, const std::string &profile) {
 }
 } // namespace
 
-std::string renderScenarioSource(const Program &program, const std::string &profile) {
+ScenarioSource renderScenarioSource(const Program &program, const std::string &profile) {
     CRecovery recovery = recoverPlacedC(program, profile);
     if (!recovery.moduleIssues.empty())
         throw std::runtime_error("Cannot export C module: " + recovery.moduleIssues.dump());
@@ -1652,7 +1654,8 @@ std::string renderScenarioSource(const Program &program, const std::string &prof
         throw std::runtime_error("Cannot export functions as C: " + unresolved);
     if (!recovery.plain.empty())
         std::cerr << "note: " << recovery.plain.size() << " functions use raw words for overlapping stack objects\n";
-    const std::string text = moduleSource(recovery, original);
+    ScenarioSource source = moduleSource(recovery, original);
+    const std::string text = source.declarations + source.definitions;
     const SourceUnit parsed = parseScenarioSourceText(text);
     SourceUnit placed = parsed;
     for (const std::string &name : placed.functionOrder)
@@ -1674,7 +1677,7 @@ std::string renderScenarioSource(const Program &program, const std::string &prof
         throw std::runtime_error("C source does not reproduce the module layout: first difference at " + hexUnsigned(offset) + "; original size " +
             std::to_string(original.originalBlob.size()) + ", rebuilt size " + std::to_string(rebuilt.size()));
     }
-    return text;
+    return source;
 }
 
 std::string renderCRecoveryReport(const Program &program, const std::string &profile, const std::optional<std::string> &onlyFunction) {

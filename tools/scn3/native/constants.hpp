@@ -9,6 +9,14 @@
 #include "s1/task/scrl.hpp"
 
 namespace shenmue::scenario {
+#define SCENARIO_ENUM_BEGIN(name)
+#define SCENARIO_ENUM_VALUE(table, name, value) inline constexpr std::uint32_t name = s1::name;
+#define SCENARIO_ENUM_END(name)
+#include "s1/task/scen/commands.def"
+#undef SCENARIO_ENUM_BEGIN
+#undef SCENARIO_ENUM_VALUE
+#undef SCENARIO_ENUM_END
+
 inline constexpr std::uint32_t CDM_Hide = s1::CDM_Hide;
 inline constexpr std::uint32_t CDM_Query = s1::CDM_Query;
 inline constexpr std::uint32_t CDM_Show = s1::CDM_Show;
@@ -32,7 +40,7 @@ inline constexpr std::uint32_t LB = 0x00000041U;
 inline constexpr std::uint32_t RB = 0x00000180U;
 inline constexpr std::uint32_t RT = 0x00000008U;
 inline constexpr std::uint32_t CYCLE_CMD_SETUP = 0x00000000U;
-inline constexpr std::uint32_t CYCLE_CMD_CHECK_SCNF_HAS_CVWK = 0x00000001U;
+inline constexpr std::uint32_t CYCLE_CMD_HAS_CHARA = s1::CYCLE_CMD_HAS_CHARA;
 inline constexpr std::uint32_t CYCLE_CMD_LINK_CYCLES_IN_STACK = 0x00000002U;
 inline constexpr std::uint32_t CYCLE_CMD_PROCESS_SND = 0x00000003U;
 inline constexpr std::uint32_t CYCLE_CMD_PARSE_FOR_SCRIPT = 0x00000004U;

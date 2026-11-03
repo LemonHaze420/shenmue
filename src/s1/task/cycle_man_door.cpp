@@ -296,7 +296,7 @@ bool StartDoorRequest(CycleManager::NpcRecord &npc) {
     // The original only enters the DSWK hand-off while the cycle has a live
     // character/MOTN work context.  Inactive cycles take the dormant branch;
     // allocating a request for one leaves the scenario door task with an owner
-    // that CYCLE_CMD_CHECK_SCNF_HAS_CVWK can never resolve.
+    // that CYCLE_CMD_HAS_CHARA can never resolve.
     if (!npc.cycle->motnSteeringActive || !npc.cycle->obj) {
         CycleManager::SetDoorTransitionDormant(npc);
         return true;

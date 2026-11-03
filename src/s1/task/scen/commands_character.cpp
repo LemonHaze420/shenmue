@@ -687,13 +687,13 @@ void Script_FaceLookAtTargetUtils(ScenarioContext *context, void *rawParams) {
     }
     constexpr Vector3 kZero{};
     switch (params->mode) {
-    case 0:
+    case FACE_LookReset:
         FACE_SetLookTarget(character, 0, &kZero, 16);
         break;
-    case 1:
+    case FACE_LookAtSpeaker:
         FACE_SetLookTarget(character, 1, &kZero, static_cast<std::uint16_t>(params->targetOffset));
         break;
-    case 2:
+    case FACE_LookAtPosition:
         FACE_SetLookTarget(character, 2, ScenarioPointer<const Vector3>(params->targetOffset), params->blendFrames);
         break;
     default:
@@ -1131,19 +1131,19 @@ void Script_charaPosRotUtils(ScenarioContext *context, void *rawParams) {
     const std::uint32_t mode = arguments.word(4);
     if (Vector3 *const position = arguments.pointer<Vector3>(2)) {
         switch (mode) {
-        case 0:
+        case CHARA_PART_Set:
             // MFSY's CAN1 node 0x99 ignores the authored x=1000 placeholder.
             if (arguments.word(1) != 0x99 || characterId != SHEN_NAME(CAN1) || position->x <= 999.0f || position->x >= 1001.0f || g_areaId != SHEN_NAME(MFSY)) {
                 node->position = *position;
             }
             break;
-        case 1:
+        case CHARA_PART_Add:
             node->position = {node->position.x + position->x, position->y + node->position.y, position->z + node->position.z};
             break;
-        case 2:
+        case CHARA_PART_Get:
             *position = node->position;
             break;
-        case 3:
+        case CHARA_PART_SetScale:
             node->scale = *position;
             break;
         default:
@@ -1152,13 +1152,13 @@ void Script_charaPosRotUtils(ScenarioContext *context, void *rawParams) {
     }
     if (Vector3i *const rotation = arguments.pointer<Vector3i>(3)) {
         switch (mode) {
-        case 0:
+        case CHARA_PART_Set:
             node->rotation = *rotation;
             break;
-        case 1:
+        case CHARA_PART_Add:
             node->rotation = {node->rotation.x + rotation->x, node->rotation.y + rotation->y, node->rotation.z + rotation->z};
             break;
-        case 2:
+        case CHARA_PART_Get:
             *rotation = node->rotation;
             break;
         default:

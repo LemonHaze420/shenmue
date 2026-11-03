@@ -1,5 +1,6 @@
 #pragma once
 #include "shenmue.h"
+#include "s1/task/scen/commands.hpp"
 
 #include "s1/flags.hpp"
 
@@ -30,6 +31,7 @@ enum RyoControlCommand : std::uint32_t {
 };
 
 enum ScenarioCycleCommand : std::uint32_t {
+    CYCLE_CMD_HAS_CHARA = 1,
     CYCLE_CMD_RESET_LOAD_SETTLE = 0x1c,
     CYCLE_CMD_TICK_LOAD_SETTLE_COUNT = 0x1d,
 };

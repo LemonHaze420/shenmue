@@ -102,7 +102,7 @@ jobs:
           ./.github/scripts/configure-games.ps1 -BuildDirectory build/windows-asi -Game $game
       - name: Build games
         run: |
-          $targets = if ('${{ matrix.game }}' -eq 'WS') { @('shenmue1') } else { @('shenmue${{ matrix.game }}_asi', 'shenmue${{ matrix.game }}') }
+          [string[]]$targets = if ('${{ matrix.game }}' -eq 'WS') { @('shenmue1') } else { @('shenmue${{ matrix.game }}_asi', 'shenmue${{ matrix.game }}') }
           cmake --build build/windows-asi --config Release --target @targets --parallel 4
       - name: Sign CI executables
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'

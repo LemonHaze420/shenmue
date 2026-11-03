@@ -22,26 +22,26 @@ void UI_QteInitializeSprite();
 void UI_QteDraw();
 #endif
 
-struct SfxOverlayBoostFrames {
+struct QteOverlayBoostFrames {
     std::int16_t stepFrames;
     std::int16_t accumulatedFrames;
 };
 
-static_assert(sizeof(SfxOverlayBoostFrames) == 4);
+static_assert(sizeof(QteOverlayBoostFrames) == 4);
 
-inline constexpr std::uint8_t kSfxPlayPrimingCue = 0x01;
+inline constexpr std::uint8_t kQtePlayPrimingCue = 0x01;
 
-inline constexpr std::uint8_t kSfxShowOverlay = 0x02;
+inline constexpr std::uint8_t kQteShowOverlay = 0x02;
 
-inline constexpr std::uint8_t kSfxWaitForExternalClose = 0x04;
+inline constexpr std::uint8_t kQteWaitForExternalClose = 0x04;
 
-inline constexpr std::uint8_t kSfxAlternateResultSound = 0x08;
+inline constexpr std::uint8_t kQteAlternateResultSound = 0x08;
 
-inline constexpr std::uint8_t kSfxCloseImmediately = 0x10;
+inline constexpr std::uint8_t kQteCloseImmediately = 0x10;
 
-inline constexpr std::uint8_t kSfxSubsetMaskMode = 0x20;
+inline constexpr std::uint8_t kQteSubsetMaskMode = 0x20;
 
-inline constexpr std::array<std::uint16_t, 16> kSfxMaskLut{
+inline constexpr std::array<std::uint16_t, 16> kQteMaskLut{
     0x000,
     0x001,
     0x010,
@@ -67,7 +67,7 @@ inline constexpr std::array<const char *, 4> kQteMinigameKeyIconIds{"Multi_Left_
 
 inline constexpr std::array<const char *, 4> kQteMinigamePadIconIds{"Multi_Left", "Multi_Up", "Multi_Down", "Multi_Right"};
 
-// Game QTE (element 52, GameQTE.ui): the QTE button prompt ICQu shows while a Script_SFXUtil overlay is up. Its windows are the
+// Game QTE (element 52, GameQTE.ui): the QTE button prompt ICQu shows while a Script_QTEUtil overlay is up. Its windows are the
 // MultiPanel_Mouse_ and MultiPanel_Default_ direction windows (the view authors only Up, Right, Down and Left), then DefaultPanel,
 // MousePanel and PlatformPanel.
 inline constexpr std::array<const char *, 8> kGameQteDirections{"Up", "Up_Right", "Right", "Down_Right", "Down", "Down_Left", "Left", "Up_Left"};

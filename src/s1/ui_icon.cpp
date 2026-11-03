@@ -238,10 +238,10 @@ void UI_ICONMainCallback(HLib::TaskData *) {
     if ((Shenmue_nPauseState & 2) != 0) {
         // One dword store clears the held copy with the pressed half, then the repeated half; the stick copies are kept.
         g_tmpPadcHeld = 0;
-        g_sfxInputFlags = 0;
+        g_qteInputFlags = 0;
     } else if (input) {
         g_tmpPadcHeld = input->held;
-        g_sfxInputFlags = input->pressedPriority | (static_cast<std::uint32_t>(input->repeatedPresses) << 16U);
+        g_qteInputFlags = input->pressedPriority | (static_cast<std::uint32_t>(input->repeatedPresses) << 16U);
         g_tmpRightStickHi = static_cast<std::uint8_t>(input->rightStick);
         g_tmpRightStickLo = static_cast<std::uint8_t>(input->rightStick >> 8U);
     }

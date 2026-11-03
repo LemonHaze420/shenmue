@@ -49,7 +49,7 @@ IconPresentationOwner g_iconPresentation;
 
 std::uint16_t g_tmpPadcHeld = 0;
 
-std::uint32_t g_sfxInputFlags = 0;
+std::uint32_t g_qteInputFlags = 0;
 
 std::uint16_t g_tmpRightStickHi = 0;
 
@@ -389,15 +389,15 @@ bool g_sicnClearPendingUntilUnpause = false;
 
 std::int32_t Shenmue_nPrevPauseState = 0;
 
-std::int32_t g_sfxFlashOnFrames = 0;
+std::int32_t g_qteFlashOnFrames = 0;
 
-std::int32_t g_sfxTimedOutMarker = 0;
+std::int32_t g_qteTimedOutMarker = 0;
 
 } // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 
-UISfxOverlayState g_sfxOverlayState = UISfxOverlayState::Idle;
+UIQteOverlayState g_qteOverlayState = UIQteOverlayState::Idle;
 
 
 std::uint8_t g_helpOverlayPageTokenId = 0;
@@ -408,33 +408,33 @@ UIHelpWidgetState g_helpOverlayState = UIHelpWidgetState::Idle;
 
 namespace shenmue::s1::ui_runtime_detail {
 
-std::uint8_t g_sfxOverlayFlags = 0;
+std::uint8_t g_qteOverlayFlags = 0;
 
-std::uint16_t g_currentSfxMask = 0;
+std::uint16_t g_currentQteMask = 0;
 
-std::int16_t g_sfxTimeoutFrames = 0;
+std::int16_t g_qteTimeoutFrames = 0;
 
-std::int16_t g_sfxFrameCounter = 0;
+std::int16_t g_qteFrameCounter = 0;
 
-std::array<std::int16_t, 2> g_sfxOverlayResult{};
+std::array<std::int16_t, 2> g_qteOverlayResult{};
 
-SfxOverlayBoostFrames g_qteOverlay{};
+QteOverlayBoostFrames g_qteOverlay{};
 
-std::int16_t g_sfxOverlayTimeoutPendingBonusFrames = 0;
+std::int16_t g_qteOverlayTimeoutPendingBonusFrames = 0;
 
 std::int16_t g_qteOverlayTimeoutMaxFrames = 0;
 
-std::int32_t g_sfxOverlayTimeoutBoostEnabled = 0;
+std::int32_t g_qteOverlayTimeoutBoostEnabled = 0;
 
-std::int32_t g_sfxFlashOffFrames = 0;
+std::int32_t g_qteFlashOffFrames = 0;
 
-std::int32_t g_sfxOverlayTimeoutBoostCount = 0;
+std::int32_t g_qteOverlayTimeoutBoostCount = 0;
 
-std::uint8_t g_sfxFlashCounter = 0;
+std::uint8_t g_qteFlashCounter = 0;
 
-std::uint8_t g_sfxStateDirty = 0;
+std::uint8_t g_qteStateDirty = 0;
 
-HLib::Task *g_sfxOverlayTask = nullptr;
+HLib::Task *g_qteOverlayTask = nullptr;
 
 HelpPresentationOwner g_helpPresentation;
 
@@ -1875,7 +1875,7 @@ void UI_GUITasksEnqueue() {
         CurrentTask = icon.rootTask;
         icon.actionSelectorTask = HLib_EnqueueTaskWithoutParameter(UI_ICSpCallback, 8, 0, UI_ICSP_TASK.name);
         CurrentTask = icon.rootTask;
-        g_sfxOverlayTask = HLib_EnqueueTaskWithoutParameter(UI_ICQuCallback, 8, 0, UI_ICQU_TASK.name);
+        g_qteOverlayTask = HLib_EnqueueTaskWithoutParameter(UI_ICQuCallback, 8, 0, UI_ICQU_TASK.name);
         CurrentTask = icon.rootTask;
         icon.notificationTask = HLib_EnqueueTaskWithoutParameter(UI_ICNQCallback, 8, 0, UI_ICNQ_TASK.name);
         CurrentTask = icon.rootTask;
@@ -1960,14 +1960,14 @@ void UI_GUITasksShutdown() {
     DestroyOwnedTask(g_iconPresentation.menuTask, SHEN_NAME(ICIS));
     DestroyOwnedTask(g_iconPresentation.moneyTask, 0x6f4d4349);
     DestroyOwnedTask(g_iconPresentation.actionSelectorTask, 0x70534349);
-    DestroyOwnedTask(g_sfxOverlayTask, 0x75514349);
+    DestroyOwnedTask(g_qteOverlayTask, 0x75514349);
     DestroyOwnedTask(g_iconPresentation.notificationTask, SHEN_NAME(ICNQ));
     DestroyOwnedTask(g_iconPresentation.cassetteTask, SHEN_NAME(ICMC));
     DestroyOwnedTask(g_iconPresentation.rootTask, SHEN_NAME(ICON));
     g_iconPresentation.actionSelectorTask = nullptr;
     g_iconPresentation.notificationTask = nullptr;
     g_iconPresentation.cassetteTask = nullptr;
-    g_sfxOverlayTask = nullptr;
+    g_qteOverlayTask = nullptr;
 
     g_moveLearnedPresentation = {};
     g_actionSelectorPresentation = {};
@@ -2065,16 +2065,16 @@ UIPresentationSnapshot UI_GetPresentationSnapshot() {
         g_cdttMode,
         g_cdttAlpha,
         {
-            g_sfxOverlayState,
-            g_sfxTimeoutFrames,
-            g_sfxFrameCounter,
-            g_sfxOverlayResult[0],
-            g_sfxOverlayTimeoutPendingBonusFrames,
+            g_qteOverlayState,
+            g_qteTimeoutFrames,
+            g_qteFrameCounter,
+            g_qteOverlayResult[0],
+            g_qteOverlayTimeoutPendingBonusFrames,
             g_qteOverlayTimeoutMaxFrames,
             g_qteOverlay.stepFrames,
             g_qteOverlay.accumulatedFrames,
-            g_sfxOverlayTimeoutBoostCount,
-            static_cast<std::uint8_t>(g_sfxOverlayTimeoutBoostEnabled),
+            g_qteOverlayTimeoutBoostCount,
+            static_cast<std::uint8_t>(g_qteOverlayTimeoutBoostEnabled),
             static_cast<std::uint8_t>(g_qteSessionActive),
         },
         g_helpOverlayState,

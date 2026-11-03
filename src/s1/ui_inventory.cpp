@@ -1781,7 +1781,7 @@ void UI_ICISMainCallback(HLib::TaskData *) {
         ryo->skipRootMotionDelta = 1;
     if ((Shenmue_nPauseState & 2) == 0) {
         if (icon.menuState == UIIconSystemMenuState::OpeningTransition) {
-            const std::uint16_t pressed = static_cast<std::uint16_t>(g_sfxInputFlags & 0x202U);
+            const std::uint16_t pressed = static_cast<std::uint16_t>(g_qteInputFlags & 0x202U);
             if ((pressed & 0x200U) != 0) {
                 if (icon.bufferedFollowupPressMask)
                     icon.bufferedFollowupPressMask = 0;
@@ -3627,7 +3627,7 @@ bool UI_ICMCWaitForClosed(std::int32_t &result) {
 
 void UI_ICMCCallback(HLib::TaskData *) {
 #if SHENMUE_IS_DEMO
-    g_sfxOverlayState = UISfxOverlayState::Idle;
+    g_qteOverlayState = UIQteOverlayState::Idle;
     UI_QteInitializeSprite();
     g_qteSessionActive = 0;
     InstallOwnedTaskMain(UI_ICMCMainCallback);
@@ -3657,7 +3657,7 @@ void UI_ICMCCallback(HLib::TaskData *) {
 
 void UI_ICMCMainCallback(HLib::TaskData *taskData) {
 #if SHENMUE_IS_DEMO
-    UI_SFXOverlayCallback(taskData);
+    UI_QTEOverlayCallback(taskData);
 #else
 #if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
     UpdatePortableCassette();

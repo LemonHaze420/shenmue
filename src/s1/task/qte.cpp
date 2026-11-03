@@ -5,7 +5,7 @@
 namespace shenmue::s1 {
 
 void EVT_AT_QTE(const QteRequest &request) {
-    UI_SFXOverlayBegin({
+    UI_QTEOverlayBegin({
         request.expectedStatus,
         request.timeoutFrames,
         request.promptMode,
@@ -14,15 +14,15 @@ void EVT_AT_QTE(const QteRequest &request) {
 }
 
 void EVT_AT_ResultQTE(std::int16_t result) {
-    UI_SFXOverlayResolve(result);
+    UI_QTEOverlayResolve(result);
 }
 
 bool EV_GetCurrentQteStatusWhileOpen(std::int16_t &result) {
-    return UI_SFXOverlayConsumeResultWhileOpen(result);
+    return UI_QTEOverlayConsumeResultWhileOpen(result);
 }
 
 bool EV_GetCurrentQteStatusIfIdle(std::int16_t &result) {
-    return UI_SFXOverlayConsumeResultIfIdle(result);
+    return UI_QTEOverlayConsumeResultIfIdle(result);
 }
 
 } // namespace shenmue::s1

@@ -190,6 +190,8 @@ class Importer {
             return result;
         result.written = clang::QualType::getAsString(qualified.split(), policy_);
         result.name = cTypeName(clang::QualType::getAsString(qualified.getSplitDesugaredType(), policy_));
+        if (const clang::EnumType *enumeration = qualified->getAs<clang::EnumType>())
+            result.name = type(enumeration->getDecl()->getIntegerType()).name;
         if (const auto *alias = qualified->getAs<clang::TypedefType>())
             result.alias = identity(alias->getDecl());
         for (clang::QualType part = qualified.getCanonicalType(); !part.isNull();) {
@@ -221,8 +223,19 @@ class Importer {
     bool isSource(const clang::Decl *decl) const {
         if (decl->isImplicit())
             return false;
-        const clang::PresumedLoc location = sources_.getPresumedLoc(sources_.getExpansionLoc(decl->getLocation()));
-        return location.isValid() && location.getIncludeLoc().isInvalid();
+        const clang::SourceLocation expansion = sources_.getExpansionLoc(decl->getLocation());
+        const clang::PresumedLoc location = sources_.getPresumedLoc(expansion);
+        if (!location.isValid())
+            return false;
+        if (location.getIncludeLoc().isInvalid())
+            return true;
+        if (sources_.isInSystemHeader(expansion))
+            return false;
+        if (const clang::VarDecl *variable = llvm::dyn_cast<clang::VarDecl>(decl))
+            return variable->getStorageClass() == clang::SC_Static;
+        if (const clang::FunctionDecl *function = llvm::dyn_cast<clang::FunctionDecl>(decl))
+            return function->getStorageClass() == clang::SC_Static;
+        return false;
     }
 
     CNode attribute(const clang::Attr *attribute) {
@@ -253,14 +266,14 @@ class Importer {
             result.type = type(value->getType());
         else if (const auto *alias = llvm::dyn_cast<clang::TypedefNameDecl>(decl))
             result.type = type(alias->getUnderlyingType());
-        if (const auto *function = llvm::dyn_cast<clang::FunctionDecl>(decl)) {
+        if (const clang::FunctionDecl *function = llvm::dyn_cast<clang::FunctionDecl>(decl)) {
             result.storage = storage(function->getStorageClass());
             result.variadic = function->isVariadic();
             for (const clang::ParmVarDecl *parameter : function->parameters())
                 result.children.push_back(declaration(parameter));
             if (function->doesThisDeclarationHaveABody())
                 result.children.push_back(statement(function->getBody()));
-        } else if (const auto *variable = llvm::dyn_cast<clang::VarDecl>(decl)) {
+        } else if (const clang::VarDecl *variable = llvm::dyn_cast<clang::VarDecl>(decl)) {
             result.storage = storage(variable->getStorageClass());
             result.initialized = variable->hasInit();
             if (const clang::Expr *initializer = variable->getInit())

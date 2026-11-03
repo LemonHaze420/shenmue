@@ -60,7 +60,7 @@ void UI_ICSpInitializeSprites() {
 
 // @verified - d
 void UI_ICSpReadInput() {
-    const std::uint16_t direction = static_cast<std::uint16_t>(g_sfxInputFlags) >> 12U;
+    const std::uint16_t direction = static_cast<std::uint16_t>(g_qteInputFlags) >> 12U;
     if (direction == 4 || direction == 8) {
         const bool yes = direction == 4;
         shenExecuteAICACommand(yes ? 0x500abU : 0x100abU, 0, 0);
@@ -201,7 +201,7 @@ void UI_ICQuUpdateLabels() {
 // @verified - d
 void UI_ICQuReadInput() {
     ActionSelectorOwner &selector = g_actionSelectorPresentation;
-    const std::uint16_t input = static_cast<std::uint16_t>(g_sfxInputFlags);
+    const std::uint16_t input = static_cast<std::uint16_t>(g_qteInputFlags);
     const std::uint8_t code = UI_DecodeInputCode(input, 0x55);
     const std::array<std::int16_t, 4> choices{selector.request.up, selector.request.left, selector.request.down, selector.request.right};
     bool noSelection = code == 13;

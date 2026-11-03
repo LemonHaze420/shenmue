@@ -459,7 +459,7 @@ struct UICdttPresentationText {
     std::uint8_t loadingTextVisible;
 };
 
-enum class UISfxOverlayState : std::uint8_t {
+enum class UIQteOverlayState : std::uint8_t {
     Idle = 0,
     Opening = 1,
     Requested = 2,
@@ -468,16 +468,16 @@ enum class UISfxOverlayState : std::uint8_t {
     Closing = 5,
 };
 
-extern UISfxOverlayState g_sfxOverlayState;
+extern UIQteOverlayState g_qteOverlayState;
 
-struct UISfxOverlayRequest {
+struct UIQteOverlayRequest {
     std::uint16_t expectedMask;
     std::int16_t timeoutFrames;
     std::uint8_t mode;
     std::uint8_t bonusFrames;
 };
 
-enum class UISfxOverlayTimeoutTuningMode : std::int32_t {
+enum class UIQteOverlayTimeoutTuningMode : std::int32_t {
     Session = 0,
     DisableBoost = 1,
     SetStepFrames = 2,
@@ -485,19 +485,19 @@ enum class UISfxOverlayTimeoutTuningMode : std::int32_t {
     SetMaximumFrames = 4,
 };
 
-enum class UISfxOverlayTimeoutSessionAction : std::uint8_t {
+enum class UIQteOverlayTimeoutSessionAction : std::uint8_t {
     Begin = 0,
     Advance = 1,
     Reset = 2,
 };
 
-struct UISfxOverlayTimeoutTuningParameters {
+struct UIQteOverlayTimeoutTuningParameters {
     std::int32_t value;
-    UISfxOverlayTimeoutTuningMode mode;
+    UIQteOverlayTimeoutTuningMode mode;
 };
 
-struct UISfxOverlaySnapshot {
-    UISfxOverlayState state;
+struct UIQteOverlaySnapshot {
+    UIQteOverlayState state;
     std::int16_t timeoutFrames;
     std::int16_t elapsedFrames;
     std::int16_t result;
@@ -526,7 +526,7 @@ struct UIPresentationSnapshot {
     UISicnPausePolicy sicnPausePolicy;
     UICdttMode cdttMode;
     std::int16_t cdttAlpha;
-    UISfxOverlaySnapshot sfxOverlay;
+    UIQteOverlaySnapshot qteOverlay;
     UIHelpWidgetState helpWidgetState;
     UIIconSystemMenuState iconSystemMenuState;
     UIIconSystemMenuSelection iconSystemMenuSelection;
@@ -1364,7 +1364,7 @@ extern IconPresentationOwner g_iconPresentation;
 
 
 extern std::uint16_t g_tmpPadcHeld;
-extern std::uint32_t g_sfxInputFlags;
+extern std::uint32_t g_qteInputFlags;
 extern std::uint16_t g_tmpRightStickHi;
 extern std::uint16_t g_tmpRightStickLo;
 
@@ -1526,16 +1526,16 @@ extern std::array<UIColourImageWidget *, 31> g_frontendEmblemImages;
 extern std::int32_t g_frontendEmblemImageCount, g_frontendEmblemAnimSlot;
 
 extern std::int32_t g_qteSessionActive;
-void UI_SFXOverlayBegin(const UISfxOverlayRequest &request);
-void UI_SFXOverlayBegin(std::int16_t timeoutFrames);
-void UI_SFXOverlayResolve(std::int16_t result);
-bool UI_SFXOverlayConsumeResultWhileOpen(std::int16_t &result);
-bool UI_SFXOverlayConsumeResultIfIdle(std::int16_t &result);
-void UI_SFXOverlayCallback(HLib::TaskData *taskData);
+void UI_QTEOverlayBegin(const UIQteOverlayRequest &request);
+void UI_QTEOverlayBegin(std::int16_t timeoutFrames);
+void UI_QTEOverlayResolve(std::int16_t result);
+bool UI_QTEOverlayConsumeResultWhileOpen(std::int16_t &result);
+bool UI_QTEOverlayConsumeResultIfIdle(std::int16_t &result);
+void UI_QTEOverlayCallback(HLib::TaskData *taskData);
 bool UI_IsFrontendCaptureReady() noexcept;
 
 // Shenmue scenario function 392.
-void Script_SetSfxOverlayTimeoutTuning(ScenarioContext *context, void *rawParams);
+void Script_SetQteOverlayTimeoutTuning(ScenarioContext *context, void *rawParams);
 
 } // namespace shenmue::s1
 

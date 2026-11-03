@@ -4,7 +4,12 @@
 
 namespace shenmue::scenario {
 
-std::string renderScenarioSource(const Program &program, const std::string &profile);
+struct ScenarioSource {
+    std::string declarations;
+    std::string definitions;
+};
+
+ScenarioSource renderScenarioSource(const Program &program, const std::string &profile);
 
 std::string renderExplicitSource(const Program &program, const std::string &profile, const std::set<std::string> &plain = {}, SourceUnit *parsed = nullptr);
 

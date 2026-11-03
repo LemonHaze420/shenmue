@@ -252,7 +252,7 @@ bool CollectionGrid_Tick() {
         break;
     case CollectionGridPhase::Closing:
         if (!(Shenmue_nPauseState & 2)) {
-            if (g_sfxInputFlags & 0x200) {
+            if (g_qteInputFlags & 0x200) {
                 CollectionGrid_Close();
                 g_iconPresentation.menuCloseRequested = true;
                 closed = true;
@@ -293,7 +293,7 @@ bool CollectionGrid_Tick() {
 
 // @verified - p
 void CollectionGrid_HandleInput() {
-    const std::uint16_t input = static_cast<std::uint16_t>(g_sfxInputFlags);
+    const std::uint16_t input = static_cast<std::uint16_t>(g_qteInputFlags);
     if (input & 0x200) {
         g_collectionGridPhase = CollectionGridPhase::Closing;
     } else if (input & 0x402) {

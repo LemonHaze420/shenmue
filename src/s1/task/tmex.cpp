@@ -428,7 +428,7 @@ void ClearTMEXSharedItemResponse() {
 
 void TMEX_Callback(HLib::TaskData *taskData) {
     (void)taskData;
-    const std::uint16_t inputFlags = static_cast<std::uint16_t>(g_sfxInputFlags);
+    const std::uint16_t inputFlags = static_cast<std::uint16_t>(g_qteInputFlags);
     g_tmexRuntime.inputFlags = inputFlags;
     g_tmexRuntime.maskedInputFlags = g_TMEX_CurrentMode > 0 ? static_cast<std::uint16_t>(inputFlags & ~kCloseInput) : inputFlags;
 

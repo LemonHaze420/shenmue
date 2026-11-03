@@ -168,12 +168,27 @@ void writeScenarioCHeader(const std::string &path) {
            "typedef int32_t MotionId;\n"
            "#define SCN3_WORD(x) _Generic((x), float: ((scn3_bits){.f = (x)}).u, default: (uint32_t)(x))\n";
     out << "void SCNT_ShowSubtitle(const char *text);\n";
+#define SCENARIO_ENUM_BEGIN(name) out << "typedef enum " #name " {\n";
+#define SCENARIO_ENUM_VALUE(table, name, value) out << "  " #name " = " << value << ",\n";
+#define SCENARIO_ENUM_END(name) out << "} " #name ";\n";
+#include "s1/task/scen/commands.def"
+#undef SCENARIO_ENUM_BEGIN
+#undef SCENARIO_ENUM_VALUE
+#undef SCENARIO_ENUM_END
+
     for (const ScenarioDataSchema &schema : scenarioDataSchemas())
         out << "typedef struct " << schema.name << " " << schema.name << ";\n";
     out << "\n";
     for (const ScenarioDataSchema &schema : scenarioDataSchemas())
         writeCRecord(out, schema);
     std::set<std::string> constants;
+#define SCENARIO_ENUM_BEGIN(name)
+#define SCENARIO_ENUM_VALUE(table, name, value) constants.insert(#name);
+#define SCENARIO_ENUM_END(name)
+#include "s1/task/scen/commands.def"
+#undef SCENARIO_ENUM_BEGIN
+#undef SCENARIO_ENUM_VALUE
+#undef SCENARIO_ENUM_END
     for (const abi::ValueNameSpec &value : abi::kValueNames)
         if (value.symbol && lookupAbiValueByName(value.symbol) == value.value && constants.insert(value.symbol).second)
             out << "#define " << value.symbol << " " << hexUnsigned(value.value) << "\n";

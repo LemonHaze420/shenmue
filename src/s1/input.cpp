@@ -777,7 +777,7 @@ InputMode GetCurrentInputType() {
     if (gameUi)
         return InputMode::GameUi;
 
-    if (UIElementRequested(52) || UIElementTicked(52) || g_sfxOverlayState != UISfxOverlayState::Idle)
+    if (UIElementRequested(52) || UIElementTicked(52) || g_qteOverlayState != UIQteOverlayState::Idle)
         return UIElementRequested(76) ? InputMode::Game : InputMode::Qte2;
     if (g_uiElements[68].isVisible || UIElementRequested(68) || UIElementTicked(68))
         return InputMode::Qte;

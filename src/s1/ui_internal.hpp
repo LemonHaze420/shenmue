@@ -431,7 +431,7 @@ extern std::int32_t g_currentSplashScreenIndex;
 
 extern IconPresentationOwner g_iconPresentation;
 
-extern std::uint32_t g_sfxInputFlags;
+extern std::uint32_t g_qteInputFlags;
 
 extern std::int8_t g_cassetteCollectionUiState;
 
@@ -1881,47 +1881,47 @@ extern bool g_sicnClearPendingUntilUnpause;
 
 extern std::int32_t Shenmue_nPrevPauseState;
 
-extern std::int32_t g_sfxFlashOnFrames;
+extern std::int32_t g_qteFlashOnFrames;
 
-extern std::int32_t g_sfxTimedOutMarker;
+extern std::int32_t g_qteTimedOutMarker;
 
 } // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 
-extern UISfxOverlayState g_sfxOverlayState;
+extern UIQteOverlayState g_qteOverlayState;
 
 } // namespace shenmue::s1
 
 namespace shenmue::s1::ui_runtime_detail {
 
-extern std::uint8_t g_sfxOverlayFlags;
+extern std::uint8_t g_qteOverlayFlags;
 
-extern std::uint16_t g_currentSfxMask;
+extern std::uint16_t g_currentQteMask;
 
-extern std::int16_t g_sfxTimeoutFrames;
+extern std::int16_t g_qteTimeoutFrames;
 
-extern std::int16_t g_sfxFrameCounter;
+extern std::int16_t g_qteFrameCounter;
 
-extern std::array<std::int16_t, 2> g_sfxOverlayResult;
+extern std::array<std::int16_t, 2> g_qteOverlayResult;
 
-extern SfxOverlayBoostFrames g_qteOverlay;
+extern QteOverlayBoostFrames g_qteOverlay;
 
-extern std::int16_t g_sfxOverlayTimeoutPendingBonusFrames;
+extern std::int16_t g_qteOverlayTimeoutPendingBonusFrames;
 
 extern std::int16_t g_qteOverlayTimeoutMaxFrames;
 
-extern std::int32_t g_sfxOverlayTimeoutBoostEnabled;
+extern std::int32_t g_qteOverlayTimeoutBoostEnabled;
 
-extern std::int32_t g_sfxFlashOffFrames;
+extern std::int32_t g_qteFlashOffFrames;
 
-extern std::int32_t g_sfxOverlayTimeoutBoostCount;
+extern std::int32_t g_qteOverlayTimeoutBoostCount;
 
-extern std::uint8_t g_sfxFlashCounter;
+extern std::uint8_t g_qteFlashCounter;
 
-extern std::uint8_t g_sfxStateDirty;
+extern std::uint8_t g_qteStateDirty;
 
-extern HLib::Task *g_sfxOverlayTask;
+extern HLib::Task *g_qteOverlayTask;
 
 extern ActionSelectorOwner g_actionSelectorPresentation;
 

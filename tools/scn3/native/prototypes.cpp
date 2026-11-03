@@ -40,7 +40,7 @@ constexpr std::string_view noScriptArguments[] = {
     "SCNF_GetCashOverlayResult",
     "SCNF_GetSelectedBinary",
     "SCNF_GetSelectedHelpToken",
-    "SCNF_GetSfxOverlayResultIfIdle",
+    "SCNF_GetQteOverlayResultIfIdle",
     "SCNF_PrepareCassetteUI",
     "SCNF_ReturnMinusOne",
     "SCNF_ReturnZero",

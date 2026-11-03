@@ -114,7 +114,7 @@ SCN3_MODE(Script_WeatherUtils, 0 == 47, int32_t record, uint32_t active)
 
 SCN3_PROTOTYPE(Script_SetActionSelectorHUDElementVisibility, void, int32_t disabled)
 
-SCN3_PROTOTYPE(Script_cdttLoadScrUtils, void, int32_t mode, ...)
+SCN3_PROTOTYPE(Script_cdttLoadScrUtils, void, LoadingScreenCommand mode, ...)
 SCN3_MODE(Script_cdttLoadScrUtils, 0 == 2, int32_t setting)
 
 SCN3_PROTOTYPE(Script_SetRefBoardValues, void, shen_name chara, int32_t type, const int32_t *field024)
@@ -146,7 +146,7 @@ SCN3_PROTOTYPE(Script_GetCycleManagerState, int32_t, uint32_t *position, uint32_
 
 SCN3_PROTOTYPE(Script_SetCycleManagerData, void, int32_t index, const uint32_t *position, const uint32_t *rotation, uint32_t field20, uint32_t querySetName)
 
-SCN3_PROTOTYPE(Script_ScenDataUtil, int32_t, void *data, int32_t op, int32_t index, ...)
+SCN3_PROTOTYPE(Script_ScenDataUtil, int32_t, void *data, ScenarioDataCommand op, int32_t index, ...)
 SCN3_MODE(Script_ScenDataUtil, 1 == 11, uint32_t value)
 SCN3_MODE(Script_ScenDataUtil, 1 == 12, uint32_t value)
 SCN3_MODE(Script_ScenDataUtil, 1 == 14, uint32_t value)
@@ -234,7 +234,7 @@ SCN3_MODE(Script_SetOsageFlags, 0 == 31, int32_t value)
 SCN3_PROTOTYPE(Script_SetupTransformMatrixForMotionTask, void, shen_name targetChara, int32_t targetAnchorNodeId, shen_name sourceChara,
     uint32_t sourceModelNodeKind, Vector3 *translation, Vector3i *euler)
 
-SCN3_PROTOTYPE(Script_motmGetCharaFlags, int32_t, shen_name chara, int32_t stage, int32_t query)
+SCN3_PROTOTYPE(Script_motmGetCharaFlags, int32_t, shen_name chara, MotionPoseStage stage, ScriptValueAccess query)
 
 SCN3_PROTOTYPE(Script_CEWPRelated, int32_t, shen_name chara)
 
@@ -266,7 +266,7 @@ SCN3_PROTOTYPE(Script_SetCCOW_Flags, void, shen_name chara, uint32_t flags, ...)
 
 SCN3_PROTOTYPE(Script_ccowUnknown, float, shen_name chara, int32_t mode, float value)
 
-SCN3_PROTOTYPE(Script_motnUtils, int32_t, int32_t mode, ...)
+SCN3_PROTOTYPE(Script_motnUtils, int32_t, MotionBudgetCommand mode, ...)
 SCN3_MODE(Script_motnUtils, 0 == 0, int32_t capacity)
 SCN3_MODE(Script_motnUtils, 0 == 1, shen_name chara, int32_t enable)
 SCN3_MODE(Script_motnUtils, 0 == 2, uint32_t chara)
@@ -382,7 +382,7 @@ SCN3_MODE(Script_SetMITKFlags, 0 == 1, int32_t unused, int32_t fadeFrames)
 SCN3_PROTOTYPE(Script_CtrlTimeLimit, int32_t, int32_t mode, ...)
 SCN3_MODE(Script_CtrlTimeLimit, 0 == 1, int32_t seconds)
 
-SCN3_PROTOTYPE(Script_SetSfxOverlayTimeoutTuning, void, int32_t value, int32_t mode)
+SCN3_PROTOTYPE(Script_SetQteOverlayTimeoutTuning, void, int32_t value, QteTimeoutCommand mode)
 
 SCN3_PROTOTYPE(Script_HATO_Funcs, int32_t, int32_t mode, ...)
 SCN3_MODE(Script_HATO_Funcs, 0 == 1, const Vector3 *center, float maxDistance)
@@ -565,7 +565,7 @@ SCN3_MODE(Script_EV_PAK_AFS_Utils, 0 == 2 && 1 == 3, const char *packName)
 SCN3_PROTOTYPE(Script_Execute3DSoundCommand_Wrapper, void, uint32_t baseCommand, uint32_t bank, const Vector3 *position, float minimumDistance,
     float fadeDistance, uint32_t releaseVolume)
 
-SCN3_PROTOTYPE(Script_FaceEx, void, shen_name characterId, int32_t eyeMode, int32_t eyePatternId, int32_t timing)
+SCN3_PROTOTYPE(Script_FaceEx, void, shen_name characterId, FaceExpressionMode eyeMode, int32_t eyePatternId, int32_t timing)
 
 SCN3_PROTOTYPE(Script_GetAuthorState_And_SetCamPos, int32_t, Vector3 *eye, Vector3 *target)
 
@@ -657,9 +657,9 @@ SCN3_PROTOTYPE(Script_UpdateCCOWCandidateObjects, int32_t, shen_name chara, int3
 
 SCN3_PROTOTYPE(Script_WeatherUtils_0, int32_t, uint32_t mode, uint32_t year, ...)
 
-SCN3_PROTOTYPE(Script_ccowSetFlag80, void, shen_name chara, int32_t mode)
+SCN3_PROTOTYPE(Script_ccowSetHeightMode, void, shen_name chara, CharacterHeightMode mode)
 
-SCN3_PROTOTYPE(Script_charaPosRotUtils, void, shen_name characterId, int32_t childIndex, Vector3 *position, Vector3i *rotation, int32_t mode)
+SCN3_PROTOTYPE(Script_charaPosRotUtils, void, shen_name characterId, int32_t childIndex, Vector3 *position, Vector3i *rotation, CharacterPartTransformMode mode)
 
 SCN3_PROTOTYPE(Script_charaSetupXForm, void, shen_name chara, uint32_t nodeKind, Vector3 *output)
 
@@ -765,7 +765,7 @@ SCN3_MODE(Script_EffectUtils, 0 == 50, int32_t slot, const Vector3 *amount)
 
 SCN3_PROTOTYPE(Script_ExecuteAicaCommand, int32_t, int32_t mode, uint32_t value)
 
-SCN3_PROTOTYPE(Script_FaceLookAtTargetUtils, void, shen_name characterId, int32_t mode, ...)
+SCN3_PROTOTYPE(Script_FaceLookAtTargetUtils, void, shen_name characterId, FaceLookCommand mode, ...)
 SCN3_MODE(Script_FaceLookAtTargetUtils, 1 == 1, int32_t blendFrames)
 SCN3_MODE(Script_FaceLookAtTargetUtils, 1 == 2, const Vector3 *target, uint32_t blendFrames)
 
@@ -861,7 +861,7 @@ SCN3_MODE(Script_Weather_WindUtils, 0 == 10, void *wind)
 SCN3_MODE(Script_Weather_WindUtils, 0 == 12, void *wind, uint32_t angle)
 SCN3_MODE(Script_Weather_WindUtils, 0 == 13, void *wind, uint32_t strength)
 
-SCN3_PROTOTYPE(Script_ccowUtils, int32_t, shen_name characterId, int32_t mode)
+SCN3_PROTOTYPE(Script_ccowUtils, int32_t, shen_name characterId, CharacterCollisionCommand mode)
 
 SCN3_PROTOTYPE(Script_charaSetClipAngle, float, shen_name characterId, float value)
 
@@ -1159,7 +1159,7 @@ SCN3_PROTOTYPE(Script_shenClearFreeState, void, int32_t value)
 
 SCN3_PROTOTYPE(Script_EventCamReader, int32_t, int32_t sequenceIndex, shen_name eyeOwner, shen_name targetOwner, shen_name character)
 
-SCN3_PROTOTYPE(Script_FACE_LCG, void, shen_name characterId, int32_t valueA, int32_t valueB, int32_t timing)
+SCN3_PROTOTYPE(Script_FACE_LCG, void, shen_name characterId, FaceBlinkCommand mode, int32_t frames, int32_t blendSteps)
 
 SCN3_PROTOTYPE(Script_FreeTaskData, void, uint32_t handle)
 
@@ -1289,7 +1289,7 @@ SCN3_PROTOTYPE(Script_mapEvGetCurrentEvt, int32_t, shen_name characterId)
 
 SCN3_PROTOTYPE(Script_motDetailFlagUtil, int32_t, shen_name characterId, int32_t query, uint32_t value)
 
-SCN3_PROTOTYPE(Script_motmToggleFlags, void, shen_name characterId, int32_t operation, uint32_t flags)
+SCN3_PROTOTYPE(Script_motmToggleFlags, void, shen_name characterId, ScriptFlagOperation operation, uint32_t flags)
 
 SCN3_PROTOTYPE(Script_ptmvControlTrailFollow, void, int32_t sourceKey, shen_name owner, int32_t mode)
 

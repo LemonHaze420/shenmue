@@ -132,6 +132,13 @@ constexpr std::uint32_t operator|(std::uint32_t lhs, CommandFlags rhs) {
 
 enum class ValueTableId : std::uint16_t {
     None = 0,
+#define SCENARIO_ENUM_BEGIN(name) name,
+#define SCENARIO_ENUM_VALUE(table, name, value)
+#define SCENARIO_ENUM_END(name)
+#include "s1/task/scen/commands.def"
+#undef SCENARIO_ENUM_BEGIN
+#undef SCENARIO_ENUM_VALUE
+#undef SCENARIO_ENUM_END
     AicaCommand,
     AtckUtilMode,
     AuthorState,
@@ -150,7 +157,6 @@ enum class ValueTableId : std::uint16_t {
     CycleManagerCommand,
     DoorCommand,
     EEngineInfoMode,
-    ESfxOverlayTimeoutTuningMode,
     EVAT_SetPosFlags,
     EntityTransformFlags,
     EvPakAfsAfsReadSubmode,

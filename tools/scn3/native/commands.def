@@ -9,6 +9,13 @@ SCN3_FAMILY(SCNF, 0xC, DispatchKind::ScnfPaired, ResultKind::Integer, ArityKind:
 #endif
 
 #if defined(SCN3_VALUE_TABLE)
+#define SCENARIO_ENUM_BEGIN(name) SCN3_VALUE_TABLE(name, ValueTableFlags::None, #name)
+#define SCENARIO_ENUM_VALUE(table, name, value)
+#define SCENARIO_ENUM_END(name)
+#include "s1/task/scen/commands.def"
+#undef SCENARIO_ENUM_BEGIN
+#undef SCENARIO_ENUM_VALUE
+#undef SCENARIO_ENUM_END
 SCN3_VALUE_TABLE(AicaCommand, ValueTableFlags::None, "AicaCommand")
 SCN3_VALUE_TABLE(AtckUtilMode, ValueTableFlags::None, "AtckUtilMode")
 SCN3_VALUE_TABLE(AuthorState, ValueTableFlags::None, "AuthorState")
@@ -27,7 +34,6 @@ SCN3_VALUE_TABLE(ConversationDetailsMode, ValueTableFlags::None, "ConversationDe
 SCN3_VALUE_TABLE(CycleManagerCommand, ValueTableFlags::None, "CycleManagerCommand")
 SCN3_VALUE_TABLE(DoorCommand, ValueTableFlags::None, "DoorCommand")
 SCN3_VALUE_TABLE(EEngineInfoMode, ValueTableFlags::None, "EEngineInfoMode")
-SCN3_VALUE_TABLE(ESfxOverlayTimeoutTuningMode, ValueTableFlags::None, "ESfxOverlayTimeoutTuningMode")
 SCN3_VALUE_TABLE(EVAT_SetPosFlags, ValueTableFlags::None, "EVAT_SetPosFlags")
 SCN3_VALUE_TABLE(EntityTransformFlags, ValueTableFlags::Bitmask, "EntityTransformFlags")
 SCN3_VALUE_TABLE(EvPakAfsAfsReadSubmode, ValueTableFlags::None, "EvPakAfsAfsReadSubmode")
@@ -233,7 +239,7 @@ SCN3_ARG(Shenmue, 31, 0, 1, "mode", ArgKind::EnumValue, 0, ValueTableId::Charact
     ArgFlags::None) SCN3_ARG(Shenmue, 385, 0, 0, "cmd", ArgKind::EnumValue, 0, ValueTableId::CameraCollisionStairCommand,
     ArgFlags::None) SCN3_ARG(Shenmue, 388, 0, 0, "mode", ArgKind::EnumValue, 0, ValueTableId::STEPUtilsModes,
     ArgFlags::None) SCN3_ARG(Shenmue, 391, 0, 0, "module", ArgKind::EnumValue, 0, ValueTableId::SysModType, ArgFlags::None) SCN3_ARG(Shenmue, 392, 0,
-    1, "mode", ArgKind::EnumValue, 0, ValueTableId::ESfxOverlayTimeoutTuningMode, ArgFlags::None) SCN3_ARG(Shenmue, 393, 0, 0, "mode", ArgKind::EnumValue, 0,
+    1, "mode", ArgKind::EnumValue, 0, ValueTableId::QteTimeoutCommand, ArgFlags::None) SCN3_ARG(Shenmue, 393, 0, 0, "mode", ArgKind::EnumValue, 0,
     ValueTableId::CameraUtilMode, ArgFlags::None) SCN3_ARG(Shenmue, 396, 0, 0, "mode", ArgKind::EnumValue, 0, ValueTableId::ForkliftUtilTargetMode,
     ArgFlags::SignExtendNarrowLiteral) SCN3_ARG(Shenmue, 396, 0, 1, "dword4", ArgKind::EnumValue, 0, ValueTableId::ForkliftUtilCommand,
     ArgFlags::SignExtendNarrowLiteral) SCN3_ARG(Shenmue, 405, 0, 0, "param", ArgKind::Opaque, 0, ValueTableId::None,
@@ -311,6 +317,13 @@ SCN3_ARG(Shenmue, 414, 0, 6, "flags", ArgKind::EnumValue, 0, ValueTableId::Timed
 #endif
 
 #if defined(SCN3_VALUE_NAME)
+#define SCENARIO_ENUM_BEGIN(name)
+#define SCENARIO_ENUM_VALUE(table, name, value) SCN3_VALUE_NAME(table, name, #name)
+#define SCENARIO_ENUM_END(name)
+#include "s1/task/scen/commands.def"
+#undef SCENARIO_ENUM_BEGIN
+#undef SCENARIO_ENUM_VALUE
+#undef SCENARIO_ENUM_END
         SCN3_VALUE_NAME(AicaCommand, AICA_CMD_PLAY, "AICA_CMD_PLAY") SCN3_VALUE_NAME(
             AicaCommand, AICA_CMD_RESET, "AICA_CMD_RESET") SCN3_VALUE_NAME(AtckUtilMode, 0x9u, "Activate") SCN3_VALUE_NAME(AtckUtilMode, 0x7u,
             "Enable") SCN3_VALUE_NAME(AtckUtilMode, 0x3u,
@@ -373,8 +386,8 @@ SCN3_ARG(Shenmue, 414, 0, 6, "flags", ArgKind::EnumValue, 0, ValueTableId::Timed
             "CONV_DETAILS_MODE_TMEX_DESTROY") SCN3_VALUE_NAME(ConversationDetailsMode, 0xAu,
             "CONV_DETAILS_MODE_TMEX_ENQUEUE") SCN3_VALUE_NAME(ConversationDetailsMode, 0xCu,
             "CONV_DETAILS_MODE_TMEX_GET_STATE") SCN3_VALUE_NAME(ConversationDetailsMode, 0x3u,
-            "CONV_DETAILS_MODE_UNUSED_3") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_CHECK_SCNF_HAS_CVWK,
-            "CYCLE_CMD_CHECK_SCNF_HAS_CVWK") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_COUNT_CHARACTERS_IN_QUAD,
+            "CONV_DETAILS_MODE_UNUSED_3") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_HAS_CHARA,
+            "CYCLE_CMD_HAS_CHARA") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_COUNT_CHARACTERS_IN_QUAD,
             "CYCLE_CMD_COUNT_CHARACTERS_IN_QUAD") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_COUNT_CYCLES_IN_RADIUS,
             "CYCLE_CMD_COUNT_CYCLES_IN_RADIUS") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_GET_CYCLE_PTR_BY_CHARA_ID,
             "CYCLE_CMD_GET_CYCLE_PTR_BY_CHARA_ID") SCN3_VALUE_NAME(CycleManagerCommand, CYCLE_CMD_GET_MOBJ_FIELD_13C_PERCENT,
@@ -426,12 +439,8 @@ SCN3_ARG(Shenmue, 414, 0, 6, "flags", ArgKind::EnumValue, 0, ValueTableId::Timed
             "ENGINE_AREA_ID") SCN3_VALUE_NAME(EEngineInfoMode, 0x2u, "ENGINE_CURR_RENDERED_FRMS") SCN3_VALUE_NAME(EEngineInfoMode,
             0x4u, "ENGINE_DEBUG_LOG") SCN3_VALUE_NAME(EEngineInfoMode, 0x7u, "ENGINE_ENTRY") SCN3_VALUE_NAME(EEngineInfoMode, 0x0u,
             "ENGINE_FRAMES_PAST") SCN3_VALUE_NAME(EEngineInfoMode, 0x1u, "ENGINE_FRAMES_PAST_COPY") SCN3_VALUE_NAME(EEngineInfoMode, 0x3u,
-            "ENGINE_PAUSE_STATE") SCN3_VALUE_NAME(EEngineInfoMode, 0x5u, "ENGINE_SCENE_ID") SCN3_VALUE_NAME(ESfxOverlayTimeoutTuningMode, 0x1u,
-            "SfxMode_DisableBoost") SCN3_VALUE_NAME(ESfxOverlayTimeoutTuningMode, 0x0u,
-            "SfxMode_SessionAction") SCN3_VALUE_NAME(ESfxOverlayTimeoutTuningMode, 0x2u,
-            "SfxMode_SetBoostStepFrames") SCN3_VALUE_NAME(ESfxOverlayTimeoutTuningMode, 0x4u,
-            "SfxMode_SetMaxFrames") SCN3_VALUE_NAME(ESfxOverlayTimeoutTuningMode, 0x3u,
-            "SfxMode_SetPendingBonusFrames") SCN3_VALUE_NAME(EVAT_SetPosFlags, 0x0u, "ABSOLUTE") SCN3_VALUE_NAME(EVAT_SetPosFlags, 0x4200000u,
+            "ENGINE_PAUSE_STATE") SCN3_VALUE_NAME(EEngineInfoMode, 0x5u, "ENGINE_SCENE_ID")
+            SCN3_VALUE_NAME(EVAT_SetPosFlags, 0x0u, "ABSOLUTE") SCN3_VALUE_NAME(EVAT_SetPosFlags, 0x4200000u,
             "ANY_YAW_HELPER") SCN3_VALUE_NAME(EVAT_SetPosFlags, 0x7200000u,
             "AUX_MASK") SCN3_VALUE_NAME(EVAT_SetPosFlags, 0xC0000000u,
             "MODE_MASK") SCN3_VALUE_NAME(EVAT_SetPosFlags, 0x20000000u,
@@ -574,7 +583,7 @@ SCN3_ARG(Shenmue, 414, 0, 6, "flags", ArgKind::EnumValue, 0, ValueTableId::Timed
             "SCENARIO_CMD_UPDATE_TIMER") SCN3_VALUE_NAME(ScriptCameraSettingsMode, 0x0u,
             "CAM_UTILS_SET_DISTANCE_FROM_PLAYER") SCN3_VALUE_NAME(ScriptCameraSettingsMode, 0x1u,
             "CAM_UTILS_SET_HEIGHT_ABOVE_PLAYER") SCN3_VALUE_NAME(ScriptCameraSettingsMode, 0x2u,
-            "CAM_UTILS_SET_MAX_Y_ANGLE") SCN3_VALUE_NAME(ScriptCycleCommand, 0x1u, "CYCLE_CMD_CHECK_SCNF_HAS_CVWK") SCN3_VALUE_NAME(ScriptCycleCommand, 0x14u,
+            "CAM_UTILS_SET_MAX_Y_ANGLE") SCN3_VALUE_NAME(ScriptCycleCommand, 0x1u, "CYCLE_CMD_HAS_CHARA") SCN3_VALUE_NAME(ScriptCycleCommand, 0x14u,
             "CYCLE_CMD_COUNT_CHARACTERS_IN_QUAD") SCN3_VALUE_NAME(ScriptCycleCommand, 0x13u,
             "CYCLE_CMD_COUNT_CYCLES_IN_RADIUS") SCN3_VALUE_NAME(ScriptCycleCommand, 0x5u,
             "CYCLE_CMD_GET_CYCLE_PTR_BY_CHARA_ID") SCN3_VALUE_NAME(ScriptCycleCommand, 0x259u,

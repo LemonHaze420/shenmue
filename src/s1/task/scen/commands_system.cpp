@@ -972,41 +972,41 @@ void Script_ccowUtils(ScenarioContext *context, void *rawParams) {
     const auto *const params = static_cast<const std::uint32_t *>(rawParams);
     Character *const character = params[0] ? CHID_Find(context->task->task, params[0]) : nullptr;
     switch (params[1]) {
-    case 1:
+    case CCOW_EnableAll:
         ccowEnableCharaFlags(character, 7);
         context->stack->accumulator = 0;
         break;
-    case 2:
+    case CCOW_DisableAll:
         ccowDisableCharaFlags(character, 7);
         context->stack->accumulator = 0;
         break;
-    case 3:
+    case CCOW_EnableMap:
         ccowEnableCharaFlags(character, 2);
         context->stack->accumulator = 0;
         break;
-    case 4:
+    case CCOW_DisableMap:
         ccowDisableCharaFlags(character, 2);
         context->stack->accumulator = 0;
         break;
-    case 5:
+    case CCOW_EnableCharacters:
         ccowEnableCharaFlags(character, 4);
         context->stack->accumulator = 0;
         break;
-    case 6:
+    case CCOW_DisableCharacters:
         ccowDisableCharaFlags(character, 4);
         context->stack->accumulator = 0;
         break;
-    case 7:
+    case CCOW_HasCharacters:
         context->stack->accumulator = ccowHasAnyCharaFlags(character, 4) ? 0xffffffffU : 0;
         break;
-    case 8:
+    case CCOW_HasMap:
         context->stack->accumulator = ccowHasAnyCharaFlags(character, 2) ? 0xffffffffU : 0;
         break;
-    case 9:
+    case CCOW_DisableHeightAdjustment:
         ccowEnableCharaFlags(character, 0x2000);
         context->stack->accumulator = 0;
         break;
-    case 10:
+    case CCOW_EnableHeightAdjustment:
         ccowDisableCharaFlags(character, 0x2000);
         context->stack->accumulator = 0;
         break;
@@ -1016,12 +1016,12 @@ void Script_ccowUtils(ScenarioContext *context, void *rawParams) {
     }
 }
 
-void Script_ccowSetFlag80(ScenarioContext *context, void *rawParams) {
+void Script_ccowSetHeightMode(ScenarioContext *context, void *rawParams) {
     const auto *const params = static_cast<const std::uint32_t *>(rawParams);
     Character *const character = params[0] ? CHID_Find(context->task->task, params[0]) : nullptr;
-    if (params[1] == 1)
+    if (params[1] == CCOW_KeepHeight)
         ccowEnableCharaFlags(character, 0x80);
-    else if (params[1] == 2)
+    else if (params[1] == CCOW_FollowGround)
         ccowDisableCharaFlags(character, 0x80);
 }
 
@@ -1038,9 +1038,9 @@ void Script_motmToggleFlags(ScenarioContext *context, void *rawParams) {
         SCEN_PromoteCharacterIndexNode(control ? control->scenarioTask : nullptr, character);
         return;
     }
-    if (params[1] == 1)
+    if (params[1] == SCEN_Enable)
         manager->motion.motionFlags |= params[2];
-    else if (params[1] == 2)
+    else if (params[1] == SCEN_Disable)
         manager->motion.motionFlags &= ~params[2];
 }
 
@@ -1716,7 +1716,7 @@ std::int64_t SCNF_UIUtils(ScenarioContext *context, void *rawParams) {
     return 0;
 }
 
-std::int64_t SCNF_GetSfxOverlayResultIfIdle(ScenarioContext *context, void *) {
+std::int64_t SCNF_GetQteOverlayResultIfIdle(ScenarioContext *context, void *) {
     if (!context || !context->stack)
         return 0;
     std::int16_t result = -1;
@@ -2292,7 +2292,7 @@ void Script_CycleManagerUtils(ScenarioContext *context, void *rawParams) {
         context->stack->accumulator = MOBJ_Setup(filename, params->areaId) ? 1U : 0U;
         break;
     }
-    case 1: {
+    case CYCLE_CMD_HAS_CHARA: {
         const auto *const control = g_mapControlTask ? reinterpret_cast<const MapControlData *>(g_mapControlTask->task_data_ptr) : nullptr;
         context->stack->accumulator = control && control->scenarioTask && CHID_Find(control->scenarioTask, params->operand) ? 1U : 0U;
         break;
@@ -3181,31 +3181,31 @@ void Script_ScenDataUtil(ScenarioContext *context, void *rawParams) {
     const std::ptrdiff_t index = static_cast<std::int32_t>(arguments.word(2));
     const std::uint32_t value = arguments.word(3);
     switch (arguments.word(1)) {
-    case 1:
+    case SCND_ReadU8:
         arguments.result(std::to_integer<std::uint8_t>(data[index]));
         break;
-    case 2:
+    case SCND_ReadU16:
         arguments.result(reinterpret_cast<std::uint16_t *>(data)[index]);
         break;
-    case 4:
-    case 5:
+    case SCND_ReadU32:
+    case SCND_ReadFloatBits:
         arguments.result(reinterpret_cast<std::uint32_t *>(data)[index]);
         break;
-    case 8: {
+    case SCND_ReadScriptOffset: {
         const std::int32_t offset = reinterpret_cast<std::int32_t *>(data)[index];
         const auto *const pointer = reinterpret_cast<const std::byte *>(context->task->activeInfo) + offset;
         arguments.result(HLib_GetTaskDataOffset(pointer));
         break;
     }
-    case 11:
+    case SCND_WriteU8:
         data[index] = static_cast<std::byte>(value);
         break;
-    case 12:
+    case SCND_WriteU16:
         reinterpret_cast<std::uint16_t *>(data)[index] = static_cast<std::uint16_t>(value);
         break;
-    case 14:
-    case 15:
-    case 18:
+    case SCND_WriteU32:
+    case SCND_WriteFloatBits:
+    case SCND_WriteScriptOffset:
         reinterpret_cast<std::uint32_t *>(data)[index] = value;
         break;
     default:
