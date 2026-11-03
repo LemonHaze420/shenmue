@@ -1,3 +1,7 @@
+if(MSVC)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif()
+
 function(shenmue_set_project_warnings target)
     if(MSVC)
         target_compile_options(${target} PRIVATE /W4 /permissive- /EHsc)
