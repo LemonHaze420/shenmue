@@ -22,3 +22,7 @@ compile_commands.json
 /src/s1/motion/motion.h
 /src/s1/misc/m_mobj.*
 /src/s1/misc/m_mdor.*
+
+/src/ws/scenario/*.scn
+/src/ws/motion/*.bin
+/src/ws/motion/*.h

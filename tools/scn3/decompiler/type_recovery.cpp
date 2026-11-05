@@ -956,6 +956,16 @@ SourceExpr cTypedExpression(const SourceExpr &expression, const SourceFunctionAs
         if (prototype && prototype->result != "float" && prototype->result != "void")
             result.args[index] = SourceExpr{.kind = SourceExprKind::Cast, .text = "scn3_bits.f", .args = {std::move(result.args[index])}, .cType = "float"};
 
+        if (!argumentFloat && unit && expression.kind == SourceExprKind::Call && explicitExpressionIsFloat(result.args[index], unit, &function)) {
+            const auto callee = unit->functions.find(expression.text);
+            if (callee != unit->functions.end() && index < callee->second.params.size()) {
+                const auto type = callee->second.localTypes.find(callee->second.params[index]);
+                if (type == callee->second.localTypes.end() || type->second == "int32_t" || type->second == "uint32_t")
+                    result.args[index] =
+                        SourceExpr{.kind = SourceExprKind::Cast, .text = "scn3_bits.i", .args = {std::move(result.args[index])}, .cType = "int32_t"};
+            }
+        }
+
         const abi::CommandSpec *native = !argumentFloat && expression.kind == SourceExprKind::Call && (!unit || !unit->functions.count(expression.text)) ?
             abiCommandForCallName(expression.text) :
             nullptr;
@@ -1211,7 +1221,10 @@ void cReturnType(const std::vector<SourceStmt> &statements, std::string &type, c
             }
             const abi::CommandSpec *command = statement.expr.kind == SourceExprKind::Call ? abiCommandForCallName(statement.expr.text) : nullptr;
             const NativePrototype *prototype = command && command->handlerName ? nativePrototype(command->handlerName) : nullptr;
-            const bool floating = explicitExpressionIsFloat(statement.expr, &unit, &function) || (prototype && prototype->result == "float");
+            const bool assignmentFloat = statement.expr.kind == SourceExprKind::Binary && statement.expr.text == "=" && statement.expr.args.size() == 2 &&
+                cFloatStorage(statement.expr.args[0], function, unit);
+            const bool floating =
+                assignmentFloat || explicitExpressionIsFloat(statement.expr, &unit, &function) || (prototype && prototype->result == "float");
             const std::string valueType = floating ? "float" : "int32_t";
             if (type != "void" && type != valueType)
                 throw std::runtime_error("Conflicting C return types in " + function.name);

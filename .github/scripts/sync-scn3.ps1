@@ -2,8 +2,8 @@ param([switch]$IncludeSources)
 
 $ErrorActionPreference = 'Stop'
 $work = 'build/windows-capture/scenarios/roundtrip'
-$badge = "$work/s1-roundtrip.svg"
-if (!(Test-Path $badge)) { exit 0 }
+$badges = @('s1', 'ws' | Where-Object { Test-Path "$work/$_-roundtrip.svg" })
+if (!$badges.Count) { exit 0 }
 $head = git rev-parse HEAD
 if ($LASTEXITCODE -ne 0) { throw 'Cannot read checkout commit' }
 $tip = git ls-remote --refs origin refs/heads/master
@@ -12,18 +12,20 @@ if ($head -ne $env:GITHUB_SHA -or !$tip -or ($tip -split '\s+')[0] -ne $env:GITH
   Write-Host 'master has advanced; leaving generated files for its next run'
   exit 0
 }
-$paths = @('docs/s1-roundtrip.svg')
+$paths = @($badges | ForEach-Object { "docs/$_-roundtrip.svg" })
 $manifest = "$work/sync-files.txt"
 if ($IncludeSources -and (Test-Path $manifest)) {
   $paths += @(Get-Content -LiteralPath $manifest | Where-Object { $_ })
 }
 foreach ($path in $paths) {
-  if ($path -ne 'docs/s1-roundtrip.svg' -and
-      ($path -notmatch '^src/s1/scenario/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+\.(c|h)$' -or $path -match '(?:^|/)\.\.(?:/|$)')) {
+  if ($path -notmatch '^docs/(s1|ws)-roundtrip[.]svg$' -and
+      ($path -notmatch '^src/(s1|ws)/scenario/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+\.(c|h)$' -or $path -match '(?:^|/)\.\.(?:/|$)')) {
     throw 'Unexpected generated path in scenario sync'
   }
 }
-Copy-Item -LiteralPath $badge -Destination docs/s1-roundtrip.svg -Force
+foreach ($game in $badges) {
+  Copy-Item -LiteralPath "$work/$game-roundtrip.svg" -Destination "docs/$game-roundtrip.svg" -Force
+}
 git add -- @paths
 if ($LASTEXITCODE -ne 0) { throw 'Cannot stage generated files' }
 git diff --cached --quiet -- @paths

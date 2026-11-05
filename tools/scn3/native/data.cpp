@@ -17,16 +17,27 @@ constexpr ScenarioDataField initFields[] = {SCENARIO_OFFSET(DoorSystemInitParams
     SCENARIO_OFFSET(DoorSystemInitParams, doorIdLookupChainsOff, "u32"), SCENARIO_OFFSET(DoorSystemInitParams, resourceNameTableOff, "DoorResourceDescriptor"),
     SCENARIO_OFFSET(DoorSystemInitParams, mapObjectRecordsOff, "MapObjectRecord"), SCENARIO_OFFSET(DoorSystemInitParams, systemStateOff, "DoorSlotState"),
     SCENARIO_OFFSET(DoorSystemInitParams, slotStatesOff, "i32"), SCENARIO_OFFSET(DoorSystemInitParams, candidateDoorEntryIndicesOff, "i32"),
-    SCENARIO_OFFSET(DoorSystemInitParams, ownerActorArrayOff, "u32"), SCENARIO_OFFSET(DoorSystemInitParams, progressArrayOff, "i32"),
+    SCENARIO_OFFSET(DoorSystemInitParams, ownerActorArrayOff, "u32"),
+#if !SHENMUE_IS_DEMO
+    SCENARIO_OFFSET(DoorSystemInitParams, progressArrayOff, "i32"),
+#endif
     SCENARIO_FIELD(DoorSystemInitParams, actorLookupKey), SCENARIO_FIELD(DoorSystemInitParams, maxCandidates),
     SCENARIO_OFFSET(DoorSystemInitParams, auxTable0Off, "DoorMotionSelectorBlock"),
-    SCENARIO_OFFSET(DoorSystemInitParams, auxTable1Off, "ScnDoorMotionDescriptor"), SCENARIO_OFFSET(DoorSystemInitParams, doorActorHandlesOff, "u32")};
+    SCENARIO_OFFSET(DoorSystemInitParams, auxTable1Off, "ScnDoorMotionDescriptor"),
+#if !SHENMUE_IS_DEMO
+    SCENARIO_OFFSET(DoorSystemInitParams, doorActorHandlesOff, "u32"),
+#endif
+};
 
 constexpr ScenarioDataField entryFields[] = {SCENARIO_FIELD(DSWKDoorEntry, slot), SCENARIO_FIELD(DSWKDoorEntry, flags),
     SCENARIO_FIELD(DSWKDoorEntry, ctrl_mask_pair), SCENARIO_FIELD(DSWKDoorEntry, coarse_metric), SCENARIO_FIELD(DSWKDoorEntry, selection_metric),
-    SCENARIO_FIELD(DSWKDoorEntry, view_ang_delta), SCENARIO_FIELD(DSWKDoorEntry, group), SCENARIO_FIELD(DSWKDoorEntry, global1),
+    SCENARIO_FIELD(DSWKDoorEntry, view_ang_delta),
+#if !SHENMUE_IS_DEMO
+    SCENARIO_FIELD(DSWKDoorEntry, group), SCENARIO_FIELD(DSWKDoorEntry, global1),
     SCENARIO_FIELD(DSWKDoorEntry, global2), SCENARIO_FIELD(DSWKDoorEntry, global3), SCENARIO_FIELD(DSWKDoorEntry, sndCommandId),
-    SCENARIO_FIELD(DSWKDoorEntry, global5), SCENARIO_FIELD(DSWKDoorEntry, global6)};
+    SCENARIO_FIELD(DSWKDoorEntry, global5), SCENARIO_FIELD(DSWKDoorEntry, global6),
+#endif
+};
 
 constexpr ScenarioDataField slotFields[] = {SCENARIO_FIELD(DoorSlotState, mode), SCENARIO_FIELD(DoorSlotState, id), SCENARIO_FIELD(DoorSlotState, entry_idx)};
 
@@ -48,7 +59,8 @@ constexpr ScenarioDataField motionFields[] = {SCENARIO_FIELD(ScnDoorMotionDescri
 #undef SCENARIO_FIELD
 #undef SCENARIO_OFFSET
 
-static_assert(sizeof(s1::DoorSystemInitParams) == 0x38 && sizeof(s1::DSWKDoorEntry) == 0x34 && sizeof(s1::DoorSlotState) == 0x0C);
+static_assert(sizeof(s1::DoorSystemInitParams) == (SHENMUE_IS_DEMO ? 0x30 : 0x38));
+static_assert(sizeof(s1::DSWKDoorEntry) == (SHENMUE_IS_DEMO ? 0x18 : 0x34) && sizeof(s1::DoorSlotState) == 0x0C);
 static_assert(sizeof(s1::DoorResourceDescriptor) == 0x10 && sizeof(s1::MapObjectRecord) == 0x24);
 static_assert(sizeof(s1::DoorMotionSelectorBlock) == 0x28 && sizeof(s1::ScnDoorMotionDescriptor) == 0x24);
 

@@ -225,10 +225,11 @@ std::vector<SourceStmt> liftFunction(const LowLevelFunction &function, const std
 
 void attachUnreferencedReturns(Scn3Module &module) {
     std::set<uint32_t> referenced{module.parsedHeader.startupFunctionOffset};
+    std::map<uint32_t, std::set<uint32_t>> branches;
     for (const LowLevelFunction &function : module.functions)
         for (const LowLevelInsn &insn : function.instructions) {
             if (insn.relativeTarget)
-                referenced.insert(*insn.relativeTarget);
+                branches[*insn.relativeTarget].insert(insn.offset);
             if (insn.localTarget)
                 referenced.insert(*insn.localTarget);
             if (insn.cls == InstrClass::Addr && addressOperation(insn.opcode) >= Address::Relative1 && addressOperation(insn.opcode) <= Address::Relative3 &&
@@ -253,7 +254,9 @@ void attachUnreferencedReturns(Scn3Module &module) {
         const uint8_t first = fragment.instructions.empty() ? 0 : fragment.instructions[0].opcode;
         if (fragment.reason == DiscoveryReason::PackedNext && !fragment.instructions.empty() &&
             !(first < kAddressClass && controlOperation(first) == Control::AdjustStack) && contiguous && fragment.baseOffset == owner.baseOffset &&
-            !referenced.count(fragment.start)) {
+            !referenced.count(fragment.start) &&
+            std::all_of(branches[fragment.start].begin(), branches[fragment.start].end(),
+                [&](uint32_t offset) { return offset >= owner.start && offset < fragment.start; })) {
             owner.instructions.insert(owner.instructions.end(), fragment.instructions.begin(), fragment.instructions.end());
             module.functions.erase(module.functions.begin() + static_cast<std::ptrdiff_t>(i));
         } else

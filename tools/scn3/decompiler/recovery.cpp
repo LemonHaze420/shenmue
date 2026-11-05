@@ -76,7 +76,8 @@ CRecovery recoverC(const Program &program, const std::string &profile, const std
         recovery.moduleIssues.push_back(issue(1, "call_signature", error.what()));
     }
     for (const std::string &name : unit.functionOrder) {
-        recoverCScopedRecords(unit.functions.at(name));
+        if (!plain.count(name))
+            recoverCScopedRecords(unit.functions.at(name));
     }
 
     for (const std::string &name : unit.functionOrder)

@@ -129,7 +129,7 @@ std::string renderExplicitSource(const Program &program, const std::string &prof
             }
             ControlFlowGraph graph(std::move(body));
             splitFrameVariables(graph);
-            if (verification.abiProfile == "s1_pc")
+            if (verification.abiProfile == "s1_pc" && !plain.count(lifted.name))
                 lifted.frameMembers = splitFrameRecords(graph);
             body = structureFunction(std::move(graph));
             placeFrameVariables(lifted);
@@ -241,7 +241,7 @@ void decompile::printCModuleData(std::ostream &out, const SourceUnit &unit, cons
             return "char";
         if (binding.type == "u32")
             return "uint32_t";
-        if (binding.type == "bytes")
+        if (binding.type == "bytes" || binding.type == "pad")
             return "uint8_t";
         return binding.type;
     };

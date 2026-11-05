@@ -356,8 +356,8 @@ bool nativeCallHasModes(std::string_view handler) {
 }
 
 bool nativeCallIgnoresParameters(std::string_view handler) {
-    if (findPrototype(handler))
-        return false;
+    if (const Prototype *prototype = findPrototype(handler))
+        return prototype->declaration->parameters == "void";
     for (std::string_view name : noScriptArguments)
         if (name == handler)
             return true;

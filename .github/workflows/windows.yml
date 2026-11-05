@@ -158,6 +158,8 @@ jobs:
           Get-ChildItem dist/screens -File -Filter '*.png' | Remove-Item -Force
       - name: Configure screen captures
         run: ./.github/scripts/configure-games.ps1 -BuildDirectory build/windows-capture -Capture
+      - name: Configure WS screen captures
+        run: ./.github/scripts/configure-games.ps1 -BuildDirectory build/ws-capture -Capture -Game WHATS
       - name: Build tools and round-trip scenarios
         id: roundtrip
         run: ./.github/scripts/roundtrip-scn3.ps1
@@ -165,7 +167,6 @@ jobs:
         run: cmake --build build/windows-capture --config Release --target shenmue1 shenmue2 --parallel 4
       - name: Build WS capture
         run: |
-          ./.github/scripts/configure-games.ps1 -BuildDirectory build/ws-capture -Capture -Game WHATS
           cmake --build build/ws-capture --config Release --target shenmue1 --parallel 4
           if ($LASTEXITCODE -ne 0) { throw 'WS capture build failed' }
       - name: Build HangOn capture

@@ -382,7 +382,11 @@ SCN3_MODE(Script_SetMITKFlags, 0 == 1, int32_t unused, int32_t fadeFrames)
 SCN3_PROTOTYPE(Script_CtrlTimeLimit, int32_t, int32_t mode, ...)
 SCN3_MODE(Script_CtrlTimeLimit, 0 == 1, int32_t seconds)
 
+#if SHENMUE_IS_DEMO
+SCN3_PROTOTYPE(Script_SetQteOverlayTimeoutTuning, void, QteTimeoutSession action)
+#else
 SCN3_PROTOTYPE(Script_SetQteOverlayTimeoutTuning, void, int32_t value, QteTimeoutCommand mode)
+#endif
 
 SCN3_PROTOTYPE(Script_HATO_Funcs, int32_t, int32_t mode, ...)
 SCN3_MODE(Script_HATO_Funcs, 0 == 1, const Vector3 *center, float maxDistance)
@@ -508,10 +512,16 @@ SCN3_PROTOTYPE(SCNF_ShowHelpMessage, int32_t, uint32_t mode, void *choices, int3
 
 SCN3_PROTOTYPE(SCNF_GetSelectedChoiceIndex, int32_t, uint32_t unused, const void *choices)
 
+#if SHENMUE_IS_DEMO
+SCN3_PROTOTYPE(DSWK_BindTablesAndInitState, void, DSWKDoorEntry *doorEntries, int32_t *doorIdLookupChains, DoorResourceDescriptor *resourceNameTable,
+    MapObjectRecord *mapObjectRecords, DoorSlotState *systemState, int32_t *slotStates, int32_t *candidateDoorEntryIndices, shen_name *ownerActorArray,
+    shen_name actorLookupKey, int32_t maxCandidates, DoorMotionSelectorBlock *auxTable0, ScnDoorMotionDescriptor *auxTable1)
+#else
 SCN3_PROTOTYPE(DSWK_BindTablesAndInitState, void, DSWKDoorEntry *doorEntries, int32_t *doorIdLookupChains, DoorResourceDescriptor *resourceNameTable,
     MapObjectRecord *mapObjectRecords, DoorSlotState *systemState, int32_t *slotStates, int32_t *candidateDoorEntryIndices, shen_name *ownerActorArray,
     int32_t *progressArray, shen_name actorLookupKey, int32_t maxCandidates, DoorMotionSelectorBlock *auxTable0, ScnDoorMotionDescriptor *auxTable1,
     shen_name *doorActorHandles)
+#endif
 
 SCN3_PROTOTYPE(DSWK_DoorUtils, int32_t, int32_t command, ...)
 SCN3_MODE(DSWK_DoorUtils, 0 == 3, int32_t doorEntryIndex, int32_t kind)
@@ -771,7 +781,11 @@ SCN3_MODE(Script_FaceLookAtTargetUtils, 1 == 2, const Vector3 *target, uint32_t 
 
 SCN3_PROTOTYPE(Script_GetBatteryLifePair, int32_t, int32_t mode, uint32_t index, ...)
 
+#if SHENMUE_IS_DEMO
+SCN3_PROTOTYPE(Script_GetCassetteFlags, int32_t, uint32_t itemId, int32_t amount, int32_t attribute)
+#else
 SCN3_PROTOTYPE(Script_GetCassetteFlags, int32_t, uint32_t id, uint32_t amount, uint32_t reserved, int32_t isCassette)
+#endif
 
 SCN3_PROTOTYPE(Script_GetCharaPos, void, shen_name characterId, int32_t keepPosition)
 
@@ -918,7 +932,11 @@ SCN3_PROTOTYPE(
 
 SCN3_PROTOTYPE(MMTK_ScriptMemoToggle, int32_t, int32_t mode, ...)
 
+#if SHENMUE_IS_DEMO
+SCN3_PROTOTYPE(SCNF_RequestActionSelector, int32_t, int32_t timeoutFrames)
+#else
 SCN3_PROTOTYPE(SCNF_RequestActionSelector, int32_t, int32_t timeoutFrames, int32_t mode, int32_t timeoutHelpToken)
+#endif
 
 SCN3_PROTOTYPE(SCNF_SetCashValue, void, int32_t value, int32_t useCash)
 
@@ -1134,8 +1152,12 @@ SCN3_PROTOTYPE(Script_uiUtils, void, int32_t mode, int32_t helpIconId, int32_t b
 
 SCN3_PROTOTYPE(MODU_Script_shenRequestGameModule, void, int32_t module, int32_t sceneId, uint32_t areaId, uint32_t entryPoint)
 
+#if SHENMUE_IS_DEMO
+SCN3_PROTOTYPE(SCNF_RequestActionSelectorFromParams, int32_t, int32_t up, int32_t left, int32_t right, int32_t down, uint32_t timeoutFrames)
+#else
 SCN3_PROTOTYPE(SCNF_RequestActionSelectorFromParams, int32_t, int32_t up, int32_t left, int32_t right, int32_t down, uint32_t timeoutFrames,
     int32_t timeoutHelpToken, int32_t mode)
+#endif
 
 SCN3_PROTOTYPE(SCNF_StartCashOverlaySelector, int32_t, int32_t maximumValue, uint32_t timeoutFrames, uint32_t unused2, uint32_t unused3)
 

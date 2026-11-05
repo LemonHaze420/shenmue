@@ -11,7 +11,7 @@ $arguments = @('-S', '.', '-B', $BuildDirectory, '-A', 'x64',
   '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded$<$<CONFIG:Debug>:Debug>',
   '-DSHENMUE_ENHANCEMENT_S2_MAP_SEAMS=ON', '-DSHENMUE_RT_ARCADE=ON', '-DSHENMUE_LOAD_HANGON_DLL=ON')
 if ($Capture) {
-  $arguments += '-DClang_DIR=C:/dev/llvm-20.1.0/lib/cmake/clang', '-DSHENMUE_STEAM=OFF', '-DSHEN_AUTO_TEST_ENABLED=ON',
+  $arguments += '-DClang_DIR=C:/dev/llvm-20.1.0/lib/cmake/clang', '-DSHENMUE_STEAM=OFF', '-DSHEN_AUTO_TEST_ENABLED=ON', '-DSHENMUE_BUILD_SCN3CC=ON',
     "-DSHENMUE_BUILD_SCENARIOS=$(if ($Game -eq 'S1') { 'ON' } else { 'OFF' })"
 } else {
   $arguments += "-DSHENMUE_STEAM=$(if ($Game -eq 'WHATS') { 'OFF' } else { 'ON' })", '-DSHEN_AUTO_TEST_ENABLED=OFF', '-DSHENMUE_BUILD_SCENARIOS=OFF'

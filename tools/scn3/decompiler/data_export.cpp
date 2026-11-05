@@ -32,7 +32,7 @@ std::vector<ScenarioDataView> discoverScenarioDataViews(const Program &program, 
         for (const VmCallSite &call : analyzeVmCalls(program, function)) {
             if (call.control != Control::CallDswk || (call.target != 0 && call.target != 2))
                 continue;
-            const uint32_t count = call.target == 0 ? 14U : 5U;
+            const uint32_t count = call.target == 0 ? static_cast<uint32_t>(init->fields.size()) : 5U;
             for (uint32_t argument = 0; argument < count && argument < call.arguments.size(); ++argument) {
                 const ScenarioDataField &field = init->fields[argument];
                 const VmValue value = call.arguments[argument];
