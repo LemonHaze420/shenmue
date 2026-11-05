@@ -1,0 +1,142 @@
+#if defined(SHENMUE_GFX_STANDALONE)
+#include "bits.hlsli"
+
+cbuffer cb21_struct : register(b1) {
+    float4 cb1_1_m0[21] : packoffset(c0);
+};
+
+struct VertexInput {
+    float3 inputPosition0 : POSITION0;
+    float2 inputTexcoord0 : TEXCOORD0;
+};
+
+struct VertexOutput {
+    float4 outputColor0 : COLOR0;
+    float outputFog0 : FOG0;
+    float2 outputTexcoord0 : TEXCOORD0;
+    float4 position : SV_Position;
+};
+
+VertexOutput main(VertexInput input) {
+    float4 position = 0;
+    float3 inputPosition0 = 0;
+    float2 inputTexcoord0 = 0;
+    float2 outputTexcoord0 = 0;
+    float outputFog0 = 0;
+    float4 outputColor0 = 0;
+    uint4 r0 = 0;
+    uint4 r1 = 0;
+    float3 v0 = 0;
+    float2 v2 = 0;
+    float3 o1 = 0;
+    float4 o2 = 0;
+    float3 _527 = 0;
+    float2 _537 = 0;
+
+    inputPosition0 = input.inputPosition0;
+    inputTexcoord0 = input.inputTexcoord0;
+    float3 _530 = _527;
+    _530.x = inputPosition0.x;
+    float3 _532 = _530;
+    _532.y = inputPosition0.y;
+    float3 _534 = _532;
+    _534.z = inputPosition0.z;
+    v0 = _534;
+    float2 _540 = _537;
+    _540.x = inputTexcoord0.x;
+    float2 _542 = _540;
+    _542.y = inputTexcoord0.y;
+    v2 = _542;
+    r0 = uint4(asuint(v0.x), asuint(v0.y), asuint(v0.z), r0.w);
+    r0.w = asuint(1.0f);
+    r1.x = asuint(dot(asfloat(r0), cb1_1_m0[8u]));
+    position.w = asfloat(r1.x);
+    r1.x = asuint(asfloat(r1.x) + ((-cb1_1_m0[20u].xxxx).x));
+    position.x = dot(asfloat(r0), cb1_1_m0[5u]);
+    position.y = dot(asfloat(r0), cb1_1_m0[6u]);
+    position.z = dot(asfloat(r0), cb1_1_m0[7u]);
+    r0.x = asuint((-cb1_1_m0[20u].xxxx).x + cb1_1_m0[20u].y);
+    r0.x = asuint(asfloat(r1.x) / asfloat(r0.x));
+    r0.x = asuint(asfloat(r0.x) * (cb1_1_m0[20u].z));
+    r0.x = asuint(min(asfloat(r0.x), 255.9998931884765625f));
+    r0.x = asuint(max(asfloat(r0.x), 1.0f));
+    r0.y = asuint(log2(asfloat(r0.x)));
+    uint _123 = 0u & 31u;
+    r0.x = gfxInsertBits(1056964608u, r0.x, _123, min((23u & 31u), (32u - _123)));
+    r0.x = asuint(asfloat(r0.x) * (512.0f));
+    float2 _143 = max(asfloat(r0.xy), (-2147483648.0f).xx);
+    bool2 _148 = bool2(_143.x >= 2147483648.0f.xx.x, _143.y >= 2147483648.0f.xx.y);
+    int2 _149 = int2(_143);
+    int2 _150 = int2(_148.x ? int2(2147483647, 2147483647).x : _149.x, _148.y ? int2(2147483647, 2147483647).y : _149.y);
+    uint2 _559 = r0.xy & uint2(2147483647u, 2147483647u);
+    bool2 _153 = bool2(_559.x > uint2(2139095040u, 2139095040u).x, _559.y > uint2(2139095040u, 2139095040u).y);
+    uint2 _155 = uint2(int2(_153.x ? int2(0, 0).x : _150.x, _153.y ? int2(0, 0).y : _150.y));
+    r0 = uint4(_155.x, _155.y, r0.z, r0.w);
+    uint _162 = 4u & 31u;
+    r0.z = gfxExtractBits(r0.x, _162, min((4u & 31u), (32u - _162)));
+    r0.x = r0.x & 15u;
+    r0.x = asuint(float(asint(r0.x)));
+    r0.y = (asint(r0.y) * 16) + asint(r0.z);
+    r0.z = asint(r0.y) + 1;
+    float2 _202 = float2(asint(r0.yz));
+    r0 = uint4(r0.x, asuint(_202.x), asuint(_202.y), r0.w);
+    r0.z = asuint(min(asfloat(r0.z), 127.0f));
+    float2 _215 = (-asfloat(r0.yyzy)).yz + 127.0f.xx;
+    r0 = uint4(r0.x, asuint(_215.x), asuint(_215.y), r0.w);
+    float _220 = max(asfloat(r0.z), -2147483648.0f);
+    r0.w = ((r0.z & 2147483647u) > 2139095040u) ? 0 : ((_220 >= 2147483648.0f) ? 2147483647 : int(_220));
+    r1.x = asuint(cb1_1_m0[20u].y / cb1_1_m0[20u].x);
+    r1.y = r1.x & 2139095040u;
+    r1.y = asint(r1.y) + (-1056964608);
+    r1.z = (!(asfloat(r1.x) == 0.0f)) ? 4294967295u : 0u;
+    uint _261 = 0u & 31u;
+    r1.x = gfxInsertBits(1056964608u, r1.x, _261, min((23u & 31u), (32u - _261)));
+    uint2 _276 = uint2(r1.zz & r1.xy);
+    r1 = uint4(_276.x, _276.y, r1.z, r1.w);
+    r1.y = asint(r1.y) >> (23 & int(31u));
+    r1.y = asint(r1.y) << (4 & int(31u));
+    r1.x = asuint(asfloat(r1.x) * (32.0f));
+    float _302 = max(asfloat(r1.x), -2147483648.0f);
+    r1.x = ((r1.x & 2147483647u) > 2139095040u) ? 0 : ((_302 >= 2147483648.0f) ? 2147483647 : int(_302));
+    uint2 _316 = uint2(asint(r1.xy) + int2(-16, -16));
+    r1 = uint4(_316.x, _316.y, r1.z, r1.w);
+    r1.x = r1.x | r1.y;
+    r1.y = (asint(r0.w) < asint(r1.x)) ? 4294967295u : 0u;
+    r0.w = (asint(r0.w) >= asint(r1.x)) ? 4294967295u : 0u;
+    r1.z = asuint(float(asint(r1.x)));
+    r1.w = asuint((-asfloat(r0.zzzz)).w + asfloat(r1.z));
+    r0.z = asuint((-asfloat(r0.zzzz)).z + 128.0f);
+    float2 _373 = asfloat(r0.xz) * float2(0.066666670143604278564453125f, 0.0078125f);
+    r0 = uint4(asuint(_373.x), r0.y, asuint(_373.y), r0.w);
+    r1.w = asuint(asfloat(r1.w) / (asfloat(r1.z)));
+    r1.y = r1.w & r1.y;
+    r0.w = asuint((r0.w != 0u) ? 0.0f : asfloat(r1.y));
+    r1.y = asuint(cb1_1_m0[20u].y * 0.00390625f);
+    r1.y = (asfloat(r1.y) >= cb1_1_m0[20u].x) ? 4294967295u : 0u;
+    r0.z = asuint((r1.y != 0u) ? asfloat(r0.z) : asfloat(r0.w));
+    r0.w = asuint((-asfloat(r0.yyyy)).w + asfloat(r1.z));
+    r0.w = asuint(asfloat(r0.w) / (asfloat(r1.z)));
+    float _440 = max(asfloat(r0.y), -2147483648.0f);
+    r1.z = ((r0.y & 2147483647u) > 2139095040u) ? 0 : ((_440 >= 2147483648.0f) ? 2147483647 : int(_440));
+    r0.y = asuint((-asfloat(r0.yyyy)).y + 128.0f);
+    r0.y = asuint(asfloat(r0.y) * (0.0078125f));
+    r1.w = (asint(r1.z) < asint(r1.x)) ? 4294967295u : 0u;
+    r1.x = (asint(r1.z) >= asint(r1.x)) ? 4294967295u : 0u;
+    r0.w = r0.w & r1.w;
+    r0.w = asuint((r1.x != 0u) ? 0.0f : asfloat(r0.w));
+    r0.y = asuint((r1.y != 0u) ? asfloat(r0.y) : asfloat(r0.w));
+    r0.z = asuint((-asfloat(r0.yyyy)).z + asfloat(r0.z));
+    o1.z = mad(asfloat(r0.x), asfloat(r0.z), asfloat(r0.y));
+    o1 = float3(v2.x, v2.y, o1.z);
+    o2 = 1.0f.xxxx;
+    outputTexcoord0 = float2(o1.xy);
+    outputFog0 = o1.z;
+    outputColor0 = float4(o2);
+    VertexOutput output;
+    output.position = position;
+    output.outputTexcoord0 = outputTexcoord0;
+    output.outputFog0 = outputFog0;
+    output.outputColor0 = outputColor0;
+    return output;
+}
+#endif

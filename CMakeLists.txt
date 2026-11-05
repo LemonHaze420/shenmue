@@ -20,6 +20,22 @@ if(NOT SHENMUE_S1_GAME MATCHES "^(S1|WHATS)$")
   message(FATAL_ERROR "SHENMUE_S1_GAME must be S1 or WHATS")
 endif()
 
+option(SHENMUE_WS_STANDALONE "Run What's Shenmue using only its disc data" OFF)
+option(SHENMUE_GFX_STANDALONE "Build shaders without PC game archives" OFF)
+if(SHENMUE_WS_STANDALONE)
+  if(NOT SHENMUE_S1_GAME STREQUAL "WHATS")
+    message(FATAL_ERROR "SHENMUE_WS_STANDALONE requires SHENMUE_S1_GAME=WHATS")
+  endif()
+  set(SHENMUE_GFX_STANDALONE ON)
+endif()
+if(SHENMUE_GFX_STANDALONE)
+  if(NOT WIN32 OR SHENMUE_BUILD_DREAMCAST)
+    message(FATAL_ERROR "SHENMUE_GFX_STANDALONE requires the Windows renderer")
+  endif()
+  enable_language(C)
+endif()
+
+
 option(SHENMUE_STEAM "Build Steam integration modules" OFF)
 if(SHENMUE_S1_GAME STREQUAL "WHATS" AND SHENMUE_STEAM)
   message(FATAL_ERROR "The What's Shenmue PC target requires SHENMUE_STEAM=OFF")
@@ -109,6 +125,11 @@ option(SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE "Show the targeted enemy health gau
 option(SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE "Keep menu cassette playback active while roaming" ON)
 option(SHENMUE_RT_ARCADE "Run the original arcade cores on Shenmue I cabinet screens in realtime" OFF)
 option(SHENMUE_LOAD_HANGON_DLL "Resolve the original Hang-On DLL explicitly instead of native imports" OFF)
+if(SHENMUE_WS_STANDALONE)
+  set(SHENMUE_LOAD_HANGON_DLL ON)
+  set_property(SOURCE src/s1/main.cpp src/s1/initialization.cpp src/s1/modules/arcade.cpp
+    APPEND PROPERTY COMPILE_DEFINITIONS SHENMUE_WS_STANDALONE=1)
+endif()
 
 
 add_subdirectory(libs/ShenmueDK)
@@ -172,6 +193,11 @@ set_source_files_properties(src/d3t/ui_nuklear.cpp PROPERTIES
   COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:/W0>;$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>"
 )
 target_link_libraries(shenmue_d3t PUBLIC shenmue_common)
+if(SHENMUE_GFX_STANDALONE)
+  include(cmake/StandaloneGraphics.cmake)
+  target_link_libraries(shenmue_d3t PRIVATE shenmue_gfx_standalone)
+  set_property(SOURCE src/d3t/shader_load.cpp APPEND PROPERTY COMPILE_DEFINITIONS SHENMUE_GFX_STANDALONE=1)
+endif()
 if(WIN32)
   target_sources(shenmue_common PRIVATE src/api/audio_xaudio.cpp)
   target_link_libraries(shenmue_common PUBLIC xaudio2)

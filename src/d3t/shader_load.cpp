@@ -3,6 +3,16 @@
 
 #include "d3t/content.hpp"
 
+#if defined(SHENMUE_GFX_STANDALONE)
+#include "gfx/standalone.h"
+
+#include <cstdlib>
+#include <cstring>
+#include <new>
+#include <stdexcept>
+#include <string>
+#endif
+
 #include <array>
 #include <atomic>
 #include <cstdio>
@@ -31,6 +41,28 @@ std::atomic<std::uint16_t> nextAsyncShaderRecord{0};
 void ShaderCleanupNoOp(void *) {
 }
 
+#if defined(SHENMUE_GFX_STANDALONE)
+#pragma region StandaloneGraphics
+void LoadStandaloneShader(const char *path, std::uint32_t shader, ShaderType type) {
+    const void *source = nullptr;
+    std::size_t size = 0;
+    if (!gfxGetShader(path, static_cast<int>(type), &source, &size))
+        throw std::runtime_error(std::string("Shader not found: ") + path);
+    void *bytecode = std::malloc(size);
+    if (!bytecode)
+        throw std::bad_alloc{};
+    std::memcpy(bytecode, source, size);
+    const bool loaded = shen_render_load_shader(shader, bytecode, size, static_cast<int32_t>(type));
+    if (type != ShaderType::Vertex)
+        std::free(bytecode);
+    if (!loaded)
+        throw std::runtime_error(std::string("Cannot create shader: ") + path);
+    SetShaderCleanup(shader, ShaderCleanupNoOp, nullptr);
+}
+#pragma endregion
+#endif
+
+#if !defined(SHENMUE_GFX_STANDALONE)
 void CompileShaderAsync(void *data, std::uint32_t contentHandle, void *bytecode, std::uint64_t bytecodeLength, const char *) {
     auto *const shaderInfo = static_cast<ShaderInfo *>(data);
     if (!shaderInfo)
@@ -39,6 +71,7 @@ void CompileShaderAsync(void *data, std::uint32_t contentHandle, void *bytecode,
     SetShaderCleanup(shaderInfo->shader, ShaderCleanupNoOp, nullptr);
     ProcessThreadStates(contentHandle, shaderInfo->type == ShaderType::Vertex ? 1 : 0);
 }
+#endif
 
 AsyncShaderRecord *AllocateAsyncShaderRecord(std::uint32_t &handle) {
     const std::uint16_t index = static_cast<std::uint16_t>(nextAsyncShaderRecord.fetch_add(1, std::memory_order_seq_cst) & 0x1fffU);
@@ -79,8 +112,15 @@ std::uint32_t LoadShaderHLSL(const char *path, std::uint32_t renderHandle, std::
     if (!record)
         return handle;
     record->shaders[0] = {type, shader};
+#if defined(SHENMUE_GFX_STANDALONE)
+#pragma region StandaloneGraphics
+    (void)renderHandle;
+    LoadStandaloneShader(path, shader, type);
+#pragma endregion
+#else
     const D3TShaderLoadTask task{path, renderHandle, 0, {CompileShaderAsync, &record->shaders[0]}, nullptr, 0, 0, {}};
     PushShaderLoadToThreadQueue(&task);
+#endif
     return handle;
 }
 
@@ -93,14 +133,27 @@ std::uint32_t LoadPrecompiledShader(const char *shaderPath, std::uint32_t render
     std::array<char, 240> path{};
     std::snprintf(path.data(), path.size(), "%s_vs.hlsl", shaderPath);
     record->shaders[0] = {ShaderType::Vertex, CreateShader(0)};
+#if defined(SHENMUE_GFX_STANDALONE)
+#pragma region StandaloneGraphics
+    (void)renderHandle;
+    LoadStandaloneShader(path.data(), record->shaders[0].shader, ShaderType::Vertex);
+#pragma endregion
+#else
     D3TShaderLoadTask task{path.data(), renderHandle, 0, {CompileShaderAsync, &record->shaders[0]}, nullptr, 0, 0, {}};
     PushShaderLoadToThreadQueue(&task);
+#endif
 
     std::snprintf(path.data(), path.size(), "%s_ps.hlsl", shaderPath);
     record->shaders[1] = {ShaderType::Pixel, CreateShader(1)};
+#if defined(SHENMUE_GFX_STANDALONE)
+#pragma region StandaloneGraphics
+    LoadStandaloneShader(path.data(), record->shaders[1].shader, ShaderType::Pixel);
+#pragma endregion
+#else
     task.thread.data = &record->shaders[1];
     task.path = path.data();
     PushShaderLoadToThreadQueue(&task);
+#endif
     return handle;
 }
 
