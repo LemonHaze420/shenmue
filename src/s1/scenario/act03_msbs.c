@@ -1,110 +1,5 @@
 #include "act03_msbs.h"
 
-static void script_0030(void);
-static void script_0039(void);
-static void script_0048(int32_t arg0);
-static void script_00D5(int32_t arg0);
-static int32_t script_0125(void);
-static void script_0153(int32_t arg0);
-static void script_0181(void);
-static void script_01B5(int32_t arg0);
-static void script_01E9(int32_t arg0);
-static void script_0207(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_0241(int32_t arg0, int32_t arg1);
-static int32_t script_0275(void);
-static void script_036D(int32_t arg0, int32_t arg1);
-static void script_039D(void);
-static int32_t script_0447(void);
-static void script_07E3(void);
-static void script_083E(void);
-static void script_0859(int32_t arg0);
-static void script_08FD(int32_t arg0);
-static void script_0926(int32_t arg0);
-static void script_0949(int32_t arg0);
-static void script_098F(void);
-static void script_0992(int32_t arg0);
-static void script_0AE3(void);
-static void script_0B84(void);
-static int32_t script_0BF7(int32_t arg0);
-static int32_t script_0E81(int32_t arg0);
-static int32_t script_0ED7(void);
-static void script_0EF4(void);
-void script_0F98(void);
-static int32_t script_0FA6(void);
-static void script_1207(int32_t arg0, const Vector3 *arg1, const Vector3i *arg2);
-static void script_1226(void);
-static void script_12CF(void);
-
-typedef struct Row_1414 { float w0; float w1; float w2; int32_t w3; int32_t w4; int32_t w5; int32_t w6; } Row_1414;
-static const Row_1414 data_1414[9] = {
-  {1.0f, 1.0f, 1.0f, 16777215, 16777215, 16777215, 16777215},
-  {20.0f, 800.0f, 1.0f, -1, 0, 0, 0},
-  {0.0f, 0.0f, 0.0f, 0, 0, 0, 0},
-  {0.0f, 0.0f, 0.0f, 0, 0, 0, 0},
-  {0.0f, 0.0f, 0.0f, 0, 0, 0, 0},
-  {0.0f, 0.0f, 0.0f, 0, 0, 0, 0},
-  {0.0f, 0.0f, 0.0f, 0, 0, 0, 0},
-  {0.0f, 0.0f, 0.0f, 0, 0, 0, 0},
-  {0.0f, 0.0f, 0.0f, 0, 0, 0, 0}
-};
-static const int32_t data_1510[5] = {0, 0, 0, 0, 0};
-static const int32_t data_1524[684] = {
-  0, 0, -10922, 0, 0, -10558, 0, 1456, 0, 0, 0, -18022, 0, 0, -17112, 0, 0, -18386, 0, 0, 0, 0, 0, -12196, 0, 0, -18204, 0, 0, -16748, 0, 0, 0, 0, 0,
-  -11832, 0, 0, -18386, 0, 0, -15109, 0, 0, 0, 0, 910, -12014, 0, -2184, -16748, 0, -2184, -10012, 0, 0, 0, 0, -364, -11650, -2912, -364, -4369, 1638,
-  910, 182, 0, 0, -16019, 0, 182, -23119, 0, 546, -18932, 0, 0, -1092, 0, 0, -16384, 0, 0, -21845, 0, 0, -18750, 0, 0, -546, 0, 0, -21481, 0, 0,
-  -21299, 0, 0, -18568, 0, 0, -728, 0, 910, -18750, 0, 182, -18750, 0, -4004, -18204, 0, 0, -728, 0, -364, -14017, -2912, -364, -6735, 1638, 910,
-  2548, 0, 0, -18568, 0, 182, -25668, 0, 546, -21481, 0, 0, -3640, 0, 0, -18932, 0, 0, -24393, 0, 0, -21299, 0, 0, -3094, 0, 0, -24029, 0, 0, -23847,
-  0, 0, -21117, 0, 0, -3276, 0, 910, -21299, 0, 182, -21299, 0, -4004, -20753, 0, 0, -3276, 0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546,
-  -6735, 0, 0, -4004, 0, 0, -2912, 0, -182, 1274, 0, 0, -13289, 0, 0, -5279, 0, 0, -8009, 0, 0, 1456, 0, 182, -8738, 0, 0, -6007, 0, 0, -8738, 0, 182,
-  1638, 0, -728, -5279, 0, -1274, -6735, 0, -910, -8738, 0, 0, 1638, 0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546, -13289, 0, 0, -5643, 0, 0,
-  -8009, 0, -182, 1274, 0, 0, -11832, 0, 0, -5279, 0, 0, -8009, 0, 0, 1456, 0, 182, -8738, 0, 0, -6007, 0, 0, -8738, 0, 182, 1638, 0, -728, -5279, 0,
-  -1274, -6735, 0, -910, -8738, 0, 0, 1092, 0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546, -3640, 0, 0, -2366, 0, 0, -1456, 0, -182, 1274, 0,
-  0, -3822, 0, 0, -2730, 0, 0, -1456, 0, 0, 1456, 0, 182, -3822, 0, 0, -2912, 0, 0, -1638, 0, 182, 1638, 0, -728, -3640, 0, -910, -2730, 0, -546,
-  -1638, 0, 0, 1092, 0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546, -6735, 0, 0, -4004, 0, 0, -6553, 0, -182, 1274, 0, 0, -13289, 0, 0, -5279,
-  0, 0, -8009, 0, 0, 1456, 0, 182, -8738, 0, 0, -6007, 0, 0, -8738, 0, 182, 1638, 0, -728, -5279, 0, -1274, -6735, 0, -910, -8738, 0, 0, 1638, 0, 0,
-  -9102, 0, -2366, -2002, 0, -182, 910, 0, -546, -2366, 0, 0, -2002, 0, 0, -2912, 0, -182, 1274, 0, 0, -14199, 0, 0, -11468, 0, 0, -13653, 0, 0, 1456,
-  0, 182, -11286, 0, 0, -12014, 0, 0, -12743, 0, 182, 1638, 0, -728, -10194, 0, -1274, -12196, 0, -910, -10922, -728, 546, 1638, 0, 0, -1820, 0,
-  -2366, -728, 0, -364, -1092, 0, -546, -11832, 0, 910, -6735, 0, 0, -6553, 0, -182, 1274, 0, 0, -13289, 0, 0, -6007, 0, 0, -10012, 0, 0, 1092, 0,
-  182, -8738, 0, 0, -6735, 0, 0, -9830, 0, 182, 1638, 0, -728, -6553, 0, -1274, -7281, 0, -910, -10740, 0, 0, 1638, 0, 0, -5461, -2912, -2366, -364,
-  -5279, 2548, -910, 0, -546, -8374, 0, 0, -9466, 0, 910, -4915, 0, -182, 546, 0, 0, -13289, 0, 0, -5279, 0, 364, -7645, 0, -182, 1456, 0, 182, -8738,
-  0, 0, -7281, 0, 182, -6917, 0, -182, 1638, 0, -728, -5279, 0, -1274, -6735, 0, -182, -8009, 0, 0, 1638, -4733, 0, -8556, 0, -2366, -1092, -6189,
-  2912, 0, 0, -546, -10922, 0, 1820, -16384, 0, 0, -11468, 0, 182, 546, 0, 0, -10376, 0, 0, -15837, 0, 0, -12743, 0, -182, 728, 0, 182, -13835, 0, 0,
-  -16201, 0, 364, -10922, 0, -182, 728, 0, -728, -9648, 0, -3458, -12379, 0, -728, -7463, 0, 0, 1092, 0, 0, -5461, 0, -2366, -1638, 0, -910, 1092, 0,
-  -546, -3640, 0, 0, -2366, 0, 0, -1456, 0, -182, 1638, 0, 0, -910, 0, 0, -2730, 0, 0, -1274, 0, 0, 1820, 0, 182, -2730, 0, 0, -1820, 0, 0, -1274, 0,
-  182, 2184, 0, -728, -3094, 0, -910, -2548, 0, 910, -1456, -546, 910, 2366
-};
-static const int32_t data_1FD4[57] = {
-  0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546, -9102, 0, 0, -6553, 0, 0, -5643, 0, -182, 1274, 0, 0, -13289, 0, 0, -5279, 0, 0, -8009, 0, 0,
-  1456, 0, 182, -8738, 0, 0, -6007, 0, 0, -8738, 0, 182, 1638, 0, -728, -5279, 0, -1274, -6735, 0, -910, -8738, 0, 0, 1638
-};
-static const int32_t data_20B8[57] = {
-  0, 0, -4915, 0, 1456, -1456, 0, 546, 1092, 0, -546, -9102, 0, 0, -6553, 0, 0, -5643, 0, -182, 1274, 0, 0, -13289, 0, 0, -5279, 0, 0, -8009, 0, 0,
-  1456, 0, 182, -8738, 0, 0, -2912, 0, 0, -8738, 0, 182, 1638, 0, -910, -4551, 0, -728, -3094, 0, -364, -7099, 0, 0, 1638
-};
-static const int32_t data_219C[57] = {
-  0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546, -16748, 0, 0, -7827, 0, 0, -7645, 0, -182, 1274, 0, 0, -16566, 0, 0, -6189, 0, 0, -8009, 0, 0,
-  1456, 0, 182, -17840, 0, 0, -3094, 0, 0, -8920, 0, 182, 1638, 0, -728, -9102, 0, -1274, -7463, 0, -910, -8738, 0, 0, 1638
-};
-static const FogColourData data_2280 = {.red = 0.1f, .green = 1055.0f, .blue = 0.41f, .colour = 0xFF1B214FU};
-static const uint32_t data_2290[4] = {0, 0, 0, 0};
-static const Vector4 data_22A0 = {.x = 1.0f, .y = 0.3f, .z = 0.3f, .w = 0.3f};
-static Vector3i data_22B0 = {.x = 0, .y = 14108, .z = 0};
-static Vector3i data_22BC = {.x = 0, .y = 30474, .z = 0};
-static const Vector3 data_22C8 = {.x = 1.62f, .y = 1.0f, .z = 3.4f};
-static const Vector3 data_22D4 = {.x = 3.1f, .y = 2.65f, .z = 8.0f};
-static const Vector4 data_22E0 = {.x = 1.0f, .y = 0.3f, .z = 0.3f, .w = 0.3f};
-static Vector3i data_22F0 = {.x = 2730, .y = 0, .z = 0};
-static Vector3i data_22FC = {.x = -2730, .y = 0, .z = 0};
-static const char data_2308[16] __attribute__((scn_string_literal)) = "/scene/03/MSBS/";
-static const char data_2318[5] __attribute__((scn_string_literal)) = "MSBS";
-static const char data_231D[6] __attribute__((scn_string_literal)) = "01MSO";
-static const char data_2323[11] __attribute__((scn_string_literal)) = "bgm103.snd";
-static const char data_232E[11] __attribute__((scn_string_literal)) = "a1_mso.snd";
-static const char data_2339[12] __attribute__((scn_string_literal)) = "M_01MSO.BIN";
-static const char data_2345[6] __attribute__((scn_string_literal)) = "01MSO";
-static const char data_234B[12] __attribute__((scn_string_literal)) = "M_01BUS.BIN";
-static const char data_2357[13] __attribute__((scn_string_literal)) = "a1_busno.snd";
-
 static void script_0030(void) {
   Script_ryoControl(PCCTL_DisablePlayerControl);
   return;
@@ -117,7 +12,7 @@ static void script_0039(void) {
 }
 
 static void script_0048(int32_t arg0) {
-  Script_ccowUtils(arg0, 2);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
   if (0) {
     Script_charaDisplay(arg0, CDM_Hide);
   } else {
@@ -128,12 +23,12 @@ static void script_0048(int32_t arg0) {
   }
   L000074:;
   Script_scenToggleVisibleFor(arg0, 1);
-  Script_ccowSetFlag80(arg0, 1);
-  Script_motmToggleFlags(arg0, 2, 0x40);
+  Script_ccowSetHeightMode(arg0, CCOW_KeepHeight);
+  Script_motmToggleFlags(arg0, SCEN_Disable, 0x40);
   Script_charaToggleMotEnabled(arg0, 0);
   Script_facemotUtils(arg0, 0, 0);
-  Script_FaceEx(arg0, 1, 0, 2);
-  Script_FaceLookAtTargetUtils(arg0, 0);
+  Script_FaceEx(arg0, FACE_ExpressionEnabled, 0, 2);
+  Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
   Script_CharHandlers(arg0, 2, 8, 16);
   Script_SetCPAMFlags(arg0, 0);
   Script_charaDisplay(arg0, CDM_Show);
@@ -141,12 +36,12 @@ static void script_0048(int32_t arg0) {
 }
 
 static void script_00D5(int32_t arg0) {
-  Script_ccowUtils(arg0, 1);
-  Script_ccowSetFlag80(arg0, 2);
-  Script_motmToggleFlags(arg0, 1, 0x40);
+  Script_ccowUtils(arg0, CCOW_EnableAll);
+  Script_ccowSetHeightMode(arg0, CCOW_FollowGround);
+  Script_motmToggleFlags(arg0, SCEN_Enable, 0x40);
   Script_charaToggleMotEnabled(arg0, 1);
-  Script_FaceEx(arg0, 0, 0, 2);
-  Script_FaceLookAtTargetUtils(arg0, 0);
+  Script_FaceEx(arg0, FACE_ExpressionDisabled, 0, 2);
+  Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
   Script_CharHandlers(arg0, -1, 0, 0);
   Script_SetCPAMFlags(arg0, 1);
   return;
@@ -254,9 +149,9 @@ static int32_t script_0275(void) {
 }
 
 static void script_036D(int32_t arg0, int32_t arg1) {
-  Script_FACE_LCG(arg0, 1, arg1, 0);
+  Script_FACE_LCG(arg0, FACE_BlinkClose, arg1, 0);
   SCNF_WaitFrames_0000(arg1 + 1);
-  Script_FACE_LCG(arg0, 2, arg1, 0);
+  Script_FACE_LCG(arg0, FACE_BlinkOpen, arg1, 0);
   SCNF_WaitFrames_0000(arg1);
   return;
 }
@@ -293,8 +188,8 @@ static int32_t script_0447(void) {
   local_E4 = 0;
   for (;;) {
     if (local_E4 == 0) {
-      Script_FACE_LCG(CHARA_AKIR, 1, 0, 0);
-      Script_FACE_LCG(CHARA_IWAO, 1, 0, 0);
+      Script_FACE_LCG(CHARA_AKIR, FACE_BlinkClose, 0, 0);
+      Script_FACE_LCG(CHARA_IWAO, FACE_BlinkClose, 0, 0);
     }
     if (local_E4 == 560) {
       Script_WeatherUtils_ForFIXC(13, 0);
@@ -315,7 +210,7 @@ static int32_t script_0447(void) {
       Script_SpriteUtils(Scroll_Read3, 0, 0);
       Script_mapmSetRenderFlag(7, 0);
       Script_SetupLightFromTable(1);
-      Script_FACE_LCG(CHARA_IWAO, 2, 14, 0);
+      Script_FACE_LCG(CHARA_IWAO, FACE_BlinkOpen, 14, 0);
       Script_SetFogEnabled(1);
       Script_SetFogColour(&data_2280);
       Script_SetFogFlags(0, data_2290);
@@ -338,7 +233,7 @@ static int32_t script_0447(void) {
       local_F4.x = -4.87f;
       (&local_F4)->y = 2.13f;
       (&local_F4)->z = -23.87f;
-      Script_FaceLookAtTargetUtils(CHARA_IWAO, 2, &local_F4, 15);
+      Script_FaceLookAtTargetUtils(CHARA_IWAO, FACE_LookAtPosition, &local_F4, 15);
     }
     if (local_E4 == 790) {
       Script_shenSetLightingMode(1);
@@ -363,7 +258,7 @@ static int32_t script_0447(void) {
       Script_mapmSetRenderFlag(7, 1);
     }
     if (local_E4 == 810) {
-      Script_FACE_LCG(CHARA_AKIR, 2, 15, 0);
+      Script_FACE_LCG(CHARA_AKIR, FACE_BlinkOpen, 15, 0);
     }
     if (local_E4 == 1080) {
       Script_handSetFloatsFor(CHARA_AKIR, 1, data_1524, 30);
@@ -403,18 +298,18 @@ static void script_083E(void) {
 }
 
 static void script_0859(int32_t arg0) {
-  Script_ccowUtils(arg0, 2);
-  Script_ccowSetFlag80(arg0, 1);
-  Script_motmGetCharaFlags(arg0, 0, 0);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
+  Script_ccowSetHeightMode(arg0, CCOW_KeepHeight);
+  Script_motmGetCharaFlags(arg0, MOTM_PoseNone, SCEN_Write);
   Script_facemotUtils(arg0, 0, 0);
   Script_facemotUtils(arg0, 1, 0);
-  Script_FaceEx(arg0, 1, 0, 1);
+  Script_FaceEx(arg0, FACE_ExpressionEnabled, 0, 1);
   Script_ResetHandMotion(arg0, 1, 1, 0);
   Script_ResetHandMotion(arg0, 1, 0, 0);
   Script_handSetFloatsFor(arg0, 0, data_1FD4, 10);
   Script_handSetFloatsFor(arg0, 1, data_1FD4, 10);
   Script_SetCPAMFlags(arg0, 0);
-  Script_FaceLookAtTargetUtils(arg0, 0);
+  Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
   Script_SetCharaFlags(arg0, 4);
   Script_scenToggleActiveFor(arg0, 1);
   Script_SetShadowFlags(arg0, SCRIPT_SHADOW_SET_LIGHT_MASK_BIT_COUNT, 1);
@@ -422,24 +317,24 @@ static void script_0859(int32_t arg0) {
 }
 
 static void script_08FD(int32_t arg0) {
-  Script_ccowUtils(arg0, 2);
-  Script_ccowSetFlag80(arg0, 1);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
+  Script_ccowSetHeightMode(arg0, CCOW_KeepHeight);
   Script_CharHandlers(arg0, 2, 8, 16);
   Script_SetCPAMFlags(arg0, 0);
   return;
 }
 
 static void script_0926(int32_t arg0) {
-  Script_ccowUtils(arg0, 1);
+  Script_ccowUtils(arg0, CCOW_EnableAll);
   Script_SetCPAMFlags(arg0, 1);
   Script_SetCharaLookAtPosition(arg0, -98310, 0, 0);
   return;
 }
 
 static void script_0949(int32_t arg0) {
-  Script_ccowUtils(arg0, 1);
+  Script_ccowUtils(arg0, CCOW_EnableAll);
   Script_SetCPAMFlags(arg0, 1);
-  Script_FaceLookAtTargetUtils(arg0, 0);
+  Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
   Script_SetCharaLookAtPosition(arg0, -98310, 0, 0);
   Script_ResetHandMotion(arg0, 0, 1, 0);
   Script_ResetHandMotion(arg0, 0, 0, 0);
@@ -457,8 +352,8 @@ static void script_0992(int32_t arg0) {
   local_FC = 0;
   script_0030();
   script_0AE3();
-  Script_charaPosRotUtils(SHEN_NAME('BUS_'), 153, 0, &data_22B0, 0);
-  Script_charaPosRotUtils(SHEN_NAME('BUS_'), 154, 0, &data_22BC, 0);
+  Script_charaPosRotUtils(SHEN_NAME('BUS_'), 153, 0, &data_22B0, CHARA_PART_Set);
+  Script_charaPosRotUtils(SHEN_NAME('BUS_'), 154, 0, &data_22BC, CHARA_PART_Set);
   Script_LODUtils(LOD_UTILS_SET_DISTANCE_0, 160.0f);
   Script_LODUtils(LOD_UTILS_SET_DISTANCE_2, 80.0f);
   Script_SetShadowRange(160.0f);
@@ -513,7 +408,7 @@ static void script_0AE3(void) {
     local_F4.x = 0.0f;
     (&local_F4)->y = -100.0f;
     (&local_F4)->z = 0.0f;
-    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 196, &local_F4, 0, 0);
+    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 196, &local_F4, 0, CHARA_PART_Set);
   }
   return;
 }
@@ -524,11 +419,11 @@ static void script_0B84(void) {
   local_F4.x = 0.0f;
   (&local_F4)->y = -100.0f;
   (&local_F4)->z = 0.0f;
-  Script_charaPosRotUtils(SHEN_NAME('BUS_'), 196, &local_F4, 0, 0);
+  Script_charaPosRotUtils(SHEN_NAME('BUS_'), 196, &local_F4, 0, CHARA_PART_Set);
   script_00D5(SHEN_NAME('AKI2'));
   script_00D5(CHARA_BUSS);
   Script_scenToggleActiveFor(SHEN_NAME('AKI2'), 1);
-  Script_FaceEx(SHEN_NAME('AKI2'), 1, 0, 2);
+  Script_FaceEx(SHEN_NAME('AKI2'), FACE_ExpressionEnabled, 0, 2);
   Script_SetCharaFlags(SHEN_NAME('AKI2'), 4);
   return;
 }
@@ -602,12 +497,12 @@ static int32_t script_0BF7(int32_t arg0) {
         (&local_B4)->y = (&local_B4)->y + 983;
         break;
     }
-    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 153, 0, &local_F0, 0);
-    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 154, 0, &local_E4, 0);
-    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 157, 0, &local_D8, 0);
-    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 158, 0, &local_CC, 0);
-    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 155, 0, &local_C0, 0);
-    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 156, 0, &local_B4, 0);
+    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 153, 0, &local_F0, CHARA_PART_Set);
+    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 154, 0, &local_E4, CHARA_PART_Set);
+    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 157, 0, &local_D8, CHARA_PART_Set);
+    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 158, 0, &local_CC, CHARA_PART_Set);
+    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 155, 0, &local_C0, CHARA_PART_Set);
+    Script_charaPosRotUtils(SHEN_NAME('BUS_'), 156, 0, &local_B4, CHARA_PART_Set);
     local_FF = local_FF + 1;
     SCNF_WaitFrames_0000(1);
   }
@@ -616,9 +511,9 @@ static int32_t script_0BF7(int32_t arg0) {
 
 static int32_t script_0E81(int32_t arg0) {
   while (Script_shenSeqUtils(-1)) {
-    Script_charaPosRotUtils(arg0, 163, 0, &data_22F0, 1);
-    Script_charaPosRotUtils(arg0, 173, 0, &data_22F0, 1);
-    Script_charaPosRotUtils(arg0, 182, 0, &data_22FC, 1);
+    Script_charaPosRotUtils(arg0, 163, 0, &data_22F0, CHARA_PART_Add);
+    Script_charaPosRotUtils(arg0, 173, 0, &data_22F0, CHARA_PART_Add);
+    Script_charaPosRotUtils(arg0, 182, 0, &data_22FC, CHARA_PART_Add);
     SCNF_WaitFrames_0000(1);
   }
   return Script_srchControl(0);

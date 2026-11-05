@@ -1,169 +1,5 @@
 #include "act02_arar.h"
 
-static void script_0030(int32_t arg0, float arg1, float arg2, float arg3);
-static void script_0058(int32_t arg0, float arg1, float arg2, float arg3);
-static void script_00AC(int32_t arg0, int32_t arg1, int32_t arg2);
-static int32_t script_00FC(int32_t arg0);
-static void script_01A3(int32_t arg0, int32_t arg1);
-static int32_t script_01C6(int32_t arg0);
-static void script_01F9(int32_t arg0, int32_t arg1);
-static void script_021C(int32_t arg0, int32_t arg1);
-static void script_027B(int32_t arg0);
-static void script_0290(void);
-static void script_0299(void);
-static void script_02A8(int32_t arg0);
-static void script_0335(int32_t arg0);
-static void script_0385(void);
-static void script_03B3(int32_t arg0);
-static void script_03E1(void);
-static void script_0415(int32_t arg0);
-static void script_0449(int32_t arg0);
-static void script_0467(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_04A1(int32_t arg0, int32_t arg1);
-static void script_04D5(void);
-static void script_05CD(int32_t arg0, int32_t arg1);
-static void script_05FD(int32_t arg0);
-static void script_0660(int32_t arg0);
-static void script_0731(void);
-static int32_t script_078B(void);
-static void script_07A4(void);
-static int32_t script_0805(void);
-static int32_t script_1133(void);
-static void script_1948(void);
-static int32_t script_2353(void);
-static int32_t script_2FED(void);
-static int32_t script_3646(void);
-void script_3D09(void);
-
-static int32_t task_0;
-static int32_t task_4;
-static const float data_43CC[3] = {1.0f, 1.0f, 1.0f};
-static const int32_t data_43D8[4] = {16777215, 16777215, 16777215, 16777215};
-static const float data_43E8[3] = {20.0f, 800.0f, 1.0f};
-static const int32_t data_43F4[115] = {
-  -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -10922, 0, 0, -10558, 0, 1456, 0, 0, 0, -18022, 0, 0, -17112, 0, 0, -18386, 0, 0, 0, 0, 0, -12196, 0, 0, -18204, 0,
-  0, -16748, 0, 0, 0, 0, 0, -11832, 0, 0, -18386, 0, 0, -15109, 0, 0, 0, 0, 910, -12014, 0, -2184, -16748, 0, -2184, -10012, 0, 0, 0
-};
-static const int32_t data_45C0[627] = {
-  0, -364, -11650, -2912, -364, -4369, 1638, 910, 182, 0, 0, -16019, 0, 182, -23119, 0, 546, -18932, 0, 0, -1092, 0, 0, -16384, 0, 0, -21845, 0, 0,
-  -18750, 0, 0, -546, 0, 0, -21481, 0, 0, -21299, 0, 0, -18568, 0, 0, -728, 0, 910, -18750, 0, 182, -18750, 0, -4004, -18204, 0, 0, -728, 0, -364,
-  -14017, -2912, -364, -6735, 1638, 910, 2548, 0, 0, -18568, 0, 182, -25668, 0, 546, -21481, 0, 0, -3640, 0, 0, -18932, 0, 0, -24393, 0, 0, -21299, 0,
-  0, -3094, 0, 0, -24029, 0, 0, -23847, 0, 0, -21117, 0, 0, -3276, 0, 910, -21299, 0, 182, -21299, 0, -4004, -20753, 0, 0, -3276, 0, 0, -5461, 0,
-  -2366, -1092, 0, -182, 1092, 0, -546, -6735, 0, 0, -4004, 0, 0, -2912, 0, -182, 1274, 0, 0, -13289, 0, 0, -5279, 0, 0, -8009, 0, 0, 1456, 0, 182,
-  -8738, 0, 0, -6007, 0, 0, -8738, 0, 182, 1638, 0, -728, -5279, 0, -1274, -6735, 0, -910, -8738, 0, 0, 1638, 0, 0, -5461, 0, -2366, -1092, 0, -182,
-  1092, 0, -546, -13289, 0, 0, -5643, 0, 0, -8009, 0, -182, 1274, 0, 0, -11832, 0, 0, -5279, 0, 0, -8009, 0, 0, 1456, 0, 182, -8738, 0, 0, -6007, 0,
-  0, -8738, 0, 182, 1638, 0, -728, -5279, 0, -1274, -6735, 0, -910, -8738, 0, 0, 1092, 0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546, -3640, 0,
-  0, -2366, 0, 0, -1456, 0, -182, 1274, 0, 0, -3822, 0, 0, -2730, 0, 0, -1456, 0, 0, 1456, 0, 182, -3822, 0, 0, -2912, 0, 0, -1638, 0, 182, 1638, 0,
-  -728, -3640, 0, -910, -2730, 0, -546, -1638, 0, 0, 1092, 0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546, -6735, 0, 0, -4004, 0, 0, -6553, 0,
-  -182, 1274, 0, 0, -13289, 0, 0, -5279, 0, 0, -8009, 0, 0, 1456, 0, 182, -8738, 0, 0, -6007, 0, 0, -8738, 0, 182, 1638, 0, -728, -5279, 0, -1274,
-  -6735, 0, -910, -8738, 0, 0, 1638, 0, 0, -9102, 0, -2366, -2002, 0, -182, 910, 0, -546, -2366, 0, 0, -2002, 0, 0, -2912, 0, -182, 1274, 0, 0,
-  -14199, 0, 0, -11468, 0, 0, -13653, 0, 0, 1456, 0, 182, -11286, 0, 0, -12014, 0, 0, -12743, 0, 182, 1638, 0, -728, -10194, 0, -1274, -12196, 0,
-  -910, -10922, -728, 546, 1638, 0, 0, -1820, 0, -2366, -728, 0, -364, -1092, 0, -546, -11832, 0, 910, -6735, 0, 0, -6553, 0, -182, 1274, 0, 0,
-  -13289, 0, 0, -6007, 0, 0, -10012, 0, 0, 1092, 0, 182, -8738, 0, 0, -6735, 0, 0, -9830, 0, 182, 1638, 0, -728, -6553, 0, -1274, -7281, 0, -910,
-  -10740, 0, 0, 1638, 0, 0, -5461, -2912, -2366, -364, -5279, 2548, -910, 0, -546, -8374, 0, 0, -9466, 0, 910, -4915, 0, -182, 546, 0, 0, -13289, 0,
-  0, -5279, 0, 364, -7645, 0, -182, 1456, 0, 182, -8738, 0, 0, -7281, 0, 182, -6917, 0, -182, 1638, 0, -728, -5279, 0, -1274, -6735, 0, -182, -8009,
-  0, 0, 1638, -4733, 0, -8556, 0, -2366, -1092, -6189, 2912, 0, 0, -546, -10922, 0, 1820, -16384, 0, 0, -11468, 0, 182, 546, 0, 0, -10376, 0, 0,
-  -15837, 0, 0, -12743, 0, -182, 728, 0, 182, -13835, 0, 0, -16201, 0, 364, -10922, 0, -182, 728, 0, -728, -9648, 0, -3458, -12379, 0, -728, -7463, 0,
-  0, 1092, 0, 0, -5461, 0, -2366, -1638, 0, -910, 1092, 0, -546, -3640, 0, 0, -2366, 0, 0, -1456, 0, -182, 1638, 0, 0, -910, 0, 0, -2730, 0, 0, -1274,
-  0, 0, 1820, 0, 182, -2730, 0, 0, -1820, 0, 0, -1274, 0, 182, 2184, 0, -728, -3094, 0, -910, -2548, 0, 910, -1456, -546, 910, 2366
-};
-static const int32_t data_4F8C[57] = {
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0
-};
-static const int32_t data_5070[57] = {
-  0, 0, -3640, 0, 0, -2366, -4369, 1820, -546, 0, 0, -5279, 0, 0, -6007, 0, 0, -2912, 0, 0, -910, 0, 0, -6553, 0, 0, -6735, 0, 0, -3640, 0, 0, -182,
-  0, 0, -5461, 0, 0, -6007, 0, 0, -2366, 0, 0, 0, 0, 0, -5643, 0, 0, -4733, 0, 0, -2366, -1456, 0, 728
-};
-static const int32_t data_5154[171] = {
-  0, 0, -9466, 0, -546, -2912, 0, 3094, -2366, 0, 0, -18386, 0, 0, -19296, 0, 1092, -14381, 0, 0, 0, 0, 0, -16748, 0, 0, -17658, 0, 0, -15109, 0, 0,
-  0, 0, 0, -16566, 0, 0, -18204, 0, 0, -14381, 0, 0, 0, 0, 0, -19478, 0, 0, -18386, 0, -4004, -12925, 0, 0, -546, 0, 0, -3276, 0, 0, 0, 0, 0, 0, 0, 0,
-  -6553, 0, 0, -4369, 0, -546, -3458, 0, 0, 0, 0, 0, -5461, 0, 0, -5643, 0, 0, -3458, 0, 0, 0, 0, 0, -6007, 0, 0, -4551, 0, 546, -2548, 0, 0, 0, 0, 0,
-  -6189, 0, -1092, -3094, 0, 0, -2548, 0, 0, 0, 0, 0, -6007, 0, 0, -728, 0, 0, 0, 0, 0, -5097, 0, 0, -2184, 0, 0, -2002, 0, 0, 0, 0, 0, -5825, 0, 0,
-  -2912, 0, 0, -728, 0, 0, 0, 0, 0, -4915, 0, 0, -4187, 0, 0, -1274, 0, 0, 0, 0, 0, -6553, 0, -364, -4369, 0, -546, -1456, 0, 0, 0
-};
-static const Vector4 data_5400 = {.x = 0.3f, .y = 0.5f, .z = 0.4f, .w = 0.4f};
-static const int32_t data_5410[57] = {
-  0, -728, -4205, 0, 2366, 928, 0, 728, -2184, 0, 0, -2639, 0, 0, -3695, 0, 0, -9193, 0, 0, 0, 0, 0, -4004, 0, 0, -8574, 0, 0, -6917, 0, 0, 0, 0, 0,
-  -1729, 0, 0, -8701, 0, 0, -4096, 0, 47, -455, 0, -728, -3313, 0, -364, -5570, 0, -1638, -2494, 0, -254, -1310
-};
-static const int32_t data_54F4[57] = {
-  0, 0, 0, 0, 0, 1456, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2184, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1456, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, -2912, 0, 0, 0, 0
-};
-static const int32_t data_55D8[57] = {
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2002, 0, 0, 0, 0, 0, 0, 0, 0, -2184, 0, 0, 1274, 0, 0, 0, 0, 0, 0, 0, 0, -1456, 0, 0,
-  546, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-static const int32_t data_56BC[57] = {
-  0, 0, 0, 0, 0, 0, 0, 1638, 0, 0, 0, -6189, 0, 0, -3822, 0, 0, -2366, 0, 0, 3640, 0, 0, -4187, 0, 0, -2730, 0, 0, -910, 0, 0, 2730, 0, 0, -728, 0, 0,
-  -1456, 0, 0, 0, 0, 0, 2912, 0, 0, -1638, 0, 0, -364, 0, 0, 0, 0, 728, 3094
-};
-static const int32_t data_57A0[57] = {
-  0, 0, -2184, 0, 0, -2184, 0, 0, -1456, 0, 0, -1638, 0, 0, -1638, 0, 0, -1456, 0, 0, 0, 0, 0, -2184, 0, 0, -2184, 0, 0, -1456, 0, 0, 0, 0, 0, -2912,
-  0, 0, -2184, 0, 0, -2184, 0, 0, 0, 0, 0, -2184, 0, 0, -2184, 0, -1456, -2912, 0, 0, 0
-};
-static const int32_t data_5884[57] = {
-  0, 0, 0, 0, 0, 0, 0, -1820, 0, 0, 0, 0, 0, 0, -364, 0, 0, -1092, 0, 0, 0, 0, 0, 0, 0, 0, -546, 0, 0, -364, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -364, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-static const int32_t data_5968[57] = {
-  0, 0, 0, 0, 0, -1820, 0, 0, 0, 0, 0, -1456, 0, 0, 0, 0, 0, 546, 0, 0, 0, 0, 0, -1274, 0, 0, -3822, 0, 0, -364, 0, 0, 0, 0, 0, -728, 0, 0, -1638, 0,
-  0, -1638, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-static const int32_t data_5A4C[57] = {
-  0, -1274, 0, 0, 0, -2366, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -364, 0, 0, -364, 0, 0, 0, 0, 0, -546, 0, 0, -546, 0, 0,
-  -1092, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-static const int32_t data_5B30[57] = {
-  0, 0, -1092, 0, 0, 4004, 0, -1820, 910, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -364, 0, 0, -364, 0, 0, 0, 0, 0, -546, 0, 0, -546, 0, 0,
-  -1092, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
-static const int32_t data_5C14[57] = {
-  0, -728, -3094, 0, 910, -2366, 0, 0, 0, 0, 0, -2184, 0, 0, -3458, 0, 0, -4733, 0, 0, 0, 0, 0, -2366, 0, 0, -3094, 0, 0, -2002, 0, 0, 0, 0, 0, -1638,
-  0, 0, -910, 0, 0, -1820, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2548, 0, 0, 0
-};
-static const char data_5CF8[12] __attribute__((scn_string_literal)) = "bgm013.snd";
-static const Vector3i data_5D04 = {.x = 10194, .y = 0, .z = 0};
-static const Vector3i data_5D10 = {.x = 0, .y = -1456, .z = 0};
-static const int32_t data_5D1C[10] = {0, 63715, 63715, 0, 4915, 0, 0, 6189, 0, 0};
-static const int32_t data_5D44[10] = {0, -63715, -63715, 0, -4915, 0, 0, -6189, 0, 0};
-static const Vector3 data_5D6C = {.x = 0.091f, .y = -0.019f, .z = 0.0107f};
-static const Vector3i data_5D78 = {.x = 25486, .y = 4551, .z = 18204};
-static const int32_t data_5D84[10] = {0, 61895, 0, 0, 0, 0, 0, 4733, 0, 0};
-static const int32_t data_5DAC[10] = {62259, 0, 0, 0, 59710, 0, 0, 61895, 0, 0};
-static const Vector3i data_5DD4 = {.x = 2184, .y = -546, .z = 0};
-static const Vector3i data_5DE0 = {.x = 0, .y = -910, .z = 0};
-static const FogColourData data_5DEC = {.red = 4.1f, .green = 50.0f, .blue = 0.82f, .colour = 0xFFFFD9D7U};
-static const char data_5DFC[6] __attribute__((scn_string_literal)) = "A0165";
-static const char data_5E02[11] __attribute__((scn_string_literal)) = "M_0165.BIN";
-static const char data_5E0D[11] __attribute__((scn_string_literal)) = "bgm073.snd";
-static const char data_5E18[13] __attribute__((scn_string_literal)) = "a1_asiar.snd";
-static const char data_5E25[6] __attribute__((scn_string_literal)) = "A0165";
-static const char data_5E2B[6] __attribute__((scn_string_literal)) = "A0174";
-static const char data_5E31[11] __attribute__((scn_string_literal)) = "M_0174.BIN";
-static const char data_5E3C[13] __attribute__((scn_string_literal)) = "HMOT0151.BIN";
-static const char data_5E49[11] __attribute__((scn_string_literal)) = "bgm063.snd";
-static const char data_5E54[13] __attribute__((scn_string_literal)) = "a1_hijym.snd";
-static const char data_5E61[6] __attribute__((scn_string_literal)) = "A0174";
-static const char data_5E67[6] __attribute__((scn_string_literal)) = "A0174";
-static const char data_5E6D[11] __attribute__((scn_string_literal)) = "M_0174.BIN";
-static const char data_5E78[13] __attribute__((scn_string_literal)) = "HMOT0151.BIN";
-static const char data_5E85[11] __attribute__((scn_string_literal)) = "bgm063.snd";
-static const char data_5E90[13] __attribute__((scn_string_literal)) = "a1_hijym.snd";
-static const char data_5E9D[6] __attribute__((scn_string_literal)) = "A0174";
-static const char data_5EA3[6] __attribute__((scn_string_literal)) = "01ETU";
-static const char data_5EA9[12] __attribute__((scn_string_literal)) = "M_01ETU.BIN";
-static const char data_5EB5[11] __attribute__((scn_string_literal)) = "bgm073.snd";
-static const char data_5EC0[13] __attribute__((scn_string_literal)) = "a1_etuko.snd";
-static const char data_5ECD[6] __attribute__((scn_string_literal)) = "01ETU";
-static const char data_5ED3[6] __attribute__((scn_string_literal)) = "01ETU";
-static const char data_5ED9[12] __attribute__((scn_string_literal)) = "M_01ETU.BIN";
-static const char data_5EE5[11] __attribute__((scn_string_literal)) = "bgm073.snd";
-static const char data_5EF0[13] __attribute__((scn_string_literal)) = "a1_etuko.snd";
-static const char data_5EFD[7] __attribute__((scn_string_literal)) = "01ETU";
-
 static void script_0030(int32_t arg0, float arg1, float arg2, float arg3) {
   Vector3 local_F4;
   local_F4.x = arg1;
@@ -185,10 +21,10 @@ static void script_0058(int32_t arg0, float arg1, float arg2, float arg3) {
 static void script_00AC(int32_t arg0, int32_t arg1, int32_t arg2) {
   Vector3 local_F4;
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg1)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg1)) {
       Script_EVT_GetPosition(arg1, 4, &local_F4, ENTITY_XFORM_WORLD_SPACE);
       Script_SetLookPointDetails(arg0, 16, &local_F4, arg2);
-      Script_FaceLookAtTargetUtils(arg0, 2, &local_F4, 30);
+      Script_FaceLookAtTargetUtils(arg0, FACE_LookAtPosition, &local_F4, 30);
     }
     SCNF_WaitFrames_0000(1);
   }
@@ -288,7 +124,7 @@ static void script_0299(void) {
 }
 
 static void script_02A8(int32_t arg0) {
-  Script_ccowUtils(arg0, 2);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
   if (0) {
     Script_charaDisplay(arg0, CDM_Hide);
   } else {
@@ -299,12 +135,12 @@ static void script_02A8(int32_t arg0) {
   }
   L0002D4:;
   Script_scenToggleVisibleFor(arg0, 1);
-  Script_ccowSetFlag80(arg0, 1);
-  Script_motmToggleFlags(arg0, 2, 0x40);
+  Script_ccowSetHeightMode(arg0, CCOW_KeepHeight);
+  Script_motmToggleFlags(arg0, SCEN_Disable, 0x40);
   Script_charaToggleMotEnabled(arg0, 0);
   Script_facemotUtils(arg0, 0, 0);
-  Script_FaceEx(arg0, 1, 0, 2);
-  Script_FaceLookAtTargetUtils(arg0, 0);
+  Script_FaceEx(arg0, FACE_ExpressionEnabled, 0, 2);
+  Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
   Script_CharHandlers(arg0, 2, 8, 16);
   Script_SetCPAMFlags(arg0, 0);
   Script_charaDisplay(arg0, CDM_Show);
@@ -312,12 +148,12 @@ static void script_02A8(int32_t arg0) {
 }
 
 static void script_0335(int32_t arg0) {
-  Script_ccowUtils(arg0, 1);
-  Script_ccowSetFlag80(arg0, 2);
-  Script_motmToggleFlags(arg0, 1, 0x40);
+  Script_ccowUtils(arg0, CCOW_EnableAll);
+  Script_ccowSetHeightMode(arg0, CCOW_FollowGround);
+  Script_motmToggleFlags(arg0, SCEN_Enable, 0x40);
   Script_charaToggleMotEnabled(arg0, 1);
-  Script_FaceEx(arg0, 0, 0, 2);
-  Script_FaceLookAtTargetUtils(arg0, 0);
+  Script_FaceEx(arg0, FACE_ExpressionDisabled, 0, 2);
+  Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
   Script_CharHandlers(arg0, -1, 0, 0);
   Script_SetCPAMFlags(arg0, 1);
   return;
@@ -425,17 +261,17 @@ static void script_04D5(void) {
 }
 
 static void script_05CD(int32_t arg0, int32_t arg1) {
-  Script_FACE_LCG(arg0, 1, arg1, 0);
+  Script_FACE_LCG(arg0, FACE_BlinkClose, arg1, 0);
   SCNF_WaitFrames_0000(arg1 + 1);
-  Script_FACE_LCG(arg0, 2, arg1, 0);
+  Script_FACE_LCG(arg0, FACE_BlinkOpen, arg1, 0);
   SCNF_WaitFrames_0000(arg1);
   return;
 }
 
 static void script_05FD(int32_t arg0) {
-  Script_ccowUtils(arg0, 2);
-  Script_ccowSetFlag80(arg0, 1);
-  Script_motmToggleFlags(arg0, 2, 0x40);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
+  Script_ccowSetHeightMode(arg0, CCOW_KeepHeight);
+  Script_motmToggleFlags(arg0, SCEN_Disable, 0x40);
   Script_SetMotnFlag(arg0, -1);
   Script_SetCPAMFlags(arg0, 0);
   Script_SetCharaFlags(arg0, 4);
@@ -447,16 +283,16 @@ static void script_05FD(int32_t arg0) {
 }
 
 static void script_0660(int32_t arg0) {
-  Script_ccowUtils(arg0, 2);
-  Script_ccowSetFlag80(arg0, 1);
-  Script_motmToggleFlags(arg0, 2, 0x40);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
+  Script_ccowSetHeightMode(arg0, CCOW_KeepHeight);
+  Script_motmToggleFlags(arg0, SCEN_Disable, 0x40);
   Script_SetMotnFlag(arg0, -1);
   Script_SetCPAMFlags(arg0, 0);
   Script_facemotUtils(arg0, 0, 0);
   Script_facemotUtils(arg0, 1, 0);
-  Script_FaceEx(arg0, 1, 0, 1);
-  Script_FACE_LCG(arg0, 0, 6, 0);
-  Script_FaceLookAtTargetUtils(arg0, 0);
+  Script_FaceEx(arg0, FACE_ExpressionEnabled, 0, 1);
+  Script_FACE_LCG(arg0, FACE_BlinkAutomatic, 6, 0);
+  Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
   Script_ResetHandMotion(arg0, 1, 1, 0);
   Script_ResetHandMotion(arg0, 1, 0, 0);
   Script_handSetFloatsFor(arg0, 1, data_5070, 1);
@@ -695,13 +531,13 @@ static int32_t script_0805(void) {
       }
     }
     if (task_4 == 1) {
-      Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+      Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
     } else if ((task_4 >= 1203) & (task_4 <= 1211)) {
       Script_EVT_GetPosition(CHARA_KJHS, 5, &local_F4, ENTITY_XFORM_WORLD_SPACE);
-      Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_F4, 8);
+      Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_F4, 8);
     } else {
       if (task_4 >= 1624) {
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
         goto L000D9A;
       }
     }
@@ -941,7 +777,7 @@ static int32_t script_1133(void) {
   Script_scenToggleVisibleFor(CHARA_MNWA, 0);
   Script_charaDisplay(SHEN_NAME('TKET'), CDM_Show);
   Script_scenToggleActiveFor(SHEN_NAME('TKET'), 0);
-  Script_ccowSetFlag80(SHEN_NAME('TKET'), 1);
+  Script_ccowSetHeightMode(SHEN_NAME('TKET'), CCOW_KeepHeight);
   Script_ResetHandMotion(CHARA_AKIR, 1, 1, 0);
   Script_ResetHandMotion(CHARA_AKIR, 1, 0, 0);
   Script_handSetFloatsFor(CHARA_AKIR, 1, data_5070, 1);
@@ -1233,8 +1069,8 @@ static void script_1948(void) {
   Script_charaDisplay(SHEN_NAME('TKE2'), CDM_Show);
   Script_scenToggleActiveFor(SHEN_NAME('TKET'), 0);
   Script_scenToggleActiveFor(SHEN_NAME('TKE2'), 0);
-  Script_ccowSetFlag80(SHEN_NAME('TKET'), 1);
-  Script_ccowSetFlag80(SHEN_NAME('TKE2'), 1);
+  Script_ccowSetHeightMode(SHEN_NAME('TKET'), CCOW_KeepHeight);
+  Script_ccowSetHeightMode(SHEN_NAME('TKE2'), CCOW_KeepHeight);
   Script_ResetHandMotion(CHARA_AKIR, 1, 1, 0);
   Script_ResetHandMotion(CHARA_AKIR, 1, 0, 0);
   Script_ResetHandMotion(CHARA_JIMY, 1, 1, 0);
@@ -1303,7 +1139,7 @@ static void script_1948(void) {
           Script_charaDisplay(SHEN_NAME('TKE2'), CDM_Hide);
           Script_EVT_GetPosition(CHARA_AKIR, 12, &local_F4, 0);
           local_F4.x = (&local_F4)->x + 0.07f;
-          Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_F4, 1);
+          Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_F4, 1);
           Script_charaDisplay(SHEN_NAME('TKET'), CDM_Show);
           break;
         case 615:
@@ -1327,7 +1163,7 @@ static void script_1948(void) {
           Script_FACE(CHARA_AKIR, 2, 4, 5);
           break;
         case 431:
-          Script_FACE_LCG(CHARA_AKIR, 0, 0, 0);
+          Script_FACE_LCG(CHARA_AKIR, FACE_BlinkAutomatic, 0, 0);
           Script_FACE(CHARA_AKIR, 0, 0, 5);
           break;
         case 506:
@@ -1340,56 +1176,56 @@ static void script_1948(void) {
           Script_FACE(CHARA_AKIR, 2, 0, 5);
           break;
         case 966:
-          Script_FACE_LCG(CHARA_AKIR, 0, 0, 0);
+          Script_FACE_LCG(CHARA_AKIR, FACE_BlinkAutomatic, 0, 0);
           break;
       }
       if ((local_CE >= 140) & (local_CE <= 240)) {
         Script_EVT_GetPosition(CHARA_JIMY, 5, &local_E8, 0);
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_E8, 8);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_E8, 8);
       } else if (local_CE == 241) {
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
       } else if ((local_CE >= 506) & (local_CE <= 600)) {
         Script_EVT_GetPosition(CHARA_AKIR, 12, &local_E8, 0);
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_E8, 8);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_E8, 8);
       } else {
         switch (local_CE) {
           case 601:
             Script_EVT_GetPosition(CHARA_JIMY, 5, &local_E8, 0);
             (&local_E8)->y = (&local_E8)->y + 1.0f;
-            Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_E8, 8);
+            Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_E8, 8);
             break;
           case 941:
-            Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+            Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
             break;
         }
       }
       if ((local_CE >= 431) & (local_CE <= 470)) {
         Script_EVT_GetPosition(CHARA_AKIR, 5, &local_DC, 0);
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 2, &local_DC, 8);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookAtPosition, &local_DC, 8);
       } else if (local_CE == 471) {
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 0);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookReset);
       } else if ((local_CE >= 615) & (local_CE <= 695)) {
         Script_EVT_GetPosition(CHARA_AKIR, 5, &local_DC, 0);
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 2, &local_DC, 8);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookAtPosition, &local_DC, 8);
       } else if (local_CE == 696) {
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 0);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookReset);
       } else if ((local_CE >= 796) & (local_CE <= 890)) {
         Script_EVT_GetPosition(CHARA_AKIR, 5, &local_DC, 0);
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 2, &local_DC, 8);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookAtPosition, &local_DC, 8);
       } else {
         if (local_CE == 891) {
-          Script_FaceLookAtTargetUtils(CHARA_JIMY, 0);
+          Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookReset);
           goto L002215;
         }
       }
       L002215:;
       switch (local_CE) {
         case 1:
-          Script_FACE_LCG(CHARA_JIMY, 1, 0, 0);
+          Script_FACE_LCG(CHARA_JIMY, FACE_BlinkClose, 0, 0);
           Script_FACE(CHARA_JIMY, 6, 0, 5);
           break;
         case 230:
-          Script_FACE_LCG(CHARA_JIMY, 0, 0, 0);
+          Script_FACE_LCG(CHARA_JIMY, FACE_BlinkAutomatic, 0, 0);
           break;
         case 321:
           Script_FACE(CHARA_JIMY, 0, 0, 5);
@@ -1554,8 +1390,8 @@ static int32_t script_2353(void) {
   Script_scenToggleVisibleFor(SHEN_NAME('TKE2'), 0);
   Script_scenToggleActiveFor(SHEN_NAME('TKET'), 0);
   Script_scenToggleActiveFor(SHEN_NAME('TKE2'), 0);
-  Script_ccowSetFlag80(SHEN_NAME('TKET'), 1);
-  Script_ccowSetFlag80(SHEN_NAME('TKE2'), 1);
+  Script_ccowSetHeightMode(SHEN_NAME('TKET'), CCOW_KeepHeight);
+  Script_ccowSetHeightMode(SHEN_NAME('TKE2'), CCOW_KeepHeight);
   Script_ResetHandMotion(CHARA_AKIR, 1, 1, 0);
   Script_ResetHandMotion(CHARA_AKIR, 1, 0, 0);
   Script_ResetHandMotion(CHARA_JIMY, 1, 1, 0);
@@ -1627,7 +1463,7 @@ static int32_t script_2353(void) {
           Script_fixoClearAttachment(SHEN_NAME('TKET'));
           Script_EVT_GetPosition(CHARA_AKIR, 12, &local_F4, 0);
           local_F4.x = (&local_F4)->x + 0.07f;
-          Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_F4, 1);
+          Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_F4, 1);
           local_F4.x = 0.135f;
           (&local_F4)->y = -0.022f;
           (&local_F4)->z = 0.119f;
@@ -1689,13 +1525,13 @@ static int32_t script_2353(void) {
           Script_FACE(CHARA_AKIR, 2, 5, 5);
           break;
         case 321:
-          Script_FACE_LCG(CHARA_AKIR, 1, 16, 8);
+          Script_FACE_LCG(CHARA_AKIR, FACE_BlinkClose, 16, 8);
           break;
         case 340:
           Script_FACE(CHARA_AKIR, 2, 4, 5);
           break;
         case 431:
-          Script_FACE_LCG(CHARA_AKIR, 0, 0, 0);
+          Script_FACE_LCG(CHARA_AKIR, FACE_BlinkAutomatic, 0, 0);
           Script_FACE(CHARA_AKIR, 0, 0, 5);
           break;
         case 506:
@@ -1705,70 +1541,70 @@ static int32_t script_2353(void) {
           Script_FACE(CHARA_AKIR, 0, 0, 5);
           break;
         case 891:
-          Script_FACE_LCG(CHARA_AKIR, 1, 16, 4);
+          Script_FACE_LCG(CHARA_AKIR, FACE_BlinkClose, 16, 4);
           Script_FACE(CHARA_AKIR, 2, 0, 5);
           break;
         case 966:
-          Script_FACE_LCG(CHARA_AKIR, 0, 0, 0);
+          Script_FACE_LCG(CHARA_AKIR, FACE_BlinkAutomatic, 0, 0);
           Script_FACE(CHARA_AKIR, 10, 0, 5);
           break;
       }
       if ((local_CE >= 140) & (local_CE <= 240)) {
         Script_EVT_GetPosition(CHARA_JIMY, 5, &local_E8, 0);
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_E8, 8);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_E8, 8);
       } else if (local_CE == 241) {
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
       } else if (local_CE == 321) {
         local_E8.x = 2.39f;
         (&local_E8)->y = -0.98f;
         (&local_E8)->z = -3.4f;
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_E8, 8);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_E8, 8);
       } else if ((local_CE >= 506) & (local_CE <= 695)) {
         Script_EVT_GetPosition(CHARA_JIMY, 5, &local_E8, 0);
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_E8, 8);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_E8, 8);
       } else if (local_CE == 696) {
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
       } else if ((local_CE >= 796) & (local_CE <= 890)) {
         Script_EVT_GetPosition(CHARA_JIMY, 5, &local_E8, 0);
-        Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_E8, 8);
+        Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_E8, 8);
       } else {
         switch (local_CE) {
           case 891:
             Script_EVT_GetPosition(CHARA_AKIR, 12, &local_E8, 0);
-            Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_E8, 8);
+            Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_E8, 8);
             break;
           case 1061:
-            Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+            Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
             break;
         }
       }
       if ((local_CE >= 431) & (local_CE <= 470)) {
         Script_EVT_GetPosition(CHARA_AKIR, 5, &local_DC, 0);
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 2, &local_DC, 8);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookAtPosition, &local_DC, 8);
       } else if (local_CE == 471) {
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 0);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookReset);
       } else if ((local_CE >= 615) & (local_CE <= 695)) {
         Script_EVT_GetPosition(CHARA_AKIR, 5, &local_DC, 0);
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 2, &local_DC, 8);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookAtPosition, &local_DC, 8);
       } else if (local_CE == 696) {
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 0);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookReset);
       } else if ((local_CE >= 796) & (local_CE <= 890)) {
         Script_EVT_GetPosition(CHARA_AKIR, 5, &local_DC, 0);
-        Script_FaceLookAtTargetUtils(CHARA_JIMY, 2, &local_DC, 8);
+        Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookAtPosition, &local_DC, 8);
       } else {
         if (local_CE == 891) {
-          Script_FaceLookAtTargetUtils(CHARA_JIMY, 0);
+          Script_FaceLookAtTargetUtils(CHARA_JIMY, FACE_LookReset);
           goto L002EAF;
         }
       }
       L002EAF:;
       switch (local_CE) {
         case 1:
-          Script_FACE_LCG(CHARA_JIMY, 1, 0, 0);
+          Script_FACE_LCG(CHARA_JIMY, FACE_BlinkClose, 0, 0);
           Script_FACE(CHARA_JIMY, 6, 0, 5);
           break;
         case 230:
-          Script_FACE_LCG(CHARA_JIMY, 0, 0, 0);
+          Script_FACE_LCG(CHARA_JIMY, FACE_BlinkAutomatic, 0, 0);
           break;
         case 321:
           Script_FACE(CHARA_JIMY, 0, 0, 5);
@@ -1884,9 +1720,9 @@ static int32_t script_2FED(void) {
   }
   L003183:;
   Script_scenToggleVisibleFor(SHEN_NAME('COMP'), 0);
-  Script_ccowSetFlag80(SHEN_NAME('INF1'), 1);
-  Script_ccowSetFlag80(SHEN_NAME('INF2'), 1);
-  Script_ccowSetFlag80(SHEN_NAME('MAGA'), 1);
+  Script_ccowSetHeightMode(SHEN_NAME('INF1'), CCOW_KeepHeight);
+  Script_ccowSetHeightMode(SHEN_NAME('INF2'), CCOW_KeepHeight);
+  Script_ccowSetHeightMode(SHEN_NAME('MAGA'), CCOW_KeepHeight);
   for (;;) {
     {
       int32_t local_F0;
@@ -1954,20 +1790,20 @@ static int32_t script_2FED(void) {
       switch (local_F0) {
         case 1:
           (&local_F4)->z = 0;
-          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 152, 0, &local_F4, 0);
-          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 162, 0, &local_F4, 0);
+          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 152, 0, &local_F4, CHARA_PART_Set);
+          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 162, 0, &local_F4, CHARA_PART_Set);
           (&local_F4)->z = -8865;
-          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 153, 0, &local_F4, 0);
+          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 153, 0, &local_F4, CHARA_PART_Set);
           (&local_F4)->z = 8865;
-          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 163, 0, &local_F4, 0);
+          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 163, 0, &local_F4, CHARA_PART_Set);
           (&local_F4)->z = -0x1600;
-          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 154, 0, &local_F4, 0);
+          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 154, 0, &local_F4, CHARA_PART_Set);
           (&local_F4)->z = 0x1600;
-          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 164, 0, &local_F4, 0);
+          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 164, 0, &local_F4, CHARA_PART_Set);
           (&local_F4)->z = -4109;
-          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 155, 0, &local_F4, 0);
+          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 155, 0, &local_F4, CHARA_PART_Set);
           (&local_F4)->z = 4109;
-          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 165, 0, &local_F4, 0);
+          Script_charaPosRotUtils(SHEN_NAME('MAGA'), 165, 0, &local_F4, CHARA_PART_Set);
           Script_ReadModelFormat7(CHARA_ETKO, 0, data_5D1C, 0);
           Script_ReadModelFormat7(CHARA_ETKO, 1, data_5D44, 0);
           Script_handSetFloatsFor(CHARA_ETKO, 1, data_57A0, 0);
@@ -2073,10 +1909,10 @@ static int32_t script_3646(void) {
   }
   L003774:;
   Script_scenToggleVisibleFor(SHEN_NAME('MAGA'), 0);
-  Script_ccowSetFlag80(SHEN_NAME('INF3'), 1);
-  Script_ccowSetFlag80(SHEN_NAME('TRAY'), 1);
-  Script_ccowSetFlag80(SHEN_NAME('MONY'), 1);
-  Script_ccowSetFlag80(SHEN_NAME('PURS'), 1);
+  Script_ccowSetHeightMode(SHEN_NAME('INF3'), CCOW_KeepHeight);
+  Script_ccowSetHeightMode(SHEN_NAME('TRAY'), CCOW_KeepHeight);
+  Script_ccowSetHeightMode(SHEN_NAME('MONY'), CCOW_KeepHeight);
+  Script_ccowSetHeightMode(SHEN_NAME('PURS'), CCOW_KeepHeight);
   for (;;) {
     {
       int32_t local_FC;
@@ -2220,10 +2056,10 @@ static int32_t script_3646(void) {
       int32_t unused_FC;
       Vector3 local_F0;
       Script_EVT_GetPosition(CHARA_AKIR, 5, &local_F0, 0);
-      Script_FaceLookAtTargetUtils(CHARA_ETKO, 2, &local_F0, 4);
+      Script_FaceLookAtTargetUtils(CHARA_ETKO, FACE_LookAtPosition, &local_F0, 4);
     } else {
       if (task_4 == 1220) {
-        Script_FaceLookAtTargetUtils(CHARA_ETKO, 0);
+        Script_FaceLookAtTargetUtils(CHARA_ETKO, FACE_LookReset);
         goto L003CA6;
       }
     }

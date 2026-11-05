@@ -1,992 +1,8 @@
 #include "act03_ydb1.h"
 
-static void script_0030(int32_t arg0, const char *arg1, const char *arg2);
-static void script_0094(const char *arg0);
-static void script_00B5(int32_t arg0);
-static void script_00CC(int32_t arg0);
-static void script_0152(int32_t arg0, int32_t arg1);
-static int32_t script_0175(int32_t arg0, int32_t arg1);
-static void script_0199(int32_t arg0, int32_t arg1);
-static int32_t script_01AB(const char *arg0, int32_t arg1);
-static void script_01D2(int32_t arg0, int32_t arg1);
-static int32_t script_01E4(int32_t arg0, int32_t arg1, int32_t arg2, const Vector3 *arg3, const Vector3i *arg4, int32_t arg5);
-static void script_024F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static int32_t script_0269(int32_t arg0, int32_t arg1);
-static void script_0289(int32_t arg0, int32_t arg1);
-static int32_t script_029B(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_02DF(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_02F3(int32_t arg0);
-static int32_t script_030F(int32_t arg0, int32_t arg1, int32_t arg2, float arg3, int32_t arg4, int32_t arg5);
-static void script_03B3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static int32_t script_03CD(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static void script_0412(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_042A(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_045E(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_0474(int32_t arg0, int32_t arg1, const Vector3i *arg2, int32_t arg3);
-static void script_04BC(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_04D2(int32_t arg0, int32_t arg1, const int32_t *arg2, int32_t arg3, int32_t arg4);
-static void script_04F8(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_0510(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static void script_0537(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_054F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_058C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_05A2(int32_t arg0, int32_t arg1, float arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_0626(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static int32_t script_0640(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_06A9(int32_t arg0, int32_t arg1, int32_t arg2);
-static int32_t script_06BD(int32_t arg0, int32_t arg1, const Vector3 *arg2, int32_t arg3);
-static void script_0721(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_0737(int32_t arg0, int32_t arg1, float arg2, float arg3, float arg4, int32_t arg5);
-static void script_0792(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static int32_t script_07AC(int32_t arg0, int32_t arg1, const Vector3i *arg2, int32_t arg3);
-static void script_0812(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_0828(int32_t arg0, int32_t arg1, float arg2, int32_t arg3);
-static void script_0893(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_08A9(int32_t arg0, const Vector3i *arg1, int32_t arg2);
-static void script_08F3(int32_t arg0, int32_t arg1, int32_t arg2);
-static int32_t script_0907(int32_t arg0, float arg1, int32_t arg2);
-static void script_0956(int32_t arg0, int32_t arg1, int32_t arg2);
-static int32_t script_096A(int32_t arg0, float arg1, float arg2, float arg3, int32_t arg4);
-static void script_09E3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_09FB(int32_t arg0, float arg1, float arg2, float arg3, int32_t arg4);
-static void script_0A74(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_0A8C(int32_t arg0, float arg1, float arg2, float arg3, int32_t arg4);
-static void script_0B05(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_0B1D(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_0B62(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_0B78(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_0B9C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_0BB2(float arg0, float arg1, float arg2, int32_t arg3);
-static void script_0BD7(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_0BED(void);
-static void script_0C48(int32_t arg0, int32_t arg1);
-static void script_0DBA(int32_t arg0, int32_t arg1);
-static void script_0E0E(void);
-static void script_0E6D(void);
-static void script_0F98(void);
-static void script_0FBF(void);
-static void script_10F7(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_1294(void);
-static int32_t script_13B4(void);
-static void script_160E(int32_t arg0);
-static void script_176A(int32_t arg0, int32_t arg1);
-static void script_21CD(int32_t arg0);
-static int32_t script_25A2(int32_t arg0);
-static void script_2607(int32_t arg0);
-static void script_277E(void);
-static void script_2788(void);
-static void script_2792(void);
-static void script_279C(int32_t arg0);
-static void script_27A6(int32_t arg0);
-static int32_t script_294C(void);
-static int32_t script_3A93(void);
-static void script_3B38(void);
-static void script_4135(int32_t arg0);
-static void script_4658(int32_t arg0);
-static int32_t script_60EF(void);
-static int32_t script_61A2(void);
-static int32_t script_6225(void);
-static int32_t script_62AB(void);
-static void script_62C0(void);
-static void script_65D6(void);
-static void script_6631(void);
-static void script_6894(void);
-static void script_6C55(void);
-static void script_6F93(void);
-static void script_7017(void);
-static int32_t script_7358(int32_t arg0);
-static void script_7468(void);
-static int32_t script_74BB(void);
-static void script_7583(void);
-static void script_7642(void);
-static void script_7ADA(void);
-static int32_t script_7E8C(void);
-static void script_7EDB(void);
-static void script_8753(void);
-static int32_t script_8891(void);
-static int32_t script_90CD(int32_t arg0);
-static void script_91CC(void);
-static void script_9355(void);
-static void script_9422(void);
-static void script_94B2(void);
-static void script_9640(int32_t arg0, float arg1);
-static void script_965F(int32_t arg0);
-static int32_t script_967B(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static void script_96F1(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static void script_9709(void);
-static void script_9891(void);
-static int32_t script_9BB3(void);
-static void script_9D35(void);
-static void script_9E2D(void);
-static int32_t script_A0EA(void);
-static void script_A18D(void);
-static int32_t script_A992(void);
-static void script_AA12(void);
-static int32_t script_AA3A(void);
-static int32_t script_AA64(void);
-static int32_t script_AA72(int32_t arg0);
-static int32_t script_AB96(void);
-static void script_AC9D(void);
-static int32_t script_ACD2(void);
-static void script_AD92(void);
-static void script_B019(int32_t arg0);
-static void script_B1AD(int32_t arg0);
-static void script_B21F(void);
-static void script_B358(int32_t arg0);
-static void script_B723(int32_t arg0);
-static void script_BC3F(void);
-static void script_C0FC(void);
-static int32_t script_C7F8(void);
-static void script_C858(void);
-static void script_CCC1(void);
-static void script_CE68(void);
-void script_CEB6(void);
-static void script_D06D(int32_t arg0, int32_t arg1, int32_t arg2);
-static int32_t script_D14B(int32_t arg0);
-static void script_D789(int32_t arg0, int32_t arg1);
-static void script_D810(int32_t arg0, int32_t arg1);
-static void script_D87D(int32_t arg0, int32_t arg1);
-static void script_D8C1(void);
-static void script_D908(void);
-static void script_DA3B(void);
-static void script_DC39(void);
-static int32_t script_DD28(void);
-static void script_DDE3(int32_t arg0);
-static int32_t script_E106(int32_t arg0);
-static void script_E207(void);
-static void script_E34E(void);
-static void script_E4BE(void);
-
-static int32_t task_0[16][5];
-static int32_t task_140[32][2];
-static int32_t task_240;
-static int32_t task_244;
-static int32_t task_248;
-static int32_t task_24C;
-static int8_t task_250;
-static uint8_t task_251;
-static uint16_t task_252;
-static int32_t task_254;
-static int32_t task_258;
-static int32_t task_25C;
-static int32_t task_260;
-static int32_t task_264;
-static int32_t task_268;
-static int32_t task_26C;
-static int32_t task_270;
-static int32_t task_274;
-static int32_t task_278;
-static int32_t task_27C;
-static int32_t task_280;
-static Vector3 task_284;
-static Vector3i task_290;
-static int32_t task_29C;
-static int32_t task_2A0;
-static int32_t task_2A4;
-static int32_t task_2A8;
-static int32_t task_2AC;
-static int32_t task_2B0;
-static int32_t task_2B4;
-static int32_t task_2B8;
-static int32_t task_2BC;
-static int32_t task_2C0;
-static int32_t task_2C4;
-static int32_t task_2C8;
-static int32_t task_2CC;
-static int32_t task_2D0;
-static int32_t task_2D4;
-static int32_t task_2D8;
-static int32_t task_2DC;
-static int32_t task_2E0;
-static int32_t task_2E4;
-static int32_t task_2E8;
-static int32_t task_2EC;
-static int32_t task_2F0;
-static int32_t task_2F4;
-static int32_t task_2F8;
-static int32_t task_2FC[2];
-static int32_t task_304[5];
-static int32_t task_318;
-static int32_t task_31C;
-static int32_t task_320;
-static int32_t task_324;
-static int32_t task_328;
-static int32_t task_32C;
-static int32_t task_330;
-static int32_t task_334;
-static int32_t task_338[20];
-static int32_t task_388;
-static int32_t task_38C;
-static int32_t task_390;
-static int32_t task_394[4];
-static int32_t task_3A4;
-static int32_t task_3A8;
-static int32_t task_3AC;
-static int32_t task_3B0;
-static int32_t task_3B4;
-static int32_t task_3B8;
-static int32_t task_3BC;
-static int32_t task_3C0;
-static int32_t task_3C4;
-static int32_t task_3C8;
-static Vector3 task_3CC;
-static int32_t task_3D8;
-static int32_t task_3DC;
-static int32_t task_3E0;
-static int32_t task_3E4;
-static Vector3 task_3E8;
-static Vector3i task_3F4;
-static int32_t task_400;
-static int32_t task_404;
-static int32_t task_408;
-static int32_t task_40C;
-static int32_t task_410;
-static int32_t task_414;
-static int32_t task_418;
-static int32_t task_41C;
-static int32_t task_420;
-static int32_t task_424;
-static int32_t task_428;
-static int8_t task_42C;
-static uint8_t task_42D;
-static uint16_t task_42E;
-static int8_t task_430;
-static uint8_t task_431;
-static uint16_t task_432;
-static int32_t task_434;
-static int32_t task_438;
-static int32_t task_43C;
-static int32_t task_440;
-static int32_t task_444;
-static int32_t task_448;
-static int32_t task_44C;
-static int32_t task_450;
-static int32_t task_454;
-static int32_t task_458;
-static int32_t task_45C;
-static int32_t task_460;
-static int32_t task_464;
-static int32_t task_468;
-static int32_t task_46C;
-static int32_t task_470;
-static int32_t task_474;
-static int32_t task_478;
-static int32_t task_47C;
-static int32_t task_480;
-static int32_t task_484[100];
-static int32_t task_614;
-static int32_t task_618;
-static int32_t task_61C;
-static int32_t task_620;
-static int32_t task_624;
-static int32_t task_628;
-static int32_t task_62C;
-static int32_t task_630;
-static int32_t task_634;
-static int32_t task_638;
-static int32_t task_63C;
-static int32_t task_640;
-static int32_t task_644;
-static int32_t task_648;
-static int32_t task_64C;
-static int32_t task_650;
-static int32_t task_654;
-static int32_t task_658;
-static int32_t task_65C;
-static int32_t task_660;
-static int32_t task_664[4];
-static int8_t task_674[4][9];
-static const Vector3 data_E860 = {.x = 1.0f, .y = 1.0f, .z = 1.0f};
-static const int32_t data_E86C[4] = {16777215, 16777215, 16777215, 16777215};
-static const float data_E87C[3] = {20.0f, 800.0f, 1.0f};
-static const int32_t data_E888 = -1;
-static const Vector3 data_E88C = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
-static const Vector3i data_E898 = {.x = 0, .y = 0, .z = 0};
-static const uint32_t data_E8A4 = 380;
-static const int32_t data_E8A8[6] = {1, 390, 0, 1018, 0, -1};
-static const uint32_t data_E8C0 = 510;
-static const int32_t data_E8C4[6] = {1, 525, 0, 1020, 0, -1};
-static const uint32_t data_E8DC = 150;
-static const int32_t data_E8E0[6] = {1, 160, 0, 1019, 0, -1};
-static const uint32_t data_E8F8 = 530;
-static const int32_t data_E8FC[6] = {1, 970, 0, 1014, 0, -1};
-static const uint32_t data_E914 = 911;
-static const int32_t data_E918[6] = {1, 155, 0, 1015, 0, -1};
-static const Vector3 data_E930 = {.x = 7.88008f, .y = 1.21f, .z = 1.45f};
-static uint32_t data_E93C = 131072;
-static const shen_name data_E940 = SHEN_NAME('TUB2');
-static const uint32_t data_E944[2] = {0x80004000U, 0};
-static const float data_E94C[4] = {0.15f, 0.0f, 0.0f, 0.0f};
-static const int32_t data_E95C = 131072;
-static const shen_name data_E960 = SHEN_NAME('TUB3');
-static const uint32_t data_E964[2] = {0x80008000U, 0};
-static const float data_E96C[5] = {0.15f, 0.0f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_E980 = SHEN_NAME('DENW');
-static const uint32_t data_E984 = 0x71C7C000U;
-static const float data_E988[5] = {-0.1f, 0.0f, 0.0f, 0.0f, 0.0f};
-static const int32_t data_E99C = 131072;
-static const shen_name data_E9A0 = SHEN_NAME('YAKU');
-static const uint32_t data_E9A4[5] = {0x71C78000U, 0, 0, 0, 0};
-static const int32_t data_E9B8[2] = {5, 131072};
-static const shen_name data_E9C0 = SHEN_NAME('YAK2');
-static const uint32_t data_E9C4[5] = {0x71C70000U, 0, 0, 0, 0};
-static const int32_t data_E9D8[2] = {5, 0};
-static const shen_name data_E9E0 = CHARA_ONO_;
-static const uint32_t data_E9E4[2] = {0x71C74000U, 0};
-static const float data_E9EC[4] = {0.3559f, -0.0414f, 0.0f, 0.0f};
-static const int32_t data_E9FC = 589824;
-static const shen_name data_EA00 = SHEN_NAME('BALL');
-static const uint32_t data_EA04[6] = {0x71C70000U, 0, 0, 0, 0, 0};
-static const int32_t data_EA1C = 589824;
-static const shen_name data_EA20 = SHEN_NAME('BOOK');
-static const uint32_t data_EA24[4] = {0x71C78000U, 0, 0, 0};
-static const int32_t data_EA34[3] = {21, 0, 131072};
-static const shen_name data_EA40 = SHEN_NAME('BNT0');
-static const uint32_t data_EA44[7] = {0x71C7C000U, 0, 0, 0, 0, 0, 0};
-static const shen_name data_EA60 = SHEN_NAME('BX4B');
-static const uint32_t data_EA64[6] = {0x71C70000U, 0, 0, 0, 0, 0};
-static const int32_t data_EA7C = 393472;
-static const shen_name data_EA80 = SHEN_NAME('UBOX');
-static const uint32_t data_EA84[2] = {0x71C70000U, 0};
-static const float data_EA8C[5] = {0.2f, 0.3f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_EAA0 = SHEN_NAME('ROU4');
-static const uint32_t data_EAA4[6] = {0x71C74000U, 0, 0, 0, 0, 0};
-static const int32_t data_EABC = 196608;
-static const shen_name data_EAC0 = SHEN_NAME('TNS0');
-static const uint32_t data_EAC4[4] = {0x71C7C000U, 0, 0, 0};
-static const int32_t data_EAD4[3] = {4, 5, 196608};
-static const shen_name data_EAE0 = SHEN_NAME('TNS1');
-static const uint32_t data_EAE4[4] = {0x71C7C000U, 0, 0, 0};
-static const int32_t data_EAF4[3] = {4, 4, 196608};
-static const shen_name data_EB00 = SHEN_NAME('TNS2');
-static const uint32_t data_EB04[4] = {0x71C7C000U, 0, 0, 0};
-static const int32_t data_EB14[3] = {4, 6, 196608};
-static const shen_name data_EB20 = SHEN_NAME('TNS3');
-static const uint32_t data_EB24[4] = {0x71C7C000U, 0, 0, 0};
-static const int32_t data_EB34[3] = {4, 7, 196608};
-static const shen_name data_EB40 = SHEN_NAME('TNS4');
-static const uint32_t data_EB44[4] = {0x71C7C000U, 0, 0, 0};
-static const int32_t data_EB54[3] = {4, 8, 327680};
-static const shen_name data_EB60 = SHEN_NAME('TNS5');
-static const uint32_t data_EB64[2] = {0x71C7C000U, 0};
-static const float data_EB6C[3] = {0.25f, 0.0f, 0.0f};
-static const int32_t data_EB78[2] = {3, 196608};
-static const shen_name data_EB80 = SHEN_NAME('HIK1');
-static const uint32_t data_EB84[5] = {0x71C7C000U, 0, 0, 0, 0};
-static const int32_t data_EB98[2] = {1, 196608};
-static const shen_name data_EBA0 = SHEN_NAME('HIK2');
-static const uint32_t data_EBA4[6] = {0x71C7C000U, 0, 0, 0, 0, 0};
-static const int32_t data_EBBC = 196608;
-static const shen_name data_EBC0 = SHEN_NAME('HIK3');
-static const uint32_t data_EBC4[5] = {0x71C7C000U, 0, 0, 0, 0};
-static const int32_t data_EBD8[2] = {2, 0};
-static const shen_name data_EBE0 = SHEN_NAME('ROU1');
-static const uint32_t data_EBE4[7] = {0x71C7C000U, 0, 0, 0, 0, 0, 0};
-static const shen_name data_EC00 = SHEN_NAME('ROU2');
-static const uint32_t data_EC04[7] = {0x71C7C000U, 0, 0, 0, 0, 0, 0};
-static const shen_name data_EC20 = SHEN_NAME('ROU3');
-static const uint32_t data_EC24[7] = {0x71C78000U, 0, 0, 0, 0, 0, 0};
-static const shen_name data_EC40 = SHEN_NAME('HAKO');
-static const uint32_t data_EC44[2] = {0x71C78000U, 0};
-static const float data_EC4C[4] = {0.5f, 0.0f, 0.0f, 0.0f};
-static const int32_t data_EC5C = 589824;
-static const shen_name data_EC60 = SHEN_NAME('KNIS');
-static const uint32_t data_EC64[6] = {0x71C78000U, 0, 0, 0, 0, 0};
-static const int32_t data_EC7C = 131072;
-static const shen_name data_EC80 = SHEN_NAME('MATI');
-static const uint32_t data_EC84[4] = {0x71C78000U, 0, 0, 0};
-static const int32_t data_EC94[3] = {55, 0, 0};
-static const shen_name data_ECA0 = SHEN_NAME('DAMY');
-static const uint32_t data_ECA4[7] = {0x71C70000U, 0, 0, 0, 0, 0, 0};
-static const shen_name data_ECC0[3] = {SHEN_NAME('MUKA'), 0, 0};
-static const float data_ECCC[5] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_ECE0[2] = {SHEN_NAME('MUKA'), 0};
-static const float data_ECE8[6] = {100.5f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_ED00[2] = {SHEN_NAME('MUKA'), 0};
-static const float data_ED08[6] = {-100.5f, 0.0f, 0.5f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_ED20[2] = {SHEN_NAME('MUKA'), 0};
-static const float data_ED28[6] = {100.5f, 0.0f, -0.5f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_ED40[2] = {SHEN_NAME('MUKA'), 0};
-static const float data_ED48[6] = {-100.5f, 0.0f, -0.5f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_ED60[2] = {SHEN_NAME('MUKA'), 0};
-static const float data_ED68[6] = {-100.75f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_ED80[2] = {SHEN_NAME('MUKA'), 0};
-static const float data_ED88[6] = {100.0f, 0.0f, 0.75f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_EDA0 = SHEN_NAME('FUDA');
-static const uint32_t data_EDA4[2] = {0x71C74000U, 0};
-static const float data_EDAC[4] = {0.05f, 0.0f, 0.0f, 0.0f};
-static const int32_t data_EDBC[2] = {-65536, 4};
-static const uint32_t data_EDC4 = 0x71C72AAAU;
-static const float data_EDC8[5] = {0.9224f, 1.2864f, 2.2065f, 0.0f, 0.0f};
-static const int32_t data_EDDC[3] = {-65536, 7, 0};
-static const float data_EDE8[5] = {3.9994f, 1.916f, 4.0053f, 0.0f, 0.0f};
-static const int32_t data_EDFC[2] = {-65536, 8};
-static const uint32_t data_EE04 = 0x71C74000U;
-static const float data_EE08[5] = {0.0342f, 1.3f, 2.9097f, 0.0f, 0.0f};
-static const int32_t data_EE1C[2] = {-65536, 12};
-static const uint32_t data_EE24 = 0x71C78000U;
-static const float data_EE28[5] = {3.4967f, 1.104f, 7.2008f, 0.0f, 0.0f};
-static const int32_t data_EE3C[2] = {-65536, 13};
-static const uint32_t data_EE44 = 0x71C7CE38U;
-static const float data_EE48[6] = {7.818f, 1.2f, 1.4687f, 0.0f, 0.0f, 0.0f};
-static const shen_name data_EE60 = SHEN_NAME('TIRA');
-static const uint32_t data_EE64[6] = {0x71C78000U, 0, 0, 0, 0, 0};
-static const int32_t data_EE7C = 65535;
-static char data_EE80[] = "TNS4SZAS";
-static const uint8_t pad_EE89[11] = {0};
-static const char str_EE94[] __attribute__((scn_string_literal)) = "TNS3KKAZ";
-static const uint8_t pad_EE9D[11] = {0};
-static const char str_EEA8[] __attribute__((scn_string_literal)) = "HIK3IROU6";
-static const uint8_t pad_EEB2[10] = {0};
-static const char str_EEBC[] __attribute__((scn_string_literal)) = "UBOXSAKA";
-static const uint8_t pad_EEC5[11] = {0};
-static const char str_EED0[] __attribute__((scn_string_literal)) = "HIK1KUSK";
-static const uint8_t pad_EED9[11] = {0};
-static const int32_t data_EEE4 = -1;
-static uint32_t data_EEE8 = 0x1B05A9;
-static const int32_t data_EEEC[3] = {0, 1836457, 0};
-static const shen_name data_EEF8[8] = {
-  SHEN_NAME('TNS0'), SHEN_NAME('TNS1'), SHEN_NAME('TNS2'), SHEN_NAME('TNS3'), SHEN_NAME('TNS4'), SHEN_NAME('HIK1'), SHEN_NAME('HIK2'),
-  SHEN_NAME('HIK3')
-};
-static const int32_t data_EF18[5] = {-1, 1508777, 0, 1508777, 0};
-static const shen_name data_EF2C[2] = {SHEN_NAME('BX4B'), SHEN_NAME('BX7B')};
-static const int32_t data_EF34[5] = {-1, 3474857, 0, 0, 3474857};
-static const shen_name data_EF48 = SHEN_NAME('KKAZ');
-static const int32_t data_EF4C[5] = {-1, 3409321, 0, 0, 0};
-static const shen_name data_EF60 = SHEN_NAME('KNIS');
-static const int32_t data_EF64[5] = {-1, 2688425, 0, 0, 2753961};
-static const shen_name data_EF78[4] = {SHEN_NAME('YAKU'), SHEN_NAME('YAK2'), SHEN_NAME('TUB2'), SHEN_NAME('TUB3')};
-static const int32_t data_EF88[5] = {-1, 3212713, 0, 0, 2819497};
-static const shen_name data_EF9C[2] = {SHEN_NAME('KUSK'), SHEN_NAME('BALL')};
-static const int32_t data_EFA4[5] = {-1, 2360745, 0, 0, 2885033};
-static const shen_name data_EFB8 = SHEN_NAME('UBOX');
-static const int32_t data_EFBC[5] = {-1, 2229673, 0, 0, 2229673};
-static const shen_name data_EFD0 = SHEN_NAME('SAKA');
-static const int32_t data_EFD4[5] = {-1, 3081641, 0, 3016105, 3147177};
-static const shen_name data_EFE8 = SHEN_NAME('TNS5');
-static const int32_t data_EFEC[5] = {-1, 2295209, 0, 0, 2229673};
-static const shen_name data_F000 = SHEN_NAME('BNT0');
-static const int32_t data_F004[5] = {-1, 3343785, 0, 0, 2819497};
-static const shen_name data_F018 = SHEN_NAME('BOOK');
-static const int32_t data_F01C[2] = {-1, -1};
-static const uint8_t data_F024[20] = {0};
-typedef struct Row_F038 { int32_t w0; int32_t w1; int32_t w2; int32_t w3; float w4; float w5; int32_t w6; } Row_F038;
-static const Row_F038 data_F038[15] = {
-  {16384, 0, -1, 0, 0.0f, 0.0f, 0},
-  {0, 0, 1, 0, 0.0f, 0.0f, 0},
-  {16384, 0, -1, 0, 0.0f, 0.0f, 0},
-  {0, 0, 2, 0, -0.15f, -0.05f, 0},
-  {0, 0, -1, 0, 0.0f, 0.0f, 0},
-  {0, 0, 3, 0, 0.0f, 0.05f, 0},
-  {0, 0, -1, 0, 0.0f, 0.0f, 0},
-  {0, 0, 4, 0, 0.0f, 0.05f, 0},
-  {0, 0, -1, 0, 0.0f, 0.0f, 0},
-  {0, 0, 5, 0, 0.0f, 0.05f, 0},
-  {0, 0, -1, 0, 0.0f, 0.0f, 0},
-  {0, 0, 6, 0, 0.0f, 0.05f, 0},
-  {0, 0, -1, 0, 0.0f, 0.0f, 0},
-  {0, 0, 7, 0, 0.0f, 0.05f, 0},
-  {0, 0, -1, 0, 0.0f, 0.0f, 0}
-};
-static const int32_t data_F1DC[2] = {0, 0};
-static char data_F1E4[] = "$KYOM400G.MT5";
-static const char str_F1F2[] __attribute__((scn_string_literal)) = "$KYOM401G.MT5";
-static const char str_F200[] __attribute__((scn_string_literal)) = "$TIKM4T0G.MT5";
-static const char str_F20E[] __attribute__((scn_string_literal)) = "$TIKM4T1G.MT5";
-static const char str_F21C[] __attribute__((scn_string_literal)) = "$TIKM4T2G.MT5";
-static const char str_F22A[] __attribute__((scn_string_literal)) = "$TIKM4T3G.MT5";
-static const char str_F238[] __attribute__((scn_string_literal)) = "$TIKM4T4G.MT5";
-static const char str_F246[] __attribute__((scn_string_literal)) = "$TIKM4T5G.MT5";
-static const uint8_t pad_F254[4] = {0};
-static const Vector4 data_F258 = {.x = 0.78f, .y = 0.82f, .z = 0.59f, .w = 0.46f};
-static const float data_F268[19] = {
-  0.89f, 0.89f, 0.13f, 0.39f, 0.28f, 0.14f, 1.1f, 1.84f, 0.93f, 0.58f, 4.1813f, 0.996f, 0.7922f, 1000.0f, 1000.0f, 1000.0f, 1000.0f, 1000.0f, 1000.0f
-};
-static const char data_F2B4[28] __attribute__((scn_string_literal)) = "Map Start!!!!!!!!!!!!!!!!!\012";
-static const char data_F2D0[21] __attribute__((scn_string_literal)) = "このアイテムもってる";
-static const char data_F2E5[19] __attribute__((scn_string_literal)) = "tansu naka = %d\012";
-static const Vector3 data_F2F8 = {.x = 0.116f, .y = -0.005f, .z = -0.018f};
-static const Vector3i data_F304 = {.x = 1455, .y = 14196, .z = 0};
-static const Vector3 data_F310 = {.x = 0.7041f, .y = 0.0f, .z = 5.6678f};
-static const Vector3i data_F31C = {.x = 0, .y = 16384, .z = 0};
-static const Vector3 data_F328 = {.x = 0.029f, .y = -0.226f, .z = -0.015f};
-static const Vector3i data_F334 = {.x = 65171, .y = 32395, .z = 63170};
-static const Vector3 data_F340 = {.x = 1000.0f, .y = 1000.0f, .z = 1000.0f};
-static const char data_F34C[10] __attribute__((scn_string_literal)) = "E1012A272";
-static const char data_F356[10] __attribute__((scn_string_literal)) = "E1012A014";
-static const char data_F360[10] __attribute__((scn_string_literal)) = "E1012A271";
-static const char data_F36A[10] __attribute__((scn_string_literal)) = "E1012A288";
-static const char data_F374[10] __attribute__((scn_string_literal)) = "E1012A289";
-static const char data_F37E[10] __attribute__((scn_string_literal)) = "E1012A112";
-static const char data_F388[10] __attribute__((scn_string_literal)) = "E1012A198";
-static const char data_F392[10] __attribute__((scn_string_literal)) = "E1012A135";
-static const char data_F39C[10] __attribute__((scn_string_literal)) = "E1012A066";
-static const char data_F3A6[10] __attribute__((scn_string_literal)) = "E1012A190";
-static const char data_F3B0[10] __attribute__((scn_string_literal)) = "E1012A192";
-static const char data_F3BA[21] __attribute__((scn_string_literal)) = "FUKUSAN  frame = %d\012";
-static const char data_F3CF[21] __attribute__((scn_string_literal)) = "KAITYUU nokori = %d\012";
-static const char data_F3E4[10] __attribute__((scn_string_literal)) = "E1012A101";
-static const char data_F3EE[10] __attribute__((scn_string_literal)) = "E1012A103";
-static const char data_F3F8[10] __attribute__((scn_string_literal)) = "E1012A167";
-static const char data_F402[10] __attribute__((scn_string_literal)) = "E1012A168";
-static const char data_F40C[10] __attribute__((scn_string_literal)) = "E1012A169";
-static const char data_F416[10] __attribute__((scn_string_literal)) = "E1012A101";
-static const char data_F420[10] __attribute__((scn_string_literal)) = "E1012A103";
-static const char data_F42A[10] __attribute__((scn_string_literal)) = "E1012A092";
-static const char data_F434[10] __attribute__((scn_string_literal)) = "E1012A093";
-static const char data_F43E[10] __attribute__((scn_string_literal)) = "E1012A094";
-static const char data_F448[10] __attribute__((scn_string_literal)) = "E1012A095";
-static const char data_F452[10] __attribute__((scn_string_literal)) = "E1012A096";
-static const char data_F45C[10] __attribute__((scn_string_literal)) = "E1012A097";
-static const char data_F466[10] __attribute__((scn_string_literal)) = "E1012A098";
-static const char data_F470[10] __attribute__((scn_string_literal)) = "E1012A099";
-static const char data_F47A[10] __attribute__((scn_string_literal)) = "E1012A100";
-static const char data_F484[10] __attribute__((scn_string_literal)) = "E1012A103";
-static const char data_F48E[10] __attribute__((scn_string_literal)) = "E1012A104";
-static const char data_F498[10] __attribute__((scn_string_literal)) = "E1012A105";
-static const char data_F4A2[10] __attribute__((scn_string_literal)) = "E1012A106";
-static const char data_F4AC[10] __attribute__((scn_string_literal)) = "E1012A107";
-static const char data_F4B6[10] __attribute__((scn_string_literal)) = "E1012A085";
-static const char data_F4C0[10] __attribute__((scn_string_literal)) = "E1012A084";
-static const char data_F4CA[10] __attribute__((scn_string_literal)) = "E1012A086";
-static const Vector3 data_F4D4 = {.x = 6.873f, .y = 0.0f, .z = 6.6538f};
-static const Vector3 data_F4E0 = {.x = 6.921f, .y = 0.0f, .z = 6.5531f};
-typedef struct Row_F4EC { float w0; int32_t w1; float w2; } Row_F4EC;
-static const Row_F4EC data_F4EC[2] = {
-  {1000.0f, 0, 0.0f},
-  {3.0289f, 0, 6.1558f}
-};
-static const char data_F504[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F50E[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F518[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F522[10] __attribute__((scn_string_literal)) = "E1012A019";
-static const char data_F52C[10] __attribute__((scn_string_literal)) = "E1012A057";
-static const char data_F536[10] __attribute__((scn_string_literal)) = "E1012A058";
-static const char data_F540[10] __attribute__((scn_string_literal)) = "E1012A236";
-static const char data_F54A[10] __attribute__((scn_string_literal)) = "E1012A256";
-static const char data_F554[10] __attribute__((scn_string_literal)) = "E1012A257";
-static const char data_F55E[10] __attribute__((scn_string_literal)) = "E1012A061";
-static const char data_F568[10] __attribute__((scn_string_literal)) = "E1012A062";
-static const char data_F572[10] __attribute__((scn_string_literal)) = "E1012A110";
-static const char data_F57C[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F586[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F590[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F59A[10] __attribute__((scn_string_literal)) = "E1012A040";
-static const char data_F5A4[10] __attribute__((scn_string_literal)) = "E1012A182";
-static const char data_F5AE[10] __attribute__((scn_string_literal)) = "E1012A183";
-static const char data_F5B8[10] __attribute__((scn_string_literal)) = "E1012A184";
-static const char data_F5C2[10] __attribute__((scn_string_literal)) = "E1012A185";
-static const char data_F5CC[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F5D6[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F5E0[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F5EA[10] __attribute__((scn_string_literal)) = "E1012A194";
-static const char data_F5F4[10] __attribute__((scn_string_literal)) = "E1012A198";
-static const char data_F5FE[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F608[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F612[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F61C[10] __attribute__((scn_string_literal)) = "E1012A195";
-static const char data_F626[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F630[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F63A[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F644[10] __attribute__((scn_string_literal)) = "E1012A197";
-static const char data_F64E[10] __attribute__((scn_string_literal)) = "E1012A193";
-static const char data_F658[10] __attribute__((scn_string_literal)) = "E1012A191";
-static const char data_F662[10] __attribute__((scn_string_literal)) = "E1012A194";
-static const char data_F66C[10] __attribute__((scn_string_literal)) = "E1012A198";
-static const char data_F676[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F680[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F68A[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F694[10] __attribute__((scn_string_literal)) = "E1012A195";
-static const char data_F69E[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F6A8[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F6B2[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F6BC[10] __attribute__((scn_string_literal)) = "E1012A197";
-static const char data_F6C6[10] __attribute__((scn_string_literal)) = "E1012A193";
-static const char data_F6D0[10] __attribute__((scn_string_literal)) = "E1012A191";
-static const char data_F6DA[10] __attribute__((scn_string_literal)) = "E1012A194";
-static const char data_F6E4[10] __attribute__((scn_string_literal)) = "E1012A198";
-static const char data_F6EE[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F6F8[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F702[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F70C[10] __attribute__((scn_string_literal)) = "E1012A195";
-static const char data_F716[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F720[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F72A[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F734[10] __attribute__((scn_string_literal)) = "E1012A197";
-static const char data_F73E[10] __attribute__((scn_string_literal)) = "E1012A193";
-static const char data_F748[10] __attribute__((scn_string_literal)) = "E1012A191";
-static const char data_F752[10] __attribute__((scn_string_literal)) = "E1012A194";
-static const char data_F75C[10] __attribute__((scn_string_literal)) = "E1012A198";
-static const char data_F766[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F770[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F77A[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F784[10] __attribute__((scn_string_literal)) = "E1012A195";
-static const char data_F78E[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F798[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F7A2[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F7AC[10] __attribute__((scn_string_literal)) = "E1012A197";
-static const char data_F7B6[10] __attribute__((scn_string_literal)) = "E1012A193";
-static const char data_F7C0[10] __attribute__((scn_string_literal)) = "E1012A191";
-static const char data_F7CA[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F7D4[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F7DE[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F7E8[10] __attribute__((scn_string_literal)) = "E1012A187";
-static const char data_F7F2[10] __attribute__((scn_string_literal)) = "E1012A188";
-static const char data_F7FC[10] __attribute__((scn_string_literal)) = "E1012A189";
-static const char data_F806[10] __attribute__((scn_string_literal)) = "E1012A138";
-static const char data_F810[10] __attribute__((scn_string_literal)) = "E1012A139";
-static const char data_F81A[10] __attribute__((scn_string_literal)) = "E1012A140";
-static const char data_F824[10] __attribute__((scn_string_literal)) = "E1012A131";
-static const char data_F82E[10] __attribute__((scn_string_literal)) = "E1012A137";
-static const char data_F838[10] __attribute__((scn_string_literal)) = "E1012A141";
-static const char data_F842[10] __attribute__((scn_string_literal)) = "E1012A142";
-static const char data_F84C[10] __attribute__((scn_string_literal)) = "E1012A268";
-static const char data_F856[10] __attribute__((scn_string_literal)) = "E1012A295";
-static const char data_F860[10] __attribute__((scn_string_literal)) = "E1012A144";
-static const char data_F86A[10] __attribute__((scn_string_literal)) = "E1012A144";
-static const char data_F874[10] __attribute__((scn_string_literal)) = "E1012A079";
-static const char data_F87E[10] __attribute__((scn_string_literal)) = "E1012A080";
-static const char data_F888[10] __attribute__((scn_string_literal)) = "E1012A180";
-static const char data_F892[10] __attribute__((scn_string_literal)) = "E1012A298";
-static const char data_F89C[10] __attribute__((scn_string_literal)) = "E1012A290";
-static const char data_F8A6[10] __attribute__((scn_string_literal)) = "E1012A293";
-static const char data_F8B0[10] __attribute__((scn_string_literal)) = "E1012A294";
-static const char data_F8BA[10] __attribute__((scn_string_literal)) = "E1012A295";
-static const char data_F8C4[10] __attribute__((scn_string_literal)) = "E1012A254";
-static const char data_F8CE[10] __attribute__((scn_string_literal)) = "E1012A153";
-static const char data_F8D8[10] __attribute__((scn_string_literal)) = "E1012A299";
-static const char data_F8E2[10] __attribute__((scn_string_literal)) = "E1012A300";
-static const char data_F8EC[10] __attribute__((scn_string_literal)) = "E1012A274";
-static const char data_F8F6[10] __attribute__((scn_string_literal)) = "E1012A275";
-static const char data_F900[10] __attribute__((scn_string_literal)) = "E1012A158";
-static const char data_F90A[10] __attribute__((scn_string_literal)) = "E1012A159";
-static const char data_F914[10] __attribute__((scn_string_literal)) = "E1012A296";
-static const char data_F91E[10] __attribute__((scn_string_literal)) = "E1012A297";
-static const char data_F928[10] __attribute__((scn_string_literal)) = "E1012A164";
-static const char data_F932[10] __attribute__((scn_string_literal)) = "E1012A135";
-static const char data_F93C[10] __attribute__((scn_string_literal)) = "E1012A150";
-static const char data_F946[10] __attribute__((scn_string_literal)) = "E1012A259";
-static const char data_F950[12] __attribute__((scn_string_literal)) = "E1012A260";
-static const Vector3 data_F95C = {.x = 2.7134f, .y = 0.0f, .z = 6.8502f};
-static const Vector3 data_F968 = {.x = 7.7508f, .y = 0.0f, .z = 0.6502f};
-static const char data_F974[32] = "HUKU2 END\012\000\000\001\000\005\000\261\277\214\276\000\000\200@\000\000\200?\000\000\003";
-static const Vector3 data_F994 = {.x = 1000.0f, .y = 0.0f, .z = 0.0f};
-typedef struct Row_F9A0 { float w0; int32_t w1; float w2; } Row_F9A0;
-static const Row_F9A0 data_F9A0[2] = {
-  {3.9047f, 0, 3.4063f},
-  {-6.3f, 0, 4.0f}
-};
-static const char data_F9B8[10] __attribute__((scn_string_literal)) = "E1012B065";
-static const char data_F9C2[10] __attribute__((scn_string_literal)) = "E1012B266";
-static const char data_F9CC[10] __attribute__((scn_string_literal)) = "E1012A230";
-static const char data_F9D6[10] __attribute__((scn_string_literal)) = "E1012B059";
-static const char data_F9E0[10] __attribute__((scn_string_literal)) = "E1012B060";
-static const char data_F9EA[10] __attribute__((scn_string_literal)) = "E1012A250";
-static const char data_F9F4[10] __attribute__((scn_string_literal)) = "E1012A251";
-static const char data_F9FE[90] = "E1012B061\000\232\231\311\300\037\205k\276ff&@^K\330?\000\000\000\000\016\276\230@\001\000\005\000\232\231\311\300\000\000\200@\000\000\200?\002\000\005\000\261\277\214\276\000\000\200@\000\000\200?\000\000\003\000\002\000\005\000-C\034@\000\000\200@\000\000\200?\000\000\003";
-static const char data_FA58[10] __attribute__((scn_string_literal)) = "E1012B038";
-static const char data_FA62[10] __attribute__((scn_string_literal)) = "E1012A242";
-static const char data_FA6C[10] __attribute__((scn_string_literal)) = "E1012B002";
-static const char data_FA76[10] __attribute__((scn_string_literal)) = "E1012B003";
-static const char data_FA80[10] __attribute__((scn_string_literal)) = "E1012A212";
-static const char data_FA8A[10] __attribute__((scn_string_literal)) = "E1012B004";
-static const char data_FA94[24] = "E1012A213\000\000\000\232\231\311\300\037\205k\276ff&@";
-static const Vector3 data_FAAC = {.x = 1.6898f, .y = 0.0f, .z = 4.7732f};
-static const int32_t data_FAB8 = 327681;
-static const float data_FABC[3] = {-6.3f, 4.0f, 1.0f};
-static const int32_t data_FAC8 = 327682;
-static const float data_FACC[3] = {-0.2749f, 4.0f, 1.0f};
-static const int32_t data_FAD8[2] = {196608, 327682};
-static const float data_FAE0[3] = {2.4416f, 4.0f, 1.0f};
-static const int32_t data_FAEC[11] = {196608, 0, 5825, 63715, 0, 60074, 0, 56433, 58254, 0, 52792};
-static const char data_FB18[10] __attribute__((scn_string_literal)) = "E1012B067";
-static const char data_FB22[10] __attribute__((scn_string_literal)) = "E1012A242";
-static const char data_FB2C[10] __attribute__((scn_string_literal)) = "E1012B068";
-static const char data_FB36[10] __attribute__((scn_string_literal)) = "E1012A243";
-static const uint32_t data_FB40 = 327681;
-static const float data_FB44[3] = {4.1198f, 0.2785f, 1.0f};
-static const int32_t data_FB50 = 196608;
-static const Vector3 data_FB54 = {.x = 4.6898f, .y = 0.0f, .z = 3.4732f};
-static const Vector3 data_FB60 = {.x = 4.6698f, .y = 0.0f, .z = 1.4932f};
-static const uint32_t data_FB6C = 0x4091EB85;
-static const float data_FB70[2] = {0.8f, 1.13f};
-static const char data_FB78[10] __attribute__((scn_string_literal)) = "E1012B051";
-static const char data_FB82[10] __attribute__((scn_string_literal)) = "E1012B052";
-static const char data_FB8C[10] __attribute__((scn_string_literal)) = "E1012A245";
-static const char data_FB96[10] __attribute__((scn_string_literal)) = "E1012A246";
-static const Vector3 data_FBA0 = {.x = 0.11f, .y = 0.06f, .z = 0.013f};
-static const Vector3i data_FBAC = {.x = 18022, .y = 46785, .z = 46057};
-static const char data_FBB8[10] __attribute__((scn_string_literal)) = "E1012B051";
-static const char data_FBC2[30] = "E1012A244\000\001\000\005\0003\304\247@=\012\327?\000\000\200?\000\000\003";
-static const Vector3 data_FBE0 = {.x = 5.8918f, .y = 0.0f, .z = 2.7596f};
-static const Vector3i data_FBEC = {.x = 0, .y = 1820, .z = 0};
-static const float data_FBF8[3] = {5.8351f, 0.0f, 2.3668f};
-static const Vector3 data_FC04 = {.x = 5.4418f, .y = 0.0f, .z = 1.8596f};
-static const Vector3i data_FC10 = {.x = 0, .y = 54613, .z = 0};
-static const Vector3 data_FC1C = {.x = 1000.0f, .y = 0.0f, .z = 0.0f};
-static const char data_FC28[10] __attribute__((scn_string_literal)) = "E1012B056";
-static const char data_FC32[10] __attribute__((scn_string_literal)) = "E1012A230";
-static const char data_FC3C[10] __attribute__((scn_string_literal)) = "E1012B057";
-static const char data_FC46[10] __attribute__((scn_string_literal)) = "E1012A248";
-static const char data_FC50[10] __attribute__((scn_string_literal)) = "E1012B058";
-static const char data_FC5A[10] __attribute__((scn_string_literal)) = "E1012A249";
-static const char data_FC64[10] __attribute__((scn_string_literal)) = "E1012B059";
-static const char data_FC6E[10] __attribute__((scn_string_literal)) = "E1012A250";
-static const char data_FC78[10] __attribute__((scn_string_literal)) = "E1012B060";
-static const char data_FC82[10] __attribute__((scn_string_literal)) = "E1012A251";
-static const char data_FC8C[12] __attribute__((scn_string_literal)) = "E1012B061";
-static const Vector3 data_FC98 = {.x = -6.4f, .y = -0.29f, .z = -5.64f};
-static const Vector3 data_FCA4 = {.x = -6.4f, .y = -0.29f, .z = -6.24f};
-static const Vector3 data_FCB0 = {.x = -6.26f, .y = 2.57f, .z = -9.31f};
-static const Vector3 data_FCBC = {.x = -6.13f, .y = 2.12f, .z = -9.07f};
-static const Vector3 data_FCC8 = {.x = -5.98f, .y = 2.73f, .z = -7.63f};
-static const Vector3 data_FCD4 = {.x = -6.84f, .y = 2.73f, .z = -7.69f};
-static const Vector3i data_FCE0 = {.x = 0, .y = 0, .z = 0};
-static const Vector3i data_FCEC = {.x = 52064, .y = 31857, .z = 0};
-static const Vector3i data_FCF8 = {.x = 12925, .y = 34042, .z = 2366};
-static const Vector3i data_FD04 = {.x = 49152, .y = 62805, .z = 910};
-static const Vector4 data_FD10 = {.x = 0.4f, .y = 0.4f, .z = 0.4f, .w = 0.4f};
-static const char data_FD20[10] __attribute__((scn_string_literal)) = "E1012A174";
-static const char data_FD2A[10] __attribute__((scn_string_literal)) = "E1012B036";
-static const char data_FD34[10] __attribute__((scn_string_literal)) = "E1012A232";
-static const char data_FD3E[10] __attribute__((scn_string_literal)) = "E1012B037";
-static const char data_FD48[12] __attribute__((scn_string_literal)) = "E1012A233";
-static const int8_t data_FD54[12] = {3, 10, 17, 24, 31, 0, 0, 0, 0, 0, 0, 0};
-static const int8_t data_FD60[12] = {7, 14, 21, 28, 0, 0, 0, 0, 0, 0, 0, 0};
-static const int8_t data_FD6C[12] = {4, 11, 18, 25, 0, 0, 0, 0, 0, 0, 0, 0};
-static const int8_t data_FD78[9] = {4, 11, 18, 25, 0, 0, 0, 0, 0};
-static const char data_FD81[59] __attribute__((scn_string_literal)) = " : %d %d %d %d %d %d : %d %d %d %d : %d %d %d %d : %d %d \012";
-static const char data_FDBC[12] __attribute__((scn_string_literal)) = "lacky : %d\012";
-static const Vector4 data_FDC8 = {.x = 1.0f, .y = 0.82f, .z = 0.59f, .w = 0.46f};
-static const float data_FDD8[11] = {0.71f, 0.71f, 1.0f, 0.62f, 0.44f, 0.11f, 0.3f, 3.2f, 4.01f, 1.83f, 3.98f};
-static const Vector4 data_FE04 = {.x = 0.09f, .y = 0.09f, .z = 0.09f, .w = 0.09f};
-static const Vector4 data_FE14 = {.x = 0.16f, .y = 0.16f, .z = 0.16f, .w = 0.16f};
-static const Vector4 data_FE24 = {.x = 0.2f, .y = 0.2f, .z = 0.2f, .w = 0.2f};
-static uint32_t data_FE34 = 0x3DB851EC;
-static const float data_FE38[10] = {0.39f, 0.28f, 0.14f, 0.8f, 3.0f, 0.71f, 0.58f, 7.352f, 0.977f, 6.9672f};
-static uint32_t data_FE60 = 0x3DB851EC;
-static const float data_FE64[10] = {0.39f, 0.28f, 0.14f, 0.8f, 3.0f, 0.71f, 0.58f, 7.8153f, 0.6f, 1.715f};
-static uint32_t data_FE8C = 0x3DB851EC;
-static const float data_FE90[10] = {0.39f, 0.28f, 0.14f, 0.8f, 3.0f, 0.93f, 0.58f, 1.758f, 0.922f, 7.1292f};
-static uint32_t data_FEB8 = 0x3DB851EC;
-static const float data_FEBC[46] = {
-  0.39f, 0.28f, 0.14f, 0.8f, 3.0f, 0.93f, 0.58f, 0.864f, 1.058f, 1.0872f, 7.351f, 0.856f, 6.9662f, 7.351f, 0.856f, 6.9662f, 7.351f, 0.856f, 6.9662f,
-  7.8153f, 0.6f, 1.7152f, 7.8153f, 0.6f, 1.7152f, 7.8153f, 0.6f, 1.7152f, 1.758f, 0.863f, 7.1292f, 1.758f, 0.858f, 7.1292f, 1.758f, 0.858f, 7.1292f,
-  0.864f, 1.058f, 1.0872f, 0.864f, 1.058f, 1.0872f, 0.864f, 1.058f, 1.0872f
-};
-static const uint32_t data_FF74 = SHEN_NAME('RO11');
-static const shen_name data_FF78[3] = {SHEN_NAME('RO21'), SHEN_NAME('RO31'), SHEN_NAME('RO41')};
-static const uint32_t data_FF84 = SHEN_NAME('FIR1');
-static const shen_name data_FF88[3] = {SHEN_NAME('FIR2'), SHEN_NAME('FIR3'), SHEN_NAME('FIR5')};
-static const float data_FF94[3] = {-6.4407f, -0.23f, -4.8865f};
-static const Vector3 data_FFA0 = {.x = -9.44f, .y = 0.0f, .z = -3.58f};
-static const Vector3 data_FFAC = {.x = 17.0f, .y = 0.0f, .z = 9.11f};
-static const char data_FFB8[12] __attribute__((scn_string_literal)) = "E1012A287";
-static const Vector3 data_FFC4 = {.x = -6.4407f, .y = -0.23f, .z = -4.8865f};
-static const Vector3 data_FFD0 = {.x = 0.109f, .y = 0.78f, .z = 5.4f};
-static const Vector3i data_FFDC = {.x = 0, .y = 16384, .z = 34588};
-static const char data_FFE8[10] __attribute__((scn_string_literal)) = "E1012A083";
-static const char data_FFF2[22] = "E1012A288\000RI}?\000\000\000\000\031s①";
-static const Vector3 data_10008 = {.x = 0.8894f, .y = 0.0f, .z = 5.6328f};
-static const Vector3 data_10014 = {.x = 0.109f, .y = 0.78f, .z = 5.4f};
-static const Vector3i data_10020 = {.x = 0, .y = 16384, .z = 34588};
-static const Vector3 data_1002C = {.x = 6.27f, .y = 0.08f, .z = 0.97f};
-static const Vector3 data_10038 = {.x = -0.38f, .y = 0.0f, .z = 0.93f};
-static const char data_10044[10] __attribute__((scn_string_literal)) = "E1012A040";
-static const char data_1004E[10] __attribute__((scn_string_literal)) = "E1012A041";
-static const char data_10058[12] __attribute__((scn_string_literal)) = "E1012A042";
-static const Vector3 data_10064 = {.x = 0.029f, .y = -0.226f, .z = -0.015f};
-static const Vector3i data_10070 = {.x = 182, .y = 32395, .z = 63170};
-static const Vector3 data_1007C = {.x = 6.27f, .y = 0.08f, .z = 0.97f};
-static const Vector3 data_10088 = {.x = -0.38f, .y = 0.0f, .z = 0.93f};
-static const char data_10094[12] __attribute__((scn_string_literal)) = "E1012A043";
-static const Vector3 data_100A0 = {.x = 6.5542f, .y = 0.1558f, .z = -0.2961f};
-static const char data_100AC[12] __attribute__((scn_string_literal)) = "E1012A045";
-static const Vector3 data_100B8 = {.x = 6.5542f, .y = 0.1558f, .z = -0.2961f};
-static const Vector3i data_100C4 = {.x = 0, .y = 0, .z = 0};
-static const Vector3 data_100D0 = {.x = 6.52369f, .y = 0.0f, .z = 0.76372f};
-static const Vector3i data_100DC = {.x = 0, .y = 16384, .z = 0};
-typedef struct Row_100E8 { float w0; float w1; float w2; int32_t w3; int32_t w4; int32_t w5; } Row_100E8;
-static const Row_100E8 data_100E8[3] = {
-  {0.164f, 0.001f, -0.026f, 14848, 37983, 63169},
-  {0.198f, 0.039f, -0.094f, 14848, 48903, 57890},
-  {0.205f, -0.03f, -0.086f, 63532, 65353, 4173}
-};
-static const int32_t data_10130[3] = {0, 8736, -6551};
-static const Vector3 data_1013C = {.x = 0.147f, .y = 0.047f, .z = -0.041f};
-static const Vector3i data_10148 = {.x = 58434, .y = 60801, .z = 8359};
-static const Vector3 data_10154 = {.x = 7.0863f, .y = 0.0492f, .z = 0.7153f};
-static const Vector3i data_10160 = {.x = 16932, .y = 32241, .z = 16376};
-static const float data_1016C[6] = {6.2496f, 0.032f, 1.0096f, 0.0f, 0.0f, 0.0f};
-static const Vector3 data_10184 = {.x = 0.107f, .y = -0.026f, .z = 0.022f};
-static const Vector3i data_10190 = {.x = 15281, .y = 52974, .z = 16729};
-static const Vector3 data_1019C = {.x = 6.27f, .y = 0.08f, .z = 0.97f};
-static const Vector3 data_101A8 = {.x = -0.38f, .y = 0.0f, .z = 0.93f};
-static const char data_101B4[10] __attribute__((scn_string_literal)) = "E1012A276";
-static const char data_101BE[10] __attribute__((scn_string_literal)) = "E1012A278";
-static const char data_101C8[10] __attribute__((scn_string_literal)) = "E1012A279";
-static const char data_101D2[10] __attribute__((scn_string_literal)) = "E1012A081";
-static const uint32_t data_101DC = SHEN_NAME('HN01');
-static const shen_name data_101E0[17] = {
-  SHEN_NAME('HN02'), SHEN_NAME('HN03'), SHEN_NAME('HN04'), SHEN_NAME('HN05'), SHEN_NAME('HN06'), SHEN_NAME('HN07'), SHEN_NAME('HN08'),
-  SHEN_NAME('HN09'), SHEN_NAME('HN10'), SHEN_NAME('HN11'), SHEN_NAME('HN12'), SHEN_NAME('HN13'), SHEN_NAME('HN14'), SHEN_NAME('HN15'),
-  SHEN_NAME('HN16'), SHEN_NAME('HN17'), SHEN_NAME('HN18')
-};
-static const Vector3 data_10224 = {.x = 1000.0f, .y = 0.0f, .z = 0.0f};
-static const char data_10230[6] __attribute__((scn_string_literal)) = "MPK00";
-static const char data_10236[] __attribute__((scn_string_literal)) = "DYN2";
-static const uint8_t data_1023B[13] = {
-  0x00, 0xE1, 0x0B, 0x7F, 0x40, 0x7B, 0x14, 0xFE, 0x3F, 0x78, 0x0B, 0x80, 0x40
-};
-static const Vector3 data_10248 = {.x = 3.5899f, .y = 0.006f, .z = 4.095f};
-static const Vector3i data_10254 = {.x = 0, .y = 54613, .z = 0};
-static const Vector3 data_10260 = {.x = 0.156f, .y = -0.016f, .z = 0.026f};
-static const Vector3i data_1026C = {.x = 64623, .y = 0, .z = 49503};
-static const char data_10278[60] = "E1012A253\000\000\000\221\355\374>\000\000\000\000\370S\003\277\356\016\000\000\000\000\000\000\256%\000\000X9\364>%\006\001>\236\357\347\276\345\330\000\000\334\302\000\000\2259";
-static const Vector3 data_102B4 = {.x = 7.1f, .y = 0.51f, .z = 6.04f};
-static const Vector3 data_102C0 = {.x = 0.04f, .y = 0.03f, .z = -1.0f};
-static const float data_102CC[3] = {0.455f, 0.033f, -0.521f};
-static const int32_t data_102D8[3] = {4004, 363, 9646};
-static const Vector3 data_102E4 = {.x = 0.173f, .y = 0.031f, .z = -0.006f};
-static const Vector3i data_102F0 = {.x = 59530, .y = 45151, .z = 63170};
-static const Vector3 data_102FC = {.x = 6.9213f, .y = 0.0f, .z = 6.7797f};
-static const char data_10308[12] __attribute__((scn_string_literal)) = "E1012A074";
-static const Vector3 data_10314 = {.x = 6.819f, .y = -0.1f, .z = 6.8966f};
-static const Vector3 data_10320 = {.x = 7.2565f, .y = -0.1f, .z = 1.6284f};
-static const Vector3 data_1032C = {.x = 1.8398f, .y = -0.1f, .z = 6.531f};
-static const Vector3 data_10338 = {.x = 1.3389f, .y = 0.0f, .z = 1.4422f};
-static const Vector3i data_10344 = {.x = 0, .y = 49152, .z = 0};
-static const Vector3i data_10350 = {.x = 0, .y = 49152, .z = 0};
-static const Vector3i data_1035C = {.x = 0, .y = 32768, .z = 0};
-static const Vector3i data_10368 = {.x = 0, .y = 16384, .z = 0};
-static const Vector3 data_10374 = {.x = 0.144f, .y = -0.037f, .z = 0.032f};
-static const Vector3 data_10380 = {.x = 0.134f, .y = -0.013f, .z = 0.036f};
-static const Vector3 data_1038C = {.x = 0.138f, .y = -0.006f, .z = 0.039f};
-static const Vector3 data_10398 = {.x = 0.11f, .y = -0.006f, .z = 0.044f};
-static const Vector3i data_103A4 = {.x = 36352, .y = 45056, .z = 34980};
-static const Vector3i data_103B0 = {.x = 0, .y = 22755, .z = 8823};
-static const Vector3i data_103BC = {.x = 35419, .y = 35845, .z = 39298};
-static const Vector3i data_103C8 = {.x = 63493, .y = 35333, .z = 3629};
-static const uint32_t data_103D4 = 0x40E7020C;
-static const float data_103D8[2] = {0.96f, 6.958f};
-static const uint32_t data_103E0 = 0x40F56873;
-static const float data_103E4[2] = {0.71f, 1.648f};
-static const uint32_t data_103EC = 0x3FE33333;
-static const float data_103F0[2] = {0.937f, 6.99f};
-static const uint32_t data_103F8 = 0x3F7D2F1B;
-static const float data_103FC[2] = {1.13f, 1.138f};
-static const Vector3 data_10404 = {.x = 0.15352f, .y = 0.00543f, .z = -0.03765f};
-static const Vector3i data_10410 = {.x = 16208, .y = 6632, .z = -531};
-static const float data_1041C[3] = {0.126f, 0.01f, -0.078f};
-static const int32_t data_10428[3] = {1274, 726, 12921};
-static const Vector3 data_10434 = {.x = 0.12602f, .y = 0.0194f, .z = -0.07814f};
-static const Vector3i data_10440 = {.x = 7100, .y = -20670, .z = -5280};
-static const Vector3 data_1044C = {.x = 6.78512f, .y = 0.0f, .z = 6.93103f};
-static const Vector3 data_10458 = {.x = 7.20058f, .y = 0.0f, .z = 1.6771f};
-static const Vector3 data_10464 = {.x = 1.79375f, .y = 0.0f, .z = 6.55893f};
-static const Vector3 data_10470 = {.x = 1.39775f, .y = 0.0f, .z = 1.30095f};
-static const Vector3 data_1047C = {.x = 0.135f, .y = 0.005f, .z = -0.11f};
-static const Vector3i data_10488 = {.x = 0, .y = 49152, .z = 0};
-static const Vector3i data_10494 = {.x = 0, .y = 49152, .z = 0};
-static const Vector3i data_104A0 = {.x = 0, .y = 32768, .z = 0};
-static const Vector3i data_104AC = {.x = 0, .y = 16384, .z = 0};
-static const Vector3i data_104B8 = {.x = 60803, .y = 58074, .z = 363};
-static const Vector3 data_104C4 = {.x = 7.63f, .y = 0.85f, .z = 1.78f};
-static const uint8_t pad_104D0[12] = {0};
-static const Vector3 data_104DC = {.x = 6.8346f, .y = 1.1817f, .z = 4.2377f};
-static const uint32_t data_104E8 = 0x40D48312;
-static const float data_104EC[2] = {0.001f, 2.976f};
-static const Vector3 data_104F4 = {.x = 0.246f, .y = -0.111f, .z = -0.011f};
-static const Vector3i data_10500 = {.x = 47698, .y = 35852, .z = 54069};
-static const Vector3 data_1050C = {.x = 6.3842f, .y = 0.0f, .z = 4.3417f};
-static const Vector3 data_10518 = {.x = 0.141f, .y = 0.05f, .z = -0.072f};
-static const Vector3i data_10524 = {.x = 61168, .y = 16379, .z = 6734};
-static const Vector3 data_10530 = {.x = 8.1723f, .y = 0.0f, .z = 4.056f};
-static Vector3 data_1053C = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
-static const char data_10548[10] __attribute__((scn_string_literal)) = "E1012A119";
-static const char data_10552[10] __attribute__((scn_string_literal)) = "E1012A177";
-static const char data_1055C[12] __attribute__((scn_string_literal)) = "E1012A178";
-static const Vector3 data_10568 = {.x = 2.13037f, .y = 0.0f, .z = 1.47989f};
-static const Vector3i data_10574 = {.x = 0, .y = 0, .z = 0};
-static const Vector3 data_10580 = {.x = 0.11707f, .y = 0.00757f, .z = -0.04618f};
-static const Vector3i data_1058C = {.x = 20415, .y = 1030, .z = -21097};
-static const Vector3 data_10598 = {.x = 0.15672f, .y = -0.274f, .z = 0.0831f};
-static const Vector3i data_105A4 = {.x = 51821, .y = 1537, .z = 18136};
-static const Vector3 data_105B0 = {.x = 0.13467f, .y = 0.04983f, .z = 0.03832f};
-static const Vector3i data_105BC = {.x = -11948, .y = 990, .z = 15958};
-static const Vector3 data_105C8 = {.x = 2.0278f, .y = 0.208f, .z = 1.7903f};
-static const Vector3 data_105D4 = {.x = 2.064f, .y = 0.02f, .z = 2.977f};
-static const Vector3i data_105E0 = {.x = 0, .y = 32768, .z = 0};
-static const Vector3 data_105EC = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
-static const Vector3i data_105F8 = {.x = 0, .y = 0, .z = 0};
-static const Vector3 data_10604 = {.x = 2.5863f, .y = 0.039f, .z = 1.4193f};
-static const Vector3i data_10610 = {.x = 54424, .y = 32241, .z = 16376};
-static const Vector3 data_1061C = {.x = 2.5863f, .y = 0.23f, .z = 1.1f};
-static const Vector3 data_10628 = {.x = 0.21f, .y = 0.0f, .z = -0.8f};
-static const char data_10634[10] __attribute__((scn_string_literal)) = "E1012A208";
-static const char data_1063E[10] __attribute__((scn_string_literal)) = "E1012A209";
-static const char data_10648[8] __attribute__((scn_string_literal)) = "HAKO_4B";
-static const Vector3 data_10650 = {.x = 3.9661f, .y = 0.0f, .z = 0.57016f};
-static const Vector3i data_1065C = {.x = 0, .y = 49152, .z = 0};
-static const Vector3 data_10668 = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
-static const Vector3i data_10674 = {.x = 0, .y = 0, .z = 0};
-static const Vector3 data_10680 = {.x = 6.574f, .y = 0.2129f, .z = -0.021f};
-static const Vector3 data_1068C = {.x = 1000.0f, .y = 0.0f, .z = 0.0f};
-static const char data_10698[20] = "E1012\000\000\000囮\031>囮\031>囮\031>";
-static const Vector3 data_106AC = {.x = 1.4f, .y = 1.3f, .z = 1.4f};
-static const float data_106B8[3] = {7.9424f, 1.1933f, 1.4459f};
-static const Vector3 data_106C4 = {.x = -5.85f, .y = 0.0f, .z = -6.77f};
-static const Vector3 data_106D0 = {.x = -6.85f, .y = 0.0f, .z = -7.47f};
-static const Vector3 data_106DC = {.x = -4.7f, .y = 0.0f, .z = -2.9f};
-static const Vector3 data_106E8 = {.x = -8.1f, .y = 0.0f, .z = -4.1f};
-static const float data_106F4[3] = {-6.44f, -0.23f, -6.0294f};
-static const Vector3 data_10700 = {.x = 7.5946f, .y = 0.0f, .z = 0.2f};
-static const Vector3 data_1070C = {.x = 3.7934f, .y = 0.0f, .z = 3.7934f};
-static const Vector3 data_10718 = {.x = -0.238f, .y = 0.0f, .z = 5.0076f};
-static const Vector3 data_10724 = {.x = 0.0619f, .y = -0.23f, .z = 2.9076f};
-static const Vector3 data_10730 = {.x = 0.029f, .y = -0.226f, .z = -0.015f};
-static const Vector3i data_1073C = {.x = 65171, .y = 32395, .z = 63170};
-static const char data_10748[6] __attribute__((scn_string_literal)) = "MPK00";
-static const char data_1074E[13] __attribute__((scn_string_literal)) = "HMOT_DB1.BIN";
-static const char data_1075B[13] __attribute__((scn_string_literal)) = "HMOT_STD.BIN";
-static const char data_10768[12] __attribute__((scn_string_literal)) = "E1012A083";
-static const Vector3 data_10774 = {.x = 4.6022f, .y = 0.0f, .z = 0.537f};
-static const Vector3 data_10780 = {.x = 4.1692f, .y = 0.991f, .z = 0.623f};
-static const Vector3 data_1078C = {.x = 4.7412f, .y = 0.994f, .z = 0.588f};
-static const Vector3 data_10798 = {.x = 5.0912f, .y = 0.146f, .z = 0.7f};
-static const Vector3i data_107A4 = {.x = 0, .y = 43690, .z = 0};
-static const Vector3 data_107B0 = {.x = 6.5627f, .y = -0.0004f, .z = 0.3441f};
-static const Vector3i data_107BC = {.x = 46887, .y = 49340, .z = 18403};
-static const Vector3 data_107C8 = {.x = 6.4408f, .y = 0.0321f, .z = 0.3646f};
-static const Vector3i data_107D4 = {.x = 23286, .y = 9631, .z = 29398};
-static const Vector3 data_107E0 = {.x = 5.4462f, .y = 0.718f, .z = 0.813f};
-static const float data_107EC[3] = {6.574f, 0.2129f, -0.021f};
-static const Vector3 data_107F8 = {.x = 6.5392f, .y = 0.0428f, .z = 2.0235f};
-static const Vector3i data_10804 = {.x = 49672, .y = 14006, .z = 33396};
-static const char data_10810[6] __attribute__((scn_string_literal)) = "MPK00";
-static const char data_10816[] __attribute__((scn_string_literal)) = "DYN3";
-static const uint8_t data_1081B[13] = {
-  0x00, 0x9A, 0x99, 0x19, 0x3E, 0x9A, 0x99, 0x19, 0x3E, 0x9A, 0x99, 0x19, 0x3E
-};
-static const Vector3 data_10828 = {.x = 1.4f, .y = 1.3f, .z = 1.4f};
-static const Vector3 data_10834 = {.x = -6.401f, .y = -0.29f, .z = -6.347f};
-static const int32_t data_10840[3] = {0, 30947, 0};
-static const char data_1084C[12] __attribute__((scn_string_literal)) = "E1012A001";
-static const uint32_t data_10858 = SHEN_NAME('HN01');
-static const shen_name data_1085C[17] = {
-  SHEN_NAME('HN02'), SHEN_NAME('HN03'), SHEN_NAME('HN04'), SHEN_NAME('HN05'), SHEN_NAME('HN06'), SHEN_NAME('HN07'), SHEN_NAME('HN08'),
-  SHEN_NAME('HN09'), SHEN_NAME('HN10'), SHEN_NAME('HN11'), SHEN_NAME('HN12'), SHEN_NAME('HN13'), SHEN_NAME('HN14'), SHEN_NAME('HN15'),
-  SHEN_NAME('HN16'), SHEN_NAME('HN17'), SHEN_NAME('HN18')
-};
-static const char data_108A0[7] __attribute__((scn_string_literal)) = "start\012";
-static const char data_108A7[6] __attribute__((scn_string_literal)) = "MPK00";
-static const char data_108AD[] __attribute__((scn_string_literal)) = "DYN1";
-static const uint8_t data_108B2[2] = {0};
-
 static void script_0030(int32_t arg0, const char *arg1, const char *arg2) {
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) != 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) != 0) {
       break;
     }
     if (Script_EV_PAK_AFS_Utils(EVPAK_MODE_PACK_FILE, 5, arg2) == 0) {
@@ -1018,11 +34,11 @@ static void script_00B5(int32_t arg0) {
 static void script_00CC(int32_t arg0) {
   int32_t local_FC;
   local_FC = 0;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) != 0) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) != 0) {
     local_FC = Script_CycleManagerUtils(CYCLE_CMD_PARSE_FOR_SCRIPT_INTERNAL_HUMAN, arg0);
   } else {
     Script_CycleManagerUtils(CYCLE_CMD_PARSE_FOR_SCRIPT, arg0, 1);
-    while (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    while (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       local_FC = Script_CycleManagerUtils(CYCLE_CMD_GET_CYCLE_PTR_BY_CHARA_ID, arg0);
       while (local_FC == 0) {
         SCNF_WaitFrames_0000(1);
@@ -1132,14 +148,14 @@ static int32_t script_030F(int32_t arg0, int32_t arg1, int32_t arg2, float arg3,
     SCNF_WaitFrames_0000(arg5);
   }
   if (arg4 & -0x80000000) {
-    Script_motmToggleFlags(arg0, 2, 0x40);
+    Script_motmToggleFlags(arg0, SCEN_Disable, 0x40);
   } else {
-    Script_motmToggleFlags(arg0, 1, 0x40);
+    Script_motmToggleFlags(arg0, SCEN_Enable, 0x40);
   }
   if (arg4 & 0x40000000) {
-    Script_motmToggleFlags(arg0, 1, 0x80);
+    Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
   } else {
-    Script_motmToggleFlags(arg0, 2, 0x80);
+    Script_motmToggleFlags(arg0, SCEN_Disable, 0x80);
   }
   if (arg4 & 0x20000000) {
     Script_charaToggleMotEnabled(arg0, 0);
@@ -1276,9 +292,9 @@ static int32_t script_0640(int32_t arg0, int32_t arg1, int32_t arg2) {
   }
   local_FC = arg1;
   while (local_FC > 0) {
-    Script_FACE_LCG(arg0, 1, 2, 0);
+    Script_FACE_LCG(arg0, FACE_BlinkClose, 2, 0);
     SCNF_WaitFrames_0000(2);
-    Script_FACE_LCG(arg0, 2, 2, 0);
+    Script_FACE_LCG(arg0, FACE_BlinkOpen, 2, 0);
     SCNF_WaitFrames_0000(Script_FloatUtils(ScriptMathOp_RandomIntBelow, 100) + 50);
     local_FC = local_FC - 1;
   }
@@ -1551,25 +567,25 @@ static void script_0C48(int32_t arg0, int32_t arg1) {
   if (task_240 < 16) {
     task_0[task_240][0] = arg0;
     task_0[task_240][1] = arg1;
-    task_0[task_240][3] = Script_ccowUtils(arg0, 7);
-    task_0[task_240][2] = Script_ccowUtils(arg0, 8);
-    task_0[task_240][4] = Script_motmGetCharaFlags(arg0, 0, 1);
+    task_0[task_240][3] = Script_ccowUtils(arg0, CCOW_HasCharacters);
+    task_0[task_240][2] = Script_ccowUtils(arg0, CCOW_HasMap);
+    task_0[task_240][4] = Script_motmGetCharaFlags(arg0, MOTM_PoseNone, SCEN_Read);
     if (arg1 & -0x80000000) {
       Script_facemotUtils(arg0, 0, 0);
     }
     if (arg1 & 0x40000000) {
       Script_facemotUtils(arg0, 1, 0);
     }
-    Script_FaceEx(arg0, 1, 0, 0);
+    Script_FaceEx(arg0, FACE_ExpressionEnabled, 0, 0);
     Script_ResetHandMotion(arg0, 1, 1, 0);
     Script_ResetHandMotion(arg0, 1, 0, 0);
     Script_FACE(arg0, 0, 0, 0);
-    Script_FACE_LCG(arg0, 2, 0, 0);
-    Script_FaceLookAtTargetUtils(arg0, 0);
-    Script_ccowUtils(arg0, 2);
-    Script_motmGetCharaFlags(arg0, 0, 0);
+    Script_FACE_LCG(arg0, FACE_BlinkOpen, 0, 0);
+    Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
+    Script_ccowUtils(arg0, CCOW_DisableAll);
+    Script_motmGetCharaFlags(arg0, MOTM_PoseNone, SCEN_Write);
     Script_charaToggleMotEnabled(arg0, 1);
-    Script_motmToggleFlags(arg0, 1, 0x40);
+    Script_motmToggleFlags(arg0, SCEN_Enable, 0x40);
     Script_motmSetBlendFrames(arg0, MOTM_BLEND_FRAMES_15);
     Script_PlayCharaMotion(arg0, MN_AKI_AKI_STAND_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
     Script_SetFightProgramStateBytes(arg0, 2, 1);
@@ -1621,20 +637,20 @@ static void script_0E6D(void) {
     local_FC = task_0[task_240][0];
     local_F8 = task_0[task_240][1];
     if (task_0[task_240][3]) {
-      Script_ccowUtils(local_FC, 5);
+      Script_ccowUtils(local_FC, CCOW_EnableCharacters);
     }
     if (task_0[task_240][2]) {
-      Script_ccowUtils(local_FC, 3);
+      Script_ccowUtils(local_FC, CCOW_EnableMap);
     }
-    Script_motmGetCharaFlags(local_FC, task_0[task_240][4], 0);
-    Script_motmToggleFlags(local_FC, 1, 0x40);
+    Script_motmGetCharaFlags(local_FC, task_0[task_240][4], SCEN_Write);
+    Script_motmToggleFlags(local_FC, SCEN_Enable, 0x40);
     Script_motmSetBlendFrames(local_FC, MOTM_BLEND_FRAMES_5);
     Script_PlayCharaMotion(local_FC, 0xFFFF, -1.0f, -1.0f, -1.0f, 1.0f, 0);
     Script_SetFightProgramStateBytes(local_FC, 5, 2);
     Script_SetCPAMFlags(local_FC, 1);
     Script_ResetHandMotion(local_FC, 0, 1, 0);
     Script_ResetHandMotion(local_FC, 0, 0, 0);
-    Script_FaceEx(local_FC, 0, 0, 0);
+    Script_FaceEx(local_FC, FACE_ExpressionDisabled, 0, 0);
     if (local_F8 & 0x40000000) {
       if (local_FC != 0x52494B41) {
         Script_faceUpdateFor(local_FC, 1, 0);
@@ -1713,16 +729,16 @@ static void script_10F7(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   }
   local_F0 = 0;
   for (;;) {
-    local_EE = Script_ScenDataUtil(&data_E93C, 2, local_F0 * 16);
+    local_EE = Script_ScenDataUtil(&data_E93C, SCND_ReadU16, local_F0 * 16);
     if (local_EE < 0) {
       break;
     }
-    if ((Script_ScenDataUtil(&data_E93C, 2, local_F0 * 16 + 1) == 2) | (Script_ScenDataUtil(&data_E93C, 2, local_F0 * 16 + 1) == 9)) {
-      if (Script_ScenDataUtil(&data_E93C, 4, local_F0 * 8 + 6) != 0) {
-        Script_EVT_GetPosition(Script_ScenDataUtil(&data_E93C, 4, local_F0 * 8 + 1), -1, &local_F4, 0);
+    if ((Script_ScenDataUtil(&data_E93C, SCND_ReadU16, local_F0 * 16 + 1) == 2) | (Script_ScenDataUtil(&data_E93C, SCND_ReadU16, local_F0 * 16 + 1) == 9)) {
+      if (Script_ScenDataUtil(&data_E93C, SCND_ReadU32, local_F0 * 8 + 6) != 0) {
+        Script_EVT_GetPosition(Script_ScenDataUtil(&data_E93C, SCND_ReadU32, local_F0 * 8 + 1), -1, &local_F4, 0);
         if (!((&local_F4)->x < 9999.0f) & !((&local_F4)->z < 9999.0f)) {
           task_614 = task_614 + 1;
-          task_484[task_614] = Script_ScenDataUtil(&data_E93C, 4, local_F0 * 8 + 1);
+          task_484[task_614] = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, local_F0 * 8 + 1);
         }
       }
     }
@@ -1739,8 +755,8 @@ static void script_1294(void) {
   Vector3 local_E4;
   local_F0 = 0;
   for (;;) {
-    local_F4 = Script_ScenDataUtil(data_EE80, 4, local_F0 * 5);
-    local_F8 = Script_ScenDataUtil(data_EE80, 4, local_F0 * 5 + 1);
+    local_F4 = Script_ScenDataUtil(data_EE80, SCND_ReadU32, local_F0 * 5);
+    local_F8 = Script_ScenDataUtil(data_EE80, SCND_ReadU32, local_F0 * 5 + 1);
     if (local_F4 == -1) {
       break;
     }
@@ -1748,7 +764,7 @@ static void script_1294(void) {
     if (!((&local_E4)->x < 9999.0f) & !((&local_E4)->z < 9999.0f)) {
       task_614 = task_614 + 1;
       task_484[task_614] = local_F8;
-    } else if (Script_ScenDataUtil(data_EE80, 4, local_F0 * 5 + 3) == 0) {
+    } else if (Script_ScenDataUtil(data_EE80, SCND_ReadU32, local_F0 * 5 + 3) == 0) {
       Script_mtwkGetSetRotation(local_F8, &task_3F4, 0);
       Script_EVT_GetPosition(local_F8, -1, &task_3E8, 0);
       Script_fixoAttachEx(local_F8, local_F4, 0, &task_3E8, &task_3F4);
@@ -1780,8 +796,8 @@ static int32_t script_13B4(void) {
     Script_scenUtils(SCENARIO_CMD_INIT_SCNT);
     if (task_430) {
       task_410 = Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex);
-      local_FE = Script_ScenDataUtil(&data_E93C, 2, task_410 * 16 + 1);
-      if ((local_FE < 0) & (Script_ScenDataUtil(&data_E93C, 4, task_410 * 8 + 7) > 0)) {
+      local_FE = Script_ScenDataUtil(&data_E93C, SCND_ReadU16, task_410 * 16 + 1);
+      if ((local_FE < 0) & (Script_ScenDataUtil(&data_E93C, SCND_ReadU32, task_410 * 8 + 7) > 0)) {
         Script_sprintf("Map Start!!!!!!!!!!!!!!!!!\012");
         script_27A6(task_410);
       } else {
@@ -1789,7 +805,7 @@ static int32_t script_13B4(void) {
           for (;;) {
             if (!(task_428 == 1)) goto L001480;
             L001480:;
-            if (Script_srchUtils(SRCH_SCRIPT_UpdateAndPollSelection) == Script_ScenDataUtil(&data_E93C, 4, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1)) {
+            if (Script_srchUtils(SRCH_SCRIPT_UpdateAndPollSelection) == Script_ScenDataUtil(&data_E93C, SCND_ReadU32, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1)) {
               break;
             }
             if (Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) < 0) {
@@ -1803,7 +819,7 @@ static int32_t script_13B4(void) {
             }
           }
           task_448 = 9;
-          script_4658(Script_ScenDataUtil(&data_E93C, 4, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1));
+          script_4658(Script_ScenDataUtil(&data_E93C, SCND_ReadU32, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1));
           task_438 = Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex);
         }
       }
@@ -1827,7 +843,7 @@ static int32_t script_13B4(void) {
     Script_ryoControl(PCCTL_DisablePlayerControl);
     Script_convSetCamInactiveFlag(1);
     local_F8 = script_25A2(task_40C);
-    local_FE = Script_ScenDataUtil(&data_E93C, 2, local_F8 * 16 + 1);
+    local_FE = Script_ScenDataUtil(&data_E93C, SCND_ReadU16, local_F8 * 16 + 1);
     Script_scenToggleVisibleFor(task_440, 1);
     Script_scenToggleVisibleFor(task_444, 1);
     if (local_FE < 0) {
@@ -1847,7 +863,7 @@ static void script_160E(int32_t arg0) {
   int16_t local_FE;
   uint8_t unused_F0[14];
   int32_t local_EC;
-  local_FE = Script_ScenDataUtil(&data_E93C, 2, arg0 * 16 + 1);
+  local_FE = Script_ScenDataUtil(&data_E93C, SCND_ReadU16, arg0 * 16 + 1);
   local_EC = local_FE;
   if (local_EC == 0) {
     task_448 = 8;
@@ -1932,33 +948,33 @@ static void script_176A(int32_t arg0, int32_t arg1) {
   int32_t local_FF74;
   local_91 = 0;
   local_93 = 0;
-  local_FC = Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 1);
-  local_CC = Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 6);
-  local_D0 = Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 7);
+  local_FC = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 1);
+  local_CC = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 6);
+  local_D0 = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 7);
   local_E4 = 0;
-  if (Script_ScenDataUtil(&data_EEE8, 4, local_E4) != -1) {
-    local_B0 = Script_ScenDataUtil(&data_EEE8, 4, local_E4);
-    local_AC = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 1);
-    local_A8 = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 2);
-    local_A4 = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 3);
+  if (Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4) != -1) {
+    local_B0 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4);
+    local_AC = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 1);
+    local_A8 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 2);
+    local_A4 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 3);
     local_E4 = 4;
     for (;;) {
-      if ((Script_ScenDataUtil(&data_EEE8, 4, local_E4) == -1) & (Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 1) == -1)) {
+      if ((Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4) == -1) & (Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 1) == -1)) {
         local_B0 = 0;
         local_AC = 0;
         local_A8 = 0;
         local_A4 = 0;
         break;
       }
-      if (Script_ScenDataUtil(&data_EEE8, 4, local_E4) == -1) {
+      if (Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4) == -1) {
         local_E4 = local_E4 + 1;
-        local_B0 = Script_ScenDataUtil(&data_EEE8, 4, local_E4);
-        local_AC = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 1);
-        local_A8 = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 2);
-        local_A4 = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 3);
+        local_B0 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4);
+        local_AC = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 1);
+        local_A8 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 2);
+        local_A4 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 3);
         local_E4 = local_E4 + 4;
       }
-      if (local_FC == Script_ScenDataUtil(&data_EEE8, 4, local_E4)) {
+      if (local_FC == Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4)) {
         break;
       }
       local_E4 = local_E4 + 1;
@@ -2012,14 +1028,14 @@ static void script_176A(int32_t arg0, int32_t arg1) {
     script_4658(local_FC);
     local_E4 = 0;
     for (;;) {
-      local_EC = Script_ScenDataUtil(data_EE80, 4, local_E4 * 5);
+      local_EC = Script_ScenDataUtil(data_EE80, SCND_ReadU32, local_E4 * 5);
       if (local_EC == -1) {
         break;
       }
       if (local_EC == task_40C) {
-        local_E8 = Script_ScenDataUtil(data_EE80, 4, local_E4 * 5 + 1);
-        local_F8 = Script_ScenDataUtil(data_EE80, 4, local_E4 * 5 + 2);
-        local_FF74 = Script_ScenDataUtil(data_EE80, 4, local_E4 * 5 + 4);
+        local_E8 = Script_ScenDataUtil(data_EE80, SCND_ReadU32, local_E4 * 5 + 1);
+        local_F8 = Script_ScenDataUtil(data_EE80, SCND_ReadU32, local_E4 * 5 + 2);
+        local_FF74 = Script_ScenDataUtil(data_EE80, SCND_ReadU32, local_E4 * 5 + 4);
         Script_fixoClearAttachment(local_E8);
         Script_MoveObjectToObject(local_E8, local_FC);
         Script_EVT_GetPosition(local_E8, -1, &task_3E8, 0);
@@ -2031,29 +1047,29 @@ static void script_176A(int32_t arg0, int32_t arg1) {
       local_E4 = local_E4 + 1;
     }
     local_E0 = 0;
-    if (Script_ScenDataUtil(&data_EEE8, 4, local_E0) != -1) {
-      local_A0 = Script_ScenDataUtil(&data_EEE8, 4, local_E0);
-      local_9C = Script_ScenDataUtil(&data_EEE8, 4, local_E0 + 1);
-      local_98 = Script_ScenDataUtil(&data_EEE8, 4, local_E0 + 2);
-      local_94 = Script_ScenDataUtil(&data_EEE8, 4, local_E0 + 3);
+    if (Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0) != -1) {
+      local_A0 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0);
+      local_9C = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0 + 1);
+      local_98 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0 + 2);
+      local_94 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0 + 3);
       local_E0 = 4;
       for (;;) {
-        if ((Script_ScenDataUtil(&data_EEE8, 4, local_E0) == -1) & (Script_ScenDataUtil(&data_EEE8, 4, local_E0 + 1) == -1)) {
+        if ((Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0) == -1) & (Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0 + 1) == -1)) {
           local_A0 = 0;
           local_9C = 0;
           local_98 = 0;
           local_94 = 0;
           break;
         }
-        if (Script_ScenDataUtil(&data_EEE8, 4, local_E0) == -1) {
+        if (Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0) == -1) {
           local_E0 = local_E0 + 1;
-          local_A0 = Script_ScenDataUtil(&data_EEE8, 4, local_E0);
-          local_9C = Script_ScenDataUtil(&data_EEE8, 4, local_E0 + 1);
-          local_98 = Script_ScenDataUtil(&data_EEE8, 4, local_E0 + 2);
-          local_94 = Script_ScenDataUtil(&data_EEE8, 4, local_E0 + 3);
+          local_A0 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0);
+          local_9C = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0 + 1);
+          local_98 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0 + 2);
+          local_94 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0 + 3);
           local_E0 = local_E0 + 4;
         }
-        if (local_E8 == Script_ScenDataUtil(&data_EEE8, 4, local_E0)) {
+        if (local_E8 == Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E0)) {
           break;
         }
         local_E0 = local_E0 + 1;
@@ -2232,31 +1248,31 @@ static void script_21CD(int32_t arg0) {
   int8_t local_E3;
   int8_t local_E2;
   local_E3 = 0;
-  local_FC = Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 1);
+  local_FC = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 1);
   local_E4 = 0;
-  if (Script_ScenDataUtil(&data_EEE8, 4, local_E4) != -1) {
-    local_F4 = Script_ScenDataUtil(&data_EEE8, 4, local_E4);
-    local_F0 = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 1);
-    local_EC = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 2);
-    local_E8 = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 3);
+  if (Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4) != -1) {
+    local_F4 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4);
+    local_F0 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 1);
+    local_EC = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 2);
+    local_E8 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 3);
     local_E4 = 4;
     for (;;) {
-      if ((Script_ScenDataUtil(&data_EEE8, 4, local_E4) == -1) & (Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 1) == -1)) {
+      if ((Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4) == -1) & (Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 1) == -1)) {
         local_F4 = 0;
         local_F0 = 0;
         local_EC = 0;
         local_E8 = 0;
         break;
       }
-      if (Script_ScenDataUtil(&data_EEE8, 4, local_E4) == -1) {
+      if (Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4) == -1) {
         local_E4 = local_E4 + 1;
-        local_F4 = Script_ScenDataUtil(&data_EEE8, 4, local_E4);
-        local_F0 = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 1);
-        local_EC = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 2);
-        local_E8 = Script_ScenDataUtil(&data_EEE8, 4, local_E4 + 3);
+        local_F4 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4);
+        local_F0 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 1);
+        local_EC = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 2);
+        local_E8 = Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4 + 3);
         local_E4 = local_E4 + 4;
       }
-      if (local_FC == Script_ScenDataUtil(&data_EEE8, 4, local_E4)) {
+      if (local_FC == Script_ScenDataUtil(&data_EEE8, SCND_ReadU32, local_E4)) {
         break;
       }
       local_E4 = local_E4 + 1;
@@ -2264,10 +1280,10 @@ static void script_21CD(int32_t arg0) {
   }
   if (Script_charaDisplay(local_FC, CDM_Query)) {
     Script_InvestigationUtils(ShenmueUtils_QueueSndCommand, local_F4, local_F0);
-    if (Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 7) == 0) {
+    if (Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 7) == 0) {
       Script_InvestigationUtils(ShenmueUtils_BeginTargetModeDefault, local_FC);
     } else {
-      Script_InvestigationUtils(ShenmueUtils_BeginTargetModeByType, local_FC, Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 7) - 1);
+      Script_InvestigationUtils(ShenmueUtils_BeginTargetModeByType, local_FC, Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 7) - 1);
     }
     local_E2 = 0;
     for (;;) {
@@ -2284,7 +1300,7 @@ static void script_21CD(int32_t arg0) {
     }
     task_448 = 1;
     script_4658(task_40C);
-    local_F8 = Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 6);
+    local_F8 = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 6);
     for (;;) {
       if (task_428 == 1) {
         script_2607(local_FC);
@@ -2356,11 +1372,11 @@ static int32_t script_25A2(int32_t arg0) {
   local_FC = 0;
   local_F8 = 0;
   for (;;) {
-    local_F6 = Script_ScenDataUtil(&data_E93C, 2, local_F8 * 16);
+    local_F6 = Script_ScenDataUtil(&data_E93C, SCND_ReadU16, local_F8 * 16);
     if (local_F6 < 0) {
       break;
     }
-    if (Script_ScenDataUtil(&data_E93C, 4, local_F8 * 8 + 1) == arg0) {
+    if (Script_ScenDataUtil(&data_E93C, SCND_ReadU32, local_F8 * 8 + 1) == arg0) {
       local_FC = local_F8;
       break;
     }
@@ -2381,11 +1397,11 @@ static void script_2607(int32_t arg0) {
   int16_t local_B2;
   uint8_t unused_B0[2];
   local_B4 = script_25A2(arg0);
-  local_B2 = Script_ScenDataUtil(&data_E93C, 2, local_B4 * 16 + 1);
+  local_B2 = Script_ScenDataUtil(&data_E93C, SCND_ReadU16, local_B4 * 16 + 1);
   if (local_B2 < 0) {
-    *(int32_t *)&local_F4.x = Script_ScenDataUtil(&data_E93C, 4, local_B4 * 8 + 3);
-    *(int32_t *)&(&local_F4)->y = Script_ScenDataUtil(&data_E93C, 4, local_B4 * 8 + 4);
-    *(int32_t *)&(&local_F4)->z = Script_ScenDataUtil(&data_E93C, 4, local_B4 * 8 + 5);
+    *(int32_t *)&local_F4.x = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, local_B4 * 8 + 3);
+    *(int32_t *)&(&local_F4)->y = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, local_B4 * 8 + 4);
+    *(int32_t *)&(&local_F4)->z = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, local_B4 * 8 + 5);
   } else {
     Script_EVT_GetPosition(arg0, -1, &local_F4, 0);
   }
@@ -2429,11 +1445,11 @@ static void script_27A6(int32_t arg0) {
   int32_t local_F4[3];
   int32_t unused_F0;
   int32_t local_E8[2];
-  local_F4[0] = Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 3);
-  local_F4[1] = Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 4);
-  local_F4[2] = Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 5);
-  local_E8[1] = Script_ScenDataUtil(&data_E93C, 2, arg0 * 16 + 4);
-  task_618 = Script_ScenDataUtil(&data_E93C, 4, arg0 * 8 + 7) - 1;
+  local_F4[0] = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 3);
+  local_F4[1] = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 4);
+  local_F4[2] = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 5);
+  local_E8[1] = Script_ScenDataUtil(&data_E93C, SCND_ReadU16, arg0 * 16 + 4);
+  task_618 = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, arg0 * 8 + 7) - 1;
   *(&task_618 + 1) = 0;
   *(&task_618 + 2) = 0;
   *(&task_618 + 3) = 0;
@@ -2773,11 +1789,11 @@ static int32_t script_294C(void) {
         Script_lightSetSlotEnabled(28, 0);
         Script_SetGameStateTo(AUTH_None);
         Script_ryoControl(PCCTL_DisablePlayerControl);
-        Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+        Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
         Script_motiSetAngFlags(CHARA_AKIR, 0);
         Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_F310);
         Script_EVT_SetRotation(CHARA_AKIR, 0x38000000, &data_F31C, 0);
-        Script_ccowUtils(CHARA_AKIR, 2);
+        Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
         Script_PlayCharaMotion(CHARA_AKIR, 4164, 70.0f, -1, -1, 1.5f, 0);
         if ((Script_scenUtils(SCENARIO_CMD_GET_SHENMUE_FLAG, SHENMUE_FLAG_NOTE_TIP_WALL_DIFFERENT_COLOR) == 1) | Script_scenUtils(SCENARIO_CMD_GET_SHENMUE_FLAG, SHENMUE_FLAG_NOTE_SPACE_BEHIND_WALL) | (task_320 == 1)) {
           Script_ShowUIMessageFromID("E1012A272");
@@ -2797,24 +1813,24 @@ static int32_t script_294C(void) {
           SCNF_WaitFrames_0000(1);
         }
         Script_motiSetAngFlags(CHARA_AKIR, 1);
-        Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+        Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
         Script_fixoClearAttachment(CHARA_ONO_);
         Script_fixoAttachEx(CHARA_ONO_, CHARA_AKIR, 18, &data_F328, &data_F334);
         Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_MOVE_BACK_30, -1.0f, -1.0f, -1.0f, 1.0f, 0);
         SCNF_WaitFrames_0000(30);
-        Script_ccowUtils(CHARA_AKIR, 1);
+        Script_ccowUtils(CHARA_AKIR, CCOW_EnableAll);
         Script_ryoControl(RYO_RestoreControl);
         task_2CC = 1;
       } else {
         Script_srchUtils(SRCH_SCRIPT_Reset);
         Script_SetGameStateTo(AUTH_None);
         Script_ryoControl(PCCTL_DisablePlayerControl);
-        Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+        Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
         Script_motiSetAngFlags(CHARA_AKIR, 0);
         Script_lightSetSlotEnabled(28, 0);
         Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_F310);
         Script_EVT_SetRotation(CHARA_AKIR, 0x38000000, &data_F31C, 0);
-        Script_ccowUtils(CHARA_AKIR, 2);
+        Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
         Script_PlayCharaMotion(CHARA_AKIR, 4163, 0.0f, -1, -1, 1.5f, 0);
         Script_ShowUIMessageFromID("E1012A271");
         for (;;) {
@@ -2833,10 +1849,10 @@ static int32_t script_294C(void) {
           SCNF_WaitFrames_0000(1);
         }
         Script_motiSetAngFlags(CHARA_AKIR, 1);
-        Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+        Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
         Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_MOVE_BACK_30, -1.0f, -1.0f, -1.0f, 1.0f, 0);
         SCNF_WaitFrames_0000(30);
-        Script_ccowUtils(CHARA_AKIR, 1);
+        Script_ccowUtils(CHARA_AKIR, CCOW_EnableAll);
         Script_ryoControl(RYO_RestoreControl);
         Script_SetGameStateTo(AUTH_None);
       }
@@ -3066,7 +2082,7 @@ static void script_3B38(void) {
   if (Script_GetBatteryLifePair(BATTERY_GET_PERCENT, 0) < 13) {
     Script_SetOwnedItemMenuFlagIfOwned(1, OwnedItem_UIITEMCBAT, 1);
   }
-  local_FC = Script_ScenDataUtil(&data_E93C, 4, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1);
+  local_FC = Script_ScenDataUtil(&data_E93C, SCND_ReadU32, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1);
   if (task_2CC == 0) {
     if (Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) >= 0) {
       local_F4 = local_FC;
@@ -3187,7 +2203,7 @@ static void script_3B38(void) {
       Script_SetOwnedItemMenuFlagIfOwned(1, OwnedItem_UIITEMLIGH, 1);
     }
   }
-  if (Script_ScenDataUtil(&data_E93C, 4, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1) == 0x306B6E64) {
+  if (Script_ScenDataUtil(&data_E93C, SCND_ReadU32, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1) == 0x306B6E64) {
     if (~Script_scenUtils(SCENARIO_CMD_GET_SHENMUE_FLAG, SHENMUE_FLAG_YDB1_FLASHLIGHT_NEEDS_BULB)) {
       Script_SetOwnedItemMenuFlagIfOwned(1, OwnedItem_UIITEMLIGH, 1);
     }
@@ -3196,7 +2212,7 @@ static void script_3B38(void) {
     task_3CC.x = *(float *)&task_278;
     task_3CC.y = *(float *)(&task_278 + 1);
     task_3CC.z = *(float *)(&task_278 + 2);
-    if (Script_ScenDataUtil(&data_E93C, 4, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1) == 0x594D4144) {
+    if (Script_ScenDataUtil(&data_E93C, SCND_ReadU32, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1) == 0x594D4144) {
       if ((task_254 == 3) & (task_2CC == 1)) {
         local_F8 = 1;
       }
@@ -3218,7 +2234,7 @@ static void script_3B38(void) {
           local_F8 = 1;
         }
       }
-      if (Script_ScenDataUtil(&data_E93C, 4, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1) == 0x5F4F4E4F) {
+      if (Script_ScenDataUtil(&data_E93C, SCND_ReadU32, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1) == 0x5F4F4E4F) {
         if ((task_254 == 3) | (task_254 == 2)) {
           local_F8 = 1;
         }
@@ -3497,8 +2513,8 @@ static void script_4658(int32_t arg0) {
           if (task_448 == 8) {
             Script_CharHandlers(CHARA_AKIR, 0, 0, 16);
             Script_ryoControl(PCCTL_DisablePlayerControl);
-            Script_motmToggleFlags(CHARA_AKIR, 1, 0x80);
-            Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+            Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x80);
+            Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
             Script_motiSetAngFlags(CHARA_AKIR, 0);
             Script_PlayCharaMotion(CHARA_AKIR, 4126, -1.0f, -1.0f, -1.0f, 1.0f, 0);
             for (;;) {
@@ -3509,9 +2525,9 @@ static void script_4658(int32_t arg0) {
               SCNF_WaitFrames_0000(1);
             }
             Script_motiSetAngFlags(CHARA_AKIR, 1);
-            Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+            Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
             Script_executeAicaCommand(198057, 0, 0);
-            Script_motmToggleFlags(CHARA_AKIR, 1, 0x80);
+            Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x80);
             Script_PlayCharaMotion(CHARA_AKIR, 4125, -1.0f, -1.0f, -1.0f, 1.0f, 0);
             for (;;) {
               if (Script_IsCharaMotionFinished(CHARA_AKIR)) {
@@ -3527,8 +2543,8 @@ static void script_4658(int32_t arg0) {
         case 6:
           Script_CharHandlers(CHARA_AKIR, 0, 0, 16);
           Script_ryoControl(PCCTL_DisablePlayerControl);
-          Script_motmToggleFlags(CHARA_AKIR, 1, 0x80);
-          Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+          Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x80);
+          Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
           Script_motiSetAngFlags(CHARA_AKIR, 0);
           Script_PlayCharaMotion(CHARA_AKIR, 4126, -1.0f, -1.0f, -1.0f, 1.0f, 0);
           for (;;) {
@@ -3539,9 +2555,9 @@ static void script_4658(int32_t arg0) {
             SCNF_WaitFrames_0000(1);
           }
           Script_motiSetAngFlags(CHARA_AKIR, 1);
-          Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+          Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
           Script_executeAicaCommand(198057, 0, 0);
-          Script_motmToggleFlags(CHARA_AKIR, 1, 0x80);
+          Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x80);
           Script_PlayCharaMotion(CHARA_AKIR, 4125, -1.0f, -1.0f, -1.0f, 1.0f, 0);
           for (;;) {
             if (Script_IsCharaMotionFinished(CHARA_AKIR)) {
@@ -4561,11 +3577,11 @@ static void script_6631(void) {
   {
     int32_t unused_F4[3];
     Vector3 local_E8;
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41)) {
       Script_EVT_GetPosition(CHARA_AKIR, 4, &local_E8, ENTITY_XFORM_WORLD_SPACE);
       Script_SetLookPointDetails(CHARA_FUKU, 12, &local_E8, 1);
     }
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
       Script_EVT_GetPosition(CHARA_FUKU, 4, &local_E8, ENTITY_XFORM_WORLD_SPACE);
       Script_SetLookPointDetails(CHARA_AKIR, 12, &local_E8, 1);
     }
@@ -4645,8 +3661,8 @@ static void script_6894(void) {
   local_DC[0] = 0;
   local_DC[1] = 48059;
   local_DC[2] = 0;
-  Script_ccowUtils(CHARA_FUKU, 2);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_ccowUtils(CHARA_FUKU, CCOW_DisableAll);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
   Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   task_654 = Script_scenCreateTask(script_62AB, 0);
@@ -4660,7 +3676,7 @@ static void script_6894(void) {
   script_0893(CHARA_FUKU, -1, 0x43848000, -1);
   Script_ShowUIMessageFromID("E1012B038");
   Script_SetCPAMFlags(CHARA_FUKU, 0);
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
     Script_EVT_GetPosition(CHARA_FUKU, 4, &local_D0, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_AKIR, 12, &local_D0, 1);
   }
@@ -4668,7 +3684,7 @@ static void script_6894(void) {
   while (Script_convGetIsActive(0)) {
     SCNF_WaitFrames_0000(1);
   }
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   Script_ShowUIMessageFromID("E1012A242");
   while (Script_convGetIsActive(0)) {
     SCNF_WaitFrames_0000(1);
@@ -4676,8 +3692,8 @@ static void script_6894(void) {
   Script_PlayCharaMotion(CHARA_FUKU, 4142, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   SCNF_WaitFrames_0000(1);
   Script_ShowUIMessageFromID("E1012B002");
-  Script_FaceEx(CHARA_FUKU, 1, 5, 4);
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+  Script_FaceEx(CHARA_FUKU, FACE_ExpressionEnabled, 5, 4);
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
     Script_EVT_GetPosition(CHARA_FUKU, 4, &local_D0, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_AKIR, 12, &local_D0, 1);
   }
@@ -4692,7 +3708,7 @@ static void script_6894(void) {
   while (Script_convGetIsActive(0)) {
     SCNF_WaitFrames_0000(1);
   }
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41)) {
     Script_EVT_GetPosition(CHARA_AKIR, 4, &local_D0, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_FUKU, 12, &local_D0, 1);
   }
@@ -4711,7 +3727,7 @@ static void script_6894(void) {
   Script_SetCPAMFlags(CHARA_FUKU, 1);
   Script_scenUtils(SCENARIO_CMD_SET_SHENMUE_FLAG, SHENMUE_FLAG_NOTE_FUKU_TIPS, 1);
   Script_motiSetAngFlags(CHARA_AKIR, 1);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   Script_srchControl((void *)task_654);
   return;
 }
@@ -4732,9 +3748,9 @@ static void script_6C55(void) {
   SCNF_RequestIconNotification(0, 0, 0, 2);
   task_654 = Script_scenCreateTask(script_62AB, 0);
   SCNF_WaitFrames_0000(1);
-  Script_ccowUtils(CHARA_FUKU, 2);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
-  Script_motmToggleFlags(CHARA_FUKU, 2, 0x40);
+  Script_ccowUtils(CHARA_FUKU, CCOW_DisableAll);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
+  Script_motmToggleFlags(CHARA_FUKU, SCEN_Disable, 0x40);
   Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_PlayCharaMotion(CHARA_FUKU, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_EVT_SetPosition(CHARA_FUKU, POS_XYZ, &local_F4);
@@ -4744,12 +3760,12 @@ static void script_6C55(void) {
   while (Script_convGetIsActive(0)) {
     SCNF_WaitFrames_0000(1);
   }
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
-  Script_motmToggleFlags(CHARA_FUKU, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
+  Script_motmToggleFlags(CHARA_FUKU, SCEN_Enable, 0x40);
   Script_SetCPAMFlags(CHARA_FUKU, 0);
   Script_seqEnterEvtCam(6100, CHARA_AKIR, CHARA_AKIR);
   Script_EVT_GetPosition(CHARA_AKIR, -1, &local_DC, 0);
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
     Script_EVT_GetPosition(CHARA_FUKU, 4, &local_D0, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_AKIR, 12, &local_D0, 1);
   }
@@ -4767,15 +3783,15 @@ static void script_6C55(void) {
   Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_FAAC);
   SCNF_WaitFrames_0000(1);
   Script_ShowUIMessageFromID("E1012B068");
-  Script_FaceEx(CHARA_FUKU, 1, 5, 4);
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+  Script_FaceEx(CHARA_FUKU, FACE_ExpressionEnabled, 5, 4);
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
     Script_EVT_GetPosition(CHARA_FUKU, 4, &local_D0, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_AKIR, 12, &local_D0, 1);
   }
   while (Script_convGetIsActive(0)) {
     SCNF_WaitFrames_0000(1);
   }
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41)) {
     Script_EVT_GetPosition(CHARA_AKIR, 4, &local_D0, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_FUKU, 12, &local_D0, 1);
   }
@@ -4826,7 +3842,7 @@ static void script_7017(void) {
   int32_t local_E4[3];
   task_654 = Script_scenCreateTask(script_62AB, 0);
   local_FC = Script_scenCreateTask(script_7358, 1, 60);
-  Script_FaceLookAtTargetUtils(CHARA_FUKU, 0);
+  Script_FaceLookAtTargetUtils(CHARA_FUKU, FACE_LookReset);
   script_0B9C(6103, -1, -1, 60);
   script_0B9C(6104, -1, -1, 130);
   script_0B9C(6105, -1, -1, 310);
@@ -4849,7 +3865,7 @@ static void script_7017(void) {
   Script_LineWalkUtils(LNWK_SCRIPT_BEGIN_PATH_WALK, CHARA_FUKU, &data_FB40, 0, 0);
   while (Script_LineWalkUtils(LNWK_SCRIPT_SET_MOVE_SCALE_GET_CMD, CHARA_FUKU, 0.05f) != -1) {
     Script_GetCameraInputDetails(15);
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
       Script_EVT_GetPosition(CHARA_FUKU, 4, (Vector3 *)local_E4, ENTITY_XFORM_WORLD_SPACE);
       Script_SetLookPointDetails(CHARA_AKIR, 12, (const Vector3 *)local_E4, 1);
     }
@@ -4866,7 +3882,7 @@ static void script_7017(void) {
   SCNF_WaitFrames_0000(60);
   Script_ShowUIMessageFromID("E1012B052");
   SCNF_WaitFrames_0000(10);
-  Script_ccowUtils(CHARA_AKIR, 2);
+  Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
   Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_FB54);
   SCNF_WaitFrames_0000(1);
   local_F0.x = 4.0274f;
@@ -4940,7 +3956,7 @@ static int32_t script_74BB(void) {
   SCNF_WaitFrames_0000(135);
   Script_seqEnterEvtCam(6116, 0, AUTH_None);
   SCNF_WaitFrames_0000(350);
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
     Script_EVT_GetPosition(CHARA_FUKU, 4, &local_F4, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_AKIR, 12, &local_F4, 1);
   }
@@ -4995,11 +4011,11 @@ __attribute__((scn_string_bindings(1, data_FC32, 6, data_FC64, 7, data_FC6E, 8, 
 static void script_7642(void) {
   Vector3 local_F4;
   task_654 = Script_scenCreateTask(script_62AB, 0);
-  Script_FaceLookAtTargetUtils(CHARA_FUKU, 0);
+  Script_FaceLookAtTargetUtils(CHARA_FUKU, FACE_LookReset);
   if (Script_scenUtils(SCENARIO_CMD_GET_SHENMUE_FLAG, SHENMUE_FLAG_NOTE_TIP_FLOOR_SCRATCHES) | Script_scenUtils(SCENARIO_CMD_GET_SHENMUE_FLAG, SHENMUE_FLAG_NOTE_FLOOR_SCRATCHES)) {
     Script_EVT_SetPosition(CHARA_FUKU, POS_XYZ, &data_FC04);
     Script_EVT_SetRotation(CHARA_FUKU, 0x38000000, &data_FC10, 0);
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
       Script_EVT_GetPosition(CHARA_FUKU, 4, &local_F4, ENTITY_XFORM_WORLD_SPACE);
       Script_SetLookPointDetails(CHARA_AKIR, 12, &local_F4, 1);
     }
@@ -5016,14 +4032,14 @@ static void script_7642(void) {
     while (Script_convGetIsActive(0)) {
       SCNF_WaitFrames_0000(1);
     }
-    Script_ccowUtils(CHARA_AKIR, 2);
-    Script_ccowUtils(CHARA_FUKU, 2);
+    Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
+    Script_ccowUtils(CHARA_FUKU, CCOW_DisableAll);
     Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_FBE0);
     Script_EVT_SetRotation(CHARA_AKIR, 0x38000000, &data_FBEC, 0);
     Script_PlayCharaMotion(CHARA_FUKU, 4155, -1.0f, -1.0f, -1.0f, 1.0f, 0);
     Script_PlayCharaMotion(CHARA_AKIR, 4152, -1.0f, -1.0f, -1.0f, 1.0f, 0);
     Script_charaToggleMotEnabled(CHARA_FUKU, 1);
-    Script_motmToggleFlags(CHARA_FUKU, 2, 8);
+    Script_motmToggleFlags(CHARA_FUKU, SCEN_Disable, 8);
     SCNF_WaitFrames_0000(1);
     Script_seqEnterEvtCam(6115, 0, AUTH_None);
     SCNF_WaitFrames_0000(120);
@@ -5034,8 +4050,8 @@ static void script_7642(void) {
     Script_EVT_SetRotation(CHARA_FUKU, 0x38000000, &data_FC10, 0);
     SCNF_WaitFrames_0000(1);
     Script_SetCharaLookAtPosition(CHARA_AKIR, -1, 0, 0);
-    Script_ccowUtils(CHARA_AKIR, 2);
-    Script_ccowUtils(CHARA_FUKU, 2);
+    Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
+    Script_ccowUtils(CHARA_FUKU, CCOW_DisableAll);
     Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_FBE0);
     Script_EVT_SetRotation(CHARA_AKIR, 0x38000000, &data_FBEC, 0);
     Script_PlayCharaMotion(CHARA_FUKU, 4155, -1.0f, -1.0f, -1.0f, 1.0f, 0);
@@ -5043,7 +4059,7 @@ static void script_7642(void) {
     Script_charaToggleMotEnabled(CHARA_FUKU, 1);
     SCNF_WaitFrames_0000(1);
     Script_seqEnterEvtCam(6115, 0, AUTH_None);
-    Script_motmToggleFlags(CHARA_FUKU, 2, 8);
+    Script_motmToggleFlags(CHARA_FUKU, SCEN_Disable, 8);
     SCNF_WaitFrames_0000(120);
   }
   Script_ShowUIMessageFromID("E1012B057");
@@ -5067,7 +4083,7 @@ static void script_7642(void) {
   while (Script_convGetIsActive(0)) {
     SCNF_WaitFrames_0000(1);
   }
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
     Script_EVT_GetPosition(CHARA_FUKU, 4, &local_F4, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_AKIR, 12, &local_F4, 1);
   }
@@ -5103,7 +4119,7 @@ static void script_7642(void) {
 static void script_7ADA(void) {
   Vector3 local_F4;
   Script_ryoControl(PCCTL_DisablePlayerControl);
-  Script_FaceEx(CHARA_AKIR, 1, 0, 2);
+  Script_FaceEx(CHARA_AKIR, FACE_ExpressionEnabled, 0, 2);
   Script_ResetHandMotion(CHARA_AKIR, -1, 0, 0);
   Script_ResetHandMotion(CHARA_AKIR, -1, 1, 0);
   Script_shenClearFreeState(0);
@@ -5132,11 +4148,11 @@ static void script_7ADA(void) {
   Script_EVT_SetRotation(SHEN_NAME('YKUL'), 0x38000000, &data_FCF8, 0);
   Script_seqEnterEvtCam(9000, 0, AUTH_None);
   SCNF_WaitFrames_0000(1);
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41)) {
     Script_EVT_GetPosition(CHARA_AKIR, 4, &local_F4, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_FUKU, 12, &local_F4, 0);
   }
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, 0x554B5546)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x52494B41) & Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, 0x554B5546)) {
     Script_EVT_GetPosition(CHARA_FUKU, 4, &local_F4, ENTITY_XFORM_WORLD_SPACE);
     Script_SetLookPointDetails(CHARA_AKIR, 12, &local_F4, 1);
   }
@@ -5693,7 +4709,7 @@ static void script_91CC(void) {
   while (Script_filmCheckOrSetTransitionUtil(-1)) {
     SCNF_WaitFrames_0000(1);
   }
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_FFC4);
   (&local_F4)->y = 0;
@@ -5714,7 +4730,7 @@ static void script_91CC(void) {
   while (Script_filmCheckOrSetTransitionUtil(-1)) {
     SCNF_WaitFrames_0000(1);
   }
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   Script_ryoControl(RYO_RestoreControl);
   task_2F8 = 0;
   return;
@@ -5743,14 +4759,14 @@ static void script_9355(void) {
 
 static void script_9422(void) {
   Script_ryoControl(PCCTL_DisablePlayerControl);
-  Script_FaceEx(CHARA_AKIR, 1, 0, 2);
+  Script_FaceEx(CHARA_AKIR, FACE_ExpressionEnabled, 0, 2);
   Script_ResetHandMotion(CHARA_AKIR, -1, 0, 0);
   Script_ResetHandMotion(CHARA_AKIR, -1, 1, 0);
   Script_shenClearFreeState(0);
   SCNF_RequestIconNotification(0, 0, 0, 2);
   Script_charaDisplay(CHARA_AKIR, CDM_Show);
   (void)((task_250 = -1) & 4);
-  Script_ccowUtils(CHARA_AKIR, 2);
+  Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
   Script_SetActionSelectorHUDElementVisibility(1);
   Script_srchUtils(SRCH_SCRIPT_Reset);
   if (task_2E4 == 1) {
@@ -5766,9 +4782,9 @@ static void script_94B2(void) {
   }
   Script_lightSetSlotEnabled(28, 0);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
-  Script_ccowUtils(CHARA_AKIR, 1);
+  Script_ccowUtils(CHARA_AKIR, CCOW_EnableAll);
   Script_convSetCamInactiveFlag(1);
   Script_SetGameStateTo(AUTH_None);
   Script_SetActionSelectorHUDElementVisibility(0);
@@ -5787,13 +4803,13 @@ static void script_94B2(void) {
     SAVE_Script_UpdateForSaveData(3, 0, 10);
   }
   Script_ryoControl(RYO_RestoreControl);
-  Script_FaceEx(CHARA_AKIR, 0, 0, 2);
+  Script_FaceEx(CHARA_AKIR, FACE_ExpressionDisabled, 0, 2);
   Script_ResetHandMotion(CHARA_AKIR, 0, 0, 0);
   Script_ResetHandMotion(CHARA_AKIR, 0, 1, 0);
   Script_shenClearFreeState(1);
   SCNF_WaitFrames_0000(10);
   Script_motiSetAngFlags(CHARA_AKIR, 1);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   (void)((task_250 = 0) & 4);
   Script_filmCheckOrSetTransitionUtil(15, 255, 0, 0, 0, 0, 0, 0, 0);
   return;
@@ -5843,7 +4859,7 @@ static void script_96F1(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
 static void script_9709(void) {
   Vector3i local_F4;
   Script_ryoControl(PCCTL_DisablePlayerControl);
-  Script_FaceEx(CHARA_AKIR, 1, 0, 2);
+  Script_FaceEx(CHARA_AKIR, FACE_ExpressionEnabled, 0, 2);
   Script_ResetHandMotion(CHARA_AKIR, -1, 0, 0);
   Script_ResetHandMotion(CHARA_AKIR, -1, 1, 0);
   Script_shenClearFreeState(0);
@@ -5864,7 +4880,7 @@ static void script_9709(void) {
   Script_EVT_SetRotation(CHARA_ONO_, 0x38000000, &data_10020, 0);
   script_965F(CHARA_AKIR);
   Script_ryoControl(RYO_RestoreControl);
-  Script_FaceEx(CHARA_AKIR, 0, 0, 2);
+  Script_FaceEx(CHARA_AKIR, FACE_ExpressionDisabled, 0, 2);
   Script_ResetHandMotion(CHARA_AKIR, 0, 0, 0);
   Script_ResetHandMotion(CHARA_AKIR, 0, 1, 0);
   Script_shenClearFreeState(1);
@@ -5902,15 +4918,15 @@ static void script_9891(void) {
     script_D87D(0x52494B41, SHEN_NAME('LIGH'));
     Script_lightSetSlotEnabled(15, 0);
     Script_motiSetAngFlags(CHARA_AKIR, 0);
-    Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+    Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
     Script_PlayCharaMotion(CHARA_AKIR, 4105, 78.0f, -1, -1, 1.3f, 0);
     Script_CharHandlers(CHARA_AKIR, 1, 0, 16);
     SCNF_WaitFrames_0000(1);
     Script_motiSetAngFlags(CHARA_AKIR, 1);
-    Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+    Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
     Script_SetGameStateTo(AUTH_EventCam);
     Script_scenCreateTask(script_AA3A, 0);
-    Script_ccowUtils(CHARA_AKIR, 2);
+    Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
     Script_lightSpotLightEnable(28, &data_1002C, &data_10038);
     Script_LightUtils(28, 2, &data_F258);
     Script_LightUtils(28, 4, 2.1f);
@@ -6027,7 +5043,7 @@ static void script_9E2D(void) {
         Script_PlayCharaMotion(CHARA_AKIR, 4108, 0.0f, 56.0f, 0.0f, 1.0f, 0);
         break;
       case 1:
-        Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+        Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
         SCNF_WaitFrames_0000(1);
         Script_seqEnterEvtCam(900, 0, AUTH_None);
         Script_PlayCharaMotion(CHARA_AKIR, 4108, 0.0f, 60.0f, 42.0f, 1.0f, 0);
@@ -6117,7 +5133,7 @@ static void script_A18D(void) {
   int32_t local_A8;
   SCNF_RequestIconNotification(0, 0, 0, 2);
   (void)((task_250 = -1) & 8);
-  Script_ccowUtils(CHARA_AKIR, 2);
+  Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
   Script_ResetHandMotion(CHARA_AKIR, 1, 0, 0);
   Script_ResetHandMotion(CHARA_AKIR, 1, 1, 0);
   Script_lightSpotLightEnable(28, &data_1019C, &data_101A8);
@@ -6151,7 +5167,7 @@ static void script_A18D(void) {
   Script_charaDisplay(SHEN_NAME('LIGH'), CDM_Show);
   Script_EVT_SetPosition(SHEN_NAME('LIGH'), POS_XYZ, &data_10154);
   Script_EVT_SetRotation(SHEN_NAME('LIGH'), 0x38000000, &data_10160, 0);
-  Script_ccowUtils(CHARA_AKIR, 2);
+  Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
   Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_100D0);
   Script_EVT_SetRotation(CHARA_AKIR, 0x38000000, &data_100C4, 0);
   Script_ShowUIMessageFromID("E1012A276");
@@ -6253,7 +5269,7 @@ static void script_A18D(void) {
   }
   Script_EVT_SetRotation(CHARA_AKIR, 0x38000000, &data_100DC, 0);
   Script_fixoAttachEx(SHEN_NAME('HOKY'), CHARA_AKIR, 18, &data_1013C, &data_10148);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   Script_PlayCharaMotion(CHARA_AKIR, 4145, 20.0f, 155.0f, -1, 1.0f, 0);
   task_258 = 0;
   for (;;) {
@@ -6451,7 +5467,7 @@ static void script_AD92(void) {
   Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_10248);
   Script_EVT_SetRotation(CHARA_AKIR, 0x38000000, &data_10254, 0);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_seqEnterEvtCam(6300, 0, AUTH_None);
   Script_ResetHandMotion(CHARA_AKIR, 1, 1, 812);
   Script_fixoAttachEx(0x306B6E64, CHARA_AKIR, 18, &data_10260, &data_1026C);
@@ -6472,7 +5488,7 @@ static void script_AD92(void) {
     SCNF_WaitFrames_0000(1);
   }
   Script_motiSetAngFlags(CHARA_AKIR, 1);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   local_C0 = 0;
   for (;;) {
     local_BC = local_C0 % 30;
@@ -6498,7 +5514,7 @@ static void script_AD92(void) {
   Script_charaDisplay(CHARA_ONO_, CDM_Show);
   Script_CharHandlers(CHARA_AKIR, 0, 0, 16);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_convSetCamInactiveFlag(1);
   Script_SetGameStateTo(AUTH_None);
@@ -6524,11 +5540,11 @@ static void script_B019(int32_t arg0) {
   Script_LightUtils(28, 10, 4187);
   Script_lightSetSlotEnabled(28, 1);
   Script_charaDisplay(CHARA_ONO_, CDM_Hide);
-  Script_ccowUtils(CHARA_AKIR, 2);
-  Script_ccowUtils(arg0, 2);
+  Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
   Script_charaDisplay(SHEN_NAME('DOGI'), CDM_Show);
   Script_charaDisplay(SHEN_NAME('SHAS'), CDM_Show);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
   Script_PlayCharaMotion(CHARA_AKIR, 4100, 0.0f, -1, -1, 1.0f, 0);
   Script_EVT_GetPosition(SHEN_NAME('FUTA'), -1, &local_E4, 0);
@@ -6550,14 +5566,14 @@ static void script_B019(int32_t arg0) {
     SCNF_WaitFrames_0000(1);
   }
   Script_motiSetAngFlags(CHARA_AKIR, 1);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   return;
 }
 
 static void script_B1AD(int32_t arg0) {
   int32_t unused_FC;
-  Script_ccowUtils(CHARA_AKIR, 1);
-  Script_ccowUtils(arg0, 1);
+  Script_ccowUtils(CHARA_AKIR, CCOW_EnableAll);
+  Script_ccowUtils(arg0, CCOW_EnableAll);
   Script_charaDisplay(SHEN_NAME('DOGI'), CDM_Hide);
   Script_charaDisplay(SHEN_NAME('SHAS'), CDM_Hide);
   Script_lightSetSlotEnabled(28, 0);
@@ -6617,7 +5633,7 @@ static void script_B358(int32_t arg0) {
   Script_GetCassetteFlags_0(54, 1, 0);
   script_D87D(0x52494B41, SHEN_NAME('LIGH'));
   Script_lightSetSlotEnabled(15, 0);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
   Script_charaDisplay(CHARA_AKIR, CDM_Show);
   Script_charaDisplay(SHEN_NAME('HROU'), CDM_Show);
@@ -6704,7 +5720,7 @@ static void script_B723(int32_t arg0) {
   Script_GetCassetteFlags_0(55, 1, 0);
   script_D87D(0x52494B41, SHEN_NAME('LIGH'));
   Script_lightSetSlotEnabled(15, 0);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
   Script_ResetHandMotion(CHARA_AKIR, 1, 1, 811);
   Script_ResetHandMotion(CHARA_AKIR, 1, 0, 812);
@@ -6882,11 +5898,11 @@ static void script_BC3F(void) {
   SCNF_WaitFrames_0000(1);
   Script_SetLookPointDetails(CHARA_AKIR, 12, &data_10530, 1);
   (&local_D0)->z = -0x8000;
-  Script_charaPosRotUtils(SHEN_NAME('DENW'), 152, &data_1053C, &local_D0, 1);
+  Script_charaPosRotUtils(SHEN_NAME('DENW'), 152, &data_1053C, &local_D0, CHARA_PART_Add);
   Script_ShowUIMessageFromID("E1012A119");
-  Script_ccowUtils(CHARA_AKIR, 2);
+  Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
   Script_lightSetSlotEnabled(28, 0);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
   Script_seqEnterEvtCam(6000, 0, AUTH_None);
   Script_charaDisplay(CHARA_AKIR, CDM_Show);
@@ -6932,7 +5948,7 @@ static void script_BC3F(void) {
   }
   Script_scenUtils(SCENARIO_CMD_SET_SHENMUE_FLAG, 226, 1);
   Script_motiSetAngFlags(CHARA_AKIR, 1);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   {
     int32_t unused_B0[8];
     Vector3i local_A4;
@@ -6951,7 +5967,7 @@ static void script_BC3F(void) {
   Script_GetCassetteFlags(40, 1, 0, 0);
   SCNF_StartIconSystemMenu(40);
   (&local_D0)->z = 0x8000;
-  Script_charaPosRotUtils(SHEN_NAME('DENW'), 152, &data_1053C, &local_D0, 1);
+  Script_charaPosRotUtils(SHEN_NAME('DENW'), 152, &data_1053C, &local_D0, CHARA_PART_Add);
   Script_fixoClearAttachment(SHEN_NAME('DENW'));
   Script_charaDisplay(SHEN_NAME('YKUR'), CDM_Show);
   Script_lightSetSlotEnabled(28, 1);
@@ -6984,7 +6000,7 @@ static void script_C0FC(void) {
   Script_ResetHandMotion(CHARA_AKIR, 1, 0, 411);
   Script_scenCreateTask(script_C7F8, 0);
   task_258 = 0;
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
   Script_PlayCharaMotion(CHARA_AKIR, 4140, 0.0f, -1, -1, 1.0f, 0);
   script_D87D(0x52494B41, SHEN_NAME('LIGH'));
@@ -7035,7 +6051,7 @@ static void script_C0FC(void) {
     SCNF_WaitFrames_0000(1);
   }
   Script_motiSetAngFlags(CHARA_AKIR, 1);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   task_258 = 0;
   Script_PlayCharaMotion(CHARA_AKIR, 4133, -1, -1, -1, 1.0f, 0);
   {
@@ -7193,7 +6209,7 @@ static void script_C858(void) {
   Script_seqEnterEvtCam(1112, 0, AUTH_None);
   SCNF_WaitFrames_0000(1);
   task_258 = 120;
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_motiSetAngFlags(CHARA_AKIR, 0);
   Script_PlayCharaMotion(CHARA_AKIR, 4135, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   task_258 = 0;
@@ -7230,7 +6246,7 @@ static void script_C858(void) {
     }
     L00CA80:;
     Script_motiSetAngFlags(CHARA_AKIR, 1);
-    Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+    Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
     if (task_258 == 85) {
       Script_EVT_GetPosition(SHEN_NAME('DAMY'), -1, &local_E8, 0);
     }
@@ -7333,7 +6349,7 @@ static void script_CCC1(void) {
     Script_scenUtils(SCENARIO_CMD_SET_SHENMUE_FLAG, 890, 0);
   }
   Script_motiSetAngFlags(CHARA_AKIR, 1);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_ryoControl(RYO_RestoreControl);
   return;
@@ -7392,7 +6408,7 @@ void script_CEB6(void) {
   Script_charaDisplay(SHEN_NAME('FIR2'), CDM_Hide);
   Script_charaDisplay(SHEN_NAME('FIR3'), CDM_Hide);
   Script_charaDisplay(SHEN_NAME('FIR5'), CDM_Hide);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 8);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 8);
   Script_ryoControl(PCCTL_SetCPCTFlag400, 1);
   Script_LoadVoiceFile(1, data_10698);
   Script_SetStats(STATS_PLAYER_CONTEXT_ACTION_MODE, 0);
@@ -7470,8 +6486,8 @@ static int32_t script_D14B(int32_t arg0) {
   Script_ryoControl(PCCTL_DisablePlayerControl);
   Script_clmdSetFlags(arg0, 2, 0);
   Script_facemotUtils(arg0, 0, 0);
-  Script_FaceEx(arg0, 1, 0, 1);
-  Script_FACE_LCG(arg0, 0, 10, 0);
+  Script_FaceEx(arg0, FACE_ExpressionEnabled, 0, 1);
+  Script_FACE_LCG(arg0, FACE_BlinkAutomatic, 10, 0);
   script_0FBF();
   Script_charaSetClipAngle(SHEN_NAME('TANR'), 15.0f);
   Script_charaSetClipAngle(SHEN_NAME('UBOX'), 15.0f);
@@ -7538,7 +6554,7 @@ static int32_t script_D14B(int32_t arg0) {
       if (local_B4 == 1) {
         Script_SetShouldSleepFlag(0);
         Script_ryoControl(PCCTL_DisablePlayerControl);
-        Script_FaceEx(CHARA_AKIR, 1, 0, 2);
+        Script_FaceEx(CHARA_AKIR, FACE_ExpressionEnabled, 0, 2);
         Script_ResetHandMotion(CHARA_AKIR, -1, 0, 0);
         Script_ResetHandMotion(CHARA_AKIR, -1, 1, 0);
         Script_shenClearFreeState(0);
@@ -7851,7 +6867,7 @@ static int32_t script_DD28(void) {
 static void script_DDE3(int32_t arg0) {
   (void)((task_250 = -1) & 1);
   Script_ryoControl(PCCTL_DisablePlayerControl);
-  Script_ccowUtils(arg0, 2);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
   if (Script_scenUtils(SCENARIO_CMD_GET_SHENMUE_FLAG, SHENMUE_FLAG_YDB1_WAKE_FROM_SLEEP_CUTSCENE_SEEN) == 0) {
     Script_seqEnterEvtCam(10, 0, AUTH_None);
   } else {
@@ -7909,7 +6925,7 @@ static void script_DDE3(int32_t arg0) {
   Script_scenUtils(SCENARIO_CMD_SET_SHENMUE_FLAG, SHENMUE_FLAG_YDB1_WAKE_FROM_SLEEP_CUTSCENE_SEEN, 1);
   Script_scenUtils(SCENARIO_CMD_SET_SHENMUE_FLAG, SHENMUE_FLAG_YDB1_WAKE_FROM_SLEEP_CUTSCENE_SEEN, 1);
   (void)((task_250 = 0) & 0x10);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_EVT_SetPosition(CHARA_AKIR, POS_XYZ, &data_10834);
   {
@@ -7920,8 +6936,8 @@ static void script_DDE3(int32_t arg0) {
   Script_convSetCamInactiveFlag(1);
   Script_SetGameStateTo(AUTH_None);
   SCNF_WaitFrames_0000(10);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
-  Script_ccowUtils(arg0, 1);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
+  Script_ccowUtils(arg0, CCOW_EnableAll);
   Script_ryoControl(RYO_RestoreControl);
   Script_hmdlApplyScale(SHEN_NAME('UBOX'), &data_10828);
   Script_charaSetClipAngle(SHEN_NAME('TANR'), 15.0f);

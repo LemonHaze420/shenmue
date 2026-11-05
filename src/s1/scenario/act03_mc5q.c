@@ -1,175 +1,5 @@
 #include "act03_mc5q.h"
 
-static int32_t script_0030(int32_t arg0, int32_t arg1);
-static int32_t script_0054(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_012B(int32_t arg0, int32_t arg1, int32_t arg2, float arg3, int32_t arg4, int32_t arg5);
-static int32_t script_01C2(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_0224(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_0280(int32_t arg0, float arg1, int32_t arg2);
-static void script_02DD(int32_t arg0);
-static int32_t script_02F9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, void *arg4, int32_t arg5);
-static void script_0520(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_0557(int32_t arg0);
-static void script_0567(void);
-static void script_0587(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_05C1(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_060D(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static void script_0656(int32_t arg0);
-static int32_t script_0669(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_06CC(int32_t arg0, int32_t arg1);
-static int32_t script_078D(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_087B(void);
-static void script_0969(int32_t arg0, int32_t arg1);
-static void script_0992(int32_t arg0, int32_t arg1, float arg2, float arg3, float arg4);
-static void script_0A21(int32_t arg0, int32_t arg1, const Vector3 *arg2);
-static void script_0A54(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static int32_t script_0A6E(int32_t arg0, int32_t arg1, float arg2, float arg3, float arg4, int32_t arg5);
-static void script_0A99(int32_t arg0, int32_t arg1, float arg2, float arg3, float arg4, float arg5);
-static void script_0B19(int32_t arg0, int32_t arg1, float arg2);
-static void script_0B6D(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_0B83(int32_t arg0, int32_t arg1, float arg2, int32_t arg3);
-static void script_0BAA(int32_t arg0, float arg1);
-static void script_0BD3(int32_t arg0, float arg1, float arg2, float arg3);
-static void script_0C27(int32_t arg0, int32_t arg1, int32_t arg2);
-static int32_t script_0C3B(int32_t arg0, float arg1, int32_t arg2);
-static void script_0C60(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_0C78(int32_t arg0, float arg1, float arg2, float arg3, int32_t arg4);
-static void script_0CA1(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_0CB9(int32_t arg0, float arg1, float arg2, float arg3, int32_t arg4);
-static void script_0D0E(int32_t arg0, int32_t arg1);
-static void script_0DF3(int32_t arg0, int32_t arg1);
-static void script_0EDC(int32_t arg0);
-static void script_0EFA(void);
-static void script_0F42(void);
-static void script_0F5D(void);
-static void script_0F77(const char *arg0, const char *arg1);
-static void script_0FB5(const char *arg0);
-static void script_0FD6(int32_t arg0);
-static void script_0FED(int32_t arg0);
-static void script_1073(int32_t arg0, int32_t arg1);
-static void script_1096(int32_t arg0);
-static int32_t script_134E(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_1BF1(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_1C07(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_1C2B(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_1C41(float arg0, float arg1, float arg2, int32_t arg3);
-static void script_1C66(int32_t arg0, int32_t arg1);
-static int32_t script_1C78(const char *arg0, int32_t arg1);
-static void script_1C9F(int32_t arg0, int32_t arg1);
-static void script_1CB0(int32_t arg0, int32_t arg1);
-static void script_1DF1(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_1E09(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static void script_1E30(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_1E46(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_1E82(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5, int32_t arg6);
-static int32_t script_1E9E(int32_t arg0, int32_t arg1, int32_t arg2, float arg3, int32_t arg4, int32_t arg5, int32_t arg6);
-static void script_1EF4(void);
-static int32_t script_1EF7(int32_t arg0, int32_t arg1);
-static int32_t script_213F(int32_t arg0, int32_t arg1);
-static int32_t script_272B(int32_t arg0, int32_t arg1);
-void script_278B(void);
-static void script_27DC(int32_t arg0);
-static void script_27F7(int32_t arg0);
-static void script_2830(int32_t arg0);
-static void script_28D8(void);
-static int32_t script_295A(int32_t arg0, int32_t arg1, int32_t arg2);
-static int32_t script_2B0A(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-
-static int32_t task_0;
-static int32_t task_4;
-static int32_t task_8;
-static int32_t task_C;
-static int32_t task_10;
-static int32_t task_14;
-static int32_t task_18;
-static int32_t task_1C[2];
-static int32_t task_24[2];
-static int32_t task_2C[2];
-static int32_t task_34[2];
-static int32_t task_3C[2];
-static int32_t task_44;
-static int32_t task_48[2];
-static int32_t task_50[2];
-static int32_t task_58[2];
-static int32_t task_60[2];
-static int32_t task_68;
-static int32_t task_6C;
-static int32_t task_70;
-static int32_t task_74;
-static int32_t task_78;
-static int32_t task_7C;
-static int32_t task_80[2];
-static float task_88[2][3];
-static float task_A0[2];
-static float task_A8;
-static float task_AC;
-static float task_B0;
-static float task_B4[2][3];
-static int32_t task_CC[2][3];
-static float task_E4[2];
-static int32_t task_EC[2];
-static int32_t task_F4;
-static int32_t task_F8;
-static int32_t task_FC;
-static int32_t task_100;
-static const int32_t data_2CBC[57] = {
-  0, 0, -5461, 0, -2366, -1092, 0, -182, 1092, 0, -546, -6735, 0, 0, -4004, 0, 0, -6553, 0, -182, 1274, 0, 0, -13289, 0, 0, -5279, 0, 0, -8009, 0, 0,
-  1456, 0, 182, -8738, 0, 0, -6007, 0, 0, -8738, 0, 182, 1638, 0, -728, -5279, 0, -1274, -6735, 0, -910, -8738, 0, 0, 1638
-};
-static const int32_t data_2DA0[57] = {
-  0, 0, -7281, 0, 0, -4004, 0, 546, 182, 0, 0, -18204, 0, 0, -16930, 0, 0, -12379, 0, 0, 0, 0, 0, -12196, 0, 0, -18204, 0, 0, -13289, 0, 0, 0, 0, 0,
-  -11832, 0, 0, -18386, 0, 0, -13835, 0, 0, 0, 0, 910, -12014, 0, -2184, -16748, 0, -2002, -13835, 0, 0, 364
-};
-static const int32_t data_2E84[57] = {
-  0, 0, -1274, 0, 3276, 546, 0, -1274, 1274, 0, -546, -6735, 0, 0, -6553, 0, 2002, -546, 0, -182, 1274, 0, 0, -5643, 0, 0, -9102, 0, 0, -1092, 0, 0,
-  1456, 0, 182, -6553, 0, 0, -8374, 0, -1820, -2730, 0, 0, 1638, 0, -728, -5279, 0, -1274, -3640, 0, -2548, -4004, 0, 0, 1638
-};
-static const int32_t data_2F68[57] = {
-  0, 0, -1274, 0, 3276, 546, 0, -1274, 1274, 0, -546, -6735, 0, 0, -6553, 0, 2002, -364, 0, -182, 1274, 0, 0, -5643, 0, 0, -9102, 0, 0, -1274, 0, 0,
-  1456, 0, 182, -6553, 0, 0, -7827, 0, -1820, -2548, 0, 0, 1638, 0, -728, -5279, 0, -1274, -3640, 0, -2548, -3822, 0, 0, 1638
-};
-static const uint32_t data_304C = 16;
-static const int32_t data_3050[47] = {
-  24, 14, 0, 0, -1, -1, -1, -1, -1, 1, 3, 256, 24, 14, 0, 0, -1, -1, -1, -1, -1, 5, 7, 256, 24, 14, 0, 0, -1, -1, -1, -1, -1, 9, 11, 512, 24, 14, 0,
-  0, -1, -1, -1, -1, -1, 13, 15
-};
-static const char data_310C[9] __attribute__((scn_string_literal)) = "オート０";
-static const char data_3115[7] __attribute__((scn_string_literal)) = "開始０";
-static const char data_311C[7] __attribute__((scn_string_literal)) = "成功０";
-static const char data_3123[7] __attribute__((scn_string_literal)) = "失敗０";
-static const char data_312A[7] __attribute__((scn_string_literal)) = "死亡０";
-static const char data_3131[7] __attribute__((scn_string_literal)) = "開始１";
-static const char data_3138[7] __attribute__((scn_string_literal)) = "成功１";
-static const char data_313F[7] __attribute__((scn_string_literal)) = "失敗１";
-static const char data_3146[7] __attribute__((scn_string_literal)) = "開始２";
-static const char data_314D[7] __attribute__((scn_string_literal)) = "成功２";
-static const char data_3154[7] __attribute__((scn_string_literal)) = "失敗２";
-static const char data_315B[7] __attribute__((scn_string_literal)) = "開始３";
-static const char data_3162[7] __attribute__((scn_string_literal)) = "成功３";
-static const char data_3169[7] __attribute__((scn_string_literal)) = "失敗３";
-static const char data_3170[7] __attribute__((scn_string_literal)) = "開始４";
-static const char data_3177[7] __attribute__((scn_string_literal)) = "成功４";
-static const char data_317E[7] __attribute__((scn_string_literal)) = "失敗４";
-static const char data_3185[15] __attribute__((scn_string_literal)) = "PRESS A BUTTON";
-static const char data_3194[] __attribute__((scn_string_literal)) = "E1062B003";
-static const char data_319E[] __attribute__((scn_string_literal)) = "E1062B009";
-static const char data_31A8[] __attribute__((scn_string_literal)) = "E1062B003";
-static const char data_31B2[] __attribute__((scn_string_literal)) = "E1062B005";
-static const char data_31BC[] __attribute__((scn_string_literal)) = "E1062B008";
-static const char data_31C6[] __attribute__((scn_string_literal)) = "E1062B005";
-static const char data_31D0[11] __attribute__((scn_string_literal)) = "M_MC5Q.BIN";
-static const char data_31DB[7] __attribute__((scn_string_literal)) = "A0184D";
-static const char data_31E2[6] __attribute__((scn_string_literal)) = "E1062";
-static const char data_31E8[12] __attribute__((scn_string_literal)) = "system1.snd";
-static const char data_31F4[11] __attribute__((scn_string_literal)) = "qtebat.snd";
-static const char data_31FF[11] __attribute__((scn_string_literal)) = "bgm067.snd";
-static const char data_320A[7] __attribute__((scn_string_literal)) = "A0184D";
-static const char data_3211[7] __attribute__((scn_string_literal)) = "E1062";
-static const Vector3 data_3218 = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
-static const Vector3i data_3224 = {.x = 0, .y = 0, .z = 0};
-static const Vector3 data_3230 = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
-static const Vector3i data_323C = {.x = 0, .y = 0, .z = 0};
-
 static int32_t script_0030(int32_t arg0, int32_t arg1) {
   if (arg1 > 0) {
     SCNF_WaitFrames_0000(arg1);
@@ -204,12 +34,12 @@ static int32_t script_012B(int32_t arg0, int32_t arg1, int32_t arg2, float arg3,
   if (arg1 > 0) {
     SCNF_WaitFrames_0000(arg1);
   }
-  Script_motmGetCharaFlags(arg4, 0, 0);
-  Script_motmToggleFlags(arg4, 1, 0x40);
+  Script_motmGetCharaFlags(arg4, MOTM_PoseNone, SCEN_Write);
+  Script_motmToggleFlags(arg4, SCEN_Enable, 0x40);
   Script_PlayCharaMotion(arg4, arg0, arg2, -1.0f, -1.0f, 1.0f, 0);
   Script_SetCharaMotionPlaybackRate(arg4, arg3);
   if (local_FC & -0x80000000) {
-    Script_motmToggleFlags(arg4, 1, 0x80);
+    Script_motmToggleFlags(arg4, SCEN_Enable, 0x80);
   }
   if (local_FC & 0x40000000) {
     Script_charaToggleMotEnabled(arg4, 1);
@@ -287,38 +117,38 @@ static int32_t script_02F9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
       local_FC = task_58[arg1] * 12;
       {
         int32_t local_F8;
-        local_F8 = Script_ScenDataUtil(arg4, 4, local_FC + 5);
+        local_F8 = Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 5);
         if (local_F8 > 0) {
           SCNF_WaitFrames_0000(local_F8);
         }
       }
       {
         int32_t local_F8;
-        local_F8 = Script_ScenDataUtil(arg4, 4, local_FC + 8);
+        local_F8 = Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 8);
         if (local_F8 > 0) {
           task_1C[arg1] = local_F8;
         }
       }
       {
         int32_t local_F8;
-        local_F8 = Script_ScenDataUtil(arg4, 4, local_FC + 6);
+        local_F8 = Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 6);
         if (local_F8 > 0) {
           SCNF_WaitFrames_0000(local_F8);
         }
       }
       if (task_24[arg1] == 0) {
-        Script_scenCreateTask(script_0669, 4, Script_ScenDataUtil(arg4, 4, local_FC), Script_ScenDataUtil(arg4, 4, local_FC + 1), Script_ScenDataUtil(arg4, 4, local_FC + 2), Script_ScenDataUtil(arg4, 4, local_FC + 3));
+        Script_scenCreateTask(script_0669, 4, Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC), Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 1), Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 2), Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 3));
       }
       {
         int32_t local_F8;
-        local_F8 = Script_ScenDataUtil(arg4, 4, local_FC + 7);
+        local_F8 = Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 7);
         if (local_F8 > 0) {
           SCNF_WaitFrames_0000(local_F8);
         }
       }
       {
         int32_t local_F8;
-        local_F8 = Script_ScenDataUtil(arg4, 4, local_FC + 9);
+        local_F8 = Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 9);
         if (local_F8 > 0) {
           task_1C[arg1] = local_F8;
         }
@@ -326,15 +156,15 @@ static int32_t script_02F9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
       script_0567();
       {
         int32_t local_F8;
-        if (task_74 == Script_ScenDataUtil(arg4, 4, local_FC)) {
+        if (task_74 == Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC)) {
           task_70 = 1;
-          local_F8 = Script_ScenDataUtil(arg4, 4, local_FC + 10);
+          local_F8 = Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 10);
         } else {
           if (task_24[arg1] == 0) {
-            task_7C = task_7C + Script_ScenDataUtil(arg4, 4, local_FC + 4);
+            task_7C = task_7C + Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 4);
           }
           task_70 = 0;
-          local_F8 = Script_ScenDataUtil(arg4, 4, local_FC + 11);
+          local_F8 = Script_ScenDataUtil(arg4, SCND_ReadU32, local_FC + 11);
         }
         if (local_F8 > 0) {
           task_1C[arg1] = local_F8;
@@ -398,7 +228,7 @@ static void script_060D(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
 
 static void script_0656(int32_t arg0) {
   task_68 = arg0;
-  Script_SetSfxOverlayTimeoutTuning(arg0, SfxMode_SetBoostStepFrames);
+  Script_SetQteOverlayTimeoutTuning(arg0, QTE_SetTimeoutStep);
   return;
 }
 
@@ -408,7 +238,7 @@ static int32_t script_0669(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
   local_FC = arg1 + arg3;
   local_F8 = arg2 + arg3;
   Script_scenCreateTask(script_06CC, 2, arg1, arg3);
-  Script_SetSfxOverlayTimeoutTuning(local_FC, SfxMode_SetMaxFrames);
+  Script_SetQteOverlayTimeoutTuning(local_FC, QTE_SetTimeoutMaximum);
   if (arg0 == 68) {
     SCNF_UIUtils(0x44, local_F8, 5, 0, 1, 0);
   } else {
@@ -769,11 +599,11 @@ static void script_0FD6(int32_t arg0) {
 static void script_0FED(int32_t arg0) {
   int32_t local_FC;
   local_FC = 0;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) != 0) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) != 0) {
     local_FC = Script_CycleManagerUtils(CYCLE_CMD_PARSE_FOR_SCRIPT_INTERNAL_HUMAN, arg0);
   } else {
     Script_CycleManagerUtils(CYCLE_CMD_PARSE_FOR_SCRIPT, arg0, 1);
-    while (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    while (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       local_FC = Script_CycleManagerUtils(CYCLE_CMD_GET_CYCLE_PTR_BY_CHARA_ID, arg0);
       while (local_FC == 0) {
         SCNF_WaitFrames_0000(1);
@@ -818,7 +648,7 @@ static void script_1096(int32_t arg0) {
         Script_handSetFloatsFor(CHARA_CHAI, 0, data_2E84, 1);
         Script_handSetFloatsFor(CHARA_CHAI, 1, data_2E84, 1);
         Script_FACE(CHARA_CHAI, 0, 0, 10);
-        Script_FACE_LCG(CHARA_CHAI, 1, 0, 0);
+        Script_FACE_LCG(CHARA_CHAI, FACE_BlinkClose, 0, 0);
         break;
       case 131:
         task_FC = 1;
@@ -848,7 +678,7 @@ static void script_1096(int32_t arg0) {
       }
     }
     if (local_FC == 56) {
-      Script_FACE_LCG(CHARA_CHAI, 2, 2, 0);
+      Script_FACE_LCG(CHARA_CHAI, FACE_BlinkOpen, 2, 0);
     }
     if (local_FC == 59) {
       Script_FACE(CHARA_CHAI, 5, 0, 10);
@@ -873,7 +703,7 @@ static void script_1096(int32_t arg0) {
       local_E8.x = 70.702499f;
       (&local_E8)->y = 0.8512f;
       (&local_E8)->z = 24.5648f;
-      Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &local_E8, 5);
+      Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &local_E8, 5);
     }
     local_FC = local_FC + 1;
     SCNF_WaitFrames_0000(1);
@@ -1172,7 +1002,7 @@ static int32_t script_1E9E(int32_t arg0, int32_t arg1, int32_t arg2, float arg3,
   Script_PlayCharaMotion(arg4, arg0, arg2, -1.0f, -1.0f, 1.0f, 0);
   Script_SetCharaMotionPlaybackRate(arg4, arg3);
   if (arg6) {
-    Script_motmToggleFlags(arg4, 1, 0x80);
+    Script_motmToggleFlags(arg4, SCEN_Enable, 0x80);
   }
   return Script_srchControl(0);
 }
@@ -1187,7 +1017,7 @@ static int32_t script_1EF7(int32_t arg0, int32_t arg1) {
   GameDateTime local_EC;
   int32_t local_E8;
   SCNF_WaitFrames_0000(5);
-  Script_SetSfxOverlayTimeoutTuning(0, SfxMode_SessionAction);
+  Script_SetQteOverlayTimeoutTuning(0, QTE_TimeoutSession);
   Script_uiUtils(0, 21, 0);
   script_0EDC(18);
   Script_filmCheckOrSetTransitionUtil(60, 255, 255, 255, 255, 0, 0, 0, 0);
@@ -1240,7 +1070,7 @@ static int32_t script_1EF7(int32_t arg0, int32_t arg1) {
     Script_executeAicaCommand(2720, 2, 30);
     Script_executeAicaCommand(1184, 1, 127);
     if (task_7C == -1) {
-      Script_SetSfxOverlayTimeoutTuning(2, SfxMode_SessionAction);
+      Script_SetQteOverlayTimeoutTuning(2, QTE_TimeoutSession);
       script_0F42();
       Script_filmCheckOrSetTransitionUtil(60, 0, 0, 0, 0, 255, 0, 0, 0);
       while (Script_filmCheckOrSetTransitionUtil(-1)) {
@@ -1255,7 +1085,7 @@ static int32_t script_1EF7(int32_t arg0, int32_t arg1) {
       Script_sicnUtils(0, 1, 1);
       SCNF_WaitFrames_0000(90);
       Script_sicnUtils(2, 1, 0);
-      Script_SetSfxOverlayTimeoutTuning(1, SfxMode_SessionAction);
+      Script_SetQteOverlayTimeoutTuning(1, QTE_TimeoutSession);
       script_0EFA();
       Script_filmCheckOrSetTransitionUtil(60, 255, 0, 0, 0, 0, 0, 0, 0);
       goto L002133;
@@ -1455,18 +1285,18 @@ static int32_t script_295A(int32_t arg0, int32_t arg1, int32_t arg2) {
   local_F8 = Script_scenCreateTask(script_02F9, 6, arg0, arg1, 0, 2, &data_304C, script_134E);
   Script_facemotUtils(arg0, 0, 0);
   Script_facemotUtils(arg0, 1, 0);
-  Script_FaceEx(arg0, 1, 2, 4);
+  Script_FaceEx(arg0, FACE_ExpressionEnabled, 2, 4);
   Script_ResetHandMotion(arg0, 1, 0, 0);
   Script_ResetHandMotion(arg0, 1, 1, 0);
   Script_FACE(arg0, 2, 0, 4);
-  Script_FACE_LCG(arg0, 2, 4, 0);
-  Script_FaceLookAtTargetUtils(arg0, 0);
+  Script_FACE_LCG(arg0, FACE_BlinkOpen, 4, 0);
+  Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
   Script_ryoSetChara(arg0);
   Script_ryoControl(PCCTL_DisablePlayerControl);
-  Script_ccowUtils(arg0, 2);
-  Script_motmGetCharaFlags(arg0, 0, 0);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
+  Script_motmGetCharaFlags(arg0, MOTM_PoseNone, SCEN_Write);
   Script_charaToggleMotEnabled(arg0, 1);
-  Script_motmToggleFlags(arg0, 1, 0x40);
+  Script_motmToggleFlags(arg0, SCEN_Enable, 0x40);
   Script_motmSetBlendFrames(arg0, MOTM_BLEND_FRAMES_7);
   Script_SetFightProgramStateBytes(arg0, 2, 1);
   Script_SetCPAMFlags(arg0, 0);
@@ -1482,7 +1312,7 @@ static int32_t script_295A(int32_t arg0, int32_t arg1, int32_t arg2) {
     if (task_C == 2) {
       Script_ResetHandMotion(arg0, 0, 0, 0);
       Script_ResetHandMotion(arg0, 0, 1, 0);
-      Script_FaceEx(arg0, 0, 0, 0);
+      Script_FaceEx(arg0, FACE_ExpressionDisabled, 0, 0);
       Script_faceUpdateFor(arg0, 0, 0);
       Script_faceUpdateFor(arg0, 1, 0);
       Script_srchControl((void *)task_60[arg1]);
@@ -1502,16 +1332,16 @@ static int32_t script_2B0A(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
   local_F8 = Script_scenCreateTask(script_02F9, 6, arg0, arg1, arg3, arg4, &data_304C, script_134E);
   Script_facemotUtils(arg0, 0, 0);
   Script_facemotUtils(arg0, 1, 0);
-  Script_FaceEx(arg0, 1, 1, 4);
+  Script_FaceEx(arg0, FACE_ExpressionEnabled, 1, 4);
   Script_ResetHandMotion(arg0, 1, 0, 0);
   Script_ResetHandMotion(arg0, 1, 1, 0);
   Script_FACE(arg0, 1, 0, 4);
-  Script_FACE_LCG(arg0, 2, 4, 0);
-  Script_FaceLookAtTargetUtils(arg0, 0);
-  Script_ccowUtils(arg0, 2);
-  Script_motmGetCharaFlags(arg0, 0, 0);
+  Script_FACE_LCG(arg0, FACE_BlinkOpen, 4, 0);
+  Script_FaceLookAtTargetUtils(arg0, FACE_LookReset);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
+  Script_motmGetCharaFlags(arg0, MOTM_PoseNone, SCEN_Write);
   Script_charaToggleMotEnabled(arg0, 1);
-  Script_motmToggleFlags(arg0, 1, 0x40);
+  Script_motmToggleFlags(arg0, SCEN_Enable, 0x40);
   Script_motmSetBlendFrames(arg0, MOTM_BLEND_FRAMES_7);
   Script_SetFightProgramStateBytes(arg0, 2, 1);
   Script_SetCPAMFlags(arg0, 0);
@@ -1528,7 +1358,7 @@ static int32_t script_2B0A(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
     if (task_C == 2) {
       Script_ResetHandMotion(arg0, 0, 0, 0);
       Script_ResetHandMotion(arg0, 0, 1, 0);
-      Script_FaceEx(arg0, 0, 0, 0);
+      Script_FaceEx(arg0, FACE_ExpressionDisabled, 0, 0);
       Script_faceUpdateFor(arg0, 0, 0);
       Script_faceUpdateFor(arg0, 1, 0);
       Script_srchControl((void *)task_60[arg1]);

@@ -1,805 +1,5 @@
 #include "act02_ms8s.h"
 
-static void script_0030(void);
-static void script_0168(int32_t arg0);
-static void script_0174(int32_t arg0);
-static void script_0180(int32_t arg0);
-static void script_027C(int32_t arg0);
-static void script_0293(int32_t arg0);
-static void script_02D4(int32_t arg0);
-static void script_0318(int32_t arg0);
-static void script_0396(void);
-static int32_t script_0415(int32_t arg0);
-static void script_0433(float arg0);
-static int32_t script_0452(int32_t arg0, int32_t arg1);
-static void script_04CA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static int32_t script_0A7C(int32_t arg0);
-static void script_0B4D(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_0B5D(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_0C61(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_0E03(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_0F64(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_10C5(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_1363(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_1431(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_1498(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_14FF(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_1546(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_167C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_1F3D(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_205B(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_2720(int32_t arg0, int32_t arg1);
-static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_3709(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_3775(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_3C2F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_6A74(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_6B4C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_7F56(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_83A0(int32_t arg0, DSWKDoorEntry *arg1, int32_t *arg2, DoorResourceDescriptor *arg3, MapObjectRecord *arg4, int32_t arg5, int32_t arg6);
-static void script_852C(DSWKDoorEntry *arg0, int32_t *arg1, DoorResourceDescriptor *arg2, MapObjectRecord *arg3, int32_t arg4);
-static void script_8560(void);
-static void script_85C9(int32_t arg0, int32_t arg1);
-static void script_8666(int32_t arg0, int32_t arg1);
-static void script_86A0(void);
-static void script_8703(void);
-static void script_8766(int32_t arg0);
-static void script_879D(int32_t arg0);
-static void script_87D4(int32_t arg0);
-static void script_8A16(int32_t arg0);
-static void script_8A5F(int32_t arg0);
-static void script_8AA8(int32_t arg0, int32_t arg1);
-static void script_8B1E(int32_t arg0);
-static void script_8B2C(int32_t arg0);
-static void script_8B3A(int32_t arg0);
-static void script_8C01(void);
-static void script_8C0D(void);
-static void script_8C19(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5, int32_t arg6);
-static int32_t script_8C5C(void);
-static int8_t script_8D6D(int32_t arg0, int32_t arg1, int8_t arg2);
-static void script_8E05(int32_t arg0);
-static void script_8FD4(int32_t arg0);
-static int32_t script_9005(int32_t arg0, int32_t arg1, int32_t arg2, float arg3, float arg4, int32_t arg5, int32_t arg6);
-static void script_96CE(int32_t arg0, int32_t arg1);
-static void script_9700(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_9870(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_9A2C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static int32_t script_9BE0(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_9DF6(int32_t arg0, int32_t arg1);
-static void script_9EC0(int32_t arg0, int32_t arg1);
-static void script_9F21(int32_t arg0);
-static void script_A0C6(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_A15E(int32_t arg0, int32_t arg1);
-static void script_A240(int32_t arg0);
-static int32_t script_A297(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_AB99(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_AC8C(int32_t arg0, int32_t arg1);
-static void script_ADCB(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_AF7A(int32_t arg0, int32_t arg1, int32_t arg2);
-static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5, int32_t arg6);
-static int8_t script_B563(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4, int32_t arg5);
-static void script_BB2F(int32_t arg0, int32_t arg1, float arg2, float arg3, int32_t arg4, int32_t arg5);
-static int32_t script_BD6E(int32_t arg0, int32_t arg1, float arg2, float arg3, int32_t arg4, int32_t arg5, int32_t arg6);
-static int32_t script_BFFD(int32_t arg0, int32_t arg1, float arg2, float arg3, int32_t arg4, int32_t arg5, int32_t arg6);
-static void script_C30A(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_C538(int32_t arg0);
-static void script_C5D7(float arg0);
-static void script_C666(float arg0);
-static void script_C6F5(void);
-static int32_t script_C72C(int32_t arg0, int32_t arg1);
-static void script_C863(int32_t arg0);
-static void script_C8AA(int32_t arg0);
-static void script_C8B4(int32_t arg0);
-static void script_C8BE(void);
-static void script_C8C5(int32_t arg0);
-static void script_C9A0(int32_t arg0);
-static void script_CA7B(int32_t arg0);
-static void script_CB56(int32_t arg0, int32_t arg1);
-static void script_CC4C(int32_t arg0, int32_t arg1);
-static int32_t script_CD42(int32_t arg0, int32_t arg1);
-static int32_t script_CE6A(int32_t arg0, int32_t arg1);
-static void script_CF9B(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_D020(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_D070(int32_t arg0, int32_t arg1, int32_t arg2);
-static void script_D0BF(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3);
-static void script_D25C(void);
-static void script_D37C(void);
-static void script_D5D6(int32_t arg0);
-static void script_D732(int32_t arg0, int32_t arg1);
-static void script_E179(int32_t arg0);
-static int32_t script_E54E(int32_t arg0);
-static void script_E5B3(int32_t arg0);
-static void script_E72A(void);
-static void script_E734(void);
-static void script_E73E(void);
-static void script_E748(int32_t arg0);
-static void script_E752(int32_t arg0);
-static void script_E8F8(void);
-static int32_t script_EB70(void);
-static int32_t script_EBC5(void);
-static void script_EC8E(int32_t arg0);
-static void script_F14D(int32_t arg0);
-static int32_t script_F334(void);
-static void script_F368(void);
-static int32_t script_F380(void);
-static int32_t script_F3A3(void);
-static int32_t script_F6FB(void);
-static int32_t script_F73D(void);
-static void script_F7CE(void);
-static void script_F9B9(int32_t arg0);
-static int32_t script_FAD3(void);
-static int32_t script_FAFB(void);
-static void script_FC17(int32_t arg0);
-static void script_101F7(void);
-static void script_10309(void);
-static void script_10381(void);
-void script_10409(void);
-static void script_106CC(const char *arg0, const char *arg1);
-static void script_10706(int32_t arg0, float arg1, float arg2, float arg3, int32_t arg4);
-static void script_10746(void);
-static void script_1075F(int32_t arg0);
-static void script_10777(void);
-static int32_t script_10937(void);
-
-static DSWKDoorEntry *task_0;
-static int32_t *task_4;
-static DoorResourceDescriptor *task_8;
-static MapObjectRecord *task_C;
-static DoorSlotState task_10;
-static int32_t task_1C;
-static int32_t task_20[10];
-static int32_t task_48[10];
-static int32_t task_70[10];
-static int32_t task_98[10];
-static int32_t task_C0[10];
-static int32_t task_E8[10];
-static int32_t task_110[10];
-static int32_t task_138[10];
-static int32_t task_160;
-static int32_t task_164;
-static Vector3 task_168;
-static int32_t task_174;
-static int32_t task_178;
-static int32_t task_17C;
-static int8_t task_180;
-static uint8_t task_181;
-static uint16_t task_182;
-static int8_t task_184;
-static uint8_t task_185;
-static uint16_t task_186;
-static int32_t task_188;
-static int32_t task_18C;
-static int8_t task_190;
-static uint8_t task_191;
-static uint16_t task_192;
-static Vector3 task_194;
-static int32_t task_1A0;
-static int32_t task_1A4;
-static int32_t task_1A8;
-static int32_t task_1AC;
-static int32_t task_1B0;
-static int32_t task_1B4;
-static int32_t task_1B8;
-static int32_t task_1BC;
-static int32_t task_1C0;
-static int32_t task_1C4[4];
-static int32_t task_1D4;
-static float task_1D8;
-static float task_1DC;
-static float task_1E0;
-static int8_t task_1E4;
-static int8_t task_1E5;
-static int8_t task_1E6;
-static int8_t task_1E7;
-static int8_t task_1E8;
-static int8_t task_1E9;
-static int8_t task_1EA;
-static int8_t task_1EB;
-static int8_t task_1EC;
-static uint8_t task_1ED;
-static uint16_t task_1EE;
-static int8_t task_1F0;
-static uint8_t task_1F1;
-static uint16_t task_1F2;
-static int32_t task_1F4;
-static int32_t task_1F8;
-static GameDateTime task_1FC;
-static uint8_t task_204;
-static int8_t task_205;
-static int8_t task_206;
-static int8_t task_207;
-static int8_t task_208;
-static int8_t task_209;
-static int8_t task_20A;
-static int8_t task_20B;
-static int8_t task_20C;
-static uint8_t task_20D;
-static uint16_t task_20E;
-static int8_t task_210;
-static uint8_t task_211;
-static uint16_t task_212;
-static int32_t task_214;
-static int32_t task_218;
-static int32_t task_21C;
-static int32_t task_220;
-static int32_t task_224;
-static int32_t task_228;
-static int32_t task_22C;
-static int32_t task_230;
-static int32_t task_234;
-static Vector3 task_238;
-static Vector3i task_244;
-static int32_t task_250;
-static int32_t task_254;
-static int32_t task_258;
-static int32_t task_25C;
-static int32_t task_260;
-static int32_t task_264;
-static int32_t task_268;
-static int32_t task_26C;
-static int32_t task_270;
-static int32_t task_274;
-static int32_t task_278;
-static int8_t task_27C;
-static uint8_t task_27D;
-static uint16_t task_27E;
-static int8_t task_280;
-static uint8_t task_281;
-static uint16_t task_282;
-static int32_t task_284;
-static int32_t task_288;
-static int32_t task_28C;
-static int32_t task_290;
-static int32_t task_294;
-static int32_t task_298;
-static int32_t task_29C;
-static int32_t task_2A0;
-static int32_t task_2A4;
-static int32_t task_2A8;
-static int32_t task_2AC;
-static int32_t task_2B0;
-static int32_t task_2B4;
-static int32_t task_2B8;
-static int32_t task_2BC;
-static int32_t task_2C0;
-static int32_t task_2C4;
-static int32_t task_2C8;
-static int32_t task_2CC;
-static int32_t task_2D0;
-static int32_t task_2D4[100];
-static int32_t task_464;
-static int32_t task_468;
-static int32_t task_46C;
-static int32_t task_470;
-static int32_t task_474;
-static int32_t task_478;
-static int32_t task_47C;
-static int32_t task_480;
-static int32_t task_484;
-static int32_t task_488;
-static int32_t task_48C;
-static int32_t task_490;
-static int32_t task_494;
-static int32_t task_498;
-static int32_t task_49C;
-static int8_t task_4A0;
-static uint8_t task_4A1;
-static uint16_t task_4A2;
-static const float data_10A4C[3] = {1.0f, 1.0f, 1.0f};
-static const int32_t data_10A58[4] = {16777215, 16777215, 16777215, 16777215};
-static const float data_10A68[3] = {20.0f, 800.0f, 1.0f};
-static const int32_t data_10A74 = -1;
-static const uint32_t data_10A78 = 380;
-static const int32_t data_10A7C[6] = {1, 390, 0, 1018, 0, -1};
-static const uint32_t data_10A94 = 510;
-static const int32_t data_10A98[6] = {1, 525, 0, 1020, 0, -1};
-static const uint32_t data_10AB0 = 150;
-static const int32_t data_10AB4[6] = {1, 160, 0, 1019, 0, -1};
-static const uint32_t data_10ACC = 530;
-static const int32_t data_10AD0[6] = {1, 970, 0, 1014, 0, -1};
-static const uint32_t data_10AE8 = 911;
-static const int32_t data_10AEC[6] = {1, 155, 0, 1015, 0, -1};
-static const char data_10B04[7] __attribute__((scn_string_literal)) = "FREE02";
-static const char data_10B0B[7] __attribute__((scn_string_literal)) = "FREE03";
-static const char data_10B12[7] __attribute__((scn_string_literal)) = "FREE04";
-static const char data_10B19[7] __attribute__((scn_string_literal)) = "FREE01";
-static DoorMotionSelectorBlock data_10B20[38] = {
-  {.motion_desc_index = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {7, 6, 6, 7, 15, 14, 14, 14, 21, 20, 20, 20, 27, 26, 26, 26, 33, 32, 32, 32, 39, 38, 38, 38, 45, 44, 44, 44, 51, 50, 50, 50, 57, 56, 56, 56, 63, 62, 62, 62}},
-  {.motion_desc_index = {7, 6, 6, 7, 16, 13, 13, 13, 22, 19, 19, 19, 28, 25, 25, 25, 34, 31, 31, 31, 40, 37, 37, 37, 46, 43, 43, 43, 52, 49, 49, 49, 58, 55, 55, 55, 64, 61, 61, 61}},
-  {.motion_desc_index = {6, 7, 7, 6, 13, 16, 16, 16, 19, 22, 22, 22, 25, 28, 28, 28, 31, 34, 34, 34, 37, 40, 40, 40, 43, 46, 46, 46, 49, 52, 52, 52, 55, 58, 58, 58, 61, 64, 64, 64}},
-  {.motion_desc_index = {6, 7, 7, 6, 14, 15, 15, 15, 20, 21, 21, 21, 26, 27, 27, 27, 32, 33, 33, 33, 38, 39, 39, 39, 44, 45, 45, 45, 50, 51, 51, 51, 56, 57, 57, 57, 62, 63, 63, 63}},
-  {.motion_desc_index = {6, 7, 7, 6, 13, 16, 16, 16, 19, 22, 22, 22, 25, 28, 28, 28, 31, 34, 34, 34, 37, 40, 40, 40, 43, 46, 46, 46, 49, 52, 52, 52, 55, 58, 58, 58, 61, 64, 64, 64}},
-  {.motion_desc_index = {6, 7, 7, 6, 14, 15, 15, 15, 20, 21, 21, 21, 26, 27, 27, 27, 32, 33, 33, 33, 38, 39, 39, 39, 44, 45, 45, 45, 50, 51, 51, 51, 56, 57, 57, 57, 62, 63, 63, 63}},
-  {.motion_desc_index = {7, 6, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {7, 6, 6, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {1, 1, 1, 1, 11, 12, 12, 12, 17, 18, 18, 18, 23, 24, 24, 24, 29, 30, 30, 30, 35, 36, 36, 36, 41, 42, 42, 42, 47, 48, 48, 48, 53, 54, 54, 54, 59, 60, 60, 60}},
-  {.motion_desc_index = {1, 1, 1, 1, 12, 11, 11, 11, 18, 17, 17, 17, 24, 23, 23, 23, 30, 29, 29, 29, 36, 35, 35, 35, 42, 41, 41, 41, 48, 47, 47, 47, 54, 53, 53, 53, 60, 59, 59, 59}},
-  {.motion_desc_index = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {6, 7, 7, 6, 13, 16, 15, 14, 19, 22, 21, 20, 25, 28, 27, 26, 31, 34, 33, 32, 37, 40, 39, 38, 43, 46, 45, 44, 49, 52, 51, 50, 55, 58, 57, 56, 61, 64, 63, 62}},
-  {.motion_desc_index = {6, 7, 7, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {1, 1, 1, 1, 12, 11, 12, 11, 18, 17, 18, 17, 24, 23, 24, 23, 30, 29, 30, 29, 36, 35, 36, 35, 42, 41, 42, 41, 48, 47, 48, 47, 54, 53, 54, 53, 60, 59, 60, 59}},
-  {.motion_desc_index = {0, 0, 0, 0, 11, 12, 11, 12, 17, 18, 17, 18, 23, 24, 23, 24, 29, 30, 29, 30, 35, 36, 35, 36, 41, 42, 41, 42, 47, 48, 47, 48, 53, 54, 53, 54, 59, 60, 59, 60}},
-  {.motion_desc_index = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {2, 2, 2, 2, 11, 12, 12, 12, 17, 18, 18, 18, 23, 24, 24, 24, 29, 30, 30, 30, 35, 36, 36, 36, 41, 42, 42, 42, 47, 48, 48, 48, 53, 54, 54, 54, 59, 60, 60, 60}},
-  {.motion_desc_index = {2, 2, 2, 2, 12, 11, 11, 11, 18, 17, 17, 17, 24, 23, 23, 23, 30, 29, 29, 29, 36, 35, 35, 35, 42, 41, 41, 41, 48, 47, 47, 47, 54, 53, 53, 53, 60, 59, 59, 59}},
-  {.motion_desc_index = {2, 2, 2, 2, 12, 11, 12, 11, 18, 17, 18, 17, 24, 23, 24, 23, 30, 29, 30, 29, 36, 35, 36, 35, 42, 41, 42, 41, 48, 47, 48, 47, 54, 53, 54, 53, 60, 59, 60, 59}},
-  {.motion_desc_index = {3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {4, 5, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {4, 5, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {5, 4, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {5, 4, 4, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {8, 8, 8, 8, 13, 16, 15, 14, 19, 22, 21, 20, 25, 28, 27, 26, 31, 34, 33, 32, 37, 40, 39, 38, 43, 46, 45, 44, 49, 52, 51, 50, 55, 58, 57, 56, 61, 64, 63, 62}},
-  {.motion_desc_index = {9, 10, 10, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}},
-  {.motion_desc_index = {7, 6, 6, 7, 15, 14, 14, 14, 21, 20, 20, 20, 27, 26, 26, 26, 33, 32, 32, 32, 39, 38, 38, 38, 45, 44, 44, 44, 51, 50, 50, 50, 57, 56, 56, 56, 63, 62, 62, 62}},
-  {.motion_desc_index = {7, 6, 6, 7, 16, 13, 13, 13, 22, 19, 19, 19, 28, 25, 25, 25, 34, 31, 31, 31, 40, 37, 37, 37, 46, 43, 43, 43, 52, 49, 49, 49, 58, 55, 55, 55, 64, 61, 61, 61}},
-  {.motion_desc_index = {6, 7, 7, 6, 13, 16, 16, 16, 19, 22, 22, 22, 25, 28, 28, 28, 31, 34, 34, 34, 37, 40, 40, 40, 43, 46, 46, 46, 49, 52, 52, 52, 55, 58, 58, 58, 61, 64, 64, 64}},
-  {.motion_desc_index = {6, 7, 7, 6, 14, 15, 15, 15, 20, 21, 21, 21, 26, 27, 27, 27, 32, 33, 33, 33, 38, 39, 39, 39, 44, 45, 45, 45, 50, 51, 51, 51, 56, 57, 57, 57, 62, 63, 63, 63}},
-  {.motion_desc_index = {6, 7, 7, 6, 13, 16, 16, 16, 19, 22, 22, 22, 25, 28, 28, 28, 31, 34, 34, 34, 37, 40, 40, 40, 43, 46, 46, 46, 49, 52, 52, 52, 55, 58, 58, 58, 61, 64, 64, 64}},
-  {.motion_desc_index = {6, 7, 7, 6, 14, 15, 15, 15, 20, 21, 21, 21, 26, 27, 27, 27, 32, 33, 33, 33, 38, 39, 39, 39, 44, 45, 45, 45, 50, 51, 51, 51, 56, 57, 57, 57, 62, 63, 63, 63}},
-  {.motion_desc_index = {7, 6, 6, 7, 15, 14, 14, 14, 21, 20, 20, 20, 65, 26, 26, 26, 33, 32, 32, 32, 66, 38, 38, 38, 67, 44, 44, 44, 51, 50, 50, 50, 68, 56, 56, 56, 69, 62, 62, 62}},
-  {.motion_desc_index = {7, 6, 6, 7, 15, 14, 14, 14, 21, 70, 20, 20, 65, 26, 26, 26, 33, 71, 32, 32, 66, 38, 38, 38, 67, 44, 44, 44, 51, 50, 50, 50, 68, 56, 56, 56, 69, 62, 62, 62}}
-};
-static ScnDoorMotionDescriptor data_11110[72] = {
-  {.motion_id = -1, .frame_open_sfx_begin = 0.0f, .frame_phase1_end = 0.0f, .frame_close_sfx_begin = 0.0f, .frame_motion_end = 0.0f, .approach_off_x = 0.0f, .approach_off_z = 0.0f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 631, .frame_open_sfx_begin = 19.0f, .frame_phase1_end = 52.0f, .frame_close_sfx_begin = 96.0f, .frame_motion_end = 132.0f, .approach_off_x = 45.0f, .approach_off_z = 50.0f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 637, .frame_open_sfx_begin = 19.0f, .frame_phase1_end = 53.0f, .frame_close_sfx_begin = 0.0f, .frame_motion_end = 0.0f, .approach_off_x = 45.0f, .approach_off_z = 50.0f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 636, .frame_open_sfx_begin = 30.0f, .frame_phase1_end = 64.0f, .frame_close_sfx_begin = 0.0f, .frame_motion_end = 0.0f, .approach_off_x = 45.0f, .approach_off_z = 50.0f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 628, .frame_open_sfx_begin = 19.0f, .frame_phase1_end = 47.0f, .frame_close_sfx_begin = 0.0f, .frame_motion_end = 0.0f, .approach_off_x = 45.0f, .approach_off_z = 80.0f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 54, .frame_open_sfx_begin = 33.0f, .frame_phase1_end = 70.0f, .frame_close_sfx_begin = 0.0f, .frame_motion_end = 0.0f, .approach_off_x = 50.0f, .approach_off_z = 80.0f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 646, .frame_open_sfx_begin = 19.0f, .frame_phase1_end = 45.0f, .frame_close_sfx_begin = 106.0f, .frame_motion_end = 141.0f, .approach_off_x = 45.0f, .approach_off_z = 80.0f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 649, .frame_open_sfx_begin = 30.0f, .frame_phase1_end = 73.0f, .frame_close_sfx_begin = 108.0f, .frame_motion_end = 135.0f, .approach_off_x = 45.0f, .approach_off_z = 50.0f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 1365, .frame_open_sfx_begin = 30.0f, .frame_phase1_end = 73.0f, .frame_close_sfx_begin = 0.0f, .frame_motion_end = 0.0f, .approach_off_x = 0.0f, .approach_off_z = 89.5f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 1548, .frame_open_sfx_begin = 34.0f, .frame_phase1_end = 88.0f, .frame_close_sfx_begin = 125.0f, .frame_motion_end = 185.0f, .approach_off_x = 63.264f, .approach_off_z = 73.183998f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 1549, .frame_open_sfx_begin = 28.0f, .frame_phase1_end = 73.0f, .frame_close_sfx_begin = 108.0f, .frame_motion_end = 163.0f, .approach_off_x = 58.0f, .approach_off_z = 71.2f, .npc_tail_end_frame = 0.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 40731, .frame_open_sfx_begin = 21.0f, .frame_phase1_end = 45.0f, .frame_close_sfx_begin = 95.0f, .frame_motion_end = 125.0f, .approach_off_x = 45.0f, .approach_off_z = 56.0f, .npc_tail_end_frame = 51.0f, .npc_tail_delta_per_frame = 0.025f},
-  {.motion_id = 40732, .frame_open_sfx_begin = 20.0f, .frame_phase1_end = 43.0f, .frame_close_sfx_begin = 107.0f, .frame_motion_end = 135.0f, .approach_off_x = 45.0f, .approach_off_z = 56.5f, .npc_tail_end_frame = 48.0f, .npc_tail_delta_per_frame = 0.04f},
-  {.motion_id = 40705, .frame_open_sfx_begin = 21.0f, .frame_phase1_end = 35.0f, .frame_close_sfx_begin = 102.0f, .frame_motion_end = 126.0f, .approach_off_x = 48.08f, .approach_off_z = 83.538002f, .npc_tail_end_frame = 65.0f, .npc_tail_delta_per_frame = 1.7136f},
-  {.motion_id = 40706, .frame_open_sfx_begin = 41.0f, .frame_phase1_end = 61.0f, .frame_close_sfx_begin = 140.0f, .frame_motion_end = 182.0f, .approach_off_x = 48.978001f, .approach_off_z = 82.223f, .npc_tail_end_frame = 93.0f, .npc_tail_delta_per_frame = 2.4333f},
-  {.motion_id = 40733, .frame_open_sfx_begin = 33.0f, .frame_phase1_end = 59.0f, .frame_close_sfx_begin = 105.0f, .frame_motion_end = 136.0f, .approach_off_x = 34.54f, .approach_off_z = 86.077003f, .npc_tail_end_frame = 64.0f, .npc_tail_delta_per_frame = 1.7972f},
-  {.motion_id = 40707, .frame_open_sfx_begin = 48.0f, .frame_phase1_end = 88.0f, .frame_close_sfx_begin = 134.0f, .frame_motion_end = 193.0f, .approach_off_x = 50.158001f, .approach_off_z = 51.297001f, .npc_tail_end_frame = 107.0f, .npc_tail_delta_per_frame = 1.206f},
-  {.motion_id = 40734, .frame_open_sfx_begin = 22.0f, .frame_phase1_end = 45.0f, .frame_close_sfx_begin = 100.0f, .frame_motion_end = 130.0f, .approach_off_x = 60.0f, .approach_off_z = 55.0f, .npc_tail_end_frame = 52.0f, .npc_tail_delta_per_frame = 0.0183f},
-  {.motion_id = 40735, .frame_open_sfx_begin = 20.0f, .frame_phase1_end = 37.0f, .frame_close_sfx_begin = 114.0f, .frame_motion_end = 136.0f, .approach_off_x = 68.5f, .approach_off_z = 60.0f, .npc_tail_end_frame = 42.0f, .npc_tail_delta_per_frame = 0.0798f},
-  {.motion_id = 40708, .frame_open_sfx_begin = 23.0f, .frame_phase1_end = 44.0f, .frame_close_sfx_begin = 118.0f, .frame_motion_end = 149.0f, .approach_off_x = 81.0f, .approach_off_z = 58.0f, .npc_tail_end_frame = 64.0f, .npc_tail_delta_per_frame = 1.2643f},
-  {.motion_id = 40709, .frame_open_sfx_begin = 51.0f, .frame_phase1_end = 64.0f, .frame_close_sfx_begin = 140.0f, .frame_motion_end = 175.0f, .approach_off_x = 76.0f, .approach_off_z = 80.0f, .npc_tail_end_frame = 101.0f, .npc_tail_delta_per_frame = 1.7926f},
-  {.motion_id = 40736, .frame_open_sfx_begin = 35.0f, .frame_phase1_end = 70.0f, .frame_close_sfx_begin = 133.0f, .frame_motion_end = 169.0f, .approach_off_x = 62.75f, .approach_off_z = 59.0f, .npc_tail_end_frame = 70.0f, .npc_tail_delta_per_frame = 1.9468f},
-  {.motion_id = 40710, .frame_open_sfx_begin = 33.0f, .frame_phase1_end = 58.0f, .frame_close_sfx_begin = 96.0f, .frame_motion_end = 142.0f, .approach_off_x = 55.0f, .approach_off_z = 69.0f, .npc_tail_end_frame = 79.0f, .npc_tail_delta_per_frame = 2.28709984f},
-  {.motion_id = 40737, .frame_open_sfx_begin = 24.0f, .frame_phase1_end = 51.0f, .frame_close_sfx_begin = 89.0f, .frame_motion_end = 123.0f, .approach_off_x = 54.0f, .approach_off_z = 56.5f, .npc_tail_end_frame = 58.0f, .npc_tail_delta_per_frame = 0.0249f},
-  {.motion_id = 40738, .frame_open_sfx_begin = 25.0f, .frame_phase1_end = 43.0f, .frame_close_sfx_begin = 94.0f, .frame_motion_end = 123.0f, .approach_off_x = 48.3f, .approach_off_z = 58.0f, .npc_tail_end_frame = 54.0f, .npc_tail_delta_per_frame = 0.0236f},
-  {.motion_id = 40711, .frame_open_sfx_begin = 20.0f, .frame_phase1_end = 38.0f, .frame_close_sfx_begin = 95.0f, .frame_motion_end = 125.0f, .approach_off_x = 47.703999f, .approach_off_z = 76.788002f, .npc_tail_end_frame = 60.0f, .npc_tail_delta_per_frame = 1.9167f},
-  {.motion_id = 40712, .frame_open_sfx_begin = 45.0f, .frame_phase1_end = 71.0f, .frame_close_sfx_begin = 165.0f, .frame_motion_end = 217.0f, .approach_off_x = 53.195f, .approach_off_z = 88.927002f, .npc_tail_end_frame = 97.0f, .npc_tail_delta_per_frame = 1.4981f},
-  {.motion_id = 40739, .frame_open_sfx_begin = 46.0f, .frame_phase1_end = 95.0f, .frame_close_sfx_begin = 150.0f, .frame_motion_end = 200.0f, .approach_off_x = 39.535f, .approach_off_z = 89.264999f, .npc_tail_end_frame = 99.0f, .npc_tail_delta_per_frame = 0.5833f},
-  {.motion_id = 40713, .frame_open_sfx_begin = 34.0f, .frame_phase1_end = 110.0f, .frame_close_sfx_begin = 167.0f, .frame_motion_end = 202.0f, .approach_off_x = 48.733002f, .approach_off_z = 59.613998f, .npc_tail_end_frame = 130.0f, .npc_tail_delta_per_frame = 0.75f},
-  {.motion_id = 40740, .frame_open_sfx_begin = 22.0f, .frame_phase1_end = 41.0f, .frame_close_sfx_begin = 85.0f, .frame_motion_end = 110.0f, .approach_off_x = 63.0f, .approach_off_z = 47.0f, .npc_tail_end_frame = 47.0f, .npc_tail_delta_per_frame = 0.028f},
-  {.motion_id = 40741, .frame_open_sfx_begin = 23.0f, .frame_phase1_end = 41.0f, .frame_close_sfx_begin = 90.0f, .frame_motion_end = 114.0f, .approach_off_x = 73.0f, .approach_off_z = 46.0f, .npc_tail_end_frame = 47.0f, .npc_tail_delta_per_frame = 0.0289f},
-  {.motion_id = 40714, .frame_open_sfx_begin = 22.0f, .frame_phase1_end = 36.0f, .frame_close_sfx_begin = 105.0f, .frame_motion_end = 132.0f, .approach_off_x = 67.096001f, .approach_off_z = 56.924f, .npc_tail_end_frame = 59.0f, .npc_tail_delta_per_frame = 1.6836f},
-  {.motion_id = 40715, .frame_open_sfx_begin = 45.0f, .frame_phase1_end = 59.0f, .frame_close_sfx_begin = 140.0f, .frame_motion_end = 180.0f, .approach_off_x = 91.0f, .approach_off_z = 60.0f, .npc_tail_end_frame = 95.0f, .npc_tail_delta_per_frame = 1.8126f},
-  {.motion_id = 40742, .frame_open_sfx_begin = 23.0f, .frame_phase1_end = 67.0f, .frame_close_sfx_begin = 105.0f, .frame_motion_end = 162.0f, .approach_off_x = 50.1f, .approach_off_z = 54.112f, .npc_tail_end_frame = 80.0f, .npc_tail_delta_per_frame = 0.3366f},
-  {.motion_id = 40716, .frame_open_sfx_begin = 32.0f, .frame_phase1_end = 60.0f, .frame_close_sfx_begin = 96.0f, .frame_motion_end = 150.0f, .approach_off_x = 62.0f, .approach_off_z = 63.0f, .npc_tail_end_frame = 86.0f, .npc_tail_delta_per_frame = 1.39560008f},
-  {.motion_id = 40743, .frame_open_sfx_begin = 21.0f, .frame_phase1_end = 48.0f, .frame_close_sfx_begin = 80.0f, .frame_motion_end = 113.0f, .approach_off_x = 49.0f, .approach_off_z = 57.5f, .npc_tail_end_frame = 54.0f, .npc_tail_delta_per_frame = 0.0223f},
-  {.motion_id = 40744, .frame_open_sfx_begin = 24.0f, .frame_phase1_end = 47.0f, .frame_close_sfx_begin = 94.0f, .frame_motion_end = 120.0f, .approach_off_x = 49.0f, .approach_off_z = 58.5f, .npc_tail_end_frame = 50.0f, .npc_tail_delta_per_frame = 0.0327f},
-  {.motion_id = 40717, .frame_open_sfx_begin = 20.0f, .frame_phase1_end = 39.0f, .frame_close_sfx_begin = 98.0f, .frame_motion_end = 125.0f, .approach_off_x = 51.0f, .approach_off_z = 80.081001f, .npc_tail_end_frame = 47.0f, .npc_tail_delta_per_frame = 1.9319f},
-  {.motion_id = 40718, .frame_open_sfx_begin = 35.0f, .frame_phase1_end = 55.0f, .frame_close_sfx_begin = 110.0f, .frame_motion_end = 152.0f, .approach_off_x = 51.819f, .approach_off_z = 82.554001f, .npc_tail_end_frame = 87.0f, .npc_tail_delta_per_frame = 2.2963f},
-  {.motion_id = 40745, .frame_open_sfx_begin = 33.0f, .frame_phase1_end = 64.0f, .frame_close_sfx_begin = 100.0f, .frame_motion_end = 138.0f, .approach_off_x = 39.535f, .approach_off_z = 95.652f, .npc_tail_end_frame = 71.0f, .npc_tail_delta_per_frame = 1.1599f},
-  {.motion_id = 40719, .frame_open_sfx_begin = 43.0f, .frame_phase1_end = 73.0f, .frame_close_sfx_begin = 100.0f, .frame_motion_end = 135.0f, .approach_off_x = 50.158001f, .approach_off_z = 59.491001f, .npc_tail_end_frame = 88.0f, .npc_tail_delta_per_frame = 1.0387f},
-  {.motion_id = 40746, .frame_open_sfx_begin = 21.0f, .frame_phase1_end = 41.0f, .frame_close_sfx_begin = 84.0f, .frame_motion_end = 106.0f, .approach_off_x = 45.0f, .approach_off_z = 54.0f, .npc_tail_end_frame = 43.0f, .npc_tail_delta_per_frame = 0.03f},
-  {.motion_id = 40747, .frame_open_sfx_begin = 51.0f, .frame_phase1_end = 76.0f, .frame_close_sfx_begin = 156.0f, .frame_motion_end = 184.0f, .approach_off_x = 51.0f, .approach_off_z = 52.5f, .npc_tail_end_frame = 79.0f, .npc_tail_delta_per_frame = 0.0283f},
-  {.motion_id = 40720, .frame_open_sfx_begin = 25.0f, .frame_phase1_end = 48.0f, .frame_close_sfx_begin = 100.0f, .frame_motion_end = 129.0f, .approach_off_x = 56.070999f, .approach_off_z = 70.459f, .npc_tail_end_frame = 64.0f, .npc_tail_delta_per_frame = 1.4962f},
-  {.motion_id = 40721, .frame_open_sfx_begin = 64.0f, .frame_phase1_end = 99.0f, .frame_close_sfx_begin = 160.0f, .frame_motion_end = 200.0f, .approach_off_x = 43.352001f, .approach_off_z = 106.598999f, .npc_tail_end_frame = 131.0f, .npc_tail_delta_per_frame = 2.0784f},
-  {.motion_id = 40748, .frame_open_sfx_begin = 38.0f, .frame_phase1_end = 66.0f, .frame_close_sfx_begin = 102.0f, .frame_motion_end = 133.0f, .approach_off_x = 52.025002f, .approach_off_z = 100.740997f, .npc_tail_end_frame = 69.0f, .npc_tail_delta_per_frame = 0.7168f},
-  {.motion_id = 40722, .frame_open_sfx_begin = 47.0f, .frame_phase1_end = 108.0f, .frame_close_sfx_begin = 153.0f, .frame_motion_end = 200.0f, .approach_off_x = 53.535f, .approach_off_z = 90.637001f, .npc_tail_end_frame = 115.0f, .npc_tail_delta_per_frame = 0.0565f},
-  {.motion_id = 40749, .frame_open_sfx_begin = 22.0f, .frame_phase1_end = 42.0f, .frame_close_sfx_begin = 84.0f, .frame_motion_end = 105.0f, .approach_off_x = 51.0f, .approach_off_z = 44.5f, .npc_tail_end_frame = 43.0f, .npc_tail_delta_per_frame = 0.02f},
-  {.motion_id = 40750, .frame_open_sfx_begin = 39.0f, .frame_phase1_end = 67.0f, .frame_close_sfx_begin = 140.0f, .frame_motion_end = 176.0f, .approach_off_x = 47.0f, .approach_off_z = 54.1f, .npc_tail_end_frame = 75.0f, .npc_tail_delta_per_frame = 0.025f},
-  {.motion_id = 40723, .frame_open_sfx_begin = 22.0f, .frame_phase1_end = 46.0f, .frame_close_sfx_begin = 110.0f, .frame_motion_end = 135.0f, .approach_off_x = 60.0f, .approach_off_z = 68.424004f, .npc_tail_end_frame = 67.0f, .npc_tail_delta_per_frame = 1.7189f},
-  {.motion_id = 40724, .frame_open_sfx_begin = 39.0f, .frame_phase1_end = 68.0f, .frame_close_sfx_begin = 124.0f, .frame_motion_end = 173.0f, .approach_off_x = 54.183998f, .approach_off_z = 76.428001f, .npc_tail_end_frame = 98.0f, .npc_tail_delta_per_frame = 1.9291f},
-  {.motion_id = 40751, .frame_open_sfx_begin = 38.0f, .frame_phase1_end = 70.0f, .frame_close_sfx_begin = 102.0f, .frame_motion_end = 134.0f, .approach_off_x = 45.0f, .approach_off_z = 96.102997f, .npc_tail_end_frame = 70.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 40725, .frame_open_sfx_begin = 40.0f, .frame_phase1_end = 84.0f, .frame_close_sfx_begin = 130.0f, .frame_motion_end = 190.0f, .approach_off_x = 50.0f, .approach_off_z = 81.102997f, .npc_tail_end_frame = 110.0f, .npc_tail_delta_per_frame = 1.0671f},
-  {.motion_id = 40757, .frame_open_sfx_begin = 21.0f, .frame_phase1_end = 45.0f, .frame_close_sfx_begin = 84.0f, .frame_motion_end = 109.0f, .approach_off_x = 48.5f, .approach_off_z = 44.5f, .npc_tail_end_frame = 46.0f, .npc_tail_delta_per_frame = 0.01f},
-  {.motion_id = 40752, .frame_open_sfx_begin = 39.0f, .frame_phase1_end = 67.0f, .frame_close_sfx_begin = 110.0f, .frame_motion_end = 146.0f, .approach_off_x = 49.5f, .approach_off_z = 42.5f, .npc_tail_end_frame = 75.0f, .npc_tail_delta_per_frame = 0.0119f},
-  {.motion_id = 40726, .frame_open_sfx_begin = 20.0f, .frame_phase1_end = 44.0f, .frame_close_sfx_begin = 110.0f, .frame_motion_end = 136.0f, .approach_off_x = 60.0f, .approach_off_z = 68.424004f, .npc_tail_end_frame = 56.0f, .npc_tail_delta_per_frame = 0.7448f},
-  {.motion_id = 40727, .frame_open_sfx_begin = 42.0f, .frame_phase1_end = 66.0f, .frame_close_sfx_begin = 127.0f, .frame_motion_end = 185.0f, .approach_off_x = 54.183998f, .approach_off_z = 81.102997f, .npc_tail_end_frame = 100.0f, .npc_tail_delta_per_frame = 1.8151f},
-  {.motion_id = 40753, .frame_open_sfx_begin = 36.0f, .frame_phase1_end = 57.0f, .frame_close_sfx_begin = 85.0f, .frame_motion_end = 111.0f, .approach_off_x = 30.0f, .approach_off_z = 81.102997f, .npc_tail_end_frame = 62.0f, .npc_tail_delta_per_frame = 1.421f},
-  {.motion_id = 40728, .frame_open_sfx_begin = 37.0f, .frame_phase1_end = 87.0f, .frame_close_sfx_begin = 130.0f, .frame_motion_end = 194.0f, .approach_off_x = 50.0f, .approach_off_z = 71.102997f, .npc_tail_end_frame = 101.0f, .npc_tail_delta_per_frame = 0.7448f},
-  {.motion_id = 40758, .frame_open_sfx_begin = 21.0f, .frame_phase1_end = 52.0f, .frame_close_sfx_begin = 90.0f, .frame_motion_end = 123.0f, .approach_off_x = 47.553001f, .approach_off_z = 52.632999f, .npc_tail_end_frame = 54.0f, .npc_tail_delta_per_frame = 0.01f},
-  {.motion_id = 40754, .frame_open_sfx_begin = 24.0f, .frame_phase1_end = 47.0f, .frame_close_sfx_begin = 104.0f, .frame_motion_end = 133.0f, .approach_off_x = 48.0f, .approach_off_z = 52.132999f, .npc_tail_end_frame = 53.0f, .npc_tail_delta_per_frame = 0.0247f},
-  {.motion_id = 40729, .frame_open_sfx_begin = 18.0f, .frame_phase1_end = 42.0f, .frame_close_sfx_begin = 108.0f, .frame_motion_end = 138.0f, .approach_off_x = 45.0f, .approach_off_z = 78.463997f, .npc_tail_end_frame = 68.0f, .npc_tail_delta_per_frame = 1.3195f},
-  {.motion_id = 40730, .frame_open_sfx_begin = 35.0f, .frame_phase1_end = 56.0f, .frame_close_sfx_begin = 143.0f, .frame_motion_end = 183.0f, .approach_off_x = 55.4f, .approach_off_z = 84.542999f, .npc_tail_end_frame = 85.0f, .npc_tail_delta_per_frame = 1.9986f},
-  {.motion_id = 40755, .frame_open_sfx_begin = 32.0f, .frame_phase1_end = 65.0f, .frame_close_sfx_begin = 110.0f, .frame_motion_end = 144.0f, .approach_off_x = 41.187f, .approach_off_z = 95.0f, .npc_tail_end_frame = 66.0f, .npc_tail_delta_per_frame = 0.2855f},
-  {.motion_id = 40756, .frame_open_sfx_begin = 44.0f, .frame_phase1_end = 75.0f, .frame_close_sfx_begin = 105.0f, .frame_motion_end = 151.0f, .approach_off_x = 50.629002f, .approach_off_z = 56.424f, .npc_tail_end_frame = 90.0f, .npc_tail_delta_per_frame = 1.2961f},
-  {.motion_id = 40759, .frame_open_sfx_begin = 55.0f, .frame_phase1_end = 90.0f, .frame_close_sfx_begin = 150.0f, .frame_motion_end = 180.0f, .approach_off_x = 30.0f, .approach_off_z = 80.0f, .npc_tail_end_frame = 90.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 40760, .frame_open_sfx_begin = 29.0f, .frame_phase1_end = 60.0f, .frame_close_sfx_begin = 71.0f, .frame_motion_end = 110.0f, .approach_off_x = 47.535f, .approach_off_z = 75.652f, .npc_tail_end_frame = 71.0f, .npc_tail_delta_per_frame = 0.1295f},
-  {.motion_id = 40761, .frame_open_sfx_begin = 29.0f, .frame_phase1_end = 66.0f, .frame_close_sfx_begin = 104.0f, .frame_motion_end = 200.0f, .approach_off_x = 52.025002f, .approach_off_z = 80.740997f, .npc_tail_end_frame = 67.0f, .npc_tail_delta_per_frame = 0.0231f},
-  {.motion_id = 40762, .frame_open_sfx_begin = 36.0f, .frame_phase1_end = 62.0f, .frame_close_sfx_begin = 73.0f, .frame_motion_end = 114.0f, .approach_off_x = 45.0f, .approach_off_z = 71.102997f, .npc_tail_end_frame = 62.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 40763, .frame_open_sfx_begin = 32.0f, .frame_phase1_end = 60.0f, .frame_close_sfx_begin = 78.0f, .frame_motion_end = 120.0f, .approach_off_x = 44.284f, .approach_off_z = 81.165001f, .npc_tail_end_frame = 60.0f, .npc_tail_delta_per_frame = 0.0f},
-  {.motion_id = 40764, .frame_open_sfx_begin = 52.0f, .frame_phase1_end = 74.0f, .frame_close_sfx_begin = 180.0f, .frame_motion_end = 225.0f, .approach_off_x = 45.0f, .approach_off_z = 65.0f, .npc_tail_end_frame = 95.0f, .npc_tail_delta_per_frame = 2.0f},
-  {.motion_id = 40765, .frame_open_sfx_begin = 52.0f, .frame_phase1_end = 76.0f, .frame_close_sfx_begin = 190.0f, .frame_motion_end = 240.0f, .approach_off_x = 45.0f, .approach_off_z = 60.0f, .npc_tail_end_frame = 98.0f, .npc_tail_delta_per_frame = 1.7727f}
-};
-static uint32_t data_11B30 = 0xFFFFFFFF;
-typedef struct Row_11B34 { float w0; float w1; float w2; float w3; int32_t w4; } Row_11B34;
-static const Row_11B34 data_11B34[7] = {
-  {0.0f, 0.0f, 0.0f, 0.0f, -1},
-  {0.0f, 0.0f, 0.0f, 0.0f, -1},
-  {0.0f, 0.0f, 0.0f, 0.0f, 1534},
-  {26.0f, 55.0f, 45.0f, 75.0f, 1555},
-  {61.0f, 146.0f, 45.0f, 50.0f, 1554},
-  {59.0f, 124.0f, 45.0f, 70.0f, 1543},
-  {33.0f, 49.0f, 45.0f, 50.0f, 1543}
-};
-static const float data_11BC0[4] = {33.0f, 49.0f, 50.0f, 50.0f};
-static void (*data_11BD0)(int32_t, int32_t, int32_t) = script_0B4D;
-static void (*const data_11BD4)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11BD8)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11BDC)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11BE0)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11BE4)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11BE8)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11BEC)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11BF0)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11BF4)(int32_t, int32_t, int32_t, int32_t) = script_0E03;
-static void (*const data_11BF8)(int32_t, int32_t, int32_t, int32_t) = script_0F64;
-static void (*const data_11BFC)(int32_t, int32_t, int32_t, int32_t) = script_1431;
-static void (*const data_11C00)(int32_t, int32_t, int32_t, int32_t) = script_1498;
-static void (*const data_11C04)(int32_t, int32_t, int32_t, int32_t) = script_0C61;
-static void (*const data_11C08)(int32_t, int32_t, int32_t, int32_t) = script_0C61;
-static void (*const data_11C0C)(int32_t, int32_t, int32_t, int32_t) = script_10C5;
-static void (*const data_11C10)(int32_t, int32_t, int32_t, int32_t) = script_1363;
-static void (*const data_11C14)(int32_t, int32_t, int32_t, int32_t) = script_14FF;
-static void (*const data_11C18)(int32_t, int32_t, int32_t, int32_t) = script_0E03;
-static void (*const data_11C1C)(int32_t, int32_t, int32_t, int32_t) = script_0F64;
-static void (*const data_11C20)(int32_t, int32_t, int32_t, int32_t) = script_10C5;
-static void (*const data_11C24)(int32_t, int32_t, int32_t, int32_t) = script_0E03;
-static void (*const data_11C28)(int32_t, int32_t, int32_t, int32_t) = script_0F64;
-static void (*const data_11C2C)(int32_t, int32_t, int32_t, int32_t) = script_10C5;
-static void (*const data_11C30)(int32_t, int32_t, int32_t, int32_t) = script_1546;
-static void (*const data_11C34)(int32_t, int32_t, int32_t, int32_t) = script_1546;
-static void (*const data_11C38)(int32_t, int32_t, int32_t, int32_t) = script_1546;
-static void (*const data_11C3C)(int32_t, int32_t, int32_t, int32_t) = script_1546;
-static void (*const data_11C40)(int32_t, int32_t, int32_t, int32_t) = script_167C;
-static void (*const data_11C44)(int32_t, int32_t, int32_t, int32_t) = script_1F3D;
-static void (*const data_11C48)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11C4C)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11C50)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11C54)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11C58)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11C5C)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11C60)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static void (*const data_11C64)(int32_t, int32_t, int32_t, int32_t) = script_0B5D;
-static const char data_11C68[46] __attribute__((scn_string_literal)) = "Door Index = %d : call_type = %d : type = %d\012";
-static const char data_11C96[43] __attribute__((scn_string_literal)) = "Door Open Motion = DEB_AKESIME_FUSUMA_L_F\012";
-static const char data_11CC1[43] __attribute__((scn_string_literal)) = "Door Open Motion = DEB_AKESIME_FUSUMA_R_F\012";
-static const char data_11CEC[42] __attribute__((scn_string_literal)) = "Door Open Motion = DEB_HIKISIME_DOOR_L_F\012";
-static const char data_11D16[42] __attribute__((scn_string_literal)) = "Door Open Motion = DEB_HIKISIME_DOOR_R_F\012";
-static const char data_11D40[41] __attribute__((scn_string_literal)) = "Door Open Motion = DEB_OSISIME_DOOR_L_F\012";
-static const char data_11D69[41] __attribute__((scn_string_literal)) = "Door Open Motion = DEB_OSISIME_DOOR_R_F\012";
-static const char data_11D92[43] __attribute__((scn_string_literal)) = "Door Open Motion = GAK_AKESIME_FUSUMA_L_F\012";
-static const char data_11DBD[43] __attribute__((scn_string_literal)) = "Door Open Motion = GAK_AKESIME_FUSUMA_R_F\012";
-static const char data_11DE8[42] __attribute__((scn_string_literal)) = "Door Open Motion = GAK_HIKISIME_DOOR_L_F\012";
-static const char data_11E12[42] __attribute__((scn_string_literal)) = "Door Open Motion = GAK_HIKISIME_DOOR_R_F\012";
-static const char data_11E3C[41] __attribute__((scn_string_literal)) = "Door Open Motion = GAK_OSISIME_DOOR_L_F\012";
-static const char data_11E65[41] __attribute__((scn_string_literal)) = "Door Open Motion = GAK_OSISIME_DOOR_R_F\012";
-static const char data_11E8E[43] __attribute__((scn_string_literal)) = "Door Open Motion = JIJ_AKESIME_FUSUMA_L_F\012";
-static const char data_11EB9[43] __attribute__((scn_string_literal)) = "Door Open Motion = JIJ_AKESIME_FUSUMA_R_F\012";
-static const char data_11EE4[42] __attribute__((scn_string_literal)) = "Door Open Motion = JIJ_HIKISIME_DOOR_L_F\012";
-static const char data_11F0E[42] __attribute__((scn_string_literal)) = "Door Open Motion = JIJ_HIKISIME_DOOR_R_F\012";
-static const char data_11F38[41] __attribute__((scn_string_literal)) = "Door Open Motion = JIJ_OSISIME_DOOR_L_F\012";
-static const char data_11F61[41] __attribute__((scn_string_literal)) = "Door Open Motion = JIJ_OSISIME_DOOR_R_F\012";
-static const char data_11F8A[43] __attribute__((scn_string_literal)) = "Door Open Motion = KOD_AKESIME_FUSUMA_L_F\012";
-static const char data_11FB5[43] __attribute__((scn_string_literal)) = "Door Open Motion = KOD_AKESIME_FUSUMA_R_F\012";
-static const char data_11FE0[42] __attribute__((scn_string_literal)) = "Door Open Motion = KOD_HIKISIME_DOOR_L_F\012";
-static const char data_1200A[42] __attribute__((scn_string_literal)) = "Door Open Motion = KOD_HIKISIME_DOOR_R_F\012";
-static const char data_12034[41] __attribute__((scn_string_literal)) = "Door Open Motion = KOD_OSISIME_DOOR_L_F\012";
-static const char data_1205D[41] __attribute__((scn_string_literal)) = "Door Open Motion = KOD_OSISIME_DOOR_R_F\012";
-static const char data_12086[43] __attribute__((scn_string_literal)) = "Door Open Motion = OTH_AKESIME_FUSUMA_L_F\012";
-static const char data_120B1[43] __attribute__((scn_string_literal)) = "Door Open Motion = OTH_AKESIME_FUSUMA_R_F\012";
-static const char data_120DC[42] __attribute__((scn_string_literal)) = "Door Open Motion = OTH_HIKISIME_DOOR_L_F\012";
-static const char data_12106[42] __attribute__((scn_string_literal)) = "Door Open Motion = OTH_HIKISIME_DOOR_R_F\012";
-static const char data_12130[41] __attribute__((scn_string_literal)) = "Door Open Motion = OTH_OSISIME_DOOR_L_F\012";
-static const char data_12159[41] __attribute__((scn_string_literal)) = "Door Open Motion = OTH_OSISIME_DOOR_R_F\012";
-static const char data_12182[43] __attribute__((scn_string_literal)) = "Door Open Motion = PNW_AKESIME_FUSUMA_L_F\012";
-static const char data_121AD[43] __attribute__((scn_string_literal)) = "Door Open Motion = PNW_AKESIME_FUSUMA_R_F\012";
-static const char data_121D8[42] __attribute__((scn_string_literal)) = "Door Open Motion = PNW_HIKISIME_DOOR_L_F\012";
-static const char data_12202[42] __attribute__((scn_string_literal)) = "Door Open Motion = PNW_HIKISIME_DOOR_R_F\012";
-static const char data_1222C[41] __attribute__((scn_string_literal)) = "Door Open Motion = PNW_OSISIME_DOOR_L_F\012";
-static const char data_12255[41] __attribute__((scn_string_literal)) = "Door Open Motion = PNW_OSISIME_DOOR_R_F\012";
-static const char data_1227E[43] __attribute__((scn_string_literal)) = "Door Open Motion = SIN_AKESIME_FUSUMA_L_F\012";
-static const char data_122A9[43] __attribute__((scn_string_literal)) = "Door Open Motion = SIN_AKESIME_FUSUMA_R_F\012";
-static const char data_122D4[42] __attribute__((scn_string_literal)) = "Door Open Motion = SIN_HIKISIME_DOOR_L_F\012";
-static const char data_122FE[42] __attribute__((scn_string_literal)) = "Door Open Motion = SIN_HIKISIME_DOOR_R_F\012";
-static const char data_12328[41] __attribute__((scn_string_literal)) = "Door Open Motion = SIN_OSISIME_DOOR_L_F\012";
-static const char data_12351[41] __attribute__((scn_string_literal)) = "Door Open Motion = SIN_OSISIME_DOOR_R_F\012";
-static const char data_1237A[43] __attribute__((scn_string_literal)) = "Door Open Motion = SYP_AKESIME_FUSUMA_L_F\012";
-static const char data_123A5[43] __attribute__((scn_string_literal)) = "Door Open Motion = SYP_AKESIME_FUSUMA_R_F\012";
-static const char data_123D0[42] __attribute__((scn_string_literal)) = "Door Open Motion = SYP_HIKISIME_DOOR_L_F\012";
-static const char data_123FA[42] __attribute__((scn_string_literal)) = "Door Open Motion = SYP_HIKISIME_DOOR_R_F\012";
-static const char data_12424[41] __attribute__((scn_string_literal)) = "Door Open Motion = SYP_OSISIME_DOOR_L_F\012";
-static const char data_1244D[41] __attribute__((scn_string_literal)) = "Door Open Motion = SYP_OSISIME_DOOR_R_F\012";
-static const char data_12476[43] __attribute__((scn_string_literal)) = "Door Open Motion = YKI_AKESIME_FUSUMA_L_F\012";
-static const char data_124A1[43] __attribute__((scn_string_literal)) = "Door Open Motion = YKI_AKESIME_FUSUMA_R_F\012";
-static const char data_124CC[42] __attribute__((scn_string_literal)) = "Door Open Motion = YKI_HIKISIME_DOOR_L_F\012";
-static const char data_124F6[42] __attribute__((scn_string_literal)) = "Door Open Motion = YKI_HIKISIME_DOOR_R_F\012";
-static const char data_12520[41] __attribute__((scn_string_literal)) = "Door Open Motion = YKI_OSISIME_DOOR_L_F\012";
-static const char data_12549[41] __attribute__((scn_string_literal)) = "Door Open Motion = YKI_OSISIME_DOOR_R_F\012";
-static const char data_12572[44] __attribute__((scn_string_literal)) = "Door Open Motion = JIJ_OSISIME_DOOR_AP_L_F\012";
-static const char data_1259E[44] __attribute__((scn_string_literal)) = "Door Open Motion = OTH_OSISIME_DOOR_AP_L_F\012";
-static const char data_125CA[44] __attribute__((scn_string_literal)) = "Door Open Motion = PNW_OSISIME_DOOR_AP_L_F\012";
-static const char data_125F6[44] __attribute__((scn_string_literal)) = "Door Open Motion = SYP_OSISIME_DOOR_AP_L_F\012";
-static const char data_12622[44] __attribute__((scn_string_literal)) = "Door Open Motion = YKI_OSISIME_DOOR_AP_L_F\012";
-static const char data_1264E[28] __attribute__((scn_string_literal)) = "This Motion don't Finish!!\012";
-static const char data_1266A[28] __attribute__((scn_string_literal)) = "This Motion don't Finish!!\012";
-static const char data_12686[28] __attribute__((scn_string_literal)) = "This Motion don't Finish!!\012";
-static const char data_126A2[28] __attribute__((scn_string_literal)) = "This Motion don't Finish!!\012";
-static const char data_126BE[28] __attribute__((scn_string_literal)) = "This Motion don't Finish!!\012";
-static const char data_126DA[28] __attribute__((scn_string_literal)) = "This Motion don't Finish!!\012";
-static const char data_126F6[28] __attribute__((scn_string_literal)) = "This Motion don't Finish!!\012";
-static const char data_12712[13] __attribute__((scn_string_literal)) = "open-move!!\012";
-static const char data_1271F[11] __attribute__((scn_string_literal)) = "M_MDOR.BIN";
-static const char data_1272A[] __attribute__((scn_string_literal)) = "This Charactor Work is NULL!!\n";
-static const char data_12749[22] __attribute__((scn_string_literal)) = "手動ドア開け番号指定\012";
-static const char data_1275F[34] __attribute__((scn_string_literal)) = "無限ループになりそうなので抜ける\012";
-static const char data_12781[] __attribute__((scn_string_literal)) = "Don't make BOX Buffer!!\n";
-static const char data_1279A[] __attribute__((scn_string_literal)) = "Don't make BOX Buffer!!\n";
-static const char data_127B3[15] __attribute__((scn_string_literal)) = "Door System : ";
-static const char data_127C2[15] __attribute__((scn_string_literal)) = "Door System : ";
-static const char data_127D1[18] __attribute__((scn_string_literal)) = "Door Box is ON!!\012";
-static const char data_127E3[19] __attribute__((scn_string_literal)) = "Door Box is OFF!!\012";
-static const char data_127F6[18] __attribute__((scn_string_literal)) = "Door Box is ON!!\012";
-static const char data_12808[20] __attribute__((scn_string_literal)) = "Door Box is OFF!!\012";
-static const DSWKDoorEntry data_1281C[3] = {
-  {.slot = 0, .flags = 0, .ctrl_mask_pair = 0x640064U, .coarse_metric = 0.0f, .selection_metric = 0.0f, .view_ang_delta = 0, .group = 0, .global1 = 0xFFFFFFFFU, .global2 = 0xFFFFFFFFU, .global3 = 0xFFFFFFFFU, .sndCommandId = 0xFFFFFFFFU, .global5 = 0xFFFFFFFFU, .global6 = 0xFFFFFFFFU},
-  {.slot = 2, .flags = 0, .ctrl_mask_pair = 0x640064U, .coarse_metric = 0.0f, .selection_metric = 0.0f, .view_ang_delta = 0, .group = 0, .global1 = 0xFFFFFFFFU, .global2 = 0xFFFFFFFFU, .global3 = 0xFFFFFFFFU, .sndCommandId = 0xFFFFFFFFU, .global5 = 0xFFFFFFFFU, .global6 = 0xFFFFFFFFU},
-  {.slot = 4, .flags = 0, .ctrl_mask_pair = 0x640064U, .coarse_metric = 0.0f, .selection_metric = 0.0f, .view_ang_delta = 0, .group = 0, .global1 = 0xFFFFFFFFU, .global2 = 0xFFFFFFFFU, .global3 = 0xFFFFFFFFU, .sndCommandId = 0xFFFFFFFFU, .global5 = 0xFFFFFFFFU, .global6 = 0xFFFFFFFFU}
-};
-static const int32_t data_128B8[13] = {-1, 0, 6553700, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1};
-static const uint8_t data_128EC[4] = {0};
-static const int32_t data_128F0[5] = {-1, 1, -1, 2, -1};
-static char data_12904[] = "MS8S_DOOR";
-static char data_1290E[] = "MS8S_DOOR";
-static char data_12918[] = "MS8S_DOOR";
-static const uint8_t data_12922[2] = {0};
-static char *const data_12924 = data_12904;
-static const int32_t data_12928[3] = {31, 1966763, 2032299};
-static char *const data_12934 = data_1290E;
-static const int32_t data_12938[3] = {31, 1966763, 2032299};
-static char *const data_12944 = data_12918;
-static const int32_t data_12948[3] = {31, 1966763, 2032299};
-static const MapObjectRecord data_12954[3] = {
-  {.kind = 2, .resourceIndex = 0, .scale = {1.0f, 1.0f, 1.0f}, .pos = {22.165022f, 4.28f, 139.939743f}, .yawFixed16 = -8191},
-  {.kind = 2, .resourceIndex = 1, .scale = {1.0f, 1.0f, 1.0f}, .pos = {25.98341f, 4.28f, 143.758133f}, .yawFixed16 = -8191},
-  {.kind = 2, .resourceIndex = 2, .scale = {1.0f, 1.0f, 1.0f}, .pos = {13.343f, 4.28f, 131.130524f}, .yawFixed16 = -8192}
-};
-static const char data_129C0[10] __attribute__((scn_string_literal)) = "Kaidan : ";
-static const char data_129CA[32] __attribute__((scn_string_literal)) = "========== initializing kaidan\012";
-static const char data_129EA[48] __attribute__((scn_string_literal)) = "please ENDOFKDATA use can't start shuki kaidan\012";
-static const char data_12A1A[] __attribute__((scn_string_literal)) = "Kaidan Function Error 1\n";
-static const char data_12A33[] __attribute__((scn_string_literal)) = "Kaidan Function Error 2\n";
-static const char data_12A4C[] __attribute__((scn_string_literal)) = "Kaidan Data Error\n";
-static const char data_12A5F[10] __attribute__((scn_string_literal)) = "Kaidan : ";
-static const char data_12A69[28] __attribute__((scn_string_literal)) = "wait ... shuki shuki shuki\012";
-static const char data_12A85[10] __attribute__((scn_string_literal)) = "Kaidan : ";
-static const char data_12A8F[24] __attribute__((scn_string_literal)) = "KAIDAN : Warning coli!\012";
-static const char data_12AA7[24] __attribute__((scn_string_literal)) = "KAIDAN : Warning coli!\012";
-static const char data_12ABF[24] __attribute__((scn_string_literal)) = "KAIDAN : Warning coli!\012";
-static const char data_12AD7[24] __attribute__((scn_string_literal)) = "KAIDAN : Warning coli!\012";
-static const char data_12AEF[24] __attribute__((scn_string_literal)) = "KAIDAN : Warning coli!\012";
-static const char data_12B07[24] __attribute__((scn_string_literal)) = "KAIDAN : Warning setY!\012";
-static const char data_12B1F[24] __attribute__((scn_string_literal)) = "KAIDAN : Warning setY!\012";
-static const char data_12B37[13] __attribute__((scn_string_literal)) = "Kaidan : ";
-static const uint32_t data_12B44 = 0x41090F28;
-typedef struct Row_12B48 { float w0; uint32_t w1; int32_t w2; int32_t w3; int32_t w4; float w5; } Row_12B48;
-static const Row_12B48 data_12B48[2] = {
-  {0.225f, 0x4317A183U, 40960, 1048832, 19, 12.3844f},
-  {4.275f, 0x431B7190U, 8192, 264, 19, 100000.0f}
-};
-static const uint8_t data_12B78[8] = {0};
-static const float data_12B80[2] = {0.5f, 0.0f};
-static const int32_t data_12B88 = 1;
-static const float data_12B8C = 0.5f;
-static const int32_t data_12B90 = 3;
-static uint32_t data_12B94 = 131073;
-static const shen_name data_12B98 = SHEN_NAME('TB00');
-static const uint32_t data_12B9C[6] = {0x55552000U, 0, 0, 0, 0, 0};
-static const int32_t data_12BB4 = 131073;
-static const shen_name data_12BB8 = SHEN_NAME('TB02');
-static const uint32_t data_12BBC[6] = {0x5555E000U, 0, 0, 0, 0, 0};
-static const int32_t data_12BD4 = 131073;
-static const shen_name data_12BD8 = SHEN_NAME('TB10');
-static const uint32_t data_12BDC[6] = {0x5555A000U, 0, 0, 0, 0, 0};
-static const int32_t data_12BF4 = 131073;
-static const shen_name data_12BF8 = SHEN_NAME('TB11');
-static const uint32_t data_12BFC[6] = {0x5555E000U, 0, 0, 0, 0, 0};
-static const int32_t data_12C14 = 131073;
-static const shen_name data_12C18 = SHEN_NAME('TB12');
-static const uint32_t data_12C1C[6] = {0x5555E000U, 0, 0, 0, 0, 0};
-static const int32_t data_12C34 = 1;
-static const shen_name data_12C38 = SHEN_NAME('ZAR0');
-static const uint32_t data_12C3C[6] = {0x55552000U, 0, 0, 0, 0, 0};
-static const int32_t data_12C54 = 131073;
-static const shen_name data_12C58 = SHEN_NAME('PEN0');
-static const uint32_t data_12C5C[6] = {0x5555E000U, 0, 0, 0, 0, 0};
-static const int32_t data_12C74 = 131074;
-static const shen_name data_12C78 = SHEN_NAME('PEN1');
-static const float data_12C7C[6] = {40128.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-static const int32_t data_12C94 = 131073;
-static const shen_name data_12C98 = SHEN_NAME('YNM0');
-static const uint32_t data_12C9C[6] = {0x55552000U, 0, 0, 0, 0, 0};
-static const int32_t data_12CB4 = 131073;
-static const shen_name data_12CB8 = SHEN_NAME('YNM1');
-static const uint32_t data_12CBC[6] = {0x55556000U, 0, 0, 0, 0, 0};
-static const int32_t data_12CD4 = 131073;
-static const shen_name data_12CD8 = SHEN_NAME('YNM2');
-static const uint32_t data_12CDC[6] = {0x5555E000U, 0, 0, 0, 0, 0};
-static const int32_t data_12CF4 = 131074;
-static const shen_name data_12CF8 = SHEN_NAME('YNM4');
-static const float data_12CFC[6] = {40128.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-static const int32_t data_12D14 = 131074;
-static const shen_name data_12D18 = SHEN_NAME('FUT0');
-static const float data_12D1C[6] = {40128.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-static const int32_t data_12D34 = 131073;
-static const shen_name data_12D38 = SHEN_NAME('FUT1');
-static const uint32_t data_12D3C[6] = {0x5555E000U, 0, 0, 0, 0, 0};
-static const int32_t data_12D54 = 2;
-static const shen_name data_12D58 = SHEN_NAME('SHO0');
-static const float data_12D5C[6] = {40128.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-static const int32_t data_12D74 = 1;
-static const shen_name data_12D78 = SHEN_NAME('SHO1');
-static const uint32_t data_12D7C[6] = {0x5555E000U, 0, 0, 0, 0, 0};
-static const int32_t data_12D94[2] = {-65536, 0};
-static const uint32_t data_12D9C = 0x8E388000U;
-static const float data_12DA0[5] = {22.85f, 0.61f, 143.76f, 0.0f, 0.0f};
-static const int32_t data_12DB4[2] = {-65536, 1};
-static const uint32_t data_12DBC = 0xA38EE000U;
-static const float data_12DC0[5] = {20.13f, 0.69f, 133.31f, 0.0f, 0.0f};
-static const int32_t data_12DD4[2] = {-65536, 2};
-static const uint32_t data_12DDC = 0x5555A000U;
-static const float data_12DE0[5] = {28.51f, 1.1f, 141.42f, 0.0f, 0.0f};
-static const int32_t data_12DF4[2] = {-65536, 3};
-static const uint32_t data_12DFC = 0x55552000U;
-static const float data_12E00[5] = {15.45f, 1.4f, 136.14f, 0.0f, 0.0f};
-static const int32_t data_12E14[2] = {-65536, 4};
-static const uint32_t data_12E1C = 0x8E38A000U;
-static const float data_12E20[5] = {22.1f, 1.16f, 144.06f, 0.0f, 0.0f};
-static const int32_t data_12E34[2] = {-65536, 5};
-static const uint32_t data_12E3C = 0x5555A000U;
-static const float data_12E40[5] = {22.5f, 1.59f, 135.18f, 0.0f, 0.0f};
-static const int32_t data_12E54[2] = {-65536, 6};
-static const uint32_t data_12E5C = 0x5555A000U;
-static const float data_12E60[5] = {23.48f, 5.37f, 146.66f, 0.0f, 0.0f};
-static const int32_t data_12E74[2] = {-65536, 10};
-static const uint32_t data_12E7C = 0x5555E000U;
-static const float data_12E80[5] = {21.84f, 5.88f, 139.59f, 0.0f, 0.0f};
-static const int32_t data_12E94[2] = {-65536, 7};
-static const uint32_t data_12E9C = 0x5555E000U;
-static const float data_12EA0[5] = {25.68f, 5.88f, 143.46f, 0.0f, 0.0f};
-static const int32_t data_12EB4[2] = {-65535, 8};
-static const uint32_t data_12EBC = 0x5555E000U;
-static const float data_12EC0[5] = {28.5f, 5.97f, 139.97f, 0.0f, 0.0f};
-static const int32_t data_12ED4[2] = {-65535, 9};
-static const uint32_t data_12EDC = 0x5555E000U;
-static const float data_12EE0[5] = {26.67f, 5.97f, 138.03f, 0.0f, 0.0f};
-static const int32_t data_12EF4[2] = {-65535, 14};
-static const uint32_t data_12EFC = 0x5555A000U;
-static const float data_12F00[5] = {28.27f, 4.63f, 141.51f, 0.0f, 0.0f};
-static const int32_t data_12F14[2] = {-65535, 15};
-static const uint32_t data_12F1C = 0x5555A000U;
-static const float data_12F20[5] = {27.24f, 6.2f, 142.6f, 0.0f, 0.0f};
-static const int32_t data_12F34[2] = {-65534, 11};
-static const uint32_t data_12F3C = 0x5555E000U;
-static const float data_12F40[5] = {23.61f, 6.18f, 135.64f, 0.0f, 0.0f};
-static const int32_t data_12F54[2] = {-65534, 12};
-static const uint32_t data_12F5C = 0x5555E000U;
-static const float data_12F60[5] = {22.11f, 6.18f, 134.18f, 0.0f, 0.0f};
-static const int32_t data_12F74[2] = {-65534, 13};
-static const uint32_t data_12F7C = 0x55552000U;
-static const float data_12F80[5] = {21.35f, 6.18f, 136.15f, 0.0f, 0.0f};
-static const int32_t data_12F94 = 65535;
-static uint32_t data_12F98 = 0xFFFFFFFF;
-static uint8_t data_12F9C[12] = {0};
-static const int32_t data_12FA8 = 2033065;
-static const shen_name data_12FAC[8] = {
-  SHEN_NAME('TB00'), SHEN_NAME('TB01'), SHEN_NAME('TB02'), SHEN_NAME('TB10'), SHEN_NAME('TB11'), SHEN_NAME('TB12'), SHEN_NAME('FUT0'),
-  SHEN_NAME('FUT1')
-};
-static const int32_t data_12FCC[5] = {-1, 0, 0, 0, 2164137};
-static const shen_name data_12FE0[5] = {SHEN_NAME('YNM0'), SHEN_NAME('YNM1'), SHEN_NAME('YNM2'), SHEN_NAME('YNM3'), SHEN_NAME('YNM4')};
-static const int32_t data_12FF4[5] = {-1, 0, 0, 0, 2229673};
-static const shen_name data_13008[2] = {SHEN_NAME('PEN0'), SHEN_NAME('PEN1')};
-static const int32_t data_13010[3] = {-1, -1, 0};
-static const Vector4 data_1301C = {.x = 0.78f, .y = 0.82f, .z = 0.59f, .w = 0.46f};
-static const float data_1302C[19] = {
-  0.89f, 0.89f, 0.13f, 0.39f, 0.28f, 0.14f, 1.1f, 1.84f, 0.93f, 0.58f, 4.1813f, 0.996f, 0.7922f, 1000.0f, 1000.0f, 1000.0f, 1000.0f, 1000.0f, 1000.0f
-};
-static const char data_13078[28] __attribute__((scn_string_literal)) = "Map Start!!!!!!!!!!!!!!!!!\012";
-static const char data_13094[21] __attribute__((scn_string_literal)) = "このアイテムもってる";
-static const char data_130A9[43] __attribute__((scn_string_literal)) = "tansu naka = %d\012";
-static const Vector3i data_130D4 = {.x = 16384, .y = 32768, .z = 0};
-static const Vector3 data_130E0 = {.x = 22.271f, .y = 4.275f, .z = 139.194504f};
-static const Vector3 data_130EC = {.x = 26.1152f, .y = 4.275f, .z = 142.987503f};
-static const Vector3 data_130F8 = {.x = 24.890699f, .y = 4.275f, .z = 144.214493f};
-static const Vector3 data_13104 = {.x = 21.0723f, .y = 4.275f, .z = 140.396194f};
-static const char data_13110[11] __attribute__((scn_string_literal)) = "E1009BA007";
-static const char data_1311B[11] __attribute__((scn_string_literal)) = "E1009BA008";
-static const char data_13126[11] __attribute__((scn_string_literal)) = "E1009BA009";
-static const char data_13131[11] __attribute__((scn_string_literal)) = "E1009BA006";
-static const char data_1313C[11] __attribute__((scn_string_literal)) = "E1009BA008";
-static const char data_13147[11] __attribute__((scn_string_literal)) = "E1009BA009";
-static const char data_13152[11] __attribute__((scn_string_literal)) = "E1009BA022";
-static const char data_1315D[11] __attribute__((scn_string_literal)) = "E1009BA023";
-static const char data_13168[11] __attribute__((scn_string_literal)) = "E1009BA024";
-static const char data_13173[11] __attribute__((scn_string_literal)) = "E1009BA034";
-static const char data_1317E[11] __attribute__((scn_string_literal)) = "E1009BA029";
-static const char data_13189[11] __attribute__((scn_string_literal)) = "E1009BA030";
-static const char data_13194[11] __attribute__((scn_string_literal)) = "E1009BA035";
-static const char data_1319F[11] __attribute__((scn_string_literal)) = "E1009BA036";
-static const char data_131AA[11] __attribute__((scn_string_literal)) = "E1009BA037";
-static const char data_131B5[11] __attribute__((scn_string_literal)) = "E1009BA038";
-static const char data_131C0[11] __attribute__((scn_string_literal)) = "E1009BA036";
-static const char data_131CB[11] __attribute__((scn_string_literal)) = "E1009BA039";
-static const char data_131D6[11] __attribute__((scn_string_literal)) = "E1009BA040";
-static const char data_131E1[11] __attribute__((scn_string_literal)) = "E1009BA026";
-static const char data_131EC[11] __attribute__((scn_string_literal)) = "E1009BA041";
-static const char data_131F7[11] __attribute__((scn_string_literal)) = "E1009BA009";
-static const char data_13202[11] __attribute__((scn_string_literal)) = "E1009BA019";
-static const char data_1320D[11] __attribute__((scn_string_literal)) = "E1009BA020";
-static Vector3 data_13218 = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
-static Vector3i data_13224 = {.x = 0, .y = 0, .z = 0};
-static const Vector3 data_13230 = {.x = 18.01f, .y = 4.275f, .z = 137.16f};
-static const Vector3 data_1323C = {.x = 23.125f, .y = 0.0f, .z = 146.3f};
-static const Vector3 data_13248 = {.x = 4.4257f, .y = 0.0f, .z = 140.0f};
-static const Vector3 data_13254 = {.x = 22.271f, .y = 4.275f, .z = 139.194504f};
-static const Vector3 data_13260 = {.x = 26.1152f, .y = 4.275f, .z = 142.987503f};
-static const Vector3 data_1326C = {.x = 14.81f, .y = 5.78f, .z = 149.9f};
-static const Vector3 data_13278 = {.x = 16.77f, .y = 4.275f, .z = 151.87f};
-static const char data_13284[11] __attribute__((scn_string_literal)) = "E1009BA002";
-static const char data_1328F[11] __attribute__((scn_string_literal)) = "E1009BA002";
-static const char data_1329A[11] __attribute__((scn_string_literal)) = "E1009BA006";
-static const char data_132A5[11] __attribute__((scn_string_literal)) = "E1009BA028";
-static const char data_132B0[12] __attribute__((scn_string_literal)) = "E1009BA003";
-static const Vector3 data_132BC = {.x = 17.69f, .y = 4.275f, .z = 136.69f};
-static const Vector3 data_132C8 = {.x = 16.15f, .y = 4.275f, .z = 135.18f};
-static const float data_132D4[6] = {15.15f, 4.275f, 133.48f, 14.14f, 5.8f, 132.09f};
-static const Vector3 data_132EC = {.x = 16.63f, .y = 5.6f, .z = 131.87f};
-static const float data_132F8[3] = {15.4f, 5.3f, 131.0f};
-static const char data_13304[11] __attribute__((scn_string_literal)) = "E1009BA013";
-static const char data_1330F[11] __attribute__((scn_string_literal)) = "E1009BB001";
-static const char data_1331A[11] __attribute__((scn_string_literal)) = "E1009BC001";
-static const char data_13325[11] __attribute__((scn_string_literal)) = "E1009BB002";
-static const char data_13330[11] __attribute__((scn_string_literal)) = "E1009BC002";
-static const char data_1333B[11] __attribute__((scn_string_literal)) = "E1009BC003";
-static const char data_13346[11] __attribute__((scn_string_literal)) = "E1009BB003";
-static const char data_13351[11] __attribute__((scn_string_literal)) = "E1009BC004";
-static const char data_1335C[11] __attribute__((scn_string_literal)) = "E1009BA014";
-static const char data_13367[13] __attribute__((scn_string_literal)) = "E1009BA017";
-static const Vector3 data_13374 = {.x = 14.5f, .y = 0.0f, .z = 144.5f};
-static const Vector3 data_13380 = {.x = 15.0296f, .y = 4.275f, .z = 134.593094f};
-static const char data_1338C[11] __attribute__((scn_string_literal)) = "E1009BA018";
-static const char data_13397[7] __attribute__((scn_string_literal)) = "E1009B";
-static const char data_1339E[5] __attribute__((scn_string_literal)) = "FREE";
-static const char data_133A3[5] __attribute__((scn_string_literal)) = "FREE";
-static const char data_133A8[5] __attribute__((scn_string_literal)) = "FREE";
-static const char data_133AD[5] __attribute__((scn_string_literal)) = "FREE";
-static const char data_133B2[5] __attribute__((scn_string_literal)) = "FREE";
-static const char data_133B7[12] __attribute__((scn_string_literal)) = "fre1100.snd";
-static const char data_133C3[13] __attribute__((scn_string_literal)) = "f1new8so.snd";
-static const uint32_t data_133D0 = 0xBFB33333;
-static const float data_133D4[13] = {143.6f, 15.8f, 126.3f, 30.1f, 140.6f, 12.9f, 157.9f, -0.3f, 10.8f, 14.4f, 1.0f, 146.1f, 15.0f};
-static const Vector4 data_13408 = {.x = 1.0f, .y = 0.3f, .z = 0.3f, .w = 0.3f};
-static const char data_13418[22] __attribute__((scn_string_literal)) = "res_tachikiki_end,%d\012";
-static const char data_1342E[29] __attribute__((scn_string_literal)) = "res_tachikiki_kyusai_end,%d\012";
-static const char data_1344B[24] __attribute__((scn_string_literal)) = "res_1kai_hitorigoto,%d\012";
-static const char data_13463[24] __attribute__((scn_string_literal)) = "res_left_hitorigoto,%d\012";
-static const char data_1347B[25] __attribute__((scn_string_literal)) = "res_right_hitorigoto,%d\012";
-static const char data_13494[13] __attribute__((scn_string_literal)) = "res_futo,%d\012";
-static const char data_134A1[15] __attribute__((scn_string_literal)) = "res_search,%d\012";
-static const char data_134B0[13] __attribute__((scn_string_literal)) = "res_game,%d\012";
-static const char data_134BD[15] __attribute__((scn_string_literal)) = "res_limit,%d\012";
-
 static void script_0030(void) {
   int32_t local_FC;
   local_FC = Script_GetSceneID();
@@ -854,7 +54,7 @@ static void script_0180(int32_t arg0) {
   Script_ryoSetChara(arg0);
   Script_facemotUtils(arg0, 1, 0);
   Script_facemotUtils(arg0, 0, 0);
-  Script_FaceEx(arg0, 0, 0, 2);
+  Script_FaceEx(arg0, FACE_ExpressionDisabled, 0, 2);
   Script_CharHandlers(arg0, -1, 0, 0);
   script_0030();
   Script_cpctStateUtils(1, 2);
@@ -1209,15 +409,15 @@ static void script_0B5D(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   int32_t local_FC;
   float local_F8;
   float local_F4;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
     if ((local_FC == 1) | (local_FC == 2)) {
       local_FC = 1;
     } else {
       local_FC = 0;
     }
-    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
-    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
+    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
+    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
     local_FC = script_9005(arg0, arg1, 5, local_F8 / 100.0f, local_F4 / 100.0f, arg3, -1);
     script_42E9(arg0, arg1, arg2, arg3, local_FC, 0);
   }
@@ -1230,13 +430,13 @@ static void script_0C61(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   int32_t local_F8;
   float local_F4;
   float local_F0;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
-    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
+    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
     local_F4 = 90.0f - local_F4;
-    *(int32_t *)&local_F0 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
-    if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x40) | (Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x80)) {
-      if (Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x40) {
+    *(int32_t *)&local_F0 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
+    if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x40) | (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x80)) {
+      if (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x40) {
         if ((local_FC == 0) | (local_FC == 1)) {
           local_F8 = 6;
         } else {
@@ -1261,22 +461,22 @@ static void script_0E03(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   int32_t local_FC;
   float local_F8;
   float local_F4;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
     if ((local_FC == 1) | (local_FC == 2)) {
       local_FC = 1;
     } else {
       local_FC = 0;
     }
-    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
-    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
+    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
+    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
     local_FC = script_9005(arg0, arg1, 5, local_F8 / 100.0f, local_F4 / 100.0f, arg3, -1);
     if (local_FC == 1) {
       local_FC = 2;
     } else {
       local_FC = 3;
     }
-    if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 4) == 0) {
+    if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 4) == 0) {
       script_27F6(arg0, arg1, arg2, arg3, local_FC, 0);
     } else {
       if (arg0 == task_160) {
@@ -1292,22 +492,22 @@ static void script_0F64(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   int32_t local_FC;
   float local_F8;
   float local_F4;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
     if ((local_FC == 1) | (local_FC == 2)) {
       local_FC = 1;
     } else {
       local_FC = 0;
     }
-    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
-    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
+    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
+    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
     local_FC = script_9005(arg0, arg1, 5, local_F8 / 100.0f, local_F4 / 100.0f, arg3, -1);
     if (local_FC == 1) {
       local_FC = 1;
     } else {
       local_FC = 0;
     }
-    if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 4) == 0) {
+    if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 4) == 0) {
       script_27F6(arg0, arg1, arg2, arg3, local_FC, 0);
     } else {
       if (arg0 == task_160) {
@@ -1322,15 +522,15 @@ static void script_0F64(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
 static void script_10C5(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) {
   int32_t local_FC;
   int32_t local_F8;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
-    if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 4) == 0) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
+    if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 4) == 0) {
       float local_F4;
       float local_F0;
       local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
-      *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
-      *(int32_t *)&local_F0 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
-      if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x40) | (Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x80)) {
-        if (Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x40) {
+      *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
+      *(int32_t *)&local_F0 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
+      if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x40) | (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x80)) {
+        if (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x40) {
           if ((local_FC == 0) | (local_FC == 1)) {
             local_F8 = 6;
           } else {
@@ -1351,8 +551,8 @@ static void script_10C5(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
         float local_F4;
         float local_F0;
         local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
-        *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
-        *(int32_t *)&local_F0 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
+        *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
+        *(int32_t *)&local_F0 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
         local_FC = script_9005(arg0, arg1, 6, local_F4 / 100.0f, local_F0 / 100.0f, arg3, task_48[arg2]);
         script_5BC9(arg0, arg1, arg2, arg3, local_FC, 1);
       }
@@ -1366,10 +566,10 @@ static void script_1363(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   int32_t local_FC;
   float local_F8;
   float local_F4;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
-    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
-    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
+    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
+    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
     script_9005(arg0, arg1, 0, local_F8 / 100.0f, local_F4 / 100.0f, arg3, -1);
   }
   script_9870(arg0, arg2, 0);
@@ -1378,7 +578,7 @@ static void script_1363(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
 
 static void script_1431(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) {
   int32_t local_FC;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     local_FC = script_9005(arg0, arg1, 4, 0.5f, 0.5f, arg3, -1);
     if (local_FC == 1) {
       local_FC = 2;
@@ -1393,7 +593,7 @@ static void script_1431(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
 
 static void script_1498(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) {
   int32_t local_FC;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     local_FC = script_9005(arg0, arg1, 4, 0.5f, 0.5f, arg3, -1);
     if (local_FC == 1) {
       local_FC = 1;
@@ -1407,7 +607,7 @@ static void script_1498(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
 }
 
 static void script_14FF(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) {
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     script_9005(arg0, arg1, 4, 0.0f, 0.5f, arg3, -1);
     script_3775(arg0, arg1, arg2, arg3, 4, 1);
   }
@@ -1419,15 +619,15 @@ static void script_1546(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   int32_t local_FC;
   float local_F8;
   float local_F4;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
     if ((local_FC == 1) | (local_FC == 2)) {
       local_FC = 1;
     } else {
       local_FC = 0;
     }
-    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
-    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
+    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
+    *(int32_t *)&local_F4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
     if (local_FC == 0) {
       local_FC = script_9005(arg0, arg1, 5, local_F8 / 100.0f, local_F4 / 100.0f, arg3, -1);
     } else {
@@ -1461,28 +661,28 @@ static void script_167C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   float local_FF78;
   float local_FF74;
   if (arg0 == task_160) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
       local_FF7F = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
-      *(int32_t *)&local_FF78 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9 + 5);
-      *(int32_t *)&local_FF74 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9 + 6);
+      *(int32_t *)&local_FF78 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9 + 5);
+      *(int32_t *)&local_FF74 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9 + 6);
       local_FF7F = script_9005(arg0, arg1, 5, local_FF78 / (float)100, local_FF74 / (float)100, arg3, -1);
       script_96CE(arg0, 0);
-      *(int32_t *)&local_94 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9 + 1);
-      *(int32_t *)&local_90 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9 + 2);
+      *(int32_t *)&local_94 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9 + 1);
+      *(int32_t *)&local_90 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9 + 2);
       local_8C = 0.0f;
-      local_FC = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9);
+      local_FC = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FF7F) * 9);
       local_FC = local_FC | ((Script_FloatUtils(ScriptMathOp_FloatToInt, local_94 - 3.0f) << 16) & 0x7FFF0000);
       local_9C.x = (&task_168)->x;
       (&local_9C)->y = task_168.y;
       (&local_9C)->z = task_168.z;
-      Script_charaPosRotUtils(arg1, 12, &local_CC, &local_E4, 2);
-      Script_charaPosRotUtils(arg1, 7, &local_C0, &local_D8, 2);
+      Script_charaPosRotUtils(arg1, 12, &local_CC, &local_E4, CHARA_PART_Get);
+      Script_charaPosRotUtils(arg1, 7, &local_C0, &local_D8, CHARA_PART_Get);
       Script_ryoControl(PCCTL_StartCameraFacingInterpolation, 0);
       if (arg0 == task_160) {
         Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
         Script_scenCharaSubmitMoveTargetRequest(arg0, &task_168, *(&task_174 + 1), local_FC, 0);
         for (;;) {
-          if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+          if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
             break;
           }
           if (Script_IsMoveTargetRequestActive(arg0) == 0) {
@@ -1494,7 +694,7 @@ static void script_167C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
         Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
         Script_SetCharaMoveTarget(arg0, &task_168, *(&task_174 + 1), local_FC);
         for (;;) {
-          if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+          if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
             break;
           }
           if (Script_GetCharaMoveStatus(arg0) == 0) {
@@ -1504,7 +704,7 @@ static void script_167C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
         }
       }
       for (;;) {
-        if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+        if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
           break;
         }
         if (Script_IsCharaMotionFinished(arg0)) {
@@ -1518,7 +718,7 @@ static void script_167C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
               int32_t unused_FF70;
               int32_t local_FF6C;
               local_FF6C = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-              local_FF6C = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FF6C * 9 + 1) * 4 + 2);
+              local_FF6C = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FF6C * 9 + 1) * 4 + 2);
               if (local_FF6C != -1) {
                 if (arg0 == task_160) {
                   Script_executeAicaCommand(local_FF6C, 0, 0);
@@ -1533,20 +733,20 @@ static void script_167C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
             (&local_F0)->y = (&local_F0)->y - (int32_t)((local_8C + 95.0f) / 360.0f * (float)0x10000);
             local_F0.x = (&local_D8)->x;
             (&local_F0)->z = (&local_D8)->z;
-            Script_charaPosRotUtils(arg1, 7, 0, &local_F0, 0);
+            Script_charaPosRotUtils(arg1, 7, 0, &local_F0, CHARA_PART_Set);
             Script_EVT_GetPosition(arg0, 18, &local_B4, ENTITY_XFORM_MOTION_SPACE);
             (&local_B4)->z = (&local_B4)->z + (&local_A8)->z;
             (&local_F0)->y = Script_FloatUtils(ScriptMathOp_Atan2ReverseVector, (&local_CC)->x - (&local_B4)->x, (&local_CC)->z - (&local_B4)->z);
             (&local_F0)->y = (&local_F0)->y + (int32_t)((local_8C + 95.0f) / 360.0f * (float)0x10000);
             local_F0.x = (&local_E4)->x;
             (&local_F0)->z = (&local_E4)->z;
-            Script_charaPosRotUtils(arg1, 12, 0, &local_F0, 0);
+            Script_charaPosRotUtils(arg1, 12, 0, &local_F0, CHARA_PART_Set);
           } else {
             if (!(local_98 < local_94) & !(local_98 >= local_94 + 1.0f)) {
               int32_t unused_FF70;
               int32_t local_FF6C;
               local_FF6C = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-              local_FF6C = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FF6C * 9 + 1) * 4 + 2);
+              local_FF6C = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FF6C * 9 + 1) * 4 + 2);
               if (local_FF6C != -1) {
                 if (arg0 == task_160) {
                   Script_executeAicaCommand(local_FF6C, 0, 0);
@@ -1561,14 +761,14 @@ static void script_167C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
             (&local_F0)->y = -((&local_F0)->y - (int32_t)((local_8C + 95.0f) / 360.0f * (float)0x10000));
             local_F0.x = (&local_D8)->x;
             (&local_F0)->z = (&local_D8)->z;
-            Script_charaPosRotUtils(arg1, 7, 0, &local_F0, 0);
+            Script_charaPosRotUtils(arg1, 7, 0, &local_F0, CHARA_PART_Set);
             Script_EVT_GetPosition(arg0, 18, &local_B4, ENTITY_XFORM_MOTION_SPACE);
             (&local_B4)->z = (&local_B4)->z + (&local_A8)->z;
             (&local_F0)->y = Script_FloatUtils(ScriptMathOp_Atan2ReverseVector, (&local_CC)->x - (&local_B4)->x, (&local_CC)->z - (&local_B4)->z);
             (&local_F0)->y = -((&local_F0)->y + (int32_t)((local_8C + 95.0f) / 360.0f * (float)0x10000));
             local_F0.x = (&local_E4)->x;
             (&local_F0)->z = (&local_E4)->z;
-            Script_charaPosRotUtils(arg1, 12, 0, &local_F0, 0);
+            Script_charaPosRotUtils(arg1, 12, 0, &local_F0, CHARA_PART_Set);
           }
         }
         if (!(local_98 < local_90 + 10.0f)) {
@@ -1593,7 +793,7 @@ static void script_167C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
         int32_t unused_FF70;
         int32_t local_FF6C;
         local_FF6C = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-        local_FF6C = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FF6C * 9 + 1) * 4 + 3);
+        local_FF6C = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FF6C * 9 + 1) * 4 + 3);
         if (local_FF6C != -1) {
           if (arg0 == task_160) {
             Script_executeAicaCommand(local_FF6C, 0, 0);
@@ -1619,14 +819,14 @@ static void script_167C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
         local_84 = local_84 + 128;
         if (local_FF7F == 1) {
           (&local_F0)->y = -(int32_t)(((float)0 - local_94) / 360.0f * (float)0x10000);
-          Script_charaPosRotUtils(arg1, 7, 0, &local_F0, 0);
+          Script_charaPosRotUtils(arg1, 7, 0, &local_F0, CHARA_PART_Set);
           (&local_F0)->y = (int32_t)(((float)0 - local_94) / 360.0f * (float)0x10000);
-          Script_charaPosRotUtils(arg1, 12, 0, &local_F0, 0);
+          Script_charaPosRotUtils(arg1, 12, 0, &local_F0, CHARA_PART_Set);
         } else {
           (&local_F0)->y = (int32_t)(((float)0 - local_94) / 360.0f * (float)0x10000);
-          Script_charaPosRotUtils(arg1, 7, 0, &local_F0, 0);
+          Script_charaPosRotUtils(arg1, 7, 0, &local_F0, CHARA_PART_Set);
           (&local_F0)->y = -(int32_t)(((float)0 - local_94) / 360.0f * (float)0x10000);
-          Script_charaPosRotUtils(arg1, 12, 0, &local_F0, 0);
+          Script_charaPosRotUtils(arg1, 12, 0, &local_F0, CHARA_PART_Set);
         }
         SCNF_WaitFrames_0000(1);
         if (local_84 >= 0x4000) {
@@ -1645,11 +845,11 @@ static void script_1F3D(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   int32_t local_FC;
   float local_F8;
   int32_t local_F4;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
-    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
+    *(int32_t *)&local_F8 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 5);
     local_F8 = 98.0f - local_F8;
-    local_F4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
+    local_F4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + local_FC) * 9 + 6);
     if ((local_FC == 0) | (local_FC == 3)) {
       local_FC = script_9005(arg0, arg1, 4, 0.34736f, 0.73184f, arg3, -1);
     } else {
@@ -1674,8 +874,8 @@ static int32_t script_205B(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
   int32_t unused_C8;
   GameDateTime local_C0;
   int32_t local_BC;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
-    local_F4 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 6);
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
+    local_F4 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 6);
     if ((local_F4 == 6) | (local_F4 == 7)) {
       Script_ReturnTimeDate(&local_C0);
       if (((&local_C0)->hours >= 22) | ((&local_C0)->hours <= 4)) {
@@ -1719,13 +919,13 @@ static int32_t script_205B(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
         script_6A74(arg0, arg1, arg2, arg3, local_FC, local_F0);
       }
     } else if ((local_BC == 3) | (local_BC == 4) | (local_BC == 5) | (local_BC == 6)) {
-      *(int32_t *)&local_D0 = Script_ScenDataUtil(&data_11B30, 5, Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 6) * 5 + 3);
-      *(int32_t *)&local_CC = Script_ScenDataUtil(&data_11B30, 5, Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 6) * 5 + 4);
+      *(int32_t *)&local_D0 = Script_ScenDataUtil(&data_11B30, SCND_ReadFloatBits, Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 6) * 5 + 3);
+      *(int32_t *)&local_CC = Script_ScenDataUtil(&data_11B30, SCND_ReadFloatBits, Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 6) * 5 + 4);
       local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
       local_BC = arg3;
       if ((local_BC == 13) | (local_BC == 14) | (local_BC == 15) | (local_BC == 16) | (local_BC == 20) | (local_BC == 23) | (local_BC == 28) | (local_BC == 29)) {
-        if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x40) | (Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x80)) {
-          if (Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x40) {
+        if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x40) | (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x80)) {
+          if (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x40) {
             if ((local_FC == 0) | (local_FC == 1)) {
               local_F8 = 6;
             } else {
@@ -1749,8 +949,8 @@ static int32_t script_205B(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
         local_FC = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
         local_BC = arg3;
         if ((local_BC == 13) | (local_BC == 14) | (local_BC == 15) | (local_BC == 16) | (local_BC == 20) | (local_BC == 23) | (local_BC == 28) | (local_BC == 29)) {
-          if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x40) | (Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x80)) {
-            if (Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 0x40) {
+          if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x40) | (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x80)) {
+            if (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 0x40) {
               if ((local_FC == 0) | (local_FC == 1)) {
                 local_F8 = 6;
               } else {
@@ -1767,16 +967,16 @@ static int32_t script_205B(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
         } else {
           local_F8 = 5;
         }
-        if (Script_CycleManagerUtils(CYCLE_CMD_IS_DOOR_OR_MOBJ_TYPE2, Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 12)) == 1) {
-          *(int32_t *)&local_D0 = Script_ScenDataUtil(&data_11B30, 5, Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 6) * 5 + 3);
-          *(int32_t *)&local_CC = Script_ScenDataUtil(&data_11B30, 5, Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 6) * 5 + 4);
+        if (Script_CycleManagerUtils(CYCLE_CMD_IS_DOOR_OR_MOBJ_TYPE2, Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 12)) == 1) {
+          *(int32_t *)&local_D0 = Script_ScenDataUtil(&data_11B30, SCND_ReadFloatBits, Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 6) * 5 + 3);
+          *(int32_t *)&local_CC = Script_ScenDataUtil(&data_11B30, SCND_ReadFloatBits, Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 6) * 5 + 4);
           local_FC = script_9005(arg0, arg1, local_F8, local_D0 / (float)100, local_CC / (float)100, arg3, task_48[arg2]);
           Script_scenUtils(SCENARIO_CMD_INIT_SCNT);
           script_6FC3(arg0, arg1, arg2, arg3, local_FC, 0);
           Script_scenUtils(SCENARIO_CMD_UPDATE_TIMER);
         } else {
-          *(int32_t *)&local_D0 = Script_ScenDataUtil(&data_11B30, 5, Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 6) * 5 + 3);
-          *(int32_t *)&local_CC = Script_ScenDataUtil(&data_11B30, 5, Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 6) * 5 + 4);
+          *(int32_t *)&local_D0 = Script_ScenDataUtil(&data_11B30, SCND_ReadFloatBits, Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 6) * 5 + 3);
+          *(int32_t *)&local_CC = Script_ScenDataUtil(&data_11B30, SCND_ReadFloatBits, Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 6) * 5 + 4);
           local_FC = script_9005(arg0, arg1, local_F8, local_D0 / (float)100, local_CC / (float)100, arg3, task_48[arg2]);
           script_6B4C(arg0, arg1, arg2, arg3, local_FC, 0);
         }
@@ -1801,7 +1001,7 @@ static void script_2720(int32_t arg0, int32_t arg1) {
     local_F4.x = (&local_F4)->x - Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_E8)->y) * 0.3f;
     (&local_F4)->z = (&local_F4)->z - Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_E8)->y) * 0.3f;
   }
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
     Script_SetCharaMoveTarget(arg0, &local_F4, (&local_E8)->y, script_0A7C(arg1));
   }
@@ -1835,14 +1035,14 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   int16_t local_84;
   int32_t local_80;
   int32_t local_FF7C;
-  *(int32_t *)&local_98 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 1);
-  *(int32_t *)&local_94 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 2);
-  *(int32_t *)&local_90 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 3);
-  *(int32_t *)&local_8C = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 4);
-  *(int32_t *)&local_88 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 7);
+  *(int32_t *)&local_98 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 1);
+  *(int32_t *)&local_94 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 2);
+  *(int32_t *)&local_90 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 3);
+  *(int32_t *)&local_8C = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 4);
+  *(int32_t *)&local_88 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 7);
   if (arg5) {
-    Script_charaPosRotUtils(arg1, 12, &local_D8, 0, 2);
-    Script_charaPosRotUtils(arg1, 7, &local_CC, 0, 2);
+    Script_charaPosRotUtils(arg1, 12, &local_D8, 0, CHARA_PART_Get);
+    Script_charaPosRotUtils(arg1, 7, &local_CC, 0, CHARA_PART_Get);
   } else {
     Script_EVT_GetPosition(arg1, -1, &local_D8, 0);
     Script_EVT_GetPosition(arg1, -1, &local_CC, 0);
@@ -1868,17 +1068,17 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     Script_mtwkGetSetRotation(arg1, &local_FF68, 0);
     local_84 = 0;
     if ((arg4 == 1) | (arg4 == 3)) {
-      local_FF78 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+      local_FF78 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
       local_FF7C = 18;
       local_80 = 18;
       local_A4 = 1.0f;
     } else {
       if (arg0 == task_160) {
-        local_FF78 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+        local_FF78 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
         local_FF7C = 12;
         local_80 = 12;
       } else {
-        local_FF78 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+        local_FF78 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
         local_FF7C = 18;
         local_80 = 18;
       }
@@ -1894,7 +1094,7 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
     Script_SetCharaMoveTarget(arg0, &task_168, *(&task_174 + 1), local_FF78);
     for (;;) {
-      if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+      if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
         break;
       }
       if (Script_GetCharaMoveStatus(arg0) == 0) {
@@ -1909,11 +1109,11 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     } else {
       local_FF = 1;
     }
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
       local_B8 = Script_GetCharaMotionRemainingFramesScaled(arg0);
     }
     for (;;) {
-      if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+      if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
         Script_sprintf("This Motion don't Finish!!\012");
         break;
       }
@@ -1933,7 +1133,7 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           if (local_84 == 0) {
             int32_t local_FF64;
             local_FF64 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-            local_FF64 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FF64 * 9 + 1) * 4 + 2);
+            local_FF64 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FF64 * 9 + 1) * 4 + 2);
             if (local_FF64 != -1) {
               if (arg0 == task_160) {
                 Script_executeAicaCommand(local_FF64, 0, 0);
@@ -1988,7 +1188,7 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         }
       } else {
         if (!(local_B8 <= local_94) & !(local_B8 > local_88)) {
-          *(int32_t *)&local_9C = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 8);
+          *(int32_t *)&local_9C = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 8);
           local_B4 = local_B4 + local_9C * local_A4;
         }
       }
@@ -1996,7 +1196,7 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         if (local_84 == 1) {
           int32_t local_FF64;
           local_FF64 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-          local_FF64 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FF64 * 9 + 1) * 4 + 3);
+          local_FF64 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FF64 * 9 + 1) * 4 + 3);
           if (local_FF64 != -1) {
             if (arg0 == task_160) {
               Script_executeAicaCommand(local_FF64, 0, 0);
@@ -2081,7 +1281,7 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             (&local_F0)->z = (&local_CC)->z;
             if (arg5) {
               local_F0.x = (&local_CC)->x - local_B4;
-              Script_charaPosRotUtils(arg1, 7, &local_F0, 0, 0);
+              Script_charaPosRotUtils(arg1, 7, &local_F0, 0, CHARA_PART_Set);
             } else {
               local_F0.x = (&local_CC)->x + ((float)0 - local_B4) * Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_FF68)->y);
               (&local_F0)->z = (&local_CC)->z + local_B4 * Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_FF68)->y);
@@ -2094,7 +1294,7 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             (&local_F0)->z = (&local_CC)->z;
             if (arg5) {
               local_F0.x = (&local_CC)->x + local_B4;
-              Script_charaPosRotUtils(arg1, 7, &local_F0, 0, 0);
+              Script_charaPosRotUtils(arg1, 7, &local_F0, 0, CHARA_PART_Set);
             } else {
               local_F0.x = (&local_CC)->x - ((float)0 - local_B4) * Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_FF68)->y);
               (&local_F0)->z = (&local_CC)->z - local_B4 * Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_FF68)->y);
@@ -2107,7 +1307,7 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             (&local_F0)->z = (&local_D8)->z;
             if (arg5) {
               local_F0.x = (&local_D8)->x + local_B4;
-              Script_charaPosRotUtils(arg1, 12, &local_F0, 0, 0);
+              Script_charaPosRotUtils(arg1, 12, &local_F0, 0, CHARA_PART_Set);
             } else {
               local_F0.x = (&local_D8)->x - ((float)0 - local_B4) * Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_FF68)->y);
               (&local_F0)->z = (&local_D8)->z - local_B4 * Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_FF68)->y);
@@ -2120,7 +1320,7 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             (&local_F0)->z = (&local_D8)->z;
             if (arg5) {
               local_F0.x = (&local_D8)->x - local_B4;
-              Script_charaPosRotUtils(arg1, 12, &local_F0, 0, 0);
+              Script_charaPosRotUtils(arg1, 12, &local_F0, 0, CHARA_PART_Set);
             } else {
               local_F0.x = (&local_D8)->x + ((float)0 - local_B4) * Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_FF68)->y);
               (&local_F0)->z = (&local_D8)->z + local_B4 * Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_FF68)->y);
@@ -2153,49 +1353,49 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     local_FF64 = arg3;
     if ((local_FF64 == 9) | (local_FF64 == 10) | (local_FF64 == 15)) {
       if (arg5) {
-        Script_charaPosRotUtils(arg1, 12, &local_D8, 0, 0);
-        Script_charaPosRotUtils(arg1, 7, &local_CC, 0, 0);
+        Script_charaPosRotUtils(arg1, 12, &local_D8, 0, CHARA_PART_Set);
+        Script_charaPosRotUtils(arg1, 7, &local_CC, 0, CHARA_PART_Set);
       } else {
         Script_EVT_SetPosition(arg1, POS_XYZ, &local_D8);
       }
       if (task_160 == arg0) {
-        local_80 = (Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 2) >> 16) & 0xFFFF;
+        local_80 = (Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 2) >> 16) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_80, 1);
-        local_80 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 2) & 0xFFFF;
+        local_80 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 2) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_80, 1);
       }
     } else if ((local_FF64 == 18) | (local_FF64 == 19) | (local_FF64 == 21) | (local_FF64 == 22)) {
       if (task_160 == arg0) {
-        local_80 = (Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 2) >> 16) & 0xFFFF;
+        local_80 = (Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 2) >> 16) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_80, 1);
         {
           int32_t local_FF60;
-          local_FF60 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 1);
+          local_FF60 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 1);
           local_FF60 = local_FF60 | 8;
-          Script_ScenDataUtil(task_0, 14, local_FF78 * 13 + 1, local_FF60);
+          Script_ScenDataUtil(task_0, SCND_WriteU32, local_FF78 * 13 + 1, local_FF60);
         }
         {
           int32_t local_FF60;
-          local_FF60 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 1);
+          local_FF60 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 1);
           local_FF60 = local_FF60 | 0x10;
-          Script_ScenDataUtil(task_0, 14, local_FF78 * 13 + 1, local_FF60);
+          Script_ScenDataUtil(task_0, SCND_WriteU32, local_FF78 * 13 + 1, local_FF60);
         }
         {
           int32_t local_FF60;
-          local_FF60 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 1);
+          local_FF60 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 1);
           local_FF60 = local_FF60 | 2;
-          Script_ScenDataUtil(task_0, 14, local_FF78 * 13 + 1, local_FF60);
+          Script_ScenDataUtil(task_0, SCND_WriteU32, local_FF78 * 13 + 1, local_FF60);
         }
       } else {
         if (arg5) {
-          Script_charaPosRotUtils(arg1, 12, &local_D8, 0, 0);
-          Script_charaPosRotUtils(arg1, 7, &local_CC, 0, 0);
+          Script_charaPosRotUtils(arg1, 12, &local_D8, 0, CHARA_PART_Set);
+          Script_charaPosRotUtils(arg1, 7, &local_CC, 0, CHARA_PART_Set);
         } else {
           Script_EVT_SetPosition(arg1, POS_XYZ, &local_D8);
         }
-        local_80 = (Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 2) >> 16) & 0xFFFF;
+        local_80 = (Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 2) >> 16) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_80, 1);
-        local_80 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 2) & 0xFFFF;
+        local_80 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 2) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_80, 1);
       }
     } else {
@@ -2204,40 +1404,40 @@ static void script_27F6(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           if ((arg4 == 0) | (arg4 == 1)) {
             {
               int32_t local_FF60;
-              local_FF60 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 1);
+              local_FF60 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 1);
               local_FF60 = local_FF60 | 0x10;
-              Script_ScenDataUtil(task_0, 14, local_FF78 * 13 + 1, local_FF60);
+              Script_ScenDataUtil(task_0, SCND_WriteU32, local_FF78 * 13 + 1, local_FF60);
             }
             {
               int32_t local_FF60;
-              local_FF60 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 1);
+              local_FF60 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 1);
               local_FF60 = local_FF60 | 4;
-              Script_ScenDataUtil(task_0, 14, local_FF78 * 13 + 1, local_FF60);
+              Script_ScenDataUtil(task_0, SCND_WriteU32, local_FF78 * 13 + 1, local_FF60);
             }
           } else {
             {
               int32_t local_FF60;
-              local_FF60 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 1);
+              local_FF60 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 1);
               local_FF60 = local_FF60 | 8;
-              Script_ScenDataUtil(task_0, 14, local_FF78 * 13 + 1, local_FF60);
+              Script_ScenDataUtil(task_0, SCND_WriteU32, local_FF78 * 13 + 1, local_FF60);
             }
             {
               int32_t local_FF60;
-              local_FF60 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 1);
+              local_FF60 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 1);
               local_FF60 = local_FF60 | 4;
-              Script_ScenDataUtil(task_0, 14, local_FF78 * 13 + 1, local_FF60);
+              Script_ScenDataUtil(task_0, SCND_WriteU32, local_FF78 * 13 + 1, local_FF60);
             }
           }
         } else {
           if (arg5) {
-            Script_charaPosRotUtils(arg1, 12, &local_D8, 0, 0);
-            Script_charaPosRotUtils(arg1, 7, &local_CC, 0, 0);
+            Script_charaPosRotUtils(arg1, 12, &local_D8, 0, CHARA_PART_Set);
+            Script_charaPosRotUtils(arg1, 7, &local_CC, 0, CHARA_PART_Set);
           } else {
             Script_EVT_SetPosition(arg1, POS_XYZ, &local_D8);
           }
-          local_80 = (Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 2) >> 16) & 0xFFFF;
+          local_80 = (Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 2) >> 16) & 0xFFFF;
           Script_scenToggleCharaFlag(0, local_80, 1);
-          local_80 = Script_ScenDataUtil(task_0, 4, local_FF78 * 13 + 2) & 0xFFFF;
+          local_80 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FF78 * 13 + 2) & 0xFFFF;
           Script_scenToggleCharaFlag(0, local_80, 1);
         }
         goto L003708;
@@ -2254,12 +1454,12 @@ static void script_3709(int32_t arg0, int32_t arg1, int32_t arg2) {
     local_FC = task_48[arg1];
     {
       int32_t local_F8;
-      local_F8 = Script_ScenDataUtil(task_0, 4, local_FC * 13 + 2) & 0xFFFF;
+      local_F8 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13 + 2) & 0xFFFF;
       Script_scenToggleCharaFlag(0, local_F8, arg2);
     }
     {
       int32_t local_F8;
-      local_F8 = (Script_ScenDataUtil(task_0, 4, local_FC * 13 + 2) >> 16) & 0xFFFF;
+      local_F8 = (Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13 + 2) >> 16) & 0xFFFF;
       Script_scenToggleCharaFlag(0, local_F8, arg2);
     }
   }
@@ -2285,8 +1485,8 @@ static void script_3775(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   int32_t local_88;
   int32_t local_84;
   if (arg4 == 4) {
-    Script_charaPosRotUtils(arg1, 12, &local_C4, 0, 2);
-    Script_charaPosRotUtils(arg1, 7, &local_B8, 0, 2);
+    Script_charaPosRotUtils(arg1, 12, &local_C4, 0, CHARA_PART_Get);
+    Script_charaPosRotUtils(arg1, 7, &local_B8, 0, CHARA_PART_Get);
   } else {
     Script_EVT_GetPosition(arg1, -1, &local_C4, 0);
     Script_EVT_GetPosition(arg1, -1, &local_B8, 0);
@@ -2308,7 +1508,7 @@ static void script_3775(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   {
     int32_t local_80;
     local_80 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-    local_80 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_80 * 9 + 1) * 4 + 2);
+    local_80 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_80 * 9 + 1) * 4 + 2);
     if (local_80 != -1) {
       if (arg0 == task_160) {
         Script_executeAicaCommand(local_80, 0, 0);
@@ -2322,7 +1522,7 @@ static void script_3775(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   local_84 = 0;
   for (;;) {
     local_92 = 0;
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
       Script_EVT_GetPosition(arg0, -1, &local_E8, 0);
       if (Script_CheckTargetWithinAngleRange(&local_F4, 1.5f, (&local_A0)->y, 0x10000, &local_E8)) {
         local_92 = 1;
@@ -2339,7 +1539,7 @@ static void script_3775(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       if ((local_93 == 1) & (local_8C == 0)) {
         int32_t local_80;
         local_80 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-        local_80 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_80 * 9 + 1) * 4 + 3);
+        local_80 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_80 * 9 + 1) * 4 + 3);
         if (local_80 != -1) {
           if (arg0 == task_160) {
             Script_executeAicaCommand(local_80, 0, 0);
@@ -2355,7 +1555,7 @@ static void script_3775(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       }
     }
     local_88 = task_48[arg2];
-    local_88 = Script_ScenDataUtil(task_0, 4, local_88 * 13 + 2) & 0xFFFF;
+    local_88 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_88 * 13 + 2) & 0xFFFF;
     local_88 = local_88 + ((local_9C - 0x4000) >> 12);
     if (local_84 != local_88) {
       Script_scenToggleCharaFlag(0, local_88, local_8C);
@@ -2365,7 +1565,7 @@ static void script_3775(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     if (local_9C >= 0xC000) {
       local_9C = 0xC000;
       local_88 = task_48[arg2];
-      local_88 = Script_ScenDataUtil(task_0, 4, local_88 * 13 + 2) & 0xFFFF;
+      local_88 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_88 * 13 + 2) & 0xFFFF;
       local_88 = local_88 + 8;
       Script_scenToggleCharaFlag(0, local_88, local_8C);
       break;
@@ -2384,8 +1584,8 @@ static void script_3775(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       if (local_80 == 4) {
         local_DC.x = (&local_C4)->x + local_94;
         local_D0.x = (&local_B8)->x - local_94;
-        Script_charaPosRotUtils(arg1, 12, &local_DC, 0, 0);
-        Script_charaPosRotUtils(arg1, 7, &local_D0, 0, 0);
+        Script_charaPosRotUtils(arg1, 12, &local_DC, 0, CHARA_PART_Set);
+        Script_charaPosRotUtils(arg1, 7, &local_D0, 0, CHARA_PART_Set);
       } else if ((local_80 == 0) | (local_80 == 1)) {
         local_DC.x = (&local_C4)->x - ((float)0 - local_94) * Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_A0)->y);
         (&local_DC)->z = (&local_C4)->z - local_94 * Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_A0)->y);
@@ -2403,8 +1603,8 @@ static void script_3775(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     SCNF_WaitFrames_0000(1);
   }
   if (arg4 == 4) {
-    Script_charaPosRotUtils(arg1, 12, &local_C4, 0, 0);
-    Script_charaPosRotUtils(arg1, 7, &local_B8, 0, 0);
+    Script_charaPosRotUtils(arg1, 12, &local_C4, 0, CHARA_PART_Set);
+    Script_charaPosRotUtils(arg1, 7, &local_B8, 0, CHARA_PART_Set);
   } else {
     Script_EVT_SetPosition(arg1, POS_XYZ, &local_C4);
     Script_EVT_SetPosition(arg1, POS_XYZ, &local_B8);
@@ -2440,14 +1640,14 @@ static void script_3C2F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           local_F8 = 18;
           local_F0 = 0x4000;
           local_B8 = 1.0f;
-          local_FC = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+          local_FC = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
           break;
         case 0:
           local_B7 = 0;
           local_F8 = 12;
           local_F0 = 0x4000;
           local_B8 = 1.0f;
-          local_FC = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+          local_FC = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
           break;
       }
       break;
@@ -2459,14 +1659,14 @@ static void script_3C2F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           local_F8 = 12;
           local_F0 = 0xC000;
           local_B8 = 1.0f;
-          local_FC = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+          local_FC = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
           break;
         case 0:
           local_B7 = 1;
           local_F8 = 18;
           local_F0 = 0xC000;
           local_B8 = 1.0f;
-          local_FC = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+          local_FC = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
           break;
       }
       break;
@@ -2478,14 +1678,14 @@ static void script_3C2F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           local_F8 = 12;
           local_F0 = 0xC000;
           local_B8 = -1.0f;
-          local_FC = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+          local_FC = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
           break;
         case 0:
           local_B7 = 0;
           local_F8 = 18;
           local_F0 = 0xC000;
           local_B8 = -1.0f;
-          local_FC = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+          local_FC = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
           break;
       }
       break;
@@ -2497,20 +1697,20 @@ static void script_3C2F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           local_F8 = 18;
           local_F0 = 0x4000;
           local_B8 = -1.0f;
-          local_FC = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+          local_FC = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
           break;
         case 0:
           local_B7 = 1;
           local_F8 = 12;
           local_F0 = 0x4000;
           local_B8 = -1.0f;
-          local_FC = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+          local_FC = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
           break;
       }
       break;
   }
-  *(int32_t *)&local_C4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 1);
-  *(int32_t *)&local_C0 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 2);
+  *(int32_t *)&local_C4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 1);
+  *(int32_t *)&local_C0 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 2);
   local_FC = local_FC | ((Script_FloatUtils(ScriptMathOp_FloatToInt, local_C4 - 3.0f) << 16) & 0x7FFF0000);
   local_BC = 0.0f;
   script_96CE(arg0, 0);
@@ -2521,7 +1721,7 @@ static void script_3C2F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
   Script_SetCharaMoveTarget(arg0, &task_168, *(&task_174 + 1), local_FC);
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       break;
     }
     if (Script_GetCharaMoveStatus(arg0) == 0) {
@@ -2534,7 +1734,7 @@ static void script_3C2F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   Script_mtwkGetSetRotation(arg1, &local_A8, 0);
   local_F4 = (&local_A8)->y;
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       Script_sprintf("This Motion don't Finish!!\012");
       break;
     }
@@ -2549,7 +1749,7 @@ static void script_3C2F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       if (!(local_C8 < local_C4) & !(local_C8 >= local_C4 + 1.0f)) {
         int32_t local_A0;
         local_A0 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-        local_A0 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_A0 * 9 + 1) * 4 + 2);
+        local_A0 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_A0 * 9 + 1) * 4 + 2);
         if (local_A0 != -1) {
           if (arg0 == task_160) {
             Script_executeAicaCommand(local_A0, 0, 0);
@@ -2573,21 +1773,21 @@ static void script_3C2F(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   local_FC = task_48[arg2];
   {
     int32_t local_A0;
-    local_A0 = Script_ScenDataUtil(task_0, 4, local_FC * 13 + 1);
+    local_A0 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13 + 1);
     local_A0 = local_A0 | 8;
-    Script_ScenDataUtil(task_0, 14, local_FC * 13 + 1, local_A0);
+    Script_ScenDataUtil(task_0, SCND_WriteU32, local_FC * 13 + 1, local_A0);
   }
   {
     int32_t local_A0;
-    local_A0 = Script_ScenDataUtil(task_0, 4, local_FC * 13 + 1);
+    local_A0 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13 + 1);
     local_A0 = local_A0 | 0x10;
-    Script_ScenDataUtil(task_0, 14, local_FC * 13 + 1, local_A0);
+    Script_ScenDataUtil(task_0, SCND_WriteU32, local_FC * 13 + 1, local_A0);
   }
   {
     int32_t local_A0;
-    local_A0 = Script_ScenDataUtil(task_0, 4, local_FC * 13 + 1);
+    local_A0 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13 + 1);
     local_A0 = local_A0 | 4;
-    Script_ScenDataUtil(task_0, 14, local_FC * 13 + 1, local_A0);
+    Script_ScenDataUtil(task_0, SCND_WriteU32, local_FC * 13 + 1, local_A0);
   }
   return;
 }
@@ -2639,7 +1839,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         switch (local_FF5C) {
           case 1:
             local_CF = 1;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = 1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2648,7 +1848,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             break;
           case 0:
             local_CF = 0;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
             local_C0 = 1.0f;
             local_A0 = 12;
             local_9C = 18;
@@ -2661,7 +1861,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         switch (local_FF5C) {
           case 1:
             local_CF = 1;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = 1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2669,7 +1869,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             break;
           case 0:
             local_CF = 0;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = 1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2683,7 +1883,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         switch (local_FF5C) {
           case 1:
             local_CF = 0;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
             local_C0 = 1.0f;
             local_A0 = 12;
             local_9C = 18;
@@ -2692,7 +1892,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             break;
           case 0:
             local_CF = 1;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = 1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2705,7 +1905,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         switch (local_FF5C) {
           case 1:
             local_CF = 0;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = 1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2717,7 +1917,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             break;
           case 0:
             local_CF = 1;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = 1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2735,7 +1935,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         switch (local_FF5C) {
           case 1:
             local_CF = 1;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
             local_C0 = -1.0f;
             local_A0 = 12;
             local_9C = 12;
@@ -2744,7 +1944,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             break;
           case 0:
             local_CF = 0;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = -1.0f;
             local_A0 = 18;
             local_9C = 12;
@@ -2757,7 +1957,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         switch (local_FF5C) {
           case 1:
             local_CF = 1;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = -1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2765,7 +1965,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             break;
           case 0:
             local_CF = 0;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = -1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2779,7 +1979,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         switch (local_FF5C) {
           case 1:
             local_CF = 0;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = -1.0f;
             local_A0 = 18;
             local_9C = 12;
@@ -2788,7 +1988,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             break;
           case 0:
             local_CF = 1;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
             local_C0 = -1.0f;
             local_A0 = 12;
             local_9C = 12;
@@ -2801,7 +2001,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         switch (local_FF5C) {
           case 1:
             local_CF = 0;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = -1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2809,7 +2009,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             break;
           case 0:
             local_CF = 1;
-            local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+            local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
             local_C0 = -1.0f;
             local_A0 = 18;
             local_9C = 18;
@@ -2824,7 +2024,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           switch (local_FF5C) {
             case 0:
               local_CF = 0;
-              local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+              local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
               local_C0 = -1.0f;
               local_A0 = 18;
               local_9C = 12;
@@ -2833,7 +2033,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
               break;
             case 1:
               local_CF = 1;
-              local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+              local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
               local_C0 = -1.0f;
               local_A0 = 12;
               local_9C = 12;
@@ -2842,7 +2042,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
               break;
             case 2:
               local_CF = 1;
-              local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+              local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
               local_C0 = 1.0f;
               local_A0 = 18;
               local_9C = 18;
@@ -2851,7 +2051,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
               break;
             case 3:
               local_CF = 0;
-              local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+              local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
               local_C0 = 1.0f;
               local_A0 = 12;
               local_9C = 18;
@@ -2864,7 +2064,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           switch (local_FF5C) {
             case 0:
               local_CF = 0;
-              local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+              local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
               local_C0 = -1.0f;
               local_A0 = 18;
               local_9C = 18;
@@ -2872,7 +2072,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
               break;
             case 1:
               local_CF = 1;
-              local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+              local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
               local_C0 = -1.0f;
               local_A0 = 18;
               local_9C = 18;
@@ -2880,7 +2080,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
               break;
             case 2:
               local_CF = 1;
-              local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+              local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
               local_C0 = 1.0f;
               local_A0 = 18;
               local_9C = 18;
@@ -2892,7 +2092,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
               break;
             case 3:
               local_CF = 0;
-              local_A4 = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+              local_A4 = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
               local_C0 = 1.0f;
               local_A0 = 18;
               local_9C = 18;
@@ -2911,33 +2111,33 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   }
   L004EDC:;
   (void)local_90;
-  *(int32_t *)&local_B8 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 1);
-  *(int32_t *)&local_B4 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 2);
-  *(int32_t *)&local_B0 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 3);
-  *(int32_t *)&local_AC = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 4);
-  *(int32_t *)&local_A8 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 7);
+  *(int32_t *)&local_B8 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 1);
+  *(int32_t *)&local_B4 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 2);
+  *(int32_t *)&local_B0 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 3);
+  *(int32_t *)&local_AC = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 4);
+  *(int32_t *)&local_A8 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 7);
   local_C8 = 0.0f;
   local_FF7C = 0;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg1)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg1)) {
     if (local_CE) {
       {
         int32_t unused_FF5C;
         Vector3i local_FF50;
-        Script_charaPosRotUtils(arg1, 12, 0, &local_FF50, 2);
+        Script_charaPosRotUtils(arg1, 12, 0, &local_FF50, CHARA_PART_Get);
         local_98 = (&local_FF50)->y;
       }
       {
         int32_t unused_FF5C;
         Vector3i local_FF50;
-        Script_charaPosRotUtils(arg1, 7, 0, &local_FF50, 2);
+        Script_charaPosRotUtils(arg1, 7, 0, &local_FF50, CHARA_PART_Get);
         local_94 = (&local_FF50)->y;
       }
       if ((arg4 == 2) | (arg4 == 3)) {
         local_88 = local_98;
-        Script_charaPosRotUtils(arg1, 12, &local_F4, 0, 2);
+        Script_charaPosRotUtils(arg1, 12, &local_F4, 0, CHARA_PART_Get);
       } else {
         local_88 = local_94;
-        Script_charaPosRotUtils(arg1, 7, &local_F4, 0, 2);
+        Script_charaPosRotUtils(arg1, 7, &local_F4, 0, CHARA_PART_Get);
       }
       local_FF70 = local_88;
       {
@@ -2979,7 +2179,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
   Script_SetCharaMoveTarget(arg0, &task_168, *(&task_174 + 1), local_A4);
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       break;
     }
     if (Script_GetCharaMoveStatus(arg0) == 0) {
@@ -2996,11 +2196,11 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     } else {
       (void)((local_FF5B = -1) & 0x80);
     }
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
       local_C4 = Script_GetCharaMotionRemainingFramesScaled(arg0);
     }
     for (;;) {
-      if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+      if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
         Script_sprintf("This Motion don't Finish!!\012");
         break;
       }
@@ -3037,7 +2237,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           uint8_t unused_FF54[7];
           int32_t local_FF50;
           local_FF50 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-          local_FF50 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FF50 * 9 + 1) * 4 + 2);
+          local_FF50 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FF50 * 9 + 1) * 4 + 2);
           if (local_FF50 != -1) {
             if (arg0 == task_160) {
               Script_executeAicaCommand(local_FF50, 0, 0);
@@ -3052,9 +2252,9 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         local_88 = local_88 + local_90 + (int32_t)(local_C8 * local_C0 / 360.0f * (float)0x10000);
         if (local_CE) {
           if ((arg4 == 2) | (arg4 == 3)) {
-            Script_charaPosRotUtils(arg1, 12, 0, &local_FF64, 2);
+            Script_charaPosRotUtils(arg1, 12, 0, &local_FF64, CHARA_PART_Get);
           } else {
-            Script_charaPosRotUtils(arg1, 7, 0, &local_FF64, 2);
+            Script_charaPosRotUtils(arg1, 7, 0, &local_FF64, CHARA_PART_Get);
           }
         } else {
           Script_mtwkGetSetRotation(arg1, &local_FF64, 0);
@@ -3090,9 +2290,9 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           Vector3i local_FF48;
           if (local_CE) {
             if ((arg4 == 2) | (arg4 == 3)) {
-              Script_charaPosRotUtils(arg1, 12, 0, &local_FF48, 2);
+              Script_charaPosRotUtils(arg1, 12, 0, &local_FF48, CHARA_PART_Get);
             } else {
-              Script_charaPosRotUtils(arg1, 7, 0, &local_FF48, 2);
+              Script_charaPosRotUtils(arg1, 7, 0, &local_FF48, CHARA_PART_Get);
             }
           } else {
             Script_mtwkGetSetRotation(arg1, &local_FF48, 0);
@@ -3100,7 +2300,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
           local_FF74 = (float)script_0415(script_0452(local_FF70, (&local_FF48)->y) * 360 / 0x10000);
         }
         if (!(local_C4 <= local_B4) & !(local_C4 > local_A8)) {
-          *(int32_t *)&local_BC = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 8);
+          *(int32_t *)&local_BC = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 8);
           if (!(local_FF74 < 90.0f)) {
             local_BC = 0.0f;
           } else {
@@ -3120,9 +2320,9 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             int32_t local_FF44;
             if (local_CE) {
               if ((arg4 == 2) | (arg4 == 3)) {
-                Script_charaPosRotUtils(arg1, 12, 0, &local_FF48, 2);
+                Script_charaPosRotUtils(arg1, 12, 0, &local_FF48, CHARA_PART_Get);
               } else {
-                Script_charaPosRotUtils(arg1, 7, 0, &local_FF48, 2);
+                Script_charaPosRotUtils(arg1, 7, 0, &local_FF48, CHARA_PART_Get);
               }
             } else {
               Script_mtwkGetSetRotation(arg1, &local_FF48, 0);
@@ -3153,7 +2353,7 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         uint8_t unused_FF54[7];
         int32_t local_FF50;
         local_FF50 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-        local_FF50 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FF50 * 9 + 1) * 4 + 3);
+        local_FF50 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FF50 * 9 + 1) * 4 + 3);
         if (local_FF50 != -1) {
           if (arg0 == task_160) {
             Script_executeAicaCommand(local_FF50, 0, 0);
@@ -3164,9 +2364,9 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         local_A4 = task_48[arg2];
         if (arg0 == task_160) {
           if (task_160 == arg0) {
-            local_A0 = (Script_ScenDataUtil(task_0, 4, local_A4 * 13 + 2) >> 16) & 0xFFFF;
+            local_A0 = (Script_ScenDataUtil(task_0, SCND_ReadU32, local_A4 * 13 + 2) >> 16) & 0xFFFF;
             Script_scenToggleCharaFlag(0, local_A0, 1);
-            local_A0 = Script_ScenDataUtil(task_0, 4, local_A4 * 13 + 2) & 0xFFFF;
+            local_A0 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_A4 * 13 + 2) & 0xFFFF;
             Script_scenToggleCharaFlag(0, local_A0, 1);
           }
         }
@@ -3209,10 +2409,10 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         (&local_FF48)->z = 0;
         if ((arg4 == 2) | (arg4 == 3)) {
           (&local_FF48)->y = local_88;
-          Script_charaPosRotUtils(arg1, 12, 0, &local_FF48, 0);
+          Script_charaPosRotUtils(arg1, 12, 0, &local_FF48, CHARA_PART_Set);
         } else {
           (&local_FF48)->y = local_88;
-          Script_charaPosRotUtils(arg1, 7, 0, &local_FF48, 0);
+          Script_charaPosRotUtils(arg1, 7, 0, &local_FF48, CHARA_PART_Set);
         }
       } else {
         uint8_t unused_FF54[7];
@@ -3236,9 +2436,9 @@ static void script_42E9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     local_FF50.x = 0;
     (&local_FF50)->z = 0;
     (&local_FF50)->y = local_98;
-    Script_charaPosRotUtils(arg1, 12, 0, &local_FF50, 0);
+    Script_charaPosRotUtils(arg1, 12, 0, &local_FF50, CHARA_PART_Set);
     (&local_FF50)->y = local_94;
-    Script_charaPosRotUtils(arg1, 7, 0, &local_FF50, 0);
+    Script_charaPosRotUtils(arg1, 7, 0, &local_FF50, CHARA_PART_Set);
   } else {
     {
       int32_t unused_FF5C;
@@ -3293,8 +2493,8 @@ static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   local_A8 = 30.0f;
   local_A4 = 60.0f;
   if (arg5) {
-    Script_charaPosRotUtils(arg1, 12, &local_DC, 0, 2);
-    Script_charaPosRotUtils(arg1, 7, &local_D0, 0, 2);
+    Script_charaPosRotUtils(arg1, 12, &local_DC, 0, CHARA_PART_Get);
+    Script_charaPosRotUtils(arg1, 7, &local_D0, 0, CHARA_PART_Get);
   } else {
     Script_EVT_GetPosition(arg1, -1, &local_DC, 0);
     Script_EVT_GetPosition(arg1, -1, &local_D0, 0);
@@ -3334,7 +2534,7 @@ static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
     Script_SetCharaMoveTarget(arg0, &task_168, *(&task_174 + 1), local_94);
     for (;;) {
-      if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+      if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
         break;
       }
       if (Script_GetCharaMoveStatus(arg0) == 0) {
@@ -3344,7 +2544,7 @@ static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     }
     local_94 = local_94 & 0xFFFF;
     for (;;) {
-      if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+      if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
         Script_sprintf("This Motion don't Finish!!\012");
         break;
       }
@@ -3361,7 +2561,7 @@ static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         if (!(local_BC < local_A8) & !(local_BC >= local_A8 + 1.0f)) {
           int32_t local_84;
           local_84 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-          local_84 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_84 * 9 + 1) * 4 + 3);
+          local_84 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_84 * 9 + 1) * 4 + 3);
           if (local_84 != -1) {
             if (arg0 == task_160) {
               Script_executeAicaCommand(local_84, 0, 0);
@@ -3431,7 +2631,7 @@ static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             (&local_F4)->z = (&local_D0)->z;
             if (arg5) {
               local_F4.x = (&local_D0)->x - local_B8;
-              Script_charaPosRotUtils(arg1, 7, &local_F4, 0, 0);
+              Script_charaPosRotUtils(arg1, 7, &local_F4, 0, CHARA_PART_Set);
             } else {
               local_F4.x = (&local_D0)->x + ((float)0 - local_B8) * Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_88)->y);
               (&local_F4)->z = (&local_D0)->z + local_B8 * Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_88)->y);
@@ -3444,7 +2644,7 @@ static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             (&local_F4)->z = (&local_D0)->z;
             if (arg5) {
               local_F4.x = (&local_D0)->x + local_B8;
-              Script_charaPosRotUtils(arg1, 7, &local_F4, 0, 0);
+              Script_charaPosRotUtils(arg1, 7, &local_F4, 0, CHARA_PART_Set);
             } else {
               local_F4.x = (&local_D0)->x - ((float)0 - local_B8) * Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_88)->y);
               (&local_F4)->z = (&local_D0)->z - local_B8 * Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_88)->y);
@@ -3457,7 +2657,7 @@ static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             (&local_F4)->z = (&local_DC)->z;
             if (arg5) {
               local_F4.x = (&local_DC)->x + local_B8;
-              Script_charaPosRotUtils(arg1, 12, &local_F4, 0, 0);
+              Script_charaPosRotUtils(arg1, 12, &local_F4, 0, CHARA_PART_Set);
             } else {
               local_F4.x = (&local_DC)->x - ((float)0 - local_B8) * Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_88)->y);
               (&local_F4)->z = (&local_DC)->z - local_B8 * Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_88)->y);
@@ -3470,7 +2670,7 @@ static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             (&local_F4)->z = (&local_DC)->z;
             if (arg5) {
               local_F4.x = (&local_DC)->x - local_B8;
-              Script_charaPosRotUtils(arg1, 12, &local_F4, 0, 0);
+              Script_charaPosRotUtils(arg1, 12, &local_F4, 0, CHARA_PART_Set);
             } else {
               local_F4.x = (&local_DC)->x + ((float)0 - local_B8) * Script_MathUtils(SCRIPT_MATH_COS_FIXED16, (&local_88)->y);
               (&local_F4)->z = (&local_DC)->z + local_B8 * Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, (&local_88)->y);
@@ -3487,30 +2687,30 @@ static void script_5BC9(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   {
     int32_t local_94;
     local_94 = task_48[arg2];
-    local_9C = Script_ScenDataUtil(task_0, 4, local_94 * 13 + 2) & 0xFFFF;
+    local_9C = Script_ScenDataUtil(task_0, SCND_ReadU32, local_94 * 13 + 2) & 0xFFFF;
     Script_scenToggleCharaFlag(0, local_9C, 1);
-    local_9C = (Script_ScenDataUtil(task_0, 4, local_94 * 13 + 2) >> 16) & 0xFFFF;
+    local_9C = (Script_ScenDataUtil(task_0, SCND_ReadU32, local_94 * 13 + 2) >> 16) & 0xFFFF;
     Script_scenToggleCharaFlag(0, local_9C, 1);
     {
       int32_t unused_88[3];
       int32_t local_84;
-      local_84 = Script_ScenDataUtil(task_0, 4, local_94 * 13 + 1);
+      local_84 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_94 * 13 + 1);
       local_84 = local_84 & -9;
-      Script_ScenDataUtil(task_0, 14, local_94 * 13 + 1, local_84);
+      Script_ScenDataUtil(task_0, SCND_WriteU32, local_94 * 13 + 1, local_84);
     }
     {
       int32_t unused_88[3];
       int32_t local_84;
-      local_84 = Script_ScenDataUtil(task_0, 4, local_94 * 13 + 1);
+      local_84 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_94 * 13 + 1);
       local_84 = local_84 & -17;
-      Script_ScenDataUtil(task_0, 14, local_94 * 13 + 1, local_84);
+      Script_ScenDataUtil(task_0, SCND_WriteU32, local_94 * 13 + 1, local_84);
     }
     {
       int32_t unused_88[3];
       int32_t local_84;
-      local_84 = Script_ScenDataUtil(task_0, 4, local_94 * 13 + 1);
+      local_84 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_94 * 13 + 1);
       local_84 = local_84 & -5;
-      Script_ScenDataUtil(task_0, 14, local_94 * 13 + 1, local_84);
+      Script_ScenDataUtil(task_0, SCND_WriteU32, local_94 * 13 + 1, local_84);
     }
   }
   return;
@@ -3549,7 +2749,7 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   switch (local_FF68) {
     case 0:
       local_AF = 0;
-      local_8C = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+      local_8C = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
       local_A0 = -1.0f;
       local_88 = 18;
       local_84 = 18;
@@ -3558,7 +2758,7 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       break;
     case 1:
       local_AF = 1;
-      local_8C = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+      local_8C = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
       local_A0 = -1.0f;
       local_88 = 12;
       local_84 = 12;
@@ -3567,7 +2767,7 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       break;
     case 2:
       local_AF = 1;
-      local_8C = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
+      local_8C = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9);
       local_A0 = 1.0f;
       local_88 = 18;
       local_84 = 18;
@@ -3576,7 +2776,7 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       break;
     case 3:
       local_AF = 0;
-      local_8C = Script_ScenDataUtil(data_11110, 4, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
+      local_8C = Script_ScenDataUtil(data_11110, SCND_ReadU32, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9) | -0x80000000;
       local_A0 = 1.0f;
       local_88 = 12;
       local_84 = 12;
@@ -3585,21 +2785,21 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       break;
   }
   (void)local_FF78;
-  *(int32_t *)&local_9C = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 1);
-  *(int32_t *)&local_98 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 2);
-  *(int32_t *)&local_94 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 3);
-  *(int32_t *)&local_90 = Script_ScenDataUtil(data_11110, 5, Script_ScenDataUtil(data_10B20, 1, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 4);
+  *(int32_t *)&local_9C = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 1);
+  *(int32_t *)&local_98 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 2);
+  *(int32_t *)&local_94 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 3);
+  *(int32_t *)&local_90 = Script_ScenDataUtil(data_11110, SCND_ReadFloatBits, Script_ScenDataUtil(data_10B20, SCND_ReadU8, arg3 * 40 + task_98[arg2] * 4 + arg4) * 9 + 4);
   local_A8 = 0.0f;
-  Script_charaPosRotUtils(arg1, 12, 0, &local_F4, 2);
+  Script_charaPosRotUtils(arg1, 12, 0, &local_F4, CHARA_PART_Get);
   local_80 = (&local_F4)->y;
-  Script_charaPosRotUtils(arg1, 7, 0, &local_F4, 2);
+  Script_charaPosRotUtils(arg1, 7, 0, &local_F4, CHARA_PART_Get);
   local_FF7C = (&local_F4)->y;
   if ((arg4 == 2) | (arg4 == 3)) {
     local_FF70 = local_80;
-    Script_charaPosRotUtils(arg1, 12, &local_D4, 0, 2);
+    Script_charaPosRotUtils(arg1, 12, &local_D4, 0, CHARA_PART_Get);
   } else {
     local_FF70 = local_FF7C;
-    Script_charaPosRotUtils(arg1, 7, &local_D4, 0, 2);
+    Script_charaPosRotUtils(arg1, 7, &local_D4, 0, CHARA_PART_Get);
   }
   Script_EVT_GetPosition(arg1, -1, &local_E8, 0);
   Script_mtwkGetSetRotation(arg1, &local_F4, 0);
@@ -3618,7 +2818,7 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
   Script_SetCharaMoveTarget(arg0, &task_168, *(&task_174 + 1), local_8C);
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       break;
     }
     if (Script_GetCharaMoveStatus(arg0) == 0) {
@@ -3628,7 +2828,7 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   }
   local_8C = local_8C & 0xFFFF;
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       Script_sprintf("This Motion don't Finish!!\012");
       break;
     }
@@ -3644,7 +2844,7 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       if (!(local_A4 < local_9C) & !(local_A4 >= local_9C + 1.0f)) {
         int32_t local_FF64;
         local_FF64 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-        local_FF64 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FF64 * 9 + 1) * 4 + 2);
+        local_FF64 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FF64 * 9 + 1) * 4 + 2);
         if (local_FF64 != -1) {
           if (arg0 == task_160) {
             Script_executeAicaCommand(local_FF64, 0, 0);
@@ -3666,7 +2866,7 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       if (!(local_A4 < local_90) & !(local_A4 >= local_90 + 1.0f)) {
         int32_t local_FF64;
         local_FF64 = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg2], 2);
-        local_FF64 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FF64 * 9 + 1) * 4 + 3);
+        local_FF64 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FF64 * 9 + 1) * 4 + 3);
         if (local_FF64 != -1) {
           if (arg0 == task_160) {
             Script_executeAicaCommand(local_FF64, 0, 0);
@@ -3684,10 +2884,10 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     (&local_F4)->z = 0;
     if ((arg4 == 2) | (arg4 == 3)) {
       (&local_F4)->y = local_FF70;
-      Script_charaPosRotUtils(arg1, 12, 0, &local_F4, 0);
+      Script_charaPosRotUtils(arg1, 12, 0, &local_F4, CHARA_PART_Set);
     } else {
       (&local_F4)->y = local_FF70;
-      Script_charaPosRotUtils(arg1, 7, 0, &local_F4, 0);
+      Script_charaPosRotUtils(arg1, 7, 0, &local_F4, CHARA_PART_Set);
     }
     SCNF_WaitFrames_0000(1);
   }
@@ -3695,9 +2895,9 @@ static void script_62EA(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   local_F4.x = 0;
   (&local_F4)->z = 0;
   (&local_F4)->y = local_80;
-  Script_charaPosRotUtils(arg1, 12, 0, &local_F4, 0);
+  Script_charaPosRotUtils(arg1, 12, 0, &local_F4, CHARA_PART_Set);
   (&local_F4)->y = local_FF7C;
-  Script_charaPosRotUtils(arg1, 7, 0, &local_F4, 0);
+  Script_charaPosRotUtils(arg1, 7, 0, &local_F4, CHARA_PART_Set);
   return;
 }
 
@@ -3707,7 +2907,7 @@ static void script_6A74(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
   Script_SetCharaMoveTarget(arg0, &task_168, *(&task_174 + 1), MN_AKI_AKI_BASE);
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       break;
     }
     if (Script_GetCharaMoveStatus(arg0) == 0) {
@@ -3722,7 +2922,7 @@ static void script_6A74(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       if (arg5 != 0) {
         local_FC = 11;
       } else {
-        local_FC = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 7);
+        local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 7);
       }
       if (local_FC == 0) {
         SCNF_WaitFrames_0000(45);
@@ -3752,26 +2952,26 @@ static void script_6B4C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   int32_t unused_D0;
   int32_t local_CC;
   local_DC = 0;
-  local_D4 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 6);
+  local_D4 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 6);
   local_CC = arg3;
   if ((local_CC == 1) | (local_CC == 3) | (local_CC == 5) | (local_CC == 7) | (local_CC == 9) | (local_CC == 18) | (local_CC == 21) | (local_CC == 25) | (local_CC == 27) | (local_CC == 36) | (local_CC == 37)) {
     local_CC = arg4;
     switch (local_CC) {
       case 1:
-        local_E0 = Script_ScenDataUtil(&data_11B30, 4, local_D4 * 5) | -0x80000000;
+        local_E0 = Script_ScenDataUtil(&data_11B30, SCND_ReadU32, local_D4 * 5) | -0x80000000;
         break;
       case 0:
-        local_E0 = Script_ScenDataUtil(&data_11B30, 4, local_D4 * 5);
+        local_E0 = Script_ScenDataUtil(&data_11B30, SCND_ReadU32, local_D4 * 5);
         break;
     }
   } else if ((local_CC == 2) | (local_CC == 4) | (local_CC == 6) | (local_CC == 8) | (local_CC == 10) | (local_CC == 19) | (local_CC == 22) | (local_CC == 24) | (local_CC == 26) | (local_CC == 28)) {
     local_CC = arg4;
     switch (local_CC) {
       case 1:
-        local_E0 = Script_ScenDataUtil(&data_11B30, 4, local_D4 * 5);
+        local_E0 = Script_ScenDataUtil(&data_11B30, SCND_ReadU32, local_D4 * 5);
         break;
       case 0:
-        local_E0 = Script_ScenDataUtil(&data_11B30, 4, local_D4 * 5) | -0x80000000;
+        local_E0 = Script_ScenDataUtil(&data_11B30, SCND_ReadU32, local_D4 * 5) | -0x80000000;
         break;
     }
   } else {
@@ -3779,24 +2979,24 @@ static void script_6B4C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       local_CC = arg4;
       switch (local_CC) {
         case 0:
-          local_E0 = Script_ScenDataUtil(&data_11B30, 4, local_D4 * 5);
+          local_E0 = Script_ScenDataUtil(&data_11B30, SCND_ReadU32, local_D4 * 5);
           break;
         case 1:
-          local_E0 = Script_ScenDataUtil(&data_11B30, 4, local_D4 * 5) | -0x80000000;
+          local_E0 = Script_ScenDataUtil(&data_11B30, SCND_ReadU32, local_D4 * 5) | -0x80000000;
           break;
         case 2:
-          local_E0 = Script_ScenDataUtil(&data_11B30, 4, local_D4 * 5);
+          local_E0 = Script_ScenDataUtil(&data_11B30, SCND_ReadU32, local_D4 * 5);
           break;
         case 3:
-          local_E0 = Script_ScenDataUtil(&data_11B30, 4, local_D4 * 5) | -0x80000000;
+          local_E0 = Script_ScenDataUtil(&data_11B30, SCND_ReadU32, local_D4 * 5) | -0x80000000;
           break;
       }
       goto L006D6D;
     }
   }
   L006D6D:;
-  *(int32_t *)&local_EC = Script_ScenDataUtil(&data_11B30, 5, local_D4 * 5 + 1);
-  *(int32_t *)&local_E8 = Script_ScenDataUtil(&data_11B30, 5, local_D4 * 5 + 2);
+  *(int32_t *)&local_EC = Script_ScenDataUtil(&data_11B30, SCND_ReadFloatBits, local_D4 * 5 + 1);
+  *(int32_t *)&local_E8 = Script_ScenDataUtil(&data_11B30, SCND_ReadFloatBits, local_D4 * 5 + 2);
   local_E0 = local_E0 | ((Script_FloatUtils(ScriptMathOp_FloatToInt, local_EC - 3.0f) << 16) & 0x7FFF0000);
   local_F4.x = (&task_168)->x;
   (&local_F4)->y = task_168.y;
@@ -3805,7 +3005,7 @@ static void script_6B4C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
   Script_SetCharaMoveTarget(arg0, &task_168, *(&task_174 + 1), local_E0);
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       break;
     }
     if (Script_GetCharaMoveStatus(arg0) == 0) {
@@ -3814,7 +3014,7 @@ static void script_6B4C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     SCNF_WaitFrames_0000(1);
   }
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       Script_sprintf("This Motion don't Finish!!\012");
       break;
     }
@@ -3828,7 +3028,7 @@ static void script_6B4C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     local_F0 = Script_GetCharaMotionRemainingFramesScaled(arg0);
     if (!(local_F0 < local_EC) & !(local_F0 >= local_EC + 1.0f)) {
       int32_t local_C8;
-      local_C8 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 9);
+      local_C8 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 9);
       if (local_C8 != -1) {
         if (arg0 == task_160) {
           Script_executeAicaCommand(local_C8, 0, 0);
@@ -3840,7 +3040,7 @@ static void script_6B4C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     if (!(local_F0 < local_E8) & !(local_F0 >= local_E8 + 1.0f)) {
       if ((local_D4 == 6) | (local_D4 == 7)) {
         int32_t local_C8;
-        local_C8 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 9);
+        local_C8 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 9);
         if (local_C8 != -1) {
           if (arg0 == task_160) {
             Script_executeAicaCommand(local_C8, 0, 0);
@@ -3851,7 +3051,7 @@ static void script_6B4C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       }
       if (local_DC == 0) {
         local_DC = 1;
-        local_D8 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 7);
+        local_D8 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 7);
         if (local_D8 == 0) {
           SCNF_WaitFrames_0000(45);
         }
@@ -4007,21 +3207,21 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     {
       int32_t unused_FF44;
       Vector3i local_FF38;
-      Script_charaPosRotUtils(arg1, 12, 0, &local_FF38, 2);
+      Script_charaPosRotUtils(arg1, 12, 0, &local_FF38, CHARA_PART_Get);
       local_84 = (&local_FF38)->y;
     }
     {
       int32_t unused_FF44;
       Vector3i local_FF38;
-      Script_charaPosRotUtils(arg1, 7, 0, &local_FF38, 2);
+      Script_charaPosRotUtils(arg1, 7, 0, &local_FF38, CHARA_PART_Get);
       local_80 = (&local_FF38)->y;
     }
     if ((arg4 == 2) | (arg4 == 3)) {
       local_FF7C = local_84;
-      Script_charaPosRotUtils(arg1, 12, &local_F4, 0, 2);
+      Script_charaPosRotUtils(arg1, 12, &local_F4, 0, CHARA_PART_Get);
     } else {
       local_FF7C = local_80;
-      Script_charaPosRotUtils(arg1, 7, &local_F4, 0, 2);
+      Script_charaPosRotUtils(arg1, 7, &local_F4, 0, CHARA_PART_Get);
     }
     {
       int32_t unused_FF44;
@@ -4059,7 +3259,7 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
   Script_SetCharaMoveTarget(arg0, &task_168, *(&task_174 + 1), local_90);
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       break;
     }
     if (Script_GetCharaMoveStatus(arg0) == 0) {
@@ -4077,7 +3277,7 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     }
     SCNF_WaitFrames_0000(1);
   }
-  Script_motmGetCharaFlags(SHEN_NAME('DOOR'), 0, 0);
+  Script_motmGetCharaFlags(SHEN_NAME('DOOR'), MOTM_PoseNone, SCEN_Write);
   Script_PlayCharaMotion(SHEN_NAME('DOOR'), MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_charaDisplay(SHEN_NAME('DOOR'), CDM_Show);
   {
@@ -4206,7 +3406,7 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   local_A4 = 0.0f;
   local_FF68 = 0;
   for (;;) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
       Script_sprintf("This Motion don't Finish!!\012");
       break;
     }
@@ -4222,7 +3422,7 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         int32_t unused_FF44;
         int32_t local_FF40;
         SCNF_WaitFrames_0000(45);
-        local_FF40 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 10);
+        local_FF40 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 10);
         if (local_FF40 != -1) {
           if (arg0 == task_160) {
             Script_executeAicaCommand(local_FF40, 0, 0);
@@ -4242,10 +3442,10 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
             (&local_FF38)->z = 0;
             if ((arg4 == 2) | (arg4 == 3)) {
               (&local_FF38)->y = local_FF7C;
-              Script_charaPosRotUtils(arg1, 12, 0, &local_FF38, 0);
+              Script_charaPosRotUtils(arg1, 12, 0, &local_FF38, CHARA_PART_Set);
             } else {
               (&local_FF38)->y = local_FF7C;
-              Script_charaPosRotUtils(arg1, 7, 0, &local_FF38, 0);
+              Script_charaPosRotUtils(arg1, 7, 0, &local_FF38, CHARA_PART_Set);
             }
           } else {
             int32_t unused_FF44;
@@ -4261,7 +3461,7 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     if (!(local_A0 < local_98) & !(local_A0 >= local_98 + 1.0f)) {
       int32_t unused_FF44;
       int32_t local_FF40;
-      local_FF40 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 9);
+      local_FF40 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 9);
       if (local_FF40 != -1) {
         if (arg0 == task_160) {
           Script_executeAicaCommand(local_FF40, 0, 0);
@@ -4273,7 +3473,7 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     if (!(local_A0 < local_94) & !(local_A0 >= local_94 + 1.0f)) {
       int32_t unused_FF44;
       int32_t local_FF40;
-      local_FF40 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 9);
+      local_FF40 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 9);
       if (local_FF40 != -1) {
         if (arg0 == task_160) {
           Script_executeAicaCommand(local_FF40, 0, 0);
@@ -4283,7 +3483,7 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
       }
       if (local_FF68 == 0) {
         local_FF68 = 1;
-        local_FF64 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 8);
+        local_FF64 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 8);
         Script_ConversationUtils(1, local_FF74);
         Script_EnqueueSCNT(1, 0x524F4F44, local_FF64);
       }
@@ -4291,10 +3491,10 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     SCNF_WaitFrames_0000(1);
   }
   local_A4 = 0.0f;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) != 0) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) != 0) {
     local_FF6C = 0;
     L007D9A:;
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) == 0) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) == 0) {
     } else {
       local_A4 = local_A4 + 0.05f;
       local_FF7C = local_FF7C + (int32_t)(local_A4 * local_9C / 360.0f * (float)0x10000);
@@ -4305,10 +3505,10 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
         (&local_FF38)->z = 0;
         if ((arg4 == 2) | (arg4 == 3)) {
           (&local_FF38)->y = local_FF7C;
-          Script_charaPosRotUtils(arg1, 12, 0, &local_FF38, 0);
+          Script_charaPosRotUtils(arg1, 12, 0, &local_FF38, CHARA_PART_Set);
         } else {
           (&local_FF38)->y = local_FF7C;
-          Script_charaPosRotUtils(arg1, 7, 0, &local_FF38, 0);
+          Script_charaPosRotUtils(arg1, 7, 0, &local_FF38, CHARA_PART_Set);
         }
       } else {
         int32_t unused_FF44;
@@ -4323,7 +3523,7 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     {
       int32_t unused_FF44;
       int32_t local_FF40;
-      local_FF40 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 11);
+      local_FF40 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 11);
       if (local_FF40 != -1) {
         if (arg0 == task_160) {
           Script_executeAicaCommand(local_FF40, 0, 0);
@@ -4339,9 +3539,9 @@ static void script_6FC3(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     local_FF38.x = 0;
     (&local_FF38)->z = 0;
     (&local_FF38)->y = local_84;
-    Script_charaPosRotUtils(arg1, 12, 0, &local_FF38, 0);
+    Script_charaPosRotUtils(arg1, 12, 0, &local_FF38, CHARA_PART_Set);
     (&local_FF38)->y = local_80;
-    Script_charaPosRotUtils(arg1, 7, 0, &local_FF38, 0);
+    Script_charaPosRotUtils(arg1, 7, 0, &local_FF38, CHARA_PART_Set);
   } else {
     {
       int32_t unused_FF44;
@@ -4373,7 +3573,7 @@ static void script_7F56(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   int32_t local_AC;
   Script_sprintf("open-move!!\012");
   local_BC[1] = arg4;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0) != 0) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0) != 0) {
     Script_EVT_GetPosition(arg1, -1, &local_E0, 0);
     Script_EVT_GetPosition(arg0, -1, &local_C8, 0);
     Script_mtwkGetSetRotation(arg0, &local_B0, 0);
@@ -4510,10 +3710,10 @@ static void script_83A0(int32_t arg0, DSWKDoorEntry *arg1, int32_t *arg2, DoorRe
   if (!(local_F8 >= 10)) goto L00840A;
   local_F8 = 0;
   for (;;) {
-    if (Script_ScenDataUtil(task_0, 4, local_F8 * 13) == -1) {
+    if (Script_ScenDataUtil(task_0, SCND_ReadU32, local_F8 * 13) == -1) {
       break;
     }
-    Script_ScenDataUtil(task_0, 14, local_F8 * 13 + 1, 0);
+    Script_ScenDataUtil(task_0, SCND_WriteU32, local_F8 * 13 + 1, 0);
     local_F8 = local_F8 + 1;
   }
   Script_EnqueueSCNT(0);
@@ -4598,12 +3798,12 @@ static void script_86A0(void) {
   int32_t local_F8;
   local_FC = 0;
   for (;;) {
-    if (Script_ScenDataUtil(task_0, 4, local_FC * 13) == -1) {
+    if (Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13) == -1) {
       break;
     }
-    local_F8 = Script_ScenDataUtil(task_0, 4, local_FC * 13 + 1);
+    local_F8 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13 + 1);
     local_F8 = local_F8 | 2;
-    Script_ScenDataUtil(task_0, 14, local_FC * 13 + 1, local_F8);
+    Script_ScenDataUtil(task_0, SCND_WriteU32, local_FC * 13 + 1, local_F8);
     local_FC = local_FC + 1;
   }
   return;
@@ -4614,12 +3814,12 @@ static void script_8703(void) {
   int32_t local_F8;
   local_FC = 0;
   for (;;) {
-    if (Script_ScenDataUtil(task_0, 4, local_FC * 13) == -1) {
+    if (Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13) == -1) {
       break;
     }
-    local_F8 = Script_ScenDataUtil(task_0, 4, local_FC * 13 + 1);
+    local_F8 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13 + 1);
     local_F8 = local_F8 & -3;
-    Script_ScenDataUtil(task_0, 14, local_FC * 13 + 1, local_F8);
+    Script_ScenDataUtil(task_0, SCND_WriteU32, local_FC * 13 + 1, local_F8);
     local_FC = local_FC + 1;
   }
   return;
@@ -4627,17 +3827,17 @@ static void script_8703(void) {
 
 static void script_8766(int32_t arg0) {
   int32_t local_FC;
-  local_FC = Script_ScenDataUtil(task_0, 4, arg0 * 13 + 1);
+  local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, arg0 * 13 + 1);
   local_FC = local_FC | 2;
-  Script_ScenDataUtil(task_0, 14, arg0 * 13 + 1, local_FC);
+  Script_ScenDataUtil(task_0, SCND_WriteU32, arg0 * 13 + 1, local_FC);
   return;
 }
 
 static void script_879D(int32_t arg0) {
   int32_t local_FC;
-  local_FC = Script_ScenDataUtil(task_0, 4, arg0 * 13 + 1);
+  local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, arg0 * 13 + 1);
   local_FC = local_FC & -3;
-  Script_ScenDataUtil(task_0, 14, arg0 * 13 + 1, local_FC);
+  Script_ScenDataUtil(task_0, SCND_WriteU32, arg0 * 13 + 1, local_FC);
   return;
 }
 
@@ -4651,50 +3851,50 @@ static void script_87D4(int32_t arg0) {
       local_EC = task_E8[local_F0];
       if (Script_shenGetNode(local_EC, 7)) {
         if (Script_shenGetNode(local_EC, 5) & Script_shenGetNode(local_EC, 10)) {
-          if (Script_ScenDataUtil(task_0, 4, task_48[local_F0] * 13 + 1) & 0x100) {
+          if (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[local_F0] * 13 + 1) & 0x100) {
             local_F4.x = 0.0f;
             (&local_F4)->y = 0.0f;
             (&local_F4)->z = 0.0f;
-            Script_charaPosRotUtils(local_EC, 10, &local_F4, 0, 0);
-            Script_charaPosRotUtils(local_EC, 5, &local_F4, 0, 0);
+            Script_charaPosRotUtils(local_EC, 10, &local_F4, 0, CHARA_PART_Set);
+            Script_charaPosRotUtils(local_EC, 5, &local_F4, 0, CHARA_PART_Set);
           } else {
             local_F4.x = 0.0f;
             (&local_F4)->y = -1200.0f;
             (&local_F4)->z = 0.0f;
-            Script_charaPosRotUtils(local_EC, 10, &local_F4, 0, 0);
-            Script_charaPosRotUtils(local_EC, 5, &local_F4, 0, 0);
+            Script_charaPosRotUtils(local_EC, 10, &local_F4, 0, CHARA_PART_Set);
+            Script_charaPosRotUtils(local_EC, 5, &local_F4, 0, CHARA_PART_Set);
           }
         }
       } else {
         if (Script_shenGetNode(local_EC, 10)) {
-          if (Script_ScenDataUtil(task_0, 4, task_48[local_F0] * 13 + 1) & 0x100) {
+          if (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[local_F0] * 13 + 1) & 0x100) {
             local_F4.x = 0.0f;
             (&local_F4)->y = 0.0f;
             (&local_F4)->z = 0.0f;
-            Script_charaPosRotUtils(local_EC, 10, &local_F4, 0, 0);
+            Script_charaPosRotUtils(local_EC, 10, &local_F4, 0, CHARA_PART_Set);
           } else {
             local_F4.x = 0.0f;
             (&local_F4)->y = -1200.0f;
             (&local_F4)->z = 0.0f;
-            Script_charaPosRotUtils(local_EC, 10, &local_F4, 0, 0);
+            Script_charaPosRotUtils(local_EC, 10, &local_F4, 0, CHARA_PART_Set);
           }
         }
       }
       if (Script_shenGetNode(local_EC, 8) & Script_shenGetNode(local_EC, 13)) {
-        if (Script_ScenDataUtil(task_0, 4, task_48[local_F0] * 13 + 1) & 0x20) {
+        if (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[local_F0] * 13 + 1) & 0x20) {
           local_F4.x = 0.0f;
           (&local_F4)->y = 0.0f;
           (&local_F4)->z = 0.0f;
-          Script_charaPosRotUtils(local_EC, 13, &local_F4, 0, 0);
+          Script_charaPosRotUtils(local_EC, 13, &local_F4, 0, CHARA_PART_Set);
           (&local_F4)->y = -1000.0f;
-          Script_charaPosRotUtils(local_EC, 8, &local_F4, 0, 0);
+          Script_charaPosRotUtils(local_EC, 8, &local_F4, 0, CHARA_PART_Set);
         } else {
           local_F4.x = 0.0f;
           (&local_F4)->y = -1000.0f;
           (&local_F4)->z = 0.0f;
-          Script_charaPosRotUtils(local_EC, 13, &local_F4, 0, 0);
+          Script_charaPosRotUtils(local_EC, 13, &local_F4, 0, CHARA_PART_Set);
           (&local_F4)->y = 0.0f;
-          Script_charaPosRotUtils(local_EC, 8, &local_F4, 0, 0);
+          Script_charaPosRotUtils(local_EC, 8, &local_F4, 0, CHARA_PART_Set);
         }
       }
     }
@@ -4708,9 +3908,9 @@ static void script_87D4(int32_t arg0) {
 
 static void script_8A16(int32_t arg0) {
   int32_t local_FC;
-  local_FC = Script_ScenDataUtil(task_0, 4, arg0 * 13 + 1);
+  local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, arg0 * 13 + 1);
   local_FC = local_FC | 0x20;
-  Script_ScenDataUtil(task_0, 14, arg0 * 13 + 1, local_FC);
+  Script_ScenDataUtil(task_0, SCND_WriteU32, arg0 * 13 + 1, local_FC);
   script_8B1E(arg0);
   script_87D4(arg0);
   return;
@@ -4718,9 +3918,9 @@ static void script_8A16(int32_t arg0) {
 
 static void script_8A5F(int32_t arg0) {
   int32_t local_FC;
-  local_FC = Script_ScenDataUtil(task_0, 4, arg0 * 13 + 1);
+  local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, arg0 * 13 + 1);
   local_FC = local_FC & -33;
-  Script_ScenDataUtil(task_0, 14, arg0 * 13 + 1, local_FC);
+  Script_ScenDataUtil(task_0, SCND_WriteU32, arg0 * 13 + 1, local_FC);
   script_8B2C(arg0);
   script_87D4(arg0);
   return;
@@ -4729,14 +3929,14 @@ static void script_8A5F(int32_t arg0) {
 static void script_8AA8(int32_t arg0, int32_t arg1) {
   if (arg1) {
     int32_t local_FC;
-    local_FC = Script_ScenDataUtil(task_0, 4, arg0 * 13 + 1);
+    local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, arg0 * 13 + 1);
     local_FC = local_FC & -257;
-    Script_ScenDataUtil(task_0, 14, arg0 * 13 + 1, local_FC);
+    Script_ScenDataUtil(task_0, SCND_WriteU32, arg0 * 13 + 1, local_FC);
   } else {
     int32_t local_FC;
-    local_FC = Script_ScenDataUtil(task_0, 4, arg0 * 13 + 1);
+    local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, arg0 * 13 + 1);
     local_FC = local_FC | 0x100;
-    Script_ScenDataUtil(task_0, 14, arg0 * 13 + 1, local_FC);
+    Script_ScenDataUtil(task_0, SCND_WriteU32, arg0 * 13 + 1, local_FC);
   }
   return;
 }
@@ -4755,23 +3955,23 @@ static void script_8B3A(int32_t arg0) {
   int32_t local_FC;
   local_FC = 0;
   for (;;) {
-    if (Script_ScenDataUtil(task_0, 4, local_FC * 13) == -1) {
+    if (Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13) == -1) {
       break;
     }
     if (arg0) {
       int32_t local_F8;
-      local_F8 = Script_ScenDataUtil(task_0, 4, local_FC * 13 + 1);
+      local_F8 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13 + 1);
       local_F8 = local_F8 & -65;
       local_F8 = local_F8 & -129;
       local_F8 = local_F8 | 0x40;
-      Script_ScenDataUtil(task_0, 14, local_FC * 13 + 1, local_F8);
+      Script_ScenDataUtil(task_0, SCND_WriteU32, local_FC * 13 + 1, local_F8);
     } else {
       int32_t local_F8;
-      local_F8 = Script_ScenDataUtil(task_0, 4, local_FC * 13 + 1);
+      local_F8 = Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13 + 1);
       local_F8 = local_F8 & -65;
       local_F8 = local_F8 & -129;
       local_F8 = local_F8 | 0x80;
-      Script_ScenDataUtil(task_0, 14, local_FC * 13 + 1, local_F8);
+      Script_ScenDataUtil(task_0, SCND_WriteU32, local_FC * 13 + 1, local_F8);
     }
     local_FC = local_FC + 1;
   }
@@ -4792,7 +3992,7 @@ static void script_8C19(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
   int32_t local_FC;
   local_FC = 0;
   for (;;) {
-    if (Script_ScenDataUtil(task_0, 4, local_FC * 13) == -1) {
+    if (Script_ScenDataUtil(task_0, SCND_ReadU32, local_FC * 13) == -1) {
       break;
     }
     DSWK_AssignDoorEntryConfig(local_FC, arg0, arg1, arg2, arg3, arg4, arg5, arg6);
@@ -4815,7 +4015,7 @@ static int32_t script_8C5C(void) {
       local_F4 = DSWK_DoorUtils(DOOR_CMD_FIND_LOWEST_FLOAT_INDEX, 0x3FD851EA);
       if (-(local_F4 != -1) & -(task_20[local_F4] == 1) & Script_IsPlayerAllowed(0) & -((&task_10)->mode == 0)) {
         local_FC = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[local_F4], 2);
-        local_F8 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FC * 9 + 1) * 4 + 1);
+        local_F8 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FC * 9 + 1) * 4 + 1);
         script_9A2C(1, local_FC, local_F4, local_F8);
         if (script_9BE0(local_FC, local_F4, local_F8)) {
           local_F4 = -1;
@@ -4871,19 +4071,19 @@ static void script_8E05(int32_t arg0) {
       task_138[arg0] = -1;
     } else if (local_FC == arg0 * 0x1000000 + 0x30786F62) {
       task_138[arg0] = local_FC;
-      *(int32_t *)&local_EC.x = Script_ScenDataUtil(task_C, 4, local_F8 * 9 + 5);
-      *(int32_t *)&(&local_EC)->y = Script_ScenDataUtil(task_C, 4, local_F8 * 9 + 6);
-      *(int32_t *)&(&local_EC)->z = Script_ScenDataUtil(task_C, 4, local_F8 * 9 + 7);
+      *(int32_t *)&local_EC.x = Script_ScenDataUtil(task_C, SCND_ReadU32, local_F8 * 9 + 5);
+      *(int32_t *)&(&local_EC)->y = Script_ScenDataUtil(task_C, SCND_ReadU32, local_F8 * 9 + 6);
+      *(int32_t *)&(&local_EC)->z = Script_ScenDataUtil(task_C, SCND_ReadU32, local_F8 * 9 + 7);
       Script_EVT_SetPosition(local_FC, POS_XYZ, &local_EC);
       local_E0.x = 0;
-      (&local_E0)->y = Script_ScenDataUtil(task_C, 4, local_F8 * 9 + 8);
+      (&local_E0)->y = Script_ScenDataUtil(task_C, SCND_ReadU32, local_F8 * 9 + 8);
       (&local_E0)->z = 0;
       Script_EVT_SetRotation(local_FC, 0x38000000, &local_E0, 0);
-      *(int32_t *)&local_EC.x = Script_ScenDataUtil(task_C, 4, local_F8 * 9 + 2);
-      *(int32_t *)&(&local_EC)->y = Script_ScenDataUtil(task_C, 4, local_F8 * 9 + 3);
-      *(int32_t *)&(&local_EC)->z = Script_ScenDataUtil(task_C, 4, local_F8 * 9 + 4);
+      *(int32_t *)&local_EC.x = Script_ScenDataUtil(task_C, SCND_ReadU32, local_F8 * 9 + 2);
+      *(int32_t *)&(&local_EC)->y = Script_ScenDataUtil(task_C, SCND_ReadU32, local_F8 * 9 + 3);
+      *(int32_t *)&(&local_EC)->z = Script_ScenDataUtil(task_C, SCND_ReadU32, local_F8 * 9 + 4);
       Script_hmdlApplyScale(local_FC, &local_EC);
-      Script_CreateNPCImageModule(local_FC, (const char *)Script_ScenDataUtil(task_8, 8, Script_ScenDataUtil(task_C, 4, local_F8 * 9 + 1) * 4), 0);
+      Script_CreateNPCImageModule(local_FC, (const char *)Script_ScenDataUtil(task_8, SCND_ReadScriptOffset, Script_ScenDataUtil(task_C, SCND_ReadU32, local_F8 * 9 + 1) * 4), 0);
       Script_charaDisplay(local_FC, CDM_Show);
       Script_charaVisUtils(local_FC, 1);
     } else {
@@ -4929,11 +4129,11 @@ static int32_t script_9005(int32_t arg0, int32_t arg1, int32_t arg2, float arg3,
   if (arg2 != 99) {
     if (arg2 == 6) {
       if ((local_C0 == 0) | (local_C0 == 1)) {
-        if ((Script_ScenDataUtil(task_0, 4, arg6 * 13 + 1) & 8) | (Script_ScenDataUtil(task_0, 4, arg6 * 13 + 1) & 0x40)) {
+        if ((Script_ScenDataUtil(task_0, SCND_ReadU32, arg6 * 13 + 1) & 8) | (Script_ScenDataUtil(task_0, SCND_ReadU32, arg6 * 13 + 1) & 0x40)) {
           local_C0 = local_C0 ^ 3;
         }
       } else {
-        if ((Script_ScenDataUtil(task_0, 4, arg6 * 13 + 1) & 0x10) | (Script_ScenDataUtil(task_0, 4, arg6 * 13 + 1) & 0x80)) {
+        if ((Script_ScenDataUtil(task_0, SCND_ReadU32, arg6 * 13 + 1) & 0x10) | (Script_ScenDataUtil(task_0, SCND_ReadU32, arg6 * 13 + 1) & 0x80)) {
           local_C0 = local_C0 ^ 3;
         }
       }
@@ -5095,12 +4295,12 @@ static int32_t script_9005(int32_t arg0, int32_t arg1, int32_t arg2, float arg3,
 }
 
 static void script_96CE(int32_t arg0, int32_t arg1) {
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
     if (task_160 == arg0) {
       if (arg1) {
-        Script_ccowUtils(arg0, 3);
+        Script_ccowUtils(arg0, CCOW_EnableMap);
       } else {
-        Script_ccowUtils(arg0, 4);
+        Script_ccowUtils(arg0, CCOW_DisableMap);
       }
     }
   }
@@ -5112,26 +4312,26 @@ static void script_9700(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   int32_t local_F8;
   local_F8 = script_9005(arg0, arg1, 99, 0.0f, 0.5f, -1, -1);
   if (task_160 != arg0) {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
       Script_charaToggleMotEnabled(arg0, 1);
     }
   } else if ((local_F8 == 0) | (local_F8 == 1)) {
-    if ((Script_ScenDataUtil(task_0, 4, arg2 * 13 + 1) & 8) == 0) {
-      if ((Script_ScenDataUtil(task_0, 4, arg2 * 13 + 1) & 0x40) != 0) {
-        local_FC = Script_ScenDataUtil(task_0, 4, arg2 * 13 + 2) & 0xFFFF;
+    if ((Script_ScenDataUtil(task_0, SCND_ReadU32, arg2 * 13 + 1) & 8) == 0) {
+      if ((Script_ScenDataUtil(task_0, SCND_ReadU32, arg2 * 13 + 1) & 0x40) != 0) {
+        local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, arg2 * 13 + 2) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_FC, 0);
       } else {
-        local_FC = (Script_ScenDataUtil(task_0, 4, arg2 * 13 + 2) >> 16) & 0xFFFF;
+        local_FC = (Script_ScenDataUtil(task_0, SCND_ReadU32, arg2 * 13 + 2) >> 16) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_FC, 0);
       }
     }
   } else {
-    if ((Script_ScenDataUtil(task_0, 4, arg2 * 13 + 1) & 0x10) == 0) {
-      if ((Script_ScenDataUtil(task_0, 4, arg2 * 13 + 1) & 0x80) != 0) {
-        local_FC = (Script_ScenDataUtil(task_0, 4, arg2 * 13 + 2) >> 16) & 0xFFFF;
+    if ((Script_ScenDataUtil(task_0, SCND_ReadU32, arg2 * 13 + 1) & 0x10) == 0) {
+      if ((Script_ScenDataUtil(task_0, SCND_ReadU32, arg2 * 13 + 1) & 0x80) != 0) {
+        local_FC = (Script_ScenDataUtil(task_0, SCND_ReadU32, arg2 * 13 + 2) >> 16) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_FC, 0);
       } else {
-        local_FC = Script_ScenDataUtil(task_0, 4, arg2 * 13 + 2) & 0xFFFF;
+        local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, arg2 * 13 + 2) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_FC, 0);
       }
     }
@@ -5155,22 +4355,22 @@ static void script_9870(int32_t arg0, int32_t arg1, int32_t arg2) {
       if (arg2 != 2) {
         int32_t local_F8;
         local_F8 = task_48[arg1];
-        local_FC = Script_ScenDataUtil(task_0, 4, local_F8 * 13 + 2) & 0xFFFF;
+        local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, local_F8 * 13 + 2) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_FC, 1);
-        local_FC = (Script_ScenDataUtil(task_0, 4, local_F8 * 13 + 2) >> 16) & 0xFFFF;
+        local_FC = (Script_ScenDataUtil(task_0, SCND_ReadU32, local_F8 * 13 + 2) >> 16) & 0xFFFF;
         Script_scenToggleCharaFlag(0, local_FC, 1);
       }
     }
   } else {
-    if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, arg0)) {
+    if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, arg0)) {
       Script_charaToggleMotEnabled(arg0, 0);
     }
     if ((arg2 == 0) | (arg2 == 2)) {
       int32_t local_F8;
       local_F8 = task_48[arg1];
-      local_FC = Script_ScenDataUtil(task_0, 4, local_F8 * 13 + 2) & 0xFFFF;
+      local_FC = Script_ScenDataUtil(task_0, SCND_ReadU32, local_F8 * 13 + 2) & 0xFFFF;
       Script_scenToggleCharaFlag(0, local_FC, 1);
-      local_FC = (Script_ScenDataUtil(task_0, 4, local_F8 * 13 + 2) >> 16) & 0xFFFF;
+      local_FC = (Script_ScenDataUtil(task_0, SCND_ReadU32, local_F8 * 13 + 2) >> 16) & 0xFFFF;
       Script_scenToggleCharaFlag(0, local_FC, 1);
     }
   }
@@ -5195,8 +4395,8 @@ static void script_9A2C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
     local_F4 = arg3;
     if ((local_F4 == 17) | (local_F4 == 11) | (local_F4 == 12)) {
       local_FC = 0;
-    } else if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 2) == 0) {
-      if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 4) == 0) {
+    } else if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 2) == 0) {
+      if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 4) == 0) {
         local_FC = script_8D6D(arg2, arg3, local_FC);
       } else {
         local_F4 = arg3;
@@ -5207,9 +4407,9 @@ static void script_9A2C(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
       }
       L009AF0:;
     } else {
-      if ((Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 1) & 4) == 0) {
+      if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 1) & 4) == 0) {
         local_FC = script_8D6D(arg2, arg3, local_FC);
-        local_F8 = Script_ScenDataUtil(task_0, 4, task_48[arg2] * 13 + 6);
+        local_F8 = Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg2] * 13 + 6);
         if (local_F8 == 0) {
           local_FC = 0;
         } else {
@@ -5247,7 +4447,7 @@ static int32_t script_9BE0(int32_t arg0, int32_t arg1, int32_t arg2) {
   local_FC = 1;
   local_F8 = arg2;
   if ((local_F8 == 17) | (local_F8 == 11) | (local_F8 == 12)) {
-    if (((Script_ScenDataUtil(task_0, 4, task_48[arg1] * 13 + 1) & 2) == 0) & ((Script_ScenDataUtil(task_0, 4, task_48[arg1] * 13 + 1) & 4) == 0)) {
+    if (((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg1] * 13 + 1) & 2) == 0) & ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg1] * 13 + 1) & 4) == 0)) {
       if (task_110[arg1] == 0) {
         task_20[arg1] = 4;
         local_FC = 0;
@@ -5256,7 +4456,7 @@ static int32_t script_9BE0(int32_t arg0, int32_t arg1, int32_t arg2) {
   } else {
     if (Script_GetControllerInput(1) == 0x400) {
       if (-(task_70[arg1] != task_160) & task_190) {
-        if ((Script_ScenDataUtil(task_0, 4, task_48[arg1] * 13 + 1) & 2) == 0) {
+        if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg1] * 13 + 1) & 2) == 0) {
           task_20[arg1] = 3;
           task_70[arg1] = task_160;
           task_98[arg1] = 0;
@@ -5264,7 +4464,7 @@ static int32_t script_9BE0(int32_t arg0, int32_t arg1, int32_t arg2) {
           task_10.entry_idx = task_48[arg1];
           local_FC = 0;
         } else {
-          if (Script_ScenDataUtil(task_0, 4, task_48[arg1] * 13 + 6) >= 2) {
+          if (Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg1] * 13 + 6) >= 2) {
             Script_EVT_GetPosition(task_160, -1, &local_EC, 0);
             if (Script_CycleManagerUtils(CYCLE_CMD_COUNT_CYCLES_IN_RADIUS, &local_EC, 1.5f) == 0) {
               task_20[arg1] = 6;
@@ -5347,7 +4547,7 @@ __attribute__((scn_string_bindings(0, data_127D1, 1, data_127E3)))
 static void script_9F21(int32_t arg0) {
   int32_t local_FC;
   int32_t local_F8;
-  if (Script_CycleManagerUtils(CYCLE_CMD_CHECK_SCNF_HAS_CVWK, task_70[arg0])) {
+  if (Script_CycleManagerUtils(CYCLE_CMD_HAS_CHARA, task_70[arg0])) {
     if (task_110[arg0] == 0) {
       if (task_70[arg0] == task_160) {
         task_10.mode = 1;
@@ -5356,11 +4556,11 @@ static void script_9F21(int32_t arg0) {
       }
       L009F76:;
       local_FC = DSWK_DoorUtils(DOOR_CMD_FIND_ENTRY_BY_VALUES, task_48[arg0], 2);
-      local_F8 = Script_ScenDataUtil(task_8, 4, Script_ScenDataUtil(task_C, 4, local_FC * 9 + 1) * 4 + 1);
+      local_F8 = Script_ScenDataUtil(task_8, SCND_ReadU32, Script_ScenDataUtil(task_C, SCND_ReadU32, local_FC * 9 + 1) * 4 + 1);
       script_9700(task_70[arg0], task_E8[arg0], task_48[arg0], local_F8);
-      task_110[arg0] = Script_scenCreateTask(Script_ScenDataUtil(&data_11BD0, 8, local_F8), 4, task_70[arg0], task_E8[arg0], arg0, local_F8);
+      task_110[arg0] = Script_scenCreateTask(Script_ScenDataUtil(&data_11BD0, SCND_ReadScriptOffset, local_F8), 4, task_70[arg0], task_E8[arg0], arg0, local_F8);
       task_C0[arg0] = task_70[arg0];
-      if ((Script_ScenDataUtil(task_0, 4, task_48[arg0] * 13 + 1) & 0x20000) == 0) {
+      if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg0] * 13 + 1) & 0x20000) == 0) {
         Script_sprintf("Door Box is ON!!\012");
         script_8E05(arg0);
       } else {
@@ -5384,7 +4584,7 @@ static void script_A0C6(int32_t arg0, int32_t arg1, int32_t arg2) {
     task_70[arg0] = task_160;
     task_10.mode = 2;
     task_10.entry_idx = task_48[arg0];
-    task_110[arg0] = Script_scenCreateTask(Script_ScenDataUtil(&data_11BD0, 8, arg2), 4, task_70[arg0], task_E8[arg0], arg0, arg2);
+    task_110[arg0] = Script_scenCreateTask(Script_ScenDataUtil(&data_11BD0, SCND_ReadScriptOffset, arg2), 4, task_70[arg0], task_E8[arg0], arg0, arg2);
     task_C0[arg0] = task_70[arg0];
     script_8E05(arg0);
   }
@@ -5395,9 +4595,9 @@ __attribute__((scn_string_bindings(0, data_127F6, 1, data_12808)))
 static void script_A15E(int32_t arg0, int32_t arg1) {
   if ((task_110[arg0] == 0) & (arg1 >= 0)) {
     script_9700(task_70[arg0], task_E8[arg0], task_48[arg0], arg1);
-    task_110[arg0] = Script_scenCreateTask(Script_ScenDataUtil(&data_11BD0, 8, arg1), 4, task_70[arg0], task_E8[arg0], arg0, arg1);
+    task_110[arg0] = Script_scenCreateTask(Script_ScenDataUtil(&data_11BD0, SCND_ReadScriptOffset, arg1), 4, task_70[arg0], task_E8[arg0], arg0, arg1);
     task_C0[arg0] = task_70[arg0];
-    if ((Script_ScenDataUtil(task_0, 4, task_48[arg0] * 13 + 1) & 0x20000) == 0) {
+    if ((Script_ScenDataUtil(task_0, SCND_ReadU32, task_48[arg0] * 13 + 1) & 0x20000) == 0) {
       Script_sprintf("Door Box is ON!!\012");
       script_8E05(arg0);
     } else {
@@ -5445,18 +4645,18 @@ static int32_t script_A297(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
     arg2 = Script_KaidanUtils(CAM_STAIR_QUERY_GUIDE_ENTRY, arg0, task_1A0, (const void *)task_1A4, (const void *)task_1A8, task_1C0);
     if (arg2 >= 0) {
       Script_motmSetBlendFrames(arg0, MOTM_BLEND_FRAMES_2);
-      Script_ccowUtils(arg0, 9);
+      Script_ccowUtils(arg0, CCOW_DisableHeightAdjustment);
       if (*(&task_1AC + arg5) & 0x800) {
         Script_scenUtils(SCENARIO_CMD_INIT_SCNT);
       }
       (void)((local_CA = 0) & 1);
       local_E4 = arg2 * 6;
-      *(int32_t *)&local_F4[1] = Script_ScenDataUtil((void *)task_1A4, 4, local_E4 + 1);
-      *(int32_t *)&local_F4[0] = Script_ScenDataUtil((void *)task_1A4, 4, local_E4);
-      *(int32_t *)&local_F4[2] = Script_ScenDataUtil((void *)task_1A4, 4, local_E4 + 2);
-      local_DC = Script_ScenDataUtil((void *)task_1A4, 4, local_E4 + 4);
-      local_E8[1] = Script_ScenDataUtil((void *)task_1A4, 4, local_E4 + 3);
-      local_E0 = Script_ScenDataUtil((void *)task_1A4, 4, local_E4 + 5);
+      *(int32_t *)&local_F4[1] = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, local_E4 + 1);
+      *(int32_t *)&local_F4[0] = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, local_E4);
+      *(int32_t *)&local_F4[2] = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, local_E4 + 2);
+      local_DC = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, local_E4 + 4);
+      local_E8[1] = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, local_E4 + 3);
+      local_E0 = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, local_E4 + 5);
       local_D8 = Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, local_E8[1]);
       local_D4 = Script_MathUtils(SCRIPT_MATH_COS_FIXED16, local_E8[1]);
       script_C30A(arg0, arg5, arg2);
@@ -5481,7 +4681,7 @@ static int32_t script_A297(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
         Script_MotStepUtil(arg0, 0);
       }
       if ((local_DC & 0xF) <= 4) {
-        Script_ccowSetFlag80(arg0, 1);
+        Script_ccowSetHeightMode(arg0, CCOW_KeepHeight);
         if ((*(&task_1AC + arg5) & 8) == 0) {
           if (local_DC & 0x1000000) {
             Script_scenCreateTask(script_C72C, 2, arg0, 1);
@@ -5526,7 +4726,7 @@ static int32_t script_A297(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
           Script_KaidanUtils(CAM_STAIR_APPLY_GUIDE_FACING, arg0, arg2, (const void *)task_1A4);
         }
         (void)((local_CC = -1) & 1);
-        Script_ccowSetFlag80(arg0, 2);
+        Script_ccowSetHeightMode(arg0, CCOW_FollowGround);
         Script_ccowUnknown(arg0, 1, 3.0f);
       } else {
         if ((local_DC & 0xF) <= 12) {
@@ -5569,7 +4769,7 @@ static int32_t script_A297(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
           if (local_CA & 4) {
             Script_KaidanUtils(CAM_STAIR_APPLY_GUIDE_FACING, arg0, arg2, (const void *)task_1A4);
           }
-          Script_ccowSetFlag80(arg0, 2);
+          Script_ccowSetHeightMode(arg0, CCOW_FollowGround);
           Script_ccowUnknown(arg0, 1, 3.0f);
           (void)((local_CC = 0) & 0x80);
           goto L00A78C;
@@ -5578,7 +4778,7 @@ static int32_t script_A297(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
       L00A78C:;
       if ((local_E0 == 1) & ((local_DC & 0xF) <= 4)) {
         if (*((int8_t *)&task_1E7 + arg5) == 1) {
-          Script_motmToggleFlags(arg0, 1, 0x80);
+          Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
         }
         if (task_1E9) {
           Script_PlayCharaMotion(arg0, MN_AKI_AKI_RUN_MID_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
@@ -5658,7 +4858,7 @@ static int32_t script_A297(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
         if (local_D0) {
           if (((*(&task_1AC + arg5) & 0x10) == 0) & ((local_DC & 0xF) < 2)) {
             if (*((int8_t *)&task_1E7 + arg5) == 1) {
-              Script_motmToggleFlags(arg0, 1, 0x80);
+              Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
             }
             if (task_1E9) {
               Script_PlayCharaMotion(arg0, MN_AKI_AKI_RUN_MID_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
@@ -5699,7 +4899,7 @@ static int32_t script_A297(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg
         script_D070(arg0, arg5, local_DC);
       }
       Script_ccowUnknown(arg0, 2, 0.07f);
-      Script_ccowUtils(arg0, 10);
+      Script_ccowUtils(arg0, CCOW_EnableHeightAdjustment);
       if (*((int8_t *)&task_1E5 + arg5) != 2) {
         *((int8_t *)&task_1E5 + arg5) = 0;
       }
@@ -5739,7 +4939,7 @@ static void script_AB99(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3, 
     } else {
       Script_CycleManagerUtils(CYCLE_CMD_SET_GLOBAL_CYCLE_PTR, task_1A4, &task_1B8);
       task_1A0 = local_F8 = 0;
-      while ((local_FC = Script_ScenDataUtil((void *)task_1A4, 4, local_F8)) != 0x47C35000) {
+      while ((local_FC = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, local_F8)) != 0x47C35000) {
         task_1A0 = task_1A0 + 1;
         local_F8 = local_F8 + 6;
       }
@@ -5757,14 +4957,14 @@ static void script_AC8C(int32_t arg0, int32_t arg1) {
   int32_t local_F0;
   local_F4 = 0;
   local_FC = 0;
-  while ((local_F8 = Script_ScenDataUtil((void *)task_1A8, 4, local_FC)) != 3) {
+  while ((local_F8 = Script_ScenDataUtil((void *)task_1A8, SCND_ReadU32, local_FC)) != 3) {
     local_F0 = local_F8;
     if (local_F0 == 0) {
       local_FC = local_FC + 3;
     } else if (local_F0 == 1) {
       if (arg0) {
-        if (Script_ScenDataUtil((void *)task_1A8, 4, local_FC + 1) == arg1) {
-          local_F4 = Script_ScenDataUtil((void *)task_1A8, 4, local_FC + 2);
+        if (Script_ScenDataUtil((void *)task_1A8, SCND_ReadU32, local_FC + 1) == arg1) {
+          local_F4 = Script_ScenDataUtil((void *)task_1A8, SCND_ReadU32, local_FC + 2);
           if (local_F4 < 4) {
             local_F4 = task_1C4[local_F4];
             break;
@@ -5776,8 +4976,8 @@ static void script_AC8C(int32_t arg0, int32_t arg1) {
       local_FC = local_FC + 3;
     } else if (local_F0 == 2) {
       if (arg0 == 0) {
-        if (Script_ScenDataUtil((void *)task_1A8, 4, local_FC + 1) == arg1) {
-          local_F4 = Script_ScenDataUtil((void *)task_1A8, 4, local_FC + 2);
+        if (Script_ScenDataUtil((void *)task_1A8, SCND_ReadU32, local_FC + 1) == arg1) {
+          local_F4 = Script_ScenDataUtil((void *)task_1A8, SCND_ReadU32, local_FC + 2);
           if (local_F4 < 4) {
             local_F4 = task_1C4[local_F4];
             break;
@@ -5908,10 +5108,10 @@ static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
   if (task_1E9) {
     local_FF = 4;
     if (arg1 < arg2 - 3) {
-      Script_motmToggleFlags(arg0, 2, 0x40);
+      Script_motmToggleFlags(arg0, SCEN_Disable, 0x40);
       if (arg6) {
         if (*((int8_t *)&task_1E7 + arg3) == 1) {
-          Script_motmToggleFlags(arg0, 1, 0x80);
+          Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_NOBORU_KAIDAN_2STEP_SONOBA_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
         Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
@@ -5924,7 +5124,7 @@ static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
           SCNF_WaitFrames_0000(1);
         }
       }
-      Script_motmToggleFlags(arg0, 1, 0x40);
+      Script_motmToggleFlags(arg0, SCEN_Enable, 0x40);
     } else {
       if ((*(&task_1AC + arg3) & 8) == 0) {
         task_1EA = 2;
@@ -5940,7 +5140,7 @@ static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
         }
       } else if (arg2 <= arg1 + 2) {
         if (*((int8_t *)&task_1E7 + arg3) == 0) {
-          Script_motmToggleFlags(arg0, 1, 0x80);
+          Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_RUN_MID_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
         SCNF_WaitFrames_0000(1);
@@ -5953,7 +5153,7 @@ static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
       } else {
         if (arg6) {
           if (*((int8_t *)&task_1E7 + arg3) == 1) {
-            Script_motmToggleFlags(arg0, 1, 0x80);
+            Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
           }
           Script_PlayCharaMotion(arg0, MN_AKI_AKI_NOBORU_KAIDAN_2STEP_SONOBA_LP, -1.0f, 5.0f, -1.0f, 1.0f, 0);
           SCNF_WaitFrames_0000(1);
@@ -5970,7 +5170,7 @@ static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
           }
         }
         if (*((int8_t *)&task_1E7 + arg3) == 0) {
-          Script_motmToggleFlags(arg0, 1, 0x80);
+          Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_RUN_MID_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
         SCNF_WaitFrames_0000(1);
@@ -5990,7 +5190,7 @@ static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
     if (arg1 < arg2 - 1) {
       if (arg6) {
         if (*((int8_t *)&task_1E7 + arg3) == 1) {
-          Script_motmToggleFlags(arg0, 1, 0x80);
+          Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_NOBORU_KAIDAN_SONOBA_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
         Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
@@ -6004,14 +5204,14 @@ static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
         }
       }
     } else {
-      Script_ccowSetFlag80(arg0, 1);
+      Script_ccowSetHeightMode(arg0, CCOW_KeepHeight);
       if ((*(&task_1AC + arg3) & 8) == 0) {
         task_1EA = 2;
       }
       script_D020(arg0, arg3, arg4);
       if (arg6) {
         if (*((int8_t *)&task_1E7 + arg3) == 1) {
-          Script_motmToggleFlags(arg0, 1, 0x80);
+          Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_NOBORU_KAIDAN_SONOBA_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
         Script_SetCharaMotionPlaybackRate(arg0, 1.0f);
@@ -6033,7 +5233,7 @@ static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
           SCNF_WaitFrames_0000(1);
         }
       }
-      Script_ccowSetFlag80(arg0, 2);
+      Script_ccowSetHeightMode(arg0, CCOW_FollowGround);
       if (arg4 & 0xF00 & 0x800) {
         script_AC8C(0, arg5);
         if (arg4 & 0xF000 & 0x1000) {
@@ -6045,11 +5245,11 @@ static int8_t script_B073(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
       } else {
         if (arg2 == arg1) {
           if (*((int8_t *)&task_1E7 + arg3) == 0) {
-            Script_motmToggleFlags(arg0, 1, 0x80);
+            Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
           }
         } else {
           if (*((int8_t *)&task_1E7 + arg3) == 1) {
-            Script_motmToggleFlags(arg0, 1, 0x80);
+            Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
           }
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_WALK_SP2_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
@@ -6076,7 +5276,7 @@ static int8_t script_B563(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
     if (arg1 >= local_FF) {
       if (arg5) {
         if (*((int8_t *)&task_1E7 + arg2) == 1) {
-          Script_motmToggleFlags(arg0, 1, 0x80);
+          Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_ORIRU_KAIDAN_2STEP_SONOBA_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
       }
@@ -6096,7 +5296,7 @@ static int8_t script_B563(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
         case 1:
           if (arg5) {
             if (*((int8_t *)&task_1E7 + arg2) == 1) {
-              Script_motmToggleFlags(arg0, 1, 0x80);
+              Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
             }
             Script_PlayCharaMotion(arg0, MN_AKI_AKI_ORIRU_KAIDAN_2STEP_SONOBA_LP, 0.0f, 5.0f, 0.0f, 1.0f, 0);
             SCNF_WaitFrames_0000(1);
@@ -6116,7 +5316,7 @@ static int8_t script_B563(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
         case 2:
           if (arg5) {
             if (*((int8_t *)&task_1E7 + arg2) == 1) {
-              Script_motmToggleFlags(arg0, 1, 0x80);
+              Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
             }
             Script_PlayCharaMotion(arg0, MN_AKI_AKI_ORIRU_KAIDAN_2STEP_SONOBA_LP, 0.0f, 7.0f, 0.0f, 1.0f, 0);
             SCNF_WaitFrames_0000(1);
@@ -6136,7 +5336,7 @@ static int8_t script_B563(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
         case 3:
           if (arg5) {
             if (*((int8_t *)&task_1E7 + arg2) == 1) {
-              Script_motmToggleFlags(arg0, 1, 0x80);
+              Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
             }
             Script_PlayCharaMotion(arg0, MN_AKI_AKI_ORIRU_KAIDAN_2STEP_SONOBA_LP, 0.0f, 9.0f, 0.0f, 1.0f, 0);
             SCNF_WaitFrames_0000(1);
@@ -6169,11 +5369,11 @@ static int8_t script_B563(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
       } else {
         if (arg1 <= 2) {
           if (*((int8_t *)&task_1E7 + arg2) == 1) {
-            Script_motmToggleFlags(arg0, 1, 0x80);
+            Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
           }
         } else {
           if (*((int8_t *)&task_1E7 + arg2) == 0) {
-            Script_motmToggleFlags(arg0, 1, 0x80);
+            Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
           }
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_RUN_MID_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
@@ -6194,7 +5394,7 @@ static int8_t script_B563(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
     if (arg1 >= local_FF) {
       if (arg5) {
         if (*((int8_t *)&task_1E7 + arg2) == 1) {
-          Script_motmToggleFlags(arg0, 1, 0x80);
+          Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_ORIRU_KAIDAN_SONOBA_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
       }
@@ -6213,7 +5413,7 @@ static int8_t script_B563(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
       if (arg1) {
         if (arg5) {
           if (*((int8_t *)&task_1E7 + arg2) == 1) {
-            Script_motmToggleFlags(arg0, 1, 0x80);
+            Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
           }
           Script_PlayCharaMotion(arg0, MN_AKI_AKI_ORIRU_KAIDAN_SONOBA_LP, 0.0f, 15.0f, 0.0f, 1.0f, 0);
           SCNF_WaitFrames_0000(1);
@@ -6245,11 +5445,11 @@ static int8_t script_B563(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3
       } else {
         if (arg1) {
           if (*((int8_t *)&task_1E7 + arg2) == 1) {
-            Script_motmToggleFlags(arg0, 1, 0x80);
+            Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
           }
         } else {
           if (*((int8_t *)&task_1E7 + arg2) == 0) {
-            Script_motmToggleFlags(arg0, 1, 0x80);
+            Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
           }
         }
         Script_PlayCharaMotion(arg0, MN_AKI_AKI_WALK_SP2_LP, -1.0f, -1.0f, -1.0f, 1.0f, 0);
@@ -6389,11 +5589,11 @@ static int32_t script_BD6E(int32_t arg0, int32_t arg1, float arg2, float arg3, i
     arg3 = local_E8[2] + arg3;
   }
   if (task_1E9) {
-    Script_motmToggleFlags(arg0, 2, 0x40);
+    Script_motmToggleFlags(arg0, SCEN_Disable, 0x40);
     if (Script_motmUtilsEx(13, arg0, 0) != 0) {
       SCNF_WaitFrames_0000(1);
     }
-    Script_motmToggleFlags(arg0, 1, 0x40);
+    Script_motmToggleFlags(arg0, SCEN_Enable, 0x40);
     local_F4.x = arg2;
     (&local_F4)->z = arg3;
     Script_EVT_GetPosition(arg0, 26, &local_DC, ENTITY_XFORM_WORLD_SPACE);
@@ -6451,7 +5651,7 @@ static int32_t script_BFFD(int32_t arg0, int32_t arg1, float arg2, float arg3, i
   float local_BC;
   int32_t local_B8;
   Script_EVT_GetPosition(arg0, -1, &local_F4, ENTITY_XFORM_WORLD_SPACE);
-  Script_ccowUtils(arg0, 2);
+  Script_ccowUtils(arg0, CCOW_DisableAll);
   if (arg5 & 0x100) {
     local_CC = Script_MathUtils(SCRIPT_MATH_SIN_FIXED16, arg1);
     local_C8 = Script_MathUtils(SCRIPT_MATH_COS_FIXED16, arg1);
@@ -6469,11 +5669,11 @@ static int32_t script_BFFD(int32_t arg0, int32_t arg1, float arg2, float arg3, i
   }
   task_1D4 = 0;
   if (task_1E9) {
-    Script_motmToggleFlags(arg0, 2, 0x40);
+    Script_motmToggleFlags(arg0, SCEN_Disable, 0x40);
     if (Script_motmUtilsEx(13, arg0, 0) != 0) {
       SCNF_WaitFrames_0000(1);
     }
-    Script_motmToggleFlags(arg0, 1, 0x40);
+    Script_motmToggleFlags(arg0, SCEN_Enable, 0x40);
     local_F4.x = arg2;
     (&local_F4)->z = arg3;
     Script_EVT_GetPosition(arg0, 26, &local_DC, ENTITY_XFORM_WORLD_SPACE);
@@ -6516,7 +5716,7 @@ static int32_t script_BFFD(int32_t arg0, int32_t arg1, float arg2, float arg3, i
   while (Script_SetCharaXMPTMode(arg0, 2) != 0) {
     SCNF_WaitFrames_0000(1);
   }
-  Script_ccowUtils(arg0, 1);
+  Script_ccowUtils(arg0, CCOW_EnableAll);
   script_CF9B(arg0, arg4, arg5);
   if (*(&task_1AC + arg4) & 2) {
     if (Script_ryoControl(PCCTL_QueryShouldRun)) {
@@ -6524,7 +5724,7 @@ static int32_t script_BFFD(int32_t arg0, int32_t arg1, float arg2, float arg3, i
       Script_ryoControl(PCCTL_DisablePlayerControl);
       (void)((task_1F0 = -1) & 4);
     }
-    Script_ccowUtils(arg0, 6);
+    Script_ccowUtils(arg0, CCOW_DisableCharacters);
   }
   return local_B8;
 }
@@ -6536,8 +5736,8 @@ static void script_C30A(int32_t arg0, int32_t arg1, int32_t arg2) {
   int8_t local_F7;
   (void)((local_F7 = 0) & 4);
   arg2 = arg2 & -2;
-  local_F8 = Script_ScenDataUtil((void *)task_1A4, 4, arg2 * 6 + 4);
-  local_FC = Script_ScenDataUtil((void *)task_1A4, 4, (arg2 + 1) * 6 + 4);
+  local_F8 = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, arg2 * 6 + 4);
+  local_FC = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, (arg2 + 1) * 6 + 4);
   local_FC = local_FC | local_F8;
   if (local_FC & -0x80000000) {
     while (local_FC & -0x80000000) {
@@ -6553,7 +5753,7 @@ static void script_C30A(int32_t arg0, int32_t arg1, int32_t arg2) {
             Script_ryoControl(PCCTL_DisablePlayerControl);
             (void)((task_1F0 = -1) & 4);
           }
-          Script_ccowUtils(arg0, 6);
+          Script_ccowUtils(arg0, CCOW_DisableCharacters);
         }
         Script_charaToggleMotEnabled(arg0, 0);
         if (Script_ryoControl(PCCTL_QueryIsRunningRequest)) {
@@ -6575,13 +5775,13 @@ static void script_C30A(int32_t arg0, int32_t arg1, int32_t arg2) {
         (void)((local_F7 = -1) & 4);
       }
       task_1F4 = (task_1F4 + 1) & 0xF;
-      local_F8 = Script_ScenDataUtil((void *)task_1A4, 4, arg2 * 6 + 4);
-      local_FC = Script_ScenDataUtil((void *)task_1A4, 4, (arg2 + 1) * 6 + 4);
+      local_F8 = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, arg2 * 6 + 4);
+      local_FC = Script_ScenDataUtil((void *)task_1A4, SCND_ReadU32, (arg2 + 1) * 6 + 4);
       local_FC = local_FC | local_F8;
       SCNF_WaitFrames_0000(1);
     }
     Script_PlayCharaMotion(arg0, MN_AKI_AKI_WALK_ST, -1.0f, -1.0f, -1.0f, 1.0f, 0);
-    Script_motmToggleFlags(arg0, 1, 0x80);
+    Script_motmToggleFlags(arg0, SCEN_Enable, 0x80);
     SCNF_WaitFrames_0000(1);
     while (Script_IsCharaMotionFinished(arg0) == 0) {
       SCNF_WaitFrames_0000(1);
@@ -7022,13 +6222,13 @@ static void script_CF9B(int32_t arg0, int32_t arg1, int32_t arg2) {
       Script_ryoControl(PCCTL_DisablePlayerControl);
       (void)((task_1F0 = -1) & 4);
     }
-    Script_ccowUtils(arg0, 6);
+    Script_ccowUtils(arg0, CCOW_DisableCharacters);
   }
   if (*(&task_1AC + arg1) & 0x20) {
-    Script_ccowUtils(arg0, 4);
+    Script_ccowUtils(arg0, CCOW_DisableMap);
   } else {
     if ((arg2 & 0x100) | (arg2 & 0x4000) | ((arg2 & 0x8000) > 0)) {
-      Script_ccowUtils(arg0, 4);
+      Script_ccowUtils(arg0, CCOW_DisableMap);
       goto L00D01F;
     }
   }
@@ -7038,11 +6238,11 @@ static void script_CF9B(int32_t arg0, int32_t arg1, int32_t arg2) {
 
 static void script_D020(int32_t arg0, int32_t arg1, int32_t arg2) {
   if (*(&task_1AC + arg1) & 0x20) {
-    Script_ccowUtils(arg0, 3);
+    Script_ccowUtils(arg0, CCOW_EnableMap);
   } else if ((arg2 & 0x8000) > 0) {
   } else {
     if ((arg2 & 0x100) | ((arg2 & 0x4000) > 0)) {
-      Script_ccowUtils(arg0, 3);
+      Script_ccowUtils(arg0, CCOW_EnableMap);
       goto L00D06F;
     }
   }
@@ -7051,12 +6251,12 @@ static void script_D020(int32_t arg0, int32_t arg1, int32_t arg2) {
 }
 
 static void script_D070(int32_t arg0, int32_t arg1, int32_t arg2) {
-  Script_ccowUtils(arg0, 5);
+  Script_ccowUtils(arg0, CCOW_EnableCharacters);
   if (*(&task_1AC + arg1) & 0x20) {
-    Script_ccowUtils(arg0, 3);
+    Script_ccowUtils(arg0, CCOW_EnableMap);
   } else {
     if ((arg2 & 0x100) | (arg2 & 0x4000) | ((arg2 & 0x8000) > 0)) {
-      Script_ccowUtils(arg0, 3);
+      Script_ccowUtils(arg0, CCOW_EnableMap);
       goto L00D0BE;
     }
   }
@@ -7090,16 +6290,16 @@ static void script_D0BF(int32_t arg0, int32_t arg1, int32_t arg2, int32_t arg3) 
   }
   local_F0 = 0;
   for (;;) {
-    local_EE = Script_ScenDataUtil(&data_12B94, 2, local_F0 * 16);
+    local_EE = Script_ScenDataUtil(&data_12B94, SCND_ReadU16, local_F0 * 16);
     if (local_EE < 0) {
       break;
     }
-    if ((Script_ScenDataUtil(&data_12B94, 2, local_F0 * 16 + 1) == 2) | (Script_ScenDataUtil(&data_12B94, 2, local_F0 * 16 + 1) == 9)) {
-      if (Script_ScenDataUtil(&data_12B94, 4, local_F0 * 8 + 6) != 0) {
-        Script_EVT_GetPosition(Script_ScenDataUtil(&data_12B94, 4, local_F0 * 8 + 1), -1, &local_F4, 0);
+    if ((Script_ScenDataUtil(&data_12B94, SCND_ReadU16, local_F0 * 16 + 1) == 2) | (Script_ScenDataUtil(&data_12B94, SCND_ReadU16, local_F0 * 16 + 1) == 9)) {
+      if (Script_ScenDataUtil(&data_12B94, SCND_ReadU32, local_F0 * 8 + 6) != 0) {
+        Script_EVT_GetPosition(Script_ScenDataUtil(&data_12B94, SCND_ReadU32, local_F0 * 8 + 1), -1, &local_F4, 0);
         if (!((&local_F4)->x < 9999.0f) & !((&local_F4)->z < 9999.0f)) {
           task_464 = task_464 + 1;
-          task_2D4[task_464] = Script_ScenDataUtil(&data_12B94, 4, local_F0 * 8 + 1);
+          task_2D4[task_464] = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, local_F0 * 8 + 1);
         }
       }
     }
@@ -7116,8 +6316,8 @@ static void script_D25C(void) {
   Vector3 local_E4;
   local_F0 = 0;
   for (;;) {
-    local_F4 = Script_ScenDataUtil(&data_12F98, 4, local_F0 * 5);
-    local_F8 = Script_ScenDataUtil(&data_12F98, 4, local_F0 * 5 + 1);
+    local_F4 = Script_ScenDataUtil(&data_12F98, SCND_ReadU32, local_F0 * 5);
+    local_F8 = Script_ScenDataUtil(&data_12F98, SCND_ReadU32, local_F0 * 5 + 1);
     if (local_F4 == -1) {
       break;
     }
@@ -7125,7 +6325,7 @@ static void script_D25C(void) {
     if (!((&local_E4)->x < 9999.0f) & !((&local_E4)->z < 9999.0f)) {
       task_464 = task_464 + 1;
       task_2D4[task_464] = local_F8;
-    } else if (Script_ScenDataUtil(&data_12F98, 4, local_F0 * 5 + 3) == 0) {
+    } else if (Script_ScenDataUtil(&data_12F98, SCND_ReadU32, local_F0 * 5 + 3) == 0) {
       Script_mtwkGetSetRotation(local_F8, &task_244, 0);
       Script_EVT_GetPosition(local_F8, -1, &task_238, 0);
       Script_fixoAttachEx(local_F8, local_F4, 0, &task_238, &task_244);
@@ -7157,8 +6357,8 @@ static void script_D37C(void) {
     Script_scenUtils(SCENARIO_CMD_INIT_SCNT);
     if (task_280) {
       task_260 = Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex);
-      local_FE = Script_ScenDataUtil(&data_12B94, 2, task_260 * 16 + 1);
-      if ((local_FE < 0) & (Script_ScenDataUtil(&data_12B94, 4, task_260 * 8 + 7) > 0)) {
+      local_FE = Script_ScenDataUtil(&data_12B94, SCND_ReadU16, task_260 * 16 + 1);
+      if ((local_FE < 0) & (Script_ScenDataUtil(&data_12B94, SCND_ReadU32, task_260 * 8 + 7) > 0)) {
         Script_sprintf("Map Start!!!!!!!!!!!!!!!!!\012");
         script_E752(task_260);
       } else {
@@ -7166,7 +6366,7 @@ static void script_D37C(void) {
           for (;;) {
             if (!(task_278 == 1)) goto L00D448;
             L00D448:;
-            if (Script_srchUtils(SRCH_SCRIPT_UpdateAndPollSelection) == Script_ScenDataUtil(&data_12B94, 4, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1)) {
+            if (Script_srchUtils(SRCH_SCRIPT_UpdateAndPollSelection) == Script_ScenDataUtil(&data_12B94, SCND_ReadU32, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1)) {
               break;
             }
             if (Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) < 0) {
@@ -7180,7 +6380,7 @@ static void script_D37C(void) {
             }
           }
           task_298 = 9;
-          script_F14D(Script_ScenDataUtil(&data_12B94, 4, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1));
+          script_F14D(Script_ScenDataUtil(&data_12B94, SCND_ReadU32, Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex) * 8 + 1));
           task_288 = Script_srchUtils(SRCH_SCRIPT_GetCurrentTargetEntryIndex);
         }
       }
@@ -7204,7 +6404,7 @@ static void script_D37C(void) {
     Script_ryoControl(PCCTL_DisablePlayerControl);
     Script_convSetCamInactiveFlag(1);
     local_F8 = script_E54E(task_25C);
-    local_FE = Script_ScenDataUtil(&data_12B94, 2, local_F8 * 16 + 1);
+    local_FE = Script_ScenDataUtil(&data_12B94, SCND_ReadU16, local_F8 * 16 + 1);
     Script_scenToggleVisibleFor(task_290, 1);
     Script_scenToggleVisibleFor(task_294, 1);
     if (local_FE < 0) {
@@ -7225,7 +6425,7 @@ static void script_D5D6(int32_t arg0) {
   int16_t local_FE;
   uint8_t unused_F0[14];
   int32_t local_EC;
-  local_FE = Script_ScenDataUtil(&data_12B94, 2, arg0 * 16 + 1);
+  local_FE = Script_ScenDataUtil(&data_12B94, SCND_ReadU16, arg0 * 16 + 1);
   local_EC = local_FE;
   if (local_EC == 0) {
     task_298 = 8;
@@ -7310,33 +6510,33 @@ static void script_D732(int32_t arg0, int32_t arg1) {
   int32_t local_FF74;
   local_91 = 0;
   local_93 = 0;
-  local_FC = Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 1);
-  local_CC = Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 6);
-  local_D0 = Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 7);
+  local_FC = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 1);
+  local_CC = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 6);
+  local_D0 = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 7);
   local_E4 = 0;
-  if (Script_ScenDataUtil(data_12F9C, 4, local_E4) != -1) {
-    local_B0 = Script_ScenDataUtil(data_12F9C, 4, local_E4);
-    local_AC = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 1);
-    local_A8 = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 2);
-    local_A4 = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 3);
+  if (Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4) != -1) {
+    local_B0 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4);
+    local_AC = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 1);
+    local_A8 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 2);
+    local_A4 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 3);
     local_E4 = 4;
     for (;;) {
-      if ((Script_ScenDataUtil(data_12F9C, 4, local_E4) == -1) & (Script_ScenDataUtil(data_12F9C, 4, local_E4 + 1) == -1)) {
+      if ((Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4) == -1) & (Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 1) == -1)) {
         local_B0 = 0;
         local_AC = 0;
         local_A8 = 0;
         local_A4 = 0;
         break;
       }
-      if (Script_ScenDataUtil(data_12F9C, 4, local_E4) == -1) {
+      if (Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4) == -1) {
         local_E4 = local_E4 + 1;
-        local_B0 = Script_ScenDataUtil(data_12F9C, 4, local_E4);
-        local_AC = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 1);
-        local_A8 = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 2);
-        local_A4 = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 3);
+        local_B0 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4);
+        local_AC = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 1);
+        local_A8 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 2);
+        local_A4 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 3);
         local_E4 = local_E4 + 4;
       }
-      if (local_FC == Script_ScenDataUtil(data_12F9C, 4, local_E4)) {
+      if (local_FC == Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4)) {
         break;
       }
       local_E4 = local_E4 + 1;
@@ -7390,14 +6590,14 @@ static void script_D732(int32_t arg0, int32_t arg1) {
     script_F14D(local_FC);
     local_E4 = 0;
     for (;;) {
-      local_EC = Script_ScenDataUtil(&data_12F98, 4, local_E4 * 5);
+      local_EC = Script_ScenDataUtil(&data_12F98, SCND_ReadU32, local_E4 * 5);
       if (local_EC == -1) {
         break;
       }
       if (local_EC == task_25C) {
-        local_E8 = Script_ScenDataUtil(&data_12F98, 4, local_E4 * 5 + 1);
-        local_F8 = Script_ScenDataUtil(&data_12F98, 4, local_E4 * 5 + 2);
-        local_FF74 = Script_ScenDataUtil(&data_12F98, 4, local_E4 * 5 + 4);
+        local_E8 = Script_ScenDataUtil(&data_12F98, SCND_ReadU32, local_E4 * 5 + 1);
+        local_F8 = Script_ScenDataUtil(&data_12F98, SCND_ReadU32, local_E4 * 5 + 2);
+        local_FF74 = Script_ScenDataUtil(&data_12F98, SCND_ReadU32, local_E4 * 5 + 4);
         Script_fixoClearAttachment(local_E8);
         Script_MoveObjectToObject(local_E8, local_FC);
         Script_EVT_GetPosition(local_E8, -1, &task_238, 0);
@@ -7409,29 +6609,29 @@ static void script_D732(int32_t arg0, int32_t arg1) {
       local_E4 = local_E4 + 1;
     }
     local_E0 = 0;
-    if (Script_ScenDataUtil(data_12F9C, 4, local_E0) != -1) {
-      local_A0 = Script_ScenDataUtil(data_12F9C, 4, local_E0);
-      local_9C = Script_ScenDataUtil(data_12F9C, 4, local_E0 + 1);
-      local_98 = Script_ScenDataUtil(data_12F9C, 4, local_E0 + 2);
-      local_94 = Script_ScenDataUtil(data_12F9C, 4, local_E0 + 3);
+    if (Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0) != -1) {
+      local_A0 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0);
+      local_9C = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0 + 1);
+      local_98 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0 + 2);
+      local_94 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0 + 3);
       local_E0 = 4;
       for (;;) {
-        if ((Script_ScenDataUtil(data_12F9C, 4, local_E0) == -1) & (Script_ScenDataUtil(data_12F9C, 4, local_E0 + 1) == -1)) {
+        if ((Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0) == -1) & (Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0 + 1) == -1)) {
           local_A0 = 0;
           local_9C = 0;
           local_98 = 0;
           local_94 = 0;
           break;
         }
-        if (Script_ScenDataUtil(data_12F9C, 4, local_E0) == -1) {
+        if (Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0) == -1) {
           local_E0 = local_E0 + 1;
-          local_A0 = Script_ScenDataUtil(data_12F9C, 4, local_E0);
-          local_9C = Script_ScenDataUtil(data_12F9C, 4, local_E0 + 1);
-          local_98 = Script_ScenDataUtil(data_12F9C, 4, local_E0 + 2);
-          local_94 = Script_ScenDataUtil(data_12F9C, 4, local_E0 + 3);
+          local_A0 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0);
+          local_9C = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0 + 1);
+          local_98 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0 + 2);
+          local_94 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0 + 3);
           local_E0 = local_E0 + 4;
         }
-        if (local_E8 == Script_ScenDataUtil(data_12F9C, 4, local_E0)) {
+        if (local_E8 == Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E0)) {
           break;
         }
         local_E0 = local_E0 + 1;
@@ -7610,31 +6810,31 @@ static void script_E179(int32_t arg0) {
   int8_t local_E3;
   int8_t local_E2;
   local_E3 = 0;
-  local_FC = Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 1);
+  local_FC = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 1);
   local_E4 = 0;
-  if (Script_ScenDataUtil(data_12F9C, 4, local_E4) != -1) {
-    local_F4 = Script_ScenDataUtil(data_12F9C, 4, local_E4);
-    local_F0 = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 1);
-    local_EC = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 2);
-    local_E8 = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 3);
+  if (Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4) != -1) {
+    local_F4 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4);
+    local_F0 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 1);
+    local_EC = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 2);
+    local_E8 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 3);
     local_E4 = 4;
     for (;;) {
-      if ((Script_ScenDataUtil(data_12F9C, 4, local_E4) == -1) & (Script_ScenDataUtil(data_12F9C, 4, local_E4 + 1) == -1)) {
+      if ((Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4) == -1) & (Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 1) == -1)) {
         local_F4 = 0;
         local_F0 = 0;
         local_EC = 0;
         local_E8 = 0;
         break;
       }
-      if (Script_ScenDataUtil(data_12F9C, 4, local_E4) == -1) {
+      if (Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4) == -1) {
         local_E4 = local_E4 + 1;
-        local_F4 = Script_ScenDataUtil(data_12F9C, 4, local_E4);
-        local_F0 = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 1);
-        local_EC = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 2);
-        local_E8 = Script_ScenDataUtil(data_12F9C, 4, local_E4 + 3);
+        local_F4 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4);
+        local_F0 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 1);
+        local_EC = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 2);
+        local_E8 = Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4 + 3);
         local_E4 = local_E4 + 4;
       }
-      if (local_FC == Script_ScenDataUtil(data_12F9C, 4, local_E4)) {
+      if (local_FC == Script_ScenDataUtil(data_12F9C, SCND_ReadU32, local_E4)) {
         break;
       }
       local_E4 = local_E4 + 1;
@@ -7642,10 +6842,10 @@ static void script_E179(int32_t arg0) {
   }
   if (Script_charaDisplay(local_FC, CDM_Query)) {
     Script_InvestigationUtils(ShenmueUtils_QueueSndCommand, local_F4, local_F0);
-    if (Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 7) == 0) {
+    if (Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 7) == 0) {
       Script_InvestigationUtils(ShenmueUtils_BeginTargetModeDefault, local_FC);
     } else {
-      Script_InvestigationUtils(ShenmueUtils_BeginTargetModeByType, local_FC, Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 7) - 1);
+      Script_InvestigationUtils(ShenmueUtils_BeginTargetModeByType, local_FC, Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 7) - 1);
     }
     local_E2 = 0;
     for (;;) {
@@ -7662,7 +6862,7 @@ static void script_E179(int32_t arg0) {
     }
     task_298 = 1;
     script_F14D(task_25C);
-    local_F8 = Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 6);
+    local_F8 = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 6);
     for (;;) {
       if (task_278 == 1) {
         script_E5B3(local_FC);
@@ -7734,11 +6934,11 @@ static int32_t script_E54E(int32_t arg0) {
   local_FC = 0;
   local_F8 = 0;
   for (;;) {
-    local_F6 = Script_ScenDataUtil(&data_12B94, 2, local_F8 * 16);
+    local_F6 = Script_ScenDataUtil(&data_12B94, SCND_ReadU16, local_F8 * 16);
     if (local_F6 < 0) {
       break;
     }
-    if (Script_ScenDataUtil(&data_12B94, 4, local_F8 * 8 + 1) == arg0) {
+    if (Script_ScenDataUtil(&data_12B94, SCND_ReadU32, local_F8 * 8 + 1) == arg0) {
       local_FC = local_F8;
       break;
     }
@@ -7759,11 +6959,11 @@ static void script_E5B3(int32_t arg0) {
   int16_t local_B2;
   uint8_t unused_B0[2];
   local_B4 = script_E54E(arg0);
-  local_B2 = Script_ScenDataUtil(&data_12B94, 2, local_B4 * 16 + 1);
+  local_B2 = Script_ScenDataUtil(&data_12B94, SCND_ReadU16, local_B4 * 16 + 1);
   if (local_B2 < 0) {
-    *(int32_t *)&local_F4.x = Script_ScenDataUtil(&data_12B94, 4, local_B4 * 8 + 3);
-    *(int32_t *)&(&local_F4)->y = Script_ScenDataUtil(&data_12B94, 4, local_B4 * 8 + 4);
-    *(int32_t *)&(&local_F4)->z = Script_ScenDataUtil(&data_12B94, 4, local_B4 * 8 + 5);
+    *(int32_t *)&local_F4.x = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, local_B4 * 8 + 3);
+    *(int32_t *)&(&local_F4)->y = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, local_B4 * 8 + 4);
+    *(int32_t *)&(&local_F4)->z = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, local_B4 * 8 + 5);
   } else {
     Script_EVT_GetPosition(arg0, -1, &local_F4, 0);
   }
@@ -7807,11 +7007,11 @@ static void script_E752(int32_t arg0) {
   int32_t local_F4[3];
   int32_t unused_F0;
   int32_t local_E8[2];
-  local_F4[0] = Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 3);
-  local_F4[1] = Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 4);
-  local_F4[2] = Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 5);
-  local_E8[1] = Script_ScenDataUtil(&data_12B94, 2, arg0 * 16 + 4);
-  task_468 = Script_ScenDataUtil(&data_12B94, 4, arg0 * 8 + 7) - 1;
+  local_F4[0] = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 3);
+  local_F4[1] = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 4);
+  local_F4[2] = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 5);
+  local_E8[1] = Script_ScenDataUtil(&data_12B94, SCND_ReadU16, arg0 * 16 + 4);
+  task_468 = Script_ScenDataUtil(&data_12B94, SCND_ReadU32, arg0 * 8 + 7) - 1;
   *(&task_468 + 1) = 0;
   *(&task_468 + 2) = 0;
   *(&task_468 + 3) = 0;
@@ -8200,8 +7400,8 @@ static int32_t script_F3A3(void) {
   local_EC = 0x40800000;
   script_10706(CHARA_TMHN, 15.56f, 4.275f, 131.09f, 40413);
   script_10706(CHARA_TKSA, 16.7792f, 4.275f, 132.35f, 7094);
-  Script_motmGetCharaFlags(CHARA_TMHN, 0, 0);
-  Script_motmGetCharaFlags(CHARA_TKSA, 0, 0);
+  Script_motmGetCharaFlags(CHARA_TMHN, MOTM_PoseNone, SCEN_Write);
+  Script_motmGetCharaFlags(CHARA_TKSA, MOTM_PoseNone, SCEN_Write);
   script_F368();
   Script_scenCreateTask(script_F380, 0);
   for (;;) {
@@ -8321,7 +7521,7 @@ static void script_F7CE(void) {
     script_10706(CHARA_AKIR, 18.42f, 3.58f, 153.52f, 0x2000);
     Script_scenCreateTask(script_F73D, 0);
     Script_scenCreateTask(script_F6FB, 0);
-    Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+    Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
     Script_PlayCharaMotion(CHARA_AKIR, 8193, -1.0f, 65.0f, -1.0f, 1000.0f, 0);
     SCNF_WaitFrames_0000(2);
     Script_PlayCharaMotion(CHARA_AKIR, 8193, 66.0f, -1.0f, -1.0f, 1.0f, 0);
@@ -8372,7 +7572,7 @@ static void script_F9B9(int32_t arg0) {
   local_FC = arg0;
   switch (local_FC) {
     case 1:
-      Script_ccowUtils(CHARA_AKIR, 1);
+      Script_ccowUtils(CHARA_AKIR, CCOW_EnableAll);
       SCNF_WaitFrames_0000(30);
       Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
       Script_ShowUIMessageFromID("E1009BA006");
@@ -8501,7 +7701,7 @@ static void script_FC17(int32_t arg0) {
   }
   Script_PlayCharaMotion(CHARA_AKIR, 8194, 40.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_scenCreateTask(script_FAFB, 0);
-  Script_FaceLookAtTargetUtils(CHARA_AKIR, 2, &data_132EC, 60);
+  Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookAtPosition, &data_132EC, 60);
   SCNF_WaitFrames_0000(1);
   for (;;) {
     if (!(Script_GetCharaMotionRemainingFramesScaled(CHARA_AKIR) <= 160.0f)) {
@@ -8512,7 +7712,7 @@ static void script_FC17(int32_t arg0) {
   Script_SetCharaMotionPlaybackRate(CHARA_AKIR, 0.0f);
   Script_PlayCharaMotion(CHARA_TKSA, 4097, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_SetCharaMotionPlaybackRate(CHARA_TKSA, 0.5f);
-  Script_motmToggleFlags(CHARA_TMHN, 1, 0x80);
+  Script_motmToggleFlags(CHARA_TMHN, SCEN_Enable, 0x80);
   Script_PlayCharaMotion(CHARA_TMHN, 4098, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_scenCreateTask(script_FAD3, 0);
   Script_ShowUIMessageFromID("E1009BB001");
@@ -8557,13 +7757,13 @@ static void script_FC17(int32_t arg0) {
     SCNF_WaitFrames_0000(1);
   }
   Script_SetCharaMotionPlaybackRate(CHARA_TKSA, 1.0f);
-  Script_motmToggleFlags(CHARA_AKIR, 2, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Disable, 0x40);
   Script_SetCharaLookAtPosition(CHARA_AKIR, -20, 0, 0);
   local_F4[1] = 2184;
   Script_EVT_SetRotation(CHARA_AKIR, MATRIX_XFORM_Y, (const Vector3i *)local_F4, 0);
   Script_PlayCharaMotion(CHARA_AKIR, MN_AKI_AKI_TATI_IWA_L, -1.0f, -1.0f, -1.0f, 1.0f, 0);
   Script_FACE(CHARA_AKIR, 0, 0, 0);
-  Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+  Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
   local_F4[0] = 0x418A0000;
   local_F4[1] = 0x4088CCCD;
   local_F4[2] = 0x43184000;
@@ -8628,27 +7828,27 @@ static void script_101F7(void) {
 static void script_10309(void) {
   Vector3i local_F4;
   Script_ryoControl(PCCTL_DisablePlayerControl);
-  Script_FaceEx(CHARA_AKIR, 1, 0, 2);
+  Script_FaceEx(CHARA_AKIR, FACE_ExpressionEnabled, 0, 2);
   Script_ResetHandMotion(CHARA_AKIR, -1, 0, 0);
   Script_ResetHandMotion(CHARA_AKIR, -1, 1, 0);
   Script_shenClearFreeState(0);
-  Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+  Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
   Script_mtwkGetSetRotation(CHARA_AKIR, &local_F4, 0x2000000);
   Script_EVT_SetRotation(CHARA_AKIR, 0x38000000, &local_F4, 0);
-  Script_ccowUtils(CHARA_AKIR, 2);
+  Script_ccowUtils(CHARA_AKIR, CCOW_DisableAll);
   return;
 }
 
 static void script_10381(void) {
-  Script_ccowUtils(CHARA_AKIR, 1);
+  Script_ccowUtils(CHARA_AKIR, CCOW_EnableAll);
   Script_FACE(CHARA_AKIR, 0, 0, 0);
-  Script_FaceLookAtTargetUtils(CHARA_AKIR, 0);
+  Script_FaceLookAtTargetUtils(CHARA_AKIR, FACE_LookReset);
   Script_convSetCamInactiveFlag(1);
   Script_SetGameStateTo(AUTH_None);
   SCNF_WaitFrames_0000(1);
-  Script_motmToggleFlags(CHARA_AKIR, 1, 0x40);
+  Script_motmToggleFlags(CHARA_AKIR, SCEN_Enable, 0x40);
   Script_ryoControl(RYO_RestoreControl);
-  Script_FaceEx(CHARA_AKIR, 0, 0, 2);
+  Script_FaceEx(CHARA_AKIR, FACE_ExpressionDisabled, 0, 2);
   Script_ResetHandMotion(CHARA_AKIR, 0, 0, 0);
   Script_ResetHandMotion(CHARA_AKIR, 0, 1, 0);
   Script_shenClearFreeState(1);
@@ -8706,7 +7906,7 @@ void script_10409(void) {
   Script_SetShadowFlags(CHARA_AKIR, SCRIPT_SHADOW_UPDATE_LIGHT_MASK, 2);
   Script_SetShadowFlags(CHARA_AKIR, SCRIPT_SHADOW_SET_LIGHT_RADIUS, 30.0f);
   script_1075F(CHARA_AKIR);
-  Script_cdttLoadScrUtils(1, 0);
+  Script_cdttLoadScrUtils(CDTT_CMD_Init, 0);
   if (task_206 & 1) {
     Script_ryoSleepUtils(1);
     Script_filmCheckOrSetTransitionUtil(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -8714,7 +7914,7 @@ void script_10409(void) {
       SCNF_WaitFrames_0000(1);
     }
     Script_ryoControl(RYO_RestoreControl);
-    Script_FaceEx(CHARA_AKIR, 0, 0, 2);
+    Script_FaceEx(CHARA_AKIR, FACE_ExpressionDisabled, 0, 2);
     Script_ResetHandMotion(CHARA_AKIR, 0, 0, 0);
     Script_ResetHandMotion(CHARA_AKIR, 0, 1, 0);
     Script_shenClearFreeState(1);
