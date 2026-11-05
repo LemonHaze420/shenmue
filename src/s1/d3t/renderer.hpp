@@ -1,5 +1,7 @@
 #pragma once
 
+#include "api/render.h"
+
 #include "d3t/dx11_renderer.hpp"
 #include "s1/d3t/settings.hpp"
 
@@ -34,7 +36,7 @@ inline D3TDeviceContext *d3t_DXGetPipelineContext(std::int32_t mode) {
     return d3t::DXGetPipelineContext(mode);
 }
 inline void d3t_PresentFrame(std::int32_t renderMode) {
-    d3t::PresentFrame(renderMode);
+    shen_render_present(renderMode);
 }
 inline void d3t_DumpFramePng(const char *filename) {
     d3t::DumpFramePng(filename);

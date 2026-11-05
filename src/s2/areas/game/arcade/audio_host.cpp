@@ -1,3 +1,4 @@
+#include "api/audio.h"
 // S2-private encoded-handle arcade voice pool and actual XAudio/WAV primitives.
 // No S1 dialogue archives, title admission, or SOND task lifecycle are linked.
 #include "s1/d3t/namespace.hpp"
@@ -185,7 +186,7 @@ bool InitializeXAudio() {
         result = g_xaudio->CreateSubmixVoice(&g_aicaSubmixVoice, 1, 48000, 0, 0, nullptr, &reverbChain);
     }
     if (SUCCEEDED(result)) {
-        result = g_aicaSubmixVoice->SetVolume(5.0f);
+        result = shen_audio_voice_set_volume(g_aicaSubmixVoice, 5.0f, 0);
     }
     if (SUCCEEDED(result)) {
         XAUDIO2FX_REVERB_PARAMETERS reverb{};
@@ -217,7 +218,7 @@ bool InitializeXAudio() {
     }
     if (FAILED(result)) {
         if (g_aicaSubmixVoice) {
-            g_aicaSubmixVoice->DestroyVoice();
+            shen_audio_voice_destroy(g_aicaSubmixVoice);
             g_aicaSubmixVoice = nullptr;
         }
         if (g_aicaReverbEffect) {
@@ -229,7 +230,7 @@ bool InitializeXAudio() {
             g_masteringLimiterEffect = nullptr;
         }
         if (g_masteringVoice) {
-            g_masteringVoice->DestroyVoice();
+            shen_audio_voice_destroy(g_masteringVoice);
             g_masteringVoice = nullptr;
         }
         g_xaudio->UnregisterForCallbacks(g_audioEngineCallbacks.get());
@@ -487,10 +488,10 @@ void SetOutputAudioMatrix(void *playback, std::uint32_t sourceChannels) {
         return;
     if (sourceChannels == 2) {
         constexpr float matrix[]{1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1};
-        voice->SetOutputMatrix(g_masteringVoice, sourceChannels, 6, matrix);
+        shen_audio_voice_set_matrix(voice, g_masteringVoice, sourceChannels, 6, matrix, 0);
     } else {
         constexpr float matrix[]{0, 0, 1, 0, 0, 0};
-        voice->SetOutputMatrix(g_masteringVoice, sourceChannels, 6, matrix);
+        shen_audio_voice_set_matrix(voice, g_masteringVoice, sourceChannels, 6, matrix, 0);
     }
 #else
     (void)playback;
@@ -503,7 +504,7 @@ void SetOutputMatrixVolumeAndChannels(void *playback, float volume, std::uint32_
     IXAudio2SourceVoice *const voice = owner ? owner->voice : nullptr;
     if (g_xaudio && g_masteringVoice && GetXAudioEffectFlagVal() != 1 && g_aicaSubmixVoice && voice) {
         const float matrix[]{volume, volume};
-        voice->SetOutputMatrix(g_aicaSubmixVoice, sourceChannels, 1, matrix);
+        shen_audio_voice_set_matrix(voice, g_aicaSubmixVoice, sourceChannels, 1, matrix, 0);
     }
 #else
     (void)playback;
@@ -517,9 +518,9 @@ void StopSourceVoiceAndFlush(std::uint32_t physicalId) {
     XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(physicalId));
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
-    owner->voice->ExitLoop();
-    owner->voice->Stop();
-    owner->voice->FlushSourceBuffers();
+    shen_audio_source_exit_loop(owner->voice, 0);
+    shen_audio_source_stop(owner->voice, 0, 0);
+    shen_audio_source_flush(owner->voice);
 #else
     (void)physicalId;
 #endif
@@ -534,19 +535,19 @@ void CreateAndStartPlayingSourceVoice(std::uint32_t physicalId, const std::byte 
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
     const WAVEFORMATEX *const format = static_cast<const WAVEFORMATEX *>(wave.format);
-    owner->voice->SetSourceSampleRate(format->nSamplesPerSec);
-    owner->voice->SetVolume(1.0f);
-    owner->voice->SetFrequencyRatio(1.0f);
+    shen_audio_source_set_sample_rate(owner->voice, format->nSamplesPerSec);
+    shen_audio_voice_set_volume(owner->voice, 1.0f, 0);
+    shen_audio_source_set_frequency_ratio(owner->voice, 1.0f, 0);
     SetOutputAudioMatrix(GetRawSoundEffectVoice(physicalId), format->nChannels);
-    XAUDIO2_BUFFER buffer{};
-    buffer.AudioBytes = wave.audioBytes;
-    buffer.pAudioData = reinterpret_cast<const BYTE *>(wave.audio);
-    buffer.PlayLength = wave.audioBytes / (format->nChannels * format->wBitsPerSample / 8);
-    buffer.LoopBegin = wave.loopBegin;
-    buffer.LoopLength = wave.loopLength;
-    buffer.LoopCount = XAUDIO2_LOOP_INFINITE;
-    owner->voice->SubmitSourceBuffer(&buffer);
-    owner->voice->Start();
+    shen_audio_buffer buffer{};
+    buffer.audio_bytes = wave.audioBytes;
+    buffer.audio_data = reinterpret_cast<const uint8_t *>(wave.audio);
+    buffer.play_length = wave.audioBytes / (format->nChannels * format->wBitsPerSample / 8);
+    buffer.loop_begin = wave.loopBegin;
+    buffer.loop_length = wave.loopLength;
+    buffer.loop_count = SHEN_AUDIO_LOOP_INFINITE;
+    shen_audio_source_submit(owner->voice, &buffer, nullptr);
+    shen_audio_source_start(owner->voice, 0, 0);
 #else
     (void)physicalId;
 #endif
@@ -561,18 +562,18 @@ void ProcessWave_Wrapper_0(std::uint32_t physicalId, const std::byte *bytes, std
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
     const WAVEFORMATEX *const format = static_cast<const WAVEFORMATEX *>(wave.format);
-    XAUDIO2_BUFFER buffer{};
-    buffer.Flags = XAUDIO2_END_OF_STREAM;
-    buffer.AudioBytes = wave.audioBytes;
-    buffer.pAudioData = reinterpret_cast<const BYTE *>(wave.audio);
+    shen_audio_buffer buffer{};
+    buffer.flags = SHEN_AUDIO_END_OF_STREAM;
+    buffer.audio_bytes = wave.audioBytes;
+    buffer.audio_data = reinterpret_cast<const uint8_t *>(wave.audio);
     StopSourceVoiceAndFlush(physicalId);
-    owner->voice->SetSourceSampleRate(format->nSamplesPerSec);
-    owner->voice->SetVolume(1.0f);
-    owner->voice->SetFrequencyRatio(1.0f);
+    shen_audio_source_set_sample_rate(owner->voice, format->nSamplesPerSec);
+    shen_audio_voice_set_volume(owner->voice, 1.0f, 0);
+    shen_audio_source_set_frequency_ratio(owner->voice, 1.0f, 0);
     SetOutputAudioMatrix(GetRawSoundEffectVoice(physicalId), format->nChannels);
     SetOutputMatrixVolumeAndChannels(GetRawSoundEffectVoice(physicalId), 0.1f, format->nChannels);
-    owner->voice->SubmitSourceBuffer(&buffer);
-    owner->voice->Start();
+    shen_audio_source_submit(owner->voice, &buffer, nullptr);
+    shen_audio_source_start(owner->voice, 0, 0);
 #else
     (void)physicalId;
 #endif
@@ -680,7 +681,7 @@ void StopEngine(std::uint32_t voiceId) {
 #if defined(_WIN32)
     XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(voiceId));
     if (g_xaudio && g_masteringVoice && !GetXAudioEffectFlagVal() && owner && owner->voice)
-        owner->voice->Stop();
+        shen_audio_source_stop(owner->voice, 0, 0);
 #else
     (void)voiceId;
 #endif
@@ -691,14 +692,14 @@ void ConfigureAndSubmitXAudioBuffer(std::uint32_t voiceId, const RawAudioSubmiss
     XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(voiceId));
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
-    XAUDIO2_BUFFER buffer{};
-    buffer.Flags = XAUDIO2_END_OF_STREAM;
-    buffer.AudioBytes = submission.audioBytes;
-    buffer.pAudioData = reinterpret_cast<const BYTE *>(submission.audio);
+    shen_audio_buffer buffer{};
+    buffer.flags = SHEN_AUDIO_END_OF_STREAM;
+    buffer.audio_bytes = submission.audioBytes;
+    buffer.audio_data = reinterpret_cast<const uint8_t *>(submission.audio);
     if (submission.loopLength) {
-        buffer.LoopBegin = submission.loopBegin;
-        buffer.LoopLength = submission.loopLength;
-        buffer.LoopCount = XAUDIO2_LOOP_INFINITE;
+        buffer.loop_begin = submission.loopBegin;
+        buffer.loop_length = submission.loopLength;
+        buffer.loop_count = SHEN_AUDIO_LOOP_INFINITE;
     }
     const float volume = submission.volume * (submission.music ? g_applicationSettings.savedMusicVolume : 1.0f);
     float ratio = submission.frequencyRatio;
@@ -707,11 +708,11 @@ void ConfigureAndSubmitXAudioBuffer(std::uint32_t voiceId, const RawAudioSubmiss
         ratio *= 0.5f;
         rate *= 2;
     }
-    owner->voice->FlushSourceBuffers();
-    owner->voice->SetSourceSampleRate(rate);
-    owner->voice->SetVolume(volume);
-    owner->voice->SetFrequencyRatio(ratio);
-    owner->voice->SubmitSourceBuffer(&buffer);
+    shen_audio_source_flush(owner->voice);
+    shen_audio_source_set_sample_rate(owner->voice, rate);
+    shen_audio_voice_set_volume(owner->voice, volume, 0);
+    shen_audio_source_set_frequency_ratio(owner->voice, ratio, 0);
+    shen_audio_source_submit(owner->voice, &buffer, nullptr);
     const std::uint16_t channels = static_cast<const WAVEFORMATEX *>(submission.format)->nChannels;
     SetOutputMatrixVolumeAndChannels(GetRawSoundEffectVoice(voiceId), volume, channels);
 
@@ -748,7 +749,7 @@ void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, 
             sampleRate *= 2;
             frequencyRatio *= 0.5f;
         }
-        owner->voice->SetSourceSampleRate(sampleRate);
+        shen_audio_source_set_sample_rate(owner->voice, sampleRate);
     }
     return GetRawSoundEffectVoice(owner->slotId);
 #else
@@ -770,7 +771,7 @@ void StartRawSoundEffectPlayback(void *playback) {
 #if defined(_WIN32)
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
     if (g_xaudio && g_masteringVoice && GetXAudioEffectFlagVal() != 1 && owner && owner->voice)
-        owner->voice->Start();
+        shen_audio_source_start(owner->voice, 0, 0);
 #else
     (void)playback;
 #endif
@@ -794,9 +795,9 @@ void *AllocateRawSoundEffectVoice(std::uint16_t bitsPerSample, std::uint16_t cha
         if (candidate.active || candidate.reserved)
             continue;
         if (candidate.voice) {
-            XAUDIO2_VOICE_STATE state{};
-            candidate.voice->GetState(&state, XAUDIO2_VOICE_NOSAMPLESPLAYED);
-            if (state.BuffersQueued != 0)
+            shen_audio_voice_state state{};
+            shen_audio_source_get_state(candidate.voice, &state, SHEN_AUDIO_NO_SAMPLES_PLAYED);
+            if (state.buffers_queued != 0)
                 continue;
         }
         owner = &candidate;
@@ -806,7 +807,7 @@ void *AllocateRawSoundEffectVoice(std::uint16_t bitsPerSample, std::uint16_t cha
     owner->active = true;
     owner->reserved = !reclaimable;
     if (owner->voice)
-        owner->voice->DestroyVoice();
+        shen_audio_voice_destroy(owner->voice);
 
     Routing(owner) = {};
 
@@ -841,12 +842,12 @@ void StartRawSoundEffectVoice(void *playback) {
     std::lock_guard lock(g_audioInitializationMutex);
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
-    owner->voice->SetSourceSampleRate(48000);
+    shen_audio_source_set_sample_rate(owner->voice, 48000);
 
-    owner->voice->SetVolume(1.0f);
+    shen_audio_voice_set_volume(owner->voice, 1.0f, 0);
 
     SetOutputAudioMatrix(playback, Routing(owner).channels);
-    owner->voice->Start();
+    shen_audio_source_start(owner->voice, 0, 0);
 #else
     static_cast<void>(owner);
 #endif
@@ -858,11 +859,11 @@ void SubmitRawSoundEffectBuffer(void *playback, const std::byte *samples, std::u
     std::lock_guard lock(g_audioInitializationMutex);
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
-    XAUDIO2_BUFFER buffer{};
-    buffer.AudioBytes = audioBytes;
-    buffer.pAudioData = reinterpret_cast<const BYTE *>(samples);
-    buffer.PlayLength = playLength;
-    owner->voice->SubmitSourceBuffer(&buffer);
+    shen_audio_buffer buffer{};
+    buffer.audio_bytes = audioBytes;
+    buffer.audio_data = reinterpret_cast<const uint8_t *>(samples);
+    buffer.play_length = playLength;
+    shen_audio_source_submit(owner->voice, &buffer, nullptr);
 #else
     static_cast<void>(owner);
     static_cast<void>(samples);
@@ -876,9 +877,9 @@ bool RawSoundEffectIsPlaying(const void *playback) {
 #if defined(_WIN32)
     if (!owner || !owner->voice)
         return false;
-    XAUDIO2_VOICE_STATE state{};
-    owner->voice->GetState(&state, XAUDIO2_VOICE_NOSAMPLESPLAYED);
-    return state.BuffersQueued != 0;
+    shen_audio_voice_state state{};
+    shen_audio_source_get_state(owner->voice, &state, SHEN_AUDIO_NO_SAMPLES_PLAYED);
+    return state.buffers_queued != 0;
 #else
     static_cast<void>(owner);
     return false;
@@ -890,7 +891,7 @@ void SetRawSoundEffectVolume(void *playback, float volume) {
 #if defined(_WIN32)
     if (g_xaudio && g_masteringVoice && GetXAudioEffectFlagVal() == 0 && owner && owner->voice) {
 
-        owner->voice->SetVolume(volume);
+        shen_audio_voice_set_volume(owner->voice, volume, 0);
     }
 #else
     static_cast<void>(owner);
@@ -901,7 +902,7 @@ void SetRawSoundEffectFrequencyRatio(void *playback, float frequencyRatio) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
 #if defined(_WIN32)
     if (g_xaudio && g_masteringVoice && GetXAudioEffectFlagVal() != 1 && owner && owner->voice)
-        owner->voice->SetFrequencyRatio(frequencyRatio);
+        shen_audio_source_set_frequency_ratio(owner->voice, frequencyRatio, 0);
 #else
     static_cast<void>(owner);
     static_cast<void>(frequencyRatio);
@@ -912,11 +913,11 @@ bool SetRawSoundEffectLowPassFrequency(void *playback, float normalizedFrequency
 #if defined(_WIN32)
     if (g_audioFilterBypass || !g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return false;
-    XAUDIO2_FILTER_PARAMETERS filter{};
-    filter.Type = LowPassFilter;
-    filter.Frequency = std::fmin(1.0f, normalizedFrequency);
-    filter.OneOverQ = std::fmin(1.5f, oneOverQ);
-    return SUCCEEDED(owner->voice->SetFilterParameters(&filter));
+    shen_audio_filter filter{};
+    filter.type = SHEN_AUDIO_LOW_PASS;
+    filter.frequency = std::fmin(1.0f, normalizedFrequency);
+    filter.one_over_q = std::fmin(1.5f, oneOverQ);
+    return SUCCEEDED(shen_audio_voice_set_filter(owner->voice, &filter, 0));
 #else
     static_cast<void>(owner);
     static_cast<void>(normalizedFrequency);
@@ -943,9 +944,9 @@ bool SetRawSoundEffectOutputMatrix(void *playback, const float *levelMatrix, std
     if (destinationChannels == 1) {
         std::array<float, 2> repeated{};
         repeated.fill(levelMatrix[0]);
-        return SUCCEEDED(owner->voice->SetOutputMatrix(outputVoice, sourceChannels, 1, repeated.data()));
+        return SUCCEEDED(shen_audio_voice_set_matrix(owner->voice, outputVoice, sourceChannels, 1, repeated.data(), 0));
     }
-    return SUCCEEDED(owner->voice->SetOutputMatrix(outputVoice, sourceChannels, destinationChannels, levelMatrix));
+    return SUCCEEDED(shen_audio_voice_set_matrix(owner->voice, outputVoice, sourceChannels, destinationChannels, levelMatrix, 0));
 #else
     static_cast<void>(owner);
     static_cast<void>(levelMatrix);
@@ -962,9 +963,9 @@ void StopRawSoundEffectPlayback(void *playback, bool release) {
     if (release && g_releaseEnvelope && g_releaseEnvelope(owner->slotId))
         return;
     if (RawSoundEffectIsPlaying(playback)) {
-        owner->voice->ExitLoop();
-        owner->voice->Stop(XAUDIO2_PLAY_TAILS);
-        owner->voice->FlushSourceBuffers();
+        shen_audio_source_exit_loop(owner->voice, 0);
+        shen_audio_source_stop(owner->voice, SHEN_AUDIO_PLAY_TAILS, 0);
+        shen_audio_source_flush(owner->voice);
     }
     owner->reserved = false;
 #else
@@ -977,7 +978,7 @@ void SetRawSoundEffectPaused(void *playback, bool paused) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
 #if defined(_WIN32)
     if (paused && g_xaudio && g_masteringVoice && GetXAudioEffectFlagVal() != 1 && owner && owner->voice)
-        owner->voice->Stop();
+        shen_audio_source_stop(owner->voice, 0, 0);
 #else
     static_cast<void>(owner);
     static_cast<void>(paused);
@@ -1005,7 +1006,7 @@ void EnvelopeGenerator_StopAndReset() {
                         g_stopEnvelope(owner.state->voiceId);
                 }
                 if (owner.voice) {
-                    owner.voice->DestroyVoice();
+                    shen_audio_voice_destroy(owner.voice);
                     owner.voice = nullptr;
                 }
                 delete owner.state;
@@ -1017,14 +1018,14 @@ void EnvelopeGenerator_StopAndReset() {
         g_xaudio->UnregisterForCallbacks(g_audioEngineCallbacks.get());
         for (IXAudio2SourceVoice *&voice : g_dialogueVoices) {
             if (voice)
-                voice->DestroyVoice();
+                shen_audio_voice_destroy(voice);
             voice = nullptr;
         }
         g_audioEngineCallbacks.reset();
         if (g_aicaSubmixVoice)
-            g_aicaSubmixVoice->DestroyVoice();
+            shen_audio_voice_destroy(g_aicaSubmixVoice);
         if (g_masteringVoice)
-            g_masteringVoice->DestroyVoice();
+            shen_audio_voice_destroy(g_masteringVoice);
         g_xaudio->Release();
     }
     g_aicaSubmixVoice = nullptr;
@@ -1079,25 +1080,25 @@ void SubmitArcadePcmVoice(std::uint32_t voiceId, std::uint32_t channels, std::ui
     IXAudio2SourceVoice *const voice = owner ? owner->voice : nullptr;
     if (!s1::g_xaudio || !s1::g_masteringVoice || s1::GetXAudioEffectFlagVal() == 1 || !voice)
         return;
-    XAUDIO2_BUFFER buffer{};
-    buffer.AudioBytes = size;
-    buffer.pAudioData = reinterpret_cast<const BYTE *>(data);
-    buffer.PlayBegin = begin;
-    buffer.PlayLength = end - begin;
+    shen_audio_buffer buffer{};
+    buffer.audio_bytes = size;
+    buffer.audio_data = reinterpret_cast<const uint8_t *>(data);
+    buffer.play_begin = begin;
+    buffer.play_length = end - begin;
     if (looped) {
-        buffer.LoopBegin = begin;
-        buffer.LoopLength = end - begin;
-        buffer.LoopCount = 255;
+        buffer.loop_begin = begin;
+        buffer.loop_length = end - begin;
+        buffer.loop_count = 255;
     }
-    voice->ExitLoop(0);
-    voice->Stop(0, 0);
-    voice->FlushSourceBuffers();
-    voice->SetSourceSampleRate(sampleRate);
-    voice->SetVolume(1.0f, 0);
-    voice->SetFrequencyRatio(1.0f, 0);
+    shen_audio_source_exit_loop(voice, 0);
+    shen_audio_source_stop(voice, 0, 0);
+    shen_audio_source_flush(voice);
+    shen_audio_source_set_sample_rate(voice, sampleRate);
+    shen_audio_voice_set_volume(voice, 1.0f, 0);
+    shen_audio_source_set_frequency_ratio(voice, 1.0f, 0);
     s1::SetOutputAudioMatrix(s1::GetRawSoundEffectVoice(voiceId), channels);
-    voice->SubmitSourceBuffer(&buffer, nullptr);
-    voice->Start(0, 0);
+    shen_audio_source_submit(voice, &buffer, nullptr);
+    shen_audio_source_start(voice, 0, 0);
 #else
     static_cast<void>(voiceId);
     static_cast<void>(channels);

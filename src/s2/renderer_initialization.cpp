@@ -1,3 +1,4 @@
+#include "api/render.h"
 #include "s2/renderer_initialization.hpp"
 #include "s2/simple_shader.hpp"
 #include "d3t/light_tiles.hpp"
@@ -126,7 +127,7 @@ std::uint32_t MakeFVF(std::initializer_list<ElementDefinition> definitions) {
         element.extraStride = definition.extraStride;
         element.semanticHash = d3t::d3t_HashData(definition.name, static_cast<std::uint32_t>(std::strlen(definition.name)));
     }
-    return d3t::CreateFVF(&description);
+    return shen_render_create_layout(&description);
 }
 
 std::uint32_t fvfPdTVertexShaderLoad = 0;
@@ -221,43 +222,43 @@ void CreateFVFLayouts(std::uint32_t renderHandle) {
     g_fvfLayouts[34] = position20Tex;
     g_fvfLayouts[35] = position20Tex;
 
-    fvfPdTVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_t_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    fvfPdTPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_t_ps.hlsl", renderHandle, d3t::CreateShader(1), d3t::ShaderType::Pixel);
+    fvfPdTVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_t_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    fvfPdTPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_t_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
     texturedQuadShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/texturedquad", renderHandle);
     texturedQuadGammaShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/texturedquad_gammacorrect", renderHandle);
     contrastShaderLoad = d3t::LoadPrecompiledShader("/shaders/contrast", renderHandle);
 }
 
 void LoadOriginalStripShaders(std::uint32_t renderHandle) {
-    originalStrip00VertexShaderLoad = d3t::LoadShaderHLSL("/shaders/original_strip00_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    originalStrip03VertexShaderLoad = d3t::LoadShaderHLSL("/shaders/original_strip03_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    originalStrip00PixelShaderLoad = d3t::LoadShaderHLSL("/shaders/original_strip00_ps.hlsl", renderHandle, d3t::CreateShader(1), d3t::ShaderType::Pixel);
-    originalStrip03PixelShaderLoad = d3t::LoadShaderHLSL("/shaders/original_strip03_ps.hlsl", renderHandle, d3t::CreateShader(1), d3t::ShaderType::Pixel);
+    originalStrip00VertexShaderLoad = d3t::LoadShaderHLSL("/shaders/original_strip00_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    originalStrip03VertexShaderLoad = d3t::LoadShaderHLSL("/shaders/original_strip03_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    originalStrip00PixelShaderLoad = d3t::LoadShaderHLSL("/shaders/original_strip00_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
+    originalStrip03PixelShaderLoad = d3t::LoadShaderHLSL("/shaders/original_strip03_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
 }
 
 void LoadNativeLegacyShaders(std::uint32_t renderHandle) {
 
 
 
-    originalLambertVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/original_lamb_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    originalConstantVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/original_const_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    originalVertexColour0ShaderLoad = d3t::LoadShaderHLSL("/shaders/original_vcol0_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    originalVertexColour1ShaderLoad = d3t::LoadShaderHLSL("/shaders/original_vcol1_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    lightingVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/lighting_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    simplePixelShaderLoad = d3t::LoadShaderHLSL("/shaders/simple_ps.hlsl", renderHandle, d3t::CreateShader(1), d3t::ShaderType::Pixel);
-    fullscreenQuadVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fullscreen_quad_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    defaultPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/default_ps.hlsl", renderHandle, d3t::CreateShader(1), d3t::ShaderType::Pixel);
-    blurPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/blur_ps.hlsl", renderHandle, d3t::CreateShader(1), d3t::ShaderType::Pixel);
-    fvfPntdsVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pntds_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    whiteVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/white_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    projectedShadowVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/sv_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    fireVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fire_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    fvfPtdPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_ptd_ps.hlsl", renderHandle, d3t::CreateShader(1), d3t::ShaderType::Pixel);
-    fvfPtdVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_ptd_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    fvfPtdTVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_ptd_t_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    fvfPtdTPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_ptd_t_ps.hlsl", renderHandle, d3t::CreateShader(1), d3t::ShaderType::Pixel);
-    fvfPdVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_vs.hlsl", renderHandle, d3t::CreateShader(0), d3t::ShaderType::Vertex);
-    fvfPdPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_ps.hlsl", renderHandle, d3t::CreateShader(1), d3t::ShaderType::Pixel);
+    originalLambertVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/original_lamb_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    originalConstantVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/original_const_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    originalVertexColour0ShaderLoad = d3t::LoadShaderHLSL("/shaders/original_vcol0_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    originalVertexColour1ShaderLoad = d3t::LoadShaderHLSL("/shaders/original_vcol1_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    lightingVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/lighting_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    simplePixelShaderLoad = d3t::LoadShaderHLSL("/shaders/simple_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
+    fullscreenQuadVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fullscreen_quad_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    defaultPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/default_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
+    blurPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/blur_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
+    fvfPntdsVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pntds_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    whiteVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/white_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    projectedShadowVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/sv_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    fireVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fire_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    fvfPtdPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_ptd_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
+    fvfPtdVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_ptd_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    fvfPtdTVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_ptd_t_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    fvfPtdTPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_ptd_t_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
+    fvfPdVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
+    fvfPdPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
     emulatorPdShaderLoad = d3t::LoadPrecompiledShader("/shaders/emu/emu_pd", renderHandle);
     emulatorPdtShaderLoad = d3t::LoadPrecompiledShader("/shaders/emu/emu_pdt", renderHandle);
     emulatorPtShaderLoad = d3t::LoadPrecompiledShader("/shaders/emu/emu_pt", renderHandle);
@@ -407,7 +408,7 @@ void SetupAllShaders() {
     InitNativeLegacyShaderReferences();
     constexpr std::array<std::uint32_t, 4> whitePixels{0xffffffffU, 0xffffffffU, 0xffffffffU, 0xffffffffU};
     const d3t::Texture2DDescription whiteDescription{2, 2, 1, 1, 2, 0, 0, 1, 0, 0, whitePixels.data()};
-    g_legacyDefaultEffectTexture = d3t::CreateTexture2D(&whiteDescription);
+    g_legacyDefaultEffectTexture = shen_render_create_texture(&whiteDescription);
     if (!g_legacyDefaultEffectTexture)
         return;
     InitializeLegacyDrawState();
@@ -460,7 +461,7 @@ bool InitRenderer() {
     InitializeSDLightNodes();
     g_sdShaderFileLock = d3t::AllocateFileLockHandle();
     const d3t::BufferDescription lightDescription{.flags = 3, .size = 131072, .count = 256, .flags3 = 2, .buffer = nullptr, .name = nullptr};
-    g_sdLightBuffer = d3t::CreateBuffer(&lightDescription);
+    g_sdLightBuffer = shen_render_create_buffer(&lightDescription);
     for (std::uint32_t index = 0; index < 32; ++index) {
         SDFoliageParameters *const parameters = AllocateSDFoliageParameters();
         if (parameters) {

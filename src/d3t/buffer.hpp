@@ -1,5 +1,7 @@
 #pragma once
 
+#include "api/render.h"
+
 #include "d3t/render_state.hpp"
 
 #include <cstddef>
@@ -9,14 +11,7 @@
 
 namespace shenmue::d3t {
 
-struct BufferDescription {
-    std::int32_t flags;
-    std::int32_t size;
-    std::int32_t count;
-    std::int32_t flags3;
-    const void *buffer;
-    const char *name;
-};
+using BufferDescription = ShenRenderBufferDesc;
 
 static_assert(sizeof(BufferDescription) == 0x20);
 

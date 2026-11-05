@@ -119,6 +119,7 @@ add_library(shenmue_common STATIC
   src/common/aica_adpcm.cpp
   src/common/matrix_stack.cpp
   src/platform/performance_counter.cpp
+  src/api/platform.cpp
 )
 target_compile_features(shenmue_common PUBLIC cxx_std_20)
 target_include_directories(shenmue_common PUBLIC src)
@@ -132,6 +133,7 @@ endif()
 
 
 add_library(shenmue_d3t STATIC
+  src/api/render_d3d11.cpp
   src/third_party/cjson.cpp
   src/third_party/stb_image.cpp
   src/platform/file.cpp
@@ -171,6 +173,8 @@ set_source_files_properties(src/d3t/ui_nuklear.cpp PROPERTIES
 )
 target_link_libraries(shenmue_d3t PUBLIC shenmue_common)
 if(WIN32)
+  target_sources(shenmue_common PRIVATE src/api/audio_xaudio.cpp)
+  target_link_libraries(shenmue_common PUBLIC xaudio2)
   target_link_libraries(shenmue_d3t PUBLIC d3d11 dxgi windowscodecs)
   if(TARGET Microsoft::DirectXTex)
     target_link_libraries(shenmue_d3t PUBLIC Microsoft::DirectXTex)

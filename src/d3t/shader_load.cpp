@@ -1,3 +1,4 @@
+#include "api/render.h"
 #include "d3t/shader_load.hpp"
 
 #include "d3t/content.hpp"
@@ -34,7 +35,7 @@ void CompileShaderAsync(void *data, std::uint32_t contentHandle, void *bytecode,
     auto *const shaderInfo = static_cast<ShaderInfo *>(data);
     if (!shaderInfo)
         return;
-    CreateShaderResource(shaderInfo->shader, bytecode, bytecodeLength, shaderInfo->type);
+    shen_render_load_shader(shaderInfo->shader, bytecode, bytecodeLength, static_cast<int32_t>(shaderInfo->type));
     SetShaderCleanup(shaderInfo->shader, ShaderCleanupNoOp, nullptr);
     ProcessThreadStates(contentHandle, shaderInfo->type == ShaderType::Vertex ? 1 : 0);
 }

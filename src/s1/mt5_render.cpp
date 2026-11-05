@@ -1,3 +1,4 @@
+#include "api/render.h"
 #include "s1/mt5_render.hpp"
 #include "s1/d3t/namespace.hpp"
 
@@ -51,7 +52,6 @@
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
-#include <d3d11.h>
 #endif
 
 namespace shenmue::s1 {
@@ -1251,12 +1251,8 @@ void DrawObject(D3TDeviceContext *context, GameNode *object, std::int32_t index,
 
 #if defined(_WIN32)
     const std::uint32_t vertexCount = records[index * 3];
-    DX11_ResetMappedResources(context);
-    DX11_UnmapAndSyncShaderBindings(context);
-    DX11_SetupShadersForDXAndSetViewports(context);
-    auto *const native = static_cast<ID3D11DeviceContext *>(context->deviceContext);
-    if (native && vertexCount) {
-        native->Draw(vertexCount, startVertex);
+    shen_render_prepare(context);
+    if (vertexCount && shen_render_draw(context, vertexCount, startVertex)) {
         ++g_drawCount;
     }
 #else

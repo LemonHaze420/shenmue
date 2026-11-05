@@ -1,3 +1,4 @@
+#include "api/render.h"
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -424,7 +425,7 @@ void ResetS2Window() {
     if (swapChain)
         swapChain->SetFullscreenState(configuration.windowMode == 2 && !validationHiddenWindow, nullptr);
     resetWindowPending = false;
-    d3t::DirectXUpdateWindowDimensions(resolution->width, resolution->height);
+    shen_render_resize(resolution->width, resolution->height);
     if (g_backBufferCaptureTexture2D) {
         d3t::InitTexture2DResource(g_backBufferCaptureTexture2D);
         CaptureBackbuffer_SetupImmutableDXTex2D();
@@ -662,7 +663,7 @@ bool InitializeD3TRenderer(std::uint32_t width, std::uint32_t height, bool hidde
     inputEnabled = true;
 
     const d3t::DisplayModeInfo displayMode{width, height, 60, 1, {}};
-    d3t::DX11_D3D11CreateDeviceAndSwapChain(&displayMode, windowHandle);
+    shen_render_open(&displayMode, windowHandle);
     if (!d3t::GetNativeSwapChain() || !d3t::g_D3DDevice) {
         ShutdownD3TRenderer();
         return false;
@@ -775,7 +776,7 @@ void PresentD3TFrame(std::int32_t renderMode) {
         presentAt60Hz = false;
     }
 #if defined(_WIN32)
-    d3t::PresentFrame(renderMode);
+    shen_render_present(renderMode);
     if (resetWindowPending)
         ResetS2Window();
 #else
@@ -788,7 +789,7 @@ void PresentD3TFrame(std::int32_t renderMode) {
 void ShutdownD3TRenderer() {
 #if defined(_WIN32)
     ExecuteCurrentCommandList();
-    d3t::ShutdownDX11();
+    shen_render_close();
     if (windowHandle) {
         DestroyWindow(windowHandle);
         windowHandle = nullptr;

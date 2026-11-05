@@ -1,5 +1,7 @@
 #pragma once
 
+#include "api/render.h"
+
 #include "d3t/buffer.hpp"
 
 #include <cstdint>
@@ -13,13 +15,7 @@ struct ID3D11DeviceContext;
 
 namespace shenmue::d3t {
 
-struct DisplayModeInfo {
-    std::uint32_t width;
-    std::uint32_t height;
-    std::uint32_t refreshRateNumerator;
-    std::uint32_t refreshRateDenominator;
-    char description[16];
-};
+using DisplayModeInfo = ShenRenderDisplayMode;
 
 static_assert(sizeof(DisplayModeInfo) == 0x20);
 

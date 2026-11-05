@@ -1,3 +1,5 @@
+#include "api/render.h"
+
 #include "s1/legacy_renderer.hpp"
 
 #include "s1/d3t/d3t_buffer.hpp"
@@ -15,11 +17,6 @@
 #include <cmath>
 #include <cstring>
 
-#if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <d3d11.h>
-#endif
 
 namespace shenmue::s1 {
 
@@ -589,11 +586,8 @@ void CommitAndDrawGeometryVertices() {
     CommitLegacyScreenRenderState(context, false);
 #if defined(_WIN32)
     const std::uint32_t vertexCount = static_cast<std::uint32_t>(g_numVertices);
-    DX11_ResetMappedResources(context);
-    DX11_UnmapAndSyncShaderBindings(context);
-    DX11_SetupShadersForDXAndSetViewports(context);
-    if (auto *const native = static_cast<ID3D11DeviceContext *>(context->deviceContext))
-        native->Draw(vertexCount, 0);
+    shen_render_prepare(context);
+    shen_render_draw(context, vertexCount, 0);
 #endif
 }
 

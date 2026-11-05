@@ -1,3 +1,4 @@
+#include "api/render.h"
 #include "s1/fvf_layout.hpp"
 
 #include "s1/archive_data.hpp"
@@ -43,7 +44,7 @@ D3TFVFDescription makeDescription(std::initializer_list<ElementDefinition> defin
 
 std::uint32_t create(std::initializer_list<ElementDefinition> definitions) {
     const D3TFVFDescription description = makeDescription(definitions);
-    return CreateFVF(&description);
+    return shen_render_create_layout(&description);
 }
 
 } // namespace
@@ -111,8 +112,8 @@ std::int64_t CreateFVFLayouts() {
     static_cast<void>(colourTex);
 
     const std::uint32_t renderHandle = g_activeRenderHandle;
-    g_fvfPdTVertexShaderLoad = QueueShaderCompileFromHLSL("/shaders/fvf/fvf_pd_t_vs.hlsl", renderHandle, d3t_CreateShader(0), D3TShaderType::Vertex);
-    g_fvfPdTPixelShaderLoad = QueueShaderCompileFromHLSL("/shaders/fvf/fvf_pd_t_ps.hlsl", renderHandle, d3t_CreateShader(1), D3TShaderType::Pixel);
+    g_fvfPdTVertexShaderLoad = QueueShaderCompileFromHLSL("/shaders/fvf/fvf_pd_t_vs.hlsl", renderHandle, shen_render_create_shader(0), D3TShaderType::Vertex);
+    g_fvfPdTPixelShaderLoad = QueueShaderCompileFromHLSL("/shaders/fvf/fvf_pd_t_ps.hlsl", renderHandle, shen_render_create_shader(1), D3TShaderType::Pixel);
     g_texturedQuadShaderLoad = LoadPrecompiledShader("/engine/assets/shaders/texturedquad", renderHandle);
     g_texturedQuadGammaShaderLoad = LoadPrecompiledShader("/engine/assets/shaders/texturedquad_gammacorrect", renderHandle);
     g_abufferWriteShaderLoad = LoadPrecompiledShader("/shaders/abuffer_write", renderHandle);

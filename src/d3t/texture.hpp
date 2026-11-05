@@ -1,5 +1,7 @@
 #pragma once
 
+#include "api/render.h"
+
 #include "common/math.hpp"
 
 #include <atomic>
@@ -23,19 +25,7 @@ bool QueryTextureSize(std::uint32_t handle, Vector2i *size);
 void CreateTemp2x2Textures();
 extern std::int32_t g_TextureRefCount;
 
-struct Texture2DDescription {
-    std::uint32_t width;
-    std::uint32_t height;
-    std::uint32_t arraySize;
-    std::uint32_t mipLevels;
-    std::uint32_t format;
-    std::uint32_t bindFlags;
-    std::uint32_t flags;
-    std::uint32_t sampleCount;
-    std::uint32_t sampleQuality;
-    std::uint32_t reserved_24;
-    const void *initialData;
-};
+using Texture2DDescription = ShenRenderTextureDesc;
 
 static_assert(sizeof(Texture2DDescription) == 0x30);
 

@@ -1,3 +1,4 @@
+#include "api/render.h"
 #include "s2/model_draw.hpp"
 #include "s2/renderer_scratch.hpp"
 #include "d3t/dx11_renderer.hpp"
@@ -7,7 +8,6 @@
 #include <cmath>
 #include <cstring>
 #if defined(_WIN32)
-#include <d3d11.h>
 #endif
 
 namespace shenmue::s2 {
@@ -212,18 +212,15 @@ void CommitModelGeometryDraw(d3t::D3TDeviceContext *context, const ModelGeometry
         state.indexFormat = geometry.indexFormat;
     }
 #if defined(_WIN32)
-    d3t::DX11_ResetMappedResources(context);
-    d3t::DX11_UnmapAndSyncShaderBindings(context);
-    d3t::DX11_SetupShadersForDXAndSetViewports(context);
-    ID3D11DeviceContext *const native = static_cast<ID3D11DeviceContext *>(context->deviceContext);
+    shen_render_prepare(context);
     if (material.materialType == 5)
-        native->DrawIndexed(draw.instanceCount, draw.firstInstance, 0);
+        shen_render_draw_indexed(context, draw.instanceCount, draw.firstInstance, 0);
     else if (material.materialType == 4)
-        native->Draw(6U * (mesh.primitiveCount >> 1U), 0);
+        shen_render_draw(context, 6U * (mesh.primitiveCount >> 1U), 0);
     else if (draw.instanceCount)
-        native->DrawIndexedInstanced(3U * mesh.primitiveCount, draw.instanceCount, mesh.firstIndex + group.firstIndex, group.baseVertex, draw.firstInstance);
+        shen_render_draw_indexed_instanced(context, 3U * mesh.primitiveCount, draw.instanceCount, mesh.firstIndex + group.firstIndex, group.baseVertex, draw.firstInstance);
     else
-        native->DrawIndexed(3U * mesh.primitiveCount, mesh.firstIndex + group.firstIndex, group.baseVertex);
+        shen_render_draw_indexed(context, 3U * mesh.primitiveCount, mesh.firstIndex + group.firstIndex, group.baseVertex);
 #endif
     if (draw.opacity < 1.0f)
         d3t::SetupPipelineSampleMask(context, 0xff);

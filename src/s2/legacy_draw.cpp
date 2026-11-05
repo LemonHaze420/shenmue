@@ -1,3 +1,4 @@
+#include "api/render.h"
 #include "s2/legacy_draw.hpp"
 
 #include "s2/frame_pipeline.hpp"
@@ -1236,10 +1237,8 @@ bool RenderLegacyFullscreenQuad(std::uint32_t outputTexture, std::uint32_t input
     for (std::uint32_t slot = 1; slot < 4; ++slot)
         ClearPixelShaderEffectSRVSlot(state, slot);
     UpdateShaderParams();
-    d3t::DX11_ResetMappedResources(context);
-    d3t::DX11_UnmapAndSyncShaderBindings(context);
-    d3t::DX11_SetupShadersForDXAndSetViewports(context);
-    static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(4, 0);
+    shen_render_prepare(context);
+    shen_render_draw(context, 4, 0);
     ClearPixelShaderEffectSRVSlot(state, 0);
     engineFlags = savedEngineFlags;
     blendFlags = savedBlendFlags;
@@ -1383,10 +1382,8 @@ void RenderLegacyWeatherQuads(std::int32_t count) {
         state.bufferStateFlags |= d3t::BufferTopology;
     }
     UpdateShaderParams();
-    d3t::DX11_ResetMappedResources(context);
-    d3t::DX11_UnmapAndSyncShaderBindings(context);
-    d3t::DX11_SetupShadersForDXAndSetViewports(context);
-    static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(6U * static_cast<std::uint32_t>(count), 0);
+    shen_render_prepare(context);
+    shen_render_draw(context, 6U * static_cast<std::uint32_t>(count), 0);
     if (legacyWeatherRenderPass == 1U) {
         SetEngineFlag(0x3b, savedProjectedShadowRenderSettings.blendEnabled);
         SetEngineFlag(0x40, savedProjectedShadowRenderSettings.depthWriteEnabled);
@@ -1593,10 +1590,8 @@ void PerformCommonShaderPass(std::uint32_t colour) {
     if (void *mapped = d3t::GetMappedConstantBuffer(context, 0, sizeof(vertices)))
         std::memcpy(mapped, vertices.data(), sizeof(vertices));
     UpdateShaderParams();
-    d3t::DX11_ResetMappedResources(context);
-    d3t::DX11_UnmapAndSyncShaderBindings(context);
-    d3t::DX11_SetupShadersForDXAndSetViewports(context);
-    static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(4, 0);
+    shen_render_prepare(context);
+    shen_render_draw(context, 4, 0);
     state.viewport = viewport;
     state.viewportDirtyMask = 1;
     const auto &saved = savedProjectedShadowRenderSettings;
@@ -2928,7 +2923,6 @@ std::uint32_t DrawLegacyIndexedCommand(const LegacyDrawResources &resources, std
         return 0;
     auto *const context = d3t::DX11::g_ppD3DDeviceContext;
     auto &state = d3t::GetRenderState(*context);
-    auto *const native = static_cast<ID3D11DeviceContext *>(context->deviceContext);
     d3t::TopologyType topology = d3t::TopologyType::TriangleStrip;
     if (draw->primitive == 1)
         topology = d3t::TopologyType::LineList;
@@ -2944,10 +2938,8 @@ std::uint32_t DrawLegacyIndexedCommand(const LegacyDrawResources &resources, std
         state.pipelineStateFlags |= d3t::PipelineIndexBuffer;
     }
     UpdateShaderParams();
-    d3t::DX11_ResetMappedResources(context);
-    d3t::DX11_UnmapAndSyncShaderBindings(context);
-    d3t::DX11_SetupShadersForDXAndSetViewports(context);
-    native->DrawIndexed(draw->indexCount, draw->startIndex, 0);
+    shen_render_prepare(context);
+    shen_render_draw_indexed(context, draw->indexCount, draw->startIndex, 0);
     return 1;
 }
 #endif
@@ -3298,11 +3290,9 @@ void DrawQueuedFireQuad(void *data) {
     shaderParameters.constants[25] = {1.0f, 1.0f, 1.0f, std::clamp(quad->alpha, 0.0f, 1.0f)};
     BindPixelTexture0(state, texture);
     UpdateShaderParams();
-    d3t::DX11_ResetMappedResources(context);
-    d3t::DX11_UnmapAndSyncShaderBindings(context);
-    d3t::DX11_SetupShadersForDXAndSetViewports(context);
+    shen_render_prepare(context);
     const auto slot = static_cast<std::uint32_t>(quad - fireQuads.data());
-    static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(4, 4U * slot);
+    shen_render_draw(context, 4, 4U * slot);
     ClearPixelShaderEffectSRVSlot(state, 0);
 #else
     static_cast<void>(data);
@@ -4499,10 +4489,8 @@ void SubmitLegacyEffectCommand(const std::byte *command) {
                 state.bufferStateFlags |= d3t::BufferTopology;
             }
             UpdateShaderParams();
-            d3t::DX11_ResetMappedResources(context);
-            d3t::DX11_UnmapAndSyncShaderBindings(context);
-            d3t::DX11_SetupShadersForDXAndSetViewports(context);
-            static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(vertexCount, 0);
+            shen_render_prepare(context);
+            shen_render_draw(context, vertexCount, 0);
             SetEngineFlag(0x3b, 0);
         }
     }
@@ -4579,10 +4567,8 @@ void EndSmokeDraw() {
             SetEngineFlag(0x3b, 1);
         }
         UpdateShaderParams();
-        d3t::DX11_ResetMappedResources(context);
-        d3t::DX11_UnmapAndSyncShaderBindings(context);
-        d3t::DX11_SetupShadersForDXAndSetViewports(context);
-        static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(6U * draw.count, 0);
+        shen_render_prepare(context);
+        shen_render_draw(context, 6U * draw.count, 0);
         if (draw.renderPass == 1) {
             SetEngineFlag(0x3b, 0);
             SetEngineFlag(0x40, 1);
@@ -5255,10 +5241,8 @@ void DrawStripBatchRange(const LegacyStripType3Batch &batch) {
         state.bufferStateFlags |= d3t::BufferTopology;
     }
     UpdateShaderParams();
-    d3t::DX11_ResetMappedResources(context);
-    d3t::DX11_UnmapAndSyncShaderBindings(context);
-    d3t::DX11_SetupShadersForDXAndSetViewports(context);
-    static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(static_cast<std::uint32_t>(batch.vertexCount), batch.firstVertex);
+    shen_render_prepare(context);
+    shen_render_draw(context, static_cast<std::uint32_t>(batch.vertexCount), batch.firstVertex);
 #else
     static_cast<void>(batch);
 #endif
@@ -5490,10 +5474,8 @@ static bool DrawLegacyStripType3Immediate(std::span<const LegacyStripType3Vertex
         state.bufferStateFlags |= d3t::BufferTopology;
     }
     UpdateShaderParams();
-    d3t::DX11_ResetMappedResources(context);
-    d3t::DX11_UnmapAndSyncShaderBindings(context);
-    d3t::DX11_SetupShadersForDXAndSetViewports(context);
-    static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(static_cast<std::uint32_t>(vertices.size()), stripType3WriteOffset);
+    shen_render_prepare(context);
+    shen_render_draw(context, static_cast<std::uint32_t>(vertices.size()), stripType3WriteOffset);
     SetEngineFlag(0x5c, savedFog);
     ClearPixelShaderEffectSRVSlot(state, 0);
     stripType3WriteOffset += static_cast<std::uint32_t>(vertices.size());

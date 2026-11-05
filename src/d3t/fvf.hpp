@@ -1,28 +1,15 @@
 #pragma once
 
+#include "api/render.h"
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
 
 namespace shenmue::d3t {
 
-struct FVFElement {
-    const char *semanticName;
-    std::uint32_t semanticIndex;
-    std::uint32_t format;
-    std::uint32_t inputClassification;
-    std::uint8_t inputSlot;
-    std::uint8_t extraStride;
-    std::uint16_t reserved_16;
-    std::uint32_t semanticHash;
-    std::uint32_t reserved_1c;
-};
-
-struct FVFDescription {
-    std::array<FVFElement, 32> elements;
-    std::uint32_t elementCount;
-    std::uint32_t reserved_404;
-};
+using FVFElement = ShenRenderVertexElement;
+using FVFDescription = ShenRenderVertexLayout;
 
 static_assert(sizeof(FVFElement) == 0x20);
 static_assert(offsetof(FVFElement, inputClassification) == 0x10);

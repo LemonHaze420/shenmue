@@ -1,3 +1,4 @@
+#include "api/render.h"
 #include "s1/d3t/renderer.hpp"
 
 #include "s1/d3t/d3t_texture.hpp"
@@ -50,12 +51,12 @@ std::int64_t CopyOrResolveTexture(D3TDeviceContext *context, std::uint32_t sourc
 
 #if defined(_WIN32)
 void DX11_D3D11CreateDeviceAndSwapChain(const DisplayModeInfo *config) {
-    d3t::DX11_D3D11CreateDeviceAndSwapChain(config, g_windowHandle);
+    shen_render_open(config, g_windowHandle);
     g_swapChain = static_cast<IDXGISwapChain *>(d3t::GetNativeSwapChain());
 }
 
 void ShutdownDX11() {
-    d3t::ShutdownDX11();
+    shen_render_close();
     g_swapChain = nullptr;
 }
 #endif

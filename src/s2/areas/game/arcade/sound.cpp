@@ -1,4 +1,5 @@
 #include "s2/areas/game/arcade/sound.hpp"
+#include "api/audio.h"
 
 #include "s1/archive_data.hpp"
 #include "s1/archive_handles.hpp"
@@ -226,7 +227,7 @@ void FadeOutArcadeMusic(std::int32_t frames) {
 #if defined(_WIN32)
                 IXAudio2SourceVoice *const voice = static_cast<IXAudio2SourceVoice *>(s1::GetRawSoundEffectVoice(voiceId));
                 if (voice && s1::GetXAudioEffectFlagVal() != 1)
-                    voice->GetVolume(&volume);
+                    shen_audio_voice_get_volume(voice, &volume);
 #endif
                 SetVolume(voiceId, (volume - 0.7f / static_cast<float>(frames)) * MusicVolume());
             }

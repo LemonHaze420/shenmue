@@ -1,3 +1,4 @@
+#include "api/audio.h"
 #include "s2/audio_data.hpp"
 #include "s1/audio_stream.hpp"
 #include "s2/aica_middleware.hpp"
@@ -155,14 +156,14 @@ void ResetAudioOutput() {
     for (std::atomic<IXAudio2SourceVoice *> &slot : dialogueSources) {
         IXAudio2SourceVoice *source = slot.exchange(nullptr);
         if (source)
-            source->DestroyVoice();
+            shen_audio_voice_destroy(source);
     }
     if (bankWetOutput)
-        bankWetOutput->DestroyVoice();
+        shen_audio_voice_destroy(bankWetOutput);
 
     bankWetOutput = nullptr;
     if (masteringVoice)
-        masteringVoice->DestroyVoice();
+        shen_audio_voice_destroy(masteringVoice);
     masteringVoice = nullptr;
     if (xaudio)
         xaudio->Release();
@@ -274,10 +275,10 @@ IXAudio2SourceVoice *SubmitDialogueWave(const RiffWaveView &wave, float gain) {
         source = dialogueSources[dialogueSourceIndex].load();
         if (!source)
             break;
-        XAUDIO2_VOICE_STATE state{};
-        source->GetState(&state, 0);
-        if (!state.BuffersQueued) {
-            source->DestroyVoice();
+        shen_audio_voice_state state{};
+        shen_audio_source_get_state(source, &state, 0);
+        if (!state.buffers_queued) {
+            shen_audio_voice_destroy(source);
             dialogueSources[dialogueSourceIndex] = nullptr;
             source = nullptr;
             break;
@@ -293,25 +294,25 @@ IXAudio2SourceVoice *SubmitDialogueWave(const RiffWaveView &wave, float gain) {
     }
     if (!source)
         return nullptr;
-    source->FlushSourceBuffers();
-    source->SetSourceSampleRate(wave.format->nSamplesPerSec);
-    source->SetVolume(gain);
-    source->SetFrequencyRatio(1.0f);
+    shen_audio_source_flush(source);
+    shen_audio_source_set_sample_rate(source, wave.format->nSamplesPerSec);
+    shen_audio_voice_set_volume(source, gain, 0);
+    shen_audio_source_set_frequency_ratio(source, 1.0f, 0);
     const float *outputMatrix = wave.format->nChannels == 2 ? CONVERSATION_STEREO_OUTPUT_MATRIX.data() : CONVERSATION_MONO_OUTPUT_MATRIX.data();
-    source->SetOutputMatrix(masteringVoice, wave.format->nChannels, 6, outputMatrix);
-    XAUDIO2_BUFFER buffer{};
-    buffer.Flags = XAUDIO2_END_OF_STREAM;
-    buffer.AudioBytes = wave.audioBytes;
-    buffer.pAudioData = reinterpret_cast<const BYTE *>(wave.audio);
-    XAUDIO2_BUFFER_WMA wma{};
-    wma.PacketCount = wave.packetCount;
-    wma.pDecodedPacketCumulativeBytes = wave.packetBytes;
-    source->SubmitSourceBuffer(&buffer, wave.format->wFormatTag == WAVE_FORMAT_PCM ? nullptr : &wma);
+    shen_audio_voice_set_matrix(source, masteringVoice, wave.format->nChannels, 6, outputMatrix, 0);
+    shen_audio_buffer buffer{};
+    buffer.flags = SHEN_AUDIO_END_OF_STREAM;
+    buffer.audio_bytes = wave.audioBytes;
+    buffer.audio_data = reinterpret_cast<const uint8_t *>(wave.audio);
+    shen_audio_wma_buffer wma{};
+    wma.packet_count = wave.packetCount;
+    wma.decoded_packet_bytes = wave.packetBytes;
+    shen_audio_source_submit(source, &buffer, wave.format->wFormatTag == WAVE_FORMAT_PCM ? nullptr : &wma);
     if (bankWetOutput) {
         const float wetMatrix[]{0.0f, 0.0f};
-        source->SetOutputMatrix(bankWetOutput, wave.format->nChannels, 1, wetMatrix);
+        shen_audio_voice_set_matrix(source, bankWetOutput, wave.format->nChannels, 1, wetMatrix, 0);
     }
-    source->Start();
+    shen_audio_source_start(source, 0, 0);
     return source;
 }
 
@@ -391,7 +392,7 @@ bool InitializeDialogueAudio() noexcept {
     reverb->Release();
     if (FAILED(created))
         return false;
-    bankWetOutput->SetVolume(CONVERSATION_WET_OUTPUT_GAIN);
+    shen_audio_voice_set_volume(bankWetOutput, CONVERSATION_WET_OUTPUT_GAIN, 0);
     XAUDIO2FX_REVERB_PARAMETERS parameters{};
     ReverbConvertI3DL2ToNative(&CONVERSATION_REVERB_PRESET, &parameters, FALSE);
     bankWetOutput->SetEffectParameters(0, &parameters, sizeof(parameters));
@@ -450,9 +451,9 @@ void SetDialogueStreamsPaused(bool paused) {
         IXAudio2SourceVoice *source = slot.load();
         if (source) {
             if (paused)
-                source->Stop();
+                shen_audio_source_stop(source, 0, 0);
             else
-                source->Start();
+                shen_audio_source_start(source, 0, 0);
         }
     }
 #else
@@ -564,9 +565,9 @@ DialogueVoiceState PollDialogueVoice(const DialogueVoice *voice) noexcept {
     IXAudio2SourceVoice *source = GetDialogueSource(voice);
     if (!source)
         return DialogueVoiceState::Stopped;
-    XAUDIO2_VOICE_STATE state{};
-    source->GetState(&state, XAUDIO2_VOICE_NOSAMPLESPLAYED);
-    return state.BuffersQueued ? DialogueVoiceState::Playing : DialogueVoiceState::Stopped;
+    shen_audio_voice_state state{};
+    shen_audio_source_get_state(source, &state, SHEN_AUDIO_NO_SAMPLES_PLAYED);
+    return state.buffers_queued ? DialogueVoiceState::Playing : DialogueVoiceState::Stopped;
 #endif
 }
 
@@ -576,14 +577,14 @@ bool GetDialogueVoicePosition(const DialogueVoice *voice, std::uint64_t &samples
     IXAudio2SourceVoice *source = GetDialogueSource(voice);
     if (!source)
         return false;
-    XAUDIO2_VOICE_DETAILS details{};
-    XAUDIO2_VOICE_STATE state{};
-    source->GetVoiceDetails(&details);
-    source->GetState(&state, 0);
-    if (!state.BuffersQueued)
+    shen_audio_voice_details details{};
+    shen_audio_voice_state state{};
+    shen_audio_voice_get_details(source, &details);
+    shen_audio_source_get_state(source, &state, 0);
+    if (!state.buffers_queued)
         return false;
-    samples = static_cast<std::uint32_t>(state.SamplesPlayed);
-    sampleRate = details.InputSampleRate;
+    samples = static_cast<std::uint32_t>(state.samples_played);
+    sampleRate = details.input_sample_rate;
     return true;
 #else
     (void)voice;
@@ -600,8 +601,8 @@ void StopDialogueVoice(DialogueVoice *voice) noexcept {
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
     IXAudio2SourceVoice *source = GetDialogueSource(voice);
     if (source) {
-        source->Stop();
-        source->DestroyVoice();
+        shen_audio_source_stop(source, 0, 0);
+        shen_audio_voice_destroy(source);
         dialogueSources[static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(voice)) - 1U] = nullptr;
     }
 #endif
@@ -615,7 +616,7 @@ bool PauseDialogueVoice(DialogueVoice *voice, std::int32_t paused) noexcept {
 #else
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
     IXAudio2SourceVoice *source = GetDialogueSource(voice);
-    return source && SUCCEEDED(source->SetFrequencyRatio(paused == 1 ? 0.0f : 1.0f));
+    return source && SUCCEEDED(shen_audio_source_set_frequency_ratio(source, paused == 1 ? 0.0f : 1.0f, 0));
 #endif
 }
 
@@ -627,7 +628,7 @@ bool SetDialogueVoiceVolume(DialogueVoice *voice, float gain) noexcept {
 #else
     const std::lock_guard<std::recursive_mutex> lock(audioMutex);
     IXAudio2SourceVoice *source = GetDialogueSource(voice);
-    return source && xaudio && masteringVoice && SUCCEEDED(source->SetVolume(gain));
+    return source && xaudio && masteringVoice && SUCCEEDED(shen_audio_voice_set_volume(source, gain, 0));
 #endif
 }
 
@@ -637,7 +638,7 @@ void SetVoiceReverbOutputMatrix(void *voice, float gain, std::uint32_t channels)
     if (!bankWetOutput || !voice)
         return;
     const std::array<float, 2> matrix{gain, gain};
-    static_cast<IXAudio2SourceVoice *>(voice)->SetOutputMatrix(bankWetOutput, channels, 1, matrix.data(), 0);
+    shen_audio_voice_set_matrix(static_cast<IXAudio2SourceVoice *>(voice), bankWetOutput, channels, 1, matrix.data(), 0);
 #else
     (void)voice;
     (void)gain;
