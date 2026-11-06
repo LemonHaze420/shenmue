@@ -138,7 +138,7 @@ void GPUPostEffect_SetAutoExposure(std::int32_t effect) {
 }
 
 void UpdatePPFX() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3TDeviceContext *const context = d3t_DXGetPipelineContext(1);
     if (!context)
         return;

@@ -22,14 +22,16 @@
 #include <string>
 #include <thread>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include <dxgi.h>
 #include <windows.h>
+#if defined(_WIN32)
 #include <wincodec.h>
+#endif
 #if defined(SHENMUE_HAS_DIRECTXTEX)
 #include <DirectXTex.h>
 #endif
@@ -44,7 +46,7 @@ namespace {
 std::uint64_t g_presentFrameCount = 0;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 
 ID3D11DeviceContext *g_immediateContext = nullptr;
 
@@ -458,8 +460,10 @@ void ShutdownDX11() {
 }
 
 void DX11_D3D11CreateDeviceAndSwapChain(const DisplayModeInfo *config, void *windowHandle) {
+#if defined(_WIN32)
     LARGE_INTEGER frequency{};
     QueryPerformanceFrequency(&frequency);
+#endif
     g_originalScreenHeight = config->height;
     g_originalScreenWidth = config->width;
 
@@ -708,24 +712,6 @@ void *GetMappedConstantBuffer(D3TDeviceContext *context, std::int64_t unused, st
     return mapped.pData;
 }
 
-// @verified - p
-void SetupPipelineSampleMask(D3TDeviceContext *context, std::uint8_t opacity) {
-    D3TRenderState &state = GetRenderState(*context);
-    std::uint32_t texture;
-    std::memcpy(&texture, state.outputTargets.data(), sizeof(texture));
-    Texture2DDescription description;
-    const std::uint32_t samples = GetTexture2DDescription(texture, &description) ? description.sampleCount : 4U;
-    const std::uint32_t halfStep = 127U / ((1U << (samples & 31U)) - 1U);
-    const std::uint32_t range = 255U - halfStep;
-    std::uint32_t value = opacity + 2U * halfStep;
-    if (value > range)
-        value = range;
-    const std::uint32_t mask = (0x01010101U << ((samples * value / range) & 31U)) - 0x01010101U;
-    if (state.blendSampleMask != mask) {
-        state.pipelineStateFlags |= PipelineBlend;
-        state.blendSampleMask = mask;
-    }
-}
 std::int64_t DX11_SetupShadersForDXAndSetViewports(D3TDeviceContext *context) {
     if (!context || !context->deviceContext)
         return 0;
@@ -1071,6 +1057,27 @@ bool WriteCapturedFrameJpeg(const char *filename, const FramePixelCapture &captu
     static_cast<void>(capture);
     return false;
 #endif
+}
+#endif
+
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
+// @verified - p
+void SetupPipelineSampleMask(D3TDeviceContext *context, std::uint8_t opacity) {
+    D3TRenderState &state = GetRenderState(*context);
+    std::uint32_t texture;
+    std::memcpy(&texture, state.outputTargets.data(), sizeof(texture));
+    Texture2DDescription description;
+    const std::uint32_t samples = GetTexture2DDescription(texture, &description) ? description.sampleCount : 4U;
+    const std::uint32_t halfStep = 127U / ((1U << (samples & 31U)) - 1U);
+    const std::uint32_t range = 255U - halfStep;
+    std::uint32_t value = opacity + 2U * halfStep;
+    if (value > range)
+        value = range;
+    const std::uint32_t mask = (0x01010101U << ((samples * value / range) & 31U)) - 0x01010101U;
+    if (state.blendSampleMask != mask) {
+        state.pipelineStateFlags |= PipelineBlend;
+        state.blendSampleMask = mask;
+    }
 }
 #endif
 

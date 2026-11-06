@@ -30,7 +30,7 @@
 #include <cstring>
 #include <utility>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #include <d3d11.h>
 #endif
@@ -216,7 +216,7 @@ namespace {
 }
 
 [[maybe_unused]] void SetNuklearConstants(D3TDeviceContext *context, float width, float height) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (auto *const matrix = static_cast<float *>(MapTempConstantBufferForWriteDiscard(context, 1, 0, 64))) {
         const std::array<float, 16> orthographic{
             2.0f / width,
@@ -250,7 +250,7 @@ namespace {
 }
 
 bool SubmitNuklearQuads(D3TDeviceContext *context, std::uint32_t renderTarget, std::uint32_t texture2D, std::span<const NuklearQuad> quads) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     std::uint32_t targetWidth = 0;
     std::uint32_t targetHeight = 0;
     if (!context || !renderTarget || !texture2D || quads.empty() || !GetTexture2DDimensions(renderTarget, &targetWidth, &targetHeight) || !targetWidth ||
@@ -285,7 +285,7 @@ bool SubmitNuklearQuads(D3TDeviceContext *context, std::uint32_t renderTarget, s
 } // namespace
 
 void SubmitQuad(D3TDeviceContext *context) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     const std::byte *const state = context->renderState.data();
     void *const vertexShader = d3t_GetNativeShader(ReadState<std::uint32_t>(state, 0), D3TShaderType::Vertex);
     void *const pixelShader = d3t_GetNativeShader(ReadState<std::uint32_t>(state, 4), D3TShaderType::Pixel);
@@ -337,7 +337,7 @@ void SetOriginalStripAlphaFlag(std::uint32_t setting, std::int32_t value) {
 
 
 void BindOriginalStripVertexBuffer(D3TDeviceContext *context, std::int32_t buffer) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (context->resourceCache[0]) {
         static_cast<ID3D11DeviceContext *>(context->deviceContext)->Unmap(reinterpret_cast<ID3D11Resource *>(context->resourceCache[0]), 0);
         context->resourceCache[0] = 0;
@@ -350,7 +350,7 @@ void BindOriginalStripVertexBuffer(D3TDeviceContext *context, std::int32_t buffe
 }
 
 void DrawOriginalStripVertices(D3TDeviceContext *context, std::uint32_t vertexCount, std::uint32_t startVertex) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     DX11_ResetMappedResources(context);
     DX11_UnmapAndSyncShaderBindings(context);
     DX11_SetupShadersForDXAndSetViewports(context);
@@ -720,7 +720,7 @@ void PublishEffeParticleDrawCount(std::uint32_t particleCount) {
     g_currentRenderFlags[0x66] = 0;
 }
 EffeParticleVertex *MapEffeParticleVertices(D3TDeviceContext *context, std::uint32_t particleCount) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!context || !particleCount || !g_fvfPtdTVertexShader || !g_fvfPtdTPixelShader || !g_fvfLayouts[28] ||
         particleCount > UINT32_MAX / (6U * sizeof(EffeParticleVertex))) {
         return nullptr;
@@ -736,7 +736,7 @@ EffeParticleVertex *MapEffeParticleVertices(D3TDeviceContext *context, std::uint
 std::uint32_t CommitEffeParticleVertices(
     D3TDeviceContext *context, std::uint32_t particleCount, std::uint32_t texture2D, bool transparent, const EffeMaterialWords *material) {
     PublishEffeParticleDrawCount(particleCount);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!context || !particleCount)
         return 0;
 
@@ -818,7 +818,7 @@ std::uint32_t CommitEffeParticleVertices(
 
 std::uint32_t DrawProjectedOriginalStrip03Batch(D3TDeviceContext *context, std::span<const OriginalStrip> strips,
     std::span<const ProjectedOriginalStripDepths> depths, std::uint32_t texture2D, bool transparent, const EffeMaterialWords *material) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!context || strips.empty() || !texture2D || !g_fvfPtdTVertexShader || !g_fvfPtdTPixelShader || !g_fvfLayouts[28]) {
         return 0;
     }
@@ -879,7 +879,7 @@ std::uint32_t DrawProjectedOriginalStrip03Batch(D3TDeviceContext *context, std::
 }
 
 void CreateTexture2DInstance(D3TDeviceContext *context) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!context)
         return;
     SetRenderTarget(context, CreateNewTexture2D());
@@ -913,7 +913,7 @@ std::int64_t DrawSuperSampled(D3TDeviceContext *context, std::uint32_t texture2D
         {1.0f, 1.0f, scaledInterpolation, 0.0f},
     }};
     static_cast<void>(vertices);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (void *const mapped = GetMappedConstantBuffer(context, 3, 64)) {
         std::memcpy(mapped, vertices.data(), sizeof(vertices));
     }
@@ -964,7 +964,7 @@ void DrawCharacterShadowComposite(D3TDeviceContext *context) {
         g_currentAlphaRenderFlags[1].values[flag.first] = static_cast<std::int32_t>(flag.second);
     }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (void *const mapped = GetMappedConstantBuffer(context, 3, sizeof(constants))) {
         std::memcpy(mapped, constants.data(), sizeof(constants));
     }
@@ -1017,7 +1017,7 @@ D3TDeviceContext *DrawFullPass_Quad(const RenderPassHandles *renderPass, DrawPas
         {aspectScale, 1.0f, 1.0f, 0.0f},
     }};
     static_cast<void>(vertices);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     void *const mapped = GetMappedConstantBuffer(context, 8, 64);
     if (mapped) {
         std::memcpy(mapped, vertices.data(), sizeof(vertices));
@@ -1070,7 +1070,7 @@ void HangOnRender_DrawQuad(std::uint32_t texture2D) {
         {-x, y, 0.1875f, 0.0625f},
         {x, y, 0.8125f, 0.0625f},
     }};
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (void *const mapped = GetMappedConstantBuffer(context, 8, 64))
         std::memcpy(mapped, vertices.data(), sizeof(vertices));
 #endif
@@ -1086,7 +1086,7 @@ void Do_contrast_Pass() {
         return;
     SetShaderState(context, g_contrastVertexShader, g_contrastPixelShader, 0);
     CreateTexture2DInstance(context);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (auto *const value = static_cast<float *>(MapTempConstantBufferForWriteDiscard(context, 2, 4, 4))) {
         *value = g_fContrastValue;
     }
@@ -1114,7 +1114,7 @@ bool BeginNuklearFrame(D3TDeviceContext *context, std::uint32_t renderTarget) {
         !g_nuklearInputLayout) {
         return false;
     }
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3TTextureBackendView view{};
     if (!GetTexture2DBackendView(renderTarget, &view) || !view.view) {
         return false;
@@ -1182,7 +1182,7 @@ void DrawTexturedQuad(D3TDeviceContext *context, const std::uint32_t *texture2D)
 }
 
 bool CompositeNuklearFrame(D3TDeviceContext *context, std::uint32_t texture2D) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!context || !texture2D)
         return false;
     DrawTexturedQuad(context, &texture2D);

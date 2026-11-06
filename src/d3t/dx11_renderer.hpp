@@ -9,7 +9,7 @@
 #include <cstddef>
 #include <vector>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 struct ID3D11DeviceContext;
 #endif
 
@@ -24,7 +24,7 @@ extern std::uint32_t g_originalScreenWidth;
 extern std::uint32_t g_defaultTextureFormat;
 std::uint64_t GetNumRenderedFrames() noexcept;
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 extern ID3D11DeviceContext *g_immediateContext;
 
 struct FramePixelCapture {
@@ -38,12 +38,14 @@ struct FramePixelCapture {
 bool BeginOcclusionQuery(std::uint32_t index);
 bool EndOcclusionQuery(std::uint32_t index);
 std::uint64_t ReadOcclusionQuerySamples(std::uint32_t index);
+void *GetNativeSwapChain();
+void DumpFramePng(const char *filename);
+bool WriteCapturedFrameJpeg(const char *filename, const FramePixelCapture &capture);
 void CreateUserDefinedAnnotations();
 void CreateConstantBuffers();
 void CreateVertexBuffers();
 void CreateNewSRVTexture();
 void DX11_D3D11CreateDeviceAndSwapChain(const DisplayModeInfo *config, void *windowHandle);
-void *GetNativeSwapChain();
 void ShutdownDX11();
 D3TDeviceContext *DXGetPipelineContext(std::int32_t mode);
 namespace DX11 {
@@ -59,8 +61,6 @@ void SetupPipelineSampleMask(D3TDeviceContext *context, std::uint8_t opacity);
 std::uint32_t CreateNewTexture2D();
 void DirectXUpdateWindowDimensions(std::uint32_t width, std::uint32_t height);
 void PresentFrame(std::int32_t renderMode);
-void DumpFramePng(const char *filename);
-bool WriteCapturedFrameJpeg(const char *filename, const FramePixelCapture &capture);
 #endif
 
 } // namespace shenmue::d3t

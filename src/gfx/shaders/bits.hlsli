@@ -1,6 +1,10 @@
 #ifndef GFX_BITS_HLSLI
 #define GFX_BITS_HLSLI
 
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#define isnan(value) ((asuint(value) & 0x7fffffffu) > 0x7f800000u)
+#endif
+
 #define gfxBitMask(width) ((width) == 32u ? 0xffffffffu : ((1u << (width)) - 1u))
 #define gfxInsertMask(offset, width) ((width) == 32u ? 0xffffffffu : (gfxBitMask(width) << ((offset) & 31u)))
 #define gfxInsertBits(base, value, offset, width) (((base) & ~gfxInsertMask(offset, width)) | (((value) << (offset)) & gfxInsertMask(offset, width)))

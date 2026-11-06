@@ -18,7 +18,7 @@
 #include "s1/matrix_stack.hpp"
 #endif
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -87,7 +87,7 @@ void SetNuklearViewMatrix(const Matrix4x4 &matrix) {
 
 // @verified - p
 d3t::D3TDeviceContext *SetupNuklearBuffer() {
-#if defined(_WIN32) || defined(SHENMUE_NULL_LIBRARY)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE) || defined(SHENMUE_NULL_LIBRARY)
     if (!g_NuklearInitialized)
         return nullptr;
     d3t::D3TDeviceContext *const context = d3t::DXGetPipelineContext(1);
@@ -112,7 +112,7 @@ std::intptr_t InvokeNuklearFrame(d3t::D3TDeviceContext *context) {
 void FinishNuklearFrame() {
     if (!g_nuklearRenderDeviceContext)
         return;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     d3t::DX11::WaitForCommandListFinish(g_nuklearRenderDeviceContext);
 #endif
     g_nuklearRenderDeviceContext = nullptr;
@@ -151,7 +151,7 @@ void Nuklear_BindRenderTarget() {
     state.outputTargets.fill(std::byte{});
     std::memcpy(state.outputTargets.data(), &texture, sizeof(texture));
     state.bufferStateFlags |= d3t::BufferOutputTargets;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!redirected) {
         constexpr std::array<float, 4> transparent{};
         d3t::UnmapAndClearViews(context, texture, 0, transparent.data());
@@ -176,7 +176,7 @@ void NuklearCompositeNullsub(d3t::D3TDeviceContext *, ...) {
 }
 
 void CopyNuklearTexToBackBuffer(d3t::D3TDeviceContext *context, const std::uint32_t *texture) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     NuklearCompositeNullsub(context, "NK GUI Texture to backbuffer");
     d3t::D3TRenderState &state = d3t::GetRenderState(*context);
     std::byte *const bytes = context->renderState.data();
@@ -338,7 +338,7 @@ void NuklearDrawAspectBars(float alpha, std::int32_t mode, std::int32_t reveal) 
 
 
 void Nuklear_RenderPass(const UIViewport *viewport) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #if SHENMUE_IS_S1_FAMILY
     D3TDeviceContext *const context = g_RenderDeviceContext;
 #else

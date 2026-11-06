@@ -13,6 +13,12 @@
 #include "s1/task/vfma.hpp"
 #include "s1/ui_runtime.hpp"
 #include "s1/window.hpp"
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#include "platform/host.hpp"
+#if SHENMUE_IS_DEMO
+#include "s1/task/disp.hpp"
+#endif
+#endif
 
 #include <algorithm>
 #include <array>
@@ -74,6 +80,9 @@ static_assert(sizeof(WindowInputStorage) == 0x1084);
 
 WindowInputStorage g_windowInputStorage{};
 std::int32_t g_startButtonSuppressionFrames = 0;
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+host::InputSnapshot hostInput;
+#endif
 
 constexpr std::array<std::int32_t, 55> kMappableKeys{
     KeyBackspace, KeyTab, KeyEnter, KeyShift, KeyControl, KeyAlt, KeyCapsLock, KeySpace, KeyF1, KeyF2, KeyF3, KeyF4, KeyF5, KeyF6, KeyF7, KeyF8, KeyF9,
@@ -227,7 +236,7 @@ std::uint16_t PrioritizePressedInput(std::uint16_t state) {
     return retained;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 float NormalizeAxis(std::int16_t value) {
     const float normalized = (static_cast<float>(value) + 0.5F) / 32767.5F;
     return std::fabs(normalized) < 0.25F ? 0.0F : normalized;
@@ -366,6 +375,15 @@ void RefreshTriggerInputs() {
     for (DWORD user = 0; user < 4; ++user) {
         XINPUT_STATE state{};
         if (XInputGetState(user, &state) == ERROR_SUCCESS && (state.Gamepad.wButtons || state.Gamepad.bLeftTrigger || state.Gamepad.bRightTrigger)) {
+            g_controllerUserIndex = static_cast<std::int32_t>(user);
+            g_controllers[user].active = 1;
+            return;
+        }
+    }
+#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+    for (std::size_t user = 0; user < hostInput.controllers.size(); ++user) {
+        const host::Controller &state = hostInput.controllers[user];
+        if (state.connected && (state.buttons || state.leftTrigger || state.rightTrigger)) {
             g_controllerUserIndex = static_cast<std::int32_t>(user);
             g_controllers[user].active = 1;
             return;
@@ -631,6 +649,32 @@ void UpdateControllerState(std::uint32_t userIndex) {
         controller.active = 0;
         g_controllerUserIndex = -1;
     }
+#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+    const host::Controller &state = hostInput.controllers[userIndex];
+    if (state.connected) {
+        controller.buttons = state.buttons;
+        controller.leftTrigger = state.leftTrigger;
+        controller.rightTrigger = state.rightTrigger;
+        controller.thumbLX = state.leftX;
+        controller.thumbLY = state.leftY;
+        controller.thumbRX = state.rightX;
+        controller.thumbRY = state.rightY;
+        controller.normalizedLX = NormalizeAxis(controller.thumbLX);
+        controller.normalizedLY = NormalizeAxis(controller.thumbLY);
+        controller.normalizedRX = NormalizeAxis(controller.thumbRX);
+        controller.normalizedRY = NormalizeAxis(controller.thumbRY);
+        controller.active = 1;
+        PostProcessControllerState(userIndex);
+        UpdateButtonAndTriggerStates(userIndex);
+        if (controller.buttons || controller.normalizedLX != 0.0F || controller.normalizedLY != 0.0F || controller.normalizedRX != 0.0F ||
+            controller.normalizedRY != 0.0F || controller.leftTrigger || controller.rightTrigger)
+            g_xInputActive = 0;
+    } else if (!g_xInputActive) {
+        if (controller.active == 1)
+            g_lastXInputError = 1;
+        controller.active = 0;
+        g_controllerUserIndex = -1;
+    }
 #endif
 
     g_xInputReserved1 = 0;
@@ -639,6 +683,21 @@ void UpdateControllerState(std::uint32_t userIndex) {
 }
 
 void UpdateInputsFromInputDevices() {
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    host::PollInput(hostInput);
+    HandleHostWindowInput(hostInput);
+    for (std::size_t key = 0; key < hostInput.keys.size(); ++key) {
+        if (hostInput.keys[key])
+            SetKeyPressedState(static_cast<std::uint32_t>(key));
+        else
+            SetKeyReleasedState(static_cast<std::uint32_t>(key));
+    }
+    g_windowInput.customInputHandler = hostInput.changed ? 1 : 0;
+#if SHENMUE_IS_DEMO
+    if (host::ConsumeEnterPresses() && g_isOnMainMenu)
+        g_pendingInputFlags |= 0x800U;
+#endif
+#endif
 #if SHEN_AUTO_TEST_ENABLED && SHENMUE_IS_DEMO
     if (auto_test::SceneIs("ws-face-ryo")) {
         g_inputState.slots[0] = {.enabled = 1, .rightStick = 0x8080, .leftStick = 0x8080};
@@ -875,14 +934,25 @@ std::uint32_t ExtendedMapVirtualKey(std::uint32_t virtualKeyCode, void *inputLoc
     return virtualKeyCode;
 }
 
+#endif
+
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 void SetKeyPressedState(std::uint32_t keyCode) {
+#if defined(_WIN32)
     const auto key = ExtendedMapVirtualKey(keyCode, GetKeyboardLayout(0), reinterpret_cast<void *>(0x08090809));
+#else
+    const std::uint32_t key = keyCode;
+#endif
     if (key < std::size(g_windowInput.keyStates))
         g_windowInput.keyStates[key].pressed = 1;
 }
 
 void SetKeyReleasedState(std::uint32_t keyCode) {
+#if defined(_WIN32)
     const auto key = ExtendedMapVirtualKey(keyCode, GetKeyboardLayout(0), reinterpret_cast<void *>(0x08090809));
+#else
+    const std::uint32_t key = keyCode;
+#endif
     if (key < std::size(g_windowInput.keyStates) && g_windowInput.keyStates[key].pressed == 1) {
         g_windowInput.keyStates[key].pressed = 0;
         g_windowInput.keyStates[key].released = 1;

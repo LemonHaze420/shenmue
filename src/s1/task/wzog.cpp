@@ -763,7 +763,7 @@ void MovesScreen_RenderScene() {
 }
 
 void InitMovesScreenPipelineContext() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     AcquireScenePipelineContext();
     g_movesScreenContext = DX11::g_ppD3DDeviceContext;
     if (!g_movesScreenContext || !g_movesScreen.sceneTextureBound)
@@ -788,7 +788,7 @@ void InitMovesScreenPipelineContext() {
 }
 
 void RenderMovesScreenSceneToTexture() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!g_movesScreenContext)
         return;
     std::uint32_t sceneWidthPixels = 0;

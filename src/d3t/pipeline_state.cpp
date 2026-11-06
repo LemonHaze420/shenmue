@@ -9,7 +9,7 @@
 #include <cstring>
 #include <limits>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <d3d11.h>
@@ -104,7 +104,7 @@ std::uint32_t Hash16Bytes(const void *data) {
     return hash;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 D3D11_COMPARISON_FUNC Comparison(std::uint32_t type) {
     constexpr std::array<D3D11_COMPARISON_FUNC, 8> values{D3D11_COMPARISON_ALWAYS, D3D11_COMPARISON_NEVER, D3D11_COMPARISON_LESS, D3D11_COMPARISON_EQUAL,
         D3D11_COMPARISON_LESS_EQUAL, D3D11_COMPARISON_GREATER, D3D11_COMPARISON_NOT_EQUAL, D3D11_COMPARISON_GREATER_EQUAL};
@@ -303,7 +303,7 @@ template <typename T, typename Create> void *Retrieve(NativeStateCache<void> &ca
 
 void *RetrieveHashedSamplerState(const std::uint64_t *flags) {
     const std::uint32_t hash = Hash16Bytes(flags);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     return Retrieve<ID3D11SamplerState>(g_samplerStates, hash, [flags] { return CreateSampler(flags); });
 #else
     static_cast<void>(flags);
@@ -314,7 +314,7 @@ void *RetrieveHashedSamplerState(const std::uint64_t *flags) {
 
 void *RetrieveHashedBlendState(const std::byte *flags) {
     const std::uint32_t hash = BlendHash(flags);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     return Retrieve<ID3D11BlendState>(g_blendStates, hash, [flags] { return CreateBlend(flags); });
 #else
     static_cast<void>(flags);
@@ -325,7 +325,7 @@ void *RetrieveHashedBlendState(const std::byte *flags) {
 
 void *RetrieveHashedStencilState(const std::uint64_t *flags) {
     const std::uint32_t hash = Hash16Bytes(flags);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     return Retrieve<ID3D11DepthStencilState>(g_depthStencilStates, hash, [flags] { return CreateDepthStencil(flags); });
 #else
     static_cast<void>(flags);
@@ -337,7 +337,7 @@ void *RetrieveHashedStencilState(const std::uint64_t *flags) {
 void *RetrieveHashedRasterizerState(const std::uint32_t *flags) {
     const auto *bytes = reinterpret_cast<const std::uint8_t *>(flags);
     const std::uint32_t hash = 0x2e86d0bfU * bytes[0] + 0x1003fU * bytes[2] + 0x7e0f81U * bytes[1] + bytes[3] - 0x5349ae13U;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     return Retrieve<ID3D11RasterizerState>(g_rasterizerStates, hash, [flags] { return CreateRasterizer(flags); });
 #else
     static_cast<void>(flags);
@@ -347,7 +347,7 @@ void *RetrieveHashedRasterizerState(const std::uint32_t *flags) {
 }
 
 void ReleaseD3TPipelineStateCaches() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto release = [](NativeStateCache<void> &cache) {
         for (void *&state : cache.states) {
             if (state)

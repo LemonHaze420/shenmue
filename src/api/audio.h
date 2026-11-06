@@ -20,6 +20,18 @@ enum shen_audio_filter_type {
 };
 enum { SHEN_AUDIO_LOOP_INFINITE = 255 };
 
+#pragma pack(push, 1)
+typedef struct shen_audio_wave_format {
+    uint16_t format_tag;
+    uint16_t channels;
+    uint32_t sample_rate;
+    uint32_t average_bytes_per_second;
+    uint16_t block_align;
+    uint16_t bits_per_sample;
+    uint16_t extra_size;
+} shen_audio_wave_format;
+#pragma pack(pop)
+
 typedef struct shen_audio_buffer {
     uint32_t flags;
     uint32_t audio_bytes;

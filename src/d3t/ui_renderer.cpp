@@ -16,7 +16,7 @@
 #include <limits>
 #include <vector>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <d3d11.h>
@@ -51,7 +51,7 @@ std::uint32_t g_gammaInputLayout = 0;
 std::uint32_t g_gammaVertexShader = 0;
 std::uint32_t g_gammaPixelShader = 0;
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 struct UITextureTargetState {
     D3TDeviceContext *context{};
     std::uint32_t texture{};
@@ -253,7 +253,7 @@ bool UploadUIGeometry(D3TDeviceContext *context, std::span<const UITexturedVerte
         return false;
     }
     std::memcpy(vertexData, vertices.data(), vertices.size_bytes());
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (uiTextureTarget.context && uiTextureTarget.flipVertical) {
         UITexturedVertex *const output = static_cast<UITexturedVertex *>(vertexData);
         for (std::size_t index = 0; index < vertices.size(); ++index)
@@ -261,7 +261,7 @@ bool UploadUIGeometry(D3TDeviceContext *context, std::span<const UITexturedVerte
     }
 #endif
     std::memcpy(indexData, indices.data(), indices.size_bytes());
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (uiTextureTarget.context && uiTextureTarget.flipVertical) {
         std::uint16_t *const output = static_cast<std::uint16_t *>(indexData);
         for (std::size_t index = 0; index + 2 < indices.size(); index += 3)
@@ -285,7 +285,7 @@ bool UploadQuad(D3TDeviceContext *context, float x, float y, float width, float 
 }
 
 void SetConstants(D3TDeviceContext *context, float width, float height) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (auto *const matrix = static_cast<float *>(d3t::MapTempConstantBufferForWriteDiscard(context, 1, 0, 64))) {
         const std::array<float, 16> orthographic{
             2.0f / width,
@@ -319,7 +319,7 @@ void SetConstants(D3TDeviceContext *context, float width, float height) {
 }
 
 bool SubmitUIImage(std::uint32_t texture, float x, float y, float width, float height, float opacity) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const context = DX11::g_ppD3DDeviceContext;
     const auto target = uiTextureTarget.context ? uiTextureTarget.texture : g_backBufferTexture;
     const float targetWidth = static_cast<float>(uiTextureTarget.context ? uiTextureTarget.width : g_originalScreenWidth);
@@ -458,7 +458,7 @@ void RetireSceneTextures() {
 }
 
 bool EnsureSceneTargets() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     const SceneFrameTargets targets =
         g_requestedSceneTargets.width ? g_requestedSceneTargets : SceneFrameTargets{.width = d3t::g_originalScreenWidth, .height = d3t::g_originalScreenHeight};
     if (!targets.width || !targets.height)
@@ -545,7 +545,7 @@ bool InitializeUIRenderer(std::uint32_t inputLayout, std::uint32_t vertexShader,
 }
 
 bool BeginUIFrame() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!g_uiVertexBuffer || !g_uiIndexBuffer || !g_uiWhiteTexture || !g_uiInputLayout || !g_uiVertexShader || !g_uiPixelShader || !g_gammaInputLayout ||
         !g_gammaVertexShader || !g_gammaPixelShader) {
         return false;
@@ -567,7 +567,7 @@ bool BeginUIFrame() {
 }
 
 bool BindSceneFrameRenderTarget() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const context = DX11::g_ppD3DDeviceContext;
     if (!context || !g_sceneTexture || !g_sceneDepthTexture) {
         return false;
@@ -581,7 +581,7 @@ bool BindSceneFrameRenderTarget() {
 }
 
 bool BindUIFrameRenderTarget() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const context = DX11::g_ppD3DDeviceContext;
     if (!context || !g_backBufferTexture)
         return false;
@@ -593,7 +593,7 @@ bool BindUIFrameRenderTarget() {
 #endif
 }
 bool BeginUITextureRenderTarget(std::uint32_t texture, bool flipVertical) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const context = DX11::g_ppD3DDeviceContext;
     D3TTextureBackendView target{};
     if (uiTextureTarget.context || !context || !context->deviceContext || !GetTexture2DBackendView(texture, &target) || !target.view ||
@@ -645,7 +645,7 @@ bool BeginUITextureRenderTarget(std::uint32_t texture, bool flipVertical) {
 }
 
 void RestoreUIRenderTarget() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto &saved = uiTextureTarget;
     if (!saved.context)
         return;
@@ -700,7 +700,7 @@ void RestoreUIRenderTarget() {
 }
 
 bool PresentSceneFrame() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const context = DX11::g_ppD3DDeviceContext;
     if (!context || !g_backBufferTexture || !g_sceneTexture || !GetNativeShader(g_gammaVertexShader, ShaderType::Vertex) ||
         !GetNativeShader(g_gammaPixelShader, ShaderType::Pixel)) {
@@ -761,7 +761,7 @@ bool PresentSceneFrame() {
 }
 
 bool DrawFullscreenContrast(D3TDeviceContext *context, std::uint32_t vertexShader, std::uint32_t pixelShader, float contrast) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 
     if (!context || !g_backBufferTexture || !GetNativeShader(vertexShader, ShaderType::Vertex) || !GetNativeShader(pixelShader, ShaderType::Pixel))
         return false;
@@ -782,6 +782,7 @@ bool DrawFullscreenContrast(D3TDeviceContext *context, std::uint32_t vertexShade
     DX11_ResetMappedResources(context);
     DX11_UnmapAndSyncShaderBindings(context);
     DX11_SetupShadersForDXAndSetViewports(context);
+
     static_cast<ID3D11DeviceContext *>(context->deviceContext)->Draw(4, 0);
     return true;
 #else
@@ -1159,7 +1160,7 @@ bool DrawUIImage(std::uint32_t texture, float x, float y, float width, float hei
 
 bool DrawUITexturedGeometry(
     std::uint32_t texture, std::span<const UITexturedVertex> vertices, std::span<const std::uint16_t> indices, const std::array<std::int32_t, 4> &scissor) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const context = DX11::g_ppD3DDeviceContext;
     const auto target = uiTextureTarget.context ? uiTextureTarget.texture : g_backBufferTexture;
     const float targetWidth = static_cast<float>(uiTextureTarget.context ? uiTextureTarget.width : g_originalScreenWidth);

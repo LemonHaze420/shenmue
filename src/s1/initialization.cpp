@@ -26,6 +26,9 @@
 #include "s1/scene_memory.hpp"
 #include "s1/texture_cache.hpp"
 #include "s1/window.hpp"
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#include "platform/host.hpp"
+#endif
 
 #include <array>
 #include <atomic>
@@ -33,6 +36,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <string>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
@@ -242,18 +246,27 @@ bool IsMainRenderHandleBusy() {
 
 int Initialization(int, char **) {
 
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    if (!host::Initialize())
+        return 0;
+#else
     const SteamAppInfo appInfo{758330, 0, "Coconut", "MD22_112855"};
     if (!Steam_InitApp(&appInfo)) {
         return 0;
     }
     g_steamInitialized = true;
+#endif
 
     smallTextures = 0;
 
     std::memset(MainMemory.data(), 0, MainMemory.size());
     HLib_Malloc();
     Initialization_2();
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    return d3t::g_D3DDevice != nullptr;
+#else
     return 1;
+#endif
 }
 
 std::int64_t InitShenmue(GameConfig *config) {
@@ -299,6 +312,27 @@ std::int64_t InitShenmue(GameConfig *config) {
     config->display.width = 640;
     config->display.height = 480;
     DX11_D3D11CreateDeviceAndSwapChain(screenResolution);
+#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+    if (!host::Initialize())
+        return -1;
+    DisplayModeInfo *const screenResolution = GetScreenResolution();
+    if (!screenResolution)
+        return -1;
+    ClearWindowInput();
+    g_windowInput.width = static_cast<std::int32_t>(screenResolution->width);
+    g_windowInput.height = static_cast<std::int32_t>(screenResolution->height);
+    InitInputMapping();
+    CreateSMWindow();
+    if (!g_windowHandle)
+        return -1;
+    config->display.width = 640;
+    config->display.height = 480;
+    DX11_D3D11CreateDeviceAndSwapChain(screenResolution);
+    if (!d3t::g_D3DDevice) {
+        ShutdownDX11();
+        std::fputs("Cannot create the Direct3D 11 device and swap chain.\n", stderr);
+        return -1;
+    }
 #else
     static_cast<void>(config);
 #endif
@@ -324,11 +358,15 @@ std::int64_t InitShenmue(GameConfig *config) {
     const UINT message = RegisterWindowMessageA("SHENMUE_LOADED");
     PostMessageA(HWND_BROADCAST, message, 0x1234, 0x5678);
     SetupImmutableDXTex2D();
+#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+    SetupImmutableDXTex2D();
 #endif
     GenerateMipsAndUpdateResourcesForDirectX();
     g_dxPipelineLock = 0;
 #if defined(_WIN32)
     DX11::g_ppD3DDeviceContext = d3t_DXGetPipelineContext(0);
+#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+    DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
 #endif
     InitGeneralTextureResources();
     return 0;
@@ -342,8 +380,10 @@ std::int64_t ShenmueInit(GameConfig *config) {
         g_globalMemorySize = static_cast<std::uint32_t>(kGlobalMemorySize);
     }
 
+#if !defined(SHENMUE_GFX_DXVK_NATIVE)
     d3t::SetupAchievements();
     d3t::InitializeSteamAPI();
+#endif
     for (AsyncArchiveRequest &request : g_asyncArchiveRequests) {
         request.state.exchange(0, std::memory_order_seq_cst);
     }
@@ -386,7 +426,7 @@ std::int64_t ShenmueInit(GameConfig *config) {
         g_steamCallbackFunction(0, nullptr);
     }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     EnumerateDisplays();
 #endif
     InitializeD3TSettings();
@@ -395,7 +435,12 @@ std::int64_t ShenmueInit(GameConfig *config) {
     g_ClearColour = 0xff000000;
     g_initializationTemporaryClearColour = 0;
 
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    if (InitShenmue(config) != 0)
+        return 0;
+#else
     InitShenmue(config);
+#endif
     MatrixStack_InitTransformMatrixStack(config->matrices, config->matrixCount);
     InitRenderer();
     SetAlphaRenderFlags();
@@ -414,7 +459,9 @@ std::int64_t ShenmueInit(GameConfig *config) {
     g_postInitVectorA = {-0.5f, -0.5f, -0.5f, 0.5f};
     g_ClearColour = 0;
     g_postInitVectorB = {0.5f, 0.5f, 0.5f, -0.5f};
+#if !defined(SHENMUE_GFX_DXVK_NATIVE)
     SteamPlatformContextRefresh();
+#endif
     g_hasDirectXInitialized |= 1;
     return 1;
 }

@@ -271,7 +271,7 @@ namespace shenmue::s1::effe_detail {
 
 
 void CommitOrCombineGeometryBuffers(EffeGeometryChunk *chunk, std::int32_t renderPass) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     CreateAlphaTextureForParticleEffects(chunk->textureWords);
     SetRenderFlags(0x40, 0);
     std::int32_t stripCount = chunk->stripCount;

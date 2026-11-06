@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <cstring>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #include <d3d11.h>
 #endif
@@ -106,7 +106,7 @@ std::int64_t ClearEffectABuffer() {
     }
     WriteRenderState(state, 4, g_abufferClearPixelShader);
     d3t::SetupForDepthBufferPass(context);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     DX11_ResetMappedResources(context);
     DX11_UnmapAndSyncShaderBindings(context);
     DX11_SetupShadersForDXAndSetViewports(context);
@@ -148,7 +148,7 @@ std::int64_t ComposeEffectABuffer() {
         WriteRenderState(state, kPixelViewFlags8, std::uint32_t{0});
     }
     d3t::SetupForDepthBufferPass(context);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     DX11_ResetMappedResources(context);
     DX11_UnmapAndSyncShaderBindings(context);
     DX11_SetupShadersForDXAndSetViewports(context);

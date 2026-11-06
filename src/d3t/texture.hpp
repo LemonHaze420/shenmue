@@ -144,7 +144,7 @@ inline constexpr std::uint32_t kPvrFamilySourceFlags[][2]{{0x100, 0x4}, {0x200, 
     {0x8000, 0x80}, {0x8700, 0x81}, {0x8100, 0x100}, {0x8200, 0x101}, {0x8300, 0x200}, {0x8400, 0x201}};
 void init_format_desc(DecodedTextureFormat &out, std::uint16_t formatType);
 std::uint32_t CreateDirectXTexture2D(DecodedTextureFormat &out, std::uint32_t width, std::uint32_t height, std::uint16_t formatType, const void *pixels);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 bool ReplaceTexture2DNativeResource(std::uint32_t textureHandle, std::uint32_t width, std::uint32_t height, std::uint32_t arraySize, std::uint32_t mipLevels,
     std::uint32_t nativeFormat, void *texture, void *shaderResourceView);
 std::uint32_t AdoptBackBufferTexture2D(std::uint32_t currentHandle, std::uint32_t width, std::uint32_t height, std::uint32_t format, void *texture,
@@ -156,6 +156,9 @@ void CopyResource(std::uint32_t textureHandle);
 void *MapGpu(std::uint32_t textureHandle, std::uint32_t *rowPitch);
 void UnmapGpu(std::uint32_t textureHandle);
 } // namespace Texture2D
+#endif
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+bool UploadTexture2DSubresource(std::uint32_t textureHandle, std::uint32_t mip, std::uint32_t layer, const void *data, std::uint32_t size, std::uint32_t rowPitch);
 #endif
 void CreateMipmappedScaledTexture(
     std::uint32_t textureHandle, std::uint32_t firstMip, std::uint32_t mipLevels, const void *pixels, std::uint32_t pixelDataSize);

@@ -3,13 +3,14 @@
 #include "d3t/buffer.hpp"
 #include "d3t/fvf.hpp"
 
+
 #include <array>
 #include <atomic>
 #include <cstddef>
 #include <cstdlib>
 #include <new>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #include <d3d11.h>
 #include <dxgi.h>
@@ -89,7 +90,7 @@ void ResetShader(ShaderResource *resource, bool destroy) {
         return;
     if (resource->type == static_cast<std::int32_t>(ShaderType::Vertex)) {
         auto *const vertex = reinterpret_cast<VertexShaderResource *>(resource);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
         for (void *&layout : vertex->inputLayouts) {
             if (layout) {
                 static_cast<ID3D11InputLayout *>(layout)->Release();
@@ -106,7 +107,7 @@ void ResetShader(ShaderResource *resource, bool destroy) {
         vertex->bytecode = nullptr;
         vertex->bytecodeLength = 0;
     } else if (resource->type == static_cast<std::int32_t>(ShaderType::Pixel) || resource->type == static_cast<std::int32_t>(ShaderType::Compute)) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
         if (resource->shader) {
             static_cast<ID3D11DeviceChild *>(resource->shader)->Release();
         }
@@ -190,7 +191,7 @@ bool CreateShaderResource(std::uint32_t shader, const void *bytecode, std::uint6
     resource->type = static_cast<std::int32_t>(type);
 
     bool succeeded = true;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const device = static_cast<ID3D11Device *>(g_D3DDevice);
     if (!device)
         return false;
@@ -250,7 +251,7 @@ void *GetInputLayout(std::uint32_t vertexShader, std::uint32_t fvfHandle) {
     if (!vertex->inputLayouts[fvfIndex]) {
         std::array<std::uint32_t, 32> slotOffsets{};
         std::array<std::uint32_t, 32> slotStrides{};
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
         std::array<D3D11_INPUT_ELEMENT_DESC, 32> native{};
 #endif
         for (std::uint32_t i = 0; i < description->elementCount; ++i) {
@@ -287,7 +288,7 @@ void *GetInputLayout(std::uint32_t vertexShader, std::uint32_t fvfHandle) {
             }
             slotOffsets[inputSlot] += formatStride + element.extraStride;
             slotStrides[inputSlot] += formatStride + element.extraStride;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
             constexpr std::array<DXGI_FORMAT, 45> formats{DXGI_FORMAT_UNKNOWN, static_cast<DXGI_FORMAT>(31), static_cast<DXGI_FORMAT>(28),
                 static_cast<DXGI_FORMAT>(29), static_cast<DXGI_FORMAT>(28), static_cast<DXGI_FORMAT>(29), static_cast<DXGI_FORMAT>(26),
                 static_cast<DXGI_FORMAT>(12), static_cast<DXGI_FORMAT>(10), static_cast<DXGI_FORMAT>(61), static_cast<DXGI_FORMAT>(49),
@@ -313,7 +314,7 @@ void *GetInputLayout(std::uint32_t vertexShader, std::uint32_t fvfHandle) {
         for (std::uint32_t i = 0; i < description->elementCount; ++i) {
             fvfStrides[fvfIndex * 64U + i] = slotStrides[description->elements[i].inputSlot];
         }
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
         auto *const device = static_cast<ID3D11Device *>(g_D3DDevice);
         if (device && vertex->bytecode && description->elementCount != 0) {
             device->CreateInputLayout(native.data(), description->elementCount, vertex->bytecode, static_cast<SIZE_T>(vertex->bytecodeLength),

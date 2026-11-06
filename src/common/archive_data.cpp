@@ -515,6 +515,18 @@ std::optional<fs::path> looseFilePath(const char *path) {
             return candidate;
         }
     }
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    fs::path resolved = g_shenRoot;
+    for (const fs::path &component : fs::path(relative)) {
+        const auto child = childPathCaseInsensitive(resolved, component.string());
+        if (!child)
+            return std::nullopt;
+        resolved = *child;
+    }
+    error.clear();
+    if (fs::is_regular_file(resolved, error))
+        return resolved;
+#endif
     return std::nullopt;
 }
 

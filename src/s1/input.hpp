@@ -193,6 +193,8 @@ std::uint16_t ReadInputSlotMode(std::uint32_t slot, std::uint32_t mode);
 
 #if defined(_WIN32)
 std::uint32_t ExtendedMapVirtualKey(std::uint32_t virtualKeyCode, void *inputLocale, void *outputLocale);
+#endif
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 void SetKeyPressedState(std::uint32_t keyCode);
 void SetKeyReleasedState(std::uint32_t keyCode);
 #endif

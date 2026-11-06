@@ -6,7 +6,7 @@
 #include "d3t/shader.hpp"
 #include "d3t/texture.hpp"
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #include <d3d11.h>
 #endif
 
@@ -15,8 +15,10 @@ using namespace shenmue::d3t;
 extern "C" {
 
 int shen_render_open(const ShenRenderDisplayMode *display, void *window) {
-#if defined(_WIN32)
-    if (!display || !window)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
+    if (!display)
+        return 0;
+    if (!window)
         return 0;
     DX11_D3D11CreateDeviceAndSwapChain(display, window);
     return g_D3DDevice && GetNativeSwapChain();
@@ -28,13 +30,13 @@ int shen_render_open(const ShenRenderDisplayMode *display, void *window) {
 }
 
 void shen_render_close(void) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     ShutdownDX11();
 #endif
 }
 
 void shen_render_resize(uint32_t width, uint32_t height) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     DirectXUpdateWindowDimensions(width, height);
 #else
     (void)width;
@@ -43,7 +45,7 @@ void shen_render_resize(uint32_t width, uint32_t height) {
 }
 
 void shen_render_present(int32_t mode) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     PresentFrame(mode);
 #else
     (void)mode;
@@ -51,7 +53,7 @@ void shen_render_present(int32_t mode) {
 }
 
 void *shen_render_context(int32_t mode) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     return DXGetPipelineContext(mode);
 #else
     (void)mode;
@@ -60,7 +62,7 @@ void *shen_render_context(int32_t mode) {
 }
 
 void shen_render_finish(void *context) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (context)
         DX11::WaitForCommandListFinish(static_cast<D3TDeviceContext *>(context));
 #else
@@ -133,7 +135,7 @@ uint32_t shen_render_create_layout(const ShenRenderVertexLayout *description) {
 }
 
 void *shen_render_map_vertices(void *context, uint32_t size) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     return GetMappedConstantBuffer(static_cast<D3TDeviceContext *>(context), 0, size);
 #else
     (void)context;
@@ -143,7 +145,7 @@ void *shen_render_map_vertices(void *context, uint32_t size) {
 }
 
 void *shen_render_map_constants(void *context, int32_t stages, uint32_t slot, int32_t size) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     return MapTempConstantBufferForWriteDiscard(static_cast<D3TDeviceContext *>(context), stages, slot, size);
 #else
     (void)context;
@@ -155,7 +157,7 @@ void *shen_render_map_constants(void *context, int32_t stages, uint32_t slot, in
 }
 
 int shen_render_prepare(void *context) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3TDeviceContext *pipeline = static_cast<D3TDeviceContext *>(context);
     if (!pipeline || !pipeline->deviceContext)
         return 0;
@@ -170,7 +172,7 @@ int shen_render_prepare(void *context) {
 }
 
 int shen_render_draw(void *context, uint32_t count, uint32_t first) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3TDeviceContext *pipeline = static_cast<D3TDeviceContext *>(context);
     if (!pipeline || !pipeline->deviceContext)
         return 0;
@@ -185,7 +187,7 @@ int shen_render_draw(void *context, uint32_t count, uint32_t first) {
 }
 
 int shen_render_draw_indexed(void *context, uint32_t count, uint32_t first, int32_t base_vertex) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3TDeviceContext *pipeline = static_cast<D3TDeviceContext *>(context);
     if (!pipeline || !pipeline->deviceContext)
         return 0;
@@ -201,7 +203,7 @@ int shen_render_draw_indexed(void *context, uint32_t count, uint32_t first, int3
 }
 
 int shen_render_draw_indexed_instanced(void *context, uint32_t count, uint32_t instances, uint32_t first, int32_t base_vertex, uint32_t first_instance) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3TDeviceContext *pipeline = static_cast<D3TDeviceContext *>(context);
     if (!pipeline || !pipeline->deviceContext)
         return 0;

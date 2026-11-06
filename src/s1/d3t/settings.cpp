@@ -27,6 +27,8 @@
 #if defined(_WIN32)
 #include <dxgi.h>
 #include <windows.h>
+#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+#include "platform/host.hpp"
 #endif
 
 namespace shenmue::s1 {
@@ -784,6 +786,27 @@ std::int32_t EnumerateDisplays() {
         }
     }
     return static_cast<std::int32_t>(factory->Release());
+}
+#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+std::int32_t EnumerateDisplays() {
+    host::InputSnapshot input;
+    host::PollInput(input, false);
+    if (input.width <= 0 || input.height <= 0)
+        return -1;
+    static DisplayModeInfo displayMode{};
+    static MonitorInfo monitor{};
+    displayMode = {.width = static_cast<std::uint32_t>(input.width), .height = static_cast<std::uint32_t>(input.height),
+        .refreshRateNumerator = 60, .refreshRateDenominator = 1};
+    std::snprintf(displayMode.description, sizeof(displayMode.description), "%u x %u", displayMode.width, displayMode.height);
+    constexpr const char *displayName = "SDL window";
+    monitor = {
+        .monitorCoordinates = {.left = 0, .top = 0, .right = input.width, .bottom = input.height}, .active = 1,
+        .displayModes = &displayMode, .displayModeCount = 1, .displayModeCapacity = 1};
+    std::snprintf(monitor.adapterName, sizeof(monitor.adapterName), "%s", displayName);
+    std::snprintf(monitor.displayName, sizeof(monitor.displayName), "%s", displayName);
+    g_monitors = &monitor;
+    g_monitorCount = 1;
+    return 0;
 }
 #endif
 

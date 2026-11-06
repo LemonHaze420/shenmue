@@ -9,6 +9,9 @@
 #include "s1/ui_runtime.hpp"
 #include "d3t/dx11_renderer.hpp"
 #include "d3t/ui_nuklear.hpp"
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#include "platform/host.hpp"
+#endif
 
 #include <algorithm>
 #include <array>
@@ -479,6 +482,49 @@ void CreateSMWindow() {
     ShowWindow(g_windowHandle, g_hideValidationWindow ? SW_HIDE : SW_SHOW);
     ResetWindow();
     g_shouldResetWindow = false;
+}
+#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+extern std::int32_t g_NuklearInitialized;
+void *g_windowHandle = nullptr;
+IDXGISwapChain *g_swapChain = nullptr;
+
+void HandleHostWindowInput(const host::InputSnapshot &input) {
+    g_isInputEnabled = input.focused ? 1 : 0;
+    g_shouldQuit = host::QuitRequested();
+    g_windowInput.width = input.width;
+    g_windowInput.height = input.height;
+    g_windowInput.currentMouseDelta[0] = g_windowInput.mouseDelta;
+    const float width = static_cast<float>((std::max)(input.width, 1));
+    const float height = static_cast<float>((std::max)(input.height, 1));
+    g_windowInput.mouseDelta = {.x = 2.0f * (static_cast<float>(input.mouseX) / width - 0.5f),
+        .y = 2.0f * (static_cast<float>(input.mouseY) / height - 0.5f)};
+    if (!g_NuklearInitialized)
+        return;
+    const float buffer = static_cast<float>(g_uiScreenWidth);
+    const float aspect = static_cast<float>(d3t::g_originalScreenHeight) / static_cast<float>(d3t::g_originalScreenWidth);
+    const float clientX = static_cast<float>(input.mouseX) / width * buffer;
+    const std::int32_t x = static_cast<std::int32_t>(clientX / ((1.0f / (1080.0f / buffer)) * aspect) - g_currentUIViewportRect.x);
+    const std::int32_t y = static_cast<std::int32_t>(static_cast<float>(input.mouseY) / height * 1080.0f - g_currentUIViewportRect.y);
+    nk_input_motion(&GNuklearWindow, x, y);
+    nk_input_button(&GNuklearWindow, NK_BUTTON_LEFT, x, y, input.keys[256]);
+    nk_input_button(&GNuklearWindow, NK_BUTTON_RIGHT, x, y, input.keys[257]);
+    nk_input_button(&GNuklearWindow, NK_BUTTON_MIDDLE, x, y, input.keys[258]);
+    nk_input_scroll(&GNuklearWindow, input.wheel);
+}
+
+void ResetWindow() {
+    if (const DisplayModeInfo *const display = GetScreenResolution())
+        host::ResizeWindow(static_cast<std::int32_t>(display->width), static_cast<std::int32_t>(display->height));
+    g_shouldResetWindow = false;
+}
+
+void CreateSMWindow() {
+    const DisplayModeInfo *const display = GetScreenResolution();
+    g_windowHandle = host::CreateWindow(display ? static_cast<std::int32_t>(display->width) : 1280,
+        display ? static_cast<std::int32_t>(display->height) : 720);
+    host::InputSnapshot input;
+    host::PollInput(input);
+    HandleHostWindowInput(input);
 }
 #endif
 

@@ -144,7 +144,7 @@ bool WriteSettingsFile();
 std::uint32_t GetDisplayInfoByIdx(std::uint32_t displayOutput);
 DisplayModeInfo *GetScreenResolution();
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 std::int32_t EnumerateDisplays();
 #endif
 

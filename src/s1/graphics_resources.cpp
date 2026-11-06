@@ -132,7 +132,7 @@ void SetupGlobalRenderBuffers() {
 }
 
 void SetupImmutableDXTex2D() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     const std::uint32_t backBuffer = CreateNewTexture2D();
     Texture2DDescription backBufferDescription{};
     if (!GetTexture2DDescription(backBuffer, &backBufferDescription)) {
@@ -322,7 +322,7 @@ void GetAspectRatio_0(D3TDeviceContext *context) {
 }
 
 void MapForSuperSampling(D3TDeviceContext *context, float scale) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *values = static_cast<float *>(MapTempConstantBufferForWriteDiscard(context, 3, 4, 12));
     if (!values)
         return;

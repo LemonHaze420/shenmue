@@ -37,7 +37,7 @@ using d3t::TextureResource;
 using d3t::TextureUploadDescription;
 using d3t::d3t_UploadTexture2DToGPU;
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 using d3t::AdoptBackBufferTexture2D;
 using d3t::ReplaceTexture2DNativeResource;
 #endif

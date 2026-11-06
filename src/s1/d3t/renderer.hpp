@@ -16,7 +16,7 @@ inline std::uint32_t &g_defaultTextureFormat = d3t::g_defaultTextureFormat;
 
 std::int64_t CopyOrResolveTexture(D3TDeviceContext *context, std::uint32_t sourceTexture, std::uint32_t destinationTexture);
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 using d3t::CreateConstantBuffers;
 using d3t::CreateNewSRVTexture;
 using d3t::CreateNewTexture2D;

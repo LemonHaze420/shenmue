@@ -37,6 +37,24 @@
         "VCPKG_TARGET_TRIPLET": "x64-windows",
         "VCPKG_MANIFEST_MODE": "ON"
       }
+    },
+    {
+      "name": "linux-dxvk",
+      "displayName": "WS (Linux, DXVK native)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-dxvk",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SHENMUE_S1_GAME": "WHATS",
+        "SHENMUE_WS_STANDALONE": "ON",
+        "SHENMUE_GFX_DXVK_NATIVE": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -51,6 +69,12 @@
       "name": "windows-msvc-release",
       "configurePreset": "windows-msvc",
       "configuration": "Release"
+    },
+    {
+      "name": "linux-dxvk",
+      "configurePreset": "linux-dxvk",
+      "targets": ["shenmue1"],
+      "jobs": 8
     }
   ]
 }

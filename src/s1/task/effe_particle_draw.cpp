@@ -116,7 +116,7 @@ void ConstructParticleSystemElements(const EffeRuntimeTexture &runtime) {
 
 
 void ClearVertsForDrawing(D3TDeviceContext *context, const EffeRuntimeTexture &runtime) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     const auto count = static_cast<std::uint32_t>(runtime.particleCount);
     if (count > UINT32_MAX / 0xa8U || !GetMappedConstantBuffer(context, 0, count * 0xa8U)) {
         return;
@@ -135,7 +135,7 @@ void ClearVertsForDrawing(D3TDeviceContext *context, const EffeRuntimeTexture &r
 
 
 void ClearVertsForDrawing_0(D3TDeviceContext *context, const EffeRuntimeTexture &runtime) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     const auto count = static_cast<std::uint32_t>(runtime.particleCount);
     if (count > UINT32_MAX / 0xa8U)
         return;

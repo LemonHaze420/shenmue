@@ -1634,7 +1634,7 @@ void DrawNuklear() {
     UpdateInGameStatus();
     g_uiPreviousInputElements = g_uiRegisteredCallbackRequests;
     g_uiRegisteredCallbackRequests.fill(0);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!g_RenderDeviceContext) {
         g_RenderDeviceContext = d3t_DXGetPipelineContext(1);
     }

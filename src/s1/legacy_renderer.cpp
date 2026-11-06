@@ -584,7 +584,7 @@ void CommitAndDrawGeometryVertices() {
     parameters.alphaArgument2 = g_alphaShaderParameters.argument2;
     parameters.specularEnabled = g_legacyShaderParameters.specularEnabled;
     CommitLegacyScreenRenderState(context, false);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     const std::uint32_t vertexCount = static_cast<std::uint32_t>(g_numVertices);
     shen_render_prepare(context);
     shen_render_draw(context, vertexCount, 0);

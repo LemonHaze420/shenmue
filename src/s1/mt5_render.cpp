@@ -49,7 +49,7 @@
 #include <memory>
 #include <unordered_map>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #endif
@@ -536,7 +536,7 @@ struct CharacterShadowCallbackState {
         workTransformMatrix = workMatrix;
 
         context->renderState = renderState;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
         if (void *mapped = MapTempConstantBufferForWriteDiscard(context, 3, 1, sizeof(renderParameters))) {
             std::memcpy(mapped, &renderParameters, sizeof(renderParameters));
         }
@@ -1049,7 +1049,7 @@ void BindTexture(D3TDeviceContext *context, std::uint32_t texture) {
 
 void CommitLegacyRenderState(D3TDeviceContext *context, ShaderParams &parameters, bool transparent) {
     PublishLegacyShaderParameters(parameters);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (void *mapped = MapTempConstantBufferForWriteDiscard(context, 3, 1, sizeof(parameters))) {
         std::memcpy(mapped, &parameters, sizeof(parameters));
     }
@@ -1249,7 +1249,7 @@ void DrawObject(D3TDeviceContext *context, GameNode *object, std::int32_t index,
         }
     }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     const std::uint32_t vertexCount = records[index * 3];
     shen_render_prepare(context);
     if (vertexCount && shen_render_draw(context, vertexCount, startVertex)) {

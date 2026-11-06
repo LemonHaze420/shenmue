@@ -14,7 +14,7 @@
 #include <mutex>
 #include <vector>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #include <d3d11.h>
 #include <dxgiformat.h>
@@ -204,7 +204,7 @@ std::uint32_t DecodeS1LegacyTextureFormat(std::uint16_t format) {
 
 namespace {
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 constexpr std::array<DXGI_FORMAT, 52> kSupportedTextureFormats{
     DXGI_FORMAT_UNKNOWN,
     static_cast<DXGI_FORMAT>(0x1f),
@@ -273,7 +273,7 @@ TextureResource *GetTextureResource(std::uint32_t handle) {
 }
 
 void ReleaseTextureObjects(TextureResource &resource) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (resource.texture) {
         static_cast<ID3D11Texture2D *>(resource.texture)->Release();
         resource.texture = nullptr;
@@ -319,7 +319,7 @@ void ReleaseTextureObjects(TextureResource &resource) {
     }
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 DXGI_FORMAT NativeTextureFormat(std::uint32_t format) {
     return format < kSupportedTextureFormats.size() ? kSupportedTextureFormats[format] : DXGI_FORMAT_UNKNOWN;
 }
@@ -796,7 +796,7 @@ bool GetTexture2DBackendView(std::uint32_t textureHandle, D3TTextureBackendView 
 }
 
 std::uint32_t GetD3TNativeTextureFormat(std::uint32_t format) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     return static_cast<std::uint32_t>(NativeTextureFormat(format));
 #else
     static_cast<void>(format);
@@ -831,7 +831,7 @@ std::int64_t GetStride(std::int32_t width, std::int32_t height, std::uint32_t fo
     }
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 bool ReplaceTexture2DNativeResource(std::uint32_t textureHandle, std::uint32_t width, std::uint32_t height, std::uint32_t arraySize, std::uint32_t mipLevels,
     std::uint32_t nativeFormat, void *texture, void *shaderResourceView) {
     const TextureLock lock;
@@ -955,6 +955,21 @@ void UnmapGpu(std::uint32_t textureHandle) {
 } // namespace Texture2D
 #endif
 
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+bool UploadTexture2DSubresource(std::uint32_t textureHandle, std::uint32_t mip, std::uint32_t layer, const void *data, std::uint32_t size, std::uint32_t rowPitch) {
+    const TextureLock lock;
+    TextureResource *const resource = GetTextureResource(textureHandle);
+    if (!resource || !resource->texture || !data || !size || mip >= static_cast<std::uint32_t>(resource->mipLevels) ||
+        layer >= static_cast<std::uint32_t>(resource->arraySize))
+        return false;
+    if (!g_immediateContext)
+        return false;
+    const std::uint32_t subresource = mip + layer * static_cast<std::uint32_t>(resource->mipLevels);
+    g_immediateContext->UpdateSubresource(static_cast<ID3D11Texture2D *>(resource->texture), subresource, nullptr, data, rowPitch, size);
+    return true;
+}
+#endif
+
 void CreateMipmappedScaledTexture(
     std::uint32_t textureHandle, std::uint32_t firstMip, std::uint32_t mipLevels, const void *pixels, std::uint32_t pixelDataSize) {
     const TextureLock textureLock;
@@ -973,14 +988,14 @@ void CreateMipmappedScaledTexture(
         height = 1;
     }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     std::vector<D3D11_SUBRESOURCE_DATA> subresources(mipLevels - firstMip);
 #endif
     const auto *cursor = static_cast<const std::byte *>(pixels);
     for (std::uint32_t mip = firstMip; mip < mipLevels; ++mip) {
         const std::uint32_t rowPitch = TextureStride(static_cast<std::int32_t>(width), 1, resource->format);
         const std::uint32_t mipSize = TextureStride(static_cast<std::int32_t>(width), static_cast<std::int32_t>(height), resource->format);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
         D3D11_SUBRESOURCE_DATA &subresource = subresources[mip - firstMip];
         subresource.pSysMem = cursor;
         subresource.SysMemPitch = rowPitch;
@@ -1003,7 +1018,7 @@ void CreateMipmappedScaledTexture(
     }
 
     void *sourceTexture = nullptr;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3D11_TEXTURE2D_DESC description{};
     description.Width = static_cast<UINT>(std::max<std::int32_t>(1, resource->width / static_cast<std::int32_t>(divisor)));
     description.Height = static_cast<UINT>(std::max<std::int32_t>(1, resource->height / static_cast<std::int32_t>(divisor)));
@@ -1018,6 +1033,7 @@ void CreateMipmappedScaledTexture(
         return;
     }
 #endif
+
 
     const TextureCreationLock queueLock;
     g_queuedTextureCopies.push_back(QueuedTextureCopy{
@@ -1035,7 +1051,7 @@ void GenerateMipsAndUpdateResourcesForDirectX() {
     {
         const std::lock_guard<std::mutex> mipsLock(g_generateMipsMutex);
         const TextureLock textureLock;
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
         for (const std::uint32_t texture : g_generateMipsTextures) {
             TextureResource *const resource = GetTextureResource(texture);
             if (resource)
@@ -1051,7 +1067,7 @@ void GenerateMipsAndUpdateResourcesForDirectX() {
         if (!resource) {
             continue;
         }
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
         ID3D11DeviceContext *const context = g_immediateContext;
         auto *const source = static_cast<ID3D11Texture2D *>(copy.sourceTexture);
         auto *const destination = static_cast<ID3D11Texture2D *>(resource->texture);

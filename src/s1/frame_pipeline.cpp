@@ -28,6 +28,9 @@
 #include "s1/timing.hpp"
 #include "s1/ui_runtime.hpp"
 #include "s1/window.hpp"
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#include "platform/host.hpp"
+#endif
 #include "s1/archive_data.hpp"
 #include "d3t/ui_nuklear.hpp"
 #include "s1/d3t/d3t_shader_load.hpp"
@@ -119,7 +122,7 @@ bool g_pausedRenderState = false;
 
 } // namespace
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 void SubmitAndReleasePipelineContext() {
     if (!DX11::g_ppD3DDeviceContext)
         return;
@@ -190,6 +193,9 @@ void ProcessMessages() {
     constexpr float kThirtyFramesPerSecond = 0.03333333507180214f;
     TexSortWrapper(g_bEnableFrameTimeSmoothing ? fFrameTimeMs : kThirtyFramesPerSecond);
 
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    g_shouldQuit = g_shouldQuit || host::QuitRequested();
+#endif
     if (g_shouldQuit)
         Shutdown();
     if (g_bNeedsLoadTextureResources) {
@@ -204,7 +210,7 @@ void ProcessMessages() {
     if (g_getAspectRatioModeFunction)
         g_getAspectRatioModeFunction();
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     g_RenderDeviceContext = g_NuklearInitialized ? d3t_DXGetPipelineContext(1) : nullptr;
 #else
     g_RenderDeviceContext = nullptr;
@@ -241,7 +247,7 @@ void ProcessMessages() {
     ReleaseD3TPipelineStateCaches();
     FreeBuffers();
     ReleaseLargeDataBuffer();
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     ShutdownDX11();
 #endif
     ReleaseRenderHandleLogs();
@@ -285,7 +291,7 @@ void GetWindowCoords(std::uint32_t height, bool windowed) {
 
 
 void SetNewWindowDimensions(std::uint32_t width, std::uint32_t height) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     d3t::DirectXUpdateWindowDimensions(width, height);
 #endif
     if (g_screenWindow.texture2D[0]) {
@@ -340,7 +346,7 @@ void DispatchRenderPipeline(void *renderContext, void *frameInfo) {
 
 void RenderPipeline(std::int64_t unused, std::int32_t deferred, std::int32_t renderType) {
     static_cast<void>(unused);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3TDeviceContext *const context = d3t_DXGetPipelineContext(deferred != 0 ? 1 : 0);
     DX11::g_ppD3DDeviceContext = context;
 
@@ -431,7 +437,7 @@ void Matrix4x4_Create(CameraConstantBlock &block) {
 
 
 void UploadModernRendererDebugConstants(D3TDeviceContext *context) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     ModernRendererDebugConstants *const mapped = static_cast<ModernRendererDebugConstants *>(MapTempConstantBufferForWriteDiscard(context, 3, 9, 36));
     if (mapped) {
         *mapped = g_modernRendererDebugConstants;
@@ -448,7 +454,7 @@ void UploadModernRendererDebugConstants(D3TDeviceContext *context) {
 }
 
 void InitGameBuffers() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!g_sdOverrideSkinningRoot || g_perspectiveProjection == 1 || g_forcePrimaryCachedModel)
         return;
     D3TDeviceContext *const context = d3t_DXGetPipelineContext(1);
@@ -491,7 +497,7 @@ void InitGameBuffers() {
 
 
 void RecomputeMatricesAndWaitSortTextureStack() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!g_mainSkinningRoot)
         return;
     if (g_perspectiveProjection == 1) {
@@ -538,7 +544,7 @@ void RecomputeMatricesAndWaitSortTextureStack() {
 }
 
 void BeginSceneFrameSubmission() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     SubmitAndReleasePipelineContext();
 #ifdef SHENMUE_RT_ARCADE
     RTArcade_Tick();
@@ -549,7 +555,7 @@ void BeginSceneFrameSubmission() {
     g_modernDayFraction = (static_cast<float>(1000 * seconds) + g_currentDeltaTimeSim) / 86400000.0f;
     ProcessHmdlResourceTransitions(1);
     RecomputeMatricesAndWaitSortTextureStack();
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     AcquireScenePipelineContext();
     InitGameBuffers();
     if (DX11::g_ppD3DDeviceContext)
@@ -558,7 +564,7 @@ void BeginSceneFrameSubmission() {
 }
 
 void BeginSceneCompositionSubmission() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     SubmitAndReleasePipelineContext();
     AcquireScenePipelineContext();
 #endif
@@ -586,7 +592,7 @@ void ManageFramePacing() {
 } // namespace
 
 void FinishSceneFrameSubmission() {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3TDeviceContext *context = DX11::g_ppD3DDeviceContext;
     if (context && g_superSampling + 1.0f > 1.0f) {
         const std::uint32_t output = g_superSamplingTextureActive ? g_superSamplingTexture2D : g_legacyFullScreenTexture2D;
@@ -632,7 +638,7 @@ void FinishSceneFrameSubmission() {
     if (g_pfnDrawNuklear)
         g_pfnDrawNuklear();
     Do_contrast_Pass();
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (g_pfnDrawNuklear && g_RenderDeviceContext) {
         DX11::WaitForCommandListFinish(g_RenderDeviceContext);
         g_RenderDeviceContext = nullptr;
@@ -744,7 +750,7 @@ void RenderScreen() {
             IsPostProcessPass() ? g_postFxTexture : (g_superSamplingTextureActive ? g_superSamplingTexture2D : g_legacyFullScreenTexture2D),
         };
         DrawFullPass_Quad(&pass, DrawPassOpType::GammaCorrect);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
         DX11::WaitForCommandListFinish(DX11::g_ppD3DDeviceContext);
 #endif
         DX11::g_ppD3DDeviceContext = nullptr;
@@ -753,7 +759,7 @@ void RenderScreen() {
     if (g_pfnDrawNuklear) {
         g_pfnDrawNuklear();
         if (g_pfnDrawNuklear && g_RenderDeviceContext) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
             DX11::WaitForCommandListFinish(g_RenderDeviceContext);
 #endif
             g_RenderDeviceContext = nullptr;
@@ -775,7 +781,7 @@ void PresentLatestFrame() {
         renderMode = 2;
         b60fps = 0;
     }
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     d3t_PresentFrame(renderMode);
     g_hasPresentedGameFrame = true;
     if (g_shouldResetWindow) {

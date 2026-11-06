@@ -23,7 +23,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -606,7 +606,7 @@ void SetCurrentRenderFlag(std::uint32_t setting, std::int32_t value) {
 
 // The D3T draw DoShadowPass inlines for each of its four passes.
 void DrawShadowTriangles(std::uint32_t startVertex) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     D3TDeviceContext *const context = DX11::g_ppD3DDeviceContext;
     const auto vertexCount = static_cast<std::uint32_t>(g_shadowTriangleVertexCount);
     DX11_ResetMappedResources(context);
@@ -1041,7 +1041,7 @@ void DoShadowPass() {
     if (void *const mapped = GetWriteMappedBufferPointer(context, g_shadowVideoBuffer, (startVertex != 0) + 1, 12U * static_cast<std::uint32_t>(startVertex)))
         std::memcpy(mapped, g_shadowTriangleVertices.data(), 12 * static_cast<std::size_t>(vertexCount));
     DX11_CopySceneNodeToGPU(context, g_shadowVideoBuffer);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (context->resourceCache[0]) {
         static_cast<ID3D11DeviceContext *>(context->deviceContext)->Unmap(reinterpret_cast<ID3D11Resource *>(context->resourceCache[0]), 0);
         context->resourceCache[0] = 0;

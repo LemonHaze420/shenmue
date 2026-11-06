@@ -5,6 +5,9 @@
 #include "s1/task/ctrl.hpp"
 #include "s1/audio_stream.hpp"
 #include "common/aica_adpcm.hpp"
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+#include "platform/audio.hpp"
+#endif
 #include "s1/archive_handles.hpp"
 #include "s1/d3t/settings.hpp"
 #include "s1/task/pack.hpp"
@@ -50,12 +53,26 @@ bool (*g_releaseEnvelope)(std::uint32_t){};
 
 #include "s1/audio_metadata_table.inc"
 
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+namespace host_audio = platform::audio;
+std::array<XA_VoiceContext, kXAudioVoiceCount> g_hostRawVoices{};
+std::array<host_audio::Voice *, kEncodedAudioVoiceCount> g_hostDialogueVoices{};
+std::uint32_t g_hostDialogueIndex{};
+std::uint32_t g_hostRawIndex{};
+bool g_hostVoicePoolInitialized{};
+
+host_audio::Voice *HostVoice(const XA_VoiceContext *owner) {
+    return owner ? static_cast<host_audio::Voice *>(owner->voice) : nullptr;
+}
+#endif
+
+#if SHENMUE_IS_DEMO && ((defined(_WIN32) || (defined(SHENMUE_GFX_DXVK_NATIVE))))
+std::array<std::vector<std::uint8_t>, kEncodedAudioVoiceCount> g_trialVoicePcm;
+#endif
+
 #if defined(_WIN32)
 std::array<IXAudio2SourceVoice *, kEncodedAudioVoiceCount> g_dialogueVoices{};
 std::uint32_t g_nextDialogueVoice{};
-#if SHENMUE_IS_DEMO
-std::array<std::vector<std::uint8_t>, kEncodedAudioVoiceCount> g_trialVoicePcm;
-#endif
 std::unique_ptr<XA_VoiceContext[]> g_rawSoundEffectVoices;
 std::array<AudioVoiceRouting, kXAudioVoiceCount> g_voiceRouting{};
 AudioVoiceRouting &Routing(const XA_VoiceContext *owner) {
@@ -81,7 +98,21 @@ std::unique_ptr<AudioEngineCallbacks> g_audioEngineCallbacks;
 #endif
 
 XA_VoiceContext *ResolveRawVoice(const void *playback) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    const std::uintptr_t handle = reinterpret_cast<std::uintptr_t>(playback);
+    if (handle < 1 || handle > kXAudioVoiceCount || !g_hostVoicePoolInitialized)
+        return nullptr;
+    XA_VoiceContext &owner = g_hostRawVoices[handle - 1];
+    if (owner.active && host_audio::IsComplete(HostVoice(&owner)) && owner.voice) {
+        owner.active = 0;
+        if (owner.state && owner.state->phase) {
+            owner.state->phase = 0;
+            if (g_stopEnvelope)
+                g_stopEnvelope(owner.state->voiceId);
+        }
+    }
+    return &owner;
+#elif defined(_WIN32)
     const std::uintptr_t handle = reinterpret_cast<std::uintptr_t>(playback);
     return g_rawSoundEffectVoices && handle >= 1 && handle <= kXAudioVoiceCount ? &g_rawSoundEffectVoices[handle - 1] : nullptr;
 #else
@@ -194,7 +225,23 @@ void STDMETHODCALLTYPE XA_VoiceContext::OnBufferEnd(void *) {
 #endif
 
 bool InitializeXAudio() {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    if (!host_audio::Initialize())
+        return false;
+    if (!g_hostVoicePoolInitialized) {
+        for (std::uint32_t index = 0; index < kXAudioVoiceCount; ++index) {
+            XA_VoiceContext &owner = g_hostRawVoices[index];
+            owner.slotId = index;
+            owner.state = new AicaState{};
+            owner.state->uid = index;
+            owner.state->currentFilterLevel = 1.0f;
+            owner.state->instantFilterAttack = 1;
+            owner.state->linearVolume = 1.0f;
+        }
+        g_hostVoicePoolInitialized = true;
+    }
+    return true;
+#elif defined(_WIN32)
     std::lock_guard<std::recursive_mutex> lock(g_audioInitializationMutex);
     if (g_xaudio)
         return true;
@@ -825,7 +872,9 @@ void InitializeSceneDialogueAudio() {
 
 // @verified - p
 bool EncodedSourceVoiceHasFinished(void *playback) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return !host_audio::HasBuffer(static_cast<host_audio::Voice *>(playback));
+#elif defined(_WIN32)
     if (!playback)
         return true;
     std::lock_guard<std::recursive_mutex> lock(g_audioInitializationMutex);
@@ -839,7 +888,17 @@ bool EncodedSourceVoiceHasFinished(void *playback) {
 }
 // @verified - p
 void *GetSourceVoice() {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    for (std::uint32_t attempt = 0; attempt < kEncodedAudioVoiceCount; ++attempt) {
+        g_hostDialogueIndex = (g_hostDialogueIndex + 1U) & 3U;
+        host_audio::Voice *&voice = g_hostDialogueVoices[g_hostDialogueIndex];
+        if (voice && !host_audio::IsComplete(voice))
+            continue;
+        host_audio::DestroyVoice(voice);
+        voice = nullptr;
+        return &voice;
+    }
+#elif defined(_WIN32)
     for (std::uint32_t attempt = 0; attempt < kEncodedAudioVoiceCount; ++attempt) {
         g_nextDialogueVoice = (g_nextDialogueVoice + 1U) & 3U;
         IXAudio2SourceVoice *&voice = g_dialogueVoices[g_nextDialogueVoice];
@@ -856,7 +915,16 @@ void *GetSourceVoice() {
 }
 // @verified - p
 void SetOutputAudioMatrix(void *playback, std::uint32_t sourceChannels) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    host_audio::Voice *const voice = static_cast<host_audio::Voice *>(playback);
+    if (sourceChannels == 2) {
+        constexpr float matrix[]{1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1};
+        host_audio::SetOutputMatrix(voice, matrix, 2, 6);
+    } else {
+        constexpr float matrix[]{0, 0, 1, 0, 0, 0};
+        host_audio::SetOutputMatrix(voice, matrix, 1, 6);
+    }
+#elif defined(_WIN32)
     IXAudio2SourceVoice *const voice = static_cast<IXAudio2SourceVoice *>(playback);
     if (!g_masteringVoice || !voice)
         return;
@@ -889,7 +957,23 @@ void SetOutputMatrixVolumeAndChannels(void *playback, float volume, std::uint32_
 
 // @verified - p
 void *CreateAndSubmitSourceVoice(const AudioWaveData &wave, float volume) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    if (!InitializeXAudio() || !wave.format)
+        return nullptr;
+    host_audio::Voice **const output = static_cast<host_audio::Voice **>(GetSourceVoice());
+    if (!output)
+        return nullptr;
+    std::uint16_t channels;
+    std::memcpy(&channels, static_cast<const std::byte *>(wave.format) + 2, 2);
+    *output = host_audio::CreateVoice(channels);
+    if (!*output || !host_audio::SubmitWave(*output, wave.format, wave.audio, wave.audioBytes)) {
+        host_audio::DestroyVoice(*output);
+        *output = nullptr;
+        return nullptr;
+    }
+    host_audio::SetVolume(*output, volume);
+    return host_audio::Start(*output) ? *output : nullptr;
+#elif defined(_WIN32)
     if (!g_xaudio || !g_masteringVoice || !wave.format)
         return nullptr;
     IXAudio2SourceVoice **const output = static_cast<IXAudio2SourceVoice **>(GetSourceVoice());
@@ -923,7 +1007,10 @@ void *CreateAndSubmitSourceVoice(const AudioWaveData &wave, float volume) {
 }
 // @verified - p
 void StopSourceVoiceAndFlush(std::uint32_t physicalId) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(physicalId));
+    host_audio::Stop(HostVoice(owner));
+#elif defined(_WIN32)
     XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(physicalId));
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
@@ -939,7 +1026,14 @@ void CreateAndStartPlayingSourceVoice(std::uint32_t physicalId, const std::byte 
     AudioWaveData wave{};
     if (ProcessWave(bytes, size, wave) < 0 || !wave.format)
         return;
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(physicalId));
+    if (owner && host_audio::SubmitWave(HostVoice(owner), wave.format, wave.audio, wave.audioBytes)) {
+        host_audio::SetVolume(HostVoice(owner), 1.0f);
+        host_audio::SetFrequencyRatio(HostVoice(owner), 1.0f);
+        host_audio::Start(HostVoice(owner));
+    }
+#elif defined(_WIN32)
     std::lock_guard<std::recursive_mutex> lock(g_audioInitializationMutex);
     XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(physicalId));
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
@@ -966,7 +1060,14 @@ void ProcessWave_Wrapper_0(std::uint32_t physicalId, const std::byte *bytes, std
     AudioWaveData wave{};
     if (ProcessWave(bytes, size, wave) < 0 || !wave.format)
         return;
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(physicalId));
+    if (owner && host_audio::SubmitWave(HostVoice(owner), wave.format, wave.audio, wave.audioBytes, wave.loopBegin, wave.loopLength, true)) {
+        host_audio::SetVolume(HostVoice(owner), 1.0f);
+        host_audio::SetFrequencyRatio(HostVoice(owner), 1.0f);
+        host_audio::Start(HostVoice(owner));
+    }
+#elif defined(_WIN32)
     std::lock_guard<std::recursive_mutex> lock(g_audioInitializationMutex);
     XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(physicalId));
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
@@ -991,7 +1092,9 @@ void ProcessWave_Wrapper_0(std::uint32_t physicalId, const std::byte *bytes, std
 }
 
 std::uint32_t GetCurrentEncodedAudioVoiceHandle() {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return g_hostDialogueIndex + 1;
+#elif defined(_WIN32)
     return g_nextDialogueVoice + 1;
 #else
     return 5;
@@ -1017,7 +1120,7 @@ std::uint32_t LoadFileWrapper_0(std::int32_t fileId, std::int32_t entryIndex, fl
         ReadCachedFile(file);
         AudioWaveData wave{};
         handle = 5;
-#if SHENMUE_IS_DEMO && defined(_WIN32)
+#if SHENMUE_IS_DEMO && ((defined(_WIN32) || (defined(SHENMUE_GFX_DXVK_NATIVE))))
         if (size >= 0x40 && std::memcmp(bytes, "SPSD", 4) == 0) {
             std::uint32_t dataBytes{};
             std::uint16_t sampleRate{}, interleave{};
@@ -1028,8 +1131,14 @@ std::uint32_t LoadFileWrapper_0(std::int32_t fileId, std::int32_t entryIndex, fl
                 dataBytes <= size - 0x40 && sampleRate) {
                 std::vector<std::uint8_t> pcm;
                 DecodeYamahaAdpcm(reinterpret_cast<const std::uint8_t *>(bytes + 0x40), dataBytes, pcm);
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+                const shen_audio_wave_format format{.format_tag = 1, .channels = 1, .sample_rate = sampleRate,
+                    .average_bytes_per_second = static_cast<std::uint32_t>(sampleRate) * 2U, .block_align = 2, .bits_per_sample = 16, .extra_size = 0};
+                static_assert(sizeof(format) == 18);
+#else
                 const WAVEFORMATEX format{.wFormatTag = WAVE_FORMAT_PCM, .nChannels = 1, .nSamplesPerSec = sampleRate,
                     .nAvgBytesPerSec = static_cast<DWORD>(sampleRate) * 2U, .nBlockAlign = 2, .wBitsPerSample = 16, .cbSize = 0};
+#endif
                 wave.format = &format;
                 wave.audio = reinterpret_cast<const std::byte *>(pcm.data());
                 wave.audioBytes = static_cast<std::uint32_t>(pcm.size());
@@ -1085,7 +1194,9 @@ bool StartDialogueVoice(CVRSEntry &source, std::uint16_t entryIndex, CVWKAudioCo
 
 // @verified - p
 std::uint32_t DoXAudioStuff(std::uint32_t handle) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return handle >= 1 && handle <= kEncodedAudioVoiceCount && host_audio::HasBuffer(g_hostDialogueVoices[handle - 1]) ? 3 : 0;
+#elif defined(_WIN32)
     if (GetXAudioEffectFlagVal() || handle < 1 || handle > kEncodedAudioVoiceCount)
         return 0;
     IXAudio2SourceVoice *const voice = g_dialogueVoices[handle - 1];
@@ -1106,7 +1217,9 @@ bool DialogueVoiceIsPlaying(const CVWKAudioContext &context) {
 
 
 bool Audio_HasMasteringVoice() {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return g_hostVoicePoolInitialized && host_audio::IsInitialized();
+#elif defined(_WIN32)
     return g_masteringVoice != nullptr;
 #else
     return false;
@@ -1115,7 +1228,11 @@ bool Audio_HasMasteringVoice() {
 
 void SetDialogueVoiceVolume(CVWKAudioContext &context, std::int32_t volume, bool music) {
     std::memcpy(&context.streamCookie, &volume, sizeof(volume));
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    const std::uintptr_t handle = reinterpret_cast<std::uintptr_t>(context.sourceVoice);
+    if (handle >= 1 && handle <= kEncodedAudioVoiceCount)
+        host_audio::SetVolume(g_hostDialogueVoices[handle - 1], GetAdjustedVolumeForMusicOrDialogue(volume, music));
+#elif defined(_WIN32)
     const std::uintptr_t handle = reinterpret_cast<std::uintptr_t>(context.sourceVoice);
     if (!GetXAudioEffectFlagVal() && handle >= 1 && handle <= kEncodedAudioVoiceCount && g_dialogueVoices[handle - 1])
         shen_audio_voice_set_volume(g_dialogueVoices[handle - 1], GetAdjustedVolumeForMusicOrDialogue(volume, music), 0);
@@ -1129,7 +1246,11 @@ void SetDialogueVoiceLifetime(CVWKAudioContext &context, std::uint32_t lifetime)
     std::memcpy(reinterpret_cast<std::byte *>(&context) + 0x1c, &lifetime, sizeof(lifetime));
 }
 void SetDialogueVoicePaused(CVWKAudioContext &context, bool paused) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    const std::uintptr_t handle = reinterpret_cast<std::uintptr_t>(context.sourceVoice);
+    if (handle >= 1 && handle <= kEncodedAudioVoiceCount)
+        host_audio::Pause(g_hostDialogueVoices[handle - 1], paused);
+#elif defined(_WIN32)
     const std::uintptr_t handle = reinterpret_cast<std::uintptr_t>(context.sourceVoice);
     if (!GetXAudioEffectFlagVal() && handle >= 1 && handle <= kEncodedAudioVoiceCount && g_dialogueVoices[handle - 1])
         shen_audio_source_set_frequency_ratio(g_dialogueVoices[handle - 1], paused ? 0.0f : 1.0f, 0);
@@ -1139,7 +1260,13 @@ void SetDialogueVoicePaused(CVWKAudioContext &context, bool paused) {
 
 // @verified - p
 void DestroyEncodedAudioVoice(std::uint32_t handle) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    if (handle >= 1 && handle <= kEncodedAudioVoiceCount) {
+        host_audio::Voice *&voice = g_hostDialogueVoices[handle - 1];
+        host_audio::DestroyVoice(voice);
+        voice = nullptr;
+    }
+#elif defined(_WIN32)
     if (!GetXAudioEffectFlagVal() && handle >= 1 && handle <= kEncodedAudioVoiceCount) {
         IXAudio2SourceVoice *&voice = g_dialogueVoices[handle - 1];
         if (voice) {
@@ -1167,7 +1294,9 @@ std::uint32_t RawSoundEffectVoiceId(const void *playback) {
     return handle >= 1 && handle <= kXAudioVoiceCount ? static_cast<std::uint32_t>(handle - 1) : UINT32_MAX;
 }
 void *GetRawSoundEffectVoice(std::uint32_t physicalId) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return g_hostVoicePoolInitialized && physicalId < kXAudioVoiceCount ? reinterpret_cast<void *>(static_cast<std::uintptr_t>(physicalId + 1)) : nullptr;
+#elif defined(_WIN32)
     return g_rawSoundEffectVoices && physicalId < kXAudioVoiceCount ? reinterpret_cast<void *>(static_cast<std::uintptr_t>(physicalId + 1)) : nullptr;
 #else
     (void)physicalId;
@@ -1202,7 +1331,9 @@ std::uint32_t GetXAudioEffectFlagVal() {
 }
 
 bool GetAudioDeviceDetails() {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return host_audio::Initialize();
+#elif defined(_WIN32)
     if (!g_xaudio)
         return false;
     g_audioDeviceCount = 0;
@@ -1270,14 +1401,18 @@ bool GetAudioDeviceDetails() {
 #endif
 }
 std::uint32_t GetAudioDeviceCount() {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return 2;
+#elif defined(_WIN32)
     return g_audioDeviceCount;
 #else
     return 0;
 #endif
 }
 const char *GetAudioDeviceName(std::uint32_t index) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return index == 0 ? "UIOTGLOFF0" : index == 1 ? "Browser audio" : nullptr;
+#elif defined(_WIN32)
     std::lock_guard<std::recursive_mutex> lock(g_audioInitializationMutex);
     GetAudioDeviceDetails();
     return index <= g_audioDeviceCount ? g_audioDeviceNames[index].data() : nullptr;
@@ -1287,7 +1422,10 @@ const char *GetAudioDeviceName(std::uint32_t index) {
 #endif
 }
 void QueueAudioDeviceChange(std::int32_t device) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    if (device == 0 || device == 1)
+        host_audio::SetEnabled(device == 1);
+#elif defined(_WIN32)
     std::lock_guard<std::recursive_mutex> lock(g_audioInitializationMutex);
     if (device != -2 && g_audioDeviceRequestCount < 5)
         g_audioDeviceRequests[g_audioDeviceRequestCount++] = device;
@@ -1298,7 +1436,9 @@ void QueueAudioDeviceChange(std::int32_t device) {
 
 // @verified - p
 void StopEngine(std::uint32_t voiceId) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    host_audio::Pause(HostVoice(ResolveRawVoice(GetRawSoundEffectVoice(voiceId))), true);
+#elif defined(_WIN32)
     XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(voiceId));
     if (g_xaudio && g_masteringVoice && !GetXAudioEffectFlagVal() && owner && owner->voice)
         shen_audio_source_stop(owner->voice, 0, 0);
@@ -1309,7 +1449,24 @@ void StopEngine(std::uint32_t voiceId) {
 
 // @verified - p
 void ConfigureAndSubmitXAudioBuffer(std::uint32_t voiceId, const RawAudioSubmission &submission) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(voiceId));
+    host_audio::Voice *const voice = HostVoice(owner);
+    if (!voice)
+        return;
+    const host_audio::PcmBuffer buffer{.data = submission.audio,
+        .bytes = submission.audioBytes,
+        .sampleRate = 44100,
+        .channels = voice->channels,
+        .bitsPerSample = voice->bitsPerSample,
+        .loopBegin = submission.loopBegin,
+        .loopLength = submission.loopLength,
+        .looped = submission.loopLength != 0};
+    if (host_audio::Submit(voice, buffer)) {
+        host_audio::SetVolume(voice, submission.volume * (submission.music ? g_applicationSettings.savedMusicVolume : 1.0f));
+        host_audio::SetFrequencyRatio(voice, submission.frequencyRatio);
+    }
+#elif defined(_WIN32)
     XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(voiceId));
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
@@ -1351,7 +1508,29 @@ void StopSourceVoiceAndFlush_0(std::uint32_t voiceId, bool release) {
 
 void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, std::uint32_t loopBegin, std::uint32_t loopLength, std::uint16_t channels,
     float volume, float frequencyRatio, std::uint32_t sampleRate, bool routeThroughAica) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    void *const playback = AllocateRawSoundEffectVoice(16, channels, routeThroughAica);
+    XA_VoiceContext *const owner = ResolveRawVoice(playback);
+    host_audio::Voice *const voice = HostVoice(owner);
+    const host_audio::PcmBuffer buffer{.data = samples,
+        .bytes = audioBytes,
+        .sampleRate = sampleRate,
+        .channels = channels,
+        .bitsPerSample = 16,
+        .loopBegin = loopBegin,
+        .loopLength = loopLength,
+        .looped = loopLength != 0};
+    if (!voice || !host_audio::Submit(voice, buffer)) {
+        if (owner) {
+            owner->active = 0;
+            owner->reserved = 0;
+        }
+        return nullptr;
+    }
+    host_audio::SetVolume(voice, volume);
+    host_audio::SetFrequencyRatio(voice, frequencyRatio);
+    return playback;
+#elif defined(_WIN32)
     XA_VoiceContext *const owner = ResolveRawVoice(AllocateRawSoundEffectVoice(16, channels, routeThroughAica));
     if (!owner)
         return nullptr;
@@ -1388,7 +1567,9 @@ void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, 
 }
 
 void StartRawSoundEffectPlayback(void *playback) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    host_audio::Start(HostVoice(ResolveRawVoice(playback)));
+#elif defined(_WIN32)
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
     if (g_xaudio && g_masteringVoice && !GetXAudioEffectFlagVal() && owner && owner->voice)
         shen_audio_source_start(owner->voice, 0, 0);
@@ -1404,7 +1585,24 @@ void *StartRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, st
 }
 
 void *AllocateRawSoundEffectVoice(std::uint16_t bitsPerSample, std::uint16_t channels, bool reclaimable) {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    if (!InitializeXAudio() || !channels || channels > 2 || (bitsPerSample != 8 && bitsPerSample != 16))
+        return nullptr;
+    for (std::uint32_t attempt = 0; attempt < kXAudioVoiceCount; ++attempt) {
+        g_hostRawIndex = (g_hostRawIndex + 1U) % kXAudioVoiceCount;
+        XA_VoiceContext *const owner = ResolveRawVoice(GetRawSoundEffectVoice(g_hostRawIndex));
+        if (!owner || owner->active || owner->reserved)
+            continue;
+        host_audio::DestroyVoice(HostVoice(owner));
+        owner->voice = host_audio::CreateVoice(channels, bitsPerSample);
+        if (!owner->voice)
+            return nullptr;
+        owner->active = 1;
+        owner->reserved = !reclaimable;
+        return GetRawSoundEffectVoice(owner->slotId);
+    }
+    return nullptr;
+#elif defined(_WIN32)
     if (!InitializeXAudio() || !g_masteringVoice || !g_rawSoundEffectVoices)
         return nullptr;
     std::lock_guard<std::recursive_mutex> lock(g_audioInitializationMutex);
@@ -1457,7 +1655,11 @@ void *AllocateRawSoundEffectVoice(std::uint16_t bitsPerSample, std::uint16_t cha
 
 void StartRawSoundEffectVoice(void *playback) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    host_audio::SetSampleRate(HostVoice(owner), 48000);
+    host_audio::SetVolume(HostVoice(owner), 1.0f);
+    host_audio::Start(HostVoice(owner));
+#elif defined(_WIN32)
     std::lock_guard lock(g_audioInitializationMutex);
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
@@ -1474,7 +1676,20 @@ void StartRawSoundEffectVoice(void *playback) {
 
 void SubmitRawSoundEffectBuffer(void *playback, const std::byte *samples, std::uint32_t audioBytes, std::uint32_t playLength) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    host_audio::Voice *const voice = HostVoice(owner);
+    if (voice) {
+        const host_audio::PcmBuffer buffer{.data = samples,
+            .bytes = audioBytes,
+            .sampleRate = voice->sampleRate,
+            .channels = voice->channels,
+            .bitsPerSample = voice->bitsPerSample,
+            .playLength = playLength,
+            .append = true};
+        if (host_audio::Submit(voice, buffer))
+            host_audio::Start(voice);
+    }
+#elif defined(_WIN32)
     std::lock_guard lock(g_audioInitializationMutex);
     if (!g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return;
@@ -1493,7 +1708,9 @@ void SubmitRawSoundEffectBuffer(void *playback, const std::byte *samples, std::u
 
 bool RawSoundEffectIsPlaying(const void *playback) {
     const XA_VoiceContext *const owner = ResolveRawVoice(playback);
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return host_audio::HasBuffer(HostVoice(owner));
+#elif defined(_WIN32)
     if (!owner || !owner->voice)
         return false;
     shen_audio_voice_state state{};
@@ -1507,7 +1724,9 @@ bool RawSoundEffectIsPlaying(const void *playback) {
 
 void SetRawSoundEffectVolume(void *playback, float volume) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    host_audio::SetVolume(HostVoice(owner), volume);
+#elif defined(_WIN32)
     if (owner && owner->voice) {
 
         shen_audio_voice_set_volume(owner->voice, volume, 0);
@@ -1519,7 +1738,9 @@ void SetRawSoundEffectVolume(void *playback, float volume) {
 }
 void SetRawSoundEffectFrequencyRatio(void *playback, float frequencyRatio) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    host_audio::SetFrequencyRatio(HostVoice(owner), frequencyRatio);
+#elif defined(_WIN32)
     if (owner && owner->voice)
         shen_audio_source_set_frequency_ratio(owner->voice, frequencyRatio, 0);
 #else
@@ -1529,7 +1750,9 @@ void SetRawSoundEffectFrequencyRatio(void *playback, float frequencyRatio) {
 }
 bool SetRawSoundEffectLowPassFrequency(void *playback, float normalizedFrequency, float oneOverQ) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return !g_audioFilterBypass && host_audio::SetLowPass(HostVoice(owner), normalizedFrequency, oneOverQ);
+#elif defined(_WIN32)
     if (g_audioFilterBypass || !g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner || !owner->voice)
         return false;
     shen_audio_filter filter{};
@@ -1547,7 +1770,9 @@ bool SetRawSoundEffectLowPassFrequency(void *playback, float normalizedFrequency
 
 bool SetRawSoundEffectOutputMatrix(void *playback, const float *levelMatrix, std::uint32_t sourceChannels, std::uint32_t destinationChannels) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    return host_audio::SetOutputMatrix(HostVoice(owner), levelMatrix, sourceChannels, destinationChannels);
+#elif defined(_WIN32)
     if (!owner || !owner->voice || !levelMatrix || sourceChannels != Routing(owner).channels) {
         return false;
     }
@@ -1576,7 +1801,14 @@ bool SetRawSoundEffectOutputMatrix(void *playback, const float *levelMatrix, std
 // @verified - p
 void StopRawSoundEffectPlayback(void *playback, bool release) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    if (!owner)
+        return;
+    if (release && g_releaseEnvelope && g_releaseEnvelope(owner->slotId))
+        return;
+    host_audio::Stop(HostVoice(owner));
+    owner->reserved = 0;
+#elif defined(_WIN32)
     if (!owner || !g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1 || !owner->active)
         return;
     if (release && g_releaseEnvelope && g_releaseEnvelope(owner->slotId))
@@ -1595,7 +1827,9 @@ void StopRawSoundEffectPlayback(void *playback, bool release) {
 
 void SetRawSoundEffectPaused(void *playback, bool paused) {
     XA_VoiceContext *const owner = ResolveRawVoice(playback);
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    host_audio::Pause(HostVoice(owner), paused);
+#elif defined(_WIN32)
     if (paused && owner && owner->voice)
         shen_audio_source_stop(owner->voice, 0, 0);
 #else
@@ -1611,7 +1845,23 @@ void StopRawSoundEffect(void *&playback) {
 
 // @verified - p
 void EnvelopeGenerator_StopAndReset() {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    for (XA_VoiceContext &owner : g_hostRawVoices) {
+        if (owner.state && owner.state->phase) {
+            owner.state->phase = 0;
+            if (g_stopEnvelope)
+                g_stopEnvelope(owner.state->voiceId);
+        }
+        host_audio::DestroyVoice(HostVoice(&owner));
+        delete owner.state;
+        owner = {};
+    }
+    for (host_audio::Voice *&voice : g_hostDialogueVoices) {
+        host_audio::DestroyVoice(voice);
+        voice = nullptr;
+    }
+    g_hostVoicePoolInitialized = false;
+#elif defined(_WIN32)
     if (g_xaudio) {
         if (g_rawSoundEffectVoices) {
             std::unique_ptr<XA_VoiceContext[]> contexts;
@@ -1656,7 +1906,9 @@ void EnvelopeGenerator_StopAndReset() {
 }
 
 void ShutdownXAudio() {
-#if defined(_WIN32)
+#if (defined(SHENMUE_GFX_DXVK_NATIVE))
+    EnvelopeGenerator_StopAndReset();
+#elif defined(_WIN32)
     std::lock_guard<std::recursive_mutex> lock(g_audioInitializationMutex);
     EnvelopeGenerator_StopAndReset();
     if (g_aicaReverbEffect)

@@ -3,6 +3,7 @@
 #include "s1/archive_data.hpp"
 #include "s1/audio_stream.hpp"
 #include "s1/d3t/model.hpp"
+#include "s1/d3t/d3t_threads.hpp"
 #include "s1/d3t/d3t_content.hpp"
 #include "s1/d3t/d3t_texture.hpp"
 #include "d3t/shader_load.hpp"
@@ -551,7 +552,14 @@ void Initialization_2() {
     config.matrices = g_defaultMatrices.data();
     config.matrixCount = 64;
     config.memoryLimit = 100000;
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    if (!ShenmueInit(&config)) {
+        ShutdownThreads();
+        return;
+    }
+#else
     ShenmueInit(&config);
+#endif
 
 #if !defined(SHENMUE_STEAM)
     std::uint64_t steamId = 1024;

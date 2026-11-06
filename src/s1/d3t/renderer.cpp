@@ -5,7 +5,7 @@
 
 #include "s1/window.hpp"
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #include <d3d11.h>
 #include <dxgi.h>
 #endif
@@ -13,7 +13,7 @@
 namespace shenmue::s1 {
 
 std::int64_t CopyOrResolveTexture(D3TDeviceContext *context, std::uint32_t sourceTexture, std::uint32_t destinationTexture) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!context || !context->deviceContext)
         return 0;
 
@@ -49,7 +49,7 @@ std::int64_t CopyOrResolveTexture(D3TDeviceContext *context, std::uint32_t sourc
     return 0;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 void DX11_D3D11CreateDeviceAndSwapChain(const DisplayModeInfo *config) {
     shen_render_open(config, g_windowHandle);
     g_swapChain = static_cast<IDXGISwapChain *>(d3t::GetNativeSwapChain());

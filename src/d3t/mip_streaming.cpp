@@ -7,6 +7,9 @@
 #include "d3t/buffer.hpp"
 #include "d3t/texture.hpp"
 #include "d3t/shader_load.hpp"
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#include "d3t/image_texture_loader.hpp"
+#endif
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -77,6 +80,11 @@ bool ReplaceWithDecodedTexture(std::uint32_t textureHandle, const void *loadedDa
         return false;
     }
     const auto *const bytes = static_cast<const std::uint8_t *>(loadedData);
+
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    if (loadedSize >= 4 && std::memcmp(bytes, "DDS ", 4) == 0)
+        return ReplaceDecodedImage(textureHandle, loadedData, loadedSize, linearColour);
+#endif
 
 #if defined(_WIN32) && defined(SHENMUE_HAS_DIRECTXTEX)
     if (loadedSize >= 3 && std::memcmp(bytes, "DDS", 3) == 0) {

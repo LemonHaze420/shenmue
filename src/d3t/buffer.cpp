@@ -5,7 +5,7 @@
 #include <cstring>
 #include <new>
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #include <d3d11.h>
 #endif
@@ -128,7 +128,7 @@ void FreeRawBuffer(void *buffer) {
 }
 
 void ReleaseBufferResources(BufferResource &slot) {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (slot.shaderResourceView) {
         static_cast<ID3D11ShaderResourceView *>(slot.shaderResourceView)->Release();
         slot.shaderResourceView = nullptr;
@@ -147,7 +147,7 @@ void ReleaseBufferResources(BufferResource &slot) {
     }
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 void CreateD3D11Buffer(const BufferDescription &description, BufferResource &slot) {
     auto *const device = static_cast<ID3D11Device *>(g_D3DDevice);
 
@@ -424,7 +424,7 @@ void *GetWriteMappedBufferPointer(void *renderer, std::int32_t bufferHandle, std
     if (slot->rawData) {
         return static_cast<std::byte *>(slot->rawData) + offsetIntoBuffer;
     }
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const context = static_cast<ID3D11DeviceContext *>(GetD3DDeviceContext(renderer));
     auto *const buffer = static_cast<ID3D11Buffer *>(slot->gpuBuffer);
     D3D11_MAPPED_SUBRESOURCE mapped{};
@@ -440,7 +440,7 @@ void *GetWriteMappedBufferPointer(void *renderer, std::int32_t bufferHandle, std
 
 std::int64_t DX11_CopySceneNodeToGPU(void *renderer, std::int32_t bufferHandle) {
     BufferResource *const slot = GetSceneBuffer(bufferHandle);
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const context = static_cast<ID3D11DeviceContext *>(GetD3DDeviceContext(renderer));
     auto *const buffer = static_cast<ID3D11Buffer *>(slot->gpuBuffer);
     if (slot->rawData) {

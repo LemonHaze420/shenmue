@@ -23,6 +23,9 @@ int main(int argc, char **argv) {
 #if defined(SHENMUE_WS_STANDALONE)
 #pragma region StandaloneWS
     if (argc == 1) {
+#if defined(__linux__)
+        gameDirectory = std::filesystem::read_symlink("/proc/self/exe", error).parent_path();
+#else
         wchar_t executable[32768]{};
         const DWORD length = GetModuleFileNameW(nullptr, executable, static_cast<DWORD>(sizeof(executable) / sizeof(*executable)));
         if (!length || length >= sizeof(executable) / sizeof(*executable)) {
@@ -30,6 +33,7 @@ int main(int argc, char **argv) {
             return EXIT_FAILURE;
         }
         gameDirectory = std::filesystem::path(executable).parent_path();
+#endif
     } else
 #pragma endregion
 #endif
@@ -43,7 +47,14 @@ int main(int argc, char **argv) {
         }
         gameDirectory = std::filesystem::absolute(argv[1], error);
     }
-    if (error || !std::filesystem::is_regular_file(gameDirectory / "sprite" / "TNTITLE.SPR", error)) {
+    std::filesystem::path titlePath = gameDirectory / "sprite" / "TNTITLE.SPR";
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    if (!std::filesystem::is_regular_file(titlePath, error)) {
+        error.clear();
+        titlePath = gameDirectory / "SPRITE" / "TNTITLE.SPR";
+    }
+#endif
+    if (error || !std::filesystem::is_regular_file(titlePath, error)) {
         std::fputs("The WS data directory must contain sprite/TNTITLE.SPR.\n", stderr);
         return EXIT_FAILURE;
     }
@@ -77,7 +88,11 @@ int main(int argc, char **argv) {
 #else
     shenmue::s1::g_trialLaunchOptions = {gameDirectory, hostDirectory};
 #endif
+#if defined(SHENMUE_GFX_DXVK_NATIVE)
+    return shenmue::s1::Shenmue_Main(0, nullptr) ? EXIT_SUCCESS : EXIT_FAILURE;
+#else
     return shenmue::s1::Shenmue_Main(0, nullptr);
+#endif
 }
 #pragma endregion
 #else
