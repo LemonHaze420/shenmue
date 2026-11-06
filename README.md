@@ -18,6 +18,7 @@ The purpose of this repository is to maintain a codebase which shares as much as
 
 - Windows
 - Linux
+- Dreamcast
 
 ### Libs
 
