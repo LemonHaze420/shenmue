@@ -7,21 +7,33 @@ if (!$vcpkg) { $vcpkg = $env:VCPKG_ROOT }
 if (!$vcpkg) { $vcpkg = 'C:\dev\vcpkg' }
 if ($env:GITHUB_ACTIONS -eq 'true' -and !$Capture) {
   $tools = Get-Content (Join-Path $vcpkg 'scripts/vcpkg-tools.json') -Raw | ConvertFrom-Json
-  $cmakeTools = @($tools.tools | Where-Object { $_.name -eq 'cmake' -and $_.os -eq 'windows' -and $_.arch -eq 'amd64' })
-  if ($cmakeTools.Count -ne 1) { throw 'Cannot identify the vcpkg CMake tool' }
-  $cmakeTool = $cmakeTools[0]
   $downloads = $env:VCPKG_DOWNLOADS
   if (!$downloads) { $downloads = Join-Path $vcpkg 'downloads' }
-  $archive = Join-Path $downloads $cmakeTool.archive
-  if (!(Test-Path -LiteralPath $archive) -or (Get-FileHash -LiteralPath $archive -Algorithm SHA512).Hash -ne $cmakeTool.sha512) {
+  $headers = @{ Accept = 'application/vnd.github+json' }
+  if ($env:GH_TOKEN) { $headers.Authorization = "Bearer $env:GH_TOKEN" }
+  foreach ($name in 'cmake', 'ninja') {
+    $matchesForTool = @($tools.tools | Where-Object { $_.name -eq $name -and $_.os -eq 'windows' -and $_.arch -in 'amd64', 'x64' })
+    if ($matchesForTool.Count -ne 1) { throw "Cannot identify the vcpkg $name tool" }
+    $tool = $matchesForTool[0]
+    $archive = Join-Path $downloads $tool.archive
+    if ((Test-Path -LiteralPath $archive) -and (Get-FileHash -LiteralPath $archive -Algorithm SHA512).Hash -eq $tool.sha512) { continue }
+    if ($tool.url -notmatch '^https://github[.]com/([^/]+/[^/]+)/releases/download/([^/]+)/([^/?]+)$') {
+      throw "Unsupported $name release URL"
+    }
+    $repository = $Matches[1]
+    $tag = $Matches[2]
+    $assetName = [Uri]::UnescapeDataString($Matches[3])
     New-Item -ItemType Directory -Force $downloads | Out-Null
     $temporaryArchive = "$archive.$PID.tmp"
     try {
-      $cmakeVersion = [version]$cmakeTool.version
-      $uri = "https://cmake.org/files/v$($cmakeVersion.Major).$($cmakeVersion.Minor)/$($cmakeTool.archive)"
-      Invoke-WebRequest -UseBasicParsing -Uri $uri -OutFile $temporaryArchive
-      if ((Get-FileHash -LiteralPath $temporaryArchive -Algorithm SHA512).Hash -ne $cmakeTool.sha512) {
-        throw 'CMake archive checksum mismatch'
+      $headers.Accept = 'application/vnd.github+json'
+      $release = Invoke-RestMethod -Headers $headers -Uri "https://api.github.com/repos/$repository/releases/tags/$tag"
+      $assets = @($release.assets | Where-Object { $_.name -eq $assetName })
+      if ($assets.Count -ne 1) { throw "Cannot identify the $name release asset" }
+      $headers.Accept = 'application/octet-stream'
+      Invoke-WebRequest -UseBasicParsing -Headers $headers -Uri $assets[0].url -OutFile $temporaryArchive
+      if ((Get-FileHash -LiteralPath $temporaryArchive -Algorithm SHA512).Hash -ne $tool.sha512) {
+        throw "$name archive checksum mismatch"
       }
       Move-Item -LiteralPath $temporaryArchive -Destination $archive -Force
     } finally {

@@ -97,6 +97,8 @@ jobs:
           submodules: recursive
           persist-credentials: false
       - name: Configure games
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           $game = if ('${{ matrix.game }}' -eq 'WS') { 'WHATS' } else { 'S1' }
           ./.github/scripts/configure-games.ps1 -BuildDirectory build/windows-asi -Game $game
