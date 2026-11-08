@@ -1,0 +1,6 @@
+src/s2/**/*.c text eol=lf
+src/s2/**/*.cpp text eol=lf
+src/s2/**/*.h text eol=lf
+src/s2/**/*.hpp text eol=lf
+src/s2/**/*.inc text eol=lf
+src/s2/**/*.S text eol=lf
