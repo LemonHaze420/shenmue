@@ -5,6 +5,30 @@ $ErrorActionPreference = 'Stop'
 $vcpkg = $env:VCPKG_INSTALLATION_ROOT
 if (!$vcpkg) { $vcpkg = $env:VCPKG_ROOT }
 if (!$vcpkg) { $vcpkg = 'C:\dev\vcpkg' }
+if ($env:GITHUB_ACTIONS -eq 'true' -and !$Capture) {
+  $tools = Get-Content (Join-Path $vcpkg 'scripts/vcpkg-tools.json') -Raw | ConvertFrom-Json
+  $cmakeTools = @($tools.tools | Where-Object { $_.name -eq 'cmake' -and $_.os -eq 'windows' -and $_.arch -eq 'amd64' })
+  if ($cmakeTools.Count -ne 1) { throw 'Cannot identify the vcpkg CMake tool' }
+  $cmakeTool = $cmakeTools[0]
+  $downloads = $env:VCPKG_DOWNLOADS
+  if (!$downloads) { $downloads = Join-Path $vcpkg 'downloads' }
+  $archive = Join-Path $downloads $cmakeTool.archive
+  if (!(Test-Path -LiteralPath $archive) -or (Get-FileHash -LiteralPath $archive -Algorithm SHA512).Hash -ne $cmakeTool.sha512) {
+    New-Item -ItemType Directory -Force $downloads | Out-Null
+    $temporaryArchive = "$archive.$PID.tmp"
+    try {
+      $cmakeVersion = [version]$cmakeTool.version
+      $uri = "https://cmake.org/files/v$($cmakeVersion.Major).$($cmakeVersion.Minor)/$($cmakeTool.archive)"
+      Invoke-WebRequest -UseBasicParsing -Uri $uri -OutFile $temporaryArchive
+      if ((Get-FileHash -LiteralPath $temporaryArchive -Algorithm SHA512).Hash -ne $cmakeTool.sha512) {
+        throw 'CMake archive checksum mismatch'
+      }
+      Move-Item -LiteralPath $temporaryArchive -Destination $archive -Force
+    } finally {
+      Remove-Item -LiteralPath $temporaryArchive -Force -ErrorAction SilentlyContinue
+    }
+  }
+}
 $arguments = @('-S', '.', '-B', $BuildDirectory, '-A', 'x64',
   "-DCMAKE_TOOLCHAIN_FILE=$(Join-Path $vcpkg 'scripts/buildsystems/vcpkg.cmake')",
   '-DVCPKG_TARGET_TRIPLET=x64-windows-static', "-DSHENMUE_S1_GAME=$Game",
