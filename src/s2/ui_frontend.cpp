@@ -270,8 +270,6 @@ void ProcessSplashScreen() {
                 SetSplashMode(0);
             } else {
                 DestroyElementByIndex(UIElement::Splash);
-                ShowElementByIndex(UIElement::PressStart);
-                return;
             }
         }
         break;
@@ -524,7 +522,7 @@ std::int64_t PressStartRender() {
     }
     const bool promptVisible = runtime.blinkTransition != -1 && GetUIIntegerTransitionValue(runtime.blinkTransition) % 4 != 0;
     static std::uint32_t titleFrames = 0;
-    const bool titleReady = SplashSequenceComplete() && element.config.init == 3 && element.isVisible && !runtime.frozen && imagesReady && imageCount != 0;
+    const bool titleReady = SplashSequenceComplete() && element.config.init == 3 && element.config.enabled && !runtime.frozen && imagesReady && imageCount != 0;
     titleFrames = titleReady ? titleFrames + 1 : 0;
     auto_test::LatchTitleFrame(titleFrames >= 150 && promptVisible);
 #endif
