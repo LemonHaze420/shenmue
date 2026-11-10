@@ -31,7 +31,6 @@
 #include <json/json.h>
 
 namespace shenmue::s1 {
-#if SHENMUE_IS_DEMO
 std::int32_t LoadSpriteTextureList(void *data, std::uint32_t size, std::int32_t *surfaces) {
     std::byte *cursor = static_cast<std::byte *>(data);
     const std::byte *const end = cursor + size;
@@ -48,7 +47,6 @@ std::int32_t LoadSpriteTextureList(void *data, std::uint32_t size, std::int32_t 
     }
     return count;
 }
-#endif
 
 namespace {
 
@@ -268,8 +266,10 @@ void ParseStandardDefinitionRemappingJson(void *, std::uint32_t, void *loadedDat
     }
 }
 
+void TextureLoadReleaseNullsub(void *) {
+}
 
-void ParseTextureLoad(void *data, std::uint32_t, void *loadedData, std::uint64_t loadedSize, const char *) {
+void ParseTextureLoad(void *data, std::uint32_t contentHandle, void *loadedData, std::uint64_t loadedSize, const char *) {
     TextureLoadRequest &request = *static_cast<TextureLoadRequest *>(data);
     const Texture2DDescription empty{};
     std::uint32_t texture = CreateTexture2D(&empty);
@@ -278,6 +278,8 @@ void ParseTextureLoad(void *data, std::uint32_t, void *loadedData, std::uint64_t
         texture = 0;
     }
     request.texture = texture;
+    AssignShaderCallback(texture, TextureLoadReleaseNullsub, nullptr);
+    ProcessThreadStates(contentHandle, 0);
 }
 } // namespace
 } // namespace d3t

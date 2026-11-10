@@ -1,4 +1,5 @@
 #include "s1/ui_internal.hpp"
+#include "s1/d3t/scratch_memory.hpp"
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -109,8 +110,16 @@ bool GameMessageAnimIdle() {
     return slot != -1 && g_uiAnimSlots[static_cast<std::size_t>(slot)].status == 0;
 }
 
-
 std::string FormatGroupedNumber(std::int32_t value) {
+    if (g_uiLoadedLanguage == -1) {
+        if (g_uiStringTable) {
+            g_uiStringTable = nullptr;
+            std::free(g_uiStringBuffer);
+            g_uiStringBufferSize = 0;
+        }
+        g_uiLoadedLanguage = English;
+        ReadSubtitleGlyphsAndSubs(English);
+    }
     if (value == 0)
         return "0";
     const char separator = g_uiLoadedLanguage == 2 || g_uiLoadedLanguage == 3 ? ' ' : ',';
@@ -324,7 +333,7 @@ std::int32_t FillStringData(const char *text, std::int32_t size) {
     std::int32_t offset = 0;
     std::int32_t count = 0;
     for (std::int32_t length = DecodeUITextCharacter(text, &codepoint, size); length && offset < size;
-         length = DecodeUITextCharacter(text + offset, &codepoint, size - offset)) {
+        length = DecodeUITextCharacter(text + offset, &codepoint, size - offset)) {
         offset += length;
         ++count;
     }
@@ -356,15 +365,16 @@ char *ParseGameTagsForBuffer(char *buffer, std::int32_t size, const char *tag) {
     }
 }
 
-
 std::int32_t TextFormat(char *buffer, std::int32_t size, const char *tag, const char *replacement) {
     char *const found = ParseGameTagsForBuffer(buffer, size, tag);
     if (!found)
         return 0;
-    std::vector<char> copy(static_cast<std::size_t>(size));
-    std::snprintf(copy.data(), copy.size(), "%s", buffer);
+    char *const copy = static_cast<char *>(AllocateMemoryFromGlobalPool(static_cast<std::size_t>(size)));
+    std::snprintf(copy, static_cast<std::size_t>(size), "%s", buffer);
     const std::int32_t space = FillStringData(buffer, size) + static_cast<std::int32_t>(buffer - found);
-    std::snprintf(found, static_cast<std::size_t>(space), "%s%s", replacement, copy.data() + (found - buffer) + std::strlen(tag));
+    std::snprintf(found, static_cast<std::size_t>(space), "%s%s", replacement, copy + (found - buffer) + std::strlen(tag));
+    if (copy)
+        RestoreGlobalPoolCheckpoint(copy);
     return 1;
 }
 

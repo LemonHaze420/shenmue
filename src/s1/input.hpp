@@ -125,7 +125,6 @@ extern const std::array<std::int32_t, 18> kKeyboardKeys;
 std::int32_t UserMapping(std::uint32_t index);
 extern std::int32_t g_hasMovedMouse;
 extern std::int32_t g_forceAlternateButtonLayout;
-extern std::int32_t g_steamInputGameLayoutState;
 extern std::int32_t g_debugAllowInputGameLayout;
 extern std::uint16_t g_pendingInputFlags;
 extern std::uint16_t g_forcedHeldInputFlags;

@@ -1830,8 +1830,12 @@ void SetRawSoundEffectPaused(void *playback, bool paused) {
 #if (defined(SHENMUE_GFX_DXVK_NATIVE))
     host_audio::Pause(HostVoice(owner), paused);
 #elif defined(_WIN32)
-    if (paused && owner && owner->voice)
+    if (!owner || !owner->voice || !g_xaudio || !g_masteringVoice || GetXAudioEffectFlagVal() == 1)
+        return;
+    if (paused)
         shen_audio_source_stop(owner->voice, 0, 0);
+    else
+        shen_audio_source_start(owner->voice, 0, 0);
 #else
     static_cast<void>(owner);
     static_cast<void>(paused);

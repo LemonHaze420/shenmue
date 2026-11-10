@@ -78,6 +78,7 @@
 #include "s1/task/telm.hpp"
 #include "s1/texture_cache.hpp"
 #include "s1/ui_runtime.hpp"
+#include "s1/ui_internal.hpp"
 #include "s1/texture_loader.hpp"
 
 #include <algorithm>
@@ -395,7 +396,10 @@ std::int64_t ASEQ_VOICE(std::int32_t mode, void *rawData, void *rawRuntime) {
             if (std::strcmp(voiceName, "01m046000038.aiff") == 0) {
                 SubtitleStringId id{};
                 std::memcpy(&id, "A0184BC003", 10);
-                ProcessSubtitleText(ReadStringFromStringTableById(id));
+                const char *const text = ReadStringFromStringTableById(id);
+                d3t::ActivateElementByIdx(kSubtitleUiState);
+                ProcessSubtitleText(text);
+                ApplySubtitlePresentationClass(0);
             } else {
                 if (char *const extension = std::strchr(voiceName, '.'))
                     *extension = '\0';

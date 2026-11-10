@@ -665,7 +665,7 @@ struct VFActor {
     std::int32_t groundContactFlags;
     std::uint32_t contactDecisionMask;
     std::uint32_t contactActionMask;
-    std::int32_t latchedPairContactPriority;
+    std::uint32_t latchedPairContactPriority;
     std::uint32_t counterReactionFlags;
     std::int16_t currentHp;
     std::int16_t maximumHp;

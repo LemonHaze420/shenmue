@@ -614,6 +614,8 @@ namespace CycleManager {
 
 CycleManager::NpcRecord *EntryRecord(CycleManager::MobjEntry *entry);
 
+void MoveObj_LoadMCIR_ChairGroup();
+
 void LoadMNRBAndMCIR();
 
 void CopyCycleValues();

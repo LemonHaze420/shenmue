@@ -240,12 +240,13 @@ void ProcessMessages() {
 #endif
     SOND_Shutdown();
     ShutdownThreads();
-    ReleaseModernSceneLightMetadata();
     ReleaseAicaRam();
     ReleaseRGBA8TextureResources();
+#if !defined(_WIN32) && !defined(SHENMUE_GFX_DXVK_NATIVE)
     d3t_DestroyAllShaders();
     ReleaseD3TPipelineStateCaches();
     FreeBuffers();
+#endif
     ReleaseLargeDataBuffer();
 #if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     ShutdownDX11();
@@ -256,6 +257,7 @@ void ProcessMessages() {
         g_shouldShutdownOodle = 0;
         g_oodleMode = 0;
     }
+    d3t::Free();
     Shenmue_Free();
     std::free(g_globalMemory);
     g_globalMemory = nullptr;

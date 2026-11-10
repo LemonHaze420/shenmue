@@ -34,7 +34,7 @@ void SubtitleFadeCallback(CVWKRuntimeSlot *slot);
 void FreeSequenceFileHandles(CVWKRuntimeSlot &slot);
 
 void SubtitleAuxLoadCallback(CVWKRuntimeSlot *slot);
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 #if SHENMUE_IS_DEMO
@@ -79,7 +79,7 @@ void PrepareSubtitleFontAtlas(void *data, std::uint32_t, void *loadedData, std::
 void InstallLegacyUIFontRecord(std::uint32_t language, const std::uint32_t *header, const std::byte *record, const char *path, std::uint32_t renderHandle);
 
 void RetireLegacyUIFont(std::int32_t language);
-}
+} // namespace shenmue::s1
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -170,30 +170,30 @@ bool ReadFromCacheSubsData(std::vector<std::byte> &data) {
     return true;
 }
 
-void InsertLocalisedText(void *requestData, std::uint32_t, void *loadedData, std::uint64_t loadedSize, const char *) {
+void InsertLocalisedText(void *requestData, std::uint32_t contentHandle, void *loadedData, std::uint64_t loadedSize, const char *) {
     auto *const request = static_cast<SubtitleLoadRequest *>(requestData);
-    if (!request || request->language < 0 || request->language >= 7 || !loadedData || loadedSize < sizeof(SubtitleTableHeader)) {
-        return;
+    if (request && request->language >= 0 && request->language < 7 && loadedData && loadedSize >= sizeof(SubtitleTableHeader)) {
+        auto &data = g_subtitleData[static_cast<std::size_t>(request->language)];
+        const auto *const first = static_cast<const std::byte *>(loadedData);
+        data.assign(first, first + loadedSize);
+        if (ReadFromCacheSubsData(data)) {
+            request->state = 1;
+        }
     }
-    auto &data = g_subtitleData[static_cast<std::size_t>(request->language)];
-    const auto *const first = static_cast<const std::byte *>(loadedData);
-    data.assign(first, first + loadedSize);
-    if (ReadFromCacheSubsData(data)) {
-        request->state = 1;
-    }
+    ProcessThreadStates(contentHandle, 0);
 }
 
-void AsyncPrepareFontGlyphs(void *requestData, std::uint32_t, void *loadedData, std::uint64_t loadedSize, const char *) {
+void AsyncPrepareFontGlyphs(void *requestData, std::uint32_t contentHandle, void *loadedData, std::uint64_t loadedSize, const char *) {
     auto *const request = static_cast<GlyphLoadRequest *>(requestData);
-    if (!request || request->language < 0 || request->language >= 7 || !loadedData || loadedSize == 0) {
-        return;
+    if (request && request->language >= 0 && request->language < 7 && loadedData && loadedSize != 0) {
+        auto &data = g_subtitleGlyphData[static_cast<std::size_t>(request->language)];
+        const auto *const first = static_cast<const std::byte *>(loadedData);
+        data.assign(first, first + loadedSize);
+        request->glyphData = data.data();
+        request->state = 2;
+        g_glyphLoadStates[static_cast<std::size_t>(request->language)] = 2;
     }
-    auto &data = g_subtitleGlyphData[static_cast<std::size_t>(request->language)];
-    const auto *const first = static_cast<const std::byte *>(loadedData);
-    data.assign(first, first + loadedSize);
-    request->glyphData = data.data();
-    request->state = 2;
-    g_glyphLoadStates[static_cast<std::size_t>(request->language)] = 2;
+    ProcessThreadStates(contentHandle, 0);
 }
 
 void LoadFontGlyphsAsync(const char *glyphPath, std::int32_t language) {
@@ -801,7 +801,7 @@ bool CVWK_IsVoiceSlotActive(const CVWKRuntimeSlot *slot) {
     }
     return false;
 }
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 

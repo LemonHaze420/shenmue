@@ -21,12 +21,29 @@ extern std::int32_t g_is70ManBattleLoad;
 extern std::int32_t g_pickedSaveResumeKind;
 extern std::int32_t g_settingFlagsCaptured;
 extern std::int32_t g_displayCapturedDialogueMode;
+extern std::int32_t g_displayCapturedAudioMode;
 extern std::int32_t g_displayCapturedAreaJumpDisabled;
 extern std::int32_t g_displayCapturedDefaultTriggerLayout;
 extern std::int32_t g_displayCapturedWeatherMode;
 extern std::int32_t g_displayDialogueSettingsDirty;
 extern std::int32_t g_displayGameplaySettingsDirty;
 extern std::int32_t g_70ManBattleLoadBeforeSettings;
+
+struct LoadingScreenSaveRecord {
+    std::int32_t present;
+    char gameTime[16];
+    char gameDate[16];
+    std::int32_t locationKind;
+    char location[32];
+    char systemDate[16];
+    char systemTime[16];
+    std::int32_t actNumber;
+};
+static_assert(sizeof(LoadingScreenSaveRecord) == 0x6c);
+
+extern std::array<LoadingScreenSaveRecord, 10> g_loadingScreenSaveRecords;
+
+inline constexpr std::array<const char *, 5> kSaveLocationStringIds{"UISAVELOC0", "UISAVELOC1", "UISAVELOC2", "UISAVELOC3", "UISAVELOC4"};
 
 std::int32_t DISP_GetTitleState() noexcept;
 bool DISP_IsOnMainMenu() noexcept;

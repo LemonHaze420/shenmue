@@ -25,12 +25,14 @@
 #include "s1/timing.hpp"
 #include "s1/texture_loader.hpp"
 #include "s1/d3t/d3t_texture.hpp"
+#include "s1/subtitles.hpp"
 
 #include <algorithm>
 #include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 
 namespace shenmue::s1 {
@@ -52,6 +54,7 @@ std::int32_t g_is70ManBattleLoad = 0;
 std::int32_t g_pickedSaveResumeKind = 0;
 std::int32_t g_settingFlagsCaptured = 0;
 std::int32_t g_displayCapturedDialogueMode = 0;
+std::int32_t g_displayCapturedAudioMode = 0;
 std::int32_t g_displayCapturedAreaJumpDisabled = 0;
 std::int32_t g_displayCapturedDefaultTriggerLayout = 0;
 std::int32_t g_displayCapturedWeatherMode = 0;
@@ -94,8 +97,50 @@ std::uint8_t g_bLoad70MB = 0;
 
 const std::byte *g_bookkeepingCache = nullptr;
 
+std::array<LoadingScreenSaveRecord, 10> g_loadingScreenSaveRecords{};
+void FillLoadingScreenData(std::int32_t slot, const S1SaveSummary &summary) {
+    LoadingScreenSaveRecord &record = g_loadingScreenSaveRecords[slot];
+    if (!summary.numberOfSaves) {
+        record.present = 0;
+        return;
+    }
+    record.present = 1;
+    const S1SaveDateTime &game = summary.gameTime;
+    const S1SaveDateTime &system = summary.systemTime;
+    const char hourTens = static_cast<char>('0' + game.hour / 10);
+    std::snprintf(record.gameTime, sizeof(record.gameTime), "%c%d:%d%d", hourTens, game.hour % 10, game.minute / 10, game.minute % 10);
+    std::snprintf(record.gameDate, sizeof(record.gameDate), "%d%d/%d%d/19%d%d", game.day / 10, game.day % 10, game.month / 10, game.month % 10, game.year / 10,
+        game.year % 10);
+    std::snprintf(record.systemDate, sizeof(record.systemDate), "%d%d/%d%d/%d%d", system.day / 10, system.day % 10, system.month / 10, system.month % 10,
+        system.year / 10, system.year % 10);
+    std::snprintf(record.systemTime, sizeof(record.systemTime), "%c%d:%d%d", hourTens, system.hour % 10, system.minute / 10, system.minute % 10);
+    record.locationKind = 1;
+    const char area[4]{static_cast<char>(summary.areaId), static_cast<char>(summary.areaId >> 8), static_cast<char>(summary.areaId >> 16),
+        static_cast<char>(summary.areaId >> 24)};
+    std::size_t location = 3;
+    if (area[0] == 'J') {
+        location = area[1] == 'U' ? 1 : area[1] == 'A' || area[1] == 'D' ? 2 : 0;
+    } else if (area[0] == 'M') {
+        location = 4;
+    } else if (area[0] != 'D' && area[0] != 'T') {
+        record.locationKind = 2;
+        std::snprintf(record.location + 16, sizeof(record.location) - 16, "%c%c%c%c", area[0], area[1], area[2], area[3]);
+    }
+    std::snprintf(record.location, sizeof(record.location), "%s", InitAndRetrieveStringFromID(kSaveLocationStringIds[location]));
+    record.actNumber = summary.actNumber;
+}
+void FillAllLoadingScreenData() {
+    for (std::int32_t slot = 0; slot < 10; ++slot) {
+        const S1SaveSummary *const summary = HPLG_GetSaveSummary(static_cast<std::size_t>(slot));
+        if (summary && summary->numberOfSaves)
+            FillLoadingScreenData(slot, *summary);
+        else
+            g_loadingScreenSaveRecords[slot].present = 0;
+    }
+}
 void MainMenu_OnBookkeepingCacheRefreshed(const std::byte *cache) {
     g_bookkeepingCache = cache;
+    FillAllLoadingScreenData();
     if (!cache) {
         g_bookkeepingRefreshLoaded = 0;
         return;
@@ -130,6 +175,7 @@ void SetSettingFlags() {
     const std::uint32_t flags = S1SettingsFlags_Get();
     g_settingFlagsCaptured = 1;
     g_displayCapturedDialogueMode = static_cast<std::int32_t>((flags >> 4U) & 3U);
+    g_displayCapturedAudioMode = CheckAicaBootromData() == 0;
     g_displayCapturedDefaultTriggerLayout = g_currentSettings.input.swapTriggers == 0 || g_keyboardActive == 1;
     g_displayCapturedWeatherMode = static_cast<std::int32_t>((flags >> 7U) & 1U);
     g_bookkeepingRefreshUpdatesDisabled = 1;
@@ -285,7 +331,7 @@ void InternalInit() {
 void HLTaskFunc_InternalWeatherInit(std::int32_t mode) {
 
     void *const bootRomScratch = HLib_AllocMemBlock(0x4000, SHEN_NAME(BROM));
-    const bool soundEnabled = bootRomScratch != nullptr;
+    const bool soundEnabled = g_displayCapturedAudioMode == 0;
     if (bootRomScratch) {
         HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(bootRomScratch), 0);
     }

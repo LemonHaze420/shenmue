@@ -39,6 +39,9 @@ const std::byte *SIMM_GetEntryData(const void *buffer, const char *directory, co
 
 void *ReadLooseFile(const char *directory, const char *filename, std::int32_t token);
 #endif
+#if !SHENMUE_IS_DEMO
+std::uint8_t *LookupDirectoryEntry(const char *path, std::int64_t, std::int32_t allocationCount);
+#endif
 
 std::uint64_t OpenFileInternal(const char *path);
 void OpenFile(FileState *file, void *destination, std::int32_t size);

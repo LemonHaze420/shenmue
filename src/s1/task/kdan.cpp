@@ -54,7 +54,7 @@ bool KaidanOccupantOnStairs(const KaidanOccupancyEntry &entry) {
     if (!npc || !npc->moveConfigOffset || !CycleManager::FileOffset(npc->cycle->cycleCommandPtr) || entry.charaId.name != npc->cycle->moveConfig->obj_id.name)
         return false;
     std::uint32_t occupancy = npc->cycle->currentOpcode == CycleOpcode_FollowStairPath2D ? 1U : 0U;
-    const std::vector<std::uint8_t> &bytes = g_cycleManagerRuntime.bytes;
+    const std::span<const std::uint8_t> bytes = g_cycleManagerRuntime.bytes;
     std::uint32_t command = 0;
     if (static_cast<std::size_t>(CycleManager::FileOffset(npc->cycle->cycleCommandPtr)) + sizeof(command) <= bytes.size())
         std::memcpy(&command, bytes.data() + CycleManager::FileOffset(npc->cycle->cycleCommandPtr), sizeof(command));
@@ -440,7 +440,7 @@ namespace {
 
 std::uint32_t KaidanNextCommand(const CycleManager::NpcRecord &npc) {
     std::uint32_t command = 0;
-    const std::vector<std::uint8_t> &bytes = g_cycleManagerRuntime.bytes;
+    const std::span<const std::uint8_t> bytes = g_cycleManagerRuntime.bytes;
     if (static_cast<std::size_t>(CycleManager::FileOffset(npc.cycle->cycleCommandPtr)) + sizeof(command) <= bytes.size())
         std::memcpy(&command, bytes.data() + CycleManager::FileOffset(npc.cycle->cycleCommandPtr), sizeof(command));
     return command;
@@ -723,7 +723,7 @@ namespace CycleManager {
 
 
 bool InitStairPath2D(CycleManager::NpcRecord &npc, std::uint32_t recordOffset) {
-    const std::vector<std::uint8_t> &bytes = g_cycleManagerRuntime.bytes;
+    const std::span<const std::uint8_t> bytes = g_cycleManagerRuntime.bytes;
     if (static_cast<std::size_t>(recordOffset) + 20U > bytes.size())
         return false;
     std::uint32_t packedAnim = 0;

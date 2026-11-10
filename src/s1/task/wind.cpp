@@ -184,16 +184,10 @@ constexpr std::int32_t makeToken(char a, char b, char c, char d) noexcept {
         (static_cast<std::int32_t>(static_cast<std::uint8_t>(c)) << 16) | (static_cast<std::int32_t>(static_cast<std::uint8_t>(d)) << 24);
 }
 
-constexpr std::array<std::uint8_t, 8> kGlyphBitMasks{
-    1, 2, 4, 8, 16, 32, 64, 128};
-constexpr std::array<std::uint8_t, 91> kGlyphStamp{
-    0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0,
-    1, 2, 2, 4, 4, 4, 4, 4, 4, 4, 2, 2, 1,
-    1, 2, 4, 8, 8, 16, 16, 16, 8, 8, 4, 2, 1,
-    1, 2, 4, 8, 16, 32, 128, 64, 16, 8, 4, 2, 1,
-    1, 2, 4, 8, 8, 16, 16, 64, 64, 8, 4, 2, 1,
-    1, 2, 2, 4, 4, 4, 4, 4, 4, 4, 2, 2, 1,
-    0, 1, 2, 2, 2, 2, 2, 2, 2, 4, 2, 1, 0};
+constexpr std::array<std::uint8_t, 8> kGlyphBitMasks{1, 2, 4, 8, 16, 32, 64, 128};
+constexpr std::array<std::uint8_t, 91> kGlyphStamp{0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 1, 2, 2, 4, 4, 4, 4, 4, 4, 4, 2, 2, 1, 1, 2, 4, 8, 8, 16, 16, 16, 8,
+    8, 4, 2, 1, 1, 2, 4, 8, 16, 32, 128, 64, 16, 8, 4, 2, 1, 1, 2, 4, 8, 8, 16, 16, 64, 64, 8, 4, 2, 1, 1, 2, 2, 4, 4, 4, 4, 4, 4, 4, 2, 2, 1, 0, 1, 2, 2, 2, 2,
+    2, 2, 2, 4, 2, 1, 0};
 
 struct FontStorage {
     const std::uint8_t *kana;
@@ -229,31 +223,30 @@ static_assert(sizeof(WeatherWindRegistryNode) == 0x20);
 
 WeatherWindRegistryNode *g_weatherWindRegistry = nullptr;
 constexpr std::array<std::array<float, 9>, 16> kSakuraAngleWeights{{
-        {{0.3f, 6.0f, 6.0f, 4.0f, 4.0f, 2.0f, 2.0f, 2.0f, 2.0f}},
-        {{0.3f, 5.0f, 5.0f, 2.0f, 1.4f, 0.9f, 0.8f, 0.7f, 0.2f}},
-        {{0.3f, 1.0f, 1.0f, 1.0f, 0.5f, 0.2f, 0.0f, 0.0f, 0.0f}},
-        {{0.3f, 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
-        {{0.2f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
-        {{0.2f, 0.5f, 0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
-        {{0.2f, 1.0f, 0.5f, 0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
-        {{0.2f, 0.6f, 0.6f, 0.8f, 0.7f, 0.6f, 0.5f, 0.5f, 0.0f}},
-        {{0.2f, 0.8f, 1.2f, 2.5f, 2.1f, 1.7f, 1.2f, 0.6f, 0.0f}},
-        {{0.2f, 0.8f, 1.0f, 1.6f, 1.0f, 0.5f, 0.4f, 0.0f, 0.0f}},
-        {{0.2f, 1.0f, 0.5f, 0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
-        {{0.2f, 0.7f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
-        {{0.2f, 0.7f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
-        {{0.2f, 0.8f, 0.7f, 0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
-        {{0.3f, 1.0f, 1.0f, 1.0f, 0.6f, 0.4f, 0.4f, 0.3f, 0.0f}},
-        {{0.4f, 3.5f, 2.8f, 2.5f, 2.2f, 1.2f, 1.2f, 1.2f, 1.2f}},
+    {{0.3f, 6.0f, 6.0f, 4.0f, 4.0f, 2.0f, 2.0f, 2.0f, 2.0f}},
+    {{0.3f, 5.0f, 5.0f, 2.0f, 1.4f, 0.9f, 0.8f, 0.7f, 0.2f}},
+    {{0.3f, 1.0f, 1.0f, 1.0f, 0.5f, 0.2f, 0.0f, 0.0f, 0.0f}},
+    {{0.3f, 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
+    {{0.2f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
+    {{0.2f, 0.5f, 0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
+    {{0.2f, 1.0f, 0.5f, 0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
+    {{0.2f, 0.6f, 0.6f, 0.8f, 0.7f, 0.6f, 0.5f, 0.5f, 0.0f}},
+    {{0.2f, 0.8f, 1.2f, 2.5f, 2.1f, 1.7f, 1.2f, 0.6f, 0.0f}},
+    {{0.2f, 0.8f, 1.0f, 1.6f, 1.0f, 0.5f, 0.4f, 0.0f, 0.0f}},
+    {{0.2f, 1.0f, 0.5f, 0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
+    {{0.2f, 0.7f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
+    {{0.2f, 0.7f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
+    {{0.2f, 0.8f, 0.7f, 0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}},
+    {{0.3f, 1.0f, 1.0f, 1.0f, 0.6f, 0.4f, 0.4f, 0.3f, 0.0f}},
+    {{0.4f, 3.5f, 2.8f, 2.5f, 2.2f, 1.2f, 1.2f, 1.2f, 1.2f}},
 }};
 
-std::array<float, 256> g_sakuraWindNoise{};
+float *g_sakuraWindNoise = nullptr;
 std::uint32_t g_sakuraWindNoiseIndex = 0;
 bool g_sakuraWindNoiseInitialized = false;
-
-
-std::array<float, 48> g_sakuraKernel{};
+float *g_sakuraKernel = nullptr;
 float g_sakuraKernelTotalWeight{};
+float *g_sakuraBinTable = nullptr;
 
 // @verified - p
 float EvaluatePowExpKernel(float shape, float scale, float t) {
@@ -346,22 +339,25 @@ float GetValueFromSakuraLUT(float strength) {
 
 
 std::int32_t pickSakuraWindAngle(float strength) {
-    const std::int32_t strengthIndex = std::min(
-        static_cast<std::int32_t>(strength * 30.0f), 8);
+    const std::int32_t strengthIndex = std::min(static_cast<std::int32_t>(strength * 30.0f), 8);
     const float random = nextEnvironmentRandom(g_EnvPrngSeed);
-    float total = 0.0f;
-    for (const auto &weights : kSakuraAngleWeights) {
-        total += weights[static_cast<std::size_t>(strengthIndex)];
-    }
-    const float selected = random * total;
-    float cumulative = 0.0f;
+    const float selected = random * g_sakuraBinTable[135 + strengthIndex];
     for (std::int32_t bin = 0; bin < 16; ++bin) {
-        cumulative += kSakuraAngleWeights[static_cast<std::size_t>(bin)][static_cast<std::size_t>(strengthIndex)];
-        if (cumulative > selected) {
+        if (g_sakuraBinTable[bin * 9 + strengthIndex] > selected) {
             return (bin << 12) - 0x1000;
         }
     }
     return 0xf000;
+}
+
+void SakuraLookupTable() {
+    for (std::size_t strength = 0; strength < 9; ++strength) {
+        float cumulative = 0.0f;
+        for (std::size_t bin = 0; bin < 16; ++bin) {
+            cumulative += kSakuraAngleWeights[bin][strength];
+            g_sakuraBinTable[bin * 9 + strength] = cumulative;
+        }
+    }
 }
 
 const std::uint8_t *glyphSource(const FontStorage *font, std::uint16_t glyphCode) {
@@ -581,11 +577,11 @@ void WIND_InitSakuraWindLUT() {
     std::uint32_t seed = g_EnvPrngSeed;
     for (std::size_t index = 0; index < 13; ++index)
         samples[index] = nextEnvironmentRandom(seed);
-    for (float &output : g_sakuraWindNoise) {
+    for (std::size_t sample = 0; sample < 256; ++sample) {
         float weighted = 0.0f;
         for (std::size_t index = 0; index < 13; ++index)
             weighted += coefficients[index] * samples[index];
-        output = weighted / totalWeight;
+        g_sakuraWindNoise[sample] = weighted / totalWeight;
         for (std::size_t index = 0; index < 12; ++index)
             samples[index] = samples[index + 1];
         samples[12] = nextEnvironmentRandom(seed);
@@ -595,14 +591,16 @@ void WIND_InitSakuraWindLUT() {
     HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(coefficients), 0);
 }
 
-
-
 void WIND_InitializeSakuraWindState() {
+    g_sakuraKernel = static_cast<float *>(HLib_AllocHeapMemBlock(0x100, static_cast<std::int32_t>(WEATHER_WBLT.name)));
     BuildPowExpKernelLUT48(1.78f, 4.8f);
     float total = 0.0f;
-    for (const float weight : g_sakuraKernel)
-        total += weight;
+    for (std::size_t index = 0; index < 48; ++index)
+        total += g_sakuraKernel[index];
     g_sakuraKernelTotalWeight = total;
+    g_sakuraBinTable = static_cast<float *>(HLib_AllocHeapMemBlock(0x280, static_cast<std::int32_t>(WEATHER_S2AT.name)));
+    SakuraLookupTable();
+    g_sakuraWindNoise = static_cast<float *>(HLib_AllocHeapMemBlock(0x440, static_cast<std::int32_t>(WEATHER_NOISE.name)));
     WIND_InitSakuraWindLUT();
     g_sakuraWindNoise[0] = 0.0f;
     g_sakuraWindNoiseIndex = 0;

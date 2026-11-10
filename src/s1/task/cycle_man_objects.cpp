@@ -193,9 +193,6 @@ void CommitXForm_RotateTranslateZYX(CycleManager::NpcRecord &npc, uint32_t offse
 namespace shenmue::s1 {
 namespace CycleManager {
 
-
-
-
 void CreateCharacter(CycleManager::NpcRecord &npc) {
     Character *const chara = npc.cycle->obj;
     const char *const name = reinterpret_cast<const char *>(npc.cycle->create_chara_name);
@@ -291,7 +288,7 @@ bool InitializeMoveObjContext(CycleManager::NpcRecord &npc, uint32_t recordOffse
 bool BeginTaggedWait(CycleManager::NpcRecord &npc, uint32_t opcode, uint32_t recordOffset, uint32_t currentTime) {
     uint32_t targetObjectId = 0;
     float radius = 0.0f;
-    const std::vector<uint8_t> &bytes = g_cycleManagerRuntime.bytes;
+    const std::span<const uint8_t> bytes = g_cycleManagerRuntime.bytes;
     if (!ReadValue(bytes, static_cast<size_t>(recordOffset) + 4u, targetObjectId) || !ReadValue(bytes, static_cast<size_t>(recordOffset) + 8u, radius)) {
         npc.cycle->trackedMobj = nullptr;
         npc.cycle->currentOpcode = CycleOpcode_AdvanceScript;
@@ -320,7 +317,8 @@ bool UpdateTaggedWait(CycleManager::NpcRecord &npc, uint32_t currentTime) {
         if (timedOut) {
             uint32_t nextOpcode = 0;
             const bool followedByTalkMove = tracked && npc.cycle->motnSteeringActive &&
-                ReadValue(cm.bytes, CycleManager::FileOffset(npc.cycle->cycleCommandPtr), nextOpcode) && nextOpcode == CycleOpcode_BeginTalkMoveToTaggedPosition;
+                ReadValue(cm.bytes, CycleManager::FileOffset(npc.cycle->cycleCommandPtr), nextOpcode) &&
+                nextOpcode == CycleOpcode_BeginTalkMoveToTaggedPosition;
             complete = !followedByTalkMove;
         } else if (!tracked) {
             complete = true;
@@ -352,6 +350,5 @@ bool UpdateTaggedWait(CycleManager::NpcRecord &npc, uint32_t currentTime) {
     return true;
 }
 } // namespace CycleManager
-
 
 } // namespace shenmue::s1

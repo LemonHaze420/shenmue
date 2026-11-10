@@ -177,6 +177,7 @@ PackSlot *PACK_FindAfsEntrySlot(PackOwner *owner, std::int32_t pkfEntryIndex, st
 PackSlot *PACK_LoadHumanByIndex(PackOwner *owner, std::uint32_t pkfEntryIndex, std::uint32_t pksEntryIndex);
 std::int64_t PACK_FreeOwnerADFSData(void *owner);
 PackSlot *PACK_QueueFile(const char *rootDirectory, const char *packageName);
+PackSlot *PACK_QueueScriptFile(const char *rootDirectory, const char *packageName);
 void FreePVR(void *modelPointer);
 void Shenmue_FileRead_ALL(std::int64_t model, char *formattedPath, std::uint32_t readMode, std::int16_t flags);
 PackSlot *PACK_QueueAFSPair(
@@ -191,6 +192,7 @@ std::byte *MT5_SetModelBaseOverride(std::byte *modelBase);
 std::byte *MT5_ModelBaseForNode(const void *node);
 void *MT5_SceneBindingForNode(const void *node, std::byte **modelBase);
 void hmdlNormalizeCommandHeader(void *binding, std::byte *modelBase);
+void hmdlNormalizeNodeCommandHeaders(void *model);
 void MT5_ResetModelOwnershipRegistry();
 bool MT5_IsRegisteredModelNode(const void *node);
 void MT5_UnregisterModelAllocation(const void *payload);

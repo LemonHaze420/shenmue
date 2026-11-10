@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -12,8 +15,9 @@
 #include "s1/task/padc.hpp"
 #include "s1/task/vfma.hpp"
 #include "s1/ui_runtime.hpp"
+#include "s1/steam.hpp"
 #include "s1/window.hpp"
-#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #include "platform/host.hpp"
 #if SHENMUE_IS_DEMO
 #include "s1/task/disp.hpp"
@@ -54,7 +58,6 @@ std::int32_t g_inputActive = 0;
 std::int32_t g_keyboardActive = 1;
 std::int32_t g_hasMovedMouse = 0;
 std::int32_t g_forceAlternateButtonLayout = 0;
-std::int32_t g_steamInputGameLayoutState = 1;
 std::int32_t g_debugAllowInputGameLayout = 0;
 std::uint16_t g_pendingInputFlags = 0;
 std::uint16_t g_forcedHeldInputFlags = 0;
@@ -80,7 +83,7 @@ static_assert(sizeof(WindowInputStorage) == 0x1084);
 
 WindowInputStorage g_windowInputStorage{};
 std::int32_t g_startButtonSuppressionFrames = 0;
-#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
 host::InputSnapshot hostInput;
 #endif
 
@@ -236,7 +239,7 @@ std::uint16_t PrioritizePressedInput(std::uint16_t state) {
     return retained;
 }
 
-#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(_WIN32) || defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
 float NormalizeAxis(std::int16_t value) {
     const float normalized = (static_cast<float>(value) + 0.5F) / 32767.5F;
     return std::fabs(normalized) < 0.25F ? 0.0F : normalized;
@@ -380,7 +383,7 @@ void RefreshTriggerInputs() {
             return;
         }
     }
-#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+#elif defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     for (std::size_t user = 0; user < hostInput.controllers.size(); ++user) {
         const host::Controller &state = hostInput.controllers[user];
         if (state.connected && (state.buttons || state.leftTrigger || state.rightTrigger)) {
@@ -649,7 +652,7 @@ void UpdateControllerState(std::uint32_t userIndex) {
         controller.active = 0;
         g_controllerUserIndex = -1;
     }
-#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+#elif defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     const host::Controller &state = hostInput.controllers[userIndex];
     if (state.connected) {
         controller.buttons = state.buttons;
@@ -683,7 +686,7 @@ void UpdateControllerState(std::uint32_t userIndex) {
 }
 
 void UpdateInputsFromInputDevices() {
-#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     host::PollInput(hostInput);
     HandleHostWindowInput(hostInput);
     for (std::size_t key = 0; key < hostInput.keys.size(); ++key) {
@@ -850,11 +853,7 @@ InputMode GetCurrentInputType() {
 }
 
 bool ResolveCurrentInputForGame(std::int32_t inputContext) {
-#if defined(SHENMUE_STEAM)
-    if (g_keyboardActive == 1 || (::shenmue::d3t::OriginalSteamGameInputLayout() != 1 && g_debugAllowInputGameLayout == 0)) {
-#else
-    if (g_keyboardActive == 1 || (g_steamInputGameLayoutState != 1 && g_debugAllowInputGameLayout == 0)) {
-#endif
+    if (g_keyboardActive == 1 || ((!g_platformInterface || g_platformInterface->GetInputGameLayout() != 1) && g_debugAllowInputGameLayout == 0)) {
         return false;
     }
     if (g_cinemaBars[1].isVisible != 0 || (g_uiRefreshedElements[2] & 0x400U) != 0 || (g_uiPreviousRefreshedElements[2] & 0x400U) != 0 ||
@@ -936,7 +935,7 @@ std::uint32_t ExtendedMapVirtualKey(std::uint32_t virtualKeyCode, void *inputLoc
 
 #endif
 
-#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(_WIN32) || defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
 void SetKeyPressedState(std::uint32_t keyCode) {
 #if defined(_WIN32)
     const auto key = ExtendedMapVirtualKey(keyCode, GetKeyboardLayout(0), reinterpret_cast<void *>(0x08090809));
@@ -963,3 +962,4 @@ void SetKeyReleasedState(std::uint32_t keyCode) {
 #endif
 
 } // namespace shenmue::s1
+

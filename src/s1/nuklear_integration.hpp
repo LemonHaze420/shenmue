@@ -33,6 +33,7 @@ extern std::uint8_t g_dbg_is_jp_ver;
 extern void *g_uiStringTable;
 extern void *g_uiStringBuffer;
 extern std::uint64_t g_uiStringBufferSize;
+extern std::uint32_t g_previousUiRenderHandle;
 void ReadSubtitleGlyphsAndSubs(std::int32_t language);
 extern std::uint8_t g_d3t_dbg_forceAllUiLanguages;
 bool GetIsJPVersion();

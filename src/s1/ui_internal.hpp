@@ -250,11 +250,13 @@ struct SplashImageDefinition {
 struct SplashScreenRuntime {
     std::uint32_t textureHandle;
     std::uint32_t resolvedTextureHandle;
-    std::byte imageRegion[0x20];
-    void *waveData;
-    std::int32_t waveIndex;
+    struct nk_image image;
+    std::byte *waveData;
+    std::uint64_t waveSize;
     const SplashImageDefinition *definition;
 };
+static_assert(offsetof(SplashScreenRuntime, image) == 0x8 && offsetof(SplashScreenRuntime, waveData) == 0x28);
+static_assert(offsetof(SplashScreenRuntime, definition) == 0x38);
 
 enum class FrontendAutomationStage : std::uint8_t {
     PressStart,
@@ -879,11 +881,13 @@ extern std::int32_t g_forceSkipSplashScreens;
 
 extern std::uint64_t g_splashStateStart;
 
-extern bool g_splashPanel;
+extern d3t::UIWindow *g_splashPanel;
+
+extern nk_panel g_uiSplashPanel;
 
 extern bool g_skipSplash;
 
-extern float g_splashOpacity;
+bool UI_SetImageFromTexture(struct nk_image &image, std::uint32_t texture);
 
 extern std::int32_t g_pressStartIdleFrames;
 
@@ -1293,8 +1297,6 @@ std::int64_t MainMenuWheel_GetPromptIconSet();
 
 void FrontendAutomation_MainMenuWheelTick();
 
-std::int64_t MainMenuWheelDestroy();
-
 std::int64_t MainMenuSelected();
 
 std::int64_t MainMenuTick();
@@ -1407,6 +1409,12 @@ std::int64_t ItemsMenu_Tick();
 std::int64_t ItemsMenu_IsPressed();
 
 std::int64_t ItemsMenu_Destroy();
+
+std::int64_t ItemsMenu_Reset();
+
+std::int64_t ItemsMenu_GetPromptIconSet();
+
+std::int64_t ItemsMenu_ElementDraw();
 } // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
@@ -1743,6 +1751,8 @@ std::int64_t LoadSave_IsPressed();
 std::int64_t LoadSave_Tick();
 
 std::int64_t LoadSave_Destroy();
+
+std::int64_t LoadSave_GetPromptIconSet();
 } // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
@@ -2094,6 +2104,10 @@ std::int64_t PracticeHud_GetPromptIconSet();
 
 std::int64_t GameBackground_Tick();
 
+void GameBackground_Render();
+
+std::int64_t GameBackground_Destroy();
+
 extern std::array<d3t::UILabelWidget *, 3> g_moveLearnedLabels;
 
 std::int64_t GameMoveLearned_IsSelected();
@@ -2101,6 +2115,10 @@ std::int64_t GameMoveLearned_IsSelected();
 std::int64_t GameMoveLearned_Tick();
 
 std::int64_t GameMoveLearned_Reset();
+
+void GameMoveLearned_Render();
+
+std::int64_t GameMoveLearned_Destroy();
 
 std::int64_t HandleEwzoUiEvent(EwzoUiEvent event, const EwzoUiBinding &binding);
 
@@ -2215,6 +2233,8 @@ std::int64_t GameTraining_IsPressed();
 std::int64_t GameTraining_Tick();
 
 std::int64_t GameTraining_Destroy();
+
+std::int64_t GameTraining_GetPromptIconSet();
 
 extern std::int32_t g_gameTrainingLegacyUIViewSlot;
 

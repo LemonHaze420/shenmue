@@ -9,6 +9,10 @@ namespace shenmue::s1 {
 
 struct ScenarioContext;
 
+inline constexpr shen_name WEATHER_WBLT = SHEN_NAME(WBLT);
+inline constexpr shen_name WEATHER_S2AT = SHEN_NAME(S2AT);
+inline constexpr shen_name WEATHER_NOISE = make_name('1', '/', 'F', 'W');
+
 #pragma pack(push, 1)
 struct WindEntry {
     std::uint32_t flags;

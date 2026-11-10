@@ -1,5 +1,6 @@
 #include "auto_test.hpp"
 #include "s1/ui_internal.hpp"
+#include "s1/archive_data.hpp"
 
 namespace shenmue::s1::ui_runtime_detail {
 std::uint64_t currentNanoseconds();
@@ -19,7 +20,7 @@ std::int32_t MainMenuWheel_ReadInput(std::int32_t index);
 void MainMenuWheel_Update();
 
 void PlayMainMenuAcceptSound();
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 std::int32_t ConfirmChanges();
@@ -63,7 +64,7 @@ void Finish70ManBattleFlow(bool leaveToDisplay);
 void Do70MB_callback(UIRetry70ManBattlePromptResult result);
 
 void Retry70ManBattle(UIRetry70ManBattlePromptResult result);
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 bool UI_ShowRetry70ManBattlePrompt(UIRetry70ManBattlePromptCallback callback);
@@ -73,13 +74,13 @@ namespace shenmue::s1::ui_runtime_detail {
 void GameMenu_SwitchSubmenu(std::uint32_t current, std::uint32_t next);
 
 void GameMenu_TabClicked(float *, void *data);
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 bool AskToKeepOrRevert();
 
 void DoYouWantToQuit_UnsavedChangesLost(UIRetry70ManBattlePromptResult result);
-}
+} // namespace shenmue::s1
 
 namespace shenmue::s1::d3t::ui_runtime_detail {
 std::int32_t CheckAllKeysAreBound();
@@ -125,7 +126,7 @@ void Options_RevertSettings();
 void KeepOptions(UIRetry70ManBattlePromptResult result);
 
 void KeepOrRevertSettingsInternal();
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 void KeepOrRevertSettings(UIRetry70ManBattlePromptResult result);
@@ -193,7 +194,7 @@ void Options_OnTabClicked(float *, void *data);
 void UI_ResetLabelScaleVariables(std::uint32_t slot);
 
 void FrontendAutomation_OptionsTick();
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 void ReturnToTitleScreen();
@@ -238,6 +239,8 @@ std::uint32_t LoadPressStart() {
         pressStart.config.screenWidth = static_cast<std::int16_t>(handle);
         pressStart.config.screenHeight = static_cast<std::int16_t>(handle >> 16U);
         pressStart.config.init = 1;
+        if (g_previousUiRenderHandle)
+            d3t_AddRenderHandleReference(g_previousUiRenderHandle);
     }
     return static_cast<std::uint32_t>(pressStart.setup);
 }
@@ -253,6 +256,8 @@ std::uint32_t LoadMainMenu() {
         mainMenu.config.screenWidth = static_cast<std::int16_t>(handle);
         mainMenu.config.screenHeight = static_cast<std::int16_t>(handle >> 16U);
         mainMenu.config.init = 1;
+        if (g_previousUiRenderHandle)
+            d3t_AddRenderHandleReference(g_previousUiRenderHandle);
     }
     return static_cast<std::uint32_t>(mainMenu.setup);
 }
@@ -422,8 +427,8 @@ void MainMenuWheel_Update() {
 
 void PlayMainMenuAcceptSound() {
     PlayGatedUiSound(g_uiAcceptSoundFrame, kUiAcceptSound);
-    }
 }
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 
@@ -435,7 +440,7 @@ std::int32_t ConfirmChanges() {
     d3t::MessageBox("UIOPTUNSAV", false, 1, KeepOrRevertSettings, 0.0f); // @text EN: "Do you wish to save your changes?" | JA: "変更した項目を保存しますか？"
     return 1;
 }
-}
+} // namespace shenmue::s1
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -692,8 +697,7 @@ void FrontendAutomation_MainMenuWheelTick() {
         QueueFrontendAutomationInput(0x400U);
 }
 
-
-std::int64_t MainMenuWheelDestroy() {
+std::int64_t GameBackground_Destroy() {
     UIBaseRuntime &informationBar = g_uiElements[kUiGameMenuInformationBar];
     if (!informationBar.isVisible || !informationBar.destroy || informationBar.destroy() == 1 || g_busy_reset == 1)
         informationBar.isVisible = 0;
@@ -1105,8 +1109,8 @@ std::int64_t PressStartTick() {
     if (slot <= 0x4bU)
         UI_InputHandler(GNuklearWindow, static_cast<std::int32_t>(slot), 0, g_uiViewSlots[slot].widgetCount);
 #if SHEN_AUTO_TEST_ENABLED
-    const bool promptVisible = g_pressStartBlinkSlot != -1 &&
-        (std::bit_cast<std::int32_t>(g_uiAnimSlots[static_cast<std::size_t>(g_pressStartBlinkSlot)].current[0]) % 4) != 0;
+    const bool promptVisible =
+        g_pressStartBlinkSlot != -1 && (std::bit_cast<std::int32_t>(g_uiAnimSlots[static_cast<std::size_t>(g_pressStartBlinkSlot)].current[0]) % 4) != 0;
     auto_test::LatchTitleFrame(UI_IsFrontendCaptureReady() && !g_pressStartIntroActive && promptVisible);
     if (auto_test::TitleLatched())
         return 0;
@@ -1146,17 +1150,97 @@ std::int64_t PressStartDestroy() {
 }
 
 std::int64_t Splash() {
-    g_splashPanel = true;
+    const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[0x3b].config.uiHandleIndex);
+    g_splashPanel = UI_GetWindow(UI_FindViewWindow(slot, "Splash::Panel"));
     return 1;
 }
 
 std::int64_t ResetSplash() {
-    g_splashPanel = false;
+    g_splashPanel = nullptr;
     return 1;
 }
 
 std::int64_t InitShaders() {
+    SetupShaders();
     return 1;
+}
+
+constexpr std::array<const char *, 7> kLanguageFileSuffixes{"", "jp", "fr", "de", "kr", "tc", "sc"};
+
+void ENG_Load(SplashScreenRuntime &screen) {
+    if (g_uiLoadedLanguage == -1) {
+        if (g_uiStringTable) {
+            g_uiStringTable = nullptr;
+            std::free(g_uiStringBuffer);
+            g_uiStringBufferSize = 0;
+        }
+        g_uiLoadedLanguage = English;
+        ReadSubtitleGlyphsAndSubs(English);
+    }
+    const std::int32_t language = GetCurrentLanguageId(static_cast<GameLanguage>(g_uiLoadedLanguage));
+    const char *path = screen.definition->texturePath;
+    if (!path)
+        return;
+    std::array<char, 272> localized{};
+    if (language) {
+        std::size_t end = std::strlen(path);
+        while (end > 1 && static_cast<std::uint8_t>(path[end - 1] - '.') > 1U)
+            --end;
+        if (path[end - 1] == '.') {
+            std::snprintf(
+                localized.data(), 260, "%.*s_%s.%s", static_cast<int>(end - 1), path, kLanguageFileSuffixes[static_cast<std::size_t>(language)], path + end);
+            if (d3t::CheckForFile(localized.data()))
+                path = localized.data();
+        }
+    }
+    d3t::LoadTextureFromFilepath(path, 0, &screen.textureHandle, g_activeRenderHandle);
+}
+
+std::byte *LoadFileWhole(const char *path, std::uint64_t *size) {
+    const std::uint64_t fileSize = ArchiveData_GetFileSize(path);
+    if (!fileSize)
+        return nullptr;
+    std::byte *const buffer = static_cast<std::byte *>(std::malloc(static_cast<std::size_t>(fileSize)));
+    if (!buffer || !ArchiveData_Read(path, 0, buffer, fileSize)) {
+        std::free(buffer);
+        return nullptr;
+    }
+    *size = fileSize;
+    return buffer;
+}
+
+void SetupUISplashWidget(const SplashScreenRuntime &screen, float fraction) {
+    if (!g_splashPanel)
+        return;
+    nk_context &context = GNuklearWindow;
+    UILayoutRect rect{};
+    UI_GetWindowRect(g_splashPanel, rect);
+    if (g_waitingForNextTick == 1) {
+        nk_begin_titled(&context, &g_uiSplashPanel, "UISplash", "UISplash", nk_rect(rect.x, rect.y, rect.width, rect.height), NK_WINDOW_NO_SCROLLBAR);
+        if (g_waitingForNextTick == 1 && context.current && context.current->layout)
+            nk_layout_space_begin(&context, NK_STATIC, 0.0f, 1);
+    }
+    if (screen.resolvedTextureHandle) {
+        const float width = static_cast<float>(screen.image.region[2]);
+        const float height = static_cast<float>(screen.image.region[3]);
+        if (g_waitingForNextTick == 1 && context.current && context.current->layout)
+            nk_layout_space_push(&context, nk_rect((rect.width - width) * 0.5f + rect.x, (rect.height - height) * 0.5f + rect.y, width, height));
+        const std::int32_t alpha = static_cast<std::int32_t>(fraction * 255.0f);
+        if (g_waitingForNextTick == 1)
+            nk_image_color(&context, screen.image, nk_rgba(255, 255, 255, alpha < 0 ? 0 : alpha < 255 ? alpha : 255));
+    }
+    if (g_waitingForNextTick == 1 && context.current) {
+        if (context.current->layout) {
+            nk_row_layout &layout = context.current->layout->row;
+            layout.item_width = 0.0f;
+            layout.item_height = 0.0f;
+            layout.item_offset = 0.0f;
+            layout.item = nk_rect(0.0f, 0.0f, 0.0f, 0.0f);
+        }
+        if (!(context.current->flags & NK_WINDOW_HIDDEN))
+            nk_end(&context);
+        context.current = nullptr;
+    }
 }
 
 std::int64_t GetInput() {
@@ -1174,7 +1258,9 @@ void InitLoadingSplash() {
     for (std::size_t index = firstSplash; index < g_splashScreens.size(); ++index) {
         SplashScreenRuntime &screen = g_splashScreens[index];
         screen.definition = &kSplashImages[index];
-        d3t::LoadTextureFromFilepath(screen.definition->texturePath, 0, &screen.textureHandle, g_activeRenderHandle);
+        ENG_Load(screen);
+        if (screen.definition->audioPath)
+            screen.waveData = LoadFileWhole(screen.definition->audioPath, &screen.waveSize);
     }
     if (g_skipFrontendSplash) {
 
@@ -1205,15 +1291,14 @@ std::int64_t ProcessGlobalGameState() {
                 screen.resolvedTextureHandle = 0;
                 break;
             }
-            std::memset(screen.imageRegion, 0, sizeof(screen.imageRegion));
-            std::memcpy(screen.imageRegion, &screen.resolvedTextureHandle, sizeof(screen.resolvedTextureHandle));
-            const auto regionWidth = static_cast<std::uint16_t>(width);
-            const auto regionHeight = static_cast<std::uint16_t>(height);
-            std::memcpy(screen.imageRegion + 8, &regionWidth, sizeof(regionWidth));
-            std::memcpy(screen.imageRegion + 10, &regionHeight, sizeof(regionHeight));
-            std::memcpy(screen.imageRegion + 16, &width, sizeof(width));
-            std::memcpy(screen.imageRegion + 20, &height, sizeof(height));
+            screen.image = {};
+            UI_SetImageFromTexture(screen.image, screen.resolvedTextureHandle);
             setSplashState(1);
+            if (screen.waveData) {
+                AudioWaveData wave{};
+                if (ProcessWave(screen.waveData, static_cast<std::size_t>(screen.waveSize), wave) >= 0)
+                    CreateAndSubmitSourceVoice(wave, g_currentSettings.sfxVolume);
+            }
         }
         break;
     case 1:
@@ -1247,7 +1332,12 @@ std::int64_t ProcessGlobalGameState() {
     default:
         break;
     }
-    g_splashOpacity = std::clamp(opacity, 0.0f, 1.0f);
+    SetupUISplashWidget(screen, std::fmax(0.0f, std::fmin(1.0f, opacity)));
+    const UIBaseRuntime &element = g_uiElements[0x3b];
+    const std::uint32_t slot = static_cast<std::uint32_t>(element.config.uiHandleIndex);
+    g_currActiveUIIndex = element.index;
+    if (slot <= 75U)
+        UI_InputHandler(GNuklearWindow, static_cast<std::int32_t>(slot), 0, g_uiViewSlots[slot].widgetCount);
     return 0;
 }
 
@@ -1487,7 +1577,7 @@ std::int64_t YesNoPrompt_GetPromptIconSet() {
         prompts[slot] = static_cast<std::uint16_t>(g_searchPromptIconSlots[slot]);
     return reinterpret_cast<std::int64_t>(prompts.data());
 }
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1::d3t::ui_runtime_detail {
 
@@ -1523,7 +1613,7 @@ bool MessageBox(const char *token, bool useString, std::int32_t clearAfterDone, 
     d3t::ActivateElementByIdx(kUiYesNoPrompt);
     return true;
 }
-}
+} // namespace shenmue::s1::d3t::ui_runtime_detail
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -1575,7 +1665,7 @@ void Retry70ManBattle(UIRetry70ManBattlePromptResult result) {
         Finish70ManBattleFlow(true);
     }
 }
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 
@@ -1597,7 +1687,7 @@ void UI_CloseRetry70ManBattlePrompt() {
     HideOwnedElement(kUiGameMenuInformationBar);
     g_uiElements[kUiGameMenuInformationBar].isHandledExternally = 1;
 }
-}
+} // namespace shenmue::s1
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -1640,7 +1730,7 @@ void GameMenu_TabClicked(float *, void *data) {
     if (static_cast<std::uint32_t>(g_gameMenuSubmenu) != next)
         GameMenu_SwitchSubmenu(static_cast<std::uint32_t>(g_gameMenuSubmenu), next);
 }
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 
@@ -1665,7 +1755,8 @@ void WriteInput_Callback(const UIGridEntry &entry) {
 
 bool AskToKeepOrRevert() {
     if (g_uiElements[kUiSubMenuOptions].isVisible && Options_SettingsChanged()) {
-        d3t::MessageBox("UIOPTUNSAV", false, 1, KeepOrRevertSettings, 0.0f); // @text EN: "Do you wish to save your changes?" | JA: "変更した項目を保存しますか？"
+        d3t::MessageBox(
+            "UIOPTUNSAV", false, 1, KeepOrRevertSettings, 0.0f); // @text EN: "Do you wish to save your changes?" | JA: "変更した項目を保存しますか？"
         return false;
     }
     if (g_currUIState != -1 && g_currUIState != kUiGameMenu)
@@ -1689,7 +1780,8 @@ void DoYouWantToQuit_UnsavedChangesLost(UIRetry70ManBattlePromptResult result) {
         return;
     gameMenu.isVisible = 0;
     if (g_uiElements[kUiSubMenuOptions].isVisible && Options_SettingsChanged()) {
-        d3t::MessageBox("UIOPTUNSAV", false, 1, KeepOrRevertSettings, 0.0f); // @text EN: "Do you wish to save your changes?" | JA: "変更した項目を保存しますか？"
+        d3t::MessageBox(
+            "UIOPTUNSAV", false, 1, KeepOrRevertSettings, 0.0f); // @text EN: "Do you wish to save your changes?" | JA: "変更した項目を保存しますか？"
         return;
     }
     d3t::ResetElementByIdx(kUiSubMenuOptions);
@@ -1839,7 +1931,7 @@ std::int64_t GameMenu_StartDraw() {
     informationBar.isHandledExternally = external;
     return informationBar.elementDraw ? informationBar.elementDraw() : 0;
 }
-}
+} // namespace shenmue::s1
 
 namespace shenmue::s1::d3t::ui_runtime_detail {
 
@@ -1850,7 +1942,7 @@ std::int32_t CheckAllKeysAreBound() {
     }
     return 0;
 }
-}
+} // namespace shenmue::s1::d3t::ui_runtime_detail
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -1858,7 +1950,7 @@ namespace shenmue::s1::ui_runtime_detail {
 void UI_ScriptNoOpCallback(float *, void *) {
 }
 
-// The inlined description lookup of the Options texts: a string id of up to 12 characters read from the string table.
+// Options description ID: up to 12 characters, looked up in the string table.
 const char *Options_ReadString(const char *id) {
     SubtitleStringId key{};
     std::size_t length = 0;
@@ -2123,7 +2215,7 @@ void Options_RedescribeOption() {
     d3t::CopyStringToUILabel(&message);
 }
 
-// The rect of every window drops its cache (inlined in KeepOptions and the revert paths after the display settings changed).
+// Invalidate every window rectangle cache after display settings change.
 void Options_InvalidateWindowRects() {
     for (d3t::UIWindow &window : g_uiWindows)
         window.rectCached = 0;
@@ -2172,7 +2264,7 @@ void KeepOrRevertSettingsInternal() {
     }
     g_optionsPendingAction = -1;
 }
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 
@@ -2183,7 +2275,7 @@ void KeepOrRevertSettings(UIRetry70ManBattlePromptResult result) {
     else
         Options_RevertSettings();
 }
-}
+} // namespace shenmue::s1
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -2269,7 +2361,7 @@ void FormatKeyString(const char *token, std::int32_t key, const UIOption *option
     }
 }
 
-// The Information Bar's current message takes `text` (localized) without its colour override and shows (inlined throughout Options).
+// Show localized Information Bar text without a colour override.
 void Options_ShowText(const char *text) {
     InformationBarMessage &message = g_informationBarLabels.message;
     message.text = text;
@@ -2295,7 +2387,8 @@ void BindOrUnbind(UIRetry70ManBattlePromptResult result) {
             SetSavedInputMapping(saved, static_cast<std::size_t>(bound), kUnboundInputMapping);
         SetSavedInputMapping(saved, static_cast<std::size_t>(g_optionsKeyMapAction), g_optionsLastKeyIndex);
         const UIOption *const action = g_optionsInputAction;
-        FormatKeyString("UIKMAPBIND", g_optionsLastKeyIndex, action); // @text EN: "The [[KEY_NAME]] key has been successfully bound to the [[INPUT_ACTION]] input slot." | JA: "[[KEY_NAME]]キーは[[INPUT_ACTION]]の入力スロットにアサインされました。"
+        FormatKeyString("UIKMAPBIND", g_optionsLastKeyIndex,
+            action); // @text EN: "The [[KEY_NAME]] key has been successfully bound to the [[INPUT_ACTION]] input slot." | JA: "[[KEY_NAME]]キーは[[INPUT_ACTION]]の入力スロットにアサインされました。"
         Options_ShowText(InitAndRetrieveStringFromID(action ? action->name : nullptr));
         g_informationBarLabels.message.text = g_optionsKeyBindingText.data();
         d3t::ShowMessageStr(&g_informationBarLabels.message, 4.0f);
@@ -2413,7 +2506,8 @@ std::int32_t KeyboardMapping(std::int32_t row, UIOption *table, std::int32_t cou
         g_optionsKeyMapAction = action;
         const std::int32_t key = g_windowInput.lastKeyIndex;
         if (key == 256 || (!g_windowInput.currentKeyStateChangedFlag && !g_windowInput.previousKeyStateChangedFlag)) {
-            FormatKeyString("UIKMAPANYK", -1, option); // @text EN: "Press any key to bind it to the [[INPUT_ACTION]] input slot." | JA: "[[INPUT_ACTION]]の入力スロットにアサインするには、好きなキーを押してください。"
+            FormatKeyString("UIKMAPANYK", -1,
+                option); // @text EN: "Press any key to bind it to the [[INPUT_ACTION]] input slot." | JA: "[[INPUT_ACTION]]の入力スロットにアサインするには、好きなキーを押してください。"
             Options_ShowText(g_optionsKeyBindingText.data());
             return 1;
         }
@@ -2422,7 +2516,8 @@ std::int32_t KeyboardMapping(std::int32_t row, UIOption *table, std::int32_t cou
             const std::int32_t bound = Options_FindBoundAction(action, key);
             if (bound == -1 || bound == g_optionsKeyMapAction) {
                 SetSavedInputMapping(g_applicationSettings.savedInput, static_cast<std::size_t>(g_optionsKeyMapAction), g_optionsLastKeyIndex);
-                FormatKeyString("UIKMAPBIND", key, option); // @text EN: "The [[KEY_NAME]] key has been successfully bound to the [[INPUT_ACTION]] input slot." | JA: "[[KEY_NAME]]キーは[[INPUT_ACTION]]の入力スロットにアサインされました。"
+                FormatKeyString("UIKMAPBIND", key,
+                    option); // @text EN: "The [[KEY_NAME]] key has been successfully bound to the [[INPUT_ACTION]] input slot." | JA: "[[KEY_NAME]]キーは[[INPUT_ACTION]]の入力スロットにアサインされました。"
                 Options_ShowText(InitAndRetrieveStringFromID(option->name));
                 g_informationBarLabels.message.text = g_optionsKeyBindingText.data();
                 d3t::ShowMessageStr(&g_informationBarLabels.message, 4.0f);
@@ -2440,14 +2535,16 @@ std::int32_t KeyboardMapping(std::int32_t row, UIOption *table, std::int32_t cou
                     break;
                 }
             }
-            FormatKeyString("UIKMAPALBO", g_windowInput.lastKeyIndex, boundOption); // @text EN: "The [[KEY_NAME]] key is already bound to [[INPUT_ACTION]], do you want to unbind it?" | JA: "[[KEY_NAME]]キーはすでに[[INPUT_ACTION]]にアサインされています。解除しますか？"
+            FormatKeyString("UIKMAPALBO", g_windowInput.lastKeyIndex,
+                boundOption); // @text EN: "The [[KEY_NAME]] key is already bound to [[INPUT_ACTION]], do you want to unbind it?" | JA: "[[KEY_NAME]]キーはすでに[[INPUT_ACTION]]にアサインされています。解除しますか？"
             d3t::MessageBox(g_optionsKeyBindingText.data(), true, 1, BindOrUnbind, 0.0f);
             ReadSettingsFile();
             Options_ReadSettings(g_optionsControlsTable.data(), static_cast<std::int32_t>(g_optionsControlsTable.size()));
             return 1;
         }
         const char *const name = InitAndRetrieveStringFromID(option->name);
-        CopyStringToUI(InitAndRetrieveStringFromID("UIKMAPINVK"), name, 4.0f); // @text EN: "This key cannot be bound. Please try another." | JA: "このキーはアサインできません。他のキーを選択してください。"
+        CopyStringToUI(InitAndRetrieveStringFromID("UIKMAPINVK"), name,
+            4.0f); // @text EN: "This key cannot be bound. Please try another." | JA: "このキーはアサインできません。他のキーを選択してください。"
         g_optionsPendingAction = -1;
         g_optionsLastKeyIndex = -1;
         return 1;
@@ -2814,7 +2911,7 @@ std::int64_t Options_PressChild(UIGrid &grid, UIOption *table, std::int32_t coun
     return result;
 }
 
-// Every option of a table is asked whether it shows (its answer unused), as the children's Renders do first.
+// Query every option before rendering; the visibility results are unused.
 void Options_AskAvailability(const UIOption *table, std::int32_t count) {
     for (std::int32_t entry = 0; entry < count; ++entry) {
         if (table[entry].available)
@@ -2822,12 +2919,12 @@ void Options_AskAvailability(const UIOption *table, std::int32_t count) {
     }
 }
 
-// The rows' choices and slider positions as each child's Render records them (never read).
+// Render records the row choices and slider positions; these values are never read.
 void Options_RecordRows(const UIOption *table, std::int32_t count, std::uint64_t *recorded) {
     for (std::int32_t entry = 0; entry < count; ++entry)
         std::memcpy(&recorded[entry], &table[entry].current, sizeof(recorded[entry]));
 }
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 
@@ -2965,7 +3062,7 @@ void OptionsGraphics_Render() {
     UIGrid_ResetRuntime(g_optionsGraphicsGrid);
     Collection_ShowSelectedCell(g_optionsGraphicsGrid, kUiSubMenuOptionsGraphics, table[0].text(table[0].current));
 }
-}
+} // namespace shenmue::s1
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -2977,7 +3074,8 @@ void Options_SwitchTab() {
     if (kOptionsChildren[static_cast<std::size_t>(list.selected)] == -1) {
         list.selected = list.shownIndex;
         if (g_isInGame)
-            d3t::MessageBox("UIQUITLAB2", false, 0, DoYouWantToQuit_UnsavedChangesLost, 0.0f); // @text EN: "Are you sure you want to quit?\nAny unsaved progress will be lost." | JA: "タイトル画面に戻ります。よろしいですか？\n（記録されていないゲームデータは失われます）"
+            d3t::MessageBox("UIQUITLAB2", false, 0, DoYouWantToQuit_UnsavedChangesLost,
+                0.0f); // @text EN: "Are you sure you want to quit?\nAny unsaved progress will be lost." | JA: "タイトル画面に戻ります。よろしいですか？\n（記録されていないゲームデータは失われます）"
         return;
     }
     if (list.shownIndex == list.selected)
@@ -3047,7 +3145,7 @@ void UI_ResetLabelScaleVariables(std::uint32_t slot) {
             variable.value.floatValue = 1.0f;
     }
 }
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 
@@ -3273,7 +3371,7 @@ std::int64_t OptionsMenu_GetPromptIconSet() {
         g_optionsPromptIconSet[slot] = static_cast<std::uint16_t>(prompts[slot]);
     return reinterpret_cast<std::int64_t>(g_optionsPromptIconSet.data());
 }
-}
+} // namespace shenmue::s1
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -3395,7 +3493,7 @@ void FrontendAutomation_OptionsTick() {
         break;
     }
 }
-}
+} // namespace shenmue::s1::ui_runtime_detail
 
 namespace shenmue::s1 {
 
@@ -3446,4 +3544,4 @@ std::int64_t LoadSplash() {
     }
     return splash.setup;
 }
-}
+} // namespace shenmue::s1

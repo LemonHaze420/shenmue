@@ -972,11 +972,11 @@ std::int32_t g_forceSkipSplashScreens = 0;
 
 std::uint64_t g_splashStateStart = 0;
 
-bool g_splashPanel = false;
+d3t::UIWindow *g_splashPanel = nullptr;
 
 bool g_skipSplash = false;
 
-float g_splashOpacity = 0.0f;
+nk_panel g_uiSplashPanel{};
 
 std::int32_t g_pressStartIdleFrames = 600;
 
@@ -1016,8 +1016,8 @@ d3t::UIImageWidget *g_pressStartLogoImage = nullptr;
 
 std::array<UILegacyFile, 80> g_uiLegacyFiles{};
 
-// The Main Menu's ButtonWheel (MainMenuButtonWheel): its record index and the record, whose selection is the item id (0 New Game, 1
-// Continue, 2 70 Man Battle, 3 Options), and the record as the wheel's IsSelected found it (its Angles are the progress preset's).
+// Main-menu wheel selection: 0 New Game, 1 Continue, 2 70 Man Battle, 3 Options.
+// The selected wheel record keeps the angles from the progress preset.
 std::int32_t g_mainMenuWheelIndex = -1;
 
 UIButtonWheel *g_activeMainMenuWheelLayout = nullptr;
@@ -1078,8 +1078,8 @@ FrontendAutomationStage g_frontendAutomationStage = FrontendAutomationStage::Pre
 
 std::uint16_t g_frontendAutomationFrames = 0;
 
-// The --options automation's step (an edit of kFrontendOptionsEdits, then its return), the edited option's grid row, its value before the
-// edit and the value the step started from.
+
+
 std::int32_t g_frontendOptionsStep = 0;
 
 std::int32_t g_frontendOptionsRow = -1;
@@ -1494,6 +1494,45 @@ std::int64_t ScreenFade() {
     return 0;
 }
 
+float g_cinemaBarsFade = 0.0f;
+
+float g_cinemaBarsFadeDirection = 0.0f;
+
+std::array<nk_panel, 2> g_cinemaBarPanels{};
+
+std::int64_t AspectRatioBars() {
+    const float step = g_bEnableFrameTimeSmoothing ? fFrameTimeMs : 0.033333335f;
+    g_cinemaBarsFade = std::fmax(0.0f, std::fmin(1.0f, g_cinemaBarsFadeDirection * step + g_cinemaBarsFade));
+    const float height = std::sin(g_cinemaBarsFade * 3.1415927f * 0.5f) * 128.57143f;
+    const std::int32_t opacity = static_cast<std::int32_t>(std::fmax(0.0f, std::fmin(1.0f, g_cinemaBarsFade * 10.0f)) * 255.0f);
+    const float width = static_cast<float>(UI_GetAspectWidth()) + 10.0f;
+    nk_context &context = GNuklearWindow;
+    context.style.window.fixed_background = nk_style_item_color(nk_rgba(0, 0, 0, opacity < 0 ? 0 : opacity < 255 ? opacity : 255));
+    const auto bar = [&context](nk_panel &panel, const char *name, struct nk_rect rect) {
+        nk_begin_titled(&context, &panel, name, name, rect, NK_WINDOW_NO_SCROLLBAR);
+        if (context.current) {
+            if (!(context.current->flags & NK_WINDOW_HIDDEN))
+                nk_end(&context);
+            context.current = nullptr;
+        }
+    };
+    bar(g_cinemaBarPanels[0], "Aspect Bar Top", nk_rect(-10.0f, -1.0f, width, height));
+    bar(g_cinemaBarPanels[1], "Aspect Bar Bottom", nk_rect(-10.0f, (1080.0f - height) + 1.0f, width, height));
+    return 0;
+}
+
+void CinemaBars_Render() {
+    g_cinemaBarsFadeDirection = 1.0f;
+}
+
+std::int64_t CinemaBars_Destroy() {
+    g_cinemaBarsFadeDirection = -1.0f;
+    return 1;
+}
+
+std::int64_t CinemaBars_IsShowing() {
+    return g_cinemaBarsFade > 0.0f;
+}
 
 std::int32_t g_uiHelpNewOnly = 0;
 
@@ -1639,8 +1678,6 @@ void DrawNuklear() {
         g_RenderDeviceContext = d3t_DXGetPipelineContext(1);
     }
 #endif
-
-
     for (std::size_t index = 0; index < g_uiElements.size(); ++index) {
         UIBaseRuntime &element = g_uiElements[index];
         if (g_uiDefinitionReady[index].exchange(false, std::memory_order_acq_rel)) {
@@ -1654,6 +1691,8 @@ void DrawNuklear() {
         if (element.config.init == 2 && static_cast<std::uint32_t>(element.config.uiHandleIndex) < 0x4cU &&
             TryFinalizeUIViewTextures(element.config.uiHandleIndex) == 1) {
             element.config.init = 3;
+            if ((element.someFlag3 & 1) && g_previousUiRenderHandle)
+                shenmue::d3t::d3t_DecrementRenderHandleReference(g_previousUiRenderHandle);
             if (element.isSelected)
                 element.isSelected();
             if (element.getContentPanel)
@@ -1711,17 +1750,6 @@ void DrawNuklear() {
         const NuklearQuad fade{
             -10.0f * scale, -10.0f * scale, static_cast<float>(g_uiScreenWidth) + 20.0f * scale, 1100.0f * scale, 0.0f, 0.0f, 1.0f, 1.0f, g_currentFilmColour};
         drewUI |= DrawNuklearQuads(g_RenderDeviceContext, uiRenderTarget, g_rendererWhiteTexture, std::span{&fade, 1});
-    }
-    if (canRender && g_splashPanel && g_currentSplashScreenIndex >= 0 && g_currentSplashScreenIndex < static_cast<std::int32_t>(g_splashScreens.size())) {
-        const SplashScreenRuntime &screen = g_splashScreens[static_cast<std::size_t>(g_currentSplashScreenIndex)];
-        std::uint32_t width = 0;
-        std::uint32_t height = 0;
-        if (screen.resolvedTextureHandle && GetTexture2DDimensions(screen.resolvedTextureHandle, &width, &height)) {
-            const float x = (static_cast<float>(g_uiScreenWidth) - static_cast<float>(width)) * 0.5f;
-            const float y = (static_cast<float>(g_uiScreenHeight) - static_cast<float>(height)) * 0.5f;
-            drewUI |= DrawNuklearImage(g_RenderDeviceContext, uiRenderTarget, screen.resolvedTextureHandle, x, y, static_cast<float>(width),
-                static_cast<float>(height), g_splashOpacity);
-        }
     }
     if (canRender) {
         drewUI |= DrawPresentationOwners(uiRenderTarget);
@@ -3104,6 +3132,12 @@ const char *UI_Elements_Init() {
     g_uiElements[kUiScreenFade].isPressed = UI_NullsubReturn1;
     g_uiElements[kUiScreenFade].tick = ScreenFade;
     g_uiElements[kUiScreenFade].name = "Game Screen Fade";
+    g_cinemaBars->field_ac = 1;
+    g_cinemaBars->tick = AspectRatioBars;
+    g_cinemaBars->render = CinemaBars_Render;
+    g_cinemaBars->destroy = CinemaBars_Destroy;
+    g_cinemaBars->unknown80 = CinemaBars_IsShowing;
+    g_cinemaBars->name = "Cinema bars";
     g_currentFilmColour = 0;
     g_uiElements[4].name = "Main Menu";
     g_uiElements[4].parseDefinitionFromFile = LoadMainMenu;
@@ -3119,7 +3153,7 @@ const char *UI_Elements_Init() {
     g_uiElements[kMainMenuWheelElement].isPressed = MainMenuWheelInput;
     g_uiElements[kMainMenuWheelElement].tick = MainMenuWheelTick;
     g_uiElements[kMainMenuWheelElement].render = MainMenuWheelRender;
-    g_uiElements[kMainMenuWheelElement].destroy = MainMenuWheelDestroy;
+    g_uiElements[kMainMenuWheelElement].destroy = GameBackground_Destroy;
     g_uiElements[kMainMenuWheelElement].getSearchType = MainMenuWheel_GetPromptIconSet;
     g_mainMenuWheelRefresh = 1;
     const auto bindPresentation = [](std::int32_t index, const char *name, std::uint32_t (*loader)()) {
@@ -3137,11 +3171,12 @@ const char *UI_Elements_Init() {
     g_uiElements[kUiGameMenu].elementDraw = GameMenu_StartDraw;
     bindPresentation(kUiGameMenuBackground, "Game Menu Background",
         [] { return LoadPresentationDefinition(kUiGameMenuBackground, "/ui/gamemenu_New/GameMenu_Background.ui"); });
-
     g_uiElements[kUiGameMenuBackground].isPressed = UI_NullsubReturn1;
     g_uiElements[kUiGameMenuBackground].tick = GameBackground_Tick;
     g_uiElements[kUiGameMenuBackground].isSelected = UI_NullsubReturn1;
     g_uiElements[kUiGameMenuBackground].reset = UI_ScriptNoOpReset;
+    g_uiElements[kUiGameMenuBackground].render = GameBackground_Render;
+    g_uiElements[kUiGameMenuBackground].destroy = GameBackground_Destroy;
     bindPresentation(kUiSharedItems, "Shared Items", [] { return LoadPresentationDefinition(kUiSharedItems, "/ui/gamemenu_new/SharedItems.ui"); });
     g_uiElements[kUiSharedItems].isSelected = GetIconSet;
     g_uiElements[kUiSharedItems].isPressed = SharedItems_IsPressed;
@@ -3151,6 +3186,9 @@ const char *UI_Elements_Init() {
     g_uiElements[kUiSubMenuItems].isSelected = ItemsMenu_IsSelected;
     g_uiElements[kUiSubMenuItems].render = ItemsMenu_Render;
     g_uiElements[kUiSubMenuItems].destroy = ItemsMenu_Destroy;
+    g_uiElements[kUiSubMenuItems].reset = ItemsMenu_Reset;
+    g_uiElements[kUiSubMenuItems].getSearchType = ItemsMenu_GetPromptIconSet;
+    g_uiElements[kUiSubMenuItems].elementDraw = ItemsMenu_ElementDraw;
     bindPresentation(
         kUiSubMenuCollection, "Collection", [] { return LoadPresentationDefinition(kUiSubMenuCollection, "/ui/gamemenu_New/SubMenu_Collection.ui"); });
     g_uiElements[kUiSubMenuCollection].isSelected = CollectionMenu_IsSelected;
@@ -3247,8 +3285,8 @@ const char *UI_Elements_Init() {
     g_uiElements[kUiActionSelector].isPressed = ActionSelector_IsPressed;
     g_uiElements[kUiActionSelector].unknown28 = ActionSelector_IsPressed;
     g_uiElements[kUiActionSelector].getSearchType = ActionSelector_GetPromptIconSet;
-
     UIBaseRuntime &gameTraining = g_uiElements[kUiGameTraining];
+    gameTraining.getSearchType = GameTraining_GetPromptIconSet;
     gameTraining.reloadUI = GameTraining_ReloadLegacyUI;
     gameTraining.postInit = GameTrainingWidgetUpdate;
     gameTraining.field_ac = 1;
@@ -3273,11 +3311,15 @@ const char *UI_Elements_Init() {
     loadSave.render = LoadSave_Render;
     loadSave.destroy = LoadSave_Destroy;
     loadSave.getContentPanel = LoadSave_GetContentPanel;
+    loadSave.reset = UI_ScriptNoOpReset;
+    loadSave.getSearchType = LoadSave_GetPromptIconSet;
     bindPresentation(kUiMoveLearned, kEwzoUiElementName, [] { return LoadPresentationDefinition(kUiMoveLearned, "/ui/gamehud/GameHudMoveLearned.ui"); });
     g_uiElements[kUiMoveLearned].isPressed = UI_SCNFNoOpHandler;
     g_uiElements[kUiMoveLearned].tick = GameMoveLearned_Tick;
     g_uiElements[kUiMoveLearned].isSelected = GameMoveLearned_IsSelected;
     g_uiElements[kUiMoveLearned].reset = GameMoveLearned_Reset;
+    g_uiElements[kUiMoveLearned].render = GameMoveLearned_Render;
+    g_uiElements[kUiMoveLearned].destroy = GameMoveLearned_Destroy;
     bindPresentation(kUiYesNoPrompt, "Yes/No Prompt", [] { return LoadPresentationDefinition(kUiYesNoPrompt, "/ui/YesNoPrompt/YesNoPrompt_new.ui"); });
     g_uiElements[kUiYesNoPrompt].isPressed = YesNoPrompt_ProcessMessageBox;
     g_uiElements[kUiYesNoPrompt].tick = YesNoPrompt_Tick;
@@ -3298,12 +3340,13 @@ const char *UI_Elements_Init() {
     g_uiElements[kUiGameMenuInformationBar].getContentPanel = InformationBar_GetContentPanel;
     bindPresentation(
         kUiGameHudBattery, "Game HUD Battery", [] { return LoadPresentationDefinition(kUiGameHudBattery, "/ui/gamemenu_New/GameHud_Battery.ui"); });
-
     g_uiElements[kUiGameHudBattery].isSelected = BatteryHud_IsSelected;
     g_uiElements[kUiGameHudBattery].isPressed = BatteryHud_IsPressed;
     g_uiElements[kUiGameHudBattery].tick = BatteryHud_Tick;
     g_uiElements[kUiGameHudBattery].getSearchType = BatteryHud_GetPromptIconSet;
     g_uiElements[kUiGameHudBattery].destroy = UI_NullsubReturn1;
+    g_uiElements[kUiGameHudBattery].reset = UI_ScriptNoOpReset;
+    g_uiElements[kUiGameHudBattery].render = UI_ScriptNoOp;
     bindPresentation(kUiPlatformIcons, "Platform Icons", [] { return LoadPresentationDefinition(kUiPlatformIcons, "/ui/PlatformIcons.ui"); });
     g_uiElements[kUiPlatformIcons].isSelected = PlatformIcons_IsSelected;
     bindPresentation(kUiGameHud, "Game HUD", [] { return LoadPresentationDefinition(kUiGameHud, "/ui/gamehud/GameHud.ui"); });
@@ -3312,6 +3355,8 @@ const char *UI_Elements_Init() {
     g_uiElements[kUiGameHud].isSelected = GameHud_IsSelected;
     g_uiElements[kUiGameHud].getContentPanel = GameHud_GetContentPanel;
     g_uiElements[kUiGameHud].destroy = GameHud_Destroy;
+    g_uiElements[kUiGameHud].reset = UI_ScriptNoOpReset;
+    g_uiElements[kUiGameHud].render = UI_ScriptNoOp;
     bindPresentation(kUiGameHudWatch, "Game HUD Watch", [] { return LoadPresentationDefinition(kUiGameHudWatch, "/ui/gamehud/GameHudWatch.ui"); });
     g_uiElements[kUiGameHudWatch].field_ac = 1;
     g_uiElements[kUiGameHudWatch].isSelected = GameHudWatch_IsSelected;

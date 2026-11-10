@@ -301,6 +301,10 @@ bool VFActor_UpdateReactProgAnimationFrames(const VFCoreMotionDecodeInput &input
     return false;
 }
 
+bool VFActor_ReactProgramNull(const VFCoreMotionDecodeInput &, VFCoreMotionState &, const std::byte *&) {
+    return false;
+}
+
 VFCoreMotionGate VFDecodeMotionProgram(const VFCoreMotionDecodeInput &input, VFCoreMotionState &state) {
     const std::byte *cursor = input.reactionData + 12;
     for (;;) {
@@ -353,6 +357,9 @@ VFCoreMotionGate VFDecodeMotionProgram(const VFCoreMotionDecodeInput &input, VFC
             break;
         case 15:
             finished = vfApplyNextReactProg(input, state, cursor);
+            break;
+        case 16:
+            finished = VFActor_ReactProgramNull(input, state, cursor);
             break;
         case 17:
             finished = vfIncrementReactProgPC(input, state, cursor);

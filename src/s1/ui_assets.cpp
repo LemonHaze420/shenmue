@@ -170,6 +170,8 @@ std::uint32_t LoadPresentationDefinition(std::int32_t index, const char *path) {
         element.config.screenWidth = static_cast<std::int16_t>(handle);
         element.config.screenHeight = static_cast<std::int16_t>(handle >> 16U);
         element.config.init = 1;
+        if (g_previousUiRenderHandle)
+            d3t_AddRenderHandleReference(g_previousUiRenderHandle);
     }
     return static_cast<std::uint32_t>(element.setup);
 }

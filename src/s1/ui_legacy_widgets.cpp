@@ -1,4 +1,5 @@
 #include "s1/ui_internal.hpp"
+#include "s1/steam.hpp"
 
 namespace shenmue::s1::ui_runtime_detail {
 
@@ -74,11 +75,11 @@ void UI_PlaySound(std::int32_t index) {
     PlayGatedUiSound(frame, kUiSoundCommands[static_cast<std::size_t>(index)]);
     }
 
-// Resolve an authored panel through its parents into the safe-area-mapped authored 1920x1080 space. Children lay out inside the
-// parent's padded rect, as UI_GetPanelRect returns it. Submenu roots parent to GameMenu_New.ui panels, the Collection tabs' roots to
-// SubMenu_Collection.ui panels and, in the frontend, the Options and Load Save roots to the Main Menu's MainMenu::ContentPanel (their
-// GetContentPanel picks the parent), which are looked up in those definitions. An owner may displace one panel, and with it its
-// children, by an animated offset.
+// Resolve panels through their parents in safe-area-mapped 1920x1080 coordinates, using each parent's padded rectangle.
+// Submenus use GameMenu_New.ui; Collection tabs use SubMenu_Collection.ui.
+// Frontend Options and Load/Save use MainMenu::ContentPanel. Animated offsets move a panel and its children.
+
+
 UILayoutRect ResolveUIPanelRect(const UIDefinition &definition, const UIPanelDefinition &panel, std::int32_t depth, const UIPanelOffset *offset) {
     const float safeScale = 0.8f + std::clamp(g_currentSettings.display.uiDisplayArea, 0.0f, 1.0f) * 0.2f;
     const UIDefinition *parentDefinition = &definition;
@@ -343,7 +344,7 @@ std::int32_t ResolveDirectionalGlyph(std::int32_t action) {
 // The pad glyph tables' A/B context: Steam Input's game layout (or its debug allowance) with the keyboard idle, and whether the cinema
 // bars or the skip prompt (UI element 74 ticked this frame, or in the previous frame for the swap context) flip the confirm and cancel faces.
 bool PadLayoutActive() {
-    return g_keyboardActive != 1 && (g_steamInputGameLayoutState == 1 || g_debugAllowInputGameLayout != 0);
+    return g_keyboardActive != 1 && ((g_platformInterface && g_platformInterface->GetInputGameLayout() == 1) || g_debugAllowInputGameLayout != 0);
 }
 
 bool PadFacesSwappedByScene() {

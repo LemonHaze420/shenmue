@@ -10,6 +10,8 @@
 #include "s1/d3t/d3t_asset_remap.hpp"
 #include "s1/d3t/d3t_compression.hpp"
 #include "s1/d3t/render_offsets.hpp"
+#include "d3t/buffer.hpp"
+#include "d3t/crash_reporter.hpp"
 #include "d3t/model.hpp"
 #include "s1/d3t/renderer.hpp"
 #include "s1/d3t/settings.hpp"
@@ -26,7 +28,7 @@
 #include "s1/scene_memory.hpp"
 #include "s1/texture_cache.hpp"
 #include "s1/window.hpp"
-#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #include "platform/host.hpp"
 #endif
 
@@ -68,7 +70,6 @@ void InitializeSteamAPI();
 void ReadConfigFromSave();
 void SettingsFileParser();
 void SetupEffeTransform();
-void SteamPlatformContextRefresh();
 extern std::uint32_t g_ClearColour;
 
 PvrTaskDataNode *g_pendingPvrTaskData = nullptr;
@@ -84,8 +85,6 @@ std::int32_t g_sceneInitFlag71c = 0;
 std::int32_t g_sceneInitFlag718 = 0;
 std::int32_t g_sceneInitFlag72c = 0;
 std::uint32_t g_memAlignment = 7;
-void *g_globalMemory = nullptr;
-std::uint32_t g_globalMemorySize = 0;
 SteamStorageCallback g_steamSaveFunction = nullptr;
 SaveStorageCompletion g_steamCallbackFunction = nullptr;
 void *g_activeSaveData = nullptr;
@@ -219,7 +218,7 @@ struct RenderHandleEntry {
 };
 #pragma pack(pop)
 
-static_assert(offsetof(SteamAppInfo, appName) == 0x8);
+static_assert(offsetof(SteamAppInfo, appId) == 0x10);
 static_assert(sizeof(RenderHandleEntry) == 0x240);
 static_assert(offsetof(RenderHandleEntry, loadedAssetLog) == 0xc4);
 static_assert(offsetof(RenderHandleEntry, pending) == 0xc0);
@@ -246,11 +245,11 @@ bool IsMainRenderHandleBusy() {
 
 int Initialization(int, char **) {
 
-#if defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     if (!host::Initialize())
         return 0;
 #else
-    const SteamAppInfo appInfo{758330, 0, "Coconut", "MD22_112855"};
+    const SteamAppInfo appInfo{.appName = "Coconut", .buildId = "MD22_112855", .appId = 758330};
     if (!Steam_InitApp(&appInfo)) {
         return 0;
     }
@@ -358,14 +357,14 @@ std::int64_t InitShenmue(GameConfig *config) {
     const UINT message = RegisterWindowMessageA("SHENMUE_LOADED");
     PostMessageA(HWND_BROADCAST, message, 0x1234, 0x5678);
     SetupImmutableDXTex2D();
-#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+#elif defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     SetupImmutableDXTex2D();
 #endif
     GenerateMipsAndUpdateResourcesForDirectX();
     g_dxPipelineLock = 0;
 #if defined(_WIN32)
     DX11::g_ppD3DDeviceContext = d3t_DXGetPipelineContext(0);
-#elif defined(SHENMUE_GFX_DXVK_NATIVE)
+#elif defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     DX11::g_ppD3DDeviceContext = d3t::DXGetPipelineContext(0);
 #endif
     InitGeneralTextureResources();
@@ -373,14 +372,17 @@ std::int64_t InitShenmue(GameConfig *config) {
 }
 
 std::int64_t ShenmueInit(GameConfig *config) {
+#if defined(_WIN32)
+    d3t::g_workerExceptionFilter = d3t::CrashReporter;
+#endif
     d3t_CreateThreads();
     if (!g_globalMemory) {
         constexpr std::size_t kGlobalMemorySize = 0x280000;
         g_globalMemory = std::malloc(kGlobalMemorySize * static_cast<std::size_t>(g_memAlignment));
-        g_globalMemorySize = static_cast<std::uint32_t>(kGlobalMemorySize);
+        g_globalMemorySize = kGlobalMemorySize;
     }
 
-#if !defined(SHENMUE_GFX_DXVK_NATIVE)
+#if !defined(__EMSCRIPTEN__) && !defined(SHENMUE_GFX_DXVK_NATIVE)
     d3t::SetupAchievements();
     d3t::InitializeSteamAPI();
 #endif
@@ -426,7 +428,7 @@ std::int64_t ShenmueInit(GameConfig *config) {
         g_steamCallbackFunction(0, nullptr);
     }
 
-#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(_WIN32) || defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     EnumerateDisplays();
 #endif
     InitializeD3TSettings();
@@ -459,8 +461,8 @@ std::int64_t ShenmueInit(GameConfig *config) {
     g_postInitVectorA = {-0.5f, -0.5f, -0.5f, 0.5f};
     g_ClearColour = 0;
     g_postInitVectorB = {0.5f, 0.5f, 0.5f, -0.5f};
-#if !defined(SHENMUE_GFX_DXVK_NATIVE)
-    SteamPlatformContextRefresh();
+#if !defined(__EMSCRIPTEN__) && !defined(SHENMUE_GFX_DXVK_NATIVE)
+    g_platformInterface->RefreshContext();
 #endif
     g_hasDirectXInitialized |= 1;
     return 1;
@@ -471,6 +473,13 @@ void ReleaseAicaRam() {
 }
 
 void ReleaseLargeDataBuffer() {
+    if (g_fileLockHandle != 0xffffU)
+        d3t::ReleaseFileLockHandle(g_fileLockHandle);
+    g_fileLockHandle = 0xffffU;
+    d3t::ValidateAndCommitBuffer(static_cast<std::int32_t>(g_instanceBuffer));
+    d3t::ValidateAndCommitBuffer(static_cast<std::int32_t>(g_billboardBuffer));
+    d3t::ValidateAndCommitBuffer(static_cast<std::int32_t>(g_perObjectBuffer));
+    d3t::ValidateAndCommitBuffer(static_cast<std::int32_t>(g_dedicatedShadowBuffer));
 #if defined(_WIN32)
     _aligned_free(g_largeDataBuffer);
 #else

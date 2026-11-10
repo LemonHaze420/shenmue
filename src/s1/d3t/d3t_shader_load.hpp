@@ -117,6 +117,7 @@ extern const std::uint32_t *g_currentInputLayoutSet;
 namespace d3t {
 void LoadOriginalStripShaders();
 void LoadShaders();
+void LoadEnvironmentShaders();
 } // namespace d3t
 void LoadD3TGenericShaders();
 void AssignShaderReferences();

@@ -1,8 +1,12 @@
 #include "s1/task/effe_internal.hpp"
+#include "d3t/buffer.hpp"
+#include "s1/d3t/model.hpp"
+#include "s1/skinning_cache.hpp"
 
 namespace shenmue::s1::effe_detail {
 
 Matrix4x4 g_particleViewportTransform = kParticleViewportInitialTransform;
+std::array<d3t::D3TParticleInstance, 10000> g_particleInstanceData{};
 Vector2 g_particleViewportSize{};
 float g_particleViewportScale{};
 float EffeDot(const Vector3 &left, const Vector3 &right) {
@@ -87,8 +91,8 @@ void SetEffeParticlesPaused(bool paused) {
     }
 }
 
-// The 0x60 callback-only walker: the task owns the allocation. Suppressing
-// callbacks never substitutes storage or advances particle simulation.
+// The 0x60 task owns the allocation; this pass only invokes callbacks.
+
 void RunEffeParticleCallbacks96(const EffeRuntimeTexture &runtime) {
     if ((runtime.flags & kParticleCallbacksSuppressedFlag) != 0U)
         return;
@@ -100,8 +104,8 @@ void RunEffeParticleCallbacks96(const EffeRuntimeTexture &runtime) {
     }
 }
 
-// ConstructParticleSystemElements. The next callback comes from the next record +0x08,
-// not from the 0x60 task's update selector. No active/lifetime gate exists.
+// Read each callback from record +0x08, without an active/lifetime gate.
+
 void ConstructParticleSystemElements(const EffeRuntimeTexture &runtime) {
     if ((runtime.flags & kParticleCallbacksSuppressedFlag) != 0U)
         return;
@@ -236,6 +240,78 @@ std::uint32_t DrawEffeParticleQuads(
     return drawn;
 }
 
+void UploadParticleInstances(D3TDeviceContext *context, std::uint64_t cacheHandle, std::uint32_t count) {
+    CachedSkinningBufferSlot *const slot = ResolveCachedSkinningBuffer(static_cast<std::uint32_t>(cacheHandle));
+    if (!slot)
+        return;
+    const std::uint32_t modelHandle = slot->renderHandles[GetValueFromMurmurHash(&slot->valueTable, static_cast<std::uint32_t>(cacheHandle >> 32U))];
+    D3TModelRecord *const model = d3t::ResolveModel(modelHandle);
+    if (!model)
+        return;
+    const std::int32_t buffer = static_cast<std::int32_t>(model->instanceBuffer);
+    if (void *const mapped = d3t::GetWriteMappedBufferPointer(context, buffer, 1, 0))
+        std::memcpy(mapped, g_particleInstanceData.data(), sizeof(d3t::D3TParticleInstance) * count);
+    d3t::DX11_CopySceneNodeToGPU(context, buffer);
+    std::memcpy(model->instanceMirror, g_particleInstanceData.data(), sizeof(d3t::D3TParticleInstance) * count);
+    model->instanceCount = count;
+    model->submeshes->primitiveCount = 2U * count;
+    model->drawGroups->indexCount = 6U * count;
+    d3t::UpdateInstancedModelBounds(*model, g_particleInstanceData.data(), count);
+}
+
+void DrawEffeParticleInstances(D3TDeviceContext *context, EffeRuntimeTexture &runtime) {
+    const Matrix4x4 saved = workTransformMatrix;
+    std::int32_t count = 0;
+    for (std::int32_t index = 0; index < runtime.particleCount; ++index) {
+        workTransformMatrix = *(g_matrixStack.top.stack - 1);
+        EffeParticle &particle = static_cast<EffeParticle *>(runtime.particles)[index];
+        particle.update(&particle);
+        if ((particle.flags & kActiveTextureFlag) != 0) {
+            const Vector4 center = TransformEffePoint4(particle.position);
+            workTransformMatrix.rows[0] = {1.0f, 0.0f, 0.0f, workTransformMatrix.rows[0].w};
+            workTransformMatrix.rows[1] = {0.0f, 1.0f, 0.0f, workTransformMatrix.rows[1].w};
+            workTransformMatrix.rows[2] = {0.0f, 0.0f, 1.0f, workTransformMatrix.rows[2].w};
+            workTransformMatrix.rows[3] = center;
+            Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(particle.phase1));
+            const float height = particle.scale * runtime.halfHeight;
+            const float width = particle.scale * runtime.halfWidth;
+            matrix_stack::Matrix4x4_Push();
+            workTransformMatrix = g_particleScreenProjection;
+            Matrix4x4::Multiply(g_matrixStack.top.stack - 1);
+            Matrix4x4::SetActiveTransformToPrePass();
+            const float cosine = cos_fixed16(static_cast<std::uint16_t>(particle.phase1));
+            const float sine = sin_fixed16(static_cast<std::int16_t>(particle.phase1));
+            const Matrix4x4 prePass = workTransformMatrix;
+            matrix_stack::Matrix4x4_Push();
+            workTransformMatrix.rows[0] = {cosine, sine, 0.0f, 0.0f};
+            workTransformMatrix.rows[1] = {-sine, cosine, 0.0f, 0.0f};
+            d3t::D3TParticleInstance &instance = g_particleInstanceData[static_cast<std::size_t>(count)];
+            instance.position = particle.position;
+            instance.corner0[0] = -sine * height + cosine * -width + prePass.rows[2].x * 0.0f + prePass.rows[3].x;
+            instance.corner0[1] = cosine * height + sine * -width + prePass.rows[2].y * 0.0f + prePass.rows[3].y;
+            instance.corner1[0] = -sine * -height + cosine * -width + prePass.rows[2].x * 0.0f + prePass.rows[3].x;
+            instance.corner1[1] = cosine * -height + sine * -width + prePass.rows[2].y * 0.0f + prePass.rows[3].y;
+            instance.parameter1c[0] = 0.0f;
+            instance.parameter1c[1] = 0.0f;
+            instance.parameter24[0] = 1.0f;
+            instance.parameter24[1] = -1.0f;
+            instance.colour = particle.colour | 0x00ffffffU;
+            instance.particle = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&particle));
+            Matrix4x4::Pop(2);
+            ++count;
+            Matrix4x4::Pop();
+        }
+        workTransformMatrix = saved;
+    }
+    if (count != 0) {
+        const RenderArrayEntry *const entry = reinterpret_cast<const RenderArrayEntry *>(ResolveHmdlEntry(reinterpret_cast<std::uintptr_t>(&runtime)));
+        if (entry && entry->state == 1)
+            UploadParticleInstances(context, entry->handle, static_cast<std::uint32_t>(count));
+    }
+    if (count > 0)
+        CachedAttachmentOwnsSubmission(&runtime, 1.0f, workTransformMatrix);
+}
+
 void SubmitAlphaQuads(std::size_t slot) {
     D3TDeviceContext *const context = DX11::g_ppD3DDeviceContext ? DX11::g_ppD3DDeviceContext : g_RenderDeviceContext;
     if (!context)
@@ -258,21 +334,17 @@ void SubmitAlphaQuads(std::size_t slot) {
     g_effeCurrentSystem = &runtime;
     if ((runtime.flags & kActiveTextureFlag) == 0U || !runtime.particles || runtime.particleCount <= 0)
         return;
-    if (screenProjection)
-        SetRenderPass((runtime.flags & kTransparentParticlePassFlag) != 0U ? 1 : 0, (runtime.flags & kAlternateParticleRecordFlag) != 0U ? 3 : 5);
+    SetRenderPass((runtime.flags & kTransparentParticlePassFlag) != 0U ? 1 : 0, (runtime.flags & kAlternateParticleRecordFlag) != 0U ? 3 : 5);
     if ((runtime.flags & kCallbackOnlyParticleFlag) != 0U) {
         if ((runtime.flags & kAlternateParticleRecordFlag) != 0U)
             ConstructParticleSystemElements(runtime);
         else
             RunEffeParticleCallbacks96(runtime);
-        if (screenProjection) {
-            SetRenderAndAlphaFlags_0();
-            Matrix4x4::Pop();
-        }
+        SetRenderAndAlphaFlags_0();
+        Matrix4x4::Pop();
         return;
     }
-    if (screenProjection)
-        CreateAlphaTextureForParticleEffects(runtime.descriptor);
+    CreateAlphaTextureForParticleEffects(runtime.descriptor);
     const std::uint32_t selector = (runtime.flags >> 27U) & 7U;
     if (selector > 3U) {
         const Matrix4x4 saved = workTransformMatrix;
@@ -281,23 +353,21 @@ void SubmitAlphaQuads(std::size_t slot) {
         else
             ClearVertsForDrawing(context, runtime);
         workTransformMatrix = saved;
-        if (screenProjection) {
-            SetRenderAndAlphaFlags_0();
-            Matrix4x4::Pop();
-        }
+        SetRenderAndAlphaFlags_0();
+        Matrix4x4::Pop();
         return;
     }
-
-    if (selector == 2U && !screenProjection)
+    if (selector == 2U && !screenProjection && (runtime.flags & kParticleCallbacksSuppressedFlag) == 0U) {
+        DrawEffeParticleInstances(context, runtime);
+        SetRenderAndAlphaFlags_0();
+        Matrix4x4::Pop();
         return;
-    // CreateAlphaTextureForParticleEffects: descriptor words 0-2 set the render state; word 3 is the texture when word 0 bit 3 is set.
+    }
     const EffeMaterialWords material{.texture = runtime.descriptor[0], .render = runtime.descriptor[1], .alpha = runtime.descriptor[2]};
     const std::uint32_t texture = (runtime.descriptor[0] & 8U) != 0U && runtime.descriptor[3] ? runtime.descriptor[3] : d3t::g_defaultWhiteTexture;
     const std::uint32_t submitted = DrawEffeParticleQuads(context, runtime, selector, material, texture);
-    if (screenProjection) {
-        SetRenderAndAlphaFlags_0();
-        Matrix4x4::Pop();
-    }
+    SetRenderAndAlphaFlags_0();
+    Matrix4x4::Pop();
     g_effeSubmittedParticleCount += submitted;
     if (!submitted)
         return;

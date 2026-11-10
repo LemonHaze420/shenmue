@@ -20,7 +20,7 @@ std::int64_t WristwatchOverlay_GetPromptIconSet() {
     return reinterpret_cast<std::int64_t>(prompts.data());
 }
 
-// The pulse hudSetPromptIconOverrideSet runs for a changed prompt: 1 to 0 over 1.2 s.
+// Changed-prompt pulse: 1 to 0 over 1.2 s.
 void HudPromptStartIconPulse(std::int32_t slotIndex) {
     UIAnimSlot &slot = g_uiAnimSlots[static_cast<std::size_t>(slotIndex)];
     slot.allocated = 1;
@@ -35,7 +35,7 @@ void HudPromptStartIconPulse(std::int32_t slotIndex) {
     slot.reserved40 = -1;
 }
 
-// The shared highlight a changed prompt's alpha follows: 1 to 0.1 over 0.2 s after 0.01 s.
+// Shared prompt highlight: 1 to 0.1 over 0.2 s, after a 0.01 s delay.
 void HudPromptStartHighlight(std::int32_t slotIndex) {
     UIAnimSlot &slot = g_uiAnimSlots[static_cast<std::size_t>(slotIndex)];
     slot.allocated = 1;
@@ -665,7 +665,12 @@ std::int64_t GameBackground_Tick() {
     return 0;
 }
 
+void GameBackground_Render() {
+    UI_ActivateElement(g_uiElements[kUiGameMenuInformationBar]);
+    UI_ActivateElement(g_uiElements[kUiGameHud]);
+}
 
+std::int32_t g_moveLearnedWatchWasVisible = 0;
 
 std::int64_t GameMoveLearned_IsSelected() {
     const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[kUiMoveLearned].config.uiHandleIndex);
@@ -695,6 +700,35 @@ std::int64_t GameMoveLearned_Tick() {
 std::int64_t GameMoveLearned_Reset() {
     g_moveLearnedLabels = {};
     return 0;
+}
+
+void GameMoveLearned_Render() {
+    UIBaseRuntime &hud = g_uiElements[kUiGameHud];
+    hud.isHandledExternally = 1;
+    if (hud.elementDraw)
+        hud.elementDraw();
+    UIBaseRuntime &watch = g_uiElements[kUiGameHudWatch];
+    watch.isHandledExternally = 1;
+    if (watch.elementDraw)
+        watch.elementDraw();
+    g_moveLearnedWatchWasVisible = watch.isVisible != 0;
+    if (g_moveLearnedWatchWasVisible == 1 && (g_currUIState == -1 || g_currUIState == kUiGameHudWatch) &&
+        (!watch.isVisible || !watch.destroy || watch.destroy() == 1 || g_busy_reset == 1))
+        watch.isVisible = 0;
+}
+
+std::int64_t GameMoveLearned_Destroy() {
+    UIBaseRuntime &hud = g_uiElements[kUiGameHud];
+    hud.isHandledExternally = 0;
+    if (hud.elementDraw)
+        hud.elementDraw();
+    UIBaseRuntime &watch = g_uiElements[kUiGameHudWatch];
+    watch.isHandledExternally = 0;
+    if (watch.elementDraw)
+        watch.elementDraw();
+    if (g_moveLearnedWatchWasVisible == 1 && (g_currUIState == -1 || g_currUIState == kUiGameHudWatch))
+        UI_ActivateElement(watch);
+    return 1;
 }
 
 std::int64_t HandleEwzoUiEvent(EwzoUiEvent event, const EwzoUiBinding &binding) {
@@ -746,8 +780,6 @@ std::int64_t HandleEwzoUiEvent(EwzoUiEvent event, const EwzoUiBinding &binding) 
     return 1;
 }
 
-
-
 std::uint32_t RaceHud_ParseDefinition() {
     UIBaseRuntime &element = g_uiElements[kUiGameHudRace];
     if (!element.setup) {
@@ -759,6 +791,8 @@ std::uint32_t RaceHud_ParseDefinition() {
         element.config.screenWidth = static_cast<std::int16_t>(handle);
         element.config.screenHeight = static_cast<std::int16_t>(handle >> 16U);
         element.config.init = 1;
+        if (g_previousUiRenderHandle)
+            d3t_AddRenderHandleReference(g_previousUiRenderHandle);
     }
     return static_cast<std::uint32_t>(element.setup);
 }
@@ -1075,8 +1109,8 @@ std::int64_t GameHudSkip_ReloadUI() {
 
 namespace shenmue::s1 {
 
-// icon changed (to anything but 0xffff), or whose pulse is still running, is flagged (bit 16); a newly flagged slot starts its pulse and
-// the shared highlight, as hudSetPromptIconOverrideSet does for the override set. Without a set, the effective icons are cleared.
+// Flag changed, non-0xffff icons and icons with a running pulse (bit 16).
+// Newly flagged slots start their pulse and the shared highlight; a null set clears the effective icons.
 void SRCH_ApplyPromptIconTypeSet(const std::int32_t *prompts) {
     if (!prompts) {
         for (std::int32_t &slot : g_hudPromptEffectiveSlots)

@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #pragma once
 #include "shenmue.h"
 #include "s1/task/cycle_man.hpp"
@@ -5,6 +8,7 @@
 namespace shenmue::s1 {
 
 inline constexpr shen_name TASK_MOBJ = SHEN_NAME(MOBJ);
+inline constexpr shen_name TASK_MOBS = SHEN_NAME(MOBS);
 bool SetMOBJTaskPtr();
 bool MOBJ_AllocateTaskMemory();
 bool MOBJ_SetupTaskPointer();
@@ -17,3 +21,4 @@ void MOBJ_SetEnabled(bool enabled);
 void MOBJ_CoreCallback(HLib::TaskData *taskData);
 
 } // namespace shenmue::s1
+

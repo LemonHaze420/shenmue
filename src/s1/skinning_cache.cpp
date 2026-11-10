@@ -1794,8 +1794,6 @@ bool ConvertSkinningNodeToParentSpace(std::uint64_t handle, Matrix4x4 &published
     return true;
 }
 
-
-
 Matrix4x4 ComputeGlobalSkinningTransform(std::uint64_t handle) {
     const Matrix4x4 identity{{
         {1.0F, 0.0F, 0.0F, 0.0F},
@@ -1807,16 +1805,26 @@ Matrix4x4 ComputeGlobalSkinningTransform(std::uint64_t handle) {
     if (!slot || !slot->entries || !slot->matrices)
         return identity;
 
-    std::uint32_t index = GetValueFromMurmurHash(&slot->valueTable, static_cast<std::uint32_t>(handle >> 32U));
-    Matrix4x4 transform = slot->matrices[index];
-    std::uint32_t remaining = slot->entryCount;
-    while (index && remaining--) {
-        const std::uint16_t parentDistance = Read<std::uint16_t>(slot->entries, static_cast<std::size_t>(index) * 20U + 4U);
-        if (!parentDistance || index < parentDistance)
+    const std::uint32_t index = GetValueFromMurmurHash(&slot->valueTable, static_cast<std::uint32_t>(handle >> 32U));
+    std::uint32_t depth = 0;
+    for (std::uint32_t ancestor = index; ancestor && depth < slot->entryCount; ++depth) {
+        const std::uint16_t parentDistance = Read<std::uint16_t>(slot->entries, static_cast<std::size_t>(ancestor) * 20U + 4U);
+        if (!parentDistance || ancestor < parentDistance)
             break;
-        index -= parentDistance;
-        transform = MultiplyMatrices(slot->matrices[index], transform);
+        ancestor -= parentDistance;
     }
+    void *const checkpoint = GetGlobalPoolCheckpoint();
+    std::uint32_t *const ancestors = static_cast<std::uint32_t *>(AllocateMemoryFromGlobalPool(4U * depth));
+    std::uint32_t ancestor = index;
+    for (std::uint32_t level = 0; level < depth; ++level) {
+        ancestor -= Read<std::uint16_t>(slot->entries, static_cast<std::size_t>(ancestor) * 20U + 4U);
+        ancestors[level] = ancestor;
+    }
+    Matrix4x4 transform = identity;
+    for (std::uint32_t level = depth; level > 0; --level)
+        transform = MultiplyMatrices(transform, slot->matrices[ancestors[level - 1]]);
+    transform = MultiplyMatrices(transform, slot->matrices[index]);
+    RestoreGlobalPoolCheckpoint(checkpoint);
     return transform;
 }
 

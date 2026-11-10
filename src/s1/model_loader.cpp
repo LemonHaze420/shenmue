@@ -17,6 +17,7 @@
 #include "s1/dynamic_map.hpp"
 #include "common/math.hpp"
 #include "s1/matrix_stack.hpp"
+#include "s1/modern_lighting.hpp"
 #include "s1/mt5_types.hpp"
 #include "s1/file_loader.hpp"
 #include "s1/texture_cache.hpp"
@@ -200,15 +201,15 @@ bool hmdlSetCycleDataForNode(void *nodePointer, void *cycleData) {
 const Matrix4x4 *hmdlTransformForNode(const void *nodePointer, std::int32_t transformOffset) {
     if (!nodePointer || !transformOffset)
         return nullptr;
-    // Runtime HMDL nodes and replacement roots temporarily borrowing one of
-    // their transforms resolve that offset from the owning task. Static
-    // packed nodes retain model-relative transforms.
+    // Runtime nodes and replacement roots borrowing their transforms use the owning task base.
+    // Packed nodes use model-relative transforms.
+
     const bool taskRelative = g_mt5CopiedBindings.contains(nodePointer) || g_mt5TemporaryTaskRelativeNodes.contains(nodePointer);
     const std::byte *const base = taskRelative ? g_pCurrentTaskData : MT5_ModelBaseForNode(nodePointer);
     return reinterpret_cast<const Matrix4x4 *>(base + transformOffset);
 }
 
-// The offset through which hmdlTransformForNode resolves this node to the transform (0 when it lies out of offset range).
+// Transform offset for hmdlTransformForNode; zero if out of range.
 std::int32_t hmdlTransformOffsetForNode(const void *nodePointer, const Matrix4x4 *transform) {
     if (!nodePointer || !transform)
         return 0;
@@ -421,8 +422,8 @@ void hmdlFreeAssignedModel(void *model) {
     if (!model)
         return;
     auto *const header = reinterpret_cast<HLib::TaskData *>(model) - 1;
-    if (header->status != 0x20455355 || header->taskToken != static_cast<std::int32_t>(SHEN_NAME(HMDL)) ||
-        header->content_size <= static_cast<std::int64_t>(sizeof(HLib::TaskData))) {
+    if (header->status != 0x20455355 ||
+        header->taskToken != static_cast<std::int32_t>(SHEN_NAME(HMDL)) || header->content_size <= static_cast<std::int64_t>(sizeof(HLib::TaskData))) {
         return;
     }
     if (RenderArrayEntry *const entry = reinterpret_cast<RenderArrayEntry *>(ResolveHmdlEntry(reinterpret_cast<std::uintptr_t>(model)))) {
@@ -463,9 +464,9 @@ void Shenmue_FileRead_ALL(std::int64_t model, char *formattedPath, std::uint32_t
 
 void MT5_PrepassNodeTreeTexturesAndStrips(void **node, std::int32_t *textureIds, std::uint32_t *depth) {
     auto *current = static_cast<Mt5Node *>(*node);
-    // Packed HMDL offsets are relative to the owning model allocation for
-    // every node, not just the root. Runtime clip records retain arbitrary
-    // child-node pointers, so preserve that ownership for those pointers too.
+    // Packed MT5 node offsets use the owning model allocation, including child nodes referenced by clips.
+
+
     g_mt5ModelBases[current] = MT5_ModelBase();
     Matrix4x4 *temporaryMatrix = nullptr;
 
@@ -690,10 +691,10 @@ PackModel *PAKF_Mallocs(PakChunkHeader *pakf, std::int32_t *textureIds, void *, 
     result->model = model;
     result->textureCount = textureCount;
     result->field_14 = 0;
-    // Every pointer stored by the packed MT5 is an offset from the task-data
-    // allocation which owned the PAKS while PAKF_Mallocs relocated it.  The
-    // model is submitted later from a different HLib task, so retain that base
-    // with the root instead of depending on the current task-data global.
+    // MT5 offsets use the task-data base captured during PAKF_Mallocs relocation.
+    // Submission can run under another task, so keep that base with the root.
+
+
     g_mt5ModelBases[model] = g_pCurrentTaskData;
 
     g_globalEntityName = entityName;
@@ -1067,7 +1068,28 @@ void RemoveCubeProbeSlotsForEntry(RenderArrayEntry &entry) {
     }
 }
 
-
+void UpdateEffectSlotCubeFaceFrustums(std::uint32_t index) {
+    EffectProbeSlot &slot = g_effectProbeSlots[index];
+    const Matrix4x4 world = ComputeGlobalSkinningTransform(slot.node);
+    const Vector3 eye{world.rows[0].w, world.rows[1].w, world.rows[2].w};
+    const float scale = 1.0f / std::tan(kEffectProbeHalfFov);
+    const std::array<Vector3, 6> targets{{{eye.x - 1.0f, eye.y, eye.z}, {eye.x + 1.0f, eye.y, eye.z}, {eye.x, eye.y - 1.0f, eye.z},
+        {eye.x, eye.y + 1.0f, eye.z}, {eye.x, eye.y, eye.z + 1.0f}, {eye.x, eye.y, eye.z - 1.0f}}};
+    const Matrix4x4 projection{{{scale, 0, 0, 0}, {0, scale, 0, 0}, kEffectProbeFrustumDepth, kEffectProbeProjectionW}};
+    for (std::uint32_t face = 0; face < 6; ++face) {
+        matrix_stack::ComputeLookAtViewMatrix(&slot.views[face], &eye, &targets[face], &kEffectProbeFaceUp[face]);
+        slot.projections[face] = {{{scale, 0, 0, 0}, {0, scale, 0, 0}, kEffectProbeProjectionDepth, kEffectProbeProjectionW}};
+        const Matrix4x4 &view = slot.views[face];
+        Matrix4x4 viewProjection;
+        for (std::uint32_t row = 0; row < 4; ++row)
+            for (std::uint32_t column = 0; column < 4; ++column)
+                viewProjection.rows[row][column] = ((projection.rows[row].x * view.rows[0][column] + projection.rows[row].y * view.rows[1][column]) +
+                                                       projection.rows[row].z * view.rows[2][column]) +
+                    projection.rows[row].w * view.rows[3][column];
+        std::array<Vector4, 6> &planes = slot.frustums[face];
+        ExtractAndNormalizeSixFrustumPlanes(planes, viewProjection);
+    }
+}
 
 void SetupHmdlOwnerProbes(RenderArrayEntry &entry) {
     const D3TModelRecord *const model = entry.owner ? d3t::ResolveModel(entry.owner->renderHandle) : nullptr;
@@ -1086,6 +1108,7 @@ void SetupHmdlOwnerProbes(RenderArrayEntry &entry) {
         slot.parameter2c = 0;
         slot.parameter28 = 1.0f;
         slot.parameter30 = 0;
+        UpdateEffectSlotCubeFaceFrustums(0);
         ++g_FramePacingFactor;
     }
     const std::int32_t first = g_FramePacingFactor;
@@ -1110,6 +1133,7 @@ void SetupHmdlOwnerProbes(RenderArrayEntry &entry) {
         slot.parameter20[1] = source.parameter20[1];
         slot.parameter28 = source.parameter28;
         slot.parameter30 = source.parameter30;
+        UpdateEffectSlotCubeFaceFrustums(static_cast<std::uint32_t>(first + probe));
     }
     g_FramePacingFactor = first + probeCount;
 }
@@ -1320,7 +1344,7 @@ RenderArrayOwner BuildHmdlRuntimeObjectRecord(std::uintptr_t handle, const char 
 
 namespace {
 
-// The flag-0x20 tail of d3t_FileRead_ALL: set up an unbound spare entry once every entry of the object is bound.
+// d3t_FileRead_ALL flag 0x20: create an unbound spare when all entries of the object are bound.
 bool SetupHmdlSpareEntry(std::uintptr_t handle) {
     const RenderArrayOwner *const object = reinterpret_cast<const RenderArrayOwner *>(ResolveHmdlRuntimeObject(handle));
     if (!object)

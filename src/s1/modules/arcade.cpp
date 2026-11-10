@@ -537,6 +537,7 @@ void HarrierLoop() {
             g_Nuklear_num_verts = 0;
         }
 #endif
+        ui_runtime_detail::UI_BeginFrame();
 #if defined(_WIN32)
         UpdateMipMaps();
         d3t_PresentFrame(2);
@@ -661,6 +662,7 @@ void HangOnCreate(HLib::TaskData *taskData) {
         g_emulatorSession.result = -1;
         g_emulatorSession.mode = 2;
         g_emulatorSession.field0c = 0;
+        g_emulatorSession.aicaBootrom = ProbeArcadeBootromWorkspace();
         g_emulatorSession.lastScoreBcd = {};
         g_emulatorSession.flags = 0;
         const bool fromMap = EnteredFromMap(taskData);

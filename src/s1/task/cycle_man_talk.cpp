@@ -18,7 +18,7 @@ bool cycleCheckIsActorInsideForwardBlockingQuad(CycleManager::NpcRecord &npc, bo
         return true;
     const CycleManager::NpcRecord *const tracked = CycleManager::GetTrackedMobj(npc);
     for (const CycleManager::NpcRecord *other = CycleManager::NextProgramInList(CycleProgramList_SimSet); other;
-         other = CycleManager::NextProgramInList(CycleProgramList_SimSet, other)) {
+        other = CycleManager::NextProgramInList(CycleProgramList_SimSet, other)) {
         if (other->cycle->moveConfig->obj_id.name != npc.cycle->moveConfig->obj_id.name && other != tracked &&
             check_if_point_in_quadrilateral(nearLeft, nearRight, farRight, farLeft, other->cycle->pos))
             return true;
@@ -26,7 +26,6 @@ bool cycleCheckIsActorInsideForwardBlockingQuad(CycleManager::NpcRecord &npc, bo
     return false;
 }
 namespace CycleManager {
-
 
 void OffsetTalkMoveTarget(CycleManager::NpcRecord &npc, const CycleManager::NpcRecord &tracked, int32_t yawOffset, float distance) {
     const uint16_t sideYaw = static_cast<uint16_t>(static_cast<uint16_t>(tracked.cycle->desiredPathYaw) + yawOffset);
@@ -287,7 +286,7 @@ bool BeginRyoTalkWalk(Character *ryo) {
     const CycleManager::NpcRecord &partner = cm.npcRecords[partnerIndex];
     if (partner.cycle->areaID.name != CycleManager::CurrentAreaId() || g_cycleTalkSuppressed ||
         !CheckIsPointIntersectWith(partner.cycle->pos, nullptr, SHEN_NAME(TALK)) || ((partner.cycle->currentOpcode - 1u) & 0xfffbu) != 0u ||
-        g_pControlPadController->controlMode == 3)
+            g_pControlPadController->controlMode == 3)
         return false;
 
     CycleManager::NpcRecord &talk = g_cyclTalkCycle;
@@ -310,9 +309,6 @@ bool BeginRyoTalkWalk(Character *ryo) {
     return true;
 }
 } // namespace CycleManager
-
-
-
 
 bool TALK(Character *ryo) {
     CycleManager::NpcRecord &talk = g_cyclTalkCycle;
@@ -348,12 +344,11 @@ bool TALK(Character *ryo) {
 }
 namespace CycleManager {
 
-
 bool BeginTalkMoveObjectState(CycleManager::NpcRecord &npc, uint32_t recordOffset) {
     uint32_t targetObjectId = 0;
     Vector3 talkMovePos{};
     uint16_t talkMoveFlags = 0;
-    const std::vector<uint8_t> &bytes = g_cycleManagerRuntime.bytes;
+    const std::span<const uint8_t> bytes = g_cycleManagerRuntime.bytes;
     if (!ReadValue(bytes, static_cast<size_t>(recordOffset) + 4u, targetObjectId) || !ReadValue(bytes, static_cast<size_t>(recordOffset) + 8u, talkMovePos.x) ||
         !ReadValue(bytes, static_cast<size_t>(recordOffset) + 12u, talkMovePos.y) ||
         !ReadValue(bytes, static_cast<size_t>(recordOffset) + 16u, talkMovePos.z) ||
@@ -387,7 +382,6 @@ bool BeginTalkMoveObjectState(CycleManager::NpcRecord &npc, uint32_t recordOffse
 }
 } // namespace CycleManager
 
-
 } // namespace shenmue::s1
 
 namespace shenmue::s1::CycleManager {
@@ -410,8 +404,11 @@ void HoldForConversation(CycleManager::NpcRecord &npc) {
     switch (npc.cycle->currentOpcode) {
     case CycleOpcode_InitTimedPath:
     case CycleOpcode_WalkPath3D:
-        if (!g_bGlobalFlag && CycleManager::CurrentAreaId() == SHEN_NAME(MFSY) && CheckIsPointIntersectWith(npc.cycle->pos, nullptr, SHEN_NAME(TALK)) &&
-            g_pControlPadController && g_pControlPadController->controlMode != 3) {
+        if (!g_bGlobalFlag &&
+            CycleManager::CurrentAreaId() ==
+                SHEN_NAME(MFSY) &&
+                    CheckIsPointIntersectWith(npc.cycle->pos, nullptr, SHEN_NAME(TALK)) && g_pControlPadController &&
+                        g_pControlPadController->controlMode != 3) {
             npc.cycle->xformDirty = true;
             return;
         }

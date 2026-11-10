@@ -11,6 +11,79 @@ struct ScenarioContext;
 #if SHENMUE_IS_PC
 inline constexpr std::uint32_t kWeatherFcasInterpolation[2] = {0x00010800U, 0x00fcfdfbU};
 #endif
+#if SHENMUE_IS_PC || (SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1))
+struct WeatherScheduleCursor {
+    const std::uint32_t *records;
+    const std::uint32_t *current;
+    std::uint32_t count;
+    float fraction;
+    float intensity;
+};
+struct WeatherWindMonth {
+    const std::uint8_t *days;
+    std::uint32_t count;
+};
+struct WeatherWindYear {
+    const WeatherWindMonth *months;
+    std::uint32_t count;
+};
+struct WeatherDateSchedule {
+    std::int32_t baseYear;
+    std::int32_t year;
+    std::int32_t month;
+    std::int32_t day;
+    WeatherScheduleCursor *cloud;
+    WeatherScheduleCursor *rain;
+    WeatherScheduleCursor *snow;
+    WeatherScheduleCursor *forecast;
+    const WeatherWindYear *wind;
+    std::uint32_t windYears;
+    std::uint32_t retained28;
+    float retained2c;
+#if SHENMUE_IS_S1
+    const std::uint32_t *forecastRecords;
+    std::uint32_t forecastRecordCount;
+#endif
+};
+
+inline constexpr std::uint8_t kWeatherWindDays[90]{
+    0x09, 0x07, 0x07, 0x07, 0x08, 0x08, 0x07, 0x05, 0xb8, 0x0a, 0x09, 0xf9, 0xf9, 0x15, 0xf4, 0xa7,
+    0xbc, 0x06, 0x08, 0x18, 0x15, 0x07, 0xab, 0xac, 0x0a, 0x07, 0x54, 0x53, 0xb7, 0x16, 0x19, 0x08,
+    0xf7, 0xe7, 0x09, 0x04, 0x54, 0x04, 0x06, 0x04, 0x75, 0xbc, 0xad, 0x35, 0xa9, 0x06, 0x08, 0x15,
+    0x08, 0x09, 0x07, 0x16, 0x07, 0xf5, 0xaa, 0xbc, 0xb9, 0xb8, 0x06, 0xf9, 0x07, 0xa4, 0xba, 0xb7,
+    0xbb, 0x09, 0x08, 0x0b, 0x0e, 0x08, 0x45, 0xf5, 0xa9, 0x08, 0x06, 0x06, 0x0a, 0x34, 0x08, 0x46,
+    0x04, 0x05, 0xac, 0xad, 0x08, 0x87, 0x56, 0x07, 0x9a, 0x0b};
+inline constexpr WeatherWindMonth kWeatherWindMonths[12]{
+    {kWeatherWindDays, 31},
+    {kWeatherWindDays + 31, 28},
+    {kWeatherWindDays + 59, 31},
+    {kWeatherWindDays, 31},
+    {kWeatherWindDays + 59, 31},
+    {kWeatherWindDays, 31},
+    {kWeatherWindDays + 59, 31},
+    {kWeatherWindDays, 31},
+    {kWeatherWindDays + 59, 31},
+    {kWeatherWindDays, 31},
+    {kWeatherWindDays + 59, 31},
+    {kWeatherWindDays, 31},
+};
+inline constexpr WeatherWindYear kWeatherWindYears[3]{{kWeatherWindMonths, 12}, {kWeatherWindMonths, 12}, {kWeatherWindMonths, 12}};
+inline constexpr shen_name WEATHER_WDAT = SHEN_NAME(WDAT);
+inline constexpr shen_name WEATHER_WIT1 = SHEN_NAME(WIT1);
+inline constexpr shen_name WEATHER_WIT2 = SHEN_NAME(WIT2);
+inline constexpr shen_name WEATHER_WIT3 = SHEN_NAME(WIT3);
+inline constexpr shen_name WEATHER_WIT4 = SHEN_NAME(WIT4);
+#endif
+#if SHENMUE_IS_PC
+inline constexpr shen_name WEATHER_WDTA = SHEN_NAME(WDTA);
+static_assert(sizeof(WeatherScheduleCursor) == 0x20 && offsetof(WeatherScheduleCursor, count) == 0x10 && offsetof(WeatherScheduleCursor, intensity) == 0x18);
+static_assert(offsetof(WeatherDateSchedule, cloud) == 0x10 && offsetof(WeatherDateSchedule, wind) == 0x30 && offsetof(WeatherDateSchedule, retained2c) == 0x40);
+#if SHENMUE_IS_S1
+static_assert(offsetof(WeatherDateSchedule, forecastRecords) == 0x48 && sizeof(WeatherDateSchedule) == 0x58);
+#endif
+WeatherDateSchedule *Weather_CreateDateSchedule(std::int32_t baseYear);
+extern WeatherDateSchedule *g_weatherDateSchedule;
+#endif
 struct WeatherDataEntry {
     float intensity;
     float targetIntensity;
@@ -133,6 +206,7 @@ void WEXE_ApplySnowGameData(float intensity, std::int32_t stepCount);
 void WEXE_ApplyWindGameData(float intensity, std::int32_t stepCount);
 void WEXE_ApplyFcasGameData(float intensity, std::int32_t stepCount);
 float WEXE_GetCloudIntensity();
+float Weather_GetCLUDIntensity();
 float WEXE_GetRainIntensity();
 float WEXE_GetSnowIntensity();
 float WEXE_GetWindIntensity();

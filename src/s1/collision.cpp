@@ -4159,13 +4159,18 @@ void CCOW_RefreshAuthoredShape(Character *character) {
 
 namespace {
 
+const QueryShape *RetrieveCameraCollisionShape(Character *&character);
+
 bool CheckPointConditions(float startX, float startZ, float endX, float endZ) {
+    MapControlData *const control = CharacterCollisionMapControl();
+    Character *const ryo = control ? static_cast<Character *>(control->ryo) : nullptr;
     QueryShape line{.mode = CalculateLineIntersection_0};
     line.packed[0] = {startX, startZ, endX};
     line.packed[1].x = endZ;
     g_characterCollisionIterator = g_characterCollisionHead;
-    while (CharacterCollisionWork *const work = NextCharacterCollisionShape()) {
-        if (ShapeIntersectsQuery(work->shape, line))
+    Character *character = nullptr;
+    for (const QueryShape *shape = RetrieveCameraCollisionShape(character); shape; shape = RetrieveCameraCollisionShape(character)) {
+        if (character != ryo && ShapeIntersectsQuery(*shape, line))
             return true;
     }
     return false;

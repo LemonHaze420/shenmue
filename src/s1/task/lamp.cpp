@@ -175,7 +175,7 @@ void LAMP_Callback(HLib::TaskData *taskData) {
     auto *const draw = reinterpret_cast<LampDrawTaskData *>(taskData);
 
     PushDrawTransform(draw->transform);
-    d3t::MT5_PushAndReadNodeTree(draw->modelRoot, nullptr, draw->opacity);
+    CharacterHandler_AlphaDraw(draw->modelRoot, draw->opacity);
     PopDrawTransform();
 
     draw->opacity += draw->opacityStep;

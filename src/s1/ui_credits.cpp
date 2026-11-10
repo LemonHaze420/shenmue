@@ -1,4 +1,5 @@
 #include "s1/ui_internal.hpp"
+#include "s1/d3t/scratch_memory.hpp"
 
 namespace shenmue::s1::ui_runtime_detail {
 float LerpEaseInOutQuad(float start, float end, float t);
@@ -171,26 +172,28 @@ void CreditsAppendText(CreditsTable &table, CreditsCell &cell, const char *text)
     cell.value = offset;
 }
 
-
-
 void CreditsParseCell(CreditsTable &table, CreditsCell &cell, const char *start, const char *end) {
-    std::vector<char> field(start, end);
-    field.push_back('\0');
-    char *const text = field.data();
+    const std::size_t length = static_cast<std::size_t>(end - start);
+    char *const text = static_cast<char *>(AllocateMemoryFromGlobalPool(8U * length + 8U));
+    if (!text)
+        return;
+    std::memcpy(text, start, length);
+    text[length] = '\0';
     for (char *quote = std::strchr(text, '"'); quote; quote = std::strchr(quote, '"')) {
         if (std::strstr(quote, "\"\"\"") == quote)
             ++quote;
         else
             std::memmove(quote, quote + 1, std::strlen(quote));
     }
-    std::size_t length = std::strlen(text);
-    while (length > 1 && static_cast<std::uint8_t>(text[length - 1] - '.') > 1U)
-        --length;
-    const char *const extension = length && text[length - 1] == '.' ? text + length : nullptr;
+    std::size_t dot = std::strlen(text);
+    while (dot > 1 && static_cast<std::uint8_t>(text[dot - 1] - '.') > 1U)
+        --dot;
+    const char *const extension = dot && text[dot - 1] == '.' ? text + dot : nullptr;
     if (extension && (std::strcmp(extension, "png") == 0 || std::strcmp(extension, "tga") == 0))
         CreditsLoadImage(table, cell, text);
     if (cell.kind == 0)
         CreditsAppendText(table, cell, text);
+    RestoreGlobalPoolCheckpoint(text);
 }
 
 
@@ -655,4 +658,4 @@ std::int64_t Credits_Tick() {
     }
     return 0;
 }
-}
+} // namespace shenmue::s1::ui_runtime_detail

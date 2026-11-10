@@ -1,7 +1,9 @@
+#include "shenmue.h"
+
 #include "s1/task/vf_internal.hpp"
+#include "s1/texture_loader.hpp"
 
 namespace shenmue::s1 {
-
 using namespace vf_detail;
 
 using namespace vf_detail;
@@ -15,7 +17,6 @@ std::int16_t g_lcdmScoreBlinkTimer = 0;
 std::uint8_t g_lcdmScoreBlinkPhase = 0;
 
 std::int32_t g_vfLcdmEndShown = 0;
-
 std::uint8_t g_prevHelpIconFlag = 0;
 
 std::uint8_t g_shenFightState = 0;
@@ -48,7 +49,6 @@ std::int32_t g_vfShouldLoad70mbAssets = 0;
 std::uint16_t g_vfPostBtlWaitFrms = 0;
 
 std::uint8_t g_b70MBState = 0;
-
 std::int32_t g_70mbLastRankIndex = 0;
 
 std::uint32_t g_70mbLastTimeTicks = 0xffffffffU;
@@ -279,6 +279,7 @@ void AllocateFGST() {
         style = nullptr;
 }
 
+std::array<std::int32_t, 11> g_vfEnergySprite{};
 std::uint32_t shenStartFGST(std::uint8_t enemies, std::uint8_t groups, std::int8_t areaMasks, std::uint8_t generators) {
     AllocateFGST();
     AllocateFCMG(enemies);
@@ -293,6 +294,11 @@ std::uint32_t shenStartFGST(std::uint8_t enemies, std::uint8_t groups, std::int8
     g_vfStageObjs.fill(nullptr);
     g_maxDist = 16.0f;
     g_vfObjectRoot = nullptr;
+    const std::uint32_t energyBytes = static_cast<std::uint32_t>(shenOpenFile("sprite", "ENERGY.SPR"));
+    void *const energy = ReadFile("sprite", "ENERGY.SPR", static_cast<std::int32_t>(SHEN_NAME(ENRG)));
+    if (energy)
+        LoadSpriteTextureList(energy, energyBytes, g_vfEnergySprite.data());
+    HLib_FreeTaskData(static_cast<HLib::TaskData *>(energy), 0);
     g_battle70Index = nullptr;
     g_battle70Afs = nullptr;
     if (g_areaId == SHEN_NAME(MFBT)) {
@@ -1248,7 +1254,6 @@ void vfFightTaskTeardown(VFMAData *game) {
 }
 
 } // namespace shenmue::s1::vf_detail
-
 namespace shenmue::s1 {
 
 using namespace vf_detail;

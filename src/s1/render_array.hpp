@@ -2,6 +2,7 @@
 
 #include "s1/d3t/namespace.hpp"
 #include "common/math.hpp"
+#include <array>
 #include <cstddef>
 #include <cstdint>
 
@@ -53,13 +54,12 @@ struct RenderArrayEntry {
     std::byte reserved_85f4[4];
 };
 
-
-
-
 #pragma pack(push, 4)
 struct EffectProbeSlot {
     RenderArrayEntry *owner;
-    std::byte faceData[0x540];
+    std::array<Matrix4x4, 6> views;
+    std::array<Matrix4x4, 6> projections;
+    std::array<std::array<Vector4, 6>, 6> frustums;
     std::uint64_t parameter08;
     std::uint32_t parameter10;
     std::uint64_t parameter14;
@@ -76,6 +76,14 @@ struct EffectProbeSlot {
     std::byte reserved_58d[3];
 };
 #pragma pack(pop)
+static_assert(sizeof(EffectProbeSlot) == 0x590);
+static_assert(offsetof(EffectProbeSlot, views) == 8 && offsetof(EffectProbeSlot, projections) == 392 && offsetof(EffectProbeSlot, frustums) == 776);
+static_assert(offsetof(EffectProbeSlot, parameter08) == 0x548 && offsetof(EffectProbeSlot, node) == 0x568);
+inline constexpr std::array<Vector3, 6> kEffectProbeFaceUp{{{0, 1, 0}, {0, 1, 0}, {0, 0, 1}, {0, 0, -1}, {0, 1, 0}, {0, 1, 0}}};
+inline constexpr Vector4 kEffectProbeProjectionDepth{0, 0, -1.0000033378601074f, -0.010000033304095268f};
+inline constexpr Vector4 kEffectProbeFrustumDepth{0, 0, -1.0006670951843262f, -0.010006670840084553f};
+inline constexpr Vector4 kEffectProbeProjectionW{0, 0, -1, 0};
+inline constexpr float kEffectProbeHalfFov = 0.7853975892066956f;
 
 
 struct HmdlEntryStorage {

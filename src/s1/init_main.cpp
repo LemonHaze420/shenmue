@@ -3,6 +3,7 @@
 #include "s1/file_loader.hpp"
 #include "s1/font.hpp"
 #include "s1/motion_registry.hpp"
+#include "s1/task/pack.hpp"
 #include "s1/task/wexe.hpp"
 
 #include <array>
@@ -343,9 +344,11 @@ void LoadShadowMesh() {
     const auto *const mobj = static_cast<const std::byte *>(g_mobjData);
     const std::byte *const tableBase = mobj + 0x10;
     const std::int32_t selector = readInt32(mobj + 0x1c);
-    g_shadowMeshData = copyColdStorageBlock(tableBase, selector, 0xe8, 0xec, SHEN_NAME(SHDS));
-    if (g_shadowMeshData)
-        (static_cast<HLib::TaskData *>(g_shadowMeshData) - 1)->alignment |= 1;
+    void *const shadowFile = copyColdStorageBlock(tableBase, selector, 0xe8, 0xec, SHEN_NAME(SHDS));
+    if (shadowFile)
+        (static_cast<HLib::TaskData *>(shadowFile) - 1)->alignment |= 1;
+    PackModel *const shadowModel = MT5_InitRawModelAndTextures(shadowFile, "SYD_S.MT5", nullptr);
+    g_shadowMeshData = shadowModel ? shadowModel->model : nullptr;
 }
 
 void ReadMOTI() {
@@ -570,7 +573,6 @@ void InitMain() {
 #endif
 }
 
-#if SHENMUE_IS_DEMO
 void LoadKanaFont(const char *filename) {
     std::byte *const font = static_cast<std::byte *>(g_pFont);
     char *const currentName = reinterpret_cast<char *>(font + 0x28);
@@ -592,10 +594,13 @@ void LoadKanaFont(const char *filename) {
     }
     void *kanji = nullptr;
     std::memcpy(&kanji, font + 0x00, sizeof(kanji));
+#if SHENMUE_IS_DEMO
     shenLoadFile("font", filename, kanji, 0x1e20);
+#else
+    shenLoadFile("misc", filename, kanji, 0x1e20);
+#endif
     std::strcpy(currentName, filename);
 }
-#endif
 
 #if SHENMUE_IS_DEMO
 void LoadRyoFont(const char *filename) {

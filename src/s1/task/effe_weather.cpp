@@ -1,4 +1,5 @@
 #include "s1/task/effe_internal.hpp"
+#include "s1/task/trwv.hpp"
 
 namespace shenmue::s1::effe_detail {
 
@@ -897,14 +898,18 @@ void Weather_TickPerSystemValues(float intensity) {
     }
 }
 
+DecodedTextureFormat g_weatherSnowTextureFormat{};
 
 void CreateDDSorPVR(const void *file) {
     const auto *pvr = static_cast<const EffePvrHeader *>(file);
     if (pvr->magic == 0x58494247U)
         pvr = reinterpret_cast<const EffePvrHeader *>(static_cast<const std::byte *>(file) + 0x0c);
-    const std::uint32_t handle = CreatePvrEffeTexture(pvr);
-    if (handle)
-        g_weatherSnowTexture = {.handle = handle, .width = pvr->width, .height = pvr->height};
+    const std::uint32_t height = static_cast<std::uint32_t>(static_cast<std::int16_t>(pvr->height));
+    const std::uint32_t width = static_cast<std::uint32_t>(static_cast<std::int16_t>(pvr->width));
+    if (CreateDirectXTexture2D(g_weatherSnowTextureFormat, width, height, 0x183, nullptr) ||
+        CreatePVRForDirectX(g_weatherSnowTextureFormat, reinterpret_cast<const std::byte *>(pvr)))
+        return;
+    g_weatherSnowTexture = {.handle = static_cast<std::uint32_t>(g_weatherSnowTextureFormat.texture), .width = width, .height = height};
 }
 
 // Shenmue_InitSpriteBank's w_hamon.pvr branch: a fixed 64x64 ripple sprite.

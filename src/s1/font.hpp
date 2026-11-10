@@ -9,6 +9,7 @@ extern void *g_pFont;
 
 void AllocFONTs();
 void LoadFont(const char *filename);
+void LoadKanaFont(const char *filename);
 
 #if SHENMUE_IS_DEMO
 std::uint16_t ConvertJisGlyphToKana(std::uint16_t token);
@@ -22,7 +23,6 @@ struct TrialFontStorage {
 };
 static_assert(sizeof(TrialFontStorage) == 3 * sizeof(void *) + 48);
 static_assert(offsetof(TrialFontStorage, kanjiName) == 3 * sizeof(void *));
-void LoadKanaFont(const char *filename);
 void LoadRyoFont(const char *filename);
 #endif
 } // namespace shenmue::s1

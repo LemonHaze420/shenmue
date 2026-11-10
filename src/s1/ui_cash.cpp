@@ -4,31 +4,19 @@
 namespace shenmue::s1::ui_runtime_detail {
 
 std::string FormatCashOverlayText(std::int32_t value) {
-    const bool negative = value < 0;
-    const std::uint64_t magnitude = negative ? static_cast<std::uint64_t>(-static_cast<std::int64_t>(value)) : static_cast<std::uint64_t>(value);
-    const char separator = g_uiLoadedLanguage == 2 || g_uiLoadedLanguage == 3 ? ' ' : ',';
-
-    std::string digits = std::to_string(magnitude);
-    for (std::ptrdiff_t index = static_cast<std::ptrdiff_t>(digits.size()) - 3; index > 0; index -= 3) {
-        digits.insert(static_cast<std::size_t>(index), 1, separator);
-    }
-    if (negative)
-        digits.insert(digits.begin(), '-');
-
+    const std::uint32_t magnitude = value < 0 ? 0U - static_cast<std::uint32_t>(value) : static_cast<std::uint32_t>(value);
+    const std::string digits = FormatGroupedNumber(static_cast<std::int32_t>(magnitude));
     SubtitleStringId id{};
     constexpr std::string_view kMoneyStringId = "UIMONEYVAL"; // @text EN: "¥[[MONEY_VAL]]" | JA: "[[MONEY_VAL]]円"
     std::memcpy(&id, kMoneyStringId.data(), kMoneyStringId.size());
     const char *const localized = ReadStringFromStringTableById(id);
-    if (!localized || !*localized)
-        return digits;
-
-    std::string text(localized);
-    constexpr std::string_view kMoneyValueTag = "[[MONEY_VAL]]";
-    const std::size_t position = text.find(kMoneyValueTag);
-    if (position == std::string::npos)
-        return digits;
-    text.replace(position, kMoneyValueTag.size(), digits);
-    return text;
+    std::array<char, 256> text{};
+    std::snprintf(text.data(), text.size(), "%s", localized ? localized : "");
+    if (!TextFormat(text.data(), static_cast<std::int32_t>(text.size()), "[[MONEY_VAL]]", digits.c_str()))
+        std::snprintf(text.data(), text.size(), "%s", digits.c_str());
+    std::array<char, 256> money{};
+    std::snprintf(money.data(), money.size(), "%s%s", value < 0 ? "-" : "", text.data());
+    return money.data();
 }
 
 // @verified - p

@@ -92,8 +92,22 @@ std::uint32_t g_blurPixelShaderLoad = 0;
 std::uint32_t g_emuPdShaderLoad = 0;
 std::uint32_t g_emuPdtShaderLoad = 0;
 std::uint32_t g_emuPtShaderLoad = 0;
+std::uint32_t g_prefilterEnvmapShaderLoad = 0;
+std::uint32_t g_prefilterIrrmapShaderLoad = 0;
+std::uint32_t g_brdfLutShaderLoad = 0;
+std::uint32_t g_envprobeShaderLoad = 0;
+std::uint32_t g_depthClearVertexShaderLoad = 0;
 
 } // namespace
+
+std::uint32_t g_prefilterEnvmapVertexShader = 0;
+std::uint32_t g_prefilterEnvmapPixelShader = 0;
+std::uint32_t g_prefilterIrrmapVertexShader = 0;
+std::uint32_t g_prefilterIrrmapPixelShader = 0;
+std::uint32_t g_brdfLutVertexShader = 0;
+std::uint32_t g_brdfLutPixelShader = 0;
+std::uint32_t g_envprobeVertexShader = 0;
+std::uint32_t g_envprobePixelShader = 0;
 
 std::array<std::uint32_t, 10> g_unlitVertexShaderSet{};
 std::array<std::uint32_t, 10> g_litVertexShaderSet{};
@@ -114,8 +128,6 @@ void LoadOriginalStripShaders() {
     g_originalStrip00PixelShaderLoad = QueueShaderCompileFromHLSL("/shaders/original_strip00_ps.hlsl", renderHandle, d3t_CreateShader(1), D3TShaderType::Pixel);
     g_originalStrip03PixelShaderLoad = QueueShaderCompileFromHLSL("/shaders/original_strip03_ps.hlsl", renderHandle, d3t_CreateShader(1), D3TShaderType::Pixel);
 }
-
-
 
 void LoadShaders() {
     const std::uint32_t renderHandle = g_activeRenderHandle;
@@ -154,9 +166,26 @@ void LoadShaders() {
     g_fvfPtdPixelShaderLoad = QueueShaderCompileFromHLSL("/shaders/fvf/fvf_ptd_ps.hlsl", renderHandle, d3t_CreateShader(1), D3TShaderType::Pixel);
     g_fvfPtdTPixelShaderLoad = QueueShaderCompileFromHLSL("/shaders/fvf/fvf_ptd_t_ps.hlsl", renderHandle, d3t_CreateShader(1), D3TShaderType::Pixel);
     g_fvfPtdsPixelShaderLoad = QueueShaderCompileFromHLSL("/shaders/fvf/fvf_ptds_ps.hlsl", renderHandle, d3t_CreateShader(1), D3TShaderType::Pixel);
+    g_prefilterEnvmapShaderLoad = LoadPrecompiledShader("/engine/assets/shaders/prefilter_envmap", renderHandle);
+    g_prefilterIrrmapShaderLoad = LoadPrecompiledShader("/engine/assets/shaders/prefilter_irrmap", renderHandle);
+    g_brdfLutShaderLoad = LoadPrecompiledShader("/engine/assets/shaders/BRDF_LUT", renderHandle);
+    g_envprobeShaderLoad = LoadPrecompiledShader("/engine/assets/shaders/envprobe", renderHandle);
     g_emuPdShaderLoad = LoadPrecompiledShader("/shaders/emu/emu_pd", renderHandle);
     g_emuPdtShaderLoad = LoadPrecompiledShader("/shaders/emu/emu_pdt", renderHandle);
     g_emuPtShaderLoad = LoadPrecompiledShader("/shaders/emu/emu_pt", renderHandle);
+    g_depthClearVertexShaderLoad =
+        QueueShaderCompileFromHLSL("/engine/assets/shaders/depth_clear_vs.hlsl", renderHandle, d3t_CreateShader(0), D3TShaderType::Vertex);
+}
+
+void LoadEnvironmentShaders() {
+    g_prefilterEnvmapVertexShader = d3t_GetLoadedShader(g_prefilterEnvmapShaderLoad, 0);
+    g_prefilterEnvmapPixelShader = d3t_GetLoadedShader(g_prefilterEnvmapShaderLoad, 1);
+    g_prefilterIrrmapVertexShader = d3t_GetLoadedShader(g_prefilterIrrmapShaderLoad, 0);
+    g_prefilterIrrmapPixelShader = d3t_GetLoadedShader(g_prefilterIrrmapShaderLoad, 1);
+    g_brdfLutVertexShader = d3t_GetLoadedShader(g_brdfLutShaderLoad, 0);
+    g_brdfLutPixelShader = d3t_GetLoadedShader(g_brdfLutShaderLoad, 1);
+    g_envprobeVertexShader = d3t_GetLoadedShader(g_envprobeShaderLoad, 0);
+    g_envprobePixelShader = d3t_GetLoadedShader(g_envprobeShaderLoad, 1);
 }
 } // namespace d3t
 
@@ -195,6 +224,7 @@ void LoadD3TGenericShaders() {
 
 
 void AssignShaderReferences() {
+    d3t::LoadEnvironmentShaders();
     g_originalLambVertexShader = d3t_GetLoadedShader(g_originalLambVertexShaderLoad, 0);
     g_originalConstVertexShader = d3t_GetLoadedShader(g_originalConstVertexShaderLoad, 0);
     g_originalVcol0VertexShader = d3t_GetLoadedShader(g_originalVcol0VertexShaderLoad, 0);

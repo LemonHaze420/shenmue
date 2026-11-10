@@ -3611,7 +3611,14 @@ Character *HLTaskFunc_CharacterHandler_Enqueue(std::uint16_t taskIndex, HLib::Ta
     character->shadowState.lightIndex[1] = -1;
     character->shadowState.flag[0] = 1;
     character->shadowState.flag[1] = 1;
-    character->motionFlags = 0x3b;
+    const bool wasActive = (character->motionFlags & 0x3FU) != 0;
+    character->motionFlags |= 0x3FU;
+    if (g_bDebugLogVisibility && (character->flags.value & CharacterFlagHasCpct) != 0 && !wasActive)
+        CHAR_LogNPCVisibility(character, true);
+    const bool wasVisible = (character->motionFlags & 4U) != 0;
+    character->motionFlags &= 0xFBU;
+    if (g_bDebugLogVisibility && (character->flags.value & CharacterFlagHasCpct) != 0 && wasVisible)
+        CHAR_LogNPCVisibility(character, false);
     character->figurePoseCallback = CharacterHandler_FigurePose;
     character->processShadowCallback = CharacterHandler_ProcessShadow;
     character->drawCallback = CharacterHandler_DrawSubmitAndScale;

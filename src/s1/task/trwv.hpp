@@ -226,5 +226,6 @@ void Run16PointFFTButterflyPasses(std::array<WaveComplex, 16> &values);
 // ones, which are all ApplyButterflyPass_16Point reads.
 void Generate32PointTwiddles();
 void Script_MT5Loader_TRWV_TRWAVE(ScenarioContext *context, void *rawParams);
+std::uint32_t CreatePVRForDirectX(DecodedTextureFormat &out, const std::byte *source);
 
 } // namespace shenmue::s1

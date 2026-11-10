@@ -1,6 +1,7 @@
 #include "s1/simple_shader.hpp"
 
 #include "s1/d3t/d3t_buffer.hpp"
+#include "s1/d3t/d3t_content.hpp"
 #include "s1/d3t/d3t_render_handles.hpp"
 #include "s1/d3t/renderer.hpp"
 #include "s1/d3t/settings.hpp"
@@ -8,6 +9,10 @@
 #include "s1/d3t/d3t_texture.hpp"
 #include "s1/file_state.hpp"
 #include "s1/modern_lighting.hpp"
+#include "s1/shader_initialization.hpp"
+#include "s1/texture_loader.hpp"
+
+#include <cJSON.h>
 
 #include <algorithm>
 #include <array>
@@ -16,11 +21,15 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 namespace shenmue::s1 {
 
 FoliageAnimationParameters *g_foliageAnimationParameters = nullptr;
 std::uint32_t g_foliageAnimationParameterCount = 0;
+std::uint32_t g_foliageAnimationParameterCapacity = 0;
+std::uint32_t g_foliageAnimationBuffer = 0;
+std::uint32_t g_wetnessMaskTexture = 0;
 std::uint32_t g_simpleShaderLoad = 0;
 std::uint32_t g_simpleShaderTemporaryBuffer = 0;
 std::uint32_t g_simpleShaderFileHandle = 0;
@@ -73,26 +82,88 @@ void InitializeSimpleShaderParameters() {
 
 FoliageAnimationParameters *AppendFoliageAnimationParameters() {
     constexpr std::uint32_t kInitialCapacity = 16;
-    static std::uint32_t capacity = 0;
-    if (g_foliageAnimationParameterCount >= capacity) {
-        const std::uint32_t newCapacity = capacity == 0 ? kInitialCapacity : capacity * 2;
+    if (g_foliageAnimationParameterCount >= g_foliageAnimationParameterCapacity) {
+        const std::uint32_t newCapacity = g_foliageAnimationParameterCapacity == 0 ? kInitialCapacity : g_foliageAnimationParameterCapacity * 2;
         void *const allocation = std::realloc(g_foliageAnimationParameters, sizeof(FoliageAnimationParameters) * newCapacity);
         if (!allocation)
             return nullptr;
         g_foliageAnimationParameters = static_cast<FoliageAnimationParameters *>(allocation);
-        capacity = newCapacity;
+        g_foliageAnimationParameterCapacity = newCapacity;
     }
     return &g_foliageAnimationParameters[g_foliageAnimationParameterCount++];
 }
 
-
-
+void FoliageAnimationLoaded(void *, std::uint32_t contentHandle, void *loadedData, std::uint64_t loadedSize, const char *) {
+    g_foliageAnimationParameterCount = 0;
+    const std::string text = loadedData ? std::string(static_cast<const char *>(loadedData), static_cast<std::size_t>(loadedSize)) : std::string();
+    cJSON *const root = loadedData ? cJSON_Parse(text.c_str()) : nullptr;
+    if (root) {
+        const cJSON *const data = cJSON_GetObjectItem(root, "data");
+        const std::int32_t count = data ? cJSON_GetArraySize(const_cast<cJSON *>(data)) : 0;
+        for (std::int32_t index = 0; index < count; ++index) {
+            cJSON *const entry = cJSON_GetArrayItem(const_cast<cJSON *>(data), index);
+            FoliageAnimationParameters *const parameters = AppendFoliageAnimationParameters();
+            if (const cJSON *const value = cJSON_GetObjectItem(entry, "bendiness"))
+                parameters->bendiness = static_cast<float>(value->valuedouble);
+            if (const cJSON *const value = cJSON_GetObjectItem(entry, "maxHeight"))
+                parameters->maxHeight = static_cast<float>(value->valuedouble);
+            if (const cJSON *const value = cJSON_GetObjectItem(entry, "startHeight"))
+                parameters->startHeight = static_cast<float>(value->valuedouble);
+            if (const cJSON *const value = cJSON_GetObjectItem(entry, "wiggleSpeed"))
+                parameters->wiggleSpeed = static_cast<float>(value->valuedouble);
+            if (const cJSON *const value = cJSON_GetObjectItem(entry, "deadzone"))
+                parameters->deadzone = static_cast<float>(value->valuedouble);
+        }
+        cJSON_Delete(root);
+    }
+    ProcessThreadStates(contentHandle, 0);
+}
 
 void InitializeOptionalPpfxMiddleware() {
     g_ppfxMiddlewareAvailable = false;
 }
 
 } // namespace
+
+namespace d3t {
+void LoadFoliageAnimation() {
+    const std::uint32_t renderHandle = g_activeRenderHandle;
+    const D3TShaderLoadTask task{.path = "/foliageanim.json",
+        .renderHandle = renderHandle,
+        .reserved_0c = 0,
+        .thread = {FoliageAnimationLoaded, nullptr},
+        .destination = nullptr,
+        .destinationCapacity = 0,
+        .option = 0,
+        .reserved_31 = {}};
+    PushShaderLoadToThreadQueue(&task);
+    g_wetnessMaskTexture = LoadTextureFromFilepath("/fx/wetness_mask01.png?usage=0", 1, renderHandle);
+}
+
+void Free() {
+    ReleaseSimpleShaderBuffers();
+    ValidateAndCommitBuffer(static_cast<std::int32_t>(g_foliageAnimationBuffer));
+    g_foliageAnimationBuffer = 0;
+    ReleaseModernSceneLightMetadata();
+    if (g_simpleShaderFileHandle != 0xffffU)
+        ReleaseFileLockHandle(g_simpleShaderFileHandle);
+    g_simpleShaderFileHandle = 0xffffU;
+    std::free(g_foliageAnimationParameters);
+    g_foliageAnimationParameters = nullptr;
+    g_foliageAnimationParameterCount = 0;
+    g_foliageAnimationParameterCapacity = 0;
+}
+} // namespace d3t
+
+void CreateDXBufferForShaders() {
+    const BufferDescription description{.flags = 3,
+        .size = static_cast<std::int32_t>(sizeof(FoliageAnimationParameters) * g_foliageAnimationParameterCount),
+        .count = sizeof(FoliageAnimationParameters),
+        .flags3 = 0,
+        .buffer = g_foliageAnimationParameters,
+        .name = nullptr};
+    g_foliageAnimationBuffer = static_cast<std::uint32_t>(CreateBuffer(&description));
+}
 
 void InitPostFX() {
     if (g_postFxInitialized)

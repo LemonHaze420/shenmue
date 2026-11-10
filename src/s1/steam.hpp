@@ -168,6 +168,46 @@ inline constexpr std::array<SteamAchievementDefinition, 28> kSteamAchievementDef
 }};
 
 extern SteamStatDefinition *g_steamTemporaryStats;
+
+class texPlatformInterface {
+  public:
+    virtual ~texPlatformInterface() = default;
+    virtual bool Initialize();
+    virtual void Shutdown();
+    virtual void RefreshContext();
+    virtual std::int32_t GetPlatformType();
+    virtual const char *GetName();
+    virtual bool GetBuildString(char *buffer, std::uint32_t size);
+    virtual void Reserved7();
+    virtual void Reserved8();
+    virtual std::int32_t GetLanguage();
+    virtual bool Reserved10();
+    virtual std::int32_t GetCountry();
+    virtual std::int32_t AllowsAssetRemap();
+    virtual std::int32_t GetInputGameLayout();
+
+    const char *appName{};
+    const char *buildId{};
+    std::uint32_t appId{};
+    std::uint32_t reserved1c{};
+    std::int32_t country{};
+};
+
+class texPlatformInterface_Steam final : public texPlatformInterface {
+  public:
+    void Shutdown() override;
+    void RefreshContext() override;
+    std::int32_t GetPlatformType() override;
+    const char *GetName() override;
+    bool GetBuildString(char *buffer, std::uint32_t size) override;
+    std::int32_t GetLanguage() override;
+    std::int32_t GetCountry() override;
+};
+
+static_assert(sizeof(texPlatformInterface_Steam) == 0x28);
+
+extern texPlatformInterface *g_platformInterface;
+
 using SteamInputHandle = std::uint64_t;
 using SteamInputPoll = std::int64_t (*)(std::uint32_t mode, SteamControllerInput *input, const SteamInputHandle *controllers, std::size_t controllerCount);
 using SteamCallResultCompletion = void (*)(void *user, std::uint64_t call, std::int32_t result, std::uint32_t byteCount, bool ioFailure);
@@ -219,5 +259,7 @@ bool SteamRemoteStorage_ReadAsync(
 bool SteamRemoteStorage_WriteAsync(const char *nativePath, const void *source, std::uint32_t size, SteamStorageCallback callback, void *context) noexcept;
 std::uint64_t SteamRemoteStorage_AvailableBytes() noexcept;
 void SteamRemoteStorage_RunCallbacks() noexcept;
+void SGAAS_Init(std::uint64_t steamId);
+void SGAAS_Stop();
 
 } // namespace shenmue::s1

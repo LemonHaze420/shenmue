@@ -2,6 +2,7 @@
 
 #include "s1/file_loader.hpp"
 #include "s1/hlib.hpp"
+#include "s1/matrix_stack.hpp"
 #include "s1/task/came.hpp"
 #include "s1/task/char.hpp"
 #include "s1/task/ctrl.hpp"
@@ -229,7 +230,13 @@ std::int32_t GCPN_ExecuteScript(ScenarioContext *context, const GCPNScriptParame
             nullptr;
 
         work->actorPosition = GetPositionForEntity(character->entity.node);
-        work->cameraTarget = TransformPointByEntity(character->entity.node, *authoredOffset);
+        const Vector3i euler = GetEulerAnglesForEntity(character->entity.node);
+        Matrix4x4::SetActiveTransformToPrePass();
+        Matrix4x4::preTranslate(work->actorPosition.x, work->actorPosition.y, work->actorPosition.z);
+        Matrix4x4::SetViewMatrixFromEuler(euler.y, euler.x, euler.z);
+        Matrix4x4::preTranslate(authoredOffset->x, authoredOffset->y, authoredOffset->z);
+        work->cameraTarget = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
+        Matrix4x4::Pop(1);
         const float dx = work->actorPosition.x - work->cameraTarget.x;
         const float dz = work->actorPosition.z - work->cameraTarget.z;
         const float distance = std::sqrt(dx * dx + dz * dz);

@@ -61,6 +61,7 @@
 #include "s1/skinning_cache.hpp"
 #include "s1/file_state.hpp"
 #include "s1/file_loader.hpp"
+#include "s1/font.hpp"
 #include "s1/ui_runtime.hpp"
 #include "s1/save_format.hpp"
 
@@ -238,8 +239,9 @@ void CEWP_RetireGroup(std::int32_t groupId, bool immediate) {
     for (void *bucketHead : control->characterBuckets) {
         for (auto *node = static_cast<CharacterBucketNode *>(bucketHead); node; node = node->next) {
             Character *const character = node->character;
-            if (!character || character->entity.name != SHEN_NAME(CEWP) ||
-                !((character->flags.value & 1U) != 0U || ((character->flags.value & 2U) != 0U && (character->motionFlags & 1U) != 0U)))
+            if (!character ||
+                character->entity.name !=
+                    SHEN_NAME(CEWP) || !((character->flags.value & 1U) != 0U || ((character->flags.value & 2U) != 0U && (character->motionFlags & 1U) != 0U)))
                 continue;
             if (character->groupId != groupId)
                 continue;
@@ -831,6 +833,9 @@ void HLTaskFunc_EnqueueMapControlTask(HLib::TaskData *) {
     };
     char directoryPath[64];
     std::snprintf(directoryPath, sizeof(directoryPath), "/scene/maps/%c%c%c%c", areaCharacters[0], areaCharacters[1], areaCharacters[2], areaCharacters[3]);
+#if !SHENMUE_IS_DEMO
+    LookupDirectoryEntry(directoryPath, 0, 0);
+#endif
     InitSkyGeometry(g_cycleManagerRuntime.skyGeometryRuntimeData);
     InitSkyGeometry(g_cycleManagerRuntime.skyProbeGeometryRuntimeData);
     ReleaseCachedSkinningBuffer(g_skySkinningRoot);
@@ -909,6 +914,10 @@ void HLTaskFunc_EnqueueMapControlTask(HLib::TaskData *) {
     std::uint32_t payloadSize = 0;
     const std::byte *const sndd = MAPINFO_FindChunkPayload(SHEN_NAME(SNDD), &payloadSize);
     SNDD_Parse(reinterpret_cast<HLib::TaskData *>(const_cast<std::byte *>(sndd ? sndd - 8 : nullptr)));
+#if !SHENMUE_IS_DEMO
+    LoadFont("DC_KANJI.FON");
+    LoadKanaFont("DC_KANA.FON");
+#endif
 
     SCEN_ResetTimedTransitions();
     control->mapEventTask = HLib_EnqueueTaskWithoutParameter(MapEventTask_Callback, 3, 2, kMapEventTaskToken);

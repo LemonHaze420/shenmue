@@ -80,7 +80,7 @@ PackSlot *g_pszTempLoadedHumanSched = nullptr;
 
 std::int32_t g_bHasLoadedHuman = 0;
 
-// The character whose human pack the script asked for (CycleManager_SetCyclePtrByCharaID); CycleManager_GetNextTaskPointer hands it over.
+// Character requested by SetCyclePtrByCharaID and returned by GetNextTaskPointer.
 std::uint32_t g_cycleScriptHumanChara = 0;
 
 
@@ -496,8 +496,8 @@ bool npcActivateIfNearInArea(CycleManager::NpcRecord &npc, float radius, const V
 
 namespace shenmue::s1::CycleManager {
 
-// The largest free block of the task heap, as CycleManager_UpdateCharaCycles and Weather_SetRainModelsFromHumans scan it inline; the
-// scan stops at a misaligned block and before the last.
+// Largest free task heap block; stop at a misaligned block and skip the last block.
+
 uint64_t LargestFreeTaskHeapBlock() {
     uint64_t largest = 0;
     for (HLib::TaskData *block = g_pFirstTaskData; block; block = block->next_ptr) {
@@ -789,7 +789,7 @@ void MOBJ_UpdateTransformsRecursively_0() {
         if (row.byte31 != previousByte31)
             ++cm.shutDispatchStateChanges;
         CycleManager::UpdateSHUTRowObject(row);
-        // Scene-object collision extents remain unavailable until the current MAPC/CVWK owner binds.
+        // Scene-object collision extents become available when MAPC/CVWK binds.
     }
 }
 namespace CycleManager {
@@ -837,8 +837,8 @@ void ResetPublishedSceneState();
 bool PerformAicaSoundUpdates(CycleManager::NpcRecord &npc, const Vector3 &target, int16_t targetYaw, bool commit);
 
 CycleManager::FrameCacheStats CollectCycleManagerFrameCacheStats() {
-    // Deformed-pose/render-batch caches are owned by the current MOTN/D3T
-    // owners.  Cycle keeps no renderer cache mirror.
+    // MOTN/D3T owns the pose and render-batch caches.
+
     return {};
 }
 
@@ -1004,8 +1004,11 @@ void AttachEntityAndInitCycle(Character *character, bool deactivate) {
     if (!task)
         return;
 
+    const bool wasActive = (character->motionFlags & 0x3fu) != 0;
     if (deactivate) {
         character->motionFlags &= 0xc0u;
+        if (g_bDebugLogVisibility && (character->flags.value & CharacterFlagHasCpct) != 0 && wasActive)
+            CHAR_LogNPCVisibility(character, false);
         if (!task->initCallbackFnPtr) {
             task->initCallbackFnPtr = task->mainTaskCallbackFnPtr;
             task->mainTaskCallbackFnPtr = HLib_SetTaskCallbackToInitCallback;
@@ -1023,6 +1026,8 @@ void AttachEntityAndInitCycle(Character *character, bool deactivate) {
         task->initCallbackFnPtr = nullptr;
     }
     character->motionFlags |= 0x3fu;
+    if (g_bDebugLogVisibility && (character->flags.value & CharacterFlagHasCpct) != 0 && !wasActive)
+        CHAR_LogNPCVisibility(character, true);
 }
 
 } // namespace shenmue::s1::CycleManager
@@ -1638,6 +1643,51 @@ CycleManager::MobjEntry *SortSimSetByCameraDistance() {
     return head;
 }
 
+CycleManager::MobjCycle **g_motnCycles = nullptr;
+std::int32_t g_motnCycleCount = 0;
+
+void MoveObj_InitMOBS() {
+    g_motnCycles = static_cast<CycleManager::MobjCycle **>(HLib_AllocHeapMemBlock(0xc0, static_cast<std::int32_t>(TASK_MOBS.name)));
+    if (g_motnCycles)
+        (reinterpret_cast<HLib::TaskData *>(g_motnCycles) - 1)->alignment |= 1;
+}
+
+void InitMotnCycleList() {
+    g_motnCycleCount = 0;
+    if (!g_MOBJ_Cycles || !g_MOBJ_num_entries)
+        return;
+    std::int32_t count = 0;
+    for (std::int32_t index = 0; index < g_MOBJ_num_entries; ++index) {
+#if SHENMUE_IS_DEMO
+        if (ProgramClassCode(g_MOBJ_Cycles[index].moveConfig) == 6U)
+#else
+        if (g_MOBJ_Cycles[index].moveConfig->cycleClassCode == 6U)
+#endif
+            ++count;
+    }
+    if (!count || !g_motnCycles) {
+        g_motnCycleCount = count;
+        return;
+    }
+    for (std::int32_t index = 0; index < g_MOBJ_num_entries; ++index) {
+        CycleManager::MobjCycle *const cycle = &g_MOBJ_Cycles[index];
+#if SHENMUE_IS_DEMO
+        if (ProgramClassCode(cycle->moveConfig) != 6U)
+#else
+        if (cycle->moveConfig->cycleClassCode != 6U)
+#endif
+            continue;
+        if (CycleManager::NpcRecord *const npc = CycleManager::CycleRecord(cycle)) {
+            npc->motnCycleBlend = 0.5f;
+            npc->motnCycleState = 0;
+            npc->field148 = 0;
+            npc->motnCycleYawDelta = 0;
+        }
+        cycle->selectedMotionToken = 0;
+        g_motnCycles[g_motnCycleCount++] = cycle;
+    }
+}
+
 void UpdateCharaCycles() {
     CycleManager::RuntimeState &cm = g_cycleManagerRuntime;
     if (g_bDebugSkipCyclesForCharacters)
@@ -2086,10 +2136,11 @@ void UpdateCharaCycles() {
     }
 
     CycleManager::PublishVisibleParkedMoveObjects();
-
-    for (CycleManager::NpcRecord &npc : cm.npcRecords) {
-        if (ProgramClassCode(npc.cycle->moveConfig) != 6u)
+    for (std::int32_t index = 0; g_motnCycles && index < g_motnCycleCount; ++index) {
+        CycleManager::NpcRecord *const record = CycleManager::CycleRecord(g_motnCycles[index]);
+        if (!record)
             continue;
+        CycleManager::NpcRecord &npc = *record;
         CycleManager::UpdateClass6DoorNodes(npc);
 
         float dx = npc.cycle->pos.x - npc.cycle->steeringTarget.x;
@@ -2566,13 +2617,11 @@ void UpdateCharaCycles() {
     }
 
     CycleManager::PublishVisibleParkedMoveObjects();
-
-
-
-
-    for (CycleManager::NpcRecord &npc : cm.npcRecords) {
-        if (npc.cycle->moveConfig->cycleClassCode != 6u)
+    for (std::int32_t index = 0; g_motnCycles && index < g_motnCycleCount; ++index) {
+        CycleManager::NpcRecord *const record = CycleManager::CycleRecord(g_motnCycles[index]);
+        if (!record)
             continue;
+        CycleManager::NpcRecord &npc = *record;
         CycleManager::UpdateClass6DoorNodes(npc);
 
         float dx = npc.cycle->pos.x - npc.cycle->steeringTarget.x;
@@ -2726,15 +2775,7 @@ void Init() {
         g_CycleManager_Current = payloads;
         g_CM_obj_list = nullptr;
     }
-    for (CycleManager::NpcRecord &npc : cm.npcRecords) {
-        if (ProgramClassCode(npc.cycle->moveConfig) != 6u)
-            continue;
-        npc.motnCycleBlend = 0.5f;
-        npc.motnCycleState = 0;
-        npc.cycle->selectedMotionToken = 0;
-        npc.field148 = 0;
-        npc.motnCycleYawDelta = 0;
-    }
+    InitMotnCycleList();
     HUMANS_AFS_Ptr = PACK_ReadAFS(sceneDirectory, "HUMANS.afs");
     g_pszTempLoadedHumanSched = nullptr;
     PackTaskData *const pack = g_packTaskData ? g_packTaskData : g_packTask ? reinterpret_cast<PackTaskData *>(HLib_GetTaskDataForTask(g_packTask)) : nullptr;
@@ -2906,15 +2947,7 @@ void Init() {
         g_CycleManager_Current = payloads;
         g_CM_obj_list = nullptr;
     }
-    for (CycleManager::NpcRecord &npc : cm.npcRecords) {
-        if (npc.cycle->moveConfig->cycleClassCode != 6u)
-            continue;
-        npc.motnCycleBlend = 0.5f;
-        npc.motnCycleState = 0;
-        npc.cycle->selectedMotionToken = 0;
-        npc.field148 = 0;
-        npc.motnCycleYawDelta = 0;
-    }
+    InitMotnCycleList();
     HUMANS_AFS_Ptr = PACK_ReadAFS(sceneDirectory, "HUMANS.afs");
     g_pszTempLoadedHumanSched = nullptr;
     PackTaskData *const pack = g_packTaskData ? g_packTaskData : g_packTask ? reinterpret_cast<PackTaskData *>(HLib_GetTaskDataForTask(g_packTask)) : nullptr;
@@ -3029,10 +3062,6 @@ void Init() {
 }
 } // namespace CycleManager
 
-
-
-
-
 void PreLoad_InitCycleman() {
     CycleManager::RuntimeState &cm = g_cycleManagerRuntime;
     CycleManager::ClearProgramLists();
@@ -3041,8 +3070,18 @@ void PreLoad_InitCycleman() {
     g_MOBJ_Cycles = nullptr;
     if (static_cast<std::uint32_t>(g_actNumber - 1) > 3U)
         return;
-    CycleManager::MoveObj_FileLoad("cm_d000.bin");
-    std::snprintf(g_tmp_cm_path, sizeof(g_tmp_cm_path), "%s", "misc");
+    char directory[32];
+    std::snprintf(directory, sizeof(directory), "misc");
+    CycleManager::CycleManFileHeader *const file = CycleManager::PreLoad_OpenDobuitaCycleman(directory);
+    CycleManager::g_cycleManFileData = file;
+    CycleManager::g_activeCycleFileSize = 0;
+    if (file) {
+        HLib::TaskData *const block = reinterpret_cast<HLib::TaskData *>(file) - 1;
+        block->alignment |= 1;
+        if ((reinterpret_cast<std::uintptr_t>(file) & 0x1F) == 0)
+            CycleManager::g_activeCycleFileSize = static_cast<std::int32_t>(block->content_size) - 64;
+    }
+    std::snprintf(g_tmp_cm_path, sizeof(g_tmp_cm_path), "%s", directory);
     struct_v16_2 MSCR{};
     if (cm.loaded && !cm.schedule.empty()) {
         if (uint8_t *const mscr = CycleManager::MoveObj_FindEntry(cm.schedule.data(), SHEN_NAME(MSCR), 0, static_cast<int32_t>(cm.schedule.size()) - 1))
@@ -3063,6 +3102,7 @@ void PreLoad_InitCycleman() {
     CycleManager::InitMemory();
 #endif
     CycleManager::LoadMNRBAndMCIR();
+    CycleManager::MoveObj_InitMOBS();
     CycleManager::LoadSHUT();
     SetMOBJTaskPtr();
 }

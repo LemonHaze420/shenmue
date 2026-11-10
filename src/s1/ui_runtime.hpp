@@ -162,9 +162,9 @@ static_assert(offsetof(InformationBarMessage, leftText) == 0x50);
 static_assert(offsetof(InformationBarMessage, rightText) == 0x60);
 static_assert(offsetof(InformationBarMessage, colour) == 0x6a);
 
-// The Information Bar label texts d3t_CopyStringToUILabel formats from the message (g_infoBarRightText, g_infoBarLeftText,
-// g_infoBarSingleLine, g_infoBarFirstLine and g_infoBarSecondLine): the right and left texts, and the text on one line or split at the
-// line break.
+// Information Bar buffers: right, left, single-line, and the two lines split at a line break.
+// d3t_CopyStringToUILabel formats all five from the current message.
+
 struct InformationBarLabels {
     InformationBarMessage message;
     std::array<char, 256> rightText;
@@ -403,8 +403,10 @@ inline constexpr std::int32_t kUiGameQte = 52;
 
 
 inline constexpr std::int32_t kUi70ManBattle = 64;
-inline constexpr std::array<const char *, 8> k70mbStringIds{"UI70MBDEF0", "UI70MBLOSS", "UI70MBWIN1", "UI70MBWIN2", "UI70MBWIN3", "UI70MBWIN4", // @text UI70MBDEF0 EN: "Defeated" | JA: "人抜き" ; UI70MBLOSS EN: "You did not rank in the leaderboard" | JA: "ランキングにエントリーできませんでした" ; UI70MBWIN1 EN: "Your rank is 1st" | JA: "１位をゲット" ; UI70MBWIN2 EN: "Your rank is 2nd" | JA: "２位をゲット" ; UI70MBWIN3 EN: "Your rank is 3rd" | JA: "３位をゲット" ; UI70MBWIN4 EN: "Your rank is 4th" | JA: "４位をゲット"
-    "UI70MBWIN5", "UI70MBRETY"}; // @text UI70MBWIN5 EN: "Your rank is 5th" | JA: "５位をゲット" ; UI70MBRETY EN: "Do you wish to retry?" | JA: "もう一度チャレンジしますか？"
+inline constexpr std::array<const char *, 8> k70mbStringIds{"UI70MBDEF0", "UI70MBLOSS", "UI70MBWIN1", "UI70MBWIN2", "UI70MBWIN3",
+    "UI70MBWIN4", // @text UI70MBDEF0 EN: "Defeated" | JA: "人抜き" ; UI70MBLOSS EN: "You did not rank in the leaderboard" | JA: "ランキングにエントリーできませんでした" ; UI70MBWIN1 EN: "Your rank is 1st" | JA: "１位をゲット" ; UI70MBWIN2 EN: "Your rank is 2nd" | JA: "２位をゲット" ; UI70MBWIN3 EN: "Your rank is 3rd" | JA: "３位をゲット" ; UI70MBWIN4 EN: "Your rank is 4th" | JA: "４位をゲット"
+    "UI70MBWIN5",
+    "UI70MBRETY"}; // @text UI70MBWIN5 EN: "Your rank is 5th" | JA: "５位をゲット" ; UI70MBRETY EN: "Do you wish to retry?" | JA: "もう一度チャレンジしますか？"
 extern std::array<std::array<char, 256>, 8> g_70mbLabelText;
 extern std::int32_t g_70mbShownIconStatus;
 extern std::int32_t g_70mbStartPromptIconVisible;
@@ -1050,10 +1052,10 @@ inline constexpr std::array<const char *, 19> kOptionsButtonIds{"SubMenu_Options
 inline constexpr std::array<std::int32_t, 13> kOptionsFrontEndImages{13, 16, 18, 23, 21, 26, 28, 31, 36, 37, 42, 44, 47};
 inline constexpr std::array<std::int32_t, 17> kOptionsInGameImages{12, 14, 15, 17, 20, 22, 24, 25, 27, 30, 34, 35, 38, 40, 41, 43, 46};
 
-// The Options colour statics (static initializers), by what STATIC_SubMenu__Options_unk_func7 gives them to in the frontend and in game:
-// the tab Buttons and the shown tab's, the tab backgrounds and the shown tab's, the main panel Button, the row background Buttons, the row
-// control Buttons, the scroll bar Buttons and the list arrows; and the key binding label colours, bound and unbound (also the
-// unbound-keys warning's).
+// Frontend and in-game Options colours: normal/selected tabs and backgrounds, panel and row buttons,
+// controls, scrollbars, list arrows, bound/unbound key labels and the unbound-key warning.
+
+
 struct UIOptionsColours {
     std::uint32_t tabButton;
     std::uint32_t tabButtonShown;
@@ -1188,6 +1190,10 @@ std::uint32_t UI_SetPVRSurfaceTexture(std::int32_t surface, std::uint32_t textur
 void UI_ActivateElement(UIBaseRuntime &element);
 
 void HandleUICallbacks();
+namespace ui_runtime_detail {
+void UI_BeginFrame();
+void Subtitles_FadeOutPanels();
+} // namespace ui_runtime_detail
 
 
 

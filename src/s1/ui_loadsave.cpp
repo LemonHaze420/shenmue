@@ -57,9 +57,9 @@ void LoadLoadingScreenImage(std::int32_t name, std::int32_t loadIndex, std::int3
 
 namespace shenmue::s1::ui_runtime_detail {
 
-// The Load Screen's Nuklear windows, drawn while the element is shown or its windows fade: each bound window at its alpha, its labels
-// with the texts GenerateLoadingScreenText_0 binds (TIME, DATE, AREA, SUBAREA and LOADING) and Image_Header with the area's header once
-// SetRenderShaderFlags binds it. The labels use the subtitle font; UILoadScreenFont and the H1/H2 sizes are not modelled.
+
+
+
 
 } // namespace shenmue::s1::ui_runtime_detail
 
@@ -119,7 +119,7 @@ void GenerateLoadingScreenText(
     char *destination, std::size_t size, std::int32_t year, std::int32_t month, std::uint32_t day, std::int32_t dayOfWeek, std::uint8_t mode) {
     const std::int32_t shortYear = year > 1900 ? year - 1900 : year;
     const std::uint32_t displayYear = static_cast<std::uint32_t>((mode & 4) != 0 ? shortYear : shortYear + 1900);
-    const std::int32_t language = SaveTextLanguage();
+    const std::int32_t language = UI_GetLoadedLanguage();
     const char *const monthName = month >= 1 && month <= 12 ? InitAndRetrieveStringFromID(kLoadMonthIds[static_cast<std::size_t>(month - 1)]) : "";
     if (language == 1 || (language >= 4 && language <= 6))
         std::snprintf(destination, size, "%u/%02u/%02u", displayYear, static_cast<unsigned>(month), day);
@@ -151,7 +151,7 @@ void CreateStringForSaveDataMenuLabel(char *destination, std::int32_t year, std:
         std::snprintf(time.data(), time.size(), "%02u:%02u:%02u", static_cast<unsigned>(hour), static_cast<unsigned>(minute), static_cast<unsigned>(second));
     else
         std::snprintf(time.data(), time.size(), "%02u:%02u", static_cast<unsigned>(hour), static_cast<unsigned>(minute));
-    const std::int32_t language = SaveTextLanguage();
+    const std::int32_t language = UI_GetLoadedLanguage();
     const bool dateFirst = language >= 4 && language <= 6;
     std::snprintf(destination, 128, "%s %s", dateFirst ? date.data() : time.data(), dateFirst ? time.data() : date.data());
 }
@@ -191,8 +191,8 @@ void UpdateInGameStatus() {
 
 namespace shenmue::s1::ui_runtime_detail {
 
-// LoadOrSaveGame's and CreateSaveDataInfo's timed Information Bar message: the current message with the localized text, without its colour
-// override, for the given seconds (d3t_ShowMessageStr).
+// Show localized Information Bar text for the requested duration, without a colour override.
+
 void LoadSaveShowMessage(const char *stringId, float seconds) {
     InformationBarMessage &message = g_informationBarLabels.message;
     message.text = InitAndRetrieveStringFromID(stringId);
@@ -477,11 +477,15 @@ std::int64_t LoadSave_GetContentPanel() {
     return 0;
 }
 
-
-
-
-
-
+std::int64_t LoadSave_GetPromptIconSet() {
+    static std::array<std::int32_t, 5> prompts{};
+    constexpr std::array<std::int16_t, 4> kLoadSavePromptIcons{45, 44, -1, -1};
+    for (std::size_t slot = 0; slot < kLoadSavePromptIcons.size(); ++slot)
+        g_searchPromptIconSlots[slot] = kLoadSavePromptIcons[slot];
+    for (std::size_t slot = 0; slot < prompts.size(); ++slot)
+        prompts[slot] = static_cast<std::uint16_t>(g_searchPromptIconSlots[slot]);
+    return reinterpret_cast<std::int64_t>(prompts.data());
+}
 
 void LoadSaveGrid_DrawSlot(
     UIGrid *grid, nk_panel *panel, const UILayoutRect *holder, const UILayoutRect *cell, float, std::int32_t element, void *, std::int32_t index) {

@@ -7,7 +7,9 @@
 #include "s1/input.hpp"
 #include "s1/steam.hpp"
 
+#include <array>
 #include <bit>
+#include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #if defined(_WIN32)
@@ -31,13 +33,113 @@ void Steam_BindRuntime(const SteamRuntimeBindings &bindings) noexcept {
     g_steamTemporaryStats = bindings.stats;
 }
 
-bool Steam_InitApp(const SteamAppInfo *) {
+texPlatformInterface *g_platformInterface = nullptr;
+
+bool texPlatformInterface::Initialize() {
+    return true;
+}
+
+void texPlatformInterface::Shutdown() {
+}
+
+void texPlatformInterface::RefreshContext() {
+}
+
+std::int32_t texPlatformInterface::GetPlatformType() {
+    return 4;
+}
+
+const char *texPlatformInterface::GetName() {
+    return "Unknown";
+}
+
+bool texPlatformInterface::GetBuildString(char *, std::uint32_t) {
+    return false;
+}
+
+void texPlatformInterface::Reserved7() {
+}
+
+void texPlatformInterface::Reserved8() {
+}
+
+std::int32_t texPlatformInterface::GetLanguage() {
+    return 0;
+}
+
+bool texPlatformInterface::Reserved10() {
+    return false;
+}
+
+std::int32_t texPlatformInterface::GetCountry() {
+    return 2;
+}
+
+std::int32_t texPlatformInterface::AllowsAssetRemap() {
+    return 1;
+}
+
+std::int32_t texPlatformInterface::GetInputGameLayout() {
+#if defined(SHENMUE_STEAM)
+    return ::shenmue::d3t::OriginalSteamGameInputLayout();
+#else
+    return 0;
+#endif
+}
+
+void texPlatformInterface_Steam::Shutdown() {
+}
+
+void texPlatformInterface_Steam::RefreshContext() {
+    country = 2;
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::RefreshSteamContext();
+#endif
+}
+
+std::int32_t texPlatformInterface_Steam::GetPlatformType() {
+    return 0;
+}
+
+const char *texPlatformInterface_Steam::GetName() {
+    return "Steam";
+}
+
+bool texPlatformInterface_Steam::GetBuildString(char *buffer, std::uint32_t size) {
+    std::snprintf(buffer, size, "%u:%u [%s]", 0U, 0U, "");
+    return true;
+}
+
+std::int32_t texPlatformInterface_Steam::GetLanguage() {
+    return 0;
+}
+
+std::int32_t texPlatformInterface_Steam::GetCountry() {
+    return country;
+}
+
+bool Steam_InitApp(const SteamAppInfo *appInfo) {
+    if (!g_platformInterface)
+        g_platformInterface = new texPlatformInterface_Steam();
+    texPlatformInterface &platform = *g_platformInterface;
+    platform.appName = nullptr;
+    platform.buildId = nullptr;
+    platform.appId = 0;
+    platform.reserved1c = 0;
+    if (appInfo) {
+        platform.appName = appInfo->appName;
+        platform.buildId = appInfo->buildId;
+        platform.appId = appInfo->appId;
+        platform.reserved1c = appInfo->reserved;
+    }
+    if (!platform.Initialize())
+        return false;
 #if defined(SHENMUE_STEAM)
     ::shenmue::d3t::RequireSteamInitialized();
-    return true;
-#else
-    return true;
 #endif
+    std::array<char, 64> build{"Unknown"};
+    platform.GetBuildString(build.data(), static_cast<std::uint32_t>(build.size()));
+    return true;
 }
 
 bool Steam_TryGetCurrentUserId(std::uint64_t *userId) {
@@ -162,12 +264,6 @@ void SteamRemoteStorage_RunCallbacks() noexcept {
 #endif
 }
 
-void SteamPlatformContextRefresh() {
-#if defined(SHENMUE_STEAM)
-    ::shenmue::d3t::RefreshSteamContext();
-#endif
-}
-
 namespace d3t {
 void SetupAchievements() {
 #if defined(SHENMUE_STEAM)
@@ -244,6 +340,9 @@ void InitializeSteamAPI() {
 void SGAAS_Init(std::uint64_t) {
 }
 #endif
+
+void SGAAS_Stop() {
+}
 
 std::int64_t PollSteamInputEvents(SteamControllerInput *input) {
 #if defined(SHENMUE_STEAM)

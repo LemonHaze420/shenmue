@@ -1724,6 +1724,12 @@ PackSlot *PACK_QueueFile(const char *rootDirectory, const char *packageName) {
     return slot;
 }
 
+PackSlot *PACK_QueueScriptFile(const char *rootDirectory, const char *packageName) {
+    PackTaskData *const pack = g_packTaskData ? g_packTaskData : reinterpret_cast<PackTaskData *>(HLib_GetTaskDataForTask(g_packTask));
+    pack->flags = 0;
+    return PACK_QueueFile(rootDirectory, packageName);
+}
+
 PackSlot *PACK_QueueAFSPair(const char *rootDirectory, const char *afsFilename, std::int32_t pkfEntryIndex, std::int32_t pksEntryIndex, const char *) {
     PackTaskData *pack = g_packTaskData;
     if (!pack) {

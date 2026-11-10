@@ -8,6 +8,7 @@
 #include "s1/task/came.hpp"
 #include "s1/task/char.hpp"
 #include "s1/task/mdlm.hpp"
+#include "s1/task/pack.hpp"
 #include "s1/task/cycle_man.hpp"
 #include "s1/task/obje.hpp"
 #include "s1/task/scen/scen.hpp"
@@ -442,6 +443,8 @@ void ApplyDoorActorRecord(DSWK_t &doorSupport, std::int32_t entryIndex, Characte
 
     if (const DoorResourceDescriptor *resource = ResourceFor(doorSupport, record)) {
         DSWK_PublishDoorActor(*character, *resource);
+        if (character->model)
+            hmdlNormalizeNodeCommandHeaders(character->model);
         ApplyDoorModelOffsets(*character, doorSupport.doorEntries[entryIndex], *resource);
     }
     character->motionFlags |= 4U;

@@ -366,8 +366,42 @@ std::int64_t ItemsMenu_IsPressed() {
     return UIGrid_IsPressed(g_itemsGrid);
 }
 
+std::int64_t ItemsMenu_Reset() {
+    g_itemsGridWindows = {};
+    g_itemsGridPlaceholderImage = nullptr;
+    return 0;
+}
 
+std::int64_t ItemsMenu_GetPromptIconSet() {
+    static std::array<std::int32_t, 5> prompts{};
+    constexpr std::array<std::int16_t, 4> kItemsPromptIcons{4, 44, -1, -1};
+    for (std::size_t slot = 0; slot < kItemsPromptIcons.size(); ++slot)
+        g_searchPromptIconSlots[slot] = kItemsPromptIcons[slot];
+    for (std::size_t slot = 0; slot < prompts.size(); ++slot)
+        prompts[slot] = static_cast<std::uint16_t>(g_searchPromptIconSlots[slot]);
+    return reinterpret_cast<std::int64_t>(prompts.data());
+}
 
+std::int64_t ItemsMenu_ElementDraw() {
+    if (g_uiElements[kUiSubMenuItems].isHandledExternally)
+        return 0;
+    const std::int32_t index = UIGrid_SelectedIndex(g_itemsGrid);
+    const UILayoutRect cell = UIGrid_GetSelectedCellRect(&g_itemsGrid);
+    InformationBarMessage message{.iconAction = g_uiElements[kUiSubMenuItems].config.uiHandleIndex,
+        .outlinePanel = -1,
+        .outline = {cell.x, cell.y, cell.width, cell.height},
+        .iconIndex = -1};
+    message.text = "";
+    if (index >= 0) {
+        const UIGridEntry &entry = g_itemsGridElements[static_cast<std::size_t>(index)];
+        if (entry.type == 0)
+            message.text = g_ownedItemCatalog[static_cast<std::size_t>(entry.id)].itemNameId;
+        else if (entry.type == 1 && entry.id >= 0)
+            message.text = g_cassetteCatalog[static_cast<std::size_t>(entry.id)].entry.cassetteNameId;
+    }
+    d3t::CopyStringToUILabel(&message);
+    return 0;
+}
 
 void SharedItemsMenu_DestroyAndResetPreviewState() {
     if (g_sharedItemRequest.requestActive && g_sharedItemsRequested) {
@@ -1379,8 +1413,8 @@ bool UI_ICONAdvanceItemInfoPopup() {
 
 namespace shenmue::s1::ui_runtime_detail {
 
-// Ryo's yaw (the summed node yaws, negated) and his position, as the system menu's camera move reads them each time: the eye goes to his
-// head, the target 0.2 in front of it.
+// Use Ryo's position and negated summed node yaw for the system-menu camera:
+// eye at his head, target 0.2 in front.
 void IconSystemMenu_AimCameraAtRyo(IconSystemMenuCameraTransition &transition, Character &ryo) {
     std::int16_t yawSum = 0;
     for (CharacterNode *node = &ryo.entity.node; node; node = node->child)
@@ -1586,7 +1620,7 @@ void HandleCassetteItemEvents() {
         if (item == 51) {
             g_playerStats.runtimeFlags ^= 4U;
         } else if (static_cast<std::uint16_t>(item - 52) <= 1U) {
-            // Shenmue_LoadAudioFile, the ReadAudioFromTable_0 wait and PlayDialogueByVoiceCode, through the wrapper's modes 1 and 0.
+            // Wait for the voice file, then start playback (audio wrapper modes 1 and 0).
             LoadAudioFile_Wrapper(1, "E1079");
             ProcessSubtitleFile("E1079A001", 0, 0, nullptr);
             LoadAudioFile_Wrapper(0, "E1079");
@@ -1721,7 +1755,7 @@ void IconSystemMenu_UpdateMenuCloseState() {
 #endif
 }
 
-// The ICSM_ClosingTeardown/ClosingTransition end: the saved author and temporary game states return and ICON's stage 5 follows.
+// Restore saved author and temporary game states, then advance ICON to stage 5.
 void IconSystemMenu_FinishClose() {
     IconPresentationOwner &icon = g_iconPresentation;
     g_temporaryGameState = icon.cameraTransition.savedTemporaryGameState;
@@ -2281,7 +2315,7 @@ void CassetteMenu_HandleInput() {
                 UI_ICLIResetSharedItemMenu();
                 g_userResponse = response;
             } else {
-                // Shenmue_LoadAudioFile, the ReadAudioFromTable_0 wait and PlayDialogueByVoiceCode, through the wrapper's modes 1 and 0.
+                // Wait for the voice file, then start playback (audio wrapper modes 1 and 0).
                 LoadAudioFile_Wrapper(1, "E1060");
                 icon.itemLookRemark = ProcessSubtitleFile("E1060A020", 0, 0, nullptr);
                 icon.sharedItemMenuState = 4;
@@ -2367,7 +2401,7 @@ void ItemLook_Open() {
     if (!remark) {
         icon.sharedItemMenuState = 1;
     } else {
-        // Shenmue_LoadAudioFile, the ReadAudioFromTable_0 wait and PlayDialogueByVoiceCode, through the wrapper's modes 1 and 0.
+        // Wait for the voice file, then start playback (audio wrapper modes 1 and 0).
         LoadAudioFile_Wrapper(1, "E1060");
         icon.itemLookRemark = ProcessSubtitleFile(remark, 0, 0, nullptr);
         icon.sharedItemMenuState = 3;
@@ -2577,7 +2611,7 @@ void BatteriesAreDead() {
         g_playerStats.batteryDecrementMask &= static_cast<std::uint8_t>(~2U);
         g_cassettePlaying = 0;
     }
-    // Shenmue_LoadAudioFile, the ReadAudioFromTable_0 wait and PlayDialogueByVoiceCode, through the wrapper's modes 1 and 0.
+    // Wait for the voice file, then start playback (audio wrapper modes 1 and 0).
     LoadAudioFile_Wrapper(1, "E1079");
     g_currentCassetteDialogue = ProcessSubtitleFile("E1079A005", 0, 0, nullptr);
     LoadAudioFile_Wrapper(0, "E1079");
@@ -2691,7 +2725,7 @@ void ShowDescriptionForItem(float *rect, void *data) {
     InformationBarMessage message{.iconAction = -1, .outlinePanel = -1, .outline = {rect[0], rect[1], rect[2], rect[3]}};
     std::array<char, 32> count{};
     if (const UIGridEntry *const entry = static_cast<const UIGridEntry *>(data)) {
-        struct nk_image icon {};
+        struct nk_image icon{};
         if (entry->type == 0 && static_cast<std::uint32_t>(entry->id) < kOwnedItemCatalogCount)
             RenderingRelatedInventory(icon, g_ownedItemCatalog[static_cast<std::size_t>(entry->id)].iconIndex, 0);
         else if (entry->type == 1 && static_cast<std::uint32_t>(entry->id) < kCassetteCatalogCount)
@@ -2769,8 +2803,8 @@ const char *UIGridEntry_NameToken(const UIGridEntry &entry) {
     return "";
 }
 
-// The tail of the Collection children's Render (inlined in each): the Information Bar shows `text` (already localized) outlined by the grid's
-// selected cell (none in the frontend), with the element's view slot in the message's first word; the rest of the current message stays.
+// Show localized Information Bar text, outlined by the selected cell outside the frontend.
+// Store the view slot in the first message word; leave the remaining fields unchanged.
 void Collection_ShowSelectedCell(UIGrid &grid, std::int32_t element, const char *text) {
     const UILayoutRect cell = UIGrid_GetSelectedCellRect(&grid);
     InformationBarMessage message = g_informationBarLabels.message;
@@ -2824,10 +2858,10 @@ void CassetteMusicNote(const std::array<float, 4> &cell) {
     float bob = 0.0f;
     if (g_cassetteMusicNoteAnimSlot != -1)
         bob = std::sin(g_uiAnimSlots[static_cast<std::size_t>(g_cassetteMusicNoteAnimSlot)].current[0]);
-    const struct nk_rect note { .x = cell[2] - 40.0f - 8.0f, .y = cell[3] - 40.0f - 16.0f + bob * 5.0f, .w = 40.0f, .h = 40.0f };
+    const struct nk_rect note{.x = cell[2] - 40.0f - 8.0f, .y = cell[3] - 40.0f - 16.0f + bob * 5.0f, .w = 40.0f, .h = 40.0f};
     if (context.current && context.current->layout)
         context.current->layout->row.item = note;
-    struct nk_image image {};
+    struct nk_image image{};
     RenderingRelatedInventory(image, 251, 0);
     nk_image_color(&context, image, nk_color{.r = 0xff, .g = 0xff, .b = 0xff, .a = 0xff});
     if (!context.current)
@@ -3251,9 +3285,6 @@ std::int64_t CollectionMenu_Tick() {
     return 0;
 }
 
-
-
-
 void CollectionMenu_Render() {
     UIBaseRuntime &informationBar = g_uiElements[kUiGameMenuInformationBar];
     UI_ActivateElement(informationBar);
@@ -3268,10 +3299,10 @@ void CollectionMenu_Render() {
     UI_RestartCurrentGridSelection();
     list.shownIndex = -1;
     Collection_ShowSelectedTab();
-    constexpr std::int32_t kPlatformCountry = 2;
+    const std::int32_t country = g_platformInterface->GetCountry();
     for (OwnedItemCatalogEntry &entry : g_ownedItemCatalog) {
         if (entry.iconIndex == 0xbe)
-            entry.itemNameId = kPlatformCountry == 0 || kPlatformCountry == 1 ?
+            entry.itemNameId = country == 0 || country == 1 ?
                 "UIGACHGENE" :
                 "UIGACHMEGA"; // @text UIGACHGENE EN: "Genesis" | JA: "ジェネシス" ; UIGACHMEGA EN: "Mega Drive" | JA: "メガドライブ"
     }
@@ -3356,7 +3387,7 @@ void Scrolls_DrawCell(
     UIGridEntry *const entry = elements ? &static_cast<UIGridEntry *>(elements)[static_cast<std::uint32_t>(index)] : nullptr;
     const bool owned = entry && entry->count != 0;
     UI_WindowMouseCallbacks(grid->mouseCallbacks, element, rect, owned ? entry : &g_scrollsEmptyElement);
-    struct nk_image image {};
+    struct nk_image image{};
     if (static_cast<std::uint32_t>(g_uiElements[kUiSharedItems].config.uiHandleIndex) <= 75U) {
         if (!owned)
             RenderingRelatedInventory(image, g_ownedItemCatalog[29].iconIndex, 0);
@@ -3604,8 +3635,8 @@ void UI_StopPlayingCassettes() {
     g_currentCassetteDialogue = nullptr;
 }
 
-// SCNF_PrepareCassetteUI's test: open the player from free roam when no item look or notebook help is up; a script-started player
-// neither drains the battery nor checks it.
+// Open from free roam when neither item inspection nor notebook help is active.
+// Script-started playback does not check or drain the battery.
 bool UI_ICMCBegin() {
     if (g_isPlayerGameStateActive != 7 || g_iconPresentation.sharedItemMenuState || g_notebookHelpOverrideActive || !shenPrepareCassetteUI())
         return false;

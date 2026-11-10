@@ -3,7 +3,6 @@
 namespace shenmue::s1 {
 namespace CycleManager {
 
-
 CycleManager::ShutRow *FindSHUTRowByToken(uint32_t token) {
     if (!CycleManager::IsReady() || !token)
         return nullptr;
@@ -83,7 +82,11 @@ void UpdateSHUTRowObject(CycleManager::ShutRow &row) {
         return;
     if (Character *const primary = row.token.name ? CycleManager::FindCharacter(row.token.name) : nullptr) {
         ApplyCharacterTransform(*primary, row.pos, {0, CycleManager::SubtractChildYawChain(row.angle1, primary->entity.node.child), 0});
+        const bool primaryWasActive = (primary->motionFlags & 0x3fU) != 0;
         primary->motionFlags = static_cast<std::uint8_t>(row.byte31 != 2 ? (primary->motionFlags | 0x3fU) : (primary->motionFlags & 0xc0U));
+        const bool primaryActive = (primary->motionFlags & 0x3fU) != 0;
+        if (g_bDebugLogVisibility && (primary->flags.value & CharacterFlagHasCpct) != 0 && primaryActive != primaryWasActive)
+            CHAR_LogNPCVisibility(primary, primaryActive);
         if (row.byte31 != 2) {
             CharacterComponentNode *const component = HLib_GetCharacterComponent(primary, SHEN_NAME(CCOW));
             const auto *const control = component ? reinterpret_cast<const std::byte *>(component + 1) : nullptr;
@@ -96,7 +99,11 @@ void UpdateSHUTRowObject(CycleManager::ShutRow &row) {
     if (Character *const paired = row.modelToken.name ? CycleManager::FindCharacter(row.modelToken.name) : nullptr) {
         ApplyCharacterTransform(*paired, row.targetPos, {0, CycleManager::SubtractChildYawChain(row.angle2, paired->entity.node.child), 0});
         const bool shown = row.modelToken.name != 0 && row.byte31 != 0;
+        const bool pairedWasActive = (paired->motionFlags & 0x3fU) != 0;
         paired->motionFlags = static_cast<std::uint8_t>(shown ? (paired->motionFlags | 0x3fU) : (paired->motionFlags & 0xc0U));
+        const bool pairedActive = (paired->motionFlags & 0x3fU) != 0;
+        if (g_bDebugLogVisibility && (paired->flags.value & CharacterFlagHasCpct) != 0 && pairedActive != pairedWasActive)
+            CHAR_LogNPCVisibility(paired, pairedActive);
     }
 }
 
@@ -220,14 +227,12 @@ uint32_t CurrentTimeSeconds() {
 
 } // namespace CycleManager
 
-
 DSWK_t *DSWK_GetLocalTaskData() {
     if (!CycleManager::IsReady() || !g_cycleManagerRuntime.doorTaskData)
         return nullptr;
     return reinterpret_cast<DSWK_t *>(g_cycleManagerRuntime.doorTaskData);
 }
 namespace CycleManager {
-
 
 void SetDoorTransitionDormant(CycleManager::NpcRecord &npc) {
     npc.cycle->pos.x = 1000.0f;
@@ -237,7 +242,6 @@ void SetDoorTransitionDormant(CycleManager::NpcRecord &npc) {
     npc.cycle->actionTimerOrDoorHandle = -1;
 }
 } // namespace CycleManager
-
 
 bool npcActivateIfNearInArea(CycleManager::NpcRecord &npc, float radius, const Vector3 *target, int16_t targetYaw, bool commit, uint16_t animId) {
     npc.cycle->savedSteeringHalfDepth = npc.cycle->steeringHalfDepth;
@@ -280,7 +284,6 @@ bool npcActivateIfNearInArea(CycleManager::NpcRecord &npc, float radius, const V
 }
 namespace CycleManager {
 
-
 bool PrepareDoorTransitionCandidate(CycleManager::NpcRecord &npc, Vector3 &approachPos, int32_t &approachYaw) {
     DSWK_t *const doorSupport = reinterpret_cast<DSWK_t *>(DSWK_CurrentTaskDataAt(0, sizeof(DSWK_t)));
     if (!doorSupport || !DSWK_TryComputeNearestDoorApproachPose(*doorSupport, approachPos, approachYaw)) {
@@ -293,10 +296,10 @@ bool StartDoorRequest(CycleManager::NpcRecord &npc) {
     if (npc.cycle->actionTimerOrDoorHandle >= 0)
         return true;
 
-    // The original only enters the DSWK hand-off while the cycle has a live
-    // character/MOTN work context.  Inactive cycles take the dormant branch;
-    // allocating a request for one leaves the scenario door task with an owner
-    // that CYCLE_CMD_HAS_CHARA can never resolve.
+    // Door hand-off requires a live character/MOTN context; inactive cycles stay dormant.
+    // The scenario door task resolves the request owner through CYCLE_CMD_HAS_CHARA.
+
+
     if (!npc.cycle->motnSteeringActive || !npc.cycle->obj) {
         CycleManager::SetDoorTransitionDormant(npc);
         return true;
@@ -438,6 +441,5 @@ uint32_t BeginShopShutterCommand(CycleManager::NpcRecord &npc, const char *recor
     return 1;
 }
 } // namespace CycleManager
-
 
 } // namespace shenmue::s1

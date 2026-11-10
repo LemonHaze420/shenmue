@@ -33,7 +33,7 @@ void InitializeRainLayer(WeatherNodeData &data, float intensity, RainRandomFunct
     data.rain.pool.renderCount = 0;
     data.rain.pool.fade = reinterpret_cast<WeatherDataEntry *>(fade);
     data.rain.pool.availableCount = 0;
-    ReadWeatherParticleModel(particles, "/particles/rain/rain.fbx");
+    ReadWeatherParticleModel(particles, "/particles/rain/rain.fbx", data.rain.pool.capacity);
     data.rain.damping = 0.06f;
     data.rain.colour = std::uint32_t{0x15b7b9bbU};
     data.rain.width = 0.0035f;

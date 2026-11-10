@@ -8,19 +8,31 @@
 #include "s1/d3t/d3t_render_handles.hpp"
 #include "s1/d3t/d3t_shader_load.hpp"
 #include "s1/d3t/d3t_texture.hpp"
+#include "d3t/archive_handles.hpp"
+#include "s1/boot.hpp"
+#include "s1/frame_pipeline.hpp"
 #include "s1/fvf_layout.hpp"
 #include "s1/graphics_resources.hpp"
 #include "s1/nuklear_integration.hpp"
 #include "s1/simple_shader.hpp"
+#include "s1/task/came.hpp"
+
+#include <cJSON.h>
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
 #define WIN32_LEAN_AND_MEAN
 #include <d3d11.h>
 #endif
+
+namespace shenmue::s1::ui_runtime_detail {
+bool validateActiveRenderHandle();
+}
 
 namespace shenmue::s1 {
 
@@ -106,13 +118,17 @@ std::int64_t ClearEffectABuffer() {
     }
     WriteRenderState(state, 4, g_abufferClearPixelShader);
     d3t::SetupForDepthBufferPass(context);
-#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(_WIN32) || defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     DX11_ResetMappedResources(context);
     DX11_UnmapAndSyncShaderBindings(context);
     DX11_SetupShadersForDXAndSetViewports(context);
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *native = static_cast<ID3D11DeviceContext *>(context->deviceContext);
     if (native)
         native->Draw(4, 0);
+#else
+    browser::gpu::Draw(context, 4);
+#endif
 #endif
     return 0;
 }
@@ -148,19 +164,114 @@ std::int64_t ComposeEffectABuffer() {
         WriteRenderState(state, kPixelViewFlags8, std::uint32_t{0});
     }
     d3t::SetupForDepthBufferPass(context);
-#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
+#if defined(_WIN32) || defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     DX11_ResetMappedResources(context);
     DX11_UnmapAndSyncShaderBindings(context);
     DX11_SetupShadersForDXAndSetViewports(context);
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
     auto *const native = static_cast<ID3D11DeviceContext *>(context->deviceContext);
     if (native)
         native->Draw(4, 0);
+#else
+    browser::gpu::Draw(context, 4);
+#endif
 #endif
     return 0;
 }
 
 
 std::int32_t g_bHasSetupShaders = 0;
+
+std::array<CameraConfigPreset, 16> g_cameraConfigPresets{};
+std::int32_t g_cameraConfigPresetCount = 0;
+
+namespace {
+void ReadCameraConfigFloat2(cJSON *object, const char *name, float *output, const float *fallback) {
+    cJSON *const item = cJSON_GetObjectItem(object, name);
+    if (!item) {
+        output[0] = fallback[0];
+        output[1] = fallback[1];
+        return;
+    }
+    if (item->type == cJSON_Array && cJSON_GetArraySize(item) >= 2) {
+        for (std::int32_t index = 0; index < 2; ++index)
+            output[index] = static_cast<float>(cJSON_GetArrayItem(item, index)->valuedouble);
+    }
+}
+
+void ReadCameraConfigVector4(cJSON *object, const char *name, float *output, const float *fallback) {
+    cJSON *const item = cJSON_GetObjectItem(object, name);
+    if (!item) {
+        for (std::int32_t index = 0; index < 4; ++index)
+            output[index] = fallback[index];
+        return;
+    }
+    if (item->type == cJSON_Array && cJSON_GetArraySize(item) >= 4) {
+        for (std::int32_t index = 0; index < 4; ++index)
+            output[index] = static_cast<float>(cJSON_GetArrayItem(item, index)->valuedouble);
+    }
+}
+
+float ReadCameraConfigNumber(cJSON *object, const char *name, float fallback) {
+    const cJSON *const item = cJSON_GetObjectItem(object, name);
+    return item && item->type == cJSON_Number ? static_cast<float>(item->valuedouble) : fallback;
+}
+} // namespace
+
+void ReadCameraConfig() {
+    char *const text = static_cast<char *>(d3t::LoadLegacyFile("./camera.config", nullptr));
+    cJSON *const root = cJSON_Parse(text);
+    constexpr float origin[4]{0.0f, 0.0f, 0.0f, 1.0f};
+    constexpr float forward[4]{0.0f, 0.0f, -1.0f, 0.0f};
+    constexpr float defaultDirection[4]{0.0f, 0.0f, 1.0f, 0.0f};
+    constexpr float zero[2]{};
+    CameraConfigPreset &fallback = g_cameraConfigPresets[0];
+    std::strcpy(fallback.name, "Default");
+    fallback.fov = kCameraConfigDefaultFov;
+    fallback.nearPlane = kCameraConfigDefaultNearPlane;
+    fallback.farPlane = kCameraConfigDefaultFarPlane;
+    g_cameraConfigPresetCount = 1;
+    std::memcpy(fallback.position, origin, sizeof(origin));
+    std::memcpy(fallback.direction, defaultDirection, sizeof(defaultDirection));
+    std::memset(fallback.lookAt, 0, sizeof(fallback.lookAt));
+    fallback.eulerAngles[0] = 0.78539819f;
+    fallback.eulerAngles[1] = 1.5707964f;
+    for (cJSON *entry = root ? root->child : nullptr; entry && g_cameraConfigPresetCount < static_cast<std::int32_t>(g_cameraConfigPresets.size());
+        entry = entry->next) {
+        CameraConfigPreset &preset = g_cameraConfigPresets[static_cast<std::size_t>(g_cameraConfigPresetCount++)];
+        std::snprintf(preset.name, sizeof(preset.name), "%s", entry->string);
+        const cJSON *const fpsMode = cJSON_GetObjectItem(entry, "fpsMode");
+        preset.fpsMode = fpsMode && fpsMode->type == cJSON_True;
+        ReadCameraConfigVector4(entry, "position", preset.position, origin);
+        ReadCameraConfigVector4(entry, "direction", preset.direction, forward);
+        ReadCameraConfigVector4(entry, "lookAt", preset.lookAt, origin);
+        ReadCameraConfigFloat2(entry, "eulerAngles", preset.eulerAngles, zero);
+        preset.fov = ReadCameraConfigNumber(entry, "fov", kCameraConfigDefaultFov);
+        preset.nearPlane = ReadCameraConfigNumber(entry, "nearPlane", kCameraConfigDefaultNearPlane);
+        preset.farPlane = ReadCameraConfigNumber(entry, "farPlane", kCameraConfigDefaultFarPlane);
+    }
+    cJSON_Delete(root);
+    std::free(text);
+}
+
+void SetupShaders() {
+    if (g_bHasSetupShaders)
+        return;
+    const bool active = ui_runtime_detail::validateActiveRenderHandle();
+    if (!active) {
+        g_seqActive = 0;
+        g_isRenderSuppressed = 1;
+        FlushRenderQueue();
+    }
+    RenderScreen_Wrapper(&g_activeRenderHandle, 1);
+    d3t_CloseRenderHandle(g_activeRenderHandle);
+    AssignShaderReferences();
+    CreateDXBufferForShaders();
+    AssignShaderReferences_0();
+    if (!active)
+        Shenmue_DispatchRenderPipeline();
+    g_bHasSetupShaders = 1;
+}
 
 std::int64_t LoadShaders() {
     g_activeRenderHandle = d3t_AllocateRenderHandle();
@@ -180,11 +291,16 @@ std::int64_t LoadShaders() {
     Shenmue_InitShaders();
     SetupNuklear();
     LoadSimpleShader();
+    const std::int64_t result = ClearEffectABuffer();
 
-    AssignShaderReferences();
-    AssignShaderReferences_0();
-    g_bHasSetupShaders = 1;
-    return ClearEffectABuffer();
+    g_activeRenderHandle = d3t_AllocateRenderHandle();
+    d3t::LoadFoliageAnimation();
+    ReadCameraConfig();
+    while (d3t_IsRenderHandlePending(g_activeRenderHandle)) {
+        ProcessRemappings();
+    }
+    SetupShaders();
+    return result;
 }
 
 } // namespace shenmue::s1

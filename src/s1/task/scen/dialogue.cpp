@@ -108,6 +108,43 @@ bool SCNT_IsParticipantTurnSettled(std::uint32_t name) {
     return !chara || !charaHasBlockingTPMRequest(chara);
 }
 
+void SCNF_ReleaseActiveObject() {
+    ScenFlags() &= ~(kScenarioFlagActiveRuntimeObject | kScenarioFlagUnknown200 | kScenarioFlagInteractionModal);
+    ScenRuntimeObject *const active = g_scenRuntimeState.activeObject;
+    const std::uint32_t flags = ScenFlags();
+    SetScenActiveObjectName(0);
+    if (!active)
+        return;
+    g_scenRuntimeState.activeObject = nullptr;
+    if (!ShouldRun() && (flags & kScenarioFlagPadBlockOverride) != 0) {
+        ScenFlags() = flags & ~kScenarioFlagPadBlockOverride;
+        navResetAuthAndInputStates();
+    }
+    RestoreScenPadContext();
+    FinalizeScenRuntimeObject(active);
+    active->name.name = 0;
+}
+bool scntCore_ClearOrUpdateTaskDataIfInvalid(ScenRuntimeObject *object) {
+    const std::uint32_t name = object->name.name;
+    if (name == g_cpctLastOperand || name == g_cpctPreviousOperand || name == g_scenarioStepLut.pendingCharacterName)
+        return true;
+    if (g_scenRuntimeState.activeObject && (g_scenRuntimeState.activeObject->runtimeFlags & 2U) != 0)
+        return true;
+    bool found = false;
+    scen_detail::ForEachEligibleScenCycleNpc([&](const CycleManager::NpcRecord &npc) {
+        const auto *const record = reinterpret_cast<const ScenRuntimeRecord *>(static_cast<const std::byte *>(npc.cycle->loadedBinHandle) + 16);
+        const std::uint32_t recordName = make_shen_name(record->name[0], record->name[1], record->name[2], record->name[3]);
+        const std::byte *const script = reinterpret_cast<const std::byte *>(record) + record->scriptOffset;
+        found = npc.cycle->moveConfig->obj_id.name == name && recordName == name && script == object->scriptStart;
+        return !found;
+    });
+    if (!found) {
+        if (object == g_scenRuntimeState.activeObject)
+            SCNF_ReleaseActiveObject();
+        *object = ScenRuntimeObject{};
+    }
+    return found;
+}
 void SCNT_Core(ScenRuntimeObject *object) {
     if (!object)
         return;
@@ -312,6 +349,8 @@ void SCNT_Core(ScenRuntimeObject *object) {
         if (slot < g_scntWaitOffsets.size())
             g_scntWaitOffsets[slot] = 0;
     } else if (shouldDecode) {
+        if (!scntCore_ClearOrUpdateTaskDataIfInvalid(object))
+            return;
         std::byte *const decoded = ScanScenConditionalFlow(*object, object->instructionPtr);
         const std::size_t slot = ScenWordSlotIndex(*object);
         if (decoded && slot < g_scntSelectedStateOffsets.size()) {
@@ -337,7 +376,10 @@ void SCNT_Core(ScenRuntimeObject *object) {
         g_scenarioTaskSubtitleTime = 0.0F;
         g_scenRuntimeState.randomBranchCount = 0;
         g_scntFrameTimer = 0;
-        (void)RunScenBytecode(*object);
+        if (scntCore_ClearOrUpdateTaskDataIfInvalid(object)) {
+            (void)RunScenBytecode(*object);
+            ui_runtime_detail::Subtitles_FadeOutPanels();
+        }
         return;
     }
 
@@ -352,7 +394,7 @@ void SCNT_Core(ScenRuntimeObject *object) {
             (void)UpdateScenStateFiveRecovery(*object, pad);
             return;
         }
-        if (!ShouldRun() || g_scenHelpPromptOverride != 0)
+        if (!scntCore_ClearOrUpdateTaskDataIfInvalid(object) || g_scenHelpPromptOverride != 0 || !ShouldRun())
             return;
         if (g_areaId != AREA_MFSY.name || SCEN_HasActiveScript())
             g_bGlobalFlag = 1;

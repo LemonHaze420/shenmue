@@ -950,7 +950,7 @@ void TRWV_FloatAttachedNode(const TransformedWaveform &waveform) {
     const std::byte *const strips = TaskDataPointer<std::byte>(TaskDataPointer<EffeGeometryMesh>(model->meshOffset)->chunkOffset);
     const auto *const node = static_cast<const WaveModelNode *>(waveform.attachedNode);
     std::byte *const vertices = TaskDataPointer<std::byte>(TaskDataPointer<EffeGeometryMesh>(node->meshOffset)->vertexOffset);
-    for (const std::uint32_t(&pair)[2] : kFloatingVertices) {
+    for (const std::uint32_t (&pair)[2] : kFloatingVertices) {
         float height = 0.0f;
         std::memcpy(&height, strips + pair[0], sizeof(height));
         const float floated = static_cast<float>(static_cast<double>(height) + 0.04);
@@ -1402,6 +1402,8 @@ std::uint32_t GetTypeForResolution(std::uint32_t size) {
     }
 }
 
+} // namespace
+
 // Recreates the data-less texture from the decoded, vertically flipped PVR, the raw source for families without PVR flags, or an encoded image in place.
 std::uint32_t CreatePVRForDirectX(DecodedTextureFormat &out, const std::byte *source) {
     if ((out.extraParam & 0x80U) != 0U) {
@@ -1451,6 +1453,8 @@ std::uint32_t CreatePVRForDirectX(DecodedTextureFormat &out, const std::byte *so
     out.texture = texture;
     return 0;
 }
+
+namespace {
 
 bool CreateDynamicTexture(
     std::int32_t slot, std::uint32_t formatType, std::int32_t width, std::int32_t height, const std::byte *pvr, std::uint32_t textureFlags) {

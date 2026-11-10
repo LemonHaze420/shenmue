@@ -8,6 +8,7 @@
 #include "s1/d3t/d3t_texture.hpp"
 #include "s1/fvf_layout.hpp"
 #include "s1/shader_initialization.hpp"
+#include "s1/steam.hpp"
 
 #include <array>
 #include <atomic>
@@ -97,10 +98,11 @@ void *g_uiStringTable = nullptr;
 void *g_uiStringBuffer = nullptr;
 std::uint64_t g_uiStringBufferSize = 0;
 
+std::uint32_t g_previousUiRenderHandle = 0;
+
 namespace {
 
 std::int32_t g_pendingUiLanguage = 0;
-std::uint32_t g_previousUiRenderHandle = 0;
 std::uint64_t g_splashRenderState = 0;
 std::uint32_t g_splashRenderFlags = 0;
 
@@ -119,13 +121,6 @@ static_assert(sizeof(FontLoadRequest) == 80);
 
 std::array<FontLoadRequest, 8192> g_fontLoadRequests{};
 std::atomic<std::uint16_t> g_fontLoadRequestIndex{0};
-
-
-
-
-GameLanguage GetSteamUiLanguage() {
-    return GameLanguage::English;
-}
 
 } // namespace
 
@@ -176,7 +171,7 @@ bool GetIsJPVersion() {
 
 GameLanguage GetCurrentLanguageId(GameLanguage requestedLanguage) {
     if (requestedLanguage < 0)
-        requestedLanguage = GetSteamUiLanguage();
+        requestedLanguage = static_cast<GameLanguage>(g_platformInterface->GetLanguage());
 
     constexpr std::array<GameLanguage, 7> allLanguages{English, Japanese, French, German, Korean, ChineseTrad, ChineseSimp};
 

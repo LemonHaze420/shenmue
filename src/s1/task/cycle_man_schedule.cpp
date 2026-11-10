@@ -1,4 +1,5 @@
 #include "s1/task/cycle_man_internal.hpp"
+#include "s1/file_loader.hpp"
 
 namespace shenmue::s1::CycleManager {
 
@@ -76,17 +77,8 @@ uint32_t ResolveOffsetFromChara(uint32_t charaHeaderOffset, int32_t offset) {
     return rawOffset;
 }
 
-void LoadMNRBAndMCIR() {
+void MoveObj_LoadMCIR_ChairGroup() {
     CycleManager::RuntimeState &cm = g_cycleManagerRuntime;
-    cm.mnrbEntries.clear();
-    cm.mnrbReservationPoolAvailable = false;
-    for (CycleManager::MNRBEntry::Reservation &reservation : cm.mnrbReservationPool) {
-        reservation.prev = nullptr;
-        reservation.next = nullptr;
-        reservation.owner = nullptr;
-        reservation.seatOrderKey = 0;
-    }
-    cm.mnrbOffset = 0;
     cm.mcirOffset = 0;
     if (!cm.loaded || cm.schedule.empty())
         return;
@@ -110,6 +102,22 @@ void LoadMNRBAndMCIR() {
                 cm.mcirOffset = offset;
         }
     }
+}
+
+void LoadMNRBAndMCIR() {
+    CycleManager::RuntimeState &cm = g_cycleManagerRuntime;
+    cm.mnrbEntries.clear();
+    cm.mnrbReservationPoolAvailable = false;
+    for (CycleManager::MNRBEntry::Reservation &reservation : cm.mnrbReservationPool) {
+        reservation.prev = nullptr;
+        reservation.next = nullptr;
+        reservation.owner = nullptr;
+        reservation.seatOrderKey = 0;
+    }
+    cm.mnrbOffset = 0;
+    MoveObj_LoadMCIR_ChairGroup();
+    if (!cm.loaded || cm.schedule.empty())
+        return;
 
     uint8_t *mnrb = CycleManager::MoveObj_FindEntry(cm.schedule.data(), SHEN_NAME(MNRB), 0, static_cast<int32_t>(cm.schedule.size()) - 1);
     if (!mnrb)
@@ -315,7 +323,7 @@ uint32_t ReadCommandDwordOrZero(uint32_t recordOffset, uint32_t payloadOffset) {
 bool WriteCommandDword(uint32_t absoluteOffset, uint32_t value) {
     if (!CycleManager::IsReady())
         return false;
-    std::vector<uint8_t> &bytes = g_cycleManagerRuntime.bytes;
+    const std::span<uint8_t> bytes = g_cycleManagerRuntime.bytes;
     if (absoluteOffset > bytes.size() || sizeof(value) > bytes.size() - absoluteOffset)
         return false;
     std::memcpy(bytes.data() + absoluteOffset, &value, sizeof(value));
@@ -970,18 +978,24 @@ int32_t ReadCyclemanForScene(const char *InFilename
 #if SHENMUE_IS_DEMO
     cm.loaded = false;
     cm.ready = false;
-    cm.bytes.clear();
+    cm.bytes = {};
     cm.relinkedOffsetFields.clear();
     cm.sections.clear();
     cm.schedule.clear();
     cm.programs.clear();
     cm.mscrOffset = 0;
     cm.mscrCharaCount = 0;
-    const std::string path = std::string(InFilename ? InFilename : "") + "/" + (cycleFilename ? cycleFilename : "SCRTEST.BIN");
-    if (!ReadCurrentFile(path, cm.bytes)) {
-
+    const char *const directory = InFilename ? InFilename : "";
+    const char *const filename = cycleFilename ? cycleFilename : "SCRTEST.BIN";
+    const std::string path = std::string(directory) + "/" + filename;
+    const std::uint32_t size = static_cast<std::uint32_t>(shenOpenFile(directory, filename));
+    void *const file = size ? HLib_AllocMemBlock(size, SHEN_NAME(MOBJ)) : nullptr;
+    if (!file || !shenLoadFile(directory, filename, file, static_cast<std::int32_t>(size))) {
+        if (file)
+            HLib_FreeTaskData(static_cast<HLib::TaskData *>(file), 0);
         return 0;
     }
+    cm.bytes = {static_cast<uint8_t *>(file), size};
     std::uint32_t count = 0;
     if (!ReadValue(cm.bytes, 0, count) || 4ULL + 4ULL * count > cm.bytes.size())
         return 0;
@@ -1097,6 +1111,7 @@ int32_t ReadCyclemanForScene(const char *InFilename
     if (std::strcmp(g_tmp_cm_path, path) != 0) {
         std::snprintf(g_tmp_cm_path, sizeof(g_tmp_cm_path), "%s", path);
         CycleManager::MoveObj_FileLoad(std::strstr(path, "D000") ? "cm_d000.bin" : std::strstr(path, "MFSY") ? "cm_mfsy.bin" : "cm_jomo.bin");
+        CycleManager::MoveObj_LoadMCIR_ChairGroup();
         cm.ready = cm.loaded;
         cm.currentSectionToken = 0;
         cm.currentSectionOffset = 0;
@@ -1294,18 +1309,20 @@ void ParseProgramForChara(uint32_t charaToken, uint32_t timetableIndex) {
 
 
 
-void MoveObj_FileLoad(const char *InFilename) {
-    CycleManager::RuntimeState &cm = g_cycleManagerRuntime;
-    cm.loaded = false;
-    cm.bytes.clear();
-    cm.relinkedOffsetFields.clear();
-    cm.sections.clear();
-    cm.schedule.clear();
-    const std::string rel = std::string("misc/") + InFilename;
-    if (!CycleManager::ReadCurrentFile(rel, cm.bytes)) {
-        return;
-    }
+CycleManFileHeader *g_MOBJ = nullptr;
+CycleManFileHeader *g_cycleManFileData = nullptr;
+std::int32_t g_activeCycleFileSize = 0;
 
+void RelinkCycleManFileSections(CycleManFileHeader *file) {
+    CycleScheduleEntry *const entries = reinterpret_cast<CycleScheduleEntry *>(file + 1);
+    for (std::uint32_t index = 0; index < file->entryCount; ++index) {
+        std::byte *const section = reinterpret_cast<std::byte *>(file) + entries[index].offset;
+        entries[index].offset = section ? static_cast<std::int32_t>(section - g_pCurrentTaskData) : 0;
+    }
+}
+
+void ReadCycleManSections(const std::string &rel) {
+    CycleManager::RuntimeState &cm = g_cycleManagerRuntime;
     cm.sourcePath = rel;
     uint32_t signature = 0;
     uint32_t count = 0;
@@ -1332,8 +1349,52 @@ void MoveObj_FileLoad(const char *InFilename) {
         if (section.offset < cm.bytes.size() && nextOffset >= section.offset)
             section.size = nextOffset - section.offset;
     }
-
     cm.loaded = true;
+}
+
+void ResetCycleManFile() {
+    CycleManager::RuntimeState &cm = g_cycleManagerRuntime;
+    cm.loaded = false;
+    cm.bytes = {};
+    cm.relinkedOffsetFields.clear();
+    cm.sections.clear();
+    cm.schedule.clear();
+}
+
+CycleManFileHeader *PreLoad_OpenDobuitaCycleman(const char *directory) {
+    ResetCycleManFile();
+    const std::uint32_t size = static_cast<std::uint32_t>(shenOpenFile(directory, "CM_D000.BIN"));
+    CycleManFileHeader *const file = size ? static_cast<CycleManFileHeader *>(HLib_AllocMemBlock(size, SHEN_NAME(MOBJ))) : nullptr;
+    if (!file) {
+        g_MOBJ = nullptr;
+        return nullptr;
+    }
+    if (!shenLoadFile(directory, "CM_D000.BIN", file, static_cast<std::int32_t>(size))) {
+        HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(file), 0);
+        g_MOBJ = nullptr;
+        return nullptr;
+    }
+    g_cycleManagerRuntime.bytes = {reinterpret_cast<uint8_t *>(file), size};
+    ReadCycleManSections(std::string(directory) + "/CM_D000.BIN");
+    RelinkCycleManFileSections(file);
+    g_MOBJ = file;
+    return file;
+}
+
+void MoveObj_FileLoad(const char *InFilename) {
+    ResetCycleManFile();
+    const std::string rel = std::string("misc/") + InFilename;
+    shenLoadFile("misc", InFilename, g_cycleManFileData, g_activeCycleFileSize);
+    if (!g_cycleManFileData) {
+        g_MOBJ = nullptr;
+        return;
+    }
+    const std::uint64_t fileSize = shenOpenFile("misc", InFilename);
+    const std::uint64_t capacity = static_cast<std::uint64_t>(g_activeCycleFileSize);
+    g_cycleManagerRuntime.bytes = {reinterpret_cast<uint8_t *>(g_cycleManFileData), static_cast<size_t>(fileSize < capacity ? fileSize : capacity)};
+    ReadCycleManSections(rel);
+    RelinkCycleManFileSections(g_cycleManFileData);
+    g_MOBJ = g_cycleManFileData;
 }
 } // namespace CycleManager
 

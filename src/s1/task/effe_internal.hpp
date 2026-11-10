@@ -206,7 +206,7 @@ bool AdvanceCameraSnowParticle(RainParticleNative *particle, WeatherNodeData *da
 void SpawnCameraSnowParticleCore(RainParticleNative *particle, WeatherNodeData *data, bool clipped);
 std::uint32_t WeatherSpriteSizeBits(const WeatherSpriteTexture &texture);
 void AssignSnowTexture(WeatherNodeData &data);
-void ReadWeatherParticleModel(void *particles, const char *modelPath);
+void ReadWeatherParticleModel(void *particles, const char *modelPath, std::int32_t capacity);
 float CameraSnowRadius(std::int32_t fieldOfView, float depth);
 void SetCameraSnowVolume(WeatherNodeData &data, float radius, float radiusSquared, std::int32_t layer);
 WeatherNodeData *AllocateCameraSnowNode(bool clipped, float radius, std::int32_t layer);

@@ -215,24 +215,7 @@ std::uint32_t packedWeatherDateTime(const GameDateTime &dateTime) {
     return (static_cast<std::uint32_t>(year) << 20U) | (month << 16U) | (day << 11U) | (hour << 6U) | minute;
 }
 
-struct WeatherRuntimeCursor {
-    const std::uint32_t *current;
-    float dateTimeDifference;
-    float value;
-};
-
-WeatherRuntimeCursor g_cloudRuntime{};
-WeatherRuntimeCursor g_rainRuntime{};
-WeatherRuntimeCursor g_snowRuntime{};
-WeatherRuntimeCursor g_fcasRuntime{};
-
-void resetWeatherCursor(WeatherRuntimeCursor &cursor, void *records) {
-    cursor.current = static_cast<const std::uint32_t *>(records);
-    cursor.dateTimeDifference = 0.0f;
-    cursor.value = 0.0f;
-}
-
-float readWeatherIntensity(WeatherRuntimeCursor &cursor, std::uint32_t wanted) {
+float readWeatherIntensity(WeatherScheduleCursor &cursor, std::uint32_t wanted) {
     const std::uint32_t *current = cursor.current;
     const std::uint32_t *next = current + 1;
     std::uint32_t currentDate;
@@ -252,14 +235,14 @@ float readWeatherIntensity(WeatherRuntimeCursor &cursor, std::uint32_t wanted) {
         --next;
     }
     cursor.current = current;
-    cursor.dateTimeDifference = static_cast<float>(wanted - currentDate) / static_cast<float>(nextDate - currentDate);
+    cursor.fraction = static_cast<float>(wanted - currentDate) / static_cast<float>(nextDate - currentDate);
     const float currentValue = static_cast<float>(*current >> 24U) / 255.0f;
     float step = static_cast<float>(*next >> 24U) / 255.0f - currentValue;
-    if (std::fabs(step) < std::numeric_limits<float>::epsilon() || std::fabs(step *= cursor.dateTimeDifference) < std::numeric_limits<float>::epsilon()) {
+    if (std::fabs(step) < std::numeric_limits<float>::epsilon() || std::fabs(step *= cursor.fraction) < std::numeric_limits<float>::epsilon()) {
         step = 0.0f;
     }
-    cursor.value = step + currentValue;
-    return cursor.value;
+    cursor.intensity = step + currentValue;
+    return cursor.intensity;
 }
 
 std::uint8_t readForecast(const GameDateTime &dateTime) {
@@ -279,32 +262,20 @@ std::uint8_t readForecast(const GameDateTime &dateTime) {
     return 0;
 }
 
-std::int32_t g_weatherDataYear = 0;
-std::int32_t g_weatherDataMonth = 1;
-std::int32_t g_weatherDataDay = 1;
 float g_weatherCloudValue = 0.0f;
 float g_weatherRainValue = 0.0f;
 float g_weatherSnowValue = 0.0f;
 float g_weatherFcasValue = 0.0f;
 
-constexpr std::array<std::uint8_t, 31> kWindDaysA{
-    0x09, 0x07, 0x07, 0x07, 0x08, 0x08, 0x07, 0x05,
-    0xb8, 0x0a, 0x09, 0xf9, 0xf9, 0x15, 0xf4, 0xa7,
-    0xbc, 0x06, 0x08, 0x18, 0x15, 0x07, 0xab, 0xac,
-    0x0a, 0x07, 0x54, 0x53, 0xb7, 0x16, 0x19};
-constexpr std::array<std::uint8_t, 28> kWindDaysFebruary{
-    0x08, 0xf7, 0xe7, 0x09, 0x04, 0x54, 0x04, 0x06,
-    0x04, 0x75, 0xbc, 0xad, 0x35, 0xa9, 0x06, 0x08,
-    0x15, 0x08, 0x09, 0x07, 0x16, 0x07, 0xf5, 0xaa,
-    0xbc, 0xb9, 0xb8, 0x06};
-constexpr std::array<std::uint8_t, 31> kWindDaysB{
-    0xf9, 0x07, 0xa4, 0xba, 0xb7, 0xbb, 0x09, 0x08,
-    0x0b, 0x0e, 0x08, 0x45, 0xf5, 0xa9, 0x08, 0x06,
-    0x06, 0x0a, 0x34, 0x08, 0x46, 0x04, 0x05, 0xac,
-    0xad, 0x08, 0x87, 0x56, 0x07, 0x9a, 0x0b};
+constexpr std::array<std::uint8_t, 31> kWindDaysA{0x09, 0x07, 0x07, 0x07, 0x08, 0x08, 0x07, 0x05, 0xb8, 0x0a, 0x09, 0xf9, 0xf9, 0x15, 0xf4, 0xa7, 0xbc, 0x06,
+    0x08, 0x18, 0x15, 0x07, 0xab, 0xac, 0x0a, 0x07, 0x54, 0x53, 0xb7, 0x16, 0x19};
+constexpr std::array<std::uint8_t, 28> kWindDaysFebruary{0x08, 0xf7, 0xe7, 0x09, 0x04, 0x54, 0x04, 0x06, 0x04, 0x75, 0xbc, 0xad, 0x35, 0xa9, 0x06, 0x08, 0x15,
+    0x08, 0x09, 0x07, 0x16, 0x07, 0xf5, 0xaa, 0xbc, 0xb9, 0xb8, 0x06};
+constexpr std::array<std::uint8_t, 31> kWindDaysB{0xf9, 0x07, 0xa4, 0xba, 0xb7, 0xbb, 0x09, 0x08, 0x0b, 0x0e, 0x08, 0x45, 0xf5, 0xa9, 0x08, 0x06, 0x06, 0x0a,
+    0x34, 0x08, 0x46, 0x04, 0x05, 0xac, 0xad, 0x08, 0x87, 0x56, 0x07, 0x9a, 0x0b};
 
 std::uint8_t weatherWindScheduleByte() {
-    const std::int32_t month = std::clamp(g_weatherDataMonth - 1, 0, 11);
+    const std::int32_t month = std::clamp(g_weatherDateSchedule->month - 1, 0, 11);
     const std::uint8_t *days = kWindDaysA.data();
     std::size_t dayCount = kWindDaysA.size();
     if (month == 1) {
@@ -314,7 +285,7 @@ std::uint8_t weatherWindScheduleByte() {
         days = kWindDaysB.data();
         dayCount = kWindDaysB.size();
     }
-    const std::size_t day = static_cast<std::size_t>(std::clamp(g_weatherDataDay - 1, 0, static_cast<std::int32_t>(dayCount - 1)));
+    const std::size_t day = static_cast<std::size_t>(std::clamp(g_weatherDateSchedule->day - 1, 0, static_cast<std::int32_t>(dayCount - 1)));
     return days[day];
 }
 
@@ -516,7 +487,8 @@ void WEXE_UpdateWeatherCameraPosition() {
     }
 }
 void WEXE_ReadDataForDateTime(std::uint32_t year, std::uint32_t month, std::uint32_t day, std::uint32_t hour, std::uint32_t minute) {
-    std::int32_t weatherYear = static_cast<std::int32_t>(year) - 86;
+    WeatherDateSchedule *const schedule = g_weatherDateSchedule;
+    std::int32_t weatherYear = static_cast<std::int32_t>(year) - schedule->baseYear;
     std::int32_t weatherMonth = static_cast<std::int32_t>(month);
     std::int32_t weatherDay = static_cast<std::int32_t>(day);
     std::int32_t weatherHour = static_cast<std::int32_t>(hour);
@@ -564,13 +536,13 @@ void WEXE_ReadDataForDateTime(std::uint32_t year, std::uint32_t month, std::uint
     }
     const std::uint32_t packedDateTime = (static_cast<std::uint32_t>(weatherYear) << 20U) | (static_cast<std::uint32_t>(weatherMonth) << 16U) |
         (static_cast<std::uint32_t>(weatherDay) << 11U) | (static_cast<std::uint32_t>(weatherHour) << 6U) | static_cast<std::uint32_t>(weatherMinute);
-    g_weatherDataYear = weatherYear;
-    g_weatherDataMonth = weatherMonth;
-    g_weatherDataDay = weatherDay;
-    g_weatherCloudValue = clampWeatherValue(readWeatherIntensity(g_cloudRuntime, packedDateTime));
-    g_weatherRainValue = clampWeatherValue(readWeatherIntensity(g_rainRuntime, packedDateTime));
-    g_weatherSnowValue = readWeatherIntensity(g_snowRuntime, packedDateTime);
-    g_weatherFcasValue = readWeatherIntensity(g_fcasRuntime, packedDateTime);
+    schedule->year = weatherYear;
+    schedule->month = weatherMonth;
+    schedule->day = weatherDay;
+    g_weatherCloudValue = clampWeatherValue(readWeatherIntensity(*schedule->cloud, packedDateTime));
+    g_weatherRainValue = clampWeatherValue(readWeatherIntensity(*schedule->rain, packedDateTime));
+    g_weatherSnowValue = readWeatherIntensity(*schedule->snow, packedDateTime);
+    g_weatherFcasValue = readWeatherIntensity(*schedule->forecast, packedDateTime);
 }
 
 namespace {
@@ -1058,6 +1030,7 @@ void Weather_BgdtSpriteLoader(WeatherTaskRuntime &data) {
     if (SCRL_LoadSprite(kWeatherSpriteNames[static_cast<std::size_t>(mode)], intensity))
         data.spriteMode = mode;
 }
+} // namespace
 
 float Weather_GetCLUDIntensity() {
     if (std::fabs(g_cloudGameData->intensity) < std::numeric_limits<float>::epsilon()) {
@@ -1065,7 +1038,6 @@ float Weather_GetCLUDIntensity() {
     }
     return g_cloudGameData->intensity;
 }
-} // namespace
 
 std::uint32_t PackWeatherColour(WeatherColourData &data) {
     std::uint32_t colour = 0;
@@ -1599,13 +1571,46 @@ std::int32_t Weather_GetCurrentWeatherEffectMode() {
     return clampWeatherValue(g_weatherCloudValue) > 0.0f;
 }
 
-HLib::Task *WEXE_Init() {
+WeatherDateSchedule *g_weatherDateSchedule = nullptr;
+
+WeatherDateSchedule *Weather_CreateDateSchedule(std::int32_t baseYear) {
+    WeatherDateSchedule *const schedule = static_cast<WeatherDateSchedule *>(HLib_AllocHeapMemBlock(sizeof(WeatherDateSchedule), WEATHER_WDTA.name));
+    schedule->baseYear = baseYear;
+    schedule->year = 0;
+    schedule->day = 1;
+    schedule->month = 1;
+    WeatherScheduleCursor **const cursors[4]{&schedule->cloud, &schedule->rain, &schedule->snow, &schedule->forecast};
 #if SHENMUE_IS_DEMO
-    g_cloudRuntime = {.current = kTrialWeatherCloud};
-    g_rainRuntime = {.current = kTrialWeatherRain};
-    g_snowRuntime = {.current = kTrialWeatherSnow};
-    g_fcasRuntime = {.current = kTrialWeatherForecast};
+    const std::uint32_t *const records[4]{kTrialWeatherCloud, kTrialWeatherRain, kTrialWeatherSnow, kWeatherFcasInterpolation};
+    const std::uint32_t counts[4]{279, 158, 60, 2};
+#else
+    const std::uint32_t *const records[4]{static_cast<const std::uint32_t *>(g_cloudNode), static_cast<const std::uint32_t *>(g_rainNode),
+        static_cast<const std::uint32_t *>(g_snowNode), kWeatherFcasInterpolation};
+    const std::uint32_t counts[4]{
+        static_cast<std::uint32_t>(g_cloudCount), static_cast<std::uint32_t>(g_rainCount), static_cast<std::uint32_t>(g_snowCount), 2};
 #endif
+    const shen_name tokens[4]{WEATHER_WIT1, WEATHER_WIT2, WEATHER_WIT3, WEATHER_WIT4};
+    for (std::uint32_t index = 0; index < 4; ++index) {
+        WeatherScheduleCursor *const cursor = static_cast<WeatherScheduleCursor *>(HLib_AllocHeapMemBlock(sizeof(WeatherScheduleCursor), tokens[index].name));
+        cursor->current = records[index];
+        cursor->records = records[index];
+        cursor->count = counts[index];
+        cursor->fraction = 0.0f;
+        cursor->intensity = 0.0f;
+        *cursors[index] = cursor;
+    }
+    schedule->wind = kWeatherWindYears;
+    schedule->windYears = 3;
+    schedule->retained28 = 0;
+    schedule->retained2c = 0.0f;
+#if SHENMUE_IS_S1
+    schedule->forecastRecords = static_cast<const std::uint32_t *>(g_forecastNode);
+    schedule->forecastRecordCount = static_cast<std::uint32_t>(g_forecastCount);
+#endif
+    return schedule;
+}
+
+HLib::Task *WEXE_Init() {
     WIND_ResetWeatherDataForScene();
     g_cachedWeatherYear = 0;
     g_cachedWeatherMonth = 0;
@@ -1647,9 +1652,7 @@ HLib::Task *WEXE_Init() {
     g_activeWindEntry = allocateWeatherEntry();
     WIND_EnsureWeatherData();
     g_weatherExecuteTask = HLib_EnqueueTaskWithoutParameter(Weather_Tick, 13, 8, makeToken('W', 'E', 'X', 'E'));
-#if SHENMUE_IS_PC
-    g_fcasRuntime = {.current = kWeatherFcasInterpolation};
-#endif
+    g_weatherDateSchedule = Weather_CreateDateSchedule(86);
     return g_weatherExecuteTask;
 }
 
@@ -1768,22 +1771,15 @@ void Weather_ReadChunks(void *fileData) {
     g_wdatRoot = fileData;
     auto *const first = static_cast<WeatherChunk *>(fileData);
     static_cast<void>(findChunkUnchecked(first, makeToken('W', 'D', 'A', 'T')));
-    auto bindChunk = [&](std::uint32_t token, void *&node, std::int32_t &count, WeatherRuntimeCursor &runtime) {
+    auto bindChunk = [&](std::uint32_t token, void *&node, std::int32_t &count) {
         WeatherChunk *const chunk = findChunkUnchecked(first, token);
         count = chunk->size / static_cast<std::int32_t>(sizeof(std::uint32_t)) - 2;
         node = chunk + 1;
-        resetWeatherCursor(runtime, node);
     };
-    bindChunk(makeToken('C', 'L', 'U', 'D'), g_cloudNode, g_cloudCount, g_cloudRuntime);
-    bindChunk(makeToken('R', 'A', 'I', 'N'), g_rainNode, g_rainCount, g_rainRuntime);
-    bindChunk(makeToken('S', 'N', 'O', 'W'), g_snowNode, g_snowCount, g_snowRuntime);
-#if SHENMUE_IS_PC
-    WeatherChunk *const forecast = findChunkUnchecked(first, makeToken('F', 'C', 'A', 'S'));
-    g_forecastCount = forecast->size / static_cast<std::int32_t>(sizeof(std::uint32_t)) - 2;
-    g_forecastNode = forecast + 1;
-#else
-    bindChunk(makeToken('F', 'C', 'A', 'S'), g_forecastNode, g_forecastCount, g_fcasRuntime);
-#endif
+    bindChunk(makeToken('C', 'L', 'U', 'D'), g_cloudNode, g_cloudCount);
+    bindChunk(makeToken('R', 'A', 'I', 'N'), g_rainNode, g_rainCount);
+    bindChunk(makeToken('S', 'N', 'O', 'W'), g_snowNode, g_snowCount);
+    bindChunk(makeToken('F', 'C', 'A', 'S'), g_forecastNode, g_forecastCount);
 }
 
 

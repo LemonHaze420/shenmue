@@ -1,4 +1,9 @@
 #pragma once
+
+#include "shenmue.h"
+
+
+#pragma once
 #include "shenmue.h"
 
 #include "s1/hlib.hpp"
@@ -323,6 +328,7 @@ void SOND_SetSystemOutputMode(std::int32_t mode);
 #endif
 std::int64_t ExecuteAicaCommand2Ch(std::int32_t bank, std::int32_t channel, std::uint32_t command, std::int16_t volume);
 std::int32_t shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t volume);
+std::uint32_t CheckAicaBootromData();
 
 std::int32_t SND_SelectFreeWeird(std::int32_t id);
 std::int32_t ExecuteAICACommand_Wrapper(std::uint32_t volume);
@@ -360,3 +366,4 @@ inline constexpr std::int32_t kSndCommands[]{
 };
 
 } // namespace shenmue::s1
+

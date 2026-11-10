@@ -241,11 +241,6 @@ bool InitBikeMoveObjectRuntime(CycleManager::NpcRecord &npc, uint32_t opcode, ui
 }
 } // namespace CycleManager
 
-
-
-
-
-
 void InitBikePathRuntime(CycleManager::NpcRecord &npc, const char *record) {
     CycleManager::MobjCycle *const ctx = npc.cycle;
     const int32_t *const word = reinterpret_cast<const int32_t *>(record);
@@ -294,15 +289,13 @@ void InitBikePathRuntime(CycleManager::NpcRecord &npc, const char *record) {
 }
 namespace CycleManager {
 
-
-
 bool InitVehiclePath2D(CycleManager::NpcRecord &npc, uint32_t recordOffset, uint32_t opcode) {
     uint16_t anim = 0;
     uint32_t vehicle = 0;
     uint32_t count = 0;
     uint32_t offset = 0;
     float speed = 1.0f;
-    const std::vector<uint8_t> &bytes = g_cycleManagerRuntime.bytes;
+    const std::span<const uint8_t> bytes = g_cycleManagerRuntime.bytes;
     if (!ReadValue(bytes, recordOffset + 4u, anim) || !ReadValue(bytes, recordOffset + 8u, vehicle) || !ReadValue(bytes, recordOffset + 12u, count) ||
         !ReadValue(bytes, recordOffset + 16u, offset) || !ReadValue(bytes, recordOffset + 20u, speed))
         return false;
@@ -314,9 +307,9 @@ bool InitVehiclePath2D(CycleManager::NpcRecord &npc, uint32_t recordOffset, uint
 
 namespace CycleManager {
 
-BikeMoveObjectToken MakeBikeToken(const BikeAnimTokenSet *anims, Vector3 localOffset, int16_t steeringClamp, int16_t wheelPitch,
-    Vector3 leftAnkleLocal, Vector3 rightAnkleLocal, Vector3 wheelPivotLocal, float mountTargetX, float mountTargetZ, int16_t mountYawDelta, int16_t runtimeC0,
-    float steeringHalfWidth, float steeringHalfDepth, uint8_t speedCurveMode) {
+BikeMoveObjectToken MakeBikeToken(const BikeAnimTokenSet *anims, Vector3 localOffset, int16_t steeringClamp, int16_t wheelPitch, Vector3 leftAnkleLocal,
+    Vector3 rightAnkleLocal, Vector3 wheelPivotLocal, float mountTargetX, float mountTargetZ, int16_t mountYawDelta, int16_t runtimeC0, float steeringHalfWidth,
+    float steeringHalfDepth, uint8_t speedCurveMode) {
     BikeMoveObjectToken token{};
     token.pos = localOffset;
     token.steering_clamp = steeringClamp;
@@ -390,19 +383,23 @@ void ResolveVisibleBikeModels(CycleMoveObjectRuntime &runtime) {
             std::byte *const modelBase = root ? MT5_ModelBaseForNode(root) : nullptr;
             if (root && modelBase && FindRuntimeNodeByKind(root, modelBase, 196u)) {
                 const uint32_t low24 = runtime.moveObjectId & 0x00ffffffu;
-                runtime.modelAttachOffset.x = runtime.moveObjectId == SHEN_NAME(K013)                                                                 ? -0.05f :
-                    (runtime.moveObjectId == SHEN_NAME(BIKE) || low24 == (SHEN_NAME(CAB0) & 0x00ffffffu) || low24 == (SHEN_NAME(HAL0) & 0x00ffffffu)) ? -0.0f :
-                                                                                                                                                        -100.0f;
-                runtime.modelAttachOffset.y = runtime.moveObjectId == SHEN_NAME(K013) ? 0.94239998f :
-                    runtime.moveObjectId == SHEN_NAME(BIKE)                           ? 0.8937f :
-                    low24 == (SHEN_NAME(CAB0) & 0x00ffffffu)                          ? 1.0207f :
-                    low24 == (SHEN_NAME(HAL0) & 0x00ffffffu)                          ? 0.93809998f :
-                                                                                        -100.0f;
-                runtime.modelAttachOffset.z = runtime.moveObjectId == SHEN_NAME(K013) ? -0.8624f :
-                    runtime.moveObjectId == SHEN_NAME(BIKE)                           ? -0.81370002f :
-                    low24 == (SHEN_NAME(CAB0) & 0x00ffffffu)                          ? -0.94069999f :
-                    low24 == (SHEN_NAME(HAL0) & 0x00ffffffu)                          ? -0.8581f :
-                                                                                        -100.0f;
+                runtime.modelAttachOffset.x = runtime.moveObjectId ==
+                    SHEN_NAME(K013) ?
+                        -0.05f :
+                        (runtime.moveObjectId ==
+                            SHEN_NAME(BIKE) || low24 == (SHEN_NAME(CAB0) & 0x00ffffffu) || low24 == (SHEN_NAME(HAL0) & 0x00ffffffu)) ? -0.0f : -100.0f;
+                runtime.modelAttachOffset.y = runtime.moveObjectId ==
+                    SHEN_NAME(K013) ? 0.94239998f :
+                                      runtime.moveObjectId ==
+                            SHEN_NAME(BIKE) ?
+                                0.8937f :
+                                low24 == (SHEN_NAME(CAB0) & 0x00ffffffu) ? 1.0207f : low24 == (SHEN_NAME(HAL0) & 0x00ffffffu) ? 0.93809998f : -100.0f;
+                runtime.modelAttachOffset.z = runtime.moveObjectId ==
+                    SHEN_NAME(K013) ? -0.8624f :
+                                      runtime.moveObjectId ==
+                            SHEN_NAME(BIKE) ?
+                                -0.81370002f :
+                                low24 == (SHEN_NAME(CAB0) & 0x00ffffffu) ? -0.94069999f : low24 == (SHEN_NAME(HAL0) & 0x00ffffffu) ? -0.8581f : -100.0f;
             } else {
                 runtime.modelAttachOffset = {-100.0f, -100.0f, -100.0f};
             }
@@ -490,7 +487,6 @@ void AppendParkedVehicleSteeringVolumes() {
     }
 }
 } // namespace CycleManager
-  // namespace
 
 namespace CycleManager {
 
@@ -673,7 +669,6 @@ void SetBikeMotionConstraintOwner(CycleManager::NpcRecord &npc) {
     motion->mobjCallbackUser = &npc;
 }
 } // namespace CycleManager
-  // namespace
 
 namespace CycleManager {
 
@@ -764,9 +759,9 @@ bool BeginBikeMoveObjectRelease(CycleManager::NpcRecord &npc) {
         runtime->wheelSpin = npc.cycle->moveConfig->obj_id.name == SHEN_NAME(SOBA) ? 0x8000 : 0;
     npc.cycle->requestAnimId = static_cast<uint16_t>(runtime->renderEuler.y);
 
-    // HAL1 remains attached during this transition in the original.  Every
-    // other vehicle is published and detached immediately, while the saved
-    // released pointer remains valid until cleanup.
+    // HAL1 stays attached; other vehicles detach immediately.
+    // Keep the released pointer valid until cleanup.
+
     if (runtime->moveObjectId != SHEN_NAME(HAL1))
         CycleManager::ReleaseVehicleRuntime(npc);
     if (MotionInformationWork *const motion = npc.cycle->mot) {
@@ -845,7 +840,6 @@ void BuildNaturalCubicSpline3DCache() {
     SolveCubicSegmentCoeffs(g_spline3d.z, g_spline3d.cumulativeArcLen);
 }
 } // namespace CycleManager
-  // namespace
 
 
 void UpdateAnimationCurvePoints(const std::array<Vector3, 4> &points) {
@@ -883,11 +877,6 @@ void CalculateCubicPolynomial(Vector3 &result, float distance, float extra) {
     result = {value(g_spline3d.x), value(g_spline3d.y), value(g_spline3d.z)};
 }
 namespace CycleManager {
-
-
-
-
-
 
 bool TickVehicleActiveState(CycleManager::NpcRecord &npc) {
     CycleMoveObjectRuntime *const runtime = npc.cycle->moveObjRuntime;
@@ -982,7 +971,6 @@ bool TickVehicleActiveState(CycleManager::NpcRecord &npc) {
     return true;
 }
 } // namespace CycleManager
- // namespace
 
 
 
@@ -1005,9 +993,6 @@ void BIKE_Init(CycleMoveObjectRuntime &runtime) {
     runtime.animOutput = 0x4000;
 }
 namespace CycleManager {
-
-
-
 
 bool BeginVehicleActiveState(CycleManager::NpcRecord &npc, bool live) {
     CycleMoveObjectRuntime *attached = npc.cycle->moveObjRuntime;
@@ -1418,11 +1403,8 @@ void BIKE_UpdateCurveLean(CycleManager::NpcRecord &npc, CycleMoveObjectRuntime &
     runtime.animLeanAngle = (runtime.leanHistory[1] + runtime.animLeanAngle + runtime.leanHistory[0]) / 3;
 }
 
-
-
-
-void FindForwardSteeringObstacleInList(CycleManager::NpcRecord &npc, uint32_t objectId, float minAhead, float halfDepth, float maxAhead,
-    CycleProgramList list, float &nearest, float &nearestRadius) {
+void FindForwardSteeringObstacleInList(CycleManager::NpcRecord &npc, uint32_t objectId, float minAhead, float halfDepth, float maxAhead, CycleProgramList list,
+    float &nearest, float &nearestRadius) {
     for (CycleManager::NpcRecord *other = CycleManager::NextProgramInList(list); other; other = CycleManager::NextProgramInList(list, other)) {
         if (!other->cycle->motnSteeringActive || other->cycle->moveConfig->obj_id.name == objectId || other->cycle->trackedMobj == npc.cycle ||
             other->cycle->moveObjRuntime || static_cast<int32_t>(other->cycle->moveConfig->cycleClassCode) >= 4 ||
@@ -2320,7 +2302,6 @@ bool cmCheckEntityInRangeOf(const CycleManager::NpcRecord &npc, const BikeSideVo
     return false;
 }
 } // namespace CycleManager
-  // namespace
 
 namespace CycleManager {
 
@@ -2521,7 +2502,6 @@ void AddBikeReleaseCollisionVolume(const CycleMoveObjectRuntime &runtime, const 
     entry.dword1C = SCN_U32FromFloat(0.0f);
 }
 } // namespace CycleManager
-  // namespace
 
 namespace CycleManager {
 

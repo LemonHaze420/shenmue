@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s1/boot.hpp"
 #include "s1/task/ctrl.hpp"
 #include "s1/task/colb.hpp"
@@ -10,6 +13,13 @@
 #include "s1/audio_stream.hpp"
 #include "s1/scene.hpp"
 #include "s1/subtitles.hpp"
+#if defined(_MSC_VER) && SHENMUE_IS_S1
+#include "d3t/crash_reporter.hpp"
+#include "s1/steam.hpp"
+#include "s1/ui_internal.hpp"
+
+#include <excpt.h>
+#endif
 
 #include <bit>
 
@@ -72,7 +82,7 @@ std::int32_t Shenmue_nPauseState = 0;
 std::int64_t g_TotalSceneFileReadBytes = 0;
 CVRSTable *g_CVRS = nullptr;
 CVWK *g_pCVWK = nullptr;
-std::uint32_t g_EnvPrngSeed = 0xec47094dU; // 1
+std::uint32_t g_EnvPrngSeed = 0xec47094dU;
 
 void HLTaskFunc_InternalInit();
 
@@ -168,17 +178,32 @@ void InitMemory_callback(HLib::TaskData *taskData) {
 }
 
 int Shenmue_Main(int argc, char **argv) {
-    const int initialized = Initialization(argc, argv);
-    if (!initialized) {
-        return initialized;
-    }
+#if defined(_MSC_VER) && SHENMUE_IS_S1
+    __try {
+#endif
+        const int initialized = Initialization(argc, argv);
+        if (!initialized) {
+            return initialized;
+        }
 
-    HLib::Task *task = CurrentTask;
-    for (;;) {
-        task->mainTaskCallbackFnPtr(task->task_data_ptr);
-        task = CurrentTask->nextInQueue;
-        CurrentTask = task;
+        HLib::Task *task = CurrentTask;
+        for (;;) {
+            task->mainTaskCallbackFnPtr(task->task_data_ptr);
+            task = CurrentTask->nextInQueue;
+            CurrentTask = task;
+        }
+#if defined(_MSC_VER) && SHENMUE_IS_S1
+    } __except (d3t::CrashReporter(GetExceptionInformation())) {
+        InitNotebookTexture2D();
+        for (std::vector<std::byte> &data : g_subtitleData) {
+            data.clear();
+            data.shrink_to_fit();
+        }
+        SGAAS_Stop();
+        return 0;
     }
+#endif
 }
 
 } // namespace shenmue::s1
+

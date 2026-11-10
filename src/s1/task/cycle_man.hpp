@@ -1,4 +1,9 @@
 #pragma once
+
+#include "shenmue.h"
+
+
+#pragma once
 #include "shenmue.h"
 #include "logging.hpp"
 
@@ -565,9 +570,6 @@ struct SimNode {
 
 #pragma once
 
-// Cycle owns only its script/simulation data.  Integration points are explicit
-// bindings to the current S1 owners; no renderer or aggregate runtime state is
-// reachable from this boundary.
 #include "s1/task/char.hpp"
 #include "s1/date_time.hpp"
 #include "s1/task/dswk.hpp"
@@ -615,7 +617,7 @@ inline std::string TokenString(uint32_t token) {
     return std::string(text);
 }
 
-template <typename T> inline bool ReadValue(const std::vector<uint8_t> &bytes, size_t offset, T &out) {
+template <typename T> inline bool ReadValue(std::span<const uint8_t> bytes, size_t offset, T &out) {
     if (offset > bytes.size() || sizeof(T) > bytes.size() - offset)
         return false;
     std::memcpy(&out, bytes.data() + offset, sizeof(T));
@@ -694,9 +696,9 @@ enum BikeWaypointAdvanceResult : uint32_t {
     BikeWaypoint_Continuing = 0x3,
 };
 
-/* Native move-object constants selected by GetBikeTOKEN.  They are runtime
- * behavior data, not asset-derived MOTN state, and are shared by all three
- * vehicle path opcodes. */
+// Constants shared by the three vehicle path opcodes.
+
+
 struct BikeAnimTokenSet {
     int16_t anim[6];
 };
@@ -869,15 +871,15 @@ static_assert(offsetof(ObjectProjectionData, projHeight) == 0x28);
 static_assert(offsetof(ObjectProjectionData, halfBoxExtent) == 0x2C);
 static_assert(offsetof(ObjectProjectionData, corners) == 0x3C);
 
-// The CycleManager_AdjustDesiredYawForSteeringCollision frame fields written by ComputeRotatedProjectionBounds:
-// the left/right blocking boundary directions and the nearest squared obstacle distance.
+// ComputeRotatedProjectionBounds writes the left/right blocking directions and nearest squared obstacle distance.
+
 struct SteeringProjectionBounds {
     Vector3 directions[4];
     float minDistanceSquared;
 };
 static_assert(sizeof(SteeringProjectionBounds) == 0x34);
 
-// One g_pMOBJ entry: a CEWP collision object and its CCOW world-space shape, collected once per cycle tick.
+// A g_pMOBJ entry pairs a CEWP collision object with its CCOW world-space shape once per cycle tick.
 struct MobjCollisionObject {
     Character *character;
     const QueryShape *shape;
@@ -1065,15 +1067,15 @@ struct TaggedPayload {
     uint32_t mode;
     uint32_t field_14;
     void *model;
-    // The placement in the attachment frame: position x/y/z (floats), then euler x/y/z.
+    // Attachment-frame position (floats), followed by Euler rotation.
     std::array<uint32_t, 6> payload;
-    // The state (low byte: 0 hidden, 1 shown, 2 fading in, 3 fading out) and the fade counter (high byte).
+    // Low byte: 0 hidden, 1 shown, 2 fading in, 3 fading out. High byte: fade counter.
     uint16_t lifetime;
     uint8_t gap3A[6];
     CycleManager::MobjCycle *owner;
-    // The begin command (0x10/0x2D): its identifier at word 1, model token at 2, upright flag at 3 and hand pose at 5.
+    // Begin command (0x10/0x2D): word 1 identifier, 2 model token, 3 upright flag, 5 hand pose.
     const uint32_t *command;
-    // A fade-out leaves the payload hidden in the list instead of freeing it (the free talk's suspension).
+    // Fade-out hides the payload but keeps it in the list while free talk is suspended.
     uint8_t retainAfterFade;
     uint8_t gap51[7];
 };
@@ -1156,9 +1158,8 @@ struct NpcRecord {
 };
 
 struct RuntimeState {
-    // File/archive payload owned by the cycle manager, never by a renderer.
-    std::vector<uint8_t> bytes;
-    // The offset fields CycleManager_RelinkCycleProgram has relinked since the file was loaded, by file offset.
+    std::span<uint8_t> bytes;
+    // File offsets already relinked by CycleManager_RelinkCycleProgram.
     std::vector<bool> relinkedOffsetFields;
     std::vector<CycleManager::Section> sections;
     std::vector<CycleScheduleEntry> schedule;
@@ -1256,8 +1257,6 @@ struct RuntimeState {
     bool loaded = false;
     bool localNpcCharactersCreated = false;
 
-    // Explicit bindings to current S1 owners.  These are populated by map/scenario
-    // setup; cycle code must not reach through a process-wide aggregate state.
     bool ready = false;
     bool collisionReady = false;
     bool inGame = false;
@@ -1339,7 +1338,7 @@ extern std::int32_t g_cycleConversationHoldActive;
 extern std::int32_t g_scntReferencedCycleHeld;
 // The MFSY talk-walk drives Ryo through g_cyclTalkCycle.
 extern std::int32_t g_cyclTalkCycleActive;
-// Blocks cycle talk (cmDoForThisEntry and the talk-walk begin); only the CTRL enqueue writes it (0).
+// Suppress cycle talk and talk-walk setup; only CTRL clears the flag when queued.
 extern std::int32_t g_cycleTalkSuppressed;
 
 extern PackSlot *gRainModelPtr;
@@ -1412,6 +1411,15 @@ bool ApplyNpcCommandState(CycleManager::NpcRecord &npc, uint32_t opcode, uint32_
 void ApplyNpcRecordToLocal(CycleManager::NpcRecord &npc);
 std::uint32_t GetRelativePositionToCycles(Character *point);
 
+struct CycleManFileHeader {
+    std::uint32_t magic;
+    std::uint32_t entryCount;
+};
+static_assert(sizeof(CycleManFileHeader) == 8);
+extern CycleManFileHeader *g_MOBJ;
+extern CycleManFileHeader *g_cycleManFileData;
+extern std::int32_t g_activeCycleFileSize;
+CycleManFileHeader *PreLoad_OpenDobuitaCycleman(const char *directory);
 void MoveObj_FileLoad(const char *InFilename);
 int32_t ReadCyclemanForScene(const char *filename);
 bool DispatchSceneTask(uint32_t token, uint32_t dispatchState, uint32_t currentTime);
@@ -1564,16 +1572,6 @@ bool MnrBEntryAllowsTalk(const CycleManager::NpcRecord &npc);
 inline Vector3 CurrentRyoPosition() noexcept {
     Character *const ryo = CycleManager::MapRyo();
     return ryo ? GetPositionForEntity(ryo->entity.node) : Vector3{};
-}
-inline bool ReadCurrentFile(std::string_view path, std::vector<uint8_t> &bytes) {
-    if (g_cycleManagerReadFile && g_cycleManagerReadFile(path, bytes))
-        return true;
-    const std::string pathText(path);
-    const uint64_t size = ArchiveData_GetFileSize(pathText.c_str());
-    if (size == 0 || size > static_cast<uint64_t>(std::numeric_limits<size_t>::max()))
-        return false;
-    bytes.resize(static_cast<size_t>(size));
-    return ArchiveData_Read(pathText.c_str(), 0, bytes.data(), size);
 }
 inline bool FileExists(std::string_view path) noexcept {
     if (g_cycleManagerFileExists && g_cycleManagerFileExists(path))
@@ -1733,3 +1731,4 @@ struct UtilityParameters {
 #pragma pack(pop)
 
 } // namespace shenmue::s1
+

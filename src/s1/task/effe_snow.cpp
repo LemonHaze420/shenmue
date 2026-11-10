@@ -1,4 +1,5 @@
 #include "s1/task/effe_internal.hpp"
+#include "s1/d3t/model.hpp"
 
 namespace shenmue::s1::effe_detail {
 
@@ -236,12 +237,7 @@ void AssignSnowTexture(WeatherNodeData &data) {
     reinterpret_cast<std::uint8_t *>(&data.snow.material.alpha)[3] = 0x94U;
 }
 
-
-
-
-
-
-void ReadWeatherParticleModel(void *particles, const char *modelPath) {
+void ReadWeatherParticleModel(void *particles, const char *modelPath, std::int32_t capacity) {
     const auto key = reinterpret_cast<std::uintptr_t>(particles);
     if (ResolveHmdlRuntimeObject(key)) {
         if (auto *const entry = reinterpret_cast<RenderArrayEntry *>(ResolveHmdlEntry(key))) {
@@ -252,7 +248,10 @@ void ReadWeatherParticleModel(void *particles, const char *modelPath) {
         ReleaseHmdlRuntimeObject(key);
         ReleaseHmdlRuntimeObject(key + 1);
     }
-    d3t::FileRead_ALL(key, modelPath, 0, 0x1d80);
+    if (!d3t::FileRead_ALL(key, modelPath, 0, 0x1d80))
+        return;
+    if (RenderArrayOwner *const object = reinterpret_cast<RenderArrayOwner *>(ResolveHmdlRuntimeObject(key)))
+        object->renderHandle = d3t::CreateAndBindInstanceBuffer(object->instanceHandle, static_cast<std::uint32_t>(capacity));
 }
 
 void InitializeNativeSnowParticles(WeatherNodeData &data, float intensity, RainRandomFunction initialCallback, bool cameraRelative) {
@@ -290,7 +289,7 @@ void InitializeNativeSnowParticles(WeatherNodeData &data, float intensity, RainR
     data.snow.pool.availableCount = 0;
 #if SHENMUE_IS_DEMO
 #else
-    ReadWeatherParticleModel(particles, "/particles/snow/snow.fbx");
+    ReadWeatherParticleModel(particles, "/particles/snow/snow.fbx", data.snow.pool.capacity);
 #endif
     data.snow.colour = std::uint32_t{0xe8cdc8d1U};
     data.snow.size = std::bit_cast<float>(0x3da3d70aU);

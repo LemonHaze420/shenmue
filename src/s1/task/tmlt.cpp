@@ -6,6 +6,7 @@
 #include "s1/task/atck.hpp"
 #include "s1/texture_cache.hpp"
 #include "s1/texture_loader.hpp"
+#include "s1/ui_runtime.hpp"
 
 #include <array>
 #include <cstddef>
@@ -16,7 +17,6 @@
 namespace shenmue::s1 {
 
 std::int32_t shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t volume);
-extern void *g_pFont;
 
 HLib::Task *g_TMLT_Task = nullptr;
 std::int16_t g_tmp_tmlt_textures_initialised = 0;
@@ -31,100 +31,11 @@ std::int32_t g_curr_time_left = 0;
 
 namespace {
 
-constexpr std::int32_t kTmltAuxTextureKey = static_cast<std::int32_t>(SHEN_NAME(TMLT));
 constexpr std::int32_t kSpriteAllocationToken = static_cast<std::int32_t>(SHEN_NAME(LDTD));
 constexpr std::uint32_t kTimeLimitWarningCommand = 0x000d00ab;
 
 
 constexpr std::array<std::int16_t, 11> kBeepIntervalBySeconds{2, 2, 5, 7, 9, 13, 17, 21, 24, 27, 30};
-
-struct FontStorage {
-    const std::uint8_t *kana;
-    const std::uint8_t *kanji;
-    const std::uint8_t *ryou;
-};
-
-constexpr std::array<std::uint8_t, 8> kGlyphBitMasks{1, 2, 4, 8, 16, 32, 64, 128};
-std::uint32_t g_tmltAuxiliaryGeneration = 0;
-
-const std::uint8_t *TmltGlyphSource(const FontStorage &font, std::uint16_t glyphCode) {
-    if ((glyphCode & 0x8080U) == 0x8080U || (glyphCode & 0xff00U) == 0x0100U) {
-        return font.kana ? font.kana + 30U * static_cast<std::uint8_t>(glyphCode) : nullptr;
-    }
-    const std::int32_t glyphIndex = 94 * static_cast<std::uint8_t>(glyphCode >> 8) + static_cast<std::uint8_t>(glyphCode) - 3135;
-    return font.kanji ? font.kanji + 45 * glyphIndex : nullptr;
-}
-
-std::uint32_t ExpandTmltPaletteColour(std::uint16_t colour) {
-    std::uint32_t expanded = colour >> 12;
-    expanded = (expanded << 8U) + ((colour >> 8U) & 0x0fU);
-    expanded = (expanded << 8U) + ((colour >> 4U) & 0x0fU);
-    expanded = (expanded << 8U) + (colour & 0x0fU);
-    return expanded * 17U;
-}
-
-void RasterizeTmltAuxiliaryGlyph(const FontStorage &font, std::uint32_t *pixels) {
-    constexpr std::uint16_t kGlyphCode = 0x012e;
-    constexpr std::array<std::uint16_t, 4> kPalette{0, 0xffff, 0xf000, 0xf000};
-    const std::uint8_t *const source = TmltGlyphSource(font, kGlyphCode);
-    if (!source)
-        return;
-
-    std::array<std::uint8_t, 25 * 16> coverage{};
-    for (std::int32_t sourcePixel = 0; sourcePixel < 240; ++sourcePixel) {
-        if ((source[sourcePixel >> 3] & kGlyphBitMasks[sourcePixel & 7]) == 0) {
-            continue;
-        }
-        const std::int32_t x = sourcePixel & 0x0f;
-        const std::int32_t y = sourcePixel >> 4;
-        coverage[25 * y + x] |= 2;
-        coverage[25 * y + x + 1] |= 1;
-        coverage[25 * (y + 1) + x] |= 1;
-        coverage[25 * (y + 1) + x + 1] |= 1;
-    }
-
-    constexpr std::int32_t kWidth = 64;
-    constexpr std::int32_t kStartX = (kWidth - 12) / 2;
-    for (std::int32_t sourceY = 0; sourceY < 16; ++sourceY) {
-        std::uint32_t *const destination = pixels + (15 - sourceY) * kWidth + kStartX;
-        const std::uint8_t *const sourceRow = coverage.data() + 25 * sourceY;
-        for (std::int32_t x = 0; x < 13; ++x) {
-            destination[x] = ExpandTmltPaletteColour(kPalette[sourceRow[x]]);
-        }
-    }
-}
-
-std::int32_t AllocateTmltAuxiliarySurface(std::size_t index, std::uint32_t generation) {
-    constexpr std::int32_t kWidth = 64;
-    constexpr std::int32_t kHeight = 16;
-    constexpr std::size_t kPixelBytes = kWidth * kHeight * sizeof(std::uint32_t);
-    auto *const font = static_cast<FontStorage *>(g_pFont);
-    if (!font)
-        return -1;
-    auto *const pixels = static_cast<std::uint32_t *>(HLib_AllocHeapMemBlock(kPixelBytes, SHEN_NAME(TMLP)));
-    if (!pixels)
-        return -1;
-    std::memset(pixels, 0, kPixelBytes);
-    RasterizeTmltAuxiliaryGlyph(*font, pixels);
-
-    std::int32_t surface = -1;
-    if (g_pFirstTaskData) {
-        const std::intptr_t offset = reinterpret_cast<std::intptr_t>(pixels) - reinterpret_cast<std::intptr_t>(g_pFirstTaskData) - 0x40;
-        if (offset >= (std::numeric_limits<std::int32_t>::min)() && offset <= (std::numeric_limits<std::int32_t>::max)() && offset != 0) {
-            const std::int32_t high = static_cast<std::int32_t>((generation << 1U) | static_cast<std::uint32_t>(index));
-            surface = PVR_FindOrAllocateSurface(kTmltAuxTextureKey, high);
-            if (surface >= 0) {
-                const TextureUploadDescription upload{kWidth, kHeight, 0x8089, static_cast<std::int32_t>(offset)};
-                if (d3t_UploadTexture2DToGPU(surface, &upload, pixels) < 0) {
-                    PVR_FreeAllocatedSurfaceByIndex(surface);
-                    surface = -1;
-                }
-            }
-        }
-    }
-    HLib_FreeTaskData(reinterpret_cast<HLib::TaskData *>(pixels), 0);
-    return surface;
-}
 
 void LoadDigitSurfaces() {
     constexpr const char *kDirectory = "sprite";
@@ -172,9 +83,8 @@ void InitTMLT(std::int16_t texturesInitialised) {
     g_tmp_tmlt_textures_initialised = texturesInitialised;
     if (!texturesInitialised) {
         LoadDigitSurfaces();
-        const std::uint32_t generation = g_tmltAuxiliaryGeneration++;
-        g_tmltDotPVR0 = AllocateTmltAuxiliarySurface(0, generation);
-        g_tmltDotPVR1 = AllocateTmltAuxiliarySurface(1, generation);
+        g_tmltDotPVR0 = AllocatePVRSurface("TIME", 64, 0xffff, 0xf000, 0, true);
+        g_tmltDotPVR1 = AllocatePVRSurface("\xa1\xa7", 64, 0xffff, 0xf000, 1, true);
     }
     g_TMLT_Task = HLib_EnqueueTaskWithoutParameter(TMLT_Callback, 6, 0, static_cast<std::int32_t>(TASK_TMLT.name));
     g_BeepIntervalFrames = 30;

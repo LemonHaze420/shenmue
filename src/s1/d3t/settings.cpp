@@ -445,8 +445,8 @@ void SettingsFileParser() {
         const Json::Value &width = graphics["ResolutionWidth"];
         const Json::Value &height = graphics["ResolutionHeight"];
         if (width.isIntegral() && height.isIntegral()) {
-            display.antiAliasingMode =
-                static_cast<std::int32_t>(ValidDisplayModeOr(output, FindDisplayMode(output, width.asUInt(), height.asUInt(), fallbackMode), fallbackMode));
+            display.antiAliasingMode = static_cast<std::int32_t>(
+                ValidDisplayModeOr(output, FindDisplayMode(output, width.asUInt(), height.asUInt(), GetDisplayInfoByIdx(output)), fallbackMode));
         } else {
             display.antiAliasingMode = static_cast<std::int32_t>(fallbackMode);
         }

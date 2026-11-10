@@ -1,5 +1,6 @@
 #pragma once
 
+#include <d3t/scratch_memory.hpp>
 #include "s1/lighting.hpp"
 #include "s1/matrix_stack.hpp"
 
@@ -39,10 +40,10 @@ struct GameConfig {
 };
 
 struct SteamAppInfo {
-    std::uint32_t appId;
-    std::uint32_t reserved;
     const char *appName;
     const char *buildId;
+    std::uint32_t appId;
+    std::uint32_t reserved;
 };
 
 static_assert(sizeof(DisplayInfo) == 0xc);
@@ -58,8 +59,8 @@ void UpdateSteamAchievement(std::uint32_t achievementId);
 
 extern std::uint32_t g_memAlignment;
 extern std::uint64_t g_initializationTemporaryClearColour;
-extern void *g_globalMemory;
-extern std::uint32_t g_globalMemorySize;
+using d3t::g_globalMemory;
+using d3t::g_globalMemorySize;
 extern std::uint8_t g_frameWaitEnabled[2];
 extern float g_deltaTime;
 extern std::int32_t g_framesPerSecond;

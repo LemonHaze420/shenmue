@@ -1,5 +1,6 @@
 #pragma once
 
+#include "s1/d3t/namespace.hpp"
 #include "d3t/light_tiles.hpp"
 #include "s1/model_lighting.hpp"
 #include <array>
@@ -32,6 +33,9 @@ using d3t ::g_simpleCpuBuffers;
 using d3t ::g_simpleIndexBufferHandles;
 extern FoliageAnimationParameters *g_foliageAnimationParameters;
 extern std::uint32_t g_foliageAnimationParameterCount;
+extern std::uint32_t g_foliageAnimationParameterCapacity;
+extern std::uint32_t g_foliageAnimationBuffer;
+extern std::uint32_t g_wetnessMaskTexture;
 extern std::uint32_t g_simpleShaderLoad;
 extern std::uint32_t g_simpleShaderTemporaryBuffer;
 extern std::uint32_t g_simpleShaderFileHandle;
@@ -47,6 +51,11 @@ void GPUPostEffect_InitializeAutoExposure(std::int32_t effect, float minimum, fl
 void GPUPostEffect_SetAutoExposure(std::int32_t effect);
 
 void InitPostFX();
+namespace d3t {
+void LoadFoliageAnimation();
+void Free();
+} // namespace d3t
+void CreateDXBufferForShaders();
 using d3t::AllocateSimpleShaderBuffers;
 std::uint32_t LoadSimpleShader();
 

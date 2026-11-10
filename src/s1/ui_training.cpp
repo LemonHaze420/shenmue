@@ -93,9 +93,9 @@ void GameTraining_CloseMoveList() {
     g_gameTrainingElement.state = 0;
 }
 
-// HandleGameTrainingResult_0: the "train specific moves?" answer. Anything but Yes commits the whole focused set. Yes opens the Moves
-// list over the Game Background with the Information Bar, lists the focused set's moves (every move for the whole-set focus) and makes the
-// list's A pick the move (CompleteMenuInteraction).
+// Yes opens the focused move list over the game background and Information Bar; A picks a move.
+// Any other answer trains the whole focused set.
+
 void GameTraining_HandleSpecificMovesPrompt(UIRetry70ManBattlePromptResult result) {
     GameTrainingElement &training = g_gameTrainingElement;
     UIBaseRuntime &informationBar = g_uiElements[kUiGameMenuInformationBar];
@@ -120,8 +120,8 @@ void GameTraining_HandleSpecificMovesPrompt(UIRetry70ManBattlePromptResult resul
     g_movesScreen.adjustFightMove = CompleteMenuInteraction;
 }
 
-// ChangeFocusMoveType: the directions pick the focused set (up all moves, left hand, right leg, down throw), A commits all moves or
-// asks about specific moves of the set, B closes the element; X opens the focused set's help page (31 to 34, SetHelpDetailsByIndex).
+// Focus: up all, left hand, right leg, down throws.
+// A confirms or asks for specific moves; B closes; X opens help pages 31-34.
 void GameTraining_ChangeFocusMoveType() {
     GameTrainingElement &training = g_gameTrainingElement;
     const std::uint16_t pressed = g_inputState.slots[0].pressedPriority;
@@ -237,8 +237,8 @@ std::int64_t GameTraining_IsSelected() {
     return 1;
 }
 
-// STATIC_Game_Training_Render: the element's activation. It frames Ryo for the picker (shenExitSearchAndMoveCameraRelative) and slides
-// the RootPanel in over half a second.
+// Frame Ryo for the training picker and slide RootPanel in over 0.5 s.
+
 void GameTraining_Render() {
     GameTrainingElement &training = g_gameTrainingElement;
     training.state = 0;
@@ -301,7 +301,7 @@ std::int64_t GameTraining_Tick() {
     return 0;
 }
 
-// au_re_TranslatesCamera, the element's Destroy: restore the camera (srchSetToFree) and hand control back to the bedroom menu.
+// Restore the free camera and return control to the bedroom menu.
 std::int64_t GameTraining_Destroy() {
     ResetSearchToFree();
     g_sleepSaveTrainingMenu.requested = 1;
@@ -309,7 +309,21 @@ std::int64_t GameTraining_Destroy() {
     return 1;
 }
 
+std::array<std::int16_t, 4> g_gameTrainingPromptIcons{45, 44, 58, -1};
 
+std::int64_t GameTraining_GetPromptIconSet() {
+    static std::array<std::int32_t, 5> prompts{};
+    const std::uint32_t state = static_cast<std::uint32_t>(g_gameTrainingElement.state);
+    if (state < 2)
+        g_gameTrainingPromptIcons = {45, 44, 58, g_gameTrainingPromptIcons[3]};
+    else if (state == 2)
+        g_gameTrainingPromptIcons = {45, -1, -1, g_gameTrainingPromptIcons[3]};
+    for (std::size_t slot = 0; slot < g_gameTrainingPromptIcons.size(); ++slot)
+        g_searchPromptIconSlots[slot] = g_gameTrainingPromptIcons[slot];
+    for (std::size_t slot = 0; slot < prompts.size(); ++slot)
+        prompts[slot] = static_cast<std::uint16_t>(g_searchPromptIconSlots[slot]);
+    return reinterpret_cast<std::int64_t>(prompts.data());
+}
 
 void GameTrainingLegacy_BindWidgets() {
     const std::int32_t slot = g_gameTrainingLegacyUIViewSlot;

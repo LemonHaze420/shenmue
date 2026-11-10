@@ -37,7 +37,7 @@
 #include <cstdlib>
 #include <new>
 #include <thread>
-#if defined(_WIN32) && !defined(SHENMUE_NULL_LIBRARY)
+#if defined(_WIN32)
 #include <windows.h>
 #endif
 #if defined(_M_X64) || defined(__x86_64__)
@@ -498,9 +498,12 @@ void SelectAicaProgram(std::uint8_t bank, std::uint8_t programIndex) {
             const std::uint8_t *const assignments = raw + 0x28c0 + 64U * bank + 4U * channel;
             for (std::size_t candidate = 0; candidate < 4; ++candidate) {
                 const std::uint8_t voiceIndex = assignments[candidate];
-                if (voiceIndex >= 128 || (raw[0x8c1 + 64U * voiceIndex] & 1U) != 0)
+                if (voiceIndex == 0xff || (raw[0x8c1 + 64U * voiceIndex] & 1U) != 0)
                     continue;
-                ResetAicaDriverDynamicFields(voiceIndex);
+                raw[0x8e8 + 64U * voiceIndex] = 64;
+                raw[0x8e9 + 64U * voiceIndex] = 0;
+                raw[0x8ea + 64U * voiceIndex] = 0;
+                raw[0x8eb + 64U * voiceIndex] = 0;
             }
         }
         return;
@@ -1309,7 +1312,7 @@ bool RecomputeAicaPreBankLevel(std::size_t index, std::uint8_t &level) {
     }
     const std::uint32_t velocityTableOffset = read_unaligned<std::uint32_t>(bankData + 0x28);
     const std::size_t velocityOffset = static_cast<std::size_t>(velocityTableOffset) + 4U + 128U * static_cast<std::size_t>(table[6]) +
-        static_cast<std::size_t>((voice.spawnCommand >> 8) & 0x7fU);
+        static_cast<std::size_t>(static_cast<std::uint8_t>(voice.spawnCommand >> 8));
     if (velocityOffset >= bankSize)
         return false;
 
@@ -1347,7 +1350,7 @@ void UpdateAicaPlaybackPitch(std::size_t index) {
     if (!AicaBankPointerValid(bankData, bankSize, driverBase, 1) || !AicaBankPointerValid(bankData, bankSize, note, 12)) {
         return;
     }
-    const std::int32_t pitchNote = driverBase[0] == 0 ? static_cast<std::int32_t>((voice.spawnCommand >> 16) & 0x7fU) - 60 : 0;
+    const std::int32_t pitchNote = driverBase[0] == 0 ? static_cast<std::int32_t>(static_cast<std::uint8_t>(voice.spawnCommand >> 16)) - 60 : 0;
     const std::int32_t pitchUnits = static_cast<std::int32_t>(
         (static_cast<double>(static_cast<std::int8_t>(memory[0x8cf + configBase]) + static_cast<std::int8_t>(note[11])) * 1024.0 / 3.0 * 0.015625) +
         (static_cast<double>(static_cast<std::int8_t>(memory[0x8ce + configBase]) + static_cast<std::int8_t>(note[10]) + pitchNote) * 1024.0 / 3.0));
@@ -3008,7 +3011,7 @@ void ProcessAicaEventStreams() {
         while (!ownerFinished) {
             if (stream == kAicaEndStream.data()) {
                 stream = nullptr;
-            } else if (!AicaBankPointerValid(bankData, bankSize, stream, 1)) {
+            } else if (stream && !AicaBankPointerValid(bankData, bankSize, stream, 1)) {
                 clearOwner();
                 ownerFinished = true;
                 break;
@@ -3191,13 +3194,10 @@ void ExecuteAicaCommand_1(std::uint16_t command, std::int32_t mask) {
         switch (command) {
         case 0x8000:
             if (voice.playState == 1 && (voice.driverFlags & 8U) == 0) {
-                if ((voice.driverFlags & 1U) != 0) {
+                if ((voice.driverFlags & 1U) != 0)
                     voice.driverFlags |= 2U;
-                } else {
-                    StopRawSoundEffectPlayback(g_aicaPlaybackOwners[playbackIndex]);
-                    voice.xaudioStreamKind = -1;
-                    voice.playState = 2;
-                }
+                else
+                    ReleaseAicaVoice(static_cast<std::uint32_t>(playbackIndex), true);
             }
             break;
         case 0xa002:
@@ -3220,12 +3220,15 @@ void ExecuteAicaCommand_1(std::uint16_t command, std::int32_t mask) {
                 SetRawSoundEffectPaused(g_aicaPlaybackOwners[playbackIndex], false);
             }
             break;
+        case 0xa01c:
+            if (voice.status == 1)
+                UpdateAicaPlaybackVolume(playbackIndex);
+            break;
         case 0xa001:
         case 0xa004:
         case 0xa005:
         case 0xa010:
         case 0xa011:
-        case 0xa01c:
         case 0xb007:
             UpdateAicaPlaybackVolume(playbackIndex);
             break;
@@ -3255,10 +3258,8 @@ void ExecuteAicaCommand_1(std::uint16_t command, std::int32_t mask) {
             voice.driverFlags &= static_cast<std::uint8_t>(~1U);
             if (config < 128 && memory[0x8e9 + 64U * config]) {
                 voice.driverFlags |= 1U;
-            } else if ((voice.driverFlags & 2U) != 0 && voice.playState == 1) {
-                StopRawSoundEffectPlayback(g_aicaPlaybackOwners[playbackIndex]);
-                voice.xaudioStreamKind = -1;
-                voice.playState = 2;
+            } else if ((voice.driverFlags & 2U) != 0) {
+                ReleaseAicaVoice(static_cast<std::uint32_t>(playbackIndex), true);
             }
             break;
         case 0xb078:
@@ -3267,9 +3268,8 @@ void ExecuteAicaCommand_1(std::uint16_t command, std::int32_t mask) {
             }
             break;
         case 0xe000:
-            if (voice.playState == 1) {
-                StopRawSoundEffectPlayback(g_aicaPlaybackOwners[playbackIndex]);
-            }
+            if (voice.playState == 1)
+                UpdateAicaPlaybackPitch(playbackIndex);
             break;
         default:
             break;
@@ -3506,7 +3506,7 @@ std::int64_t LoadAICADriver(std::uint16_t *driver, std::uint8_t voiceIndex) {
     }
     if (driverKind != 0) {
         const std::uint8_t exclusiveMode = note[34] & 0x83U;
-        if (exclusiveMode == 0x82U) {
+        if (exclusiveMode != 0 && exclusiveMode != 0x80U && exclusiveMode != 0x81U) {
             for (const AicaVoiceSlot &active : g_aicaMemory->voicePool.slots) {
                 if ((active.status == 1 || active.status == 2) && active.playFlags == 0x82U &&
                     (active.spawnCommand & 0x0f00000fU) == (g_aicaMemory->currentCommand & 0x0f00000fU) && active.layerFlags == note[35]) {
@@ -3521,15 +3521,18 @@ std::int64_t LoadAICADriver(std::uint16_t *driver, std::uint8_t voiceIndex) {
                     (active.spawnCommand & 0x0f00000fU) == (g_aicaMemory->currentCommand & 0x0f00000fU) && active.layerFlags == note[35];
                 if (!matchesCommon || !matchesCommand || active.playState != 1)
                     continue;
-                const std::ptrdiff_t activeIndex = &active - g_aicaMemory->voicePool.slots;
-                if (activeIndex >= 0 && activeIndex < static_cast<std::ptrdiff_t>(g_aicaPlaybackOwners.size()))
-                    StopRawSoundEffectPlayback(g_aicaPlaybackOwners[static_cast<std::size_t>(activeIndex)]);
-                active.xaudioStreamKind = -1;
+                const std::size_t activeIndex = static_cast<std::size_t>(&active - g_aicaMemory->voicePool.slots);
+                if (active.xaudioStreamKind != -1) {
+                    StopRawSoundEffectPlayback(g_aicaPlaybackOwners[activeIndex], exclusiveMode == 0x81U);
+                    active.xaudioStreamKind = -1;
+                }
                 active.playState = 2;
             }
         }
     }
 
+    if (memory[0x8c2 + configBase] && (!memory[0x8cc + configBase] || !memory[0x8e2 + configBase] || !g_aicaMemory->globalVolume))
+        return 0;
     const std::uint16_t sampleId = read_unaligned<std::uint16_t>(note + 2);
     const std::byte *sampleData = nullptr;
     std::uint32_t audioBytes = 0;
@@ -3550,13 +3553,13 @@ std::int64_t LoadAICADriver(std::uint16_t *driver, std::uint8_t voiceIndex) {
             residentOffset = 100U * (sampleId - 85U);
             audioBytes = 100;
             loopLength = 50;
-        } else if (sampleId == 0 || sampleId == 169) {
+        } else if (sampleId == 0 || (sampleId >= 169 && sampleId <= 171)) {
             audioBytes = static_cast<std::uint32_t>(kAicaResidentNoisePcm.size());
             loopLength = 16384;
         } else {
             return 0;
         }
-        if (sampleId == 0 || sampleId == 169) {
+        if (sampleId == 0 || sampleId >= 169) {
             sampleData = reinterpret_cast<const std::byte *>(kAicaResidentNoisePcm.data());
         } else {
             if (residentOffset > kAicaResidentPcm.size() || audioBytes > kAicaResidentPcm.size() - residentOffset)
@@ -3657,7 +3660,8 @@ std::int64_t LoadAICADriver(std::uint16_t *driver, std::uint8_t voiceIndex) {
     g_aicaPlaybackOwners[playbackIndex] = playback;
     const std::uint8_t reverbLevel = note[30] != 0 ? static_cast<std::uint8_t>(memory[0x8ca + configBase] >> 4U) : static_cast<std::uint8_t>(note[31] >> 4U);
     const float reverbDecibels = reverbLevel == 0 ? -100.0f : 3.0f * (static_cast<float>(reverbLevel) - 15.0f);
-    const float reverbGain = reverbDecibels > -64.0f ? std::pow(10.0f, reverbDecibels / 20.0f) : 0.0f;
+    const float reverbGain = (reverbDecibels > -64.0f ? std::pow(10.0f, reverbDecibels / 20.0f) : 0.0f) *
+        (g_aicaMemory->ownerId == 2 ? g_applicationSettings.savedMusicVolume : 1.0f);
     const std::array<float, 2> reverbMatrix{reverbGain, reverbGain};
     SetRawSoundEffectOutputMatrix(playback, reverbMatrix.data(), channels, 1);
     ApplyVoicePanMatrixToXAudio(playbackIndex);
@@ -3671,8 +3675,6 @@ std::int64_t LoadAICADriver(std::uint16_t *driver, std::uint8_t voiceIndex) {
     SetAttackFilterParamsForTone(voice.xaudioVoiceId, note, envelopeNote, volume, g_aicaMemory->ownerId == 2, g_aicaMemory->ownerId);
     StartRawSoundEffectPlayback(playback);
     voice.playState = 1;
-    if (g_aicaMemory->voicePool.paused)
-        SetRawSoundEffectPaused(playback, true);
     return 1;
 }
 
@@ -3746,14 +3748,14 @@ void ProcessAmbientSoundEffects() {
         if (effectVolume > 0.0f) {
             switch (entry.weatherMode) {
             case 1: {
-                const double cloud = static_cast<double>(WEXE_GetCloudIntensity());
+                const double cloud = static_cast<double>(Weather_GetCLUDIntensity());
                 effectVolume = static_cast<float>(static_cast<double>(effectVolume) - cloud * static_cast<double>(effectVolume));
                 break;
             }
             case 2: {
                 const float precipitation = (std::max)(WEXE_GetSnowIntensity(), WEXE_GetRainIntensity());
                 const float weatherFactor =
-                    static_cast<double>(precipitation) <= 0.01 ? WEXE_GetCloudIntensity() : static_cast<float>(static_cast<double>(precipitation) + 1.0);
+                    static_cast<double>(precipitation) <= 0.01 ? Weather_GetCLUDIntensity() : static_cast<float>(static_cast<double>(precipitation) + 1.0);
                 const double volume = static_cast<double>(effectVolume);
                 effectVolume = static_cast<float>(volume - static_cast<double>(weatherFactor) * 0.45 * volume);
                 break;
@@ -3834,7 +3836,7 @@ void ProcessAudioData(CVWKRuntimeSlot *slot, std::int32_t volume) {
 
 void AudioRender() {
     g_audioWorkerRunning.store(true, std::memory_order_release);
-#if defined(_WIN32) && !defined(SHENMUE_NULL_LIBRARY)
+#if defined(_WIN32)
     const HANDLE delayTimer = CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_MODIFY_STATE | SYNCHRONIZE);
 #endif
     std::chrono::steady_clock::time_point previousTick = std::chrono::steady_clock::now();
@@ -3863,7 +3865,7 @@ void AudioRender() {
         }
         const std::chrono::steady_clock::time_point afterWork = std::chrono::steady_clock::now();
         const std::chrono::nanoseconds remaining = std::chrono::milliseconds(4) - (afterWork - previousTick);
-#if defined(_WIN32) && !defined(SHENMUE_NULL_LIBRARY)
+#if defined(_WIN32)
         if (delayTimer && remaining.count() > 0) {
             LARGE_INTEGER due;
             due.QuadPart = -static_cast<LONGLONG>(remaining.count() * 7 / 1000);
@@ -3881,7 +3883,7 @@ void AudioRender() {
         } while (std::chrono::steady_clock::now() - previousTick < remaining);
         previousTick = std::chrono::steady_clock::now();
     }
-#if defined(_WIN32) && !defined(SHENMUE_NULL_LIBRARY)
+#if defined(_WIN32)
     if (delayTimer)
         CloseHandle(delayTimer);
 #endif
@@ -3900,6 +3902,10 @@ std::int32_t InitAICAMemory() {
     if (d3t::g_workerThreadCount > 2)
         d3t::d3t_SetAudioCallback(AudioRender);
     return 0;
+}
+
+std::uint32_t CheckAicaBootromData() {
+    return static_cast<std::uint32_t>(HLib_FreeTaskData(static_cast<HLib::TaskData *>(HLib_AllocHeapMemBlock(0x4000, SHEN_NAME(BROM))), 0));
 }
 
 void InitializeAicaForNotebook() {
@@ -3989,15 +3995,8 @@ void ExecuteAicaCommandsForAllBanks(std::int32_t paused, bool preserveVoicePoolP
             shenExecuteAICACommand(0xba0, bank, 0);
             SetVolumeForAicaBank(0.0f, bank);
         }
-        if (!preserveVoicePoolPause) {
-            std::lock_guard lock(g_aicaCommandMutex);
+        if (!preserveVoicePoolPause)
             g_aicaMemory->voicePool.paused = 1;
-            for (std::size_t index = 0; index < g_aicaPlaybackOwners.size(); ++index) {
-                const std::uint8_t bank = g_aicaMemory->voicePool.slots[index].bank;
-                if (bank == 0 || bank > 7)
-                    SetRawSoundEffectPaused(g_aicaPlaybackOwners[index], true);
-            }
-        }
         for (std::int32_t bank = 15; bank >= 0; --bank) {
             EnvironmentAicaBank &state = g_environmentAicaBanks[bank];
             if (!state.active)
@@ -4024,15 +4023,8 @@ void ExecuteAicaCommandsForAllBanks(std::int32_t paused, bool preserveVoicePoolP
         shenExecuteAICACommand(0x3a0, bank, 0);
         shenExecuteAICACommand(0xca0, bank, 0);
     }
-    if (!preserveVoicePoolPause) {
-        std::lock_guard lock(g_aicaCommandMutex);
+    if (!preserveVoicePoolPause)
         g_aicaMemory->voicePool.paused = 0;
-        for (std::size_t index = 0; index < g_aicaPlaybackOwners.size(); ++index) {
-            const std::uint8_t bank = g_aicaMemory->voicePool.slots[index].bank;
-            if (bank == 0 || bank > 7)
-                SetRawSoundEffectPaused(g_aicaPlaybackOwners[index], false);
-        }
-    }
     for (std::int32_t bank = 15; bank >= 0; --bank) {
         EnvironmentAicaBank &state = g_environmentAicaBanks[bank];
         if (!state.active)
