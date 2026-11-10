@@ -13,6 +13,9 @@ extern bool g_s2NeedsLoadTextureResources;
 
 extern std::int32_t g_PPFX_Enabled;
 void SetPPFXEnabled(std::int32_t enabled) noexcept;
+float GetOptionsGammaValue() noexcept;
+void SetOptionsGammaValue(float value) noexcept;
+void ReloadUserSettingsAndSnapshots();
 
 
 struct S2AudioSettings {

@@ -39,8 +39,8 @@ inline constexpr shen_name CHARACTER_RYO{SHEN_NAME(RYO_)};
 struct CharacterNode {
     CharacterNode *child;
     Vector3 position;
-    std::int32_t rotation[3]; // @todo: Vector3i
-                              // @todo: check DC/XB sizes (maybe i32 vs i16?)
+    std::int32_t rotation[3];
+
 };
 
 struct CharacterEntity {
@@ -215,6 +215,7 @@ float SetScenarioCharacterRadius(shen_name character, float radius);
 void SetChildObjectFlagByIndex(Character *character, std::uint8_t mode);
 
 void ApplyRecursiveCharacterNodeTransforms(const CharacterNode *node);
+void TransformPointByCharacterNode(const CharacterNode *node, Vector3 *point);
 void TransformPointToCharacterNodeSpace(const CharacterNode *node, Vector3 *point);
 void ApplyCharacterEntityTransform(const Character *character);
 CharacterNode *GetCharacterNode(Character *character);
@@ -280,7 +281,7 @@ void DrawLights(Character *character);
 void shenDrawCharaLighting(Character *character);
 void charaCollisionDistanceChecks(void *character);
 void shenExecuteCharaDrawCallbacks(Character *character);
-// Bind the real core-draw context without the world visibility admission gate.
+// Bind the core draw context without the world-visibility gate.
 std::uint32_t ExecuteCharacterCoreDraw(Character *character);
 
 bool IsOfThisVisibilityType(const Character *character, std::uint32_t mode);

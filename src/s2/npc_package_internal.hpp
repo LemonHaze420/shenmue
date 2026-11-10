@@ -611,6 +611,8 @@ std::int64_t npcSetLock(shen_name character, std::int32_t preserveMotion);
 
 namespace npc_package_detail {
 
+void UpdateNpcScheduleSeedSlot(shen_name character, shen_name previous, std::size_t slot);
+
 struct ConditionalNpcLoadSlot {
     shen_name character;
     std::int32_t entryIndex;

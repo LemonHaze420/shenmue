@@ -4,6 +4,7 @@
 #include "d3t/light_tiles.hpp"
 #include "s2/model_geometry.hpp"
 #include "d3t/file_state.hpp"
+#include <cstdio>
 #include <cstdlib>
 #if defined(_WIN32)
 #include <malloc.h>
@@ -21,6 +22,7 @@
 #include "s2/input_bindings.hpp"
 
 #include "d3t/archive_data.hpp"
+#include "d3t/archive_handles.hpp"
 #include "d3t/content.hpp"
 #include "d3t/dx11_renderer.hpp"
 #include "d3t/fvf.hpp"
@@ -36,10 +38,13 @@
 #include "d3t/ui_runtime.hpp"
 
 #include <array>
+#include <cstdlib>
 #include <cstring>
 #include <initializer_list>
 
-    namespace shenmue::s2 {
+#include <cJSON.h>
+
+namespace shenmue::s2 {
 
 namespace {
 std::uint32_t legacyEffectTextureStateDirty{};
@@ -163,6 +168,15 @@ std::uint32_t simpleShaderLoad = 0;
 std::uint32_t emulatorPdShaderLoad = 0;
 std::uint32_t emulatorPdtShaderLoad = 0;
 std::uint32_t emulatorPtShaderLoad = 0;
+std::uint32_t prefilterEnvmapShaderLoad = 0;
+std::uint32_t prefilterIrrmapShaderLoad = 0;
+std::uint32_t brdfLutShaderLoad = 0;
+std::uint32_t envprobeShaderLoad = 0;
+std::array<std::uint32_t, 2> prefilterEnvmapShaders{};
+std::array<std::uint32_t, 2> prefilterIrrmapShaders{};
+std::array<std::uint32_t, 2> brdfLutShaders{};
+std::array<std::uint32_t, 2> envprobeShaders{};
+std::int32_t areShadersSetup = 0;
 
 std::uint32_t contrastVertexShader = 0;
 std::uint32_t contrastPixelShader = 0;
@@ -259,6 +273,10 @@ void LoadNativeLegacyShaders(std::uint32_t renderHandle) {
     fvfPtdTPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_ptd_t_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
     fvfPdVertexShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_vs.hlsl", renderHandle, shen_render_create_shader(0), d3t::ShaderType::Vertex);
     fvfPdPixelShaderLoad = d3t::LoadShaderHLSL("/shaders/fvf/fvf_pd_ps.hlsl", renderHandle, shen_render_create_shader(1), d3t::ShaderType::Pixel);
+    prefilterEnvmapShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/prefilter_envmap", renderHandle);
+    prefilterIrrmapShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/prefilter_irrmap", renderHandle);
+    brdfLutShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/BRDF_LUT", renderHandle);
+    envprobeShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/envprobe", renderHandle);
     emulatorPdShaderLoad = d3t::LoadPrecompiledShader("/shaders/emu/emu_pd", renderHandle);
     emulatorPdtShaderLoad = d3t::LoadPrecompiledShader("/shaders/emu/emu_pdt", renderHandle);
     emulatorPtShaderLoad = d3t::LoadPrecompiledShader("/shaders/emu/emu_pt", renderHandle);
@@ -301,7 +319,15 @@ void InitStripShaders() {
     g_originalStrip03PixelShader = d3t::GetLoadedShader(originalStrip03PixelShaderLoad);
 }
 
+void LoadEnvironmentShaders() {
+    prefilterEnvmapShaders = {d3t::GetLoadedShader(prefilterEnvmapShaderLoad, 0), d3t::GetLoadedShader(prefilterEnvmapShaderLoad, 1)};
+    prefilterIrrmapShaders = {d3t::GetLoadedShader(prefilterIrrmapShaderLoad, 0), d3t::GetLoadedShader(prefilterIrrmapShaderLoad, 1)};
+    brdfLutShaders = {d3t::GetLoadedShader(brdfLutShaderLoad, 0), d3t::GetLoadedShader(brdfLutShaderLoad, 1)};
+    envprobeShaders = {d3t::GetLoadedShader(envprobeShaderLoad, 0), d3t::GetLoadedShader(envprobeShaderLoad, 1)};
+}
+
 void InitNativeLegacyShaderReferences() {
+    LoadEnvironmentShaders();
     const std::uint32_t lambert = d3t::GetLoadedShader(originalLambertVertexShaderLoad);
     g_originalConstantVertexShader = d3t::GetLoadedShader(originalConstantVertexShaderLoad);
     g_originalVertexColour0Shader = d3t::GetLoadedShader(originalVertexColour0ShaderLoad);
@@ -355,7 +381,7 @@ void UpdateMipMaps() {
     d3t::g_mipMapFrameCounters.fill(0);
 }
 
-// Map admission owns the global sweep, not HIKI's local reset routines.
+// Map setup runs the global renderer sweep; HIKI resets only its local state.
 void SetupMapRendererCaches() {
     d3t::ResetObjectStoreForMap();
     SweepEffectTextureSources();
@@ -381,6 +407,59 @@ void InitGeneralTextureResources() {
         .supersampling = sampling > 1.0f};
     d3t::ConfigureSceneFrameTargets(targets, g_fvfLayouts[34], texturedQuadVertexShader, texturedQuadPixelShader);
     d3t::SelectResolvedSceneFrame(configuration.enableSuperSampling != 0);
+    g_sdAccumulationTargetTable[0] = {.width = targets.width >> 2, .height = targets.height >> 2, .kind = kSDAccumulationTargetKind, .texture = 0};
+    g_sdAccumulationTargetTable[1] = {.width = targets.width, .height = targets.height, .kind = kSDAccumulationTargetKind, .texture = 0};
+    g_sdAccumulationTargetTable[2] = {.width = targets.width >> 2, .height = targets.height >> 2, .kind = kSDAccumulationTargetKind, .texture = 0};
+    CreateSDAccumulationTargets();
+}
+
+std::array<SDAccumulationTarget, 3> g_sdAccumulationTargetTable{};
+std::int32_t g_sdAccumulationTargetCount = 0;
+SDAccumulationTarget *g_sdAccumulationTargets = nullptr;
+
+// @verified - p
+std::int32_t CreateSDAccumulationTargets() {
+    if (g_sdAccumulationTargetCount)
+        ReleaseSDAccumulationTargets();
+    g_sdAccumulationTargetCount = 3;
+    g_sdAccumulationTargets = g_sdAccumulationTargetTable.data();
+    for (std::int32_t index = 0; index < static_cast<std::int32_t>(g_sdAccumulationTargetTable.size()); ++index) {
+        SDAccumulationTarget &target = g_sdAccumulationTargetTable[static_cast<std::size_t>(index)];
+        if (target.kind != kSDAccumulationTargetKind)
+            return 0;
+        d3t::InitTexture2DResource(target.texture);
+        const d3t::Texture2DDescription description{target.width, target.height, 1, 1, 2, 4, 0, 1, 0, 0, nullptr};
+        target.texture = shen_render_create_texture(&description);
+    }
+    return 1;
+}
+
+// @verified - p
+std::int32_t ReleaseSDAccumulationTargets() {
+    if (!g_sdAccumulationTargets)
+        return 0;
+    for (std::int32_t index = 0; index < g_sdAccumulationTargetCount; ++index) {
+        SDAccumulationTarget &target = g_sdAccumulationTargets[index];
+        if (target.texture || target.reserved14) {
+            if (target.texture)
+                d3t::InitTexture2DResource(target.texture);
+            target.texture = 0;
+            target.reserved14 = 0;
+        }
+    }
+    g_sdAccumulationTargetCount = 0;
+    g_sdAccumulationTargets = nullptr;
+    return 1;
+}
+
+// @verified - p
+std::uint32_t GetPostProcessingRenderTarget(std::int32_t index) {
+    return g_sdAccumulationTargets[index].texture;
+}
+
+// @verified - p
+std::uint32_t *GetFullscreenTexture() {
+    return GetRuntimeUserConfiguration().enableSuperSampling ? &d3t::g_resolvedSceneTexture : &d3t::g_legacySceneTexture;
 }
 
 void SetContrastShaderAndDraw() {
@@ -411,10 +490,98 @@ void SetupAllShaders() {
     g_legacyDefaultEffectTexture = shen_render_create_texture(&whiteDescription);
     if (!g_legacyDefaultEffectTexture)
         return;
+    CreateSDFoliageBuffer();
     InitializeLegacyDrawState();
+    resetPreviousRenderHandle();
     if (hasRenderHandle)
         SetD3TRenderSettings(0);
     legacyShadersInitialized = true;
+}
+
+std::array<CameraConfigPreset, 16> g_cameraConfigPresets{};
+std::int32_t g_cameraConfigPresetCount{};
+
+namespace {
+void ReadJsonFloat2(const cJSON *object, const char *name, float *output, const float *fallback) {
+    const cJSON *const item = cJSON_GetObjectItem(const_cast<cJSON *>(object), name);
+    if (!item) {
+        output[0] = fallback[0];
+        output[1] = fallback[1];
+        return;
+    }
+    if (item->type == cJSON_Array && cJSON_GetArraySize(const_cast<cJSON *>(item)) >= 2) {
+        for (std::int32_t index = 0; index < 2; ++index)
+            output[index] = static_cast<float>(cJSON_GetArrayItem(const_cast<cJSON *>(item), index)->valuedouble);
+    }
+}
+
+void ReadJsonVector4(const cJSON *object, const char *name, float *output, const float *fallback) {
+    const cJSON *const item = cJSON_GetObjectItem(const_cast<cJSON *>(object), name);
+    if (!item) {
+        for (std::int32_t index = 0; index < 4; ++index)
+            output[index] = fallback[index];
+        return;
+    }
+    if (item->type == cJSON_Array && cJSON_GetArraySize(const_cast<cJSON *>(item)) >= 4) {
+        for (std::int32_t index = 0; index < 4; ++index)
+            output[index] = static_cast<float>(cJSON_GetArrayItem(const_cast<cJSON *>(item), index)->valuedouble);
+    }
+}
+
+float ReadCameraConfigNumber(const cJSON *object, const char *name, float fallback) {
+    const cJSON *const item = cJSON_GetObjectItem(const_cast<cJSON *>(object), name);
+    return item && item->type == cJSON_Number ? static_cast<float>(item->valuedouble) : fallback;
+}
+} // namespace
+
+void CameraConfig() {
+    char *const text = static_cast<char *>(d3t::LoadLegacyFile("./camera.config", nullptr));
+    cJSON *const root = cJSON_Parse(text);
+    constexpr float origin[4]{0.0f, 0.0f, 0.0f, 1.0f};
+    constexpr float forward[4]{0.0f, 0.0f, -1.0f, 0.0f};
+    constexpr float zero[2]{};
+    CameraConfigPreset &fallback = g_cameraConfigPresets[0];
+    std::strcpy(fallback.name, "Default");
+    fallback.fov = kCameraConfigDefaultFov;
+    fallback.nearPlane = kCameraConfigDefaultNearPlane;
+    fallback.farPlane = kCameraConfigDefaultFarPlane;
+    g_cameraConfigPresetCount = 1;
+    std::memcpy(fallback.position, origin, sizeof(origin));
+    constexpr float defaultDirection[4]{0.0f, 0.0f, 1.0f, 0.0f};
+    std::memcpy(fallback.direction, defaultDirection, sizeof(defaultDirection));
+    std::memset(fallback.lookAt, 0, sizeof(fallback.lookAt));
+    fallback.eulerAngles[0] = 0.78539819f;
+    fallback.eulerAngles[1] = 1.5707964f;
+    for (const cJSON *entry = root ? root->child : nullptr; entry && g_cameraConfigPresetCount < static_cast<std::int32_t>(g_cameraConfigPresets.size());
+        entry = entry->next) {
+        CameraConfigPreset &preset = g_cameraConfigPresets[static_cast<std::size_t>(g_cameraConfigPresetCount++)];
+        std::snprintf(preset.name, sizeof(preset.name), "%s", entry->string);
+        const cJSON *const fpsMode = cJSON_GetObjectItem(const_cast<cJSON *>(entry), "fpsMode");
+        preset.fpsMode = fpsMode && fpsMode->type == cJSON_True;
+        ReadJsonVector4(entry, "position", preset.position, origin);
+        ReadJsonVector4(entry, "direction", preset.direction, forward);
+        ReadJsonVector4(entry, "lookAt", preset.lookAt, origin);
+        ReadJsonFloat2(entry, "eulerAngles", preset.eulerAngles, zero);
+        preset.fov = ReadCameraConfigNumber(entry, "fov", kCameraConfigDefaultFov);
+        preset.nearPlane = ReadCameraConfigNumber(entry, "nearPlane", kCameraConfigDefaultNearPlane);
+        preset.farPlane = ReadCameraConfigNumber(entry, "farPlane", kCameraConfigDefaultFarPlane);
+    }
+    cJSON_Delete(root);
+    std::free(text);
+}
+
+// @verified - p
+std::int32_t AreShadersSetup() {
+    return areShadersSetup;
+}
+
+void LoadShadersAndRenderer() {
+    areShadersSetup = 1;
+    LoadNativeLegacyShaders(g_currentRenderHandle);
+    FoliageAnim(g_currentRenderHandle);
+    UI_ReloadElementDefinitions(g_currentRenderHandle);
+    QueueSDTextureOverride("/textureOverride/SDTextureOverride.json", g_currentRenderHandle);
+    CameraConfig();
 }
 
 bool InitRenderer() {
@@ -425,8 +592,17 @@ bool InitRenderer() {
 
     CreateFVFLayouts(g_currentRenderHandle);
     LoadOriginalStripShaders(g_currentRenderHandle);
-    LoadNativeLegacyShaders(g_currentRenderHandle);
-    QueueSDTextureOverride("/textureOverride/SDTextureOverride.json", g_currentRenderHandle);
+    for (std::uint32_t index = 0; index < 32; ++index) {
+        SDFoliageParameters *const parameters = AllocateSDFoliageParameters();
+        if (parameters) {
+            parameters->bendiness = 0.02f;
+            parameters->maxHeight = 4.0f;
+            parameters->startHeight = 0.5f;
+            parameters->wiggleSpeed = 16.0f;
+            parameters->deadzone = 0.0f;
+        }
+    }
+    LoadShadersAndRenderer();
     InitializeNuklearUI(g_currentRenderHandle);
     LoadNuklearBuffer(g_currentRenderHandle);
     while (d3t::d3t_IsRenderHandlePending(g_currentRenderHandle)) {
@@ -462,15 +638,6 @@ bool InitRenderer() {
     g_sdShaderFileLock = d3t::AllocateFileLockHandle();
     const d3t::BufferDescription lightDescription{.flags = 3, .size = 131072, .count = 256, .flags3 = 2, .buffer = nullptr, .name = nullptr};
     g_sdLightBuffer = shen_render_create_buffer(&lightDescription);
-    for (std::uint32_t index = 0; index < 32; ++index) {
-        SDFoliageParameters *const parameters = AllocateSDFoliageParameters();
-        if (parameters) {
-            parameters->bendiness = 0.02f;
-            parameters->maxHeight = 4.0f;
-            parameters->startHeight = 0.5f;
-            parameters->wiggleSpeed = 16.0f;
-        }
-    }
     d3t::AllocateSimpleShaderBuffers();
     std::uint32_t simpleRenderHandle = d3t::d3t_AllocateRenderHandle();
     simpleShaderLoad = d3t::LoadPrecompiledShader("/engine/assets/shaders/simple", simpleRenderHandle);
@@ -512,6 +679,7 @@ void ShutdownRendererContent() {
     }
     d3t::ReleaseSceneFrameTargets();
     d3t::ShutdownThreads();
+    ReleaseSDAccumulationTargets();
     d3t::ReleaseSimpleShaderBuffers();
     d3t::ValidateAndCommitBuffer(static_cast<std::int32_t>(g_sdFoliageBuffer));
     g_sdFoliageBuffer = 0;

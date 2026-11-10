@@ -122,6 +122,7 @@ inline constexpr std::array<std::uint32_t, 8> DDS_PIXEL_DXT5{32, 4, 877942852, 0
 inline constexpr std::array<std::uint32_t, 8> DDS_PIXEL_BGRA8{32, 65, 0, 32, 16711680, 65280, 255, 4278190080U};
 
 void InitializeLegacyIconSprite(LegacyIconSprite &sprite) noexcept;
+void resetPreviousRenderHandle();
 void PublishBigKanjiText(const char *spriteName, LegacyIconSprite *sprites, std::int32_t count);
 void PublishBigKanjiGlyph(std::int32_t index, std::uint32_t colour);
 void ReleaseBigKanjiText();
@@ -144,6 +145,7 @@ std::int64_t PrepareLegacyInventoryItemLabel(std::uint16_t &label, std::uint32_t
 void SetLegacyItemSelectorExitFlag() noexcept;
 std::int64_t RequestItemSelector();
 void SetItemSelectorDelayedResult(std::uint16_t result) noexcept;
+void SetItemSelectorNavigationInputHalf(std::int8_t half, std::int16_t value) noexcept;
 inline constexpr std::array<const char *, 35> MAIN_MENU_WHEEL_IMAGES{"LT_NewGame_En", "LT_Continue_En", "LT_Collection_En", "LT_Options_En", "LT_Shots_En",
     "LT_NewGame_Jp", "LT_Continue_Jp", "LT_Collection_Jp", "LT_Options_Jp", "LT_Shots_Jp", "LT_NewGame_Fr", "LT_Continue_Fr", "LT_Collection_Fr",
     "LT_Options_Fr", "LT_Shots_Fr", "LT_NewGame_De", "LT_Continue_De", "LT_Collection_De", "LT_Options_De", "LT_Shots_De", "LT_NewGame_Kr", "LT_Continue_Kr",
@@ -193,6 +195,7 @@ enum class UIElement : std::int32_t {
     PawnshopFlyer = 40,
     PawnshopFlyer1 = 41,
     PawnshopFlyer2 = 42,
+    InfoBar = 43,
     GameHome = 44,
     GameMoves = 45,
     GameCollection = 46,
@@ -201,6 +204,7 @@ enum class UIElement : std::int32_t {
     GameNotebook = 49,
     GameHudTimer = 50,
     BigKanjiText = 51,
+    GameCollectionMaps = 52,
     CollectionMaps = 70,
     CollectionPawnshop = 53,
     GameQte = 54,
@@ -219,6 +223,7 @@ enum class UIElement : std::int32_t {
     HudSnapshot = 65,
     CutsceneSkip = 66,
     QteMinigame = 67,
+    SDOverlay = 68,
     WristwatchOverlay = 69,
     CollectionMapsEnglish = 71,
     CollectionMapsFrench = 72,
@@ -227,6 +232,7 @@ enum class UIElement : std::int32_t {
     CollectionMapsKorean = 76,
     CollectionMapsTraditionalChinese = 77,
     CollectionMapsSimplifiedChinese = 78,
+    OpeningPlaceholder = 79,
     GameHelp = 80,
     Credits = 81,
     LoadingScreen = 82,
@@ -344,6 +350,12 @@ enum class SleepSelectionResult : std::int32_t {
     Cancelled = 1,
     Selected = 2,
 };
+enum class PromptResponse : std::int32_t { None = 0, No = 1, Yes = 2, TimedOut = 3, Cancelled = 4 };
+using PromptResponseCallback = void (*)();
+std::int32_t SetResponseCallbackForWidget(PromptResponse response, PromptResponseCallback callback);
+void MessageBoxTimed(const char *question, const char *yes, const char *no, std::int32_t timed, float seconds);
+void RefreshTimedPromptQuestion();
+
 enum class DialogueSelectionResult : std::int32_t {
     Pending = 0,
     Selected = 1,
@@ -430,6 +442,14 @@ extern std::int32_t g_uiDebugRevealAspectBars;
 extern std::int32_t g_uiHelpAdmission;
 extern float g_uiHelpAdmissionValue;
 extern std::int32_t g_uiFreeInputOverride;
+extern std::array<std::int32_t, static_cast<std::size_t>(UIElement::Count)> g_uiElementReinitStates;
+extern std::int32_t g_uiMenuInputBlock;
+void UI_ClearElementReinitState(std::int32_t element);
+void UI_InitializeElementReinitStates();
+void UI_ReloadElementDefinitions(std::uint32_t renderHandle);
+std::int32_t UI_GetMenuInputBlock();
+std::uint32_t GetElementInitState(UIElement element);
+void ReinitPendingUIElements();
 void SetIsDrawingUI(std::int32_t drawing);
 bool IsNonBettingHelpTopic();
 extern std::array<std::uint32_t, 3> g_uiRefreshedElements;
@@ -460,6 +480,7 @@ bool IsGameUIActive();
 void SetMoveLearnedUiLine(std::int32_t index, std::string_view token);
 bool IsSharedItemsWidgetOwnedBy(std::int32_t owner) noexcept;
 std::int64_t ShowSharedItemsWidget(std::uint32_t itemType, std::uint32_t owner);
+std::int64_t OpenSharedItemsWidget(std::uint32_t itemType, std::uint32_t owner);
 std::int64_t DestroySharedItemsWidget();
 std::int64_t EnableSnapshotViewer();
 bool ShowSnapshotViewer(std::uint32_t slot);
@@ -470,6 +491,7 @@ void SetDebugHideCameraIcon(std::int32_t hidden) noexcept;
 void SetupCameraIcon() noexcept;
 std::int32_t IsHudFightSpriteActive() noexcept;
 std::int32_t GetCurrentUIInputType() noexcept;
+std::int32_t GetGammaOptionsActive() noexcept;
 bool GetIsFreeInputType(std::int32_t type = -1);
 bool IsGameUiSecondaryFlagSet(std::int32_t index);
 bool HandleGameUIVisibility();
@@ -622,7 +644,8 @@ inline constexpr std::array<const char *, 7> UI_DUCK_RACE_LABELS{"DuckRace:Rank1
     "DuckRace:Rank5Label", "DuckRace:Rank6Label", "DuckRace:TimerLabel"};
 inline constexpr std::array<const char *, 6> UI_DUCK_RACE_BOWTIES{
     "DuckRace::Rank1Bowtie", "DuckRace::Rank2Bowtie", "DuckRace::Rank3Bowtie", "DuckRace::Rank4Bowtie", "DuckRace::Rank5Bowtie", "DuckRace::Rank6Bowtie"};
-inline constexpr std::array<const char*, 3> UI_FIGHT_ROUND_TOKENS{"UIROUND001", "UIROUND002", "UIROUND003"}; // @text UIROUND001 EN: "ROUND 1" | JA: "第１ラウンド" ; UIROUND002 EN: "ROUND 2" | JA: "第２ラウンド" ; UIROUND003 EN: "FINAL ROUND" | JA: "最終ラウンド"
+inline constexpr std::array<const char *, 3> UI_FIGHT_ROUND_TOKENS{"UIROUND001", "UIROUND002",
+    "UIROUND003"}; // @text UIROUND001 EN: "ROUND 1" | JA: "第１ラウンド" ; UIROUND002 EN: "ROUND 2" | JA: "第２ラウンド" ; UIROUND003 EN: "FINAL ROUND" | JA: "最終ラウンド"
 inline constexpr std::array<const char *, 7> UI_INFORMATION_PANELS{"Information_Bar::InfoBoxParent_FrontEnd", "Information_Bar::InfoBoxPanelFrontEnd",
     "Information_Bar::InfoBoxParent_InGame", "Information_Bar::InfoBoxPanelInGame_Texture", "Information_Bar::InfoBoxPanelInGame",
     "Information_Bar::InfoBoxLabels", "Information_Bar::Panel_FocusOutline"};
@@ -755,6 +778,7 @@ void RequestHelpIconItemPrompt();
 // 1 shows the HUD notebook prompt's new-entry icon (3847) in place of the plain notebook (51).
 void SetHudItemPromptIcon(std::int32_t enabled);
 bool ToggleItemEffect(std::uint32_t itemId, std::int32_t amount);
+bool GiveItemOf(std::uint32_t itemId);
 bool CloseItemEffect(std::int32_t force);
 bool SetSleepActionIcon(std::int16_t flags);
 void ResetSleepActionIcon();
@@ -825,6 +849,7 @@ std::int32_t GetCurrentUIState();
 void PreparePawnSetFlyer(std::int32_t index, std::int32_t inspection);
 void PreparePawnItemFlyer(std::int32_t index);
 void EnableRenderableByIndex(UIElement element);
+void SetGameInformationBarVisibility(bool hidden);
 extern std::array<UIElementState, static_cast<std::size_t>(UIElement::Count)> g_uiElements;
 extern std::uint32_t g_nuklearTexture;
 

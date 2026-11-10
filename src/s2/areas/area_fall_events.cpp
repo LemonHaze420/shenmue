@@ -56,18 +56,18 @@ struct RockyPlacement {
 static_assert(sizeof(RockyPlacement) == 32);
 constexpr RockyPlacement rockyPlacements[]{
     {{-21.6200008392334f, -1.0f, -33.599998474121094f}, {0, 54613, 0}, 851, SHEN_NAME(kw1s)},
-    {{-8.260000228881836f, -0.9900000095367432f, -38.41999816894531f}, {0, 52792, 0}, 852, SHEN_NAME(kw1e)},
-    {{-6.920000076293945f, -1.0f, -38.66999816894531f}, {0, 49152, 0}, 853, SHEN_NAME(kw2s)},
-    {{6.099999904632568f, -0.550000011920929f, -36.310001373291016f}, {0, 23665, 0}, 854, SHEN_NAME(kw2e)},
-    {{2.4600000381469727f, 0.10999999940395355f, -33.959999084472656f}, {0, 20935, 0}, 855, SHEN_NAME(kw3s)},
-    {{-9.5600004196167f, 1.440000057220459f, -21.43000030517578f}, {0, 20935, 0}, 856, SHEN_NAME(kw3e)},
-    {{-8.100000381469727f, 1.3899999856948853f, -15.369999885559082f}, {0, 40049, 0}, 1001, SHEN_NAME(kw4s)},
-    {{-2.059999942779541f, 1.2899999618530273f, -9.25f}, {0, 40049, 0}, 1002, SHEN_NAME(kw4e)},
-    {{3.75f, 0.8299999833106995f, -11.0f}, {0, 54613, 0}, 1003, SHEN_NAME(kw5s)},
-    {{18.459999084472656f, 1.3300000429153442f, -11.899999618530273f}, {0, 32768, 0}, 1004, SHEN_NAME(kw5e)},
-    {{15.899999618530273f, 3.5f, -1.350000023841858f}, {0, 27306, 0}, 1005, SHEN_NAME(kw6s)},
-    {{9.220000267028809f, 3.5f, 8.619999885559082f}, {0, 27306, 0}, 0, SHEN_NAME(kw6e)},
-};
+        {{-8.260000228881836f, -0.9900000095367432f, -38.41999816894531f}, {0, 52792, 0}, 852, SHEN_NAME(kw1e)},
+            {{-6.920000076293945f, -1.0f, -38.66999816894531f}, {0, 49152, 0}, 853, SHEN_NAME(kw2s)},
+                {{6.099999904632568f, -0.550000011920929f, -36.310001373291016f}, {0, 23665, 0}, 854, SHEN_NAME(kw2e)},
+                    {{2.4600000381469727f, 0.10999999940395355f, -33.959999084472656f}, {0, 20935, 0}, 855, SHEN_NAME(kw3s)},
+                        {{-9.5600004196167f, 1.440000057220459f, -21.43000030517578f}, {0, 20935, 0}, 856, SHEN_NAME(kw3e)},
+                            {{-8.100000381469727f, 1.3899999856948853f, -15.369999885559082f}, {0, 40049, 0}, 1001, SHEN_NAME(kw4s)},
+                                {{-2.059999942779541f, 1.2899999618530273f, -9.25f}, {0, 40049, 0}, 1002, SHEN_NAME(kw4e)},
+                                    {{3.75f, 0.8299999833106995f, -11.0f}, {0, 54613, 0}, 1003, SHEN_NAME(kw5s)},
+                                        {{18.459999084472656f, 1.3300000429153442f, -11.899999618530273f}, {0, 32768, 0}, 1004, SHEN_NAME(kw5e)},
+                                            {{15.899999618530273f, 3.5f, -1.350000023841858f}, {0, 27306, 0}, 1005, SHEN_NAME(kw6s)},
+                                                {{9.220000267028809f, 3.5f, 8.619999885559082f}, {0, 27306, 0}, 0, SHEN_NAME(kw6e)},
+                                            };
 struct RoomExit {
     Vector3 position;
     shen_name scene;
@@ -75,14 +75,12 @@ struct RoomExit {
 };
 constexpr RoomExit roomExits[]{
     {{168.3000030517578f, 100.0f, 102.5999984741211f}, SHEN_NAME(QD01), 4},
-    {{175.5f, 100.0f, 102.5999984741211f}, SHEN_NAME(QD01), 4},
-    {{168.3000030517578f, 100.0f, 91.80000305175781f}, SHEN_NAME(QD01), 4},
-    {{175.5f, 0.0f, 91.80000305175781f}, SHEN_NAME(QD01), 4},
-    {{206.10000610351562f, 0.0f, 76.5f}, SHEN_NAME(QD01), 5},
-    {{206.10000610351562f, 0.0f, 84.5999984741211f}, SHEN_NAME(QD01), 5},
-};
-
-
+        {{175.5f, 100.0f, 102.5999984741211f}, SHEN_NAME(QD01), 4},
+            {{168.3000030517578f, 100.0f, 91.80000305175781f}, SHEN_NAME(QD01), 4},
+                {{175.5f, 0.0f, 91.80000305175781f}, SHEN_NAME(QD01), 4},
+                    {{206.10000610351562f, 0.0f, 76.5f}, SHEN_NAME(QD01), 5},
+                        {{206.10000610351562f, 0.0f, 84.5999984741211f}, SHEN_NAME(QD01), 5},
+                    };
 constexpr Vector3 roomLookPositions[]{
     {std::bit_cast<float>(0x432be666U), std::bit_cast<float>(0x42c80000U), std::bit_cast<float>(0x42b7999aU)},
     {std::bit_cast<float>(0x432be666U), std::bit_cast<float>(0x42c80000U), std::bit_cast<float>(0x42cd3333U)},
@@ -316,7 +314,7 @@ void UpdateRockyCompanion() {
         const float dx = placement.position.x - position.x, dz = placement.position.z - position.z;
         if (dx * dx + dz * dz < 9) {
             EV_PTYCUtils(shenhua, 3, 1);
-            mtwkRequestPositionTransition(scenFindMotionwork(shenhua), &placement.position, static_cast<std::uint16_t>(placement.rotation.y), 0, 0);
+            mtwkCopyTransition(scenFindMotionwork(shenhua), &placement.position, static_cast<std::uint16_t>(placement.rotation.y), 0, 0);
             rockyFall.companionPhase = 1;
         }
     }

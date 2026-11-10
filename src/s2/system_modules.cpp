@@ -61,7 +61,7 @@ SystemModule hotLoadModule = SystemModule::Test;
 namespace {
 std::int32_t sceneFolderReadiness{};
 std::int32_t unusedSceneFolderWord{};
-}
+} // namespace
 
 // @verified - p
 std::int64_t ResetSceneFolderReadiness() {
@@ -249,6 +249,7 @@ void InitShenmue() {
     ResetTaskWaitFlags();
     mstsInit();
     InitAica();
+    ZeroAicaMemoryArena();
     InitializePlayerRuntime();
     scenInitCallbacks();
     unusedBootstrapWordA = 0;

@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/npc_package.hpp"
 
 #include "s2/archive_data.hpp"
@@ -884,7 +887,7 @@ std::int32_t ExecuteNpcCommand(NpcRouteLiveEntry &entry, std::int32_t currentTim
                 ApplyNpcCompletionFlag(entry.currentCommand);
                 entry.currentCommand += 16;
             }
-            SetNpcAreaPoint(entry, entry.currentAreaPoint);
+            RestoreNpcAreaPointSeedPosition(entry);
             const std::uint32_t following = ReadU32(entry.currentCommand);
             if (((following == 4 || following == 18) && IncrementSharedPrngFloat() * 5.0f >= 2.0f) || !BeginNpcAreaPointState(entry, npcLatestTime))
                 ResolveNpcAreaPointOwnerAnchor(entry, entry.currentAreaPoint);
@@ -2480,6 +2483,9 @@ bool LoadCurrentNpcSchedule(bool loadResources, const char *requestedFilename) {
     for (const ParsedNpcRecord &record : npcSchedule.records) {
         sources.push_back({record.name, npcSchedule.bytes.data() + record.offset, record.humanPackageIndex});
     }
+    const auto seedByte = [](std::int16_t index) { return static_cast<std::uint32_t>(EV_GetPlayerFlag(PlayerFlagReadMode::Stat, index)); };
+    npcCondition2StartSeconds = (seedByte(48) << 24) + (seedByte(49) << 16) + (seedByte(32) << 8) + seedByte(33);
+    npcCondition2OutsideFrames = 0;
     // npcResetSpecialSceneState, called by the cold route bootstrap:
     // only these exact schedule filenames permit MoveForNpcInData checks.
     npcSceneCheckEnabled = filename == "NPC.BIN" || filename == "NPC_Q100.BIN";
@@ -2638,3 +2644,4 @@ void CaptureNpcScheduleSeeds(std::span<std::byte, NpcScheduleSeedBufferSize> des
     }
 }
 } // namespace shenmue::s2
+

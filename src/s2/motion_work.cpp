@@ -5,6 +5,7 @@
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
 #include "s2/map_control.hpp"
+#include "s2/scenario_characters.hpp"
 #include "s2/fight.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/hlib.hpp"
@@ -230,15 +231,10 @@ void InitializeMotionRotationPointers(MotionWork &work) {
         storePointer(destination + 0x18, basis);
         storePointer(destination + 0x20, &work.runtime.layerBlendAlpha[layer]);
     };
-    static constexpr std::uint16_t records[][4]{
-        {0x2898,0x1a0,0x2d0,0}, {0x2910,0x4e0,0x5d0,0}, {0x2938,0x7c8,0x8f8,0},
-        {0x2988,0xab8,0xba8,0}, {0x29b0,0xda0,0xed0,0},
-        {0x2a50,0x10d0,0x11c0,1}, {0x2a78,0x1378,0x1468,1},
-        {0x2aa0,0x1518,0x1608,2}, {0x2af0,0x1688,0x1778,2},
-        {0x2b90,0x19a8,0x1a98,3}, {0x2bb8,0x1b18,0x1c08,3},
-        {0x2be0,0x1e80,0x1e00,3}, {0x2c08,0x1e80,0x1fb0,3},
-        {0x2c30,0x2010,0x2100,4}, {0x2c58,0x2180,0x2270,4},
-        {0x2c80,0x24e8,0x2468,4}, {0x2ca8,0x24e8,0x2618,4}};
+    static constexpr std::uint16_t records[][4]{{0x2898, 0x1a0, 0x2d0, 0}, {0x2910, 0x4e0, 0x5d0, 0}, {0x2938, 0x7c8, 0x8f8, 0}, {0x2988, 0xab8, 0xba8, 0},
+        {0x29b0, 0xda0, 0xed0, 0}, {0x2a50, 0x10d0, 0x11c0, 1}, {0x2a78, 0x1378, 0x1468, 1}, {0x2aa0, 0x1518, 0x1608, 2}, {0x2af0, 0x1688, 0x1778, 2},
+        {0x2b90, 0x19a8, 0x1a98, 3}, {0x2bb8, 0x1b18, 0x1c08, 3}, {0x2be0, 0x1e80, 0x1e00, 3}, {0x2c08, 0x1e80, 0x1fb0, 3}, {0x2c30, 0x2010, 0x2100, 4},
+        {0x2c58, 0x2180, 0x2270, 4}, {0x2c80, 0x24e8, 0x2468, 4}, {0x2ca8, 0x24e8, 0x2618, 4}};
     for (const auto &record : records)
         bind(record[0], bytes + record[1], bytes + record[2], record[3]);
     if (work.rig.useOverride != 0) {
@@ -285,44 +281,27 @@ void InitializeMotionRig(MotionWork &work, std::uint32_t rigType) {
     const auto put = [&](std::size_t destination, std::size_t source) { std::memcpy(storage + destination, defaults + source / 4, sizeof(std::uint32_t)); };
     if (work.rig.useOverride) {
         auto *const unfo = static_cast<std::byte *>(work.runtime.unfo);
-        static constexpr std::uint16_t pointers[][2]{
-            {0x480,0}, {0x488,0x130}, {0x4d0,0x268}, {0x4d8,0x398},
-            {0xaa8,0x3d8}, {0xab0,0x508}, {0x1080,0x548}, {0x1088,0x628},
-            {0x1090,0x668}, {0x1098,0x748}, {0x10a0,0x788}, {0x10a8,0x868},
-            {0x1940,0x8a8}, {0x1948,0x9d8}, {0x1950,0xb10}, {0x1958,0xb50},
-            {0x1960,0xc80}, {0x1968,0xcc0}, {0x1970,0xdf0}, {0x1978,0xe30},
-            {0x1980, 0xf60}};
+        static constexpr std::uint16_t pointers[][2]{{0x480, 0}, {0x488, 0x130}, {0x4d0, 0x268}, {0x4d8, 0x398}, {0xaa8, 0x3d8}, {0xab0, 0x508},
+            {0x1080, 0x548}, {0x1088, 0x628}, {0x1090, 0x668}, {0x1098, 0x748}, {0x10a0, 0x788}, {0x10a8, 0x868}, {0x1940, 0x8a8}, {0x1948, 0x9d8},
+            {0x1950, 0xb10}, {0x1958, 0xb50}, {0x1960, 0xc80}, {0x1968, 0xcc0}, {0x1970, 0xdf0}, {0x1978, 0xe30}, {0x1980, 0xf60}};
         for (const auto &entry : pointers) {
             void *const pointer = unfo + entry[1];
             std::memcpy(storage + entry[0], &pointer, sizeof(pointer));
         }
-        static constexpr std::uint16_t unfoWords[][2]{
-            {0x8f0,0x1c}, {0x940,0x20}, {0xa20,0x24},
-            {0xbe8,0x38}, {0xc38,0x3c}, {0xd58,0x40}, {0xda8,0x44},
-            {0xe78,0x48}, {0xf18,0x4c}, {0xe8,0xa4}, {0x178,0xa8},
-            {0x2b0,0xac}, {0x300,0xb0}, {0x350,0xb4},
-            {0x420,0xd4}, {0x470,0xd8}, {0x4c0,0xdc},
-            {0x590,0xfc}, {0x5e0,0x100}, {0x6b0,0x104}, {0x700,0x108},
-            {0x7d0, 0x10c}, {0x820, 0x110}};
+        static constexpr std::uint16_t unfoWords[][2]{{0x8f0, 0x1c}, {0x940, 0x20}, {0xa20, 0x24}, {0xbe8, 0x38}, {0xc38, 0x3c}, {0xd58, 0x40}, {0xda8, 0x44},
+            {0xe78, 0x48}, {0xf18, 0x4c}, {0xe8, 0xa4}, {0x178, 0xa8}, {0x2b0, 0xac}, {0x300, 0xb0}, {0x350, 0xb4}, {0x420, 0xd4}, {0x470, 0xd8}, {0x4c0, 0xdc},
+            {0x590, 0xfc}, {0x5e0, 0x100}, {0x6b0, 0x104}, {0x700, 0x108}, {0x7d0, 0x10c}, {0x820, 0x110}};
         for (const auto &entry : unfoWords)
             std::memcpy(unfo + entry[0], defaults + entry[1] / 4, sizeof(std::uint32_t));
-        static constexpr std::uint16_t words[][2]{
-            {0x11b8,8}, {0x15b0,0x18}, {0x16d0,0x28}, {0x1720,0x2c},
-            {0x19f0,0x50}, {0x1a40,0x54}, {0x1a90,0x58}, {0x1b60,0x5c},
-            {0x1bb0,0x60}, {0x1c00,0x64}, {0x1ce0,0x68},
-            {0x20a8,0x7c}, {0x20f8,0x80}, {0x21c8,0x84}, {0x2218,0x88},
-            {0x2268,0x8c}, {0x2348,0x90}, {0x528,0xb8}, {0x578,0xbc},
-            {0xb00, 0xe0}, {0xb50, 0xe4}};
+        static constexpr std::uint16_t words[][2]{{0x11b8, 8}, {0x15b0, 0x18}, {0x16d0, 0x28}, {0x1720, 0x2c}, {0x19f0, 0x50}, {0x1a40, 0x54}, {0x1a90, 0x58},
+            {0x1b60, 0x5c}, {0x1bb0, 0x60}, {0x1c00, 0x64}, {0x1ce0, 0x68}, {0x20a8, 0x7c}, {0x20f8, 0x80}, {0x21c8, 0x84}, {0x2218, 0x88}, {0x2268, 0x8c},
+            {0x2348, 0x90}, {0x528, 0xb8}, {0x578, 0xbc}, {0xb00, 0xe0}, {0xb50, 0xe4}};
         for (const auto &entry : words)
             put(entry[0], entry[1]);
     } else {
-        static constexpr std::uint16_t words[][2]{
-            {0x1168,4}, {0x1560,0x14}, {0x16d0,0x28}, {0x1930,0x30}, {0x1938,0x34},
-            {0x19f0,0x50}, {0x1a90,0x58}, {0x1c00,0x64}, {0x1ce0,0x68},
-            {0x1ec8,0x74}, {0x1f18,0x70}, {0x20f8,0x80}, {0x2268,0x8c},
-            {0x2348,0x90}, {0x2530,0x9c}, {0x2580,0x98},
-            {0x3e8,0xa0}, {0x578,0xbc}, {0x5c8,0xc0}, {0x9d0,0xcc},
-            {0xa20,0xd0}, {0xb50,0xe4}, {0xba0,0xe8}, {0xfa8,0xf4}, {0xff8,0xf8}};
+        static constexpr std::uint16_t words[][2]{{0x1168, 4}, {0x1560, 0x14}, {0x16d0, 0x28}, {0x1930, 0x30}, {0x1938, 0x34}, {0x19f0, 0x50}, {0x1a90, 0x58},
+            {0x1c00, 0x64}, {0x1ce0, 0x68}, {0x1ec8, 0x74}, {0x1f18, 0x70}, {0x20f8, 0x80}, {0x2268, 0x8c}, {0x2348, 0x90}, {0x2530, 0x9c}, {0x2580, 0x98},
+            {0x3e8, 0xa0}, {0x578, 0xbc}, {0x5c8, 0xc0}, {0x9d0, 0xcc}, {0xa20, 0xd0}, {0xb50, 0xe4}, {0xba0, 0xe8}, {0xfa8, 0xf4}, {0xff8, 0xf8}};
         for (const auto &entry : words)
             put(entry[0], entry[1]);
     }
@@ -1193,9 +1172,9 @@ Vector3 CopyLocalOffset(const Vector3 &offset, std::int32_t yaw) {
     return local;
 }
 
-// CopyContinueStep's running transition consumes real solved frame crossings.
-// A recheck may run twice on the same frame after a target replacement;
-// clocks and SolveMotionLowerBody are still advanced only once by MTWK.
+// Use solved frame crossings for a running transition.
+// A changed target can cause two checks on one frame; MTWK advances the clocks and lower-body solver only once.
+
 // @verified - p
 bool CopyContinueStep(CopyMotionContext &context, bool recheck, bool stopAtYaw) {
     MotionRuntimeState &state = context.state();
@@ -1662,8 +1641,8 @@ bool LatchMotionControllerTarget(MotionWork &work, std::uint32_t controller, con
     return true;
 }
 
-// UpdateCopyLookTransition owns the look request's saved flags and transient controller
-// submissions. The solver, not this state machine, owns the yaw/blend result.
+// Look-transition state saves flags and submits controller targets.
+// The solver determines yaw and blend.
 // @verified - p
 void UpdateCopyLookTransition(MotionWork &work) {
     MotionRuntimeState &state = work.runtime;
@@ -1731,11 +1710,14 @@ void UpdateCopyLookTransition(MotionWork &work) {
     flags &= ~0x10U;
 }
 
-constexpr std::uint16_t targetFacingMotions[5][20] = {
-    {0xf095,0xf091,0xf096,0xf092,0xf08c,0xf08a,0xf08e,0xf123,0xf127,0xf125,0xf094,0xf090,0xf093,0xf08f,0xf08b,0xf089,0xf08d,0xf122,0xf126,0xf124},
-    {0xf04e,0xf049,0xf04f,0xf04a,0xf044,0xf042,0xf046,0xf123,0xf127,0xf125,0xf04d,0xf048,0xf04c,0xf047,0xf043,0xf041,0xf045,0xf122,0xf126,0xf124},
-    {0xf06f,0xf06b,0xf070,0xf06c,0xf066,0xf064,0xf068,0xf123,0xf127,0xf125,0xf06e,0xf06a,0xf06d,0xf069,0xf065,0xf063,0xf067,0xf122,0xf126,0xf124},
-    {0xf0e0,0xf0dc,0xf0e1,0xf0dd,0xf0d7,0xf0d5,0xf0d9,0xf123,0xf127,0xf125,0xf0df,0xf0db,0xf0de,0xf0da,0xf0d6,0xf0d4,0xf0d8,0xf122,0xf126,0xf124},
+constexpr std::uint16_t targetFacingMotions[5][20] = {{0xf095, 0xf091, 0xf096, 0xf092, 0xf08c, 0xf08a, 0xf08e, 0xf123, 0xf127, 0xf125, 0xf094, 0xf090, 0xf093,
+                                                          0xf08f, 0xf08b, 0xf089, 0xf08d, 0xf122, 0xf126, 0xf124},
+    {0xf04e, 0xf049, 0xf04f, 0xf04a, 0xf044, 0xf042, 0xf046, 0xf123, 0xf127, 0xf125, 0xf04d, 0xf048, 0xf04c, 0xf047, 0xf043, 0xf041, 0xf045, 0xf122, 0xf126,
+        0xf124},
+    {0xf06f, 0xf06b, 0xf070, 0xf06c, 0xf066, 0xf064, 0xf068, 0xf123, 0xf127, 0xf125, 0xf06e, 0xf06a, 0xf06d, 0xf069, 0xf065, 0xf063, 0xf067, 0xf122, 0xf126,
+        0xf124},
+    {0xf0e0, 0xf0dc, 0xf0e1, 0xf0dd, 0xf0d7, 0xf0d5, 0xf0d9, 0xf123, 0xf127, 0xf125, 0xf0df, 0xf0db, 0xf0de, 0xf0da, 0xf0d6, 0xf0d4, 0xf0d8, 0xf122, 0xf126,
+        0xf124},
     {}};
 
 
@@ -2612,6 +2594,126 @@ void charaGetMotWorldPos(Character *character, std::int32_t bone, Vector3 *posit
         *position = GetCharacterWorldPosition(character);
 }
 
+const Matrix4x4 *charaResolveModelSpaceBoneTransform(const void *placement, const MotionWork *motion, std::int32_t boneId, const Matrix4x4 *transform) {
+    static Matrix4x4 modelSpace;
+    std::int32_t kind;
+    switch (boneId) {
+    case 0:
+        kind = 0;
+        break;
+    case 3:
+        kind = 1;
+        break;
+    case 4:
+        kind = 2;
+        break;
+    case 5:
+        kind = -67;
+        break;
+    case 8:
+        kind = 4;
+        break;
+    case 9:
+        kind = 5;
+        break;
+    case 12:
+        kind = 6;
+        break;
+    case 14:
+        kind = -65;
+        break;
+    case 15:
+        kind = 9;
+        break;
+    case 16:
+        kind = 10;
+        break;
+    case 19:
+        kind = 11;
+        break;
+    case 21:
+        kind = -66;
+        break;
+    case 22:
+        kind = 14;
+        break;
+    case 23:
+        kind = 16;
+        break;
+    case 24:
+        kind = 17;
+        break;
+    case 26:
+        kind = 18;
+        break;
+    case 28:
+        kind = 21;
+        break;
+    case 29:
+        kind = 22;
+        break;
+    case 31:
+        kind = 23;
+        break;
+    default:
+        if (motion->rig.useOverride) {
+            switch (boneId) {
+            case 33:
+                kind = -79;
+                break;
+            case 35:
+                kind = 58;
+                break;
+            case 36:
+                kind = 59;
+                break;
+            case 37:
+                kind = 119;
+                break;
+            case 39:
+                kind = 15;
+                break;
+            case 40:
+                kind = 20;
+                break;
+            case 41:
+                kind = 55;
+                break;
+            case 42:
+                kind = 56;
+                break;
+            case 43:
+                kind = 57;
+                break;
+            default:
+                return transform;
+            }
+        } else {
+            switch (boneId) {
+            case 1:
+                kind = 0;
+                break;
+            case 13:
+                kind = 7;
+                break;
+            case 20:
+                kind = 12;
+                break;
+            case 27:
+                kind = 19;
+                break;
+            case 32:
+                kind = 24;
+                break;
+            default:
+                return transform;
+            }
+        }
+        break;
+    }
+    return produceXform(placement, kind, modelSpace) ? &modelSpace : transform;
+}
+
 bool ResolveAuthoredMotionBoneTransform(const Character *character, std::uint16_t boneId, Matrix4x4 &transform) {
     const MotionWork *const motion = FindMotionWork(character);
     if (!motion)
@@ -2994,6 +3096,26 @@ bool mtwkLatchBoneTarget(MotionWork *work, std::int32_t selector, const Vector3 
 }
 
 // @verified - p
+bool GetMTWK_NodeParent(Character *character, std::int32_t selector, const Vector3 *point) {
+    MotionWork *const work = FindMotionWork(character);
+    Vector3 target = *point;
+    if (const CharacterNode *const child = GetCharacterNode(character)->child)
+        TransformPointByCharacterNode(child, &target);
+    return mtwkLatchBoneTarget(work, selector, &target);
+}
+
+// @verified - p
+bool GetMTWK_NodeParent_0(shen_name name, std::uint32_t mode, std::int32_t selector, const Vector3 *point) {
+    const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    Character *const character = scenFindChara(control->scenarioTask, name);
+    if (mode & 0x40000000U)
+        return mtwkLatchBoneTarget(FindMotionWork(character), selector, point);
+    if (mode & 0x1000000U)
+        return mtwkSetBoneTarget(FindMotionWork(character), selector, point);
+    return GetMTWK_NodeParent(character, selector, point);
+}
+
+// @verified - p
 float mtwkGetBoneTargetStepLimit(const MotionWork *work, std::int32_t selector) {
     const std::int32_t controller = ParentBoneId(static_cast<std::uint32_t>(selector));
     return controller == -1 ? 0.0f : work->runtime.constraintStepLimit[controller];
@@ -3079,11 +3201,9 @@ bool mtwkGetControllerTargetPosition(const MotionWork *work, std::uint32_t contr
     const IKRig &rig = work->rig;
     const MotionRigTarget *target;
     switch (controller) {
-    case 0: {
-        const Vector4 &root = rig.lowerBody.pelvisWorld.rows[3];
-        position = {root.x, root.y, root.z};
+    case 0:
+        mtwkGetBonePosition(const_cast<MotionWork *>(work), MB_Pelvis, &position);
         return true;
-    }
     case 1:
         target = &rig.chest.target;
         break;
@@ -3786,7 +3906,7 @@ bool mtwkCompletePositionTransitionRequest(MotionWork *motionWork) {
     return mtwkSetExtra(motionWork, 5U, 0xf002U);
 }
 
-// 5d94c0 / 5db020: the runtime root is distinct from solved pelvis output.
+// The runtime root is separate from solved pelvis output.
 Vector3 mtwkGetRootPosition(const MotionWork *motion) {
     return motion->runtime.rootPosition;
 }
@@ -3794,7 +3914,54 @@ void mtwkSetRootPosition(MotionWork *motion, const Vector3 &position) {
     motion->runtime.rootPosition = position;
 }
 
+namespace {
+void TranslateRigVector(std::byte *owner, std::size_t offset, float x, float y, float z) {
+    Vector3 value;
+    std::memcpy(&value, owner + offset, sizeof(value));
+    value.x += x;
+    value.y += y;
+    value.z += z;
+    std::memcpy(owner + offset, &value, sizeof(value));
+}
 
+void motnAdvanceInterpolated(MotionWork *motion, float x, float y, float z) {
+    std::byte *const raw = reinterpret_cast<std::byte *>(motion);
+    constexpr std::size_t matrices[]{
+        0x2c0, 0x4c0, 0x778, 0x7b8, 0x8e8, 0xd50, 0xd90, 0xec0, 0x14d8, 0x1678, 0x1920, 0x1b08, 0x1db0, 0x1df0, 0x1fa0, 0x2170, 0x2418, 0x2458, 0x2608};
+    for (const std::size_t offset : matrices)
+        TranslateRigVector(raw, offset, x, y, z);
+    std::uint32_t custom;
+    std::memcpy(&custom, raw + 4, sizeof(custom));
+    if (custom) {
+        constexpr std::size_t pointers[]{0x4d8, 0xab0, 0x1088, 0x1098, 0x10a8, 0x1950, 0x1960, 0x1970, 0x1980};
+        for (const std::size_t offset : pointers) {
+            std::byte *matrix;
+            std::memcpy(&matrix, raw + offset, sizeof(matrix));
+            TranslateRigVector(matrix, 0x30, x, y, z);
+        }
+    } else {
+        constexpr std::size_t standard[]{0x1368, 0x1e70, 0x24d8, 0xa58, 0x1030};
+        for (const std::size_t offset : standard)
+            TranslateRigVector(raw, offset, x, y, z);
+    }
+}
+
+void motnCopyInterpolated(MotionWork *motion, float x, float y, float z) {
+    std::byte *const raw = reinterpret_cast<std::byte *>(motion);
+    constexpr std::size_t targets[]{0x12e8, 0x18a0, 0x1d30, 0x2398, 0x6f8, 0xcd0};
+    for (const std::size_t offset : targets)
+        TranslateRigVector(raw, offset, x, y, z);
+    std::uint32_t custom;
+    std::memcpy(&custom, raw + 4, sizeof(custom));
+    if (custom) {
+        for (const std::size_t offset : {std::size_t{0x488}, std::size_t{0x1948}}) {
+            std::byte *node;
+            std::memcpy(&node, raw + offset, sizeof(node));
+            TranslateRigVector(node, 0xe8, x, y, z);
+        }
+    }
+}
+} // namespace
 
 void mtwkApplyCollisionTranslation(MotionWork *motion, float x, float y, float z) {
     if (!motion)
@@ -3802,44 +3969,8 @@ void mtwkApplyCollisionTranslation(MotionWork *motion, float x, float y, float z
     motion->runtime.rootDelta.x += x;
     motion->runtime.rootDelta.y += y;
     motion->runtime.rootDelta.z += z;
-    auto *const raw = reinterpret_cast<std::byte *>(motion);
-    const auto translate = [x, y, z](std::byte *owner, std::size_t offset) {
-        Vector3 value;
-        std::memcpy(&value, owner + offset, sizeof(value));
-        value.x += x;
-        value.y += y;
-        value.z += z;
-        std::memcpy(owner + offset, &value, sizeof(value));
-    };
-    constexpr std::size_t matrices[]{
-        0x2c0,0x4c0,0x778,0x7b8,0x8e8,0xd50,0xd90,0xec0,0x14d8,0x1678,
-        0x1920,0x1b08,0x1db0,0x1df0,0x1fa0,0x2170,0x2418,0x2458,0x2608};
-    for (const auto offset : matrices)
-        translate(raw, offset);
-    std::uint32_t custom;
-    std::memcpy(&custom, raw + 4, sizeof(custom));
-    if (custom) {
-        constexpr std::size_t pointers[]{0x4d8, 0xab0, 0x1088, 0x1098, 0x10a8, 0x1950, 0x1960, 0x1970, 0x1980};
-        for (const auto offset : pointers) {
-            std::byte *matrix;
-            std::memcpy(&matrix, raw + offset, sizeof(matrix));
-            translate(matrix, 0x30);
-        }
-    } else {
-        constexpr std::size_t standard[]{0x1368, 0x1e70, 0x24d8, 0xa58, 0x1030};
-        for (const auto offset : standard)
-            translate(raw, offset);
-    }
-    constexpr std::size_t targets[]{0x12e8, 0x18a0, 0x1d30, 0x2398, 0x6f8, 0xcd0};
-    for (const auto offset : targets)
-        translate(raw, offset);
-    if (custom) {
-        for (const auto offset : {std::size_t{0x488}, std::size_t{0x1948}}) {
-            std::byte *node;
-            std::memcpy(&node, raw + offset, sizeof(node));
-            translate(node, 0xe8);
-        }
-    }
+    motnAdvanceInterpolated(motion, x, y, z);
+    motnCopyInterpolated(motion, x, y, z);
     motion->runtime.rootPosition.x = motion->rig.lowerBody.pelvisWorld.rows[3].x;
     motion->runtime.rootPosition.z = motion->rig.lowerBody.pelvisWorld.rows[3].z;
 }

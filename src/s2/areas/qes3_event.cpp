@@ -7,6 +7,7 @@
 #include "s2/event_runtime.hpp"
 #include "s2/game_runtime.hpp"
 #include "s2/handcuffs.hpp"
+#include "s2/lighting.hpp"
 #include "s2/math.hpp"
 #include "s2/motion_work.hpp"
 #include "s2/particle_effects.hpp"
@@ -286,7 +287,7 @@ void Qes3AuthorAudioCallback(void *) {
 void Qes3AfterFightAuthorCallback(void *) {
     switch (EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame)) {
     case 0:
-        EV_SetObjectFlagByIndex(3, 0);
+        EV_SetMapLightingPlacementEnabled(3, 0);
         break;
     case 581:
     case 1001:
@@ -305,7 +306,7 @@ void Qes3AfterFightAuthorCallback(void *) {
         break;
     case 2030:
         Handcuffs_Attach(QES_RYO, 0, QES_YUA, 1, 0.3f);
-        EV_SetObjectFlagByIndex(3, 1);
+        EV_SetMapLightingPlacementEnabled(3, 1);
         break;
     default:
         break;

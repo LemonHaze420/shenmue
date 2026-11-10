@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/npc_package.hpp"
 
 #include "s2/archive_data.hpp"
@@ -24,6 +27,7 @@
 #include "s2/mt7.hpp"
 #include "s2/npc_area_route.hpp"
 #include "s2/player.hpp"
+#include "s2/scenario_characters.hpp"
 #include "s2/system_modules.hpp"
 #include "s2/weather.hpp"
 #include "s2/world_render.hpp"
@@ -972,6 +976,46 @@ std::int32_t DetectNpcRouteStair(NpcRouteStateContext &context) {
     return 1;
 }
 
+// @verified - p
+std::uint16_t GetMotnId(Character *character) {
+    switch (GetCharacterBoneId(character)) {
+    case 0:
+        return 61503;
+    case 1:
+        return 61535;
+    case 2:
+        return 61567;
+    case 3:
+        return 61527;
+    case 4:
+        return 61599;
+    case 5:
+        return 61650;
+    case 6:
+        return 61537;
+    case 7:
+        return 61575;
+    case 8: {
+        const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        return scenGetCharaName(control->scenarioTask, character).name == SHEN_NAME(REN_) ? 41476 : 61573;
+    }
+    case 9:
+        return 61561;
+    case 10:
+        return 61529;
+    case 11:
+        return 61608;
+    case 13:
+        return 61605;
+    case 14:
+        return 61607;
+    case 15:
+        return 61674;
+    default:
+        return 61573;
+    }
+}
+
 std::int32_t TickNpcRouteStair(NpcRouteStateContext &context) {
     Character *const character = context.owner->node;
     if (!(context.routeFlags & 4U) || !character)
@@ -983,7 +1027,7 @@ std::int32_t TickNpcRouteStair(NpcRouteStateContext &context) {
             if ((context.flags & 0x1000U) || (context.routeFlags & 0x800U)) {
                 context.flags |= 0x1000U;
                 context.routeFlags &= ~0x800U;
-                context.motion = mtwkGetAnimationId(context.motionWork, MotionRegion::LowerBody);
+                context.motion = GetMotnId(character);
                 context.avoidancePhase = 3;
             } else {
                 context.stairTarget = NpcAreaPosition(context.stairTarget);
@@ -2580,6 +2624,11 @@ bool FinishNpcRoute(NpcRouteStateContext &context) {
             owner.scheduleProgress = 1;
         }
         context.moveFlags = (owner.packedMoveFlags & 0x100ffU) | (static_cast<std::uint32_t>(context.floor) << 8);
+        if (npcScriptRouteOwner == &owner) {
+            owner.flags &= ~0x200U;
+            npcScriptRouteOwner = nullptr;
+            UpdateNpcScheduleSeedSlot({}, owner.name, 0);
+        }
     }
     context.flags = 0;
     return true;
@@ -2745,9 +2794,9 @@ void InitializeStreamedNpcRoute(NpcRouteLiveEntry &entry, bool warm) {
         }
         NpcAreaRouteState &state = *GetNpcAreaPointRouteState(entry.currentAreaPoint);
         if (entry.specialAnimationContext)
-            entry.currentMotionId = ResolveNpcAreaAnimation(state, entry, false);
+            entry.currentMotionId = npcResolveAnimationForRoute(state, entry);
         if (!entry.specialAnimationContext)
-            entry.currentMotionId = ResolveNpcAreaAnimation(state, entry, false);
+            entry.currentMotionId = npcResolveAnimationForRoute(state, entry);
         if (!entry.currentMotionId)
             entry.currentMotionId = SelectNpcIdleMotion(entry);
         ApplyNpcAreaMotion(entry, entry.currentMotionId);
@@ -3541,3 +3590,4 @@ std::int64_t PlaceNpcAtAreaPoint(shen_name character, shen_name areaPoint, const
     return 0;
 }
 } // namespace shenmue::s2
+

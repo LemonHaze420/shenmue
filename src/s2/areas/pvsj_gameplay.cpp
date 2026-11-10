@@ -15,6 +15,7 @@
 #include "s2/math.hpp"
 #include "s2/matrix_stack.hpp"
 #include "s2/motion_work.hpp"
+#include "s2/npc.hpp"
 #include "s2/npc_package.hpp"
 #include "s2/pak.hpp"
 #include "s2/player.hpp"
@@ -124,6 +125,9 @@ void LoadCustomerHands(PvsjEventWork *work) {
     work->customerPartition = index;
     DisableNpcLoads();
     EV_ResetFreeTalkFlags();
+    EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 2943, "evl_PAKLOAD_AFS [PVSJ] %i,%i,%i\n",
+        static_cast<std::int32_t>(reinterpret_cast<std::intptr_t>(work->jobPartition)), PVSJ_CUSTOMER_PARTITIONS[index].models,
+        PVSJ_CUSTOMER_PARTITIONS[index].hands);
     EV_pakUtils(PakCategory::Package, PakPackageOp::LoadAfs, reinterpret_cast<std::uintptr_t>(work->jobPartition),
         static_cast<std::uintptr_t>(PVSJ_CUSTOMER_PARTITIONS[index].models), static_cast<std::uint32_t>(PVSJ_CUSTOMER_PARTITIONS[index].hands));
     EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
@@ -137,6 +141,8 @@ void LoadCustomerHands(PvsjEventWork *work) {
     Matrix4x4::RotateAroundX_Wrapper(0);
     Matrix4x4::preTranslate(position.x, position.y, position.z);
     position = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
+    EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 2979, "PVSJ:YubiBase(%f,%f,%f)\n", workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y,
+        workTransformMatrix.rows[3].z);
     Matrix4x4::Pop(1);
     EV_scenApplyPosOrRotToPartOf(PATI_OPPONENT_HAND, 0xffff, &position, &rotation, EventCharacterPartTransformMode::Absolute);
     EV_AT_SetAngY(PATI_OPPONENT_HAND, EventTransformFlags::AllAxes, {0, 20935, 0});
@@ -242,6 +248,8 @@ void PvsjMainCallback(void *data) {
         work->sessionCash = Cash();
         const auto oldCustomer = work->customer;
         const auto now = Minute();
+        EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 2396, "StartTime:%i,NowTime:%i,DifTime:%i,first:%i\n", work->startMinute, now, now - work->startMinute,
+            work->firstCustomer);
         if ((now - work->startMinute <= 90 || work->firstCustomer) && work->sessionCash >= 50 && shenGetMinutesUntilNextFrameMinute() > 0)
             PvsjChooseCustomer(work);
         else {
@@ -337,7 +345,7 @@ void PvsjMainCallback(void *data) {
                     const float dx = customer.x - player.x, dy = customer.y - player.y, dz = customer.z - player.z;
                     close = (dy * dy + dx * dx) + dz * dz < 25.0f;
                 }
-                if (!GetNpcScriptRouteCompletion(work->customer)) {
+                if (!IsNpcRouteActive(work->customer)) {
                     if (DoesScenarioCharacterExist(work->owner)) {
                         Rebase(work->owner);
                         EV_SetCharacterAlphaEnabled(work->owner, true);
@@ -349,7 +357,7 @@ void PvsjMainCallback(void *data) {
         } else if (EV_ForceLoadNpc(work->owner)) {
             if (DoesScenarioCharacterExist(work->owner))
                 EV_SetCharacterAlphaEnabled(work->owner, false);
-            if (!GetNpcScriptRouteCompletion(work->owner)) {
+            if (!IsNpcRouteActive(work->owner)) {
                 if (DoesScenarioCharacterExist(work->customer)) {
                     Rebase(work->customer);
                     EV_SetCharacterAlphaEnabled(work->customer, true);
@@ -501,12 +509,16 @@ void PvsjMainCallback(void *data) {
         auto index = shenGetRandomInt32(pvsjBoardCount);
         if (!pvsjBoardPositions[index].character.name)
             index = 0;
+        EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 2903, "boards = %i\n", pvsjBoardCount);
+        EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 2904, "board_idx = %i\n", index);
         std::memcpy(pvsjGameArgument + 8, &pvsjBoardPositions[index].character, 4);
         std::memcpy(pvsjGameArgument + 12, &work->owner, 4);
         pvsjGameArgument[16] = 0;
         PvsjReleaseVoice(work);
         auto *invalid = reinterpret_cast<PakAfsPartition *>(~std::uintptr_t{});
         if (work->gamePartition != invalid) {
+            EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 2922, "evl_UNMOUNT_AFS_PARTITION [PATI].afs %i\n",
+                static_cast<std::int32_t>(reinterpret_cast<std::intptr_t>(work->gamePartition)));
             EV_pakUtils(PakCategory::Partition, PakPartitionOp::Unmount, reinterpret_cast<std::uintptr_t>(work->gamePartition), 0);
             work->gamePartition = invalid;
         }
@@ -517,18 +529,27 @@ void PvsjMainCallback(void *data) {
     }
     case 32:
         EV_EventSetUpHelpIcon_0(145, 0);
+        EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 2995, "evl_FREE_PAKFILE_AFS [PVSJ]\n");
         EV_pakUtils(PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(work->jobPartition),
             static_cast<std::uintptr_t>(PVSJ_CUSTOMER_PARTITIONS[work->customerPartition].models),
             static_cast<std::uint32_t>(PVSJ_CUSTOMER_PARTITIONS[work->customerPartition].hands));
         work->customerPartition = -1;
         SetPlayerControlEnabled(0);
         EV_npcLockUnlock(work->customer);
+        EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 3003, "PVSJ:New-Load [PATI]afs\n");
         work->gamePartition = reinterpret_cast<PakAfsPartition *>(EV_pakUtils(PakCategory::Partition, PakPartitionOp::Mount,
             reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)), reinterpret_cast<std::uintptr_t>("PATI.afs")));
-        if (!EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("PATI"), 0)) {
-            EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
-                reinterpret_cast<std::uintptr_t>("PATI"));
-            EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+        EV_debug_log(
+            "PVSJ\\ePVSJ_et_PVSJ.c", 3005, "evl_PAKLOAD_AFS [PATI] %i\n", static_cast<std::int32_t>(reinterpret_cast<std::intptr_t>(work->gamePartition)));
+        if (EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("PATI"), 0))
+            EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 3029, "PVSJ:Already-Load [PATI]PAK\n");
+        else {
+            EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 3023, "PVSJ:Re-Load [PATI]PAK\n");
+            const std::int64_t loaded = EV_pakUtils(PakCategory::Package, PakPackageOp::Load,
+                reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)), reinterpret_cast<std::uintptr_t>("PATI"));
+            EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 3025, "PVSJ:EV_PAKLOAD = %i\n", static_cast<std::int32_t>(loaded));
+            const std::int64_t waited = EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+            EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 3027, "PVSJ:EV_WAIT_PAKLOAD = %i\n", static_cast<std::int32_t>(waited));
         }
         work->cameraId = 0;
         work->cameraEye = {};
@@ -677,7 +698,7 @@ void PvsjMainCallback(void *data) {
         break;
     }
     if (previous != work->state)
-        EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 3282, "PVSJ State = %i\n", work->state);
+        EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 3282, "PVSJ State = %i \n", work->state);
     if (work->delay > 0)
         HLib::SetupTaskDelay(work->delay);
 }

@@ -634,6 +634,20 @@ void SetModelPlacementChildTransform(const void *placement, std::int32_t kind, c
     d3t::SetModelCacheTransform(handle, matrix);
 }
 
+bool produceXform(const void *placement, std::int32_t kind, Matrix4x4 &transform) {
+    d3t::ModelRuntimeState *const state = placement ? d3t::GetModelRuntimeState(placement) : nullptr;
+    const d3t::ModelRuntimeNode *const node = state ? FindPlacementRuntimeNode(*state, kind) : nullptr;
+    if (node && state->cacheHandle && node->nodeHash) {
+        const Matrix4x4 composite = d3t::ComputeModelCacheGlobalTransform(RuntimeHandle(*state, node->nodeHash));
+        for (std::size_t row = 0; row < 4; ++row)
+            for (std::size_t column = 0; column < 4; ++column)
+                transform.rows[row][column] = composite.rows[column][row];
+        return true;
+    }
+    transform = d3t::kModelCacheIdentity;
+    return false;
+}
+
 bool UpdateModelFrame(MT7Model *model, Character *character, std::int32_t mode, std::uint32_t flags, const void *placement) {
     if (!placement)
         placement = GetMT7ReaderData(model);

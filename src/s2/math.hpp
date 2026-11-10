@@ -5,11 +5,13 @@
 #include <cstdint>
 #define SHENMUE_S2_ATAN std::atan
 
-namespace shenmue { namespace s2 {
+namespace shenmue {
+namespace s2 {
 
 std::uint16_t FloatToShort(float value);
 std::int32_t ComputeTriangleNormal(const Vector3 &first, const Vector3 &second, const Vector3 &third, Vector3 &normal);
 void NormalizeVector3(Vector3 *vector);
+void NormalizeVector4(Vector4 *vector);
 extern Matrix4x4 g_modelInverseTransform;
 void InvertModelWorkTransform();
 
@@ -81,7 +83,8 @@ inline std::int16_t AtanToFixedAngle(float ratio) {
     return static_cast<std::int16_t>(static_cast<std::int32_t>(SHENMUE_S2_ATAN(ratio) * 65536.0f / 6.2831855f + 0.5f));
 }
 
-} } // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue
 
 #undef SHENMUE_S2_ATAN
 #undef SHENMUE_S2_ROUNDED_RATIO

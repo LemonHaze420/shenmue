@@ -10,7 +10,7 @@ namespace shenmue::s2 {
 
 inline constexpr shen_name ITEM_TEXTURE_TYPE = SHEN_NAME(ITEM);
 inline constexpr shen_name ITEM_COMMON_TEXTURE = SHEN_NAME(COMN);
-inline constexpr shen_name ITEM_COUNTER_TEXTURE = SHEN_NAME(SCNT);
+inline constexpr shen_name ITEM_COUNTER_TEXTURE = SHEN_NAME(SNCT);
 
 struct UniqueItemActionData {
     std::int32_t item{-1};

@@ -111,6 +111,7 @@
 
 namespace shenmue::s2 {
 using namespace ui_detail;
+void ResetLegacyMainMenuWheel();
 
 namespace ui_detail {
 
@@ -253,7 +254,10 @@ void ProcessSplashScreen() {
         break;
     case 2:
         opacity = 1.0f;
-        if (forceSkipSplashScreens || elapsed > definition.maximumDuration || (splashSkipPressed && elapsed > definition.minimumDuration)) {
+        if (!AreShadersSetup())
+            LoadShadersAndRenderer();
+        if ((forceSkipSplashScreens || elapsed > definition.maximumDuration || (splashSkipPressed && elapsed > definition.minimumDuration)) &&
+            (splashScreenIndex != 5 || (HasUnlockedRenderHandle() && GetDebugForceUIEnabled(UIElement::Splash)))) {
             SetSplashMode(3);
         }
         break;
@@ -315,10 +319,6 @@ std::uint32_t LoadMainMenuWheel() {
 
 std::uint32_t LoadMainMenuNew() {
     return ReadUIDefinitionFile(UIElement::MainMenuNew, "/ui/mainmenu_New/MainMenu_New.ui", 1);
-}
-
-std::uint32_t LoadMainMenuContinue() {
-    return ReadUIDefinitionFile(UIElement::MainMenuContinue, "/ui/mainmenu_New/MainMenu_Continue.ui", 1);
 }
 
 std::uint32_t LoadMainMenuCollection() {
@@ -392,6 +392,88 @@ std::int64_t PressStartInput() {
     g_inputBuffer[0].pressedPriority &= 0xfbffU;
     return 0;
 #endif
+}
+
+std::int32_t legacyPressStartState{};
+std::uint32_t legacyPressStartRequest{};
+UIViewConfiguration legacyPressStartConfiguration{-1, 0, 0};
+std::int32_t legacyPressStartColoursHeld{};
+
+std::int64_t LegacyPressStartInput() {
+    if (!legacyPressStartColoursHeld) {
+        if (d3t::UIWindow *const text = UI_GetWindow(legacyPressStartConfiguration.enabled))
+            text->colour = ConstructColour(255, 255, 255, 255);
+        if (d3t::UIWindow *const loading = UI_GetWindow(legacyPressStartConfiguration.status))
+            loading->colour = ConstructColour(255, 255, 255, 0);
+    }
+    if ((g_inputBuffer[0].pressedPriority & 0x800U) == 0 && (g_inputBuffer[0].pressedPriority & 0x400U) == 0)
+        return 0;
+    ReloadUserSettingsAndSnapshots();
+    ResetLegacyMainMenuWheel();
+    return 1;
+}
+
+// @verified - p
+void BindLegacyPressStart() {
+    d3t::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(static_cast<std::uint32_t>(legacyPressStartConfiguration.uiHandleIndex));
+    if (!view)
+        return;
+    view->keepLoaded = 1;
+    const std::uint32_t slot = static_cast<std::uint32_t>(legacyPressStartConfiguration.uiHandleIndex);
+    legacyPressStartConfiguration.enabled = UI_FindViewWindow(slot, "PressStart_StartTextPanel");
+    legacyPressStartConfiguration.status = UI_FindViewWindow(slot, "PressStart_Panel_Loading");
+}
+
+// @verified - p
+void InitializeLegacyPressStart() {
+    if (HasUnlockedRenderHandle()) {
+        SetD3TRenderSettings(0);
+        shenSetForcedFilmbars(1);
+    }
+}
+
+// @verified - p
+std::uint32_t AdvanceLegacyPressStartInit() {
+    if (legacyPressStartState == 0) {
+        legacyPressStartState = LoadUIFile("/ui/pressstart/PressStart.ui", static_cast<std::int32_t>(UIElement::PressStart), &legacyPressStartRequest);
+        return static_cast<std::uint32_t>(legacyPressStartState);
+    }
+    if (legacyPressStartState == 1) {
+        legacyPressStartState = GetNewUIFileInitFor(&legacyPressStartRequest, legacyPressStartConfiguration);
+        if (legacyPressStartState != 2)
+            return static_cast<std::uint32_t>(legacyPressStartState);
+        BindLegacyPressStart();
+    }
+    if (legacyPressStartState == 2)
+        legacyPressStartState = GetShouldInitUIFileFor(static_cast<std::uint32_t>(legacyPressStartConfiguration.uiHandleIndex));
+    return static_cast<std::uint32_t>(legacyPressStartState);
+}
+
+// @verified - p
+std::int64_t RenderLegacyPressStart() {
+    if (legacyPressStartState == 3 || (AdvanceLegacyPressStartInit(), static_cast<std::uint32_t>(legacyPressStartState) - 2U <= 1U)) {
+        RefreshNotebook();
+        uiUpdateWithColour(*GetNativeUiContext(), static_cast<std::uint32_t>(legacyPressStartConfiguration.uiHandleIndex));
+    }
+    return 0;
+}
+
+// @verified - p
+std::int64_t GetLegacyPressStartInitState() {
+    return static_cast<std::uint32_t>(legacyPressStartState);
+}
+
+// @verified - p
+std::int64_t ReloadLegacyPressStart() {
+    ResetUIViewSlot(legacyPressStartConfiguration.uiHandleIndex);
+    legacyPressStartRequest = 0;
+    LoadOwnedUIFromMemoryIntoViewSlot(GetUIReloadFileMemory(), legacyPressStartConfiguration.uiHandleIndex);
+    legacyPressStartState = 2;
+    return 2;
+}
+
+std::int64_t PressStartDebugGate() {
+    return GetDebugForceUIEnabled(UIElement::PressStart);
 }
 
 // @verified - p
@@ -539,11 +621,20 @@ std::int32_t CheckAllSaveFiles(std::int32_t first, std::int32_t source) {
         FormatSaveMenuTimestamp(slot.gameTime, data.gameYear, data.gameMonth, data.gameDay, data.gameWeek, data.gameHour, data.gameMinute, 2);
         FormatSaveMenuTimestamp(slot.saveTime, data.systemYear, data.systemMonth, data.systemDay, data.systemWeek, data.systemHour, data.systemMinute, 0);
         const std::int32_t location = source <= 1 ? SaveMenuLocationIndex(slot.area) : -1;
-        const char* const locationToken = data.clearState == 6 ? "UISAVES1LC" : location < 0 ? "UISAVES1CL" : UI_SAVE_LOCATION_TOKENS[location]; // @text UISAVES1LC EN: "Cleared Game" | JA: "クリアデータ" ; UISAVES1CL EN: "SM1 Save" | JA: "Ｓ１セーブデータ"
+        const char *const locationToken = data.clearState == 6 ?
+            "UISAVES1LC" :
+            location < 0 ?
+            "UISAVES1CL" :
+            UI_SAVE_LOCATION_TOKENS[location]; // @text UISAVES1LC EN: "Cleared Game" | JA: "クリアデータ" ; UISAVES1CL EN: "SM1 Save" | JA: "Ｓ１セーブデータ"
         const std::string_view name = locationToken ? GetLocalizedSceneText(locationToken) : std::string_view{};
         std::snprintf(slot.locationName.data(), slot.locationName.size(), "%s%.*s", data.clearState != 6 && location >= 0 && data.saveKind == 99 ? "DBG: " : "",
             static_cast<int>(name.size()), name.data());
-        const char* const areaToken = data.clearState == 6 ? "UISAVES1LC" : slot.area < 0 ? "UISAVES1NC" : UI_SAVE_AREA_TOKENS[slot.area]; // @text UISAVES1LC EN: "Cleared Game" | JA: "クリアデータ" ; UISAVES1NC EN: "Non-Cleared Game" | JA: "未クリアゲームデータ"
+        const char *const areaToken = data.clearState == 6 ?
+            "UISAVES1LC" :
+            slot.area < 0 ?
+            "UISAVES1NC" :
+            UI_SAVE_AREA_TOKENS[slot
+                    .area]; // @text UISAVES1LC EN: "Cleared Game" | JA: "クリアデータ" ; UISAVES1NC EN: "Non-Cleared Game" | JA: "未クリアゲームデータ"
         const std::string_view areaName = GetLocalizedSceneText(areaToken);
         std::snprintf(slot.areaName.data(), slot.areaName.size(), "%.*s", static_cast<int>(areaName.size()), areaName.data());
     }
@@ -583,7 +674,9 @@ void SelectSaveMenuRow(float *bounds, void *) {
     message.hideTarget = IsCameraIconHidden() == 0;
     const std::int32_t row = GetUIGridSelection(loadSaveRuntime.grid);
     if (row >= 0 && row < loadSaveRuntime.grid.dictionaryCount)
-        message.primaryText = IsCameraIconHidden() ? loadSaveRuntime.slots[row].valid ? "UIMAINHLSO" : "UIMAINHLSC" : "UIMAINHLCN"; // @text UIMAINHLSO EN: "Overwrite the save in this slot." | JA: "このスロットのゲームデータを上書きします。" ; UIMAINHLSC EN: "Create a new game save in this slot." | JA: "このスロットに新しくゲームデータをセーブします。" ; UIMAINHLCN EN: "Load and start a saved game." | JA: "記録したゲームデータを読み込みます。"
+        message.primaryText = IsCameraIconHidden() ?
+            loadSaveRuntime.slots[row].valid ? "UIMAINHLSO" : "UIMAINHLSC" :
+            "UIMAINHLCN"; // @text UIMAINHLSO EN: "Overwrite the save in this slot." | JA: "このスロットのゲームデータを上書きします。" ; UIMAINHLSC EN: "Create a new game save in this slot." | JA: "このスロットに新しくゲームデータをセーブします。" ; UIMAINHLCN EN: "Load and start a saved game." | JA: "記録したゲームデータを読み込みます。"
     message.primaryLocalized = 0;
     CopyUIMessageBox(&message);
     FillSaveMenuPreview();
@@ -810,7 +903,9 @@ std::int64_t LoadSaveInput() {
             return 0;
         loadSaveRuntime.writing = false;
         if (status >= 2 && status <= 4) {
-            const std::string_view text = GetLocalizedSceneText(status == 2 ? "UISAVEOK" : "UISAVEERRDS"); // @text UISAVEOK EN: "Saved successfully" | JA: "セーブが完了しました。" ; UISAVEERRDS EN: "Save failed. No storage space available" | JA: "空きスペースがないため、セーブできません。"
+            const std::string_view text = GetLocalizedSceneText(status == 2 ?
+                    "UISAVEOK" :
+                    "UISAVEERRDS"); // @text UISAVEOK EN: "Saved successfully" | JA: "セーブが完了しました。" ; UISAVEERRDS EN: "Save failed. No storage space available" | JA: "空きスペースがないため、セーブできません。"
             std::snprintf(loadSaveRuntime.resultText.data(), loadSaveRuntime.resultText.size(), "%.*s", static_cast<int>(text.size()), text.data());
             UIMessageBox message = GetCurrentUIMessageBox();
             message.primaryText = loadSaveRuntime.resultText.data();
@@ -855,7 +950,9 @@ std::int64_t LoadSaveTick() {
     CheckAllSaveFiles(0, static_cast<std::int32_t>(GetSaveMenuSource()));
     SetUIGridDictionary(runtime.grid, 10, reinterpret_cast<const std::int32_t *>(runtime.slots.data()));
     UIMessageBox message{};
-    message.primaryText = GetSaveMenuSource() == 1 && g_saveFrontendMode == 0 ? "UIMAINHLCOL" : "UIMAINHLCN"; // @text UIMAINHLCOL EN: "Select the game file to load." | JA: "ロードするゲームデータを選んでください。" ; UIMAINHLCN EN: "Load and start a saved game." | JA: "記録したゲームデータを読み込みます。"
+    message.primaryText = GetSaveMenuSource() == 1 && g_saveFrontendMode == 0 ?
+        "UIMAINHLCOL" :
+        "UIMAINHLCN"; // @text UIMAINHLCOL EN: "Select the game file to load." | JA: "ロードするゲームデータを選んでください。" ; UIMAINHLCN EN: "Load and start a saved game." | JA: "記録したゲームデータを読み込みます。"
     message.hideTarget = 1;
     CopyUIMessageBox(&message);
     ResetUIGrid(runtime.grid);
@@ -913,6 +1010,7 @@ std::int64_t TickMainMenu() {
     frontendRoute = FrontendRoute::Wheel;
     SelectMainMenuPage(0);
     ShowElementByIndex(UIElement::GameHud);
+    ClearTitlePressStartSelection();
     return 0;
 }
 
@@ -988,6 +1086,12 @@ void MainMenuQuitResponse(std::int32_t response) {
         RequestFrontendQuit();
 }
 
+// @verified - p
+std::int64_t ReturnMainMenuToTitle() {
+    RequestTitleAttractSkip();
+    return DestroyElementByIndex(UIElement::PressStart);
+}
+
 std::int64_t MainMenuWheelInput() {
     SetContinueAvailability(ContinueModuleIsAvailable());
     if (!g_uiElements[static_cast<std::size_t>(UIElement::MainMenuWheel)].isVisible) {
@@ -1005,9 +1109,11 @@ std::int64_t MainMenuWheelInput() {
         return 0;
     }
     if (cancelPressed || (g_inputBuffer[0].pressedPriority & 0x0200U)) {
-        if (!ReturnToTitlePressStartTask())
-            return 0;
+        DestroyElementByIndex(UIElement::MainMenu);
+        ShowElementByIndex(UIElement::PressStart);
         ResetMainMenuWheel();
+        ReturnMainMenuToTitle();
+        AicaExecuteWrapper(2);
         cancelPressed = false;
         g_inputBuffer[0].pressedPriority &= ~0x0200U;
         frontendRoute = FrontendRoute::Wheel;

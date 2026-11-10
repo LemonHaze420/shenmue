@@ -3,6 +3,8 @@
 
 #include "s2/d3t_renderer.hpp"
 #include "s2/title_warning.hpp"
+#include "s2/save.hpp"
+#include "d3t/texture.hpp"
 #include <bit>
 #include "s2/pak.hpp"
 #include "s2/legacy_draw.hpp"
@@ -43,11 +45,6 @@ LegacySpritePacket itemWindowTiles;
 LegacySpritePacket itemWindowSeparators;
 LegacyIconSprite itemWindowSelection;
 
-struct SDTextureMapping {
-    std::array<char, 260> source{};
-    std::array<char, 260> destination{};
-};
-static_assert(sizeof(SDTextureMapping) == 520);
 std::vector<SDTextureMapping> sdTextureMappings;
 const char *spriteTexturePath{};
 std::array<std::int32_t, 5> collectionTextures{-1, -1, -1, -1, -1};
@@ -68,7 +65,7 @@ void RetireImagePrefetch(void *, std::uint32_t handle, void *, std::uint64_t, co
 }
 
 void ReplaceSpriteImage(void *data, std::uint32_t handle, void *bytes, std::uint64_t size, const char *) {
-    d3t::ReplaceDecodedImage(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(data)), bytes, size, false);
+    d3t::ReplaceDecodedImage(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(data)), bytes, size, true);
     d3t::ProcessThreadStates(handle, 0);
 }
 
@@ -115,7 +112,7 @@ float SinScreenAngle(std::uint16_t angle) {
     const float result = (tangent + tangent) / (tangent * tangent + 1.0f);
     return (quadrant & 1) != 0 ? -result : result;
 }
-}
+} // namespace
 // @verified - p
 std::int64_t ResetUnusedReloadState() {
     unusedReloadWide0 = 0;
@@ -772,26 +769,37 @@ void ApplySpriteTextureOverride(const void *texn, std::uint32_t textureHandle) {
     char source[260]{};
     std::snprintf(source, sizeof(source), "%s%s.png", spriteTexturePath, name);
     FilepathCleaner(source);
-    for (const SDTextureMapping &mapping : sdTextureMappings) {
-        if (std::strcmp(mapping.source.data(), source) != 0)
+    std::int32_t count = 0;
+    const SDTextureMapping *const mappings = GetSDTextureMappings(&count);
+    for (std::int32_t index = 0; index < count; ++index) {
+        if (std::strcmp(mappings[index].source.data(), source) != 0)
             continue;
-        char destination[272]{};
-        std::snprintf(destination, sizeof(destination), "%s", mapping.destination.data());
-        constexpr std::array<const char *, 7> suffix{"", "_jp", "_fr", "_de", "_kr", "_tc", "_sc"};
-        const std::int32_t language = ResolveSceneTextLanguage();
-        const char *const extension = std::strrchr(destination, '.');
-        if (extension && language > 0 && language < static_cast<std::int32_t>(suffix.size())) {
-            char localized[272]{};
-            const auto stemLength = static_cast<int>(extension - destination);
-            std::snprintf(localized, sizeof(localized), "%.*s%s%s", stemLength, destination, suffix[static_cast<std::size_t>(language)], extension);
-            if (ArchiveData_GetFileSize(localized))
-                std::snprintf(destination, sizeof(destination), "%s", localized);
-        }
-        const d3t::D3TShaderLoadTask request{
-            .path = destination, .renderHandle = 0, .thread = {ReplaceSpriteImage, reinterpret_cast<void *>(static_cast<std::uintptr_t>(textureHandle))}};
-        d3t::PushShaderLoadToThreadQueue(&request);
+        ReplaceSDTextureImage(mappings[index].destination.data(), textureHandle);
         return;
     }
+}
+
+const SDTextureMapping *GetSDTextureMappings(std::int32_t *count) {
+    *count = static_cast<std::int32_t>(sdTextureMappings.size());
+    return sdTextureMappings.data();
+}
+
+void ReplaceSDTextureImage(const char *mappedDestination, std::uint32_t textureHandle) {
+    char destination[272]{};
+    std::snprintf(destination, sizeof(destination), "%s", mappedDestination);
+    constexpr std::array<const char *, 7> suffix{"", "_jp", "_fr", "_de", "_kr", "_tc", "_sc"};
+    const std::int32_t language = ResolveSceneTextLanguage();
+    const char *const extension = std::strrchr(destination, '.');
+    if (extension && language > 0 && language < static_cast<std::int32_t>(suffix.size())) {
+        char localized[272]{};
+        const auto stemLength = static_cast<int>(extension - destination);
+        std::snprintf(localized, sizeof(localized), "%.*s%s%s", stemLength, destination, suffix[static_cast<std::size_t>(language)], extension);
+        if (ArchiveData_GetFileSize(localized))
+            std::snprintf(destination, sizeof(destination), "%s", localized);
+    }
+    const d3t::D3TShaderLoadTask request{
+        .path = destination, .renderHandle = 0, .thread = {ReplaceSpriteImage, reinterpret_cast<void *>(static_cast<std::uintptr_t>(textureHandle))}};
+    d3t::PushShaderLoadToThreadQueue(&request);
 }
 
 std::int64_t QueueSDTextureOverride(const char *path, std::uint32_t renderHandle) {
@@ -968,6 +976,18 @@ std::int32_t InitializeTitleCommonTempSprites() {
     BindTempSprite(0, 0, 36, TITLE_COMMON_TEMP_RECTANGLES.data());
 
     return BindTempSprite(0, 1, 37, TITLE_COMMON_TEMP_RECTANGLES.data()) ? 1 : 0;
+}
+
+void InitWarnLogos() {
+    SetTitleWarningLogo(0, nullptr);
+    FreeTitleWarningResources();
+    for (const std::int32_t texture : {titleGTextTexture, titleCTextTexture, titleKeyImageTexture, titleContinueTexture})
+        if (static_cast<std::uint32_t>(texture + 1) > 1U)
+            d3t::InitTexture2DResource(static_cast<std::uint32_t>(texture));
+    InitSceneEffects();
+    titleEsrbTexture = -1;
+    titleSpriteTextures.fill(-1);
+    titleGTextTexture = titleCTextTexture = titleKeyImageTexture = titleContinueTexture = -1;
 }
 
 void InitShotsImages() {

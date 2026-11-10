@@ -137,6 +137,8 @@ bool OpenWristwatch();
 void RequestWristwatchFromHeldInput();
 void CloseWristwatch(std::int32_t immediate);
 void SetCtrlHandWatchFlags(std::int32_t enabled);
+std::int32_t GetHandWatchState();
+void SetHandWatchState(std::int32_t state);
 
 extern DateTime g_currentDateTime;
 extern float g_gameTimeMilliseconds;

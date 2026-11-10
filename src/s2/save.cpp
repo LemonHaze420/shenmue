@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -48,6 +51,7 @@
 #include "s2/map_info.hpp"
 #include "s2/frame_pacing.hpp"
 #include "s2/sound_program.hpp"
+#include "s2/flag.hpp"
 #include "s2/renderer_initialization.hpp"
 #include "s2/load_title.hpp"
 #include "s2/navi.hpp"
@@ -91,16 +95,13 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
-#if defined(SHENMUE_HAS_DIRECTXTEX)
-#include <DirectXTex.h>
-#include <ocidl.h>
-#include <wincodec.h>
-#endif
 #else
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #endif
+
+extern "C" int stbi_write_jpg_to_func(void (*func)(void* context, void* data, int size), void* context, int x, int y, int comp, const void* data, int quality);
 
 namespace shenmue::s2 {
 std::array<ArcadeRankingRecord, 20> g_harrierRankings{};
@@ -334,12 +335,13 @@ bool snapshotMetadataInitialized = false;
 std::int32_t snapshotDataOption = 0;
 std::filesystem::path saveDirectory{"saves"};
 std::atomic<std::uint32_t> snapshotSaveInProgress{0};
-std::vector<std::byte> snapshotJpegBuffer;
+d3t::D3TByteBuffer snapshotJpegBuffer{};
 std::atomic<std::int32_t> activeBackupState{0};
 std::mutex backupAdmissionMutex;
 const void* backupCompletionSource{};
 std::int32_t backupCompletionStage{},backupCompletionResult{};
 BackupSaveCompletion backupSaveCompletion{};
+void (*backupLayerCallback)(std::int32_t stage, std::int32_t result, const void *source){};
 std::uint32_t& localBackupInfo = nativeSaveBacking.backupFlags;
 std::int32_t allowIncompleteS1Import{1};
 std::array<std::byte, 0x200> backupS1Prefix{};
@@ -597,24 +599,24 @@ bool WriteSnapshotMetadataFile() {
     return QueueSaveFileWrite("SnapshotData", buffer, static_cast<std::uint32_t>(json.size()), FreeSnapshotMetadataWrite) == 0;
 }
 
-void LoadSnapshotMetadataFile() {
+bool LoadSnapshotMetadataFile() {
 #if defined(SHENMUE_STEAM)
     const std::vector<std::byte> bytes = ::shenmue::d3t::ReadSteamFileBytes("SnapshotData");
-    if (bytes.empty()) return;
+    if (bytes.empty()) return false;
     std::istringstream input(std::string(reinterpret_cast<const char *>(bytes.data()), bytes.size()));
     const std::lock_guard<std::mutex> lock(snapshotMetadataFileMutex);
 #else
     const std::lock_guard lock(snapshotMetadataFileMutex);
     std::ifstream input(SnapshotMetadataPath(), std::ios::binary);
 #endif
-    if (!input) return;
+    if (!input) return false;
     Json::CharReaderBuilder builder;
     builder["collectComments"] = false;
     Json::Value root;
     std::string errors;
-    if (!Json::parseFromStream(builder, input, &root, &errors)) return;
+    if (!Json::parseFromStream(builder, input, &root, &errors)) return false;
     const Json::Value& header = root["Header"];
-    if (header["id"].asString() != "S2XSnapshots1.07") return;
+    if (header["id"].asString() != "S2XSnapshots1.07") return false;
     const Json::Value& flags = header["omakeflags"];
     for (Json::ArrayIndex index = 0;
          index < flags.size() &&
@@ -624,7 +626,7 @@ void LoadSnapshotMetadataFile() {
     }
     snapshotMetadata.reserve = header["reserve"].asUInt();
     const Json::Value& snapshots = root["Snapshots"]["Snap"];
-    if (!snapshots.isArray()) return;
+    if (!snapshots.isArray()) return true;
     for (const Json::Value& value : snapshots) {
         const std::int32_t id = value["id"].asInt();
         if (id < 0 ||
@@ -658,53 +660,30 @@ void LoadSnapshotMetadataFile() {
             date["week"].asUInt());
         UpdateSnapshotSortKeys(record);
     }
+    return true;
 }
 
 #if defined(_WIN32)
 void CompleteSnapshotSave(std::int32_t result, const void*) {
-    if (result) {
-        bool changed = false;
-        for (SnapshotMetadataRecord& record : snapshotMetadata.records) {
-            char path[32];
-            std::snprintf(path, sizeof(path), "%d.jpg", record.id);
-            if (record.use == 1 && CheckBackupFileExists(path) != 0) {
-                snapResetMetadataRecord(record);
-                changed = true;
-            }
-        }
-        if (changed) SaveSnapshotMetadata();
-    } else {
+    if (result)
+        ValidateSnapshotMetadataFiles();
+    else
         SaveSnapshotMetadata();
-    }
     snapshotSaveInProgress.store(0, std::memory_order_seq_cst);
+}
+
+void AppendSnapshotJpegBytes(void* context, void* data, int size) {
+    std::memcpy(d3t::d3t_AppendBuffer(*static_cast<d3t::D3TByteBuffer*>(context), static_cast<std::uint32_t>(size)), data, static_cast<std::size_t>(size));
 }
 
 std::int32_t WriteSnapshotTask(void* data) {
     SnapshotSaveWork& work = *static_cast<SnapshotSaveWork*>(data);
-    snapshotJpegBuffer.clear();
-#if defined(SHENMUE_HAS_DIRECTXTEX)
-    const std::size_t pitch = static_cast<std::size_t>(work.width) * 4U;
-    const DirectX::Image image{.width = work.width, .height = work.height, .format = DXGI_FORMAT_R8G8B8A8_UNORM,
-        .rowPitch = pitch, .slicePitch = pitch * work.height, .pixels = reinterpret_cast<std::uint8_t*>(work.pixels)};
-    DirectX::Blob jpeg;
-    const HRESULT encoded = DirectX::SaveToWICMemory(image, DirectX::WIC_FLAGS_NONE, GUID_ContainerFormatJpeg, jpeg, nullptr,
-        [](IPropertyBag2* properties) {
-            PROPBAG2 option{};
-            option.pstrName = const_cast<wchar_t*>(L"ImageQuality");
-            VARIANT value{};
-            value.vt = VT_R4;
-            value.fltVal = 0.85f;
-            properties->Write(1, &option, &value);
-        });
-    if (SUCCEEDED(encoded)) {
-        const std::byte* const bytes = reinterpret_cast<const std::byte*>(jpeg.GetBufferPointer());
-        snapshotJpegBuffer.assign(bytes, bytes + jpeg.GetBufferSize());
-    }
-#endif
+    snapshotJpegBuffer.size = 0;
+    stbi_write_jpg_to_func(AppendSnapshotJpegBytes, &snapshotJpegBuffer, static_cast<int>(work.width), static_cast<int>(work.height), 4, work.pixels, 85);
     std::free(work.pixels);
     char path[32];
     std::snprintf(path, sizeof(path), "%u.jpg", work.slot);
-    QueueSaveFileWrite(path, snapshotJpegBuffer.data(), static_cast<std::uint32_t>(snapshotJpegBuffer.size()), CompleteSnapshotSave);
+    QueueSaveFileWrite(path, snapshotJpegBuffer.data, snapshotJpegBuffer.size, CompleteSnapshotSave);
     return 0;
 }
 #endif
@@ -714,6 +693,8 @@ bool slotCatalogInitialized = false;
 
 HLib::Task* saveTask = nullptr;
 SaveTaskData* saveTaskData = nullptr;
+LegacySaveListState legacySaveList{};
+float legacySaveGlyphScale = 1.0f;
 SaveOperation saveOperation{};
 std::uint32_t currentSaveState = 0;
 HLib::Task* lcdmTask = nullptr;
@@ -1287,6 +1268,33 @@ std::int8_t SaveTransitionValue(std::string_view row,
         static_cast<std::uint8_t>(row[index]));
 }
 
+bool SaveScreenYesNoChoice(bool draw) {
+    if (saveTaskData->initializationMode == 0) {
+        set_icon_select_flags_to(0x0400U);
+        set_icon_select_flags_to(0x0200U);
+        CheckHelpIcon(0x20U, 0, CheckHelpIconOp::FrameOverlay);
+    }
+    if (draw) {
+        if (currentSaveState == 7) {
+            nullsub();
+            nullsub();
+        } else {
+            SetSaveScreenWarning(12, static_cast<std::uint8_t>(saveTaskData->field5d0) == 0);
+        }
+    }
+    const std::uint16_t pressed = saveTaskData->inputBuffer ? saveTaskData->inputBuffer->pressedPriority : 0;
+    const std::uint64_t field = static_cast<std::uint64_t>(saveTaskData->field5d0) & ~0xffULL;
+    if (pressed & 0x4000U) {
+        saveTaskData->field5d0 = static_cast<std::int64_t>(field | 1ULL);
+        return false;
+    }
+    if (pressed & 0x8000U) {
+        saveTaskData->field5d0 = static_cast<std::int64_t>(field);
+        return false;
+    }
+    return (pressed & 0x0400U) != 0;
+}
+
 void ApplySaveScreenTransition(SaveTaskData& save) {
     const auto& tables = currentSaveState == 4
         ? kLoadSaveTables
@@ -1333,6 +1341,17 @@ void ApplySaveScreenTransition(SaveTaskData& save) {
     } else {
         SelectSaveScreenWarning(&save, static_cast<std::uint8_t>(row[0]));
     }
+    if (row[0] == 1) {
+        LcdmInit(5);
+    } else if (row[0] == 10) {
+        LcdmInit(9);
+    } else if (row[0] == 4 && save.frame <= 45) {
+        LcdmInit(7);
+        if (!saveTaskData->frame)
+            ExecuteAicaCommand(0x900abU, 0, 0);
+    } else {
+        LcdmInit(0);
+    }
     std::int32_t next = save.screenRow;
     const std::uint16_t pressed =
         save.inputBuffer ? save.inputBuffer->pressedPriority : 0;
@@ -1343,19 +1362,6 @@ void ApplySaveScreenTransition(SaveTaskData& save) {
     const auto chooseIfPresent = [&](std::size_t index) {
         const std::int32_t candidate = rowValue(index);
         if (candidate != -1) next = candidate;
-    };
-    const auto processChoiceInput = [&]() {
-        if ((pressed & 0x4000U) != 0) {
-            save.field5d0 = static_cast<std::int64_t>(
-                static_cast<std::uint64_t>(save.field5d0) | 1ULL);
-            return false;
-        }
-        if ((pressed & 0x8000U) != 0) {
-            save.field5d0 = static_cast<std::int64_t>(
-                static_cast<std::uint64_t>(save.field5d0) & ~1ULL);
-            return false;
-        }
-        return (pressed & 0x0400U) != 0;
     };
 
     switch (descriptor.inputKind) {
@@ -1398,13 +1404,11 @@ void ApplySaveScreenTransition(SaveTaskData& save) {
         break;
     case 2:
     case 3:
-        if (processChoiceInput()) {
-            const bool affirmative =
-                (static_cast<std::uint64_t>(save.field5d0) & 1ULL) != 0;
-            if (affirmative) {
-                save.field5d0 = static_cast<std::int64_t>(
-                    static_cast<std::uint64_t>(save.field5d0) & ~1ULL);
-            }
+        if (SaveScreenYesNoChoice(descriptor.inputKind == 2) &&
+            (descriptor.inputKind == 2 || !GetDebugForceUIEnabled(UIElement::LoadSave))) {
+            const bool affirmative = static_cast<std::uint8_t>(save.field5d0) != 0;
+            if (affirmative)
+                save.field5d0 = static_cast<std::int64_t>(static_cast<std::uint64_t>(save.field5d0) & ~0xffULL);
             next = rowValue(affirmative ? 2 : 3);
         }
         break;
@@ -1539,6 +1543,8 @@ void SaveScreenComplete(void* taskData) {
     }
     saveScreenStorageStatus = 0;
     DestroyElementByIndex(UIElement::LoadSave);
+    HLib::FreeTaskData(legacySaveList.locationPack);
+    HLib::FreeTaskData(legacySaveList.areaPack);
     if (currentSaveState == 4) {
         save->colour = 118;
         save->preRenderCallback = SaveScreenDiskFade;
@@ -1589,6 +1595,7 @@ void SaveScreenInitialize(void* taskData) {
     save->screenItem = 0;
     save->fadeTarget = 0;
     save->fadeCurrent = 0.0f;
+    legacySaveGlyphScale = 1.0f;
     save->field610 = GetUiFlag(0);
     save->selectedSlot = 0;
     save->screenRow = 0;
@@ -1596,8 +1603,11 @@ void SaveScreenInitialize(void* taskData) {
     save->screenSelection = 0;
     save->screenPage = 0;
     save->screenOption = 0;
+    legacySaveList.locationIds.fill(-1);
+    legacySaveList.areaIds.fill(-1);
     if (save->initializationMode == 0 && save->padData &&
         !save->previousPadData) {
+        nullsub(&legacySaveList.textOffset);
         save->previousPadData = BindPadControlEntry(save->padData);
     }
 
@@ -1616,6 +1626,11 @@ void SaveScreenInitialize(void* taskData) {
     }
     save->colour = 0;
     save->preRenderCallback = SaveScreenRun;
+    if (saveTaskData->initializationMode == 0) {
+        set_icon_select_flags_to(0x0400U);
+        set_icon_select_flags_to(0x0200U);
+        CheckHelpIcon(0x20U, 0, CheckHelpIconOp::FrameOverlay);
+    }
 }
 
 // @verified - p
@@ -1868,12 +1883,12 @@ void CompleteBackupSave(std::int32_t stage,std::int32_t result,const void* sourc
 }
 std::int32_t CompleteBackupSaveWrite(void* parameter) {
     BackupSaveWriteWork* const work=static_cast<BackupSaveWriteWork*>(parameter);
-    if (!work) { CompleteBackupSave(3,-9,nullptr); return 0; }
+    if (!work) { backupLayerCallback(3,-9,nullptr); return 0; }
     while (d3t::Archive_HasPendingRead(work->archiveHandle)) {}
     const d3t::ArchiveHandleEntry* const archive=d3t::Archive_GetHandle(work->archiveHandle);
     const std::int32_t result=archive->readSucceeded?0:-9;
     d3t::ReadFile_0(0,&work->archiveHandle);
-    CompleteBackupSave(3,result,work->source);
+    backupLayerCallback(3,result,work->source);
     return 0;
 }
 bool EnsureBackupParentDirectories(const char* source) {
@@ -1903,12 +1918,12 @@ bool EnsureBackupParentDirectories(const char* source) {
 void QueueBackupArchiveWrite(const char* path,const void* source,std::uint32_t size) {
 #if defined(SHENMUE_STEAM)
     const bool accepted = ::shenmue::d3t::WriteSteamFileAsync(path, source, size,
-        [](std::int32_t stage, std::int32_t result, void *data) { CompleteBackupSave(stage, result, data); }, const_cast<void *>(source));
-    if (!accepted) CompleteBackupSave(2, -4, source);
+        [](std::int32_t stage, std::int32_t result, void *data) { backupLayerCallback(stage, result, data); }, const_cast<void *>(source));
+    if (!accepted) backupLayerCallback(2, -4, source);
 #else
     if (!EnsureBackupParentDirectories(path)) return;
     const std::uint32_t handle=d3t::Archive_AllocateHandle(0);
-    if (!d3t::Archive_DoesHandleExist(handle)) { CompleteBackupSave(2,-4,source); return; }
+    if (!d3t::Archive_DoesHandleExist(handle)) { backupLayerCallback(2,-4,source); return; }
     d3t::Archive_GetHandle(handle)->platformHandle=-1;
     void* const buffer=std::malloc(size);
     d3t::Archive_BindBuffer(handle,buffer,size,false);
@@ -1923,7 +1938,7 @@ void QueueBackupArchiveWrite(const char* path,const void* source,std::uint32_t s
 }
 std::int32_t CompleteBackupFileRead(void* parameter) {
     BackupSaveReadWork* const work = static_cast<BackupSaveReadWork*>(parameter);
-    if (!work) { CompleteBackupSave(2, -9, nullptr); return 0; }
+    if (!work) { backupLayerCallback(2, -9, nullptr); return 0; }
     while (d3t::Archive_HasPendingRead(work->archiveHandle)) {}
     const d3t::ArchiveHandleEntry* const archive = d3t::Archive_GetHandle(work->archiveHandle);
     const std::int32_t result = archive->readSucceeded ? 0 : -4;
@@ -1936,15 +1951,15 @@ std::int32_t CompleteBackupFileRead(void* parameter) {
 void QueueBackupArchiveRead(const char* path, void* destination, std::uint32_t offset, std::uint32_t size) {
 #if defined(SHENMUE_STEAM)
     const bool accepted = ::shenmue::d3t::ReadSteamFileAsync(path, destination, offset, size,
-        [](std::int32_t stage, std::int32_t result, void *data) { CompleteBackupSave(stage, result, data); }, destination);
-    if (!accepted) CompleteBackupSave(2, -4, destination);
+        [](std::int32_t stage, std::int32_t result, void *data) { backupLayerCallback(stage, result, data); }, destination);
+    if (!accepted) backupLayerCallback(2, -4, destination);
 #else
     const std::uint32_t handle = d3t::Archive_AllocateHandle(0);
-    if (!d3t::Archive_DoesHandleExist(handle)) { CompleteBackupSave(2, -4, destination); return; }
+    if (!d3t::Archive_DoesHandleExist(handle)) { backupLayerCallback(2, -4, destination); return; }
     d3t::Archive_GetHandle(handle)->platformHandle = -1;
     d3t::Archive_BindBuffer(handle, std::malloc(size), size, false);
     d3t::Archive_QueueRead(handle, 0, path, offset, size, 33);
-    BackupSaveReadWork work{.archiveHandle = handle, .reserved04 = 0, .completion = CompleteBackupSave, .size = size, .path = {},
+    BackupSaveReadWork work{.archiveHandle = handle, .reserved04 = 0, .completion = backupLayerCallback, .size = size, .path = {},
         .destination = destination};
 #ifdef _WIN32
     strcpy_s(work.path.data(), work.path.size(), path);
@@ -1985,8 +2000,39 @@ std::int32_t PreflightBackupSaveWrite(const char* path,std::uint32_t size) {
     return BACKUP_LOCAL_CAPACITY>=growth?0:-5;
 #endif
 }
+std::int32_t DeleteBackupArchiveFile(const char* name) {
+    std::int32_t result = 0;
+#if defined(SHENMUE_STEAM)
+    ::shenmue::d3t::DeleteSteamFile(name);
+#else
+    const std::string path = (saveDirectory / name).string();
+#ifdef _WIN32
+    SetFileAttributesA(path.c_str(), GetFileAttributesA(path.c_str()) & ~static_cast<DWORD>(FILE_ATTRIBUTE_READONLY));
+    if (!DeleteFileA(path.c_str()))
+        result = -6;
+#else
+    if (unlink(path.c_str()))
+        result = -6;
+#endif
+#endif
+    backupLayerCallback(1, result, nullptr);
+    return result;
+}
 
 } // namespace
+
+void SetSaveDataStuff() {
+    activeBackupState.store(0, std::memory_order_seq_cst);
+    (void)ReturnZero();
+    backupLayerCallback = CompleteBackupSave;
+    const BackupSaveCompletion completion = backupSaveCompletion;
+    backupCompletionSource = nullptr;
+    backupCompletionStage = 0;
+    backupCompletionResult = 0;
+    activeBackupState.store(0, std::memory_order_seq_cst);
+    if (completion)
+        completion(backupCompletionResult, backupCompletionSource);
+}
 
 std::uint64_t BupReady(std::int32_t reserve) {
 #if defined(SHENMUE_STEAM)
@@ -2026,6 +2072,20 @@ std::uint64_t QueueSaveFileWrite(const char* name,const void* source,std::uint32
 }
 std::uint32_t QueueSnapshotMetadataWrite(SnapshotMetadataOwner* metadata) {
     return QueueSaveFileWrite("Snap-shots",metadata,0x1c68)?5:0;
+}
+std::int32_t DeleteSaveFile(const char* name) {
+    BupReady(1);
+    activeBackupState.store(-2, std::memory_order_seq_cst);
+    switch (const std::int32_t result = DeleteBackupArchiveFile(name)) {
+    case -3:
+        return -4;
+    case -2:
+        return -5;
+    case -1:
+        return -2;
+    default:
+        return result ? -6 : 0;
+    }
 }
 
 std::uint64_t CheckBackupFileExists(const char* name) {
@@ -2325,9 +2385,11 @@ void InitializeSnapshotMetadata() noexcept {
         snapshotMetadata.records[index].id =
             static_cast<std::int32_t>(index);
     }
+    bool loaded = false;
     try {
-        LoadSnapshotMetadataFile();
+        loaded = LoadSnapshotMetadataFile();
     } catch (...) {
+        loaded = false;
         snapshotMetadata = {};
         std::copy_n(identifier, sizeof(identifier),
                     snapshotMetadata.identifier.begin());
@@ -2338,6 +2400,22 @@ void InitializeSnapshotMetadata() noexcept {
         }
     }
     snapshotMetadataInitialized = true;
+    if (loaded)
+        ValidateSnapshotMetadataFiles();
+}
+
+void ValidateSnapshotMetadataFiles() noexcept {
+    bool changed = false;
+    for (SnapshotMetadataRecord& record : snapshotMetadata.records) {
+        char path[32];
+        std::snprintf(path, sizeof(path), "%d.jpg", record.id);
+        if (record.use == 1 && CheckBackupFileExists(path) != 0) {
+            snapResetMetadataRecord(record);
+            changed = true;
+        }
+    }
+    if (changed)
+        SaveSnapshotMetadata();
 }
 
 bool SaveSnapshotMetadata() noexcept {
@@ -3918,7 +3996,7 @@ void SubmitTitleWarningLogo(void *) {
         if (category >= 0) {
             LoadTitleWarningLogo(data, TITLE_WARNING_LOGOS[titleWarningLogo][1], 320, TITLE_WARNING_LOGO_Y[category]);
             DrawTitleWarningDecorations(titleWarningLogo, titleWarningLogoParameters.data());
-            // Indexed TEMP ownership and sprite/digit slot primitives require the excluded legacy_sprite interface.
+
             if (category == 3)
                 DrawTitleSelection(320, 162, 90, std::to_integer<std::uint8_t>(titleWarningLogoParameters[1]));
         }
@@ -4026,6 +4104,192 @@ HLib::Task* SM_Init_Enqueue(std::int32_t initializationMode) {
     return saveTask;
 }
 
+namespace {
+
+void DrawLegacySaveText(const char *text) {
+    for (const char *pair = text; pair[0]; pair += 2) {
+        const std::uint16_t code = static_cast<std::uint16_t>((static_cast<std::uint8_t>(pair[0]) << 8U) | static_cast<std::uint8_t>(pair[1]));
+        for (const LegacySaveGlyph &glyph : LEGACY_SAVE_GLYPHS) {
+            if (!glyph.code)
+                break;
+            if (glyph.code == code) {
+                nullsub();
+                break;
+            }
+        }
+        if (!pair[1])
+            break;
+    }
+}
+
+void DrawLegacySaveNumber(const char *text) {
+    std::array<char, 80> digits{};
+    std::strncpy(digits.data(), text, digits.size() - 1);
+    std::size_t length = std::strlen(digits.data());
+    const std::int32_t value = std::atoi(digits.data());
+    if (value < 0)
+        return;
+    if (value > 50000) {
+        DrawLegacySaveText(" +");
+        std::strcpy(digits.data(), "50000");
+        length = std::strlen(digits.data());
+    }
+    for (std::size_t index = 0; index < length; ++index) {
+        if (index == 3)
+            DrawLegacySaveText(" ,");
+        digits[length - 1 - index] = 0;
+        nullsub();
+    }
+}
+
+bool MatchLegacySaveArea(std::uint32_t pattern, shen_name map, std::int32_t &exact) {
+    exact = 0;
+    std::int32_t wildcards = 0;
+    for (std::uint32_t index = 0; index < 4; ++index) {
+        const std::uint8_t wanted = static_cast<std::uint8_t>(pattern >> (8U * index));
+        if (wanted == static_cast<std::uint8_t>(map.name >> (8U * index)))
+            ++exact;
+        else if (wanted == '*')
+            ++wildcards;
+    }
+    return wildcards + exact >= 4;
+}
+
+std::int32_t GetLegacySaveAreaId(shen_name map) {
+    std::int32_t best = 0;
+    std::int32_t area = -1;
+    for (std::size_t row = 0; row < LEGACY_SAVE_AREAS.size(); ++row) {
+        std::int32_t exact = 0;
+        if (MatchLegacySaveArea(LEGACY_SAVE_AREAS[row].pattern, map, exact) && exact > best) {
+            best = exact;
+            area = static_cast<std::int32_t>(row);
+        }
+    }
+    if (best < 4) {
+        for (const LegacySaveArea &alias : LEGACY_SAVE_AREA_ALIASES) {
+            std::int32_t exact = 0;
+            if (MatchLegacySaveArea(alias.pattern, map, exact) && exact > best) {
+                area = alias.index;
+                best = exact;
+            }
+        }
+    }
+    return area;
+}
+
+std::int32_t GetLegacySaveLocationId(std::int32_t area) {
+    if (area < 0)
+        return 0;
+    const std::uint32_t name = LEGACY_SAVE_AREAS[static_cast<std::size_t>(area)].pattern;
+    if (name == make_shen_name("0200"))
+        return 2;
+    if (name == make_shen_name("WAT0"))
+        return 1;
+    if (name == make_shen_name("KRF1"))
+        return 3;
+    if (name == make_shen_name("CLS1"))
+        return 4;
+    if (name == make_shen_name("CLS2"))
+        return 5;
+    switch (static_cast<char>(name & 0xffU)) {
+    case 'A':
+        return 0;
+    case 'K':
+        return 3;
+    case 'Q':
+        return 2;
+    case 'W':
+        return 1;
+    default:
+        return -1;
+    }
+}
+
+void DrawLegacySaveArea(std::int32_t area, std::size_t row) {
+    if (area < 0) {
+        legacySaveList.areaIds[row] = -1;
+        return;
+    }
+    if (area != legacySaveList.areaIds[row])
+        legacySaveList.areaIds[row] = area;
+    nullsub();
+    DrawLegacySaveText("k1");
+}
+
+void DrawLegacySaveLocation(std::int32_t area, std::size_t row) {
+    const std::int32_t location = GetLegacySaveLocationId(area);
+    if (location < 0) {
+        legacySaveList.locationIds[row] = -1;
+        return;
+    }
+    if (location != legacySaveList.locationIds[row])
+        legacySaveList.locationIds[row] = location;
+    nullsub();
+    DrawLegacySaveText("k1");
+    DrawLegacySaveArea(area, row);
+}
+
+void DrawLegacySaveSlotIndex(const SaveTaskData &save) {
+    for (std::int32_t slot = 0; slot < 10; ++slot) {
+        DrawLegacySaveText("a0");
+        const bool visible = save.screenPage <= slot && slot < save.screenPage + 3;
+        if (save.selectedSlot == slot)
+            DrawLegacySaveText("a2");
+        else if (visible)
+            DrawLegacySaveText("a1");
+    }
+    DrawLegacySaveText("a3");
+}
+
+void DrawLegacySaveSlotList(SaveTaskData &save) {
+    saveTaskData->fadeTarget = currentSaveState == 7 ? 190 : 118;
+    WRN_SetWarning(0, 0);
+    saveTaskData->previousWarning = 0;
+    saveTaskData->screenItem = 0;
+    (void)ReturnZero();
+    shenSubmitQuadsUI(320.0f, 380.0f, 0x3b00008cU, 0xff4040c0U, 422, 76, 6.9000001f);
+    nullsub();
+    char text[80];
+    std::snprintf(text, sizeof(text), "%d", 100);
+    DrawLegacySaveNumber(text);
+    DrawLegacySaveText("FB");
+    DrawLegacySaveSlotIndex(save);
+    std::int32_t y = 48;
+    for (std::size_t row = 0; row < 3; ++row) {
+        const std::int32_t slot = static_cast<std::int32_t>(row) + save.screenPage;
+        const S2SaveDataInfo *const info = GetBackupSaveDataInfo(slot);
+        const bool selected = static_cast<std::int32_t>(row) == save.screenSelection;
+        shenSubmitQuadsUI(320.0f, static_cast<float>(y + 43), selected ? 0x3b8c0000U : 0x3b00008cU, selected ? 0xffc04040U : 0xff4040c0U, 480, 86,
+            6.9000001f);
+        std::snprintf(text, sizeof(text), "bfb%1d", slot);
+        DrawLegacySaveText("bf");
+        DrawLegacySaveText(text + 2);
+        if (info->saveKind) {
+            nullsub();
+            const shen_name map = info->clearState != 6 ? info->mapName : LEGACY_SAVE_CLEARED_AREA;
+            const std::int32_t area = GetLegacySaveAreaId(map);
+            if (area != -1)
+                DrawLegacySaveLocation(area, row);
+            const std::uint32_t gameHour = info->gameHour / 10U;
+            std::snprintf(text, sizeof(text), "  %2u%2u /%2u%2u / 1 9%2d%2d   %c%2u :%2u%2u", info->gameMonth / 10U, info->gameMonth % 10U, info->gameDay / 10U,
+                info->gameDay % 10U, info->gameYear / 10, info->gameYear % 10, static_cast<int>(gameHour ? gameHour + 48 : 97), info->gameHour % 10U,
+                info->gameMinute / 10U, info->gameMinute % 10U);
+            DrawLegacySaveText(text);
+            const std::uint32_t systemHour = info->systemHour / 10U;
+            std::snprintf(text, sizeof(text), "  %2u%2u /%2u%2u /%2u%2u%2u%2u   %c%2u :%2u%2u", info->systemMonth / 10U, info->systemMonth % 10U,
+                info->systemDay / 10U, info->systemDay % 10U, info->systemYear / 1000U, info->systemYear % 1000U / 100U, info->systemYear % 100U / 10U,
+                info->systemYear % 10U, static_cast<int>(systemHour ? systemHour + 48 : 97), info->systemHour % 10U, info->systemMinute / 10U,
+                info->systemMinute % 10U);
+            DrawLegacySaveText(text);
+        } else {
+            DrawLegacySaveText("EY");
+        }
+        y += 94;
+    }
+}
+
+} // namespace
+
 // @verified - p
 SaveTaskData* SetSaveScreenWarning(std::int32_t warning, std::int32_t value) {
     saveTaskData->fadeTarget = currentSaveState == 7 ? 190 : 118;
@@ -4056,6 +4320,9 @@ SaveTaskData* SelectSaveScreenWarning(SaveTaskData* save, std::int32_t screen) {
     case 21:
         value = g_actNumber;
         break;
+    case 23:
+        DrawLegacySaveSlotList(*save);
+        return save;
     default:
         return nullptr;
     }
@@ -4080,6 +4347,12 @@ void SetSceneInfos(std::int32_t actNumber, shen_name mapName,
     savedSceneInfo.actNumber = actNumber;
     savedSceneInfo.mapName = mapName;
     savedSceneInfo.entryPoint = entryPoint;
+}
+
+void GetSceneInfos(std::int32_t *actNumber, shen_name *mapName, std::int32_t *entryPoint) noexcept {
+    *actNumber = savedSceneInfo.actNumber;
+    *mapName = savedSceneInfo.mapName;
+    *entryPoint = savedSceneInfo.entryPoint;
 }
 
 
@@ -4404,6 +4677,8 @@ TitleFileSelectState *InitializeTitleCollectionFlags() {
     titleFileSelect.titleSequence = 2;
     return &titleFileSelect;
 }
+
+TitleFileSelectState *g_titleFileSelect = &titleFileSelect;
 
 // @verified - p
 void ResetTitleImportSelection() {
@@ -5053,8 +5328,8 @@ bool S2Save_RestorePlayerAtStartup() noexcept {
     PlayerModelState* const model = g_playerRuntime.model;
     if (!character || !model) return false;
 
-    // Area main and the common startup owner may both restore placement.
-    // Only the decoded runtime/persistent payload is consumed on the first call.
+    // Area setup and common startup may both restore placement.
+    // Consume the decoded runtime/persistent payload on the first call only.
     SetPlayerRootPosition(pendingPlayerTransform.position);
     shenDecrementRotYAllNodes(
         &character->entity.node,
@@ -5073,3 +5348,4 @@ bool S2Save_RestorePlayerAtStartup() noexcept {
 }
 
 } // namespace shenmue::s2
+

@@ -18,6 +18,7 @@ inline constexpr float MEMO_PAGE_WIDTH = 512.0f, MEMO_PAGE_HEIGHT = 512.0f;
 inline constexpr std::array<float, 2> MEMO_TEXT_FIRST_Y{54.0f, 72.0f}, MEMO_TEXT_LINE_SPACING{1300.0f, 1114.0f}, MEMO_TEXT_FONT_SCALE{1.0f, 0.9f};
 inline constexpr std::array<std::int32_t, 5> MEMO_TITLE_PIECES{1, 1, 1, 1, 2};
 inline constexpr std::uint32_t MEMO_TEXT_COLOUR = 0xff081219U, MEMO_TITLE_COLOUR = 0xff0f2878U;
+inline constexpr std::uint32_t MEMO_PAGE_TEXTURE_PARAMETER = 11;
 inline constexpr std::array<const char *, 3> MEMO_TITLE_PATHS{
     "/ui/notebookpages/NotebookTitleTop.tga", "/ui/notebookpages/NotebookTitleVertical.tga", "/ui/notebookpages/NotebookTitleBot.tga"};
 struct MemoPageState {
@@ -83,8 +84,8 @@ static_assert(sizeof(MemoCameraSave) == 0x34);
 static_assert(offsetof(MemoCameraSave, position) == 0x18);
 static_assert(offsetof(MemoCameraSave, weatherMode) == 0x30);
 
-// MEMO touches only WNDT's final control word; this view follows the selected
-// platform's WIND payload rather than SCEN or lighting state.
+// MEMO uses the selected platform WIND payload and only touches the final WNDT control word.
+
 struct MemoWindowTaskView {
 #if SHENMUE_IS_PC
     std::byte precedingFields[0x2b0];
@@ -103,8 +104,8 @@ static_assert(sizeof(MemoWindowTaskView) == 0x1e8);
 static_assert(offsetof(MemoWindowTaskView, customFlag) == 0x1e4);
 #endif
 
-// InitializeMemoNotebookPages: bank zero borrows page-text pointers; bank one owns the
-// four 800-byte text buffers. These are eight targets, not copy textures.
+// Bank zero borrows page-text pointers; bank one owns four 800-byte text buffers.
+// These eight entries are text targets.
 struct MemoPageRenderer {
     std::array<std::array<std::uint32_t, 4>, 2> targets{};
     std::array<std::array<bool, 4>, 2> dirty{};
@@ -127,7 +128,9 @@ std::int64_t CloseMemoFromNotebookMenu();
 // SetupNotebook: InitShenmue creates both banks' four 512x512 page targets and marks them for a redraw.
 void SetupNotebook();
 std::int64_t CreateMemoNotebookPages();
+void ReleaseNotebookPageTargets();
 std::int64_t DestroyMemoNotebookPages();
+std::int64_t GetMemoNotebookPagesInitState();
 void RenderMemoNotebookPages();
 
 bool NotifyMemoFlag(std::int32_t flag, bool selected);

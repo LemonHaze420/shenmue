@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/fight_stage.hpp"
 
 #include "s2/character.hpp"
@@ -205,7 +208,7 @@ constexpr std::uint32_t fightMoveCategoryMasks[44]{
     0x18,0xc0,0x1a,0xc2,0x38,0x1c0,0xd800,0x4800,0x1830,0xc180,
     0x42,0xa,0x2602,0x4c,0x5000,0x8800,0xd800,0x1b0,0x1f8,0xffffffffU,0xfe02,0x3fe};
 
-// The actual active-slot ground target callback.
+// Ground target callback for the active slot.
 // @verified - p
 void AdjustActiveGroundTarget(std::uint32_t controller, Vector3 *position, MotionWork *motion, void *context) {
     static constexpr shen_name qlbtMap{SHEN_NAME(QLBT)};
@@ -306,8 +309,8 @@ void mtwkRegisterGroundTargetCallbacks(MotionWork *motion, VFActor *actor) {
     }
 }
 
-// Publishes a real FGTM/FENE actor and its target
-// callbacks only after the stage's ready/active/cooldown counters transition.
+// Publish the FGTM/FENE actor and target callbacks after the ready/active/cooldown counters transition.
+
 // @verified - p
 std::uint8_t vfRegisterContactSlot(VFMA_t *game, FCMG_t *slot) {
     Character *const character = slot->character;
@@ -1369,7 +1372,7 @@ bool vfEnemySlotResetAndRestartCycle(VFMA_t *game, FCMG_t *group) {
     return true;
 }
 
-// Installs the real cooldown target producer.
+// Install the cooldown target callback.
 // @verified - p
 void vfCaptureGroundForCooldown(VFMA_t *game, VFActor *actor) {
     FCMG_t *const group = game->enemySlots[actor->groupIndex];
@@ -1866,6 +1869,37 @@ std::uint64_t GetBattleDialogueCompletionCount(std::uint32_t id) {
     return 0xffffffffU;
 }
 
+// @verified - p
+void RemoveBattleDialogue(std::uint32_t id) {
+    VFMA_t *const game = vfmaGetTaskParam();
+    if (!game || !game->cameraDialogue)
+        return;
+    VCDW_t *const owner = game->cameraDialogue;
+    VCDS_t *record = owner->records;
+    while (record && record->id != id)
+        record = record->next;
+    if (!record || !id)
+        return;
+    if (record->previous)
+        record->previous->next = record->next;
+    else
+        owner->records = record->next;
+    if (record->next)
+        record->next->previous = record->previous;
+    HLib::FreeHeapSpace(record, static_cast<std::int32_t>(TASK_VCDS.name));
+}
+
+// @verified - p
+std::uint32_t GetFightStageObjectFlags() {
+    const VFMA_t *const game = vfmaGetTaskParam();
+    return game ? game->reserved2c : 0;
+}
+
+// @verified - p
+void SetFightCounterHighWord(std::uint16_t value) {
+    if (VFMA_t *const game = vfmaGetTaskParam())
+        game->counter32c = (game->counter32c & 0xffffU) | static_cast<std::uint32_t>(value) << 16;
+}
 
 std::uint32_t SetFightFlag400000(std::int32_t enabled) {
     VFMA_t *const game = vfmaGetTaskParam();
@@ -2084,7 +2118,7 @@ std::uint8_t vfStageObjectSetBrokenModel(std::int32_t slot, Character *character
     return EV_SetCharDisplay(character, CVM_DisplayEnabled, 0);
 }
 
-// Initialize the real live root in insertion order.
+// Initialize the live root in insertion order.
 void vfInitializeStageObjectHitboxes() {
     Matrix4x4_Push();
     for (VOBJ_t *object = g_fightStageObjectRoot; object; object = object->next)
@@ -2421,7 +2455,7 @@ std::int64_t PublishFightRespawn(std::uint16_t hp, std::uint8_t style, std::uint
     return 1;
 }
 
-// Transfer, rather than share a second owning task-data reference.
+// Transfer task-data ownership.
 // @verified - p
 bool vfgGameInfoEntry(HLib::Task *source, HLib::Task *target) {
     if (!source || !target || target->taskData)
@@ -2454,7 +2488,7 @@ HLib::Task *vfg_Callback_GameInfoEntry_Enqueue(VFMA_t *game) {
     return task;
 }
 
-// Reset the shared sound slots, retaining the six live actor owners.
+// Reset shared sound slots, retaining the six live actors.
 void vfInitSfxSlotState(VFMA_t *game) {
     auto *const bytes = reinterpret_cast<std::byte *>(game);
     std::memset(bytes + 0x294, 0, 8);
@@ -2646,3 +2680,4 @@ std::int32_t ResumeFight(std::int32_t resetActors) {
 }
 
 } // namespace shenmue::s2
+

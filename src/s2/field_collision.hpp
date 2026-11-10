@@ -83,17 +83,30 @@ inline constexpr std::size_t kMaximumFieldParts = 8;
 inline constexpr std::size_t kMaximumGeneratedVolumes = 50;
 inline constexpr shen_name kGeneratedVolumeName{make_shen_name('@', '@', '@', '@')};
 inline constexpr std::array<Vector3, 8> kGeneratedBoxVertices{{
-    {-0.5f, 0.0f, -0.5f}, {-0.5f, 0.0f, 0.5f}, {-0.5f, 1.0f, 0.5f}, {-0.5f, 1.0f, -0.5f},
-    {0.5f, 0.0f, 0.5f}, {0.5f, 1.0f, 0.5f}, {0.5f, 0.0f, -0.5f}, {0.5f, 1.0f, -0.5f},
+    {-0.5f, 0.0f, -0.5f},
+    {-0.5f, 0.0f, 0.5f},
+    {-0.5f, 1.0f, 0.5f},
+    {-0.5f, 1.0f, -0.5f},
+    {0.5f, 0.0f, 0.5f},
+    {0.5f, 1.0f, 0.5f},
+    {0.5f, 0.0f, -0.5f},
+    {0.5f, 1.0f, -0.5f},
 }};
 inline constexpr std::array<Vector3, 6> kGeneratedBoxNormals{{
-    {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
+    {-1.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 1.0f},
+    {1.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, -1.0f},
+    {0.0f, -1.0f, 0.0f},
+    {0.0f, 1.0f, 0.0f},
 }};
 inline constexpr std::array<FieldDataPolygon, 6> kGeneratedBoxPolygons{{
-    {1U, 0xffffU, 0U, 0U, {0U, 1U, 2U, 3U}}, {1U, 0xffffU, 1U, 1U, {1U, 4U, 5U, 2U}},
-    {1U, 0xffffU, 2U, 2U, {4U, 6U, 7U, 5U}}, {1U, 0xffffU, 3U, 3U, {6U, 0U, 3U, 7U}},
-    {8U, 0xffffU, 4U, 4U, {6U, 4U, 1U, 0U}}, {8U, 0xffffU, 5U, 5U, {3U, 2U, 5U, 7U}},
+    {1U, 0xffffU, 0U, 0U, {0U, 1U, 2U, 3U}},
+    {1U, 0xffffU, 1U, 1U, {1U, 4U, 5U, 2U}},
+    {1U, 0xffffU, 2U, 2U, {4U, 6U, 7U, 5U}},
+    {1U, 0xffffU, 3U, 3U, {6U, 0U, 3U, 7U}},
+    {8U, 0xffffU, 4U, 4U, {6U, 4U, 1U, 0U}},
+    {8U, 0xffffU, 5U, 5U, {3U, 2U, 5U, 7U}},
 }};
 } // namespace field_collision_data
 
@@ -122,6 +135,8 @@ struct FieldDataPart : FieldDataRuntimePart {
     std::span<const std::byte> sourceData;
 };
 
+inline constexpr shen_name FIELD_DATA_MEMORY{SHEN_NAME(FLDD)};
+bool FLDD_AllocateRuntimeBuffers();
 bool FLDD_ReadFieldData(const void *chunk, std::size_t chunkSize);
 void FLDD_FreeFieldData();
 

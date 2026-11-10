@@ -759,7 +759,7 @@ void ApplyWeatherLightStateInternal(std::uint32_t index, const Vector4 *colour, 
         SetLightSceneIntensity(index, *sceneIntensity);
     if (sunDirection)
         SetLightSunDirection(index, *sunDirection);
-    // These setters mutate only the runtime owner; publication belongs to LGHT.
+    // Setters change runtime state; LGHT publishes it.
 }
 
 // @verified - p
@@ -1353,25 +1353,21 @@ bool BeginTemporaryMapWeatherLighting(TemporaryMapWeatherLightingState &saved) {
         return false;
     saved.activeLight = currentActiveLight;
     saved.globalLighting = globalLighting;
-    saved.sceneIntensity = lightRuntimeEntries[0].vectors[1].y;
+    saved.sceneIntensity = GetSelectedLightIntensity(0);
     saved.engaged = true;
 
-    currentActiveLight = 1;
-    globalLighting = {weatherLighting, weatherLighting, weatherLighting, weatherLighting};
-    lightRuntimeEntries[0].vectors[1].y = std::abs(weatherSceneLighting) < 0.0001f ? 0.0f : weatherSceneLighting;
-    SetLegacyGlobalLighting(globalLighting);
-    SetLegacyLight(0, lightRuntimeEntries[0]);
+    SetCurrentActiveLight(1);
+    UpdateGlobalLighting({weatherLighting, weatherLighting, weatherLighting, weatherLighting});
+    SetSelectedLightIntensity(0, weatherSceneLighting);
     return true;
 }
 
 void EndTemporaryMapWeatherLighting(TemporaryMapWeatherLightingState &saved) {
     if (!saved.engaged)
         return;
-    currentActiveLight = saved.activeLight;
-    globalLighting = saved.globalLighting;
-    lightRuntimeEntries[0].vectors[1].y = saved.sceneIntensity;
-    SetLegacyGlobalLighting(globalLighting);
-    SetLegacyLight(0, lightRuntimeEntries[0]);
+    UpdateGlobalLighting(saved.globalLighting);
+    SetSelectedLightIntensity(0, saved.sceneIntensity);
+    SetCurrentActiveLight(saved.activeLight);
     saved.engaged = false;
 }
 
@@ -1422,6 +1418,12 @@ MapLightingPlacement *GetMapLightingPlacement(std::int32_t index) {
 void SetMapLightingPlacementEnabled(std::int32_t value, std::int32_t index) {
     if (index < 33)
         mapLightingPlacements[index].enabled = static_cast<std::uint32_t>(value);
+}
+// @verified - p
+std::uint32_t EV_SetMapLightingPlacementEnabled(std::int32_t index, std::int32_t enabled) {
+    const std::uint32_t previous = GetMapLightingPlacementEnabled(index);
+    SetMapLightingPlacementEnabled(enabled, index);
+    return previous;
 }
 std::uint32_t SetMapLightingPlacementPosition(const Vector3 *position, std::int32_t index) {
     if (index >= 33)
@@ -1765,6 +1767,12 @@ void ReinitializeLights(std::int32_t mode) {
         InitializeDefaultDirectionalLight();
     LightModeNullsub(mode == 1 ? 0 : 1);
     lightRootPosition = {};
+}
+
+void SetupEffectTransforms() {
+    lightRuntimeEntries.fill({});
+    ClearLegacySelectedLights();
+    SetupEffeTransform();
 }
 
 std::int64_t LightTask_Enqueue() {

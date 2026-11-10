@@ -1,5 +1,6 @@
 #include "s2/pati.hpp"
 #include "s2/pati_tables.hpp"
+#include "s2/debug.hpp"
 #include "d3t/object_store.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
@@ -80,7 +81,7 @@ void StorePatiPlacementNodes(PatiBoardProps &props, MT7Model &characterModel) {
     const std::int32_t child = HLib::GetDynamicHeapOffset(props.primary);
     std::memcpy(root + 44, &child, sizeof(child));
 }
-}
+} // namespace
 
 void ReleasePatiProps() {
     for (std::uint32_t index = 0; index < patiBoardPropCount; ++index) {
@@ -98,6 +99,7 @@ void ReleasePatiProps() {
 }
 
 void InitPati() {
+    EV_debug_log("common\\et_pati.c", 849, "PATI INIT START\n");
     PatiModelCache cache;
     cache.count = 0;
     PatiTableData data;
@@ -405,6 +407,7 @@ void InitPati() {
             expandedRadius = boardExpandedRadius;
         }
     }
+    EV_debug_log("common\\et_pati.c", 1542, "PATI INIT END\n");
 }
 
 } // namespace shenmue::s2

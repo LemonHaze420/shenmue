@@ -96,6 +96,8 @@ void FindPatiDealerBoards(PatiEventWork *work, const char *dealer) {
     area[4] = 0;
     std::memcpy(group, dealer, 4);
     group[4] = 0;
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4888, "Search DM=%s:", area);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4889, "%s\n", group);
     std::int32_t count = 0, nearest = 9999;
     float nearestDistance = 100000000.0f;
     const char *selectedOption = nullptr;
@@ -123,14 +125,20 @@ void FindPatiDealerBoards(PatiEventWork *work, const char *dealer) {
             const PatiGameType *type = PATI_GAME_TYPES;
             while (type->name[0] && std::strcmp(type->name, table.gameType))
                 ++type;
+            if (!type->name[0])
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 4916, "Error:Undefined Game Type.\n");
             choice.type = type->mode;
             const PatiGameOption *option = PATI_GAME_OPTIONS;
             while (option->name[0] && std::strcmp(option->name, table.gameOptions))
                 ++option;
+            if (!option->name[0])
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 4925, "Error:Undefined Game Option.\n");
             choice.option = option->mode;
             const PatiWagerMode *wager = PATI_WAGER_MODES;
             while (wager->name[0] && std::strcmp(wager->name, table.stake))
                 ++wager;
+            if (!wager->name[0])
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 4936, "Error:Undefined Bet Type.\n");
             work->wagerMode = wager->mode;
             SetPatiBet(work);
             if (g_patiMinimumBet > work->bet)
@@ -152,12 +160,32 @@ void FindPatiDealerBoards(PatiEventWork *work, const char *dealer) {
                 if (nearest == count || !selectedType)
                     selectedType = table.gameType;
             }
-            ++count;
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4977, "bd:%s ", board.character);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4978, "(% f,", choice.position.x);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4979, "% f,", choice.position.y);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4980, "% f)-", choice.position.z);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4981, "[% f,", static_cast<float>(choice.rotation.x) / 182.04445f);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4982, "% f,", static_cast<float>(choice.rotation.y) / 182.04445f);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4983, "% f]\n", static_cast<float>(choice.rotation.z) / 182.04445f);
+            if (++count >= 20)
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 4986, "Too much boards controled by domoto [%s]\n", group);
         }
     }
+    if (!count)
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 4996, "No boards controled by domoto [%s]\n", group);
     if (count == 1)
         g_patiSingleMode = 1;
     work->choices[count].character = {};
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 5004, "Museum Mode: ");
+    if (g_patiMuseumMode)
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 5006, "Enable\n");
+    else
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 5008, "Disable\n");
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 5010, "Single Mode: ");
+    if (g_patiSingleMode)
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 5012, "Enable\n");
+    else
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 5014, "Disable\n");
     work->selectedBoard = nearest;
     AttachPatiNails(work, work->choices[nearest].character, work->choices[nearest].nailFile);
     g_patiCameraStep = 8;
@@ -169,8 +197,8 @@ void FindPatiDealerBoards(PatiEventWork *work, const char *dealer) {
 }
 // @verified - p
 shen_name FindNearestPatiDealer() {
-    constexpr shen_name dealers[]{SHEN_NAME(MST1), SHEN_NAME(MST2), SHEN_NAME(MST3), SHEN_NAME(MST4), SHEN_NAME(MST5), SHEN_NAME(MST6), SHEN_NAME(MST7),
-        SHEN_NAME(MST8), SHEN_NAME(MST9)};
+    constexpr shen_name dealers[]{SHEN_NAME(MST1),
+        SHEN_NAME(MST2), SHEN_NAME(MST3), SHEN_NAME(MST4), SHEN_NAME(MST5), SHEN_NAME(MST6), SHEN_NAME(MST7), SHEN_NAME(MST8), SHEN_NAME(MST9)};
     Vector3 player;
     EV_GetCharaPosition(PATI_PLAYER, CHARACTER_TRANSLATION_ROOT, &player, EventTransformFlags::World);
     std::int32_t selected = -1;
@@ -182,6 +210,14 @@ shen_name FindNearestPatiDealer() {
         EV_GetCharaPosition(dealers[index], CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
         const float distance = GetSquaredDistanceXZ(&player, &position);
         for (std::int32_t phase = 0; phase < 3; ++phase) {
+            if (phase == 2) {
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 5828, "%f\n", distance);
+            } else {
+                const Vector3 &logged = phase == 0 ? player : position;
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 5822 + phase * 3, "(%f,", logged.x);
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 5823 + phase * 3, "%f,", logged.y);
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 5824 + phase * 3, "%f)-", logged.z);
+            }
             volatile std::int64_t wait = 1000000;
             while (wait)
                 wait = wait - 1;

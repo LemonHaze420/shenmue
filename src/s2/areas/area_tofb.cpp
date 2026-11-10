@@ -2,25 +2,22 @@
 #include "s2/areas/area_tofb.hpp"
 
 #if defined(SHENMUE_EVENT_ENTRY)
-void TofbMain(void *argument)
-{
+void TofbMain(void *argument) {
     QueueTofbEvent();
 }
 #else
-static const int tofbDynamicsParts[] = {152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174,
-    175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204,
-    205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 228, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234,
-    235};
+static const int tofbDynamicsParts[] = {152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+    176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206,
+    207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 228, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235};
 const shen_name tofbInvalidCharacter = EVENT_CHARACTER_INVALID;
-static const shen_name tofbLoadCharacters[] = {TOFB_PLAYER, TOFB_CHO, TOFB_SBO, TOFB_MRC, TOFB_SCX, TOFB_CHR, TOFB_RKN, TOFB_SBK, TOFB_SKH,
-    EVENT_CHARACTER_INVALID};
+static const shen_name tofbLoadCharacters[] = {
+    TOFB_PLAYER, TOFB_CHO, TOFB_SBO, TOFB_MRC, TOFB_SCX, TOFB_CHR, TOFB_RKN, TOFB_SBK, TOFB_SKH, EVENT_CHARACTER_INVALID};
 static Vector3 tofbCameraTarget = {215.9774932861328f, 105.64350128173828f, 212.9739990234375f};
 static Vector3 tofbCameraPosition = {213.4884033203125f, 105.7667007446289f, 213.3881072998047f};
 static shen_name tofbBrokenTableNames[] = {TOFB_TABLE, TOFB_BROKEN_TABLE, 0};
 static int tofbRetries;
 
-void QueueTofbEvent(void)
-{
+void QueueTofbEvent(void) {
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(TofbStartCallback, 4, 11, sizeof(TofbEventWork), TASK_EVNT);
     TofbEventWork *work = (TofbEventWork *)FTBL.HLib_GetTaskParameter(task);
     work->task = task;
@@ -30,14 +27,12 @@ void QueueTofbEvent(void)
     EventDebugRegister(TOFB_DEBUG_ID, TofbDebugExitCallback, work, 2000000000);
 }
 
-void TofbDebugExitCallback(void *data)
-{
+void TofbDebugExitCallback(void *data) {
     FTBL.EV_stepSetFlags(85, 0);
     FinishTofbEvent((TofbEventWork *)data);
 }
 
-void FinishTofbEvent(TofbEventWork *work)
-{
+void FinishTofbEvent(TofbEventWork *work) {
     CleanupTofbResources(work);
     FTBL.EV_HLKillOtherHierarchyTask(work->task);
     EventDebugUnregister(TOFB_DEBUG_ID);
@@ -47,8 +42,7 @@ void FinishTofbEvent(TofbEventWork *work)
     }
 }
 
-void TofbStartCallback(void *data)
-{
+void TofbStartCallback(void *data) {
     EventDebugCheck(TOFB_DEBUG_ID, 4);
     FTBL.EV_EnableCharacterDisplay(TOFB_CHO);
     FTBL.EV_EnableCharacterDisplay(TOFB_A412);
@@ -63,8 +57,7 @@ void TofbStartCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(TofbOpeningAuthorCallback);
 }
 
-void TofbOpeningAuthorCallback(void *data)
-{
+void TofbOpeningAuthorCallback(void *data) {
     if (FTBL.EV_authSceneCtrl(-6) == 925)
         Queue_EVT_AT_PlayDynamix(TOFB_A418, "MICS", 2.0f, 110.0f, 84, tofbDynamicsParts, 2.0f, 0);
     if (!FTBL.EV_authSceneCtrl(-1)) {
@@ -74,8 +67,7 @@ void TofbOpeningAuthorCallback(void *data)
     }
 }
 
-void TofbBattleStartCallback(void *data)
-{
+void TofbBattleStartCallback(void *data) {
     FTBL.flddSetPointFlagOnGrid(TOFB_GRID, 1);
     FTBL.flddSetPointFlagOnGrid(TOFB_DEFAULT_GRID, 0);
     FTBL.EV_DisableCharacterDisplay(TOFB_CHO);
@@ -137,8 +129,7 @@ void TofbBattleStartCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(TofbBattleCallback);
 }
 
-void TofbBattleCallback(void *data)
-{
+void TofbBattleCallback(void *data) {
     if (!FTBL.IsFightActive()) {
         FTBL.EV_EnsureCharacterDraw(TOFB_CHO);
         FTBL.EV_EnsureCharacterDraw(TOFB_RKN);
@@ -161,15 +152,13 @@ void TofbBattleCallback(void *data)
         MaintainTofbBattleCamera(0);
 }
 
-void TofbRetryCallback(void *data)
-{
+void TofbRetryCallback(void *data) {
     FTBL.ST_LoadTitleFade();
     FTBL.HLib_SetCurrentTaskTo(TofbStartCallback);
     FTBL.HLib_SetupTaskDelay(30);
 }
 
-void TofbVictoryAuthorCallback(void *data)
-{
+void TofbVictoryAuthorCallback(void *data) {
     FTBL.EV_ControlPackageResources(0, 6, "0047", 0, 0);
     FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0048", 0);
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
@@ -185,8 +174,7 @@ void TofbVictoryAuthorCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(TofbEndingAuthorCallback);
 }
 
-void TofbEndingAuthorCallback(void *data)
-{
+void TofbEndingAuthorCallback(void *data) {
     if (!FTBL.EV_authSceneCtrl(-1)) {
         EVT_AT_SetSample(0, 1, 0);
         FTBL.HLib_SetCurrentTaskTo(TofbEndCallback);
@@ -194,16 +182,14 @@ void TofbEndingAuthorCallback(void *data)
     }
 }
 
-void TofbEndCallback(void *data)
-{
+void TofbEndCallback(void *data) {
     FTBL.flddSetPointFlagOnGrid(TOFB_DEFAULT_GRID, 1);
     FTBL.flddSetPointFlagOnGrid(TOFB_GRID, 0);
     MaintainTofbBattleCamera(1);
     FinishTofbEvent((TofbEventWork *)data);
 }
 
-void InitializeTofbResources(TofbEventWork *work)
-{
+void InitializeTofbResources(TofbEventWork *work) {
     FTBL.EV_NPC_NewLoadSw_0(0);
     FTBL.EV_ResetFreeTalkFlags();
     SaveEventDateTime();
@@ -230,8 +216,7 @@ void InitializeTofbResources(TofbEventWork *work)
     FTBL.SetLoadingBusy();
 }
 
-void CleanupTofbResources(TofbEventWork *work)
-{
+void CleanupTofbResources(TofbEventWork *work) {
     FTBL.FinishLoading();
     FTBL.SetRenderClockAndCompassTo(0);
     FTBL.LoadCutsceneAndSoundProgramForArea();
@@ -245,8 +230,7 @@ void CleanupTofbResources(TofbEventWork *work)
     FTBL.EV_NPC_NewLoadSw_0(1);
 }
 
-void MaintainTofbBattleCamera(int mode)
-{
+void MaintainTofbBattleCamera(int mode) {
     Vector3 camera, position;
     float distance, alpha;
     int index;
@@ -257,8 +241,8 @@ void MaintainTofbBattleCamera(int mode)
                 alpha = 1.0f;
             else {
                 FTBL.GetCharaPosition(tofbBrokenTableNames[index], -1, &position, 0x40000000);
-                distance = (camera.x - position.x) * (camera.x - position.x) + (camera.y - position.y) * (camera.y - position.y)
-                    + (camera.z - position.z) * (camera.z - position.z);
+                distance = (camera.x - position.x) * (camera.x - position.x) + (camera.y - position.y) * (camera.y - position.y) +
+                    (camera.z - position.z) * (camera.z - position.z);
                 TOFB_FSQRT(distance);
                 alpha = (distance - 0.8f) / 1.7f;
                 if (alpha < 0.0f)
@@ -393,7 +377,7 @@ void TofbOpeningAuthorCallback(void *) {
         const std::uint16_t foldedFirst = first <= 0x8000U ? first : static_cast<std::uint16_t>(-first);
         const std::uint16_t foldedThird = third <= 0x8000U ? third : static_cast<std::uint16_t>(-third);
         const float amplitude = sin_fixed16(static_cast<std::int16_t>(0x4000 - foldedFirst)) * 0.05000000074505806f;
-        SetLightSceneIntensity(20, amplitude * sin_fixed16(static_cast<std::int16_t>(0x4000 - foldedThird)) + 2.0f);
+        SetLightRange(20, amplitude * sin_fixed16(static_cast<std::int16_t>(0x4000 - foldedThird)) + 2.0f);
         tofbLightPhase += 20.0f;
         if (tofbLightPhase >= 180.0f)
             tofbLightPhase = -180.0f;

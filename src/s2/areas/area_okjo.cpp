@@ -113,7 +113,7 @@ void OKJOStartAuthor() {
             EV_SetObjectFlagByIndex(i, (i & 1) == 0);
         enabled = 1;
     }
-    SetMapFieldDepthSlotEnabled(0, enabled);
+    SetMapFieldDepthSlotEnabled(enabled, 0);
     if (currentScene->author.name == OKJO_AUTHORS[1].name) {
         const Vector3 scale{50, 50, 50};
         mtwkSetMotionworkScale3(OKJO_SCALED_PROP, &scale);

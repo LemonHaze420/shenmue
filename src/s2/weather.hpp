@@ -1,5 +1,8 @@
 #pragma once
 
+#include "shenmue.h"
+
+
 #include "common/math.hpp"
 #include "common/types.hpp"
 
@@ -67,7 +70,7 @@ static_assert(offsetof(WeatherWind, cooldownFramesRemaining) == 0x3c);
 
 
 inline constexpr shen_name TASK_WEXE = SHEN_NAME(WEXE);
-inline constexpr shen_name TASK_WDAT = SHEN_NAME(WDAT);
+inline constexpr shen_name TASK_WDTA = SHEN_NAME(WDTA);
 inline constexpr shen_name TASK_WAIR = SHEN_NAME(WAIR);
 inline constexpr std::array<shen_name, 4> WEATHER_TIMELINE_TASKS{SHEN_NAME(WIT1), SHEN_NAME(WIT2), SHEN_NAME(WIT3), SHEN_NAME(WIT4)};
 inline constexpr shen_name WEATHER_SCENE_DATA{SHEN_NAME(WSCN)};
@@ -88,7 +91,7 @@ std::int32_t GetCurrentWeather();
 
 void SetWeatherShouldUpdateDay(std::int32_t flag);
 void SetWeatherMinimumSunElevation(float elevation);
-// SetWeatherLightManager is an independent lens-flare-manager gate, not ambient lighting.
+// Weather-light manager gate for lens flares, independent of ambient lighting.
 std::int32_t SetWeatherLightManager(std::int32_t enabled);
 
 float GetWeatherPressure();
@@ -228,3 +231,4 @@ void SetNewWindPhaseAndSpeed(std::int32_t phase, float speed);
 void SyncWindWithWDATWeatherState();
 
 } // namespace shenmue::s2
+

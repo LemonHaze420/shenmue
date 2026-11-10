@@ -27,6 +27,170 @@ inline constexpr shen_name TITLE_AREA_SPRITE_FILE{SHEN_NAME(NVTT)};
 inline constexpr shen_name TITLE_LOCAL_AREA_SPRITE_FILE{SHEN_NAME(NVTX)};
 inline constexpr std::array<std::int32_t, 24> SAVE_SCREEN_WARNING_IDS{0, 0, 14, 5, 11, 18, 4, 1, 8, 1, 10, 12, 13, 15, 16, 7, 20, 5, 3, 6, 17, 19, 2, 0};
 
+struct LegacySaveGlyph {
+    std::uint16_t code;
+    std::uint8_t x;
+    std::uint8_t y;
+    std::uint8_t width;
+    std::uint8_t height;
+};
+static_assert(sizeof(LegacySaveGlyph) == 6);
+inline constexpr std::size_t LEGACY_SAVE_PANEL_GLYPH = 15;
+inline constexpr std::size_t LEGACY_SAVE_LOCATION_GLYPH = 20;
+inline constexpr std::size_t LEGACY_SAVE_DIGIT_GLYPH = 26;
+inline constexpr std::array<LegacySaveGlyph, 75> LEGACY_SAVE_GLYPHS{{
+    {0x0001, 0, 0, 250, 25},
+    {0x0001, 0, 25, 50, 25},
+    {0x0001, 50, 25, 200, 25},
+    {0x0001, 0, 50, 100, 25},
+    {0x0001, 100, 50, 150, 25},
+    {0x0001, 0, 75, 150, 25},
+    {0x0001, 150, 75, 106, 25},
+    {0x0001, 0, 100, 150, 25},
+    {0x0001, 150, 100, 100, 25},
+    {0x0001, 0, 125, 225, 25},
+    {0x0001, 0, 150, 225, 25},
+    {0x0001, 0, 175, 200, 25},
+    {0x0001, 200, 175, 50, 25},
+    {0x0001, 0, 200, 250, 25},
+    {0x0001, 0, 225, 255, 25},
+    {0x0001, 0, 0, 250, 25},
+    {0x0001, 0, 25, 50, 25},
+    {0x0001, 50, 25, 150, 25},
+    {0x0001, 0, 50, 250, 25},
+    {0x0001, 0, 75, 125, 25},
+    {0x444b, 150, 100, 100, 50},
+    {0x202f, 4, 100, 14, 22},
+    {0x203a, 29, 100, 14, 22},
+    {0x5354, 50, 100, 100, 25},
+    {0x434c, 0, 125, 150, 25},
+    {0x4559, 0, 150, 250, 25},
+    {0x2030, 4, 176, 14, 22},
+    {0x2031, 29, 176, 14, 22},
+    {0x2032, 54, 176, 14, 22},
+    {0x2033, 79, 176, 14, 22},
+    {0x2034, 104, 176, 14, 22},
+    {0x2035, 129, 176, 14, 22},
+    {0x2036, 154, 176, 14, 22},
+    {0x2037, 179, 176, 14, 22},
+    {0x2038, 204, 176, 14, 22},
+    {0x2039, 229, 176, 14, 22},
+    {0x6230, 10, 198, 34, 44},
+    {0x6231, 60, 198, 34, 44},
+    {0x6232, 110, 198, 34, 44},
+    {0x6233, 10, 0, 34, 44},
+    {0x6234, 60, 0, 34, 44},
+    {0x6235, 10, 50, 34, 44},
+    {0x6236, 60, 50, 34, 44},
+    {0x6237, 10, 100, 34, 44},
+    {0x6238, 60, 100, 34, 44},
+    {0x6239, 10, 150, 34, 44},
+    {0x6266, 160, 198, 86, 48},
+    {0x2020, 200, 25, 6, 22},
+    {0x6130, 0, 206, 30, 45},
+    {0x6131, 32, 206, 20, 40},
+    {0x6132, 32, 206, 20, 40},
+    {0x6133, 0, 251, 30, 5},
+    {0x6b31, 32, 206, 20, 40},
+    {0x6b32, 32, 206, 20, 40},
+    {0x6b33, 32, 206, 20, 40},
+    {0x4943, 0, 0, 80, 80},
+    {0x4d31, 100, 100, 48, 25},
+    {0x4d32, 100, 125, 48, 25},
+    {0x4d33, 100, 150, 48, 25},
+    {0x4d34, 100, 175, 48, 25},
+    {0x4d35, 150, 100, 48, 25},
+    {0x4d36, 150, 125, 48, 25},
+    {0x4d37, 150, 150, 48, 25},
+    {0x4d38, 150, 175, 48, 25},
+    {0x4d39, 200, 100, 48, 25},
+    {0x4d41, 200, 125, 48, 25},
+    {0x4d42, 200, 150, 48, 25},
+    {0x4d43, 200, 175, 48, 25},
+    {0x2060, 104, 200, 14, 22},
+    {0x202c, 128, 200, 9, 22},
+    {0x202e, 154, 200, 9, 22},
+    {0x202d, 179, 200, 14, 22},
+    {0x202b, 200, 200, 25, 25},
+    {0x4642, 100, 225, 100, 25},
+    {0x0000, 0, 0, 1, 1},
+}};
+
+struct LegacySaveArea {
+    std::uint32_t pattern;
+    std::int32_t index;
+};
+inline constexpr std::array<LegacySaveArea, 33> LEGACY_SAVE_AREAS{{
+    {make_shen_name("AK**"), 0},
+    {make_shen_name("AR**"), 1},
+    {make_shen_name("AR03"), 2},
+    {make_shen_name("AB00"), 3},
+    {make_shen_name("WS**"), 4},
+    {make_shen_name("WK**"), 5},
+    {make_shen_name("WE**"), 6},
+    {make_shen_name("WN**"), 7},
+    {make_shen_name("WT**"), 8},
+    {make_shen_name("WB**"), 9},
+    {make_shen_name("WR**"), 10},
+    {make_shen_name("QR**"), 11},
+    {make_shen_name("Q1**"), 12},
+    {make_shen_name("Q2**"), 13},
+    {make_shen_name("Q3**"), 14},
+    {make_shen_name("QA**"), 15},
+    {make_shen_name("QB**"), 16},
+    {make_shen_name("QC**"), 17},
+    {make_shen_name("QD**"), 18},
+    {make_shen_name("QE**"), 19},
+    {make_shen_name("QF**"), 20},
+    {make_shen_name("QUG0"), 21},
+    {make_shen_name("KRH1"), 22},
+    {make_shen_name("KWM1"), 23},
+    {make_shen_name("KRM3"), 24},
+    {make_shen_name("KWW1"), 25},
+    {make_shen_name("KRC1"), 26},
+    {make_shen_name("KRK*"), 27},
+    {make_shen_name("KSH1"), 28},
+    {make_shen_name("KWW4"), 29},
+    {make_shen_name("KES1"), 30},
+    {make_shen_name("CLS1"), 0},
+    {make_shen_name("CLS2"), 22},
+}};
+inline constexpr std::array<LegacySaveArea, 19> LEGACY_SAVE_AREA_ALIASES{{
+    {make_shen_name("ARZ0"), 2},
+    {make_shen_name("QSFB"), 13},
+    {make_shen_name("QGBT"), 13},
+    {make_shen_name("QSFC"), 13},
+    {make_shen_name("QKBT"), 20},
+    {make_shen_name("QC00"), 17},
+    {make_shen_name("QSFD"), 12},
+    {make_shen_name("QSFA"), 12},
+    {make_shen_name("QTB1"), 12},
+    {make_shen_name("QTB2"), 14},
+    {make_shen_name("QTB3"), 14},
+    {make_shen_name("QTB4"), 13},
+    {make_shen_name("QEHH"), 15},
+    {make_shen_name("QRC0"), 15},
+    {make_shen_name("QJBT"), 15},
+    {make_shen_name("QLBT"), 19},
+    {make_shen_name("KMZ*"), 27},
+    {make_shen_name("0200"), 11},
+    {make_shen_name("KRF1"), 22},
+}};
+inline constexpr shen_name LEGACY_SAVE_CLEARED_AREA{SHEN_NAME(CQS2)};
+
+struct LegacySaveListState {
+    std::byte *locationPack;
+    std::byte *areaPack;
+    std::array<std::uint32_t, 3> locationTextures;
+    std::array<std::uint32_t, 3> areaTextures;
+    std::array<std::int32_t, 3> locationIds;
+    std::array<std::int32_t, 3> areaIds;
+    std::int64_t textOffset;
+};
+static_assert(offsetof(LegacySaveListState, locationTextures) == 0x10);
+static_assert(offsetof(LegacySaveListState, locationIds) == 0x28);
+static_assert(offsetof(LegacySaveListState, textOffset) == 0x40);
+
 struct PlayerPersistentState;
 struct PadControlEntry;
 struct LegacyInputSlot;
@@ -481,13 +645,16 @@ std::uint32_t ScanS1BackupSlots();
 std::uint32_t ScanS2BackupSlots();
 void RenewLocalBackupInfo();
 std::uint64_t GetLocalBackupInfo() noexcept;
+void SetSaveDataStuff();
 std::uint64_t BupReady(std::int32_t reserve);
 std::uint64_t QueueSaveFileWrite(const char *name, const void *source, std::uint32_t size, BackupSaveCompletion completion = nullptr);
 std::uint32_t QueueSnapshotMetadataWrite(SnapshotMetadataOwner *metadata);
+std::int32_t DeleteSaveFile(const char *name);
 SnapshotMetadataOwner *GetSnapshotMetadataOwner() noexcept;
 std::uint32_t GetSnapshotMetadataCount() noexcept;
 void InitializeSnapshotMetadata() noexcept;
 bool SaveSnapshotMetadata() noexcept;
+void ValidateSnapshotMetadataFiles() noexcept;
 std::int32_t GetSnapshotDataOption() noexcept;
 void SetSnapshotDataOption(std::int32_t option) noexcept;
 std::uint64_t GetCurrentGameFlags() noexcept;
@@ -563,6 +730,7 @@ void wndSetFlag(HLib::Task *task, std::int32_t flag);
 void LoadAreaSpriteImages();
 void SetTitleWarningLogo(std::int32_t logoIndex, const void *parameters = nullptr) noexcept;
 void SetSceneInfos(std::int32_t actNumber, shen_name mapName, std::int32_t entryPoint) noexcept;
+void GetSceneInfos(std::int32_t *actNumber, shen_name *mapName, std::int32_t *entryPoint) noexcept;
 void CloseSaveScreen() noexcept;
 void CloseSaveScreenFromLoadSave() noexcept;
 // LoadSave admission word: the action selector's Save entry raises it; the LoadSave element reads it at setup and
@@ -789,6 +957,7 @@ static_assert(offsetof(TitleFileSelectState, field0c4) == 0xc4);
 static_assert(offsetof(TitleFileSelectState, field0c8) == 0xc8);
 static_assert(offsetof(TitleFileSelectState, field0cc) == 0xcc);
 static_assert(offsetof(TitleFileSelectState, state) == 0xd8);
+extern TitleFileSelectState *g_titleFileSelect;
 
 struct TitleControlData;
 TitleFileSelectState *AssignActiveTCRL(TitleControlData *control);

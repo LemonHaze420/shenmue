@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/particle_effects.hpp"
 
 #include "s2/camera.hpp"
@@ -103,8 +106,8 @@ struct ParticleEmitter {
     const std::byte *textureSource;
 };
 
-// The shared allocation is 0x18 bytes, not an array of twelve dwords.
-// SmokeTextureOwner callbacks increment the WORD at +0x14 and modify the WORD at +0x16.
+// Shared smoke state is 0x18 bytes. Callbacks increment the word at +0x14 and update the word at +0x16.
+
 struct SmokeTextureOwner {
     std::int32_t slot;
     std::uint32_t reserved04;
@@ -250,6 +253,7 @@ std::array<SmokeEffect *, 16> fallingEffects{};
 std::array<FireEffect *, 8> fireEffects{};
 std::array<std::uint32_t, 16> smokeTextureHandles{};
 std::array<std::array<std::uint32_t, 2>, 8> fireTextureHandles{};
+std::int32_t fireShaderInstanceCount{};
 HLib::Task *effectController{};
 ParticleEmitter *currentEmitter{};
 Matrix4x4 particleScreenProjection{{{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}};
@@ -4174,6 +4178,10 @@ void SetFireFalloff(std::uint32_t index, float radiusX, float radiusY, float gai
     SetFireFftFalloff(*fireFft[effect.slot], falloff);
 }
 
+void ResetFireShaderInstanceCount() noexcept {
+    fireShaderInstanceCount = 0;
+}
+
 // @verified - p
 void SetFireFalloffScalar(std::uint32_t index, float scalar) {
     const FireEffect &effect = *fireEffects[static_cast<std::int32_t>(index)];
@@ -4356,3 +4364,4 @@ void FreeParticleEffect(std::int32_t type, std::uint32_t index) {
     HLib::FreeTaskData(effect);
 }
 } // namespace shenmue::s2
+

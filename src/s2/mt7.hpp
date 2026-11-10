@@ -2,6 +2,7 @@
 
 #include "common/math.hpp"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -22,12 +23,23 @@ struct MT7WbtrConstraint {
     float endRadius;
 };
 static_assert(sizeof(MT7WbtrConstraint) == 0x20);
-inline constexpr MT7WbtrConstraint mt7WbtrConstraints[]{
-    {{-0.128f, -0.052f, -0.005f}, 0.100f, {0.124f, -0.010f, 0.024f}, 0.075f},
-    {{-0.080f, -0.059f, 0.000f}, 0.100f, {0.116f, 0.000f, 0.016f}, 0.085f},
-    {{-0.062f, 0.107f, -0.133f}, 0.148f, {0.080f, -0.036f, 0.016f}, 0.075f},
+inline constexpr MT7WbtrConstraint mt7WbtrConstraints[]{{{-0.128f, -0.052f, -0.005f}, 0.100f, {0.124f, -0.010f, 0.024f}, 0.075f},
+    {{-0.080f, -0.059f, 0.000f}, 0.100f, {0.116f, 0.000f, 0.016f}, 0.085f}, {{-0.062f, 0.107f, -0.133f}, 0.148f, {0.080f, -0.036f, 0.016f}, 0.075f},
     {{-0.057f, 0.024f, 0.075f}, 0.079f, {0.215f, -0.038f, 0.019f}, 0.065f}};
 void ClampPointToSegmentRange(Vector3 *point, const Vector3 *start, const Vector3 *end, float startRadius, float endRadius);
+inline constexpr const char *SPECIAL_FIGHT_CHARACTER_LABELS[]{"CHD_L.CHRM_", "BF1_L.CHRM_", "BF2_L.CHRM_", "BF3_L.CHRM_", "BF4_L.CHRM_", "BF5_L.CHRM_",
+    "BF6_L.CHRM_", "BF7_L.CHRM_", "BF8_L.CHRM_", "BF9_L.CHRM_", "BFA_L.CHRM_", "CHD_L.CHRM_", "ESY_L.CHRM_", "ISN_L.CHRM_", "KF1_L.CHRM_", "KF2_L.CHRM_",
+    "KF3_L.CHRM_", "KF4_L.CHRM_", "KF5_L.CHRM_", "KR1_L.CHRM_", "KR2_L.CHRM_", "KR3_L.CHRM_", "KR4_L.CHRM_", "KR5_L.CHRM_", "KRD_L.CHRM_", "KRE_L.CHRM_"};
+bool check_special_fight_charas(const char *label);
+inline constexpr const char *DARTH_PACKET_FLAG_LABEL = "DARTH00G.CHRM_";
+inline constexpr const char *SYE_M_UV_LABEL = "SYE_M.CHRM_";
+inline constexpr std::int16_t SYE_M_UV_NODE_ID = 70;
+inline constexpr std::uint32_t SYE_M_UV_FIRST_VERTEX = 6;
+inline constexpr std::uint32_t SYE_M_UV_LAST_VERTEX = 25;
+inline constexpr float SYE_M_V_ORIGIN = 0.63281f;
+inline constexpr float SYE_M_V_SCALE = 6.2523446f;
+inline constexpr float SYE_M_V_RANGE = 0.33649999f;
+inline constexpr float SYE_M_V_OFFSET = 0.25f;
 
 struct MT7Header {
     std::uint32_t signature;
@@ -124,7 +136,7 @@ struct MT7Node {
     MT7Node *runtimeChild{};
     MT7Node *runtimeSibling{};
     MT7Node *runtimeParent{};
-    // Set only by an admission owner supplying writable source storage; clones borrow it.
+    // Set when model loading receives writable source storage; clones borrow it.
     std::byte *runtimeMesh{};
     std::uint32_t modelMarker{};
     std::uint32_t mdcVertexLinkFlags{};
@@ -202,7 +214,10 @@ void mt7_CopyXB01Offset(MT7Node *node, const MT7Node *source);
 
 
 const MT7Node *GetMT7ReaderData(const MT7Model *model);
-
+extern std::array<const void *, 1024> g_mt7ClonedMeshes;
+extern std::uint32_t g_mt7ClonedMeshCount;
+bool mt7IsClonedMesh(const void *mesh);
+std::int64_t mt7RegisterClonedMesh(const void *mesh);
 void FilepathBuilder(
     const MT7Node *data, const char *directory, const char *subdirectory, const char *stem, std::uint16_t flags, std::uint32_t threadHandle = 0);
 

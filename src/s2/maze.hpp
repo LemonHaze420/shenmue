@@ -18,6 +18,7 @@ struct Task;
 }
 struct Character;
 struct MT7Model;
+struct PakGlobalData;
 
 extern std::uint32_t g_mazePropDrawCount;
 extern std::uint32_t g_mazeUnitWallHitCount;
@@ -25,23 +26,49 @@ extern std::uint32_t g_mazeUnitWallHitCount;
 inline constexpr shen_name TASK_MAZE{SHEN_NAME(MAZE)};
 inline constexpr shen_name TASK_FISH{SHEN_NAME(FISH)};
 inline constexpr shen_name MEMORY_MAZE_FISH{SHEN_NAME(MZFS)};
-inline constexpr shen_name MEMORY_MAZE_UNITS{SHEN_NAME(MUZT)};
+inline constexpr shen_name MEMORY_MAZE_UNITS{SHEN_NAME(MZUT)};
 inline constexpr shen_name MEMORY_MAZE_ROUTES{SHEN_NAME(MZRT)};
 inline constexpr std::size_t MAZE_UNIT_CAPACITY = 64;
 inline constexpr shen_name AREA_MAZE_FISH{SHEN_NAME(KWM1)};
+inline constexpr const char *mazeTerrainPackages[]{"QTE", "KMZ1", "KMZ2", "KMZ3", "KMZ4"};
+PakGlobalData *SetupRendererAndForceLoadPak(std::int32_t mode);
 inline constexpr Vector2 mazeFishControlPath[] = {
-    {-1.91311002f, -0.219183996f}, {-1.92379701f, -0.572017014f}, {-1.91311002f, -0.924848974f},
-    {-1.84898305f, -1.341833f}, {-1.560413f, -1.68397403f}, {-0.983273983f, -1.85504401f},
-    {-0.491636992f, -1.75881696f}, {-0.106877998f, -1.52359605f}, {0.224443004f, -0.989000976f},
-    {0.427511007f, -0.219183996f}, {0.427511007f, 0.657552004f}, {-0.480949014f, 0.850005984f},
-    {-0.972585976f, 0.882081985f}, {-1.06877601f, 1.48082805f}, {-0.598514974f, 1.79089296f},
-    {0.513013005f, 1.87642801f}, {1.76348102f, 1.61982298f}, {1.82760799f, 0.539941013f},
-    {1.02602506f, 0.0481140018f}, {1.710042f, -0.775162995f}, {1.69935405f, -1.63051498f},
-    {1.16496599f, -1.85504401f}, {0.491636992f, -1.92988801f}, {-0.171003997f, -1.64120698f},
-    {-0.395446986f, -1.13868701f}, {-0.470261991f, -0.572017014f}, {-0.887084007f, 0.197799996f},
-    {-1.11152697f, 0.700318992f}, {-0.662640989f, 1.24560595f}, {-1.12221503f, 1.73743403f},
-    {-1.77416897f, 1.416677f}, {-1.87035799f, 0.850005984f}, {-1.92379701f, 0.539941013f},
-    {-1.92379701f, 0.176415995f}, {-1.92379701f, -0.197799996f}, {-1.91311002f, -0.219183996f},
+    {-1.91311002f, -0.219183996f},
+    {-1.92379701f, -0.572017014f},
+    {-1.91311002f, -0.924848974f},
+    {-1.84898305f, -1.341833f},
+    {-1.560413f, -1.68397403f},
+    {-0.983273983f, -1.85504401f},
+    {-0.491636992f, -1.75881696f},
+    {-0.106877998f, -1.52359605f},
+    {0.224443004f, -0.989000976f},
+    {0.427511007f, -0.219183996f},
+    {0.427511007f, 0.657552004f},
+    {-0.480949014f, 0.850005984f},
+    {-0.972585976f, 0.882081985f},
+    {-1.06877601f, 1.48082805f},
+    {-0.598514974f, 1.79089296f},
+    {0.513013005f, 1.87642801f},
+    {1.76348102f, 1.61982298f},
+    {1.82760799f, 0.539941013f},
+    {1.02602506f, 0.0481140018f},
+    {1.710042f, -0.775162995f},
+    {1.69935405f, -1.63051498f},
+    {1.16496599f, -1.85504401f},
+    {0.491636992f, -1.92988801f},
+    {-0.171003997f, -1.64120698f},
+    {-0.395446986f, -1.13868701f},
+    {-0.470261991f, -0.572017014f},
+    {-0.887084007f, 0.197799996f},
+    {-1.11152697f, 0.700318992f},
+    {-0.662640989f, 1.24560595f},
+    {-1.12221503f, 1.73743403f},
+    {-1.77416897f, 1.416677f},
+    {-1.87035799f, 0.850005984f},
+    {-1.92379701f, 0.539941013f},
+    {-1.92379701f, 0.176415995f},
+    {-1.92379701f, -0.197799996f},
+    {-1.91311002f, -0.219183996f},
     {-1.92379701f, -0.572017014f},
     {1000.0f, 1000.0f},
 };
@@ -50,8 +77,14 @@ static_assert(sizeof(Vector3) == 12);
 static_assert(sizeof(mazeFishControlPath) == 304);
 
 inline constexpr Vector3 mazeButterflyPath[] = {
-    {-0.02f, 0.02f, 0.01f}, {-0.04f, 0.05f, 0.02f}, {-0.05f, 0.07f, 0.0f}, {-0.03f, 0.08f, -0.01f},
-    {0.03f, 0.08f, 0.01f}, {0.05f, 0.07f, 0.0f}, {0.04f, 0.05f, -0.02f}, {0.02f, 0.02f, -0.01f},
+    {-0.02f, 0.02f, 0.01f},
+    {-0.04f, 0.05f, 0.02f},
+    {-0.05f, 0.07f, 0.0f},
+    {-0.03f, 0.08f, -0.01f},
+    {0.03f, 0.08f, 0.01f},
+    {0.05f, 0.07f, 0.0f},
+    {0.04f, 0.05f, -0.02f},
+    {0.02f, 0.02f, -0.01f},
 };
 
 struct MazePropRecord {
@@ -214,6 +247,7 @@ void GetMazeMarkerRouteCoordinates(std::int32_t marker, std::int32_t *partition,
 std::int32_t FindMazeMarkerWithinRadius(const Vector3 *position, float radius);
 std::int32_t FindCharacterMazeMarkerWithinRadius(Character *character, float radius);
 bool IsCharacterWithinMazeMarkerRadius(Character *character, std::int32_t marker, float radius);
+bool IsPositionWithinMazeMarkerRadius(const Vector3 *position, std::int32_t marker, float radius);
 void GetMazeUnitPosition(std::int32_t index, Vector3 *output);
 std::uint32_t GetMazeUnitYaw(std::int32_t index);
 std::uint64_t GetCharacterMazeUnitIndex(Character *character);

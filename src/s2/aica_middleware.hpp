@@ -17,7 +17,12 @@ inline constexpr std::uint32_t CORRECTED_SAMPLE_BYTE_COUNT = 18182;
 
 std::recursive_mutex &GetAudioBackendMutex() noexcept;
 enum AicaEnvelopePhase : std::uint32_t {
-    AICA_ENVELOPE_OFF, AICA_ENVELOPE_ATTACK, AICA_ENVELOPE_HOLD, AICA_ENVELOPE_DECAY1, AICA_ENVELOPE_DECAY2, AICA_ENVELOPE_RELEASE
+    AICA_ENVELOPE_OFF,
+    AICA_ENVELOPE_ATTACK,
+    AICA_ENVELOPE_HOLD,
+    AICA_ENVELOPE_DECAY1,
+    AICA_ENVELOPE_DECAY2,
+    AICA_ENVELOPE_RELEASE
 };
 inline constexpr std::int32_t AICA_MODERN_ENVELOPE_STEP = 6;
 inline constexpr float AICA_MODERN_ENVELOPE_DECAY_BASE = 0.999888f;
@@ -212,7 +217,10 @@ struct AicaMemory {
     std::uint8_t field730;
     std::uint8_t field731;
     std::int8_t field732;
-    std::byte reserved_0733[0x190d];
+    std::uint8_t field733;
+    std::int32_t field734;
+    std::int32_t field738;
+    std::byte reserved_073c[0x1904];
     AicaVoicePool voicePool;
 };
 
@@ -234,6 +242,8 @@ static_assert(offsetof(AicaMemory, globalPanRight) == 0x710);
 static_assert(offsetof(AicaMemory, globalPanLeft) == 0x712);
 static_assert(offsetof(AicaMemory, field731) == 0x731);
 static_assert(offsetof(AicaMemory, field732) == 0x732);
+static_assert(offsetof(AicaMemory, field734) == 0x734);
+static_assert(offsetof(AicaMemory, field738) == 0x738);
 static_assert(offsetof(AicaMemory, voicePool) == 0x2040);
 static_assert(offsetof(AicaMemory, voicePool) + offsetof(AicaVoicePool, paused) == 0x4354);
 constexpr std::array<std::uint16_t, 128> kAicaFadeTable{0xa3d7, 0x6d3a, 0x51eb, 0x4189, 0x369d, 0x2ecf, 0x28f5, 0x2468, 0x20c4, 0x1dca, 0x1b4e, 0x1934, 0x1767,
@@ -269,11 +279,8 @@ constexpr std::array<std::uint8_t, 8600> kAicaResidentPcm{
 alignas(16) inline constexpr std::array<std::uint8_t, 32768> kAicaResidentNoisePcm{
 #include "s1/aica_resident_noise_samples.inc"
 };
-constexpr std::array<float, 32> kAicaFilterQ{
-    1.5f, 1.4f, 1.31f, 1.12f, 1.0f, 0.9f, 0.95f, 0.8f,
-    0.75f, 0.7f, 0.65f, 0.6f, 0.55f, 0.5f, 0.45f, 0.4f,
-    0.35f, 0.3f, 0.25f, 0.2f, 0.18f, 0.16f, 0.15f, 0.145f,
-    0.142f, 0.139f, 0.133f, 0.129f, 0.125f, 0.12f, 0.115f, 0.1f};
+constexpr std::array<float, 32> kAicaFilterQ{1.5f, 1.4f, 1.31f, 1.12f, 1.0f, 0.9f, 0.95f, 0.8f, 0.75f, 0.7f, 0.65f, 0.6f, 0.55f, 0.5f, 0.45f, 0.4f, 0.35f, 0.3f,
+    0.25f, 0.2f, 0.18f, 0.16f, 0.15f, 0.145f, 0.142f, 0.139f, 0.133f, 0.129f, 0.125f, 0.12f, 0.115f, 0.1f};
 
 void *PrepareRawSoundEffect(const std::byte *samples, std::uint32_t audioBytes, std::uint32_t loopBegin, std::uint32_t loopLength, std::uint16_t channels,
     float volume, float frequencyRatio, std::uint32_t sampleRate, bool reclaimable, std::uint16_t bitsPerSample = 16);

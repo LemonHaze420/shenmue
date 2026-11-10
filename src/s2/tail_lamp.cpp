@@ -121,6 +121,7 @@ void CleanupTailLamp(Character *character, void *payload) {
     SetDynamicLightEnabled(component->lightSlot, false);
     if (component->resource) {
         ReleaseModelFormat7(component->resource->model);
+        HLib::FreeTaskData(component->resource->file);
         delete component->resource;
     }
 }
@@ -139,21 +140,12 @@ bool AttachTailLampComponent(Character *character) {
         return false;
     *component = {};
     std::unique_ptr<TailLampResource> resource = std::make_unique<TailLampResource>();
-    constexpr char filename[] = "TALS500G.MT5";
-    constexpr char archivePath[] = "/model/object/TALS500G.MT5";
-    const std::span<const std::byte> packageEntry = FindLoadedMapPackageEntry(filename);
-    if (!packageEntry.empty()) {
-        resource->bytes.assign(packageEntry.begin(), packageEntry.end());
-    } else {
-        const std::uint64_t size = ArchiveData_GetFileSize(archivePath);
-        if (size && size <= (std::numeric_limits<std::size_t>::max)()) {
-            resource->bytes.resize(static_cast<std::size_t>(size));
-            if (!ArchiveData_Read(archivePath, 0, resource->bytes.data(), resource->bytes.size()))
-                resource->bytes.clear();
-        }
-    }
-    if (!resource->bytes.empty() && ReadModelFormat7(resource->bytes, "model/object/TALS500G.MT5", resource->model, 0))
+    std::uint32_t size = 0;
+    resource->file = LoadLegacySceneFile("model/object", "TALS500G.MT5", kTailLampToken, &size);
+    if (resource->file && ReadModelFormat7({static_cast<const std::byte *>(resource->file), size}, "model/object/TALS500G.MT5", resource->model, 0))
         component->resource = resource.release();
+    else if (resource->file)
+        HLib::FreeTaskData(resource->file);
     component->lightSlot = GetCurrentActiveLight() == 1 ? kTailLampNoLightSlot : kTailLampLightSlot;
     component->lifetime = 128;
     if (component->lightSlot != kTailLampNoLightSlot) {

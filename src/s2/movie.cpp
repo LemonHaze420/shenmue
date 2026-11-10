@@ -33,8 +33,10 @@ constexpr std::array<MovieElement, 5> movieElements{{
 constexpr std::array<const char *, 5> movieFiles{"s1d_bg.dds", "s1d_f01.dds", "s1d_f02.dds", "s1d_she.dds", "s1d_bme.dds"};
 std::array<NamedSpriteTextureRecord, 5> movieTextures{};
 std::array<LegacyStripType0Vertex, 4> movieFadeVertices{{
-    {{0.0f, 0.0f, 0.0f}, 0}, {{640.0f, 0.0f, 0.0f}, 0},
-    {{0.0f, 480.0f, 0.0f}, 0}, {{640.0f, 480.0f, 0.0f}, 0},
+    {{0.0f, 0.0f, 0.0f}, 0},
+    {{640.0f, 0.0f, 0.0f}, 0},
+    {{0.0f, 480.0f, 0.0f}, 0},
+    {{640.0f, 480.0f, 0.0f}, 0},
 }};
 
 
@@ -187,6 +189,7 @@ void MovieTask(void *taskData) {
     movieSpritesLoaded = false;
     DispatchPostFxFilterRender(1);
     HLib::SetCurrentTaskTo(MovieTaskCallback);
+    aicaFree();
     DisableAicaIfEnabled();
     LoadMovieSprites();
     runningMovieRender = 1;

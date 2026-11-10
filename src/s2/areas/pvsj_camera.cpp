@@ -1,6 +1,7 @@
 #include "s2/areas/area_pvsj.hpp"
 #include "s2/areas/pati_event.hpp"
 #include "s2/camera.hpp"
+#include "s2/debug.hpp"
 #include "s2/event_gameplay_queued.hpp"
 #include "s2/event_queued.hpp"
 #include "s2/event_runtime.hpp"
@@ -26,6 +27,9 @@ void PvsjSetCamera(PvsjEventWork *work, std::int32_t id, shen_name eye, shen_nam
     if (id == work->cameraId && eye.name == work->cameraEye.name && target.name == work->cameraTarget.name)
         return;
     EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
+    const std::uint32_t eyeName[2]{eye.name, 0}, targetName[2]{target.name, 0};
+    EV_debug_log(
+        "PVSJ\\ePVSJ_et_PVSJ.c", 1974, "SetCamera:%i,%s,%s\n", id, reinterpret_cast<const char *>(eyeName), reinterpret_cast<const char *>(targetName));
     EVT_AT_SetCam(id, eye, target, 0, 0, delay);
     work->cameraId = id;
     pvsjCameraBlend = -1;

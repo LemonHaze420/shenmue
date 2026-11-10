@@ -106,8 +106,8 @@ void UpdateWatchHandAngles(MT7Node* root) {
     if (hour) hour->rotation.y = static_cast<std::uint16_t>(-91 * g_currentDateTime.minute - 5461 * g_currentDateTime.hour - g_currentDateTime.second);
 }
 
-// LoadRyoTimeArm's SafeTryLoad call has zero region-headroom requirement. Retain
-// its NPC-load suspension, free-talk pruning and heap's extra 32-byte guard.
+// LoadRyoTimeArm requests no region headroom.
+// Keep NPC-load suspension, free-talk pruning and the extra 32-byte heap guard.
 bool LoadRyoTimeArm() {
     constexpr char path[] = "model/item/YKBT2U2G.MT7";
     const std::uint32_t previousLoadState = static_cast<std::uint32_t>(GetNpcNewLoadState());
@@ -1161,6 +1161,14 @@ void CloseWristwatch(std::int32_t immediate) {
 void SetCtrlHandWatchFlags(std::int32_t enabled) {
     if (enabled) handWatch.flags |= 4U;
     else handWatch.flags &= ~4U;
+}
+
+std::int32_t GetHandWatchState() {
+    return handWatch.state;
+}
+
+void SetHandWatchState(std::int32_t state) {
+    handWatch.state = state;
 }
 
 } // namespace shenmue::s2

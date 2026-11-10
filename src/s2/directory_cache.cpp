@@ -1,6 +1,7 @@
 #include "s2/directory_cache.hpp"
 
 #include "s2/flag.hpp"
+#include <cstring>
 #include "s2/hlib.hpp"
 
 #define SHENMUE_DIRECTORY_NULL nullptr
@@ -86,6 +87,21 @@ void AllocateDIRE(const char *path, std::int32_t, std::int32_t entryCount) {
         }
     }
     nullsub();
+}
+
+void FreeDIRE(const char *path) {
+    char normalized[64];
+    NormalizeDirectoryPath(path, normalized);
+    for (DirectoryCacheEntry &entry : directoryCache) {
+        if (std::strcmp(entry.path, normalized))
+            continue;
+        if (!entry.retained) {
+            HLib::FreeTaskData(entry.directory);
+            entry.directory = nullptr;
+            entry.path[0] = '\0';
+        }
+        return;
+    }
 }
 
 

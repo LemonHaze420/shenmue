@@ -153,27 +153,26 @@ constexpr MagicRoomFloorGroup floors[]{
 };
 QronFloorProp floorProps[]{
     {SHEN_NAME(F004), {0x0, 0x4254, 0x1, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F005), {0x0, 0xa10a, 0x4, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F006), {0x0, 0x1c81, 0x2, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F007), {0x0, 0x80, 0x0, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F008), {0x0, 0x40, 0x0, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F009), {0x0, 0xff1f, 0x3, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F010), {0x0, 0x5082, 0x2, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F011), {0x0, 0x2841, 0x1, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F012), {0x0, 0x871c, 0x0, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F013), {0x0, 0xa90a, 0x0, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F014), {0x0, 0x5255, 0x0, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F015), {0x0, 0x0, 0x3, 0x0}, 0, 0, 0, nullptr},
-    {SHEN_NAME(R595), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
-    {SHEN_NAME(R115), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
-    {SHEN_NAME(R114), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F079), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
-    {SHEN_NAME(R106), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
-    {SHEN_NAME(R107), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
-    {SHEN_NAME(R108), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F038), {0xffff, 0x7fff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
-    {},
-};
+        {SHEN_NAME(F005), {0x0, 0xa10a, 0x4, 0x0}, 0, 0, 0, nullptr},
+            {SHEN_NAME(F006), {0x0, 0x1c81, 0x2, 0x0}, 0, 0, 0, nullptr},
+                {SHEN_NAME(F007), {0x0, 0x80, 0x0, 0x0}, 0, 0, 0, nullptr},
+                    {SHEN_NAME(F008), {0x0, 0x40, 0x0, 0x0}, 0, 0, 0, nullptr},
+                        {SHEN_NAME(F009), {0x0, 0xff1f, 0x3, 0x0}, 0, 0, 0, nullptr},
+                            {SHEN_NAME(F010), {0x0, 0x5082, 0x2, 0x0}, 0, 0, 0, nullptr},
+                                {SHEN_NAME(F011), {0x0, 0x2841, 0x1, 0x0}, 0, 0, 0, nullptr},
+                                    {SHEN_NAME(F012), {0x0, 0x871c, 0x0, 0x0}, 0, 0, 0, nullptr},
+                                        {SHEN_NAME(F013), {0x0, 0xa90a, 0x0, 0x0}, 0, 0, 0, nullptr},
+                                            {SHEN_NAME(F014), {0x0, 0x5255, 0x0, 0x0}, 0, 0, 0, nullptr},
+                                                {SHEN_NAME(F015), {0x0, 0x0, 0x3, 0x0}, 0, 0, 0, nullptr},
+                                                    {SHEN_NAME(R595), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
+                                                        {SHEN_NAME(R115), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
+                                                            {SHEN_NAME(R114), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
+                                                                {SHEN_NAME(F079), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
+                                                                    {SHEN_NAME(R106), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
+                                                                        {SHEN_NAME(R107), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
+                                                                            {SHEN_NAME(R108), {0xffff, 0xffff, 0xffff, 0xffff}, 0, 0, 0, nullptr},
+                                                                                {SHEN_NAME(F038), {0xffff, 0x7fff, 0xffff, 0xffff}, 0, 0, 0, nullptr}, {},
+                                                                            };
 constexpr std::uint8_t firstMasks[]{
     0,
     0,
@@ -1408,18 +1407,18 @@ constexpr const Vector3 *floorSevenPositionPointers[]{
 
 constexpr shen_name floorSevenCharacters[]{
     SHEN_NAME(FBX1),
-    SHEN_NAME(FBX2),
-    SHEN_NAME(FBX3),
-    SHEN_NAME(FBX4),
-    SHEN_NAME(DRM1),
-    SHEN_NAME(DRM2),
-    SHEN_NAME(FBX5),
-    SHEN_NAME(FBX6),
-    SHEN_NAME(FBX7),
-    SHEN_NAME(FBX8),
-    SHEN_NAME(DRM3),
-    SHEN_NAME(DRM4),
-};
+        SHEN_NAME(FBX2),
+            SHEN_NAME(FBX3),
+                SHEN_NAME(FBX4),
+                    SHEN_NAME(DRM1),
+                        SHEN_NAME(DRM2),
+                            SHEN_NAME(FBX5),
+                                SHEN_NAME(FBX6),
+                                    SHEN_NAME(FBX7),
+                                        SHEN_NAME(FBX8),
+                                            SHEN_NAME(DRM3),
+                                                SHEN_NAME(DRM4),
+                                            };
 void SetQF00FloorModel(shen_name name, std::int32_t enabled) {
     ToggleFlagOnFieldEntity(name, enabled);
     SetDisplayFlagForProp(name, enabled);
@@ -1482,7 +1481,7 @@ void QF00FloorChanged(Vector3 *position, std::uint32_t floor) {
         flddSetPointFlagOnGrid(SHEN_NAME(0000), 1);
         flddSetPointFlagOnGrid(SHEN_NAME(QF0X), 0);
         flddSetPointFlagOnGrid(SHEN_NAME(QF0Z), 1);
-        SetMapFieldDepthSlotEnabled(1, 0);
+        SetMapFieldDepthSlotEnabled(0, 1);
         ToggleFlagOnFieldEntity(SHEN_NAME(R110), 0);
         SetDoorSubjectEnabled(SHEN_NAME(R110), 0);
         ToggleFlagOnFieldEntity(SHEN_NAME(R109), 0);

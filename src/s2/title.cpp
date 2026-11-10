@@ -19,13 +19,23 @@
 #include "s2/sound_program.hpp"
 #include "s2/system_modules.hpp"
 #include "s2/ui.hpp"
+#include "s2/archive_data.hpp"
+#include "s2/initialization.hpp"
+#include "s2/legacy_draw.hpp"
+#include "s2/math.hpp"
+#include "s2/ui_loadsave.hpp"
+#include "d3t/ui_runtime.hpp"
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <bit>
 #include <limits>
 #include "s2/area_names.hpp"
+#if defined(_WIN32)
+#include "imgui.h"
+#endif
 
 namespace shenmue::s2 {
 void TitleControl(void *taskData);
@@ -82,12 +92,24 @@ float titleSequenceTime = 0.0f;
 std::int32_t titleAttractSkipRequested{};
 std::int32_t titleWheelTransitionAngle{};
 ConversationBuffer *currentTitleLogo = nullptr;
-std::int32_t titleMenuDialogueMode = 0;
-std::int32_t titleMenuControlMode = 0;
-std::int32_t titleMenuTriggerSwap = 0;
-std::int32_t titleOptionsSelection = 0;
-std::array<std::int32_t, 4> titleOptionItems{};
-std::int32_t titleOptionItemCount = 0;
+std::array<std::int32_t, 3> titleMenuOptions{};
+std::int32_t titleOptionsInputLocked{};
+std::int32_t titleOptionsRow{};
+std::int32_t titleOptionsPage1Row{};
+std::array<std::int32_t, 2> titleOptionsPage1Values{};
+std::int32_t titleOptionsPage2Mode{};
+std::int32_t titleOptionsPage2Row{};
+std::array<std::int32_t, 11> titleOptionsPage2Values{};
+std::int32_t titleOptionsPage{};
+std::array<std::int32_t, 5> titleOptionItems{};
+const std::int16_t *titleOptionColumnMarker{};
+std::int32_t debugModuleChangeRequested{};
+SystemModule debugModuleChange{};
+std::int32_t debugSceneAct{};
+shen_name debugSceneArea{};
+std::int32_t debugSceneEntry{};
+std::array<MapEventAreaDefinition, 128> titleDebugSceneAreas{};
+std::array<char, 5> shenNameString{};
 std::int16_t titleSelectedAct = -1;
 std::int32_t titleDebugAct = 0;
 std::int32_t titleDebugSaveSlot = -1;
@@ -347,6 +369,100 @@ void SwitchSystemModuleTaskForFrontend(void *) {
         }
     }
 }
+
+// @verified - p
+const MapEventAreaDefinition *BuildTitleDebugSceneAreas(std::int32_t scene, std::int32_t filter) {
+    const MapEventAreaDefinition *areas = nullptr;
+    if (scene != 0) {
+        if (static_cast<std::uint32_t>(scene) <= 2)
+            areas = GetHongKongMapEventAreas();
+        else if (scene == 3)
+            areas = GetKowloonMapEventAreas();
+        else if (scene == 4)
+            areas = GetGuilinMapEventAreas();
+    }
+    if (!filter)
+        return areas;
+    std::size_t count = 0;
+    for (; areas && areas->areaId.name != 0xffffffffU; ++areas) {
+        bool keep = true;
+        for (const shen_name excluded : TITLE_DEBUG_EXCLUDED_AREAS[static_cast<std::size_t>(scene - 1)]) {
+            if (excluded.name == 0 || !keep)
+                break;
+            if (excluded.name == areas->areaId.name)
+                keep = false;
+        }
+        if (!keep)
+            continue;
+        const shen_name area = areas->areaId;
+        char directory[64];
+        std::snprintf(
+            directory, sizeof(directory), "scene/%02d/%c%c%c%c", scene, area.characters[0], area.characters[1], area.characters[2], area.characters[3]);
+        char path[260];
+        std::snprintf(path, sizeof(path), "%s/%s", directory, "MAPINFO.BIN");
+        if (ArchiveData_GetFileSize(path) != 0)
+            titleDebugSceneAreas[count++] = *areas;
+    }
+    titleDebugSceneAreas[count].areaId.name = 0xffffffffU;
+    return titleDebugSceneAreas.data();
+}
+
+#if defined(_WIN32)
+// @verified - p
+void TitleDebugMenuHeader() {
+    ImGui::SameLine(0.0f, -1.0f);
+    ImGui::Text("Disk %u: %s", static_cast<std::uint32_t>(g_actNumber), GetShenNameString(g_currentMap));
+}
+
+// @verified - p
+void TitleDebugMenuBody() {
+    char label[512];
+    for (std::uint32_t scene = 1; scene <= 4; ++scene) {
+        const MapEventAreaDefinition *area = BuildTitleDebugSceneAreas(static_cast<std::int32_t>(scene), 1);
+        if (!area)
+            continue;
+        std::snprintf(label, sizeof(label), "Disk %u", scene);
+        if (!ImGui::BeginMenu(label, true))
+            continue;
+        for (; area->areaId.name != 0xffffffffU; ++area) {
+            const std::int32_t index = ui_detail::SaveMenuAreaIndex(area->areaId);
+            const char *const name = index == -1 ? "" : GetStringForUILabel(UI_SAVE_AREA_TOKENS[static_cast<std::size_t>(index)]);
+            std::snprintf(label, sizeof(label), "%s - %s", GetShenNameString(area->areaId), name);
+            if (!ImGui::BeginMenu(label, true))
+                continue;
+            for (const MapEventTransition *entry = area->transitions; entry && entry->eventId != -1; ++entry) {
+                std::snprintf(label, sizeof(label), "Entry %d: %s", entry->eventId, GetShenNameString(entry->areaId));
+                if (ImGui::MenuItem(label, nullptr, false, true)) {
+                    SetProjectionOff();
+                    debugModuleChangeRequested = 1;
+                    debugModuleChange = SystemModule::Game;
+                    debugSceneAct = static_cast<std::int32_t>(scene);
+                    debugSceneArea = area->areaId;
+                    debugSceneEntry = entry->eventId;
+                }
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Change System Module", true)) {
+        for (std::size_t module = 0; module < TITLE_DEBUG_SYSTEM_MODULE_NAMES.size(); ++module) {
+            if (ImGui::MenuItem(TITLE_DEBUG_SYSTEM_MODULE_NAMES[module], nullptr, false, true)) {
+                SetProjectionOff();
+                debugModuleChangeRequested = 1;
+                debugModuleChange = static_cast<SystemModule>(module);
+                debugSceneAct = 0;
+                debugSceneArea = {};
+                debugSceneEntry = 0;
+            }
+        }
+        ImGui::EndMenu();
+    }
+    if (ImGui::MenuItem("Reset To Title", nullptr, false, true))
+        ResetToTitleScreen();
+}
+#endif
+
 void NativeTitleNoOp(void *) {
 }
 
@@ -411,23 +527,334 @@ void TitleMenuControl(void *data) {
     }
 }
 
+// @verified - p
+void DrawTitleMenuWheel() {
+    std::int32_t angle = titleWheelTransitionAngle;
+    if (angle > 0) {
+        angle -= static_cast<std::int32_t>(shenGetScaledDeltaTickTime(1365.0f));
+        titleWheelTransitionAngle = angle;
+        if (angle < 255) {
+            angle = 0;
+            titleWheelTransitionAngle = 0;
+        }
+    } else if (angle < 0) {
+        angle += static_cast<std::int32_t>(shenGetScaledDeltaTickTime(1365.0f));
+        titleWheelTransitionAngle = angle;
+        if (angle > -255) {
+            angle = 0;
+            titleWheelTransitionAngle = 0;
+        }
+    }
+    if (angle == 0) {
+        switch (g_titleMenuSelection - g_previousTitleMenuSelection) {
+        case -1:
+        case 5:
+            angle = 9557;
+            titleWheelTransitionAngle = angle;
+            break;
+        case 1:
+        case -5:
+            angle = -9557;
+            titleWheelTransitionAngle = angle;
+            break;
+        default:
+            break;
+        }
+    }
+    for (std::int32_t item = 0; item < 6; ++item) {
+        const std::int32_t itemAngle = static_cast<std::int32_t>(static_cast<float>(10922 * (g_titleMenuSelection - item))) + angle;
+        const float cosine = FixedAngleCos(static_cast<std::uint16_t>(itemAngle));
+        const float y = cosine * 70.0f + 200.0f;
+        const float sine = FixedAngleSin(static_cast<std::uint16_t>(itemAngle));
+        const float depth = cosine + 2.5f;
+        const float scale = (depth * 0.2f + 0.2f) * 1.1111112f;
+        Vector3 position{.x = scale * 10.0f + (sine * (depth * 70.0f) + 320.0f), .y = scale * 15.0f + y, .z = scale * 0.001f - 2.8000002f};
+        DrawTitleSpriteRect(item != g_titleMenuSelection ? TITLE_WHEEL_ITEM_UV.data() : TITLE_WHEEL_SELECTED_UV.data(), position, 7, scale);
+        position.z = scale * 0.0001f + position.z;
+        DrawTitleSpriteRect(TITLE_WHEEL_LABEL_UV[static_cast<std::size_t>(item)].data(), position, 7, scale);
+        angle = titleWheelTransitionAngle;
+    }
+}
+
+// @verified - p
 void TitleMenuDisplay(void *) {
-    EnableElement(UIElement::MainMenu);
+    if (GetDebugForceUIEnabled(UIElement::MainMenu) && g_debugImGuiRenderMode != 1) {
+        EnableElement(UIElement::MainMenu);
+        return;
+    }
+    DrawTitleSpriteRect(TITLE_MENU_HEADER_UV[0].data(), {.x = 160.0f, .y = 59.0f, .z = -2.8000002f}, 7, 1.0f);
+    DrawTitleSpriteRect(TITLE_MENU_HEADER_UV[1].data(), {.x = 480.0f, .y = 59.0f, .z = -2.8000002f}, 7, 1.0f);
+    DrawTitleMenuWheel();
+    std::int32_t item = 3, secondary = -1;
+    if (g_titleMenuSelection != 1 || (GetLocalBackupInfo() & 0x40U) != 0) {
+        switch (g_titleMenuSelection) {
+        case 2:
+            item = 14;
+            secondary = 13;
+            break;
+        case 3:
+            item = 15;
+            break;
+        case 5:
+            item = 16;
+            break;
+        default:
+            item = g_titleMenuSelection == -1 ? g_previousTitleMenuSelection : TITLE_MENU_CAPTIONS[static_cast<std::size_t>(g_titleMenuSelection)];
+            break;
+        }
+    }
+    DrawTitleCaption(item, secondary);
+    DrawTitleFrame(3);
 }
 
 const std::array<TitleCallbackPair, 2> TITLE_SECOND_CALLBACKS{{
     {.control = SwitchSystemModuleTaskForFrontend, .display = SetPressStart},
     {.control = TitleMenuControl, .display = TitleMenuDisplay},
 }};
-void TitleOptionsControl(void *) {
+
+// @verified - p
+void TitleOptionsControl(void *data) {
+    const std::uint16_t analog = InterpretTitleAnalogInput();
+    std::uint16_t buttons = g_inputBuffer[0].pressedPriority | analog;
     padcCheckControllerConnection();
-    ProcessTitleOptionsInput();
-    g_previousTitleInputUserHandle = FrontendControllerUserHandle();
+    std::int32_t page = titleOptionsPage;
+    if ((buttons & 0x200U) != 0) {
+        if (titleOptionsInputLocked == 0) {
+            ApplyTitleMenuOptions();
+            ExecuteTitleMenuCallback(static_cast<TitleControlData *>(data), SystemModule::Test);
+            return;
+        }
+    } else if (titleOptionsInputLocked == 0) {
+        if ((buttons & 0x80U) != 0) {
+            page = page + 1 > 2 ? 0 : page + 1;
+            buttons &= 0xff3fU;
+            titleOptionsPage = page;
+        }
+        if ((buttons & 0x40U) != 0) {
+            if (--page < 0)
+                page = 2;
+            buttons &= 0xff3fU;
+            titleOptionsPage = page;
+        }
+    }
+    if (page == 1) {
+        std::int32_t row = titleOptionsPage1Row;
+        if ((buttons & 0x2000U) != 0) {
+            row = row + 1 > 1 ? 0 : row + 1;
+            buttons &= 0x3fffU;
+            titleOptionsPage1Row = row;
+        }
+        if ((buttons & 0x1000U) != 0) {
+            if (--row < 0)
+                row = 1;
+            buttons &= 0x3fffU;
+            titleOptionsPage1Row = row;
+        }
+        std::int32_t value = titleOptionsPage1Values[static_cast<std::size_t>(row)];
+        if ((buttons & 0x4000U) != 0 && --value < 0)
+            value = 0;
+        if ((buttons & 0x8000U) != 0) {
+            const std::int32_t count = TITLE_OPTION_PAGE1_COUNTS[static_cast<std::size_t>(row)];
+            if (++value >= count)
+                value = count - 1;
+        }
+        titleOptionsPage1Values[static_cast<std::size_t>(row)] = value;
+    } else if (page == 0) {
+        std::int32_t row = titleOptionsRow;
+        if ((buttons & 0x2000U) != 0) {
+            row = row + 1 > 2 ? 0 : row + 1;
+            buttons &= 0x3fffU;
+            titleOptionsRow = row;
+        }
+        if ((buttons & 0x1000U) != 0) {
+            if (--row < 0)
+                row = 2;
+            buttons &= 0x3fffU;
+            titleOptionsRow = row;
+        }
+        if (row != 3) {
+            std::int32_t value = titleMenuOptions[static_cast<std::size_t>(row)];
+            if ((buttons & 0x4000U) != 0) {
+                if (--value < 0)
+                    value = row != 0 ? 0 : TITLE_OPTION_PAGE0_COUNTS[0] - 1;
+                g_titleVersionOverride = 1;
+            }
+            if ((buttons & 0x8000U) != 0) {
+                const std::int32_t count = TITLE_OPTION_PAGE0_COUNTS[static_cast<std::size_t>(row)];
+                if (++value >= count)
+                    value = row != 0 ? count - 1 : 0;
+                g_titleVersionOverride = 1;
+            }
+            titleMenuOptions[static_cast<std::size_t>(row)] = value;
+        }
+    }
 }
 
+const std::uint16_t *TitleOptionSpriteUv(std::int32_t texture, std::int32_t index) {
+    const std::size_t entry = static_cast<std::size_t>(index);
+    switch (texture) {
+    case 8:
+        return TITLE_OPTION_FRAME_UV[entry].data();
+    case 9:
+        return TITLE_OPTION_TEXT_UV[entry].data();
+    case 21:
+        return TITLE_OPTION_VALUE_UV[entry].data();
+    case 22:
+        return TITLE_OPTION_LABEL_UV[entry].data();
+    case 23:
+        return TITLE_OPTION_ICON_UV[entry].data();
+    default:
+        return nullptr;
+    }
+}
+
+// @verified - p
+void DrawTitleOptionColumns(std::int32_t texture, const std::int16_t *labels, std::int32_t value, float y) {
+    Vector3 position{.y = y};
+    titleOptionColumnMarker = TITLE_OPTION_COLUMN_MARKERS[static_cast<std::size_t>(value & 1)].data();
+    for (std::int32_t column = 0; column < 2; ++column) {
+        position.z = -2.8000002f;
+        position.x = static_cast<float>(TITLE_OPTION_COLUMN_X[static_cast<std::size_t>(column)]);
+        DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[static_cast<std::size_t>(titleOptionColumnMarker[1])].data(), position, 8, 1.0f);
+        position.x = static_cast<float>(column) * 210.0f + 310.0f;
+        DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[static_cast<std::size_t>(titleOptionColumnMarker[0])].data(), position, 8, 1.0f);
+        position.z = -2.6000004f;
+        DrawTitleSpriteRect(TitleOptionSpriteUv(texture, labels[column]), position, texture, 1.0f);
+        titleOptionColumnMarker += 2;
+    }
+}
+
+// @verified - p
+void DrawTitleOptionStepper(Vector3 position, std::int32_t first, std::int32_t row) {
+    const std::size_t index = static_cast<std::size_t>(row);
+    DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[6].data(), position, 8, 1.0f);
+    position.z = -2.6000004f;
+    DrawTitleSpriteRect(TITLE_OPTION_VALUE_UV[static_cast<std::size_t>(first + titleOptionsPage1Values[index])].data(), position, 21, 1.0f);
+    position.z = -2.8000002f;
+    position.x = 300.0f;
+    DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[titleOptionsPage1Values[index] == 0 ? 9 : 7].data(), position, 8, 1.0f);
+    position.x = 525.0f;
+    DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[titleOptionsPage1Values[index] == TITLE_OPTION_PAGE1_COUNTS[index] - 1 ? 10 : 8].data(), position, 8, 1.0f);
+}
+
+// @verified - p
 void TitleOptionsDisplay(void *) {
-    ShowElementByIndex(UIElement::SubMenuOptions);
-    EnableElement(UIElement::SubMenuOptions);
+    if (GetDebugForceUIEnabled(UIElement::Options))
+        EnableElement(UIElement::Options);
+    Vector3 position{.x = 160.0f, .y = 59.0f, .z = -2.8000002f};
+    DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[0].data(), position, 8, 1.0f);
+    position.x = 480.0f;
+    DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[1].data(), position, 8, 1.0f);
+    position = {.x = 20.0f, .y = 110.0f, .z = -2.6000004f};
+    DrawTitleSpriteRect(TITLE_OPTION_LABEL_UV[21].data(), position, 22, 1.0f);
+    position.x = 620.0f;
+    DrawTitleSpriteRect(TITLE_OPTION_LABEL_UV[22].data(), position, 22, 1.0f);
+    for (std::int32_t tab = 0; tab < 3; ++tab) {
+        position = {.x = static_cast<float>(tab * 200) + 120.0f, .y = 110.0f, .z = -2.8000002f};
+        DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[tab == titleOptionsPage ? 2 : 3].data(), position, 8, 1.0f);
+        position.z = -2.6000004f;
+        DrawTitleSpriteRect(TITLE_OPTION_LABEL_UV[static_cast<std::size_t>(TITLE_OPTION_TAB_LABELS[static_cast<std::size_t>(tab)])].data(), position, 22, 1.0f);
+    }
+    std::int32_t item = -1, secondary = -1;
+    if (titleOptionsPage == 0) {
+        for (std::int32_t row = 0; row < 3; ++row) {
+            position = {.x = 130.0f, .y = static_cast<float>(row) * 45.0f + 160.0f, .z = -2.8000002f};
+            DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[row == titleOptionsRow ? 2 : 3].data(), position, 8, 1.0f);
+            position.z = -2.6000004f;
+            DrawTitleSpriteRect(
+                TITLE_OPTION_TEXT_UV[static_cast<std::size_t>(TITLE_OPTION_PAGE0_LABELS[static_cast<std::size_t>(row)])].data(), position, 9, 1.0f);
+        }
+        position = {.x = 415.0f, .y = 160.0f, .z = -2.8000002f};
+        DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[6].data(), position, 8, 1.0f);
+        position.z = -2.6000004f;
+        DrawTitleSpriteRect(TITLE_OPTION_TEXT_UV[static_cast<std::size_t>(TITLE_OPTION_DIALOGUE_LABELS[static_cast<std::size_t>(titleMenuOptions[0])])].data(),
+            position, 9, 1.0f);
+        position.x = 300.0f;
+        position.z = -2.8000002f;
+        DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[7].data(), position, 8, 1.0f);
+        position.x = 525.0f;
+        DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[8].data(), position, 8, 1.0f);
+        for (std::int32_t row = 1; row <= 2; ++row)
+            DrawTitleOptionColumns(9, TITLE_OPTION_PAGE0_VALUE_LABELS[static_cast<std::size_t>(row - 1)].data(),
+                titleMenuOptions[static_cast<std::size_t>(row)], static_cast<float>(row) * 45.0f + 160.0f);
+        const std::array<std::int8_t, 2> &caption = titleOptionsRow != 0 ? TITLE_OPTION_ROW_CAPTIONS[static_cast<std::size_t>(titleOptionsRow)] :
+                                                                           TITLE_OPTION_DIALOGUE_CAPTIONS[static_cast<std::size_t>(titleMenuOptions[0])];
+        item = caption[0];
+        secondary = caption[1];
+    } else if (titleOptionsPage == 1) {
+        for (std::int32_t row = 0; row <= 1; ++row) {
+            position = {.x = 130.0f, .y = static_cast<float>(row) * 45.0f + 160.0f, .z = -2.8000002f};
+            DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[row == titleOptionsPage1Row ? 2 : 3].data(), position, 8, 1.0f);
+            position.z = -2.6000004f;
+            DrawTitleSpriteRect(
+                TITLE_OPTION_VALUE_UV[static_cast<std::size_t>(TITLE_OPTION_PAGE1_LABELS[static_cast<std::size_t>(row)])].data(), position, 21, 1.0f);
+        }
+        position = {.x = 415.0f, .y = 160.0f, .z = -2.8000002f};
+        DrawTitleOptionStepper(position, 7, 0);
+        position.y = 205.0f;
+        DrawTitleOptionStepper(position, 2, 1);
+    } else if (titleOptionsPage == 2) {
+        for (std::int32_t row = 0; row < 5; ++row) {
+            const std::int32_t option = titleOptionItems[static_cast<std::size_t>(row)];
+            if (option == 10)
+                continue;
+            position = {.x = 130.0f, .y = static_cast<float>(row) * 45.0f + 160.0f, .z = -2.8000002f};
+            DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[option == titleOptionsPage2Row ? 2 : 3].data(), position, 8, 1.0f);
+            position.z = -2.6000004f;
+            DrawTitleSpriteRect(
+                TITLE_OPTION_LABEL_UV[static_cast<std::size_t>(TITLE_OPTION_ITEM_LABELS[static_cast<std::size_t>(option)])].data(), position, 22, 1.0f);
+        }
+        for (std::int32_t row = 0; row < 5; ++row) {
+            const std::int32_t option = titleOptionItems[static_cast<std::size_t>(row)];
+            if (option == 0) {
+                position.x = 415.0f;
+                position.z = -2.8000002f;
+                position.y = static_cast<float>(row) * 45.0f + 160.0f;
+                DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[6].data(), position, 8, 1.0f);
+                position.z = -2.6000004f;
+                DrawTitleSpriteRect(
+                    TITLE_OPTION_LABEL_UV[static_cast<std::size_t>(TITLE_OPTION_PAGE2_MODE_LABELS[static_cast<std::size_t>(titleOptionsPage2Mode)])].data(),
+                    position, 22, 1.0f);
+                position.z = -2.8000002f;
+                position.x = 300.0f;
+                DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[7].data(), position, 8, 1.0f);
+                position.x = 525.0f;
+                DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[8].data(), position, 8, 1.0f);
+            }
+            if (option == 10) {
+                position = {.x = 320.0f, .y = static_cast<float>(row) * 45.0f + 160.0f, .z = -2.8000002f};
+                DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[titleOptionsPage2Row == 10 ? 2 : 3].data(), position, 8, 1.0f);
+                position.z = -2.6000004f;
+                DrawTitleSpriteRect(TITLE_OPTION_LABEL_UV[static_cast<std::size_t>(TITLE_OPTION_ITEM_LABELS[10])].data(), position, 22, 1.0f);
+            }
+        }
+        for (std::int32_t row = 0; row < 5; ++row) {
+            const std::int32_t option = titleOptionItems[static_cast<std::size_t>(row)];
+            if (option == 0 || option == 10 || titleOptionsPage2Mode == 1)
+                continue;
+            position.x = 415.0f;
+            position.y = static_cast<float>(row) * 45.0f + 160.0f;
+            const std::int32_t value = titleOptionsPage2Values[static_cast<std::size_t>(option)];
+            position.z = -2.8000002f;
+            DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[titleOptionsPage2Row == option ? 4 : 5].data(), position, 8, 1.0f);
+            if (value != -1) {
+                position.z = -2.6000004f;
+                DrawTitleSpriteRect(TITLE_OPTION_ICON_UV[static_cast<std::size_t>(value)].data(), position, 23, 1.0f);
+            }
+        }
+        if (titleOptionItems[0] != 0) {
+            position.x = 520.0f;
+            position.y = 160.0f;
+            DrawTitleSpriteRect(TITLE_OPTION_LABEL_UV[19].data(), position, 22, 1.0f);
+        }
+        if (titleOptionItems[4] != 10) {
+            position.y = 340.0f;
+            position.x = 520.0f;
+            DrawTitleSpriteRect(TITLE_OPTION_LABEL_UV[20].data(), position, 22, 1.0f);
+        }
+    }
+    DrawTitleCaption(item, secondary);
+    DrawTitleFrame(7);
 }
 
 void StartTitleCreditsMovie(void *) {
@@ -651,14 +1078,47 @@ void SetTitleLogoPresent() {
 }
 
 // @verified - p
+void HandleSceneTransitionForModule() {
+    if (!debugModuleChangeRequested)
+        return;
+    const SystemModule module = debugModuleChange;
+    debugModuleChangeRequested = 0;
+    if (module == SystemModule::Game) {
+        g_actNumber = debugSceneAct;
+        g_currentMap = debugSceneArea;
+        g_entryPoint = debugSceneEntry;
+        (void)ExecuteAicaCommand(0x1200a0U, 5, 0);
+        (void)ChangeSystemModule(SystemModule::Game, 0);
+        if (g_loadedActNumber != g_actNumber) {
+            SetSceneInfos(g_actNumber, g_currentMap, g_entryPoint);
+            (void)S2Save_CheckData();
+            SetNextSceneNumber(static_cast<std::uint32_t>(g_actNumber));
+            g_bPaused = false;
+            (void)ChangeSystemModule(SystemModule::DiskChange, 0);
+        }
+    } else {
+        (void)ExecuteAicaCommand(0x1200a0U, 5, 0);
+        (void)ChangeSystemModule(module, 0);
+    }
+}
+
+// @verified - p
+const char *GetShenNameString(shen_name name) {
+    std::memcpy(shenNameString.data(), &name.name, 4);
+    shenNameString[4] = 0;
+    return shenNameString.data();
+}
+
+// @verified - p
 void ResetTitleMenuState() {
-    titleMenuDialogueMode = static_cast<std::uint8_t>(GetS2DialogueMode());
-    titleMenuTriggerSwap = AreS2TriggersSwapped();
-    titleMenuControlMode = GetS2ControlMode();
-    titleOptionsSelection = 0;
+    titleMenuOptions[0] = static_cast<std::uint8_t>(GetS2DialogueMode());
+    titleMenuOptions[2] = AreS2TriggersSwapped();
+    titleMenuOptions[1] = GetS2ControlMode();
+    titleOptionsPage1Values[0] = 0;
     SetTitleLogoPresent();
-    titleOptionItems = TITLE_OPTION_ITEMS;
-    titleOptionItemCount = 4;
+    for (std::size_t index = 0; index < TITLE_OPTION_ITEMS.size(); ++index)
+        titleOptionItems[index] = TITLE_OPTION_ITEMS[index];
+    titleOptionItems[4] = 4;
 }
 
 // @verified - p
@@ -692,9 +1152,9 @@ void TitleAudioControl(std::int32_t sceneIndex) {
 
 // @verified - p
 void ApplyTitleMenuOptions() {
-    ApplyS2TriggerSwapMode(titleMenuTriggerSwap);
+    ApplyS2TriggerSwapMode(titleMenuOptions[2]);
     ApplyS2DialogueMode(static_cast<std::uint8_t>(GetS2AudioSettings().dialogueMode));
-    ApplyS2ControlMode(titleMenuControlMode);
+    ApplyS2ControlMode(titleMenuOptions[1]);
 } // namespace
 
 // @verified - p
@@ -847,6 +1307,11 @@ void TitleControl(void *taskData) {
     g_previousTitleInputUserHandle = g_inputBuffer[0].connectionState;
 }
 
+// @verified - p
+void ClearTitlePressStartSelection() {
+    pressStartSelected = 0;
+}
+
 bool SelectTitlePressStart() {
     auto *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
     if (!control) {
@@ -888,9 +1353,14 @@ bool ReturnToTitlePressStartTask() {
 
 void TitleModule(void *taskData) {
     SystemModuleTaskData *const module = static_cast<SystemModuleTaskData *>(taskData);
+#if defined(_WIN32)
+    g_debugMenuHeader = TitleDebugMenuHeader;
+    g_debugMenuBody = TitleDebugMenuBody;
+#endif
     DispatchPostFxFilterRender(0);
     ResetLegacySpriteSlotDrawState();
     g_bPaused = true;
+    InitWarnLogos();
     const shen_name previousMap = g_currentMap;
     g_currentMap = titleAreaName;
     ReloadSpriteResources();

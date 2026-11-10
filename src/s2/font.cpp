@@ -64,15 +64,23 @@ std::size_t DecodeUIFontCodepoint(std::string_view text, std::uint32_t &codepoin
     return count;
 }
 
+using UIFontAlternateCompletion = void (*)(void *data, void *, std::uint32_t contentHandle, void *loadedData, std::uint64_t loadedSize);
+
 // @verified - p
-std::int32_t FontContentPostLoadNullsub(std::uint32_t) {
+void UIFontAlternateLoaded(void *data, void *, std::uint32_t contentHandle, void *loadedData, std::uint64_t loadedSize) {
+    LoadUIFont(data, contentHandle, loadedData, loadedSize, d3t::GetContentSourcePath(contentHandle));
+    d3t::ProcessThreadStates(contentHandle, 1);
+}
+
+// @verified - p
+std::int32_t FontContentPostLoadNullsub(std::uint32_t, UIFontAlternateCompletion, void *, std::int32_t) {
     return 0;
 }
 
 // @verified - p
 void UIFontMetadataLoaded(void *data, std::uint32_t contentHandle, void *metadata, std::uint64_t size, const char *sourcePath) {
     LoadUIFont(data, contentHandle, metadata, size, sourcePath);
-    FontContentPostLoadNullsub(contentHandle);
+    FontContentPostLoadNullsub(contentHandle, UIFontAlternateLoaded, data, 8);
     d3t::ProcessThreadStates(contentHandle, 1);
 }
 

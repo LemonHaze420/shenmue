@@ -13,49 +13,49 @@ namespace {
 
 
 constexpr InventoryItemDefinition keyItems[] = {
-    {11, 20, 200, 1200, nullptr, "UIITEMOVMA", 0x2U, 0x0U}, // @text EN: "Overall Map" | JA: "全体マップ"
-    {12, 0, 200, 1200, nullptr, "UIITEMNOTE", 0x2U, 0x0U}, // @text EN: "Notebook" | JA: "メモ帳"
-    {3, 21, 300, 800, nullptr, "UIITEMTOKE", 0x2U, 0x0U}, // @text EN: "Token(s)" | JA: "コイン"
-    {10, 2, 1000, 1000, nullptr, "UIITEMWATC", 0x2U, 0x0U}, // @text EN: "Watch" | JA: "時計"
-    {13, 3, 600, 1300, "TUBA1T1", "UIITEMSWHA", 0x200U, 0x0U}, // @text EN: "Sword Handguard" | JA: "刀の鍔"
-    {14, 4, 400, 650, "PNX02H6", "UIITEMPHMI", 0x200U, 0x0U}, // @text EN: "Phoenix Mirror" | JA: "鳳凰鏡"
-    {22, 5, 200, 450, "LMAL200", "UIITEMCIL0", 0x200U, 0x0U}, // @text EN: "Chen Intro Letter" | JA: "陳大人の紹介状"
-    {15, 6, 530, 1140, "OMMR1M1", "UIITEMAMUL", 0x200U, 0x0U}, // @text EN: "Amulet" | JA: "お守り"
-    {16, 7, 480, 930, "HAFK100", "UIITEMWHLE", 0x200U, 0x0U}, // @text EN: "White Leaf" | JA: "白い葉"
-    {20, 24, 800, 1600, "ZIPOHHV", "UIITEMHEZI", 0x200U, 0x0U}, // @text EN: "Heavens Lighter" | JA: "ヘヴンズライター"
-    {17, 22, 800, 1500, "MAGA2WH", "UIITEMCSB0", 0x0U, 0x0U}, // @text EN: "Comma Shaped Bead" | JA: "勾玉"
-    {21, 10, 240, 480, "QDKJASI", "UIITEMFDB0", 0x210U, 0x0U}, // @text EN: "Four Divine Beasts" | JA: "四神獣の図面"
-    {18, 11, 1250, 3100, "IKSM2OM", "UIITEMHECO", 0x202U, 0x0U}, // @text EN: "Heads Coin" | JA: "コイン表"
+    {11, 20, 200, 1200, nullptr, "UIITEMOVMA", 0x2U, 0x0U},       // @text EN: "Overall Map" | JA: "全体マップ"
+    {12, 0, 200, 1200, nullptr, "UIITEMNOTE", 0x2U, 0x0U},        // @text EN: "Notebook" | JA: "メモ帳"
+    {3, 21, 300, 800, nullptr, "UIITEMTOKE", 0x2U, 0x0U},         // @text EN: "Token(s)" | JA: "コイン"
+    {10, 2, 1000, 1000, nullptr, "UIITEMWATC", 0x2U, 0x0U},       // @text EN: "Watch" | JA: "時計"
+    {13, 3, 600, 1300, "TUBA1T1", "UIITEMSWHA", 0x200U, 0x0U},    // @text EN: "Sword Handguard" | JA: "刀の鍔"
+    {14, 4, 400, 650, "PNX02H6", "UIITEMPHMI", 0x200U, 0x0U},     // @text EN: "Phoenix Mirror" | JA: "鳳凰鏡"
+    {22, 5, 200, 450, "LMAL200", "UIITEMCIL0", 0x200U, 0x0U},     // @text EN: "Chen Intro Letter" | JA: "陳大人の紹介状"
+    {15, 6, 530, 1140, "OMMR1M1", "UIITEMAMUL", 0x200U, 0x0U},    // @text EN: "Amulet" | JA: "お守り"
+    {16, 7, 480, 930, "HAFK100", "UIITEMWHLE", 0x200U, 0x0U},     // @text EN: "White Leaf" | JA: "白い葉"
+    {20, 24, 800, 1600, "ZIPOHHV", "UIITEMHEZI", 0x200U, 0x0U},   // @text EN: "Heavens Lighter" | JA: "ヘヴンズライター"
+    {17, 22, 800, 1500, "MAGA2WH", "UIITEMCSB0", 0x0U, 0x0U},     // @text EN: "Comma Shaped Bead" | JA: "勾玉"
+    {21, 10, 240, 480, "QDKJASI", "UIITEMFDB0", 0x210U, 0x0U},    // @text EN: "Four Divine Beasts" | JA: "四神獣の図面"
+    {18, 11, 1250, 3100, "IKSM2OM", "UIITEMHECO", 0x202U, 0x0U},  // @text EN: "Heads Coin" | JA: "コイン表"
     {518, 12, 1250, 3100, "IKSM2UR", "UIITEMTACO", 0x202U, 0x0U}, // @text EN: "Tails Coin" | JA: "コイン裏"
-    {19, 13, 450, 1200, "OMMRHH1", "UIITEMXUAM", 0x202U, 0x0U}, // @text EN: "Xun's Amulet" | JA: "薫のお守り"
-    {512, 25, 525, 1300, "MEDA2GL", "UIITEMBGM0", 0x202U, 0x0U}, // @text EN: "Big Gold Medal" | JA: "大きな金メダル"
-    {513, 26, 525, 1300, "MEDA2SV", "UIITEMBSM0", 0x202U, 0x0U}, // @text EN: "Big Silver Medal" | JA: "大きな銀メダル"
-    {514, 27, 525, 1300, "MEDA2CP", "UIITEMBBM0", 0x202U, 0x0U}, // @text EN: "Big Bronze Medal" | JA: "大きな銅メダル"
-    {23, 1, 200, 420, "LETT1L1", "UIITEMLTF0", 0x200U, 0x0U}, // @text EN: "Letter to Father" | JA: "親父宛の手紙"
-    {24, 14, 360, 900, "TMEM200", "UIITEMMYPA", 0x8U, 0x0U}, // @text EN: "Mysterious Paper" | JA: "武林書の紙"
-    {24, 41, 360, 900, "TMEM200", "UIITEMCHSI", 0x8U, 0x0U}, // @text EN: "Chawan Sign" | JA: "茶碗陣のメモ"
-    {25, 35, 260, 460, "WS00ALE", "UIITEMZOLE", 0x200U, 0x0U}, // @text EN: "Zongquan Letter" | JA: "宗泉の手紙"
-    {26, 36, 240, 480, "TYOM28J", "UIITEMDJD0", 0x200U, 0x0U}, // @text EN: "Dou Jiang Diner" | JA: "８時豆将軒"
-    {26, 37, 240, 480, "BSKM2HO", "UIITEMCOGH", 0x200U, 0x0U}, // @text EN: "Come Over Guest House" | JA: "方来旅社"
-    {26, 38, 240, 480, "BKOI200", "UIITEMMMP0", 0x200U, 0x0U}, // @text EN: "Man Mo Park" | JA: "文武公園"
-    {26, 40, 240, 480, "TOSM29J", "UIITEMMMP0", 0x200U, 0x0U}, // @text EN: "Man Mo Park" | JA: "文武公園"
-    {26, 39, 240, 460, "QEME203", "UIITEMMCB0", 0x200U, 0x0U}, // @text EN: "Moon Child Bldg." | JA: "百子楼５０３"
-    {4, 9000, 330, 530, nullptr, "UIGNRLQSTN", 0x0U, 0x0U}, // @text EN: "? ? ?" | JA: "？？？"
-    {263, 71, 330, 530, "QDKJAN5", "UIITEMWHTI", 0x210U, 0x0U}, // @text EN: "White Tiger" | JA: "白虎の棒"
-    {258, 72, 330, 530, "QDKJAN3", "UIITEMSNTO", 0x200U, 0x0U}, // @text EN: "Snake Tortoise" | JA: "玄武の棒"
-    {260, 73, 330, 530, "QDKJAN1", "UIITEMBLDR", 0x210U, 0x0U}, // @text EN: "Blue Dragon" | JA: "青龍の棒"
-    {256, 74, 330, 530, "QDKJAN4", "UIITEMFISH", 0x210U, 0x0U}, // @text EN: "Fish" | JA: "魚の棒"
-    {257, 76, 330, 530, "QDKJAN7", "UIITEMROOS", 0x210U, 0x0U}, // @text EN: "Rooster" | JA: "鶏の棒"
-    {261, 77, 330, 530, "QDKJAN0", "UIITEMPHOE", 0x210U, 0x0U}, // @text EN: "Phoenix" | JA: "朱雀の棒"
-    {262, 78, 330, 530, "QDKJAN6", "UIITEMWIBO", 0x210U, 0x0U}, // @text EN: "Wild Boar" | JA: "猪の棒"
-    {259, 79, 330, 530, "QDKJAN8", "UIITEMGOAT", 0x210U, 0x0U}, // @text EN: "Goat" | JA: "山羊の棒"
-    {264, 29, 600, 1000, "QFIXZK1", "UIITEMEK29", 0x200U, 0x0U}, // @text EN: "EV Key 29" | JA: "ＥＶ鍵２９"
-    {264, 30, 600, 1000, "QFIXZK2", "UIITEMEK10", 0x200U, 0x0U}, // @text EN: "EV Key 10" | JA: "ＥＶ鍵１０"
-    {264, 31, 600, 1000, "QFIXZK3", "UIITEMEK46", 0x200U, 0x0U}, // @text EN: "EV Key 46" | JA: "ＥＶ鍵４６"
-    {264, 32, 600, 1000, "QFIXZK4", "UIITEMEK09", 0x200U, 0x0U}, // @text EN: "EV Key 9" | JA: "ＥＶ鍵９"
-    {264, 33, 600, 1000, "QFIXZK5", "UIITEMEK18", 0x200U, 0x0U}, // @text EN: "EV Key 18" | JA: "ＥＶ鍵１８"
-    {264, 34, 600, 1000, "QFIXZK6", "UIITEMEK21", 0x200U, 0x0U}, // @text EN: "EV Key 21" | JA: "ＥＶ鍵２１"
-    {517, 80, 100, 180, "AHIR2SN", "UIITEMDUCK", 0x0U, 0x0U}, // @text EN: "Duck" | JA: "アヒル"
+    {19, 13, 450, 1200, "OMMRHH1", "UIITEMXUAM", 0x202U, 0x0U},   // @text EN: "Xun's Amulet" | JA: "薫のお守り"
+    {512, 25, 525, 1300, "MEDA2GL", "UIITEMBGM0", 0x202U, 0x0U},  // @text EN: "Big Gold Medal" | JA: "大きな金メダル"
+    {513, 26, 525, 1300, "MEDA2SV", "UIITEMBSM0", 0x202U, 0x0U},  // @text EN: "Big Silver Medal" | JA: "大きな銀メダル"
+    {514, 27, 525, 1300, "MEDA2CP", "UIITEMBBM0", 0x202U, 0x0U},  // @text EN: "Big Bronze Medal" | JA: "大きな銅メダル"
+    {23, 1, 200, 420, "LETT1L1", "UIITEMLTF0", 0x200U, 0x0U},     // @text EN: "Letter to Father" | JA: "親父宛の手紙"
+    {24, 14, 360, 900, "TMEM200", "UIITEMMYPA", 0x8U, 0x0U},      // @text EN: "Mysterious Paper" | JA: "武林書の紙"
+    {24, 41, 360, 900, "TMEM200", "UIITEMCHSI", 0x8U, 0x0U},      // @text EN: "Chawan Sign" | JA: "茶碗陣のメモ"
+    {25, 35, 260, 460, "WS00ALE", "UIITEMZOLE", 0x200U, 0x0U},    // @text EN: "Zongquan Letter" | JA: "宗泉の手紙"
+    {26, 36, 240, 480, "TYOM28J", "UIITEMDJD0", 0x200U, 0x0U},    // @text EN: "Dou Jiang Diner" | JA: "８時豆将軒"
+    {26, 37, 240, 480, "BSKM2HO", "UIITEMCOGH", 0x200U, 0x0U},    // @text EN: "Come Over Guest House" | JA: "方来旅社"
+    {26, 38, 240, 480, "BKOI200", "UIITEMMMP0", 0x200U, 0x0U},    // @text EN: "Man Mo Park" | JA: "文武公園"
+    {26, 40, 240, 480, "TOSM29J", "UIITEMMMP0", 0x200U, 0x0U},    // @text EN: "Man Mo Park" | JA: "文武公園"
+    {26, 39, 240, 460, "QEME203", "UIITEMMCB0", 0x200U, 0x0U},    // @text EN: "Moon Child Bldg." | JA: "百子楼５０３"
+    {4, 9000, 330, 530, nullptr, "UIGNRLQSTN", 0x0U, 0x0U},       // @text EN: "? ? ?" | JA: "？？？"
+    {263, 71, 330, 530, "QDKJAN5", "UIITEMWHTI", 0x210U, 0x0U},   // @text EN: "White Tiger" | JA: "白虎の棒"
+    {258, 72, 330, 530, "QDKJAN3", "UIITEMSNTO", 0x200U, 0x0U},   // @text EN: "Snake Tortoise" | JA: "玄武の棒"
+    {260, 73, 330, 530, "QDKJAN1", "UIITEMBLDR", 0x210U, 0x0U},   // @text EN: "Blue Dragon" | JA: "青龍の棒"
+    {256, 74, 330, 530, "QDKJAN4", "UIITEMFISH", 0x210U, 0x0U},   // @text EN: "Fish" | JA: "魚の棒"
+    {257, 76, 330, 530, "QDKJAN7", "UIITEMROOS", 0x210U, 0x0U},   // @text EN: "Rooster" | JA: "鶏の棒"
+    {261, 77, 330, 530, "QDKJAN0", "UIITEMPHOE", 0x210U, 0x0U},   // @text EN: "Phoenix" | JA: "朱雀の棒"
+    {262, 78, 330, 530, "QDKJAN6", "UIITEMWIBO", 0x210U, 0x0U},   // @text EN: "Wild Boar" | JA: "猪の棒"
+    {259, 79, 330, 530, "QDKJAN8", "UIITEMGOAT", 0x210U, 0x0U},   // @text EN: "Goat" | JA: "山羊の棒"
+    {264, 29, 600, 1000, "QFIXZK1", "UIITEMEK29", 0x200U, 0x0U},  // @text EN: "EV Key 29" | JA: "ＥＶ鍵２９"
+    {264, 30, 600, 1000, "QFIXZK2", "UIITEMEK10", 0x200U, 0x0U},  // @text EN: "EV Key 10" | JA: "ＥＶ鍵１０"
+    {264, 31, 600, 1000, "QFIXZK3", "UIITEMEK46", 0x200U, 0x0U},  // @text EN: "EV Key 46" | JA: "ＥＶ鍵４６"
+    {264, 32, 600, 1000, "QFIXZK4", "UIITEMEK09", 0x200U, 0x0U},  // @text EN: "EV Key 9" | JA: "ＥＶ鍵９"
+    {264, 33, 600, 1000, "QFIXZK5", "UIITEMEK18", 0x200U, 0x0U},  // @text EN: "EV Key 18" | JA: "ＥＶ鍵１８"
+    {264, 34, 600, 1000, "QFIXZK6", "UIITEMEK21", 0x200U, 0x0U},  // @text EN: "EV Key 21" | JA: "ＥＶ鍵２１"
+    {517, 80, 100, 180, "AHIR2SN", "UIITEMDUCK", 0x0U, 0x0U},     // @text EN: "Duck" | JA: "アヒル"
 };
 
 constexpr InventoryItemDefinition capsuleToys[] = {
@@ -348,7 +348,7 @@ constexpr InventoryItemDefinition photos[] = {
     {33, 8014, 420, 1000, "SHAS1RS", "UIPHODFRIE", 0x0U, 0x0U}, // @text EN: "Friends" | JA: "友人"
     {34, 8018, 420, 1000, "PHFS2WO", "UIPHODWONG", 0x0U, 0x0U}, // @text EN: "Wong" | JA: "ウォン"
     {35, 8012, 420, 1000, "PHFS2BU", "UIPHODXIUY", 0x0U, 0x0U}, // @text EN: "Xiuying" | JA: "秀瑛たち"
-    {41, 8000, 400, 800, "PCHN200", "UIPHODSCOU", 0x0U, 0x0U}, // @text EN: "Scout" | JA: "スカウトマン"
+    {41, 8000, 400, 800, "PCHN200", "UIPHODSCOU", 0x0U, 0x0U},  // @text EN: "Scout" | JA: "スカウトマン"
     {36, 8015, 460, 1000, "PHFS2JR", "UIPHODJOY0", 0x0U, 0x0U}, // @text EN: "Joy" | JA: "ジョイ"
     {37, 8016, 460, 1000, "PHFS2K2", "UIPHODFANG", 0x0U, 0x0U}, // @text EN: "Fangmei" | JA: "薫"
     {37, 8017, 460, 1000, "PHFS2K1", "UIPHODFANG", 0x0U, 0x0U}, // @text EN: "Fangmei" | JA: "薫"
@@ -358,28 +358,28 @@ constexpr InventoryItemDefinition photos[] = {
 };
 
 constexpr InventoryItemDefinition mapItems[] = {
-    {11, 6015, 200, 550, nullptr, "UIMAPDFOPI", 0x0U, 0x0U}, // @text EN: "Fortune's Pier" | JA: "開運碼頭"
-    {11, 6012, 200, 550, nullptr, "UIMAPDWOPI", 0x0U, 0x0U}, // @text EN: "Worker's Pier" | JA: "労湾碼頭"
-    {11, 6013, 200, 550, nullptr, "UIMAPDQUST", 0x0U, 0x0U}, // @text EN: "Queen's St." | JA: "クイーンズストリート"
-    {11, 6014, 200, 550, nullptr, "UIMAPDBHW0", 0x0U, 0x0U}, // @text EN: "Beverly Hills Wharf" | JA: "ビバリーヒルズワーフ"
-    {11, 6011, 300, 800, nullptr, "UIMAPDGMQR", 0x0U, 0x0U}, // @text EN: "Green Market Qr." | JA: "菜珍街"
-    {11, 6006, 300, 800, nullptr, "UIMAPDGOQR", 0x0U, 0x0U}, // @text EN: "Golden Qr." | JA: "詠黄街"
-    {11, 6010, 300, 800, nullptr, "UIMAPDLCQR", 0x0U, 0x0U}, // @text EN: "Lucky Charm Qr." | JA: "福仙街"
-    {11, 6007, 300, 800, nullptr, "UIMAPDWHQR", 0x0U, 0x0U}, // @text EN: "White Dynasty Qr." | JA: "白秦街"
-    {11, 6009, 300, 800, nullptr, "UIMAPDWMQR", 0x0U, 0x0U}, // @text EN: "Wise Men's Qr." | JA: "太老街"
-    {11, 6008, 300, 800, nullptr, "UIMAPDSCQR", 0x0U, 0x0U}, // @text EN: "South Carmain Qr." | JA: "紅南街"
-    {11, 6027, 300, 800, nullptr, "UIMAPDSCHI", 0x0U, 0x0U}, // @text EN: "Scarlet Hills" | JA: "紅華台"
-    {11, 6019, 300, 800, nullptr, "UIMAPDDRST", 0x0U, 0x0U}, // @text EN: "Dragon St." | JA: "龍影街"
-    {11, 6020, 300, 800, nullptr, "UIMAPDTWQR", 0x0U, 0x0U}, // @text EN: "Thousand White Qr." | JA: "白千街"
-    {11, 6021, 300, 800, nullptr, "UIMAPDDIQR", 0x0U, 0x0U}, // @text EN: "Dimsum Qr." | JA: "点心街"
-    {11, 6022, 300, 800, nullptr, "UIMAPDSTQR", 0x0U, 0x0U}, // @text EN: "Stand Qr." | JA: "屋台街"
-    {11, 6000, 300, 800, nullptr, "UIGNRLMISS", 0x0U, 0x0U}, // @text EN: "Missing" | JA: "ない"
-    {11, 6001, 300, 800, nullptr, "UIMAPDABLD", 0x0U, 0x0U}, // @text EN: "A Building" | JA: "九龍城Ａビル"
-    {11, 6002, 300, 800, nullptr, "UIMAPDBBLD", 0x0U, 0x0U}, // @text EN: "B Building" | JA: "九龍城Ｂビル"
-    {11, 6003, 300, 800, nullptr, "UIMAPDCBLD", 0x0U, 0x0U}, // @text EN: "C Building" | JA: "九龍城Ｃビル"
-    {11, 6004, 300, 800, nullptr, "UIMAPDDBLD", 0x0U, 0x0U}, // @text EN: "D Building" | JA: "九龍城Ｄビル"
-    {11, 6005, 300, 800, nullptr, "UIMAPDEBLD", 0x0U, 0x0U}, // @text EN: "E Building" | JA: "九龍城Ｅビル"
-    {11, 6023, 300, 800, nullptr, "UIMAPDFBLD", 0x0U, 0x0U}, // @text EN: "F Building" | JA: "九龍城Ｆビル"
+    {11, 6015, 200, 550, nullptr, "UIMAPDFOPI", 0x0U, 0x0U},     // @text EN: "Fortune's Pier" | JA: "開運碼頭"
+    {11, 6012, 200, 550, nullptr, "UIMAPDWOPI", 0x0U, 0x0U},     // @text EN: "Worker's Pier" | JA: "労湾碼頭"
+    {11, 6013, 200, 550, nullptr, "UIMAPDQUST", 0x0U, 0x0U},     // @text EN: "Queen's St." | JA: "クイーンズストリート"
+    {11, 6014, 200, 550, nullptr, "UIMAPDBHW0", 0x0U, 0x0U},     // @text EN: "Beverly Hills Wharf" | JA: "ビバリーヒルズワーフ"
+    {11, 6011, 300, 800, nullptr, "UIMAPDGMQR", 0x0U, 0x0U},     // @text EN: "Green Market Qr." | JA: "菜珍街"
+    {11, 6006, 300, 800, nullptr, "UIMAPDGOQR", 0x0U, 0x0U},     // @text EN: "Golden Qr." | JA: "詠黄街"
+    {11, 6010, 300, 800, nullptr, "UIMAPDLCQR", 0x0U, 0x0U},     // @text EN: "Lucky Charm Qr." | JA: "福仙街"
+    {11, 6007, 300, 800, nullptr, "UIMAPDWHQR", 0x0U, 0x0U},     // @text EN: "White Dynasty Qr." | JA: "白秦街"
+    {11, 6009, 300, 800, nullptr, "UIMAPDWMQR", 0x0U, 0x0U},     // @text EN: "Wise Men's Qr." | JA: "太老街"
+    {11, 6008, 300, 800, nullptr, "UIMAPDSCQR", 0x0U, 0x0U},     // @text EN: "South Carmain Qr." | JA: "紅南街"
+    {11, 6027, 300, 800, nullptr, "UIMAPDSCHI", 0x0U, 0x0U},     // @text EN: "Scarlet Hills" | JA: "紅華台"
+    {11, 6019, 300, 800, nullptr, "UIMAPDDRST", 0x0U, 0x0U},     // @text EN: "Dragon St." | JA: "龍影街"
+    {11, 6020, 300, 800, nullptr, "UIMAPDTWQR", 0x0U, 0x0U},     // @text EN: "Thousand White Qr." | JA: "白千街"
+    {11, 6021, 300, 800, nullptr, "UIMAPDDIQR", 0x0U, 0x0U},     // @text EN: "Dimsum Qr." | JA: "点心街"
+    {11, 6022, 300, 800, nullptr, "UIMAPDSTQR", 0x0U, 0x0U},     // @text EN: "Stand Qr." | JA: "屋台街"
+    {11, 6000, 300, 800, nullptr, "UIGNRLMISS", 0x0U, 0x0U},     // @text EN: "Missing" | JA: "ない"
+    {11, 6001, 300, 800, nullptr, "UIMAPDABLD", 0x0U, 0x0U},     // @text EN: "A Building" | JA: "九龍城Ａビル"
+    {11, 6002, 300, 800, nullptr, "UIMAPDBBLD", 0x0U, 0x0U},     // @text EN: "B Building" | JA: "九龍城Ｂビル"
+    {11, 6003, 300, 800, nullptr, "UIMAPDCBLD", 0x0U, 0x0U},     // @text EN: "C Building" | JA: "九龍城Ｃビル"
+    {11, 6004, 300, 800, nullptr, "UIMAPDDBLD", 0x0U, 0x0U},     // @text EN: "D Building" | JA: "九龍城Ｄビル"
+    {11, 6005, 300, 800, nullptr, "UIMAPDEBLD", 0x0U, 0x0U},     // @text EN: "E Building" | JA: "九龍城Ｅビル"
+    {11, 6023, 300, 800, nullptr, "UIMAPDFBLD", 0x0U, 0x0U},     // @text EN: "F Building" | JA: "九龍城Ｆビル"
     {11, 6025, 300, 560, "ABR02MP", "UIMAPDREN0", 0x100U, 0x0U}, // @text EN: "Ren" | JA: "レン"
     {11, 6026, 400, 820, "WMEM200", "UIMAPDWONG", 0x100U, 0x0U}, // @text EN: "Wong" | JA: "ウォン"
     {11, 6018, 350, 600, "WT001M1", "UIMAPDDYA0", 0x100U, 0x0U}, // @text EN: "Da Yuan Apartments" | JA: "大元楼"
@@ -387,31 +387,31 @@ constexpr InventoryItemDefinition mapItems[] = {
 };
 
 constexpr InventoryItemDefinition moveItems[] = {
-    {266, 3000, 160, 322, "WZIS1SJ", "UISKILTWBL", 0x0U, 0x0U}, // @text EN: "Twin Blades" | JA: "双刃の技書"
-    {266, 3001, 160, 320, "MKIS101", "UISKILSHRE", 0x0U, 0x0U}, // @text EN: "Shadow Reaper" | JA: "影狩りの技書"
-    {266, 3002, 160, 320, "MKIS103", "UISKILSTAR", 0x0U, 0x0U}, // @text EN: "Stab Armor" | JA: "鎧通の技書"
-    {266, 3003, 160, 320, "WZIS1HE", "UISKILTSL0", 0x0U, 0x0U}, // @text EN: "Twin Swallow Leap" | JA: "飛燕連刈の技書"
-    {266, 3004, 160, 320, "WZIS1TG", "UISKILMUSP", 0x0U, 0x0U}, // @text EN: "Mud Spider" | JA: "土蜘蛛の技書"
-    {266, 3005, 160, 320, "WZIS1SK", "UISKILRIFL", 0x0U, 0x0U}, // @text EN: "Rising Flash" | JA: "裂晃閃の技書"
-    {266, 3006, 160, 320, "WZIS1CS", "UISKILCRCY", 0x0U, 0x0U}, // @text EN: "Crawl Cyclone" | JA: "旋風の技書"
-    {266, 3007, 160, 320, "WZIS1HZ", "UISKILTIST", 0x0U, 0x0U}, // @text EN: "Tiger Storm" | JA: "虎身崩しの技書"
-    {266, 3008, 160, 320, "WZIS1OB", "UISKILABF0", 0x0U, 0x0U}, // @text EN: "Arm Break Fire" | JA: "朧無双の技書"
+    {266, 3000, 160, 322, "WZIS1SJ", "UISKILTWBL", 0x0U, 0x0U},   // @text EN: "Twin Blades" | JA: "双刃の技書"
+    {266, 3001, 160, 320, "MKIS101", "UISKILSHRE", 0x0U, 0x0U},   // @text EN: "Shadow Reaper" | JA: "影狩りの技書"
+    {266, 3002, 160, 320, "MKIS103", "UISKILSTAR", 0x0U, 0x0U},   // @text EN: "Stab Armor" | JA: "鎧通の技書"
+    {266, 3003, 160, 320, "WZIS1HE", "UISKILTSL0", 0x0U, 0x0U},   // @text EN: "Twin Swallow Leap" | JA: "飛燕連刈の技書"
+    {266, 3004, 160, 320, "WZIS1TG", "UISKILMUSP", 0x0U, 0x0U},   // @text EN: "Mud Spider" | JA: "土蜘蛛の技書"
+    {266, 3005, 160, 320, "WZIS1SK", "UISKILRIFL", 0x0U, 0x0U},   // @text EN: "Rising Flash" | JA: "裂晃閃の技書"
+    {266, 3006, 160, 320, "WZIS1CS", "UISKILCRCY", 0x0U, 0x0U},   // @text EN: "Crawl Cyclone" | JA: "旋風の技書"
+    {266, 3007, 160, 320, "WZIS1HZ", "UISKILTIST", 0x0U, 0x0U},   // @text EN: "Tiger Storm" | JA: "虎身崩しの技書"
+    {266, 3008, 160, 320, "WZIS1OB", "UISKILABF0", 0x0U, 0x0U},   // @text EN: "Arm Break Fire" | JA: "朧無双の技書"
     {266, 3009, 200, 330, "MKIS104", "UISKILPOSC", 0x140U, 0x0U}, // @text EN: "Poetry Scroll" | JA: "謎の巻物"
     {266, 3010, 200, 330, "MKIS105", "UISKILMYSC", 0x140U, 0x0U}, // @text EN: "Mysterious Scroll" | JA: "歌訣の巻物"
-    {266, 3011, 160, 320, "WZIS2KR", "UISKILDRSP", 0x0U, 0x0U}, // @text EN: "Dragon Spin" | JA: "降龍脚の技書"
-    {266, 3012, 160, 320, "WZIS2JS", "UISKILSECO", 0x0U, 0x0U}, // @text EN: "Serpent Coil" | JA: "蛇身貼の技書"
-    {266, 3013, 160, 320, "WZIS2DH", "UISKILRFS0", 0x0U, 0x0U}, // @text EN: "Rear Foot Sweep" | JA: "大展伯の技書"
-    {266, 3014, 160, 320, "WZIS2SK", "UISKILDIWI", 0x0U, 0x0U}, // @text EN: "Diagonal Wipe" | JA: "斜弧捶の技書"
-    {266, 3015, 160, 320, "WZIS2SH", "UISKILOBSL", 0x0U, 0x0U}, // @text EN: "Oblique Slam" | JA: "斜歩劈斬の技書"
-    {266, 3016, 160, 320, "WZIS2SS", "UISKILTPT0", 0x0U, 0x0U}, // @text EN: "Twin Palm Thrust" | JA: "双掌打の技書"
-    {266, 3017, 160, 320, "WZIS2BT", "UISKILHOKI", 0x0U, 0x0U}, // @text EN: "Horseshoe Kick" | JA: "馬蹄脚の技書"
-    {266, 3018, 160, 320, "WZIS2RH", "UISKILMACO", 0x0U, 0x0U}, // @text EN: "Mantis Combo" | JA: "連環劈の技書"
-    {266, 3019, 160, 320, "WZIS2JH", "UISKILSTST", 0x0U, 0x0U}, // @text EN: "Stepping Strike" | JA: "順歩捶の技書"
-    {266, 3020, 160, 320, "WZIS2SN", "UISKILOAK0", 0x0U, 0x0U}, // @text EN: "Oblique Air Kick" | JA: "旋空脚の技書"
-    {266, 3021, 160, 320, "WZIS2FS", "UISKILHESW", 0x0U, 0x0U}, // @text EN: "Heel Sweep" | JA: "伏身脚の技書"
-    {266, 3022, 160, 320, "WZIS2HE", "UISKILMRD0", 0x0U, 0x0U}, // @text EN: "Monkey Roll Drop" | JA: "白猿落の技書"
-    {266, 3023, 160, 320, "WZIS2RS", "UISKILMAFI", 0x0U, 0x0U}, // @text EN: "Machinegun Fist" | JA: "連手砲の技書"
-    {266, 3024, 160, 320, "WZIS2RT", "UISKILDSK0", 0x0U, 0x0U}, // @text EN: "Double Storm Kick" | JA: "連環腿の技書"
+    {266, 3011, 160, 320, "WZIS2KR", "UISKILDRSP", 0x0U, 0x0U},   // @text EN: "Dragon Spin" | JA: "降龍脚の技書"
+    {266, 3012, 160, 320, "WZIS2JS", "UISKILSECO", 0x0U, 0x0U},   // @text EN: "Serpent Coil" | JA: "蛇身貼の技書"
+    {266, 3013, 160, 320, "WZIS2DH", "UISKILRFS0", 0x0U, 0x0U},   // @text EN: "Rear Foot Sweep" | JA: "大展伯の技書"
+    {266, 3014, 160, 320, "WZIS2SK", "UISKILDIWI", 0x0U, 0x0U},   // @text EN: "Diagonal Wipe" | JA: "斜弧捶の技書"
+    {266, 3015, 160, 320, "WZIS2SH", "UISKILOBSL", 0x0U, 0x0U},   // @text EN: "Oblique Slam" | JA: "斜歩劈斬の技書"
+    {266, 3016, 160, 320, "WZIS2SS", "UISKILTPT0", 0x0U, 0x0U},   // @text EN: "Twin Palm Thrust" | JA: "双掌打の技書"
+    {266, 3017, 160, 320, "WZIS2BT", "UISKILHOKI", 0x0U, 0x0U},   // @text EN: "Horseshoe Kick" | JA: "馬蹄脚の技書"
+    {266, 3018, 160, 320, "WZIS2RH", "UISKILMACO", 0x0U, 0x0U},   // @text EN: "Mantis Combo" | JA: "連環劈の技書"
+    {266, 3019, 160, 320, "WZIS2JH", "UISKILSTST", 0x0U, 0x0U},   // @text EN: "Stepping Strike" | JA: "順歩捶の技書"
+    {266, 3020, 160, 320, "WZIS2SN", "UISKILOAK0", 0x0U, 0x0U},   // @text EN: "Oblique Air Kick" | JA: "旋空脚の技書"
+    {266, 3021, 160, 320, "WZIS2FS", "UISKILHESW", 0x0U, 0x0U},   // @text EN: "Heel Sweep" | JA: "伏身脚の技書"
+    {266, 3022, 160, 320, "WZIS2HE", "UISKILMRD0", 0x0U, 0x0U},   // @text EN: "Monkey Roll Drop" | JA: "白猿落の技書"
+    {266, 3023, 160, 320, "WZIS2RS", "UISKILMAFI", 0x0U, 0x0U},   // @text EN: "Machinegun Fist" | JA: "連手砲の技書"
+    {266, 3024, 160, 320, "WZIS2RT", "UISKILDSK0", 0x0U, 0x0U},   // @text EN: "Double Storm Kick" | JA: "連環腿の技書"
     {266, 3025, 200, 330, "WZKM2ES", "UISKILDETR", 0x140U, 0x0U}, // @text EN: "Demon's Triangle" | JA: "閻王三点手の巻物"
 };
 
@@ -431,9 +431,7 @@ constexpr InventoryItemDefinition pawnItems[] = {
 };
 
 constexpr std::array<std::span<const InventoryItemDefinition>, 6> itemBanks{keyItems, capsuleToys, photos, mapItems, moveItems, pawnItems};
-
-constexpr std::array<std::uint8_t, 10> itemTypeByThousands{
-    0, 0, 6, 4, 1, 6, 3, 6, 2, 5};
+constexpr std::array<std::uint8_t, 10> itemTypeByThousands{0, 0, 6, 4, 1, 6, 3, 6, 2, 5};
 
 const InventoryItemDefinition *FindInventorySlot(std::uint32_t itemId, S2InventoryBank &bank, std::size_t &index) noexcept {
     const std::uint32_t group = itemId / 1000;
@@ -524,6 +522,30 @@ const char *GetInventoryItemModel(std::uint32_t itemId) noexcept {
     return item ? item->model : nullptr;
 }
 
+std::int32_t CollectOwnedCapsuleToys(std::int32_t *ids, std::int32_t *counts) noexcept {
+    const std::span<const std::byte> stock = S2Save_GetInventoryBank(S2InventoryBank::Type1);
+    std::int32_t count = 0;
+    for (std::int32_t index = 0; index < 512; ++index) {
+        if (stock[static_cast<std::size_t>(index)] == std::byte{})
+            continue;
+        ids[count] = index;
+        counts[count++] = std::to_integer<std::uint8_t>(stock[static_cast<std::size_t>(index)]);
+    }
+    return count;
+}
+
+std::int32_t CollectOwnedKeyItems(std::int32_t *ids, std::int32_t *counts) noexcept {
+    const std::span<const std::byte> stock = S2Save_GetInventoryBank(S2InventoryBank::Type0);
+    std::int32_t count = 0;
+    for (std::int32_t index = 4; index < 384; ++index) {
+        if (stock[static_cast<std::size_t>(index)] == std::byte{})
+            continue;
+        ids[count] = index;
+        counts[count++] = std::to_integer<std::uint8_t>(stock[static_cast<std::size_t>(index)]);
+    }
+    return count;
+}
+
 const char *GetShenmueItem(std::uint32_t category, std::uint32_t index) noexcept {
     if (category >= itemBanks.size() || index >= itemBanks[category].size())
         return nullptr;
@@ -608,9 +630,7 @@ std::int64_t ImportS1KeyItems(const std::uint8_t *source) {
 
 void InitItems() {
     ResetItemInventoryState();
-    constexpr std::uint16_t initialItems[]{
-        0, 2, 5, 1, 6, 8006, 4, 8005, 3, 20, 21,
-        4080, 4081, 4082, 4083, 4084, 4085, 4086};
+    constexpr std::uint16_t initialItems[]{0, 2, 5, 1, 6, 8006, 4, 8005, 3, 20, 21, 4080, 4081, 4082, 4083, 4084, 4085, 4086};
     for (const std::uint16_t item : initialItems)
         AddInventoryItem(item, 1);
     for (std::uint32_t item = 4000; item <= 4015; ++item)

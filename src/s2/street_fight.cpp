@@ -1,6 +1,7 @@
 #include "s2/street_fight.hpp"
 #include "s2/street_fight_tables.hpp"
 #include "s2/area_event.hpp"
+#include "s2/debug.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
 #include "s2/conversation.hpp"
@@ -915,7 +916,15 @@ void StreetFightCharacterLoadCallback(void *parameter) {
             (void)HLib::ResolveDeferredCallback(work->parent);
             (void)HLib::DestroyTaskInternal(work->task);
         } else {
-            work->state = DoesScenarioCharacterExist(character) ? 3 : 2;
+            EV_debug_log("D:\\Mango\\sm2\\src\\event\\common\\et_standerd_sf.c", 380, "[%c%c%c%c] ", character.name & 0xff, character.name >> 8 & 0xff,
+                character.name >> 16 & 0xff, character.name >> 24);
+            if (DoesScenarioCharacterExist(character)) {
+                EV_debug_log("D:\\Mango\\sm2\\src\\event\\common\\et_standerd_sf.c", 383, "Exist\n");
+                work->state = 3;
+            } else {
+                EV_debug_log("D:\\Mango\\sm2\\src\\event\\common\\et_standerd_sf.c", 386, "Loading\n");
+                work->state = 2;
+            }
         }
         return;
     }
@@ -929,6 +938,7 @@ void StreetFightCharacterLoadCallback(void *parameter) {
     }
     if (work->state != 3)
         return;
+    EV_debug_log("D:\\Mango\\sm2\\src\\event\\common\\et_standerd_sf.c", 416, "Completed.\n");
     (void)EV_SetRefBoardParamsFor(character, 1);
     EV_SetCharacterAlphaEnabled(character, false);
     EV_SetCharaControllerFlags(character, ApplyGravity, NpcCharacterControllerState::Disabled);

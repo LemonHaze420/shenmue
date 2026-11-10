@@ -12,5 +12,8 @@ void SetShouldReturnToTitleScreen(std::int32_t requested) noexcept;
 std::int32_t GetShouldReturnToTitleScreen() noexcept;
 void SetRootSaveTransitionEnabled(std::int32_t enabled) noexcept;
 void SetRootSoftResetEnabled(std::int32_t enabled) noexcept;
+using DebugMenuCallback = void (*)();
+extern DebugMenuCallback g_debugMenuBody;
+extern DebugMenuCallback g_debugMenuHeader;
 
 } // namespace shenmue::s2

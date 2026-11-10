@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/npc_area_route.hpp"
 
 #include "s2/character.hpp"
@@ -2313,6 +2316,11 @@ std::uint32_t SelectNpcAreaTransitionMotion(const NpcRouteLiveEntry &entry) {
     return 0;
 }
 
+// @verified - p
+std::uint16_t npcResolveAnimationForRoute(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
+    return entry.routeMotionState == 16 ? ResolveNpcAreaAnimation(state, entry, false) : 0;
+}
+
 std::uint16_t ResolveNpcAreaAnimation(NpcAreaRouteState &state, NpcRouteLiveEntry &entry, bool advancing) {
     if (!entry.node)
         return 0;
@@ -3003,3 +3011,4 @@ void RestoreNpcAreaMotion(NpcRouteLiveEntry &entry) {
 }
 
 } // namespace shenmue::s2
+

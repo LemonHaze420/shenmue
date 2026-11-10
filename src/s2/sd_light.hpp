@@ -179,11 +179,18 @@ static_assert(sizeof(SDLightTileOffset) == 12);
 inline constexpr float SD_GPU_LIGHT_SCALE = 0.33000001311302185f;
 inline constexpr float SD_GPU_POINT_RANGE_SCALE = 3.0f;
 inline constexpr float SD_TILE_LIGHT_THRESHOLD = 0.000009999999747378752f;
+inline constexpr float SD_CLUSTER_LIGHT_DISTANCE = 50.0f;
+inline constexpr float SD_SPOT_RIM_EPSILON = 1.1920928955078125e-7f;
 extern std::array<std::uint32_t, 4> g_sdDirectionalLightIndices;
 extern std::uint32_t g_sdDirectionalLightCount;
+extern std::uint8_t g_sdBroadcastLightTiles;
 SDGpuLight *InitializeSDGpuLight(SDGpuLight *light);
-void BuildLightTileLists(
-    d3t::D3TDeviceContext *context, const SDGpuLight *lights, std::uint32_t count, std::uint64_t, std::int32_t, const Matrix4x4 *, float, float);
+Vector4 ComputeUnprojectedPlane(Vector3 first, Vector3 second, Vector3 third, const Matrix4x4 &inverseViewProjection);
+void ProjectSphereToClusterGrid20(
+    const Vector3 &centre, float radius, const Matrix4x4 &worldToClip, float nearZ, float farZ, Vector3 &minimum, Vector3 &maximum, Vector3 &centreCell);
+bool DoesSpotConeCrossPlane(const Vector4 &plane, const SDGpuLight &light, const Vector3 &apex, bool acceptBehind);
+void BuildLightTileLists(d3t::D3TDeviceContext *context, const SDGpuLight *lights, std::uint32_t count, std::uint64_t, std::int32_t,
+    const Matrix4x4 *viewProjection, float nearZ, float farZ);
 void UpdateModelSceneLights(d3t::D3TDeviceContext *context, const Matrix4x4 *viewProjection);
 
 struct SDSceneLight {

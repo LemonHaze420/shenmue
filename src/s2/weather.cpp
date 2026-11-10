@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/weather.hpp"
 #include "s2/math.hpp"
 #include "s2/particle_effects.hpp"
@@ -31,15 +34,12 @@ std::int32_t g_planetPreviousRotationDay = 20, g_planetCurrentRotationDay = 41, 
 namespace {
 
 constexpr std::size_t weatherRowSize = 0x60;
-constexpr std::array<std::uint8_t, 32> weatherMonthDays1{
-    0x09, 0x07, 0x07, 0x07, 0x08, 0x08, 0x07, 0x05, 0xb8, 0x0a, 0x09, 0xf9, 0xf9, 0x15, 0xf4, 0xa7,
-    0xbc, 0x06, 0x08, 0x18, 0x15, 0x07, 0xab, 0xac, 0x0a, 0x07, 0x54, 0x53, 0xb7, 0x16, 0x19, 0x00};
-constexpr std::array<std::uint8_t, 32> weatherMonthDays2{
-    0x08, 0xf7, 0xe7, 0x09, 0x04, 0x54, 0x04, 0x06, 0x04, 0x75, 0xbc, 0xad, 0x35, 0xa9, 0x06, 0x08,
-    0x15, 0x08, 0x09, 0x07, 0x16, 0x07, 0xf5, 0xaa, 0xbc, 0xb9, 0xb8, 0x06, 0x00, 0x00, 0x00, 0x00};
-constexpr std::array<std::uint8_t, 32> weatherMonthDays3{
-    0xf9, 0x07, 0xa4, 0xba, 0xb7, 0xbb, 0x09, 0x08, 0x0b, 0x0e, 0x08, 0x45, 0xf5, 0xa9, 0x08, 0x06,
-    0x06, 0x0a, 0x34, 0x08, 0x46, 0x04, 0x05, 0xac, 0xad, 0x08, 0x87, 0x56, 0x07, 0x9a, 0x0b, 0x00};
+constexpr std::array<std::uint8_t, 32> weatherMonthDays1{0x09, 0x07, 0x07, 0x07, 0x08, 0x08, 0x07, 0x05, 0xb8, 0x0a, 0x09, 0xf9, 0xf9, 0x15, 0xf4, 0xa7, 0xbc,
+    0x06, 0x08, 0x18, 0x15, 0x07, 0xab, 0xac, 0x0a, 0x07, 0x54, 0x53, 0xb7, 0x16, 0x19, 0x00};
+constexpr std::array<std::uint8_t, 32> weatherMonthDays2{0x08, 0xf7, 0xe7, 0x09, 0x04, 0x54, 0x04, 0x06, 0x04, 0x75, 0xbc, 0xad, 0x35, 0xa9, 0x06, 0x08, 0x15,
+    0x08, 0x09, 0x07, 0x16, 0x07, 0xf5, 0xaa, 0xbc, 0xb9, 0xb8, 0x06, 0x00, 0x00, 0x00, 0x00};
+constexpr std::array<std::uint8_t, 32> weatherMonthDays3{0xf9, 0x07, 0xa4, 0xba, 0xb7, 0xbb, 0x09, 0x08, 0x0b, 0x0e, 0x08, 0x45, 0xf5, 0xa9, 0x08, 0x06, 0x06,
+    0x0a, 0x34, 0x08, 0x46, 0x04, 0x05, 0xac, 0xad, 0x08, 0x87, 0x56, 0x07, 0x9a, 0x0b, 0x00};
 constexpr std::array<WeatherMonth, 12> weatherMonths{{
     {.days = &weatherMonthDays1, .dayCount = 31},
     {.days = &weatherMonthDays2, .dayCount = 28},
@@ -62,22 +62,150 @@ constexpr std::array<WeatherYear, 3> weatherYears{{
 
 
 constexpr std::array<float, 144> windDirectionWeights{
-    0.3f, 6.0f, 6.0f, 4.0f, 4.0f, 2.0f, 2.0f, 2.0f, 2.0f,
-    0.3f, 5.0f, 5.0f, 2.0f, 1.4f, 0.9f, 0.8f, 0.7f, 0.2f,
-    0.3f, 1.0f, 1.0f, 1.0f, 0.5f, 0.2f, 0.0f, 0.0f, 0.0f,
-    0.3f, 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.2f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.2f, 0.5f, 0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.2f, 1.0f, 0.5f, 0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.2f, 0.6f, 0.6f, 0.8f, 0.7f, 0.6f, 0.5f, 0.5f, 0.0f,
-    0.2f, 0.8f, 1.2f, 2.5f, 2.1f, 1.7f, 1.2f, 0.6f, 0.0f,
-    0.2f, 0.8f, 1.0f, 1.6f, 1.0f, 0.5f, 0.4f, 0.0f, 0.0f,
-    0.2f, 1.0f, 0.5f, 0.3f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.2f, 0.7f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.2f, 0.7f, 0.1f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.2f, 0.8f, 0.7f, 0.4f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-    0.3f, 1.0f, 1.0f, 1.0f, 0.6f, 0.4f, 0.4f, 0.3f, 0.0f,
-    0.4f, 3.5f, 2.8f, 2.5f, 2.2f, 1.2f, 1.2f, 1.2f, 1.2f,
+    0.3f,
+    6.0f,
+    6.0f,
+    4.0f,
+    4.0f,
+    2.0f,
+    2.0f,
+    2.0f,
+    2.0f,
+    0.3f,
+    5.0f,
+    5.0f,
+    2.0f,
+    1.4f,
+    0.9f,
+    0.8f,
+    0.7f,
+    0.2f,
+    0.3f,
+    1.0f,
+    1.0f,
+    1.0f,
+    0.5f,
+    0.2f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.3f,
+    0.2f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.2f,
+    0.1f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.2f,
+    0.5f,
+    0.3f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.2f,
+    1.0f,
+    0.5f,
+    0.3f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.2f,
+    0.6f,
+    0.6f,
+    0.8f,
+    0.7f,
+    0.6f,
+    0.5f,
+    0.5f,
+    0.0f,
+    0.2f,
+    0.8f,
+    1.2f,
+    2.5f,
+    2.1f,
+    1.7f,
+    1.2f,
+    0.6f,
+    0.0f,
+    0.2f,
+    0.8f,
+    1.0f,
+    1.6f,
+    1.0f,
+    0.5f,
+    0.4f,
+    0.0f,
+    0.0f,
+    0.2f,
+    1.0f,
+    0.5f,
+    0.3f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.2f,
+    0.7f,
+    0.1f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.2f,
+    0.7f,
+    0.1f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.2f,
+    0.8f,
+    0.7f,
+    0.4f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    0.3f,
+    1.0f,
+    1.0f,
+    1.0f,
+    0.6f,
+    0.4f,
+    0.4f,
+    0.3f,
+    0.0f,
+    0.4f,
+    3.5f,
+    2.8f,
+    2.5f,
+    2.2f,
+    1.2f,
+    1.2f,
+    1.2f,
+    1.2f,
 };
 constexpr std::array<std::uint32_t, 2> auxiliaryTimeline{0x00010800U, 0x00fcfdfbU};
 std::array<WeatherTable, 4> weatherTables{};
@@ -133,8 +261,7 @@ float SinSubNinetyDegrees(float angle) {
 
 Vector3 BuildWeatherSunDirection(const WeatherAir &air) {
     constexpr float nativePi = 3.1400001f;
-    constexpr std::array<std::int32_t, 12> accumulatedDays{
-        31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
+    constexpr std::array<std::int32_t, 12> accumulatedDays{31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
     const std::size_t month = static_cast<std::size_t>(std::clamp(air.month, 1, 12) - 1);
     const float sunAngle =
         (((static_cast<float>(air.minute) / 60.0f + static_cast<float>(air.hour) + static_cast<float>(air.second) / 3600.0f) - 12.0f) * -15.0f * nativePi) /
@@ -734,10 +861,28 @@ void FreeWeatherAir(WeatherAir *air) {
     HLib::FreeTaskData(air);
 }
 
+void WairSetterNullsub(WeatherAir *) {
+}
+
+void wairSetCloud(WeatherAir *air, float value) {
+    air->cloud = value;
+    WairSetterNullsub(air);
+}
+
+void wairSetRain(WeatherAir *air, float value) {
+    air->rain = value;
+    WairSetterNullsub(air);
+}
+
+void wairSetAuxiliary(WeatherAir *air, float value) {
+    air->auxiliary = value;
+    WairSetterNullsub(air);
+}
+
 void PublishWeatherAir(bool initial = false) {
-    weatherAir->cloud = cloud->current = FlushSmall(cloud->current);
-    weatherAir->rain = GetWeatherPressure();
-    weatherAir->auxiliary = auxiliary->current = FlushSmall(auxiliary->current);
+    wairSetCloud(weatherAir, cloud->current = FlushSmall(cloud->current));
+    wairSetRain(weatherAir, GetWeatherPressure());
+    wairSetAuxiliary(weatherAir, auxiliary->current = FlushSmall(auxiliary->current));
     if (weatherUpdateFog == 1)
         UpdateFog(*weatherAir);
     if (weatherUpdateClouds == 1) {
@@ -1021,7 +1166,7 @@ std::int64_t WSCN_DeleteWeatherData() {
 
 // @verified - p
 WeatherData *SetupWeatherData(std::int32_t baseYear) {
-    WeatherData *const data = static_cast<WeatherData *>(HLib::AllocateTaskData(sizeof(WeatherData), TASK_WDAT));
+    WeatherData *const data = static_cast<WeatherData *>(HLib::AllocateTaskData(sizeof(WeatherData), TASK_WDTA));
     data->baseYear = baseYear;
     data->year = 0;
     data->month = data->day = 1;
@@ -1325,8 +1470,9 @@ Vector4 *GetInterpolatedWeatherValues() {
 }
 
 std::array<std::uint32_t, 2> GetWeatherWaveColours() {
-    // The existing typed wave consumer reads the same borrowed publication, including consumer mutations until the next update.
+    // Wave consumers share this buffer and may modify it until the next update.
     return {std::bit_cast<std::uint32_t>(interpolatedWeatherValues[4].z), std::bit_cast<std::uint32_t>(interpolatedWeatherValues[5].x)};
 }
 
 } // namespace shenmue::s2
+

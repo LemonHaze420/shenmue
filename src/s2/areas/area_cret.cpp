@@ -1,6 +1,7 @@
 #include "s2/areas/area_cret.hpp"
 #include "s2/conversation.hpp"
 #include "s2/date_time.hpp"
+#include "s2/debug.hpp"
 #include "s2/event_characters.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/flag.hpp"
@@ -79,6 +80,7 @@ void CRETRetryCallback(void *) {
     }
     const std::int32_t retries = EV_GetPlayerFlag(PlayerFlagReadMode::Stat, 34);
     EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, 34, retries + 1);
+    EV_debug_log("CRET\\eCRET_et_CRET.c", 294, "New New New\n");
     InitiateCleanupForSceneChara(EVENT_CHARACTER_INVALID);
     HLib::DestroyCurrentTask();
     EV_NPC_NewLoadSw(1);
@@ -97,6 +99,7 @@ void CRETResumeChaseCallback(void *) {
         if (EV_ForceLoadNpc(cretCharacter)) {
             Vector3 position;
             EV_GetCharaPosition(cretCharacter, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
+            EV_debug_log("CRET\\eCRET_et_CRET.c", 332, "%f %f %f\n", position.x, position.y, position.z);
             if (cretMode == 1 || cretMode == 11) {
                 position = {102.22f, 89.279999f, 151.2f};
                 const Vector3i rotation{0, 0x8000, 0};
@@ -130,6 +133,7 @@ void CRETResumeChaseCallback(void *) {
         }
         break;
     default:
+        EV_debug_log("CRET\\eCRET_et_CRET.c", 317, "Mode : %d\n", cretState);
         ++cretState;
         if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1267)) {
             cretState = 10;

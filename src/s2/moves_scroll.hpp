@@ -1,5 +1,9 @@
 #pragma once
 
+#include "shenmue.h"
+
+
+
 #include "common/types.hpp"
 #include <array>
 #include <cstddef>
@@ -137,11 +141,14 @@ bool SelectWazamakiMove(std::uint8_t category, std::uint8_t id) noexcept;
 std::int64_t SetMoveEquipment(std::int8_t operation, std::int32_t category, std::uint8_t move) noexcept;
 void RefreshWazamakiLearnedGroups();
 std::span<const WazamakiLearnedGroup> GetWazamakiLearnedGroups() noexcept;
+std::int32_t GetWazamakiGroupCount(std::int32_t category) noexcept;
 void PlayWazamakiGroupMove(std::uint32_t row);
 void LoadRyoSceneForMovesScreen();
 void UpdateWazamakiPreviewFrame();
 void DrawWazamakiPreview();
 void ReleaseWazamakiPreviewModels();
+NativeWazamakiGroup *FindWazamakiGroup(std::int32_t row, std::int32_t *category, std::int32_t *groupIndex = nullptr);
+void RequestWazamakiPreviewMotion(std::uint8_t category, std::uint8_t id);
 
 
 
@@ -163,3 +170,4 @@ void ReleaseMoveLearnedOwner() noexcept;
 bool IsMoveLearnedActive() noexcept;
 
 } // namespace shenmue::s2
+

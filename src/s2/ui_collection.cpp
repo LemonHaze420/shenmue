@@ -130,15 +130,6 @@ void ResolveCollectionNativeLayout(const d3t::UIDefinition &definition, Collecti
     d3t::ResolveUIDefinitionLayout(definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels,
         std::span{layout.overrides.data(), count}, GetUILayoutPaddingScale());
 }
-void RequestCollectionSnapshotImage(std::uint32_t slot) {
-    if (snapshotImages[slot].state.load(std::memory_order_acquire) != 0)
-        return;
-    collectionSnapshotPriority[slot] = 1;
-    for (const auto &image : snapshotImages)
-        if (image.state.load(std::memory_order_acquire) == 1)
-            return;
-    QueueSnapshotImageLoad(slot);
-}
 
 void ResolveCollectionLayout(std::size_t index) {
     auto &definition = uiDefinitions[static_cast<std::size_t>(collectionChildren[index])];
@@ -206,14 +197,33 @@ void CollectionSnapshotBuilding(const SnapshotMetadataRecord &record, std::span<
     const auto area = static_cast<std::uint32_t>(record.sortKeys[2]);
     const char *label{};
     switch (area) {
-    case 0x1000e: label="UIHELPL026";break; // @text EN: "Lucky Plaza" | JA: "好運中心"
-    case 0x1001d: label="UIHELPL022";break; // @text EN: "Beverly Hills Wharf" | JA: "ビバリーヒルズワーフ"
-    case 0x2000d: case 0x2000e: label="UIHELPL103";break; // @text EN: "South Carmain Qr." | JA: "紅南街"
-    case 0x20022: label="UIHELPL069";break; // @text EN: "Dou Jiang Diner" | JA: "豆将軒"
-    case 0x2004b: case 0x2004c: case 0x2004d: label="UIHELPL091";break; // @text EN: "Man Mo Temple" | JA: "文武廟"
-    case 0x20053: label="UIHELPL113";break; // @text EN: "White Dynasty Qr." | JA: "白秦街"
-    case 0x30044: label="UIHELPL179";break; // @text EN: "Yellow Head Bldg." | JA: "黄天楼"
-    case 0x40003: label="UIHELPL182";break; // @text EN: "Yingshuihe" | JA: "緑野"
+    case 0x1000e:
+        label = "UIHELPL026";
+        break; // @text EN: "Lucky Plaza" | JA: "好運中心"
+    case 0x1001d:
+        label = "UIHELPL022";
+        break; // @text EN: "Beverly Hills Wharf" | JA: "ビバリーヒルズワーフ"
+    case 0x2000d:
+    case 0x2000e:
+        label = "UIHELPL103";
+        break; // @text EN: "South Carmain Qr." | JA: "紅南街"
+    case 0x20022:
+        label = "UIHELPL069";
+        break; // @text EN: "Dou Jiang Diner" | JA: "豆将軒"
+    case 0x2004b:
+    case 0x2004c:
+    case 0x2004d:
+        label = "UIHELPL091";
+        break; // @text EN: "Man Mo Temple" | JA: "文武廟"
+    case 0x20053:
+        label = "UIHELPL113";
+        break; // @text EN: "White Dynasty Qr." | JA: "白秦街"
+    case 0x30044:
+        label = "UIHELPL179";
+        break; // @text EN: "Yellow Head Bldg." | JA: "黄天楼"
+    case 0x40003:
+        label = "UIHELPL182";
+        break; // @text EN: "Yingshuihe" | JA: "緑野"
     case 0x30000:
     case 0x40000:
     case 0x40010:
@@ -231,7 +241,8 @@ void CollectionSnapshotBuilding(const SnapshotMetadataRecord &record, std::span<
         break;
     }
     const auto location = label ? GetLocalizedSceneText(label) : std::string_view{};
-    constexpr std::array<const char*,4> regions{"UIMAREABER","UIMAREWACH","UIMAREKOWL","UIMAREGUIL"}; // @text UIMAREABER EN: "Aberdeen" | JA: "香港仔" ; UIMAREWACH EN: "Wan Chai" | JA: "湾仔" ; UIMAREKOWL EN: "Kowloon" | JA: "九龍城" ; UIMAREGUIL EN: "Guilin" | JA: "桂林"
+    constexpr std::array<const char *, 4> regions{"UIMAREABER", "UIMAREWACH", "UIMAREKOWL",
+        "UIMAREGUIL"}; // @text UIMAREABER EN: "Aberdeen" | JA: "香港仔" ; UIMAREWACH EN: "Wan Chai" | JA: "湾仔" ; UIMAREKOWL EN: "Kowloon" | JA: "九龍城" ; UIMAREGUIL EN: "Guilin" | JA: "桂林"
     const auto regionIndex = (area >> 16) - 1;
     const auto region = regionIndex < regions.size() ? GetLocalizedSceneText(regions[regionIndex]) : std::string_view{};
     std::snprintf(output.data(), output.size(), region.empty() ? "%.*s" : "%.*s, %.*s", static_cast<int>(location.size()), location.data(),
@@ -254,7 +265,8 @@ void RefreshCollectionViewerText() {
     if (bio >= 48)
         return;
     constexpr std::array<const char *, 5> suffixes{"NAME", "AGE", "BIRTH", "BLOOD", "DESC"};
-    constexpr std::array<const char*,4> prefixes{"UIBIONAME","UIBIOAGE","UIBIOBIRTH","UIBIOBLOOD"}; // @text UIBIONAME EN: "Name:" | JA: "名前：" ; UIBIOAGE EN: "Age:" | JA: "年齢：" ; UIBIOBIRTH EN: "Birth:" | JA: "生年月日：" ; UIBIOBLOOD EN: "Blood:" | JA: "血液型："
+    constexpr std::array<const char *, 4> prefixes{"UIBIONAME", "UIBIOAGE", "UIBIOBIRTH",
+        "UIBIOBLOOD"}; // @text UIBIONAME EN: "Name:" | JA: "名前：" ; UIBIOAGE EN: "Age:" | JA: "年齢：" ; UIBIOBIRTH EN: "Birth:" | JA: "生年月日：" ; UIBIOBLOOD EN: "Blood:" | JA: "血液型："
     for (std::size_t i = 0; i < 5; ++i) {
         std::array<char, 32> token{};
         std::snprintf(token.data(), token.size(), "UIBIO%02d%s", bio, suffixes[i]);
@@ -265,28 +277,22 @@ void RefreshCollectionViewerText() {
             value.data());
     }
 }
-void OpenCollectionSnapshotViewer(std::span<const std::uint32_t> order, std::uint32_t selected, UIElement returning, bool wrap) {
-    if (order.empty())
-        return;
-    if (order.data() != collectionViewerOrder.data())
-        std::copy(order.begin(), order.end(), collectionViewerOrder.begin());
-    collectionViewerCount = static_cast<std::uint32_t>(order.size());
+void SetCollectionViewerBack(bool back) {
+    collectionViewerBack = back;
+    const float alpha = back ? 1.0f : 0.0f;
+    for (std::size_t window = 6; window < collectionViewerWindows.size(); ++window)
+        if (collectionViewerWindows[window])
+            collectionViewerWindows[window]->alpha = alpha;
+}
+void OpenCollectionSnapshotViewer(const std::uint32_t *order, std::uint32_t count, std::uint32_t selected, UIElement returning, bool wrap) {
+    collectionViewerOrder = order;
+    collectionViewerWrap = wrap;
+    collectionViewerCount = count;
     collectionViewerIndex = selected;
     collectionViewerReturn = returning;
-    collectionViewerWrap = wrap;
-    collectionViewerBack = false;
     RefreshCollectionViewerText();
-    RequestCollectionSnapshotImage(collectionViewerOrder[selected]);
+    SetCollectionViewerBack(false);
     ShowElementByIndex(UIElement::SnapshotViewer);
-}
-void RetireCollectionPhotos() {
-    for (auto &image : snapshotImages) {
-        image.generation.fetch_add(1, std::memory_order_acq_rel);
-        const auto texture = image.texture.exchange(0, std::memory_order_acq_rel);
-        if (texture)
-            d3t::InitTexture2DResource(texture);
-        image.state.store(0, std::memory_order_release);
-    }
 }
 void RefreshCollectionAlbums() {
     const auto *metadata = GetSnapshotMetadataOwner();
@@ -383,7 +389,10 @@ template <std::size_t Child> void SelectCollectionRow(float *bounds, void *data)
         } else {
             std::array<char, 32> token{};
             std::snprintf(token.data(), token.size(), "UIBIO%02dNAME", row[0] * 8 + row[1]);
-            if (row[1]>=8) message.primaryText=CollectionPrizeUnlocked(row[0])?"UIBONUSUNL":"UIBONUSLOC"; // @text UIBONUSUNL EN: "Bonus Prize" | JA: "秘密の贈りもの" ; UIBONUSLOC EN: "Locked" | JA: "ロック中"
+            if (row[1] >= 8)
+                message.primaryText = CollectionPrizeUnlocked(row[0]) ?
+                    "UIBONUSUNL" :
+                    "UIBONUSLOC"; // @text UIBONUSUNL EN: "Bonus Prize" | JA: "秘密の贈りもの" ; UIBONUSLOC EN: "Locked" | JA: "ロック中"
             else {
                 const auto value = GetLocalizedSceneText(token.data());
                 std::snprintf(collectionViewerText[2].data(), collectionViewerText[2].size(), "%.*s", static_cast<int>(value.size()), value.data());
@@ -404,7 +413,8 @@ template <std::size_t Child> void ActivateCollectionRow(float *bounds, void *dat
         ActivateItemsRow(bounds, data);
     else if constexpr (Child == 2) {
         if (row[2]) {
-            OpenCollectionPawnFlyer(reinterpret_cast<const CollectionItemRow *>(row)->flyer);
+            PreparePawnSetFlyer(reinterpret_cast<const CollectionItemRow *>(row)->flyer, 1);
+            ShowElementByIndex(UIElement::PawnshopFlyer2);
             AicaExecuteWrapper(2);
         } else
             AicaExecuteWrapper(8);
@@ -432,12 +442,11 @@ template <std::size_t Child> void ActivateCollectionRow(float *bounds, void *dat
         if (snapshotImages[static_cast<std::uint32_t>(*row)].state.load(std::memory_order_acquire) != 2)
             return;
         if (collectionSnapshotDeleteClick == static_cast<std::uint32_t>(*row)) {
-            RequestCollectionSnapshotDelete(static_cast<std::uint32_t>(*row));
+            RequestCollectionSnapshotDelete(static_cast<std::uint32_t>(*row), EnableSnapshotViewer);
             return;
         }
         const auto selected = GetUIGridSelection(collectionChild[Child].grid);
-        OpenCollectionSnapshotViewer(
-            std::span{snapshotOrder.data(), snapshotOrderCount}, static_cast<std::uint32_t>(selected), static_cast<UIElement>(0), true);
+        OpenCollectionSnapshotViewer(snapshotOrder.data(), snapshotOrderCount, static_cast<std::uint32_t>(selected), static_cast<UIElement>(0), true);
     } else if constexpr (Child == 6) {
         if (row[1] >= 8) {
             if (CollectionPrizeUnlocked(row[0])) {
@@ -451,9 +460,8 @@ template <std::size_t Child> void ActivateCollectionRow(float *bounds, void *dat
                 AicaExecuteWrapper(8);
                 return;
             }
-            for (std::int32_t i = 0; i < album.count; ++i)
-                collectionViewerOrder[static_cast<std::size_t>(i)] = static_cast<std::uint32_t>(album.slots[static_cast<std::size_t>(i)]);
-            OpenCollectionSnapshotViewer(std::span{collectionViewerOrder.data(), static_cast<std::size_t>(album.count)}, 0, static_cast<UIElement>(0), false);
+            OpenCollectionSnapshotViewer(
+                reinterpret_cast<const std::uint32_t *>(album.slots.data()), static_cast<std::uint32_t>(album.count), 0, static_cast<UIElement>(0), false);
             AicaExecuteWrapper(0);
         }
     }
@@ -466,29 +474,21 @@ void DrawCollectionRowImage(const d3t::UISharedSpriteImage &image, const d3t::UI
 void DrawNativeCollectionPostcard(const UILayoutRect &rect, const struct nk_image *image, float border, float opacity) {
     nk_context &context = *GetNativeUiContext();
     const float inset = border < 0.0f ? 4.0f : border;
-    const auto place = [&context](const UILayoutRect &area) {
-        if (g_waitingForNextTick == 1 && context.current && context.current->layout)
-            context.current->layout->row.item = nk_rect(area.x, area.y, area.width, area.height);
-    };
-    place({.x = rect.x + 3.0f, .y = rect.y + 3.0f, .width = rect.width, .height = rect.height});
-    if (g_waitingForNextTick == 1)
-        nk_button_color(&context, nk_rgba(0, 0, 0, 150));
-    place(rect);
+    UI_GatedLayoutSpacePush(context, nk_rect(rect.x + 3.0f, rect.y + 3.0f, rect.width, rect.height));
+    UI_GatedButtonColour(context, nk_rgba(0, 0, 0, 150));
+    UI_GatedLayoutSpacePush(context, nk_rect(rect.x, rect.y, rect.width, rect.height));
     nk_color background{};
     const UIGridStyle &style = IsCameraIconHidden() ? UI_GRID_GAME_STYLE : UI_GRID_FRONTEND_STYLE;
     std::memcpy(&background, &style.borderColour, sizeof(background));
-    if (g_waitingForNextTick == 1)
-        nk_button_color(&context, background);
+    UI_GatedButtonColour(context, background);
     const float rounding = context.style.button.rounding;
     context.style.button.rounding = ScaleTo1080WithSafeArea(nk_rect(rect.x, rect.y, rect.width, rect.height), inset * 0.25f);
-    place(rect);
-    if (g_waitingForNextTick == 1)
-        nk_button_color(&context, nk_rgba(216, 216, 216, 255));
+    UI_GatedLayoutSpacePush(context, nk_rect(rect.x, rect.y, rect.width, rect.height));
+    UI_GatedButtonColour(context, nk_rgba(216, 216, 216, 255));
     context.style.button.rounding = rounding;
     if (image) {
-        place({.x = rect.x + inset, .y = rect.y + inset, .width = rect.width - inset * 2.0f, .height = rect.height - inset * 2.0f});
-        if (g_waitingForNextTick == 1)
-            nk_image_color(&context, *image, nk_rgba(255, 255, 255, static_cast<std::int32_t>(opacity * 255.0f)));
+        UI_GatedLayoutSpacePush(context, nk_rect(rect.x + inset, rect.y + inset, rect.width - inset * 2.0f, rect.height - inset * 2.0f));
+        UI_GatedImageColour(context, *image, nk_rgba(255, 255, 255, static_cast<std::int32_t>(opacity * 255.0f)));
     }
 }
 void FillCollectionTextureImage(struct nk_image &image, std::uint32_t texture) {
@@ -504,8 +504,8 @@ void FillCollectionTextureImage(struct nk_image &image, std::uint32_t texture) {
 }
 void DeleteCollectionSnapshotCell(float *, void *data) {
     const std::uint32_t *const slot = static_cast<const std::uint32_t *>(data);
-    if (slot)
-        RequestCollectionSnapshotDelete(*slot);
+    if (slot && *slot != std::numeric_limits<std::uint32_t>::max() && !IsSnapshotDeletePending())
+        RequestCollectionSnapshotDelete(*slot, EnableSnapshotViewer);
 }
 template <std::size_t Child>
 void DrawCollectionRow(
@@ -538,7 +538,7 @@ void DrawCollectionRow(
             else
                 text = reinterpret_cast<const WfMenuEntry *>(entry)->label;
             if (!heading) {
-                struct nk_image image {};
+                struct nk_image image{};
                 if constexpr (Child == 1)
                     RenderingRelatedInventory(image, GetInventoryItemIcon(0, 0), 0);
                 else if constexpr (Child == 2)
@@ -601,7 +601,7 @@ void DrawCollectionRow(
             AfterDrawUIGridCell(runtime.cellTemplate, *grid, ordinal, 1, -1, holder, static_cast<nk_panel *>(panel));
         if (!entry)
             return;
-        struct nk_image image {};
+        struct nk_image image{};
         bool postcard = true;
         float opacity = 1.0f;
         if constexpr (Child == 6) {
@@ -770,8 +770,7 @@ template <std::size_t Child> std::int64_t TickCollectionChild() {
                 return collectionGacha;
             else
                 return collectionEventPhotos;
-        }
-        ();
+        }();
         const auto stock = S2Save_GetInventoryBank(static_cast<S2InventoryBank>(bank));
         const auto maximum = Child == 0 ? GetMaxItemsForItemType(bank) : 64U;
         for (std::uint32_t i = 0; i < maximum; ++i) {
@@ -802,7 +801,8 @@ template <std::size_t Child> std::int64_t TickCollectionChild() {
                     continue;
                 const auto ordinal = count - area - 1;
                 const bool owned = (mask & (1U << i)) != 0;
-                collectionMaps[static_cast<std::size_t>(count++)]={area,owned?ordinal:-1,owned?floors[i].label:"UIGNRLQSTN",0}; // @text EN: "? ? ?" | JA: "？？？"
+                collectionMaps[static_cast<std::size_t>(count++)] = {
+                    area, owned ? ordinal : -1, owned ? floors[i].label : "UIGNRLQSTN", 0}; // @text EN: "? ? ?" | JA: "？？？"
             }
         }
         dictionary = reinterpret_cast<const std::int32_t *>(collectionMaps.data());
@@ -830,6 +830,8 @@ template <std::size_t Child> std::int64_t TickCollectionChild() {
         dictionary = collectionSecretRows[0].data();
     }
     SetUIGridDictionary(runtime.grid, count, dictionary);
+    if constexpr (Child == 3)
+        OpenWfScrollWidget();
     ResetUIGrid(runtime.grid);
     Vector4 outer{}, bounds{};
     GetUIGridRowBounds(runtime.grid, &outer, &bounds);
@@ -845,7 +847,8 @@ template <std::size_t Child> std::int64_t InputCollectionChild() {
         if (pressed & 4U) {
             const auto option = (GetSnapshotDataOption() + 1) % 3;
             SetSnapshotDataOption(option);
-            constexpr std::array<const char*,3> sortLabels{"UISORTNEW","UISORTOLD","UISORTPLC"}; // @text UISORTNEW EN: "Sorted by new" | JA: "並べ替え（新しい順）" ; UISORTOLD EN: "Sorted by old" | JA: "並べ替え（古い順）" ; UISORTPLC EN: "Sorted by place" | JA: "並べ替え（場所）"
+            constexpr std::array<const char *, 3> sortLabels{"UISORTNEW", "UISORTOLD",
+                "UISORTPLC"}; // @text UISORTNEW EN: "Sorted by new" | JA: "並べ替え（新しい順）" ; UISORTOLD EN: "Sorted by old" | JA: "並べ替え（古い順）" ; UISORTPLC EN: "Sorted by place" | JA: "並べ替え（場所）"
             auto message = informationBar.current;
             message.primaryText = sortLabels[static_cast<std::size_t>(option)];
             message.primaryLocalized = false;
@@ -854,9 +857,8 @@ template <std::size_t Child> std::int64_t InputCollectionChild() {
             SetUIGridDictionary(runtime.grid, static_cast<std::int32_t>(snapshotOrderCount), reinterpret_cast<const std::int32_t *>(snapshotOrder.data()));
         }
         const std::int32_t selected = GetUIGridSelection(runtime.grid);
-        if ((pressed & 2U) && selected >= 0 && static_cast<std::uint32_t>(selected) < snapshotOrderCount) {
-            RequestCollectionSnapshotDelete(snapshotOrder[static_cast<std::size_t>(selected)]);
-        }
+        if ((pressed & 2U) && !IsSnapshotDeletePending() && selected >= 0 && static_cast<std::uint32_t>(selected) < snapshotOrderCount)
+            RequestCollectionSnapshotDelete(snapshotOrder[static_cast<std::size_t>(selected)], EnableSnapshotViewer);
     }
     ProcessUIGridInput(runtime.grid, uiPointer, GetFrameTime());
     return 1;
@@ -1033,8 +1035,7 @@ template <bool Photos> std::int64_t TickCollectionRoot() {
     runtime.nativeTabs.active = runtime.nativeTabs.previousActive = 0;
     SetUIGridTabSelector(&runtime.nativeTabs, 1);
     if constexpr (Photos) {
-        RetireCollectionPhotos();
-        RefreshSnapshotOrder();
+        PrepareSnapshotImages();
         ShowElementByIndex(UIElement::GameInfoBar);
     }
     SwitchCollectionTab<Photos>();
@@ -1058,10 +1059,10 @@ template <bool Photos> std::int64_t InputCollectionRoot() {
 }
 template <bool Photos> std::int64_t DestroyCollectionRoot() {
     auto &runtime = Photos ? photosTabs : collectionTabs;
+    if constexpr (Photos)
+        ReleaseSnapshotImages();
     if (runtime.shown >= 0)
         DestroyElementByIndex(CollectionTabChild<Photos>(runtime.shown));
-    if constexpr (Photos)
-        RetireCollectionPhotos();
     return 1;
 }
 template <bool Photos> std::int64_t ResetCollectionRoot() {
@@ -1135,24 +1136,6 @@ void DrawCollectionColour(const d3t::UIRect &rectangle, std::uint32_t colour, co
     const d3t::UISharedSpriteImage white{.textureHandle = d3t::g_defaultWhiteTexture, .source = {0, 0, 1, 1}};
     d3t::DrawUITextureObject(uiDefinitions[24], object, {rectangle, clip}, 1.0f, &white);
 }
-void DrawCollectionPostcard(
-    const d3t::UISharedSpriteImage &image, const d3t::UIRect &container, const d3t::UIRect &clip, float border, float opacity, bool framed) {
-    if (!image.source.width || !image.source.height)
-        return;
-    const float scale = std::min(container.width / image.source.width, container.height / image.source.height);
-    const float width = image.source.width * scale, height = image.source.height * scale;
-    d3t::UIRect rectangle{container.x + (container.width - width) * 0.5f, container.y + (container.height - height) * 0.5f, width, height};
-    DrawCollectionColour({rectangle.x + 3, rectangle.y + 3, rectangle.width, rectangle.height}, static_cast<std::uint32_t>(150 * opacity) << 24, clip);
-    if (framed) {
-        DrawCollectionColour(rectangle, 0xffffffffU, clip);
-        const auto grey = static_cast<std::uint32_t>(216 * opacity);
-        DrawCollectionColour({rectangle.x + 1, rectangle.y + 1, rectangle.width - 2, rectangle.height - 2},
-            grey | (grey << 8) | (grey << 16) | (static_cast<std::uint32_t>(255 * opacity) << 24), clip);
-        const float inset = border < 0 ? 4 : border;
-        rectangle = {rectangle.x + inset, rectangle.y + inset, rectangle.width - 2 * inset, rectangle.height - 2 * inset};
-    }
-    DrawCollectionRowImage(image, rectangle, opacity, clip);
-}
 void SetCollectionUnderlayAlpha(bool restore) {
     constexpr std::array<std::string_view, 3> names{"MainMenu::ContentBackground", "Texture_Alpha_Front", "Texture_Alpha_Front2"};
     auto &definition = uiDefinitions[static_cast<std::size_t>(UIElement::MainMenu)];
@@ -1179,202 +1162,239 @@ void SetCollectionUnderlayAlpha(bool restore) {
     if (restore)
         collectionUnderlayHidden = false;
 }
-bool CollectionViewerArrowHidden(const d3t::UIDefinition &definition, const AuthoredMenuLayout &layout, std::int32_t panel, bool left, bool right) {
-    for (; panel >= 0; panel = layout.parents[static_cast<std::size_t>(panel)]) {
-        const auto &id = definition.panels[static_cast<std::size_t>(panel)].id;
-        if (id.ends_with("::LeftIconImagePanel"))
-            return !left;
-        if (id.ends_with("::RightIconImagePanel"))
-            return !right;
-        if (id.ends_with("::LeftIconPanel"))
-            return !left || GetIsKeyboardActive() != 0;
-        if (id.ends_with("::RightIconPanel"))
-            return !right || GetIsKeyboardActive() != 0;
-    }
-    return false;
-}
 std::int64_t TickCollectionViewer() {
     AicaExecuteWrapper(2);
+    EnableRenderableByIndex(UIElement::SubMenuPhotos);
+    EnableRenderableByIndex(UIElement::PhotosSecrets);
+    EnableRenderableByIndex(UIElement::GameMenu);
+    EnableRenderableByIndex(UIElement::GameInfoBar);
     SetCollectionUnderlayAlpha(false);
-    for (auto root : std::array<std::size_t, 4>{20, 23, 8, 59})
-        g_uiElements[root].isRenderable = 1;
     return 0;
 }
 void RetireCollectionViewerUnderlay(UIElement returning) {
     AicaExecuteWrapper(1);
+    DisableElement(UIElement::SubMenuPhotos);
+    DisableElement(UIElement::PhotosSecrets);
+    DisableElement(UIElement::GameMenu);
+    DisableElement(UIElement::GameInfoBar);
     SetCollectionUnderlayAlpha(true);
-    for (auto root : std::array<std::size_t, 4>{20, 23, 8, 59})
-        g_uiElements[root].isRenderable = 0;
     ShowElementByIndex(returning);
+}
+void FitCollectionViewerImage(UILayoutRect &fitted, const UILayoutRect &area, const struct nk_image &image) {
+    fitted = {.x = 0.0f, .y = 0.0f, .width = area.width, .height = area.height};
+    UI_ScaleSize(fitted.width, fitted.height, 2, area.width, area.height, image.region[2], image.region[3], nullptr);
+    UI_AlignInArea(1, 1, fitted.width, fitted.height, fitted.x, fitted.y, area.width, area.height);
+}
+void ShowNextCollectionViewerImage(float *, void *) {
+    const std::uint32_t previous = collectionViewerIndex;
+    if (++collectionViewerIndex >= collectionViewerCount)
+        collectionViewerIndex = collectionViewerWrap ? 0 : collectionViewerCount - 1;
+    if (previous != collectionViewerIndex) {
+        RefreshCollectionViewerText();
+        AicaExecuteWrapper(3);
+    }
+}
+void ShowPreviousCollectionViewerImage(float *, void *) {
+    const std::uint32_t previous = collectionViewerIndex;
+    if (--collectionViewerIndex >= collectionViewerCount)
+        collectionViewerIndex = collectionViewerWrap ? collectionViewerCount - 1 : 0;
+    if (previous != collectionViewerIndex) {
+        RefreshCollectionViewerText();
+        AicaExecuteWrapper(3);
+    }
+}
+void FlipCollectionViewerImage(float *, void *) {
+    SetCollectionViewerBack(!collectionViewerBack);
+    AicaExecuteWrapper(3);
+}
+void UpdateCollectionViewerArrows() {
+    const bool left = collectionViewerCount > 1 && (collectionViewerWrap || collectionViewerIndex);
+    const bool right = collectionViewerCount > 1 && (collectionViewerWrap || collectionViewerIndex < collectionViewerCount - 1);
+    if (collectionViewerWindows[4])
+        collectionViewerWindows[4]->alpha = left ? 1.0f : 0.0f;
+    if (collectionViewerWindows[5])
+        collectionViewerWindows[5]->alpha = right ? 1.0f : 0.0f;
+    const bool pointerLeft = GetIsKeyboardActive() == 0 && left, pointerRight = GetIsKeyboardActive() == 0 && right;
+    if (collectionViewerWindows[2])
+        collectionViewerWindows[2]->alpha = pointerLeft ? 1.0f : 0.0f;
+    if (collectionViewerWindows[3])
+        collectionViewerWindows[3]->alpha = pointerRight ? 1.0f : 0.0f;
 }
 std::uint32_t LoadCollectionViewer() {
     return ReadUIDefinitionFile(UIElement::SnapshotViewer, "/ui/gamemenu_New/SubMenu_Photos_Snapshot_Viewer.ui", 1);
 }
 std::int64_t BindCollectionViewer() {
-    BindCollectionLayout(uiDefinitions[24], collectionViewerLayout);
+    const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::SnapshotViewer)].config.uiHandleIndex;
+    for (std::size_t window = 0; window < collectionViewerWindows.size(); ++window)
+        collectionViewerWindows[window] = UI_GetWindow(UI_FindViewWindow(slot, COLLECTION_VIEWER_WINDOWS[window]));
+    if (collectionViewerWindows[0])
+        collectionViewerWindows[0]->mouseCallbacks.clicked = FlipCollectionViewerImage;
+    if (collectionViewerWindows[2])
+        collectionViewerWindows[2]->mouseCallbacks.clicked = ShowPreviousCollectionViewerImage;
+    if (collectionViewerWindows[3])
+        collectionViewerWindows[3]->mouseCallbacks.clicked = ShowNextCollectionViewerImage;
+    if (collectionViewerWindows[4])
+        collectionViewerWindows[4]->mouseCallbacks.clicked = ShowPreviousCollectionViewerImage;
+    if (collectionViewerWindows[5])
+        collectionViewerWindows[5]->mouseCallbacks.clicked = ShowNextCollectionViewerImage;
+    for (std::size_t item = 0; item < collectionViewerLayoutItems.size(); ++item)
+        collectionViewerLayoutItems[item] = UI_FindViewLayoutItem(slot, COLLECTION_VIEWER_LAYOUT_ITEMS[item]);
+    for (std::size_t label = 0; label < collectionViewerLabels.size(); ++label) {
+        d3t::UILabelWidget *const widget = UI_GetLabel(static_cast<std::uint32_t>(UI_FindViewLabel(slot, COLLECTION_VIEWER_LABELS[label])));
+        collectionViewerLabels[label] = widget;
+        if (widget) {
+            widget->text = collectionViewerText[label].data();
+            widget->token.alreadyLocalized = 1;
+        }
+    }
+    collectionViewerPlaceholder = UI_FindViewImage(slot, "Image_Placeholder");
     return 1;
 }
 std::int64_t ResetCollectionViewer() {
-    collectionViewerLayout = {};
+    collectionViewerWindows.fill(nullptr);
+    collectionViewerLabels.fill(nullptr);
+    collectionViewerLayoutItems.fill(nullptr);
+    collectionViewerPlaceholder = -1;
     return 0;
-}
-void MoveCollectionViewer(std::int32_t direction) {
-    if (!collectionViewerCount)
-        return;
-    auto next = static_cast<std::int32_t>(collectionViewerIndex) + direction;
-    if (collectionViewerWrap)
-        next = (next + static_cast<std::int32_t>(collectionViewerCount)) % static_cast<std::int32_t>(collectionViewerCount);
-    else if (next < 0 || next >= static_cast<std::int32_t>(collectionViewerCount))
-        return;
-    collectionViewerIndex = static_cast<std::uint32_t>(next);
-    RequestCollectionSnapshotImage(collectionViewerOrder[collectionViewerIndex]);
-    RefreshCollectionViewerText();
-    AicaExecuteWrapper(3);
-}
-bool CollectionPanelClicked(const d3t::UIDefinition &definition, const AuthoredMenuLayout &layout, std::string_view id) {
-    if (!uiPointer.leftClicks)
-        return false;
-    const auto panel = MenuPanelIndex(definition, id);
-    if (panel < 0)
-        return false;
-    if (&definition == &uiDefinitions[24]) {
-        const bool left = collectionViewerCount > 1 && (collectionViewerWrap || collectionViewerIndex != 0);
-        const bool right = collectionViewerCount > 1 && (collectionViewerWrap || collectionViewerIndex < collectionViewerCount - 1);
-        if (CollectionViewerArrowHidden(definition, layout, panel, left, right))
-            return false;
-    } else if (&definition == &uiDefinitions[25]) {
-        const bool left = collectionPresentTextures.size() > 1 && collectionPresentIndex != 0;
-        const bool right = collectionPresentTextures.size() > 1 && collectionPresentIndex < collectionPresentTextures.size() - 1;
-        if (CollectionViewerArrowHidden(definition, layout, panel, left, right))
-            return false;
-    }
-    const auto &rectangle = layout.panels[static_cast<std::size_t>(panel)];
-    const float x = uiPointer.position.x * 1920 / GetUIViewportWidth();
-    return x >= rectangle.x && x < rectangle.x + rectangle.width && uiPointer.position.y >= rectangle.y &&
-        uiPointer.position.y < rectangle.y + rectangle.height;
 }
 std::int64_t InputCollectionViewer() {
     if (nativePrompt.active)
         return 0;
     const auto pressed = GetPadControlData(1);
+    if (pressed & 0x400U) {
+        SetCollectionViewerBack(!collectionViewerBack);
+        AicaExecuteWrapper(3);
+    }
+    if ((pressed & 2U) && !IsSnapshotDeletePending())
+        RequestCollectionSnapshotDelete(collectionViewerOrder[collectionViewerIndex], EnableSnapshotViewer);
     if (pressed & 0x200U) {
         DestroyElementByIndex(UIElement::SnapshotViewer);
         return 0;
     }
-    if (pressed & 0x400U) {
-        collectionViewerBack = !collectionViewerBack;
-        AicaExecuteWrapper(2);
-    }
-    if ((pressed & 2U) && collectionViewerCount)
-        RequestCollectionSnapshotDelete(collectionViewerOrder[collectionViewerIndex]);
-    const auto &definition = uiDefinitions[24];
-    if ((pressed & 0x8088U) || CollectionPanelClicked(definition, collectionViewerLayout, "SubMenu_Photos_Snapshot_Viewer::RightIconPanel") ||
-        CollectionPanelClicked(definition, collectionViewerLayout, "SubMenu_Photos_Snapshot_Viewer::RightIconImagePanel"))
-        MoveCollectionViewer(1);
-    else if ((pressed & 0x4050U) || CollectionPanelClicked(definition, collectionViewerLayout, "SubMenu_Photos_Snapshot_Viewer::LeftIconPanel") ||
-        CollectionPanelClicked(definition, collectionViewerLayout, "SubMenu_Photos_Snapshot_Viewer::LeftIconImagePanel"))
-        MoveCollectionViewer(-1);
-    if (CollectionPanelClicked(definition, collectionViewerLayout, "SubMenu_Photos_Snapshot_Viewer::Image_Panel")) {
-        collectionViewerBack = !collectionViewerBack;
-        AicaExecuteWrapper(2);
-    }
+    if (pressed & 0x8088U)
+        ShowNextCollectionViewerImage(nullptr, nullptr);
+    if (pressed & 0x4050U)
+        ShowPreviousCollectionViewerImage(nullptr, nullptr);
     return 0;
 }
 std::int64_t RenderCollectionViewer() {
-    auto &definition = uiDefinitions[24];
-    auto &layout = collectionViewerLayout;
-    ResolveCollectionNativeLayout(definition, layout);
-    if (!drawingUI)
-        return 0;
-    const bool left = collectionViewerCount > 1 && (collectionViewerWrap || collectionViewerIndex != 0);
-    const bool right = collectionViewerCount > 1 && (collectionViewerWrap || collectionViewerIndex < collectionViewerCount - 1);
-    const d3t::UIRect screen{0, 0, 1920, 1080};
-    DrawCollectionColour(screen, 0xc8000000U, screen);
-    const auto panel = MenuPanelIndex(definition, "SubMenu_Photos_Snapshot_Viewer::Image_Panel");
-    if (collectionViewerCount && panel >= 0) {
-        const auto slot = collectionViewerOrder[collectionViewerIndex];
-        RequestCollectionSnapshotImage(slot);
-        const auto texture = snapshotImages[slot].texture.load(std::memory_order_acquire);
-        std::uint32_t width{}, height{};
-        if (snapshotImages[slot].state.load(std::memory_order_acquire) == 2 && d3t::GetTexture2DDimensions(texture, &width, &height)) {
-            const d3t::UISharedSpriteImage image{.textureHandle = texture, .source = {0, 0, static_cast<float>(width), static_cast<float>(height)}};
-            DrawCollectionPostcard(image, layout.panels[static_cast<std::size_t>(panel)], screen, 16, collectionViewerBack ? 0.34999999f : 1.0f, true);
-        }
+    const float aspect = static_cast<float>(static_cast<std::int32_t>(GetUIViewportWidth()));
+    for (std::size_t item = 0; item < collectionViewerLayoutItems.size(); ++item) {
+        d3t::UIWindow *const window = collectionViewerWindows[item + 7];
+        d3t::UILayoutItem *const layout = collectionViewerLayoutItems[item];
+        if (!window || !layout)
+            continue;
+        UILayoutRect rect{};
+        UI_GetWindowRect(window, rect);
+        layout->offsetX = rect.x / aspect;
+        layout->width = rect.width / aspect;
+        layout->offsetY = rect.y / 1080.0f;
+        layout->height = rect.height / 1080.0f;
     }
-    for (std::size_t i = 0; i < definition.textureObjects.size(); ++i) {
-        const auto &object = definition.textureObjects[i];
-        if (CollectionViewerArrowHidden(definition, layout, layout.objectPanels[i], left, right))
-            continue;
-        if (object.imageName == "Image_Placeholder")
-            continue;
-        if (!collectionViewerBack && (object.id.find("Photo_Back") != std::string::npos || object.id.find("PhotoBack") != std::string::npos))
-            continue;
-        DrawNativeMenuObject(definition, object, layout.objects[i], 1.0f);
+    UpdateCollectionViewerArrows();
+    nk_context &context = *GetNativeUiContext();
+    const std::uint32_t slot = collectionViewerOrder ? collectionViewerOrder[collectionViewerIndex] : std::numeric_limits<std::uint32_t>::max();
+    if (slot < collectionSnapshotPriority.size())
+        collectionSnapshotPriority[slot] = 1;
+    PumpCollectionSnapshotImages();
+    context.style.window.fixed_background.data.color.a = 200;
+    UI_GatedBegin(context, collectionViewerBackgroundPanel, "SnapshotViewBackground", nk_rect(0.0f, 0.0f, static_cast<float>(g_uiScreenWidth), 1080.0f),
+        NK_WINDOW_NO_SCROLLBAR);
+    UI_GatedEnd(context);
+    if (slot < snapshotImages.size() && GetSnapshotMetadataOwner()->records[slot].use == 1 && snapshotImages[slot].state.load(std::memory_order_acquire) == 2 &&
+        collectionViewerWindows[0]) {
+        UILayoutRect area{};
+        UI_GetWindowRect(collectionViewerWindows[0], area);
+        context.style.window.fixed_background.data.color.a = 0;
+        UI_GatedBegin(context, collectionViewerPanel, "SnapshotView", nk_rect(area.x, area.y, area.width, area.height), NK_WINDOW_NO_SCROLLBAR);
+        UI_GatedLayoutSpaceBegin(context, NK_STATIC, 0.0f, 1);
+        struct nk_image image{};
+        FillCollectionTextureImage(image, snapshotImages[slot].texture.load(std::memory_order_acquire));
+        UILayoutRect fitted{};
+        FitCollectionViewerImage(fitted, area, image);
+        DrawNativeCollectionPostcard(fitted, &image, 16.0f, collectionViewerBack ? 0.34999999f : 1.0f);
+        if (d3t::UIWindow *const back = collectionViewerWindows[7])
+            back->layout.offsetX = fitted.x / aspect + back->layout.offsetY;
+        UI_GatedLayoutSpaceEnd(context);
+        UI_GatedEnd(context);
     }
-    for (std::size_t i = 0; i < definition.labels.size(); ++i) {
-        const auto &label = definition.labels[i];
-        if (CollectionViewerArrowHidden(definition, layout, layout.labelPanels[i], left, right))
-            continue;
-        if (label.id.find("::Label_PhotoBack") != std::string::npos) {
-            const auto digit = label.id.back() - '0';
-            if (collectionViewerBack && digit >= 0 && digit < 7)
-                DrawMovesLabel(label, layout.labels[i], collectionViewerText[static_cast<std::size_t>(digit)].data(), 1.0f, &definition);
-        } else
-            DrawMovesLabel(label, layout.labels[i], label.token.empty() ? std::string_view{label.text} : GetLocalizedSceneText(label.token), 1.0f, &definition);
-    }
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::SnapshotViewer)];
+    DrawUIEntity(context, element.config.uiHandleIndex, element.index);
     return 0;
 }
 std::int64_t DestroyCollectionViewer() {
+    collectionViewerOrder = nullptr;
     collectionViewerCount = 0;
+    collectionViewerIndex = 0;
     RetireCollectionViewerUnderlay(collectionViewerReturn);
     return 1;
 }
 void ConfirmCollectionSnapshotDelete(std::int32_t response) {
-    const auto slot = std::exchange(collectionPendingDelete, std::numeric_limits<std::uint32_t>::max());
-    if (response != 2 || slot >= snapshotImages.size())
-        return;
-    DeleteSnapshotSlot(slot);
-    auto &grid = collectionChild[5].grid;
-    SetUIGridDictionary(grid, static_cast<std::int32_t>(snapshotOrderCount), reinterpret_cast<const std::int32_t *>(snapshotOrder.data()));
-    if (g_uiElements[24].isVisible) {
-        std::uint32_t count{};
-        for (std::uint32_t i = 0; i < collectionViewerCount; ++i)
-            if (collectionViewerOrder[i] != slot)
-                collectionViewerOrder[count++] = collectionViewerOrder[i];
-        collectionViewerCount = count;
-        if (!count)
-            DestroyElementByIndex(UIElement::SnapshotViewer);
-        else {
-            collectionViewerIndex = std::min(collectionViewerIndex, count - 1);
-            RefreshCollectionViewerText();
-        }
+    const std::uint32_t slot = collectionPendingDelete;
+    if (response == 2 && slot < snapshotImages.size()) {
+        DeleteSnapshotSlot(slot);
+        if (collectionPendingDeleteCompletion)
+            collectionPendingDeleteCompletion();
     }
-    RefreshCollectionAlbums();
+    collectionPendingDelete = std::numeric_limits<std::uint32_t>::max();
+    collectionPendingDeleteCompletion = nullptr;
 }
-void RequestCollectionSnapshotDelete(std::uint32_t slot) {
-    if (nativePrompt.active || slot >= snapshotImages.size() || GetSnapshotMetadataOwner()->records[slot].use != 1 ||
-        snapshotImages[slot].state.load(std::memory_order_acquire) != 2)
+void RequestCollectionSnapshotDelete(std::uint32_t slot, std::int64_t (*completion)()) {
+    if (nativePrompt.active || IsSnapshotDeletePending())
+        return;
+    collectionPendingDelete = std::numeric_limits<std::uint32_t>::max();
+    collectionPendingDeleteCompletion = nullptr;
+    if (slot >= snapshotImages.size() || GetSnapshotMetadataOwner()->records[slot].use != 1 || snapshotImages[slot].state.load(std::memory_order_acquire) < 2)
         return;
     collectionPendingDelete = slot;
-    NativeMessageBox("UISNAPDELE",false,0,ConfirmCollectionSnapshotDelete); // @text EN: "Are you sure you want to delete this image?" | JA: "このスナップショットを削除してもよろしいですか？"
+    collectionPendingDeleteCompletion = completion;
+    NativeMessageBox("UISNAPDELE", false, 0,
+        ConfirmCollectionSnapshotDelete); // @text EN: "Are you sure you want to delete this image?" | JA: "このスナップショットを削除してもよろしいですか？"
 }
 std::uint32_t LoadCollectionPresentViewer() {
     return ReadUIDefinitionFile(UIElement::SecretViewer, "/ui/gamemenu_New/SubMenu_Photos_Secret_Viewer.ui", 1);
 }
+void ShowNextCollectionPresentPage(float *, void *) {
+    if (collectionPresentIndex < collectionPresentCount - collectionPresentPageStep) {
+        ++collectionPresentIndex;
+        AicaExecuteWrapper(3);
+    }
+}
+void ShowPreviousCollectionPresentPage(float *, void *) {
+    if (collectionPresentIndex) {
+        --collectionPresentIndex;
+        AicaExecuteWrapper(3);
+    }
+}
 std::int64_t BindCollectionPresentViewer() {
-    BindCollectionLayout(uiDefinitions[25], collectionPresentLayout);
+    const std::uint32_t slot = g_uiElements[static_cast<std::size_t>(UIElement::SecretViewer)].config.uiHandleIndex;
+    for (std::size_t window = 0; window < collectionPresentWindows.size(); ++window)
+        collectionPresentWindows[window] = UI_GetWindow(UI_FindViewWindow(slot, COLLECTION_PRESENT_VIEWER_WINDOWS[window]));
+    if (collectionPresentWindows[1])
+        collectionPresentWindows[1]->mouseCallbacks.clicked = ShowPreviousCollectionPresentPage;
+    if (collectionPresentWindows[2])
+        collectionPresentWindows[2]->mouseCallbacks.clicked = ShowNextCollectionPresentPage;
+    if (collectionPresentWindows[3])
+        collectionPresentWindows[3]->mouseCallbacks.clicked = ShowPreviousCollectionPresentPage;
+    if (collectionPresentWindows[4])
+        collectionPresentWindows[4]->mouseCallbacks.clicked = ShowNextCollectionPresentPage;
+    if (collectionPresentWindows[0])
+        collectionPresentWindows[0]->mouseCallbacks.clicked = ShowNextCollectionPresentPage;
+    collectionPresentPlaceholder = UI_FindViewImage(slot, "Image_Placeholder");
     return 1;
 }
 std::int64_t ResetCollectionPresentViewer() {
-    collectionPresentLayout = {};
+    collectionPresentWindows.fill(nullptr);
+    collectionPresentPlaceholder = -1;
     return 0;
 }
 std::int64_t DestroyCollectionPresentViewer() {
-    for (const auto texture : collectionPresentTextures)
-        if (texture)
-            d3t::InitTexture2DResource(texture);
-    collectionPresentTextures.clear();
+    for (std::uint32_t page = 0; page < collectionPresentCount; ++page) {
+        d3t::InitTexture2DResource(collectionPresentPages[page].texture);
+        collectionPresentPages[page].texture = 0;
+    }
     collectionPresentIndex = 0;
+    collectionPresentCount = 0;
     RetireCollectionViewerUnderlay(collectionPresentReturn);
     return 1;
 }
@@ -1386,250 +1406,91 @@ void OpenCollectionPresent(std::uint32_t group) {
     const char *suffix = japaneseVersion ? "_jp" : suffixes[static_cast<std::size_t>(language)];
     collectionPresentReturn = static_cast<UIElement>(0);
     collectionPresentIndex = 0;
+    collectionPresentCount = 0;
+    collectionPresentPageStep = 1;
     collectionPresentFramed = group >= 4;
-    for (std::uint32_t index = 0;; ++index) {
+    while (collectionPresentCount < collectionPresentPages.size()) {
         std::array<char, 272> path{};
-        std::snprintf(path.data(), path.size(), "/Snapshots/PresentPic/Present%02u_%02u%s.png", group, index, suffix);
+        std::snprintf(path.data(), path.size(), "/Snapshots/PresentPic/Present%02u_%02u%s.png", group, collectionPresentCount, suffix);
         if (!ArchiveData_GetFileSize(path.data())) {
-            std::snprintf(path.data(), path.size(), "/Snapshots/PresentPic/Present%02u_%02u.png", group, index);
+            std::snprintf(path.data(), path.size(), "/Snapshots/PresentPic/Present%02u_%02u.png", group, collectionPresentCount);
             if (!ArchiveData_GetFileSize(path.data()))
                 break;
         }
         std::strcat(path.data(), "?usage=0");
-        std::uint32_t texture{};
-        d3t::LoadImageTexture(path.data(), false, &texture, g_currentRenderHandle);
-        collectionPresentTextures.push_back(texture);
+        collectionPresentPages[collectionPresentCount++].request = static_cast<std::int32_t>(SetupUsageForTexture(path.data(), 0));
     }
     ShowElementByIndex(UIElement::SecretViewer);
 }
-void MoveCollectionPresent(std::int32_t direction) {
-    const auto next = static_cast<std::int32_t>(collectionPresentIndex) + direction;
-    if (next < 0 || next >= static_cast<std::int32_t>(collectionPresentTextures.size()))
-        return;
-    collectionPresentIndex = static_cast<std::uint32_t>(next);
-    AicaExecuteWrapper(3);
-}
 std::int64_t InputCollectionPresentViewer() {
     const auto pressed = GetPadControlData(1);
-    if (pressed & 0x200U) {
+    if (pressed & 0x200U)
         DestroyElementByIndex(UIElement::SecretViewer);
-        return 0;
-    }
-    const auto &definition = uiDefinitions[25];
-    if ((pressed & 0x8088U) || CollectionPanelClicked(definition, collectionPresentLayout, "SubMenu_Photos_Secret_Viewer::RightIconPanel") ||
-        CollectionPanelClicked(definition, collectionPresentLayout, "SubMenu_Photos_Secret_Viewer::RightIconImagePanel") ||
-        CollectionPanelClicked(definition, collectionPresentLayout, "SubMenu_Photos_Secret_Viewer::Image_Panel"))
-        MoveCollectionPresent(1);
-    else if ((pressed & 0x4050U) || CollectionPanelClicked(definition, collectionPresentLayout, "SubMenu_Photos_Secret_Viewer::LeftIconPanel") ||
-        CollectionPanelClicked(definition, collectionPresentLayout, "SubMenu_Photos_Secret_Viewer::LeftIconImagePanel"))
-        MoveCollectionPresent(-1);
+    if (pressed & 0x8088U)
+        ShowNextCollectionPresentPage(nullptr, nullptr);
+    if (pressed & 0x4050U)
+        ShowPreviousCollectionPresentPage(nullptr, nullptr);
     return 0;
+}
+void UpdateCollectionPresentArrows() {
+    const bool left = collectionPresentCount > 1 && collectionPresentIndex;
+    const bool right = collectionPresentCount > 1 && collectionPresentIndex < collectionPresentCount - collectionPresentPageStep;
+    if (collectionPresentWindows[3])
+        collectionPresentWindows[3]->alpha = left ? 1.0f : 0.0f;
+    if (collectionPresentWindows[4])
+        collectionPresentWindows[4]->alpha = right ? 1.0f : 0.0f;
+    const bool pointerLeft = GetIsKeyboardActive() == 0 && left, pointerRight = GetIsKeyboardActive() == 0 && right;
+    if (collectionPresentWindows[1])
+        collectionPresentWindows[1]->alpha = pointerLeft ? 1.0f : 0.0f;
+    if (collectionPresentWindows[2])
+        collectionPresentWindows[2]->alpha = pointerRight ? 1.0f : 0.0f;
+}
+void ResolveCollectionPresentPage(CollectionPresentPage &page) {
+    if (page.texture)
+        return;
+    page.texture = GetShaderDataByIndex(static_cast<std::uint32_t>(page.request));
+    if (page.texture)
+        FillCollectionTextureImage(page.image, page.texture);
+}
+void DrawCollectionPresentPage(const CollectionPresentPage &page, const UILayoutRect &area) {
+    nk_context &context = *GetNativeUiContext();
+    UILayoutRect fitted{};
+    FitCollectionViewerImage(fitted, area, page.image);
+    if (collectionPresentFramed) {
+        DrawNativeCollectionPostcard(fitted, &page.image, -1.0f, 1.0f);
+        return;
+    }
+    UI_GatedLayoutSpacePush(context, nk_rect(fitted.x + 3.0f, fitted.y + 3.0f, fitted.width, fitted.height));
+    UI_GatedButtonColour(context, nk_rgba(0, 0, 0, 150));
+    UI_GatedLayoutSpacePush(context, nk_rect(fitted.x, fitted.y, fitted.width, fitted.height));
+    UI_GatedImageColour(context, page.image, nk_rgba(255, 255, 255, 255));
 }
 std::int64_t RenderCollectionPresentViewer() {
-    auto &definition = uiDefinitions[25];
-    auto &layout = collectionPresentLayout;
-    ResolveCollectionNativeLayout(definition, layout);
-    if (!drawingUI)
+    UpdateCollectionPresentArrows();
+    nk_context &context = *GetNativeUiContext();
+    const UIElementState &element = g_uiElements[static_cast<std::size_t>(UIElement::SecretViewer)];
+    DrawUIEntity(context, element.config.uiHandleIndex, element.index);
+    if (collectionPresentIndex >= collectionPresentCount)
         return 0;
-    const bool left = collectionPresentTextures.size() > 1 && collectionPresentIndex != 0;
-    const bool right = collectionPresentTextures.size() > 1 && collectionPresentIndex < collectionPresentTextures.size() - 1;
-    for (std::size_t i = 0; i < definition.textureObjects.size(); ++i) {
-        const auto &object = definition.textureObjects[i];
-        if (object.imageName == "Image_Placeholder" || CollectionViewerArrowHidden(definition, layout, layout.objectPanels[i], left, right))
-            continue;
-        DrawNativeMenuObject(definition, object, layout.objects[i], 1);
-    }
-    for (std::size_t i = 0; i < definition.labels.size(); ++i) {
-        if (CollectionViewerArrowHidden(definition, layout, layout.labelPanels[i], left, right))
-            continue;
-        const auto &label = definition.labels[i];
-        DrawMovesLabel(label, layout.labels[i], label.token.empty() ? std::string_view(label.text) : GetLocalizedSceneText(label.token), 1, &definition);
-    }
-    const auto panel = MenuPanelIndex(definition, "SubMenu_Photos_Secret_Viewer::Image_Panel");
-    if (panel < 0 || collectionPresentIndex >= collectionPresentTextures.size())
+    CollectionPresentPage *page = &collectionPresentPages[collectionPresentIndex];
+    ResolveCollectionPresentPage(*page);
+    if (!collectionPresentWindows[0])
         return 0;
-    const auto texture = collectionPresentTextures[collectionPresentIndex];
-    std::uint32_t width{}, height{};
-    if (!d3t::GetTexture2DDimensions(texture, &width, &height))
-        return 0;
-    const d3t::UISharedSpriteImage image{.textureHandle = texture, .source = {0, 0, static_cast<float>(width), static_cast<float>(height)}};
-    const auto &bounds = layout.panels[static_cast<std::size_t>(panel)];
-    DrawCollectionPostcard(image, bounds, bounds, -1, 1, collectionPresentFramed);
-    return 0;
-}
-const std::int32_t *CollectionPawnSelection(UIGrid *, std::int32_t row) {
-    return &collectionPawnFlyer.order[static_cast<std::size_t>(row)];
-}
-std::int32_t CollectionPawnRowSpan(UIGrid *, std::int32_t row) {
-    const auto *set = GetPawnShopSet(collectionPawnFlyer.shop, collectionPawnFlyer.order[static_cast<std::size_t>(row)]);
-    return set ? set->itemCount / 16 + 2 : 1;
-}
-void SelectCollectionPawnSet(float *, void *data) {
-    const std::int32_t *const row = static_cast<const std::int32_t *>(data);
-    UIMessageBox message{};
-    message.imageIndex = message.widgetIndex = -1;
-    if (row)
-        if (const auto *set = GetPawnShopSet(collectionPawnFlyer.shop, *row))
-            message.primaryText = set->label;
-    CopyUIMessageBox(&message);
-}
-bool CollectionPawnSetAvailable(const PawnSetRecord &set) {
-    const auto *items = reinterpret_cast<const std::uint16_t *>(&set + 1);
-    for (std::int32_t i = 0; i < set.itemCount; ++i)
-        if (items[i] && !GetItemState(items[i]))
-            return false;
-    return true;
-}
-void DrawCollectionPawnSet(
-    UIGrid *grid, void *, const Vector4 *outer, const Vector4 *bounds, std::int32_t, std::uint32_t, const std::int32_t *, std::int32_t ordinal) {
-    if (!drawingUI)
-        return;
-    const auto index = collectionPawnFlyer.order[static_cast<std::size_t>(ordinal)];
-    const auto *set = GetPawnShopSet(collectionPawnFlyer.shop, index);
-    if (!set)
-        return;
-    auto &definition = uiDefinitions[53];
-    const float sx = 1920 / GetUIViewportWidth();
-    const d3t::UIRect clip{outer->x * sx, outer->y, outer->z * sx, outer->w};
-    const d3t::UIRect rectangle{(outer->x + bounds->x) * sx, outer->y + bounds->y, bounds->z * sx, bounds->w};
-    if (ordinal == GetUIGridSelection(*grid))
-        DrawCollectionColour(rectangle, 0x7f313273U, clip);
-    const bool available = CollectionPawnSetAvailable(*set);
-    d3t::UILabelDefinition label;
-    label.fontSize = "H3";
-    label.colour = available ? 0xff9be0dcU : 0xff372d2dU;
-    const float left = rectangle.x + 16, top = rectangle.y + 16, innerWidth = rectangle.width - 32;
-    const d3t::UIRect title{left, top, innerWidth * 0.69999999f, 64};
-    auto shadow = label;
-    shadow.colour = available ? 0xc8000000U : 0;
-    DrawMovesLabel(shadow, {{title.x + 2, title.y + 2, title.width, title.height}, clip}, GetLocalizedSceneText(set->label), 1, &definition);
-    DrawMovesLabel(label, {title, clip}, GetLocalizedSceneText(set->label), 1, &definition);
-    const auto *references =
-        reinterpret_cast<const PawnSetReference *>(reinterpret_cast<std::uintptr_t>(HLib::DynamicHeapBase) + 0x40 + collectionPawnFlyer.shop->setsOffset);
-    std::array<char, 32> money{}, digits{};
-    FormatGameMenuNumber(digits, references[index].price);
-    const auto language = GetLoadingScreenTextType(g_s2SelectedSubtitleLanguage);
-    std::snprintf(money.data(), money.size(), language == 2 || language == 3 ? "%s HK$" : "HK$ %s", digits.data());
-    const d3t::UIRect price{left + title.width, top, innerWidth - title.width, 64};
-    DrawMovesLabel(shadow, {{price.x + 2, price.y + 2, price.width, price.height}, clip}, money.data(), 1, &definition);
-    DrawMovesLabel(label, {price, clip}, money.data(), 1, &definition);
-    const auto *items = reinterpret_cast<const std::uint16_t *>(set + 1);
-    const float side = (innerWidth - 15 * 16) / 16;
-    for (std::int32_t i = 0; i < set->itemCount; ++i) {
-        const auto item = items[i];
-        if (!item)
-            continue;
-        const d3t::UIRect tile{left + (i % 16) * (side + 16), top + 64 + (i / 16) * (side + 16), side, side};
-        d3t::UISharedSpriteImage image;
-        if (CollectionSpriteImage(GetInventoryItemIcon(item / 1000, item % 1000), image))
-            DrawCollectionRowImage(image, tile, 1, clip);
-        if (GetItemState(item)) {
-            std::array<char, 40> name{};
-            std::snprintf(name.data(), name.size(), "PawnshopSets::Collected%u", item % 5);
-            for (auto &overlay : definition.textureObjects)
-                if (overlay.id == name.data() || overlay.imageName == name.data()) {
-                    const bool hidden = overlay.hidden;
-                    const float rotation = overlay.rotation;
-                    overlay.hidden = false;
-                    overlay.rotation = static_cast<float>(item) * 0.0099999998f;
-                    d3t::DrawUITextureObject(definition, overlay, {tile, clip}, 1);
-                    overlay.hidden = hidden;
-                    overlay.rotation = rotation;
-                }
+    UILayoutRect area{};
+    UI_GetWindowRect(collectionPresentWindows[0], area);
+    UI_GatedBegin(context, collectionPresentPanel, "SnapshotView", nk_rect(area.x, area.y, area.width, area.height), NK_WINDOW_NO_SCROLLBAR);
+    UI_GatedLayoutSpaceBegin(context, NK_STATIC, 0.0f, 1);
+    if (collectionPresentPageStep != 1) {
+        DrawCollectionPresentPage(*page, area);
+        if (collectionPresentIndex < collectionPresentCount - 1) {
+            page = &collectionPresentPages[collectionPresentIndex + 1];
+            ResolveCollectionPresentPage(*page);
+            DrawCollectionPresentPage(*page, area);
         }
-    }
-    for (const auto &object : definition.textureObjects)
-        if (object.id == "PawnshopSets::Divider" || object.imageName == "PawnshopSets::Divider")
-            d3t::DrawUITextureObject(
-                definition, object, {{rectangle.x, rectangle.y + rectangle.height - object.height, rectangle.width, object.height}, clip}, 1);
-}
-std::uint32_t LoadCollectionPawnFlyer() {
-    return ReadUIDefinitionFile(static_cast<UIElement>(53), "/ui/pawnshop/PawnshopFlyer_Sets.ui", 0);
-}
-std::int64_t BindCollectionPawnFlyer() {
-    auto &runtime = collectionPawnFlyer;
-    auto &definition = uiDefinitions[53];
-    BindCollectionLayout(definition, runtime.layout);
-    runtime.holder = MenuPanelIndex(definition, "PawnshopSets::Panel_GridHolder");
-    InitializeUIGrid(runtime.grid,
-        {.columns = 1,
-            .visibleRows = 8,
-            .rows = 8,
-            .drawEmpty = 0,
-            .drawRow = DrawCollectionPawnSet,
-            .actions = {SelectCollectionPawnSet, nullptr, nullptr, nullptr},
-            .selectionData = CollectionPawnSelection,
-            .rowSpan = CollectionPawnRowSpan,
-            .sound = 3});
-    runtime.bound = true;
-    if (g_uiElements[53].isVisible)
-        TickCollectionPawnFlyer();
-    return 1;
-}
-void OpenCollectionPawnFlyer(std::int32_t index) {
-    auto &runtime = collectionPawnFlyer;
-    runtime.index = index;
-    runtime.shop = FindPawnShop(GetPawnData(), collectionPawnShops[static_cast<std::size_t>(index)]);
-    if (!runtime.shop)
-        return;
-    runtime.order.resize(static_cast<std::size_t>(runtime.shop->setCount));
-    runtime.scores.resize(runtime.order.size());
-    std::int32_t maximumItems{};
-    for (std::int32_t i = 0; i < runtime.shop->setCount; ++i)
-        if (const auto *set = GetPawnShopSet(runtime.shop, i))
-            maximumItems = std::max(maximumItems, set->itemCount);
-    runtime.scratch.resize(static_cast<std::size_t>(maximumItems + 1));
-    BuildPawnSetAvailability(runtime.shop, runtime.order.data(), runtime.scores.data(), runtime.scratch.data());
-    ShowElementByIndex(static_cast<UIElement>(53));
-}
-std::int64_t TickCollectionPawnFlyer() {
-    auto &runtime = collectionPawnFlyer;
-    if (!runtime.bound)
-        return 0;
-    g_uiElements[8].isRenderable = 1;
-    ShowElementByIndex(UIElement::GameHud);
-    SetUIGridDictionary(runtime.grid, static_cast<std::int32_t>(runtime.order.size()), runtime.order.data());
-    ResetUIGrid(runtime.grid);
-    return 0;
-}
-std::int64_t InputCollectionPawnFlyer() {
-    if (GetPadControlData(1) & 0x200U) {
-        DestroyElementByIndex(static_cast<UIElement>(53));
-        return 0;
-    }
-    ProcessMovesGridInput(collectionPawnFlyer.grid, uiPointer, GetFrameTime());
-    return 0;
-}
-std::int64_t RenderCollectionPawnFlyer() {
-    auto &runtime = collectionPawnFlyer;
-    if (!runtime.bound)
-        return 0;
-    auto &definition = uiDefinitions[53];
-    ResolveCollectionNativeLayout(definition, runtime.layout);
-    for (auto &label : definition.labels)
-        if (label.id == "PawnshopSets::Label_PawnshopName") {
-            std::array<char, 16> token{};
-            std::snprintf(token.data(), token.size(), "UIPWNSHP%02d", runtime.index);
-            label.text = GetLocalizedSceneText(token.data());
-            label.token.clear();
-        }
-    DrawCollectionDefinition(static_cast<UIElement>(53), runtime.layout);
-    if (runtime.holder >= 0) {
-        const auto &bounds = runtime.layout.panels[static_cast<std::size_t>(runtime.holder)];
-        const float sx = GetUIViewportWidth() / 1920;
-        runtime.grid.bounds = {bounds.x * sx, bounds.y, bounds.width * sx, bounds.height};
-    }
-    RenderUIGrid(runtime.grid, 53, uiPointer);
-    return 0;
-}
-std::int64_t DestroyCollectionPawnFlyer() {
-    DestroyElementByIndex(UIElement::GameHud);
-    g_uiElements[8].isRenderable = 0;
-    AicaExecuteWrapper(2);
-    return 1;
-}
-std::int64_t ResetCollectionPawnFlyer() {
-    collectionPawnFlyer.bound = false;
+    } else
+        DrawCollectionPresentPage(*page, area);
+    UI_GatedLayoutSpaceEnd(context);
+    UI_GatedEnd(context);
     return 0;
 }
 template <std::size_t Child> std::int64_t DestroyCollectionChild() {
@@ -1642,6 +1503,16 @@ template <std::size_t Child> std::int64_t DestroyCollectionChild() {
             album.thumbnail = 0;
         }
     return Child == 0 || Child == 1 || Child == 2 || Child == 4 || Child == 5 ? GetDebugForceUIEnabled(collectionChildren[Child]) : 1;
+}
+std::int64_t ResetPhotoSecretRender() {
+    if (!g_uiElements[static_cast<std::size_t>(UIElement::PhotosSecrets)].isRenderable)
+        RefreshCollectionAlbums();
+    return 0;
+}
+std::int64_t ResetPhotoSnapshotRender() {
+    if (g_uiElements[static_cast<std::size_t>(UIElement::PhotosSnapshot)].isRenderable)
+        collectionChild[5].grid.notifySelection = 1;
+    return 0;
 }
 std::int64_t CollectionRootHints() {
     const std::array<std::int16_t, 5> ids{static_cast<std::int16_t>(collectionTabs.shown == 1 ? -1 : 3844), 44, -1, -1, -1};
@@ -1658,13 +1529,13 @@ std::int64_t CollectionPresentHints() {
 std::int64_t CollectionSnapshotHints() {
     std::array<std::int16_t, 4> ids{3844, 44, 3841, -1};
     const auto selected = GetUIGridSelection(collectionChild[5].grid);
-    if (selected >= 0 && static_cast<std::uint32_t>(selected) < snapshotOrderCount && !nativePrompt.active &&
-        snapshotImages[snapshotOrder[static_cast<std::size_t>(selected)]].state.load(std::memory_order_acquire) == 2)
+    if (selected >= 0 && static_cast<std::uint32_t>(selected) < snapshotOrderCount &&
+        snapshotImages[snapshotOrder[static_cast<std::size_t>(selected)]].state.load(std::memory_order_acquire) >= 2 && !IsSnapshotDeletePending())
         ids[3] = 3840;
     return CopyHudHintIds(ids);
 }
 std::int64_t CollectionSnapshotViewerHints() {
-    const std::array<std::int16_t, 4> ids{3844, 44, -1, static_cast<std::int16_t>(nativePrompt.active ? -1 : 3840)};
+    const std::array<std::int16_t, 4> ids{3844, 44, -1, static_cast<std::int16_t>(IsSnapshotDeletePending() ? -1 : 3840)};
     return CopyHudHintIds(ids);
 }
 template <std::size_t Child> void RegisterCollectionChild() {
@@ -1682,8 +1553,12 @@ template <std::size_t Child> void RegisterCollectionChild() {
         element.unknown88 = SetPhotoGridContext<Child>;
     if constexpr (Child == 4 || Child == 6)
         element.unknown98 = CollectionPhotoHints;
-    if constexpr (Child == 5)
+    if constexpr (Child == 5) {
         element.unknown98 = CollectionSnapshotHints;
+        element.resetRender = ResetPhotoSnapshotRender;
+    }
+    if constexpr (Child == 6)
+        element.resetRender = ResetPhotoSecretRender;
 }
 template <bool Photos> void RegisterCollectionRoot() {
     auto &root = g_uiElements[static_cast<std::size_t>(CollectionRoot<Photos>())];
@@ -1747,42 +1622,21 @@ void RegisterCollectionAndPhotos() {
     present.destroy = DestroyCollectionPresentViewer;
     present.fieldAc = 1;
     present.unknown98 = CollectionPresentHints;
-    auto &pawn = g_uiElements[53];
-    pawn.name = "Pawnshop Sets";
-    pawn.parseDefinitionFromFile = LoadCollectionPawnFlyer;
-    pawn.isSelected = BindCollectionPawnFlyer;
-    pawn.isPressed = InputCollectionPawnFlyer;
-    pawn.render = RenderCollectionPawnFlyer;
-    pawn.reset = ResetCollectionPawnFlyer;
-    pawn.tick = TickCollectionPawnFlyer;
-    pawn.destroy = DestroyCollectionPawnFlyer;
-    pawn.unknown98 = []() -> std::int64_t {
-        constexpr std::array<std::int16_t, 4> ids{3852, 44, -1, -1};
-        return CopyHudHintIds(ids);
-    };
 }
 void PumpCollectionSnapshotImages() {
-    for (const auto &image : snapshotImages)
-        if (image.state.load(std::memory_order_acquire) == 1) {
-            collectionSnapshotPriority.fill(0);
-            return;
-        }
-    for (std::uint32_t i = 0; i < snapshotOrderCount; ++i) {
-        const auto slot = snapshotOrder[i];
-        if (collectionSnapshotPriority[slot] && snapshotImages[slot].state.load(std::memory_order_acquire) == 0) {
-            QueueSnapshotImageLoad(slot);
-            collectionSnapshotPriority.fill(0);
-            return;
-        }
+    if (!snapshotImagesReady)
+        return;
+    if (!d3t::d3t_IsTaskActive(snapshotLoadTask)) {
+        bool queued = false;
+        for (const std::uint32_t slot : snapshotOrder)
+            if (slot < collectionSnapshotPriority.size() && collectionSnapshotPriority[slot] && (queued = QueueSnapshotImageLoad(slot)))
+                break;
+        if (!queued)
+            for (const std::uint32_t slot : snapshotOrder)
+                if (QueueSnapshotImageLoad(slot))
+                    break;
     }
     collectionSnapshotPriority.fill(0);
-    for (std::uint32_t i = 0; i < snapshotOrderCount; ++i) {
-        const auto slot = snapshotOrder[i];
-        if (snapshotImages[slot].state.load(std::memory_order_acquire) == 0) {
-            QueueSnapshotImageLoad(slot);
-            return;
-        }
-    }
 }
 void DrawCollectionSnapshotStatus(std::uint32_t slot, const d3t::UIRect &rectangle, const d3t::UIRect &clip, bool selected) {
     const auto state = snapshotImages[slot].state.load(std::memory_order_acquire);
@@ -1813,16 +1667,18 @@ void DrawCollectionSnapshotStatus(std::uint32_t slot, const d3t::UIRect &rectang
 }
 void ReleaseCollectionMenuResources() {
     SetCollectionUnderlayAlpha(true);
-    RetireCollectionPhotos();
+    ReleaseSnapshotImages();
     for (auto &album : collectionAlbums) {
         if (album.thumbnail)
             d3t::InitTexture2DResource(album.thumbnail);
         album = {};
     }
-    for (const auto texture : collectionPresentTextures)
-        if (texture)
-            d3t::InitTexture2DResource(texture);
-    collectionPresentTextures.clear();
+    for (CollectionPresentPage &page : collectionPresentPages) {
+        if (page.texture)
+            d3t::InitTexture2DResource(page.texture);
+        page = {};
+    }
+    collectionPresentCount = 0;
     collectionViewerCount = 0;
 }
 } // namespace ui_detail

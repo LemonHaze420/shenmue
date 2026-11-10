@@ -64,7 +64,7 @@ void StartMoleCamera() {
     gabtCameraEyeHeight = 120.7f;
     camCtrlSetTargetPosition(Vector3{.x = 287.70001f, .y = 118.1f, .z = 75.800003f});
     camCtrlSetNextPosition(Vector3{.x = 287.70001f, .y = 120.7f, .z = 79.400002f});
-    camCtrlSetFov(10922);
+    camCtrlSetPerspective(10922);
     const EulerRotation16 rotation{};
     camCtrlSetNextCamRot(&rotation);
     camCtrlToggleSmoothing(1);

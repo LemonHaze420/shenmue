@@ -131,7 +131,7 @@ void UpdateMdtpHand(MdtpWork *work) {
     Vector3 target;
     CalculateMdtpHandTarget(work->selectedButton, &target, work->pressFrames);
     BlendMdtpHandPosition(&work->handPosition, &target, work->handBlendFrames);
-    mtwkLatchBoneTarget(scenFindMotionwork(MDTP_PLAYER), 10, &work->handPosition);
+    GetMTWK_NodeParent_0(MDTP_PLAYER, 0x78000000U, 10, &work->handPosition);
     const Vector3i rotation{.x = 63352, .y = 0, .z = 0};
     ApplyCharacterHandRotation(ctrlGetCharaByName(MDTP_PLAYER), 0, 1, &rotation);
     if (--work->handBlendFrames < 0)

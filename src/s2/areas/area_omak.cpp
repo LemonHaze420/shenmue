@@ -142,6 +142,8 @@ void BootOmake() {
     HLib::SetupTaskDelay(0);
 }
 void QueueOmakeSceneChange(OmakeWork *, const OmakeCommand *command) {
+    const std::uint32_t name[2]{command->area.name, 0};
+    EV_debug_log("OMAK\\eOMAK_et_omak.c", 1000, "SceneChange:[%s]%i\n", reinterpret_cast<const char *>(name), command->entry);
     GiveDefaultPlayerFlags();
     if (command->area.name != 0x20202020)
         EV_scenQueueLoad(4, command->area, command->entry);
@@ -197,6 +199,29 @@ void QueueOmakeModuleCall(OmakeWork *owner, const OmakeCommand *command) {
     work->frames = 10;
     work->command = command;
     HLib::SetupTaskDelay(0);
+}
+// @verified - p
+const char *GetOmakeEntryName(std::int32_t category, std::uint32_t index) {
+    const OmakeEntry *const entry = OMAKE_COLLECTION_TABLES[category] + index;
+    if (!entry->callback)
+        return nullptr;
+    if ((static_cast<std::uint32_t>(GetCurrentGameFlags()) & entry->requiredFlags) == entry->requiredFlags)
+        return entry->name;
+    return omakeUnlockOverride ? entry->name : "UIMCOLLOCK";
+}
+// @verified - p
+const char *GetOmakeEntryDescription(std::int32_t category, std::uint32_t index) {
+    const OmakeEntry *const entry = OMAKE_COLLECTION_TABLES[category] + index;
+    if (entry->callback && ((static_cast<std::uint32_t>(GetCurrentGameFlags()) & entry->requiredFlags) == entry->requiredFlags || omakeUnlockOverride))
+        return entry->description;
+    return "UIMCOLLOCK";
+}
+// @verified - p
+const char *GetOmakeEntryDescriptionEnd(std::int32_t category, std::uint32_t index) {
+    const OmakeEntry *const entry = OMAKE_COLLECTION_TABLES[category] + index;
+    if (entry->callback && ((static_cast<std::uint32_t>(GetCurrentGameFlags()) & entry->requiredFlags) == entry->requiredFlags || omakeUnlockOverride))
+        return entry->descriptionEnd;
+    return nullptr;
 }
 void SelectOmakeEntry(std::int32_t category, std::uint32_t index) {
     const OmakeEntry *const tables[]{OMAKE_ARCADE_ENTRIES, OMAKE_MINIGAME_ENTRIES, OMAKE_FIGHT_ENTRIES};

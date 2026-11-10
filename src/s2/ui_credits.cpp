@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/ui_credits.hpp"
 #include "s2/ui_internal.hpp"
 #include "s2/renderer_scratch.hpp"
@@ -307,7 +310,7 @@ void CreditsMeasureTables() {
 
 void CreditsInitScroll() {
     CVS_CtrlConversTask_Enqueue(true);
-    creditsState.voice = shenPlayAudio("stuffroll", {}, 17, false);
+    creditsState.voice = shenPlayAudioWithFlags("stuffroll", 17);
     CreditsMeasureTables();
     creditsState.scrollInitialized = 1;
     creditsState.scrollProgress = 0.0f;
@@ -594,3 +597,4 @@ void InitializeEndingCreditsElement(UIElementState &element) {
     element.fieldAc = 1;
 }
 } // namespace shenmue::s2::ui_detail
+

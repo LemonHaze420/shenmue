@@ -508,7 +508,7 @@ void ExecuteRoom(void *) {
         }
         if (!synchronous)
             return;
-        ST_LoadTitleFadeIn();
+        LoadTitleFadeIn();
         FlushQueuedStripType3Batches();
         (void)ProfileFramePerformance();
     }

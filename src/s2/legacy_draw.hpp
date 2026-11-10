@@ -137,10 +137,27 @@ static_assert(offsetof(LegacyVertexColourStateRecord, transformedPosition) == 0x
 static_assert(offsetof(LegacyVertexColourStateRecord, modelPosition) == 0x74);
 static_assert(offsetof(LegacyVertexColourStateRecord, range) == 0xa8);
 
-
-
-
-
+inline constexpr LegacyVertexColourStateRecord LEGACY_VERTEX_COLOUR_STATE_DEFAULT{.enabled = 0,
+    .kind = 0,
+    .reserved04 = {1.0f, 1.0f, 1.0f, 1.0f},
+    .colour = {1.0f, 1.0f, 1.0f, 1.0f},
+    .reserved24 = {1.0f, 1.0f, 1.0f, 1.0f},
+    .position = {0.0f, 0.0f, 1.0f},
+    .direction = {0.0f, 0.0f, 1.0f},
+    .attenuation = {1.0f, 0.0f, 0.0f},
+    .coneCosine = 0.0f,
+    .transformedPosition = {0.0f, 0.0f, 1.0f},
+    .transformedDirection = {0.0f, 0.0f, 1.0f},
+    .modelPosition = {0.0f, 0.0f, 1.0f},
+    .modelDirection = {0.0f, 0.0f, 1.0f},
+    .reserved8c = {},
+    .inverseRange = 1.52587890625e-05f,
+    .reserved9c = 0xff0f0f0fU,
+    .rangeSquared = 4294967296.0f,
+    .inverseConeWidth = 1.0f,
+    .range = 65536.0f,
+    .coneSine = 0.0f,
+    .reservedB0 = 0};
 
 struct LegacyDrawResources {
     std::vector<LegacyVertexBufferBinding> vertexBuffers;
@@ -237,6 +254,15 @@ void SetLegacySelectedLightDirection(std::uint32_t slot, const Vector3 &directio
 void SetLegacySelectedLightColour(std::uint32_t slot, const Vector4 &colour);
 std::uint32_t GetAvailableSelectedLightSlot();
 void SetSelectedLightIntensity(std::uint32_t slot, float intensity);
+float GetSelectedLightIntensity(std::uint32_t slot);
+void SetupEffeTransform();
+void ClearLegacySelectedLights();
+void EnableStripEffect();
+void SetStripEffectMode(std::uint8_t mode);
+std::int32_t EnableLegacyEffect();
+void EnableLegacyEffectSecondary();
+void EnableStripEffectFinal();
+void InitializeEffectRenderPassTable();
 void shenSetLightPosition(std::uint32_t slot, const Vector3 *position);
 void shenSetLightScale2(std::uint32_t slot, float range);
 void shenSetLightScale(std::uint32_t slot, float falloff);
@@ -328,6 +354,10 @@ std::uint32_t ModelFlagDispatch_SetModelFlagDataOpaque(std::span<const std::byte
 std::uint32_t ModelFlagDispatch_ReadModelDataOpaque(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources);
 std::uint32_t ReadModelDataWithAlpha(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources, float alpha);
 std::uint32_t SetModelFlagDataWithAlpha(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources, float alpha);
+std::uint32_t ModelFlagDispatch_ReadModelDataAlpha(
+    std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources, float alpha);
+std::uint32_t ModelFlagDispatch_SetModelFlagDataAlpha(
+    std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources, float alpha);
 
 using LegacyUpdateCallback = void (*)(void *data);
 void SetUpdateCallback(LegacyUpdateCallback callback, void *data, float priority);
@@ -357,12 +387,20 @@ struct LegacyEffectGpuFlags {
     std::uint32_t gpuFlags{};
 };
 
+inline constexpr std::array<std::uint32_t, 10> SAVED_ALPHA_SETTINGS{0x10, 0x12, 0x13, 0, 1, 3, 4, 5, 6, 0x11};
+inline constexpr std::array<std::array<std::uint32_t, 10>, 4> SAVED_ALPHA_OPERATIONS{{
+    {{4, 2, 0, 3, 3, 2, 2, 2, 0, 1}},
+    {{4, 2, 1, 3, 3, 2, 2, 2, 0, 1}},
+    {{4, 2, 1, 3, 3, 2, 2, 2, 0, 1}},
+    {{4, 2, 1, 3, 3, 2, 2, 2, 0, 1}},
+}};
 
 void SetEngineFlag(std::uint32_t index, std::uint32_t setting);
 void RestoreEngineFlag(std::uint32_t index);
 void SetAlphaFlags(std::uint32_t stage, std::uint32_t setting, std::uint32_t value);
 void InitShaderStates();
 void InitShenmueRendering();
+void InitShenmueGlobals();
 void SetLegacyParticleRenderPass(bool translucent, bool compact = false);
 void RenderLegacyWeatherQuads(std::int32_t count);
 void UpdateShaderParams();

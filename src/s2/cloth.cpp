@@ -932,7 +932,7 @@ void AllocateCLTH_CLMS_CLID_CLVB_CLVO_CLVP(ClothComponent &cloth, MT7Model &mode
                 object->bindings[index].field02 = 1;
                 object->previousBindings[index].field02 = 1;
             }
-            object->columnLinks = static_cast<void **>(HLib::AllocateTaskData(8ULL * object->columns, SHEN_NAME(CLVP)));
+            object->columnLinks = static_cast<void **>(HLib::AllocateTaskData(8ULL * object->columns, SHEN_NAME(CLPV)));
             HLib::AssignDynamicAlignmentForTaskData(object->columnLinks);
             for (std::uint8_t index = 0; index < object->columns; ++index)
                 object->columnLinks[index] = nullptr;
@@ -1181,8 +1181,8 @@ void UpdateWindReactiveNode(Character *character, void *payload) {
     if (cloth.name.name == kun.name) {
         std::byte *const parameters = cloth.parameters;
         const std::uint16_t animation = mtwkGetAnimationId(cloth.motionWork, MotionRegion::LowerBody);
-        if (g_currentMap.name == SHEN_NAME(AKS1) ||
-            (g_currentMap == AREA_WT00 && (static_cast<std::uint32_t>(animation) - 0xe3b2U <= 2U || animation == 0xe299U))) {
+        if (g_currentMap.name ==
+            SHEN_NAME(AKS1) || (g_currentMap == AREA_WT00 && (static_cast<std::uint32_t>(animation) - 0xe3b2U <= 2U || animation == 0xe299U))) {
             parameters[0x16] = std::byte{1};
             parameters[0x17] = std::byte{3};
             parameters[0x18] = std::byte{2};

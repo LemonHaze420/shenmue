@@ -1,5 +1,6 @@
 #include "s2/areas/area_ycpa.hpp"
 #include "s2/character.hpp"
+#include "s2/debug.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/field_collision.hpp"
 #include "s2/flag.hpp"
@@ -61,7 +62,7 @@ bool YcpaSelectDiscoveryPlacement(bool followUp) {
         SetHighModelXYZ(ctrlGetScenarioChara(character), 1, 1, 0);
     }
     Vector3 original;
-    Vector3i originalAngle;
+    Vector3i originalAngle{};
     if (!followUp) {
         EV_GetCharaPosition(YCPA_YUA, CHARACTER_TRANSLATION_ROOT, &original, EventTransformFlags::World);
         GetScenarioCharacterEulerAngles(YCPA_YUA, &originalAngle, EventTransformFlags::World);
@@ -83,19 +84,25 @@ bool YcpaSelectDiscoveryPlacement(bool followUp) {
     EVT_AT_SetAngY(YCPA_BASE, YCPA_YUA, followUp ? 180.0f : 0.0f, 0);
     Vector3i baseAngle;
     GetScenarioCharacterEulerAngles(YCPA_BASE, &baseAngle, EventTransformFlags::World);
-    bool reverse = false;
-    for (std::int32_t orientation = 0; orientation < 2; ++orientation) {
+    bool reverse = false, placed = false;
+    for (std::int32_t orientation = 0; orientation < 2 && !placed; ++orientation) {
         for (std::int32_t attempt = 0; attempt < 48; ++attempt) {
             const float sign = static_cast<float>(attempt % 2) * -1.0f;
             const float degrees = (((sign + sign) + 1.0f) * (static_cast<float>(attempt + 1) * 0.5f)) * 7.5f;
             EVT_AT_SetAngY(YCPA_BASE, YCPA_BASE, degrees, 0);
             reverse = orientation != 0;
             YcpaPlaceDiscoveryActors(reverse);
-            if (YcpaDiscoverySightLinesClear())
-                return reverse;
+            placed = YcpaDiscoverySightLinesClear();
+            if (placed)
+                break;
             EV_AT_SetAngY(YCPA_BASE, EventTransformFlags::World | EventTransformFlags::AllAxes, baseAngle);
         }
     }
+    if (followUp)
+        EV_debug_log("YCPA\\eYCPA_et_yuan_pa.c", 1404, "X : %3.2f Y : %3.2f Z : %3.2f AngY %3.2f\n", original.x, original.y, original.z,
+            static_cast<float>(originalAngle.y) / 182.04445f);
+    else
+        EV_debug_log("YCPA\\eYCPA_et_yuan_pa.c", 1253, "X : %3.2f Y : %3.2f Z : %3.2f AngY %3.2f\n", original.x, original.y, original.z);
     return reverse;
 }
 } // namespace shenmue::s2::areas

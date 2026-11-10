@@ -2,8 +2,7 @@
 #include "s2/areas/area_b102.hpp"
 
 #if defined(SHENMUE_EVENT_ENTRY)
-void B102_main_func(const shen_name *argument)
-{
+void B102_main_func(const shen_name *argument) {
     shen_name area, prop;
     int mode;
     const BayItemShop *shop;
@@ -41,31 +40,18 @@ void B102_main_func(const shen_name *argument)
 
 static BayItemShop bayItemShops[] = {
     {SHEN_NAME4('W', 'T', 'R', '0'), SHEN_NAME4('B', 'B', 'T', '_'),
-     {{SHEN_NAME4('M', '4', '0', '1'), 0, 3024, 300},
-      {SHEN_NAME4('M', '4', '0', '2'), 0, 3011, 200},
-      {SHEN_NAME4('M', '4', '0', '3'), 0, 3016, 200},
-      {SHEN_NAME4('M', '4', '0', '4'), 0, 3020, 100},
-      {SHEN_NAME4('M', '4', '0', '5'), 0, 3019, 100},
-      {0, 0, 0, 0}}},
+        {{SHEN_NAME4('M', '4', '0', '1'), 0, 3024, 300}, {SHEN_NAME4('M', '4', '0', '2'), 0, 3011, 200}, {SHEN_NAME4('M', '4', '0', '3'), 0, 3016, 200},
+            {SHEN_NAME4('M', '4', '0', '4'), 0, 3020, 100}, {SHEN_NAME4('M', '4', '0', '5'), 0, 3019, 100}, {0, 0, 0, 0}}},
     {SHEN_NAME4('Q', 'C', 'A', 'C'), SHEN_NAME4('J', 'I', '9', '_'),
-     {{SHEN_NAME4('M', '4', '0', '1'), 0, 3018, 150},
-      {SHEN_NAME4('M', '4', '0', '2'), 0, 3017, 150},
-      {SHEN_NAME4('M', '4', '0', '3'), 0, 3014, 150},
-      {SHEN_NAME4('M', '4', '0', '4'), 0, 3015, 100},
-      {0, 0, 0, 0},
-      {0, 0, 0, 0}}},
+        {{SHEN_NAME4('M', '4', '0', '1'), 0, 3018, 150}, {SHEN_NAME4('M', '4', '0', '2'), 0, 3017, 150}, {SHEN_NAME4('M', '4', '0', '3'), 0, 3014, 150},
+            {SHEN_NAME4('M', '4', '0', '4'), 0, 3015, 100}, {0, 0, 0, 0}, {0, 0, 0, 0}}},
     {SHEN_NAME4('Q', 'C', 'A', 'D'), SHEN_NAME4('Z', 'Y', 'C', '_'),
-     {{SHEN_NAME4('M', '4', '0', '5'), 0, 3023, 500},
-      {SHEN_NAME4('M', '4', '0', '6'), 0, 3012, 250},
-      {SHEN_NAME4('M', '4', '0', '7'), 0, 3013, 200},
-      {0, 0, 0, 0},
-      {0, 0, 0, 0},
-      {0, 0, 0, 0}}},
+        {{SHEN_NAME4('M', '4', '0', '5'), 0, 3023, 500}, {SHEN_NAME4('M', '4', '0', '6'), 0, 3012, 250}, {SHEN_NAME4('M', '4', '0', '7'), 0, 3013, 200},
+            {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}},
     {0, 0, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}},
 };
 
-int BayItemShopUpdateAreaItems(shen_name area, shen_name prop)
-{
+int BayItemShopUpdateAreaItems(shen_name area, shen_name prop) {
     int result = 0;
     const BayItemShop *shop;
     do {
@@ -78,8 +64,7 @@ int BayItemShopUpdateAreaItems(shen_name area, shen_name prop)
     return result;
 }
 
-const BayItemShop *FindBayItemShop(shen_name area)
-{
+const BayItemShop *FindBayItemShop(shen_name area) {
     const BayItemShop *shop = 0;
     int index;
     for (index = 0; bayItemShops[index].area; index++) {
@@ -91,8 +76,7 @@ const BayItemShop *FindBayItemShop(shen_name area)
     return shop;
 }
 
-void BayItemShopUpdateItems(const BayItemShop *shop, shen_name prop)
-{
+void BayItemShopUpdateItems(const BayItemShop *shop, shen_name prop) {
     int index;
     if (!shop)
         return;
@@ -115,12 +99,11 @@ void BayItemShopUpdateItems(const BayItemShop *shop, shen_name prop)
 #else
 static char b102Package[] = "B102";
 
-void BayItemShopQueueWait(shen_name area, shen_name prop)
-{
+void BayItemShopQueueWait(shen_name area, shen_name prop) {
     HLibTask *task;
     BayItemShopWork *work;
     while ((task = FTBL.HLib_EnqueueTaskWithParameter(BayItemShopWaitPackageCallback, 4, 11, sizeof(BayItemShopWork), TASK_EVNT)) &&
-           (work = (BayItemShopWork *)FTBL.HLib_GetTaskParameter(task))) {
+        (work = (BayItemShopWork *)FTBL.HLib_GetTaskParameter(task))) {
         work->parent = FTBL.HLib_GetCurrentTask();
         work->task = task;
         work->flags = 1;
@@ -136,8 +119,7 @@ void BayItemShopQueueWait(shen_name area, shen_name prop)
     }
 }
 
-void BayItemShopWaitPackageCallback(void *data)
-{
+void BayItemShopWaitPackageCallback(void *data) {
     BayItemShopWork *work = (BayItemShopWork *)data;
     if (FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)b102Package, 0)) {
         const BayItemShop *shop;
@@ -155,8 +137,7 @@ void BayItemShopWaitPackageCallback(void *data)
     }
 }
 
-void BayItemShopStartCallback(void *data)
-{
+void BayItemShopStartCallback(void *data) {
     BayItemShopWork *work = (BayItemShopWork *)data;
     const BayItemShop *shop;
     Vector3 ryoPosition, npcPosition;
@@ -243,8 +224,7 @@ void BayItemShopStartCallback(void *data)
     }
 }
 
-int BayItemShopChargeItem(int phase, int value, HLibTask *parent)
-{
+int BayItemShopChargeItem(int phase, int value, HLibTask *parent) {
     BayItemShopWork *work = (BayItemShopWork *)FTBL.HLib_GetTaskParameter(parent);
     const BayItemShop *shop = 0;
     if (work)
@@ -261,8 +241,7 @@ int BayItemShopChargeItem(int phase, int value, HLibTask *parent)
     return 1;
 }
 
-int BayItemShopDeliverItem(int phase, int value, HLibTask *parent)
-{
+int BayItemShopDeliverItem(int phase, int value, HLibTask *parent) {
     BayItemShopWork *work;
     const BayItemShop *shop;
     work = (BayItemShopWork *)FTBL.HLib_GetTaskParameter(parent);
@@ -295,8 +274,7 @@ int BayItemShopDeliverItem(int phase, int value, HLibTask *parent)
     return 1;
 }
 
-void BayItemShopWaitItemEffectCallback(void *data)
-{
+void BayItemShopWaitItemEffectCallback(void *data) {
     if (!FTBL.GetShouldRenderIcons(5)) {
         FTBL.HLib_SetCurrentTaskTo(BayItemShopDoneCallback);
         FTBL.SetScreenFilmFade(16, 0, 0, 0, 0, 255, 0, 0, 0);
@@ -304,8 +282,7 @@ void BayItemShopWaitItemEffectCallback(void *data)
     }
 }
 
-void BayItemShopDoneCallback(void *data)
-{
+void BayItemShopDoneCallback(void *data) {
     BayItemShopWork *work = (BayItemShopWork *)data;
     while (!FTBL.GetShouldRenderIcons(5)) {
         if (work) {
@@ -366,6 +343,9 @@ const BayItemShop *FindBayItemShop(shen_name area) {
 namespace bay_item_shop {
 constexpr shen_name ryo{SHEN_NAME(RYO_)};
 constexpr shen_name anchor{SHEN_NAME(b102)};
+// @verified - p: PC nullsub_0 occupies the event-table slot of DC SetLoadingBusy.
+void LoadingBusyNullsub() {
+}
 void UpdateItems(const BayItemShop &shop, shen_name selected = {}) {
     for (const auto &item : shop.items) {
         if (!item.prop.name || (selected.name && selected.name != item.prop.name))
@@ -438,6 +418,7 @@ void B102_main_func(std::uintptr_t argument) {
         bay_item_shop::QueueWait(area, prop);
         srchReset();
         SetPlayerControlEnabled(0);
+        bay_item_shop::LoadingBusyNullsub();
         return;
     }
     if (mode == 0 && shop)

@@ -70,15 +70,7 @@ void InitializeArcadeSoundEffects(const char *const *files, std::int32_t count) 
     std::memset(soundSlots, 0, static_cast<std::size_t>(count) * sizeof(ArcadeSoundSlot));
     for (std::int32_t index = 0; index < count; ++index) {
         ArcadeSoundSlot &slot = soundSlots[index];
-        const std::uint64_t size = s1::ArchiveData_GetFileSize(files[index]);
-        std::byte *const buffer = static_cast<std::byte *>(std::malloc(static_cast<std::size_t>(size)));
-        if (s1::ArchiveData_Read(files[index], 0, buffer, size)) {
-            slot.fileData = buffer;
-            if (buffer)
-                slot.fileSize = size;
-        } else {
-            std::free(buffer);
-        }
+        slot.fileData = static_cast<std::byte *>(d3t::LoadLegacyFile(files[index], &slot.fileSize));
         slot.paused = 0;
         slot.voiceId = kInvalidVoiceId;
     }

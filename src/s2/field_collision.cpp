@@ -1,4 +1,5 @@
 #include "s2/field_collision.hpp"
+#include "s2/hlib.hpp"
 
 #include "s2/map_info.hpp"
 #include "s2/math.hpp"
@@ -16,7 +17,7 @@ namespace {
 using namespace field_collision_data;
 std::array<FieldGeneratedVolume, kMaximumGeneratedVolumes> generatedVolumes{};
 std::size_t generatedVolumeCount{};
-FieldDataSourceRoot generatedRoot{};
+FieldDataSourceRoot *flddRuntimeSpace{};
 std::array<std::int16_t, kMaximumGeneratedVolumes * 6U + 2U> generatedPolygonList{};
 bool generatedRuntimeAllocated{};
 std::size_t lastRadiusPartIndex = std::numeric_limits<std::size_t>::max();
@@ -1037,6 +1038,38 @@ void ResetQueryFlags() {
 
 } // namespace
 
+bool StoreFieldRuntimeSegment(FieldDataSourceRoot &root, std::uint32_t index, std::size_t size) {
+    void *const block = HLib::AllocateTaskData(size, FIELD_DATA_MEMORY);
+    root.segmentOffsets[index] = block ? static_cast<std::uint32_t>(HLib::GetDynamicHeapOffset(block)) : 0U;
+    return root.segmentOffsets[index] != 0;
+}
+
+bool FLDD_AllocateRuntimeBuffers() {
+    flddRuntimeSpace = nullptr;
+    FieldDataSourceRoot *const root = static_cast<FieldDataSourceRoot *>(HLib::AllocateTaskData(sizeof(FieldDataSourceRoot), FIELD_DATA_MEMORY));
+    if (!root)
+        return false;
+    constexpr std::array<std::size_t, 4> segmentSizes{0x12c0, 0xe10, 0x4b0, 0x12c0};
+    for (std::uint32_t index = 0; index < segmentSizes.size(); ++index)
+        if (!StoreFieldRuntimeSegment(*root, index, segmentSizes[index]))
+            return false;
+    root->segmentOffsets[4] = 0;
+    if (!StoreFieldRuntimeSegment(*root, 5, 8) || !StoreFieldRuntimeSegment(*root, 5, 0x25a) || !StoreFieldRuntimeSegment(*root, 6, 0xc))
+        return false;
+    (void)StoreFieldRuntimeSegment(*root, 7, 8);
+    for (std::uint32_t index = 0; index < segmentSizes.size(); ++index)
+        std::memset(HLib::GetPointerFromDynamicHeapOffsetBase(static_cast<std::int32_t>(root->segmentOffsets[index])), 0, segmentSizes[index]);
+    std::memset(HLib::GetPointerFromDynamicHeapOffsetBase(static_cast<std::int32_t>(root->segmentOffsets[5])), 0, 0x25a);
+    std::uint32_t *const grid = static_cast<std::uint32_t *>(HLib::GetPointerFromDynamicHeapOffsetBase(static_cast<std::int32_t>(root->segmentOffsets[6])));
+    grid[0] = 0xc0000000U;
+    grid[1] = 0;
+    grid[2] = 0;
+    root->segmentOffsets[7] = 0;
+    flddRuntimeSpace = root;
+    generatedVolumeCount = 0;
+    return true;
+}
+
 bool FLDD_ReadFieldData(const void *chunk, std::size_t chunkSize) {
     FLDD_FreeFieldData();
     if (!chunk || chunkSize < sizeof(MapInfoChunk) + 8)
@@ -1051,6 +1084,8 @@ bool FLDD_ReadFieldData(const void *chunk, std::size_t chunkSize) {
             return false;
 
         if (header->nextByteOffset == 0) {
+            if (!FLDD_AllocateRuntimeBuffers())
+                return true;
             generatedRuntimeAllocated = true;
             generatedPolygonList = {};
             generatedPolygonList[1] = -1;
@@ -1063,7 +1098,7 @@ bool FLDD_ReadFieldData(const void *chunk, std::size_t chunkSize) {
                 generated.name = kGeneratedVolumeName;
                 generated.partClass = 2;
                 generated.gridMode = -2.0f;
-                generated.data = &generatedRoot;
+                generated.data = flddRuntimeSpace;
                 generated.segmentOffsets[5] = sizeof(std::int16_t);
                 generated.sourceData = std::as_bytes(std::span{generatedPolygonList});
                 generated.vertices.reserve(kMaximumGeneratedVolumes * 8U);
@@ -1148,7 +1183,7 @@ void flddClearAllGeneratedVolumes() {
         if (part.name.name != kGeneratedVolumeName.name)
             continue;
         part.enabled = 0;
-        if (part.data != &generatedRoot)
+        if (part.data != flddRuntimeSpace)
             break;
         part.vertices.clear();
         part.normals.clear();
@@ -1197,7 +1232,7 @@ bool flddAssignGeneratedBox(std::int32_t mode, const Vector3 &position, const Ve
         if (part.name.name != kGeneratedVolumeName.name)
             continue;
         part.enabled = 1;
-        if (part.data != &generatedRoot)
+        if (part.data != flddRuntimeSpace)
             break;
         const std::uint16_t vertexBase = static_cast<std::uint16_t>(part.vertices.size());
         const std::uint16_t normalBase = static_cast<std::uint16_t>(part.normals.size());
@@ -1465,9 +1500,9 @@ bool flddFindIntersections(const Vector3 &origin, const Vector3 &destination) {
 bool GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius) {
     foundIntersection = false;
     bool hit = false;
-    // GlobalRayIntersectionTest sets FieldDataFlag2=1, selecting full DDA rather than the
-    // endpoint-only mode of FindRayIntersectionInGridWithinRadius. This dedicated path needs no global
-    // mode flag to leak or restore. Radius expands polygon edges, not voxels.
+    // GlobalRayIntersectionTest uses full DDA traversal; the other mode tests only endpoint cells.
+    // Radius expands polygon edges, not voxels.
+
     for (std::size_t partIndex = 0; partIndex < fieldParts.size(); ++partIndex) {
         const auto &part = fieldParts[partIndex];
         if (!part.enabled)

@@ -46,23 +46,23 @@ constexpr MagicRoomFloorGroup roomGroups[]{
 };
 QronFloorProp floorProps[]{
     {SHEN_NAME(F002), {0x0U, 0x82U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F004), {0x0U, 0x40U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F108), {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F110), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F013), {0xffffU, 0xffdbU, 0xffffU, 0x1ffffU}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F014), {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F001), {0x0U, 0x110U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F003), {0x0U, 0x88U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F107), {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F109), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F112), {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F111), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(R598), {0xffffU, 0xfdffU, 0xffffU, 0xffffU}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F006), {0xffffU, 0xfdffU, 0xffffU, 0xffffU}, 0, 0, 0, nullptr},
-    {SHEN_NAME(R140), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {SHEN_NAME(F005), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-    {shen_name{0x00000000U}, {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
-};
+        {SHEN_NAME(F004), {0x0U, 0x40U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+            {SHEN_NAME(F108), {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                {SHEN_NAME(F110), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                    {SHEN_NAME(F013), {0xffffU, 0xffdbU, 0xffffU, 0x1ffffU}, 0, 0, 0, nullptr},
+                        {SHEN_NAME(F014), {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                            {SHEN_NAME(F001), {0x0U, 0x110U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                                {SHEN_NAME(F003), {0x0U, 0x88U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                                    {SHEN_NAME(F107), {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                                        {SHEN_NAME(F109), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                                            {SHEN_NAME(F112), {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                                                {SHEN_NAME(F111), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                                                    {SHEN_NAME(R598), {0xffffU, 0xfdffU, 0xffffU, 0xffffU}, 0, 0, 0, nullptr},
+                                                        {SHEN_NAME(F006), {0xffffU, 0xfdffU, 0xffffU, 0xffffU}, 0, 0, 0, nullptr},
+                                                            {SHEN_NAME(R140), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                                                                {SHEN_NAME(F005), {0x0U, 0x200U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                                                                    {shen_name{0x00000000U}, {0x0U, 0x0U, 0x0U, 0x0U}, 0, 0, 0, nullptr},
+                                                            };
 void QD00FloorChanged(Vector3 *position, std::uint32_t floor) {
     UpdateAreaElevatorBindings(position, floor);
     const shen_name lowerDoor{0x38393552U}, upperDoor{0x30343152U};
@@ -106,13 +106,13 @@ void QD00MainLoopCallback(void *) {
         const auto slot = GetMagicRoomFlag(index);
         if (slot == 0x7fff)
             continue;
-        SetMapModelSlotEnabled(index, slot == 5 ? fifth : slot == 6 ? sixth : true);
+        EV_SetMapLightingPlacementEnabled(index, slot == 5 ? fifth : slot == 6 ? sixth : true);
     }
     for (std::int32_t index = 10; index <= 14; ++index) {
         const auto slot = GetMagicRoomFlag(index);
         if (slot == 0x7fff)
             continue;
-        SetMapModelSlotEnabled(index, slot == 5 ? fifth : slot == 6 ? sixth : true);
+        EV_SetMapLightingPlacementEnabled(index, slot == 5 ? fifth : slot == 6 ? sixth : true);
     }
 }
 void ApplyLighting() {

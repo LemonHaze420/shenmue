@@ -51,25 +51,26 @@ bool InitializeDialogueAudio() noexcept;
 DialogueVoice *StartDialogueVoice(std::int32_t fileId, std::uint16_t entry, float gain) noexcept;
 void PlayWaveBuffer(const std::byte *data, std::int32_t size, float gain);
 DialogueVoiceState PollDialogueVoice(const DialogueVoice *voice) noexcept;
-// Real backend sample cursor; unavailable voices leave the outputs untouched.
+// Backend sample position; unavailable voices leave the outputs unchanged.
 bool GetDialogueVoicePosition(const DialogueVoice *voice, std::uint64_t &samples, std::uint32_t &sampleRate) noexcept;
 void StopDialogueVoice(DialogueVoice *voice) noexcept;
 bool PauseDialogueVoice(DialogueVoice *voice, std::int32_t paused) noexcept;
 bool SetDialogueVoiceVolume(DialogueVoice *voice, float gain) noexcept;
 void SetDialogueVoiceReverbAttenuation(DialogueVoice *voice, std::int32_t unused, std::int32_t attenuation) noexcept;
 bool IsDialogueAudioActive() noexcept;
-// The conversation owner releases every CVBF voice before its audio device.
+// Release CVBF voices before destroying the audio device.
 void ReleaseDialogueAudio() noexcept;
 std::int32_t GetS2AudioOutputCount() noexcept;
 std::string_view GetS2AudioOutputName(std::int32_t index) noexcept;
 void QueueS2AudioOutputChange(std::int32_t index);
+void RecoverS2AudioOutputIfNeeded();
 void PublishS2AudioOutputAcknowledgement();
 void ApplyS2AudioVolumeSettings() noexcept;
 extern float g_s2CurrentSfxVolume;
 extern float g_s2CurrentMusicVolume;
 
-// The opening author owns a separate Dolby AIX program.  It is not an IDX
-// voice bank and is therefore kept on its own game-side lifecycle boundary.
+// Opening audio uses a separate Dolby AIX program with its own lifetime.
+
 struct OpeningAixRequest {
     std::string_view path;
     std::byte *taskData;

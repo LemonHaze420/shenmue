@@ -129,8 +129,8 @@ constexpr std::array<std::uint32_t, 26> authDynamicStreamTags{Tag('S', 'T', 'G',
     Tag('W', 'A', 'V', 'E'), Tag('F', 'A', 'C', 'X'), Tag('F', 'A', 'D', 'E'), Tag('M', 'B', 'T', 'K'), Tag('S', 'M', 'K', 'C'), Tag('H', 'A', 'P', 'A'),
     Tag('P', 'R', 'T', 'S'), Tag('A', 'F', 'O', 'G'), Tag('F', 'O', 'B', 'J'), Tag('S', 'H', 'D', 'W'), Tag('F', 'C', 'L', 'P'), Tag('F', 'I', 'L', 'T'),
     Tag('L', 'E', 'N', 'S'), Tag('D', 'O', 'O', 'R'), Tag('L', 'G', 'H', 'S'), Tag('W', 'R', 'S', 'T'), Tag('F', 'P', 'L', 'U')};
-constexpr std::array<std::uint16_t, 26> authDynamicStreamStrides{12, 12, 16, 28, 44, 20, 16, 16, 16, 12, 24, 12, 0, 24, 24, 44, 28, 44,
-    16, 16, 20, 12, 16, 16, 28, 16};
+constexpr std::array<std::uint16_t, 26> authDynamicStreamStrides{
+    12, 12, 16, 28, 44, 20, 16, 16, 16, 12, 24, 12, 0, 24, 24, 44, 28, 44, 16, 16, 20, 12, 16, 16, 28, 16};
 
 struct AuthActor {
     shen_name subject{};
@@ -777,10 +777,7 @@ void RestoreAuthCharacterStates() {
         if (!character)
             continue;
         SetPluralControlFor(character, static_cast<std::int16_t>(state.pluralControl));
-        if (state.displayEnabled)
-            character->renderFlags |= CRF_DisplayEnabled;
-        else
-            character->renderFlags &= ~CRF_DisplayEnabled;
+        EV_SetCharDisplay(character, CVM_DisplayEnabled, state.displayEnabled ? 1 : 0);
         // FindCCM_OR_flags assigns the captured flags, despite its name.
         SetCharacterControlModelFlags(character, state.controlFlags);
         SetHighModelAndFaceFlagsForChara(character, 0, 10.0f, 1.0f);
@@ -1403,9 +1400,10 @@ void CleanupAuthCommands() {
     SetWeatherInstruction(author.savedWeatherInstruction, true);
     SetSoundListenerUsesCamera(0);
     SetWeatherLightManager(1);
+    (void)SetWeatherSunControl(0);
     for (std::uint32_t index = 0; index < author.savedMapModelEnabled.size(); ++index) {
         SetMapModelSlotEnabled(static_cast<std::int32_t>(index), static_cast<std::int32_t>(author.savedMapModelEnabled[index]));
-        SetMapFieldDepthSlotEnabled(index, author.savedMapFieldEnabled[index]);
+        SetMapFieldDepthSlotEnabled(author.savedMapFieldEnabled[index], index);
     }
     plymAddFlags(author.savedPlayerFlag);
     authorHighQualityHands = 1;
@@ -1468,19 +1466,13 @@ void ApplyAuthoredDynamicStreams() {
                 if (kind == 0)
                     SetMapModelSlotEnabled(index, enabled);
                 else if (kind == 1)
-                    SetMapFieldDepthSlotEnabled(index, enabled);
+                    SetMapFieldDepthSlotEnabled(enabled, index);
             } else if (stream.tag == Tag('C', 'H', 'D', 'S')) {
                 shen_name subject{};
                 std::int32_t enabled{};
                 Read(record, 8, subject);
                 Read(record, 12, enabled);
-                if (Character *character = scenFindChara(controller->task, subject)) {
-                    constexpr std::uint8_t displayEnabled = 0x04;
-                    if (enabled)
-                        character->renderFlags |= displayEnabled;
-                    else
-                        character->renderFlags &= ~displayEnabled;
-                }
+                EV_SetCharDisplay(scenFindChara(controller->task, subject), CVM_DisplayEnabled, enabled);
             } else if (stream.tag == Tag('R', 'F', 'B', 'D')) {
                 std::int32_t enabled{};
                 shen_name subject{};
@@ -1834,11 +1826,10 @@ void ApplyAuthoredDynamicStreams() {
                     break;
                 }
             } else if (stream.opcode == 21) {
-
-
                 std::int32_t mode{};
                 Read(record, 8, mode);
                 SetWeatherLightManager(mode != 0);
+                (void)SetWeatherSunControl(mode == 2);
             } else if (stream.opcode == 6) {
 
                 shen_name subject{};
@@ -2068,8 +2059,7 @@ bool ParseAseq(std::span<const std::byte> bytes, std::size_t offset, std::size_t
             if (argumentCount > 64 || cursor > end || static_cast<std::size_t>(argumentCount) * 4 > end - cursor) {
                 return false;
             }
-            constexpr std::array<std::uint8_t, 7> minimumArguments{
-                0, 2, 2, 5, 6, 5, 9};
+            constexpr std::array<std::uint8_t, 7> minimumArguments{0, 2, 2, 5, 6, 5, 9};
             if (type >= minimumArguments.size() || argumentCount < minimumArguments[type] || (type == 3 && version >= 6 && argumentCount < 6))
                 return false;
             AuthCommand command{};
@@ -2535,6 +2525,36 @@ std::int32_t probeSceneById(std::int32_t id) {
 
 bool FindAuthor(shen_name id) {
     return probeSceneById(static_cast<std::int32_t>(id.name)) > -1;
+}
+
+void LoadAuthorTableSlot(std::int32_t index, const char *filename, const char *directory) {
+    AuthorTableEntry &entry = authorTable[static_cast<std::size_t>(index)];
+    if (entry.track) {
+        if (controller && controller->loaded) {
+            authDestroySubtitleConverseData();
+            CleanupAuthCommands();
+        }
+        if (entry.fileOwned && (controller->track != index || !controller->loaded))
+            entry = {};
+    }
+    char path[64];
+    std::snprintf(path, sizeof(path), "%s", directory);
+    std::byte *const file = static_cast<std::byte *>(LoadLegacySceneFile(path, filename, AUTHOR_FILE_STORAGE));
+    entry = {.file = file, .track = file, .view = nullptr, .fileOwned = 1, .name = {}};
+    const std::byte *const next = file + ChunkSize(file);
+    entry.view = ChunkTag(next) == Tag('A', 'U', 'V', 'W') ? next : nullptr;
+}
+
+void SetAuthorTableFile(std::int32_t index, const char *filename, const char *directory) {
+    if (static_cast<std::uint32_t>(index + 100) <= 99U)
+        return;
+    if (filename) {
+        LoadAuthorTableSlot(index, filename, directory);
+        return;
+    }
+    AuthorTableEntry &entry = authorTable[static_cast<std::size_t>(index)];
+    if (entry.fileOwned && (controller->track != index || !controller->loaded))
+        entry = {};
 }
 
 void authResetLoadFlag() {

@@ -1,12 +1,26 @@
 #include "s2/areas/game/harrier/render.hpp"
 #include "s2/legacy_draw.hpp"
 #include "s1/modules/harrier.hpp"
+#include "d3t/dx11_renderer.hpp"
 #include "d3t/texture.hpp"
 #include <cstring>
 
 namespace shenmue::s2 {
 namespace {
 constexpr std::uint32_t kTransparent = 0x00818181;
+
+void SetHarrierDefaultRenderFlags() {
+    d3t::D3TDeviceContext &context = *d3t::DX11::g_ppD3DDeviceContext;
+    const std::array<std::byte, 16> sampler{};
+    if (std::memcmp(context.renderState.data() + 0x574, sampler.data(), sampler.size()) != 0) {
+        std::memcpy(context.renderState.data() + 0x574, sampler.data(), sampler.size());
+        d3t::GetRenderState(context).samplerDirtyMasks[1] |= 0x10;
+    }
+    SetEngineFlag(147, 0);
+    SetEngineFlag(59, 1);
+    SetEngineFlag(62, 770);
+    SetEngineFlag(63, 771);
+}
 std::array<std::uint8_t, 0x200000> spriteGraphics{};
 std::array<std::uint8_t, 0x40000> backgroundGraphics{};
 std::array<std::uint32_t, 32768> paletteLookup{};
@@ -355,7 +369,7 @@ void DrawSprites() {
         entry.active = 1;
         SelectSpriteCache(count, pattern, source[4], static_cast<std::uint16_t>(height), static_cast<std::uint16_t>(width));
     }
-    SetEmulatorDefaultRenderFlags();
+    SetHarrierDefaultRenderFlags();
     for (std::int32_t index = 0; index < count; ++index) {
         HarrierSpriteCache &entry = spriteCache[index];
         if (!entry.active)
@@ -379,7 +393,7 @@ void DrawSolidLines(std::uint16_t selection) {
     }
 }
 void DrawTexturedLines(std::uint16_t selection) {
-    SetEmulatorDefaultRenderFlags();
+    SetHarrierDefaultRenderFlags();
     BindEmulatorTexture(patternTexture);
     for (std::size_t row = 0; row < 224; ++row) {
         const std::uint16_t control = MemoryWord(0xe0000 + row * 2);
@@ -403,7 +417,7 @@ void DrawScrollingLayer(std::int32_t bank, std::uint16_t pages, bool repeatPage)
         CopyTileMap(x + (quadrant & 1) * 512, y + (quadrant >> 1) * 256, s1::g_harrierMemory + 0x90000 + page * 4096, tileMaps[bank].data());
     }
     UpdateTileBank(bank);
-    SetEmulatorDefaultRenderFlags();
+    SetHarrierDefaultRenderFlags();
     for (std::int32_t quadrant = 0; quadrant < 4; ++quadrant)
         DrawTileBank(bank, x + (quadrant & 1) * 512, y + (quadrant >> 1) * 256);
 }
@@ -417,7 +431,7 @@ void DrawForeground() {
         destination += 64;
     }
     UpdateTileBank(0);
-    SetEmulatorDefaultRenderFlags();
+    SetHarrierDefaultRenderFlags();
     DrawTileBank(0, 0, 0);
 }
 } // namespace

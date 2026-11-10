@@ -63,7 +63,6 @@ ScenarioFreeTalkRecord *FindMutableScenarioFreeTalkRecord(shen_name character) {
 }
 namespace event_runtime_detail {
 
-
 std::uint16_t FreeTalkCharacterStateIndex(const char *path, std::size_t pathSize) {
     if (!path || pathSize < 6)
         return 0;
@@ -189,29 +188,15 @@ void SelectExtraFreeTalkRecord(const std::byte *data, std::size_t size) {
 }
 
 void LoadExternalFreeTalkData() {
-    std::array<char, 32> path{};
-    const char actCharacter = static_cast<char>('0' + g_actNumber);
-    int length = std::snprintf(path.data(), path.size(), "/misc/freetlk%c.bin", actCharacter);
-    if (length <= 0 || static_cast<std::size_t>(length) >= path.size())
+    char filename[16];
+    std::strcpy(filename, "freetlk0.bin");
+    filename[7] = static_cast<char>(g_actNumber + '0');
+    if (!DoesFileExist("misc", filename))
+        std::strcpy(filename, "freetalk.bin");
+    std::uint32_t size = 0;
+    std::byte *const data = static_cast<std::byte *>(LoadLegacySceneFile("misc", filename, scenarioTalkAllocation, &size));
+    if (!data)
         return;
-
-    std::uint64_t size = ArchiveData_GetFileSize(path.data());
-    if (size == 0) {
-        length = std::snprintf(path.data(), path.size(), "/misc/freetalk.bin");
-        if (length <= 0 || static_cast<std::size_t>(length) >= path.size()) {
-            return;
-        }
-        size = ArchiveData_GetFileSize(path.data());
-    }
-    if (size == 0 || size > std::numeric_limits<std::size_t>::max())
-        return;
-
-    auto *const data = static_cast<std::byte *>(HLib::AllocateTaskData(size, scenarioTalkAllocation));
-    if (!data || !ArchiveData_Read(path.data(), 0, data, size)) {
-        if (data)
-            HLib::FreeTaskData(data);
-        return;
-    }
 
     scenarioFreeTalkStorage.externalData = data;
     scenarioFreeTalkStorage.externalSize = static_cast<std::size_t>(size);
@@ -448,7 +433,6 @@ void ReleaseFreeTalk() {
 }
 } // namespace event_runtime_detail
 
-
 bool ScenarioCharacterIsRyo(shen_name name) {
     // scenCheckIsRyo rejects the zero token, but accepts the
     // literal four-character token "null". Pointer aliases precede names.
@@ -457,8 +441,10 @@ bool ScenarioCharacterIsRyo(shen_name name) {
     const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     if (activeScenarioEventRuntime && control && scenFindChara(activeScenarioEventRuntime->task, name) == control->ryo)
         return true;
-    return name.name == SHEN_NAME(RYO_) || name.name == SHEN_NAME(null) || name.name == SHEN_NAME(AKIR) || name.name == SHEN_NAME(AKID) ||
-        name.name == SHEN_NAME(JAKR) || name.name == SHEN_NAME(AKI_);
+    return name.name ==
+        SHEN_NAME(RYO_) ||
+            name.name ==
+                SHEN_NAME(null) || name.name == SHEN_NAME(AKIR) || name.name == SHEN_NAME(AKID) || name.name == SHEN_NAME(JAKR) || name.name == SHEN_NAME(AKI_);
 }
 bool IsScenarioCharacterForcedVisible(shen_name character) {
     const ScenarioEventRuntime *const scenario = activeScenarioEventRuntime;
@@ -559,17 +545,9 @@ void ApplyScenarioFaceLook(std::uint32_t command) {
         std::int16_t upper, lower;
         float upperScale, lowerScale;
     };
-
-    static constexpr std::array<FaceLook, 16> looks{{
-        {0, 0, 1.0f, 1.0f}, {3, 3, 0.5f, 0.7f},
-        {1, 1, 1.0f, 1.0f}, {5, 5, 1.0f, 1.0f},
-        {4, 4, 1.0f, 1.0f}, {21, 21, 1.0f, 1.0f},
-        {22, 22, 0.9f, 1.0f}, {2, 2, 0.4f, 1.0f},
-        {4, 2, 0.6f, 1.0f}, {0, 0, 1.0f, 1.0f},
-        {0, 0, 1.0f, 1.0f}, {0, 0, 1.0f, 1.0f},
-        {0, 0, 1.0f, 1.0f}, {0, 0, 1.0f, 1.0f},
-        {0, 0, 1.0f, 1.0f}, {0, 0, 1.0f, 1.0f}
-    }};
+    static constexpr std::array<FaceLook, 16> looks{{{0, 0, 1.0f, 1.0f}, {3, 3, 0.5f, 0.7f}, {1, 1, 1.0f, 1.0f}, {5, 5, 1.0f, 1.0f}, {4, 4, 1.0f, 1.0f},
+        {21, 21, 1.0f, 1.0f}, {22, 22, 0.9f, 1.0f}, {2, 2, 0.4f, 1.0f}, {4, 2, 0.6f, 1.0f}, {0, 0, 1.0f, 1.0f}, {0, 0, 1.0f, 1.0f}, {0, 0, 1.0f, 1.0f},
+        {0, 0, 1.0f, 1.0f}, {0, 0, 1.0f, 1.0f}, {0, 0, 1.0f, 1.0f}, {0, 0, 1.0f, 1.0f}}};
     const FaceLook &look = looks[index];
     const float frames = static_cast<float>(static_cast<std::uint8_t>(command));
     SetUpperFacialExpression(character, look.upper, frames, look.upperScale);
@@ -771,7 +749,6 @@ void RetireScenarioFreeTalkRecord(ScenarioFreeTalkRecord *record) {
 }
 } // namespace event_runtime_detail
 
-
 // @verified - p
 std::int64_t StartScenarioFreeTalkRecord(shen_name character, std::int16_t root) {
     if (!scenarioPersistentFlags.initialized || (activeScenarioEventRuntime->flags & 0x800U) || cvsGet())
@@ -828,9 +805,6 @@ std::int64_t StopScenarioFreeTalkRecord() {
     return DrainScenarioAcknowledgements();
 }
 namespace event_runtime_detail {
-
-
-
 
 void scenUpdateCandidateAvailability() {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
@@ -1010,9 +984,6 @@ void scenUpdateFreeTalkInteraction() {
         talk.followRouteWait = -1;
 }
 } // namespace event_runtime_detail
-
-
-
 
 void scenUpdateFreeTalkRuntime(ScenarioEventRuntime *scenario) {
     if (!scenario || scenario != activeScenarioEventRuntime)

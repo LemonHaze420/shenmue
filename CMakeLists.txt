@@ -168,12 +168,14 @@ add_library(shenmue_d3t STATIC
   src/api/render_d3d11.cpp
   src/third_party/cjson.cpp
   src/third_party/stb_image.cpp
+  src/third_party/stb_image_write.cpp
   src/platform/file.cpp
   src/d3t/archive_handles.cpp
   src/d3t/archives.cpp
   src/d3t/asset_remap.cpp
   src/d3t/buffer.cpp
   src/d3t/compression.cpp
+  src/d3t/crash_reporter.cpp
   src/d3t/dx11_renderer.cpp
   src/d3t/fvf.cpp
   src/d3t/material.cpp
@@ -183,6 +185,7 @@ add_library(shenmue_d3t STATIC
   src/d3t/pipeline_state.cpp
   src/d3t/pvr_decoder.cpp
   src/d3t/render_handles.cpp
+  src/d3t/scratch_memory.cpp
   src/d3t/shader.cpp
   src/d3t/shader_load.cpp
   src/d3t/file_state.cpp
@@ -215,7 +218,7 @@ endif()
 if(WIN32)
   target_sources(shenmue_common PRIVATE src/api/audio_xaudio.cpp)
   target_link_libraries(shenmue_common PUBLIC xaudio2)
-  target_link_libraries(shenmue_d3t PUBLIC d3d11 dxgi windowscodecs)
+  target_link_libraries(shenmue_d3t PUBLIC d3d11 dxgi windowscodecs dbghelp)
   if(TARGET Microsoft::DirectXTex)
     target_link_libraries(shenmue_d3t PUBLIC Microsoft::DirectXTex)
     target_compile_definitions(shenmue_d3t PUBLIC SHENMUE_HAS_DIRECTXTEX=1)
@@ -317,7 +320,6 @@ add_library(shenmue1_game STATIC
   src/s1/d3t/renderer.cpp
   src/s1/d3t/settings.cpp
   src/s1/d3t/d3t_shader_load.cpp
-  src/s1/d3t/scratch_memory.cpp
   src/s1/task/dswk.cpp
   src/s1/dynamic_map.cpp
   src/s1/task/effe.cpp
@@ -513,6 +515,9 @@ endif()
 set_source_files_properties(src/third_party/stb_image.cpp PROPERTIES
   COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:/W0>;$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>"
 )
+set_source_files_properties(src/third_party/stb_image_write.cpp PROPERTIES
+  COMPILE_OPTIONS "$<$<CXX_COMPILER_ID:MSVC>:/W0>;$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-w>"
+)
 target_compile_features(shenmue1_game PUBLIC cxx_std_20)
 target_include_directories(shenmue1_game PUBLIC src)
 target_sources(shenmue1_game PRIVATE src/s1/enhancements/enemy_gauge.cpp)
@@ -550,8 +555,8 @@ if(MSVC)
 endif()
 shenmue_set_project_warnings(shenmue1)
 
-# PC/Xbox area and event implementation objects (native event subroutines compiled into the executable). Kept as an object
-# library so the DC event modules can later build the same sources into separately linked EV overlays.
+# Build PC/Xbox area and event code as objects.
+# DC event builds reuse these sources in separately linked EV overlays.
 set_source_files_properties(src/s2/areas/common/et_setgamble.c PROPERTIES LANGUAGE CXX)
 add_library(shenmue2_events OBJECT
   src/s2/areas/area_0004.cpp
@@ -1416,7 +1421,13 @@ add_library(shenmue2_game STATIC
   src/s2/ui_snapshot_debug.cpp
   src/s2/ui_pawn_flyers.cpp
   src/s2/ui_pawn_legacy.cpp
+  src/s2/ui_game_screens.cpp
+  src/s2/ui_prompt_legacy.cpp
+  src/s2/ui_legacy_menus.cpp
+  src/s2/ui_main_legacy.cpp
+  src/s2/ui_main_collection.cpp
   src/s2/ui_list_input.cpp
+  src/s2/ui_moves_legacy.cpp
   src/s2/ui_frontend.cpp
   src/s2/ui_legacy_icons.cpp
   src/s2/ui_subtitles.cpp

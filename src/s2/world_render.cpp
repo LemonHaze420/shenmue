@@ -79,6 +79,10 @@ void InitModelVector() {
     g_modelDeformationSuppressed = 0;
 }
 Matrix4x4 g_scriptedIncomingTransform{};
+
+void mtRestoreIncomingTransform() {
+    Matrix4x4::SetActiveTransform(&g_scriptedIncomingTransform);
+}
 Vector3 g_shadowRange{};
 std::uint32_t g_characterShadowDisabled{};
 alignas(32) std::array<std::byte, characterShadowStorageSize> g_characterShadowStorage{};
@@ -302,7 +306,7 @@ void ApplyWbtrDeformation(const MT7Model &model, std::size_t selectedNode = std:
                 }
             }
         }
-        // WBTR admission also owns the final parent-mesh weld, including when weighted deformation is disabled.
+        // WBTR also welds the parent mesh when weighted deformation is disabled.
         if (const Matrix4x4 *const current = GetMT7NodeTransformOverride(node); current && (node.mdcVertexLinkFlags & 0xffffU)) {
             if (const MT7Node *const source = FindMdcSourceNode(model, node))
                 if (const Matrix4x4 *const sourceTransform = GetMT7NodeTransformOverride(*source))
@@ -336,8 +340,8 @@ void ApplyMdcNodeVertexLinks(const MT7Model &model, std::size_t destinationIndex
     auto *const destination = static_cast<std::byte *>(d3t::GetWriteMappedBufferPointer(d3t::DX11::g_ppD3DDeviceContext, destinationBinding->handle, 1, 0));
     if (!source || !destination)
         return;
-    // TransformCharacterRelativePoint subtracts positions before applying inverse rotation.
-    // Keep that ordering rather than cancelling large transformed positions.
+    // Subtract positions before inverse rotation to avoid cancelling large transformed positions.
+
     Matrix4x4 destinationBasis = destinationTransform;
     destinationBasis.rows[3] = {0.0f, 0.0f, 0.0f, destinationTransform.rows[3].w};
     Matrix4x4 sourceRelative = sourceTransform;
@@ -406,8 +410,8 @@ std::uint32_t DrawMdcChildHierarchy(const MT7Model &model, const MT7Node *firstN
             const LegacyDrawResources &resources = node.borrowedMesh ? node.borrowedMesh->drawResources : node.drawResources;
             const bool lambert = shaderPath == LegacyModelShaderPath::Lambert;
             if (alpha < 1.0f)
-                draws += lambert ? SetModelFlagDataWithAlpha(model.source, node.xb01Offset, resources, alpha) :
-                                   ReadModelDataWithAlpha(model.source, node.xb01Offset, resources, alpha);
+                draws += lambert ? ModelFlagDispatch_SetModelFlagDataAlpha(model.source, node.xb01Offset, resources, alpha) :
+                                   ModelFlagDispatch_ReadModelDataAlpha(model.source, node.xb01Offset, resources, alpha);
             else
                 draws += lambert ? ModelFlagDispatch_SetModelFlagDataOpaque(model.source, node.xb01Offset, resources) :
                                    ModelFlagDispatch_ReadModelDataOpaque(model.source, node.xb01Offset, resources);
@@ -457,8 +461,8 @@ std::uint32_t DrawHierarchy(const MT7Model &model, const MT7Node *firstNode, con
                 if (commands) {
                     if (commands->resources) {
                         if (alphaPass)
-                            draws += lambert ? SetModelFlagDataWithAlpha(commands->bytes, commands->xb01Offset, *commands->resources, nodeAlpha) :
-                                               ReadModelDataWithAlpha(commands->bytes, commands->xb01Offset, *commands->resources, nodeAlpha);
+                            draws += lambert ? ModelFlagDispatch_SetModelFlagDataAlpha(commands->bytes, commands->xb01Offset, *commands->resources, nodeAlpha) :
+                                               ModelFlagDispatch_ReadModelDataAlpha(commands->bytes, commands->xb01Offset, *commands->resources, nodeAlpha);
                         else
                             draws += lambert ? ModelFlagDispatch_SetModelFlagDataOpaque(commands->bytes, commands->xb01Offset, *commands->resources) :
                                                ModelFlagDispatch_ReadModelDataOpaque(commands->bytes, commands->xb01Offset, *commands->resources);
@@ -466,8 +470,8 @@ std::uint32_t DrawHierarchy(const MT7Model &model, const MT7Node *firstNode, con
                 } else if (!mtIsMeshTypeOverridden(model, node)) {
                     const LegacyDrawResources &resources = node.borrowedMesh ? node.borrowedMesh->drawResources : node.drawResources;
                     if (alphaPass)
-                        draws += lambert ? SetModelFlagDataWithAlpha(model.source, node.xb01Offset, resources, nodeAlpha) :
-                                           ReadModelDataWithAlpha(model.source, node.xb01Offset, resources, nodeAlpha);
+                        draws += lambert ? ModelFlagDispatch_SetModelFlagDataAlpha(model.source, node.xb01Offset, resources, nodeAlpha) :
+                                           ModelFlagDispatch_ReadModelDataAlpha(model.source, node.xb01Offset, resources, nodeAlpha);
                     else
                         draws += lambert ? ModelFlagDispatch_SetModelFlagDataOpaque(model.source, node.xb01Offset, resources) :
                                            ModelFlagDispatch_ReadModelDataOpaque(model.source, node.xb01Offset, resources);
@@ -541,8 +545,8 @@ std::uint32_t DrawHierarchy(const MT7Model &model, const MT7Node *firstNode, con
                                                                       node.drawResources;
                     const bool lambert = shaderPath == LegacyModelShaderPath::Lambert;
                     if (nodeAlpha < 1.0f)
-                        draws += lambert ? SetModelFlagDataWithAlpha(bytes, offset, resources, nodeAlpha) :
-                                           ReadModelDataWithAlpha(bytes, offset, resources, nodeAlpha);
+                        draws += lambert ? ModelFlagDispatch_SetModelFlagDataAlpha(bytes, offset, resources, nodeAlpha) :
+                                           ModelFlagDispatch_ReadModelDataAlpha(bytes, offset, resources, nodeAlpha);
                     else
                         draws += lambert ? ModelFlagDispatch_SetModelFlagDataOpaque(bytes, offset, resources) :
                                            ModelFlagDispatch_ReadModelDataOpaque(bytes, offset, resources);
@@ -848,6 +852,31 @@ std::uint32_t DrawMT7NodeHierarchy(const MT7Model &model, const MT7Node &node, L
     return DrawHierarchy(model, &node, rootTransform, shaderPath, alpha, 0.0f, nullptr, nullptr, nullptr, &node);
 }
 
+std::uint32_t mtRecursiveSetFlag(const MT7Model &model, const MT7Node *node, float alpha) {
+    std::uint32_t draws = 0;
+    while (!d3t::HashModelWithAlpha(node, alpha, GetLegacyPerspectiveProjection())) {
+        const MT7Node *const sibling = node->runtimeSibling;
+        if (sibling)
+            Matrix4x4_Push();
+        ApplyMT7NodeTransform(*node);
+        if (node->xb01Offset && !(static_cast<std::uint32_t>(node->id) >> 16U)) {
+            std::uint32_t meshFlags{};
+            std::memcpy(&meshFlags, (node->runtimeMesh ? node->runtimeMesh : model.source.data() + node->xb01Offset) + 4, sizeof(meshFlags));
+            if (meshFlags & 4U)
+                NoteXb01Flag4Mesh();
+            draws +=
+                SetModelFlagDataWithAlpha(model.source, node->xb01Offset, node->borrowedMesh ? node->borrowedMesh->drawResources : node->drawResources, alpha);
+        }
+        if (node->runtimeChild)
+            draws += mtRecursiveSetFlag(model, node->runtimeChild, alpha);
+        if (!sibling)
+            break;
+        Matrix4x4::Pop(1);
+        node = sibling;
+    }
+    return draws;
+}
+
 Character *SetScriptedModelEntity(Character *entity) {
     Character *const previous = scriptedModelEntity;
     scriptedModelEntity = entity;
@@ -863,6 +892,16 @@ void charaApplyScale(const MT7Model *model, const MT7Node *node, float) {
             Matrix4x4::SetPrePassToTempTransform();
             BuildScriptedModelTransformTree(*model, node, nullptr);
         }
+        DrawScriptedModelTransformTree(*model, node, g_scriptedIncomingTransform, g_scriptedModelScale.x, nullptr);
+    }
+    g_scriptedModelScale.x = 1.0f;
+}
+
+// @verified - p
+void applyPosRotScl(const MT7Model *model, const MT7Node *node) {
+    if (model && node) {
+        ScriptedMatrixFrame frame;
+        Matrix4x4::GetTransformMatrix(&g_scriptedIncomingTransform);
         DrawScriptedModelTransformTree(*model, node, g_scriptedIncomingTransform, g_scriptedModelScale.x, nullptr);
     }
     g_scriptedModelScale.x = 1.0f;
@@ -1050,8 +1089,32 @@ void DrawPIN(shen_name name, std::int32_t, const Vector3 *position, const Vector
     Matrix4x4::Pop(1);
 }
 
+// @verified - p
+void ApplyTranslationRotationScaleXYZToCharaByID(shen_name name, float, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale) {
+    MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    Character *const dummy = GetScenarioCharacterNode(control->scenarioTask, SCENARIO_DUMMY_CHARACTER);
+    Matrix4x4_Push(nullptr);
+    ApplyRecursiveCharacterNodeTransforms(GetCharacterNode(dummy));
+    if (position)
+        Matrix4x4::preTranslate(position->x, position->y, position->z);
+    if (rotation) {
+        if (rotation->z)
+            Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(rotation->z));
+        if (rotation->y)
+            Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(rotation->y));
+        if (rotation->x)
+            Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(rotation->x));
+    }
+    if (scale)
+        Matrix4x4::Scale(scale->x, scale->y, scale->z);
+    MapControlData *const current = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    Character *const character = GetScenarioCharacterNode(current->scenarioTask, name);
+    const MT7Model *const model = static_cast<const MT7Model *>(character->model);
+    charaApplyScale(model, model ? model->nodes.data() : nullptr);
+    Matrix4x4::Pop(1);
+}
 
-void ApplyTranslationRotationScaleXYZToCharaByID(
+void ApplyTranslationRotationScaleXYZToCharaSibling(
     shen_name name, std::int32_t siblingOrdinal, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *const dummy = GetScenarioCharacterNode(control->scenarioTask, SCENARIO_DUMMY_CHARACTER);
@@ -1148,13 +1211,16 @@ void DrawMT7ProceduralBranch(MT7Model &model, MT7Node *node, std::uint16_t cutof
 namespace {
 bool shadowRelativePositioning = true;
 std::int32_t characterShadowStencilReference = -1;
+std::int32_t shadowWithinCameraDistance = 1;
 
 float GetCharacterShadowDistanceFade(const Vector3 &position, const Character &character) {
     Vector3 camera{};
     camCtrlGetNextCamPos(&camera);
     const float dx = position.x - camera.x, dz = position.z - camera.z;
+    const float distance = std::sqrt(dx * dx + dz * dz);
+    shadowWithinCameraDistance = distance < 0.0f;
     const float range = GetShadowRange() * ((character.fieldE8 & 0x10U) ? 3.0f : 1.0f);
-    const float fade = range - std::sqrt(dx * dx + dz * dz);
+    const float fade = range - distance;
     return (fade < 0.0f ? 0.0f : std::fmin(1.0f, fade)) * character.alpha;
 }
 
@@ -1266,7 +1332,10 @@ void DrawProjectedSharedCharacterShadow(Character &character, const Vector3 &pos
         g_scriptedModelScale.x = 3.0f;
         if (GetPreviousActiveLight() != 1)
             SetLegacyStencilReference(static_cast<std::uint32_t>(alpha * 255.0f));
-        DrawBaseShadowModel(*shared, alpha);
+        if (shadowWithinCameraDistance)
+            mtUpdateTransparencyCallback(shared, shared->nodes.empty() ? nullptr : shared->nodes.data(), alpha);
+        else
+            DrawBaseShadowModel(*shared, alpha);
     }
 }
 
@@ -1312,7 +1381,10 @@ void DrawMotionCharacterShadow(Character &character, const Vector3 &position, fl
         g_scriptedModelScale.x = 3.0f;
         if (stencil)
             SetLegacyStencilReference(static_cast<std::uint32_t>(alpha * 255.0f));
-        DrawBaseShadowModel(*shadow, alpha);
+        if (shadowWithinCameraDistance)
+            mtUpdateTransparencyCallback(shadow, shadow->nodes.empty() ? nullptr : shadow->nodes.data(), alpha);
+        else
+            DrawBaseShadowModel(*shadow, alpha);
     }
 }
 
@@ -2239,7 +2311,7 @@ struct AirPlanetLayerState {
 };
 
 struct AirPresentation {
-    std::vector<std::byte> doomBytes;
+    std::array<void *, static_cast<std::size_t>(AirModelSlot::Count)> modelData{};
     std::array<MT7Model, static_cast<std::size_t>(AirModelSlot::Count)> models;
     std::array<float, 2> cloudBlends{1.0f, 0.0f};
     std::array<float, 2> cloudBlendMax{1.0f, 1.0f};
@@ -2274,18 +2346,6 @@ template <typename Value> bool ReadAirValue(std::span<const std::byte> bytes, st
     }
     std::memcpy(&value, bytes.data() + offset, sizeof(value));
     return true;
-}
-
-bool LoadArchivedAirFile(const char *path, std::vector<std::byte> &bytes) {
-    const std::uint64_t size = ArchiveData_GetFileSize(path);
-    if (!size || size > (std::numeric_limits<std::size_t>::max)()) {
-        return false;
-    }
-    bytes.resize(static_cast<std::size_t>(size));
-    if (ArchiveData_Read(path, 0, bytes.data(), size))
-        return true;
-    bytes.clear();
-    return false;
 }
 
 std::span<std::byte> FindAirModelChunk(std::span<std::byte> bytes, std::uint32_t wantedTag) {
@@ -2562,8 +2622,11 @@ void ReleaseAirGeometry() {
             }
         }
     }
-    airPresentation.doomBytes.clear();
-    airPresentation.doomBytes.shrink_to_fit();
+    for (void *&data : airPresentation.modelData) {
+        if (data)
+            HLib::FreeTaskData(data);
+        data = nullptr;
+    }
     airPresentation.geometryReady = false;
     airWeatherPresentation.clouds = {};
     airPresentation.cloudBlends = {1.0f, 0.0f};
@@ -2573,29 +2636,72 @@ void ReleaseAirGeometry() {
     airWeatherPresentation.secondsSince1980 = 0;
 }
 
+void SelectDomePrimitiveLayout(const MT7Model &model) {
+    const MT7Node *const mesh = FindAirGradientMesh(model);
+    if (!mesh)
+        return;
+    std::byte *const xb01 = const_cast<std::byte *>(model.source.data() + mesh->xb01Offset);
+    std::uint32_t signature{}, firstPacket{}, header{}, command{};
+    std::memcpy(&signature, xb01, sizeof(signature));
+    if (signature != xb01Signature)
+        return;
+    std::memcpy(&firstPacket, xb01 + 24, sizeof(firstPacket));
+    std::byte *packet = xb01 + (static_cast<std::size_t>(firstPacket) + 6U) * 4U;
+    std::byte *cursor = packet + 20;
+    std::memcpy(&header, packet, sizeof(header));
+    while (header) {
+        std::memcpy(&command, cursor, sizeof(command));
+        if (static_cast<std::uint8_t>(command) == 2) {
+            constexpr std::uint32_t layout = 3;
+            std::memcpy(cursor + 4, &layout, sizeof(layout));
+        }
+        cursor += static_cast<std::size_t>(command >> 8U) * 4U;
+        if (std::to_integer<std::uint8_t>(*cursor) == 0) {
+            packet += static_cast<std::size_t>(header >> 8U) * 4U;
+            cursor = packet + 20;
+            std::memcpy(&header, packet, sizeof(header));
+        }
+    }
+}
+
+bool ReadAirModel(std::span<std::byte> doom, AirModelSlot slot) {
+    const std::size_t index = static_cast<std::size_t>(slot);
+    const std::span<std::byte> chunk = FindAirModelChunk(doom, airModelTags[index]);
+    if (chunk.empty())
+        return false;
+    void *const data = HLib::AllocateTaskData(chunk.size(), AIR_DOME_MODEL);
+    if (!data)
+        return false;
+    std::memcpy(data, chunk.data(), chunk.size());
+    airPresentation.modelData[index] = data;
+    std::array<char, 5> label{static_cast<char>(airModelTags[index]), static_cast<char>(airModelTags[index] >> 8U),
+        static_cast<char>(airModelTags[index] >> 16U), static_cast<char>(airModelTags[index] >> 24U), '\0'};
+    MT7Model &model = airPresentation.models[index];
+    const std::span<const std::byte> source{static_cast<const std::byte *>(data), chunk.size()};
+    return ReadModelFormat7(source, label.data(), model) && UploadEmbeddedAirTextures(source, model);
+}
+
 bool LoadAirGeometry() {
     ReleaseAirGeometry();
-    if (!LoadArchivedAirFile("/misc/DOOM.BIN", airPresentation.doomBytes)) {
+    std::uint32_t size = 0;
+    void *const file = FileRead("misc", "DOOM.BIN", AIR_DOOM_FILE, &size);
+    if (!file)
+        return false;
+    const std::span<std::byte> doom{static_cast<std::byte *>(file), size};
+    bool loaded = ReadAirModel(doom, AirModelSlot::CloudA) && ReadAirModel(doom, AirModelSlot::CloudB);
+    if (loaded)
+        AllocateCDCX(airPresentation.models[static_cast<std::size_t>(AirModelSlot::CloudA)], airCloudVertexLevels, 9);
+    loaded = loaded && ReadAirModel(doom, AirModelSlot::DomeDay) && ReadAirModel(doom, AirModelSlot::DomeNight);
+    if (loaded) {
+        SelectDomePrimitiveLayout(airPresentation.models[static_cast<std::size_t>(AirModelSlot::DomeDay)]);
+        AllocateCDCX(airPresentation.models[static_cast<std::size_t>(AirModelSlot::DomeDay)], airDomeVertexLevels, 5);
+    }
+    loaded = loaded && ReadAirModel(doom, AirModelSlot::Moon);
+    HLib::FreeTaskData(file);
+    if (!loaded) {
+        ReleaseAirGeometry();
         return false;
     }
-    const std::span<std::byte> doom{airPresentation.doomBytes.data(), airPresentation.doomBytes.size()};
-    for (std::size_t index = 0; index < airModelTags.size(); ++index) {
-        std::span<std::byte> chunk = FindAirModelChunk(doom, airModelTags[index]);
-        if (chunk.empty()) {
-            ReleaseAirGeometry();
-            return false;
-        }
-        std::array<char, 5> label{static_cast<char>(airModelTags[index]), static_cast<char>(airModelTags[index] >> 8U),
-            static_cast<char>(airModelTags[index] >> 16U), static_cast<char>(airModelTags[index] >> 24U), '\0'};
-        MT7Model &model = airPresentation.models[index];
-        const std::span<const std::byte> source{chunk.data(), chunk.size()};
-        if (!ReadModelFormat7(source, label.data(), model) || !UploadEmbeddedAirTextures(source, model)) {
-            ReleaseAirGeometry();
-            return false;
-        }
-    }
-    AllocateCDCX(airPresentation.models[static_cast<std::size_t>(AirModelSlot::CloudA)], airCloudVertexLevels, 9);
-    AllocateCDCX(airPresentation.models[static_cast<std::size_t>(AirModelSlot::DomeDay)], airDomeVertexLevels, 5);
     airPresentation.geometryReady = true;
     return true;
 }
@@ -2611,12 +2717,13 @@ void ReadSpriteForSkyboxObjects(std::int32_t textureIndex, std::int32_t layer, f
     airPresentation.cloudBlendMax[static_cast<std::size_t>(layer)] = blendMax;
     airWeatherPresentation.clouds.textureIndices[static_cast<std::size_t>(layer)] = textureIndex;
     const std::span<const std::byte> bytes{sprite, 0x8800};
-
+    MT7Model &cloud = airPresentation.models[static_cast<std::size_t>(AirModelSlot::CloudA) + static_cast<std::size_t>(layer)];
+    const std::uint32_t previous = cloud.textures.empty() ? 0 : cloud.textures[0].textureIndex;
+    if (previous)
+        (void)ReturnZero();
     const std::uint32_t handle = UploadAirPvrTexture(bytes, 16);
     if (!handle)
         return;
-    MT7Model &cloud = airPresentation.models[static_cast<std::size_t>(AirModelSlot ::CloudA) + static_cast<std::size_t>(layer)];
-    const std::uint32_t previous = cloud.textures.empty() ? 0 : cloud.textures[0].textureIndex;
     SetAirModelTexture(cloud, 0, handle);
     if (previous && previous != handle && !IsAirTextureUsedElsewhere(&cloud, previous))
         d3t::InitTexture2DResource(previous);
@@ -3925,6 +4032,7 @@ std::uint32_t DrawWaterSetNode(const MT7Model &model, const MT7Node &node, const
     Matrix4x4_Push();
     if (refreshLights)
         UpdateLegacyLightTransforms();
+    Matrix4x4::GetTransformMatrix(&objectCommandPlacementTransform);
     Matrix4x4::preTranslate(position.x, position.y, position.z);
     const std::uint32_t draws = DispatchModelFlag2WithOptionalAltTransform(model, node);
     Matrix4x4::Pop(1);

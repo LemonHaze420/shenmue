@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/npc_package.hpp"
 
 #include "s2/archive_data.hpp"
@@ -1206,9 +1209,9 @@ void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry) {
     case 8: {
         NpcAreaRouteState &state = *GetNpcAreaPointRouteState(entry.currentAreaPoint);
         if (entry.specialAnimationContext)
-            entry.currentMotionId = ResolveNpcAreaAnimation(state, entry, false);
+            entry.currentMotionId = npcResolveAnimationForRoute(state, entry);
         if (!entry.specialAnimationContext)
-            entry.currentMotionId = ResolveNpcAreaAnimation(state, entry, false);
+            entry.currentMotionId = npcResolveAnimationForRoute(state, entry);
         if (!entry.currentMotionId)
             entry.currentMotionId = SelectNpcIdleMotion(entry);
         ApplyNpcAreaMotion(entry, entry.currentMotionId);
@@ -1865,3 +1868,4 @@ std::uint64_t GetNpcNewLoadState() {
     return npcNewLoadState;
 }
 } // namespace shenmue::s2
+

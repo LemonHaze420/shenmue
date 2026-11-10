@@ -27,6 +27,9 @@
 #include <cstring>
 namespace shenmue::s2 {
 namespace bt40 {
+// @verified - p: PC nullsub_0 occupies the event-table slot of DC SetLoadingBusy.
+void LoadingBusyNullsub() {
+}
 const shen_name *admittedCharacters{};
 std::int32_t *completion{};
 struct AuthorWork {
@@ -408,8 +411,8 @@ void ChallengeSequence(void *parameter) {
             EVT_AT_SetAngY_Callback(&angle);
             motion = {0, joy, 10690, 0, 1, 0x40000000U, 0};
             EVT_AT_SetMot_Callback(&motion);
-            EVT_AT_SetVoice("0340C005", 1, 0); // @text EN: "Ryo." | JA: "涼。"
-            EVT_AT_SetVoice("0340C006", 1, 30); // @text EN: "You've got to hurry and save Wong!" | JA: "早くウォンを助けに行かないと！"
+            EVT_AT_SetVoice("0340C005", 1, 0);   // @text EN: "Ryo." | JA: "涼。"
+            EVT_AT_SetVoice("0340C006", 1, 30);  // @text EN: "You've got to hurry and save Wong!" | JA: "早くウォンを助けに行かないと！"
             EVT_AT_SetVoice("0340A010", 1, 100); // @text EN: "Yeah. Let's hurry." | JA: "ああ、急ごう！"
             EventSetCamera camera{0, 9100, base, base, 0, {}, 0, 0};
             EVT_AT_SetCam_Callback(&camera);
@@ -549,6 +552,7 @@ void Bt40BoutCallback(void *parameter) {
     case 4:
         flddSetPointFlagOnGrid(SHEN_NAME(0000), 0);
         flddSetPointFlagOnGrid(SHEN_NAME(BT40), 1);
+        LoadingBusyNullsub();
         w.sequence = QueueCompiledSequence(w.mode ? ChallengeSequence : NormalSequence, SHEN_NAME(SEQP), &w);
         w.active = 1;
         w.phase = 5;

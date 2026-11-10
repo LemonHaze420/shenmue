@@ -11,6 +11,9 @@
 #include "s2/pak.hpp"
 #include "s2/matrix_stack.hpp"
 #include "s2/scene_data.hpp"
+#include "s2/legacy_sprite.hpp"
+#include "d3t/archive_handles.hpp"
+#include "s2/archive_data.hpp"
 #include "s2/hlib.hpp"
 #include "s2/math.hpp"
 
@@ -51,9 +54,38 @@ struct MeshRange {
     std::int32_t parentNode{-1};
 };
 
+void ReadMatrix(MT7Model &model, std::int32_t index) {
+    do {
+        MT7Node &node = model.nodes[static_cast<std::size_t>(index)];
+        std::uint32_t nodeClass;
+        switch (static_cast<std::uint16_t>(node.id)) {
+        case 0xffa5:
+        case 0xffa6:
+            nodeClass = 2;
+            break;
+        case 0xffbe:
+        case 0xffbf:
+            nodeClass = 1;
+            break;
+        case 5:
+        case 0xa:
+            nodeClass = 3;
+            break;
+        default:
+            nodeClass = 0;
+            break;
+        }
+        node.id = static_cast<std::int32_t>((nodeClass << 16U) | static_cast<std::uint16_t>(node.id));
+        if (node.firstChild >= 0)
+            ReadMatrix(model, node.firstChild);
+        index = node.nextSibling;
+    } while (index >= 0);
+}
+
 class MT7Reader {
   public:
-    MT7Reader(std::span<const std::byte> source, const char *label, MT7Model &destination) : bytes(source), container(source), model(destination) {
+    MT7Reader(std::span<const std::byte> source, const char *label, MT7Model &destination)
+        : bytes(source), container(source), label(label), model(destination) {
         model = {};
         model.label = label ? label : "MT7";
         model.source = source;
@@ -70,9 +102,9 @@ class MT7Reader {
 #else
             if (shendk::IsMt7Signature(chunk[0]))
 #endif
-            break;
-            if (chunk[0] != SHEN_NAME(FACE) && chunk[0] != SHEN_NAME(FACX) && chunk[0] != SHEN_NAME(LIGT) && chunk[0] != SHEN_NAME(CLSG) &&
-                chunk[0] != SHEN_NAME(CLSX))
+                break;
+            if (chunk[0] !=
+                SHEN_NAME(FACE) && chunk[0] != SHEN_NAME(FACX) && chunk[0] != SHEN_NAME(LIGT) && chunk[0] != SHEN_NAME(CLSG) && chunk[0] != SHEN_NAME(CLSX))
                 return false;
             if (chunk[1] < 8 || chunk[1] > container.size() - offset)
                 return false;
@@ -111,6 +143,12 @@ class MT7Reader {
         if (rootId >= 0x7001U && rootId <= 0x7061U) {
             model.entityType = static_cast<std::int32_t>(rootId - 0x7001U);
         }
+        if (std::strstr(model.label.c_str(), DARTH_PACKET_FLAG_LABEL))
+            SetPacketHeaderFlags(1U);
+        if (std::strstr(model.label.c_str(), SYE_M_UV_LABEL))
+            RemapSyeMUVs();
+        if (check_special_fight_charas(model.label.c_str()))
+            SetPacketHeaderFlags(4U);
         std::uint32_t vertexMemorySize = 0;
         if (!ParseNode(vertexMemorySize))
             return false;
@@ -143,12 +181,49 @@ class MT7Reader {
                 }
             }
         }
-        return ReadFacialModelResource(model, container);
+        if (!ReadFacialModelResource(model, container))
+            return false;
+        const std::uint32_t rootMesh = model.nodes.front().meshType;
+        if (rootMesh == SHEN_NAME(MDC7) || rootMesh == SHEN_NAME(MDCX))
+            ReadMatrix(model, 0);
+        return true;
     }
 
   private:
+    void SetPacketHeaderFlags(std::uint32_t flag) {
+        for (const MT7Node &node : model.nodes) {
+            std::uint32_t firstPacket{};
+            if (!node.xb01Offset || !Read(bytes, node.xb01Offset + 24, firstPacket))
+                continue;
+            std::size_t packet = static_cast<std::size_t>(node.xb01Offset) + (static_cast<std::size_t>(firstPacket) + 6U) * 4U;
+            std::uint32_t packetHeader{};
+            while (Read(bytes, packet, packetHeader) && packetHeader && packetHeader >> 8U) {
+                packetHeader |= flag;
+                std::memcpy(const_cast<std::byte *>(bytes.data() + packet), &packetHeader, sizeof(packetHeader));
+                packet += static_cast<std::size_t>(packetHeader >> 8U) * 4U;
+            }
+        }
+    }
 
-
+    void RemapSyeMUVs() {
+        for (const MT7Node &node : model.nodes) {
+            std::uint32_t commandWords{}, header{};
+            if (!node.xb01Offset || static_cast<std::int16_t>(node.id) != SYE_M_UV_NODE_ID || !Read(bytes, node.xb01Offset + 28, commandWords))
+                continue;
+            const std::size_t command = static_cast<std::size_t>(node.xb01Offset) + 28U + static_cast<std::size_t>(commandWords) * 4U;
+            if (!Read(bytes, command, header) || !header || static_cast<std::uint8_t>(header) != 1)
+                continue;
+            for (std::uint32_t vertex = SYE_M_UV_FIRST_VERTEX; vertex <= SYE_M_UV_LAST_VERTEX; ++vertex) {
+                const std::size_t offset = command + 40U + static_cast<std::size_t>(vertex) * 32U;
+                std::array<float, 2> uv{};
+                if (!Read(bytes, offset, uv))
+                    break;
+                uv[0] = uv[0] + uv[0];
+                uv[1] = (uv[1] - SYE_M_V_ORIGIN) * SYE_M_V_SCALE * SYE_M_V_RANGE + SYE_M_V_OFFSET;
+                std::memcpy(const_cast<std::byte *>(bytes.data() + offset), uv.data(), sizeof(uv));
+            }
+        }
+    }
 
     void ReadTxt7(std::size_t offset) {
         for (;;) {
@@ -157,8 +232,8 @@ class MT7Reader {
                 return;
             if (chunk[0] == SHEN_NAME(TXT7))
                 break;
-            if (chunk[0] != SHEN_NAME(FACE) && chunk[0] != SHEN_NAME(FACX) && chunk[0] != SHEN_NAME(LIGT) && chunk[0] != SHEN_NAME(CLSG) &&
-                chunk[0] != SHEN_NAME(CLSX))
+            if (chunk[0] !=
+                SHEN_NAME(FACE) && chunk[0] != SHEN_NAME(FACX) && chunk[0] != SHEN_NAME(LIGT) && chunk[0] != SHEN_NAME(CLSG) && chunk[0] != SHEN_NAME(CLSX))
                 return;
             if (chunk[1] < 8 || chunk[1] > container.size() - offset)
                 return;
@@ -255,8 +330,33 @@ class MT7Reader {
             std::memcpy(&idHigh, entry.id + sizeof(idLow), sizeof(idHigh));
             entry.unknown08 = 0xffffffffU;
             entry.textureIndex = ResolveLoadedMapTexture(idLow, idHigh);
+            if (label)
+                ApplyTextureOverride(entry, index);
         }
         return true;
+    }
+
+    void ApplyTextureOverride(const MT7TextureEntry &entry, std::uint32_t index) {
+        std::int32_t count = 0;
+        const SDTextureMapping *const mappings = GetSDTextureMappings(&count);
+        const char *const filename = d3t::GetFileName(label);
+        const char *const extension = d3t::GetFileExtension(label);
+        if (!extension)
+            return;
+        const std::size_t extensionLength = std::strlen(extension);
+        const char *const separator = extensionLength && extension[extensionLength - 1] == '_' ? "" : "_";
+        char source[260];
+        std::snprintf(source, sizeof(source), "/%s%s/%-.*s_%i.dds", label, separator, static_cast<int>(extension - filename - 1), filename,
+            static_cast<std::int32_t>(index));
+        FilepathCleaner(source);
+        if (char *const fbx = std::strstr(source, ".fbx_"))
+            std::memcpy(fbx, ".mt7_", 5);
+        for (std::int32_t mapping = 0; mapping < count; ++mapping) {
+            if (std::strcmp(mappings[mapping].source.data(), source) == 0) {
+                ReplaceSDTextureImage(mappings[mapping].destination.data(), entry.textureIndex);
+                return;
+            }
+        }
     }
 
     bool ReadNode(std::uint32_t offset, std::int32_t parent, std::size_t depth) {
@@ -653,6 +753,7 @@ class MT7Reader {
 
     std::span<const std::byte> bytes;
     std::span<const std::byte> container;
+    const char *label;
     const std::byte *clothChunk{};
     MT7Model &model;
     std::unordered_set<std::uint32_t> visited;
@@ -914,6 +1015,14 @@ void mt7_CopyXB01Offset(MT7Node *node, const MT7Node *source) {
     node->runtimeMesh = source->xb01Offset ? source->runtimeMesh : nullptr;
 }
 
+// @verified - p
+bool check_special_fight_charas(const char *label) {
+    for (const char *name : SPECIAL_FIGHT_CHARACTER_LABELS)
+        if (std::strstr(label, name))
+            return true;
+    return false;
+}
+
 bool ReadModelFormat7(std::span<const std::byte> bytes, const char *label, MT7Model &model) {
     if (MT7Reader(bytes, label, model).Run()) {
         InitializeMT7RuntimeLinks(model);
@@ -921,6 +1030,23 @@ bool ReadModelFormat7(std::span<const std::byte> bytes, const char *label, MT7Mo
     }
     ReleaseModelFormat7(model);
     return false;
+}
+
+std::array<const void *, 1024> g_mt7ClonedMeshes{};
+std::uint32_t g_mt7ClonedMeshCount{};
+
+bool mt7IsClonedMesh(const void *mesh) {
+    for (std::uint32_t index = 0; index < g_mt7ClonedMeshCount; ++index) {
+        if (g_mt7ClonedMeshes[index] == mesh)
+            return true;
+    }
+    return false;
+}
+
+std::int64_t mt7RegisterClonedMesh(const void *mesh) {
+    g_mt7ClonedMeshes[g_mt7ClonedMeshCount] = mesh;
+    g_mt7ClonedMeshCount = g_mt7ClonedMeshCount + 1 >= g_mt7ClonedMeshes.size() ? 0 : g_mt7ClonedMeshCount + 1;
+    return 0;
 }
 
 const MT7Node *GetMT7ReaderData(const MT7Model *model) {
@@ -936,7 +1062,7 @@ void RegisterModelNodeAliases(const MT7Node *node, const MT7Node *root, std::uin
             RegisterModelNodeAliases(child, root, flag);
     }
 }
-}
+} // namespace
 
 // @verified - p
 void FilepathBuilder(const MT7Node *data, const char *directory, const char *subdirectory, const char *stem, std::uint16_t flags, std::uint32_t threadHandle) {

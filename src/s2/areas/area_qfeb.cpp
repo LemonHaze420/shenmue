@@ -6,8 +6,7 @@ const char qfebAuthorScene[] = "0302";
 const shen_name qfebCharacters[] = {QFEB_RYO, QFEB_REN, QFEB_RKN, QFEB_KHO, QFEB_SOY, QFEB_KIC, QFEB_ANC, QFEB_MRC, EVENT_CHARACTER_INVALID};
 const char qfebPackage[] = "QFEB";
 
-void QfebMain(unsigned char entry)
-{
+void QfebMain(unsigned char entry) {
     HLibTask *task;
     QfebEventWork *work;
     FTBL.SetPlayerControlEnabled(0);
@@ -69,22 +68,20 @@ Vector3i qfebAuthorReturnRotation = {0, 0, 0};
 Vector3i qfebAuthorDefaultRotation = {0, 32768, 0};
 int qfebReturnArguments[3][3] = {{2, 1, 1}, {0, 1, 1}, {1, 1, 1}};
 QfebPlace qfebBasePositions[3] = {{241.68f, 147.0f, 70.28f}, {222.74f, 175.82f, 70.28f}, {188.3f, 150.53f, 70.28f}};
-QfebPlace qfebChoreographyPositions[3][2] = {{{245.19f, 148.36f, 64.79f}, {245.97f, 147.44f, 77.6f}},
-    {{224.54f, 176.62f, 55.21f}, {224.84f, 175.86f, 55.2f}}, {{187.83f, 150.43f, 245.54f}, {187.36f, 149.34f, 235.17f}}};
+QfebPlace qfebChoreographyPositions[3][2] = {{{245.19f, 148.36f, 64.79f}, {245.97f, 147.44f, 77.6f}}, {{224.54f, 176.62f, 55.21f}, {224.84f, 175.86f, 55.2f}},
+    {{187.83f, 150.43f, 245.54f}, {187.36f, 149.34f, 235.17f}}};
 QfebNpcPlace qfebChoreographyNpcs[3][2] = {{{239.8f, 145.1f, 79.45f, QFEB_KHO}, {239.69f, 146.05f, 29.45f, QFEB_RKN}},
-    {{222.0f, 174.71f, 70.1f, QFEB_ANC}, {221.52f, 175.57f, 45.0f, QFEB_KIC}},
-    {{190.18f, 150.67f, 275.67f, QFEB_ANC}, {189.3f, 151.47f, 170.46f, QFEB_MRC}}};
+    {{222.0f, 174.71f, 70.1f, QFEB_ANC}, {221.52f, 175.57f, 45.0f, QFEB_KIC}}, {{190.18f, 150.67f, 275.67f, QFEB_ANC}, {189.3f, 151.47f, 170.46f, QFEB_MRC}}};
 QfebPlace qfebExitPositions[4] = {{257.73f, 168.0f, 90.0f}, {223.14f, 179.4f, 0.0f}, {188.85f, 146.85f, 180.0f}, {257.17f, 166.63f, 90.0f}};
-QfebRenExit qfebRenExitPositions[4] = {{{257.04f, 125.2f, 166.31f}, 16384}, {{225.22f, 125.2f, 178.83f}, 0}, {{189.69f, 125.2f, 147.3f}, 32768},
-    {{257.89f, 132.4f, 168.54f}, 12178}};
-QfebAuthorReturnPose qfebAuthorReturnPoses[3] = {{{248.04f, 128.8f, 154.24f}, {0, 0, 0}}, {{224.81f, 127.0f, 185.59f}, {0, 0, 0}},
-    {{187.28f, 127.0f, 140.07f}, {0, 32768, 0}}};
+QfebRenExit qfebRenExitPositions[4] = {
+    {{257.04f, 125.2f, 166.31f}, 16384}, {{225.22f, 125.2f, 178.83f}, 0}, {{189.69f, 125.2f, 147.3f}, 32768}, {{257.89f, 132.4f, 168.54f}, 12178}};
+QfebAuthorReturnPose qfebAuthorReturnPoses[3] = {
+    {{248.04f, 128.8f, 154.24f}, {0, 0, 0}}, {{224.81f, 127.0f, 185.59f}, {0, 0, 0}}, {{187.28f, 127.0f, 140.07f}, {0, 32768, 0}}};
 Vector3 qfebProximityEntry1 = {245.65f, 128.8f, 147.48f};
 Vector3 qfebProximityEntry2 = {224.13f, 128.8f, 175.0f};
 Vector3 qfebProximityEntry3 = {187.32f, 128.8f, 151.08f};
 
-void QueueQfebAuthor(shen_name author)
-{
+void QueueQfebAuthor(shen_name author) {
     HLibTask *task;
     QfebAuthorWork *work;
     task = FTBL.HLib_EnqueueTaskWithParameter(QfebAuthorCallback, 4, 11, sizeof(QfebAuthorWork), TASK_EVNT);
@@ -95,8 +92,7 @@ void QueueQfebAuthor(shen_name author)
     PrepareQfebAuthor();
 }
 
-void QfebAuthorCallback(void *data)
-{
+void QfebAuthorCallback(void *data) {
     QfebAuthorWork *work = (QfebAuthorWork *)data;
     switch (work->state) {
     case 0:
@@ -110,8 +106,7 @@ void QfebAuthorCallback(void *data)
     }
 }
 
-void StartQfebAuthorLoop(QfebAuthorWork *work)
-{
+void StartQfebAuthorLoop(QfebAuthorWork *work) {
     HLibTask *task;
     QfebAuthorLoopWork *loop;
     task = FTBL.HLib_EnqueueTaskWithParameter(QfebAuthorLoopCallback, 4, 11, sizeof(QfebAuthorLoopWork), TASK_EVNT);
@@ -123,8 +118,7 @@ void StartQfebAuthorLoop(QfebAuthorWork *work)
     work->state = 2;
 }
 
-void QfebAuthorLoopCallback(void *data)
-{
+void QfebAuthorLoopCallback(void *data) {
     QfebAuthorLoopWork *loop = (QfebAuthorLoopWork *)data;
     loop->frame = FTBL.EV_authSceneCtrl(-6);
     if (loop->frame == 0)
@@ -139,14 +133,12 @@ void QfebAuthorLoopCallback(void *data)
     }
 }
 
-void PrepareQfebAuthor(void)
-{
+void PrepareQfebAuthor(void) {
     FTBL.SetPlayerControlEnabled(0);
     FTBL.EV_FreeAuthorPak(1, qfebAuthorScene);
 }
 
-void FinishQfebAuthor(QfebAuthorWork *work)
-{
+void FinishQfebAuthor(QfebAuthorWork *work) {
     FTBL.HLib_DestroyTask(work->task);
     FTBL.SetPlayerControlEnabled(1);
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -159,22 +151,19 @@ void FinishQfebAuthor(QfebAuthorWork *work)
         FTBL.EV_AT_SetAngY_0(QFEB_RYO, 0x78000000, &qfebAuthorDefaultRotation, 0);
 }
 
-void HideQfebAuthorCharacters(void)
-{
+void HideQfebAuthorCharacters(void) {
     HideAuthorCharacter(QFEB_RYO);
     HideAuthorCharacter(QFEB_REN);
 }
 
-void ShowQfebAuthorCharacters(void)
-{
+void ShowQfebAuthorCharacters(void) {
     ShowAuthorCharacter(QFEB_RYO);
     ShowAuthorCharacter(QFEB_REN);
 }
 
 #include "s2/events/event_author_dc.h"
 
-void QfebMainCallback(void *data)
-{
+void QfebMainCallback(void *data) {
     QfebEventWork *work = (QfebEventWork *)data;
     Vector3 ryo;
     signed char entry = work->entry - 1;
@@ -432,8 +421,7 @@ void QfebMainCallback(void *data)
     }
 }
 
-void PrepareQfebBattleStances(QfebEventWork *work)
-{
+void PrepareQfebBattleStances(QfebEventWork *work) {
     switch (work->entry) {
     case 1:
         EVT_AT_SetMot(QFEB_RYO, 306, 0.0f, 1.0f, 0x40000000, 0);
@@ -529,8 +517,7 @@ void PrepareQfebBattleStances(QfebEventWork *work)
     work->phase = 7;
 }
 
-void StartQfebBattle(QfebEventWork *work)
-{
+void StartQfebBattle(QfebEventWork *work) {
     unsigned char index = 0;
     FTBL.EV_DisableCharacterDisplay(QFEB_REN);
     FTBL.EV_ToggleCharacterFlag(QFEB_REN);
@@ -734,8 +721,7 @@ void StartQfebBattle(QfebEventWork *work)
     work->phase = 8;
 }
 
-void AddQfebGenerators(QfebEventWork *work)
-{
+void AddQfebGenerators(QfebEventWork *work) {
     switch (work->entry) {
     case 1:
         FTBL.vfAddGeneratorPoint(234.89f, 128.8f, 138.92f);
@@ -764,8 +750,7 @@ void AddQfebGenerators(QfebEventWork *work)
     }
 }
 
-void PrepareQfebBattleChoreography(QfebEventWork *work)
-{
+void PrepareQfebBattleChoreography(QfebEventWork *work) {
     signed char entry = work->entry - 1;
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     EVT_AT_SetFaceLooks(QFEB_RYO, 0, 5, 1.0f, 0);
@@ -803,8 +788,7 @@ void PrepareQfebBattleChoreography(QfebEventWork *work)
     EVT_AT_SetCam(work->entry + 2049, QFEB_BASE, QFEB_BASE, 0, 0, 170);
 }
 
-void UpdateQfebBattleTaunts(QfebEventWork *work)
-{
+void UpdateQfebBattleTaunts(QfebEventWork *work) {
     unsigned char index;
     work->voiceFrames++;
     if (FTBL.cvsHasValidConverseData(0) != 1 && work->battleUpdates > 29 && work->voiceFrames > 89) {
@@ -839,8 +823,7 @@ void UpdateQfebBattleTaunts(QfebEventWork *work)
     }
 }
 
-void QueueQfebAftermath(void)
-{
+void QueueQfebAftermath(void) {
     EVT_AT_SetSound(16, 10);
     EVT_AT_SetVoice("S2BVF007", 11);
     EVT_AT_SetSound(38, 30);
@@ -860,13 +843,11 @@ void QueueQfebAftermath(void)
     EVT_AT_SetSound(38, 293);
 }
 
-void QfebDebugExitCallback(void *data)
-{
+void QfebDebugExitCallback(void *data) {
     FinishQfebDefeat((QfebEventWork *)data);
 }
 
-void FinishQfebDefeat(QfebEventWork *work)
-{
+void FinishQfebDefeat(QfebEventWork *work) {
     int index;
     switch (work->entry) {
     case 1:
@@ -908,8 +889,7 @@ void FinishQfebDefeat(QfebEventWork *work)
     FTBL.ExecuteCurrAreaMainFunc("QTCV.EV3", qfebReturnArguments[index]);
 }
 
-void FinishQfebEscape(QfebEventWork *work)
-{
+void FinishQfebEscape(QfebEventWork *work) {
     EventDebugUnregister(QFEB_DEBUG_ID);
     FTBL.SetScenarioCharacterKillMode(QFEB_BASE, 1);
     switch (work->entry) {
@@ -1025,7 +1005,7 @@ void QfebAuthorLoopCallback(void *data) {
         EV_SetCharacterAlphaEnabled(QFEB_RYO, true);
         mtwkSetExtraFlag(scenFindMotionwork(QFEB_REN), 6, 0);
         EV_SetCharacterAlphaEnabled(QFEB_REN, true);
-        SetCurrentGameFlag(22, 0);
+        SetPlayerGameFlags(PlayerGameFlagMode::Bit22, reinterpret_cast<void *>(std::uintptr_t{0}));
         work->parent->state = 3;
         HLib::DestroyCurrentTask();
     }
@@ -1301,8 +1281,8 @@ void QueueQfebAftermath() {
     EVT_AT_SetVoice("S2BVF007", 1, 11);
     EVT_AT_SetSound(38, 30);
     EVT_AT_SetVoice("S2BVA030", 1, 31);
-    EVT_AT_SetVoice("S2BVE017", 1, 50); // @text EN: "Damn kid!" | JA: "このガキぃっ！"
-    EVT_AT_SetVoice("S2BVG014", 1, 89); // @text EN: "You cocky kid!" | JA: "ふざけやがって！"
+    EVT_AT_SetVoice("S2BVE017", 1, 50);  // @text EN: "Damn kid!" | JA: "このガキぃっ！"
+    EVT_AT_SetVoice("S2BVG014", 1, 89);  // @text EN: "You cocky kid!" | JA: "ふざけやがって！"
     EVT_AT_SetVoice("S2BVF012", 1, 124); // @text EN: "You're not going any further!" | JA: "これ以上、行かせるか！"
     EVT_AT_SetVoice("S2BVF005", 1, 171); // @text EN: "Die!" | JA: "死ねっ！"
     EVT_AT_SetSound(16, 193);
@@ -1376,7 +1356,7 @@ void QfebMainCallback(void *data) {
         EV_LoadCutsceneFromCurrentScene("0302A000");
         EV_LoadAudio("0302A000", 0);
         SetMapControlStatusFlag(0, 0);
-        SetCurrentGameFlag(22, 1);
+        SetPlayerGameFlags(PlayerGameFlagMode::Bit22, reinterpret_cast<void *>(std::uintptr_t{1}));
         if (work->entry >= 1 && work->entry <= 3) {
             const std::int16_t readFlag = work->entry == 2 ? 1991 : 1990;
             if (!EV_GetPlayerFlag(PlayerFlagReadMode::Internal, readFlag))

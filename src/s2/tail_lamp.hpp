@@ -11,7 +11,7 @@ constexpr std::uint32_t kTailLampNoLightSlot = 17;
 inline constexpr Vector4 kTailLampColour{1.0f, 1.0f, 0.0f, 0.0f};
 
 struct TailLampResource {
-    std::vector<std::byte> bytes;
+    void *file;
     MT7Model model;
 };
 

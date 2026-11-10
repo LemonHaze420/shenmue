@@ -31,19 +31,25 @@ void ShowPatiBoardOdds(PatiEventWork *work) {
             break;
         }
     }
-    if (!found)
+    if (!found) {
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 5099, "Error:search error.\n");
         return;
+    }
     const PatiTableEntry &table = work->tables.tables[tableIndex];
     const PatiGameOption *option = PATI_GAME_OPTIONS;
     while (option->name[0] && std::strcmp(option->name, table.gameOptions))
         ++option;
-    if (!option->name[0])
+    if (!option->name[0]) {
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 5109, "Error:Undefined Game Option.\n");
         return;
+    }
     const PatiPayoutMode *payout = PATI_PAYOUT_MODES;
     while (payout->name[0] && std::strcmp(payout->name, table.payout))
         ++payout;
-    if (!payout->name[0])
+    if (!payout->name[0]) {
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 5120, "Error:Undefined Get Type.\n");
         return;
+    }
     const float stake = static_cast<float>(std::atof(table.stake));
     const std::string_view betLabel = GetLocalizedSceneText("UIGNRLBET0"); // @text EN: "Bet" | JA: " "
     if (option->mode == 7)
@@ -100,10 +106,13 @@ std::int32_t SelectPatiBoardInput(PatiEventWork *work) {
         }
     }
     if (!(input & 0x3000) && (input & 0xc000)) {
-        if (input < 0)
+        if (input < 0) {
             work->selectedBoard = right;
-        else if (input & 0x4000)
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 5231, "BD_SEL-R:%i\n", right);
+        } else if (input & 0x4000) {
             work->selectedBoard = left;
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 5234, "BD_SEL-L:%i\n", left);
+        }
         if (work->selectedBoard != previous)
             g_patiCameraStep = 8;
     }
@@ -140,6 +149,7 @@ std::int32_t SelectPatiBoardInput(PatiEventWork *work) {
         if (!g_patiCameraMoving && g_patiSelectionAccepted) {
             g_patiSelectionAccepted = 0;
             g_patiInspectRequested = 0;
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 5310, "Result:%s\n", work->selectedName[4]);
             return 1;
         }
     } else

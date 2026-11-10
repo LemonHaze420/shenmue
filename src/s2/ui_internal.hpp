@@ -152,7 +152,7 @@ inline constexpr std::array<const char *, 4> PRESS_START_LOGO_WIDGETS{"Press_Sta
     "Press_Start::Logo_Shadow_Left::Logo_Shadow_Left_Image", "Press_Start::Logo_Shadow_Right::Logo_Shadow_Right_Image"};
 inline constexpr std::array<const char *, 2> PRESS_START_ICON_WIDGETS{"PressStart::Icon_Console", "PressStart::Icon_PC"};
 
-// @provisional-layout: IDA has no UDT; the title-light data and consumer establish the fields and 0x50-byte stride.
+
 struct PressStartLightBand {
     float begin;
     float end;
@@ -303,6 +303,7 @@ extern std::int32_t gameMenuActive;
 void ResolveUniqueItemAction(std::int32_t mode);
 bool ConfirmGameMenuClose();
 extern WindowUIInput uiPointer;
+extern std::int32_t gameMovesItemActionState;
 
 extern bool drawingUI;
 
@@ -320,6 +321,7 @@ struct InformationBarRuntime {
 void ClearMenuInputHints() noexcept;
 
 void SetInformationBarVisibilityMode(std::int32_t mode) noexcept;
+void InvalidateUIWindowRects();
 
 extern InformationBarRuntime informationBar;
 
@@ -327,13 +329,11 @@ void RestorePreviousInformationBarMessage();
 
 struct SnapshotImageRuntime {
     std::atomic<std::uint32_t> texture{};
-    std::atomic<std::uint32_t> generation{};
     std::atomic<std::uint32_t> state{};
 };
 
 struct SnapshotImageLoadRequest {
     std::uint32_t slot{};
-    std::uint32_t generation{};
     std::filesystem::path path;
 };
 extern std::array<SnapshotImageRuntime, 126> snapshotImages;
@@ -342,7 +342,13 @@ extern std::array<std::uint32_t, 126> snapshotOrder;
 
 extern std::uint32_t snapshotOrderCount;
 
-void QueueSnapshotImageLoad(std::uint32_t slot);
+extern bool snapshotImagesReady;
+extern std::uint32_t snapshotReleaseTask, snapshotLoadTask, snapshotDeleteTask;
+
+bool QueueSnapshotImageLoad(std::uint32_t slot);
+void PrepareSnapshotImages();
+void ReleaseSnapshotImages();
+bool IsSnapshotDeletePending();
 
 void RefreshSnapshotOrder();
 
@@ -597,6 +603,8 @@ extern bool easyOptionPreviousClockSuppression;
 
 extern float easyOptionPosition;
 
+extern float easyOptionPositionY;
+
 extern float easyOptionVelocity;
 
 extern PadControlEntry *easyOptionPadControl;
@@ -753,7 +761,7 @@ struct SplashImageDefinition {
 struct SplashRuntime {
     std::uint32_t request{};
     std::uint32_t textureHandle{};
-    struct nk_image image {};
+    struct nk_image image{};
     std::byte *audioData{};
     std::uint64_t audioSize{};
     const SplashImageDefinition *definition{};
@@ -808,8 +816,6 @@ std::uint32_t LoadMainMenu();
 std::uint32_t LoadMainMenuWheel();
 
 std::uint32_t LoadMainMenuNew();
-
-std::uint32_t LoadMainMenuContinue();
 
 std::uint32_t LoadMainMenuCollection();
 
@@ -1116,8 +1122,6 @@ extern const std::array<const char *, 7> collectionFiles;
 
 extern const std::array<const char *, 29> collectionMapImages;
 
-extern const std::array<shen_name, 12> collectionPawnShops;
-
 extern const std::array<shen_name, 48> collectionBioNames;
 
 extern std::array<CollectionChildRuntime, 7> collectionChild;
@@ -1140,7 +1144,7 @@ extern std::array<std::array<std::int32_t, 2>, 54> collectionSecretRows;
 
 extern std::array<CollectionAlbum, 48> collectionAlbums;
 
-extern std::array<std::uint32_t, 126> collectionViewerOrder;
+extern const std::uint32_t *collectionViewerOrder;
 
 extern std::uint32_t collectionViewerCount, collectionViewerIndex;
 
@@ -1148,19 +1152,24 @@ extern UIElement collectionViewerReturn;
 
 extern bool collectionViewerWrap, collectionViewerBack;
 
-extern CollectionAuthoredLayout collectionViewerLayout, collectionPresentLayout;
+extern std::array<d3t::UIWindow *, 14> collectionViewerWindows;
+extern std::array<d3t::UILayoutItem *, 7> collectionViewerLayoutItems;
+extern std::array<d3t::UILabelWidget *, 7> collectionViewerLabels;
+extern std::int32_t collectionViewerPlaceholder;
+extern nk_panel collectionViewerBackgroundPanel, collectionViewerPanel;
 
 extern std::array<std::array<char, 256>, 7> collectionViewerText;
 
-extern std::vector<std::uint32_t> collectionPresentTextures;
-
-extern std::uint32_t collectionPresentIndex;
+extern std::array<d3t::UIWindow *, 5> collectionPresentWindows;
+extern std::int32_t collectionPresentPlaceholder;
+extern std::array<CollectionPresentPage, 11> collectionPresentPages;
+extern std::uint32_t collectionPresentIndex, collectionPresentCount, collectionPresentPageStep;
+extern nk_panel collectionPresentPanel;
 
 extern std::array<std::uint8_t, 126> collectionSnapshotPriority;
 
 void PumpCollectionSnapshotImages();
 const d3t::UIImageDefinition *CollectionLocalizedMapImage(std::int32_t index);
-void DrawCollectionPostcard(const d3t::UISharedSpriteImage &, const d3t::UIRect &, const d3t::UIRect &, float, float, bool);
 extern float collectionSnapshotLoadingTime;
 
 extern std::uint32_t collectionSnapshotDeleteClick;
@@ -1170,11 +1179,10 @@ extern UIElement collectionPresentReturn;
 
 void DrawCollectionDefinition(UIElement element, AuthoredMenuLayout &layout, std::span<const std::uint8_t> excluded = {});
 
-void OpenCollectionSnapshotViewer(std::span<const std::uint32_t> order, std::uint32_t selected, UIElement returning, bool wrap);
+void OpenCollectionSnapshotViewer(const std::uint32_t *order, std::uint32_t count, std::uint32_t selected, UIElement returning, bool wrap);
 
 void OpenCollectionPresent(std::uint32_t group);
-void OpenCollectionPawnFlyer(std::int32_t index);
-void RequestCollectionSnapshotDelete(std::uint32_t slot);
+void RequestCollectionSnapshotDelete(std::uint32_t slot, std::int64_t (*completion)());
 extern float collectionSnapshotDeleteAlpha;
 
 template <std::size_t Child> std::int64_t TickCollectionChild();
@@ -1203,9 +1211,6 @@ extern bool collectionMapLanguagePending;
 
 const d3t::UIImageDefinition *CollectionLocalizedMapImage(std::int32_t index);
 
-void DrawCollectionPostcard(
-    const d3t::UISharedSpriteImage &image, const d3t::UIRect &container, const d3t::UIRect &clip, float border, float opacity, bool framed);
-
 struct CollectionUnderlayAlpha {
     std::int32_t object{-1};
     std::uint8_t alpha{};
@@ -1215,29 +1220,13 @@ extern std::array<CollectionUnderlayAlpha, 3> collectionUnderlayAlpha;
 extern bool collectionUnderlayHidden;
 
 extern std::uint32_t collectionPendingDelete;
+extern std::int64_t (*collectionPendingDeleteCompletion)();
 
-void RequestCollectionSnapshotDelete(std::uint32_t slot);
+void RequestCollectionSnapshotDelete(std::uint32_t slot, std::int64_t (*completion)());
 
 extern bool collectionPresentFramed;
 
 void OpenCollectionPresent(std::uint32_t group);
-
-struct CollectionPawnFlyer {
-    CollectionAuthoredLayout layout;
-    UIGrid grid;
-    const PawnShopRecord *shop{};
-    std::vector<std::int32_t> order;
-    std::vector<std::uint32_t> scores;
-    std::vector<PawnStockCount> scratch;
-    std::int32_t holder{-1}, index{};
-    bool bound{};
-};
-extern CollectionPawnFlyer collectionPawnFlyer;
-
-std::int64_t TickCollectionPawnFlyer();
-void OpenCollectionPawnFlyer(std::int32_t index);
-
-std::int64_t TickCollectionPawnFlyer();
 
 void RegisterCollectionAndPhotos();
 
@@ -1254,6 +1243,12 @@ extern std::uint32_t moneyHudRequest;
 extern d3t::UILabelWidget *moneyHudLabel;
 extern std::array<char, 512> moneyHudText;
 std::uint32_t AdvanceMoneyHudInit();
+std::int64_t LegacyPromptInput();
+std::int64_t RenderLegacyPrompt();
+void OpenLegacyPrompt();
+std::int64_t CloseLegacyPrompt();
+std::int64_t ReloadLegacyPrompt();
+std::int64_t GetLegacyPromptInitState();
 std::int64_t ReloadMoneyHud();
 std::int64_t GetMoneyHudInitState();
 std::int64_t RenderMoneyHud();
@@ -1349,6 +1344,18 @@ std::int64_t DestroyMainMenuWheel();
 
 std::int64_t MainMenuWheelInput();
 
+void InitializeLegacyPressStart();
+
+std::int64_t RenderLegacyPressStart();
+
+std::int64_t LegacyPressStartInput();
+
+std::int64_t GetLegacyPressStartInitState();
+
+std::int64_t ReloadLegacyPressStart();
+
+std::int64_t PressStartDebugGate();
+
 extern std::int32_t helpWidgetRunCount, helpWidgetLineCount, helpWidgetIconRunCount, helpWidgetBoxCount;
 
 extern std::uint8_t helpWidgetRelayout, helpWidgetBoxesLocked;
@@ -1395,11 +1402,17 @@ std::int64_t HelpWidgetDestroy();
 
 std::int64_t HelpWidgetHints();
 
+std::int64_t WristwatchOverlayHints();
+
+std::int64_t WristwatchOverlayDebugGate();
+
+std::int64_t WristwatchOverlayTickNullsub();
+
 struct PawnFlyerRuntime {
     UIGrid grid{};
     AuthoredMenuLayout layout;
     UIGridStyle style{UI_GRID_FRONTEND_STYLE};
-    std::int32_t nameLabel{-1}, divider{-1}, placeholder{-1};
+    std::int32_t nameLabel{-1}, divider{-1}, placeholder{-1}, holder{-1};
     std::array<std::int32_t, 5> collected{-1, -1, -1, -1, -1};
     std::int32_t imageControl{};
     float imageAngle{};

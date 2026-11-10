@@ -1,5 +1,8 @@
 #pragma once
 
+#include "shenmue.h"
+
+
 #include "s2/map_info.hpp"
 #include "common/math.hpp"
 
@@ -194,7 +197,12 @@ std::uint64_t GetSoundProgramPhaseFlag(std::int32_t selector) noexcept;
 void ResetSoundProgramPhaseFlags(std::int32_t selector) noexcept;
 void SetSoundProgramPhaseFlags(std::int32_t selector) noexcept;
 
+inline constexpr std::size_t AICA_MEMORY_ARENA_SIZE = 0x400000;
+extern std::array<void *, 2> g_aicaMemoryArena;
+
 void InitAica() noexcept;
+void ZeroAicaMemoryArena() noexcept;
+void aicaFree() noexcept;
 void DisableAicaEmulation() noexcept;
 void DisableAicaIfEnabled() noexcept;
 void QueueSoundProgramControl() noexcept;
@@ -257,3 +265,4 @@ void EVT_AT_FadeBGM_Callback(void *data);
 void EVT_AT_FadeBGM(std::int32_t frames, std::int32_t mode, std::int32_t delay);
 
 } // namespace shenmue::s2
+

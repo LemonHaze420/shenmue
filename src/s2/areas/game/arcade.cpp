@@ -18,6 +18,7 @@
 #include "s2/initialization.hpp"
 #include "s2/legacy_draw.hpp"
 #include "s2/map_control.hpp"
+#include "s2/model_geometry.hpp"
 #include "s2/renderer_initialization.hpp"
 #include "s2/save.hpp"
 #include "s2/ui.hpp"
@@ -437,9 +438,9 @@ void PullHarrierRuntime() {
     run.pauseFrames = s1::g_harrierPauseFrames;
     run.disconnectedTimer = s1::g_harrierHelpChoice;
 }
-// Bind the immutable core's actual host consumers, not a second S1 title
-// initialization path. Its audio pool uses encoded handles; S2's bank voices
-// use pointers and must never be passed into those unchanged functions.
+// The arcade core uses encoded audio handles; S2 bank voices use pointers.
+// Bind the S2 host callbacks and keep those audio representations separate.
+
 void BindArcadeAudioSettings() {
     const S2AudioSettings &settings = GetS2AudioSettings();
     s1::g_applicationSettings.savedAudioDevice = settings.device;
@@ -450,9 +451,9 @@ void BindArcadeAudioSettings() {
 void HarrierLocalDebugNullsub() {
 }
 
-// The immutable core reads the common archive registry mounted by S2
-// Initialization(root/sm2,"dx11",2). Neither core initializer mounts S1
-// archives or invokes an S1 title/module admission path.
+// S2 Initialization mounts root/sm2 archives for both arcade initializers.
+
+
 void HarrierStart(EmulatorInfoHeader *info, std::uint8_t *rankings, GameArcadeRuntime *) {
     BindArcadeAudioSettings();
     s1::g_harrierSession.mode = info->mode;
@@ -593,6 +594,7 @@ void RunEmulator(EmulatorInfoHeader *info, std::uint8_t *rankings, const GameArc
         }
 #endif
         d3t::GenerateMipsAndUpdateResourcesForDirectX();
+        WaitDxPipelineLock();
         BeginGameArcadeFrame();
         d3t::D3TDeviceContext *context = d3t::DX11::g_ppD3DDeviceContext;
         BindGameArcadeTarget(texture);
@@ -643,8 +645,8 @@ void LongModule(void *data, EmulatorGame game) {
     ResetSession(module);
     AdmitRankings(game);
     CopySessionToInfo(info, game);
-    // The system-module admission owner must require GameArcadeModuleAvailable. There is
-    // no substitute CPU, fake result, or silent callback for an absent AB/OutRun driver.
+    // Require GameArcadeModuleAvailable before admitting an AB/OutRun system module.
+
     RunEmulator(info, Rankings(game), *Driver(game));
     ReturnFromArcade(module, game);
 }

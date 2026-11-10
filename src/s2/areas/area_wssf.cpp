@@ -99,7 +99,7 @@ void Face(std::int32_t expression) {
 }
 void ResetFace() {
     Face(0);
-    SetUpperFacialExpression(ctrlGetScenarioChara(ryo), 0, 0, 1);
+    SetFacialMouthExpression(ctrlGetScenarioChara(ryo), 0, 0, 1);
 }
 void Controllers(shen_name name, bool enabled) {
     const auto state = enabled ? NpcCharacterControllerState::Enabled : NpcCharacterControllerState::Disabled;
@@ -174,13 +174,13 @@ void FailureSounds(const WssfMainWork &w) {
 }
 void PartnerDialogue(const WssfMainWork &w) {
     if (w.attempts == 1) {
-        EVT_AT_SetVoice("0028C031", 1, 0); // @text EN: "What are you doing?\nCome on!" | JA: "何やってんだ。しっかりしろ！"
-        EVT_AT_SetVoice("0028C058", 1, 80); // @text EN: "Swing your arm high and\nas you bring it down=@" | JA: "大きく振りかぶって\n打ち下ろしたら、"
+        EVT_AT_SetVoice("0028C031", 1, 0);   // @text EN: "What are you doing?\nCome on!" | JA: "何やってんだ。しっかりしろ！"
+        EVT_AT_SetVoice("0028C058", 1, 80);  // @text EN: "Swing your arm high and\nas you bring it down=@" | JA: "大きく振りかぶって\n打ち下ろしたら、"
         EVT_AT_SetVoice("0028C059", 1, 155); // @text EN: "Concentrate your power\nthe moment you hit." | JA: "石に当たる瞬間に、\nガツンと力をこめるんだ。"
         EVT_AT_SetVoice("0028A038", 1, 260); // @text EN: "I know that." | JA: "わかってる。"
         EVT_AT_SetVoice("0028C060", 1, 280); // @text EN: "Well then, do it again.\nHit it this time." | JA: "よし、もう１回だ。\nしっかり頼むぞ。"
     } else {
-        EVT_AT_SetVoice("0028C033", 1, 0); // @text EN: "You fool! The people\nhere are all angry!" | JA: "バカヤローっ！\nお客さんカンカンじゃねえか！"
+        EVT_AT_SetVoice("0028C033", 1, 0);   // @text EN: "You fool! The people\nhere are all angry!" | JA: "バカヤローっ！\nお客さんカンカンじゃねえか！"
         EVT_AT_SetVoice("0028C059", 1, 115); // @text EN: "Concentrate your power\nthe moment you hit." | JA: "石に当たる瞬間に、\nガツンと力をこめるんだ。"
         EVT_AT_SetVoice("0028A038", 1, 220); // @text EN: "I know that." | JA: "わかってる。"
         EVT_AT_SetVoice("0028C034", 1, 240); // @text EN: "This is your last chance!\nDo it right!" | JA: "これが最後だ！\n絶対に失敗すんな！"
@@ -192,8 +192,11 @@ void PartnerWarning(WssfMainWork &w) {
     Cam(4);
     (void)mtwkUpdateWithPosition(Motion(sos), nullptr, 0);
     const auto count = Child(w.partner).counter;
-
-    EVT_AT_SetVoice(count == 1 ? "0028C028" : count == 2 ? "0028C029" : "0028C030", 1, 0); // @text 0028C028 EN: "Don't keep us waiting.\nHurry up." | JA: "おい、まだかよ。\nさっさとやれ。" ; 0028C029 EN: "What are you waiting for?\nGet on with it!" | JA: "まだやんねーのか！\nいつまで待たせるんだ！" ; 0028C030 EN: "What are you waiting for?\nHurry up and break it!" | JA: "おい、いいかげんにしろ！\n早く割らねえか！"
+    EVT_AT_SetVoice(count == 1 ? "0028C028" :
+            count == 2         ? "0028C029" :
+                                 "0028C030",
+        1,
+        0); // @text 0028C028 EN: "Don't keep us waiting.\nHurry up." | JA: "おい、まだかよ。\nさっさとやれ。" ; 0028C029 EN: "What are you waiting for?\nGet on with it!" | JA: "まだやんねーのか！\nいつまで待たせるんだ！" ; 0028C030 EN: "What are you waiting for?\nHurry up and break it!" | JA: "おい、いいかげんにしろ！\n早く割らねえか！"
     Child(w.player).step = 10;
 }
 void HideSpectators() {

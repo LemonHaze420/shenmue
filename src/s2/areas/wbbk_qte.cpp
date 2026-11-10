@@ -27,6 +27,9 @@ constexpr const char *patterns[5][2][4]{
     {{"LRD,E,", "LRU,UD,E,", "LRD,LRU,UD,E,", ""}, {"", "", "LRD,LRD,LRUD,E,", "LRD,LRD,LRUD,LRUD,E,"}},
 };
 constexpr std::int8_t intervals[14]{2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4};
+// @verified - p: PC nullsub_0 occupies the event-table slot of DC SetLoadingBusy.
+void BookQteLoadingBusyNullsub() {
+}
 } // namespace
 std::uint32_t SelectBookQteCommands(std::int32_t type, std::int32_t pattern) {
     char *output = bookQteCommands;
@@ -83,6 +86,7 @@ void StartBookCarryQte(std::int32_t type) {
     bookCarryPhase = 3;
     bookModelState.displayMode = 0;
     bookModelState.animationFrame = 0;
+    BookQteLoadingBusyNullsub();
     Vector3 target;
     EV_GetCharaPosition(BOOK_RYO, CHARACTER_TRANSLATION_ROOT, &target, EventTransformFlags::Local);
     target.y += 1.5f;

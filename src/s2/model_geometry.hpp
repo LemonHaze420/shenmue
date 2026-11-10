@@ -110,6 +110,7 @@ extern std::array<Vector4, 6> g_modelFrustumPlanes;
 void SetupGlobalRenderBuffers();
 void ReleaseModelGeometryResources();
 void *AllocateModelGeometryFrameMemory(std::uint32_t bytes);
+std::int32_t WaitDxPipelineLock();
 void RefreshModelCacheMaterials(std::uint32_t handle, d3t::D3TDeviceContext *context, std::uint32_t fileLock);
 ModelGeometryContext *BuildModelGeometry(std::uint32_t handle, d3t::D3TDeviceContext *context);
 

@@ -41,6 +41,7 @@
 #include "s2/main_icon.hpp"
 #include "s2/flag.hpp"
 #include "s2/item_selector_actions.hpp"
+#include "s2/legacy_draw.hpp"
 #include "s2/legacy_sprite.hpp"
 #include "s2/math.hpp"
 #include "s2/screen_film.hpp"
@@ -104,6 +105,7 @@
 #include "s2/area_names.hpp"
 
 #include "s2/ui_internal.hpp"
+#include "s2/ui_legacy_menus.hpp"
 
 namespace shenmue::s2 {
 using namespace ui_detail;
@@ -284,7 +286,7 @@ std::int64_t NativePromptHints() {
 void NativeMessageBox(std::string_view text, bool useString, std::int32_t clearAfter, void (*callback)(std::int32_t), float seconds) {
     if (!callback || nativePrompt.active)
         return;
-    SetInformationBarVisibilityMode(0);
+    SetGameInformationBarVisibility(false);
     std::snprintf(nativePrompt.text.data(), nativePrompt.text.size(), "%.*s", static_cast<int>(text.size()), text.data());
     nativePrompt.callback = callback;
     nativePrompt.selected = (clearAfter == 1) + 1;
@@ -359,25 +361,34 @@ std::string_view GetOptionsAudioOutputDescription(std::int32_t index) {
     return name.empty() ? LocalizedOption(audioOptions[0].description) : name;
 }
 std::string_view OptionChoiceCaption(const OptionSpec &spec, std::int32_t index) {
-    static constexpr std::array<const char*, 2> offOn{"UIOTGLOFF0", "UIOTGLON00"}; // @text UIOTGLOFF0 EN: "Off" | JA: "いいえ" ; UIOTGLON00 EN: "On" | JA: "はい"
-    static constexpr std::array<const char*, 2> languages{"UIOTGLENG0", "UIOTGLJPN0"}; // @text UIOTGLENG0 EN: "English" | JA: "英語" ; UIOTGLJPN0 EN: "Japanese" | JA: "日本語"
-    static constexpr std::array<const char*, 7> subtitles{"UIOTGLENG0", "UIOTGLJAP0", "UIOTGLFRN0", "UIOTGLGER0", "UIOTGLKOR0", "UIOTGLCHTR", "UIOTGLCHSU"}; // @text UIOTGLENG0 EN: "English" | JA: "英語" ; UIOTGLFRN0 EN: "French" | JA: "フランス語" ; UIOTGLGER0 EN: "German" | JA: "ドイツ語" ; UIOTGLKOR0 EN: "Korean" | JA: "韓国語" ; UIOTGLCHTR EN: "T. Chinese" | JA: "中国語（繁体字）" ; UIOTGLCHSU EN: "S. Chinese" | JA: "中国語（簡体字）"
-    static constexpr std::array<const char*, 4> dialogue{"UIMODECINE", "UIMODESHEN", "UIMODEGAME", "UIMODETEXT"}; // @text UIMODECINE EN: "Cinema Mode" | JA: "シネマモード" ; UIMODESHEN EN: "Shenmue Mode" | JA: "シェンムーモード" ; UIMODEGAME EN: "Game Mode" | JA: "ゲームモード" ; UIMODETEXT EN: "Text Mode" | JA: "テキストモード"
-    static constexpr std::array<const char*, 3> windowModes{"UIOTGLWIND", "UIOTGLBORD", "UIOTGLFULL"}; // @text UIOTGLWIND EN: "Windowed" | JA: "ウィンドウ" ; UIOTGLBORD EN: "Borderless" | JA: "ボーダーレス" ; UIOTGLFULL EN: "Fullscreen" | JA: "フルスクリーン"
-    static constexpr std::array<const char*, 3> bloom{"UIOTGLOFF0", "UIOTGLLOW0", "UIOTGLHIGH"}; // @text UIOTGLOFF0 EN: "Off" | JA: "いいえ" ; UIOTGLLOW0 EN: "Low" | JA: "低" ; UIOTGLHIGH EN: "High" | JA: "高"
-    static constexpr std::array<const char*, 2> aspect{"UIASPECT43", "UIASPECT169"}; // @text UIASPECT43 EN: "4:3" | JA: "4:3" ; UIASPECT169 EN: "16:9" | JA: "16:9"
+    static constexpr std::array<const char *, 2> offOn{
+        "UIOTGLOFF0", "UIOTGLON00"}; // @text UIOTGLOFF0 EN: "Off" | JA: "いいえ" ; UIOTGLON00 EN: "On" | JA: "はい"
+    static constexpr std::array<const char *, 2> languages{
+        "UIOTGLENG0", "UIOTGLJPN0"}; // @text UIOTGLENG0 EN: "English" | JA: "英語" ; UIOTGLJPN0 EN: "Japanese" | JA: "日本語"
+    static constexpr std::array<const char *, 7> subtitles{"UIOTGLENG0", "UIOTGLJAP0", "UIOTGLFRN0", "UIOTGLGER0", "UIOTGLKOR0", "UIOTGLCHTR",
+        "UIOTGLCHSU"}; // @text UIOTGLENG0 EN: "English" | JA: "英語" ; UIOTGLFRN0 EN: "French" | JA: "フランス語" ; UIOTGLGER0 EN: "German" | JA: "ドイツ語" ; UIOTGLKOR0 EN: "Korean" | JA: "韓国語" ; UIOTGLCHTR EN: "T. Chinese" | JA: "中国語（繁体字）" ; UIOTGLCHSU EN: "S. Chinese" | JA: "中国語（簡体字）"
+    static constexpr std::array<const char *, 4> dialogue{"UIMODECINE", "UIMODESHEN", "UIMODEGAME",
+        "UIMODETEXT"}; // @text UIMODECINE EN: "Cinema Mode" | JA: "シネマモード" ; UIMODESHEN EN: "Shenmue Mode" | JA: "シェンムーモード" ; UIMODEGAME EN: "Game Mode" | JA: "ゲームモード" ; UIMODETEXT EN: "Text Mode" | JA: "テキストモード"
+    static constexpr std::array<const char *, 3> windowModes{"UIOTGLWIND", "UIOTGLBORD",
+        "UIOTGLFULL"}; // @text UIOTGLWIND EN: "Windowed" | JA: "ウィンドウ" ; UIOTGLBORD EN: "Borderless" | JA: "ボーダーレス" ; UIOTGLFULL EN: "Fullscreen" | JA: "フルスクリーン"
+    static constexpr std::array<const char *, 3> bloom{"UIOTGLOFF0", "UIOTGLLOW0",
+        "UIOTGLHIGH"}; // @text UIOTGLOFF0 EN: "Off" | JA: "いいえ" ; UIOTGLLOW0 EN: "Low" | JA: "低" ; UIOTGLHIGH EN: "High" | JA: "高"
+    static constexpr std::array<const char *, 2> aspect{
+        "UIASPECT43", "UIASPECT169"}; // @text UIASPECT43 EN: "4:3" | JA: "4:3" ; UIASPECT169 EN: "16:9" | JA: "16:9"
     if (index < 0)
         return {};
     switch (spec.choices) {
     case OptionChoices::OffOn:
         if (spec.offset == offsetof(S2UserConfiguration280, invertLookY))
-            return index < 2 ? LocalizedOption(index ? "UIACTSYES0" : "UIGNRLNO00") : std::string_view{}; // @text UIACTSYES0 EN: "Yes" | JA: "はい" ; UIGNRLNO00 EN: "No" | JA: "いいえ"
+            return index < 2 ? LocalizedOption(index ? "UIACTSYES0" : "UIGNRLNO00") :
+                               std::string_view{}; // @text UIACTSYES0 EN: "Yes" | JA: "はい" ; UIGNRLNO00 EN: "No" | JA: "いいえ"
         return index < 2 ? LocalizedOption(offOn[index]) : std::string_view{};
     case OptionChoices::AudioLanguages:
         return index < 2 ? LocalizedOption(languages[index]) : std::string_view{};
     case OptionChoices::SubtitleLanguages: {
         const auto available = GetS2AvailableSubtitleLanguages();
-        if (index == static_cast<std::int32_t>(available.size())) return LocalizedOption("UIOTGLDEF0"); // @text EN: "Default" | JA: "デフォルト"
+        if (index == static_cast<std::int32_t>(available.size()))
+            return LocalizedOption("UIOTGLDEF0"); // @text EN: "Default" | JA: "デフォルト"
         return index < static_cast<std::int32_t>(available.size()) ? LocalizedOption(subtitles[available[index]]) : std::string_view{};
     }
     case OptionChoices::Dialogue:
@@ -452,7 +463,8 @@ void DescribeOption(const OptionSpec &spec, const Vector4 *bounds = nullptr) {
         if (const auto caption = OptionChoiceCaption(spec, SelectedOptionChoice(spec)); !caption.empty())
             description = caption;
     if (spec.choices == OptionChoices::Dialogue) {
-        static constexpr std::array<const char*, 4> tokens{"UIMODECINEDS", "UIMODESHENDS", "UIMODEGAMEDS", "UIMODETEXTDS"}; // @text UIMODECINEDS EN: "Voice ON, Text OFF.\nDialog skip disabled." | JA: "声だけでゲームを進行します。\n会話はスキップできません。" ; UIMODESHENDS EN: "Voice ON, Text ON.\nSubtitles appear only if dialog is skipped." | JA: "声と字幕でゲームを進行します。\nスキップ時、字幕が表示されます。" ; UIMODEGAMEDS EN: "Voice ON, Text ON." | JA: "声と字幕でゲームを進行します。" ; UIMODETEXTDS EN: "Voice OFF, Text ON." | JA: "字幕だけでゲームを進行します。"
+        static constexpr std::array<const char *, 4> tokens{"UIMODECINEDS", "UIMODESHENDS", "UIMODEGAMEDS",
+            "UIMODETEXTDS"}; // @text UIMODECINEDS EN: "Voice ON, Text OFF.\nDialog skip disabled." | JA: "声だけでゲームを進行します。\n会話はスキップできません。" ; UIMODESHENDS EN: "Voice ON, Text ON.\nSubtitles appear only if dialog is skipped." | JA: "声と字幕でゲームを進行します。\nスキップ時、字幕が表示されます。" ; UIMODEGAMEDS EN: "Voice ON, Text ON." | JA: "声と字幕でゲームを進行します。" ; UIMODETEXTDS EN: "Voice OFF, Text ON." | JA: "字幕だけでゲームを進行します。"
         const auto index = std::clamp(ReadOptionInteger(spec), 0, 3);
         description = LocalizedOption(tokens[index]);
     }
@@ -464,6 +476,12 @@ void DescribeOption(const OptionSpec &spec, const Vector4 *bounds = nullptr) {
     if (bounds)
         message.bounds = *bounds;
     CopyUIMessageBox(&message);
+}
+void RedescribeSelectedOption() {
+    if (selectedOptionDescription) {
+        const Vector4 bounds = GetCurrentUIMessageBox().bounds;
+        DescribeOption(*selectedOptionDescription, &bounds);
+    }
 }
 void RefreshOptionChildren() {
     for (std::int32_t child = 0; child < 3; ++child) {
@@ -560,7 +578,8 @@ void BindCapturedOptionKey() {
         WriteOptionInteger(*spec, options.pendingKey);
     PreviewDraftUserConfiguration();
     RefreshOptionChildren();
-    ShowOptionStatus("UIKMAPBIND"); // @text EN: "The [[KEY_NAME]] key has been successfully bound to the [[INPUT_ACTION]] input slot." | JA: "[[KEY_NAME]]キーは[[INPUT_ACTION]]の入力スロットにアサインされました。"
+    ShowOptionStatus(
+        "UIKMAPBIND"); // @text EN: "The [[KEY_NAME]] key has been successfully bound to the [[INPUT_ACTION]] input slot." | JA: "[[KEY_NAME]]キーは[[INPUT_ACTION]]の入力スロットにアサインされました。"
     options.editing = -1;
 }
 void ConfirmDuplicateOptionKey(std::int32_t response) {
@@ -573,7 +592,9 @@ void ConfirmDuplicateOptionKey(std::int32_t response) {
 void CaptureOptionKey(const OptionSpec &spec) {
     UIMessageBox waiting{};
     waiting.imageIndex = waiting.widgetIndex = waiting.imageFrame = -1;
-    waiting.primaryText = FormatOptionKeyMessage("UIKMAPANYK", -1, &spec).data(); // @text EN: "Press any key to bind it to the [[INPUT_ACTION]] input slot." | JA: "[[INPUT_ACTION]]の入力スロットにアサインするには、好きなキーを押してください。"
+    waiting.primaryText =
+        FormatOptionKeyMessage("UIKMAPANYK", -1, &spec)
+            .data(); // @text EN: "Press any key to bind it to the [[INPUT_ACTION]] input slot." | JA: "[[INPUT_ACTION]]の入力スロットにアサインするには、好きなキーを押してください。"
     waiting.primaryLocalized = 1;
     waiting.hideTarget = 1;
     CopyUIMessageBox(&waiting);
@@ -584,7 +605,9 @@ void CaptureOptionKey(const OptionSpec &spec) {
     const auto action = (spec.offset - offsetof(S2UserConfiguration280, keyMappings)) / sizeof(std::int32_t);
     options.pendingKey = static_cast<std::int32_t>(key);
     if (!IsWindowKeyBindable(static_cast<std::int32_t>(action), key)) {
-        ShowOptionStatus("UIKMAPINVK"); options.editing = -1; return; // @text EN: "This key cannot be bound. Please try another." | JA: "このキーはアサインできません。他のキーを選択してください。"
+        ShowOptionStatus("UIKMAPINVK");
+        options.editing = -1;
+        return; // @text EN: "This key cannot be bound. Please try another." | JA: "このキーはアサインできません。他のキーを選択してください。"
     }
     const std::size_t first = action < 18 ? 0 : action < 22 ? 18 : action < 32 ? 22 : 32;
     const std::size_t last = action < 18 ? 18 : action < 22 ? 22 : action < 32 ? 32 : 50;
@@ -603,7 +626,9 @@ void CaptureOptionKey(const OptionSpec &spec) {
     for (const auto &entry : OptionSpecs(options.current))
         if (entry.kind == OptionKind::Key && entry.offset == offsetof(S2UserConfiguration280, keyMappings) + options.duplicate * sizeof(std::int32_t))
             duplicateAction = &entry;
-    NativeMessageBox(FormatOptionKeyMessage("UIKMAPALBO", options.pendingKey, duplicateAction).data(), // @text EN: "The [[KEY_NAME]] key is already bound to [[INPUT_ACTION]], do you want to unbind it?" | JA: "[[KEY_NAME]]キーはすでに[[INPUT_ACTION]]にアサインされています。解除しますか？"
+    NativeMessageBox(
+        FormatOptionKeyMessage("UIKMAPALBO", options.pendingKey, duplicateAction)
+            .data(), // @text EN: "The [[KEY_NAME]] key is already bound to [[INPUT_ACTION]], do you want to unbind it?" | JA: "[[KEY_NAME]]キーはすでに[[INPUT_ACTION]]にアサインされています。解除しますか？"
         true, 1, ConfirmDuplicateOptionKey);
 }
 void ChangeOptionChoice(const OptionSpec &spec, std::int32_t direction) {
@@ -632,7 +657,9 @@ std::int64_t OptionChildInput() {
     if (!spec || spec->kind != OptionKind::Key || options.editing < 0) {
         if (pressed & 2U)
             ApplyOptions();
-        if (pressed & 4U) NativeMessageBox("UIOPTSREVD", false, 1, ConfirmOptionsReset); // @text EN: "Reset settings to default values?" | JA: "設定をデフォルト値に戻しますか？"
+        if (pressed & 4U)
+            NativeMessageBox(
+                "UIOPTSREVD", false, 1, ConfirmOptionsReset); // @text EN: "Reset settings to default values?" | JA: "設定をデフォルト値に戻しますか？"
     }
     if (options.editing < 0 && (pressed & 0x4000U)) {
         options.tabFocus = true;
@@ -766,11 +793,10 @@ void UpdateOptionRowInput(
         const float bottom = std::min(window.y + window.height, clip.y + clip.height);
         return d3t::UIRect{x, y, std::max(0.0f, right - x), std::max(0.0f, bottom - y)};
     };
-    const std::array<d3t::UIPanelBoundsOverride, 2> overrides{{
-        {static_cast<std::size_t>(options.root), layout.panels[options.root]},
+    const std::array<d3t::UIPanelBoundsOverride, 2> overrides{{{static_cast<std::size_t>(options.root), layout.panels[options.root]},
         {static_cast<std::size_t>(options.rowRoot), {(outer->x + bounds->x) * sx, outer->y + bounds->y, bounds->z * sx, bounds->w}}}};
-    d3t::ResolveUIDefinitionLayout(definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels,
-        overrides, GetUILayoutPaddingScale());
+    d3t::ResolveUIDefinitionLayout(definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels, overrides,
+        GetUILayoutPaddingScale());
     const auto matches = [&](std::int32_t panel) { return panel >= 0 && options.panelKinds[panel] == kind; };
     const bool selected = ordinal == GetUIGridSelection(*grid);
 
@@ -806,6 +832,8 @@ void UpdateOptionRowInput(
                 const std::int32_t track = options.sliderTrack;
                 OptionsRuntime::SliderDrag &drag = options.sliderDrag[options.current][dictionary[ordinal]];
                 if (uiPointer.leftDown && (hover || drag.active) && track >= 0) {
+                    options.editing = -1;
+                    informationBar.current.hideTarget = 1;
                     const float pointer = uiPointer.position.x * sx;
                     if (!drag.active) {
                         drag.previousPointer = pointer;
@@ -1138,20 +1166,25 @@ std::int64_t ResetOptions() {
 }
 void ConfirmOptionsKeep(std::int32_t response) {
     if (response < 0 || (response > 1 && static_cast<std::uint32_t>(response - 3) > 1U)) {
+        InvalidateUIWindowRects();
         ProcessUserSettingsConfig();
         SnapshotUserConfiguration();
         AicaExecuteWrapper(9);
     } else {
         RollbackUserConfiguration();
+        InvalidateUIWindowRects();
         options.editing = -1;
         RefreshOptionChildren();
     }
+    RedescribeSelectedOption();
 }
 void ApplyOptions() {
     if (HasUserConfigurationChanges() && !HasUnboundUserMappings()) {
         const bool scalingChanged = HasScalingSettingsModified();
         ApplyDraftUserConfiguration();
-        if (scalingChanged) NativeMessageBox("UIOPTSKEEP", false, 1, ConfirmOptionsKeep, 15.0f); // @text EN: "Keep changes? Reverting in " | JA: "変更を適用しますか？元に戻るまであと： "
+        if (scalingChanged)
+            NativeMessageBox(
+                "UIOPTSKEEP", false, 1, ConfirmOptionsKeep, 15.0f); // @text EN: "Keep changes? Reverting in " | JA: "変更を適用しますか？元に戻るまであと： "
         else {
             ProcessUserSettingsConfig();
             SnapshotUserConfiguration();
@@ -1165,6 +1198,7 @@ void ConfirmUnsavedOptions(std::int32_t response) {
         ApplyOptions();
     else {
         RollbackUserConfiguration();
+        InvalidateUIWindowRects();
         options.editing = -1;
         RefreshOptionChildren();
     }
@@ -1187,6 +1221,7 @@ void ConfirmOptionsReset(std::int32_t response) {
         RefreshOptionChildren();
     }
     options.editing = -1;
+    RedescribeSelectedOption();
 }
 // @verified - p
 void ConfirmOptionsQuit(std::int32_t response) {
@@ -1204,7 +1239,9 @@ void SelectOptionsTab(std::int32_t next) {
     if (next == 3) {
         options.requested = options.current;
         optionsTabSelector.selected = options.current;
-        if (IsCameraIconHidden()) NativeMessageBox("UIQUITLAB2", false, 0, ConfirmOptionsQuit); // @text EN: "Are you sure you want to quit?\nAny unsaved progress will be lost." | JA: "タイトル画面に戻ります。よろしいですか？\n（記録されていないゲームデータは失われます）"
+        if (IsCameraIconHidden())
+            NativeMessageBox("UIQUITLAB2", false, 0,
+                ConfirmOptionsQuit); // @text EN: "Are you sure you want to quit?\nAny unsaved progress will be lost." | JA: "タイトル画面に戻ります。よろしいですか？\n（記録されていないゲームデータは失われます）"
         return;
     }
     if (next < 0 || next >= 3 || next == options.current)
@@ -1490,6 +1527,68 @@ void DrawEasyOptionBox(const EasyOptionCaption &caption, const Vector2 &origin) 
     DrawEasyOptionCaption(caption, origin);
 }
 
+// @verified - p
+void DrawEasyOptionArrow(std::int16_t x, std::int16_t y, bool left) {
+    const std::uint32_t colour = ((static_cast<std::uint32_t>(easyOptionPulse) << 16) + 0x330000U) | 0xbf000000U;
+    const float px = x, py = y;
+    const std::array<LegacyStripType0Vertex, 4> vertices{{
+        {.position = {px - 16.0f, left ? py : py - 16.0f, 0.009708737954497337f}, .diffuse = colour},
+        {.position = {px + 16.0f, left ? py - 16.0f : py, 0.009708737954497337f}, .diffuse = colour},
+        {.position = {px - 16.0f, left ? py : py + 16.0f, 0.009708737954497337f}, .diffuse = colour},
+        {.position = {px + 16.0f, left ? py + 16.0f : py, 0.009708737954497337f}, .diffuse = colour},
+    }};
+    SetLegacyFogMode(2);
+    SubmitStripType3Quad(vertices);
+    SetLegacyFogMode(0);
+}
+
+// @verified - p
+void DrawLegacyEasyOption() {
+    easyOptionPulse = static_cast<std::int16_t>(easyOptionPulseStep + easyOptionPulse);
+    if (easyOptionPulse <= 32)
+        easyOptionPulseStep = 2;
+    else if (easyOptionPulse >= 80)
+        easyOptionPulseStep = -2;
+    const Vector2 origin{easyOptionPosition, easyOptionPositionY};
+    const EasyOptionCaption &description = easyOptionDescriptionCaption;
+    const std::int32_t value = description.condition == 2 ? easyOptionSelectedRow : description.condition > 2 ? easyOptionDraft[description.condition - 3] : 0;
+    const bool unselected = description.condition != 0 && (description.condition == 1 || value != description.value);
+    const std::uint32_t fill = unselected ? 0xbf000020U : (static_cast<std::uint32_t>(easyOptionPulse) << 16) | 0xbf000000U;
+    const std::array<std::int16_t, 2> &size = EASY_OPTION_BOX_SIZES[description.size];
+    shenSubmitQuadsUI(description.x + origin.x, description.y + origin.y, fill, unselected ? 0xff000065U : 0xff650000U, size[0], size[1], 3.0f);
+    easyOptionTextSprite.x = description.x + origin.x;
+    easyOptionTextSprite.width = 1024;
+    easyOptionTextSprite.y = (description.y - 20) + origin.y;
+    for (std::size_t i = 0; i < 2; ++i) {
+        if ((i == 0 ? description.first : description.second) < 0)
+            continue;
+        easyOptionTextSprite.icon = static_cast<std::uint16_t>(easyOptionDescriptionTextures[i]);
+        if (easyOptionDescriptionTextures[i] >= 0)
+            PrepareDrawTextureWithMode(easyOptionTextSprite, ScreenMode::Centered);
+        easyOptionTextSprite.y += 40.0f;
+    }
+    DrawEasyOptionBox(easyOptionValueCaption, origin);
+    const float arrowX = easyOptionValueCaption.x + origin.x;
+    const std::int16_t arrowY = static_cast<std::int16_t>(static_cast<std::int32_t>(easyOptionValueCaption.y + origin.y));
+    DrawEasyOptionArrow(static_cast<std::int16_t>(static_cast<std::int32_t>(arrowX - 148.0f)), arrowY, true);
+    DrawEasyOptionArrow(static_cast<std::int16_t>(static_cast<std::int32_t>(arrowX + 148.0f)), arrowY, false);
+    for (const EasyOptionCaption &caption : EASY_OPTION_CAPTIONS)
+        DrawEasyOptionBox(caption, origin);
+    vfSubmitQuad(0x76000000U, 0.0f);
+    easyOptionButtonSprite.icon = 772;
+    easyOptionButtonSprite.x = (origin.x + 200.0f) - 48.0f;
+    easyOptionButtonSprite.y = ((origin.y + 192.0f) - 20.0f) - 44.0f;
+    PrepareDrawWithMode(easyOptionButtonSprite, ScreenMode::Centered);
+    easyOptionButtonSprite.x += 200.0f;
+    PrepareDrawWithMode(easyOptionButtonSprite, ScreenMode::Centered);
+    easyOptionButtonSprite.icon = 773;
+    easyOptionButtonSprite.y += 40.0f;
+    easyOptionButtonSprite.x = (origin.x + 200.0f) - 48.0f;
+    PrepareDrawWithMode(easyOptionButtonSprite, ScreenMode::Centered);
+    easyOptionButtonSprite.x += 200.0f;
+    PrepareDrawWithMode(easyOptionButtonSprite, ScreenMode::Centered);
+}
+
 void UpdateEasyOptionSelectionInput() noexcept {
     const LegacyInputSlot &input = *ctrlGetPadInputBuffer0(easyOptionPadControl);
     std::uint16_t repeated = input.repeatedPresses;
@@ -1535,7 +1634,7 @@ void UpdateEasyOptionController() noexcept {
         if (IsMagicRoomLoadingModels() || GetIsCurrentCloudTextureValid())
             break;
         easyOptionPosition = -640.0f;
-        easyOptionVelocity = 65.0f;
+        easyOptionPositionY = 65.0f;
         easyOptionDraft[0] = static_cast<std::uint8_t>(GetS2DialogueMode());
         easyOptionDraft[1] = static_cast<std::uint8_t>(GetS2ControlMode());
         easyOptionDraft[2] = AreS2TriggersSwapped() ? 1U : 0U;
@@ -1603,7 +1702,12 @@ void UpdateEasyOptionController() noexcept {
         break;
     }
     if (easyOptionShowsOptions) {
-        EnableElement(UIElement::Options);
+        if (GetDebugForceUIEnabled(UIElement::Options)) {
+            ExecuteElementCallback(UIElement::Options);
+            EnableElement(UIElement::Options);
+        } else {
+            DrawLegacyEasyOption();
+        }
     }
 }
 void StepDebugTaskCallback(void *) {
@@ -1618,7 +1722,8 @@ void InitEasyOptionTaskCallback(void *) {
     easyOptionPreviousPadControl = nullptr;
     easyOptionPadControl = AllocatePadControlEntry();
     easyOptionPosition = -50.0f;
-    easyOptionVelocity = 100.0f;
+    easyOptionPositionY = 100.0f;
+    easyOptionVelocity = 1.0f;
     easyOptionPulseStep = 2;
     for (std::int16_t &texture : easyOptionLabelTextures)
         texture = -1;
@@ -1644,13 +1749,103 @@ void InitEasyOptionTaskCallback(void *) {
 }
 } // namespace ui_detail
 
+namespace {
+std::int32_t gammaOptionsActive{};
+}
+
+std::int32_t GetGammaOptionsActive() noexcept {
+    return gammaOptionsActive;
+}
+
+std::int32_t optionsGammaInitState{};
+std::uint32_t optionsGammaRequest{};
+UIViewConfiguration optionsGammaConfiguration{-1, -1, -1};
+std::int32_t optionsBackgroundInitState{};
+std::uint32_t optionsBackgroundRequest{};
+std::array<char, 256> optionsBackgroundPath{};
+UIViewConfiguration optionsBackgroundConfiguration{-1, -1, -1};
+
+// @verified - p
+std::uint32_t LoadOptionsGamma() {
+    if (optionsGammaInitState == 0)
+        optionsGammaInitState = LoadUIFile("/ui/options/GammaCorrection.ui", static_cast<std::int32_t>(UIElement::OptionsGamma), &optionsGammaRequest);
+    else if (optionsGammaInitState == 1)
+        optionsGammaInitState = GetNewUIFileInitFor(&optionsGammaRequest, optionsGammaConfiguration);
+    else if (optionsGammaInitState == 2)
+        optionsGammaInitState = GetShouldInitUIFileFor(static_cast<std::uint32_t>(optionsGammaConfiguration.uiHandleIndex));
+    return static_cast<std::uint32_t>(optionsGammaInitState);
+}
+
+// @verified - p
+std::int64_t RenderOptionsGamma() {
+    if (optionsGammaInitState == 3 || (LoadOptionsGamma(), static_cast<std::uint32_t>(optionsGammaInitState - 2) <= 1U))
+        RefreshNotebookAndUpdateView(static_cast<std::uint32_t>(optionsGammaConfiguration.uiHandleIndex));
+    return 0;
+}
+
+// @verified - p
+std::int64_t OptionsGammaInput() {
+    std::uint16_t input = g_inputBuffer[0].pressedPriority;
+    if (input & 0x400U) {
+        gammaOptionsActive = 0;
+        input &= 0xfbffU;
+        g_inputBuffer[0].pressedPriority = input;
+    }
+    if (input & 0x200U) {
+        gammaOptionsActive = 0;
+        g_inputBuffer[0].pressedPriority = input & 0xfdffU;
+    }
+    if (g_inputBuffer[0].repeatedPresses & 0x4000U) {
+        const float value = GetOptionsGammaValue();
+        if (value > 1.1f)
+            SetOptionsGammaValue(value - 0.1f);
+    }
+    if (g_inputBuffer[0].repeatedPresses & 0x8000U) {
+        const float value = GetOptionsGammaValue();
+        if (value < 3.3f)
+            SetOptionsGammaValue(value + 0.1f);
+    }
+    return 0;
+}
+
+// @verified - p
+std::int64_t GetOptionsGammaInitState() {
+    return static_cast<std::uint32_t>(optionsGammaInitState);
+}
+
+// @verified - p
+std::uint32_t LoadOptionsBackground() {
+    if (optionsBackgroundInitState == 0) {
+        std::snprintf(optionsBackgroundPath.data(), optionsBackgroundPath.size(), "/ui/options/OptionsBackground.ui");
+        optionsBackgroundInitState =
+            LoadUIFile(optionsBackgroundPath.data(), static_cast<std::int32_t>(UIElement::OptionsBackground), &optionsBackgroundRequest);
+    } else if (optionsBackgroundInitState == 1) {
+        optionsBackgroundInitState = GetNewUIFileInitFor(&optionsBackgroundRequest, optionsBackgroundConfiguration);
+    } else if (optionsBackgroundInitState == 2) {
+        optionsBackgroundInitState = GetShouldInitUIFileFor(static_cast<std::uint32_t>(optionsBackgroundConfiguration.uiHandleIndex));
+    }
+    return static_cast<std::uint32_t>(optionsBackgroundInitState);
+}
+
+// @verified - p
+std::int64_t RenderOptionsBackground() {
+    if (optionsBackgroundInitState == 3 || (LoadOptionsBackground(), static_cast<std::uint32_t>(optionsBackgroundInitState - 2) <= 1U)) {
+        RefreshNotebook();
+        if (!GetGammaOptionsActive())
+            uiUpdateWithColour(*GetNativeUiContext(), static_cast<std::uint32_t>(optionsBackgroundConfiguration.uiHandleIndex));
+    }
+    return 0;
+}
+
+// @verified - p
+std::int64_t GetOptionsBackgroundInitState() {
+    return static_cast<std::uint32_t>(optionsBackgroundInitState);
+}
+
 void RefreshOptionsLanguage() {
     if (optionChildren[1].bound)
         RefreshOptionsAudioOutputs();
-    if (selectedOptionDescription) {
-        const Vector4 bounds = GetCurrentUIMessageBox().bounds;
-        DescribeOption(*selectedOptionDescription, &bounds);
-    }
+    RedescribeSelectedOption();
 }
 
 bool IsEasyOptionActive() noexcept {

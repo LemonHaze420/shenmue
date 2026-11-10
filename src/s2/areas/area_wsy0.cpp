@@ -341,7 +341,7 @@ void SwitchRestoreCallback(void *) {
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::Local);
     position.y = switchPreviousPosition.y;
     mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 71, 0, MotionRegion::LowerBody);
-    mtwkSetEnabled(FindMotionWork(ctrlGetScenarioChara(ryo)), 0);
+    mtwkSetRequestedRootMode(FindMotionWork(ctrlGetScenarioChara(ryo)), 0);
     mtwkSetFrameTime(FindMotionWork(ctrlGetScenarioChara(ryo)), 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 17, 0);
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, position);
@@ -368,11 +368,11 @@ void SwitchCallback(std::uint32_t *) {
     scenApplyTransRot(&location, &rotation, &offset);
     mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 71, 0, MotionRegion::LowerBody);
     mtwkSetFrameTime(FindMotionWork(ctrlGetScenarioChara(ryo)), 0, MotionRegion::LowerBody);
-    mtwkSetEnabled(FindMotionWork(ctrlGetScenarioChara(ryo)), 0);
+    mtwkSetRequestedRootMode(FindMotionWork(ctrlGetScenarioChara(ryo)), 0);
     mtwkRequestMotion(FindMotionWork(ctrlGetScenarioChara(ryo)), 0x2d03, MotionRegion::LowerBody);
     mtwkSetRegionEvalTime(FindMotionWork(ctrlGetScenarioChara(ryo)), 60, MotionRegion::LowerBody);
     mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 71, 0, MotionRegion::LowerBody);
-    mtwkSetEnabled(FindMotionWork(ctrlGetScenarioChara(ryo)), 0);
+    mtwkSetRequestedRootMode(FindMotionWork(ctrlGetScenarioChara(ryo)), 0);
     mtwkSetFrameTime(FindMotionWork(ctrlGetScenarioChara(ryo)), 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(ryo)), 17, 0);
     EV_AT_SetPos(ryo, EventTransformFlags::AllAxes, offset);

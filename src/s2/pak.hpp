@@ -199,12 +199,7 @@ enum Value : std::uint64_t {
 };
 }
 
-
-
-
-
-std::int64_t EV_pakUtils(
-    std::int32_t category, std::uint64_t mode, std::uintptr_t source, std::uintptr_t target, std::int32_t secondaryIndex = 0);
+std::int64_t EV_pakUtils(std::int32_t category, std::uint64_t mode, std::uintptr_t source, std::uintptr_t target, std::int32_t secondaryIndex = 0);
 #endif
 std::int32_t GetPakReadiness(PakGlobalData *package);
 void DestroyPakFileAFS(PakGlobalData *package);
@@ -220,8 +215,11 @@ PakGlobalData *GetNextReadyModelPackage(PakGlobalData *previous);
 PakGlobalData *FindPakByEntryName(const char *name);
 void SetNewPakLoadedBuffer(PakGlobalData *package);
 void pakLoad(PakGlobalData *package);
+inline constexpr shen_name GZIP_MEMORY{SHEN_NAME(GZIP)};
 void SetupPakSpace(std::int64_t mode);
-
+void InitializeNamedTextureSlots();
+void InitEffect();
+std::int64_t GetPakLoadBudget();
 void *FileLoader(PakGlobalData *package, const char *filename, shen_name extension);
 std::span<const std::byte> FileLoaderView(PakGlobalData *package, const char *filename, shen_name extension);
 std::int64_t GetPakFileSize(PakGlobalData *package, const char *filename, shen_name extension);
@@ -233,6 +231,8 @@ const MT7Model *FindLoadedModelNodeOwner(const MT7Node *node, std::size_t &index
 std::uint32_t *pakFindEventCam(std::int32_t index);
 
 void *LoadLegacySceneFile(const char *directory, const char *filename, shen_name token, std::uint32_t *size = nullptr);
+void *FileRead(const char *directory, const char *filename, shen_name token, std::uint32_t *size = nullptr);
+bool DoesFileExist(const char *directory, const char *filename);
 std::int64_t ReadLegacySceneFileIntoBuffer(d3t::FileState *file, void *buffer, std::uint64_t size);
 std::int64_t AssignLegacySceneFilePath(d3t::FileState *file, const char *directory, const char *filename);
 bool FlushLegacyFileReadAndRenderQueue(d3t::FileState *file);
@@ -254,6 +254,7 @@ std::uint32_t ResolveLoadedMapTexture(std::uint32_t idLow, std::uint32_t idHigh)
 
 std::uint32_t AcquireModelTexture(std::uint32_t idLow, std::uint32_t idHigh, std::span<const std::byte> image);
 void ReleaseModelTexture(std::uint32_t idLow, std::uint32_t idHigh);
+inline constexpr std::size_t PVR_IMAGE_LOADER_SOURCE_SIZE = 0x100100;
 // imageOffset locates the GBIX/PVRT image: 0x1c inside a PKF TEXN chunk, zero for an MT7 TXT7 entry.
 std::uint32_t UploadTexn(std::span<const std::byte> texn, std::size_t imageOffset = 0x1c);
 
@@ -309,5 +310,7 @@ std::int32_t RetireGeneratedSurface(GeneratedTextureSurface *surface);
 void SetNamedTextureBank(std::int32_t bank);
 
 std::uint32_t ReplacePtxTexture(std::uint32_t textureIndex, const void *ptx);
+std::uint32_t GetPvrTextureSize(std::uint16_t format, std::int32_t width, std::int32_t height);
+bool SetPtxDimensions(std::byte *ptx, std::int32_t height, std::int32_t width, std::uint16_t format);
 
 } // namespace shenmue::s2

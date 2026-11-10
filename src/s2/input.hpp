@@ -85,7 +85,7 @@ struct KeyState {
 };
 static_assert(sizeof(KeyState) == 0x0c);
 
-// Window-event adapter for the replaced Nuklear input owner; coordinates are client pixels.
+// Window input adapter; coordinates are client pixels.
 struct WindowUIInput {
     Vector2 position{};
     Vector2 previousPosition{};
@@ -107,11 +107,21 @@ struct PhysicalControllerState {
     std::int16_t thumbRY;
     std::array<std::byte, 2> reserved0e;
     Vector4 normalizedSticks;
-    std::array<std::byte, 0x30> retained20;
+    std::uint16_t previousButtons;
+    std::array<std::byte, 2> reserved22;
+    std::array<std::uint32_t, 2> triggerDown;
+    std::uint16_t pressedButtons;
+    std::array<std::byte, 2> reserved2e;
+    std::array<std::uint32_t, 2> triggerPressed;
+    std::array<std::byte, 0x18> retained38;
     std::uint32_t active;
 };
 static_assert(sizeof(PhysicalControllerState) == 0x54);
 static_assert(offsetof(PhysicalControllerState, normalizedSticks) == 0x10);
+static_assert(offsetof(PhysicalControllerState, previousButtons) == 0x20);
+static_assert(offsetof(PhysicalControllerState, triggerDown) == 0x24);
+static_assert(offsetof(PhysicalControllerState, pressedButtons) == 0x2c);
+static_assert(offsetof(PhysicalControllerState, triggerPressed) == 0x30);
 static_assert(offsetof(PhysicalControllerState, active) == 0x50);
 
 extern std::int32_t g_mouseLookInputActive;
@@ -121,6 +131,9 @@ void SetXInputFlags();
 void SetXInputDigitalProcessing(std::int32_t enabled);
 void SetXInputAnalogProcessing(std::int32_t enabled);
 std::uint64_t PostProcessControllerState(std::uint32_t controllerIndex);
+void UpdateButtonAndTriggerStates(std::uint32_t controllerIndex);
+void ControlCursorVisibilityAndPosition();
+void InitializeInputBuffers();
 void ClearWindowInput();
 void InitializeWindowInput(std::uint32_t width, std::uint32_t height);
 void ResetInputHandler();

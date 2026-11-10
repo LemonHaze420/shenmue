@@ -1746,18 +1746,37 @@ std::int64_t ReleaseAbsentPartyCharacter(shen_name name) {
 }
 
 // @verified - p
+void InitializePartyCompanion(PartyCompanion &party) {
+    party.mode = 2;
+    party.flags = 0;
+    party.name = {};
+    party.character = nullptr;
+    party.behaviorState = 0;
+    party.motionState = 0;
+    party.runBlend = 0.0f;
+    party.frameCount = 0;
+    std::memset(&party.placement, 0, sizeof(party.placement));
+    std::memset(&party.trailPlacement, 0, sizeof(party.trailPlacement));
+    party.selectedPlacement = nullptr;
+    party.movement = &party.embeddedMovement;
+    InitializePlayerMovementState(party.embeddedMovement);
+    party.trailDistance = 0.0f;
+    party.trailWriteIndex = 0;
+    party.trailCount = 0;
+    party.selectedTrailIndex = -1;
+    party.followDistance = 3.5f;
+    party.routeMarker = 0;
+    party.routeIndex = -1;
+}
+
+// @verified - p
 bool AttachPartyCompanion(Character *character) {
     if (!character)
         return false;
     PartyCompanion *const party = static_cast<PartyCompanion *>(AllocateModelComponent(character, kPartyToken, sizeof(PartyCompanion), UpdatePartyCompanion));
     if (!party)
         return false;
-    party->mode = 2;
-    party->movement = &party->embeddedMovement;
-    InitializePlayerMovementState(party->embeddedMovement);
-    party->selectedTrailIndex = -1;
-    party->followDistance = 3.5f;
-    party->routeIndex = -1;
+    InitializePartyCompanion(*party);
     party->flags |= 0xa12U;
     party->name = ctrlGetScenarioCharaName(character);
     party->character = character;

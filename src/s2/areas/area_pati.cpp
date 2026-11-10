@@ -153,12 +153,20 @@ void PatiEventCallback(void *data) {
             ConfigurePatiEventBoard(work, work->selectedName);
             work->state = g_patiMuseumMode ? 1 : 14;
         }
-        if (work->nearbyDealer.name && work->nearbyDealer.name != work->dealer.name)
+        if (work->nearbyDealer.name && work->nearbyDealer.name != work->dealer.name) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3000, "Unlock Near Pati-Master:");
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3001, "%c", work->nearbyDealer.name & 0xff);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3002, "%c", work->nearbyDealer.name >> 8 & 0xff);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3003, "%c", work->nearbyDealer.name >> 16 & 0xff);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3004, "%c", work->nearbyDealer.name >> 24);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3005, "\n");
             EV_npcLockUnlock(work->nearbyDealer);
+        }
         adfsSetCameraIdxForChara(work->dealer, SHEN_NAME(damy));
         if (FindPatiDealer(work).name)
             CreatePatiEventResources(work);
         else {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3014, "Pati-Master not found!!\n");
             PatiMissingDealer(work);
             work->state = 61;
         }
@@ -385,12 +393,20 @@ void PatiEventCallback(void *data) {
             work->state = 27;
         break;
     case 27:
-        if ((work->option == 1 || work->option == 2) && !std::strncmp(work->excludedBoard, work->board, 4)) {
-            PatiRejectSameDoubleBoard(work);
-            work->state = 19;
-        } else if ((work->option == 4 || work->option == 5) && std::strncmp(work->excludedBoard, work->board, 4)) {
-            PatiRejectOtherChallengeBoard(work);
-            work->state = 19;
+        if (work->option == 1 || work->option == 2) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3479, "DoubleUp:place_opt_bd = %s ", work->excludedBoard);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3480, ": bd_idx = %s\n", work->board);
+            if (!std::strncmp(work->excludedBoard, work->board, 4)) {
+                PatiRejectSameDoubleBoard(work);
+                work->state = 19;
+            }
+        } else if (work->option == 4 || work->option == 5) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3488, "Challenge:place_opt_bd = %s ", work->excludedBoard);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3489, ": bd_idx = %s\n", work->board);
+            if (std::strncmp(work->excludedBoard, work->board, 4)) {
+                PatiRejectOtherChallengeBoard(work);
+                work->state = 19;
+            }
         }
         if (work->state == 27)
             work->state = 28;
@@ -430,6 +446,8 @@ void PatiEventCallback(void *data) {
         SetPatiHelpTopic(work->option, static_cast<std::int8_t>(work->type));
         const std::int32_t result = static_cast<std::int32_t>(GetNumBet());
         work->remainingGames = result <= 0 ? result : result / work->bet;
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 2632, "RESULT = $%i ", result);
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 2633, "(%i)\n", work->remainingGames);
         if (work->remainingGames <= 0) {
             if (work->remainingGames == -2 && shenGetMinutesUntilNextFrameMinute() <= 0)
                 work->state = 61;
@@ -455,14 +473,17 @@ void PatiEventCallback(void *data) {
         break;
     case 36:
         if (work->game.result == -4) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3572, "Cancel (>_<)\n");
             HidePatiActiveBall(work);
             PatiCancel(work);
             work->state = 37;
         } else if (work->game.result == 4) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3581, "TimeOut (-_-)zZ\n");
             HidePatiActiveBall(work);
             PatiClosing(work);
             work->state = 37;
         } else if (work->game.result == -1) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3590, "Stuck (-_-;)\n");
             HidePatiActiveBall(work);
             PatiStuck(work);
             work->state = 35;
@@ -470,15 +491,23 @@ void PatiEventCallback(void *data) {
             const PatiDealer *dealer = PATI_DEALERS;
             while (dealer->character.name && dealer->character.name != work->dealer.name)
                 ++dealer;
-            if (dealer->playedFlag >= 0)
+            if (dealer->playedFlag < 0)
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 3610, "Can't set HINT_M flag:pati domoto_list search error!\n");
+            else {
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 3603, "Set HINT_M flag  FreeTalkFlag[%i] = ON\n", dealer->playedFlag);
                 EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, static_cast<std::int16_t>(dealer->playedFlag), 1);
-            if (work->dealer.name == SHEN_NAME(SF7_))
-                SetCurrentGameFlag(7, 1);
+                if (work->dealer.name == SHEN_NAME(SF7_)) {
+                    PatiDebugLog("PATI\\ePATI_et_patinko.c", 3606, "Set MG_OTOSIDAMA flag = ON\n");
+                    SetCurrentGameFlag(7, 1);
+                }
+            }
             work->played = 1;
             if (HasPatiWon(work)) {
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 3614, "Set Win Flag V(^-^)V\n");
                 EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1290, 1);
                 work->state = 38;
             } else {
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 3618, "Set Lose Flag(;_;)\n");
                 EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1291, 1);
                 work->state = 39;
             }
@@ -507,10 +536,13 @@ void PatiEventCallback(void *data) {
             else
                 PatiDoubleWin(work);
             work->state = work->round == 5 ? 47 : 42;
-            if (!work->round)
+            if (!work->round) {
                 work->pendingMoney += GetPatiPayout(work);
-            else
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 2692, "get_sub:%i\n", work->pendingMoney);
+            } else {
                 work->pendingMoney *= 2;
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 2696, "get_sub:%i\n", work->pendingMoney);
+            }
             break;
         case 4:
         case 5:
@@ -535,6 +567,7 @@ void PatiEventCallback(void *data) {
             work->state = 49;
             break;
         default:
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3697, "Unknown Game Option!!\n");
             work->state = 61;
             break;
         }
@@ -576,6 +609,7 @@ void PatiEventCallback(void *data) {
             }
             break;
         default:
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3771, "Unknown Game Option!!\n");
             work->state = 61;
             break;
         }
@@ -632,7 +666,8 @@ void PatiEventCallback(void *data) {
         break;
     case 49:
         if (AwardPatiPrize(work)) {
-            if (--work->remainingGames > 0)
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 3873, "PlayRemain = %i\n", --work->remainingGames);
+            if (work->remainingGames > 0)
                 work->state = 34;
             else if (shenGetMinutesUntilNextFrameMinute() <= 0) {
                 PatiClosing(work);
@@ -736,10 +771,15 @@ void PatiEventCallback(void *data) {
     case 67:
         EV_EnableCharacterDisplay(work->dealer);
         if (work->game.result == -4 || work->game.result == 4) {
+            if (work->game.result == -4)
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 4097, "Cancel (>_<)\n");
+            else
+                PatiDebugLog("PATI\\ePATI_et_patinko.c", 4106, "Timeout (-_-)zZ\n");
             HidePatiActiveBall(work);
             PatiVersusClosing(work);
             work->state = 61;
         } else if (work->game.result == -1) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4115, "Stuck (-_-;)\n");
             HidePatiActiveBall(work);
             PatiVersusStuck(work);
             work->state = 66;
@@ -752,19 +792,26 @@ void PatiEventCallback(void *data) {
                 PatiPlayerVersusLose(work);
             ++work->totalRounds;
             work->state = 71;
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4145, "Game:Total=%i", work->totalRounds);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4146, "NPC=%i,", work->dealerWins);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4147, "RYO=%i\n", work->playerWins);
             if (work->totalRounds == 2) {
                 if (work->playerWins == 2 && !work->dealerWins) {
+                    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4153, "Set Win Flag V(^-^)V\n");
                     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1290, 1);
                     work->state = 72;
                 } else if (!work->playerWins && work->dealerWins == 2) {
+                    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4158, "Set Lose Flag (;_;)\n");
                     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1291, 1);
                     work->state = 73;
                 }
             } else if (work->totalRounds != 1) {
                 if (work->playerWins > work->dealerWins) {
+                    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4165, "Set Win Flag V(^-^)V\n");
                     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1290, 1);
                     work->state = 72;
                 } else if (work->playerWins < work->dealerWins) {
+                    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4170, "Set Lose Flag (;_;)\n");
                     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1291, 1);
                     work->state = 73;
                 }
@@ -792,10 +839,12 @@ void PatiEventCallback(void *data) {
     case 70:
         EV_EnableCharacterDisplay(work->dealer);
         if (work->game.result == 4) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4012, "Timeout (-_-)zZ\n");
             HidePatiActiveBall(work);
             PatiVersusClosing(work);
             work->state = 61;
         } else if (work->game.result == -1) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4021, "Stuck (-_-;)\n");
             HidePatiActiveBall(work);
             PatiVersusStuck(work);
             work->state = 69;
@@ -806,11 +855,16 @@ void PatiEventCallback(void *data) {
                 ++work->dealerWins;
             } else
                 PatiDealerVersusLose(work);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4048, "Game:Total=%i+0.5", work->totalRounds);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4049, "NPC=%i,", work->dealerWins);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 4050, "RYO=%iX\n", work->playerWins);
             if (work->totalRounds == 2) {
                 if (work->dealerWins - work->playerWins >= 2) {
+                    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4054, "Set Lose Flag (;_;)\n");
                     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1291, 1);
                     work->state = 73;
                 } else if (work->playerWins > work->dealerWins) {
+                    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4060, "Set Win Flag V(^-^)V\n");
                     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1290, 1);
                     work->state = 72;
                 }
@@ -859,8 +913,11 @@ void PatiEventCallback(void *data) {
         break;
     }
     default:
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 4247, "Illegal State!!\n");
         break;
     }
+    if (entryState != work->state)
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 4252, "State = %i \n", work->state);
     if (work->delay > 0)
         HLib::SetupTaskDelay(work->delay);
 }

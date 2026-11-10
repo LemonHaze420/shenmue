@@ -83,6 +83,10 @@ void *AllocateModelGeometryFrameMemory(std::uint32_t bytes) {
     return offset + bytes < g_modelGeometryFrameSize ? static_cast<std::byte *>(g_modelGeometryFrameMemory) + offset : nullptr;
 }
 
+std::int32_t WaitDxPipelineLock() {
+    return std::atomic_ref<std::int32_t>(g_modelGeometryFrameOffset).exchange(0, std::memory_order_seq_cst);
+}
+
 // @verified - p
 void RefreshModelCacheMaterials(std::uint32_t handle, d3t::D3TDeviceContext *context, std::uint32_t fileLock) {
     d3t::ModelCacheSlot *const cache = d3t::ResolveModelCache(handle);

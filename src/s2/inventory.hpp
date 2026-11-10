@@ -102,6 +102,8 @@ std::uint32_t GetInventoryItemPresentationType(std::uint32_t itemId) noexcept;
 std::uint32_t hasItemRegistered(std::uint32_t itemId) noexcept;
 const char *GetInventoryItemModel(std::uint32_t itemId) noexcept;
 const char *GetShenmueItem(std::uint32_t category, std::uint32_t index) noexcept;
+std::int32_t CollectOwnedCapsuleToys(std::int32_t *ids, std::int32_t *counts) noexcept;
+std::int32_t CollectOwnedKeyItems(std::int32_t *ids, std::int32_t *counts) noexcept;
 const char *shenGetAmtOf(std::uint32_t itemId) noexcept;
 void GetInventoryItemDistances(std::uint32_t itemId, float *minimum, float *maximum) noexcept;
 

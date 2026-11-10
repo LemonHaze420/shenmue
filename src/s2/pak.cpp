@@ -19,6 +19,7 @@
 #include "s2/scene_data.hpp"
 #include "s2/renderer_initialization.hpp"
 #include "s2/ui.hpp"
+#include "s2/legacy_draw.hpp"
 #include "s2/legacy_sprite.hpp"
 #include "s2/effect_texture.hpp"
 
@@ -194,6 +195,8 @@ const d3t::PvrHeader *FindPvrHeader(std::span<const std::byte> texn, std::size_t
     return reinterpret_cast<const d3t::PvrHeader *>(cursor);
 }
 
+} // namespace
+
 void InitializeNamedTextureSlots() {
     for (std::size_t index = 0; index < namedTextureSlots.size(); ++index) {
         namedTextureSlots[index] = {.index = static_cast<std::int16_t>(index),
@@ -206,6 +209,20 @@ void InitializeNamedTextureSlots() {
     namedTextureFree = namedTextureSlots.data();
     namedTexturesInitialized = true;
 }
+
+void InitEffect() {
+    namedTextureBank = 0;
+    InitializeNamedTextureSlots();
+    namedTextureBanks = {};
+    EnableStripEffect();
+    SetStripEffectMode(2);
+    if (EnableLegacyEffect() == 0) {
+        EnableLegacyEffectSecondary();
+        EnableStripEffectFinal();
+    }
+}
+
+namespace {
 
 NamedTextureSlot *FindNamedTexture(std::uint32_t idLow, std::uint32_t idHigh) {
     for (NamedTextureSlot *slot = namedTextureBanks[namedTextureBank != 0]; slot; slot = slot->next) {
@@ -394,6 +411,14 @@ bool ParseContainer(std::span<const std::byte> bytes, PakContainerView &result) 
     return true;
 }
 
+voidpf AllocateGzipWork(voidpf, uInt items, uInt size) {
+    return HLib::AllocateTaskData(static_cast<std::size_t>(items) * size, GZIP_MEMORY);
+}
+
+void FreeGzipWork(voidpf, voidpf address) {
+    HLib::FreeTaskData(address);
+}
+
 bool InflateGzip(std::span<const std::byte> source, void *&allocation, std::size_t &size, shen_name name, void *destination = nullptr) {
     allocation = nullptr;
     size = 0;
@@ -419,6 +444,8 @@ bool InflateGzip(std::span<const std::byte> source, void *&allocation, std::size
         return false;
     }
     z_stream stream{};
+    stream.zalloc = AllocateGzipWork;
+    stream.zfree = FreeGzipWork;
     stream.next_in = reinterpret_cast<Bytef *>(const_cast<std::byte *>(source.data()));
     stream.avail_in = static_cast<uInt>(source.size());
     stream.next_out = static_cast<Bytef *>(output);
@@ -769,6 +796,8 @@ bool ReadPakFromAfs(PakLoadTaskData &task, PakGlobalData &slot, std::int32_t mem
     slot.flags |= 1U;
     const PakAfsPartition *const partition = static_cast<const PakAfsPartition *>(slot.field30);
     slot.afsFile = d3t::LargeFile_OpenTocEntryHandle(partition->afs->index, member);
+    if (!slot.afsFile)
+        PakLoadingDiagnosticNullsub();
     const std::uint64_t sectors = static_cast<std::uint64_t>(d3t::LargeFile_GetSizeInBlocks(slot.afsFile));
     const std::uint64_t size = static_cast<std::uint32_t>(sectors << 11U);
     const std::size_t index = PakSlotIndex(&slot);
@@ -890,8 +919,8 @@ bool CompletePakRead(PakLoadTaskData &task, PakGlobalData &slot) {
         FailPackage(task, slot);
         return false;
     }
-    // 531570 dispatches from the actual decoded signature. An AFS member
-    // may be a standalone PKS; it is not forced through a fictitious PKF pair.
+    // Dispatch by decoded signature; AFS members may be standalone PKS files.
+
     pakf = container.signature == pakF;
     pakReadBuffer = allocation;
     pakReadAllocationSize = HLib::GetTaskDataSize(allocation);
@@ -1111,8 +1140,8 @@ bool AllocatePAKStuff(PakLoadTaskData &task, PakGlobalData &slot) {
                 if (model) {
                     char stem[9]{};
                     std::strncpy(stem, entry.stem.data(), 8);
-                    FilepathBuilder(GetMT7ReaderData(model), runtime.folder.data(), slot.entryType.data(), stem, tag == SHEN_NAME(CHRM) ? 0x22U : 0x2001U,
-                        task.renderThreadHandle);
+                    FilepathBuilder(GetMT7ReaderData(model), runtime.folder.data(), slot.entryType.data(), stem,
+                        tag == SHEN_NAME(CHRM) ? 0x22U : 0x2001U, task.renderThreadHandle);
                 }
                 if (tag == SHEN_NAME(PROP))
                     ++slot.propIndex;
@@ -1400,6 +1429,11 @@ std::uint32_t GetPakTaskDataField() {
     return task->flags;
 }
 
+std::int64_t GetPakLoadBudget() {
+    PakLoadTaskData *const task = pakLoadTaskData ? pakLoadTaskData : static_cast<PakLoadTaskData *>(HLib::GetTaskParameter(pakLoadTask));
+    return task->timeBudget;
+}
+
 // @verified - p
 PakGlobalData *pakLoadGetNext() {
     PakLoadTaskData *const task = pakLoadTaskData ? pakLoadTaskData : static_cast<PakLoadTaskData *>(HLib::GetTaskParameter(pakLoadTask));
@@ -1549,7 +1583,7 @@ std::int64_t GetCurrentPakBinarySize(const char *filename) {
     return package ? GetPakFileSize(package, filename, HAND_BANK_EXTENSION) : 0;
 }
 
-// 52e960/624460/5a54b0: the active package takes precedence over map ECAM.
+// Prefer active-package ECAM over map ECAM.
 // The returned record borrows the selected PKS or INFO allocation.
 std::uint32_t *pakFindEventCam(std::int32_t index) {
     const auto findRecord = [index](void *ecam) -> std::uint32_t * {
@@ -1645,6 +1679,18 @@ std::int64_t LoadLegacyFiles(const char *directory, const char *filename, void *
     return 0;
 }
 
+// @verified - p
+bool DoesFileExist(const char *directory, const char *filename) {
+    char name[16];
+    std::strcpy(name, filename);
+    if (char *const extension = std::strstr(name, ".MT5"))
+        std::strcpy(extension, ".MT7");
+    char path[260];
+    std::snprintf(path, sizeof(path), "/%s/%s", directory, name);
+    FilepathCleaner(path);
+    return d3t::Archive_FileExists(path);
+}
+
 void *LoadLegacySceneFile(const char *directory, const char *filename, shen_name token, std::uint32_t *size) {
     char name[16];
     std::strcpy(name, filename);
@@ -1675,6 +1721,28 @@ void *LoadLegacySceneFile(const char *directory, const char *filename, shen_name
     if (size)
         *size = fileSize;
     return allocation;
+}
+
+void *FileRead(const char *directory, const char *filename, shen_name token, std::uint32_t *size) {
+    char name[16];
+    std::strcpy(name, filename);
+    if (char *const extension = std::strstr(name, ".MT5"))
+        std::strcpy(extension, ".MT7");
+    char path[260];
+    std::snprintf(path, sizeof(path), "%s/%s", directory, name);
+    const std::uint32_t fileSize = static_cast<std::uint32_t>(ArchiveData_GetFileSize(path));
+    if (fileSize == 0)
+        return nullptr;
+    void *const block = HLib::AllocateStaticOrDynamicBlock(fileSize, token);
+    if (!block)
+        return nullptr;
+    if (!LoadLegacyFiles(directory, name, block, fileSize)) {
+        HLib::FreeTaskData(block);
+        return nullptr;
+    }
+    if (size)
+        *size = fileSize;
+    return block;
 }
 
 bool LoadLegacySprite(const char *directory, const char *filename, shen_name token, void *&allocation, std::size_t &size) {
@@ -1712,7 +1780,6 @@ std::uint32_t UploadTexn(std::span<const std::byte> texn, std::size_t imageOffse
     std::size_t payloadOffset = static_cast<std::size_t>(payload - texn.data());
     // CreatePVRForDirectX routes the 0x8000 and 0x8700 families (format-table flag 0x80) through the image loader,
     // skipping one DWORD when the payload is not DDS; CreateDirectXTexture2D admits only pixel codes 0..2 and
-    // 0x80..0x89 in them. This also covers ParsePTX's 0x8089 dynamic NAVI textures.
     if (pvr->dataFormat == 0x80 || pvr->dataFormat == 0x87) {
         if (pvr->pixelFormat > 2 && (pvr->pixelFormat < 0x80 || pvr->pixelFormat > 0x89))
             return 0;
@@ -1724,7 +1791,7 @@ std::uint32_t UploadTexn(std::span<const std::byte> texn, std::size_t imageOffse
             payload += sizeof(std::uint32_t);
             payloadOffset += sizeof(std::uint32_t);
         }
-        return d3t::CreateImageTextureFromMemory(payload, texn.size() - payloadOffset, true);
+        return d3t::CreateImageTextureFromMemory(payload, PVR_IMAGE_LOADER_SOURCE_SIZE, true);
     }
     // BuildMemoTextures emits 0x0989 for MEMT: CreatePVRForDirectX selects
     // upload flags zero for the 0x0900 format family, so it consumes these RGBA
@@ -1850,10 +1917,13 @@ static PakGlobalData *RequestMapPackage(const char *folder, const char *packageN
     runtime.destination = destination;
 #endif
     std::memcpy(package.name.data(), packageName, nameLength + 1);
-    std::memcpy(runtime.folder.data(), folder, std::strlen(folder) + 1);
     slot.name = shen_name{make_shen_name('H', 'P', 'M', static_cast<char>('a' + index))};
     std::memcpy(slot.entryType.data(), packageName, nameLength + 1);
-    std::memcpy(pakLoadTaskData->path.data(), folder, std::strlen(folder) + 1);
+    std::size_t folderLength = std::strlen(folder);
+    std::memcpy(pakLoadTaskData->path.data(), folder, folderLength + 1);
+    if (folderLength > 1 && pakLoadTaskData->path[folderLength - 1] == '/')
+        pakLoadTaskData->path[--folderLength] = 0;
+    std::memcpy(runtime.folder.data(), pakLoadTaskData->path.data(), folderLength + 1);
     std::memcpy(pakLoadTaskData->nameStart.data(), packageName, nameLength + 1);
 #if !SHENMUE_IS_DC
     if (mode == 1)
@@ -1867,7 +1937,7 @@ static PakGlobalData *RequestMapPackage(const char *folder, const char *packageN
         slot.flags |= 4U;
     const PakPhase readingPhase = paksOnly ? PakPhase::ReadingPaks : PakPhase::ReadingPakf;
     std::array<char, 0x120> path{};
-    const int pathLength = std::snprintf(path.data(), path.size(), "%s/%s.%s", folder, packageName, paksOnly ? "pks" : "pkf");
+    const int pathLength = std::snprintf(path.data(), path.size(), "%s/%s.%s", pakLoadTaskData->path.data(), packageName, paksOnly ? "pks" : "pkf");
     if (pathLength < 0 || static_cast<std::size_t>(pathLength) >= path.size() || !PAK_Reading(*pakLoadTaskData, slot, path.data(), readingPhase)) {
         RemovePackage(index);
         return nullptr;
@@ -2056,7 +2126,7 @@ std::int64_t EV_pakUtils(std::int32_t category, std::uint64_t mode, std::uintptr
             FreeReadyPak(FindPakByEntryName(name));
             break;
         case PakPackageOp::FinishLoading: {
-            const std::int64_t previousBudget = pakLoadTaskData->timeBudget;
+            const std::int64_t previousBudget = GetPakLoadBudget();
             SetupPakSpace(-1);
             pakLoadFlush();
             SetupPakSpace(previousBudget);
@@ -2075,7 +2145,7 @@ std::int64_t EV_pakUtils(std::int32_t category, std::uint64_t mode, std::uintptr
             SetupPakSpace(std::bit_cast<std::int64_t>(static_cast<std::uint64_t>(source)));
             break;
         case PakPackageOp::GetLoadBudget:
-            return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(pakLoadTaskData->timeBudget));
+            return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(GetPakLoadBudget()));
         case PakPackageOp::FreeAfs:
             FreeReadyPak(FindPakInAfs(partition, firstIndex));
             break;
@@ -2243,13 +2313,13 @@ const LoadedMapPackage *LoadPakPackageFromMemory(const char *packageName, std::s
     LoadedMapPackage package{};
     std::memcpy(package.name.data(), packageName, nameLength + 1);
     if (!InflateGzip(packedPkf, package.pkfAllocation, package.pkfSize, SHEN_NAME(PAKF)) ||
-        !ParseContainer({static_cast<const std::byte *>(package.pkfAllocation), package.pkfSize}, package.pkf) || package.pkf.signature != pakF) {
+            !ParseContainer({static_cast<const std::byte *>(package.pkfAllocation), package.pkfSize}, package.pkf) || package.pkf.signature != pakF) {
         if (package.pkfAllocation)
             HLib::FreeTaskData(package.pkfAllocation);
         return nullptr;
     }
     if (!InflateGzip(packedPks, package.pksAllocation, package.pksSize, SHEN_NAME(PAKS)) ||
-        !ParseContainer({static_cast<const std::byte *>(package.pksAllocation), package.pksSize}, package.pks) || package.pks.signature != pakS) {
+            !ParseContainer({static_cast<const std::byte *>(package.pksAllocation), package.pksSize}, package.pks) || package.pks.signature != pakS) {
         HLib::FreeTaskData(package.pkfAllocation);
         if (package.pksAllocation)
             HLib::FreeTaskData(package.pksAllocation);
@@ -2456,7 +2526,7 @@ namespace {
 std::int16_t mstsValue0{};
 std::int16_t mstsValue1{};
 std::int16_t mstsValue2{};
-}
+} // namespace
 
 // @verified - p
 
@@ -2730,6 +2800,68 @@ std::uint32_t ReplacePtxTexture(std::uint32_t textureIndex, const void *ptx) {
         }
     }
     return textureIndex;
+}
+
+// @verified - p
+std::uint32_t GetPvrTextureSize(std::uint16_t format, std::int32_t width, std::int32_t height) {
+    const std::uint32_t family = format & 0xff00U;
+    if (family <= 0x700U) {
+        if (family == 0x700U)
+            return static_cast<std::uint32_t>(height * width);
+        if (family == 0x100U)
+            return static_cast<std::uint32_t>(2 * height * width);
+        if (family == 0x300U && width == height) {
+            switch (width) {
+            case 64:
+                return 0xc00;
+            case 128:
+                return 0x1800;
+            case 256:
+                return 0x4800;
+            case 512:
+                return 0x10800;
+            default:
+                break;
+            }
+        } else if (family == 0x500U)
+            return static_cast<std::uint32_t>(height * width / 2);
+        return 0;
+    }
+    if (family == 0x900U)
+        return static_cast<std::uint32_t>(2 * height * width);
+    if (family != 0x8000U)
+        return 0;
+    const std::int32_t blocksWide = width / 4 < 1 ? 1 : width / 4;
+    const std::int32_t blocksHigh = height / 4 < 1 ? 1 : height / 4;
+    switch (format & 0xffU) {
+    case 0x01:
+    case 0x02:
+    case 0x85:
+        return static_cast<std::uint32_t>(2 * height * width + 128);
+    case 0x80:
+        return static_cast<std::uint32_t>(8 * blocksWide * blocksHigh + 128);
+    case 0x81:
+    case 0x82:
+        return static_cast<std::uint32_t>(16 * (blocksWide * blocksHigh + 8));
+    case 0x89:
+        return static_cast<std::uint32_t>(4 * height * width + 128);
+    default:
+        return 128;
+    }
+}
+
+// @verified - p
+bool SetPtxDimensions(std::byte *ptx, std::int32_t height, std::int32_t width, std::uint16_t format) {
+    if ((reinterpret_cast<std::uintptr_t>(ptx) & 3U) != 0 || static_cast<std::int32_t>(GetPvrTextureSize(format, width, height)) <= 0)
+        return false;
+    const std::uint16_t pvrWidth = static_cast<std::uint16_t>(width), pvrHeight = static_cast<std::uint16_t>(height);
+    std::memcpy(ptx + 40, &pvrWidth, sizeof(pvrWidth));
+    std::memcpy(ptx + 42, &pvrHeight, sizeof(pvrHeight));
+    if ((format & 0xff00U) == 0x8000U) {
+        std::memcpy(ptx + 64, &width, sizeof(width));
+        std::memcpy(ptx + 60, &height, sizeof(height));
+    }
+    return true;
 }
 
 } // namespace shenmue::s2

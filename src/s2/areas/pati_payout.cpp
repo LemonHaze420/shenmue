@@ -17,6 +17,8 @@ void PayPatiWinnings(PatiEventWork *work) {
     PATI_StartMoneyCount(static_cast<std::uint32_t>(amount), work->delay);
     work->delay += 5;
     work->payout += amount;
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 2597, "get:%i\n", amount);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 2598, "get_sum:%i\n", work->payout);
 }
 // @verified - p
 void RefundPatiBet(PatiEventWork *work) {
@@ -94,9 +96,13 @@ bool HasPatiWon(PatiEventWork *work) {
         return work->game.wins >= 2;
     case 6:
         return work->game.wins > 0 && GetPatiPayout(work) > 0;
+    case 7:
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 5900, "Under construction. versus game!!\n");
+        return false;
     case 8:
         return work->game.wins >= work->game.winLimit;
     default:
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 5905, "Unknown Game Type!!\n");
         return false;
     }
 }

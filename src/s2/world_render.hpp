@@ -1,5 +1,9 @@
 #pragma once
 
+#include "shenmue.h"
+
+
+
 #include "common/math.hpp"
 #include "s2/hlib.hpp"
 #include "s2/legacy_draw.hpp"
@@ -26,6 +30,7 @@ std::uint32_t DrawMT7Model(const MT7Model &model, const Matrix4x4 *entityTransfo
     const Matrix4x4 *controllerTransformBase = nullptr);
 std::uint32_t DrawMT7NodeHierarchy(
     const MT7Model &model, const MT7Node &node, LegacyModelShaderPath shaderPath = LegacyModelShaderPath::Lambert, float alpha = 1.0f);
+std::uint32_t mtRecursiveSetFlag(const MT7Model &model, const MT7Node *node, float alpha);
 extern Vector3 g_scriptedModelScale;
 extern std::int32_t g_modelDeformationSuppressed;
 void InitModelVector();
@@ -39,7 +44,9 @@ void ReleaseSkyDomeModels(const std::uint32_t *handles);
 void SetupRenderBufferHandles();
 void SkyDomeProbe(const char *mapDirectory);
 extern Matrix4x4 g_scriptedIncomingTransform;
+void mtRestoreIncomingTransform();
 void charaApplyScale(const MT7Model *model, const MT7Node *node, float alpha = 1.0f);
+void applyPosRotScl(const MT7Model *model, const MT7Node *node);
 void charaPrepareNodesForDraw(const MT7Model *model, const MT7Node *node, float alpha);
 void imgmDrawModelNode(const MT7Model *model, const MT7Node *node, float alpha);
 void ConstructMatricesForObjectRecursive(MT7Model &model, MT7Node *node);
@@ -51,7 +58,8 @@ std::uint64_t DrawDummyCharacterModel(const MT7Model &model);
 inline constexpr shen_name SCENARIO_PIN_CHARACTER{SHEN_NAME(PIN_)};
 void DrawPIN(shen_name character, std::int32_t enabled, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale);
 inline constexpr shen_name SCENARIO_DUMMY_CHARACTER{SHEN_NAME(dumy)};
-void ApplyTranslationRotationScaleXYZToCharaByID(
+void ApplyTranslationRotationScaleXYZToCharaByID(shen_name character, float scaleY, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale);
+void ApplyTranslationRotationScaleXYZToCharaSibling(
     shen_name character, std::int32_t siblingOrdinal, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale);
 
 struct Character;
@@ -101,6 +109,8 @@ std::uint32_t DrawAirWorldPass();
 void InitializeAirPresentation(const void *mapInfo);
 void ResetAirPresentation();
 inline constexpr shen_name TASK_AIRD = SHEN_NAME(AIRD);
+inline constexpr shen_name AIR_DOOM_FILE{SHEN_NAME(DOOE)};
+inline constexpr shen_name AIR_DOME_MODEL{SHEN_NAME(DOME)};
 extern std::int32_t g_airDrawDomeEnabled;
 extern std::int32_t g_airDrawCloudsEnabled;
 extern std::int32_t g_airDrawPlanetsEnabled;
@@ -237,3 +247,4 @@ const MT7Model *GetShadowDataModel(std::size_t index);
 std::uint32_t DrawFixedShadowMesh(std::size_t index, float alpha);
 
 } // namespace shenmue::s2
+

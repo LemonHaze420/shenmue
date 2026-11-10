@@ -79,9 +79,9 @@ std::int32_t fightMotionCameraWaypointCount{}, fightMotionCameraWaypointIndex{},
 float fightMotionCameraTime{};
 std::uint16_t fightMotionCameraPreviousPerspective{};
 bool fightMotionCameraInitializeEye{};
-}
+} // namespace
 
-// 526010 / 526930: actual field/fight camera mode and its distance/pattern owner.
+// Field/fight camera mode and distance/pattern settings.
 CameraMotionMode camCtrlGetInterpMode() noexcept {
     return cameraMotionMode;
 }
@@ -130,8 +130,8 @@ void camCtrlSetInterpModeTo(CameraMotionMode mode) {
         break;
     }
 }
-// 524ef0: the retained fight eye/target, ray mask and easing histories share
-// one owner with the field/fight goal solver.
+// Retained fight eye/target, ray mask and easing history for the field/fight goal solver.
+
 void resetIntersectionAndTest() {
     camCtrlGetNextCamPos(&fightCameraEye);
     camCtrlGetTargetPosition(&fightCameraTarget);
@@ -264,7 +264,7 @@ void BeginMotionInterpolationCamera(Character *target) {
     fightMotionCameraInitializeEye = true;
 }
 
-// 526070: the real player MTWK receives F01B; no synthetic camera actor.
+// Start the player MTWK F01B motion.
 bool BeginMotionUpdateCamera(Character *target) {
     using enum CameraState;
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -386,10 +386,9 @@ void UpdateFightCameraPattern(VFMA_t *game) {
     if (perspective < 60)
         perspective -= (60 - perspective) * 0.5f;
     const float speedDivisor = perspective >= 10 ? std::fmin(90.0f, perspective) : 10;
-    constexpr std::uint8_t patterns[5][8]{{0, 0, 0, 2, 3, 3, 4, 5}, {0, 0, 0, 2, 2, 2, 4, 5},
-        {0,0,0,2,3,4,4,5},{0,0,2,2,5,5,6,7},{0,0,2,2,2,2,4,4}};
-    constexpr float phaseTargets[8][2]{{0, 0}, {-0.2f, 0.2f}, {-0.30000001f, 0.1f}, {0, 0.5f},
-        {1.5f,0},{2,0.5f},{3.5f,0.5f},{6,0.5f}};
+    constexpr std::uint8_t patterns[5][8]{
+        {0, 0, 0, 2, 3, 3, 4, 5}, {0, 0, 0, 2, 2, 2, 4, 5}, {0, 0, 0, 2, 3, 4, 4, 5}, {0, 0, 2, 2, 5, 5, 6, 7}, {0, 0, 2, 2, 2, 2, 4, 4}};
+    constexpr float phaseTargets[8][2]{{0, 0}, {-0.2f, 0.2f}, {-0.30000001f, 0.1f}, {0, 0.5f}, {1.5f, 0}, {2, 0.5f}, {3.5f, 0.5f}, {6, 0.5f}};
     constexpr float speeds[5][3]{{80, 160, 240}, {80, 120, 160}, {80, 160, 240}, {80, 180, 300}, {80, 140, 200}};
     const auto frame = static_cast<std::int32_t>(fightCameraPatternFrame);
     const auto previous = static_cast<std::int32_t>(fightCameraPreviousPatternFrame);
@@ -705,7 +704,7 @@ void UpdateEnvironmentFightCamera(VFMA_t *game, VFActor *self, VFActor *other) {
     fightCameraDesiredEye.z += fightCameraOffset.z;
 }
 
-// 6b8a90: camera/auth owner predicate, not an alternate actor or test view.
+// Camera/AUTH activity predicate.
 bool IsEarlyAuthFightCamera() {
     const auto *const game = vfmaGetTaskParam();
     return game && (game->mode & 0x80000) && game->parameter570 < 5;
@@ -870,8 +869,8 @@ void UpdateMotionInterpolationFightCamera() {
     player->alpha = distance >= 0 ? std::fmin(1.0f, distance) : 0;
 }
 
-// 522470: player F01B/F01A camera transaction, bound to real input mediation,
-// help-icon masks, player MTWK and the saved field camera.
+// F01B/F01A camera transition: input mediation, help-icon masks, player MTWK and saved field camera.
+
 void UpdateMotionFightCamera(VFActor *self, VFActor *other) {
     using enum CameraState;
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -1337,7 +1336,7 @@ float SearchCameraEase(const CameraRuntime &camera) {
     return std::fmax(0.25f, 1.0f - CameraDistance(camera.nextPosition, searchCamera.cameraPosition) * 0.13600001f);
 }
 
-// InitDynamicSceneData publishes aligned static storage, not heap ownership.
+// Scene data publishes aligned static storage.
 alignas(32) std::array<CameraFieldDepthSample, 257> worldFieldDepth{};
 alignas(32) std::array<CameraFieldDepthSample, 257> cameraFieldDepth{};
 std::uint32_t fieldDepthPointCount{};
@@ -1699,7 +1698,13 @@ void GenerateConversationTypeEight(const ConversationCameraDescriptor &descripto
     fieldOfView = static_cast<std::uint16_t>(ConversationBankI16(descriptor, 4));
 }
 
+void BuildConversationOverrideCamera(Vector3 &eye, Vector3 &target, std::uint16_t &fieldOfView);
+
 void GenerateConversationCandidate(std::int32_t candidate, float progress, Vector3 &eye, Vector3 &target, std::uint16_t &fieldOfView) {
+    if (conversationCamera.flags & 0x08000000U) {
+        BuildConversationOverrideCamera(eye, target, fieldOfView);
+        return;
+    }
     if (candidate < 0 || candidate >= static_cast<std::int32_t>(ConversationDescriptors.size())) {
         eye = conversationCamera.previousEye;
         target = conversationCamera.previousTarget;
@@ -1856,8 +1861,7 @@ void FilterConversationSceneCandidates() {
     std::uint32_t angleMask{};
     if ((state.currentShotFlags & 8U) && state.shotType == 1) {
         const std::int32_t angleClass = std::abs(static_cast<std::int32_t>(conversationCamera.orientationClass));
-        constexpr std::array<std::uint8_t, 8> angleGroups{
-            0, 1, 2, 3, 3, 3, 2, 1};
+        constexpr std::array<std::uint8_t, 8> angleGroups{0, 1, 2, 3, 3, 3, 2, 1};
         if (angleClass < static_cast<std::int32_t>(angleGroups.size()))
             angleMask = static_cast<std::uint32_t>(angleGroups[static_cast<std::size_t>(angleClass)] & 7U) << 24U;
     } else if ((state.currentShotFlags & 8U) == 0) {
@@ -2464,7 +2468,8 @@ void camCtrlGetIdealCameraPosition(CameraRuntime &camera) {
                 hit = precise;
         }
         Vector3 delta{target.x - hit.x, target.y - hit.y, target.z - hit.z};
-        const Vector3 &normal = flddGetLastIntersection().planeNormal;
+        Vector3 normal = flddGetLastIntersection().planeNormal;
+        TransformIntersectionNormal(normal);
         const float product =
             std::sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z) * std::sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
         std::uint16_t angle = 0;
@@ -2681,7 +2686,7 @@ void ReadConversationActorPose() {
         state.actorEye = ConversationActorPosition(listener);
         state.actorYaw = ConversationActorYaw(speaker);
         if (state.sceneFlags & 0x10U)
-            (void)plymGetAuthorPlacementYaw(state.specialTargetName);
+            state.actorYaw = plymGetAuthorPlacementYaw(state.specialTargetName);
     }
 }
 
@@ -3077,10 +3082,7 @@ void EvaluateConversationShot() {
     float progress = generationProgress;
     if (state.shotType == 1 && state.candidateIndex >= 0) {
         constexpr std::array<float, 22> collisionWeights{
-            0.0f, 1.0f, 0.0f, 0.25f, 0.25f, 0.25f,
-            0.5f, 0.25f, 0.75f, 0.25f, 0.0f, 0.75f,
-            0.25f, 0.75f, 0.0f, 0.5f, 0.25f, 0.5f,
-            0.5f, 0.5f, 0.0f, 1.0f};
+            0.0f, 1.0f, 0.0f, 0.25f, 0.25f, 0.25f, 0.5f, 0.25f, 0.75f, 0.25f, 0.0f, 0.75f, 0.25f, 0.75f, 0.0f, 0.5f, 0.25f, 0.5f, 0.5f, 0.5f, 0.0f, 1.0f};
         const std::uint8_t collisionClass = state.candidates[static_cast<std::size_t>(state.candidateIndex)].collisionClass;
         const std::size_t weight = std::min<std::size_t>(collisionClass, 10) * 2;
         progress = collisionWeights[weight] + progress * collisionWeights[weight + 1];
@@ -3167,8 +3169,17 @@ struct CameraContextSetting {
 // int32 pitch field is consumed as a WORD. The first-person row is the adjacent
 // g_tmp_dist_from_player/g_tmp_base_pitch_bias pair that index 11 reads.
 constexpr std::array<CameraContextSetting, 11> cameraContextSettings{{
-    {0.66000003f, 2048}, {0.76800001f, 1588}, {0.87599999f, 1128}, {0.98400003f, 668}, {1.092f, 208}, {1.2f, -256},
-    {1.388f, -601}, {1.576f, -946}, {1.7640001f, -1291}, {1.952f, -1636}, {2.1400001f, -1984},
+    {0.66000003f, 2048},
+    {0.76800001f, 1588},
+    {0.87599999f, 1128},
+    {0.98400003f, 668},
+    {1.092f, 208},
+    {1.2f, -256},
+    {1.388f, -601},
+    {1.576f, -946},
+    {1.7640001f, -1291},
+    {1.952f, -1636},
+    {2.1400001f, -1984},
 }};
 constexpr CameraContextSetting firstPersonContextSetting{1.67f, -2048};
 
@@ -3720,7 +3731,7 @@ std::int32_t DoKeyframeCubicHermiteInterpolation(CameraSplineTrack &track, float
 }
 
 namespace {
-// 52e230: authored attachment modes borrow the real entity or solved rig bone.
+// Attachment modes borrow an entity or solved rig bone.
 void GetPosRotUtil(
     Vector3 &position, Vector3i &rotation, std::uint8_t mode, const void *node, const Vector3 &fallbackPosition, const Vector3i &fallbackRotation) {
     if (!(mode & 1))
@@ -4123,7 +4134,7 @@ CameraRuntime *camCtrlSetRotationXYZ(float x, float y, float duration) noexcept 
     return camera;
 }
 
-// 5206f0: this belongs to CAMT, not the global film-bar publication.
+// CAMT state is independent of the film-bar publication.
 void camCtrlDisableFilmBars() noexcept {
     g_cameraControl->showFilmBars = 0;
 }
@@ -4298,8 +4309,8 @@ Vector3 g_cameraTargetPublication{};
 Matrix4x4 g_cameraProjectionMatrix{};
 CameraPreset g_cameraCachedPresets[3]{};
 std::int32_t g_cameraFilmBarsEnabled = 0;
-// 522a20: real CAMT state-10 consumer. Motion interpolation owns its path
-// without VFMA; every fight mode borrows the actual six-slot producer.
+// State 10 interpolates motion without VFMA; fight modes read the six-slot producer.
+
 void camCtrlEvaluateGoal() {
     g_cameraControl->flags &= ~CameraRaycastEnabled;
     if (IsWazamakiInactive() != 0)
@@ -5112,7 +5123,7 @@ void camCtrlSetPerspective(std::uint16_t perspective) noexcept {
         g_cameraControl->currentFovAngle = perspective;
 }
 
-// PPFX's reset call is middleware; the game-owned distance latch remains live without PPFX.
+// Update the camera-distance latch independently of PPFX.
 void camCtrlSetNextPosition(const Vector3 &position) noexcept {
     CameraRuntime *const camera = g_cameraControl;
     const float dy = camera->previousPosition.y - position.y;
@@ -5411,10 +5422,8 @@ bool camCtrlIsScreenSpaceVisible(const Vector3 &centre, float radius) {
     return point.y <= vertical && -vertical < point.y;
 }
 
-// @verified - p
-bool camCtrlCheckPosition(const Vector3 &position, float radius) {
-    // camCtrlCheckPos/camCtrlCheckPosition use the WALC-augmented camera buffer,
-    // not the primary world-model depth buffer or the ambient node matrix.
+namespace {
+bool CheckFieldDepthPosition(const std::array<CameraFieldDepthSample, 257> &samples, const Vector3 &position, float radius) {
     Matrix4x4_Push(&fieldDepthTransform);
     const Vector3 point = TransformFieldDepthPoint(position);
     Matrix4x4::Pop(1);
@@ -5423,16 +5432,26 @@ bool camCtrlCheckPosition(const Vector3 &position, float radius) {
         return true;
     const float threshold = depth - radius * 0.5f;
     const std::int32_t first = std::clamp(static_cast<std::int32_t>(((point.x - radius) / depth) * 128.0f), -128, 128) + 128;
-    if (cameraFieldDepth[first].depth >= threshold)
+    if (samples[first].depth >= threshold)
         return true;
     const std::int32_t last = std::clamp(static_cast<std::int32_t>(((point.x + radius) / depth) * 128.0f), -128, 128) + 128;
-    if (cameraFieldDepth[last].depth >= threshold)
+    if (samples[last].depth >= threshold)
         return true;
     for (std::int32_t sample = last - 1; sample >= first; --sample) {
-        if (cameraFieldDepth[sample].depth >= threshold)
+        if (samples[sample].depth >= threshold)
             return true;
     }
     return false;
+}
+} // namespace
+
+// @verified - p
+bool camCtrlCheckPosition(const Vector3 &position, float radius) {
+    return CheckFieldDepthPosition(cameraFieldDepth, position, radius);
+}
+
+bool camCtrlCheckWorldPosition(const Vector3 &position, float radius) {
+    return CheckFieldDepthPosition(worldFieldDepth, position, radius);
 }
 
 void camCtrlSetProjectedShadowDepth(float distance) {
@@ -5464,8 +5483,8 @@ void camCtrlSubmitFieldDepth(const CameraRuntime &camera) {
     const float farDistance = camCtrlGetFarDistance();
     const std::uint16_t inverseYaw = static_cast<std::uint16_t>(-camCtrlGetNextRotY());
 
-    // camCtrlSubmitMatrices. The buffers are process-owned;
-    // every publication starts a new id/depth generation.
+    // Matrix buffers are persistent; each publication starts a new ID/depth generation.
+
     fieldDepthPointCount = 0;
     worldFieldDepth.fill({0x10000U, 20000.0f});
     const MapCellOffset cameraCell = GetFieldDepthCell(camera.nextPosition.x, camera.nextPosition.z);

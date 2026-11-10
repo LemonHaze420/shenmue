@@ -48,6 +48,12 @@ void NormalizeVector3(Vector3 *vector) {
     }
 }
 
+void NormalizeVector4(Vector4 *vector) {
+    const float x = vector->x, y = vector->y, z = vector->z, w = vector->w;
+    const float length = std::sqrt(((x * x + y * y) + z * z) + w * w);
+    *vector = {.x = x * (1.0f / length), .y = y * (1.0f / length), .z = z * (1.0f / length), .w = w * (1.0f / length)};
+}
+
 // @verified - p
 void InvertModelWorkTransform() {
     g_modelInverseTransform = workTransformMatrix;

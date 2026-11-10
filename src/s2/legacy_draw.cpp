@@ -21,6 +21,7 @@
 #include "s2/legacy_sprite.hpp"
 #include "s2/texture_source.hpp"
 #include "s2/pak.hpp"
+#include "s2/player.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -63,6 +64,7 @@ std::uint64_t engineFlags = 0x0000000007fff817ULL;
 std::uint32_t stencilReference = 0;
 std::uint32_t renderingMode = 9;
 std::uint64_t blendFlags = 0x00000000f0000290ULL;
+std::uint32_t stripPacketCommandType{};
 std::array<std::int32_t, 2> stripPacketBlendModes{};
 std::array<std::array<std::uint32_t, 4>, 4> pixelSamplerKeys{{
     {{0x999bc2aaU, 0x0002fd99U, 0, 0}},
@@ -76,6 +78,7 @@ std::array<std::uint32_t, 10> currentLegacyVertexShaderMap{};
 std::int32_t currentVertexColourLayoutType = 1;
 std::uint32_t currentVertexColourShader = 0;
 std::array<LegacyVertexColourStateRecord, 16> legacyVertexColourStates{};
+std::uint32_t legacyVertexColourStateMask{};
 std::array<LightRuntimeEntry, 16> selectedLights{};
 Vector3 globalLightColour{};
 std::uint32_t packedGlobalLightColour{};
@@ -860,7 +863,7 @@ void SelectShader(d3t::D3TRenderState &state, std::uint32_t primitiveType) {
 }
 
 void BindPixelTexture0(d3t::D3TRenderState &state, std::uint32_t texture) {
-    // D3T PS resource table and view-flags table, verified in both games.
+    // D3T pixel-shader resource and view-flag tables.
     auto *const bytes = reinterpret_cast<std::byte *>(&state);
     constexpr std::size_t textureOffset = 0x1b4;
     constexpr std::size_t viewFlagsOffset = 0x334;
@@ -976,9 +979,9 @@ void AssignPixelShaderForShenmue(std::span<const std::byte> bytes, std::size_t c
     const std::uint64_t materialExtra = ReadValue<std::uint64_t>(bytes, command + 0x34);
     material.w = ReadValue<float>(bytes, command + 0x38);
 
-    // AssignPixelShaderForShenmue writes aliases inside the contiguous
-    // GShaderParams upload: spotLights[0].pos, g_pTexture2D_0,
-    // stru_...9A48 and dword_...9A58 are c[5], c[6], c[7], c[8].
+    // GShaderParams c[5..8] share storage with the first spotlight position,
+    // texture pointer and the two following fields.
+
     shaderParameters.constants[5] = {
         lightScale.x * modelLightVector.x * material.x, lightScale.y * modelLightVector.y * material.y, lightScale.z * modelLightVector.z * material.z, 1.0f};
     if (legacyAlphaPassEnabled) {
@@ -1008,7 +1011,6 @@ std::array<std::byte, 0x74> postFxModeDefaults{};
 std::array<std::byte, 0x74> postFxModeCurrent{};
 bool postFxModeActive = false;
 float postFxModeScale = 1.0f;
-std::uint32_t postFxScratchTexture = 0;
 std::uint32_t postFxRetainedTexture = 0;
 
 template <typename Value> void WritePostFxModeValue(std::array<std::byte, 0x74> &bank, std::size_t offset, const Value &value) {
@@ -1101,35 +1103,6 @@ void ApplyPostProcessingMode(std::int32_t mode) {
     WritePostFxModeValue(postFxModeCurrent, 0x54, 1.0f);
     WritePostFxModeValue(postFxModeCurrent, 0x58, 0.80000001f);
     postFxModeScale = 1.05f;
-}
-
-std::uint32_t CurrentPostProcessingRenderTarget() {
-    auto *const context = d3t::DX11::g_ppD3DDeviceContext;
-    if (!context)
-        return 0;
-    std::uint32_t texture{};
-    std::memcpy(&texture, d3t::GetRenderState(*context).outputTargets.data(), sizeof(texture));
-    return texture;
-}
-
-bool EnsurePostProcessingScratch(std::uint32_t sceneTexture) {
-    d3t::Texture2DDescription scene{};
-    if (!sceneTexture || !d3t::GetTexture2DDescription(sceneTexture, &scene)) {
-        return false;
-    }
-    d3t::Texture2DDescription scratch{};
-    if (postFxScratchTexture && d3t::GetTexture2DDescription(postFxScratchTexture, &scratch) && scratch.width == scene.width &&
-        scratch.height == scene.height && scratch.arraySize == scene.arraySize && scratch.mipLevels == scene.mipLevels && scratch.format == scene.format &&
-        scratch.sampleCount == scene.sampleCount && scratch.sampleQuality == scene.sampleQuality) {
-        return true;
-    }
-    if (postFxScratchTexture) {
-        d3t::InitTexture2DResource(postFxScratchTexture);
-        postFxScratchTexture = 0;
-    }
-    scene.initialData = nullptr;
-    postFxScratchTexture = d3t::CreateTexture2D(&scene);
-    return postFxScratchTexture != 0;
 }
 
 bool RecreatePostFxRetainedTexture(std::uint32_t sceneTexture) {
@@ -1607,9 +1580,18 @@ void PerformCommonShaderPass(std::uint32_t colour) {
 #endif
 }
 
+void InitShenmueGlobals() {
+    for (std::uint32_t stage = 0; stage < SAVED_ALPHA_OPERATIONS.size(); ++stage)
+        for (std::size_t index = 0; index < SAVED_ALPHA_SETTINGS.size(); ++index)
+            SetAlphaFlags(stage, SAVED_ALPHA_SETTINGS[index], SAVED_ALPHA_OPERATIONS[stage][index]);
+}
+
 void InitializeLegacyDrawState() {
     shaderParameterStorage.fill(std::byte{});
     InitShenmueRendering();
+    InitShenmueGlobals();
+    for (std::array<std::uint32_t, 4> &key : pixelSamplerKeys)
+        key = {0x0003c02aU, 0, 0, 0};
 
 
     shaderParameters.base.fogColour = {1.0f, 1.0f, 1.0f};
@@ -1627,8 +1609,8 @@ void InitializeLegacyDrawState() {
     shaderParameters.constant1[0] = {};
     shaderParameters.constant1[1] = {0.5f, 0.0f, 0.5f, 0.0f};
 
-    // Initialization calls SetMiscFlags(1, 1, 1, 1, 1) immediately after
-    // InitSystemMatrices.  These are its exact writes into GShaderParams.c.
+    // SetMiscFlags(1, 1, 1, 1, 1) initializes these GShaderParams slots after InitSystemMatrices.
+
     shaderParameters.constants[0] = {0.0f, 0.0f, 1.0f, 0.5f};
     shaderParameters.constants[10] = {0.0f, 0.0f, -1.0f, 1.0f};
     shaderParameters.constants[12] = {1.0f, 1.0f, 1.0f, 1.0f};
@@ -1742,29 +1724,28 @@ void InitializeLegacyPostProcessingParameters() {
 }
 
 void InitializeLegacyPostFxTransitionTexture() {
-    RecreatePostFxRetainedTexture(CurrentPostProcessingRenderTarget());
+    RecreatePostFxRetainedTexture(*GetFullscreenTexture());
 }
 
 void RenderLegacyPostFxTransition(float alpha) {
     if (GetLegacyPerspectiveProjection() == 1)
         return;
 
-    const std::uint32_t sceneTexture = CurrentPostProcessingRenderTarget();
-    if (!EnsurePostProcessingScratch(sceneTexture))
-        return;
+    const std::uint32_t sceneTexture = *GetFullscreenTexture();
+    const std::uint32_t postProcessingTarget = GetPostProcessingRenderTarget(1);
     if (!PostFxRetainedTextureMatches(sceneTexture) && !RecreatePostFxRetainedTexture(sceneTexture)) {
         return;
     }
 
     // RenderLegacyPostFxTransition preserves the current scene in scratch, restores the
     // separately retained texture to scene, then alpha scratch over scene.
-    if (!RenderLegacyFullscreenQuad(postFxScratchTexture, sceneTexture, g_defaultPixelShader, nullptr)) {
+    if (!RenderLegacyFullscreenQuad(postProcessingTarget, sceneTexture, g_defaultPixelShader, nullptr)) {
         return;
     }
     if (!RenderLegacyFullscreenQuad(sceneTexture, postFxRetainedTexture, g_defaultPixelShader, nullptr)) {
         return;
     }
-    RenderLegacyFullscreenQuadAlpha(sceneTexture, postFxScratchTexture, alpha);
+    RenderLegacyFullscreenQuadAlpha(sceneTexture, postProcessingTarget, alpha);
 }
 
 void ReleaseLegacyPostProcessingTargets() {
@@ -1772,10 +1753,6 @@ void ReleaseLegacyPostProcessingTargets() {
     if (postFxRetainedTexture) {
         d3t::InitTexture2DResource(postFxRetainedTexture);
         postFxRetainedTexture = 0;
-    }
-    if (postFxScratchTexture) {
-        d3t::InitTexture2DResource(postFxScratchTexture);
-        postFxScratchTexture = 0;
     }
 #if defined(_WIN32)
     if (smokeDraw.mapped && d3t::DX11::g_ppD3DDeviceContext) {
@@ -1800,14 +1777,13 @@ void RenderPostProcessing(std::int32_t pass) {
     if (pass == 2)
         return;
 
-    const std::uint32_t sceneTexture = CurrentPostProcessingRenderTarget();
-    if (!EnsurePostProcessingScratch(sceneTexture))
-        return;
+    const std::uint32_t sceneTexture = *GetFullscreenTexture();
+    const std::uint32_t postProcessingTarget = GetPostProcessingRenderTarget(pass);
 
     for (std::size_t slot = 0; slot < 2; ++slot) {
         const PostEffectShaderPacket &packet = postProcessing.packets[slot + 2U * static_cast<std::size_t>(pass)];
-        const std::uint32_t outputTexture = slot != 0 ? sceneTexture : postFxScratchTexture;
-        const std::uint32_t inputTexture = slot != 0 ? postFxScratchTexture : sceneTexture;
+        const std::uint32_t outputTexture = slot != 0 ? sceneTexture : postProcessingTarget;
+        const std::uint32_t inputTexture = slot != 0 ? postProcessingTarget : sceneTexture;
         switch (packet.kind) {
         case 2: {
             const float mode = std::abs(ReadPostEffectFloat(packet, 2)) * 1000.0f + ReadPostEffectFloat(packet, 0) + ReadPostEffectFloat(packet, 1) * 100.0f;
@@ -1867,7 +1843,56 @@ bool GetLegacyVertexColourStateEnabled(std::uint32_t slot) {
 void SetLegacyVertexColourStateEnabled(std::uint32_t slot, bool enabled) {
     if (slot < legacyVertexColourStates.size()) {
         legacyVertexColourStates[slot].enabled = enabled;
+        legacyVertexColourStateMask = enabled ? legacyVertexColourStateMask | 1U << slot : legacyVertexColourStateMask & ~(1U << slot);
     }
+}
+
+void SetupEffeTransform() {
+    legacyVertexColourStates.fill(LEGACY_VERTEX_COLOUR_STATE_DEFAULT);
+    legacyVertexColourStateMask = 0;
+}
+
+void ClearLegacySelectedLights() {
+    selectedLights.fill({});
+}
+
+std::int32_t stripEffectEnabled{};
+std::uint8_t stripEffectMode{};
+std::int32_t legacyEffectEnabled{};
+std::int32_t legacyEffectSecondaryEnabled{};
+std::int32_t stripEffectFinalEnabled{};
+
+void EnableStripEffect() {
+    if (stripEffectEnabled == 0)
+        stripEffectEnabled = 1;
+}
+
+void SetStripEffectMode(std::uint8_t mode) {
+    stripEffectMode = mode;
+}
+
+std::int32_t EnableLegacyEffect() {
+    if (legacyEffectEnabled == 0)
+        legacyEffectEnabled = 1;
+    return 0;
+}
+
+void EnableLegacyEffectSecondary() {
+    if (legacyEffectSecondaryEnabled == 0)
+        legacyEffectSecondaryEnabled = 1;
+}
+
+void EnableStripEffectFinal() {
+    if (stripEffectFinalEnabled == 0)
+        stripEffectFinalEnabled = 1;
+}
+
+std::array<std::uint32_t, 1024> effectRenderPassTable{};
+
+void InitializeEffectRenderPassTable() {
+    effectRenderPassTable.fill(0);
+    effectRenderPassTable[0] = 0xffffffffU;
+    effectRenderPassTable[1] = 0xff000000U;
 }
 
 // @verified - p
@@ -2012,6 +2037,10 @@ void SetSelectedLightIntensity(std::uint32_t slot, float intensity) {
         intensity = 0.0f;
     if (slot < selectedLights.size())
         selectedLights[slot].vectors[1].y = intensity;
+}
+
+float GetSelectedLightIntensity(std::uint32_t slot) {
+    return slot < selectedLights.size() ? selectedLights[slot].vectors[1].y : 0.0f;
 }
 
 // @verified - p
@@ -2898,9 +2927,9 @@ void BindLegacyVertexStream(d3t::D3TRenderState &state, const LegacyDrawResource
         return;
     const std::uint32_t handle = static_cast<std::uint32_t>(ResolveVertexBuffer(resources, localIndex));
 #if defined(_WIN32)
-    // UnmapAll/SetVertexStreamHandleFromCmd release this stream's mapped
-    // temporary buffer before replacing its handle; a later draw must not
-    // republish the old resource-cache binding.
+    // Release the mapped temporary buffer before replacing the stream handle.
+    // Later draws must not reuse the old resource-cache binding.
+
     auto *const context = d3t::DX11::g_ppD3DDeviceContext;
     if (slot < context->resourceCache.size() / 3) {
         auto *const cache = context->resourceCache.data() + slot * 3;
@@ -3119,9 +3148,17 @@ std::uint32_t ExecuteLegacyDrawPacket(
             const std::uint32_t count = ReadValue<std::uint32_t>(modelBytes, command + 4);
             if (!Contains(modelBytes, command + 8, std::size_t(count) * 4U))
                 return draws;
+            bool alphaPassOverride = false;
             for (std::uint32_t index = 0; index < count; ++index) {
                 const std::size_t record = command + 8U + index * 4U;
-                SetEngineFlag(ReadValue<std::uint16_t>(modelBytes, record), ReadValue<std::uint16_t>(modelBytes, record + 2U));
+                const std::uint16_t engineState = ReadValue<std::uint16_t>(modelBytes, record), value = ReadValue<std::uint16_t>(modelBytes, record + 2U);
+                if (engineState == 0x3a && value == 514 && legacyAlphaPassEnabled)
+                    alphaPassOverride = true;
+                SetEngineFlag(engineState, value);
+            }
+            if (alphaPassOverride) {
+                SetEngineFlag(0x3d, 0);
+                SetEngineFlag(0x3a, 517);
             }
             break;
         }
@@ -3299,7 +3336,6 @@ void DrawQueuedFireQuad(void *data) {
 #endif
 }
 } // namespace
-
 
 static std::uint32_t ExecuteLegacyDrawCommandStreamInternal(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset,
     const LegacyDrawResources &resources, LegacyModelShaderPath shaderPath, float alpha, bool manageModelState) {
@@ -4021,6 +4057,28 @@ std::uint32_t SetModelFlagDataWithAlpha(std::span<const std::byte> modelBytes, s
     legacyAlphaPassEnabled = false;
     legacyVertexColourStateActive = false;
     temporaryModelScale = 1.0f;
+    return draws;
+}
+
+std::uint32_t ModelFlagDispatch_ReadModelDataAlpha(
+    std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources, float alpha) {
+    if (!GetLegacyBusyPreparingDraw())
+        return ReadModelDataWithAlpha(modelBytes, xb01Offset, resources, alpha);
+    if (alpha < 0.050000001f)
+        SetLegacyBusyPreparingDraw(false);
+    const std::uint32_t draws = ReadModelDataWithAlpha(modelBytes, xb01Offset, resources, alpha);
+    SetLegacyBusyPreparingDraw(true);
+    return draws;
+}
+
+std::uint32_t ModelFlagDispatch_SetModelFlagDataAlpha(
+    std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources, float alpha) {
+    if (!GetLegacyBusyPreparingDraw())
+        return SetModelFlagDataWithAlpha(modelBytes, xb01Offset, resources, alpha);
+    if (alpha < 0.050000001f)
+        SetLegacyBusyPreparingDraw(false);
+    const std::uint32_t draws = SetModelFlagDataWithAlpha(modelBytes, xb01Offset, resources, alpha);
+    SetLegacyBusyPreparingDraw(true);
     return draws;
 }
 
@@ -5509,9 +5567,9 @@ void GetLegacyStripBlendModes(std::int32_t *source, std::int32_t *destination) {
 }
 
 void SetLegacyStripBlendModes(std::int32_t source, std::int32_t destination) {
-
-
+    stripPacketCommandType = 192;
     stripPacketBlendModes = {source, destination};
+    (void)ReturnZero();
 }
 
 } // namespace shenmue::s2

@@ -41,6 +41,12 @@ void ResetPatiNailModelState() {
 }
 // @verified - p
 void AttachPatiNails(PatiEventWork *work, shen_name board, const char *nailFile) {
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4443, "ePATI_set_nail(%x,", work);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4444, "%c", board.name & 0xff);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4445, "%c", board.name >> 8 & 0xff);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4446, "%c", board.name >> 16 & 0xff);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4447, "%c,", board.name >> 24);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4448, "%s)\n", nailFile);
     RestorePatiNailModels();
     Character *character = ctrlGetScenarioChara(board);
     MT7Model &model = *static_cast<MT7Model *>(character->model);

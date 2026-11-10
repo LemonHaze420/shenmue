@@ -4,8 +4,7 @@
 #if defined(SHENMUE_EVENT_ENTRY)
 static BellWork *bellWork;
 
-void BellMain(const unsigned int *argument)
-{
+void BellMain(const unsigned int *argument) {
     HLibTask *task;
     FTBL.DebugLogToFileRemoved("BELL_EVENT mode[%d]\n", *argument);
     if (*argument == 0) {
@@ -43,8 +42,7 @@ const char bellPackage[] = "BELL";
 #else
 static BellSearchTarget bellTargets[2];
 
-void BellLoadNpcCallback(void *data)
-{
+void BellLoadNpcCallback(void *data) {
     if (FTBL.ForceLoadNpc(BELL_REN)) {
         FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(BELL_REN));
         FTBL.EV_SetCharacterAlphaEnabled(BELL_REN, 0);
@@ -53,8 +51,7 @@ void BellLoadNpcCallback(void *data)
     }
 }
 
-void BellInteractionInitCallback(void *data)
-{
+void BellInteractionInitCallback(void *data) {
     BellWork *work = (BellWork *)data;
     Vector3 position;
     Vector3i rotation;
@@ -120,8 +117,7 @@ void BellInteractionInitCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(BellInteractionCallback);
 }
 
-void BellInteractionCallback(void *data)
-{
+void BellInteractionCallback(void *data) {
     BellWork *work = (BellWork *)data;
     Vector3 position;
     Vector3i rotation;
@@ -358,8 +354,7 @@ void BellInteractionCallback(void *data)
     }
 }
 
-void BellRingCallback(void *data)
-{
+void BellRingCallback(void *data) {
     BellWork *work = (BellWork *)data;
     Vector3 position;
     Vector3i rotation, handRotation;
@@ -441,8 +436,7 @@ void BellRingCallback(void *data)
     }
 }
 
-void BellRestoreControl(void *data)
-{
+void BellRestoreControl(void *data) {
     ((BellWork *)data)->busy = 0;
     FTBL.SetPlayerControlEnabled(1);
     FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(BELL_RYO), 0, 0);
@@ -451,8 +445,7 @@ void BellRestoreControl(void *data)
     FTBL.camCtrlSetState(0);
 }
 
-void BellEyeTowardBell(void *data)
-{
+void BellEyeTowardBell(void *data) {
     Vector3 point;
     point.x = 208.1f;
     point.y = 105.0f;
@@ -460,13 +453,11 @@ void BellEyeTowardBell(void *data)
     FTBL.SetEyeToChara(FTBL.ctrlGetCharaByName(BELL_RYO), &point, 10, 2);
 }
 
-void BellResetEye(void *data)
-{
+void BellResetEye(void *data) {
     FTBL.SetEyeToChara(FTBL.ctrlGetCharaByName(BELL_RYO), 0, 16, 0);
 }
 
-void BellExitCallback(void *data)
-{
+void BellExitCallback(void *data) {
     BellWork *work = (BellWork *)data;
     FTBL.DebugLogToFileRemoved("=============== YAN_KANPOUYA_BELL_END ==============\n");
     FTBL.EV_setHoldStatesFlags(1);
@@ -597,7 +588,7 @@ int Conversation(std::uint8_t index) {
     case 1:
         Camera(210, ryo);
         camCtrlDisableFilmBars();
-        Voice("0202A019"); // @text EN: "Ren." | JA: "レン。"
+        Voice("0202A019");     // @text EN: "Ren." | JA: "レン。"
         Voice("0202A020", 20); // @text EN: "How does Yang get his information?" | JA: "いったいどうやって\nヤンは情報を？"
         Camera(250, anchor, 100);
         Voice("0202C014", 100); // @text EN: "His sources are the best in Hong Kong." | JA: "ヤツの仕入れルートは\n香港一だ。"
@@ -607,7 +598,7 @@ int Conversation(std::uint8_t index) {
     case 2:
         Camera(200, ryo);
         camCtrlDisableFilmBars();
-        Voice("0202A019"); // @text EN: "Ren." | JA: "レン。"
+        Voice("0202A019");     // @text EN: "Ren." | JA: "レン。"
         Voice("0202A022", 20); // @text EN: "I've never seen these things before." | JA: "みんな見かけない物ばかりだな。"
         Camera(220, anchor, 90);
         Voice("0202C017", 90); // @text EN: "Aren't there any medicine shops in Japan?" | JA: "日本に漢方薬屋はねえのか？"
@@ -619,32 +610,36 @@ int Conversation(std::uint8_t index) {
     case 3:
         Camera(200, ryo);
         camCtrlDisableFilmBars();
-        Voice("0202A019"); // @text EN: "Ren." | JA: "レン。"
+        Voice("0202A019");     // @text EN: "Ren." | JA: "レン。"
         Voice("0202A024", 20); // @text EN: "Do the medicines here work?" | JA: "ここの薬は効くのか？"
         Camera(250, anchor, 80);
-        Voice("0202C019", 80); // @text EN: "They're quite well known.\nThere's even Dongzhongxiacao here." | JA: "その筋じゃ有名だ。\n冬虫夏草とかもあるぜ。"
+        Voice("0202C019", 80);  // @text EN: "They're quite well known.\nThere's even Dongzhongxiacao here." | JA: "その筋じゃ有名だ。\n冬虫夏草とかもあるぜ。"
         Voice("0202A025", 210); // @text EN: "What is that?" | JA: "なんだ、それは？"
         Camera(240, anchor, 250);
         Voice("0202C020", 250); // @text EN: "It's a plant that grows out\nof an insect in the ground." | JA: "土ん中にいる虫とかに\n寄生して育つ植物だ。"
-        Voice("0202C021", 350); // @text EN: "An insect in the winter that\nturns into a plant by the summer." | JA: "冬には虫だったものが\n夏には草になっている。"
+        Voice("0202C021",
+            350); // @text EN: "An insect in the winter that\nturns into a plant by the summer." | JA: "冬には虫だったものが\n夏には草になっている。"
         Camera(210, ryo, 480);
         Voice("0202A026", 480); // @text EN: "Dongzhongxiacao=@" | JA: "だから冬虫夏草か。"
         Voice("0202A027", 540); // @text EN: "And that becomes a medicine?" | JA: "そんなものも薬になるのか？"
         Camera(230, anchor, 610);
         Voice("0202C022", 610); // @text EN: "I heard it's highly nutritious." | JA: "滋養強壮に効くって話だ。"
-        Voice("0202C023", 680); // @text EN: "But Yang here sells fake stuff too,\ndepending on the customer." | JA: "まあ、ヤンの野郎は客によっちゃ、\nまがい物をつかませるからな。"
+        Voice("0202C023",
+            680); // @text EN: "But Yang here sells fake stuff too,\ndepending on the customer." | JA: "まあ、ヤンの野郎は客によっちゃ、\nまがい物をつかませるからな。"
         return 850;
     case 4:
         Camera(250, anchor);
         camCtrlDisableFilmBars();
-        Voice("0202A019"); // @text EN: "Ren." | JA: "レン。"
+        Voice("0202A019");     // @text EN: "Ren." | JA: "レン。"
         Voice("0202C024", 20); // @text EN: "Enough talking now." | JA: "もう、くっちゃべるのは\nいいだろ。"
         Camera(220, anchor, 130);
         Voice("0202C025", 130); // @text EN: "Just ring the bell." | JA: "さっさと呼び鈴を押せ。"
         Voice("0202A009", 200); // @text EN: "Yeah." | JA: "ああ。"
         return 240;
     default: {
-        Voice(static_cast<std::uint8_t>(static_cast<std::int32_t>(GetRandomNumberInRange(2))) == 0 ? "0202A019" : "0202A028"); // @text 0202A019 EN: "Ren." | JA: "レン。" ; 0202A028 EN: "Hey." | JA: "おい。"
+        Voice(static_cast<std::uint8_t>(static_cast<std::int32_t>(GetRandomNumberInRange(2))) == 0 ?
+                "0202A019" :
+                "0202A028"); // @text 0202A019 EN: "Ren." | JA: "レン。" ; 0202A028 EN: "Hey." | JA: "おい。"
         const std::uint8_t choice = static_cast<std::uint8_t>(static_cast<std::int32_t>(GetRandomNumberInRange(3)));
         if (choice == 0) {
             Camera(240, anchor, 20);
@@ -773,14 +768,14 @@ void BellInteractionCallback(void *parameter) {
         Pose(ryo, {208.2f, 103.6f, 196}, 24576);
         int camera = 120;
         if (!state->escapeTalks) {
-            Voice("0202C028"); // @text EN: "Where do you think you're going?" | JA: "おい、どこ行くんだ。"
+            Voice("0202C028");     // @text EN: "Where do you think you're going?" | JA: "おい、どこ行くんだ。"
             Voice("0202C036", 60); // @text EN: "Hurry up and ring the bell." | JA: "とっとと呼び鈴を押せよ。"
         } else if (state->escapeTalks == 1) {
-            Voice("0202C037"); // @text EN: "What are you doing, stupid?" | JA: "何してんだ、バカ。"
+            Voice("0202C037");     // @text EN: "What are you doing, stupid?" | JA: "何してんだ、バカ。"
             Voice("0202C038", 70); // @text EN: "Ring the bell and get Yang!" | JA: "呼び鈴押して\nヤンを呼べってんだよ。"
             camera = 121;
         } else {
-            Voice("0202C039"); // @text EN: "Where are you going?" | JA: "どこ行くつもりだ。"
+            Voice("0202C039");     // @text EN: "Where are you going?" | JA: "どこ行くつもりだ。"
             Voice("0202C025", 70); // @text EN: "Just ring the bell." | JA: "さっさと呼び鈴を押せ。"
             if (state->escapeTalks == 2)
                 camera = 122;
@@ -813,13 +808,13 @@ void BellInteractionCallback(void *parameter) {
             RequestMemoClose();
         EVT_AT_SetMot(ryo, 0xf003, 0, 1, 0x80000000U, 0);
         if (state->elapsed == 900) {
-            Voice("0202C032"); // @text EN: "What are you waiting for?" | JA: "何、ぐずぐずしてんだ。"
+            Voice("0202C032");     // @text EN: "What are you waiting for?" | JA: "何、ぐずぐずしてんだ。"
             Voice("0202C026", 70); // @text EN: "Ring the damn bell." | JA: "呼び鈴を押しゃあ\nいいんだよ。"
         } else if (state->elapsed == 1800) {
-            Voice("0202C033"); // @text EN: "You're wasting time." | JA: "時間がもったいねえだろ。"
+            Voice("0202C033");     // @text EN: "You're wasting time." | JA: "時間がもったいねえだろ。"
             Voice("0202C025", 60); // @text EN: "Just ring the bell." | JA: "さっさと呼び鈴を押せ。"
         } else {
-            Voice("0202C034"); // @text EN: "Give me a break." | JA: "おい、いいかげんにしろ。"
+            Voice("0202C034");     // @text EN: "Give me a break." | JA: "おい、いいかげんにしろ。"
             Voice("0202C035", 70); // @text EN: "Ring the bell and get Yang." | JA: "呼び鈴押して\nヤンを呼べ。"
         }
     }
@@ -828,7 +823,7 @@ void BellInteractionCallback(void *parameter) {
     if (IsItemSelectable())
         RequestMemoClose();
     srchReset();
-    RefreshPadTask(0, 1);
+    RefreshPadControlData(0, 1);
     SetPlayerControlEnabled(0);
     Pose(ren, {207.7f, 103.6f, 194.96001f}, 58982);
     DisableScenarioCharacterDisplay(ryo);

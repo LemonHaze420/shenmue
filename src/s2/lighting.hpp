@@ -9,7 +9,9 @@
 #include <cstdint>
 #include <span>
 #define SHENMUE_LIGHT_ARRAY(type, name, count) std::array<type, count> name
-#define SHENMUE_LIGHT_DEFAULT {}
+#define SHENMUE_LIGHT_DEFAULT                                                                                                                                  \
+    {                                                                                                                                                          \
+    }
 
 namespace shenmue { namespace s2 {
 struct MT7Node;
@@ -23,8 +25,12 @@ inline constexpr shen_name WEATHER_LENS_PACKAGE{SHEN_NAME(LNSW)}, WEATHER_LENS_M
 struct WeatherLensMaterialParameter {
     std::uint32_t model, parameter;
 };
-#define SHENMUE_LENS_PARAMETERS inline constexpr std::array<WeatherLensMaterialParameter, 11> WEATHER_LENS_MATERIAL_PARAMETERS{{
-#define SHENMUE_LENS_PARAMETERS_END }}
+#define SHENMUE_LENS_PARAMETERS                                                                                                                                \
+    inline constexpr std::array<WeatherLensMaterialParameter, 11> WEATHER_LENS_MATERIAL_PARAMETERS {                                                           \
+        {
+#define SHENMUE_LENS_PARAMETERS_END                                                                                                                            \
+    }                                                                                                                                                          \
+    }
 SHENMUE_LENS_PARAMETERS {11, 1157240422}, {0, 1157238784}, {1, 1157238784}, {2, 1157238784}, {4, 1157235507}, {5, 0x44fa1000},
     {6, 1157238784}, {7, 1157238784}, {8, 1157238784}, {9, 1157237146}, {10, 1157237146} SHENMUE_LENS_PARAMETERS_END;
 #undef SHENMUE_LENS_PARAMETERS
@@ -73,6 +79,7 @@ bool RegisterLightData(const void *block, std::int32_t identifier, std::size_t s
 void UnregisterLightData(std::int32_t identifier);
 std::int32_t GetCurrentActiveLight();
 void SetCurrentActiveLight(std::int32_t mode);
+void SetupEffectTransforms();
 void DrawPreparedVertexColours(const MT7Model *model, const MT7Node *node, float alpha);
 void ResetLightEntry(std::uint32_t slot);
 void SetLightKind(std::uint32_t slot, std::int32_t kind);
@@ -236,6 +243,7 @@ std::uint32_t GetMapLightingPlacementRotation(std::int32_t index);
 std::uint32_t GetMapLightingPlacementActive(std::int32_t index);
 MapLightingPlacement *GetMapLightingPlacement(std::int32_t index);
 void SetMapLightingPlacementEnabled(std::int32_t value, std::int32_t index);
+std::uint32_t EV_SetMapLightingPlacementEnabled(std::int32_t index, std::int32_t enabled);
 std::uint32_t SetMapLightingPlacementPosition(const Vector3 *position, std::int32_t index);
 void SetMapLightingPlacementRotation(std::int32_t value, std::int32_t index);
 std::int64_t AttachMapLightingPlacement(std::int32_t mapSlot, std::int32_t placement);

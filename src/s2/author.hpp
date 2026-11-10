@@ -193,11 +193,11 @@ enum class AuthSceneCtrl : std::int64_t {
     SetAuthorStopped = -2,
     IsLoaded = -1,
     AU01 = SHEN_NAME(AU01),
-    AU02 = SHEN_NAME(AU02),
-    AU03 = SHEN_NAME(AU03),
-    AU04 = SHEN_NAME(AU04),
-    AU05 = SHEN_NAME(AU05),
-};
+        AU02 = SHEN_NAME(AU02),
+            AU03 = SHEN_NAME(AU03),
+                AU04 = SHEN_NAME(AU04),
+                    AU05 = SHEN_NAME(AU05),
+                    };
 
 struct MapInfoChunk;
 
@@ -260,7 +260,9 @@ std::int32_t FreeAUTH(const void *package);
 bool FindAuthor(shen_name id);
 // The author slot registered under `id`, searched from slot 69 down, or -1.
 std::int32_t probeSceneById(std::int32_t id);
-
+inline constexpr shen_name AUTHOR_FILE_STORAGE{SHEN_NAME(SCIF)};
+void LoadAuthorTableSlot(std::int32_t index, const char *filename, const char *directory);
+void SetAuthorTableFile(std::int32_t index, const char *filename, const char *directory);
 void authResetLoadFlag();
 
 std::int64_t EV_authSceneCtrl(AuthSceneCtrl command);

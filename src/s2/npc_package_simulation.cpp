@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/npc_package.hpp"
 
 #include "s2/archive_data.hpp"
@@ -7,6 +10,7 @@
 #include "s2/event_runtime.hpp"
 #include "s2/door.hpp"
 #include "s2/face.hpp"
+#include "s2/fight_stage.hpp"
 #include "s2/field_collision.hpp"
 #include "s2/frame_pacing.hpp"
 #include "s2/game_runtime.hpp"
@@ -249,6 +253,7 @@ void TickNpcRouteLiveEntries() {
             entry.streamRadius = radius;
     }
     std::int32_t environmentCount = 0;
+    const VFMA_t *const game = vfmaGetTaskParam();
     for (NpcRouteLiveEntry *entry = npcCrowdHead; entry; entry = entry->next) {
         if (entry->flags & 4U)
             UpdateNpcStreamFade(*entry);
@@ -263,7 +268,8 @@ void TickNpcRouteLiveEntries() {
             npcSetAlphaOnOff(entry->node, true);
         }
         if (entry->node)
-            mtwkSetEnvironmentEnabled(entry->motionWork, (entry->flags & 8U) || environmentCount++ < 5);
+            mtwkSetEnvironmentEnabled(
+                entry->motionWork, (entry->flags & 8U) || (game && static_cast<std::uint32_t>(GetBtlStatus(entry->node)) <= 1U) || environmentCount++ < 5);
     }
     NpcRouteLiveEntry *entry = npcCrowdHead;
     while (entry) {
@@ -357,3 +363,4 @@ void BuildRouteTimeWindow(std::int32_t startTick, std::int32_t endTick, std::int
     ActivateNpcAreaRoutes(true);
 }
 } // namespace shenmue::s2
+

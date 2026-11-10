@@ -44,7 +44,7 @@ template <class T> void Queue(HLib::TaskCallback callback, const T &data) {
     RegisterEventTask(task);
     *static_cast<T *>(HLib::GetTaskParameter(task)) = data;
 }
-}
+} // namespace
 
 
 
@@ -240,7 +240,12 @@ void EVT_AT_SetAngY(shen_name character, shen_name parent, float degrees, std::i
         EVT_AT_SetAngY_Callback(&request);
 }
 void EVT_AT_SetPosAng(shen_name character, shen_name parent, float x, float z, float degrees, std::int32_t delay) {
-    Queue(EVT_AT_SetPosAng_Callback, EventSetPositionAngle{1, character, parent, {x, 0, z}, degrees, static_cast<float>(delay)});
+    if (delay != 0) {
+        Queue(EVT_AT_SetPosAng_Callback, EventSetPositionAngle{1, character, parent, {x, 0, z}, degrees, static_cast<float>(delay)});
+        return;
+    }
+    EventSetPositionAngle parameter{0, character, parent, {x, 0, z}, degrees, 0.0f};
+    EVT_AT_SetPosAng_Callback(&parameter);
 }
 std::int32_t EVT_AT_SetMot(shen_name character, std::uint32_t animation, float frame, float speed, std::uint32_t flags, std::int32_t delay) {
     EventSetMotion request{delay != 0, character, animation, frame, speed, flags, static_cast<float>(delay)};
@@ -425,16 +430,15 @@ void EVT_AT_CtrlHandUp_Callback(void *data) {
     EventControlHand &parameter = *static_cast<EventControlHand *>(data);
     if (Waiting(parameter.delay))
         return;
-    ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(parameter.character), static_cast<std::int32_t>(parameter.side), parameter.command,
-        static_cast<std::int16_t>(parameter.ticks));
+    ApplyCharacterHandPoseCommand(
+        ctrlGetScenarioChara(parameter.character), static_cast<std::int32_t>(parameter.side), parameter.command, static_cast<std::int16_t>(parameter.ticks));
     Complete(parameter.cleanup);
 }
 
 // @verified - p
 std::uintptr_t Queue_EVT_AT_CtrlHandUp_1(shen_name character, std::uint32_t side, std::byte *command, std::uint32_t ticks, std::int32_t delay) {
     if (delay == 0)
-        return ApplyCharacterHandPoseCommand(
-            ctrlGetScenarioChara(character), static_cast<std::int32_t>(side), command, static_cast<std::int16_t>(ticks));
+        return ApplyCharacterHandPoseCommand(ctrlGetScenarioChara(character), static_cast<std::int32_t>(side), command, static_cast<std::int16_t>(ticks));
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(EVT_AT_CtrlHandUp_Callback, 6, 0x0b, 0x20, EVENT_QUEUED_HAND_TASK);
     RegisterEventTask(task);
     EventControlHand *const parameter = static_cast<EventControlHand *>(HLib::GetTaskParameter(task));

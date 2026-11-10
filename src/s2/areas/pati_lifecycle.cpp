@@ -61,8 +61,8 @@ bool LoadPatiEvent(PatiEventWork *work) {
     if (g_currentMap.name == PATI_CHALLENGE_MAP.name && EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1234))
         return false;
     if (!EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("PATI"), 0)) {
-        if (!EV_pakUtils(PakCategory::Package, PakPackageOp::Load,
-                reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)), reinterpret_cast<std::uintptr_t>("PATI")))
+        if (!EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)),
+                reinterpret_cast<std::uintptr_t>("PATI")))
             return false;
         if (!EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0))
             return false;
@@ -94,23 +94,30 @@ void CreatePatiEventResources(PatiEventWork *work) {
     const PatiVoicePartition *voice = PATI_VOICE_PARTITIONS;
     while (voice->name && std::strcmp(voice->name, work->game.voicePrefix))
         ++voice;
-    if (!voice->name)
+    if (!voice->name) {
+        PatiDebugLog("PATI\\ePATI_et_patinko.c", 4297, "NoVoiceFile:%s!!\n", work->game.voicePrefix);
         std::sprintf(work->game.voicePrefix, "0104");
+    }
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4303, "PATI:New-Load [PATI]afs\n");
     const std::int64_t partition = EV_pakUtils(PakCategory::Partition, PakPartitionOp::Mount,
         reinterpret_cast<std::uintptr_t>(Filepath_Gen(FilepathGenMode::PackDirectory)), reinterpret_cast<std::uintptr_t>("PATI.afs"));
-    EV_pakUtils(
-        PakCategory::Package, PakPackageOp::LoadAfs, static_cast<std::uintptr_t>(partition), static_cast<std::uint32_t>(voice->text), voice->sound);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4305, "evl_PAKLOAD_AFS [PATI] %i\n", static_cast<std::int32_t>(partition));
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4309, "evl_PAKLOAD_AFS [PATI] %i,%i,%i\n", static_cast<std::int32_t>(partition), voice->text, voice->sound);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::LoadAfs, static_cast<std::uintptr_t>(partition), static_cast<std::uint32_t>(voice->text), voice->sound);
     EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_pakUtils(
-        PakCategory::Task, PakTaskOp::SetCurrentAfs, static_cast<std::uintptr_t>(partition), static_cast<std::uint32_t>(voice->text), voice->sound);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentAfs, static_cast<std::uintptr_t>(partition), static_cast<std::uint32_t>(voice->text), voice->sound);
     const void *source = LoadCurrentPakBinary(work->game.voicePrefix);
     const std::int32_t bytes = static_cast<std::int32_t>(GetCurrentPakBinarySize(work->game.voicePrefix));
     const std::int32_t rounded = (bytes + ((bytes >> 31) & 3)) & ~3;
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4317, "evl_PAK [PATI] %08x,%08x,%08x->", static_cast<std::int32_t>(partition), source, rounded);
     work->game.voiceLengths = static_cast<PatiVoiceLength *>(HLib::AllocateTaskData(static_cast<std::uint64_t>(rounded), PATI_AREA));
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4319, "%08x\n", work->game.voiceLengths);
     std::memcpy(work->game.voiceLengths, source, static_cast<std::size_t>(rounded));
-    EV_pakUtils(
-        PakCategory::Package, PakPackageOp::FreeAfs, static_cast<std::uintptr_t>(partition), static_cast<std::uint32_t>(voice->text), voice->sound);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4323, "evl_FREE_PAKFILE_AFS [PATI] %i,%i,%i\n", static_cast<std::int32_t>(partition), voice->text, voice->sound);
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FreeAfs, static_cast<std::uintptr_t>(partition), static_cast<std::uint32_t>(voice->text), voice->sound);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4327, "evl_UNMOUNT_AFS_PARTITION [PATI].afs %i\n", static_cast<std::int32_t>(partition));
     EV_pakUtils(PakCategory::Partition, PakPartitionOp::Unmount, static_cast<std::uintptr_t>(partition), 0);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 4330, "PATI_VOICE_NAME:%s\n", work->game.voicePrefix);
     EV_FreeAuthorPak(1, work->game.voicePrefix);
     mtwkUpdateWithPosition(FindMotionWork(ctrlGetScenarioChara(PATI_PLAYER)), nullptr, 0);
     mtwkUpdateWithPosition(FindMotionWork(ctrlGetScenarioChara(work->dealer)), nullptr, 0);

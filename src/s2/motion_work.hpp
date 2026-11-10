@@ -477,7 +477,7 @@ void charaGetMotLocalPos(Character *character, std::int32_t bone, Vector3 *posit
 void charaGetMotNodePos(Character *character, std::int32_t bone, Vector3 *position);
 void charaGetMotWorldPos(Character *character, std::int32_t bone, Vector3 *position);
 void TransformScenarioMotionBonePose(shen_name character, std::int32_t boneId, Vector3 *position, Vector3i *rotation);
-
+const Matrix4x4 *charaResolveModelSpaceBoneTransform(const void *placement, const MotionWork *motion, std::int32_t boneId, const Matrix4x4 *transform);
 bool ResolveAuthoredMotionBoneTransform(const Character *character, std::uint16_t boneId, Matrix4x4 &transform);
 bool charaGetMotBonePos(Character *character, std::uint16_t boneId, Vector3 &position);
 std::int16_t mtwkGetBoneYaw(MotionWork *motion, std::int32_t bone);
@@ -517,6 +517,8 @@ bool mtwkGetParentBoneWrapper(MotionWork *motionWork, std::int32_t selector);
 bool mtwkSetAngle(MotionWork *motionWork, std::int32_t angle);
 bool mtwkSetBoneTarget(MotionWork *motionWork, std::int32_t selector, const Vector3 *point);
 bool mtwkLatchBoneTarget(MotionWork *motionWork, std::int32_t selector, const Vector3 *point);
+bool GetMTWK_NodeParent(Character *character, std::int32_t selector, const Vector3 *point);
+bool GetMTWK_NodeParent_0(shen_name name, std::uint32_t mode, std::int32_t selector, const Vector3 *point);
 float mtwkGetBoneTargetStepLimit(const MotionWork *work, std::int32_t selector);
 bool mtwkSetBoneTargetStepLimit(MotionWork *work, std::int32_t selector, float limit);
 

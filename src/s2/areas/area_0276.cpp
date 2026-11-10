@@ -2,16 +2,14 @@
 #include "s2/areas/area_0276.hpp"
 
 #define AREA_0276_CHARACTER(parent) area0276Characters[(parent)->characterIndex]
-unsigned short firePalette0276[] = {
-    0x311, 0x311, 0x411, 0x511, 0x612, 0x712, 0xa32, 0xb32, 0xb42, 0xc50, 0xd70, 0xe70, 0xe80, 0xfa0, 0xfc3, 0xfd6};
+unsigned short firePalette0276[] = {0x311, 0x311, 0x411, 0x511, 0x612, 0x712, 0xa32, 0xb32, 0xb42, 0xc50, 0xd70, 0xe70, 0xe80, 0xfa0, 0xfc3, 0xfd6};
 shen_name area0276Characters[] = {AREA_0276_SRY, AREA_0276_WON, AREA_0276_REN, AREA_0276_JOP, AREA_0276_CHO, AREA_0276_SGT, INVALID_CHARACTER};
 shen_name area0276ReleaseCharacters[] = {AREA_0276_SRY, AREA_0276_WON, AREA_0276_REN, AREA_0276_JOP, AREA_0276_CHO, AREA_0276_SGT, INVALID_CHARACTER};
 shen_name area0276RemainingCharacters[] = {AREA_0276_WON, AREA_0276_REN, AREA_0276_JOP, INVALID_CHARACTER};
 float transparency0276 = 0.0f;
 static unsigned int fire0276;
 
-void Start0276(void)
-{
+void Start0276(void) {
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Load0276Characters, 4, 11, sizeof(Area0276Parameter), TASK_EVNT);
     Area0276Parameter *parent = (Area0276Parameter *)FTBL.HLib_GetTaskParameter(task);
     parent->self = task;
@@ -22,8 +20,7 @@ void Start0276(void)
     Setup0276Environment();
 }
 
-void Update0276(void *data)
-{
+void Update0276(void *data) {
     Area0276Parameter *parent = (Area0276Parameter *)data;
     switch (parent->state) {
     case 6:
@@ -47,12 +44,11 @@ void Update0276(void *data)
     }
 }
 
-void Load0276Characters(void *data)
-{
+void Load0276Characters(void *data) {
     Area0276Parameter *parent = (Area0276Parameter *)data;
     if (parent->loadState == 1) {
-        FTBL.DebugLogToFileRemoved("%d ID : [%c%c%c%c]\n", parent->characterIndex, AREA_0276_CHARACTER(parent) & 0xff,
-            AREA_0276_CHARACTER(parent) >> 8 & 0xff, AREA_0276_CHARACTER(parent) >> 16 & 0xff, AREA_0276_CHARACTER(parent) >> 24);
+        FTBL.DebugLogToFileRemoved("%d ID : [%c%c%c%c]\n", parent->characterIndex, AREA_0276_CHARACTER(parent) & 0xff, AREA_0276_CHARACTER(parent) >> 8 & 0xff,
+            AREA_0276_CHARACTER(parent) >> 16 & 0xff, AREA_0276_CHARACTER(parent) >> 24);
         if (FTBL.ForceLoadNpc(AREA_0276_CHARACTER(parent)) == 1) {
             HideAuthorCharacter(AREA_0276_CHARACTER(parent));
             FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(AREA_0276_CHARACTER(parent)));
@@ -72,13 +68,12 @@ void Load0276Characters(void *data)
     }
 }
 
-void Release0276Characters(void *data)
-{
+void Release0276Characters(void *data) {
     Area0276Parameter *parent = (Area0276Parameter *)data;
     int visible;
     if (parent->loadState == 1) {
-        FTBL.DebugLogToFileRemoved("%d ID : [%c%c%c%c]\n", parent->characterIndex, AREA_0276_CHARACTER(parent) & 0xff,
-            AREA_0276_CHARACTER(parent) >> 8 & 0xff, AREA_0276_CHARACTER(parent) >> 16 & 0xff, AREA_0276_CHARACTER(parent) >> 24);
+        FTBL.DebugLogToFileRemoved("%d ID : [%c%c%c%c]\n", parent->characterIndex, AREA_0276_CHARACTER(parent) & 0xff, AREA_0276_CHARACTER(parent) >> 8 & 0xff,
+            AREA_0276_CHARACTER(parent) >> 16 & 0xff, AREA_0276_CHARACTER(parent) >> 24);
         visible = FTBL.IsNpcRouteLoadedOrVisible(AREA_0276_CHARACTER(parent));
         if (!visible) {
             ShowAuthorCharacter(AREA_0276_CHARACTER(parent));
@@ -94,8 +89,7 @@ void Release0276Characters(void *data)
     }
 }
 
-void Queue0276Author(Area0276Parameter *parent)
-{
+void Queue0276Author(Area0276Parameter *parent) {
     HLibTaskCallback callbacks[2] = {Update0276FirstAuthor, Update0276SecondAuthor};
     int second = parent->selection > 2;
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(callbacks[second], 4, 11, sizeof(Area0276AuthorParameter), TASK_EVNT);
@@ -134,8 +128,7 @@ void Queue0276Author(Area0276Parameter *parent)
     parent->state = 2;
 }
 
-void Update0276FirstAuthor(void *data)
-{
+void Update0276FirstAuthor(void *data) {
     Area0276AuthorParameter *child = (Area0276AuthorParameter *)data;
     Vector3 position;
     Vector3 offset = {0.0f, 0.14f, 0.0f};
@@ -209,8 +202,7 @@ void Update0276FirstAuthor(void *data)
     }
 }
 
-void Update0276SecondAuthor(void *data)
-{
+void Update0276SecondAuthor(void *data) {
     Area0276AuthorParameter *child = (Area0276AuthorParameter *)data;
     Vector3 position;
     short frame = FTBL.EV_authSceneCtrl(-6);
@@ -254,8 +246,7 @@ void Update0276SecondAuthor(void *data)
     }
 }
 
-void Setup0276Environment(void)
-{
+void Setup0276Environment(void) {
     Vector3 position = {106.46f, 90.1f, 152.23f};
     FTBL.FreeWAIR();
     FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
@@ -277,8 +268,7 @@ void Setup0276Environment(void)
     Prepare0276Characters();
 }
 
-void Cleanup0276(Area0276Parameter *parent)
-{
+void Cleanup0276(Area0276Parameter *parent) {
     EventDateTime time;
     Restore0276Characters();
     FTBL.AddInventoryItem(11, 1, 0);
@@ -296,8 +286,7 @@ void Cleanup0276(Area0276Parameter *parent)
         FTBL.EV_scenQueueLoad(g_actNumber, AREA_0276_RETURN_CLEAR, 0);
 }
 
-void Prepare0276Characters(void)
-{
+void Prepare0276Characters(void) {
     HideAuthorCharacter(RYO_CHARACTER);
     HideAuthorProp(AREA_0276_A209);
     HideAuthorProp(AREA_0276_A207);
@@ -307,8 +296,7 @@ void Prepare0276Characters(void)
     HideAuthorProp(AREA_0276_A325);
 }
 
-void Restore0276Characters(void)
-{
+void Restore0276Characters(void) {
     ShowAuthorCharacter(RYO_CHARACTER);
     ShowAuthorProp(AREA_0276_A209);
     ShowAuthorProp(AREA_0276_A207);
@@ -318,8 +306,7 @@ void Restore0276Characters(void)
     ShowAuthorProp(AREA_0276_A325);
 }
 
-void Prepare0276FirstScene(void)
-{
+void Prepare0276FirstScene(void) {
     HideAuthorProp(AREA_0276_A300);
     HideAuthorProp(AREA_0276_A067);
     HideAuthorProp(AREA_0276_A393);
@@ -330,8 +317,7 @@ void Prepare0276FirstScene(void)
     FTBL.SetScenarioCharacterTransparency(AREA_0276_TRANSPARENT_PROP, 0.0f);
 }
 
-void Restore0276FirstScene(void)
-{
+void Restore0276FirstScene(void) {
     ShowAuthorProp(AREA_0276_A300);
     ShowAuthorProp(AREA_0276_A067);
     ShowAuthorProp(AREA_0276_A393);
@@ -341,8 +327,7 @@ void Restore0276FirstScene(void)
     ShowAuthorProp(AREA_0276_TRANSPARENT_PROP);
 }
 
-void Hide0276IndoorProps(void)
-{
+void Hide0276IndoorProps(void) {
     HideAuthorProp(AREA_0276_A342);
     HideAuthorProp(AREA_0276_A343);
     HideAuthorProp(AREA_0276_AB19);
@@ -350,8 +335,7 @@ void Hide0276IndoorProps(void)
     HideAuthorProp(AREA_0276_AA23);
 }
 
-void Show0276IndoorProps(void)
-{
+void Show0276IndoorProps(void) {
     ShowAuthorProp(AREA_0276_A342);
     ShowAuthorProp(AREA_0276_A343);
     ShowAuthorProp(AREA_0276_AB19);
@@ -359,26 +343,22 @@ void Show0276IndoorProps(void)
     ShowAuthorProp(AREA_0276_AA23);
 }
 
-void HideAuthorCharacter(shen_name character)
-{
+void HideAuthorCharacter(shen_name character) {
     FTBL.SetScenarioCharacterRadius(character, 40.0f);
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
     FTBL.EV_SetCharacterAlphaEnabled(character, 0);
 }
 
-void ShowAuthorCharacter(shen_name character)
-{
+void ShowAuthorCharacter(shen_name character) {
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 0);
     FTBL.EV_SetCharacterAlphaEnabled(character, 1);
 }
 
-void HideAuthorProp(shen_name prop)
-{
+void HideAuthorProp(shen_name prop) {
     FTBL.EV_SetCharacterAlphaEnabled(prop, 0);
 }
 
-void ShowAuthorProp(shen_name prop)
-{
+void ShowAuthorProp(shen_name prop) {
     FTBL.EV_SetCharacterAlphaEnabled(prop, 1);
 }
 #else
@@ -388,6 +368,7 @@ void ShowAuthorProp(shen_name prop)
 #include "s2/author.hpp"
 #include "s2/character.hpp"
 #include "s2/date_time.hpp"
+#include "s2/debug.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/field_collision.hpp"
 #include "s2/flag.hpp"
@@ -452,7 +433,11 @@ void Load0276Characters(void *data) {
         EV_CheckWarmStartNpcRoute(character);
         EV_ForceLoadNpc(character);
         parent->loadState = 1;
-    } else if (parent->loadState == 1 && EV_ForceLoadNpc(character) == 1) {
+    } else if (parent->loadState == 1) {
+        EV_debug_log("0276\\e0276_et_0276.c", 177, "%d ID : [%c%c%c%c]\n", parent->characterIndex, character.name & 0xff, character.name >> 8 & 0xff,
+            character.name >> 16 & 0xff, character.name >> 24);
+        if (EV_ForceLoadNpc(character) != 1)
+            return;
         SetScenarioCharacterRadius(character, 40.0f);
         mtwkSetExtraFlag(FindMotionWork(ctrlGetScenarioChara(character)), 6, 2);
         EV_SetCharacterAlphaEnabled(character, false);

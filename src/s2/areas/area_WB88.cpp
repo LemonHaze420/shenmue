@@ -45,9 +45,21 @@ namespace shenmue::s2::areas {
 namespace {
 constexpr shen_name ryo{SHEN_NAME(RYO_)}, rude{SHEN_NAME(RUDE)}, dummy{SHEN_NAME(DUMY)}, duck{SHEN_NAME(DUCK)}, kun{SHEN_NAME(KUN_)}, invalid{0xffffffffU};
 constexpr std::uint32_t local = 0x38000000U, recursive = 0x40000000U;
-constexpr shen_name leafNames[]{SHEN_NAME(HAP0), SHEN_NAME(HAP1), SHEN_NAME(HAP2), SHEN_NAME(HAP3), SHEN_NAME(HAP4), SHEN_NAME(HAP5), SHEN_NAME(HAP6),
-    SHEN_NAME(HAP7), SHEN_NAME(HAP8), SHEN_NAME(HAP9), SHEN_NAME(HAPA), SHEN_NAME(HAPB), SHEN_NAME(HAPC), SHEN_NAME(HAPD), SHEN_NAME(HAPE), SHEN_NAME(HAPF),
-    SHEN_NAME(HAPG), SHEN_NAME(HAPH), SHEN_NAME(HAPI), SHEN_NAME(HAPJ)};
+constexpr shen_name leafNames[]{SHEN_NAME(HAP0),
+    SHEN_NAME(HAP1),
+        SHEN_NAME(HAP2),
+            SHEN_NAME(HAP3),
+                SHEN_NAME(HAP4),
+                    SHEN_NAME(HAP5),
+                        SHEN_NAME(HAP6),
+                            SHEN_NAME(HAP7),
+                                SHEN_NAME(HAP8),
+                                    SHEN_NAME(HAP9),
+                                        SHEN_NAME(HAPA),
+                                            SHEN_NAME(HAPB),
+                                                SHEN_NAME(HAPC),
+                                                    SHEN_NAME(HAPD),
+                                                        SHEN_NAME(HAPE), SHEN_NAME(HAPF), SHEN_NAME(HAPG), SHEN_NAME(HAPH), SHEN_NAME(HAPI), SHEN_NAME(HAPJ)};
 constexpr shen_name characters[]{SHEN_NAME(SYE_), SHEN_NAME(SRY_), kun, invalid};
 struct LeafWork {
     Vector3 position, direction;
@@ -210,8 +222,14 @@ void SetupRyo() {
 void ConfigureAuthorSubjects() {
     AT_SetLocalBaseChara(ryo, invalid);
     EV_DisableCharacterDisplay(rude);
-    constexpr shen_name subjects[]{ryo, SHEN_NAME(SYE_), SHEN_NAME(SRY_), SHEN_NAME(a115), SHEN_NAME(a054), SHEN_NAME(a055), SHEN_NAME(a092), SHEN_NAME(a536),
-        SHEN_NAME(a538), SHEN_NAME(a057), SHEN_NAME(a404), SHEN_NAME(a405), SHEN_NAME(a403), SHEN_NAME(a406)};
+    constexpr shen_name subjects[]{ryo,
+        SHEN_NAME(SYE_),
+            SHEN_NAME(SRY_),
+                SHEN_NAME(a115),
+                    SHEN_NAME(a054),
+                        SHEN_NAME(a055),
+                            SHEN_NAME(a092),
+                                SHEN_NAME(a536), SHEN_NAME(a538), SHEN_NAME(a057), SHEN_NAME(a404), SHEN_NAME(a405), SHEN_NAME(a403), SHEN_NAME(a406)};
     for (std::size_t i = 0; i < std::size(subjects); ++i) {
         EV_SetCharaControllerFlags(subjects[i], UpdateHeight, NpcCharacterControllerState::Disabled);
         EV_SetCharaControllerFlags(subjects[i], UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
@@ -279,7 +297,7 @@ void CameraUpdate(CameraRuntime *) {
             cameraZoom = 0;
         }
     }
-    camCtrlSetFov(static_cast<std::int16_t>(cameraFov));
+    camCtrlSetPerspective(static_cast<std::uint16_t>(cameraFov));
 }
 void InitializeCamera(CameraRuntime *camera) {
     camCtrlGetNextCamPos(&cameraEye);
@@ -524,24 +542,32 @@ void GoodVoice(std::int32_t replay) {
     if (EV_GetShenmueFlag(0xa3) && work.duckCaught)
         Voice("0037A044", 12); // @text EN: "Damn=@" | JA: "あっ…"
     else {
-        constexpr const char *voices[]{"0037A041", "0037A042", "0037A043"}; // @text 0037A041 EN: "Good!" | JA: "よし！" ; 0037A042 EN: "I did it!" | JA: "やった！" ; 0037A043 EN: "I got it." | JA: "とれた！"
+        constexpr const char *voices[]{"0037A041", "0037A042",
+            "0037A043"}; // @text 0037A041 EN: "Good!" | JA: "よし！" ; 0037A042 EN: "I did it!" | JA: "やった！" ; 0037A043 EN: "I got it." | JA: "とれた！"
         Voice(voices[shenGetRandomInt32(3)], 12);
         if (EV_GetShenmueFlag(0x2c6)) {
             if (!work.round)
-                Voice(shenGetRandomInt32(2) ? "0037A048" : "0037A047", 70); // @text 0037A048 EN: "Two more leaves." | JA: "あと２枚だ。" ; 0037A047 EN: "Two more times." | JA: "あと２回か。"
+                Voice(shenGetRandomInt32(2) ? "0037A048" : "0037A047",
+                    70); // @text 0037A048 EN: "Two more leaves." | JA: "あと２枚だ。" ; 0037A047 EN: "Two more times." | JA: "あと２回か。"
             else if (work.round == 1)
-                Voice(shenGetRandomInt32(2) ? "0037A050" : "0037A049", 70); // @text 0037A050 EN: "If I can catch just one more=@" | JA: "もう１枚とれば…" ; 0037A049 EN: "One more time." | JA: "あと１回だ。"
+                Voice(shenGetRandomInt32(2) ? "0037A050" : "0037A049",
+                    70); // @text 0037A050 EN: "If I can catch just one more=@" | JA: "もう１枚とれば…" ; 0037A049 EN: "One more time." | JA: "あと１回だ。"
         }
     }
 }
 void BadVoice() {
     const auto first = shenGetRandomInt32(3);
-    Voice(first == 0 ? "0037A045" : first == 1 ? "0037A046" : "0037A044", 12); // @text 0037A045 EN: "No=@" | JA: "くそっ…" ; 0037A046 EN: "No good." | JA: "ダメだ…" ; 0037A044 EN: "Damn=@" | JA: "あっ…"
+    Voice(first == 0   ? "0037A045" :
+            first == 1 ? "0037A046" :
+                         "0037A044",
+        12); // @text 0037A045 EN: "No=@" | JA: "くそっ…" ; 0037A046 EN: "No good." | JA: "ダメだ…" ; 0037A044 EN: "Damn=@" | JA: "あっ…"
     if (EV_GetShenmueFlag(0x2c6) && work.round == 2) {
         const auto second = shenGetRandomInt32(2);
-        Voice(!first || second ? "0037A052" : "0037A051", 70); // @text 0037A052 EN: "Have to start all over." | JA: "１からやり直しか…" ; 0037A051 EN: "Damn.\nThat was supposed to be the last one." | JA: "くそ…あと１回だったのに。"
+        Voice(!first || second ? "0037A052" : "0037A051",
+            70); // @text 0037A052 EN: "Have to start all over." | JA: "１からやり直しか…" ; 0037A051 EN: "Damn.\nThat was supposed to be the last one." | JA: "くそ…あと１回だったのに。"
     } else {
-        constexpr const char *voices[]{"0037A053", "0037A054", "0037A055"}; // @text 0037A053 EN: "Have to concentrate on the leaves." | JA: "葉っぱから目をそらしたら\nダメだな…" ; 0037A054 EN: "Only go for a single leaf at a time." | JA: "１枚の葉っぱだけを、\n追わないとな…" ; 0037A055 EN: "The timing for catching the leaf\nis important=@" | JA: "葉っぱをつかむ\nタイミングさえわかれば…"
+        constexpr const char *voices[]{"0037A053", "0037A054",
+            "0037A055"}; // @text 0037A053 EN: "Have to concentrate on the leaves." | JA: "葉っぱから目をそらしたら\nダメだな…" ; 0037A054 EN: "Only go for a single leaf at a time." | JA: "１枚の葉っぱだけを、\n追わないとな…" ; 0037A055 EN: "The timing for catching the leaf\nis important=@" | JA: "葉っぱをつかむ\nタイミングさえわかれば…"
         Voice(voices[shenGetRandomInt32(3)], 70);
     }
 }

@@ -337,13 +337,13 @@ std::int64_t BindPawnFlyer(PawnFlyerRuntime &runtime, UIElement element, bool se
         .rows = sets ? 8 : 4,
         .drawEmpty = static_cast<std::uint8_t>(!sets),
         .style = &runtime.style,
-        .panel = holder < 0 ? nullptr : &definition.panels[holder],
         .drawRow = sets ? DrawPawnSetRow : DrawPawnItemRow,
         .actions = {sets ? SelectPawnSet : SelectPawnItem, nullptr, nullptr, sets ? ActivatePawnSet : ActivatePawnItem},
         .selectionData = sets ? PawnSetSelectionData : PawnItemSelectionData,
         .rowSpan = sets ? PawnSetRowSpan : nullptr,
         .sound = 3};
     InitializeUIGrid(runtime.grid, configuration);
+    runtime.holder = holder;
     return 1;
 }
 std::int64_t BindPawnSetFlyer() {
@@ -425,6 +425,11 @@ std::int64_t RenderPawnFlyer(PawnFlyerRuntime &runtime, UIElement element) {
     }
     d3t::ResolveUIDefinitionLayout(definition, runtime.layout.parents, runtime.layout.panels, runtime.layout.objects, runtime.layout.labels,
         runtime.layout.objectPanels, runtime.layout.labelPanels, {}, GetUILayoutPaddingScale());
+    if (runtime.holder >= 0) {
+        const d3t::UIRect &bounds = runtime.layout.panels[static_cast<std::size_t>(runtime.holder)];
+        const float sx = GetUIViewportWidth() / 1920.0f;
+        runtime.grid.bounds = {bounds.x * sx, bounds.y, bounds.width * sx, bounds.height};
+    }
     if (drawingUI)
         d3t::DrawUIDefinition(definition, 1);
     RenderUIGrid(runtime.grid, static_cast<std::uint32_t>(element), uiPointer);

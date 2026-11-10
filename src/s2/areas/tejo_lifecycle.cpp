@@ -45,8 +45,8 @@ void PrepareTejoQteResources() {
     AT_SetLocalBaseChara(REN_QTE_SECOND_BASE, REN_QTE_PLAYER);
     EV_AT_SetPos(REN_QTE_SECOND_BASE, EventTransformFlags::AllAxes, TEJO_SECOND_BASE_POSITION);
     EV_AT_SetAngY(REN_QTE_SECOND_BASE, EventTransformFlags::AllAxes, TEJO_SECOND_BASE_ROTATION);
-    SetPluralControlFor(ctrlGetCharaByName(REN_QTE_PLAYER), 0);
-    SetPluralControlFor(ctrlGetCharaByName(REN_QTE_REN), 0);
+    charaSetDisplayEnabledFlag(ctrlGetCharaByName(REN_QTE_PLAYER), 0);
+    charaSetDisplayEnabledFlag(ctrlGetCharaByName(REN_QTE_REN), 0);
     SetQronMapLightingEnabled(0);
     Vector3 doorPosition;
     EV_GetCharaPosition(REN_QTE_DOOR, CHARACTER_TRANSLATION_ROOT, &doorPosition, EventTransformFlags::World);
@@ -132,8 +132,8 @@ void CleanupTejoQte() {
         SetScenarioCharacterKillMode(REN_QTE_BASE, 1);
     if (DoesScenarioCharacterExist(REN_QTE_SECOND_BASE))
         SetScenarioCharacterKillMode(REN_QTE_SECOND_BASE, 1);
-    SetPluralControlFor(ctrlGetCharaByName(REN_QTE_PLAYER), 1);
-    SetPluralControlFor(ctrlGetCharaByName(REN_QTE_REN), 1);
+    charaSetDisplayEnabledFlag(ctrlGetCharaByName(REN_QTE_PLAYER), 1);
+    charaSetDisplayEnabledFlag(ctrlGetCharaByName(REN_QTE_REN), 1);
     HLib::ResolveDeferredCallback(tejoMainTask);
     EV_CleanupMapControlTask();
     HLib::EV_HLKillOtherHierarchyTask(tejoQteTask);

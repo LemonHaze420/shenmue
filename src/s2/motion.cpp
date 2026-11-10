@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/motion.hpp"
 
 #include <shendk/files/animation/motn_reader.h>
@@ -710,11 +713,8 @@ void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable) 
                 MT7Model *const model = FindMotionProp(descriptor.prop);
                 const auto boneId = static_cast<std::uint8_t>(descriptor.bone);
                 const Matrix4x4 *bone = mtwkGetBoneTransform(&work, boneId);
-
-
-                Matrix4x4 modelSpace;
-                if (forceDisable && !previous && ResolveAuthoredMotionBoneTransform(&character, boneId, modelSpace))
-                    bone = &modelSpace;
+                if (forceDisable && !previous)
+                    bone = charaResolveModelSpaceBoneTransform(GetMT7ReaderData(static_cast<const MT7Model *>(character.model)), &work, boneId, bone);
                 if (!model || !bone)
                     continue;
                 MT7Node &root = model->nodes[0];
@@ -1682,3 +1682,4 @@ std::byte *AllocateAndLoadMOTFiles() {
 }
 
 } // namespace shenmue::s2
+

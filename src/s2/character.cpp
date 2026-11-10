@@ -2,6 +2,7 @@
 
 
 #include "s2/character.hpp"
+#include "s2/scene_data.hpp"
 
 #include "logging.hpp"
 
@@ -588,6 +589,15 @@ void TransformPointToCharacterNodeSpace(const CharacterNode *node, Vector3 *poin
     point->x = (transform.rows[0].y * y + transform.rows[0].x * x) + transform.rows[0].z * z;
     point->y = (transform.rows[1].y * y + transform.rows[1].x * x) + transform.rows[1].z * z;
     point->z = (transform.rows[2].y * y + transform.rows[2].x * x) + transform.rows[2].z * z;
+    Matrix4x4::SetActiveTransform(&g_characterNodeSavedTransform);
+}
+
+// @verified - p
+void TransformPointByCharacterNode(const CharacterNode *node, Vector3 *point) {
+    Matrix4x4::GetTransformMatrix(&g_characterNodeSavedTransform);
+    Matrix4x4::SetPrePassToTempTransform();
+    ApplyRecursiveCharacterNodeTransforms(node);
+    Matrix4x4::TransformPoint(*point, *point);
     Matrix4x4::SetActiveTransform(&g_characterNodeSavedTransform);
 }
 namespace {
@@ -1805,7 +1815,7 @@ void ApplyCharacterTableCollisionFlags(Character *character, const Record *recor
     }
 }
 
-bool ApplyCharacterTableComponents(CharacterResource *resource, const std::vector<Record> &authoredComponents, shen_name owner, std::int32_t entryId) {
+bool ApplyCharacterTableComponentRecords(CharacterResource *resource, const std::vector<Record> &authoredComponents, shen_name owner, std::int32_t entryId) {
     Character &character = *resource->character;
     std::array<const Record *, 55> componentRecords{};
     const std::array<const Record *, 55> *const components = &componentRecords;
@@ -2030,6 +2040,15 @@ bool ApplyCharacterTableComponents(CharacterResource *resource, const std::vecto
         SetCharacterModelName(&character, owner);
     }
     return true;
+}
+
+bool ApplyCharacterTableComponents(CharacterResource *resource, const std::vector<Record> &authoredComponents, shen_name owner, std::int32_t entryId) {
+    std::byte *const pack = allocateInGlobalHeap(55 * 0x100);
+    for (std::size_t slot = 0; slot < 55; ++slot)
+        std::memset(pack + slot * 0x100, 0, sizeof(std::uint64_t));
+    const bool created = ApplyCharacterTableComponentRecords(resource, authoredComponents, owner, entryId);
+    SetTaskHeapData(pack);
+    return created;
 }
 
 bool CreateCharacter(const Record &record, shen_name owner, std::int32_t entryId) {
@@ -2850,12 +2869,18 @@ void shenExecuteCharaDrawCallbacks(Character *character) {
 
 namespace {
 
-std::uint32_t DrawCharacterResource(Character *character) {
+std::uint32_t DrawCharacterResource(Character *character, bool executeNow = false) {
     if (!character)
         return 0;
+    const auto runCore = [character, executeNow] {
+        if (executeNow)
+            HLib::ExecuteCallbackNow(reinterpret_cast<HLib::TaskCallback>(character->core), character);
+        else
+            character->core(character);
+    };
     if (!character->model) {
         if (character->core)
-            character->core(character);
+            runCore();
         return 0;
     }
     const MotionWork *const motionWork = FindMotionWork(character);
@@ -2871,7 +2896,7 @@ std::uint32_t DrawCharacterResource(Character *character) {
     currentCharacterCoreDrawContext = &context;
     Character *const previousEntity = SetScriptedModelEntity(character);
     if (character->core)
-        character->core(character);
+        runCore();
     SetScriptedModelEntity(previousEntity);
     currentCharacterCoreDrawContext = previousContext;
     return context.draws;
@@ -3219,7 +3244,7 @@ void CharDrawObject_Callback(void *) {
 } // namespace
 
 std::uint32_t ExecuteCharacterCoreDraw(Character *character) {
-    return DrawCharacterResource(character);
+    return DrawCharacterResource(character, true);
 }
 
 // @verified - p

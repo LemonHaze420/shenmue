@@ -2,8 +2,7 @@
 #include "s2/areas/area_sfkm.hpp"
 
 #if defined(SHENMUE_EVENT_ENTRY)
-void SfkmMain(StreetFightStartParameters *start)
-{
+void SfkmMain(StreetFightStartParameters *start) {
     if (start->scene == 99)
         QueueDebug(start);
     else
@@ -21,8 +20,7 @@ static int sfkmRepeatDialogue;
 static int sfkmLastDialogue;
 static int sfkmFirstAttempt;
 
-void QueueNormal(StreetFightStartParameters *start)
-{
+void QueueNormal(StreetFightStartParameters *start) {
     HLibTask *task;
     StreetFightEventWork *work;
     if (start->signal)
@@ -62,8 +60,7 @@ void QueueNormal(StreetFightStartParameters *start)
     EventDebugRegister(3, NormalDebugCallback, work, 36000);
 }
 
-void PlaceNormal(StreetFightEventWork *work)
-{
+void PlaceNormal(StreetFightEventWork *work) {
     shen_name fighter = work->fighters[work->fighterIndex];
     SetStreetFightCharacterVisible(SFKM_OD2, 1);
     SetStreetFightCharacterVisible(fighter, 1);
@@ -98,13 +95,11 @@ void PlaceNormal(StreetFightEventWork *work)
     FTBL.EV_SetPlayerFlag(12, 1292, 0);
 }
 
-void NormalDebugCallback(void *data)
-{
+void NormalDebugCallback(void *data) {
     CleanupNormalCallback(data);
 }
 
-void CleanupNormalCallback(void *data)
-{
+void CleanupNormalCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     StreetFightStartParameters *start = work->startParameters;
     int i;
@@ -148,8 +143,7 @@ void CleanupNormalCallback(void *data)
         *start->signal = 0;
 }
 
-void MainCallback(void *data)
-{
+void MainCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     Vector3 centre, position, second, player, bookie;
     shen_name fighter = work->fighters[work->fighterIndex];
@@ -342,8 +336,7 @@ void MainCallback(void *data)
     }
 }
 
-void RetryBeginCallback(void *data)
-{
+void RetryBeginCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     FTBL.EV_SetPlayerFlag(12, 740, 1);
     FTBL.dbgPrintEventMessage("「リトライしますか？\n");
@@ -352,8 +345,7 @@ void RetryBeginCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(RetryChoiceCallback);
 }
 
-void RetryChoiceCallback(void *data)
-{
+void RetryChoiceCallback(void *data) {
     unsigned int choice = PollStreetFightActionChoice();
     if (choice) {
         FTBL.ctrlStopSubtitles();
@@ -364,8 +356,7 @@ void RetryChoiceCallback(void *data)
     }
 }
 
-void RetryResetCallback(void *data)
-{
+void RetryResetCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     FTBL.EV_ResetFreeTalkFlags();
     work->rank = FTBL.vfmDispatchControl(14, work->stage | 64, 0, -1);
@@ -378,13 +369,11 @@ void RetryResetCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(MainCallback);
 }
 
-void RetryCancelCallback(void *data)
-{
+void RetryCancelCallback(void *data) {
     FTBL.HLib_SetCurrentTaskTo(CleanupNormalCallback);
 }
 
-int FirstIntroConversation(void *data)
-{
+int FirstIntroConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     FTBL.EV_SetCharacterAlphaEnabled(STREET_FIGHT_RYO, 0);
@@ -440,8 +429,7 @@ int FirstIntroConversation(void *data)
     return 880;
 }
 
-int RepeatIntroConversation(void *data)
-{
+int RepeatIntroConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     FTBL.EV_SetCharacterAlphaEnabled(STREET_FIGHT_RYO, 0);
@@ -486,8 +474,7 @@ int RepeatIntroConversation(void *data)
     return 270;
 }
 
-int AcceptConversation(void *data)
-{
+int AcceptConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     int frames;
     shen_name fighter = work->fighters[work->fighterIndex];
@@ -526,8 +513,7 @@ int AcceptConversation(void *data)
     return frames;
 }
 
-int DeclineConversation(void *data)
-{
+int DeclineConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 0);
     EVT_AT_SetAngY(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 225.0f, 0);
@@ -548,16 +534,14 @@ int DeclineConversation(void *data)
     return 60;
 }
 
-int InsufficientConversation(void *data)
-{
+int InsufficientConversation(void *data) {
     EVT_AT_StartMoneyCount(0, 60);
     EVT_AT_SetVoice("0100A037", 0);
     EVT_AT_SetCam(2315, STREET_FIGHT_BASE, STREET_FIGHT_BASE, 0, 0, 0);
     return 150;
 }
 
-void BattleEntryCallback(void *data)
-{
+void BattleEntryCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, 0.0f, 0.0f, -1.1f, 0);
@@ -569,8 +553,7 @@ void BattleEntryCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(BattlePreEventCallback);
 }
 
-void BattlePreEventCallback(void *data)
-{
+void BattlePreEventCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     FTBL.EV_NPC_NewLoadSw_0(0);
@@ -596,8 +579,7 @@ void BattlePreEventCallback(void *data)
     FTBL.HLib_SetupTaskDelay(170);
 }
 
-void BattlePreInitCallback(void *data)
-{
+void BattlePreInitCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     Vector3 position;
     Vector3i rotation;
@@ -617,8 +599,7 @@ void BattlePreInitCallback(void *data)
     FTBL.HLib_SetupTaskDelay(10);
 }
 
-void BattleStartCallback(void *data)
-{
+void BattleStartCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     int id;
@@ -653,8 +634,7 @@ void BattleStartCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(BattleWaitCallback);
 }
 
-short SelectFirstBattleVoice(void *data)
-{
+short SelectFirstBattleVoice(void *data) {
     unsigned short voices[4] = {165, 166, 167, 178};
     unsigned short *index = (unsigned short *)data;
     unsigned short voice = voices[*index];
@@ -663,8 +643,7 @@ short SelectFirstBattleVoice(void *data)
     return voice;
 }
 
-short SelectSecondBattleVoice(void *data)
-{
+short SelectSecondBattleVoice(void *data) {
     unsigned short voices[2] = {169, 170};
     unsigned short *index = (unsigned short *)data;
     unsigned short voice = voices[*index];
@@ -673,8 +652,7 @@ short SelectSecondBattleVoice(void *data)
     return voice;
 }
 
-void BattleWaitCallback(void *data)
-{
+void BattleWaitCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     unsigned int flags;
@@ -738,8 +716,7 @@ void BattleWaitCallback(void *data)
     work->frameCounter = 0;
 }
 
-void BattleEndCallback(void *data)
-{
+void BattleEndCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO), 1, 1, 1.0f);
@@ -762,8 +739,7 @@ void BattleEndCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(MainCallback);
 }
 
-int VictoryConversation(void *data)
-{
+int VictoryConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 0);
@@ -793,13 +769,11 @@ int VictoryConversation(void *data)
     return 360;
 }
 
-int PostVictoryConversation(void *data)
-{
+int PostVictoryConversation(void *data) {
     return PlayStreetFightVictoryAppearance();
 }
 
-int DefeatConversation(void *data)
-{
+int DefeatConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 0);
@@ -829,8 +803,7 @@ int DefeatConversation(void *data)
     return 450;
 }
 
-int TimeoutConversation(void *data)
-{
+int TimeoutConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 0);
@@ -1579,8 +1552,7 @@ void MainCallback(void *parameter) {
         EV_EventSetUpHelpIcon_0(GetHelpIconForArea(), 0);
         if (!EV_pakUtils(PakCategory::Package, PakPackageOp::IsLoaded, reinterpret_cast<std::uintptr_t>("QSFC"), 0)) {
             const char *const path = Filepath_Gen(FilepathGenMode::SceneDirectory);
-            EV_pakUtils(
-                PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("QSFC"));
+            EV_pakUtils(PakCategory::Package, PakPackageOp::Load, reinterpret_cast<std::uintptr_t>(path), reinterpret_cast<std::uintptr_t>("QSFC"));
             EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
         }
         EV_FreeAuthorPak(1, "0100");
@@ -1797,7 +1769,7 @@ void BattlePreEventCallback(void *parameter) {
     EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 1292, 1);
     EVT_AT_SetMot(STREET_FIGHT_RYO, 13, 0, 1, 0, 0);
     EVT_AT_SetMot(fighter, 3156, 0, 1, 0, 0);
-    EVT_AT_SetVoice("0100C013", 1, 60); // @text EN: "Take your stance!" | JA: "それじゃあ、かまえて。"
+    EVT_AT_SetVoice("0100C013", 1, 60);  // @text EN: "Take your stance!" | JA: "それじゃあ、かまえて。"
     EVT_AT_SetVoice("0100C014", 1, 140); // @text EN: "Ready=@go!" | JA: "レディ・ゴー！"
     EventSetCamera camera{.cleanup = 0, .camera = 2400, .eye = SFKM_BASE, .target = SFKM_BASE, .context = 0, .reserved11 = {}, .angle = 0, .delay = 0};
     EVT_AT_SetCam_Callback(&camera);
@@ -1861,7 +1833,7 @@ void BattleWaitCallback(void *parameter) {
         HLib::SetCurrentTaskTo(BattleEndCallback);
         HLib::SetupTaskDelay(30);
     } else {
-        const std::uint8_t flags = static_cast<std::uint8_t>(GetFightTaskFlags());
+        const std::uint8_t flags = static_cast<std::uint8_t>(GetFightStageObjectFlags());
         if (flags & 2U)
             QueueStreetFightPlayerReaction(fighter, false);
         if (flags & 4U)
@@ -1964,8 +1936,10 @@ std::int32_t FirstIntroConversation(void *parameter) {
         .delay = 2});
     EVT_AT_SetVoice("0100C001", 1, 10); // @text EN: "Now, come and see this!" | JA: "さあさあ、ごらんあれ。"
     EVT_AT_SetVoice("0100C002", 1, 90); // @text EN: "Zhouhong Kong here\nis not just any expert." | JA: "ここにいる孔周鴻は\nただの達人じゃねえぞ。"
-    EVT_AT_SetVoice("0100C003", 1, 220); // @text EN: "When training in the mountains,\nhe killed a tiger with his bare hands!" | JA: "山ごもりの最中にトラと出くわし、\nそれを素手で仕留めた豪傑だ。"
-    EVT_AT_SetVoice("0100C004", 1, 400); // @text EN: "He lost his eye in that battle,\nbut that's proof of his bravery!" | JA: "その時に失った片目こそ、\n勇者の勲章だぜ。"
+    EVT_AT_SetVoice("0100C003", 1,
+        220); // @text EN: "When training in the mountains,\nhe killed a tiger with his bare hands!" | JA: "山ごもりの最中にトラと出くわし、\nそれを素手で仕留めた豪傑だ。"
+    EVT_AT_SetVoice(
+        "0100C004", 1, 400); // @text EN: "He lost his eye in that battle,\nbut that's proof of his bravery!" | JA: "その時に失った片目こそ、\n勇者の勲章だぜ。"
     switch (SFKM_ENTRY_FEES[work.rank]) {
     case 10:
         EVT_AT_SetVoice("0100C008", 1, 540); // @text EN: "One match for a bet of $10!" | JA: "賭け金１０ドルの１本勝負だ！"
@@ -2141,10 +2115,10 @@ std::int32_t VictoryConversation(void *parameter) {
         .targetBlue = 0,
         .delay = 5});
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 741)) {
-        EVT_AT_SetVoice("0100R023", 1, 30); // @text EN: "I need more kung fu=@" | JA: "俺の功夫もまだまだか…"
+        EVT_AT_SetVoice("0100R023", 1, 30);  // @text EN: "I need more kung fu=@" | JA: "俺の功夫もまだまだか…"
         EVT_AT_SetVoice("0100C017", 1, 100); // @text EN: "Amazing.\nHere you go." | JA: "スゲエなぁ、兄ちゃん。\nほらよ。"
     } else {
-        EVT_AT_SetVoice("0100R002", 1, 30); // @text EN: "I lost.\nHe was in my blind spot." | JA: "やられた…\n死角に回り込まれるとは…"
+        EVT_AT_SetVoice("0100R002", 1, 30);  // @text EN: "I lost.\nHe was in my blind spot." | JA: "やられた…\n死角に回り込まれるとは…"
         EVT_AT_SetVoice("0100C017", 1, 170); // @text EN: "Amazing.\nHere you go." | JA: "スゲエなぁ、兄ちゃん。\nほらよ。"
     }
     PATI_StartMoneyCount(static_cast<std::uint32_t>(SFKM_ENTRY_FEES[work.rank]), 260);
@@ -2183,7 +2157,8 @@ std::int32_t DefeatConversation(void *parameter) {
         .targetBlue = 0,
         .delay = 5});
     EVT_AT_SetVoice("0100C018", 1, 30); // @text EN: "Too bad.\nBut it was a good match." | JA: "おしかったな、兄ちゃん。\nでも、いいセンいってたぜ。"
-    EVT_AT_SetVoice(firstStoryMatch ? "0100R003" : "0100R006", 1, 180); // @text 0100R003 EN: "Train yourself and come back.\nI'll be waiting." | JA: "もっと腕をみがいてこい。\n待ってるぞ。" ; 0100R006 EN: "You need more kung fu.\nWe'll have a match again." | JA: "功夫が足りんな。\n出直してこい。"
+    EVT_AT_SetVoice(firstStoryMatch ? "0100R003" : "0100R006", 1,
+        180); // @text 0100R003 EN: "Train yourself and come back.\nI'll be waiting." | JA: "もっと腕をみがいてこい。\n待ってるぞ。" ; 0100R006 EN: "You need more kung fu.\nWe'll have a match again." | JA: "功夫が足りんな。\n出直してこい。"
     EVT_AT_SetCam(2308, SFKM_BASE, SFKM_BASE, 0, 0, 0);
     EVT_AT_SetCam(2318, SFKM_BASE, SFKM_BASE, 0, 0, 180);
     EVT_AT_SetCam(310, SFKM_BASE, SFKM_BASE, 0, 0, 300);
@@ -2202,7 +2177,7 @@ std::int32_t TimeoutConversation(void *parameter) {
     EVT_AT_SetPos(fighter, SFKM_BASE, SFKM_FIGHTER_ACCEPT_POSITION, 0);
     EVT_AT_SetAngY(fighter, SFKM_BASE, 30, 0);
     EVT_AT_SetMot(fighter, 6850, 0, 1.2f, 0x50000000U, 0);
-    EVT_AT_SetVoice("0100C019", 1, 30); // @text EN: "It's a draw,\nso I can't ask you for your money." | JA: "引き分けじゃ金は取れねえな。"
+    EVT_AT_SetVoice("0100C019", 1, 30);  // @text EN: "It's a draw,\nso I can't ask you for your money." | JA: "引き分けじゃ金は取れねえな。"
     EVT_AT_SetVoice("0100C020", 1, 110); // @text EN: "Come and try again." | JA: "また今度挑戦してくれ。"
     EVT_AT_MenCtrl(EventFilmControl{.cleanup = 1,
         .frames = 30,

@@ -1,5 +1,9 @@
 #pragma once
 
+#include "shenmue.h"
+
+
+
 #include "s2/hlib.hpp"
 #include "common/math.hpp"
 #include "common/types.hpp"
@@ -56,11 +60,31 @@ static_assert(offsetof(WfTaskData, textures) == 0x44);
 static_assert(sizeof(WfScrollDefinition) == 6);
 
 inline constexpr std::array<WfScrollDefinition, 25> wfScrollDefinitions{{
-    {11, 2, 22, 1}, {12, 3, 18, 1}, {13, 3, 16, 1}, {14, 1, 27, 1}, {15, 1, 26, 1},
-    {16, 1, 23, 1}, {17, 2, 19, 1}, {18, 1, 25, 1}, {19, 1, 19, 1}, {20, 2, 21, 1},
-    {21, 2, 20, 1}, {22, 3, 19, 1}, {23, 3, 17, 1}, {24, 2, 4, 1}, {25, 3, 20, 2},
-    {0, 1, 14, 0}, {1, 2, 18, 0}, {2, 1, 16, 0}, {3, 2, 17, 0}, {4, 2, 14, 0},
-    {5, 1, 13, 0}, {6, 2, 15, 0}, {7, 3, 11, 0}, {8, 3, 10, 0}, {10, 3, -1, 2},
+    {11, 2, 22, 1},
+    {12, 3, 18, 1},
+    {13, 3, 16, 1},
+    {14, 1, 27, 1},
+    {15, 1, 26, 1},
+    {16, 1, 23, 1},
+    {17, 2, 19, 1},
+    {18, 1, 25, 1},
+    {19, 1, 19, 1},
+    {20, 2, 21, 1},
+    {21, 2, 20, 1},
+    {22, 3, 19, 1},
+    {23, 3, 17, 1},
+    {24, 2, 4, 1},
+    {25, 3, 20, 2},
+    {0, 1, 14, 0},
+    {1, 2, 18, 0},
+    {2, 1, 16, 0},
+    {3, 2, 17, 0},
+    {4, 2, 14, 0},
+    {5, 1, 13, 0},
+    {6, 2, 15, 0},
+    {7, 3, 11, 0},
+    {8, 3, 10, 0},
+    {10, 3, -1, 2},
 }};
 inline constexpr std::array<WfScrollDefinition, 2> wfSpecialScrollDefinitions{{{10, 3, -1, 2}, {9, 3, -1, 2}}};
 inline constexpr std::array<std::array<std::uint16_t, 2>, 3> wfPromptIcons{{{266, 265}, {268, 267}, {270, 269}}};
@@ -117,6 +141,7 @@ std::uint16_t GetWfPromptIcon(std::uint16_t prompt, std::uint32_t scroll);
 void BuildWfMenuEntries(std::span<WfMenuEntry, 25> entries);
 void BuildOwnedWfScrollSlots(std::span<std::int32_t, 26> slots);
 std::uint32_t GetWfScrollItem(std::int32_t index) noexcept;
+void GetWfScrollMove(std::int32_t index, std::int32_t *category, std::int32_t *move) noexcept;
 std::int32_t FindWfScrollDefinition(std::int32_t item) noexcept;
 std::int32_t GetWfScrollPreviewRow(std::int32_t index);
 
@@ -133,3 +158,4 @@ void ICSU_CtrlItemLook_Callback(void *parameter);
 void ReleaseItemWfOwners();
 
 } // namespace shenmue::s2
+

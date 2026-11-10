@@ -13,6 +13,7 @@
 
 #include "s2/hlib.hpp"
 #include "s2/frame_pacing.hpp"
+#include "s2/game_runtime.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
 #include "s2/map_control.hpp"
@@ -120,6 +121,9 @@ HLib::Task *padControlTask{};
 bool clearPrePadInput{};
 
 std::array<PhysicalControllerState, 4> physicalControllers{};
+constexpr std::size_t CONTROLLER_INPUT_DATA_STRIDE = 0x820;
+alignas(32) std::array<std::byte, 6 * CONTROLLER_INPUT_DATA_STRIDE> controllerInputData{};
+std::array<std::byte *, 6> controllerInputPointers{};
 std::int32_t selectedPhysicalControllerIndex = -1;
 std::int32_t softResetInputEnabled{};
 std::int32_t softResetInputState{};
@@ -727,7 +731,7 @@ bool HasWindowInputStateChanged() noexcept {
 }
 
 bool IsWindowKeyBindable(std::int32_t action, std::uint32_t key) noexcept {
-    // InitInputMapping43A500 and the QTE-only arrow-key exclusion433E00.
+    // Keyboard input mapping and the QTE arrow-key exclusion.
     static constexpr auto valid = [] {
         std::array<bool, 261> table{};
         constexpr std::array<std::uint16_t, 55> keys{
@@ -847,6 +851,55 @@ std::uint64_t PostProcessControllerState(std::uint32_t controllerIndex) {
         dpadAnalog = {};
     }
     return result;
+}
+
+void InitializeInputBuffers() {
+    for (std::size_t index = 0; index < controllerInputPointers.size(); ++index)
+        controllerInputPointers[index] = controllerInputData.data() + CONTROLLER_INPUT_DATA_STRIDE * index;
+    physicalControllers = {};
+}
+
+void UpdateButtonAndTriggerStates(std::uint32_t controllerIndex) {
+    PhysicalControllerState &controller = physicalControllers[controllerIndex];
+    const std::uint16_t buttons = static_cast<std::uint16_t>(controller.buttons);
+    const std::uint16_t previous = controller.previousButtons;
+    controller.previousButtons = buttons;
+    controller.pressedButtons = static_cast<std::uint16_t>(buttons & (buttons ^ previous));
+    const std::uint8_t triggers[2]{controller.leftTrigger, controller.rightTrigger};
+    for (std::size_t index = 0; index < 2; ++index) {
+        const std::uint32_t down = triggers[index] != 0 ? 1U : 0U;
+        controller.triggerPressed[index] = down && controller.triggerDown[index] == 0 ? 1U : 0U;
+        controller.triggerDown[index] = down;
+    }
+}
+
+void ControlCursorVisibilityAndPosition() {
+#if defined(_WIN32)
+    if (keyboardActive == 1 || g_forceDisplayCursor != 0) {
+        while (ShowCursor(TRUE) <= 0) {
+        }
+        SetCursor(LoadCursorA(nullptr, MAKEINTRESOURCEA(32512)));
+    } else {
+        while (ShowCursor(FALSE) >= 0) {
+        }
+    }
+    if (keyboardActive != 1)
+        return;
+    const std::int32_t type = GetCurrentUIInputType();
+    if (static_cast<std::uint32_t>(type - 3) <= 1U) {
+        POINT point{inputWindowWidth / 2, inputWindowHeight / 2};
+        ClientToScreen(inputWindow, &point);
+        SetCursorPos(point.x, point.y);
+    }
+    if (type == 2) {
+        if (windowKeys[257].pressed == 0)
+            return;
+    } else if (static_cast<std::uint32_t>(type - 3) > 1U) {
+        return;
+    }
+    while (ShowCursor(FALSE) >= 0) {
+    }
+#endif
 }
 
 // @verified - p
@@ -1285,6 +1338,7 @@ void HandleInputs() {
         physical.thumbLX = physical.thumbLY = physical.thumbRX = physical.thumbRY = 0;
         physical.normalizedSticks = {};
     }
+    UpdateButtonAndTriggerStates(controllerIndex);
 #if defined(SHENMUE_STEAM)
     if (!steamChanged) {
 #endif
@@ -1298,6 +1352,7 @@ void HandleInputs() {
     if (inputEnabled) {
         DetectActiveInputDevice(controllerIndex);
         HandleControllerInput(controllerIndex);
+        ControlCursorVisibilityAndPosition();
     } else {
         physical.buttons = 0;
         physical.leftTrigger = physical.rightTrigger = 0;

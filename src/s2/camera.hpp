@@ -55,7 +55,7 @@ enum class CameraInterpolationMode : std::int16_t {
     ToTargetTimed = 8,
 };
 
-// Independent of CAMT's interpolation mode: E10C80 drives field/fight motion.
+// Field/fight motion mode, independent of CAMT interpolation.
 enum class CameraMotionMode : std::uint8_t {
     Default = 0,
     Default1 = 1,
@@ -500,6 +500,7 @@ bool camCtrlIsNearSphereVisible(const Vector3 &centre, float radius);
 bool camCtrlIsFarSphereVisible(const Vector3 &centre, float radius);
 bool camCtrlIsScreenSpaceVisible(const Vector3 &centre, float radius);
 bool camCtrlCheckPosition(const Vector3 &position, float radius);
+bool camCtrlCheckWorldPosition(const Vector3 &position, float radius);
 void camCtrlSetProjectedShadowDepth(float distance);
 bool camCtrlIsProjectedShadowVisible(const Vector3 &centre, float radius);
 

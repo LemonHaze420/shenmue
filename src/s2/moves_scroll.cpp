@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/moves_scroll.hpp"
 
 #include "s2/ui_scroll_list.hpp"
@@ -259,7 +262,9 @@ std::span<NativeWazamakiGroup> NativeWazamakiGroups(std::uint8_t category) {
     }
 }
 
-NativeWazamakiGroup *FindWazamakiGroup(std::int32_t row, std::int32_t *category, std::int32_t *groupIndex = nullptr) {
+} // namespace
+
+NativeWazamakiGroup *FindWazamakiGroup(std::int32_t row, std::int32_t *category, std::int32_t *groupIndex) {
     *category = -1;
     for (std::int32_t current = 1; current < 4; ++current) {
         if (row >= wazamakiGroupCounts[current]) {
@@ -282,6 +287,8 @@ NativeWazamakiGroup *FindWazamakiGroup(std::int32_t row, std::int32_t *category,
     }
     return nullptr;
 }
+
+namespace {
 
 void CacheWazamakiGroups() {
     for (std::int32_t row = 0; row < wazamakiGroupCounts[0]; ++row) {
@@ -405,7 +412,9 @@ WazamakiLearnedGroup *CurrentLearnedGroup() {
     return wazamakiSelectedRow < wazamakiGroupCounts[0] ? &wazamakiLearnedView[wazamakiSelectedRow] : nullptr;
 }
 
-void RequestWazamakiPreviewMotion(Character *character, std::uint8_t category, std::uint8_t id) {
+} // namespace
+
+void RequestWazamakiPreviewMotion(std::uint8_t category, std::uint8_t id) {
     const std::span<const MoveDefinition> definitions = MoveDefinitions(category);
     const std::span<const S2MoveSkillBank, 3> banks = S2Save_GetMoveSkillBanks();
     if (category == 0 || category > banks.size() || id >= definitions.size())
@@ -413,8 +422,8 @@ void RequestWazamakiPreviewMotion(Character *character, std::uint8_t category, s
 
     const bool learned = banks[category - 1U].proficiency[id] >= 12;
     wazamakiPreviewPendingMotion = static_cast<std::uint16_t>(learned ? definitions[id].motionId : 306U);
-    if (character) {
-        MotionWork *const work = FindMotionWork(character);
+    if (wazamakiPreviewCharacter) {
+        MotionWork *const work = FindMotionWork(wazamakiPreviewCharacter);
         mtwkRequestMotion(work, wazamakiPreviewPendingMotion, MotionRegion::LowerBody);
         mtwkSetRegionFlag(work, 71, 0, MotionRegion::LowerBody);
         mtwkSetExtraFlag(work, 0, 2);
@@ -425,12 +434,14 @@ void RequestWazamakiPreviewMotion(Character *character, std::uint8_t category, s
         wazamakiPreviewMotionYaw = 0x8000;
 }
 
+namespace {
+
 void PlayCurrentLegacyMove() {
     WazamakiLearnedGroup *const group = CurrentLearnedGroup();
     if (!group || !group->count)
         return;
     const std::uint8_t id = group->moves[group->selected];
-    RequestWazamakiPreviewMotion(wazamakiPreviewCharacter, group->category, id);
+    RequestWazamakiPreviewMotion(group->category, id);
     wazamakiPresentationCategory = group->category;
     wazamakiPresentationVariant = group->selected;
 }
@@ -636,7 +647,7 @@ void RefreshWazamakiDescriptionAndMotion() {
     char buffer[256];
     std::sprintf(buffer, "%s.", text);
     UpdateWazamakiDescriptionText(buffer);
-    RequestWazamakiPreviewMotion(wazamakiPreviewCharacter, static_cast<std::uint8_t>(category), id);
+    RequestWazamakiPreviewMotion(static_cast<std::uint8_t>(category), id);
 }
 
 void SelectCurrentLegacyVariant() {
@@ -1432,6 +1443,11 @@ void RefreshWazamakiLearnedGroups() {
     CacheWazamakiGroups();
 }
 
+// @verified - p
+std::int32_t GetWazamakiGroupCount(std::int32_t category) noexcept {
+    return wazamakiGroupCounts[static_cast<std::size_t>(category)];
+}
+
 std::span<const WazamakiLearnedGroup> GetWazamakiLearnedGroups() noexcept {
     CacheWazamakiGroups();
     return {wazamakiLearnedView.data(), wazamakiGroupCounts[0]};
@@ -1442,7 +1458,7 @@ void PlayWazamakiGroupMove(std::uint32_t row) {
         return;
     CacheWazamakiGroups();
     const WazamakiLearnedGroup &group = wazamakiLearnedView[row];
-    RequestWazamakiPreviewMotion(wazamakiPreviewCharacter, group.category, group.moves[group.selected]);
+    RequestWazamakiPreviewMotion(group.category, group.moves[group.selected]);
 }
 
 void ResetMoveLearningPresentationState() noexcept {
@@ -1563,7 +1579,7 @@ bool SetWazamakiSelection(std::uint8_t category, std::uint8_t row) noexcept {
     wazamakiSelectedRow = row;
     wazamakiPresentationVariant = 0;
     if (wazamakiTask && !wazamakiLegacyState)
-        RequestWazamakiPreviewMotion(wazamakiPreviewCharacter, category, row);
+        RequestWazamakiPreviewMotion(category, row);
     return true;
 }
 
@@ -1654,3 +1670,4 @@ void SetupWZ2_CtrlWazamaki() noexcept {
 }
 
 } // namespace shenmue::s2
+

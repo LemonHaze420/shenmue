@@ -678,7 +678,7 @@ void ST_LoadTitleFadeIn_Main(void *) {
 }
 
 void ST_LoadTitleFadeIn_Callback(void *) {
-    // SetPPFXEnabled(1): the PPFX bypass flag is middleware state.
+    // PPFX owns the bypass flag set by SetPPFXEnabled(1).
     if ((g_loadingFlag & 0x102U) == 0) {
         loadTitle.alpha = static_cast<std::int16_t>(loadTitle.alpha + 8);
         if (loadTitle.alpha > 255)
@@ -965,7 +965,10 @@ void ST_LoadTitleFadeIn() {
     } while (loadTitle.alpha <= 255);
 }
 
-
+void LoadTitleFadeIn() {
+    loadTitle.alpha = 255;
+    ST_LoadTitleFadeIn_Main(nullptr);
+}
 
 void ST_LoadTitleFade() {
     loadTitle.fadeInActive = 0;

@@ -133,67 +133,61 @@ constexpr AreaJumpScheduleEntry we00Schedule[]{
 
 constexpr AreaJumpDestinationEntry areaJumpDestinations[]{
     {-1, {.specialMode = 0}, 0},
-    {165, {.areaId = SHEN_NAME(AR03)}, 3},
-    {165, {.candidateIndices = {0, 3, 4, 0}}, -1},
-    {166, {.areaId = SHEN_NAME(AR02)}, 25},
-    {167, {.areaId = SHEN_NAME(AK00)}, 1},
-    {168, {.areaId = SHEN_NAME(AB00)}, 95},
-    {169, {.areaId = SHEN_NAME(WB00)}, 1},
-    {170, {.areaId = SHEN_NAME(WT00)}, 1},
-    {170, {.areaId = SHEN_NAME(WT00)}, 80},
-    {171, {.areaId = SHEN_NAME(WTA0)}, 1},
-    {172, {.areaId = SHEN_NAME(WK00)}, 1},
-    {172, {.areaId = SHEN_NAME(WK00)}, 3},
-    {173, {.areaId = SHEN_NAME(WS00)}, 79},
-    {173, {.areaId = SHEN_NAME(WS00)}, 2},
-    {174, {.candidateIndices = {7, 10, 28, 29}}, -1},
-    {233, {.specialMode = 2}, 0},
-    {253, {.specialMode = 1}, 0},
-    {249, {.areaId = SHEN_NAME(Q100)}, 1},
-    {250, {.areaId = SHEN_NAME(Q200)}, 6},
-    {251, {.areaId = SHEN_NAME(QR00)}, 80},
-    {253, {.specialMode = 0}, 0},
-    {174, {.areaId = SHEN_NAME(WSY0)}, 50},
-    {255, {.areaId = SHEN_NAME(WK00)}, 32},
-    {256, {.areaId = SHEN_NAME(WN00)}, 28},
-    {233, {.areaId = SHEN_NAME(QUG0)}, 0},
-    {165, {.areaId = SHEN_NAME(AR02)}, 26},
-    {254, {.areaId = SHEN_NAME(WSY0)}, 50},
-    {287, {.areaId = SHEN_NAME(WE00)}, 77},
-    {258, {.areaId = SHEN_NAME(WN00)}, 3},
-    {173, {.areaId = SHEN_NAME(WS00)}, 1},
-};
+    {165, {.areaId = SHEN_NAME(AR03)}, 3}, {165, {.candidateIndices = {0, 3, 4, 0}}, -1},
+        {166, {.areaId = SHEN_NAME(AR02)}, 25},
+            {167, {.areaId = SHEN_NAME(AK00)}, 1},
+                {168, {.areaId = SHEN_NAME(AB00)}, 95},
+                    {169, {.areaId = SHEN_NAME(WB00)}, 1},
+                        {170, {.areaId = SHEN_NAME(WT00)}, 1},
+                            {170, {.areaId = SHEN_NAME(WT00)}, 80},
+                                {171, {.areaId = SHEN_NAME(WTA0)}, 1},
+                                    {172, {.areaId = SHEN_NAME(WK00)}, 1},
+                                        {172, {.areaId = SHEN_NAME(WK00)}, 3},
+                                            {173, {.areaId = SHEN_NAME(WS00)}, 79},
+                                                {173, {.areaId = SHEN_NAME(WS00)}, 2}, {174, {.candidateIndices = {7, 10, 28, 29}}, -1},
+                                                    {233, {.specialMode = 2}, 0}, {253, {.specialMode = 1}, 0},
+                                                    {249, {.areaId = SHEN_NAME(Q100)}, 1},
+                                                        {250, {.areaId = SHEN_NAME(Q200)}, 6},
+                                                            {251, {.areaId = SHEN_NAME(QR00)}, 80}, {253, {.specialMode = 0}, 0},
+                                                                {174, {.areaId = SHEN_NAME(WSY0)}, 50},
+                                                                    {255, {.areaId = SHEN_NAME(WK00)}, 32},
+                                                                        {256, {.areaId = SHEN_NAME(WN00)}, 28},
+                                                                            {233, {.areaId = SHEN_NAME(QUG0)}, 0},
+                                                                                {165, {.areaId = SHEN_NAME(AR02)}, 26},
+                                                                                    {254, {.areaId = SHEN_NAME(WSY0)}, 50},
+                                                                                        {287, {.areaId = SHEN_NAME(WE00)}, 77},
+                                                                                            {258, {.areaId = SHEN_NAME(WN00)}, 3},
+                                                                                                {173, {.areaId = SHEN_NAME(WS00)}, 1},
+                                                                                            };
 
 constexpr CtrlAreaJumpEntry areaJumps[]{
     {SHEN_NAME(WSY0), 66.5f, 121.0f, 64.5f, 120.5f, 63.5f, 121.0f, 66.5f, 122.0f, 98.199997f, {}, wsy0Schedule},
-    {SHEN_NAME(AB00), 163.5f, 536.5f, 163.5f, 538.5f, 164.5f, 536.5f, 164.5f, 538.5f, 95.300003f, {}, ab00Schedule},
-    {SHEN_NAME(AR01), 176.5f, 308.0f, 176.5f, 302.5f, 176.5f, 308.0f, 173.5f, 308.0f, 100.2f, {}, ar01Schedule},
-    {SHEN_NAME(QR00), 109.0f, 152.5f, 107.5f, 152.5f, 109.0f, 152.5f, 109.0f, 150.5f, 92.0f, {}, qr00Schedule},
-    {SHEN_NAME(AK00), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, SHEN_NAME(AKB0), ak00Schedule},
-    {SHEN_NAME(WB00), 334.5f, 277.0f, 337.0f, 277.0f, 334.5f, 277.5f, 337.0f, 277.5f, 127.0f, {}, wb00Schedule},
-    {SHEN_NAME(WE00), 150.3f, 98.099998f, 4.0f, 999.90002f, 150.3f, 98.099998f, 5.0f, 999.90002f, 102.0f, {}, we00Schedule},
-    {},
-};
+        {SHEN_NAME(AB00), 163.5f, 536.5f, 163.5f, 538.5f, 164.5f, 536.5f, 164.5f, 538.5f, 95.300003f, {}, ab00Schedule},
+            {SHEN_NAME(AR01), 176.5f, 308.0f, 176.5f, 302.5f, 176.5f, 308.0f, 173.5f, 308.0f, 100.2f, {}, ar01Schedule},
+                {SHEN_NAME(QR00), 109.0f, 152.5f, 107.5f, 152.5f, 109.0f, 152.5f, 109.0f, 150.5f, 92.0f, {}, qr00Schedule},
+                    {SHEN_NAME(AK00), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, SHEN_NAME(AKB0), ak00Schedule},
+                        {SHEN_NAME(WB00), 334.5f, 277.0f, 337.0f, 277.0f, 334.5f, 277.5f, 337.0f, 277.5f, 127.0f, {}, wb00Schedule},
+                            {SHEN_NAME(WE00), 150.3f, 98.099998f, 4.0f, 999.90002f, 150.3f, 98.099998f, 5.0f, 999.90002f, 102.0f, {}, we00Schedule}, {},
+                        };
 
 constexpr AreaEntryLocation areaEntryLocations[]{
     {SHEN_NAME(AR01), 86, {179.31f, 308.91f}},
-    {SHEN_NAME(WSY0), 79, {69.860001f, 120.57f}},
-    {SHEN_NAME(WTA0), 80, {230.75f, 228.0f}},
-    {SHEN_NAME(AB00), 95, {120.19f, 549.31f}},
-    {SHEN_NAME(QRR0), 80, {107.1f, 154.3f}},
-    {SHEN_NAME(WS00), 40, {65.199997f, 124.2f}},
-    {SHEN_NAME(WB00), 40, {336.70001f, 272.39999f}},
-    {SHEN_NAME(WTA0), 41, {230.75f, 228.0f}},
-    {SHEN_NAME(WTA0), 40, {230.75f, 228.0f}},
-    {SHEN_NAME(YMQB), 77, {258.04001f, 338.60001f}},
-    {SHEN_NAME(TOFB), 0, {217.74001f, 213.17f}},
-    {SHEN_NAME(WN00), 40, {266.5f, 270.60001f}},
-    {SHEN_NAME(SYW0), 0, {330.79001f, 234.38f}},
-    {SHEN_NAME(QR00), 40, {116.94f, 172.97f}},
-    {SHEN_NAME(QR00), 41, {116.94f, 172.97f}},
-    {SHEN_NAME(QUG0), 40, {155.48f, 185.98f}},
-    {},
-};
+        {SHEN_NAME(WSY0), 79, {69.860001f, 120.57f}},
+            {SHEN_NAME(WTA0), 80, {230.75f, 228.0f}},
+                {SHEN_NAME(AB00), 95, {120.19f, 549.31f}},
+                    {SHEN_NAME(QRR0), 80, {107.1f, 154.3f}},
+                        {SHEN_NAME(WS00), 40, {65.199997f, 124.2f}},
+                            {SHEN_NAME(WB00), 40, {336.70001f, 272.39999f}},
+                                {SHEN_NAME(WTA0), 41, {230.75f, 228.0f}},
+                                    {SHEN_NAME(WTA0), 40, {230.75f, 228.0f}},
+                                        {SHEN_NAME(YMQB), 77, {258.04001f, 338.60001f}},
+                                            {SHEN_NAME(TOFB), 0, {217.74001f, 213.17f}},
+                                                {SHEN_NAME(WN00), 40, {266.5f, 270.60001f}},
+                                                    {SHEN_NAME(SYW0), 0, {330.79001f, 234.38f}},
+                                                        {SHEN_NAME(QR00), 40, {116.94f, 172.97f}},
+                                                            {SHEN_NAME(QR00), 41, {116.94f, 172.97f}},
+                                                                {SHEN_NAME(QUG0), 40, {155.48f, 185.98f}}, {},
+                                                            };
 
 AreaJumpPersistentState persistentState{};
 SavedAreaJumpLocation savedAreaJumpLocation{};
@@ -537,9 +531,7 @@ void CaptureCurrentAreaJumpState() {
         persistentState.capturedTime = {};
         persistentState.reserved2b = {};
     }
-    persistentState.sceneActId = g_actNumber;
-    persistentState.sceneAreaId = g_currentMap;
-    persistentState.sceneEntryId = g_entryPoint;
+    GetSceneInfos(&persistentState.sceneActId, &persistentState.sceneAreaId, &persistentState.sceneEntryId);
     persistentState.authorId = GetCurrentAuthorId();
     persistentState.qronFloor = static_cast<std::int32_t>(GetQronNextStream());
     persistentState.magicRoomFlag = static_cast<std::int32_t>(GetMagicRoomActiveFlag());

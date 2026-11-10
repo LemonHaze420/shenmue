@@ -4,6 +4,7 @@
 #include "s2/cold_archive.hpp"
 #include "s2/hlib.hpp"
 #include "s2/map_control.hpp"
+#include "s2/pak.hpp"
 #include "s2/input_bindings.hpp"
 #include "common/types.hpp"
 
@@ -847,10 +848,9 @@ bool AllocateFlagWork(std::int32_t actNumber) {
     std::array<char, 10> filename{};
     std::memcpy(filename.data(), "FLAG0.BIN", filename.size());
     filename[4] = static_cast<char>(filename[4] + actNumber);
-    g_flagDescriptorDataSize = 0;
-    g_flagDescriptorData = LoadMiscFile(
-        filename.data(), SHEN_NAME(FLGB),
-        true, &g_flagDescriptorDataSize);
+    std::uint32_t flagDescriptorSize = 0;
+    g_flagDescriptorData = static_cast<std::byte*>(FileRead("misc", filename.data(), SHEN_NAME(FLGB), &flagDescriptorSize));
+    g_flagDescriptorDataSize = flagDescriptorSize;
     if (!g_flagDescriptorData) {
         return false;
     }

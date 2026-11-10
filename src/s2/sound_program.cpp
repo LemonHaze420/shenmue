@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/sound_program.hpp"
 
 #include "d3t/archive_handles.hpp"
@@ -27,11 +30,13 @@
 #include <algorithm>
 #include <cstdio>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <span>
 #include <string_view>
 
 namespace shenmue::s2 {
+std::array<void *, 2> g_aicaMemoryArena{};
 std::int32_t g_audioPlaybackEnabled = 1;
 std::int32_t g_audioPlaybackSuppressed{};
 std::int32_t g_forceDreamcastSoundData{};
@@ -1141,6 +1146,21 @@ void DisableAicaEmulation() noexcept {
     aicaEmulationEnabled = 0;
 }
 
+void ZeroAicaMemoryArena() noexcept {
+    for (void *&arena : g_aicaMemoryArena)
+        if (!arena)
+            arena = std::malloc(AICA_MEMORY_ARENA_SIZE);
+}
+
+void aicaFree() noexcept {
+    for (void *&arena : g_aicaMemoryArena) {
+        if (arena) {
+            std::free(arena);
+            arena = nullptr;
+        }
+    }
+}
+
 void DisableAicaIfEnabled() noexcept {
     if (aicaEmulationEnabled) {
         ReleaseS2AicaMiddleware();
@@ -1818,8 +1838,9 @@ void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
                 handle.active = 2;
             }
             (void)Dispatch(AicaBackendOperation::PauseStreams);
+            PauseConversationCategories(true);
         } else {
-            (void)Dispatch(AicaBackendOperation::PauseStreams, 0, 0, 0, 254);
+            SetConversationVolume(nullptr, 254);
         }
         ++runtime.pauseDepth;
         return;
@@ -1828,7 +1849,7 @@ void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
         return;
     --runtime.pauseDepth;
     if (runtime.pauseDepth == 1) {
-        (void)Dispatch(AicaBackendOperation::ResumeStreams, 0, 0, 0, 255);
+        SetConversationVolume(nullptr, 255);
         return;
     }
     if (runtime.pauseDepth != 0)
@@ -1851,6 +1872,7 @@ void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
         (void)Dispatch(AicaBackendOperation::WideBankCommand, MATERIAL_SOUND_GAIN_COMMAND, slot, 0, handle.gain);
     }
     (void)Dispatch(AicaBackendOperation::ResumeStreams);
+    PauseConversationCategories(false);
 }
 
 void SoundProgramControl_Callback(void *) {
@@ -1921,3 +1943,4 @@ void EVT_AT_FadeBGM(std::int32_t frames, std::int32_t mode, std::int32_t delay) 
 }
 
 } // namespace shenmue::s2
+

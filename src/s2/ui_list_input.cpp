@@ -1,6 +1,7 @@
 #include "d3t/ui_runtime.hpp"
 #include "s2/input.hpp"
 #include "s2/ui_scroll_list.hpp"
+#include <bit>
 #include <cstring>
 
 namespace shenmue::s2 {
@@ -34,6 +35,26 @@ UICollection *UI_GetCollection(std::uint32_t index) {
 }
 UITexturePage *UI_GetTexturePage(std::uint32_t index) {
     return index < g_uiTexturePages.size() ? &g_uiTexturePages[index] : nullptr;
+}
+
+void UI_SetCollectionCount(std::uint32_t index, std::int32_t count) {
+    UICollection *const collection = UI_GetCollection(index);
+    if (!collection)
+        return;
+    const UICollectionPage &layout = collection->pages[collection->field94];
+    collection->field64[0] = count;
+    std::int32_t perPage = layout.columns * layout.rows;
+    std::int32_t pages = (perPage + count - 1) / perPage;
+    if (pages >= 1) {
+        if (pages > count)
+            pages = count;
+    } else {
+        pages = 1;
+    }
+    collection->field64[1] = pages;
+    if (pages == 1)
+        perPage = count;
+    collection->field64[2] = perPage;
 }
 
 void UI_UpdateCollectionPageSize(std::uint32_t index) {
@@ -124,22 +145,88 @@ void UI_UpdateScrollListSelection(std::uint32_t index) {
     UIScrollList *const list = UI_GetScrollList(index);
     if (!list)
         return;
-    if (g_inputBuffer[0].pressedPriority & PAD_UP) {
+    const std::int32_t previousRow = list->field74[1];
+    if (list->field3AC) {
+        if (UIWidget_IsAnimating(static_cast<std::uint32_t>(list->field3A8)))
+            return;
+        list->field74[0] += list->field3AC;
+        list->field3AC = 0;
+        list->field3A4 = 0;
+    }
+    const std::int32_t count = list->field6C;
+    const std::int32_t visible = list->rows <= count ? list->rows : count;
+    const std::uint16_t input = g_inputBuffer[0].repeatedPresses;
+    if (input & PAD_DOWN) {
+        const std::int32_t row = ++list->field74[1];
+        if (row >= visible) {
+            if (row + list->field74[0] < count) {
+                list->field3AC = 1;
+                list->field74[1] = row - 1;
+                if (list->field64 == 1)
+                    UIWidget_Retarget(list->field3A8, {0.0f, 0.0f}, {-std::bit_cast<float>(list->field358[row - 1]), 0.0f});
+                UIWidget_Animate(list->field3A8, 1, 0.15f, 0.0f);
+            }
+            list->field74[1] = visible - 1;
+        }
+        UIWidget_Retarget(list->field3D4, {static_cast<float>(previousRow), 0.0f}, {static_cast<float>(list->field74[1]), 0.0f});
+        UIWidget_Animate(list->field3D4, 1, 0.15f, 0.0f);
+    }
+    if (input & PAD_UP) {
         if (--list->field74[1] < 0) {
-            --list->field74[0];
-            if (list->field74[0] < 0)
-                list->field74[0] = 0;
+            if (list->field74[0] > 0) {
+                list->field3AC = -1;
+                if (list->field64 == 1)
+                    UIWidget_Retarget(list->field3A8, {0.0f, 0.0f}, {-std::bit_cast<float>(list->field3B0[1]), 0.0f});
+                UIWidget_Animate(list->field3A8, 2, 0.15f, 0.0f);
+            }
             list->field74[1] = 0;
         }
+        UIWidget_Retarget(list->field3D4, {static_cast<float>(previousRow), 0.0f}, {static_cast<float>(list->field74[1]), 0.0f});
+        UIWidget_Animate(list->field3D4, 1, 0.15f, 0.0f);
     }
-    if (g_inputBuffer[0].pressedPriority & PAD_DOWN) {
-        if (++list->field74[1] >= list->rows) {
-            ++list->field74[0];
-            --list->field74[1];
-            if (list->field74[0] + list->field74[1] >= list->field6C)
-                --list->field74[0];
-        }
+}
+
+std::int32_t UI_UpdateMenuBarSelection(std::uint32_t index, std::uint16_t previous, std::uint16_t next) {
+    const std::uint16_t input = g_inputBuffer[0].pressedPriority;
+    UIMenuBar *const menuBar = UI_GetMenuBar(index);
+    if (!menuBar)
+        return 0;
+    UIMenuBar &bar = *menuBar;
+    if (input & previous) {
+        if (--bar.field184 < 0)
+            bar.field184 = bar.optionCount - 1;
+        return 1;
     }
+    if (input & next) {
+        std::int32_t selected = ++bar.field184;
+        if (selected >= bar.optionCount)
+            selected = 0;
+        bar.field184 = selected;
+        return 1;
+    }
+    return 0;
+}
+
+UISelector *UI_UpdateSelectorInput(std::uint32_t index) {
+    if (index >= g_uiSelectors.size())
+        return nullptr;
+    UISelector &selector = g_uiSelectors[index];
+    std::uint16_t input = g_inputBuffer[0].pressedPriority;
+    if ((input & PAD_LEFT) && selector.hasOption[3]) {
+        selector.pos = 3;
+        input = 0;
+    }
+    if ((input & PAD_RIGHT) && selector.hasOption[1]) {
+        selector.pos = 1;
+        input = 0;
+    }
+    if ((input & PAD_UP) && selector.hasOption[0]) {
+        selector.pos = 0;
+        input = 0;
+    }
+    if ((input & PAD_DOWN) && selector.hasOption[2])
+        selector.pos = 2;
+    return &selector;
 }
 
 void UI_UpdateScrollListPage(std::uint32_t index) {

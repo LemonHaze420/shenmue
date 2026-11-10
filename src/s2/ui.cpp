@@ -3,6 +3,11 @@
 #include "s2/ui_credits.hpp"
 #include "s2/ui.hpp"
 #include "s2/ui_pawn_legacy.hpp"
+#include "s2/ui_moves_legacy.hpp"
+#include "s2/legacy_draw.hpp"
+#include "s2/ui_game_screens.hpp"
+#include "s2/ui_legacy_menus.hpp"
+#include "s2/ui_main_collection.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
 #include "s2/magic_room.hpp"
@@ -127,6 +132,8 @@ std::int32_t g_uiDebugRevealAspectBars{};
 std::int32_t g_uiHelpAdmission{};
 float g_uiHelpAdmissionValue{};
 std::int32_t g_uiFreeInputOverride{};
+std::array<std::int32_t, static_cast<std::size_t>(UIElement::Count)> g_uiElementReinitStates{};
+std::int32_t g_uiMenuInputBlock{};
 UIButtonWheel *g_mainMenuWheelWidget{};
 std::int32_t g_mainMenuWheelIndex{};
 std::int32_t g_mainMenuWheelInputBlock{};
@@ -256,6 +263,8 @@ std::array<d3t ::UILabelWidget *, 3> moveLearnedLabels{};
 std::array<SnapshotImageRuntime, 126> snapshotImages{};
 std::array<std::uint32_t, 126> snapshotOrder{};
 std::uint32_t snapshotOrderCount{};
+bool snapshotImagesReady{};
+std::uint32_t snapshotReleaseTask{}, snapshotLoadTask{}, snapshotDeleteTask{};
 FrontendRoute frontendRoute = FrontendRoute::Wheel;
 bool continueAvailable = false;
 
@@ -1035,8 +1044,6 @@ std::int32_t moneyHudState{};
 std::uint32_t moneyHudRequest{};
 d3t::UILabelWidget *moneyHudLabel{};
 std::array<char, 512> moneyHudText{};
-AuthoredMenuLayout cutsceneSkipLayout;
-
 std::array<char, 256> gameHudTimerText{};
 d3t::UIWindow *gameHudTimerPanel{};
 d3t::UILabelWidget *gameHudTimerLabel{};
@@ -1268,6 +1275,7 @@ std::int8_t easyOptionMode{};
 bool easyOptionShowsOptions{};
 bool easyOptionPreviousClockSuppression{};
 float easyOptionPosition{};
+float easyOptionPositionY{};
 float easyOptionVelocity{};
 PadControlEntry *easyOptionPadControl{};
 PadControlEntry *easyOptionPreviousPadControl{};
@@ -1303,7 +1311,7 @@ std::byte *scenarioItemPtx{};
 std::uint32_t commonItemTexture{};
 std::uint32_t scenarioItemTexture{};
 
-} // namespace
+} // namespace ui_detail
 
 
 std::span<const std::byte> SetupPtxTexture(std::uint16_t width, std::uint32_t idLow, std::uint32_t idHigh) {
@@ -1370,6 +1378,7 @@ std::int32_t FirstDialogueSelectionSlot() {
 
 std::uint32_t gameScreenFadeColour{};
 nk_panel screenFadePanel{};
+nk_panel sdOverlayPanel{};
 std::array<nk_panel, 2> cinemaBarPanels{};
 float cinemaBarAmount{};
 float cinemaBarDirection{};
@@ -1383,6 +1392,7 @@ std::array<std::int32_t, 2> subtitleAlphaBindings{};
 
 std::int64_t RenderCinemaBars();
 std::int64_t RenderScreenFilm();
+std::int64_t RenderSDOverlay();
 std::int64_t ShowCinemaBars() {
     cinemaBarDirection = 1.0f;
     return 0;
@@ -1473,8 +1483,6 @@ void ParseLoadedUIDefinition(UIElementState &element) {
                 parentLayout.parents[panel] = static_cast<std::int32_t>(parent);
                 break;
             }
-    if (index == static_cast<std::size_t>(UIElement::CutsceneSkip))
-        BindAuthoredMenuLayout(definition, cutsceneSkipLayout);
 }
 
 bool AreUIDefinitionImagesReady(const UIElementState &element) {
@@ -2613,7 +2621,7 @@ void UpdateBigKanjiImages() {
             continue;
         d3t::UIViewImage &image = view->images[index];
         image = {};
-        struct nk_image raster {};
+        struct nk_image raster{};
         const bool described = UI_SetImageFromTexture(raster, glyph.admittedTexture);
         std::memcpy(&image.textureHandle, &raster, sizeof(raster));
         if (!described)
@@ -2942,9 +2950,7 @@ void ActivateItemsRow(float *, void *data) {
         if (row[1] != 2)
             SetItemLookShowingGameMenu();
     } else if (row[2]) {
-        ShowSharedItemsWidget(row[0], row[1]);
-        SetItemLookShowingGameMenu();
-        if (!OpenItemLook(GetInventoryItemId(row[0], row[1]), 1)) {
+        if (!OpenSharedItemsWidget(row[0], row[1])) {
             AicaExecuteWrapper(8);
             return;
         }
@@ -2974,7 +2980,7 @@ void DrawInventoryGridCell(UIGrid *grid, const Vector4 *bounds, const std::int32
     if (!dictionary)
         return;
     std::int32_t *const entry = const_cast<std::int32_t *>(dictionary) + ordinal * 8;
-    struct nk_image image {};
+    struct nk_image image{};
     RenderingRelatedInventory(image, GetInventoryItemIcon(entry[0], entry[1]), 0);
     UILayoutRect fitted = cell;
     UI_ScaleSize(fitted.width, fitted.height, 2, cell.width, cell.height, image.region[2], image.region[3], nullptr);
@@ -3072,6 +3078,16 @@ std::int64_t ResetItemsMenu() {
     itemsMenu.bound = false;
     return 0;
 }
+
+std::array<std::int16_t, 5> itemsMenuHints{3844, 44, -1, -1, -1};
+// @verified - p
+std::int64_t ItemsMenuHints() {
+    itemsMenuHints[0] = 3844;
+    if (!itemsMenu.dictionary[static_cast<std::size_t>(itemsMenu.grid.row * itemsMenu.grid.columns + itemsMenu.grid.column)][1] &&
+        !IsCurrentMapNaviFolderAvailable())
+        itemsMenuHints[0] = -1;
+    return CopyHudHintIds(itemsMenuHints);
+}
 std::int64_t DestroyItemsMenu() {
     return 1;
 }
@@ -3085,41 +3101,82 @@ std::int64_t RenderItemsMenu() {
 
 NativePromptRuntime nativePrompt;
 constexpr std::array<OptionSpec, 7> audioOptions{{
-    {OptionKind::List, "UIOPTADEV", "UIOPTAODDSC", AudioOptionOffset(offsetof(S2AudioSettings, device)), OptionChoices::AudioOutputs}, // @text UIOPTADEV EN: "Audio Output Device" | JA: "音声出力デバイス" ; UIOPTAODDSC EN: "Select which device is used for audio." | JA: "音声に使うデバイスを選択します。"
-    {OptionKind::Toggle, "UIOPTADLAN", "UIOPTALDSC", AudioOptionOffset(offsetof(S2AudioSettings, audioLanguage)), OptionChoices::AudioLanguages}, // @text UIOPTADLAN EN: "Audio Language" | JA: "音声言語" ; UIOPTALDSC EN: "Toggles the language used for audio." | JA: "音声言語の切り換えを行います。"
-    {OptionKind::List, "UIOTTXTLNG", "UIOPTTLDSC", AudioOptionOffset(offsetof(S2AudioSettings, subtitleLanguage)), OptionChoices::SubtitleLanguages}, // @text UIOTTXTLNG EN: "Text Language" | JA: "字幕言語" ; UIOPTTLDSC EN: "Select the language used for subtitles & UI." | JA: "字幕とUIの言語を選択します。"
-    {OptionKind::List, "UIOPTSBSEN", "UIOPTDTDSC", AudioOptionOffset(offsetof(S2AudioSettings, dialogueMode)), OptionChoices::Dialogue}, // @text UIOPTSBSEN EN: "Dialogue & Text" | JA: "声＆字幕" ; UIOPTDTDSC EN: "Select which mode dialogue & subtitles\nare presented in." | JA: "声と字幕の表示方法を選択します。"
-    {OptionKind::Slider, "UIOPTSSVOL", "UIOPTSFXVDSC", AudioOptionOffset(offsetof(S2AudioSettings, sfxVolume)), {}, 0, 100}, // @text UIOPTSSVOL EN: "SFX Volume" | JA: "SE音量" ; UIOPTSFXVDSC EN: "Adjusts the volume of sound effects." | JA: "効果音の音量を調節します。"
-    {OptionKind::Slider, "UIOPTSMVOL", "UIOPTMUSDSC", AudioOptionOffset(offsetof(S2AudioSettings, musicVolume)), {}, 0, 100}, // @text UIOPTSMVOL EN: "Music Volume" | JA: "BGM音量" ; UIOPTMUSDSC EN: "Adjusts the volume of music." | JA: "音楽の音量を調節します。"
-    {OptionKind::Slider, "UIOPTSTVOL", "UIOPTSPEDSC", AudioOptionOffset(offsetof(S2AudioSettings, dialogueVolume)), {}, 0, 100}, // @text UIOPTSTVOL EN: "Speech Volume" | JA: "ボイス音量" ; UIOPTSPEDSC EN: "Adjusts the volume of speech." | JA: "声の音量を調節します。"
+    {OptionKind::List, "UIOPTADEV", "UIOPTAODDSC", AudioOptionOffset(offsetof(S2AudioSettings, device)),
+        OptionChoices::
+            AudioOutputs}, // @text UIOPTADEV EN: "Audio Output Device" | JA: "音声出力デバイス" ; UIOPTAODDSC EN: "Select which device is used for audio." | JA: "音声に使うデバイスを選択します。"
+    {OptionKind::Toggle, "UIOPTADLAN", "UIOPTALDSC", AudioOptionOffset(offsetof(S2AudioSettings, audioLanguage)),
+        OptionChoices::
+            AudioLanguages}, // @text UIOPTADLAN EN: "Audio Language" | JA: "音声言語" ; UIOPTALDSC EN: "Toggles the language used for audio." | JA: "音声言語の切り換えを行います。"
+    {OptionKind::List, "UIOTTXTLNG", "UIOPTTLDSC", AudioOptionOffset(offsetof(S2AudioSettings, subtitleLanguage)),
+        OptionChoices::
+            SubtitleLanguages}, // @text UIOTTXTLNG EN: "Text Language" | JA: "字幕言語" ; UIOPTTLDSC EN: "Select the language used for subtitles & UI." | JA: "字幕とUIの言語を選択します。"
+    {OptionKind::List, "UIOPTSBSEN", "UIOPTDTDSC", AudioOptionOffset(offsetof(S2AudioSettings, dialogueMode)),
+        OptionChoices::
+            Dialogue}, // @text UIOPTSBSEN EN: "Dialogue & Text" | JA: "声＆字幕" ; UIOPTDTDSC EN: "Select which mode dialogue & subtitles\nare presented in." | JA: "声と字幕の表示方法を選択します。"
+    {OptionKind::Slider, "UIOPTSSVOL", "UIOPTSFXVDSC", AudioOptionOffset(offsetof(S2AudioSettings, sfxVolume)), {}, 0,
+        100}, // @text UIOPTSSVOL EN: "SFX Volume" | JA: "SE音量" ; UIOPTSFXVDSC EN: "Adjusts the volume of sound effects." | JA: "効果音の音量を調節します。"
+    {OptionKind::Slider, "UIOPTSMVOL", "UIOPTMUSDSC", AudioOptionOffset(offsetof(S2AudioSettings, musicVolume)), {}, 0,
+        100}, // @text UIOPTSMVOL EN: "Music Volume" | JA: "BGM音量" ; UIOPTMUSDSC EN: "Adjusts the volume of music." | JA: "音楽の音量を調節します。"
+    {OptionKind::Slider, "UIOPTSTVOL", "UIOPTSPEDSC", AudioOptionOffset(offsetof(S2AudioSettings, dialogueVolume)), {}, 0,
+        100}, // @text UIOPTSTVOL EN: "Speech Volume" | JA: "ボイス音量" ; UIOPTSPEDSC EN: "Adjusts the volume of speech." | JA: "声の音量を調節します。"
 }};
 constexpr std::array<OptionSpec, 31> controlsOptions{{
-    {OptionKind::Toggle, "UISWAPTRIG", "UISWAPTRDS", offsetof(S2UserConfiguration280, swapTriggers), OptionChoices::OffOn, 0, 0, true}, // @text UISWAPTRIG EN: "Swap Look & Run" | JA: "走りボタン変更" ; UISWAPTRDS EN: "Swap the inputs used for look & run." | JA: "「走る」と「ズーム」の機能を入れ替えます。\n「はい」にすると、L2ボタンで走ります。"
-    {OptionKind::Toggle, "UIOPTSINVY", "UIOPTLYADSC", offsetof(S2UserConfiguration280, invertLookY), OptionChoices::OffOn, 0, 0, true}, // @text UIOPTSINVY EN: "Invert Look Y Axis" | JA: "上下反転" ; UIOPTLYADSC EN: "Inverts the Y axis when looking around." | JA: "見回す操作を行う際に、\n入力に対して上下を反転させます。"
+    {OptionKind::Toggle, "UISWAPTRIG", "UISWAPTRDS", offsetof(S2UserConfiguration280, swapTriggers), OptionChoices::OffOn, 0, 0,
+        true}, // @text UISWAPTRIG EN: "Swap Look & Run" | JA: "走りボタン変更" ; UISWAPTRDS EN: "Swap the inputs used for look & run." | JA: "「走る」と「ズーム」の機能を入れ替えます。\n「はい」にすると、L2ボタンで走ります。"
+    {OptionKind::Toggle, "UIOPTSINVY", "UIOPTLYADSC", offsetof(S2UserConfiguration280, invertLookY), OptionChoices::OffOn, 0, 0,
+        true}, // @text UIOPTSINVY EN: "Invert Look Y Axis" | JA: "上下反転" ; UIOPTLYADSC EN: "Inverts the Y axis when looking around." | JA: "見回す操作を行う際に、\n入力に対して上下を反転させます。"
     {OptionKind::Heading, "UIKEYGENER", "", 0}, // @text EN: "Key Bindings - General" | JA: "キーアサイン（一般）"
-    KeyOption("UIBUT2CONF", 0), KeyOption("UIBUT2CANC", 1), KeyOption("UIBUT2EVEN", 2), KeyOption("UIBUT2SYST", 3), // @text UIBUT2CONF EN: "Talk / Action" | JA: "話す/アクション" ; UIBUT2CANC EN: "Cancel / Nav Mark" | JA: "キャンセル/ナビマーク" ; UIBUT2EVEN EN: "Notebook / Action" | JA: "メモ帳/アクション" ; UIBUT2SYST EN: "Inventory / Menu" | JA: "アイテム/メニュー"
-    KeyOption("UIBUTTFILT", 4), KeyOption("UIBUTTSHOT", 5), KeyOption("UIBUTTHELP", 7), // @text UIBUTTFILT EN: "Change Filter" | JA: "フィルタ変更" ; UIBUTTSHOT EN: "Snapshot" | JA: "スナップショット" ; UIBUTTHELP EN: "Pause/Help" | JA: "ポーズ/ヘルプ"
+    KeyOption("UIBUT2CONF", 0), KeyOption("UIBUT2CANC", 1), KeyOption("UIBUT2EVEN", 2),
+    KeyOption("UIBUT2SYST",
+        3), // @text UIBUT2CONF EN: "Talk / Action" | JA: "話す/アクション" ; UIBUT2CANC EN: "Cancel / Nav Mark" | JA: "キャンセル/ナビマーク" ; UIBUT2EVEN EN: "Notebook / Action" | JA: "メモ帳/アクション" ; UIBUT2SYST EN: "Inventory / Menu" | JA: "アイテム/メニュー"
+    KeyOption("UIBUTTFILT", 4), KeyOption("UIBUTTSHOT", 5),
+    KeyOption("UIBUTTHELP",
+        7), // @text UIBUTTFILT EN: "Change Filter" | JA: "フィルタ変更" ; UIBUTTSHOT EN: "Snapshot" | JA: "スナップショット" ; UIBUTTHELP EN: "Pause/Help" | JA: "ポーズ/ヘルプ"
     {OptionKind::Heading, "UIKEYMOVCA", "", 0}, // @text EN: "Key Bindings - Movement / Camera" | JA: "キーアサイン（移動＆カメラ）"
-    KeyOption("UIBUTTLOOK", 8), KeyOption("UIBUTTRUN0", 9), KeyOption("UIMOVEUP00", 14), KeyOption("UIMOVEDOWN", 15), // @text UIBUTTLOOK EN: "Look Zoom" | JA: "ズーム／ロックオン" ; UIBUTTRUN0 EN: "Run" | JA: "走る" ; UIMOVEUP00 EN: "Walk Forward" | JA: "前に進む" ; UIMOVEDOWN EN: "Turnaround" | JA: "振り向く"
-    KeyOption("UIMOVELEFT", 16), KeyOption("UIMOVERIGH", 17), KeyOption("UILOOKUP00", 10), KeyOption("UILOOKDOWN", 11), // @text UIMOVELEFT EN: "Turn Left" | JA: "左に曲がる" ; UIMOVERIGH EN: "Turn Right" | JA: "右に曲がる" ; UILOOKUP00 EN: "Look Up" | JA: "上を見る" ; UILOOKDOWN EN: "Look Down" | JA: "下を見る"
-    KeyOption("UILOOKLEFT", 12), KeyOption("UILOOKRIGH", 13), // @text UILOOKLEFT EN: "Look Left" | JA: "左を見る" ; UILOOKRIGH EN: "Look Right" | JA: "右を見る"
+    KeyOption("UIBUTTLOOK", 8), KeyOption("UIBUTTRUN0", 9), KeyOption("UIMOVEUP00", 14),
+    KeyOption("UIMOVEDOWN",
+        15), // @text UIBUTTLOOK EN: "Look Zoom" | JA: "ズーム／ロックオン" ; UIBUTTRUN0 EN: "Run" | JA: "走る" ; UIMOVEUP00 EN: "Walk Forward" | JA: "前に進む" ; UIMOVEDOWN EN: "Turnaround" | JA: "振り向く"
+    KeyOption("UIMOVELEFT", 16), KeyOption("UIMOVERIGH", 17), KeyOption("UILOOKUP00", 10),
+    KeyOption("UILOOKDOWN",
+        11), // @text UIMOVELEFT EN: "Turn Left" | JA: "左に曲がる" ; UIMOVERIGH EN: "Turn Right" | JA: "右に曲がる" ; UILOOKUP00 EN: "Look Up" | JA: "上を見る" ; UILOOKDOWN EN: "Look Down" | JA: "下を見る"
+    KeyOption("UILOOKLEFT", 12),
+    KeyOption("UILOOKRIGH", 13),                // @text UILOOKLEFT EN: "Look Left" | JA: "左を見る" ; UILOOKRIGH EN: "Look Right" | JA: "右を見る"
     {OptionKind::Heading, "UIKEYQTETT", "", 0}, // @text EN: "Key Bindings - QTE" | JA: "キーアサイン（ＱＴＥ）"
-    KeyOption("UIQTE00001", 18), KeyOption("UIQTE00002", 19), KeyOption("UIQTE00003", 20), KeyOption("UIQTE00004", 21), // @text UIQTE00001 EN: "Quick Time Action 1" | JA: "クイックタイムアクション１" ; UIQTE00002 EN: "Quick Time Action 2" | JA: "クイックタイムアクション２" ; UIQTE00003 EN: "Quick Time Action 3" | JA: "クイックタイムアクション３" ; UIQTE00004 EN: "Quick Time Action 4" | JA: "クイックタイムアクション４"
+    KeyOption("UIQTE00001", 18), KeyOption("UIQTE00002", 19), KeyOption("UIQTE00003", 20),
+    KeyOption("UIQTE00004",
+        21), // @text UIQTE00001 EN: "Quick Time Action 1" | JA: "クイックタイムアクション１" ; UIQTE00002 EN: "Quick Time Action 2" | JA: "クイックタイムアクション２" ; UIQTE00003 EN: "Quick Time Action 3" | JA: "クイックタイムアクション３" ; UIQTE00004 EN: "Quick Time Action 4" | JA: "クイックタイムアクション４"
     {OptionKind::Heading, "UIKEYFIGHT", "", 0}, // @text EN: "Key Bindings - Fight" | JA: "キーアサイン（バトル）"
-    KeyOption("UIKICK0000", 22), KeyOption("UITHROW000", 23), KeyOption("UIPUNCH000", 24), KeyOption("UIBLOCK000", 25), // @text UIKICK0000 EN: "Kick" | JA: "キック" ; UITHROW000 EN: "Throw" | JA: "投げ" ; UIPUNCH000 EN: "Punch" | JA: "パンチ" ; UIBLOCK000 EN: "Guard" | JA: "防御"
+    KeyOption("UIKICK0000", 22), KeyOption("UITHROW000", 23), KeyOption("UIPUNCH000", 24),
+    KeyOption("UIBLOCK000",
+        25), // @text UIKICK0000 EN: "Kick" | JA: "キック" ; UITHROW000 EN: "Throw" | JA: "投げ" ; UIPUNCH000 EN: "Punch" | JA: "パンチ" ; UIBLOCK000 EN: "Guard" | JA: "防御"
 }};
 constexpr std::array<OptionSpec, 11> graphicsOptions{{
-    {OptionKind::List, "UIOPTSFULL", "UIOPTDMDSC", offsetof(S2UserConfiguration280, windowMode), OptionChoices::WindowModes}, // @text UIOPTSFULL EN: "Display Mode" | JA: "フルスクリーンモード" ; UIOPTDMDSC EN: "Select the display mode." | JA: "表示モードを選択します。"
-    {OptionKind::List, "UIOPTSMONI", "UIOPTMONSDC", offsetof(S2UserConfiguration280, displayOutput), OptionChoices::Displays}, // @text UIOPTSMONI EN: "Monitor" | JA: "モニター" ; UIOPTMONSDC EN: "Select which monitor the game should appear on." | JA: "ゲームを表示するモニターを選択します。"
-    {OptionKind::List, "UIOPTSRESO", "UIOPTRESDSC", offsetof(S2UserConfiguration280, resolutionIndex), OptionChoices::Resolutions}, // @text UIOPTSRESO EN: "Resolution" | JA: "解像度" ; UIOPTRESDSC EN: "Select the games resolution." | JA: "ゲームの解像度を選択します。"
-    {OptionKind::Slider, "UIOPTRESSCAL", "UIOPTRESSCDS", offsetof(S2UserConfiguration280, resolutionScale), {}, 40, 100}, // @text UIOPTRESSCAL EN: "Resolution Scale" | JA: "解像度スケール" ; UIOPTRESSCDS EN: "Scale resolution down to emulate original\nresolution and/or improve performance." | JA: "解像度を低くします。オリジナルの解像度でプレイしたい、\nまたはパフォーマンスを向上させたい場合に最適です。"
-    {OptionKind::Slider, "UIOPTSUPSA", "UIOPTSUPSADS", offsetof(S2UserConfiguration280, superSampling), {}, 100, 200}, // @text UIOPTSUPSA EN: "Super Sampling" | JA: "スーパーサンプリング" ; UIOPTSUPSADS EN: "Enable super sampling. Higher values\nrequire more memory and may impact performance." | JA: "スーパーサンプリングを有効にします。高く設定するとより多くの\nメモリが必要となり、パフォーマンスに影響が出る場合があります。"
+    {OptionKind::List, "UIOPTSFULL", "UIOPTDMDSC", offsetof(S2UserConfiguration280, windowMode),
+        OptionChoices::
+            WindowModes}, // @text UIOPTSFULL EN: "Display Mode" | JA: "フルスクリーンモード" ; UIOPTDMDSC EN: "Select the display mode." | JA: "表示モードを選択します。"
+    {OptionKind::List, "UIOPTSMONI", "UIOPTMONSDC", offsetof(S2UserConfiguration280, displayOutput),
+        OptionChoices::
+            Displays}, // @text UIOPTSMONI EN: "Monitor" | JA: "モニター" ; UIOPTMONSDC EN: "Select which monitor the game should appear on." | JA: "ゲームを表示するモニターを選択します。"
+    {OptionKind::List, "UIOPTSRESO", "UIOPTRESDSC", offsetof(S2UserConfiguration280, resolutionIndex),
+        OptionChoices::
+            Resolutions}, // @text UIOPTSRESO EN: "Resolution" | JA: "解像度" ; UIOPTRESDSC EN: "Select the games resolution." | JA: "ゲームの解像度を選択します。"
+    {OptionKind::Slider, "UIOPTRESSCAL", "UIOPTRESSCDS", offsetof(S2UserConfiguration280, resolutionScale), {}, 40,
+        100}, // @text UIOPTRESSCAL EN: "Resolution Scale" | JA: "解像度スケール" ; UIOPTRESSCDS EN: "Scale resolution down to emulate original\nresolution and/or improve performance." | JA: "解像度を低くします。オリジナルの解像度でプレイしたい、\nまたはパフォーマンスを向上させたい場合に最適です。"
+    {OptionKind::Slider, "UIOPTSUPSA", "UIOPTSUPSADS", offsetof(S2UserConfiguration280, superSampling), {}, 100,
+        200}, // @text UIOPTSUPSA EN: "Super Sampling" | JA: "スーパーサンプリング" ; UIOPTSUPSADS EN: "Enable super sampling. Higher values\nrequire more memory and may impact performance." | JA: "スーパーサンプリングを有効にします。高く設定するとより多くの\nメモリが必要となり、パフォーマンスに影響が出る場合があります。"
     {OptionKind::Toggle, "UIOPTSFXAA", "UIOPTSFXAA", offsetof(S2UserConfiguration280, fxaa), OptionChoices::OffOn, 0, 0, true}, // @text EN: "FXAA" | JA: "FXAA"
-    {OptionKind::List, "UIOTGLBLOO", "UIOPBLMTOGDC", offsetof(S2UserConfiguration280, bloomMode), OptionChoices::Bloom}, // @text UIOTGLBLOO EN: "Bloom" | JA: "ブルーム" ; UIOPBLMTOGDC EN: "Toggle bloom post FX." | JA: "ブルームを「はい」にすることで、光源から光が\n溢れ出るようなエフェクトが有効になります。"
-    {OptionKind::Slider, "UIGAMMGAMM", "UIOPBRGHTDSC", offsetof(S2UserConfiguration280, gamma), {}, -100, 100}, // @text UIGAMMGAMM EN: "Gamma" | JA: "ガンマ" ; UIOPBRGHTDSC EN: "Adjust gameplay brightness level." | JA: "鮮明度を調節します。"
-    {OptionKind::Slider, "UIOPTSCONT", "UIOPTSCONDSC", offsetof(S2UserConfiguration280, contrast), {}, -100, 100}, // @text UIOPTSCONT EN: "Contrast" | JA: "コントラスト" ; UIOPTSCONDSC EN: "Adjust contrast level." | JA: "コントラストを調節します。"
-    {OptionKind::Toggle, "UIOPTSSD43", "UIOPTASPDSC", offsetof(S2UserConfiguration280, aspectRatio), OptionChoices::Aspect}, // @text UIOPTSSD43 EN: "Aspect Ratio" | JA: "アスペクト比" ; UIOPTASPDSC EN: "Select the aspect ratio used during gameplay." | JA: "ゲームプレイ時の縦横比を選択します。"
-    {OptionKind::Slider, "UIOPTSCALE", "UIOPUISCADSC", offsetof(S2UserConfiguration280, uiSafeArea), {}, 80, 100}, // @text UIOPTSCALE EN: "UI Display Area" | JA: "UIサイズ" ; UIOPUISCADSC EN: "Adjust the screen area that\nthe UI is contained within." | JA: "UIが含まれるスクリーンエリアを調節します。"
+    {OptionKind::List, "UIOTGLBLOO", "UIOPBLMTOGDC", offsetof(S2UserConfiguration280, bloomMode),
+        OptionChoices::
+            Bloom}, // @text UIOTGLBLOO EN: "Bloom" | JA: "ブルーム" ; UIOPBLMTOGDC EN: "Toggle bloom post FX." | JA: "ブルームを「はい」にすることで、光源から光が\n溢れ出るようなエフェクトが有効になります。"
+    {OptionKind::Slider, "UIGAMMGAMM", "UIOPBRGHTDSC", offsetof(S2UserConfiguration280, gamma), {}, -100,
+        100}, // @text UIGAMMGAMM EN: "Gamma" | JA: "ガンマ" ; UIOPBRGHTDSC EN: "Adjust gameplay brightness level." | JA: "鮮明度を調節します。"
+    {OptionKind::Slider, "UIOPTSCONT", "UIOPTSCONDSC", offsetof(S2UserConfiguration280, contrast), {}, -100,
+        100}, // @text UIOPTSCONT EN: "Contrast" | JA: "コントラスト" ; UIOPTSCONDSC EN: "Adjust contrast level." | JA: "コントラストを調節します。"
+    {OptionKind::Toggle, "UIOPTSSD43", "UIOPTASPDSC", offsetof(S2UserConfiguration280, aspectRatio),
+        OptionChoices::
+            Aspect}, // @text UIOPTSSD43 EN: "Aspect Ratio" | JA: "アスペクト比" ; UIOPTASPDSC EN: "Select the aspect ratio used during gameplay." | JA: "ゲームプレイ時の縦横比を選択します。"
+    {OptionKind::Slider, "UIOPTSCALE", "UIOPUISCADSC", offsetof(S2UserConfiguration280, uiSafeArea), {}, 80,
+        100}, // @text UIOPTSCALE EN: "UI Display Area" | JA: "UIサイズ" ; UIOPUISCADSC EN: "Adjust the screen area that\nthe UI is contained within." | JA: "UIが含まれるスクリーンエリアを調節します。"
 }};
 OptionsRuntime options;
 const OptionSpec *selectedOptionDescription{};
@@ -3147,14 +3204,54 @@ constexpr std::array<const char *, 7> collectionRowRoots{"Submenu_Collection_Gac
 constexpr std::array<const char *, 29> collectionMapImages{"A000_00", "A000_01", "A000_02", "A000_03", "A000_04", "A000_05", "W000_01", "W000_02", "W000_03",
     "W000_04", "W000_05", "W000_00", "W000_06", "W000_07", "Q000_00", "Q000_01", "Q000_02", "Q000_03", "Q000_04", "Q000_05", "Q000_06", "Q000_07", "Q000_08",
     "Q000_09", "Q000_10", "Locked", "Aberdeen", "WanChai", "Kowloon"};
-constexpr std::array<shen_name, 12> collectionPawnShops{SHEN_NAME(ARP0), SHEN_NAME(WSP0), SHEN_NAME(WKP0), SHEN_NAME(WKP1), SHEN_NAME(WTP0), SHEN_NAME(WTP1),
-    SHEN_NAME(WTP2), SHEN_NAME(WTP3), SHEN_NAME(WTP4), SHEN_NAME(WRP0), SHEN_NAME(QBL0), SHEN_NAME(QBR0)};
-constexpr std::array<shen_name, 48> collectionBioNames{SHEN_NAME(JOP_), SHEN_NAME(WON_), SHEN_NAME(SAM_), SHEN_NAME(LLY_), SHEN_NAME(CLJ_), SHEN_NAME(MM5_),
-    SHEN_NAME(GOI_), SHEN_NAME(HTK_), SHEN_NAME(SYE_), SHEN_NAME(KEM_), SHEN_NAME(BKN_), SHEN_NAME(CHY_), SHEN_NAME(KEK_), SHEN_NAME(TNZ_), SHEN_NAME(SOS_),
-    SHEN_NAME(TSK_), SHEN_NAME(KUN_), SHEN_NAME(SAI_), SHEN_NAME(SIZ_), SHEN_NAME(KNK_), SHEN_NAME(ANA_), SHEN_NAME(TKR_), SHEN_NAME(MYS_), SHEN_NAME(LKN_),
-    SHEN_NAME(EDL_), SHEN_NAME(XGH_), SHEN_NAME(CKT_), SHEN_NAME(YAN_), SHEN_NAME(GAI_), SHEN_NAME(CHO_), SHEN_NAME(SF7_), SHEN_NAME(CEN_), SHEN_NAME(REN_),
-    SHEN_NAME(AM1_), SHEN_NAME(AM2_), SHEN_NAME(AW3_), SHEN_NAME(SF6_), SHEN_NAME(SF3_), SHEN_NAME(SF4_), SHEN_NAME(SD4_), SHEN_NAME(SIN_), SHEN_NAME(SRY_),
-    SHEN_NAME(TGY_), SHEN_NAME(YUA_), SHEN_NAME(RNP_), SHEN_NAME(AW2_), SHEN_NAME(DM2_), SHEN_NAME(CH8_)};
+constexpr std::array<shen_name, 48> collectionBioNames{SHEN_NAME(JOP_),
+    SHEN_NAME(WON_),
+        SHEN_NAME(SAM_),
+            SHEN_NAME(LLY_),
+                SHEN_NAME(CLJ_),
+                    SHEN_NAME(MM5_),
+                        SHEN_NAME(GOI_),
+                            SHEN_NAME(HTK_),
+                                SHEN_NAME(SYE_),
+                                    SHEN_NAME(KEM_),
+                                        SHEN_NAME(BKN_),
+                                            SHEN_NAME(CHY_),
+                                                SHEN_NAME(KEK_),
+                                                    SHEN_NAME(TNZ_),
+                                                        SHEN_NAME(SOS_),
+                                                            SHEN_NAME(TSK_),
+                                                                SHEN_NAME(KUN_),
+                                                                    SHEN_NAME(SAI_),
+                                                                        SHEN_NAME(SIZ_),
+                                                                            SHEN_NAME(KNK_),
+                                                                                SHEN_NAME(ANA_),
+                                                                                    SHEN_NAME(TKR_),
+                                                                                        SHEN_NAME(MYS_),
+                                                                                            SHEN_NAME(LKN_),
+                                                                                                SHEN_NAME(EDL_),
+                                                                                                    SHEN_NAME(XGH_),
+                                                                                                        SHEN_NAME(CKT_),
+                                                                                                            SHEN_NAME(YAN_),
+                                                                                                                SHEN_NAME(GAI_),
+                                                                                                                    SHEN_NAME(CHO_),
+                                                                                                                        SHEN_NAME(SF7_),
+                                                                                                                            SHEN_NAME(CEN_),
+                                                                                                                                SHEN_NAME(REN_),
+                                                                                                                                    SHEN_NAME(AM1_),
+                                                                                                                                        SHEN_NAME(AM2_),
+                                                                                                                                            SHEN_NAME(AW3_),
+                                                                                                                                                SHEN_NAME(SF6_),
+                                                                                                                                                    SHEN_NAME(SF3_),
+                                                                                                                                                        SHEN_NAME(SF4_),
+                                                                                                                                                            SHEN_NAME(SD4_),
+                                                                                                                                                                SHEN_NAME(SIN_),
+                                                                                                                                                                    SHEN_NAME(SRY_),
+                                                                                                                                                                        SHEN_NAME(TGY_),
+                                                                                                                                                                            SHEN_NAME(YUA_),
+                                                                                                                                                                                SHEN_NAME(RNP_),
+                                                                                                                                                                                    SHEN_NAME(AW2_),
+                                                                                                                                                                                        SHEN_NAME(DM2_),
+                                                                                                                                                                                            SHEN_NAME(CH8_)};
 std::array<CollectionChildRuntime, 7> collectionChild;
 d3t::UIImageWidget *collectionMapPreview;
 std::array<std::int32_t, 29> collectionMapImageIndices{};
@@ -3165,14 +3262,21 @@ std::array<CollectionMapRow, 28> collectionMaps;
 std::array<WfMenuEntry, 25> collectionScrolls;
 std::array<std::array<std::int32_t, 2>, 54> collectionSecretRows;
 std::array<CollectionAlbum, 48> collectionAlbums;
-std::array<std::uint32_t, 126> collectionViewerOrder;
+const std::uint32_t *collectionViewerOrder{};
 std::uint32_t collectionViewerCount{}, collectionViewerIndex{};
 UIElement collectionViewerReturn{UIElement::PhotosSnapshot};
 bool collectionViewerWrap{}, collectionViewerBack{};
-CollectionAuthoredLayout collectionViewerLayout, collectionPresentLayout;
+std::array<d3t::UIWindow *, 14> collectionViewerWindows{};
+std::array<d3t::UILayoutItem *, 7> collectionViewerLayoutItems{};
+std::array<d3t::UILabelWidget *, 7> collectionViewerLabels{};
+std::int32_t collectionViewerPlaceholder{-1};
+nk_panel collectionViewerBackgroundPanel{}, collectionViewerPanel{};
 std::array<std::array<char, 256>, 7> collectionViewerText;
-std::vector<std::uint32_t> collectionPresentTextures;
-std::uint32_t collectionPresentIndex{};
+std::array<d3t::UIWindow *, 5> collectionPresentWindows{};
+std::int32_t collectionPresentPlaceholder{-1};
+std::array<CollectionPresentPage, 11> collectionPresentPages{};
+std::uint32_t collectionPresentIndex{}, collectionPresentCount{}, collectionPresentPageStep{};
+nk_panel collectionPresentPanel{};
 std::array<bool, 2> collectionTabFocus{true, true};
 std::array<std::uint8_t, 126> collectionSnapshotPriority{};
 float collectionSnapshotLoadingTime{};
@@ -3189,8 +3293,8 @@ bool collectionMapLanguagePending{};
 std::array<CollectionUnderlayAlpha, 3> collectionUnderlayAlpha;
 bool collectionUnderlayHidden{};
 std::uint32_t collectionPendingDelete{std::numeric_limits<std::uint32_t>::max()};
+std::int64_t (*collectionPendingDeleteCompletion)(){};
 bool collectionPresentFramed{};
-CollectionPawnFlyer collectionPawnFlyer;
 
 // @verified - p
 std::uint32_t AdvanceMoneyHudInit() {
@@ -3392,6 +3496,23 @@ std::int64_t GameHudTimerDebugGate() {
     return GetDebugForceUIEnabled(UIElement::GameHudTimer);
 }
 
+UIElementState *openingPlaceholderElement{};
+// @verified - p
+std::int64_t OpeningPlaceholderRenderNullsub() {
+    return 0;
+}
+
+std::int64_t OpeningPlaceholderDebugGate() {
+    return GetDebugForceUIEnabled(UIElement::OpeningPlaceholder);
+}
+
+// @verified - p
+void RegisterOpeningPlaceholder(UIElementState &element) {
+    openingPlaceholderElement = &element;
+    element.render = OpeningPlaceholderRenderNullsub;
+    element.isPressed = OpeningPlaceholderDebugGate;
+}
+
 std::uint32_t LoadStreetFighterHud() {
     return ReadUIDefinitionFile(UIElement::StreetFighterHud, "/ui/gamehud/GameHudStreetFighter.ui", 0);
 }
@@ -3533,19 +3654,9 @@ std::uint32_t LoadCutsceneSkip() {
     return ReadUIDefinitionFile(UIElement::CutsceneSkip, "/ui/gamehud/GameHudSkip.ui", 1);
 }
 
+// @verified - p
 std::int64_t RenderCutsceneSkip() {
-    if (!drawingUI)
-        return 0;
-    d3t::UIDefinition &definition = uiDefinitions[static_cast<std::size_t>(UIElement::CutsceneSkip)];
-    AuthoredMenuLayout &layout = cutsceneSkipLayout;
-    d3t::ResolveUIDefinitionLayout(
-        definition, layout.parents, layout.panels, layout.objects, layout.labels, layout.objectPanels, layout.labelPanels, {}, GetUILayoutPaddingScale());
-    for (std::size_t index = 0; index < definition.textureObjects.size(); ++index)
-        DrawNativeMenuObject(definition, definition.textureObjects[index], layout.objects[index], 1.0f);
-    for (std::size_t index = 0; index < definition.labels.size(); ++index) {
-        const d3t::UILabelDefinition &label = definition.labels[index];
-        DrawMovesLabel(label, layout.labels[index], label.token.empty() ? std::string_view(label.text) : GetLocalizedSceneText(label.token), 1.0f, &definition);
-    }
+    uiUpdateWithColour(*GetNativeUiContext(), g_uiElements[static_cast<std::size_t>(UIElement::CutsceneSkip)].config.uiHandleIndex);
     return 0;
 }
 
@@ -3669,6 +3780,14 @@ std::int64_t StartActionSelector() {
     }
     AicaExecuteWrapper(3);
     return 1;
+}
+
+std::array<std::int16_t, 5> actionSelectorHints{-1, 44, -1, -1, -1};
+// @verified - p
+std::int64_t ActionSelectorHints() {
+    if (numericActionSelector.mode == 1 && numericActionSelector.amount > 0)
+        actionSelectorHints[0] = 45;
+    return CopyHudHintIds(actionSelectorHints);
 }
 
 std::int64_t ActionSelectorDestroy() {
@@ -4079,7 +4198,7 @@ std::int64_t DrawGameMessage() {
     return 0;
 }
 
-} // namespace
+} // namespace ui_detail
 
 namespace ui_detail {
 
@@ -4112,11 +4231,103 @@ void InitializeUIElements() {
         element.index = static_cast<std::int32_t>(index);
         element.config.uiHandleIndex = -1;
     }
+    UIElementState &legacyMainMenu = g_uiElements[static_cast<std::size_t>(UIElement::MainMenu)];
+    legacyMainMenu.name = "MAIN";
+    legacyMainMenu.parseDefinitionFromFile = LoadLegacyMainMenu;
+    legacyMainMenu.unknown28 = LegacyMainMenuInput;
+    legacyMainMenu.postInit = RenderLegacyMainMenu;
+    legacyMainMenu.unknown78 = GetLegacyMainMenuInitState;
+
+    UIElementState &mainLoad = g_uiElements[static_cast<std::size_t>(UIElement::MainMenuContinue)];
+    mainLoad.name = "MAIN_CONTINUE";
+    mainLoad.parseDefinitionFromFile = LoadMainLoad;
+    mainLoad.unknown28 = LoadGame;
+    mainLoad.postInit = RenderMainLoad;
+    mainLoad.initialize = InitializeMainLoad;
+    mainLoad.unknown60 = LegacyUICallbackReturnOne;
+    mainLoad.unknown78 = GetMainLoadMode;
+
+    UIElementState &mainCollection = g_uiElements[static_cast<std::size_t>(UIElement::ShenmueCollection)];
+    mainCollection.name = "MAIN_COLLECTION";
+    mainCollection.parseDefinitionFromFile = LoadMainCollection;
+    mainCollection.unknown28 = MainCollectionInput;
+    mainCollection.postInit = RenderMainCollection;
+    mainCollection.initialize = LegacyUICallbackNullsub;
+    mainCollection.unknown60 = LegacyUICallbackReturnOne;
+    mainCollection.unknown70 = ReloadMainCollection;
+    mainCollection.unknown78 = GetMainCollectionInitState;
+
+    UIElementState &optionsGamma = g_uiElements[static_cast<std::size_t>(UIElement::OptionsGamma)];
+    optionsGamma.name = "OPTIONS_GAMMA";
+    optionsGamma.parseDefinitionFromFile = LoadOptionsGamma;
+    optionsGamma.unknown28 = OptionsGammaInput;
+    optionsGamma.postInit = RenderOptionsGamma;
+    optionsGamma.unknown78 = GetOptionsGammaInitState;
+
+    UIElementState &legacyGameHud = g_uiElements[static_cast<std::size_t>(UIElement::GameHud)];
+    legacyGameHud.name = "GAMEHUD";
+    legacyGameHud.parseDefinitionFromFile = LoadLegacyGameHud;
+    legacyGameHud.unknown28 = LegacyUICallbackReturnZero;
+    legacyGameHud.initialize = LegacyUICallbackNullsub;
+    legacyGameHud.unknown60 = LegacyUICallbackReturnOne;
+    legacyGameHud.unknown70 = ReloadLegacyGameHud;
+    legacyGameHud.unknown78 = GetLegacyGameHudInitState;
+
+    UIElementState &legacyHelp = g_uiElements[static_cast<std::size_t>(UIElement::GameHelp)];
+    legacyHelp.name = "GAME_HELP";
+    legacyHelp.unknown78 = GetGameHelpLoadState;
+
+    UIElementState &legacyQte = g_uiElements[static_cast<std::size_t>(UIElement::GameQte)];
+    legacyQte.name = "GAME_QTE";
+    legacyQte.unknown28 = LegacyUICallbackReturnZero;
+    legacyQte.initialize = LegacyUICallbackNullsub;
+    legacyQte.unknown60 = LegacyUICallbackReturnOne;
+    legacyQte.unknown78 = GetGameQteInitState;
+
+    UIElementState &collectionBackground = g_uiElements[static_cast<std::size_t>(UIElement::CollectionBackground)];
+    collectionBackground.name = "COLLECTION_BACKGROUND";
+    collectionBackground.parseDefinitionFromFile = LoadCollectionBackground;
+    collectionBackground.unknown28 = LegacyUICallbackReturnZero;
+    collectionBackground.postInit = RenderCollectionBackground;
+    collectionBackground.initialize = LegacyUICallbackNullsub;
+    collectionBackground.unknown60 = LegacyUICallbackReturnOne;
+    collectionBackground.unknown78 = GetCollectionBackgroundInitState;
+
+    UIElementState &optionsBackground = g_uiElements[static_cast<std::size_t>(UIElement::OptionsBackground)];
+    optionsBackground.name = "OPTIONS_BACKGROUND";
+    optionsBackground.parseDefinitionFromFile = LoadOptionsBackground;
+    optionsBackground.unknown28 = LegacyUICallbackReturnZero;
+    optionsBackground.postInit = RenderOptionsBackground;
+    optionsBackground.initialize = LegacyUICallbackNullsub;
+    optionsBackground.unknown60 = LegacyUICallbackReturnOne;
+    optionsBackground.unknown78 = GetOptionsBackgroundInitState;
+
+    UIElementState &yesNoPrompt = g_uiElements[static_cast<std::size_t>(UIElement::YesNoPrompt)];
+    yesNoPrompt.name = "YESNOPROMPT";
+    yesNoPrompt.unknown28 = LegacyPromptInput;
+    yesNoPrompt.postInit = RenderLegacyPrompt;
+    yesNoPrompt.initialize = OpenLegacyPrompt;
+    yesNoPrompt.unknown60 = CloseLegacyPrompt;
+    yesNoPrompt.unknown70 = ReloadLegacyPrompt;
+    yesNoPrompt.unknown78 = GetLegacyPromptInitState;
+
+    UIElementState &infoBar = g_uiElements[static_cast<std::size_t>(UIElement::InfoBar)];
+    infoBar.name = "Info Bar";
+    infoBar.parseDefinitionFromFile = LoadInfoBar;
+    infoBar.tick = ShowInfoBar;
+    infoBar.destroy = HideInfoBar;
+    infoBar.unknown80 = IsInfoBarAnimating;
+    infoBar.render = RenderInfoBar;
+    infoBar.postInit = RenderInfoBar;
+    infoBar.isSelected = BindInfoBar;
+    infoBar.fieldAc = 1;
+
     UIElementState &screenFade = g_uiElements[static_cast<std::size_t>(UIElement::GameScreenFade)];
     screenFade.name = "Game Screen Fade";
     screenFade.isPressed = ScreenFadeAcceptsInput;
     screenFade.render = RenderScreenFilm;
     gameScreenFadeColour = 0;
+    RegisterOpeningPlaceholder(g_uiElements[static_cast<std::size_t>(UIElement::OpeningPlaceholder)]);
 
     UIElementState &splash = g_uiElements[static_cast<std::size_t>(UIElement::Splash)];
     splash.name = "Splash";
@@ -4132,8 +4343,14 @@ void InitializeUIElements() {
     pressStart.parseDefinitionFromFile = LoadPressStart;
     pressStart.isSelected = PressStartSelected;
     pressStart.isPressed = PressStartInput;
+    pressStart.unknown28 = LegacyPressStartInput;
     pressStart.render = PressStartRender;
     pressStart.tick = TickPressStart;
+    pressStart.postInit = RenderLegacyPressStart;
+    pressStart.initialize = InitializeLegacyPressStart;
+    pressStart.unknown60 = PressStartDebugGate;
+    pressStart.unknown70 = ReloadLegacyPressStart;
+    pressStart.unknown78 = GetLegacyPressStartInitState;
     UIElementState &bigKanjiText = g_uiElements[static_cast<std::size_t>(UIElement::BigKanjiText)];
     bigKanjiText.name = "Game HUD Big Kanji Text";
     bigKanjiText.parseDefinitionFromFile = LoadBigKanjiText;
@@ -4163,10 +4380,12 @@ void InitializeUIElements() {
     items.reset = ResetItemsMenu;
     items.tick = TickItemsMenu;
     items.destroy = DestroyItemsMenu;
+    items.unknown98 = ItemsMenuHints;
     RegisterCollectionAndPhotos();
     RegisterOptionsAndPrompt();
     RegisterNativeGameHud();
     RegisterGameNotebook();
+    RegisterLegacyGameScreens();
 
     UIElementState &intro = g_uiElements[static_cast<std::size_t>(UIElement::IntroCutsceneCredits)];
     intro.name = "Intro Cutscene - Credits & Logo";
@@ -4206,11 +4425,11 @@ void InitializeUIElements() {
     loading.reset = ResetLoadingScreenDefinition;
 
     UIElementState &mainMenu = g_uiElements[static_cast<std::size_t>(UIElement::MainMenu)];
-    mainMenu.name = "Main Menu";
     mainMenu.parseDefinitionFromFile = LoadMainMenu;
     mainMenu.isSelected = MainMenuSelected;
     mainMenu.isPressed = MainMenuWheelInput;
     mainMenu.render = MainMenuRender;
+    mainMenu.reset = ResetMainMenu;
     mainMenu.tick = TickMainMenu;
     mainMenu.destroy = DestroyMainMenuPage;
 
@@ -4227,9 +4446,6 @@ void InitializeUIElements() {
     UIElementState &mainMenuNew = g_uiElements[static_cast<std::size_t>(UIElement::MainMenuNew)];
     mainMenuNew.name = "Main Menu New";
     mainMenuNew.parseDefinitionFromFile = LoadMainMenuNew;
-    UIElementState &mainMenuContinue = g_uiElements[static_cast<std::size_t>(UIElement::MainMenuContinue)];
-    mainMenuContinue.name = "Main Menu Continue";
-    mainMenuContinue.parseDefinitionFromFile = LoadMainMenuContinue;
     UIElementState &mainMenuCollection = g_uiElements[static_cast<std::size_t>(UIElement::ShenmueCollection)];
     mainMenuCollection.name = "Main Menu Collection";
     mainMenuCollection.parseDefinitionFromFile = LoadMainMenuCollection;
@@ -4318,7 +4534,12 @@ void InitializeUIElements() {
     notebookPages.name = "Notebook Pages";
     notebookPages.config.init = 3;
     notebookPages.isSelected = CreateMemoNotebookPages;
-    notebookPages.destroy = DestroyMemoNotebookPages;
+    notebookPages.render = []() -> std::int64_t {
+        RenderMemoNotebookPages();
+        return 0;
+    };
+    notebookPages.unknown60 = DestroyMemoNotebookPages;
+    notebookPages.unknown78 = GetMemoNotebookPagesInitState;
 
     UIElementState &cinemaBars = g_uiElements[static_cast<std::size_t>(UIElement::CinemaBars)];
     cinemaBars.name = "Cinema bars";
@@ -4351,6 +4572,11 @@ void InitializeUIElements() {
     qteMini.destroy = DestroyQteMinigame;
     qteMini.render = RenderQteMinigame;
     qteMini.fieldAc = 1;
+    UIElementState &wristwatch = g_uiElements[static_cast<std::size_t>(UIElement::WristwatchOverlay)];
+    wristwatch.unknown98 = WristwatchOverlayHints;
+    wristwatch.destroy = WristwatchOverlayDebugGate;
+    wristwatch.tick = WristwatchOverlayTickNullsub;
+    wristwatch.name = "Wristwatch overlay";
     g_uiElements[static_cast<std::size_t>(UIElement::PlatformIcons)].name = "Platform Icons";
     UIElementState &actionSelector = g_uiElements[static_cast<std::size_t>(UIElement::ActionSelector)];
     actionSelector.name = "Action Selector";
@@ -4360,6 +4586,7 @@ void InitializeUIElements() {
     actionSelector.tick = StartActionSelector;
     actionSelector.destroy = ActionSelectorDestroy;
     actionSelector.render = DrawActionSelector;
+    actionSelector.unknown98 = ActionSelectorHints;
     UIElementState &pawnLegacy = g_uiElements[static_cast<std::size_t>(UIElement::PawnshopFlyer)];
     pawnLegacy.name = "PAWNSHOP_FLYER";
     pawnLegacy.parseDefinitionFromFile = AdvanceLegacyPawnFlyerInit;
@@ -4368,6 +4595,18 @@ void InitializeUIElements() {
     pawnLegacy.initialize = InitializeLegacyPawnFlyerNullsub;
     pawnLegacy.unknown60 = LegacyPawnFlyerReady;
     pawnLegacy.unknown78 = GetLegacyPawnFlyerResult;
+    UIElementState &legacyMoves = g_uiElements[static_cast<std::size_t>(UIElement::GameMoves)];
+    legacyMoves.parseDefinitionFromFile = AdvanceLegacyMovesInit;
+    legacyMoves.unknown28 = LegacyMovesInput;
+    legacyMoves.postInit = RenderLegacyMoves;
+    legacyMoves.initialize = ShowLegacyMoves;
+    legacyMoves.unknown60 = HideLegacyMoves;
+    legacyMoves.unknown70 = ReloadLegacyMoves;
+    legacyMoves.unknown78 = GetLegacyMovesInitState;
+    legacyMoves.name = "GAME_MOVES";
+    UIElementState &sdOverlay = g_uiElements[static_cast<std::size_t>(UIElement::SDOverlay)];
+    sdOverlay.name = "SDOVERLAY";
+    sdOverlay.postInit = RenderSDOverlay;
     UIElementState &pawnSets = g_uiElements[static_cast<std::size_t>(UIElement::PawnshopFlyer2)];
     pawnSets.name = "Pawnshop Flyer";
     pawnSets.parseDefinitionFromFile = LoadPawnSetFlyer;
@@ -4471,7 +4710,21 @@ std::int64_t RenderScreenFilm() {
     return 0;
 }
 
-// STVW snapshot/debug and biography viewer ownership.
+std::int64_t RenderSDOverlay() {
+    if (GetLegacyRenderMask())
+        return 0;
+    sdOverlayPanel.flags |= 8U;
+    nk_context &context = *GetNativeUiContext();
+    const std::uint32_t colour = ConstructColour(0, 0, 0, 190);
+    nk_color background{};
+    std::memcpy(&background, &colour, sizeof(background));
+    context.style.window.fixed_background = nk_style_item_color(background);
+    UI_GatedBegin(context, sdOverlayPanel, "SDOverlay", nk_rect(0.0f, 0.0f, 1920.0f, 1080.0f), NK_WINDOW_BACKGROUND);
+    UI_GatedEnd(context);
+    return 0;
+}
+
+// STVW snapshot/debug and biography viewer.
 
 HLib::Task *snapshotDebugTask{};
 SnapshotDebugWork *snapshotDebugWork{};
@@ -4485,7 +4738,7 @@ std::int32_t warningMessageIndex{}, warningMessageNumber{};
 SnapshotDebugTextResources snapshotDebugTextResources{};
 std::int32_t snapshotDebugSpriteCount{};
 std::array<std::int32_t, 7> snapshotDebugSprites{};
-} // namespace
+} // namespace ui_detail
 
 namespace ui_detail {
 
@@ -4535,7 +4788,7 @@ void *LoadEndingStaffRollResource() {
     return LoadLegacySceneFile("scene/04/stfrol", "STAFF_01.SPR", STAFF_ROLL_SPRITE);
 }
 
-} // namespace
+} // namespace ui_detail
 
 std::int32_t GetCurrentUIState() {
     return currentUIState;
@@ -4929,7 +5182,7 @@ void SetMoveLearnedUiLine(std::int32_t index, std::string_view token) {
     }
 }
 
-namespace ui_detail {} // namespace
+namespace ui_detail {} // namespace ui_detail
 
 void ExecuteFightGaugeUI() noexcept {
     constexpr std::size_t index = static_cast<std::size_t>(UIElement::FightGauge);
@@ -5214,13 +5467,7 @@ void InitializeNuklearUI(std::uint32_t renderHandle) {
     loadingScreen.images.fill(-1);
     ResetLoadingScreenDefinition();
     snapshotOrderCount = 0;
-    for (SnapshotImageRuntime &image : snapshotImages) {
-        image.generation.fetch_add(1, std::memory_order_acq_rel);
-        const std::uint32_t texture = image.texture.exchange(0, std::memory_order_acq_rel);
-        if (texture)
-            d3t::InitTexture2DResource(texture);
-        image.state.store(0, std::memory_order_release);
-    }
+    ReleaseSnapshotImages();
     mainMenuSelection = MainMenuItem::NewGame;
     frontendRoute = FrontendRoute::Wheel;
     continueAvailable = ContinueModuleIsAvailable();
@@ -5242,6 +5489,9 @@ void InitializeNuklearUI(std::uint32_t renderHandle) {
     previousRenderHandle = renderHandle;
     InitializeSplashScreens(renderHandle);
     LoadSplash();
+    UI_ClearElementReinitState(60);
+    UI_ClearElementReinitState(61);
+    UI_ClearElementReinitState(63);
     previousRenderHandle = 0;
     LoadPressStart();
     LoadMainMenu();
@@ -5258,7 +5508,6 @@ void InitializeNuklearUI(std::uint32_t renderHandle) {
     LoadMainMenuWheel();
     LoadMainMenuNew();
     LoadFightGaugeDefinition();
-    LoadMainMenuContinue();
     LoadMainMenuCollection();
     LoadGameBackground();
     LoadInformationBar();
@@ -5375,6 +5624,14 @@ void DisableElement(UIElement elementIndex) {
 }
 
 // @verified - p
+void SetGameInformationBarVisibility(bool hidden) {
+    if (hidden)
+        DisableElement(UIElement::GameInfoBar);
+    else
+        EnableRenderableByIndex(UIElement::GameInfoBar);
+}
+
+// @verified - p
 void EnableRenderableByIndex(UIElement elementIndex) {
     const std::uint32_t index = static_cast<std::uint32_t>(elementIndex);
     if (index >= static_cast<std::uint32_t>(UIElement::Count))
@@ -5479,6 +5736,42 @@ std::int64_t DestroyElementByIndex(UIElement elementIndex) {
 bool IsSharedItemsWidgetOwnedBy(std::int32_t owner) noexcept {
     return sharedItemsWidget.active != 0 && (owner == -1 || sharedItemsWidget.owner == owner);
 }
+std::int32_t UI_GetMenuInputBlock() {
+    return g_uiMenuInputBlock;
+}
+void UI_ClearElementReinitState(std::int32_t element) {
+    g_uiElementReinitStates[static_cast<std::size_t>(element)] = 0;
+}
+void UI_InitializeElementReinitStates() {
+    g_uiElementReinitStates.fill(4);
+}
+
+// @verified - p
+std::uint32_t GetElementInitState(UIElement elementIndex) {
+    const std::uint32_t index = static_cast<std::uint32_t>(elementIndex);
+    if (index >= static_cast<std::uint32_t>(UIElement::Count))
+        return 4;
+    const UIElementState &element = g_uiElements[index];
+    if (element.setup)
+        return static_cast<std::uint32_t>(element.config.init);
+    return element.unknown78 ? static_cast<std::uint32_t>(element.unknown78()) : 4;
+}
+
+// @verified - p
+void ReinitPendingUIElements() {
+    for (std::uint32_t index = 0; index < static_cast<std::uint32_t>(UIElement::Count); ++index) {
+        const UIElement element = static_cast<UIElement>(index);
+        if (GetElementInitState(element) != 3 && g_uiElementReinitStates[index] != 4 && ReInitElement(element) == 3)
+            g_uiElementReinitStates[index] = 3;
+    }
+}
+
+void UI_ReloadElementDefinitions(std::uint32_t renderHandle) {
+    previousRenderHandle = renderHandle;
+    for (std::int32_t element = 0; element < static_cast<std::int32_t>(UIElement::Count); ++element)
+        UI_ClearElementReinitState(element);
+    ReinitPendingUIElements();
+}
 bool IsHelpOverlayVisible(UIElement element) noexcept {
     const auto index = static_cast<std::int32_t>(element);
     return index >= 0 && index < static_cast<std::int32_t>(g_uiElements.size()) && g_uiElements[static_cast<std::size_t>(index)].isVisible != 0;
@@ -5569,6 +5862,13 @@ std::int64_t ShowSharedItemsWidget(std::uint32_t itemType, std::uint32_t owner) 
     return 1;
 }
 
+std::int64_t OpenSharedItemsWidget(std::uint32_t itemType, std::uint32_t owner) {
+    ShowSharedItemsWidget(itemType, owner);
+    const std::uint32_t item = GetInventoryItemId(itemType, owner);
+    SetItemLookShowingGameMenu();
+    return OpenItemLook(item, 1);
+}
+
 std::int64_t DestroySharedItemsWidget() {
     sharedItemsWidget = {};
     sharedItemsWidget.owner = -1;
@@ -5635,11 +5935,18 @@ void UI_BeginFrame() {
     if (safeHeight != uiSafeAreaHeight || safeWidth != uiSafeAreaWidth) {
         uiSafeAreaWidth = safeWidth;
         uiSafeAreaHeight = safeHeight;
-        informationBar.current.hideTarget = 1;
-        for (d3t::UIWindow &window : g_uiWindows)
-            window.rectCached = 0;
+        InvalidateUIWindowRects();
     }
 }
+
+namespace ui_detail {
+// @verified - p
+void InvalidateUIWindowRects() {
+    informationBar.current.hideTarget = 1;
+    for (d3t::UIWindow &window : g_uiWindows)
+        window.rectCached = 0;
+}
+} // namespace ui_detail
 
 void UpdateElements() {
     for (std::size_t index = 0; index < g_uiElements.size(); ++index) {
@@ -6025,6 +6332,10 @@ bool ConsumeUICancelPressed() {
     const bool pressed = cancelPressed;
     cancelPressed = false;
     return pressed;
+}
+
+void resetPreviousRenderHandle() {
+    previousRenderHandle = 0;
 }
 
 } // namespace shenmue::s2

@@ -66,8 +66,8 @@ struct ScenarioTalkPresentationState {
     std::int32_t selectedFollowFlag{};
     std::int32_t talkEndRequest{};
 
-    // scenProcessCharacterActionQueue state. The participant copy is followed natively by ten
-    // reset-only words, which actions 58, 59, 148 and 149 index; they read as unnamed participants.
+    // The participant copy is followed by ten reset-only words.
+    // Actions 58, 59, 148 and 149 index those words as unnamed participants.
     std::array<shen_name, 18> actionParticipants{};
     std::array<std::int32_t, 8> participantMotionIds{};
     std::array<std::int32_t, 8> participantWorldYaws{};
@@ -122,7 +122,7 @@ struct ScenarioAction {
 };
 static_assert(sizeof(ScenarioAction) == 8);
 
-// AllocateMem's variable-record FIFOs; SCEN owns both inside its task data (+0x1a0, +0x228).
+// AllocateMem variable-record FIFOs in SCEN task data (+0x1a0, +0x228).
 struct ScenarioActionQueue {
     shen_name name;
     std::uint32_t count;
@@ -259,14 +259,15 @@ static_assert(sizeof(ConversationTaskData) == 0x2c0);
 inline constexpr shen_name TASK_CONVERSATION{SHEN_NAME(VOIC)}, CONVERSATION_PACKET_MEMORY{SHEN_NAME(CVBF)}, CONVERSATION_RESOURCE_MEMORY{SHEN_NAME(CVRS)};
 inline constexpr shen_name CONVERSATION_INDEX_MEMORY{SHEN_NAME(CVIX)}, CONVERSATION_ADFS_MEMORY{SHEN_NAME(ADFS)};
 
-// AllocateAudioIndexData owns the persistent BGM CVIX and separate ADFS.
-// Cold-scene admission precedes the HLib heap partition; MODU only retires borrowers.
+// The BGM CVIX and ADFS persist across module changes.
+// Allocate them before partitioning the HLib heap; MODU only releases its references.
 void AllocateAudioIndexData();
 bool adfsSetCameraIdxForChara(shen_name target, shen_name source);
 bool RemoveConversationSpeakerAlias(shen_name target);
 
 
 void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks);
+void EnsureLoadedPakForActiveScene();
 void CVS_CtrlConversTask();
 void UpdateConversationStreams();
 void ReleaseConversationResources();

@@ -11,6 +11,7 @@
 #include "s2/npc_package.hpp"
 #include "s2/player.hpp"
 #include "s2/screen_film.hpp"
+#include "s2/sound_program.hpp"
 
 #include <bit>
 
@@ -82,7 +83,9 @@ void Cleanup031E(AuthorViewerTaskParameter *parent) {
 std::int64_t Queue031EAuthor(AuthorViewerTaskParameter *parent) {
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(Update031EAuthorTask, 4, 0x0b, sizeof(AuthorViewerLoopTaskParameter), AUTHOR_VIEWER_TASK);
     static_cast<AuthorViewerLoopTaskParameter *>(HLib::GetTaskParameter(task))->parent = parent;
-    SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    const std::uint32_t selection = static_cast<std::uint32_t>(static_cast<std::int32_t>(parent->selection));
+    EV_LoadCutsceneFromCurrentScene(selection <= 2 || selection == 11 ? "0031E000" : "0031E020");
+    SetScreenFilmFade(0, 255, 0, 0, 0, 0, 0, 0, 0);
     Prepare031ECharacters();
     EV_authSceneCtrl(static_cast<AuthSceneCtrl>(parent->selection));
     parent->state = 2;

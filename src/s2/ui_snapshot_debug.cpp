@@ -27,6 +27,7 @@
 #include "s2/areas/omak_tables.hpp"
 #include "s2/omak_collection_ui.hpp"
 
+#include "d3t/archive_handles.hpp"
 #include "d3t/content.hpp"
 #include "d3t/image_texture_loader.hpp"
 #include "d3t/render_handles.hpp"
@@ -96,6 +97,7 @@
 #include <cctype>
 #include <cmath>
 #include <limits>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -139,38 +141,66 @@ std::int32_t LoadSnapshotImageTask(void *data) {
 #endif
     const std::uint32_t texture = bytes.empty() ? 0 : d3t::CreateImageTextureFromMemory(bytes.data(), bytes.size(), false);
     SnapshotImageRuntime &runtime = snapshotImages[request->slot];
-    if (runtime.generation.load(std::memory_order_acquire) == request->generation) {
-        const std::uint32_t previous = runtime.texture.exchange(texture, std::memory_order_acq_rel);
-        if (previous)
-            d3t::InitTexture2DResource(previous);
-        runtime.state.store(texture ? 2U : 3U, std::memory_order_release);
-    } else if (texture) {
-        d3t::InitTexture2DResource(texture);
-    }
+    runtime.texture.store(texture, std::memory_order_release);
+    runtime.state.store(texture ? 2U : 3U, std::memory_order_release);
     delete request;
     return texture ? 0 : -1;
 }
 
-void QueueSnapshotImageLoad(std::uint32_t slot) {
+bool QueueSnapshotImageLoad(std::uint32_t slot) {
     if (slot >= snapshotImages.size())
-        return;
+        return false;
     SnapshotImageRuntime &runtime = snapshotImages[slot];
-    const std::uint32_t state = runtime.state.load(std::memory_order_acquire);
-    if (state == 1 || state == 2)
-        return;
+    if (runtime.state.load(std::memory_order_acquire) != 0 || GetSnapshotMetadataOwner()->records[slot].use != 1)
+        return false;
     auto *const request = new (std::nothrow) SnapshotImageLoadRequest{};
     if (!request)
-        return;
+        return false;
     request->slot = slot;
-    request->generation = runtime.generation.fetch_add(1, std::memory_order_acq_rel) + 1;
     request->path = S2Save_SnapshotPath(slot);
     SnapshotImageLoadRequest *queuedRequest = request;
     const d3t::D3TTaskDescriptor descriptor{&queuedRequest, LoadSnapshotImageTask, nullptr, 2};
     runtime.state.store(1, std::memory_order_release);
-    if (!d3t::d3t_QueueTask(&descriptor, sizeof(queuedRequest))) {
+    snapshotLoadTask = d3t::d3t_QueueTask(&descriptor, sizeof(queuedRequest));
+    if (!snapshotLoadTask) {
         runtime.state.store(3, std::memory_order_release);
         delete request;
     }
+    return true;
+}
+
+void ReleaseSnapshotImageTextures() {
+    for (SnapshotImageRuntime &image : snapshotImages) {
+        const std::uint32_t texture = image.texture.exchange(0, std::memory_order_acq_rel);
+        if (texture)
+            d3t::InitTexture2DResource(texture);
+        image.state.store(0, std::memory_order_release);
+    }
+}
+
+std::int32_t ReleaseSnapshotImagesTask(void *) {
+    ReleaseSnapshotImageTextures();
+    ValidateSnapshotMetadataFiles();
+    snapshotImagesReady = true;
+    return 0;
+}
+
+void PrepareSnapshotImages() {
+    d3t::d3t_WaitForTask(snapshotLoadTask);
+    RefreshSnapshotOrder();
+    const d3t::D3TTaskDescriptor descriptor{.data = nullptr, .callback = ReleaseSnapshotImagesTask, .completion = nullptr, .priority = 2};
+    snapshotReleaseTask = d3t::d3t_QueueTask(&descriptor, 4);
+}
+
+void ReleaseSnapshotImages() {
+    snapshotImagesReady = false;
+    d3t::d3t_WaitForTask(snapshotReleaseTask);
+    d3t::d3t_WaitForTask(snapshotLoadTask);
+    ReleaseSnapshotImageTextures();
+}
+
+bool IsSnapshotDeletePending() {
+    return d3t::d3t_IsTaskActive(snapshotDeleteTask);
 }
 
 void RefreshSnapshotOrder() {
@@ -190,26 +220,28 @@ void RefreshSnapshotOrder() {
     }
 }
 
+std::int32_t DeleteSnapshotFileTask(void *data) {
+    if (data) {
+        SaveSnapshotMetadata();
+        DeleteSaveFile(static_cast<const char *>(data));
+    }
+    return 0;
+}
+
 void DeleteSnapshotSlot(std::uint32_t slot) {
     if (slot >= snapshotImages.size())
         return;
     SnapshotMetadataRecord &record = GetSnapshotMetadataOwner()->records[slot];
-    record = {};
-    record.id = static_cast<std::int32_t>(slot);
+    std::array<char, 272> path{};
+    std::snprintf(path.data(), path.size(), "%d.jpg", record.id);
+    snapResetMetadataRecord(record);
+    const d3t::D3TTaskDescriptor descriptor{.data = path.data(), .callback = DeleteSnapshotFileTask, .completion = nullptr, .priority = 2};
+    snapshotDeleteTask = d3t::d3t_QueueTask(&descriptor, 0x105);
     SnapshotImageRuntime &image = snapshotImages[slot];
-    image.generation.fetch_add(1, std::memory_order_acq_rel);
-    const std::uint32_t texture = image.texture.exchange(0, std::memory_order_acq_rel);
-    if (texture)
+    if (image.state.load(std::memory_order_acquire) >= 2) {
+        const std::uint32_t texture = image.texture.exchange(0, std::memory_order_acq_rel);
         d3t::InitTexture2DResource(texture);
-    image.state.store(0, std::memory_order_release);
-    SaveSnapshotMetadata();
-#if defined(SHENMUE_STEAM)
-    ::shenmue::d3t::DeleteSteamFile(S2Save_SnapshotPath(slot).filename().string().c_str());
-#else
-    std::error_code error;
-    std::filesystem::remove(S2Save_SnapshotPath(slot), error);
-#endif
-    RefreshSnapshotOrder();
+    }
 }
 // @verified - p
 std::int64_t SetWarningMessageParameters(std::int32_t message, std::int32_t number) {
@@ -292,22 +324,20 @@ std::int32_t LoadSnapshotDebugMetadata() {
     return 1;
 }
 
-void LoadSnapshotDebugThumbnails() {
+std::uint32_t LoadSnapshotDebugThumbnails() {
+    std::uint32_t loaded = 0;
     for (std::uint32_t index = 0; index < snapshotDebugThumbnails.size(); ++index) {
-        std::array<char, 128> filename{};
-        std::snprintf(filename.data(), filename.size(), "Snapshots/Thumbnail/CharThumb%02u.bmp", index);
-        std::ifstream input(filename.data(), std::ios::binary | std::ios::ate);
-        if (!input)
-            continue;
-        const auto length = input.tellg();
-        if (length <= 0)
-            continue;
-        std::vector<std::byte> bytes(static_cast<std::size_t>(length));
-        input.seekg(0);
-        if (!input.read(reinterpret_cast<char *>(bytes.data()), static_cast<std::streamsize>(bytes.size())))
-            continue;
-        snapshotDebugThumbnails[index] = d3t::CreateImageTextureFromMemory(bytes.data(), bytes.size(), false);
+        char filename[128];
+        std::snprintf(filename, sizeof(filename), "%s%02d.bmp", "Snapshots\\Thumbnail\\CharThumb", index % 48U);
+        std::uint64_t size = 0;
+        void *const data = d3t::LoadLegacyFile(filename, &size);
+        if (size) {
+            snapshotDebugThumbnails[index] = d3t::CreateImageTextureFromMemory(data, static_cast<std::size_t>(size), false);
+            std::free(data);
+            ++loaded;
+        }
     }
+    return loaded;
 }
 void SortSnapshotDebugRecords(std::int32_t key) {
     for (std::int32_t first = 0; first < 125; ++first) {
@@ -1743,7 +1773,7 @@ bool ShowSnapshotViewer(std::uint32_t slot) {
     for (std::uint32_t index = 0; index < snapshotOrderCount; ++index) {
         if (snapshotOrder[index] != slot)
             continue;
-        OpenCollectionSnapshotViewer(std::span{snapshotOrder.data(), snapshotOrderCount}, index, static_cast<UIElement>(0), true);
+        OpenCollectionSnapshotViewer(snapshotOrder.data(), snapshotOrderCount, index, static_cast<UIElement>(0), true);
         return IsHelpOverlayVisible(UIElement::SnapshotViewer);
     }
     return false;

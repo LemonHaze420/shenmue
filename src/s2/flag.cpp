@@ -361,7 +361,7 @@ void UpdateWindForChara(Character *character, void *payload) {
     if (camCtrlIsInsideDepthScaledRect(position, radius))
         UpdateWindForModel(static_cast<FlagWindObject *>(payload));
 }
-}
+} // namespace
 
 void UpdateWindForFlag() {
     if (g_flagWindObject)
@@ -405,7 +405,7 @@ void AnimateFlagCallback(Character *character, void *payload) {
     const float amplitude = 1.0f > scaled ? 1.0f : scaled;
     for (std::int32_t index = 0; index < object.placementCount; ++index) {
         FlagAnimationPlacement &placement = object.placements[index];
-        if (!camCtrlIsSphereVisible(placement.translation, 2.0f) || !camCtrlCheckPosition(placement.translation, 2.0f))
+        if (!camCtrlIsSphereVisible(placement.translation, 2.0f) || !camCtrlCheckWorldPosition(placement.translation, 2.0f))
             continue;
         const float step = 5.0f > static_cast<float>(placement.speed) * scaled ? 5.0f : static_cast<float>(placement.speed) * scaled;
         const std::int32_t increment = step < 2147483648.0f ? static_cast<std::int32_t>(step) : std::numeric_limits<std::int32_t>::min();
@@ -553,38 +553,36 @@ constexpr std::array<FlagSector, 14> flagSectors{{
 
 constexpr std::array<SleepScheduleEntry, 24> sleepScheduleEntries{{
     {16, 5940, 1379, 0x500, 40, 0, SHEN_NAME(WS00)},
-    {891, 5940, 1379, 0x501, 41, 0, SHEN_NAME(WTA0)},
-    {203, 5940, 1379, 0x502, 40, 0, SHEN_NAME(WTA0)},
-    {52, 5940, 1260, 0x603, 80, 0, SHEN_NAME(WK00)},
-    {111, 5940, 1379, 0x504, 40, 0, SHEN_NAME(WN00)},
-    {205, 5940, 1170, 0x605, 0, 0, SHEN_NAME(TOFB)},
-    {1125, 5940, 1679, 0x605, 40, 0, SHEN_NAME(AR03)},
-    {204, 5940, 1379, 0x606, 95, 0, SHEN_NAME(AB00)},
-    {127, 5940, 1560, 0x607, 60, 0, SHEN_NAME(AR02)},
-    {202, 5940, 1379, 0x508, 40, 0, SHEN_NAME(WB00)},
-    {455, 5940, 1499, 0x509, 77, 0, SHEN_NAME(YMQB)},
-    {133, 5940, 1379, 0x50a, 0, 0, SHEN_NAME(SYW0)},
-    {771, 5940, 1559, 0x50b, 40, 0, SHEN_NAME(QR00)},
-    {772, 5940, 1559, 0x50c, 41, 0, SHEN_NAME(QR00)},
-    {736, 5940, 780, 0x50d, 40, 0, SHEN_NAME(QUG0)},
-    {241, 5940, 705, 0x50e, 0, 0, SHEN_NAME(0523)},
-    {235, 5940, 990, 0x50f, 0, 0, SHEN_NAME(KWQA)},
-    {501, 1320, 1380, 0x101, 86, 0, SHEN_NAME(AR01)},
-    {502, 1320, 1380, 0x102, 79, 0, SHEN_NAME(WSY0)},
-    {503, 1320, 1380, 0x103, 80, 0, SHEN_NAME(WTA0)},
-    {504, 1320, 1380, 0x104, 95, 0, SHEN_NAME(AB00)},
-    {505, 1320, 1380, 0x105, 80, 0, SHEN_NAME(QRR0)},
-    {670, 5940, 5940, 0x000, 1, 0, SHEN_NAME(0000)},
-    {},
-}};
+        {891, 5940, 1379, 0x501, 41, 0, SHEN_NAME(WTA0)},
+            {203, 5940, 1379, 0x502, 40, 0, SHEN_NAME(WTA0)},
+                {52, 5940, 1260, 0x603, 80, 0, SHEN_NAME(WK00)},
+                    {111, 5940, 1379, 0x504, 40, 0, SHEN_NAME(WN00)},
+                        {205, 5940, 1170, 0x605, 0, 0, SHEN_NAME(TOFB)},
+                            {1125, 5940, 1679, 0x605, 40, 0, SHEN_NAME(AR03)},
+                                {204, 5940, 1379, 0x606, 95, 0, SHEN_NAME(AB00)},
+                                    {127, 5940, 1560, 0x607, 60, 0, SHEN_NAME(AR02)},
+                                        {202, 5940, 1379, 0x508, 40, 0, SHEN_NAME(WB00)},
+                                            {455, 5940, 1499, 0x509, 77, 0, SHEN_NAME(YMQB)},
+                                                {133, 5940, 1379, 0x50a, 0, 0, SHEN_NAME(SYW0)},
+                                                    {771, 5940, 1559, 0x50b, 40, 0, SHEN_NAME(QR00)},
+                                                        {772, 5940, 1559, 0x50c, 41, 0, SHEN_NAME(QR00)},
+                                                            {736, 5940, 780, 0x50d, 40, 0, SHEN_NAME(QUG0)},
+                                                                {241, 5940, 705, 0x50e, 0, 0, SHEN_NAME(0523)},
+                                                                    {235, 5940, 990, 0x50f, 0, 0, SHEN_NAME(KWQA)},
+                                                                        {501, 1320, 1380, 0x101, 86, 0, SHEN_NAME(AR01)},
+                                                                            {502, 1320, 1380, 0x102, 79, 0, SHEN_NAME(WSY0)},
+                                                                                {503, 1320, 1380, 0x103, 80, 0, SHEN_NAME(WTA0)},
+                                                                                    {504, 1320, 1380, 0x104, 95, 0, SHEN_NAME(AB00)},
+                                                                                        {505, 1320, 1380, 0x105, 80, 0, SHEN_NAME(QRR0)},
+                                                                                            {670, 5940, 5940, 0x000, 1, 0, SHEN_NAME(0000)}, {},
+                                                                                        }};
 
 constexpr std::array<FlagContextSelector, 5> flagContextSelectors{{
     {1160, SHEN_NAME(rcha)},
-    {620, SHEN_NAME(sel2)},
-    {1205, SHEN_NAME(lcha)},
-    {212, SHEN_NAME(lcha)},
-    {0, {}},
-}};
+        {620, SHEN_NAME(sel2)},
+            {1205, SHEN_NAME(lcha)},
+                {212, SHEN_NAME(lcha)}, {0, {}},
+            }};
 
 Vector3 flagCameraPosition{};
 Vector3 currentCameraPosition{};

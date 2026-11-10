@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/navigation.hpp"
 #include "s2/navi_window.hpp"
 #include "s2/legacy_sprite.hpp"
@@ -16,6 +19,7 @@
 #include "s2/npc_package.hpp"
 #include "s2/pak.hpp"
 #include "s2/player.hpp"
+#include "s2/scene_data.hpp"
 #include "s2/screen_film.hpp"
 #include "s2/search.hpp"
 #include "s2/sound_program.hpp"
@@ -44,7 +48,9 @@ std::array<std::int32_t, 6> naviWindowLabelTextures{}, naviWindowSecondaryTextur
 std::array<std::int32_t, 2> naviWindowPreviewTextures{};
 std::int32_t naviWindowPreviewTexture{};
 
-std::uint32_t NaviFolderEntryMask(std::int32_t page) {
+} // namespace
+
+std::uint32_t NaviFolderEntryMask(std::int32_t page, std::uint16_t excludedFlags) {
     if (page >= 3)
         return 0;
     const NaviFolderPage &folder = naviFolderPages[page];
@@ -53,23 +59,25 @@ std::uint32_t NaviFolderEntryMask(std::int32_t page) {
     std::uint32_t mask = 0, bit = 1;
     for (std::int32_t index = 0; index < NWIN_FOLDER_COUNTS[page]; ++index) {
         const NaviFolderEntry &entry = folder.entries[index];
-        if (!(entry.flags & 2U) && (entry.itemId < 0 || GetItemState(static_cast<std::uint16_t>(entry.itemId))))
+        if (!(entry.flags & excludedFlags) && (entry.itemId < 0 || GetItemState(static_cast<std::uint16_t>(entry.itemId))))
             mask |= bit;
         bit = (bit << 1U) | (bit >> 31U);
     }
     return mask;
 }
 
-std::int32_t NaviFolderEntryCount(std::int32_t page) {
+std::int32_t NaviFolderEntryCount(std::int32_t page, std::uint16_t excludedFlags) {
     if (page >= 3)
         return 0;
     std::int32_t count = 0;
     for (std::int32_t index = 0; index < NWIN_FOLDER_COUNTS[page]; ++index) {
-        if (!(naviFolderPages[page].entries[index].flags & 2U))
+        if (!(naviFolderPages[page].entries[index].flags & excludedFlags))
             ++count;
     }
     return count;
 }
+
+namespace {
 
 void ReleaseNaviWindowStrips(std::uint8_t flags) {
     if (!(flags & 3U))
@@ -153,11 +161,11 @@ void LoadNaviWindowPageSource() {
         HLib::FreeTaskData(naviWindow.mapImageData);
         naviWindow.mapImageData = nullptr;
     }
-    std::size_t bytes = 0;
     if (!naviWindow.page)
-        (void)LoadLegacySprite("sprite", "NAVI_IMG.SPR", NWIN_ROOT_FILE, naviWindow.mapImageData, bytes);
+        naviWindow.mapImageData = LoadLegacySceneFile(Filepath_Gen(FilepathGenMode::SpriteDirectory), "NAVI_IMG.SPR", NWIN_ROOT_FILE);
     else if (naviWindow.categorySelection < 3)
-        (void)LoadLegacySprite("sprite", naviFolderPages[naviWindow.categorySelection].sprite, NWIN_FOLDER_FILE, naviWindow.mapImageData, bytes);
+        naviWindow.mapImageData =
+            LoadLegacySceneFile(Filepath_Gen(FilepathGenMode::SpriteDirectory), naviFolderPages[naviWindow.categorySelection].sprite, NWIN_FOLDER_FILE);
 }
 
 void RefreshNaviWindowPreview() {
@@ -320,9 +328,12 @@ void ReleaseNaviWindowPreviewTextures() {
 bool NaviIsDisplayable(bool skipMapItemRequirement) {
     if (IsNaviDisplayOverridden())
         return true;
-    if (GetCurrentAuthorId().name != 0 || g_currentMap.name == SHEN_NAME(ARK0) || g_currentMap.name == SHEN_NAME(KESS) ||
-        GetShouldRenderIcons(RenderIconSlot::ItemSelect) || IsScenarioBusyForMainIcon() || IsItemSelectable() || g_fightUiActive != 0 ||
-        !plymIsSearchStartRequested()) {
+    if (GetCurrentAuthorId().name != 0 ||
+        g_currentMap.name ==
+            SHEN_NAME(ARK0) ||
+                g_currentMap.name ==
+                    SHEN_NAME(KESS) || GetShouldRenderIcons(RenderIconSlot::ItemSelect) || IsScenarioBusyForMainIcon() || IsItemSelectable() ||
+                        g_fightUiActive != 0 || !plymIsSearchStartRequested()) {
         return false;
     }
     const std::int32_t configIndex = navGetNumEntriesFor(g_currentMap);
@@ -335,6 +346,14 @@ bool NaviIsDisplayable(bool skipMapItemRequirement) {
     }
     const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return control && IsScreenFilmNotShowing(control->screenFilmTask) && authGetLoaded() == 0 && g_moveUiClockAndNavigationHold == 0;
+}
+
+const char *GetNaviFolderLabel(std::int32_t page) {
+    return naviFolderPages[static_cast<std::size_t>(page)].label;
+}
+
+const char *GetNaviFolderEntryLabel(std::int32_t page, std::int32_t entry) {
+    return naviFolderPages[static_cast<std::size_t>(page)].entries[entry].label;
 }
 
 namespace {
@@ -517,6 +536,16 @@ HLib::Task *NVW_CtrlNaviWindow_Enqueue(std::uint8_t nextFunctionIndex) {
     return naviWindow.task;
 }
 
+// @verified - p
+bool IsCurrentMapNaviFolderAvailable() {
+    const char area = static_cast<char>(g_currentMap.name & 0xffU);
+    std::int32_t page = 0;
+    while (static_cast<char>(naviFolderPages[page].area.name & 0xffU) != area)
+        if (++page >= 3)
+            return false;
+    return NaviFolderEntryMask(page, 6) != 0 && NaviFolderEntryMask(page, 4) != 0;
+}
+
 std::int64_t OpenNaviWindow() {
     naviWindow.dummySpriteData = naviWindow.mapImageData = naviWindow.labelScratch = nullptr;
     if (!naviWindow.task)
@@ -573,3 +602,4 @@ void ReleaseNavigationTaskOwners() {
 }
 
 } // namespace shenmue::s2
+

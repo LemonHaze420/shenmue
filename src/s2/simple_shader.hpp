@@ -18,4 +18,5 @@ extern std::uint32_t g_sdLightBuffer;
 extern std::uint32_t g_sdShaderFileLock;
 SDFoliageParameters *AllocateSDFoliageParameters();
 std::uint32_t CreateSDFoliageBuffer();
+void FoliageAnim(std::uint32_t renderHandle);
 } // namespace shenmue::s2

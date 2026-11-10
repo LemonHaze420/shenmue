@@ -2,8 +2,7 @@
 #include "s2/areas/area_duck.hpp"
 
 #if defined(SHENMUE_EVENT_ENTRY)
-void StartDuckRace(void)
-{
+void StartDuckRace(void) {
     switch (g_currentMap) {
     case DUCK_AREA:
         EVT_AT_SetPos(DUCK_RYO, EVENT_CHARACTER_INVALID, 193.9f, 107.2f, 310.8f, 0);
@@ -41,10 +40,10 @@ void StartDuckRace(void)
 #define DUCK_RACER5 SHEN_NAME4('d', 'u', 'k', '5')
 #define DUCK_RACER6 SHEN_NAME4('d', 'u', 'k', '6')
 
-const int duckHoldHandPose[57] = {0, 0, 56072, 0, 0, 64627, 0, 62624, 2912, 0, 0, 60258, 0, 0, 61168, 0, 0, 62988, 0, 546, 1820, 0, 0, 59712, 0, 0,
-    59894, 0, 0, 62624, 0, 546, 2548, 0, 0, 61896, 0, 0, 59166, 0, 0, 0, 0, 546, 2183, 0, 0, 58802, 0, 0, 61532, 0, 0, 65354, 0, 546, 2002};
-const int duckReleaseHandPose[57] = {0, 0, 61896, 0, 0, 364, 0, 62624, 3640, 0, 0, 60258, 0, 0, 61168, 0, 0, 63352, 0, 546, 2002, 0, 0, 59712, 0, 0,
-    59894, 0, 0, 62806, 0, 546, 2730, 0, 0, 61896, 0, 0, 59166, 0, 0, 64990, 0, 546, 2183, 0, 0, 58802, 0, 0, 61532, 0, 0, 65354, 0, 546, 2002};
+const int duckHoldHandPose[57] = {0, 0, 56072, 0, 0, 64627, 0, 62624, 2912, 0, 0, 60258, 0, 0, 61168, 0, 0, 62988, 0, 546, 1820, 0, 0, 59712, 0, 0, 59894, 0, 0,
+    62624, 0, 546, 2548, 0, 0, 61896, 0, 0, 59166, 0, 0, 0, 0, 546, 2183, 0, 0, 58802, 0, 0, 61532, 0, 0, 65354, 0, 546, 2002};
+const int duckReleaseHandPose[57] = {0, 0, 61896, 0, 0, 364, 0, 62624, 3640, 0, 0, 60258, 0, 0, 61168, 0, 0, 63352, 0, 546, 2002, 0, 0, 59712, 0, 0, 59894, 0,
+    0, 62806, 0, 546, 2730, 0, 0, 61896, 0, 0, 59166, 0, 0, 64990, 0, 546, 2183, 0, 0, 58802, 0, 0, 61532, 0, 0, 65354, 0, 546, 2002};
 
 shen_name duckInitialCharacters[] = {DUCK_RYO, DUCK_XGH, DUCK_COH, EVENT_CHARACTER_INVALID};
 shen_name duckIntroCharacters[] = {SHEN_NAME4('P', 'G', '5', '_'), SHEN_NAME4('J', 'J', '1', '_'), SHEN_NAME4('C', 'L', 'Y', '_'),
@@ -73,8 +72,7 @@ static int duckRaceDebugStandings;
 static int duckStatusValues[4];
 static DuckHudText *duckStatusHud[5];
 
-void QueueDuckRace(void *parameter)
-{
+void QueueDuckRace(void *parameter) {
     DuckEventWork *work;
     duckDebugTask = FTBL.HLib_EnqueueTaskWithoutParameter(DuckDebugNullsub, 4, 11, SHEN_NAME4('d', 'd', 'b', 'g'));
     duckRaceTask = FTBL.HLib_EnqueueTaskWithParameter(DuckRace_Callback, 5, 11, sizeof(DuckEventWork), SHEN_NAME4('r', 'm', 'i', 'n'));
@@ -91,10 +89,9 @@ void QueueDuckRace(void *parameter)
     work->npcLoad = Queue_EVT_AT_ReadChr(duckRaceTask, duckInitialCharacters);
 }
 
-int InitializeDuckRace(DuckEventWork *work)
-{
-    float grid[DUCK_RACER_COUNT * 3] = {-0.53f, -0.47f, -0.41f, -0.33f, -0.27f, -0.21f, -0.13f, -0.07f, -0.01f, 0.07f, 0.13f, 0.19f, 0.27f, 0.33f,
-        0.39f, 0.47f, 0.53f, 0.59f};
+int InitializeDuckRace(DuckEventWork *work) {
+    float grid[DUCK_RACER_COUNT * 3] = {
+        -0.53f, -0.47f, -0.41f, -0.33f, -0.27f, -0.21f, -0.13f, -0.07f, -0.01f, 0.07f, 0.13f, 0.19f, 0.27f, 0.33f, 0.39f, 0.47f, 0.53f, 0.59f};
     int i, j, status;
     signed char ribbon;
     FTBL.CreateEventCharacter(3, 0, SHEN_NAME4('P', 'C', 'A', 'M'));
@@ -178,8 +175,7 @@ int InitializeDuckRace(DuckEventWork *work)
     return 0;
 }
 
-void SetupDuckRaceActors(void)
-{
+void SetupDuckRaceActors(void) {
     int i;
     ResetDuckRaceRuntime();
     SetDuckRaceCrowd(0);
@@ -189,15 +185,13 @@ void SetupDuckRaceActors(void)
     duckRaceTicks = 0;
 }
 
-void StartDuckRaceEnd(DuckEventWork *work)
-{
+void StartDuckRaceEnd(DuckEventWork *work) {
     FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
     FTBL.HLib_SetCurrentTaskTo(DuckRace_End);
     FTBL.HLib_SetupTaskDelay(30);
 }
 
-void DuckRace_End(void *data)
-{
+void DuckRace_End(void *data) {
     DuckEventWork *work = (DuckEventWork *)data;
     int i, j;
     DestroyDuckRaceActors();
@@ -231,8 +225,7 @@ void DuckRace_End(void *data)
     FTBL.EV_scenQueueLoad(g_actNumber, SHEN_NAME4('W', 'E', 'T', '0'), 1);
 }
 
-void DuckRace_Callback(void *data)
-{
+void DuckRace_Callback(void *data) {
     DuckEventWork *work = (DuckEventWork *)data;
     int delay = 0;
     switch (work->state) {
@@ -288,8 +281,7 @@ void DuckRace_Callback(void *data)
         FTBL.HLib_SetupTaskDelay(delay);
 }
 
-void RunDuckRaceIntro(DuckEventWork *work)
-{
+void RunDuckRaceIntro(DuckEventWork *work) {
     switch (work->phase) {
     case 0:
         Queue_EVT_UTL_LoadNPCChara_3(duckIntroCharacters, FTBL.HLib_GetCurrentTask());
@@ -317,8 +309,7 @@ void RunDuckRaceIntro(DuckEventWork *work)
     }
 }
 
-int RunDuckRaceCountdown(DuckEventWork *work)
-{
+int RunDuckRaceCountdown(DuckEventWork *work) {
     int delay = 0;
     unsigned int input;
     switch (work->phase) {
@@ -365,8 +356,7 @@ int RunDuckRaceCountdown(DuckEventWork *work)
     return delay;
 }
 
-void RunDuckRace(DuckEventWork *work)
-{
+void RunDuckRace(DuckEventWork *work) {
     int limit;
     int i;
     limit = duckRacePlayerRace ? 2400 : 1800;
@@ -380,8 +370,8 @@ void RunDuckRace(DuckEventWork *work)
         FTBL.DebugLogToFileRemoved("GOAL : ");
         for (i = 0; i < duckEntrantCount; i++) {
             FTBL.DebugLogToFileRemoved("  %d:", i + 1);
-            FTBL.DebugLogToFileRemoved("%c%c%c%c", duckPlaceNames[i] & 0xff, duckPlaceNames[i] >> 8 & 0xff, duckPlaceNames[i] >> 16 & 0xff,
-                duckPlaceNames[i] >> 24);
+            FTBL.DebugLogToFileRemoved(
+                "%c%c%c%c", duckPlaceNames[i] & 0xff, duckPlaceNames[i] >> 8 & 0xff, duckPlaceNames[i] >> 16 & 0xff, duckPlaceNames[i] >> 24);
         }
         FTBL.DebugLogToFileRemoved("\n");
         work->state = DUCK_STATE_POST_RACE;
@@ -390,8 +380,7 @@ void RunDuckRace(DuckEventWork *work)
         FTBL.HLib_EnqueueTaskWithoutParameter(DuckRaceCheer_Callback, 6, 11, SHEN_NAME4('c', 'h', 'g', 'o'));
 }
 
-void UpdateDuckRaceStatusHud(void)
-{
+void UpdateDuckRaceStatusHud(void) {
     int current[4];
     int i, count;
     char *text;
@@ -459,8 +448,7 @@ void UpdateDuckRaceStatusHud(void)
     }
 }
 
-void RunDuckRacePostRace(DuckEventWork *work)
-{
+void RunDuckRacePostRace(DuckEventWork *work) {
     UpdateDuckRaceStatusHud();
     if (work->phase++ > 59) {
         work->phase = 0;
@@ -468,8 +456,7 @@ void RunDuckRacePostRace(DuckEventWork *work)
     }
 }
 
-void UpdateDuckRacePlacementText(int replaySlot, int actor, int ticks)
-{
+void UpdateDuckRacePlacementText(int replaySlot, int actor, int ticks) {
     DuckHudText *hud = duckPlacementText[replaySlot];
     char *text = hud->text;
     hud->depth = 8.0f;
@@ -512,18 +499,15 @@ void UpdateDuckRacePlacementText(int replaySlot, int actor, int ticks)
     duckPlacementText[replaySlot]->draw(duckPlacementText[replaySlot]);
 }
 
-int GetDuckRaceTicks(void)
-{
+int GetDuckRaceTicks(void) {
     return duckRaceTicks;
 }
 
-int GetDuckRaceState(void)
-{
+int GetDuckRaceState(void) {
     return ((DuckEventWork *)FTBL.HLib_GetTaskParameter(duckRaceTask))->state;
 }
 
-void SelectDuckRaceProfiles(void)
-{
+void SelectDuckRaceProfiles(void) {
     int used[12];
     int i;
     short profile;
@@ -540,8 +524,7 @@ void SelectDuckRaceProfiles(void)
     FTBL.DebugLogToFileRemoved("\n");
 }
 
-void CalculateDuckRaceOdds(void)
-{
+void CalculateDuckRaceOdds(void) {
     int ratings[DUCK_RACER_COUNT];
     int total = 0;
     int i;
@@ -583,8 +566,7 @@ void CalculateDuckRaceOdds(void)
         duckRaceOdds[i] = total / ratings[i];
 }
 
-int RunDuckRaceEntryDialogue(DuckEventWork *work)
-{
+int RunDuckRaceEntryDialogue(DuckEventWork *work) {
     int delay = 0;
     FTBL.SetupHandPoseScript(FTBL.ctrlGetCharaByName(DUCK_XGH));
     if (!FTBL.EV_GetScreenFilmIsNotShowing())
@@ -653,8 +635,7 @@ int RunDuckRaceEntryDialogue(DuckEventWork *work)
     return delay;
 }
 
-int RunDuckRacePayEntry(DuckEventWork *work)
-{
+int RunDuckRacePayEntry(DuckEventWork *work) {
     if (!work->phase) {
         EVT_AT_SetCam(1000, DUCK_RYO, DUCK_RYO, 0, 0, 0);
         FTBL.EV_EventSetUpHelpIcon_0(9, 0);
@@ -681,8 +662,7 @@ int RunDuckRacePayEntry(DuckEventWork *work)
     return 0;
 }
 
-void UpdateDuckRaceOddsBoard(void)
-{
+void UpdateDuckRaceOddsBoard(void) {
     const char *images[10] = {"DACKMS0G", "DACKMS1G", "DACKMS2G", "DACKMS3G", "DACKMS4G", "DACKMS5G", "DACKMS6G", "DACKMS7G", "DACKMS8G", "DACKMS9G"};
     int i, j, divisor;
     CalculateDuckRaceOdds();
@@ -696,8 +676,7 @@ void UpdateDuckRaceOddsBoard(void)
     }
 }
 
-int RunDuckRaceBettingIntro(DuckEventWork *work)
-{
+int RunDuckRaceBettingIntro(DuckEventWork *work) {
     if (!work->phase) {
         EVT_AT_SetCam(1000, DUCK_RYO, DUCK_RYO, 0, 0, 0);
         AddDuckVoice(0, "A010");
@@ -714,8 +693,7 @@ int RunDuckRaceBettingIntro(DuckEventWork *work)
     return 0;
 }
 
-int RunDuckRaceBetMenu(DuckEventWork *work)
-{
+int RunDuckRaceBetMenu(DuckEventWork *work) {
     int selection;
     if (!work->phase) {
         if (!FTBL.EV_GetScreenFilmIsNotShowing())
@@ -766,8 +744,7 @@ int RunDuckRaceBetMenu(DuckEventWork *work)
     return 0;
 }
 
-int RunDuckRaceInsufficientFunds(DuckEventWork *work)
-{
+int RunDuckRaceInsufficientFunds(DuckEventWork *work) {
     EVT_AT_SetCam(1000, DUCK_RYO, DUCK_RYO, 0, 0, 0);
     EVT_AT_SetCam(4150, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, 0, 60);
     EVT_AT_SetVoice("0122A013", 0);
@@ -776,8 +753,7 @@ int RunDuckRaceInsufficientFunds(DuckEventWork *work)
     return 120;
 }
 
-int RunDuckRaceWagerInput(DuckEventWork *work)
-{
+int RunDuckRaceWagerInput(DuckEventWork *work) {
     int money;
     switch (work->phase) {
     case 0:
@@ -800,8 +776,7 @@ int RunDuckRaceWagerInput(DuckEventWork *work)
     return 0;
 }
 
-int RunDuckRaceSelection(DuckEventWork *work)
-{
+int RunDuckRaceSelection(DuckEventWork *work) {
     Vector3 position;
     int delay = 0;
     unsigned int input;
@@ -845,8 +820,7 @@ int RunDuckRaceSelection(DuckEventWork *work)
     return delay;
 }
 
-int RunDuckRacePaddock(DuckEventWork *work)
-{
+int RunDuckRacePaddock(DuckEventWork *work) {
     int delay = 0;
     switch (work->phase) {
     case 0:
@@ -859,8 +833,7 @@ int RunDuckRacePaddock(DuckEventWork *work)
     return delay;
 }
 
-int ShowDuckRacePaddock(DuckEventWork *work)
-{
+int ShowDuckRacePaddock(DuckEventWork *work) {
     EVT_AT_SetPos(DUCK_BASE, EVENT_CHARACTER_INVALID, 188.1f, 107.2f, 312.3f, 0);
     EVT_AT_SetAngY(DUCK_BASE, EVENT_CHARACTER_INVALID, 0.0f, 0);
     EVT_AT_SetPos(DUCK_RACER1, DUCK_BASE, -1.5f, 0.2f, 0.0f, 0);
@@ -884,8 +857,7 @@ int ShowDuckRacePaddock(DuckEventWork *work)
     return 0;
 }
 
-int BrowseDuckRacePaddock(DuckEventWork *work)
-{
+int BrowseDuckRacePaddock(DuckEventWork *work) {
     shen_name ducks[DUCK_RACER_COUNT] = {DUCK_RACER1, DUCK_RACER2, DUCK_RACER3, DUCK_RACER4, DUCK_RACER5, DUCK_RACER6};
     Vector3 duckPosition, cameraPosition;
     unsigned int input = FTBL.EVT_GetControllerInput(0, 7);
@@ -919,16 +891,14 @@ int BrowseDuckRacePaddock(DuckEventWork *work)
     return 0;
 }
 
-void QueueDuckPaddockInfo(int index)
-{
+void QueueDuckPaddockInfo(int index) {
     if (duckPaddockInfoTask)
         FTBL.EV_HLKillOtherHierarchyTask(duckPaddockInfoTask);
     duckPaddockInfoTask = FTBL.HLib_EnqueueTaskWithParameter(DuckPaddockInfo_Callback, 4, 11, 4, SHEN_NAME4('p', 'i', 'f', 'o'));
     *(int *)FTBL.HLib_GetTaskParameter(duckPaddockInfoTask) = index;
 }
 
-void DuckPaddockInfo_Callback(void *data)
-{
+void DuckPaddockInfo_Callback(void *data) {
     const char *entry[DUCK_RACER_COUNT] = {"0122C024", "0122C025", "0122C026", "0122C027", "0122C028", "0122C029"};
     const char *const speed[4] = {"0122C030", "0122C031", "0122C032", "0122C033"};
     const char *const stamina[4] = {"0122C034", "0122C035", "0122C036", "0122C037"};
@@ -974,8 +944,7 @@ void DuckPaddockInfo_Callback(void *data)
     FTBL.HLib_SetupTaskDelay(0);
 }
 
-int RunDuckRaceDecline(DuckEventWork *work)
-{
+int RunDuckRaceDecline(DuckEventWork *work) {
     EVT_AT_SetCam(1000, DUCK_RYO, DUCK_RYO, 0, 0, 0);
     EVT_AT_SetCam(4150, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, 0, 40);
     EVT_AT_SetVoice("0122A010", 0);
@@ -984,8 +953,7 @@ int RunDuckRaceDecline(DuckEventWork *work)
     return 100;
 }
 
-void SetDuckRaceCrowd(int mode)
-{
+void SetDuckRaceCrowd(int mode) {
     switch (mode) {
     case 0:
         ShowDuckRaceCrowd();
@@ -996,8 +964,7 @@ void SetDuckRaceCrowd(int mode)
     }
 }
 
-void ShowDuckRaceCrowd(void)
-{
+void ShowDuckRaceCrowd(void) {
     int i;
     for (i = 0; i < 5; i++) {
         EVT_AT_SetPos(duckPaddockCharacters[i], EVENT_CHARACTER_INVALID, 224.3f, 108.8f, i + 333.2f, 0);
@@ -1023,8 +990,7 @@ void ShowDuckRaceCrowd(void)
     }
 }
 
-void DuckRaceCheer_Callback(void *data)
-{
+void DuckRaceCheer_Callback(void *data) {
     int i;
     duckPaddockAlpha -= 0.05f;
     for (i = 0; i < 5; i++) {
@@ -1049,8 +1015,7 @@ void DuckRaceCheer_Callback(void *data)
     }
 }
 
-int RunDuckRaceResults(DuckEventWork *work)
-{
+int RunDuckRaceResults(DuckEventWork *work) {
     int delay;
     if (duckRacePlayerRace) {
         if (duckPlaceNames[0] == DUCK_RACER1)
@@ -1073,8 +1038,7 @@ int RunDuckRaceResults(DuckEventWork *work)
     return delay;
 }
 
-int RunDuckRaceBettingWin(DuckEventWork *work)
-{
+int RunDuckRaceBettingWin(DuckEventWork *work) {
     EVT_AT_CharaDisp(DUCK_RYO, 0, 0);
     EVT_AT_CharaDisp(DUCK_XGH, 0, 0);
     EVT_AT_CharaDisp(DUCK_COH, 0, 0);
@@ -1106,8 +1070,7 @@ int RunDuckRaceBettingWin(DuckEventWork *work)
     return 240;
 }
 
-int RunDuckRaceBettingLoss(DuckEventWork *work)
-{
+int RunDuckRaceBettingLoss(DuckEventWork *work) {
     EVT_AT_CharaDisp(DUCK_RYO, 0, 0);
     EVT_AT_CharaDisp(DUCK_XGH, 0, 0);
     EVT_AT_CharaDisp(DUCK_COH, 0, 0);
@@ -1136,8 +1099,7 @@ int RunDuckRaceBettingLoss(DuckEventWork *work)
     return 240;
 }
 
-int RunDuckRaceSpecialWin(DuckEventWork *work)
-{
+int RunDuckRaceSpecialWin(DuckEventWork *work) {
     EVT_AT_CharaDisp(DUCK_RYO, 0, 0);
     EVT_AT_CharaDisp(DUCK_XGH, 0, 0);
     EVT_AT_CharaDisp(DUCK_COH, 0, 0);
@@ -1170,8 +1132,7 @@ int RunDuckRaceSpecialWin(DuckEventWork *work)
     return 240;
 }
 
-int RunDuckRaceSpecialLoss(DuckEventWork *work)
-{
+int RunDuckRaceSpecialLoss(DuckEventWork *work) {
     EVT_AT_CharaDisp(DUCK_RYO, 0, 0);
     EVT_AT_CharaDisp(DUCK_XGH, 0, 0);
     EVT_AT_CharaDisp(DUCK_COH, 0, 0);
@@ -1199,14 +1160,12 @@ int RunDuckRaceSpecialLoss(DuckEventWork *work)
     return 170;
 }
 
-void AwardDuckRacePrize(void *argument)
-{
+void AwardDuckRacePrize(void *argument) {
     FTBL.AddInventoryItem(25, 1, 1);
     FTBL.EV_SetPlayerFlag(12, 1646, 1);
 }
 
-void DuckRaceMoney_Callback(void *data)
-{
+void DuckRaceMoney_Callback(void *data) {
     Vector3 position;
     Vector3i rotation;
     FTBL.AT_SetLocalBaseChara(DUCK_MONEY, DUCK_BASE);
@@ -1274,9 +1233,15 @@ void DuckRaceMoney_Callback(void *data)
 
 namespace shenmue::s2::areas {
 namespace {
-constexpr shen_name invalid{0xffffffffU}, ryo{SHEN_NAME(RYO_)}, xgh{SHEN_NAME(XGH_)}, coh{SHEN_NAME(COH_)}, hand{SHEN_NAME(HAND)}, base{SHEN_NAME(BASE)},
-    hdum{SHEN_NAME(HDUM)}, pcam{SHEN_NAME(PCAM)}, medal{SHEN_NAME(MEDL)}, board{SHEN_NAME(aa82)}, money{SHEN_NAME(KANE)}, aa95{SHEN_NAME(aa95)},
-    event{SHEN_NAME(EVNT)};
+constexpr shen_name invalid{0xffffffffU},
+    ryo{SHEN_NAME(RYO_)},
+        xgh{SHEN_NAME(XGH_)},
+            coh{SHEN_NAME(COH_)},
+                hand{SHEN_NAME(HAND)},
+                    base{SHEN_NAME(BASE)},
+                        hdum{SHEN_NAME(HDUM)},
+                            pcam{SHEN_NAME(PCAM)},
+                                medal{SHEN_NAME(MEDL)}, board{SHEN_NAME(aa82)}, money{SHEN_NAME(KANE)}, aa95{SHEN_NAME(aa95)}, event{SHEN_NAME(EVNT)};
 constexpr shen_name initialCharacters[]{ryo, xgh, coh, invalid};
 constexpr shen_name introCharacters[]{SHEN_NAME(PG5_), SHEN_NAME(JJ1_), SHEN_NAME(CLY_), SHEN_NAME(JN8_), SHEN_NAME(OJ5_), SHEN_NAME(WTC_), invalid};
 constexpr shen_name duckNames[]{SHEN_NAME(duk1), SHEN_NAME(duk2), SHEN_NAME(duk3), SHEN_NAME(duk4), SHEN_NAME(duk5), SHEN_NAME(duk6)};
@@ -1373,8 +1338,11 @@ void InitialMotions(bool includePrizeDuck) {
     }
 }
 void SetRaceFieldVisibility(bool paddock) {
-    constexpr shen_name names[]{SHEN_NAME(DIC1) | 0x282628U, SHEN_NAME(DAI2) | 0x222e28U, SHEN_NAME(a800) | 0x4004004U, SHEN_NAME(a005) | 0x4804U,
-        SHEN_NAME(f11a), SHEN_NAME(f11b), SHEN_NAME(f21a), SHEN_NAME(f21b), SHEN_NAME(f91a), SHEN_NAME(f91b), SHEN_NAME(fa1a), SHEN_NAME(fa1b)};
+    constexpr shen_name names[]{SHEN_NAME(DIC1) | 0x282628U,
+        SHEN_NAME(DAI2) | 0x222e28U,
+            SHEN_NAME(a800) | 0x4004004U,
+                SHEN_NAME(a005) | 0x4804U,
+                    SHEN_NAME(f11a), SHEN_NAME(f11b), SHEN_NAME(f21a), SHEN_NAME(f21b), SHEN_NAME(f91a), SHEN_NAME(f91b), SHEN_NAME(fa1a), SHEN_NAME(fa1b)};
     constexpr bool states[]{true, false, false, false, true, true, true, true, false, false, false, false};
     for (std::size_t i = 0; i < std::size(names); ++i)
         ToggleFlagOnFieldEntity(names[i], states[i] == paddock);
@@ -1421,9 +1389,26 @@ void HideRoster() {
     duckRaceRuntime.finishTicks.fill(0);
     duckRaceRuntime.names.fill(shen_name{0});
     duckRaceRuntime.actors.fill(nullptr);
-    constexpr shen_name allNames[]{SHEN_NAME(duk1), SHEN_NAME(duk2), SHEN_NAME(duk3), SHEN_NAME(duk4), SHEN_NAME(duk5), SHEN_NAME(duk6), SHEN_NAME(duk1),
-        SHEN_NAME(duk2), SHEN_NAME(duk3), SHEN_NAME(duk4), SHEN_NAME(duk5), SHEN_NAME(duk6), SHEN_NAME(peng), SHEN_NAME(KAMO), SHEN_NAME(KAMM), SHEN_NAME(KAK0),
-        SHEN_NAME(KAK1), SHEN_NAME(KAK2), SHEN_NAME(KAK3), SHEN_NAME(KAK4), SHEN_NAME(KAK5), SHEN_NAME(duk1), SHEN_NAME(duk1)};
+    constexpr shen_name allNames[]{SHEN_NAME(duk1),
+        SHEN_NAME(duk2),
+            SHEN_NAME(duk3),
+                SHEN_NAME(duk4),
+                    SHEN_NAME(duk5),
+                        SHEN_NAME(duk6),
+                            SHEN_NAME(duk1),
+                                SHEN_NAME(duk2),
+                                    SHEN_NAME(duk3),
+                                        SHEN_NAME(duk4),
+                                            SHEN_NAME(duk5),
+                                                SHEN_NAME(duk6),
+                                                    SHEN_NAME(peng),
+                                                        SHEN_NAME(KAMO),
+                                                            SHEN_NAME(KAMM),
+                                                                SHEN_NAME(KAK0),
+                                                                    SHEN_NAME(KAK1),
+                                                                        SHEN_NAME(KAK2),
+                                                                            SHEN_NAME(KAK3),
+                                                                                SHEN_NAME(KAK4), SHEN_NAME(KAK5), SHEN_NAME(duk1), SHEN_NAME(duk1)};
     for (auto name : allNames)
         EV_DisableCharacterDisplay(name);
 }
@@ -1817,7 +1802,8 @@ std::int32_t EntryDialogue(DuckEventWork *work) {
     ++work->phase;
     std::int32_t delay{};
     if (state.paidGame) {
-        EVT_AT_SetVoice("0122C009", 1, 0); // @text EN: "It'll be $50 a try if you're going\nto enter the race." | JA: "エントリーするなら\n１レース５０ドルだぜい。"
+        EVT_AT_SetVoice(
+            "0122C009", 1, 0); // @text EN: "It'll be $50 a try if you're going\nto enter the race." | JA: "エントリーするなら\n１レース５０ドルだぜい。"
         if (GetPlayerStat(PlayerStatsId::Cash) < 50) {
             work->state = DuckState::BettingIntro;
             work->phase = 0;
@@ -1827,11 +1813,12 @@ std::int32_t EntryDialogue(DuckEventWork *work) {
     } else {
         if (!g_entryPoint) {
             EVT_AT_SetVoice("0122C008", 1, 0); // @text EN: "Hey, you've got a nice duck there." | JA: "おっ。兄ちゃん、\nいいアヒルだな。"
-            EVT_AT_SetVoice("0122C009", 1, 120); // @text EN: "It'll be $50 a try if you're going\nto enter the race." | JA: "エントリーするなら\n１レース５０ドルだぜい。"
+            EVT_AT_SetVoice(
+                "0122C009", 1, 120); // @text EN: "It'll be $50 a try if you're going\nto enter the race." | JA: "エントリーするなら\n１レース５０ドルだぜい。"
             delay = 220;
         }
         if (GetPlayerStat(PlayerStatsId::Cash) < 50) {
-            EVT_AT_SetVoice("0122A013", 1, delay); // @text EN: "Not enough to enter." | JA: "今は持ち合わせが…"
+            EVT_AT_SetVoice("0122A013", 1, delay);      // @text EN: "Not enough to enter." | JA: "今は持ち合わせが…"
             EVT_AT_SetVoice("0122C010", 1, delay + 60); // @text EN: "Do you want to place a bet?" | JA: "じゃあ、賭けて遊ぶかい？"
             Camera(1000, ryo, ryo, delay);
             Camera(4150, invalid, invalid, delay + 60);
@@ -1955,7 +1942,7 @@ std::int32_t DuckSelection(DuckEventWork *work) {
         AT_SetLocalBaseChara(money, hand);
     } else if (work->phase != 1)
         return 0;
-    const auto input = static_cast<std::int16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES));
+    const auto input = static_cast<std::int16_t>(EVT_GetControllerInput(0, INPUT_NEW_PRESSES));
     if (input & 0x4000)
         --work->selection;
     if (input < 0)
@@ -1991,7 +1978,7 @@ std::int32_t PaddockView(DuckEventWork *work) {
     return 0;
 }
 std::int32_t PaddockBrowse(DuckEventWork *work) {
-    const auto input = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_NEW_PRESSES));
+    const auto input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_NEW_PRESSES));
     if (input == 0x4000)
         ++state.browseIndex;
     else if (input == 0x8000)
@@ -2040,7 +2027,7 @@ std::int32_t Countdown(DuckEventWork *work) {
         return 70;
     case 1:
         if (state.playerRace) {
-            const auto input = static_cast<std::uint16_t>(GetCurrentControlInput(INPUT_HELD));
+            const auto input = static_cast<std::uint16_t>(EVT_GetControllerInput(0, INPUT_HELD));
             if ((input & 6) == 6)
                 Obstacles(3);
             if ((input & 0x204) == 0x204)
@@ -2228,7 +2215,7 @@ std::int64_t DuckRaceRunBettingWinSequence(const DuckEventWork *work) {
     }
     Motion(coh, 32533);
     EV_PlayDialogue("0122B009");
-    EVT_AT_SetVoice("0122C005", 1, 70); // @text EN: "I'm impressed.\nHere you go." | JA: "兄ちゃん、やるなあ。ほらよ。"
+    EVT_AT_SetVoice("0122C005", 1, 70);  // @text EN: "I'm impressed.\nHere you go." | JA: "兄ちゃん、やるなあ。ほらよ。"
     EVT_AT_SetVoice("0122C017", 1, 200); // @text EN: "Another try?" | JA: "どうだい、もういっちょ？"
     Camera(2100);
     Camera(2101, invalid, invalid, 65);
@@ -2282,7 +2269,7 @@ std::int64_t DuckRaceRunSpecialWinSequence() {
     }
     Motion(coh, 32533);
     EV_PlayDialogue("0122B012");
-    EVT_AT_SetVoice("0122C014", 1, 70); // @text EN: "Here's your prize." | JA: "こいつは景品だ。"
+    EVT_AT_SetVoice("0122C014", 1, 70);  // @text EN: "Here's your prize." | JA: "こいつは景品だ。"
     EVT_AT_SetVoice("0122C015", 1, 180); // @text EN: "How about another race?" | JA: "どうだい？　もう１レース。"
     QueueDisplay(medal, 0, 70);
     QueueDisplay(medal, 1, 241);
@@ -2309,7 +2296,7 @@ std::int64_t DuckRaceRunSpecialLossSequence() {
     }
     Motion(coh, 32533);
     EV_PlayDialogue("0122B013");
-    EVT_AT_SetVoice("0122C016", 1, 70); // @text EN: "That was close." | JA: "兄ちゃん、惜しかったな。"
+    EVT_AT_SetVoice("0122C016", 1, 70);  // @text EN: "That was close." | JA: "兄ちゃん、惜しかったな。"
     EVT_AT_SetVoice("0122C017", 1, 130); // @text EN: "Another try?" | JA: "どうだい、もういっちょ？"
     Camera(2101, invalid, invalid, 70);
     SetHighModelAndFaceFlagsForChara(ctrlGetScenarioChara(xgh), Sad, 0, 1);

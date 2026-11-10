@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/ui.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
@@ -389,6 +392,21 @@ std::int64_t HelpWidgetDestroy() {
     DisableElement(UIElement::WristwatchOverlay);
     ClearMenuInputHints();
     return 1;
+}
+
+constexpr std::array<std::int16_t, 4> WRISTWATCH_OVERLAY_HINTS{3852, 44, -1, -1};
+// @verified - p
+std::int64_t WristwatchOverlayHints() {
+    return CopyHudHintIds(WRISTWATCH_OVERLAY_HINTS);
+}
+
+std::int64_t WristwatchOverlayDebugGate() {
+    return GetDebugForceUIEnabled(UIElement::WristwatchOverlay);
+}
+
+// @verified - p
+std::int64_t WristwatchOverlayTickNullsub() {
+    return 0;
 }
 
 // @verified - p
@@ -3543,12 +3561,7 @@ std::uint32_t RasterizeItemLabelNullsub(std::byte *, std::int32_t, const char *,
 }
 
 std::uint16_t PublishLegacyItemLabel(const char *text, std::uint16_t width) noexcept {
-    const std::uint16_t height = 16;
-    std::memcpy(guiPtxBacking + 40, &width, sizeof(width));
-    std::memcpy(guiPtxBacking + 42, &height, sizeof(height));
-    const std::uint32_t wideWidth = width, wideHeight = height;
-    std::memcpy(guiPtxBacking + 60, &wideHeight, sizeof(wideHeight));
-    std::memcpy(guiPtxBacking + 64, &wideWidth, sizeof(wideWidth));
+    (void)SetPtxDimensions(guiPtxBacking, 16, width, 0x8089);
     (void)RasterizeItemLabelNullsub(guiPtxBacking, width, text, 0, 1);
     (void)ReplacePtxTexture(commonItemTexture, guiPtxBacking);
     return static_cast<std::uint16_t>(commonItemTexture);
@@ -3571,6 +3584,15 @@ void SetLegacyItemSelectorExitFlag() noexcept {
 
 void SetItemSelectorDelayedResult(std::uint16_t result) noexcept {
     itemSelectorDelayedResult = result;
+}
+
+void SetItemSelectorNavigationInputHalf(std::int8_t half, std::int16_t value) noexcept {
+    std::memcpy(reinterpret_cast<std::byte *>(&itemSelectorNavigationInput) + half * 2, &value, sizeof(value));
+}
+
+// @verified - p
+bool GiveItemOf(std::uint32_t itemId) {
+    return ToggleItemEffect(itemId, 1);
 }
 
 bool initSCNT_item_data() {
@@ -4365,3 +4387,4 @@ HLib::Task *GUI_Tasks_Enqueue() {
     return Queue_pw_CtrlPawnWindow();
 }
 } // namespace shenmue::s2
+

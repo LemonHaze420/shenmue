@@ -341,7 +341,7 @@ void Update0547Butterflies(void *data) {
             butterfly.state = 0;
         }
         if (screen.x >= 0.0f && screen.x <= 639.0f && screen.y >= 0.0f && screen.y <= 479.0f && distance < 49.0f && drawn < butterflyLimit0547) {
-            ApplyTranslationRotationScaleXYZToCharaByID(butterfly.model, butterfly.animation, &butterfly.position, &butterfly.rotation, &scale);
+            ApplyTranslationRotationScaleXYZToCharaSibling(butterfly.model, butterfly.animation, &butterfly.position, &butterfly.rotation, &scale);
             if (--butterfly.animationDelay < 0) {
                 butterfly.animationDelay = 1;
                 butterfly.animation = (butterfly.animation + 1) & 3;

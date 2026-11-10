@@ -33,6 +33,7 @@ std::int64_t DestroyOmakeCollectionUI();
 std::int64_t InputOmakeCollectionUI();
 std::int64_t ResetOmakeCollectionUI();
 std::int64_t ResetOmakeCollectionRender();
+std::int64_t ResetMainMenu();
 std::int64_t DestroyMainMenuPage();
 std::int64_t OmakeCollectionHints();
 } // namespace shenmue::s2

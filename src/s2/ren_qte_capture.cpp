@@ -22,10 +22,10 @@ void CaptureRenQtePursuers(RenQteWork *work) {
     EV_EnsureCharacterDraw(REN_QTE_KK1);
     EV_EnsureCharacterDraw(REN_QTE_KT1);
     EV_EnsureCharacterDraw(REN_QTE_KU7);
-    SetPluralControlFor(ctrlGetCharaByName(REN_QTE_KD7), 0);
-    SetPluralControlFor(ctrlGetCharaByName(REN_QTE_KK1), 0);
-    SetPluralControlFor(ctrlGetCharaByName(REN_QTE_KT1), 0);
-    SetPluralControlFor(ctrlGetCharaByName(REN_QTE_KU7), 0);
+    charaSetDisplayEnabledFlag(ctrlGetCharaByName(REN_QTE_KD7), 0);
+    charaSetDisplayEnabledFlag(ctrlGetCharaByName(REN_QTE_KK1), 0);
+    charaSetDisplayEnabledFlag(ctrlGetCharaByName(REN_QTE_KT1), 0);
+    charaSetDisplayEnabledFlag(ctrlGetCharaByName(REN_QTE_KU7), 0);
     const Vector3 basePosition{work->entry->endX, GetQronTemporaryFloorHeight(), work->entry->endZ};
     EV_AT_SetPos(REN_QTE_BASE, EventTransformFlags::World | EventTransformFlags::AllAxes, basePosition);
     EV_AT_SetAngY(REN_QTE_BASE, EventTransformFlags::AllAxes, Vector3i{0, work->entry->endYaw, 0});
@@ -63,7 +63,7 @@ void CaptureRenQtePursuers(RenQteWork *work) {
     voice->delay = 10;
     std::strcpy(voice->voice, "0209B041");
     EVT_AT_SetVoice("0209B038", 1, 100 - (firstFrame >> 1)); // @text EN: "Came all the way for nothing." | JA: "くそったれが！\nここまで来て…"
-    EVT_AT_SetVoice("0209F001", 1, 240 - firstFrame); // @text EN: "Giving us trouble!!" | JA: "てこずらせやがって。"
+    EVT_AT_SetVoice("0209F001", 1, 240 - firstFrame);        // @text EN: "Giving us trouble!!" | JA: "てこずらせやがって。"
     if (work->entry->type == 7) {
         EVT_AT_SetVoice("0209G001", 1, 280 - firstFrame); // @text EN: "You won't be getting away now!" | JA: "もう逃がさねぇぞ！"
         EVT_AT_SetVoice("0209G002", 1, 320 - firstFrame); // @text EN: " " | JA: "オラオラオラッ！！"

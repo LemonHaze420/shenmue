@@ -182,7 +182,7 @@ void Mfw0PracticeDecisionSequence(void *data) {
                     Mfw0WaitDecisionChild(sequence, next);
                 }
             } else if (practice == 9) {
-                CompiledSequenceWork *child = Mfw0Child(sequence, Mfw0FinalFeedbackSequence, SHEN_NAME(FS_3), 1);
+                CompiledSequenceWork *child = Mfw0Child(sequence, Mfw0FinalFeedbackSequence, SHEN_NAME(FS_F), 1);
                 Mfw0Value(child, 0x138, firstSuccess);
                 Mfw0Value(child, 0x140, exit);
                 Mfw0WaitDecisionChild(sequence, 111);
@@ -213,10 +213,7 @@ void Mfw0PracticeDecisionSequence(void *data) {
         case 114:
             if (practice == 0 || practice == 1 || practice == 9) {
                 work.dialogueSequence = Mfw0Child(sequence, practice == 0 ? Mfw0StepFeedbackSequence : Mfw0PunchFeedbackSequence,
-                    practice == 0     ? SHEN_NAME(FS_1) :
-                        practice == 1 ? SHEN_NAME(FS_2) :
-                                        SHEN_NAME(FS_3),
-                    1);
+                    practice == 0 ? SHEN_NAME(FS_1) : practice == 1 ? SHEN_NAME(FS_2) : SHEN_NAME(FS_F), 1);
                 Mfw0SetDecisionResult(sequence, continuation);
             }
             Mfw0Advance(sequence, 115);

@@ -51,6 +51,16 @@ void CheckSteamStats();
 
 void ReadSm2Saves(std::int32_t slot);
 void ResetSteamStatistics();
+
+struct SteamAppInfo {
+    const char *appName;
+    const char *buildId;
+    std::int64_t appId;
+};
+static_assert(sizeof(SteamAppInfo) == 0x18);
+static_assert(offsetof(SteamAppInfo, appId) == 0x10);
+bool SteamInit(const SteamAppInfo *appInfo);
+
 extern std::array<EventTaskEntry, 64> g_eventTasks;
 extern std::int32_t g_eventTaskFirst;
 extern std::int32_t g_eventTaskLast;

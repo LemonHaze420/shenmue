@@ -1,5 +1,9 @@
 #pragma once
 
+#include "shenmue.h"
+
+
+
 #include "common/math.hpp"
 #include "common/types.hpp"
 
@@ -334,6 +338,7 @@ void FreeParticleEffect(std::int32_t type, std::uint32_t effect);
 void SetFirePalette(std::uint32_t effect, const std::uint16_t *palette);
 void SetFireFalloff(std::uint32_t effect, float radiusX, float radiusY, float gain);
 void SetFireFalloffScalar(std::uint32_t effect, float scalar);
+void ResetFireShaderInstanceCount() noexcept;
 void SetFireAlpha(std::uint32_t effect, float alpha);
 std::uint32_t SetFirePosition(std::uint32_t effect, std::int32_t instance, const Vector3 *position);
 Character *AttachFireEffect(std::uint32_t effect, shen_name name, std::int16_t bone, float offset);
@@ -344,3 +349,4 @@ void SetFireInstanceAlpha(std::uint32_t effect, std::int32_t instance, float alp
 void SetFireInstanceSize(std::uint32_t effect, std::int32_t instance, float width, float height);
 
 } // namespace shenmue::s2
+

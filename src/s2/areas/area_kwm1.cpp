@@ -5,6 +5,7 @@
 #include "s2/event_runtime.hpp"
 #include "s2/hlib.hpp"
 #include "s2/motion.hpp"
+#include "s2/ui.hpp"
 #include "s2/world_render.hpp"
 #include "s2/maze.hpp"
 
@@ -36,7 +37,7 @@ constexpr std::array butterflyRegions{
 };
 
 void eKWM1_EVT_KWM1_mainloop_Callback(void *) {
-    if (IsAreaItemSelectionActive())
+    if (GetShouldRenderIcons(RenderIconSlot::ItemSelect))
         return;
 
     EV_SetCurrentRefCount(EV_GetCurrentRefCount() + 1U);

@@ -216,7 +216,7 @@ void FreeSleepPackageActors() {
 void HideSleepActor(shen_name actor) {
     if ((actor.name & 0xff000000U) == 0x5f000000U) {
         EV_SetCharacterAlphaEnabled(actor, false);
-        mtwkSetEnabled(FindMotionWork(ctrlGetScenarioChara(actor)), 0);
+        mtwkSetRequestedRootMode(FindMotionWork(ctrlGetScenarioChara(actor)), 0);
         mtwkSetRegionFlag(FindMotionWork(ctrlGetScenarioChara(actor)), 71, 0, MotionRegion::LowerBody);
     }
     EV_SetCharaControllerFlags(actor, CCMF_UpdateHeight, NpcCharacterControllerState::Disabled);

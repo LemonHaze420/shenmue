@@ -228,6 +228,10 @@ void IncrementSteamStat(std::int32_t stat) {
     ::shenmue::d3t::IncrementSteamStat(stat);
 #endif
 }
+bool SteamInit(const SteamAppInfo *) {
+    return true;
+}
+
 void ResetSteamStatistics() {
 #if defined(SHENMUE_STEAM)
     ::shenmue::d3t::ResetSteamStats();

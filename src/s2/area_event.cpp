@@ -460,6 +460,7 @@
 #include "s2/hlib.hpp"
 #include "s2/load_title.hpp"
 #include "s2/map_control.hpp"
+#include "s2/memo.hpp"
 #include "s2/pause.hpp"
 #include "s2/player.hpp"
 #include "s2/save.hpp"
@@ -570,9 +571,8 @@ void EVT_AreaMainLoop_Callback(void *) {
     if (ryoNotBusy() && EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1006) == 0) {
         const bool night = EV_GetShenmueFlag(0xff) != 0;
         if (night && areaCleanupState == 1) {
-            constexpr shen_name yoru{SHEN_NAME(YORU)};
             auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-            if (control && Author_HasMapInfoAuthor(control->mapInfo, yoru)) {
+            if (control && Author_HasMapInfoAuthor(control->mapInfo, AREA_NIGHT_AUTHOR)) {
                 BeginNightTransition(EVT_NightAuthor_Callback);
             } else if (g_currentMap.name == SHEN_NAME(WSG1)) {
                 BeginNightTransition(EVT_NightChange_Callback);
@@ -585,6 +585,10 @@ void EVT_AreaMainLoop_Callback(void *) {
             areaCleanupState = 1;
         }
     }
+    if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 966) && (GetCurrentItemSelectState() & 0x20U))
+        EV_SetPlayerFlag(PlayerFlagWriteMode::Internal, 966, 0);
+    if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 966) && shenCheckIsBusy())
+        (void)RefreshPadTask(2, 1);
     if (g_areaHeldItemRestorePending != 0 && !IsAreaItemSelectionActive() && !EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 966)) {
         EV_setHoldStatesFlags(1);
         g_areaHeldItemRestorePending = 0;
@@ -594,6 +598,7 @@ void BeginNightTransition(HLib::TaskCallback callback) {
     SetPlayerControlEnabled(0);
     SetCurrentAreaControlLock(true);
     WaitForNextTask_0(GetCurrentAreaScreenFilmTask(), 1, 30);
+    spmFadeOut();
     nightAuthorState = 0;
     areaCleanupState = 0;
     HLib::SetCurrentTaskTo(callback);
@@ -1154,12 +1159,10 @@ constexpr std::array<const GameplayAreaDefinition *, 98> recoveredGameplayAreas{
     &areas::areaKRK6GameplayDefinition,
     &areas::areaQD00GameplayDefinition,
 }};
-constexpr std::array<std::uint32_t, recoveredGameplayAreas.size()> recoveredGameplayAreaNativeIndices{{
-        9, 15, 30, 29, 2, 8, 32, 94, 14, 16, 87, 89, 42, 47, 25, 39, 40, 41, 51, 82, 53, 54, 55, 62, 43, 81, 44, 13, 59, 76, 60, 77,
-        0, 1, 3, 4, 5, 6, 7, 10, 11, 12, 17, 18, 19, 20, 21, 22,
-        23, 24, 27, 28, 31, 33, 34, 35, 36, 37, 38, 45, 46, 48, 50, 52,
-        56, 57, 58, 61, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,
-        75, 78, 79, 80, 83, 84, 85, 86, 88, 90, 91, 92, 93, 95, 96, 97, 26, 49}};
+constexpr std::array<std::uint32_t, recoveredGameplayAreas.size()> recoveredGameplayAreaNativeIndices{
+    {9, 15, 30, 29, 2, 8, 32, 94, 14, 16, 87, 89, 42, 47, 25, 39, 40, 41, 51, 82, 53, 54, 55, 62, 43, 81, 44, 13, 59, 76, 60, 77, 0, 1, 3, 4, 5, 6, 7, 10, 11,
+        12, 17, 18, 19, 20, 21, 22, 23, 24, 27, 28, 31, 33, 34, 35, 36, 37, 38, 45, 46, 48, 50, 52, 56, 57, 58, 61, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
+        74, 75, 78, 79, 80, 83, 84, 85, 86, 88, 90, 91, 92, 93, 95, 96, 97, 26, 49}};
 
 std::size_t FunctionIndex(EventFunctionType type) {
     return static_cast<std::size_t>(type);
@@ -1216,6 +1219,19 @@ void scenFreeEvent(const char *requestedScenario) {
         slot.areaId.fill(0);
         return;
     }
+}
+
+// @verified - p
+void scenFreeEventByIndex(std::uint32_t slot) {
+    scenFreeEvent(slot > 3 ? nullptr : areaSlots[slot].areaId.data());
+}
+
+// @verified - p
+std::int32_t shenGetAreaSlotByName(const char *areaId) {
+    for (std::uint32_t index = 0; index < areaSlots.size(); ++index)
+        if (std::strcmp(areaId, areaSlots[index].areaId.data()) == 0)
+            return static_cast<std::int32_t>(index);
+    return -1;
 }
 
 void scenInitCallbacks() {
@@ -1332,11 +1348,11 @@ void EVT_NightAuthor_Callback(void *) {
         EV_ToggleCharacterFlag(ryo);
         ExecuteGameplayAreaCleanup(true);
         auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-        constexpr shen_name yoru{SHEN_NAME(YORU)};
+        (void)CreateEventCharacter(CharacterCreationHighModel, nullptr, AREA_NIGHT_AUTHOR);
         if (control) {
             if (HasDoorAuthorEntries())
-                SetTemporaryDoorAuthor(yoru);
-            Author_InitializeFromMapInfoAuthor(control->mapInfo, yoru);
+                SetTemporaryDoorAuthor(AREA_NIGHT_AUTHOR);
+            Author_InitializeFromMapInfoAuthor(control->mapInfo, AREA_NIGHT_AUTHOR);
         }
         if (HasDoorAuthorEntries()) {
             (void)SetupDoorAreaCallbacks();
@@ -1367,6 +1383,7 @@ void EVT_NightAuthor_Callback(void *) {
         camCtrlSetState(Init);
         camCtrlSetFovTransitionTo(true);
         WaitForNextTask_0(GetCurrentAreaScreenFilmTask(), 0, 30);
+        SetCharaKill(AREA_NIGHT_AUTHOR, 1);
         nightAuthorState = 2;
         return;
     }

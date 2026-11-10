@@ -87,6 +87,7 @@ void ResetNpcAreaRouteResources();
 void FreeNpcAreaRouteStore();
 NpcAreaRouteState *GetNpcAreaPointRouteState(std::uint16_t point);
 std::uint16_t ResolveNpcAreaAnimation(NpcAreaRouteState &state, NpcRouteLiveEntry &entry, bool advancing);
+std::uint16_t npcResolveAnimationForRoute(NpcAreaRouteState &state, NpcRouteLiveEntry &entry);
 void ApplyNpcAreaMotion(NpcRouteLiveEntry &entry, std::uint16_t motion);
 std::uint32_t GetNpcAreaSpecialMotionFlags(const NpcRouteLiveEntry &entry);
 std::uint32_t SelectNpcAreaTransitionMotion(const NpcRouteLiveEntry &entry);

@@ -30,4 +30,26 @@ struct CollectionAlbum {
 };
 static_assert(sizeof(CollectionAlbum) == 0x228);
 static_assert(offsetof(CollectionAlbum, image) == 8 && offsetof(CollectionAlbum, slots) == 40 && offsetof(CollectionAlbum, count) == 544);
-}
+struct CollectionPresentPage {
+    std::int32_t request;
+    std::uint32_t texture;
+    struct nk_image image;
+};
+static_assert(sizeof(CollectionPresentPage) == 0x28);
+inline constexpr std::array<const char *, 5> COLLECTION_PRESENT_VIEWER_WINDOWS{"SubMenu_Photos_Secret_Viewer::Image_Panel",
+    "SubMenu_Photos_Secret_Viewer::LeftIconPanel", "SubMenu_Photos_Secret_Viewer::RightIconPanel", "SubMenu_Photos_Secret_Viewer::LeftIconImagePanel",
+    "SubMenu_Photos_Secret_Viewer::RightIconImagePanel"};
+inline constexpr std::array<const char *, 14> COLLECTION_VIEWER_WINDOWS{"SubMenu_Photos_Snapshot_Viewer::Image_Panel",
+    "SubMenu_Photos_Snapshot_Viewer::Photo_Back_Panel", "SubMenu_Photos_Snapshot_Viewer::LeftIconPanel", "SubMenu_Photos_Snapshot_Viewer::RightIconPanel",
+    "SubMenu_Photos_Snapshot_Viewer::LeftIconImagePanel", "SubMenu_Photos_Snapshot_Viewer::RightIconImagePanel",
+    "SubMenu_Photos_Snapshot_Viewer::Panel_PhotoBackText", "SubMenu_Photos_Snapshot_Viewer::Panel_PhotoBack0",
+    "SubMenu_Photos_Snapshot_Viewer::Panel_PhotoBack1", "SubMenu_Photos_Snapshot_Viewer::Panel_PhotoBack2", "SubMenu_Photos_Snapshot_Viewer::Panel_PhotoBack3",
+    "SubMenu_Photos_Snapshot_Viewer::Panel_PhotoBack4", "SubMenu_Photos_Snapshot_Viewer::Panel_PhotoBack5", "SubMenu_Photos_Snapshot_Viewer::Panel_PhotoBack6"};
+inline constexpr std::array<const char *, 7> COLLECTION_VIEWER_LAYOUT_ITEMS{"SubMenu_Photos_Snapshot_Viewer::SpacePush_PhotoBack0",
+    "SubMenu_Photos_Snapshot_Viewer::SpacePush_PhotoBack1", "SubMenu_Photos_Snapshot_Viewer::SpacePush_PhotoBack2",
+    "SubMenu_Photos_Snapshot_Viewer::SpacePush_PhotoBack3", "SubMenu_Photos_Snapshot_Viewer::SpacePush_PhotoBack4",
+    "SubMenu_Photos_Snapshot_Viewer::SpacePush_PhotoBack5", "SubMenu_Photos_Snapshot_Viewer::SpacePush_PhotoBack6"};
+inline constexpr std::array<const char *, 7> COLLECTION_VIEWER_LABELS{"SubMenu_Photos_Snapshot_Viewer::Label_PhotoBack0",
+    "SubMenu_Photos_Snapshot_Viewer::Label_PhotoBack1", "SubMenu_Photos_Snapshot_Viewer::Label_PhotoBack2", "SubMenu_Photos_Snapshot_Viewer::Label_PhotoBack3",
+    "SubMenu_Photos_Snapshot_Viewer::Label_PhotoBack4", "SubMenu_Photos_Snapshot_Viewer::Label_PhotoBack5", "SubMenu_Photos_Snapshot_Viewer::Label_PhotoBack6"};
+} // namespace shenmue::s2

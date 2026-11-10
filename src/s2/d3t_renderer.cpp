@@ -57,6 +57,7 @@ bool g_s2FxaaEnabled;
 bool g_s2PostEffectsRequested;
 bool g_s2NeedsLoadTextureResources;
 std::int32_t g_PPFX_Enabled = 1;
+float g_optionsGammaValue = 1.0f;
 std::uint32_t g_backBufferCaptureTexture2D = 0;
 
 namespace {
@@ -760,6 +761,23 @@ bool ProcessD3TMessages() {
 // @verified - p
 void SetPPFXEnabled(std::int32_t enabled) noexcept {
     g_PPFX_Enabled = enabled;
+}
+
+// @verified - p
+float GetOptionsGammaValue() noexcept {
+    return g_optionsGammaValue;
+}
+
+// @verified - p
+void SetOptionsGammaValue(float value) noexcept {
+    g_optionsGammaValue = value;
+}
+
+void ReloadUserSettingsAndSnapshots() {
+    InitializeInputBindings();
+    ReadRendererUserSettings();
+    FontLoader();
+    InitializeSnapshotMetadata();
 }
 
 // @verified - p

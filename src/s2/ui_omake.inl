@@ -453,6 +453,11 @@ bool SelectMainMenuPage(std::uint32_t page) {
     RefreshMainMenuTitle();
     return true;
 }
+std::int64_t ResetMainMenu() {
+    mainMenuPageWindows.fill(nullptr);
+    mainMenuTitleImage = nullptr;
+    return SelectMainMenuPage(mainMenuPage);
+}
 std::int64_t DestroyMainMenuPage() {
     if (mainMenuPage < 6)
         DestroyElementByIndex(static_cast<UIElement>(OMAKE_MAIN_MENU_PAGES[mainMenuPage]));

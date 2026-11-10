@@ -2,28 +2,26 @@
 #include "s2/areas/area_ytqb.hpp"
 
 #if defined(SHENMUE_EVENT_ENTRY)
-void YtqbMain(void *argument)
-{
+void YtqbMain(void *argument) {
     QueueYtqb();
 }
 #else
 const shen_name ytqbFirstNames[] = {SHEN_NAME4('S', 'B', 'O', '_'), SHEN_NAME4('Y', 'O', 'H', '_'), SHEN_NAME4('S', 'C', 'X', '_'),
-                                    SHEN_NAME4('E', 'S', 'Y', '_'), SHEN_NAME4('G', 'E', 'N', '_'), YTQB_CHO, YTQB_INVALID};
+    SHEN_NAME4('E', 'S', 'Y', '_'), SHEN_NAME4('G', 'E', 'N', '_'), YTQB_CHO, YTQB_INVALID};
 const shen_name ytqbSecondNames[] = {SHEN_NAME4('S', 'B', 'K', '_'), SHEN_NAME4('V', 'U', 'N', '_'), SHEN_NAME4('I', 'K', 'O', '_'), YTQB_INVALID};
 const shen_name ytqbWaterNames[] = {YTQB_KIC, SHEN_NAME4('R', 'I', 'K', '_'), SHEN_NAME4('T', 'H', 'G', '_'), SHEN_NAME4('S', 'O', 'Y', '_'), YTQB_INVALID};
 const shen_name ytqbThirdNames[] = {SHEN_NAME4('K', 'T', '2', '_'), SHEN_NAME4('R', 'N', 'T', '_'), SHEN_NAME4('K', 'T', '3', '_'), YTQB_INVALID};
 const shen_name ytqbLastNames[] = {SHEN_NAME4('E', 'H', 'Y', '_'), SHEN_NAME4('A', 'N', 'C', '_'), SHEN_NAME4('K', 'T', '5', '_'),
-                                   SHEN_NAME4('C', 'J', 'U', '_'), SHEN_NAME4('K', 'T', '7', '_'), YTQB_INVALID};
+    SHEN_NAME4('C', 'J', 'U', '_'), SHEN_NAME4('K', 'T', '7', '_'), YTQB_INVALID};
 const shen_name ytqbFinalNames[] = {SHEN_NAME4('M', 'R', 'C', '_'), SHEN_NAME4('S', 'E', 'E', '_'), SHEN_NAME4('I', 'I', 'I', '_'),
-                                    SHEN_NAME4('R', 'K', 'N', '_'), SHEN_NAME4('E', 'S', 'Y', '_'), SHEN_NAME4('G', 'E', 'N', '_'),
-                                    YTQB_CHO, YTQB_SYE, SHEN_NAME4('Y', 'U', 'A', '_'), YTQB_INVALID};
+    SHEN_NAME4('R', 'K', 'N', '_'), SHEN_NAME4('E', 'S', 'Y', '_'), SHEN_NAME4('G', 'E', 'N', '_'), YTQB_CHO, YTQB_SYE, SHEN_NAME4('Y', 'U', 'A', '_'),
+    YTQB_INVALID};
 const shen_name ytqbPlayerNames[] = {YTQB_RYO, YTQB_INVALID};
 int ytqbAttackState = 0;
 Vector3 ytqbBucketClingPosition = {-0.433791f, -2.32006f, -0.176954f};
 Vector3i ytqbBucketClingRotation = {-364, 22573, -2730};
 
-void QueueYtqb(void)
-{
+void QueueYtqb(void) {
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(YtqbStart, 4, 11, sizeof(YtqbWork), TASK_EVNT);
     YtqbWork *work = (YtqbWork *)FTBL.HLib_GetTaskParameter(task);
     HLibTask *keeper = FTBL.HLib_EnqueueTaskWithParameter(YtqbKeeperCallback, 3, 11, sizeof(YtqbWork *), TASK_EVNT);
@@ -34,13 +32,11 @@ void QueueYtqb(void)
     EventDebugRegister(YTQB_DEBUG_ID, YtqbDebugExitCallback, work, 2000000000);
 }
 
-void YtqbDebugExitCallback(void *data)
-{
+void YtqbDebugExitCallback(void *data) {
     YtqbExit((YtqbWork *)data);
 }
 
-void YtqbExit(YtqbWork *work)
-{
+void YtqbExit(YtqbWork *work) {
     CleanupYtqb(work);
     FTBL.EV_HLKillOtherHierarchyTask(work->keeper);
     FTBL.EV_HLKillOtherHierarchyTask(work->task);
@@ -51,12 +47,10 @@ void YtqbExit(YtqbWork *work)
     }
 }
 
-void YtqbKeeperCallback(void *data)
-{
+void YtqbKeeperCallback(void *data) {
 }
 
-void YtqbResetSequence(YtqbSequence *sequence)
-{
+void YtqbResetSequence(YtqbSequence *sequence) {
     sequence->continuation = YtqbSboAttack;
     sequence->parameters.player = YTQB_RYO;
     sequence->parameters.firstOpponent = YTQB_INVALID;
@@ -68,15 +62,13 @@ void YtqbResetSequence(YtqbSequence *sequence)
     sequence->authored = 0;
 }
 
-int YtqbPrompt(YtqbSequence *sequence, int index, int delay)
-{
+int YtqbPrompt(YtqbSequence *sequence, int index, int delay) {
     sequence->prompt = &ytqbPromptQte[index];
     sequence->authored = &ytqbAuthoredQte[index];
     return Queue_EVT_AT_ResultQTE(&sequence->result, &sequence->parameters, sequence->prompt, delay);
 }
 
-void YtqbApplyResult(YtqbSequence *sequence)
-{
+void YtqbApplyResult(YtqbSequence *sequence) {
     EventQteAuthoredCallback success = sequence->authored->resultSuccess;
     EventQteAuthoredCallback failure = sequence->authored->resultFailure;
     if (sequence->result) {
@@ -86,8 +78,7 @@ void YtqbApplyResult(YtqbSequence *sequence)
         failure(&sequence->parameters, 0);
 }
 
-void YtqbStart(void *data)
-{
+void YtqbStart(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     if (!work->npcs)
@@ -112,8 +103,7 @@ void YtqbStart(void *data)
     FTBL.HLib_SetCurrentTaskTo(YtqbStartIntroAuthor);
 }
 
-void YtqbStartIntroAuthor(void *data)
-{
+void YtqbStartIntroAuthor(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     if (!IsEventNpcReadBusy(work->npcs)) {
         EventDebugCheck(YTQB_DEBUG_ID, 4);
@@ -127,8 +117,7 @@ void YtqbStartIntroAuthor(void *data)
     }
 }
 
-void YtqbStartWaterAuthor(void *data)
-{
+void YtqbStartWaterAuthor(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     if (!IsEventNpcReadBusy(work->npcs)) {
         FTBL.EV_authSceneCtrl(-8);
@@ -141,8 +130,7 @@ void YtqbStartWaterAuthor(void *data)
     }
 }
 
-void YtqbWaitWaterAuthor(void *data)
-{
+void YtqbWaitWaterAuthor(void *data) {
     int frame = FTBL.EV_authSceneCtrl(-6);
     if (frame == 1)
         FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(YTQB_RYO), frame);
@@ -158,8 +146,7 @@ void YtqbWaitWaterAuthor(void *data)
     }
 }
 
-void YtqbWaterResult(void *data)
-{
+void YtqbWaterResult(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     int delay;
@@ -177,8 +164,7 @@ void YtqbWaterResult(void *data)
     }
 }
 
-void YtqbStartFinalAuthor(void *data)
-{
+void YtqbStartFinalAuthor(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     if (!IsEventNpcReadBusy(work->npcs)) {
         FTBL.LoadBlurModelForCharacter_0(YTQB_SYE, "SYE_B.MT7", 1.0f);
@@ -191,8 +177,7 @@ void YtqbStartFinalAuthor(void *data)
     }
 }
 
-void YtqbWaitFinalAuthor(void *data)
-{
+void YtqbWaitFinalAuthor(void *data) {
     int index;
     if (FTBL.EV_authSceneCtrl(-6) == 1)
         for (index = 0; index < 6; index++)
@@ -205,8 +190,7 @@ void YtqbWaitFinalAuthor(void *data)
     }
 }
 
-void YtqbFinalResult(void *data)
-{
+void YtqbFinalResult(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     if (FTBL.qteBattleUtil(4, 0, 0, 0, 0)) {
@@ -225,8 +209,7 @@ void YtqbFinalResult(void *data)
     }
 }
 
-void YtqbWaitResultAuthor(void *data)
-{
+void YtqbWaitResultAuthor(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     int index;
@@ -240,8 +223,7 @@ void YtqbWaitResultAuthor(void *data)
     }
 }
 
-void YtqbFinish(void *data)
-{
+void YtqbFinish(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     if (!IsEventNpcReadBusy(work->npcs)) {
         ReleaseEventNpcRequests(work->npcs);
@@ -249,8 +231,7 @@ void YtqbFinish(void *data)
     }
 }
 
-void YtqbSboAttack(void *data)
-{
+void YtqbSboAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -316,8 +297,7 @@ void YtqbSboAttack(void *data)
     }
 }
 
-void YtqbYohAttack(void *data)
-{
+void YtqbYohAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -363,8 +343,7 @@ void YtqbYohAttack(void *data)
     }
 }
 
-void YtqbScxAttack(void *data)
-{
+void YtqbScxAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -414,8 +393,7 @@ void YtqbScxAttack(void *data)
     }
 }
 
-void YtqbSbkAttack(void *data)
-{
+void YtqbSbkAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -476,8 +454,7 @@ void YtqbSbkAttack(void *data)
     }
 }
 
-void YtqbVunAttack(void *data)
-{
+void YtqbVunAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -524,8 +501,7 @@ void YtqbVunAttack(void *data)
     }
 }
 
-void YtqbIkoAttack(void *data)
-{
+void YtqbIkoAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -575,8 +551,7 @@ void YtqbIkoAttack(void *data)
     }
 }
 
-void YtqbStartSecondGroup(void *data)
-{
+void YtqbStartSecondGroup(void *data) {
     YtqbWork *work;
     ytqbAttackState = 0;
     work = (YtqbWork *)data;
@@ -586,8 +561,7 @@ void YtqbStartSecondGroup(void *data)
     FTBL.HLib_SetCurrentTaskTo(YtqbRikThgAttack);
 }
 
-void YtqbRikThgAttack(void *data)
-{
+void YtqbRikThgAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -645,8 +619,7 @@ void YtqbRikThgAttack(void *data)
     }
 }
 
-void YtqbSoyAttack(void *data)
-{
+void YtqbSoyAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -683,8 +656,7 @@ void YtqbSoyAttack(void *data)
     }
 }
 
-void YtqbKicAttack(void *data)
-{
+void YtqbKicAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -736,8 +708,7 @@ void YtqbKicAttack(void *data)
     }
 }
 
-void YtqbKt2Attack(void *data)
-{
+void YtqbKt2Attack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -795,8 +766,7 @@ void YtqbKt2Attack(void *data)
     }
 }
 
-void YtqbRntAttack(void *data)
-{
+void YtqbRntAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -843,8 +813,7 @@ void YtqbRntAttack(void *data)
     }
 }
 
-void YtqbKt3Attack(void *data)
-{
+void YtqbKt3Attack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -892,8 +861,7 @@ void YtqbKt3Attack(void *data)
     }
 }
 
-void YtqbAncAttack(void *data)
-{
+void YtqbAncAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -960,8 +928,7 @@ void YtqbAncAttack(void *data)
     }
 }
 
-void YtqbKt5Attack(void *data)
-{
+void YtqbKt5Attack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -1010,8 +977,7 @@ void YtqbKt5Attack(void *data)
     }
 }
 
-void YtqbCjuAttack(void *data)
-{
+void YtqbCjuAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -1044,8 +1010,7 @@ void YtqbCjuAttack(void *data)
     }
 }
 
-void YtqbKt7Attack(void *data)
-{
+void YtqbKt7Attack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -1077,8 +1042,7 @@ void YtqbKt7Attack(void *data)
     }
 }
 
-void YtqbFinalEhyAttack(void *data)
-{
+void YtqbFinalEhyAttack(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     YtqbSequence *sequence = &work->sequence;
     YtqbResultParameters *parameters = &sequence->parameters;
@@ -1131,8 +1095,7 @@ void YtqbFinalEhyAttack(void *data)
     }
 }
 
-int YtqbPlayRetryVoices(int delay)
-{
+int YtqbPlayRetryVoices(int delay) {
     int start = delay;
     if (FTBL.GetRandomNumberInRange(100.0f) < 50.0f) {
         EVT_AT_SetVoice("S2BVB010", delay + 23);
@@ -1174,16 +1137,14 @@ int YtqbPlayRetryVoices(int delay)
     return delay;
 }
 
-void YtqbWaitMotion(void *data)
-{
+void YtqbWaitMotion(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     if (FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(YTQB_RYO), 65, 1, 0))
         if (!IsEventNpcReadBusy(work->npcs))
             FTBL.HLib_SetCurrentTaskTo(work->sequence.continuation);
 }
 
-void YtqbNextQte(void *data)
-{
+void YtqbNextQte(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     if (!IsEventNpcReadBusy(work->npcs)) {
         RetireEventNpcRequests(work->npcs);
@@ -1191,8 +1152,7 @@ void YtqbNextQte(void *data)
     }
 }
 
-void YtqbRetry(void *data)
-{
+void YtqbRetry(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     int delay;
     if (!IsEventNpcReadBusy(work->npcs)) {
@@ -1206,8 +1166,7 @@ void YtqbRetry(void *data)
     }
 }
 
-void YtqbLoadFinalCharacters(void *data)
-{
+void YtqbLoadFinalCharacters(void *data) {
     YtqbWork *work = (YtqbWork *)data;
     ytqbAttackState = 0;
     RequestEventNpcCharacters(work->npcs, ytqbFinalNames);
@@ -1215,8 +1174,7 @@ void YtqbLoadFinalCharacters(void *data)
     FTBL.HLib_SetCurrentTaskTo(YtqbStartFinalAuthor);
 }
 
-void InitializeYtqb(YtqbWork *work)
-{
+void InitializeYtqb(YtqbWork *work) {
     FTBL.EV_NPC_NewLoadSw_0(0);
     FTBL.EV_ResetFreeTalkFlags();
     EVT_SetQteRetryFrames(24);
@@ -1250,8 +1208,7 @@ void InitializeYtqb(YtqbWork *work)
     QueueYtqbAmbientSmoke(0);
 }
 
-void CleanupYtqb(YtqbWork *work)
-{
+void CleanupYtqb(YtqbWork *work) {
     FTBL.RemoveInventoryItem(36, 1);
     FTBL.RemoveInventoryItem(37, 1);
     FTBL.RemoveInventoryItem(38, 1);
@@ -1344,7 +1301,7 @@ void EnableFinalPluralControl() {
         SetPluralControlFor(ctrlGetScenarioChara(YTQB_FinalNames[i]), 1);
 }
 void StartCombinationPrompt(std::int32_t second, std::int32_t third) {
-    qteBattleUtil(BattleQteMode::SetLastCommands, 16, second, third);
+    qteBattleUtil(BattleQteMode::SetFirstCommands, 16, second, third);
     std::int16_t frames = 24;
     ReInitElement(UIElement::GameQte);
     if (g_eventQteRetryFrames > 0)

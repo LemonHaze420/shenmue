@@ -52,8 +52,7 @@ void CloudAuthorCallback(void *data) {
             SuspendParticleEffect(0, kshtBreathEffects[0]);
             SuspendParticleEffect(0, kshtBreathEffects[1]);
         } else if (frame == 500) {
-            camCtrlSetNearDistance(0.01f);
-            camCtrlSetFarDistance(2200);
+            camCtrlSetClipDistances(0.01f, 2200.0f);
         } else if (frame == 1250)
             camCtrlResetClipDistances();
     }

@@ -684,6 +684,7 @@ void SNAP_Control_Callback(void *parameter) {
             WRN_SetWarning(work.warning, work.warningValue);
             work.state = SnapState::Hold;
             work.previousPadControl = BindPadControlEntry(work.padControl);
+            nullsub();
             shenGetCurrentDateTime(work.dateTime);
             npcResetDateTimeIfNeeded();
             shenSetTimeSimulationTo(0);

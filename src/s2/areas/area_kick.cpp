@@ -11,6 +11,7 @@
 #include "s2/flag.hpp"
 #include "s2/hlib.hpp"
 #include "s2/input.hpp"
+#include "s2/lighting.hpp"
 #include "s2/map_control.hpp"
 #include "s2/motion_work.hpp"
 #include "s2/npc.hpp"
@@ -111,7 +112,7 @@ void Exit() {
     qteBattleUtil(BattleQteMode::RetireAndFree);
     npcSetCycleTimeLimitExpiry(SHEN_NAME(cylf), 0);
     SetDoorSubjectEnabled(SHEN_NAME(R141), 1);
-    EV_SetObjectFlagByIndex(31, 1);
+    EV_SetMapLightingPlacementEnabled(31, 1);
     EventSetMotion motion{0, ryo, 0xf003, 0.0f, 1.0f, 0, 0.0f};
     EVT_AT_SetMot_Callback(&motion);
     EV_FreeAuthorPak(0, "0236");
@@ -159,7 +160,7 @@ void AreaKICKMain(std::uintptr_t) {
     EV_spmBeginSampleExecute();
     EV_FreeAuthorPak(1, "0236");
     SetDoorSubjectEnabled(SHEN_NAME(R141), 0);
-    EV_SetObjectFlagByIndex(31, 0);
+    EV_SetMapLightingPlacementEnabled(31, 0);
     EV_authSceneCtrl(AuthSceneCtrl::HideFilmBars);
     auto *task = HLib::EnqueueTaskWithoutParameter(KICK_KickDoor_Callback, 6, 0x0b, SHEN_NAME(kick));
     state = SHEN_NAME(INIT);

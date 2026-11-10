@@ -37,7 +37,7 @@ void ReleaseBookShadowReader() {
 }
 void BindBookStackShadow(shen_name actor) {
     SetCharacterAuxiliaryData(ctrlGetScenarioChara(actor), &bookShadowReader->model);
-    SetCharacterUnknownFlag(ctrlGetScenarioChara(actor), 1);
+    charaSetDisplayEnabledFlag(ctrlGetScenarioChara(actor), 1);
     SetScenarioCharacterType(actor, CharacterTypeStencilShadow);
     SetScenarioCharacterDrawControl(actor, 1, 0);
 }

@@ -4,6 +4,7 @@
 #endif
 
 #include "s2/initialization.hpp"
+#include "s2/pak.hpp"
 #include "s2/area_jump.hpp"
 
 #include "d3t/asset_remap.hpp"
@@ -12,6 +13,7 @@
 #include "d3t/compression.hpp"
 #include "d3t/dx11_renderer.hpp"
 #include "d3t/object_store.hpp"
+#include "d3t/crash_reporter.hpp"
 #include "d3t/texture.hpp"
 #include "d3t/threads.hpp"
 #include "d3t/ui_renderer.hpp"
@@ -36,6 +38,7 @@
 #include "s2/hlib.hpp"
 #include "s2/input.hpp"
 #include "s2/legacy_draw.hpp"
+#include "s2/lighting.hpp"
 #include "s2/legacy_sprite.hpp"
 #include "s2/load_title.hpp"
 #include "s2/title.hpp"
@@ -53,10 +56,12 @@
 #include "s2/system_modules.hpp"
 #include "s2/story_state.hpp"
 #include "s2/ui.hpp"
+#include "s2/particle_effects.hpp"
 #include "d3t/ui_runtime.hpp"
 #include "s2/ui_scene.hpp"
 #include "s2/world_render.hpp"
 #include "s2/areas/game/arcade.hpp"
+#include "s2/time_program.hpp"
 
 #include <array>
 #include <cstdlib>
@@ -67,10 +72,66 @@
 #if defined(_WIN32)
 #include <windows.h>
 #include <crtdbg.h>
+#include "imgui.h"
 #endif
 
     namespace shenmue::s2 {
 namespace {
+
+#if defined(_WIN32)
+bool DebugMenuSliderChar(const char *label, std::int8_t *value, std::int8_t minimum, std::int8_t maximum, const char *format) {
+    std::int32_t slider = *value;
+    const bool changed = ImGui::SliderInt(label, &slider, minimum, maximum, format);
+    *value = static_cast<std::int8_t>(slider);
+    return changed;
+}
+
+void DebugMenuSliderRow(const char *label, std::int8_t *value, std::int8_t minimum, std::int8_t maximum) {
+    ImGui::Text(label);
+    ImGui::NextColumn();
+    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+    ImGui::PushID(label);
+    DebugMenuSliderChar("", value, minimum, maximum, "%.0f");
+    ImGui::PopID();
+    ImGui::PopItemWidth();
+    ImGui::NextColumn();
+}
+#endif
+
+void DebugMenu(const char *title, std::int32_t *open) {
+    if (!open || !*open)
+        return;
+#if defined(_WIN32)
+    if (ImGui::Begin(title, reinterpret_cast<bool *>(open), 0)) {
+        ImGui::Columns(2);
+        DebugMenuSliderRow("Day", &g_currentDateTime.day, 1, 31);
+        DebugMenuSliderRow("Week", reinterpret_cast<std::int8_t *>(&g_currentDateTime.week), 1, 4);
+        DebugMenuSliderRow("Month", &g_currentDateTime.month, 1, 12);
+        DebugMenuSliderRow("Year", &g_currentDateTime.year, 86, 99);
+        DebugMenuSliderRow("Hour", &g_currentDateTime.hour, 1, 24);
+        DebugMenuSliderRow("Minute", &g_currentDateTime.minute, 1, 60);
+        DebugMenuSliderRow("Second", &g_currentDateTime.second, 1, 60);
+        ImGui::Text("Time Speed Multiplier");
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::PushID("Time Speed Multiplier");
+        ImGui::SliderFloat("Game Time Multiplier", &g_gameTimeMultiplier, 1.0f, 1000.0f, "%.3f");
+        ImGui::PopID();
+        ImGui::PopItemWidth();
+        ImGui::NextColumn();
+        ImGui::Text("Freeze Game Time");
+        ImGui::NextColumn();
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::PushID("Freeze Game Time");
+        ImGui::Checkbox("", reinterpret_cast<bool *>(&g_freezeGameTime));
+        ImGui::PopID();
+        ImGui::PopItemWidth();
+        ImGui::NextColumn();
+        ImGui::Columns(1);
+    }
+    ImGui::End();
+#endif
+}
 
 alignas(32) std::array<Matrix4x4, 64> transformMatrices{};
 bool runtimeActive = false;
@@ -91,6 +152,54 @@ std::int32_t GetCameraProperty(std::int32_t index) {
     return cameraProperties[static_cast<std::size_t>(index)];
 }
 
+std::int32_t debugCounterMode{};
+std::int32_t debugCounterArmed{};
+std::int32_t debugCounter{};
+void *debugCounterOwner{};
+std::int32_t debugCounterReported{};
+
+void DoNothing() {
+    if (debugCounterMode == 1) {
+        nullsub();
+        (void)ReturnZero();
+        nullsub();
+    }
+}
+
+using GlobalFlagCallback = void (*)();
+GlobalFlagCallback incrementGlobalFlagFunc{};
+GlobalFlagCallback frameCallbackSlot{};
+
+void IncrementGlobalFlag() {
+    ++g_rootTaskIterationCount;
+    nullsub();
+}
+
+void CallIncrementGlobalFlag() {
+    if (incrementGlobalFlagFunc)
+        incrementGlobalFlagFunc();
+}
+
+void InstallIncrementGlobalFlagHook() {
+    incrementGlobalFlagFunc = nullptr;
+    frameCallbackSlot = CallIncrementGlobalFlag;
+}
+
+void SetIncrementGlobalFlagFunc(GlobalFlagCallback callback) {
+    incrementGlobalFlagFunc = callback;
+}
+
+void IncrementGlobalCounter() {
+    if (debugCounterMode == 1 && debugCounterArmed == 1) {
+        if (!debugCounter) {
+            nullsub(debugCounterOwner);
+            debugCounterArmed = 0;
+            debugCounterReported = 0;
+        }
+        --debugCounter;
+    }
+}
+
 // @verified - p
 void RootShadowLightingCallback(void *) {
     MaybeDoGlobalShadowLighting();
@@ -106,10 +215,10 @@ void RootTask_Callback(void *) {
 #endif
     ProcessPostFxFilterInput();
     UpdateGlobalShadowTiming();
-    // ROOT is the frame boundary: index-ordered HLib tasks submit into the
-    // frame opened on the preceding ROOT visit, and ROOT presents it only
-    // after the complete task revolution.  This keeps OBJ/DRWP/DRWH/DRWO
-    // submission order intact instead of drawing those owners from ROOT.
+    // ROOT presents the frame submitted by the preceding HLib task revolution.
+    // Tasks submit in index order into the frame opened at the previous ROOT visit.
+    // OBJ/DRWP/DRWH/DRWO retain that submission order.
+
     if (frameOpen) {
         if (rootRenderDeferredMode)
             SetUpdateCallback(RootShadowLightingCallback, nullptr, 800.0f);
@@ -156,11 +265,19 @@ void RootTask_Callback(void *) {
                 DebugTextPrintf(debugCameraFormats[row], static_cast<double>(static_cast<float>(static_cast<std::uint32_t>(ReturnZero())) * 0.001f));
             }
         }
+        nullsub(reinterpret_cast<void *>(5));
+        nullsub();
         ClearQueuedDebugText();
         g_accumulatedFrameTimeDelta =
             (static_cast<float>(g_previousMainLoopFrameTime) - static_cast<float>(GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta))) /
             12.5f;
+        ResetFireShaderInstanceCount();
         HandleInputs();
+        if (GetGammaOptionsActive())
+            ExecuteElementCallback(UIElement::OptionsGamma);
+        nullsub();
+        nullsub();
+        DoNothing();
         if (rootSoftResetEnabled != 0 && CheckSoftResetInput()) {
             ResetGameArcadeEmulatorResult();
             InitializeScene();
@@ -170,6 +287,7 @@ void RootTask_Callback(void *) {
         UpdateAuthorMultichannelDevice();
         ExecuteCurrentCommandList();
         ConsumeFrames();
+        nullsub();
         d3t::D3TDeviceContext *const previousUiContext = d3t::DX11::g_ppD3DDeviceContext;
         d3t::DX11::g_ppD3DDeviceContext = g_nuklearRenderDeviceContext;
         PrepareUIFrame();
@@ -191,6 +309,7 @@ void RootTask_Callback(void *) {
             d3t::DumpFramePng(auto_test::CapturePath());
 #endif
         FinishNuklearFrame();
+        nullsub();
         PresentD3TFrame(GetNumFramesProcessed() == 0 ? 1 : 0);
         if (GetShouldReturnToTitleScreen() != 0) {
             SetShouldReturnToTitleScreen(0);
@@ -198,6 +317,8 @@ void RootTask_Callback(void *) {
         }
     }
     runtimeActive = ProcessD3TMessages();
+    HandleSceneTransitionForModule();
+    IncrementGlobalCounter();
 #if SHEN_AUTO_TEST_ENABLED && defined(_WIN32)
     if (captured)
         runtimeActive = false;
@@ -205,6 +326,7 @@ void RootTask_Callback(void *) {
     AdvanceAuthorMultichannelAudio();
     g_previousMainLoopFrameTime = GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta);
     g_postPresentMainLoopFrameTime = GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta);
+    nullsub();
     frameOpen = runtimeActive;
     ++g_rootTaskIterationCount;
 }
@@ -233,10 +355,31 @@ std::filesystem::path gameRoot() {
 #endif
 }
 
-bool Initialization(int, char **) {
+struct LoadedAssetLog {
+    void *data;
+    std::uint32_t position;
+    std::uint32_t capacity;
+};
+static_assert(sizeof(LoadedAssetLog) == 0x10);
+std::uint8_t loadedAssetLogEnabled = 0;
+LoadedAssetLog loadedAssetLog{};
+
+void SetupAssetLogging(std::uint8_t enabled) {
+    loadedAssetLogEnabled = enabled;
+    loadedAssetLog = {.data = std::malloc(0x100000), .position = 0, .capacity = 0x100000};
+}
+
+bool Initialization(int argc, char **argv) {
+    const SteamAppInfo appInfo{.appName = "Mango", .buildId = "MD22_112855", .appId = 758330};
+    if (!SteamInit(&appInfo))
+        return false;
     SetSoftResetInputEnabled(0);
     rootSoftResetEnabled = 0;
     rootSaveTransitionEnabled = 1;
+    for (int index = 1; index < argc; ++index) {
+        if (argv[index] && std::strcmp(argv[index], "-logLoadedAssets") == 0)
+            SetupAssetLogging(1);
+    }
     (void)InitializeHLibMemory(0x1200000);
     g_characterShadowRuntime = g_characterShadowStorage.data();
     GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Start);
@@ -257,6 +400,7 @@ bool Initialization(int, char **) {
         return false;
     }
     d3t::d3t_ReadAssetRemapping();
+    SetSaveDataStuff();
 
 
 
@@ -268,15 +412,20 @@ bool Initialization(int, char **) {
 #endif
         return false;
     }
-    d3t::InitializePvrTextureSlotStorage();
+    d3t::InitializePvrTextureSlotStorage(d3t::kS2PvrSurfaceCount);
+    AssignHelperFuncs();
+    d3t::InitialiseHashTable();
+    DebugMenu(nullptr, nullptr);
     InitializeDebugDefaults();
     if (!InitRenderer()) {
         return false;
     }
+    InitializeEffectRenderPassTable();
     GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Start);
     GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Reset);
     GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Accumulate);
     InitializeSprites(0, 0);
+    InitializeInputBuffers();
     if (!InitSystemMatrices()) {
         return false;
     }
@@ -288,6 +437,13 @@ bool Initialization(int, char **) {
     SetupLegacyScreenMatrix(0.0f, 0.0f, static_cast<float>(d3t::g_originalScreenWidth), static_cast<float>(d3t::g_originalScreenHeight));
     SetActiveStack(MatrixStackType::Transparent);
     SetActiveStack(MatrixStackType::DepthPrepass);
+    SetupStack();
+    Matrix4x4::SetPrePassToTempTransform();
+    d3t::SetSceneClearColour(0xff000000U);
+    InitEffect();
+    SetupEffectTransforms();
+    InstallIncrementGlobalFlagHook();
+    SetIncrementGlobalFlagFunc(IncrementGlobalFlag);
 
     InitializeInputSelectionState();
     HLib::InitializeAllocator();
@@ -301,6 +457,8 @@ bool Initialization(int, char **) {
     (void)ResetSceneFolderReadiness();
     SetSceneFolderReadiness(0);
     InstallLoadingScreenCallbacks();
+    UI_InitializeElementReinitStates();
+    UI_ResetImageLoadDiagnostics();
     runtimeActive = true;
     return true;
 }
@@ -321,8 +479,12 @@ void ShutdownS2RuntimeResources() {
     ReleaseLegacyStripType3();
     ShutdownRendererContent();
     ShutdownD3TRenderer();
+    std::free(loadedAssetLog.data);
+    loadedAssetLog.position = 0;
+    loadedAssetLog.capacity = 0;
     FreeColdArchive();
     ArchiveData_ClearArchives();
+    d3t::FreeObjectStoreTables();
 }
 
 } // namespace
@@ -335,6 +497,9 @@ std::int32_t GetRootRenderDeferredMode() noexcept {
 void SetRootRenderDeferredMode(std::int32_t mode) noexcept {
     rootRenderDeferredMode = mode;
 }
+DebugMenuCallback g_debugMenuBody{};
+DebugMenuCallback g_debugMenuHeader{};
+
 // @verified - p
 void SetUnusedEventState(std::int32_t state) noexcept {
     unusedEventState = state;
@@ -368,13 +533,16 @@ void SetRootSoftResetEnabled(std::int32_t enabled) noexcept {
 }
 
 int Shenmue2_Main(int argc, char **argv) {
-    if (!Initialization(argc, argv)) {
-        ShutdownRendererContent();
-        ShutdownD3TRenderer();
-        FreeColdArchive();
-        ArchiveData_ClearArchives();
-        return 1;
-    }
+#if defined(_MSC_VER)
+    __try {
+#endif
+        if (!Initialization(argc, argv)) {
+            ShutdownRendererContent();
+            ShutdownD3TRenderer();
+            FreeColdArchive();
+            ArchiveData_ClearArchives();
+            return 1;
+        }
 
 #if defined(_WIN32)
     while (runtimeActive) {
@@ -386,8 +554,13 @@ int Shenmue2_Main(int argc, char **argv) {
     HLib::MainLoop();
 #endif
 
-    ShutdownS2RuntimeResources();
-    return 0;
+        ShutdownS2RuntimeResources();
+        return 0;
+#if defined(_MSC_VER)
+    } __except (d3t::CrashReporter(GetExceptionInformation())) {
+        return 0;
+    }
+#endif
 }
 
 } // namespace shenmue::s2

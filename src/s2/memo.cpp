@@ -1,6 +1,11 @@
+#include "shenmue.h"
+
+
 #include "s2/memo.hpp"
 
 #include "d3t/image_texture_loader.hpp"
+#include "d3t/model.hpp"
+#include "d3t/object_store.hpp"
 #include "d3t/texture.hpp"
 #include "d3t/ui_renderer.hpp"
 #include "d3t/ui_runtime.hpp"
@@ -41,6 +46,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <span>
@@ -71,6 +77,7 @@ PadControlEntry *previousPad{};
 MemoTextureTaskData *memoTextureData{};
 std::array<std::uint32_t, 4> memoTextureHandles{};
 std::array<std::uint32_t, 4> memoPageTextureAliases{};
+std::uint32_t memoNotebookModelHandle{};
 MT7Model memoModel{};
 std::byte *memoModelSource{};
 std::vector<std::uint32_t> memoModelOwnedTextures;
@@ -367,19 +374,78 @@ void SwapMemoPageTargets(std::uint32_t first, std::uint32_t second) {
     memoPages.dirty[1][first] = true;
 }
 
+// @verified - p
+void FillNotebookWritingArea(void *areas, const ModelMaterialDescriptor &descriptor) {
+    const char *const suffix = std::strstr(descriptor.name, "Writing_Area_");
+    if (!suffix)
+        return;
+    const std::int32_t index = std::atoi(suffix + 13);
+    if (static_cast<std::uint32_t>(index - 1) <= 3U)
+        static_cast<ModelMaterialDescriptor *>(areas)[index - 1] = descriptor;
+}
+
+// @verified - p
+std::uint32_t EnsureNotebookPageTarget(std::uint32_t kind, std::uint8_t index) {
+    const std::size_t bank = kind == 1 ? 1 : 0;
+    std::uint32_t &target = memoPages.targets[bank][index];
+    if (!target) {
+        const d3t::Texture2DDescription description{512, 512, 1, 1, 2, 4, 0, 1, 0, 0, nullptr};
+        target = d3t::CreateTexture2D(&description);
+    }
+    memoPages.dirty[bank][index] = true;
+    return target;
+}
+
+void SetNotebookPageTexture(std::uint32_t kind, std::uint32_t legacyTexture, std::uint8_t index) {
+    const std::uint32_t target = EnsureNotebookPageTarget(kind, index);
+    for (std::size_t page = 0; page < memoTextureHandles.size(); ++page) {
+        if (memoTextureHandles[page] == legacyTexture) {
+            memoPageTextureAliases[page] = target;
+            break;
+        }
+    }
+    memoPages.dirty[kind == 1 ? 1 : 0][index] = true;
+}
+
+// @verified - p
+void RebindNotebookWritingAreas() {
+    std::array<ModelMaterialDescriptor, 4> areas{};
+    if (!d3t::VisitModelMaterials(memoNotebookModelHandle, areas.data(), FillNotebookWritingArea))
+        return;
+    for (std::uint32_t page = 0; page < areas.size(); ++page) {
+        ModelMaterialDescriptor &area = areas[page];
+        if (!area.name)
+            continue;
+        for (std::uint32_t parameter = 0; parameter < area.material->parameterCount; ++parameter) {
+            if (area.parameters[parameter].type == MEMO_PAGE_TEXTURE_PARAMETER) {
+                d3t::SetModelMaterialTexture(area, parameter, memoPages.targets[1][page]);
+                break;
+            }
+        }
+    }
+}
+
+// @verified - p
+void NotebookModelLoaded(void *, d3t::ObjectSource *source) {
+    if (source->resolveState != 1)
+        return;
+    if (!memoPages.targets[1][0]) {
+        for (std::uint8_t index = 0; index < 4; ++index)
+            EnsureNotebookPageTarget(1, index);
+    }
+    memoNotebookModelHandle = source->renderHandle;
+    RebindNotebookWritingAreas();
+}
+
 void UpdateNotebook(std::int16_t page, std::uint32_t left, std::uint32_t right) {
     for (MemoTexture &texture : memoTextureData->textures)
         texture.pixels.fill(0);
     PrepareNotebook(page, left, right);
-    memoPages.dirty[1][left] = true;
-    memoPages.dirty[1][right] = true;
-    const std::size_t bank = 2 * (static_cast<std::uint16_t>(page) & 1U);
-    for (std::size_t index = 0; index < 2; ++index) {
-        // UpdateNotebook replaces the legacy texture slot's renderer handle with
-        // the page target. The retained MEMT bitmap is not re-uploaded.
-        memoPageTextureAliases[bank + index] = memoPages.targets[0][bank + index];
-        memoPages.dirty[0][bank + index] = true;
-    }
+    SetNotebookPageTexture(1, 0, static_cast<std::uint8_t>(left));
+    SetNotebookPageTexture(1, 0, static_cast<std::uint8_t>(right));
+    const std::uint32_t bank = 2 * (static_cast<std::uint16_t>(page) & 1U);
+    SetNotebookPageTexture(0, memoTextureHandles[bank], static_cast<std::uint8_t>(bank));
+    SetNotebookPageTexture(0, memoTextureHandles[bank + 1], static_cast<std::uint8_t>(bank + 1));
 }
 
 bool SetupMemoTextureTaskData() {
@@ -418,10 +484,15 @@ bool LoadNotebookModel() {
     if (!size)
         return false;
     memoModelSource = static_cast<std::byte *>(HLib::AllocateTaskData(size, SHEN_NAME(MEMO)));
-    if (!memoModelSource || !ArchiveData_Read(path, 0, memoModelSource, size))
+    if (!memoModelSource)
         return false;
-    if (!ReadModelFormat7({memoModelSource, static_cast<std::size_t>(size)}, path, memoModel, 2))
+    if (!ArchiveData_Read(path, 0, memoModelSource, size) || !ReadModelFormat7({memoModelSource, static_cast<std::size_t>(size)}, path, memoModel)) {
+        ReleaseModelFormat7(memoModel);
+        HLib::FreeTaskData(memoModelSource);
+        memoModelSource = nullptr;
         return false;
+    }
+    d3t::RegisterObjectSource(GetMT7ReaderData(&memoModel), "model/item/MMA02G1T/MMA02G1T.fbx", 2, 0, nullptr, NotebookModelLoaded);
     for (std::size_t offset = ReadMemoWord(memoModelSource + 4); offset + 8 <= size;) {
         const std::uint32_t chunkSize = ReadMemoWord(memoModelSource + offset + 4);
         if (chunkSize < 8 || chunkSize > size - offset)
@@ -534,8 +605,8 @@ void RestoreMemoCamera() {
     camCtrlSetTargetPosition(memoCamera.target);
     camCtrlSetFovTransitionTo(true);
     if (player) {
-        player->renderFlags = static_cast<std::uint8_t>((player->renderFlags & ~CRF_DisplayEnabled) | (memoCamera.playerDisplay ? 4U : 0U));
-        player->flags = (player->flags & ~CF_VisibleThisCheck) | (memoCamera.playerVisibility ? CF_VisibleThisCheck : 0U);
+        (void)EV_SetCharDisplay(player, CVM_DisplayEnabled, memoCamera.playerDisplay);
+        charaSetVisibilityFlagTo(player, memoCamera.playerVisibility);
         modelSetCharaAlpha(player, memoCamera.playerAlpha);
     }
     if (control && control->windowTask)
@@ -567,6 +638,7 @@ void SetMemoState7(std::int16_t page) {
     memoNodes[3]->rotation.z = 0;
     memoNodes[3]->scale = pagePosition <= 0 ? Vector3{} : Vector3{1.0f, (150 - pageThickness) * 0.0046999999f, 1.0f};
     SwapMemoPageTargets(0, 2);
+    RebindNotebookWritingAreas();
     pageModelBindings[3] = pageModelBindings[0];
     RebindMemoModelTextures();
     (void)ExecuteAicaCommand(0xb00ab, 0, 0);
@@ -649,7 +721,7 @@ void DrawMemoNotebook(void *) {
     TemporaryAttachedLightState attachedLight{};
     BeginTemporaryAttachedLight(0, origin, 0, {2.0f, 2.0f, 2.0f, 2.0f}, attachedLight);
     SetLegacyModelScale(1.3f);
-    DrawMT7Model(memoModel, nullptr, LegacyModelShaderPath::VertexColour, 1.0f);
+    DrawMT7Model(memoModel, nullptr, GetLegacyCharacterShaderPath(), 1.0f);
     EndTemporaryAttachedLight(attachedLight);
     Matrix4x4::Pop(1);
     EndTemporaryGlobalLighting(lighting);
@@ -751,6 +823,7 @@ void MEMO_Callback(void *) {
         break;
     case 3: {
         SwapMemoPageTargets(3, 1);
+        RebindNotebookWritingAreas();
         UpdateNotebook(nextPage, 0, 3);
         pageModelBindings[1] = pageModelBindings[2];
         const auto bank = 2 * (static_cast<std::uint16_t>(nextPage) & 1U);
@@ -797,6 +870,7 @@ void MEMO_Callback(void *) {
             pagePosition = std::min<std::int16_t>(136, static_cast<std::int16_t>(pagePosition + 1));
             memoState = 2;
             SwapMemoPageTargets(0, 2);
+            RebindNotebookWritingAreas();
             pageModelBindings[3] = pageModelBindings[0];
             RebindMemoModelTextures();
         }
@@ -807,6 +881,7 @@ void MEMO_Callback(void *) {
             memoNodes[3]->scale = {};
         --nextPage;
         SwapMemoPageTargets(2, 0);
+        RebindNotebookWritingAreas();
         UpdateNotebook(std::max<std::int16_t>(0, static_cast<std::int16_t>(nextPage - 1)), 2, 1);
         pageModelBindings[0] = pageModelBindings[3];
         const auto bank = 2 - 2 * (static_cast<std::uint16_t>(nextPage) & 1U);
@@ -855,6 +930,7 @@ void MEMO_Callback(void *) {
             }
             memoState = 2;
             SwapMemoPageTargets(1, 3);
+            RebindNotebookWritingAreas();
             pageModelBindings[2] = pageModelBindings[1];
             RebindMemoModelTextures();
         }
@@ -1139,16 +1215,25 @@ std::int64_t CreateMemoNotebookPages() {
     return 1;
 }
 
-std::int64_t DestroyMemoNotebookPages() {
-    // DestroyMemoNotebookPages releases the eight targets, not the process-lifetime
-    // three border textures installed by the UI callback's init operation.
+// @verified - p
+void ReleaseNotebookPageTargets() {
     for (std::size_t index = 0; index < 4; ++index) {
         for (std::size_t bank : {std::size_t{1}, std::size_t{0}}) {
             d3t::InitTexture2DResource(memoPages.targets[bank][index]);
             memoPages.targets[bank][index] = 0;
         }
     }
+}
+
+// @verified - p
+std::int64_t DestroyMemoNotebookPages() {
+    ReleaseNotebookPageTargets();
     return 1;
+}
+
+// @verified - p
+std::int64_t GetMemoNotebookPagesInitState() {
+    return static_cast<std::uint32_t>(memoTitlePhase);
 }
 
 // @verified - p
@@ -1170,16 +1255,19 @@ void RenderMemoNotebookPages() {
         dirty |= memoPages.dirty[1][index];
     for (std::size_t index = 0; index < 4; ++index)
         dirty |= memoPages.dirty[0][index];
-    d3t::D3TDeviceContext *context = g_nuklearRenderDeviceContext;
     if (!dirty)
+        return;
+    d3t::D3TDeviceContext *context = g_nuklearRenderDeviceContext;
+    if (!context)
+        context = SetupNuklearBuffer();
+    if (!context)
         return;
     nk_clear(GetNativeUiContext());
     const std::array<float, 6> savedViewport = d3t::GetRenderState(*context).viewport;
+    const auto savedTargets = d3t::GetRenderState(*context).outputTargets;
     const Matrix4x4 orthographic{
         .rows = {{.x = 2.0f / MEMO_PAGE_WIDTH, .w = -1.0f}, {.y = 2.0f / MEMO_PAGE_HEIGHT, .w = -1.0f}, {.z = -1.0f, .w = -0.0f}, {.w = 1.0f}}};
     SetNuklearViewMatrix(orthographic);
-    if (!context)
-        context = SetupNuklearBuffer();
     NuklearCompositeNullsub(context);
     const UIViewport viewport{.rect = {.x = 0.0f, .y = 0.0f, .z = MEMO_PAGE_WIDTH, .w = MEMO_PAGE_HEIGHT}, .depthRange = {.x = 0.0f, .y = 1.0f}};
     std::array<float, 6> pageViewport;
@@ -1205,6 +1293,7 @@ void RenderMemoNotebookPages() {
         }
     }
     NuklearCompositeNullsub(context);
+    d3t::SetRenderTargets(context, savedTargets);
     context = g_nuklearRenderDeviceContext;
     if (context) {
         GetAspectRatioModeShouldScale();
@@ -1216,3 +1305,4 @@ void RenderMemoNotebookPages() {
 }
 
 } // namespace shenmue::s2
+

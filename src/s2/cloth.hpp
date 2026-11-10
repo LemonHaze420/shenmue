@@ -94,7 +94,7 @@ struct ClothObject {
     std::uint32_t reservedb0;
     Matrix4x4 transform;
     std::uint32_t reservedf4;
-    void **columnLinks;                   // +0xf8, 'CLVP', one per column
+    void **columnLinks;                   // +0xf8, 'CLPV', one per column
 };
 #pragma pack(pop)
 static_assert(sizeof(ClothObject) == 0x100);

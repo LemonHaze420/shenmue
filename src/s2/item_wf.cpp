@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/item_wf.hpp"
 
 #include "d3t/object_store.hpp"
@@ -38,7 +41,6 @@ HLib::Task *wfMainControl{};
 constexpr std::size_t itemPtxPrefixSize = 0xb0;
 constexpr std::size_t itemPtxSize = itemPtxPrefixSize + 256 * 16 * 4;
 std::array<std::uint8_t, 384> guiItemActions{};
-std::array<std::int16_t, 2> temporaryItemStatus{};
 std::uint8_t temporarySelectedItemState{};
 std::int16_t itemLookState{};
 std::uint32_t itemLookNumber{};
@@ -224,7 +226,7 @@ void icsuMoveRotateAdjustItemScale() {
     if (itemLookFlags & 0x40U)
         rootY = &itemRoot->position.y;
     const std::uint16_t pressed = static_cast<std::uint16_t>(ItemTextureClear_Nullsub(reinterpret_cast<void *>(1))) | input->pressedPriority;
-    temporaryItemStatus[1] = 0;
+    SetItemSelectorNavigationInputHalf(1, 0);
     const std::uint16_t accept =
         !temporarySelectedItemState && (GetGuiItemAction(static_cast<std::uint32_t>(static_cast<std::int16_t>(itemLookNumber))) & 2U) ? 0x400U : 0;
     set_icon_select_flags_to(accept | 0x200U);
@@ -397,7 +399,7 @@ void DrawWf(void *parameter) {
 bool MoveWfPosition(WfTaskData &wf, bool advancing) {
     return advancing ? AdvanceIconPosition(wf.x, wf.velocity, 320.0f) : RetreatIconPosition(wf.x, wf.velocity, -320.0f);
 }
-}
+} // namespace
 
 void Queue_wf_MainControl(std::uint8_t nextFunctionIndex) {
     wfMainControl = HLib::EnqueueTaskWithParameter(wf_MainControl_Callback, nextFunctionIndex, 0, sizeof(WfTaskData), TASK_ICWF);
@@ -612,7 +614,8 @@ void BuildWfMenuEntries(std::span<WfMenuEntry, 25> entries) {
         entry.category = definition.category;
         entry.move = definition.move;
         entry.prompt = definition.prompt;
-        entry.label = owned & (1U << index) ? shenGetAmtOf(static_cast<std::uint32_t>(3000 + definition.itemOffset)) : "UIGNRLQSTN"; // @text EN: "? ? ?" | JA: "？？？"
+        entry.label =
+            owned & (1U << index) ? shenGetAmtOf(static_cast<std::uint32_t>(3000 + definition.itemOffset)) : "UIGNRLQSTN"; // @text EN: "? ? ?" | JA: "？？？"
     }
 }
 // @verified - p
@@ -648,6 +651,11 @@ void BuildOwnedWfScrollSlots(std::span<std::int32_t, 26> slots) {
         if (GetItemState(static_cast<std::uint32_t>(item)))
             slots[count] = item;
     }
+}
+
+void GetWfScrollMove(std::int32_t index, std::int32_t *category, std::int32_t *move) noexcept {
+    *category = wfScrollDefinitions[static_cast<std::size_t>(index)].category;
+    *move = wfScrollDefinitions[static_cast<std::size_t>(index)].move;
 }
 
 std::uint32_t GetWfScrollItem(std::int32_t index) noexcept {
@@ -869,3 +877,4 @@ void ReleaseItemWfOwners() {
 }
 
 } // namespace shenmue::s2
+

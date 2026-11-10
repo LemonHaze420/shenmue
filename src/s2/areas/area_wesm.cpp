@@ -55,7 +55,7 @@ void InitializeWESMFireBreather() {
     mtwkRequestMotion(scenFindMotionwork(fireBreather), 0x2644, MotionRegion::LowerBody);
     mtwkSetRegionFlag(scenFindMotionwork(fireBreather), 66, 0, MotionRegion::LowerBody);
     mtwkSetExtraFlag(scenFindMotionwork(fireBreather), 0, 0);
-    mtwkSetEnvironmentEnabled(scenFindMotionwork(fireBreather), 1);
+    mtwkSetEnabled(scenFindMotionwork(fireBreather), 1);
     EV_SetCharaControllerFlags(fireBreather, ApplyGravity, NpcCharacterControllerState::Disabled);
     EV_SetCharaControllerFlags(fireBreather, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
     AttachScenarioCharacter(fireProp, fireBreather, 14, &propOffset, &propRotation);
@@ -82,7 +82,7 @@ void WESMSpringLoop(void *) {
     EV_GetCharaPosition(ryo, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
     const std::int16_t mode = position.y >= 107.77999877929688f ? 2 : 1;
     if (previousFloorMode != mode) {
-        SetMapFieldDepthSlotEnabled(5, position.y >= 107.77999877929688f ? 0 : 1);
+        SetMapFieldDepthSlotEnabled(position.y >= 107.77999877929688f ? 0 : 1, 5);
         previousFloorMode = mode;
     }
 }

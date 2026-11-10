@@ -382,7 +382,7 @@ void StartEntry(std::int32_t variant) {
             return;
         }
         SetPlayerControlEnabled(1);
-        HLib::Task *task = HLib::EnqueueTaskWithoutParameter(CompanionPatchCallback, 4, 0xb, static_cast<std::int32_t>(SHEN_NAME(Stat)));
+        HLib::Task *task = HLib::EnqueueTaskWithoutParameter(CompanionPatchCallback, 4, 0xb, static_cast<std::int32_t>(TASK_KMZ1_SHENFA_PATCH.name));
         HLib::SetupTimedTask(task, 2);
         HLib::EnqueueTaskWithoutParameter(EventBombCallback, 4, 0xb, static_cast<std::int32_t>(SHEN_NAME(bomS)));
         return;

@@ -71,10 +71,14 @@ void InitializePatiBall(PatiBallWork *ball, HLib::Task *task) {
     }
     const float cosine = sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(ball->boardRotation.x))));
     ball->gravity = (std::fabs(cosine) * -0.052266665f) / 30.0f;
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 6027, "board.ang : %f\n", static_cast<float>(ball->boardRotation.x) / 182.04445f);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 6028, "cos : %f\n", std::fabs(cosine));
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 6029, "gravity_accel : %f\n", ball->gravity);
     SetScenarioCharacterFlag40(ball->game->board, 1);
     SetScenarioCharacterRadius(ball->game->board, 100.0f);
     InitializePatiBallCharacters(ball);
     SetupPatiBoardSize(0);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 6050, "InitEnd\n");
 }
 // @verified - p
 void QueuePatiBall(PatiGameWork *game) {
@@ -122,6 +126,8 @@ void PatiBallCallback(void *data) {
             Matrix4x4::RotateAroundX_Wrapper(0);
             Matrix4x4::preTranslate(-0.093699999f, 0.16869999f, 0.47999999f);
             Vector3 position{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 6285, "PATI:YubiBase(%f,%f,%f)\n", workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y,
+                workTransformMatrix.rows[3].z);
             Matrix4x4::Pop(1);
             EV_scenApplyPosOrRotToPartOf(hand, 0xffff, &position, &rotation, EventCharacterPartTransformMode::Absolute);
             rotation = {61895, b.boardRotation.y, 0};
@@ -241,6 +247,8 @@ void PatiBallCallback(void *data) {
             }
         }
         if (game.result == -2) {
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 6584, "%f -> ", b.releaseX / 1000.0);
+            PatiDebugLog("PATI\\ePATI_et_patinko.c", 6585, "Stuck\n");
             b.phase = 13;
             game.result = -1;
         }
@@ -258,6 +266,8 @@ void PatiBallCallback(void *data) {
         return;
     ++game.balls;
     b.phase = 3;
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 6607, "%f -> ", b.releaseX / 1000.0);
+    PatiDebugLog("PATI\\ePATI_et_patinko.c", 6608, "%i\n", game.pocket);
     const std::uint16_t mask = static_cast<std::uint16_t>(1U << game.pocket);
     if (mask & b.deathMask) {
         b.phase = 13;

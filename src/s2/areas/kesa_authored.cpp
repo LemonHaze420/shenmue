@@ -143,9 +143,9 @@ void KesaCaveWalkLoop(void *) {
         EV_stepSetFlags(0, 463);
         KesaFinishAuthor();
     } else if (frame == 857)
-        SetMapModelSlotEnabled(7, 0);
+        SetMapModelCommandRoutingEnabled(0, 7);
     else if (frame == 877)
-        SetMapModelSlotEnabled(7, 1);
+        SetMapModelCommandRoutingEnabled(1, 7);
 }
 void KesaSwordDiscoveryLoop(void *) {
     const auto frame = static_cast<std::int32_t>(EV_authSceneCtrl(AuthSceneCtrl::GetCurrentFrame));
@@ -450,12 +450,12 @@ void KesaEndingLoop(void *) {
         break;
     case 2568:
         for (auto index : {5, 7, 13, 14})
-            SetMapModelAlternateTraversalEnabled(0, index);
+            SetMapModelGridCullingEnabled(0, index);
         break;
     case 2808:
         SuspendParticleEffect(4, kesaTorchEffect);
         for (auto index : {5, 7, 13, 14})
-            SetMapModelAlternateTraversalEnabled(1, index);
+            SetMapModelGridCullingEnabled(1, index);
         break;
     case 3028:
         ResumeParticleEffect(4, kesaTorchEffect);

@@ -28,8 +28,8 @@ inline constexpr shen_name character0507{SHEN_NAME(a350)}, leaf{SHEN_NAME(a540)}
 inline constexpr shen_name character0530[]{SHEN_NAME(a199), SHEN_NAME(a197), SHEN_NAME(a271), SHEN_NAME(a272), SHEN_NAME(a273)};
 inline constexpr shen_name character0509[]{SHEN_NAME(a528), SHEN_NAME(a526)};
 inline constexpr shen_name torchObjects[]{SHEN_NAME(a435), SHEN_NAME(a466), SHEN_NAME(a468), SHEN_NAME(a470)};
-inline constexpr shen_name house{SHEN_NAME(a016)}, l180{SHEN_NAME(l180)}, l240{SHEN_NAME(l240)}, l250{SHEN_NAME(l250)}, M001{SHEN_NAME(M001)},
-    l310{SHEN_NAME(l310)};
+inline constexpr shen_name house{SHEN_NAME(a016)},
+    l180{SHEN_NAME(l180)}, l240{SHEN_NAME(l240)}, l250{SHEN_NAME(l250)}, M001{SHEN_NAME(M001)}, l310{SHEN_NAME(l310)};
 void SuspendCharacter(shen_name name, bool human) {
     EV_EnableCharacterDisplay(name);
     EV_SetCharaControllerFlags(name, 1, NpcCharacterControllerState::Disabled);
@@ -336,7 +336,7 @@ void BranchConversationLoop(void *data) {
         work->state = 3;
     else if (loop->frame == 1501) {
         if (work->selection == 10)
-            clmdUtil(ctrlGetScenarioChara(KRCT_SHENHUA), 2);
+            CLMD(ctrlGetScenarioChara(KRCT_SHENHUA), 2);
         SuspendParty();
     } else if (loop->frame == 2450 && work->selection == 10)
         work->state = 2;

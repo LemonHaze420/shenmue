@@ -217,7 +217,7 @@ std::span<const MapModelRuntimeSlot, 33> GetMapModelSlots();
 std::span<const MapFieldDepthSlot, 33> GetMapFieldDepthSlots();
 void SetMapModelLightingTraversalResult(std::int32_t index, std::uint32_t result);
 void SetPropLightingTraversalResult(std::uint32_t result);
-std::int64_t SetMapFieldDepthSlotEnabled(std::uint32_t index, std::uint32_t enabled);
+std::int64_t SetMapFieldDepthSlotEnabled(std::uint32_t enabled, std::uint32_t index);
 const MapFieldDepthSlot *SetAllMapFieldDepthSlotsEnabled(std::uint32_t enabled);
 void camCtrlCacheUtil(std::int32_t operation);
 float GetMapCellScale();
@@ -254,5 +254,14 @@ void SetMapModelReader(MT7Model *model, std::int32_t index);
 
 void ResetMapsData();
 void FreeMapAssets();
+inline constexpr shen_name MAP_VERTEX_CACHE_STORAGE{SHEN_NAME(VXPC)};
+inline constexpr std::size_t MAP_VERTEX_CACHE_CAPACITY = 100000;
+inline std::int32_t g_mapVertexCacheEnabled{};
+void DisableMapModelSlotsFromMAPD(const MapInfoChunk *chunk);
+void MarkSharedMapMesh(MT7Node *owner, MT7Node *node);
+void MarkSharedMapMeshForced(MT7Node *owner, MT7Node *node);
+void MarkSharedMapMeshes(MT7Node *node);
+void BakeMapNodeVertices(MT7Node *node);
+void InitializeMapVertexCache();
 
 } // namespace shenmue::s2

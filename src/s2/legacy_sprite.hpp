@@ -9,6 +9,12 @@
 #include <cstdint>
 
 namespace shenmue::s2 {
+
+struct SDTextureMapping {
+    std::array<char, 260> source{};
+    std::array<char, 260> destination{};
+};
+static_assert(sizeof(SDTextureMapping) == 520);
 inline constexpr shen_name COLLECTION_SPRITE_FILE{SHEN_NAME(ICCL)};
 inline constexpr shen_name TITLE_COMMON_TEMP_TASK{SHEN_NAME(TEMP)};
 inline constexpr shen_name TITLE_SPRITE_FILE{SHEN_NAME(TSSS)};
@@ -23,6 +29,7 @@ inline constexpr std::array<std::array<std::uint16_t, 2>, 21> TITLE_SPRITE_DIMEN
         {512, 512}, {512, 512}, {512, 512}, {512, 128}, {64, 64}, {0, 0}, {0, 0}, {0, 0}}};
 extern std::int32_t titleGTextTexture, titleCTextTexture, titleKeyImageTexture, titleContinueTexture, titleEsrbTexture;
 void InitShotsImages();
+void InitWarnLogos();
 struct TempTextureEntry {
     std::int32_t texture;
     std::uint16_t width, height;
@@ -194,6 +201,8 @@ bool vfSubmitQuad(std::uint32_t colour, float depth);
 void DrawLegacyIconSprite(const LegacyIconSprite &sprite, std::uint32_t colour, ScreenMode mode);
 void SetSpriteTexturePath(const char *path) noexcept;
 void ApplySpriteTextureOverride(const void *texn, std::uint32_t textureHandle);
+const SDTextureMapping *GetSDTextureMappings(std::int32_t *count);
+void ReplaceSDTextureImage(const char *mappedDestination, std::uint32_t textureHandle);
 std::int64_t QueueSDTextureOverride(const char *path, std::uint32_t renderHandle);
 void ReleaseSDTextureOverrides();
 void ResetLegacyCollectionSpriteOwners() noexcept;

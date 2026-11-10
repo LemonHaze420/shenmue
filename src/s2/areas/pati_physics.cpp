@@ -1,4 +1,5 @@
 #include "s2/areas/pati_physics.hpp"
+#include "s2/areas/pati_event.hpp"
 #include "s2/camera.hpp"
 #include "s2/date_time.hpp"
 #include "s2/event_runtime.hpp"
@@ -15,16 +16,23 @@ inline constexpr shen_name PATI_BALL_CAMERA{SHEN_NAME(CMDM)};
 void ApplyPatiWeather(PatiBallWork *ball) {
     float humidity = 1.0f;
     const std::int32_t weather = GetCurrentWeather();
-    if (weather == 1)
+    if (weather == 1) {
+        PatiDebugLog("PATI\\ePATI_et_patinko_data.c", 143, "Wether:Cloudy\n");
         humidity = 0.99000001f;
-    else if (weather == 2)
+    } else if (weather == 2) {
+        PatiDebugLog("PATI\\ePATI_et_patinko_data.c", 147, "Wether:Rain\n");
         humidity = 0.98000002f;
+    } else
+        PatiDebugLog("PATI\\ePATI_et_patinko_data.c", 139, "Wether:Sunny(Default)\n");
     DateTime time;
     shenGetCurrentDateTime(time);
     const float hour = (static_cast<float>(time.minute) / 60.0f + static_cast<float>(time.hour)) + static_cast<float>(time.second) / 3600.0f;
     const float angle = ((((hour - 13.0f) / 24.0f) * 360.0f) * 8192.0f) / 45.0f;
     const float cosine = sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(static_cast<std::int32_t>(angle)))));
     const float temperature = 1.0f - ((cosine + 1.0f) * 0.5f) * 0.0099999998f;
+    PatiDebugLog("PATI\\ePATI_et_patinko_data.c", 159, "Rate:%f ", temperature * humidity);
+    PatiDebugLog("PATI\\ePATI_et_patinko_data.c", 160, "(Humidity:%f,", humidity);
+    PatiDebugLog("PATI\\ePATI_et_patinko_data.c", 161, "Temperature:%f)\n", temperature);
     ball->tangentialRetention = (temperature * humidity) * 0.95999998f;
     ball->nailRestitution = (temperature * humidity) * 0.43000001f;
     ball->wallRestitution = (temperature * humidity) * 0.40000001f;

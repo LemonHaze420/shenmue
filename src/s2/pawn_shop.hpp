@@ -1,5 +1,9 @@
 #pragma once
 
+#include "shenmue.h"
+
+
+
 #include "s2/hlib.hpp"
 #include "common/types.hpp"
 
@@ -12,8 +16,8 @@ inline constexpr shen_name TASK_PAWN = SHEN_NAME(PAWN);
 inline constexpr std::array<std::uint32_t, 6> PAWN_SALE_MODE_FLAGS{0x80000003U, 0x80000007U, 0x80000002U, 0x80000000U, 0x80000006U, 0x80000004U};
 inline constexpr std::uint16_t PAWN_CURSOR_ICON = 0x405;
 
-// CreatePAWNShops publishes the three-task PAWN shop owner only after its
-// PAWNDATA-backed workspace has been sized and allocated successfully.
+// CreatePAWNShops publishes its three tasks after allocating the PAWNDATA workspace.
+
 char *CreatePAWNShops();
 void ReleasePAWNShops();
 bool OpenPAWNShop(shen_name shopName, std::uint32_t mode = 0);
@@ -127,19 +131,18 @@ struct PawnWindowShop {
 };
 inline constexpr std::array<PawnWindowShop, 13> PAWN_WINDOW_SHOPS{{
     {.item = 9000, .shop = SHEN_NAME(ARP0)},
-    {.item = 9001, .shop = SHEN_NAME(WSP0)},
-    {.item = 9002, .shop = SHEN_NAME(WKP0)},
-    {.item = 9003, .shop = SHEN_NAME(WKP1)},
-    {.item = 9004, .shop = SHEN_NAME(WTP0)},
-    {.item = 9005, .shop = SHEN_NAME(WTP1)},
-    {.item = 9006, .shop = SHEN_NAME(WTP2)},
-    {.item = 9007, .shop = SHEN_NAME(WTP3)},
-    {.item = 9008, .shop = SHEN_NAME(WTP4)},
-    {.item = 9009, .shop = SHEN_NAME(WRP0)},
-    {.item = 9010, .shop = SHEN_NAME(QBL0)},
-    {.item = 9011, .shop = SHEN_NAME(QBR0)},
-    {.item = -1, .shop = {}},
-}};
+        {.item = 9001, .shop = SHEN_NAME(WSP0)},
+            {.item = 9002, .shop = SHEN_NAME(WKP0)},
+                {.item = 9003, .shop = SHEN_NAME(WKP1)},
+                    {.item = 9004, .shop = SHEN_NAME(WTP0)},
+                        {.item = 9005, .shop = SHEN_NAME(WTP1)},
+                            {.item = 9006, .shop = SHEN_NAME(WTP2)},
+                                {.item = 9007, .shop = SHEN_NAME(WTP3)},
+                                    {.item = 9008, .shop = SHEN_NAME(WTP4)},
+                                        {.item = 9009, .shop = SHEN_NAME(WRP0)},
+                                            {.item = 9010, .shop = SHEN_NAME(QBL0)},
+                                                {.item = 9011, .shop = SHEN_NAME(QBR0)}, {.item = -1, .shop = {}},
+                                            }};
 
 struct PawnFlyerShopNames {
     std::uint64_t prefix;
@@ -148,7 +151,9 @@ struct PawnFlyerShopNames {
 inline constexpr PawnFlyerShopNames PAWN_FLYER_SHOP_NAMES{.prefix = 0, .shops = PAWN_WINDOW_SHOPS};
 static_assert(offsetof(PawnFlyerShopNames, shops) == 8);
 static_assert(sizeof(PawnFlyerShopNames) == 112);
+std::uint32_t GetPawnWindowShopMask();
 shen_name GetPawnFlyerShopName(std::int32_t index);
+const char *GetPawnFlyerShopLabel(std::int32_t index);
 void SelectPawnFlyerShop(std::int32_t index);
 
 // PWIN: the queue-8 null-payload pawn-shop list owned by GUI_Tasks_Enqueue; the ICIS pawn item action opens, polls and
@@ -161,3 +166,4 @@ bool IsPawnWindowOpen() noexcept;
 void ReleasePawnTaskOwners();
 
 } // namespace shenmue::s2
+

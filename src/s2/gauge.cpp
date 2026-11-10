@@ -1,8 +1,12 @@
+#include "shenmue.h"
+
+
 #include "s2/gauge.hpp"
 
 #include "d3t/texture.hpp"
 #include "d3t/ui_definition.hpp"
 #include "d3t/ui_renderer.hpp"
+#include "d3t/ui_runtime.hpp"
 #include "s2/archive_data.hpp"
 #include "s2/hlib.hpp"
 #include "s2/pak.hpp"
@@ -30,9 +34,11 @@ float enemyPercent{};
 std::int32_t gaugeLayout{};
 std::uint32_t gaugeFlags{};
 
-// Fight-widget setup owns these independently of the legacy EGAG task globals.
 d3t::UIDefinition *fightDefinition{};
 std::array<std::int32_t, 3> fightWidgetIndices{-1, -1, -1};
+std::int32_t fightComboDisplayWindow{-1};
+std::int32_t fightComboLabel{};
+std::int32_t fightComboDisplayTransition{};
 std::array<std::int32_t, 3> fightPanelIndices{-1, -1, -1};
 std::array<std::int32_t, 5> fightRoundImageIndices{-1, -1, -1, -1, -1};
 std::vector<d3t::UIRect> fightWidgetRectangles;
@@ -243,6 +249,13 @@ void BindFightGaugeDefinition(d3t::UIDefinition &definition) {
     fightDefinition = &definition;
     fightWidgetIndices[0] = definition.gauges.empty() ? -1 : 0;
     fightWidgetIndices[1] = definition.gauges.size() < 2 ? -1 : 1;
+    const std::uint32_t viewSlot = static_cast<std::uint32_t>(g_uiElements[static_cast<std::size_t>(UIElement::FightGauge)].config.uiHandleIndex);
+    if (const d3t::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(viewSlot))
+        for (std::int32_t widget = 0; widget < view->widgetCount; ++widget)
+            if (view->widgetKinds[widget] == 15)
+                fightComboLabel = view->widgetPoolIndices[widget];
+    fightComboDisplayWindow = UI_FindViewWindow(viewSlot, "HUDGauge_ComboDisp");
+    fightComboDisplayTransition = UIWidget_Bind(fightComboDisplayWindow, 0, 0, {0.0f, 0.0f}, {255.0f, 0.0f});
     const auto previousLayout = fightDisplayLayout;
     fightDisplayLayout = -1;
     SetFightGaugeDisplayLayout(previousLayout);
@@ -501,3 +514,4 @@ void ClearFightGaugeTrainingVisibility() noexcept {
 }
 
 } // namespace shenmue::s2
+

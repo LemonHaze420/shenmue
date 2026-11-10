@@ -12,12 +12,13 @@
 namespace shenmue::s2 {
 inline constexpr shen_name AREA_EVENT_TASK{SHEN_NAME(EVNT)};
 inline constexpr shen_name EVENT_HIGH_MODEL_TASK{SHEN_NAME(SHIG)};
+inline constexpr shen_name AREA_NIGHT_AUTHOR{SHEN_NAME(YORU)};
 
 namespace HLib {
 struct Task;
 }
 
-SHENMUE_AREA_ENUM_CLASS EventFunctionType SHENMUE_AREA_ENUM_BASE {
+SHENMUE_AREA_ENUM_CLASS EventFunctionType SHENMUE_AREA_ENUM_BASE{
     Event1 = 1,
     Event2 = 2,
     Event3 = 3,
@@ -93,7 +94,9 @@ bool LoadAreaFunc_Wrapper_0(const char *areaId, std::int32_t force);
 
 const char *GetAreaSlotName(std::uint32_t slot);
 void scenFreeEvent(const char *requestedScenario);
-// AllocatePAKStuff's EV1/EV2/EV3 package-entry owner.
+void scenFreeEventByIndex(std::uint32_t slot);
+std::int32_t shenGetAreaSlotByName(const char *areaId);
+// EV1/EV2/EV3 package entry used by AllocatePAKStuff.
 bool shenLoadEventFrom(const char *areaId, EventFunctionType functionType);
 bool ExecuteAreaMainFunction(const char *areaId, std::uintptr_t argument = 0);
 bool ExecuteCurrentAreaMainFunction(EventFunctionType functionType, std::uintptr_t argument = 0);

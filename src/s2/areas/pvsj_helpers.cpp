@@ -7,6 +7,7 @@
 #include "s2/help.hpp"
 #include "s2/character.hpp"
 #include "s2/input.hpp"
+#include "s2/npc.hpp"
 #include "s2/npc_package.hpp"
 #include "s2/pak.hpp"
 #include "s2/screen_film.hpp"
@@ -34,19 +35,19 @@ void PvsjLoadVoice(PvsjEventWork *work, shen_name character) {
         EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 1038, "NoVoiceFile:%s!!\n", work->voicePrefix);
         std::strcpy(work->voicePrefix, "0104");
     }
-    EV_pakUtils(PakCategory::LoadAfsWithMode, reinterpret_cast<std::uintptr_t>(work->voiceLoadBuffer),
-        reinterpret_cast<std::uintptr_t>(work->gamePartition), static_cast<std::uintptr_t>(voice->text), static_cast<std::uint32_t>(voice->sound));
-    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
-    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentAfs, reinterpret_cast<std::uintptr_t>(work->gamePartition),
+    EV_pakUtils(PakCategory::LoadAfsWithMode, reinterpret_cast<std::uintptr_t>(work->voiceLoadBuffer), reinterpret_cast<std::uintptr_t>(work->gamePartition),
         static_cast<std::uintptr_t>(voice->text), static_cast<std::uint32_t>(voice->sound));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FinishLoading, 0, 0);
+    EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentAfs, reinterpret_cast<std::uintptr_t>(work->gamePartition), static_cast<std::uintptr_t>(voice->text),
+        static_cast<std::uint32_t>(voice->sound));
     const void *source = LoadCurrentPakBinary(work->voicePrefix);
     const auto bytes = static_cast<std::int32_t>(GetCurrentPakBinarySize(work->voicePrefix));
     const auto size = static_cast<std::int32_t>((bytes + ((static_cast<std::uint32_t>(bytes >> 31)) & 3U)) & ~3U);
     if (size >= 0x4000)
         EV_debug_log("PVSJ\\ePVSJ_et_PVSJ.c", 1055, "SIZE OVER\n");
     std::memcpy(work->voiceLengths, source, size);
-    EV_pakUtils(PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(work->gamePartition),
-        static_cast<std::uintptr_t>(voice->text), static_cast<std::uint32_t>(voice->sound));
+    EV_pakUtils(PakCategory::Package, PakPackageOp::FreeAfs, reinterpret_cast<std::uintptr_t>(work->gamePartition), static_cast<std::uintptr_t>(voice->text),
+        static_cast<std::uint32_t>(voice->sound));
     EV_FreeAuthorPak(1, work->voicePrefix);
     EV_pakUtils(PakCategory::Task, PakTaskOp::LoadNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
     EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>("PATI"), 0);
@@ -118,7 +119,7 @@ void PvsjHintCallback(void *data) {
     if (!pvsjSkipMotion)
         return;
     const shen_name character = (work->customerActive & 1) ? work->customer : work->owner;
-    if (!GetNpcScriptRouteCompletion(character)) {
+    if (!IsNpcRouteActive(character)) {
         pvsjSkipMotion = 0;
         if (DoesScenarioCharacterExist(character))
             PvsjSetMotion(character, work->boards->motions[(work->customerActive & 1) ? 12 : 5], 0, 1, 0, 0);

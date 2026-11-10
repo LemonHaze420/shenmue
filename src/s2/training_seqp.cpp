@@ -205,7 +205,7 @@ void TrainingRepositionSequence(void *data) {
             }
             Vector3 position;
             EV_GetCharaPosition(character, CHARACTER_TRANSLATION_ROOT, &position, EventTransformFlags::World);
-            const float distance = GetSquaredEuclideanDistance(&position, target);
+            const float distance = GetPlanarDistance(&position, target);
             if (distance <= ReadTrainingValue<float>(data, 0x1d4) && distance >= .05f) {
                 WriteTrainingValue(data, 0x1d4, distance);
                 if (!mtwkSetRegionFlag(scenFindMotionwork(character), 65, 1, MotionRegion::LowerBody))

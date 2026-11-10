@@ -1,4 +1,5 @@
 #include "s2/door.hpp"
+#include "s2/directory_cache.hpp"
 
 #include "s2/door_area_tables.hpp"
 #include "s2/area_event.hpp"
@@ -15,6 +16,7 @@
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
 #include "s2/date_time.hpp"
+#include "s2/directory_cache.hpp"
 #include "s2/field_collision.hpp"
 #include "s2/hlib.hpp"
 #include "s2/input.hpp"
@@ -213,6 +215,9 @@ void AdmitDoorAreaTable() {
     const DoorAreaAdmission *const table = FindDoorAreaTable();
     if (!table)
         return;
+    char sceneDirectory[32];
+    std::snprintf(sceneDirectory, sizeof(sceneDirectory), "scene/%02d", g_actNumber);
+    AllocateDIRE(sceneDirectory, 0, 100);
     std::size_t eventCount = 0;
     const char *const directory = Filepath_Gen(FilepathGenMode::SceneDirectory);
     for (const DoorAreaAdmission *row = table; row->event[2] != 0xffffffffU; ++row) {
@@ -258,6 +263,7 @@ void AdmitDoorAreaTable() {
         ++sentinel;
     doorMapEvents[eventCount] = {
         nullptr, -1, sentinel->event[3], static_cast<std::uintptr_t>(sentinel->area.name) | (static_cast<std::uintptr_t>(sentinel->reserved14) << 32U)};
+    FreeDIRE(sceneDirectory);
     if (eventCount)
         SetMapEventCallbackTable(doorMapEvents.data());
 }
@@ -506,8 +512,7 @@ bool SampleRigidMotion(const RigidMotion &motion, float frame, std::size_t track
     rotation = track.rotation;
     scale = track.scale;
     for (std::size_t axis = 0; axis < 3; ++axis) {
-        (void)SampleWordCurve(
-            motion, track.translationOffsets[axis], frame, [](std::uint16_t value) { return DecodeS2Float(value); }, translation[axis]);
+        (void)SampleWordCurve(motion, track.translationOffsets[axis], frame, [](std::uint16_t value) { return DecodeS2Float(value); }, translation[axis]);
 
         SampleRotationCurve(motion, track.rotationOffsets[axis], frame, rotation[axis]);
     }
@@ -536,8 +541,7 @@ bool SampleRigidMotion(const RigidMotion &motion, float frame, std::size_t track
 }
 
 void ApplyRigidMotion(DoorEntry &entry, const RigidMotion &motion, float frame) {
-    const std::size_t count = std::min(
-        entry.animationTargets.size(), motion.tracks.size());
+    const std::size_t count = std::min(entry.animationTargets.size(), motion.tracks.size());
     for (std::size_t index = 0; index < count; ++index) {
         AnimatedDoorTarget &target = entry.animationTargets[index];
         if (!target.binding.node)
@@ -2329,12 +2333,12 @@ void DoorSceneCleanup(std::int32_t suppressAudio) {
     for (std::int32_t index = 0; index < 32; ++index) {
         if ((changedReaders & (1U << index)) != 0) {
             (void)SetMapModelGridCullingEnabled(0, index);
-            SetMapLightingPlacementEnabled(1, index);
+            SetMapFieldDepthSlotEnabled(1, index);
             AssignLightProgram(static_cast<std::uint32_t>(index));
         } else {
             EV_AssignLightParams(1, index);
             (void)SetMapModelGridCullingEnabled(1, index);
-            SetMapLightingPlacementEnabled(0, index);
+            SetMapFieldDepthSlotEnabled(0, index);
         }
     }
     SetupLightConfig();
@@ -2347,7 +2351,7 @@ void RestoreDoorMapReadersAndCamera() {
         if ((doorLightingReaderMask & (1U << index)) == 0)
             continue;
         (void)SetMapModelGridCullingEnabled(1, index);
-        SetMapLightingPlacementEnabled(1, index);
+        SetMapFieldDepthSlotEnabled(1, index);
     }
     const MapRenderProfile &profile = MatchMapRenderProfile(g_currentMap);
     camCtrlSetFarDistance(profile.farDistance);
@@ -2677,7 +2681,7 @@ void PublishDoorMotionNodes(void *) {
             primary->runtimeChild = nullptr;
             Matrix4x4_Push();
             Matrix4x4::MultiplyWithPrePassMatrix(&entry.taskEntry->worldTransform);
-            DrawMT7NodeHierarchy(*entry.primaryBinding.model, entry.motionNode, LegacyModelShaderPath::Lambert, entry.taskEntry->motionScale);
+            mtRecursiveSetFlag(*entry.primaryBinding.model, &entry.motionNode, entry.taskEntry->motionScale);
             Matrix4x4::Pop(1);
             entry.motionNode.runtimeSibling = sibling;
         }
@@ -2752,13 +2756,13 @@ void TransformPropObject() {
 
 bool camCtrlSwitchToEventCam(std::int32_t frames, const Vector3 *target, std::int16_t yaw) {
     using enum CameraState;
-    if (!g_cameraControl || !camCtrlComputeOrbitCameraFromTarget(target, yaw, &doorRuntime.cameraEndPosition, &doorRuntime.cameraEndTarget)) {
+    if (!g_cameraControl || !target)
         return false;
-    }
     doorRuntime.cameraDuration = frames;
     doorRuntime.cameraFrame = 0;
     camCtrlGetNextCamPos(&doorRuntime.cameraStartPosition);
-    doorRuntime.cameraStartTarget = g_cameraControl->targetPosition;
+    camCtrlGetTargetPosition(&doorRuntime.cameraStartTarget);
+    camCtrlComputeOrbitCameraFromTarget(target, yaw, &doorRuntime.cameraEndPosition, &doorRuntime.cameraEndTarget);
     doorRuntime.previousCameraState = g_cameraControl->state == LockedOn ? Init : g_cameraControl->state;
     doorRuntime.cameraActive = true;
     camCtrlSetState(Event);
@@ -2937,9 +2941,8 @@ bool ClaimDoor(shen_name doorId, shen_name scenarioName) {
     }
     const DoorLeafState state = GetLeafState(*entry);
     if (automatic || state == DoorLeafState::StableA) {
-        if (scenarioName.name != kDoorTaskToken.name && ctrlGetScenarioChara(scenarioName) != g_playerRuntime.character &&
-            !doorRuntime.sortedEntries.empty() && entry == &doorRuntime.entries[doorRuntime.sortedEntries.front()] &&
-            entry->taskEntry->sortKey < kDoorInteractionRadiusSquared) {
+        if (scenarioName.name != kDoorTaskToken.name && ctrlGetScenarioChara(scenarioName) != g_playerRuntime.character && !doorRuntime.sortedEntries.empty() &&
+            entry == &doorRuntime.entries[doorRuntime.sortedEntries.front()] && entry->taskEntry->sortKey < kDoorInteractionRadiusSquared) {
             return false;
         }
     }
@@ -3353,8 +3356,8 @@ void ResetDoorRuntime() {
     RestoreDoorTargets();
     if (doorRuntime.taskEntries)
         HLib::FreeTaskData(doorRuntime.taskEntries);
-    // These fields match the long-lived dr_runtime_globals_t owner; map
-    // teardown only releases the task, characters, targets, and entries.
+    // Runtime globals persist across map changes.
+    // Map teardown releases only the task, characters, targets and entries.
     const shen_name temporaryAuthor = doorRuntime.temporaryAuthor;
     const DoorAreaCleanupCallback cleanupCallback = doorRuntime.cleanupCallback;
     const DoorAreaCleanupCallback savedCleanupCallback = doorRuntime.savedCleanupCallback;

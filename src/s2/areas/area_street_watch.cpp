@@ -526,7 +526,7 @@ void StreetWatchMainCallback(void *payload, StreetWatchState &owner) {
         EV_pakUtils(PakCategory::Task, PakTaskOp::SetCurrentNamed, reinterpret_cast<std::uintptr_t>(owner.package), 0);
         EventSetCamera camera{0, 0x26ac, STREET_WATCH_RYO, STREET_WATCH_RYO, 0, {}, 0.0f, 0.0f};
         EVT_AT_SetCam_Callback(&camera);
-        camCtrlSetFilmBarEnabled(0);
+        camCtrlDisableFilmBars();
         EVT_AT_SetVoice("0255A002", 180);
         work.state = 18;
         HLib::SetupTaskDelay(60);

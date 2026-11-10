@@ -344,9 +344,9 @@ void StopOpeningAix() noexcept {
 OpeningAixState BuiltInOpeningAixBackend(OpeningAixOperation operation, const OpeningAixRequest &request) noexcept {
     (void)operation;
     (void)request;
-    // The game owns the AIX program and the platform owns its Dolby/XAudio
-    // decoder.  A platform adapter may be registered above; this source file
-    // must not substitute an IDX/AFS voice for S2_OP.aix.
+    // The AIX opening uses the registered platform decoder.
+
+
     return OpeningAixState::Unsupported;
 }
 
@@ -720,6 +720,21 @@ void QueueS2AudioOutputChange(std::int32_t index) {
         });
 #else
     static_cast<void>(index);
+#endif
+}
+
+void RecoverS2AudioOutputIfNeeded() {
+#if defined(_WIN32)
+    if (outputChangeCount != 0)
+        ProcessAudioOutputChanges();
+    if (dialogueCriticalError.load() == 1) {
+        {
+            const std::lock_guard<std::recursive_mutex> lock(audioMutex);
+            if (outputChangeCount < 5)
+                outputChangeQueue[outputChangeCount++] = -1;
+        }
+        ProcessAudioOutputChanges();
+    }
 #endif
 }
 

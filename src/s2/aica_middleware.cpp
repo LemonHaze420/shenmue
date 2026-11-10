@@ -68,6 +68,7 @@ void ConfigureAicaProgram(std::uint8_t bank, std::uint8_t *program);
 void InitializeLoadedAicaBank(std::uint8_t bank);
 void ResetAicaDriverDynamicFields(std::uint8_t voiceIndex);
 void SelectAicaProgram(std::uint8_t bank, std::uint8_t programIndex);
+void UpdateAicaProgramEffectOverride(std::uint8_t bankId, std::uint8_t programIndex);
 void ExecuteAicaCommand_3(std::uint16_t command, std::uint8_t bank);
 std::int64_t ExecuteAicaCommand_4(std::uint16_t command, std::int64_t, std::uint8_t bank);
 void ExecuteAicaCommand_5(std::uint16_t command, std::int64_t unused);
@@ -546,6 +547,54 @@ void SelectAicaProgram(std::uint8_t bank, std::uint8_t programIndex) {
         raw[0x752 + bankBase] = program[1];
     ResetAicaDriverAssignments(bank, true);
     ConfigureAicaProgram(bank, program);
+    if (modernBanks[bank])
+        UpdateAicaProgramEffectOverride(program[3], program[4]);
+}
+
+void UpdateAicaProgramEffectOverride(std::uint8_t bankId, std::uint8_t programIndex) {
+    if (bankId == 0xff) {
+        g_aicaMemory->field734 = -1;
+        g_aicaMemory->field738 = 0;
+        g_aicaMemory->field730 = 0;
+        g_aicaMemory->field731 = 0xff;
+        g_aicaMemory->field732 = static_cast<std::int8_t>(programIndex);
+        return;
+    }
+    if (((programIndex + 1U) & 0x7fU) == 0)
+        return;
+    std::uint8_t found = 0xff;
+    for (std::uint8_t bank = 0; bank < 16; ++bank) {
+        const AicaBankSlot &slot = g_aicaMemory->bankSlots[bank];
+        if (slot.bankIdOrType != -1 && static_cast<std::uint8_t>(slot.loadedSize >> 16U) == bankId) {
+            found = bank;
+            break;
+        }
+    }
+    if ((g_aicaMemory->field731 == bankId && static_cast<std::uint8_t>(g_aicaMemory->field732) == programIndex) || found == 0xff)
+        return;
+    std::uint8_t *const bankData = g_aicaMemory->bankSlots[found].bankData;
+    const std::size_t bankSize = g_aicaMemory->bankRegionSize[found];
+    const std::uint8_t *const tableOffset = AicaBankOffset(bankData, bankSize, 0xb0, 4);
+    if (!tableOffset)
+        return;
+    const std::uint32_t tableBase = read_unaligned<std::uint32_t>(tableOffset);
+    const std::uint8_t *const entryOffset = AicaBankOffset(bankData, bankSize, tableBase + 4U * (programIndex + 1U), 4);
+    if (!entryOffset)
+        return;
+    const std::uint8_t *const entry = AicaBankOffset(bankData, bankSize, tableBase + read_unaligned<std::uint32_t>(entryOffset), 8);
+    if (!entry)
+        return;
+    std::uint8_t active = 0;
+    if (entry[4] == 0xff) {
+        g_aicaMemory->field734 = -1;
+    } else {
+        g_aicaMemory->field734 = entry[4];
+        active = 1;
+    }
+    g_aicaMemory->field738 = entry[5] == 0xff ? -1 : entry[5];
+    g_aicaMemory->field730 = active;
+    g_aicaMemory->field731 = bankId;
+    g_aicaMemory->field732 = static_cast<std::int8_t>(programIndex);
 }
 
 void ExecuteAicaCommand_3(std::uint16_t command, std::uint8_t bank) {
@@ -2674,8 +2723,11 @@ void ExecuteAicaBankA() {
             AicaUpdate(command);
         return;
     }
-    if (operation == 4 && (command & 0xff700000U) == 0xa4700000U) {
-        reinterpret_cast<std::uint8_t *>(g_aicaMemory)[0x733] = static_cast<std::uint8_t>((command >> 8) & 0x7fU);
+    if (operation == 4) {
+        if ((command & 0xff700000U) == 0xa4000000U)
+            UpdateAicaProgramEffectOverride(g_aicaMemory->field733, static_cast<std::uint8_t>((command >> 8) & 0x7fU));
+        else if ((command & 0xff700000U) == 0xa4700000U)
+            g_aicaMemory->field733 = static_cast<std::uint8_t>((command >> 8) & 0x7fU);
         return;
     }
     if (operation >= 5 && operation <= 7) {
@@ -3205,6 +3257,7 @@ bool InitializeS2AicaMiddleware() noexcept {
 #endif
             std::chrono::steady_clock::time_point previous = std::chrono::steady_clock::now();
             while (!stop.stop_requested()) {
+                RecoverS2AudioOutputIfNeeded();
                 {
                     const std::lock_guard<std::recursive_mutex> workerLock(aica::GetAudioBackendMutex());
                     aica::TickMiddleware();

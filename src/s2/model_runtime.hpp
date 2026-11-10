@@ -9,5 +9,6 @@ bool UpdateModelFrame(MT7Model *model, Character *character, std::int32_t mode, 
 void SetModelPlacementVisible(const void *placement, std::int32_t visible);
 void SetModelPlacementChildVisible(const void *placement, std::int32_t kind, std::uint32_t visible);
 void SetModelPlacementChildTransform(const void *placement, std::int32_t kind, const Matrix4x4 *transform);
+bool produceXform(const void *placement, std::int32_t kind, Matrix4x4 &transform);
 
 } // namespace shenmue::s2

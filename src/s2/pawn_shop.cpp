@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/pawn_shop.hpp"
 
 #include "d3t/dx11_renderer.hpp"
@@ -79,8 +82,8 @@ const PawnItemPrice *ResolveShopItems(const PawnShopRecord *shop) {
 #include "pawn_legacy_draw.inl"
 
 void pawn_PawnShopMain(void *) {
-    // pawn_PawnShopMain deliberately queues a null main callback. Admission and
-    // completion are driven by the shop command functions, not this task.
+    // Pawn-shop commands drive admission and completion; the main task has no callback.
+
 }
 
 void pawn_PawnShopDraw(void *) {
@@ -140,6 +143,7 @@ void ReleasePawnWindowTextures() {
     pawnWindow.flags = 0;
 }
 
+} // namespace
 
 // @verified - p
 std::uint32_t GetPawnWindowShopMask() {
@@ -153,6 +157,7 @@ std::uint32_t GetPawnWindowShopMask() {
     return mask;
 }
 
+namespace {
 
 // @verified - p
 void CreatePVRs(PawnWindowWork &window) {
@@ -367,6 +372,10 @@ char *CreatePAWNShops() {
     pawnSaleItems = reinterpret_cast<std::uint16_t *>(order);
     pawnSaleQuantities = quantities;
     return reinterpret_cast<char *>(pawnDraw.primaryLabels.data() + pawnDraw.primaryLabels.size());
+}
+
+const char *GetPawnFlyerShopLabel(std::int32_t index) {
+    return GetPawnShopLabel(GetPawnFlyerShopName(index));
 }
 
 shen_name GetPawnFlyerShopName(std::int32_t index) {
@@ -866,3 +875,4 @@ void ReleasePawnTaskOwners() {
 }
 
 } // namespace shenmue::s2
+

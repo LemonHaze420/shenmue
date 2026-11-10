@@ -25,5 +25,6 @@ static_assert(offsetof(DirectoryCacheEntry, retained) == 0x30);
 void NormalizeDirectoryPath(const char *path, char *normalized);
 void ResetDirectoryCache(std::int32_t all);
 void AllocateDIRE(const char *path, std::int32_t unused, std::int32_t entryCount);
+void FreeDIRE(const char *path);
 
 } } // namespace shenmue::s2

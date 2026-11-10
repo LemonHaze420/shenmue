@@ -98,6 +98,7 @@ shen_name GetMapRegionName(const Vector3 &position);
 void SetTemporaryAreaJumpAuthor(shen_name author);
 void ResetTemporaryAreaJumpAuthor();
 void ST_LoadTitleFadeIn();
+void LoadTitleFadeIn();
 void ST_LoadTitleFade();
 void Queue_ST_LoadTitleFadeIn(shen_name author);
 std::uint64_t scenSetTaskFlags(std::uint8_t mode);

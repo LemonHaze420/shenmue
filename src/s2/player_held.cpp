@@ -1,4 +1,8 @@
+#include "shenmue.h"
+
+
 #include "s2/player_internal.hpp"
+#include "s2/game_runtime.hpp"
 
 namespace shenmue::s2::player_detail {
 
@@ -201,7 +205,7 @@ void plymUpdateHeldState(PlayerModelState &state) {
             Loop3DSoundEffect(0x8a9U);
             padEnableTask();
             SetScenarioFollowCharacter(shen_name{});
-            srchSetFocusObject(shen_name{});
+            ReleaseNpcScriptRouteOwner();
             srchRequestLockonExit();
             ++state.heldStateStep;
             state.heldStateTimer = 25;
@@ -233,7 +237,7 @@ void plymUpdateHeldState(PlayerModelState &state) {
                 mtwkSetRegionEvalTime(state.motionWork, 0.0f, static_cast<MotionRegion>(region));
             }
             for (std::uint32_t region = 1; region <= 4; ++region) {
-                mtwkSetFrameTime(state.motionWork, 40, static_cast<MotionRegion>(region));
+                mtwkSetLayerEndFrame(state.motionWork, 40.0f, static_cast<MotionRegion>(region));
             }
             state.heldStateTimer = 0;
             return;
@@ -424,6 +428,9 @@ void plymUpdateHeldState(PlayerModelState &state) {
             state.heldStateTimer = 45;
             break;
         case 2:
+            SetDebugStringPosition(10, 10);
+            if (g_rootTaskIterationCount % 15U > 5)
+                DebugTextPrintf("RETRY\n", g_rootTaskIterationCount / 15U);
             if (--state.heldStateTimer <= 0)
                 ++state.heldStateStep;
             return;
@@ -564,3 +571,4 @@ std::int32_t BuildTargetDateFromFrameClock(PlayerTargetDate &target) {
 }
 
 } // namespace shenmue::s2
+

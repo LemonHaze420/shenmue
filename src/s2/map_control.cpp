@@ -56,6 +56,7 @@
 #include "s2/particle_effects.hpp"
 #include "s2/renderer_initialization.hpp"
 #include "s2/save.hpp"
+#include "s2/scenario_characters.hpp"
 #include "s2/search.hpp"
 #include "s2/screen_film.hpp"
 #include "s2/snapshot.hpp"
@@ -191,129 +192,223 @@ static_assert(offsetof(QronMapDefinition, connections) == 0x10);
 
 constexpr QronStairConnection qronStairConnections[] = {
     {SHEN_NAME(QAE1), 1, 1, 0},
-    {SHEN_NAME(QAW1), 1, 3, 0},
-    {SHEN_NAME(QAW1), 1, 4, 0},
-    {SHEN_NAME(QAE6), 6, 1, 0},
-    {SHEN_NAME(QAW6), 6, 3, 0},
-    {SHEN_NAME(QAW6), 6, 4, 0},
-    {},
-    {SHEN_NAME(QA00), 2, 3, 0},
-    {SHEN_NAME(QA00), 2, 4, 0},
-    {},
-    {SHEN_NAME(QA00), 2, 1, 0},
-    {},
-    {SHEN_NAME(QA00), 7, 3, 0},
-    {SHEN_NAME(QA00), 7, 4, 0},
-    {SHEN_NAME(QA00), 5, 3, 0},
-    {SHEN_NAME(QA00), 5, 4, 0},
-    {},
-    {SHEN_NAME(QA00), 7, 1, 0},
-    {SHEN_NAME(QA00), 5, 1, 0},
-    {},
-    {SHEN_NAME(QC01), 1, 1, 0},
-    {SHEN_NAME(QC01), 1, 2, 0},
-    {SHEN_NAME(QC06), 6, 1, 0},
-    {SHEN_NAME(QC06), 6, 2, 0},
-    {SHEN_NAME(QUG0), -1, 2, 0},
-    {},
-    {SHEN_NAME(QC00), 2, 1, 0},
-    {SHEN_NAME(QC00), 2, 2, 0},
-    {},
-    {SHEN_NAME(QC00), 7, 1, 0},
-    {SHEN_NAME(QC00), 7, 2, 0},
-    {SHEN_NAME(QC00), 5, 1, 0},
-    {SHEN_NAME(QC00), 5, 2, 0},
-    {},
-    {SHEN_NAME(QC00), 0, 2, 0},
-    {},
-    {SHEN_NAME(QD01), 1, 1, 0},
-    {SHEN_NAME(QD01), 1, 2, 0},
-    {SHEN_NAME(QD01), 1, 3, 0},
-    {},
-    {SHEN_NAME(QD00), 2, 1, 0},
-    {SHEN_NAME(QD00), 2, 2, 0},
-    {SHEN_NAME(QD00), 2, 3, 0},
-    {},
-    {SHEN_NAME(QE01), 1, 1, 0},
-    {SHEN_NAME(QE01), 1, 2, 0},
-    {SHEN_NAME(QE01), 1, 3, 0},
-    {SHEN_NAME(QE06), 6, 1, 0},
-    {SHEN_NAME(QE06), 6, 2, 0},
-    {SHEN_NAME(QE06), 6, 3, 0},
-    {},
-    {SHEN_NAME(QE00), 2, 1, 0},
-    {SHEN_NAME(QE00), 2, 2, 0},
-    {SHEN_NAME(QE00), 2, 3, 0},
-    {},
-    {SHEN_NAME(QE00), 7, 1, 0},
-    {SHEN_NAME(QE00), 7, 2, 0},
-    {SHEN_NAME(QE00), 7, 3, 0},
-    {SHEN_NAME(QE00), 5, 1, 0},
-    {SHEN_NAME(QE00), 5, 2, 0},
-    {SHEN_NAME(QE00), 5, 3, 0},
-    {},
-    {SHEN_NAME(QF02), 4, 1, 0},
-    {SHEN_NAME(QF02), 4, 2, 0},
-    {SHEN_NAME(QF02), 4, 3, 0},
-    {SHEN_NAME(QF02), 4, 4, 0},
-    {SHEN_NAME(QF06), 6, 1, 0},
-    {SHEN_NAME(QF06), 6, 4, 0},
-    {SHEN_NAME(QF39), 40, 4, 0},
-    {},
-    {SHEN_NAME(QF02), 2, 1, 0},
-    {SHEN_NAME(QF02), 2, 2, 0},
-    {SHEN_NAME(QF02), 2, 3, 0},
-    {SHEN_NAME(QF02), 2, 4, 0},
-    {},
-    {SHEN_NAME(QF00), 5, 1, 0},
-    {SHEN_NAME(QF00), 5, 2, 0},
-    {SHEN_NAME(QF00), 5, 3, 0},
-    {SHEN_NAME(QF00), 5, 4, 0},
-    {SHEN_NAME(QF01), 1, 1, 0},
-    {SHEN_NAME(QF01), 1, 2, 0},
-    {SHEN_NAME(QF01), 1, 3, 0},
-    {SHEN_NAME(QF01), 1, 4, 0},
-    {},
-    {SHEN_NAME(QF00), 7, 1, 0},
-    {SHEN_NAME(QF00), 7, 4, 0},
-    {SHEN_NAME(QF00), 5, 1, 0},
-    {SHEN_NAME(QF00), 5, 4, 0},
-    {},
-    {SHEN_NAME(QF00), 39, 4, 0},
-    {},
+        {SHEN_NAME(QAW1), 1, 3, 0},
+            {SHEN_NAME(QAW1), 1, 4, 0},
+                {SHEN_NAME(QAE6), 6, 1, 0},
+                    {SHEN_NAME(QAW6), 6, 3, 0},
+                        {SHEN_NAME(QAW6), 6, 4, 0}, {},
+                            {SHEN_NAME(QA00), 2, 3, 0},
+                                {SHEN_NAME(QA00), 2, 4, 0}, {},
+                                    {SHEN_NAME(QA00), 2, 1, 0}, {},
+                                        {SHEN_NAME(QA00), 7, 3, 0},
+                                            {SHEN_NAME(QA00), 7, 4, 0},
+                                                {SHEN_NAME(QA00), 5, 3, 0},
+                                                    {SHEN_NAME(QA00), 5, 4, 0}, {},
+                                                        {SHEN_NAME(QA00), 7, 1, 0},
+                                                            {SHEN_NAME(QA00), 5, 1, 0}, {},
+                                                                {SHEN_NAME(QC01), 1, 1, 0},
+                                                                    {SHEN_NAME(QC01), 1, 2, 0},
+                                                                        {SHEN_NAME(QC06), 6, 1, 0},
+                                                                            {SHEN_NAME(QC06), 6, 2, 0},
+                                                                                {SHEN_NAME(QUG0), -1, 2, 0}, {},
+                                                                                    {SHEN_NAME(QC00), 2, 1, 0},
+                                                                                        {SHEN_NAME(QC00), 2, 2, 0}, {},
+                                                                                            {SHEN_NAME(QC00), 7, 1, 0},
+                                                                                                {SHEN_NAME(QC00), 7, 2, 0},
+                                                                                                    {SHEN_NAME(QC00), 5, 1, 0},
+                                                                                                        {SHEN_NAME(QC00), 5, 2, 0}, {},
+                                                                                                            {SHEN_NAME(QC00), 0, 2, 0}, {},
+                                                                                                                {SHEN_NAME(QD01), 1, 1, 0},
+                                                                                                                    {SHEN_NAME(QD01), 1, 2, 0},
+                                                                                                                        {SHEN_NAME(QD01), 1, 3, 0}, {},
+                                                                                                                            {SHEN_NAME(QD00), 2, 1, 0},
+                                                                                                                                {SHEN_NAME(QD00), 2, 2, 0},
+                                                                                                                                    {SHEN_NAME(QD00), 2, 3, 0},
+                                                                                                                                        {},
+                                                                                                                                        {SHEN_NAME(QE01), 1, 1,
+                                                                                                                                             0},
+                                                                                                                                            {SHEN_NAME(QE01), 1,
+                                                                                                                                                 2, 0},
+                                                                                                                                                {SHEN_NAME(QE01), 1,
+                                                                                                                                                     3, 0},
+                                                                                                                                                    {SHEN_NAME(QE06),
+                                                                                                                                                         6, 1,
+                                                                                                                                                         0},
+                                                                                                                                                        {SHEN_NAME(QE06),
+                                                                                                                                                             6,
+                                                                                                                                                             2,
+                                                                                                                                                             0},
+                                                                                                                                                            {SHEN_NAME(QE06),
+                                                                                                                                                                 6,
+                                                                                                                                                                 3,
+                                                                                                                                                                 0},
+                                                                                                                                                                {},
+                                                                                                                                                                {SHEN_NAME(QE00),
+                                                                                                                                                                     2,
+                                                                                                                                                                     1,
+                                                                                                                                                                     0},
+                                                                                                                                                                    {SHEN_NAME(QE00),
+                                                                                                                                                                         2,
+                                                                                                                                                                         2,
+                                                                                                                                                                         0},
+                                                                                                                                                                        {SHEN_NAME(QE00),
+                                                                                                                                                                             2,
+                                                                                                                                                                             3,
+                                                                                                                                                                             0},
+                                                                                                                                                                            {},
+                                                                                                                                                                            {SHEN_NAME(QE00),
+                                                                                                                                                                                 7,
+                                                                                                                                                                                 1,
+                                                                                                                                                                                 0},
+                                                                                                                                                                                {SHEN_NAME(QE00),
+                                                                                                                                                                                     7,
+                                                                                                                                                                                     2,
+                                                                                                                                                                                     0},
+                                                                                                                                                                                    {SHEN_NAME(QE00),
+                                                                                                                                                                                         7,
+                                                                                                                                                                                         3,
+                                                                                                                                                                                         0},
+                                                                                                                                                                                        {SHEN_NAME(QE00),
+                                                                                                                                                                                             5,
+                                                                                                                                                                                             1,
+                                                                                                                                                                                             0},
+                                                                                                                                                                                            {SHEN_NAME(QE00),
+                                                                                                                                                                                                 5,
+                                                                                                                                                                                                 2,
+                                                                                                                                                                                                 0},
+                                                                                                                                                                                                {SHEN_NAME(QE00),
+                                                                                                                                                                                                     5,
+                                                                                                                                                                                                     3,
+                                                                                                                                                                                                     0},
+                                                                                                                                                                                                    {},
+                                                                                                                                                                                                    {SHEN_NAME(QF02),
+                                                                                                                                                                                                         4,
+                                                                                                                                                                                                         1,
+                                                                                                                                                                                                         0},
+                                                                                                                                                                                                        {SHEN_NAME(QF02),
+                                                                                                                                                                                                             4,
+                                                                                                                                                                                                             2,
+                                                                                                                                                                                                             0},
+                                                                                                                                                                                                            {SHEN_NAME(QF02),
+                                                                                                                                                                                                                 4,
+                                                                                                                                                                                                                 3,
+                                                                                                                                                                                                                 0},
+                                                                                                                                                                                                                {SHEN_NAME(QF02),
+                                                                                                                                                                                                                     4,
+                                                                                                                                                                                                                     4,
+                                                                                                                                                                                                                     0},
+                                                                                                                                                                                                                    {SHEN_NAME(QF06),
+                                                                                                                                                                                                                         6,
+                                                                                                                                                                                                                         1,
+                                                                                                                                                                                                                         0},
+                                                                                                                                                                                                                        {SHEN_NAME(QF06),
+                                                                                                                                                                                                                             6,
+                                                                                                                                                                                                                             4,
+                                                                                                                                                                                                                             0},
+                                                                                                                                                                                                                            {SHEN_NAME(QF39),
+                                                                                                                                                                                                                                 40,
+                                                                                                                                                                                                                                 4,
+                                                                                                                                                                                                                                 0},
+                                                                                                                                                                                                                                {},
+                                                                                                                                                                                                                                {SHEN_NAME(QF02),
+                                                                                                                                                                                                                                     2,
+                                                                                                                                                                                                                                     1,
+                                                                                                                                                                                                                                     0},
+                                                                                                                                                                                                                                    {SHEN_NAME(QF02),
+                                                                                                                                                                                                                                         2,
+                                                                                                                                                                                                                                         2,
+                                                                                                                                                                                                                                         0},
+                                                                                                                                                                                                                                        {SHEN_NAME(QF02),
+                                                                                                                                                                                                                                             2,
+                                                                                                                                                                                                                                             3,
+                                                                                                                                                                                                                                             0},
+                                                                                                                                                                                                                                            {SHEN_NAME(QF02),
+                                                                                                                                                                                                                                                 2,
+                                                                                                                                                                                                                                                 4,
+                                                                                                                                                                                                                                                 0},
+                                                                                                                                                                                                                                                {},
+                                                                                                                                                                                                                                                {SHEN_NAME(QF00),
+                                                                                                                                                                                                                                                     5,
+                                                                                                                                                                                                                                                     1,
+                                                                                                                                                                                                                                                     0},
+                                                                                                                                                                                                                                                    {SHEN_NAME(QF00),
+                                                                                                                                                                                                                                                         5,
+                                                                                                                                                                                                                                                         2,
+                                                                                                                                                                                                                                                         0},
+                                                                                                                                                                                                                                                        {SHEN_NAME(QF00),
+                                                                                                                                                                                                                                                             5,
+                                                                                                                                                                                                                                                             3,
+                                                                                                                                                                                                                                                             0},
+                                                                                                                                                                                                                                                            {SHEN_NAME(QF00), 5, 4,
+                                                                                                                                                                                                                                                                 0},
+                                                                                                                                                                                                                                                                {SHEN_NAME(QF01),
+                                                                                                                                                                                                                                                                     1,
+                                                                                                                                                                                                                                                                     1,
+                                                                                                                                                                                                                                                                     0},
+                                                                                                                                                                                                                                                                    {SHEN_NAME(QF01),
+                                                                                                                                                                                                                                                                         1,
+                                                                                                                                                                                                                                                                         2,
+                                                                                                                                                                                                                                                                         0},
+                                                                                                                                                                                                                                                                        {SHEN_NAME(QF01),
+                                                                                                                                                                                                                                                                             1, 3, 0},
+                                                                                                                                                                                                                                                                            {SHEN_NAME(QF01),
+                                                                                                                                                                                                                                                                                 1,
+                                                                                                                                                                                                                                                                                 4,
+                                                                                                                                                                                                                                                                                 0},
+                                                                                                                                                                                                                                                                                {},
+                                                                                                                                                                                                                                                                                {SHEN_NAME(QF00),
+                                                                                                                                                                                                                                                                                     7,
+                                                                                                                                                                                                                                                                                     1,
+                                                                                                                                                                                                                                                                                     0},
+                                                                                                                                                                                                                                                                                    {SHEN_NAME(QF00),
+                                                                                                                                                                                                                                                                                         7,
+                                                                                                                                                                                                                                                                                         4,
+                                                                                                                                                                                                                                                                                         0},
+                                                                                                                                                                                                                                                                                        {SHEN_NAME(QF00),
+                                                                                                                                                                                                                                                                                             5,
+                                                                                                                                                                                                                                                                                             1,
+                                                                                                                                                                                                                                                                                             0},
+                                                                                                                                                                                                                                                                                            {SHEN_NAME(QF00), 5, 4, 0},
+                                                                                                                                                                                                                                                                                                {},
+                                                                                                                                                                                                                                                                                                {SHEN_NAME(QF00),
+                                                                                                                                                                                                                                                                                                     39,
+                                                                                                                                                                                                                                                                                                     4,
+                                                                                                                                                                                                                                                                                                     0},
+                                                                                                                                                                                                                                                                                                    {},
 };
 
 constexpr QronMapDefinition qronMapDefinitions[] = {
     {SHEN_NAME(QA00), 100.0f, 10, 2, qronStairConnections, -1, 1U},
-    {SHEN_NAME(QAW1), 100.0f, 1, 1, qronStairConnections + 7, 2, 48U},
-    {SHEN_NAME(QAE1), 100.0f, 1, 1, qronStairConnections + 10, -1, 48U},
-    {SHEN_NAME(QAW6), 100.0f, 6, 6, qronStairConnections + 12, 2, 0U},
-    {SHEN_NAME(QAE6), 100.0f, 6, 6, qronStairConnections + 17, -1, 0U},
-    {SHEN_NAME(QB00), 100.0f, 3, 1, nullptr, -1, 24U},
-    {SHEN_NAME(QA11), 100.0f, 11, 11, nullptr, -1, 18U},
-    {SHEN_NAME(QJBT), 100.0f, 4, -3, nullptr, -1, 1U},
-    {SHEN_NAME(QC00), 100.0f, 12, 0, qronStairConnections + 20, -1, 1U},
-    {SHEN_NAME(QC01), 100.0f, 1, 1, qronStairConnections + 26, 6, 50U},
-    {SHEN_NAME(QC06), 100.0f, 6, 6, qronStairConnections + 29, -1, 0U},
-    {SHEN_NAME(QUG0), 100.0f, 1, -1, qronStairConnections + 34, -1, 8U},
-    {SHEN_NAME(QD00), 100.0f, 10, 2, qronStairConnections + 36, -1, 19U},
-    {SHEN_NAME(QD01), 100.0f, 1, 1, qronStairConnections + 40, -1, 50U},
-    {SHEN_NAME(QE00), 100.0f, 13, 2, qronStairConnections + 44, -1, 1U},
-    {SHEN_NAME(QE01), 100.0f, 1, 1, qronStairConnections + 51, -1, 50U},
-    {SHEN_NAME(QE06), 100.0f, 6, 6, qronStairConnections + 55, -1, 0U},
-    {SHEN_NAME(QE09), 100.0f, 2, 2, nullptr, -1, 1U},
-    {SHEN_NAME(QLBT), 100.0f, 12, 9, nullptr, -1, 8U},
-    {SHEN_NAME(QF00), 100.0f, 39, 5, qronStairConnections + 62, -1, 1U},
-    {SHEN_NAME(QF01), 100.0f, 1, 1, qronStairConnections + 70, -1, 32U},
-    {SHEN_NAME(QF02), 100.0f, 4, 2, qronStairConnections + 75, -1, 1U},
-    {SHEN_NAME(QF06), 100.0f, 6, 6, qronStairConnections + 84, -1, 0U},
-    {SHEN_NAME(QF39), 100.0f, 40, 40, qronStairConnections + 89, -1, 0U},
-    {SHEN_NAME(QKBT), 100.0f, -2, -4, nullptr, -1, 8U},
-    {{}, 100.0f, 0, 0, nullptr, 0, 0},
+        {SHEN_NAME(QAW1), 100.0f, 1, 1, qronStairConnections + 7, 2, 48U},
+            {SHEN_NAME(QAE1), 100.0f, 1, 1, qronStairConnections + 10, -1, 48U},
+                {SHEN_NAME(QAW6), 100.0f, 6, 6, qronStairConnections + 12, 2, 0U},
+                    {SHEN_NAME(QAE6), 100.0f, 6, 6, qronStairConnections + 17, -1, 0U},
+                        {SHEN_NAME(QB00), 100.0f, 3, 1, nullptr, -1, 24U},
+                            {SHEN_NAME(QA11), 100.0f, 11, 11, nullptr, -1, 18U},
+                                {SHEN_NAME(QJBT), 100.0f, 4, -3, nullptr, -1, 1U},
+                                    {SHEN_NAME(QC00), 100.0f, 12, 0, qronStairConnections + 20, -1, 1U},
+                                        {SHEN_NAME(QC01), 100.0f, 1, 1, qronStairConnections + 26, 6, 50U},
+                                            {SHEN_NAME(QC06), 100.0f, 6, 6, qronStairConnections + 29, -1, 0U},
+                                                {SHEN_NAME(QUG0), 100.0f, 1, -1, qronStairConnections + 34, -1, 8U},
+                                                    {SHEN_NAME(QD00), 100.0f, 10, 2, qronStairConnections + 36, -1, 19U},
+                                                        {SHEN_NAME(QD01), 100.0f, 1, 1, qronStairConnections + 40, -1, 50U},
+                                                            {SHEN_NAME(QE00), 100.0f, 13, 2, qronStairConnections + 44, -1, 1U},
+                                                                {SHEN_NAME(QE01), 100.0f, 1, 1, qronStairConnections + 51, -1, 50U},
+                                                                    {SHEN_NAME(QE06), 100.0f, 6, 6, qronStairConnections + 55, -1, 0U},
+                                                                        {SHEN_NAME(QE09), 100.0f, 2, 2, nullptr, -1, 1U},
+                                                                            {SHEN_NAME(QLBT), 100.0f, 12, 9, nullptr, -1, 8U},
+                                                                                {SHEN_NAME(QF00), 100.0f, 39, 5, qronStairConnections + 62, -1, 1U},
+                                                                                    {SHEN_NAME(QF01), 100.0f, 1, 1, qronStairConnections + 70, -1, 32U},
+                                                                                        {SHEN_NAME(QF02), 100.0f, 4, 2, qronStairConnections + 75, -1, 1U},
+                                                                                            {SHEN_NAME(QF06), 100.0f, 6, 6, qronStairConnections + 84, -1, 0U},
+                                                                                                {SHEN_NAME(QF39), 100.0f, 40, 40, qronStairConnections + 89, -1,
+                                                                                                     0U},
+                                                                                                    {SHEN_NAME(QKBT), 100.0f, -2, -4, nullptr, -1, 8U},
+                                                                                                        {{}, 100.0f, 0, 0, nullptr, 0, 0},
 };
 
-// QRON's retained floor/carry owners are separate from the EVFO request.
-// In particular, an untracked destination does not erase the previous carry.
+// QRON floor/carry state is independent of the EVFO request.
+// An untracked destination leaves the previous carry unchanged.
 struct QronFloorRuntime {
     shen_name areaId;
     float baseHeight;
@@ -767,6 +862,21 @@ void SetTempMapIDs() {
     SetSpriteAreaConfigurations();
 }
 
+// @verified - p
+const MapEventAreaDefinition *GetHongKongMapEventAreas() {
+    return hongKongMapEventAreas;
+}
+
+// @verified - p
+const MapEventAreaDefinition *GetKowloonMapEventAreas() {
+    return kowloonMapEventAreas;
+}
+
+// @verified - p
+const MapEventAreaDefinition *GetGuilinMapEventAreas() {
+    return guilinMapEventAreas;
+}
+
 namespace {
 
 
@@ -929,6 +1039,43 @@ bool IsCharacterInCurrentMap(const Character *character) {
         }
     }
     return false;
+}
+
+std::int32_t ctrlFindCharasByModel(const void *placement, Character **characters, std::int32_t capacity) {
+    MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    std::int32_t count = 0;
+    if (!control)
+        return 0;
+    for (std::size_t bucket = 0; bucket < control->characterTable.size(); ++bucket) {
+        for (CharacterMapEntry *entry = CharacterBucket(*control, bucket); entry; entry = entry->next) {
+            Character *const character = entry->character;
+            if (!IsValidCEWP(character))
+                continue;
+            const MT7Model *source = nullptr;
+            if ((GetMT7ReaderData(static_cast<const MT7Model *>(character->model)) == placement ||
+                    ((source = GetImageModuleSource(character)) != nullptr && GetMT7ReaderData(source) == placement)) &&
+                count < capacity)
+                characters[count++] = character;
+        }
+    }
+    return count;
+}
+
+std::uint32_t GetCharaCEWP(const void *placement) {
+    Character *characters[32];
+    if (ctrlFindCharasByModel(placement, characters, 32) <= 0)
+        return 0;
+    const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    return scenGetCharaName(control->scenarioTask, characters[0]).name;
+}
+
+std::uint32_t GetCurrentAreaID() {
+    return g_currentMap.name;
+}
+
+void AssignHelperFuncs() {
+    d3t::g_getCurrentAreaIdHook = GetCurrentAreaID;
+    d3t::g_getCharaCEWPHook = GetCharaCEWP;
 }
 
 void KillCharactersByModelName(shen_name owner, std::uint32_t mode) {

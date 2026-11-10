@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/fight_stage.hpp"
 
 #include "s2/camera.hpp"
@@ -11,6 +14,7 @@
 #include "s2/gauge.hpp"
 #include "s2/hand.hpp"
 #include "s2/input.hpp"
+#include "s2/legacy_sprite.hpp"
 #include "s2/model_component.hpp"
 #include "s2/motion.hpp"
 #include "s2/motion_work.hpp"
@@ -460,7 +464,7 @@ void UpdateFightGaugeAnimation(VFActor *actor) {
         SetFightValue(gauge, 48, FightValue<std::int16_t>(gauge, 44));
     }
     SetFightValue(gauge, 40, alpha);
-    const float maximum = float(actor->initialHp), divisor = std::min(maximum,24.0f);
+    const float maximum = float(actor->initialHp), divisor = std::min(maximum, 24.0f);
     float step = maximum / divisor;
     if (actor->game->playerSlot != actor->groupIndex)
         step += step;
@@ -556,10 +560,33 @@ void UpdateFightGauge(void *parameter) {
     }
 }
 
-
-
+// @verified - p
 void adjustStreetFighterHUD() {
-    (void)GetDebugForceUIEnabled(UIElement::StreetFighterHud);
+    if (GetDebugForceUIEnabled(UIElement::StreetFighterHud))
+        return;
+    VFMA_t *const game = vfmaGetTaskParam();
+    if (!game || !(g_pFightStage->battleFlags & 0x10000U))
+        return;
+    LegacySpritePacket packet;
+    packet.colour = 0xffffffffU;
+    packet.secondaryColour = 0;
+    packet.uv = {0, 0, 1, 1};
+    packet.reservedTail = 0;
+    packet.quad.flags = 0x400U;
+    std::int32_t value = g_vfStreetFightLevel;
+    std::int32_t x = 600;
+    std::int32_t next;
+    do {
+        next = value / 10;
+        const std::int32_t digit = value % 10;
+        if (g_fightLoadDigits[digit] != -1) {
+            AdjustScreenAspectRatio(packet.quad, ScreenAlignment::HorizontalStretch, x, 90, 32, 32, ScreenMode::Stretched);
+            LegacySpriteNullsub(packet, static_cast<std::uint32_t>(g_fightLoadDigits[digit]), static_cast<float>(game->spriteDepth));
+            x -= 32;
+        }
+        value = next;
+    } while (next > 0);
+    DrawBattleQteSprite(12, x - 32, 90, 1.0f, 1.0f, 0, 0, 0.0f, ScreenMode::Stretched);
 }
 
 void DrawFightHud(VFMA_t *game) {
@@ -900,7 +927,7 @@ void ReleaseFight(VFMA_t *game) {
     if (!savedPostFxBank)
         UploadBlurStrength(1);
 }
-}
+} // namespace
 
 
 void vfFightNullsub() {
@@ -1440,7 +1467,7 @@ std::intptr_t vfmQueueFightStart(std::uint8_t startSlot, std::uint8_t maximumEne
     game->type = type;
     game->cameraParameter = 13;
     game->spriteDepth = 0xff;
-    game->maximumActiveEnemies = type == 10 ? 99 : std::min(maximumEnemies,g_pFightStage->enemyCount);
+    game->maximumActiveEnemies = type == 10 ? 99 : std::min(maximumEnemies, g_pFightStage->enemyCount);
     if (type == 10)
         game->strikesLeft = maximumEnemies;
     game->contactRange = type == 9 ? 200.0f : 4.0f;
@@ -1773,3 +1800,4 @@ void vfm_Callback_FightTaskEntry_Callback(void *parameter) {
 }
 
 } // namespace shenmue::s2
+

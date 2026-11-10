@@ -2,8 +2,7 @@
 #include "s2/areas/area_sfbr.hpp"
 
 #if defined(SHENMUE_EVENT_ENTRY)
-void SfbrMain(StreetFightStartParameters *start)
-{
+void SfbrMain(StreetFightStartParameters *start) {
     if (start->scene == 99)
         QueueDebug(start);
     else
@@ -19,8 +18,7 @@ static Vector3 sfbrExitPosition = {260.0f, 96.85f, 526.8f};
 static Vector3i sfbrExitRotation = {0, 49152, 0};
 static int sfbrBearVoiceIndex;
 
-void QueueNormal(StreetFightStartParameters *start)
-{
+void QueueNormal(StreetFightStartParameters *start) {
     HLibTask *task;
     StreetFightEventWork *work;
     if (start->signal)
@@ -50,8 +48,7 @@ void QueueNormal(StreetFightStartParameters *start)
     FTBL.SetPlayerGameFlags(4, 1);
 }
 
-void SetupNormalActors(StreetFightEventWork *work)
-{
+void SetupNormalActors(StreetFightEventWork *work) {
     shen_name fighter = work->fighters[work->fighterIndex];
     int rank;
     SetStreetFightCharacterVisible(fighter, 1);
@@ -97,8 +94,7 @@ void SetupNormalActors(StreetFightEventWork *work)
     FTBL.EV_SetPlayerFlag(12, 2228, 1);
 }
 
-StreetFightEventWork *InitializeNormal(HLibTask *task)
-{
+StreetFightEventWork *InitializeNormal(HLibTask *task) {
     StreetFightEventWork *work = (StreetFightEventWork *)FTBL.HLib_GetTaskParameter(task);
     work->task = task;
     work->state = 0;
@@ -120,13 +116,11 @@ StreetFightEventWork *InitializeNormal(HLibTask *task)
     return work;
 }
 
-void NormalDebugCallback(void *data)
-{
+void NormalDebugCallback(void *data) {
     CleanupNormalCallback(data);
 }
 
-void CleanupNormalCallback(void *data)
-{
+void CleanupNormalCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     StreetFightStartParameters *start = work->startParameters;
     EventDebugUnregister(3);
@@ -167,8 +161,7 @@ void CleanupNormalCallback(void *data)
         *start->signal = 0;
 }
 
-void MainCallback(void *data)
-{
+void MainCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     Vector3 position, second, player, bookie;
     unsigned int choice;
@@ -312,8 +305,7 @@ void MainCallback(void *data)
     }
 }
 
-void RetryBeginCallback(void *data)
-{
+void RetryBeginCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     FTBL.EV_SetPlayerFlag(12, 716, 1);
     FTBL.dbgPrintEventMessage("「リトライしますか？\n");
@@ -322,8 +314,7 @@ void RetryBeginCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(RetryChoiceCallback);
 }
 
-void RetryChoiceCallback(void *data)
-{
+void RetryChoiceCallback(void *data) {
     unsigned int choice = PollStreetFightActionChoice();
     if (choice) {
         FTBL.ctrlStopSubtitles();
@@ -334,8 +325,7 @@ void RetryChoiceCallback(void *data)
     }
 }
 
-void RetryResetCallback(void *data)
-{
+void RetryResetCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     FTBL.EV_ResetFreeTalkFlags();
     work->rank = FTBL.vfmDispatchControl(14, work->stage | 64, 0, -1);
@@ -348,13 +338,11 @@ void RetryResetCallback(void *data)
     FTBL.EV_spmBeginSampleExecute(0);
 }
 
-void RetryCancelCallback(void *data)
-{
+void RetryCancelCallback(void *data) {
     FTBL.HLib_SetCurrentTaskTo(CleanupNormalCallback);
 }
 
-int FirstIntroConversation(void *data)
-{
+int FirstIntroConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     FTBL.BeginSecondarySampleExecution(0);
@@ -445,8 +433,7 @@ int FirstIntroConversation(void *data)
     return 1450;
 }
 
-int RepeatIntroConversation(void *data)
-{
+int RepeatIntroConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     FTBL.BeginSecondarySampleExecution(0);
@@ -499,8 +486,7 @@ int RepeatIntroConversation(void *data)
     return 500;
 }
 
-int AcceptConversation(void *data)
-{
+int AcceptConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     QueueStreetFightLook(STREET_FIGHT_RYO, SFBR_SD5, 16, 1, 0, 4352);
@@ -525,8 +511,7 @@ int AcceptConversation(void *data)
     return 176;
 }
 
-int DeclineConversation(void *data)
-{
+int DeclineConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     switch (FTBL.shenGetRandomInt32(3)) {
@@ -551,8 +536,7 @@ int DeclineConversation(void *data)
     return 31;
 }
 
-int InsufficientConversation(void *data)
-{
+int InsufficientConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     QueueStreetFightLook(STREET_FIGHT_RYO, SFBR_SD5, 16, 1, 0, 4352);
@@ -568,8 +552,7 @@ int InsufficientConversation(void *data)
     return 120;
 }
 
-void BattleEntryCallback(void *data)
-{
+void BattleEntryCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     SetStreetFightCharacterVisible(SFBR_SD5, 0);
@@ -583,8 +566,7 @@ void BattleEntryCallback(void *data)
     FTBL.HLib_SetupTaskDelay(30);
 }
 
-void BattlePreEventCallback(void *data)
-{
+void BattlePreEventCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     Vector3 position;
@@ -611,8 +593,7 @@ void BattlePreEventCallback(void *data)
     FTBL.HLib_SetupTaskDelay(180);
 }
 
-void BattleStartCallback(void *data)
-{
+void BattleStartCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     FTBL.EV_LoadAudio("0100E000", 1);
@@ -634,8 +615,7 @@ void BattleStartCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(BattleWaitCallback);
 }
 
-void BattleWaitCallback(void *data)
-{
+void BattleWaitCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     if (FTBL.IsFightActive()) {
@@ -688,16 +668,14 @@ void BattleWaitCallback(void *data)
     }
 }
 
-void BattleWaitFadeCallback(void *data)
-{
+void BattleWaitFadeCallback(void *data) {
     FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
     FTBL.spmFadeOut(0);
     FTBL.HLib_SetCurrentTaskTo(BattleEndCallback);
     FTBL.HLib_SetupTaskDelay(30);
 }
 
-void BattleEndCallback(void *data)
-{
+void BattleEndCallback(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     SetStreetFightCharacterVisible(STREET_FIGHT_RYO, 1);
@@ -723,8 +701,7 @@ void BattleEndCallback(void *data)
     FTBL.HLib_SetCurrentTaskTo(MainCallback);
 }
 
-int VictoryConversation(void *data)
-{
+int VictoryConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     int frames;
@@ -787,8 +764,7 @@ int VictoryConversation(void *data)
     return frames;
 }
 
-int DefeatConversation(void *data)
-{
+int DefeatConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     int flag;
@@ -835,8 +811,7 @@ int DefeatConversation(void *data)
     return 430;
 }
 
-int ExpiredConversation(void *data)
-{
+int ExpiredConversation(void *data) {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     shen_name fighter = work->fighters[work->fighterIndex];
     EVT_AT_SetPos(STREET_FIGHT_RYO, STREET_FIGHT_BASE, work->playerPosition.x, work->playerPosition.y, work->playerPosition.z, 0);
@@ -1730,7 +1705,7 @@ void BattlePreEventCallback(void *parameter) {
     const shen_name fighter = work->fighters[work->fighterIndex];
     EVT_AT_SetMot(STREET_FIGHT_RYO, 13, 0, 0.5f, 0x20000000U, 0);
     EVT_AT_SetMot(fighter, 6849, 0, 1, 0, 0);
-    EVT_AT_SetVoice("0100W019", 1, 0); // @text EN: "You can start hitting him anywhere!" | JA: "さあ、どっからでも\n殴っていいぜ！"
+    EVT_AT_SetVoice("0100W019", 1, 0);   // @text EN: "You can start hitting him anywhere!" | JA: "さあ、どっからでも\n殴っていいぜ！"
     EVT_AT_SetVoice("0100W020", 1, 120); // @text EN: "Ready=@go!" | JA: "レディ・ゴー！"
     SetFaceFlagsForChara_0(ctrlGetScenarioChara(STREET_FIGHT_RYO), FacialNodeOriginal);
     SetHighModelXYZ(ctrlGetScenarioChara(STREET_FIGHT_RYO), 0, 0, 0);
@@ -1877,14 +1852,18 @@ std::int32_t FirstIntroConversation(void *parameter) {
     EVT_AT_SetMot(fighter, 6854, 0, 1, 0x40000000U, 540);
     EVT_AT_SetMot(fighter, 6849, 0, 1, 0x50000000U, 780);
     EVT_AT_MenCtrl({.cleanup = 1, .frames = 30, .startAlpha = 255, .targetAlpha = 0, .delay = 2});
-    EVT_AT_SetVoice("0100W001", 1, 32); // @text EN: "Yan Ren was found in the mountains of\nYunnan. He's the last wild man on earth!" | JA: "この厳仁は雲南省の山奥で\n発見された今世紀最後の野人だ！"
+    EVT_AT_SetVoice("0100W001", 1,
+        32); // @text EN: "Yan Ren was found in the mountains of\nYunnan. He's the last wild man on earth!" | JA: "この厳仁は雲南省の山奥で\n発見された今世紀最後の野人だ！"
     EVT_AT_SetVoice("0100J001", 1, 230);
-    EVT_AT_SetVoice("0100W002", 1, 320); // @text EN: "He can't speak, but living in the wild\nhas given him the toughest body ever!" | JA: "言葉は話せねえが、大自然に\nきたえられた肉体はまさに驚異！"
+    EVT_AT_SetVoice("0100W002", 1,
+        320); // @text EN: "He can't speak, but living in the wild\nhas given him the toughest body ever!" | JA: "言葉は話せねえが、大自然に\nきたえられた肉体はまさに驚異！"
     EVT_AT_SetVoice("0100W003", 1, 510); // @text EN: "He's hard as a rock.\nHe can't feel pain!" | JA: "岩よりも硬く、\n痛みなんて感じやしねえ！"
     EVT_AT_SetVoice("0100J002", 1, 620);
     EVT_AT_SetVoice("0100W004", 1, 670); // @text EN: "Anyone want to challenge this man?" | JA: "さあ、誰かこの男と\n勝負するヤツはいねえか？"
-    EVT_AT_SetVoice("0100W005", 1, 800); // @text EN: "He won't fight back.\nYou can hit him as hard as you want." | JA: "と言っても闘うわけじゃねえ。\n一方的に殴っていいんだ。"
-    EVT_AT_SetVoice("0100W006", 1, 970); // @text EN: "Five tries and if he feels pain\neven once, you win." | JA: "コイツを５発殴って、\n１回でも痛がらせたら勝ちだ。"
+    EVT_AT_SetVoice("0100W005", 1,
+        800); // @text EN: "He won't fight back.\nYou can hit him as hard as you want." | JA: "と言っても闘うわけじゃねえ。\n一方的に殴っていいんだ。"
+    EVT_AT_SetVoice(
+        "0100W006", 1, 970); // @text EN: "Five tries and if he feels pain\neven once, you win." | JA: "コイツを５発殴って、\n１回でも痛がらせたら勝ちだ。"
     switch (SFBR_BETS[work->rank]) {
     case 10:
         EVT_AT_SetVoice("0100W010", 1, 1100); // @text EN: "If you win,\nyou get $10." | JA: "そのときは１０ドルを進呈するぜ。"
@@ -1907,7 +1886,8 @@ std::int32_t FirstIntroConversation(void *parameter) {
         EVT_AT_SetVoice("0100W008", 1, 1200); // @text EN: "But if you fail,\nyou'll owe me $50." | JA: "ただし、失敗したら\n５０ドルを払ってくれ。"
         break;
     }
-    EVT_AT_SetVoice("0100W009", 1, 1340); // @text EN: "Is there anyone strong enough\nto challenge this man?" | JA: "さあ、誰か勝負しようって\n腕自慢はいないか？"
+    EVT_AT_SetVoice(
+        "0100W009", 1, 1340); // @text EN: "Is there anyone strong enough\nto challenge this man?" | JA: "さあ、誰か勝負しようって\n腕自慢はいないか？"
     QueueHighModel(SFBR_SD5, 0, 1, 120);
     QueueHighModel(SFBR_SD5, 1, 1, 120);
     QueueHighModel(SFBR_SD5, 0, 0, 220);
@@ -1967,7 +1947,8 @@ std::int32_t RepeatIntroConversation(void *parameter) {
     EVT_AT_SetAngY(fighter, SFBR_BASE, 17, 0);
     EVT_AT_SetMot(fighter, 6849, 0, 1, 0x50000000U, 0);
     EVT_AT_MenCtrl({.cleanup = 1, .frames = 30, .startAlpha = 255, .targetAlpha = 0, .delay = 2});
-    EVT_AT_SetVoice("0100W006", 1, 0); // @text EN: "Five tries and if he feels pain\neven once, you win." | JA: "コイツを５発殴って、\n１回でも痛がらせたら勝ちだ。"
+    EVT_AT_SetVoice(
+        "0100W006", 1, 0); // @text EN: "Five tries and if he feels pain\neven once, you win." | JA: "コイツを５発殴って、\n１回でも痛がらせたら勝ちだ。"
     switch (SFBR_BETS[work->rank]) {
     case 10:
         EVT_AT_SetVoice("0100W010", 1, 130); // @text EN: "If you win,\nyou get $10." | JA: "そのときは１０ドルを進呈するぜ。"
@@ -1990,7 +1971,8 @@ std::int32_t RepeatIntroConversation(void *parameter) {
         EVT_AT_SetVoice("0100W008", 1, 230); // @text EN: "But if you fail,\nyou'll owe me $50." | JA: "ただし、失敗したら\n５０ドルを払ってくれ。"
         break;
     }
-    EVT_AT_SetVoice("0100W009", 1, 370); // @text EN: "Is there anyone strong enough\nto challenge this man?" | JA: "さあ、誰か勝負しようって\n腕自慢はいないか？"
+    EVT_AT_SetVoice(
+        "0100W009", 1, 370); // @text EN: "Is there anyone strong enough\nto challenge this man?" | JA: "さあ、誰か勝負しようって\n腕自慢はいないか？"
     SetHighModelXYZ(ctrlGetScenarioChara(SFBR_SD5), 1, 0, 0);
     SetHighModelXYZ(ctrlGetScenarioChara(SFBR_SD5), 1, 1, 0);
     SetFaceFlagsForChara_0(ctrlGetScenarioChara(SFBR_SD5), FacialNodeReplacement);
@@ -2107,7 +2089,7 @@ std::int32_t VictoryConversation(void *parameter) {
     std::int32_t duration;
     if (EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 717)) {
         EVT_AT_SetVoice("0100J004", 1, 35);
-        EVT_AT_SetVoice("0100W027", 1, 90); // @text EN: "Hey, are you all right, brother?" | JA: "おい、大丈夫か、兄弟。"
+        EVT_AT_SetVoice("0100W027", 1, 90);  // @text EN: "Hey, are you all right, brother?" | JA: "おい、大丈夫か、兄弟。"
         EVT_AT_SetVoice("0100W028", 1, 160); // @text EN: "You definitely hurt him=@Here." | JA: "やられたぜ、兄ちゃん。\nほらよ。"
         duration = 300;
         EVT_AT_SetCam_Callback(&camera);
@@ -2124,10 +2106,11 @@ std::int32_t VictoryConversation(void *parameter) {
         QueueHighModel(fighter, 1, 1, 90);
     } else {
         EVT_AT_SetVoice("0100J004", 1, 35);
-        EVT_AT_SetVoice("0100W022", 1, 90); // @text EN: "Steady, brother." | JA: "おい、しっかりしろ、兄弟。"
+        EVT_AT_SetVoice("0100W022", 1, 90);  // @text EN: "Steady, brother." | JA: "おい、しっかりしろ、兄弟。"
         EVT_AT_SetVoice("0100W023", 1, 170); // @text EN: "You're something, boy.\nHere." | JA: "やるなぁ、兄ちゃん。\nほらよ。"
         EVT_AT_SetVoice("0100J005", 1, 240);
-        EVT_AT_SetVoice("0100W024", 1, 340); // @text EN: "What? Young man, he wants you\nto come to his village=@" | JA: "なになに…兄ちゃん、\nあんたコイツの村に来ないかってよ。"
+        EVT_AT_SetVoice("0100W024", 1,
+            340); // @text EN: "What? Young man, he wants you\nto come to his village=@" | JA: "なになに…兄ちゃん、\nあんたコイツの村に来ないかってよ。"
         EVT_AT_SetVoice("0100W025", 1, 500); // @text EN: "to meet his younger sister." | JA: "妹を紹介したいんだと。"
         EVT_AT_SetVoice("0100A021", 1, 560); // @text EN: "No, I think I'll pass." | JA: "…いえ、遠慮しときます。"
         EVT_AT_SetVoice("0100W026", 1, 620); // @text EN: "Oh well.\nSee you again." | JA: "そうか。じゃあ、またな。"
@@ -2189,13 +2172,15 @@ std::int32_t DefeatConversation(void *parameter) {
     EVT_AT_SetVoice("0100W029", 1, 0); // @text EN: "Time is up!" | JA: "はい、そこまでー！"
     if (playerFlag) {
         EVT_AT_SetVoice("0100J007", 1, 60);
-        EVT_AT_SetVoice("0100W033", 1, 150); // @text EN: "Uh=@what? His blows felt like a fly\nlanding on you?" | JA: "なになに…ハエが止まったような\n攻撃だったって？"
+        EVT_AT_SetVoice(
+            "0100W033", 1, 150); // @text EN: "Uh=@what? His blows felt like a fly\nlanding on you?" | JA: "なになに…ハエが止まったような\n攻撃だったって？"
         EVT_AT_SetVoice("0100W031", 1, 310); // @text EN: "Oh well.\nToo bad." | JA: "残念だったな、兄ちゃん。"
         EVT_AT_SetVoice("0100W032", 1, 360); // @text EN: "Come and try again." | JA: "また今度挑戦してくれ。"
         EVT_AT_SetCam(2130, SFBR_BASE, SFBR_BASE, 0, 0, 290);
     } else {
         EVT_AT_SetVoice("0100J006", 1, 60);
-        EVT_AT_SetVoice("0100W030", 1, 150); // @text EN: "=@What? Those strikes didn't\neven make you flinch?" | JA: "なになに…そんな攻撃くらいじゃ、\nびくともしない？"
+        EVT_AT_SetVoice(
+            "0100W030", 1, 150); // @text EN: "=@What? Those strikes didn't\neven make you flinch?" | JA: "なになに…そんな攻撃くらいじゃ、\nびくともしない？"
         EVT_AT_SetVoice("0100W031", 1, 310); // @text EN: "Oh well.\nToo bad." | JA: "残念だったな、兄ちゃん。"
         EVT_AT_SetVoice("0100W032", 1, 360); // @text EN: "Come and try again." | JA: "また今度挑戦してくれ。"
         EVT_AT_SetCam(2130, SFBR_BASE, SFBR_BASE, 0, 0, 280);
@@ -2211,6 +2196,7 @@ std::int32_t ExpiredConversation(void *parameter) {
     EVT_AT_SetPos(STREET_FIGHT_RYO, SFBR_BASE, work->playerPosition, 0);
     EVT_AT_SetAngY(STREET_FIGHT_RYO, SFBR_BASE, 180, 0);
     EVT_AT_SetMot(STREET_FIGHT_RYO, 6855, 0, 1, 0, 0);
+    QueueStreetFightLook(STREET_FIGHT_RYO, SFBR_SD5);
     EVT_AT_SetPos(SFBR_SD5, SFBR_BASE, work->bookiePosition, 0);
     EVT_AT_SetAngY(SFBR_SD5, SFBR_BASE, 0, 0);
     EVT_AT_SetMot(SFBR_SD5, 6852, 0, 1.1f, 0, 0);
@@ -2231,7 +2217,8 @@ std::int32_t ExpiredConversation(void *parameter) {
     QueueHighModel(fighter, 1, 0, 120);
     QueueHighModel(STREET_FIGHT_RYO, 0, 1, 120);
     EVT_AT_SetVoice("0100W029", 1, 0); // @text EN: "Time is up!" | JA: "はい、そこまでー！"
-    EVT_AT_SetVoice("0100W034", 1, 60); // @text EN: "Young man, you can't win just by\nstanding there." | JA: "おいおい、兄ちゃん、\nボーッとしてちゃ勝てねえぜ。"
+    EVT_AT_SetVoice(
+        "0100W034", 1, 60); // @text EN: "Young man, you can't win just by\nstanding there." | JA: "おいおい、兄ちゃん、\nボーッとしてちゃ勝てねえぜ。"
     EVT_AT_SetVoice("0100W035", 1, 160); // @text EN: "It's a draw, so I can't\nask for your money." | JA: "ま、引き分けじゃ金は\n取れねえな。"
     EVT_AT_SetVoice("0100W032", 1, 250); // @text EN: "Come and try again." | JA: "また今度挑戦してくれ。"
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(EVT_AT_StartMoneyCount_Callback, 6, 0x0b, sizeof(EventMoneyCount), STREET_FIGHT_EVENT_TASK);

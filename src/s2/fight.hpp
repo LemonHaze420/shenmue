@@ -1,5 +1,8 @@
 #pragma once
 
+#include "shenmue.h"
+
+
 #include "s2/hlib.hpp"
 #include "common/math.hpp"
 #include "common/types.hpp"
@@ -27,6 +30,9 @@ void InitVFM();
 std::uint64_t IsFightActive();
 std::uint64_t GetFightModeFlags();
 std::uint64_t SetFightModeFlags(std::uint16_t flags);
+void RemoveBattleDialogue(std::uint32_t id);
+std::uint32_t GetFightStageObjectFlags();
+void SetFightCounterHighWord(std::uint16_t value);
 
 struct Character;
 struct VFActor;
@@ -45,7 +51,7 @@ inline constexpr shen_name TASK_FBSM{SHEN_NAME(FBSM)};
 inline constexpr shen_name TASK_FIGH{SHEN_NAME(FIGH)};
 inline constexpr std::size_t fightSmokeSlotCount = 9;
 
-// The unrecovered gameplay fields retain their physical storage, not fabricated actor behavior.
+
 struct FCMG_t {
     Character *character;
     MotionWork *motion;
@@ -274,3 +280,4 @@ std::int64_t vfmDispatchControl(FightControlOp operation, shen_name name, std::u
 extern std::uint8_t g_savedFightBlurFlag;
 
 } // namespace shenmue::s2
+

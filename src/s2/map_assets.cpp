@@ -51,9 +51,13 @@ float cachedNearDistance{};
 float cachedNpcRadius{};
 float mapCellScale = 1.0f / 45.0f;
 MapFieldDepthWall wallEndpoints{};
+const MapModelClipRecord* mapVertexCacheRecords{};
+std::int32_t mapVertexCacheRecordIndex{};
+Vector3* mapVertexCache{};
+std::int32_t mapVertexCacheCount{};
 std::size_t mainMapModelIndex = (std::numeric_limits<std::size_t>::max)();
-// LoadMainMap's fixed pointer table and 0x48-byte placement entries are
-// separate owners. CLIP +0x18 borrows the address of a pointer-table entry.
+// Placement records (0x48 bytes) and the map pointer table are allocated separately.
+// CLIP +0x18 points to an entry in that table.
 struct MainMapProjectedPlacement {
     const MT7Node* const* modelEntry{};
     Matrix4x4 transform{};
@@ -185,8 +189,8 @@ void ApplyLocalTransform(Matrix4x4& transform, const MT7Node& node) {
 
 bool ApplyNodeTransformPath(const MT7Model& model, const MT7Node& node,
                             Matrix4x4& transform) {
-    // Runtime admission can splice a DOOR-owned motion child between borrowed
-    // MAP nodes without changing their decoded-vector indices.
+    // DOOR motion children can be inserted between MAP nodes without changing decoded-vector indices.
+
     if (&node != &model.nodes.front() && node.runtimeParent) {
         if (node.runtimeParent == &node ||
             !ApplyNodeTransformPath(model, *node.runtimeParent, transform)) {
@@ -198,8 +202,6 @@ bool ApplyNodeTransformPath(const MT7Model& model, const MT7Node& node,
 }
 
 // VisitTransformedMapNodeHierarchy preserves a transform only for nodes with a sibling; child
-// recursion inherits the parent's active TRS. Fresh MAPS readers have no
-// runtime alternate-transform allocation.
 bool CollectMainMapProjectedModels(const MT7Model& model, std::size_t& index) {
     while (index < model.nodes.size()) {
         const std::size_t current = index++;
@@ -211,7 +213,12 @@ bool CollectMainMapProjectedModels(const MT7Model& model, std::size_t& index) {
                     sizeof(siblingOffset));
         const bool sibling = siblingOffset != 0;
         if (sibling) Matrix4x4_Push();
-        ApplyMT7NodeTransform(node);
+        if (const Matrix4x4 *const override = GetMT7NodeTransformOverride(node)) {
+            mtRestoreIncomingTransform();
+            Matrix4x4::MultiplyWithPrePassMatrix(override);
+        } else {
+            ApplyMT7NodeTransform(node);
+        }
         bool ready = true;
         if (node.xb01Offset) {
 
@@ -457,8 +464,7 @@ bool SetupMapFieldDepth(std::size_t index, const MT7Model& model) {
 
 void FreeMapModelSlot(std::size_t index) {
     MapModelRuntimeSlot& slot = mapModelSlots[index];
-    // FreeMapModelSlot releases the four slot allocations before the separate
-    // field-depth owner. Source readers are borrowed from mapModels.
+    if (slot.reader && slot.ownsReader) ReleaseModelFormat7(*const_cast<MT7Model*>(slot.reader));
     if (slot.clipRecords) HLib::FreeTaskData(slot.clipRecords);
     if (slot.commandCells) HLib::FreeTaskData(slot.commandCells);
     if (slot.commandRouting) HLib::FreeTaskData(slot.commandRouting);
@@ -471,6 +477,77 @@ void ResetMapModelSlots() {
     for (std::size_t index = 0; index < mapModelSlots.size(); ++index) {
         FreeMapModelSlot(index);
     }
+}
+
+bool AddMapClipRecords(MT7Node* node, MT7Model& model, std::size_t slotIndex, MapCellOffset* cells, std::uint32_t& recordIndex) {
+    MapModelRuntimeSlot& slot = mapModelSlots[slotIndex];
+    for (; node; node = mtGetSibling(node)) {
+        if (mt7GetXb01Offset(node)) {
+            const std::size_t offset = node->xb01Offset;
+            if (offset > model.source.size() || model.source.size() - offset < 24) return false;
+            MapModelClipRecord& record = slot.clipRecords[recordIndex];
+            record = {};
+            std::memcpy(&record.centre, model.source.data() + offset + 8, sizeof(record.centre));
+            std::memcpy(&record.radius, model.source.data() + offset + 20, sizeof(record.radius));
+            record.modelScale = node->scale.x;
+            if (node->scale.y > record.modelScale) record.modelScale = node->scale.y;
+            if (node->scale.z > record.modelScale) record.modelScale = node->scale.z;
+            record.radius *= record.modelScale;
+            record.object = slotIndex == 32 ? static_cast<const void*>(GetMainMapProjectedModelEntry(recordIndex)) : node;
+            ++recordIndex;
+            float x = (node->position.x + record.centre.x) * mapCellScale;
+            float z = (record.centre.z + node->position.z) * mapCellScale;
+            if (x < 0.0f) x -= 1.0f;
+            if (z < 0.0f) z -= 1.0f;
+            record.cellX = static_cast<std::int16_t>(static_cast<std::int32_t>(x));
+            record.cellZ = static_cast<std::int16_t>(static_cast<std::int32_t>(z));
+            std::uint32_t type = (static_cast<std::uint32_t>(node->id) >> 16U) & 15U;
+            if (type >= 12) {
+                node->id &= ~0xf0000;
+                type = 0;
+            }
+            record.commandType = slotIndex == 32 ? (type == 4 ? 24 : 20) : mapModelCommandTypes[type];
+            bool addCell = true;
+            switch (record.commandType) {
+                case 4: ++slot.type4RecordCount; break;
+                case 8: ++slot.nearRecordCount; break;
+                case 12: ++slot.farRecordCount; break;
+                case 16:
+                    ++slot.screenSpaceRecordCount;
+                    record.cellX = record.cellZ = 0x4fff;
+                    break;
+                case 240: ++slot.wallRecordCount; addCell = false; break;
+                case 244: ++slot.wallCRecordCount; addCell = false; break;
+                case 255: {
+                    ++slot.dangerRecordCount;
+                    Matrix4x4_Push();
+                    Matrix4x4::preTranslate(node->position.x, node->position.y, node->position.z);
+                    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(static_cast<std::int32_t>(node->rotation.z)));
+                    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(static_cast<std::int32_t>(node->rotation.y)));
+                    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(static_cast<std::int32_t>(node->rotation.x)));
+                    Matrix4x4::Scale(node->scale.x, node->scale.y, node->scale.z);
+                    Matrix4x4 transform{};
+                    Matrix4x4::GetTransformMatrix(&transform);
+                    Matrix4x4::Pop(1);
+                    record.centre = {transform.rows[3].x, transform.rows[3].y, transform.rows[3].z};
+                    addCell = false;
+                    break;
+                }
+                default: break;
+            }
+            if (addCell) {
+                MapCellOffset* cell = cells;
+                while (cell->x != 0x5fff && (cell->x != record.cellX || cell->z != record.cellZ)) ++cell;
+                if (cell->x == 0x5fff) {
+                    *cell = {record.cellX, record.cellZ};
+                    cell[1] = {0x5fff, 0x5fff};
+                }
+            }
+        }
+        if (MT7Node* const child = mtGetTransform(node))
+            if (!AddMapClipRecords(child, model, slotIndex, cells, recordIndex)) return false;
+    }
+    return true;
 }
 
 bool SetupMapClipRecords(MT7Model& model, std::size_t slotIndex) {
@@ -503,63 +580,14 @@ bool SetupMapClipRecords(MT7Model& model, std::size_t slotIndex) {
     cells[0] = {0x5fff, 0x5fff};
     dangerCells[0] = {0x5fff, 0x5fff};
     std::uint32_t recordIndex = 0;
-    for (MT7Node& node : model.nodes) {
-        if (!node.xb01Offset) continue;
-        const std::size_t offset = node.xb01Offset;
-        if (offset > model.source.size() ||
-            model.source.size() - offset < 24) {
-            HLib::FreeTaskData(cells);
-            HLib::FreeTaskData(dangerCells);
-            FreeMapModelSlot(slotIndex);
-            return false;
-        }
-        MapModelClipRecord& record = slot.clipRecords[recordIndex];
-        record = {};
-        std::memcpy(&record.centre, model.source.data() + offset + 8,
-                    sizeof(record.centre));
-        std::memcpy(&record.radius, model.source.data() + offset + 20,
-                    sizeof(record.radius));
-        record.modelScale = node.scale.x;
-        if (node.scale.y > record.modelScale) record.modelScale = node.scale.y;
-        if (node.scale.z > record.modelScale) record.modelScale = node.scale.z;
-        record.radius *= record.modelScale;
-        record.object = slotIndex == 32 ? static_cast<const void*>(GetMainMapProjectedModelEntry(recordIndex)) : &node;
-        ++recordIndex;
-        float x = (node.position.x + record.centre.x) * mapCellScale;
-        float z = (record.centre.z + node.position.z) * mapCellScale;
-        if (x < 0.0f) x -= 1.0f;
-        if (z < 0.0f) z -= 1.0f;
-        record.cellX = static_cast<std::int16_t>(static_cast<std::int32_t>(x));
-        record.cellZ = static_cast<std::int16_t>(static_cast<std::int32_t>(z));
-        std::uint32_t type = (static_cast<std::uint32_t>(node.id) >> 16U) & 15U;
-        if (type >= 12) {
-            node.id &= ~0xf0000;
-            type = 0;
-        }
-        record.commandType = slotIndex == 32 ? (type == 4 ? 24 : 20) : mapModelCommandTypes[type];
-        switch (record.commandType) {
-            case 4: ++slot.type4RecordCount; break;
-            case 8: ++slot.nearRecordCount; break;
-            case 12: ++slot.farRecordCount; break;
-            case 16:
-                ++slot.screenSpaceRecordCount;
-                record.cellX = record.cellZ = 0x4fff;
-                break;
-            case 240: ++slot.wallRecordCount; continue;
-            case 244: ++slot.wallCRecordCount; continue;
-            case 255:
-                ++slot.dangerRecordCount;
-                record.centre = node.position;
-                continue;
-            default: break;
-        }
-        MapCellOffset* cell = cells;
-        while (cell->x != 0x5fff &&
-               (cell->x != record.cellX || cell->z != record.cellZ)) ++cell;
-        if (cell->x == 0x5fff) {
-            *cell = {record.cellX, record.cellZ};
-            cell[1] = {0x5fff, 0x5fff};
-        }
+    Matrix4x4_PushActiveTransform();
+    const bool walked = model.nodes.empty() || AddMapClipRecords(model.nodes.data(), model, slotIndex, cells, recordIndex);
+    Matrix4x4::Pop(1);
+    if (!walked) {
+        HLib::FreeTaskData(cells);
+        HLib::FreeTaskData(dangerCells);
+        FreeMapModelSlot(slotIndex);
+        return false;
     }
     std::uint32_t cellCount = 0;
     while (cells[cellCount].x != 0x5fff) ++cellCount;
@@ -1006,6 +1034,157 @@ void RetirePropAssets() {
     propModels.clear();
 }
 
+void DisableMapModelSlotsFromMAPD(const MapInfoChunk* chunk) {
+    if (!chunk) return;
+    const auto* value = reinterpret_cast<const std::int32_t*>(reinterpret_cast<const std::byte*>(chunk) + 8);
+    for (; *value != -1; ++value)
+        if (static_cast<std::uint32_t>(*value) < 33U) mapModelSlots[static_cast<std::size_t>(*value)].enabled = 0;
+}
+
+void MarkSharedMapMesh(MT7Node* owner, MT7Node* node) {
+    for (;;) {
+        if (mt7GetXb01Offset(owner) == mt7GetXb01Offset(node) && (node->id & 0x100000)) {
+            owner->id |= 0x200000;
+            node->id |= 0x200000;
+        }
+        if (MT7Node* const child = mtGetTransform(node)) MarkSharedMapMesh(owner, child);
+        if (!mtGetSibling(node)) return;
+        node = mtGetSibling(node);
+    }
+}
+
+void MarkSharedMapMeshForced(MT7Node* owner, MT7Node* node) {
+    for (;;) {
+        if (mt7GetXb01Offset(owner) == mt7GetXb01Offset(node)) {
+            owner->id |= 0x200000;
+            node->id |= 0x200000;
+        }
+        if (MT7Node* const child = mtGetTransform(node)) MarkSharedMapMeshForced(owner, child);
+        if (!mtGetSibling(node)) return;
+        node = mtGetSibling(node);
+    }
+}
+
+void MarkSharedMapMeshes(MT7Node* node) {
+    for (;;) {
+        if (mt7GetXb01Offset(node)) {
+            if (node->id & 0x100000) {
+                if (mtGetTransform(node)) MarkSharedMapMeshForced(node, mtGetTransform(node));
+                if (mtGetSibling(node)) MarkSharedMapMeshForced(node, mtGetSibling(node));
+            } else {
+                if (mtGetTransform(node)) MarkSharedMapMesh(node, mtGetTransform(node));
+                if (mtGetSibling(node)) MarkSharedMapMesh(node, mtGetSibling(node));
+            }
+        }
+        if (MT7Node* const child = mtGetTransform(node)) MarkSharedMapMeshes(child);
+        if (!mtGetSibling(node)) return;
+        node = mtGetSibling(node);
+    }
+}
+
+void BakeMapNodeVertices(MT7Node* node) {
+    if (mtGetSibling(node)) Matrix4x4_Push();
+    Matrix4x4::preTranslate(node->position.x, node->position.y, node->position.z);
+    Matrix4x4::SetViewMatrixFromEuler(static_cast<std::int32_t>(node->rotation.x), static_cast<std::int32_t>(node->rotation.y),
+                                      static_cast<std::int32_t>(node->rotation.z));
+    Matrix4x4::Scale(node->scale.x, node->scale.y, node->scale.z);
+    if (mt7GetXb01Offset(node)) {
+        std::byte* const mesh = node->runtimeMesh;
+        std::uint32_t flags{};
+        if (mesh) std::memcpy(&flags, mesh + 4, sizeof(flags));
+        const std::uint32_t type = mapVertexCacheRecords[mapVertexCacheRecordIndex].commandType - 240U;
+        if (mesh && !(node->id & 0x200000) && !(flags & 0x40U) && (type > 15U || !((0x8011U >> type) & 1U))) {
+            std::int32_t state{}, format{};
+            std::uint32_t first{};
+            std::memcpy(&state, mesh, sizeof(state));
+            std::memcpy(&first, mesh + 24, sizeof(first));
+            std::memcpy(&format, mesh + 60, sizeof(format));
+            if (state >= 0 && first && format != -3) {
+                flags |= 0x40U;
+                std::memcpy(mesh + 4, &flags, sizeof(flags));
+                Vector3 point{}, normal{};
+                std::memcpy(&point, mesh + 8, sizeof(point));
+                Matrix4x4::TransformPoint(point, point);
+                std::memcpy(mesh + 8, &point, sizeof(point));
+                std::byte* cursor = mesh + 24;
+                std::int32_t primitive{};
+                std::memcpy(&primitive, cursor, sizeof(primitive));
+                while (primitive) {
+                    if (primitive < 0) {
+                        std::memcpy(&point, cursor + 16, sizeof(point));
+                        Matrix4x4::TransformPoint(point, point);
+                        std::memcpy(cursor + 16, &point, sizeof(point));
+                        cursor += 80;
+                        std::memcpy(&primitive, cursor, sizeof(primitive));
+                    }
+                    std::uint32_t count{};
+                    std::memcpy(&count, cursor + 4, sizeof(count));
+                    cursor += 8;
+                    if (primitive & 8) count *= 3U;
+                    while (count) {
+                        --count;
+                        std::uint32_t vertexFlags{};
+                        std::memcpy(&vertexFlags, cursor, sizeof(vertexFlags));
+                        if (!(vertexFlags & 1U)) {
+                            cursor += 8;
+                            continue;
+                        }
+                        Vector3 position{};
+                        std::memcpy(&position, cursor, sizeof(position));
+                        std::memcpy(&normal, cursor + 12, sizeof(normal));
+                        Matrix4x4::TransformPoint(position, point);
+                        Matrix4x4::Transform(normal, normal);
+                        std::int32_t index = 0;
+                        for (; index < mapVertexCacheCount; ++index) {
+                            const Vector3& cached = mapVertexCache[index];
+                            const float dx = (cached.x - point.x) * (cached.x - point.x);
+                            if (!(dx < 0.00000025f)) continue;
+                            const float dy = dx + (cached.y - point.y) * (cached.y - point.y);
+                            if (dy < 0.00000025f && (cached.z - point.z) * (cached.z - point.z) + dy < 0.00000025f) {
+                                point = cached;
+                                break;
+                            }
+                        }
+                        if (index == mapVertexCacheCount && mapVertexCacheCount < static_cast<std::int32_t>(MAP_VERTEX_CACHE_CAPACITY))
+                            mapVertexCache[mapVertexCacheCount++] = point;
+                        std::memcpy(cursor, &point, sizeof(point));
+                        std::memcpy(cursor + 12, &normal, sizeof(normal));
+                        std::memcpy(&vertexFlags, cursor, sizeof(vertexFlags));
+                        vertexFlags |= 1U;
+                        std::memcpy(cursor, &vertexFlags, sizeof(vertexFlags));
+                        cursor += 32;
+                    }
+                    std::memcpy(&primitive, cursor, sizeof(primitive));
+                }
+            }
+        }
+        ++mapVertexCacheRecordIndex;
+    }
+    if (MT7Node* const child = mtGetTransform(node)) BakeMapNodeVertices(child);
+    if (MT7Node* const sibling = mtGetSibling(node)) {
+        Matrix4x4::Pop(1);
+        BakeMapNodeVertices(sibling);
+    }
+}
+
+void InitializeMapVertexCache() {
+    if (!g_mapVertexCacheEnabled) return;
+    mapVertexCache = static_cast<Vector3*>(HLib::AllocateTaskData(MAP_VERTEX_CACHE_CAPACITY * sizeof(Vector3), MAP_VERTEX_CACHE_STORAGE));
+    if (!mapVertexCache) return;
+    mapVertexCacheCount = 0;
+    for (MapModelRuntimeSlot& slot : mapModelSlots) {
+        if (!slot.reader || slot.reader->nodes.empty()) continue;
+        MT7Node* const root = const_cast<MT7Node*>(slot.reader->nodes.data());
+        MarkSharedMapMeshes(root);
+        Matrix4x4_PushActiveTransform();
+        mapVertexCacheRecords = slot.clipRecords;
+        mapVertexCacheRecordIndex = 0;
+        BakeMapNodeVertices(root);
+        Matrix4x4::Pop(1);
+    }
+    HLib::FreeTaskData(mapVertexCache);
+}
+
 bool Mapinfo_MAP_Reader(std::int32_t actNumber, shen_name areaName,
                         std::int32_t entryPoint, void* mapInfo) {
     if (!mapInfo) {
@@ -1077,6 +1256,8 @@ bool Mapinfo_MAP_Reader(std::int32_t actNumber, shen_name areaName,
         if (packageMode) {
             const std::int32_t packageCount = totalMapPacks == 0
                 ? 1 : totalMapPacks;
+            const std::int64_t loadBudget = GetPakLoadBudget();
+            SetupPakSpace(-1);
             for (std::int32_t index = 0; index < packageCount; ++index) {
                 std::array<char, 8> packageName{};
                 std::snprintf(packageName.data(), packageName.size(),
@@ -1087,6 +1268,7 @@ bool Mapinfo_MAP_Reader(std::int32_t actNumber, shen_name areaName,
                 loaded = requested || loaded;
                 pakLoadFlush();
             }
+            SetupPakSpace(loadBudget);
         } else {
             // LoadMapPacks includes MAP.MT7 plus MAP01..MAPnn, inclusive.
             for (std::int32_t layer = 0; layer <= totalMapPacks; ++layer) {
@@ -1099,6 +1281,9 @@ bool Mapinfo_MAP_Reader(std::int32_t actNumber, shen_name areaName,
         loaded = LoadMainMapByFilepath(folder.data()) || loaded;
     }
     const bool fieldOwnersReady = AssignLoadedModelsToNativeSlots();
+    if (!entryLayers && totalMapPacks >= 0)
+        InitializeMapVertexCache();
+    DisableMapModelSlotsFromMAPD(FindMapInfoChunk("MAPD", mapInfo));
 
     const auto packages = GetLoadedMapPackages();
     const std::size_t pksEntries = packages.empty()
@@ -1374,8 +1559,7 @@ std::span<const MapFieldDepthSlot, 33> GetMapFieldDepthSlots() {
     return mapFieldDepthSlots;
 }
 
-std::int64_t SetMapFieldDepthSlotEnabled(std::uint32_t index,
-                                       std::uint32_t enabled) {
+std::int64_t SetMapFieldDepthSlotEnabled(std::uint32_t enabled, std::uint32_t index) {
     if (index >= mapFieldDepthSlots.size()) return 0;
     MapFieldDepthSlot& slot = mapFieldDepthSlots[index];
     slot.enabled = slot.dangerSpheres || slot.walls || slot.cameraWalls
@@ -1398,7 +1582,7 @@ void camCtrlCacheUtil(std::int32_t operation) {
         break;
     case 3:
         for (std::uint32_t index = 0; index < 33; ++index) mapModelSlots[index].enabled = cachedMapEnabled[index];
-        for (std::uint32_t index = 0; index < 33; ++index) SetMapFieldDepthSlotEnabled(index, cachedMapFieldDepthEnabled[index]);
+        for (std::uint32_t index = 0; index < 33; ++index) SetMapFieldDepthSlotEnabled(cachedMapFieldDepthEnabled[index], index);
         for (std::uint32_t index = 0; index < 33; ++index) mapModelSlots[index].gridCullingEnabled = cachedMapGridCulling[index];
         break;
     case 4:

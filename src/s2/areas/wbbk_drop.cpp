@@ -1,5 +1,6 @@
 #include "s2/areas/area_wbbk.hpp"
 #include "s2/areas/wbbk_dialogue.hpp"
+#include "s2/author_viewer_event.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
 #include "s2/date_time.hpp"
@@ -222,6 +223,7 @@ void RecoverDroppedBooks() {
 }
 } // namespace
 void UpdateBookCarryTask() {
+    EV_set_debug_text_pos(30, 11);
     const bool dispatched = !bookCarryPhase && bookModelState.currentBook > 0;
     if (!bookCarryPhase) {
         bookFaceControl.player = 0;

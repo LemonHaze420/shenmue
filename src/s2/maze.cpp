@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/maze.hpp"
 #include "s2/world_render.hpp"
 
@@ -21,6 +24,7 @@
 
 #include <array>
 #include <bit>
+#include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -901,7 +905,7 @@ void DrawMazeAuxiliaryUnit(const MazeRoad &road, shen_name name) {
             Matrix4x4_Push();
             Matrix4x4::preTranslate(definition.position.x, definition.position.y, definition.position.z);
             Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(definition.yaw));
-            charaApplyScale(&model, model.nodes.data());
+            applyPosRotScl(&model, model.nodes.data());
         }
         Matrix4x4::Pop(1);
     }
@@ -1525,7 +1529,7 @@ void ApplyMazePositionTranslationsFromArray() {
             Matrix4x4::Pop(1);
             Matrix4x4_Push();
             Matrix4x4::preTranslate(position.point.x, position.point.y, position.point.z);
-            charaApplyScale(&model, model.nodes.data());
+            applyPosRotScl(&model, model.nodes.data());
         }
         Matrix4x4::Pop(1);
     }
@@ -1681,7 +1685,7 @@ void DrawMazeAuthoredAnimatedObject(MazeAuthoredObject &object) {
         Matrix4x4::preTranslate(0.0f, bob * 0.5f, 0.0f);
     if (object.flags & 0x10U)
         Matrix4x4::preTranslate(0.0f, bob * 0.1f, 0.0f);
-    charaApplyScale(object.modelReader->data, object.modelReader->data->nodes.data());
+    applyPosRotScl(object.modelReader->data, object.modelReader->data->nodes.data());
     Matrix4x4::Pop(1);
 }
 
@@ -2455,6 +2459,15 @@ void SetMazeDefaults() {
     mazeUnitDistance = 60.0f;
 }
 
+PakGlobalData *SetupRendererAndForceLoadPak(std::int32_t mode) {
+    if (mode < 0 || mode > 4)
+        return nullptr;
+    const char *const folder = g_actNumber != 4 ? "/viewer/maze/" : "/scene/04/MAZE/";
+    PakGlobalData *const package = LoadMapPackage(folder, mazeTerrainPackages[mode]);
+    pakLoadFlush();
+    return package;
+}
+
 bool InitializeMazeRuntime(std::int32_t act, shen_name area) {
     if (act != 4)
         return false;
@@ -2482,27 +2495,20 @@ bool InitializeMazeRuntime(std::int32_t act, shen_name area) {
     // Parent module teardown calls RetireMazeRuntime before freeing use-spaces and package buffers.
     ResetMazeState(false);
     g_mazePropDrawCount = 0;
-    constexpr const char *packageNames[] = {"qte", "kmz1", "kmz2", "kmz3", "kmz4"};
-    terrainPackage = packageNames[mode];
+    terrainPackage = mazeTerrainPackages[mode];
+    ownsTerrainPackage = FindPakByEntryName(terrainPackage) == nullptr;
+    if (!SetupRendererAndForceLoadPak(mode)) {
+        ResetMazeState(true);
+        return false;
+    }
     const LoadedMapPackage *package = nullptr;
     for (const LoadedMapPackage &loaded : GetLoadedMapPackages()) {
-        if (std::strncmp(loaded.name.data(), terrainPackage, loaded.name.size()) == 0) {
+        std::size_t index = 0;
+        while (terrainPackage[index] && std::toupper(static_cast<unsigned char>(loaded.name[index])) == terrainPackage[index])
+            ++index;
+        if (!terrainPackage[index] && !loaded.name[index]) {
             package = &loaded;
             break;
-        }
-    }
-    if (!package) {
-        if (!LoadMapPackage("scene/04/maze", terrainPackage)) {
-            ResetMazeState(true);
-            return false;
-        }
-        ownsTerrainPackage = true;
-        pakLoadFlush();
-        for (const LoadedMapPackage &loaded : GetLoadedMapPackages()) {
-            if (std::strncmp(loaded.name.data(), terrainPackage, loaded.name.size()) == 0) {
-                package = &loaded;
-                break;
-            }
         }
     }
     SetMazeDefaults();
@@ -2781,12 +2787,23 @@ std::int32_t FindCharacterMazeMarkerWithinRadius(Character *character, float rad
 
 // @verified - p
 bool IsCharacterWithinMazeMarkerRadius(Character *character, std::int32_t marker, float radius) {
-    const Vector3 position = GetCharacterWorldPosition(character);
+    Vector3 position;
+    GetCharacterLocalPosition(character, &position);
     Vector3 target;
     if (!mazeGetMarkerPosition(marker, &target))
         return false;
     const float dx = position.x - target.x;
     const float dz = position.z - target.z;
+    return radius * radius > dz * dz + dx * dx;
+}
+
+// @verified - p
+bool IsPositionWithinMazeMarkerRadius(const Vector3 *position, std::int32_t marker, float radius) {
+    Vector3 target;
+    if (!mazeGetMarkerPosition(marker, &target))
+        return false;
+    const float dx = position->x - target.x;
+    const float dz = position->z - target.z;
     return radius * radius > dz * dz + dx * dx;
 }
 
@@ -2805,8 +2822,10 @@ std::uint32_t GetMazeUnitYaw(std::int32_t index) {
     (void)AuthoredWord(block, record, 0);
     return 0x4000U - static_cast<std::uint32_t>(AuthoredWord(block, record, 24));
 }
+// @verified - p
 std::uint64_t GetCharacterMazeUnitIndex(Character *character) {
-    const Vector3 position = GetCharacterWorldPosition(character);
+    Vector3 position;
+    GetCharacterLocalPosition(character, &position);
     return static_cast<std::uint32_t>(FindUnit(position));
 }
 
@@ -2968,3 +2987,4 @@ void SetMazeHourAnimationFrame(std::int32_t frame) {
 }
 
 } // namespace shenmue::s2
+
