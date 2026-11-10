@@ -3,10 +3,12 @@
 #include "d3t/archive_data.hpp"
 #include "d3t/buffer.hpp"
 #include "d3t/fvf.hpp"
+#include "d3t/material.hpp"
 #include "d3t/texture.hpp"
 #include "d3t/shader.hpp"
 
 #include <bit>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 
@@ -126,6 +128,18 @@ std::uint32_t AppendModelString(D3TModelRecord &model, const char *text) {
     model.stringsSize = offset + length;
     std::memcpy(const_cast<char *>(model.strings) + offset, text, length);
     return offset;
+}
+
+void EnsureModelStringsOwned(D3TModelRecord &model) {
+    if (model.ownsStrings)
+        return;
+    model.ownsStrings = 1;
+    const std::uint32_t capacity = model.stringsCapacity + 2048U;
+    char *const strings = static_cast<char *>(std::malloc(capacity));
+    if (model.stringsSize)
+        std::memcpy(strings, model.strings, model.stringsSize);
+    model.strings = strings;
+    model.stringsCapacity = capacity;
 }
 
 } // namespace
@@ -384,6 +398,88 @@ void CopyModelMaterials(std::uint32_t destinationHandle, std::uint32_t sourceHan
     destination->materialParameters = parameters.data;
 }
 
+std::uint32_t CreateRenderHandleForSnowOrRain(std::uint32_t primitiveCount, std::uint32_t instanceHandle, std::uint32_t indexCount) {
+    const std::uint32_t handle = AllocateModelHandle();
+    D3TModelRecord *const model = ResolveModel(handle);
+    if (!model)
+        return 0;
+    std::memset(model, 0, sizeof(*model));
+    EnsureModelStringsOwned(*model);
+    model->instanceCount = 0;
+    model->nodeCount = 1;
+    model->materialCount = 1;
+    model->drawGroupCount = 1;
+    model->submeshCount = 1;
+    model->referenceCount = 0;
+    std::byte *storage = static_cast<std::byte *>(std::malloc(0x1b4));
+    std::memset(storage, 0, 0x1b4);
+    model->runtimeStorage = storage;
+    model->nodeTransforms = reinterpret_cast<Matrix4x4 *>(storage);
+    model->nodeTransforms[0] = kDefaultPerObjectBufferData;
+    storage += sizeof(Matrix4x4);
+    model->materialRuntime = reinterpret_cast<D3TModelMaterialRuntime *>(storage);
+    std::memset(storage, 0, sizeof(D3TModelMaterialRuntime) * model->materialCount);
+    storage += sizeof(D3TModelMaterialRuntime) * model->materialCount;
+    model->geometry = reinterpret_cast<D3TModelGeometryRuntime *>(storage);
+    storage += sizeof(D3TModelGeometryRuntime);
+    model->geometryCount = 1;
+    model->materials = reinterpret_cast<D3TModelMaterial *>(storage);
+    storage += sizeof(D3TModelMaterial);
+    model->materials->nameOffset = AppendModelString(*model, "I'm a Rain Material");
+    model->materials->materialType = 14;
+    BindRainMaterialParameters(handle, *model->materials, instanceHandle);
+    model->nodes = reinterpret_cast<D3TModelNode *>(storage);
+    storage += sizeof(D3TModelNode);
+    model->nodes->drawGroup = 1;
+    model->nodes->subtreeSize = 1;
+    model->drawGroups = reinterpret_cast<D3TModelDrawGroup *>(storage);
+    storage += sizeof(D3TModelDrawGroup);
+    model->drawGroups->reserved_0c = 0;
+    model->drawGroups->submeshCount = 1;
+    model->drawGroups->indexCount = indexCount;
+    model->submeshes = reinterpret_cast<D3TModelSubmesh *>(storage);
+    model->submeshes->primitiveCount = primitiveCount;
+    return handle;
+}
+
+std::uint32_t CreateAndBindInstanceBuffer(std::uint32_t instanceHandle, std::uint32_t count) {
+    const std::uint32_t handle = CreateRenderHandleForSnowOrRain(2U * count, instanceHandle, 6U * count);
+    D3TModelRecord *const model = ResolveModel(handle);
+    if (!model)
+        return handle;
+    const BufferDescription description{
+        .flags = 3, .size = static_cast<std::int32_t>(sizeof(D3TParticleInstance) * count), .count = 52, .flags3 = 2, .buffer = nullptr, .name = nullptr};
+    model->instanceBuffer = static_cast<std::uint32_t>(CreateBuffer(&description));
+    model->instanceMirror = std::malloc(sizeof(D3TParticleInstance) * count);
+    model->materials->doubleSided = 1;
+    return handle;
+}
+
+void UpdateInstancedModelBounds(D3TModelRecord &model, const D3TParticleInstance *instances, std::uint32_t count) {
+    Vector3 minimum{3.4028235e38f, 3.4028235e38f, 3.4028235e38f};
+    Vector3 maximum{-3.4028235e38f, -3.4028235e38f, -3.4028235e38f};
+    for (std::uint32_t index = 0; index < count; ++index) {
+        const D3TParticleInstance &instance = instances[index];
+        const float extent = std::fmax(std::fabs(instance.corner0[1]),
+            std::fmax(std::fabs(instance.corner1[1]), std::fmax(std::fabs(instance.corner0[0]), std::fabs(instance.corner1[0]))));
+        if (maximum.x < instance.position.x + extent)
+            maximum.x = instance.position.x + extent;
+        if (maximum.y < instance.position.y + extent)
+            maximum.y = instance.position.y + extent;
+        if (maximum.z < instance.position.z + extent)
+            maximum.z = instance.position.z + extent;
+        if (instance.position.x - extent <= minimum.x)
+            minimum.x = instance.position.x - extent;
+        if (instance.position.y - extent <= minimum.y)
+            minimum.y = instance.position.y - extent;
+        if (instance.position.z - extent <= minimum.z)
+            minimum.z = instance.position.z - extent;
+    }
+    model.drawGroups->boundsMinimum = minimum;
+    model.drawGroups->boundsMaximum = maximum;
+    model.submeshes->boundsMinimum = minimum;
+    model.submeshes->boundsMaximum = maximum;
+}
 
 bool SetupShaderReferences(std::uint32_t handle) {
     const D3TModelRecord *const model = d3t::ResolveModel(handle);
@@ -407,5 +503,66 @@ bool SetupShaderReferences(std::uint32_t handle) {
         }
     }
     return true;
+}
+
+// @verified - p
+std::uint8_t SetModelMaterialTexture(ModelMaterialDescriptor &descriptor, std::uint32_t parameterIndex, std::uint32_t texture) {
+    D3TModelRecord *const model = d3t::ResolveModel(descriptor.renderHandle);
+    if (!model)
+        return 0;
+    D3TModelMaterialParameter &parameter = const_cast<D3TModelMaterialParameter &>(descriptor.parameters[parameterIndex]);
+    D3TModelMaterialRuntime &runtime = model->materialRuntime[descriptor.material - model->materials];
+    std::uint32_t slot;
+    if (!GetMaterialTextureSlot(parameter.type, slot))
+        return 0;
+    IncrementTextureById(texture);
+    InitTexture2DResource(runtime.textures[slot]);
+    runtime.textures[slot] = texture;
+    parameter.texture = 0;
+    return static_cast<std::uint8_t>(texture);
+}
+
+// @verified - p
+bool VisitModelMaterial(std::uint32_t handle, std::uint32_t materialIndex, void *context, void (*visitor)(void *, const ModelMaterialDescriptor &)) {
+    D3TModelRecord *const model = d3t::ResolveModel(handle);
+    if (!model)
+        return false;
+    const D3TModelMaterial &material = model->materials[materialIndex];
+    D3TModelMaterialRuntime &runtime = model->materialRuntime[materialIndex];
+    ModelMaterialDescriptor descriptor{.name = material.nameOffset < model->stringsSize ? model->strings + material.nameOffset : nullptr,
+        .material = &material,
+        .parameters = model->materialParameters + material.firstParameter,
+        .flags = &runtime.flags,
+        .textures = {},
+        .textureNames = {},
+        .renderHandle = handle,
+        .reserved = 0};
+    for (const char *&name : descriptor.textureNames)
+        name = "NO TEXTURE";
+    for (std::uint32_t index = 0; index < material.parameterCount; ++index) {
+        const D3TModelMaterialParameter &parameter = model->materialParameters[material.firstParameter + index];
+        std::uint32_t slot;
+        if (!GetMaterialTextureSlot(parameter.type, slot))
+            continue;
+        if (parameter.texture) {
+            const std::uint32_t offset = model->textures[parameter.texture - 1].pathOffset;
+            descriptor.textureNames[slot] = offset < model->stringsSize ? model->strings + offset : nullptr;
+        } else
+            descriptor.textureNames[slot] = "UNKNOWN TEXTURE";
+        descriptor.textures[slot] = runtime.textures[slot];
+    }
+    visitor(context, descriptor);
+    return true;
+}
+
+// @verified - p
+std::uint32_t VisitModelMaterials(std::uint32_t handle, void *context, void (*visitor)(void *, const ModelMaterialDescriptor &)) {
+    const D3TModelRecord *const model = d3t::ResolveModel(handle);
+    if (!model)
+        return 0;
+    std::uint32_t count = 0;
+    for (std::uint32_t index = 0; index < model->materialCount; ++index)
+        count += VisitModelMaterial(handle, index, context, visitor);
+    return count;
 }
 } // namespace shenmue::d3t

@@ -120,11 +120,11 @@ BufferResource *GetSceneBuffer(std::int32_t handle) {
 }
 
 void *AllocateRawBuffer(std::size_t size) {
-    return ::operator new (size, std::align_val_t{16}, std::nothrow);
+    return ::operator new(size, std::align_val_t{16}, std::nothrow);
 }
 
 void FreeRawBuffer(void *buffer) {
-    ::operator delete (buffer, std::align_val_t{16});
+    ::operator delete(buffer, std::align_val_t{16});
 }
 
 void ReleaseBufferResources(BufferResource &slot) {
@@ -456,6 +456,7 @@ std::int64_t DX11_CopySceneNodeToGPU(void *renderer, std::int32_t bufferHandle) 
 }
 
 std::int64_t FreeBuffers() {
+    const BufferWriteLock lock;
     for (std::size_t index = 0; index < kBufferCount; ++index) {
         if (g_buffers.tags[index] & kBufferOccupied) {
             ReleaseBufferResources(g_buffers.buffers[index]);

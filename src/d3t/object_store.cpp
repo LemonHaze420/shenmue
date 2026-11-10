@@ -45,29 +45,6 @@ static constexpr std::uint8_t hashAfterModelTransform = 1;
 #endif
 namespace {
 
-struct ObjectEntry;
-struct ObjectSource {
-    std::uintptr_t key{};
-    std::uint32_t threadHandle{};
-    std::uint32_t loadHandle{};
-    std::uint32_t renderHandle{};
-    std::uint32_t flags{};
-    std::uint32_t resolveState{};
-    std::uint32_t modelKind{};
-    char path[260]{};
-    std::byte reserved124[20]{};
-    std::uint32_t pathHash{};
-    std::uint32_t references{};
-    std::uint8_t retiring{};
-    std::byte reserved141[7]{};
-    D3TRawArray<ObjectEntry *> placements{};
-    void *callbackData{};
-    void (*callback)(void *, ObjectSource *){};
-};
-static_assert(sizeof(ObjectSource) == 0x168);
-static_assert(offsetof(ObjectSource, placements) == 0x148);
-static_assert(offsetof(ObjectSource, pathHash) == 0x138);
-
 enum class EntryKind : std::uint32_t { Pending, ModelRuntime, Legacy };
 enum class UpdateState : std::uint32_t { Idle, Dirty, Retire };
 struct FacialExpressionChannel {
@@ -107,6 +84,7 @@ struct EyeControlRig {
     std::uint64_t head, eyelashes;
 };
 static_assert(sizeof(EyeControlRig) == 0x40);
+} // namespace
 struct ObjectEntry {
     const void *placement{};
     ObjectSource *source{};
@@ -132,6 +110,7 @@ static_assert(offsetof(ObjectEntry, eyeControlRig) == 0x8580);
 static_assert(offsetof(ObjectEntry, screenMapping) == 0x8588);
 static_assert(offsetof(ObjectEntry, handle) == 0x85ac);
 static_assert(offsetof(ObjectEntry, update) == 0x85b0);
+namespace {
 
 
 
@@ -207,6 +186,15 @@ template <class Value, std::size_t Capacity> struct FixedMap {
             probes[previous] = 0;
         --count;
         return true;
+    }
+
+    void clear() {
+        for (std::size_t index = 0; index < Capacity; ++index) {
+            values[index] = {};
+            keys[index] = 0;
+            probes[index] = 0;
+        }
+        count = 0;
     }
 };
 
@@ -714,6 +702,28 @@ void ResetHashedModelCounts() {
     g_uniqueModelCount = 0;
     g_culledModelCount = 0;
 }
+
+void InitialiseHashTable() {
+    sources.clear();
+    placementIndex.clear();
+    for (ObjectEntry &entry : entries)
+        entry = {};
+    slotFlags.fill(0);
+    nextSlot = 0;
+    publicAliases.clear();
+    sourceAliases.clear();
+}
+
+void FreeObjectStoreTables() {
+    sources.clear();
+    placementIndex.clear();
+    for (ObjectEntry &entry : entries)
+        entry = {};
+    slotFlags.fill(0);
+    nextSlot = 0;
+    publicAliases.clear();
+    sourceAliases.clear();
+}
 #endif
 
 ModelRuntimeState *GetModelRuntimeState(const void *placement) {
@@ -935,6 +945,9 @@ void UpdateModelExpressionState(ObjectEntry &entry) {
 }
 } // namespace
 
+std::uint32_t (*g_getCurrentAreaIdHook)(){};
+std::uint32_t (*g_getCharaCEWPHook)(const void *placement){};
+
 void SetObjectFacialExpression(const void *placement, std::uint32_t expression, FacialExpressionLayer layer, float transitionFrames, float weight) {
     if (!AdmitExpressionFrames(transitionFrames))
         return;
@@ -948,6 +961,8 @@ void SetObjectFacialExpression(const void *placement, std::uint32_t expression, 
             return;
         layer = FacialExpressionLayer::Lower;
     }
+    if (layer == FacialExpressionLayer::Upper && g_getCharaCEWPHook)
+        g_getCharaCEWPHook(placement);
     auto &channel = layer == FacialExpressionLayer::Upper ? entry->expressions.upper : entry->expressions.lower;
     if (StageFacialExpression(channel, expression, transitionFrames, weight) && layer == FacialExpressionLayer::Lower)
         entry->expressions.mouth.pending = 1;
@@ -956,8 +971,9 @@ void SetObjectFacialExpression(const void *placement, std::uint32_t expression, 
 void SetObjectMouthExpression(const void *placement, std::uint32_t expression, float transitionFrames, float weight) {
     if (!AdmitExpressionFrames(transitionFrames))
         return;
-    if (ObjectEntry *const entry = ResolveHashedObjectEntry(placement))
-        StageFacialExpression(entry->expressions.mouth, expression, transitionFrames, weight);
+    ObjectEntry *const entry = ResolveHashedObjectEntry(placement);
+    if (entry && StageFacialExpression(entry->expressions.mouth, expression, transitionFrames, weight) && g_getCharaCEWPHook)
+        g_getCharaCEWPHook(placement);
 }
 
 void SetObjectEyeLidExpressionWeights(const void *placement, float leftWeight, float rightWeight, float transitionFrames) {
@@ -1100,7 +1116,8 @@ bool RegisterObjectAlias(const void *publicKey, const void *placement) {
     return publicAliases.insert(FoldKey(reinterpret_cast<std::uintptr_t>(publicKey)), reinterpret_cast<std::uintptr_t>(placement)) != publicAliases.keys.size();
 }
 
-bool RegisterObjectSource(const void *source, const char *modelPath, std::uint16_t flags, std::uint32_t threadHandle) {
+bool RegisterObjectSource(
+    const void *source, const char *modelPath, std::uint16_t flags, std::uint32_t threadHandle, void *callbackData, void (*callback)(void *, ObjectSource *)) {
     if (ObjectSource *const existing = FindSource(source)) {
         if (!existing->retiring)
             return false;
@@ -1175,6 +1192,8 @@ bool RegisterObjectSource(const void *source, const char *modelPath, std::uint16
     record.modelKind = modelKind;
     record.pathHash = hash;
     record.references = 1;
+    record.callbackData = callbackData;
+    record.callback = callback;
     if (std::strlen(path) >= sizeof(record.path))
         throw std::length_error("Native object model path exceeds 259 bytes");
     std::strcpy(record.path, path);

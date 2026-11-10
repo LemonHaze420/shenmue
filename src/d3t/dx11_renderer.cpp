@@ -2,10 +2,12 @@
 #include "logging.hpp"
 
 #include "platform/performance_counter.hpp"
+#include "d3t/buffer.hpp"
 #include "d3t/pipeline_state.hpp"
 #include "d3t/shader.hpp"
 #include "d3t/texture.hpp"
 #include "d3t/fvf.hpp"
+#include "common/archive_data.hpp"
 
 #include <algorithm>
 #include <array>
@@ -36,6 +38,8 @@
 #include <DirectXTex.h>
 #endif
 #endif
+
+extern "C" unsigned char *stbi_write_png_to_mem(const unsigned char *pixels, int strideBytes, int width, int height, int components, int *length);
 
 namespace shenmue::d3t {
 
@@ -395,6 +399,87 @@ void CreateNewSRVTexture() {
     g_device->CreateTexture2D(&description, nullptr, &g_readbackTexture);
 }
 
+namespace {
+#if defined(_WIN32)
+bool CreateFilePathDirectories(const char *path) {
+    char directory[261]{};
+    strcpy_s(directory, sizeof(directory), path);
+    archive_data::FilepathCleaner(directory);
+    char *cursor = directory;
+    while (char *const slash = std::strchr(cursor, '/')) {
+        *slash = 0;
+        if (directory[0]) {
+            const DWORD attributes = GetFileAttributesA(directory);
+            if ((attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0) && !CreateDirectoryA(directory, nullptr))
+                return false;
+        }
+        *slash = '/';
+        cursor = slash + 1;
+    }
+    return true;
+}
+#endif
+} // namespace
+
+bool TakeScreenshot(const char *filename, const std::uint8_t *pixels, std::int32_t strideBytes) {
+#if !defined(_WIN32)
+    static_cast<void>(filename);
+    static_cast<void>(pixels);
+    static_cast<void>(strideBytes);
+    return false;
+#else
+    std::int32_t length = 0;
+    unsigned char *const png = stbi_write_png_to_mem(
+        pixels, strideBytes, static_cast<std::int32_t>(g_originalScreenWidth), static_cast<std::int32_t>(g_originalScreenHeight), 3, &length);
+    if (!png)
+        return false;
+    FILE *file = nullptr;
+    if (fopen_s(&file, filename, "wb") != 0 || !file) {
+        std::free(png);
+        return false;
+    }
+    std::fwrite(png, 1, static_cast<std::size_t>(length), file);
+    std::fclose(file);
+    std::free(png);
+    return true;
+#endif
+}
+
+bool MapAndTakeScreenshot(const char *filename) {
+#if !defined(_WIN32)
+    static_cast<void>(filename);
+    return false;
+#else
+    if (!g_immediateContext || !g_readbackTexture)
+        return false;
+    if (!CreateFilePathDirectories(filename))
+        return false;
+    D3D11_MAPPED_SUBRESOURCE mapped{};
+    if (FAILED(g_immediateContext->Map(g_readbackTexture, 0, D3D11_MAP_READ, 0, &mapped)))
+        return false;
+    const std::uint32_t width = g_originalScreenWidth;
+    const std::uint32_t height = g_originalScreenHeight;
+    std::uint8_t *const pixels = static_cast<std::uint8_t *>(std::malloc(3ULL * width * height));
+    std::uint8_t *output = pixels;
+    const std::uint8_t *row = static_cast<const std::uint8_t *>(mapped.pData);
+    for (std::uint32_t y = 0; y < height; ++y) {
+        const std::uint8_t *input = row;
+        for (std::uint32_t x = 0; x < width; ++x) {
+            output[0] = input[0];
+            output[1] = input[1];
+            output[2] = input[2];
+            output += 3;
+            input += 4;
+        }
+        row += mapped.RowPitch;
+    }
+    const bool written = TakeScreenshot(filename, pixels, static_cast<std::int32_t>(3 * width));
+    std::free(pixels);
+    g_immediateContext->Unmap(g_readbackTexture, 0);
+    return written;
+#endif
+}
+
 void ShutdownDX11() {
     if (g_immediateContext)
         g_immediateContext->ClearState();
@@ -416,6 +501,10 @@ void ShutdownDX11() {
             query->Release();
         query = nullptr;
     }
+    DestroyAllShaders();
+    ReleaseAllTextures();
+    FreeBuffers();
+    ReleaseD3TPipelineStateCaches();
 
     auto releasePools = [](auto &pools) {
         auto **allocation = pools.empty() ? nullptr : pools[0].buffers;

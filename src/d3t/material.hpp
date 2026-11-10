@@ -133,6 +133,25 @@ bool PopulateSkyMaterialConstants(SkyMaterialConstants &constants, const D3TMode
 void GetOrCreateSceneEntity(
     const D3TModelMaterial &material, const D3TModelMaterialParameter *parameters, D3TModelMaterialRuntime &runtime, D3TDeviceContext *context);
 
+inline constexpr D3TModelMaterialParameter kRainMaterialParameters[13] = {
+    {.type = 5, .value = {1.0f, 1.0f, 1.0f, 1.0f}, .texture = 0},
+    {.type = 6, .value = {1.0f, 1.0f, 1.0f, 1.0f}, .texture = 0},
+    {.type = 7, .value = {1.0f, 1.0f, 1.0f, 1.0f}, .texture = 0},
+    {.type = 8, .value = {0.0f, 0.0f, 0.0f, 0.0f}, .texture = 0},
+    {.type = 9, .value = {1.0f, 1.0f, 1.0f, 1.0f}, .texture = 0},
+    {.type = 14, .value = {1.0f, 0.0f, 0.0f, 0.0f}, .texture = 0},
+    {.type = 10, .value = {1.0f, 0.0f, 0.0f, 0.0f}, .texture = 0},
+    {.type = 15, .value = {1.0f, 0.0f, 0.0f, 0.0f}, .texture = 0},
+    {.type = 18, .value = {0.5f, 0.0f, 0.0f, 0.0f}, .texture = 0},
+    {.type = 19, .value = {0.0f, 0.0f, 0.0f, 0.0f}, .texture = 0},
+    {.type = 20, .value = {0.0f, 0.0f, 0.0f, 0.0f}, .texture = 0},
+    {.type = 32, .value = {0.0f, 0.0f, 0.0f, 0.0f}, .texture = 0},
+    {.type = 45, .value = {0.0f, 0.0f, 0.0f, 0.0f}, .texture = 0},
+};
+bool RebindRenderMaterial(
+    std::uint32_t handle, D3TModelMaterial &material, const D3TModelMaterialParameter *parameters, std::uint32_t count, std::uint32_t instanceHandle);
+bool BindRainMaterialParameters(std::uint32_t handle, D3TModelMaterial &material, std::uint32_t instanceHandle);
+
 } // namespace d3t
 
 } // namespace shenmue

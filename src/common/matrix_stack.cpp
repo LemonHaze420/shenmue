@@ -1,5 +1,6 @@
 #include "common/matrix_stack.hpp"
 
+
 #include "common/math.hpp"
 
 #include <algorithm>
@@ -251,21 +252,26 @@ Matrix4x4 *ComputeRotationMatrixFromVectors(Matrix4x4 *output, const Vector3 *fr
     return ComputeRotationMatrixFromVectorAndAngle(output, &axis, std::acos(dot));
 }
 
+// @verified - p
 Matrix4x4 *ComputeLookAtViewMatrix(Matrix4x4 *output, const Vector3 *eye, const Vector3 *target, const Vector3 *up) {
     Vector3 forward{target->x - eye->x, target->y - eye->y, target->z - eye->z};
-    float length = std::sqrt(forward.x * forward.x + forward.y * forward.y + forward.z * forward.z);
+    const float length = std::sqrt((forward.y * forward.y + forward.x * forward.x) + forward.z * forward.z);
     if (length > 0.0f) {
-        forward = {forward.x / length, forward.y / length, forward.z / length};
+        forward.x *= 1.0f / length;
+        forward.y *= 1.0f / length;
+        forward.z *= 1.0f / length;
     }
     Vector3 side{up->y * forward.z - up->z * forward.y, up->z * forward.x - up->x * forward.z, up->x * forward.y - up->y * forward.x};
-    length = std::sqrt(side.x * side.x + side.y * side.y + side.z * side.z);
-    if (length > 0.0f) {
-        side = {side.x / length, side.y / length, side.z / length};
+    const float sideLength = std::sqrt((side.y * side.y + side.x * side.x) + side.z * side.z);
+    if (sideLength > 0.0f) {
+        side.x *= 1.0f / sideLength;
+        side.y *= 1.0f / sideLength;
+        side.z *= 1.0f / sideLength;
     }
-    const Vector3 newUp{forward.y * side.z - forward.z * side.y, forward.z * side.x - forward.x * side.z, forward.x * side.y - forward.y * side.x};
-    output->rows[0] = {side.x, side.y, side.z, -(side.x * eye->x + side.y * eye->y + side.z * eye->z)};
-    output->rows[1] = {newUp.x, newUp.y, newUp.z, -(newUp.x * eye->x + newUp.y * eye->y + newUp.z * eye->z)};
-    output->rows[2] = {forward.x, forward.y, forward.z, -(forward.x * eye->x + forward.y * eye->y + forward.z * eye->z)};
+    const Vector3 newUp{side.z * forward.y - side.y * forward.z, side.x * forward.z - side.z * forward.x, side.y * forward.x - side.x * forward.y};
+    output->rows[0] = {side.x, side.y, side.z, -((eye->y * side.y + eye->x * side.x) + eye->z * side.z)};
+    output->rows[1] = {newUp.x, newUp.y, newUp.z, -((eye->y * newUp.y + eye->x * newUp.x) + eye->z * newUp.z)};
+    output->rows[2] = {forward.x, forward.y, forward.z, -((eye->y * forward.y + eye->x * forward.x) + eye->z * forward.z)};
     output->rows[3] = {0.0f, 0.0f, 0.0f, 1.0f};
     return output;
 }
@@ -616,14 +622,33 @@ Matrix4x4 *Matrix4x4::MakeFromQuat(Matrix4x4 *output, const Vector4 *first, cons
 }
 
 void Matrix4x4::InvertInPlace(Matrix4x4 *matrix) {
-    Matrix4x4 *const destination = matrix ? matrix : g_matrixStack.top.stack;
-    const Matrix4x4 *const source = matrix ? matrix : &workTransformMatrix;
+    Matrix4x4 *const target = matrix ? matrix : g_matrixStack.top.stack;
+    if (!matrix)
+        *target = workTransformMatrix;
+    std::array<std::uint8_t, 4> rowIndices{};
+    if (decomposeMatrix(*target, rowIndices) == 0.0f)
+        return;
     Matrix4x4 inverse;
-    Matrix4x4::invertMatrix(source, &inverse);
-    *destination = inverse;
-    if (!matrix) {
-        workTransformMatrix = inverse;
+    float *const solved = &inverse.rows[0].x;
+    for (std::size_t column = 0; column < 4; ++column) {
+        for (std::size_t row = 0; row < 4; ++row) {
+            const float *const factors = &target->rows[rowIndices[row]].x;
+            float value = rowIndices[row] == column ? 1.0f : 0.0f;
+            for (std::size_t previous = 0; previous < row; ++previous)
+                value -= factors[previous] * solved[previous * 4 + column];
+            solved[row * 4 + column] = value;
+        }
+        for (std::size_t row = 4; row-- > 0;) {
+            const float *const factors = &target->rows[rowIndices[row]].x;
+            float value = solved[row * 4 + column];
+            for (std::size_t next = row + 1; next < 4; ++next)
+                value -= factors[next] * solved[next * 4 + column];
+            solved[row * 4 + column] = value / factors[row];
+        }
     }
+    *target = inverse;
+    if (!matrix)
+        workTransformMatrix = *target;
 }
 
 void Matrix4x4::AffineProjectionSwap() {
@@ -640,3 +665,4 @@ void Matrix4x4::RotateMatrixCounterClockwise90() {
 }
 
 } // namespace shenmue
+

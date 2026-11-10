@@ -349,6 +349,12 @@ std::int64_t PushShaderLoadToThreadQueue(const D3TShaderLoadTask *task) {
     return -3;
 }
 
+// @verified - p
+const char *GetContentSourcePath(std::uint32_t contentHandle) {
+    D3TContentSlot *slot = nullptr;
+    return validContentHandle(contentHandle, slot) ? slot->sourcePath : nullptr;
+}
+
 void ProcessThreadStates(std::uint32_t contentHandle, std::int32_t type) {
     D3TContentSlot *slot = nullptr;
     if (!validContentHandle(contentHandle, slot)) {

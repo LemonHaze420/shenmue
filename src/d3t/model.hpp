@@ -404,6 +404,21 @@ static_assert(sizeof(D3TModelTable) == 0x24408);
 static_assert(sizeof(D3TModelLoad) == 8);
 static_assert(sizeof(D3TModelReferenceLoad) == 0x10);
 
+struct ModelMaterialDescriptor {
+    const char *name;
+    const D3TModelMaterial *material;
+    const D3TModelMaterialParameter *parameters;
+    std::uint32_t *flags;
+    std::uint32_t textures[16];
+    const char *textureNames[16];
+    std::uint32_t renderHandle;
+    std::uint32_t reserved;
+};
+static_assert(sizeof(ModelMaterialDescriptor) == 232);
+static_assert(offsetof(ModelMaterialDescriptor, textures) == 32);
+static_assert(offsetof(ModelMaterialDescriptor, textureNames) == 96);
+static_assert(offsetof(ModelMaterialDescriptor, renderHandle) == 224);
+
 namespace d3t {
 void ReadModel(D3TModelRecord &model, void *image, const char *sourcePath, std::int32_t textureMipMode);
 extern D3TModelTable g_d3tModels;
@@ -414,8 +429,25 @@ void ReleaseModelHandle(std::uint32_t handle);
 const char *GetModelSettings(std::uint32_t handle);
 void CopyModelMaterials(std::uint32_t destinationHandle, std::uint32_t sourceHandle);
 bool SetupShaderReferences(std::uint32_t handle);
-
+std::uint8_t SetModelMaterialTexture(ModelMaterialDescriptor &descriptor, std::uint32_t parameterIndex, std::uint32_t texture);
+bool VisitModelMaterial(std::uint32_t handle, std::uint32_t materialIndex, void *context, void (*visitor)(void *, const ModelMaterialDescriptor &));
+std::uint32_t VisitModelMaterials(std::uint32_t handle, void *context, void (*visitor)(void *, const ModelMaterialDescriptor &));
+inline constexpr Matrix4x4 kDefaultPerObjectBufferData{
+    {{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 1.0f}}};
+struct D3TParticleInstance {
+    Vector3 position;
+    float corner0[2];
+    float corner1[2];
+    float parameter1c[2];
+    float parameter24[2];
+    std::uint32_t colour;
+    std::uint32_t particle;
+};
+static_assert(sizeof(D3TParticleInstance) == 52);
+std::uint32_t CreateRenderHandleForSnowOrRain(std::uint32_t primitiveCount, std::uint32_t instanceHandle, std::uint32_t indexCount);
+std::uint32_t CreateAndBindInstanceBuffer(std::uint32_t instanceHandle, std::uint32_t count);
+void UpdateInstancedModelBounds(D3TModelRecord &model, const D3TParticleInstance *instances, std::uint32_t count);
 std::uint32_t DispatchModelLoad(const char *path, std::uint32_t instanceHandle);
-}
+} // namespace d3t
 
 } // namespace shenmue

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 #include "common/math.hpp"
+#include "d3t/asset_remap.hpp"
 
 namespace shenmue::d3t {
 
@@ -81,10 +82,39 @@ enum class FacialExpressionLayer : std::uint32_t { Upper, Lower, Full };
 void SetObjectFacialExpression(const void *placement, std::uint32_t expression, FacialExpressionLayer layer, float transitionFrames, float weight);
 void SetObjectMouthExpression(const void *placement, std::uint32_t expression, float transitionFrames, float weight);
 void SetObjectEyeLidExpressionWeights(const void *placement, float leftWeight, float rightWeight, float transitionFrames);
+extern std::uint32_t (*g_getCurrentAreaIdHook)();
+extern std::uint32_t (*g_getCharaCEWPHook)(const void *placement);
 #endif
 std::uint64_t ResolveModelRuntimeNode(const void *placement, const char *name, std::int16_t kind);
 
-bool RegisterObjectSource(const void *source, const char *modelPath, std::uint16_t flags, std::uint32_t threadHandle = 0);
+struct ObjectEntry;
+struct ObjectSource {
+    std::uintptr_t key{};
+    std::uint32_t threadHandle{};
+    std::uint32_t loadHandle{};
+    std::uint32_t renderHandle{};
+    std::uint32_t flags{};
+    std::uint32_t resolveState{};
+    std::uint32_t modelKind{};
+    char path[260]{};
+    std::byte reserved124[20]{};
+    std::uint32_t pathHash{};
+    std::uint32_t references{};
+    std::uint8_t retiring{};
+    std::byte reserved141[7]{};
+    D3TRawArray<ObjectEntry *> placements{};
+    void *callbackData{};
+    void (*callback)(void *, ObjectSource *){};
+};
+static_assert(sizeof(ObjectSource) == 0x168);
+static_assert(offsetof(ObjectSource, renderHandle) == 0x10);
+static_assert(offsetof(ObjectSource, resolveState) == 0x18);
+static_assert(offsetof(ObjectSource, pathHash) == 0x138);
+static_assert(offsetof(ObjectSource, placements) == 0x148);
+static_assert(offsetof(ObjectSource, callback) == 0x160);
+
+bool RegisterObjectSource(const void *source, const char *modelPath, std::uint16_t flags, std::uint32_t threadHandle = 0, void *callbackData = nullptr,
+    void (*callback)(void *, ObjectSource *) = nullptr);
 void ReleaseObjectSource(const void *source);
 // The source's realized D3T model handle (ResolveSourceObjectEntry +0x10), 0 when it has none.
 std::uint32_t GetObjectSourceRenderHandle(const void *source);
@@ -120,6 +150,8 @@ bool IsObjectModelRuntime(const void *placement);
 std::uint32_t GetShouldHashFlag();
 void IncrementHashedModelCount(std::int32_t models, std::int32_t culled);
 void ResetHashedModelCounts();
+void FreeObjectStoreTables();
+void InitialiseHashTable();
 extern std::int32_t g_uniqueModelCount;
 extern std::int32_t g_culledModelCount;
 #endif

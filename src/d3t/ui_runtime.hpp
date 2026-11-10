@@ -165,6 +165,7 @@ void UI_RecordImageRequest(std::int32_t image, std::uint32_t requestHandle);
 void UI_RecordImageFailure(std::int32_t image, std::uint32_t requestHandle);
 void UI_RecordImageReady(std::int32_t image);
 void UI_RecordImageViewSlot(std::int32_t slotIndex);
+void UI_ResetImageLoadDiagnostics();
 #endif
 
 extern std::array<d3t::UISpriteSheet, d3t::kUISpriteSheetCount> g_uiSpriteSheets;
@@ -987,6 +988,10 @@ std::int32_t UIWidget_Bind(std::int32_t objectHandle, std::int32_t objectKind, s
 std::int32_t UIWidget_Bind(std::int32_t objectHandle, float *property, std::array<float, 2> hidden, std::array<float, 2> shown);
 #endif
 void UIWidget_Animate(std::int32_t index, std::int32_t direction, float duration, float delay);
+#if SHENMUE_IS_S2
+bool UIWidget_IsAnimating(std::uint32_t index);
+void UIWidget_Retarget(std::int32_t index, std::array<float, 2> hidden, std::array<float, 2> shown);
+#endif
 void UIAnim_UpdateDeltaTime(float deltaTime);
 void UIWidget_ClearBinding(std::int32_t index);
 void UI_SelectFont();
@@ -1083,11 +1088,20 @@ void UI_UpdateScrollListSelection(std::uint32_t index);
 void UI_UpdateScrollListPage(std::uint32_t index);
 d3t::UIWindow *UI_FindViewWindowPointer(std::uint32_t slotIndex, const char *id);
 d3t::UILabelWidget *UI_GetLabel(std::uint32_t index);
+d3t::UIViewVariable *UI_GetViewVariable(std::uint32_t slotIndex, std::uint32_t index);
 d3t::UILayoutItem *UI_FindViewLayoutItem(std::uint32_t slotIndex, const char *id);
 UIButtonWidget *UI_FindViewButton(std::uint32_t slotIndex, const char *id);
 void UI_ResetLabelScaleVariables(std::uint32_t slotIndex);
 UIColourImageWidget *UI_GetColourImageWidget(std::uint32_t index);
+UIMenuBar *UI_GetMenuBar(std::uint32_t index);
+UIButtonIconWidget *UI_GetButtonIconWidget(std::uint32_t index);
 UIButtonIconWidget *UI_FindViewIconWidget(std::uint32_t slotIndex, const char *id, std::int32_t kind);
+UIButtonPanel *UI_FindViewButtonPanel(std::uint32_t slotIndex, const char *id);
+std::int32_t UI_FindViewSelector(std::uint32_t slotIndex, const char *id);
+UISelector *UI_FindViewSelectorPointer(std::uint32_t slotIndex, const char *id);
+void UI_SetCollectionCount(std::uint32_t index, std::int32_t count);
+std::int32_t UI_UpdateMenuBarSelection(std::uint32_t index, std::uint16_t previous, std::uint16_t next);
+UISelector *UI_UpdateSelectorInput(std::uint32_t index);
 #endif
 std::int32_t UI_FindViewButtonWheel(std::uint32_t slotIndex, const char *id);
 d3t::UIWindow *UI_FindWindowById(const char *id);
@@ -1102,6 +1116,9 @@ float UI_GetReferenceHeight();
 #endif
 float WithinSafeArea(float length);
 void AdjustForSafeArea(UILayoutRect &rect, float paddingX, float paddingY);
+#if SHENMUE_IS_S2
+UILayoutRect UI_SafeAreaInset(float paddingX, float paddingY);
+#endif
 void UI_RootWindowArea(const d3t::UIWindow &window, float &width, float &height, float &aspectWidth);
 void AdjustForDisplayAreaAndAspectRatio(const d3t::UIWindow &window, float &x, float &y);
 void UI_ScaleSize(
@@ -1173,6 +1190,13 @@ d3t::UIViewSlot<kUIViewImageCapacity> *GetNuklearElementByIdx(std::uint32_t slot
 std::uint8_t GetIsNuklearActive();
 void DrawUIEntity(nk_context &context, std::uint32_t slot, std::int32_t element);
 void uiUpdateWithColour(nk_context &context, std::uint32_t slot);
+std::int32_t UI_GatedBegin(nk_context &context, nk_panel &panel, const char *title, struct nk_rect bounds, nk_flags flags);
+std::int32_t UI_GatedButtonColour(nk_context &context, struct nk_color colour);
+void UI_GatedEnd(nk_context &context);
+void UI_GatedImageColour(nk_context &context, struct nk_image image, struct nk_color colour);
+void UI_GatedLayoutSpaceBegin(nk_context &context, enum nk_layout_format format, float height, std::int32_t count);
+void UI_GatedLayoutSpaceEnd(nk_context &context);
+void UI_GatedLayoutSpacePush(nk_context &context, struct nk_rect bounds);
 #endif
 
 #if SHENMUE_IS_S1_FAMILY

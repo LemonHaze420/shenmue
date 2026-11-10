@@ -444,8 +444,7 @@ std::int64_t g_platformIconsSheet = 0;
 #else
 std::int32_t g_platformIconsSheet = 0;
 #endif
-
-struct nk_image g_uiDefaultImage {};
+struct nk_image g_uiDefaultImage{};
 
 
 std::array<UIMouseCallbackQueue, 4> g_uiMouseCallbackQueues{};
@@ -633,6 +632,41 @@ void uiUpdateWithColour(nk_context &context, std::uint32_t slot) {
     const d3t::UIViewSlot<kUIViewImageCapacity> *const view = GetNuklearElementByIdx(slot);
     if (view)
         UI_InputHandler(context, static_cast<std::int32_t>(slot), 0, view->widgetCount);
+}
+
+std::int32_t UI_GatedBegin(nk_context &context, nk_panel &panel, const char *title, struct nk_rect bounds, nk_flags flags) {
+    if (g_waitingForNextTick != 1)
+        return 0;
+    return nk_begin(&context, &panel, title, bounds, flags);
+}
+
+std::int32_t UI_GatedButtonColour(nk_context &context, struct nk_color colour) {
+    return g_waitingForNextTick == 1 ? nk_button_color(&context, colour) : 0;
+}
+
+void UI_GatedEnd(nk_context &context) {
+    if (g_waitingForNextTick == 1)
+        nk_end(&context);
+}
+
+void UI_GatedImageColour(nk_context &context, struct nk_image image, struct nk_color colour) {
+    if (g_waitingForNextTick == 1)
+        nk_image_color(&context, image, colour);
+}
+
+void UI_GatedLayoutSpaceBegin(nk_context &context, enum nk_layout_format format, float height, std::int32_t count) {
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_begin(&context, format, height, count);
+}
+
+void UI_GatedLayoutSpaceEnd(nk_context &context) {
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_end(&context);
+}
+
+void UI_GatedLayoutSpacePush(nk_context &context, struct nk_rect bounds) {
+    if (g_waitingForNextTick == 1)
+        nk_layout_space_push(&context, bounds);
 }
 #endif
 

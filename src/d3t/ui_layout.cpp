@@ -447,8 +447,23 @@ d3t::UIWindow *UI_FindViewWindowPointer(std::uint32_t slotIndex, const char *id)
 UIColourImageWidget *UI_GetColourImageWidget(std::uint32_t index) {
     return index < g_uiColourImageWidgets.size() ? &g_uiColourImageWidgets[index] : nullptr;
 }
+
+UIMenuBar *UI_GetMenuBar(std::uint32_t index) {
+    return index < g_uiMenuBars.size() ? &g_uiMenuBars[index] : nullptr;
+}
+
+UIButtonIconWidget *UI_GetButtonIconWidget(std::uint32_t index) {
+    return index < g_uiButtonIconWidgets.size() ? &g_uiButtonIconWidgets[index] : nullptr;
+}
+
+// @verified - p
 d3t::UILabelWidget *UI_GetLabel(std::uint32_t index) {
     return index > 0x1ffU ? nullptr : &g_uiLabelWidgets[index];
+}
+
+// @verified - p
+d3t::UIViewVariable *UI_GetViewVariable(std::uint32_t slotIndex, std::uint32_t index) {
+    return slotIndex > 0x4bU || index > 0x14U ? nullptr : g_uiViewSlots[slotIndex].variables.data() + index;
 }
 #endif
 std::int32_t UI_FindViewLabel(std::uint32_t slotIndex, const char *id) {
@@ -572,6 +587,44 @@ UIButtonIconWidget *UI_FindViewIconWidget(std::uint32_t slotIndex, const char *i
     }
     return nullptr;
 }
+
+UIButtonPanel *UI_FindViewButtonPanel(std::uint32_t slotIndex, const char *id) {
+    if (!id || !id[0])
+        return nullptr;
+    const d3t::UIViewSlot<kUIViewImageCapacity> *const slot = GetNuklearElementByIdx(slotIndex);
+    if (!slot)
+        return nullptr;
+    for (std::int32_t widget = 0; widget < slot->widgetCount; ++widget) {
+        if (slot->widgetKinds[widget] != 36)
+            continue;
+        const std::uint32_t index = static_cast<std::uint32_t>(slot->widgetPoolIndices[widget]);
+        if (index >= g_uiButtonPanels.size())
+            continue;
+        UIButtonPanel &panel = g_uiButtonPanels[index];
+        if (panel.id[0] && !std::strcmp(panel.id.data(), id))
+            return &panel;
+    }
+    return nullptr;
+}
+
+std::int32_t UI_FindViewSelector(std::uint32_t slotIndex, const char *id) {
+    const d3t::UIViewSlot<kUIViewImageCapacity> *const slot = GetNuklearElementByIdx(slotIndex);
+    if (!slot || !id)
+        return -1;
+    for (std::int32_t widget = 0; widget < slot->widgetCount; ++widget) {
+        if (slot->widgetKinds[widget] != 31)
+            continue;
+        const std::uint32_t index = static_cast<std::uint32_t>(slot->widgetPoolIndices[widget]);
+        if (index < g_uiSelectors.size() && g_uiSelectors[index].id[0] && !std::strcmp(g_uiSelectors[index].id.data(), id))
+            return static_cast<std::int32_t>(index);
+    }
+    return -1;
+}
+
+UISelector *UI_FindViewSelectorPointer(std::uint32_t slotIndex, const char *id) {
+    const std::uint32_t index = static_cast<std::uint32_t>(UI_FindViewSelector(slotIndex, id));
+    return index < g_uiSelectors.size() ? &g_uiSelectors[index] : nullptr;
+}
 #endif
 
 
@@ -672,6 +725,17 @@ void AdjustForSafeArea(UILayoutRect &rect, float paddingX, float paddingY) {
     rect.width = rect.width - x * 2.0f;
     rect.height = rect.height - y * 2.0f;
 }
+
+#if SHENMUE_IS_S2
+UILayoutRect UI_SafeAreaInset(float paddingX, float paddingY) {
+    UILayoutRect inset{};
+    inset.x = WithinSafeArea(paddingX);
+    inset.y = WithinSafeArea(paddingY);
+    inset.width = -(inset.x + inset.x);
+    inset.height = -(inset.y + inset.y);
+    return inset;
+}
+#endif
 
 // The screen area a root window lays out in: 1080 high and the aspect width, less the margin outside the safe area unless the window
 // ignores it; none when either side is 0.
@@ -963,8 +1027,6 @@ void UI_ResetNuklearStyle(nk_context &context) {
         *padding = nk_vec2(0.0f, 0.0f);
 }
 
-
-
 nk_style_item UI_StyleItem(std::int32_t styleIndex) {
     nk_style_item item{};
     if (static_cast<std::uint32_t>(g_uiDrawViewSlot) > 75U || static_cast<std::uint32_t>(styleIndex) > 0x3ffU)
@@ -977,10 +1039,15 @@ nk_style_item UI_StyleItem(std::int32_t styleIndex) {
         std::memcpy(&item.data.color, &colour, sizeof(colour));
     } else if (record.isColour == 0) {
         const d3t::UIViewImage &image = g_uiViewSlots[static_cast<std::size_t>(g_uiDrawViewSlot)].images[static_cast<std::size_t>(record.image)];
-        struct nk_image nkImage {};
+        struct nk_image nkImage{};
         std::memcpy(&nkImage, &image.textureHandle, sizeof(nkImage));
+#if SHENMUE_IS_S2
+        const unsigned short width = static_cast<unsigned short>(static_cast<std::int32_t>(UI_GetFullReferenceWidth() * image.widthScale));
+        const unsigned short height = static_cast<unsigned short>(static_cast<std::int32_t>(UI_GetReferenceHeight() * image.heightScale));
+#else
         const unsigned short width = static_cast<unsigned short>(static_cast<std::int32_t>(image.widthScale * 1920.0f));
         const unsigned short height = static_cast<unsigned short>(static_cast<std::int32_t>(image.heightScale * 1080.0f));
+#endif
         nkImage.w = width;
         nkImage.h = height;
         nkImage.region[2] = width;

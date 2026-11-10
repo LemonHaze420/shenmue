@@ -2,6 +2,7 @@
 
 #include "d3t/buffer.hpp"
 #include "d3t/dx11_renderer.hpp"
+#include "d3t/scratch_memory.hpp"
 
 #include <algorithm>
 #include <array>
@@ -66,17 +67,19 @@ std::int32_t g_TextureRefCount = 0;
 
 namespace {
 
-constexpr std::size_t kSurfaceCount = 640;
+constexpr std::size_t kMaxPvrSurfaceCount = kS2PvrSurfaceCount;
 constexpr std::size_t kTextureCount = 0x4000;
 constexpr std::uint32_t kTextureIndexMask = 0x3fffU;
 constexpr std::uint32_t kTextureTagMask = 0xffffc000U;
 constexpr std::uint32_t kTextureOccupied = 0x80000000U;
 
-std::array<SurfaceMapping, kSurfaceCount> g_surfaceMappings{};
-std::array<std::uint16_t, kSurfaceCount> g_freeTextureSlots{};
-std::array<SurfaceRecord, kSurfaceCount> g_surfaceRecords{};
+std::array<SurfaceMapping, kMaxPvrSurfaceCount> g_surfaceMappings{};
+std::array<std::uint16_t, kMaxPvrSurfaceCount> g_freeTextureSlots{};
+std::array<SurfaceRecord, kMaxPvrSurfaceCount> g_surfaceRecords{};
+std::uint32_t g_surfaceMappingCount = kS1PvrSurfaceCount;
+std::uint32_t g_textureSlotCount = kS1PvrSurfaceCount;
 std::uint32_t g_freeTextureHead = 0;
-std::uint32_t g_freeTextureTail = kSurfaceCount - 1;
+std::uint32_t g_freeTextureTail = kS1PvrSurfaceCount - 1;
 std::uint32_t g_allocatedTextureSlotCount = 0;
 std::int32_t g_surfaceBase = 0;
 
@@ -404,7 +407,7 @@ void CreateNativeTexture(TextureResource &resource, const Texture2DDescription &
             device->CreateRenderTargetView(texture, &view, reinterpret_cast<ID3D11RenderTargetView **>(&resource.view));
         } else {
             const std::size_t viewCount = static_cast<std::size_t>(description.arraySize) * description.mipLevels;
-            auto **const views = static_cast<ID3D11RenderTargetView **>(std::calloc(viewCount, sizeof(ID3D11RenderTargetView*)));
+            auto **const views = static_cast<ID3D11RenderTargetView **>(std::calloc(viewCount, sizeof(ID3D11RenderTargetView *)));
             resource.view = views;
             view.ViewDimension = description.arraySize <= 1 ? D3D11_RTV_DIMENSION_TEXTURE2D : D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
             view.Texture2DArray.ArraySize = 1;
@@ -541,7 +544,7 @@ std::uint32_t CreateTextureResource(const Texture2DDescription &description, boo
 }
 
 std::int32_t CreateDirectXTexture2DWrapper(std::uint32_t surface, std::uint32_t width, std::uint32_t height, std::uint16_t format, const void *pixels) {
-    if (surface < kSurfaceCount && g_surfaceMappings[surface].referenceCount) {
+    if (surface < g_surfaceMappingCount && g_surfaceMappings[surface].referenceCount) {
         return 0;
     }
     SurfaceMapping &mapping = g_surfaceMappings[surface];
@@ -550,12 +553,12 @@ std::int32_t CreateDirectXTexture2DWrapper(std::uint32_t surface, std::uint32_t 
             mapping.textureSlot = 0xffffU;
         } else {
             mapping.textureSlot = g_freeTextureSlots[g_freeTextureHead];
-            g_freeTextureHead = (g_freeTextureHead + 1) % kSurfaceCount;
+            g_freeTextureHead = (g_freeTextureHead + 1) % g_textureSlotCount;
             ++g_allocatedTextureSlotCount;
         }
     }
     ++mapping.referenceCount;
-    if (surface >= kSurfaceCount || !mapping.referenceCount || mapping.textureSlot == 0xffffU) {
+    if (surface >= g_surfaceMappingCount || !mapping.referenceCount || mapping.textureSlot == 0xffffU) {
         return 0;
     }
 
@@ -591,7 +594,7 @@ void init_format_desc(DecodedTextureFormat &out, std::uint16_t formatType) {
     out.enabled = 1;
     out.extraParam = 0;
     const std::uint32_t family = formatType & 0xff00U;
-    for (const std::uint32_t(&entry)[2] : kPvrFamilySourceFlags) {
+    for (const std::uint32_t (&entry)[2] : kPvrFamilySourceFlags) {
         if (entry[0] == family) {
             out.extraParam = entry[1];
             break;
@@ -684,6 +687,14 @@ std::int64_t InitTexture2DResource(std::uint32_t textureHandle) {
         }
     }
     return static_cast<std::int64_t>(textureHandle & kTextureTagMask);
+}
+
+void ReleaseAllTextures() {
+    const TextureLock lock;
+    for (std::size_t index = 0; index < kTextureCount; ++index) {
+        if (g_textureTags[index] & kTextureOccupied)
+            ReleaseTextureObjects(g_textureResources[index]);
+    }
 }
 
 std::int64_t IncrementTextureById(std::uint32_t textureHandle) {
@@ -989,7 +1000,11 @@ void CreateMipmappedScaledTexture(
     }
 
 #if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
-    std::vector<D3D11_SUBRESOURCE_DATA> subresources(mipLevels - firstMip);
+    D3D11_SUBRESOURCE_DATA *const subresources = static_cast<D3D11_SUBRESOURCE_DATA *>(AllocateMemoryFromGlobalPool(8ULL * (mipLevels - firstMip)));
+    const auto releaseScratch = [subresources] {
+        if (subresources)
+            g_rendererScratch.current = reinterpret_cast<std::byte *>(subresources);
+    };
 #endif
     const auto *cursor = static_cast<const std::byte *>(pixels);
     for (std::uint32_t mip = firstMip; mip < mipLevels; ++mip) {
@@ -1014,6 +1029,9 @@ void CreateMipmappedScaledTexture(
     }
 
     if (static_cast<std::uint64_t>(cursor - static_cast<const std::byte *>(pixels)) > pixelDataSize) {
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
+        releaseScratch();
+#endif
         return;
     }
 
@@ -1029,7 +1047,8 @@ void CreateMipmappedScaledTexture(
     description.Usage = D3D11_USAGE_STAGING;
     description.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     auto *const device = static_cast<ID3D11Device *>(g_D3DDevice);
-    if (!device || FAILED(device->CreateTexture2D(&description, subresources.data(), reinterpret_cast<ID3D11Texture2D **>(&sourceTexture)))) {
+    if (!device || FAILED(device->CreateTexture2D(&description, subresources, reinterpret_cast<ID3D11Texture2D **>(&sourceTexture)))) {
+        releaseScratch();
         return;
     }
 #endif
@@ -1043,6 +1062,9 @@ void CreateMipmappedScaledTexture(
         mipLevels,
         0,
     });
+#if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)
+    releaseScratch();
+#endif
 }
 
 
@@ -1087,22 +1109,52 @@ void GenerateMipsAndUpdateResourcesForDirectX() {
     g_queuedTextureCopies.clear();
 }
 
-void InitializePvrTextureSlotStorage() {
-    for (std::size_t index = 0; index < kSurfaceCount; ++index) {
-        g_surfaceMappings[index].referenceCount = 0;
-        g_surfaceMappings[index].textureSlot = 0xffffU;
-        g_freeTextureSlots[index] = static_cast<std::uint16_t>(index);
-    }
-    std::memset(g_surfaceRecords.data(), 0, sizeof(g_surfaceRecords));
+namespace {
+
+void ResetPvrTextureSlots() {
+    for (std::uint32_t index = 0; index < g_surfaceMappingCount; ++index)
+        g_surfaceMappings[index] = {.referenceCount = 0, .textureSlot = 0xffffU};
     g_freeTextureHead = 0;
-    g_freeTextureTail = kSurfaceCount - 1;
     g_allocatedTextureSlotCount = 0;
+    g_freeTextureTail = g_textureSlotCount - 1;
+    for (std::uint32_t index = 0; index < g_textureSlotCount; ++index)
+        g_freeTextureSlots[index] = static_cast<std::uint16_t>(index);
+}
+
+void ReleasePvrSurfaceTextures() {
+    for (std::uint32_t index = 0; index < g_surfaceMappingCount; ++index) {
+        const std::uint16_t slot = g_surfaceMappings[index].textureSlot;
+        if (slot == 0xffffU)
+            continue;
+        SurfaceRecord &record = g_surfaceRecords[slot];
+        if (static_cast<std::uint32_t>(record.primary.texture)) {
+            InitTexture2DResource(static_cast<std::uint32_t>(record.primary.texture));
+            --g_TextureRefCount;
+        }
+        std::memset(&record, 0, sizeof(record));
+    }
+    ResetPvrTextureSlots();
+}
+
+} // namespace
+
+void InitializePvrTextureSlotStorage(std::uint32_t surfaceCount) {
+    ReleasePvrSurfaceTextures();
+    g_surfaceMappingCount = surfaceCount;
     g_surfaceBase = 0;
+    ResetPvrTextureSlots();
+    g_textureSlotCount = surfaceCount;
+    g_freeTextureTail = surfaceCount - 1;
+    g_freeTextureHead = 0;
+    g_allocatedTextureSlotCount = 0;
+    for (std::uint32_t index = 0; index < surfaceCount; ++index)
+        g_freeTextureSlots[index] = static_cast<std::uint16_t>(index);
+    std::memset(g_surfaceRecords.data(), 0, sizeof(SurfaceRecord) * surfaceCount);
 }
 
 void InitPVRTaskData(std::int32_t surfaceIndex) {
     const std::int32_t request = g_surfaceBase + surfaceIndex;
-    if (request < 0 || request >= static_cast<std::int32_t>(kSurfaceCount)) {
+    if (request < 0 || request >= static_cast<std::int32_t>(g_surfaceMappingCount)) {
         return;
     }
     SurfaceMapping &mapping = g_surfaceMappings[request];
@@ -1120,7 +1172,7 @@ void InitPVRTaskData(std::int32_t surfaceIndex) {
     while (mapping.referenceCount) {
         --mapping.referenceCount;
         if (!mapping.referenceCount) {
-            g_freeTextureTail = (g_freeTextureTail + 1) % kSurfaceCount;
+            g_freeTextureTail = (g_freeTextureTail + 1) % g_textureSlotCount;
             g_freeTextureSlots[g_freeTextureTail] = mapping.textureSlot;
             mapping.textureSlot = 0xffffU;
         }
@@ -1129,10 +1181,10 @@ void InitPVRTaskData(std::int32_t surfaceIndex) {
 }
 
 std::uint32_t GetPVRSurfaceTextureHandle(std::int32_t surfaceIndex) {
-    if (surfaceIndex < 0 || surfaceIndex >= static_cast<std::int32_t>(kSurfaceCount))
+    if (surfaceIndex < 0 || surfaceIndex >= static_cast<std::int32_t>(g_surfaceMappingCount))
         return 0;
     const std::int32_t request = g_surfaceBase + surfaceIndex;
-    if (request < 0 || request >= static_cast<std::int32_t>(kSurfaceCount))
+    if (request < 0 || request >= static_cast<std::int32_t>(g_surfaceMappingCount))
         return 0;
     const SurfaceMapping &mapping = g_surfaceMappings[request];
     if (!mapping.referenceCount || mapping.textureSlot == 0xffffU)
@@ -1143,7 +1195,7 @@ std::uint32_t GetPVRSurfaceTextureHandle(std::int32_t surfaceIndex) {
 // The surface record the strip and model draws read inline: none when the surface is out of range, unreferenced or has no slot.
 const SurfaceRecord *GetPVRSurfaceRecord(std::int32_t surfaceIndex) {
     const std::uint32_t request = static_cast<std::uint32_t>(g_surfaceBase + surfaceIndex);
-    if (request >= kSurfaceCount)
+    if (request >= g_surfaceMappingCount)
         return nullptr;
     const SurfaceMapping &mapping = g_surfaceMappings[request];
     if (!mapping.referenceCount || mapping.textureSlot == 0xffffU)
@@ -1153,7 +1205,7 @@ const SurfaceRecord *GetPVRSurfaceRecord(std::int32_t surfaceIndex) {
 
 std::uint32_t ExchangePVRSurfaceTexture(std::int32_t surfaceIndex, std::uint32_t texture) {
     const std::int32_t request = g_surfaceBase + surfaceIndex;
-    if (surfaceIndex < 0 || request < 0 || request >= static_cast<std::int32_t>(kSurfaceCount))
+    if (surfaceIndex < 0 || request < 0 || request >= static_cast<std::int32_t>(g_surfaceMappingCount))
         return 0;
     const SurfaceMapping &mapping = g_surfaceMappings[request];
     if (!mapping.referenceCount || mapping.textureSlot == 0xffffU)
@@ -1167,7 +1219,7 @@ std::uint32_t ExchangePVRSurfaceTexture(std::int32_t surfaceIndex, std::uint32_t
 std::int32_t d3t_UploadTexture2DToGPU(std::int32_t surfaceIndex, const void *textureDescription, const void *pixels) {
     const auto *const description = static_cast<const TextureUploadDescription *>(textureDescription);
     const std::int32_t request = g_surfaceBase + surfaceIndex;
-    if (request < static_cast<std::int32_t>(kSurfaceCount) && g_surfaceMappings[request].referenceCount) {
+    if (request < static_cast<std::int32_t>(g_surfaceMappingCount) && g_surfaceMappings[request].referenceCount) {
         ++g_surfaceMappings[request].referenceCount;
         return surfaceIndex;
     }
@@ -1184,7 +1236,7 @@ std::int32_t d3t_UploadTexture2DToGPU(std::int32_t surfaceIndex, const void *tex
 bool CreatePVRTextureBufferForSurface(
     const std::int32_t surfaceIndex, const std::uint32_t width, const std::uint32_t height, const std::uint16_t format, const void *pixels) {
     const std::int32_t request = g_surfaceBase + surfaceIndex;
-    if (request < 0 || request >= static_cast<std::int32_t>(kSurfaceCount))
+    if (request < 0 || request >= static_cast<std::int32_t>(g_surfaceMappingCount))
         return false;
     return CreateDirectXTexture2DWrapper(static_cast<std::uint32_t>(request), width, height, format, pixels) != 0;
 }

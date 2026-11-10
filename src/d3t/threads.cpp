@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <cstdlib>
 #include <condition_variable>
 #include <cstring>
 #include <limits>
@@ -17,6 +18,7 @@
 #define NOMINMAX
 #include <windows.h>
 #endif
+#include <immintrin.h>
 
 namespace shenmue::d3t {
 
@@ -29,6 +31,7 @@ std::atomic<bool> g_d3tThreadsInitialized{false};
 std::atomic<bool> g_d3tShutdownThreadFlag{false};
 bool g_d3tLowPriorityThreadFlag = false;
 std::uint32_t g_workerThreadCount = 7;
+std::int32_t (*g_workerExceptionFilter)(_EXCEPTION_POINTERS *exception) = nullptr;
 
 void LoadContent(std::uint16_t threadIndex);
 
@@ -118,27 +121,42 @@ bool ExecuteClaimedTask(D3TTaskRecord &task) {
     return true;
 }
 
+template <typename Loop> void RunWorkerLoop(const Loop &loop) {
+#if defined(_MSC_VER)
+    __try {
+        loop();
+    } __except (g_workerExceptionFilter ? g_workerExceptionFilter(GetExceptionInformation()) : EXCEPTION_CONTINUE_SEARCH) {
+    }
+#else
+    loop();
+#endif
+}
+
 void TaskWorker(std::stop_token stopToken, std::uint32_t minimumPriority, std::wstring name) {
     SetCurrentThreadName(name.c_str());
-    while (!stopToken.stop_requested()) {
-        if (RunTask(minimumPriority)) {
+    RunWorkerLoop([&] {
+        while (!stopToken.stop_requested()) {
+            if (RunTask(minimumPriority)) {
 
-            continue;
+                continue;
+            }
+            std::unique_lock lock(g_taskMutex);
+            std::condition_variable_any &wake = minimumPriority == 0 ? g_highPriorityWake : g_lowPriorityWake;
+            wake.wait(
+                lock, stopToken, [] { return g_d3tTaskCount.load(std::memory_order_seq_cst) > 0 || g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst); });
         }
-        std::unique_lock lock(g_taskMutex);
-        std::condition_variable_any &wake = minimumPriority == 0 ? g_highPriorityWake : g_lowPriorityWake;
-        wake.wait(
-            lock, stopToken, [] { return g_d3tTaskCount.load(std::memory_order_seq_cst) > 0 || g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst); });
-    }
+    });
 }
 
 void CallbackWorker(std::stop_token stopToken, std::uint16_t threadIndex, void (*callback)(std::uint16_t), std::wstring name) {
     SetCurrentThreadName(name.c_str());
-    while (!stopToken.stop_requested() && !g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst)) {
-        callback(threadIndex);
-    }
-    if (callback == LoadContent && g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst))
-        callback(threadIndex);
+    RunWorkerLoop([&] {
+        while (!stopToken.stop_requested() && !g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst)) {
+            callback(threadIndex);
+        }
+        if (callback == LoadContent && g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst))
+            callback(threadIndex);
+    });
 }
 
 void IdleWorker(std::stop_token stopToken, std::wstring name) {
@@ -151,20 +169,22 @@ void IdleWorker(std::stop_token stopToken, std::wstring name) {
 
 void AudioWorker(std::stop_token stopToken) {
     SetCurrentThreadName(L"Audio");
-    std::unique_lock<std::mutex> lock(g_audioMutex);
-    while (!stopToken.stop_requested() && !g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst)) {
-        g_audioWake.wait(lock, stopToken, [] { return g_audioCallback || g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst); });
-        if (stopToken.stop_requested() || g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst))
-            break;
-        void (*const callback)() = g_audioCallback;
-        g_audioCallback = nullptr;
-        g_audioCallbackRunning = true;
-        lock.unlock();
-        callback();
-        lock.lock();
-        g_audioCallbackRunning = false;
-        g_audioWake.notify_all();
-    }
+    RunWorkerLoop([&] {
+        std::unique_lock<std::mutex> lock(g_audioMutex);
+        while (!stopToken.stop_requested() && !g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst)) {
+            g_audioWake.wait(lock, stopToken, [] { return g_audioCallback || g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst); });
+            if (stopToken.stop_requested() || g_d3tShutdownThreadFlag.load(std::memory_order_seq_cst))
+                break;
+            void (*const callback)() = g_audioCallback;
+            g_audioCallback = nullptr;
+            g_audioCallbackRunning = true;
+            lock.unlock();
+            callback();
+            lock.lock();
+            g_audioCallbackRunning = false;
+            g_audioWake.notify_all();
+        }
+    });
 }
 
 } // namespace
@@ -213,6 +233,24 @@ void d3t_SetAudioCallback(void (*callback)()) {
         g_audioWake.notify_one();
     else
         g_audioWake.wait(lock, [] { return !g_audioCallbackRunning; });
+}
+
+void *d3t_AppendBuffer(D3TByteBuffer &buffer, std::uint32_t size) {
+    std::uint32_t required = buffer.size + size;
+    if (required > buffer.capacity) {
+        const std::uint32_t grown = 2 * buffer.capacity >= 16 ? 2 * buffer.capacity : 16;
+        if (grown >= required)
+            required = grown;
+        if (required > buffer.capacity) {
+            void *const data = std::realloc(buffer.data, required);
+            if (!data)
+                return nullptr;
+            buffer.data = data;
+            buffer.capacity = required;
+        }
+    }
+    buffer.size += size;
+    return static_cast<std::byte *>(buffer.data) + buffer.size - size;
 }
 
 std::uint32_t d3t_QueueTask(const D3TTaskDescriptor *descriptor, std::size_t dataSize) {
@@ -285,6 +323,11 @@ bool RunTask(std::uint32_t minimumPriority, const std::uint32_t *handles, std::u
 bool d3t_IsTaskActive(std::uint32_t handle) {
     D3TTaskRecord *const task = ResolveTaskHandle(handle);
     return task && task->state.load(std::memory_order_seq_cst) != 0;
+}
+
+void d3t_WaitForTask(std::uint32_t handle) {
+    while (handle != g_invalidTaskHandle && d3t_IsTaskActive(handle))
+        _mm_pause();
 }
 
 void ExecuteADynamicFunctionOnce() {

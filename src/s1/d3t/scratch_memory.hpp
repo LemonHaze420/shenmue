@@ -1,12 +1,12 @@
 #pragma once
 
-#include <cstddef>
+#include <d3t/scratch_memory.hpp>
 
 namespace shenmue::s1 {
 
-void *AllocateMemoryFromGlobalPool(std::size_t size);
-void *GetGlobalPoolCheckpoint();
-void RestoreGlobalPoolCheckpoint(void *checkpoint);
-void ResetGlobalPoolSlices();
+using d3t::AllocateMemoryFromGlobalPool;
+using d3t::GetGlobalPoolCheckpoint;
+using d3t::ResetGlobalPoolSlices;
+using d3t::RestoreGlobalPoolCheckpoint;
 
 } // namespace shenmue::s1

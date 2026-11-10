@@ -346,6 +346,22 @@ void UIWidget_Animate(std::int32_t index, std::int32_t direction, float duration
     binding.animating = 1;
 }
 
+#if SHENMUE_IS_S2
+bool UIWidget_IsAnimating(std::uint32_t index) {
+    if (index >= g_uiWidgetBindings.size())
+        return false;
+    const std::uint32_t slot = static_cast<std::uint32_t>(g_uiWidgetBindings[index].animSlot);
+    return slot < g_uiAnimSlots.size() && g_uiAnimSlots[slot].status != 0;
+}
+
+void UIWidget_Retarget(std::int32_t index, std::array<float, 2> hidden, std::array<float, 2> shown) {
+    if (static_cast<std::uint32_t>(index - 1) > 0xfeU)
+        return;
+    UIWidgetBinding &binding = g_uiWidgetBindings[static_cast<std::size_t>(index)];
+    binding.hidden = hidden;
+    binding.shown = shown;
+}
+#endif
 
 void UIAnim_UpdateDeltaTime(float deltaTime) {
     for (UIAnimSlot &slot : g_uiAnimSlots) {

@@ -703,4 +703,151 @@ void CreateModelMaterials(D3TModelRecord &model, std::uint32_t instanceHandle, s
         GetOrCreateSceneEntity(material, parameters, runtime, nullptr);
     }
 }
+
+namespace {
+D3TModelMaterialParameter *AppendMaterialParameters(D3TRawArray<D3TModelMaterialParameter> &parameters, std::uint32_t count) {
+    std::uint32_t required = parameters.count + count;
+    if (required > parameters.capacity) {
+        const std::uint32_t doubled = parameters.capacity * 2U >= 16U ? parameters.capacity * 2U : 16U;
+        if (doubled >= required)
+            required = doubled;
+        if (required > parameters.capacity) {
+            void *const allocation = std::realloc(parameters.data, sizeof(D3TModelMaterialParameter) * required);
+            if (!allocation)
+                return nullptr;
+            parameters.data = static_cast<D3TModelMaterialParameter *>(allocation);
+            parameters.capacity = required;
+        }
+    }
+    parameters.count += count;
+    return parameters.data + (parameters.count - count);
+}
+
+D3TModelMaterialParameter *InsertMaterialParameters(D3TRawArray<D3TModelMaterialParameter> &parameters, std::uint32_t count, std::uint32_t position) {
+    if (position > parameters.count)
+        return nullptr;
+    const std::uint32_t required = parameters.count + count;
+    if (required > parameters.capacity) {
+        void *const allocation = std::realloc(parameters.data, sizeof(D3TModelMaterialParameter) * required);
+        if (!allocation)
+            return nullptr;
+        parameters.data = static_cast<D3TModelMaterialParameter *>(allocation);
+        parameters.capacity = required;
+    }
+    std::memmove(parameters.data + position + count, parameters.data + position, sizeof(D3TModelMaterialParameter) * (parameters.count - position));
+    parameters.count += count;
+    return parameters.data + position;
+}
+} // namespace
+
+bool RebindRenderMaterial(
+    std::uint32_t handle, D3TModelMaterial &material, const D3TModelMaterialParameter *parameters, std::uint32_t count, std::uint32_t instanceHandle) {
+    D3TModelRecord *const model = ResolveModel(handle);
+    if (!model)
+        return false;
+    const std::ptrdiff_t index = &material - model->materials;
+    D3TModelMaterialRuntime &runtime = model->materialRuntime[index];
+    if (material.materialType != 4) {
+        D3TRawArray<D3TModelMaterialParameter> &owned = model->runtimeMaterialParameters;
+        if (!owned.data) {
+            std::uint32_t total = 0;
+            for (std::uint32_t entry = 0; entry < model->materialCount; ++entry)
+                total += model->materials[entry].parameterCount;
+            D3TModelMaterialParameter *const copy = AppendMaterialParameters(owned, total);
+            if (total)
+                std::memcpy(copy, model->materialParameters, sizeof(D3TModelMaterialParameter) * total);
+        }
+        const std::int32_t delta = static_cast<std::int32_t>(count - material.parameterCount);
+        if (delta <= 0) {
+            const std::uint32_t first = material.firstParameter;
+            const std::uint32_t size = owned.count;
+            std::uint32_t removed = material.parameterCount - count;
+            if (first < size) {
+                std::uint32_t source = first - static_cast<std::uint32_t>(delta);
+                if (source >= size) {
+                    source = size;
+                    removed = size - first;
+                }
+                std::memmove(owned.data + first, owned.data + source, sizeof(D3TModelMaterialParameter) * (size - source));
+                owned.count -= removed;
+            }
+        } else {
+            InsertMaterialParameters(owned, static_cast<std::uint32_t>(delta), material.firstParameter);
+        }
+        model->materialParameters = owned.data;
+        for (std::uint32_t entry = static_cast<std::uint32_t>(index) + 1U; entry < model->materialCount; ++entry)
+            model->materials[entry].firstParameter += static_cast<std::uint32_t>(delta);
+        for (std::uint32_t parameter = 0; parameter < count; ++parameter)
+            owned.data[material.firstParameter + parameter] = parameters[parameter];
+        bool named[14] = {};
+        for (std::uint32_t parameter = 0; parameter < count; ++parameter) {
+            const D3TModelMaterialParameter &source = parameters[parameter];
+            std::uint32_t slot = 0;
+            if (!GetMaterialTextureSlot(source.type, slot))
+                continue;
+            if (!source.texture) {
+                InitTexture2DResource(runtime.textures[slot]);
+                std::uint32_t texture = g_defaultWhiteTexture;
+                if (source.type == 6 || source.type == 17 || source.type == 34)
+                    texture = g_defaultNormalTexture;
+                else if (source.type == 9)
+                    texture = g_defaultBlackTexture;
+                runtime.textures[slot] = texture;
+                IncrementTextureById(texture);
+            }
+            named[slot] = true;
+        }
+        for (std::uint32_t slot = 0; slot < 14; ++slot) {
+            if (!named[slot]) {
+                InitTexture2DResource(runtime.textures[slot]);
+                runtime.textures[slot] = 0;
+            }
+        }
+        material.parameterCount = count;
+        material.materialType = 4;
+    }
+    MasterShaderBindings bindings;
+    SetMasterShaderBindings(bindings, material, &runtime, model->materialParameters + material.firstParameter, model->flag0 != 0, 0);
+    for (std::uint32_t shader = 0; shader < bindings.count; ++shader) {
+        MaterialShaderBinding &binding = bindings.bindings[shader];
+        DestroyShader(*binding.destination);
+        *binding.destination = CreateShader(static_cast<std::int32_t>(binding.type));
+        CreateShaderAsync(binding.path, binding.type, *binding.destination, instanceHandle);
+    }
+    runtime.flags |= 2U;
+    return true;
+}
+
+bool BindRainMaterialParameters(std::uint32_t handle, D3TModelMaterial &material, std::uint32_t instanceHandle) {
+    const D3TModelRecord *const model = ResolveModel(handle);
+    if (!model)
+        return false;
+    D3TModelMaterialParameter parameters[13];
+    std::uint32_t count = 0;
+    if (material.materialType != 4) {
+        const D3TModelMaterialParameter *const existing = model->materialParameters + material.firstParameter;
+        std::int32_t existingIndex[46];
+        for (std::int32_t &entry : existingIndex)
+            entry = -1;
+        for (std::uint32_t parameter = 0; parameter < material.parameterCount; ++parameter)
+            existingIndex[existing[parameter].type] = static_cast<std::int32_t>(parameter);
+        std::int32_t rainIndex[46];
+        for (std::int32_t &entry : rainIndex)
+            entry = -1;
+        count = 13;
+        for (std::uint32_t parameter = 0; parameter < count; ++parameter) {
+            parameters[parameter] = kRainMaterialParameters[parameter];
+            rainIndex[parameters[parameter].type] = static_cast<std::int32_t>(parameter);
+        }
+        for (std::uint32_t type = 0; type < 46; ++type) {
+            if (existingIndex[type] != -1 && rainIndex[type] != -1)
+                parameters[rainIndex[type]] = existing[existingIndex[type]];
+        }
+        if (existingIndex[0] != -1 && rainIndex[5] != -1)
+            parameters[rainIndex[5]].texture = existing[0].texture;
+        if (existingIndex[5] != -1 && rainIndex[0] != -1)
+            parameters[rainIndex[0]].texture = existing[5].texture;
+    }
+    return RebindRenderMaterial(handle, material, parameters, count, instanceHandle);
+}
 } // namespace shenmue::d3t

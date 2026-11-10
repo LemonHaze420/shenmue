@@ -205,6 +205,18 @@ void UI_RecordImageViewSlot(std::int32_t slotIndex) {
     if (g_uiImageLoadDiagnosticIndex > -1)
         g_uiImageLoadDiagnostics[static_cast<std::size_t>(g_uiImageLoadDiagnosticIndex)].viewSlot = slotIndex;
 }
+
+void UI_ResetImageLoadDiagnostics() {
+    for (UIViewImageLoadDiagnostic &record : g_uiImageLoadDiagnostics) {
+        record.viewSlot = -1;
+        record.count = 0;
+        record.imageIndices.fill(-1);
+        record.requestHandles.fill(0xffffffffU);
+        record.ready.fill(-1);
+        record.missing.fill(-1);
+        record.failureHandles.fill(0xffffffffU);
+    }
+}
 #endif
 
 
@@ -348,9 +360,7 @@ void LoadOwnedUIFromMemoryIntoViewSlot(char *memory, std::int32_t &slotIndex) {
         g_uiViewSlots[static_cast<std::size_t>(slotIndex)].keepLoaded = 0;
         ResetUIViewSlot(slotIndex);
     }
-#if SHENMUE_IS_S2
     UI_RecordImageViewSlot(slotIndex);
-#endif
     if (slotIndex <= -1)
         return;
     g_currentUIViewSlot = slotIndex;

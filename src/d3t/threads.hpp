@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <cstdint>
 
+struct _EXCEPTION_POINTERS;
+
 namespace shenmue::d3t {
 
 using D3TTaskCallback = std::int32_t (*)(void *data);
@@ -36,6 +38,13 @@ static_assert(offsetof(D3TTaskRecord, generation) == 0xc28);
 static_assert(offsetof(D3TTaskRecord, result) == 0xc2c);
 static_assert(sizeof(D3TTaskRecord) == 0xc30);
 
+struct D3TByteBuffer {
+    void *data;
+    std::uint32_t size;
+    std::uint32_t capacity;
+};
+static_assert(sizeof(D3TByteBuffer) == 0x10);
+
 extern std::uint32_t g_invalidTaskHandle;
 extern std::array<D3TTaskRecord, 1024> g_d3tTasks;
 extern std::atomic<std::int32_t> g_d3tTaskCount;
@@ -46,10 +55,13 @@ extern bool g_d3tLowPriorityThreadFlag;
 extern std::uint32_t g_workerThreadCount;
 
 void d3t_CreateThreads();
+extern std::int32_t (*g_workerExceptionFilter)(_EXCEPTION_POINTERS *exception);
 void d3t_SetAudioCallback(void (*callback)());
+void *d3t_AppendBuffer(D3TByteBuffer &buffer, std::uint32_t size);
 std::uint32_t d3t_QueueTask(const D3TTaskDescriptor *descriptor, std::size_t dataSize);
 bool RunTask(std::uint32_t minimumPriority, const std::uint32_t *handles = nullptr, std::uint32_t handleCount = 0);
 bool d3t_IsTaskActive(std::uint32_t handle);
+void d3t_WaitForTask(std::uint32_t handle);
 void ExecuteADynamicFunctionOnce();
 std::int64_t ShutdownThreads();
 

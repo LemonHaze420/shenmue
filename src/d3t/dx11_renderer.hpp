@@ -45,6 +45,8 @@ void CreateUserDefinedAnnotations();
 void CreateConstantBuffers();
 void CreateVertexBuffers();
 void CreateNewSRVTexture();
+bool TakeScreenshot(const char *filename, const std::uint8_t *pixels, std::int32_t strideBytes);
+bool MapAndTakeScreenshot(const char *filename);
 void DX11_D3D11CreateDeviceAndSwapChain(const DisplayModeInfo *config, void *windowHandle);
 void ShutdownDX11();
 D3TDeviceContext *DXGetPipelineContext(std::int32_t mode);

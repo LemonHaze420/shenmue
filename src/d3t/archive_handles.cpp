@@ -86,7 +86,7 @@ std::uint64_t GetArchiveFileSize(std::uint32_t handle) {
         if (GetFileSizeEx(reinterpret_cast<HANDLE>(entry->platformHandle), &size))
             return static_cast<std::uint64_t>(size.QuadPart);
 #else
-        struct stat attributes {};
+        struct stat attributes{};
         if (!fstat(static_cast<int>(entry->platformHandle), &attributes))
             return static_cast<std::uint64_t>(attributes.st_size);
 #endif
@@ -603,6 +603,17 @@ bool Archive_HasPendingRead(std::uint32_t handle) {
     return false;
 }
 
+const char *GetFileName(const char *path) {
+    std::size_t length = std::strlen(path);
+    if (length <= 1)
+        return path;
+    while (path[length - 1] != '/' && path[length - 1] != '\\') {
+        if (--length <= 1)
+            return path;
+    }
+    return path + length;
+}
+
 const char *GetFileExtension(const char *path) {
     std::size_t length = std::strlen(path);
     while (length > 1 && static_cast<std::uint8_t>(path[length - 1] - '.') > 1U)
@@ -623,7 +634,7 @@ bool Archive_FileExists(const char *path) {
     const DWORD attributes = GetFileAttributesA(path);
     return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0;
 #else
-    struct stat attributes {};
+    struct stat attributes{};
     return stat(path, &attributes) == 0 && !S_ISDIR(attributes.st_mode);
 #endif
 }
@@ -754,33 +765,32 @@ std::int64_t LargeFile_LoadADFSArchiveToc(std::int32_t fileId, const char *path)
     }
 
     std::memset(freeEntry, 0, sizeof(*freeEntry));
-    std::uint32_t header[2]{};
-    if (!ArchiveData_Read(path, 0, header, sizeof(header))) {
+    const std::uint32_t archive = Archive_AllocateHandle(0);
+    if (ArchiveHandleEntry *const allocated = Archive_DoesHandleExist(archive) ? Archive_GetHandle(archive) : nullptr)
+        allocated->platformHandle = -1;
+    if (archive == g_invalidArchiveHandle || !Archive_GetHandle(archive))
         return -4;
-    }
 
-    const std::uint32_t entryCount = header[1];
-    if (entryCount > SIZE_MAX / sizeof(LargeFileTocEntry)) {
-        return -4;
-    }
-    auto *const toc = static_cast<LargeFileTocEntry *>(std::malloc(static_cast<std::size_t>(entryCount) * sizeof(LargeFileTocEntry)));
-    if (!toc && entryCount != 0) {
-        return -4;
-    }
-    if (entryCount != 0 && !ArchiveData_Read(path, sizeof(header), toc, static_cast<std::uint64_t>(entryCount) * sizeof(LargeFileTocEntry))) {
-        std::free(toc);
-        return -4;
-    }
-
-    freeEntry->inUse = 1;
+    freeEntry->archiveHandle = archive;
     std::strcpy(freeEntry->cacheKey, path);
-    freeEntry->archiveHandle = g_invalidArchiveHandle;
-    freeEntry->handle.field_00 = 0;
+    freeEntry->inUse = 1;
     freeEntry->handle.entryIndex = freeIndex;
     freeEntry->handle.fileId = fileId;
-    freeEntry->tocHeader = header[0];
-    freeEntry->tocEntryCount = entryCount;
-    freeEntry->tocEntries = toc;
+    freeEntry->handle.field_00 = 0;
+    Archive_QueueRead(archive, 0, path, 0, sizeof(freeEntry->tocHeader) + sizeof(freeEntry->tocEntryCount), 0x21);
+    while (Archive_HasPendingRead(archive))
+        std::this_thread::yield();
+    const ArchiveHandleEntry *const header = Archive_DoesHandleExist(archive) ? Archive_GetHandle(archive) : nullptr;
+    if (header && header->bufferedData) {
+        std::memcpy(&freeEntry->tocHeader, header->bufferedData, static_cast<std::size_t>(header->bufferedDataSize));
+        const std::uint64_t tocSize = sizeof(LargeFileTocEntry) * static_cast<std::uint64_t>(freeEntry->tocEntryCount);
+        freeEntry->tocEntries = static_cast<LargeFileTocEntry *>(std::malloc(static_cast<std::size_t>(tocSize)));
+        Archive_BindBuffer(archive, freeEntry->tocEntries, tocSize, true);
+        Archive_QueueRead(archive, 0, path, sizeof(freeEntry->tocHeader) + sizeof(freeEntry->tocEntryCount), tocSize, 0x21);
+        while (Archive_HasPendingRead(archive))
+            std::this_thread::yield();
+    }
+    ReadFile_0(0, &freeEntry->archiveHandle);
     return 0;
 }
 

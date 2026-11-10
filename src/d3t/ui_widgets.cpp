@@ -1,4 +1,7 @@
 #include "d3t/ui_internal.hpp"
+#if SHENMUE_IS_S1_FAMILY
+#include "s1/d3t/scratch_memory.hpp"
+#endif
 
 #if SHENMUE_IS_S1_FAMILY && defined(_WIN32)
 #ifndef NOMINMAX
@@ -394,7 +397,7 @@ std::int32_t UI_ReadButtonIconObject(cJSON *object, std::int32_t window) {
 
 
 struct nk_image UI_GetSpriteImage(std::uint32_t sheet, std::int32_t frame, const d3t::UIViewImage *image) {
-    struct nk_image sprite {};
+    struct nk_image sprite{};
     if (static_cast<std::uint32_t>(g_uiDrawViewSlot) > 0x4bU || sheet > 55U)
         return sprite;
     const d3t::UISpriteSheet &sprites = g_uiSpriteSheets[sheet];
@@ -699,7 +702,7 @@ void UI_DrawImage(nk_context &context, std::int32_t index) {
     const std::uint32_t colour = UI_TintByWindow(*window, image.colour);
     nk_color tint{};
     std::memcpy(&tint, &colour, sizeof(colour));
-    struct nk_image drawn {};
+    struct nk_image drawn{};
     std::memcpy(&drawn, &image.textureHandle, sizeof(drawn));
     nk_button_image_color(&context, drawn, tint);
 }
@@ -778,24 +781,35 @@ void UI_DrawIconLabel(nk_context &context, std::int32_t index, std::int32_t widg
         std::int32_t icon;
     };
     std::vector<Piece> pieces{{.text = label.text, .length = 0, .icon = 0}};
-    std::string cut;
+#if SHENMUE_IS_S1_FAMILY
+    char *const cut = static_cast<char *>(AllocateMemoryFromGlobalPool(static_cast<std::size_t>(length)));
+#else
+    std::string cutText(static_cast<std::size_t>(length), '\0');
+    char *const cut = cutText.data();
+#endif
+    std::int32_t cutLength = 0;
     for (std::int32_t at = 0; at < length; ++at) {
         const char c = label.text[at];
         if (!pieces.back().icon) {
-            cut.push_back(c);
+            cut[cutLength++] = c;
             if (c == '<')
                 pieces.push_back({.text = label.text + at + 1, .length = -1, .icon = 1});
         } else if (c == '>') {
-            cut.push_back('>');
+            cut[cutLength++] = '>';
             pieces.push_back({.text = label.text + at + 1, .length = -1, .icon = 0});
         }
         ++pieces.back().length;
     }
-    const UILabelFit fit = UI_FitLabelScale(context, cut.c_str(), static_cast<std::int32_t>(cut.size()), label.alignment, rect, fitWidth, fitHeight, 1);
+    cut[cutLength] = '\0';
+    const UILabelFit fit = UI_FitLabelScale(context, cut, cutLength, label.alignment, rect, fitWidth, fitHeight, 1);
     const std::int32_t drawing = g_waitingForNextTick;
     g_waitingForNextTick = 0;
-    UILayoutRect at = UI_DrawLabelText(context, cut.c_str(), static_cast<std::int32_t>(cut.size()), label.alignment, rect, fit);
+    UILayoutRect at = UI_DrawLabelText(context, cut, cutLength, label.alignment, rect, fit);
     g_waitingForNextTick = drawing;
+#if SHENMUE_IS_S1_FAMILY
+    if (cut)
+        RestoreGlobalPoolCheckpoint(cut);
+#endif
     std::array<std::uint8_t, 4> channels{};
     std::memcpy(channels.data(), &window->colour, sizeof(channels));
     const std::uint32_t windowColour =
@@ -910,7 +924,7 @@ void UI_DrawSprite(nk_context &context, std::int32_t index) {
         return;
     const d3t::UIViewSlot<kUIViewImageCapacity> &view = g_uiViewSlots[static_cast<std::size_t>(g_uiDrawViewSlot)];
     const d3t::UIViewImage *image = nullptr;
-    struct nk_image sprite {};
+    struct nk_image sprite{};
     if (widget.inventoryIcon) {
         const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[kUiSharedItems].config.uiHandleIndex);
         const std::size_t sheet = static_cast<std::uint8_t>(widget.sprite >> 8);

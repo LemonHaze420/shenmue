@@ -77,6 +77,7 @@ extern std::array<D3TContentSlot, 8192> g_d3tContentSlots;
 extern std::uint32_t g_pendingContentRemappingCount;
 
 std::int64_t PushShaderLoadToThreadQueue(const D3TShaderLoadTask *task);
+const char *GetContentSourcePath(std::uint32_t contentHandle);
 void ProcessThreadStates(std::uint32_t contentHandle, std::int32_t type);
 void ProcessRemappings(std::uint64_t unused = 0);
 void d3t_ContentLoad(std::uint16_t threadIndex);

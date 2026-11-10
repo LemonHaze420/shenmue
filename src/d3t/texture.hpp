@@ -112,6 +112,7 @@ static_assert(sizeof(QueuedTextureCopy) == 0x18);
 
 std::uint32_t CreateTexture2D(const Texture2DDescription *description);
 std::int64_t InitTexture2DResource(std::uint32_t textureHandle);
+void ReleaseAllTextures();
 std::int64_t IncrementTextureById(std::uint32_t textureHandle);
 std::int64_t AssignShaderCallback(std::uint32_t textureHandle, void (*callback)(void *), void *callbackArgument);
 bool GetTexture2DDimensions(std::uint32_t textureHandle, std::uint32_t *width, std::uint32_t *height);
@@ -164,7 +165,9 @@ void CreateMipmappedScaledTexture(
     std::uint32_t textureHandle, std::uint32_t firstMip, std::uint32_t mipLevels, const void *pixels, std::uint32_t pixelDataSize);
 void GenerateMipsAndUpdateResourcesForDirectX();
 
-void InitializePvrTextureSlotStorage();
+inline constexpr std::uint32_t kS1PvrSurfaceCount = 640;
+inline constexpr std::uint32_t kS2PvrSurfaceCount = 752;
+void InitializePvrTextureSlotStorage(std::uint32_t surfaceCount = kS1PvrSurfaceCount);
 void InitPVRTaskData(std::int32_t surfaceIndex);
 std::uint32_t GetPVRSurfaceTextureHandle(std::int32_t surfaceIndex);
 const SurfaceRecord *GetPVRSurfaceRecord(std::int32_t surfaceIndex);
