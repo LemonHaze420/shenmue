@@ -114,7 +114,7 @@ std::int32_t reflectorDefaultLightAngle = 0;
 
 
 
-std::uint32_t forceCharacterAlphaVisible = 0xffffffffU;
+std::uint32_t forceCharacterAlphaVisible = 0;
 
 // CPAM_Handler spells the motion character's name into this terminated buffer every update; nothing reads it.
 std::array<char, 5> cpamCharacterName{};
