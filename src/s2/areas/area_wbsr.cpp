@@ -7,6 +7,16 @@
 #define WBSR_KNK SHEN_NAME4('K', 'N', 'K', '_')
 #define WBSR_SIZ SHEN_NAME4('S', 'I', 'Z', '_')
 #define WBSR_A048 SHEN_NAME4('a', '0', '4', '8')
+#define WBSR_HOUK SHEN_NAME4('H', 'O', 'U', 'K')
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define WBSR_BROOM WBSR_HOUK
+#define WBSR_SMOKE_HANDLE_COUNT 17
+#define WBSR_EJECT_FADE_FRAMES 30
+#else
+#define WBSR_BROOM WBSR_A048
+#define WBSR_SMOKE_HANDLE_COUNT 16
+#define WBSR_EJECT_FADE_FRAMES 60
+#endif
 #define WBSR_DOOR_RIGHT SHEN_NAME4('d', 'r', '2', 'R')
 #define WBSR_DOOR_LEFT SHEN_NAME4('d', 'r', '2', 'L')
 #define WBSR_TASK SHEN_NAME4('s', 'u', 's', 'u')
@@ -36,10 +46,22 @@ typedef struct WbsrWork {
 int wbsrEntry;
 WbsrState wbsrState;
 WbsrWork wbsrWork;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 extern int wbsrBaseEntry;
+#endif
 extern const char wbsrAuthorPackage[];
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WbsrMain(int *argument) __attribute__((section(".text.entry")));
+#else
 void WbsrMain(int *argument);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WbsrResetRyo(void *data);
+void WbsrWaitRyo(void *data);
+void WbsrAttachBroom(void);
+void WbsrSetMotion(shen_name name, int motion);
+#endif
 void WbsrCreateSmoke(void);
 void WbsrInitializeCallback(void *data);
 void WbsrPackageReady(void);
@@ -69,7 +91,7 @@ void WbsrPlaceCharacter(shen_name name, Vector3 *position, int angle);
 void WbsrPlaceCharacterAt(shen_name name, float x, float y, float z, int angle);
 
 #if defined(SHENMUE_EVENT_ENTRY)
-unsigned int wbsrSmokeEffects[16] __attribute__((section(".bss")));
+unsigned int wbsrSmokeEffects[WBSR_SMOKE_HANDLE_COUNT] __attribute__((section(".bss")));
 Vector3 wbsrSmokePositions[2] = {{330.64f, 128.05f, 268.0f}, {341.21f, 128.05f, 268.0f}};
  
 unsigned int wbsrScriptVisit[] = {0, 4, 0, 0,
@@ -80,20 +102,20 @@ unsigned int wbsrScriptVisit[] = {0, 4, 0, 0,
     0x80000004,
     0x80010001, 0,
     0x8001000d, 1,
-    0x8002001c, WBSR_A048, WBSR_SAI,
+    0x8002001c, WBSR_BROOM, WBSR_SAI,
     0x80010009, -30,
     0x8006001a, 97, 84, 1, 2, 97, 150,
     0x40000001,
     0x80010001, 1,
     0x80010009, -40,
-    0x8001001d, WBSR_A048,
+    0x8001001d, WBSR_BROOM,
     0x80020007, 70, 1,
     0x8001000e, 2,
     0x40000002,
     0x80010001, 2,
     0x80010009, 0,
-    0x8001001d, WBSR_A048,
-    0x80050011, WBSR_A048, 0, 0, 0, 0,
+    0x8001001d, WBSR_BROOM,
+    0x80050011, WBSR_BROOM, 0, 0, 0, 0,
     0x80050011, WBSR_SAI, 0, 0, 0, 0,
     0x80020007, 70, 0,
     0x8001000e, 1};
@@ -115,11 +137,28 @@ int wbsrScriptChoices[2][3] = {{97, 84, 150}, {97, 84, 150}};
 
 void WbsrMain(int *argument)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EventDateTime date;
+#endif
     HLibTask *task;
     FTBL.EV_SetCanDoAreaJumpTo(0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.EV_SetPlayerFlag(12, 1006, 1);
+#endif
     wbsrEntry = *argument;
     FTBL.DebugLogToFileRemoved("=== SusuHarai Keidai ===[%d]\n", *argument);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (wbsrEntry == 3) {
+        FTBL.GetCurrentDateTime((DateTime *)&date);
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(WBSR_RYO), 0xf002, 0);
+        if (date.hour >= 19)
+            QueueEventMessage("●青閉っているな…＆明日出直そう", 0, 60);
+        else
+            QueueEventMessage("●青明日来いと言っていたな…", 0, 60);
+        FTBL.HLib_SetupTimedTask(FTBL.HLib_EnqueueTaskWithoutParameter(WbsrResetRyo, 4, 11, WBSR_TASK), 60);
+    } else {
+#endif
     FTBL.SetPlayerControlEnabled(0);
     FTBL.SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
     FTBL.FinishLoading();
@@ -127,6 +166,9 @@ void WbsrMain(int *argument)
     wbsrState.task = task;
     FTBL.EV_FreeAuthorPak(1, wbsrAuthorPackage);
     FTBL.HLib_SetupTimedTask(task, 2);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    }
+#endif
 }
 
 const char wbsrAuthorPackage[] = "0031";
@@ -155,27 +197,65 @@ void WbsrCreateSmoke(void)
     }
 }
 #else
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 int wbsrBaseEntry = 2;
+#endif
 shen_name wbsrCharacters[] = {WBSR_SAI, WBSR_KNK, WBSR_SIZ, 0};
+
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WbsrResetRyo(void *data)
+{
+    Vector3 position = {335.76999f, 126.97f, 280.20001f};
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(WBSR_RYO), &position, 0x8000, 0, 0);
+    wbsrWork.reserved18 = 0;
+    FTBL.HLib_SetCurrentTaskTo(WbsrWaitRyo);
+}
+
+void WbsrWaitRyo(void *data)
+{
+    if (!FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(WBSR_RYO), 58, 1)) {
+        FTBL.HLib_DestroyCurrentTask();
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.EV_SetCanDoAreaJumpTo(1);
+    }
+}
+#endif
 
 void WbsrInitializeCallback(void *data)
 {
     FTBL.SetScreenFilmFade(1, 255, 0, 0, 0, 255, 0, 0, 0);
     FTBL.DebugLogToFileRemoved("Pack,NPC Load\n");
     FTBL.EV_NPC_NewLoadSw_0(0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.CheckWarmStartNpcRoute(WBSR_SAI);
     FTBL.DebugLogToFileRemoved("Lock NPC SAI_\n");
+#endif
     FTBL.EV_ResetFreeTalkFlags();
     WbsrLoadPackage("SUS1", wbsrCharacters, WbsrPackageReady);
     FTBL.HLib_DestroyCurrentTask();
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WbsrAttachBroom(void)
+{
+    Vector3 position = {0.1f, 0.0f, -0.03f};
+    Vector3i rotation = {0, 0, 0xf1c7};
+    FTBL.EV_SetCharaControllerFlags(WBSR_HOUK, 3, 0);
+    FTBL.EV_SetCharaControllerFlags(WBSR_SAI, 3, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(WBSR_SAI, 0);
+    FTBL.AttachScenarioCharacter(WBSR_HOUK, WBSR_SAI, 14, &position, &rotation);
+}
+#endif
+
 void WbsrPackageReady(void)
 {
     FTBL.EV_ControlPackageResources(2, 2, "SUS1", 0, 0);
     FTBL.EV_ControlPackageResources(2, 4, "SUS1", 0, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.EV_SetCharacterAlphaEnabled(WBSR_SAI, 0);
     FTBL.EV_SetCharaControllerFlags(WBSR_SAI, 3, 0);
+#endif
     if (wbsrEntry == 1) {
         FTBL.camCtrlSetFovTransitionTo(1);
         FTBL.camCtrlSetState(0);
@@ -187,24 +267,33 @@ void WbsrPackageReady(void)
         WbsrResetCounters(100);
     } else if (wbsrEntry == 2) {
         FTBL.EV_stepSetFlags(892, 1);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.ExecuteCurrAreaMainFunc_Wrapper(1, &wbsrBaseEntry);
+#endif
         FTBL.HLib_EnqueueTaskWithoutParameter(WbsrScenarioBCallback, 4, 11, WBSR_TASK);
         WbsrResetCounters(200);
     } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        WbsrAttachBroom();
+#endif
         FTBL.EV_DisableCharacterDisplay(WBSR_SIZ);
         FTBL.EV_LoadCutsceneFromCurrentScene("0031E000");
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetScenarioCharacterFlag40(WBSR_DOOR_RIGHT, 0);
         FTBL.SetScenarioCharacterFlag40(WBSR_DOOR_LEFT, 0);
+#endif
         WbsrStartAuthor(SHEN_NAME4('A', 'U', 'T', '0'), WbsrOpeningAuthorDone, 1);
     }
 }
 
 void WbsrOpeningAuthorDone(void)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetScenarioCharacterFlag40(WBSR_DOOR_RIGHT, 1);
     FTBL.SetScenarioCharacterFlag40(WBSR_DOOR_LEFT, 1);
     FTBL.SetRenderClockAndCompassTo(1);
     FTBL.shenSetTimeSimulationTo(0);
+#endif
     WbsrStartChoice(333, 334, 1800, 0, WbsrChoose);
 }
 
@@ -213,14 +302,20 @@ void WbsrChoose(int choice)
     switch (choice) {
     case 0:
         FTBL.DebugLogToFileRemoved("交渉決裂\n");
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetPlayerGameFlags(32, 0);
+#endif
         FTBL.SetPlayerControlEnabled(1);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.InitiateCleanupForSceneChara(WBSR_SAI);
         FTBL.DebugLogToFileRemoved("EV_FREETALK_RESET( ID_SAI )\n");
+#endif
         FTBL.camCtrlSetFovTransitionTo(1);
         FTBL.camCtrlSetState(0);
         FTBL.EV_stepSetFlags(70, 2);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.ExecuteCurrAreaMainFunc_Wrapper(1, &wbsrBaseEntry);
+#endif
         {
             Vector3 position = {336.013f, 126.97f, 269.26001f};
             Vector3i rotation = {0, 0x4000, 0};
@@ -229,16 +324,20 @@ void WbsrChoose(int choice)
             FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(WBSR_RYO), 71, 0, 0);
             FTBL.EV_AT_SetAngY_0(WBSR_RYO, WBSR_LOCAL_XYZ, &rotation, 0);
             FTBL.EV_AT_SetPos(WBSR_RYO, WBSR_LOCAL_XYZ, &position);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.EV_DisableCharacterDisplay(WBSR_A048);
+#endif
             FTBL.HLib_EnqueueTaskWithoutParameter(WbsrSelect1Callback, 4, 11, WBSR_TASK);
         }
         break;
     case 1:
         FTBL.DebugLogToFileRemoved("侵入処理\n");
         FTBL.EV_stepSetFlags(70, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.ExecuteCurrAreaMainFunc_Wrapper(1, &wbsrBaseEntry);
         FTBL.SetRenderClockAndCompassTo(0);
         FTBL.shenSetTimeSimulationTo(1);
+#endif
         WbsrStartAuthor(SHEN_NAME4('A', 'U', 'T', '2'), WbsrQueueScenarioA, 0);
         break;
     }
@@ -248,20 +347,26 @@ void WbsrSelect1Callback(void *data)
 {
     if (FTBL.EV_GetShenmueFlag(698)) {
         FTBL.SetPlayerControlEnabled(0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetPlayerGameFlags(30, 0);
         FTBL.SetRenderClockAndCompassTo(0);
         FTBL.shenSetTimeSimulationTo(1);
         FTBL.EV_EnableCharacterDisplay(WBSR_A048);
+#endif
         WbsrStartAuthor(SHEN_NAME4('A', 'U', 'T', '2'), WbsrQueueScenarioA, 0);
         FTBL.HLib_DestroyCurrentTask();
     }
     if (FTBL.EV_GetShenmueFlag(699)) {
         FTBL.SetPlayerControlEnabled(0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetPlayerGameFlags(30, 0);
+#endif
         FTBL.EV_stepSetFlags(699, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.ExecuteCurrAreaMainFunc_Wrapper(1, &wbsrBaseEntry);
         FTBL.SetRenderClockAndCompassTo(0);
         FTBL.shenSetTimeSimulationTo(1);
+#endif
         FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(WBSR_RYO), 55, 0);
         FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(WBSR_RYO), 17, 0);
         FTBL.HLib_SetCurrentTaskTo(WbsrSelect2Callback);
@@ -271,15 +376,22 @@ void WbsrSelect1Callback(void *data)
 
 void WbsrSelect2Callback(void *data)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.EV_EnableCharacterDisplay(WBSR_A048);
+#endif
     WbsrStartAuthor(SHEN_NAME4('A', 'U', 'T', '1'), WbsrStartTomorrow, 0);
     FTBL.HLib_DestroyCurrentTask();
 }
 
 void WbsrStartTomorrow(void)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.ResetScenarioCharacterAttachment(WBSR_HOUK);
+#endif
     FTBL.EV_stepSetFlags(70, 1);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.ExecuteCurrAreaMainFunc_Wrapper(1, &wbsrBaseEntry);
+#endif
     FTBL.camCtrlSetFovTransitionTo(1);
     FTBL.camCtrlSetState(0);
     {
@@ -302,9 +414,13 @@ void WbsrStartTomorrow(void)
 
 void WbsrExit2Callback(void *data)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.SetPlayerControlEnabled(1);
+#else
     FTBL.SetPlayerControlEnabled(0);
     FTBL.SetPlayerGameFlags(32, 0);
     FTBL.EV_SetPlayerFlag(12, 1006, 0);
+#endif
     FTBL.plymAdvanceTime(23, 0);
     FTBL.HLib_SetCurrentTaskTo(WbsrExit3Callback);
 }
@@ -325,20 +441,35 @@ void WbsrExit3Callback(void *data)
 
 void WbsrExit4Callback(void *data)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetPlayerGameFlags(30, 0);
     FTBL.SetPlayerControlEnabled(1);
+#endif
     WbsrReleaseResources();
     FTBL.EV_SetCanDoAreaJumpTo(1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.SetPlayerControlEnabled(1);
+#else
     FTBL.EV_SetPlayerFlag(12, 1006, 0);
     FTBL.EV_NPC_NewLoadSw_0(1);
+#endif
     FTBL.HLib_DestroyCurrentTask();
 }
 
 void WbsrQueueScenarioA(void)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.ResetScenarioCharacterAttachment(WBSR_HOUK);
+    FTBL.EV_ToggleCharacterFlag(WBSR_HOUK);
+#endif
     FTBL.EV_DisableCharacterDisplay(WBSR_SAI);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.EV_DisableCharacterDisplay(WBSR_HOUK);
+#endif
     FTBL.EV_stepSetFlags(70, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.ExecuteCurrAreaMainFunc_Wrapper(1, &wbsrBaseEntry);
+#endif
     EVT_AT_SetAngY(WBSR_RYO, 0xffffffffU, 0.0f, 0);
     FTBL.SetMotionFrameTime(FTBL.scenFindMotionwork(WBSR_RYO), 12, 0);
     FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(WBSR_RYO), 1);
@@ -357,17 +488,26 @@ void WbsrScenarioBCallback(void *data)
             FTBL.SetPlayerControlEnabled(0);
             FTBL.DebugLogToFileRemoved("追い出し\n");
             FTBL.EV_stepSetFlags(892, 1);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.ExecuteCurrAreaMainFunc_Wrapper(1, &wbsrBaseEntry);
+#endif
             WbsrResetCounters(200);
             FTBL.mtwkSetSpeed(FTBL.scenFindMotionwork(WBSR_RYO), 0.0f, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.SetPlayerGameFlags(31, 0);
-            FTBL.SetScreenFilmFade(60, 0, 0, 0, 0, 255, 0, 0, 0);
-            FTBL.HLib_SetupTaskDelay(60);
+#endif
+            FTBL.SetScreenFilmFade(WBSR_EJECT_FADE_FRAMES, 0, 0, 0, 0, 255, 0, 0, 0);
+            FTBL.HLib_SetupTaskDelay(WBSR_EJECT_FADE_FRAMES);
         }
         break;
     case 200:
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetPlayerGameFlags(30, 0);
+#endif
         FTBL.EV_EnableCharacterDisplay(WBSR_SAI);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        WbsrAttachBroom();
+#endif
         WbsrStartAuthor(SHEN_NAME4('A', 'U', 'T', 'B'), WbsrStartTomorrow, 1);
         WbsrResetCounters(999);
         break;
@@ -412,7 +552,12 @@ void WbsrScenarioACallback(void *data)
         case 2: {
             Vector3 position, target;
             Vector3i rotation;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            int timeout = wbsrState.timer--;
+            if (!timeout && FTBL.ryoNotBusy()) {
+#else
             if (wbsrState.timer-- < 0 && FTBL.ryoNotBusy()) {
+#endif
                 FTBL.SetPlayerControlEnabled(0);
                 WbsrResetCounters(21);
             }
@@ -431,15 +576,21 @@ void WbsrScenarioACallback(void *data)
         case 0:
             FTBL.SetScreenFilmFade(60, 0, 0, 0, 0, 255, 0, 0, 0);
             FTBL.HLib_SetupTaskDelay(60);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.SetPlayerGameFlags(31, 0);
+#endif
             ++wbsrState.counter;
             break;
         case 1:
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.SetPlayerGameFlags(30, 0);
+#endif
             FTBL.EV_EnableCharacterDisplay(WBSR_SAI);
             WbsrStartAuthor(SHEN_NAME4('A', 'U', 'T', 'B'), WbsrStartTomorrow, 1);
             FTBL.EV_stepSetFlags(699, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.ExecuteCurrAreaMainFunc_Wrapper(1, &wbsrBaseEntry);
+#endif
             WbsrResetCounters(999);
             break;
         }
@@ -458,6 +609,9 @@ void WbsrReleaseResources(void)
 {
     FTBL.EV_FreeAuthorPak(0, wbsrAuthorPackage);
     WbsrFreePackage();
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.EV_HLKillOtherHierarchyTask(wbsrState.task);
+#endif
 }
 
 void WbsrAuthorWaitCallback(void *data)
@@ -590,6 +744,17 @@ void WbsrPlaceCharacterAt(shen_name name, float x, float y, float z, int angle)
     position.z = z;
     WbsrPlaceCharacter(name, &position, angle);
 }
+
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WbsrSetMotion(shen_name name, int motion)
+{
+    FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(name), 71, 0, 0);
+    FTBL.SetMotionFrameTime(FTBL.scenFindMotionwork(name), 0, 0);
+    FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(name), 0);
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(name), motion, 0);
+}
+#endif
+
 #endif
 #else
 #include "s2/areas/area_wbsr.hpp"

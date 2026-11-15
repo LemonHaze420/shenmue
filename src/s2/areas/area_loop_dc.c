@@ -600,7 +600,13 @@ int QueueAreaLoopAuthor(const char *package, shen_name author, int delay, int en
         } else {
             length = 0;
         }
-        task = FTBL.HLib_EnqueueTaskWithParameter(AreaLoopAuthorCallback, 4, 11, sizeof(AreaLoopAuthorWork) + length, TASK_EVNT);
+        task = FTBL.HLib_EnqueueTaskWithParameter(AreaLoopAuthorCallback, 4, 11,
+#if defined(SHENMUE_AREA_LOOP_GAMEJAM)
+                                                        sizeof(work) + length,
+#else
+                                                        sizeof(AreaLoopAuthorWork) + length,
+#endif
+                                                        TASK_EVNT);
         if (!task)
             break;
         work = (AreaLoopAuthorWork *)FTBL.HLib_GetTaskParameter(task);
@@ -838,10 +844,21 @@ void AreaLoopPackageCallback(void *data)
         }
         if (work->completion)
             work->completion(2, 0, work->parent);
+#if defined(SHENMUE_AREA_LOOP_GAMEJAM)
+        if (FTBL.EV_ControlPackageResources(0, 0, work->folder, (int)work->package, 0)) {
+            int loading = (int)FTBL.EV_ControlPackageResources(0, 2, 0, 0, 0);
+            if (!loading && FTBL.EV_ControlPackageResources(0, 5, work->package, 0, 0)) {
+                FTBL.EV_ControlPackageResources(2, 2, work->package, loading, 0);
+                break;
+            }
+        }
+        done = 0;
+#else
         if (FTBL.EV_ControlPackageResources(0, 0, work->folder, (int)work->package, 0))
             FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
         else
             done = 0;
+#endif
     } while (0);
     if (done) {
         if (work && work->completion)

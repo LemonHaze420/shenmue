@@ -56,11 +56,26 @@ void KnmnAwardMoveSequence(void *data)
   case 0:ThrChangeSeq(thr,100,1);break;
   case 100:ThrWaitFade(thr,101,1);break;
   case 101:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+   {
+    int move=work->learnedMove;
+    if(move==-1)ThrChangeSeq(thr,103,1);
+    else{
+     if(move==6){
+      FTBL.SetMoveLearningEntry(0,1,21,12);FTBL.SetNewEwzoTypeForMoveLearned(0,1,21);
+     }else if(work->learnedMove==0){
+      FTBL.SetMoveLearningEntry(0,1,21,1);FTBL.SetNewEwzoTypeForMoveLearned(2,1,21);
+     }
+     work->resultFrames=150;ThrChangeSeq(thr,102,1);
+    }
+   }
+#else
    if(work->learnedMove==-1)ThrChangeSeq(thr,103,1);
    else{
     FTBL.SetMoveLearningEntry(0,1,21,12);FTBL.SetNewEwzoTypeForMoveLearned(0,1,21);
     work->resultFrames=150;ThrChangeSeq(thr,102,1);
    }
+#endif
    break;
   case 102:
    work->resultFrames--;
@@ -95,7 +110,11 @@ void KnmnFeedbackOpening(void *data)
  case 3:
   if(FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(KNMN_KEM),65,1,0)){
    KnmnFollowTeacher();
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+   FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5198,0);
+#else
    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5193,0);
+#endif
   }
   break;
  }
@@ -107,7 +126,11 @@ void KnmnFeedbackClosing(void *data)
 {
  if(FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(KNMN_KEM),65,1,0)){
   KnmnFollowTeacher();
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+  FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5198,0);
+#else
   FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5193,0);
+#endif
  }
 }
 

@@ -21,10 +21,14 @@ const char knmnFilename[] = "KNMN.EV3";
 const char knmnReturnOverlay[] = "WKKT.EV2";
 const char knmnBlurModel[] = "KEM_B.MT7";
 const char knmnAudio[] = "0026A000.sbt";
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 const char knmnWazaTitle[] = "小擒打";
+#endif
 const char knmnLeafDirectory[] = "misc";
 const char knmnLeafTexture[] = "REDLEAF.pvr";
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 int knmnLeafEffect = -1;
+#endif
 
 void KnmnOwnerNullsub(void *data) {
 }
@@ -78,7 +82,13 @@ void KnmnMakeGameCallback(void *data) {
     work->state = 0;
     work->mode = mode;
     work->round = 0;
-    knmnLeafEffect = -1;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    work->particleEffects[2] = -1;
+#endif
+    KNMN_LEAF_EFFECT(work) = -1;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    work->particleEffects[1] = -1;
+#endif
     work->characters = Queue_EVT_AT_ReadChr(child, knmnCharacters);
     if (g_currentMap == KNMN_AREA)
         EVT_AT_MenCtrl(0, 255, 0, 0, 0, 0, 0, 0, 0, -1);
@@ -87,7 +97,9 @@ void KnmnMakeGameCallback(void *data) {
     FTBL.HLib_DestroyCurrentTask();
 }
 void KnmnLoadPackages(KnmnGameWork *work) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetScenarioFollowCharacter(0);
+#endif
     FTBL.EV_SetNewSceneIndex();
     work->masterMotion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, knmnMasterMotion);
     FTBL.EV_FreeAuthorPak(1, knmnAuthorPackage);
@@ -119,17 +131,32 @@ void KnmnStopCallback(void *data) {
     }
 }
 void KnmnDebugEndCallback(void *data) {
-    if (knmnLeafEffect != -1)
-        FTBL.FreeParticleEffect(3, knmnLeafEffect);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    KnmnGameWork *work = (KnmnGameWork *)data;
+#endif
+    if (KNMN_LEAF_EFFECT(work) != -1)
+        FTBL.FreeParticleEffect(3, KNMN_LEAF_EFFECT(work));
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (work->particleEffects[1] != -1)
+        FTBL.FreeParticleEffect(3, work->particleEffects[1]);
+    if (work->particleEffects[2] != -1)
+        FTBL.FreeParticleEffect(0, work->particleEffects[2]);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    KnmnEndCallback(work);
+#else
     KnmnEndCallback(data);
+#endif
 }
 void KnmnEndCallback(void *data) {
     KnmnGameWork *work = (KnmnGameWork *)data;
     HLibTask *task;
-    if (knmnLeafEffect != -1) {
-        FTBL.FreeParticleEffect(3, knmnLeafEffect);
-        knmnLeafEffect = -1;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (KNMN_LEAF_EFFECT(work) != -1) {
+        FTBL.FreeParticleEffect(3, KNMN_LEAF_EFFECT(work));
+        KNMN_LEAF_EFFECT(work) = -1;
     }
+#endif
     switch (work->mode) {
     case 3:
         FTBL.EV_stepSetFlags(0x42, 0);
@@ -146,7 +173,9 @@ void KnmnEndCallback(void *data) {
     }
     FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('0', '0', '0', '0'), 1);
     FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('B', 'T', 'C', '1'), 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.InitiateCleanupForSceneChara(KNMN_KEM);
+#endif
     ET_AT_KillWork(work->characters);
     if (FTBL.EV_ControlPackageResources(0, 5, (void *)knmnPackage, 0, 0))
         FTBL.EV_ControlPackageResources(0, 6, (void *)knmnPackage, 0, 0);
@@ -173,6 +202,11 @@ void KnmnEndCallback(void *data) {
             EVT_AT_SetPos(KNMN_RYO, KNMN_INVALID, 43.1f, 102.3f, 243.1f, 0);
             EVT_AT_SetAngY(KNMN_RYO, KNMN_INVALID, 90, 0);
         }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        FTBL.SetScreenFilmFade(60, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.HLib_EnqueueTaskWithoutParameter(KnmnWaitNpcCallback, 4, 11, SHEN_NAME4('w', 'n', 'p', 'c'));
+#else
         FTBL.EV_NPC_NewLoadSw_0(0);
         task = FTBL.HLib_EnqueueTaskWithoutParameter(KnmnWaitNpcCallback, 4, 11, SHEN_NAME4('w', 'n', 'p', 'c'));
         FTBL.HLib_SetupTimedTask(task, 30);
@@ -180,13 +214,21 @@ void KnmnEndCallback(void *data) {
         FTBL.CheckWarmStartNpcRoute(KNMN_KEM);
         FTBL.ForceLoadNpc(KNMN_KEM);
         FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+#endif
     }
 }
 void KnmnWaitNpcCallback(void *data) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (FTBL.DoesScenarioCharacterExist(KNMN_KEM)) {
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+#else
     FTBL.EV_NPC_NewLoadSw_0(1);
     FTBL.npcLockUnlock(KNMN_KEM);
     FTBL.SetPlayerControlEnabled(1);
     FTBL.HLib_DestroyCurrentTask();
+#endif
 }
 void KnmnInitBattleCallback(void *data) {
     KnmnGameWork *work = (KnmnGameWork *)data;
@@ -349,15 +391,17 @@ void KnmnButokuCallback(void *data) {
         if (FTBL.filmCheckFadeTrackColour())
             return;
         work->practiceTask = KnmnQueuePractice(work);
-        knmnLeafEffect = -1;
+        KNMN_LEAF_EFFECT(work) = -1;
         work->state++;
         break;
     case 1:
         if (!KnmnFinishPractice(work->practiceTask))
             return;
-        if (knmnLeafEffect != -1) {
-            FTBL.FreeParticleEffect(3, knmnLeafEffect);
-            knmnLeafEffect = -1;
+        if (KNMN_LEAF_EFFECT(work) != -1) {
+            FTBL.FreeParticleEffect(3, KNMN_LEAF_EFFECT(work));
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            KNMN_LEAF_EFFECT(work) = -1;
+#endif
         }
         work->state++;
         break;
@@ -402,7 +446,23 @@ void KnmnAuthFirstEndCallback(void *data) {
 }
 void KnmnAuthTomoCallback(void *data) {
     KnmnGameWork *work = (KnmnGameWork *)data;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     Vector3 target;
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (work->state == 0) {
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('T', 'O', 'M', 'O'));
+        work->state++;
+    } else if (!FTBL.EV_authSceneCtrl(-1)) {
+        work->state = 0;
+        work->round++;
+        FTBL.EV_LoadAudio(knmnAudio, 0);
+        FTBL.EV_spmBeginSampleExecute(0);
+        if (work->particleEffects[2] != -1)
+            FTBL.FreeParticleEffect(0, work->particleEffects[2]);
+        FTBL.HLib_SetCurrentTaskTo(KnmnInitButokuCallback);
+    }
+#else
     switch (work->state) {
     case 0:
         FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), 0, 3);
@@ -425,10 +485,29 @@ void KnmnAuthTomoCallback(void *data) {
         }
         break;
     }
+#endif
 }
 void KnmnAuthShoukindaCallback(void *data) {
     KnmnGameWork *work = (KnmnGameWork *)data;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     Vector3 target;
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    switch (work->state) {
+    case 0:
+        QueueSkAuthorStart(work->task, SHEN_NAME4('S', 'H', 'O', 'U'), 0, 0, 0);
+        work->state++;
+        break;
+    case 1:
+        QueueSkAuthorStart(work->task, SHEN_NAME4('S', 'H', 'O', '2'), 0, 0, 0);
+        work->state++;
+        break;
+    default:
+        work->state = 0;
+        FTBL.HLib_SetCurrentTaskTo(KnmnButokuCallback);
+        break;
+    }
+#else
     switch (work->state) {
     case 0:
         FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO), 0, 3);
@@ -454,17 +533,20 @@ void KnmnAuthShoukindaCallback(void *data) {
         FTBL.HLib_SetCurrentTaskTo(KnmnButokuCallback);
         break;
     }
+#endif
 }
 void KnmnAuthWazaCallback(void *data) {
     KnmnGameWork *work = (KnmnGameWork *)data;
     if (work->state == 0) {
         work->state++;
-        knmnLeafEffect = -1;
+        KNMN_LEAF_EFFECT(work) = -1;
     } else if (!FTBL.EV_authSceneCtrl(-1)) {
         work->state = 0;
-        if (knmnLeafEffect != -1) {
-            FTBL.FreeParticleEffect(3, knmnLeafEffect);
-            knmnLeafEffect = -1;
+        if (KNMN_LEAF_EFFECT(work) != -1) {
+            FTBL.FreeParticleEffect(3, KNMN_LEAF_EFFECT(work));
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            KNMN_LEAF_EFFECT(work) = -1;
+#endif
         }
         FTBL.HLib_SetCurrentTaskTo(KnmnStopCallback);
     } else
@@ -472,12 +554,18 @@ void KnmnAuthWazaCallback(void *data) {
 }
 
 void KnmnWazaFrameEvents(void *data) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    KnmnGameWork *work = (KnmnGameWork *)data;
+#endif
     Vector3 size = {.022f, .05f, .022f};
     switch (FTBL.EV_authSceneCtrl(-6)) {
     case 50:
-        KnmnCreateLeafEmitter(&knmnLeafEffect, 80, .5f);
-        FTBL.ResumeParticleEffect(3, knmnLeafEffect);
+        KnmnCreateLeafEmitter(&KNMN_LEAF_EFFECT(work), 80, .5f);
+        FTBL.ResumeParticleEffect(3, KNMN_LEAF_EFFECT(work));
         size.y = .04f;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        break;
+#else
         return;
     case 68:
         FTBL.ProcessAicaCommand(0x1200a0, 0);
@@ -488,12 +576,21 @@ void KnmnWazaFrameEvents(void *data) {
     case 71:
         FTBL.EV_LoadAudio(knmnAuthor, 0);
         return;
+#endif
     case 200:
-        FTBL.SetParticleEffectBirthRate(3, knmnLeafEffect, 0);
+        FTBL.SetParticleEffectBirthRate(3, KNMN_LEAF_EFFECT(work), 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        break;
+#else
         return;
+#endif
     case 420:
-        FTBL.SuspendParticleEffect(3, knmnLeafEffect);
+        FTBL.SuspendParticleEffect(3, KNMN_LEAF_EFFECT(work));
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        break;
+#else
         return;
+#endif
     }
 }
 void KnmnCreateLeafEmitter(int *effect, int count, float birthRate) {

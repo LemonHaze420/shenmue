@@ -1,3 +1,24 @@
+#if defined(SHENMUE_EVENT_OVERLAY) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/scripts/cwon/area_cwon.hpp"
+
+void CwonDummyControlCallback(void *data) {
+    if (FTBL.DoesScenarioCharacterExist(RYO)) {
+        if (FTBL.DoesScenarioCharacterExist(SHEN_NAME4('D', 'U', 'M', '0'))) {
+            EVT_AT_SetPos(SHEN_NAME4('D', 'U', 'M', '0'), RYO, 0, 0, 0, 0);
+            EVT_AT_SetAng(SHEN_NAME4('D', 'U', 'M', '0'), RYO, 0, 0, 0, 0);
+        } else
+            FTBL.HLib_SetupTaskDelay(0);
+    }
+    if (FTBL.DoesScenarioCharacterExist(WON)) {
+        if (FTBL.DoesScenarioCharacterExist(SHEN_NAME4('D', 'U', 'M', '1'))) {
+            EVT_AT_SetPos(SHEN_NAME4('D', 'U', 'M', '1'), WON, 0, 0, 0, 0);
+            EVT_AT_SetAng(SHEN_NAME4('D', 'U', 'M', '1'), WON, 0, 0, 0, 0);
+        } else
+            FTBL.HLib_SetupTaskDelay(0);
+    }
+}
+
+#else
 #include "s2/scripts/cwon/cwon_tables.hpp"
 namespace shenmue::s2 {
 
@@ -29,3 +50,5 @@ const std::int32_t CWON_BEE_DYNAMIC_PARTS[]{166, 165, 164, 163, 162, 161, 160, 1
 const std::int32_t CWON_TABLE_DYNAMIC_PARTS[]{152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168};
 const std::int32_t CWON_BOX_DYNAMIC_PARTS[]{161, 160, 159, 158, 157, 156, 155, 154, 153, 152};
 } // namespace shenmue::s2
+
+#endif

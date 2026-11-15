@@ -8,7 +8,9 @@ void QueuePatiEvent(const char *argument);
 void PatiEntry(const char *argument) {
     patiHandModel = SHEN_NAME4('h','a','n','d');
     g_patiVersus = 0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     g_patiModelAlpha = 0;
+#endif
     QueuePatiEvent(argument);
 }
 
@@ -16,59 +18,99 @@ void PatiEntry(const char *argument) {
 #include "s2/areas/pati_event.hpp"
 static unsigned char g_patiMuseumMode, g_patiSingleMode;
 static int g_patiMinimumBet, g_patiCameraMoving;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+static int g_patiCameraId;
+static shen_name g_patiCameraEye, g_patiCameraTarget;
+#endif
 static Vector3 g_patiCameraPosition, g_patiCameraLookAt, g_patiFilteredEye, g_patiFilteredTarget, g_patiDesiredEye, g_patiDesiredTarget;
 static float g_patiCameraHeight;
-static int g_patiCameraStep, g_patiSelectionAccepted, g_patiInspectRequested, g_patiHeightRepeat;
+static int g_patiCameraStep, g_patiSelectionAccepted;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+static int g_patiInspectRequested;
+#endif
+static int g_patiHeightRepeat;
 static char g_patiBoardSize;
 static Vector3i g_patiBoardRotation;
 static Vector3 g_patiBoardPosition;
-static int g_patiPlayerCamera, g_patiDealerCamera, g_patiCameraId;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+enum { g_patiPlayerCamera=998, g_patiDealerCamera=999 };
+#else
+static int g_patiPlayerCamera, g_patiDealerCamera;
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+static int g_patiCameraId;
 static shen_name g_patiCameraEye, g_patiCameraTarget;
-static int g_patiCameraTime, g_patiDealerInputClock, g_patiDealerInputIndex;
+static int g_patiCameraTime;
+#endif
+static int g_patiDealerInputClock, g_patiDealerInputIndex;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static PatiMotionCache g_patiMotionCache[4];
+#endif
 
 extern PatiDealerMotion patiDealerMotions,patiAlternateDealerMotions;
 const PatiWagerMode patiWagerModes[] = {{"1", 1}, {"5", 2}, {"10", 3}, {"20", 4}, {"50", 5}, {"100", 6}, {"", 3}};
 const PatiPayoutMode patiPayoutModes[] = {{"2", 1}, {"5", 2}, {"10", 3}, {"20", 4}, {"30", 5}, {"40", 6}, {"50", 7}, {"60", 8}, {"70", 9}, {"80", 10},
     {"90", 11}, {"100", 12}, {"120", 13}, {"150", 14}, {"200", 15}, {"250", 16}, {"300", 17}, {"400", 18}, {"500", 19}, {"1000", 20}, {"5/10/20", 21},
     {"10/20/40", 22}, {"0/50/100", 23}, {"0/50/150", 24}, {"", 7}};
-const PatiDealer patiDealers[] = {{SHEN_NAME4('O','D','1','_'), 1138, &patiDealerMotions, 931}, {SHEN_NAME4('D','Y','1','_'), 1135, &patiDealerMotions, 911},
-    {SHEN_NAME4('S','O','G','_'), 1136, &patiDealerMotions, 931}, {SHEN_NAME4('K','N','T','_'), 1137, &patiDealerMotions, 911},
-    {SHEN_NAME4('C','N','6','_'), 1168, &patiDealerMotions, 911}, {SHEN_NAME4('K','T','4','_'), 1169, &patiDealerMotions, 931},
-    {SHEN_NAME4('J','O','E','_'), 1170, &patiDealerMotions, 931}, {SHEN_NAME4('S','C','N','_'), 1172, &patiDealerMotions, 931},
-    {SHEN_NAME4('S','N','S','_'), 1071, &patiDealerMotions, 921}, {SHEN_NAME4('A','A','1','_'), 1159, &patiDealerMotions, 931},
-    {SHEN_NAME4('H','A','K','_'), 1173, &patiDealerMotions, 911}, {SHEN_NAME4('D','H','O','_'), 1174, &patiDealerMotions, 931},
-    {SHEN_NAME4('L','Y','O','_'), 1160, &patiDealerMotions, 911}, {SHEN_NAME4('A','N','S','_'), 1171, &patiDealerMotions, 931},
-    {SHEN_NAME4('E','I','N','_'), 1175, &patiDealerMotions, 931}, {SHEN_NAME4('K','N','H','_'), 1176, &patiDealerMotions, 931},
-    {SHEN_NAME4('R','K','U','_'), 1177, &patiDealerMotions, 921}, {SHEN_NAME4('G','K','S','_'), 1165, &patiDealerMotions, 931},
-    {SHEN_NAME4('C','H','X','_'), 940, &patiDealerMotions, 921}, {SHEN_NAME4('D','M','1','_'), 941, &patiAlternateDealerMotions, 921},
-    {SHEN_NAME4('D','M','2','_'), 942, &patiDealerMotions, 931}, {SHEN_NAME4('D','S','4','_'), 943, &patiDealerMotions, 931},
-    {SHEN_NAME4('F','D','1','_'), 944, &patiDealerMotions, 931}, {SHEN_NAME4('J','I','8','_'), 945, &patiDealerMotions, 921},
-    {SHEN_NAME4('K','U','4','_'), 946, &patiDealerMotions, 911}, {SHEN_NAME4('M','F','G','_'), 1386, &patiAlternateDealerMotions, 921},
-    {SHEN_NAME4('O','D','3','_'), 947, &patiDealerMotions, 931}, {SHEN_NAME4('P','G','5','_'), 1325, &patiAlternateDealerMotions, 921},
-    {SHEN_NAME4('S','D','2','_'), 948, &patiDealerMotions, 931}, {SHEN_NAME4('S','F','7','_'), 1324, &patiDealerMotions, 911},
-    {SHEN_NAME4('T','N','J','_'), 949, &patiDealerMotions, 931}, {SHEN_NAME4('W','O','1','_'), 452, &patiDealerMotions, 931},
-    {SHEN_NAME4('W','O','3','_'), 454, &patiDealerMotions, 931}, {SHEN_NAME4('Z','K','S','_'), 404, &patiDealerMotions, 931},
-    {SHEN_NAME4('A','H','E','_'), -1, &patiDealerMotions, 921}, {SHEN_NAME4('S','Y','O','_'), -1, &patiDealerMotions, 931},
-    {SHEN_NAME4('A','D','2','_'), -1, &patiDealerMotions, 931}, {SHEN_NAME4('C','H','W','_'), -1, &patiDealerMotions, 931},
-    {SHEN_NAME4('T','J','N','_'), -1, &patiDealerMotions, 931}, {SHEN_NAME4('C','K','N','_'), -1, &patiDealerMotions, 931},
-    {SHEN_NAME4('S','S','A','_'), -1, &patiDealerMotions, 921}, {SHEN_NAME4('S','N','N','_'), -1, &patiDealerMotions, 931},
-    {SHEN_NAME4('S','Y','Y','_'), -1, &patiDealerMotions, 931}, {SHEN_NAME4('E','M','I','_'), -1, &patiDealerMotions, 921},
-    {SHEN_NAME4('M','E','J','_'), -1, &patiDealerMotions, 921}, {SHEN_NAME4('T','S','Y','_'), -1, &patiDealerMotions, 921},
-    {SHEN_NAME4('K','D','4','_'), -1, &patiDealerMotions, 921}, {SHEN_NAME4('S','D','7','_'), -1, &patiDealerMotions, 931},
-    {SHEN_NAME4('K','K','K','_'), -1, &patiDealerMotions, 921}, {SHEN_NAME4('W','D','1','_'), -1, &patiDealerMotions, 931},
-    {SHEN_NAME4('K','D','3','_'), -1, &patiDealerMotions, 921}, {SHEN_NAME4('A','W','6','_'), -1, &patiDealerMotions, 911},
-    {SHEN_NAME4('I','L','N','_'), -1, &patiDealerMotions, 921}, {SHEN_NAME4('T','S','O','_'), -1, &patiDealerMotions, 921},
-    {SHEN_NAME4('K','O','O','_'), -1, &patiDealerMotions, 931}, {SHEN_NAME4('K','O','W','_'), -1, &patiDealerMotions, 911},
-    {SHEN_NAME4('Y','M','1','_'), -1, &patiDealerMotions, 931}, {SHEN_NAME4('Y','M','2','_'), -1, &patiDealerMotions, 931}, {0, -1, 0, 0}};
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define PATI_DEALER(character, flag, motions, camera) {character, flag, motions}
+#else
+#define PATI_DEALER(character, flag, motions, camera) {character, flag, motions, camera}
+#endif
+const PatiDealer patiDealers[] = {PATI_DEALER(SHEN_NAME4('O','D','1','_'), 1138, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('D','Y','1','_'), 1135, &patiDealerMotions, 911),
+    PATI_DEALER(SHEN_NAME4('S','O','G','_'), 1136, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('K','N','T','_'), 1137, &patiDealerMotions, 911),
+    PATI_DEALER(SHEN_NAME4('C','N','6','_'), 1168, &patiDealerMotions, 911), PATI_DEALER(SHEN_NAME4('K','T','4','_'), 1169, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('J','O','E','_'), 1170, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('S','C','N','_'), 1172, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('S','N','S','_'), 1071, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('A','A','1','_'), 1159, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('H','A','K','_'), 1173, &patiDealerMotions, 911), PATI_DEALER(SHEN_NAME4('D','H','O','_'), 1174, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('L','Y','O','_'), 1160, &patiDealerMotions, 911), PATI_DEALER(SHEN_NAME4('A','N','S','_'), 1171, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('E','I','N','_'), 1175, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('K','N','H','_'), 1176, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('R','K','U','_'), 1177, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('G','K','S','_'), 1165, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('C','H','X','_'), 940, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('D','M','1','_'), 941, &patiAlternateDealerMotions, 921),
+    PATI_DEALER(SHEN_NAME4('D','M','2','_'), 942, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('D','S','4','_'), 943, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('F','D','1','_'), 944, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('J','I','8','_'), 945, &patiDealerMotions, 921),
+    PATI_DEALER(SHEN_NAME4('K','U','4','_'), 946, &patiDealerMotions, 911), PATI_DEALER(SHEN_NAME4('M','F','G','_'), 1386, &patiAlternateDealerMotions, 921),
+    PATI_DEALER(SHEN_NAME4('O','D','3','_'), 947, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('P','G','5','_'), 1325, &patiAlternateDealerMotions, 921),
+    PATI_DEALER(SHEN_NAME4('S','D','2','_'), 948, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('S','F','7','_'), 1324, &patiDealerMotions, 911),
+    PATI_DEALER(SHEN_NAME4('T','N','J','_'), 949, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('W','O','1','_'), 452, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('W','O','3','_'), 454, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('Z','K','S','_'), 404, &patiDealerMotions, 931),
+
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    PATI_DEALER(SHEN_NAME4('A','H','E','_'), -1, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('S','Y','O','_'), -1, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('A','D','2','_'), -1, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('C','H','W','_'), -1, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('T','J','N','_'), -1, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('C','K','N','_'), -1, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('S','S','A','_'), -1, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('S','N','N','_'), -1, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('S','Y','Y','_'), -1, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('E','M','I','_'), -1, &patiDealerMotions, 921),
+    PATI_DEALER(SHEN_NAME4('M','E','J','_'), -1, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('T','S','Y','_'), -1, &patiDealerMotions, 921),
+    PATI_DEALER(SHEN_NAME4('K','D','4','_'), -1, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('S','D','7','_'), -1, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('K','K','K','_'), -1, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('W','D','1','_'), -1, &patiDealerMotions, 931),
+    PATI_DEALER(SHEN_NAME4('K','D','3','_'), -1, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('A','W','6','_'), -1, &patiDealerMotions, 911),
+    PATI_DEALER(SHEN_NAME4('I','L','N','_'), -1, &patiDealerMotions, 921), PATI_DEALER(SHEN_NAME4('T','S','O','_'), -1, &patiDealerMotions, 921),
+    PATI_DEALER(SHEN_NAME4('K','O','O','_'), -1, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('K','O','W','_'), -1, &patiDealerMotions, 911),
+    PATI_DEALER(SHEN_NAME4('Y','M','1','_'), -1, &patiDealerMotions, 931), PATI_DEALER(SHEN_NAME4('Y','M','2','_'), -1, &patiDealerMotions, 931),
+#endif
+    PATI_DEALER(0, -1, 0, 0)};
 const PatiHelpTopic patiHelpTopics[] = {{0, 1, 119}, {0, 2, 120}, {0, 3, 121}, {0, 4, 122}, {0, 5, 123}, {0, 6, 124}, {0, 8, 146}, {3, 2, 125},
-    {3, 5, 126}, {1, 1, 127}, {1, 2, 128}, {1, 3, 129}, {2, 1, 143}, {7, 1, 131}, {4, 1, 132}, {4, 3, 133}, {8, 1, 139}, {8, 2, 140}, {8, 3, 141}, {8, 5, 142},
+    {3, 5, 126}, {1, 1, 127}, {1, 2, 128}, {1, 3, 129},
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    {1, 5, 130},
+#endif
+ {2, 1, 143},
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    {2, 5, 130},
+#endif
+ {7, 1, 131}, {4, 1, 132}, {4, 3, 133},
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    {4, 5, 134}, {5, 1, 135}, {5, 3, 136}, {5, 5, 137},
+#endif
+ {8, 1, 139}, {8, 2, 140}, {8, 3, 141}, {8, 5, 142},
     {6, 1, 119}, {255, 255, -1}};
 shen_name patiHandModel = SHEN_NAME4('h','a','n','d');
 int g_patiVersus = 0;
 float g_patiModelAlpha = 0;
 PatiDealerMotion patiDealerMotions = {6026, 6025, 6021, 6022, 6023, 6024};
 PatiDealerMotion patiAlternateDealerMotions = {6019, 6018, 6017, 6022, 6023, 6024};
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 PatiVoicePartition patiVoicePartitions[] = {{"0104", 0, 1}, {"0104AA1", 2, 3}, {"0104AD2", 4, 5}, {"0104AHE", 6, 7}, {"0104ANS", 8, 9},
     {"0104AW6", 10, 11}, {"0104CHW", 12, 13}, {"0104CHX", 14, 15}, {"0104CKN", 16, 17}, {"0104CN6", 18, 19}, {"0104DHO", 20, 21}, {"0104DM1", 22, 23},
     {"0104DM2", 24, 25}, {"0104DS4", 26, 27}, {"0104DY1", 28, 29}, {"0104EIN", 30, 31}, {"0104EMI", 32, 33}, {"0104FD1", 34, 35}, {"0104GKS", 36, 37},
@@ -78,6 +120,7 @@ PatiVoicePartition patiVoicePartitions[] = {{"0104", 0, 1}, {"0104AA1", 2, 3}, {
     {"0104SD7", 80, 81}, {"0104SF7", 82, 83}, {"0104SNN", 84, 85}, {"0104SNS", 86, 87}, {"0104SOG", 88, 89}, {"0104SSA", 90, 91}, {"0104SYO", 92, 93},
     {"0104SYY", 94, 95}, {"0104TJN", 96, 97}, {"0104TNJ", 98, 99}, {"0104TSY", 100, 101}, {"0104WD1", 102, 103}, {"0104WO1", 104, 105}, {"0104WO3", 106, 107},
     {"0104YM1", 108, 109}, {"0104YM2", 110, 111}, {"0104ZKS", 112, 113}, {0, 0, 1}};
+#endif
 
 #include "s2/event_library_tail_dc.h"
 #define CopyPatiArgument(target,source) { for(index=0;index<7;index++) { if(!((target)[index]=(source)[index]))break; } (target)[7]=0; }
@@ -148,7 +191,9 @@ void QueuePatiEvent(const char *argument)
     work->savedMotion=-1;
     g_patiCameraId=0;
     g_patiCameraEye=g_patiCameraTarget=0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     g_patiCameraMoving=1;
+#endif
     work->dealer=0;
     work->challengeComplete=0;
     for (index=0;index<5;index++)
@@ -161,6 +206,7 @@ void QueuePatiEvent(const char *argument)
     LockPatiEvent(work,argument);
 }
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void QueuePatiVoice(PatiGameWork *game,const char *code,int *frame)
 {
     shen_name name;
@@ -198,6 +244,1331 @@ void QueuePatiVoice(PatiGameWork *game,const char *code,int *frame)
     }
 }
 
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PatiGreeting(PatiEventWork *ctx) {
+    SetPatiCamera(998,PATI_PLAYER,PATI_PLAYER,ctx->delay);
+switch((unsigned short)FTBL.shenGetRandomInt32(2)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"A001",delay); } ctx->delay+=27;break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"A002",delay); } ctx->delay+=28;break;
+}
+    SetPatiMotion(ctx->dealer,ctx->motions->speak,0,1,0,ctx->delay);
+    SetPatiCamera(999,ctx->dealer,ctx->dealer,ctx->delay);
+    switch(ctx->option){
+    case 0:case 1:case 2:case 3:case 6:case 8:
+        switch(ctx->type){
+case 1:switch((unsigned short)FTBL.shenGetRandomInt32(3)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B001",delay); } ctx->delay+=132;break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B002",delay); } ctx->delay+=103;break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B003",delay); } ctx->delay+=81;break;
+}
+break;
+case 2:switch((unsigned short)FTBL.shenGetRandomInt32(3)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B004",delay); } ctx->delay+=104;break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B005",delay); } ctx->delay+=81;break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B006",delay); } ctx->delay+=70;break;
+}
+break;
+case 5:switch((unsigned short)FTBL.shenGetRandomInt32(3)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B007",delay); } ctx->delay+=111;break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B008",delay); } ctx->delay+=100;break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B009",delay); } ctx->delay+=82;break;
+}
+break;
+case 6:switch((unsigned short)FTBL.shenGetRandomInt32(3)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B010",delay); } ctx->delay+=83;break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B011",delay); } ctx->delay+=67;break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B012",delay); } ctx->delay+=64;break;
+}
+break;
+case 3:case 4:switch((unsigned short)FTBL.shenGetRandomInt32(3)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B013",delay); } ctx->delay+=116;break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B014",delay); } ctx->delay+=90;break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B015",delay); } ctx->delay+=70;break;
+}
+break;
+default:FTBL.DebugLogToFileRemoved("No Serif Data\n");FTBL.EventAssertNullsub(__FILE__,759);break;
+        }
+        break;
+    case 7:
+switch((unsigned short)FTBL.shenGetRandomInt32(3)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C001",delay); } ctx->delay+=93;break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C002",delay); } ctx->delay+=79;break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C003",delay); } ctx->delay+=65;break;
+}
+break;
+    case 4:case 5:
+switch((unsigned short)FTBL.shenGetRandomInt32(3)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"D001",delay); } ctx->delay+=133;break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"D002",delay); } ctx->delay+=133;break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"D003",delay); } ctx->delay+=133;break;
+}
+break;
+    default:FTBL.DebugLogToFileRemoved("No Serif Data\n");FTBL.EventAssertNullsub(__FILE__,794);break;
+    }
+    switch(ctx->option){case 1:case 2:
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"E004",delay); } ctx->delay+=103;break;}
+}
+
+
+void PatiExplainRules(PatiEventWork *ctx) {
+    SetPatiCamera(998,PATI_PLAYER,PATI_PLAYER,ctx->delay);
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"A003",delay); } ctx->delay+=44;
+    SetPatiCamera(999,ctx->dealer,ctx->dealer,ctx->delay);
+    switch(ctx->option){
+    case 7:
+        SetPatiCamera(999,ctx->dealer,ctx->dealer,ctx->delay);
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C004",delay); } ctx->delay+=87;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C005",delay); } ctx->delay+=83;
+break;
+    case 4:case 5:
+        switch(ctx->type){
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"D004",delay); } ctx->delay+=133;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B017",delay); } ctx->delay+=53;
+break;
+case 5:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"D007",delay); } ctx->delay+=133;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"D008",delay); } ctx->delay+=133;
+break;
+default:FTBL.DebugLogToFileRemoved("No Serif Data\n");FTBL.EventAssertNullsub(__FILE__,858);break;
+        }
+        break;
+    default:
+        switch(ctx->type){
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B016",delay); } ctx->delay+=143;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B017",delay); } ctx->delay+=53;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B018",delay); } ctx->delay+=46;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B019",delay); } ctx->delay+=121;
+break;
+case 5:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B018",delay); } ctx->delay+=46;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B020",delay); } ctx->delay+=129;
+break;
+case 6:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B018",delay); } ctx->delay+=46;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B021",delay); } ctx->delay+=81;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B018",delay); } ctx->delay+=46;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B022",delay); } ctx->delay+=107;
+break;
+case 4:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B023",delay); } ctx->delay+=41;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B022",delay); } ctx->delay+=107;
+break;
+default:FTBL.DebugLogToFileRemoved("No Serif Data\n");FTBL.EventAssertNullsub(__FILE__,937);break;
+        }
+        break;
+    }
+    switch(ctx->option){
+case 0:case 6:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B024",delay); } ctx->delay+=157;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B029",delay); } ctx->delay+=40;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B030",delay); } ctx->delay+=76;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B024",delay); } ctx->delay+=157;
+break;
+case 8:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B031",delay); } ctx->delay+=106;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B032",delay); } ctx->delay+=105;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B024",delay); } ctx->delay+=157;
+break;
+case 1:case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"E021",delay); } ctx->delay+=137;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"E022",delay); } ctx->delay+=98;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"E023",delay); } ctx->delay+=72;
+break;
+case 4:case 5:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"D009",delay); } ctx->delay+=133;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"D010",delay); } ctx->delay+=133;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"D011",delay); } ctx->delay+=53;
+break;
+case 7:break;
+default:FTBL.DebugLogToFileRemoved("No Serif Data\n");FTBL.EventAssertNullsub(__FILE__,987);break;
+    }
+    if(ctx->option==7){
+switch((unsigned short)FTBL.shenGetRandomInt32(4)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B025",delay); } ctx->delay+=101;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C007",delay); } ctx->delay+=66;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C008",delay); } ctx->delay+=90;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C009",delay); } ctx->delay+=70;
+break;
+}
+    }else{
+switch((unsigned short)FTBL.shenGetRandomInt32(4)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B025",delay); } ctx->delay+=101;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B026",delay); } ctx->delay+=97;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B027",delay); } ctx->delay+=77;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B028",delay); } ctx->delay+=116;
+break;
+}
+    }
+}
+
+
+void PatiCancel(PatiEventWork *ctx) {
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A004", delay); }
+        ctx->delay += 50;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A005", delay); }
+        ctx->delay += 40;
+        break;
+    }
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(4)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B033", delay); }
+        ctx->delay += 91;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B034", delay); }
+        ctx->delay += 90;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B035", delay); }
+        ctx->delay += 141;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B036", delay); }
+        ctx->delay += 162;
+        break;
+    }
+}
+
+
+void PatiAcceptPlay(PatiEventWork *ctx) {
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A006", delay); }
+        ctx->delay += 36;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A007", delay); }
+        ctx->delay += 40;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A008", delay); }
+        ctx->delay += 29;
+        break;
+    }
+}
+
+
+void PatiChooseBoard(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B037", delay); }
+    ctx->delay += 55;
+}
+
+
+void PatiSelectionReminder(PatiEventWork *ctx) {
+    int delay=0;
+
+    switch ((unsigned short)FTBL.shenGetRandomInt32(5)) {
+    case 0:
+    default:
+        PatiPlayVoiceCode(ctx->game.voicePrefix,"B038",delay);break;
+    case 1:
+        PatiPlayVoiceCode(ctx->game.voicePrefix,"B039",delay);break;
+    case 2:
+        PatiPlayVoiceCode(ctx->game.voicePrefix,"B040",delay);break;
+    case 3:
+        PatiPlayVoiceCode(ctx->game.voicePrefix,"B041",delay);break;
+    case 4:
+        PatiPlayVoiceCode(ctx->game.voicePrefix,"B042",delay);break;
+    }
+}
+
+
+void PatiBoardSelected(PatiEventWork *ctx) {
+    switch ((unsigned short)FTBL.shenGetRandomInt32(5)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A009", delay); }
+        ctx->delay += 48;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A010", delay); }
+        ctx->delay += 35;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A011", delay); }
+        ctx->delay += 39;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A012", delay); }
+        ctx->delay += 39;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A013", delay); }
+        ctx->delay += 56;
+        break;
+    }
+}
+
+
+void PatiInsufficientFunds(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(4)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B043", delay); }
+        ctx->delay += 120;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B044", delay); }
+        ctx->delay += 88;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B045", delay); }
+        ctx->delay += 111;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B046", delay); }
+        ctx->delay += 89;
+        break;
+    }
+}
+
+
+void PatiLowerStake(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B047", delay); }
+        ctx->delay += 134;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B048", delay); }
+        ctx->delay += 105;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B049", delay); }
+        ctx->delay += 110;
+        break;
+    }
+    { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B050", delay); }
+    ctx->delay += 81;
+}
+
+
+void PatiWin(PatiEventWork *ctx) {
+SetPatiCamera(999,ctx->dealer,ctx->dealer,ctx->delay);
+
+FTBL.DebugLogToFileRemoved("(%i,",ctx->payout-ctx->totalBet+GetPatiPayout(ctx));
+FTBL.DebugLogToFileRemoved("%i)",ctx->bet*5);
+
+if(ctx->payout-ctx->totalBet+GetPatiPayout(ctx)>=ctx->bet*5){FTBL.DebugLogToFileRemoved(" Now win, and total win over 5x");
+switch((unsigned short)FTBL.shenGetRandomInt32(6)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B051",delay); } ctx->delay+=121;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B052",delay); } ctx->delay+=104;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B053",delay); } ctx->delay+=101;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B054",delay); } ctx->delay+=145;
+break;
+case 4:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B055",delay); } ctx->delay+=117;
+break;
+case 5:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B056",delay); } ctx->delay+=146;
+break;
+}
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B057",delay); } ctx->delay+=81;
+}else{if(ctx->payout-ctx->totalBet+GetPatiPayout(ctx)>=0){FTBL.DebugLogToFileRemoved(" Now win, and total win less 5x");
+switch((unsigned short)FTBL.shenGetRandomInt32(7)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B058",delay); } ctx->delay+=84;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B059",delay); } ctx->delay+=118;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B060",delay); } ctx->delay+=161;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B061",delay); } ctx->delay+=163;
+break;
+case 4:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B062",delay); } ctx->delay+=94;
+break;
+case 5:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B063",delay); } ctx->delay+=95;
+break;
+case 6:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B064",delay); } ctx->delay+=126;
+break;
+}
+}else{FTBL.DebugLogToFileRemoved("Now win, but  total lose");
+switch((unsigned short)FTBL.shenGetRandomInt32(4)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B065",delay); } ctx->delay+=114;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B066",delay); } ctx->delay+=101;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B067",delay); } ctx->delay+=97;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B068",delay); } ctx->delay+=74;
+break;
+}
+}}}
+
+
+void PatiFirstDoubleWin(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(7)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B058", delay); }
+        ctx->delay += 84;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B059", delay); }
+        ctx->delay += 118;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E044", delay); }
+        ctx->delay += 72;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E045", delay); }
+        ctx->delay += 133;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B062", delay); }
+        ctx->delay += 94;
+        break;
+    case 5:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B063", delay); }
+        ctx->delay += 95;
+        break;
+    case 6:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B064", delay); }
+        ctx->delay += 126;
+        break;
+    }
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E049", delay); }
+        ctx->delay += 105;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E050", delay); }
+        ctx->delay += 91;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E051", delay); }
+        ctx->delay += 67;
+        break;
+    }
+}
+
+
+void PatiDoubleWin(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(6)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E052", delay); }
+        ctx->delay += 105;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E053", delay); }
+        ctx->delay += 94;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B059", delay); }
+        ctx->delay += 118;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E044", delay); }
+        ctx->delay += 72;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B064", delay); }
+        ctx->delay += 126;
+        break;
+    case 5:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E054", delay); }
+        ctx->delay += 49;
+        break;
+    }
+}
+
+
+void PatiFinalDoubleWin(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E071", delay); }
+        ctx->delay += 114;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E072", delay); }
+        ctx->delay += 134;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E073", delay); }
+        ctx->delay += 163;
+        break;
+    }
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A014", delay); }
+        ctx->delay += 26;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A015", delay); }
+        ctx->delay += 26;
+        break;
+    }
+}
+
+
+void PatiFirstChallengeWin(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(7)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B058", delay); }
+        ctx->delay += 84;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B059", delay); }
+        ctx->delay += 118;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B060", delay); }
+        ctx->delay += 161;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B061", delay); }
+        ctx->delay += 163;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B062", delay); }
+        ctx->delay += 94;
+        break;
+    case 5:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B063", delay); }
+        ctx->delay += 95;
+        break;
+    case 6:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B064", delay); }
+        ctx->delay += 126;
+        break;
+    }
+}
+
+
+void PatiChallengeWin(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(6)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D041", delay); }
+        ctx->delay += 133;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D042", delay); }
+        ctx->delay += 133;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D043", delay); }
+        ctx->delay += 133;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D044", delay); }
+        ctx->delay += 72;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D045", delay); }
+        ctx->delay += 72;
+        break;
+    case 5:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D046", delay); }
+        ctx->delay += 72;
+        break;
+    }
+}
+
+
+void PatiFinalChallengeWin(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(6)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D052", delay); }
+        ctx->delay += 133;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D053", delay); }
+        ctx->delay += 72;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D054", delay); }
+        ctx->delay += 72;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D055", delay); }
+        ctx->delay += 133;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D056", delay); }
+        ctx->delay += 133;
+        break;
+    case 5:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D057", delay); }
+        ctx->delay += 133;
+        break;
+    }
+    { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D058", delay); }
+    ctx->delay += 72;
+}
+
+
+void PatiLose(PatiEventWork *ctx) {
+    SetPatiCamera(999,ctx->dealer,ctx->dealer,ctx->delay);
+    if(ctx->totalBet-ctx->payout>=ctx->bet*5){
+        FTBL.DebugLogToFileRemoved("Now lose, and total lose over 5x");
+switch((unsigned short)FTBL.shenGetRandomInt32(3)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B073",delay); } ctx->delay+=201;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B074",delay); } ctx->delay+=123;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B075",delay); } ctx->delay+=107;
+break;
+}
+    }else if(ctx->totalBet-ctx->payout>=0){
+        FTBL.DebugLogToFileRemoved(" Now lose, and total lose less 5x");
+switch((unsigned short)FTBL.shenGetRandomInt32(4)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B076",delay); } ctx->delay+=145;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B077",delay); } ctx->delay+=180;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B078",delay); } ctx->delay+=155;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B079",delay); } ctx->delay+=89;
+break;
+}
+    }else{
+        FTBL.DebugLogToFileRemoved("Now lose, but total win");
+switch((unsigned short)FTBL.shenGetRandomInt32(4)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B069",delay); } ctx->delay+=110;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B070",delay); } ctx->delay+=102;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B071",delay); } ctx->delay+=73;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B072",delay); } ctx->delay+=102;
+break;
+}
+    }
+}
+
+
+void PatiDoubleLose(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(6)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E055", delay); }
+        ctx->delay += 133;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B077", delay); }
+        ctx->delay += 180;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B078", delay); }
+        ctx->delay += 155;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B079", delay); }
+        ctx->delay += 89;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E059", delay); }
+        ctx->delay += 102;
+        break;
+    case 5:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E060", delay); }
+        ctx->delay += 104;
+        break;
+    }
+}
+
+
+void PatiFirstChallengeLose(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(4)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B073", delay); }
+        ctx->delay += 201;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B074", delay); }
+        ctx->delay += 123;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B075", delay); }
+        ctx->delay += 107;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D040", delay); }
+        ctx->delay += 133;
+        break;
+    }
+}
+
+
+void PatiChallengeLose(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(5)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D047", delay); }
+        ctx->delay += 133;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D048", delay); }
+        ctx->delay += 133;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D049", delay); }
+        ctx->delay += 133;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D050", delay); }
+        ctx->delay += 72;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D051", delay); }
+        ctx->delay += 72;
+        break;
+    }
+}
+
+
+void PatiFinalChallengeLose(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(5)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D059", delay); }
+        ctx->delay += 72;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D060", delay); }
+        ctx->delay += 72;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D061", delay); }
+        ctx->delay += 72;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D062", delay); }
+        ctx->delay += 72;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D063", delay); }
+        ctx->delay += 133;
+        break;
+    }
+}
+
+
+void PatiOfferReplay(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B080", delay); }
+        ctx->delay += 91;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B081", delay); }
+        ctx->delay += 62;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B082", delay); }
+        ctx->delay += 122;
+        break;
+    }
+}
+
+
+void PatiOfferDouble(PatiEventWork *ctx) {
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E067", delay); }
+        ctx->delay += 84;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E068", delay); }
+        ctx->delay += 99;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E069", delay); }
+        ctx->delay += 80;
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E070", delay); }
+        ctx->delay += 64;
+        break;
+    }
+}
+
+
+void PatiAcceptContinue(PatiEventWork *ctx) {
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A019", delay); }
+        ctx->delay += 68;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A020", delay); }
+        ctx->delay += 72;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A021", delay); }
+        ctx->delay += 41;
+        break;
+    }
+}
+
+
+void PatiDeclineContinue(PatiEventWork *ctx) {
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A022", delay); }
+        ctx->delay += 58;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A023", delay); }
+        ctx->delay += 23;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A024", delay); }
+        ctx->delay += 51;
+        break;
+    }
+}
+
+
+void PatiOfferChallenge(PatiEventWork *ctx) {
+    switch ((unsigned short)FTBL.shenGetRandomInt32(5)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D064", delay); }
+        ctx->delay += 133;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D065", delay); }
+        ctx->delay += 133;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D066", delay); }
+        ctx->delay += 133;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D067", delay); }
+        ctx->delay += 72;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D068", delay); }
+        ctx->delay += 72;
+        break;
+    }
+}
+
+
+void PatiFinalChallengeRound(PatiEventWork *ctx) {
+    { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D069", delay); }
+    ctx->delay += 72;
+    { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D070", delay); }
+    ctx->delay += 133;
+}
+
+
+void PatiAfterDouble(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E064", delay); }
+        ctx->delay += 61;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E065", delay); }
+        ctx->delay += 54;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E066", delay); }
+        ctx->delay += 71;
+        break;
+    }
+}
+
+
+void PatiAfterChallenge(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D071", delay); }
+        ctx->delay += 133;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D072", delay); }
+        ctx->delay += 133;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D073", delay); }
+        ctx->delay += 133;
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D074", delay); }
+        ctx->delay += 72;
+        break;
+    }
+}
+
+
+void PatiPrizeExhausted(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D075", delay); }
+        ctx->delay += 133;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D076", delay); }
+        ctx->delay += 133;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D077", delay); }
+        ctx->delay += 133;
+        break;
+    }
+}
+
+
+void PatiRejectSameDoubleBoard(PatiEventWork *ctx) {
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D078", delay); }
+        ctx->delay += 115;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D079", delay); }
+        ctx->delay += 126;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D080", delay); }
+        ctx->delay += 120;
+        break;
+    }
+    switch ((unsigned short)FTBL.shenGetRandomInt32(5)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D081", delay); }
+        ctx->delay += 60;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E081", delay); }
+        ctx->delay += 72;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E082", delay); }
+        ctx->delay += 72;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E083", delay); }
+        ctx->delay += 72;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "E084", delay); }
+        ctx->delay += 72;
+        break;
+    }
+}
+
+
+void PatiRejectOtherChallengeBoard(PatiEventWork *ctx) {
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D078", delay); }
+        ctx->delay += 115;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D079", delay); }
+        ctx->delay += 126;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D080", delay); }
+        ctx->delay += 120;
+        break;
+    }
+    switch ((unsigned short)FTBL.shenGetRandomInt32(5)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D081", delay); }
+        ctx->delay += 60;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D082", delay); }
+        ctx->delay += 133;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D083", delay); }
+        ctx->delay += 133;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D084", delay); }
+        ctx->delay += 133;
+        break;
+    case 4:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "D085", delay); }
+        ctx->delay += 72;
+        break;
+    }
+}
+
+
+void PatiStuck(PatiEventWork *ctx) {
+    SetPatiMotion(ctx->dealer, ctx->motions->concern, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B083", delay); }
+        ctx->delay += 109;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B084", delay); }
+        ctx->delay += 147;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B085", delay); }
+        ctx->delay += 181;
+        break;
+    }
+    { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B086", delay); }
+    ctx->delay += 87;
+    { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B087", delay); }
+    ctx->delay += 89;
+    SetPatiMotion(ctx->dealer, ctx->motions->speak, 0.0f, 1.0f, 0, ctx->delay);
+}
+
+
+void PatiStuckFollowup(void *data) {
+    PatiGameWork **game=(PatiGameWork **)data;
+    int delay=0;
+
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        PatiPlayVoiceCode((*game)->voicePrefix,"B088",delay);break;
+    case 1:
+        PatiPlayVoiceCode((*game)->voicePrefix,"B089",delay);break;
+    case 2:
+        PatiPlayVoiceCode((*game)->voicePrefix,"B090",delay);break;
+    }
+}
+
+
+void PatiClosing(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B091", delay); }
+        ctx->delay += 112;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B092", delay); }
+        ctx->delay += 75;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "B093", delay); }
+        ctx->delay += 83;
+        break;
+    }
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A014", delay); }
+        ctx->delay += 26;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A015", delay); }
+        ctx->delay += 26;
+        break;
+    }
+}
+
+
+void PatiSelectGameCount(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(4)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "C027", delay); }
+        ctx->delay += 73;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "C028", delay); }
+        ctx->delay += 71;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "C029", delay); }
+        ctx->delay += 79;
+        break;
+    case 3:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "C030", delay); }
+        ctx->delay += 79;
+        break;
+    }
+    { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "C031", delay); }
+    ctx->delay += 56;
+}
+
+
+void PatiPrizeResult(PatiEventWork *ctx){SetPatiCamera(999,ctx->dealer,ctx->dealer,ctx->delay);switch(patiPrizes[ctx->game.prize].quantity){case 2:switch((unsigned short)FTBL.shenGetRandomInt32(4)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C032",delay); } ctx->delay+=94;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C033",delay); } ctx->delay+=96;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C034",delay); } ctx->delay+=96;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C035",delay); } ctx->delay+=41;
+break;
+}
+break;case 1:switch((unsigned short)FTBL.shenGetRandomInt32(5)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C036",delay); } ctx->delay+=21;
+{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C037",delay); } ctx->delay+=39;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C038",delay); } ctx->delay+=59;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C039",delay); } ctx->delay+=57;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C040",delay); } ctx->delay+=130;
+break;
+case 4:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"B062",delay); } ctx->delay+=94;
+break;
+}
+break;case 3:switch((unsigned short)FTBL.shenGetRandomInt32(4)){
+case 0:default:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C036",delay); } ctx->delay+=21;
+break;
+case 1:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C042",delay); } ctx->delay+=20;
+break;
+case 2:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C043",delay); } ctx->delay+=24;
+break;
+case 3:{ int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix,"C044",delay); } ctx->delay+=19;
+break;
+}
+break;}}
+
+void PatiMissingDealer(PatiEventWork *ctx) {
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A016", delay); }
+        ctx->delay += 35;
+        break;
+    case 1:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A017", delay); }
+        ctx->delay += 38;
+        break;
+    case 2:
+        { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A018", delay); }
+        ctx->delay += 82;
+        break;
+    }
+}
+
+
+void PatiDealerVersusWin(PatiEventWork *ctx) {
+    SetPatiMotion(ctx->dealer, 6055, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    FTBL.shenGetRandomInt32(3);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"客：よしっ！", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiDealerVersusLose(PatiEventWork *ctx) {
+    SetPatiMotion(ctx->dealer, 6045, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    FTBL.shenGetRandomInt32(3);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"客：ちくしょう…ハズレだ。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiPlayerTurn(PatiEventWork *ctx) {
+    SetPatiMotion(PATI_PLAYER, 6042, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    FTBL.shenGetRandomInt32(3);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青涼：こっちの番だな。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiPlayerVersusWin(PatiEventWork *ctx) {
+    SetPatiMotion(PATI_PLAYER, 6044, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    FTBL.shenGetRandomInt32(3);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青涼：よし。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiPlayerVersusLose(PatiEventWork *ctx) {
+    SetPatiMotion(PATI_PLAYER, 6039, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    FTBL.shenGetRandomInt32(3);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青涼：ダメか。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiNextVersusRound(PatiEventWork *ctx) {
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    FTBL.shenGetRandomInt32(3);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青涼：そっちの番だな。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiVersusSuddenDeath(PatiEventWork *ctx) {
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    FTBL.shenGetRandomInt32(3);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青涼：引き分けか…", ctx->delay, 1);
+    ctx->delay += 90;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青涼：ここからはサドンデスだ。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiVersusWin(PatiEventWork *ctx) {
+    SetPatiMotion(PATI_PLAYER, 6044, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiMotion(ctx->dealer, 6052, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    FTBL.shenGetRandomInt32(2);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青涼：俺の勝ちだな。", ctx->delay, 1);
+    ctx->delay += 70;
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    FTBL.shenGetRandomInt32(2);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"客：ちぇっ…また来るぜ。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiVersusLose(PatiEventWork *ctx) {
+    SetPatiMotion(PATI_PLAYER, 6039, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiMotion(ctx->dealer, 6054, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    FTBL.shenGetRandomInt32(2);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青涼：約束の金だ。", ctx->delay, 1);
+    ctx->delay += 70;
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    FTBL.shenGetRandomInt32(2);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"客：やりぃ…また来るぜ。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiMuseumIntro(PatiEventWork *ctx) {
+    FTBL.DebugLogToFileRemoved("PATI : SA_MuseumIntro\n");
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    { int delay=ctx->delay; PatiPlayVoiceCode(ctx->game.voicePrefix, "A001", delay); }
+    ctx->delay += 27;
+    SetPatiMotion(ctx->dealer, ctx->motions->speak, 0.0f, 1.0f, 0, ctx->delay);
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"（仮）興味のある台があれば、俺に言ってくんな。", ctx->delay, 1);
+    ctx->delay += 90;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"（仮）説明してやるよ", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiExplainMuseumBoard(PatiEventWork *ctx) {
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青（仮）これなんだが…", ctx->delay, 1);
+    ctx->delay += 90;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"（仮）遊ぶのか？", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiMuseumBoardSelected(PatiEventWork *ctx) {
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青（仮）ああ", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiMuseumPlay(PatiEventWork *ctx) {
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青（仮）他の台は…", ctx->delay, 1);
+    ctx->delay += 90;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"（仮）決まったら声かけてくれ。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiMuseumReselect(PatiEventWork *ctx) {
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青（仮）涼：交互に落す。＆おまえが先だ。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiVersusStuck(PatiEventWork *ctx) {
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青（仮）涼：引っ掛かったか…＆やり直しだ。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+void PatiVersusClosing(PatiEventWork *ctx) {
+    SetPatiCamera(999, ctx->dealer, ctx->dealer, ctx->delay);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"（仮）客：もう こんな時間か＆途中だが帰らせてもらうぜ。", ctx->delay, 1);
+    ctx->delay += 70;
+    SetPatiCamera(998, PATI_PLAYER, PATI_PLAYER, ctx->delay);
+    ctx->delay += 20;
+    EVT_RepeatCall(PatiShowVoiceFallback, (void *)"●青（仮）涼：ああ。", ctx->delay, 1);
+    ctx->delay += 70;
+}
+
+
+#else
 void PatiGreeting(PatiEventWork *ctx) {
     shen_name Chara;
     shen_name v3;
@@ -2026,6 +3397,8 @@ void PatiVersusClosing(PatiEventWork *ctx) {
 
 }
 
+#endif
+
 void ShowPatiChoiceIcons(int first,int second,int third,int fourth,PatiEventWork *work)
 {
     EVT_AT_KsIcon_Enqueue(first,second,third,fourth,10800,0xffff,2,work->delay);
@@ -2050,7 +3423,11 @@ void PlacePatiBet(PatiEventWork *work)
 void PayPatiWinnings(PatiEventWork *work)
 {
     int amount=GetPatiPayout(work);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    SetPatiCamera(g_patiPlayerCamera,PATI_PLAYER,PATI_PLAYER,work->delay);
+#else
     SetPatiCamera(g_patiPlayerCamera+1,PATI_PLAYER,PATI_PLAYER,work->delay);
+#endif
     EVT_AT_StartMoneyCount(amount,work->delay);
     work->delay+=5;
     work->payout+=amount;
@@ -2215,7 +3592,12 @@ int GetPatiPayout(const PatiEventWork *work)
     default:
         amount=1;
         FTBL.DebugLogToFileRemoved("Unknown Get Type!!\n");
-        FTBL.EventAssertNullsub(__FILE__,2743);
+        FTBL.EventAssertNullsub(__FILE__,
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            2611);
+#else
+            2743);
+#endif
         break;
     }
     } while (0);
@@ -2225,7 +3607,11 @@ int GetPatiPayout(const PatiEventWork *work)
 void SetPatiCamera(int camera,shen_name eye,shen_name target,int delay)
 {
     shen_name eyeName[2], targetName[2];
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (camera==g_patiCameraId && eye!=g_patiCameraEye && target!=g_patiCameraTarget)
+#else
     if (camera==g_patiCameraId && eye==g_patiCameraEye && target==g_patiCameraTarget)
+#endif
         return;
     FTBL.EV_ControlPackageResources(2,4,"PATI",0,0);
     eyeName[0]=eye;
@@ -2237,9 +3623,12 @@ void SetPatiCamera(int camera,shen_name eye,shen_name target,int delay)
     g_patiCameraId=camera;
     g_patiCameraEye=eye;
     g_patiCameraTarget=target;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     g_patiCameraTime=delay;
+#endif
 }
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void ResetPatiMotionCache(void)
 {
     int index;
@@ -2248,9 +3637,13 @@ void ResetPatiMotionCache(void)
         g_patiMotionCache[index].age=index;
     }
 }
+#endif
 
 void SetPatiMotion(shen_name character,int motion,float frame,float speed,int flags,int delay)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EVT_AT_SetMot(character,motion,frame,speed,flags,delay);
+#else
     shen_name name[2];
     int index, selected;
     name[0]=character;
@@ -2289,6 +3682,7 @@ void SetPatiMotion(shen_name character,int motion,float frame,float speed,int fl
         name[1]=0;
         FTBL.DebugLogToFileRemoved("cur_mot[%i]:id=%s,mot=%i,tch=%i\n",index,(char *)name,g_patiMotionCache[index].motion,g_patiMotionCache[index].age);
     }
+#endif
 }
 
 void PatiPlayVoiceCode(const char *prefix,const char *code,int delay)
@@ -2301,6 +3695,801 @@ void PatiPlayVoiceCode(const char *prefix,const char *code,int delay)
 
 #undef PATI_READ_NAME
 #define PATI_READ_NAME(s) (((unsigned char)(s)[3]<<24)|((unsigned char)(s)[2]<<16)|((unsigned char)(s)[1]<<8)|(unsigned char)(s)[0])
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PatiEventCallback(void *data) {
+    PatiEventWork *work = (PatiEventWork *)data;
+    unsigned char entryState;
+    int index;
+
+    work->delay = 0;
+    if (FTBL.GetShouldRenderIcons(0))
+        goto done;
+    entryState = work->state;
+    switch (entryState) {
+    case 0:
+        if (!LoadPatiEvent(work))
+            goto done;
+        CopyPatiArgument(work->selectedName, work->argument);
+        work->game.mode = 0;
+        if (*(shen_name *)work->argument == SHEN_NAME4('P', 'V', 'S', 'J')) {
+            FTBL.DebugLogToFileRemoved("Force Job Mode BD = [%s] domoto=[%s]\n", work->selectedName, work->dealerGroup);
+            FindPatiDealerBoards(work, work->dealerGroup);
+            CopyPatiArgument(work->selectedName, work->versusBoard);
+            work->type = 8;
+            work->option = 0;
+            ConfigurePatiEventBoard(work, work->selectedName);
+            SetPatiBet(work);
+            work->state = 20;
+            work->dealer = PATI_READ_NAME(work->opponent);
+        } else if (!((*(shen_name *)work->argument & 0xffff) == ('B' | ('D' << 8)) && work->argument[2] >= '0' && work->argument[2] <= '9' &&
+                       work->argument[3] >= '0' && work->argument[3] <= '9')) {
+            work->dealer = PATI_READ_NAME(work->argument);
+            FindPatiDealerBoards(work, work->argument);
+            ConfigurePatiEventBoard(work, work->selectedName);
+            if (g_patiMuseumMode)
+                work->state = 1;
+            else
+                work->state = 11;
+        } else {
+
+            FindPatiDealerBoards(work, 0);
+            ConfigurePatiEventBoard(work, work->selectedName);
+            SetPatiBet(work);
+            work->state = 20;
+        }
+        if (work->nearbyDealer != work->dealer && work->nearbyDealer) {
+            FTBL.DebugLogToFileRemoved("Unlock Near Pati-Master:");
+            FTBL.DebugLogToFileRemoved("%c", (work->nearbyDealer & 255));
+            FTBL.DebugLogToFileRemoved("%c", ((work->nearbyDealer >> 8) & 255));
+            FTBL.DebugLogToFileRemoved("%c", ((work->nearbyDealer >> 16) & 255));
+            FTBL.DebugLogToFileRemoved("%c", work->nearbyDealer >> 24);
+            FTBL.DebugLogToFileRemoved("\n");
+            FTBL.npcLockUnlock(work->nearbyDealer);
+        }
+        FTBL.adfsSetCameraIdxForChara(work->dealer, SHEN_NAME4('d', 'a', 'm', 'y'));
+        if (FindPatiDealer(work))
+            CreatePatiEventResources(work);
+        else {
+            FTBL.DebugLogToFileRemoved("Pati-Master not found!!\n");
+            PatiMissingDealer(work);
+            work->state = 55;
+        }
+        break;
+    case 1:
+        FTBL.EV_EventSetUpHelpIcon_0(144, 0);
+        PositionPatiPlayer(work);
+        PatiMuseumIntro(work);
+        work->state = 2;
+        break;
+    case 2:
+        FTBL.EV_DisableCharacterDisplay(PATI_PLAYER);
+        if (FTBL.DoesScenarioCharacterExist(PATI_BACKPACK) == 1)
+            FTBL.EV_DisableCharacterDisplay(PATI_BACKPACK);
+        FTBL.CheckHelpIcon(33, 0, 0);
+        InitializePatiBoardCamera(work);
+        work->selectionFrames = 0;
+
+        work->state = 3;
+        break;
+    case 3:
+        if (++work->selectionFrames >= 5400)
+            work->selectionFrames = 1800;
+        if (work->selectionFrames == 1800 || work->selectionFrames == 3600)
+            PatiSelectionReminder(work);
+        index = SelectPatiBoardInput(work);
+        if (index) {
+            if (FTBL.DoesScenarioCharacterExist(PATI_BACKPACK) == 1)
+                FTBL.EV_EnableCharacterDisplay(PATI_BACKPACK);
+            FTBL.CheckHelpIcon(1, 0, 0);
+            if (index > 0) {
+                ConfigurePatiEventBoard(work, work->selectedName);
+                SetPatiBet(work);
+                work->state = 4;
+            } else {
+                work->state = 55;
+            }
+        }
+        break;
+    case 4:
+        PatiExplainMuseumBoard(work);
+        ConfigurePatiEventBoard(work, work->selectedName);
+        work->state = 5;
+        break;
+    case 5:
+        PositionPatiPlayer(work);
+        work->state = 6;
+        break;
+    case 6:
+        FTBL.EV_DisableCharacterDisplay(PATI_PLAYER);
+        UpdatePatiBoardCamera(work);
+        ShowPatiChoiceIcons(150, 36, 369, 34, work);
+        work->state = 7;
+        break;
+    case 7:
+        switch (FTBL.shenGetCtrlSpeakIconFlag()) {
+        case 150:
+            PatiMuseumPlay(work);
+            work->state = 2;
+            break;
+        case 36:
+            work->state = 9;
+            break;
+        case 369:
+            work->state = 8;
+            break;
+        case 34:
+        default:
+            FTBL.EV_EnableCharacterDisplay(PATI_PLAYER);
+            PatiCancel(work);
+            work->state = 55;
+            break;
+        }
+        break;
+    case 8:
+        FTBL.EV_EnableCharacterDisplay(PATI_PLAYER);
+        PatiExplainRules(work);
+        work->state = 6;
+        break;
+    case 9:
+        work->intro = 0;
+        PatiMuseumBoardSelected(work);
+        work->state = 20;
+        break;
+    case 10:
+        if (g_patiMuseumMode)
+            work->state = 6;
+        else {
+            FindPatiDealerBoards(work, work->argument);
+            ConfigurePatiEventBoard(work, work->selectedName);
+            work->state = 12;
+        }
+        break;
+    case 11:
+        PositionPatiPlayer(work);
+        PatiGreeting(work);
+        work->state = 12;
+        break;
+    case 12:
+        if (work->type != 8) {
+            ShowPatiPlayerChoiceIcons(0xffff, 36, 369, 34, work);
+            work->state = 13;
+        } else {
+            work->delay += 20;
+            EVT_RepeatCall(PatiShowVoiceFallback, "（仮組みの『対戦落し玉バイト』開始）", work->delay, 1);
+            work->delay += 135;
+            work->delay += 20;
+            EVT_RepeatCall(PatiShowVoiceFallback, "（テストする台を選んでください。）", work->delay, 1);
+            work->delay += 135;
+            work->state = 17;
+        }
+        break;
+    case 13:
+        switch (FTBL.shenGetCtrlSpeakIconFlag()) {
+        case 36:
+            work->state = 15;
+            break;
+        case 369:
+            work->state = 14;
+            break;
+        case 34:
+        default:
+            PatiCancel(work);
+            work->state = 55;
+            break;
+        }
+        break;
+    case 14:
+        PatiExplainRules(work);
+        work->state = 10;
+        break;
+    case 15:
+        if (g_patiSingleMode) {
+            ConfigurePatiEventBoard(work, work->selectedName);
+            SetPatiBet(work);
+            work->intro = 0;
+            work->state = 20;
+        } else {
+            PatiAcceptPlay(work);
+            PatiChooseBoard(work);
+            work->state = 17;
+        }
+        break;
+    case 16:
+        FindPatiDealerBoards(work, work->argument);
+        work->state = 17;
+        break;
+    case 17:
+        FTBL.EV_DisableCharacterDisplay(PATI_PLAYER);
+        if (FTBL.DoesScenarioCharacterExist(PATI_BACKPACK) == 1)
+            FTBL.EV_DisableCharacterDisplay(PATI_BACKPACK);
+        FTBL.CheckHelpIcon(33, 0, 0);
+        InitializePatiBoardCamera(work);
+        work->selectionFrames = 0;
+
+        work->state = 18;
+        break;
+    case 18:
+        if (++work->selectionFrames >= 5400)
+            work->selectionFrames = 1800;
+        if (work->selectionFrames == 1800 || work->selectionFrames == 3600)
+            PatiSelectionReminder(work);
+        index = SelectPatiBoardInput(work);
+        if (index) {
+            if (FTBL.DoesScenarioCharacterExist(PATI_BACKPACK) == 1)
+                FTBL.EV_EnableCharacterDisplay(PATI_BACKPACK);
+            FTBL.CheckHelpIcon(1, 0, 0);
+            if (index > 0) {
+                ConfigurePatiEventBoard(work, work->selectedName);
+                SetPatiBet(work);
+                work->state = 19;
+            } else {
+                if (work->type != 8) {
+                    FTBL.EV_EnableCharacterDisplay(PATI_PLAYER);
+                    SHENMUE_EVENT_USE(work);
+                    work->state = 10;
+                } else {
+                    FTBL.EV_EnableCharacterDisplay(PATI_PLAYER);
+                    work->state = 55;
+                }
+            }
+        }
+        break;
+    case 19:
+        work->intro = 0;
+        PatiBoardSelected(work);
+        work->state = 20;
+        break;
+    case 20:
+        CopyPatiArgument(work->previousBoard, work->selectedName);
+        if (work->type == 8) {
+            FTBL.EV_EnableCharacterDisplay(PATI_PLAYER);
+            work->state = 58;
+        } else {
+            CommitPatiBoardSelection(work);
+            work->state = 21;
+        }
+        break;
+    case 21:
+        switch (work->option) {
+        case 1:
+        case 2:
+            FTBL.DebugLogToFileRemoved("DoubleUp:place_opt_bd = %s ", work->excludedBoard);
+            FTBL.DebugLogToFileRemoved(": bd_idx = %s\n", work->board);
+            if (!strncmp(work->excludedBoard, work->board, 4)) {
+                PatiRejectSameDoubleBoard(work);
+                work->state = 16;
+            }
+            break;
+        case 4:
+        case 5:
+            FTBL.DebugLogToFileRemoved("Challenge:place_opt_bd = %s ", work->excludedBoard);
+            FTBL.DebugLogToFileRemoved(": bd_idx = %s\n", work->board);
+            if (strncmp(work->excludedBoard, work->board, 4)) {
+                PatiRejectOtherChallengeBoard(work);
+                work->state = 16;
+            }
+            break;
+        }
+        if (work->state == 21)
+            work->state = 22;
+        break;
+    case 22:
+        if (!CanAffordPatiBet(work)) {
+            FTBL.EV_EnableCharacterDisplay(PATI_PLAYER);
+            work->state = 54;
+            break;
+        }
+
+    case 23:
+        work->round = 0;
+        work->prizeCount = 0;
+        work->prizeIndex = 0;
+        work->remainingGames = 1;
+        if (work->option == 7)
+            work->state = 25;
+        else
+            work->state = 24;
+        break;
+    case 25:
+        FTBL.EV_EventSetUpHelpIcon_0(147, (unsigned char)(work->delay));
+        PatiSelectGameCount(work);
+        work->state = 26;
+        break;
+    case 26:
+        SelectPatiGameCount(work);
+        work->state = 27;
+        break;
+    case 27: {
+        SetPatiHelpTopic(work->option, work->type, 0);
+        ReadPatiBetResult(work);
+        if (work->remainingGames > 0)
+            work->state = 24;
+        else if (work->remainingGames == -2) {
+            InitializePatiBoardCamera(work);
+            work->state = 18;
+        } else
+            work->state = 55;
+        break;
+    }
+    case 24:
+        FTBL.EV_DisableCharacterDisplay(PATI_PLAYER);
+        PlacePatiBet(work);
+        work->state = 28;
+        break;
+    case 28:
+        FTBL.EV_DisableCharacterDisplay(PATI_PLAYER);
+        work->game.balls = 0;
+        work->game.wins = 0;
+
+    case 29:
+        work->game.result = 0;
+        patiHandModel = (int)(SHEN_NAME4('h', 'a', 'n', 'd'));
+        QueuePatiBall(&work->game);
+        FTBL.HLib_SetupTaskDelay(0);
+        work->state = 30;
+        break;
+    case 30:
+        if (work->game.result == -4) {
+            FTBL.DebugLogToFileRemoved("Cancel (>_<)\n");
+            HidePatiActiveBall(work);
+            PatiCancel(work);
+            work->state = 31;
+        } else if (work->game.result == 4) {
+            FTBL.DebugLogToFileRemoved("TimeOut (-_-)zZ\n");
+            HidePatiActiveBall(work);
+            PatiClosing(work);
+            work->state = 31;
+        } else if (work->game.result == -1) {
+            FTBL.DebugLogToFileRemoved("Stuck (-_-;)\n");
+            HidePatiActiveBall(work);
+            PatiStuck(work);
+            work->state = 29;
+        } else {
+            for (index = 0; patiDealers[index].character; index++) {
+                if (patiDealers[index].character == work->dealer)
+                    break;
+            }
+            if (patiDealers[index].playedFlag >= 0) {
+                FTBL.DebugLogToFileRemoved("Set HINT_M flag  FreeTalkFlag[%i] = ON\n", patiDealers[index].playedFlag);
+                FTBL.EV_SetPlayerFlag(12, patiDealers[index].playedFlag, 1);
+                if (work->dealer == SHEN_NAME4('S', 'F', '7', '_')) {
+                    FTBL.DebugLogToFileRemoved("Set MG_OTOSIDAMA flag = ON\n");
+                    FTBL.SetMGOTOSIDAMA(7, 1);
+                }
+            } else
+                FTBL.DebugLogToFileRemoved("Can't set HINT_M flag:pati domoto_list search error!\n");
+            work->played = 1;
+            if (HasPatiWon(work)) {
+                FTBL.DebugLogToFileRemoved("Set Win Flag V(^-^)V\n");
+                FTBL.EV_SetPlayerFlag(12, 1290, 1);
+                work->state = 32;
+            } else {
+                FTBL.DebugLogToFileRemoved("Set Lose Flag(;_;)\n");
+                FTBL.EV_SetPlayerFlag(12, 1291, 1);
+                work->state = 33;
+            }
+        }
+        break;
+    case 31:
+        RefundPatiBet(work);
+        work->state = 55;
+        break;
+    case 32:
+        HidePatiActiveBall(work);
+        switch (work->option) {
+        case 0:
+        case 3:
+        case 6:
+        case 8:
+            PatiWin(work);
+            work->state = 34;
+            break;
+        case 1:
+        case 2:
+            switch (work->round) {
+            case 0:
+                PatiFirstDoubleWin(work);
+                work->state = 36;
+                break;
+            default:
+                PatiDoubleWin(work);
+                work->state = 36;
+                break;
+            case 5:
+                PatiFinalDoubleWin(work);
+                work->state = 41;
+                break;
+            }
+            AccumulatePatiDoubleWinnings(work);
+            break;
+        case 7:
+            KeepPatiPrize(work);
+            PatiPrizeResult(work);
+            work->state = 43;
+            break;
+        case 4:
+        case 5:
+            KeepPatiPrize(work);
+            if (!work->round) {
+                PatiFirstChallengeWin(work);
+                work->state = 47;
+            } else if (!((work->option == 4 && work->round >= 2) || work->round >= 4)) {
+                PatiChallengeWin(work);
+                work->state = 47;
+            } else {
+                (FTBL.EV_GetPlayerFlag(11, 1721) == 1 || FTBL.EV_GetPlayerFlag(11, 1722) == 1 ? PatiFinalChallengeWin : PatiPrizeExhausted)(work);
+                work->state = 44;
+            }
+            break;
+        default:
+            FTBL.DebugLogToFileRemoved("Unknown Game Option!!\n");
+            work->state = 55;
+            break;
+        }
+        break;
+    case 33:
+        HidePatiActiveBall(work);
+        work->pendingMoney = 0;
+        switch (work->option) {
+        case 0:
+        case 3:
+        case 6:
+        case 7:
+        case 8:
+            PatiLose(work);
+            work->state = 35;
+            break;
+        case 1:
+        case 2:
+            if (!work->round)
+                PatiLose(work);
+            else
+                PatiDoubleLose(work);
+            work->state = 42;
+            break;
+        case 4:
+        case 5:
+            if (!work->round)
+                PatiFirstChallengeLose(work);
+            else if (!((work->option == 4 && work->round >= 2) || work->round >= 4))
+                PatiChallengeLose(work);
+            else
+                PatiFinalChallengeLose(work);
+            work->state = 10;
+            break;
+        default:
+            FTBL.DebugLogToFileRemoved("Unknown Game Option!!\n");
+            work->state = 55;
+            break;
+        }
+        break;
+    case 34:
+        PayPatiWinnings(work);
+        work->state = 35;
+        break;
+    case 35:
+        PatiOfferReplay(work);
+        work->state = 10;
+        break;
+    case 36:
+        ConfigurePatiEventBoard(work, work->nextBoard);
+        InitializePatiBoardCamera(work);
+        SetupPatiBoard(2);
+        PatiOfferDouble(work);
+        work->state = 37;
+        break;
+    case 37:
+        ShowPatiChoiceIcons(0xffff, 74, 75, 0xffff, work);
+        work->state = 38;
+        break;
+    case 38:
+        if (FTBL.shenGetCtrlSpeakIconFlag() == 74)
+            work->state = 39;
+        else
+            work->state = 40;
+        break;
+    case 39:
+        PatiAcceptContinue(work);
+        ++work->round;
+        work->state = 28;
+        break;
+    case 40:
+        PatiDeclineContinue(work);
+        work->state = 41;
+        break;
+    case 41: {
+        PayPendingPatiWinnings(work);
+        if (work->round == 5)
+            work->state = 55;
+        else
+            work->state = 42;
+        break;
+    }
+    case 42:
+        PatiAfterDouble(work);
+        work->state = 10;
+        break;
+    case 43:
+        if (AwardPatiPrize(work)) {
+            --work->remainingGames;
+            FTBL.DebugLogToFileRemoved("PlayRemain = %i\n", work->remainingGames);
+            if (work->remainingGames > 0)
+                work->state = 28;
+            else
+                work->state = 35;
+        }
+        break;
+    case 44:
+        work->state = 45;
+        break;
+    case 45:
+        if (AwardPatiPrize(work))
+            work->state = 46;
+        break;
+    case 46:
+        work->challengeComplete = 1;
+        work->state = 55;
+        break;
+    case 47:
+        ConfigurePatiEventBoard(work, work->nextBoard);
+        InitializePatiBoardCamera(work);
+        SetupPatiBoard(2);
+        PatiOfferChallenge(work);
+        work->state = 48;
+        break;
+    case 48:
+        ShowPatiChoiceIcons(0xffff, 74, 75, 0xffff, work);
+        work->state = 49;
+        break;
+    case 49:
+        if (FTBL.shenGetCtrlSpeakIconFlag() == 74)
+            work->state = 50;
+        else
+            work->state = 51;
+        break;
+    case 50:
+        if (!((work->option == 4 && work->round >= 1) || work->round >= 3))
+            PatiAcceptContinue(work);
+        else {
+            PatiAcceptContinue(work);
+            PatiFinalChallengeRound(work);
+        }
+        ++work->round;
+        work->state = 28;
+        break;
+    case 51:
+        PatiDeclineContinue(work);
+        work->state = 52;
+        break;
+    case 52:
+        if (AwardPatiPrize(work))
+            work->state = 53;
+        break;
+    case 53:
+        PatiAfterChallenge(work);
+        work->state = 10;
+        break;
+    case 54:
+        if ((int)(FTBL.GetPlayerStat(2)) >= g_patiMinimumBet) {
+            PatiLowerStake(work);
+            work->state = 10;
+        } else {
+            PatiInsufficientFunds(work);
+            work->state = 55;
+        }
+        break;
+    case 55:
+        BeginPatiExit(work);
+        work->state = 56;
+        break;
+    case 56:
+        if (RestorePatiEvent(work))
+            work->state = 57;
+        break;
+    case 57:
+        FreePatiEvent(work);
+        break;
+    case 58:
+        g_patiVersus = 1;
+        work->totalRounds = 0;
+        work->playerWins = 0;
+        work->dealerWins = 0;
+        work->game.targetX = 0;
+        work->game.targetVariation = 10000;
+        PatiMuseumReselect(work);
+        work->state = 62;
+        break;
+    case 62:
+        work->game.ballLimit = 1;
+        work->game.winLimit = 1;
+        work->game.missLimit = 1;
+        work->game.balls = 0;
+        work->game.wins = 0;
+        SetupPatiBoard(2);
+
+    case 63:
+        FTBL.EV_DisableCharacterDisplay(work->dealer);
+        work->game.mode = 2;
+        work->game.result = 0;
+        patiHandModel = (int)(PATI_OPPONENT_HAND);
+        QueuePatiBall(&work->game);
+        FTBL.HLib_SetupTaskDelay(0);
+        work->state = 64;
+        break;
+    case 64:
+        FTBL.EV_EnableCharacterDisplay(work->dealer);
+        if (work->game.result == 4) {
+            FTBL.DebugLogToFileRemoved("Timeout (-_-)zZ\n");
+            HidePatiActiveBall(work);
+            PatiVersusClosing(work);
+            work->state = 55;
+        } else if (work->game.result == -1) {
+            FTBL.DebugLogToFileRemoved("Stuck (-_-;)\n");
+            HidePatiActiveBall(work);
+            PatiVersusStuck(work);
+            work->state = 63;
+        } else {
+            HidePatiActiveBall(work);
+            if (work->game.wins > 0) {
+                PatiDealerVersusWin(work);
+                ++work->dealerWins;
+            } else
+                PatiDealerVersusLose(work);
+            FTBL.DebugLogToFileRemoved("Game:Total=%i+0.5", work->totalRounds);
+            FTBL.DebugLogToFileRemoved("NPC=%i,", work->dealerWins);
+            FTBL.DebugLogToFileRemoved("RYO=%iX\n", work->playerWins);
+            switch (work->totalRounds) {
+            case 0:
+            case 1:
+                break;
+            case 2: {
+                if (work->dealerWins - work->playerWins >= 2) {
+                    FTBL.DebugLogToFileRemoved("Set Lose Flag (;_;)\n");
+                    FTBL.EV_SetPlayerFlag(12, 1291, 1);
+                    work->state = 67;
+                } else if (work->playerWins > work->dealerWins) {
+                    FTBL.DebugLogToFileRemoved("Set Win Flag V(^-^)V\n");
+                    FTBL.EV_SetPlayerFlag(12, 1290, 1);
+                    work->state = 66;
+                }
+            } break;
+            }
+            if (work->state == 64) {
+                PatiPlayerTurn(work);
+                work->state = 59;
+            }
+        }
+        break;
+    case 59:
+        SetupPatiBoard(1);
+        work->game.ballLimit = 1;
+        work->game.winLimit = 1;
+        work->game.missLimit = 1;
+        work->game.balls = 0;
+        work->game.wins = 0;
+
+    case 60:
+        FTBL.EV_DisableCharacterDisplay(work->dealer);
+        work->game.mode = 1;
+        work->game.result = 0;
+        patiHandModel = (int)(SHEN_NAME4('h', 'a', 'n', 'd'));
+        QueuePatiBall(&work->game);
+        FTBL.HLib_SetupTaskDelay(0);
+        work->state = 61;
+        break;
+    case 61:
+        FTBL.EV_EnableCharacterDisplay(work->dealer);
+        if (work->game.result == -4) {
+            FTBL.DebugLogToFileRemoved("Cancel (>_<)\n");
+            HidePatiActiveBall(work);
+            PatiVersusClosing(work);
+            work->state = 55;
+        } else if (work->game.result == 4) {
+            FTBL.DebugLogToFileRemoved("Timeout (-_-)zZ\n");
+            HidePatiActiveBall(work);
+            PatiVersusClosing(work);
+            work->state = 55;
+        } else if (work->game.result == -1) {
+            FTBL.DebugLogToFileRemoved("Stuck (-_-;)\n");
+            HidePatiActiveBall(work);
+            PatiVersusStuck(work);
+            work->state = 60;
+        } else {
+            HidePatiActiveBall(work);
+            if (work->game.wins > 0) {
+                PatiPlayerVersusWin(work);
+                work->playerWins++;
+            } else
+                PatiPlayerVersusLose(work);
+            work->totalRounds++;
+            work->state = 65;
+            FTBL.DebugLogToFileRemoved("Game:Total=%i", work->totalRounds);
+            FTBL.DebugLogToFileRemoved("NPC=%i,", work->dealerWins);
+            FTBL.DebugLogToFileRemoved("RYO=%i\n", work->playerWins);
+            switch (work->totalRounds) {
+            case 1:
+                break;
+            case 2:
+                if (work->playerWins == 2 && !work->dealerWins) {
+                    FTBL.DebugLogToFileRemoved("Set Win Flag V(^-^)V\n");
+                    FTBL.EV_SetPlayerFlag(12, 1290, 1);
+                    work->state = 66;
+                }
+                if (!work->playerWins && work->dealerWins == 2) {
+                    FTBL.DebugLogToFileRemoved("Set Lose Flag (;_;)\n");
+                    FTBL.EV_SetPlayerFlag(12, 1291, 1);
+                    work->state = 67;
+                }
+                break;
+            default:
+                if (work->playerWins > work->dealerWins) {
+                    FTBL.DebugLogToFileRemoved("Set Win Flag V(^-^)V\n");
+                    FTBL.EV_SetPlayerFlag(12, 1290, 1);
+                    work->state = 66;
+                }
+                if (work->playerWins < work->dealerWins) {
+                    FTBL.DebugLogToFileRemoved("Set Lose Flag (;_;)\n");
+                    FTBL.EV_SetPlayerFlag(12, 1291, 1);
+                    work->state = 67;
+                }
+                break;
+            }
+        }
+        break;
+    case 65:
+        if (work->totalRounds == 3)
+            PatiVersusSuddenDeath(work);
+        else
+            PatiNextVersusRound(work);
+        work->state = 62;
+        if (work->totalRounds >= 3 && FTBL.shenGetMinutesUntilNextFrameMinute() <= 0) {
+            PatiVersusClosing(work);
+            work->state = 55;
+        }
+        break;
+    case 66:
+        PatiVersusWin(work);
+        work->state = 68;
+        break;
+    case 68: {
+        unsigned int cash, amount, target;
+        amount = (unsigned int)work->bet;
+        SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, work->delay);
+        cash = (unsigned int)(FTBL.GetPlayerStat(2));
+        FTBL.AnimateMoneyAmount((int)(cash), (int)(target = cash + amount), 0);
+        FTBL.SetPlayerStat(2, target);
+        work->delay += 5;
+        work->state = 55;
+        break;
+    }
+    case 67:
+        PatiVersusLose(work);
+        work->state = 69;
+        break;
+    case 69: {
+        unsigned int cash, amount, target;
+        amount = -(unsigned int)work->bet;
+        SetPatiCamera(g_patiPlayerCamera, PATI_PLAYER, PATI_PLAYER, work->delay);
+        cash = (unsigned int)(FTBL.GetPlayerStat(2));
+        FTBL.AnimateMoneyAmount((int)(cash), (int)(target = cash + amount), 0);
+        FTBL.SetPlayerStat(2, target);
+        work->delay += 5;
+        work->state = 55;
+        break;
+    }
+    default:
+        FTBL.DebugLogToFileRemoved("Illegal State!!\n");
+        FTBL.EventAssertNullsub(__FILE__, 3645);
+        break;
+    }
+    if (entryState != work->state)
+        FTBL.DebugLogToFileRemoved("State = %i \n", work->state);
+    if (work->delay > 0)
+        FTBL.HLib_SetupTaskDelay(work->delay);
+done:;
+}
+
+#else
 void PatiEventCallback(void *data) {
     PatiEventWork *work = (PatiEventWork *)data;
     unsigned char entryState;
@@ -2322,7 +4511,9 @@ void PatiEventCallback(void *data) {
     case 0:
         if (!LoadPatiEvent(work))
             goto done;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         ResetPatiMotionCache();
+#endif
         CopyPatiArgument(work->selectedName, work->argument);
         work->game.mode = 0;
         if (*(shen_name *)work->argument==SHEN_NAME4('P','V','S','J')) {
@@ -3280,6 +5471,8 @@ done:
     ;
 }
 
+#endif
+
 void CreatePatiEventResources(PatiEventWork *work)
 {
     Vector3 player;
@@ -3291,6 +5484,25 @@ void CreatePatiEventResources(PatiEventWork *work)
         if (patiDealers[index].character==work->dealer)
             break;
     }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (patiDealers[index].motions)
+        work->motions=patiDealers[index].motions;
+    else
+        work->motions=&patiDealerMotions;
+    if (work->dealer==SHEN_NAME4('K','N','H','_') || work->dealer==SHEN_NAME4('L','Y','O','_') ||
+        work->dealer==SHEN_NAME4('K','N','H','_') || work->dealer==SHEN_NAME4('A','A','1','_') ||
+        work->dealer==SHEN_NAME4('A','N','S','_') || work->dealer==SHEN_NAME4('D','Y','1','_') ||
+        work->dealer==SHEN_NAME4('E','I','N','_') || work->dealer==SHEN_NAME4('C','N','6','_') ||
+        work->dealer==SHEN_NAME4('K','T','4','_') || work->dealer==SHEN_NAME4('S','N','S','_') ||
+        work->dealer==SHEN_NAME4('O','D','1','_') || work->dealer==SHEN_NAME4('D','H','O','_') ||
+        work->dealer==SHEN_NAME4('Z','K','S','_') || work->dealer==SHEN_NAME4('C','H','X','_') ||
+        work->dealer==SHEN_NAME4('K','U','4','_') || work->dealer==SHEN_NAME4('S','D','2','_') ||
+        work->dealer==SHEN_NAME4('T','N','J','_') || work->dealer==SHEN_NAME4('W','O','1','_') ||
+        work->dealer==SHEN_NAME4('M','F','G','_'))
+        sprintf(work->game.voicePrefix,"0104%c%c%c",work->dealer&255,(work->dealer>>8)&255,(work->dealer>>16)&255);
+    else
+        sprintf(work->game.voicePrefix,"0104");
+#else
     g_patiPlayerCamera=901;
     g_patiDealerCamera=911;
     if (patiDealers[index].motions) {
@@ -3327,12 +5539,17 @@ void CreatePatiEventResources(PatiEventWork *work)
     FTBL.EV_ControlPackageResources(0,12,(char *)partition,patiVoicePartitions[index].text,patiVoicePartitions[index].sound);
     FTBL.DebugLogToFileRemoved("EV_UNMOUNT_AFS_PARTITION [PATI].afs %i\n",partition);
     FTBL.EV_ControlPackageResources(1,1,(char *)partition,0,0);
+#endif
     FTBL.DebugLogToFileRemoved("PATI_VOICE_NAME:%s\n",work->game.voicePrefix);
     FTBL.EV_FreeAuthorPak(1,work->game.voicePrefix);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->dealer),&player,1);
+#else
     FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(PATI_PLAYER),0,0);
     FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->dealer),0,0);
     FTBL.EV_ControlPackageResources(2,2,"PATI",0,0);
     FTBL.EV_ControlPackageResources(2,4,"PATI",0,0);
+#endif
     FTBL.EV_SetCharacterAlphaEnabled(work->dealer,0);
     FTBL.SetRefBoardParamsForCharaById(PATI_PLAYER,1);
     FTBL.SetRefBoardParamsForCharaById(work->dealer,1);
@@ -3344,6 +5561,29 @@ void CreatePatiEventResources(PatiEventWork *work)
 
 void CommitPatiBoardSelection(PatiEventWork *work)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    Vector3 player,board,position;
+    Vector3i playerRotation,boardRotation;
+    float sine,cosine;
+    work->dealer=FindPatiDealer(work);
+    FTBL.GetCharaPosition(PATI_PLAYER,-1,&player,0x40000000);
+    FTBL.GetCharaPosition(work->game.board,-1,&board,0x40000000);
+    FTBL.GetScenarioCharacterEulerAngles(PATI_PLAYER,&playerRotation,0x40000000);
+    FTBL.GetScenarioCharacterEulerAngles(work->game.board,&boardRotation,0x40000000);
+    if (boardRotation.z>32767) {
+        boardRotation.x+=0x8000;
+        boardRotation.y+=0x8000;
+        boardRotation.z-=0x8000;
+    }
+    sine=FTBL.CalculateFixedSine(boardRotation.y);
+    cosine=FTBL.CalculateFixedCosine(boardRotation.y);
+    position.x=player.x=cosine*0.0f+sine*1.8f+board.x;
+    position.z=player.z=cosine*1.8f-sine*0.0f+board.z;
+    position.y=player.y+1.5f;
+    playerRotation.y=boardRotation.y;
+    EVT_AT_SetPosAng(PATI_PLAYER,-1,position.x,position.z,(float)playerRotation.y/182.04445f,0);
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->dealer),&position,1);
+#endif
 }
 
 void PositionPatiPlayer(PatiEventWork *work)
@@ -3364,6 +5604,9 @@ void PositionPatiPlayer(PatiEventWork *work)
     position.y=player.y+1.5f;
     playerRotation.y=dealerRotation.y;
     EVT_AT_SetPosAng(PATI_PLAYER,-1,position.x,position.z,(float)playerRotation.y/182.04445f,0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->dealer),&position,1);
+#endif
 }
 
 void ResetPatiNailModelState(void)
@@ -3439,7 +5682,11 @@ void SelectPatiBoard(PatiEventWork *work,const char *name)
     if (work->choices[index].character) work->selectedBoard=index;
     else {
         FTBL.DebugLogToFileRemoved("Not found board in this domoto group [%s]\n",name);
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__,3876);
+#else
         FTBL.EventAssertNullsub(__FILE__,4378);
+#endif
         work->selectedBoard=0;
     }
     FTBL.DebugLogToFileRemoved("Change Board [%s] = %i\n",name,work->selectedBoard);
@@ -3455,6 +5702,9 @@ void UpdatePatiBoardCamera(PatiEventWork *work)
     g_patiBoardPosition.y=work->choices[work->selectedBoard].position.y;
     g_patiBoardPosition.z=work->choices[work->selectedBoard].position.z;
     g_patiBoardSize=work->choices[work->selectedBoard].size;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    SetupPatiBoardSize(0);
+#endif
 }
 
 void SetupPatiBoardSize(int mode)
@@ -3564,7 +5814,9 @@ void SetupPatiBoardSize(int mode)
         PATI_FILTER(g_patiFilteredTarget,g_patiDesiredTarget,1.0f);
     }
     FTBL.camCtrlSetState(26);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     g_patiCameraId=0; g_patiCameraEye=0; g_patiCameraTarget=0;
+#endif
     if (g_patiCameraStep>0) {
         g_patiCameraPosition.x+=(g_patiFilteredEye.x-g_patiCameraPosition.x)/(float)g_patiCameraStep;
         g_patiCameraPosition.y+=(g_patiFilteredEye.y-g_patiCameraPosition.y)/(float)g_patiCameraStep;
@@ -3578,7 +5830,9 @@ void SetupPatiBoardSize(int mode)
     }
     FTBL.camCtrlSetNextPosition(&g_patiCameraPosition);
     FTBL.camCtrlSetTargetPosition(&g_patiCameraLookAt);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.camCtrlSetPerspective(10922);
+#endif
     delta.x=distantEye.x-closeEye.x; delta.y=distantEye.y-closeEye.y; delta.z=distantEye.z-closeEye.z;
     current.x=distantEye.x-g_patiCameraPosition.x; current.y=distantEye.y-g_patiCameraPosition.y; current.z=distantEye.z-g_patiCameraPosition.z;
     distance=FTBL.GetVector3DotProduct(&delta,&delta);
@@ -3648,7 +5902,11 @@ void FindPatiDealerBoards(PatiEventWork *work,const char *dealer)
             }
             if (!patiGameTypes[index].name[0]) {
                 FTBL.DebugLogToFileRemoved("Error:Undefined Game Type.\n");
-                FTBL.EventAssertNullsub(__FILE__,4746);
+                #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4242);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 4746);
+#endif
             }
             work->choices[count].type=patiGameTypes[index].mode;
             for (index=0;patiGameOptions[index].name[0];index++) {
@@ -3656,7 +5914,11 @@ void FindPatiDealerBoards(PatiEventWork *work,const char *dealer)
             }
             if (!patiGameOptions[index].name[0]) {
                 FTBL.DebugLogToFileRemoved("Error:Undefined Game Option.\n");
-                FTBL.EventAssertNullsub(__FILE__,4755);
+                #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4251);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 4755);
+#endif
             }
             work->choices[count].option=patiGameOptions[index].mode;
             for (index=0;patiWagerModes[index].name[0];index++) {
@@ -3664,7 +5926,11 @@ void FindPatiDealerBoards(PatiEventWork *work,const char *dealer)
             }
             if (!patiWagerModes[index].name[0]) {
                 FTBL.DebugLogToFileRemoved("Error:Undefined Bet Type.\n");
-                FTBL.EventAssertNullsub(__FILE__,4766);
+                #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4262);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 4766);
+#endif
             }
             work->wagerMode=patiWagerModes[index].mode;
             SetPatiBet(work);
@@ -3690,13 +5956,21 @@ void FindPatiDealerBoards(PatiEventWork *work,const char *dealer)
             count++;
             if (count>19) {
                 FTBL.DebugLogToFileRemoved("Too much boards controled by domoto [%s]\n",group);
-                FTBL.EventAssertNullsub(__FILE__,4815);
+                #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4311);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 4815);
+#endif
             }
         }
     }
     if (!count) {
         FTBL.DebugLogToFileRemoved("No boards controled by domoto [%s]\n",group);
-        FTBL.EventAssertNullsub(__FILE__,4825);
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4321);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 4825);
+#endif
     }
     work->choices[count].character=0;
     if (count==1) g_patiSingleMode=1;
@@ -3710,8 +5984,10 @@ void FindPatiDealerBoards(PatiEventWork *work,const char *dealer)
     work->selectedName[4]=0;
     g_patiCameraStep=8;
     g_patiSelectionAccepted=0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     g_patiInspectRequested=0;
     g_patiCameraMoving=1;
+#endif
 }
 
 int SelectPatiBoardInput(PatiEventWork *work)
@@ -3720,6 +5996,7 @@ int SelectPatiBoardInput(PatiEventWork *work)
     int left,right,previous,index;
     unsigned int input;
     float rightDistance=100000000.0f,leftDistance=100000000.0f,distance;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     if (!g_patiCameraMoving && !g_patiSelectionAccepted && !g_patiInspectRequested) {
         input=FTBL.GetCurrentControlInput(2);
         FTBL.GetCurrentControlInput(0);
@@ -3727,6 +6004,7 @@ int SelectPatiBoardInput(PatiEventWork *work)
         input=0;
         FTBL.GetCurrentControlInput(0);
     }
+#endif
     previous=right=left=work->selectedBoard;
     origin.x=work->choices[previous].position.x;
     origin.y=work->choices[previous].position.y;
@@ -3744,6 +6022,9 @@ int SelectPatiBoardInput(PatiEventWork *work)
             if (rightDistance>distance) {rightDistance=distance;right=index;}
         } else if (leftDistance>distance) {leftDistance=distance;left=index;}
     }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    input=FTBL.GetCurrentControlInput(2);
+#endif
     if (!(input&0x3000) && (input&0xc000)) {
         if (input&0x8000) {
             work->selectedBoard=right;
@@ -3755,15 +6036,19 @@ int SelectPatiBoardInput(PatiEventWork *work)
         if (work->selectedBoard!=previous) g_patiCameraStep=8;
     }
     UpdatePatiBoardCamera(work);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     SetupPatiBoardSize(0);
+#endif
     if (g_patiCameraStep==4) {
         AttachPatiNails(work,work->choices[work->selectedBoard].character,work->choices[work->selectedBoard].nailFile);
         if (work->option==1 && work->choices[work->selectedBoard].character==PATI_READ_NAME(work->nextBoard))
             SetPatiHelpTopic(2,(signed char)work->choices[work->selectedBoard].type,0);
         else SetPatiHelpTopic(work->choices[work->selectedBoard].option,(signed char)work->choices[work->selectedBoard].type,0);
     }
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     for (index=0;index<4;index++) work->selectedName[index]=work->choices[work->selectedBoard].character>>(index*8);
     work->selectedName[4]=0;
+#endif
     if (FTBL.GetBattleDataConfig(2,PATI_CANCEL)) return -1;
     if (FTBL.GetBattleDataConfig(2,PATI_ACCEPT)) g_patiSelectionAccepted=1;
     else if (!g_patiSelectionAccepted) {
@@ -3775,7 +6060,12 @@ int SelectPatiBoardInput(PatiEventWork *work)
     if (!g_patiSelectionAccepted) return 0;
     {
         g_patiSelectionAccepted=0;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    for (index=0;index<4;index++) work->selectedName[index]=work->choices[work->selectedBoard].character>>(index*8);
+    work->selectedName[4]=0;
+#else
         g_patiInspectRequested=0;
+#endif
         FTBL.DebugLogToFileRemoved("Result:%s\n",work->selectedName[4]);
         return 1;
     }
@@ -3791,8 +6081,13 @@ void LockPatiEvent(PatiEventWork *work,const char *argument)
     do {
         FTBL.EV_SetCharaControllerFlags(PATI_PLAYER,3,0);
     } while (0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(PATI_PLAYER),0xf002,0);
+#endif
     FTBL.EV_NPC_NewLoadSw_0(0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.EventFunction869();
+#endif
     work->nearbyDealer=FindNearestPatiDealer();
     if (work->nearbyDealer) {
         FTBL.DebugLogToFileRemoved("Lock Near Pati-Master:");
@@ -3870,7 +6165,11 @@ void ConfigurePatiEventBoard(PatiEventWork *work,const char *name)
     }
     if (!found) {
         FTBL.DebugLogToFileRemoved("Error:search error.\n");
-        FTBL.EventAssertNullsub(__FILE__,5105);
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4588);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 5105);
+#endif
     }
     {
         for (copyIndex=0;copyIndex<4;copyIndex++) work->board[copyIndex]=name[copyIndex];
@@ -3897,7 +6196,11 @@ void ConfigurePatiEventBoard(PatiEventWork *work,const char *name)
     }
     if (!patiGameOptions[index].name[0]) {
         FTBL.DebugLogToFileRemoved("Error:Undefined Game Option.\n");
-        FTBL.EventAssertNullsub(__FILE__,5136);
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4619);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 5136);
+#endif
     }
     work->option=patiGameOptions[index].mode;
     work->scale=patiGameOptions[index].scale;
@@ -3906,7 +6209,11 @@ void ConfigurePatiEventBoard(PatiEventWork *work,const char *name)
     }
     if (!patiGameTypes[index].name[0]) {
         FTBL.DebugLogToFileRemoved("Error:Undefined Game Type.\n");
-        FTBL.EventAssertNullsub(__FILE__,5146);
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4629);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 5146);
+#endif
     }
     work->type=patiGameTypes[index].mode;
     for (index=0;patiWagerModes[index].name[0];index++) {
@@ -3914,7 +6221,11 @@ void ConfigurePatiEventBoard(PatiEventWork *work,const char *name)
     }
     if (!patiWagerModes[index].name[0]) {
         FTBL.DebugLogToFileRemoved("Error:Undefined Bet Type.\n");
-        FTBL.EventAssertNullsub(__FILE__,5155);
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4638);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 5155);
+#endif
     }
     work->wagerMode=patiWagerModes[index].mode;
     for (index=0;patiPayoutModes[index].name[0];index++) {
@@ -3922,7 +6233,11 @@ void ConfigurePatiEventBoard(PatiEventWork *work,const char *name)
     }
     if (!patiPayoutModes[index].name[0]) {
         FTBL.DebugLogToFileRemoved("Error:Undefined Get Type.\n");
-        FTBL.EventAssertNullsub(__FILE__,5164);
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 4647);
+#else
+        FTBL.EventAssertNullsub(__FILE__, 5164);
+#endif
     }
     work->payoutMode=patiPayoutModes[index].mode;
     if (work->option==1 || work->option==4 || work->option==5) {
@@ -3949,12 +6264,24 @@ void ConfigurePatiEventBoard(PatiEventWork *work,const char *name)
 void ResumePatiEvent(void *data)
 {
     PatiEventWork *work=(PatiEventWork *)data;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (work->state!=30 && work->state!=61 && work->state!=64)
+#else
     if (work->state!=36 && work->state!=67 && work->state!=70)
+#endif
         FTBL.HLib_ResolveDeferredCallback(work->task);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if ((unsigned char)(work->state-17)<2) {
+#else
     if (work->state==20 || work->state==22) {
+#endif
         FTBL.EV_EnableCharacterDisplay(PATI_PLAYER);
         if (FTBL.DoesScenarioCharacterExist(PATI_BACKPACK)==1) FTBL.EV_EnableCharacterDisplay(PATI_BACKPACK);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (*(shen_name *)work->argument!=PATI_VERSUS_ARGUMENT) FTBL.SetPlayerControlEnabled(1);
+#else
         if (*(shen_name *)work->argument!=PATI_VERSUS_ARGUMENT && g_currentMap!=PATI_CHALLENGE_MAP) FTBL.SetPlayerControlEnabled(1);
+#endif
         FTBL.EV_SetCharaControllerFlags(PATI_PLAYER,2,1);
         FTBL.EV_SetCharaControllerFlags(PATI_PLAYER,3,1);
         FTBL.EVS_LoopCamera(0,0,0);
@@ -3962,7 +6289,11 @@ void ResumePatiEvent(void *data)
         FTBL.camCtrlSetState(0);
     }
     FTBL.EV_refreshPadControlData(0,1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    work->state=55;
+#else
     work->state=61;
+#endif
     work->game.result=-3;
 }
 
@@ -3977,62 +6308,107 @@ void BeginPatiExit(PatiEventWork *work)
             work->game.ballCharacters[index].character=0;
         }
     }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (g_currentMap==PATI_CHALLENGE_MAP) {
+#else
     if (g_currentMap==PATI_CHALLENGE_MAP || work->challengeComplete) {
+#endif
         FTBL.SetScreenFilmFade(30,0,0,0,0,255,0,0,0);
         FTBL.ProcessAicaCommand(0xaa0,30);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     } else {
         if (!g_patiVersus) FTBL.EV_DisableCharacterDisplay(PATI_PLAYER);
         FTBL.EV_AT_SetPos(PATI_PLAYER,0x78000000,&work->game.savedPlayerPosition);
         FTBL.EV_AT_SetAngY_0(PATI_PLAYER,0x78000000,&work->game.savedPlayerRotation,0);
+#endif
     }
 }
 
 int RestorePatiEvent(PatiEventWork *work)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (g_currentMap==PATI_CHALLENGE_MAP) {
+#else
     if (g_currentMap==PATI_CHALLENGE_MAP || work->challengeComplete) {
+#endif
         if (FTBL.filmCheckFadeTrackColour()) return 0;
     }
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.RestoreMotionSnapshotPlacement(work->dealer,work->savedMotion);
     FTBL.ReleaseMotionSnapshot(work->savedMotion);
+#endif
     if (*(shen_name *)work->argument!=PATI_VERSUS_ARGUMENT) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.DebugLogToFileRemoved("PATI:Free [PATI]PAK\n");
+#endif
         FTBL.SetRefBoardParamsForCharaById(PATI_PLAYER,0);
         FTBL.SetRefBoardParamsForCharaById(work->dealer,0);
         if (FindPatiDealer(work)) FTBL.EV_SetCharacterAlphaEnabled(work->dealer,1);
         FTBL.EV_EventSetUpHelpIcon_0(0,0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EV_ControlPackageResources(0,6,"PATI",0,0);
+    } else {
+        FTBL.DebugLogToFileRemoved("PATI:Un-Free [PATI]PAK\n");
+#else
         FTBL.EVS_LoopCamera(0,0,0);
         FTBL.camCtrlSetFovTransitionTo(1);
         FTBL.camCtrlSetState(0);
+#endif
     }
     EVT_AT_SetFaceLooks(PATI_PLAYER,0,10,1.0f,0);
     EVT_AT_SetFaceLooks(work->dealer,0,10,1.0f,0);
     FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(PATI_PLAYER));
     FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(work->dealer));
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->dealer),0,0);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+#endif
     FTBL.ClearConversationTaskRegistration(work->dealer);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.EV_FreeAuthorPak(0,"0104");
+#else
     FTBL.EV_FreeAuthorPak(0,work->game.voicePrefix);
+#endif
     FTBL.EV_LoadCutsceneFromCurrentScene(work->bgm);
     FTBL.EV_LoadAudio(work->sbt,work->soundScene);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.RestoreMotionSnapshotPlacement(work->dealer,work->savedMotion);
+    FTBL.EV_AT_SetPos(PATI_PLAYER,0x78000000,&work->game.savedPlayerPosition);
+    FTBL.EV_AT_SetAngY_0(PATI_PLAYER,0x78000000,&work->game.savedPlayerRotation,0);
+#endif
     FTBL.EV_EnableCharacterDisplay(work->dealer);
     FTBL.EV_EnableCharacterDisplay(PATI_PLAYER);
     if (FTBL.DoesScenarioCharacterExist(PATI_BACKPACK)==1) FTBL.EV_EnableCharacterDisplay(PATI_BACKPACK);
     FTBL.CheckHelpIcon(0,0,0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.EV_SetPlayerFlag(12,1233,1);
+#endif
     return 1;
 }
 
 void FreePatiEvent(PatiEventWork *work)
 {
     if (*(shen_name *)work->argument!=PATI_VERSUS_ARGUMENT) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.DebugLogToFileRemoved("PATI:Free [PATI]PAK\n");
         FTBL.EV_ControlPackageResources(0,6,"PATI",0,0);
+#endif
         FTBL.DebugLogToFileRemoved("PATI:Free [PATI]domoto\n");
         if (work->dealer) {
             FTBL.DebugLogToFileRemoved("Unlock Near Pati-Master:");
             PATI_LOG_NAME(work->dealer);
             FTBL.npcLockUnlock(work->dealer);
         }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.SetPlayerControlEnabled(1);
+#else
         FTBL.EV_NPC_NewLoadSw_0(1);
         if (g_currentMap!=PATI_CHALLENGE_MAP) FTBL.SetPlayerControlEnabled(1);
+#endif
     } else {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.DebugLogToFileRemoved("PATI:Un-Free [PATI]PAK\n");
+#endif
         FTBL.DebugLogToFileRemoved("PATI:Un-Free [PATI]domoto\n");
     }
     FTBL.HLib_MarkCurrentTaskForCleanup();
@@ -4042,8 +6418,17 @@ void FreePatiEvent(PatiEventWork *work)
     do {
         FTBL.EV_SetCharaControllerFlags(PATI_PLAYER,3,1);
     } while (0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     if (g_currentMap==PATI_CHALLENGE_MAP) FTBL.EV_SetPlayerFlag(12,1233,1);
+#endif
     if (work->challengeComplete) FTBL.EV_scenQueueLoad(g_actNumber,g_currentMap,12);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (*(shen_name *)work->argument!=PATI_VERSUS_ARGUMENT) {
+        FTBL.EVS_LoopCamera(0,0,0);
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+    }
+#endif
 }
 
 void SetPatiBet(PatiEventWork *work)
@@ -4058,7 +6443,11 @@ void SetPatiBet(PatiEventWork *work)
     default:
         work->bet=1;
         FTBL.DebugLogToFileRemoved("Unknown Bet Type!!\n");
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__,4892);
+#else
         FTBL.EventAssertNullsub(__FILE__,5427);
+#endif
         break;
     }
 }
@@ -4137,12 +6526,20 @@ int HasPatiWon(PatiEventWork *work)
     case 7:
         won = 0;
         FTBL.DebugLogToFileRemoved("Under construction. versus game!!\n");
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 5002);
+#else
         FTBL.EventAssertNullsub(__FILE__, 5537);
+#endif
         break;
     default:
         won = 0;
         FTBL.DebugLogToFileRemoved("Unknown Game Type!!\n");
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 5007);
+#else
         FTBL.EventAssertNullsub(__FILE__, 5542);
+#endif
         break;
     }
     return won;
@@ -4282,7 +6679,11 @@ void PatiBallCallback(void *data)
             FTBL.Matrix4x4_RotateAroundX_Wrapper(rotation.x);
             FTBL.matrix_stack_TranslateVector(&translation);
             FTBL.Matrix4x4_GetTranslationRow(&translation);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.DebugLogToFileRemoved("PVSJ:YubiBase(%f,%f,%f)\n", translation.x, translation.y, translation.z);
+#else
             FTBL.DebugLogToFileRemoved("PATI:YubiBase(%f,%f,%f)\n", translation.x, translation.y, translation.z);
+#endif
             FTBL.PopCurrentMatrix(1);
             FTBL.scenApplyPosOrRotToChildId(patiHandModel, -1, &translation, &rotation, zero);
             handRotation.x = 61895;
@@ -4313,18 +6714,22 @@ void PatiBallCallback(void *data)
             FTBL.CheckHelpIcon(1, 0, 0);
         UpdatePatiBallPosition(ball);
         UpdatePatiHandPosition(ball);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         g_patiModelAlpha = 0;
+#endif
         ball->historyCursor = 0;
         for (index = 0; index < 90; index++) {
             ball->history[index].x = 0;
             ball->history[index].y = 0;
             ball->movement[index] = 0;
         }
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         for (index = 0; index < 8; index++) {
             ball->contacts[index].age = index;
             ball->contacts[index].nail = -1;
             ball->contacts[index].count = 0;
         }
+#endif
         if (ball->game->mode == 2) {
             ball->phase = 6;
             g_patiDealerInputClock = 0;
@@ -4333,6 +6738,45 @@ void PatiBallCallback(void *data)
         break;
     case 4:
     case 5:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (ball->frames > 5400) ball->frames=5400;
+        input=FTBL.GetCurrentControlInput(2);
+        if ((input&0xc0)!=0xc0) {
+            HandlePatiBallInput(ball,input);
+        } else {
+            int difference,comparison,secondComparison;
+            input=0;
+            FTBL.DebugLogToFileRemoved("X");
+            difference=(int)((float)ball->releaseX- -62.0f);
+            comparison=difference;
+            if (comparison>(ball->repeatFrames>=45 ? 10 : (int)(unsigned short)(ball->repeatFrames/5)+1)) input=0x4000;
+            secondComparison=difference;
+            if (secondComparison<-(ball->repeatFrames>=45 ? 10 : (int)(unsigned short)(ball->repeatFrames/5)+1)) input=0x8000;
+            if ((unsigned int)(difference+1)<3) {
+                ball->releaseX=-62;
+                difference=0;
+            }
+            if (!difference) {
+                float humidity=0.99f,temperature=0.99128598f,rate;
+                rate=humidity*temperature;
+                FTBL.DebugLogToFileRemoved("!");
+                ball->tangentialRetention=rate*0.96f;
+                ball->wallRestitution=rate*0.4f;
+                ball->nailRestitution=rate*0.43f;
+                ball->surfaceFriction=rate*0.15f;
+                input=FTBL.GetCurrentControlInput(2);
+                input&=0x400;
+                if (input&0x400) {
+                    FTBL.DebugLogToFileRemoved("\n!!! SHOW_SUPER_MODE READY!!!\n");
+                    FTBL.DebugLogToFileRemoved("Rate:%f ",rate);
+                    FTBL.DebugLogToFileRemoved("(Humidity:%f,",humidity);
+                    FTBL.DebugLogToFileRemoved("Temperature:%f)\n",temperature);
+                }
+            }
+            HandlePatiBallInput(ball,input);
+        }
+        FTBL.GetBattleDataConfig(0,SHEN_NAME4('B','T','B','A'));
+#else
         if (ball->frames > 5400) {
             input = 1024;
             HandlePatiBallInput(ball, input);
@@ -4343,10 +6787,15 @@ void PatiBallCallback(void *data)
             if (ball->option == 7)
                 FTBL.GetBattleDataConfig(0, SHEN_NAME4('B', 'T', 'C', 'C'));
         }
+#endif
         oldFrames = ball->frames++;
         if (oldFrames == 1800 && !g_patiVersus)
             PatiStuckFollowup(ball);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (FTBL.shenGetMinutesUntilNextFrameMinute() <= 0) {
+#else
         if (FTBL.shenGetMinutesUntilNextFrameMinute() <= 0 && ball->frames >= 1800) {
+#endif
             ball->phase = 13;
             ball->game->result = 4;
         }
@@ -4360,7 +6809,11 @@ void PatiBallCallback(void *data)
             if (difference < 0)
                 difference = -difference;
             tolerance = (ball->game->targetVariation + ball->frames) / 10;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            if (difference <= tolerance || ball->frames > 300)
+#else
             if (difference <= tolerance || ball->frames > 210)
+#endif
                 input = 1024;
         }
         if (input != 1024) {
@@ -4377,7 +6830,9 @@ void PatiBallCallback(void *data)
             g_patiDealerInputClock = PATI_DEALER_INPUTS[g_patiDealerInputIndex & 15].duration;
         break;
     case 7:
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         g_patiModelAlpha = 0;
+#endif
         FTBL.CheckHelpIcon(1, 0, 0);
         FTBL.EV_DisableCharacterDisplay(patiHandModel);
         ball->game->activeBall = ball->game->balls;
@@ -4505,7 +6960,9 @@ int HandlePatiBallInput(PatiBallWork *ball, unsigned int input)
         if (input & 0x400) {
             FTBL.CheckHelpIcon(1, 0, 0);
             ball->phase = 7;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             ball->frames = 0;
+#endif
             ball->repeatFrames = 0;
             ball->soundFrames = 0;
             ball->current.position.y = ball->previous.position.y = ball->top;
@@ -4514,11 +6971,13 @@ int HandlePatiBallInput(PatiBallWork *ball, unsigned int input)
             PatiCopyVector(&ball->previous.velocity, &ball->current.velocity);
             ball->settled = 0;
             ball->cameraHeight = ball->top - 0.13f;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         } else if ((input & 0x200) && ball->option == 7) {
             FTBL.CheckHelpIcon(33, 0, 0);
             FTBL.CheckHelpIcon(1, 0, 0);
             ball->phase = 13;
             ball->game->result = -4;
+#endif
         } else {
             if (input & 0xf000)
                 ball->repeatFrames++;
@@ -4633,7 +7092,9 @@ void PatiSetVector(Vector3 *target, float x, float y, float z) {
     target->z = z;
 }
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 PatiFallbackVoice patiFallbackVoices[] = {{0, 0}};
+#endif
 PatiPlacementNode *patiDetachedNailNode = 0;
 Vector3i PATI_HAND_ROTATION = {52898, 4550, 3394};
 int patiHandPoseCommand[19][3] = {{0, 726, 64080}, {0, 1, 1093}, {0, 61168, 0}, {0, 0, 63898}, {0, 363, 60622}, {0, 1456, 58438},

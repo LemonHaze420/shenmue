@@ -22,11 +22,20 @@ typedef struct PawnWork {
     HLibTask *task;
     HLibTask *awardTask;
     shen_name shop;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    int state, selection;
+    unsigned int motion;
+#endif
     Vector3 position;
     Vector3i rotation;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    int soundScene, saleOutcome;
+    char sbt[512];
+#else
     int reserved28;
     char package[12];
     int saleOutcome;
+#endif
 } PawnWork;
 typedef struct PawnTalkWork {
     HLibTask *parent;
@@ -43,7 +52,9 @@ typedef struct PawnShopItem {
 } PawnShopItem;
 typedef struct PawnShopScene {
     shen_name shop, owner, flyer;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     int presentationFlag;
+#endif
     float flyerX, flyerZ;
     int flyerYaw;
     float flyerOffsetX, flyerOffsetZ;
@@ -58,11 +69,19 @@ void PawnWaitPackage(void *data);
 void PawnWaitOwner(void *data);
 void PawnDone(void *data);
 void PawnBegin(void *data);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void PawnFinish(void *data);
+void PawnChoosePresentation(void *data);
+#endif
 void PawnBeginFlyer(void *data);
 void PawnFlyerAward(void *data);
 void PawnFlyerDone(void *data);
 void PawnTalkOpening(void *data);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void RestorePawnTransactionPose(shen_name shop);
+#else
 void RestorePawnTransactionPose(PawnWork *work, shen_name shop);
+#endif
 void PawnToSelect(void *data);
 void PawnBeginSelect(void *data);
 void PawnExecuteSelect(void *data);

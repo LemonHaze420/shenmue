@@ -26,6 +26,9 @@
 
 typedef struct Area0004EventWork {
     HLibTask *task;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    void *motionBank;
+#endif
     int debugSelection;
     short state;
 } Area0004EventWork;
@@ -42,7 +45,14 @@ typedef struct Area0004WaveColours {
 } Area0004WaveColours;
 
 extern shen_name openingTemporaryCharacters[];
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WaitForOpeningPackage(void *taskData);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void e0004_EVT_Auth_Main(void) __attribute__((section(".text.entry")));
+#else
 void e0004_EVT_Auth_Main(void);
+#endif
 void e0004_EVT_Auth_Main_Callback(void *taskData);
 void Queue_e0004_EVT_Auth_Loop_0004A000(Area0004EventWork *parent);
 void e0004_EVT_Auth_Loop_0004A000_Callback(void *taskData);
@@ -50,8 +60,13 @@ void SetupOpeningSmoke(void);
 void UpdateOpeningWave(void);
 void InitializeOpeningEnvironment(void);
 void CompleteOpening(Area0004EventWork *event);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PrepareOpeningAuthorCharacters(short segment);
+void RestoreOpeningAuthorCharacters(short segment);
+#else
 void PrepareOpeningAuthorCharacters(void);
 void RestoreOpeningAuthorCharacters(void);
+#endif
 void PrepareOpeningTemporaryCharacter(shen_name character);
 void RestoreOpeningTemporaryCharacter(shen_name character);
 void PrepareOpeningAuthorCharacter(shen_name character);

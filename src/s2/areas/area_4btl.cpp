@@ -18,10 +18,15 @@ void Start4Btl(void *argument)
 #define BTL4_ANCHOR_7_X 261.9f
 #define BTL4_ANCHOR_15 {245.8f, 100.2f, 379.8f, 90.0f}
 #endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#define BTL4_ANCHOR_11 {260.1f, 101.0f, 400.7f, 0.0f}
+#else
+#define BTL4_ANCHOR_11 {259.3f, 101.0f, 400.0f, 0.0f}
+#endif
 static const Btl4Spot btlAnchors[] = {{237.3f, 98.35f, 463.0f, 0.0f}, {234.6f, 98.35f, 463.3f, 0.0f}, {234.8f, 98.35f, 467.6f, 0.0f},
     {230.3f, 98.35f, 467.0f, 0.0f}, {241.0f, 98.35f, 466.0f, 0.0f}, {233.2f, 101.6f, 458.6f, 0.0f}, {233.1f, 101.6f, 454.0f, 0.0f},
     {BTL4_ANCHOR_7_X, 100.9f, 418.8f, 270.0f}, {265.3f, 100.9f, 418.6f, 270.0f}, {270.2f, 100.9f, 414.5f, 0.0f}, {267.1f, 100.9f, 405.7f, 45.0f},
-    {259.3f, 101.0f, 400.0f, 0.0f}, {259.2f, 100.9f, 390.9f, 15.0f}, {258.1f, 100.9f, 384.8f, 0.0f}, {256.8f, 100.9f, 379.8f, 0.0f},
+    BTL4_ANCHOR_11, {259.2f, 100.9f, 390.9f, 15.0f}, {258.1f, 100.9f, 384.8f, 0.0f}, {256.8f, 100.9f, 379.8f, 0.0f},
     BTL4_ANCHOR_15, {238.8f, 100.2f, 377.4f, 60.0f}, {230.8f, 100.2f, 372.6f, 70.0f}, {221.9f, 100.2f, 367.6f, 30.0f},
     {220.2f, 100.2f, 354.9f, 0.0f}, {220.8f, 100.2f, 341.8f, 0.0f}, {224.0f, 100.2f, 328.0f, 315.0f}, {237.6f, 100.2f, 324.0f, 270.0f},
     {246.0f, 100.2f, 328.5f, 225.0f}, {249.6f, 100.2f, 341.8f, 180.0f}, {251.6f, 100.2f, 353.0f, 180.0f}, {251.5f, 100.2f, 362.6f, 180.0f},
@@ -36,8 +41,16 @@ static unsigned int btlAnchor __attribute__((section(".bss")));
 
 void Queue4Btl(void *argument)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    HLibTask *task;
+    Btl4Work *work;
+    FTBL.LoadNPCRoute("NPC_AR02.BIN");
+    task = FTBL.HLib_EnqueueTaskWithParameter(Btl4Callback, 6, 11, sizeof(Btl4Work), TASK_EVNT);
+    work = (Btl4Work *)FTBL.HLib_GetTaskParameter(task);
+#else
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Btl4Callback, 6, 11, sizeof(Btl4Work), TASK_EVNT);
     Btl4Work *work = (Btl4Work *)FTBL.HLib_GetTaskParameter(task);
+#endif
     work->task = task;
     work->phase = 0;
     work->step = 0;
@@ -85,7 +98,9 @@ int Btl4Initialize(Btl4Work *work)
         work->phase = 3;
     } else
         work->phase = 1;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.SetScreenFilmFade(15, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     return 0;
 }
 
@@ -95,6 +110,66 @@ void Btl4DebugExitCallback(void *data)
     Btl4Finish((Btl4Work *)data);
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void Btl4Finish(Btl4Work *work)
+{
+    shen_name partner = work->partner;
+    int phase = work->phase;
+    FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(BTL4_RYO));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(BTL4_RYO));
+    FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(work->partner));
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(work->partner));
+    EventDebugUnregister(BTL4_DEBUG_ID);
+    if (phase == 6) {
+        FTBL.SetScenarioFollowCharacter(partner);
+        Btl4SelectAnchor(BTL4_RYO);
+        EVT_AT_SetMot(BTL4_RYO, 0xf003, 0.0f, 1.0f, 0x40000000U, 0);
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    } else {
+        FTBL.LoadNPCRoute("NPC.BIN");
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+        FTBL.EV_spmBeginSampleExecute(0);
+    }
+    FTBL.SetScenarioCharacterKillMode(BTL4_DUMMY, 1);
+    FTBL.SetScenarioCharacterKillMode(BTL4_CAMERA, 1);
+    if (!FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_A) && !FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_B))
+        Btl4ChairState(1);
+    if (FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_A))
+        FTBL.EV_stepSetFlags(BTL4_FLAG_ROUTE_A, 0);
+    if (FTBL.EV_GetShenmueFlag(BTL4_FLAG_ROUTE_B))
+        FTBL.EV_stepSetFlags(BTL4_FLAG_ROUTE_B, 0);
+    FTBL.npcFree(partner);
+    FTBL.npcLockUnlock(partner);
+    ET_AT_KillWork(work->characters);
+    if (partner == BTL4_SAM) {
+        FTBL.EV_FreeAuthorPak(0, "0082");
+        FTBL.EV_ControlPackageResources(0, 6, "4NIN_SAM", 0, 0);
+    } else {
+        FTBL.EV_FreeAuthorPak(0, "0083");
+        FTBL.EV_ControlPackageResources(0, 6, "4NIN_LLY", 0, 0);
+    }
+    if (partner == BTL4_SAM) {
+        if (work->phase == 6)
+            FTBL.EV_stepSetFlags(129, 0);
+        else
+            FTBL.EV_stepSetFlags(129, 1);
+    } else {
+        FTBL.EV_SetPlayerFlag(16, 39, btlAnchor);
+        if (work->phase == 6)
+            FTBL.EV_stepSetFlags(130, 0);
+        else
+            FTBL.EV_stepSetFlags(130, 1);
+        FTBL.DebugLogToFileRemoved("======================================\n");
+        FTBL.DebugLogToFileRemoved("    SetFreeTalkCounterNo = %d\n", btlAnchor);
+        FTBL.DebugLogToFileRemoved("======================================\n");
+    }
+    FTBL.EV_HLKillOtherHierarchyTask(work->task);
+    FTBL.scenFreeEvent("BTL4.EV3");
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.SetPlayerControlEnabled(1);
+}
+#else
 void Btl4Finish(Btl4Work *work)
 {
     EventDateTime date;
@@ -201,6 +276,7 @@ void Btl4Finish(Btl4Work *work)
     FTBL.SetScenarioCharacterKillMode(BTL4_DUMMY, 1);
     FTBL.SetScenarioCharacterKillMode(BTL4_CAMERA, 1);
 }
+#endif
 
 void Btl4Callback(void *data)
 {
@@ -255,6 +331,9 @@ int Btl4RunFight(Btl4Work *work)
             Btl4SetupLlyFight(work->partner);
 #endif
         EVT_AT_SetAngY(work->partner, BTL4_RYO, 180.0f, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.vfCopyPosFromEntity(1, FTBL.ctrlGetCharaByName(BTL4_RYO), 0.0f, 0.0f, 5.0f);
+#else
         if (work->partner == BTL4_SAM)
             FTBL.vfCopyPosFromEntity(1, FTBL.ctrlGetCharaByName(BTL4_RYO), 0.0f, 0.0f, 5.0f);
         else if (btlAnchor == 12)
@@ -270,6 +349,7 @@ int Btl4RunFight(Btl4Work *work)
             FTBL.flddSetPointFlagOnGrid(BTL4_DEFAULT_GRID, 0);
         } else
             FTBL.vfCopyPosFromEntity(1, FTBL.ctrlGetCharaByName(BTL4_RYO), 0.0f, 0.0f, 5.0f);
+#endif
 #if !defined(SHENMUE_EVENT_4BTL_SCENE01)
         FTBL.EV_vfBattleUtil(1, 2, 1);
         FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(BTL4_RYO), 1);
@@ -342,11 +422,13 @@ int Btl4RunFight(Btl4Work *work)
 #endif
         FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->partner), 1, 0, 0);
         FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->partner), 1, 1, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         if (btlAnchor == 11) {
             FTBL.flddSetPointFlagOnGrid(BTL4_GRID, 0);
             FTBL.flddSetPointFlagOnGrid(BTL4_PROP_GRID, 1);
             FTBL.flddSetPointFlagOnGrid(BTL4_DEFAULT_GRID, 1);
         }
+#endif
         break;
     }
     return delay;
@@ -393,7 +475,9 @@ int Btl4LlyIntro(Btl4Work *work)
     EVT_AT_SetPos(BTL4_RYO, EVENT_CHARACTER_INVALID, 252.1f, 100.3f, 363.9f, 0);
     EVT_AT_SetAngY(BTL4_RYO, EVENT_CHARACTER_INVALID, 180.0f, 0);
     EVT_AT_SetPos(work->partner, EVENT_CHARACTER_INVALID, 252.6f, 100.22f, 366.73f, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     EVT_AT_SetAngY(work->partner, EVENT_CHARACTER_INVALID, 270.0f, 0);
+#endif
     EVT_AT_SetPos(BTL4_CAMERA, BTL4_RYO, 0.0f, 0.0f, 0.0f, 0);
     EVT_AT_SetAngY(BTL4_CAMERA, BTL4_RYO, 0.0f, 0);
     EVT_AT_SetMot(BTL4_RYO, 0xf003, 0.0f, 1.0f, 0x40000000U, 0);
@@ -538,7 +622,11 @@ int Btl4SamWon(Btl4Work *work)
     EVT_AT_SetVoice("0082B018", 1120);
     EVT_AT_SetPoint(BTL4_RYO, work->partner, 0, 3, 0, 940, 260, 0xc0000000U);
     work->phase = 6;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    return 1200;
+#else
     return 1230;
+#endif
 }
 
 int Btl4LlyWon(Btl4Work *work)
@@ -653,13 +741,21 @@ int Btl4LlyLost(Btl4Work *work)
     return 420;
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+unsigned int Btl4FindAnchor(shen_name character)
+#else
 unsigned int Btl4FindAnchor(void)
+#endif
 {
     Vector3 position;
     int nearest = 0;
     float distance = 500.0f;
     unsigned short i;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.GetCharaPosition(character, -1, &position, 0x40000000);
+#else
     FTBL.GetCharaPosition(BTL4_RYO, -1, &position, 0x40000000);
+#endif
     for (i = 0; btlAnchors[i].x > 0.0f; i++) {
         if (FTBL.CalculatePlanarDistanceBetweenPoints(&position, (const Vector3 *)&btlAnchors[i]) < distance) {
             distance = FTBL.CalculatePlanarDistanceBetweenPoints(&position, (const Vector3 *)&btlAnchors[i]);
@@ -674,7 +770,11 @@ void Btl4SelectAnchor(shen_name character)
     Vector3 position;
     Vector3i rotation;
     unsigned int anchor;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    anchor = Btl4FindAnchor(character);
+#else
     anchor = Btl4FindAnchor();
+#endif
     btlAnchor = anchor;
     if (btlAnchors[anchor].x > 0.0f) {
         EVT_AT_SetPos(character, EVENT_CHARACTER_INVALID, btlAnchors[anchor].x, btlAnchors[anchor].y, btlAnchors[anchor].z, 0);

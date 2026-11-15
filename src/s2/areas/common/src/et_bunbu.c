@@ -139,13 +139,17 @@ void ExecuteWarehouseScript(unsigned int *script)
                 choices[2] = WAREHOUSE_ARG(2);
                 choices[3] = -1;
                 FTBL.SetupControlSpeakAndUI(choices, 1800, WAREHOUSE_ARG(2), 2);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
                 FTBL.SetRenderClockAndCompassTo(1);
                 FTBL.shenSetTimeSimulationTo(0);
+#endif
             } else {
                 int choice = FTBL.shenGetCtrlSpeakIconFlag();
                 if (!FTBL.GetShouldRenderIcons(2)) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
                     FTBL.SetRenderClockAndCompassTo(0);
                     FTBL.shenSetTimeSimulationTo(1);
+#endif
                     if (choice == WAREHOUSE_ARG(1)) {
                         SeekWarehouseScriptLabel(script, WAREHOUSE_ARG(3));
                         continue;
@@ -163,13 +167,17 @@ void ExecuteWarehouseScript(unsigned int *script)
                 selectChoices[2] = WAREHOUSE_ARG(2);
                 selectChoices[3] = -1;
                 FTBL.SetupControlSpeakAndUI(selectChoices, WAREHOUSE_ARG(6), WAREHOUSE_ARG(5), 2);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
                 FTBL.SetRenderClockAndCompassTo(1);
                 FTBL.shenSetTimeSimulationTo(0);
+#endif
             } else {
                 int choice = FTBL.shenGetCtrlSpeakIconFlag();
                 if (!FTBL.GetShouldRenderIcons(2)) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
                     FTBL.SetRenderClockAndCompassTo(0);
                     FTBL.shenSetTimeSimulationTo(1);
+#endif
                     if (choice == WAREHOUSE_ARG(1))
                         SeekWarehouseScriptLabel(script, WAREHOUSE_ARG(3));
                     else
@@ -475,7 +483,11 @@ void ExecuteWarehouseScript(unsigned int *script)
             FTBL.DebugLogToFileRemoved(":::::ERROR::::: (et_bunbu.c)\n");
             FTBL.DebugLogToFileRemoved("Data Address: %8X\n", script);
             FTBL.DebugLogToFileRemoved("PC          : %8X\n", script[1]);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.EventAssertNullsub(__FILE__, 660);
+#else
             FTBL.EventAssertNullsub(__FILE__, 670);
+#endif
             break;
         }
     }
@@ -510,7 +522,11 @@ void SeekWarehouseScriptLabel(unsigned int *script, unsigned short label)
             FTBL.DebugLogToFileRemoved("Not Found Number:%d\n", label);
             FTBL.DebugLogToFileRemoved("Data Address: %8X\n", script);
             FTBL.DebugLogToFileRemoved("Before PC   : %8X\n", script[1]);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.EventAssertNullsub(__FILE__, 708);
+#else
             FTBL.EventAssertNullsub(__FILE__, 718);
+#endif
             break;
         }
     }

@@ -29,7 +29,11 @@ extern AreaPigeonStateCallback areaPigeonStateCallbacks[4];
 void QueueAreaPigeons(const Vector3 *origin, float radius, AreaPigeon *pigeons, shen_name firstCharacter, int count);
 void AreaPigeonsCallback(void *taskData);
 void EvaluatePigeonRoam(AreaPigeon *pigeon);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ComputePigeonRotation(AreaPigeon *pigeon);
+#else
 void ComputePigeonRotation(AreaPigeon *pigeon, const Vector3 *origin, const Vector3 *position, float degrees);
+#endif
 void PigeonCooldown(AreaPigeon *pigeon);
 void PigeonWander(AreaPigeon *pigeon);
 void PigeonApproach(AreaPigeon *pigeon);

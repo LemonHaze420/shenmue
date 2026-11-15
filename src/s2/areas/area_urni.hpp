@@ -50,15 +50,23 @@ typedef struct UranaiConfiguration {
     Vector3 position;
     float yaw;
     int price;
-    UranaiCallback setup, modeOne, introduction, same, decline, beginReading, reading, result, payment, insufficientCash;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    UranaiCallback setup;
+#endif
+    UranaiCallback modeOne, introduction, same, decline, beginReading, reading, result, payment, insufficientCash;
 } UranaiConfiguration;
 
 typedef struct UranaiWork {
     EventReadCharactersWork *characters;
     HLibTask *task;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    int cameraState;
+#endif
     const UranaiSelection *selection;
     const UranaiConfiguration *configuration;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     const char *package;
+#endif
 } UranaiWork;
 
 #define URNI_READER_CALLBACKS(Reader)                                                                                                  \
@@ -79,6 +87,35 @@ URNI_READER_CALLBACKS(Seh)
 URNI_READER_CALLBACKS(Sri)
 URNI_READER_CALLBACKS(Rcd)
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+extern Vector3 uranaiKlnPlayerCardPosition;
+extern Vector3i uranaiKlnPlayerCardRotation;
+extern Vector3 uranaiKlnReaderCardPosition;
+extern Vector3i uranaiKlnReaderCardRotation;
+extern Vector3 uranaiSykObjectPosition;
+extern Vector3i uranaiSykObjectRotation;
+extern Vector3 uranaiMm5ObjectPosition;
+extern Vector3i uranaiMm5ObjectRotation;
+extern Vector3i uranaiStickHandRotation;
+extern Vector3 uranaiStickAttach;
+extern Vector3i uranaiStickRotation;
+extern Vector3 uranaiCrystalScale;
+extern Vector3 uranaiStickHand[5];
+extern Vector3 uranaiRcdIdle[5];
+extern Vector3 uranaiSehIdle[5];
+extern Vector3i uranaiReadingHandPose[19];
+extern Vector3i uranaiMm5HandRotation;
+extern Vector3i uranaiMm5HandPose[19];
+#define uranaiSehHandRotation uranaiStickHandRotation
+#define uranaiSehAttach uranaiStickAttach
+#define uranaiSehRotation uranaiStickRotation
+#define uranaiSehHand uranaiStickHand
+#define uranaiRcdHandRotation uranaiStickHandRotation
+#define uranaiRcdAttach uranaiStickAttach
+#define uranaiRcdRotation uranaiStickRotation
+#define uranaiRcdHand uranaiStickHand
+#endif
+
 const char *UranaiStoryPackage(void);
 
 void AreaURNIMain(void *argument);
@@ -94,7 +131,12 @@ void UranaiFade(void *data);
 void UranaiFadeEnd(void *data);
 void InitializeUranai(UranaiWork *work);
 void CleanupUranai(UranaiWork *work);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void ConfigureUranai(UranaiWork *work);
+void InitializeUranaiCamera(int *state);
+#else
 void ConfigureUranai(UranaiWork *work, shen_name reader);
+#endif
 #else
 #pragma once
 #include "s2/area_event.hpp"

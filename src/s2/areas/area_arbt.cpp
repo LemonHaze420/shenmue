@@ -4,10 +4,25 @@
 #if defined(SHENMUE_EVENT_ENTRY)
 void ArbtEntry(void *argument)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
+    QueueClearNpcs((void (*)(void *))StartArbt, argument);
+#else
     StartArbt(argument);
+#endif
 }
 #else
 const shen_name arbtCharacters[] = {ARBT_RYO, ARBT_PARTNER, ARBT_FOREMAN, ARBT_KNT, ARBT_AA1, ARBT_LYO, ARBT_HAK, ARBT_EIN, EVENT_CHARACTER_INVALID};
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+const ArbtRouteStep arbtCarryRoutes[6][16] = {
+    {{2, 3, 45.0f, 0x8000}, {2, 2, 45.0f, 0x8000}, {2, 2, 45.0f, 0x4000}, {1, 1, 40.0f, 0x4000}, {2, 2, 45.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+    {{2, 4, 45.0f, 0x8000}, {1, 2, 40.0f, 0x8000}, {1, 2, 40.0f, 0x8000}, {2, 2, 45.0f, 0x4000}, {2, 0, 35.0f, 0x4000}, {8, 3, 0.0f, 0x0}},
+    {{1, 3, 40.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {2, 2, 45.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {8, 2, 0.0f, 0x0}},
+    {{2, 3, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {1, 0, 30.0f, 0x4000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {3, 1, 45.0f, 0x8000}, {1, 1, 40.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {8, 3, 0.0f, 0x0}},
+    {{1, 3, 40.0f, 0x4000}, {4, 2, 45.0f, 0x4000}, {1, 0, 35.0f, 0x8000}, {2, 1, 45.0f, 0x4000}, {1, 0, 35.0f, 0x4000}, {1, 0, 30.0f, 0x4000}, {1, 1, 40.0f, 0x8000}, {3, 0, 40.0f, 0x8000}, {4, 1, 45.0f, 0x4000}, {8, 2, 0.0f, 0x0}},
+    {{4, 3, 45.0f, 0x4000}, {2, 1, 45.0f, 0x8000}, {3, 1, 45.0f, 0x4000}, {1, 0, 40.0f, 0x4000}, {5, 1, 45.0f, 0x4000}, {3, 0, 40.0f, 0x8000}, {4, 1, 45.0f, 0x4000}, {4, 0, 35.0f, 0x8000}, {5, 1, 45.0f, 0x4000}, {8, 2, 0.0f, 0x0}}
+};
+#else
 const ArbtRouteStep arbtCarryRoutes[3][3][6][16] = {
     {
         {
@@ -136,6 +151,7 @@ const ArbtRouteStep arbtCarryRoutes[3][3][6][16] = {
         }
     }
 };
+#endif
 const float arbtCarrySpeeds[6] = {2.3f, 2.3f, 2.3f, 2.4f, 2.4f, 2.4f};
 const ArbtDescriptor arbtDescriptors[9] = {{0, 0}, {0, 1}, {0, 2}, {0, 3}, {1, 0}, {1, 1}, {1, 2}, {1, 3}, {2, 0}};
 int arbtAuthorFlag = 0;
@@ -155,16 +171,32 @@ Vector3 arbtGuideEdge0Right = {0.66f, 0.0305f, -0.272f};
 Vector3 arbtGuideEdge0Left = {0.68f, 0.1f, 0.32f};
 Vector3 arbtGuideEdge1Right = {-0.66f, 0.0305f, 0.272f};
 Vector3 arbtGuideEdge1Left = {-0.66f, 0.0305f, -0.272f};
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+Vector3i arbtCarryHandRotationRyo = {0, 7281, 0};
+Vector3i arbtCarryHandRotationPartner = {0, 58255, 0};
+Vector3i arbtRestHandRotation = {0, 0, 0};
+#else
 Vector3i arbtMoveRotation = {0, 0xc000, 0};
+#endif
 
 void StartArbt(const ArbtDescriptor *descriptor)
 {
     HLibTask *task, *helper;
     ArbtWork *work;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    helper = FTBL.HLib_EnqueueTaskWithParameter(ArbtHelperNullsub, 3, 11, 4, TASK_EVNT);
+    task = FTBL.HLib_EnqueueTaskWithParameter(ArbtReadyInit, 4, 11, sizeof(ArbtWork), TASK_EVNT);
+    {
+        ArbtWork **parameter = (ArbtWork **)FTBL.HLib_GetTaskParameter(helper);
+        work = (ArbtWork *)FTBL.HLib_GetTaskParameter(task);
+        *parameter = work;
+    }
+#else
     task = FTBL.HLib_EnqueueTaskWithParameter(ArbtReadyInit, 4, 11, sizeof(ArbtWork), TASK_EVNT);
     work = (ArbtWork *)FTBL.HLib_GetTaskParameter(task);
     helper = FTBL.HLib_EnqueueTaskWithParameter(ArbtHelperNullsub, 3, 11, 4, TASK_EVNT);
     *(ArbtWork **)FTBL.HLib_GetTaskParameter(helper) = work;
+#endif
     work->helper = helper;
     work->self = task;
     if (descriptor)
@@ -189,10 +221,19 @@ void ArbtDebugExit(void *data)
 void ArbtLeave(ArbtWork *work)
 {
     ArbtCleanup(work);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EV_HLKillOtherHierarchyTask(work->self);
+    FTBL.EV_HLKillOtherHierarchyTask(work->helper);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+#else
     FTBL.EV_HLKillOtherHierarchyTask(work->helper);
     FTBL.EV_HLKillOtherHierarchyTask(work->self);
+#endif
     EventDebugUnregister(ARBT_DEBUG_ID);
     FTBL.EV_SetPlayerFlag(12, 966, 1);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.scenSetTaskFlags(6);
+#endif
     if (FTBL.EV_GetShenmueFlag(1077)) {
         FTBL.EV_stepSetFlags(1077, 0);
         FTBL.EV_scenQueueLoad(g_actNumber, ARBT_AK00, 0);
@@ -212,8 +253,10 @@ void ArbtReadyInit(void *data)
     ArbtWork *work = (ArbtWork *)data;
     int frames;
     EventDebugCheck(ARBT_DEBUG_ID, 4);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.CheckHelpIcon(1, 0, 0);
     FTBL.FinishLoading();
+#endif
     FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(ARBT_RYO));
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_RYO), 1, 0, 0);
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_RYO), 1, 1, 0);
@@ -226,10 +269,19 @@ void ArbtReadyInit(void *data)
     Queue_EVT_AT_CtrlHandUp_1(ARBT_PARTNER, 1, (void *)areaLoopHandPoses[ARBT_GRIP_HAND_POSE], 0, 0);
     FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(ARBT_RYO), 1);
     FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(ARBT_PARTNER), 1);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 10, 0.05f);
+#else
     FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 10, 2.0f);
+#endif
     FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 17, 1.0f);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_PARTNER), 10, 0.05f);
+    FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_PARTNER), 17, 0.05f);
+#else
     FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_PARTNER), 10, 2.0f);
     FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_PARTNER), 17, 2.0f);
+#endif
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ARBT_RYO), 55, 0);
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ARBT_PARTNER), 55, 0);
     FTBL.AT_SetLocalBaseChara(ARBT_RYO, ARBT_BASE);
@@ -261,8 +313,12 @@ void ArbtReadyInit(void *data)
     FTBL.EV_ToggleCharacterFlag(ARBT_HAK);
     FTBL.EV_ToggleCharacterFlag(ARBT_EIN);
     FTBL.AttachScenarioCharacter(ARBT_PAY, ARBT_FOREMAN, 14, &arbtPayAttachPosition, &arbtPayAttachRotation);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EV_DisableCharacterDisplay(ARBT_PAY);
+#else
     EVT_AT_CharaDisp(ARBT_PAY, 0, 1);
     FTBL.BeginSecondarySampleExecution(0);
+#endif
     FTBL.EV_LoadAudio("0018E000", 0);
     EVT_AT_SetSample(0, 0, 0);
     if (work->firstJob)
@@ -286,6 +342,9 @@ void SetInitialArbtCarrySettings(ArbtCarryWork *carry, int crate)
     carry->consecutiveFailures = 0;
     carry->idleCount = 0;
     carry->speed = arbtCarrySpeeds[crate];
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    carry->route = arbtCarryRoutes[crate];
+#else
     random = FTBL.shenGetRandomInt32(3);
     if (g_actNumber == 1)
         carry->route = arbtCarryRoutes[0][random][crate];
@@ -293,6 +352,7 @@ void SetInitialArbtCarrySettings(ArbtCarryWork *carry, int crate)
         carry->route = arbtCarryRoutes[1][random][crate];
     else
         carry->route = arbtCarryRoutes[2][random][crate];
+#endif
     SetArbtQte(&carry->qte, 0, 0, 0);
 }
 
@@ -304,6 +364,9 @@ void SetArbtQte(ArbtQte *qte, int frames, unsigned int direction, int intensity)
     qte->frames = frames;
     qte->direction = direction;
     qte->intensity = intensity;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    qte->retries = 0;
+#endif
     qte->presses = arbtPressCounts[intensity];
 }
 
@@ -333,7 +396,9 @@ void ArbtCarryLift(void *data)
     ArbtQte *qte = &carry->qte;
     ArbtCrateWork *crates = &work->crates;
     Vector3 position;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.SetRenderClockAndCompassTo(0);
+#endif
     FTBL.GetCharaPosition(crates->crates[crates->index], -1, &position, 0);
     if (position.y > 0.5f)
         qte->frames = ArbtLiftHighCrate(crates);
@@ -352,8 +417,10 @@ void ArbtCarryTurnInit(void *data)
     turns = carry->turns--;
     if (turns != 0) {
         delay = qte->frames - 40;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         if (delay < 0)
             delay = 0;
+#endif
         if (work->delivered > 1)
             SetArbtQte(qte, 40, 0x8000, 0);
         else
@@ -367,8 +434,13 @@ void ArbtCarryTurnInit(void *data)
         FTBL.HLib_SetCurrentTaskTo(carry->phase);
         if (!work->delivered) {
             delay = ArbtStartWork(qte->frames);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            FTBL.HLib_SetupTaskDelay(delay);
+            qte->frames = 30;
+#else
             qte->frames = 0;
             FTBL.HLib_SetupTaskDelay(delay);
+#endif
         }
     }
 }
@@ -380,6 +452,37 @@ void ArbtCarryFinishTurns(void *data)
     ArbtQte *qte = &carry->qte;
     int turns, delay;
     turns = carry->turns--;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    if (turns > 0) {
+        FTBL.CheckHelpIcon(0xd020, 0, 1);
+        delay = qte->frames - 40;
+        SetArbtQte(qte, 40, 0x8000, 0);
+        ArbtQueueDirection(qte->direction, qte->intensity, delay);
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryQte);
+        if (delay > 0)
+            FTBL.HLib_SetupTaskDelay(delay);
+    } else {
+        FTBL.CheckHelpIcon(0xd020, 0xd020, 2);
+        FTBL.CheckHelpIcon(0x2020, 0, 1);
+        FTBL.GetCurrentDateTime((DateTime *)&work->time);
+        if (work->time.hour >= work->endTime.hour) {
+            EVT_AT_MenCtrl(60, 0, 0, 0, 0, 255, 0, 0, 0, qte->frames);
+            FTBL.HLib_SetCurrentTaskTo(ArbtCarryAddTime);
+            if (qte->frames > 0)
+                FTBL.HLib_SetupTaskDelay(qte->frames);
+        } else {
+            delay = qte->frames;
+            SetArbtQte(qte, 50, 0x2000, 7);
+            if (carry->turns < -1)
+                ArbtQueueDirection(qte->direction, qte->intensity, delay);
+            else
+                ArbtRequestPutDown(delay);
+            FTBL.HLib_SetCurrentTaskTo(ArbtCarryPutQte);
+            if (delay > 0)
+                FTBL.HLib_SetupTaskDelay(delay);
+        }
+    }
+#else
     if (turns > 0) {
         FTBL.CheckHelpIcon(0xd020, 0, 1);
         delay = qte->frames - 40;
@@ -406,6 +509,7 @@ void ArbtCarryFinishTurns(void *data)
         delay = ArbtRequestPutDown(qte->frames);
         FTBL.HLib_SetupTaskDelay(delay);
     }
+#endif
 }
 
 void ArbtCarryRoute(void *data)
@@ -416,6 +520,9 @@ void ArbtCarryRoute(void *data)
     const ArbtRouteStep *step = carry->route;
     int delay;
     FTBL.CheckHelpIcon(0xd020, 0, 1);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_RYO, 0.0f, -2.0f, 0.0f, 0);
+#endif
     if (carry->forwardSteps >= step->forwardSteps) {
         carry->forwardSteps = 0;
         carry->route++;
@@ -425,8 +532,10 @@ void ArbtCarryRoute(void *data)
             FTBL.HLib_SetCurrentTaskTo(carry->phase);
         } else {
             delay = (float)qte->frames - step->frames;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             if (delay < 0)
                 delay = 0;
+#endif
             SetArbtQte(qte, step->frames, step->direction, step->intensity);
             ArbtQueueDirection(qte->direction, qte->intensity, delay);
             FTBL.HLib_SetCurrentTaskTo(ArbtCarryQte);
@@ -442,8 +551,10 @@ void ArbtCarryRoute(void *data)
                 FTBL.HLib_SetupTaskDelay(qte->frames);
         } else {
             delay = qte->frames - 30;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             if (delay < 0)
                 delay = 0;
+#endif
             SetArbtQte(qte, 30, 0x1000, 6);
             ArbtQueueDirection(qte->direction, qte->intensity, delay);
             FTBL.HLib_SetCurrentTaskTo(ArbtCarryForwardQte);
@@ -482,7 +593,29 @@ void ArbtCarryQte(void *data)
             FTBL.HLib_SetupTaskDelay(qte->frames);
             qte->frames = 0;
         }
-    } else if (qte->success) {
+    }
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    else if (qte->success) {
+        carry->consecutiveFailures = 0;
+        if (qte->intensity == 1)
+            qte->frames = ArbtWalkDirection(carry->speed + 0.3f, 1, qte->direction, 0);
+        else
+            qte->frames = ArbtWalkDirection(carry->speed, qte->intensity, qte->direction, 0);
+        FTBL.HLib_SetCurrentTaskTo(carry->phase);
+    } else if (qte->retries > 0) {
+        carry->consecutiveFailures = 0;
+        qte->retries--;
+        qte->frames = ArbtWalkDirection(carry->speed, qte->intensity, qte->direction, 0);
+        FTBL.HLib_SetCurrentTaskTo(carry->phase);
+    } else {
+        carry->failures++;
+        carry->consecutiveFailures++;
+        qte->frames = ArbtFailCarry(crates, crate, qte->intensity, qte->direction);
+        FTBL.HLib_SetCurrentTaskTo(ArbtCarryFalse);
+        FTBL.HLib_SetupTaskDelay(qte->frames);
+    }
+#else
+    else if (qte->success) {
         carry->consecutiveFailures = 0;
         qte->frames = ArbtWalkDirection(carry->speed, qte->intensity, qte->direction, 0);
         FTBL.HLib_SetCurrentTaskTo(carry->phase);
@@ -493,6 +626,7 @@ void ArbtCarryQte(void *data)
         FTBL.HLib_SetCurrentTaskTo(ArbtCarryFalse);
         FTBL.HLib_SetupTaskDelay(frames);
     }
+#endif
 }
 
 void ArbtCarryForwardQte(void *data)
@@ -511,24 +645,47 @@ void ArbtCarryForwardQte(void *data)
                 FTBL.HLib_SetupTaskDelay(qte->frames);
             else
                 qte->frames = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            carry->forwardSteps++;
+            carry->idleCount = 0;
+#else
             carry->idleCount = 0;
             carry->forwardSteps++;
+#endif
             qte->frames = ArbtWalkForward(carry->speed, qte->frames);
         } else if (pressed & wrong) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ArbtWarnWrongDirection(pressed, 0);
+#endif
             FTBL.HLib_SetCurrentTaskTo(ArbtCarryQte);
             if (carry->idleCount == 0 && qte->frames > 0)
                 FTBL.HLib_SetupTaskDelay(qte->frames);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            else
+                qte->frames = 0;
+#else
             qte->frames = 0;
+#endif
             carry->idleCount = 0;
             qte->direction = 0x2000;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             ArbtWarnWrongDirection(pressed, 0);
+#endif
         }
     } else {
         FTBL.HLib_SetCurrentTaskTo(carry->phase);
         if (++carry->idleCount > 3) {
             carry->idleCount = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            qte->frames = ArbtWarnIdleForward(++work->idleWarnings);
+#else
             FTBL.HLib_SetupTaskDelay(ArbtWarnIdleForward(++work->idleWarnings));
+#endif
         }
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        else
+            qte->frames = 30;
+#endif
     }
 }
 
@@ -548,8 +705,16 @@ void ArbtCarryPutQte(void *data)
         FTBL.HLib_SetCurrentTaskTo(carry->phase);
         if (++carry->idleCount > 3) {
             carry->idleCount = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            qte->frames = ArbtWarnIdlePut(++work->idleWarnings);
+#else
             FTBL.HLib_SetupTaskDelay(ArbtWarnIdlePut(++work->idleWarnings));
+#endif
         }
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        else
+            qte->frames = 30;
+#endif
     }
 }
 
@@ -606,6 +771,13 @@ void ArbtCarryPut(void *data)
         work->perfectStreak = 0;
     else
         work->perfectStreak++;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetPosAng(crate, destination, 0.0f, 0.2f, 0.0f, 0);
+    if (crates->stacked[crates->index])
+        frames = ArbtPutHighCrate(crates, work->perfectStreak);
+    else
+        frames = ArbtPutLowCrate(crates, work->perfectStreak);
+#else
     if (crates->stacked[crates->index]) {
         EVT_AT_SetPosAng(crate, destination, -0.05f, 0.1f, 0.0f, 0);
         frames = ArbtPutHighCrate(crates, work->perfectStreak, destination);
@@ -613,6 +785,7 @@ void ArbtCarryPut(void *data)
         EVT_AT_SetPosAng(crate, destination, 0.0f, 0.2f, 0.0f, 0);
         frames = ArbtPutLowCrate(crates, work->perfectStreak, destination);
     }
+#endif
     FTBL.HLib_SetCurrentTaskTo(ArbtCarryEnd);
     FTBL.HLib_SetupTaskDelay(frames);
 }
@@ -642,7 +815,9 @@ void ArbtCarryAddTime(void *data)
 {
     ArbtWork *work = (ArbtWork *)data;
     FTBL.CheckHelpIcon(0, 0, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.SetRenderClockAndCompassTo(1);
+#endif
     FTBL.GetCurrentDateTime((DateTime *)&work->time);
     if (work->time.hour < work->endTime.hour + 1) {
         if (++work->time.minute > 59) {
@@ -650,7 +825,11 @@ void ArbtCarryAddTime(void *data)
             work->time.hour++;
         }
         FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&work->time);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    } else
+#else
     } else if (!FTBL.filmCheckFadeTrackColour())
+#endif
         FTBL.HLib_SetCurrentTaskTo(ArbtCarryTimeOver);
 }
 
@@ -674,6 +853,12 @@ void ArbtPayInit(void *data)
     } else {
         EVT_AT_SetPos(ARBT_BASE, EVENT_CHARACTER_INVALID, 225.2f, 100.0f, 247.5f, 0);
         EVT_AT_SetAngY(ARBT_BASE, EVENT_CHARACTER_INVALID, 270.0f, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    }
+    FTBL.SetMapModelDataDefaultVertexShader();
+    FTBL.EV_lightLoad(ARBT_LIGHT_AKB0);
+    FTBL.PushGlobalLightingProgram();
+#else
         FTBL.SetMapModelDataDefaultVertexShader();
         FTBL.FreeWAIR();
         FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
@@ -692,6 +877,7 @@ void ArbtPayInit(void *data)
     FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_LYO), 1);
     FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_HAK), 1);
     FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_EIN), 1);
+#endif
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ARBT_RYO), 55, 2);
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ARBT_PARTNER), 55, 2);
     EVT_AT_CharaDisp(ARBT_KNT, 0, 0);
@@ -706,8 +892,12 @@ void ArbtPayInit(void *data)
     FTBL.EV_EnsureCharacterDraw(ARBT_EIN);
     StopArbtMoveBox(&work->crates, 0);
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    work->delivered++;
+#else
     if (work->delivered <= 5)
         work->delivered++;
+#endif
     FTBL.HLib_SetCurrentTaskTo(ArbtPayAuto);
 }
 
@@ -739,6 +929,13 @@ void ArbtPayEnd(void *data)
     else
         ArbtLeave(work);
 }
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ResetArbtCarryState(int *state)
+{
+    *state = 0;
+}
+#endif
 
 void CreateArbtCrates(ArbtCrateWork *const crates)
 {
@@ -791,7 +988,11 @@ void CreateArbtCrates(ArbtCrateWork *const crates)
         FTBL.SetScenarioCharacterDrawControl(name, 2, 1, 0.0f);
     }
     for (i = 0, name = ARBT_PALLET_FIRST; i < 16; i++, name += 0x1000000) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.CreateEventCharacter(3, "PLT020M1", name);
+#else
         FTBL.CreateEventCharacter(3, "PLT0H01G", name);
+#endif
         crates->pallets[i] = name;
         if (i < 8) {
             if (i < 4) {
@@ -845,8 +1046,12 @@ void CreateArbtCrates(ArbtCrateWork *const crates)
 void KillArbtPallets(ArbtCrateWork *crates)
 {
     int i;
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < 16; i++) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.SetScenarioCharacterKillMode(crates->crates[i], 1);
+#endif
         FTBL.SetScenarioCharacterKillMode(crates->pallets[i], 1);
+    }
 }
 
 int SelectNextArbtCrate(ArbtCrateWork *crates)
@@ -880,8 +1085,13 @@ int SelectNextArbtCrate(ArbtCrateWork *crates)
 void QueueArbtMoveBox(ArbtCrateWork *crates, int delay)
 {
     if (crates->moveTask == 0) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        crates->moveFrames = 10000000;
+        crates->moveTask = FTBL.HLib_EnqueueTaskWithParameter(ArbtMoveBox, 4, 11, 4, TASK_EVNT);
+#else
         crates->moveFrames = 100000000;
         crates->moveTask = FTBL.HLib_EnqueueTaskWithParameter(ArbtMoveBox, 3, 11, 4, TASK_EVNT);
+#endif
         *(ArbtCrateWork **)FTBL.HLib_GetTaskParameter(crates->moveTask) = crates;
         if (delay > 0)
             FTBL.HLib_SetupTimedTask(crates->moveTask, delay);
@@ -892,10 +1102,12 @@ void StopArbtMoveBox(ArbtCrateWork *crates, int frames)
 {
     if (crates->moveTask) {
         crates->moveFrames = frames;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         if (!frames) {
             FTBL.HLib_DestroyTaskInternal(crates->moveTask);
             crates->moveTask = 0;
         }
+#endif
     }
 }
 
@@ -905,19 +1117,52 @@ void ArbtMoveBox(void *data)
     shen_name crate = crates->crates[crates->index];
     shen_name base;
     Vector3 hand, position;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    Vector3 target;
+    Vector3i rotation;
+#endif
     base = FTBL.SCEN_FindChar_Wrapper(crate);
     FTBL.AT_SetLocalBaseChara(crate, ARBT_RYO);
     FTBL.GetCharaPosition(ARBT_RYO, 17, &hand, 0x1000000);
     position.x = hand.x + 0.32f;
     position.y = hand.y - 0.1f;
     position.z = hand.z - 0.68f;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    rotation.x = 0;
+    rotation.y = 0xc000;
+    rotation.z = 0;
+#endif
     FTBL.EV_AT_SetPos(crate, ARBT_POSITION_FLAGS, &position);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EV_AT_SetAngY_0(crate, ARBT_POSITION_FLAGS, &rotation, 0);
+#else
     FTBL.EV_AT_SetAngY_0(crate, ARBT_POSITION_FLAGS, &arbtMoveRotation, 0);
+#endif
     FTBL.AT_SetLocalBaseChara(crate, base);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.GetCharaPosition(ARBT_EG0R, -1, &target, 0x40000000);
+    FTBL.LatchMotionBoneTarget(FTBL.scenFindMotionwork(ARBT_RYO), 10, &target);
+    FTBL.GetCharaPosition(ARBT_EG1R, -1, &target, 0x40000000);
+    FTBL.LatchMotionBoneTarget(FTBL.scenFindMotionwork(ARBT_PARTNER), 10, &target);
+    FTBL.GetCharaPosition(ARBT_EG1L, -1, &target, 0x40000000);
+    FTBL.LatchMotionBoneTarget(FTBL.scenFindMotionwork(ARBT_PARTNER), 17, &target);
+#endif
     if (--crates->moveFrames < 0) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(ARBT_RYO), 0, 21, &arbtRestHandRotation);
+        FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 0, 21, &arbtRestHandRotation);
+        FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 1, 21, &arbtRestHandRotation);
+#endif
         FTBL.HLib_DestroyCurrentTask();
         crates->moveTask = 0;
     }
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    else {
+        FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(ARBT_RYO), 0, 21, &arbtCarryHandRotationRyo);
+        FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 0, 21, &arbtCarryHandRotationRyo);
+        FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 1, 21, &arbtCarryHandRotationPartner);
+    }
+#endif
 }
 
 void QueueArbtDropBox(ArbtCrateWork *crates, int delay)
@@ -942,6 +1187,17 @@ void QueueArbtDropBox(ArbtCrateWork *crates, int delay)
                 frames = 8;
             }
         } else if (dx < 1.0f) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            if (dz < 0.3f) {
+                if (stacked) {
+                    crates->dropHeight = 0.7f;
+                    frames = 5;
+                } else {
+                    crates->dropHeight = 0.3f;
+                    frames = 8;
+                }
+            }
+#else
             if (dz < 0.3f && stacked) {
                 crates->dropHeight = 0.7f;
                 frames = 5;
@@ -949,6 +1205,7 @@ void QueueArbtDropBox(ArbtCrateWork *crates, int delay)
                 crates->dropHeight = 0.3f;
                 frames = 8;
             }
+#endif
         }
         EVT_AT_SetSound(257, delay + frames);
         crates->dropTask = FTBL.HLib_EnqueueTaskWithParameter(ArbtDropBox, 4, 11, 4, TASK_EVNT);
@@ -978,8 +1235,10 @@ void ArbtDropBox(void *data)
 void ArbtMain(ArbtWork *work)
 {
     int i;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_NPC_NewLoadSw_0(0);
     FTBL.EV_ResetFreeTalkFlags();
+#endif
     work->characters = Queue_EVT_AT_ReadChr(work->self, arbtCharacters);
     work->delivered = 0;
     work->failures = 0;
@@ -995,12 +1254,22 @@ void ArbtMain(ArbtWork *work)
         FTBL.EV_FreeAuthorPak(1, "0360");
     else
         FTBL.EV_FreeAuthorPak(1, "0018");
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.CheckHelpIcon(1, 0, 0);
+    FTBL.EV_EventSetUpHelpIcon_0(70, 0);
+    FTBL.camCtrlToggleSmoothing(1);
+    FTBL.camCtrlSetMotionScaleFactor(0.05f);
+#endif
     FTBL.GetCurrentDateTime((DateTime *)&work->time);
     FTBL.GetCurrentDateTime((DateTime *)&work->endTime);
     if (FTBL.EV_GetShenmueFlag(18)) {
         FTBL.EV_stepSetFlags(18, 0);
         work->firstJob = 1;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        work->time.hour = 8;
+#else
         work->time.hour = 10;
+#endif
     } else {
         work->firstJob = 0;
         if (work->descriptor->shift == 0)
@@ -1020,15 +1289,23 @@ void ArbtMain(ArbtWork *work)
     FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&work->time);
     FTBL.shenSetTimeSimulationTo(1);
     FTBL.EV_stepSetFlags(65, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.SetWeatherUpdateEnabledTo(1);
+    FTBL.RefreshWeatherForCurrentTime(0);
+    FTBL.UpdateWeather();
+    FTBL.BeginSecondarySampleExecution(0);
+#endif
     if (work->descriptor->mode == 1) {
         EVT_AT_SetPos(ARBT_BASE, EVENT_CHARACTER_INVALID, 175.7f, 100.0f, 177.0f, 0);
         EVT_AT_SetAngY(ARBT_BASE, EVENT_CHARACTER_INVALID, 270.0f, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.FreeWAIR();
         FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
         FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
         FTBL.UpdateWeather();
         FTBL.EV_SetWeatherInstruction(12, 0);
         FTBL.EV_SetWeatherInstruction(1920, 0);
+#endif
         FTBL.EV_lightLoad(ARBT_LIGHT_QCAE);
         FTBL.PushGlobalLightingProgram();
         FTBL.SetMapFieldDepthSlotEnabled(0, 2);
@@ -1038,11 +1315,19 @@ void ArbtMain(ArbtWork *work)
             FTBL.SetObjectFlagByIndex(i, 0);
     } else if (work->descriptor->shift == 3) {
         EVT_AT_SetPosAng(ARBT_BASE, EVENT_CHARACTER_INVALID, 266.8f, 260.5f, 0.0f, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.RefreshWeatherForCurrentTime(0);
         FTBL.UpdateWeather();
+#endif
         FTBL.EV_SetWeatherInstruction(12, 0);
         FTBL.EV_SetWeatherInstruction(1920, 0);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.EV_lightLoad(SHEN_NAME4('N', 'I', 'T', '0'));
+#else
         FTBL.EV_lightLoad(ARBT_AK00);
+#endif
         FTBL.PushGlobalLightingProgram();
         FTBL.SetMapFieldDepthSlotEnabled(0, 8);
         FTBL.SetMapFieldDepthSlotEnabled(0, 9);
@@ -1051,30 +1336,38 @@ void ArbtMain(ArbtWork *work)
         FTBL.SetObjectFlagByIndex(6, 0);
         FTBL.SetObjectFlagByIndex(8, 0);
         FTBL.SetObjectFlagByIndex(10, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_RYO), 1);
         FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 1);
+#endif
     } else if (work->descriptor->shift == 1) {
         EVT_AT_SetPosAng(ARBT_BASE, EVENT_CHARACTER_INVALID, 270.0f, 238.7f, 270.0f, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.FreeWAIR();
         FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
         FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
         FTBL.UpdateWeather();
         FTBL.EV_SetWeatherInstruction(12, 0);
         FTBL.EV_SetWeatherInstruction(1920, 0);
+#endif
         FTBL.EV_lightLoad(ARBT_LIGHT_AKA3);
         FTBL.PushGlobalLightingProgram();
         FTBL.SetMapFieldDepthSlotEnabled(0, 2);
         FTBL.SetMapFieldDepthSlotEnabled(0, 9);
         FTBL.SetMapFieldDepthSlotEnabled(0, 10);
         FTBL.SetObjectFlagByIndex(10, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         HideArbtDockProps();
+#endif
         for (i = 0; i < 8; i++)
             FTBL.SetObjectFlagByIndex(i, 0);
     } else {
         EVT_AT_SetPos(ARBT_BASE, EVENT_CHARACTER_INVALID, 225.2f, 100.0f, 247.5f, 0);
         EVT_AT_SetAngY(ARBT_BASE, EVENT_CHARACTER_INVALID, 270.0f, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.RefreshWeatherForCurrentTime(0);
         FTBL.UpdateWeather();
+#endif
         FTBL.ReinitializeLights(1);
         FTBL.SetLightFlagForIndex(0, 2);
         FTBL.SetLightEntryIndex(0, 1);
@@ -1086,13 +1379,38 @@ void ArbtMain(ArbtWork *work)
         FTBL.SetObjectFlagByIndex(8, 0);
         FTBL.SetObjectFlagByIndex(10, 0);
     }
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.SetRenderClockAndCompassTo(1);
     FTBL.SetLoadingBusy();
     FTBL.EV_EventSetUpHelpIcon_0(70, 0);
+#endif
     SetInitialArbtCarrySettings(&work->carry, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    ResetArbtCarryState(&work->carryState);
+#endif
     CreateArbtCrates(&work->crates);
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ArbtCleanup(ArbtWork *work)
+{
+    KillArbtPallets(&work->crates);
+    FTBL.CheckHelpIcon(0, 0, 0);
+    FTBL.camCtrlToggleSmoothing(0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_RYO), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_RYO), 0, 1, 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(ARBT_RYO));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARBT_PARTNER), 0, 1, 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(ARBT_PARTNER));
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0018");
+    FTBL.EV_ControlPackageResources(0, 6, "ARBT", 0, 0);
+    ET_AT_KillWork(work->characters);
+}
+#else
 void ArbtCleanup(ArbtWork *work)
 {
     FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(ARBT_RYO), 0);
@@ -1115,7 +1433,9 @@ void ArbtCleanup(ArbtWork *work)
     FTBL.EV_NPC_NewLoadSw_0(1);
     FTBL.SetPlayerControlEnabled(0);
 }
+#endif
 
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 void HideArbtDockProps(void)
 {
     FTBL.SetDisplayFlagForProp(ARBT_PROP_R024, 0);
@@ -1128,6 +1448,7 @@ void HideArbtDockProps(void)
     FTBL.SetDisplayFlagForProp(ARBT_PROP_R012, 0);
     FTBL.SetDisplayFlagForProp(ARBT_PROP_R030, 0);
 }
+#endif
 #endif
 #else
 #include "s2/areas/area_arbt.hpp"

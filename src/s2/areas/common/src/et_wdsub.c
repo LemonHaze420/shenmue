@@ -450,6 +450,9 @@ void TrainingLcdSequence(void *data)
             if (lcd->frames && !--lcd->frames) {
                 lcd->bitmap = 0;
                 FTBL.lcdmInit(0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                FTBL.CheckHelpIcon(0x800, 0x800, 2);
+#endif
             }
             break;
         default:
@@ -466,9 +469,15 @@ void TrainingSetLcd(int *frames, const void *bitmap)
     if (!bitmap) {
         frames[0] = 0;
         FTBL.SetCombatEffectOrder(0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.CheckHelpIcon(0x800, 0x800, 2);
+#endif
     } else {
         frames[0] = 600;
         FTBL.SetCombatEffectOrder(1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.CheckHelpIcon(0x800, 0, 1);
+#endif
     }
     FTBL.lcdmInit((void *)frames[1]);
 }
@@ -479,6 +488,9 @@ void TrainingSetLcdOrder(int *frames, const void *bitmap, int order)
     if (!bitmap) {
         frames[0] = 0;
         FTBL.SetCombatEffectOrder(0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.CheckHelpIcon(0x800, 0x800, 2);
+#endif
     } else {
         if (!order) order = 1;
         frames[0] = 600;
@@ -486,6 +498,9 @@ void TrainingSetLcdOrder(int *frames, const void *bitmap, int order)
             FTBL.SetCombatEffectOrder(1);
         else
             FTBL.SetCombatEffectOrder(0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.CheckHelpIcon(0x800, 0, 1);
+#endif
     }
     FTBL.lcdmInit((void *)frames[1]);
 }
@@ -496,10 +511,20 @@ int TrainingPlanarAngle(float x1, float z1, float x2, float z2)
     z1 = z2 - z1;
     if (!((*(unsigned int *)&x1 >= 0x00800000U && *(unsigned int *)&x1 <= 0x7f7fffffU) ||
           (*(unsigned int *)&x1 >= 0x80800000U && *(unsigned int *)&x1 <= 0xff7fffffU) || *(unsigned int *)&x1 == 0 || *(unsigned int *)&x1 == 0x80000000U))
-        FTBL.EventAssertNullsub(trainingSource, 685);
+        FTBL.EventAssertNullsub(trainingSource,
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            676);
+#else
+            685);
+#endif
     if (!((*(unsigned int *)&z1 >= 0x00800000U && *(unsigned int *)&z1 <= 0x7f7fffffU) ||
           (*(unsigned int *)&z1 >= 0x80800000U && *(unsigned int *)&z1 <= 0xff7fffffU) || *(unsigned int *)&z1 == 0 || *(unsigned int *)&z1 == 0x80000000U))
-        FTBL.EventAssertNullsub(trainingSource, 686);
+        FTBL.EventAssertNullsub(trainingSource,
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            677);
+#else
+            686);
+#endif
     return FTBL.InverseFixedAtan2(x1, z1);
 }
 // @verified - d
@@ -899,8 +924,13 @@ void TrainingSpeak(short a, short b, short c, short d, short selection)
 void ResetTrainingAuthorCharacter(shen_name name)
 {
     FTBL.EV_EnableCharacterDisplay(name);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(name), 0, 3);
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(name), 0, 0);
+#else
     FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(name), 0, 0);
     FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(name), 0, 3);
+#endif
     FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(name), 0);
     FTBL.EV_SetCharaControllerFlags(name, 2, 0);
     FTBL.EV_SetCharaControllerFlags(name, 3, 0);

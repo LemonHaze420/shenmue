@@ -1,50 +1,60 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/areas/area_ro10.hpp"
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM || !defined(SHENMUE_EVENT_ENTRY)
+
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static Ro10Shop ro10Shops[7] = {
-    {SHEN_NAME4('A', 'R', 'D', 'X'), SHEN_NAME4('S', 'Y', 'R', '_'), 0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 56,
+    {SHEN_NAME4('A', 'R', 'D', 'X'), SHEN_NAME4('S', 'Y', 'R', '_'),
+        0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 56,
      0.25f, 0.2f, {147.34f, 101.61f, 313.12f}, {10922, 0, 0}, 4, 4, 147.44f, 314.4f, 0, 145.56f, 313.21f, 40960, 11458, 11457,
      RO10_ITEM_OBJECTS,
      {0, 50, 50, 0, 0, 50, 50, 50, 50, 50, 50, 50, 0, 50, 50, 0},
      {0, 4278, 4278, 0, 0, 4272, 4272, 4272, 4274, 4274, 4274, 4274, 0, 4277, 4277, 0},
      {0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0},
      {0, 40, 0, 0, 0, 0, 41, 0, 42, 0, 0, 0, 0, 0, 43, 0}},
-    {SHEN_NAME4('A', 'R', 'X', '2'), SHEN_NAME4('M', 'Y', 'H', '_'), 0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 56,
+    {SHEN_NAME4('A', 'R', 'X', '2'), SHEN_NAME4('M', 'Y', 'H', '_'),
+        0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 56,
      0.25f, 0.2f, {223.95f, 101.61f, 365.15f}, {10922, 49152, 0}, 4, 4, 222.75f, 365.5f, 49152, 223.4f, 363.78f, 14017, 11464, 11463,
      RO10_ITEM_OBJECTS,
      {0, 50, 50, 50, 50, 50, 50, 50, 0, 0, 50, 50, 0, 50, 50, 50},
      {0, 4270, 4270, 4270, 4278, 4278, 4278, 4278, 0, 0, 4269, 4269, 0, 4267, 4267, 4267},
      {0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 2, 2, 2},
      {0, 0, 1, 0, 0, 2, 0, 0, 0, 0, 0, 3, 0, 0, 4, 0}},
-    {SHEN_NAME4('A', 'R', 'X', 'X'), SHEN_NAME4('K', 'A', 'N', '_'), 2040, 2041, 2056, SHEN_NAME4('W', '0', '0', '2'), 59,
+    {SHEN_NAME4('A', 'R', 'X', 'X'), SHEN_NAME4('K', 'A', 'N', '_'),
+        2040, 2041, 2056, SHEN_NAME4('W', '0', '0', '2'), 59,
      0.25f, 0.2f, {227.44f, 100.72f, 408.4f}, {10922, 49152, 0}, 4, 4, 226.35f, 408.81f, 39139, 227.27f, 410.34f, 9830, 0, 0,
      RO10_ITEM_OBJECTS,
      {25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 0, 0, 0, 0, 0, 0},
      {-1, -2, -3, -3, -4, -4, -5, -5, -6, -6, 0, 0, 0, 0, 0, 0},
      {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0},
      {30, 0, 0, 30, 0, 30, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0}},
-    {SHEN_NAME4('A', 'R', 'S', 'F'), SHEN_NAME4('C', 'N', '0', '_'), 0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 59,
+    {SHEN_NAME4('A', 'R', 'S', 'F'), SHEN_NAME4('C', 'N', '0', '_'),
+        0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 59,
      0.25f, 0.2f, {290.16f, 109.26f, 329.75f}, {10740, 16384, 0}, 4, 4, 291.48f, 329.3f, 29072, 290.38f, 331.38f, 59346, 0, 0,
      RO10_ITEM_OBJECTS,
      {25, 25, 25, 25, 25, 25, 0, 0, 0, 50, 50, 50, 50, 50, 0, 50},
      {-1, -2, -5, -5, -6, -6, 0, 0, 0, 4276, 4276, 4276, 4273, 4273, 0, 4264},
      {3, 3, 3, 3, 3, 3, 0, 0, 0, 1, 1, 1, 1, 1, 0, 2},
      {20, 0, 0, 0, 0, 0, 0, 0, 0, 21, 0, 0, 22, 0, 0, 23}},
-    {SHEN_NAME4('A', 'K', 'X', '7'), SHEN_NAME4('G', 'N', 'B', '_'), 0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 56,
+    {SHEN_NAME4('A', 'K', 'X', '7'), SHEN_NAME4('G', 'N', 'B', '_'),
+        0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 56,
      0.25f, 0.2f, {226.22f, 101.4f, 260.95f}, {10922, 32768, 0}, 4, 4, 226.21f, 259.56f, 43745, 227.84f, 260.47f, 11104, 0, 0,
      RO10_ITEM_OBJECTS,
      {50, 50, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 0, 50, 50, 50},
      {4278, 4278, 0, 0, 0, 4272, 4272, 4272, 4274, 4274, 4274, 4274, 0, 4263, 4268, 4265},
      {1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 2, 2, 2},
      {0, 50, 0, 0, 0, 0, 51, 0, 52, 0, 0, 0, 0, 53, 54, 55}},
-    {SHEN_NAME4('Q', 'R', '0', '0'), SHEN_NAME4('M', 'F', 'M', '_'), 0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 56,
+    {SHEN_NAME4('Q', 'R', '0', '0'), SHEN_NAME4('M', 'F', 'M', '_'),
+        0, 0, 0, SHEN_NAME4('W', '0', '0', '1'), 56,
      0.25f, 0.2f, {153.25f, 101.4f, 202.98f}, {10922, 29127, 0}, 4, 4, 153.47f, 201.47f, 19642, 152.01f, 201.62f, 50535, 0, 0,
      RO10_ITEM_OBJECTS,
      {50, 50, 50, 50, 50, 50, 50, 50, 0, 50, 50, 0, 50, 50, 0, 50},
      {4280, 4280, 4280, 4280, 4271, 4271, 4271, 4271, 0, 4279, 4279, 0, 4275, 4275, 0, 4266},
      {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2},
      {0, 10, 0, 0, 0, 11, 0, 0, 0, 0, 12, 0, 13, 0, 0, 14}},
-    {0, 0, 0, 0, 0, 0, 0,
+    {0, 0,
+        0, 0, 0, 0, 0,
      0.25f, 0.2f, {0.0f, 0.0f, 0.0f}, {0, 0, 0}, 4, 4, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0, 0, 0,
      RO10_ITEM_OBJECTS,
      {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -54,7 +64,10 @@ static Ro10Shop ro10Shops[7] = {
 };
 static Vector3i ro10GripRotations[7] = {{0, 0, 0}, {0, 0, 16384}, {16384, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
 static Vector3 ro10GripScales[4] = {{1.5f, 1.5f, 1.5f}, {1.5f, 1.5f, 1.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}};
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static char ro10Conversation[] = "0110";
+#endif
 static int ro10Prizes1[24] = {
     4072, 4073, 4074, 4075, 4076, 4083, 4084, 4085, 4086, 4044, 4045, 4024, 4026, 4028, 4030, 4032, 4034, 4036, 4038, 4040, 4042, 4068, 4069, 4070};
 static int ro10Prizes2[23] = {
@@ -67,6 +80,69 @@ static int ro10Prizes5[24] = {
     4072, 4073, 4074, 4075, 4076, 4083, 4084, 4085, 4086, 4222, 4223, 4224, 4225, 4226, 4232, 4233, 4235, 4236, 4237, 4238, 4242, 4068, 4069, 4070};
 static int ro10Prizes6[21] = {
     4077, 4078, 4079, 4080, 4081, 4082, 4087, 4088, 4019, 4122, 4066, 4067, 4094, 4095, 4096, 4097, 4098, 4099, 4162, 4163, 4164};
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+static Ro10Shop ro10Shops[7] = {
+    {SHEN_NAME4('A', 'R', 'D', 'X'), SHEN_NAME4('S', 'Y', 'R', '_'),
+        0.25f, 0.200000003f, {147.339996f, 101.610001f, 313.119995f}, {10922, 0, 0},
+        4, 4, 147.440002f, 314.399994f, 0, 145.559998f, 313.209991f, 40960, 11458, 11457,
+        RO10_ITEM_OBJECTS,
+        {0, 50, 50, 0, 0, 50, 50, 50, 50, 50, 50, 50, 0, 50, 50, 0},
+        {0, 4278, 4278, 0, 0, 4272, 4272, 4272, 4274, 4274, 4274, 4274, 0, 4277, 4277, 0},
+        {0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0},
+        {0, 40, 0, 0, 0, 0, 41, 0, 42, 0, 0, 0, 0, 0, 43, 0}},
+    {SHEN_NAME4('A', 'R', 'X', '2'), SHEN_NAME4('M', 'Y', 'H', '_'),
+        0.25f, 0.200000003f, {223.949997f, 101.610001f, 365.149994f}, {10922, 49152, 0},
+        4, 4, 222.75f, 365.5f, 49152, 223.399994f, 363.779999f, 14017, 11464, 11463,
+        RO10_ITEM_OBJECTS,
+        {0, 50, 50, 50, 50, 50, 50, 50, 0, 0, 50, 50, 0, 50, 50, 50},
+        {0, 4270, 4270, 4270, 4278, 4278, 4278, 4278, 0, 0, 4269, 4269, 0, 4267, 4267, 4267},
+        {0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 2, 2, 2},
+        {0, 0, 1, 0, 0, 2, 0, 0, 0, 0, 0, 3, 0, 0, 4, 0}},
+    {SHEN_NAME4('A', 'R', 'X', 'X'), SHEN_NAME4('K', 'A', 'N', '_'),
+        0.25f, 0.200000003f, {227.440002f, 100.720001f, 408.399994f}, {10922, 49152, 0},
+        4, 4, 226.350006f, 408.809998f, 39139, 227.270004f, 410.339996f, 9830, 0, 0,
+        RO10_ITEM_OBJECTS,
+        {25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 0, 0, 0, 0, 0, 0},
+        {-1, -2, -3, -3, -4, -4, -5, -5, -6, -6, 0, 0, 0, 0, 0, 0},
+        {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0},
+        {30, 0, 0, 30, 0, 30, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0}},
+    {SHEN_NAME4('A', 'R', 'S', 'F'), SHEN_NAME4('C', 'N', '0', '_'),
+        0.25f, 0.200000003f, {0.0f, 0.0f, 0.0f}, {0, 0, 0},
+        4, 4, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0, 0, 0,
+        RO10_ITEM_OBJECTS,
+        {25, 25, 25, 25, 25, 25, 0, 0, 0, 50, 50, 50, 50, 50, 0, 50},
+        {-1, -2, -5, -5, -6, -6, 0, 0, 0, 4276, 4276, 4276, 4273, 4273, 0, 4264},
+        {3, 3, 3, 3, 3, 3, 0, 0, 0, 1, 1, 1, 1, 1, 0, 2},
+        {20, 0, 0, 0, 0, 0, 0, 0, 0, 21, 0, 0, 22, 0, 0, 23}},
+    {SHEN_NAME4('A', 'K', 'X', '7'), SHEN_NAME4('G', 'N', 'B', '_'),
+        0.25f, 0.200000003f, {0.0f, 0.0f, 0.0f}, {0, 0, 0},
+        4, 4, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0, 0, 0,
+        RO10_ITEM_OBJECTS,
+        {50, 50, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 0, 50, 50, 50},
+        {4278, 4278, 0, 0, 0, 4272, 4272, 4272, 4274, 4274, 4274, 4274, 0, 4263, 4268, 4265},
+        {1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 2, 2, 2},
+        {0, 50, 0, 0, 0, 0, 51, 0, 52, 0, 0, 0, 0, 53, 54, 55}},
+    {SHEN_NAME4('Q', 'R', '0', '0'), SHEN_NAME4('M', 'F', 'M', '_'),
+        0.25f, 0.200000003f, {0.0f, 0.0f, 0.0f}, {0, 0, 0},
+        4, 4, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0, 0, 0,
+        RO10_ITEM_OBJECTS,
+        {50, 50, 50, 50, 50, 50, 50, 50, 0, 50, 50, 0, 50, 50, 0, 50},
+        {4280, 4280, 4280, 4280, 4271, 4271, 4271, 4271, 0, 4279, 4279, 0, 4275, 4275, 0, 4266},
+        {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 2},
+        {0, 10, 0, 0, 0, 11, 0, 0, 0, 0, 12, 0, 13, 0, 0, 14}},
+    {0, 0,
+        0.25f, 0.200000003f, {0.0f, 0.0f, 0.0f}, {0, 0, 0},
+        4, 4, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0, 0, 0,
+        RO10_ITEM_OBJECTS,
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+};
+static Vector3i ro10GripRotations[7] = {{0, 0, 0}, {0, 0, 16384}, {16384, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
+static Vector3 ro10GripScales[4] = {{1.5f, 1.5f, 1.5f}, {1.5f, 1.5f, 1.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}};
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static Vector3i ro10SmallRotation = {57891, 61714, 364};
 static int ro10SmallReach[19][3] = {
     {0, 1090, 64262}, {0, 1456, 4732}, {0, 61714, 3276}, {0, 909, 60440}, {0, 0, 62442}, {0, 0, 64990}, {0, 546, 3458}, {0, 0, 53160}, {0, 0, 49702},
@@ -97,7 +173,61 @@ static int ro10PacketGrip[19][3] = {
     {0, 0, 62078}, {0, 0, 182}, {0, 546, 3458}, {0, 0, 61896}, {0, 0, 60076}, {0, 0, 183}, {0, 546, 4549}, {0, 727, 61350}, {0, 727, 61350},
     {0, 64444, 910}, {0, 546, 3640}};
 static Vector3 ro10PacketOffset = {0.0f, 0.0f, 0.0f};
+#endif
 
+#endif
+
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#if defined(SHENMUE_EVENT_ENTRY)
+void RunRo10(const shen_name *argument)
+{
+    HLibTask *task = 0;
+    Ro10Work *work;
+    const Ro10Shop *shop;
+    int index;
+    char *package;
+    while (argument) {
+        shop = FindRo10Shop(*argument);
+        if (!shop)
+            break;
+        task = FTBL.HLib_EnqueueTaskWithParameter(WaitShopReady, 4, 11, sizeof(Ro10Work), TASK_EVNT);
+        if (!task)
+            break;
+        work = (Ro10Work *)FTBL.HLib_GetTaskParameter(task);
+        if (!work)
+            break;
+        package = (char *)work;
+        for (index = 0; index < (int)sizeof(Ro10Work); index++)
+            package[index] = 0;
+        work->parent = FTBL.HLib_GetCurrentTask();
+        work->self = task;
+        work->package[0] = 'R';
+        work->package[1] = 'O';
+        work->package[2] = '1';
+        work->package[3] = '0';
+        work->package[4] = ((char *)argument)[0];
+        work->package[5] = ((char *)argument)[1];
+        work->package[6] = ((char *)argument)[2];
+        work->package[7] = ((char *)argument)[3];
+        work->package[8] = 0;
+        work->shop = *argument;
+        work->flags = 0;
+        work->definition = shop;
+        work->owner = shop->owner;
+        EventDebugRegister(RO10_DEBUG_ID, Ro10DebugQuit, work, 0x7fffffff);
+        if (FTBL.GetNpcNewLoadState())
+            work->flags |= 0x10000;
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+        work->flags |= 1;
+        task = 0;
+        break;
+    }
+    if (task)
+        FTBL.HLib_DestroyTask(task);
+}
+#endif
+#else
 void RunRo10(const shen_name *argument)
 {
     HLibTask *task = 0;
@@ -162,7 +292,12 @@ void RunRo10(const shen_name *argument)
     if (task)
         FTBL.HLib_DestroyTask(task);
 }
+#endif
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM || !defined(SHENMUE_EVENT_ENTRY)
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define SHENMUE_AREA_LOOP_VOICE_REVISION 1
+#endif
 #include "s2/areas/area_loop_dc.c"
 
 void Ro10DebugQuit(void *data)
@@ -172,6 +307,65 @@ void Ro10DebugQuit(void *data)
     FTBL.HLib_SetupTimedTask(work->self, 1);
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void Ro10Quit(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    HLibTask *parent;
+    shen_name names[2];
+    int index;
+    while (!FTBL.filmCheckFadeTrackColour()) {
+        if (work) {
+            if (!(work->flags & 1)) {
+                FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+                work->flags |= 1;
+                break;
+            }
+            parent = work->parent;
+            for (index = 0; index < 16; index++) {
+                if (work->boards[index])
+                    FTBL.SetScenarioCharacterKillMode(work->boards[index], 1);
+                if (work->hundreds[index])
+                    FTBL.SetScenarioCharacterKillMode(work->hundreds[index], 1);
+                if (work->tens[index])
+                    FTBL.SetScenarioCharacterKillMode(work->tens[index], 1);
+                if (work->ones[index])
+                    FTBL.SetScenarioCharacterKillMode(work->ones[index], 1);
+            }
+            if (work->flags & 4) {
+                FTBL.EV_EnableCharacterDisplay(RO10_RYO);
+                FTBL.EV_EnableCharacterDisplay(work->owner);
+            }
+            SetAreaLoopCharacterControl(work->owner, 0);
+            names[0] = work->owner;
+            names[1] = 0;
+            RestoreAreaLoopCharacters(names, names);
+            FTBL.EV_NPC_NewLoadSw_0((work->flags >> 16) & 1);
+            if ((work->flags & 2) && work->audio[0]) {
+                FTBL.EV_FreeAuthorPak(0, work->audio);
+                work->flags &= ~2;
+            }
+            if (work->package[0] && FTBL.EV_ControlPackageResources(0, 5, work->package, 0, 0)) {
+                FTBL.EV_ControlPackageResources(0, 6, work->package, 0, 0);
+                work->package[0] = 0;
+            }
+        } else
+            parent = 0;
+        FTBL.camCtrlSetState(0);
+        FTBL.camCtrlSetFovTransitionTo(1);
+        SetAreaLoopCharacterControl(RO10_RYO, 0);
+        EventDebugUnregister(RO10_DEBUG_ID);
+        FTBL.HLib_MarkCurrentTaskForCleanup();
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        if (parent)
+            FTBL.HLib_ResolveDeferredCallback(work->parent);
+        FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.SetPlayerControlEnabled(1);
+        break;
+    }
+}
+#else
 void Ro10Quit(void *data)
 {
     Ro10Work *work = (Ro10Work *)data;
@@ -260,7 +454,9 @@ void Ro10Quit(void *data)
         break;
     }
 }
+#endif
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void ExitAfterFade(void *data)
 {
     Ro10ExitWork *work = (Ro10ExitWork *)data;
@@ -271,7 +467,22 @@ void ExitAfterFade(void *data)
         FTBL.SetPlayerControlEnabled(1);
     }
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WaitShopReady(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    while (work && !FTBL.filmCheckFadeTrackColour()) {
+        FTBL.HLib_SetCurrentTaskTo(WaitShopPackage);
+        FTBL.HLib_SetupTaskDelay(-1);
+        FTBL.EV_NPC_NewLoadSw_0(0);
+        FTBL.EV_ResetFreeTalkFlags();
+        QueueAreaLoopPackage(FTBL.Filepath_Gen(0), work->package, ResolveAreaLoopParent);
+        break;
+    }
+}
+#else
 void WaitShopReady(void *data)
 {
     Ro10Work *work = (Ro10Work *)data;
@@ -292,7 +503,35 @@ void WaitShopReady(void *data)
         break;
     }
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WaitShopPackage(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    Vector3 position;
+    Vector3i rotation;
+    shen_name names[2];
+    do {
+        if (!work)
+            break;
+        FTBL.HLib_SetCurrentTaskTo(WaitShopOwner);
+        FTBL.HLib_SetupTaskDelay(-1);
+        FTBL.EV_ControlPackageResources(2, 2, work->package, 0, 0);
+        FTBL.EV_ControlPackageResources(2, 4, work->package, 0, 0);
+        CreateRo10PriceBoards(work->definition, work->boards, work->hundreds, work->tens, work->ones);
+        GetRo10ItemTransform(work->definition, 0, 0, &position, 0, 0, 0);
+        FTBL.EV_AT_SetPos(RO10_BASE, 0x78000000, &position);
+        rotation.x = 0;
+        rotation.y = 0;
+        rotation.z = 0;
+        FTBL.EV_AT_SetAngY_0(RO10_BASE, 0x78000000, &rotation, 0);
+        names[0] = work->owner;
+        names[1] = 0;
+        QueueAreaLoopNpcs(names, ResolveAreaLoopParent);
+    } while (0);
+}
+#else
 void WaitShopPackage(void *data)
 {
     Ro10Work *work = (Ro10Work *)data;
@@ -320,7 +559,125 @@ void WaitShopPackage(void *data)
         QueueAreaLoopNpcs(names, ResolveAreaLoopParent);
     } while (0);
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WaitShopOwner(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    Vector3 position;
+    Vector3i rotation;
+    do {
+    if (!work)
+        break;
+    EventDebugGetState(RO10_DEBUG_ID, 1);
+    EventDebugCheck(RO10_DEBUG_ID, 4);
+    FTBL.HLib_SetCurrentTaskTo(ShopResumeItems);
+    FTBL.HLib_SetupTaskDelay(-1);
+    SetAreaLoopCharacterControl(RO10_RYO, 1);
+    SetAreaLoopCharacterControl(work->owner, 1);
+    QueueAreaLoopMotion(RO10_RYO, 11462, 0, -1, -1.0f, -1.0f, 1.0f, 8.0f, 0, 18);
+    QueueAreaLoopMotion(work->owner, work->definition->ownerMotion, 0, -1, -1.0f, -1.0f, 1.0f, 8.0f, 0, 18);
+    rotation.x = 0;
+    rotation.z = 0;
+    FTBL.GetCharaPosition(RO10_RYO, -1, &position, 0x40000000);
+    position.x = work->definition->playerX;
+    position.z = work->definition->playerZ;
+    rotation.y = work->definition->playerYaw;
+    QueueAreaLoopPosition(RO10_RYO, 0, 0, &position, &rotation, 0);
+    position.x = work->definition->ownerX;
+    position.z = work->definition->ownerZ;
+    rotation.y = work->definition->ownerYaw;
+    QueueAreaLoopPosition(work->owner, 0, 0, &position, &rotation, 0);
+    switch (work->shop) {
+    case RO10_ARDX:
+        work->column = 1;
+        work->row = 0;
+        switch (FTBL.shenGetRandomInt32(3)) {
+        case 0:
+            QueueAreaLoopVoice("さあ、さあ、見てってよ！", 0, 1, 100, 0);
+            break;
+        case 1:
+            QueueAreaLoopVoice("さあ、さあ、見てっとくれ。", 0, 1, 100, 0);
+            break;
+        case 2:
+            QueueAreaLoopVoice("さあ、さあ、手にとって見てよ。", 0, 1, 100, 0);
+            break;
+        }
+        switch (FTBL.shenGetRandomInt32(3)) {
+        case 0:
+            QueueAreaLoopVoice("お兄さん、いい男だから＆安くしとくよ！", 0, 110, 100, ResolveAreaLoopParent);
+            break;
+        case 1:
+            QueueAreaLoopVoice("お客さん、男前だから＆まけちゃうよ！", 0, 110, 100, ResolveAreaLoopParent);
+            break;
+        case 2:
+            QueueAreaLoopVoice("香港みやげに、なんかどう？", 0, 110, 100, ResolveAreaLoopParent);
+            break;
+        }
+        QueueAreaLoopCamera(work->package, 1500, RO10_BASE, 1, 0);
+        break;
+    case RO10_ARX2:
+        work->column = 1;
+        work->row = 0;
+        QueueAreaLoopVoice("コレどうだい、１個ずつ＆ネエちゃんカアちゃんバアちゃんに。", 0, 1, 100, ResolveAreaLoopParent);
+        QueueAreaLoopCamera(work->package, 1500, RO10_BASE, 1, 0);
+        break;
+    case RO10_ARXX:
+        work->column = 0;
+        work->row = 0;
+        switch (FTBL.shenGetRandomInt32(3)) {
+        case 0:
+            QueueAreaLoopVoice("さあ、見てって！", 0, 1, 100, ResolveAreaLoopParent);
+            break;
+        case 1:
+            QueueAreaLoopVoice("さあ、見てった、見てった。", 0, 1, 100, ResolveAreaLoopParent);
+            break;
+        case 2:
+            QueueAreaLoopVoice("さあ、手にとって見てよ。", 0, 1, 100, ResolveAreaLoopParent);
+            break;
+        }
+        QueueAreaLoopCamera(work->package, 1500, RO10_BASE, 1, 0);
+        break;
+    case RO10_ARSF:
+        work->column = 0;
+        work->row = 0;
+        QueueAreaLoopVoice("はい、いらっしゃい。", 0, 1, 100, 0);
+        QueueAreaLoopVoice("うちはジッポーがおすすめだよ。", 0, 110, 100, ResolveAreaLoopParent);
+        QueueAreaLoopCamera(work->package, 1500, RO10_BASE, 1, 0);
+        break;
+    case RO10_AKX7:
+        work->column = 0;
+        work->row = 0;
+        switch (FTBL.shenGetRandomInt32(3)) {
+        case 0:
+            QueueAreaLoopVoice("さあ、どれにする？", 0, 1, 100, 0);
+            break;
+        case 1:
+            QueueAreaLoopVoice("さあ、選んでくれよ！", 0, 1, 100, 0);
+            break;
+        case 2:
+            QueueAreaLoopVoice("さあさあ、買っていこう！", 0, 1, 100, 0);
+            break;
+        }
+        QueueAreaLoopVoice("安すぎてビックリだぜ！", 0, 110, 100, ResolveAreaLoopParent);
+        break;
+    case RO10_QR00:
+        work->column = 0;
+        work->row = 0;
+        QueueAreaLoopVoice("さあ、見てってよ。", 0, 1, 100, 0);
+        QueueAreaLoopVoice("うちのジッポーは他にはないよ。", 0, 110, 100, ResolveAreaLoopParent);
+        QueueAreaLoopCamera(work->package, 1500, RO10_BASE, 1, 0);
+        break;
+    default:
+        FTBL.HLib_SetupTaskDelay(1);
+        break;
+    }
+    FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+    work->flags &= ~1;
+    } while (0);
+}
+#else
 void WaitShopOwner(void *data)
 {
     Ro10Work *work = (Ro10Work *)data;
@@ -455,6 +812,7 @@ void WaitShopOwner(void *data)
     work->flags &= ~1;
     } while (0);
 }
+#endif
 
 void Ro10EnterItems(void *data)
 {
@@ -482,6 +840,502 @@ void Ro10EnterItems(void *data)
     }
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void ShopMain(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    unsigned int input;
+    int moved, price, dialogue;
+    float distance;
+    for (;;) {
+        if (!work)
+            break;
+        if (++work->frames > 10800) {
+            FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+            break;
+        }
+        input = FTBL.GetCurrentControlInput(2);
+        moved = 1;
+        if ((unsigned short)(input & 0x8000)) {
+            if (++work->column >= 4) {
+                work->column = 0;
+                work->cameraFrames = 16;
+            } else
+                work->cameraFrames = 8;
+        } else if (input & 0x4000) {
+            if (--work->column < 0) {
+                work->column = 3;
+                work->cameraFrames = 16;
+            } else
+                work->cameraFrames = 8;
+        } else if (input & 0x1000) {
+            if (--work->row < 0) {
+                work->row = 3;
+                work->cameraFrames = 16;
+            } else
+                work->cameraFrames = 8;
+        } else if (input & 0x2000) {
+            if (++work->row >= 4) {
+                work->row = 0;
+                work->cameraFrames = 16;
+            } else
+                work->cameraFrames = 8;
+        } else
+            moved = 0;
+        distance = (float)(int)(FTBL.GetCurrentControlInput(3) - FTBL.GetCurrentControlInput(4));
+        RO10_FLUSH(distance);
+        distance *= 0.00390625f;
+        RO10_FLUSH(distance);
+        distance *= 0.2f;
+        RO10_FLUSH(distance);
+        distance += 0.5f;
+        RO10_FLUSH(distance);
+        distance *= 0.2f;
+        RO10_FLUSH(distance);
+        work->cameraDistance *= 0.8f;
+        RO10_FLUSH(work->cameraDistance);
+        work->cameraDistance = distance + work->cameraDistance;
+        RO10_FLUSH(work->cameraDistance);
+        UpdateRo10ItemCamera(work->definition, work->column, work->row, work->cameraDistance, work->cameraFrames);
+        if (--work->cameraFrames < 0)
+            work->cameraFrames = 0;
+        price = work->definition->prices[work->column + work->row * work->definition->columns];
+        dialogue = work->definition->dialogues[work->column + work->row * work->definition->columns];
+        if (work->purchased[work->column + work->row * work->definition->columns] & 1) {
+            price = -1;
+            dialogue = 0;
+        }
+        {
+            FTBL.GetBattleDataConfig(0, RO10_CANCEL);
+            if (price > 0)
+                FTBL.GetBattleDataConfig(0, RO10_SELECT);
+            if (dialogue > 0) {
+                if (moved)
+                    FTBL.Loop3DSoundEffect(0xe00ab);
+                FTBL.GetBattleDataConfig(0, RO10_DESCRIBE);
+            }
+        }
+        if (moved)
+            break;
+        if (FTBL.GetBattleDataConfig(1, RO10_CANCEL) && FTBL.GetBattleDataConfig(2, RO10_CANCEL)) {
+            FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+            break;
+        }
+        if (FTBL.GetBattleDataConfig(1, RO10_SELECT) && FTBL.GetBattleDataConfig(2, RO10_SELECT)) {
+            FTBL.HLib_SetCurrentTaskTo(ShopSelect);
+            break;
+        }
+        if (FTBL.GetBattleDataConfig(1, RO10_DESCRIBE) && FTBL.GetBattleDataConfig(2, RO10_DESCRIBE) &&
+            work->definition->dialogues[work->column + work->row * work->definition->columns] > 0) {
+            FTBL.HLib_SetupTaskDelay(-1);
+            QueueAreaLoopVoice("●青これは・・・？", 0, 1, 100, 0);
+            switch (work->definition->dialogues[work->column + work->row * work->definition->columns]) {
+            case 1:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("吸血鬼もビックリ！＆十字ジッポーだ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("どうだい？＆見せびらかしたくなる迫力だろ？", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("これ出しゃネコも逃げ出すぜ！", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 2:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("このバラ模様、＆女をまどわす男のライターだ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("バラのライターだ。＆飲み屋のネエちゃんたちに人気だぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("バラの炎は情熱的だぜ。＆熱さ一番のライターだ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 3:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("この迫力！＆もう恐いモンなしだぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("この迫力！＆食いつかれても知らねえぞ！", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("やっぱジッポーは＆強そうじゃなくちゃな。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 4:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("この石、珍しいんだぜ。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("男ならビッと買ってけ！", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("この色でこの大きさ！", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("迷ってたらソンするぜ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("立身出世のお守りになる！", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("…って聞いたけど自信ないな。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 10:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("こいつは禁煙ってデザインの＆ライターだ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("このデザインで、この値段。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("これを買わない手はないぜ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("うちでしか手に入らない＆貴重な一品だぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 11:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("こいつはウイングってデザインの＆ジッポーだ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("どうだい、このデザイン。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("ビビッと来ないか？", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("他にはない超限定品だ。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("今、買わないと後悔するぜ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 12:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("こいつはハートってデザインの＆ライターだ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("見てよ、このデザイン。＆ハートの中が燃えているだろ。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("まさにアンタのような若者のための＆デザインだぜ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("マニア感涙の掘り出し物だ。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("こんな値段じゃ、普通買えないぜ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 13:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("こいつはキングってデザインの＆ジッポーだ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("在庫限りだ。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("グズグズしてると売り切れちまうぜ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("こいつは持っているだけで＆幸せになれるって評判だ。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("ウソかホントかは知らねえが＆試してみる価値はあると思うぜ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 14:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("こいつは須弥山の頂でしか＆手に入らないっていう一品だ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("どうだい、この紫色の輝き。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("他の店では手に入らない＆極上の一品だ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("他にも種類があるってウワサだ。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("セットで持ってると＆いいことあるかもな。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 20:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("３個入りのガチャガチャ箱です。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("何が入っているかは、＆開けてみてのお楽しみ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("ガチャガチャのセット完成への＆近道と皆様に喜ばれています。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 21:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("これはドラゴンってデザインの＆ジッポーです。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("売り切れ続出の一品ですよ。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("縁起のいい龍はコレクターの間で＆絶大の人気がありますから…", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("これはうち以外、香港のどこに＆行っても買えませんよ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 22:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("これはムーキャスってデザインの＆ジッポー…らしいです。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("このマークの服を着た男から＆買い取ったんですが、", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("これって、どの本にも＆載っていないんですよ。", 0, 220, 100, 0);
+                    QueueAreaLoopVoice("一部では有名らしいんですがね。", 0, 330, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("幸せを運ぶってウワサですが…", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 23:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("これは天から降ってきたと＆いわれる謎の宝石です。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("この精練された色を見てみてよ。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("お土産に、どうです？", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("他にも種類があるって話です。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("揃えたらいい事あるかも＆しれませんよ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 30:
+                switch (FTBL.shenGetRandomInt32(5)) {
+                case 0:
+                    QueueAreaLoopVoice("中身はガチャガチャの景品だよ。", 0, 110, 100, 0);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("どの箱にも、ガチャガチャの景品が＆３個入ってるよ。", 0, 110, 100, 0);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("よくぞ、聞いてくれました。＆箱の中身はガチャガチャの景品だよ。", 0, 110, 100, 0);
+                    break;
+                case 3:
+                    QueueAreaLoopVoice("これはガチャ箱って言って、＆ガチャガチャが３個入ってるんだ。", 0, 110, 100, 0);
+                    break;
+                case 4:
+                    QueueAreaLoopVoice("香港名物、ガチャ箱さ。名前の通り、＆ガチャガチャの景品が入ってるよ。", 0, 110, 100, 0);
+                    break;
+                }
+                switch (FTBL.shenGetRandomInt32(5)) {
+                case 0:
+                    QueueAreaLoopVoice("何が出るかは、＆買ってからのお楽しみさ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("泣くか笑うかは、＆開けてからのお楽しみってワケさ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("開けてビックリ玉手箱。＆何が出るかは運次第ってワケさ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 3:
+                    QueueAreaLoopVoice("吉と出るか、凶と出るか、", 0, 220, 100, 0);
+                    QueueAreaLoopVoice("買ってみなきゃ、＆わかんないって寸法さ。", 0, 330, 100, ResolveAreaLoopParent);
+                    break;
+                case 4:
+                    QueueAreaLoopVoice("ただし、何が出るかは＆買ってみてのお楽しみさ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 40:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("さすが、センスいいねえ！", 0, 110, 100, 0);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("オッ、お兄さん目が高いねえ！", 0, 110, 100, 0);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("いい男は選ぶ物がちがうねえ！", 0, 110, 100, 0);
+                    break;
+                }
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("ごらんの通り、デザインに＆バラをあしらった人気の一品さ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("そりゃ、香港限定の＆プレミアムモデルさ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("絵柄のバラみたいに＆情熱的なライターだよ〜。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 41:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("さすが、センスいいねえ！", 0, 110, 100, 0);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("オッ、お兄さん目が高いねえ！", 0, 110, 100, 0);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("いい男は選ぶ物がちがうねえ！", 0, 110, 100, 0);
+                    break;
+                }
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("そのオオカミ…いや、ウサギかな？＆まあ、とにかくデザインがいいよね。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("今年の売れスジだよ〜。＆そのジッポー。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("それ、デザインがシブイよね。＆Ｔ字に獣をあしらっててさ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 42:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("さすが、センスいいねえ！", 0, 110, 100, 0);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("オッ、お兄さん目が高いねえ！", 0, 110, 100, 0);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("いい男は選ぶ物がちがうねえ！", 0, 110, 100, 0);
+                    break;
+                }
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("サソリって言えば、＆ジッポーの定番だからさ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("よ〜く売れてるよ〜。＆そのサソリのジッポー。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("そのサソリのジッポーは＆入っても、す〜ぐ売れちまうんだ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 43:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("さすが、センスいいねえ！", 0, 110, 100, 0);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("オッ、お兄さん目が高いねえ！", 0, 110, 100, 0);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("いい男は選ぶ物がちがうねえ！", 0, 110, 100, 0);
+                    break;
+                }
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("ごらんの通り、デザインに＆舵をあしらった人気の一品さ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("そりゃ、香港限定の＆プレミアムモデルさ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("絵柄の舵がいいよね。＆こう、シンプルでさあ〜。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 50:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("男のライターはバラ模様って＆昔っから決まってるんだよ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("金と女とツキを呼ぶ＆幸運のライターだ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("そりゃもう一生モンのライターだよ。＆２度と買い替えの必要なし！", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 51:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("ジッポーといえば獣って＆オレのジイちゃんも言ってたぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("火の獣神をかたどってるらしいぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("このＴ字のマークがいいんだよ。＆ジッポーの紋章だってウワサだぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 52:
+                QueueAreaLoopVoice("サソリのジッポー…", 0, 110, 100, 0);
+                switch (FTBL.shenGetRandomInt32(2)) {
+                case 0:
+                    QueueAreaLoopVoice("さては兄ちゃん、＆サソリ座の男か？", 0, 220, 100, 0);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("さては兄ちゃんの彼女、＆サソリ座の女か？", 0, 220, 100, 0);
+                    break;
+                }
+                QueueAreaLoopVoice("●青あんたには関係ない。", 0, 330, 100, 0);
+                QueueAreaLoopVoice("そりゃ悪かった…", 0, 440, 100, ResolveAreaLoopParent);
+                break;
+            case 53:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("こういう色の石は珍しいんだぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("この色でこの大きさ、＆なかなかないんだぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("財運のお守りにもなる＆実用的な宝石だぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 54:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("これだけ澄んだ石は珍しいんだぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("この透明感でこの大きさ、＆なかなかないんだぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("良縁のお守りにもなる＆うれしい宝石だぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            case 55:
+                switch (FTBL.shenGetRandomInt32(3)) {
+                case 0:
+                    QueueAreaLoopVoice("こういう色の石は珍しいんだぜ。」", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 1:
+                    QueueAreaLoopVoice("この色でこの大きさ、＆なかなかないんだぜ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case 2:
+                    QueueAreaLoopVoice("美のお守りにもなる宝石だけど＆兄ちゃんにはいらないか…", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                break;
+            default:
+                FTBL.HLib_SetupTaskDelay(-1);
+                break;
+            }
+        }
+        break;
+    }
+}
+#else
 void ShopMain(void *data)
 {
     Ro10Work *work = (Ro10Work *)data;
@@ -1027,7 +1881,79 @@ void ShopMain(void *data)
         break;
     }
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void ShopSelect(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    if (work) {
+        FTBL.HLib_SetCurrentTaskTo(ShopSelectionIcon);
+        FTBL.HLib_SetupTaskDelay(-1);
+        switch (work->shop) {
+        case RO10_ARDX:
+            switch (FTBL.shenGetRandomInt32(3)) {
+            case 0:
+                QueueAreaLoopVoice("それにするかい？", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            case 1:
+                QueueAreaLoopVoice("それ、買ってくかい？", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            case 2:
+                QueueAreaLoopVoice("それに決めるかい？", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            }
+            break;
+        case RO10_ARX2:
+            switch (FTBL.shenGetRandomInt32(3)) {
+            case 0:
+                QueueAreaLoopVoice("やっぱソレが一番だろ？", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            case 1:
+                QueueAreaLoopVoice("オッ…＆見る目あるね。", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            case 2:
+                QueueAreaLoopVoice("それ今、はやってんだよ。", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            }
+            break;
+        case RO10_ARXX:
+            switch (FTBL.shenGetRandomInt32(3)) {
+            case 0:
+                QueueAreaLoopVoice("それにするかい？", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            case 1:
+                QueueAreaLoopVoice("それ、買ってくかい？", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            case 2:
+                QueueAreaLoopVoice("それに決めるかい？", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            }
+            break;
+        case RO10_ARSF:
+            QueueAreaLoopVoice("それにしますか？", 0, 1, 100, ResolveAreaLoopParent);
+            break;
+        case RO10_AKX7:
+            switch (FTBL.shenGetRandomInt32(3)) {
+            case 0:
+                QueueAreaLoopVoice("兄ちゃんならソレ選ぶと思ったぜ。", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            case 1:
+                QueueAreaLoopVoice("オッ…＆やっぱりソレかい？", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            case 2:
+                QueueAreaLoopVoice("さすがだねえ兄ちゃん。＆一番いいヤツ選んだね。", 0, 1, 100, ResolveAreaLoopParent);
+                break;
+            }
+            break;
+        case RO10_QR00:
+            QueueAreaLoopVoice("おっ、それにするのかい？", 0, 1, 100, ResolveAreaLoopParent);
+            break;
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+}
+#else
 void ShopSelect(void *data)
 {
     Ro10Work *work = (Ro10Work *)data;
@@ -1099,6 +2025,7 @@ void ShopSelect(void *data)
     } else
         FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
 }
+#endif
 
 void ShopSelectionIcon(void *data)
 {
@@ -1106,7 +2033,11 @@ void ShopSelectionIcon(void *data)
     if (data) {
         choices[0] = -1;
         choices[1] = 80;
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+        choices[2] = 81;
+#else
         choices[2] = 154;
+#endif
         choices[3] = -1;
         FTBL.SetupControlSpeakAndUI(choices, 10800, -1, 2);
         FTBL.HLib_SetCurrentTaskTo(ShopChoice);
@@ -1114,6 +2045,77 @@ void ShopSelectionIcon(void *data)
         FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void ShopChoice(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    if (work) {
+        if (!FTBL.GetShouldRenderIcons(2)) {
+            if (FTBL.shenGetCtrlSpeakIconFlag() == 80) {
+                if (FTBL.GetPlayerStat(2) >= work->definition->prices[work->column + work->row * work->definition->columns]) {
+                work->purchased[work->column + work->row * work->definition->columns] |= 1;
+                FTBL.HLib_SetCurrentTaskTo(ShopAward);
+                FTBL.HLib_SetupTaskDelay(-1);
+                QueueAreaLoopVoice("●青ああ・・・", 0, 1, 100, ResolveAreaLoopParent);
+                FTBL.AddThisToCashOrSegaCoins(-work->definition->prices[work->column + work->row * work->definition->columns], 2);
+            } else {
+                FTBL.HLib_SetCurrentTaskTo(ShopMain);
+                FTBL.HLib_SetupTaskDelay(-1);
+                switch (work->shop) {
+                case RO10_ARDX:
+                    QueueAreaLoopVoice("いや、金が足りないな…", 0, 1, 100, 0);
+                    QueueAreaLoopVoice("そうかい…", 0, 110, 100, 0);
+                    switch (FTBL.shenGetRandomInt32(3)) {
+                    case 0:
+                        QueueAreaLoopVoice("じゃあ、しかたないねえ。", 0, 220, 100, ResolveAreaLoopParent);
+                        break;
+                    case 1:
+                        QueueAreaLoopVoice("まあ、お金ができたら、＆また来ておくれ。", 0, 220, 100, ResolveAreaLoopParent);
+                        break;
+                    case 2:
+                        QueueAreaLoopVoice("そりゃ、残念だねえ。", 0, 220, 100, ResolveAreaLoopParent);
+                        break;
+                    }
+                    break;
+                case RO10_ARX2:
+                    QueueAreaLoopVoice("●青金が足りないな…", 0, 1, 100, 0);
+                    QueueAreaLoopVoice("●青また今度。", 0, 110, 100, 0);
+                    QueueAreaLoopVoice("言うと思ったぜ。", 0, 220, 100, ResolveAreaLoopParent);
+                    break;
+                case RO10_ARXX:
+                    QueueAreaLoopVoice("●青いや、金が足りないな…", 0, 1, 100, 0);
+                    QueueAreaLoopVoice("な〜んだ…", 0, 110, 100, 0);
+                    switch (FTBL.shenGetRandomInt32(3)) {
+                    case 0:
+                        QueueAreaLoopVoice("じゃあ、しょうがないね。", 0, 220, 100, ResolveAreaLoopParent);
+                    case 1:
+                        QueueAreaLoopVoice("まあ、お金ができたら、＆また来てよ。", 0, 220, 100, ResolveAreaLoopParent);
+                    case 2:
+                        QueueAreaLoopVoice("そりゃ、残念だね。", 0, 220, 100, ResolveAreaLoopParent);
+                        break;
+                    }
+                    break;
+                case RO10_ARSF:
+                    QueueAreaLoopVoice("●青いや、金が足りないな…", 0, 1, 100, 0);
+                    QueueAreaLoopVoice("…そうですか。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case RO10_AKX7:
+                    QueueAreaLoopVoice("●青金が足りないな…", 0, 1, 100, 0);
+                    QueueAreaLoopVoice("そうかい。＆じゃあまた今度たのむよ！", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                case RO10_QR00:
+                    QueueAreaLoopVoice("●青いや、金が足りないな…", 0, 1, 100, 0);
+                    QueueAreaLoopVoice("なんだ、がっかりさせるなよ。", 0, 110, 100, ResolveAreaLoopParent);
+                    break;
+                }
+                }
+            } else
+                FTBL.HLib_SetCurrentTaskTo(ShopDeclined);
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+}
+#else
 void ShopChoice(void *data)
 {
     Ro10Work *work = (Ro10Work *)data;
@@ -1202,7 +2204,19 @@ void ShopChoice(void *data)
     } else
         FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void ShopDeclined(void *data)
+{
+    if (data) {
+        FTBL.HLib_SetCurrentTaskTo(ShopMain);
+        FTBL.HLib_SetupTaskDelay(-1);
+        QueueAreaLoopVoice("●青いや、やめとくよ。", 0, 1, 100, ResolveAreaLoopParent);
+    } else
+        FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+}
+#else
 void ShopDeclined(void *data)
 {
     if (data) {
@@ -1212,7 +2226,34 @@ void ShopDeclined(void *data)
     } else
         FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void ShopAward(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    Vector3 position;
+    Vector3i rotation;
+    if (work) {
+        FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+        work->flags |= 1;
+        FTBL.HLib_SetCurrentTaskTo(ShopHand);
+        work->cameraFrames = 38;
+        FTBL.AT_SetLocalBaseChara(RO10_HAND, work->definition->objects[work->column + work->row * work->definition->columns]);
+        SetAreaLoopCharacterControl(RO10_HAND, 1);
+        position.x = 0.6f;
+        position.y = -0.2f;
+        position.z = 0.5f;
+        FTBL.EV_AT_SetPos(RO10_HAND, 0x38000000, &position);
+        rotation.x = 0xa888;
+        rotation.y = 0x751e;
+        rotation.z = 0xb28f;
+        FTBL.EV_AT_SetAngY_0(RO10_HAND, 0x38000000, &rotation, 0);
+        FTBL.EV_EnableCharacterDisplay(RO10_HAND);
+    } else
+        FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+}
+#else
 void ShopAward(void *data)
 {
     Ro10Work *work = (Ro10Work *)data;
@@ -1323,7 +2364,60 @@ void ShopAward(void *data)
         break;
     }
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void ShopHand(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    Vector3 position, target;
+    float blend, delta;
+    if (work) {
+        work->cameraFrames--;
+        target.x = 0.375f;
+        target.y = -0.171f;
+        target.z = 0.528f;
+        FTBL.GetCharaPosition(RO10_HAND, -1, &position, 0);
+        blend = (float)work->cameraFrames * 0.03125f;
+        RO10_FLUSH(blend);
+        delta = position.x - target.x;
+        RO10_FLUSH(delta);
+        delta *= blend;
+        RO10_FLUSH(delta);
+        position.x = target.x + delta;
+        RO10_FLUSH(position.x);
+        delta = position.y - target.y;
+        RO10_FLUSH(delta);
+        delta *= blend;
+        RO10_FLUSH(delta);
+        position.y = target.y + delta;
+        RO10_FLUSH(position.y);
+        delta = position.z - target.z;
+        RO10_FLUSH(delta);
+        delta *= blend;
+        RO10_FLUSH(delta);
+        position.z = target.z + delta;
+        RO10_FLUSH(position.z);
+        FTBL.EV_AT_SetPos(RO10_HAND, 0x38000000, &position);
+        if (work->cameraFrames <= 0) {
+            SetAreaLoopCharacterControl(RO10_HAND, 0);
+            FTBL.EV_DisableCharacterDisplay(RO10_HAND);
+            if (work->flags & 4) {
+                FTBL.EV_EnableCharacterDisplay(RO10_RYO);
+                FTBL.EV_EnableCharacterDisplay(work->owner);
+                work->flags &= ~4;
+            }
+            FTBL.HLib_SetCurrentTaskTo(ShopGiveItems);
+            FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+            work->flags &= ~1;
+            QueueAreaLoopMotion(RO10_RYO, 11461, 0, -1, -1.0f, -1.0f, 1.0f, 8.0f, 0, 18);
+            QueueAreaLoopCamera(work->package, 1501, RO10_BASE, 1, 0);
+            FTBL.HLib_SetupTaskDelay(40);
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+}
+#else
 void ShopHand(void *data)
 {
     Ro10Work *work = (Ro10Work *)data;
@@ -1605,6 +2699,265 @@ void ShopHand(void *data)
         break;
     }
 }
+#endif
+
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void ShopPayment(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    for (;;) {
+        if (!work) {
+            FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+            break;
+        }
+        FTBL.HLib_SetCurrentTaskTo(ShopResumeItems);
+        FTBL.HLib_SetupTaskDelay(-1);
+        switch (work->shop) {
+        case RO10_ARDX:
+            switch (FTBL.shenGetRandomInt32(3)) {
+            case 0:
+                QueueAreaLoopVoice("はい、まいど！", 0, 10, 100, 0);
+                break;
+            case 1:
+                QueueAreaLoopVoice("まいどあり〜！", 0, 10, 100, 0);
+                break;
+            case 2:
+                QueueAreaLoopVoice("はい、ありがとよ。", 0, 10, 100, 0);
+                break;
+            }
+            switch (FTBL.shenGetRandomInt32(3)) {
+            case 0:
+                QueueAreaLoopVoice("お兄さん、いい買いモンしたねえ。", 0, 111, 100, ResolveAreaLoopParent);
+                break;
+            case 1:
+                QueueAreaLoopVoice("他にもなんかどう？", 0, 111, 100, ResolveAreaLoopParent);
+                break;
+            case 2:
+                QueueAreaLoopVoice("もう一個ぐらいどうだい？", 0, 111, 100, ResolveAreaLoopParent);
+                break;
+            }
+            break;
+        case RO10_ARX2:
+            QueueAreaLoopVoice("ありがとう！＆ただし返品、おことわり！", 0, 10, 100, 0);
+            QueueAreaLoopVoice("え？", 0, 111, 100, ResolveAreaLoopParent);
+            break;
+        case RO10_ARXX:
+            switch (FTBL.shenGetRandomInt32(3)) {
+            case 0:
+                QueueAreaLoopVoice("はい、まいど！", 0, 10, 100, ResolveAreaLoopParent);
+                break;
+            case 1:
+                QueueAreaLoopVoice("まいどあり〜！", 0, 10, 100, ResolveAreaLoopParent);
+                break;
+            case 2:
+                QueueAreaLoopVoice("はい、ありがとう。", 0, 10, 100, ResolveAreaLoopParent);
+                break;
+            }
+            break;
+        case RO10_ARSF:
+            QueueAreaLoopVoice("まいど、ありがとうございます。", 0, 10, 100, ResolveAreaLoopParent);
+            break;
+        case RO10_AKX7:
+            QueueAreaLoopVoice("まいどー！", 0, 10, 100, ResolveAreaLoopParent);
+            break;
+        case RO10_QR00:
+            QueueAreaLoopVoice("いい買い物したな、兄ちゃん。", 0, 10, 100, ResolveAreaLoopParent);
+            break;
+        default:
+            FTBL.HLib_SetupTaskDelay(1);
+            break;
+        }
+        break;
+    }
+}
+
+void ShopResumeItems(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    int index, count;
+    for (;;) {
+        if (!work) {
+            FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+            break;
+        }
+        if (FTBL.filmCheckFadeTrackColour())
+            break;
+        if (!(work->flags & 1)) {
+            FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+            work->flags |= 1;
+            break;
+        }
+        count = 0;
+        for (index = 0; index < 16; index++) {
+            if (!(work->purchased[index] & 1) && work->definition->prices[index] > 0)
+                count++;
+        }
+        if (count) {
+            FTBL.HLib_SetCurrentTaskTo(Ro10EnterItems);
+        } else
+            FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+        break;
+    }
+}
+
+void ShopGiveItems(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    Ro10AwardWork *award;
+    HLibTask *task;
+    int item, category, count, chance;
+    for (;;) {
+        if (!work) {
+            FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+            break;
+        }
+        item = work->definition->items[work->column + work->row * work->definition->columns];
+        if (item < 0) {
+        task = FTBL.HLib_EnqueueTaskWithParameter(ShopGiveItemsCallback, 4, 11, sizeof(Ro10AwardWork), TASK_EVNT);
+        category = item; SHENMUE_EVENT_CLOBBER("r11");
+        if (!task) {
+            FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+            break;
+        }
+        award = (Ro10AwardWork *)FTBL.HLib_GetTaskParameter(task);
+        if (!award) {
+            FTBL.HLib_DestroyTask(task);
+            FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+            break;
+        }
+        SHENMUE_EVENT_CLOBBER("r11");
+        award->parent = FTBL.HLib_GetCurrentTask();
+        award->frames = 0;
+        count = 0;
+        do {
+                chance = FTBL.shenGetRandomInt32(100);
+                switch (category) {
+                case -1:
+                    if (chance < 20)
+                        item = ro10Prizes1[FTBL.shenGetRandomInt32(9)];
+                    else if (chance < 22)
+                        item = ro10Prizes1[FTBL.shenGetRandomInt32(2) + 9];
+                    else if (chance < 90)
+                        item = ro10Prizes1[FTBL.shenGetRandomInt32(10) + 11];
+                    else
+                        item = ro10Prizes1[FTBL.shenGetRandomInt32(3) + 21];
+            if ((count < 1 || award->items[0] != item) && (count != 2 || award->items[1] != item))
+                { *(int *)((char *)award + ((count << 2) + 8)) = item; count++; }
+                    break;
+                case -2:
+                    if (chance < 20)
+                        item = ro10Prizes2[FTBL.shenGetRandomInt32(8)];
+                    else if (chance < 22)
+                        item = ro10Prizes2[FTBL.shenGetRandomInt32(2) + 8];
+                    else if (chance < 90)
+                        item = ro10Prizes2[FTBL.shenGetRandomInt32(10) + 10];
+                    else
+                        item = ro10Prizes2[FTBL.shenGetRandomInt32(3) + 20];
+            if ((count < 1 || award->items[0] != item) && (count != 2 || award->items[1] != item))
+                { *(int *)((char *)award + ((count << 2) + 8)) = item; count++; }
+                    break;
+                case -3:
+                    if (chance < 20)
+                        item = ro10Prizes3[FTBL.shenGetRandomInt32(9)];
+                    else if (chance < 22)
+                        item = ro10Prizes3[FTBL.shenGetRandomInt32(2) + 9];
+                    else if (chance < 90)
+                        item = ro10Prizes3[FTBL.shenGetRandomInt32(10) + 11];
+                    else
+                        item = ro10Prizes3[FTBL.shenGetRandomInt32(3) + 21];
+            if ((count < 1 || award->items[0] != item) && (count != 2 || award->items[1] != item))
+                { *(int *)((char *)award + ((count << 2) + 8)) = item; count++; }
+                    break;
+                case -4:
+                    if (chance < 20)
+                        item = ro10Prizes4[FTBL.shenGetRandomInt32(8)];
+                    else if (chance < 22)
+                        item = ro10Prizes4[FTBL.shenGetRandomInt32(2) + 8];
+                    else if (chance < 90)
+                        item = ro10Prizes4[FTBL.shenGetRandomInt32(10) + 10];
+                    else
+                        item = ro10Prizes4[FTBL.shenGetRandomInt32(3) + 20];
+            if ((count < 1 || award->items[0] != item) && (count != 2 || award->items[1] != item))
+                { *(int *)((char *)award + ((count << 2) + 8)) = item; count++; }
+                    break;
+                case -5:
+                    if (chance < 20)
+                        item = ro10Prizes5[FTBL.shenGetRandomInt32(9)];
+                    else if (chance < 22)
+                        item = ro10Prizes5[FTBL.shenGetRandomInt32(2) + 9];
+                    else if (chance < 90)
+                        item = ro10Prizes5[FTBL.shenGetRandomInt32(10) + 11];
+                    else
+                        item = ro10Prizes5[FTBL.shenGetRandomInt32(3) + 21];
+            if ((count < 1 || award->items[0] != item) && (count != 2 || award->items[1] != item))
+                { *(int *)((char *)award + ((count << 2) + 8)) = item; count++; }
+                    break;
+                case -6:
+                    if (chance < 20)
+                        item = ro10Prizes6[FTBL.shenGetRandomInt32(8)];
+                    else if (chance < 22)
+                        item = ro10Prizes6[FTBL.shenGetRandomInt32(2) + 8];
+                    else if (chance < 90)
+                        item = ro10Prizes6[FTBL.shenGetRandomInt32(8) + 10];
+                    else
+                        item = ro10Prizes6[FTBL.shenGetRandomInt32(3) + 18];
+            if ((count < 1 || award->items[0] != item) && (count != 2 || award->items[1] != item))
+                { *(int *)((char *)award + ((count << 2) + 8)) = item; count++; }
+                    break;
+                default:
+                    count = 3; break;
+                }
+        } while (count < 3);
+        ShopAwardResume(work);
+        FTBL.HLib_SetupTaskDelay(-1);
+        } else {
+            FTBL.AddInventoryItem(item, 1, 1);
+            ShopAwardResume(work);
+        }
+        break;
+    }
+}
+
+void ShopAwardResume(void *data)
+{
+    Ro10Work *work = (Ro10Work *)data;
+    int index, finished = 1;
+    if (work) {
+        for (index = 0; index < 16; index++) {
+            if (work->definition->prices[index] <= 0 || !(work->purchased[index] & 1)) {
+                finished = 0;
+                break;
+            }
+        }
+    }
+    if (finished)
+        FTBL.HLib_SetCurrentTaskTo(Ro10Quit);
+    else
+        FTBL.HLib_SetCurrentTaskTo(ShopPayment);
+}
+
+void ShopGiveItemsCallback(void *data)
+{
+    Ro10AwardWork *work = (Ro10AwardWork *)data;
+    if (++work->frames % 150 != 1)
+        return;
+    switch (work->frames / 150) {
+    case 0:
+        FTBL.AddInventoryItem(work->items[0], 1, 1);
+        break;
+    case 1:
+        FTBL.AddInventoryItem(work->items[1], 1, 1);
+        break;
+    case 2:
+        FTBL.AddInventoryItem(work->items[2], 1, 1);
+        break;
+    case 3:
+        FTBL.HLib_ResolveDeferredCallback(work->parent);
+        FTBL.HLib_DestroyCurrentTask();
+        break;
+    }
+}
+#endif
 
 const Ro10Shop *FindRo10Shop(shen_name shop)
 {
@@ -1619,6 +2972,63 @@ const Ro10Shop *FindRo10Shop(shen_name shop)
     return result;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void RefreshRo10Items(const Ro10Shop *shop, int *purchased, shen_name *boards, shen_name *hundreds, shen_name *tens, shen_name *ones)
+{
+    Vector3 position, base, boardPosition;
+    Vector3i rotation, baseRotation, boardRotation;
+    Vector3 scale;
+    shen_name item;
+    int index;
+    if (!shop || !purchased)
+        return;
+    for (index = 0; index < 16; index++) {
+        item = shop->objects[index];
+        if (!item || shop->prices[index] <= 0)
+            continue;
+        if (!(purchased[index] & 1)) {
+            GetRo10ItemTransform(shop, index % 4, index / 4, &base, &baseRotation, 0, 0);
+            GetRo10ItemTransform(shop, index % 4, index / 4, &position, &rotation, &scale, 1);
+            FTBL.EV_AT_SetPos(item, 0x78000000, &position);
+            FTBL.EV_AT_SetAngY_0(item, 0x78000000, &rotation, 0);
+            if (!(purchased[index] & 8)) {
+                FTBL.mtwkSetMotionworkScale3(item, &scale);
+                purchased[index] |= 8;
+            }
+            FTBL.EV_EnableCharacterDisplay(item);
+            if (boards[index] && ones[index]) {
+                boardPosition.x = 0.0f;
+                boardPosition.y = -0.07f;
+                boardPosition.z = 0.01f;
+                position = base;
+                FTBL.ApplyScenarioTranslationAndRotation(&position, &baseRotation, &boardPosition);
+                boardRotation.x = baseRotation.x - 44055;
+                boardRotation.y = baseRotation.y;
+                boardRotation.z = baseRotation.z;
+                FTBL.EV_AT_SetPos(boards[index], 0x78000000, &boardPosition);
+                FTBL.EV_AT_SetAngY_0(boards[index], 0x78000000, &boardRotation, 0);
+                FTBL.EV_EnableCharacterDisplay(boards[index]);
+                if (hundreds[index])
+                    FTBL.EV_EnableCharacterDisplay(hundreds[index]);
+                if (tens[index])
+                    FTBL.EV_EnableCharacterDisplay(tens[index]);
+                FTBL.EV_EnableCharacterDisplay(ones[index]);
+            }
+        } else {
+            FTBL.EV_DisableCharacterDisplay(item);
+            if (boards[index])
+                FTBL.EV_DisableCharacterDisplay(boards[index]);
+            if (hundreds[index])
+                FTBL.EV_DisableCharacterDisplay(hundreds[index]);
+            if (tens[index])
+                FTBL.EV_DisableCharacterDisplay(tens[index]);
+            if (ones[index])
+                FTBL.EV_DisableCharacterDisplay(ones[index]);
+        }
+
+    }
+}
+#else
 void RefreshRo10Items(const Ro10Shop *shop, int *purchased, shen_name *boards, shen_name *hundreds, shen_name *tens, shen_name *ones)
 {
     Vector3 position, base, boardPosition;
@@ -1673,6 +3083,7 @@ void RefreshRo10Items(const Ro10Shop *shop, int *purchased, shen_name *boards, s
         }
     }
 }
+#endif
 
 int GetRo10ItemTransform(const Ro10Shop *shop, int column, int row, Vector3 *position, Vector3i *rotation, Vector3 *scale, int grip)
 {
@@ -1857,6 +3268,7 @@ void CreateRo10PriceBoards(const Ro10Shop *shop, shen_name *boards, shen_name *h
             boards[index] = 0;
     }
 }
+#endif
 #else
 #include "s2/areas/area_ro10.hpp"
 #include "s2/author.hpp"

@@ -1,12 +1,28 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/areas/area_dart.hpp"
 
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+#define DART_CHOICE_QUIT 23
+#define DART_CHOICE_STOP 34
+#define DART_CHOICE_ACCEPT_BET 36
+#define DART_CHOICE_DECLINE_BET 23
+#else
+#define DART_CHOICE_QUIT 154
+#define DART_CHOICE_STOP 154
+#define DART_CHOICE_ACCEPT_BET 74
+#define DART_CHOICE_DECLINE_BET 75
+#endif
+
 #if defined(SHENMUE_EVENT_ENTRY)
 void DartsAreaMain(EventDartsGame *entry)
 {
     HLibTaskCallback callbacks[2] = {DartsInitStart, DartsPositionOpponentHands};
     HLibTask *task;
     DartsEventWork *work;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    DartsNullTaskWork *child;
+    HLibTask *unusedTask;
+#endif
     if (entry->opponentMatch > 1)
         return;
     task = FTBL.HLib_EnqueueTaskWithParameter(callbacks[entry->opponentMatch], 4, 11, sizeof(DartsEventWork), DART_TASK);
@@ -17,6 +33,15 @@ void DartsAreaMain(EventDartsGame *entry)
         EventDebugRegister(DART_DEBUG_ID, DartsDebugExitCallback, work, 2000000000);
         EventDebugCheck(DART_DEBUG_ID, 4);
     }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    unusedTask = FTBL.HLib_EnqueueTaskWithParameter(DartsNullTask, 4, 11, sizeof(DartsNullTaskWork), DART_TASK);
+    work->unusedTask = unusedTask;
+    child = (DartsNullTaskWork *)FTBL.HLib_GetTaskParameter(unusedTask);
+    if (child) {
+        child->root = work->task;
+        child->work = work;
+    }
+#endif
 }
 #else
 extern void *memset(void *destination, int value, unsigned int size);
@@ -69,6 +94,62 @@ void DartsDebugExitCallback(void *data)
 
 void DartsExit(void *data)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+    DartsEventWork *work = (DartsEventWork *)data;
+    int i;
+    unsigned char plays;
+    switch (work->gameState) {
+    case 0:
+        ++work->gameState;
+        FTBL.SetScreenFilmFade(20, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_SetupTaskDelay(20);
+        break;
+    case 1:
+        ++work->gameState;
+        FTBL.CheckHelpIcon(0, 0, 0);
+        DartsRestorePlayer(work);
+        DartsRestoreOpponent(work);
+        DartsRetireCoinAndArrows(work);
+        FTBL.EV_LoadCutsceneFromCurrentScene(work->previousBgm);
+        FTBL.EV_LoadAudio(work->previousSbt, work->previousSoundProgram);
+        FTBL.EV_FreeAuthorPak(0, "0137");
+        FTBL.EV_FreeAuthorPak(0, "0113");
+        for (i = 0; i <= 3; i++)
+            if (work->childTasks[i])
+                FTBL.HLib_DestroyTaskInternal(work->childTasks[i]);
+        FTBL.shenSetTimeSimulationTo(1);
+        FTBL.SetRenderClockAndCompassTo(0);
+        FTBL.EVS_LoopCamera(0, 0, 0);
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        EVT_AT_SetCam(-1, 0, 0, 0, 0, 0);
+        EVT_AT_SetSample(0, 0, 0);
+        FTBL.SetScreenFilmFade(20, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.HLib_SetupTaskDelay(20);
+        break;
+    case 2:
+        plays = FTBL.EV_GetPlayerFlag(15, 1);
+        if (plays <= 254)
+            plays++;
+        FTBL.EV_SetPlayerFlag(16, 1, plays);
+        if (!work->entry->opponentMatch && work->banks[1].score[3] > 2499999)
+            FTBL.EV_SetPlayerFlag(12, 1732, 1);
+        else if (!DartsIsOpponentMatch(work))
+            FTBL.SetPlayerControlEnabled(1);
+        EventDebugUnregister(DART_DEBUG_ID);
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        if (work->unusedTask)
+            FTBL.HLib_DestroyTaskInternal(work->unusedTask);
+        FTBL.EV_HLKillOtherHierarchyTask(work->task);
+        FTBL.HLib_ResolveDeferredCallback(work->entry->task);
+        break;
+    default:
+        work->gameState = 0;
+        break;
+    }
+#else
+
     DartsEventWork *work = (DartsEventWork *)data;
     int i;
     unsigned char plays;
@@ -124,18 +205,32 @@ void DartsExit(void *data)
         work->gameState = 0;
         break;
     }
+#endif
 }
 
 void DartsRestorePlayer(DartsEventWork *work)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(DART_PLAYER), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(DART_PLAYER), 0, 1, 0);
+#endif
     FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(DART_PLAYER));
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetScenarioCharacterFlag40(DART_PLAYER, 1);
+#endif
     FTBL.AT_SetLocalBaseChara(DART_PLAYER, -1);
     FTBL.EV_EnableCharacterDisplay(DART_PLAYER);
     FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(DART_PLAYER), 0, 0);
     FTBL.EV_SetCharacterAlphaEnabled(DART_PLAYER, 1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    do {
+#endif
     FTBL.EV_SetCharaControllerFlags(DART_PLAYER, 2, 1);
     FTBL.EV_SetCharaControllerFlags(DART_PLAYER, 3, 1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        break;
+    } while (0);
+#endif
     SHENMUE_EVENT_BOUNDARY();
     FTBL.EV_SetCharaControllerFlags(DART_PLAYER, 1, 1);
     EVT_AT_SetMot(DART_PLAYER, 0xf002, -1.0f, 1.0f, 0x40000000, 0);
@@ -143,27 +238,58 @@ void DartsRestorePlayer(DartsEventWork *work)
         FTBL.EV_AT_SetPos(DART_PLAYER, 0x38000000, &work->previousPosition);
         FTBL.EV_AT_SetAngY_0(DART_PLAYER, 0x38000000, &work->previousRotation, 0);
     } else
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        SetDartsPosition(DartsSelectBoard(work, 0), DART_PLAYER, 0.0f, 0.0f, 2.0f, 0, 0);
+#else
         SetDartsPosition(DartsSelectBoard(work, 0), DART_PLAYER, 0.0f, 0.0f, 1.5f, 0, 0);
+#endif
     if (work->gameFlag)
         FTBL.SetPlayerGameFlags(4, 1);
 }
 
 void DartsRestoreOpponent(DartsEventWork *work)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (DartsIsOpponentMatch(work)) {
+#else
     if (!DartsIsOpponentMatch(work))
         return;
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetScenarioCharacterFlag40(work->entry->enemy->name, 1);
+#endif
     FTBL.AT_SetLocalBaseChara(work->entry->enemy->name, -1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    do {
+#endif
     FTBL.EV_EnableCharacterDisplay(work->entry->enemy->name);
     FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->entry->enemy->name), 0, 0);
     FTBL.EV_SetCharacterAlphaEnabled(work->entry->enemy->name, 1);
     DartsBeginOpponentThrow(work->entry->enemy->name, 1, work->difficulty);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.EV_SetCharaControllerFlags(work->entry->enemy->name, 2, 1);
+    FTBL.EV_SetCharaControllerFlags(work->entry->enemy->name, 3, 1);
+    } while (0);
+    SHENMUE_EVENT_BOUNDARY();
+    FTBL.EV_SetCharaControllerFlags(work->entry->enemy->name, 1, 1);
+#endif
     FTBL.InitiateCleanupForSceneChara(work->entry->enemy->name);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->entry->enemy->name), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->entry->enemy->name), 0, 1, 0);
+#endif
     FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(work->entry->enemy->name));
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    SetDartsPosition(work->entry->placement[work->entry->mode].character, work->entry->enemy->name, 0.0f, 0.0f, 4.0f, 0, 0);
+#else
     if (g_currentMap == DART_AKS0 && work->entry->enemy->name == DART_XHO)
         SetDartsPosition(work->entry->placement[work->entry->mode].character, work->entry->enemy->name, -0.3f, 0.0f, 3.6f, 0, 0);
     else
         SetDartsPosition(work->entry->placement[work->entry->mode].character, work->entry->enemy->name, 0.0f, 0.0f, 3.6f, 0, 0);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    }
+#endif
 }
 
 void DartsRetireCoinAndArrows(DartsEventWork *work)
@@ -229,10 +355,15 @@ void DartsInitStart(void *data)
         FTBL.GetCurrentDateTime((DateTime *)&work->previousTime);
         FTBL.shenSetTimeSimulationTo(0);
         FTBL.SetRenderClockAndCompassTo(1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+#else
         FTBL.SetPlayerControlEnabled(0);
+#endif
         FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(DART_PLAYER), 0);
         EVT_AT_SetMot(DART_PLAYER, 0xf002, -1.0f, 1.0f, 0x80000000, 0);
         if (DartsIsOpponentMatch(work)) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             switch (work->entry->enemy->name) {
             case DART_FCJ:
                 FTBL.SetMGOTOSIDAMA(9, 1);
@@ -250,6 +381,7 @@ void DartsInitStart(void *data)
                 FTBL.SetMGOTOSIDAMA(11, 1);
                 break;
             }
+#endif
             for (i = 0; i <= 14; i++)
                 FTBL.EV_DisableCharacterDisplay(GetDartsArrowName(2, i));
             FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(work->entry->enemy->name), 0);
@@ -272,11 +404,21 @@ void DartsInitStart2(void *data)
     FTBL.EV_SetCharaControllerFlags(DART_PLAYER, 3, 0);
     SHENMUE_EVENT_BOUNDARY();
     FTBL.EV_SetCharaControllerFlags(DART_PLAYER, 1, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetScenarioCharacterFlag40(DART_PLAYER, 0);
+#endif
     if (DartsIsOpponentMatch(work)) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetScenarioCharacterFlag40(work->entry->enemy->name, 0);
+#endif
         FTBL.SetScenarioCharacterTransparency(work->entry->enemy->name, 1.0f);
         FTBL.EV_SetCharacterAlphaEnabled(work->entry->enemy->name, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EV_SetCharaControllerFlags(work->entry->enemy->name, 2, 0);
+        FTBL.EV_SetCharaControllerFlags(work->entry->enemy->name, 3, 0);
+        SHENMUE_EVENT_BOUNDARY();
+        FTBL.EV_SetCharaControllerFlags(work->entry->enemy->name, 1, 0);
+#endif
         DartsInitializeGame(work);
         FTBL.SetPlayerGameFlags(4, 0);
         FTBL.HLib_SetCurrentTaskTo(DartsEnemyShot);
@@ -378,7 +520,11 @@ void DartsMain(void *data)
 {
     DartsEventWork *work = (DartsEventWork *)data;
     void *voice;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (FTBL.GetPlayerStat(2) < 1) {
+#else
     if (FTBL.GetPlayerStat(2) < 5) {
+#endif
         voice = DartsResponse(work, 2);
         FTBL.HLib_SetCurrentTaskTo(DartsMainOk);
         FTBL.HLib_SetupTaskDelay(30);
@@ -413,7 +559,11 @@ void DartsAskPlay(void *data)
     case 1:
         ++work->nextState;
         FTBL.SetMotionFrameTime(FTBL.scenFindMotionwork(DART_PLAYER), 5, 0);
-        EVT_AT_KsIcon_Enqueue(0xffff, 36, 154, 0xffff, 1800, 154, 2, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_KsIcon_Enqueue(0xffff, 36, 34, 0xffff, 1800, 34, 2, 0);
+#else
+        EVT_AT_KsIcon_Enqueue(0xffff, 36, DART_CHOICE_QUIT, 0xffff, 1800, DART_CHOICE_QUIT, 2, 0);
+#endif
         break;
     case 2:
         if (!FTBL.GetShouldRenderIcons(2)) {
@@ -421,7 +571,9 @@ void DartsAskPlay(void *data)
             work->requestIcon = FTBL.shenGetCtrlSpeakIconFlag();
             if (work->requestIcon == 36) {
                 voice = DartsResponse(work, 1);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
                 if (DartsSelectBoard(work, 0) != DARTS_COMPACT_BOARD)
+#endif
                     FTBL.SetMGOTOSIDAMA(8, 1);
             } else {
                 voice = DartsResponse(work, 3);
@@ -445,7 +597,9 @@ void DartsInsertCoin(void *data)
     switch (work->gameState) {
     case 0:
         ++work->gameState;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         DartsResetScoring(work);
+#endif
         for (i = 0; i <= 4; i++) {
             FTBL.EV_DisableCharacterDisplay(GetDartsArrowName(0, i));
             FTBL.AT_SetLocalBaseChara(GetDartsArrowName(0, i), DartsSelectBoard(work, 0));
@@ -456,8 +610,25 @@ void DartsInsertCoin(void *data)
         FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(DART_PLAYER), 1);
         DartsCamera(work, 7203, DartsSelectBoard(work, 0), DartsSelectBoard(work, 0), 0);
         DartsQueueCameraWait(work, 7204, DartsSelectBoard(work, 0), DartsSelectBoard(work, 0));
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.AddThisToCashOrSegaCoins(-1, 2);
+#else
         FTBL.AddThisToCashOrSegaCoins(-5, 2);
+#endif
     case 1:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(DART_PLAYER), 65, 1, 0)) {
+            ++work->gameState;
+            position.x = -0.045f;
+            position.y = 0.0f;
+            position.z = 0.6f;
+            QueueDartsPosition(DartsSelectBoard(work, 0), DART_PLAYER, &position, 0, 0);
+            DartsCamera(work, 7212, DartsSelectBoard(work, 0), DartsSelectBoard(work, 0), 0);
+            EVT_AT_SetMot(DART_PLAYER, 6372, -1.0f, 1.0f, 0x80000000, 0);
+            DartsPlaySample(2);
+            break;
+        }
+#endif
         switch ((int)FTBL.GetMotionFrame(FTBL.scenFindMotionwork(DART_PLAYER), 0)) {
         case 30:
             DartsPlaySample(1);
@@ -480,12 +651,16 @@ void DartsInsertCoin(void *data)
         case 140:
             FTBL.EV_EnsureCharacterDraw(DartsSelectBoard(work, 0));
             FTBL.EV_EnableCharacterDisplay(DartsSelectBoard(work, 0));
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            DartsResetScoring(work);
+#endif
             DartsPlaySample(0);
             FTBL.ResetScenarioCharacterAttachment(DART_COIN);
             FTBL.EV_DisableCharacterDisplay(DART_COIN);
             for (i = 0; i <= 4; i++)
                 DartsHideBoardArrow(DartsSelectBoard(work, 0), i, 1);
             break;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         case 169:
             ++work->gameState;
             position.x = -0.045f;
@@ -496,6 +671,7 @@ void DartsInsertCoin(void *data)
             EVT_AT_SetMot(DART_PLAYER, 6372, -1.0f, 1.0f, 0x80000000, 0);
             DartsPlaySample(2);
             break;
+#endif
         }
         offset.x = offset.y = offset.z = 1.0f;
         FTBL.SetCharaTargetTransformOffset(DART_PLAYER, &offset, 1);
@@ -504,6 +680,9 @@ void DartsInsertCoin(void *data)
         if (FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(DART_PLAYER), 65, 1, 0)) {
             ++work->gameState;
             FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(DART_PLAYER), 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            EVT_AT_SetMot(DART_PLAYER, 6371, -1.0f, 1.0f, 0x80000000, 0);
+#endif
             break;
         }
         switch ((int)FTBL.GetMotionFrame(FTBL.scenFindMotionwork(DART_PLAYER), 0)) {
@@ -548,6 +727,9 @@ void DartsInsertCoin(void *data)
         DartsResetRound(work);
         DartsStartChildTask(work, 2);
         FTBL.HLib_SetCurrentTaskTo(DartsPlaying);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.HLib_SetupTaskDelay(FTBL.GetMotionFrameCount(6371));
+#endif
         break;
     }
 }
@@ -560,6 +742,14 @@ void DartsPlaying(void *data)
     switch (work->gameState) {
     case 0:
         ++work->gameState;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        DartsShowTurnActor(work);
+        FTBL.EV_EnableCharacterDisplay(GetDartsArrowName(0, work->state));
+        if (work->standardBoard) {
+            FTBL.EV_SetCharacterAlphaEnabled(DART_PLAYER, 1);
+            FTBL.SetScenarioCharacterTransparency(DART_PLAYER, 0.5f);
+        }
+#endif
         if (work->state == 1) {
             voice = DartsResponse(work, 4);
             if (voice)
@@ -573,22 +763,39 @@ void DartsPlaying(void *data)
         if (work->standardBoard) {
             work->wobblePhaseX = (int)(FTBL.GetRandomNumberInRange(360.0f) * 8192.0f / 45.0f) & 0xffff;
             work->wobblePhaseY = (int)(FTBL.GetRandomNumberInRange(360.0f) * 8192.0f / 45.0f) & 0xffff;
-        } else
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            EVT_AT_SetMot(DART_PLAYER, 6371, 27.0f, 0.0f, 0x80000000, 0);
+#endif
+        } else {
             work->wobblePhaseY = 0;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(DART_PLAYER), 6371, 0);
+            FTBL.SetMotionLayerEndFrame(FTBL.scenFindMotionwork(DART_PLAYER), 44.0f, 0);
+#endif
+        }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        SetDartsPosition(DartsSelectBoard(work, 0), DART_PLAYER, -0.015f, -0.002f, 1.8f, 0, 0);
+#endif
         DartsAttachTurnArrows(work);
         break;
     case 2:
         work->gameState = 0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         DartsShowTurnActor(work);
         FTBL.EV_EnableCharacterDisplay(GetDartsArrowName(0, work->state));
+#endif
         if (work->standardBoard) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             SetDartsPosition(DartsSelectBoard(work, 0), DART_PLAYER, -0.015f, -0.002f, 1.8f, 0, 0);
             EVT_AT_SetMot(DART_PLAYER, 6371, 27.0f, 0.0f, 0x80000000, 0);
             FTBL.EV_SetCharacterAlphaEnabled(DART_PLAYER, 1);
             FTBL.SetScenarioCharacterTransparency(DART_PLAYER, 0.5f);
+#endif
             FTBL.ResetScenarioCharacterAttachment(GetDartsArrowName(0, work->state));
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             EVT_AT_SetPos(GetDartsArrowName(0, work->state), DartsSelectBoard(work, 0), -0.0903f, 1.6251f, 1.3136f, 0);
             EVT_AT_SetAng(GetDartsArrowName(0, work->state), DartsSelectBoard(work, 0), 58.2715f, 279.1571f, 119.5203f, 0);
+#endif
             FTBL.AT_SetLocalBaseChara(DART_PLAYER, GetDartsArrowName(0, work->state));
             FTBL.GetCharaPosition(DART_PLAYER, -1, &work->dartPosition, 0);
             FTBL.GetScenarioCharacterEulerAngles(DART_PLAYER, (Vector3i *)&work->ryoRotation, 0);
@@ -596,16 +803,25 @@ void DartsPlaying(void *data)
             FTBL.GetCharaPosition(GetDartsArrowName(0, work->state), -1, &position, 0x40000000);
             FTBL.EV_AT_SetPos(DART_COIN, 0x78000000, &position);
         } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            position = (Vector3){-0.015f, -0.002f, 1.8f};
+            position.x += 0.025f;
+            QueueDartsPosition(DartsSelectBoard(work, 0), DART_PLAYER, &position, 0, 0);
+            FTBL.mtwkSetSpeed(FTBL.scenFindMotionwork(DART_PLAYER), 1.0f, 0);
+#else
             SetDartsPosition(DartsSelectBoard(work, 0), DART_PLAYER, 0.0100000007f, -0.002f, 1.8f, 0, 0);
             EVT_AT_SetMot(DART_PLAYER, 6371, 44.0f, 0.0f, 0x80000000, 0);
             FTBL.mtwkSetSpeed(FTBL.scenFindMotionwork(DART_PLAYER), 1.0f, 0);
+#endif
         }
         if (!DartsIsPlayerTurn(work))
             DartsComputeAiTarget(work);
         work->banks[0].ticker = 100000;
         work->banks[0].score[0] = 0;
         work->scoreUiFlags = 1;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         work->actorControl[1] = 5;
+#endif
         DartsCamera(work, 7201, DartsSelectBoard(work, 0), DartsSelectBoard(work, 0), 0);
         FTBL.HLib_SetCurrentTaskTo(DartsPlayingLoop);
         DartsPlayingLoop(work);
@@ -622,9 +838,12 @@ void DartsPlayingLoop(void *data)
         thrown = 0;
         if (DartsIsPlayerTurn(work)) {
             FTBL.GetBattleDataConfig(0, SHEN_NAME4('B', 'T', 'B', 'A'));
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             if (work->actorControl[1])
                 work->actorControl[1]--;
-            else if (FTBL.GetCurrentControlInput(1) == 1024)
+            else
+#endif
+            if (FTBL.GetCurrentControlInput(1) == 1024)
                 thrown = 1;
         } else if (work->field08) {
             work->field08 = 0;
@@ -688,14 +907,29 @@ void DartsEnemyPlaying(void *data)
         SetDartsPosition(DartsSelectBoard(work, 0), work->entry->enemy->name, 0.0f, 0.0f, 4.0f, 0, 0);
         SetDartsPosition(DartsSelectBoard(work, 0), DART_PLAYER, 0.8f, 0.0f, 4.7f, 1820, 0);
         EVT_AT_SetMot(DART_PLAYER, 0xf002, -1.0f, 1.0f, 0x80000000, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        {
+            Vector3i rotation;
+            Vector3 position = {0.123f, -0.058f, -0.03f};
+            rotation.x = 18655;
+            rotation.y = 31391;
+            rotation.z = 49425;
         FTBL.EV_EnableCharacterDisplay(GetDartsArrowName(1, work->state));
         FTBL.EV_EnsureCharacterDraw(GetDartsArrowName(1, work->state));
+            FTBL.AttachScenarioCharacter(GetDartsArrowName(1, work->state), work->entry->enemy->name,
+                DartsOpponentAttachBone(work->entry->enemy->name, work->difficulty), &position, &rotation);
+        }
+#else
+        FTBL.EV_EnableCharacterDisplay(GetDartsArrowName(1, work->state));
+        FTBL.EV_EnsureCharacterDraw(GetDartsArrowName(1, work->state));
+
         if (DartsOpponentAttachBone(work->entry->enemy->name, work->difficulty) == 21)
             FTBL.AttachScenarioCharacter(GetDartsArrowName(1, work->state), work->entry->enemy->name,
                 DartsOpponentAttachBone(work->entry->enemy->name, work->difficulty), &dartsJonGameArrowOffset, &dartsGameArrowRotation);
         else
             FTBL.AttachScenarioCharacter(GetDartsArrowName(1, work->state), work->entry->enemy->name,
                 DartsOpponentAttachBone(work->entry->enemy->name, work->difficulty), &dartsGameArrowOffsets[index], &dartsGameArrowRotation);
+#endif
         if (!work->actorControl[0])
             EVT_AT_SetCam(index + 7230, DartsSelectBoard(work, 0), DartsSelectBoard(work, 0), 0, 0, 1);
         DartsComputeAiTarget(work);
@@ -829,8 +1063,12 @@ void DartsShotEnd(void *data)
     switch (work->gameState) {
     case 0:
         ++work->gameState;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.CheckHelpIcon(1, 1, 2);
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetLoadingBusy();
+#endif
         if (work->standardBoard)
             work->banks[0].score[2] = work->banks[0].score[1] / 10000;
         else
@@ -894,20 +1132,45 @@ void DartsShotEnd(void *data)
             EVT_AT_SetMot(work->entry->enemy->name, 0xf002, 0.0f, 0.0f, 0x80000000, 0);
     case 8:
         ++work->gameState;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.CheckHelpIcon(1, 0, 1);
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.FinishLoading();
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (work->standardBoard && (!work->state || (work->state == 1 && work->scoreStep && DartsIsOpponentMatch(work)))) {
+            ++work->banks[0].throws;
+            if ((work->banks[0].throws <= 2) & (work->banks[0].score[3] / 10000 >= work->banks[0].throws * 120)) {
+                DartsNextGame(work);
+                FTBL.HLib_SetCurrentTaskTo(DartsNextGame);
+                break;
+            }
+            if (DartsIsOpponentMatch(work)) {
+                voice = DartsResponse(work, 15);
+                if (voice)
+                    DartsQueueVoiceWait(work->task, voice);
+                else
+                    FTBL.HLib_SetupTaskDelay(30);
+                break;
+            }
+        }
+#else
         if (work->standardBoard && (!work->state || (work->state == 1 && work->scoreStep && DartsIsOpponentMatch(work)))) {
             if (++work->banks[0].throws <= 2) {
                 if (work->banks[0].score[3] / 10000 >= work->banks[0].throws * 120) {
                     DartsNextGame(work);
                     FTBL.HLib_SetCurrentTaskTo(DartsNextGame);
-                } else if (DartsIsOpponentMatch(work)) {
+                }
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                else if (DartsIsOpponentMatch(work)) {
                     voice = DartsResponse(work, 29);
                     if (voice)
                         DartsQueueVoiceWait(work->task, voice);
                     else
                         FTBL.HLib_SetupTaskDelay(30);
                 }
+#endif
                 break;
             } else if (DartsIsOpponentMatch(work)) {
                 voice = DartsResponse(work, 15);
@@ -918,6 +1181,7 @@ void DartsShotEnd(void *data)
                 break;
             }
         }
+#endif
     case 9:
         work->gameState = 0;
         work->pendingReset = 0;
@@ -1017,7 +1281,11 @@ void DartsNextGame(void *data)
             DartsResponse(work, 16);
         work->scoreTickInterval = 0;
     case 1:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (work->scoreTickInterval <= 159) {
+#else
         if (work->scoreTickInterval <= 219) {
+#endif
             step.x = -0.05f;
             step.y = 0.0f;
             step.z = 0.0f;
@@ -1150,24 +1418,93 @@ void DartsExitBattle(void *data)
 {
     DartsEventWork *work = (DartsEventWork *)data;
     float x, z, first;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    int index, result, motion, frames;
+#else
     int motion, index, result, delay, frames;
+#endif
     FTBL.EV_EnableCharacterDisplay(work->entry->enemy->name);
     FTBL.EV_SetCharacterAlphaEnabled(work->entry->enemy->name, 0);
     index = DartsOpponentIndex(work->entry->enemy->name);
     result = DartsBattleResult(work);
     if (FTBL.EV_GetShenmueFlag(0x3e0) && g_currentMap == DART_AKS1) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (work->previousTime.hour < 23) {
+#endif
         if (result == 2)
             FTBL.EV_stepSetFlags(0x3e0, 0);
         else
             FTBL.EV_stepSetFlags(0x3e0, 1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        } else {
+            FTBL.EV_stepSetFlags(0x3e0, 2);
+        }
+#endif
         FTBL.HLib_SetCurrentTaskTo(DartsExit);
         return;
     }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    switch (result) {
+    case 2:
+        motion = dartsOpponents[index].winMotion;
+        frames = dartsOpponents[index].winTotal;
+        x = dartsOpponents[index].winX;
+        z = dartsOpponents[index].winZ;
+        DartsResponse(work, 21);
+        EVT_AT_StartMoneyCount(work->entry->bet, frames);
+        if (work->entry->enemy->name == DART_JON)
+            work->difficulty++;
+        DartsCamera(work, 7222, DART_DUMMY1, DART_DUMMY1, 1);
+        DartsCamera(work, index + 7523, work->entry->placement[work->entry->mode].character, work->entry->placement[work->entry->mode].character, 150);
+        EVT_AT_CharaDisp(DART_PLAYER, 0, 1);
+        EVT_AT_CharaDisp(DART_PLAYER, 150, 0);
+        break;
+    case 1:
+        motion = dartsOpponents[index].drawMotion;
+        frames = 200;
+        x = dartsOpponents[5].loseX;
+        z = dartsOpponents[5].loseZ;
+        DartsResponse(work, 22);
+        DartsCamera(work, 7228, DART_DUMMY1, DART_DUMMY1, 1);
+        DartsCamera(work, index + 7523, work->entry->placement[work->entry->mode].character, work->entry->placement[work->entry->mode].character, 150);
+        EVT_AT_CharaDisp(DART_PLAYER, 0, 1);
+        EVT_AT_CharaDisp(DART_PLAYER, 150, 0);
+        break;
+    default:
+        if (FTBL.shenGetRandomInt32(2)) {
+            motion = dartsOpponents[index].motions[12];
+            frames = dartsOpponents[index].motions[14];
+        } else {
+            motion = dartsOpponents[index].motions[13];
+            frames = dartsOpponents[index].motions[15];
+        }
+        x = dartsOpponents[index].loseX;
+        z = dartsOpponents[index].loseZ;
+        DartsResponse(work, 23);
+        EVT_AT_StartMoneyCount(-work->entry->bet, frames);
+        DartsCamera(work, 7229, DART_DUMMY1, DART_DUMMY1, 1);
+        DartsCamera(work, index + 7523, work->entry->placement[work->entry->mode].character, work->entry->placement[work->entry->mode].character, 150);
+        EVT_AT_CharaDisp(DART_PLAYER, 0, 1);
+        EVT_AT_CharaDisp(DART_PLAYER, 150, 0);
+        break;
+    }
+    if (result != 1) {
+        frames = frames < 150 ? 0 : frames - 150;
+        EVT_AT_SetMot(DART_PLAYER, 6343, -1.0f, 0.0f, 0x40000000, 0);
+        EVT_AT_SetMot(DART_PLAYER, 6343, -1.0f, 1.0f, 0, frames + 1);
+    }
+    frames = EVT_AT_SetMot(work->entry->enemy->name, motion, -1.0f, 1.0f, 0x40000000, 0);
+#else
     switch (result) {
     case 2:
         motion = dartsOpponents[index].winMotion;
         delay = dartsOpponents[index].winTotal;
-        first = dartsOpponents[index].winFrame;
+        first =
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    0.0f;
+#else
+                    dartsOpponents[index].winFrame;
+#endif
         x = dartsOpponents[index].winX;
         z = dartsOpponents[index].winZ;
         delay = delay - first < 200.0f ? 0 : delay - 200 - first;
@@ -1200,20 +1537,40 @@ void DartsExitBattle(void *data)
             if (DartsIsHardJon(work->entry->enemy->name, work->difficulty)) {
                 motion = dartsOpponents[index].motions[13];
                 delay = dartsOpponents[index].motions[15];
-                first = dartsOpponents[index].loseFrame[1];
+                first =
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    0.0f;
+#else
+                    dartsOpponents[index].loseFrame[1];
+#endif
             } else {
                 motion = dartsOpponents[index].motions[12];
                 delay = dartsOpponents[index].motions[14];
-                first = dartsOpponents[index].loseFrame[0];
+                first =
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    0.0f;
+#else
+                    dartsOpponents[index].loseFrame[0];
+#endif
             }
         } else if (FTBL.shenGetRandomInt32(2)) {
             motion = dartsOpponents[index].motions[13];
             delay = dartsOpponents[index].motions[15];
-            first = dartsOpponents[index].loseFrame[1];
+            first =
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    0.0f;
+#else
+                    dartsOpponents[index].loseFrame[1];
+#endif
         } else {
             motion = dartsOpponents[index].motions[12];
             delay = dartsOpponents[index].motions[14];
-            first = dartsOpponents[index].loseFrame[0];
+            first =
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    0.0f;
+#else
+                    dartsOpponents[index].loseFrame[0];
+#endif
         }
         x = dartsOpponents[index].loseX;
         z = dartsOpponents[index].loseZ;
@@ -1231,8 +1588,11 @@ void DartsExitBattle(void *data)
     }
     if (frames < delay)
         frames = delay;
+#endif
     EVT_AT_SetMot(work->entry->enemy->name, dartsOpponents[index].motions[7], -1.0f, 1.0f, 0x80000000, frames);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_CharaDisp(DART_PLAYER, frames, 0);
+#endif
     SetDartsPosition(work->entry->placement[work->entry->mode].character, DART_PLAYER, x, 0.0f, z, 0x4000, 0);
     SetDartsPosition(work->entry->placement[work->entry->mode].character, work->entry->enemy->name, 0.0f, 0.0f, 4.0f, 0xeaaa, 0);
     SetDartsPosition(work->entry->placement[work->entry->mode].character, DART_PLAYER, 1.2f, 0.0f, 4.2f, 0x4000, frames);
@@ -1267,8 +1627,12 @@ void DartsContinuePrompt(void *data)
     void *voice = 0;
     int reward = 0;
     int delay;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+#else
     if (!work->entry->opponentMatch && work->banks[1].score[3] > 2499999)
         reward = !FTBL.EV_GetPlayerFlag(11, 1014);
+#endif
     switch (work->gameState) {
     case 0:
         ++work->gameState;
@@ -1295,7 +1659,10 @@ void DartsContinuePrompt(void *data)
             FTBL.HLib_SetupTaskDelay(200);
         break;
     case 1:
-        if (DartsIsOpponentMatch(work)) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (DartsIsOpponentMatch(work))
+#endif
+        {
             delay = DartsCheckBet(work);
             if (!delay) {
                 ++work->gameState;
@@ -1306,7 +1673,11 @@ void DartsContinuePrompt(void *data)
                         work->gameState = 0;
                         FTBL.HLib_SetCurrentTaskTo(DartsDoubleUp);
                     } else
-                        EVT_AT_KsIcon_Enqueue(0xffff, 37, 154, 0xffff, 1800, 154, 2, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                        EVT_AT_KsIcon_Enqueue(0xffff, 37, 34, 0xffff, 1800, 154, 2, 0);
+#else
+                        EVT_AT_KsIcon_Enqueue(0xffff, 37, DART_CHOICE_STOP, 0xffff, 1800, DART_CHOICE_STOP, 2, 0);
+#endif
                 }
             } else if (delay > 0) {
                 work->gameState = 0;
@@ -1323,7 +1694,9 @@ void DartsContinuePrompt(void *data)
                 }
                 FTBL.HLib_SetupTaskDelay(-delay);
             }
-        } else if (FTBL.GetPlayerStat(2) < 5) {
+        }
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        else if (FTBL.GetPlayerStat(2) < 5) {
             work->gameState = 0;
             voice = DartsResponse(work, 2);
             FTBL.HLib_SetCurrentTaskTo(DartsExit);
@@ -1333,13 +1706,18 @@ void DartsContinuePrompt(void *data)
         } else {
             ++work->gameState;
             if (FTBL.shenGetMinutesUntilNextFrameMinute() > 0 && !reward)
-                EVT_AT_KsIcon_Enqueue(0xffff, 37, 154, 0xffff, 1800, 154, 2, 0);
+                EVT_AT_KsIcon_Enqueue(0xffff, 37, DART_CHOICE_STOP, 0xffff, 1800, DART_CHOICE_STOP, 2, 0);
         }
+#endif
         break;
     case 2:
         if (!FTBL.GetShouldRenderIcons(2)) {
             work->gameState = 0;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            if (FTBL.shenGetMinutesUntilNextFrameMinute() > 0 && (work->entry->opponent == 1 || FTBL.shenGetCtrlSpeakIconFlag() == 37)) {
+#else
             if (FTBL.shenGetMinutesUntilNextFrameMinute() > 0 && !reward && (work->entry->opponent == 1 || FTBL.shenGetCtrlSpeakIconFlag() == 37)) {
+#endif
                 if (DartsIsOpponentMatch(work)) {
                     DartsContinueOk(work);
                     break;
@@ -1383,9 +1761,9 @@ void DartsDoubleUp(void *data)
     case 0:
         ++work->gameState;
         if (work->difficulty == 1)
-            EVT_AT_KsIcon_Enqueue(212, 213, 214, 154, 1800, 154, 2, 0);
+            EVT_AT_KsIcon_Enqueue(212, 213, 214, DART_CHOICE_QUIT, 1800, DART_CHOICE_QUIT, 2, 0);
         else
-            EVT_AT_KsIcon_Enqueue(215, 216, 217, 154, 1800, 154, 2, 0);
+            EVT_AT_KsIcon_Enqueue(215, 216, 217, DART_CHOICE_QUIT, 1800, DART_CHOICE_QUIT, 2, 0);
         break;
     case 1:
         if (!FTBL.GetShouldRenderIcons(2)) {
@@ -1405,21 +1783,33 @@ void DartsDoubleUp(void *data)
                 work->entry->aiParameters[0] = 5;
                 work->entry->aiParameters[1] = 0;
                 FTBL.EV_SetPlayerFlag(12, 502, 1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+#else
                 FTBL.EV_LoadAudio("01130000.sbt", 6);
+#endif
                 break;
             case 216:
                 work->entry->bet = 200;
                 work->entry->aiParameters[0] = 5;
                 work->entry->aiParameters[1] = 0;
                 FTBL.EV_SetPlayerFlag(12, 502, 1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+#else
                 FTBL.EV_LoadAudio("01130000.sbt", 6);
+#endif
                 break;
             case 217:
                 work->entry->bet = 300;
                 work->entry->aiParameters[0] = 5;
                 work->entry->aiParameters[1] = 0;
                 FTBL.EV_SetPlayerFlag(12, 502, 1);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+#else
                 FTBL.EV_LoadAudio("01130000.sbt", 6);
+#endif
                 break;
             default:
                 work->entry->bet = 0;
@@ -1856,6 +2246,10 @@ int DartsIsMatchDecided(DartsEventWork *work)
 int DartsBattleResult(DartsEventWork *work)
 {
     int player, enemy, result;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    player = work->banks[1].score[3] / 10000;
+    enemy = work->banks[2].score[3] / 10000;
+#else
     if (FTBL.EV_GetShenmueFlag(0x3e0)) {
         player = work->banks[1].score[3];
         enemy = work->banks[2].score[3];
@@ -1863,6 +2257,7 @@ int DartsBattleResult(DartsEventWork *work)
         player = work->banks[1].score[3] / 10000;
         enemy = work->banks[2].score[3] / 10000;
     }
+#endif
     if (work->entry->enemy->name == DART_XHO) {
         if (work->banks[1].bullseyes > work->banks[2].bullseyes)
             result = 2;
@@ -1891,8 +2286,12 @@ void DartsShowTurnActor(DartsEventWork *work)
 void DartsSetTurn(DartsEventWork *work, char enemyTurn)
 {
     work->enemyTurn = enemyTurn;
-    if (!enemyTurn)
+    if (!enemyTurn) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        DartsLoadAudioBank(work, 1);
+#endif
         work->banks[0] = work->banks[1];
+    }
     else {
         DartsLoadAudioBank(work, 2);
         work->banks[0] = work->banks[2];
@@ -1904,6 +2303,9 @@ int DartsSwitchTurn(DartsEventWork *work)
     signed char previous = work->enemyTurn;
     work->enemyTurn = previous == 0;
     if (!work->enemyTurn) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        DartsLoadAudioBank(work, 1);
+#endif
         work->banks[2] = work->banks[0];
         work->banks[0] = work->banks[1];
     } else {
@@ -2163,7 +2565,13 @@ void DartsStartChildTask(DartsEventWork *work, int kind)
                 child->work = work;
                 child->reserved = 0;
             } else if (!child)
-                FTBL.EventAssertNullsub(__FILE__, 3817);
+                FTBL.EventAssertNullsub(__FILE__,
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    3647
+#else
+                    3817
+#endif
+                );
         } else
             FTBL.DebugLogToFileRemoved("Task Already Created %d\n", kind);
     } else
@@ -2236,12 +2644,24 @@ void DartsPositionOpponentHands(void *data)
 {
     DartsEventWork *work = (DartsEventWork *)data;
     if (work) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+#else
         FTBL.SetPlayerControlEnabled(0);
+#endif
         FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(work->entry->enemy->name));
         FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->entry->enemy->name), 1, 0, 0);
         FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->entry->enemy->name), 1, 1, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+#else
         FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(work->entry->enemy->name), 0, dartsHandPoseCommand, 0);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+#else
         FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(work->entry->enemy->name), 1, dartsHandPoseCommand, 0);
+#endif
         FTBL.EV_SetCharacterAlphaEnabled(work->entry->enemy->name, 0);
         FTBL.SetRefBoardParamsForCharaById(work->entry->enemy->name, 1);
         QueueDartsArrow(work->entry->enemy->name, GetDartsArrowName(2, 14));
@@ -2281,7 +2701,7 @@ void DartsOpponentAdmission(void *data)
         delay = DartsCheckBet(work);
         if (!delay) {
             work->gameState++;
-            EVT_AT_KsIcon_Enqueue(0xffff, 74, 75, 0xffff, 1800, 75, 2, 0);
+            EVT_AT_KsIcon_Enqueue(0xffff, DART_CHOICE_ACCEPT_BET, DART_CHOICE_DECLINE_BET, 0xffff, 1800, DART_CHOICE_DECLINE_BET, 2, 0);
             EVT_AT_SetCam(7319, DART_PLAYER, DART_PLAYER, 0, 0, 0);
             EVT_AT_CharaDisp(work->entry->enemy->name, 0, 1);
         } else if (delay > 0) {
@@ -2299,7 +2719,7 @@ void DartsOpponentAdmission(void *data)
     case 4:
         if (!FTBL.GetShouldRenderIcons(2)) {
             work->gameState = 0;
-            if (FTBL.shenGetCtrlSpeakIconFlag() == 74) {
+            if (FTBL.shenGetCtrlSpeakIconFlag() == DART_CHOICE_ACCEPT_BET) {
                 delay = DartsAcceptBet(work);
                 FTBL.HLib_SetCurrentTaskTo(DartsInitStart);
                 FTBL.HLib_SetupTaskDelay(delay);
@@ -2440,6 +2860,30 @@ int DartsAdmissionOffer(DartsEventWork *work)
 int DartsAcceptBet(DartsEventWork *work)
 {
     int delay, frames, index;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    switch (work->entry->enemy->name) {
+    case DART_FCJ:
+        delay = 50;
+        FTBL.SetMGOTOSIDAMA(9, 1);
+        break;
+    case DART_HCY:
+        delay = 100;
+        FTBL.SetMGOTOSIDAMA(11, 1);
+        break;
+    case DART_HLN:
+        delay = 40;
+        FTBL.SetMGOTOSIDAMA(10, 1);
+        break;
+    case DART_JON:
+        delay = 50;
+        FTBL.SetMGOTOSIDAMA(13, 1);
+        break;
+    default:
+        delay = 40;
+        FTBL.SetMGOTOSIDAMA(12, 1);
+        break;
+    }
+#else
     switch (work->entry->enemy->name) {
     case DART_HLN:
     default:
@@ -2455,6 +2899,7 @@ int DartsAcceptBet(DartsEventWork *work)
         delay = 100;
         break;
     }
+#endif
     frames = PlayDartsBetResponse(work->entry->enemy->name, work->difficulty, work->entry->bet);
     index = DartsOpponentIndex(work->entry->enemy->name);
     SetDartsPosition(work->entry->placement[work->entry->mode].character, work->entry->enemy->name, 0.0f, 0.0f, 4.0f, 0, 0);
@@ -2533,7 +2978,11 @@ int DartsOpponentAttachBone(shen_name opponent, int difficulty)
     if (!DartsIsHardJon(opponent, difficulty))
         bone = dartsOpponents[DartsOpponentIndex(opponent)].bone;
     else
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        bone = 0;
+#else
         bone = 14;
+#endif
     return bone;
 }
 
@@ -2631,6 +3080,30 @@ void DartsProjectileTask(void *data)
         FTBL.HLib_DestroyCurrentTask();
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void DartsNullTask(void *data)
+{
+}
+
+void DartsShowAimArrow(DartsEventWork *work)
+{
+    Vector3i rotation = {0, 0xc000, 0};
+    Vector3 position;
+    const shen_name arrow = SHEN_NAME4('Y', 'A', '_', 'd');
+    FTBL.AT_SetLocalBaseChara(arrow, -1);
+    FTBL.AT_SetLocalBaseChara(arrow, FTBL.SCEN_FindChar_Wrapper(GetDartsArrowName(0, work->state)));
+    if (work->standardBoard)
+        DartsProjectImpact(work, &position);
+    position.y += 1.4174f;
+    position.z = -0.068200007f;
+    FTBL.EV_EnsureCharacterDraw(arrow);
+    FTBL.EV_EnableCharacterDisplay(arrow);
+    FTBL.EV_AT_SetPos(arrow, 0x38000000, &position);
+    FTBL.EV_AT_SetAngY_0(arrow, 0x38000000, &rotation, 0);
+    FTBL.EV_DisableCharacterDisplay(DART_PLAYER);
+}
+#endif
+
 void *DartsExecuteResponse(int index, int opponentMatch, int playerTurn, int playerWon, shen_name opponent)
 {
     FTBL.scenCvsCtrlFree(0);
@@ -2638,7 +3111,13 @@ void *DartsExecuteResponse(int index, int opponentMatch, int playerTurn, int pla
     return dartsResponseCallbacks[index](opponentMatch, playerTurn, opponent);
 }
 
-const DartsResponseCallback dartsResponseCallbacks[30] = {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+static const char dartsScoreFormat[] = "%d : %d(%d)";
+static const char dartsRandomFormat[] = "Rnd = %d";
+static const char dartsRangeFormat[] = "<%d-%d> <%d-%d>";
+#endif
+
+const DartsResponseCallback dartsResponseCallbacks[DART_RESPONSE_COUNT] = {
     PlayDartsOpeningResponse,
     PlayDartsReadyResponse,
     PlayDartsExitResponse,
@@ -2668,7 +3147,9 @@ const DartsResponseCallback dartsResponseCallbacks[30] = {
     PlayDartsOpponentFinalResponse,
     PlayDartsThrowStartResponse,
     PlayDartsThrowResponse,
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     PlayDartsRoundOverResponse
+#endif
 };
 
 void *PlayDartsOpeningResponse(int mode, int playerTurn, shen_name opponent)
@@ -2765,11 +3246,21 @@ void *PlayDartsZeroScoreResponse(int mode, int playerTurn, shen_name opponent)
         if (playerTurn) {
             switch (opponent) {
             case DART_FCJ:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                if (random < 1.0f) {
+                    voice = FTBL.EV_PlayDialogue("0137D041");
+                } else if (random < 2.0f) {
+                    voice = FTBL.EV_PlayDialogue("0137D042");
+                } else {
+                    voice = FTBL.EV_PlayDialogue("0137D043");
+                }
+#else
                 if (random < 1.0f || random < 2.0f) {
                     voice = FTBL.EV_PlayDialogue("0137D042");
                 } else {
                     voice = FTBL.EV_PlayDialogue("0137D043");
                 }
+#endif
                 break;
             case DART_HCY:
                 if (random < 1.0f) {
@@ -2800,18 +3291,36 @@ void *PlayDartsZeroScoreResponse(int mode, int playerTurn, shen_name opponent)
                     if (random < 2.0f) {
                         voice = FTBL.EV_PlayDialogue("0137B039");
                     } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                        voice = FTBL.EV_PlayDialogue("0137B028");
+#else
                         voice = FTBL.EV_PlayDialogue("0137B052");
+#endif
                     }
                 }
                 break;
             default:
-                if (random < 0.5f) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                if (random < 1.0f)
+#else
+                if (random < 0.5f)
+#endif
+                {
                     voice = FTBL.EV_PlayDialogue("0137E034");
                 } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    if (random < 1.5f) {
+#else
                     if (random < 1.0f) {
+#endif
                         voice = FTBL.EV_PlayDialogue("0137E035");
                     } else {
-                        if (random < 1.5f || random >= 2.0f && random < 2.5f) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                        if (random < 2.5f)
+#else
+                        if (random < 1.5f || random >= 2.0f && random < 2.5f)
+#endif
+                {
                             voice = FTBL.EV_PlayDialogue("0137E036");
                         } else {
                             voice = FTBL.EV_PlayDialogue("0137E037");
@@ -2867,12 +3376,28 @@ void *PlayDartsZeroScoreResponse(int mode, int playerTurn, shen_name opponent)
                 }
                 break;
             default:
-                if (random < 0.5f) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                if (random < 1.0f)
+#else
+                if (random < 0.5f)
+#endif
+                {
                     voice = FTBL.EV_PlayDialogue("0137E023");
                 } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    if (random < 1.5f) {
+#else
                     if (random < 1.0f) {
+#endif
                         voice = FTBL.EV_PlayDialogue("0137E024");
                     } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                        if (random < 2.5f) {
+                            voice = FTBL.EV_PlayDialogue("0137E026");
+                        } else {
+                            voice = FTBL.EV_PlayDialogue("0137E025");
+                        }
+#else
                         if (random < 2.0f) {
                             voice = FTBL.EV_PlayDialogue("0137E026");
                         } else {
@@ -2882,6 +3407,7 @@ void *PlayDartsZeroScoreResponse(int mode, int playerTurn, shen_name opponent)
                                 voice = FTBL.EV_PlayDialogue("0137E025");
                             }
                         }
+#endif
                     }
                 }
                 break;
@@ -2945,6 +3471,21 @@ void *PlayDartsLowScoreResponse(int mode, int playerTurn, shen_name opponent)
                 }
                 break;
             default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                if (random < 1.0f) {
+                    voice = FTBL.EV_PlayDialogue("0137E034");
+                } else {
+                    if (random < 1.5f) {
+                        voice = FTBL.EV_PlayDialogue("0137E035");
+                    } else {
+                        if (random < 2.5f) {
+                            voice = FTBL.EV_PlayDialogue("0137E036");
+                        } else {
+                            voice = FTBL.EV_PlayDialogue("0137E037");
+                        }
+                    }
+                }
+#else
                 if (random < 0.5f) {
                     voice = FTBL.EV_PlayDialogue("0137E034");
                 } else {
@@ -2958,6 +3499,7 @@ void *PlayDartsLowScoreResponse(int mode, int playerTurn, shen_name opponent)
                         }
                     }
                 }
+#endif
                 break;
             }
         } else {
@@ -2997,16 +3539,39 @@ void *PlayDartsLowScoreResponse(int mode, int playerTurn, shen_name opponent)
                 break;
             case DART_JON:
                 if (random < 1.0f) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    voice = FTBL.EV_PlayDialogue("0137B010");
+#else
                     voice = FTBL.EV_PlayDialogue("0137B050");
+#endif
                 } else {
                     if (random < 2.0f) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                        voice = FTBL.EV_PlayDialogue("0137B012");
+#else
                         voice = FTBL.EV_PlayDialogue("0137B051");
+#endif
                     } else {
                         voice = FTBL.EV_PlayDialogue("0137B028");
                     }
                 }
                 break;
             default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                if (random < 1.0f) {
+                    voice = FTBL.EV_PlayDialogue("0137E023");
+                } else {
+                    if (random < 1.5f) {
+                        voice = FTBL.EV_PlayDialogue("0137E024");
+                    } else {
+                        if (random < 2.5f) {
+                            voice = FTBL.EV_PlayDialogue("0137E026");
+                        } else {
+                            voice = FTBL.EV_PlayDialogue("0137E025");
+                        }
+                    }
+                }
+#else
                 if (random < 0.5f) {
                     voice = FTBL.EV_PlayDialogue("0137E023");
                 } else {
@@ -3024,6 +3589,7 @@ void *PlayDartsLowScoreResponse(int mode, int playerTurn, shen_name opponent)
                         }
                     }
                 }
+#endif
                 break;
             }
         }
@@ -3094,6 +3660,21 @@ void *PlayDartsMiddleScoreResponse(int mode, int playerTurn, shen_name opponent)
                 }
                 break;
             default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                if (random < 1.0f) {
+                    voice = FTBL.EV_PlayDialogue("0137E035");
+                } else {
+                    if (random < 1.5f) {
+                        voice = FTBL.EV_PlayDialogue("0137E034");
+                    } else {
+                        if (random < 2.5f) {
+                            voice = FTBL.EV_PlayDialogue("0137E036");
+                        } else {
+                            voice = FTBL.EV_PlayDialogue("0137E037");
+                        }
+                    }
+                }
+#else
                 if (random < 0.5f) {
                     voice = FTBL.EV_PlayDialogue("0137E034");
                 } else {
@@ -3107,6 +3688,7 @@ void *PlayDartsMiddleScoreResponse(int mode, int playerTurn, shen_name opponent)
                         }
                     }
                 }
+#endif
                 break;
             }
         } else {
@@ -3156,6 +3738,21 @@ void *PlayDartsMiddleScoreResponse(int mode, int playerTurn, shen_name opponent)
                 }
                 break;
             default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                if (random < 1.0f) {
+                    voice = FTBL.EV_PlayDialogue("0137E023");
+                } else {
+                    if (random < 1.5f) {
+                        voice = FTBL.EV_PlayDialogue("0137E024");
+                    } else {
+                        if (random < 2.5f) {
+                            voice = FTBL.EV_PlayDialogue("0137E026");
+                        } else {
+                            voice = FTBL.EV_PlayDialogue("0137E025");
+                        }
+                    }
+                }
+#else
                 if (random < 0.5f) {
                     voice = FTBL.EV_PlayDialogue("0137E023");
                 } else {
@@ -3173,6 +3770,7 @@ void *PlayDartsMiddleScoreResponse(int mode, int playerTurn, shen_name opponent)
                         }
                     }
                 }
+#endif
                 break;
             }
         }
@@ -3283,6 +3881,21 @@ void *PlayDartsHighScoreResponse(int mode, int playerTurn, shen_name opponent)
                 }
                 break;
             default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                if (random < 1.0f) {
+                    voice = FTBL.EV_PlayDialogue("0137E034");
+                } else {
+                    if (random < 1.5f) {
+                        voice = FTBL.EV_PlayDialogue("0137E035");
+                    } else {
+                        if (random < 2.5f) {
+                            voice = FTBL.EV_PlayDialogue("0137E036");
+                        } else {
+                            voice = FTBL.EV_PlayDialogue("0137E037");
+                        }
+                    }
+                }
+#else
                 if (random < 0.5f) {
                     voice = FTBL.EV_PlayDialogue("0137E034");
                 } else {
@@ -3296,6 +3909,7 @@ void *PlayDartsHighScoreResponse(int mode, int playerTurn, shen_name opponent)
                         }
                     }
                 }
+#endif
                 break;
             }
         } else {
@@ -3349,6 +3963,21 @@ void *PlayDartsHighScoreResponse(int mode, int playerTurn, shen_name opponent)
                 }
                 break;
             default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                if (random < 1.0f) {
+                    voice = FTBL.EV_PlayDialogue("0137E023");
+                } else {
+                    if (random < 1.5f) {
+                        voice = FTBL.EV_PlayDialogue("0137E024");
+                    } else {
+                        if (random < 2.5f) {
+                            voice = FTBL.EV_PlayDialogue("0137E025");
+                        } else {
+                            voice = FTBL.EV_PlayDialogue("0137E026");
+                        }
+                    }
+                }
+#else
                 if (random < 0.5f) {
                     voice = FTBL.EV_PlayDialogue("0137E023");
                 } else {
@@ -3366,6 +3995,7 @@ void *PlayDartsHighScoreResponse(int mode, int playerTurn, shen_name opponent)
                         }
                     }
                 }
+#endif
                 break;
             }
         }
@@ -3412,6 +4042,9 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
             if (dartsPlayerWon) {
                 switch (opponent) {
                 case DART_FCJ:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    voice = FTBL.EV_PlayDialogue("0137D057");
+#else
                     if (random < 1.0f) {
                         voice = FTBL.EV_PlayDialogue("0137D065");
                     } else {
@@ -3421,6 +4054,7 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
                             voice = FTBL.EV_PlayDialogue("0137D067");
                         }
                     }
+#endif
                     break;
                 case DART_HCY:
                     if (random < 1.0f) {
@@ -3434,6 +4068,9 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
                     }
                     break;
                 case DART_HLN:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    voice = FTBL.EV_PlayDialogue("0137C044");
+#else
                     if (random < 1.0f) {
                         voice = FTBL.EV_PlayDialogue("0137C053");
                     } else {
@@ -3443,8 +4080,12 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
                             voice = FTBL.EV_PlayDialogue("0137C055");
                         }
                     }
+#endif
                     break;
                 case DART_JON:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    voice = FTBL.EV_PlayDialogue("0137B047");
+#else
                     if (random < 1.0f) {
                         voice = FTBL.EV_PlayDialogue("0137B059");
                     } else {
@@ -3454,17 +4095,49 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
                             voice = FTBL.EV_PlayDialogue("0137B061");
                         }
                     }
+#endif
                     break;
                 default:
                     voice = FTBL.EV_PlayDialogue("0137E049");
                     break;
                 }
             } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                switch (opponent) {
+                case DART_FCJ:
+                    voice = FTBL.EV_PlayDialogue("0137D032");
+                    break;
+                case DART_HCY:
+                    if (random < 1.0f) {
+                        voice = FTBL.EV_PlayDialogue("0137F058");
+                    } else {
+                        if (random < 2.0f) {
+                            voice = FTBL.EV_PlayDialogue("0137F059");
+                        } else {
+                            voice = FTBL.EV_PlayDialogue("0137F060");
+                        }
+                    }
+                    break;
+                case DART_HLN:
+                    voice = FTBL.EV_PlayDialogue("0137C031");
+                    break;
+                case DART_JON:
+                    voice = FTBL.EV_PlayDialogue("0137B023");
+                    break;
+                default:
+                    voice = FTBL.EV_PlayDialogue("0137E033");
+                    break;
+                }
+#else
                 voice = FTBL.EV_PlayDialogue("0113A035");
+#endif
             }
         } else {
             switch (opponent) {
             case DART_FCJ:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                voice = FTBL.EV_PlayDialogue("0137D018");
+#else
                 if (random < 1.0f) {
                     voice = FTBL.EV_PlayDialogue("0137D059");
                 } else {
@@ -3474,6 +4147,7 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
                         voice = FTBL.EV_PlayDialogue("0137D061");
                     }
                 }
+#endif
                 break;
             case DART_HCY:
                 if (random < 1.0f) {
@@ -3487,6 +4161,9 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
                 }
                 break;
             case DART_HLN:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                voice = FTBL.EV_PlayDialogue("0137C014");
+#else
                 if (random < 1.0f) {
                     voice = FTBL.EV_PlayDialogue("0137C047");
                 } else {
@@ -3496,8 +4173,12 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
                         voice = FTBL.EV_PlayDialogue("0137C049");
                     }
                 }
+#endif
                 break;
             case DART_JON:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                voice = FTBL.EV_PlayDialogue("0137B027");
+#else
                 if (random < 1.0f) {
                     voice = FTBL.EV_PlayDialogue("0137B053");
                 } else {
@@ -3507,6 +4188,7 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
                         voice = FTBL.EV_PlayDialogue("0137B055");
                     }
                 }
+#endif
                 break;
             default:
                 voice = FTBL.EV_PlayDialogue("0137E019");
@@ -3517,6 +4199,16 @@ void *PlayDartsRoundResultResponse(int mode, int playerTurn, shen_name opponent)
     return voice;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void *PlayDartsBonusResultResponse(int mode, int playerTurn, shen_name opponent)
+{
+    void *voice = 0;
+    FTBL.GetRandomNumberInRange(3.0f);
+    if (playerTurn)
+        voice = FTBL.EV_PlayDialogue("0113A035");
+    return voice;
+}
+#else
 void *PlayDartsBonusResultResponse(int mode, int playerTurn, shen_name opponent)
 {
     void *voice;
@@ -3564,6 +4256,7 @@ void *PlayDartsBonusResultResponse(int mode, int playerTurn, shen_name opponent)
     }
     return voice;
 }
+#endif
 
 void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
 {
@@ -3583,6 +4276,7 @@ void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
         if (playerTurn) {
             if (dartsPlayerWon) {
                 switch (opponent) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
                 case DART_FCJ:
                     if (random < 1.0f) {
                         voice = FTBL.EV_PlayDialogue("0137D065");
@@ -3594,6 +4288,7 @@ void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
                         }
                     }
                     break;
+#endif
                 case DART_HCY:
                     if (random < 1.0f) {
                         voice = FTBL.EV_PlayDialogue("0137F061");
@@ -3606,6 +4301,9 @@ void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
                     }
                     break;
                 case DART_HLN:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    voice = FTBL.EV_PlayDialogue("0137C044");
+#else
                     if (random < 1.0f) {
                         voice = FTBL.EV_PlayDialogue("0137C053");
                     } else {
@@ -3615,8 +4313,12 @@ void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
                             voice = FTBL.EV_PlayDialogue("0137C055");
                         }
                     }
+#endif
                     break;
                 case DART_JON:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                    voice = FTBL.EV_PlayDialogue("0137B047");
+#else
                     if (random < 1.0f) {
                         voice = FTBL.EV_PlayDialogue("0137B059");
                     } else {
@@ -3626,17 +4328,49 @@ void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
                             voice = FTBL.EV_PlayDialogue("0137B061");
                         }
                     }
+#endif
                     break;
                 default:
                     voice = FTBL.EV_PlayDialogue("0137E049");
                     break;
                 }
             } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                switch (opponent) {
+                case DART_FCJ:
+                    voice = FTBL.EV_PlayDialogue("0137D032");
+                    break;
+                case DART_HCY:
+                    if (random < 1.0f) {
+                        voice = FTBL.EV_PlayDialogue("0137F058");
+                    } else {
+                        if (random < 2.0f) {
+                            voice = FTBL.EV_PlayDialogue("0137F059");
+                        } else {
+                            voice = FTBL.EV_PlayDialogue("0137F060");
+                        }
+                    }
+                    break;
+                case DART_HLN:
+                    voice = FTBL.EV_PlayDialogue("0137C031");
+                    break;
+                case DART_JON:
+                    voice = FTBL.EV_PlayDialogue("0137B023");
+                    break;
+                default:
+                    voice = FTBL.EV_PlayDialogue("0137E033");
+                    break;
+                }
+#else
                 voice = FTBL.EV_PlayDialogue("0113A035");
+#endif
             }
         } else {
             switch (opponent) {
             case DART_FCJ:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                voice = FTBL.EV_PlayDialogue("0137D018");
+#else
                 if (random < 1.0f) {
                     voice = FTBL.EV_PlayDialogue("0137D059");
                 } else {
@@ -3646,6 +4380,7 @@ void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
                         voice = FTBL.EV_PlayDialogue("0137D061");
                     }
                 }
+#endif
                 break;
             case DART_HCY:
                 if (random < 1.0f) {
@@ -3659,6 +4394,9 @@ void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
                 }
                 break;
             case DART_HLN:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                voice = FTBL.EV_PlayDialogue("0137C014");
+#else
                 if (random < 1.0f) {
                     voice = FTBL.EV_PlayDialogue("0137C047");
                 } else {
@@ -3668,8 +4406,12 @@ void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
                         voice = FTBL.EV_PlayDialogue("0137C049");
                     }
                 }
+#endif
                 break;
             case DART_JON:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                voice = FTBL.EV_PlayDialogue("0137B027");
+#else
                 if (random < 1.0f) {
                     voice = FTBL.EV_PlayDialogue("0137B053");
                 } else {
@@ -3679,6 +4421,7 @@ void *PlayDartsFinalResultResponse(int mode, int playerTurn, shen_name opponent)
                         voice = FTBL.EV_PlayDialogue("0137B055");
                     }
                 }
+#endif
                 break;
             default:
                 voice = FTBL.EV_PlayDialogue("0137E019");
@@ -3742,12 +4485,41 @@ void *PlayDartsDeclineOpponentResponse(int mode, int playerTurn, shen_name oppon
     if (opponent == DART_HCY) {
         EVT_AT_SetVoice("0137A012", 0);
         EVT_AT_SetVoice("0137F010", 80);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 80);
+#endif
     } else
         PlayDartsOpponentExit(opponent);
     return 0;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void *PlayDartsWonBetResponse(int mode, int playerTurn, shen_name opponent)
+{
+    void *voice = 0;
+    FTBL.GetRandomNumberInRange(3.0f);
+    switch (opponent) {
+    case DART_FCJ:
+        voice = FTBL.EV_PlayDialogue("0137D054");
+        break;
+    case DART_HCY:
+        EVT_AT_SetVoice("0137F048", 0);
+        EVT_AT_SetVoice("0137F066", 160);
+        EVT_AT_SetVoice("0137F067", 360);
+        break;
+    case DART_HLN:
+        voice = FTBL.EV_PlayDialogue("0137C045");
+        break;
+    case DART_JON:
+        voice = FTBL.EV_PlayDialogue("0137B046");
+        break;
+    default:
+        voice = FTBL.EV_PlayDialogue("0137E033");
+        break;
+    }
+    return voice;
+}
+#else
 void *PlayDartsWonBetResponse(int mode, int playerTurn, shen_name opponent)
 {
     FTBL.GetRandomNumberInRange(3.0f);
@@ -3756,13 +4528,17 @@ void *PlayDartsWonBetResponse(int mode, int playerTurn, shen_name opponent)
         EVT_AT_SetVoice("0137D070", 0);
         EVT_AT_SetVoice("0137D071", 350);
         EVT_AT_SetVoice("0137D054", 400);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 0);
+#endif
         break;
     case DART_HCY:
         EVT_AT_SetVoice("0137F048", 0);
         EVT_AT_SetVoice("0137F066", 160);
         EVT_AT_SetVoice("0137F067", 360);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 0);
+#endif
         break;
     case DART_HLN:
         EVT_AT_SetVoice("0137C045", 0);
@@ -3779,17 +4555,22 @@ void *PlayDartsWonBetResponse(int mode, int playerTurn, shen_name opponent)
             EVT_AT_SetVoice("0137B067", 120);
             EVT_AT_SetVoice("0137B068", 270);
         }
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 0);
+#endif
         break;
     default:
         EVT_AT_SetVoice("0137E060", 0);
         EVT_AT_SetVoice("0137E061", 160);
         EVT_AT_SetVoice("0137E062", 380);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 0);
+#endif
         break;
     }
     return 0;
 }
+#endif
 
 void *PlayDartsOpponentPaymentResponse(int mode, int playerTurn, shen_name opponent)
 {
@@ -3815,9 +4596,43 @@ void *PlayDartsOpponentPaymentResponse(int mode, int playerTurn, shen_name oppon
     return voice;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void *PlayDartsLostBetResponse(int mode, int playerTurn, shen_name opponent)
 {
+    void *voice = 0;
+    FTBL.GetRandomNumberInRange(3.0f);
+    switch (opponent) {
+    case DART_FCJ:
+        voice = FTBL.EV_PlayDialogue("0137D056");
+        break;
+    case DART_HCY:
+        EVT_AT_SetVoice("0137F068", 0);
+        EVT_AT_SetVoice("0137F050", 90);
+        EVT_AT_SetVoice("0137F069", 240);
+        break;
+    case DART_HLN:
+        voice = FTBL.EV_PlayDialogue("0137C043");
+        break;
+    case DART_JON:
+        if (FTBL.EV_GetPlayerFlag(11, 502)) {
+            EVT_AT_SetVoice("0137B043", 0);
+            EVT_AT_SetVoice("0137B044", 110);
+        } else {
+            voice = FTBL.EV_PlayDialogue("0137B043");
+        }
+        break;
+    default:
+        voice = FTBL.EV_PlayDialogue("0137E047");
+        break;
+    }
+    return voice;
+}
+#else
+void *PlayDartsLostBetResponse(int mode, int playerTurn, shen_name opponent)
+{
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 0);
+#endif
     FTBL.GetRandomNumberInRange(3.0f);
     switch (opponent) {
     case DART_FCJ:
@@ -3854,11 +4669,14 @@ void *PlayDartsLostBetResponse(int mode, int playerTurn, shen_name opponent)
     }
     return 0;
 }
+#endif
 
 void *PlayDartsOpponentReplayResponse(int mode, int playerTurn, shen_name opponent)
 {
     void *voice = 0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetFaceLooks(opponent, 0, 30, 1.0f, 0);
+#endif
     FTBL.GetRandomNumberInRange(3.0f);
     switch (opponent) {
     case DART_FCJ:
@@ -3872,10 +4690,18 @@ void *PlayDartsOpponentReplayResponse(int mode, int playerTurn, shen_name oppone
         break;
     case DART_JON:
         EVT_AT_SetVoice("0137B047", 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_SetVoice("0137B048", 120);
+#else
         EVT_AT_SetVoice("0137B073", 110);
+#endif
         break;
     default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        voice = FTBL.EV_PlayDialogue("0137E049");
+#else
         voice = FTBL.EV_PlayDialogue("0137E063");
+#endif
         break;
     }
     return voice;
@@ -3884,24 +4710,43 @@ void *PlayDartsOpponentReplayResponse(int mode, int playerTurn, shen_name oppone
 void *PlayDartsOpponentBonusReplayResponse(int mode, int playerTurn, shen_name opponent)
 {
     void *voice = 0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetFaceLooks(opponent, 0, 30, 1.0f, 0);
+#endif
     FTBL.GetRandomNumberInRange(3.0f);
     switch (opponent) {
     case DART_FCJ:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        voice = FTBL.EV_PlayDialogue("0137D055");
+#else
         voice = FTBL.EV_PlayDialogue("0137D074");
+#endif
         break;
     case DART_HCY:
         voice = FTBL.EV_PlayDialogue("0137F049");
         break;
     case DART_HLN:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        voice = FTBL.EV_PlayDialogue("0137C044");
+#else
         voice = FTBL.EV_PlayDialogue("0137C062");
+#endif
         break;
     case DART_JON:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_SetVoice("0137B047", 0);
+        EVT_AT_SetVoice("0137B048", 120);
+#else
         voice = FTBL.EV_PlayDialogue("0137B047");
+#endif
         break;
     default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        voice = FTBL.EV_PlayDialogue("0137E051");
+#else
         EVT_AT_SetVoice("0137E064", 0);
         EVT_AT_SetVoice("0137E065", 70);
+#endif
         break;
     }
     return voice;
@@ -3910,7 +4755,9 @@ void *PlayDartsOpponentBonusReplayResponse(int mode, int playerTurn, shen_name o
 void *PlayDartsOpponentFinalResponse(int mode, int playerTurn, shen_name opponent)
 {
     void *voice;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetFaceLooks(opponent, 0, 30, 1.0f, 0);
+#endif
     FTBL.GetRandomNumberInRange(3.0f);
     switch (opponent) {
     case DART_FCJ:
@@ -3926,7 +4773,11 @@ void *PlayDartsOpponentFinalResponse(int mode, int playerTurn, shen_name opponen
         voice = FTBL.EV_PlayDialogue("0137B047");
         break;
     default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        voice = FTBL.EV_PlayDialogue("0137E048");
+#else
         voice = FTBL.EV_PlayDialogue("0137E049");
+#endif
         break;
     }
     return voice;
@@ -3936,7 +4787,9 @@ void *PlayDartsThrowStartResponse(int mode, int playerTurn, shen_name opponent)
 {
     void *voice;
     float random;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetFaceLooks(opponent, 0, 30, 1.0f, 0);
+#endif
     random = FTBL.GetRandomNumberInRange(3.0f);
     switch (opponent) {
     case DART_FCJ:
@@ -4063,6 +4916,7 @@ void *PlayDartsThrowResponse(int mode, int playerTurn, shen_name opponent)
     return voice;
 }
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void *PlayDartsRoundOverResponse(int mode, int playerTurn, shen_name opponent)
 {
     void *voice = 0;
@@ -4108,6 +4962,7 @@ void *PlayDartsRoundOverResponse(int mode, int playerTurn, shen_name opponent)
     }
     return voice;
 }
+#endif
 
 void PrepareDartsOpponentAdmission(shen_name opponent)
 {
@@ -4117,7 +4972,11 @@ void PrepareDartsOpponentAdmission(shen_name opponent)
             EVT_AT_SetVoice("0137D008", 0);
         else {
             EVT_AT_SetVoice("0137D001", 0);
-            EVT_AT_SetVoice("0137A011", 50);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137A011", 90);
+#else
+EVT_AT_SetVoice("0137A011", 50);
+#endif
         }
         break;
     case DART_HCY:
@@ -4133,7 +4992,11 @@ void PrepareDartsOpponentAdmission(shen_name opponent)
             EVT_AT_SetVoice("0137C007", 0);
         else {
             EVT_AT_SetVoice("0137C001", 0);
-            EVT_AT_SetVoice("0137A010", 50);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137A010", 60);
+#else
+EVT_AT_SetVoice("0137A010", 50);
+#endif
         }
         break;
     case DART_JON:
@@ -4141,16 +5004,31 @@ void PrepareDartsOpponentAdmission(shen_name opponent)
             EVT_AT_SetVoice("0137B007", 0);
         else {
             EVT_AT_SetVoice("0137B001", 0);
-            EVT_AT_SetVoice("0137B002", 120);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137B002", 110);
+#else
+EVT_AT_SetVoice("0137B002", 120);
+#endif
         }
         break;
     default:
         if (FTBL.EV_GetPlayerFlag(11, 475)) {
             EVT_AT_SetVoice("0137E010", 0);
-            EVT_AT_SetVoice("0137E011", 150);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137E011", 70);
+#else
+EVT_AT_SetVoice("0137E011", 150);
+#endif
         } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            EVT_AT_SetVoice("0137E001", 0);
+            EVT_AT_SetVoice("0137E002", 120);
+            EVT_AT_SetVoice("0137E003", 190);
+            EVT_AT_SetVoice("0137E004", 240);
+#else
             EVT_AT_SetVoice("0137E052", 0);
             EVT_AT_SetVoice("0137E053", 180);
+#endif
         }
         break;
     }
@@ -4162,15 +5040,39 @@ int PlayDartsOpponentAdmission(shen_name opponent)
     switch (opponent) {
     case DART_FCJ:
         if (FTBL.EV_GetPlayerFlag(11, 478)) {
-            frames = 120;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 160;
+#else
+frames = 120;
+#endif
             EVT_AT_SetVoice("0137D009", 0);
         } else {
-            frames = 540;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 650;
+#else
+frames = 540;
+#endif
             EVT_AT_SetVoice("0137D003", 0);
-            EVT_AT_SetVoice("0137D004", 100);
-            EVT_AT_SetVoice("0137D005", 160);
-            EVT_AT_SetVoice("0137D006", 270);
-            EVT_AT_SetVoice("0137D007", 450);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137D004", 120);
+#else
+EVT_AT_SetVoice("0137D004", 100);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137D005", 190);
+#else
+EVT_AT_SetVoice("0137D005", 160);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137D006", 310);
+#else
+EVT_AT_SetVoice("0137D006", 270);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137D007", 540);
+#else
+EVT_AT_SetVoice("0137D007", 450);
+#endif
         }
         break;
     case DART_HCY:
@@ -4189,48 +5091,133 @@ int PlayDartsOpponentAdmission(shen_name opponent)
         break;
     case DART_HLN:
         if (FTBL.EV_GetPlayerFlag(11, 477)) {
-            frames = 60;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 70;
+#else
+frames = 60;
+#endif
             EVT_AT_SetVoice("0137C008", 0);
         } else {
-            frames = 450;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 540;
+#else
+frames = 450;
+#endif
             EVT_AT_SetVoice("0137C002", 0);
-            EVT_AT_SetVoice("0137C003", 100);
-            EVT_AT_SetVoice("0137C004", 170);
-            EVT_AT_SetVoice("0137C005", 260);
-            EVT_AT_SetVoice("0137C006", 390);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137C003", 120);
+#else
+EVT_AT_SetVoice("0137C003", 100);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137C004", 190);
+#else
+EVT_AT_SetVoice("0137C004", 170);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137C005", 300);
+#else
+EVT_AT_SetVoice("0137C005", 260);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137C006", 470);
+#else
+EVT_AT_SetVoice("0137C006", 390);
+#endif
         }
         break;
     case DART_JON:
         if (FTBL.EV_GetPlayerFlag(11, 476)) {
             if (FTBL.EV_GetPlayerFlag(11, 502)) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                frames = 320;
+                EVT_AT_SetVoice("0137B003", 0);
+                EVT_AT_SetVoice("0137B008", 110);
+                EVT_AT_SetVoice("0137B009", 210);
+#else
                 frames = 230;
                 EVT_AT_SetVoice("0137B003", 0);
                 EVT_AT_SetVoice("0137B006", 110);
+#endif
             } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                frames = 240;
+                EVT_AT_SetVoice("0137B003", 0);
+                EVT_AT_SetVoice("0137B006", 110);
+#else
                 frames = 230;
                 EVT_AT_SetVoice("0137B003", 0);
                 EVT_AT_SetVoice("0137B006", 110);
+#endif
             }
         } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            frames = 540;
+#else
             frames = 450;
+#endif
             EVT_AT_SetVoice("0137B003", 0);
-            EVT_AT_SetVoice("0137B004", 110);
-            EVT_AT_SetVoice("0137B005", 210);
-            EVT_AT_SetVoice("0137B006", 340);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137B004", 120);
+#else
+EVT_AT_SetVoice("0137B004", 110);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137B005", 230);
+#else
+EVT_AT_SetVoice("0137B005", 210);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137B006", 430);
+#else
+EVT_AT_SetVoice("0137B006", 340);
+#endif
         }
         break;
     default:
         if (FTBL.EV_GetPlayerFlag(11, 475)) {
-            frames = 70;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 90;
+#else
+frames = 70;
+#endif
             EVT_AT_SetVoice("0137E012", 0);
         } else {
-            frames = 390;
-            EVT_AT_SetVoice("0137E054", 0);
-            EVT_AT_SetVoice("0137A017", 60);
-            EVT_AT_SetVoice("0137E055", 90);
-            EVT_AT_SetVoice("0137E007", 130);
-            EVT_AT_SetVoice("0137E008", 190);
-            EVT_AT_SetVoice("0137E009", 320);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 590;
+#else
+frames = 390;
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137E005", 0);
+#else
+EVT_AT_SetVoice("0137E054", 0);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137A015", 90);
+#else
+EVT_AT_SetVoice("0137A017", 60);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137E006", 160);
+#else
+EVT_AT_SetVoice("0137E055", 90);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137E007", 260);
+#else
+EVT_AT_SetVoice("0137E007", 130);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137E008", 350);
+#else
+EVT_AT_SetVoice("0137E008", 190);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137E009", 500);
+#else
+EVT_AT_SetVoice("0137E009", 320);
+#endif
         }
         break;
     }
@@ -4242,26 +5229,48 @@ int PlayDartsBetResponse(shen_name opponent, int difficulty, int bet)
     int frames;
     switch (opponent) {
     case DART_FCJ:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        frames = 170;
+#else
         frames = 120;
+#endif
         EVT_AT_SetVoice("0137A014", 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_SetVoice("0137D013", 50);
+#else
         EVT_AT_SetVoice("0137D013", 30);
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 50);
+#endif
         break;
     case DART_HCY:
         frames = 160;
         EVT_AT_SetVoice("0137A016", 0);
         EVT_AT_SetVoice("0137F015", 100);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 100);
+#endif
         break;
     case DART_HLN:
         frames = 120;
         EVT_AT_SetVoice("0137A003", 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_SetVoice("0137C010", 40);
+#else
         EVT_AT_SetVoice("0137C010", 30);
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 40);
+#endif
         break;
     case DART_JON:
         if (difficulty) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            frames = 170;
+#else
             frames = 130;
+#endif
             switch (bet) {
             case 10:
                 EVT_AT_SetVoice("0137A004", 0);
@@ -4289,22 +5298,85 @@ int PlayDartsBetResponse(shen_name opponent, int difficulty, int bet)
                 break;
             }
         } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            frames = 150;
+#else
             frames = 130;
+#endif
             EVT_AT_SetVoice("0137A003", 0);
             EVT_AT_SetVoice("0137B016", 50);
         }
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 50);
+#endif
         break;
     default:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        frames = 180;
+#else
         frames = 130;
+#endif
         EVT_AT_SetVoice("0137A003", 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_SetVoice("0137E015", 40);
+#else
         EVT_AT_SetVoice("0137E015", 30);
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 3, 30, 1.0f, 40);
+#endif
         break;
     }
     return frames;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int PlayDartsOpponentResult(shen_name opponent, int bet)
+{
+    int frames = 0;
+    switch (opponent) {
+    case DART_FCJ:
+        EVT_AT_SetVoice("0137A013", 0);
+        switch (bet) {
+        case 10:
+            frames = -120;
+            EVT_AT_SetVoice("0137D011", 80);
+            break;
+        case 5:
+            frames = -120;
+            EVT_AT_SetVoice("0137D012", 80);
+            break;
+        case 1:
+            frames = 120;
+            EVT_AT_SetVoice("0137D010", 80);
+            break;
+        }
+        break;
+    case DART_HCY:
+        frames = 200;
+        EVT_AT_SetVoice("0137A012", 0);
+        EVT_AT_SetVoice("0137F010", 80);
+        break;
+    case DART_HLN:
+        frames = 120;
+        EVT_AT_SetVoice("0137A002", 0);
+        EVT_AT_SetVoice("0137C009", 50);
+        break;
+    case DART_JON:
+        frames = 180;
+        EVT_AT_SetVoice("0137A002", 0);
+        EVT_AT_SetVoice("0137B010", 50);
+        EVT_AT_SetVoice("0137B013", 130);
+        break;
+    default:
+        frames = 150;
+        EVT_AT_SetVoice("0137A002", 0);
+        EVT_AT_SetVoice("0137E014", 50);
+        break;
+    }
+    return frames;
+}
+#else
 int PlayDartsOpponentResult(shen_name opponent, int bet)
 {
     int frames;
@@ -4324,7 +5396,9 @@ int PlayDartsOpponentResult(shen_name opponent, int bet)
         default:
             frames = 170;
             EVT_AT_SetVoice("0137D010", 60);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 80);
+#endif
             break;
         }
         break;
@@ -4353,17 +5427,22 @@ int PlayDartsOpponentResult(shen_name opponent, int bet)
             EVT_AT_SetVoice("0137B014", 100);
         else
             EVT_AT_SetVoice("0137B015", 100);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 50);
+#endif
         break;
     default:
         frames = 140;
         EVT_AT_SetVoice("0137A002", 0);
         EVT_AT_SetVoice("0137E014", 50);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 50);
+#endif
         break;
     }
     return frames;
 }
+#endif
 
 int PlayDartsOpponentExit(shen_name opponent)
 {
@@ -4371,10 +5450,16 @@ int PlayDartsOpponentExit(shen_name opponent)
     float random = FTBL.GetRandomNumberInRange(3.0f);
     switch (opponent) {
     case DART_FCJ:
-        frames = 190;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 200;
+#else
+frames = 190;
+#endif
         EVT_AT_SetVoice("0137A012", 0);
         EVT_AT_SetVoice("0137D010", 80);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 80);
+#endif
         break;
     case DART_HCY:
         frames = 400;
@@ -4390,12 +5475,24 @@ int PlayDartsOpponentExit(shen_name opponent)
             EVT_AT_SetVoice("0137F014", 210);
         break;
     case DART_HLN:
-        frames = 120;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 200;
+#else
+frames = 120;
+#endif
         EVT_AT_SetVoice("0137A001", 0);
-        EVT_AT_SetVoice("0137C009", 60);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137C009", 80);
+#else
+EVT_AT_SetVoice("0137C009", 60);
+#endif
         break;
     case DART_JON:
-        frames = 160;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 200;
+#else
+frames = 160;
+#endif
         EVT_AT_SetVoice("0137A001", 0);
         if (random < 1.0f)
             EVT_AT_SetVoice("0137B010", 50);
@@ -4404,18 +5501,42 @@ int PlayDartsOpponentExit(shen_name opponent)
         else
             EVT_AT_SetVoice("0137B012", 50);
         if (random < 1.0f)
-            EVT_AT_SetVoice("0137B013", 100);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137B013", 130);
+#else
+EVT_AT_SetVoice("0137B013", 100);
+#endif
         else if (random < 1.5f)
-            EVT_AT_SetVoice("0137B014", 100);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137B014", 130);
+#else
+EVT_AT_SetVoice("0137B014", 100);
+#endif
         else
-            EVT_AT_SetVoice("0137B015", 100);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137B015", 130);
+#else
+EVT_AT_SetVoice("0137B015", 100);
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 50);
+#endif
         break;
     default:
-        frames = 150;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+frames = 200;
+#else
+frames = 150;
+#endif
         EVT_AT_SetVoice("0137A001", 0);
-        EVT_AT_SetVoice("0137E013", 60);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+EVT_AT_SetVoice("0137E013", 80);
+#else
+EVT_AT_SetVoice("0137E013", 60);
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(opponent, 5, 30, 1.0f, 80);
+#endif
         break;
     }
     return frames;
@@ -4443,6 +5564,16 @@ void DartsPlayOpponentChatter(shen_name opponent)
     }
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+DartsOpponentInfo dartsOpponents[6] = {
+    {DART_FCJ, 1.45000005f, 14, {6786, 6785, 199, 221, 6786, 30, 6790, 6787, 6846, 199, 6789, 6788, 6825, 6826, 390, 470}, 1.20000005f, 4.19999981f, 6827, 430, 1.29999995f, 4.19999981f, 6824, 0},
+    {DART_HCY, 1.53999996f, 14, {6798, 6797, 245, 245, 6798, 60, 6802, 6799, 6847, 135, 6801, 6800, 6829, 6830, 300, 250}, 1.20000005f, 4.80000019f, 6831, 340, 1.29999995f, 4.69999981f, 6828, 0},
+    {DART_HLN, 1.25f, 14, {6841, 6840, 279, 242, 6841, 50, 6845, 6842, 6850, 157, 6844, 6843, 6822, 6822, 200, 200}, 0.899999976f, 4.30000019f, 6823, 250, 0.899999976f, 4.30000019f, 6823, 0},
+    {DART_JON, 1.51999998f, 21, {6810, 6809, 145, 215, 6810, 70, 6814, 6811, 6848, 144, 6813, 6812, 6833, 6834, 245, 240}, 1.29999995f, 4.5999999f, 6835, 470, 1.0f, 4.4000001f, 6832, 0},
+    {DART_XHO, 1.52999997f, 14, {6816, 6815, 180, 150, 6816, 60, 6820, 6817, 6849, 165, 6819, 6818, 6837, 6838, 300, 245}, 1.29999995f, 4.5999999f, 6839, 380, 1.39999998f, 4.5f, 6836, 0},
+    {0, 1.5f, 14, {6816, 6815, 180, 150, 6816, 60, 6820, 6817, 6849, 165, 6819, 6818, 6837, 6838, 300, 245}, 1.0f, 4.4000001f, 6839, 380, 1.0f, 4.4000001f, 6836, 0},
+};
+#else
 DartsOpponentInfo dartsOpponents[6] = {
     {DART_FCJ, 1.45f, 14, {6786, 6785, 199, 221, 6786, 30, 6790, 6787, 6846, 199, 6789, 6788, 6825, 6826, 390, 470}, {70.0f, 40.0f}, 1.2f, 4.2f, 6827, 430, 70.0f, 1.3f, 4.2f, 6824, 0},
     {DART_HCY, 1.54f, 14, {6798, 6797, 245, 245, 6798, 60, 6802, 6799, 6847, 135, 6801, 6800, 6829, 6830, 300, 250}, {0.0f, 0.0f}, 1.2f, 4.8f, 6831, 340, 0.0f, 1.3f, 4.7f, 6828, 0},
@@ -4451,13 +5582,16 @@ DartsOpponentInfo dartsOpponents[6] = {
     {DART_XHO, 1.53f, 14, {6816, 6815, 180, 150, 6816, 60, 6820, 6817, 6849, 165, 6819, 6818, 6837, 6838, 300, 245}, {0.0f, 0.0f}, 1.3f, 4.6f, 6839, 380, 0.0f, 1.4f, 4.5f, 6836, 0},
     {0, 1.5f, 14, {6816, 6815, 180, 150, 6816, 60, 6820, 6817, 6849, 165, 6819, 6818, 6837, 6838, 300, 245}, {0.0f, 0.0f}, 1.0f, 4.4f, 6839, 380, 0.0f, 1.0f, 4.4f, 6836, 0}
 };
+#endif
 Vector3i dartsHandRotation = {64863, 3458, 64361};
 int dartsHandPoseCommand[19][3] = {{0, 64444, 63534}, {0, 0, 62624}, {0, 63716, 2002}, {0, 64444, 55890}, {0, 0, 56982}, {0, 65172, 61350}, {0, 0, 1456}, {0, 364, 56800}, {0, 64627, 57528}, {0, 0, 61531}, {0, 65354, 2002}, {0, 65354, 60986}, {0, 64444, 56982}, {0, 0, 63898}, {0, 65354, 2730}, {0, 64809, 60075}, {0, 64809, 61168}, {0, 65172, 62442}, {0, 364, 4368}};
 Vector3 dartsReadyArrowOffsets[5] = {{0.158f, 0.009f, 0.004f}, {0.145f, 0.01f, -0.002f}, {0.128f, 0.017f, -0.007f}, {0.135f, 0.008f, 0.0f}, {0.15f, 0.009f, 0.004f}};
 float dartsAiBands[5] = {0.5f, 0.6f, 0.8f, 0.9f, 1.0f};
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 Vector3i dartsGameArrowRotation = {18655, 31391, 49425};
 Vector3 dartsJonGameArrowOffset = {0.14f, -0.06f, 0.04f};
 Vector3 dartsGameArrowOffsets[5] = {{0.12f, -0.09f, -0.01f}, {0.14f, -0.06f, -0.02f}, {0.105f, -0.07f, -0.01f}, {0.14f, -0.06f, -0.02f}, {0.14f, -0.06f, -0.02f}};
+#endif
 const char *dartsFcjChatter[4][4] = {{"0137D044", "0137D045", "0137D046", 0}, {"0137D047", "0137D048", "0137D049", 0}, {"0137D050", "0137D051", "0137D046", 0}, {"0137D052", "0137D053", "0137D049", 0}};
 const char *dartsHcyChatter[3][2] = {{"0137F053", 0}, {"0137F054", 0}, {"0137F047", 0}};
 const char *dartsHlnChatter[3][2] = {{"0137C040", 0}, {"0137C041", 0}, {"0137C042", 0}};

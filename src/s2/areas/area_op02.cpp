@@ -7,13 +7,22 @@ void AreaOP02Main(void)
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(OP02MainCallback, 4, 11, sizeof(Op02EventWork), TASK_EVNT);
     Op02EventWork *work = (Op02EventWork *)FTBL.HLib_GetTaskParameter(task);
     work->task = task;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    work->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0001A.MOT");
+#endif
     work->mode = 1;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    work->scene = 0;
+#endif
     Queue_EVT_UTL_LoadNPCChara_3(op02AuthorCharacters, work->task);
     OP02Prepare();
 }
 #else
 static HLibTask *op02WaveTask;
 static int op02WaveEnabled;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static float op02Alpha = 0.0f;
+#endif
 
 void OP02MainCallback(void *data)
 {
@@ -33,14 +42,86 @@ void OP02QueueAuthor(Op02EventWork *work)
 {
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(OP02AuthorLoopCallback, 4, 11, sizeof(Op02EventWork *), TASK_EVNT);
     *(Op02EventWork **)FTBL.HLib_GetTaskParameter(task) = work;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     OP02PrepareSceneCharacters();
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.shenPlayAudioWithFlags("unmeinouneri", 1);
+    FTBL.EV_authSceneCtrl(work->scene);
+#else
     FTBL.shenPlayAudioWithFlags("adv", 1);
     FTBL.EV_authSceneCtrl(0);
+#endif
     work->mode = 2;
 }
 
 void OP02AuthorLoopCallback(void *data)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    short frame = (short)FTBL.EV_authSceneCtrl(-6);
+    switch (frame) {
+    case 0:
+        OP02SetHourAndMinute(5, 0);
+        break;
+    case 653:
+        op02WaveEnabled = 1;
+        break;
+    case 774:
+        op02WaveEnabled = 0;
+        OP02SetHourAndMinute(5, 15);
+        break;
+    case 1038:
+        OP02SetHourAndMinute(5, 30);
+        break;
+    case 1149:
+        op02WaveEnabled = 1;
+        OP02SetHourAndMinute(5, 35);
+        break;
+    case 1207:
+        op02WaveEnabled = 0;
+        OP02SetHourAndMinute(5, 40);
+        break;
+    case 1260:
+        op02WaveEnabled = 1;
+        OP02SetHourAndMinute(5, 45);
+        break;
+    case 1309:
+        op02WaveEnabled = 0;
+        break;
+    case 1344:
+        op02WaveEnabled = 1;
+        OP02SetHourAndMinute(5, 50);
+        break;
+    case 1433:
+        OP02SetHourAndMinute(11, 0);
+        break;
+    case 1483:
+        OP02SetHourAndMinute(5, 55);
+        break;
+    case 1579:
+        OP02SetHourAndMinute(6, 10);
+        break;
+    case 1667:
+        OP02SetHourAndMinute(12, 0);
+        break;
+    case 1817:
+        OP02SetHourAndMinute(6, 15);
+        break;
+    case 1863:
+        OP02SetHourAndMinute(13, 0);
+        break;
+    case 1973:
+        OP02SetHourAndMinute(6, 20);
+        break;
+    case 2003:
+        OP02SetHourAndMinute(6, 25);
+        break;
+    case 2314:
+        OP02SetHourAndMinute(6, 30);
+        break;
+    }
+#else
     switch ((short)FTBL.EV_authSceneCtrl(-6)) {
     case 0:
         OP02SetLightingAndWeather(2);
@@ -89,12 +170,30 @@ void OP02AuthorLoopCallback(void *data)
         OP02ResetWeather();
         break;
     }
+#endif
     if (!FTBL.EV_authSceneCtrl(-1)) {
         OP02RestoreSceneCharacters();
         (*(Op02EventWork **)data)->mode = 3;
         FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
         FTBL.HLib_DestroyCurrentTask();
     }
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    if (frame == 0) {
+        FTBL.SetScenarioCharacterTransparency(SHEN_NAME4('a', '0', '6', '7'), 0.0f);
+    } else if ((unsigned short)(frame - 848) < 39) {
+        op02Alpha += 0.012820513f;
+        FTBL.SetScenarioCharacterTransparency(SHEN_NAME4('a', '0', '6', '7'), op02Alpha);
+    } else if (frame == 887) {
+        op02Alpha = 0.5f;
+        FTBL.SetScenarioCharacterTransparency(SHEN_NAME4('a', '0', '6', '7'), op02Alpha);
+    } else if ((unsigned short)(frame - 930) < 39) {
+        op02Alpha += 0.012820513f;
+        FTBL.SetScenarioCharacterTransparency(SHEN_NAME4('a', '0', '6', '7'), op02Alpha);
+    } else if (frame == 969) {
+        op02Alpha = 1.0f;
+        FTBL.SetScenarioCharacterTransparency(SHEN_NAME4('a', '0', '6', '7'), op02Alpha);
+    }
+#endif
     if (FTBL.EVT_GetControllerInput(0, 1) == 0x800) {
         OP02RestoreSceneCharacters();
         FTBL.EV_authSceneCtrl(-4);
@@ -104,6 +203,7 @@ void OP02AuthorLoopCallback(void *data)
     }
 }
 
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 void OP02SetHourAndMinute(short hour, short minute)
 {
     EventDateTime date;
@@ -129,6 +229,7 @@ void OP02ResetWeather(void)
     FTBL.SetLightFlagForIndex(0, 2);
     FTBL.SetLightEntryIndex(0, 1);
 }
+#endif
 
 void OP02Prepare(void)
 {
@@ -138,11 +239,13 @@ void OP02Prepare(void)
     FTBL.EV_authSceneCtrl(-11);
     FTBL.EV_ToggleCharacterFlag(RYO_CHARACTER);
     FTBL.SetRenderClockAndCompassTo(1);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.SetLoadingBusy();
     FTBL.SetIsSkySetup(0);
     FTBL.ReinitializeLights(1);
     FTBL.SetLightFlagForIndex(0, 2);
     FTBL.SetLightEntryIndex(0, 1);
+#endif
     FTBL.FreeWAIR();
     FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
     FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
@@ -156,8 +259,15 @@ void OP02Prepare(void)
     FTBL.fft_bins_load_pairwise_tables(op02PairwiseKernel, op02PairwiseKernel);
     FTBL.FFTUtil(0.0149f, 0.0f);
     FTBL.set_lighting_flags(0.1f, &direction);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    op02WaveEnabled = 0;
+#else
     op02WaveEnabled = 1;
+#endif
     op02WaveTask = FTBL.HLib_EnqueueTaskWithoutParameter(OP02WaveCallback, 3, 2, OP02_WAVE_TASK);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.WSCN_LoadWeatherData(FTBL.Filepath_Gen(0), "W_COND.BIN");
+#endif
 }
 
 const float op02PairwiseKernel[64] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -168,32 +278,85 @@ void OP02Release(Op02EventWork *work)
 {
     FTBL.EV_FreeAuthorPak(0, "0001");
     EVT_UTL_FreeNPCChara(op02AuthorCharacters);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.DeleteMotion(work->motion);
+#endif
     FTBL.HLib_DestroyTaskInternal(work->task);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_authSceneCtrl(-10);
+#endif
     if (work->mode == 3)
         FTBL.shenQueueChangeModuleAndScene(4, 1, OP02_AREA, 0);
     else
         FTBL.shenQueueChangeModuleAndScene(4, 1, OP02_AREA, 49);
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void OP02SetHourAndMinute(int hour, int minute)
+{
+    EventDateTime date;
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    date.hour = hour;
+    date.minute = minute;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&date);
+}
+
+void OP02ResetWeather(void)
+{
+    EventDateTime date;
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    date.hour = 8;
+    date.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&date);
+    FTBL.ReinitializeLights(1);
+    FTBL.SetLightFlagForIndex(0, 2);
+    FTBL.SetLightEntryIndex(0, 1);
+}
+
+void OP02SetLightingAndWeather(int mode)
+{
+    EventDateTime date;
+    FTBL.EV_SetWeatherInstruction(12, 0);
+    if (mode == 0)
+        FTBL.EV_lightLoad(SHEN_NAME4('l', '0', '0', '7'));
+    else
+        FTBL.EV_lightLoad(SHEN_NAME4('l', '0', '7', '3'));
+    FTBL.GetCurrentDateTime((DateTime *)&date);
+    date.hour = 22;
+    date.minute = 0;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&date);
+}
+#endif
+
 void OP02PrepareSceneCharacters(void)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    Vector3 scale;
+    scale.x = 40.0f;
+    scale.y = 40.0f;
+    scale.z = 40.0f;
+    FTBL.mtwkSetMotionworkScale3(SHEN_NAME4('a', '0', '6', '7'), &scale);
+#endif
     OP02PrepareCharacter(OP02_SHENHUA);
     OP02PrepareProp(SHEN_NAME4('a', '3', '5', '0'));
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     OP02PrepareProp(SHEN_NAME4('a', 'b', '2', '4'));
     OP02PrepareProp(SHEN_NAME4('a', 'b', '2', '5'));
     OP02PrepareProp(SHEN_NAME4('a', 'b', '2', '6'));
     OP02PrepareProp(SHEN_NAME4('a', 'b', '2', '2'));
+#endif
 }
 
 void OP02RestoreSceneCharacters(void)
 {
     OP02RestoreCharacter(OP02_SHENHUA);
     OP02RestoreProp(SHEN_NAME4('a', '3', '5', '0'));
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     OP02RestoreProp(SHEN_NAME4('a', 'b', '2', '4'));
     OP02RestoreProp(SHEN_NAME4('a', 'b', '2', '5'));
     OP02RestoreProp(SHEN_NAME4('a', 'b', '2', '6'));
     OP02RestoreProp(SHEN_NAME4('a', 'b', '2', '2'));
+#endif
 }
 
 void OP02PrepareCharacter(shen_name character)
@@ -238,9 +401,17 @@ void OP02WaveCallback(void *data)
     FTBL.BuildLightingTableFrom(1, unit, unit, unit, unit, unit, unit, unit, unit, 10.0f, unit);
     if (op02WaveEnabled) {
         FTBL.nlSetTexanimUV(0.015f, 0.0f);
-        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(2));
-        FTBL.nlSetTexanimUV(0.0f, 0.015f);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(3));
+#else
+        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(2));
+#endif
+        FTBL.nlSetTexanimUV(0.0f, 0.015f);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(4));
+#else
+        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(3));
+#endif
     }
 }
 #endif

@@ -488,7 +488,11 @@ void QdmrStartTimeoutAuthor(void *data)
             break;
         }
         if (FTBL.srchHasActiveLockonTarget())
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+            FTBL.srchReset();
+#else
             break;
+#endif
         FTBL.SetPlayerControlEnabled(0);
         work->flags |= 4;
         if (FTBL.drGetCurrentAuthorId()) {
@@ -767,11 +771,19 @@ void QdmrInFree(void *data)
             if (mode) {
                 work->timerRequests |= 0x40000000;
                 QueueAreaLoopMotion(QDMR_PLAYER, 0xf002, 0, 1, 0.0f, -1.0f, 1.0f, 16.0f, 0, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_US) && !defined(SHENMUE_TARGET_S2_DC_EU)
                 FTBL.SetPlayerControlEnabled(0);
                 work->flags |= 4;
+#endif
                 FTBL.HLib_SetCurrentTaskTo(QdmrStartTimeoutAuthor);
                 if (FTBL.srchHasActiveLockonTarget())
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+                    FTBL.srchReset();
+                FTBL.SetPlayerControlEnabled(0);
+                work->flags |= 4;
+#else
                     FTBL.srchRequestLockonExit();
+#endif
             } else {
                 FTBL.HLib_SetCurrentTaskTo(QdmrStartTransition);
             }

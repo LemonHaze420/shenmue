@@ -47,8 +47,12 @@ AnaTobiPoint anaTobiPoints[] = {{ANATOBI_POINT_PUT, 0, {254.69f, 121.6f, 167.38f
     {ANATOBI_POINT_MOVE_DIRECT, 0, {247.64f, 121.6f, 134.16f}, 32503, "last.root"},
     {ANATOBI_POINT_MOVE_DIRECT, 0, {248.32f, 121.6f, 138.97f}, 47061, "last.curve"},
     {ANATOBI_POINT_CURVE, 0, {254.24f, 121.6f, 140.4f}, 46557, 0}, {ANATOBI_POINT_END, 0, {0.0f, 0.0f, 0.0f}, 0, 0}};
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+int anaTobiUnusedCommon[2];
+#else
 int anaTobiReservedBss[2] __attribute__((section(".bss")));
 int anaTobiUnusedCommon[3];
+#endif
 int anaTobiCourseIndex;
 char anaTobiTextBuffer[68];
 AnaTobiWork anaTobiWork;

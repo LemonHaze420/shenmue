@@ -9,7 +9,11 @@ void areaClearAreaEntities(void)
     if (g_actNumber == 1)
         return;
     if (FTBL.EV_GetShenmueFlag(49)
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        || FTBL.EV_GetShenmueFlag(322)
+#else
         || (FTBL.EV_GetShenmueFlag(483) && (FTBL.EV_GetPlayerFlag(11, 821) & FTBL.EV_GetPlayerFlag(11, 822) & FTBL.EV_GetPlayerFlag(11, 823)) == 0)
+#endif
         || FTBL.EV_GetShenmueFlag(270)) {
         package[0] = AREA_ENTITY_PACKAGE;
         package[1] = g_currentMap;

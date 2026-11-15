@@ -17,21 +17,46 @@ static HLibTask *lighting0001Task;
 void Update0001(void *taskData)
 {
     Title0001TaskParameter *parent = (Title0001TaskParameter *)taskData;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    switch (parent->mainState) {
+    case 1:
+        Queue0001Author(parent);
+        break;
+    case 3:
+        Finish0001(parent);
+        break;
+    }
+#else
     if (parent->mainState == 1)
         Queue0001Author(parent);
+#endif
 }
 
 void Queue0001Author(Title0001TaskParameter *parent)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    HLibTaskCallback callbacks[2] = {0, 0};
+    HLibTask *task;
+    Title0001AuthorTaskParameter *child;
+    callbacks[0] = Update0001Author;
+    callbacks[1] = Update0001Prompt;
+    task = FTBL.HLib_EnqueueTaskWithParameter(callbacks[parent->state], 4, 11, sizeof(Title0001AuthorTaskParameter), TASK_EVNT);
+    child = (Title0001AuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+#else
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0001Author, 4, 11, sizeof(Title0001AuthorTaskParameter), TASK_EVNT);
     Title0001AuthorTaskParameter *child = (Title0001AuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+#endif
     child->parent = parent;
     child->currentFrame = 0;
     child->blinkVisible = 1;
     child->blinkFrames = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EV_authSceneCtrl(parent->state);
+#else
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     FTBL.EV_LoadAudio("0001A020", 0);
     FTBL.EV_authSceneCtrl(0);
+#endif
     parent->mainState = 2;
 }
 
@@ -41,6 +66,9 @@ void Update0001Author(void *taskData)
     child->currentFrame = FTBL.EV_authSceneCtrl(-6);
     switch (child->currentFrame) {
     case 0:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
         Prepare0001Characters();
         FTBL.figpAssignModeFor(AREA_0001_FIGURE_FIRST, 1);
         FTBL.figpSetFlagsBlendForBlur(AREA_0001_FIGURE_FIRST, 10, 255);
@@ -78,6 +106,14 @@ void Update0001Author(void *taskData)
         break;
     }
     if (FTBL.EVT_GetControllerInput(0, 1) == 0x800) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.ProcessAicaCommand(0x1200a0, 0);
+        FTBL.EV_authSceneCtrl(-4);
+        Clear0001Characters();
+        child->parent->mainState = 1;
+        child->parent->state = 1;
+        FTBL.HLib_DestroyCurrentTask();
+#else
         FTBL.EV_authSceneCtrl(-4);
         Clear0001Characters();
         child->parent->state = 1;
@@ -85,20 +121,34 @@ void Update0001Author(void *taskData)
         Present0001PromptCharacters();
         FTBL.EV_authSceneCtrl(1);
         FTBL.HLib_SetCurrentTaskTo(Update0001Prompt);
+#endif
     }
     if (!FTBL.EV_authSceneCtrl(-1)) {
         Clear0001Characters();
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        child->parent->mainState = 1;
+        child->parent->state = 1;
+        FTBL.ProcessAicaCommand(0x1200a0, 0);
+        Clear0001Characters();
+        FTBL.HLib_DestroyCurrentTask();
+#else
         child->parent->state = 1;
         FTBL.ProcessAicaCommand(0x1200a0, 0);
         Present0001PromptCharacters();
         FTBL.EV_authSceneCtrl(1);
         FTBL.HLib_SetCurrentTaskTo(Update0001Prompt);
+#endif
     }
 }
 
 void Update0001Prompt(void *taskData)
 {
     Title0001AuthorTaskParameter *child = (Title0001AuthorTaskParameter *)taskData;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    child->currentFrame = FTBL.EV_authSceneCtrl(-6);
+    if (child->currentFrame == 0)
+        Present0001PromptCharacters();
+#endif
     if (child->blinkFrames == 20) {
         if (child->blinkVisible == 1) {
             child->blinkVisible = 0;
@@ -112,8 +162,13 @@ void Update0001Prompt(void *taskData)
         child->blinkFrames++;
     }
     if (!FTBL.EV_authSceneCtrl(-1)) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        child->parent->mainState = 0;
+#endif
         FTBL.ProcessAicaCommand(0x1200a0, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         Cleanup0001Characters();
+#endif
         FTBL.HLib_DestroyCurrentTask();
         FTBL.shenQueueChangeModuleAndScene(4, g_actNumber, g_currentMap, 0);
     }
@@ -145,8 +200,10 @@ void Queue0001Alpha(shen_name character, short frames, float from, float to, sho
 void Update0001Alpha(void *taskData)
 {
     Title0001AlphaTaskParameter *work = (Title0001AlphaTaskParameter *)taskData;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (!FTBL.EV_authSceneCtrl(-1))
         FTBL.HLib_DestroyCurrentTask();
+#endif
     if (work->remaining > 0) {
         if (work->increasing == 0)
             work->current = work->current - work->step;
@@ -159,8 +216,12 @@ void Update0001Alpha(void *taskData)
             FTBL.SetScenarioCharacterTransparency(work->character, 0.0f);
         else
             FTBL.SetScenarioCharacterTransparency(work->character, work->target);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.HLib_DestroyCurrentTask();
+#else
         if (FTBL.EV_authSceneCtrl(-1))
             FTBL.HLib_DestroyCurrentTask();
+#endif
     }
 }
 
@@ -234,20 +295,59 @@ void Setup0001(void)
 {
     FTBL.SetPlayerControlEnabled(0);
     FTBL.EV_authSceneCtrl(-8);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    switch (FTBL.GetGameLanguage()) {
+    case 1:
+        FTBL.DebugLogToFileRemoved("=========== GERMANY ===========\n");
+        FTBL.EV_SetupImageModule(AREA_0001_PRESS_MODEL, "GERMAN");
+        break;
+    case 2:
+        FTBL.DebugLogToFileRemoved("=========== FRENCH ===========\n");
+        FTBL.EV_SetupImageModule(AREA_0001_PRESS_MODEL, "FRENCH");
+        break;
+    case 3:
+        FTBL.DebugLogToFileRemoved("=========== SPANISH ===========\n");
+        FTBL.EV_SetupImageModule(AREA_0001_PRESS_MODEL, "SPANISH");
+        break;
+    default:
+        FTBL.DebugLogToFileRemoved("=========== ENGLISH ===========\n");
+        break;
+    }
+#endif
     FTBL.EV_nlSetVertexColourType(0);
     FTBL.SetWeatherUpdateEnabledTo(0);
     FTBL.ReinitFogTasks(0);
     FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EV_LoadAudio("0001A020", 0);
+#endif
     FTBL.EV_authSceneCtrl(-11);
     FTBL.SetRenderClockAndCompassTo(1);
     FTBL.EV_ToggleCharacterFlag(AREA_0001_PLAYER);
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+    Hide0001Character(AREA_0001_HIDDEN_MODEL);
+#endif
     Queue0001Lighting();
 }
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void Finish0001(Title0001TaskParameter *parent)
+{
+    FTBL.HLib_DestroyTask(lighting0001Task);
+    FTBL.HLib_DestroyTask(parent->self);
+    FTBL.scenSetTaskFlags(6);
+    FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, 0);
+}
+#endif
 
 const shen_name area0001AuthorCharacters[] = {AREA_0001_A084, AREA_0001_A085, AREA_0001_A083, AREA_0001_A089, AREA_0001_A090,
     AREA_0001_A079, AREA_0001_A086, AREA_0001_A075, AREA_0001_A076, 0xffffffff};
 const shen_name area0001CleanupCharacters[] = {AREA_0001_A084, AREA_0001_A085, AREA_0001_A089, AREA_0001_A090, AREA_0001_A086,
-    SHEN_NAME4('a', 'a', '7', '8'), AREA_0001_PRESS_MODEL, SHEN_NAME4('a', '0', '9', '1'), 0xffffffff};
+    SHEN_NAME4('a', 'a', '7', '8'), AREA_0001_PRESS_MODEL, SHEN_NAME4('a', '0', '9', '1'),
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+    AREA_0001_HIDDEN_MODEL,
+#endif
+    0xffffffff};
 
 void Prepare0001Characters(void)
 {
@@ -256,27 +356,53 @@ void Prepare0001Characters(void)
         shen_name character = area0001AuthorCharacters[i];
         Prepare0001Character(character);
         FTBL.SetScenarioCharacterTransparency(character, 0.0f);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(character), 0);
+#endif
     }
     Prepare0001Character(AREA_0001_FIGURE_SECOND);
     Prepare0001Character(AREA_0001_FIGURE_FIRST);
     FTBL.SetScenarioCharacterTransparency(AREA_0001_FIGURE_FIRST, 1.0f);
     FTBL.SetScenarioCharacterTransparency(AREA_0001_FIGURE_SECOND, 1.0f);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    Hide0001Character(AREA_0001_PRESS_MODEL);
+#endif
 }
 
 void Present0001PromptCharacters(void)
 {
     Vector3 scale;
     int i;
+#if !defined(SHENMUE_TARGET_S2_DC_EU)
     scale.x = 1.0f;
     scale.y = 0.7f;
     scale.z = 1.0f;
+#endif
     for (i = 0; area0001CleanupCharacters[i] != 0xffffffff; i++) {
         Prepare0001Character(area0001CleanupCharacters[i]);
         FTBL.SetScenarioCharacterTransparency(area0001CleanupCharacters[i], 1.0f);
     }
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+    FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(AREA_0001_HIDDEN_MODEL), 0);
+#endif
     FTBL.SetScenarioCharacterTransparency(AREA_0001_A085, 0.5f);
     FTBL.SetScenarioCharacterTransparency(AREA_0001_A090, 0.5f);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    switch (FTBL.GetGameLanguage()) {
+    case 1:
+    case 2:
+    case 3:
+        scale.x = 1.0f;
+        scale.y = 0.6f;
+        scale.z = 1.0f;
+        break;
+    default:
+        scale.x = 1.0f;
+        scale.y = 0.7f;
+        scale.z = 1.0f;
+        break;
+    }
+#endif
     FTBL.mtwkSetMotionworkScale3(AREA_0001_PRESS_MODEL, &scale);
 }
 
@@ -307,7 +433,11 @@ void Prepare0001Character(shen_name character)
     FTBL.EV_SetCharaControllerFlags(character, 1, 0);
     FTBL.EV_SetCharaControllerFlags(character, 3, 0);
     FTBL.EV_SetCharacterAlphaEnabled(character, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.SetScenarioCharacterRadius(character, 100.0f);
+#else
     FTBL.SetScenarioCharacterRadius(character, 1000.0f);
+#endif
 }
 
 void Hide0001Character(shen_name character)

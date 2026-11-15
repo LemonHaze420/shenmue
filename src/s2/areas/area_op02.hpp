@@ -9,6 +9,10 @@
 #define OP02_WAVE_TASK SHEN_NAME4('w', 'a', 'v', 'e')
 typedef struct Op02EventWork {
     HLibTask *task;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    void *motion;
+    int scene;
+#endif
     short mode;
 } Op02EventWork;
 extern const shen_name op02AuthorCharacters[];
@@ -18,8 +22,16 @@ void AreaOP02Main(void);
 void OP02MainCallback(void *data);
 void OP02QueueAuthor(Op02EventWork *work);
 void OP02AuthorLoopCallback(void *data);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void OP02SetHourAndMinute(int hour, int minute);
+#else
 void OP02SetHourAndMinute(short hour, short minute);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void OP02SetLightingAndWeather(int mode);
+#else
 void OP02SetLightingAndWeather(short mode);
+#endif
 void OP02ResetWeather(void);
 void OP02Prepare(void);
 void OP02Release(Op02EventWork *work);

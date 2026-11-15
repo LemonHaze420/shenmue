@@ -1,5 +1,41 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_utility_dc.h"
+#include "s2/event_queued_dc.h"
+
+#define AREA_0008_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define AREA_0008_A012 SHEN_NAME4('a', '0', '1', '2')
+#define AREA_0008_A195 SHEN_NAME4('a', '1', '9', '5')
+#define AREA_0008_HNG SHEN_NAME4('H', 'N', 'G', '_')
+#define AREA_0008_SYO SHEN_NAME4('S', 'Y', 'O', '_')
+
+typedef struct E0008TaskParameter {
+    HLibTask *self;
+    void *motion;
+    void *handMotion;
+    short selection, state;
+} E0008TaskParameter;
+typedef struct E0008LoopParameter {
+    E0008TaskParameter *parent;
+    unsigned short currentFrame;
+} E0008LoopParameter;
+
+extern shen_name e0008Characters[];
+void E0008Main(void);
+void E0008MainCallback(void *taskData);
+void QueueE0008Loop(E0008TaskParameter *parent);
+void E0008LoopCallback(void *taskData);
+void ConfigureE0008Environment(void);
+void CleanupE0008(E0008TaskParameter *parent);
+void SetupE0008Characters(void);
+void RestoreE0008Characters(void);
+void PrepareE0008Character(shen_name name);
+void RestoreE0008Character(shen_name name);
+void HideE0008Prop(shen_name name);
+void ShowE0008Prop(shen_name name);
+void E0008WaveCallback(void *taskData);
+#else
 #include "s2/area_event.hpp"
 #include "s2/areas/numeric_event.hpp"
 
@@ -35,3 +71,4 @@ static_assert(sizeof(E0008LoopParameter) == 0x10);
 extern const ScriptAreaDefinition area0008ScriptDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

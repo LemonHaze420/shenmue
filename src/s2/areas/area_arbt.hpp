@@ -54,6 +54,15 @@
 #define ARBT_DEBUG_ID 3
 #define ARBT_POSITION_FLAGS 0x38000000
 #define ARBT_GRIP_HAND_POSE 11
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#define ARBT_IDLE_MOTION 0xf085
+#define ARBT_FACE_FRAMES 1
+#define ARBT_CARRY_MOTION_FLAGS 0
+#else
+#define ARBT_IDLE_MOTION 0xf002
+#define ARBT_FACE_FRAMES 30
+#define ARBT_CARRY_MOTION_FLAGS 0x2000000
+#endif
 
 typedef struct ArbtDescriptor {
     int mode, shift;
@@ -66,7 +75,11 @@ typedef struct ArbtRouteStep {
 typedef struct ArbtQte {
     int success, frames;
     unsigned int direction;
-    int presses, intensity;
+    int presses;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    int retries;
+#endif
+    int intensity;
 } ArbtQte;
 typedef struct ArbtCarryWork {
     HLibTaskCallback phase;
@@ -93,6 +106,9 @@ typedef struct ArbtTime {
 typedef struct ArbtWork {
     EventReadCharactersWork *characters;
     ArbtCarryWork carry;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    int carryState;
+#endif
     ArbtCrateWork crates;
     HLibTask *helper, *self;
     int reserved158;
@@ -134,6 +150,9 @@ void ArbtCarryTimeOver(void *data);
 void ArbtPayInit(void *data);
 void ArbtPayAuto(void *data);
 void ArbtPayEnd(void *data);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ResetArbtCarryState(int *state);
+#endif
 void CreateArbtCrates(ArbtCrateWork *crates);
 void KillArbtPallets(ArbtCrateWork *crates);
 int SelectNextArbtCrate(ArbtCrateWork *crates);
@@ -153,8 +172,13 @@ int ArbtIntroduceNextCrate(void);
 int ArbtStartWork(int delay);
 int ArbtLiftHighCrate(ArbtCrateWork *crates);
 int ArbtLiftLowCrate(ArbtCrateWork *crates);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+int ArbtPutHighCrate(ArbtCrateWork *crates, int streak);
+int ArbtPutLowCrate(ArbtCrateWork *crates, int streak);
+#else
 int ArbtPutHighCrate(ArbtCrateWork *crates, int streak, shen_name destination);
 int ArbtPutLowCrate(ArbtCrateWork *crates, int streak, shen_name destination);
+#endif
 int ArbtPraiseCarry(int streak, int delay);
 int ArbtWarnCarryOnce(void);
 int ArbtWarnCarryTwice(void);

@@ -13,7 +13,11 @@ void AreaMain(unsigned int startParameters)
     Vector3 waveColour;
     void *firstKernel;
     void *secondKernel;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    pigeonOrigin.x = 236.0f;
+#else
     pigeonOrigin.x = 236.25f;
+#endif
     pigeonOrigin.y = 100.325f;
     pigeonOrigin.z = 430.0f;
     ar02InitFlag = 1;
@@ -25,9 +29,14 @@ void AreaMain(unsigned int startParameters)
     FTBL.SetMapControlStatusFlag(0, 1);
     QueueAreaPigeons(&pigeonOrigin, 4.5f, areaPigeons1, AR02_FIRST_PIGEON, 10);
     ApplyAR02Gate();
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.HLib_EnqueueTaskWithoutParameter(AR02CheckAozr, 3, 11, SHEN_NAME4('a', 'o', 'z', 'r'));
+#endif
     PrepareAR02NpcState();
     areaClearAreaEntities();
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_SetPlayerFlag(12, 2228, 0);
+#endif
     FTBL.GenerateFFT(2.0f);
     FTBL.fft_fill_dist(FTBL.fft_fill_krn(10.0f, FTBL.generate_distance_falloff_row_major(2.082f, ar02DistanceFalloff)));
     firstKernel = FTBL.fft_fill_krn(0.0564f, FTBL.generate_distance_falloff_kernel_8x8(0.94f, ar02FirstKernel));
@@ -41,11 +50,15 @@ void AreaMain(unsigned int startParameters)
     FTBL.HLib_EnqueueTaskWithoutParameter((HLibTaskCallback)AR02WaveCallback, 3, 2, TASK_AR02_WAVE);
     FTBL.SetMapModelVertexShaderType(15, 1);
     FTBL.SetMapModelVertexShaderType(16, 1);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     AR02WaveCallback();
+#endif
     FTBL.HLib_EnqueueTaskWithoutParameter(AR02SpringCallback, 3, 2, TASK_AR02_SPRING);
     ar02InitFlag = 0;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (FTBL.EV_GetShenmueFlag(964))
         FTBL.ToggleFlagOnFieldEntity(AR02_ARMW, 0);
+#endif
     FTBL.flddSetPointFlagOnGrid(AR02_BTC1, 0);
 }
 
@@ -122,7 +135,11 @@ void PrepareAR02NpcState(void)
     if (FTBL.EV_GetShenmueFlag(734))
         FTBL.LoadNPCRoute("NPC_AR02.BIN");
     if (FTBL.EV_GetShenmueFlag(127) || FTBL.EV_GetShenmueFlag(132))
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.LoadNPCRoute("NPC_EXT0.BIN");
+#else
         FTBL.EventFunction857(0);
+#endif
     if (npcState != 7) {
         FTBL.EV_NPC_NewLoadSw_0(0);
         FTBL.EV_ResetFreeTalkFlags();
@@ -133,13 +150,16 @@ void PrepareAR02NpcState(void)
 
 void AR02WaveCallback(void)
 {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     Vector3 position;
     EventDateTime dateTime;
     int applyFrame;
+#endif
     unsigned char *weather;
     unsigned int *colours;
     float diffuseR, diffuseG, diffuseB, specularR, specularG, specularB, specularPower;
     void *model;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (FTBL.EV_GetPlayerFlag(11, 2228))
         return;
     applyFrame = ar02InitFlag;
@@ -151,6 +171,7 @@ void AR02WaveCallback(void)
         if (position.x > 244.0f && (position.z < 446.0f || position.x > 249.0f))
             return;
     }
+#endif
     weather = (unsigned char *)FTBL.GetInterpolatedWeatherValues();
     colours = (unsigned int *)(weather + 52);
     diffuseR = (unsigned char)(colours[7] >> 16) / 255.0f;
@@ -181,6 +202,47 @@ void AR02SpringCallback(void *taskData)
     FTBL.nlSetTexanimUV(0.0f, 0.027f);
     FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(18));
 }
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static float ar02AozrPosition[2] = {223.97f, 365.15f};
+static int ar02AozrActive = 0;
+
+void AR02CheckAozr(void *data)
+{
+    Vector3 position;
+    float x, z;
+    FTBL.GetCharaPosition(AR02_RYO, -1, &position, 0x40000000);
+    x = position.x - ar02AozrPosition[0];
+    z = position.z - ar02AozrPosition[1];
+    if (__builtin_fabs(x) < 1.1920929e-7f)
+        x = 0.0f;
+    if (__builtin_fabs(z) < 1.1920929e-7f)
+        z = 0.0f;
+    x *= x;
+    z *= z;
+    if (__builtin_fabs(x) < 1.1920929e-7f)
+        x = 0.0f;
+    if (__builtin_fabs(z) < 1.1920929e-7f)
+        z = 0.0f;
+    if (x + z < 9.0f) {
+        if (ar02AozrActive == 0) {
+            HLibTask *task;
+            ar02AozrActive = 1;
+            FTBL.dbgPrintEventMessage("「さあ、いらっしゃい、いらっしゃい」");
+            task = FTBL.HLib_EnqueueTaskWithoutParameter(AR02StopAozrMessage, 4, 11, TASK_EVNT);
+            if (task)
+                FTBL.HLib_SetupTimedTask(task, 100);
+        }
+    } else
+        ar02AozrActive = 0;
+}
+
+void AR02StopAozrMessage(void *data)
+{
+    FTBL.ctrlStopSubtitles();
+    FTBL.HLib_DestroyCurrentTask();
+}
+#endif
+
 #else
 #include "s2/areas/area_ar02.hpp"
 #include "s2/areas/area_entities.hpp"

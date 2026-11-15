@@ -285,7 +285,11 @@ void AddStreetFightAudienceFighter(HLibTask *task, shen_name fighter)
         p->fighters[p->fighterCount++] = fighter;
         if (p->fighterCount > 4) {
             FTBL.DebugLogToFileRemoved("*** ID buffer over.\n");
+#if defined(SHENMUE_TARGET_S2_DC_EU) && !defined(SHENMUE_EVENT_SFKK_Q109)
+            FTBL.EventAssertNullsub(__FILE__, 700);
+#else
             FTBL.EventAssertNullsub(__FILE__, 698);
+#endif
         }
     }
 }
@@ -1617,4 +1621,24 @@ void StreetFightHighModelCallback(void *data)
     if (p->task)
         FTBL.HLib_DestroyCurrentTask();
 }
+
+#if defined(SHENMUE_TARGET_S2_DC_EU) && !defined(SHENMUE_EVENT_SFKK_Q109)
+void ShowStreetFightRetryMessage(void)
+{
+    switch (FTBL.GetGameLanguage()) {
+    case 1:
+        FTBL.dbgPrintEventMessage("Erneut versuchen?\n");
+        break;
+    case 2:
+        FTBL.dbgPrintEventMessage("R\245\341essayez?\n");
+        break;
+    case 3:
+        FTBL.dbgPrintEventMessage("\245\256Quieres volver a intentarlo?\n");
+        break;
+    default:
+        FTBL.dbgPrintEventMessage("Retry?\n");
+        break;
+    }
+}
+#endif
 #endif

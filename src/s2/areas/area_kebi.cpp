@@ -31,6 +31,9 @@ void KEBIMainCallback(void *data)
         FTBL.EV_NPC_NewLoadSw_0(0);
         FTBL.CheckWarmStartNpcRoute(KEBI_GUARD);
         FTBL.EV_ResetFreeTalkFlags();
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KEBI_PLAYER), 0xf003, 0);
+#else
         FTBL.GetCharaPosition(KEBI_PLAYER, -1, &position, 0x40000000);
         position.x = 245.3f;
         position.z = 303.9f;
@@ -40,6 +43,7 @@ void KEBIMainCallback(void *data)
         FTBL.EV_AT_SetPos(KEBI_PLAYER, 0x78000000, &position);
         FTBL.EV_AT_SetAngY_0(KEBI_PLAYER, 0x78000000, &rotation, 0);
         FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KEBI_PLAYER), 0xf002, 0);
+#endif
         ++work->frame;
         break;
     case 1:
@@ -64,7 +68,11 @@ void KEBIMainCallback(void *data)
             FTBL.GetCharaPosition(KEBI_GUARD, -1, &playerPosition, 0x40000000);
             FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(KEBI_GUARD), &playerPosition, rotation.y, 0, 0);
             ++work->frame;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            EVT_AT_SetCam(3150, KEBI_PLAYER, KEBI_GUARD, 0, 0, 0);
+#else
             EVT_AT_SetCam(3150, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, 0, 0);
+#endif
             (unsigned char)FTBL.GetRandomNumberInRange(2.0f) == 0 ? EVT_AT_SetVoice("0075B001", 0) : EVT_AT_SetVoice("0075B002", 0);
         }
         break;

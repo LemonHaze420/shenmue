@@ -1,6 +1,14 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/areas/area_urni.hpp"
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+const UranaiConfiguration uranaiSykConfiguration = {{246.39999389648438f, 104.5f, 167.1999969482422f}, 0.0f, 10, UranaiSykModeOne, UranaiSykIntroduction, UranaiSykSame, UranaiSykDecline, UranaiSykBeginReading, UranaiSykReading, UranaiSykResult, UranaiSykPayment, UranaiSykInsufficientCash};
+const UranaiConfiguration uranaiKlnConfiguration = {{277.7099914550781f, 100.0f, 135.83999633789062f}, -90.0f, 10, UranaiKlnModeOne, UranaiKlnIntroduction, UranaiKlnSame, UranaiKlnDecline, UranaiKlnBeginReading, UranaiKlnReading, UranaiKlnResult, UranaiKlnPayment, UranaiKlnInsufficientCash};
+const UranaiConfiguration uranaiMm5Ar01Configuration = {{177.89999389648438f, 100.3499984741211f, 314.20001220703125f}, 180.0f, 20, UranaiMm5ModeOne, UranaiMm5Introduction, UranaiMm5Same, UranaiMm5Decline, UranaiMm5BeginReading, UranaiMm5Reading, UranaiMm5Result, UranaiMm5Payment, UranaiMm5InsufficientCash};
+const UranaiConfiguration uranaiSehConfiguration = {{332.6000061035156f, 127.0f, 290.20001220703125f}, 0.0f, 10, UranaiSehModeOne, UranaiSehIntroduction, UranaiSehSame, UranaiSehDecline, UranaiSehBeginReading, UranaiSehReading, UranaiSehResult, UranaiSehPayment, UranaiSehInsufficientCash};
+const UranaiConfiguration uranaiSriConfiguration = {{3.0f, 100.0f, 1.2000000476837158f}, 180.0f, 20, UranaiSriModeOne, UranaiSriIntroduction, UranaiSriSame, UranaiSriDecline, UranaiSriBeginReading, UranaiSriReading, UranaiSriResult, UranaiSriPayment, UranaiSriInsufficientCash};
+const UranaiConfiguration uranaiRcdConfiguration = {{71.9000015258789f, 98.19999694824219f, 118.4000015258789f}, 180.0f, 10, UranaiRcdModeOne, UranaiRcdIntroduction, UranaiRcdSame, UranaiRcdDecline, UranaiRcdBeginReading, UranaiRcdReading, UranaiRcdResult, UranaiRcdPayment, UranaiRcdInsufficientCash};
+#else
 const UranaiConfiguration uranaiSykConfiguration = {{246.39999389648438f, 104.5f, 167.25999450683594f}, 0.0f, 10, UranaiSykSetup, UranaiSykModeOne,
     UranaiSykIntroduction, UranaiSykSame, UranaiSykDecline, UranaiSykBeginReading, UranaiSykReading, UranaiSykResult, UranaiSykPayment,
     UranaiSykInsufficientCash};
@@ -25,8 +33,88 @@ const UranaiConfiguration uranaiSriConfiguration = {{122.23000335693359f, 93.019
 const UranaiConfiguration uranaiRcdConfiguration = {{332.67001342773438f, 126.98999786376953f, 290.32000732421875f}, 0.0f, 20, UranaiRcdSetup,
     UranaiRcdModeOne, UranaiRcdIntroduction, UranaiRcdSame, UranaiRcdDecline, UranaiRcdBeginReading, UranaiRcdReading, UranaiRcdResult,
     UranaiRcdPayment, UranaiRcdInsufficientCash};
+#endif
 static shen_name uranaiCharacters[] = {URNI_PLAYER, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID};
 static UranaiSelection uranaiSelections[] = {{URNI_SYK, 2}, {URNI_KLN, 2}, {URNI_MM5, 2}, {URNI_SEH, 2}, {URNI_SRI, 2}, {URNI_RCD, 2}};
+
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+Vector3 uranaiKlnPlayerCardPosition = {0.13099999725818634f, 0.06199999898672104f, -0.014000000432133675f};
+Vector3i uranaiKlnPlayerCardRotation = {35953, 49152, 0};
+Vector3 uranaiKlnReaderCardPosition = {0.25099998712539673f, 0.03099999949336052f, -0.08500000089406967f};
+Vector3i uranaiKlnReaderCardRotation = {53248, 0, 16384};
+Vector3 uranaiSykObjectPosition = {0.06599999964237213f, -0.05700000002980232f, 0.006000000052154064f};
+Vector3i uranaiSykObjectRotation = {50972, 52610, 8192};
+Vector3 uranaiMm5ObjectPosition = {0.08261799812316895f, 0.0056409998796880245f, -0.012121000327169895f};
+Vector3i uranaiMm5ObjectRotation = {32457, 32812, 30493};
+Vector3i uranaiStickHandRotation = {50972, 2730, 61895};
+Vector3 uranaiStickAttach = {0.0f, 0.0f, 0.0f};
+Vector3i uranaiStickRotation = {64479, 4460, 63533};
+Vector3 uranaiCrystalScale = {0.699999988079071f, 0.699999988079071f, 0.699999988079071f};
+Vector3 uranaiStickHand[5] = {
+    {0.10199999809265137f, 0.10000000149011612f, 0.024000000208616257f},
+    {0.12999999523162842f, 0.10000000149011612f, 0.035999998450279236f},
+    {0.12399999797344208f, 0.10000000149011612f, 0.020999999716877937f},
+    {0.10199999809265137f, 0.10000000149011612f, 0.03200000151991844f},
+    {0.11299999803304672f, 0.10000000149011612f, 0.028999999165534973f}
+};
+Vector3 uranaiRcdIdle[5] = {
+    {-0.30000001192092896f, 0.8999999761581421f, -0.6700000166893005f},
+    {-0.3199999928474426f, 0.8999999761581421f, -0.6800000071525574f},
+    {-0.28999999165534973f, 0.8999999761581421f, -0.6700000166893005f},
+    {-0.3100000023841858f, 0.8999999761581421f, -0.6600000262260437f},
+    {-0.30000001192092896f, 0.8999999761581421f, -0.6499999761581421f}
+};
+Vector3 uranaiSehIdle[5] = {
+    {-0.4000000059604645f, 0.8999999761581421f, -0.7699999809265137f},
+    {-0.41999998688697815f, 0.8999999761581421f, -0.7799999713897705f},
+    {-0.38999998569488525f, 0.8999999761581421f, -0.7699999809265137f},
+    {-0.4099999964237213f, 0.8999999761581421f, -0.7599999904632568f},
+    {-0.4000000059604645f, 0.8999999761581421f, -0.75f}
+};
+Vector3i uranaiReadingHandPose[19] = {
+    {0, 65354, 64809},
+    {0, 63352, 65354},
+    {0, 62260, 1275},
+    {0, 0, 62624},
+    {0, 364, 61532},
+    {0, 64627, 61532},
+    {0, 726, 2184},
+    {0, 64990, 53888},
+    {0, 3276, 47882},
+    {0, 2548, 55526},
+    {0, 364, 1274},
+    {0, 0, 58620},
+    {0, 2730, 46790},
+    {0, 1092, 58438},
+    {0, 1092, 546},
+    {0, 0, 55344},
+    {0, 1274, 44060},
+    {0, 2184, 60986},
+    {0, 1273, 64990}
+};
+Vector3i uranaiMm5HandRotation = {0, 363, 63170};
+Vector3i uranaiMm5HandPose[19] = {
+    {0, 0, 60622},
+    {0, 909, 64445},
+    {0, 59035, 4959},
+    {0, 64904, 63352},
+    {0, 97, 64225},
+    {0, 1141, 64807},
+    {0, 1047, 3458},
+    {0, 65446, 63221},
+    {0, 64350, 63679},
+    {0, 1505, 64264},
+    {0, 1273, 3276},
+    {0, 65133, 64403},
+    {0, 65221, 62810},
+    {0, 726, 64757},
+    {0, 1496, 2730},
+    {0, 1456, 65354},
+    {0, 363, 61351},
+    {0, 65216, 63898},
+    {0, 1771, 2548}
+};
+#endif
 
 void AreaURNIMain(void *argument)
 {
@@ -53,9 +141,142 @@ void UranaiEnd(void *data)
     UranaiWork *work = (UranaiWork *)data;
     CleanupUranai(work);
     FTBL.EV_HLKillOtherHierarchyTask(work->task);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.EV_NPC_NewLoadSw_0(1);
+#endif
     EventDebugUnregister(URNI_DEBUG_ID);
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void InitializeUranaiCamera(int *state)
+{
+}
+
+void ConfigureUranai(UranaiWork *work)
+{
+    int i;
+    shen_name name;
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(URNI_PLAYER));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(URNI_PLAYER), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(URNI_PLAYER), 1, 1, 0);
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(uranaiCharacters[1]));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(uranaiCharacters[1]), 1, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(uranaiCharacters[1]), 1, 1, 0);
+    switch (uranaiCharacters[1]) {
+    case URNI_SYK:
+        work->configuration = &uranaiSykConfiguration;
+        EVT_AT_SetPos(URNI_BASE, EVENT_CHARACTER_INVALID, work->configuration->position.x, work->configuration->position.y,
+            work->configuration->position.z, 0);
+        EVT_AT_SetAngY(URNI_BASE, EVENT_CHARACTER_INVALID, work->configuration->yaw, 0);
+        Queue_EVT_AT_Cling(SHEN_NAME4('M', 'M', 'E', 'G'), uranaiCharacters[1], 14, &uranaiSykObjectPosition, &uranaiSykObjectRotation, 0, 0);
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('M', 'M', 'E', 'G'));
+        break;
+    case URNI_KLN:
+        work->configuration = &uranaiKlnConfiguration;
+        EVT_AT_CharaDisp(SHEN_NAME4('H', 'A', 'R', '1'), 0, 0);
+        EVT_AT_SetPos(URNI_BASE, EVENT_CHARACTER_INVALID, work->configuration->position.x, work->configuration->position.y,
+            work->configuration->position.z, 0);
+        EVT_AT_SetAngY(URNI_BASE, EVENT_CHARACTER_INVALID, work->configuration->yaw, 0);
+        EVT_AT_SetPos(uranaiCharacters[1], URNI_BASE, 0.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetAngY(uranaiCharacters[1], URNI_BASE, 0.0f, 0);
+        EVT_AT_SetPos(SHEN_NAME4('H', 'A', 'R', '0'), EVENT_CHARACTER_INVALID, 278.575012f, 100.810997f, 135.824997f, 0);
+        EVT_AT_SetAngY(SHEN_NAME4('H', 'A', 'R', '0'), EVENT_CHARACTER_INVALID, 270.0f, 0);
+        EVT_AT_SetPos(SHEN_NAME4('H', 'A', 'R', '1'), EVENT_CHARACTER_INVALID, 278.494995f, 100.761002f, 136.184006f, 0);
+        EVT_AT_SetAngY(SHEN_NAME4('H', 'A', 'R', '1'), EVENT_CHARACTER_INVALID, 270.0f, 0);
+        Queue_EVT_AT_Cling(SHEN_NAME4('H', 'A', 'R', '2'), URNI_PLAYER, 14, &uranaiKlnPlayerCardPosition, &uranaiKlnPlayerCardRotation, 0, 0);
+        Queue_EVT_AT_Cling(SHEN_NAME4('H', 'A', 'R', '3'), uranaiCharacters[1], 14, &uranaiKlnReaderCardPosition, &uranaiKlnReaderCardRotation, 0, 0);
+        break;
+    case URNI_MM5:
+        work->configuration = &uranaiMm5Ar01Configuration;
+        Queue_EVT_AT_Cling(SHEN_NAME4('M', 'M', 'E', 'G'), uranaiCharacters[1], 14, &uranaiMm5ObjectPosition, &uranaiMm5ObjectRotation, 0, 0);
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('M', 'M', 'E', 'G'));
+        FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(URNI_PLAYER), 0, uranaiMm5HandPose, 0);
+        FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(URNI_PLAYER), 1, (void *)areaLoopHandPoses[1], 0);
+        FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(URNI_PLAYER), 0, 21, &uranaiMm5HandRotation);
+        break;
+    case URNI_SEH:
+        work->configuration = &uranaiSehConfiguration;
+        EVT_AT_SetPos(URNI_STICK_CUP, uranaiCharacters[1], -0.4f, 0.75f, -0.75f, 0);
+        EVT_AT_SetAngY(URNI_STICK_CUP, uranaiCharacters[1], 0.0f, 0);
+        FTBL.EV_EnableCharacterDisplay(URNI_STICK_CUP);
+        for (i = 0, name = URNI_STICK_HELD_FIRST; i < 5; i++, name += 0x1000000) {
+            Queue_EVT_AT_Cling(name, uranaiCharacters[1], 21, &uranaiStickHand[i], &uranaiStickHandRotation, 0, 0);
+            FTBL.EV_DisableCharacterDisplay(name);
+        }
+        for (i = 0, name = URNI_STICK_IDLE_FIRST; i < 5; i++, name += 0x1000000) {
+            EVT_AT_SetPos(name, uranaiCharacters[1], uranaiSehIdle[i].x, uranaiSehIdle[i].y, uranaiSehIdle[i].z, 0);
+            EVT_AT_SetAng(name, EVENT_CHARACTER_INVALID, 260.0f, 0.0f, 0.0f, 0);
+            FTBL.EV_EnableCharacterDisplay(name);
+        }
+        break;
+    case URNI_SRI:
+        work->configuration = &uranaiSriConfiguration;
+        FTBL.CreateEventCharacter(3, "SUISYO", SHEN_NAME4('S', 'U', 'I', 'S'));
+        FTBL.AT_SetLocalBaseChara(SHEN_NAME4('S', 'U', 'I', 'S'), uranaiCharacters[1]);
+        EVT_AT_SetPos(SHEN_NAME4('S', 'U', 'I', 'S'), uranaiCharacters[1], -0.147f, 0.906f, -0.824f, 0);
+        EVT_AT_SetAngY(SHEN_NAME4('S', 'U', 'I', 'S'), uranaiCharacters[1], 0.0f, 0);
+        FTBL.mtwkSetMotionworkScale3(SHEN_NAME4('S', 'U', 'I', 'S'), &uranaiCrystalScale);
+        FTBL.SetScenarioCharacterTransparency(SHEN_NAME4('S', 'U', 'I', 'S'), 0.4f);
+        break;
+    case URNI_RCD:
+        work->configuration = &uranaiRcdConfiguration;
+        EVT_AT_SetPos(URNI_STICK_CUP, uranaiCharacters[1], -0.3f, 0.75f, -0.65f, 0);
+        EVT_AT_SetAngY(URNI_STICK_CUP, uranaiCharacters[1], 0.0f, 0);
+        FTBL.EV_EnableCharacterDisplay(URNI_STICK_CUP);
+        for (i = 0, name = URNI_STICK_HELD_FIRST; i < 5; i++, name += 0x1000000) {
+            Queue_EVT_AT_Cling(name, uranaiCharacters[1], 21, &uranaiStickHand[i], &uranaiStickHandRotation, 0, 0);
+            FTBL.EV_DisableCharacterDisplay(name);
+        }
+        for (i = 0, name = URNI_STICK_IDLE_FIRST; i < 5; i++, name += 0x1000000) {
+            EVT_AT_SetPos(name, uranaiCharacters[1], uranaiRcdIdle[i].x, uranaiRcdIdle[i].y, uranaiRcdIdle[i].z, 0);
+            EVT_AT_SetAng(name, EVENT_CHARACTER_INVALID, 260.0f, 0.0f, 0.0f, 0);
+            FTBL.EV_EnableCharacterDisplay(name);
+        }
+        break;
+    }
+}
+#endif
+
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void UranaiStart(void *data)
+{
+    UranaiWork *work = (UranaiWork *)data;
+    const UranaiSelection *selection = work->selection;
+    int delay, initialDelay = 0;
+    EventDebugCheck(URNI_DEBUG_ID, 4);
+    ConfigureUranai(work);
+    InitializeUranaiCamera(&work->cameraState);
+    FTBL.AT_SetLocalBaseChara(URNI_PLAYER, URNI_BASE);
+    FTBL.AT_SetLocalBaseChara(URNI_PLAYER_DUMMY, URNI_PLAYER);
+    FTBL.AT_SetLocalBaseChara(selection->reader, URNI_BASE);
+    FTBL.AT_SetLocalBaseChara(URNI_READER_DUMMY, selection->reader);
+    EVT_AT_SetPos(URNI_PLAYER_DUMMY, URNI_PLAYER, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(URNI_PLAYER_DUMMY, URNI_PLAYER, 0.0f, 0);
+    EVT_AT_SetPos(URNI_READER_DUMMY, selection->reader, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(URNI_READER_DUMMY, selection->reader, 0.0f, 0);
+    FTBL.EV_LoadAudio("01200000", 0);
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    if (selection->mode == 1) {
+        initialDelay = work->configuration->modeOne(selection->reader, 0);
+        FTBL.HLib_SetCurrentTaskTo(UranaiFade);
+        FTBL.HLib_SetupTaskDelay(initialDelay);
+    } else {
+        if (selection->mode == 2)
+            initialDelay = work->configuration->modeOne(selection->reader, 0);
+        delay = work->configuration->introduction(selection->reader, initialDelay);
+        if (delay) {
+            EVT_AT_KsIcon_Enqueue(0xffff, 157, 153, 0xffff, 1800, 153, 2, delay);
+            FTBL.HLib_SetCurrentTaskTo(UranaiSelect);
+            FTBL.HLib_SetupTaskDelay(delay);
+        } else {
+            initialDelay = work->configuration->same(selection->reader, initialDelay);
+            FTBL.HLib_SetCurrentTaskTo(UranaiFade);
+            FTBL.HLib_SetupTaskDelay(initialDelay - 60);
+        }
+    }
+}
+#else
 void UranaiStart(void *data)
 {
     UranaiWork *work = (UranaiWork *)data;
@@ -89,13 +310,18 @@ void UranaiStart(void *data)
         if (delay) {
             FTBL.FinishLoading();
             FTBL.CheckHelpIcon(1, 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+            EVT_AT_KsIcon_Enqueue(0xffff, 25, 26, 0xffff, 1800, 26, 2, delay);
+#else
             EVT_AT_KsIcon_Enqueue(0xffff, 49, 154, 0xffff, 1800, 154, 2, delay);
+#endif
             FTBL.HLib_SetCurrentTaskTo(UranaiSelect);
             FTBL.HLib_SetupTaskDelay(delay);
         } else
             FTBL.HLib_SetCurrentTaskTo(UranaiSame);
     }
 }
+#endif
 
 void UranaiSelect(void *data)
 {
@@ -105,9 +331,19 @@ void UranaiSelect(void *data)
     int delay;
     if (FTBL.GetShouldRenderIcons(2))
         return;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.FinishLoading();
     FTBL.CheckHelpIcon(0, 0, 0);
-    if (FTBL.shenGetCtrlSpeakIconFlag() == 49) {
+#endif
+    if (FTBL.shenGetCtrlSpeakIconFlag() ==
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        157
+#elif defined(SHENMUE_TARGET_S2_DC_EU)
+        25
+#else
+        49
+#endif
+    ) {
         if (FTBL.GetPlayerStat(2) >= configuration->price) {
             delay = configuration->beginReading(selection->reader, 0);
             delay = configuration->reading(selection->reader, delay);
@@ -125,6 +361,19 @@ void UranaiSelect(void *data)
     }
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void UranaiResult(void *data)
+{
+    UranaiWork *work = (UranaiWork *)data;
+    const UranaiSelection *selection = work->selection;
+    const UranaiConfiguration *configuration = work->configuration;
+    int delay;
+    FTBL.HLib_SetCurrentTaskTo(UranaiMoney);
+    delay = configuration->result(selection->reader, work->cameraState);
+    if (delay)
+        FTBL.HLib_SetupTaskDelay(delay);
+}
+#else
 void UranaiResult(void *data)
 {
     UranaiWork *work = (UranaiWork *)data;
@@ -137,7 +386,9 @@ void UranaiResult(void *data)
         FTBL.HLib_SetupTaskDelay(delay);
     }
 }
+#endif
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void UranaiSame(void *data)
 {
     UranaiWork *work = (UranaiWork *)data;
@@ -146,6 +397,7 @@ void UranaiSame(void *data)
     FTBL.HLib_SetCurrentTaskTo(UranaiFade);
     FTBL.HLib_SetupTaskDelay(delay - 60);
 }
+#endif
 
 void UranaiMoney(void *data)
 {
@@ -158,6 +410,15 @@ void UranaiMoney(void *data)
     FTBL.HLib_SetupTaskDelay(delay - 60);
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void UranaiFade(void *data)
+{
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 0);
+    EVT_AT_SetSample(0, 1, 0);
+    FTBL.HLib_SetCurrentTaskTo(UranaiFadeEnd);
+    FTBL.HLib_SetupTaskDelay(60);
+}
+#else
 void UranaiFade(void *data)
 {
     UranaiWork *work = (UranaiWork *)data;
@@ -167,12 +428,30 @@ void UranaiFade(void *data)
     FTBL.HLib_SetCurrentTaskTo(UranaiFadeEnd);
     FTBL.HLib_SetupTaskDelay(60);
 }
+#endif
 
 void UranaiFadeEnd(void *data)
 {
     UranaiEnd(data);
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void InitializeUranai(UranaiWork *work)
+{
+    uranaiCharacters[1] = work->selection->reader;
+    work->characters = Queue_EVT_AT_ReadChr(work->task, uranaiCharacters);
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(7), (int)"URNI", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "URNI", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "URNI", 0, 0);
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_FreeAuthorPak(1, "0120");
+    SetEventVoicePrefix("0120");
+    FTBL.camCtrlToggleSmoothing(1);
+    FTBL.camCtrlSetMotionScaleFactor(0.05f);
+    FTBL.EV_LoadCutsceneFromCurrentScene("01200000");
+}
+#else
 void InitializeUranai(UranaiWork *work)
 {
     FTBL.EV_NPC_NewLoadSw_0(0);
@@ -194,7 +473,29 @@ void InitializeUranai(UranaiWork *work)
     FTBL.SetLoadingBusy();
     FTBL.EV_EventSetUpHelpIcon_0(54, 0);
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void CleanupUranai(UranaiWork *work)
+{
+    if (FTBL.DoesScenarioCharacterExist(SHEN_NAME4('S', 'U', 'I', 'S')))
+        FTBL.SetScenarioCharacterKillMode(SHEN_NAME4('S', 'U', 'I', 'S'), 1);
+    FTBL.EV_EnableCharacterDisplay(URNI_PLAYER);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->selection->reader), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->selection->reader), 0, 1, 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(work->selection->reader));
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(URNI_PLAYER), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(URNI_PLAYER), 0, 1, 0);
+    FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(URNI_PLAYER));
+    FTBL.camCtrlToggleSmoothing(0);
+    FTBL.LoadCutsceneAndSoundProgramForArea();
+    EVT_AT_SetSample(0, 0, 0);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0120");
+    FTBL.EV_ControlPackageResources(0, 6, "URNI", 0, 0);
+    ET_AT_KillWork(work->characters);
+}
+#else
 void CleanupUranai(UranaiWork *work)
 {
     FTBL.EV_EnableCharacterDisplay(URNI_PLAYER);
@@ -216,7 +517,9 @@ void CleanupUranai(UranaiWork *work)
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     FTBL.EV_NPC_NewLoadSw_0(1);
 }
+#endif
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void ConfigureUranai(UranaiWork *work, shen_name reader)
 {
     switch (reader) {
@@ -257,6 +560,7 @@ void ConfigureUranai(UranaiWork *work, shen_name reader)
     EVT_AT_SetAngY(uranaiCharacters[1], URNI_BASE, 0.0f, 0);
     work->configuration->setup(reader, 0);
 }
+#endif
 #else
 #include "s2/areas/area_urni.hpp"
 #include "s2/author.hpp"

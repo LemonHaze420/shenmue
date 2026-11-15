@@ -25,6 +25,85 @@ static int UranaiSriQueueMessages(HLibTask *parent, const char **messages, int v
     return offset;
 }
 
+
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+static const char *uranaiSriModeOneVoices[] = {
+    "C003",
+    "C006",
+    "C007",
+    0
+};
+static const char *uranaiSriIntroductionVoices[] = {
+    "C008",
+    "C011",
+    0
+};
+static const char *uranaiSriSameVoices[] = {
+    "A001",
+    "C031",
+    "C032",
+    "A010",
+    "C033",
+    0
+};
+static const char *uranaiSriDeclineVoices[] = {
+    "A003",
+    "C014",
+    "C015",
+    "A015",
+    0
+};
+static const char *uranaiSriBeginVoices[] = {
+    "A002",
+    "C007",
+    "C016",
+    0
+};
+static const char *uranaiSriReadingVoices[] = {
+    "C017",
+    "C018",
+    "A001",
+    0
+};
+static const char *uranaiSriPaymentVoices[] = {
+    "C026",
+    "C027",
+    "A036",
+    "C028",
+    "C029",
+    "A019",
+    "C030",
+    "A010",
+    0
+};
+static const char *uranaiSriInsufficientVoices[] = {
+    "A020",
+    "C034",
+    "A037",
+    "C035",
+    "A025",
+    0
+};
+static const char *uranaiSriResultVoices[16][16] = {
+    {"お探しの人物が、水晶に映っています。", "ただ…良くない影が出ています。＆行動は慎重に。", 0},
+    {"この人物が、あなたを導いてくれるでしょう。", "ただ…良くない影が出ています。＆行動は慎重に。", 0},
+    {"この人物が、あなたを導いてくれるでしょう。", "ただ…良くない影が出ています。＆行動は慎重に。", 0},
+    {"お探しの人物が水晶に映っています。", "あなたが向かう事を、＆察しているのでしょうか？", "急いだ方がよさそうですね。", 0},
+    {"お探しのものが、水晶の中に映っています。", 0},
+    {"この者があなたが探す人の＆手がかりを教えてくれるでしょう。", 0},
+    {"かの少年が、お探しの人物について＆教えてくれるでしょう。", "●青子供か…　どこにいるのかわかりますか？", "わかりません。＆九龍城のどこかだとは思いますが…。", 0},
+    {"この鳥が、お探しの人物に関わっているようです。", 0},
+    {"お探しの人物には、水晶に映っている＆ものが関わっている様です。", 0},
+    {"お探しの場所は、この人物が＆行く手を塞いでいます。", "●青ここは？　どこだかわかりますか？", "わかりません。＆九龍城のどこかだとは思いますが…。", 0},
+    {"水晶に映っているものが、＆お探しの場所に関わっています。", "●青ここは？　どこだかわかりますか？", "わかりません。＆九龍城のどこかだとは思いますが…。", 0},
+    {"水晶に映っているものが、＆お探しの場所に関わっています。", "●青ここは？　どこだかわかりますか？", "わかりません。＆九龍城のどこかだとは思いますが…。", 0},
+    {"お探しの相手の１人がこちらです。", "●青ここは？　どこだかわかりますか？", "わかりません。＆九龍城のどこかだとは思いますが…。", 0},
+    {"ここからすぐ近くの場所に＆かの人物がいると、", "水晶は告げております。", 0},
+    {"お探しの相手の１人がこちらです。", "●青ここは？　どこだかわかりますか？", "わかりません。＆九龍城のどこかだとは思いますが…。", 0},
+    {"お探しの場所は、この人物が＆行く手を塞いでいます。", "●青ここは？　どこだかわかりますか？", "わかりません。＆九龍城のどこかだとは思いますが…。", "ですが、正しき道は＆どうやら別の場所にあるようです。", 0}
+};
+static int uranaiSriStoryFlags[16] = {1626, 1627, 1628, 1629, 1630, 1631, 1632, 1633, 1634, 1635, 1636, 1637, 1638, 1639, 1640, 1641};
+#else
 static const char *uranaiSriModeOneVoices[] = {0};
 static const char *uranaiSriIntroductionVoices[] = {"A087", "H013", "H001", 0};
 static const char *uranaiSriSameVoices[] = {"H009", "A062", "H010", "H011", "A010", 0};
@@ -65,6 +144,8 @@ static const char *uranaiSriResultVoices[28][16] = {
 };
 static int uranaiSriStoryFlags[28] = {1524, 1525, 1527, 1528, 1529, 1530, 1531, 1532, 1533, 1534, 1535, 1536, 1537, 1538, 1539, 1540, 1541, 1542,
     1543, 1544, 1545, 1546, 1547, 1548, 1549, 1550, 1551, 1552};
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static const char *uranaiSriPackages[28] = {"0120_YAN", "0120_CHD", "0120_TEJ", "0120_YAN", "0120_QRR", "0120_GAI", "0120_KUK", "0120_HAT",
     "0120_QCN", "0120_QCN", "0120_HAT", "0120_SGT", "0120_KT1", "0120_KYC", "0120_KYC", "0120_GAI", "0120_SSY", "0120_CHN", "0120_AW3", "0120_SF6",
     "0120_SF3", "0120_CHN", "0120_TGY", "0120_AW1", "0120_VNE", "0120_SF5", "0120_KFT", "0120_OXO"};
@@ -120,6 +201,9 @@ const char *UranaiStoryPackage(void)
     return uranaiSriPackages[UranaiStoryPackageIndex()];
 }
 
+#endif
+
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 int UranaiSriSetup(shen_name reader, int delay)
 {
     int index;
@@ -136,19 +220,50 @@ int UranaiSriSetup(shen_name reader, int delay)
     FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(uranaiSriProjections[index].character), 0);
     return 0;
 }
+#endif
 
 int UranaiSriModeOne(shen_name reader, int delay)
 {
     int end = delay + 330;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetMot(URNI_PLAYER, URNI_STAND_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EVT_AT_SetMot(reader, 6645, 2.0f, 1.0f, 0x40000000, delay);
+#else
     EVT_AT_SetMot(reader, URNI_SRI_TALK_TWO_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+#endif
     EVT_AT_SetCam(1216, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
     QueueEventVoiceList(0, uranaiSriModeOneVoices, 10, 0x80000000, delay);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_CharaDisp(URNI_PLAYER, 0, 1);
     EVT_AT_CharaDisp(URNI_PLAYER, end, 0);
+#endif
     return end;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSriIntroduction(shen_name reader, int delay)
+{
+    int end = delay + 285;
+    int i;
+    for (i = 15; i > 0; i--)
+        if (FTBL.EV_GetShenmueFlag(uranaiSriStoryFlags[i]))
+            break;
+    if (i == FTBL.EV_GetPlayerFlag(15, 44))
+        end = 0;
+    else {
+        EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, end - delay, 0);
+        EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, end - delay, 0);
+        EVT_AT_SetPos(URNI_PLAYER, reader, 0.0f, 0.0f, -1.4f, delay);
+        EVT_AT_SetAngY(URNI_PLAYER, reader, 180.0f, delay);
+        EVT_AT_SetMot(reader, URNI_SRI_TALK_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+        EVT_AT_SetCam(1202, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+        QueueEventVoiceList(0, uranaiSriIntroductionVoices, 10, 0x80000000, delay);
+    }
+    return end;
+}
+#else
 int UranaiSriIntroduction(shen_name reader, int delay)
 {
     int end = delay + 175;
@@ -166,7 +281,24 @@ int UranaiSriIntroduction(shen_name reader, int delay)
     }
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSriSame(shen_name reader, int delay)
+{
+    int leave = delay + 450;
+    int end;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, leave - delay, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, leave - delay, 0);
+    EVT_AT_SetPosAng(URNI_PLAYER, reader, 0.0f, -1.4f, 180.0f, delay);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, leave - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetCam(1202, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiSriSameVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSriSame(shen_name reader, int delay)
 {
     int end;
@@ -183,7 +315,23 @@ int UranaiSriSame(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiSriSameVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSriDecline(shen_name reader, int delay)
+{
+    int leave = delay + 400;
+    int end;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, leave - delay, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, leave - delay, 0);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, leave - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetCam(1203, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiSriDeclineVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSriDecline(shen_name reader, int delay)
 {
     int leave = delay + 280;
@@ -200,7 +348,24 @@ int UranaiSriDecline(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiSriDeclineVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSriBeginReading(shen_name reader, int delay)
+{
+    int end = delay + 250;
+    int frames;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, end - delay, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, end - delay, 0);
+    EVT_AT_SetPosAng(URNI_PLAYER, reader, 0.0f, -1.4f, 180.0f, delay);
+    frames = EVT_AT_SetMot(URNI_PLAYER, URNI_SIT_MOTION, 2.0f, 1.0f, 0, delay + 120);
+    EVT_AT_SetMot(URNI_PLAYER, URNI_SITTING_MOTION, 2.0f, 1.0f, 0, frames);
+    EVT_AT_SetCam(1203, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    EVT_AT_SetSound(993, delay + 120);
+    QueueEventVoiceList(0, uranaiSriBeginVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSriBeginReading(shen_name reader, int delay)
 {
     int end;
@@ -212,7 +377,20 @@ int UranaiSriBeginReading(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiSriBeginVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSriReading(shen_name reader, int delay)
+{
+    int end = delay + 340;
+    int frames;
+    frames = EVT_AT_SetMot(reader, URNI_SRI_START_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetMot(reader, URNI_SRI_LOOP_MOTION, 2.0f, 1.0f, 0, frames);
+    EVT_AT_SetCam(1204, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiSriReadingVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSriReading(shen_name reader, int delay)
 {
     int end = delay + 340;
@@ -224,7 +402,28 @@ int UranaiSriReading(shen_name reader, int delay)
         QueueEventVoiceList(0, uranaiSriReadingVoices, 10, 0x80000000, delay + 150);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSriResult(shen_name reader, int delay)
+{
+    int index;
+    int frames;
+    EVT_AT_CharaDisp(URNI_CRYSTAL, 0, 0);
+    EVT_AT_CharaDisp(URNI_CRYSTAL, 560, 1);
+    EVT_AT_SetMot(reader, URNI_SRI_TALK_MOTION, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetCam(1207, URNI_CRYSTAL, URNI_CRYSTAL, 0, 0, 0);
+    index = 15;
+    while (index > 0) {
+        if (FTBL.EV_GetShenmueFlag(uranaiSriStoryFlags[index]))
+            break;
+        index--;
+    }
+    FTBL.EV_SetPlayerFlag(16, 44, index);
+    frames = UranaiSriQueueMessages(FTBL.HLib_GetCurrentTask(), uranaiSriResultVoices[index], 10, 0x80000000, 0);
+    return frames;
+}
+#else
 int UranaiSriResult(shen_name reader, int delay)
 {
     int result = 0;
@@ -241,7 +440,26 @@ int UranaiSriResult(shen_name reader, int delay)
     }
     return result;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSriPayment(shen_name reader, int delay)
+{
+    int end;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay + 100, 300, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay + 100, 300, 0);
+    end = EVT_AT_SetMot(reader, URNI_SRI_END_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetMot(reader, URNI_SRI_TALK_TWO_MOTION, 2.0f, 1.0f, 0, end);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_STAND_FROM_CHAIR_MOTION, 2.0f, 1.0f, 0, delay + 680);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, end - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetCam(1202, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    EVT_AT_SetSound(996, delay + 680);
+    QueueEventVoiceList(0, uranaiSriPaymentVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSriPayment(shen_name reader, int delay)
 {
     int index, end;
@@ -260,7 +478,22 @@ int UranaiSriPayment(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiSriPaymentVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSriInsufficientCash(shen_name reader, int delay)
+{
+    int leave = delay + 580;
+    int end;
+    EVT_AT_StartMoneyCount(0, delay + 10);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, leave - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetCam(1203, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiSriInsufficientVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSriInsufficientCash(shen_name reader, int delay)
 {
     int leave = delay + 340;
@@ -280,6 +513,7 @@ int UranaiSriInsufficientCash(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiSriInsufficientVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 #else
 #include "s2/areas/area_urni.hpp"
 #include "s2/camera.hpp"

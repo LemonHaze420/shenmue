@@ -3,6 +3,141 @@
 
 double fabs(double value);
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int AnanUpdateGame(AnanWork *work)
+{
+    AnanGame *game;
+    EventDateTime now;
+    int input, previous, result = 0, clear;
+    float step;
+    AnanVoiceCallback callback;
+    callback = AnanVoiceUnlockInput;
+    do {
+        if (!work)
+            break;
+        game = &work->game;
+        if (game->responseVoice && !FTBL.cvsHasValidConverseData(game->responseVoice))
+            game->responseVoice = 0;
+        AnanHistoryInput(game, 0);
+        input = AnanHistoryInput(game, 1);
+        previous = AnanHistoryInput(game, 2);
+        clear = 0;
+        if ((int)game->gameFlags >= 0) {
+            step = AnanInputStep(game);
+            switch (input) {
+            case 0:
+                FTBL.GetCurrentDateTime((DateTime *)&now);
+                if (now.hour >= 19 || (now.hour >= 18 && now.minute >= 50)) {
+                    result = 1;
+                    AnanStopLift(0, 1);
+                    QueueAnanCamera(ananPackage, 1912, ANAN_BASE, 0);
+                    FTBL.HLib_SetCurrentTaskTo(AnanBeginTimeOver);
+                } else if (game->idleFrames > 750) {
+                    result = 2;
+                    AnanStopLift(0, 1);
+                    QueueAnanCamera(ananPackage, 1912, ANAN_BASE, 0);
+                    game->idleFrames = 0;
+                    FTBL.HLib_SetCurrentTaskTo(AnanBeginAngry);
+                    clear = 1;
+                } else if (game->idleFrames > 300 && !(game->gameFlags & 1)) {
+                    result = 3;
+                    AnanStopLift(0, 0);
+                    FTBL.HLib_SetCurrentTaskTo(AnanRestartGame);
+                    clear = 1;
+                    FTBL.HLib_SetupTaskDelay(-1);
+                    QueueAnanWait(0);
+                    {
+                        unsigned flags = game->gameFlags;
+                        SHENMUE_EVENT_CLOBBER("r1");
+                        game->gameFlags = flags | 0x80000001U;
+                    }
+                    QueueAnanVoice("0020B026", clear, 0, 80, 0);
+                    QueueAnanVoice("0020B027", clear, 100, 200, callback);
+                }
+                break;
+            case 1:
+                result = 4;
+                game->idleFrames = 0;
+                game->gameFlags &= ~0x8000U;
+                FTBL.HLib_SetCurrentTaskTo(AnanAskStraight);
+                AnanStopLift(1, 0);
+                QueueAnanVoice("0020B012", 1, 20, 90, 0);
+                clear = 1;
+                break;
+            case 2:
+                game->idleFrames = 0;
+                if (fabs(game->tilt + 1.0f) < 1.1920929e-07) {
+                    result = 5;
+                    game->gameFlags |= 0x80000000U;
+                    FTBL.HLib_SetCurrentTaskTo(AnanRestartGame);
+                    FTBL.HLib_SetupTaskDelay(-1);
+                    QueueAnanWait(0);
+                    game->gameFlags |= 1;
+                    AnanStopLift(0, 0);
+                    QueueAnanVoice("0020B010", 1, 0, 130, callback);
+                    game->tilt = -1.0f;
+                    clear = 1;
+                    game->endHoldFrames = 0;
+                } else {
+                    result = 6;
+                    game->tilt = step + game->tilt;
+                    if (fabs(game->tilt) < ANAN_EPSILON)
+                        game->tilt = 0;
+                    if (game->tilt <= -1.0f) {
+                        game->endHoldFrames++;
+                        if (previous != input || game->endHoldFrames > 30)
+                            game->tilt = -1.0f;
+                        else
+                            game->tilt = -0.99900001f;
+                    } else {
+                        game->endHoldFrames = 0;
+                        if (!game->responseVoice && FTBL.GetRandomNumberInRange(100.0f) > 90.0f)
+                            game->responseVoice = FTBL.EV_PlayDialogue("0020B008");
+                    }
+                }
+                break;
+            case 3:
+                game->idleFrames = 0;
+                if (fabs(game->tilt - 1.0f) < ANAN_EPSILON) {
+                    result = 7;
+                    game->gameFlags |= 0x80000000U;
+                    FTBL.HLib_SetCurrentTaskTo(AnanRestartGame);
+                    FTBL.HLib_SetupTaskDelay(-1);
+                    QueueAnanWait(0);
+                    game->gameFlags |= 1;
+                    AnanStopLift(0, 0);
+                    QueueAnanVoice("0020B011", 1, 0, 160, callback);
+                    game->tilt = 1.0f;
+                    clear = 1;
+                    game->endHoldFrames = 0;
+                } else {
+                    result = 8;
+                    game->tilt = step + game->tilt;
+                    if (fabs(game->tilt) < ANAN_EPSILON)
+                        game->tilt = 0;
+                    if (game->tilt >= 1.0f) {
+                        game->endHoldFrames++;
+                        if (previous != input || game->endHoldFrames > 30)
+                            game->tilt = 1.0f;
+                        else
+                            game->tilt = 0.99900001f;
+                    } else {
+                        game->endHoldFrames = 0;
+                        if (!game->responseVoice && FTBL.GetRandomNumberInRange(100.0f) > 90.0f)
+                            game->responseVoice = FTBL.EV_PlayDialogue("0020B009");
+                    }
+                }
+                break;
+            }
+        }
+        else
+            result = -1;
+        if (clear)
+            AnanClearInput(game);
+    } while (0);
+    return result;
+}
+#else
 int AnanUpdateGame(AnanWork *work)
 {
     AnanGame *game;
@@ -145,7 +280,50 @@ int AnanUpdateGame(AnanWork *work)
     } while (0);
     return result;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void AnanStopLift(int confirming, int fixedCamera)
+{
+    MotionWork *motion;
+    int camera, index;
+    shen_name character;
+    motion = FTBL.scenFindMotionwork(ANAN_MAN);
+    if (!motion)
+        return;
+    FTBL.mtwkSetExtraFlag(motion, 9, 2);
+    FTBL.mtwkSetSpeed(motion, 1.0f, 0);
+    FTBL.mtwkRequestMotion(motion, 0x67c5, 0);
+    FTBL.EV_mtwkSetEnabled(motion, 1);
+    FTBL.SetMotionLayerLoopStartTime(motion, 170.0f, 0);
+    FTBL.SetMotionRegionEvalTime(motion, 170.0f, 0);
+    FTBL.SetMotionLayerEndFrame(motion, 200.0f, 0);
+    if (!fixedCamera) {
+        switch (FTBL.shenGetRandomInt32(!confirming ? 5 : 3)) {
+        case 0:
+            camera = 1907;
+            break;
+        case 1:
+            camera = 1908;
+            break;
+        case 3:
+            camera = 1910;
+            break;
+        case 4:
+            camera = 1911;
+            break;
+        default:
+            camera = 1909;
+            break;
+        }
+        QueueAnanCamera(ananPackage, camera, ANAN_BASE, 0);
+    }
+    for (index = 0; (character = ananStoppedPlacement[index].character) != ANAN_INVALID; index++) {
+        FTBL.EV_AT_SetPos(character, ANAN_ALL_AXES, &ananStoppedPlacement[index].position);
+        FTBL.EV_AT_SetAngY_0(character, ANAN_ALL_AXES, &ananStoppedPlacement[index].rotation, 0);
+    }
+}
+#else
 void AnanStopLift(int confirming, int fixedCamera)
 {
     MotionWork *motion;
@@ -186,7 +364,47 @@ void AnanStopLift(int confirming, int fixedCamera)
         FTBL.EV_AT_SetAngY_0(character, ANAN_ALL_AXES, &ananStoppedPlacement[index].rotation, 0);
     }
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void AnanRetry(void *data)
+{
+    AnanWork *work = (AnanWork *)data;
+    int index, finish = 1;
+    while (work) {
+        if (FTBL.filmCheckFadeTrackColour()) {
+            finish = 0;
+            break;
+        }
+        if (work->lifecycle & 2) {
+            FTBL.SetScreenFilmFade(32, 0, 0, 0, 0, 255, 0, 0, 0);
+            work->lifecycle &= ~2U;
+            finish = 0;
+            break;
+        } else {
+            FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+            work->lifecycle |= 2;
+            FTBL.HLib_SetCurrentTaskTo(AnanRestartGame);
+            FTBL.HLib_SetupTaskDelay(-1);
+            QueueAnanWait(0);
+            AnanStopLift(0, 1);
+            QueueAnanCamera(ananPackage, 1911, ANAN_BASE, 0);
+            QueueAnanVoice("0020B023", 1, 32, 150, AnanVoiceUnlockInput);
+            work->game.gameFlags |= 0x80000000U;
+            work->targets[0] = ANAN_MAN;
+            work->targets[1] = ANAN_RYO;
+            for (index = 0; ananGamePlacement[index].character != ANAN_INVALID; index++) {
+                FTBL.EV_AT_SetPos(ananGamePlacement[index].character, ANAN_ALL_AXES, &ananGamePlacement[index].position);
+                FTBL.EV_AT_SetAngY_0(ananGamePlacement[index].character, ANAN_ALL_AXES, &ananGamePlacement[index].rotation, 0);
+            }
+        }
+        finish = 0;
+        break;
+    }
+    if (finish)
+        FTBL.HLib_SetCurrentTaskTo(AnanFinish);
+}
+#else
 void AnanRetry(void *data)
 {
     AnanWork *work = (AnanWork *)data;
@@ -224,6 +442,7 @@ void AnanRetry(void *data)
     if (finish)
         FTBL.HLib_SetCurrentTaskTo(AnanFinish);
 }
+#endif
 
 void AnanSetLiftPose(float tilt)
 {
@@ -234,6 +453,36 @@ void AnanSetLiftPose(float tilt)
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ANAN_MAN), 9, 0);
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void AnanSetLiftFrame(float tilt)
+{
+    float frame;
+    int index;
+    if (fabs(tilt) < ANAN_EPSILON)
+        tilt = 0;
+    if (tilt > 1.0f)
+        tilt = 1.0f;
+    tilt += 1.0f;
+    if (fabs(tilt) < ANAN_EPSILON)
+        tilt = 0;
+    tilt *= 0.5f;
+    if (fabs(tilt) < ANAN_EPSILON)
+        tilt = 0;
+    frame = tilt * 41.0f;
+    if (fabs(frame) < ANAN_EPSILON)
+        frame = 0;
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(ANAN_MAN), 0x67ca, 0);
+    FTBL.SetMotionLayerLoopStartTime(FTBL.scenFindMotionwork(ANAN_MAN), frame, 0);
+    FTBL.SetMotionRegionEvalTime(FTBL.scenFindMotionwork(ANAN_MAN), frame, 0);
+    FTBL.SetMotionLayerEndFrame(FTBL.scenFindMotionwork(ANAN_MAN), frame, 0);
+    for (index = 0; ananGamePlacement[index].character != ANAN_INVALID; index++) {
+        if (ananGamePlacement[index].character == ANAN_MAN) {
+            FTBL.EV_AT_SetPos(ananGamePlacement[index].character, ANAN_ALL_AXES, &ananGamePlacement[index].position);
+            FTBL.EV_AT_SetAngY_0(ananGamePlacement[index].character, ANAN_ALL_AXES, &ananGamePlacement[index].rotation, 0);
+        }
+    }
+}
+#else
 void AnanSetLiftFrame(float tilt)
 {
     float frame;
@@ -262,7 +511,57 @@ void AnanSetLiftFrame(float tilt)
         }
     }
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void AnanSetTargets(float tilt, int hand, int body)
+{
+    MotionWork *motion;
+    Vector3 origin;
+    Vector3i rotation;
+    Vector3 copy;
+    Vector3i angle;
+    Vector3 handPoint, bodyPoint;
+    do {
+        if (!hand && !body)
+            break;
+        motion = FTBL.scenFindMotionwork(ANAN_MAN);
+        if (!motion)
+            break;
+        FTBL.GetCharaPosition(ANAN_BOARD, 0xffffffffU, &origin, ANAN_WORLD);
+        FTBL.GetScenarioCharacterEulerAngles(ANAN_BOARD, &angle, ANAN_WORLD);
+    #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    AnanGetBoardRotation(tilt, &rotation);
+#else
+    AnanGetBoardRotation(&rotation, tilt);
+#endif
+        if (hand) {
+            copy.x = 0.0f;
+            copy.y = 0.0f;
+            copy.z = 0.0f;
+            handPoint.x = -1.0f;
+            handPoint.y = -0.6f;
+            handPoint.z = 0.0f;
+            FTBL.ApplyScenarioTranslationAndRotation(&copy, &rotation, &handPoint);
+            copy = origin;
+            FTBL.ApplyScenarioTranslationAndRotation(&copy, &angle, &handPoint);
+            FTBL.LatchMotionBoneTarget(motion, 14, &handPoint);
+        }
+        if (body) {
+            copy.x = 0.0f;
+            copy.y = 0.0f;
+            copy.z = 0.0f;
+            bodyPoint.x = -1.25f;
+            bodyPoint.y = -0.4f;
+            bodyPoint.z = 0.0f;
+            FTBL.ApplyScenarioTranslationAndRotation(&copy, &rotation, &bodyPoint);
+            copy = origin;
+            FTBL.ApplyScenarioTranslationAndRotation(&copy, &angle, &bodyPoint);
+            FTBL.LatchMotionBoneTarget(motion, 21, &bodyPoint);
+        }
+    } while (0);
+}
+#else
 void AnanSetTargets(float tilt, int hand, int body)
 {
     Vector3 origin, copy;
@@ -293,6 +592,7 @@ void AnanSetTargets(float tilt, int hand, int body)
         }
     } while (0);
 }
+#endif
 
 void AnanClearInput(AnanGame *game)
 {
@@ -321,6 +621,36 @@ int AnanHistoryInput(AnanGame *game, int index)
     return value;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void AnanReadInput(AnanGame *game)
+{
+    unsigned int input;
+    unsigned char carry; unsigned char old;
+    int direction;
+    int index;
+    while (game) {
+        if (!(game->gameFlags & 0x80008000U)) {
+            input = FTBL.GetCurrentControlInput(0);
+        } else
+            input = 0;
+        if (input >> 10 & 1)
+            direction = 1;
+        else if (input & 0x1000)
+            direction = 2;
+        else if (input & 0x2000)
+            direction = 3;
+        else
+            direction = 0;
+        carry = direction << 6;
+        for (index = 5; index >= 0; index--) {
+            old = game->inputHistory[index];
+            game->inputHistory[index] = old >> 2 | carry;
+            carry = (old & 3) << 6;
+        }
+        break;
+    }
+}
+#else
 void AnanReadInput(AnanGame *game)
 {
     unsigned int input;
@@ -354,6 +684,7 @@ void AnanReadInput(AnanGame *game)
         break;
     }
 }
+#endif
 
 float AnanInputStep(AnanGame *game)
 {
@@ -479,6 +810,48 @@ void AnanAskStraight(void *data)
         FTBL.HLib_SetCurrentTaskTo(AnanFinish);
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void AnanWaitStraight(void *data)
+{
+    AnanWork *work = (AnanWork *)data;
+    HLibTaskCallback next;
+    AnanVoiceCallback callback;
+    callback = AnanVoiceUnlockInput;
+    if (work) {
+        if (!FTBL.GetShouldRenderIcons(2)) {
+            QueueAnanWait(0);
+            work->game.gameFlags |= 0x80000000U;
+            if (FTBL.shenGetCtrlSpeakIconFlag() == 82) {
+                work->targets[1] = ANAN_RYO;
+                QueueAnanCamera(ananPackage, 1716, ANAN_BASE, 0);
+                QueueAnanVoice("0020A012", 1, 0, 80, AnanVoiceUnlockInput);
+                QueueAnanCamera(ananPackage, 1904, ANAN_BASE, 0);
+                if (AnanIsStraight(&work->game))
+                    next = AnanSuccess;
+                else {
+                    work->game.failures++;
+                    next = AnanFailure;
+                }
+            } else {
+                work->targets[0] = ANAN_INVALID;
+                work->targets[1] = ANAN_INVALID;
+                QueueAnanCamera(ananPackage, 1753, ANAN_BASE, 0);
+                next = AnanRestartGame;
+                QueueAnanVoice("0020B023", 1, 0, 130, callback);
+                FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(ANAN_MAN), 0);
+                FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(ANAN_MAN), 9, 2);
+                AnanSetLiftFrame(work->game.tilt);
+                AnanGetHandPosition(work->game.tilt, &work->positions[1]);
+                work->targets[1] = 0;
+                work->positionModes[1] = 0;
+            }
+            FTBL.HLib_SetCurrentTaskTo(next);
+            FTBL.HLib_SetupTaskDelay(-1);
+        }
+    } else
+        FTBL.HLib_SetCurrentTaskTo(AnanFinish);
+}
+#else
 void AnanWaitStraight(void *data)
 {
     AnanWork *work = (AnanWork *)data;
@@ -521,6 +894,7 @@ void AnanWaitStraight(void *data)
     } else
         FTBL.HLib_SetCurrentTaskTo(AnanFinish);
 }
+#endif
 
 void QueueAnanWait(int updatePose)
 {

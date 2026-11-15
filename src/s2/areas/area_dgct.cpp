@@ -8,6 +8,11 @@ void RunDgct(void)
     InitializeGameCenterWork((GameCenterWork *)FTBL.HLib_GetTaskParameter(task), task);
 }
 #else
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#define DGCT_SET_CAMERA(camera, eye, target, frames) EVT_AT_SetCam(camera, eye, target, 0, frames)
+#else
+#define DGCT_SET_CAMERA(camera, eye, target, frames) EVT_AT_SetCam(camera, eye, target, 0, 0, frames)
+#endif
 #define SET_VECTOR(v, a, b, c) do { (v).x = (a); (v).y = (b); (v).z = (c); } while (0)
 void InitializeGameCenterWork(GameCenterWork *work, HLibTask *task)
 {
@@ -568,14 +573,14 @@ int AdvanceGameCenterWait(ExciteState *state)
 }
 void StartGameCenterIntro(void)
 {
-    EVT_AT_SetCam(7000, EXQT_MACHINE, EXQT_MACHINE, 0, 0, -1);
-    EVT_AT_SetCam(7010, EXQT_MACHINE, EXQT_MACHINE, 0, 0, 100);
+    DGCT_SET_CAMERA(7000, EXQT_MACHINE, EXQT_MACHINE, -1);
+    DGCT_SET_CAMERA(7010, EXQT_MACHINE, EXQT_MACHINE, 100);
 }
 void StartGameCenterPaidIntro(void)
 {
-    EVT_AT_SetCam(7020, EXQT_MACHINE, EXQT_MACHINE, 0, 0, -1);
-    EVT_AT_SetCam(7030, EXQT_MACHINE, EXQT_MACHINE, 0, 0, 125);
-    EVT_AT_SetCam(7040, EXQT_MACHINE, EXQT_MACHINE, 0, 0, 155);
+    DGCT_SET_CAMERA(7020, EXQT_MACHINE, EXQT_MACHINE, -1);
+    DGCT_SET_CAMERA(7030, EXQT_MACHINE, EXQT_MACHINE, 125);
+    DGCT_SET_CAMERA(7040, EXQT_MACHINE, EXQT_MACHINE, 155);
     EVT_AT_SetMot(EXQT_RYO, 5249, 0.0f, 1.0f, 0x80000000, -1);
     EVT_AT_SetMot(EXQT_RYO, 5251, 0.0f, 1.0f, 0x80000000, 125);
     EVT_AT_StartMoneyCount(-100, 10);
@@ -583,10 +588,10 @@ void StartGameCenterPaidIntro(void)
 void GameCenterLostLife(int final)
 {
     if (final) {
-        EVT_AT_SetCam(7055, EXQT_MACHINE, EXQT_MACHINE, 0, 0, -1);
+        DGCT_SET_CAMERA(7055, EXQT_MACHINE, EXQT_MACHINE, -1);
         EVT_AT_SetMot(EXQT_RYO, 5252, 0.0f, 1.0f, 0x80000000, -1);
     } else
-        EVT_AT_SetCam(7050, EXQT_MACHINE, EXQT_MACHINE, 0, 0, -1);
+        DGCT_SET_CAMERA(7050, EXQT_MACHINE, EXQT_MACHINE, -1);
 }
 void QueueExciteResultDisplay(ExciteState *state)
 {
@@ -610,13 +615,13 @@ void QueueExciteResultDisplay(ExciteState *state)
 }
 void ExciteHighScoreReaction(void)
 {
-    EVT_AT_SetCam(7060, EXQT_MACHINE, EXQT_MACHINE, 0, 0, -1);
-    EVT_AT_SetCam(7065, EXQT_MACHINE, EXQT_MACHINE, 0, 0, 30);
+    DGCT_SET_CAMERA(7060, EXQT_MACHINE, EXQT_MACHINE, -1);
+    DGCT_SET_CAMERA(7065, EXQT_MACHINE, EXQT_MACHINE, 30);
     EVT_AT_SetMot(EXQT_RYO, 5250, 0.0f, 1.0f, 0x80000000, -1);
 }
 void FinishGameCenterQte(void)
 {
-    EVT_AT_SetCam(7070, EXQT_MACHINE, EXQT_MACHINE, 0, 0, -1);
+    DGCT_SET_CAMERA(7070, EXQT_MACHINE, EXQT_MACHINE, -1);
 }
 void QueueExcitePart(int part, int enabled, int delay)
 {

@@ -1,3 +1,80 @@
+#if defined(SHENMUE_EVENT_OVERLAY) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/scripts/cwon/area_cwon.hpp"
+
+int CwonUpdateBattleIntro(CwonWork *work) {
+    int result = 0;
+    if (FTBL.EV_authSceneCtrl(-1)) {
+        switch (FTBL.EV_authSceneCtrl(-6)) {
+        case 0:
+            CwonShowCharacter(BAG);
+            CwonDisableGravity(BAG);
+            break;
+        case 380:
+            FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('S', 'A', 'M', '_')), 0, 0, 16);
+            FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('S', 'A', 'M', '_')), 1, 0, 16);
+            break;
+        case 390:
+            FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('L', 'L', 'Y', '_')), 0, 0, 16);
+            FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('L', 'L', 'Y', '_')), 1, 0, 16);
+            break;
+        case 420:
+            FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('R', 'Y', 'O', '_')), 0, 0, 16);
+            FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('R', 'Y', 'O', '_')), 1, 0, 16);
+            break;
+        }
+    } else
+        result = 1;
+    return result;
+}
+
+int CwonUpdateStreetWin(CwonWork *work) {
+    int result = 0;
+    if (FTBL.EV_authSceneCtrl(-1)) {
+        if (!FTBL.EV_authSceneCtrl(-6)) {
+            CwonShowCharacter(BAG);
+            CwonDisableGravity(BAG);
+        }
+    } else {
+        CwonHideCharacter(BAG);
+        result = 1;
+    }
+    return result;
+}
+
+int CwonUpdateStreetLost(CwonWork *work) {
+    int result = 0;
+    if (FTBL.EV_authSceneCtrl(-1)) {
+        CwonShowCharacter(BAG);
+        CwonDisableGravity(BAG);
+    } else
+        result = 1;
+    return result;
+}
+
+int CwonUpdateStreetLostOutro(CwonWork *work) {
+    int result = 0;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.ResetScenarioCharacterAttachment(BAG);
+        result = 1;
+    }
+    return result;
+}
+
+int CwonUpdateMarketWin(CwonWork *work) {
+    return !FTBL.EV_authSceneCtrl(-1);
+}
+
+int CwonUpdateWarehouseWin(CwonWork *work) {
+    return !FTBL.EV_authSceneCtrl(-1);
+}
+
+void CwonAttachIntroBag(void) {
+    Vector3 position = {.579f, -.0668f, .1566f};
+    Vector3i rotation = {0x82a6, 0xfccb, 0x3a7c};
+    FTBL.AttachScenarioCharacter(BAG, SHEN_NAME4('C', 'L', 'J', '_'), 3, &position, &rotation);
+}
+
+#else
 #include "s2/scripts/cwon/cwon_helpers.hpp"
 #include "s2/scripts/cwon/cwon_tables.hpp"
 #include "s2/author.hpp"
@@ -1312,3 +1389,5 @@ void CwonEndChaseCallback(void *data) {
     }
 }
 } // namespace shenmue::s2
+
+#endif

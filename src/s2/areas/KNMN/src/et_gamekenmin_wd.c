@@ -1,12 +1,24 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/areas/area_knmn.hpp"
 #include "s2/training_seqp.hpp"
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define KNMN_PRACTICE_IDLE_MOTION 5198
+#define KNMN_PRACTICE_CAMERA_ASSERT_LINE 1235
+#else
+#define KNMN_PRACTICE_IDLE_MOTION 5193
+#define KNMN_PRACTICE_CAMERA_ASSERT_LINE 1241
+#endif
 
 Vector3 knmnPlayerStartPosition = {40.7f, 102.25f, 241.4f};
 Vector3 knmnTeacherStartPosition = {40.2f, 102.25f, 242.7f};
 Vector3 knmnDummyStartPosition = {37.9f, 102.25f, 241.0f};
 int knmnPlayerStartYaw = 0x4000, knmnTeacherStartYaw = 0xee38, knmnDummyStartYaw = 0xc000;
-Vector3 knmnPlayerPracticePosition = {41.08f, 102.25f, 241.04001f};
+Vector3 knmnPlayerPracticePosition = {41.08f, 102.25f,
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    241.44f};
+#else
+    241.04001f};
+#endif
 Vector3 knmnTeacherPracticePosition = {40.2f, 102.25f, 242.7f};
 Vector3 knmnDummyPracticePosition = {37.9f, 102.25f, 241.0f};
 int knmnPlayerPracticeYaw = 0x4000, knmnTeacherPracticeYaw = 0xee38, knmnDummyPracticeYaw = 0xc000;
@@ -269,7 +281,7 @@ void KnmnInitializeDemonstrationSequence(void *data)
  FTBL.EV_AT_SetPos(KNMN_KEM,0x78000000,&knmnTeacherPracticePosition);
  SetTrainingCharacterYaw(KNMN_KEM,knmnTeacherPracticeYaw);
  ClearTrainingMotionFlag(KNMN_KEM);
- FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5193,0);
+ FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),KNMN_PRACTICE_IDLE_MOTION,0);
  ThrSignalParent((Thr*)data,1);
  ThrKillOwn((Thr*)data);
 }
@@ -299,7 +311,7 @@ void KnmnExitPracticeSequence(void *data)
   switch(ThrGetSeq(thr)){
   case 0:ThrChangeSeq(thr,100,1);break;
   case 100:
-   FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5193,0);
+   FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),KNMN_PRACTICE_IDLE_MOTION,0);
    if(control->practiceExpired)ThrChangeSeq(thr,101,1);
    else if(control->practiceWarning)ThrChangeSeq(thr,105,1);
    else{ThrSetReturnValue(thr,retry);ThrChangeSeq(thr,125,1);}break;
@@ -409,7 +421,9 @@ void KnmnSuccessSequence(void *data)
  Thr *thr=(Thr*)data;
  int continuation=ThrGetUser(thr,2);
  KnmnPracticeWork *work=(KnmnPracticeWork*)ThrGetWork(thr);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
  Vector3 target;
+#endif
  ThrResetLoopCount(thr);
  do{
   ThrBeginStep(thr);
@@ -424,6 +438,9 @@ void KnmnSuccessSequence(void *data)
   case 103:ThrWaitAuthor(thr,133,0);break;
   case 133:
    ThrSetReturnValue(thr,continuation);KnmnPrepareAuthorCharacters(work);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+   FTBL.EV_authSceneCtrl(SHEN_NAME4('W','A','Z','A'));ThrWaitFrames(thr,134,1,2);break;
+#else
    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_KEM),0,3);
    FTBL.GetCharaPosition(KNMN_RYO,5,&target,0x40000000);
    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_KEM),&target,0);
@@ -432,6 +449,7 @@ void KnmnSuccessSequence(void *data)
    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO),0,3);
    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(KNMN_RYO),0,0);
    ThrWaitFrames(thr,134,1,1);break;
+#endif
   case 134:
    if(!FTBL.EV_authSceneCtrl(-1))ThrChangeSeq(thr,135,1);
    else KnmnWazaFrameEvents(work->game);break;
@@ -585,7 +603,7 @@ int KnmnSelectPracticeCamera(KnmnPracticeWork *work,int practice)
  if(practice>=0&&(practice<=3||practice==9)){
   if(control->practiceCamera==9010)camera=9011;
   else camera=9010;
- }else FTBL.EventAssertMessageNullsub(__FILE__,1241,"Illigal step number !");
+ }else FTBL.EventAssertMessageNullsub(__FILE__,KNMN_PRACTICE_CAMERA_ASSERT_LINE,"Illigal step number !");
  control->changeCamera=0;
  return camera;
 }
@@ -627,7 +645,7 @@ void KnmnResetActors(int practice)
  FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(KNMN_RYO),69,0,0);
  FTBL.EV_AT_SetPos(KNMN_KEM,0x78000000,&knmnTeacherPracticePosition);
  SetTrainingCharacterYaw(KNMN_KEM,knmnTeacherPracticeYaw);ClearTrainingMotionFlag(KNMN_KEM);
- FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5193,0);
+ FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),KNMN_PRACTICE_IDLE_MOTION,0);
 }
 
 const char knmnPracticeCountLog[] = "@@@ cnt %d : Wcnt %d : time %d : time_old %d\n";
@@ -677,7 +695,7 @@ void KnmnPracticeDecisionSequence(void *data)
             FTBL.EV_AT_SetPos(KNMN_KEM,0x78000000,&knmnTeacherPracticePosition);
             SetTrainingCharacterYaw(KNMN_KEM,knmnTeacherPracticeYaw);
             ClearTrainingMotionFlag(KNMN_KEM);
-            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),5193,0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(KNMN_KEM),KNMN_PRACTICE_IDLE_MOTION,0);
             *resetFacing = 1;
             ThrChangeSeq(thr,101,1);
             break;
@@ -968,8 +986,10 @@ void KnmnQteSequence(void *data)
             ThrWaitFrames(sequence,100,1,10);
             break;
         case 100:
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.EV_EventSetUpHelpIcon_0(14,0);
             FTBL.shenSetTimeSimulationTo(0);
+#endif
             FTBL.EV_AT_SetPos(player,0x78000000,&knmnPlayerPracticePosition);
             SetTrainingCharacterYaw(player,knmnPlayerPracticeYaw);
             FTBL.EV_AT_SetPos(dummy,0x78000000,&knmnDummyPracticePosition);
@@ -1001,7 +1021,9 @@ void KnmnQteSequence(void *data)
                 FTBL.qteBattleUtil(10,0,0,0,0);
                 FTBL.qteBattleUtil(1,0,0,0,0);
                 FTBL.qteBattleUtil(2,0,0,0,0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
                 FTBL.EV_vfBattleUtil(1,2,1);
+#endif
                 FTBL.vfmQueueFightStart(2,99,1.0f,0,-1);
                 FTBL.EV_vfBattleUtil(0,1,1);
                 FTBL.DebugLogToFileRemoved(knmnQteStartLog);
@@ -1067,6 +1089,9 @@ void KnmnQteSequence(void *data)
             else KnmnWazaFrameEvents(work->game);
             break;
         case 108:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.SetScreenFilmFade(30,0,0,0,0,255,0,0,0);
+#endif
             KnmnRestoreAuthorCharacters();
             ThrWaitFrames(sequence,113,1,2);
             break;
@@ -1101,7 +1126,9 @@ void KnmnQteSequence(void *data)
             break;
         case 113:
             KnmnClearPracticeCamera(control);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.shenSetTimeSimulationTo(1);
+#endif
             if (work->control.fight.fightSuspended) {
                 work->control.fight.fightSuspended = 0;
                 ResumeTrainingFight(work,player,dummy);

@@ -4,7 +4,12 @@
 #define AREA_0001_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
 #define AREA_0001_FIGURE_FIRST SHEN_NAME4('a', '0', '7', '7')
 #define AREA_0001_FIGURE_SECOND SHEN_NAME4('a', '0', '6', '7')
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+#define AREA_0001_PRESS_MODEL SHEN_NAME4('S', 'T', 'B', 'T')
+#else
 #define AREA_0001_PRESS_MODEL SHEN_NAME4('a', '0', '8', '8')
+#endif
+#define AREA_0001_HIDDEN_MODEL SHEN_NAME4('T', 'M', 'T', 'M')
 #define AREA_0001_A075 SHEN_NAME4('a', '0', '7', '5')
 #define AREA_0001_A076 SHEN_NAME4('a', '0', '7', '6')
 #define AREA_0001_A079 SHEN_NAME4('a', '0', '7', '9')
@@ -67,6 +72,9 @@ void Clear0001Characters(void);
 void Cleanup0001Characters(void);
 void Prepare0001Character(shen_name character);
 void Hide0001Character(shen_name character);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void Finish0001(Title0001TaskParameter *parent);
+#endif
 #else
 #pragma once
 

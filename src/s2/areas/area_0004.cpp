@@ -1,29 +1,56 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/areas/area_0004.hpp"
 
-#if defined(SHENMUE_EVENT_ENTRY)
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+static unsigned char openingWaveDistance[0x100];
+static unsigned char openingWaveFirstKernel[0x100];
+static unsigned char openingWaveSecondKernel[0x100];
+static void *openingArchive;
+#endif
+
+#if defined(SHENMUE_EVENT_ENTRY) || SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void e0004_EVT_Auth_Main(void)
 {
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(e0004_EVT_Auth_Main_Callback, 4, 11, sizeof(Area0004EventWork), TASK_EVNT);
     Area0004EventWork *event = (Area0004EventWork *)FTBL.HLib_GetTaskParameter(task);
     event->task = task;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    event->motionBank = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0004A.MOT");
+#endif
     event->state = 1;
     event->debugSelection = 0;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    openingArchive = FTBL.EV_ControlPackageResources(1, 0, FTBL.Filepath_Gen(0), (int)"AUTH.afs", 0);
+#else
     FTBL.InitializeShipSpray();
     FTBL.HIKI_Enqueue();
+#endif
     InitializeOpeningEnvironment();
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_UTL_SetNPCLowQualityHands(0);
+#endif
     Queue_EVT_UTL_LoadNPCChara_3(openingTemporaryCharacters, event->task);
 }
+#endif
+#if !defined(SHENMUE_EVENT_ENTRY)
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+shen_name openingTemporaryCharacters[] = {
+    SHEN_NAME4('K', 'R', 'N', '_'), SHEN_NAME4('C', 'L', 'Y', '_'), SHEN_NAME4('J', 'J', '1', '_'), SHEN_NAME4('J', 'J', '5', '_'),
+    SHEN_NAME4('J', 'N', '8', '_'), SHEN_NAME4('H', 'C', 'R', '_'), SHEN_NAME4('M', 'K', 'R', '_'), SHEN_NAME4('M', 'M', '8', '_'),
+    SHEN_NAME4('O', 'J', '5', '_'), SHEN_NAME4('O', 'K', '9', '_'), SHEN_NAME4('U', 'C', 'H', '_'), SHEN_NAME4('W', 'O', '6', '_'),
+    SHEN_NAME4('W', 'T', 'C', '_'), INVALID_CHARACTER, INVALID_CHARACTER};
 #else
 shen_name openingTemporaryCharacters[] = {
     SHEN_NAME4('F', 'T', '1', '_'), SHEN_NAME4('F', 'T', '2', '_'), SHEN_NAME4('F', 'T', '3', '_'), SHEN_NAME4('F', 'T', '4', '_'),
     SHEN_NAME4('F', 'T', '5', '_'), SHEN_NAME4('F', 'T', '6', '_'), SHEN_NAME4('F', 'T', '7', '_'), SHEN_NAME4('F', 'T', '8', '_'), INVALID_CHARACTER};
 static int openingWavePhase = 0;
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static unsigned char openingWaveDistance[0x100];
 static unsigned char openingWaveFirstKernel[0x100];
 static unsigned char openingWaveSecondKernel[0x100];
 static unsigned int openingSmokeEffects[2];
+#endif
 
 void e0004_EVT_Auth_Main_Callback(void *taskData)
 {
@@ -36,9 +63,17 @@ void e0004_EVT_Auth_Main_Callback(void *taskData)
             event->state = 1;
         else if (input == 64) {
             if (--event->debugSelection < 0)
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                event->debugSelection = 10;
+#else
                 event->debugSelection = 0;
+#endif
         } else if (input == 128) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            if (++event->debugSelection > 10)
+#else
             if (++event->debugSelection > 0)
+#endif
                 event->debugSelection = 0;
         }
         switch (event->debugSelection) {
@@ -105,16 +140,98 @@ void Queue_e0004_EVT_Auth_Loop_0004A000(Area0004EventWork *parent)
     Area0004LoopWork *child = (Area0004LoopWork *)FTBL.HLib_GetTaskParameter(task);
     child->parent = parent;
     child->state = 0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     SetupOpeningSmoke();
+#endif
     FTBL.EV_LoadAudio("0004A000", 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    PrepareOpeningAuthorCharacters((short)parent->debugSelection);
+#else
     PrepareOpeningAuthorCharacters();
     FTBL.Queue_OP_StaffRoll();
+#endif
     FTBL.EV_authSceneCtrl(parent->debugSelection);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     parent->state = 2;
 }
 
 void e0004_EVT_Auth_Loop_0004A000_Callback(void *taskData)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+
+    Area0004LoopWork *child = (Area0004LoopWork *)taskData;
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    int authorState;
+    switch (child->parent->debugSelection) {
+    case 0:
+        if (frame == 750)
+            FTBL.camCtrlSetFarDistance(0.0f);
+        else if (frame == 1260)
+            FTBL.camCtrlSetFarDistance(60.0f);
+        break;
+    case 4:
+    case 5:
+        FTBL.nlSetTexanimUV(0.0f, 0.055f);
+        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(8));
+        FTBL.nlSetTexanimUV(0.0f, 0.027f);
+        FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(9));
+        break;
+    }
+    authorState = FTBL.EV_authSceneCtrl(-1);
+    if (!authorState) {
+        if (child->parent->debugSelection == 10) {
+            RestoreOpeningAuthorCharacters((short)child->parent->debugSelection);
+            child->parent->state = 3;
+            FTBL.HLib_SetupTimedTask(child->parent->task, 30);
+            FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+            FTBL.HLib_DestroyCurrentTask();
+            return;
+        }
+        switch (child->parent->debugSelection) {
+        case 3:
+            FTBL.DebugLogToFileRemoved("PakLoad : OP02_PKF, OP02_PKS\n");
+            FTBL.EV_ControlPackageResources(0, 12, openingArchive, 0, 1);
+            FTBL.EV_ControlPackageResources(0, 8, openingArchive, 2, 3);
+            FTBL.HLib_SetCurrentTaskTo(WaitForOpeningPackage);
+            break;
+        case 5:
+            FTBL.SetObjectFlagByIndex(0, 0);
+            FTBL.DebugLogToFileRemoved("PakLoad : OP03_PKF, OP03_PKS\n");
+            FTBL.EV_ControlPackageResources(0, 12, openingArchive, 2, 3);
+            FTBL.EV_ControlPackageResources(0, 8, openingArchive, 4, 5);
+            FTBL.HLib_SetCurrentTaskTo(WaitForOpeningPackage);
+            break;
+        case 6:
+            FTBL.DebugLogToFileRemoved("PakLoad : OP04_PKF, OP04_PKS\n");
+            FTBL.EV_ControlPackageResources(0, 12, openingArchive, 4, 5);
+            FTBL.EV_ControlPackageResources(0, 8, openingArchive, 6, 7);
+            FTBL.HLib_SetCurrentTaskTo(WaitForOpeningPackage);
+            break;
+        case 8:
+            FTBL.SetObjectFlagByIndex(0, 1);
+            FTBL.DebugLogToFileRemoved("PakLoad : OP05_PKF, OP05_PKS\n");
+            FTBL.EV_ControlPackageResources(0, 12, openingArchive, 6, 7);
+            FTBL.EV_ControlPackageResources(0, 8, openingArchive, 8, 9);
+            FTBL.HLib_SetCurrentTaskTo(WaitForOpeningPackage);
+            break;
+        default:
+            child->parent->debugSelection++;
+            switch (child->parent->debugSelection) {
+            case 5:
+                FTBL.camCtrlSetFarDistance(60.0f);
+                break;
+            case 10:
+                FTBL.camCtrlSetFarDistance(100.0f);
+                break;
+            }
+            FTBL.EV_authSceneCtrl(child->parent->debugSelection);
+            return;
+        }
+    }
+#else
+
     Area0004LoopWork *child = (Area0004LoopWork *)taskData;
     Vector3 position;
     Vector3 smokePosition;
@@ -208,8 +325,26 @@ void e0004_EVT_Auth_Loop_0004A000_Callback(void *taskData)
         child->parent->state = 3;
         FTBL.HLib_DestroyCurrentTask();
     }
+#endif
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void WaitForOpeningPackage(void *taskData)
+{
+    Area0004LoopWork *child = (Area0004LoopWork *)taskData;
+    if (!FTBL.EV_ControlPackageResources(0, 2, 0, 0, 0)) {
+        child->parent->debugSelection++;
+        FTBL.camCtrlSetFarDistance(80.0f);
+        PrepareOpeningAuthorCharacters((short)child->parent->debugSelection);
+        FTBL.EV_authSceneCtrl(child->parent->debugSelection);
+        FTBL.HLib_SetCurrentTaskTo(e0004_EVT_Auth_Loop_0004A000_Callback);
+    } else {
+        FTBL.DebugLogToFileRemoved("Author PakFile Loding ... \n");
+    }
+}
+#endif
+
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void SetupOpeningSmoke(void)
 {
     Vector3 position = {0.0f, 0.0f, 0.0f};
@@ -229,7 +364,9 @@ void SetupOpeningSmoke(void)
         FTBL.ResumeParticleEffect(0, openingSmokeEffects[i]);
     }
 }
+#endif
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void UpdateOpeningWave(void)
 {
     Vector3 position = {0.0f, 0.0f, 0.0f};
@@ -247,23 +384,38 @@ void UpdateOpeningWave(void)
     FTBL.SetMapModelSlotTransform(2, &position, 0);
     FTBL.SetMapModelSlotTransform(3, &position, 0);
 }
+#endif
 
 void InitializeOpeningEnvironment(void)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EventDateTime dateTime;
+#endif
     Vector3 direction;
     void *firstKernel;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.SetPlayerControlEnabled(0);
+    PrepareOpeningTemporaryCharacter(RYO_CHARACTER);
+    FTBL.camCtrlSetFarDistance(60.0f);
+#else
     FTBL.GetCurrentDateTime((DateTime *)&dateTime);
     dateTime.hour = 8;
     dateTime.minute = 0;
     FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&dateTime);
     FTBL.SetPlayerControlEnabled(0);
+#endif
     FTBL.FreeWAIR();
     FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
     FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
     FTBL.UpdateWeather();
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.DebugLogToFileRemoved("PakLoad : OP01_PKF, OP01_PKS\n");
+    FTBL.EV_ControlPackageResources(0, 8, openingArchive, 0, 1);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+#else
     FTBL.EV_SetPlayerFlag(12, 123, 1);
     FTBL.camCtrlSetFarDistance(400.0f);
+#endif
     FTBL.GenerateFFT(2.0f);
     FTBL.fft_fill_dist(FTBL.fft_fill_krn(10.0f, FTBL.generate_distance_falloff_row_major(2.082f, openingWaveDistance)));
     firstKernel = FTBL.fft_fill_krn(0.0564f, FTBL.generate_distance_falloff_kernel_8x8(0.94f, openingWaveFirstKernel));
@@ -274,12 +426,23 @@ void InitializeOpeningEnvironment(void)
     direction.z = 0.2054f;
     FTBL.set_lighting_flags(0.1f, &direction);
     FTBL.HLib_EnqueueTaskWithoutParameter(e0004_ET_WAVE_AR00_Callback, 3, 2, AREA_0004_WAVE);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.SetMapModelVertexShaderType(0, 1);
+#else
     FTBL.SetMapModelVertexShaderType(16, 1);
     FTBL.SetObjectFlagByIndex(22, 0);
+#endif
 }
 
 void CompleteOpening(Area0004EventWork *event)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EVT_UTL_FreeNPCChara(openingTemporaryCharacters);
+    FTBL.DeleteMotion(event->motionBank);
+    FTBL.HLib_DestroyTask(event->task);
+    FTBL.EV_scenQueueLoad(g_actNumber, AREA_0004_AR01, 0);
+#else
+
     EventDateTime dateTime;
     if (openingSmokeEffects[0] != AREA_0004_INVALID_EFFECT) {
         FTBL.SuspendParticleEffect(0, openingSmokeEffects[0]);
@@ -296,10 +459,62 @@ void CompleteOpening(Area0004EventWork *event)
     EVT_UTL_FreeNPCChara(openingTemporaryCharacters);
     FTBL.HLib_DestroyTask(event->task);
     FTBL.EV_scenQueueLoad(g_actNumber, AREA_0004_AR01, 0);
+#endif
 }
 
-void PrepareOpeningAuthorCharacters(void)
+void PrepareOpeningAuthorCharacters(
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    short segment
+#else
+    void
+#endif
+)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('R', 'Y', 'O', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('C', 'L', 'Y', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('H', 'C', 'R', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('J', 'J', '5', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('J', 'J', '1', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('J', 'N', '8', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('K', 'R', 'N', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('M', 'K', 'R', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('M', 'M', '8', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('O', 'J', '5', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('O', 'K', '9', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('U', 'C', 'H', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('W', 'O', '6', '_'));
+    PrepareOpeningTemporaryCharacter(SHEN_NAME4('W', 'T', 'C', '_'));
+    PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '8', '9', '2'));
+    switch (segment) {
+    case 0:
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '5', '5', '0'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '5', '5', '2'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '2', '5', '9'));
+        break;
+    case 4:
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '5', '5', '0'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '5', '5', '2'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '2', '5', '9'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '8', '1', '4'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '8', '1', '6'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '8', '1', '8'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '8', '2', '0'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '8', '2', '2'));
+        break;
+    case 7:
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '9', '5', '2'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '9', '5', '4'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', 'a', '0', '8'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', 'a', '1', '0'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '9', '6', '2'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '9', '6', '2'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '9', '6', '2'));
+        PrepareOpeningAuthorCharacter(SHEN_NAME4('a', '9', '6', '2'));
+        break;
+    }
+#else
+
     int i;
     PrepareOpeningAuthorCharacter(AREA_0004_AA87);
     PrepareOpeningAuthorCharacter(AREA_0004_AA88);
@@ -320,10 +535,62 @@ void PrepareOpeningAuthorCharacters(void)
     PrepareOpeningAuthorCharacter(AREA_0004_A796);
     for (i = 0; openingTemporaryCharacters[i] != INVALID_CHARACTER; i++)
         PrepareOpeningTemporaryCharacter(openingTemporaryCharacters[i]);
+#endif
 }
 
-void RestoreOpeningAuthorCharacters(void)
+void RestoreOpeningAuthorCharacters(
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    short segment
+#else
+    void
+#endif
+)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('R', 'Y', 'O', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('C', 'L', 'Y', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('H', 'C', 'R', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('J', 'J', '5', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('J', 'J', '1', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('J', 'N', '8', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('K', 'R', 'N', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('M', 'K', 'R', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('M', 'M', '8', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('O', 'J', '5', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('O', 'K', '9', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('U', 'C', 'H', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('W', 'O', '6', '_'));
+    RestoreOpeningTemporaryCharacter(SHEN_NAME4('W', 'T', 'C', '_'));
+    RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '8', '9', '2'));
+    switch (segment) {
+    case 0:
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '5', '5', '0'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '5', '5', '2'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '2', '5', '9'));
+        break;
+    case 4:
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '5', '5', '0'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '5', '5', '2'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '2', '5', '9'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '8', '1', '4'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '8', '1', '6'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '8', '1', '8'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '8', '2', '0'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '8', '2', '2'));
+        break;
+    case 7:
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '9', '5', '2'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '9', '5', '4'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', 'a', '0', '8'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', 'a', '1', '0'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '9', '6', '2'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '9', '6', '2'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '9', '6', '2'));
+        RestoreOpeningAuthorCharacter(SHEN_NAME4('a', '9', '6', '2'));
+        break;
+    }
+#else
+
     int i;
     RestoreOpeningAuthorCharacter(AREA_0004_A892);
     RestoreOpeningAuthorCharacter(AREA_0004_AA87);
@@ -345,11 +612,14 @@ void RestoreOpeningAuthorCharacters(void)
     RestoreOpeningAuthorCharacter(AREA_0004_A796);
     for (i = 0; openingTemporaryCharacters[i] != INVALID_CHARACTER; i++)
         RestoreOpeningTemporaryCharacter(openingTemporaryCharacters[i]);
+#endif
 }
 
 void PrepareOpeningTemporaryCharacter(shen_name character)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.EV_EnableCharacterDisplay(character);
+#endif
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(character), 6, 2);
     FTBL.EV_SetCharacterAlphaEnabled(character, 0);
 }
@@ -362,15 +632,19 @@ void RestoreOpeningTemporaryCharacter(shen_name character)
 
 void PrepareOpeningAuthorCharacter(shen_name character)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.EV_EnsureCharacterDraw(character);
     FTBL.EV_EnableCharacterDisplay(character);
+#endif
     FTBL.EV_SetCharacterAlphaEnabled(character, 0);
 }
 
 void RestoreOpeningAuthorCharacter(shen_name character)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.EV_ToggleCharacterFlag(character);
     FTBL.EV_DisableCharacterDisplay(character);
+#endif
     FTBL.EV_SetCharacterAlphaEnabled(character, 1);
 }
 
@@ -393,10 +667,19 @@ void e0004_ET_WAVE_AR00_Callback(void *taskData)
     specularBlue *= 0.2862f;
     shininess = 42.54f;
     FTBL.BuildLightingTableFrom(1, 1.0f, 1.0f, diffuseRed, diffuseGreen, diffuseBlue, specularRed, specularGreen, specularBlue, shininess, 1.0f);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    root = FTBL.GetMapModelRoot(0);
+#else
     root = FTBL.GetMapModelRoot(16);
+#endif
     FTBL.TransformFieldCollisionForModel(root);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.nlSetTexanimUV(0.00015f, 0.0001f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(0));
+#else
     FTBL.nlSetTexanimUV(0.00035f, 0.0003f);
     FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(16));
+#endif
 }
 #endif
 #else

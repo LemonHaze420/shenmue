@@ -1,5 +1,10 @@
 option(SHENMUE_DC_EVENT_OVERLAYS "Build Shenmue II Dreamcast EV1/EV2/EV3 overlays with the pinned GCC 2.95.2" OFF)
 set(SHENMUE_DC_EVENT_REFERENCE_DIR "" CACHE STRING "Disc data directories (a list) whose EV files the built overlays must match byte-for-byte")
+set(SHENMUE_DC_EVENT_TARGET "S2_JP_1001" CACHE STRING "Dreamcast event build")
+set_property(CACHE SHENMUE_DC_EVENT_TARGET PROPERTY STRINGS S2_JP_1001 S2_JP_GAMEJAM S2_US S2_EU)
+if(NOT SHENMUE_DC_EVENT_TARGET MATCHES "^(S2_JP_1001|S2_JP_GAMEJAM|S2_US|S2_EU)$")
+  message(FATAL_ERROR "Unknown Dreamcast event build: ${SHENMUE_DC_EVENT_TARGET}")
+endif()
 if(NOT SHENMUE_DC_EVENT_OVERLAYS)
   return()
 endif()
@@ -12,16 +17,112 @@ find_program(SHENMUE_EVENT_MAKE NAMES make gmake REQUIRED)
 find_program(SHENMUE_EVENT_PATCH NAMES patch REQUIRED)
 find_program(SHENMUE_EVENT_ICONV NAMES iconv REQUIRED)
 
-set(SHENMUE_EVENT_HOST_CC "gcc -m32" CACHE STRING "32-bit host C compiler command used to build the pinned GCC 2.95.2")
-set(_event_host_cc "${SHENMUE_EVENT_HOST_CC} -D_FILE_OFFSET_BITS=64 -std=gnu89 -fcommon -fgnu89-inline -w -O1")
-file(WRITE "${CMAKE_BINARY_DIR}/event-gcc/host-check.c" "typedef char host_long_is_32_bits[sizeof(long) == 4 ? 1 : -1];\n")
-separate_arguments(_event_host_check UNIX_COMMAND "${_event_host_cc}")
-execute_process(COMMAND ${_event_host_check} -c host-check.c -o host-check.o WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/event-gcc"
-  RESULT_VARIABLE _event_host_result ERROR_VARIABLE _event_host_error)
-if(NOT _event_host_result EQUAL 0)
-  message(FATAL_ERROR "SHENMUE_EVENT_HOST_CC must compile 32-bit host code (install gcc-multilib): ${_event_host_error}")
-endif()
-set(_event_host --host=i686-pc-linux-gnu --build=i686-pc-linux-gnu --target=sh-elf)
+function(_shenmue_event_gcc_project name)
+  set(version "${ARGV1}")
+  if(NOT version)
+    set(version 2.95.2)
+  endif()
+  set(prefix "${CMAKE_BINARY_DIR}/event-gcc")
+  set(patch_commands "${SHENMUE_EVENT_PATCH}" -p1 -i "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-host.patch")
+  set(dependencies)
+  set(programs cc1)
+  set(languages c)
+  set(byproducts <BINARY_DIR>/gcc/cc1)
+  if(version STREQUAL "2.95.2")
+    set(hash 65e68d39ba3f2a6b23431ee361b62fe0103b35c3ccaa818d174ace80dfc587b1)
+    list(APPEND dependencies shenmue_event_gxx_source)
+    list(APPEND patch_commands
+      COMMAND "${SHENMUE_EVENT_PATCH}" -p1 -i "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-sh-backend.patch"
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory "${_event_gxx_source}/gcc/cp" <SOURCE_DIR>/gcc/cp
+      COMMAND "${CMAKE_COMMAND}" -E touch <SOURCE_DIR>/gcc/cp/parse.c <SOURCE_DIR>/gcc/cp/parse.h <SOURCE_DIR>/gcc/cp/cfns.h)
+    set(programs xgcc g++ cpp cc1 cc1plus cccp)
+    set(languages "c c++")
+    list(APPEND byproducts <BINARY_DIR>/gcc/xgcc <BINARY_DIR>/gcc/g++ <BINARY_DIR>/gcc/cpp
+      <BINARY_DIR>/gcc/cc1plus <BINARY_DIR>/gcc/cccp)
+  elseif(version STREQUAL "2.95.3")
+    set(hash 56811ee60990b4660d54c2a66f5e0253a487e330ee53b499d8a565882ff16ef7)
+    set(prefix "${CMAKE_BINARY_DIR}/event-gcc-${version}")
+  else()
+    message(FATAL_ERROR "Unknown event compiler version: ${version}")
+  endif()
+  set(SHENMUE_EVENT_HOST_CC "gcc -m32" CACHE STRING "32-bit host C compiler command used to build the pinned event compilers")
+  set(host_cc "${SHENMUE_EVENT_HOST_CC} -D_FILE_OFFSET_BITS=64 -std=gnu89 -fcommon -fgnu89-inline -w -O1")
+  file(MAKE_DIRECTORY "${prefix}")
+  file(WRITE "${prefix}/host-check.c" "typedef char host_long_is_32_bits[sizeof(long) == 4 ? 1 : -1];\n")
+  separate_arguments(host_check UNIX_COMMAND "${host_cc}")
+  execute_process(COMMAND ${host_check} -c host-check.c -o host-check.o WORKING_DIRECTORY "${prefix}"
+    RESULT_VARIABLE result ERROR_VARIABLE error)
+  if(NOT result EQUAL 0)
+    message(FATAL_ERROR "SHENMUE_EVENT_HOST_CC must compile 32-bit host code (install gcc-multilib): ${error}")
+  endif()
+  set(host --host=i686-pc-linux-gnu --build=i686-pc-linux-gnu --target=sh-elf)
+  ExternalProject_Add(${name}
+    URL https://ftp.gnu.org/gnu/gcc/gcc-${version}/gcc-core-${version}.tar.gz
+    URL_HASH SHA256=${hash}
+    PREFIX "${prefix}"
+    DEPENDS ${dependencies}
+    PATCH_COMMAND ${patch_commands}
+    CONFIGURE_COMMAND "${CMAKE_COMMAND}" -E make_directory <BINARY_DIR>/libiberty <BINARY_DIR>/gcc/include
+      COMMAND "${CMAKE_COMMAND}" -E chdir <BINARY_DIR>/libiberty "${CMAKE_COMMAND}" -E env "CC=${host_cc}" sh <SOURCE_DIR>/libiberty/configure ${host}
+      COMMAND "${CMAKE_COMMAND}" -E chdir <BINARY_DIR>/gcc "${CMAKE_COMMAND}" -E env "CC=${host_cc}" sh <SOURCE_DIR>/gcc/configure ${host} --disable-nls
+    BUILD_COMMAND "${SHENMUE_EVENT_MAKE}" -C <BINARY_DIR>/libiberty
+      COMMAND "${SHENMUE_EVENT_MAKE}" -C <BINARY_DIR>/gcc ${programs} "LANGUAGES=${languages}"
+      COMMAND "${CMAKE_COMMAND}" -E copy <SOURCE_DIR>/gcc/glimits.h <BINARY_DIR>/gcc/include/limits.h
+      COMMAND "${CMAKE_COMMAND}" -E copy <SOURCE_DIR>/gcc/ginclude/stddef.h <SOURCE_DIR>/gcc/ginclude/stdarg.h <SOURCE_DIR>/gcc/ginclude/va-sh.h
+        <BINARY_DIR>/gcc/include
+      COMMAND "${CMAKE_COMMAND}" -E copy <SOURCE_DIR>/gcc/config/float-sh.h <BINARY_DIR>/gcc/include/float.h
+    INSTALL_COMMAND ""
+    BUILD_BYPRODUCTS ${byproducts})
+  if(version STREQUAL "2.95.2")
+    ExternalProject_Add_Step(${name} math_options
+      COMMAND "${SHENMUE_EVENT_PATCH}" -p1 -i "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-math-errno.patch"
+      WORKING_DIRECTORY <SOURCE_DIR>
+      DEPENDEES patch
+      DEPENDERS configure
+      DEPENDS "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-math-errno.patch")
+  endif()
+endfunction()
+
+function(_shenmue_event_newlib_project name)
+  set(version "${ARGV1}")
+  if(NOT version)
+    set(version 1.8.1)
+  endif()
+  if(version STREQUAL "1.8.1")
+    set(hash bdf73c1b691d952798af33dfa3c7ec90854d89bc6afa100e6c547ee26d7a3c42)
+    set(prefix "${CMAKE_BINARY_DIR}/event-newlib")
+  elseif(version STREQUAL "1.9.0")
+    set(hash 8f7b9407b13b424876b3ecdc31acf593068b48332297a40ae9665d8cfc4ac4e7)
+    set(prefix "${CMAKE_BINARY_DIR}/event-newlib-${version}")
+  else()
+    message(FATAL_ERROR "Unknown event newlib version: ${version}")
+  endif()
+  ExternalProject_Add(${name}
+    URL https://sourceware.org/pub/newlib/newlib-${version}.tar.gz
+    URL_HASH SHA256=${hash}
+    PREFIX "${prefix}"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND "")
+endfunction()
+
+set(SHENMUE_EVENT_TOOLCHAIN_CACHE "" CACHE PATH "Existing event compiler and newlib build cache")
+if(SHENMUE_EVENT_TOOLCHAIN_CACHE)
+  set(_event_gcc_source "${SHENMUE_EVENT_TOOLCHAIN_CACHE}/event-gcc/src/shenmue_event_gcc")
+  set(_event_gcc_build "${SHENMUE_EVENT_TOOLCHAIN_CACHE}/event-gcc/src/shenmue_event_gcc-build/gcc")
+  set(_event_gxx_source "${SHENMUE_EVENT_TOOLCHAIN_CACHE}/event-gcc/src/shenmue_event_gxx_source")
+  set(_event_newlib_source "${SHENMUE_EVENT_TOOLCHAIN_CACHE}/event-newlib/src/shenmue_event_newlib/newlib/libc")
+  foreach(_event_program cc1 cc1plus cccp)
+    if(NOT EXISTS "${_event_gcc_build}/${_event_program}")
+      message(FATAL_ERROR "Missing cached event compiler: ${_event_gcc_build}/${_event_program}")
+    endif()
+  endforeach()
+  if(NOT EXISTS "${_event_gcc_source}/gcc/libgcc2.c" OR NOT EXISTS "${_event_newlib_source}/include/stdio.h")
+    message(FATAL_ERROR "The event toolchain cache is missing GCC or newlib sources")
+  endif()
+  add_custom_target(shenmue_event_gcc)
+  add_custom_target(shenmue_event_newlib)
+else()
 ExternalProject_Add(shenmue_event_gxx_source
   URL https://ftp.gnu.org/gnu/gcc/gcc-2.95.2/gcc-g++-2.95.2.tar.gz
   URL_HASH SHA256=fa3372cf8a5aca73d4be651eda01cb87811e2f0e76e469b1b8fa124615fa671b
@@ -31,44 +132,36 @@ ExternalProject_Add(shenmue_event_gxx_source
   INSTALL_COMMAND "")
 ExternalProject_Get_Property(shenmue_event_gxx_source SOURCE_DIR)
 set(_event_gxx_source "${SOURCE_DIR}")
-ExternalProject_Add(shenmue_event_gcc
-  URL https://ftp.gnu.org/gnu/gcc/gcc-2.95.2/gcc-core-2.95.2.tar.gz
-  URL_HASH SHA256=65e68d39ba3f2a6b23431ee361b62fe0103b35c3ccaa818d174ace80dfc587b1
-  PREFIX "${CMAKE_BINARY_DIR}/event-gcc"
-  DEPENDS shenmue_event_gxx_source
-  PATCH_COMMAND "${SHENMUE_EVENT_PATCH}" -p1 -i "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-host.patch"
-    COMMAND "${SHENMUE_EVENT_PATCH}" -p1 -i "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-sh-backend.patch"
-    COMMAND "${CMAKE_COMMAND}" -E copy_directory "${_event_gxx_source}/gcc/cp" <SOURCE_DIR>/gcc/cp
-    COMMAND "${CMAKE_COMMAND}" -E touch <SOURCE_DIR>/gcc/cp/parse.c <SOURCE_DIR>/gcc/cp/parse.h <SOURCE_DIR>/gcc/cp/cfns.h
-  CONFIGURE_COMMAND "${CMAKE_COMMAND}" -E make_directory <BINARY_DIR>/libiberty <BINARY_DIR>/gcc/include
-    COMMAND "${CMAKE_COMMAND}" -E chdir <BINARY_DIR>/libiberty "${CMAKE_COMMAND}" -E env "CC=${_event_host_cc}" sh <SOURCE_DIR>/libiberty/configure ${_event_host}
-    COMMAND "${CMAKE_COMMAND}" -E chdir <BINARY_DIR>/gcc "${CMAKE_COMMAND}" -E env "CC=${_event_host_cc}" sh <SOURCE_DIR>/gcc/configure ${_event_host} --disable-nls
-  BUILD_COMMAND "${SHENMUE_EVENT_MAKE}" -C <BINARY_DIR>/libiberty
-    COMMAND "${SHENMUE_EVENT_MAKE}" -C <BINARY_DIR>/gcc cc1 cc1plus cccp "LANGUAGES=c c++"
-    COMMAND "${CMAKE_COMMAND}" -E copy <SOURCE_DIR>/gcc/glimits.h <BINARY_DIR>/gcc/include/limits.h
-    COMMAND "${CMAKE_COMMAND}" -E copy <SOURCE_DIR>/gcc/ginclude/stddef.h <SOURCE_DIR>/gcc/ginclude/stdarg.h <SOURCE_DIR>/gcc/ginclude/va-sh.h
-      <BINARY_DIR>/gcc/include
-  INSTALL_COMMAND ""
-  BUILD_BYPRODUCTS <BINARY_DIR>/gcc/cc1 <BINARY_DIR>/gcc/cc1plus <BINARY_DIR>/gcc/cccp)
-ExternalProject_Add_Step(shenmue_event_gcc math_options
-  COMMAND "${SHENMUE_EVENT_PATCH}" -p1 -i "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-math-errno.patch"
-  WORKING_DIRECTORY <SOURCE_DIR>
-  DEPENDEES patch
-  DEPENDERS configure
-  DEPENDS "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-math-errno.patch")
+_shenmue_event_gcc_project(shenmue_event_gcc)
 ExternalProject_Get_Property(shenmue_event_gcc SOURCE_DIR BINARY_DIR)
 set(_event_gcc_source "${SOURCE_DIR}")
 set(_event_gcc_build "${BINARY_DIR}/gcc")
 
-ExternalProject_Add(shenmue_event_newlib
-  URL https://sourceware.org/pub/newlib/newlib-1.8.1.tar.gz
-  URL_HASH SHA256=bdf73c1b691d952798af33dfa3c7ec90854d89bc6afa100e6c547ee26d7a3c42
-  PREFIX "${CMAKE_BINARY_DIR}/event-newlib"
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  INSTALL_COMMAND "")
+_shenmue_event_newlib_project(shenmue_event_newlib)
 ExternalProject_Get_Property(shenmue_event_newlib SOURCE_DIR)
 set(_event_newlib_source "${SOURCE_DIR}/newlib/libc")
+endif()
+
+if(SHENMUE_DC_EVENT_TARGET MATCHES "^S2_(US|EU)$")
+  set(SHENMUE_EVENT_RUNTIME_TOOLCHAIN_CACHE "${SHENMUE_EVENT_TOOLCHAIN_CACHE}" CACHE PATH "Existing GCC 2.95.3 and newlib 1.9.0 build cache")
+  set(_event_runtime_gcc_build "${SHENMUE_EVENT_RUNTIME_TOOLCHAIN_CACHE}/event-gcc-2.95.3/src/shenmue_event_runtime_gcc-build/gcc")
+  if(SHENMUE_EVENT_RUNTIME_TOOLCHAIN_CACHE AND EXISTS "${_event_runtime_gcc_build}/cc1")
+    add_custom_target(shenmue_event_runtime_gcc)
+  else()
+    _shenmue_event_gcc_project(shenmue_event_runtime_gcc 2.95.3)
+    ExternalProject_Get_Property(shenmue_event_runtime_gcc BINARY_DIR)
+    set(_event_runtime_gcc_build "${BINARY_DIR}/gcc")
+  endif()
+  set(_event_newlib_190_source "${SHENMUE_EVENT_RUNTIME_TOOLCHAIN_CACHE}/event-newlib-1.9.0/src/shenmue_event_newlib_190/newlib/libc")
+  if(SHENMUE_EVENT_RUNTIME_TOOLCHAIN_CACHE AND EXISTS "${_event_newlib_190_source}/string/memchr.c"
+      AND EXISTS "${_event_newlib_190_source}/machine/sh/strcpy.S")
+    add_custom_target(shenmue_event_newlib_190)
+  else()
+    _shenmue_event_newlib_project(shenmue_event_newlib_190 1.9.0)
+    ExternalProject_Get_Property(shenmue_event_newlib_190 SOURCE_DIR)
+    set(_event_newlib_190_source "${SOURCE_DIR}/newlib/libc")
+  endif()
+endif()
 
 set(_event_cccp "${_event_gcc_build}/cccp")
 set(_event_cc1 "${_event_gcc_build}/cc1")
@@ -76,6 +169,13 @@ set(_event_cc1plus "${_event_gcc_build}/cc1plus")
 set(_event_as "${SHENMUE_DC_TOOLCHAIN_ROOT}/bin/sh4-elf-as")
 set(_event_ld "${SHENMUE_DC_TOOLCHAIN_ROOT}/bin/sh4-elf-ld")
 set(_event_defines -D__sh__ -D__ELF__ -D__LITTLE_ENDIAN__ -D__SH4_SINGLE_ONLY__)
+if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_GAMEJAM")
+  list(APPEND _event_defines -DSHENMUE_TARGET_S2_DC_JP_GAMEJAM=1)
+elseif(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_US")
+  list(APPEND _event_defines -DSHENMUE_TARGET_S2_DC_US=1)
+elseif(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_EU")
+  list(APPEND _event_defines -DSHENMUE_TARGET_S2_DC_EU=1)
+endif()
 set(_event_root "${PROJECT_SOURCE_DIR}/src/s2/events")
 file(GLOB_RECURSE _event_headers CONFIGURE_DEPENDS "${_event_root}/*.h" "${_event_root}/*.hpp" "${_event_root}/*.inc")
 list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/areas/area_loop_dc.c" "${PROJECT_SOURCE_DIR}/src/s2/areas/area_loop_dc.h")
@@ -83,7 +183,8 @@ list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/event_queued_dc.h" "${P
   "${PROJECT_SOURCE_DIR}/src/s2/areas/area_dgct.hpp" "${PROJECT_SOURCE_DIR}/src/s2/areas/area_arbt.cpp" "${PROJECT_SOURCE_DIR}/src/s2/areas/area_arbt.hpp"
   "${PROJECT_SOURCE_DIR}/src/s2/areas/et_tejo_dc.h" "${PROJECT_SOURCE_DIR}/src/s2/areas/area_knmn.hpp"
   "${PROJECT_SOURCE_DIR}/src/s2/training_seqp.hpp")
-file(GLOB _event_common_headers CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/s2/areas/common/*.h")
+list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/scripts/cwon/area_cwon.hpp")
+file(GLOB_RECURSE _event_common_headers CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/s2/areas/*.h" "${PROJECT_SOURCE_DIR}/src/s2/areas/*.hpp")
 list(APPEND _event_headers ${_event_common_headers})
 foreach(_event_c_header event_queued_dc event_utility_dc event_debug_dc event_library_tail_dc event_sleep_dc sk_event_dc areas/numeric_event_dc)
   list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/${_event_c_header}.h")
@@ -94,6 +195,7 @@ function(_shenmue_event_object out kind source)
   get_filename_component(object_dir "${object}" DIRECTORY)
   set(includes -I${PROJECT_SOURCE_DIR}/src -I${_event_gcc_build}/include)
   set(language)
+  set(dependencies shenmue_event_gcc shenmue_event_newlib)
   if(kind STREQUAL "GAME")
     set(language -lang-c++ -D__cplusplus -DSHENMUE_EVENT_OVERLAY=1)
     set(compile "${_event_cc1plus}" -quiet -ml -m4-single-only -O1 -fno-exceptions -fno-rtti ${_event_game_options} "${object}.i" -o "${object}.s")
@@ -103,15 +205,25 @@ function(_shenmue_event_object out kind source)
   elseif(kind STREQUAL "LIBC")
     list(PREPEND includes -I${_event_newlib_source}/include)
     set(compile "${_event_cc1}" -quiet -ml -m4-single-only -O2 "${object}.i" -o "${object}.s")
+  elseif(kind STREQUAL "LIBC_190")
+    list(PREPEND includes -I${_event_newlib_190_source}/include)
+    list(APPEND dependencies shenmue_event_runtime_gcc shenmue_event_newlib_190)
+    set(compile "${_event_runtime_gcc_build}/cc1" -quiet -ml -m4-single-only -O1 -fno-delayed-branch "${object}.i" -o "${object}.s")
   elseif(kind STREQUAL "LIBGCC")
     list(PREPEND includes -I${_event_gcc_build} -I${_event_gcc_source}/gcc -I${_event_gcc_source}/gcc/config -I${_event_gcc_source}/include)
     set(compile "${_event_cc1}" -quiet -ml -m4-single-only -O2 "${object}.i" -o "${object}.s")
   else()
     set(compile "${CMAKE_COMMAND}" -E copy "${object}.i" "${object}.s")
   endif()
+  if(kind MATCHES "^GAME" AND _event_compile_environment)
+    list(PREPEND compile "${CMAKE_COMMAND}" -E env ${_event_compile_environment})
+  endif()
   set(preprocess "${_event_cccp}" ${language} ${_event_defines} ${ARGN} ${includes})
-  if(kind STREQUAL "ASM")
+  if(kind STREQUAL "ASM" OR kind STREQUAL "ASM_190")
     list(APPEND preprocess -lang-asm)
+  endif()
+  if(kind STREQUAL "ASM_190")
+    list(APPEND dependencies shenmue_event_newlib_190)
   endif()
   set(preprocess_source "${source}")
   set(preprocess_directory "${PROJECT_SOURCE_DIR}")
@@ -129,7 +241,7 @@ function(_shenmue_event_object out kind source)
     COMMAND "${SHENMUE_EVENT_ICONV}" -f UTF-8 -t EUC-JP -o "${object}.i" "${object}.i.utf8"
     COMMAND ${compile}
     COMMAND "${_event_as}" -little --no-pad-sections "${object}.s" -o "${object}"
-    DEPENDS "${source}" ${_event_headers} shenmue_event_gcc shenmue_event_newlib
+    DEPENDS "${source}" ${_event_headers} ${dependencies}
     VERBATIM)
   set(${out}_object "${object}" PARENT_SCOPE)
 endfunction()
@@ -140,7 +252,22 @@ function(_shenmue_event_runtime_object var name)
     set(${var} "${object}" PARENT_SCOPE)
     return()
   endif()
-  if(name STREQUAL "memset")
+  if(name MATCHES "^(.+)_190$")
+    set(member "${CMAKE_MATCH_1}")
+    if(member MATCHES "^(memcpy|memset|strcpy)$")
+      _shenmue_event_object("runtime190/${member}.o" ASM_190 "${_event_newlib_190_source}/machine/sh/${member}.S"
+        -I${_event_newlib_190_source}/machine/sh)
+    elseif(member MATCHES "^(memchr|strcat|strlen)$")
+      _shenmue_event_object("runtime190/${member}.o" LIBC_190 "${_event_newlib_190_source}/string/${member}.c")
+    elseif(member STREQUAL "vsprintf")
+      _shenmue_event_object("runtime190/${member}.o" LIBC_190 "${_event_root}/runtime/vsprintf_190.c")
+    elseif(member STREQUAL "vsnprintf")
+      _shenmue_event_object("runtime190/${member}.o" LIBC_190 "${_event_root}/runtime/vsprintf.c" -DSHENMUE_EVENT_BOUNDED_PRINTF=1)
+    else()
+      message(FATAL_ERROR "Unknown event newlib 1.9.0 member: ${member}")
+    endif()
+    set(object "${runtime190/${member}.o_object}")
+  elseif(name STREQUAL "memset")
     _shenmue_event_object("runtime/${name}.o" ASM "${_event_newlib_source}/machine/sh/memset.S" -I${_event_newlib_source}/machine/sh
       -I${_event_newlib_source}/include)
   elseif(name MATCHES "^(memcpy|memchr|strcat|strcpy|strlen|strcmp|strncmp)$")
@@ -161,7 +288,9 @@ function(_shenmue_event_runtime_object var name)
   else()
     message(FATAL_ERROR "Unknown event runtime member: ${name}")
   endif()
-  set(object "${runtime/${name}.o_object}")
+  if(NOT name MATCHES "_190$")
+    set(object "${runtime/${name}.o_object}")
+  endif()
   add_custom_target(shenmue_event_runtime_${name} DEPENDS "${object}")
   set_target_properties(shenmue_event_runtime_${name} PROPERTIES EVENT_OBJECT "${object}")
   set(${var} "${object}" PARENT_SCOPE)
@@ -170,8 +299,102 @@ endfunction()
 set(SHENMUE_DC_EVENT_FUNCTION_TABLE 0x0c020200 CACHE STRING "Event function table (FTBL) address in the selected main executable")
 
 function(shenmue_add_event_overlay name)
-  cmake_parse_arguments(EVENT "C" "TYPE;ENTRY;REFERENCE" "SOURCES;RUNTIME;DEFINES;OPTIONS" ${ARGN})
+  cmake_parse_arguments(EVENT "C" "TYPE;ENTRY;REFERENCE" "SOURCES;TAIL_SOURCES;RUNTIME;DEFINES;OPTIONS;COMPILER_ENVIRONMENT;COMMON_ORDER" ${ARGN})
+  if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_GAMEJAM")
+    if(name STREQUAL "WB00_WBSR")
+      set(EVENT_REFERENCE SCENE/01/WB00/WBSR.EV2)
+    elseif(name STREQUAL "AK00_RO10")
+      set(EVENT_REFERENCE SCENE/01/AR01/RO10.EV3)
+    endif()
+    set(_gamejam_reference_found FALSE)
+    foreach(root IN LISTS SHENMUE_DC_EVENT_REFERENCE_DIR)
+      if(EXISTS "${root}/${EVENT_REFERENCE}")
+        set(_gamejam_reference_found TRUE)
+      endif()
+    endforeach()
+    if(NOT _gamejam_reference_found)
+      return()
+    endif()
+    if(name STREQUAL "JUMP")
+      set(EVENT_SOURCES s2/areas/area_anatobi.cpp s2/event_queued_dc.c s2/event_library_tail_dc.c@SHENMUE_EVENT_LIBRARY_TAIL_LOG=1
+        s2/areas/common/src/et_movesp.c s2/event_utility_v1_dc.c)
+      set(EVENT_RUNTIME sprintf strcpy vsprintf memchr memcpy strlen sdivsi3_i4 udivsi3_i4)
+    elseif(name STREQUAL "AR02")
+      list(APPEND EVENT_DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=15)
+    elseif(name STREQUAL "QESC")
+      set(EVENT_SOURCES s2/areas/area_qesc.cpp s2/event_debug_dc.c s2/event_queued_dc.c
+        s2/event_library_tail_dc.c@SHENMUE_EVENT_LIBRARY_TAIL_LOG=1)
+      list(APPEND EVENT_DEFINES SHENMUE_EVENT_DEBUG_GAMEJAM=1)
+      set(EVENT_RUNTIME vsprintf memchr memcpy strcpy strlen sdivsi3_i4 udivsi3_i4)
+    elseif(name STREQUAL "S01_AR01_AOZR")
+      list(APPEND EVENT_DEFINES SHENMUE_EVENT_DEBUG_GAMEJAM=1)
+    elseif(name STREQUAL "AKA3_AKTM")
+      set(EVENT_RUNTIME strcat strcpy vsprintf memchr memcpy strlen sdivsi3_i4 udivsi3_i4)
+    elseif(name STREQUAL "KEBI")
+      list(FILTER EVENT_DEFINES EXCLUDE REGEX "^SHENMUE_EVENT_LIBRARY_REVISION=")
+      list(APPEND EVENT_DEFINES SHENMUE_EVENT_LIBRARY_REVISION=2 SHENMUE_EVENT_LIBRARY_GAMEJAM_KEBI=1)
+      set(EVENT_RUNTIME vsprintf memchr memcpy strcpy strlen sdivsi3_i4 udivsi3_i4)
+    elseif(name STREQUAL "PAWN")
+      set(EVENT_ENTRY s2/areas/PAWN/src/et_main.c)
+      list(APPEND EVENT_SOURCES s2/event_debug_dc.c)
+    elseif(name STREQUAL "DGCT")
+      set(EVENT_RUNTIME memcpy fixunssfsi movstr_i4 sdivsi3_i4 udivsi3_i4)
+    elseif(name STREQUAL "S01_0549")
+      set(EVENT_RUNTIME strcat strcpy)
+    elseif(name STREQUAL "AK00_RO10")
+      set(EVENT_ENTRY s2/areas/area_ro10.cpp)
+    elseif(name STREQUAL "AK00_PATI")
+      set(EVENT_RUNTIME atof sprintf strcat strcmp strcpy strlen strncmp strtod vsprintf infinity ctype ctype_ memchr memcpy sdivsi3_i4 udivsi3_i4)
+    elseif(name STREQUAL "S01_0004")
+      set(EVENT_ENTRY)
+      set(EVENT_RUNTIME strcat strcpy)
+    elseif(name STREQUAL "S01_AR02_4BTL")
+      set(EVENT_RUNTIME strcat strcpy vsprintf memchr memcpy strlen sdivsi3_i4 udivsi3_i4)
+    elseif(name STREQUAL "S01_ARBT" OR name STREQUAL "S01_AR01_URNI" OR name STREQUAL "S01_AR01_0005" OR name STREQUAL "WB00_WBSR")
+      set(EVENT_RUNTIME strcat strcpy vsprintf memchr memcpy strlen sdivsi3_i4 udivsi3_i4)
+    elseif(name STREQUAL "AK00_PVSJ")
+      set(EVENT_RUNTIME atof strcat strcmp strcpy strlen strtod vsprintf infinity ctype ctype_ memchr memcpy sdivsi3_i4 udivsi3_i4)
+    endif()
+    if(name MATCHES "^(KEBI|AKA3_AKTM|PAWN|S01_AR02_4BTL|WKKT|S01_ARBT|S01_AR02_ARMW|S01_AR01_URNI|AKS0_DART|AK00_PVSJ|WK00_KNMN|WS00_ANAN|AK00_RO10|AK00_PATI)$")
+      list(APPEND EVENT_DEFINES SHENMUE_EVENT_DEBUG_GAMEJAM=1)
+    endif()
+    if(name MATCHES "^(S01_0017|OP02|S01_0004|S01_0549|S01_AR02_ARMW)$")
+      list(TRANSFORM EVENT_SOURCES REPLACE "event_utility_dc[.]c$" "event_utility_v1_dc.c")
+    endif()
+    if(name MATCHES "^(DGCT|QESC|JUMP)$")
+      list(FILTER EVENT_DEFINES EXCLUDE REGEX "^SHENMUE_EVENT_LIBRARY_REVISION=")
+      list(APPEND EVENT_DEFINES SHENMUE_EVENT_LIBRARY_REVISION=1 SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP=1)
+    elseif(name MATCHES "^(S01_0004|AKA3_AKTM|S01_AR02_4BTL|WKKT|S01_ARBT|S01_AR02_ARMW|S01_AR01_URNI|AK00_PVSJ|S01_AR01_0005|WB00_WBSR|WK00_KNMN)$")
+      list(FILTER EVENT_DEFINES EXCLUDE REGEX "^SHENMUE_EVENT_LIBRARY_REVISION=")
+      list(APPEND EVENT_DEFINES SHENMUE_EVENT_LIBRARY_REVISION=10)
+    elseif(name STREQUAL "S01_0549")
+      list(FILTER EVENT_DEFINES EXCLUDE REGEX "^SHENMUE_EVENT_LIBRARY_REVISION=")
+      list(APPEND EVENT_DEFINES SHENMUE_EVENT_LIBRARY_REVISION=3)
+    elseif(name STREQUAL "AKS0_DART")
+      list(FILTER EVENT_DEFINES EXCLUDE REGEX "^SHENMUE_EVENT_LIBRARY_REVISION=")
+      list(APPEND EVENT_DEFINES SHENMUE_EVENT_LIBRARY_REVISION=20)
+    endif()
+  endif()
+  if((SHENMUE_DC_EVENT_TARGET STREQUAL "S2_US" AND name MATCHES "^(QJBT_SFJF|Q100_SFKK|AB00_SFBR|QSFC_SFKM|QSFD_SFTC|QSFB_SFS2|QTB1_SFTS|QSFA_SFM2|QGBT_SFWF|QLBT_SFSR|QKBT_SFLU)$")
+      OR (SHENMUE_DC_EVENT_TARGET STREQUAL "S2_EU" AND name MATCHES "^(QJBT_SFJF|Q100_SFKK|Q109_SFKK|AB00_SFBR|QSFC_SFKM|QSFD_SFTC|QSFB_SFS2|QTB1_SFTS|QSFA_SFM2|QGBT_SFWF|QLBT_SFSR|QKBT_SFLU|WKKT|WT00_DUCK|OMAK_OMAK|AKS0_DART|S01_AR01_URNI|S01_AR02_ARMW)$"))
+    set(runtime)
+    foreach(member IN LISTS EVENT_RUNTIME)
+      if(member STREQUAL "vsprintf")
+        list(APPEND runtime vsprintf_190 vsnprintf_190)
+      elseif(member MATCHES "^(memcpy|memset|strcat|strcpy|memchr|strlen)$")
+        list(APPEND runtime "${member}_190")
+      else()
+        list(APPEND runtime "${member}")
+      endif()
+    endforeach()
+    set(EVENT_RUNTIME ${runtime})
+  endif()
+  if(name STREQUAL "QRR0_MDTP" AND SHENMUE_DC_EVENT_TARGET MATCHES "^S2_(US|EU)$")
+    list(INSERT EVENT_SOURCES 1 s2/areas/mdtp_authored.cpp)
+    set(EVENT_RUNTIME fixunssfsi movstr_i4 sdivsi3_i4)
+  endif()
   set(_event_game_options ${EVENT_OPTIONS})
+  set(_event_compile_environment ${EVENT_COMPILER_ENVIRONMENT})
   set(kind GAME)
   if(EVENT_C)
     set(kind GAME_C)
@@ -192,30 +415,49 @@ function(shenmue_add_event_overlay name)
     _shenmue_event_object("${name}/${stem}_entry.o" ${kind} "${PROJECT_SOURCE_DIR}/src/${EVENT_ENTRY}" -DSHENMUE_EVENT_ENTRY=1 ${defines})
     list(APPEND objects "${${name}/${stem}_entry.o_object}")
   endif()
-  foreach(entry IN LISTS EVENT_SOURCES)
-    set(source "${entry}")
-    set(source_defines)
-    if(entry MATCHES "^([^@]+)@(.+)$")
-      set(source "${CMAKE_MATCH_1}")
-      set(source_defines "-D${CMAKE_MATCH_2}")
+  foreach(group SOURCES RUNTIME TAIL_SOURCES)
+    if(group STREQUAL "RUNTIME")
+      foreach(member IN LISTS EVENT_RUNTIME)
+        _shenmue_event_runtime_object(object "${member}")
+        list(APPEND objects "${object}")
+      endforeach()
+      continue()
     endif()
-    get_filename_component(stem "${source}" NAME_WE)
-    if(source_defines)
-      string(MAKE_C_IDENTIFIER "${CMAKE_MATCH_2}" suffix)
-      string(TOLOWER "${suffix}" suffix)
-      set(stem "${stem}_${suffix}")
-    endif()
-    _shenmue_event_object("${name}/${stem}.o" ${kind} "${PROJECT_SOURCE_DIR}/src/${source}" ${defines} ${source_defines})
-    list(APPEND objects "${${name}/${stem}.o_object}")
-  endforeach()
-  foreach(member IN LISTS EVENT_RUNTIME)
-    _shenmue_event_runtime_object(object "${member}")
-    list(APPEND objects "${object}")
+    foreach(entry IN LISTS EVENT_${group})
+      set(source "${entry}")
+      set(source_defines)
+      if(entry MATCHES "^([^@]+)@(.+)$")
+        set(source "${CMAKE_MATCH_1}")
+        set(source_defines "-D${CMAKE_MATCH_2}")
+      endif()
+      get_filename_component(stem "${source}" NAME_WE)
+      if(source_defines)
+        string(MAKE_C_IDENTIFIER "${CMAKE_MATCH_2}" suffix)
+        string(TOLOWER "${suffix}" suffix)
+        set(stem "${stem}_${suffix}")
+      endif()
+      _shenmue_event_object("${name}/${stem}.o" ${kind} "${PROJECT_SOURCE_DIR}/src/${source}" ${defines} ${source_defines})
+      list(APPEND objects "${${name}/${stem}.o_object}")
+    endforeach()
   endforeach()
   set(output_dir "${CMAKE_CURRENT_BINARY_DIR}/events")
   set(elf "${output_dir}/${name}.elf")
   set(output "${output_dir}/${name}.${EVENT_TYPE}")
   set(script "${_event_root}/event.ld")
+  if(EVENT_COMMON_ORDER)
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${script}")
+    set(common_order)
+    foreach(entry IN LISTS EVENT_COMMON_ORDER)
+      if(NOT entry MATCHES "^([A-Za-z_][A-Za-z_0-9]*):([0-9]+)$")
+        message(FATAL_ERROR "Invalid COMMON symbol and size: ${entry}")
+      endif()
+      string(APPEND common_order "_${CMAKE_MATCH_1} = .; . += ${CMAKE_MATCH_2};\n")
+    endforeach()
+    file(READ "${script}" layout)
+    string(REPLACE "*(COMMON)" "${common_order} *(COMMON)" layout "${layout}")
+    set(script "${output_dir}/${name}.ld")
+    file(CONFIGURE OUTPUT "${script}" CONTENT "${layout}" @ONLY)
+  endif()
   set(compare)
   set(reference)
   foreach(root IN LISTS SHENMUE_DC_EVENT_REFERENCE_DIR)
@@ -450,6 +692,12 @@ shenmue_add_event_overlay(Q100_SFKK ${_event_c} TYPE EV3 REFERENCE SCENE/03/Q100
   SOURCES s2/areas/area_sfkk.cpp ${_event_debug} ${_event_library} ${_event_library_tail}
   s2/areas/common/et_street_debug.c@SHENMUE_STREET_FIGHT_PACKAGE=QSFF s2/areas/common/src/et_street.c@SHENMUE_STREET_FIGHT_PACKAGE=QSFF
   RUNTIME ${_event_library_runtime} vsprintf memchr strlen sdivsi3_i4 udivsi3_i4 OPTIONS -fno-math-errno)
+if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_EU")
+  shenmue_add_event_overlay(Q109_SFKK ${_event_c} TYPE EV3 REFERENCE SCENE/03/Q109/SFKK.EV3
+    SOURCES s2/areas/area_sfkk.cpp ${_event_debug} ${_event_library} ${_event_library_tail}
+    s2/areas/common/et_street_debug.c@SHENMUE_STREET_FIGHT_PACKAGE=QSFF s2/areas/common/src/et_street.c@SHENMUE_STREET_FIGHT_PACKAGE=QSFF
+    RUNTIME ${_event_library_runtime} vsprintf memchr strlen sdivsi3_i4 udivsi3_i4 OPTIONS -fno-math-errno DEFINES SHENMUE_EVENT_SFKK_Q109=1)
+endif()
 shenmue_add_event_overlay(AB00_SFBR ${_event_c} TYPE EV3 REFERENCE SCENE/02/AB00/SFBR.EV3 ENTRY s2/areas/area_sfbr.cpp
   SOURCES s2/areas/area_sfbr.cpp ${_event_debug} ${_event_library} ${_event_library_tail}
   s2/areas/common/et_street_debug.c@SHENMUE_STREET_FIGHT_PACKAGE=ABSF s2/areas/common/src/et_street.c@SHENMUE_STREET_FIGHT_PACKAGE=ABSF
@@ -580,7 +828,61 @@ shenmue_add_event_overlay(WT00_B102 ${_event_c} TYPE EV2 REFERENCE SCENE/01/WT00
 shenmue_add_event_overlay(AK00_RO10 ${_event_c} TYPE EV3 REFERENCE SCENE/01/AK00/RO10.EV3
   SOURCES s2/areas/area_ro10.cpp ${_event_debug} RUNTIME fixunssfsi sdivsi3_i4)
 
+if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_GAMEJAM")
+  shenmue_add_event_overlay(EVENT_VEND C TYPE EV3 REFERENCE EVENT/VEND.EV3 ENTRY s2/areas/area_vend.cpp
+    SOURCES s2/areas/area_vend.cpp s2/areas/area_vend.cpp@SHENMUE_EVENT_VEND_ACTIONS=1
+    ${_event_debug} ${_event_library} ${_event_library_tail}
+    TAIL_SOURCES s2/areas/area_vend.cpp@SHENMUE_EVENT_CONSTANTS=1
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=2 SHENMUE_EVENT_LIBRARY_VEND=1 SHENMUE_EVENT_DEBUG_GAMEJAM=1 SHENMUE_EVENT_VEND_SCENE=0
+    RUNTIME vsprintf memchr memcpy strcpy strlen movstr_i4 sdivsi3_i4 udivsi3_i4)
+  shenmue_add_event_overlay(WE00_VEND C TYPE EV3 REFERENCE SCENE/01/WE00/VEND.EV3 ENTRY s2/areas/area_vend.cpp
+    SOURCES s2/areas/area_vend.cpp s2/areas/area_vend.cpp@SHENMUE_EVENT_VEND_ACTIONS=1
+    ${_event_debug} ${_event_library} ${_event_library_tail}
+    TAIL_SOURCES s2/areas/area_vend.cpp@SHENMUE_EVENT_CONSTANTS=1
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=10 SHENMUE_EVENT_DEBUG_GAMEJAM=1 SHENMUE_EVENT_VEND_SCENE=1
+    RUNTIME strcat strcpy vsprintf memchr memcpy strlen movstr_i4 sdivsi3_i4 udivsi3_i4)
+  shenmue_add_event_overlay(CWON C TYPE EV3 REFERENCE SCENE/01/CWON/CWON.EV3 ENTRY s2/scripts/cwon/area_cwon.cpp
+    SOURCES s2/scripts/cwon/area_cwon.cpp s2/scripts/cwon/cwon_authored.cpp s2/scripts/cwon/cwon_battle.cpp
+    s2/scripts/cwon/cwon_tables.cpp s2/scripts/cwon/cwon_props.cpp s2/scripts/cwon/cwon_escape.cpp s2/scripts/cwon/cwon_helpers.cpp
+    ${_event_library} ${_event_utility_v1} s2/areas/area_loop_dc.c
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=10 SHENMUE_AREA_LOOP_HAND_POSE_TABLE=1
+    RUNTIME memset strcat strcpy movstr_i4 sdivsi3_i4 OPTIONS -fno-math-errno
+    # Reproduce the native branch choice despite GCC 2.95.2's uninitialized delay-sequence ordering entry.
+    COMPILER_ENVIRONMENT MALLOC_PERTURB_=128
+    COMMON_ORDER cwonPackIndex:4 cwonWaveTask:4 cwonSpringTask:4 cwonPack:4 cwonDynamixTask:4 cwonPackState:4)
+  shenmue_add_event_overlay(EVENT_SMBL C TYPE EV3 REFERENCE EVENT/SMBL.EV3 ENTRY s2/areas/area_smbl.cpp
+    SOURCES s2/areas/area_smbl_ball.cpp s2/areas/area_smbl.cpp ${_event_library}
+    s2/event_library_tail_dc.c@SHENMUE_EVENT_LIBRARY_TAIL_LOG=1
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=1 SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP=1
+    RUNTIME memcpy vsprintf memchr strcpy strlen sdivsi3_i4 udivsi3_i4 OPTIONS -fno-math-errno)
+  shenmue_add_event_overlay(EVENT_DRBL C TYPE EV3 REFERENCE EVENT/DRBL.EV3 ENTRY s2/areas/area_drbl.cpp
+    SOURCES s2/areas/area_drbl.cpp s2/event_library_tail_dc.c@SHENMUE_EVENT_LIBRARY_TAIL_LOG=1
+    RUNTIME memcpy vsprintf memchr strcpy strlen movstr_i4 sdivsi3_i4 udivsi3_i4 OPTIONS -fno-math-errno)
+  shenmue_add_event_overlay(WESM_DAI2 C TYPE EV3 REFERENCE SCENE/01/WESM/DAI2.EV3 SOURCES s2/dai2_event.cpp)
+  shenmue_add_event_overlay(WSG1_TEST C TYPE EV1 REFERENCE SCENE/01/WSG1/TEST.EV1 SOURCES s2/areas/area_test.cpp)
+  shenmue_add_event_overlay(EVENT_0000 C TYPE EV3 REFERENCE EVENT/0000.EV3 SOURCES s2/areas/area_0000.cpp)
+  shenmue_add_event_overlay(S01_AR02_0008 C TYPE EV3 REFERENCE SCENE/01/AR02/0008.EV3 ENTRY s2/areas/area_0008.cpp
+    SOURCES s2/areas/area_0008.cpp s2/event_utility_v1_dc.c)
+  shenmue_add_event_overlay(WTA0_0034 C TYPE EV3 REFERENCE SCENE/01/WTA0/0034.EV3 ENTRY s2/areas/area_0034.cpp
+    SOURCES s2/areas/area_0034.cpp s2/event_utility_v1_dc.c)
+  shenmue_add_event_overlay(S01_AR02_0007 C TYPE EV3 REFERENCE SCENE/01/AR02/0007.EV3 ENTRY s2/areas/area_0007.cpp
+    SOURCES s2/areas/area_0007.cpp ${_event_library} ${_event_utility_v1} RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=4)
+  shenmue_add_event_overlay(WKA0_0023 C TYPE EV3 REFERENCE SCENE/01/WKA0/0023.EV3 ENTRY s2/areas/area_0023.cpp
+    SOURCES s2/areas/area_0023.cpp ${_event_library} ${_event_utility_v1} RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=3)
+  shenmue_add_event_overlay(WB01_0025 C TYPE EV3 REFERENCE SCENE/01/WB01/0025.EV3 ENTRY s2/areas/area_0025.cpp
+    SOURCES s2/areas/area_0025.cpp ${_event_library} ${_event_utility_v1} RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=3)
+  shenmue_add_event_overlay(WESM C TYPE EV1 REFERENCE SCENE/01/WESM/WESM.EV1 ENTRY ${_event_area_base}
+    SOURCES s2/areas/area_wesm.cpp s2/areas/area_wesm.cpp@SHENMUE_EVENT_WESM_NPCS=1 ${_event_area_base}
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=10)
+endif()
+
 get_property(event_targets DIRECTORY PROPERTY SHENMUE_EVENT_TARGETS)
+if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_GAMEJAM" AND NOT event_targets)
+  message(FATAL_ERROR "No GameJam event overlay references were found in SHENMUE_DC_EVENT_REFERENCE_DIR")
+endif()
 foreach(target IN LISTS event_targets)
   get_target_property(excluded "${target}" EXCLUDE_FROM_ALL)
   if(excluded)

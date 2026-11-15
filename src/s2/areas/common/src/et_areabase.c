@@ -17,6 +17,7 @@ typedef struct AreaBaseState {
 #define AREA_BASE_NIGHT SHEN_NAME4('Y', 'O', 'R', 'U')
 
 #define AREA_BASE_REVISION_WRS2 10
+#define AREA_BASE_REVISION_AR02 15
 #define AREA_BASE_REVISION_Q200 20
 #define AREA_BASE_REVISION_TBAK 30
 #ifndef SHENMUE_AREA_BASE_REVISION
@@ -169,7 +170,7 @@ void EVT_AreaMainLoop_Callback(void *taskData)
                         FTBL.shenToggleAreaFlags(1);
 #endif
                         FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
-#if !defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) || SHENMUE_AREA_BASE_REVISION >= AREA_BASE_REVISION_Q200
+#if !defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) || SHENMUE_AREA_BASE_REVISION >= AREA_BASE_REVISION_AR02
                         FTBL.spmFadeOut(0);
 #endif
                         FTBL.HLib_SetCurrentTaskTo(EVT_NightAuthor_Callback);
@@ -221,7 +222,7 @@ void EVT_NightAuthor_Callback(void *taskData)
             FTBL.EV_ToggleCharacterFlag(AREA_BASE_RYO);
             AreaCleanup(1);
             FTBL.CreateEventCharacter(3, 0, AREA_BASE_NIGHT);
-#if !defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) || SHENMUE_AREA_BASE_REVISION >= AREA_BASE_REVISION_Q200
+#if !defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) || SHENMUE_AREA_BASE_REVISION >= AREA_BASE_REVISION_AR02
             FTBL.EV_authSceneCtrl(-16);
 #endif
 #if !defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) || SHENMUE_AREA_BASE_REVISION >= AREA_BASE_REVISION_TBAK
@@ -229,7 +230,7 @@ void EVT_NightAuthor_Callback(void *taskData)
 #endif
             FTBL.EV_authSceneCtrl(AREA_BASE_NIGHT);
             FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-#if !defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) || SHENMUE_AREA_BASE_REVISION >= AREA_BASE_REVISION_Q200
+#if !defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) || SHENMUE_AREA_BASE_REVISION >= AREA_BASE_REVISION_AR02
             FTBL.EV_spmBeginSampleExecute(0);
 #endif
             areaBaseState.nightAuthorState = 1;

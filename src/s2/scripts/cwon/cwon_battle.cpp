@@ -1,3 +1,652 @@
+#if defined(SHENMUE_EVENT_OVERLAY) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/scripts/cwon/area_cwon.hpp"
+
+static shen_name CWON_STREET_BATTLE_CHARACTERS[] = {SHEN_NAME4('R', 'Y', 'O', '_'), SHEN_NAME4('W', 'O', 'N', '_'), SHEN_NAME4('C', 'L', 'J', '_'),
+    SHEN_NAME4('S', 'A', 'M', '_'), SHEN_NAME4('L', 'L', 'Y', '_'), 0};
+static shen_name CWON_MARKET_BATTLE_CHARACTERS[] = {
+    SHEN_NAME4('R', 'Y', 'O', '_'), SHEN_NAME4('W', 'O', 'N', '_'), SHEN_NAME4('S', 'A', 'M', '_'), SHEN_NAME4('L', 'L', 'Y', '_'), 0};
+shen_name CWON_STREET_STAGE_MODELS[] = {SHEN_NAME4('D', 'R', 'A', '0'), SHEN_NAME4('D', 'R', 'A', '1'), SHEN_NAME4('D', 'R', 'A', '2'), 0};
+shen_name CWON_STREET_BREAKABLE_MODELS[] = {
+    SHEN_NAME4('B', 'H', 'K', '0'), SHEN_NAME4('B', 'H', 'K', '1'), SHEN_NAME4('B', 'H', 'K', '2'), SHEN_NAME4('B', 'H', 'K', '3'), 0};
+shen_name CWON_STREET_BROKEN_MODELS[] = {
+    SHEN_NAME4('b', 'H', 'K', '0'), SHEN_NAME4('b', 'H', 'K', '1'), SHEN_NAME4('b', 'H', 'K', '2'), SHEN_NAME4('b', 'H', 'K', '3'), 0};
+shen_name CWON_MARKET_STAGE_MODELS[] = {SHEN_NAME4('T', 'B', 'L', 'a'), SHEN_NAME4('T', 'B', 'L', 'b'), SHEN_NAME4('T', 'B', 'L', 'c'),
+    SHEN_NAME4('T', 'B', 'L', 'd'), SHEN_NAME4('T', 'B', 'L', 'e'), 0};
+shen_name CWON_MARKET_BROKEN_MODELS[] = {SHEN_NAME4('b', 'T', 'K', '0'), SHEN_NAME4('b', 'T', 'K', '1'), SHEN_NAME4('b', 'T', 'K', '2'),
+    SHEN_NAME4('b', 'T', 'K', '3'), SHEN_NAME4('b', 'T', 'K', '4'), 0};
+shen_name CWON_MARKET_MISC_MODELS[] = {SHEN_NAME4('I', 'S', '_', '1'), SHEN_NAME4('I', 'S', '_', '2'), SHEN_NAME4('I', 'S', '_', '3'),
+    SHEN_NAME4('I', 'S', '_', '4'), SHEN_NAME4('I', 'S', '_', '5'), SHEN_NAME4('I', 'S', '_', '6'), SHEN_NAME4('I', 'S', '_', '7'),
+    SHEN_NAME4('I', 'S', '_', '8'), SHEN_NAME4('I', 'S', '_', '9'), SHEN_NAME4('I', 'S', '1', '0'), SHEN_NAME4('I', 'S', '1', '1'),
+    SHEN_NAME4('I', 'S', '1', '2'), SHEN_NAME4('I', 'S', '1', '6'), SHEN_NAME4('I', 'S', '1', '7'), SHEN_NAME4('I', 'S', '1', '8'),
+    SHEN_NAME4('I', 'S', '1', '9'), SHEN_NAME4('I', 'S', '2', '0'), SHEN_NAME4('I', 'S', '2', '1'), SHEN_NAME4('I', 'S', '2', '2'),
+    SHEN_NAME4('I', 'S', '2', '3'), 0};
+
+void CwonInitializeBattleCallback(CwonWork *work) {
+    static Vector3 CWON_INTRO_BAG_POSITION = {0.180000007f, 0.0f, -0.0900000036f};
+    static Vector3i CWON_INTRO_BAG_ROTATION = {33496, 0, 8192};
+
+    int state;
+    switch (work->authorState) {
+    case -1:
+        work->authorState++;
+    case 0:
+        if (work->entry > 6)
+            FTBL.EV_ControlPackageResources(2, 4, "CWONBATL", 0, 0);
+        state = work->authorState + 1;
+        break;
+    case 1:
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SAM), 1, 0, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SAM), 1, 1, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(LLY), 1, 0, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(LLY), 1, 1, 0);
+        FTBL.CreateEventCharacter(3, 0, BASE);
+        if (work->entry < 6) {
+            EVT_AT_SetPos(RYO, RYO, 0, 0, 0, 0);
+            EVT_AT_SetAngY(RYO, RYO, 315, 0);
+            EVT_AT_SetPos(WON, WON, 0, 0, 0, 0);
+            EVT_AT_SetAngY(WON, WON, 180, 0);
+            EVT_AT_SetPos(SHEN_NAME4('C', 'L', 'J', '_'), SHEN_NAME4('C', 'L', 'J', '_'), 0, 0, 0, 0);
+            EVT_AT_SetAngY(SHEN_NAME4('C', 'L', 'J', '_'), SHEN_NAME4('C', 'L', 'J', '_'), 180, 0);
+            EVT_AT_SetPos(SAM, SAM, 0, 0, 0, 0);
+            EVT_AT_SetAngY(SAM, SAM, 150, 0);
+            EVT_AT_SetPos(LLY, LLY, 1, 0, 1, 0);
+            EVT_AT_SetAngY(LLY, LLY, 225, 0);
+            EVT_AT_SetMot(RYO, 0x26c3, 150, 1, 0x44000000, 0);
+            EVT_AT_SetMot(SAM, 0x26c4, 150, 1, 0x44000000, 0);
+            EVT_AT_SetMot(LLY, 0x26c2, 150, 1, 0x44000000, 0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(WON), 0x26c5, 0);
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(SHEN_NAME4('C', 'L', 'J', '_')), 0x26c1, 0);
+            EVT_AT_SetVoice("0012A011", 0);
+            EVT_AT_SetVoice("0012C017", 35);
+            EVT_AT_SetVoice("0012D011", 65);
+            CwonShowCharacter(BAG);
+            FTBL.AttachScenarioCharacter(BAG, SHEN_NAME4('C', 'L', 'J', '_'), 14, &CWON_INTRO_BAG_POSITION, &CWON_INTRO_BAG_ROTATION);
+            EVT_AT_SetCam(7000, -1, -1, 0, 0, 0);
+            EVT_AT_SetCam(7001, -1, -1, 0, 0, 35);
+            EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, 120);
+            CwonRestoreGravity(RYO);
+            work->authorState = 150;
+        } else {
+            work->authorState = 0;
+            CwonLoadAudioForPhase(work, 4);
+            CwonStartBattle(work);
+            FTBL.SetScreenFilmFade(20, 255, 0, 0, 0, 0, 0, 0, 0);
+            CwonShowBattleCharacters();
+        }
+        return;
+    case 2:
+        CwonStartBattle(work);
+        state = 0;
+        break;
+    default:
+        state = work->authorState - 1;
+        break;
+    }
+    work->authorState = state;
+}
+
+void CwonStartBattle(CwonWork *work) {
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"BATLPACK", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.shenStartFGST(10, 10, 0, 0);
+    if (work->entry < 7) {
+        CwonInitializeFighters();
+        CwonInitializeStreetObjects();
+        FTBL.vfCopyPosFromEntity(0, 0, 237, 466, 8);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(RYO), 0, 0, 0, 0, 0);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(SAM), 0, 1, 1, 120, 11);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(LLY), 0, 1, 1, 150, 12);
+        FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonBattlePrepareCallback);
+    } else if (work->entry == 7) {
+        CwonInitializeMarketObjects();
+        FTBL.ToggleFlagOnFieldEntity(SHEN_NAME4('T', 'B', 'L', 'a'), 0);
+        FTBL.ToggleFlagOnFieldEntity(SHEN_NAME4('T', 'B', 'L', 'b'), 0);
+        FTBL.ToggleFlagOnFieldEntity(SHEN_NAME4('T', 'B', 'L', 'c'), 0);
+        FTBL.ToggleFlagOnFieldEntity(SHEN_NAME4('T', 'B', 'L', 'd'), 0);
+        FTBL.ToggleFlagOnFieldEntity(SHEN_NAME4('T', 'B', 'L', 'e'), 0);
+        FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('B', 'T', 'C', '1'), 1);
+        FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('P', 'R', 'O', 'P'), 0);
+        FTBL.flddSetPointFlagOnGrid(LIGHT_DEFAULT_DEFINITION, 0);
+        EVT_AT_SetPos(SHEN_NAME4('I', 'S', '_', '6'), -1, 257.7f, 101, 397.1f, 0);
+        EVT_AT_SetPos(BASE, BASE, 258.2f, 101, 398.8f, 0);
+        EVT_AT_SetAngY(BASE, BASE, 90, 0);
+        FTBL.AT_SetLocalBaseChara(RYO, BASE);
+        FTBL.AT_SetLocalBaseChara(SAM, BASE);
+        FTBL.AT_SetLocalBaseChara(LLY, BASE);
+        FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonBattleAuthorMarket);
+    } else {
+        EVT_AT_SetPos(BASE, BASE, 204.5f, 98.875f, 394.7f, 0);
+        EVT_AT_SetAngY(BASE, BASE, 270, 0);
+        FTBL.AT_SetLocalBaseChara(RYO, BASE);
+        FTBL.AT_SetLocalBaseChara(SAM, BASE);
+        FTBL.AT_SetLocalBaseChara(LLY, BASE);
+        FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonBattleAuthorWarehouse);
+        CwonInitializeWarehouseObjects();
+    }
+    CwonResetCamera();
+    FTBL.EV_vfBattleUtil(1, 2, 1);
+}
+
+void CwonInitializeClubObject(int slot) {
+    Vector3 scale = {2, .5f, 2};
+    shen_name club = SHEN_NAME4('K', 'E', 'I', 'B');
+    CwonShowCharacter(club);
+    FTBL.AllocateVOBJ(3, 4);
+    FTBL.vfStageDefinitionAddHitbox(3, 2, 1, 0, 0, 0, .3f, 0, 0);
+    FTBL.vfStageDefinitionAddHitbox(3, 2, 1, -.3f, 0, 0, .3f, 0, 0);
+    FTBL.vfStageDefinitionAddHitbox(3, 2, 1, -.6f, 0, 0, .3f, 0, 0);
+    FTBL.ToggleVOBJArrayIndex(3, 15, 255, 0, 0);
+    FTBL.vfStageDefinitionSetHitResponse(3, 0, 0, 0xa00, 1, .01f, 0, 0);
+    FTBL.vfStageDefinitionSetAttachment(3, 14, .05f, 0, -.05f, 0, 0, 61440);
+    FTBL.vfAllocateVOBJ(slot, FTBL.ctrlGetCharaByName(club), 3);
+    FTBL.vfStageObjectAssignMotFlags(slot, 0x405000);
+    FTBL.vfStageObjectReset(slot, FTBL.ctrlGetCharaByName(SAM));
+    FTBL.mtwkSetMotionworkScale3(club, &scale);
+    FTBL.EV_DisableCharacterDisplay(club);
+}
+
+void CwonBattleAuthorMarket(CwonWork *work) {
+    switch (work->authorState) {
+    case 0:
+        work->authorState++;
+        CwonDisableGravity(RYO);
+        CwonDisableGravity(SAM);
+        CwonDisableGravity(LLY);
+        EVT_AT_SetCam(1001, BASE, BASE, 0, 0, 0);
+        EVT_AT_SetCam(1002, BASE, BASE, 0, 0, 116);
+        EVT_AT_SetCam(1003, BASE, BASE, 0, 0, 136);
+        EVT_AT_SetCam(1004, BASE, BASE, 0, 0, 296);
+        EVT_AT_CharaDisp(SHEN_NAME4('T', 'B', 'L', 'b'), 140, 1);
+        EVT_AT_CharaDisp(SHEN_NAME4('T', 'B', 'L', 'b'), 290, 0);
+        EVT_AT_SetPos(RYO, BASE, 2.41033f, 0, 3.13482f, 0);
+        EVT_AT_SetAngY(RYO, BASE, 0, 0);
+        EVT_AT_SetPos(SAM, BASE, 0, 0, 0, 0);
+        EVT_AT_SetAngY(SAM, BASE, 0, 0);
+        EVT_AT_SetPos(LLY, BASE, 1.73141f, 0, -.49199f, 0);
+        EVT_AT_SetAngY(LLY, BASE, 0, 0);
+        EVT_AT_SetMot(RYO, 0x1005, 0, 1, 0x44000000, 0);
+        EVT_AT_SetMot(SAM, 0x1007, 0, 0, 0x44000000, 0);
+        EVT_AT_SetMot(LLY, 0x1001, 0, 0, 0x44000000, 0);
+        EVT_AT_SetMot(SAM, 0x1007, 0, 1, 0x44000000, 62);
+        EVT_AT_SetMot(LLY, 0x1001, 0, 1, 0x44000000, 30);
+        EVT_AT_SetVoice("0012C022", 110);
+        EVT_AT_SetVoice("0012D008", 140);
+        EVT_AT_SetVoice("0012A006", 185);
+        EVT_AT_SetVoice("0012C013", 250);
+        EVT_AT_SetVoice("0012A012", 285);
+        EVT_AT_SetVoice("0012C014", 300);
+        EVT_AT_SetVoice("0012D009", 330);
+        FTBL.HLib_SetupTaskDelay(440);
+        break;
+    case 1:
+        work->authorState++;
+        FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.spmFadeOut(30);
+        FTBL.HLib_SetupTaskDelay(30);
+        break;
+    case 2:
+        work->authorState = 0;
+        FTBL.AT_SetLocalBaseChara(RYO, -1);
+        FTBL.AT_SetLocalBaseChara(SAM, -1);
+        FTBL.AT_SetLocalBaseChara(LLY, -1);
+        CwonRestoreGravity(SAM);
+        CwonRestoreGravity(LLY);
+        CwonRestoreGravity(RYO);
+        FTBL.vfCopyPosFromEntity(0, 0, 260.4f, 399.1f, 5);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(RYO), 0, 0, 0, 0, 0);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(SAM), 0, 1, 1, 80, 11);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(LLY), 0, 1, 1, 100, 12);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        CwonRestoreBattlePoses(work);
+        FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonBattlePrepareCallback);
+        break;
+    }
+}
+
+void CwonBattleAuthorWarehouse(CwonWork *work) {
+    switch (work->authorState) {
+    case 0:
+        EVT_AT_SetPos(SAM, BASE, -.7f, 0, 0, 0);
+        EVT_AT_SetAngY(SAM, BASE, 270, 0);
+        EVT_AT_SetPos(RYO, SAM, -3, 0, -.77656f, 0);
+        EVT_AT_SetAngY(RYO, SAM, 0, 0);
+        EVT_AT_SetPos(LLY, SAM, 0, 0, -1.356f, 0);
+        EVT_AT_SetAngY(LLY, SAM, 0, 0);
+        EVT_AT_SetMot(RYO, 0x1006, 160, 1, 0x40000000, 0);
+        EVT_AT_SetMot(SAM, 0x1009, 0, 1, 0x40000000, 0);
+        EVT_AT_SetMot(LLY, 0x1003, 0, 1, 0x40000000, 0);
+        EVT_AT_SetVoice("0012C021", 0);
+        EVT_AT_SetVoice("0012A017", 185);
+        EVT_AT_SetVoice("0012D018", 260);
+        EVT_AT_SetVoice("0012C024", 400);
+        EVT_AT_SetCam(2001, BASE, BASE, 0, 0, 0);
+        EVT_AT_SetCam(2003, BASE, BASE, 0, 0, 190);
+        EVT_AT_SetCam(2004, BASE, BASE, 0, 0, 250);
+        work->authorState++;
+        FTBL.HLib_SetupTaskDelay(518);
+        break;
+    case 1:
+        work->authorState++;
+        FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.spmFadeOut(30);
+        FTBL.HLib_SetupTaskDelay(30);
+        break;
+    case 2:
+        work->authorState = 0;
+        FTBL.AT_SetLocalBaseChara(RYO, -1);
+        FTBL.AT_SetLocalBaseChara(SAM, -1);
+        FTBL.AT_SetLocalBaseChara(LLY, -1);
+        FTBL.vfCopyPosFromEntity(0, 0, 206.2f, 390, 7);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(RYO), 0, 0, 0, 0, 0);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(SAM), 0, 1, 1, 80, 11);
+        FTBL.shenInitFightData(FTBL.ctrlGetCharaByName(LLY), 0, 1, 1, 100, 12);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        CwonRestoreBattlePoses(work);
+        FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonBattlePrepareCallback);
+        break;
+    }
+}
+
+void CwonBattlePrepareCallback(CwonWork *work) {
+    Vector3 position;
+    if (work->entry > 6) {
+        CwonHideAtOrigin(WON, 1);
+        CwonHideAtOrigin(SHEN_NAME4('C', 'L', 'J', '_'), 1);
+    }
+    FTBL.vfmQueueFightStart(3, 99, 1, 0, -1);
+    if (work->entry == 8)
+        CwonGetLocalTransform(RYO, &position, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(RYO), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(RYO), 0, 1, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(WON), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(WON), 0, 1, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SAM), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SAM), 0, 1, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(LLY), 0, 0, 0);
+    FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(LLY), 0, 1, 0);
+    if (work->entry < 7) {
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SHEN_NAME4('C', 'L', 'J', '_')), 0, 0, 0);
+        FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(SHEN_NAME4('C', 'L', 'J', '_')), 0, 1, 0);
+    }
+    CwonLoadAudioForPhase(work, 3);
+    FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonBattleCallback);
+    if (work->entry < 7)
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+}
+
+void CwonBattleCallback(CwonWork *work) {
+    int status;
+    switch (work->authorState) {
+    case 0:
+        if (FTBL.IsFightActive())
+            CwonRestoreBattleProps(work, 0);
+        else {
+            CwonRestoreBattleProps(work, 1);
+            if (work->entry == 7) {
+                FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('B', 'T', 'C', '1'), 0);
+                FTBL.flddSetPointFlagOnGrid(SHEN_NAME4('P', 'R', 'O', 'P'), 1);
+                FTBL.flddSetPointFlagOnGrid(LIGHT_DEFAULT_DEFINITION, 1);
+            }
+            FTBL.EV_ControlPackageResources(0, 6, "BATLPACK", 0, 0);
+            FTBL.npcFree(SAM);
+            FTBL.npcFree(LLY);
+            FTBL.ForceLoadNpc(SAM);
+            FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+            FTBL.ForceLoadNpc(LLY);
+            FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+            if (FTBL.DoesScenarioCharacterExist(BAG))
+                FTBL.ResetScenarioCharacterAttachment(BAG);
+            FTBL.SetScenarioCharacterKillMode(BASE, 1);
+            status = FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(RYO));
+            if (status == 3) {
+                work->routeState = 1;
+                switch (work->entry) {
+                case 7:
+                    work->routePass = 7;
+                    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '_', '6'), -1, 258.4f, 101, 397.6f, 0);
+                    CwonHideCharacter(SHEN_NAME4('I', 'S', '_', '5'));
+                    CwonHideCharacter(SHEN_NAME4('I', 'S', '_', '8'));
+                    CwonHideCharacter(SHEN_NAME4('I', 'S', '_', '9'));
+                    break;
+                case 8:
+                    work->routePass = 8;
+                    break;
+                default:
+                    work->routePass = 5;
+                    FTBL.EV_stepSetFlags(12, 0);
+                    break;
+                }
+                FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonBattleEndCallback);
+                CwonBattleEndCallback(work);
+            } else {
+                work->routeState = 0;
+                switch (work->entry) {
+                case 7:
+                    work->routePass = 10;
+                    break;
+                case 8:
+                    work->routePass = 11;
+                    break;
+                default:
+                    work->routePass = 9;
+                    FTBL.EV_stepSetFlags(12, 1);
+                    break;
+                }
+                FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonBattleLostCallback);
+                CwonBattleLostCallback(work);
+            }
+        }
+        break;
+    }
+}
+
+void CwonBattleEndCallback(CwonWork *work) {
+    int (*updates[4])(CwonWork *) = {CwonUpdateStreetWin, 0, CwonUpdateMarketWin, CwonUpdateWarehouseWin};
+    switch (work->authorState) {
+    case 0:
+        work->authorState++;
+        switch (work->routePass) {
+        case 5:
+            CwonStartAuthor(3, 0, 0, CWON_STREET_BATTLE_CHARACTERS, 0);
+            break;
+        case 7:
+            CwonStartAuthor(6, 0, 0, CWON_MARKET_BATTLE_CHARACTERS, 0);
+            break;
+        case 8:
+            CwonStartAuthor(7, 0, 0, CWON_MARKET_BATTLE_CHARACTERS, 0);
+            break;
+        }
+    case 1:
+        if (updates[work->routePass - 5](work))
+            work->authorState++;
+        break;
+    case 2:
+        work->temporarySlot = 0;
+        work->routeChoice = 1;
+        work->nextArea = SHEN_NAME4('A', 'R', '0', '2');
+        work->routePass = 74;
+        work->authorState = 0;
+        FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonEndChaseCallback);
+        break;
+    }
+}
+
+void CwonBattleAuthorEndCallback(void *data) {
+    if (FTBL.EV_authSceneCtrl(-1)) {
+        if (FTBL.EV_authSceneCtrl(-6) == 521)
+            FTBL.EV_stepSetFlags(64, 0);
+    } else {
+        FTBL.EV_FreeAuthorPak(0, "0014");
+        FTBL.EV_ControlPackageResources(0, 6, "CWONGET", 0, 0);
+        FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonEndChaseCallback);
+    }
+}
+
+void CwonBattleLostCallback(CwonWork *work) {
+    switch (work->authorState) {
+    case 0:
+        CwonHideCharacter(SHEN_NAME4('K', 'E', 'I', 'B'));
+        if (work->routePass == 9) {
+            work->authorState++;
+            CwonStartAuthor(4, 0, 0, CWON_STREET_BATTLE_CHARACTERS, 0);
+            CwonUpdateStreetLost(work);
+        } else {
+            work->authorState = 0;
+            CwonLoadAudioForPhase(work, 5);
+            FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonBattleLostChoiceCallback);
+        }
+        break;
+    case 1:
+        if (CwonUpdateStreetLost(work))
+            work->authorState++;
+        break;
+    case 2:
+        work->authorState++;
+        CwonQueueLoadingTitle(SHEN_NAME4('A', 'R', '0', '2'), 90);
+        FTBL.HLib_SetupTaskDelay(90);
+        break;
+    case 3:
+        work->authorState++;
+        FTBL.SetScreenFilmFade(20, 255, 0, 0, 0, 0, 0, 0, 0);
+        CwonStartAuthor(5, 0, 0, CWON_STREET_BATTLE_CHARACTERS, 0);
+    case 4:
+        if (CwonUpdateStreetLostOutro(work)) {
+            work->authorState = 0;
+            work->temporarySlot = 0;
+            FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonEndChaseCallback);
+        }
+        break;
+    }
+}
+
+void CwonBattleLostChoiceCallback(CwonWork *work) {
+    Vector3i rotation;
+    Vector3 position;
+    switch (work->authorState) {
+    case 0:
+        work->authorState++;
+        FTBL.SetScreenFilmFade(20, 0, 0, 0, 0, 255, 0, 0, 0);
+        CwonQueueFadeWait(work->task);
+        break;
+    case 1:
+        work->authorState++;
+        CwonHideCharacter(SAM);
+        CwonHideCharacter(LLY);
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('T', 'B', 'L', 'a'));
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('T', 'B', 'L', 'b'));
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('T', 'B', 'L', 'c'));
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('T', 'B', 'L', 'd'));
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('T', 'B', 'L', 'e'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('b', 'T', 'K', '0'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('b', 'T', 'K', '1'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('b', 'T', 'K', '2'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('b', 'T', 'K', '3'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('b', 'T', 'K', '4'));
+        CwonRestoreMarketProps(0);
+        if (work->routePass == 10) {
+            EVT_AT_SetPos(RYO, SHEN_NAME4('C', 'E', 'N', 'T'), 260, 101, 397.5f, 0);
+            EVT_AT_SetAngY(RYO, SHEN_NAME4('C', 'E', 'N', 'T'), 0, 0);
+        } else {
+            EVT_AT_SetPos(RYO, SHEN_NAME4('C', 'E', 'N', 'T'), 207.6f, 98.9f, 390.6f, 0);
+            EVT_AT_SetAngY(RYO, SHEN_NAME4('C', 'E', 'N', 'T'), 0, 0);
+        }
+        FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(RYO), 69, 2, 0);
+        CwonQueueLoadingTitle(SHEN_NAME4('A', 'R', '0', '2'), 90);
+        FTBL.HLib_SetupTaskDelay(90);
+        break;
+    case 2:
+        work->authorState++;
+        FTBL.SetScreenFilmFade(20, 255, 0, 0, 0, 0, 0, 0, 0);
+        EVT_AT_SetMot(RYO, 0x7f09, -1, 1, 0, 0);
+        EVT_AT_SetVoice("0012A008", 100);
+        EVT_AT_SetVoice("0012A010", 300);
+        FTBL.HLib_SetupTaskDelay(550);
+        CwonGetLocalTransform(RYO, &position, &rotation);
+        EVT_AT_SetPos(SHEN_NAME4('D', 'U', 'M', '0'), SHEN_NAME4('C', 'E', 'N', 'T'), position.x, position.y, position.z, 0);
+        EVT_AT_SetAng(SHEN_NAME4('D', 'U', 'M', '0'), SHEN_NAME4('C', 'E', 'N', 'T'), rotation.x, rotation.y, rotation.z, 0);
+        EVT_AT_SetCam(202, SHEN_NAME4('D', 'U', 'M', '0'), SHEN_NAME4('D', 'U', 'M', '0'), 0, 0, 0);
+        EVT_AT_SetCam(206, SHEN_NAME4('D', 'U', 'M', '0'), SHEN_NAME4('D', 'U', 'M', '0'), 0, 0, 270);
+        break;
+    case 3:
+        work->authorState = 0;
+        work->temporarySlot = 0;
+        FTBL.spmFadeOut(30);
+        FTBL.SetScreenFilmFade(20, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonEndChaseCallback);
+        CwonQueueFadeWait(work->task);
+        break;
+    }
+}
+
+void CwonInitializeStreetObjects(void) {
+    int slot;
+    unsigned index;
+    FTBL.AllocateVOBJ(0, 2);
+    FTBL.vfStageDefinitionAddHitbox(0, 2, 1, .2f, 0, 0, .45f, 0, 0);
+    FTBL.vfStageDefinitionAddHitbox(0, 2, 1, -.2f, 0, 0, .45f, 0, 0);
+    FTBL.ToggleVOBJArrayIndex(0, 15, 255, 14, 0x214);
+    FTBL.vfStageDefinitionSetHitResponse(0, 0x214, 0xc03, 0x40, 20, .4f, 0, 0x71c7);
+    FTBL.vfStageDefinitionSetAttachment(0, 14, -.25f, .43f, 0, 0, 0, 0);
+    FTBL.AllocateVOBJ(1, 1);
+    FTBL.vfStageDefinitionAddHitbox(1, 2, 1, 0, .3f, 0, .5f, 0, 0);
+    FTBL.vfStageDefinitionSetMotion(1, SHEN_NAME4('B', 'O', 'X', '1'), 38, 0, 2, 2, 169, 118);
+    FTBL.AllocateVOBJ(2, 1);
+    FTBL.vfStageDefinitionAddHitbox(2, 2, 1, 0, .3f, 0, .5f, 0, 0);
+    FTBL.vfStageDefinitionSetMotion(2, SHEN_NAME4('B', 'O', 'X', '2'), 38, 0, 2, 2, 103, 118);
+    index = 0;
+    while (CWON_STREET_STAGE_MODELS[index]) {
+        FTBL.vfAllocateVOBJ(index, FTBL.ctrlGetCharaByName(CWON_STREET_STAGE_MODELS[index]), 0);
+        FTBL.vfStageObjectAssignMotFlagsAlternative(index, 3);
+        FTBL.vfStageObjectAssignMotFlags(index, 0xb01000);
+        index++;
+    }
+    slot = index;
+    index = 0;
+    while (CWON_STREET_BREAKABLE_MODELS[index]) {
+        FTBL.vfAllocateVOBJ(slot, FTBL.ctrlGetCharaByName(CWON_STREET_BREAKABLE_MODELS[index]), (index & 1) + 1);
+        FTBL.vfStageObjectSetBrokenModel(slot, FTBL.ctrlGetCharaByName(CWON_STREET_BROKEN_MODELS[index]), 720);
+        index++;
+        slot++;
+    }
+    CwonInitializeClubObject(slot + 1);
+    FTBL.vfInitializeStageObjectHitboxes();
+}
+
+void CwonInitializeMarketObjects(void) {
+    int slot, index;
+    FTBL.AllocateVOBJ(0, 1);
+    FTBL.vfStageDefinitionAddHitbox(0, 2, 1, 0, .3f, 0, .6f, 0, 0);
+    FTBL.vfStageDefinitionAddHitbox(0, 2, 0x8001, .9f, .5f, 0, .5f, 0, 0);
+    FTBL.vfStageDefinitionSetMotion(0, SHEN_NAME4('T', 'U', 'K', 'U'), 17, 0, 2, 2, 299, 117);
+    index = 0;
+    while (CWON_MARKET_STAGE_MODELS[index]) {
+        FTBL.vfAllocateVOBJ(index, FTBL.ctrlGetCharaByName(CWON_MARKET_STAGE_MODELS[index]), 0);
+        FTBL.vfStageObjectSetBrokenModel(index, FTBL.ctrlGetCharaByName(CWON_MARKET_BROKEN_MODELS[index]), 720);
+        index++;
+    }
+    FTBL.AllocateVOBJ(1, 7);
+    FTBL.vfStageDefinitionAddHitbox(1, 2, 1, 0, .2f, 0, .4f, 0, 0);
+    FTBL.vfStageDefinitionSetHitResponse(1, 0xb64, 0xb62, 0x60000, 17, 0, 0x2000, 0);
+    FTBL.ToggleVOBJArrayIndex(1, 10, 255, 14, 0xb61);
+    slot = index;
+    index = 0;
+    while (CWON_MARKET_MISC_MODELS[index]) {
+        FTBL.vfAllocateVOBJ(slot, FTBL.ctrlGetCharaByName(CWON_MARKET_MISC_MODELS[index]), 1);
+        FTBL.vfStageObjectAssignMotFlagsAlternative(slot, 3);
+        FTBL.vfStageObjectAssignMotFlags(slot, 0x1000);
+        index++;
+        slot++;
+    }
+    CwonInitializeClubObject(slot + 1);
+    FTBL.vfInitializeStageObjectHitboxes();
+}
+
+void CwonInitializeWarehouseObjects(void) {
+    CwonInitializeClubObject(0);
+    FTBL.vfInitializeStageObjectHitboxes();
+}
+
+void CwonInitializeFighters(void) {
+    struct {
+        float yaw;
+        Vector3 position;
+        shen_name character;
+    } objects[7] = {{0, {240.5f, 99.04999542236328f, 462.95001220703125f}, SHEN_NAME4('D', 'R', 'A', '0')},
+        {0, {243.3000030517578f, 97.44999694824219f, 467.8500061035156f}, SHEN_NAME4('D', 'R', 'A', '1')},
+        {90, {233.6999969482422f, 99.04999542236328f, 469.04998779296875f}, SHEN_NAME4('D', 'R', 'A', '2')},
+        {0, {229.6999969482422f, 98.42500305175781f, 463.75f}, SHEN_NAME4('B', 'H', 'K', '0')},
+        {295, {242.39999389648438f, 98.32499694824219f, 464.95001220703125f}, SHEN_NAME4('B', 'H', 'K', '1')},
+        {335, {239.6999969482422f, 98.32499694824219f, 470.3500061035156f}, SHEN_NAME4('B', 'H', 'K', '2')},
+        {0, {237.1999969482422f, 98.32499694824219f, 470.25f}, SHEN_NAME4('B', 'H', 'K', '3')}};
+    int i;
+    for (i = 0; i < 7; i++)
+        CwonEnablePositionedCharacter(objects[i].character, objects[i].position.x, objects[i].position.y, objects[i].position.z, 0, objects[i].yaw, 0);
+}
+
+void CwonShowBattleCharacters(void) {
+    CwonShowCharacter(SAM);
+    CwonShowCharacter(LLY);
+}
+
+void CwonRestoreBattlePoses(CwonWork *work) {
+    Vector3i rotation = {0, 0, 0};
+    float angles[3][3] = {{278.3f, 132.6f, 98.3f}, {1.7f, 181.7f, 215.4f}, {71.2f, 251.2f, 285.6f}};
+    int index;
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(RYO), 0x132, 0);
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(SAM), 0x630, 0);
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(LLY), 0x610, 0);
+    FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(RYO), 69, 0, 0);
+    FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(SAM), 69, 0, 0);
+    switch (work->entry) {
+    case 7:
+        index = 1;
+        break;
+    case 8:
+        index = 2;
+        break;
+    default:
+        index = 0;
+        break;
+    }
+    rotation.y = (int)(angles[index][0] * 8192.f / 45.f) & 65535;
+    FTBL.EV_AT_SetAngY_0(RYO, 0x38000000, &rotation, 0);
+    rotation.y = (int)(angles[index][1] * 8192.f / 45.f) & 65535;
+    FTBL.EV_AT_SetAngY_0(SAM, 0x38000000, &rotation, 0);
+    rotation.y = (int)(angles[index][2] * 8192.f / 45.f) & 65535;
+    FTBL.EV_AT_SetAngY_0(LLY, 0x38000000, &rotation, 0);
+}
+
+void CwonRestoreBattleProps(CwonWork *work, int restore) {
+    Vector3 camera, position;
+    const shen_name *street[4] = {CWON_STREET_STAGE_MODELS, CWON_STREET_BREAKABLE_MODELS, CWON_STREET_BROKEN_MODELS, 0};
+    const shen_name *market[3] = {CWON_MARKET_STAGE_MODELS, CWON_MARKET_BROKEN_MODELS, 0};
+    const shen_name **lists;
+    const shen_name *models;
+    int group, index;
+    float alpha, x, y, z;
+    void *character;
+    if (work->entry <= 6)
+        lists = street;
+    else if (work->entry == 7)
+        lists = market;
+    else
+        return;
+    FTBL.camCtrlGetNextCamPos(&camera);
+    models = lists[0];
+    group = 1;
+    while (models) {
+        for (index = 0; models[index]; index++) {
+            character = FTBL.ctrlGetCharaByName(models[index]);
+            SHENMUE_EVENT_OPAQUE(index);
+            if (character) {
+                alpha = 1;
+                if (restore != 1) {
+                    FTBL.GetCharaPosition(models[index], -1, &position, 0x40000000);
+                    alpha = ({
+                        float root = (camera.x - position.x) * (camera.x - position.x) + (camera.y - position.y) * (camera.y - position.y) +
+                            (camera.z - position.z) * (camera.z - position.z);
+                        root = __builtin_sqrtf(root);
+                        SHENMUE_EVENT_USE(root);
+                        root;
+                    });
+                    alpha = (alpha - 1.f) * .5f;
+                    if (alpha < 0)
+                        alpha = 0;
+                }
+                if (alpha >= 1)
+                    FTBL.EV_SetCharacterAlphaEnabled(models[index], 0);
+                else {
+                    FTBL.EV_SetCharacterAlphaEnabled(models[index], 1);
+                    FTBL.SetScenarioCharacterTransparency(models[index], alpha);
+                }
+            }
+        }
+        models = lists[group];
+        group++;
+    }
+}
+
+#else
 #include "s2/scripts/cwon/area_cwon.hpp"
 #include "s2/scripts/cwon/cwon_helpers.hpp"
 #include "s2/author.hpp"
@@ -805,3 +1454,5 @@ std::int32_t CwonUpdateVictoryAuthorHands(CwonEventWork *) {
     return 0;
 }
 } // namespace shenmue::s2
+
+#endif

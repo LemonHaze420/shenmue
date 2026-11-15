@@ -601,7 +601,13 @@ int RunDuckRaceEntryDialogue(DuckEventWork *work) {
                 delay = 220;
             }
             if (FTBL.GetPlayerStat(2) >= 50) {
-                QueueSkChoiceWait(duckRaceTask, 0xffff, 382, 153, 0xffff, 0xffff, 32767, delay);
+                QueueSkChoiceWait(duckRaceTask, 0xffff, 382,
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+                    34,
+#else
+                    153,
+#endif
+                    0xffff, 0xffff, 32767, delay);
                 delay = 0;
             } else {
                 EVT_AT_SetVoice("0122A013", delay);
@@ -617,7 +623,13 @@ int RunDuckRaceEntryDialogue(DuckEventWork *work) {
             EVT_AT_SetVoice("0122C009", 0);
             delay = 100;
             if (FTBL.GetPlayerStat(2) >= 50) {
-                QueueSkChoiceWait(duckRaceTask, 0xffff, 382, 153, 0xffff, 0xffff, 32767, delay);
+                QueueSkChoiceWait(duckRaceTask, 0xffff, 382,
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+                    34,
+#else
+                    153,
+#endif
+                    0xffff, 0xffff, 32767, delay);
                 delay = 0;
             } else {
                 work->state = DUCK_STATE_BETTING_INTRO;
@@ -685,7 +697,13 @@ int RunDuckRaceBettingIntro(DuckEventWork *work) {
     } else {
         EVT_AT_SetCam(4150, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, 0, 0);
         EVT_AT_SetVoice("0122C010", 0);
-        QueueSkChoiceWait(duckRaceTask, 0xffff, 36, 480, 154, 154, 32767, 80);
+        QueueSkChoiceWait(duckRaceTask, 0xffff, 36, 480,
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+            34, 34,
+#else
+            154, 154,
+#endif
+            32767, 80);
         FTBL.EV_EventSetUpHelpIcon_0(8, 0);
         work->phase = 1;
         work->state = DUCK_STATE_BET_MENU;
@@ -712,16 +730,27 @@ int RunDuckRaceBetMenu(DuckEventWork *work) {
         EVT_AT_SetMot(DUCK_COH, 32518, 0.0f, 1.0f, 0x40000000, 0);
         FTBL.ConfigureScenarioNodeMotion(DUCK_PRIZE, 32526, 0.0f, 32767.0f, 0.0f, 1.0f, 0);
         FTBL.ConfigureScenarioNodeMotion(DUCK_PRIZE, 0, -1.0f, -1.0f, -1.0f, 32767.0f, 4);
+#if !defined(SHENMUE_TARGET_S2_DC_EU)
         EVT_AT_SetCam(4020, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, 0, 0);
         if (!duckRaceMenuShown && !g_entryPoint)
             EVT_AT_SetVoice("0122C001", 0);
+#endif
         if (!FTBL.EV_GetPlayerFlag(11, 1646))
             EVT_AT_CharaDisp(DUCK_PRIZE, 0, 1);
         if (FTBL.GetPlayerStat(2) >= 20) {
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+            EVT_AT_SetCam(4020, EVENT_CHARACTER_INVALID, EVENT_CHARACTER_INVALID, 0, 0, 0);
+            if (!duckRaceMenuShown && !g_entryPoint && !FTBL.EV_GetPlayerFlag(11, 1335)) {
+                EVT_AT_SetVoice("0122C001", 0);
+                QueueSkChoiceWait(duckRaceTask, 0xffff, 36, 480, 34, 34, 32767, 80);
+            } else
+                QueueSkChoiceWait(duckRaceTask, 0xffff, 36, 480, 34, 34, 32767, 0);
+#else
             if (duckRaceMenuShown || g_entryPoint)
                 QueueSkChoiceWait(duckRaceTask, 0xffff, 36, 480, 154, 154, 32767, 0);
             else
                 QueueSkChoiceWait(duckRaceTask, 0xffff, 36, 480, 154, 154, 32767, 80);
+#endif
             work->phase++;
         } else {
             work->state = DUCK_STATE_INSUFFICIENT_FUNDS;
@@ -735,7 +764,11 @@ int RunDuckRaceBetMenu(DuckEventWork *work) {
             work->state = DUCK_STATE_WAGER_INPUT;
         else if (selection == 480)
             work->state = DUCK_STATE_PADDOCK_VIEW;
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+        else if (selection == 34)
+#else
         else if (selection == 154)
+#endif
             work->state = DUCK_STATE_DECLINE;
         else
             work->state = DUCK_STATE_DECLINE;

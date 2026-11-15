@@ -1,3 +1,332 @@
+#if defined(SHENMUE_EVENT_OVERLAY) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/scripts/cwon/area_cwon.hpp"
+
+void CwonPlaceScenarioCharacter(shen_name name, float x, float y, float z, float yaw) {
+    FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(name), 1);
+    FTBL.EV_SetCharaControllerFlags(name, 2, 0);
+    FTBL.EV_SetCharaControllerFlags(name, 3, 0);
+    CwonShowCharacter(name);
+    EVT_AT_SetPos(name, CENTER, x, y, z, 0);
+    EVT_AT_SetAngY(name, CENTER, yaw, 0);
+}
+
+void CwonGetDodgeCallback(CwonTemporaryWork *work) {
+    const shen_name name = SHEN_NAME4('G', 'E', 'T', '_');
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WkTask Error\n");
+    else {
+        switch (work->ticks) {
+        case 0:
+            if (!FTBL.DoesScenarioCharacterExist(name))
+                return;
+            work->ticks++;
+        case 1:
+            FTBL.EV_SetCharacterAlphaEnabled(name, 0);
+            CwonPlaceScenarioCharacter(name, 256.6f, 100.9f, 383.4f, 0);
+            EVT_AT_SetVoice("0011E002", 0);
+            FTBL.mtwkSetUnknownField(FTBL.scenFindMotionwork(name), 0);
+            EVT_AT_SetMot(name, 0x1039, -1, 1, 0, 0);
+            CwonQueueLook(name, RYO, 5, 0, 1, 3, 60, 0);
+            CwonShowCharacter(name);
+            CwonDestroyTemporary(work->root, work->slot);
+            break;
+        }
+    }
+}
+
+void CwonMarketPropsCallback(CwonTemporaryWork *work) {
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WkTask Error\n");
+    else {
+        CwonPlaceScenarioCharacter(SHEN_NAME4('D', 'Y', 'U', '_'), 260.1f, 101, 393.7f, 240);
+        EVT_AT_SetMot(SHEN_NAME4('D', 'Y', 'U', '_'), 0x1006, -1, 1, 0, 0);
+        CwonShowCharacter(SHEN_NAME4('D', 'Y', 'U', '_'));
+        CwonPlaceScenarioCharacter(SHEN_NAME4('M', 'E', 'Y', '_'), 263.6f, 100.9f, 402.5f, 270);
+        EVT_AT_SetMot(SHEN_NAME4('M', 'E', 'Y', '_'), 0x100d, -1, 0, 0, 0);
+        CwonShowCharacter(SHEN_NAME4('M', 'E', 'Y', '_'));
+        CwonPlaceScenarioCharacter(SHEN_NAME4('S', 'E', 'E', '_'), 263.4500122f, 101, 399.1f, 135);
+        EVT_AT_SetMot(SHEN_NAME4('S', 'E', 'E', '_'), 0x1006, -1, 1, 0, 0);
+        CwonShowCharacter(SHEN_NAME4('S', 'E', 'E', '_'));
+        CwonPlaceScenarioCharacter(SHEN_NAME4('E', 'E', 'N', '_'), 261.25f, 101, 399.5f, 256);
+        EVT_AT_SetMot(SHEN_NAME4('E', 'E', 'N', '_'), 0x1006, -1, 1, 0, 0);
+        CwonShowCharacter(SHEN_NAME4('E', 'E', 'N', '_'));
+        CwonRestoreMarketProps(0);
+        CwonShowCharacter(SHEN_NAME4('T', 'B', 'L', 'e'));
+        CwonDestroyTemporary(work->root, work->slot);
+    }
+}
+
+void CwonRestoreMarketProps(int showTables) {
+    static float CWON_CHAIR_YAWS[] = {40.0f, 310.0f, 100.0f, 20.0f, 45.0f, 250.0f, 45.0f, 307.0f, 51.0f, 32.0f, 314.0f, 298.0f, 67.0f, 49.0f, 105.0f, 221.0f,
+        41.0f, 180.0f, 41.0f, 26.0f, 185.0f, 302.0f, 90.0f};
+    static float CWON_TABLE_YAWS[] = {180.0f, 180.0f, 180.0f, 0.0f, 0.0f};
+    static Vector3 CWON_CHAIR_POSITIONS[] = {{257.100006f, 101.0f, 394.0f}, {256.5f, 101.0f, 395.399994f}, {257.299988f, 101.0f, 395.799988f},
+        {258.200012f, 101.0f, 395.100006f}, {258.399994f, 101.0f, 397.600006f}, {256.5f, 101.0f, 397.899994f}, {257.350006f, 101.0f, 399.420013f},
+        {258.299988f, 101.0f, 399.049988f}, {257.700012f, 101.0f, 401.0f}, {257.0f, 101.0f, 402.0f}, {257.799988f, 101.0f, 402.600006f},
+        {258.100006f, 101.0f, 401.799988f}, {257.600006f, 101.0f, 405.299988f}, {259.200012f, 101.0f, 405.100006f}, {260.899994f, 101.0f, 405.299988f},
+        {262.600006f, 101.0f, 400.299988f}, {261.200012f, 101.0f, 399.5f}, {262.399994f, 101.0f, 398.600006f}, {263.299988f, 101.0f, 399.200012f},
+        {261.5f, 101.0f, 396.100006f}, {262.399994f, 101.0f, 395.299988f}, {261.5f, 101.0f, 393.899994f}, {260.299988f, 101.0f, 395.0f}};
+    static Vector3 CWON_TABLE_POSITIONS[] = {{257.100006f, 101.0f, 395.100006f}, {257.399994f, 101.0f, 398.299988f}, {257.700012f, 101.0f, 402.0f},
+        {260.799988f, 101.0f, 394.5f}, {262.299988f, 101.0f, 399.5f}};
+
+    int i;
+    shen_name name;
+    for (i = 1; i < 24; i++) {
+        if (i < 10)
+            name = 0x5f5349 | ((i + 48) << 24);
+        else
+            name = ((i % 10 + 48) << 24) | (((i / 10 + 48) & 255) << 16) | 0x5349;
+        CwonEnablePositionedCharacter(name, CWON_CHAIR_POSITIONS[i].x, CWON_CHAIR_POSITIONS[i].y, CWON_CHAIR_POSITIONS[i].z, 0, CWON_CHAIR_YAWS[i], 0);
+        CwonShowCharacter(name);
+    }
+    for (i = 0; i < 5; i++) {
+        name = 0x4c4254 | ((i + 97) << 24);
+        CwonEnablePositionedCharacter(name, CWON_TABLE_POSITIONS[i].x, CWON_TABLE_POSITIONS[i].y, CWON_TABLE_POSITIONS[i].z, 0, CWON_TABLE_YAWS[i], 0);
+        FTBL.DebugLogToFileRemoved("%x\n", name);
+        if (showTables)
+            CwonShowCharacter(name);
+    }
+    if (g_currentMap == SHEN_NAME4('A', 'R', '0', '2'))
+        EVT_AT_SetPos(SHEN_NAME4('T', 'B', 'L', 'd'), -1, 261.5f, 101, 395, 0);
+}
+
+void CwonPrepareTableProps(void) {
+    EVT_AT_SetPos(SHEN_NAME4('H', 'A', 'K', '0'), CENTER, 265.5f, 100.9f, 408, 0);
+    EVT_AT_SetAngY(SHEN_NAME4('H', 'A', 'K', '0'), CENTER, 40, 0);
+    CwonShowCharacter(SHEN_NAME4('H', 'A', 'K', '0'));
+    EVT_AT_SetPos(SHEN_NAME4('H', 'A', 'K', '1'), CENTER, 265, 100.98f, 408, 0);
+    EVT_AT_SetAngY(SHEN_NAME4('H', 'A', 'K', '1'), CENTER, 190, 0);
+    CwonShowCharacter(SHEN_NAME4('H', 'A', 'K', '1'));
+}
+
+void CwonWarehousePropsCallback(CwonTemporaryWork *work) {
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WkTask Error\n");
+    else {
+        CwonEnablePositionedCharacter(SHEN_NAME4('K', 'Y', 'A', 'T'), 266.3f, 100.9f, 419, 0, 10, 0);
+        FTBL.SetScenarioCharacterRadius(SHEN_NAME4('K', 'A', 'N', 'B'), 20);
+        CwonEnablePositionedCharacter(SHEN_NAME4('K', 'A', 'N', 'B'), 267, 103.6f, 421.2f, 0, 0, 0);
+        CwonPlaceScenarioCharacter(SHEN_NAME4('A', 'N', 'A', '_'), 266.3f, 102.4f, 419, 270);
+        EVT_AT_SetMot(SHEN_NAME4('A', 'N', 'A', '_'), 0x103b, -1, 1, 0, 0);
+        CwonDisableGravity(SHEN_NAME4('A', 'N', 'A', '_'));
+        CwonEnablePositionedCharacter(SHEN_NAME4('D', 'D', 'O', 'R'), 260.47f, 100.9f, 421.1700134f, 0, 180, 0);
+        CwonPlaceScenarioCharacter(SHEN_NAME4('K', 'J', 'N', '_'), 259.57f, 100.9f, 421.1700134f, 0);
+        CwonHideCharacter(SHEN_NAME4('K', 'J', 'N', '_'));
+        CwonPlaceScenarioCharacter(SHEN_NAME4('S', 'H', 'I', '_'), 254, 100, 423.5f, 200);
+        EVT_AT_SetMot(SHEN_NAME4('S', 'H', 'I', '_'), 0x103e, -1, 1, 0, 0);
+        CwonShowCharacter(SHEN_NAME4('S', 'H', 'I', '_'));
+        CwonPlaceScenarioCharacter(SHEN_NAME4('E', 'I', 'N', '_'), 255, 100, 424.9f, 45);
+        EVT_AT_SetMot(SHEN_NAME4('E', 'I', 'N', '_'), 0x1007, -1, 1, 0, 0);
+        CwonShowCharacter(SHEN_NAME4('E', 'I', 'N', '_'));
+        CwonEnablePositionedCharacter(SHEN_NAME4('G', 'O', 'M', 'a'), 255.8f, 100, 425, 0, 0, 0);
+        CwonDestroyTemporary(work->root, work->slot);
+    }
+}
+
+HLibTask *CwonQueuePipeDynamics(void) {
+    return Queue_EVT_AT_PlayDynamix(SHEN_NAME4('P', 'I', 'P', '1'), "PIPE", 2, 3, 12, 0, 2, 0);
+}
+
+void CwonFallingWorkerCallback(CwonTemporaryWork *work) {
+    Vector3 position;
+    HLibTask *task;
+    const shen_name name = SHEN_NAME4('A', 'N', 'A', '_');
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WkTask Error\n");
+    else
+        switch (work->ticks) {
+        case 0:
+            if (!FTBL.DoesScenarioCharacterExist(name))
+                return;
+            work->ticks++;
+        case 1:
+            work->ticks++;
+            CwonGetLocalTransform(name, &position, 0);
+            EVT_AT_SetPos(name, CENTER, position.x, 100.9f, position.z, 0);
+            EVT_AT_SetAngY(name, CENTER, 270, 0);
+            FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(name), 0);
+            EVT_AT_SetSound(669, 0);
+            EVT_AT_SetSound(670, 20);
+            EVT_AT_SetMot(name, 0x1055, 20, 1, 0x40000000, 0);
+            task = CwonGetTemporaryTask(work);
+            if (task)
+                CwonQueueMotionWait(task, name, 170);
+            else
+                FTBL.DebugLogToFileRemoved("Taskid Error\n");
+            break;
+        case 2:
+            work->ticks++;
+            task = CwonGetTemporaryTask(work);
+            if (task)
+                CwonQueueMotionWait(task, name, 0);
+            else
+                FTBL.DebugLogToFileRemoved("Taskid Error\n");
+            break;
+        case 3:
+            break;
+        case 4:
+            CwonDestroyTemporary(work->root, work->slot);
+            break;
+        }
+}
+
+void CwonFallingSignCallback(CwonTemporaryWork *work) {
+    Vector3i rotation;
+    Vector3 position;
+    unsigned rotationFlags, positionFlags;
+    const shen_name name = SHEN_NAME4('K', 'Y', 'A', 'T');
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WkTask Error\n");
+    else {
+        if (work->ticks == 0) {
+            rotationFlags = 0;
+            SHENMUE_EVENT_CLOBBER("r11");
+            positionFlags = 0;
+            CwonGetLocalTransform(name, &position, &rotation);
+            if (position.x > 265.6999817f)
+                positionFlags |= 8;
+            if (position.y < 101.1f)
+                positionFlags |= 16;
+            position.x = -.03f;
+            position.y = .05f;
+            if (rotation.z < 0x4000)
+                rotationFlags |= 32;
+            if (rotation.y > 0)
+                rotationFlags |= 16;
+            rotation.y = -182;
+            rotation.z = 910;
+            if (positionFlags || rotationFlags) {
+                CwonSetPositionMasked(name, positionFlags, &position);
+                CwonSetRotationMasked(name, rotationFlags, &rotation);
+            } else
+                CwonDestroyTemporary(work->root, work->slot);
+        }
+    }
+}
+
+void CwonOpeningDoorCallback(CwonTemporaryWork *work) {
+    Vector3i rotation;
+    HLibTask *task;
+    const shen_name name = SHEN_NAME4('K', 'J', 'N', '_');
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WkTask Error\n");
+    else {
+        switch (work->ticks) {
+        case 0:
+            if (!FTBL.DoesScenarioCharacterExist(name))
+                return;
+            work->ticks++;
+            EVT_AT_SetSound(671, 0);
+            CwonQueueLook(name, RYO, 5, 0, 1, 3, 50, 30);
+        case 1:
+            CwonAddYaw(SHEN_NAME4('D', 'D', 'O', 'R'), -910);
+            CwonGetLocalTransform(SHEN_NAME4('D', 'D', 'O', 'R'), 0, &rotation);
+            if (rotation.y < 0x3c71) {
+                CwonShowCharacter(name);
+                EVT_AT_SetMot(name, 0x1038, -1, .8f, 0, 0);
+                task = CwonGetTemporaryTask(work);
+                if (task)
+                    CwonQueueMotionWait(task, RYO, 0);
+                else
+                    FTBL.DebugLogToFileRemoved("Taskid Error\n");
+                FTBL.mtwkSetUnknownField(FTBL.scenFindMotionwork(name), 0);
+                EVT_AT_SetMot(name, 0x103a, -1, 1, 0x20000000, 0);
+                CwonDestroyTemporary(work->root, work->slot);
+            }
+            break;
+        }
+    }
+}
+
+void CwonTurningPedestrianCallback(CwonTemporaryWork *work) {
+    Vector3 position;
+    const shen_name name = SHEN_NAME4('K', 'L', 'N', '_');
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WkTask Error\n");
+    else {
+        switch (work->ticks) {
+        case 0:
+            if (!FTBL.DoesScenarioCharacterExist(name))
+                return;
+            work->ticks++;
+            CwonShowCharacter(name);
+            CwonDisableGravity(name);
+            CwonPlaceScenarioCharacter(name, 253.3f, 100.9f, 422.5f, 350);
+            EVT_AT_SetMot(name, 0x1038, -1, 1, 0, 0);
+            CwonGetLocalTransform(WON, &position, 0);
+        case 1:
+            if (!FTBL.DoesScenarioCharacterExist(name) || CwonTurnTowardYaw(name, 0xc000, 182, 1))
+                CwonDestroyTemporary(work->root, work->slot);
+            break;
+        }
+    }
+}
+
+void CwonAttachBagPose1(shen_name character) {
+    Vector3 position = {.218f, -0.f, -.025f};
+    Vector3i rotation = {0x4d24, 0xd213, 0xa05b};
+    shen_name bag = SHEN_NAME4('S', 'A', 'L', 'A');
+    CwonShowCharacter(bag);
+    CwonDisableGravity(bag);
+    FTBL.AttachScenarioCharacter(bag, character, 14, &position, &rotation);
+}
+
+void CwonAttachBagPose2(shen_name character) {
+    Vector3 position = {.134f, -.12f, .019f};
+    Vector3i rotation = {0x41c3, 0x6f32, 0xcb05};
+    shen_name bag = SHEN_NAME4('S', 'A', 'L', 'A');
+    CwonShowCharacter(bag);
+    CwonDisableGravity(bag);
+    FTBL.AttachScenarioCharacter(bag, character, 14, &position, &rotation);
+}
+
+void CwonAttachBagPose3(shen_name character) {
+    Vector3 position = {.095f, .048f, -.11f};
+    Vector3i rotation = {0xf0b6, 0xae76, 0xc71};
+    shen_name bag = SHEN_NAME4('S', 'A', 'L', 'A');
+    CwonShowCharacter(bag);
+    CwonDisableGravity(bag);
+    FTBL.AttachScenarioCharacter(bag, character, 14, &position, &rotation);
+}
+
+void CwonAttachBagPose4(shen_name character) {
+    Vector3 position = {.134f, .083f, -.041f};
+    Vector3i rotation = {0x2a4c, 0xe8d4, 0xbc16};
+    shen_name bag = SHEN_NAME4('S', 'A', 'L', 'A');
+    CwonShowCharacter(bag);
+    CwonDisableGravity(bag);
+    FTBL.AttachScenarioCharacter(bag, character, 14, &position, &rotation);
+}
+
+void CwonPrepareChairProps(void) {
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '2', '3'), CENTER, 260.1f, 101, 393.7f, 0);
+}
+
+void CwonSetCollisionTables(void) {
+    EVT_AT_SetPos(SHEN_NAME4('T', 'B', 'L', 'a'), CENTER, 260.1205139f, 100.9890976f, 401.5202026f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('T', 'B', 'L', 'b'), CENTER, 259.2f, 101, 398.6f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('T', 'B', 'L', 'e'), CENTER, 263.0960999f, 100.9890976f, 401.5719910f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '1', '9'), CENTER, 264.0480042f, 100.9990005f, 401.5841064f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '1', '7'), CENTER, 262.0747986f, 100.9990005f, 401.2644043f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '_', '5'), CENTER, 260.0451050f, 100.9990005f, 400.3627014f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '_', '9'), CENTER, 258.8f, 100.9990005f, 397.7f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '1', '0'), CENTER, 259.8f, 100.9990005f, 399.2f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '1', '1'), CENTER, 258.9f, 100.9990005f, 399.3f, 0);
+    EVT_AT_SetAngY(SHEN_NAME4('T', 'B', 'L', 'a'), CENTER, 90, 0);
+}
+
+void CwonRestoreChair17(void) {
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '1', '7'), CENTER, 262.0747986f, 100.9990005f, 401.2644043f, 0);
+}
+
+void CwonSetFallenTable(void) {
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '1', '7'), CENTER, 262.0440979f, 100.9990005f, 401.6568909f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('I', 'S', '_', '5'), CENTER, 263.9382935f, 100.9990005f, 401.2322083f, 0);
+    EVT_AT_SetPos(SHEN_NAME4('T', 'B', 'L', 'e'), CENTER, 262.9399109f, 100.9890976f, 401.9465942f, 0);
+    EVT_AT_SetAngY(SHEN_NAME4('T', 'B', 'L', 'e'), CENTER, 0, 0);
+}
+
+#else
 #include "s2/scripts/cwon/cwon_helpers.hpp"
 #include "s2/character.hpp"
 #include "s2/conversation.hpp"
@@ -306,3 +635,5 @@ std::int32_t CwonInitializePedestrian() {
     return static_cast<std::int32_t>(GetMotionFrameCount(4152));
 }
 } // namespace shenmue::s2
+
+#endif

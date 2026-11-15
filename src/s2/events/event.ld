@@ -5,7 +5,7 @@ ENTRY(__event_base)
 SECTIONS
 {
   . = __event_base;
-  .text : { *(.text) }
+  .text : { *(.text.entry) *(.text) }
   .rodata : { *(.rodata) }
   .data : { *(.data) }
   .bss : { *(.bss) *(COMMON) }

@@ -22,7 +22,9 @@ void B102_main_func(const shen_name *argument) {
             BayItemShopQueueWait(area, prop);
             FTBL.srchReset();
             FTBL.SetPlayerControlEnabled(0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.SetLoadingBusy();
+#endif
             break;
         case 2:
             FTBL.SetPlayerControlEnabled(1);
@@ -32,10 +34,18 @@ void B102_main_func(const shen_name *argument) {
     }
 }
 #elif defined(SHENMUE_EVENT_B102_SHOPS)
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define SHENMUE_AREA_LOOP_VOICE_REVISION 1
+#define SHENMUE_AREA_LOOP_CONTROL_REVISION 1
+#define SHENMUE_AREA_LOOP_GAMEJAM
+#else
 #define SHENMUE_AREA_LOOP_SOUND
 #define SHENMUE_AREA_LOOP_MOTION_FRAMES
 #define SHENMUE_AREA_LOOP_VOICE_REVISION 2
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 #define SHENMUE_AREA_LOOP_HAND_POSES
+#endif
 #include "s2/areas/area_loop_dc.c"
 
 static BayItemShop bayItemShops[] = {
@@ -46,7 +56,12 @@ static BayItemShop bayItemShops[] = {
         {{SHEN_NAME4('M', '4', '0', '1'), 0, 3018, 150}, {SHEN_NAME4('M', '4', '0', '2'), 0, 3017, 150}, {SHEN_NAME4('M', '4', '0', '3'), 0, 3014, 150},
             {SHEN_NAME4('M', '4', '0', '4'), 0, 3015, 100}, {0, 0, 0, 0}, {0, 0, 0, 0}}},
     {SHEN_NAME4('Q', 'C', 'A', 'D'), SHEN_NAME4('Z', 'Y', 'C', '_'),
-        {{SHEN_NAME4('M', '4', '0', '5'), 0, 3023, 500}, {SHEN_NAME4('M', '4', '0', '6'), 0, 3012, 250}, {SHEN_NAME4('M', '4', '0', '7'), 0, 3013, 200},
+        {{SHEN_NAME4('M', '4', '0', '5'), 0, 3023, 500}, {SHEN_NAME4('M', '4', '0', '6'), 0, 3012, 250},
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            {SHEN_NAME4('M', '4', '0', '7'), 0, 3013, 250},
+#else
+            {SHEN_NAME4('M', '4', '0', '7'), 0, 3013, 200},
+#endif
             {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}},
     {0, 0, {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}},
 };
@@ -114,7 +129,9 @@ void BayItemShopQueueWait(shen_name area, shen_name prop) {
         break;
     }
     if (task) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.FinishLoading();
+#endif
         FTBL.HLib_DestroyTask(task);
     }
 }
@@ -143,13 +160,21 @@ void BayItemShopStartCallback(void *data) {
     Vector3 ryoPosition, npcPosition;
     Vector3i ryoRotation, npcRotation;
     shen_name npc;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     unsigned int npcMotion;
+#endif
     while (!FTBL.filmCheckFadeTrackColour() && work && (shop = FindBayItemShop(work->area)) != 0) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.HLib_SetCurrentTaskTo(BayItemShopDoneCallback);
+#else
         FTBL.HLib_SetCurrentTaskTo(BayItemShopWaitItemEffectCallback);
+#endif
         FTBL.HLib_SetupTaskDelay(-1);
         SetAreaLoopCharacterControl(B102_RYO, 1);
         npc = shop->npc;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         npcMotion = 11464;
+#endif
         FTBL.GetCharaPosition(B102_RYO, -1, &ryoPosition, 0x40000000);
         npcPosition = ryoPosition;
         ryoRotation.x = 0;
@@ -158,9 +183,18 @@ void BayItemShopStartCallback(void *data) {
         npcRotation.x = 0;
         npcRotation.y = 0;
         npcRotation.z = 0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.EV_FreeAuthorPak(1, "0110");
+#endif
         switch (work->area) {
         case B102_AREA_WTR0:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            QueueAreaLoopCamera(b102Package, 1500, B102_ANCHOR, 0, 0);
+            QueueAreaLoopCamera(b102Package, 1501, B102_ANCHOR, 100, 0);
+            QueueAreaLoopCamera(b102Package, 1502, B102_ANCHOR, 200, 0);
+            QueueAreaLoopVoice("●青かりです。＆買います。", 0, 0, 100, 0);
+            QueueAreaLoopVoice("かりです。＆ありがとう。", 0, 105, 100, 0);
+#else
             npcMotion = 11460;
             QueueAreaLoopCamera(b102Package, 1550, B102_ANCHOR, 0, 0);
             QueueAreaLoopCamera(b102Package, 1551, B102_ANCHOR, 200, 0);
@@ -168,6 +202,7 @@ void BayItemShopStartCallback(void *data) {
             QueueAreaLoopVoice("0110A019", 1, 0, -1, 0);
             QueueAreaLoopVoice("0110J009", 1, 100, -1, 0);
             QueueAreaLoopVoice("0110J010", 1, 200, -1, ResolveAreaLoopParent);
+#endif
             ryoPosition.x = 221.21f;
             ryoPosition.z = 276.74f;
             ryoRotation.y = 16384;
@@ -176,12 +211,20 @@ void BayItemShopStartCallback(void *data) {
             npcRotation.y = 49152;
             break;
         case B102_AREA_QCAC:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            QueueAreaLoopCamera(b102Package, 1500, B102_ANCHOR, 0, 0);
+            QueueAreaLoopCamera(b102Package, 1501, B102_ANCHOR, 100, 0);
+            QueueAreaLoopCamera(b102Package, 1502, B102_ANCHOR, 200, 0);
+            QueueAreaLoopVoice("●青かりです。＆買います。", 0, 0, 100, 0);
+            QueueAreaLoopVoice("かりです。＆ありがとう。", 0, 105, 100, 0);
+#else
             npcMotion = 11460;
             QueueAreaLoopCamera(b102Package, 1550, B102_ANCHOR, 0, 0);
             QueueAreaLoopCamera(b102Package, 1551, B102_ANCHOR, 200, 0);
             QueueAreaLoopVoice("0110A019", 1, 0, -1, 0);
             QueueAreaLoopVoice("0110K009", 1, 100, -1, 0);
             QueueAreaLoopVoice("0110K010", 1, 200, -1, ResolveAreaLoopParent);
+#endif
             ryoPosition.x = 169.16f;
             ryoPosition.z = 140.6f;
             ryoRotation.y = 32768;
@@ -190,12 +233,20 @@ void BayItemShopStartCallback(void *data) {
             npcRotation.y = 0;
             break;
         case B102_AREA_QCAD:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            QueueAreaLoopCamera(b102Package, 1500, B102_ANCHOR, 0, 0);
+            QueueAreaLoopCamera(b102Package, 1501, B102_ANCHOR, 100, 0);
+            QueueAreaLoopCamera(b102Package, 1502, B102_ANCHOR, 200, 0);
+            QueueAreaLoopVoice("●青かりです。＆買います。", 0, 0, 100, 0);
+            QueueAreaLoopVoice("かりです。＆ありがとう。", 0, 105, 100, 0);
+#else
             npcMotion = 11460;
             QueueAreaLoopCamera(b102Package, 1550, B102_ANCHOR, 0, 0);
             QueueAreaLoopCamera(b102Package, 1551, B102_ANCHOR, 200, 0);
             QueueAreaLoopVoice("0110A019", 1, 0, -1, 0);
             QueueAreaLoopVoice("0110I012", 1, 100, -1, 0);
             QueueAreaLoopVoice("0110I013", 1, 200, -1, ResolveAreaLoopParent);
+#endif
             ryoPosition.x = 174.56f;
             ryoPosition.z = 140.6f;
             ryoRotation.y = 32768;
@@ -208,6 +259,11 @@ void BayItemShopStartCallback(void *data) {
             QueueAreaLoopPosition(B102_RYO, 0, 0, &ryoPosition, &ryoRotation, 0);
             QueueAreaLoopPosition(npc, 0, 0, &npcPosition, &npcRotation, 0);
             QueueAreaLoopPosition(B102_ANCHOR, 0, 0, &npcPosition, &npcRotation, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            QueueAreaLoopMotion(B102_RYO, 0xf003, 0, -1, -1.0f, -1.0f, 1.0f, 0.0f, 0, 22);
+            QueueAreaLoopMotion(npc, 0xf087, 0, -1, -1.0f, -1.0f, 1.0f, 0.0f, BayItemShopChargeItem, 22);
+            QueueAreaLoopMotion(B102_RYO, 0xf11f, 200, -1, -1.0f, -1.0f, 1.0f, 0.0f, BayItemShopDeliverItem, 22);
+#else
             FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(B102_RYO));
             FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(B102_RYO));
             FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(B102_RYO), 1, 0, 0);
@@ -215,6 +271,7 @@ void BayItemShopStartCallback(void *data) {
             QueueAreaLoopMotion(B102_RYO, 11462, 0, -1, -1.0f, -1.0f, 1.0f, 0.0f, 0, 22);
             QueueAreaLoopMotion(npc, npcMotion, 0, -1, -1.0f, -1.0f, 1.0f, 0.0f, BayItemShopChargeItem, 22);
             QueueAreaLoopMotion(B102_RYO, 11461, 200, -1, 7.0f, -1.0f, 1.0f, 0.0f, BayItemShopDeliverItem, 22);
+#endif
             if (work->flags & 1) {
                 FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
                 work->flags &= ~1;
@@ -274,6 +331,7 @@ int BayItemShopDeliverItem(int phase, int value, HLibTask *parent) {
     return 1;
 }
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void BayItemShopWaitItemEffectCallback(void *data) {
     if (!FTBL.GetShouldRenderIcons(5)) {
         FTBL.HLib_SetCurrentTaskTo(BayItemShopDoneCallback);
@@ -281,6 +339,8 @@ void BayItemShopWaitItemEffectCallback(void *data) {
         ((BayItemShopWork *)data)->flags |= 1;
     }
 }
+
+#endif
 
 void BayItemShopDoneCallback(void *data) {
     BayItemShopWork *work = (BayItemShopWork *)data;
@@ -291,17 +351,26 @@ void BayItemShopDoneCallback(void *data) {
             if (work->flags & 1) {
                 FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
                 work->flags &= ~1;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                break;
+#endif
             }
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.EV_FreeAuthorPak(0, "0110");
+#endif
         }
         FTBL.camCtrlSetFovTransitionTo(1);
         FTBL.camCtrlSetState(0);
         FTBL.HLib_MarkCurrentTaskForCleanup();
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(B102_RYO));
         FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(B102_RYO));
+#endif
         if (FTBL.EV_ControlPackageResources(0, 5, b102Package, 0, 0))
             FTBL.EV_ControlPackageResources(0, 6, b102Package, 0, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.FinishLoading();
+#endif
         SetAreaLoopCharacterControl(B102_RYO, 0);
         FTBL.SetPlayerControlEnabled(1);
         break;

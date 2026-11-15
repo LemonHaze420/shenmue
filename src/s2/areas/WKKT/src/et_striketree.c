@@ -19,6 +19,9 @@ int wkktLevelDivisor = 4;
 int wkktPaused = 0;
 int wkktIdle = 0;
 int wkktDelayedCommand = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static int wkktNpcWaitFrames = 0;
+#endif
 int wkktDescending = 0;
 int wkktAnimationFrames = 0;
 float wkktStrengthPeak __attribute__((section(".bss")));
@@ -27,8 +30,10 @@ float wkktStrength __attribute__((section(".bss")));
 int wkktVoiceParity __attribute__((section(".bss")));
 int wkktTaught[5] __attribute__((section(".bss")));
 int wkktGrade __attribute__((section(".bss")));
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 int wkktPooledLeaves[WKKT_LEAF_SLOTS] __attribute__((section(".bss")));
 int wkktLeafSlots[WKKT_LEAF_SLOTS] __attribute__((section(".bss")));
+#endif
 
 void WkktRootCallback(void *data)
 {
@@ -81,6 +86,7 @@ void WkktMakeTask(void *data)
 
 void WkktPrepare(WkktTrainingWork *work)
 {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     int slot;
     FTBL.SetScenarioFollowCharacter(0);
     for (slot = 0; slot < WKKT_LEAF_SLOTS; slot++) {
@@ -89,6 +95,7 @@ void WkktPrepare(WkktTrainingWork *work)
         wkktPooledLeaves[slot] = FTBL.CreateFallingParticleEffect(&position, &volume, (int)wkktLeafCount, 1.0f, 1024, "misc", "REDLEAF.pvr", 102.0f);
         wkktLeafSlots[slot] = 0;
     }
+#endif
     if (wkktEntry != 1)
         FTBL.EV_SetNewSceneIndex();
     FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"WKKT", 0);
@@ -144,9 +151,11 @@ void WkktEnd(void *data)
     WkktTrainingWork *work = (WkktTrainingWork *)data;
     EventDateTime date;
     HLibTask *task;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     int i;
     for (i = 0; i < WKKT_LEAF_SLOTS; i++)
         FTBL.FreeParticleEffect(3, wkktPooledLeaves[i]);
+#endif
     FTBL.EV_SetPlayerFlag(16, 0, work->level);
     FTBL.CloseMoveLearning();
     FTBL.SetScenarioCharacterKillMode(WKKT_BASE, 1);
@@ -158,16 +167,26 @@ void WkktEnd(void *data)
         FTBL.FreeParticleEffect(0, work->smoke);
     FTBL.EV_ControlPackageResources(0, 6, "WKKT", 0, 0);
     FTBL.EV_FreeAuthorPak(0, "0026");
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.InitiateCleanupForSceneChara(WKKT_KEM);
+#endif
     ET_AT_KillWork(work->readCharacters);
     FTBL.EV_HLKillOtherHierarchyTask(work->parent);
     FTBL.EV_HLKillOtherHierarchyTask(work->self);
     EVT_AT_SetMot(WKKT_RYO, 0xf003, 0.0f, 1.0f, 0x40000000U, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetPos(WKKT_RYO, WKKT_ABSOLUTE, 41.6f, 102.25f, 242.9f, 0);
+    EVT_AT_SetAngY(WKKT_RYO, WKKT_ABSOLUTE, 270.0f, 0);
+#else
     EVT_AT_SetPos(WKKT_RYO, WKKT_ABSOLUTE, 40.0f, 102.25f, 242.3f, 0);
     EVT_AT_SetAngY(WKKT_RYO, WKKT_ABSOLUTE, 247.5f, 0);
+#endif
     FTBL.LoadCutsceneAndSoundProgramForArea();
     FTBL.EV_spmBeginSampleExecute(0);
     FTBL.lcdmInit(0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EV_NPC_NewLoadSw_0(1);
+#endif
     FTBL.EV_EventSetUpHelpIcon_0(0, 0);
     FTBL.scenFreeEvent("WKKT.EV2");
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
@@ -183,23 +202,34 @@ void WkktEnd(void *data)
             FTBL.npcAdvanceTime(date.hour, date.minute);
         }
         FTBL.SetPlayerControlEnabled(1);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.EV_NPC_NewLoadSw_0(1);
+#endif
     } else {
         task = FTBL.HLib_EnqueueTaskWithoutParameter(WkktWaitNpc, 4, 11, WKKT_WAIT_NPC_TASK);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.HLib_SetupTimedTask(task, 30);
         FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
         FTBL.CheckWarmStartNpcRoute(WKKT_KEM);
         FTBL.ForceLoadNpc(WKKT_KEM);
         FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+#endif
     }
 }
 
 void WkktWaitNpc(void *data)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    if (wkktNpcWaitFrames++ > 90 || FTBL.DoesScenarioCharacterExist(WKKT_KEM)) {
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+#else
     FTBL.EV_NPC_NewLoadSw_0(1);
     FTBL.npcLockUnlock(WKKT_KEM);
     FTBL.SetPlayerControlEnabled(1);
     FTBL.HLib_DestroyCurrentTask();
+#endif
 }
 
 void WkktFirst(void *data)
@@ -287,7 +317,11 @@ void WkktAuto2(void *data)
         EVT_AT_SetMot(WKKT_RYO, 5190, 0.0f, 1.0f, 0x40000000U, 30);
         EVT_AT_SetCam(1100, WKKT_BASE, WKKT_BASE, 0, 0, -1);
         EVT_AT_SetVoice("0026A028", 0);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+        QueueSkChoiceWait(work->self, 0xffff, 152, 34, 0xffff, 34, 32767, 60);
+#else
         QueueSkChoiceWait(work->self, 0xffff, 152, 154, 0xffff, 154, 32767, 60);
+#endif
         work->phase++;
         work->elapsed = 0;
         work->idleTicks = 0;
@@ -382,10 +416,19 @@ void WkktTalk(void *data)
 void WkktTraining(void *data)
 {
     WkktTrainingWork *work = (WkktTrainingWork *)data;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    Vector3 position;
+#endif
     WkktDrawLcdLevel(work);
     FTBL.GetBattleDataConfig(0, SHEN_NAME4('B', 'T', 'P', 'P'));
     FTBL.GetBattleDataConfig(0, SHEN_NAME4('B', 'T', 'K', 'K'));
     FTBL.GetBattleDataConfig(0, SHEN_NAME4('B', 'T', 'C', 'C'));
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    if (FTBL.EVT_GetControllerInput(1, 1) == 1024 && work->level++ >= wkktMaximumLevel)
+        work->level = wkktMaximumLevel;
+    if (FTBL.EVT_GetControllerInput(1, 1) == 512 && work->level-- < 1)
+        work->level = 0;
+#endif
     if (FTBL.GetMotionAnimationId(FTBL.scenFindMotionwork(WKKT_RYO), 0) == WKKT_IDLE_MOTION)
         wkktIdle = 1;
     else
@@ -549,7 +592,11 @@ void WkktBufferDuringMotion(WkktTrainingWork *work)
     int required = WKKT_REQUIRED_INPUT;
     float end, frame;
     if (FTBL.GetMotionAnimationId(FTBL.scenFindMotionwork(WKKT_RYO), 0) != WKKT_IDLE_MOTION) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        end = FTBL.GetMotionEndFrame(FTBL.scenFindMotionwork(WKKT_RYO), 0);
+#else
         end = (float)FTBL.GetMotionFrameCount(FTBL.GetMotionAnimationId(FTBL.scenFindMotionwork(WKKT_RYO), 0));
+#endif
         frame = FTBL.GetMotionFrame(FTBL.scenFindMotionwork(WKKT_RYO), 0);
         if (frame >= end - wkktMotionInputMargin) {
             work->action = WkktMatchInput(&work->history, &required, 0);
@@ -618,8 +665,10 @@ void WkktAction(void *data)
         EVT_AT_SetSound(948, 10);
         EVT_AT_SetSound(secondSounds[wkktGrade], 30);
         EVT_AT_SetMot(WKKT_RYO, 5188, 40.0f, 1.0f, 0x20000000U, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         Queue_EVT_AT_CtrlHandUp_1(WKKT_RYO, 0, (void *)areaLoopHandPoses[WKKT_STRIKE_HAND_POSE], 8, 0);
         Queue_EVT_AT_CtrlHandUp_1(WKKT_RYO, 0, (void *)areaLoopHandPoses[WKKT_STANCE_HAND_POSE], 8, 60);
+#endif
         WkktFeedback(work);
         break;
     case 1:
@@ -679,6 +728,10 @@ void WkktFeedbackVoice(WkktTrainingWork *work)
     wkktVoiceParity = (wkktVoiceParity + 1) % 2;
     if ((wkktVoiceParity == 0 || wkktGrade == 0 || wkktGrade == 3) && wkktTaught[work->level / 10] == 1)
         EVT_AT_SetVoice(voices[work->rank][wkktGrade][FTBL.shenGetRandomInt32(2)], 60);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetFaceLooks(WKKT_RYO, unused[wkktGrade], 16, 1.0f, 60);
+    EVT_AT_SetFaceLooks(WKKT_RYO, 0, 16, 1.0f, 90);
+#endif
 }
 
 void WkktActionWait(void *data)
@@ -705,6 +758,47 @@ void WkktQueueFallLeaves(int level, int delay)
     work->self = task;
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void WkktFallLeaves(void *data)
+{
+    WkktFallingWork *work = (WkktFallingWork *)data;
+    float position[3] = {39.34f, 105.5f, 241.1f};
+    float volume[3] = {0.7f, 0.35f, 0.7f};
+    float velocity[3] = {0.0f, -0.03f, 0.0f};
+    float variance[3] = {0.012f, -0.005f, 0.012f};
+    int sounds[11] = {451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 460};
+    int counts[11] = {12, 20, 30, 45, 70, 100, 130, 160, 200, (int)wkktLeafCount, (int)wkktLeafCount};
+    float gradeCounts[4] = {0.0f, 0.6f, 1.0f, 3.0f};
+    int count;
+    float rate;
+    SHENMUE_EVENT_BOUNDARY();
+    SHENMUE_EVENT_CLOBBER("r3");
+    count = counts[work->level / wkktLevelDivisor] * gradeCounts[wkktGrade];
+    rate = 0.5f;
+    EVT_AT_SetSound(sounds[work->level / wkktLevelDivisor], 0);
+    work->slot = 1;
+    work->effects[0] = FTBL.CreateFallingParticleEffect((Vector3 *)position, (Vector3 *)volume, count, rate, 1024, "misc", "REDLEAF.pvr", -1.0f);
+    FTBL.SetParticleEffectVelocity(3, work->effects[0], (Vector3 *)velocity, (Vector3 *)variance);
+    FTBL.SetParticleEffectSize(3, work->effects[0], 0.03f, 0.09f);
+    FTBL.ResumeParticleEffect(3, work->effects[0]);
+    work->frame = 0;
+    FTBL.DebugLogToFileRemoved("Skill   = %d\n", work->level);
+    FTBL.DebugLogToFileRemoved("Fall    = %3d\n", count);
+    FTBL.HLib_SetCurrentTaskTo(WkktKillLeaves);
+    FTBL.HLib_SetupTaskDelay(300);
+}
+
+void WkktKillLeaves(void *data)
+{
+    WkktFallingWork *work = (WkktFallingWork *)data;
+    int i;
+    for (i = 0; i < work->slot; i++) {
+        FTBL.SuspendParticleEffect(3, work->effects[i]);
+        FTBL.FreeParticleEffect(3, work->effects[i]);
+    }
+    FTBL.HLib_DestroyTaskInternal(work->self);
+}
+#else
 void WkktFallLeaves(void *data)
 {
     WkktFallingWork *work = (WkktFallingWork *)data;
@@ -749,6 +843,7 @@ void WkktKillLeaves(void *data)
     FTBL.SetParticleEffectPosition(3, wkktPooledLeaves[work->slot], &position, &volume);
     FTBL.HLib_DestroyTaskInternal(work->self);
 }
+#endif
 
 void WkktResetInputHistory(WkktInputHistory *history)
 {
@@ -877,10 +972,22 @@ void WkktAnimateSuccessEffects(WkktTrainingWork *work)
     case 440:
         FTBL.SuspendParticleEffect(3, work->leafA);
         break;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    case 1270:
+#else
     case 1330:
+#endif
         FTBL.SetParticleEffectSize(3, work->leafB, 0.04f, 0.12f);
         FTBL.ResumeParticleEffect(3, work->leafB);
         break;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    case 1630:
+        FTBL.ProcessAicaCommand(2720, 5);
+        break;
+    case 1660:
+        FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
+        break;
+#endif
     }
 }
 

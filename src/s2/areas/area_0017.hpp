@@ -15,6 +15,9 @@ extern void *area0017Voice, *area0017Archive;
 #define AREA_0017_DESTINATION SHEN_NAME4('A', 'R', 'B', 'T')
 typedef struct Area0017TaskParameter {
     HLibTask *self;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    void *motion;
+#endif
     short selection;
     short state;
 } Area0017TaskParameter;
@@ -24,6 +27,9 @@ typedef struct Area0017LoopTaskParameter {
 } Area0017LoopTaskParameter;
 extern const shen_name *const area0017Characters[];
 extern const shen_name area0017CleanupCharacters[];
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern const int area0017ArchiveRanges[3][2];
+#endif
 extern const shen_name area0017Characters0[], area0017Characters1[], area0017Characters2[];
 
 void Main(void);
@@ -35,7 +41,11 @@ void Loop2(void *taskData);
 void ConfigureArchive(int selection);
 void Setup0017(void);
 void Cleanup(Area0017TaskParameter *parent);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetupCharacters(void);
+#else
 void SetupCharacters(short selection);
+#endif
 void RestoreCharacters(void);
 void PrepareCharacter(shen_name name);
 void RestoreCharacter(shen_name name);

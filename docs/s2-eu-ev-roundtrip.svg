@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="20" role="img" aria-label="S2 EU - EV Roundtrip: 100% (116/116)">
+  <title>S2 EU - EV Roundtrip: 100% (116/116)</title>
+  <rect width="280" height="20" rx="3" fill="#555"/>
+  <path fill="#4c1" d="M200 0h77q3 0 3 3v14q0 3-3 3h-77z"/>
+  <g fill="#fff" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="11">
+    <text x="100" y="14">S2 EU - EV Roundtrip</text><text x="240" y="14">100%</text>
+  </g>
+</svg>

@@ -88,13 +88,17 @@ typedef struct PvsjEventWork {
     int stateTicks;
     int startMinute;
     int firstCustomer;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     int callFrames;
+#endif
     int cameraId;
     shen_name cameraEye, cameraTarget;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     char voicePrefix[16];
     PvsjVoiceLength *voiceLengths;
     void *voiceLoadBuffer;
     void *gamePartition;
+#endif
 } PvsjEventWork;
 
 extern PatiMotionCacheEntry g_patiMotionCache[4];
@@ -148,9 +152,21 @@ void PvsjInitializeBoards(PvsjEventWork *work);
 void ResetPatiMotionCache(void);
 void PvsjSetMotion(shen_name character, int motion, float frame, float speed, unsigned int flags, int delay);
 void PvsjSavePlayerRotation(void);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PvsjRefreshOverlay(unsigned int mode);
+#else
 void PvsjRefreshOverlay(int mode, PvsjEventWork *work);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PvsjSetOverlay(unsigned int mode);
+#else
 void PvsjSetOverlay(int mode, PvsjEventWork *work);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PvsjUpdateOverlay(unsigned int mode);
+#else
 void PvsjUpdateOverlay(int mode, PvsjEventWork *work);
+#endif
 void PvsjBeginGame(void *argument, PvsjEventWork *work);
 #else
 #pragma once

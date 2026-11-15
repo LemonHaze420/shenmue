@@ -56,11 +56,23 @@ typedef char PatiEventStateOffset[(offsetof(PatiEventWork,state)==0x88)?1:-1];
 typedef char PatiEventOptionOffset[(offsetof(PatiEventWork,option)==0x98)?1:-1];
 typedef char PatiEventTablesOffset[(offsetof(PatiEventWork,tables)==0xfc)?1:-1];
 typedef char PatiEventGameOffset[(offsetof(PatiEventWork,game)==0x8694)?1:-1];
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+typedef char PatiEventSavedPositionOffset[(offsetof(PatiEventWork,game)+offsetof(PatiGameWork,savedPlayerPosition)==0xe768)?1:-1];
+typedef char PatiEventWorkSize[(sizeof(PatiEventWork)==0x16aa0)?1:-1];
+#else
 typedef char PatiEventSavedPositionOffset[(offsetof(PatiEventWork,game)+offsetof(PatiGameWork,savedPlayerPosition)==0xe76c)?1:-1];
 typedef char PatiEventWorkSize[(sizeof(PatiEventWork)==0x16aa4)?1:-1];
+#endif
 
 typedef struct PatiMotionCache { shen_name character; int motion; unsigned int age; } PatiMotionCache;
-typedef struct PatiDealer { shen_name character; int playedFlag; const PatiDealerMotion *motions; int camera; } PatiDealer;
+typedef struct PatiDealer {
+    shen_name character;
+    int playedFlag;
+    const PatiDealerMotion *motions;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    int camera;
+#endif
+} PatiDealer;
 typedef struct PatiHelpTopic { char option, type; short topic; } PatiHelpTopic;
 typedef struct PatiWagerMode { char name[4]; unsigned char mode; } PatiWagerMode;
 typedef struct PatiPayoutMode { char name[9]; unsigned char mode; } PatiPayoutMode;

@@ -166,6 +166,7 @@ jobs:
         id: roundtrip
         run: ./.github/scripts/roundtrip-scn3.ps1
       - name: Build and round-trip S2 event overlays
+        id: events
         run: ./.github/scripts/roundtrip-events.ps1
       - name: Build screen captures
         run: cmake --build build/windows-capture --config Release --target shenmue1 shenmue2 --parallel 4
@@ -188,8 +189,9 @@ jobs:
           if-no-files-found: error
       - name: Compare HangOn screenshot
         run: ./.github/scripts/compare-hangon-screenshot.ps1
-      - name: Sync scenarios and roundtrip badge
+      - name: Sync scenarios and roundtrip badges
         if: always() && !cancelled() && (steps.roundtrip.outcome == 'success' || steps.roundtrip.outcome == 'failure') && github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
           SCN3_SYNC_SOURCES: ${{ job.status == 'success' }}
-        run: ./.github/scripts/sync-scn3.ps1 -IncludeSources:($env:SCN3_SYNC_SOURCES -eq 'true')
+          S2_SYNC_BADGES: ${{ steps.events.outcome == 'success' || steps.events.outcome == 'failure' }}
+        run: ./.github/scripts/sync-scn3.ps1 -IncludeSources:($env:SCN3_SYNC_SOURCES -eq 'true') -IncludeEventBadges:($env:S2_SYNC_BADGES -eq 'true')

@@ -25,7 +25,17 @@ void EVT_UTL_LoadNPCChara_Callback(void *taskData)
 {
     if (npcLoadPhase) {
         if (FTBL.ForceLoadNpc(*npcLoadCharacters)) {
+#if defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP)
+            FTBL.EV_EnableCharacterDisplay(*npcLoadCharacters);
+            do {
+                FTBL.EV_SetCharaControllerFlags(*npcLoadCharacters, 2, 0);
+                FTBL.EV_SetCharaControllerFlags(*npcLoadCharacters, 3, 0);
+            } while (0);
+            FTBL.SetRefBoardParamsForCharaById(*npcLoadCharacters, 1);
+            FTBL.EV_SetCharacterAlphaEnabled(*npcLoadCharacters, 0);
+#else
             EnableAuthoredCharacterFlagsAndDisplay(*npcLoadCharacters);
+#endif
             if (npcLowQualityHands)
                 FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(*npcLoadCharacters));
             npcLoadCharacters++;
@@ -70,6 +80,7 @@ int EVT_UTL_IsNPCCharaLoaded(void)
     return npcLoadComplete;
 }
 
+#if !defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP)
 void EnableAuthoredCharacterFlagsAndDisplay(shen_name character)
 {
     FTBL.EV_EnableCharacterDisplay(character);
@@ -81,6 +92,7 @@ void EnableAuthoredCharacterFlagsAndDisplay(shen_name character)
     SHENMUE_EVENT_BOUNDARY();
     FTBL.EV_SetCharacterAlphaEnabled(character, 0);
 }
+#endif
 
 void EVT_UTL_SaveDateTime(void)
 {

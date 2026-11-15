@@ -5,6 +5,7 @@
 #define EVENT_LIBRARY_REVISION_TKYB 1
 #define EVENT_LIBRARY_REVISION_FRBT 2
 #define EVENT_LIBRARY_REVISION_0337 3
+#define EVENT_LIBRARY_REVISION_0007 4
 #define EVENT_LIBRARY_REVISION_WRS2 5
 #define EVENT_LIBRARY_REVISION_0009 10
 #define EVENT_LIBRARY_REVISION_AKTM 20
@@ -17,7 +18,11 @@
 #endif
 #if SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_WRS2
 #define EVENT_VOICE_LIST_COUNT 10
+#if SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_0007
 #define EVENT_VOICE_LIST_LENGTH 10
+#else
+#define EVENT_VOICE_LIST_LENGTH 12
+#endif
 #else
 #define EVENT_VOICE_LIST_COUNT 16
 #define EVENT_VOICE_LIST_LENGTH 12
@@ -26,7 +31,10 @@
 typedef struct EventSetCamera {
     int cleanup, camera;
     shen_name eye, target;
-    int context, angle;
+    int context;
+#if !defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP)
+    int angle;
+#endif
 } EventSetCamera;
 typedef struct EventSetCameraRotation {
     int cleanup;
@@ -228,7 +236,11 @@ typedef struct EventQteResultTaskData {
 } EventQteResultTaskData;
 extern int g_eventQteFailureCount, g_eventQteRetryFrames;
 void EVT_AT_SetCam_Callback(void *data);
+#if defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP)
+void EVT_AT_SetCam(int camera, shen_name eye, shen_name target, int context, int delay);
+#else
 void EVT_AT_SetCam(int camera, shen_name eye, shen_name target, int context, int angle, int delay);
+#endif
 void EVT_AT_SetCamRot_Callback(void *data);
 void EVT_AT_SetCamRot(float x, float y, float duration, int delay);
 void EVT_AT_SetMot_Callback(void *data);

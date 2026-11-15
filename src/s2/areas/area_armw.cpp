@@ -1,12 +1,20 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/areas/area_armw.hpp"
 
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+#define ARMW_CHOICE_ACCEPT 22
+#else
+#define ARMW_CHOICE_ACCEPT 157
+#endif
+
 #if defined(SHENMUE_EVENT_ENTRY)
 void RunArmwEvent(int argument)
 {
     FTBL.SetScreenFilmFade(1, 0, 0, 0, 0, 255, 0, 0, 0);
     FTBL.SetPlayerControlEnabled(0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetLoadingBusy();
+#endif
     armwArgument = argument;
     FTBL.SetWeatherUpdateEnabledTo(1);
     FTBL.RefreshWeatherForCurrentTime(0);
@@ -29,10 +37,91 @@ void ArmwPlaceCrowd(const shen_name *names)
     }
 }
 #else
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+const float armwBases[12][4] = {
+    {205.0f, 100.220001f, 320.0f, 120.0f},
+    {234.0f, 100.220001f, 348.0f, 90.0f},
+    {247.899994f, 100.220001f, 363.100006f, 180.0f},
+    {299.299988f, 107.879997f, 329.299988f, 120.0f},
+    {300.600006f, 107.879997f, 331.399994f, 120.0f},
+    {301.899994f, 107.879997f, 333.399994f, 120.0f},
+    {240.300003f, 100.0f, 132.300003f, 180.0f},
+    {237.600006f, 100.0f, 132.300003f, 180.0f},
+    {234.899994f, 100.0f, 132.300003f, 180.0f},
+    {232.199997f, 100.0f, 132.300003f, 180.0f},
+    {229.5f, 100.0f, 132.300003f, 180.0f},
+    {226.5f, 100.0f, 132.300003f, 180.0f}
+};
+#else
 const float armwBases[12][4] = {{205.0f, 100.22f, 320.0f, 120.0f}, {234.0f, 100.22f, 348.0f, 90.0f}, {247.9f, 100.22f, 363.1f, 180.0f}, {299.4f, 107.87f, 329.3f, 120.0f}, {300.6f, 107.87f, 331.3f, 120.0f}, {301.8f, 107.87f, 333.4f, 120.0f}, {240.3f, 100.0f, 132.3f, 180.0f}, {237.6f, 100.0f, 132.3f, 180.0f}, {234.9f, 100.0f, 132.3f, 180.0f}, {232.2f, 100.0f, 132.3f, 180.0f}, {229.5f, 100.0f, 132.3f, 180.0f}, {226.8f, 100.0f, 132.3f, 180.0f}};
+#endif
 const int armwExits[12][2] = {{0, 20}, {0, 21}, {0, 22}, {0, 0}, {0, 0}, {0, 0}, {0, 20}, {0, 21}, {0, 22}, {0, 0}, {0, 0}, {0, 0}};
 const shen_name armwReferees[12][2] = {{ARMW_GAU, 0}, {ARMW_WD3, 0}, {ARMW_AD2, 0}, {ARMW_SD1, 0}, {ARMW_SD1, 0}, {ARMW_SD1, 0}, {ARMW_WD1, 0}, {ARMW_WD1, 0}, {ARMW_WD1, 0}, {ARMW_WD1, 0}, {ARMW_WD1, 0}, {ARMW_WD1, 0}};
 const int armwFlagIds[12] = {3, 4, 5, 6, 7, 8, 4, 3, 5, 7, 6, 8};
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+const ArmwOpponent armwOpponents[60] = {
+    {ARMW_HONG, 3, 1, 6, 60, 2, 15, 100, 0, 0, 0, 0, 0},
+    {ARMW_HONG, 4, 2, 7, 90, 2, 15, 100, 0, 0, 0, 0, 0},
+    {ARMW_HONG, 5, 3, 7, 120, 2, 15, 100, 0, 0, 0, 0, 0},
+    {ARMW_HONG, 5, 3, 8, 180, 2, 15, 100, 0, 0, 0, 0, 0},
+    {ARMW_HONG, 6, 4, 9, 250, 2, 15, 100, 0, 0, 0, 0, 0},
+    {ARMW_SF8, 5, 2, 5, 60, 0, 10, 50, 50, 0, 0, 0, 0},
+    {ARMW_SF8, 5, 3, 6, 60, 0, 10, 50, 50, 0, 0, 0, 0},
+    {ARMW_SF8, 6, 3, 6, 60, 0, 10, 25, 75, 0, 0, 0, 0},
+    {ARMW_SF8, 6, 4, 7, 90, 0, 10, 25, 75, 0, 0, 0, 0},
+    {ARMW_SF8, 7, 4, 7, 90, 0, 10, 25, 75, 0, 0, 0, 0},
+    {ARMW_SFC, 7, 3, 5, 120, 1, 4, 50, 50, 0, 0, 0, 0},
+    {ARMW_SFC, 8, 3, 5, 240, 1, 4, 50, 0, 50, 0, 0, 0},
+    {ARMW_SFC, 8, 4, 6, 460, 1, 4, 33, 33, 33, 0, 0, 0},
+    {ARMW_SFC, 9, 5, 6, 580, 1, 4, 25, 25, 50, 0, 0, 0},
+    {ARMW_SFC, 9, 5, 7, 600, 1, 4, 20, 40, 40, 0, 0, 0},
+    {ARMW_KZN, 4, 3, 5, 450, 3, 7, 50, 50, 0, 0, 0, 0},
+    {ARMW_KZN, 5, 4, 6, 400, 3, 7, 50, 0, 50, 0, 0, 0},
+    {ARMW_KZN, 5, 4, 7, 350, 3, 7, 50, 0, 0, 50, 0, 0},
+    {ARMW_KZN, 6, 5, 7, 300, 3, 7, 33, 33, 33, 0, 0, 0},
+    {ARMW_KZN, 6, 5, 8, 250, 3, 7, 25, 25, 25, 25, 0, 0},
+    {ARMW_SSY, 5, 3, 5, 150, 4, 1, 25, 25, 25, 25, 512, 0},
+    {ARMW_SSY, 6, 3, 6, 210, 4, 1, 25, 25, 25, 25, 512, 0},
+    {ARMW_SSY, 6, 3, 6, 270, 4, 1, 25, 25, 25, 25, 513, 0},
+    {ARMW_SSY, 7, 4, 7, 450, 4, 1, 25, 25, 25, 25, 514, 0},
+    {ARMW_SSY, 8, 4, 8, 600, 4, 1, 25, 25, 25, 25, 768, 0},
+    {ARMW_SF2, 5, 3, 5, 90, 5, 0, 25, 25, 25, 25, 514, 0},
+    {ARMW_SF2, 6, 3, 6, 150, 5, 0, 25, 25, 25, 25, 768, 0},
+    {ARMW_SF2, 6, 3, 6, 210, 5, 0, 25, 25, 25, 25, 769, 0},
+    {ARMW_SF2, 7, 4, 7, 300, 5, 0, 25, 25, 25, 25, 770, 0},
+    {ARMW_SF2, 8, 4, 8, 450, 5, 0, 25, 25, 25, 25, 771, 0},
+    {ARMW_FRS, 2, 1, 4, 60, 0, 20, 90, 10, 0, 0, 0, 0},
+    {ARMW_FRS, 3, 2, 45, 60, 0, 20, 80, 20, 0, 0, 0, 0},
+    {ARMW_FRS, 4, 2, 5, 60, 0, 20, 70, 30, 0, 0, 0, 0},
+    {ARMW_FRS, 5, 3, 6, 90, 0, 15, 60, 40, 0, 0, 0, 0},
+    {ARMW_FRS, 6, 3, 7, 90, 0, 15, 50, 50, 0, 0, 0, 0},
+    {ARMW_HONG, 4, 2, 7, 90, 2, 9, 80, 10, 10, 0, 0, 0},
+    {ARMW_HONG, 5, 3, 8, 120, 2, 9, 70, 15, 15, 0, 0, 0},
+    {ARMW_HONG, 6, 3, 8, 180, 2, 9, 60, 20, 20, 0, 0, 0},
+    {ARMW_HONG, 6, 4, 9, 250, 2, 9, 50, 25, 25, 0, 0, 0},
+    {ARMW_HONG, 7, 4, 10, 350, 2, 9, 40, 30, 30, 0, 0, 0},
+    {ARMW_MHK, 8, 3, 5, 90, 1, 15, 10, 30, 10, 50, 0, 0},
+    {ARMW_MHK, 9, 4, 6, 150, 1, 15, 50, 10, 30, 10, 0, 0},
+    {ARMW_MHK, 9, 4, 6, 210, 1, 15, 10, 50, 10, 30, 0, 0},
+    {ARMW_MHK, 10, 5, 7, 270, 1, 15, 30, 10, 50, 10, 0, 0},
+    {ARMW_MHK, 10, 5, 7, 350, 1, 15, 25, 25, 25, 25, 0, 0},
+    {ARMW_DML, 5, 4, 6, 150, 4, 5, 25, 25, 25, 25, 512, 0},
+    {ARMW_DML, 6, 4, 6, 210, 4, 5, 25, 25, 25, 25, 513, 0},
+    {ARMW_DML, 6, 5, 7, 270, 4, 5, 25, 25, 25, 25, 514, 0},
+    {ARMW_DML, 7, 5, 7, 450, 4, 5, 25, 25, 25, 25, 515, 0},
+    {ARMW_DML, 8, 6, 8, 600, 4, 5, 25, 25, 25, 25, 516, 0},
+    {ARMW_MSH, 6, 4, 6, 150, 5, 0, 25, 25, 25, 25, 768, 0},
+    {ARMW_MSH, 6, 5, 7, 210, 5, 0, 25, 25, 25, 25, 769, 0},
+    {ARMW_MSH, 7, 5, 7, 270, 5, 0, 25, 25, 25, 25, 770, 0},
+    {ARMW_MSH, 7, 6, 8, 450, 5, 0, 25, 25, 25, 25, 771, 0},
+    {ARMW_MSH, 8, 6, 8, 600, 5, 0, 25, 25, 25, 25, 772, 0},
+    {ARMW_DGY, 6, 5, 7, 150, 6, 0, 25, 25, 25, 25, 1024, 0},
+    {ARMW_DGY, 7, 5, 7, 210, 6, 0, 25, 25, 25, 25, 1025, 0},
+    {ARMW_DGY, 7, 6, 8, 270, 6, 0, 25, 25, 25, 25, 1026, 0},
+    {ARMW_DGY, 8, 6, 8, 450, 6, 0, 25, 25, 25, 25, 1027, 0},
+    {ARMW_DGY, 8, 7, 9, 600, 6, 0, 25, 25, 25, 25, 1028, 0}
+};
+#else
 const ArmwOpponent armwOpponents[60] = {
     {ARMW_HONG, 3, 1, 6, 60, 2, 15, 100, 0, 0, 0, 0, 0},
     {ARMW_HONG, 4, 2, 7, 90, 2, 15, 100, 0, 0, 0, 0, 0},
@@ -95,11 +184,29 @@ const ArmwOpponent armwOpponents[60] = {
     {ARMW_DGY, 8, 6, 8, 450, 6, 3, 25, 25, 25, 25, 1027, 0},
     {ARMW_DGY, 8, 7, 9, 600, 6, 3, 25, 25, 25, 25, 1028, 0},
 };
+#endif
 const short armwOrder[12][6] = {{0, 1, 2, 3, 4, -1}, {5, 6, 7, 8, 9, -1}, {10, 11, 12, 13, 14, -1}, {15, 16, 17, 18, 19, -1}, {20, 21, 22, 23, 24, -1}, {25, 26, 27, 28, 29, -1}, {30, 31, 32, 33, 34, -1}, {35, 36, 37, 38, 39, -1}, {40, 41, 42, 43, 44, -1}, {45, 46, 47, 48, 49, -1}, {50, 51, 52, 53, 54, -1}, {55, 56, 57, 58, 59, -1}};
 const short armwRotations[7][2][3] = {{{0, 1, 2}, {4, 1, 3}}, {{3, 4, 2}, {1, 0, 2}}, {{2, 1, 0}, {3, 2, 4}}, {{3, 4, 0}, {2, 3, 1}}, {{2, 3, 1}, {0, 1, 4}}, {{4, 3, 0}, {1, 3, 2}}, {{2, 1, 3}, {4, 2, 0}}};
 shen_name armwCharacters[15] = {ARMW_RYO, ARMW_INVALID};
 shen_name armwTutorialCharacters[2] = {ARMW_SHIYO, ARMW_INVALID};
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int armwBets[12][5] = {
+    {10, 20, 30, 40, 50},
+    {20, 30, 40, 50, 60},
+    {40, 50, 60, 70, 80},
+    {30, 40, 50, 60, 70},
+    {50, 60, 70, 80, 90},
+    {60, 70, 80, 90, 100},
+    {10, 20, 30, 40, 50},
+    {20, 30, 40, 50, 60},
+    {40, 50, 60, 70, 80},
+    {30, 40, 50, 60, 70},
+    {50, 60, 70, 80, 90},
+    {60, 70, 80, 90, 100}
+};
+#else
 int armwBets[12][5] = {{10, 20, 30, 40, 50}, {20, 30, 40, 50, 60}, {40, 50, 60, 70, 80}, {30, 40, 50, 60, 70}, {50, 60, 70, 80, 90}, {60, 70, 80, 90, 100}, {10, 20, 30, 40, 50}, {20, 30, 40, 50, 60}, {30, 40, 50, 60, 70}, {40, 50, 60, 70, 80}, {50, 60, 70, 80, 90}, {60, 70, 80, 90, 100}};
+#endif
 int armwStarted = 0;
 int armwStartFrames = 0;
 unsigned int armwIntroductionVariant __attribute__((section(".bss")));
@@ -130,7 +237,9 @@ void ArmwStart(void *parameter)
     FTBL.RefreshWeatherForCurrentTime(0);
     FTBL.UpdateWeather();
     work->characters = Queue_EVT_AT_ReadChr(task, armwCharacters);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetLoadingBusy();
+#endif
     FTBL.EV_EventSetUpHelpIcon_0(65, 0);
     EventDebugRegister(3, ArmwDebugExit, work, 3000000);
 }
@@ -172,21 +281,30 @@ void ArmwInitializeResources(ArmwWork *work)
     FTBL.EV_ControlPackageResources(2, 2, "ARMW", 0, 0);
     FTBL.EV_LoadCutsceneFromCurrentScene("0008A000");
     FTBL.CreateEventCharacter(3, 0, ARMW_BASE);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     if (work->opponent == ARMW_SFC || work->opponent == ARMW_DGY || work->opponent == ARMW_MHK)
         armwOpponentVariant = 2;
-    else if (FTBL.GetMotionRigBoneId(FTBL.scenFindMotionwork(work->opponent)) == 7)
+    else
+#endif
+    if (FTBL.GetMotionRigBoneId(FTBL.scenFindMotionwork(work->opponent)) == 7)
         armwOpponentVariant = 0;
     else if (FTBL.GetMotionRigBoneId(FTBL.scenFindMotionwork(work->opponent)) == 9)
         armwOpponentVariant = 1;
     else
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        armwOpponentVariant = 2;
+#else
         armwOpponentVariant = 3;
+#endif
     if (FTBL.EV_GetShenmueFlag(2) && !armwLocation) {
         for (i = 0; i < 6; i++)
             FTBL.EV_SetPlayerFlag(16, armwFlagIds[i], 0);
         path = FTBL.Filepath_Gen(0);
         FTBL.EV_ControlPackageResources(0, 0, path, (int)"ARMWAUTH", 0);
         FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         armwHandMotion = (int)FTBL.LoadHandPoseBank(g_actNumber, g_currentMap, "HMOT_0008E");
+#endif
         Queue_EVT_UTL_LoadNPCChara_3(armwTutorialCharacters, work->self);
     } else {
         path = FTBL.Filepath_Gen(0);
@@ -222,10 +340,18 @@ void ArmwFreeRefereePackages(void)
 
 void ArmwLoadOpponentPackage(int variant)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    const char *names[3] = {"ARMWSAMR", "ARMWLLYR", "ARMWHGNR"};
+#else
     const char *names[4] = {"ARMWSAMR", "ARMWLLYR", "ARMWLLYR", "ARMWHGNR"};
+#endif
     const char *path;
     int i;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    for (i = 0; i < 3; i++)
+#else
     for (i = 0; i < 4; i++)
+#endif
         if (FTBL.EV_ControlPackageResources(0, 5, names[i], 0, 0))
             FTBL.EV_ControlPackageResources(0, 6, names[i], 0, 0);
     path = FTBL.Filepath_Gen(0);
@@ -237,11 +363,35 @@ void ArmwFreeOpponentPackages(void)
 {
     const char *names[3] = {"ARMWSAMR", "ARMWLLYR", "ARMWHGNR"};
     int i;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    for (i = 0; i < 3; i++)
+#else
     for (i = 0; i < 4; i++)
+#endif
         if (FTBL.EV_ControlPackageResources(0, 5, names[i], 0, 0))
             FTBL.EV_ControlPackageResources(0, 6, names[i], 0, 0);
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int ArmwBeginExit(ArmwWork *work)
+{
+    int frames;
+    if ((unsigned int)g_entryPoint >= 90) {
+        frames = 90;
+        work->step = 0;
+        FTBL.SetScreenFilmFade(frames, 0, 0, 0, 0, 255, 0, 0, 0);
+        EVT_AT_MenCtrl(frames, 255, 0, 0, 0, 0, 0, 0, 0, frames);
+        ArmwSelectOpponent(work);
+        work->phase = 4;
+    } else {
+        frames = 90;
+        FTBL.SetScreenFilmFade(frames, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.spmFadeOut(0);
+        FTBL.HLib_SetCurrentTaskTo(ArmwEndCallback);
+    }
+    return frames;
+}
+#else
 int ArmwBeginExit(ArmwWork *work)
 {
     int frames = 0;
@@ -253,6 +403,7 @@ int ArmwBeginExit(ArmwWork *work)
     FTBL.HLib_SetCurrentTaskTo(ArmwEndCallback);
     return frames;
 }
+#endif
 
 void ArmwSetExitStep(ArmwWork *work)
 {
@@ -299,7 +450,9 @@ void ArmwEndCallback(void *data)
         FTBL.EV_FreeAuthorPak(0, "0008");
     EVT_UTL_FreeNPCChara(armwTutorialCharacters);
     FTBL.EV_EventSetUpHelpIcon_0(0, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.CheckHelpIcon(0, 0, 0);
+#endif
     if (FTBL.EV_ControlPackageResources(0, 5, "ARMW", 0, 0))
         FTBL.EV_ControlPackageResources(0, 6, "ARMW", 0, 0);
     if (FTBL.EV_ControlPackageResources(0, 5, "ARMWCOMN", 0, 0))
@@ -405,14 +558,21 @@ void ArmwSelectOpponent(ArmwWork *work)
     work->buttonUp = armwOpponents[index].buttonUp;
     work->finishQte = armwOpponents[index].finishQte;
     work->warmupFrames = armwOpponents[index].warmupFrames;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     if (work->opponent == ARMW_SFC || work->opponent == ARMW_DGY || work->opponent == ARMW_MHK)
         armwOpponentVariant = 2;
-    else if (FTBL.GetMotionRigBoneId(FTBL.scenFindMotionwork(work->opponent)) == 7)
+    else
+#endif
+    if (FTBL.GetMotionRigBoneId(FTBL.scenFindMotionwork(work->opponent)) == 7)
         armwOpponentVariant = 0;
     else if (FTBL.GetMotionRigBoneId(FTBL.scenFindMotionwork(work->opponent)) == 9)
         armwOpponentVariant = 1;
     else
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        armwOpponentVariant = 2;
+#else
         armwOpponentVariant = 3;
+#endif
 }
 
 int ArmwGetDay(void)
@@ -519,14 +679,21 @@ int ArmwReady(ArmwWork *work)
     if (FTBL.EV_GetShenmueFlag(2) && !armwLocation)
         work->phase = 2;
     else {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.FinishLoading();
+#endif
         FTBL.EV_LoadAudio("0008A000", 1);
         FTBL.EV_spmBeginSampleExecute(0);
         work->phase = 5;
         work->step = 1;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     }
     EventDebugCheck(3, 4);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     FTBL.EV_NPC_NewLoadSw_0(1);
     return 0;
 }
@@ -557,7 +724,9 @@ int ArmwNextOpponent(ArmwWork *work)
             }
         } else {
             ArmwFinishLadderFlags();
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             work->step = 0;
+#endif
             work->phase = 15;
         }
         break;
@@ -673,7 +842,9 @@ int ArmwAskTutorial(ArmwWork *work)
     switch (work->step) {
     case 0:
         FTBL.EV_LoadAudio("0008A000", 1);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.FinishLoading();
+#endif
         Queue_EVT_AT_CtrlHandUp_1(work->player, 1, (void *)areaLoopHandPoses[47], 0, 0);
         EVT_AT_SetMot(work->player, 0xf002, 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
         EVT_AT_SetMot(work->opponent, armwOpponentMotions[0][armwOpponentVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
@@ -686,21 +857,27 @@ int ArmwAskTutorial(ArmwWork *work)
         EVT_AT_SetAng(work->referee, ARMW_BASE, 0.0f, 65.0f, 0.0f, 0);
         EVT_AT_SetCam(2101, ARMW_BASE, ARMW_BASE, 0, 0, 0);
         if (FTBL.GetPlayerStat(2) > armwWager) {
-            QueueSkChoiceWait(work->self, 0xffff, 157, 153, 0xffff, 153, 32767, 10);
+            QueueSkChoiceWait(work->self, 0xffff, ARMW_CHOICE_ACCEPT, 153, 0xffff, 153, 32767, 10);
             work->step++;
         } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.spmFadeOut(0);
+#endif
             frames = ArmwWalkAway(work);
             work->phase = 20;
             work->step = 0;
         }
         break;
     case 1:
-        if (FTBL.shenGetCtrlSpeakIconFlag() == 157) {
+        if (FTBL.shenGetCtrlSpeakIconFlag() == ARMW_CHOICE_ACCEPT) {
             ArmwVoice(0, "028", 0);
             work->phase = 5;
             work->step = 0;
             frames = 30;
         } else {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.spmFadeOut(0);
+#endif
             frames = ArmwWalkAway(work);
             work->phase = 20;
             work->step = 0;
@@ -710,6 +887,107 @@ int ArmwAskTutorial(ArmwWork *work)
     return frames;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int ArmwExplain(ArmwWork *work)
+{
+    int frames = 0;
+    switch (work->step) {
+    case 0:
+        EVT_AT_SetVoice("0008E065", 0);
+        EVT_AT_SetVoice("0008E066", 80);
+        EVT_AT_SetVoice("0008A001", 180);
+        EVT_AT_SetVoice("0008E067", 260);
+        EVT_AT_SetVoice("0008E068", 320);
+        EVT_AT_SetCam(2130, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+        EVT_AT_SetCam(2131, ARMW_BASE, ARMW_BASE, 0, 0, 180);
+        EVT_AT_SetCam(2132, ARMW_BASE, ARMW_BASE, 0, 0, 260);
+        EVT_AT_SetMot(work->referee, 9095, 60.0f, 1.0f, ARMW_MOTION_FLAGS, 260);
+        frames = 460;
+        EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, frames - 60);
+        work->step++;
+        break;
+    case 1:
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.SetPlayerGameFlags(4, 0);
+        EVT_AT_SetPos(work->player, ARMW_BASE, 0.5f, 0.0f, -0.8f, 0);
+        EVT_AT_SetAng(work->player, ARMW_BASE, 0.0f, 157.5f, 0.0f, 0);
+        EVT_AT_SetPos(work->referee, ARMW_BASE, 1.2f, 0.0f, 0.6f, 0);
+        EVT_AT_SetAng(work->referee, ARMW_BASE, 0.0f, 337.5f, 0.0f, 0);
+        EVT_AT_SetPos(work->opponent, ARMW_BASE, 0.0f, 0.0f, 0.8f, 0);
+        EVT_AT_SetAng(work->opponent, ARMW_BASE, 0.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetMot(work->player, 0xf003, 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+        EVT_AT_SetMot(work->referee, armwRefereeMotions[13][armwRefereeVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+        EVT_AT_CharaDisp(work->opponent, 0, 1);
+        EVT_AT_SetCam(2150, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+        if (work->referee != ARMW_SD1)
+            ArmwAppendVoice(2, "009");
+        else
+            ArmwAppendVoice(1, "009");
+        ArmwAppendVoice(2, "010");
+        ArmwWaitVoices(work->self, 8, 0, 0);
+        work->step++;
+        break;
+    case 2:
+        {
+            EVT_AT_SetMot(work->player, 9157, 20.0f, 0.7f, ARMW_MOTION_FLAGS, 0);
+            ArmwAppendVoice(1, "011");
+            EVT_AT_SetCam(2151, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+            ArmwWaitVoices(work->self, 8, 0, 0);
+            work->step++;
+        }
+        break;
+    case 3:
+        {
+            EVT_AT_SetMot(work->player, 0xf003, 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+            EVT_AT_SetPos(work->player, ARMW_BASE, 0.5f, 0.0f, -0.8f, 0);
+            EVT_AT_SetAng(work->player, ARMW_BASE, 0.0f, 157.5f, 0.0f, 0);
+            ArmwAppendVoice(2, "012");
+            ArmwAppendVoice(2, "001");
+            EVT_AT_SetCam(2152, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+            ArmwWaitVoices(work->self, 8, 0, 0);
+            work->step++;
+        }
+        break;
+    case 4:
+        {
+            ArmwAppendVoice(2, "002");
+            ArmwAppendVoice(3, "007");
+            ArmwWaitVoices(0, 8, 0, 0);
+            switch (work->opponent) {
+            case ARMW_HONG:
+            case ARMW_MSH:
+            case ARMW_SSY:
+                frames += ArmwIntroduceHong(work->player, work->opponent, work->referee, 0);
+                break;
+            case ARMW_SF8:
+            case ARMW_SF2:
+            case ARMW_DML:
+                frames += ArmwIntroduceSf8(work->player, work->opponent, work->referee, 0);
+                break;
+            case ARMW_SFC:
+            case ARMW_MHK:
+                frames += ArmwIntroduceSfc(work->player, work->opponent, work->referee, 0);
+                break;
+            case ARMW_DGY:
+                frames += ArmwIntroduceSfc(work->player, work->opponent, work->referee, 0);
+                break;
+            case ARMW_KZN:
+            case ARMW_FRS:
+                frames += ArmwIntroduceKzn(work->player, work->opponent, work->referee, 0);
+                break;
+            }
+            work->step = 1;
+            work->phase = 4;
+            EVT_AT_CharaDisp(work->referee, 0, 1);
+            EVT_AT_CharaDisp(work->opponent, 0, 0);
+            EVT_AT_CharaDisp(work->referee, frames, 0);
+            EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, frames - 30);
+        }
+        break;
+    }
+    return frames;
+}
+#else
 int ArmwExplain(ArmwWork *work)
 {
     int frames = 0;
@@ -759,7 +1037,9 @@ int ArmwExplain(ArmwWork *work)
             work->step = 1;
             work->phase = 4;
             EVT_AT_MenCtrl(0, 0, 0, 0, 0, 255, 0, 0, 0, 0);
-        } else {
+        } else
+
+        {
             EVT_AT_SetMot(work->player, 9157, 20.0f, 0.7f, ARMW_MOTION_FLAGS, 0);
             EVT_AT_SetMot(work->referee, armwRefereeMotions[13][armwRefereeVariant], 200.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
             ArmwAppendVoice(1, "011");
@@ -777,7 +1057,9 @@ int ArmwExplain(ArmwWork *work)
             work->step = 1;
             work->phase = 4;
             EVT_AT_MenCtrl(0, 0, 0, 0, 0, 255, 0, 0, 0, 0);
-        } else {
+        } else
+
+        {
             EVT_AT_CharaDisp(work->opponent, 0, 1);
             EVT_AT_SetMot(work->player, 0xf003, 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
             EVT_AT_SetMot(work->referee, armwRefereeMotions[13][armwRefereeVariant], 320.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
@@ -795,7 +1077,9 @@ int ArmwExplain(ArmwWork *work)
             work->step = 1;
             work->phase = 4;
             EVT_AT_MenCtrl(0, 0, 0, 0, 0, 255, 0, 0, 0, 0);
-        } else {
+        } else
+
+        {
             EVT_AT_SetSound(187, 20);
             EVT_AT_SetSound(349, 60);
             EVT_AT_SetSound(187, 120);
@@ -836,7 +1120,24 @@ int ArmwExplain(ArmwWork *work)
     }
     return frames;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int ArmwWalkAway(ArmwWork *work)
+{
+    FTBL.SetPlayerGameFlags(4, 1);
+    EVT_AT_SetMot(work->player, 0xf027, 0.0f, 1.0f, ARMW_MOTION_FLAGS, 10);
+    EVT_AT_SetMot(work->player, 0xf005, 0.0f, 1.0f, ARMW_MOTION_FLAGS, 35);
+    EVT_AT_SetMot(work->opponent, armwOpponentMotions[0][armwOpponentVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 25);
+    EVT_AT_SetAngY(work->player, ARMW_BASE, 135.0f, 35);
+    ArmwVoice(0, "027", 0);
+    ArmwVoice(2, "029", 90);
+    EVT_AT_SetCam(1228, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+    EVT_AT_SetCam(1803, ARMW_BASE, ARMW_BASE, 0, 0, 35);
+    work->flags |= 32;
+    return 180;
+}
+#else
 int ArmwWalkAway(ArmwWork *work)
 {
     FTBL.SetPlayerGameFlags(4, 1);
@@ -849,7 +1150,18 @@ int ArmwWalkAway(ArmwWork *work)
     work->flags |= 32;
     return 180;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int ArmwRefuse(ArmwWork *work)
+{
+    ArmwVoice(0, "027", 0);
+    ArmwVoice(1, "029", 50);
+    ArmwVoice(1, "030", 120);
+    work->phase = 20;
+    return 180;
+}
+#else
 int ArmwRefuse(ArmwWork *work)
 {
     ArmwAppendVoice(0, "027");
@@ -859,6 +1171,7 @@ int ArmwRefuse(ArmwWork *work)
     ArmwWaitVoices(work->self, 8, 0, 0);
     return 220;
 }
+#endif
 
 int ArmwPrepareMatch(ArmwWork *work)
 {
@@ -903,17 +1216,28 @@ int ArmwPrepareMatch(ArmwWork *work)
         work->position = 0.5f;
         if (!FTBL.EV_GetScreenFilmIsNotShowing())
             FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_CharaDisp(work->opponent, 0, 0);
         EVT_AT_CharaDisp(work->referee, 0, 0);
+#endif
         ArmwMatchHands(work);
         ArmwUpdatePose(work, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_SetPos(work->referee, ARMW_BASE, 0.7f, 0.0f, 0.0f, 0);
+#else
         EVT_AT_SetPos(work->referee, ARMW_BASE, 0.7f, 0.0f, 0.05f, 0);
+#endif
         EVT_AT_SetAng(work->referee, ARMW_BASE, 0.0f, 90.0f, 0.0f, 0);
         EVT_AT_SetPos(ARMW_MONEY, ARMW_BASE, -0.2f, 0.9f, -0.16f, 0);
         EVT_AT_SetAng(ARMW_MONEY, ARMW_BASE, 0.0f, 0.0f, 0.0f, 0);
         EVT_AT_SetMot(work->referee, armwRefereeMotions[3][armwRefereeVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_SetPoint(work->player, work->opponent, 5, 3, 0, 0, 0, 0x20000000U);
+        EVT_AT_SetPoint(work->opponent, work->player, 5, 3, 0, 0, 0, 0x20000000U);
+#else
         EVT_AT_SetPoint(work->player, work->opponent, 5, 3, 0, 0, 0, 0xa0000000U);
         EVT_AT_SetPoint(work->opponent, work->player, 5, 3, 0, 0, 0, 0xa0000000U);
+#endif
         EVT_AT_SetCam(3000, ARMW_BASE, ARMW_BASE, 0, 0, 0);
         armwIntroductionVariant = FTBL.shenGetRandomInt32(2);
         if (!armwStarted)
@@ -1002,7 +1326,11 @@ int ArmwPrepareMatch(ArmwWork *work)
             EVT_AT_SetPoint(work->opponent, 0, 0, 3, 0, 0, 0, 0x10000000U);
             ArmwMatchHands(work);
             ArmwUpdatePose(work, 0);
-            EVT_AT_SetPos(work->referee, ARMW_BASE, 0.7f, 0.0f, 0.05f, 0);
+    #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_SetPos(work->referee, ARMW_BASE, 0.7f, 0.0f, 0.0f, 0);
+#else
+        EVT_AT_SetPos(work->referee, ARMW_BASE, 0.7f, 0.0f, 0.05f, 0);
+#endif
             EVT_AT_SetAng(work->referee, ARMW_BASE, 0.0f, 90.0f, 0.0f, 0);
             EVT_AT_SetMot(work->referee, armwRefereeMotions[11][armwRefereeVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
             EVT_AT_SetCam(3004, ARMW_BASE, ARMW_BASE, 0, 0, 0);
@@ -1034,13 +1362,26 @@ int ArmwOfferNextMatch(ArmwWork *work)
     int frames = 0;
     switch (work->step) {
     case 0:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (FTBL.shenGetMinutesUntilNextFrameMinute()) {
+#endif
         if (work->flags & 0x10000000U)
             frames = ArmwOfferRematch(work->player, work->opponent, work->referee);
         else
             frames = ArmwAnnounceBet(work->player, work->opponent, work->referee);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        QueueSkChoiceWait(work->self, 0xffff, ARMW_CHOICE_ACCEPT, 153, 0xffff, 153, 32767, frames);
+        EVT_AT_SetCam(3205, ARMW_BASE, ARMW_BASE, 0, 0, frames);
+        frames = 0;
+        work->step++;
+        } else {
+            work->step = 0;
+            work->phase = 7;
+        }
+#else
         if (FTBL.shenGetMinutesUntilNextFrameMinute()) {
             EVT_AT_SetCam(3205, ARMW_BASE, ARMW_BASE, 0, 0, frames);
-            QueueSkChoiceWait(work->self, 0xffff, 157, 153, 0xffff, 153, 32767, frames);
+            QueueSkChoiceWait(work->self, 0xffff, ARMW_CHOICE_ACCEPT, 153, 0xffff, 153, 32767, frames);
             work->step++;
             frames = 0;
         } else {
@@ -1048,9 +1389,10 @@ int ArmwOfferNextMatch(ArmwWork *work)
             work->step = 0;
             work->phase = 7;
         }
+#endif
         break;
     case 1:
-        if (FTBL.shenGetCtrlSpeakIconFlag() == 157) {
+        if (FTBL.shenGetCtrlSpeakIconFlag() == ARMW_CHOICE_ACCEPT) {
             ArmwVoice(0, "028", 0);
             frames = 30;
             FTBL.SetScreenFilmFade(frames, 0, 0, 0, 0, 255, 0, 0, 0);
@@ -1069,7 +1411,11 @@ int ArmwFalseStart(ArmwWork *work)
 {
     int frames = ArmwWarnFalseStart(work->player, work->opponent, work->referee, work->falseStarts);
     if (++work->falseStarts <= 2) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        work->step = 1;
+#else
         work->step = 4;
+#endif
         work->phase = 4;
         EVT_AT_MenCtrl(30, 255, 0, 0, 0, 0, 0, 0, 0, frames);
     } else {
@@ -1104,23 +1450,31 @@ int ArmwWin(ArmwWork *work)
         EVT_AT_SetSound(349, 0);
         EVT_AT_SetSound(269, 20);
         EVT_AT_SetSound(347, 30);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetSound(349, 10);
+#endif
         EVT_AT_SetCam(FTBL.shenGetRandomInt32(3) + 3100, ARMW_BASE, ARMW_BASE, 0, 0, 0);
         if ((work->flags & 0x20000000U) && work->opponentIndex != 2)
             ArmwReplaceOpponent(work);
         else
             work->step++;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         if (work->flags & 8) {
             work->phase = 18;
             work->step = 0;
         }
+#endif
         frames = 120;
         break;
     case 1:
         EVT_AT_SetPos(work->player, ARMW_BASE, -0.4f, 0.0f, -0.7f, 0);
         EVT_AT_SetAng(work->player, ARMW_BASE, 0.0f, 180.0f, 0.0f, 0);
         EVT_AT_SetPos(work->referee, work->player, -0.75f, 0.0f, -0.1f, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        EVT_AT_SetAng(work->referee, work->player, 0.0f, 270.0f, 0.0f, 0);
+#else
         EVT_AT_SetAng(work->referee, work->player, 0.0f, 260.0f, 0.0f, 0);
+#endif
         EVT_AT_SetPos(work->opponent, ARMW_BASE, 0.2f, 0.0f, 0.76f, 0);
         EVT_AT_SetAng(work->opponent, ARMW_BASE, 0.0f, 0.0f, 0.0f, 0);
         EVT_AT_SetMot(work->player, 9160, 70.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
@@ -1154,8 +1508,10 @@ int ArmwWin(ArmwWork *work)
         Queue_EVT_AT_Cling(ARMW_MONEY, 0, 0, 0, 0, 220, 1);
         ArmwVoice(1, "005", 30);
         ArmwVoice(1, "006", 100);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(work->referee, 3, 0, 1.0f, 0);
         EVT_AT_SetFaceLooks(work->referee, 0, 8, 1.0f, 220);
+#endif
         EVT_AT_SetCam(FTBL.shenGetRandomInt32(3) + 3103, ARMW_BASE, ARMW_BASE, 0, 0, 0);
         EVT_AT_StartMoneyCount(armwWager, 90);
         work->step = 0;
@@ -1166,6 +1522,55 @@ int ArmwWin(ArmwWork *work)
     return frames;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int ArmwEndLadder(ArmwWork *work)
+{
+    EVT_AT_SetPos(work->player, ARMW_BASE, -0.02f, 0.0f, -0.76f, 0);
+    EVT_AT_SetAng(work->player, ARMW_BASE, 0.0f, 180.0f, 0.0f, 0);
+    EVT_AT_SetPos(work->opponent, ARMW_BASE, -0.2f, 0.0f, 1.1f, 0);
+    EVT_AT_SetAng(work->opponent, ARMW_BASE, 0.0f, 337.5f, 0.0f, 0);
+    EVT_AT_SetPos(work->referee, ARMW_BASE, 0.5f, 0.0f, 0.4f, 0);
+    EVT_AT_SetAng(work->referee, ARMW_BASE, 0.0f, 22.5f, 0.0f, 0);
+    EVT_AT_SetMot(work->player, 0xf003, 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+    EVT_AT_SetMot(work->referee, armwRefereeMotions[0][armwRefereeVariant], 0.0f, 1.0f, ARMW_MOTION_FLAGS, 0);
+    switch (work->opponent) {
+    case ARMW_HONG:
+    case ARMW_MSH:
+    case ARMW_SSY:
+        EVT_AT_SetMot(work->opponent, 9299, 30.0f, 0.6f, ARMW_MOTION_FLAGS, 60);
+        break;
+    case ARMW_SF8:
+    case ARMW_SF2:
+    case ARMW_DML:
+        EVT_AT_SetAngY(work->opponent, work->opponent, -90.0f, 0);
+        EVT_AT_SetMot(work->opponent, 9232, 20.0f, 0.6f, ARMW_MOTION_FLAGS, 60);
+        break;
+    case ARMW_SFC:
+    case ARMW_MHK:
+        EVT_AT_SetMot(work->opponent, 9297, 80.0f, 0.6f, ARMW_MOTION_FLAGS, 60);
+        break;
+    case ARMW_DGY:
+        EVT_AT_SetMot(work->opponent, 9295, 30.0f, 0.6f, ARMW_MOTION_FLAGS, 60);
+        break;
+    case ARMW_KZN:
+    case ARMW_FRS:
+        EVT_AT_SetMot(work->opponent, 9360, 70.0f, 0.6f, ARMW_MOTION_FLAGS, 60);
+        break;
+    }
+    ArmwVoice(1, "007", 0);
+    ArmwVoice(0, "024", 70);
+    ArmwVoice(1, "008", 90);
+    ArmwVoice(1, "022", 190);
+    ArmwVoice(0, "025", 280);
+    EVT_AT_SetPoint(work->referee, work->opponent, 5, 3, 0, 80, 100, 0);
+    EVT_AT_SetCam(3150, ARMW_BASE, ARMW_BASE, 0, 0, 0);
+    EVT_AT_SetCam(3151, ARMW_BASE, ARMW_BASE, 0, 0, 70);
+    EVT_AT_SetCam(3152, ARMW_BASE, ARMW_BASE, 0, 0, 90);
+    EVT_AT_SetCam(3151, ARMW_BASE, ARMW_BASE, 0, 0, 280);
+    work->phase = 20;
+    return 320;
+}
+#else
 int ArmwEndLadder(ArmwWork *work)
 {
     switch (work->step) {
@@ -1228,7 +1633,46 @@ int ArmwEndLadder(ArmwWork *work)
     ArmwWaitVoices(work->self, 8, 0, 0);
     return 0;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int ArmwLose(ArmwWork *work)
+{
+    int frames = 0;
+    if (FTBL.shenGetRandomInt32(2))
+        ArmwVoice(3, "024", 0);
+    else
+        ArmwVoice(3, "025", 0);
+    switch (work->opponent) {
+    case ARMW_HONG:
+    case ARMW_MSH:
+    case ARMW_SSY:
+        frames = ArmwHongCollects(work->player, work->opponent, work->referee, 0);
+        break;
+    case ARMW_SF8:
+    case ARMW_SF2:
+    case ARMW_DML:
+        frames = ArmwSf8Collects(work->player, work->opponent, work->referee, 0);
+        break;
+    case ARMW_SFC:
+    case ARMW_MHK:
+        frames = ArmwSfcCollects(work->player, work->opponent, work->referee, 0);
+        break;
+    case ARMW_DGY:
+        frames = ArmwDgyCollects(work->player, work->opponent, work->referee, 0);
+        break;
+    case ARMW_KZN:
+    case ARMW_FRS:
+        frames = ArmwKznCollects(work->player, work->opponent, work->referee, 0);
+        break;
+    }
+    Queue_EVT_AT_Cling(ARMW_MONEY, 0, 0, 0, 0, frames + 90, 1);
+    frames += ArmwRefereeCollects(work->player, work->opponent, work->referee, frames + 30);
+    EVT_AT_SetSound(346, 5);
+    work->phase = 20;
+    return frames;
+}
+#else
 int ArmwLose(ArmwWork *work)
 {
     int frames = 0;
@@ -1287,6 +1731,7 @@ int ArmwLose(ArmwWork *work)
     }
     return frames;
 }
+#endif
 
 int ArmwTutorial(ArmwWork *work)
 {
@@ -1297,21 +1742,29 @@ int ArmwTutorial(ArmwWork *work)
         FTBL.EV_LoadAudio("0008A000", 0);
         FTBL.EV_spmBeginSampleExecute(0);
         FTBL.SetPlayerGameFlags(4, 1);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
         QueueSkAuthorStart(work->self, ARMW_YASA, 0, 0, 0);
         FTBL.EV_stepSetFlags(2, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(ARMW_SHIYO));
         FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARMW_SHIYO), 1, 0, 0);
         FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(ARMW_SHIYO), 1, 1, 0);
         FTBL.SetScenarioCharacterAnimation(FTBL.ctrlGetCharaByName(ARMW_HONG), 0, 1025, 0, 1.0f, 1, 0, 4, 0);
         FTBL.SetScenarioCharacterAnimation(FTBL.ctrlGetCharaByName(ARMW_SHIYO), 0, 1033, 0, 1.0f, 1, 0, 4, 0);
+#endif
         work->step++;
         break;
     default:
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(ARMW_SHIYO));
+#endif
         EVT_UTL_FreeNPCChara(armwTutorialCharacters);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         if (armwHandMotion != -1)
             FTBL.ReleaseHandPoseBank((void *)armwHandMotion);
+#endif
         if (FTBL.EV_ControlPackageResources(0, 5, "ARMWAUTH", 0, 0))
             FTBL.EV_ControlPackageResources(0, 6, "ARMWAUTH", 0, 0);
         FTBL.EV_NPC_NewLoadSw_0(0);
@@ -1332,6 +1785,39 @@ int ArmwTutorial(ArmwWork *work)
     return frames;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int ArmwTutorialResult(ArmwWork *work)
+{
+    int frames = 0;
+    const char *path;
+    switch (work->step) {
+    case 0:
+        FTBL.EV_LoadAudio("0008A000", 0);
+        FTBL.EV_NPC_NewLoadSw_0(0);
+        FTBL.EV_ResetFreeTalkFlags();
+        ArmwResetAuthFlags();
+        ArmwFreeRefereePackages();
+        ArmwFreeOpponentPackages();
+        path = FTBL.Filepath_Gen(0);
+        FTBL.EV_ControlPackageResources(0, 0, path, (int)"ARMWAUTH", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        EVT_AT_CharaDisp(work->opponent, 0, 1);
+        FTBL.SetPlayerGameFlags(4, 1);
+        QueueSkAuthorStart(work->self, ARMW_WON, 0, 0, 0);
+        EVT_AT_StartMoneyCount(armwWager, 30);
+        work->step++;
+        break;
+    default:
+        EVT_AT_CharaDisp(work->opponent, 90, 0);
+        work->opponentIndex = 1;
+        work->phase = 20;
+        work->step = 0;
+        break;
+    }
+    return frames;
+}
+#else
 int ArmwTutorialResult(ArmwWork *work)
 {
     int frames = 0;
@@ -1382,6 +1868,8 @@ int ArmwTutorialResult(ArmwWork *work)
     return frames;
 }
 
+#endif
+
 void ArmwResetMatch(ArmwWork *work)
 {
     FTBL.EV_LoadAudio("0008A000", 1);
@@ -1406,16 +1894,22 @@ void ArmwResetMatch(ArmwWork *work)
     work->staminaVoice = 0;
     work->fatigueRate = 50.0f;
     work->fatigueFrames = 0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.CheckHelpIcon(0, 0, 0);
+#endif
     FTBL.EV_SetPlayerFlag(12, 1292, 1);
     FTBL.EV_SetPlayerFlag(12, 1293, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetFaceLooks(work->player, 1, 0, 1.0f, 0);
     EVT_AT_SetFaceLooks(work->opponent, 1, 0, 1.0f, 0);
+#endif
     FTBL.EVS_LoopCamera(FTBL.shenGetRandomInt32(3) + 5000, ARMW_BASE, ARMW_BASE);
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->player), 0, 1, 0);
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->opponent), 0, 1, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->referee), 0, 0, 0);
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->referee), 0, 1, 0);
+#endif
 }
 
 static __inline__ int ArmwMaxInt(int a, int b)
@@ -1492,6 +1986,13 @@ int ArmwPlayMatch(ArmwWork *work)
         opponent = work->opponentRate + 1;
     opponent = ArmwMinInt(ArmwMaxInt(opponent, work->minimumStrength), work->maximumStrength);
     work->opponentRate = opponent;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (work->frames > 5400 || (work->strategyFlags & 1)) {
+        opponent = player + FTBL.shenGetRandomInt32(2);
+        if (work->frames > 5400)
+            work->stalemate = 60;
+    }
+#endif
     if (work->frames % 60 == 0)
         FTBL.Loop3DSoundEffect(188);
     else if (work->frames % 120 == 0)
@@ -1504,16 +2005,22 @@ int ArmwPlayMatch(ArmwWork *work)
         work->acceleration -= 0.002f;
         if (!work->fatigueVoice) {
             work->fatigueVoice = 1;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            ArmwVoice(3, "0008D011", 0);
+#else
             ArmwVoice(3, "011", 0);
+#endif
         }
         if (work->acceleration < -0.03f)
             work->acceleration = -0.03f;
         movement = work->acceleration * opponent;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         ARMW_SNAP(movement);
         if (movement > 0.14f)
             movement = 0.14f;
         if (movement < -0.14f)
             movement = -0.14f;
+#endif
     } else {
         if (player < opponent) {
             work->acceleration = -0.001f;
@@ -1522,6 +2029,7 @@ int ArmwPlayMatch(ArmwWork *work)
             work->acceleration = 0.001f;
             movement = work->acceleration * (player - opponent);
         }
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         ARMW_SNAP(movement);
         if (movement > 0.06f)
             movement = 0.06f;
@@ -1533,7 +2041,15 @@ int ArmwPlayMatch(ArmwWork *work)
         }
         if (work->frames > 5400)
             movement = -0.06f;
+#endif
     }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    ARMW_SNAP(movement);
+    if (movement > 0.2f)
+        movement = 0.2f;
+    if (movement < -0.2f)
+        movement = -0.2f;
+#endif
     if (!work->settling) {
         work->target += movement;
         if (work->target > 1.0f)
@@ -1574,6 +2090,33 @@ int ArmwPlayMatch(ArmwWork *work)
     ArmwUpdatePose(work, 0);
     ArmwUpdateFaces(work);
     shake = work->target - work->position;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (__builtin_fabs(shake) >= ARMW_EPSILON && !(fatigue & 1)) {
+        if (shake > 0.0f) {
+            if (shake > 0.01f)
+                work->position += 0.01f;
+            else
+                work->position = work->target;
+        } else {
+            if (shake < -0.01f)
+                work->position -= 0.01f;
+            else
+                work->position = work->target;
+        }
+    } else {
+        if (shake > 0.0f) {
+            if (shake > 0.08f)
+                work->position += 0.08f;
+            else
+                work->position = work->target;
+        } else {
+            if (shake < -0.08f)
+                work->position -= 0.08f;
+            else
+                work->position = work->target;
+        }
+    }
+#else
     if (__builtin_fabs(shake) >= ARMW_EPSILON) {
         step = !(fatigue & 2) ? 0.008f : 0.12f;
         if (shake > 0.0f) {
@@ -1588,6 +2131,7 @@ int ArmwPlayMatch(ArmwWork *work)
                 work->position = work->target;
         }
     }
+#endif
     if (!work->settling) {
         if (work->position >= 0.85f) {
             work->step = 0;
@@ -1625,14 +2169,26 @@ unsigned int ArmwButtons(ArmwWork *work)
         if (work->position > 0.75f && work->stamina > 0) {
             if (!work->staminaVoice && !FTBL.cvsHasValidConverseData(0))
                 work->staminaVoice = 1;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            work->stamina -= 2;
+#else
             work->stamina -= 3;
+#endif
             adjustment = 6;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        } else if (work->position > 0.6f && work->stamina > 0) {
+#else
         } else if (work->position > 0.65f && work->stamina > 0) {
+#endif
             work->stamina--;
             adjustment = 3;
         } else {
             work->staminaVoice = 0;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            adjustment = -2;
+#else
             adjustment = -3;
+#endif
         }
         break;
     case 2:
@@ -1649,31 +2205,51 @@ unsigned int ArmwButtons(ArmwWork *work)
         break;
     case 4:
         if (work->stamina > 0) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             if (work->position > 0.6f)
                 work->stamina--;
+#endif
             if (work->position > 0.5f) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                work->stamina--;
+#else
                 work->stamina -= 2;
+#endif
                 work->strategyFlags |= 1;
             } else
                 adjustment = 2;
         } else
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            adjustment = -2;
+#else
             adjustment = -4;
+#endif
         break;
     case 5:
     case 6:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (work->position > 0.7f)
+#else
         if (work->position > 0.65f)
+#endif
             work->stamina--;
         if (work->position > 0.75f) {
             if (work->stamina-- > 0) {
                 work->strategyFlags |= 1;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
                 work->stamina -= 2;
+#endif
             }
         }
         if (work->initialStamina / 2 < work->stamina)
             adjustment = 2;
         else
             adjustment = -2;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (work->strategy == 6 && work->position < 0.5f)
+#else
         if (work->strategy == 6 && work->position < 0.4f)
+#endif
             work->stamina = work->stamina + 1 > work->initialStamina ? work->initialStamina : work->stamina + 1;
         break;
     default:
@@ -1681,7 +2257,11 @@ unsigned int ArmwButtons(ArmwWork *work)
         break;
     }
     work->stamina = ARMW_MAX(work->stamina, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    strength = ARMW_MIN(ARMW_MAX(work->strength + adjustment + FTBL.shenGetRandomInt32(3), 0), 31);
+#else
     strength = ARMW_MIN(ARMW_MAX(work->strength + adjustment + FTBL.shenGetRandomInt32(2), 0), 31);
+#endif
     if (strength > FTBL.shenGetRandomInt32(32))
         buttons |= 2;
     return buttons;
@@ -1689,8 +2269,12 @@ unsigned int ArmwButtons(ArmwWork *work)
 
 void ArmwUpdatePose(ArmwWork *work, int mode)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    unsigned int opponentMotions[3] = {9359, 9292, 9231};
+#else
     unsigned int playerMotions[4] = {9169, 9164, 9164, 9168};
     unsigned int opponentMotions[4] = {9359, 9292, 9292, 9231};
+#endif
     unsigned int flags = 0;
     float sum = work->position + work->shake;
     float frame;
@@ -1724,16 +2308,26 @@ void ArmwUpdatePose(ArmwWork *work, int mode)
         EVT_AT_SetAng(work->opponent, work->player, 0.0f, 180.0f, 0.0f, 0);
         break;
     case 1:
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     case 2:
+#endif
         EVT_AT_SetPos(work->opponent, work->player, 0.0f, 0.0f, -1.391f, 0);
         EVT_AT_SetAng(work->opponent, work->player, 0.0f, 0.0f, 0.0f, 0);
         break;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    case 2:
+#else
     case 3:
+#endif
         EVT_AT_SetPos(work->opponent, work->player, 0.0f, 0.0f, -1.533f, 0);
         EVT_AT_SetAng(work->opponent, work->player, 0.0f, 180.0f, 0.0f, 0);
         break;
     }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EVT_AT_SetMot(work->player, 9164, frame, 0.0f, flags | 0x04000000U, 0);
+#else
     EVT_AT_SetMot(work->player, playerMotions[armwOpponentVariant], frame, 0.0f, flags | 0x04000000U, 0);
+#endif
     EVT_AT_SetMot(work->opponent, opponentMotions[armwOpponentVariant], opponentFrame, 0.0f, flags | 0x04000000U, 0);
 }
 
@@ -1786,7 +2380,41 @@ int ArmwDirectionQte(ArmwWork *work)
         if (!FTBL.GetShouldRenderIcons(3)) {
             scale = 0.7f / 11.0f;
             status = FTBL.GetCurrentQteStatus();
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            if (armwQteSpeaker) {
+                if (work->position < 0.1f)
+                    ArmwVoice(0, "033", 0);
+                else if (work->position < 0.22f)
+                    ArmwVoice(0, "018", 0);
+                else if (work->position < 0.36f)
+                    ArmwVoice(0, "010", 0);
+                else if (work->position < 0.48f)
+                    ArmwVoice(0, "021", 0);
+                else if (work->position < 0.6f)
+                    ArmwVoice(0, "008", 0);
+                else if (work->position < 0.72f)
+                    ArmwVoice(0, "009", 0);
+                else
+                    ArmwVoice(0, "007", 0);
+            } else {
+                if (work->position < 0.1f)
+                    ArmwVoice(3, "020", 0);
+                else if (work->position < 0.22f)
+                    ArmwVoice(3, "023", 0);
+                else if (work->position < 0.36f)
+                    ArmwVoice(3, "020", 0);
+                else if (work->position < 0.48f)
+                    ArmwVoice(3, "019", 0);
+                else if (work->position < 0.6f)
+                    ArmwVoice(3, "022", 0);
+                else if (work->position < 0.72f)
+                    ArmwVoice(3, "021", 0);
+                else
+                    ArmwVoice(3, "017", 0);
+            }
+#endif
             if ((status & 4095) == armwQteButton) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
                 if (armwQteSpeaker) {
                     if (work->position < 0.1f)
                         ArmwVoice(0, "016", 0);
@@ -1818,13 +2446,22 @@ int ArmwDirectionQte(ArmwWork *work)
                     else
                         ArmwVoice(3, "009", 0);
                 }
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                work->target = work->target + 1.05f * scale - armwQtePenalty;
+#else
                 work->target = work->target + 1.3f * scale - armwQtePenalty;
+#endif
             } else {
                 if (armwQteSpeaker) {
                     if (work->position < 0.1f)
                         ArmwVoice(0, "013", 0);
                     else if (work->position < 0.22f)
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                        ArmwVoice(0, "016", 0);
+#else
                         ArmwVoice(0, "013", 0);
+#endif
                     else if (work->position < 0.36f)
                         ArmwVoice(0, "015", 0);
                     else if (work->position < 0.48f)
@@ -1832,7 +2469,11 @@ int ArmwDirectionQte(ArmwWork *work)
                     else if (work->position < 0.6f)
                         ArmwVoice(0, "012", 0);
                     else if (work->position < 0.72f)
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                        ArmwVoice(0, "017", 0);
+#else
                         ArmwVoice(0, "049", 0);
+#endif
                     else
                         ArmwVoice(0, "015", 0);
                 } else {
@@ -1853,7 +2494,11 @@ int ArmwDirectionQte(ArmwWork *work)
                 }
                 if ((status & 4095) != 0xa000)
                     armwQtePenalty += 0.015f;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                work->target = work->target - 0.9f * scale - armwQtePenalty / 10.0f;
+#else
                 work->target = work->target - 1.1f * scale - armwQtePenalty / 10.0f;
+#endif
             }
             armwQteSpeaker = (armwQteSpeaker + 1) % 2;
             if (__builtin_fabs(work->target) < ARMW_EPSILON)
@@ -1885,7 +2530,11 @@ int ArmwFinishQte(ArmwWork *work)
             for (i = 0; i < length - 1; i++)
                 sequence[i] = buttons[FTBL.shenGetRandomInt32(4)];
             sequence[i] = 256;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.qteBattleUtil(8, 30, 8 - count, (8 - count) * length + 5, 0);
+#else
             FTBL.qteBattleUtil(8, 30, 7 - count, (8 - count) * length + 5, 0);
+#endif
             FTBL.qteBattleUtil(9, sequence[0], sequence[1], sequence[2], sequence[3]);
             FTBL.qteBattleUtil(10, 0, 0, 0, 0);
             FTBL.qteBattleUtil(1, 0, 0, 0, 0);
@@ -1919,8 +2568,13 @@ int ArmwFinishQte(ArmwWork *work)
 
 void ArmwMatchHands(ArmwWork *work)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    int player[3] = {1029, 1028, 1027};
+    int opponent[3] = {1034, 1026, 1024};
+#else
     int player[4] = {1029, 1028, 1028, 1027};
     int opponent[4] = {1034, 1026, 1026, 1024};
+#endif
     FTBL.SetScenarioCharacterAnimation(FTBL.ctrlGetCharaByName(work->player), 0, player[armwOpponentVariant], 0, 1.0f, 1, 0, 4, 0);
     FTBL.SetScenarioCharacterAnimation(FTBL.ctrlGetCharaByName(work->opponent), 0, opponent[armwOpponentVariant], 0, 1.0f, 1, 0, 4, 0);
     FTBL.SetScenarioCharacterAnimation(FTBL.ctrlGetCharaByName(work->player), 1, player[armwOpponentVariant], 0, 1.0f, 1, 0, 4, 0);
@@ -1931,10 +2585,16 @@ void ArmwMatchHands(ArmwWork *work)
 
 void ArmwRestoreHands(ArmwWork *work)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EVT_AT_SetFaceLooks(work->player, 0, 10, 1.0f, 0);
+    EVT_AT_SetFaceLooks(work->opponent, 0, 10, 1.0f, 0);
+#endif
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->player), 1, 1, 0);
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->opponent), 1, 1, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->referee), 1, 0, 0);
     FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(work->referee), 1, 1, 0);
+#endif
     FTBL.CheckHelpIcon(0, 0, 0);
     FTBL.FinishLoading();
     work->step = 0;
@@ -1945,9 +2605,16 @@ int ArmwWinAnimation(ArmwWork *work)
     float position;
     if (work->position >= 3.0f) {
         FTBL.camCtrlSetRotationXYZ(0.0f, 0.0f, 0.0f);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        if (work->flags & 8)
+            work->phase = 18;
+        else
+            work->phase = 14;
+#else
         EVT_AT_SetFaceLooks(work->player, 0, 10, 1.0f, 0);
         EVT_AT_SetFaceLooks(work->opponent, 0, 10, 1.0f, 0);
         work->phase = 14;
+#endif
     } else if (work->position >= 2.0f) {
         position = work->position += 0.006f;
         if (position >= 3.0f)
@@ -1989,10 +2656,14 @@ int ArmwLoseAnimation(ArmwWork *work)
 {
     float position;
     if (work->position < -2.0f) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         EVT_AT_SetFaceLooks(work->player, 0, 10, 1.0f, 30);
         EVT_AT_SetFaceLooks(work->opponent, 0, 10, 1.0f, 30);
+#endif
         work->phase = 17;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.HLib_SetupTaskDelay(30);
+#endif
         return 0;
     }
     if (work->position < -1.0f) {
@@ -2001,7 +2672,9 @@ int ArmwLoseAnimation(ArmwWork *work)
             position = -2.75f;
         else if (position < -1.86f && position >= -1.8875f) {
             FTBL.Loop3DSoundEffect(344);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
             FTBL.camCtrlSetRotationXYZ(0.05f, 0.18f, 0.25f);
+#endif
         }
         work->position += 2.0f;
         if (__builtin_fabs(work->position) < ARMW_EPSILON)

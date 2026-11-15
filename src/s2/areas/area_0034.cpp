@@ -1,3 +1,209 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0034.hpp"
+
+#define E0034_LOAD_PACKAGE(package) do { \
+    const char *directory = FTBL.Filepath_Gen(0); \
+    FTBL.EV_ControlPackageResources(0, 0, (void *)directory, (int)(package), 0); \
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0); \
+    FTBL.EV_ControlPackageResources(2, 2, (void *)(package), 0, 0); \
+} while (0)
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void E0034Main(const short *selection)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0034MainCallback, 4, 11, sizeof(E0034TaskParameter), TASK_EVNT);
+    E0034TaskParameter *work = (E0034TaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    work->self = task;
+    work->state = 1;
+    Queue_EVT_UTL_LoadNPCChara_3(e0034Characters, work->self);
+    ConfigureE0034Environment();
+    if (g_currentMap == AREA_0034_WTA0)
+        work->selection = *selection;
+    else {
+        work->selection = g_entryPoint;
+        LoadE0034ScenePackages(work->selection);
+    }
+    if (work->selection > 2)
+        CleanupE0034(work);
+}
+#else
+shen_name e0034Characters[] = {AREA_0034_KUN, INVALID_CHARACTER};
+shen_name e0034Authors[] = {SHEN_NAME4('i', '0', '0', '0'), SHEN_NAME4('i', '0', '2', '0')};
+
+void E0034MainCallback(void *taskData)
+{
+    E0034TaskParameter *work = (E0034TaskParameter *)taskData;
+    switch (work->state) {
+    case 1:
+        QueueE0034Loop(work);
+        break;
+    case 3:
+        CleanupE0034(work);
+        break;
+    }
+}
+
+void QueueE0034Loop(E0034TaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0034LoopCallback, 4, 11, sizeof(E0034LoopParameter), TASK_EVNT);
+    E0034LoopParameter *work = (E0034LoopParameter *)FTBL.HLib_GetTaskParameter(task);
+    work->parent = parent;
+    work->currentFrame = 0;
+    if (parent->selection == 2)
+        FTBL.EV_authSceneCtrl(2);
+    else
+        FTBL.EV_authSceneCtrl(e0034Authors[parent->selection]);
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    parent->state = 2;
+}
+
+void LoadE0034ScenePackages(int selection)
+{
+    if (selection == 2)
+        E0034_LOAD_PACKAGE("WB00");
+    else
+        E0034_LOAD_PACKAGE("WTA0");
+    FTBL.SetObjectFlagByIndex(2, 0);
+}
+
+void E0034LoopCallback(void *taskData)
+{
+    E0034LoopParameter *work = (E0034LoopParameter *)taskData;
+    work->currentFrame = FTBL.EV_authSceneCtrl(-6);
+    if (work->currentFrame == 1)
+        SetupE0034Characters();
+    if (FTBL.EV_authSceneCtrl(-1) == 0) {
+        RestoreE0034Characters();
+        work->parent->state = 3;
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_DestroyCurrentEventTask();
+    }
+}
+
+void ConfigureE0034Environment(void)
+{
+    const char *directory;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_SetNewSceneIndex();
+    directory = FTBL.Filepath_Gen(0);
+    FTBL.EV_ControlPackageResources(0, 0, (void *)directory, (int)"0034A", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "0034A", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0034");
+    FTBL.EV_LoadCutsceneFromCurrentScene("0034A000");
+    if (g_currentMap != AREA_0034_WTA0) {
+        if (g_entryPoint == 2) {
+            FTBL.ReinitializeLights(1);
+            FTBL.SetLightFlagForIndex(0, 2);
+            FTBL.SetLightEntryIndex(0, 1);
+        } else {
+            FTBL.EV_lightLoad(SHEN_NAME4('0', '0', '0', '0'));
+            FTBL.PushGlobalLightingProgram();
+        }
+    }
+}
+
+void CleanupE0034(E0034TaskParameter *parent)
+{
+    EventDateTime time;
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    time.hour = 8;
+    time.minute = 0;
+    time.day++;
+    FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
+    EVT_UTL_FreeNPCChara(e0034Characters);
+    FTBL.EV_ControlPackageResources(0, 6, "0034A", 0, 0);
+    FTBL.EV_FreeAuthorPak(0, "0034");
+    FTBL.HLib_DestroyTask(parent->self);
+    if (g_currentMap == AREA_0034_WTA0) {
+        FTBL.EV_scenQueueLoad(g_actNumber, AREA_0034_WB00, 1);
+    } else {
+        if (FTBL.EV_ControlPackageResources(0, 5, "WTA0", 0, 0))
+            FTBL.EV_ControlPackageResources(0, 6, "WTA0", 0, 0);
+        else if (FTBL.EV_ControlPackageResources(0, 5, "WB00", 0, 0))
+            FTBL.EV_ControlPackageResources(0, 6, "WB00", 0, 0);
+        if (g_entryPoint == 2)
+            FTBL.EV_scenQueueLoad(g_actNumber, AREA_0034_WB00, 1);
+        else
+            FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+    }
+}
+
+void SetupE0034Characters(void)
+{
+    PrepareE0034Character(AREA_0034_RYO);
+    PrepareE0034Character(AREA_0034_KUN);
+    HideE0034Prop(AREA_0034_PROP('4', '7'));
+    HideE0034Prop(AREA_0034_PROP('4', '4'));
+    HideE0034Prop(AREA_0034_PROP('4', '6'));
+    HideE0034Prop(AREA_0034_PROP('5', '0'));
+    HideE0034Prop(AREA_0034_PROP('5', '1'));
+    HideE0034Prop(AREA_0034_PROP('5', '2'));
+    HideE0034Prop(AREA_0034_PROP('5', '3'));
+    if (g_currentMap != AREA_0034_WTA0)
+        HideE0034Prop(AREA_0034_PROP('4', '8'));
+    FTBL.TelCode_Enqueue();
+}
+
+void RestoreE0034Characters(void)
+{
+    RestoreE0034Character(AREA_0034_RYO);
+    RestoreE0034Character(AREA_0034_KUN);
+    ShowE0034Prop(AREA_0034_PROP('4', '7'));
+    ShowE0034Prop(AREA_0034_PROP('4', '4'));
+    ShowE0034Prop(AREA_0034_PROP('4', '6'));
+    ShowE0034Prop(AREA_0034_PROP('5', '0'));
+    ShowE0034Prop(AREA_0034_PROP('5', '1'));
+    ShowE0034Prop(AREA_0034_PROP('5', '2'));
+    ShowE0034Prop(AREA_0034_PROP('5', '3'));
+    if (g_currentMap != AREA_0034_WTA0)
+        ShowE0034Prop(AREA_0034_PROP('4', '8'));
+    FTBL.UpdateTelephoneState();
+}
+
+void PrepareE0034Character(shen_name name)
+{
+    FTBL.EV_EnableCharacterDisplay(name);
+    FTBL.EV_SetCharaControllerFlags(name, 1, 0);
+    FTBL.EV_SetCharaControllerFlags(name, 3, 0);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 0);
+    FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(name), 0, 8, 16);
+    FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(name), 1, 8, 16);
+}
+
+void RestoreE0034Character(shen_name name)
+{
+    FTBL.EV_EnableCharacterDisplay(name);
+    do {
+        FTBL.EV_SetCharaControllerFlags(name, 1, 1);
+        FTBL.EV_SetCharaControllerFlags(name, 2, 1);
+        FTBL.EV_SetCharaControllerFlags(name, 3, 1);
+    } while (0);
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 1);
+}
+
+void HideE0034Prop(shen_name name)
+{
+    FTBL.EV_EnableCharacterDisplay(name);
+    FTBL.EV_SetCharaControllerFlags(name, 1, 0);
+    FTBL.EV_SetCharaControllerFlags(name, 3, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 0);
+}
+
+void ShowE0034Prop(shen_name name)
+{
+    FTBL.EV_EnableCharacterDisplay(name);
+    do {
+        FTBL.EV_SetCharaControllerFlags(name, 1, 1);
+        FTBL.EV_SetCharaControllerFlags(name, 2, 1);
+        FTBL.EV_SetCharaControllerFlags(name, 3, 1);
+    } while (0);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 1);
+}
+#endif
+#else
 #include "s2/areas/area_0034.hpp"
 #include "s2/snapshot.hpp"
 #include "s2/sound_program.hpp"
@@ -196,3 +402,4 @@ void E0034LoopCallback(void *taskData) {
 const ScriptAreaDefinition area0034ScriptDefinition{.areaId = AREA_0034_AREA, .field04 = 0, .init = E0034Init, .main = E0034Main};
 
 } // namespace shenmue::s2::areas
+#endif

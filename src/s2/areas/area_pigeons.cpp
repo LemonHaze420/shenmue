@@ -6,7 +6,9 @@ double fabs(double value);
 
 static Vector3 areaPigeonPlayerPosition;
 static Vector3i areaPigeonPlayerRotation;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 static int areaPigeonsActive;
+#endif
 
 void QueueAreaPigeons(const Vector3 *origin, float radius, AreaPigeon *pigeons, shen_name firstCharacter, int count)
 {
@@ -25,8 +27,10 @@ void QueueAreaPigeons(const Vector3 *origin, float radius, AreaPigeon *pigeons, 
         name = firstCharacter + (i << 24);
         FTBL.EV_AT_SetPos(name, 0x38000000, &position);
         FTBL.EV_AT_SetAngY_0(name, 0x38000000, &rotation, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.EV_EnableCharacterDisplay(name);
         FTBL.EV_EnsureCharacterDraw(name);
+#endif
         pigeons[i].name = name;
         pigeons[i].origin = *origin;
         pigeons[i].roamRadius = radius;
@@ -44,7 +48,9 @@ void QueueAreaPigeons(const Vector3 *origin, float radius, AreaPigeon *pigeons, 
     }
     task = FTBL.HLib_EnqueueTaskWithParameter(AreaPigeonsCallback, 3, 11, 4, PIGEON_TASK);
     *(AreaPigeon **)FTBL.HLib_GetTaskParameter(task) = pigeons;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     areaPigeonsActive = 1;
+#endif
 }
 
 void AreaPigeonsCallback(void *taskData)
@@ -52,10 +58,16 @@ void AreaPigeonsCallback(void *taskData)
     AreaPigeon *pigeon;
     int count;
     int i;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     count = (*(AreaPigeon **)taskData)->birdCount;
     pigeon = *(AreaPigeon **)taskData;
+#endif
     FTBL.GetCharaPosition(PIGEON_PLAYER, 0xffffffffU, &areaPigeonPlayerPosition, 0x40000000);
     FTBL.GetScenarioCharacterEulerAngles(PIGEON_PLAYER, &areaPigeonPlayerRotation, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    count = (*(AreaPigeon **)taskData)->birdCount;
+    pigeon = *(AreaPigeon **)taskData;
+#else
     if (g_currentMap == PIGEON_ABERDEEN_AREA) {
         if ((areaPigeonPlayerPosition.x > 218.0f && areaPigeonPlayerPosition.z > 420.0f && areaPigeonPlayerPosition.x < 270.0f
                 && areaPigeonPlayerPosition.z < 450.0f)
@@ -82,7 +94,12 @@ void AreaPigeonsCallback(void *taskData)
             return;
         }
     }
+#endif
     for (i = 0; i < count; i++) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.GetCharaPosition(pigeon->name, -1, &pigeon->position, 0);
+        FTBL.GetScenarioCharacterEulerAngles(pigeon->name, &pigeon->rotation, 0);
+#endif
         pigeon->distanceToPlayer = FTBL.CalculatePlanarDistanceBetweenPoints(&pigeon->position, &areaPigeonPlayerPosition);
         pigeon->distanceToOrigin = FTBL.CalculatePlanarDistanceBetweenPoints(&pigeon->position, &pigeon->origin);
         areaPigeonStateCallbacks[pigeon->state](pigeon);
@@ -95,19 +112,56 @@ void AreaPigeonsCallback(void *taskData)
 void EvaluatePigeonRoam(AreaPigeon *pigeon)
 {
     float degrees;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    if (pigeon->distanceToOrigin > pigeon->roamRadius + 1.0f) {
+#else
     if (pigeon->distanceToOrigin > pigeon->roamRadius + 0.5f) {
+#endif
         pigeon->rotation.y = (unsigned short)FTBL.InverseFixedAtan2(pigeon->origin.x - pigeon->position.x, pigeon->origin.z - pigeon->position.z);
     } else {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        int yaw, target;
+#endif
         if (pigeon->distanceToOrigin > pigeon->roamRadius)
             degrees = 10.0f;
         else if (fabs(pigeon->distanceToOrigin) < 1.1920929e-07f)
             degrees = 0.0f;
         else
             degrees = pigeon->distanceToOrigin / (pigeon->roamRadius + pigeon->roamRadius);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        yaw = pigeon->rotation.y & 0xffff;
+        target = FTBL.InverseFixedAtan2(pigeon->origin.x - pigeon->position.x, pigeon->origin.z - pigeon->position.z) & 0xffff;
+        if (yaw > 32768)
+            yaw -= 65536;
+        if (target > 32768)
+            target -= 65536;
+        target -= yaw;
+        if (target > 3640)
+            pigeon->rotation.y += (unsigned short)(degrees * 8192.0f / 45.0f);
+        else if (target < -3640)
+            pigeon->rotation.y -= (unsigned short)(degrees * 8192.0f / 45.0f);
+#else
         ComputePigeonRotation(pigeon, &pigeon->origin, &pigeon->position, degrees);
+#endif
     }
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ComputePigeonRotation(AreaPigeon *pigeon)
+{
+    int yaw = pigeon->rotation.y & 0xffff;
+    int target = FTBL.InverseFixedAtan2(pigeon->position.x - areaPigeonPlayerPosition.x, pigeon->position.z - areaPigeonPlayerPosition.z);
+    if (yaw > 32768)
+        yaw -= 65536;
+    if (target > 32768)
+        target -= 65536;
+    target -= yaw;
+    if (target > 3640)
+        pigeon->rotation.y += 1820;
+    else if (target < -3640)
+        pigeon->rotation.y -= 1820;
+}
+#else
 void ComputePigeonRotation(AreaPigeon *pigeon, const Vector3 *origin, const Vector3 *position, float degrees)
 {
     short yaw = pigeon->rotation.y;
@@ -119,6 +173,8 @@ void ComputePigeonRotation(AreaPigeon *pigeon, const Vector3 *origin, const Vect
     else if (difference < -3640)
         pigeon->rotation.y -= (unsigned short)(degrees * 8192.0f / 45.0f);
 }
+
+#endif
 
 void PigeonCooldown(AreaPigeon *pigeon)
 {
@@ -139,12 +195,15 @@ void PigeonWander(AreaPigeon *pigeon)
     EvaluatePigeonRoam(pigeon);
     pigeon->position.x -= FTBL.CalculateFixedSine(pigeon->rotation.y) * 0.01f;
     pigeon->position.z -= FTBL.CalculateFixedCosine(pigeon->rotation.y) * 0.01f;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (pigeon->distanceToOrigin > pigeon->roamRadius) {
         FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 0.5f, 0);
         FTBL.Shenmue_Execute3DSoundCommand(839, &pigeon->position, 4.0f, 40.0f);
         pigeon->state = PigeonState_HoverBob;
         pigeon->bobPhase = 0;
-    } else if (pigeon->distanceToPlayer < 2.5f) {
+    } else
+#endif
+    if (pigeon->distanceToPlayer < 2.5f) {
         FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 1);
         pigeon->state = PigeonState_Approach;
     } else if (--pigeon->randomWaitFrames < 10) {
@@ -156,13 +215,25 @@ void PigeonWander(AreaPigeon *pigeon)
 
 void PigeonApproach(AreaPigeon *pigeon)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    ComputePigeonRotation(pigeon);
+#else
     ComputePigeonRotation(pigeon, &pigeon->position, &areaPigeonPlayerPosition, 10.0f);
+#endif
     pigeon->position.x -= FTBL.CalculateFixedSine(pigeon->rotation.y) * 0.1f;
     pigeon->position.z -= FTBL.CalculateFixedCosine(pigeon->rotation.y) * 0.1f;
     if (pigeon->distanceToPlayer > 3.0f) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 1.0f, 1);
+#else
         FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 1);
+#endif
         pigeon->state = PigeonState_Wander;
-    } else if (pigeon->distanceToPlayer < 1.5f || pigeon->distanceToOrigin > pigeon->roamRadius) {
+    } else if (pigeon->distanceToPlayer < 1.5f
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        || pigeon->distanceToOrigin > pigeon->roamRadius
+#endif
+    ) {
         FTBL.AssignIMGMParams(FTBL.ctrlGetCharaByName(pigeon->name), 1, -1, 0.5f, 0);
         FTBL.Shenmue_Execute3DSoundCommand(839, &pigeon->position, 4.0f, 40.0f);
         pigeon->state = PigeonState_HoverBob;
@@ -173,7 +244,11 @@ void PigeonApproach(AreaPigeon *pigeon)
 void PigeonHoverBob(AreaPigeon *pigeon)
 {
     if (pigeon->distanceToOrigin < pigeon->roamRadius - 1.0f)
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        ComputePigeonRotation(pigeon);
+#else
         ComputePigeonRotation(pigeon, &pigeon->position, &areaPigeonPlayerPosition, 10.0f);
+#endif
     else
         EvaluatePigeonRoam(pigeon);
     pigeon->bobPhase += 512;

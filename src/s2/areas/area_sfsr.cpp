@@ -791,8 +791,17 @@ void RetryBeginCallback(void *data)
         RecordStreetFightVictory(work->stage);
     else
         RecordStreetFightDefeat(work->stage);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    ShowStreetFightRetryMessage();
+    EVT_AT_KsIcon_Enqueue(0xffff, 82, 83, 0xffff, 0x7fff, 0xffff, 2, 0);
+#else
+#if defined(SHENMUE_TARGET_S2_DC_US)
+    FTBL.dbgPrintEventMessage("Retry?\n");
+#else
     FTBL.dbgPrintEventMessage("「リトライしますか？\n");
+#endif
     EVT_AT_KsIcon_Enqueue(0xffff, 38, 39, 0xffff, 0x7fff, 0xffff, 2, 0);
+#endif
     ChangeStreetFightAudienceMode(work->audienceTask, 2, 1);
     FTBL.HLib_SetCurrentTaskTo(RetryChoiceCallback);
 }
@@ -802,7 +811,11 @@ void RetryChoiceCallback(void *data)
     unsigned int choice = PollStreetFightActionChoice();
     if (choice) {
         FTBL.ctrlStopSubtitles();
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+        if (choice == 82)
+#else
         if (choice == 38)
+#endif
             RetryResetCallback(data);
         else
             RetryCancelCallback(data);
@@ -912,7 +925,11 @@ void UpdateBattleQte(void)
     switch (sfsrQtePhase) {
     case 0:
         if ((FTBL.btlGetCharaFlag(1, FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO), 0.0f) <= 14 &&
-                FTBL.btlGetCharaFlag(1, FTBL.ctrlGetCharaByName(SFSR_SF3), 0.0f) <= 49) ||
+                FTBL.btlGetCharaFlag(1, FTBL.ctrlGetCharaByName(SFSR_SF3), 0.0f) <= 49
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+                && FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(STREET_FIGHT_RYO)) == 1
+#endif
+                ) ||
             FTBL.btlGetCharaFlag(1, FTBL.ctrlGetCharaByName(SFSR_SF3), 0.0f) <= 14)
             if (!(FTBL.GetFightStateFlags() & 16) && (FTBL.EV_vfBattleUtil(2, STREET_FIGHT_RYO, 13) & 1)) {
                 FTBL.qteBattleUtil(8, 30, 7, 45, 0);

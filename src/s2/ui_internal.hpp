@@ -152,7 +152,6 @@ inline constexpr std::array<const char *, 4> PRESS_START_LOGO_WIDGETS{"Press_Sta
     "Press_Start::Logo_Shadow_Left::Logo_Shadow_Left_Image", "Press_Start::Logo_Shadow_Right::Logo_Shadow_Right_Image"};
 inline constexpr std::array<const char *, 2> PRESS_START_ICON_WIDGETS{"PressStart::Icon_Console", "PressStart::Icon_PC"};
 
-
 struct PressStartLightBand {
     float begin;
     float end;

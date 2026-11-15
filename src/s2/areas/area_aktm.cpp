@@ -64,10 +64,19 @@ int SetupAktmBattle(AktmBattleWork *work)
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
     FTBL.EV_ControlPackageResources(2, 4, "AKTM", 0, 0);
     FTBL.EV_ControlPackageResources(2, 2, "AKTM", 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EV_LoadCutsceneFromCurrentScene("0053A000");
+    FTBL.EV_LoadAudio("0138A000", 0);
+#endif
     FTBL.EV_FreeAuthorPak(1, "0053");
     FTBL.EV_FreeAuthorPak(1, "0138");
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EV_spmBeginSampleExecute(0);
+#endif
     FTBL.CreateEventCharacter(3, 0, AKTM_BASE);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.CreateEventCharacter(3, 0, AKTM_PROP);
+#endif
     EVT_AT_SetPos(AKTM_BASE, EVENT_CHARACTER_INVALID, 267.4f, 100.0f, 230.9f, 0);
     EVT_AT_SetAngY(AKTM_BASE, EVENT_CHARACTER_INVALID, 0.0f, 0);
     FTBL.GetCurrentDateTime((DateTime *)&aktmSavedTime);
@@ -92,7 +101,9 @@ void End_Callback(void *data)
     AktmBattleWork *work = (AktmBattleWork *)data;
     FTBL.EV_stepSetFlags(136, 0);
     FTBL.SetScenarioCharacterKillMode(AKTM_BASE, 1);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.SetScenarioCharacterKillMode(AKTM_PROP, 1);
+#endif
 #if defined(SHENMUE_EVENT_AKTM_RETRIES)
     if (aktmMotion != (void *)-1)
         FTBL.DeleteMotion(aktmMotion);
@@ -170,12 +181,17 @@ int StartAktmAuthor(AktmBattleWork *work)
 #else
     FTBL.EV_LoadCutsceneFromCurrentScene("0138A000");
     FTBL.EV_LoadAudio("0138A000", 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_spmBeginSampleExecute(0);
+#endif
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     FTBL.EV_authSceneCtrl(-8);
 #endif
     QueueSkAuthorStart(work->self, AKTM_START_AUTHOR, 0, 0, 0);
     EventDebugCheck(AKTM_DEBUG_ID, 4);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, FTBL.EV_authSceneCtrl(-5) - 30);
+#endif
     work->phase = 2;
     return 0;
 }

@@ -18,6 +18,89 @@ static int UranaiSehQueueMessages(HLibTask *parent, const char **messages, int v
     return offset;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define QueueEventVoiceList UranaiSehQueueMessages
+#endif
+
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+static const char *uranaiSehModeOneVoices[] = {
+    "どうじゃ？＆占ってみるか。",
+    "●青当たるも八卦か…",
+    "こりゃ、わしの卦は＆百発百中じゃわい。",
+    0
+};
+static const char *uranaiSehIntroductionVoices[] = {
+    "さて、見料は＆一回、１０ドルじゃ",
+    "●青１０ドルか…",
+    "お金で運命を知ることができる。＆しかも迷いが晴れる。",
+    "安いものよ。＆わしなら占っとるな。",
+    "●青はあ",
+    "さあ、どうじゃ？",
+    0
+};
+static const char *uranaiSehSameVoices[] = {
+    "●青あの…",
+    "ああ、お前さんか。＆だめじゃ、だめじゃ。",
+    "そうそう、陰陽の秘に頼ってはならん。",
+    "新たな悩みが生まれるまで＆自分で考えることじゃ。",
+    "●青わかりました。",
+    0
+};
+static const char *uranaiSehDeclineVoices[] = {
+    "●青いえ、結構です。",
+    "そうか、残念じゃの。＆気が向いたらまた来なされ。",
+    "●青失礼します。",
+    0
+};
+static const char *uranaiSehBeginVoices[] = {
+    "●青お願いします。",
+    "それでは、＆そこに座って。",
+    0
+};
+static const char *uranaiSehReadingVoices[] = {
+    "ふむ…",
+    "●青あの？",
+    0
+};
+static const char *uranaiSehPaymentVoices[] = {
+    "以上じゃ。",
+    "●青それだけですか？",
+    "１０ドルではそんなもんじゃ。",
+    "●青…そうですか。",
+    "易は太極にあり、是れ両義を生ず、",
+    "両義は四象を生じ、四象は八卦を生ず。",
+    "この筮竹には陰陽、全てがある。＆迷ったときにはここに来なされ。",
+    "●青ありがとうございます。",
+    0
+};
+static const char *uranaiSehInsufficientVoices[] = {
+    "●青それじゃあ…あれ？",
+    "どうした？",
+    "●青いえ、ちょっと…",
+    "なんじゃ、１０ドルもないのか？",
+    "●青…すいません。",
+    "まあ、わしは逃げんから、＆金ができたら、また来てくだされ。",
+    "●青はい…わかりました。",
+    0
+};
+static const char *uranaiSehResultVoices[14][16] = {
+    {"「まず心あたりのある＆場所に行ってみよ。」", "「卦はお主の努力不足を告げておる。」", "「●青…わかりました。」", 0},
+    {"「安見楼に行きたいのか。」", "「●青はい。」", "「ワナが張られておるぞ。」", "「それでも行くしかないんです。」", "「そうか……ならば是非もない。」", "「『断じてかかれば鬼神も退く』と＆いうしな。」", "「安見楼は九龍城の＆出入り口、すぐのビルじゃ。」", "「小さな２階建ての＆建物を探すんじゃな。」", 0},
+    {"「あきらめて帰る気はないか？＆ワナが張られておるぞ。」", "「●青それでも行くしかないんです。」", "「そうか……ならば是非もない。」", "「『虎穴に入らずんば虎児を得ず』とも＆いうしな。」", "「この部屋を出て左の道を進むがよい。」", "「虎児はそこにいる。＆まあ、張子の虎児じゃがな。」", 0},
+    {"「どうやらワナを食いちぎって＆きたの。」", "「安見楼は九龍城の＆出入り口すぐのビルじゃ。」", "「小さな２階建ての＆建物を探すんじゃな。」", "「さてと…そこでお主は＆しばし１人になる。」", "「連れに聞きたいことがあるなら＆しっかりたずねておくことじゃな。」", 0},
+    {"「探し人はいない。＆ただし、その場所に奇貨あり。」", "「丹念に調べ、奇貨を手に入れるんじゃぞ。」", "「茶が飲める楼閣の９階。＆そこに奇貨が眠っておる。」", 0},
+    {"「陰陽、併せ持つ者か…＆危険な人物じゃ。」", "「その者と会わねばならんのか？」", "「●青はい。」", "「まず、街の者に話を聞くとよい。」", "「然らばいくつかの道が現れるだろう。」", "「鐘、鳥、刃など」", "「陰陽の者に会うには＆『鳥』の囀りを頼りにするがよい。」", "「黒鳥の影が陰陽の者の＆元へと誘う。」", "「この言葉を心に留めておくがよい。」", 0},
+    {"「陰陽、併せ持つ者か…＆危険な人物じゃ。」", "「その者と会わねばならんのか？」", "「●青はい。」", "「まず、街の者に話を聞くとよい。」", "「然らばいくつかの道が現れるだろう。」", "「鐘、鳥、刃など」", "「陰陽の者に会うには＆『鳥』の囀りを頼りにするがよい。」", "「黒鳥の影が陰陽の者の＆元へと誘う。」", "「この言葉を心に留めておくがよい。」", 0},
+    {"「あきらめる気はないか？＆ワナが張られておるぞ。」", "「●青それでも行くしかないんです。」", "「そうか……ならば是非もない。」", "「求める人物は最上階にいる。」", "「『急いては事を仕損じる』＆慎重にな。」", 0},
+    {"「眼前にある入口。じゃが、そこからは＆入ることは叶わぬ。」", "「●青本当ですか？」", "「それでも探さねばならん。」", "「だめだとわかったとき＆新たな道が開ける。」", "「がんばるんじゃな。」", 0},
+    {"「ただ、ただ、探して試すべし。＆それしか道はない。」", 0},
+    {"「見えているものがすべてではない。」", "「それを痛感するであろう。」", "「どういう意味ですか？」", "「それはわからん。＆そう卦が告げているだけじゃ。」", 0},
+    {"「次の出会いは３つの試練が＆生まれることになる。」", "「試練はかなり物騒なものと＆なりそうじゃな。」", 0},
+    {"「偉丈夫、東の庭園で待つ。＆龍喜楼脇の庭院に行くがよい。」", "「長き階段の果てに国士無双の士が＆待っているであろう。」", 0},
+    {"「わしがお主に与えられる＆助言はこれで最後じゃ。」", "「己の信じる道を進め。＆金はいらない。」", "「人を信じ、友を信じ、進むがよい。」", "「さすれば邂逅を＆果たせるであろう。」", 0}
+};
+static int uranaiSehFlags[14] = {1600, 1626, 1628, 1629, 1630, 1631, 1633, 1634, 1635, 1636, 1637, 1639, 1640, 1641};
+#else
 static const char *uranaiSehModeOneVoices[] = {0};
 static const char *uranaiSehIntroductionVoices[] = {"E001", "A125", "E031", "E032", 0};
 static const char *uranaiSehSameVoices[] = {"E040", "A062", "E041", "E042", "A010", 0};
@@ -48,6 +131,8 @@ static const char *uranaiSehResultVoices[19][16] = {
     {"E103", "E104", "A221", "E105", "E106", "E107", "E108", "E109", "A233", 0},
 };
 static int uranaiSehFlags[19] = {1500, 1524, 1526, 1529, 1531, 1532, 1533, 1534, 1535, 1536, 1537, 1538, 1541, 1542, 1543, 1544, 1545, 1546, 1547};
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static Vector3i uranaiSehHandRotation = {50972, 2730, 61895};
 static Vector3 uranaiSehAttach = {0.108f, 0.0f, 0.012f};
 static Vector3i uranaiSehRotation = {4915, 65171, 60620};
@@ -57,7 +142,9 @@ static Vector3 uranaiSehHand[5] = {
 static Vector3 uranaiSehIdle[5] = {{-0.15f, 0.9f, -0.67f}, {-0.17f, 0.9f, -0.68f}, {-0.14f, 0.9f, -0.67f}, {-0.16f, 0.9f, -0.66f}, {-0.15f, 0.9f, -0.65f}};
 static Vector3 uranaiSehTable[6] = {
     {0.1f, 0.75f, -0.67f}, {0.07f, 0.75f, -0.68f}, {0.05f, 0.75f, -0.67f}, {-0.0f, 0.75f, -0.66f}, {-0.03f, 0.75f, -0.65f}, {-0.09f, 0.75f, -0.65f}};
+#endif
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 int UranaiSehSetup(shen_name reader, int delay)
 {
     int i;
@@ -84,19 +171,54 @@ int UranaiSehSetup(shen_name reader, int delay)
     }
     return 0;
 }
+#endif
 
 int UranaiSehModeOne(shen_name reader, int delay)
 {
     int end = delay + 180;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetMot(URNI_PLAYER, URNI_STAND_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EVT_AT_SetMot(reader, URNI_SEH_AWAKE_MOTION, 100.0f, 1.0f, 0x50000000, 0);
+#else
     EVT_AT_SetMot(reader, URNI_SEH_AWAKE_MOTION, 100.0f, 1.0f, 0x50000000, delay);
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EVT_AT_SetCam(1216, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+#else
     EVT_AT_SetCam(1217, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+#endif
     QueueEventVoiceList(0, uranaiSehModeOneVoices, 10, 0x80000000, delay);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_CharaDisp(URNI_PLAYER, 0, 1);
     EVT_AT_CharaDisp(URNI_PLAYER, end, 0);
+#endif
     return end;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSehIntroduction(shen_name reader, int delay)
+{
+    int end = delay + 360;
+    int i;
+    for (i = 13; i > 0; i--)
+        if (FTBL.EV_GetShenmueFlag(uranaiSehFlags[i]))
+            break;
+    if (i == FTBL.EV_GetPlayerFlag(15, 45))
+        end = 0;
+    else {
+        EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, end - delay, 0);
+        EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, end - delay, 0);
+        EVT_AT_SetPos(URNI_PLAYER, reader, 0.0f, 0.0f, -1.5f, delay);
+        EVT_AT_SetAngY(URNI_PLAYER, reader, 180.0f, delay);
+        EVT_AT_SetMot(reader, URNI_SEH_AWAKE_MOTION, 100.0f, 1.0f, 0x50000000, delay);
+        EVT_AT_SetCam(1202, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+        QueueEventVoiceList(0, uranaiSehIntroductionVoices, 10, 0x80000000, delay);
+    }
+    return end;
+}
+#else
 int UranaiSehIntroduction(shen_name reader, int delay)
 {
     int end = delay + 360;
@@ -117,7 +239,25 @@ int UranaiSehIntroduction(shen_name reader, int delay)
     }
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSehSame(shen_name reader, int delay)
+{
+    int leave = delay + 300;
+    int end;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, leave - delay, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, leave - delay, 0);
+    EVT_AT_SetPosAng(URNI_PLAYER, reader, 0.0f, -1.4f, 180.0f, delay);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, leave - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetMot(reader, 6604, 2.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetCam(1202, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiSehSameVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSehSame(shen_name reader, int delay)
 {
     int i;
@@ -138,7 +278,23 @@ int UranaiSehSame(shen_name reader, int delay)
         EVT_AT_CharaDisp(name, end, 0);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSehDecline(shen_name reader, int delay)
+{
+    int leave = delay + 180;
+    int end;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, leave - delay, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, leave - delay, 0);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, leave - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetCam(1203, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiSehDeclineVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSehDecline(shen_name reader, int delay)
 {
     int leave = delay + 280;
@@ -155,7 +311,25 @@ int UranaiSehDecline(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiSehDeclineVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSehBeginReading(shen_name reader, int delay)
+{
+    int end = delay + 120;
+    int frames;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, end - delay, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, end - delay, 0);
+    EVT_AT_SetPosAng(URNI_PLAYER, reader, 0.0f, -1.4f, 180.0f, delay);
+    frames = EVT_AT_SetMot(URNI_PLAYER, URNI_SIT_MOTION, 2.0f, 1.0f, 0, end);
+    EVT_AT_SetMot(URNI_PLAYER, URNI_SITTING_MOTION, 2.0f, 1.0f, 0, frames);
+    EVT_AT_SetMot(reader, URNI_SEH_START_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetCam(1203, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    EVT_AT_SetSound(993, end);
+    QueueEventVoiceList(0, uranaiSehBeginVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSehBeginReading(shen_name reader, int delay)
 {
     int end;
@@ -168,7 +342,28 @@ int UranaiSehBeginReading(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiSehBeginVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSehReading(shen_name reader, int delay)
+{
+    int end = delay + 417;
+    int i;
+    shen_name name;
+    EVT_AT_SetMot(reader, URNI_SEH_READING_MOTION, 0.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetCam(1204, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiSehReadingVoices, 10, 0x80000000, delay);
+    for (i = 0, name = URNI_STICK_HELD_FIRST; i < 5; i++, name += 0x1000000)
+        EVT_AT_CharaDisp(name, delay + 60, 0);
+    for (i = 0, name = URNI_STICK_IDLE_FIRST; i < 5; i++, name += 0x1000000)
+        EVT_AT_CharaDisp(name, delay + 60, 1);
+    for (i = 0, name = URNI_STICK_HELD_FIRST; i < 5; i++, name += 0x1000000)
+        EVT_AT_CharaDisp(name, end, 1);
+    for (i = 0, name = URNI_STICK_IDLE_FIRST; i < 5; i++, name += 0x1000000)
+        EVT_AT_CharaDisp(name, end, 0);
+    return end;
+}
+#else
 int UranaiSehReading(shen_name reader, int delay)
 {
     int end = delay + 417;
@@ -196,7 +391,27 @@ int UranaiSehReading(shen_name reader, int delay)
     EVT_AT_CharaDisp(URNI_STICK_HAND, delay + 340, 1);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSehResult(shen_name reader, int delay)
+{
+    int index;
+    int frames;
+    frames = EVT_AT_SetMot(reader, URNI_SEH_RESULT_START_MOTION, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(reader, URNI_SEH_RESULT_LOOP_MOTION, 2.0f, 1.0f, 0, frames);
+    EVT_AT_SetCam(1203, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, 0);
+    index = 13;
+    while (index > 0) {
+        if (FTBL.EV_GetShenmueFlag(uranaiSehFlags[index]))
+            break;
+        index--;
+    }
+    FTBL.EV_SetPlayerFlag(16, 45, index);
+    frames = QueueEventVoiceList(FTBL.HLib_GetCurrentTask(), uranaiSehResultVoices[index], 10, 0x80000000, 0);
+    return frames;
+}
+#else
 int UranaiSehResult(shen_name reader, int delay)
 {
     int result = 0;
@@ -219,7 +434,27 @@ int UranaiSehResult(shen_name reader, int delay)
     }
     return result;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSehPayment(shen_name reader, int delay)
+{
+    int end;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay + 100, 350, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay + 100, 350, 0);
+    EVT_AT_SetMot(reader, URNI_SEH_RESULT_END_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetMot(reader, URNI_SEH_DROWSY_MOTION, 2.0f, 1.0f, 0, delay + 480);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_STAND_FROM_CHAIR_MOTION, 2.0f, 1.0f, 0, delay + 510);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, end - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetCam(1202, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    EVT_AT_SetSound(992, delay + 90);
+    EVT_AT_SetSound(996, delay + 480);
+    QueueEventVoiceList(0, uranaiSehPaymentVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSehPayment(shen_name reader, int delay)
 {
     int i;
@@ -242,7 +477,22 @@ int UranaiSehPayment(shen_name reader, int delay)
         EVT_AT_CharaDisp(name, end, 0);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiSehInsufficientCash(shen_name reader, int delay)
+{
+    int leave = delay + 420;
+    int end;
+    EVT_AT_StartMoneyCount(0, delay + 10);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, leave - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetCam(1203, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiSehInsufficientVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiSehInsufficientCash(shen_name reader, int delay)
 {
     int leave = delay + 250;
@@ -262,6 +512,7 @@ int UranaiSehInsufficientCash(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiSehInsufficientVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 #else
 #include "s2/areas/area_urni.hpp"
 #include "s2/camera.hpp"

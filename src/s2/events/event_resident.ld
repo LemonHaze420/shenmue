@@ -7,3 +7,6 @@ _g_eventSlotStates = 0x0c020170;
 _g_hotLoadModule = 0x0c02011c;
 _g_storyStep = 0x0c020178;
 _g_eventCallResult = 0x0c0201f0;
+_g_eventTaskFlags1 = 0x0c020180;
+_g_eventTaskFlags2 = 0x0c020190;
+_g_eventTaskFlags3 = 0x0c0201a0;

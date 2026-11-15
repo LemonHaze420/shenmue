@@ -21,7 +21,9 @@ typedef struct PatiGameWork {
     char voicePrefix[16];
     int activeBall;
     PatiBallCharacter ballCharacters[5];
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     PatiVoiceLength *voiceLengths;
+#endif
     Vector3 savedPlayerPosition;
     Vector3i savedPlayerRotation;
 } PatiGameWork;
@@ -80,7 +82,9 @@ typedef struct PatiBallWork {
     int historyCursor;
     Vector2 history[90];
     float movement[90];
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     PatiNailContact contacts[8];
+#endif
     short boardSize;
     unsigned short reserved8d02;
     unsigned int soundFlags;
@@ -88,6 +92,9 @@ typedef struct PatiBallWork {
     signed char soundFrames;
     char reserved8d0d[3];
 } PatiBallWork;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+typedef char PatiBallWorkSize[(sizeof(PatiBallWork)==0x8c78)?1:-1];
+#endif
 void ApplyPatiWeather(PatiBallWork *ball);
 void AdvancePatiBall(PatiBallWork *ball);
 void IntegratePatiBall(PatiBallWork *ball);

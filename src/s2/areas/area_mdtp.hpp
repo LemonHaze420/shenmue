@@ -67,6 +67,27 @@ typedef struct MdtpPackageWork {
     int recorder, npcState;
     char package[1];
 } MdtpPackageWork;
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+typedef struct MdtpSubtitle {
+    const char *token;
+    float duration;
+} MdtpSubtitle;
+typedef struct MdtpSubtitleWork {
+    int state, reserved04, frames;
+    MdtpSubtitle *cursor;
+} MdtpSubtitleWork;
+extern MdtpSubtitle MDTP_SUBTITLE_TRACK_01[], MDTP_SUBTITLE_TRACK_02[], MDTP_SUBTITLE_TRACK_03[], MDTP_SUBTITLE_TRACK_04[];
+extern MdtpSubtitle MDTP_SUBTITLE_TRACK_05[], MDTP_SUBTITLE_TRACK_06[], MDTP_SUBTITLE_TRACK_07[], MDTP_SUBTITLE_TRACK_08[];
+extern MdtpSubtitle MDTP_SUBTITLE_TRACK_09[], MDTP_SUBTITLE_TRACK_10[], MDTP_SUBTITLE_TRACK_11[], MDTP_SUBTITLE_TRACK_12[];
+extern MdtpSubtitle MDTP_SUBTITLE_TRACK_13[], MDTP_SUBTITLE_TRACK_14[], MDTP_SUBTITLE_TRACK_15[], MDTP_SUBTITLE_TRACK_16[];
+extern MdtpSubtitle MDTP_SUBTITLE_TRACK_17[];
+extern HLibTask *mdtpSubtitleTask;
+void QueueMdtpSubtitles(int clip);
+void MdtpSubtitleCallback(void *data);
+void PauseMdtpSubtitles(void);
+void ResumeMdtpSubtitles(void);
+void StopMdtpSubtitles(void);
+#endif
 double fabs(double value);
 extern char mdtpPackage[], mdtpTapePrefix[], mdtpTapeSuffix[], mdtpMedia[], mdtpAuthorPackage[], mdtpConversation[];
 extern int mdtpHandPoses[2][57], mdtpButtonParts[], mdtpCounterParts[];

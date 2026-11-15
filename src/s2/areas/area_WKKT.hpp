@@ -15,7 +15,11 @@
 #define WKKT_AUTHOR_SUCCESS SHEN_NAME4('B', 'U', 'T', 'K')
 #define WKKT_ABSOLUTE 0xffffffffU
 #define WKKT_DEBUG_ID 2
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#define WKKT_STANCE_HAND_POSE 4
+#else
 #define WKKT_STANCE_HAND_POSE 13
+#endif
 #define WKKT_STRIKE_HAND_POSE 40
 #define WKKT_IDLE_MOTION 5187
 #define WKKT_REQUIRED_INPUT 1028
@@ -40,6 +44,9 @@ typedef struct WkktTrainingWork {
 typedef struct WkktFallingWork {
     HLibTask *self;
     int reserved04;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    int effects[4];
+#endif
     unsigned char slot;
     int frame, level;
 } WkktFallingWork;

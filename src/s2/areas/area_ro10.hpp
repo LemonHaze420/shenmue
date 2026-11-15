@@ -16,7 +16,11 @@
 #define RO10_QR00 SHEN_NAME4('Q', 'R', '0', '0')
 #define RO10_CANCEL SHEN_NAME4('B', 'T', 'C', 'C')
 #define RO10_SELECT SHEN_NAME4('B', 'T', 'E', 'V')
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define RO10_DESCRIBE SHEN_NAME4('B', 'T', 'I', 'F')
+#else
 #define RO10_DESCRIBE SHEN_NAME4('B', 'T', 'F', 'T')
+#endif
 #define RO10_ITEM(tens, ones) SHEN_NAME4('6', '.', tens, ones)
 #define RO10_ITEM_OBJECTS                                                                                                                           \
     {RO10_ITEM('0', '1'), RO10_ITEM('0', '2'), RO10_ITEM('0', '3'), RO10_ITEM('0', '4'), RO10_ITEM('0', '5'), RO10_ITEM('0', '6'),             \
@@ -27,9 +31,11 @@
 #define RO10_FLUSH(value) if (__builtin_fabs(value) < RO10_EPSILON) (value) = 0.0f
 typedef struct Ro10Shop {
     shen_name shop, owner;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     int resetFlag, purchasedFlag, declinedFlag;
     shen_name prop;
     unsigned char help;
+#endif
     float columnSpacing, rowSpacing;
     Vector3 position;
     Vector3i rotation;
@@ -55,7 +61,9 @@ typedef struct Ro10Work {
     shen_name boards[16], ones[16], tens[16], hundreds[16];
     int flags;
     const Ro10Shop *definition;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     int handFrame, grip, awards[3];
+#endif
 } Ro10Work;
 typedef struct Ro10ExitWork {
     HLibTask *parent;
@@ -81,6 +89,14 @@ void RefreshRo10Items(const Ro10Shop *shop, int *purchased, shen_name *boards, s
 int GetRo10ItemTransform(const Ro10Shop *shop, int column, int row, Vector3 *position, Vector3i *rotation, Vector3 *scale, int grip);
 void UpdateRo10ItemCamera(const Ro10Shop *shop, int column, int row, float distance, int frames);
 void CreateRo10PriceBoards(const Ro10Shop *shop, shen_name *boards, shen_name *hundreds, shen_name *tens, shen_name *ones);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+typedef struct Ro10AwardWork { HLibTask *parent; int frames, items[3]; } Ro10AwardWork;
+void ShopPayment(void *data);
+void ShopResumeItems(void *data);
+void ShopGiveItems(void *data);
+void ShopAwardResume(void *data);
+void ShopGiveItemsCallback(void *data);
+#endif
 #else
 #pragma once
 #include "s2/area_event.hpp"

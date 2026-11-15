@@ -39,10 +39,15 @@ typedef struct DartsOpponentInfo {
     float height;
     int bone;
     int motions[16];
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     float loseFrame[2];
+#endif
     float loseX, loseZ;
     int winMotion, winTotal;
-    float winFrame, winX, winZ;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    float winFrame;
+#endif
+    float winX, winZ;
     int drawMotion;
     HLibTaskCallback throwCallback;
 } DartsOpponentInfo;
@@ -81,6 +86,12 @@ typedef struct DartsChildTaskWork {
     struct DartsEventWork *work;
     int reserved;
 } DartsChildTaskWork;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+typedef struct DartsNullTaskWork {
+    HLibTask *root;
+    struct DartsEventWork *work;
+} DartsNullTaskWork;
+#endif
 typedef struct DartsEventWork {
     char nextGameText[8];
     unsigned char field08, field09, standardBoard;
@@ -110,8 +121,15 @@ typedef struct DartsEventWork {
     HLibTask *childTasks[4];
     EventDartsGame *entry;
     EventDateTime previousTime;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    HLibTask *unusedTask;
+#endif
 } DartsEventWork;
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void DartsNullTask(void *data);
+void DartsShowAimArrow(DartsEventWork *work);
+#endif
 void DartsAreaMain(EventDartsGame *entry);
 void DartsInitializeRoot(DartsEventWork *work, HLibTask *task, EventDartsGame *entry);
 void DartsDebugExitCallback(void *data);
@@ -182,8 +200,13 @@ int DartsComputeAiImpactPoint(DartsEventWork *work);
 float DartsVerticalWobble(int phase);
 void DartsQueueProjectile(shen_name board, shen_name arrow, int score, Vector3 *impact, float duration, int arc);
 void DartsProjectileTask(void *data);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define DART_RESPONSE_COUNT 29
+#else
+#define DART_RESPONSE_COUNT 30
+#endif
 typedef void *(*DartsResponseCallback)(int opponentMatch, int playerTurn, shen_name opponent);
-extern const DartsResponseCallback dartsResponseCallbacks[30];
+extern const DartsResponseCallback dartsResponseCallbacks[DART_RESPONSE_COUNT];
 void *PlayDartsOpeningResponse(int mode, int playerTurn, shen_name opponent);
 void *PlayDartsReadyResponse(int mode, int playerTurn, shen_name opponent);
 void *PlayDartsExitResponse(int mode, int playerTurn, shen_name opponent);
@@ -215,9 +238,11 @@ void *PlayDartsThrowStartResponse(int mode, int playerTurn, shen_name opponent);
 void *PlayDartsThrowResponse(int mode, int playerTurn, shen_name opponent);
 void *PlayDartsRoundOverResponse(int mode, int playerTurn, shen_name opponent);
 void DartsGameMain(void *data);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 extern Vector3i dartsGameArrowRotation;
 extern Vector3 dartsJonGameArrowOffset;
 extern Vector3 dartsGameArrowOffsets[5];
+#endif
 int DartsAiTriggerReady(DartsEventWork *work);
 void DartsBeginScoreTransfer(DartsEventWork *work, int *score);
 int DartsAdvanceScore(DartsEventWork *work, int *score);

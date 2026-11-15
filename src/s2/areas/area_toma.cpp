@@ -1,6 +1,14 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/areas/area_toma.hpp"
 
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+#define TOMA_CHOICE_RACE 82
+#define TOMA_CHOICE_QUIT 83
+#else
+#define TOMA_CHOICE_RACE 398
+#define TOMA_CHOICE_QUIT 154
+#endif
+
 #if defined(SHENMUE_EVENT_ENTRY)
 void TomaMain(const TomaRequest *request)
 {
@@ -15,7 +23,9 @@ void TomaMain(const TomaRequest *request)
         row = FindTomaMap(map);
         if ((unsigned int)(selector - 1) <= 1 && !row)
             break;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         tomaRaceEntry = 0;
+#endif
         switch (selector) {
         case 0:
             FTBL.SetPlayerControlEnabled(1);
@@ -24,11 +34,14 @@ void TomaMain(const TomaRequest *request)
             QueueTomaWaitPackage(map, argument);
             FTBL.srchReset();
             FTBL.SetPlayerControlEnabled(0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             FTBL.SetLoadingBusy();
+#endif
             break;
         case 2:
             FTBL.SetPlayerControlEnabled(1);
             break;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         case 100:
             QueueTomaFirstTalk();
             break;
@@ -44,6 +57,7 @@ void TomaMain(const TomaRequest *request)
         case 200:
             QueueTomaBye();
             break;
+#endif
         }
         break;
     }
@@ -116,19 +130,29 @@ void TomaUpdateItems(const TomaMapEntry *row, shen_name motion)
     }
 }
 
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 int tomaRaceEntry;
+#endif
+#else
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#define SHENMUE_AREA_LOOP_GAMEJAM
+#define SHENMUE_AREA_LOOP_CONTROL_REVISION 1
+#define SHENMUE_AREA_LOOP_VOICE_REVISION 1
 #else
 #define SHENMUE_AREA_LOOP_SOUND
 #define SHENMUE_AREA_LOOP_MOTION_FRAMES
 #define SHENMUE_AREA_LOOP_VOICE_REVISION 2
+#endif
 #include "s2/areas/area_loop_dc.c"
 
 static int tomaRewards[] = {4075, 4076, 4074, 4075, 4076, 4083, 4084, 4085, 4086, 4050, 4058, 4105,
                             4019, 4122, 4068, 4069, 4070, 4162, 4163, 4164, 4165, 4166, 4167};
 static char tomaPackage[] = "TOMA";
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 static char tomaConversation[] = "0110";
 static char tomaPlusPackage[] = "TOMAPLUS";
 static char tomaRaceConversation[] = "0122";
+#endif
 
 void QueueTomaWaitPackage(shen_name map, unsigned int argument)
 {
@@ -143,7 +167,9 @@ void QueueTomaWaitPackage(shen_name map, unsigned int argument)
         work->argument = argument;
         FTBL.EV_NPC_NewLoadSw_0(0);
         task = 0;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.EV_SetPlayerFlag(12, 2095, 1);
+#endif
         break;
     }
     if (task)
@@ -176,6 +202,9 @@ void TomaStart(void *data)
     Vector3 ryoPosition, npcPosition;
     Vector3i ryoRotation, npcRotation;
     shen_name npc;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    const char *package = tomaPackage;
+#endif
     shen_name prop = TOMA_PROP;
     while (!FTBL.filmCheckFadeTrackColour() && work && (row = FindTomaMap(work->map)) != 0) {
         FTBL.HLib_SetCurrentTaskTo(TomaDone);
@@ -190,23 +219,46 @@ void TomaStart(void *data)
         npcRotation.x = 0;
         npcRotation.y = 0;
         npcRotation.z = 0;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.EV_FreeAuthorPak(1, tomaConversation);
+#endif
         switch (work->map) {
         case TOMA_ARZ0:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(package, 1550, prop, 0, 0);
+            QueueAreaLoopCamera(package, 1551, prop, 200, 0);
+#else
             QueueAreaLoopCamera(tomaPackage, 1550, prop, 0, 0);
             QueueAreaLoopCamera(tomaPackage, 1551, prop, 200, 0);
+#endif
             switch (FTBL.shenGetRandomInt32(3)) {
             case 0:
+                #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+                QueueAreaLoopVoice("それ、日本ではやってるらしいね。", 0, 100, 100, 0);
+#else
                 QueueAreaLoopVoice("0110G001", 1, 10, -1, 0);
+#endif
                 break;
             case 1:
+                #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+                QueueAreaLoopVoice("それ、最近売れてるらしいね。", 0, 100, 100, 0);
+#else
                 QueueAreaLoopVoice("0110G002", 1, 10, -1, 0);
+#endif
                 break;
             default:
+                #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+                QueueAreaLoopVoice("それ、なかなかイケるらしいね。", 0, 100, 100, 0);
+#else
                 QueueAreaLoopVoice("0110G003", 1, 10, -1, 0);
+#endif
                 break;
             }
-            QueueAreaLoopVoice("0110A012", 1, 130, -1, 0);
+            #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+                QueueAreaLoopVoice("●青そうですか。", 0, 201, 100, ResolveAreaLoopParent);
+#else
+                QueueAreaLoopVoice("0110A012", 1, 130, -1, 0);
+#endif
             ryoPosition.x = 331.51f;
             ryoPosition.z = 456.29f;
             ryoRotation.y = 0;
@@ -215,20 +267,41 @@ void TomaStart(void *data)
             npcRotation.y = 0x8000;
             break;
         case TOMA_WET0:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(package, 1501, prop, 0, 0);
+            QueueAreaLoopCamera(package, 1502, prop, 200, 0);
+#else
             QueueAreaLoopCamera(tomaPackage, 1550, prop, 0, 0);
             QueueAreaLoopCamera(tomaPackage, 1551, prop, 200, 0);
+#endif
             switch (FTBL.shenGetRandomInt32(3)) {
             case 0:
+                #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+                QueueAreaLoopVoice("それ、香港限定版なのよ。", 0, 100, 100, 0);
+#else
                 QueueAreaLoopVoice("0110H001", 1, 10, -1, 0);
+#endif
                 break;
             case 1:
+                #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+                QueueAreaLoopVoice("それ、最近よく売れてるの。", 0, 100, 100, 0);
+#else
                 QueueAreaLoopVoice("0110H002", 1, 10, -1, 0);
+#endif
                 break;
             default:
+                #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+                QueueAreaLoopVoice("それ、おいしいのよ。", 0, 100, 100, 0);
+#else
                 QueueAreaLoopVoice("0110H003", 1, 10, -1, 0);
+#endif
                 break;
             }
-            QueueAreaLoopVoice("0110A014", 1, 130, -1, 0);
+            #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+                QueueAreaLoopVoice("●青ありがとう。", 0, 201, 100, ResolveAreaLoopParent);
+#else
+                QueueAreaLoopVoice("0110A014", 1, 130, -1, 0);
+#endif
             ryoPosition.x = 185.0f;
             ryoPosition.z = 107.8f;
             ryoRotation.y = 0;
@@ -237,17 +310,21 @@ void TomaStart(void *data)
             npcRotation.y = 0x8000;
             break;
         }
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         if (FTBL.shenGetRandomInt32(2) == 0)
             QueueAreaLoopVoice("0110A020", 1, 200, -1, ResolveAreaLoopParent);
         else
             QueueAreaLoopVoice("0110A021", 1, 200, -1, ResolveAreaLoopParent);
+#endif
         QueueAreaLoopPosition(TOMA_PLAYER, 0, 0, &ryoPosition, &ryoRotation, 0);
         QueueAreaLoopPosition(npc, 0, 0, &npcPosition, &npcRotation, 0);
         QueueAreaLoopPosition(prop, 0, 0, &npcPosition, &npcRotation, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(TOMA_PLAYER));
         FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(TOMA_PLAYER));
         FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(TOMA_PLAYER), 1, 0, 0);
         FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(TOMA_PLAYER), 0, (void *)areaLoopHandPoses[18], 1);
+#endif
         QueueAreaLoopMotion(TOMA_PLAYER, 0xf003, 0, -1, -1.0f, -1.0f, 1.0f, 0.0f, 0, 22);
         QueueAreaLoopMotion(npc, 0xf087, 0, -1, -1.0f, -1.0f, 1.0f, 0.0f, TomaChargeCompletion, 22);
         QueueAreaLoopMotion(TOMA_PLAYER, 0xf11f, 200, -1, -1.0f, -1.0f, 1.0f, 0.0f, TomaRewardCompletion, 22);
@@ -302,6 +379,40 @@ int TomaRewardCompletion(int phase, int value, HLibTask *parent)
     return 1;
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void TomaDone(void *data)
+{
+    TomaWork *work = (TomaWork *)data;
+    const TomaMapEntry *row;
+    while (!FTBL.GetShouldRenderIcons(5)) {
+        if (work) {
+            if (FTBL.filmCheckFadeTrackColour())
+                break;
+            if (work->flags & 1) {
+                FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+                work->flags &= ~1;
+                break;
+            }
+            row = FindTomaMap(work->map);
+            if (row) {
+                shen_name names[2];
+                FTBL.HLib_SetupTaskDelay(-1);
+                names[0] = row->npc;
+                names[1] = 0;
+                RestoreAreaLoopCharacters(names, 0);
+            }
+        }
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        FTBL.HLib_MarkCurrentTaskForCleanup();
+        if (FTBL.EV_ControlPackageResources(0, 5, tomaPackage, 0, 0))
+            FTBL.EV_ControlPackageResources(0, 6, tomaPackage, 0, 0);
+        SetAreaLoopCharacterControl(TOMA_PLAYER, 0);
+        FTBL.SetPlayerControlEnabled(1);
+        break;
+    }
+}
+#else
 void TomaDone(void *data)
 {
     TomaWork *work = (TomaWork *)data;
@@ -352,6 +463,9 @@ void TomaDone(void *data)
     }
 }
 
+#endif
+
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 void QueueTomaFirstTalk(void)
 {
     while (FTBL.HLib_EnqueueTaskWithParameter(TomaWaitPackageFirstTalk, 4, 11, 0, TASK_EVNT)) {
@@ -405,9 +519,9 @@ void TomaStartFirstTalkChoices(void *data)
         FTBL.HLib_SetCurrentTaskTo(TomaCheckFirstTalkChoices);
         choices[0] = -1;
         choices[3] = -1;
-        choices[1] = 398;
-        choices[2] = 154;
-        FTBL.SetupControlSpeakAndUI(choices, 800, 154, 2);
+        choices[1] = TOMA_CHOICE_RACE;
+        choices[2] = TOMA_CHOICE_QUIT;
+        FTBL.SetupControlSpeakAndUI(choices, 800, TOMA_CHOICE_QUIT, 2);
         break;
     }
 }
@@ -415,7 +529,7 @@ void TomaStartFirstTalkChoices(void *data)
 void TomaCheckFirstTalkChoices(void *data)
 {
     if (!FTBL.GetShouldRenderIcons(2)) {
-        if (FTBL.shenGetCtrlSpeakIconFlag() == 398) {
+        if (FTBL.shenGetCtrlSpeakIconFlag() == TOMA_CHOICE_RACE) {
             FTBL.HLib_SetCurrentTaskTo(TomaGoRaceFirstTalk);
             if (tomaRaceEntry)
                 FTBL.EV_stepSetFlags(1140, 0);
@@ -618,9 +732,9 @@ void TomaStartHaveFirstTalkChoices(void *data)
         FTBL.HLib_SetCurrentTaskTo(TomaCheckHaveFirstTalkChoices);
         choices[0] = -1;
         choices[3] = -1;
-        choices[1] = 398;
-        choices[2] = 154;
-        FTBL.SetupControlSpeakAndUI(choices, 800, 154, 2);
+        choices[1] = TOMA_CHOICE_RACE;
+        choices[2] = TOMA_CHOICE_QUIT;
+        FTBL.SetupControlSpeakAndUI(choices, 800, TOMA_CHOICE_QUIT, 2);
         break;
     }
 }
@@ -628,7 +742,7 @@ void TomaStartHaveFirstTalkChoices(void *data)
 void TomaCheckHaveFirstTalkChoices(void *data)
 {
     if (!FTBL.GetShouldRenderIcons(2)) {
-        if (FTBL.shenGetCtrlSpeakIconFlag() == 398) {
+        if (FTBL.shenGetCtrlSpeakIconFlag() == TOMA_CHOICE_RACE) {
             FTBL.HLib_SetCurrentTaskTo(TomaGoRaceHaveFirstTalk);
             if (tomaRaceEntry)
                 FTBL.EV_stepSetFlags(1142, 0);
@@ -703,6 +817,7 @@ void TomaInitializeRepeatHaveTalkAuthor(void *data)
 
 #define SHENMUE_AREA_LOOP_HAND_POSE_TABLE
 #include "s2/areas/area_loop_dc.c"
+#endif
 #endif
 #else
 #include "s2/areas/area_toma.hpp"

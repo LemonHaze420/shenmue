@@ -1,4 +1,129 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+#include "s2/event_queued_dc.h"
+#include "s2/event_debug_dc.h"
+#include "s2/event_library_tail_dc.h"
+#define ID_HAND SHEN_NAME4('c', 'h', 'n', 'd')
+#define ID_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#if SHENMUE_EVENT_VEND_SCENE
+extern shen_name vendMachine;
+#define ID_MACHINE vendMachine
+#else
+#define ID_MACHINE SHEN_NAME4('J', 'I', 'H', 'N')
+#endif
+#define ID_BASE SHEN_NAME4('D', 'U', 'M', 'H')
+#define ID_CAN SHEN_NAME4('H', 'C', 'A', 'N')
+#define TASK_VEND TASK_EVNT
+typedef struct VendButtons {
+    Vector3 positions[8];
+    int count, upper, selected;
+} VendButtons;
+typedef struct VendWork {
+    EventReadCharactersWork *characters;
+    Vector3 buttons[8];
+    int buttonCount, upperButtons, selected;
+    HLibTask *procTask, *task;
+    shen_name originalMachine;
+    unsigned char retained7c[28];
+#if SHENMUE_EVENT_VEND_SCENE
+    int sound, prizeState, elapsed, prizeItem, state, timer;
+    unsigned char retainedb0[8];
+    int colour;
+#else
+    int state, timer;
+    unsigned char retaineda0[12];
+#endif
+} VendWork;
+typedef struct VendLamps {
+    int selected, parts[8];
+    Vector3 positions[8];
+} VendLamps;
+typedef struct VendHandWait {
+    int reserved;
+    HLibTask *task;
+    shen_name character;
+    int side;
+    int commands[171];
+    int duration, threshold, timer, state;
+} VendHandWait;
+typedef struct VendAutoWait {
+    HLibTask *task;
+    int begin, end, timer, state;
+    HLibTaskCallback callback;
+    void *argument;
+} VendAutoWait;
+void RunVendingMachineEvent(void *argument);
+void eVEND_EVT_InitVend_Enqueue(void *argument);
+void eVEND_ET_AbortVend(void *data);
+void eVEND_ET_KillVend(VendWork *work);
+void VendingProcCallback(void *data);
+void eVEND_EVT_InitVend(void *data);
+void eVEND_EVT_CheckVend(void *data);
+void eVEND_EVT_InitSelect(void *data);
+void eVEND_EVT_SelectJuice(void *data);
+void eVEND_EVT_DrinkJuice(void *data);
+void eVEND_EVT_VendEnd(void *data);
+void InitializeVendingButtons(VendButtons *buttons);
+void HideVendingButtons(VendButtons *buttons);
+void ShowVendingButtons(VendButtons *buttons);
+void SelectNextVendingButton(VendButtons *buttons);
+void SelectPreviousVendingButton(VendButtons *buttons);
+void SelectUpperVendingButton(VendButtons *buttons);
+void SelectLowerVendingButton(VendButtons *buttons);
+void InitializeVendingCan(void);
+void ReleaseVendingCan(void);
+void InitializeVendingResources(VendWork *work);
+void ReleaseVendingResources(VendWork *work);
+void eVEND_ET_SetHandUpYubiWait(void *data);
+int QueueVendingHandWait(shen_name character, int side, const int *commands, int duration, int threshold);
+#if SHENMUE_EVENT_VEND_SCENE
+int VendingInsertCoin(int cash);
+#else
+int VendingInsertCoin(void);
+#endif
+#if SHENMUE_EVENT_VEND_SCENE
+int VendingLiftCan(int sound);
+#else
+int VendingLiftCan(void);
+#endif
+int VendingDrink(int delay);
+int InterpolateVendingHand(const Vector3 *target, const Vector3 *start, int step, int delay);
+#if SHENMUE_EVENT_VEND_SCENE
+int PressVendingButton(const Vector3 *button);
+#else
+int PressVendingButton(const Vector3 *button, int cash);
+#endif
+int VendingNoMoney(void);
+int HideVendingLamps(void);
+void RestoreVendingLamps(void *data);
+int ShowVendingLamps(VendLamps *lamps);
+int GetVendingAutoWaitState(void);
+int FinishVendingAutoWait(void);
+void eVEND_ET_SetVendAutoWait(void *data);
+int QueueVendingAutoWait(HLibTaskCallback callback, void *argument, int begin, int end);
+
+extern const Vector3 vendHandOffset, vendHandRotation;
+
+typedef struct VendColour {
+    shen_name map;
+    int colour;
+} VendColour;
+extern VendColour vendColours[];
+extern Vector3 vendCanAttachment, vendWinningAttachment;
+extern Vector3i vendCanRotation, vendWinningRotation;
+extern int vendWaitHandCommand[57];
+extern VendLamps vendLamps;
+void DetermineVendingPrize(VendWork *work, float random);
+void eVEND_EVT_HitCan(void *data);
+int VendingLiftWinningCan(int sound);
+void VendingItemCallback(void *data);
+void QueueVendingItem(int item, int delay);
+int GetVendingMachineColour(const shen_name *scene);
+
+#else
+#pragma once
 #include "s2/area_event.hpp"
 #include "s2/event_characters.hpp"
 #include "common/math.hpp"
@@ -126,3 +251,5 @@ void RunVendingMachineEvent(std::uintptr_t argument);
 inline constexpr ScriptAreaDefinition vendingMachineScriptDefinition{
     .areaId = VEND_AREA, .field04 = 0, .init = InitializeVendingMachineEvent, .main = RunVendingMachineEvent};
 } // namespace shenmue::s2
+
+#endif

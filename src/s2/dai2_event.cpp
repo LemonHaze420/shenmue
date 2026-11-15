@@ -1,3 +1,42 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/dai2_event.hpp"
+
+void DAI2Main(int selector)
+{
+    DAI2Setup();
+    if (selector == 0)
+        FTBL.EV_authSceneCtrl(DAI2_AUTHOR_RIGHT);
+    else
+        FTBL.EV_authSceneCtrl(DAI2_AUTHOR_LEFT);
+    FTBL.HLib_EnqueueTaskWithoutParameter(DAI2WaitAuthor, 6, 11, DAI2_LOOK_TASK);
+}
+
+void DAI2Setup(void)
+{
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.SetPlayerControlEnabled(0);
+    do {
+        FTBL.EV_SetCharaControllerFlags(DAI2_RYO, 2, 0);
+        FTBL.EV_SetCharaControllerFlags(DAI2_RYO, 3, 0);
+    } while (0);
+    FTBL.SetRefBoardParamsForCharaById(DAI2_RYO, 1);
+}
+
+void DAI2WaitAuthor(void *taskData)
+{
+    if (FTBL.EV_authSceneCtrl(-1) == 0) {
+        FTBL.camCtrlSetState(0);
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.SetPlayerControlEnabled(1);
+        do {
+            FTBL.EV_SetCharaControllerFlags(DAI2_RYO, 2, 1);
+            FTBL.EV_SetCharaControllerFlags(DAI2_RYO, 3, 1);
+        } while (0);
+        FTBL.SetRefBoardParamsForCharaById(DAI2_RYO, 0);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+#else
 #include "s2/dai2_event.hpp"
 #include "s2/author.hpp"
 #include "s2/camera.hpp"
@@ -51,3 +90,4 @@ const ScriptAreaDefinition dai2ScriptDefinition{
 };
 
 } // namespace shenmue::s2
+#endif

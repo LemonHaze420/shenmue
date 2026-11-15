@@ -1,3 +1,204 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_0007.hpp"
+
+#if defined(SHENMUE_EVENT_ENTRY)
+void E0007Main(void)
+{
+    EventDateTime time;
+    HLibTask *task;
+    E0007TaskParameter *work;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    task = FTBL.HLib_EnqueueTaskWithParameter(E0007MainCallback, 4, 11, sizeof(E0007TaskParameter), TASK_EVNT);
+    work = (E0007TaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    work->self = task;
+    work->state = 1;
+    work->selection = time.hour >= 19;
+    FTBL.EV_stepSetFlags(1, 0);
+    ConfigureE0007Environment();
+    if (e0007Characters[work->selection]) {
+        EVT_UTL_SetNPCLowQualityHands(0);
+        Queue_EVT_UTL_LoadNPCChara_3(e0007Characters[work->selection], work->self);
+    } else
+        CleanupE0007(work);
+}
+#else
+shen_name e0007DayCharacters[] = {
+    SHEN_NAME4('J', 'O', 'P', '_'), SHEN_NAME4('S', 'H', 'I', '_'), SHEN_NAME4('U', 'N', 'H', '_'),
+    SHEN_NAME4('G', 'O', 'I', '_'), SHEN_NAME4('H', 'T', 'K', '_'), INVALID_CHARACTER};
+shen_name e0007NightCharacters[] = {SHEN_NAME4('J', 'O', 'P', '_'), INVALID_CHARACTER};
+shen_name *e0007Characters[] = {e0007DayCharacters, e0007NightCharacters, 0};
+static unsigned char e0007Distance[256], e0007FirstKernel[256], e0007SecondKernel[256];
+static void *e0007Audio;
+
+void E0007MainCallback(void *data)
+{
+    E0007TaskParameter *work = (E0007TaskParameter *)data;
+    switch (work->state) {
+    case 1: QueueE0007Loop(work); break;
+    case 3: CleanupE0007(work); break;
+    }
+}
+
+void QueueE0007Loop(E0007TaskParameter *parent)
+{
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0007LoopCallback, 4, 11, sizeof(E0007LoopParameter), TASK_EVNT);
+    E0007LoopParameter *work = (E0007LoopParameter *)FTBL.HLib_GetTaskParameter(task);
+    work->parent = parent;
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    e0007Audio = FTBL.shenPlayAudioWithFlags("joy", 1);
+    SetupE0007Characters(work->parent->selection);
+    FTBL.EV_authSceneCtrl(-14);
+    if (parent->selection)
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('H', '0', '1', '0'));
+    else
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('H', '0', '0', '0'));
+    parent->state = 2;
+}
+
+void E0007LoopCallback(void *data)
+{
+    E0007LoopParameter *work = (E0007LoopParameter *)data;
+    if (FTBL.EV_authSceneCtrl(-1) == 0) {
+        FTBL.hsFadeVoice(e0007Audio, 30);
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        RestoreE0007Characters(work->parent->selection);
+        work->parent->state = 3;
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void ConfigureE0007Environment(void)
+{
+    EventDateTime time;
+    const char *directory;
+    Vector3 direction;
+    void *first, *second;
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_SetNewSceneIndex();
+    if (g_currentMap != SHEN_NAME4('A', 'R', '0', '2')) {
+        FTBL.GetCurrentDateTime((DateTime *)&time);
+        if (time.hour >= 19) {
+            FTBL.EV_lightLoad(SHEN_NAME4('0', '0', '0', '0'));
+            FTBL.PushGlobalLightingProgram();
+            FTBL.CheckIsArgEquZero(1, 1);
+        } else {
+            FTBL.ReinitializeLights(1);
+            FTBL.SetLightFlagForIndex(0, 2);
+            FTBL.SetLightEntryIndex(0, 1);
+        }
+    }
+    directory = FTBL.Filepath_Gen(0);
+    FTBL.EV_ControlPackageResources(0, 0, (void *)directory, (int)"0007A", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "0007A", 0, 0);
+    FTBL.EV_FreeAuthorPak(1, "0007");
+    FTBL.EV_LoadCutsceneFromCurrentScene("0007A000");
+    if (g_currentMap != SHEN_NAME4('A', 'R', '0', '2')) {
+        FTBL.GenerateFFT(2.0f);
+        FTBL.fft_fill_dist(FTBL.fft_fill_krn(23.529f, FTBL.generate_distance_falloff_row_major(2.082f, e0007Distance)));
+        first = FTBL.fft_fill_krn(0.0564f, FTBL.generate_distance_falloff_kernel_8x8(0.94f, e0007FirstKernel));
+        second = FTBL.fft_fill_krn(0.035f, FTBL.generate_distance_falloff_kernel_8x8(0.952f, e0007SecondKernel));
+        FTBL.fft_bins_load_pairwise_tables(first, second);
+        FTBL.FFTUtil(0.002f, 0.002f);
+        direction.x = 0.0598f;
+        direction.y = 0.9768f;
+        direction.z = 0.2054f;
+        FTBL.set_lighting_flags(0.1f, &direction);
+        FTBL.HLib_EnqueueTaskWithoutParameter(E0007WaveCallback, 3, 2, TASK_EVNT);
+    }
+}
+
+void CleanupE0007(E0007TaskParameter *parent)
+{
+    EVT_UTL_FreeNPCChara(e0007Characters[parent->selection]);
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.EV_FreeAuthorPak(0, "0007");
+    FTBL.EV_ControlPackageResources(0, 6, "0007A", 0, 0);
+    FTBL.HLib_DestroyTask(parent->self);
+    if (g_currentMap == SHEN_NAME4('A', 'R', '0', '2')) {
+        EVT_AT_SetPos(RYO_CHARACTER, INVALID_CHARACTER, 224.88f, 100.0f, 327.6f, 0);
+        EVT_AT_SetAng(RYO_CHARACTER, INVALID_CHARACTER, 0.0f, 141.47f, 0.0f, 0);
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.EV_spmBeginSampleExecute(0);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+    } else
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+}
+
+void SetupE0007Characters(short selection)
+{
+    PrepareE0007Character(RYO_CHARACTER);
+    PrepareE0007Character(SHEN_NAME4('J', 'O', 'P', '_'));
+    if (selection == 0) {
+        PrepareE0007Character(SHEN_NAME4('S', 'H', 'I', '_'));
+        PrepareE0007Character(SHEN_NAME4('U', 'N', 'H', '_'));
+        PrepareE0007Character(SHEN_NAME4('G', 'O', 'I', '_'));
+        PrepareE0007Character(SHEN_NAME4('H', 'T', 'K', '_'));
+        HideE0007Prop(SHEN_NAME4('a', '3', '9', '6'));
+    } else
+        HideE0007Prop(SHEN_NAME4('a', '4', '5', '6'));
+}
+
+void RestoreE0007Characters(short selection)
+{
+    RestoreE0007Character(RYO_CHARACTER);
+    RestoreE0007Character(SHEN_NAME4('J', 'O', 'P', '_'));
+    if (selection == 0) {
+        RestoreE0007Character(SHEN_NAME4('S', 'H', 'I', '_'));
+        RestoreE0007Character(SHEN_NAME4('U', 'N', 'H', '_'));
+        RestoreE0007Character(SHEN_NAME4('G', 'O', 'I', '_'));
+        RestoreE0007Character(SHEN_NAME4('H', 'T', 'K', '_'));
+        ShowE0007Prop(SHEN_NAME4('a', '3', '9', '6'));
+    } else
+        ShowE0007Prop(SHEN_NAME4('a', '4', '5', '6'));
+}
+
+void PrepareE0007Character(shen_name name)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 2);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 0);
+}
+void RestoreE0007Character(shen_name name)
+{
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 0);
+    FTBL.EV_SetCharacterAlphaEnabled(name, 1);
+}
+void HideE0007Prop(shen_name name) { FTBL.EV_SetCharacterAlphaEnabled(name, 0); }
+void ShowE0007Prop(shen_name name) { FTBL.EV_SetCharacterAlphaEnabled(name, 1); }
+void E0007WaveCallback(void *taskData)
+
+{
+    unsigned char *weather = (unsigned char *)FTBL.GetInterpolatedWeatherValues();
+    unsigned int *colours = (unsigned int *)(weather + 0x34);
+    float red = (int)((colours[7] >> 16) & 255) / 255.0f;
+    float green = (int)((colours[7] >> 8) & 255) / 255.0f;
+    float blue = (int)weather[0x50] / 255.0f;
+    float specularRed = (int)((colours[5] >> 16) & 255) / 255.0f;
+    float specularGreen = (int)((colours[5] >> 8) & 255) / 255.0f;
+    float specularBlue = (int)weather[0x48] / 255.0f;
+    void *model;
+    float power;
+    red *= 0.3607f;
+    green *= 0.3725f;
+    blue *= 0.4352f;
+    specularRed *= 0.2549f;
+    specularGreen *= 0.38f;
+    specularBlue *= 0.2862f;
+    power = 42.54f;
+    FTBL.BuildLightingTableFrom(1, 1.0f, 1.0f, red, green, blue, specularRed, specularGreen, specularBlue, power, 1.0f);
+    model = FTBL.GetMapModelRoot(17);
+    FTBL.CalculateFieldCollision(*(void **)((unsigned char *)*(void **)((unsigned char *)model + 0x2c) + 0x28));
+    model = FTBL.GetMapModelRoot(18);
+    FTBL.TransformFieldCollisionForModel(model);
+}
+#endif
+#else
 #include "s2/debug.hpp"
 #include "s2/areas/area_0007.hpp"
 #include "s2/pak.hpp"
@@ -239,3 +440,5 @@ void E0007LoopCallback(void *taskData) {
 } // namespace
 const ScriptAreaDefinition area0007ScriptDefinition{.areaId = AREA_0007_AREA, .field04 = 0, .init = E0007Init, .main = E0007Main};
 } // namespace shenmue::s2::areas
+
+#endif

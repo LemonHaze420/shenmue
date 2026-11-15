@@ -726,9 +726,12 @@ void BouncePatiCenterOuterUpperRight(PatiBallWork *ball) {
 }
 
 void BouncePatiNail(PatiBallWork *ball) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     unsigned int oldest = 0;
     int oldestIndex = 0, index;
+#endif
     Vector3 point;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     for (index = 0; index < 8; ++index) {
         if (ball->contacts[index].age < 99999)
             ++ball->contacts[index].age;
@@ -749,6 +752,7 @@ void BouncePatiNail(PatiBallWork *ball) {
         ball->contacts[index].age = 0;
         ball->contacts[index].count = 1;
     }
+#endif
     point.x = ball->nails->nails[ball->collisionIndex].position.x;
     point.y = ball->nails->nails[ball->collisionIndex].position.y;
     point.z = 0;
@@ -788,8 +792,10 @@ int IsPatiBallSettled(PatiBallWork *ball) {
     float movement, distance;
     unsigned int contacts;
     int index;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     if ((float)ball->frames++ > 2700.0f)
         return 1;
+#endif
     if (window > 90)
         window = 90;
     difference.x = ball->history[ball->historyCursor].x - ball->current.position.x;
@@ -810,12 +816,14 @@ int IsPatiBallSettled(PatiBallWork *ball) {
         movement += ball->movement[index];
     if (movement < 0.000045000001f && distance < 0.0000030000001f)
         return 1;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     contacts = 0;
     for (index = 0; index < 8; ++index) {
         if (ball->contacts[index].count > contacts)
             contacts = ball->contacts[index].count;
     }
     if (contacts > 20) return 1;
+#endif
     return 0;
 }
 

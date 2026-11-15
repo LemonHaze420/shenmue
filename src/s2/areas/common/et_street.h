@@ -7,6 +7,13 @@
 #define STREET_FIGHT_INVALID 0xffffffffU
 #define TASK_SUEV SHEN_NAME4('s', 'u', 'e', 'v')
 
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+#define STREET_FIGHT_ENTRY_CHOICE 22
+void ShowStreetFightRetryMessage(void);
+#else
+#define STREET_FIGHT_ENTRY_CHOICE 38
+#endif
+
 #define STREET_FIGHT_STRING(name) #name
 #define STREET_FIGHT_PACKAGE_STRING(name) STREET_FIGHT_STRING(name)
 #define STREET_FIGHT_PACKAGE STREET_FIGHT_PACKAGE_STRING(SHENMUE_STREET_FIGHT_PACKAGE)

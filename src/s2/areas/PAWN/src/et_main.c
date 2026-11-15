@@ -1,6 +1,20 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/areas/area_pawn.hpp"
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+#define PAWN_CHOICE_QUIT 203
+#else
+#define PAWN_CHOICE_QUIT 154
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/event_debug_dc.h"
+#define PAWN_RESTORE_POSE(work, shop) RestorePawnTransactionPose(shop)
+#define PAWN_PACKAGE(work) pawnPackage
+#else
+#define PAWN_RESTORE_POSE(work, shop) RestorePawnTransactionPose(work, shop)
+#define PAWN_PACKAGE(work) ((work)->package)
+#endif
 
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || defined(SHENMUE_EVENT_ENTRY)
 void PawnMain(shen_name shop)
 {
     HLibTask *task;
@@ -11,8 +25,10 @@ void PawnMain(shen_name shop)
         fail = 1;
         task = 0;
         if (!FindPawnOwner(shop)) {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             FTBL.DebugLogToFileRemoved("illegal id given (in PAWN.EV3)\n\n\n\n\n");
             FTBL.EventAssertNullsub(__FILE__, 298);
+#endif
             break;
         }
         task = FTBL.HLib_EnqueueTaskWithParameter(PawnInitialize, 4, 11, sizeof(PawnWork), TASK_EVNT);
@@ -25,7 +41,27 @@ void PawnMain(shen_name shop)
         for (i = 0; i < (int)sizeof(PawnWork); i++)
             package[i] = 0;
         work->shop = shop;
-        package = work->package;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        work->motion = 0;
+        FTBL.EV_setHoldStatesFlags(0);
+        work->soundScene = FTBL.GetSelectedSoundSceneIndex();
+        package = (char *)FTBL.shenGetCurrentSbt();
+        i = 0;
+        if (package)
+            for (; package[i]; i++)
+                work->sbt[i] = package[i];
+        work->sbt[i] = 0;
+        work->state = 0;
+        work->selection = -1;
+        FTBL.srchReset();
+        FTBL.camCtrlSetState(0);
+        work->parent = FTBL.HLib_GetCurrentTask();
+        FTBL.HLib_SetupTimedTask(work->parent, -1);
+        FTBL.SetPlayerControlEnabled(0);
+        work->task = task;
+        EventDebugRegister(3, PawnFinish, work, 0x76543210);
+#else
+        package = PAWN_PACKAGE(work);
         *package++ = 'P';
         *package++ = 'A';
         *package++ = 'W';
@@ -42,6 +78,7 @@ void PawnMain(shen_name shop)
         FTBL.camCtrlSetState(0);
         FTBL.HLib_SetupTimedTask(work->parent, -1);
         FTBL.SetPlayerControlEnabled(0);
+#endif
         FTBL.SetScreenFilmFade(8, 0, 0, 0, 0, 255, 0, 0, 0);
         fail = 0;
         break;
@@ -50,18 +87,58 @@ void PawnMain(shen_name shop)
         FTBL.HLib_DestroyTask(task);
 }
 
+#endif
+
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !defined(SHENMUE_EVENT_ENTRY)
 #define SHENMUE_AREA_LOOP_MOTION_FRAMES
 #define SHENMUE_AREA_LOOP_VOICE_REVISION 1
 #include "s2/areas/area_loop_dc.c"
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static char pawnPackage[] = "PAWN";
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static char pawnConversation[] = "";
+#define PAWN_FLYER_CONVERSATION "0121"
+#else
 static char pawnConversation[] = "0121";
 static char pawnCutscene[] = "01210000";
+#define PAWN_FLYER_CONVERSATION pawnConversation
+#endif
 static PawnShopItem pawnShopItems[] = {
     {PAWN_ARP0, 9000}, {PAWN_WSP0, 9001}, {PAWN_WKP0, 9002}, {PAWN_WKP1, 9003}, {PAWN_WTP0, 9004}, {PAWN_WTP1, 9005},
     {PAWN_WTP2, 9006}, {PAWN_WTP3, 9007}, {PAWN_WTP4, 9008}, {PAWN_WRP0, 9009}, {PAWN_QBL0, 9010}, {PAWN_QBR0, 9011},
     {0, 0},
 };
 static PawnShopScene pawnShopScenes[] = {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    {PAWN_ARP0, SHEN_NAME4('T', 'J', 'N', '_'), SHEN_NAME4('p', 'A', 'P', '0'), 296.577f, 496.878f, 16384, -0.04f, -1.356f,
+     296.577f, 496.878f, 16384, -0.04f, -1.356f, 457},
+    {PAWN_WSP0, SHEN_NAME4('Y', 'R', 'Y', '_'), SHEN_NAME4('p', 'S', 'P', '0'), 49.618f, 120.72f, 49152, -0.025f, -1.342f,
+     49.618f, 120.72f, 49152, -0.025f, -1.342f, 458},
+    {PAWN_WKP0, SHEN_NAME4('H', 'A', 'C', '_'), SHEN_NAME4('p', 'K', 'P', '0'), 57.637f, 270.178f, 49152, -0.091f, -1.406f,
+     57.637f, 270.178f, 49152, -0.091f, -1.406f, 459},
+    {PAWN_WKP1, SHEN_NAME4('E', 'E', 'I', '_'), SHEN_NAME4('p', 'K', 'P', '1'), 98.8f, 316.087f, 49152, 0.046f, -1.296f,
+     98.8f, 316.087f, 49152, 0.046f, -1.296f, 460},
+    {PAWN_WTP0, SHEN_NAME4('M', 'L', 'I', '_'), SHEN_NAME4('p', 'T', 'P', '0'), 238.037f, 256.305f, 49152, 0.111f, -1.371f,
+     238.037f, 256.305f, 49152, 0.111f, -1.371f, 461},
+    {PAWN_WTP1, SHEN_NAME4('N', 'O', 'L', '_'), SHEN_NAME4('p', 'T', 'P', '1'), 237.9f, 265.8f, 49152, -0.052f, -1.233f,
+     237.9f, 265.8f, 49152, -0.052f, -1.233f, 462},
+    {PAWN_WTP2, SHEN_NAME4('J', 'N', 'T', '_'), SHEN_NAME4('p', 'T', 'P', '2'), 260.879f, 261.82f, 16384, -0.052f, -1.233f,
+     260.879f, 261.82f, 16384, -0.052f, -1.233f, 463},
+    {PAWN_WTP3, SHEN_NAME4('X', 'N', 'O', '_'), SHEN_NAME4('p', 'T', 'P', '3'), 237.737f, 244.149f, 16384, -0.027f, -1.355f,
+     237.737f, 244.149f, 16384, -0.027f, -1.355f, 464},
+    {PAWN_WTP4, SHEN_NAME4('C', 'K', 'N', '_'), SHEN_NAME4('p', 'T', 'P', '4'), 246.888f, 246.3f, 49152, 0.006f, -1.376f,
+     246.888f, 246.3f, 49152, 0.006f, -1.376f, 465},
+    {PAWN_WRP0, SHEN_NAME4('E', 'M', 'N', '_'), SHEN_NAME4('p', 'R', 'P', '0'), 160.002f, 144.234f, 16384, -0.101f, -1.355f,
+     160.002f, 144.234f, 16384, -0.101f, -1.355f, 466},
+    {PAWN_QBL0, SHEN_NAME4('M', 'M', 'H', '_'), SHEN_NAME4('p', 'B', 'L', '0'), 206.636f, 189.898f, 23665, -0.101f, -1.355f,
+     206.636f, 189.898f, 23665, -0.101f, -1.355f, 920},
+    {PAWN_QBR0, SHEN_NAME4('I', 'L', 'N', '_'), SHEN_NAME4('p', 'B', 'R', '0'), 209.749f, 193.561f, 23665, -0.101f, -1.355f,
+     209.749f, 193.561f, 23665, -0.101f, -1.355f, 921},
+    {0, 0, 0, 0.0f, 0.0f, 0, 0.0f, 0.0f,
+     0.0f, 0.0f, 0, 0.0f, 0.0f, 0},
+#else
     {PAWN_ARP0, SHEN_NAME4('T', 'J', 'N', '_'), SHEN_NAME4('p', 'A', 'P', '0'), 2227, 296.697f, 496.878f, 16384, -0.04f, -1.4f,
      296.697f, 496.878f, 16384, -0.04f, -1.4f, 457},
     {PAWN_WSP0, SHEN_NAME4('Y', 'R', 'Y', '_'), SHEN_NAME4('p', 'S', 'P', '0'), 1260, 49.618f, 120.72f, 49152, -0.025f, -1.5f,
@@ -87,6 +164,7 @@ static PawnShopScene pawnShopScenes[] = {
     {PAWN_QBR0, SHEN_NAME4('I', 'L', 'N', '_'), SHEN_NAME4('p', 'B', 'R', '0'), 0, 209.749f, 193.561f, 23665, -0.2f, -1.65f,
      209.749f, 193.561f, 23665, -0.2f, -1.65f, 921},
     {0, 0, 0, 0, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0.0f, 0.0f, 0},
+#endif
 };
 
 void PawnInitialize(void *data)
@@ -101,12 +179,23 @@ void PawnInitialize(void *data)
         }
         FTBL.HLib_SetCurrentTaskTo(PawnWaitPackage);
         FTBL.HLib_SetupTaskDelay(-1);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         fail = 0;
+#endif
         FTBL.EV_ResetFreeTalkFlags();
         FTBL.EV_NPC_NewLoadSw_0(0);
-        package = work->package;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        if (pawnConversation[0])
+            FTBL.EV_FreeAuthorPak(1, pawnConversation);
+        package = pawnPackage;
+        fail = 0;
+        if (package && package[0])
+            QueueAreaLoopPackage(FTBL.Filepath_Gen(7), package, ResolveAreaLoopParent);
+#else
+        package = PAWN_PACKAGE(work);
         if (package && package[0])
             QueueAreaLoopPackage(FTBL.Filepath_Gen(0), package, ResolveAreaLoopParent);
+#endif
         break;
     }
     if (fail)
@@ -118,9 +207,14 @@ void PawnWaitPackage(void *data)
     PawnWork *work = (PawnWork *)data;
     shen_name names[2];
     if (work) {
-        FTBL.EV_ControlPackageResources(2, 4, work->package, 0, 0);
-        FTBL.EV_ControlPackageResources(2, 2, work->package, 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.EV_ControlPackageResources(2, 4, pawnPackage, 0, 0);
+        FTBL.EV_ControlPackageResources(2, 2, pawnPackage, 0, 0);
+#else
+        FTBL.EV_ControlPackageResources(2, 4, PAWN_PACKAGE(work), 0, 0);
+        FTBL.EV_ControlPackageResources(2, 2, PAWN_PACKAGE(work), 0, 0);
         FTBL.EV_LoadCutsceneFromCurrentScene(pawnCutscene);
+#endif
         names[0] = FindPawnOwner(work->shop);
         names[1] = 0;
         FTBL.HLib_SetCurrentTaskTo(PawnWaitOwner);
@@ -136,6 +230,9 @@ void PawnWaitOwner(void *data)
     shen_name owner, flyer;
     if (work) {
         owner = FindPawnOwner(work->shop);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        work->motion = FTBL.GetMotionAnimationId(FTBL.scenFindMotionwork(owner), 0);
+#endif
         FTBL.GetCharaPosition(owner, -1, &work->position, 0x40000000);
         FTBL.GetScenarioCharacterEulerAngles(owner, &work->rotation, 0x40000000);
         SetAreaLoopCharacterControl(PAWN_RYO, 1);
@@ -144,6 +241,10 @@ void PawnWaitOwner(void *data)
             SetAreaLoopCharacterControl(flyer, 1);
         FTBL.EV_NPC_NewLoadSw_0(1);
         FTBL.SetScreenFilmFade(32, 255, 0, 0, 0, 0, 0, 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EventDebugGetState(3, 1);
+        EventDebugCheck(3, 4);
+#endif
         FTBL.HLib_SetCurrentTaskTo(PawnBegin);
     } else {
         FTBL.EV_NPC_NewLoadSw_0(1);
@@ -157,20 +258,48 @@ void PawnDone(void *data)
     shen_name owner, flyer;
     shen_name names[2];
     while (!FTBL.filmCheckFadeTrackColour() && work && !FTBL.IsScenarioBusy()) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        if (work->awardTask)
+#else
         if (work && work->awardTask)
+#endif
             FTBL.HLib_DestroyTask(work->awardTask);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        if (pawnConversation[0])
+            FTBL.EV_FreeAuthorPak(0, pawnConversation);
+#endif
         SetAreaLoopCharacterControl(PAWN_RYO, 0);
         flyer = FindPawnFlyer(work->shop);
         if (flyer)
             SetAreaLoopCharacterControl(flyer, 0);
         owner = FindPawnOwner(work->shop);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        if (owner) {
+#else
         if (!owner)
             break;
-        if (work && work->package[0])
-            FTBL.EV_ControlPackageResources(0, 6, work->package, 0, 0);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        if (pawnPackage[0])
+            FTBL.EV_ControlPackageResources(0, 6, pawnPackage, 0, 0);
+#else
+        if (work && PAWN_PACKAGE(work)[0])
+            FTBL.EV_ControlPackageResources(0, 6, PAWN_PACKAGE(work), 0, 0);
+#endif
         names[0] = owner;
         names[1] = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        RestoreAreaLoopCharacters(names, names);
+#else
         RestoreAreaLoopCharacters(names, 0);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(owner), work->motion, 0);
+        FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(owner), 1);
+        FTBL.SetMotionFrameTime(FTBL.scenFindMotionwork(owner), 16, 0);
+        FTBL.EV_AT_SetPos(owner, 0x78000000, &work->position);
+        FTBL.EV_AT_SetAngY_0(owner, 0x78000000, &work->rotation, 0);
+#endif
         FTBL.camCtrlSetState(27);
         FTBL.SetScenarioFollowCharacter(0);
         FTBL.camCtrlSetFovTransitionTo(1);
@@ -178,14 +307,88 @@ void PawnDone(void *data)
         FTBL.camCtrlSetState(0);
         FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(PAWN_RYO), 0xf003, 0);
         FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(PAWN_RYO), 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EventDebugUnregister(3);
+#endif
         FTBL.HLib_ResolveDeferredCallback(work->parent);
         FTBL.SetPlayerControlEnabled(1);
         FTBL.EV_setHoldStatesFlags(1);
         FTBL.HLib_MarkCurrentTaskForCleanup();
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        }
+#endif
         break;
     }
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void PawnFinish(void *data)
+{
+    PawnWork *work = (PawnWork *)data;
+    if (work) {
+        FTBL.HLib_AssignCallbackForTask(work->task, PawnDone);
+        FTBL.HLib_SetupTimedTask(work->task, 1);
+    }
+}
+
+void PawnBegin(void *data)
+{
+    PawnWork *work = (PawnWork *)data;
+    Vector3 playerPosition, ownerPosition;
+    Vector3i rotation;
+    int flags[9], ownerYaw, playerYaw;
+    shen_name owner;
+    int i;
+    if (work) {
+        if (GetPawnStandData(work->shop, &ownerPosition, &ownerYaw, &playerPosition, &playerYaw,
+                             FTBL.GetItemState(FindPawnItem(work->shop)) == 0)) {
+        owner = FindPawnOwner(work->shop);
+        FTBL.EV_AT_SetPos(PAWN_RYO, 0x78000000, &playerPosition);
+        rotation.x = 0;
+        rotation.y = playerYaw;
+        rotation.z = 0;
+        FTBL.EV_AT_SetAngY_0(PAWN_RYO, 0x78000000, &rotation, 0);
+        FTBL.EV_AT_SetPos(PAWN_BASE, 0x78000000, &ownerPosition);
+        rotation.x = 0;
+        rotation.y = ownerYaw;
+        rotation.z = 0;
+        FTBL.EV_AT_SetAngY_0(PAWN_BASE, 0x78000000, &rotation, 0);
+        FTBL.EV_AT_SetPos(owner, 0x78000000, &ownerPosition);
+        FTBL.EV_AT_SetAngY_0(owner, 0x78000000, &rotation, 0);
+        flags[0] = 1222;
+        flags[1] = 1223;
+        flags[2] = 1224;
+        flags[3] = 1225;
+        flags[4] = 1226;
+        flags[5] = 1227;
+        flags[6] = 1228;
+        flags[7] = 1229;
+        flags[8] = -1;
+        for (i = 0; flags[i] != -1; i++)
+            FTBL.EV_SetPlayerFlag(12, flags[i], 0);
+        FTBL.HLib_SetCurrentTaskTo(PawnChoosePresentation);
+        } else {
+            FTBL.HLib_SetCurrentTaskTo(PawnDone);
+        }
+    } else {
+        FTBL.HLib_SetCurrentTaskTo(PawnDone);
+    }
+}
+
+void PawnChoosePresentation(void *data)
+{
+    PawnWork *work = (PawnWork *)data;
+    HLibTaskCallback next;
+    do {
+        if (!work || !FindPawnOwner(work->shop)) {
+            FTBL.HLib_SetCurrentTaskTo(PawnDone);
+            break;
+        }
+        next = FTBL.GetItemState(FindPawnItem(work->shop)) ? PawnTalkOpening : PawnBeginFlyer;
+        FTBL.HLib_SetCurrentTaskTo(next);
+    } while (0);
+}
+#else
 void PawnBegin(void *data)
 {
     PawnWork *work = (PawnWork *)data;
@@ -237,13 +440,17 @@ void PawnBegin(void *data)
         FTBL.HLib_SetCurrentTaskTo(PawnDone);
 }
 
+#endif
+
 void PawnBeginFlyer(void *data)
 {
     PawnWork *work = (PawnWork *)data;
     Vector3i rotation;
     Vector3 playerPosition, ownerPosition;
     Vector3i playerRotation, ownerRotation;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     float reflector[4];
+#endif
     shen_name owner, flyer;
     int award;
     HLibTask *task;
@@ -257,7 +464,8 @@ void PawnBeginFlyer(void *data)
         FTBL.GetScenarioCharacterEulerAngles(PAWN_RYO, &rotation, 0x40000000);
         rotation.y += 0x8000;
         FTBL.EV_AT_SetAngY_0(PAWN_RYO, 0x78000000, &rotation, 0);
-        FTBL.EV_FreeAuthorPak(1, pawnConversation);
+        FTBL.EV_FreeAuthorPak(1, PAWN_FLYER_CONVERSATION);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(PAWN_RYO));
         FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(PAWN_RYO));
         FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(PAWN_RYO), 1, 0, 0);
@@ -270,33 +478,56 @@ void PawnBeginFlyer(void *data)
         FTBL.SetHighModelXYZ(FTBL.ctrlGetCharaByName(owner), 1, 1, 0);
         FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(owner), 1, (void *)areaLoopHandPoses[11], 1);
         FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(owner), 0, (void *)areaLoopHandPoses[43], 1);
+#endif
         FTBL.HLib_SetCurrentTaskTo(PawnFlyerDone);
         FTBL.HLib_SetupTaskDelay(-1);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        QueueAreaLoopCamera(pawnPackage, 1500, owner, 0, 0);
+#else
         reflector[0] = 1.0f;
         reflector[1] = 1.0f;
         reflector[2] = 1.0f;
         reflector[3] = 1.0f;
         FTBL.SetRefBoardParamsForCharaById(flyer, 1);
         FTBL.SetScenarioReflectorBoardValues(flyer, reflector);
+#endif
         award = 300;
         switch (work->shop) {
         case PAWN_ARP0:
             QueueAreaLoopMotion(PAWN_RYO, 7303, 0, 570, 80.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7315, 0, 570, 80.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 0.243f;
             playerPosition.y = 0.049f;
             playerPosition.z = -0.084f;
             playerRotation.x = 60438;
             playerRotation.y = 48969;
             playerRotation.z = 55705;
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.193f;
             ownerPosition.y = 0.155f;
             ownerPosition.z = -0.063f;
             ownerRotation.x = 34388;
             ownerRotation.y = 17694;
             ownerRotation.z = 57107;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 180, 59, &ownerPosition, &ownerRotation, 0);
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 240, 330, &playerPosition, &playerRotation, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
@@ -309,12 +540,13 @@ void PawnBeginFlyer(void *data)
             ownerRotation.z = 3640;
             FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(PAWN_RYO), 0, 21, &playerRotation);
             FTBL.imgmSetHandPos(FTBL.ctrlGetCharaByName(owner), 0, 21, &ownerRotation);
+#endif
             award = 500;
-            QueueAreaLoopCamera(work->package, 1600, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1601, PAWN_BASE, 100, 0);
-            QueueAreaLoopCamera(work->package, 1602, PAWN_BASE, 180, 0);
-            QueueAreaLoopCamera(work->package, 1604, PAWN_BASE, 240, 0);
-            QueueAreaLoopCamera(work->package, 1603, PAWN_BASE, 340, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1600, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1601, PAWN_BASE, 100, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1602, PAWN_BASE, 180, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1604, PAWN_BASE, 240, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1603, PAWN_BASE, 340, 0);
             QueueAreaLoopVoice("0121B014", 1, 33, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 127, -1, 0);
             QueueAreaLoopVoice("0121B015", 1, 165, -1, 0);
@@ -322,8 +554,34 @@ void PawnBeginFlyer(void *data)
             QueueAreaLoopVoice("0121B017", 1, 470, -1, 0);
             break;
         case PAWN_WSP0:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopMotion(PAWN_RYO, 7310, 0, 830, 540.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
+#else
             QueueAreaLoopMotion(PAWN_RYO, 7310, 0, 800, 540.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopMotion(owner, 7301, 0, 830, 540.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#else
             QueueAreaLoopMotion(owner, 7301, 0, 800, 540.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.7f;
+            ownerPosition.y = 0.7f;
+            ownerPosition.z = 0.7f;
+            FTBL.mtwkSetMotionworkScale3(flyer, &ownerPosition);
+            ownerPosition.x = 0.172f;
+            ownerPosition.y = 0.075f;
+            ownerPosition.z = -0.072f;
+            ownerRotation.x = 58285;
+            ownerRotation.y = 20201;
+            ownerRotation.z = 15848;
+            playerPosition.x = 0.189f;
+            playerPosition.y = 0.086f;
+            playerPosition.z = 0.001f;
+            playerRotation.x = 39871;
+            playerRotation.y = 18943;
+            playerRotation.z = 28025;
+#else
             ownerPosition.x = 0.212f;
             ownerPosition.y = 0.104f;
             ownerPosition.z = -0.069f;
@@ -336,6 +594,7 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 34770;
             playerRotation.y = 53703;
             playerRotation.z = 14745;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 323, 85, &ownerPosition, &ownerRotation, 0);
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 409, 170, &playerPosition, &playerRotation, 0);
             playerPosition.x = 1000.0f;
@@ -343,11 +602,11 @@ void PawnBeginFlyer(void *data)
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 580, 1, &playerPosition, &playerRotation, 0);
             award = 500;
-            QueueAreaLoopCamera(work->package, 1610, owner, 0, 0);
-            QueueAreaLoopCamera(work->package, 1611, owner, 260, 0);
-            QueueAreaLoopCamera(work->package, 1612, owner, 330, 0);
-            QueueAreaLoopCamera(work->package, 1613, owner, 409, 0);
-            QueueAreaLoopCamera(work->package, 1614, owner, 649, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1610, owner, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1611, owner, 260, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1612, owner, 330, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1613, owner, 409, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1614, owner, 649, 0);
             QueueAreaLoopVoice("0121G002", 1, 35, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 175, -1, 0);
             QueueAreaLoopVoice("0121G003", 1, 276, -1, 0);
@@ -357,6 +616,20 @@ void PawnBeginFlyer(void *data)
         case PAWN_WKP0:
             QueueAreaLoopMotion(PAWN_RYO, 7306, 0, 600, 290.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7298, 0, 600, 290.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.212f;
             ownerPosition.y = 0.137f;
             ownerPosition.z = -0.08f;
@@ -369,26 +642,64 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 48787;
             playerRotation.y = 50972;
             playerRotation.z = 3640;
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopAttachment(owner, 14, flyer, 235, 94, &ownerPosition, &ownerRotation, 0);
+#else
             QueueAreaLoopAttachment(owner, 14, flyer, 230, 94, &ownerPosition, &ownerRotation, 0);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 330, 100, &playerPosition, &playerRotation, 0);
+#else
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 329, 100, &playerPosition, &playerRotation, 0);
+#endif
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 430, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 340;
-            QueueAreaLoopCamera(work->package, 1620, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1621, owner, 100, 0);
-            QueueAreaLoopCamera(work->package, 1622, owner, 329, 0);
-            QueueAreaLoopCamera(work->package, 1623, owner, 451, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1620, owner, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1621, owner, 100, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1622, owner, 329, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1623, owner, 451, 0);
+            QueueAreaLoopVoice("0121E002", 1, 10, -1, 0);
+            QueueAreaLoopVoice("0121A005", 1, 120, -1, 0);
+            QueueAreaLoopVoice("0121E003", 1, 170, -1, 0);
+            QueueAreaLoopVoice("0121E004", 1, 380, -1, 0);
+            QueueAreaLoopVoice("0121E005", 1, 480, -1, 0);
+#else
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1620, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1621, owner, 100, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1622, owner, 329, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1623, owner, 451, 0);
             QueueAreaLoopVoice("0121E002", 1, 10, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 120, -1, 0);
             QueueAreaLoopVoice("0121E003", 1, 170, -1, 0);
             QueueAreaLoopVoice("0121E004", 1, 380, -1, 0);
             QueueAreaLoopVoice("0121E005", 1, 510, -1, 0);
+#endif
             break;
+
         case PAWN_WKP1:
             QueueAreaLoopMotion(PAWN_RYO, 7303, 0, 740, 100.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7320, 0, 740, 100.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.243f;
             ownerPosition.y = 0.046f;
             ownerPosition.z = -0.066f;
@@ -401,26 +712,56 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 61713;
             playerRotation.y = 48241;
             playerRotation.z = 56433;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 154, 75, &ownerPosition, &ownerRotation, 0);
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 230, 335, &playerPosition, &playerRotation, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 566, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 240;
-            QueueAreaLoopCamera(work->package, 1630, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1631, PAWN_BASE, 154, 0);
-            QueueAreaLoopCamera(work->package, 1635, PAWN_BASE, 220, 0);
-            QueueAreaLoopCamera(work->package, 1634, PAWN_BASE, 566, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1630, owner, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1631, PAWN_BASE, 154, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1632, owner, 230, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1633, owner, 464, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1634, PAWN_BASE, 566, 0);
+            QueueAreaLoopVoice("0121H002", 1, 10, -1, 0);
+            QueueAreaLoopVoice("0121A005", 1, 90, -1, 0);
+            QueueAreaLoopVoice("0121H003", 1, 150, -1, 0);
+            QueueAreaLoopVoice("0121H004", 1, 295, -1, 0);
+            QueueAreaLoopVoice("0121H005", 1, 631, -1, 0);
+#else
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1630, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1631, PAWN_BASE, 154, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1635, PAWN_BASE, 220, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1634, PAWN_BASE, 566, 0);
             QueueAreaLoopVoice("0121H002", 1, 10, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 100, -1, 0);
             QueueAreaLoopVoice("0121H003", 1, 150, -1, 0);
             QueueAreaLoopVoice("0121H004", 1, 295, -1, 0);
             QueueAreaLoopVoice("0121H005", 1, 631, -1, 0);
+#endif
             break;
         case PAWN_WRP0:
             QueueAreaLoopMotion(PAWN_RYO, 7305, 0, 700, 130.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7297, 0, 700, 130.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.23f;
             ownerPosition.y = 0.064f;
             ownerPosition.z = -0.08f;
@@ -433,18 +774,21 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 49880;
             playerRotation.y = 48605;
             playerRotation.z = 1820;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 230, 109, &ownerPosition, &ownerRotation, 0);
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 340, 120, &playerPosition, &playerRotation, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 461, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 350;
-            QueueAreaLoopCamera(work->package, 1640, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1641, PAWN_BASE, 275, 0);
-            QueueAreaLoopCamera(work->package, 1642, PAWN_BASE, 295, 0);
-            QueueAreaLoopCamera(work->package, 1643, PAWN_BASE, 340, 0);
-            QueueAreaLoopCamera(work->package, 1644, PAWN_BASE, 400, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1640, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1641, PAWN_BASE, 275, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1642, PAWN_BASE, 295, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1643, PAWN_BASE, 340, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1644, PAWN_BASE, 400, 0);
             QueueAreaLoopVoice("0121F002", 1, 1, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 130, -1, 0);
             QueueAreaLoopVoice("0121F003", 1, 200, -1, 0);
@@ -454,6 +798,20 @@ void PawnBeginFlyer(void *data)
         case PAWN_WTP0:
             QueueAreaLoopMotion(PAWN_RYO, 7302, 0, 640, 0.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7299, 0, 640, 0.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.229f;
             ownerPosition.y = 0.059f;
             ownerPosition.z = -0.085f;
@@ -466,27 +824,61 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 41506;
             playerRotation.y = 53521;
             playerRotation.z = 10558;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 200, 94, &ownerPosition, &ownerRotation, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 295, 340, &playerPosition, &playerRotation, 0);
+#else
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 295, 330, &playerPosition, &playerRotation, 0);
+#endif
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 626, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 300;
-            QueueAreaLoopCamera(work->package, 1650, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1651, PAWN_BASE, 215, 0);
-            QueueAreaLoopCamera(work->package, 1652, PAWN_BASE, 245, 0);
-            QueueAreaLoopCamera(work->package, 1653, PAWN_BASE, 295, 0);
-            QueueAreaLoopCamera(work->package, 1654, PAWN_BASE, 420, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1650, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1651, PAWN_BASE, 215, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1652, PAWN_BASE, 245, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1653, PAWN_BASE, 295, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1654, PAWN_BASE, 420, 0);
+            QueueAreaLoopVoice("0121D002", 1, 86, -1, 0);
+            QueueAreaLoopVoice("0121A005", 1, 138, -1, 0);
+            QueueAreaLoopVoice("0121D003", 1, 168, -1, 0);
+            QueueAreaLoopVoice("0121D004", 1, 420, -1, 0);
+#else
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1650, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1651, PAWN_BASE, 215, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1652, PAWN_BASE, 245, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1653, PAWN_BASE, 295, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1654, PAWN_BASE, 420, 0);
             QueueAreaLoopVoice("0121D002", 1, 76, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 148, -1, 0);
             QueueAreaLoopVoice("0121D003", 1, 168, -1, 0);
             QueueAreaLoopVoice("0121D004", 1, 420, -1, 0);
             QueueAreaLoopVoice("0121D005", 1, 580, -1, 0);
+#endif
             break;
+
         case PAWN_WTP1:
             QueueAreaLoopMotion(PAWN_RYO, 7308, 0, 500, 309.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7300, 0, 500, 309.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.222f;
             ownerPosition.y = 0.029f;
             ownerPosition.z = -0.092f;
@@ -499,25 +891,59 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 48423;
             playerRotation.y = 52974;
             playerRotation.z = 5825;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 200, 74, &ownerPosition, &ownerRotation, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 275, 65, &playerPosition, &playerRotation, 0);
+#else
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 276, 114, &playerPosition, &playerRotation, 0);
+#endif
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 391, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 280;
-            QueueAreaLoopCamera(work->package, 1660, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1661, PAWN_BASE, 200, 0);
-            QueueAreaLoopCamera(work->package, 1662, PAWN_BASE, 275, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1503, owner, 0, 0);
+            QueueAreaLoopVoice("お客さん、うちは初めてだね？", 0, 1, 149, 0);
+            QueueAreaLoopVoice("●青ええ。", 0, 150, 49, 0);
+            QueueAreaLoopVoice("じゃあ、、これ、持ってきな。", 0, 200, 99, 0);
+            QueueAreaLoopVoice("うちのパンフレット。＆買取り価格が書いてあるから。", 0, 300, 200, 0);
+#else
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1660, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1661, PAWN_BASE, 200, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1662, PAWN_BASE, 275, 0);
             QueueAreaLoopVoice("0121M002", 1, 1, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 130, -1, 0);
             QueueAreaLoopVoice("0121M003", 1, 190, -1, 0);
             QueueAreaLoopVoice("0121M004", 1, 290, -1, 0);
             QueueAreaLoopVoice("0121M005", 1, 414, -1, 0);
+#endif
             break;
+
         case PAWN_WTP2:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopMotion(PAWN_RYO, 7307, 0, 515, 270.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
+#else
             QueueAreaLoopMotion(PAWN_RYO, 7307, 0, 515, 280.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
+#endif
             QueueAreaLoopMotion(owner, 7317, 0, 515, 270.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.249f;
             ownerPosition.y = 0.072f;
             ownerPosition.z = -0.056f;
@@ -530,31 +956,70 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 50426;
             playerRotation.y = 52974;
             playerRotation.z = 2548;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 250, 59, &ownerPosition, &ownerRotation, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 310, 115, &playerPosition, &playerRotation, 0);
+#else
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 310, 89, &playerPosition, &playerRotation, 0);
+#endif
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 400, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 315;
-            QueueAreaLoopCamera(work->package, 1670, owner, 0, 0);
-            QueueAreaLoopCamera(work->package, 1671, owner, 125, 0);
-            QueueAreaLoopCamera(work->package, 1672, owner, 215, 0);
-            QueueAreaLoopCamera(work->package, 1673, owner, 310, 0);
-            QueueAreaLoopCamera(work->package, 1674, owner, 340, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1670, owner, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1671, owner, 125, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1672, owner, 215, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1673, owner, 310, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1674, owner, 340, 0);
+            QueueAreaLoopVoice("0121K002", 1, 30, -1, 0);
+            QueueAreaLoopVoice("0121A005", 1, 130, -1, 0);
+            QueueAreaLoopVoice("0121K003", 1, 220, -1, 0);
+            QueueAreaLoopVoice("0121K004", 1, 315, -1, 0);
+#else
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1670, owner, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1671, owner, 125, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1672, owner, 215, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1673, owner, 310, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1674, owner, 340, 0);
             QueueAreaLoopVoice("0121K002", 1, 30, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 130, -1, 0);
             QueueAreaLoopVoice("0121K003", 1, 220, -1, 0);
             QueueAreaLoopVoice("0121K004", 1, 315, -1, 0);
             QueueAreaLoopVoice("0121K005", 1, 420, -1, 0);
+#endif
             break;
+
         case PAWN_WTP4:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopMotion(PAWN_RYO, 7304, 0, 450, 320.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
+            QueueAreaLoopMotion(owner, 7314, 0, 450, 320.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#else
             QueueAreaLoopMotion(PAWN_RYO, 7304, 0, 260, 320.0f, -1.0f, 1.0f, 0.0f, 0, 6);
             QueueAreaLoopMotion(owner, 7314, 0, 260, 320.0f, -1.0f, 1.0f, 0.0f, 0, 6);
             QueueAreaLoopMotion(PAWN_RYO, 7304, 261, 60, 580.0f, -1.0f, 0.0f, 0.0f, 0, 6);
             QueueAreaLoopMotion(owner, 7314, 261, 60, 580.0f, -1.0f, 0.0f, 0.0f, 0, 6);
             QueueAreaLoopMotion(PAWN_RYO, 7304, 321, 200, 620.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7314, 321, 200, 620.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.252f;
             ownerPosition.y = 0.037f;
             ownerPosition.z = -0.033f;
@@ -567,27 +1032,61 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 63897;
             playerRotation.y = 44983;
             playerRotation.z = 52082;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 225, 59, &ownerPosition, &ownerRotation, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 285, 110, &playerPosition, &playerRotation, 0);
+#else
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 321, 110, &playerPosition, &playerRotation, 0);
+#endif
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 431, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 300;
-            QueueAreaLoopCamera(work->package, 1680, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1681, PAWN_BASE, 130, 0);
-            QueueAreaLoopCamera(work->package, 1682, PAWN_BASE, 200, 0);
-            QueueAreaLoopCamera(work->package, 1683, PAWN_BASE, 250, 0);
-            QueueAreaLoopCamera(work->package, 1684, PAWN_BASE, 321, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1680, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1681, PAWN_BASE, 130, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1682, PAWN_BASE, 200, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1683, PAWN_BASE, 250, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1684, PAWN_BASE, 285, 0);
+            QueueAreaLoopVoice("0121C002", 1, 30, -1, 0);
+            QueueAreaLoopVoice("0121A005", 1, 130, -1, 0);
+            QueueAreaLoopVoice("0121C003", 1, 250, -1, 0);
+            QueueAreaLoopVoice("0121C004", 1, 350, -1, 0);
+#else
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1680, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1681, PAWN_BASE, 130, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1682, PAWN_BASE, 200, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1683, PAWN_BASE, 250, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1684, PAWN_BASE, 321, 0);
             QueueAreaLoopVoice("0121C002", 1, 30, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 130, -1, 0);
             QueueAreaLoopVoice("0121C003", 1, 250, -1, 0);
             QueueAreaLoopVoice("0121C004", 1, 320, -1, 0);
             QueueAreaLoopVoice("0121C005", 1, 430, -1, 0);
+#endif
             break;
+
         case PAWN_WTP3:
             QueueAreaLoopMotion(PAWN_RYO, 7309, 0, 540, 250.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7319, 0, 540, 250.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.237f;
             ownerPosition.y = 0.05f;
             ownerPosition.z = -0.119f;
@@ -600,25 +1099,50 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 49698;
             playerRotation.y = 51154;
             playerRotation.z = 65353;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 182, 75, &ownerPosition, &ownerRotation, 0);
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 258, 92, &playerPosition, &playerRotation, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 351, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 260;
-            QueueAreaLoopCamera(work->package, 1690, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1691, PAWN_BASE, 182, 0);
-            QueueAreaLoopCamera(work->package, 1692, PAWN_BASE, 258, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1690, owner, 0, 0);
+            QueueAreaLoopVoice("0121L002", 1, 80, -1, 0);
+            QueueAreaLoopVoice("0121A005", 1, 140, -1, 0);
+            QueueAreaLoopVoice("0121L003", 1, 210, -1, 0);
+            QueueAreaLoopVoice("0121L004", 1, 350, -1, 0);
+#else
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1690, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1691, PAWN_BASE, 182, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1692, PAWN_BASE, 258, 0);
             QueueAreaLoopVoice("0121L002", 1, 40, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 140, -1, 0);
             QueueAreaLoopVoice("0121L003", 1, 210, -1, 0);
             QueueAreaLoopVoice("0121L004", 1, 350, -1, 0);
             QueueAreaLoopVoice("0121L005", 1, 470, -1, 0);
+#endif
             break;
         case PAWN_QBL0:
             QueueAreaLoopMotion(PAWN_RYO, 7310, 0, 775, 540.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7301, 0, 775, 540.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.228f;
             ownerPosition.y = 0.079f;
             ownerPosition.z = -0.08f;
@@ -631,27 +1155,66 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 34770;
             playerRotation.y = 53703;
             playerRotation.z = 14745;
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopAttachment(owner, 14, flyer, 343, 66, &ownerPosition, &ownerRotation, 0);
+#else
             QueueAreaLoopAttachment(owner, 14, flyer, 330, 78, &ownerPosition, &ownerRotation, 0);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 410, 169, &playerPosition, &playerRotation, 0);
+#else
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 409, 169, &playerPosition, &playerRotation, 0);
+#endif
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 580, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 410;
-            QueueAreaLoopCamera(work->package, 1700, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1701, PAWN_BASE, 260, 0);
-            QueueAreaLoopCamera(work->package, 1702, PAWN_BASE, 330, 0);
-            QueueAreaLoopCamera(work->package, 1705, PAWN_BASE, 409, 0);
-            QueueAreaLoopCamera(work->package, 1704, PAWN_BASE, 649, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1700, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1701, PAWN_BASE, 260, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1702, PAWN_BASE, 330, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1703, PAWN_BASE, 409, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1704, PAWN_BASE, 649, 0);
             QueueAreaLoopVoice("0121J002", 1, 1, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 150, -1, 0);
             QueueAreaLoopVoice("0121J003", 1, 200, -1, 0);
             QueueAreaLoopVoice("0121J004", 1, 400, -1, 0);
             QueueAreaLoopVoice("0121J005", 1, 600, -1, 0);
+#else
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1700, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1701, PAWN_BASE, 260, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1702, PAWN_BASE, 330, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1705, PAWN_BASE, 409, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1704, PAWN_BASE, 649, 0);
+            QueueAreaLoopVoice("0121J002", 1, 1, -1, 0);
+            QueueAreaLoopVoice("0121A005", 1, 150, -1, 0);
+            QueueAreaLoopVoice("0121J003", 1, 200, -1, 0);
+            QueueAreaLoopVoice("0121J004", 1, 400, -1, 0);
+            QueueAreaLoopVoice("0121J005", 1, 600, -1, 0);
+#endif
             break;
+
         case PAWN_QBR0:
             QueueAreaLoopMotion(PAWN_RYO, 7305, 0, 700, 130.0f, -1.0f, 1.0f, 0.0f, ResolveAreaLoopParent, 6);
             QueueAreaLoopMotion(owner, 7297, 0, 700, 130.0f, -1.0f, 1.0f, 0.0f, 0, 6);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            ownerPosition.x = 0.187f;
+            ownerPosition.y = 0.048f;
+            ownerPosition.z = -0.085f;
+            ownerRotation.x = 59892;
+            ownerRotation.y = 3822;
+            ownerRotation.z = 3458;
+            playerPosition.x = 0.203f;
+            playerPosition.y = 0.057f;
+            playerPosition.z = -0.084f;
+            playerRotation.x = 64989;
+            playerRotation.y = 2912;
+            playerRotation.z = 2730;
+#else
             ownerPosition.x = 0.156f;
             ownerPosition.y = 0.11f;
             ownerPosition.z = -0.141f;
@@ -664,23 +1227,38 @@ void PawnBeginFlyer(void *data)
             playerRotation.x = 7281;
             playerRotation.y = 45693;
             playerRotation.z = 43690;
+#endif
             QueueAreaLoopAttachment(owner, 14, flyer, 230, 110, &ownerPosition, &ownerRotation, 0);
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 341, 119, &playerPosition, &playerRotation, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
             playerPosition.x = 1000.0f;
             playerPosition.y = 1000.0f;
             playerPosition.z = 1000.0f;
             QueueAreaLoopAttachment(PAWN_RYO, 14, flyer, 461, 1, &playerPosition, &playerRotation, 0);
+#endif
             award = 350;
-            QueueAreaLoopCamera(work->package, 1720, PAWN_BASE, 0, 0);
-            QueueAreaLoopCamera(work->package, 1721, PAWN_BASE, 275, 0);
-            QueueAreaLoopCamera(work->package, 1722, PAWN_BASE, 295, 0);
-            QueueAreaLoopCamera(work->package, 1723, PAWN_BASE, 340, 0);
-            QueueAreaLoopCamera(work->package, 1724, PAWN_BASE, 400, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1720, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1721, PAWN_BASE, 275, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1722, PAWN_BASE, 295, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1723, PAWN_BASE, 340, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1724, PAWN_BASE, 400, 0);
+            QueueAreaLoopVoice("0121I002", 1, 1, -1, 0);
+            QueueAreaLoopVoice("0121A005", 1, 130, -1, 0);
+            QueueAreaLoopVoice("0121I003", 1, 200, -1, 0);
+            QueueAreaLoopVoice("0121I004", 1, 550, -1, 0);
+#else
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1720, PAWN_BASE, 0, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1721, PAWN_BASE, 275, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1722, PAWN_BASE, 295, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1723, PAWN_BASE, 340, 0);
+            QueueAreaLoopCamera(PAWN_PACKAGE(work), 1724, PAWN_BASE, 400, 0);
             QueueAreaLoopVoice("0121I002", 1, 1, -1, 0);
             QueueAreaLoopVoice("0121A005", 1, 130, -1, 0);
             QueueAreaLoopVoice("0121I003", 1, 200, -1, 0);
             QueueAreaLoopVoice("0121I004", 1, 450, -1, 0);
             QueueAreaLoopVoice("0121I005", 1, 600, -1, 0);
+#endif
             break;
         }
         task = FTBL.HLib_EnqueueTaskWithParameter(PawnFlyerAward, 4, 11, sizeof(PawnFlyerAwardWork), TASK_EVNT);
@@ -697,6 +1275,20 @@ void PawnBeginFlyer(void *data)
     } while (0);
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void PawnFlyerAward(void *data)
+{
+    PawnFlyerAwardWork *work = (PawnFlyerAwardWork *)data;
+    if (work) {
+        if (work->frame <= ++work->elapsed) {
+            FTBL.AddInventoryItem(work->item, 1, 1);
+            FTBL.HLib_DestroyCurrentEventTask();
+        }
+    } else {
+        FTBL.HLib_DestroyCurrentEventTask();
+    }
+}
+#else
 void PawnFlyerAward(void *data)
 {
     PawnFlyerAwardWork *work = (PawnFlyerAwardWork *)data;
@@ -706,12 +1298,15 @@ void PawnFlyerAward(void *data)
     }
 }
 
+#endif
+
 void PawnFlyerDone(void *data)
 {
     PawnWork *work = (PawnWork *)data;
     shen_name owner, flyer;
     Vector3i rotation;
     if (work) {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         flyer = FindPawnFlyer(work->shop);
         FTBL.SetRefBoardParamsForCharaById(flyer, 0);
         FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(PAWN_RYO));
@@ -721,12 +1316,13 @@ void PawnFlyerDone(void *data)
             FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(owner));
             FTBL.hndlSetFlags(FTBL.ctrlGetCharaByName(owner));
         }
+#endif
         FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(PAWN_RYO), 17, 0);
         FTBL.GetScenarioCharacterEulerAngles(PAWN_RYO, &rotation, 0x40000000);
         rotation.y += 0x8000;
         FTBL.EV_AT_SetAngY_0(PAWN_RYO, 0x78000000, &rotation, 0);
-        FTBL.EV_FreeAuthorPak(0, pawnConversation);
-        RestorePawnTransactionPose(work, work->shop);
+        FTBL.EV_FreeAuthorPak(0, PAWN_FLYER_CONVERSATION);
+        PAWN_RESTORE_POSE(work, work->shop);
         FTBL.HLib_SetCurrentTaskTo(PawnBeginSelect);
     } else
         FTBL.HLib_SetCurrentTaskTo(PawnDone);
@@ -747,7 +1343,11 @@ void PawnTalkOpening(void *data)
     } while (0);
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void RestorePawnTransactionPose(shen_name shop)
+#else
 void RestorePawnTransactionPose(PawnWork *work, shen_name shop)
+#endif
 {
     unsigned int motion = 7324;
     unsigned int playerMotion = 7323;
@@ -815,7 +1415,11 @@ void RestorePawnTransactionPose(PawnWork *work, shen_name shop)
         break;
     }
     if (camera) {
-        FTBL.EV_ControlPackageResources(2, 4, work->package, 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.EV_ControlPackageResources(2, 4, pawnPackage, 0, 0);
+#else
+        FTBL.EV_ControlPackageResources(2, 4, PAWN_PACKAGE(work), 0, 0);
+#endif
         if (base)
             FTBL.EVS_LoopCamera(camera, base, base);
         else
@@ -829,11 +1433,15 @@ void PawnToSelect(void *data)
 {
     PawnWork *work = (PawnWork *)data;
     if (work) {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         if (!FTBL.IsScenarioBusy()) {
+#endif
             FindPawnOwner(work->shop);
             FTBL.HLib_SetCurrentTaskTo(PawnBeginSelect);
-            RestorePawnTransactionPose(work, work->shop);
+            PAWN_RESTORE_POSE(work, work->shop);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         }
+#endif
     } else
         FTBL.HLib_SetCurrentTaskTo(PawnDone);
 }
@@ -851,11 +1459,13 @@ void PawnBeginSelect(void *data)
             FTBL.HLib_SetCurrentTaskTo(PawnDone);
             break;
         }
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.InitiateCleanupForSceneChara(owner);
         if (FTBL.shenGetMinutesUntilNextFrameMinute() <= 0) {
             FTBL.HLib_SetCurrentTaskTo(PawnNotSelling);
             break;
         }
+#endif
         rotation.x = 0;
         rotation.z = 0;
         playerRotation.x = 0;
@@ -867,53 +1477,65 @@ void PawnBeginSelect(void *data)
         }
         if (FTBL.GetShouldRenderIcons(4))
             break;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        modes = FTBL.GetItemSelectionAvailability(work->shop);
+        if (modes & 11) {
+#else
         modes = FTBL.GetItemSelectionAvailability(work->shop) & 11;
         if (modes) {
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            choices[0] = modes & 8 ? 204 : -1;
+            choices[3] = 154;
+            choices[1] = modes & 1 ? 237 : -1;
+            choices[2] = modes & 2 ? 238 : -1;
+#else
             switch (modes) {
             case 11:
             default:
                 choices[1] = 237;
                 choices[2] = 238;
                 choices[0] = 204;
-                choices[3] = 154;
+                choices[3] = PAWN_CHOICE_QUIT;
                 break;
             case 3:
                 choices[1] = 237;
                 choices[2] = 238;
                 choices[0] = -1;
-                choices[3] = 154;
+                choices[3] = PAWN_CHOICE_QUIT;
                 break;
             case 10:
                 choices[1] = 238;
                 choices[2] = 204;
                 choices[0] = -1;
-                choices[3] = 154;
+                choices[3] = PAWN_CHOICE_QUIT;
                 break;
             case 9:
                 choices[1] = 237;
                 choices[2] = 204;
                 choices[0] = -1;
-                choices[3] = 154;
+                choices[3] = PAWN_CHOICE_QUIT;
                 break;
             case 8:
                 choices[1] = 204;
-                choices[2] = 154;
+                choices[2] = PAWN_CHOICE_QUIT;
                 choices[0] = -1;
                 choices[3] = -1;
                 break;
             case 1:
                 choices[1] = 237;
-                choices[2] = 154;
+                choices[2] = PAWN_CHOICE_QUIT;
                 choices[0] = -1;
                 choices[3] = -1;
                 break;
             case 2:
                 choices[1] = 238;
-                choices[2] = 154;
+                choices[2] = PAWN_CHOICE_QUIT;
                 choices[0] = -1;
                 choices[3] = -1;
                 break;
             }
+#endif
             FTBL.SetupControlSpeakAndUI(choices, 800, -1, 2);
             FTBL.HLib_SetCurrentTaskTo(PawnExecuteSelect);
         } else {
@@ -949,7 +1571,7 @@ void PawnExecuteSelect(void *data)
             open = 1;
             mode = 3;
             break;
-        case 154:
+        case PAWN_CHOICE_QUIT:
             next = PawnNotSelling;
             open = 0;
             mode = 0;
@@ -1023,10 +1645,12 @@ void PawnSetTransaction(void *data)
             }
             work->saleOutcome = value;
             QueuePawnTalk(parent, owner, dialogue);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         } else if (FTBL.shenGetMinutesUntilNextFrameMinute() <= 0) {
             FTBL.HLib_SetCurrentTaskTo(PawnNotSelling);
             FTBL.SetItemSelectionPageSize(2);
             FTBL.ClosePAWNShop();
+#endif
         }
     } while (0);
 }
@@ -1042,6 +1666,24 @@ void PawnItemTransaction(void *data)
             FTBL.HLib_SetCurrentTaskTo(PawnDone);
             break;
         }
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        if (FTBL.IsPAWNShopOpen())
+            break;
+            if (FTBL.GetItemSelectionResult() >= 0) {
+                FTBL.HLib_SetCurrentTaskTo(PawnSaleDialogue);
+                parent = 0;
+                dialogue = 1227;
+                outcome = 4;
+            } else {
+                FTBL.HLib_SetCurrentTaskTo(PawnToSelect);
+                FTBL.HLib_SetupTaskDelay(-1);
+                parent = FTBL.HLib_GetCurrentTask();
+                dialogue = 1226;
+                outcome = 0;
+            }
+            work->saleOutcome = outcome;
+            QueuePawnTalk(parent, owner, dialogue);
+#else
         if (FTBL.IsPAWNShopOpen()) {
             if (FTBL.shenGetMinutesUntilNextFrameMinute() <= 0) {
                 FTBL.HLib_SetCurrentTaskTo(PawnNotSelling);
@@ -1064,6 +1706,7 @@ void PawnItemTransaction(void *data)
             work->saleOutcome = outcome;
             QueuePawnTalk(parent, owner, dialogue);
         }
+#endif
     } while (0);
 }
 
@@ -1102,11 +1745,12 @@ void PawnSaleDialogue(void *data)
                 break;
         if (pending[i] != -1)
             break;
-        RestorePawnTransactionPose(work, work->shop);
+        PAWN_RESTORE_POSE(work, work->shop);
         FTBL.HLib_SetCurrentTaskTo(PawnBeginSelect);
     } while (0);
 }
 
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 int PawnFlyerRequested(shen_name shop)
 {
     int result = 0;
@@ -1126,6 +1770,8 @@ int PawnFlyerRequested(shen_name shop)
     }
     return result;
 }
+
+#endif
 
 shen_name FindPawnOwner(shen_name shop)
 {
@@ -1223,6 +1869,37 @@ int QueuePawnTalk(HLibTask *parent, shen_name character, int flag)
     return result;
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void PawnTalkCallback(void *data)
+{
+    PawnTalkWork *work = (PawnTalkWork *)data;
+    int done = 1;
+    if (work) {
+        if (work->started) {
+            if (FTBL.camCtrlCheckIsEventCam())
+                FTBL.SetItemSelectionPageSize(0x10001);
+            done = FTBL.IsScenarioBusy() == 0;
+            if (done) {
+                if (work->parent)
+                    FTBL.HLib_ResolveDeferredCallback(work->parent);
+                FTBL.SetPlayerGameFlags(5, (void *)1);
+                if ((unsigned int)(work->flag - 1224) > 1)
+                    FTBL.SetScenarioFollowCharacter(work->character);
+                else {
+                    FTBL.srchReset();
+                    FTBL.camCtrlSetFovTransitionTo(1);
+                    FTBL.camCtrlSetState(0);
+                }
+                FTBL.InitiateCleanupForSceneChara(work->character);
+            }
+        } else {
+            work->started = FTBL.StartScenarioFreeTalkRecord(work->character, -1);
+        }
+    }
+    if (done)
+        FTBL.HLib_DestroyCurrentEventTask();
+}
+#else
 void PawnTalkCallback(void *data)
 {
     PawnTalkWork *work = (PawnTalkWork *)data;
@@ -1256,7 +1933,11 @@ void PawnTalkCallback(void *data)
     if (done)
         FTBL.HLib_DestroyCurrentEventTask();
 }
+#endif
 
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 #define SHENMUE_AREA_LOOP_HAND_POSE_TABLE
 #include "s2/areas/area_loop_dc.c"
+#endif
+#endif
 #endif

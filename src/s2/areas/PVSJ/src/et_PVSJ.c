@@ -240,6 +240,7 @@ PvsjCustomerPartition pvsjCustomerPartitions[] = {
     {SHEN_NAME4('W', 'D', '1', '_'), 38, 39, 0},
     {0, 0, 0, 0},
 };
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 PvsjVoicePartition pvsjVoicePartitions[] = {{"0104", 0, 1}, {"0104AA1", 2, 3}, {"0104AD2", 4, 5}, {"0104AHE", 6, 7}, {"0104ANS", 8, 9},
     {"0104AW6", 10, 11}, {"0104CHW", 12, 13}, {"0104CHX", 14, 15}, {"0104CKN", 16, 17}, {"0104CN6", 18, 19}, {"0104DHO", 20, 21}, {"0104DM1", 22, 23},
     {"0104DM2", 24, 25}, {"0104DS4", 26, 27}, {"0104DY1", 28, 29}, {"0104EIN", 30, 31}, {"0104EMI", 32, 33}, {"0104FD1", 34, 35}, {"0104GKS", 36, 37},
@@ -309,18 +310,596 @@ const PvsjDealer pvsjDealers[] = {
     {SHEN_NAME4('Y', 'M', '2', '_'), -1, pvsjMotions, 931},
     {0, -1, 0, 0},
 };
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static PvsjVoiceMessage pvsjVoiceMessages[] = {{0, 0}};
+#endif
 static int pvsjBoardCount;
 static PvsjBoardPosition pvsjBoardPositions[32];
 static char pvsjGameArgument[24];
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static int pvsjPlayerCamera, pvsjCustomerCamera;
+#endif
 static Vector3 pvsjFilteredEye, pvsjFilteredTarget, pvsjDesiredEye, pvsjDesiredTarget;
 static Vector3i pvsjSavedPlayerRotation;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static short pvsjCameraBlend;
 static int g_patiCameraTime;
 static int pvsjSkipMotion;
 PatiMotionCacheEntry g_patiMotionCache[4];
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PvsjOfferJob(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->owner, work->boards->motions[0], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[6], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：じゃあ、金だ。＆いいか、この金は預けるんだからな。", work->delay, 1);
+    work->delay += 70;
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：絶対、くすねるんじゃねぇぞ。", work->delay, 1);
+    work->delay += 70;
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：わかっている。", work->delay, 1);
+    work->delay += 70;
+}
+
+void PvsjBeginShift(PvsjEventWork *work)
+{
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：じゃあ、頼んだぜ。＆しっかり、稼げよ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：じゃあ、元金、減らすなよ。＆しっかり、稼げよ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：ああ。", work->delay, 1);
+    work->delay += 70;
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, work->delay);
+}
+
+void PvsjCallCustomer(PvsjEventWork *work)
+{
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：……", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：遊んでみないか？", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 2:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：いらっしゃい。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+}
+
+void PvsjWelcomeCustomer(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->customer, work->boards->motions[12], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：ここは対戦落し玉だ。＆１回、５０ドルでルールは…", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：対戦落し玉だ。＆１回、５０ドルでルールは…", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(999, work->customer, work->customer, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(5)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：対戦台なら知ってるよ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：ああ、わかってるって。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 2:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：大丈夫、大丈夫。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 3:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：いや、説明はいい、知ってるよ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 4:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：心配いらんねぇよ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：そうか…じゃあ＆やりますか？", work->delay, 1);
+    work->delay += 70;
+}
+
+void PvsjExplainPartTimeJob(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->customer, work->boards->motions[12], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(999, work->customer, work->customer, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：おっ、遊べるかい？", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：バイトの兄ちゃんか。＆遊べる？", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：ああ。", work->delay, 1);
+    work->delay += 70;
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：ここは対戦落し玉だ。＆１回、５０ドルでルールは…", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：対戦落し玉だ。＆１回、５０ドルでルールは…", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(999, work->customer, work->customer, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(5)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：対戦台なら知ってるよ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：ああ、わかってるって。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 2:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：大丈夫、大丈夫。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 3:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：いや、説明はいい、知ってるよ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 4:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：心配いらんねぇよ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：そうか…じゃあ＆やりますか？", work->delay, 1);
+    work->delay += 70;
+}
+
+void PvsjStartCustomerGame(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->customer, work->boards->motions[12], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(999, work->customer, work->customer, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：ああ、もちろんだとも。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：ああ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 2:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：やらして、もらうぜ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+}
+
+void PvsjCustomerDeclines(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->customer, work->boards->motions[12], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：ここは対戦落し玉だ。＆１回、５０ドルでルールは…", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：対戦落し玉だ。＆１回、５０ドルでルールは…", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(999, work->customer, work->customer, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：いや、冷やかしだ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：いや、やらない。＆金、無いんだ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 2:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：いまスカンピンだから、いいや。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：そうですか＆わかりました。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：冷やかしなら、＆あっちにいってくれ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 2:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：そうか…", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+}
+
+void PvsjHandleCustomerInquiry(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->customer, work->boards->motions[12], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(999, work->customer, work->customer, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：あの…", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：すみません。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：ここは対戦落し玉だ。＆１回、５０ドルでルールは…", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：対戦落し玉だ。＆１回、５０ドルでルールは…", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(999, work->customer, work->customer, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：壱刻楼って知りませんか？", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：日向旅社って知りませんか？", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 2:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：カラクリ雑技団って＆どこですか？", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：……いえ、この辺のものじゃないので…。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：すいません。ちょっと……。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 2:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：いま、忙しいので……。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(999, work->customer, work->customer, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：そうですか。わかりました。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"客：わかりました。＆ありがとうございます。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+}
+
+void PvsjReportShift(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->owner, work->boards->motions[5], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：お！　ちゃんとやってるな。＆よしよし。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：どうだい、調子は？＆けっこう難しいもんだろ？", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：……。", work->delay, 1);
+    work->delay += 70;
+}
+
+void PvsjAskToContinue(PvsjEventWork *work)
+{
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：もうちょっとやってくれると…＆どうだ？", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：あと少しだけやってくれねぇかな？＆頼むよ〜。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：……", work->delay, 1);
+    work->delay += 70;
+}
+
+void PvsjClosingReport(PvsjEventWork *work)
+{
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：おう、今日はもう上がんな。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：おう、今日はもういいぜ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：わかった。", work->delay, 1);
+    work->delay += 70;
+}
+
+void PvsjContinueShift(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->owner, work->boards->motions[3], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[8], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：ああ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：やらしてくれ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：じゃあ、頼むわ。", work->delay, 1);
+    work->delay += 70;
+}
+
+void PvsjOfferPay(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->owner, work->boards->motions[1], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：やるな！＆儲かってんじゃねぇか。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：勝ってんじゃねか。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：バイト代は儲けの半分だったな。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：バイト代は勝ち分を折半だったな。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：ほらよ、お疲れさん。", work->delay, 1);
+    work->delay += 70;
+}
+
+void PvsjDeclineContinue(PvsjEventWork *work)
+{
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：兄ちゃん、素質あるじゃねぇか！＆また頼むな。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：兄ちゃん、やるじゃねぇか。＆また頼むぜ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+}
+
+void PvsjAskWithoutProfit(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->owner, work->boards->motions[2], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：なんだこりゃ！＆負けてるじゃねぇか！", work->delay, 1);
+    work->delay += 70;
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：すまない…", work->delay, 1);
+    work->delay += 70;
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：どうする？＆もうちょっと続けるかい？", work->delay, 1);
+    work->delay += 70;
+}
+
+void PvsjRestoreSpeech(PvsjEventWork *work)
+{
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(2)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：いや、もういい。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：もう、充分だ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+}
+
+void PvsjFinishWithoutProfit(PvsjEventWork *work)
+{
+    PvsjSetMotion(work->owner, work->boards->motions[4], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[9], 0.0f, 1.0f, 0, work->delay);
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    switch ((unsigned short)FTBL.shenGetRandomInt32(3)) {
+    case 0:
+    default:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：バイト代、なしだな。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 1:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：兄ちゃん、バイト代はなしだ。", work->delay, 1);
+        work->delay += 70;
+        break;
+    case 2:
+        work->delay += 20;
+        EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：バイト代はゼロ。＆文句はねえな。", work->delay, 1);
+        work->delay += 70;
+        break;
+    }
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"●青涼：そうか…仕方がない。", work->delay, 1);
+    work->delay += 70;
+    PvsjSetCamera(999, work->owner, work->owner, work->delay, work);
+    work->delay += 20;
+    EVT_RepeatCall(ShowPatiVoiceMessage, (void *)"胴元：まあ、これに懲りずに＆また手伝ってくれや。", work->delay, 1);
+    work->delay += 70;
+}
+
+#else
 void PvsjReleaseVoice(PvsjEventWork *work)
 {
     if (work->voicePrefix[0]) {
@@ -850,16 +1429,22 @@ void PvsjFinishWithoutProfit(PvsjEventWork *work)
     PvsjSetMotion(PVSJ_PLAYER, work->boards->motions[7], 0.0f, 1.0f, 0, start);
 }
 
+#endif
+
 void PvsjShowSessionCash(PvsjEventWork *work)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     PvsjSetCamera(pvsjPlayerCamera, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+#endif
     FTBL.AnimateMoneyAmount(FTBL.GetPlayerStat(2), work->sessionCash, 0);
     FTBL.SetPlayerStat(2, work->sessionCash);
 }
 
 void PvsjShowWallet(PvsjEventWork *work)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     PvsjSetCamera(pvsjPlayerCamera, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+#endif
     FTBL.AnimateMoneyAmount(FTBL.GetPlayerStat(2), 0, 0);
     FTBL.SetPlayerStat(2, 0);
 }
@@ -884,22 +1469,31 @@ void AreaPVSJMain(void *argument)
     work->jobPartition = PVSJ_INVALID_PARTITION;
     work->customerPartition = -1;
     work->firstCustomer = 1;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     work->gamePartition = PVSJ_INVALID_PARTITION;
+#endif
     PvsjSavePlayerRotation();
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     ResetPatiMotionCache();
     pvsjSkipMotion = 0;
+#endif
     hint = FTBL.HLib_EnqueueTaskWithParameter(PvsjHintCallback, 5, 11, sizeof(PvsjEventWork *), TASK_EVNT);
     hintData = (PvsjEventWork **)FTBL.HLib_GetTaskParameter(hint);
     work->hintTask = hint;
     *hintData = work;
     work->greetingIndex = FTBL.shenGetRandomInt32(15);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     if (!(work->voiceLoadBuffer = FTBL.HLib_AllocateTaskData(0x4000, AREA_PVSJ)))
         FTBL.EventAssertNullsub(__FILE__, 1786);
     if (!(work->voiceLengths = (PvsjVoiceLength *)FTBL.HLib_AllocateTaskData(0x4000, AREA_PVSJ)))
         FTBL.EventAssertNullsub(__FILE__, 1788);
+#endif
     EventDebugRegister(PVSJ_DEBUG_ID, PvsjDebugExitCallback, work, 216000);
     EventDebugCheck(PVSJ_DEBUG_ID, 4);
     FTBL.SetPlayerControlEnabled(0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(PVSJ_PLAYER), 0xf002, 0);
+#endif
     FTBL.DebugLogToFileRemoved("PVSJ:New-Load [PVSJ]PAK\n");
     FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(7), (int)"PVSJ", 0);
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
@@ -909,6 +1503,7 @@ void AreaPVSJMain(void *argument)
     FTBL.DebugLogToFileRemoved("PVSJ:New-Load [PVSJ]afs\n");
     work->jobPartition = FTBL.EV_ControlPackageResources(1, 0, FTBL.Filepath_Gen(7), (int)"PVSJ.afs", 0);
     FTBL.DebugLogToFileRemoved("EV_PAKLOAD_AFS [PVSJ] %i\n", work->jobPartition);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     if (work->jobPartition == PVSJ_INVALID_PARTITION)
         FTBL.EventAssertNullsub(__FILE__, 1807);
     FTBL.DebugLogToFileRemoved("PVSJ:New-Load [PATI]afs\n");
@@ -917,6 +1512,7 @@ void AreaPVSJMain(void *argument)
     if (work->gamePartition == PVSJ_INVALID_PARTITION)
         FTBL.EventAssertNullsub(__FILE__, 1811);
     FTBL.LoadAreaFunc_Wrapper_0("PATI.EV3", 0);
+#endif
     PvsjInitializeBoards(work);
     FTBL.CheckHelpIcon(0, 0, 0);
     FTBL.camCtrlSetState(0);
@@ -927,7 +1523,11 @@ void AreaPVSJMain(void *argument)
 void PvsjDebugExitCallback(void *data)
 {
     PvsjEventWork *work = (PvsjEventWork *)data;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    work->state = 52;
+#else
     work->state = 60;
+#endif
     FTBL.EV_refreshPadControlData(0, 1);
 }
 
@@ -937,6 +1537,7 @@ void PvsjFinish(PvsjEventWork *work)
     int entry;
     void *player;
     EventDebugUnregister(PVSJ_DEBUG_ID);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     if (work->gamePartition != PVSJ_INVALID_PARTITION) {
         FTBL.DebugLogToFileRemoved("EV_UNMOUNT_AFS_PARTITION [PATI].afs %i\n", work->gamePartition);
         FTBL.EV_ControlPackageResources(1, 1, work->gamePartition, 0, 0);
@@ -944,6 +1545,7 @@ void PvsjFinish(PvsjEventWork *work)
     }
     FTBL.HLib_FreeTaskData(work->voiceLoadBuffer);
     FTBL.HLib_FreeTaskData(work->voiceLengths);
+#endif
     if (work->jobPartition != PVSJ_INVALID_PARTITION) {
         if (work->customerPartition != -1) {
             if (FTBL.EV_ControlPackageResources(0, 2, 0, 0, 0)) {
@@ -957,13 +1559,21 @@ void PvsjFinish(PvsjEventWork *work)
             }
             work->customerPartition = -1;
         }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.DebugLogToFileRemoved("EV_UNMOUNT_AFS_PARTITION [PVSJ].afs\n");
+#else
         FTBL.DebugLogToFileRemoved("EV_UNMOUNT_AFS_PARTITION [PVSJ].afs %i\n", work->jobPartition);
+#endif
         FTBL.EV_ControlPackageResources(1, 1, work->jobPartition, 0, 0);
         work->jobPartition = PVSJ_INVALID_PARTITION;
     }
     FTBL.EV_ControlPackageResources(0, 6, "PATI", 0, 0);
     FTBL.EV_ControlPackageResources(0, 6, "PVSJ", 0, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.EV_FreeAuthorPak(0, "0104");
+#else
     PvsjReleaseVoice(work);
+#endif
     FTBL.EV_LoadCutsceneFromCurrentScene(work->bgm);
     FTBL.EV_LoadAudio(work->sbt, work->soundScene);
     FTBL.CheckHelpIcon(0, 0, 0);
@@ -973,7 +1583,11 @@ void PvsjFinish(PvsjEventWork *work)
     EVT_AT_SetFaceLooks(PVSJ_PLAYER, 0, 10, 1.0f, 0);
     FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(PVSJ_PLAYER));
     FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(PVSJ_PLAYER));
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EVT_AT_SetFaceLooks(PVSJ_PLAYER, 13, 10, 1.0f, 0);
+#else
     EVT_AT_SetFaceLooks(PVSJ_PLAYER, 0, 10, 1.0f, 0);
+#endif
     FTBL.EV_EnableCharacterDisplay(PVSJ_PLAYER);
     if (FTBL.DoesScenarioCharacterExist(PVSJ_BACKPACK) == 1)
         FTBL.EV_EnableCharacterDisplay(PVSJ_BACKPACK);
@@ -998,38 +1612,78 @@ void PvsjFinish(PvsjEventWork *work)
     FTBL.DebugLogToFileRemoved("PVSJ:Exit to (%i,%x,%i)\n", g_actNumber, area, entry);
     FTBL.EV_scenQueueLoad(g_actNumber, area, entry);
     FTBL.EVS_LoopCamera(0, 0, 0);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.camCtrlSetFovTransitionTo(1);
+    FTBL.camCtrlSetState(0);
+#endif
 }
 
 void PvsjShowChoice(int first, int second, int third, int fourth, PvsjEventWork *work)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+#else
     PvsjSetCamera(pvsjPlayerCamera, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+#endif
     EVT_AT_KsIcon_Enqueue(first, second, third, fourth, 10800, 0xffff, 2, work->delay);
     work->delay += 5;
 }
 
 void PvsjSetCamera(int id, shen_name eye, shen_name target, int delay, PvsjEventWork *work)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     shen_name eyeText[2], targetText[2];
+#endif
     if (id == work->cameraId && eye == work->cameraEye && target == work->cameraTarget)
         return;
     FTBL.EV_ControlPackageResources(2, 4, "PATI", 0, 0);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     eyeText[0] = eye;
     targetText[0] = target;
     targetText[1] = 0;
     eyeText[1] = 0;
     FTBL.DebugLogToFileRemoved("SetCamera:%i,%s,%s\n", id, eyeText, targetText);
+#endif
     EVT_AT_SetCam(id, eye, target, 0, 0, delay);
     work->cameraId = id;
     work->cameraEye = eye;
     work->cameraTarget = target;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     g_patiCameraTime = delay;
     pvsjCameraBlend = -1;
+#endif
 }
 
 void ShowPatiVoiceMessage(void *text)
 {
     QueueEventMessage((const char *)text, 0, 60);
 }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PvsjHintCallback(void *data)
+{
+    PvsjEventWork **hint = (PvsjEventWork **)data;
+    switch ((*hint)->state) {
+    case 0:
+    case 24:
+    case 25:
+    case 26:
+    case 51:
+    case 52:
+        break;
+    case 7:
+    case 8:
+    case 9:
+    case 12:
+    case 13:
+    case 14:
+    case 27:
+        FTBL.GetBattleDataConfig(0, PVSJ_BATTLE_FONT);
+    default:
+        FTBL.CheckHelpIcon(0x100000, 0, 3);
+        break;
+    }
+}
+#else
 void PvsjHintCallback(void *data)
 {
     PvsjEventWork **hint = (PvsjEventWork **)data;
@@ -1078,6 +1732,7 @@ void PvsjHintCallback(void *data)
         }
     }
 }
+#endif
 
 int PvsjMoveCustomer(shen_name character, shen_name target, PvsjEventWork *work)
 {
@@ -1089,7 +1744,11 @@ int PvsjMoveCustomer(shen_name character, shen_name target, PvsjEventWork *work)
     for (i = 0; work->boards->customers[i].character && work->boards->customers[i].character != character; i++)
         ;
     if (!work->boards->customers[i].character)
+        #if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 1666);
+#else
         FTBL.EventAssertNullsub(__FILE__, 2057);
+#endif
     previous = work->boards->customers[i].currentPoint;
     if (!previous) {
         FTBL.DebugLogToFileRemoved("PVSJ:%s Can not move.\n", characterText);
@@ -1114,6 +1773,7 @@ int PvsjMoveCustomer(shen_name character, shen_name target, PvsjEventWork *work)
     return result;
 }
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 int PvsjRestoreCustomerRoute(shen_name character, PvsjEventWork *work)
 {
     char characterText[8], pointText[8];
@@ -1139,6 +1799,7 @@ int PvsjRestoreCustomerRoute(shen_name character, PvsjEventWork *work)
     FTBL.DebugLogToFileRemoved("PVSJ:ret = %i\n", i);
     return result;
 }
+#endif
 
 void PvsjChooseCustomer(PvsjEventWork *work)
 {
@@ -1221,6 +1882,540 @@ void PvsjChooseCustomer(PvsjEventWork *work)
         dot = FTBL.GetVector3DotProduct(&customer, &player); \
     }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define PVSJ_GAMEJAM_DIALOGUE(name) \
+    { \
+        FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(PVSJ_PLAYER)); \
+        FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(name)); \
+        EVT_AT_SetFaceLooks(PVSJ_PLAYER, 13, 10, 1.0f, 0); \
+        EVT_AT_SetFaceLooks((name), 13, 10, 1.0f, 0); \
+        FTBL.SetRefBoardParamsForCharaById(PVSJ_PLAYER, 1); \
+        FTBL.SetRefBoardParamsForCharaById((name), 1); \
+        FTBL.GetCharaPosition(PVSJ_PLAYER, -1, &player, 0x40000000); \
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(name), &player, 1); \
+        FTBL.GetCharaPosition(name, -1, &player, 0x40000000); \
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(PVSJ_PLAYER), &player, 1); \
+    }
+#define PVSJ_GAMEJAM_RELEASE(name) \
+    { \
+        EVT_AT_SetFaceLooks(PVSJ_PLAYER, 0, 10, 1.0f, 0); \
+        EVT_AT_SetFaceLooks((name), 0, 10, 1.0f, 0); \
+        FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(PVSJ_PLAYER)); \
+        FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(name)); \
+        FTBL.SetRefBoardParamsForCharaById((name), 0); \
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(name), 0, 0); \
+        FTBL.EV_SetCharacterAlphaEnabled((name), 0); \
+        FTBL.npcLockUnlock(name); \
+    }
+
+void PvsjMainCallback(void *data)
+{
+    PvsjEventWork *work = (PvsjEventWork *)data;
+    Vector3 player, customer;
+    EventDateTime date;
+    Vector3 handPosition;
+    Vector3i handRotation;
+    int previous, partition, board;
+    void *result;
+    unsigned int i;
+    float dot;
+    shen_name point, oldCustomer;
+    work->delay = 0;
+    previous = work->state;
+    if (FTBL.GetShouldRenderIcons(0))
+        return;
+    switch (work->state) {
+    case 0:
+        work->state = 1;
+        break;
+    case 1:
+        if (!FTBL.filmCheckFadeTrackColour())
+            work->state = 2;
+        break;
+    case 2:
+        if (FTBL.ForceLoadNpc(work->owner)) {
+            FTBL.EV_SetCharacterAlphaEnabled(work->owner, 0);
+            FTBL.GetCharaPosition(PVSJ_PLAYER, -1, &player, 0x40000000);
+            FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->owner), &player, 1);
+            FTBL.GetCharaPosition(work->owner, -1, &player, 0x40000000);
+            FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(PVSJ_PLAYER), &player, 1);
+            FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(PVSJ_PLAYER));
+            FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(work->owner));
+            EVT_AT_SetFaceLooks(PVSJ_PLAYER, 13, 10, 1.0f, 0);
+            EVT_AT_SetFaceLooks(work->owner, 13, 10, 1.0f, 0);
+            FTBL.SetRefBoardParamsForCharaById(PVSJ_PLAYER, 1);
+            FTBL.SetRefBoardParamsForCharaById(work->owner, 1);
+            FTBL.EV_NPC_NewLoadSw_0(1);
+            work->state = 3;
+        }
+        break;
+    case 3:
+        PvsjOfferJob(work);
+        work->state = 4;
+        break;
+    case 4:
+        work->previousCash = FTBL.GetPlayerStat(2);
+        work->sessionCash = 300;
+        FTBL.SetPlayerStat(2, 0);
+        PvsjShowSessionCash(work);
+        work->state = 5;
+        break;
+    case 5:
+        PvsjBeginShift(work);
+        FTBL.GetCurrentDateTime((DateTime *)&date);
+        work->startMinute = date.day * 1440 + date.hour * 60 + date.minute;
+        PvsjChooseCustomer(work);
+        work->state = 6;
+        break;
+    case 6:
+        PVSJ_GAMEJAM_RELEASE(work->owner);
+        FTBL.CheckWarmStartNpcRoute(work->customer);
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        PvsjRefreshOverlay(0);
+        FTBL.SetRefBoardParamsForCharaById(PVSJ_PLAYER, 0);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(PVSJ_PLAYER), 0, 0);
+        point = work->pointCount ? work->boards->points[FTBL.shenGetRandomInt32(work->pointCount - 1) + 1] : work->boards->points[0];
+        work->customerActive = 1;
+        if (work->pointCount) {
+            PvsjMoveCustomer(work->customer, work->boards->points[0], work);
+            PvsjMoveCustomer(work->owner, point, work);
+        }
+        work->state = 8;
+        break;
+    case 7:
+        PVSJ_GAMEJAM_RELEASE(work->customer);
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        PvsjRefreshOverlay(0);
+        FTBL.SetRefBoardParamsForCharaById(PVSJ_PLAYER, 0);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(PVSJ_PLAYER), 0, 0);
+        point = work->pointCount ? work->boards->points[FTBL.shenGetRandomInt32(work->pointCount - 1) + 1] : work->boards->points[0];
+        work->sessionCash = FTBL.GetPlayerStat(2);
+        oldCustomer = work->customer;
+        FTBL.GetCurrentDateTime((DateTime *)&date);
+        if ((date.day * 1440 + date.hour * 60 + date.minute - work->startMinute > 90 && !work->firstCustomer) ||
+            work->sessionCash < 50 || (unsigned char)(date.hour - 6) > 16)
+            work->customerActive = 0;
+        else
+            PvsjChooseCustomer(work);
+        work->firstCustomer = 0;
+        if (work->pointCount) {
+            if (!work->customerActive) {
+                FTBL.CheckWarmStartNpcRoute(work->owner);
+                PvsjMoveCustomer(work->customer, point, work);
+                PvsjMoveCustomer(work->owner, work->boards->points[0], work);
+            } else {
+                FTBL.CheckWarmStartNpcRoute(work->customer);
+                PvsjMoveCustomer(oldCustomer, point, work);
+                PvsjMoveCustomer(work->customer, work->boards->points[0], work);
+            }
+        }
+        work->state = 8;
+        break;
+    case 8:
+        PvsjSetOverlay(0);
+        work->delay = 5;
+        work->state = 9;
+        break;
+    case 9:
+        PvsjRefreshOverlay(0);
+        FTBL.GetCurrentControlInput(2);
+        FTBL.GetBattleDataConfig(0, PVSJ_BATTLE_FONT);
+        if (work->customerActive & 1) {
+            if (FTBL.ForceLoadNpc(work->customer)) {
+                if (FTBL.DoesScenarioCharacterExist(work->customer))
+                    FTBL.EV_SetCharacterAlphaEnabled(work->customer, 0);
+                if (!FTBL.npcGetFlagFor(work->customer)) {
+                    if (FTBL.DoesScenarioCharacterExist(work->owner))
+                        FTBL.EV_SetCharacterAlphaEnabled(work->owner, 1);
+                    work->state = 12;
+                    break;
+                }
+            }
+        } else if (FTBL.ForceLoadNpc(work->owner)) {
+            if (FTBL.DoesScenarioCharacterExist(work->owner))
+                FTBL.EV_SetCharacterAlphaEnabled(work->owner, 0);
+            if (!FTBL.npcGetFlagFor(work->owner)) {
+                if (FTBL.DoesScenarioCharacterExist(work->customer))
+                    FTBL.EV_SetCharacterAlphaEnabled(work->customer, 1);
+                work->state = 28;
+                work->sessionCash = FTBL.GetPlayerStat(2);
+                if (FTBL.shenGetMinutesUntilNextFrameMinute() <= 0 || work->sessionCash < 50)
+                    work->state = 46;
+                break;
+            }
+        }
+        if (FTBL.GetCurrentControlInput(0) >> 10 & 1)
+            work->state = 10;
+        break;
+    case 10:
+        PvsjCallCustomer(work);
+        work->state = 11;
+        break;
+    case 11:
+        work->state = 9;
+        break;
+    case 12:
+        PvsjRefreshOverlay(0);
+        switch (work->greeting) {
+        case 0:
+            work->state = 22;
+            break;
+        case 1:
+        case 2:
+            work->state = 13;
+            break;
+        case 3:
+            work->state = 17;
+            break;
+        default:
+            FTBL.EventAssertNullsub(__FILE__, 1991);
+            break;
+        }
+        break;
+    case 13:
+        PvsjRefreshOverlay(0);
+        work->stateTicks = 0;
+        work->state = 14;
+        break;
+    case 14:
+        PvsjRefreshOverlay(0);
+        if (++work->stateTicks > 299) {
+            work->state = 27;
+            break;
+        }
+        FTBL.GetCurrentControlInput(2);
+        FTBL.GetBattleDataConfig(0, PVSJ_BATTLE_FONT);
+        if (FTBL.GetCurrentControlInput(0) >> 10 & 1) {
+            PVSJ_CUSTOMER_DOT();
+            if (FTBL.CalculateFixedCosine(3640) > dot)
+                work->state = 15;
+            else {
+                switch (work->greeting) {
+                case 1:
+                    work->state = 21;
+                    break;
+                case 2:
+                    work->state = 19;
+                    break;
+                default:
+                    FTBL.EventAssertNullsub(__FILE__, 2044);
+                    break;
+                }
+            }
+        }
+        break;
+    case 15:
+        PvsjCallCustomer(work);
+        work->state = 16;
+        break;
+    case 16:
+        work->state = 14;
+        break;
+    case 17:
+        PVSJ_GAMEJAM_DIALOGUE(work->customer);
+        work->delay = 5;
+        PvsjHandleCustomerInquiry(work);
+        work->state = 18;
+        break;
+    case 18:
+        PvsjRefreshOverlay(0);
+        work->state = 27;
+        break;
+    case 19:
+        PVSJ_GAMEJAM_DIALOGUE(work->customer);
+        work->delay = 5;
+        PvsjCustomerDeclines(work);
+        work->state = 20;
+        break;
+    case 20:
+        work->state = 27;
+        break;
+    case 21:
+        PVSJ_GAMEJAM_DIALOGUE(work->customer);
+        work->delay = 5;
+        PvsjWelcomeCustomer(work);
+        work->state = 23;
+        break;
+    case 22:
+        PVSJ_GAMEJAM_DIALOGUE(work->customer);
+        work->delay = 5;
+        PvsjExplainPartTimeJob(work);
+        work->state = 23;
+        break;
+    case 23:
+        PvsjStartCustomerGame(work);
+        work->state = 24;
+        break;
+    case 24:
+        FTBL.CheckWarmStartNpcRoute(work->customer);
+        pvsjGameArgument[0] = 'P';
+        pvsjGameArgument[1] = 'V';
+        pvsjGameArgument[2] = 'S';
+        pvsjGameArgument[3] = 'J';
+        pvsjGameArgument[4] = work->customer;
+        pvsjGameArgument[5] = work->customer >> 8;
+        pvsjGameArgument[6] = work->customer >> 16;
+        pvsjGameArgument[7] = work->customer >> 24;
+        board = FTBL.shenGetRandomInt32(pvsjBoardCount);
+        if (!pvsjBoardPositions[board].character)
+            board = 0;
+        FTBL.DebugLogToFileRemoved("boards = %i\n", pvsjBoardCount);
+        FTBL.DebugLogToFileRemoved("board_idx = %i\n", board);
+        pvsjGameArgument[8] = pvsjBoardPositions[board].character;
+        pvsjGameArgument[9] = pvsjBoardPositions[board].character >> 8;
+        pvsjGameArgument[10] = pvsjBoardPositions[board].character >> 16;
+        pvsjGameArgument[11] = pvsjBoardPositions[board].character >> 24;
+        pvsjGameArgument[12] = work->owner;
+        pvsjGameArgument[13] = work->owner >> 8;
+        pvsjGameArgument[14] = work->owner >> 16;
+        pvsjGameArgument[15] = work->owner >> 24;
+        pvsjGameArgument[16] = 0;
+        partition = work->customerPartition;
+        if (work->customer == work->owner) {
+            FTBL.CheckWarmStartNpcRoute(work->customer);
+            pvsjCustomerModelIndex = 0;
+        } else {
+            for (pvsjCustomerModelIndex = 0; pvsjCustomerPartitions[pvsjCustomerModelIndex].character &&
+                 pvsjCustomerPartitions[pvsjCustomerModelIndex].character != work->customer; pvsjCustomerModelIndex++)
+                ;
+            if (!pvsjCustomerPartitions[pvsjCustomerModelIndex].character)
+                FTBL.EventAssertNullsub(__FILE__, 2164);
+        }
+        work->customerPartition = pvsjCustomerModelIndex;
+        FTBL.EV_NPC_NewLoadSw_0(0);
+        FTBL.EV_ResetFreeTalkFlags();
+        FTBL.DebugLogToFileRemoved("EV_PAKLOAD_AFS [PVSJ] %i,%i,%i\n", work->jobPartition,
+            pvsjCustomerPartitions[work->customerPartition].models, pvsjCustomerPartitions[work->customerPartition].hands);
+        if (partition != -1)
+            FTBL.EventAssertNullsub(__FILE__, 2171);
+        FTBL.EV_ControlPackageResources(0, 8, work->jobPartition, pvsjCustomerPartitions[work->customerPartition].models,
+            pvsjCustomerPartitions[work->customerPartition].hands);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        switch (pvsjCustomerPartitions[work->customerPartition].highHands) {
+        default:
+        case 0:
+            handPosition.x = -0.112792969f;
+            handPosition.y = -0.0500030518f;
+            handPosition.z = 0.0936889648f;
+            break;
+        case 1:
+            handPosition.x = -0.0971984863f;
+            handPosition.y = -0.0452957153f;
+            handPosition.z = 0.0734863281f;
+            break;
+        }
+        handRotation.x = 0;
+        handRotation.y = 0;
+        handRotation.z = 0xf1c7;
+        FTBL.matrix_stack_Matrix4x4_Push(0);
+        FTBL.matrix_stack_UnitCurrentMatrix();
+        FTBL.Matrix4x4_RotateAroundZ_Wrapper(handRotation.z);
+        FTBL.Matrix4x4_RotateAroundY_Wrapper(handRotation.y);
+        FTBL.Matrix4x4_RotateAroundX_Wrapper(handRotation.x);
+        FTBL.matrix_stack_TranslateVector(&handPosition);
+        FTBL.Matrix4x4_GetTranslationRow(&handPosition);
+        FTBL.DebugLogToFileRemoved("PVSJ:YubiBase(%f,%f,%f)\n", handPosition.x, handPosition.y, handPosition.z);
+        FTBL.PopCurrentMatrix(1);
+        FTBL.scenApplyPosOrRotToChildId(PVSJ_OPPONENT_HAND, -1, &handPosition, &handRotation, 0);
+        handRotation.x = 0;
+        handRotation.y = 0x51c7;
+        handRotation.z = 0;
+        FTBL.EV_AT_SetAngY_0(PVSJ_OPPONENT_HAND, 0x38000000, &handRotation, 0);
+        PvsjBeginGame(pvsjGameArgument, work);
+        work->state = 25;
+        break;
+    case 25:
+        FTBL.EV_EventSetUpHelpIcon_0(145, 0);
+        FTBL.DebugLogToFileRemoved("EV_FREE_PAKFILE_AFS [PVSJ]\n");
+        if (work->customerPartition == -1)
+            FTBL.EventAssertNullsub(__FILE__, 2223);
+        FTBL.EV_ControlPackageResources(0, 12, work->jobPartition, pvsjCustomerPartitions[work->customerPartition].models,
+            pvsjCustomerPartitions[work->customerPartition].hands);
+        work->customerPartition = -1;
+        FTBL.SetPlayerControlEnabled(0);
+        FTBL.npcLockUnlock(work->customer);
+        if (!FTBL.EV_ControlPackageResources(0, 5, "PATI", 0, 0)) {
+            FTBL.DebugLogToFileRemoved("PVSJ:Re-Load [PATI]PAK\n");
+            result = FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(7), (int)"PATI", 0);
+            FTBL.DebugLogToFileRemoved("PVSJ:EV_PAKLOAD = %i\n", result);
+            result = FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+            FTBL.DebugLogToFileRemoved("PVSJ:EV_WAIT_PAKLOAD = %i\n", result);
+        } else
+            FTBL.DebugLogToFileRemoved("PVSJ:Already-Load [PATI]PAK\n");
+        FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(PVSJ_PLAYER), 0xf002, 0);
+        work->cameraId = 0;
+        work->cameraEye = 0;
+        work->cameraTarget = 0;
+        EventDebugCheck(PVSJ_DEBUG_ID, 4);
+        work->state = 27;
+        break;
+    case 27:
+        PvsjRefreshOverlay(0);
+        work->state = 7;
+        break;
+    case 28:
+        PVSJ_GAMEJAM_DIALOGUE(work->owner);
+        work->delay = 5;
+        if (FTBL.shenGetMinutesUntilNextFrameMinute() <= 0)
+            work->state = 47;
+        else
+            work->state = 29;
+        break;
+    case 29:
+        PvsjReportShift(work);
+        work->state = 30;
+        break;
+    case 30:
+        work->sessionCash = FTBL.GetPlayerStat(2);
+        PvsjShowWallet(work);
+        work->state = 31;
+        break;
+    case 31:
+        FTBL.SetPlayerStat(2, work->previousCash);
+        if (work->sessionCash > 300)
+            work->state = 32;
+        else
+            work->state = 37;
+        break;
+    case 32:
+        PvsjOfferPay(work);
+        work->state = 33;
+        break;
+    case 33:
+        work->newCash = (work->sessionCash - 299) / 2;
+        PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+        EVT_AT_StartMoneyCount(work->newCash, work->delay);
+        work->delay += 5;
+        work->state = 34;
+        break;
+    case 34:
+        PvsjAskToContinue(work);
+        work->state = 35;
+        break;
+    case 35:
+        PvsjShowChoice(0xffff, 37, 34, 0xffff, work);
+        work->state = 36;
+        break;
+    case 36:
+        if (FTBL.shenGetCtrlSpeakIconFlag() == 37)
+            work->state = 40;
+        else
+            work->state = 41;
+        break;
+    case 37:
+        PvsjAskWithoutProfit(work);
+        work->state = 38;
+        break;
+    case 38:
+        PvsjShowChoice(0xffff, 37, 34, 0xffff, work);
+        work->state = 39;
+        break;
+    case 39:
+        if (FTBL.shenGetCtrlSpeakIconFlag() == 37)
+            work->state = 40;
+        else
+            work->state = 43;
+        break;
+    case 40:
+        if (FTBL.shenGetMinutesUntilNextFrameMinute() <= 0)
+            work->state = 45;
+        else {
+            PvsjContinueShift(work);
+            work->state = 4;
+        }
+        break;
+    case 41:
+        PvsjRestoreSpeech(work);
+        work->state = 42;
+        break;
+    case 42:
+        PvsjDeclineContinue(work);
+        work->state = 51;
+        break;
+    case 43:
+        PvsjRestoreSpeech(work);
+        work->state = 44;
+        break;
+    case 44:
+        PvsjFinishWithoutProfit(work);
+        work->state = 51;
+        break;
+    case 45:
+        PvsjClosingReport(work);
+        work->state = 51;
+        break;
+    case 46:
+        FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(PVSJ_PLAYER));
+        FTBL.GetCharacterFaceCacheIndex(FTBL.ctrlGetCharaByName(work->owner));
+        EVT_AT_SetFaceLooks(PVSJ_PLAYER, 13, 10, 1.0f, 0);
+        EVT_AT_SetFaceLooks(work->owner, 13, 10, 1.0f, 0);
+        FTBL.SetRefBoardParamsForCharaById(PVSJ_PLAYER, 1);
+        FTBL.SetRefBoardParamsForCharaById(work->owner, 1);
+        FTBL.GetCharaPosition(PVSJ_PLAYER, -1, &player, 0x40000000);
+        FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->owner), &player, 1);
+        work->delay = 5;
+        work->state = 47;
+        break;
+    case 47:
+        PvsjClosingReport(work);
+        work->state = 48;
+        break;
+    case 48:
+        work->sessionCash = FTBL.GetPlayerStat(2);
+        PvsjShowWallet(work);
+        work->state = 49;
+        break;
+    case 49:
+        FTBL.SetPlayerStat(2, work->previousCash);
+        if (work->sessionCash > 300)
+            work->state = 50;
+        else
+            work->state = 44;
+        break;
+    case 50:
+        work->newCash = (work->sessionCash - 299) / 2;
+        PvsjSetCamera(998, PVSJ_PLAYER, PVSJ_PLAYER, work->delay, work);
+        EVT_AT_StartMoneyCount(work->newCash, work->delay);
+        work->delay += 5;
+        work->state = 51;
+        break;
+    case 51:
+        work->previousCash = FTBL.GetPlayerStat(2);
+        work->state = 52;
+        break;
+    case 52:
+        FTBL.SetRefBoardParamsForCharaById(PVSJ_PLAYER, 0);
+        EVT_AT_SetFaceLooks(PVSJ_PLAYER, 0, 10, 1.0f, 0);
+        FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(PVSJ_PLAYER));
+        if (FTBL.DoesScenarioCharacterExist(work->owner)) {
+            EVT_AT_SetFaceLooks(work->owner, 0, 10, 1.0f, 0);
+            FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(work->owner));
+            FTBL.SetRefBoardParamsForCharaById(work->owner, 0);
+            FTBL.EV_SetCharacterAlphaEnabled(work->owner, 1);
+        }
+        FTBL.npcLockUnlock(work->owner);
+        if (work->customer) {
+            if (FTBL.DoesScenarioCharacterExist(work->customer)) {
+                EVT_AT_SetFaceLooks(work->customer, 0, 10, 1.0f, 0);
+                FTBL.ReleaseCharacterFaceCache(FTBL.ctrlGetCharaByName(work->customer));
+                FTBL.SetRefBoardParamsForCharaById(work->customer, 0);
+                FTBL.EV_SetCharacterAlphaEnabled(work->customer, 1);
+            }
+            FTBL.npcLockUnlock(work->customer);
+        }
+        PvsjFinish(work);
+        break;
+    default:
+        FTBL.DebugLogToFileRemoved("PVSJ:Illegal Main State\n");
+        FTBL.EventAssertNullsub(__FILE__, 2459);
+        break;
+    }
+    if (previous != work->state)
+        FTBL.DebugLogToFileRemoved("PVSJ State = %i \n", work->state);
+    if (work->delay > 0)
+        FTBL.HLib_SetupTaskDelay(work->delay);
+}
+#else
 void PvsjMainCallback(void *data)
 {
     PvsjEventWork *work = (PvsjEventWork *)data;
@@ -1908,6 +3103,7 @@ void PvsjMainCallback(void *data)
     if (work->delay > 0)
         FTBL.HLib_SetupTaskDelay(work->delay);
 }
+#endif
 void PvsjInitializeBoards(PvsjEventWork *work)
 {
     PatiTableData tables;
@@ -1965,7 +3161,11 @@ void PvsjInitializeBoards(PvsjEventWork *work)
             break;
         }
     if (!pvsjBoardGroups[j].area)
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.EventAssertNullsub(__FILE__, 2551);
+#else
         FTBL.EventAssertNullsub(__FILE__, 3358);
+#endif
     for (j = 0; work->boards->customers[j].character; j++)
         work->boards->customers[j].currentPoint = work->boards->customers[j].initialPoint;
     for (j = 0; work->boards->points[j + 1]; j++)
@@ -1982,6 +3182,7 @@ void PvsjInitializeBoards(PvsjEventWork *work)
     FTBL.DebugLogToFileRemoved("mis = %i\n", work->missingCustomers);
 }
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void ResetPatiMotionCache(void)
 {
     int i;
@@ -1990,7 +3191,14 @@ void ResetPatiMotionCache(void)
         g_patiMotionCache[i].age = i;
     }
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PvsjSetMotion(shen_name character, int motion, float frame, float speed, unsigned int flags, int delay)
+{
+    EVT_AT_SetMot(character, motion, frame, speed, flags, delay);
+}
+#else
 void PvsjSetMotion(shen_name character, int motion, float frame, float speed, unsigned int flags, int delay)
 {
     shen_name text[2];
@@ -2034,17 +3242,38 @@ void PvsjSetMotion(shen_name character, int motion, float frame, float speed, un
         FTBL.DebugLogToFileRemoved("cur_mot[%i]:id=%s,mot=%i,tch=%i\n", i, text, g_patiMotionCache[i].motion, g_patiMotionCache[i].age);
     }
 }
+#endif
 
 void PvsjSavePlayerRotation(void)
 {
     FTBL.GetScenarioCharacterEulerAngles(PVSJ_PLAYER, &pvsjSavedPlayerRotation, 0x40000000);
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PvsjRefreshOverlay(unsigned int mode)
+{
+    PvsjUpdateOverlay(mode);
+}
+#else
 void PvsjRefreshOverlay(int mode, PvsjEventWork *work)
 {
     PvsjUpdateOverlay(mode, work);
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PvsjSetOverlay(unsigned int mode)
+{
+    PvsjUpdateOverlay(mode);
+    pvsjFilteredEye.x = pvsjDesiredEye.x;
+    pvsjFilteredEye.y = pvsjDesiredEye.y;
+    pvsjFilteredEye.z = pvsjDesiredEye.z;
+    pvsjFilteredTarget.x = pvsjDesiredTarget.x;
+    pvsjFilteredTarget.y = pvsjDesiredTarget.y;
+    pvsjFilteredTarget.z = pvsjDesiredTarget.z;
+    PvsjUpdateOverlay(mode);
+}
+#else
 void PvsjSetOverlay(int mode, PvsjEventWork *work)
 {
     PvsjUpdateOverlay(mode, work);
@@ -2056,7 +3285,73 @@ void PvsjSetOverlay(int mode, PvsjEventWork *work)
     pvsjFilteredTarget.z = pvsjDesiredTarget.z;
     PvsjUpdateOverlay(mode, work);
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void PvsjUpdateOverlay(unsigned int mode)
+{
+    Vector3 point, far;
+    Vector3i rotation, angle;
+    Vector3 position;
+    float x, y, blend, eyeScale, targetScale;
+    FTBL.matrix_stack_Matrix4x4_Push(0);
+    FTBL.GetCharaPosition(PVSJ_PLAYER, -1, &position, 0x40000000);
+    FTBL.GetScenarioCharacterEulerAngles(PVSJ_PLAYER, &rotation, 0x40000000);
+    x = (unsigned char)FTBL.GetCurrentControlInput(5);
+    y = (unsigned char)FTBL.GetCurrentControlInput(6);
+    switch (mode) {
+    case 0:
+    default:
+        blend = (unsigned char)(FTBL.GetNormalTriggerMapping() ? FTBL.GetCurrentControlInput(4) : FTBL.GetCurrentControlInput(3));
+        break;
+    case 1:
+        blend = 255.0f;
+        break;
+    case 2:
+        blend = 0.0f;
+        break;
+    }
+    y /= 255.0f;
+    x /= 255.0f;
+    blend /= 255.0f;
+    point.x = 0.0f;
+    point.y = -0.00709998608f;
+    point.z = -0.289999992f;
+    angle.x = (int)((0.5f - y) * 2 * 45.0f * 8192.0f / 45.0f) & 0xffff;
+    angle.y = (int)((0.5f - x) * 2 * 60.0f * 8192.0f / 45.0f) & 0xffff;
+    angle.z = 0;
+    FTBL.matrix_stack_UnitCurrentMatrix();
+    FTBL.Matrix4x4_RotateAroundY_Wrapper(rotation.z);
+    FTBL.Matrix4x4_RotateAroundY_Wrapper(rotation.y);
+    FTBL.Matrix4x4_RotateAroundY_Wrapper(rotation.x);
+    FTBL.Matrix4x4_RotateAroundZ_Wrapper(angle.z);
+    FTBL.Matrix4x4_RotateAroundY_Wrapper(angle.y);
+    FTBL.Matrix4x4_RotateAroundX_Wrapper(angle.x);
+    FTBL.Matrix4x4_TransformPoint(&point, &point);
+    eyeScale = blend + blend - 1.0f;
+    targetScale = blend + blend;
+    pvsjDesiredEye.x = (position.x + 0.0f) + point.x * eyeScale;
+    pvsjDesiredEye.y = (position.y + 1.83430004f) + point.y * eyeScale;
+    pvsjDesiredEye.z = (position.z + 0.0f) + point.z * eyeScale;
+    pvsjDesiredTarget.x = (position.x + 0.0f) + point.x * targetScale;
+    pvsjDesiredTarget.y = (position.y + 1.83430004f) + point.y * targetScale;
+    pvsjDesiredTarget.z = (position.z + 0.0f) + point.z * targetScale;
+    far.x = position.x + point.x * 5.0f;
+    far.y = position.y + point.y * 5.0f;
+    far.z = position.z + point.z * 5.0f;
+    FTBL.PopCurrentMatrix(1);
+    pvsjFilteredEye.x += (pvsjDesiredEye.x - pvsjFilteredEye.x) * 0.125f;
+    pvsjFilteredEye.y += (pvsjDesiredEye.y - pvsjFilteredEye.y) * 0.125f;
+    pvsjFilteredEye.z += (pvsjDesiredEye.z - pvsjFilteredEye.z) * 0.125f;
+    pvsjFilteredTarget.x += (pvsjDesiredTarget.x - pvsjFilteredTarget.x) * 0.125f;
+    pvsjFilteredTarget.y += (pvsjDesiredTarget.y - pvsjFilteredTarget.y) * 0.125f;
+    pvsjFilteredTarget.z += (pvsjDesiredTarget.z - pvsjFilteredTarget.z) * 0.125f;
+    FTBL.camCtrlSetState(26);
+    FTBL.camCtrlSetNextPosition(&pvsjFilteredEye);
+    FTBL.camCtrlSetTargetPosition(&pvsjFilteredTarget);
+    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(PVSJ_PLAYER), &far, 1);
+}
+#else
 void PvsjUpdateOverlay(int mode, PvsjEventWork *work)
 {
     Vector3 point, far;
@@ -2137,12 +3432,15 @@ void PvsjUpdateOverlay(int mode, PvsjEventWork *work)
     SHENMUE_EVENT_BOUNDARY();
     FTBL.camCtrlSetPerspective((short)(current + (fabs(trigger) >= 1.1920929e-07f ? (fov - current) / 2 : (fov - current) / 4)));
 }
+#endif
 
 void PvsjBeginGame(void *argument, PvsjEventWork *work)
 {
     EventDebugGetState(PVSJ_DEBUG_ID, 4);
     if (FTBL.DoesScenarioCharacterExist(work->owner)) {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->owner), 0, 0);
+#endif
         FTBL.EV_SetCharacterAlphaEnabled(work->owner, 1);
     }
     FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(PVSJ_PLAYER), 71, 0, 0);

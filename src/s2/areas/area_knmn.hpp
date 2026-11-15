@@ -19,10 +19,18 @@ typedef struct KnmnGameWork {
     EventReadCharactersWork *characters;
     void *masterMotion;
     int reserved14[2];
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    int particleEffects[3];
+#endif
     short state;
     char mode, round;
     unsigned int battleFrames;
 } KnmnGameWork;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define KNMN_LEAF_EFFECT(work) ((work)->particleEffects[0])
+#else
+#define KNMN_LEAF_EFFECT(work) knmnLeafEffect
+#endif
 extern int knmnLeafEffect;
 extern const shen_name knmnCharacters[];
 extern const char knmnMasterMotion[], knmnAuthorPackage[], knmnPackage[], knmnAuthPackage[], knmnAuthor[], knmnFilename[], knmnReturnOverlay[];
@@ -126,7 +134,11 @@ typedef struct KnmnFeedbackSelection {
     HLibTaskCallback callback;
     int argument;
 } KnmnFeedbackSelection;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+typedef char KnmnGameWorkSize[(sizeof(KnmnGameWork) == 0x30) ? 1 : -1];
+#else
 typedef char KnmnGameWorkSize[(sizeof(KnmnGameWork) == 0x24) ? 1 : -1];
+#endif
 typedef char KnmnPracticeWorkSize[(sizeof(KnmnPracticeWork) == 0x64c) ? 1 : -1];
 
 void KnmnSetBattleDialogueFlags(void);

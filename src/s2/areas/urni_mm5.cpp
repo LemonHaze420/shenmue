@@ -23,6 +23,89 @@ static int UranaiMm5QueueMessages(HLibTask *parent, const char **messages, int v
     return offset;
 }
 
+
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+static const char *uranaiMm5ModeOneVoices[] = {
+    "D001",
+    0
+};
+static const char *uranaiMm5IntroductionVoices[] = {
+    "D002",
+    "D003",
+    0
+};
+static const char *uranaiMm5SameVoices[] = {
+    "A061",
+    "D008",
+    "A062",
+    "D009",
+    "D010",
+    "A063",
+    0
+};
+static const char *uranaiMm5DeclineVoices[] = {
+    "A003",
+    "D004",
+    0
+};
+static const char *uranaiMm5BeginVoices[] = {
+    "A061",
+    0
+};
+static const char *uranaiMm5ReadingVoices[] = {
+    0
+};
+static const char *uranaiMm5PaymentVoices[] = {
+    "D005",
+    "D007",
+    "A060",
+    0
+};
+static const char *uranaiMm5InsufficientVoices[] = {
+    "D011",
+    "D012",
+    "A064",
+    0
+};
+static const char *uranaiMm5HkVoices[22][16] = {
+    {"D152", "D153", "D154", "A122", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D013", "D014", "A053", "D029", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D069", "A101", "D072", "D075", "D076", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D077", "A101", "D080", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D083", "A102", "D085", "D086", "A103", "D087", "D088", "A094", "D094", "D095", "A105", 0, 0, 0, 0, 0},
+    {"D083", "D094", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D082", "D097", "D098", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D089", "D090", "A106", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D082", "D099", "A107", "D100", "A108", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D082", "D099", "A109", "D100", "A110", "D101", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D087", "D102", "D103", "A111", "D104", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D089", "D090", "D105", "A112", "D108", "D107", "A113", 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D109", "D092", "A115", "D110", "D111", "A116", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D112", "D113", "D117", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D118", "D122", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D121", "D119", "A091", "D122", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D123", "D124", "A117", "D125", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D126", "A094", "D127", "D130", "D131", "A105", "D132", "D133", "D136", 0, 0, 0, 0, 0, 0, 0},
+    {"D137", "A101", "D089", "D090", "A119", "D147", "D151", "A122", 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D137", "A101", "D144", "D165", "A121", "D149", "A122", 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D162", "D163", "D164", "D151", "A122", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"D168", "A101", "D169", "A123", "D170", "A124", "D173", "D174", "D175", "D176", 0, 0, 0, 0, 0, 0},
+};
+static int uranaiMm5HkFlags[22] = {1600, 1623, 1624, 1602, 1603, 1604, 1605, 1606, 1607, 1608, 1609, 1611, 1614, 1625, 1615, 1616, 1617, 1618, 1619, 1620, 1621, 1622};
+static const char *uranaiMm5KlVoices[10][16] = {
+    {"「まず心当たりのある場所に行ってみてください。」", "「あなたは今ある運命しか選べません。＆新たな運命を知りたいのなら…」", "「まず今ある運命を＆消していかなければなりません。」", "「●青…わかりました。」", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"「不吉な翳が出ていますね。＆避けて通れない大きな試練。」", "「●青それでも行くしかないんです。」", "「そうですか……＆では、油断は禁物です。」", "「常に油断せず、慎重に、＆そして大胆に行動してください。」", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"「危ないまねはやめてください。＆手がキズだらけです。」", "「●青君には関係ない。」", "「関係あります。」", "「手にキズができると運命が＆悪い方へといってしまうんです。」", "「●青そうか……気をつけるよ。」", "「お願いします。」", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"「出会いの線が浮かんでいます。＆吉凶含みの線です。」", "「●青出会い？」", "「はい、敵対する人と＆協力してくれる人。」", "「どちらも大きく＆関わることになります。」", "「●青どこに行けば…」", "「西に…＆それしかわかりません。」", "「●青そうかありがとう。」", 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"「出会いの線が浮かんでいます。＆吉凶含みの線です。」", "「あの……いま、お探しの人が＆いるようですが…」", "「●青ああ。」", "「どうしても、その人を＆探さなければいけないんですか？」", "「●青ああ、手がかりはそれしかない。」", "「とても危険だと、＆手相は告げてます。」", "「もしかすると命を＆落としかねないと…」", "「●青それでも行くしかない。」", "「そうですか……では、慎重に。＆努めて慎重に行動してください。」", "「高きところに陰陽の凶ありです。＆気をつけてください。」", 0, 0, 0, 0, 0, 0},
+    {"「突然の事故、＆不吉な線が浮かんでいます。」", "「あの……いま、お探しの人が＆いるようですが…」", "「●青ああ。」", "「どうしても、その人を＆探さなければいけないんですか？」", "「●青ああ、手がかりはそれしかない。」", "「とても危険だと、＆手相は告げてます。」", "「もしかすると命を＆落としかねないと…」", "「●青それでも行くしかない。」", "「そうですか……では、慎重に。＆努めて慎重に行動してください。」", "「北西に危機あり。＆高きところに陰陽の凶あり」", "「手相はそう告げております。＆気をつけてください。」", 0, 0, 0, 0, 0},
+    {"「大変な困難が待ち受けています。」", "「そして……ムダだと分かっていても＆最善を尽くさねばならない。」", "「●青そう出ているのか？」", "「はい。その結果、新たな道が開けると…」", "「●青そうか…」", "「ごめんなさい。」", "「●青君があやまる事じゃない。」", "「ですが……」", "「●青気にするな。＆いつものことだ。」", "「私が落ち込んでいても＆しょうがないですね。」", "「●青気にするな。」", 0, 0, 0, 0, 0},
+    {"「手に力が満ち溢れています。＆大きな力を手に入れる予兆です。」", "「力を手に入れるには＆多くのことを学ばなければならない。」", "「手はそう告げています。＆がんばってください。」", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"「大きな試練が＆待ち構えています。」", "「それは今まで学んできたものが＆必要だと告げています。」", "「がんばってください。」", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {"「多くの出会いと別れ。＆そんな暗示が手相に出ています。」", "「宿命は変えることはできません。＆ですが、運命は変えることができます。」", "「決してあきらめないでください。」", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+};
+static int uranaiMm5KlFlags[10] = {1600, 1628, 1629, 1631, 1633, 1634, 1635, 1637, 1639, 1641};
+#else
 static const char *uranaiMm5ModeOneVoices[] = {"D001", 0};
 static const char *uranaiMm5IntroductionVoices[] = {"D001", "D002", "D003", 0};
 static const char *uranaiMm5SameVoices[] = {"D008", "A062", "D009", "D010", "A063", 0};
@@ -80,10 +163,16 @@ static const char *uranaiMm5SpecialVoices[5][32] = {
     {"D371", "A289", "D372", "A290", "D373", "D374", "D375", "D376", "D377", "D378", "D379", "D380", "A291", "D381", 0},
     {"D389", "A293", "D390", "D391", "A285", "D392", "A294", "D393", "D394", "D395", "D396", "D397", "D398", "D399", "D400", "D401", 0},
 };
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static Vector3 uranaiMm5ObjectPosition = {0.0825529993f, 0.00466299988f, -0.0127940001f};
 static Vector3i uranaiMm5ObjectRotation = {32449, 32709, 30381};
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static int uranaiMm5Cameras[6] = {1212, 1243, 1240, 1241, 1242, 1244};
+#endif
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 int UranaiMm5Setup(shen_name reader, int delay)
 {
     Queue_EVT_AT_Cling(URNI_READING_OBJECT, reader, 14, &uranaiMm5ObjectPosition, &uranaiMm5ObjectRotation, 0, 0);
@@ -92,19 +181,57 @@ int UranaiMm5Setup(shen_name reader, int delay)
     FTBL.ApplyCharacterHandPoseCommand(FTBL.ctrlGetCharaByName(reader), 1, (void *)areaLoopHandPoses[URNI_LEFT_READING_HAND_POSE], 0);
     return 0;
 }
+#endif
 
 int UranaiMm5ModeOne(shen_name reader, int delay)
 {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    int end = delay + 60;
+#else
     int end = delay + 75;
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetMot(URNI_PLAYER, URNI_STAND_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+#endif
     EVT_AT_SetMot(reader, URNI_MM5_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, delay);
     EVT_AT_SetCam(1216, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
     QueueEventVoiceList(0, uranaiMm5ModeOneVoices, 10, 0x80000000, delay + 30);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_CharaDisp(URNI_PLAYER, 0, 1);
     EVT_AT_CharaDisp(URNI_PLAYER, end, 0);
+#endif
     return end;
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiMm5Introduction(shen_name reader, int delay)
+{
+    int end = delay + 200;
+    int i;
+    if ((unsigned int)g_actNumber < 3) {
+        for (i = 21; i > 0; i--)
+            if (FTBL.EV_GetShenmueFlag(uranaiMm5HkFlags[i]))
+                break;
+    } else {
+        for (i = 9; i > 0; i--)
+            if (FTBL.EV_GetShenmueFlag(uranaiMm5KlFlags[i]))
+                break;
+    }
+    if (i == FTBL.EV_GetPlayerFlag(15, 42))
+        end = 0;
+    else {
+        EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, end - delay, 0);
+        EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, end - delay, 0);
+        EVT_AT_SetPos(URNI_PLAYER, reader, 0.0f, 0.0f, -1.4f, delay);
+        EVT_AT_SetAngY(URNI_PLAYER, reader, 180.0f, delay);
+        EVT_AT_SetMot(reader, URNI_MM5_GREETING_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+        EVT_AT_SetCam(1208, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+        EVT_AT_SetCam(1209, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, end);
+        QueueEventVoiceList(0, uranaiMm5IntroductionVoices, 10, 0x80000000, delay);
+    }
+    return end;
+}
+#else
 int UranaiMm5Introduction(shen_name reader, int delay)
 {
     int end = delay + 250;
@@ -131,7 +258,25 @@ int UranaiMm5Introduction(shen_name reader, int delay)
     }
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiMm5Same(shen_name reader, int delay)
+{
+    int leave = delay + 460;
+    int end;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, leave - delay, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, leave - delay, 0);
+    EVT_AT_SetPosAng(URNI_PLAYER, reader, 0.0f, -1.4f, 180.0f, delay);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, leave - 2) - 7;
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end);
+    EVT_AT_SetMot(reader, URNI_MM5_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetCam(1202, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiMm5SameVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiMm5Same(shen_name reader, int delay)
 {
     int end;
@@ -149,7 +294,24 @@ int UranaiMm5Same(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiMm5SameVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiMm5Decline(shen_name reader, int delay)
+{
+    int leave = delay + 190;
+    int end;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, leave - delay, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, leave - delay, 0);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, leave - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetMot(reader, URNI_MM5_DECLINE_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetCam(1215, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiMm5DeclineVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiMm5Decline(shen_name reader, int delay)
 {
     int leave = delay + 190;
@@ -166,7 +328,24 @@ int UranaiMm5Decline(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiMm5DeclineVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiMm5BeginReading(shen_name reader, int delay)
+{
+    int end = delay + 140;
+    int frames;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay, end - delay, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay, end - delay, 0);
+    EVT_AT_SetPosAng(URNI_PLAYER, reader, 0.05f, -0.85f, 180.0f, 90);
+    frames = EVT_AT_SetMot(URNI_PLAYER, URNI_SIT_MOTION, 2.0f, 1.0f, 0, delay + 90);
+    EVT_AT_SetMot(URNI_PLAYER, URNI_SITTING_MOTION, 2.0f, 1.0f, 0, frames);
+    EVT_AT_SetCam(1210, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, 90);
+    EVT_AT_SetSound(993, delay + 90);
+    QueueEventVoiceList(0, uranaiMm5BeginVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiMm5BeginReading(shen_name reader, int delay)
 {
     int end = delay + 140;
@@ -179,7 +358,22 @@ int UranaiMm5BeginReading(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiMm5BeginVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiMm5Reading(shen_name reader, int delay)
+{
+    int end;
+    end = EVT_AT_SetMot(reader, URNI_MM5_START_MOTION, 90.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetMot(reader, URNI_MM5_LOOP_MOTION, 2.0f, 1.0f, 0, end);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_PLAYER_PALM_START_MOTION, 90.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetMot(URNI_PLAYER, URNI_PLAYER_PALM_LOOP_MOTION, 2.0f, 1.0f, 0, end);
+    EVT_AT_SetCam(1211, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    EVT_AT_SetSound(991, delay);
+    QueueEventVoiceList(0, uranaiMm5ReadingVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiMm5Reading(shen_name reader, int delay)
 {
     int end;
@@ -191,7 +385,35 @@ int UranaiMm5Reading(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiMm5ReadingVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiMm5Result(shen_name reader, int delay)
+{
+    int result = 0;
+    int index;
+    EVT_AT_SetCam(1212, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, 0);
+    if ((unsigned int)g_actNumber < 3) {
+        index = 21;
+        while (index > 0) {
+            if (FTBL.EV_GetShenmueFlag(uranaiMm5HkFlags[index]))
+                break;
+            index--;
+        }
+        QueueEventVoiceList(FTBL.HLib_GetCurrentTask(), uranaiMm5HkVoices[index], 10, 0x80000000, 0);
+    } else {
+        index = 9;
+        while (index > 0) {
+            if (FTBL.EV_GetShenmueFlag(uranaiMm5KlFlags[index]))
+                break;
+            index--;
+        }
+        result = UranaiMm5QueueMessages(FTBL.HLib_GetCurrentTask(), uranaiMm5KlVoices[index], 10, 0x80000000, 0);
+    }
+    FTBL.EV_SetPlayerFlag(16, 42, index);
+    return result;
+}
+#else
 int UranaiMm5Result(shen_name reader, int delay)
 {
     int result = 0;
@@ -255,7 +477,29 @@ int UranaiMm5Result(shen_name reader, int delay)
         EVT_AT_SetCam(uranaiMm5Cameras[special + 1], URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, 0);
     return result;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiMm5Payment(shen_name reader, int delay)
+{
+    int end;
+    EVT_AT_SetPoint(URNI_PLAYER, reader, 5, 2, 2, delay + 100, 80, 0);
+    EVT_AT_SetPoint(reader, URNI_PLAYER, 5, 2, 2, delay + 100, 200, 0);
+    end = EVT_AT_SetMot(reader, URNI_MM5_END_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+    EVT_AT_SetMot(reader, URNI_MM5_IDLE_MOTION, 2.0f, 1.0f, 0, end);
+    EVT_AT_SetMot(URNI_PLAYER, URNI_PLAYER_PALM_END_MOTION, 2.0f, 1.0f, 0x40000000, delay);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_STAND_FROM_CHAIR_MOTION, 2.0f, 1.0f, 0, delay + 215);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, end - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetCam(1213, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    EVT_AT_SetCam(1214, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay + 200);
+    EVT_AT_SetSound(992, delay + 90);
+    EVT_AT_SetSound(996, delay + 215);
+    QueueEventVoiceList(0, uranaiMm5PaymentVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiMm5Payment(shen_name reader, int delay)
 {
     int end;
@@ -274,7 +518,22 @@ int UranaiMm5Payment(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiMm5PaymentVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int UranaiMm5InsufficientCash(shen_name reader, int delay)
+{
+    int leave = delay + 580;
+    int end;
+    EVT_AT_StartMoneyCount(0, delay + 10);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_TURN_MOTION, 2.0f, 0.4f, 0, leave - 2);
+    EVT_AT_SetAngY(URNI_PLAYER, URNI_PLAYER, 180.0f, end - 7);
+    end = EVT_AT_SetMot(URNI_PLAYER, URNI_WALK_MOTION, 2.0f, 1.0f, 0, end - 7);
+    EVT_AT_SetCam(1203, URNI_READER_DUMMY, URNI_READER_DUMMY, 0, 0, delay);
+    QueueEventVoiceList(0, uranaiMm5InsufficientVoices, 10, 0x80000000, delay);
+    return end;
+}
+#else
 int UranaiMm5InsufficientCash(shen_name reader, int delay)
 {
     int leave = delay + 300;
@@ -294,6 +553,7 @@ int UranaiMm5InsufficientCash(shen_name reader, int delay)
     QueueEventVoiceList(0, uranaiMm5InsufficientVoices, 10, 0x80000000, delay);
     return end;
 }
+#endif
 #else
 #include "s2/areas/area_urni.hpp"
 #include "s2/camera.hpp"

@@ -14,7 +14,9 @@ void e0005_EVT_Load_AuthChara_Enqueue(void *argument)
     event->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0005A.MOT");
     event->loadState = 0;
     event->characterIndex = 0;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetRenderClockAndCompassTo(1);
+#endif
     if (g_currentMap == AREA_0005) {
         FTBL.BeginPrimarySampleExecution(0);
         event->entryId = (unsigned int)g_entryPoint > 4 ? 0 : g_entryPoint;
@@ -43,6 +45,9 @@ void e0005_EVT_Load_AuthChara_Enqueue(void *argument)
             event->characterTable = 0;
             break;
         case 1:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.EV_spmBeginSampleExecute(0);
+#endif
             event->characterTable = 1;
             break;
         case 3:
@@ -79,6 +84,7 @@ static const shen_name authorCharacters1[] = {SHEN_NAME4('V', 'C', 'N', '_'), SH
     AREA_0005_KYG, AREA_0005_SYM, SHEN_NAME4('S', 'H', 'K', '_'), AREA_0005_INVALID};
 static const shen_name authorCharacters2[] = {SHEN_NAME4('K', 'A', 'P', '_'), SHEN_NAME4('R', 'F', 'K', '_'), SHEN_NAME4('S', 'D', 'N', '_'),
     SHEN_NAME4('S', 'Z', 'Y', '_'), AREA_0005_INVALID};
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static const shen_name npcCharacters0[] = {SHEN_NAME4('S', 'U', 'U', '_'), SHEN_NAME4('E', 'N', 'N', '_'), SHEN_NAME4('G', 'N', 'B', '_'),
     SHEN_NAME4('M', '0', '2', 'Q'), SHEN_NAME4('M', '0', '3', 'Q'), SHEN_NAME4('M', '0', '5', 'Q'), AREA_0005_INVALID};
 static const shen_name npcCharacters1[] = {SHEN_NAME4('G', 'N', 'B', '_'), SHEN_NAME4('R', 'R', 'I', '_'), SHEN_NAME4('C', 'K', 'T', '_'),
@@ -89,10 +95,13 @@ static const shen_name npcCharacters1[] = {SHEN_NAME4('G', 'N', 'B', '_'), SHEN_
 static const shen_name npcCharacters2[] = {SHEN_NAME4('S', 'O', 'G', '_'), SHEN_NAME4('C', 'S', 'Y', '_'), SHEN_NAME4('0', '0', 'E', '_'),
     SHEN_NAME4('P', '0', '2', 'Q'), SHEN_NAME4('P', '0', '3', 'Q'), SHEN_NAME4('S', 'Y', 'R', '_'), AREA_0005_INVALID};
 static int secondaryRegisteredCount = 0;
+#endif
 static const shen_name *authorCharacters[] = {authorCharacters0, authorCharacters1, authorCharacters2, 0};
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 static const shen_name *npcCharacters[] = {npcCharacters0, npcCharacters1, npcCharacters2, 0};
 static short secondaryLoadState = 0;
 static short secondaryCharacterIndex = 0;
+#endif
 static unsigned char waveRowMajor[0x100];
 static unsigned char waveKernelA[0x100];
 static unsigned char waveKernelB[0x100];
@@ -130,10 +139,14 @@ void e0005_EVT_Auth_Main(void *taskData)
             PlaceRyoForEntry(3);
         } else if (event->entryId == 2)
             PlaceRyoForEntry(2);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.HLib_SetCurrentTaskTo(e0005_EVT_Exit_AuthChara_Callback);
+#else
         if (event->entryId >= 1 && event->entryId <= 2)
             FTBL.HLib_SetCurrentTaskTo(e0005_EVT_Exit_NpcChara2_Callback);
         else
             FTBL.HLib_SetCurrentTaskTo(e0005_EVT_Exit_NpcChara_Callback);
+#endif
         event->authorState = 5;
         break;
     case 5:
@@ -146,12 +159,16 @@ void QueueAuthorLoop(Area0005EventWork *parent)
 {
     HLibTaskCallback callbacks[5] = {e0005_EVT_Auth_Loop, e0005_EVT_Auth_Loop_0, e0005_EVT_Auth_Loop_0005A010_Callback, e0005_EVT_Auth_Loop_1,
         e0005_EVT_Auth_Loop_2};
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     shen_name scenes[5] = {SHEN_NAME4('A', 'U', '0', '1'), SHEN_NAME4('A', 'U', '0', '2'), SHEN_NAME4('A', 'U', '0', '3'), SHEN_NAME4('A', 'U', '0', '4'),
         SHEN_NAME4('A', 'U', '0', '5')};
+#endif
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(callbacks[parent->entryId], 4, 11, sizeof(Area0005LoopWork), TASK_EVNT);
     Area0005LoopWork *child = (Area0005LoopWork *)FTBL.HLib_GetTaskParameter(task);
     child->parent = parent;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     child->smoke = -1;
+#endif
     if (g_currentMap == AREA_0005 || parent->entryId == 0 || parent->entryId == 1 || parent->entryId == 3)
         FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     switch (parent->entryId) {
@@ -160,15 +177,25 @@ void QueueAuthorLoop(Area0005EventWork *parent)
         break;
     case 1:
     case 2:
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.HLib_EnqueueTaskWithoutParameter(e0005_EVT_Load_NpcChara2_Callback, 4, 11, SHEN_NAME4('a', 'u', 't', 'h'));
+#endif
         PrepareLighterCharacters();
         break;
     case 3:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    case 4:
+#endif
         FTBL.EV_authSceneCtrl(-11);
         PreparePhotographCharacters();
         break;
     }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.EV_authSceneCtrl(parent->entryId);
+#else
     FTBL.EV_authSceneCtrl(scenes[parent->entryId]);
+#endif
     parent->authorState = 2;
 }
 
@@ -188,6 +215,11 @@ void e0005_EVT_Auth_Loop_0(void *taskData)
 {
     Area0005LoopWork *child = (Area0005LoopWork *)taskData;
     if (!FTBL.EV_authSceneCtrl(-1)) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        child->parent->authorState = 1;
+        child->parent->entryId++;
+        FTBL.HLib_DestroyCurrentTask();
+#else
         child->parent->entryId++;
         if (FTBL.EV_authSceneCtrl(-13)) {
             FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
@@ -198,6 +230,7 @@ void e0005_EVT_Auth_Loop_0(void *taskData)
             FTBL.EV_authSceneCtrl(SHEN_NAME4('A', 'U', '0', '3'));
             FTBL.HLib_SetCurrentTaskTo(e0005_EVT_Auth_Loop_0005A010_Callback);
         }
+#endif
     }
 }
 
@@ -217,19 +250,25 @@ void e0005_EVT_Auth_Loop_0005A010_Callback(void *taskData)
     case 158:
         FTBL.SuspendParticleEffect(0, child->smoke);
         break;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     case 1335:
         FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(AREA_0005_SYM), 0, 1, 16);
         break;
     case 1385:
         FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(AREA_0005_SYM), 0, 8, 16);
         break;
+#endif
     }
     if (!FTBL.EV_authSceneCtrl(-1)) {
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        FTBL.FreeParticleEffect(0, child->smoke);
+#else
         if (child->smoke != -1) {
             FTBL.SuspendParticleEffect(0, child->smoke);
             FTBL.FreeParticleEffect(0, child->smoke);
             child->smoke = -1;
         }
+#endif
         RestoreLighterCharacters();
         child->parent->authorState = 3;
         FTBL.HLib_DestroyCurrentTask();
@@ -263,6 +302,34 @@ void e0005_EVT_Auth_Loop_2(void *taskData)
     }
 }
 
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void e0005_EVT_Load_AuthChara_Callback(void *taskData)
+{
+    Area0005EventWork *event = (Area0005EventWork *)taskData;
+    short *loadState = &event->loadState;
+    if (*loadState == 1) {
+        SHENMUE_EVENT_OPAQUE(loadState);
+        FTBL.DebugLogToFileRemoved("%d ID : [%c%c%c%c]\n", event->characterIndex, authorCharacters[event->characterTable][event->characterIndex] & 0xff,
+            authorCharacters[event->characterTable][event->characterIndex] >> 8 & 0xff,
+            authorCharacters[event->characterTable][event->characterIndex] >> 16 & 0xff,
+            authorCharacters[event->characterTable][event->characterIndex] >> 24 & 0xff);
+        if (FTBL.ForceLoadNpc(authorCharacters[event->characterTable][event->characterIndex]) == 1) {
+            event->characterIndex++;
+            *loadState = 0;
+            if (authorCharacters[event->characterTable][event->characterIndex] == AREA_0005_INVALID) {
+                event->characterIndex = 0;
+                if (event->entryId == 0)
+                    FTBL.EV_NPC_NewLoadSw_0(1);
+                FTBL.HLib_SetCurrentTaskTo(e0005_EVT_Auth_Main);
+            }
+        }
+    } else if (event->loadState == 0) {
+        FTBL.CheckWarmStartNpcRoute(authorCharacters[event->characterTable][event->characterIndex]);
+        FTBL.ForceLoadNpc(authorCharacters[event->characterTable][event->characterIndex]);
+        event->loadState = 1;
+    }
+}
+#else
 void e0005_EVT_Load_AuthChara_Callback(void *taskData)
 {
     Area0005EventWork *event = (Area0005EventWork *)taskData;
@@ -286,7 +353,9 @@ void e0005_EVT_Load_AuthChara_Callback(void *taskData)
         event->loadState = 1;
     }
 }
+#endif
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void e0005_EVT_Load_NpcChara(void *taskData)
 {
     Area0005EventWork *event = (Area0005EventWork *)taskData;
@@ -339,6 +408,30 @@ void e0005_EVT_Load_NpcChara2_Callback(void *taskData)
     }
 }
 
+#endif
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void e0005_EVT_Exit_AuthChara_Callback(void *taskData)
+{
+    Area0005EventWork *event = (Area0005EventWork *)taskData;
+    if (event->loadState == 1) {
+        FTBL.DebugLogToFileRemoved("%d ID : [%c%c%c%c]\n", event->characterIndex, authorCharacters[event->characterTable][event->characterIndex] & 0xff,
+            authorCharacters[event->characterTable][event->characterIndex] >> 8 & 0xff,
+            authorCharacters[event->characterTable][event->characterIndex] >> 16 & 0xff,
+            authorCharacters[event->characterTable][event->characterIndex] >> 24 & 0xff);
+        if (!FTBL.IsNpcRouteLoadedOrVisible(authorCharacters[event->characterTable][event->characterIndex])) {
+            event->characterIndex++;
+            event->loadState = 0;
+            if (authorCharacters[event->characterTable][event->characterIndex] == AREA_0005_INVALID) {
+                FTBL.HLib_SetCurrentTaskTo(e0005_EVT_Auth_Main);
+            }
+        }
+    } else if (event->loadState == 0) {
+        if (!FTBL.npcLockUnlock(authorCharacters[event->characterTable][event->characterIndex]))
+            FTBL.npcFree(authorCharacters[event->characterTable][event->characterIndex]);
+        event->loadState = 1;
+    }
+}
+#else
 void e0005_EVT_Exit_AuthChara_Callback(void *taskData)
 {
     Area0005EventWork *event = (Area0005EventWork *)taskData;
@@ -359,7 +452,9 @@ void e0005_EVT_Exit_AuthChara_Callback(void *taskData)
         event->loadState = 1;
     }
 }
+#endif
 
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 void e0005_EVT_Exit_NpcChara_Callback(void *taskData)
 {
     Area0005EventWork *event = (Area0005EventWork *)taskData;
@@ -383,6 +478,7 @@ void e0005_EVT_Exit_NpcChara2_Callback(void *taskData)
     FTBL.HLib_SetCurrentTaskTo(e0005_EVT_Exit_AuthChara_Callback);
 }
 
+#endif
 void CreateLighterSmoke(Area0005LoopWork *child)
 {
     Vector3 position = {155.74f, 101.8f, 316.1f};
@@ -442,7 +538,9 @@ void CompleteEvent(Area0005EventWork *event)
 {
     RestoreAuthorCharacterMode(AREA_0005_RYO);
     FTBL.EV_EnableCharacterDisplay(AREA_0005_RYO);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.EV_NPC_NewLoadSw_0(1);
+#endif
     FTBL.EV_FreeAuthorPak(0, "0005");
     FTBL.DeleteMotion(event->motion);
     switch (event->entryId) {
@@ -471,6 +569,9 @@ void CompleteEvent(Area0005EventWork *event)
             break;
         case 1:
         case 2:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            FTBL.EV_spmBeginSampleExecute(0);
+#endif
             FTBL.EV_stepSetFlags(97, 0);
             FTBL.EV_stepSetFlags(98, 0);
             break;
@@ -479,7 +580,9 @@ void CompleteEvent(Area0005EventWork *event)
         FTBL.camCtrlSetFovTransitionTo(1);
         FTBL.camCtrlSetState(0);
         FTBL.SetPlayerControlEnabled(1);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.SetRenderClockAndCompassTo(0);
+#endif
         FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     }
 }
@@ -509,10 +612,12 @@ void RestoreArrivalCharacters(void)
 void PrepareLighterCharacters(void)
 {
     int i;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(SHEN_NAME4('R', 'E', '1', '_')));
     FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(SHEN_NAME4('V', 'C', 'N', '_')));
     FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(SHEN_NAME4('C', 'H', 'W', '_')));
     FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(SHEN_NAME4('S', 'H', 'K', '_')));
+#endif
     PrepareCharacter(SHEN_NAME4('a', '0', '1', '0'));
     for (i = 0; authorCharacters1[i] != AREA_0005_INVALID; i++)
         PrepareAuthorCharacterMode(authorCharacters1[i]);
@@ -520,9 +625,12 @@ void PrepareLighterCharacters(void)
 
 void RestoreLighterCharacters(void)
 {
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     Vector3 position;
+#endif
     int i;
     RestoreCharacter(SHEN_NAME4('a', '0', '1', '0'));
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     position.x = 155.71f;
     position.y = 100.2f;
     position.z = 315.6f;
@@ -533,6 +641,7 @@ void RestoreLighterCharacters(void)
     position.z = 314.32f;
     FTBL.EV_AT_SetPos(AREA_0005_KYG, AREA_0005_RECURSIVE_XYZ, &position);
     FTBL.npcSetFlags(AREA_0005_KYG, 0xc000);
+#endif
     for (i = 0; authorCharacters1[i] != AREA_0005_INVALID; i++)
         RestoreAuthorCharacterMode(authorCharacters1[i]);
 }

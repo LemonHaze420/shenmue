@@ -24,17 +24,36 @@ int ArbtExplainFirstCarry(void)
     EVT_AT_SetCam(1127, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
     EVT_AT_SetCam(1104, ARBT_DUMT, ARBT_DUMT, 0, 0, 150);
     EVT_AT_SetCam(1114, ARBT_DUMT, ARBT_DUMT, 0, 0, 230);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetCam(1115, ARBT_DUMT, ARBT_DUMT, 0, 0, 390);
+#else
     EVT_AT_SetCam(1115, ARBT_DUMT, ARBT_DUMT, 0, 0, 400);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetCam(1128, ARBT_DUMT, ARBT_DUMT, 0, 0, 420);
+#else
     EVT_AT_SetCam(1128, ARBT_DUMT, ARBT_DUMT, 0, 0, 430);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetCam(1103, ARBT_DUMT, ARBT_DUMT, 0, 0, 520);
+#else
     EVT_AT_SetCam(1103, ARBT_DUMT, ARBT_DUMT, 0, 0, 530);
+#endif
     EVT_AT_SetVoice("0018C001", 50);
     EVT_AT_SetVoice("0018A002", 150);
     EVT_AT_SetVoice("0018C002", 230);
     EVT_AT_SetVoice("0018C003", 310);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetVoice("0018A001", 390);
+    EVT_AT_SetVoice("0018C004", 420);
+    EVT_AT_SetVoice("0018C005", 520);
+    return 620;
+#else
     EVT_AT_SetVoice("0018A001", 400);
     EVT_AT_SetVoice("0018C004", 430);
     EVT_AT_SetVoice("0018C005", 530);
     return 630;
+#endif
 }
 
 int ArbtExplainCarry(void)
@@ -64,8 +83,13 @@ int ArbtIntroduceNextCrate(void)
     EVT_AT_SetMot(ARBT_PARTNER, 4807, 2.0f, 1.0f, 0x40000000, 0);
     EVT_AT_SetCam(1103, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
     EVT_AT_SetVoice("0018C008", 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetVoice("0018A001", 60);
+    return 90;
+#else
     EVT_AT_SetVoice("0018A001", 80);
     return 110;
+#endif
 }
 
 int ArbtStartWork(int delay)
@@ -73,7 +97,11 @@ int ArbtStartWork(int delay)
     arbtAuthorFlag = 0;
     EVT_AT_SetAngY(ARBT_DUMT, ARBT_DUMT, 180.0f, delay);
     EVT_AT_SetAngY(ARBT_DUMT, ARBT_DUMT, 180.0f, delay + 160);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_RYO, 0.0f, -2.0f, 0.0f, delay + 160);
+#else
     EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_RYO, 0.0f, -1.95f, 0.0f, delay + 160);
+#endif
     EVT_AT_SetCam(1123, ARBT_DUMT, ARBT_DUMT, 0, 0, delay);
     EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, delay + 160);
     EVT_AT_SetVoice("0018C010", delay);
@@ -85,42 +113,86 @@ int ArbtLiftHighCrate(ArbtCrateWork *crates)
 {
     int frames;
     arbtAuthorFlag = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.2f, 180.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 2.0f, 0.0f, 0);
+#else
     EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.15f, 180.0f, 0);
     EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.95f, 0.0f, 0);
+#endif
     EVT_AT_SetMot(ARBT_RYO, 4837, 2.0f, 1.5f, 0x40000000, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetMot(ARBT_PARTNER, 4809, 2.0f, 1.5f, 0x40000000, 0);
+#else
     frames = EVT_AT_SetMot(ARBT_PARTNER, 4809, 2.0f, 1.5f, 0x40000000, 0);
+#endif
     FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 17, 1.0f);
     EVT_RepeatCall(ArbtTurnHead, 0, 20, 30);
     QueueArbtMoveBox(crates, 50);
     EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
     EVT_AT_SetVoice("0018C009", 20);
     EVT_AT_SetSound(255, 20);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    return 110;
+#else
     return frames;
+#endif
 }
 
 int ArbtLiftLowCrate(ArbtCrateWork *crates)
 {
     int frames;
     arbtAuthorFlag = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.2f, 180.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 2.0f, 0.0f, 0);
+#else
     EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.15f, 180.0f, 0);
     EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.95f, 0.0f, 0);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetMot(ARBT_RYO, 4836, 2.0f, 1.5f, 0x40000000, 0);
+#else
     EVT_AT_SetMot(ARBT_RYO, 4836, 5.0f, 1.5f, 0x40000000, 0);
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetMot(ARBT_PARTNER, 4808, 2.0f, 1.5f, 0x40000000, 0);
+#else
     frames = EVT_AT_SetMot(ARBT_PARTNER, 4808, 2.0f, 1.5f, 0x40000000, 0);
+#endif
     FTBL.SetMotionBoneTargetStepLimit(FTBL.scenFindMotionwork(ARBT_RYO), 17, 1.0f);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_RepeatCall(ArbtTurnHead, 0, 62, 30);
+    QueueArbtMoveBox(crates, 92);
+#else
     EVT_RepeatCall(ArbtTurnHead, 0, 59, 30);
     QueueArbtMoveBox(crates, 89);
+#endif
     EVT_AT_SetCam(1106, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
     EVT_AT_SetVoice("0018C009", 60);
     EVT_AT_SetSound(255, 60);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    return 155;
+#else
     return frames;
+#endif
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+int ArbtPutHighCrate(ArbtCrateWork *crates, int streak)
+#else
 int ArbtPutHighCrate(ArbtCrateWork *crates, int streak, shen_name destination)
+#endif
 {
     int frames;
     arbtAuthorFlag = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.0f, 180.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.95f, 0.0f, 0);
+#else
     EVT_AT_SetPosAng(ARBT_PARTNER, destination, -0.9f, 0.1f, 90.0f, 0);
     EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.8f, 0.0f, 0);
+#endif
     EVT_AT_SetAngY(ARBT_PARTNER, ARBT_PARTNER, 180.0f, 120);
     EVT_AT_SetMot(ARBT_RYO, 4847, 2.0f, 1.6f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_RYO, 4831, 2.0f, 1.0f, 0x40000000, 120);
@@ -130,20 +202,41 @@ int ArbtPutHighCrate(ArbtCrateWork *crates, int streak, shen_name destination)
     frames = ArbtPraiseCarry(streak, 120);
     EVT_AT_SetCam(1111, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
     EVT_AT_SetCam(1130, ARBT_DUMT, ARBT_DUMT, 0, 0, 120);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetCam(1131, ARBT_DUMA, ARBT_DUMA, 0, 0, frames + 50);
+#else
     EVT_AT_SetCam(1131, ARBT_DUMA, ARBT_DUMA, 0, 0, frames + 55);
+#endif
     EVT_AT_SetVoice("0018C009", 50);
     EVT_AT_SetVoice("0018C031", frames);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetVoice("0018A001", frames + 55);
+#else
     EVT_AT_SetVoice("0018A001", frames + 60);
+#endif
     EVT_AT_SetSound(256, 35);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    return frames + 85;
+#else
     return frames + 90;
+#endif
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+int ArbtPutLowCrate(ArbtCrateWork *crates, int streak)
+#else
 int ArbtPutLowCrate(ArbtCrateWork *crates, int streak, shen_name destination)
+#endif
 {
     int frames;
     arbtAuthorFlag = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.0f, 180.0f, 0);
+    EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.95f, 0.0f, 0);
+#else
     EVT_AT_SetPosAng(ARBT_PARTNER, destination, -0.9f, 0.2f, 90.0f, 0);
     EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, 1.85f, 0.0f, 0);
+#endif
     EVT_AT_SetAngY(ARBT_PARTNER, ARBT_PARTNER, 180.0f, 225);
     EVT_AT_SetMot(ARBT_RYO, 4846, 2.0f, 1.5f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_RYO, 4831, 2.0f, 1.0f, 0x40000000, 225);
@@ -153,12 +246,24 @@ int ArbtPutLowCrate(ArbtCrateWork *crates, int streak, shen_name destination)
     frames = ArbtPraiseCarry(streak, 225);
     EVT_AT_SetCam(1132, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
     EVT_AT_SetCam(1130, ARBT_DUMT, ARBT_DUMT, 0, 0, 225);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetCam(1131, ARBT_DUMA, ARBT_DUMA, 0, 0, frames + 45);
+#else
     EVT_AT_SetCam(1131, ARBT_DUMA, ARBT_DUMA, 0, 0, frames + 55);
+#endif
     EVT_AT_SetVoice("0018C009", 50);
     EVT_AT_SetVoice("0018C031", frames);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    EVT_AT_SetVoice("0018A001", frames + 50);
+#else
     EVT_AT_SetVoice("0018A001", frames + 60);
+#endif
     EVT_AT_SetSound(256, 65);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    return frames + 80;
+#else
     return frames + 90;
+#endif
 }
 
 int ArbtPraiseCarry(int streak, int delay)
@@ -167,28 +272,40 @@ int ArbtPraiseCarry(int streak, int delay)
     float random = FTBL.GetRandomNumberInRange(100.0f);
     switch (streak) {
     case 1:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames += 70;
+#else
         frames += 110;
+#endif
         if (random < 50.0f)
             EVT_AT_SetVoice("0018C063", delay);
         else
             EVT_AT_SetVoice("0018C064", delay);
-        EVT_AT_SetFaceLooks(ARBT_PARTNER, 3, 30, 1.0f, delay);
-        EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 3, ARBT_FACE_FRAMES, 1.0f, delay);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
         break;
     case 2:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames += 70;
+#else
         frames += 105;
+#endif
         if (random < 50.0f)
             EVT_AT_SetVoice("0018C066", delay);
         else
             EVT_AT_SetVoice("0018C067", delay);
-        EVT_AT_SetFaceLooks(ARBT_PARTNER, 3, 30, 1.0f, delay);
-        EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 3, ARBT_FACE_FRAMES, 1.0f, delay);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
         break;
     case 4:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames += 70;
+#else
         frames += 90;
+#endif
         EVT_AT_SetVoice("0018C070", delay);
-        EVT_AT_SetFaceLooks(ARBT_PARTNER, 3, 30, 1.0f, delay);
-        EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 3, ARBT_FACE_FRAMES, 1.0f, delay);
+        EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
         break;
     }
     return frames;
@@ -199,7 +316,7 @@ int ArbtWarnCarryOnce(void)
     int frames;
     float random;
     arbtAuthorFlag = 0;
-    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, ARBT_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_PARTNER, 4826, 2.0f, 1.0f, 0x40000000, 0);
     random = FTBL.GetRandomNumberInRange(100.0f);
     if (random < 30.0f) {
@@ -215,8 +332,8 @@ int ArbtWarnCarryOnce(void)
         EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C033", 0);
     }
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
     return frames;
 }
 
@@ -225,11 +342,15 @@ int ArbtWarnCarryTwice(void)
     int frames;
     float random;
     arbtAuthorFlag = 0;
-    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, ARBT_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_PARTNER, 4827, 2.0f, 1.0f, 0x40000000, 0);
     random = FTBL.GetRandomNumberInRange(100.0f);
     if (random < 50.0f) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 150;
+#else
         frames = 160;
+#endif
         EVT_AT_SetCam(1125, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetCam(1112, ARBT_DUMT, ARBT_DUMT, 0, 0, 100);
         EVT_AT_SetVoice("0018C034", 0);
@@ -241,14 +362,18 @@ int ArbtWarnCarryTwice(void)
         EVT_AT_SetVoice("0018C038", 0);
         EVT_AT_SetVoice("0018C036", 70);
     } else {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 180;
+#else
         frames = 185;
+#endif
         EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetCam(1112, ARBT_DUMT, ARBT_DUMT, 0, 0, 100);
         EVT_AT_SetVoice("0018C040", 0);
         EVT_AT_SetVoice("0018C043", 75);
     }
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
     return frames;
 }
 
@@ -257,27 +382,43 @@ int ArbtWarnCarryThird(void)
     int frames;
     float random;
     arbtAuthorFlag = 0;
-    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, ARBT_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_PARTNER, 4828, 2.0f, 1.0f, 0x40000000, 0);
     random = FTBL.GetRandomNumberInRange(100.0f);
     if (random < 30.0f) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 140;
+#else
         frames = 150;
+#endif
         EVT_AT_SetCam(1109, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C040", 0);
         EVT_AT_SetVoice("0018C037", 70);
     } else if (random < 60.0f) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 140;
+#else
         frames = 200;
+#endif
         EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C039", 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EVT_AT_SetVoice("0018C047", 70);
+#else
         EVT_AT_SetVoice("0018C047", 100);
+#endif
     } else {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 200;
+#else
         frames = 230;
+#endif
         EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C044", 0);
         EVT_AT_SetVoice("0018C042", 90);
     }
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
     return frames;
 }
 
@@ -286,27 +427,43 @@ int ArbtWarnCarryFourth(void)
     int frames;
     float random;
     arbtAuthorFlag = 0;
-    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, ARBT_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_PARTNER, 4829, 2.0f, 1.0f, 0x40000000, 0);
     random = FTBL.GetRandomNumberInRange(100.0f);
     if (random < 30.0f) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 190;
+#else
         frames = 220;
+#endif
         EVT_AT_SetCam(1109, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C046", 0);
         EVT_AT_SetVoice("0018C050", 90);
     } else if (random < 60.0f) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 180;
+#else
         frames = 210;
+#endif
         EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C048", 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EVT_AT_SetVoice("0018C043", 70);
+#else
         EVT_AT_SetVoice("0018C043", 100);
+#endif
     } else {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 190;
+#else
         frames = 220;
+#endif
         EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C044", 0);
         EVT_AT_SetVoice("0018C042", 90);
     }
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
     return frames;
 }
 
@@ -315,27 +472,47 @@ int ArbtWarnCarryRepeatedly(void)
     int frames;
     float random;
     arbtAuthorFlag = 0;
-    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, ARBT_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_PARTNER, 4830, 2.0f, 1.0f, 0x40000000, 0);
     random = FTBL.GetRandomNumberInRange(100.0f);
     if (random < 30.0f) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 200;
+#else
         frames = 220;
+#endif
         EVT_AT_SetCam(1109, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C045", 0);
         EVT_AT_SetVoice("0018C051", 90);
     } else if (random < 60.0f) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 180;
+#else
         frames = 250;
+#endif
         EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C048", 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EVT_AT_SetVoice("0018C052", 70);
+#else
         EVT_AT_SetVoice("0018C052", 100);
+#endif
     } else {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 180;
+#else
         frames = 250;
+#endif
         EVT_AT_SetCam(1124, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C039", 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EVT_AT_SetVoice("0018C041", 70);
+#else
         EVT_AT_SetVoice("0018C041", 100);
+#endif
     }
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
     return frames;
 }
 
@@ -343,7 +520,7 @@ int ArbtWarnWrongForward(void)
 {
     float random;
     arbtAuthorFlag = 0;
-    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, ARBT_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_PARTNER, 4826, 2.0f, 1.0f, 0x40000000, 0);
     random = FTBL.GetRandomNumberInRange(100.0f);
     if (random < 30.0f)
@@ -356,8 +533,8 @@ int ArbtWarnWrongForward(void)
         EVT_AT_SetVoice("0018C029", 0);
     else
         EVT_AT_SetVoice("0018C030", 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, 100);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, 100);
     return 100;
 }
 
@@ -365,20 +542,28 @@ int ArbtWarnWrongDouble(unsigned int direction)
 {
     int frames;
     arbtAuthorFlag = 0;
-    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, ARBT_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_PARTNER, 4826, 2.0f, 1.0f, 0x40000000, 0);
     FTBL.GetRandomNumberInRange(100.0f);
     if (direction == 0x8000) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 60;
+#else
         frames = 140;
+#endif
         EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C086", 0);
     } else {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        frames = 50;
+#else
         frames = 155;
+#endif
         EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
         EVT_AT_SetVoice("0018C087", 0);
     }
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
     return frames;
 }
 
@@ -386,14 +571,18 @@ int ArbtWarnWrongMultiple(unsigned int direction)
 {
     int frames;
     arbtAuthorFlag = 0;
-    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);
+    EVT_AT_SetMot(ARBT_RYO, ARBT_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, 0);
     EVT_AT_SetMot(ARBT_PARTNER, 4826, 2.0f, 1.0f, 0x40000000, 0);
     FTBL.GetRandomNumberInRange(100.0f);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    frames = 60;
+#else
     frames = 110;
+#endif
     EVT_AT_SetCam(1126, ARBT_DUMT, ARBT_DUMT, 0, 0, 0);
     EVT_AT_SetVoice("0018C089", 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, frames);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, frames);
     return frames;
 }
 
@@ -408,8 +597,8 @@ int ArbtWarnIdleForward(int count)
         EVT_AT_SetVoice("0018C026", 30);
     else
         EVT_AT_SetVoice("0018C028", 30);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, 150);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, 150);
     return 150;
 }
 
@@ -424,8 +613,8 @@ int ArbtWarnIdlePut(int count)
         EVT_AT_SetVoice("0018C091", 30);
     else
         EVT_AT_SetVoice("0018C092", 30);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, 30, 1.0f, 0);
-    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, 30, 1.0f, 150);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 1, ARBT_FACE_FRAMES, 1.0f, 0);
+    EVT_AT_SetFaceLooks(ARBT_PARTNER, 0, ARBT_FACE_FRAMES, 1.0f, 150);
     return 150;
 }
 
@@ -442,7 +631,11 @@ int ArbtWalkForward(float speed, int delay)
 
 int ArbtRequestPutDown(int delay)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    int frames = delay + 90;
+#else
     int frames = delay + 60;
+#endif
     arbtAuthorFlag = 0;
     EVT_AT_SetVoice("0018C090", delay);
     return frames;
@@ -502,34 +695,40 @@ int ArbtWalkDirection(float speed, int intensity, unsigned int direction, int de
 {
     int frames;
     arbtAuthorFlag = 0;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_RYO, 0.0f, -1.95f, 0.0f, delay);
+#endif
     switch (direction) {
     case 0x8000:
         if (intensity == 0) {
             frames = 90.0f / speed;
             EVT_AT_SetMot(ARBT_RYO, 4848, 2.0f, speed, 0, delay);
-            EVT_AT_SetMot(ARBT_PARTNER, 4820, 2.0f, speed, 0x2000000, delay);
+            EVT_AT_SetMot(ARBT_PARTNER, 4820, 2.0f, speed, ARBT_CARRY_MOTION_FLAGS, delay);
         } else {
             frames = 90.0f / speed;
             EVT_AT_SetMot(ARBT_RYO, 4867, 2.0f, speed, 0, delay);
-            EVT_AT_SetMot(ARBT_PARTNER, 4865, 2.0f, speed, 0x2000000, delay);
+            EVT_AT_SetMot(ARBT_PARTNER, 4865, 2.0f, speed, ARBT_CARRY_MOTION_FLAGS, delay);
         }
         break;
     case 0x4000:
         if (intensity == 0) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+            frames = 90.0f / speed;
+#else
             frames = 100.0f / speed;
+#endif
             EVT_AT_SetMot(ARBT_RYO, 4838, 2.0f, speed, 0, delay);
-            EVT_AT_SetMot(ARBT_PARTNER, 4811, 2.0f, speed, 0x2000000, delay);
+            EVT_AT_SetMot(ARBT_PARTNER, 4811, 2.0f, speed, ARBT_CARRY_MOTION_FLAGS, delay);
         } else {
             frames = 90.0f / speed;
             EVT_AT_SetMot(ARBT_RYO, 4863, 2.0f, speed, 0, delay);
-            EVT_AT_SetMot(ARBT_PARTNER, 4861, 2.0f, speed, 0x2000000, delay);
+            EVT_AT_SetMot(ARBT_PARTNER, 4861, 2.0f, speed, ARBT_CARRY_MOTION_FLAGS, delay);
         }
         break;
     default:
         frames = 115.0f / speed;
         EVT_AT_SetMot(ARBT_RYO, 4834, 2.0f, speed, 0, delay);
-        EVT_AT_SetMot(ARBT_PARTNER, 4805, 2.0f, speed, 0x2000000, delay);
+        EVT_AT_SetMot(ARBT_PARTNER, 4805, 2.0f, speed, ARBT_CARRY_MOTION_FLAGS, delay);
         break;
     }
     return frames;
@@ -546,6 +745,15 @@ int ArbtFailCarry(ArbtCrateWork *crates, shen_name *crate, int intensity, int di
     FTBL.GetScenarioCharacterEulerAngles(*crate, &rotation, 0);
     switch (direction) {
     case 0x8000:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        if (intensity == 0) {
+            position.x = ryo.x + -0.9f;
+            position.z = ryo.z + -0.509799957f + 0.16f;
+        } else {
+            position.x = ryo.x + -0.5f - 0.9f;
+            position.z = ryo.z + -0.529998779f + 0.16f;
+        }
+#else
         if (intensity == 0) {
             position.x += 0.112350464f;
             position.z += -0.407287121f;
@@ -553,12 +761,26 @@ int ArbtFailCarry(ArbtCrateWork *crates, shen_name *crate, int intensity, int di
             position.x += -0.381591797f;
             position.z += -0.429046035f;
         }
+#endif
         frames = 100;
         drop = 37;
         EVT_AT_SetMot(ARBT_RYO, 4845, 2.0f, 1.4f, 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EVT_AT_SetMot(ARBT_PARTNER, 4817, 2.0f, 1.4f, 0, 0);
+#else
         EVT_AT_SetMot(ARBT_PARTNER, 4817, 2.0f, 1.4f, 0, 12);
+#endif
         break;
     case 0x4000:
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        if (intensity == 0) {
+            position.x = ryo.x + -0.9f;
+            position.z = ryo.z + 0.536399961f + 0.16f;
+        } else {
+            position.x = ryo.x + -0.5f - 0.9f;
+            position.z = ryo.z + 0.529998779f + 0.16f;
+        }
+#else
         if (intensity == 0) {
             position.x += 0.113952637f;
             position.z += 0.650390983f;
@@ -566,10 +788,15 @@ int ArbtFailCarry(ArbtCrateWork *crates, shen_name *crate, int intensity, int di
             position.x += -0.380264282f;
             position.z += 0.644867003f;
         }
+#endif
         frames = 100;
         drop = 37;
         EVT_AT_SetMot(ARBT_RYO, 4844, 2.0f, 1.4f, 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EVT_AT_SetMot(ARBT_PARTNER, 4816, 2.0f, 1.4f, 0, 0);
+#else
         EVT_AT_SetMot(ARBT_PARTNER, 4816, 2.0f, 1.4f, 0, 12);
+#endif
         break;
     case 0x1000:
         frames = 100;
@@ -582,8 +809,13 @@ int ArbtFailCarry(ArbtCrateWork *crates, shen_name *crate, int intensity, int di
     default:
         frames = 100;
         drop = 37;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        position.x += 0.12f;
+        position.z += 0.12f;
+#else
         position.x += 0.116600037f;
         position.z += 0.112100005f;
+#endif
         EVT_AT_SetMot(ARBT_RYO, 4842, 25.0f, 1.4f, 0, 0);
         EVT_AT_SetMot(ARBT_PARTNER, 4814, 25.0f, 1.4f, 0, 0);
         break;
@@ -591,7 +823,9 @@ int ArbtFailCarry(ArbtCrateWork *crates, shen_name *crate, int intensity, int di
     StopArbtMoveBox(crates, drop);
     QueueArbtDropBox(crates, drop);
     EVT_AT_SetPosAng(*crate, ARBT_BASE, position.x, position.z, rotation.y, frames - 40.0f + 1.0f);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_PARTNER, -0.1f, 0.0f, 0.35f, 0);
+#endif
     EVT_AT_SetPosAng(ARBT_PARTNER, ARBT_DUMB, 0.0f, 0.0f, 0.0f, frames - 40.0f + 1.0f);
     EVT_AT_SetPosAng(ARBT_RYO, ARBT_PARTNER, 0.0f, -1.95f, 180.0f, frames - 40.0f + 1.0f);
     EVT_AT_SetCam(1107, ARBT_DUMA, ARBT_DUMA, 0, 0, 0);
@@ -655,7 +889,7 @@ int ArbtAnnounceTimeOver(void)
     EVT_AT_SetAngY(ARBT_DUMS, ARBT_DUMS, 180.0f, 110);                                                                     \
     EVT_AT_SetAngY(ARBT_DUMS, ARBT_DUMS, 180.0f, 320);                                                                     \
     EVT_AT_SetMot(ARBT_PARTNER, 4802, 2.0f, 1.0f, 0x40000000, 0);                                                         \
-    EVT_AT_SetMot(ARBT_RYO, 0xf002, 2.0f, 1.0f, 0x40000000, 0);                                                            \
+    EVT_AT_SetMot(ARBT_RYO, ARBT_IDLE_MOTION, 2.0f, 1.0f, 0x40000000, 0);                                                            \
     EVT_AT_SetMot(ARBT_RYO, 4840, 2.0f, 1.0f, 0, 110);                                                                    \
     EVT_AT_SetMot(ARBT_FOREMAN, 4802, 2.0f, 1.0f, 0x40000000, 0);                                                         \
     EVT_AT_SetMot(ARBT_FOREMAN, 4813, 2.0f, 1.0f, 0, 110);                                                                \

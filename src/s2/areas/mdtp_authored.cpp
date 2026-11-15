@@ -1,3 +1,84 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_mdtp.hpp"
+#include "s2/areas/mdtp_tables.hpp"
+
+HLibTask *mdtpSubtitleTask = 0;
+
+void QueueMdtpSubtitles(int clip)
+{
+    MdtpSubtitle *tracks[] = {MDTP_SUBTITLE_TRACK_01, MDTP_SUBTITLE_TRACK_02, MDTP_SUBTITLE_TRACK_03, MDTP_SUBTITLE_TRACK_04,
+        MDTP_SUBTITLE_TRACK_05, MDTP_SUBTITLE_TRACK_06, MDTP_SUBTITLE_TRACK_07, MDTP_SUBTITLE_TRACK_08, MDTP_SUBTITLE_TRACK_09,
+        MDTP_SUBTITLE_TRACK_10, MDTP_SUBTITLE_TRACK_11, MDTP_SUBTITLE_TRACK_12, MDTP_SUBTITLE_TRACK_13, MDTP_SUBTITLE_TRACK_14,
+        MDTP_SUBTITLE_TRACK_15, MDTP_SUBTITLE_TRACK_16, MDTP_SUBTITLE_TRACK_17};
+    MdtpSubtitleWork *work;
+    if (mdtpSubtitleTask)
+        StopMdtpSubtitles();
+    mdtpSubtitleTask = FTBL.HLib_EnqueueTaskWithParameter(MdtpSubtitleCallback, 5, 11, sizeof(MdtpSubtitleWork), TASK_EVNT);
+    work = (MdtpSubtitleWork *)FTBL.HLib_GetTaskParameter(mdtpSubtitleTask);
+    work->reserved04 = 0;
+    work->frames = 0;
+    work->cursor = tracks[clip];
+    work->state = 0;
+}
+
+void MdtpSubtitleCallback(void *data)
+{
+    MdtpSubtitleWork *work = (MdtpSubtitleWork *)data;
+    int frames;
+    switch (work->state) {
+    case 0:
+        if (work->cursor->token) {
+            FTBL.dbgPrintEventMessage(work->cursor->token);
+            work->frames = (int)(work->cursor->duration * 30.0f);
+            work->state++;
+        } else
+            StopMdtpSubtitles();
+        break;
+    case 1:
+        frames = work->frames--;
+        if (frames == 0) {
+            FTBL.ctrlStopSubtitles();
+            work->state = 0;
+            work->cursor++;
+        }
+        break;
+    }
+}
+
+void PauseMdtpSubtitles(void)
+{
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    if (mdtpSubtitleTask) {
+#endif
+        FTBL.ctrlStopSubtitles();
+        FTBL.HLib_SetupTimedTask(mdtpSubtitleTask, 0);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    }
+#endif
+}
+
+void ResumeMdtpSubtitles(void)
+{
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    if (mdtpSubtitleTask) {
+#endif
+        MdtpSubtitleWork *work = (MdtpSubtitleWork *)FTBL.HLib_GetTaskParameter(mdtpSubtitleTask);
+        FTBL.dbgPrintEventMessage(work->cursor->token);
+        FTBL.HLib_ResolveDeferredCallback(mdtpSubtitleTask);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    }
+#endif
+}
+
+void StopMdtpSubtitles(void)
+{
+    if (mdtpSubtitleTask) {
+        FTBL.HLib_DestroyTaskInternal(mdtpSubtitleTask);
+        mdtpSubtitleTask = 0;
+    }
+}
+
+#else
 #include "s2/areas/area_mdtp.hpp"
 #include "s2/areas/mdtp_tables.hpp"
 #include "s2/author.hpp"
@@ -252,3 +333,5 @@ std::int64_t MdtpQuitAuthorCompletion(std::int32_t phase, std::int64_t frame, HL
     return 1;
 }
 } // namespace shenmue::s2
+
+#endif

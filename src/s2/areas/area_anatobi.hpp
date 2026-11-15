@@ -78,8 +78,12 @@ extern shen_name anaTobiEnemyNames[];
 extern shen_name anaTobiGuardNames[];
 extern AnaTobiEnemy anaTobiEnemies[];
 extern AnaTobiPoint anaTobiPoints[];
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern int anaTobiUnusedCommon[2];
+#else
 extern int anaTobiReservedBss[2];
 extern int anaTobiUnusedCommon[3];
+#endif
 extern int anaTobiCourseIndex;
 extern char anaTobiTextBuffer[68];
 extern AnaTobiWork anaTobiWork;

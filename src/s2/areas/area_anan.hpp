@@ -30,6 +30,11 @@
 #define ANAN_ALL_AXES 0x38000000U
 #define ANAN_DEBUG_ID 2
 #define ANAN_EPSILON 1.1920929e-07f
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define ANAN_DECLINE_ANGLE 0x8eee
+#else
+#define ANAN_DECLINE_ANGLE 0xc222
+#endif
 typedef struct AnanPlacement {
     shen_name character;
     Vector3 position;
@@ -57,10 +62,17 @@ typedef struct AnanWork {
     Vector3 positions[2];
     int transitionFrames[2];
     int positionModes[2];
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    int soundScene;
+    char soundName[4];
+#endif
 } AnanWork;
 typedef struct AnanPakWork {
     HLibTask *caller;
-    int npcState, specialEntry;
+    int npcState;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    int specialEntry;
+#endif
 } AnanPakWork;
 typedef struct AnanWaitWork {
     HLibTask *caller;
@@ -71,7 +83,10 @@ typedef int (*AnanAuthorCallback)(int frame);
 typedef struct AnanAuthWork {
     HLibTask *caller;
     AnanAuthorCallback frameCallback;
-    int fadeOut, finishBeforeUnload;
+    int fadeOut;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    int finishBeforeUnload;
+#endif
     shen_name author;
     shen_name *characters;
     shen_name *parents;
@@ -152,7 +167,11 @@ void AnanTrackMan(void *data);
 void AnanDebugSkip(void *data);
 void AnanHideCharacter(shen_name character);
 void AnanShowCharacter(shen_name character);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+int QueueAnanAuthor(shen_name author, AnanAuthorCallback frameCallback, shen_name *characters, int fadeOut);
+#else
 int QueueAnanAuthor(shen_name author, AnanAuthorCallback frameCallback, shen_name *characters, int fadeOut, int finishBeforeUnload);
+#endif
 void AnanInitializeAuthor(void *data);
 void AnanWaitAuthor(void *data);
 void QueueAnanVoice(const char *text, int voice, int startTicks, int endTicks, AnanVoiceCallback callback);
@@ -162,7 +181,11 @@ void AnanVoiceUnlockInput(int event, int argument);
 void QueueAnanCamera(const char *package, int camera, shen_name base, int delay);
 void AnanCamera(void *data);
 void AnanSetBoardTilt(float tilt);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+void AnanGetBoardRotation(float tilt, Vector3i *rotation);
+#else
 void AnanGetBoardRotation(Vector3i *rotation, float tilt);
+#endif
 void AnanGetHandPosition(float tilt, Vector3 *output);
 #else
 #pragma once

@@ -229,7 +229,7 @@ void MainCallback(void *data)
         break;
     case 3:
         FTBL.EV_SetPlayerFlag(12, 724, 1);
-        EVT_AT_KsIcon_Enqueue(0xffff, 38, 39, 470, 0x7fff, 0xffff, 2, 0);
+        EVT_AT_KsIcon_Enqueue(0xffff, STREET_FIGHT_ENTRY_CHOICE, 39, 470, 0x7fff, 0xffff, 2, 0);
         FTBL.CheckHelpIcon(1, 0, 1);
         work->paidEntry = 0;
         work->state = 4;
@@ -243,7 +243,7 @@ void MainCallback(void *data)
             ClearStreetFightLook(STREET_FIGHT_RYO, 15);
             EVT_AT_CharaDisp(SFKK_SD6, 0, 0);
             switch (choice) {
-            case 38:
+            case STREET_FIGHT_ENTRY_CHOICE:
                 if (FTBL.GetPlayerStat(2) < sfkkEntryFees[work->rank])
                     work->state = 8;
                 else {
@@ -390,8 +390,20 @@ void RetryBeginCallback(void *data)
 {
     StreetFightEventWork *work = (StreetFightEventWork *)data;
     FTBL.EV_SetPlayerFlag(12, 724, 1);
+#if defined(SHENMUE_EVENT_SFKK_Q109)
+    FTBL.dbgPrintEventMessage("Retry?\n");
+    EVT_AT_KsIcon_Enqueue(0xffff, 82, 83, 0xffff, 0x7fff, 0xffff, 2, 0);
+#elif defined(SHENMUE_TARGET_S2_DC_EU)
+    ShowStreetFightRetryMessage();
+    EVT_AT_KsIcon_Enqueue(0xffff, 82, 83, 0xffff, 0x7fff, 0xffff, 2, 0);
+#else
+#if defined(SHENMUE_TARGET_S2_DC_US)
+    FTBL.dbgPrintEventMessage("Retry?\n");
+#else
     FTBL.dbgPrintEventMessage("「リトライしますか？\n");
+#endif
     EVT_AT_KsIcon_Enqueue(0xffff, 38, 39, 0xffff, 0x7fff, 0xffff, 2, 0);
+#endif
     ChangeStreetFightAudienceMode(work->audienceTask, 2, 1);
     FTBL.HLib_SetCurrentTaskTo(RetryChoiceCallback);
 }
@@ -401,7 +413,11 @@ void RetryChoiceCallback(void *data)
     unsigned int choice = PollStreetFightActionChoice();
     if (choice) {
         FTBL.ctrlStopSubtitles();
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+        if (choice == 82)
+#else
         if (choice == 38)
+#endif
             RetryResetCallback(data);
         else
             RetryCancelCallback(data);

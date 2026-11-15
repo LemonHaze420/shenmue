@@ -22,6 +22,11 @@ void ApplyAR02Gate(void);
 void PrepareAR02NpcState(void);
 void AR02WaveCallback(void);
 void AR02SpringCallback(void *taskData);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void AR02CheckAozr(void *data);
+void AR02StopAozrMessage(void *data);
+#endif
+
 #else
 #pragma once
 

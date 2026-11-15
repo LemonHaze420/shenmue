@@ -6,13 +6,21 @@ void Main(void)
 {
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(MainCallback, 4, 11, sizeof(Area0017TaskParameter), TASK_EVNT);
     Area0017TaskParameter *parent = (Area0017TaskParameter *)FTBL.HLib_GetTaskParameter(task);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    parent->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0017A.MOT");
+#endif
     parent->self = task;
     parent->state = 1;
     parent->selection = (unsigned int)g_entryPoint > 2 ? 0 : g_entryPoint;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    Queue_EVT_UTL_LoadNPCChara_3(area0017CleanupCharacters, parent->self);
+#endif
     area0017Archive = FTBL.EV_ControlPackageResources(1, 0, FTBL.Filepath_Gen(0), (int)"0017_MAP.afs", 0);
     area0017Voice = FTBL.shenPlayAudioWithFlags("joy", 1);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     EVT_UTL_SetNPCLowQualityHands(0);
     Queue_EVT_UTL_LoadNPCChara_3(area0017Characters[0], parent->self);
+#endif
     Setup0017();
 }
 #else
@@ -24,6 +32,7 @@ void MainCallback(void *taskData)
 {
     Area0017TaskParameter *parent = (Area0017TaskParameter *)taskData;
     switch (parent->state) {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     case 4:
         EVT_UTL_SetNPCLowQualityHands(0);
         Queue_EVT_UTL_LoadNPCChara_3(area0017Characters[parent->selection], parent->self);
@@ -32,6 +41,7 @@ void MainCallback(void *taskData)
     case 5:
         parent->state = 1;
         break;
+#endif
     case 1:
         QueueLoop(parent);
         break;
@@ -58,8 +68,15 @@ void QueueLoop(Area0017TaskParameter *parent)
         FTBL.EV_lightLoad(AREA_0017_LIGHT);
         FTBL.PushGlobalLightingProgram();
     }
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    SetupCharacters();
+#else
     SetupCharacters(parent->selection);
+#endif
     FTBL.EV_authSceneCtrl(parent->selection);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     FTBL.EV_spmBeginSampleExecute(0);
     parent->state = 2;
 }
@@ -67,13 +84,22 @@ void QueueLoop(Area0017TaskParameter *parent)
 void Loop0(void *taskData)
 {
     Area0017LoopTaskParameter *loop = (Area0017LoopTaskParameter *)taskData;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (FTBL.EV_authSceneCtrl(-6) == 1)
         FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     if (!FTBL.EV_authSceneCtrl(-1)) {
         FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
         FTBL.HLib_SetupTimedTask(loop->parent->self, 30);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        loop->parent->state = 1;
+#else
         loop->parent->state = 4;
+#endif
         loop->parent->selection = 1;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        RestoreCharacters();
+#endif
         FTBL.HLib_DestroyCurrentTask();
     }
 }
@@ -81,14 +107,23 @@ void Loop0(void *taskData)
 void Loop1(void *taskData)
 {
     Area0017LoopTaskParameter *loop = (Area0017LoopTaskParameter *)taskData;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (FTBL.EV_authSceneCtrl(-6) == 1)
         FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     if (FTBL.EV_authSceneCtrl(-6) == 1000)
         FTBL.SetScreenFilmFade(30, 0, 0, 0, 0, 255, 0, 0, 0);
     if (!FTBL.EV_authSceneCtrl(-1)) {
         FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        loop->parent->state = 1;
+#else
         loop->parent->state = 4;
+#endif
         loop->parent->selection = 2;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        RestoreCharacters();
+#endif
         FTBL.HLib_DestroyCurrentTask();
     }
 }
@@ -96,8 +131,10 @@ void Loop1(void *taskData)
 void Loop2(void *taskData)
 {
     Area0017LoopTaskParameter *loop = (Area0017LoopTaskParameter *)taskData;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (FTBL.EV_authSceneCtrl(-6) == 1)
         FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     if (!FTBL.EV_authSceneCtrl(-1)) {
         FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
         FTBL.hsFadeVoice(area0017Voice, 30);
@@ -110,6 +147,28 @@ void Loop2(void *taskData)
 
 void ConfigureArchive(int selection)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.DebugLogToFileRemoved("scene : %d\n", selection);
+    switch (selection) {
+    case 1:
+        FTBL.EV_ControlPackageResources(0, 12, area0017Archive, 4, 5);
+        break;
+    case 2:
+        FTBL.EV_ControlPackageResources(0, 12, area0017Archive, 2, 3);
+        break;
+    }
+    FTBL.EV_ControlPackageResources(0, 8, area0017Archive, area0017ArchiveRanges[selection][0], area0017ArchiveRanges[selection][1]);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    switch (selection) {
+    case 1:
+        FTBL.SetObjectFlagByIndex(15, 0);
+        FTBL.SetObjectFlagByIndex(16, 1);
+        break;
+    case 2:
+        FTBL.SetObjectFlagByIndex(5, 0);
+        break;
+    }
+#else
     switch (selection) {
     case 1:
         FTBL.SetObjectFlagByIndex(0, 0);
@@ -125,38 +184,60 @@ void ConfigureArchive(int selection)
         FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
         break;
     }
+#endif
 }
 
 void Setup0017(void)
 {
     FTBL.SetPlayerControlEnabled(0);
     FTBL.EV_FreeAuthorPak(1, "0017");
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_authSceneCtrl(-11);
+#endif
 }
 
 void Cleanup(Area0017TaskParameter *parent)
 {
     EVT_UTL_FreeNPCChara(area0017CleanupCharacters);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_authSceneCtrl(-10);
+#endif
     FTBL.EV_stepSetFlags(17, 0);
     FTBL.EV_FreeAuthorPak(0, "0017");
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.DeleteMotion(parent->motion);
+#endif
     FTBL.HLib_DestroyTask(parent->self);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.scenSetTaskFlags(8);
+#endif
     FTBL.EV_scenQueueLoad(g_actNumber, AREA_0017_DESTINATION, 0);
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+const shen_name area0017CleanupCharacters[] = {AREA_0017_QLN, AREA_0017_QRN, AREA_0017_SON, AREA_0017_JOP, AREA_0017_DEY,
+    AREA_0017_QLN, AREA_0017_TKR, INVALID_CHARACTER};
+const int area0017ArchiveRanges[3][2] = {{4, 5}, {2, 3}, {0, 1}};
+#else
 const shen_name area0017Characters0[] = {AREA_0017_JOP, AREA_0017_QLN, INVALID_CHARACTER};
 const shen_name area0017Characters1[] = {AREA_0017_DEY, AREA_0017_QRN, INVALID_CHARACTER};
 const shen_name area0017Characters2[] = {AREA_0017_SON, AREA_0017_TKR, INVALID_CHARACTER};
 const shen_name area0017CleanupCharacters[] = {AREA_0017_JOP, AREA_0017_DEY, AREA_0017_QRN, AREA_0017_SON, AREA_0017_QLN, AREA_0017_TKR,
     INVALID_CHARACTER};
 const shen_name *const area0017Characters[] = {area0017Characters0, area0017Characters1, area0017Characters2, 0};
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetupCharacters(void)
+#else
 void SetupCharacters(short selection)
+#endif
 {
     int i;
     PrepareCharacter(RYO_CHARACTER);
     PrepareProp(SHEN_NAME4('a', '3', '9', '6'));
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     PrepareProp(SHEN_NAME4('a', '9', '7', '8'));
+#endif
     PrepareProp(SHEN_NAME4('a', '7', '9', '6'));
     PrepareProp(SHEN_NAME4('a', '3', '7', '5'));
     PrepareProp(SHEN_NAME4('a', '3', '7', '6'));
@@ -165,8 +246,13 @@ void SetupCharacters(short selection)
     PrepareProp(SHEN_NAME4('a', '6', '4', '2'));
     PrepareProp(SHEN_NAME4('a', '6', '4', '4'));
     PrepareProp(SHEN_NAME4('a', '6', '4', '6'));
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    for (i = 0; area0017CleanupCharacters[i] != INVALID_CHARACTER; i++)
+        PrepareCharacter(area0017CleanupCharacters[i]);
+#else
     for (i = 0; area0017Characters[selection][i] != INVALID_CHARACTER; i++)
         PrepareCharacter(area0017Characters[selection][i]);
+#endif
 }
 
 void RestoreCharacters(void)
@@ -174,7 +260,9 @@ void RestoreCharacters(void)
     int i;
     RestoreCharacter(RYO_CHARACTER);
     RestoreProp(SHEN_NAME4('a', '3', '9', '6'));
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     RestoreProp(SHEN_NAME4('a', '9', '7', '8'));
+#endif
     RestoreProp(SHEN_NAME4('a', '7', '9', '6'));
     RestoreProp(SHEN_NAME4('a', '3', '7', '5'));
     RestoreProp(SHEN_NAME4('a', '3', '7', '6'));

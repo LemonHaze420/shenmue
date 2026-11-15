@@ -52,11 +52,17 @@ void MdtpQuitCallback(void *data)
                 FTBL.scenCvsCtrlFree(work->voice);
                 work->voice = 0;
                 work->voiceClip = -1;
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+            StopMdtpSubtitles();
+#endif
             }
             if (work->pausedVoice && FTBL.cvsHasValidConverseData(work->pausedVoice)) {
                 FTBL.scenCvsCtrlFree(work->pausedVoice);
                 work->pausedVoice = 0;
                 work->pausedClip = -1;
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+            StopMdtpSubtitles();
+#endif
             }
             clip = FindMdtpTapeClip(work->tape, work->tapeFrame);
             if (clip >= 0)
@@ -560,11 +566,17 @@ void BeginMdtpRewind(MdtpWork *work, int previous)
             FTBL.scenCvsCtrlFree(work->voice);
             work->voice = 0;
             work->voiceClip = -1;
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+            StopMdtpSubtitles();
+#endif
         }
         if (work->pausedVoice && FTBL.cvsHasValidConverseData(work->pausedVoice)) {
             FTBL.scenCvsCtrlFree(work->pausedVoice);
             work->pausedVoice = 0;
             work->pausedClip = -1;
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+            StopMdtpSubtitles();
+#endif
         }
     }
     while ((clip = FindMdtpTapeClip(work->tape, work->tapeFrame)) < 0)
@@ -621,11 +633,17 @@ void BeginMdtpFastForward(MdtpWork *work, int previous)
             FTBL.scenCvsCtrlFree(work->voice);
             work->voice = 0;
             work->voiceClip = -1;
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+            StopMdtpSubtitles();
+#endif
         }
         if (work->pausedVoice && FTBL.cvsHasValidConverseData(work->pausedVoice)) {
             FTBL.scenCvsCtrlFree(work->pausedVoice);
             work->pausedVoice = 0;
             work->pausedClip = -1;
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+            StopMdtpSubtitles();
+#endif
         }
     }
     clip = FindMdtpTapeClip(work->tape, work->tapeFrame);
@@ -671,6 +689,9 @@ void BeginMdtpStop(MdtpWork *work, int previous)
         work->pausedClip = work->voiceClip;
         work->voice = 0;
         work->voiceClip = -1;
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+        PauseMdtpSubtitles();
+#endif
         break;
     }
 }
@@ -757,6 +778,9 @@ int PlayMdtpTape(MdtpWork *work)
                     work->voiceClip = work->pausedClip;
                     work->pausedVoice = 0;
                     work->pausedClip = -1;
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+                    ResumeMdtpSubtitles();
+#endif
                     break;
                 }
                 if (work->voiceClip == clip)
@@ -795,12 +819,19 @@ int PlayMdtpTape(MdtpWork *work)
                         }
                     }
                     if (match < 0) {
-                        if (match == -1)
+                        if (match == -1) {
                             FTBL.EV_FreeAuthorPak(0, work->bank);
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+                            StopMdtpSubtitles();
+#endif
+                        }
                         FTBL.EV_FreeAuthorPak(1, bank);
                         work->bank = bank;
                     }
                     work->voice = FTBL.shenPlayAudioWithFlags(voice, 1);
+#if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+                    QueueMdtpSubtitles(clip - 1);
+#endif
                     work->voiceClip = clip;
                 }
             }
@@ -1150,7 +1181,11 @@ int QueueMdtpPackage(char *package, int recorder)
     } else {
         result = 0;
         FTBL.DebugLogToFileRemoved("can't found TAPE-module's data\n");
+        #if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+        FTBL.EventAssertNullsub(__FILE__, 2219);
+#else
         FTBL.EventAssertNullsub(__FILE__, 2207);
+#endif
     }
     return result;
 }
@@ -1180,7 +1215,11 @@ void MdtpPackageCallback(void *data)
         }
     } else {
         FTBL.DebugLogToFileRemoved("\n\n\n\npakload failt!!!\n\n\n\n");
+        #if defined(SHENMUE_TARGET_S2_DC_US) || defined(SHENMUE_TARGET_S2_DC_EU)
+        FTBL.EventAssertNullsub(__FILE__, 2267);
+#else
         FTBL.EventAssertNullsub(__FILE__, 2255);
+#endif
     }
 }
 

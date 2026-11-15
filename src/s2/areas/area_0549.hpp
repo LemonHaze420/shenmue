@@ -12,18 +12,24 @@
 #define AREA_0549_aa30 SHEN_NAME4('a', 'a', '3', '0')
 #define AREA_0549_TITLE_AUTHOR SHEN_NAME4('G', 'O', 'V', '2')
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+typedef AreaAuthorTaskParameter Area0549TaskParameter;
+#else
+typedef AreaImmediateAuthorTaskParameter Area0549TaskParameter;
+#endif
+
 typedef struct Area0549AuthorParameter {
-    AreaImmediateAuthorTaskParameter *parent;
+    Area0549TaskParameter *parent;
 } Area0549AuthorParameter;
 
 extern shen_name area0549Characters[];
 void Start0549(void);
 void Update0549(void *taskData);
-void Queue0549Author(AreaImmediateAuthorTaskParameter *parent);
+void Queue0549Author(Area0549TaskParameter *parent);
 void Update0549Author(void *taskData);
 void Setup0549Environment(void);
 void Update0549Waves(void *taskData);
-void Cleanup0549(AreaImmediateAuthorTaskParameter *parent);
+void Cleanup0549(Area0549TaskParameter *parent);
 void Prepare0549Characters(void);
 void Restore0549Characters(void);
 void Prepare0549AuthorCharacter(shen_name character);

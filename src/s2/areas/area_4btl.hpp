@@ -53,7 +53,11 @@ int Btl4LlyWon(Btl4Work *work);
 int Btl4Lost(Btl4Work *work);
 int Btl4SamLost(Btl4Work *work);
 int Btl4LlyLost(Btl4Work *work);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+unsigned int Btl4FindAnchor(shen_name character);
+#else
 unsigned int Btl4FindAnchor(void);
+#endif
 void Btl4SelectAnchor(shen_name character);
 void Btl4ApplyAnchor(shen_name character);
 void Btl4CreateStageObjects(void);

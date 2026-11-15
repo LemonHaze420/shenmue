@@ -1,3 +1,574 @@
+#if defined(SHENMUE_EVENT_OVERLAY) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/scripts/cwon/area_cwon.hpp"
+
+HLibTask *CwonQueueFadeWait(HLibTask *parent) {
+    HLibTask *task = 0;
+    HLibTask **work = CwonCreateTask(&task, (HLibTaskCallback)CwonFadeWaitCallback, 4);
+    if (work) {
+        *work = parent;
+        FTBL.HLib_SetupTimedTask(parent, 0);
+    }
+    return task;
+}
+
+void CwonFadeWaitCallback(HLibTask **work) {
+    if (work) {
+        if (!FTBL.filmCheckFadeTrackColour()) {
+            FTBL.HLib_ResolveDeferredCallback(*work);
+            FTBL.HLib_DestroyCurrentTask();
+        }
+    } else
+        FTBL.HLib_DestroyCurrentTask();
+}
+
+HLibTask *CwonQueueMotionWait(HLibTask *parent, shen_name character, float frame) {
+    HLibTask *task = 0;
+    CwonMotionWaitWork *work = CwonCreateTask(&task, (HLibTaskCallback)CwonMotionWaitCallback, sizeof(*work));
+    if (work) {
+        work->frame = frame;
+        work->character = character;
+        work->parent = parent;
+        FTBL.HLib_SetupTimedTask(parent, 0);
+    }
+    return task;
+}
+
+void CwonMotionWaitCallback(CwonMotionWaitWork *work) {
+    int done = 0;
+    if (work) {
+        if (work->frame != 0) {
+            if (work->frame <= FTBL.GetMotionFrame(FTBL.scenFindMotionwork(work->character), 0))
+                done = 1;
+        } else
+            done = FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(work->character), 65, 1, 0);
+        if (done) {
+            FTBL.HLib_ResolveDeferredCallback(work->parent);
+            FTBL.HLib_DestroyCurrentTask();
+        }
+    } else
+        FTBL.HLib_DestroyCurrentTask();
+}
+
+HLibTask *CwonQueueConversationWait(HLibTask *parent, void *conversation) {
+    HLibTask *task = 0;
+    CwonConversationWaitWork *work = CwonCreateTask(&task, (HLibTaskCallback)CwonConversationWaitCallback, sizeof(*work));
+    if (work) {
+        work->ticks = 100;
+        work->conversation = conversation;
+        work->parent = parent;
+        FTBL.HLib_SetupTimedTask(parent, 0);
+    }
+    return task;
+}
+
+void CwonConversationWaitCallback(CwonConversationWaitWork *work) {
+    if (work) {
+        if (!FTBL.cvsHasValidConverseData(work->conversation)) {
+            FTBL.HLib_ResolveDeferredCallback(work->parent);
+            FTBL.HLib_DestroyCurrentTask();
+        } else if (--work->ticks < 1) {
+            FTBL.HLib_ResolveDeferredCallback(work->parent);
+            FTBL.HLib_DestroyCurrentTask();
+        }
+    } else
+        FTBL.HLib_DestroyCurrentTask();
+}
+
+HLibTask *CwonQueueQteWait(HLibTask *parent, short button, short frames, unsigned short *result) {
+    HLibTask *task = 0;
+    CwonQteWaitWork *work = CwonCreateTask(&task, (HLibTaskCallback)CwonQteWaitCallback, sizeof(*work));
+    if (work) {
+        work->button = button;
+        work->frames = frames;
+        work->result = result;
+        work->parent = parent;
+        FTBL.SetShowQteFlagForButtonType((unsigned short)button, frames, 0);
+        FTBL.HLib_SetupTimedTask(parent, 0);
+    }
+    return task;
+}
+
+void CwonQteWaitCallback(CwonQteWaitWork *work) {
+    if (work) {
+        if (!FTBL.GetShouldRenderIcons(3)) {
+            *work->result = FTBL.GetCurrentQteStatus();
+            FTBL.HLib_ResolveDeferredCallback(work->parent);
+            FTBL.HLib_DestroyCurrentTask();
+        }
+    } else
+        FTBL.HLib_DestroyCurrentTask();
+}
+
+void CwonFightWaitCallback(CwonFightWaitWork *work) {
+    if (work && !FTBL.IsFightActive()) {
+        *work->result = FTBL.GetBtlStatus(FTBL.ctrlGetCharaByName(work->character));
+        FTBL.HLib_SetupTimedTask(work->parent, 30);
+        FTBL.HLib_DestroyCurrentTask();
+    }
+}
+
+void *CwonCreateTask(HLibTask **task, HLibTaskCallback callback, unsigned size) {
+    void *work = 0;
+    if (size) {
+        *task = FTBL.HLib_EnqueueTaskWithParameter(callback, 4, 11, size, TASK_EVNT);
+        if (*task)
+            work = FTBL.HLib_GetTaskParameter(*task);
+    } else
+        *task = FTBL.HLib_EnqueueTaskWithoutParameter(callback, 4, 11, TASK_EVNT);
+    return work;
+}
+
+void CwonChangeAndWaitMotion(HLibTaskCallback callback, HLibTask *parent, shen_name character, float frame) {
+    if (callback)
+        FTBL.HLib_SetCurrentTaskTo(callback);
+    CwonQueueMotionWait(parent, character, frame);
+    return;
+}
+
+HLibTask *CwonQueueMotionOffset(shen_name character, const Vector3 *position, float frame) {
+    HLibTask *task = 0;
+    CwonOffsetMotionWork *work = CwonCreateTask(&task, (HLibTaskCallback)CwonMotionOffsetCallback, sizeof(*work));
+    if (work) {
+        work->frame = frame;
+        work->position.x = position->x;
+        work->position.y = position->y;
+        work->position.z = position->z;
+        work->character = character;
+    }
+    return task;
+}
+
+void CwonMotionOffsetCallback(CwonOffsetMotionWork *work) {
+    int done = 0;
+    if (work) {
+        if (work->frame != 0) {
+            if (work->frame <= FTBL.GetMotionFrame(FTBL.scenFindMotionwork(work->character), 0))
+                done = 1;
+        } else
+            done = FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(work->character), 65, 1, 0);
+        if (done)
+            FTBL.HLib_DestroyCurrentTask();
+        else
+            FTBL.SetCharaTargetTransformOffset(work->character, &work->position, 1);
+    } else
+        FTBL.HLib_DestroyCurrentTask();
+}
+
+void CwonResetCamera(void) {
+    FTBL.EVS_LoopCamera(0, 0, 0);
+    FTBL.camCtrlSetFovTransitionTo(1);
+    FTBL.camCtrlSetState(0);
+    return;
+}
+
+void CwonGetLocalTransform(shen_name name, Vector3 *position, Vector3i *rotation) {
+    if (position)
+        FTBL.GetCharaPosition(name, -1, position, 0);
+    if (rotation)
+        FTBL.GetScenarioCharacterEulerAngles(name, rotation, 0);
+    return;
+}
+
+void CwonGetWorldTransform(shen_name name, Vector3 *position, Vector3i *rotation) {
+    if (position)
+        FTBL.GetCharaPosition(name, -1, position, 0x40000000);
+    if (rotation)
+        FTBL.GetScenarioCharacterEulerAngles(name, rotation, 0x40000000);
+    return;
+}
+
+void CwonSetPositionMasked(shen_name name, unsigned flags, const Vector3 *value) {
+    Vector3 position;
+    if (!(flags & 64))
+        FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(name), 71, 0, 0);
+    if (flags & 128)
+        FTBL.GetCharaPosition(name, -1, &position, 0x40000000);
+    else
+        FTBL.GetCharaPosition(name, -1, &position, 0);
+    if (flags & 8)
+        position.x += value->x;
+    else if (flags & 1)
+        position.x = value->x;
+    if (flags & 16)
+        position.y += value->y;
+    else if (flags & 2)
+        position.y = value->y;
+    if (flags & 32)
+        position.z += value->z;
+    else if (flags & 4)
+        position.z = value->z;
+    if (flags & 128)
+        FTBL.EV_AT_SetPos(name, 0x78000000, &position);
+    else
+        FTBL.EV_AT_SetPos(name, 0x38000000, &position);
+    return;
+}
+
+void CwonSetRotationMasked(shen_name name, unsigned flags, const Vector3i *value) {
+    Vector3i rotation;
+    if (!(flags & 64))
+        FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(name), 71, 0, 0);
+    if (flags & 128)
+        FTBL.GetScenarioCharacterEulerAngles(name, &rotation, 0x40000000);
+    else
+        FTBL.GetScenarioCharacterEulerAngles(name, &rotation, 0);
+    if (flags & 1)
+        rotation.x = value->x;
+    else if (flags & 8)
+        rotation.x += value->x;
+    if (flags & 2)
+        rotation.y = value->y;
+    else if (flags & 16)
+        rotation.y += value->y;
+    if (flags & 4)
+        rotation.z = value->z;
+    else if (flags & 32)
+        rotation.z += value->z;
+    if (flags & 128)
+        FTBL.EV_AT_SetAngY_0(name, 0x78000000, &rotation, 0);
+    FTBL.EV_AT_SetAngY_0(name, 0x38000000, &rotation, 0);
+    return;
+}
+
+void CwonSetYaw(shen_name name, int yaw) {
+    Vector3i rotation;
+    rotation.z = 0;
+    rotation.x = 0;
+    rotation.y = yaw;
+    CwonSetRotationMasked(name, 7, &rotation);
+    return;
+}
+
+void CwonAddYaw(shen_name name, int yaw) {
+    Vector3i rotation;
+    rotation.y = yaw;
+    CwonSetRotationMasked(name, 16, &rotation);
+    return;
+}
+
+void CwonHideAtOrigin(shen_name name, int mode) {
+    if (FTBL.DoesScenarioCharacterExist(name)) {
+        Vector3 position;
+        position.x = position.y = position.z = 0;
+        CwonSetPositionMasked(name, 7, &position);
+        CwonHideCharacter(name);
+    }
+    return;
+}
+
+void CwonMoveBackward(shen_name name, float distance) {
+    Vector3 offset;
+    Vector3i rotation;
+    FTBL.GetScenarioCharacterEulerAngles(name, &rotation, 0);
+    offset.x = -(distance * FTBL.CalculateFixedSine(rotation.y));
+    offset.z = -(distance * FTBL.CalculateFixedCosine(rotation.y));
+    CwonSetPositionMasked(name, 40, &offset);
+    return;
+}
+
+void CwonMoveBackwardAtYaw(shen_name name, int yaw, float distance) {
+    Vector3 offset;
+    offset.x = -(distance * FTBL.CalculateFixedSine(yaw));
+    offset.z = -(distance * FTBL.CalculateFixedCosine(yaw));
+    CwonSetPositionMasked(name, 40, &offset);
+    return;
+}
+
+int CwonAdvanceRoute(const CwonRouteEntry *route, int index) {
+    const CwonRouteEntry *entry;
+    if (index < 0)
+        return index;
+    entry = &route[index];
+    switch (entry->kind) {
+    case 0:
+        if (CwonTurnTowardYaw(entry->character, entry->yaw, entry->step, entry->direction))
+            index++;
+        break;
+    case 1:
+        if (CwonPositionThreshold(entry->character, entry->threshold, entry->axis, entry->direction))
+            index++;
+        break;
+    case 2:
+        index++;
+        break;
+    default:
+        index = -1;
+        break;
+    }
+    if (route[index].kind == 3)
+        index = -1;
+    return index;
+}
+
+int CwonPositionThreshold(shen_name name, float threshold, int isZ, int reversed) {
+    Vector3 position;
+    float value;
+    int done = 0;
+    FTBL.GetCharaPosition(name, -1, &position, 0);
+    value = position.x;
+    if (isZ)
+        value = position.z;
+    if (reversed) {
+        if (value < threshold)
+            done = 1;
+    } else if (threshold < value)
+        done = 1;
+    return done;
+}
+
+int CwonTurnTowardYaw(shen_name name, int target, int step, int reversed) {
+    Vector3i rotation;
+    int done = 0;
+    FTBL.GetScenarioCharacterEulerAngles(name, &rotation, 0);
+    if (!reversed) {
+        if ((int)((target - rotation.y) & 65535U) <= step) {
+            rotation.y = target;
+            done = 1;
+        } else
+            rotation.y += step;
+    } else {
+        if ((int)((rotation.y - target) & 65535U) <= step) {
+            rotation.y = target;
+            done = 1;
+        } else
+            rotation.y -= step;
+    }
+    CwonSetRotationMasked(name, 2, &rotation);
+    return done;
+}
+
+void CwonHideCharacter(shen_name name) {
+    FTBL.EV_ToggleCharacterFlag(name);
+    FTBL.EV_DisableCharacterDisplay(name);
+    return;
+}
+
+void CwonShowCharacter(shen_name name) {
+    FTBL.EV_EnsureCharacterDraw(name);
+    FTBL.EV_EnableCharacterDisplay(name);
+    return;
+}
+
+void CwonEnablePositionedCharacter(shen_name name, float x, float y, float z, float ax, float ay, float az) {
+    Vector3 position;
+    Vector3i rotation;
+    position.x = x;
+    position.y = y;
+    position.z = z;
+    rotation.x = ((int)(ax * 8192.0f / 45.0f) & 65535);
+    rotation.y = ((int)(ay * 8192.0f / 45.0f) & 65535);
+    rotation.z = ((int)(az * 8192.0f / 45.0f) & 65535);
+    CwonSetPositionMasked(name, 7, &position);
+    CwonSetRotationMasked(name, 7, &rotation);
+    FTBL.EV_EnableCharacterDisplay(name);
+    return;
+}
+
+void CwonRestoreGravity(shen_name name) {
+    register char *control __asm__("r1");
+    FTBL.EV_SetCharaControllerFlags(name, 2, 1);
+    FTBL.EV_SetCharaControllerFlags(name, 3, 1);
+    control = (char *)&FTBL + 252;
+    SHENMUE_EVENT_OPAQUE(control);
+    ((EventFunctionTable *)(control - 252))->EV_SetCharaControllerFlags(name, 1, 1);
+}
+
+void CwonDisableGravity(shen_name name) {
+    register char *control __asm__("r1");
+    FTBL.EV_SetCharaControllerFlags(name, 2, 0);
+    FTBL.EV_SetCharaControllerFlags(name, 3, 0);
+    control = (char *)&FTBL + 252;
+    SHENMUE_EVENT_OPAQUE(control);
+    ((EventFunctionTable *)(control - 252))->EV_SetCharaControllerFlags(name, 1, 0);
+}
+
+float CwonBallisticHeight(float time, float height) {
+    return height - .00544f * time * time;
+}
+
+unsigned CwonCreateDust(const Vector3 *position, const Vector3 *volume, const Vector3 *velocity) {
+    Vector3 acceleration;
+    unsigned effect;
+    acceleration.x = .026274512f;
+    acceleration.y = acceleration.z = 0;
+    effect = FTBL.CreateSmokeEffect(position, volume, 50, .08f, 0, 0);
+    FTBL.SetSmokeEffectFadeFactor(effect, 27);
+    FTBL.SetSmokeEffectFalloff(effect, 158);
+    FTBL.SetParticleEffectColour(0, effect, 0, 106, 104, 101);
+    FTBL.SetParticleEffectInitialScale(0, effect, .21568628f);
+    FTBL.SetParticleEffectSize(0, effect, 2.3137255f, 2.8235295f);
+    FTBL.SetParticleEffectBirthRate(0, effect, .03019608f);
+    FTBL.SetParticleEffectVelocity(0, effect, velocity, &acceleration);
+    FTBL.ResumeParticleEffect(0, effect);
+    return effect;
+}
+
+void CwonNullsub(void) {
+    return;
+}
+
+void CwonPrepareMotionCharacters(const shen_name *names) {
+    float colour[4] = {1, .3f, .3f, .3f};
+    for (; *names; names++) {
+        CwonShowCharacter(*names);
+        CwonDisableGravity(*names);
+        FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(*names), 0);
+        FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(*names), 71, 0, 0);
+        FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(*names), 69, 2, 0);
+        FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(*names), 0);
+        FTBL.EV_SetCharacterAlphaEnabled(*names, 0);
+    }
+    return;
+}
+
+int CwonStartAuthor(int index, HLibTask *parent, int frame, const shen_name *motion, const shen_name *gravity) {
+    static const shen_name authors[29] = {SHEN_NAME4('A', 'T', '0', '0'), SHEN_NAME4('A', 'T', '0', '1'), SHEN_NAME4('A', 'T', '0', '2'),
+        SHEN_NAME4('A', 'T', '0', '3'), SHEN_NAME4('A', 'T', '0', '4'), SHEN_NAME4('A', 'T', '0', '5'), SHEN_NAME4('A', 'T', '0', '6'),
+        SHEN_NAME4('A', 'T', '0', '7'), SHEN_NAME4('A', 'T', '0', '8'), SHEN_NAME4('A', 'T', '0', '9'), SHEN_NAME4('A', 'T', '1', '0'),
+        SHEN_NAME4('A', 'T', '1', '1'), SHEN_NAME4('A', 'T', '1', '2'), SHEN_NAME4('A', 'T', '1', '3'), SHEN_NAME4('A', 'T', '1', '4'),
+        SHEN_NAME4('A', 'T', '1', '5'), SHEN_NAME4('A', 'T', '1', '6'), SHEN_NAME4('A', 'T', '1', '7'), SHEN_NAME4('A', 'T', '1', '8'),
+        SHEN_NAME4('A', 'T', '1', '9'), SHEN_NAME4('A', 'T', '2', '0'), SHEN_NAME4('A', 'T', '2', '1'), SHEN_NAME4('A', 'T', '2', '2'),
+        SHEN_NAME4('A', 'T', '2', '3'), SHEN_NAME4('A', 'T', '2', '4'), SHEN_NAME4('A', 'T', '2', '5'), SHEN_NAME4('A', 'T', '2', '6'),
+        SHEN_NAME4('A', 'T', '2', '7'), SHEN_NAME4('A', 'T', '2', '8')};
+    HLibTask *task = 0;
+    CwonAuthorWaitWork *work;
+    if (index != -1) {
+        if (FTBL.EV_authSceneCtrl(-1))
+            FTBL.EV_authSceneCtrl(-4);
+        FTBL.EV_authSceneCtrl(-14);
+        FTBL.EV_authSceneCtrl(authors[index]);
+    }
+    work = CwonCreateTask(&task, (HLibTaskCallback)CwonAuthorWaitCallback, sizeof(*work));
+    if (work) {
+        if (motion)
+            CwonPrepareMotionCharacters(motion);
+        SHENMUE_EVENT_BOUNDARY();
+        if (gravity)
+            CwonPrepareGravityCharacters(gravity);
+        work->frame = FTBL.EV_authSceneCtrl(-5) < frame ? FTBL.EV_authSceneCtrl(-5) : frame;
+        work->parent = parent;
+        work->motionCharacters = motion;
+        work->gravityCharacters = gravity;
+        if (parent)
+            FTBL.HLib_SetupTimedTask(parent, 0);
+    } else
+        FTBL.DebugLogToFileRemoved("Auth Wait Error\n");
+    return FTBL.EV_authSceneCtrl(-5);
+}
+
+void CwonAuthorWaitCallback(CwonAuthorWaitWork *work) {
+    int finished = 0, early = 0;
+    if (FTBL.EV_authSceneCtrl(-1)) {
+        if (work->frame) {
+            if (FTBL.EV_authSceneCtrl(-6) >= work->frame) {
+                finished = 1;
+                early = 1;
+            }
+        }
+    } else
+        finished = 1;
+    if (finished) {
+        if (work->parent)
+            FTBL.HLib_ResolveDeferredCallback(work->parent);
+        FTBL.HLib_DestroyCurrentTask();
+        if (!early) {
+            if (work->motionCharacters)
+                CwonRestoreMotionCharacters(work->motionCharacters);
+            if (work->gravityCharacters)
+                CwonRestoreGravityCharacters(work->gravityCharacters);
+        }
+    }
+    return;
+}
+
+void CwonPrepareGravityCharacters(const shen_name *names) {
+    for (; *names; names++) {
+        CwonShowCharacter(*names);
+        CwonDisableGravity(*names);
+    }
+    return;
+}
+
+void CwonRestoreMotionCharacters(const shen_name *names) {
+    for (; *names; names++) {
+        CwonRestoreGravity(*names);
+        FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(*names), 1);
+        FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(*names), 3);
+        FTBL.SetRefBoardParamsForCharaById(*names, 1);
+    }
+    return;
+}
+
+void CwonRestoreGravityCharacters(const shen_name *names) {
+    for (; *names; names++)
+        CwonRestoreGravity(*names);
+    return;
+}
+
+HLibTask *CwonQueueLook(shen_name character, shen_name target, int bone, const Vector3 *position, unsigned operation, unsigned flags, int duration, int delay) {
+    HLibTask *task = 0;
+    CwonLookWork *work = CwonCreateTask(&task, (HLibTaskCallback)CwonLookCallback, sizeof(*work));
+    if (work) {
+        work->character = character;
+        work->target = target;
+        work->bone = bone;
+        work->operation = operation;
+        work->flags = flags;
+        work->duration = duration;
+        work->state = 1;
+        if (position)
+            work->position = *position;
+        else
+            work->position = (Vector3){0, 0, 0};
+        if (delay)
+            FTBL.HLib_SetupTimedTask(task, delay);
+        else
+            CwonLookCallback(work);
+    }
+    return task;
+}
+
+void CwonLookCallback(CwonLookWork *work) {
+    Vector3 position;
+    if (work) {
+        if (!work->state) {
+            FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->character), 0, 0);
+            FTBL.HLib_DestroyCurrentTask();
+        } else {
+            work->state = 0;
+            if (work->target) {
+                if (FTBL.DoesScenarioCharacterExist(work->target)) {
+                    if (work->bone)
+                        FTBL.GetCharaPosition(work->target, work->bone, &position, 0);
+                    else
+                        CwonGetLocalTransform(work->target, &position, 0);
+                    FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->character), &position, work->operation + (work->flags << 8));
+                }
+            } else
+                FTBL.UpdateMotionWorkWithPosition(FTBL.scenFindMotionwork(work->character), &work->position, work->operation + (work->flags << 8));
+            FTBL.HLib_SetupTaskDelay(work->duration);
+        }
+    } else
+        FTBL.HLib_DestroyCurrentTask();
+}
+
+HLibTask *CwonQueueLoadingTitle(shen_name title, int delay) {
+    HLibTask *task = 0;
+    FTBL.Queue_ST_LoadTitleFadeIn(title);
+    if (delay) {
+        CwonCreateTask(&task, CwonTitleFadeCallback, 0);
+        FTBL.HLib_SetupTimedTask(task, delay);
+    }
+    return task;
+}
+
+void CwonTitleFadeCallback(void *data) {
+    FTBL.ST_LoadTitleFade();
+    FTBL.HLib_DestroyCurrentTask();
+    return;
+}
+
+#else
 #include "s2/character.hpp"
 #include "s2/scripts/cwon/cwon_helpers.hpp"
 #include "s2/author.hpp"
@@ -475,3 +1046,5 @@ void CwonPlayerOffsetDustCallback(void *data) {
     UpdatePlayerDust(static_cast<CwonTemporaryWork *>(data), -.5f, 2809);
 }
 } // namespace shenmue::s2
+
+#endif

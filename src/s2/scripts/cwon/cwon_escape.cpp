@@ -1,3 +1,153 @@
+#if defined(SHENMUE_EVENT_OVERLAY) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/scripts/cwon/area_cwon.hpp"
+
+void CwonQueueEscape(CwonWork *work, int entry) {
+    HLibTaskCallback starts[6] = {(HLibTaskCallback)CwonEscapeStreetCallback, (HLibTaskCallback)CwonEscapeStreetCallback, 0, 0,
+        CwonStartWarehouseEscapeCallback, CwonStartStairsEscapeCallback};
+    CwonEscapeWork *data;
+    if (entry < 6) {
+        if (work->escapeTask)
+            FTBL.DebugLogToFileRemoved("MakeEscapeWonTask Error\n");
+        else if (starts[entry]) {
+            data = CwonCreateTask(&work->escapeTask, starts[entry], sizeof(*data));
+            if (data) {
+                data->root = work;
+                data->task = work->escapeTask;
+                data->state = 0;
+            } else if (!data)
+                FTBL.EventAssertNullsub("./src/et_ChaseWon_won.c", 100);
+        }
+    } else
+        FTBL.DebugLogToFileRemoved("MakeEscapeWonTask Error %d\n");
+}
+
+void CwonDestroyEscape(CwonWork *work) {
+    if (work->escapeTask) {
+        FTBL.HLib_DestroyTaskInternal(work->escapeTask);
+        work->escapeTask = 0;
+    }
+}
+
+void CwonStartOpponentAt(int entry) {
+    static Vector3 CWON_OPPONENT_POSITIONS[] = {{233.119995f, 100.300003f, 396.0f}, {233.119995f, 100.300003f, 396.0f}, {260.0f, 101.0f, 399.799988f},
+        {260.0f, 101.0f, 399.799988f}, {265.0f, 100.900002f, 405.100006f}, {246.0f, 100.0f, 443.5f}};
+    static int CWON_OPPONENT_YAWS[] = {300, 300, 250, 250, 205, 180};
+
+    FTBL.EV_SetCharacterAlphaEnabled(WON, 1);
+    EVT_AT_SetPos(WON, CENTER, CWON_OPPONENT_POSITIONS[entry].x, CWON_OPPONENT_POSITIONS[entry].y, CWON_OPPONENT_POSITIONS[entry].z, 0);
+    EVT_AT_SetAngY(WON, CENTER, CWON_OPPONENT_YAWS[entry], 0);
+    FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(WON), 1);
+    CwonShowCharacter(WON);
+}
+
+void CwonStartWarehouseEscapeCallback(void *data) {
+    CwonStartOpponentAt(4);
+    EVT_AT_SetMot(WON, 0x1043, 0, 1, 0x40000000, 0);
+    FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonEscapeWarehouseCallback);
+}
+
+void CwonStartStairsEscapeCallback(void *data) {
+    CwonStartOpponentAt(5);
+    EVT_AT_SetMot(WON, 0x1023, -1, 1, 0x20000000, 0);
+    FTBL.HLib_SetCurrentTaskTo((HLibTaskCallback)CwonEscapeStairsCallback);
+}
+
+void CwonEscapeStreetCallback(CwonEscapeWork *work) {
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WonTask Error\n");
+    else
+        switch (work->state) {
+        case 0:
+            work->state++;
+            EVT_AT_SetMot(WON, 0x1050, -1, .9f, 0, 0);
+            CwonRestoreGravity(WON);
+            EVT_AT_SetPos(WON, CENTER, 236.7f, 100.3f, 384.5f, 0);
+            EVT_AT_SetAngY(WON, CENTER, 350, 0);
+            break;
+        case 1:
+            if (CwonTurnTowardYaw(WON, 0xc000, 364, 1))
+                CwonDestroyEscape(work->root);
+            break;
+        }
+}
+
+void CwonEscapeWarehouseCallback(CwonEscapeWork *work) {
+    static const int parts[10] = {161, 160, 159, 158, 157, 156, 155, 154, 153, 152};
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WonTask Error\n");
+    else
+        switch (work->state) {
+        case 0:
+            work->state++;
+            EVT_AT_SetVoice("0011B006", 35);
+            EVT_AT_SetAngY(WON, CENTER, 225, 90);
+            EVT_AT_SetMot(WON, 0x1050, -1, .9f, 0, 90);
+            EVT_AT_SetPos(WON, CENTER, 269.6f, 100.9f, 415.7f, 100);
+            EVT_AT_SetAngY(WON, CENTER, 145, 100);
+            FTBL.HLib_SetupTaskDelay(100);
+            cwonDynamixTask = Queue_EVT_AT_PlayDynamix(SHEN_NAME4('H', 'A', 'K', '0'), "HAKB", 2, 124, 10, parts, 2, 38);
+            break;
+        case 1:
+            if (CwonTurnTowardYaw(WON, 0x471c, 327, 1))
+                CwonDestroyEscape(work->root);
+            break;
+        }
+}
+
+void CwonAdvanceWonWarehouse(void) {
+    EVT_AT_SetPos(WON, CENTER, 264, 100.9f, 420.4f, 0);
+}
+
+void CwonEscapeStairsCallback(CwonEscapeWork *work) {
+    int done, yaw, reverse;
+    if (!work)
+        FTBL.DebugLogToFileRemoved("WonTask Error\n");
+    else
+        switch (work->state) {
+        case 0:
+            if (CwonPositionThreshold(WON, 445.5f, 1, 0)) {
+                work->state++;
+                EVT_AT_SetMot(WON, 0x1050, -1, .9f, 0, 0);
+            } else {
+                CwonMoveBackward(WON, .09f);
+                EVT_AT_SetPos(WON, WON, 0, .0675f, 0, 0);
+            }
+            break;
+        case 1:
+            if (CwonTurnTowardYaw(WON, 0x438e, 910, 1))
+                work->state++;
+            break;
+        case 2:
+            if (CwonPositionThreshold(WON, 238, 0, 1))
+                work->state++;
+            break;
+        case 3:
+            if (CwonPositionThreshold(WON, 235, 0, 1)) {
+                if (CwonTurnTowardYaw(WON, 0x8000, 910, 0))
+                    work->state++;
+            }
+            break;
+        case 4:
+            if (CwonPositionThreshold(WON, 459, 1, 0)) {
+                work->state++;
+                CwonDisableGravity(WON);
+                FTBL.HLib_SetupTaskDelay(10);
+            }
+            break;
+        case 5:
+            CwonFinishEscape(work->root);
+            break;
+        }
+}
+
+void CwonFinishEscape(CwonWork *work) {
+    CwonDestroyEscape(work);
+    EVT_AT_SetPos(WON, CENTER, 233.2f, 99.1f, 460.1f, 0);
+    EVT_AT_SetAngY(WON, CENTER, 0, 0);
+    EVT_AT_SetMot(WON, 0x1052, -1, .5f, 0, 0);
+}
+
+#else
 #include "s2/character.hpp"
 #include "s2/scripts/cwon/cwon_helpers.hpp"
 #include "s2/scripts/cwon/cwon_tables.hpp"
@@ -150,3 +300,5 @@ void CwonQueueEscape(CwonEventWork *root, std::int32_t entry) {
 }
 
 } // namespace shenmue::s2
+
+#endif

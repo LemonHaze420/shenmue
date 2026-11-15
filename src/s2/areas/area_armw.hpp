@@ -93,7 +93,11 @@ typedef struct ArmwCrowdPosition {
 } ArmwCrowdPosition;
 
 extern const unsigned int armwRefereeMotions[14][2];
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+extern const unsigned int armwOpponentMotions[11][3];
+#else
 extern const unsigned int armwOpponentMotions[11][4];
+#endif
 
 int armwWager;
 unsigned short armwOpponentVariant;

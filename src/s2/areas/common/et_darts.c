@@ -14,13 +14,17 @@ extern void *memset(void *destination, int value, unsigned int size);
         FTBL.ExecuteCurrAreaMainFunc(DARTS_AREA, &(work)->game); \
         FTBL.HLib_SetupTaskDelay(0); \
     }
-#define DARTS_CLEAR_REQUESTS() \
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+#define DARTS_CLEAR_REQUESTS(flag) FTBL.EV_SetPlayerFlag(12, flag, 0);
+#else
+#define DARTS_CLEAR_REQUESTS(flag) \
     { \
         FTBL.EV_SetPlayerFlag(12, 1419, 0); \
         FTBL.EV_SetPlayerFlag(12, 1420, 0); \
         FTBL.EV_SetPlayerFlag(12, 1422, 0); \
         FTBL.EV_SetPlayerFlag(12, 1423, 0); \
     }
+#endif
 #define DARTS_FSQRT(x) \
     do { \
         (x) = __builtin_sqrtf(x); \
@@ -114,10 +118,15 @@ EventDartsAiRecord dartsAiRecords[5] = {
     {SHEN_NAME4('X', 'H', 'O', '_'), 0x1aa0, 0x1a9f, xhoDartsPattern},
 };
 #if SHENMUE_ET_DARTS_REVISION >= ET_DARTS_REVISION_DART
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+Vector3 dartsArrowOffset = {0.123f, -0.058f, -0.03f};
+#endif
 Vector3i dartsArrowRotation = {0x48df, 0x7a9f, 0xc111};
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 Vector3 dartsJonArrowOffset = {0.14f, -0.06f, 0.04f};
 Vector3 dartsDefaultArrowOffset = {0.14f, -0.06f, -0.02f};
 Vector3 dartsFcjHlnArrowOffset = {0.11f, -0.09f, -0.0f};
+#endif
 #endif
 Vector3 dartsScoreStep = {-0.05f, 0.0f, 0.0f};
 Vector3 dartsDigitStep = {-0.025f, 0.0f, 0.0f};
@@ -152,7 +161,7 @@ int IsRyoFacingDartsCharacter(shen_name character, int fov);
 void BeginDartsEvent(int mode);
 void EndDartsEvent(void);
 void SetDartsTemporaryCharacter(shen_name character);
-#if SHENMUE_ET_DARTS_REVISION >= ET_DARTS_REVISION_DART
+#if SHENMUE_ET_DARTS_REVISION >= ET_DARTS_REVISION_DART && !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 int SetDartsAiMotion(shen_name character, unsigned int flags);
 #else
 int SetDartsAiMotion(shen_name character);
@@ -203,24 +212,28 @@ void EventDartsEasyCallback(void *taskData)
 {
     EventDartsWork *work = (EventDartsWork *)taskData;
     if (work) {
-        if (work->state == 4)
+        if (work->state == 4) {
             work->state = 0;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            EndDartsEvent();
+#endif
+        }
         if (FTBL.EV_GetPlayerFlag(11, 1419)) {
-            DARTS_CLEAR_REQUESTS()
+            DARTS_CLEAR_REQUESTS(1419)
             work->state = 4;
             work->game.mode = 0;
             work->game.opponent = 0;
             BeginDartsEvent(0);
             DARTS_ENTER_GAME(work)
         } else if (FTBL.EV_GetPlayerFlag(11, 1420)) {
-            DARTS_CLEAR_REQUESTS()
+            DARTS_CLEAR_REQUESTS(1420)
             work->state = 4;
             work->game.mode = 1;
             work->game.opponent = 0;
             BeginDartsEvent(0);
             DARTS_ENTER_GAME(work)
         } else if (FTBL.EV_GetPlayerFlag(11, 1422)) {
-            DARTS_CLEAR_REQUESTS()
+            DARTS_CLEAR_REQUESTS(1422)
             work->state = 4;
             work->game.mode = 2;
             work->game.opponent = 0;
@@ -254,30 +267,50 @@ HLibTask *EVT_SetEnemyDarts(EventDartsPlacement *placement, EventDartsEnemy *ene
 void EventEnemyDartsCallback(void *taskData)
 {
     EventDartsWork *work = (EventDartsWork *)taskData;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     Vector3i rotation;
+#endif
     int aiIndex;
     if (work) {
         if (FTBL.DoesScenarioCharacterExist(work->game.enemy->name)) {
     switch (work->state) {
     case 0:
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        SetDartsAiMotion(work->game.enemy->name);
+#else
         SetDartsAiMotion(work->game.enemy->name, 0x40000000);
+#endif
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         if (g_currentMap == SHEN_NAME4('A', 'K', 'S', '0') && work->game.enemy->name == SHEN_NAME4('X', 'H', 'O', '_'))
             SetDartsPosition(work->game.placement->character, work->game.enemy->name, -0.3f, 0.0f, 3.6f, 0, 1);
         else
-            SetDartsPosition(work->game.placement->character, work->game.enemy->name, 0.0f, 0.0f, 3.6f, 0, 1);
+#endif
+            SetDartsPosition(work->game.placement->character, work->game.enemy->name, 0.0f, 0.0f,
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+                4.0f,
+#else
+                3.6f,
+#endif
+                0, 1);
     case 1:
         work->state = 2;
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.GetScenarioCharacterEulerAngles(work->game.placement->character, &rotation, 0x40000000);
         FTBL.npcSetFlags(work->game.enemy->name, rotation.y);
+#else
+        FTBL.UnknownCharaFunc(work->game.placement->character);
+#endif
         FTBL.EV_EnableCharacterDisplay(work->game.placement->character);
         FTBL.EV_SetCharacterAlphaEnabled(work->game.enemy->name, 1);
         QueueDartsArrow(work->game.enemy->name, GetDartsArrowName(2, 14));
         FTBL.mtwkSetRequestedRootMode(FTBL.scenFindMotionwork(work->game.enemy->name), 3);
         FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(work->game.enemy->name), 1);
+#if !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
         FTBL.EV_SetCharaControllerFlags(work->game.enemy->name, 2, 0);
         FTBL.EV_SetCharaControllerFlags(work->game.enemy->name, 3, 0);
         SHENMUE_EVENT_BOUNDARY();
         FTBL.EV_SetCharaControllerFlags(work->game.enemy->name, 1, 0);
+#endif
         RestoreOpponentDartsScores(work->game.enemy->name, 0, &work->game.bestScore, &work->game.opponentScore);
         PrepareDartsArrows(work);
         aiIndex = work->game.enemy->aiIndex;
@@ -301,7 +334,7 @@ void EventEnemyDartsCallback(void *taskData)
         break;
     case 2:
         if (FTBL.EV_GetPlayerFlag(11, 1423)) {
-            DARTS_CLEAR_REQUESTS()
+            DARTS_CLEAR_REQUESTS(1423)
             work->state = 3;
             work->game.mode = work->placement;
             work->game.opponentMatch = 1;
@@ -313,12 +346,18 @@ void EventEnemyDartsCallback(void *taskData)
             FTBL.LoadAreaFunc_Wrapper_0(DARTS_AREA, 0);
             FTBL.ExecuteCurrAreaMainFunc(DARTS_AREA, &work->game);
             FTBL.HLib_SetupTaskDelay(0);
-        } else if (FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(work->game.enemy->name), 65, 1, 0) && FTBL.ryoNotBusy()) {
+        }
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+        else if (FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(work->game.enemy->name), 65, 1, 0)) {
+            SetDartsAiMotion(work->game.enemy->name);
+#else
+        else if (FTBL.SetMotionRegionFlag(FTBL.scenFindMotionwork(work->game.enemy->name), 65, 1, 0) && FTBL.ryoNotBusy()) {
             SetDartsAiMotion(work->game.enemy->name, 0x2000000);
             if (g_currentMap == SHEN_NAME4('A', 'K', 'S', '0') && work->game.enemy->name == SHEN_NAME4('X', 'H', 'O', '_'))
                 SetDartsPosition(work->game.placement->character, work->game.enemy->name, -0.3f, 0.0f, 3.6f, 0, 1);
             else
                 SetDartsPosition(work->game.placement->character, work->game.enemy->name, 0.0f, 0.0f, 3.6f, 0, 1);
+#endif
         }
         break;
     case 3:
@@ -477,12 +516,19 @@ void EventDartsArrowCallback(void *taskData)
         } else if (FTBL.DoesScenarioCharacterExist(work->character) && FTBL.DoesScenarioCharacterExist(work->arrow)) {
             FTBL.EV_EnableCharacterDisplay(work->arrow);
             FTBL.EV_EnsureCharacterDraw(work->arrow);
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+            if (work->character == SHEN_NAME4('J', 'O', 'N', '_'))
+                FTBL.AttachScenarioCharacter(work->arrow, work->character, 21, &dartsArrowOffset, &dartsArrowRotation);
+            else
+                FTBL.AttachScenarioCharacter(work->arrow, work->character, 14, &dartsArrowOffset, &dartsArrowRotation);
+#else
             if (work->character == SHEN_NAME4('J', 'O', 'N', '_'))
                 FTBL.AttachScenarioCharacter(work->arrow, work->character, 21, &dartsJonArrowOffset, &dartsArrowRotation);
             else if (work->character == SHEN_NAME4('F', 'C', 'J', '_') || work->character == SHEN_NAME4('H', 'L', 'N', '_'))
                 FTBL.AttachScenarioCharacter(work->arrow, work->character, 14, &dartsFcjHlnArrowOffset, &dartsArrowRotation);
             else
                 FTBL.AttachScenarioCharacter(work->arrow, work->character, 14, &dartsDefaultArrowOffset, &dartsArrowRotation);
+#endif
         } else {
             FTBL.EV_DisableCharacterDisplay(work->arrow);
             FTBL.EV_ToggleCharacterFlag(work->arrow);
@@ -531,7 +577,7 @@ void SetDartsTemporaryCharacter(shen_name character)
     dartsTemporaryCharacter = character;
 }
 
-#if SHENMUE_ET_DARTS_REVISION >= ET_DARTS_REVISION_DART
+#if SHENMUE_ET_DARTS_REVISION >= ET_DARTS_REVISION_DART && !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
 int SetDartsAiMotion(shen_name character, unsigned int flags)
 #else
 int SetDartsAiMotion(shen_name character)
@@ -550,7 +596,7 @@ int SetDartsAiMotion(shen_name character)
     }
     if (!motion)
         motion = dartsAiRecords[0].motionA;
-#if SHENMUE_ET_DARTS_REVISION >= ET_DARTS_REVISION_DART
+#if SHENMUE_ET_DARTS_REVISION >= ET_DARTS_REVISION_DART && !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     EVT_AT_SetMot(character, motion, -1.0f, 1.0f, flags, 1);
 #else
     EVT_AT_SetMot(character, motion, -1.0f, 1.0f, 0x40000000, 1);
@@ -750,8 +796,12 @@ void DartsPositionCallback(void *taskData)
 {
     EventDartsPositionWork *work = (EventDartsPositionWork *)taskData;
     shen_name previous;
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    if (work) {
+#else
     if (!work)
         return;
+#endif
     previous = FTBL.SCEN_FindChar_Wrapper(work->character);
     FTBL.AT_SetLocalBaseChara(work->character, work->parent);
     if (work->hasPosition)
@@ -759,12 +809,15 @@ void DartsPositionCallback(void *taskData)
     if (work->hasRotation)
         FTBL.EV_AT_SetAngY_0(work->character, 0x38000000, &work->rotation, 0);
     FTBL.AT_SetLocalBaseChara(work->character, previous);
-#if SHENMUE_ET_DARTS_REVISION >= ET_DARTS_REVISION_DART
+#if SHENMUE_ET_DARTS_REVISION >= ET_DARTS_REVISION_DART && !SHENMUE_TARGET_S2_DC_JP_GAMEJAM
     FTBL.SetClothFlag(FTBL.ctrlGetCharaByName(work->character), 16, 1);
     FTBL.toggleOsagFlags(FTBL.ctrlGetCharaByName(work->character));
 #endif
     if (work->cleanupTask)
         FTBL.HLib_DestroyCurrentTask();
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    }
+#endif
 }
 
 #if SHENMUE_ET_DARTS_REVISION < ET_DARTS_REVISION_DART

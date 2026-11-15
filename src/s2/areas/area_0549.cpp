@@ -4,8 +4,11 @@
 #if defined(SHENMUE_EVENT_ENTRY)
 void Start0549(void)
 {
-    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0549, 4, 11, sizeof(AreaImmediateAuthorTaskParameter), TASK_EVNT);
-    AreaImmediateAuthorTaskParameter *parent = (AreaImmediateAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0549, 4, 11, sizeof(Area0549TaskParameter), TASK_EVNT);
+    Area0549TaskParameter *parent = (Area0549TaskParameter *)FTBL.HLib_GetTaskParameter(task);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    parent->motion = FTBL.ReadMotiFromDirectory(g_actNumber, g_currentMap, "0549A.MOT");
+#endif
     parent->self = task;
     parent->selection = (unsigned int)g_entryPoint > 1 ? 0 : g_entryPoint;
     if (g_entryPoint == 99)
@@ -21,13 +24,16 @@ static float range0549 = 0.5f;
 static float sceneIntensity0549 = 1.0f;
 static float falloff0549[2] = {0.3f, 0.3f};
 static float emissive0549[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 static float reflector0549[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+#endif
 
 void Update0549(void *taskData)
 {
-    AreaImmediateAuthorTaskParameter *parent = (AreaImmediateAuthorTaskParameter *)taskData;
+    Area0549TaskParameter *parent = (Area0549TaskParameter *)taskData;
     unsigned int input;
     switch (parent->state) {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     case 3:
         FTBL.Queue_ST_LoadTitleFadeIn(AREA_0549_TITLE_AUTHOR);
         parent->state = 4;
@@ -38,6 +44,7 @@ void Update0549(void *taskData)
         parent->state = 5;
         FTBL.HLib_SetupTimedTask(parent->self, 100);
         break;
+#endif
     case 0:
         input = FTBL.EVT_GetControllerInput(0, 1);
         if (input == 1024)
@@ -65,17 +72,28 @@ void Update0549(void *taskData)
     case 1:
         Queue0549Author(parent);
         break;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    case 3:
+#else
     case 5:
+#endif
         Cleanup0549(parent);
         break;
     }
 }
 
-void Queue0549Author(AreaImmediateAuthorTaskParameter *parent)
+void Queue0549Author(Area0549TaskParameter *parent)
 {
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update0549Author, 4, 11, sizeof(Area0549AuthorParameter), TASK_EVNT);
     ((Area0549AuthorParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.PushGlobalLightingProgram();
+    FTBL.ReinitializeLights(1);
+    FTBL.SetLightFlagForIndex(0, 2);
+    FTBL.SetLightEntryIndex(0, 1);
+#else
     FTBL.EV_lightLoad(AREA_0549_LIGHT);
+#endif
     Prepare0549Characters();
     FTBL.EV_authSceneCtrl(parent->selection);
     parent->state = 2;
@@ -86,6 +104,62 @@ void Update0549Author(void *taskData)
     Area0549AuthorParameter *child = (Area0549AuthorParameter *)taskData;
     short frame = FTBL.EV_authSceneCtrl(-6);
     int loaded;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    if (child->parent->selection == 1) {
+        switch (frame) {
+        case 0:
+            FTBL.SyncWindWithWDATWeatherState();
+            FTBL.SetIsSkySetup(0);
+            break;
+        case 201:
+            FTBL.EV_lightLoad(AREA_0549_LIGHT);
+            break;
+        case 800:
+            FTBL.SetIsSkySetup(1);
+            FTBL.ReinitializeLights(1);
+            FTBL.SetLightFlagForIndex(0, 2);
+            FTBL.SetLightEntryIndex(0, 1);
+            break;
+        case 1020:
+            FTBL.FreeWAIR();
+            FTBL.UpdateWeatherForMinute(0, 0, 60, 1.0f);
+            FTBL.UpdateWeather();
+            break;
+        case 1180:
+            FTBL.SetNewWindPhaseAndSpeed(0xa93e, 0.6f);
+            break;
+        }
+        if (frame >= 220 && frame <= 319) {
+            float *falloff = falloff0549;
+            float rangeStep = 0.005f;
+            falloff[0] = falloff[1];
+            FTBL.SetLightFalloff(17, falloff);
+            range0549 += rangeStep;
+            FTBL.SetLightRange(17, range0549);
+            sceneIntensity0549 += 0.015f;
+            FTBL.SetLightSceneIntensity(17, sceneIntensity0549);
+            emissive0549[2] -= 0.01f;
+            emissive0549[3] -= 0.01f;
+            FTBL.SetLightRuntimeColour(17, emissive0549);
+        } else if (frame == 330) {
+            falloff0549[0] = falloff0549[1] = 0.8f;
+            FTBL.SetLightFalloff(17, falloff0549);
+            range0549 = 1.0f;
+            FTBL.SetLightRange(17, range0549);
+            sceneIntensity0549 = 2.5f;
+            FTBL.SetLightSceneIntensity(17, sceneIntensity0549);
+            emissive0549[2] = 0.0f;
+            emissive0549[3] = 0.0f;
+            FTBL.SetLightRuntimeColour(17, emissive0549);
+        } else if (frame >= 331 && frame <= 479) {
+            emissive0549[1] -= 0.006666667f;
+            FTBL.SetLightRuntimeColour(17, emissive0549);
+        } else if (frame == 480) {
+            emissive0549[1] = 0.0f;
+            FTBL.SetLightRuntimeColour(17, emissive0549);
+        }
+    }
+#else
     if (child->parent->selection == 1) {
         switch (frame) {
         case 0:
@@ -147,21 +221,29 @@ void Update0549Author(void *taskData)
             FTBL.SetLightSceneIntensity(23, sceneIntensity0549);
         }
     }
+#endif
     loaded = FTBL.EV_authSceneCtrl(-1);
     if (!loaded) {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         range0549 = 0.5f;
         sceneIntensity0549 = 1.0f;
         falloff0549[0] = falloff0549[1] = 0.3f;
         emissive0549[0] = emissive0549[1] = emissive0549[2] = emissive0549[3] = 1.0f;
+#endif
         FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
         Restore0549Characters();
         if (g_entryPoint == 99)
             child->parent->state = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        else
+            child->parent->state = 3;
+#else
         else if (child->parent->selection == 1)
             child->parent->state = 3;
         else
             child->parent->state = 5;
         FTBL.HLib_SetupTimedTask(child->parent->self, 60);
+#endif
         FTBL.HLib_DestroyCurrentTask();
     }
 }
@@ -169,7 +251,9 @@ void Update0549Author(void *taskData)
 void Setup0549Environment(void)
 {
     EventDateTime dateTime;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_SetWeatherInstruction(12, 0);
+#endif
     FTBL.GetCurrentDateTime((DateTime *)&dateTime);
     dateTime.hour = 18;
     dateTime.minute = 50;
@@ -178,6 +262,7 @@ void Setup0549Environment(void)
     FTBL.UpdateWeatherForMinute(0, 0, 0, 0.0f);
     FTBL.UpdateWeatherForMinute(1, 0, 0, 0.0f);
     FTBL.UpdateWeather();
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.AssignLightParams(1, 0);
     FTBL.AssignLightParams(1, 1);
     FTBL.AssignLightParams(1, 2);
@@ -187,6 +272,7 @@ void Setup0549Environment(void)
     FTBL.AssignLightParams(1, 6);
     FTBL.AssignLightParams(1, 7);
     FTBL.AssignLightParams(1, 8);
+#endif
     FTBL.SetPlayerControlEnabled(0);
     FTBL.HLib_EnqueueTaskWithoutParameter(Update0549Waves, 3, 2, TASK_EVNT);
     FTBL.EV_FreeAuthorPak(1, "0549");
@@ -194,20 +280,36 @@ void Setup0549Environment(void)
 
 void Update0549Waves(void *taskData)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.nlSetTexanimUV(0.01f, 0.0f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(6));
+    FTBL.nlSetTexanimUV(0.0f, 0.015f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(7));
+    FTBL.nlSetTexanimUV(0.0f, 0.015f);
+    FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(8));
+#else
     FTBL.nlSetTexanimUV(0.0f, 0.015f);
     FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(4));
+#endif
 }
 
-void Cleanup0549(AreaImmediateAuthorTaskParameter *parent)
+void Cleanup0549(Area0549TaskParameter *parent)
 {
     EVT_UTL_FreeNPCChara(area0549Characters);
     FTBL.EV_FreeAuthorPak(0, "0549");
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.DeleteMotion(parent->motion);
+#endif
     if (g_entryPoint == 99 || parent->selection == 0) {
         FTBL.HLib_DestroyTask(parent->self);
         FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
     } else {
         FTBL.HLib_DestroyTask(parent->self);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.EV_scenQueueLoad(-1, 0, 0);
+#else
         FTBL.shenQueueChangeModuleAndScene(4, 0, 0, 0);
+#endif
     }
 }
 
@@ -216,7 +318,9 @@ void Prepare0549Characters(void)
     Prepare0549AuthorCharacter(AREA_0549_RYO_);
     Prepare0549AuthorCharacter(AREA_0549_SIN_);
     Hide0549Character(AREA_0549_a067);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     Hide0549Character(AREA_0549_aa30);
+#endif
 }
 
 void Restore0549Characters(void)
@@ -224,7 +328,9 @@ void Restore0549Characters(void)
     Restore0549AuthorCharacter(AREA_0549_RYO_);
     Restore0549AuthorCharacter(AREA_0549_SIN_);
     Show0549Character(AREA_0549_a067);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     Show0549Character(AREA_0549_aa30);
+#endif
 }
 
 void Prepare0549AuthorCharacter(shen_name character)

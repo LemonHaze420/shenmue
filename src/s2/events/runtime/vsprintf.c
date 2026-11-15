@@ -24,7 +24,11 @@
 #define BUF (MAXEXP + MAXFRACT + 1)
 #define DEFPREC 6
 
+#if defined(SHENMUE_EVENT_BOUNDED_PRINTF)
+#define PUTC(ch) { if (++cnt < maximum) *s++ = ch; }
+#else
 #define PUTC(ch) { ++cnt; *s++ = ch; }
+#endif
 
 #define SARG() \
 	(flags & LONGINT ? va_arg(argp, long) : \
@@ -96,8 +100,13 @@ cvt(number, prec, flags, signp, fmtch, startp, endp)
 		return (strlen(startp));
 	}
 
-	dotrim = expcnt = gformat = 0;
+#if defined(SHENMUE_EVENT_BOUNDED_PRINTF)
 	t = ++startp;
+#endif
+	dotrim = expcnt = gformat = 0;
+#if !defined(SHENMUE_EVENT_BOUNDED_PRINTF)
+	t = ++startp;
+#endif
 
 	fract = modf(number, &integer);
 
@@ -287,7 +296,12 @@ exponent(p, exp, fmtch)
 }
 
 int
+#if defined(SHENMUE_EVENT_BOUNDED_PRINTF)
+vsnprintf(s, maximum, fmt0, argp)
+	unsigned int maximum;
+#else
 vsprintf(s, fmt0, argp)
+#endif
 	register char *s;
 	const char *fmt0;
 	va_list argp;

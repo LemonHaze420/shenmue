@@ -20,8 +20,10 @@ void EVT_AT_SetCam_Callback(void *data)
         FTBL.camCtrlHandleContextSwitch(p->context);
         FTBL.camCtrlSetState(0);
     } else {
+#if !defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP)
         if (p->angle < 0)
             FTBL.camCtrlSetSplineShouldRebuildRotTo(1);
+#endif
         if (p->eye == 0xffffffffU && p->target == 0xffffffffU)
             FTBL.EVS_LoopCamera(p->camera, 0, 0);
         else
@@ -31,7 +33,11 @@ void EVT_AT_SetCam_Callback(void *data)
         FTBL.HLib_DestroyCurrentTask();
 }
 
+#if defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP)
+void EVT_AT_SetCam(int camera, shen_name eye, shen_name target, int context, int delay)
+#else
 void EVT_AT_SetCam(int camera, shen_name eye, shen_name target, int context, int angle, int delay)
+#endif
 {
     if (delay) {
         HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(EVT_AT_SetCam_Callback, 6, 11, sizeof(EventSetCamera), TASK_EVNT);
@@ -44,7 +50,9 @@ void EVT_AT_SetCam(int camera, shen_name eye, shen_name target, int context, int
         p->eye = eye;
         p->target = target;
         p->context = context;
+#if !defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP)
         p->angle = angle;
+#endif
     } else {
         EventSetCamera request;
         request.cleanup = 0;
@@ -52,7 +60,9 @@ void EVT_AT_SetCam(int camera, shen_name eye, shen_name target, int context, int
         request.eye = eye;
         request.target = target;
         request.context = context;
+#if !defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_JUMP)
         request.angle = angle;
+#endif
         EVT_AT_SetCam_Callback(&request);
     }
 }
@@ -498,6 +508,9 @@ void QueueEventVoiceList(HLibTask *parent, const char **voices, int voiceDelayFr
         FTBL.HLib_SetupTimedTask(work->parent, 0);
 }
 
+#endif
+
+#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337 || defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_KEBI) || defined(SHENMUE_EVENT_LIBRARY_VEND)
 #if !defined(SHENMUE_EVENT_LIBRARY_PATI)
 int g_eventQteFailureCount = 0;
 
@@ -533,7 +546,7 @@ void EVT_AT_SetSound(unsigned int sound, int delay)
 }
 #endif  
 
-#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337
+#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337 || defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_KEBI)
 #if !defined(SHENMUE_EVENT_LIBRARY_PATI)
 void EVT_AT_SetSample_Callback(void *data)
 {
@@ -763,7 +776,7 @@ void EVT_AT_MenCtrl(unsigned int frames, int startRed, int startGreen, int start
 }
 #endif  
 
-#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337
+#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337 || defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_KEBI) || defined(SHENMUE_EVENT_LIBRARY_VEND)
 #if !defined(SHENMUE_EVENT_LIBRARY_PATI)
 void EVT_SetQteRetryFrames(short frames)
 {
@@ -793,8 +806,8 @@ void EVT_AT_Qte_Callback(void *data)
         FTBL.SetShowQteFlagForButtonType(p->requiredStatus, p->maximumFrames, 2);
 #if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_FRBT
     } else if (p->displayState == 4) {
-#if SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_0337
-#elif SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_WRS2
+#if SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_0337 && !defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_KEBI) && !defined(SHENMUE_EVENT_LIBRARY_VEND)
+#elif SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_0007
         FTBL.qteBattleUtil(8, 10, 5, p->maximumFrames, 0);
 #else
         FTBL.qteBattleUtil(8, 10, 6, p->maximumFrames, 0);
@@ -809,7 +822,7 @@ void EVT_AT_Qte_Callback(void *data)
 
 void EVT_AT_QTE(unsigned short requiredStatus, short maximumFrames, int resultState, int delay, int displayState)
 {
-#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337
+#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337 || defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_KEBI) || defined(SHENMUE_EVENT_LIBRARY_VEND)
     if (g_eventQteRetryFrames > 0)
         maximumFrames += (g_eventQteRetryFrames - maximumFrames) / 2 * g_eventQteFailureCount;
 #endif
@@ -1057,7 +1070,7 @@ void EVT_AT_SetFaceLooks(shen_name character, int expression, int duration, floa
     }
 }
 
-#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337 && !defined(SHENMUE_EVENT_LIBRARY_PATI)
+#if (SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337 || defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_KEBI)) && !defined(SHENMUE_EVENT_LIBRARY_PATI)
 static EventDateTime savedDateTime;
 #endif
 
@@ -1270,7 +1283,7 @@ void ClearNpcs(void *data)
 }
 #endif  
 
-#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337
+#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337 || defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_KEBI)
 #if !defined(SHENMUE_EVENT_LIBRARY_PATI)
 void SaveEventDateTime(void)
 {
@@ -1468,7 +1481,7 @@ int Queue_EVT_AT_ResultQTE(int *result, void *resultParameters, const EventQteDa
         beginSuccess(resultParameters, delay + qteData->callbackTimeA);
     if (beginFailure)
         beginFailure(resultParameters, delay + qteData->callbackTimeA + qteData->callbackTimeB + qteData->callbackTimeC);
-#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337
+#if SHENMUE_EVENT_LIBRARY_REVISION >= EVENT_LIBRARY_REVISION_0337 || defined(SHENMUE_EVENT_LIBRARY_GAMEJAM_KEBI) || defined(SHENMUE_EVENT_LIBRARY_VEND)
     g_eventQteRetryFrames = qteData->retryReferenceFrames;
 #endif
 #if SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_4BTL
