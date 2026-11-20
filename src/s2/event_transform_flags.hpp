@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
 
-namespace shenmue::s2::EventTransformFlags {
-enum Value : std::uint32_t {
+namespace shenmue { namespace s2 { namespace EventTransformFlags {
+    enum Value : std::uint32_t {
     Local = 0,
     World = 0x40000000U,
     Relative = 0x80000000U,
@@ -16,4 +16,4 @@ enum Value : std::uint32_t {
     CustomIdleMotion = 0x00200000U,
     MotionTurnMask = TurnMotion | CustomIdleMotion,
 };
-}
+} } }

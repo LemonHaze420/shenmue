@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/date_time.hpp"
 #include "s2/time_program.hpp"
 
@@ -632,17 +635,7 @@ void IncrementDateTimeInPlace(DateTime& current, const DateTime& increment) {
 }
 
 // @verified - p
-void ComputeDayOfWeek(DateTime& dateTime) {
-    std::int16_t year = static_cast<std::int16_t>(dateTime.year + 1900);
-    std::int8_t month = dateTime.month;
-    if (month < 3) {
-        year = static_cast<std::int16_t>(dateTime.year + 1899);
-        month = static_cast<std::int8_t>(month + 12);
-    }
-    dateTime.week = static_cast<std::uint8_t>(
-        (year / 400 + (13 * month + 8) / 5 - year / 100 + year +
-         year / 4 + dateTime.day) % 7);
-}
+
 
 // @verified - p
 std::int64_t AddDaysAndCalculateWeekday(DateTime& dateTime, std::int16_t days) {
@@ -1171,3 +1164,18 @@ void SetCtrlHandWatchFlags(std::int32_t enabled) {
 }
 
 } // namespace shenmue::s2
+
+
+namespace shenmue { namespace s2 {
+// @verified - pd
+void ComputeDayOfWeek(DateTime &dateTime) {
+    std::int16_t year = static_cast<std::int16_t>(dateTime.year + 1900);
+    std::int8_t month = dateTime.month;
+    if (month < 3) {
+        year = static_cast<std::int16_t>(dateTime.year + 1899);
+        month = static_cast<std::int8_t>(month + 12);
+    }
+    dateTime.week = static_cast<std::uint8_t>((year / 400 + (13 * month + 8) / 5 - year / 100 + year + year / 4 + dateTime.day) % 7);
+}
+
+} } // namespace shenmue::s2

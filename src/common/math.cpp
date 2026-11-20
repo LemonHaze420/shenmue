@@ -6,10 +6,27 @@
 #include <cmath>
 #include <limits>
 
+
 namespace shenmue {
 
+#define SHENMUE_MATH_BITS std::bit_cast
+#define SHENMUE_MATH_FLOAT_TYPE requires std::is_same_v<T, float>
+#define SHENMUE_MATH_NOEXCEPT noexcept
+#define SHENMUE_MATH_FABS std::fabs
+#define SHENMUE_MATH_SQRT std::sqrt
+#define SHENMUE_MATH_ATAN std::atan
+#define SHENMUE_MATH_ISNAN std::isnan
+#define SHENMUE_MATH_INT_MIN std::numeric_limits<std::int32_t>::min()
+#define SHENMUE_MATH_INT_MAX std::numeric_limits<std::int32_t>::max()
+
+
+
+
+
+
+
 Matrix4x4 Matrix4x4::Multiply(const Matrix4x4 &left, const Matrix4x4 &right) {
-    Matrix4x4 output{};
+    Matrix4x4 output = {};
     for (int row = 0; row < 4; ++row) {
         for (int column = 0; column < 4; ++column) {
             for (int inner = 0; inner < 4; ++inner) {
@@ -83,8 +100,10 @@ bool IsAabbInsideSelectedFrustumPlanes(const std::array<Vector4, 6> &planes, con
     }
     return true;
 }
+
+
 std::uint16_t atan2_fixed16(float y, float x) {
-    const auto fixed = [](float ratio) { return static_cast<std::int32_t>(std::atan(ratio) * 65536.0f / 6.2831855f + 0.5f); };
+    const auto fixed = [](float ratio) { return static_cast<std::int32_t>(SHENMUE_MATH_ATAN(ratio) * 65536.0f / 6.2831855f + 0.5f); };
     if (x >= y) {
         if (x >= -y)
             return x == 0.0f ? 0 : static_cast<std::uint16_t>(fixed(y / x));
@@ -100,11 +119,12 @@ float cot_fixed16(std::uint16_t angle) {
     const float cosine = sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(angle)));
     return cosine / sine;
 }
+
 std::int16_t asin_fixed16(float value) {
-    if (std::fabs(value) <= 1.0f) {
-        const float norm = std::sqrt(1.0f - value * value);
+    if (SHENMUE_MATH_FABS(value) <= 1.0f) {
+        const float norm = SHENMUE_MATH_SQRT(1.0f - value * value);
         if (norm != 0.0f)
-            return static_cast<std::int16_t>(static_cast<std::int32_t>(std::atan(value / norm) * 65536.0f / 6.2831855f + 0.5f));
+            return static_cast<std::int16_t>(static_cast<std::int32_t>(SHENMUE_MATH_ATAN(value / norm) * 65536.0f / 6.2831855f + 0.5f));
     }
     return value > 0.0f ? 0x4000 : static_cast<std::int16_t>(0xc000);
 }
@@ -112,8 +132,8 @@ std::int16_t asin_fixed16(float value) {
 
 
 // @verified - p
-template <typename T> float Vector3T<T>::NormalizeInPlace(Vector3T<T> &value) requires std::is_same_v<T, float> {
-    const float magnitude = std::sqrt((value.x * value.x + value.y * value.y) + value.z * value.z);
+template <typename T> float Vector3T<T>::NormalizeInPlace(Vector3T<T> &value) SHENMUE_MATH_FLOAT_TYPE {
+    const float magnitude = SHENMUE_MATH_SQRT((value.x * value.x + value.y * value.y) + value.z * value.z);
     if (magnitude > 0.0f) {
         value.x = value.x * (1.0f / magnitude);
         value.y = value.y * (1.0f / magnitude);
@@ -123,8 +143,8 @@ template <typename T> float Vector3T<T>::NormalizeInPlace(Vector3T<T> &value) re
 }
 
 // @verified - p
-template <typename T> float Vector3T<T>::CalcMagnitude(const Vector3T<T> &vector) requires std::is_same_v<T, float> {
-    return std::sqrt((vector.x * vector.x + vector.y * vector.y) + vector.z * vector.z);
+template <typename T> float Vector3T<T>::CalcMagnitude(const Vector3T<T> &vector) SHENMUE_MATH_FLOAT_TYPE {
+    return SHENMUE_MATH_SQRT((vector.x * vector.x + vector.y * vector.y) + vector.z * vector.z);
 }
 
 template struct Vector3T<float>;
@@ -132,10 +152,10 @@ template struct Vector3T<float>;
 
 float ceil_float(float value) {
     const float negated = -value;
-    const float magnitude = std::fabs(negated);
+    const float magnitude = SHENMUE_MATH_FABS(negated);
     if (magnitude >= 8388608.0f)
         return value;
-    const std::int32_t whole = std::isnan(magnitude) ? std::numeric_limits<std::int32_t>::min() : static_cast<std::int32_t>(magnitude);
+    const std::int32_t whole = SHENMUE_MATH_ISNAN(magnitude) ? SHENMUE_MATH_INT_MIN : static_cast<std::int32_t>(magnitude);
     if (!(0.0f > negated))
         return -static_cast<float>(whole);
     if (magnitude - static_cast<float>(whole) == 0.0f)
@@ -145,7 +165,7 @@ float ceil_float(float value) {
 
 
 std::int32_t TruncateToInt32(float value) {
-    return value > -2147483648.5f && value < 2147483648.0f ? static_cast<std::int32_t>(value) : std::numeric_limits<std::int32_t>::min();
+    return value > -2147483648.5f && value < 2147483648.0f ? static_cast<std::int32_t>(value) : SHENMUE_MATH_INT_MIN;
 }
 
 namespace {
@@ -186,7 +206,7 @@ float fast_logf_approx(float value) {
 float fast_ldexpf(float value, std::int32_t exponent) {
     if (value == 0.0f)
         return 0.0f;
-    std::uint32_t bits = std::bit_cast<std::uint32_t>(value);
+    std::uint32_t bits = SHENMUE_MATH_BITS<std::uint32_t>(value);
     const std::int32_t biased = static_cast<std::int32_t>((bits >> 23U) & 0xffU) + exponent;
     if (biased < 1) {
         const std::uint32_t shift = static_cast<std::uint8_t>(1 - biased) & 31U;
@@ -196,7 +216,7 @@ float fast_ldexpf(float value, std::int32_t exponent) {
     } else {
         bits = (bits & 0x807fffffU) | (static_cast<std::uint32_t>(biased) << 23U);
     }
-    return std::bit_cast<float>(bits);
+    return SHENMUE_MATH_BITS<float>(bits);
 }
 
 
@@ -236,7 +256,7 @@ float fast_powf_approx(float base, float exponent) {
     return fast_expf_approx(fast_logf_approx(base) * exponent);
 }
 
-std::uint32_t *RadixSortIndicesBy4ByteKey(const float *keys, std::uint32_t count, std::uint32_t *&indices, std::uint32_t *&scratch) noexcept {
+std::uint32_t *RadixSortIndicesBy4ByteKey(const float *keys, std::uint32_t count, std::uint32_t *&indices, std::uint32_t *&scratch) SHENMUE_MATH_NOEXCEPT {
     if (!keys || !indices || !scratch || count == 0)
         return indices;
 
@@ -252,7 +272,7 @@ std::uint32_t *RadixSortIndicesBy4ByteKey(const float *keys, std::uint32_t count
 
     std::array<std::array<std::uint32_t, 256>, 4> counts{};
     for (std::uint32_t index = 0; index < count; ++index) {
-        const std::uint32_t key = std::bit_cast<std::uint32_t>(keys[index]);
+        const std::uint32_t key = SHENMUE_MATH_BITS<std::uint32_t>(keys[index]);
         for (unsigned byte = 0; byte < 4; ++byte) {
             ++counts[byte][(key >> (byte * 8U)) & 0xffU];
         }
@@ -261,7 +281,7 @@ std::uint32_t *RadixSortIndicesBy4ByteKey(const float *keys, std::uint32_t count
     std::array<std::uint32_t, 256> offsets{};
     for (unsigned byte = 0; byte < 4; ++byte) {
         const unsigned shift = byte * 8U;
-        const std::uint32_t first = (std::bit_cast<std::uint32_t>(keys[0]) >> shift) & 0xffU;
+        const std::uint32_t first = (SHENMUE_MATH_BITS<std::uint32_t>(keys[0]) >> shift) & 0xffU;
         if (counts[byte][first] == count) {
             if (byte == 3 && first >= 128) {
                 for (std::uint32_t index = 0; index < count; ++index) {
@@ -293,7 +313,7 @@ std::uint32_t *RadixSortIndicesBy4ByteKey(const float *keys, std::uint32_t count
 
         for (std::uint32_t index = 0; index < count; ++index) {
             const std::uint32_t source = indices[index];
-            const std::uint32_t bucket = (std::bit_cast<std::uint32_t>(keys[source]) >> shift) & 0xffU;
+            const std::uint32_t bucket = (SHENMUE_MATH_BITS<std::uint32_t>(keys[source]) >> shift) & 0xffU;
             const std::uint32_t destination = byte == 3 && bucket >= 128 ? --offsets[bucket] : offsets[bucket]++;
             scratch[destination] = source;
         }
@@ -301,5 +321,15 @@ std::uint32_t *RadixSortIndicesBy4ByteKey(const float *keys, std::uint32_t count
     }
     return indices;
 }
+
+#undef SHENMUE_MATH_BITS
+#undef SHENMUE_MATH_FLOAT_TYPE
+#undef SHENMUE_MATH_NOEXCEPT
+#undef SHENMUE_MATH_FABS
+#undef SHENMUE_MATH_SQRT
+#undef SHENMUE_MATH_ATAN
+#undef SHENMUE_MATH_ISNAN
+#undef SHENMUE_MATH_INT_MIN
+#undef SHENMUE_MATH_INT_MAX
 
 } // namespace shenmue

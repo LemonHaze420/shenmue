@@ -5,10 +5,11 @@
 #include "s2/legacy_sprite.hpp"
 #include <array>
 #include <cstddef>
-
 #include <cstdint>
+#define SHENMUE_TITLE_CONSTANT inline constexpr
+#define SHENMUE_LOAD_TITLE_DATA inline constexpr
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 struct MapInfoChunk;
 
 inline constexpr shen_name SUBTITLE_WAIT_TASK{SHEN_NAME(SBTS)};
@@ -26,20 +27,22 @@ struct SubtitleSpriteWork {
     std::int16_t alphaStep;
     std::int16_t stacked;
 };
-static_assert(sizeof(SubtitleSpriteWork) == 0x88);
-static_assert(offsetof(SubtitleSpriteWork, sprite) == 0x08);
-static_assert(offsetof(SubtitleSpriteWork, x) == 0x60);
-static_assert(offsetof(SubtitleSpriteWork, textures) == 0x68);
-static_assert(offsetof(SubtitleSpriteWork, rotation) == 0x78);
-static_assert(offsetof(SubtitleSpriteWork, alpha) == 0x7c);
-static_assert(offsetof(SubtitleSpriteWork, alphaStep) == 0x7e);
-static_assert(offsetof(SubtitleSpriteWork, stacked) == 0x80);
+typedef char Layout_load_title_8[(sizeof(SubtitleSpriteWork) == 0x88) ? 1 : -1];
+typedef char Layout_load_title_9[(offsetof(SubtitleSpriteWork, sprite) == 0x08) ? 1 : -1];
+typedef char Layout_load_title_10[(offsetof(SubtitleSpriteWork, x) == 0x60) ? 1 : -1];
+typedef char Layout_load_title_11[(offsetof(SubtitleSpriteWork, textures) == 0x68) ? 1 : -1];
+typedef char Layout_load_title_12[(offsetof(SubtitleSpriteWork, rotation) == 0x78) ? 1 : -1];
+typedef char Layout_load_title_13[(offsetof(SubtitleSpriteWork, alpha) == 0x7c) ? 1 : -1];
+typedef char Layout_load_title_14[(offsetof(SubtitleSpriteWork, alphaStep) == 0x7e) ? 1 : -1];
+typedef char Layout_load_title_15[(offsetof(SubtitleSpriteWork, stacked) == 0x80) ? 1 : -1];
 
 // Rows of the four-texture SUBTITLE.SPR stack: centre Y and height of each 512-wide strip.
-inline constexpr std::array<std::int16_t, 4> SUBTITLE_STACK_Y{240, 209, 310, 240};
-inline constexpr std::array<std::int16_t, 4> SUBTITLE_STACK_HEIGHT{512, 128, 64, 512};
+#define SHENMUE_SUBTITLE_STACK_Y_VALUES {240, 209, 310, 240}
+#define SHENMUE_SUBTITLE_STACK_HEIGHT_VALUES {512, 128, 64, 512}
+SHENMUE_LOAD_TITLE_DATA std::array<std::int16_t, 4> SUBTITLE_STACK_Y SHENMUE_SUBTITLE_STACK_Y_VALUES;
+SHENMUE_LOAD_TITLE_DATA std::array<std::int16_t, 4> SUBTITLE_STACK_HEIGHT SHENMUE_SUBTITLE_STACK_HEIGHT_VALUES;
 // 0x10000 / 3600: the per-frame rotation of the first stacked strip.
-inline constexpr float SUBTITLE_ROTATION_STEP = 18.204445f;
+SHENMUE_TITLE_CONSTANT float SUBTITLE_ROTATION_STEP = 18.204445f;
 
 struct LoadTitleEntry {
     const char *key;
@@ -51,6 +54,7 @@ struct MapRegionEntry {
     const char *map;
     std::array<float, 4> bounds;
 };
+
 
 struct FloorTitleEntry {
     const char *area;
@@ -106,8 +110,13 @@ bool IsLoadingDrawActive();
 
 
 
+
 HLib::Task *Queue_ST_WaitSubTitle(const char *filename);
 std::int64_t ST_FadeInSubTitle(HLib::Task *task, float x, float y, std::int16_t alphaStep);
 std::int64_t ST_FadeOutSubTitle(HLib::Task *task);
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2
+
+#undef SHENMUE_TITLE_CONSTANT
+
+#undef SHENMUE_LOAD_TITLE_DATA

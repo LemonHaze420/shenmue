@@ -1,5 +1,7 @@
 #pragma once
 
+#include "s2/map_render_profile.hpp"
+
 #include "common/types.hpp"
 #include "common/math.hpp"
 
@@ -13,25 +15,6 @@ namespace shenmue::s2 {
 struct MapInfoChunk;
 struct MT7Model;
 struct MT7Node;
-struct MapRenderProfile {
-    std::uint32_t areaPattern;
-    std::uint32_t field04;
-    std::uint32_t field08;
-    std::uint32_t field0c;
-    std::uint32_t field10;
-    float farDistance;
-    float nearDistance;
-    float npcRadius;
-    std::uint32_t alphaOperation;
-    float textureDistance;
-    float textureDistanceW;
-    float textureDistanceZ;
-};
-static_assert(sizeof(MapRenderProfile) == 0x30);
-static_assert(offsetof(MapRenderProfile, farDistance) == 0x14);
-static_assert(offsetof(MapRenderProfile, nearDistance) == 0x18);
-static_assert(offsetof(MapRenderProfile, npcRadius) == 0x1c);
-
 const MapRenderProfile &MatchMapRenderProfile(shen_name area);
 
 struct MainMapProjectionAngles {

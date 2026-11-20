@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/motion_rig.hpp"
 
 #include "s2/math.hpp"
@@ -298,134 +301,13 @@ float SampleMotionRigChannelAdvance(MotionRigChannel &channel) {
 }
 
 // Channel_InterpPVA_Scalar: value and half tangents at the current time.
-void SampleMotionRigChannelPVA(MotionRigChannel &channel, float *value, float *tangentIn, float *tangentOut) {
-    float now = g_motionCurrentAnimTime;
-    if (!(channel.current.timeSeconds <= now)) {
-        *value = channel.current.value;
-        *tangentOut = 0.0f;
-        *tangentIn = 0.0f;
-        return;
-    }
-    float next = channel.next.timeSeconds;
-    if (!(next > now)) {
-        for (;;) {
-            if (std::fabs(next - now) < 1.1754944e-38f) {
-                *value = channel.next.value;
-                *tangentIn = channel.next.tangentIn * 0.5f;
-                *tangentOut = channel.next.tangentOut * 0.5f;
-                return;
-            }
-            const std::uint32_t keys = channel.keysRemaining;
-            if (keys == 0) {
-                *value = channel.next.value;
-                *tangentOut = 0.0f;
-                *tangentIn = 0.0f;
-                return;
-            }
-            channel.current = channel.next;
-            const std::uint16_t rawValue = *channel.frameCursor++;
-            channel.next.value = channel.scale * DecodeMotnFloat(rawValue) + channel.bias;
-            const float tangent = channel.scale * DecodeMotnFloat(*channel.frameCursor++);
-            channel.next.tangentIn = tangent;
-            channel.next.tangentOut = (rawValue & 1U) != 0 ? channel.scale * DecodeMotnFloat(*channel.frameCursor++) : tangent;
-            channel.keysRemaining = keys - 1U;
-            const float time =
-                keys == 1U ? g_motionMaximumAnimTime : static_cast<float>(static_cast<std::int16_t>(*channel.frameCursor++)) * motionFrameSeconds;
-            channel.next.timeSeconds = time;
-            next = time;
-            channel.inverseDuration = 1.0f / (time - channel.current.timeSeconds);
-            now = g_motionCurrentAnimTime;
-            if (time > now)
-                break;
-        }
-    }
-    const float elapsed = now - channel.current.timeSeconds;
-    if (g_motionInterpolationType & MI_Linear) {
-        const float slope = (channel.next.value - channel.current.value) * channel.inverseDuration;
-        const float half = slope * 0.5f;
-        *value = elapsed * slope + channel.current.value;
-        *tangentOut = half;
-        *tangentIn = half;
-        return;
-    }
-    const float inverse = channel.inverseDuration;
-    const float nextValue = channel.next.value, nextTangent = channel.next.tangentIn;
-    const float currentValue = channel.current.value, currentTangent = channel.current.tangentOut;
-    const float inverseSquared = inverse * inverse;
-    const float elapsedSquared = elapsed * elapsed;
-    const float cubic = (elapsedSquared * elapsed) * inverseSquared;
-    const float tripleSquared = (elapsedSquared * 3.0f) * inverseSquared;
-    const float acceleration = ((elapsedSquared * 6.0f) * inverseSquared) * inverse;
-    const float sixfold = (elapsed * 6.0f) * inverseSquared;
-    const float twiceScaled = (elapsed + elapsed) * inverse;
-    const float tangent = ((((sixfold - acceleration) * nextValue + (acceleration - sixfold) * currentValue) +
-                               ((tripleSquared - twiceScaled) - twiceScaled + 1.0f) * currentTangent) +
-                              (tripleSquared - twiceScaled) * nextTangent) *
-        0.5f;
-    *tangentOut = tangent;
-    *tangentIn = tangent;
-    const float scaledSquared = elapsedSquared * inverse;
-    *value = ((((cubic + cubic) * inverse - tripleSquared + 1.0f) * currentValue + (tripleSquared - (cubic + cubic) * inverse) * nextValue) +
-                 ((cubic - scaledSquared - scaledSquared) + elapsed) * currentTangent) +
-        (cubic - scaledSquared) * nextTangent;
-}
+
 
 // @verified - p
-void UpdatePointersForCurrentFrame(MotionStreamContext *context, const std::uint16_t *header, void **armTrack, void **regionTrack) {
-    context->version = DecodeMotnFloat(header[0]);
-    const std::uint16_t flags = header[1];
-    context->flags = flags;
-    const bool overrideRig = static_cast<std::uint8_t>(flags) == 16U;
-    context->frameCount = header[2];
-    const std::int16_t keyData = static_cast<std::int16_t>(header[3]);
-    if (flags & motionWideKeyCounts)
-        g_motionWideKeyCounts = header + 4;
-    else
-        g_motionKeyCounts = reinterpret_cast<const std::uint8_t *>(header + 4);
-    g_motionKeyData = reinterpret_cast<const std::uint16_t *>(reinterpret_cast<const std::byte *>(header) + keyData);
-    const std::int32_t regionChannels[4]{overrideRig ? 42 : 27, overrideRig ? 6 : 9, overrideRig ? 24 : 9, 12};
-    for (std::size_t region = 0; region < 5; ++region) {
-        context->regions[region].keyCounts =
-            (context->flags & motionWideKeyCounts) ? static_cast<const void *>(g_motionWideKeyCounts) : static_cast<const void *>(g_motionKeyCounts);
-        context->regions[region].keyData = g_motionKeyData;
-        if (region < 4)
-            SetMotionStreamFlags(regionChannels[region], motionInitStream, context->flags);
-    }
-    const std::uint16_t contextFlags = context->flags;
-    if (!(contextFlags & 0xc000U)) {
-        if (armTrack)
-            *armTrack = nullptr;
-        *regionTrack = nullptr;
-        return;
-    }
-    SetMotionStreamFlags(12, motionInitStream, contextFlags);
-    if (contextFlags & 0x4000U) {
-        std::uint16_t *const arm = const_cast<std::uint16_t *>(g_motionKeyData);
-        if (armTrack)
-            *armTrack = arm;
-        if (contextFlags & 0x8000U) {
-            const std::uint16_t firstCount = arm[0];
-            const std::uint16_t secondCount = arm[1 + firstCount * 2U];
-            *regionTrack = arm + 2 + (firstCount + secondCount) * 2U;
-            return;
-        }
-        *regionTrack = nullptr;
-        return;
-    }
-    if (!(contextFlags & 0x8000U))
-        return;
-    if (armTrack)
-        *armTrack = nullptr;
-    *regionTrack = const_cast<std::uint16_t *>(g_motionKeyData);
-}
+
 
 // @verified - p
-float mtwkGetScaleFactorFor(std::uint32_t targetRig, std::uint32_t sourceRig, std::uint32_t region) {
-    if (targetRig == sourceRig)
-        return 1.0f;
-    return g_motionRigDimensions[static_cast<std::int32_t>(targetRig)][static_cast<std::int32_t>(region)] /
-        g_motionRigDimensions[static_cast<std::int32_t>(sourceRig)][static_cast<std::int32_t>(region)];
-}
+
 
 // @verified - p
 void SetOverrideBlendTime(float time) {
@@ -572,124 +454,23 @@ void SwizzledBasis3x4IntoActiveFrom(const Vector4 (&rows)[3]) {
 // first frame as the blend target. Joints 9-11 are the two-channel toes, 22 the forearm
 // twist and 23 the wrist pair.
 // @verified - p
-void ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
-    if (callback.evaluate) {
-        if (joint >= 9 && joint <= 11) {
-            ReadMotionKeyBlock(axes[0].channel);
-            ReadMotionKeyBlock(axes[1].channel);
-        } else if (joint == 22) {
-            ReadMotionKeyBlock(axes[0].channel);
-        } else {
-            if (joint != 23)
-                ReadMotionKeyBlock(axes[0].channel);
-            ReadMotionKeyBlock(axes[1].channel);
-            ReadMotionKeyBlock(axes[2].channel);
-        }
-        callback.evaluate(callback.parameters);
-    } else if (g_motionPoseMode == MP_FromChannels) {
-        if (joint >= 9 && joint <= 11) {
-            ReadMotionKeyBlock(axes[0].channel);
-            ReadMotionKeyBlock(axes[1].channel);
-            Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
-            Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
-        } else if (joint == 22) {
-            ReadMotionKeyBlock(axes[0].channel);
-            Matrix4x4::RotateAroundX_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
-        } else if (joint == 23) {
-            ReadMotionKeyBlock(axes[1].channel);
-            ReadMotionKeyBlock(axes[2].channel);
-            Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
-            Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[2].channel)));
-        } else {
-            for (std::size_t axis = 0; axis < 3; ++axis)
-                ReadMotionKeyBlock(axes[axis].channel);
-            ApplyChannelRotationZYX(axes);
-        }
-    }
-    CaptureTargetColumns(basis);
-}
+
 
 // ChannelsToPoseColumns_0: evaluates a joint's current pose and captures it as the blend
 // source. Joints 9-11 rotate Z/Y/X from the first two channels, 22 X only and 23 Z/Y
 // from the second and third.
 // @verified - p
-void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
-    if (callback.evaluate) {
-        callback.evaluate(callback.parameters);
-    } else if (g_motionPoseMode == MP_FromChannels) {
-        if (joint >= 9 && joint <= 11) {
-            Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
-            Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
-            Matrix4x4::RotateAroundX_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
-        } else if (joint == 22) {
-            Matrix4x4::RotateAroundX_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
-        } else if (joint == 23) {
-            Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
-            Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[2].channel)));
-        } else {
-            ApplyChannelRotationZYX(axes);
-        }
-    } else if (g_motionPoseMode == MP_FromAxisAngle) {
-        AxisAngleToBasisSlerp(basis);
-    }
-    CaptureSourceColumns(basis);
-}
+
 
 // ChannelsToWorld_PVA: reads three position channels for a new motion and replaces them
 // with one Hermite segment from the previous PVA to the new first frame, in this frame.
 // @verified - p
-void ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCallback &callback) {
-    Vector3 position{}, tangentIn{}, tangentOut{};
-    Vector3 world{}, worldIn{}, worldOut{};
-    const Matrix4x4 &work = workTransformMatrix;
-    if (callback.evaluate) {
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(axes[axis].channel);
-        EvaluateTargetCallback(callback, &position);
-        world = TransformWorkPoint(position);
-    } else if (g_motionPoseMode == MP_FromChannels) {
-        for (std::size_t axis = 0; axis < 3; ++axis) {
-            ReadMotionKeyBlock(axes[axis].channel);
-            SampleMotionRigChannelPVA(axes[axis].channel, &position[axis], &tangentIn[axis], &tangentOut[axis]);
-        }
-        world = TransformWorkPoint(position);
-        Matrix4x4::Transform(tangentOut, worldOut);
-        Matrix4x4::Transform(tangentIn, worldIn);
-    }
-    const std::int8_t frames = g_motionGraphFrames;
-    const float duration = ((frames < 0 ? 20.0f : static_cast<float>(frames)) - 1.0f) * motionFrameSeconds;
-    for (std::size_t axis = 0; axis < 3; ++axis) {
-        MotionRigChannel &channel = axes[axis].channel;
-        channel.current = {.timeSeconds = 0.0f, .tangentIn = pva[axis].y, .tangentOut = pva[axis].z, .value = pva[axis].w};
-        channel.next = {.timeSeconds = duration, .tangentIn = worldIn[axis], .tangentOut = worldOut[axis], .value = world[axis]};
-        channel.keysRemaining = 0;
-        channel.frameCursor = nullptr;
-        channel.inverseDuration = 1.0f / duration;
-    }
-}
+
 
 // EvaluateObjectMotionAndTransform: the current target position, value and half tangents
 // transformed into this frame, published as the PVA a following transition starts from.
 // @verified - p
-void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], MotionCallback &callback) {
-    Vector3 position{}, tangentIn{}, tangentOut{};
-    Vector3 world{}, worldIn{}, worldOut{};
-    if (callback.evaluate) {
-        EvaluateTargetCallback(callback, &position);
-        world = TransformWorkPoint(position);
-    } else if (g_motionPoseMode <= MP_FromAxisAngle) {
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            SampleMotionRigChannelPVA(axes[axis].channel, &position[axis], &tangentIn[axis], &tangentOut[axis]);
-        world = TransformWorkPoint(position);
-        Matrix4x4::Transform(tangentIn, worldIn);
-        Matrix4x4::Transform(tangentOut, worldOut);
-    }
-    for (std::size_t axis = 0; axis < 3; ++axis) {
-        pva[axis].w = world[axis];
-        pva[axis].y = worldIn[axis];
-        pva[axis].z = worldOut[axis];
-    }
-}
+
 
 namespace {
 
@@ -834,54 +615,7 @@ void InitBaseRig(MotionBaseRig &base) {
 
 // EvaluateBase: a positive override blend time scales the new motion's channels toward
 // the rig's rest pose; returns 0 when that blend is already applied.
-std::int32_t EvaluateBase(MotionBaseRig &base, std::uint8_t sourceRig, float scale, float blend) {
-    if (std::fabs(blend - base.pelvisRotation[2].channel.scale) < 1.1754944e-38f)
-        return 0;
-    const float positionScale = scale * blend;
-    const float height = g_motionRigDimensions[sourceRig][0];
-    const float foot = g_motionRigDimensions[sourceRig][5];
-    base.pelvisPosition[1].channel.scale = scale * blend;
-    const float rest = (1.0f - blend) * scale;
-    base.pelvisPosition[1].channel.bias = rest * height;
-    UpdateAnimRate(base.pelvisPosition[2].channel, scale * blend, 0.0f);
-    const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
-    const float signedBlend = mirrored ? -blend : blend;
-    base.pelvisRotation[0].channel.bias = 0.0f;
-    base.pelvisRotation[0].channel.scale = signedBlend;
-    base.pelvisRotation[1].channel.scale = signedBlend;
-    base.pelvisRotation[1].channel.bias = 0.0f;
-    UpdateAnimRate(base.pelvisRotation[2].channel, blend, 0.0f);
-    base.hips.axes[0].channel.bias = 0.0f;
-    base.hips.axes[0].channel.scale = signedBlend;
-    base.hips.axes[1].channel.scale = signedBlend;
-    base.hips.axes[1].channel.bias = mirrored ? (blend + 1.0f) * 1.5707964f : (1.0f - blend) * 1.5707964f;
-    base.hips.axes[2].channel.scale = signedBlend;
-    base.hips.axes[2].channel.bias = 0.0f;
-    UpdateAnimRate(base.leftThigh.axes[0].channel, blend, 0.0f);
-    base.leftThigh.axes[1].channel.bias = 0.0f;
-    base.leftThigh.axes[1].channel.scale = signedBlend;
-    UpdateAnimRate(base.leftThigh.axes[2].channel, signedBlend, 0.0f);
-    base.leftFoot.axes[1].channel.scale = positionScale;
-    const float footRest = rest * foot;
-    base.leftFoot.axes[1].channel.bias = footRest;
-    UpdateAnimRate(base.leftFoot.axes[2].channel, positionScale, 0.0f);
-    base.leftAnkleRotation[0].channel.bias = 0.0f;
-    base.leftAnkleRotation[0].channel.scale = signedBlend;
-    UpdateAnimRate(base.leftAnkleRotation[1].channel, signedBlend, 0.0f);
-    UpdateAnimRate(base.leftAnkleRotation[2].channel, blend, 0.0f);
-    UpdateAnimRate(base.rightThigh.axes[0].channel, blend, 0.0f);
-    base.rightThigh.axes[1].channel.bias = 0.0f;
-    base.rightThigh.axes[1].channel.scale = signedBlend;
-    UpdateAnimRate(base.rightThigh.axes[2].channel, signedBlend, 0.0f);
-    base.rightFoot.axes[1].channel.scale = positionScale;
-    base.rightFoot.axes[1].channel.bias = footRest;
-    UpdateAnimRate(base.rightFoot.axes[2].channel, positionScale, 0.0f);
-    base.rightAnkleRotation[0].channel.bias = 0.0f;
-    base.rightAnkleRotation[0].channel.scale = signedBlend;
-    UpdateAnimRate(base.rightAnkleRotation[1].channel, signedBlend, 0.0f);
-    UpdateAnimRate(base.rightAnkleRotation[2].channel, blend, 0.0f);
-    return 1;
-}
+
 
 namespace {
 
@@ -1014,168 +748,7 @@ void BakeBaseChannelsToPose(MotionBaseRig &base, float sourceTime, float time, f
 } // namespace
 
 // @verified - p
-void ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags) {
-    g_motionInitFlags = flags;
-    if (flags & motionInitStream) {
-        g_motionAnimFlags = context->flags;
-        if (std::fabs(static_cast<double>(1.2f - context->version)) > 0.01)
-            MotionLibraryError("motion\\src\\nlmotion_base.c", 87, "NL_ERROR_MOTION_VERSION");
-        base.clock.authored.splitTimeFrames = 0.0f;
-        const float last = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
-        base.clock.authored.ticksTime = last;
-        base.clock.authored.maxTime = last;
-    }
-    if (!(g_motionInitFlags & motionInitStream) && (g_motionInitFlags & motionInitGraphFrames))
-        MotionLibraryError("motion\\src\\nlmotion_base.c", 99, "NL_ERROR_MOTION_UNEXPECTED_INIT_FALG");
-    if (!(g_motionInitFlags & motionInitChannels))
-        MotionLibraryError("motion\\src\\nlmotion_base.c", 103, "NL_ERROR_MOTION_UNEXPECTED_INIT_FALG");
-    std::uint32_t graphFrames = 0;
-    const std::int32_t useOverride = g_motionUseOverride;
-    if (g_motionInitFlags & motionInitStream) {
-        graphFrames = g_motionInitFlags >> 8;
-        g_motionGraphFrames = static_cast<std::int8_t>(g_motionInitFlags >> 8);
-        if (static_cast<std::uint8_t>(g_motionInitFlags >> 8) || (g_motionInitFlags & motionInitCallbacks)) {
-            InitBaseRig(base);
-            graphFrames = (graphFrames & ~0xffU) | static_cast<std::uint8_t>(g_motionGraphFrames);
-        }
-        base.motionFlags = g_motionInitFlags;
-        const std::uint8_t sourceRig = static_cast<std::uint8_t>(g_motionAnimFlags);
-        const std::int32_t boneId = static_cast<std::int32_t>(rig.boneId);
-        const float scale = boneId == sourceRig ? 1.0f : g_motionRigDimensions[boneId][0] / g_motionRigDimensions[sourceRig][0];
-        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
-        const float sign = mirrored ? -1.0f : 1.0f;
-        UpdateAnimRate(base.pelvisPosition[0].channel, mirrored ? -scale : scale, 0.0f);
-        UpdateAnimRate(base.pelvisPosition[1].channel, scale, 0.0f);
-        UpdateAnimRate(base.pelvisPosition[2].channel, scale, 0.0f);
-        UpdateAnimRate(base.pelvisRotation[0].channel, sign, 0.0f);
-        UpdateAnimRate(base.pelvisRotation[1].channel, sign, 0.0f);
-        UpdateAnimRate(base.pelvisRotation[2].channel, 1.0f, 0.0f);
-        if (useOverride) {
-            MotionRigRotation &hips = *base.overrideHips;
-            UpdateAnimRate(hips.axes[0].channel, sign, 0.0f);
-            UpdateAnimRate(hips.axes[1].channel, sign, mirrored ? -3.1415927f : 0.0f);
-            UpdateAnimRate(hips.axes[2].channel, sign, 0.0f);
-            MotionRigTarget &target = *base.overridePelvisTarget;
-            UpdateAnimRate(target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
-            UpdateAnimRate(target.axes[1].channel, scale, 0.0f);
-            UpdateAnimRate(target.axes[2].channel, scale, 0.0f);
-            UpdateAnimRate(base.leftHipNode->axes[0].channel, 1.0f, 0.0f);
-            UpdateAnimRate(base.leftHipNode->axes[1].channel, sign, 0.0f);
-            UpdateAnimRate(base.leftHipNode->axes[2].channel, sign, 0.0f);
-        } else {
-            UpdateAnimRate(base.hips.axes[0].channel, sign, 0.0f);
-            UpdateAnimRate(base.hips.axes[1].channel, sign, mirrored ? 3.1415927f : 0.0f);
-            UpdateAnimRate(base.hips.axes[2].channel, sign, 0.0f);
-        }
-        UpdateAnimRate(base.leftThigh.axes[0].channel, 1.0f, 0.0f);
-        UpdateAnimRate(base.leftThigh.axes[1].channel, sign, 0.0f);
-        UpdateAnimRate(base.leftThigh.axes[2].channel, sign, 0.0f);
-        UpdateAnimRate(base.leftFoot.axes[0].channel, mirrored ? -scale : scale, 0.0f);
-        UpdateAnimRate(base.leftFoot.axes[1].channel, scale, 0.0f);
-        UpdateAnimRate(base.leftFoot.axes[2].channel, scale, 0.0f);
-        UpdateAnimRate(base.leftAnkleRotation[0].channel, sign, 0.0f);
-        UpdateAnimRate(base.leftAnkleRotation[1].channel, sign, 0.0f);
-        UpdateAnimRate(base.leftAnkleRotation[2].channel, 1.0f, 0.0f);
-        if (useOverride) {
-            UpdateAnimRate(base.rightHipNode->axes[0].channel, 1.0f, 0.0f);
-            UpdateAnimRate(base.rightHipNode->axes[1].channel, sign, 0.0f);
-            UpdateAnimRate(base.rightHipNode->axes[2].channel, sign, 0.0f);
-        }
-        UpdateAnimRate(base.rightThigh.axes[0].channel, 1.0f, 0.0f);
-        UpdateAnimRate(base.rightThigh.axes[1].channel, sign, 0.0f);
-        UpdateAnimRate(base.rightThigh.axes[2].channel, sign, 0.0f);
-        UpdateAnimRate(base.rightFoot.axes[0].channel, mirrored ? -scale : scale, 0.0f);
-        UpdateAnimRate(base.rightFoot.axes[1].channel, scale, 0.0f);
-        UpdateAnimRate(base.rightFoot.axes[2].channel, scale, 0.0f);
-        UpdateAnimRate(base.rightAnkleRotation[0].channel, sign, 0.0f);
-        UpdateAnimRate(base.rightAnkleRotation[1].channel, sign, 0.0f);
-        UpdateAnimRate(base.rightAnkleRotation[2].channel, 1.0f, 0.0f);
-        if (useOverride) {
-            for (MotionRigTwoJoint *toe : {base.rightToe1Node, base.rightToe2Node, base.rightToe3Node}) {
-                UpdateAnimRate(toe->axes[0].channel, 1.0f, 0.0f);
-                UpdateAnimRate(toe->axes[1].channel, sign, 0.0f);
-            }
-        }
-        if (g_motionOverrideBlendTime > 0.0f)
-            EvaluateBase(base, sourceRig, scale, g_motionOverrideBlendTime);
-        if (g_motionAnimFlags & motionWideKeyCounts)
-            g_motionWideKeyCounts = static_cast<const std::uint16_t *>(context->regions[0].keyCounts);
-        else
-            g_motionKeyCounts = static_cast<const std::uint8_t *>(context->regions[0].keyCounts);
-        g_motionKeyData = context->regions[0].keyData;
-        base.clock.current.ticksTime = base.clock.authored.splitTimeFrames;
-    } else {
-        g_motionGraphFrames = 0;
-    }
-    base.rootPrepassTransform = workTransformMatrix;
-    g_motionGaitSplitFraction = 0.5f;
-    if (graphFrames) {
-        BakeBaseChannelsToPose(base, sourceTime, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)));
-        return;
-    }
-    const float splitFrames = base.clock.authored.splitTimeFrames;
-    base.clock.current.splitTimeFrames = splitFrames;
-    base.poseMode = MP_FromChannels;
-    base.clock.current.maxTime = base.clock.authored.ticksTime;
-    g_motionPreviousAnimTime = splitFrames * motionFrameSeconds;
-    g_motionMaximumAnimTime = base.clock.authored.maxTime * motionFrameSeconds;
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(base.pelvisPosition[axis].channel);
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(base.pelvisRotation[axis].channel);
-    if (useOverride) {
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(base.overrideHips->axes[axis].channel);
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(base.overridePelvisTarget->axes[axis].channel);
-    } else {
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(base.hips.axes[axis].channel);
-    }
-    const auto readRightLeg = [&] {
-        if (useOverride)
-            for (std::size_t axis = 0; axis < 3; ++axis)
-                ReadMotionKeyBlock(base.rightHipNode->axes[axis].channel);
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(base.rightThigh.axes[axis].channel);
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(base.rightFoot.axes[axis].channel);
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(base.rightAnkleRotation[axis].channel);
-    };
-    if (g_motionInitFlags & motionInitMirror)
-        readRightLeg();
-    if (useOverride)
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(base.leftHipNode->axes[axis].channel);
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(base.leftThigh.axes[axis].channel);
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(base.leftFoot.axes[axis].channel);
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(base.leftAnkleRotation[axis].channel);
-    if (!(g_motionInitFlags & motionInitMirror))
-        readRightLeg();
-    if (useOverride) {
 
-        ReadMotionKeyBlock(base.rightToe1Node->axes[0].channel);
-        ReadMotionKeyBlock(base.rightToe1Node->axes[1].channel);
-        ReadMotionKeyBlock(base.rightToe1Node->axes[0].channel);
-        ReadMotionKeyBlock(base.rightToe1Node->axes[1].channel);
-        ReadMotionKeyBlock(base.rightToe3Node->axes[0].channel);
-        ReadMotionKeyBlock(base.rightToe3Node->axes[1].channel);
-    }
-    g_motionCurrentAnimTime = g_motionPreviousAnimTime;
-    g_motionInterpolationType = MI_HermiteAuto;
-    Matrix4x4_PushActiveTransform();
-    if (g_motionInitFlags & motionInitChannels) {
-        const float z = -SampleMotionRigChannelAdvance(base.pelvisPosition[2].channel);
-        const float x = SampleMotionRigChannelAdvance(base.pelvisPosition[0].channel);
-        Matrix4x4::preTranslate(-x, 0.0f, z);
-    }
-    base.pelvisTransform = workTransformMatrix;
-    Matrix4x4::Pop(1);
-}
 
 // @verified - p
 void TranslatePelvisFromChannels(MotionBaseRig &base, std::uint32_t interpolationMode) {
@@ -1374,35 +947,7 @@ void SolveBase(MotionBaseRig &base, std::uint32_t interpolationMode) {
 }
 
 // EvaluateChestBlend: the chest counterpart of EvaluateBase.
-std::int32_t EvaluateChestBlend(MotionChestRig &chest, std::uint8_t sourceRig, float scale, float blend) {
-    if (std::fabs(blend - chest.upperRotation.axes[0].channel.scale) < 1.1754944e-38f)
-        return 0;
-    const float height = g_motionRigDimensions[sourceRig][1];
-    const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
-    MotionRigAxis *const rotation = chest.rotation.axes;
-    rotation[0].channel.bias = 0.0f;
-    rotation[0].channel.scale = mirrored ? -blend : blend;
-    rotation[1].channel.scale = mirrored ? -blend : blend;
-    rotation[1].channel.bias = mirrored ? (blend + 1.0f) * 1.5707964f : (1.0f - blend) * 1.5707964f;
-    rotation[2].channel.scale = mirrored ? -blend : blend;
-    rotation[2].channel.bias = 0.0f;
-    MotionRigAxis *const target = chest.target.axes;
-    target[0].channel.bias = 0.0f;
-    const float positionScale = scale * blend;
-    target[0].channel.scale = scale * blend;
-    target[1].channel.scale = scale * blend;
-    target[1].channel.bias = ((1.0f - blend) * scale) * height;
-    target[2].channel.bias = 0.0f;
-    target[2].channel.scale = mirrored ? -positionScale : positionScale;
-    MotionRigAxis *const upper = chest.upperRotation.axes;
-    upper[0].channel.scale = blend;
-    upper[0].channel.bias = 0.0f;
-    upper[1].channel.bias = 0.0f;
-    upper[1].channel.scale = mirrored ? -blend : blend;
-    upper[2].channel.bias = 0.0f;
-    upper[2].channel.scale = mirrored ? -blend : blend;
-    return 1;
-}
+
 
 namespace {
 
@@ -1480,44 +1025,7 @@ void BakeChestChannelsToPose(MotionChestRig &chest, float time, float frameCount
 } // namespace
 
 // EvaluateHead: the head counterpart of EvaluateBase.
-std::int32_t EvaluateHead(MotionHeadRig &head, std::uint8_t sourceRig, float scale, float blend) {
-    if (std::fabs(blend - head.baseRotation.axes[0].channel.scale) < 1.1754944e-38f)
-        return 0;
-    const float height = g_motionRigDimensions[sourceRig][2];
-    const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
-    MotionRigAxis *const base = head.baseRotation.axes;
-    base[0].channel.bias = 0.0f;
-    base[0].channel.scale = blend;
-    base[1].channel.bias = 0.0f;
-    base[1].channel.scale = mirrored ? -blend : blend;
-    base[2].channel.scale = mirrored ? -blend : blend;
-    base[2].channel.bias = 0.0f;
-    MotionRigAxis *const mid = head.midRotation.axes;
-    mid[0].channel.scale = blend;
-    mid[0].channel.bias = 0.0f;
-    float rest;
-    if (mirrored) {
-        rest = blend + 1.0f;
-        mid[1].channel.scale = -blend;
-        mid[1].channel.bias = (blend + 1.0f) * -1.5707964f;
-        mid[2].channel.scale = -blend;
-    } else {
-        mid[1].channel.scale = blend;
-        rest = 1.0f - blend;
-        mid[1].channel.bias = (1.0f - blend) * -1.5707964f;
-        mid[2].channel.scale = blend;
-    }
-    mid[2].channel.bias = rest * 3.1415927f;
-    MotionRigAxis *const target = head.target.axes;
-    const float positionScale = scale * blend;
-    target[0].channel.bias = 0.0f;
-    target[0].channel.scale = mirrored ? -positionScale : positionScale;
-    target[1].channel.scale = positionScale;
-    target[1].channel.bias = ((1.0f - blend) * scale) * height;
-    target[2].channel.bias = 0.0f;
-    target[2].channel.scale = positionScale;
-    return 1;
-}
+
 
 namespace {
 
@@ -1602,41 +1110,7 @@ void BakeHeadChannelsToPose(MotionHeadRig &head, float time, float frameCount) {
 } // namespace
 
 // EvaluateArm: the arm counterpart of EvaluateBase.
-std::int32_t EvaluateArm(MotionArmRig &arm, std::uint8_t sourceRig, float scale, float blend) {
-    if (std::fabs(blend - arm.shoulder.axes[0].channel.scale) < 1.1754944e-38f)
-        return 0;
-    const float length = -g_motionRigDimensions[sourceRig][3];
-    const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
-    MotionRigAxis *const shoulder = arm.shoulder.axes;
-    shoulder[0].channel.bias = 0.0f;
-    shoulder[0].channel.scale = blend;
-    shoulder[1].channel.bias = 0.0f;
-    shoulder[1].channel.scale = mirrored ? -blend : blend;
-    shoulder[2].channel.scale = mirrored ? -blend : blend;
-    shoulder[2].channel.bias = 0.0f;
-    MotionRigAxis *const elbow = arm.elbow.axes;
-    elbow[0].channel.scale = blend;
-    elbow[0].channel.bias = (1.0f - blend) * -1.5707964f;
-    elbow[1].channel.bias = 0.0f;
-    elbow[1].channel.scale = mirrored ? -blend : blend;
-    elbow[2].channel.scale = mirrored ? -blend : blend;
-    elbow[2].channel.bias = 0.0f;
-    MotionRigAxis *const target = arm.target.axes;
-    target[0].channel.bias = 0.0f;
-    const float positionScale = scale * blend;
-    target[0].channel.scale = scale * blend;
-    target[1].channel.scale = scale * blend;
-    target[1].channel.bias = ((1.0f - blend) * scale) * length;
-    target[2].channel.bias = 0.0f;
-    target[2].channel.scale = mirrored ? -positionScale : positionScale;
-    arm.wristRotation[0].channel.bias = 0.0f;
-    arm.wristRotation[0].channel.scale = mirrored ? -blend : blend;
-    arm.wristRotation[1].channel.scale = blend;
-    arm.wristRotation[1].channel.bias = 0.0f;
-    arm.wristRotation[2].channel.bias = 0.0f;
-    arm.wristRotation[2].channel.scale = mirrored ? -blend : blend;
-    return 1;
-}
+
 
 namespace {
 
@@ -1728,231 +1202,13 @@ float RegionScale(const IKRig &rig, std::size_t column) {
 } // namespace
 
 // @verified - p
-void ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContext *context, float time, std::uint32_t flags) {
-    g_motionInitFlags = flags;
-    if (flags & motionInitStream) {
-        g_motionAnimFlags = context->flags;
-        if (std::fabs(static_cast<double>(1.2f - context->version)) > 0.01)
-            MotionLibraryError("motion\\src\\nlmotion_chest.c", 84, "NL_ERROR_MOTION_VERSION");
-        chest.clock.authored.splitTimeFrames = 0.0f;
-        const float last = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
-        chest.clock.authored.ticksTime = last;
-        chest.clock.authored.maxTime = last;
-    }
-    std::int32_t useOverride;
-    if (g_motionInitFlags & motionInitStream) {
-        const std::uint32_t graphFrames = g_motionInitFlags >> 8;
-        g_motionGraphFrames = static_cast<std::int8_t>(g_motionInitFlags >> 8);
-        if (static_cast<std::uint8_t>(g_motionInitFlags >> 8) || (g_motionInitFlags & motionInitCallbacks))
-            EvaluateChest(chest);
-        useOverride = g_motionUseOverride;
-        const float scale = RegionScale(rig, 1);
-        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
-        const float sign = mirrored ? -1.0f : 1.0f;
-        UpdateAnimRate(chest.rotation.axes[0].channel, sign, 0.0f);
-        UpdateAnimRate(chest.rotation.axes[1].channel, sign, mirrored ? 3.1415927f : 0.0f);
-        UpdateAnimRate(chest.rotation.axes[2].channel, sign, 0.0f);
-        if (useOverride) {
-            UpdateAnimRate(chest.target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
-            UpdateAnimRate(chest.target.axes[1].channel, scale, 0.0f);
-            UpdateAnimRate(chest.target.axes[2].channel, scale, 0.0f);
-        } else {
-            UpdateAnimRate(chest.target.axes[0].channel, scale, 0.0f);
-            UpdateAnimRate(chest.target.axes[1].channel, scale, 0.0f);
-            UpdateAnimRate(chest.target.axes[2].channel, mirrored ? -scale : scale, 0.0f);
-            UpdateAnimRate(chest.upperRotation.axes[0].channel, 1.0f, 0.0f);
-            UpdateAnimRate(chest.upperRotation.axes[1].channel, sign, 0.0f);
-            UpdateAnimRate(chest.upperRotation.axes[2].channel, sign, 0.0f);
-        }
-        if (g_motionOverrideBlendTime > 0.0f)
-            EvaluateChestBlend(chest, static_cast<std::uint8_t>(g_motionAnimFlags), scale, g_motionOverrideBlendTime);
-        SetRegionStreams(context, 1);
-        chest.clock.current.ticksTime = chest.clock.authored.splitTimeFrames;
-        if (graphFrames) {
-            BakeChestChannelsToPose(chest, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)));
-            return;
-        }
-    } else {
-        useOverride = g_motionUseOverride;
-        g_motionGraphFrames = 0;
-    }
-    chest.clock.current.splitTimeFrames = chest.clock.authored.splitTimeFrames;
-    chest.poseMode = MP_FromChannels;
-    chest.clock.current.maxTime = chest.clock.authored.ticksTime;
-    g_motionPreviousAnimTime = time * motionFrameSeconds;
-    g_motionMaximumAnimTime = chest.clock.authored.maxTime * motionFrameSeconds;
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(chest.rotation.axes[axis].channel);
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(chest.target.axes[axis].channel);
-    if (!useOverride)
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(chest.upperRotation.axes[axis].channel);
-}
+
 
 // @verified - p
-void ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *context, float time, std::uint32_t flags) {
-    g_motionInitFlags = flags;
-    if (flags & motionInitStream) {
-        g_motionAnimFlags = context->flags;
-        if (std::fabs(static_cast<double>(1.2f - context->version)) > 0.01)
-            MotionLibraryError("motion\\src\\nlmotion_head.c", 84, "NL_ERROR_MOTION_VERSION");
-        head.clock.authored.splitTimeFrames = 0.0f;
-        const float last = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
-        head.clock.authored.ticksTime = last;
-        head.clock.authored.maxTime = last;
-    }
-    std::int32_t useOverride;
-    if (g_motionInitFlags & motionInitStream) {
-        const std::uint32_t graphFrames = g_motionInitFlags >> 8;
-        g_motionGraphFrames = static_cast<std::int8_t>(g_motionInitFlags >> 8);
-        if (static_cast<std::uint8_t>(g_motionInitFlags >> 8) || (g_motionInitFlags & motionInitCallbacks))
-            SolveHead(head);
-        useOverride = g_motionUseOverride;
-        const float scale = RegionScale(rig, 2);
-        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
-        const float sign = mirrored ? -1.0f : 1.0f;
-        UpdateAnimRate(head.baseRotation.axes[0].channel, 1.0f, 0.0f);
-        UpdateAnimRate(head.baseRotation.axes[1].channel, sign, 0.0f);
-        UpdateAnimRate(head.baseRotation.axes[2].channel, sign, 0.0f);
-        if (useOverride) {
-            MotionRigRotation &source = *head.aimSourceNode;
-            UpdateAnimRate(source.axes[0].channel, 1.0f, 0.0f);
-            UpdateAnimRate(source.axes[1].channel, sign, 0.0f);
-            UpdateAnimRate(source.axes[2].channel, sign, 0.0f);
-            MotionRigTarget &target = *head.aimTargetNode;
-            UpdateAnimRate(target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
-            UpdateAnimRate(target.axes[1].channel, scale, 0.0f);
-            UpdateAnimRate(target.axes[2].channel, scale, 0.0f);
-        }
-        UpdateAnimRate(head.midRotation.axes[0].channel, 1.0f, 0.0f);
-        UpdateAnimRate(head.midRotation.axes[1].channel, sign, mirrored ? -3.1415927f : 0.0f);
-        UpdateAnimRate(head.midRotation.axes[2].channel, 1.0f, 0.0f);
-        UpdateAnimRate(head.target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
-        UpdateAnimRate(head.target.axes[1].channel, scale, 0.0f);
-        UpdateAnimRate(head.target.axes[2].channel, scale, 0.0f);
-        if (useOverride) {
-            for (MotionRigRotation *node : {head.nodeA, head.nodeB, head.nodeC}) {
-                UpdateAnimRate(node->axes[1].channel, 1.0f, 0.0f);
-                UpdateAnimRate(node->axes[0].channel, sign, 0.0f);
-                UpdateAnimRate(node->axes[2].channel, sign, mirrored ? 3.1415927f : 0.0f);
-            }
-        }
-        if (g_motionOverrideBlendTime > 0.0f)
-            EvaluateHead(head, static_cast<std::uint8_t>(g_motionAnimFlags), scale, g_motionOverrideBlendTime);
-        SetRegionStreams(context, 2);
-        head.clock.current.ticksTime = head.clock.authored.splitTimeFrames;
-        if (graphFrames) {
-            BakeHeadChannelsToPose(head, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)));
-            return;
-        }
-    } else {
-        useOverride = g_motionUseOverride;
-        g_motionGraphFrames = 0;
-    }
-    head.clock.current.splitTimeFrames = head.clock.authored.splitTimeFrames;
-    head.poseMode = MP_FromChannels;
-    head.clock.current.maxTime = head.clock.authored.ticksTime;
-    g_motionPreviousAnimTime = time * motionFrameSeconds;
-    g_motionMaximumAnimTime = head.clock.authored.maxTime * motionFrameSeconds;
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(head.baseRotation.axes[axis].channel);
-    if (useOverride) {
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(head.aimSourceNode->axes[axis].channel);
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(head.aimTargetNode->axes[axis].channel);
-    }
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(head.midRotation.axes[axis].channel);
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(head.target.axes[axis].channel);
-    if (useOverride) {
-        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
-        if (mirrored)
-            for (std::size_t axis = 0; axis < 3; ++axis)
-                ReadMotionKeyBlock(head.nodeB->axes[axis].channel);
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(head.nodeA->axes[axis].channel);
-        if (!mirrored)
-            for (std::size_t axis = 0; axis < 3; ++axis)
-                ReadMotionKeyBlock(head.nodeB->axes[axis].channel);
-        for (std::size_t axis = 0; axis < 3; ++axis)
-            ReadMotionKeyBlock(head.nodeC->axes[axis].channel);
-    }
-}
+
 
 // @verified - p
-void ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *context, float time, std::uint32_t flags) {
-    g_motionInitFlags = flags;
-    std::uint32_t graphFrames = 0;
-    if (flags & motionInitStream) {
-        g_motionAnimFlags = context->flags;
-        if (std::fabs(static_cast<double>(1.2f - context->version)) > 0.01)
-            MotionLibraryError("motion\\src\\nlmotion_arm.c", 84, "NL_ERROR_MOTION_VERSION");
-        arm.clock.authored.splitTimeFrames = 0.0f;
-        const float last = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
-        arm.clock.authored.ticksTime = last;
-        arm.clock.authored.maxTime = last;
-    }
-    if (!(g_motionInitFlags & motionInitStream)) {
-        g_motionGraphFrames = 0;
-    } else {
-        graphFrames = g_motionInitFlags >> 8;
-        g_motionGraphFrames = static_cast<std::int8_t>(g_motionInitFlags >> 8);
-        if (static_cast<std::uint8_t>(g_motionInitFlags >> 8) || (g_motionInitFlags & motionInitCallbacks))
-            Arm_ChannelsToBasis_Prepass(arm);
-        const std::int32_t useOverride = g_motionUseOverride;
-        const float scale = RegionScale(rig, 3);
-        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
-        const float sign = mirrored ? -1.0f : 1.0f;
-        UpdateAnimRate(arm.shoulder.axes[0].channel, 1.0f, 0.0f);
-        UpdateAnimRate(arm.shoulder.axes[1].channel, sign, 0.0f);
-        UpdateAnimRate(arm.shoulder.axes[2].channel, sign, 0.0f);
-        UpdateAnimRate(arm.elbow.axes[0].channel, 1.0f, 0.0f);
-        UpdateAnimRate(arm.elbow.axes[1].channel, sign, 0.0f);
-        UpdateAnimRate(arm.elbow.axes[2].channel, sign, 0.0f);
-        if (useOverride) {
-            UpdateAnimRate(arm.target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
-            UpdateAnimRate(arm.target.axes[1].channel, scale, 0.0f);
-            UpdateAnimRate(arm.target.axes[2].channel, scale, 0.0f);
-            UpdateAnimRate(arm.wristRotation[0].channel, sign, 0.0f);
-            UpdateAnimRate(arm.wristRotation[1].channel, sign, 0.0f);
-            UpdateAnimRate(arm.wristRotation[2].channel, 1.0f, 0.0f);
-        } else {
-            UpdateAnimRate(arm.target.axes[0].channel, scale, 0.0f);
-            UpdateAnimRate(arm.target.axes[1].channel, scale, 0.0f);
-            UpdateAnimRate(arm.target.axes[2].channel, mirrored ? -scale : scale, 0.0f);
-            UpdateAnimRate(arm.wristRotation[0].channel, sign, 0.0f);
-            UpdateAnimRate(arm.wristRotation[1].channel, 1.0f, 0.0f);
-            UpdateAnimRate(arm.wristRotation[2].channel, sign, 0.0f);
-        }
-        if (g_motionOverrideBlendTime > 0.0f)
-            EvaluateArm(arm, static_cast<std::uint8_t>(g_motionAnimFlags), scale, g_motionOverrideBlendTime);
-        bool otherArm = (g_motionInitFlags & motionInitLeftArm) != 0;
-        if (g_motionInitFlags & motionInitMirror)
-            otherArm = !otherArm;
-        SetRegionStreams(context, otherArm ? 4 : 3);
-        arm.clock.current.ticksTime = arm.clock.authored.splitTimeFrames;
-        if (graphFrames) {
-            Arm_ChannelsToTransforms(arm, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)));
-            return;
-        }
-    }
-    arm.clock.current.splitTimeFrames = arm.clock.authored.splitTimeFrames;
-    arm.poseMode = MP_FromChannels;
-    arm.clock.current.maxTime = arm.clock.authored.ticksTime;
-    g_motionPreviousAnimTime = time * motionFrameSeconds;
-    g_motionMaximumAnimTime = arm.clock.authored.maxTime * motionFrameSeconds;
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(arm.shoulder.axes[axis].channel);
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(arm.elbow.axes[axis].channel);
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(arm.target.axes[axis].channel);
-    for (std::size_t axis = 0; axis < 3; ++axis)
-        ReadMotionKeyBlock(arm.wristRotation[axis].channel);
-}
+
 
 // @verified - p
 void SolveChestLookAt(MotionChestRig &chest, std::uint32_t interpolationMode) {
@@ -2231,3 +1487,809 @@ void Matrix4x4_PushMatrixAndTranslate(const MotionHeadRig &head, Matrix4x4 *outp
 }
 
 } // namespace shenmue::s2
+
+
+namespace shenmue { namespace s2 {
+
+// @verified - pd
+float mtwkGetScaleFactorFor(std::uint32_t targetRig, std::uint32_t sourceRig, std::uint32_t region) {
+    if (targetRig == sourceRig)
+        return 1.0f;
+    return g_motionRigDimensions[static_cast<std::int32_t>(targetRig)][static_cast<std::int32_t>(region)] /
+        g_motionRigDimensions[static_cast<std::int32_t>(sourceRig)][static_cast<std::int32_t>(region)];
+}
+
+} } // namespace shenmue::s2
+
+namespace shenmue { namespace s2 {
+
+namespace {
+void ReadRightLegChannels(MotionBaseRig &base, std::int32_t useOverride) {
+    if (useOverride)
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(base.rightHipNode->axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(base.rightThigh.axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(base.rightFoot.axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(base.rightAnkleRotation[axis].channel);
+}
+} // namespace
+
+// @verified - pd
+void UpdatePointersForCurrentFrame(MotionStreamContext *context, const std::uint16_t *header, void **armTrack, void **regionTrack) {
+    context->version = DecodeMotnFloat(header[0]);
+    const std::uint16_t flags = header[1];
+    context->flags = flags;
+    const bool overrideRig = static_cast<std::uint8_t>(flags) == 16U;
+    context->frameCount = header[2];
+    const std::int16_t keyData = static_cast<std::int16_t>(header[3]);
+    if (flags & motionWideKeyCounts)
+        g_motionWideKeyCounts = header + 4;
+    else
+        g_motionKeyCounts = reinterpret_cast<const std::uint8_t *>(header + 4);
+    g_motionKeyData = reinterpret_cast<const std::uint16_t *>(reinterpret_cast<const std::byte *>(header) + keyData);
+    const std::int32_t regionChannels[4] = {overrideRig ? 42 : 27, overrideRig ? 6 : 9, overrideRig ? 24 : 9, 12};
+    for (std::size_t region = 0; region < 5; ++region) {
+        context->regions[region].keyCounts =
+            (context->flags & motionWideKeyCounts) ? static_cast<const void *>(g_motionWideKeyCounts) : static_cast<const void *>(g_motionKeyCounts);
+        context->regions[region].keyData = g_motionKeyData;
+        if (region < 4)
+            SetMotionStreamFlags(regionChannels[region], motionInitStream, context->flags);
+    }
+    const std::uint16_t contextFlags = context->flags;
+    if (!(contextFlags & 0xc000U)) {
+        if (armTrack)
+            *armTrack = 0;
+        *regionTrack = 0;
+        return;
+    }
+    SetMotionStreamFlags(12, motionInitStream, contextFlags);
+    if (contextFlags & 0x4000U) {
+        std::uint16_t *const arm = const_cast<std::uint16_t *>(g_motionKeyData);
+        if (armTrack)
+            *armTrack = arm;
+        if (contextFlags & 0x8000U) {
+            const std::uint16_t firstCount = arm[0];
+            const std::uint16_t secondCount = arm[1 + firstCount * 2U];
+            *regionTrack = arm + 2 + (firstCount + secondCount) * 2U;
+            return;
+        }
+        *regionTrack = 0;
+        return;
+    }
+    if (!(contextFlags & 0x8000U))
+        return;
+    if (armTrack)
+        *armTrack = 0;
+    *regionTrack = const_cast<std::uint16_t *>(g_motionKeyData);
+}
+
+void ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
+    if (callback.evaluate) {
+        if (joint >= 9 && joint <= 11) {
+            ReadMotionKeyBlock(axes[0].channel);
+            ReadMotionKeyBlock(axes[1].channel);
+        } else if (joint == 22) {
+            ReadMotionKeyBlock(axes[0].channel);
+        } else {
+            if (joint != 23)
+                ReadMotionKeyBlock(axes[0].channel);
+            ReadMotionKeyBlock(axes[1].channel);
+            ReadMotionKeyBlock(axes[2].channel);
+        }
+        callback.evaluate(callback.parameters);
+    } else if (g_motionPoseMode == MP_FromChannels) {
+        if (joint >= 9 && joint <= 11) {
+            ReadMotionKeyBlock(axes[0].channel);
+            ReadMotionKeyBlock(axes[1].channel);
+            Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
+            Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
+        } else if (joint == 22) {
+            ReadMotionKeyBlock(axes[0].channel);
+            Matrix4x4::RotateAroundX_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
+        } else if (joint == 23) {
+            ReadMotionKeyBlock(axes[1].channel);
+            ReadMotionKeyBlock(axes[2].channel);
+            Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
+            Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[2].channel)));
+        } else {
+            for (std::size_t axis = 0; axis < 3; ++axis)
+                ReadMotionKeyBlock(axes[axis].channel);
+            ApplyChannelRotationZYX(axes);
+        }
+    }
+    CaptureTargetColumns(basis);
+}
+
+void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
+    if (callback.evaluate) {
+        callback.evaluate(callback.parameters);
+    } else if (g_motionPoseMode == MP_FromChannels) {
+        if (joint >= 9 && joint <= 11) {
+            Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
+            Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
+            Matrix4x4::RotateAroundX_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
+        } else if (joint == 22) {
+            Matrix4x4::RotateAroundX_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
+        } else if (joint == 23) {
+            Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
+            Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[2].channel)));
+        } else {
+            ApplyChannelRotationZYX(axes);
+        }
+    } else if (g_motionPoseMode == MP_FromAxisAngle) {
+        AxisAngleToBasisSlerp(basis);
+    }
+    CaptureSourceColumns(basis);
+}
+
+void ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCallback &callback) {
+    Vector3 position = {}, tangentIn = {}, tangentOut = {};
+    Vector3 world = {}, worldIn = {}, worldOut = {};
+    if (callback.evaluate) {
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(axes[axis].channel);
+        EvaluateTargetCallback(callback, &position);
+        world = TransformWorkPoint(position);
+    } else if (g_motionPoseMode == MP_FromChannels) {
+        for (std::size_t axis = 0; axis < 3; ++axis) {
+            ReadMotionKeyBlock(axes[axis].channel);
+            SampleMotionRigChannelPVA(axes[axis].channel, &position[axis], &tangentIn[axis], &tangentOut[axis]);
+        }
+        world = TransformWorkPoint(position);
+        Matrix4x4::Transform(tangentOut, worldOut);
+        Matrix4x4::Transform(tangentIn, worldIn);
+    }
+    const std::int8_t frames = g_motionGraphFrames;
+    const float duration = ((frames < 0 ? 20.0f : static_cast<float>(frames)) - 1.0f) * motionFrameSeconds;
+    for (std::size_t axis = 0; axis < 3; ++axis) {
+        MotionRigChannel &channel = axes[axis].channel;
+        const MotionRigKey current = {0.0f, pva[axis].y, pva[axis].z, pva[axis].w};
+        channel.current = current;
+        const MotionRigKey next = {duration, worldIn[axis], worldOut[axis], world[axis]};
+        channel.next = next;
+        channel.keysRemaining = 0;
+        channel.frameCursor = 0;
+        channel.inverseDuration = 1.0f / duration;
+    }
+}
+
+void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], MotionCallback &callback) {
+    Vector3 position = {}, tangentIn = {}, tangentOut = {};
+    Vector3 world = {}, worldIn = {}, worldOut = {};
+    if (callback.evaluate) {
+        EvaluateTargetCallback(callback, &position);
+        world = TransformWorkPoint(position);
+    } else if (g_motionPoseMode <= MP_FromAxisAngle) {
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            SampleMotionRigChannelPVA(axes[axis].channel, &position[axis], &tangentIn[axis], &tangentOut[axis]);
+        world = TransformWorkPoint(position);
+        Matrix4x4::Transform(tangentIn, worldIn);
+        Matrix4x4::Transform(tangentOut, worldOut);
+    }
+    for (std::size_t axis = 0; axis < 3; ++axis) {
+        pva[axis].w = world[axis];
+        pva[axis].y = worldIn[axis];
+        pva[axis].z = worldOut[axis];
+    }
+}
+
+// @verified - pd
+std::int32_t EvaluateBase(MotionBaseRig &base, std::uint8_t sourceRig, float scale, float blend) {
+    if (std::fabs(blend - base.pelvisRotation[2].channel.scale) < 1.1754944e-38f)
+        return 0;
+    const float positionScale = scale * blend;
+    const float height = g_motionRigDimensions[sourceRig][0];
+    const float foot = g_motionRigDimensions[sourceRig][5];
+    base.pelvisPosition[1].channel.scale = scale * blend;
+    const float rest = (1.0f - blend) * scale;
+    base.pelvisPosition[1].channel.bias = rest * height;
+    UpdateAnimRate(base.pelvisPosition[2].channel, scale * blend, 0.0f);
+    const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
+    const float signedBlend = mirrored ? -blend : blend;
+    base.pelvisRotation[0].channel.bias = 0.0f;
+    base.pelvisRotation[0].channel.scale = signedBlend;
+    base.pelvisRotation[1].channel.scale = signedBlend;
+    base.pelvisRotation[1].channel.bias = 0.0f;
+    UpdateAnimRate(base.pelvisRotation[2].channel, blend, 0.0f);
+    base.hips.axes[0].channel.bias = 0.0f;
+    base.hips.axes[0].channel.scale = signedBlend;
+    base.hips.axes[1].channel.scale = signedBlend;
+    base.hips.axes[1].channel.bias = mirrored ? (blend + 1.0f) * 1.5707964f : (1.0f - blend) * 1.5707964f;
+    base.hips.axes[2].channel.scale = signedBlend;
+    base.hips.axes[2].channel.bias = 0.0f;
+    UpdateAnimRate(base.leftThigh.axes[0].channel, blend, 0.0f);
+    base.leftThigh.axes[1].channel.bias = 0.0f;
+    base.leftThigh.axes[1].channel.scale = signedBlend;
+    UpdateAnimRate(base.leftThigh.axes[2].channel, signedBlend, 0.0f);
+    base.leftFoot.axes[1].channel.scale = positionScale;
+    const float footRest = rest * foot;
+    base.leftFoot.axes[1].channel.bias = footRest;
+    UpdateAnimRate(base.leftFoot.axes[2].channel, positionScale, 0.0f);
+    base.leftAnkleRotation[0].channel.bias = 0.0f;
+    base.leftAnkleRotation[0].channel.scale = signedBlend;
+    UpdateAnimRate(base.leftAnkleRotation[1].channel, signedBlend, 0.0f);
+    UpdateAnimRate(base.leftAnkleRotation[2].channel, blend, 0.0f);
+    UpdateAnimRate(base.rightThigh.axes[0].channel, blend, 0.0f);
+    base.rightThigh.axes[1].channel.bias = 0.0f;
+    base.rightThigh.axes[1].channel.scale = signedBlend;
+    UpdateAnimRate(base.rightThigh.axes[2].channel, signedBlend, 0.0f);
+    base.rightFoot.axes[1].channel.scale = positionScale;
+    base.rightFoot.axes[1].channel.bias = footRest;
+    UpdateAnimRate(base.rightFoot.axes[2].channel, positionScale, 0.0f);
+    base.rightAnkleRotation[0].channel.bias = 0.0f;
+    base.rightAnkleRotation[0].channel.scale = signedBlend;
+    UpdateAnimRate(base.rightAnkleRotation[1].channel, signedBlend, 0.0f);
+    UpdateAnimRate(base.rightAnkleRotation[2].channel, blend, 0.0f);
+    return 1;
+}
+
+void ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags) {
+    g_motionInitFlags = flags;
+    if (flags & motionInitStream) {
+        g_motionAnimFlags = context->flags;
+        if (std::fabs(static_cast<double>(1.2f - context->version)) > 0.01)
+            MotionLibraryError("motion\\src\\nlmotion_base.c", 87, "NL_ERROR_MOTION_VERSION");
+        base.clock.authored.splitTimeFrames = 0.0f;
+        const float last = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
+        base.clock.authored.ticksTime = last;
+        base.clock.authored.maxTime = last;
+    }
+    if (!(g_motionInitFlags & motionInitStream) && (g_motionInitFlags & motionInitGraphFrames))
+        MotionLibraryError("motion\\src\\nlmotion_base.c", 99, "NL_ERROR_MOTION_UNEXPECTED_INIT_FALG");
+    if (!(g_motionInitFlags & motionInitChannels))
+        MotionLibraryError("motion\\src\\nlmotion_base.c", 103, "NL_ERROR_MOTION_UNEXPECTED_INIT_FALG");
+    std::uint32_t graphFrames = 0;
+    const std::int32_t useOverride = g_motionUseOverride;
+    if (g_motionInitFlags & motionInitStream) {
+        graphFrames = g_motionInitFlags >> 8;
+        g_motionGraphFrames = static_cast<std::int8_t>(g_motionInitFlags >> 8);
+        if (static_cast<std::uint8_t>(g_motionInitFlags >> 8) || (g_motionInitFlags & motionInitCallbacks)) {
+            InitBaseRig(base);
+            graphFrames = (graphFrames & ~0xffU) | static_cast<std::uint8_t>(g_motionGraphFrames);
+        }
+        base.motionFlags = g_motionInitFlags;
+        const std::uint8_t sourceRig = static_cast<std::uint8_t>(g_motionAnimFlags);
+        const std::int32_t boneId = static_cast<std::int32_t>(rig.boneId);
+        const float scale = boneId == sourceRig ? 1.0f : g_motionRigDimensions[boneId][0] / g_motionRigDimensions[sourceRig][0];
+        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
+        const float sign = mirrored ? -1.0f : 1.0f;
+        UpdateAnimRate(base.pelvisPosition[0].channel, mirrored ? -scale : scale, 0.0f);
+        UpdateAnimRate(base.pelvisPosition[1].channel, scale, 0.0f);
+        UpdateAnimRate(base.pelvisPosition[2].channel, scale, 0.0f);
+        UpdateAnimRate(base.pelvisRotation[0].channel, sign, 0.0f);
+        UpdateAnimRate(base.pelvisRotation[1].channel, sign, 0.0f);
+        UpdateAnimRate(base.pelvisRotation[2].channel, 1.0f, 0.0f);
+        if (useOverride) {
+            MotionRigRotation &hips = *base.overrideHips;
+            UpdateAnimRate(hips.axes[0].channel, sign, 0.0f);
+            UpdateAnimRate(hips.axes[1].channel, sign, mirrored ? -3.1415927f : 0.0f);
+            UpdateAnimRate(hips.axes[2].channel, sign, 0.0f);
+            MotionRigTarget &target = *base.overridePelvisTarget;
+            UpdateAnimRate(target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
+            UpdateAnimRate(target.axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(target.axes[2].channel, scale, 0.0f);
+            UpdateAnimRate(base.leftHipNode->axes[0].channel, 1.0f, 0.0f);
+            UpdateAnimRate(base.leftHipNode->axes[1].channel, sign, 0.0f);
+            UpdateAnimRate(base.leftHipNode->axes[2].channel, sign, 0.0f);
+        } else {
+            UpdateAnimRate(base.hips.axes[0].channel, sign, 0.0f);
+            UpdateAnimRate(base.hips.axes[1].channel, sign, mirrored ? 3.1415927f : 0.0f);
+            UpdateAnimRate(base.hips.axes[2].channel, sign, 0.0f);
+        }
+        UpdateAnimRate(base.leftThigh.axes[0].channel, 1.0f, 0.0f);
+        UpdateAnimRate(base.leftThigh.axes[1].channel, sign, 0.0f);
+        UpdateAnimRate(base.leftThigh.axes[2].channel, sign, 0.0f);
+        UpdateAnimRate(base.leftFoot.axes[0].channel, mirrored ? -scale : scale, 0.0f);
+        UpdateAnimRate(base.leftFoot.axes[1].channel, scale, 0.0f);
+        UpdateAnimRate(base.leftFoot.axes[2].channel, scale, 0.0f);
+        UpdateAnimRate(base.leftAnkleRotation[0].channel, sign, 0.0f);
+        UpdateAnimRate(base.leftAnkleRotation[1].channel, sign, 0.0f);
+        UpdateAnimRate(base.leftAnkleRotation[2].channel, 1.0f, 0.0f);
+        if (useOverride) {
+            UpdateAnimRate(base.rightHipNode->axes[0].channel, 1.0f, 0.0f);
+            UpdateAnimRate(base.rightHipNode->axes[1].channel, sign, 0.0f);
+            UpdateAnimRate(base.rightHipNode->axes[2].channel, sign, 0.0f);
+        }
+        UpdateAnimRate(base.rightThigh.axes[0].channel, 1.0f, 0.0f);
+        UpdateAnimRate(base.rightThigh.axes[1].channel, sign, 0.0f);
+        UpdateAnimRate(base.rightThigh.axes[2].channel, sign, 0.0f);
+        UpdateAnimRate(base.rightFoot.axes[0].channel, mirrored ? -scale : scale, 0.0f);
+        UpdateAnimRate(base.rightFoot.axes[1].channel, scale, 0.0f);
+        UpdateAnimRate(base.rightFoot.axes[2].channel, scale, 0.0f);
+        UpdateAnimRate(base.rightAnkleRotation[0].channel, sign, 0.0f);
+        UpdateAnimRate(base.rightAnkleRotation[1].channel, sign, 0.0f);
+        UpdateAnimRate(base.rightAnkleRotation[2].channel, 1.0f, 0.0f);
+        if (useOverride) {
+            MotionRigTwoJoint *const toes[3] = {base.rightToe1Node, base.rightToe2Node, base.rightToe3Node};
+            for (std::size_t toeIndex = 0; toeIndex < 3; ++toeIndex) {
+                MotionRigTwoJoint *const toe = toes[toeIndex];
+                UpdateAnimRate(toe->axes[0].channel, 1.0f, 0.0f);
+                UpdateAnimRate(toe->axes[1].channel, sign, 0.0f);
+            }
+        }
+        if (g_motionOverrideBlendTime > 0.0f)
+            EvaluateBase(base, sourceRig, scale, g_motionOverrideBlendTime);
+        if (g_motionAnimFlags & motionWideKeyCounts)
+            g_motionWideKeyCounts = static_cast<const std::uint16_t *>(context->regions[0].keyCounts);
+        else
+            g_motionKeyCounts = static_cast<const std::uint8_t *>(context->regions[0].keyCounts);
+        g_motionKeyData = context->regions[0].keyData;
+        base.clock.current.ticksTime = base.clock.authored.splitTimeFrames;
+    } else {
+        g_motionGraphFrames = 0;
+    }
+    base.rootPrepassTransform = workTransformMatrix;
+    g_motionGaitSplitFraction = 0.5f;
+    if (graphFrames) {
+        BakeBaseChannelsToPose(base, sourceTime, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)));
+        return;
+    }
+    const float splitFrames = base.clock.authored.splitTimeFrames;
+    base.clock.current.splitTimeFrames = splitFrames;
+    base.poseMode = MP_FromChannels;
+    base.clock.current.maxTime = base.clock.authored.ticksTime;
+    g_motionPreviousAnimTime = splitFrames * motionFrameSeconds;
+    g_motionMaximumAnimTime = base.clock.authored.maxTime * motionFrameSeconds;
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(base.pelvisPosition[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(base.pelvisRotation[axis].channel);
+    if (useOverride) {
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(base.overrideHips->axes[axis].channel);
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(base.overridePelvisTarget->axes[axis].channel);
+    } else {
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(base.hips.axes[axis].channel);
+    }
+
+    if (g_motionInitFlags & motionInitMirror)
+        ReadRightLegChannels(base, useOverride);
+    if (useOverride)
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(base.leftHipNode->axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(base.leftThigh.axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(base.leftFoot.axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(base.leftAnkleRotation[axis].channel);
+    if (!(g_motionInitFlags & motionInitMirror))
+        ReadRightLegChannels(base, useOverride);
+    if (useOverride) {
+
+        ReadMotionKeyBlock(base.rightToe1Node->axes[0].channel);
+        ReadMotionKeyBlock(base.rightToe1Node->axes[1].channel);
+        ReadMotionKeyBlock(base.rightToe1Node->axes[0].channel);
+        ReadMotionKeyBlock(base.rightToe1Node->axes[1].channel);
+        ReadMotionKeyBlock(base.rightToe3Node->axes[0].channel);
+        ReadMotionKeyBlock(base.rightToe3Node->axes[1].channel);
+    }
+    g_motionCurrentAnimTime = g_motionPreviousAnimTime;
+    g_motionInterpolationType = MI_HermiteAuto;
+    Matrix4x4_PushActiveTransform();
+    if (g_motionInitFlags & motionInitChannels) {
+        const float z = -SampleMotionRigChannelAdvance(base.pelvisPosition[2].channel);
+        const float x = SampleMotionRigChannelAdvance(base.pelvisPosition[0].channel);
+        Matrix4x4::preTranslate(-x, 0.0f, z);
+    }
+    base.pelvisTransform = workTransformMatrix;
+    Matrix4x4::Pop(1);
+}
+
+// @verified - pd
+std::int32_t EvaluateChestBlend(MotionChestRig &chest, std::uint8_t sourceRig, float scale, float blend) {
+    if (std::fabs(blend - chest.upperRotation.axes[0].channel.scale) < 1.1754944e-38f)
+        return 0;
+    const float height = g_motionRigDimensions[sourceRig][1];
+    const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
+    MotionRigAxis *const rotation = chest.rotation.axes;
+    rotation[0].channel.bias = 0.0f;
+    rotation[0].channel.scale = mirrored ? -blend : blend;
+    rotation[1].channel.scale = mirrored ? -blend : blend;
+    rotation[1].channel.bias = mirrored ? (blend + 1.0f) * 1.5707964f : (1.0f - blend) * 1.5707964f;
+    rotation[2].channel.scale = mirrored ? -blend : blend;
+    rotation[2].channel.bias = 0.0f;
+    MotionRigAxis *const target = chest.target.axes;
+    target[0].channel.bias = 0.0f;
+    const float positionScale = scale * blend;
+    target[0].channel.scale = scale * blend;
+    target[1].channel.scale = scale * blend;
+    target[1].channel.bias = ((1.0f - blend) * scale) * height;
+    target[2].channel.bias = 0.0f;
+    target[2].channel.scale = mirrored ? -positionScale : positionScale;
+    MotionRigAxis *const upper = chest.upperRotation.axes;
+    upper[0].channel.scale = blend;
+    upper[0].channel.bias = 0.0f;
+    upper[1].channel.bias = 0.0f;
+    upper[1].channel.scale = mirrored ? -blend : blend;
+    upper[2].channel.bias = 0.0f;
+    upper[2].channel.scale = mirrored ? -blend : blend;
+    return 1;
+}
+
+// @verified - pd
+std::int32_t EvaluateHead(MotionHeadRig &head, std::uint8_t sourceRig, float scale, float blend) {
+    if (std::fabs(blend - head.baseRotation.axes[0].channel.scale) < 1.1754944e-38f)
+        return 0;
+    const float height = g_motionRigDimensions[sourceRig][2];
+    const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
+    MotionRigAxis *const base = head.baseRotation.axes;
+    base[0].channel.bias = 0.0f;
+    base[0].channel.scale = blend;
+    base[1].channel.bias = 0.0f;
+    base[1].channel.scale = mirrored ? -blend : blend;
+    base[2].channel.scale = mirrored ? -blend : blend;
+    base[2].channel.bias = 0.0f;
+    MotionRigAxis *const mid = head.midRotation.axes;
+    mid[0].channel.scale = blend;
+    mid[0].channel.bias = 0.0f;
+    float rest;
+    if (mirrored) {
+        rest = blend + 1.0f;
+        mid[1].channel.scale = -blend;
+        mid[1].channel.bias = (blend + 1.0f) * -1.5707964f;
+        mid[2].channel.scale = -blend;
+    } else {
+        mid[1].channel.scale = blend;
+        rest = 1.0f - blend;
+        mid[1].channel.bias = (1.0f - blend) * -1.5707964f;
+        mid[2].channel.scale = blend;
+    }
+    mid[2].channel.bias = rest * 3.1415927f;
+    MotionRigAxis *const target = head.target.axes;
+    const float positionScale = scale * blend;
+    target[0].channel.bias = 0.0f;
+    target[0].channel.scale = mirrored ? -positionScale : positionScale;
+    target[1].channel.scale = positionScale;
+    target[1].channel.bias = ((1.0f - blend) * scale) * height;
+    target[2].channel.bias = 0.0f;
+    target[2].channel.scale = positionScale;
+    return 1;
+}
+
+// @verified - pd
+std::int32_t EvaluateArm(MotionArmRig &arm, std::uint8_t sourceRig, float scale, float blend) {
+    if (std::fabs(blend - arm.shoulder.axes[0].channel.scale) < 1.1754944e-38f)
+        return 0;
+    const float length = -g_motionRigDimensions[sourceRig][3];
+    const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
+    MotionRigAxis *const shoulder = arm.shoulder.axes;
+    shoulder[0].channel.bias = 0.0f;
+    shoulder[0].channel.scale = blend;
+    shoulder[1].channel.bias = 0.0f;
+    shoulder[1].channel.scale = mirrored ? -blend : blend;
+    shoulder[2].channel.scale = mirrored ? -blend : blend;
+    shoulder[2].channel.bias = 0.0f;
+    MotionRigAxis *const elbow = arm.elbow.axes;
+    elbow[0].channel.scale = blend;
+    elbow[0].channel.bias = (1.0f - blend) * -1.5707964f;
+    elbow[1].channel.bias = 0.0f;
+    elbow[1].channel.scale = mirrored ? -blend : blend;
+    elbow[2].channel.scale = mirrored ? -blend : blend;
+    elbow[2].channel.bias = 0.0f;
+    MotionRigAxis *const target = arm.target.axes;
+    target[0].channel.bias = 0.0f;
+    const float positionScale = scale * blend;
+    target[0].channel.scale = scale * blend;
+    target[1].channel.scale = scale * blend;
+    target[1].channel.bias = ((1.0f - blend) * scale) * length;
+    target[2].channel.bias = 0.0f;
+    target[2].channel.scale = mirrored ? -positionScale : positionScale;
+    arm.wristRotation[0].channel.bias = 0.0f;
+    arm.wristRotation[0].channel.scale = mirrored ? -blend : blend;
+    arm.wristRotation[1].channel.scale = blend;
+    arm.wristRotation[1].channel.bias = 0.0f;
+    arm.wristRotation[2].channel.bias = 0.0f;
+    arm.wristRotation[2].channel.scale = mirrored ? -blend : blend;
+    return 1;
+}
+
+void ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContext *context, float time, std::uint32_t flags) {
+    g_motionInitFlags = flags;
+    if (flags & motionInitStream) {
+        g_motionAnimFlags = context->flags;
+        if (std::fabs(static_cast<double>(1.2f - context->version)) > 0.01)
+            MotionLibraryError("motion\\src\\nlmotion_chest.c", 84, "NL_ERROR_MOTION_VERSION");
+        chest.clock.authored.splitTimeFrames = 0.0f;
+        const float last = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
+        chest.clock.authored.ticksTime = last;
+        chest.clock.authored.maxTime = last;
+    }
+    std::int32_t useOverride;
+    if (g_motionInitFlags & motionInitStream) {
+        const std::uint32_t graphFrames = g_motionInitFlags >> 8;
+        g_motionGraphFrames = static_cast<std::int8_t>(g_motionInitFlags >> 8);
+        if (static_cast<std::uint8_t>(g_motionInitFlags >> 8) || (g_motionInitFlags & motionInitCallbacks))
+            EvaluateChest(chest);
+        useOverride = g_motionUseOverride;
+        const float scale = RegionScale(rig, 1);
+        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
+        const float sign = mirrored ? -1.0f : 1.0f;
+        UpdateAnimRate(chest.rotation.axes[0].channel, sign, 0.0f);
+        UpdateAnimRate(chest.rotation.axes[1].channel, sign, mirrored ? 3.1415927f : 0.0f);
+        UpdateAnimRate(chest.rotation.axes[2].channel, sign, 0.0f);
+        if (useOverride) {
+            UpdateAnimRate(chest.target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
+            UpdateAnimRate(chest.target.axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(chest.target.axes[2].channel, scale, 0.0f);
+        } else {
+            UpdateAnimRate(chest.target.axes[0].channel, scale, 0.0f);
+            UpdateAnimRate(chest.target.axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(chest.target.axes[2].channel, mirrored ? -scale : scale, 0.0f);
+            UpdateAnimRate(chest.upperRotation.axes[0].channel, 1.0f, 0.0f);
+            UpdateAnimRate(chest.upperRotation.axes[1].channel, sign, 0.0f);
+            UpdateAnimRate(chest.upperRotation.axes[2].channel, sign, 0.0f);
+        }
+        if (g_motionOverrideBlendTime > 0.0f)
+            EvaluateChestBlend(chest, static_cast<std::uint8_t>(g_motionAnimFlags), scale, g_motionOverrideBlendTime);
+        SetRegionStreams(context, 1);
+        chest.clock.current.ticksTime = chest.clock.authored.splitTimeFrames;
+        if (graphFrames) {
+            BakeChestChannelsToPose(chest, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)));
+            return;
+        }
+    } else {
+        useOverride = g_motionUseOverride;
+        g_motionGraphFrames = 0;
+    }
+    chest.clock.current.splitTimeFrames = chest.clock.authored.splitTimeFrames;
+    chest.poseMode = MP_FromChannels;
+    chest.clock.current.maxTime = chest.clock.authored.ticksTime;
+    g_motionPreviousAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = chest.clock.authored.maxTime * motionFrameSeconds;
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(chest.rotation.axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(chest.target.axes[axis].channel);
+    if (!useOverride)
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(chest.upperRotation.axes[axis].channel);
+}
+
+void ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *context, float time, std::uint32_t flags) {
+    g_motionInitFlags = flags;
+    if (flags & motionInitStream) {
+        g_motionAnimFlags = context->flags;
+        if (std::fabs(static_cast<double>(1.2f - context->version)) > 0.01)
+            MotionLibraryError("motion\\src\\nlmotion_head.c", 84, "NL_ERROR_MOTION_VERSION");
+        head.clock.authored.splitTimeFrames = 0.0f;
+        const float last = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
+        head.clock.authored.ticksTime = last;
+        head.clock.authored.maxTime = last;
+    }
+    std::int32_t useOverride;
+    if (g_motionInitFlags & motionInitStream) {
+        const std::uint32_t graphFrames = g_motionInitFlags >> 8;
+        g_motionGraphFrames = static_cast<std::int8_t>(g_motionInitFlags >> 8);
+        if (static_cast<std::uint8_t>(g_motionInitFlags >> 8) || (g_motionInitFlags & motionInitCallbacks))
+            SolveHead(head);
+        useOverride = g_motionUseOverride;
+        const float scale = RegionScale(rig, 2);
+        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
+        const float sign = mirrored ? -1.0f : 1.0f;
+        UpdateAnimRate(head.baseRotation.axes[0].channel, 1.0f, 0.0f);
+        UpdateAnimRate(head.baseRotation.axes[1].channel, sign, 0.0f);
+        UpdateAnimRate(head.baseRotation.axes[2].channel, sign, 0.0f);
+        if (useOverride) {
+            MotionRigRotation &source = *head.aimSourceNode;
+            UpdateAnimRate(source.axes[0].channel, 1.0f, 0.0f);
+            UpdateAnimRate(source.axes[1].channel, sign, 0.0f);
+            UpdateAnimRate(source.axes[2].channel, sign, 0.0f);
+            MotionRigTarget &target = *head.aimTargetNode;
+            UpdateAnimRate(target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
+            UpdateAnimRate(target.axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(target.axes[2].channel, scale, 0.0f);
+        }
+        UpdateAnimRate(head.midRotation.axes[0].channel, 1.0f, 0.0f);
+        UpdateAnimRate(head.midRotation.axes[1].channel, sign, mirrored ? -3.1415927f : 0.0f);
+        UpdateAnimRate(head.midRotation.axes[2].channel, 1.0f, 0.0f);
+        UpdateAnimRate(head.target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
+        UpdateAnimRate(head.target.axes[1].channel, scale, 0.0f);
+        UpdateAnimRate(head.target.axes[2].channel, scale, 0.0f);
+        if (useOverride) {
+            MotionRigRotation *const nodes[3] = {head.nodeA, head.nodeB, head.nodeC};
+            for (std::size_t nodeIndex = 0; nodeIndex < 3; ++nodeIndex) {
+                MotionRigRotation *const node = nodes[nodeIndex];
+                UpdateAnimRate(node->axes[1].channel, 1.0f, 0.0f);
+                UpdateAnimRate(node->axes[0].channel, sign, 0.0f);
+                UpdateAnimRate(node->axes[2].channel, sign, mirrored ? 3.1415927f : 0.0f);
+            }
+        }
+        if (g_motionOverrideBlendTime > 0.0f)
+            EvaluateHead(head, static_cast<std::uint8_t>(g_motionAnimFlags), scale, g_motionOverrideBlendTime);
+        SetRegionStreams(context, 2);
+        head.clock.current.ticksTime = head.clock.authored.splitTimeFrames;
+        if (graphFrames) {
+            BakeHeadChannelsToPose(head, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)));
+            return;
+        }
+    } else {
+        useOverride = g_motionUseOverride;
+        g_motionGraphFrames = 0;
+    }
+    head.clock.current.splitTimeFrames = head.clock.authored.splitTimeFrames;
+    head.poseMode = MP_FromChannels;
+    head.clock.current.maxTime = head.clock.authored.ticksTime;
+    g_motionPreviousAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = head.clock.authored.maxTime * motionFrameSeconds;
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(head.baseRotation.axes[axis].channel);
+    if (useOverride) {
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(head.aimSourceNode->axes[axis].channel);
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(head.aimTargetNode->axes[axis].channel);
+    }
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(head.midRotation.axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(head.target.axes[axis].channel);
+    if (useOverride) {
+        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
+        if (mirrored)
+            for (std::size_t axis = 0; axis < 3; ++axis)
+                ReadMotionKeyBlock(head.nodeB->axes[axis].channel);
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(head.nodeA->axes[axis].channel);
+        if (!mirrored)
+            for (std::size_t axis = 0; axis < 3; ++axis)
+                ReadMotionKeyBlock(head.nodeB->axes[axis].channel);
+        for (std::size_t axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(head.nodeC->axes[axis].channel);
+    }
+}
+
+void ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *context, float time, std::uint32_t flags) {
+    g_motionInitFlags = flags;
+    std::uint32_t graphFrames = 0;
+    if (flags & motionInitStream) {
+        g_motionAnimFlags = context->flags;
+        if (std::fabs(static_cast<double>(1.2f - context->version)) > 0.01)
+            MotionLibraryError("motion\\src\\nlmotion_arm.c", 84, "NL_ERROR_MOTION_VERSION");
+        arm.clock.authored.splitTimeFrames = 0.0f;
+        const float last = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
+        arm.clock.authored.ticksTime = last;
+        arm.clock.authored.maxTime = last;
+    }
+    if (!(g_motionInitFlags & motionInitStream)) {
+        g_motionGraphFrames = 0;
+    } else {
+        graphFrames = g_motionInitFlags >> 8;
+        g_motionGraphFrames = static_cast<std::int8_t>(g_motionInitFlags >> 8);
+        if (static_cast<std::uint8_t>(g_motionInitFlags >> 8) || (g_motionInitFlags & motionInitCallbacks))
+            Arm_ChannelsToBasis_Prepass(arm);
+        const std::int32_t useOverride = g_motionUseOverride;
+        const float scale = RegionScale(rig, 3);
+        const bool mirrored = (g_motionInitFlags & motionInitMirror) != 0;
+        const float sign = mirrored ? -1.0f : 1.0f;
+        UpdateAnimRate(arm.shoulder.axes[0].channel, 1.0f, 0.0f);
+        UpdateAnimRate(arm.shoulder.axes[1].channel, sign, 0.0f);
+        UpdateAnimRate(arm.shoulder.axes[2].channel, sign, 0.0f);
+        UpdateAnimRate(arm.elbow.axes[0].channel, 1.0f, 0.0f);
+        UpdateAnimRate(arm.elbow.axes[1].channel, sign, 0.0f);
+        UpdateAnimRate(arm.elbow.axes[2].channel, sign, 0.0f);
+        if (useOverride) {
+            UpdateAnimRate(arm.target.axes[0].channel, mirrored ? -scale : scale, 0.0f);
+            UpdateAnimRate(arm.target.axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(arm.target.axes[2].channel, scale, 0.0f);
+            UpdateAnimRate(arm.wristRotation[0].channel, sign, 0.0f);
+            UpdateAnimRate(arm.wristRotation[1].channel, sign, 0.0f);
+            UpdateAnimRate(arm.wristRotation[2].channel, 1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(arm.target.axes[0].channel, scale, 0.0f);
+            UpdateAnimRate(arm.target.axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(arm.target.axes[2].channel, mirrored ? -scale : scale, 0.0f);
+            UpdateAnimRate(arm.wristRotation[0].channel, sign, 0.0f);
+            UpdateAnimRate(arm.wristRotation[1].channel, 1.0f, 0.0f);
+            UpdateAnimRate(arm.wristRotation[2].channel, sign, 0.0f);
+        }
+        if (g_motionOverrideBlendTime > 0.0f)
+            EvaluateArm(arm, static_cast<std::uint8_t>(g_motionAnimFlags), scale, g_motionOverrideBlendTime);
+        bool otherArm = (g_motionInitFlags & motionInitLeftArm) != 0;
+        if (g_motionInitFlags & motionInitMirror)
+            otherArm = !otherArm;
+        SetRegionStreams(context, otherArm ? 4 : 3);
+        arm.clock.current.ticksTime = arm.clock.authored.splitTimeFrames;
+        if (graphFrames) {
+            Arm_ChannelsToTransforms(arm, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)));
+            return;
+        }
+    }
+    arm.clock.current.splitTimeFrames = arm.clock.authored.splitTimeFrames;
+    arm.poseMode = MP_FromChannels;
+    arm.clock.current.maxTime = arm.clock.authored.ticksTime;
+    g_motionPreviousAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = arm.clock.authored.maxTime * motionFrameSeconds;
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(arm.shoulder.axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(arm.elbow.axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(arm.target.axes[axis].channel);
+    for (std::size_t axis = 0; axis < 3; ++axis)
+        ReadMotionKeyBlock(arm.wristRotation[axis].channel);
+}
+
+} } // namespace shenmue::s2
+
+namespace shenmue { namespace s2 {
+
+// @verified - pd
+void SampleMotionRigChannelPVA(MotionRigChannel &channel, float *value, float *tangentIn, float *tangentOut) {
+    float now = g_motionCurrentAnimTime;
+    if (!(channel.current.timeSeconds <= now)) {
+        *value = channel.current.value;
+        *tangentOut = 0.0f;
+        *tangentIn = 0.0f;
+        return;
+    }
+    float next = channel.next.timeSeconds;
+    if (!(next > now)) {
+        for (;;) {
+            if (std::fabs(next - now) < 1.1754944e-38f) {
+                *value = channel.next.value;
+                *tangentIn = channel.next.tangentIn * 0.5f;
+                *tangentOut = channel.next.tangentOut * 0.5f;
+                return;
+            }
+            const std::uint32_t keys = channel.keysRemaining;
+            if (keys == 0) {
+                *value = channel.next.value;
+                *tangentOut = 0.0f;
+                *tangentIn = 0.0f;
+                return;
+            }
+            channel.current = channel.next;
+            const std::uint16_t rawValue = *channel.frameCursor++;
+            channel.next.value = channel.scale * DecodeMotnFloat(rawValue) + channel.bias;
+            const float tangent = channel.scale * DecodeMotnFloat(*channel.frameCursor++);
+            channel.next.tangentIn = tangent;
+            channel.next.tangentOut = (rawValue & 1U) != 0 ? channel.scale * DecodeMotnFloat(*channel.frameCursor++) : tangent;
+            channel.keysRemaining = keys - 1U;
+            const float time =
+                keys == 1U ? g_motionMaximumAnimTime : static_cast<float>(static_cast<std::int16_t>(*channel.frameCursor++)) * motionFrameSeconds;
+            channel.next.timeSeconds = time;
+            next = time;
+            channel.inverseDuration = 1.0f / (time - channel.current.timeSeconds);
+            now = g_motionCurrentAnimTime;
+            if (time > now)
+                break;
+        }
+    }
+    const float elapsed = now - channel.current.timeSeconds;
+    if (g_motionInterpolationType & MI_Linear) {
+        const float slope = (channel.next.value - channel.current.value) * channel.inverseDuration;
+        const float half = slope * 0.5f;
+        *value = elapsed * slope + channel.current.value;
+        *tangentOut = half;
+        *tangentIn = half;
+        return;
+    }
+    const float inverse = channel.inverseDuration;
+    const float nextValue = channel.next.value, nextTangent = channel.next.tangentIn;
+    const float currentValue = channel.current.value, currentTangent = channel.current.tangentOut;
+    const float inverseSquared = inverse * inverse;
+    const float elapsedSquared = elapsed * elapsed;
+    const float cubic = (elapsedSquared * elapsed) * inverseSquared;
+    const float tripleSquared = (elapsedSquared * 3.0f) * inverseSquared;
+    const float acceleration = ((elapsedSquared * 6.0f) * inverseSquared) * inverse;
+    const float sixfold = (elapsed * 6.0f) * inverseSquared;
+    const float twiceScaled = (elapsed + elapsed) * inverse;
+    const float tangent = ((((sixfold - acceleration) * nextValue + (acceleration - sixfold) * currentValue) +
+                               ((tripleSquared - twiceScaled) - twiceScaled + 1.0f) * currentTangent) +
+                              (tripleSquared - twiceScaled) * nextTangent) *
+        0.5f;
+    *tangentOut = tangent;
+    *tangentIn = tangent;
+    const float scaledSquared = elapsedSquared * inverse;
+    *value = ((((cubic + cubic) * inverse - tripleSquared + 1.0f) * currentValue + (tripleSquared - (cubic + cubic) * inverse) * nextValue) +
+                 ((cubic - scaledSquared - scaledSquared) + elapsed) * currentTangent) +
+        (cubic - scaledSquared) * nextTangent;
+}
+
+} } // namespace shenmue::s2

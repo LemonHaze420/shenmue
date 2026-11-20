@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
 #pragma pack(push, 4)
 struct PawnDataHeader {
@@ -56,6 +56,7 @@ static_assert(sizeof(PawnSetRecord) == 0x1c);
 static_assert(sizeof(PawnItemPrice) == 4);
 static_assert(sizeof(PawnStockCount) == 8);
 
+
 PawnDataHeader *LoadPawnFile(const char *filename);
 PawnDataHeader *LoadPawnData();
 PawnDataHeader *GetPawnData();
@@ -66,4 +67,4 @@ void BuildPawnSetAvailability(const PawnShopRecord *shop, std::int32_t *order, s
 std::uint32_t CalculatePawnSelectedItemsPrice(
     std::int32_t priceCount, const PawnItemPrice *prices, const std::uint16_t *items, const std::int16_t *quantities, std::uint32_t itemCount);
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2

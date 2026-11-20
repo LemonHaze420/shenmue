@@ -2,11 +2,10 @@
 
 #include "common/types.hpp"
 
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
 #include <span>
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
 struct ColdArchiveSection {
     char name[8];
@@ -16,6 +15,7 @@ struct ColdArchiveSection {
 };
 
 static_assert(sizeof(ColdArchiveSection) == 0x14);
+
 static_assert(offsetof(ColdArchiveSection, offset) == 0x0c);
 
 bool LoadColdArchive();
@@ -25,4 +25,4 @@ void *CopyColdArchiveSection(std::uint32_t index, bool persistent, shen_name all
 const ColdArchiveSection *GetColdArchiveSectionDescriptor(std::uint32_t index);
 std::uint64_t GetColdArchiveSize();
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2

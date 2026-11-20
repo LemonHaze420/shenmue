@@ -8,8 +8,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <span>
+#define SHENMUE_LIGHT_ARRAY(type, name, count) std::array<type, count> name
+#define SHENMUE_LIGHT_DEFAULT {}
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 struct MT7Node;
 struct MT7Model;
 struct Character;
@@ -21,8 +23,12 @@ inline constexpr shen_name WEATHER_LENS_PACKAGE{SHEN_NAME(LNSW)}, WEATHER_LENS_M
 struct WeatherLensMaterialParameter {
     std::uint32_t model, parameter;
 };
-inline constexpr std::array<WeatherLensMaterialParameter, 11> WEATHER_LENS_MATERIAL_PARAMETERS{{{11, 1157240422}, {0, 1157238784}, {1, 1157238784},
-    {2, 1157238784}, {4, 1157235507}, {5, 0x44fa1000}, {6, 1157238784}, {7, 1157238784}, {8, 1157238784}, {9, 1157237146}, {10, 1157237146}}};
+#define SHENMUE_LENS_PARAMETERS inline constexpr std::array<WeatherLensMaterialParameter, 11> WEATHER_LENS_MATERIAL_PARAMETERS{{
+#define SHENMUE_LENS_PARAMETERS_END }}
+SHENMUE_LENS_PARAMETERS {11, 1157240422}, {0, 1157238784}, {1, 1157238784}, {2, 1157238784}, {4, 1157235507}, {5, 0x44fa1000},
+    {6, 1157238784}, {7, 1157238784}, {8, 1157238784}, {9, 1157237146}, {10, 1157237146} SHENMUE_LENS_PARAMETERS_END;
+#undef SHENMUE_LENS_PARAMETERS
+#undef SHENMUE_LENS_PARAMETERS_END
 
 struct PackedLightDefinitionHeader {
     shen_name name;
@@ -30,13 +36,13 @@ struct PackedLightDefinitionHeader {
     std::uint32_t reserved;
     std::int16_t lightCount;
     std::int16_t mode;
-    std::array<std::int16_t, 4> colour;
+    SHENMUE_LIGHT_ARRAY(std::int16_t, colour, 4);
 };
 struct PackedLightDefinitionRecord {
     std::int16_t index;
     std::int16_t enabled;
     std::int16_t flags;
-    std::array<std::int16_t, 12> parameters;
+    SHENMUE_LIGHT_ARRAY(std::int16_t, parameters, 12);
     std::int16_t coneAngle;
 };
 static_assert(sizeof(PackedLightDefinitionHeader) == 0x18);
@@ -45,8 +51,8 @@ static_assert(sizeof(PackedLightDefinitionRecord) == 0x20);
 static_assert(offsetof(PackedLightDefinitionRecord, parameters) == 6);
 
 struct LightDefinitionEntry {
-    const std::byte *block{};
-    std::uint32_t identifier{};
+    const std::byte *block SHENMUE_LIGHT_DEFAULT;
+    std::uint32_t identifier SHENMUE_LIGHT_DEFAULT;
 };
 #if SHENMUE_IS_PC
 static_assert(sizeof(LightDefinitionEntry) == 0x10);
@@ -89,15 +95,15 @@ void ApplyWeatherGlobalLighting(float value);
 void SetWeatherLighting(float value);
 float GetWeatherLighting();
 struct WeatherSunState {
-    float jitterCountdown{};
-    float sunlightIntensity{};
-    Vector3 direction{};
-    float diskScale{};
-    float jitterScale{};
-    std::int32_t enabled{};
-    std::int32_t explicitDirection{};
-    std::int32_t control{};
-    float sourceIntensity{};
+    float jitterCountdown SHENMUE_LIGHT_DEFAULT;
+    float sunlightIntensity SHENMUE_LIGHT_DEFAULT;
+    Vector3 direction SHENMUE_LIGHT_DEFAULT;
+    float diskScale SHENMUE_LIGHT_DEFAULT;
+    float jitterScale SHENMUE_LIGHT_DEFAULT;
+    std::int32_t enabled SHENMUE_LIGHT_DEFAULT;
+    std::int32_t explicitDirection SHENMUE_LIGHT_DEFAULT;
+    std::int32_t control SHENMUE_LIGHT_DEFAULT;
+    float sourceIntensity SHENMUE_LIGHT_DEFAULT;
 };
 static_assert(sizeof(WeatherSunState) == 0x2c);
 static_assert(offsetof(WeatherSunState, direction) == 0x08);
@@ -154,14 +160,15 @@ void EndTemporaryMapWeatherLighting(TemporaryMapWeatherLightingState &saved);
 
 
 
+
 struct LightRuntimeEntry {
-    std::array<std::uint8_t, 2> indexes{};
-    std::int16_t unknown02{};
-    std::array<Vector3, 2> vectors{};
-    float value1c{};
-    Vector3 vector20{};
-    std::array<float, 2> values2c{};
-    float value34{};
+    SHENMUE_LIGHT_ARRAY(std::uint8_t, indexes, 2) SHENMUE_LIGHT_DEFAULT;
+    std::int16_t unknown02 SHENMUE_LIGHT_DEFAULT;
+    SHENMUE_LIGHT_ARRAY(Vector3, vectors, 2) SHENMUE_LIGHT_DEFAULT;
+    float value1c SHENMUE_LIGHT_DEFAULT;
+    Vector3 vector20 SHENMUE_LIGHT_DEFAULT;
+    SHENMUE_LIGHT_ARRAY(float, values2c, 2) SHENMUE_LIGHT_DEFAULT;
+    float value34 SHENMUE_LIGHT_DEFAULT;
 };
 
 static_assert(sizeof(LightRuntimeEntry) == 0x38);
@@ -215,10 +222,11 @@ struct GeometryLightTreeWork {
     Matrix4x4 initialTransform{};
     std::span<const LightRuntimeEntry> lights;
     Vector4 baseColour{};
-    std::array<GeometryLightInfluence, 128> influences{};
+    SHENMUE_LIGHT_ARRAY(GeometryLightInfluence, influences, 128){};
     std::uint32_t influenceCount{};
     std::uint32_t lightingRequired{};
 };
+
 
 void ResetMapLightingPlacements();
 std::uint32_t GetMapLightingPlacementEnabled(std::int32_t index);
@@ -251,4 +259,8 @@ struct TemporaryAttachedLightState {
 bool BeginTemporaryAttachedLight(std::uint32_t slot, const Vector3 &origin, std::int16_t yaw, const Vector4 &colour, TemporaryAttachedLightState &saved);
 void EndTemporaryAttachedLight(TemporaryAttachedLightState &saved);
 
-} // namespace shenmue::s2
+
+} } // namespace shenmue::s2
+
+#undef SHENMUE_LIGHT_ARRAY
+#undef SHENMUE_LIGHT_DEFAULT

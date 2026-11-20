@@ -24,8 +24,8 @@
 
 namespace shenmue::s2 {
 
-SceneTextHeap* g_sceneTextHeap = nullptr;
-std::uint64_t g_sceneTextHeapCursor = 0;
+
+
 std::byte* g_lcdMemory = nullptr;
 std::uint32_t g_lcdMemorySize = 0;
 std::byte* g_systemTalkData = nullptr;
@@ -81,8 +81,7 @@ HLib::TaskData* sceneMemoryLast{};
 constexpr std::uint32_t sceneMemoryUsed = make_shen_name('U', 'S', 'E', ' ');
 constexpr std::uint32_t sceneMemoryFree = SHEN_NAME(fREe);
 
-constexpr shen_name kSceneTextHeap{
-    SHEN_NAME(STCH)};
+
 constexpr shen_name kLcdMemory{
     SHEN_NAME(LCDM)};
 
@@ -761,31 +760,13 @@ std::string_view GetLocalizedSceneText(std::string_view token) {
     return text.empty() ? std::string_view{""} : text;
 }
 
-SceneTextHeap* AllocateSTCH() {
-    g_sceneTextHeap = static_cast<SceneTextHeap*>(
-        HLib::AllocateTaskData(sizeof(SceneTextHeap), kSceneTextHeap));
-    g_sceneTextHeapCursor = 0;
-    return g_sceneTextHeap;
-}
 
-void ClearSTCH() {
-    // FreeHeapMemPtr. STCH remains allocated;
-    // only the current scene-string byte offset is cleared.
-    g_sceneTextHeapCursor = 0;
-}
 
-std::byte* allocateInGlobalHeap(std::int64_t size) {
-    if (!size) return nullptr;
-    std::byte* const allocation = g_sceneTextHeap->buffer + g_sceneTextHeapCursor;
-    g_sceneTextHeapCursor += (static_cast<std::uint64_t>(size) + 7) & ~std::uint64_t{3};
-    const std::uint32_t tag = SHEN_NAME(USSH);
-    std::memcpy(allocation, &tag, sizeof(tag));
-    return allocation + 4;
-}
 
-void SetTaskHeapData(void* allocation) {
-    if (allocation) g_sceneTextHeapCursor = static_cast<std::byte*>(allocation) - g_sceneTextHeap->buffer - 4;
-}
+
+
+
+
 
 std::byte* AllocateLCDM() {
 
@@ -860,37 +841,7 @@ bool LoadWeatherConditionData() {
     return true;
 }
 
-const char* Filepath_Gen(FilepathGenMode mode) {
-    static std::array<char, 0x40> directory{};
-    const char* area = reinterpret_cast<const char*>(&g_currentMap.name);
-    switch (mode) {
-    case FilepathGenMode::SceneDirectory:
-        std::snprintf(directory.data(), directory.size(), "SCENE/%02d/%.4s", g_actNumber, area);
-        return directory.data();
-    case FilepathGenMode::MiscDirectory:
-        std::snprintf(directory.data(), directory.size(), "MISC");
-        return directory.data();
-    case FilepathGenMode::SoundDirectory:
-        std::snprintf(directory.data(), directory.size(), "SCENE/%02d/SOUND", g_actNumber);
-        return directory.data();
-    case FilepathGenMode::StreamDirectory:
-        std::snprintf(directory.data(), directory.size(), "SCENE/%02d/STREAM", g_actNumber);
-        return directory.data();
-    case FilepathGenMode::SpriteDirectory:
-        std::snprintf(directory.data(), directory.size(), "SPRITE");
-        return directory.data();
-    case FilepathGenMode::ItemDirectory:
-        std::snprintf(directory.data(), directory.size(), "MODEL/ITEM");
-        return directory.data();
-    case FilepathGenMode::CharaDirectory:
-        std::snprintf(directory.data(), directory.size(), "SCENE/%02d/MODEL/CHARA", g_actNumber);
-        return directory.data();
-    case FilepathGenMode::PackDirectory:
-        std::snprintf(directory.data(), directory.size(), "SCENE/%02d/PACK", g_actNumber);
-        return directory.data();
-    }
-    return nullptr;
-}
+
 
 bool AllocateFlagWork(std::int32_t actNumber) {
     std::array<char, 10> filename{};

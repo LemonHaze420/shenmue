@@ -1,16 +1,21 @@
 #pragma once
 
+#include "shenmue.h"
+#include "common/types.hpp"
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
 #include <span>
+#define SHENMUE_SCENE_NOEXCEPT noexcept
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
 struct SceneTextHeap {
     std::byte buffer[0x4000];
 };
+inline constexpr shen_name SCENE_TEXT_HEAP{SHEN_NAME(STCH)};
 
 static_assert(sizeof(SceneTextHeap) == 0x4000);
 
@@ -49,10 +54,10 @@ bool LoadMemoData();
 extern std::int32_t g_s2JapaneseVersion;
 extern bool g_s2AllSubtitleLanguages;
 extern std::int32_t g_s2SelectedSubtitleLanguage;
-bool GetS2IsEnglishVersion() noexcept;
+bool GetS2IsEnglishVersion() SHENMUE_SCENE_NOEXCEPT;
 std::span<const std::int32_t> GetS2AvailableSubtitleLanguages() noexcept;
-std::int32_t GetLoadingScreenTextType(std::int32_t requestedLanguage) noexcept;
-void ApplyS2SubtitleLanguage(std::int32_t requestedLanguage) noexcept;
+std::int32_t GetLoadingScreenTextType(std::int32_t requestedLanguage) SHENMUE_SCENE_NOEXCEPT;
+void ApplyS2SubtitleLanguage(std::int32_t requestedLanguage) SHENMUE_SCENE_NOEXCEPT;
 std::int32_t ResolveSceneTextLanguage(std::int32_t requestedLanguage = -1);
 bool LoadLocalizedSceneText(std::int32_t requestedLanguage = -1);
 std::int32_t ResetSceneTextLanguage();
@@ -105,4 +110,6 @@ extern std::uint32_t g_memoRecordCount;
 extern std::int32_t g_sceneTextLanguage;
 extern bool g_sceneTextAvailable;
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2
+
+#undef SHENMUE_SCENE_NOEXCEPT

@@ -667,13 +667,7 @@ CharacterCoreCallback assignBlurFigurePoseCallback(Character *character, Charact
 }
 
 // @verified - p
-bool MatchAreaNamePattern(shen_name area, shen_name pattern) {
-    std::uint32_t mask = 0;
-    for (std::uint32_t shift = 0; shift < 32; shift += 8)
-        if (((pattern.name >> shift) & 0xffU) != static_cast<std::uint32_t>('?'))
-            mask |= 0xffU << shift;
-    return (area.name & mask) == (pattern.name & mask);
-}
+
 
 namespace model_component_detail {
 

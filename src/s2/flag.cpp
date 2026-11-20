@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/flag.hpp"
 
 #include "shenmue.h"
@@ -2435,3 +2438,4 @@ const char *GetAberdeenSearchData() noexcept {
 }
 
 } // namespace shenmue::s2
+

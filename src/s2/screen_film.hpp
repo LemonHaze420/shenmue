@@ -8,10 +8,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 inline constexpr shen_name SCREEN_FILM_PARAMETER_FILE{SHEN_NAME(SFIL)}, USER_FILTER_PARAMETER_FILE{SHEN_NAME(UFIL)};
 
+#define SHENMUE_FILM_SIGNED_FRAMES(value) std::bit_cast<std::int32_t>(value)
 enum class FilmControlFlag : std::uint32_t {
     Hide = 0,
     Show = 1,
@@ -44,6 +44,7 @@ struct ScreenFilmColourPair {
     std::uint32_t colour{};
 };
 
+
 struct ScreenFilmTaskData {
     shen_name name{};
     ScreenFilmState state{};
@@ -63,6 +64,8 @@ static_assert(sizeof(ScreenFilmColourRequest) == 0x0c);
 static_assert(offsetof(ScreenFilmColourRequest, durationFrames) == 0x08);
 
 extern std::int32_t g_authoredFilmTrackSelection;
+extern std::uint32_t savedFilmTargetActive;
+extern std::array<std::uint8_t, 4> savedFilmTarget;
 
 static_assert(sizeof(ScreenFilmState) == 0x40);
 static_assert(offsetof(ScreenFilmState, alpha) == 0x00);
@@ -158,4 +161,5 @@ void ProcessPostFxFilterInput();
 void PerformPostFxFilterRenderPass();
 std::int32_t GetPostFxFilterTransitionState() noexcept;
 
-} // namespace shenmue::s2
+
+} } // namespace shenmue::s2

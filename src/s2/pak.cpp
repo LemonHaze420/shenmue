@@ -2452,29 +2452,14 @@ std::uint32_t TEXNReader(const void *data, std::int64_t size, std::int32_t *text
 }
 
 namespace {
-std::int32_t textureMotionFlag{};
+
 std::int16_t mstsValue0{};
 std::int16_t mstsValue1{};
 std::int16_t mstsValue2{};
 }
 
 // @verified - p
-void TXMO_Reader(const void *txmo, std::int32_t entryPoint) {
-    if (!txmo) {
-        textureMotionFlag = 0;
-        return;
-    }
-    const std::int32_t *entry = reinterpret_cast<const std::int32_t *>(static_cast<const std::byte *>(txmo) + 8);
-    if (*entry != -1 && *entry != entryPoint) {
-        do {
-            if (*++entry == -1) {
-                textureMotionFlag = 0;
-                return;
-            }
-        } while (*entry != entryPoint);
-    }
-    textureMotionFlag = 1;
-}
+
 
 // @verified - p
 void MSTS_Reader(std::int16_t value0, std::int16_t value1, std::int16_t value2) {
@@ -2484,14 +2469,10 @@ void MSTS_Reader(std::int16_t value0, std::int16_t value1, std::int16_t value2) 
 }
 
 // @verified - p
-std::int32_t texGetMotionFlag() {
-    return textureMotionFlag;
-}
+
 
 // @verified - p
-void texSetMotionFlag(std::int32_t enabled) {
-    textureMotionFlag = enabled;
-}
+
 
 
 // @verified - p

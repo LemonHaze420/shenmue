@@ -38,8 +38,8 @@ constexpr shen_name kFilmToken = SHEN_NAME(FILM);
 constexpr float kFixedColourUnit = 65536.0F;
 constexpr float kOpaqueAlpha = 255.0F * kFixedColourUnit;
 
-std::uint32_t savedFilmTargetActive{};
-std::array<std::uint8_t, 4> savedFilmTarget{};
+
+
 
 PostProcessingState postProcessing{};
 std::array<std::uint32_t, 4> postFxBankValues{};
@@ -255,21 +255,13 @@ void ScreenFilmTask_Callback(void *taskData) {
 
 std::int32_t g_authoredFilmTrackSelection = -1;
 
-void ResetTaskWaitFlags() {
-    savedFilmTargetActive = false;
-    savedFilmTarget = {255, 0, 0, 0};
-}
+
 
 // @verified - p
-std::uint64_t GetIsWaitingFlag() {
-    return savedFilmTargetActive;
-}
 
 
-std::uint32_t GetFadedClearColour() {
-    return static_cast<std::uint32_t>(savedFilmTarget[0]) << 24 | static_cast<std::uint32_t>(savedFilmTarget[1]) << 16 |
-        static_cast<std::uint32_t>(savedFilmTarget[2]) << 8 | savedFilmTarget[3];
-}
+
+
 
 HLib::Task *Queue_SCF_Callback_ScreenFilmTaskEntry(std::uint8_t nextFunctionIndex) {
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(ScreenFilmTask_Callback, nextFunctionIndex, 2, sizeof(ScreenFilmTaskData), kFilmToken);

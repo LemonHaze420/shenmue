@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
 enum class EmulatorGame : std::int32_t { OutRun, AfterBurner, HangOn, SpaceHarrier };
 enum class EmulatorState : std::int32_t {
@@ -52,12 +52,15 @@ struct EmulatorInfoHeader {
     std::uint32_t reserved2c;
 };
 #pragma pack(pop)
-static_assert(sizeof(ArcadeSessionContext) == 0x28);
-static_assert(offsetof(ArcadeSessionContext, mode) == 4);
-static_assert(offsetof(ArcadeSessionContext, entryId) == 0x14);
-static_assert(offsetof(ArcadeSessionContext, flags) == 0x20);
-static_assert(sizeof(ArcadeRankingRecord) == 12);
-static_assert(sizeof(EmulatorInfoHeader) == 0x30);
-static_assert(offsetof(EmulatorInfoHeader, flags) == 0x24);
+#define SHENMUE_ARCADE_LAYOUT(condition) static_assert(condition)
+SHENMUE_ARCADE_LAYOUT(sizeof(ArcadeSessionContext) == 0x28);
+SHENMUE_ARCADE_LAYOUT(offsetof(ArcadeSessionContext, mode) == 4);
+SHENMUE_ARCADE_LAYOUT(offsetof(ArcadeSessionContext, entryId) == 0x14);
+SHENMUE_ARCADE_LAYOUT(offsetof(ArcadeSessionContext, flags) == 0x20);
+SHENMUE_ARCADE_LAYOUT(sizeof(ArcadeRankingRecord) == 12);
+SHENMUE_ARCADE_LAYOUT(sizeof(EmulatorInfoHeader) == 0x30);
+SHENMUE_ARCADE_LAYOUT(offsetof(EmulatorInfoHeader, flags) == 0x24);
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2
+
+#undef SHENMUE_ARCADE_LAYOUT

@@ -1,4 +1,8 @@
 #pragma once
+
+#include "shenmue.h"
+
+
 #include "shenmue.h"
 #include "s2/event_transform_flags.hpp"
 
@@ -39,3 +43,4 @@ struct ScenarioChoiceCandidate {
 static_assert(sizeof(ScenarioChoiceCandidate) == 0x10);
 
 } // namespace shenmue::s2
+

@@ -1,4 +1,8 @@
 #pragma once
+
+#include "shenmue.h"
+
+
 #include "shenmue.h"
 
 #include "common/math.hpp"
@@ -226,3 +230,4 @@ void MAZ_fishCtrlUpdate(const Vector3 *boxMin, const Vector3 *boxMax, std::uint3
 void SetFish(const Vector3 *boxMin, const Vector3 *boxMax, std::int32_t count, std::int32_t seed, Character *fish);
 
 } // namespace shenmue::s2
+

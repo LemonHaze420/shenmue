@@ -1,4 +1,10 @@
+#include "shenmue.h"
+
+
 #include "s2/player_internal.hpp"
+
+namespace shenmue { namespace s2 { namespace player_detail { std::uint8_t ReachedMotionRootMode(std::uint32_t); float ReachedMotionSpeed(std::uint32_t); } } }
+
 
 namespace shenmue::s2::player_detail {
 
@@ -203,36 +209,10 @@ void PreparePlayerMovementContext(PlayerModelState &state) {
 }
 
 // @verified - p
-std::uint8_t ReachedMotionRootMode(std::uint32_t motionId) {
-    if (motionId >= 0xf002U && motionId <= 0xf004U)
-        return 0;
-    if (motionId == 0xf005U || motionId == 0xf009U || motionId == 0xf02bU || (motionId >= 0xf035U && motionId <= 0xf03dU)) {
-        return 2;
-    }
-    if (motionId == 0xf006U || motionId == 0xf008U || motionId == 0xf02aU || motionId == 0xf12eU || motionId == 0xf12fU) {
-        return 6;
-    }
-    if (motionId >= 0xf020U && motionId <= 0xf029U)
-        return 9;
-    if (motionId >= 0xf02cU && motionId <= 0xf033U)
-        return 1;
-    if (motionId == 0xf034U)
-        return 4;
-    return 10;
-}
+
 
 // @verified - p
-float ReachedMotionSpeed(std::uint32_t motionId) {
-    if (motionId == 0xf005U || (motionId >= 0xf02cU && motionId <= 0xf033U)) {
-        return 1.3f;
-    }
-    if (motionId == 0xf006U || (motionId >= 0xf035U && motionId <= 0xf03dU)) {
-        return 1.075f;
-    }
-    if (motionId == 0xf034U)
-        return 1.2f;
-    return 1.0f;
-}
+
 
 // @verified - p
 bool CanRequestPlayerMotion(PlayerMovementState &movement, std::int32_t requested, float frame, float frameCount) {
@@ -1320,3 +1300,40 @@ std::int32_t plymGetTurningFrames() {
 }
 
 } // namespace shenmue::s2
+
+
+namespace shenmue { namespace s2 { namespace player_detail {
+
+std::uint8_t ReachedMotionRootMode(std::uint32_t motionId) {
+    if (motionId >= 0xf002U && motionId <= 0xf004U)
+        return 0;
+    if (motionId == 0xf005U || motionId == 0xf009U || motionId == 0xf02bU || (motionId >= 0xf035U && motionId <= 0xf03dU)) {
+        return 2;
+    }
+    if (motionId == 0xf006U || motionId == 0xf008U || motionId == 0xf02aU || motionId == 0xf12eU || motionId == 0xf12fU) {
+        return 6;
+    }
+    if (motionId >= 0xf020U && motionId <= 0xf029U)
+        return 9;
+    if (motionId >= 0xf02cU && motionId <= 0xf033U)
+        return 1;
+    if (motionId == 0xf034U)
+        return 4;
+    return 10;
+}
+
+
+float ReachedMotionSpeed(std::uint32_t motionId) {
+    if (motionId == 0xf005U || (motionId >= 0xf02cU && motionId <= 0xf033U)) {
+        return 1.3f;
+    }
+    if (motionId == 0xf006U || (motionId >= 0xf035U && motionId <= 0xf03dU)) {
+        return 1.075f;
+    }
+    if (motionId == 0xf034U)
+        return 1.2f;
+    return 1.0f;
+}
+
+
+} } }

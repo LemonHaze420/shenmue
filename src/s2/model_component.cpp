@@ -98,22 +98,7 @@ const std::byte *Payload(const ModelComponentHeader *component) {
 
 } // namespace model_component_detail
 
-std::int32_t CompareTokenIgnoreCase(const char *left, const char *right) {
-    for (;;) {
-        std::int32_t leftCharacter = static_cast<std::int8_t>(*left++);
-        std::int32_t rightCharacter = static_cast<std::int8_t>(*right++);
-        if (static_cast<std::uint32_t>(leftCharacter - 'a') <= 25U)
-            leftCharacter -= ' ';
-        if (static_cast<std::uint32_t>(rightCharacter - 'a') <= 25U)
-            rightCharacter -= ' ';
-        if (leftCharacter > rightCharacter)
-            return 1;
-        if (leftCharacter < rightCharacter)
-            return -1;
-        if (leftCharacter == 0)
-            return 0;
-    }
-}
+
 
 namespace model_component_detail {
 

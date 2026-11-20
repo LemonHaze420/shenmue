@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/model_component.hpp"
 #include "d3t/buffer.hpp"
 #include "d3t/dx11_renderer.hpp"
@@ -1734,17 +1737,6 @@ bool IsPartyCompanionOnStairs(shen_name name) {
     return party && (party->movement->flags & 8U) != 0;
 }
 
-std::int32_t SetPartyConversationPaused(shen_name name, bool paused) {
-    PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
-    if (!party)
-        return -1;
-    if (paused)
-        party->flags |= 0x40U;
-    else
-        party->flags &= ~0x40U;
-    return 0;
-}
-
 // @verified - p
 std::int64_t ReleaseAbsentPartyCharacter(shen_name name) {
     if (ctrlGetScenarioChara(name))
@@ -2018,3 +2010,20 @@ std::int32_t ExportPartyCompanionTransition(PartyCompanionTransition &state) {
 }
 
 } // namespace shenmue::s2
+
+
+namespace shenmue { namespace s2 {
+
+// @verified - d
+std::int32_t SetPartyConversationPaused(shen_name name, bool paused) {
+    PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
+    if (!party)
+        return -1;
+    if (paused)
+        party->flags |= 0x40U;
+    else
+        party->flags &= ~0x40U;
+    return 0;
+}
+
+} } // namespace shenmue::s2

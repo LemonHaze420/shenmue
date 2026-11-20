@@ -6,7 +6,7 @@
 #include <array>
 #include <string_view>
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
 enum class AdviceControlMode : std::int32_t {
     None = 0,
@@ -48,4 +48,5 @@ void QueueFightAdviceControl(std::uint8_t mode);
 std::int64_t FightAdviceControlCallback();
 void ReleaseAdviceControlOwners() noexcept;
 
-} // namespace shenmue::s2
+
+} } // namespace shenmue::s2

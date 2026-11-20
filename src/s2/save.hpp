@@ -1,4 +1,8 @@
 #pragma once
+
+#include "shenmue.h"
+
+
 #include "shenmue.h"
 
 #include "s2/hlib.hpp"
@@ -842,3 +846,4 @@ inline constexpr std::array<std::byte, 12> InitialPlayerSkillFlags{std::byte{0},
     std::byte{0x9d}, std::byte{0x36}, std::byte{0xff}, std::byte{7}, std::byte{0}, std::byte{0}};
 
 } // namespace shenmue::s2
+

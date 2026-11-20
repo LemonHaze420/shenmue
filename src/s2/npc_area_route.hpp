@@ -1,11 +1,14 @@
 #pragma once
 
+#include "shenmue.h"
+
 #include "s2/npc.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <span>
 
+#define SHENMUE_NPCAREA_LAYOUT(condition) static_assert(condition)
 namespace shenmue::s2 {
 
 #pragma pack(push, 4)
@@ -66,14 +69,14 @@ struct NpcAreaOwnerRow {
 };
 #pragma pack(pop)
 
-static_assert(sizeof(NpcAreaPoint) == 0x44);
-static_assert(offsetof(NpcAreaPoint, routeStateOffset) == 0x40);
-static_assert(sizeof(NpcAreaRouteState) == 0x28);
-static_assert(offsetof(NpcAreaRouteState, npcListHeadOffset) == 0x10);
-static_assert(sizeof(NpcAreaControlRow) == 0x2c);
-static_assert(offsetof(NpcAreaControlRow, forwardOffset) == 0x24);
-static_assert(sizeof(NpcAreaOwnerRow) == 0x20);
-static_assert(offsetof(NpcAreaOwnerRow, position) == 0x14);
+SHENMUE_NPCAREA_LAYOUT(sizeof(NpcAreaPoint) == 0x44);
+SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaPoint, routeStateOffset) == 0x40);
+SHENMUE_NPCAREA_LAYOUT(sizeof(NpcAreaRouteState) == 0x28);
+SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaRouteState, npcListHeadOffset) == 0x10);
+SHENMUE_NPCAREA_LAYOUT(sizeof(NpcAreaControlRow) == 0x2c);
+SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaControlRow, forwardOffset) == 0x24);
+SHENMUE_NPCAREA_LAYOUT(sizeof(NpcAreaOwnerRow) == 0x20);
+SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaOwnerRow, position) == 0x14);
 
 // NPCB is the sole backing for these records. Registration converts file-relative
 // row offsets to HLib offsets in place; list heads remain state-relative.
@@ -97,3 +100,4 @@ bool TryEnterNpcAreaRoute(NpcRouteLiveEntry &entry);
 bool RequestNpcAreaRouteCompletion(NpcRouteLiveEntry &entry);
 
 } // namespace shenmue::s2
+#undef SHENMUE_NPCAREA_LAYOUT

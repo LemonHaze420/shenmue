@@ -6,7 +6,9 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-
+#define SHENMUE_AREA_CONSTANT inline constexpr
+#define SHENMUE_AREA_ENUM_CLASS enum class
+#define SHENMUE_AREA_ENUM_BASE : std::uint32_t
 namespace shenmue::s2 {
 inline constexpr shen_name AREA_EVENT_TASK{SHEN_NAME(EVNT)};
 inline constexpr shen_name EVENT_HIGH_MODEL_TASK{SHEN_NAME(SHIG)};
@@ -15,13 +17,13 @@ namespace HLib {
 struct Task;
 }
 
-enum class EventFunctionType : std::uint32_t {
+SHENMUE_AREA_ENUM_CLASS EventFunctionType SHENMUE_AREA_ENUM_BASE {
     Event1 = 1,
     Event2 = 2,
     Event3 = 3,
 };
 
-enum AreaFlags : std::uint32_t {
+enum AreaFlags SHENMUE_AREA_ENUM_BASE {
     AreaFlag_KeepPlayerControlLocked = 0x1,
     AreaFlag_DeferPreAreaMainLoop = 0x2,
     AreaFlag_SuppressAutoControlLock = 0x4,
@@ -33,6 +35,7 @@ struct AreaTerminalMediaState {
     std::int32_t audioVariant{};
     bool sampleExecutionActive{};
 };
+
 
 using AreaInitFunction = void (*)();
 using ScriptAreaMainFunction = void (*)(std::uintptr_t argument);
@@ -101,9 +104,9 @@ void Startup_EventBase_Callback(void *taskData);
 bool Queue_EI_Startup_EventFade1();
 void QueueImmediateNextFadeTask(HLib::Task *task);
 
-inline constexpr std::uint32_t kLoadingPhaseSkipStartupFadeWait = 0x1U;
-inline constexpr std::uint32_t kLoadingPhaseWaitNpcBeforeFade = 0x100U;
-inline constexpr std::uint32_t kLoadingPhaseSkipTitleFade = 0x200U;
+SHENMUE_AREA_CONSTANT std::uint32_t kLoadingPhaseSkipStartupFadeWait = 0x1U;
+SHENMUE_AREA_CONSTANT std::uint32_t kLoadingPhaseWaitNpcBeforeFade = 0x100U;
+SHENMUE_AREA_CONSTANT std::uint32_t kLoadingPhaseSkipTitleFade = 0x200U;
 void EI_Startup_BeginEventFade();
 void EI_Startup_EventFade1_Callback(void *taskData);
 void EI_Startup_EventFade2_Callback(void *taskData);
@@ -119,3 +122,7 @@ void PublishAreaTerminalMediaState(shen_name cutsceneArea, const char *audioBank
 const AreaTerminalMediaState &GetAreaTerminalMediaState();
 
 } // namespace shenmue::s2
+
+#undef SHENMUE_AREA_CONSTANT
+#undef SHENMUE_AREA_ENUM_CLASS
+#undef SHENMUE_AREA_ENUM_BASE

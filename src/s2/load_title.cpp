@@ -15,6 +15,7 @@
 #include "s2/legacy_sprite.hpp"
 #include "s2/string_utility.hpp"
 
+
 #include <array>
 #include <cmath>
 #include <cstdio>
@@ -22,269 +23,270 @@
 #include <cstring>
 #include <span>
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 namespace {
 
 
-constexpr std::uint32_t Tag(const char (&text)[5]) {
+constexpr
+std::uint32_t Tag(const char (&text)[5]) {
     return static_cast<std::uint32_t>(static_cast<unsigned char>(text[0])) << 24U | static_cast<std::uint32_t>(static_cast<unsigned char>(text[1])) << 16U |
         static_cast<std::uint32_t>(static_cast<unsigned char>(text[2])) << 8U | static_cast<unsigned char>(text[3]);
 }
 
 // g_stLoadTitleTable (area plus optional entry digits to title label) and
 // g_SCENMapRegions (sub-area rectangles, circles and height bands).
-constexpr std::array<LoadTitleEntry, 297> loadTitleEntries{{
+constexpr std::array<LoadTitleEntry, 297> loadTitleEntries {{
     {"1000", "MV"},
     {"2000", "RC"},
-    {"A000", nullptr},
-    {"AB00", nullptr},
-    {"ABB0", nullptr},
-    {"ABR0", nullptr},
+    {"A000", 0},
+    {"AB00", 0},
+    {"ABB0", 0},
+    {"ABR0", 0},
     {"ABLB", "AR00"},
     {"0055", "AB00"},
-    {"AK00", nullptr},
-    {"AKY0", nullptr},
-    {"AKS0", nullptr},
+    {"AK00", 0},
+    {"AKY0", 0},
+    {"AKS0", 0},
     {"AKA3", "AKA4"},
-    {"AKA4", nullptr},
-    {"AR00", nullptr},
+    {"AKA4", 0},
+    {"AR00", 0},
     {"ARA0", "ARA0"},
-    {"ARC0", nullptr},
-    {"ARCB", nullptr},
-    {"ARSF", nullptr},
-    {"ARK0", nullptr},
-    {"W000", nullptr},
-    {"WB00", nullptr},
-    {"WB01", nullptr},
-    {"WE00", nullptr},
-    {"WK00", nullptr},
-    {"WR00", nullptr},
-    {"WS00", nullptr},
-    {"WSG1", nullptr},
-    {"WT00", nullptr},
-    {"ARXB", nullptr},
-    {"WKA0", nullptr},
-    {"WTA0", nullptr},
+    {"ARC0", 0},
+    {"ARCB", 0},
+    {"ARSF", 0},
+    {"ARK0", 0},
+    {"W000", 0},
+    {"WB00", 0},
+    {"WB01", 0},
+    {"WE00", 0},
+    {"WK00", 0},
+    {"WR00", 0},
+    {"WS00", 0},
+    {"WSG1", 0},
+    {"WT00", 0},
+    {"ARXB", 0},
+    {"WKA0", 0},
+    {"WTA0", 0},
     {"030A", "ARXB"},
-    {"SM00", nullptr},
-    {"SMMK", nullptr},
+    {"SM00", 0},
+    {"SMMK", 0},
     {"AR004", "AR00"},
     {"WS001", "WS00"},
-    {"WN00", nullptr},
+    {"WN00", 0},
     {"AR01", "AR00"},
     {"AR010", "AR004"},
     {"CB00", "ARCB"},
     {"0034", "WB01"},
-    {"KRF1", nullptr},
-    {"KRH1", nullptr},
-    {"KRZ1", nullptr},
-    {"KWM1", nullptr},
-    {"KRS2", nullptr},
-    {"KRM1", nullptr},
-    {"KRM2", nullptr},
-    {"KRM3", nullptr},
-    {"KWW1", nullptr},
-    {"KWW5", nullptr},
-    {"KRC1", nullptr},
-    {"KRC2", nullptr},
-    {"KWW2", nullptr},
-    {"KRK2", nullptr},
-    {"KWW6", nullptr},
+    {"KRF1", 0},
+    {"KRH1", 0},
+    {"KRZ1", 0},
+    {"KWM1", 0},
+    {"KRS2", 0},
+    {"KRM1", 0},
+    {"KRM2", 0},
+    {"KRM3", 0},
+    {"KWW1", 0},
+    {"KWW5", 0},
+    {"KRC1", 0},
+    {"KRC2", 0},
+    {"KWW2", 0},
+    {"KRK2", 0},
+    {"KWW6", 0},
     {"KSH1", "KSHJ"},
-    {"KSH3", nullptr},
-    {"KSH4", nullptr},
-    {"KWW4", nullptr},
-    {"KES1", nullptr},
+    {"KSH3", 0},
+    {"KSH4", 0},
+    {"KWW4", 0},
+    {"KES1", 0},
     {"TBCN", "TSGO"},
-    {"AR03", nullptr},
-    {"Q100", nullptr},
-    {"Q200", nullptr},
+    {"AR03", 0},
+    {"Q100", 0},
+    {"Q200", 0},
     {"QA00", "QA10"},
-    {"QB00", nullptr},
-    {"QBAA", nullptr},
-    {"QC00", nullptr},
+    {"QB00", 0},
+    {"QBAA", 0},
+    {"QC00", 0},
     {"QD10", "QD00"},
-    {"QE00", nullptr},
+    {"QE00", 0},
     {"QF00", "QF10"},
     {"QFTS", "QF10"},
     {"QFHG", "QF10"},
     {"QF01", "QF10"},
     {"QF02", "QF10"},
     {"QF06", "QF10"},
-    {"QR00", nullptr},
+    {"QR00", 0},
     {"0297", "QR00"},
     {"AR02", "AR00"},
-    {"QJBT", nullptr},
+    {"QJBT", 0},
     {"QKBT", "QF11"},
-    {"QE001", nullptr},
-    {"QE002", nullptr},
-    {"QLBT", nullptr},
-    {"QF001", nullptr},
-    {"QF002", nullptr},
-    {"QGBT1", nullptr},
-    {"Q300", nullptr},
-    {"AKB0", nullptr},
-    {"ARM0", nullptr},
-    {"ART0", nullptr},
-    {"ARZ0", nullptr},
-    {"WSC1", nullptr},
-    {"WSP0", nullptr},
-    {"WSS0", nullptr},
-    {"WSY0", nullptr},
-    {"WSUR", nullptr},
-    {"WSS1", nullptr},
-    {"WSS2", nullptr},
-    {"WSS3", nullptr},
-    {"WSS4", nullptr},
-    {"WSS5", nullptr},
-    {"WKP0", nullptr},
-    {"WEA0", nullptr},
-    {"WEA1", nullptr},
-    {"WECF", nullptr},
-    {"WEG0", nullptr},
+    {"QE001", 0},
+    {"QE002", 0},
+    {"QLBT", 0},
+    {"QF001", 0},
+    {"QF002", 0},
+    {"QGBT1", 0},
+    {"Q300", 0},
+    {"AKB0", 0},
+    {"ARM0", 0},
+    {"ART0", 0},
+    {"ARZ0", 0},
+    {"WSC1", 0},
+    {"WSP0", 0},
+    {"WSS0", 0},
+    {"WSY0", 0},
+    {"WSUR", 0},
+    {"WSS1", 0},
+    {"WSS2", 0},
+    {"WSS3", 0},
+    {"WSS4", 0},
+    {"WSS5", 0},
+    {"WKP0", 0},
+    {"WEA0", 0},
+    {"WEA1", 0},
+    {"WECF", 0},
+    {"WEG0", 0},
     {"WEG1", "WEG0"},
     {"WEG2", "WEG0"},
     {"WEG3", "WEG0"},
     {"WEG4", "WEG0"},
     {"WEG5", "WEG0"},
-    {"WEH0", nullptr},
-    {"WES1", nullptr},
-    {"WEC0", nullptr},
-    {"WNC0", nullptr},
-    {"WND0", nullptr},
-    {"WNDA", nullptr},
-    {"WNXE", nullptr},
-    {"WNXF", nullptr},
-    {"WNXG", nullptr},
-    {"WNXH", nullptr},
-    {"WEIC", nullptr},
-    {"WEM1", nullptr},
-    {"WNN1", nullptr},
-    {"WNS4", nullptr},
+    {"WEH0", 0},
+    {"WES1", 0},
+    {"WEC0", 0},
+    {"WNC0", 0},
+    {"WND0", 0},
+    {"WNDA", 0},
+    {"WNXE", 0},
+    {"WNXF", 0},
+    {"WNXG", 0},
+    {"WNXH", 0},
+    {"WEIC", 0},
+    {"WEM1", 0},
+    {"WNN1", 0},
+    {"WNS4", 0},
     {"TOFB", "WNS4"},
-    {"WNS5", nullptr},
-    {"WNT0", nullptr},
-    {"WNUR", nullptr},
-    {"WNX7", nullptr},
-    {"WNX8", nullptr},
-    {"WNX9", nullptr},
-    {"WNXJ", nullptr},
-    {"WNXL", nullptr},
-    {"WNXM", nullptr},
-    {"WRP0", nullptr},
-    {"WRS1", nullptr},
-    {"WRS2", nullptr},
-    {"WTK0", nullptr},
-    {"WTKB", nullptr},
-    {"WTP0", nullptr},
-    {"WTP1", nullptr},
-    {"WTP2", nullptr},
-    {"WTP3", nullptr},
-    {"WTP4", nullptr},
-    {"WTR0", nullptr},
-    {"WTS3", nullptr},
-    {"WTTB", nullptr},
-    {"WTY0", nullptr},
-    {"ZZZZ", nullptr},
-    {"WTK1", nullptr},
-    {"WTK2", nullptr},
-    {"WTX2", nullptr},
-    {"WTX3", nullptr},
-    {"WTX4", nullptr},
-    {"WTXA", nullptr},
-    {"WTXB", nullptr},
+    {"WNS5", 0},
+    {"WNT0", 0},
+    {"WNUR", 0},
+    {"WNX7", 0},
+    {"WNX8", 0},
+    {"WNX9", 0},
+    {"WNXJ", 0},
+    {"WNXL", 0},
+    {"WNXM", 0},
+    {"WRP0", 0},
+    {"WRS1", 0},
+    {"WRS2", 0},
+    {"WTK0", 0},
+    {"WTKB", 0},
+    {"WTP0", 0},
+    {"WTP1", 0},
+    {"WTP2", 0},
+    {"WTP3", 0},
+    {"WTP4", 0},
+    {"WTR0", 0},
+    {"WTS3", 0},
+    {"WTTB", 0},
+    {"WTY0", 0},
+    {"ZZZZ", 0},
+    {"WTK1", 0},
+    {"WTK2", 0},
+    {"WTX2", 0},
+    {"WTX3", 0},
+    {"WTX4", 0},
+    {"WTXA", 0},
+    {"WTXB", 0},
     {"0004", "AR01"},
-    {"WTE0", nullptr},
-    {"AKS1", nullptr},
+    {"WTE0", 0},
+    {"AKS1", 0},
     {"AR0186", "ARK0"},
-    {"QAE104", nullptr},
-    {"QAE105", nullptr},
-    {"QAE106", nullptr},
-    {"QAE110", nullptr},
-    {"QAE154", nullptr},
-    {"QAW101", nullptr},
-    {"QAW102", nullptr},
-    {"QAW110", nullptr},
-    {"QE0101", nullptr},
-    {"QE0102", nullptr},
-    {"QRR0", nullptr},
+    {"QAE104", 0},
+    {"QAE105", 0},
+    {"QAE106", 0},
+    {"QAE110", 0},
+    {"QAE154", 0},
+    {"QAW101", 0},
+    {"QAW102", 0},
+    {"QAW110", 0},
+    {"QE0101", 0},
+    {"QE0102", 0},
+    {"QRR0", 0},
     {"QUG0", "QUZO"},
     {"QF12", "QF11"},
     {"QF39", "QF11"},
     {"QF40", "QF11"},
     {"QFRR", "QF11"},
-    {"KRK3", nullptr},
-    {"KRK4", nullptr},
-    {"KRK5", nullptr},
-    {"KRK5", nullptr},
-    {"KRK6", nullptr},
-    {"KRK7", nullptr},
-    {"QSFA", nullptr},
-    {"QSFB", nullptr},
-    {"QSFC", nullptr},
-    {"QSFD", nullptr},
-    {"QTB1", nullptr},
-    {"QTB2", nullptr},
-    {"QTB3", nullptr},
+    {"KRK3", 0},
+    {"KRK4", 0},
+    {"KRK5", 0},
+    {"KRK5", 0},
+    {"KRK6", 0},
+    {"KRK7", 0},
+    {"QSFA", 0},
+    {"QSFB", 0},
+    {"QSFC", 0},
+    {"QSFD", 0},
+    {"QTB1", 0},
+    {"QTB2", 0},
+    {"QTB3", 0},
     {"WTSH", "WTA080"},
-    {"QA10", nullptr},
-    {"QA14", nullptr},
-    {"QA12", nullptr},
-    {"QA13", nullptr},
-    {"QE10", nullptr},
-    {"QE11", nullptr},
-    {"QE12", nullptr},
-    {"QA15", nullptr},
-    {"QC00", nullptr},
-    {"QC01", nullptr},
-    {"QC06", nullptr},
+    {"QA10", 0},
+    {"QA14", 0},
+    {"QA12", 0},
+    {"QA13", 0},
+    {"QE10", 0},
+    {"QE11", 0},
+    {"QE12", 0},
+    {"QA15", 0},
+    {"QC00", 0},
+    {"QC01", 0},
+    {"QC06", 0},
     {"QC10", "QC00"},
-    {"QD00", nullptr},
-    {"QD01", nullptr},
-    {"QA22", nullptr},
-    {"QAAG", nullptr},
-    {"QAAJ", nullptr},
-    {"QAEN", nullptr},
-    {"QAFJ", nullptr},
-    {"QAFK", nullptr},
-    {"QCAE", nullptr},
-    {"QCCE", nullptr},
-    {"QCEF", nullptr},
-    {"QDKJ", nullptr},
-    {"QEDJ", nullptr},
-    {"QEEC", nullptr},
-    {"QEHH", nullptr},
-    {"QEHI", nullptr},
-    {"QRC0", nullptr},
-    {"FHL1", nullptr},
-    {"NDAY", nullptr},
-    {"SDAY", nullptr},
-    {"1DAY", nullptr},
-    {"2DAY", nullptr},
-    {"3DAY", nullptr},
-    {"4DAY", nullptr},
-    {"2KAM", nullptr},
-    {"3KAM", nullptr},
-    {"4KAM", nullptr},
-    {"QD20", nullptr},
-    {"QF10", nullptr},
-    {"QF11", nullptr},
+    {"QD00", 0},
+    {"QD01", 0},
+    {"QA22", 0},
+    {"QAAG", 0},
+    {"QAAJ", 0},
+    {"QAEN", 0},
+    {"QAFJ", 0},
+    {"QAFK", 0},
+    {"QCAE", 0},
+    {"QCCE", 0},
+    {"QCEF", 0},
+    {"QDKJ", 0},
+    {"QEDJ", 0},
+    {"QEEC", 0},
+    {"QEHH", 0},
+    {"QEHI", 0},
+    {"QRC0", 0},
+    {"FHL1", 0},
+    {"NDAY", 0},
+    {"SDAY", 0},
+    {"1DAY", 0},
+    {"2DAY", 0},
+    {"3DAY", 0},
+    {"4DAY", 0},
+    {"2KAM", 0},
+    {"3KAM", 0},
+    {"4KAM", 0},
+    {"QD20", 0},
+    {"QF10", 0},
+    {"QF11", 0},
     {"QF12", "QF11"},
-    {"QAAA", nullptr},
-    {"KWWW", nullptr},
-    {"KWA1", nullptr},
-    {"KWQ2", nullptr},
-    {"KWA2", nullptr},
-    {"KWQ3", nullptr},
-    {"KMZ1", nullptr},
-    {"KMZ2", nullptr},
-    {"KMZ3", nullptr},
-    {"KMZ4", nullptr},
+    {"QAAA", 0},
+    {"KWWW", 0},
+    {"KWA1", 0},
+    {"KWQ2", 0},
+    {"KWA2", 0},
+    {"KWQ3", 0},
+    {"KMZ1", 0},
+    {"KMZ2", 0},
+    {"KMZ3", 0},
+    {"KMZ4", 0},
     {"WTA099", "WTA080"},
     {"TMOV", "TIME02"},
-    {"QAW002", nullptr},
-    {"QE53", nullptr},
-    {"QTB4", nullptr},
+    {"QAW002", 0},
+    {"QE53", 0},
+    {"QTB4", 0},
     {"0221", "QRR0"},
     {"0225", "QRR0"},
     {"0240", "QRR0"},
@@ -302,18 +304,18 @@ constexpr std::array<LoadTitleEntry, 297> loadTitleEntries{{
     {"0250", "3DAY"},
     {"0523", "KRM3"},
     {"WB0033", "NDAY"},
-    {"AKT0", nullptr},
-    {"AKT1", nullptr},
-    {"AKT2", nullptr},
-    {"AKT3", nullptr},
-    {"ARP0", nullptr},
-    {"WKP1", nullptr},
-    {"WER0", nullptr},
-    {"WESM", nullptr},
-    {"WET0", nullptr},
-    {"WNXK", nullptr},
-    {"WNN0", nullptr},
-    {"WBS2", nullptr},
+    {"AKT0", 0},
+    {"AKT1", 0},
+    {"AKT2", 0},
+    {"AKT3", 0},
+    {"ARP0", 0},
+    {"WKP1", 0},
+    {"WER0", 0},
+    {"WESM", 0},
+    {"WET0", 0},
+    {"WNXK", 0},
+    {"WNN0", 0},
+    {"WBS2", 0},
     {"WB205", "WB00B"},
     {"WB1040", "WB00A"},
     {"WB10", "WB00B"},
@@ -322,17 +324,18 @@ constexpr std::array<LoadTitleEntry, 297> loadTitleEntries{{
     {"GABT", "QE001"},
     {"0362", "WTA080"},
     {"KWQA", "KWA1"},
-    {"WSY1", nullptr},
-    {"KSHJ", nullptr},
-    {"QCHF", nullptr},
-    {"QCJE", nullptr},
-    {"QCLG", nullptr},
+    {"WSY1", 0},
+    {"KSHJ", 0},
+    {"QCHF", 0},
+    {"QCJE", 0},
+    {"QCLG", 0},
     {"WBBK", "WB00B"},
     {"0200", "QA00"},
     {"00391", "WSY0"},
     {"00395", "WTA080"},
 }};
-constexpr std::array<MapRegionEntry, 106> mapRegions{{
+
+constexpr std::array<MapRegionEntry, 106> mapRegions {{
     {"AB10", "AB00", {254.10000610351562f, 539.5f, 277.5f, 545.7999877929688f}},
     {"AB20", "AB00", {116.0f, 547.0f, 122.80000305175781f, 557.7999877929688f}},
     {"AR12", "AR02", {199.8000030517578f, 303.0f, 210.39999389648438f, 322.1000061035156f}},
@@ -442,9 +445,10 @@ constexpr std::array<MapRegionEntry, 106> mapRegions{{
 }};
 
 // g_SCENMapRegionFallbacks: fallback area name for maps with no matching region.
-constexpr std::array<std::array<const char *, 2>, 2> mapRegionFallbacks{{{"AR15", "AR02"}, {"WEG1", "WEG0"}}};
+constexpr std::array<std::array<const char *, 2>, 2> mapRegionFallbacks {{{"AR15", "AR02"}, {"WEG1", "WEG0"}}};
+
 // g_stFloorTitleTable: floor/sub-title sprites keyed by area and entry.
-constexpr std::array<FloorTitleEntry, 5> floorTitles{{
+const std::array<FloorTitleEntry, 5> floorTitles{{
     {"WS00", 1, "L_WS001.GZ"},
     {"AR03", 4, "L_AR004.GZ"},
     {"AR01", 0, "L_AR01.GZ"},
@@ -452,12 +456,12 @@ constexpr std::array<FloorTitleEntry, 5> floorTitles{{
     {"Q100", 1, "L_QA00.GZ"},
 }};
 // g_stQuestTitleTable: battle-quest title pairs used under internal flag 1015.
-constexpr std::array<LoadTitleEntry, 4> questTitles{{{"QJBT", "MG01"}, {"QGBT", "MG02"}, {"QLBT", "MG03"}, {"QKBT", "MG04"}}};
+constexpr std::array<LoadTitleEntry, 4> questTitles {{{"QJBT", "MG01"}, {"QGBT", "MG02"}, {"QLBT", "MG03"}, {"QKBT", "MG04"}}};
 
-shen_name temporaryAreaJumpAuthor{};
-LoadTitleState loadTitle{nullptr, 0, 0, 0, 0, nullptr, 0, 0, -1, -1, 0, 0, -1, {}, 0, {}, 0};
-constexpr std::array<std::uint16_t, 8> loadingSpriteRectangles{98, 99, 28, 28, 1, 1, 2, 2};
-constexpr std::array<std::array<std::int32_t, 2>, 4> loadingSpritePositions{{{395, 431}, {395, 431}, {44, 438}, {395, 431}}};
+shen_name temporaryAreaJumpAuthor= {};
+LoadTitleState loadTitle= {0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, -1, {}, 0, {}, 0};
+constexpr std::array<std::uint16_t, 8> loadingSpriteRectangles {98, 99, 28, 28, 1, 1, 2, 2};
+constexpr std::array<std::array<std::int32_t, 2>, 4> loadingSpritePositions {{{395, 431}, {395, 431}, {44, 438}, {395, 431}}};
 
 
 
@@ -467,8 +471,8 @@ void LoadTitleSpriteNullsub(std::uint32_t colour, std::int32_t texture) {
 }
 
 const MapInfoChunk *CurrentMapInfo() {
-    const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return control ? static_cast<const MapInfoChunk *>(control->mapInfo) : nullptr;
+    const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    return control ? static_cast<const MapInfoChunk *>(control->mapInfo) : 0;
 }
 
 bool SameName(std::uint32_t name, const char *text) {
@@ -476,7 +480,7 @@ bool SameName(std::uint32_t name, const char *text) {
 }
 
 std::uint32_t NameOf(const char *text) {
-    std::uint32_t name{};
+    std::uint32_t name= {};
     std::memcpy(&name, text, 4);
     return name;
 }
@@ -513,8 +517,8 @@ std::uint32_t FindMapRegionName(const Vector3 &position) {
 
 
 std::int32_t ResolveLoadTitleStream(std::uint32_t &subarea) {
-    Vector3 position{};
-    std::int32_t yaw{};
+    Vector3 position= {};
+    std::int32_t yaw= {};
     const std::int32_t stream = ResolveQronEntryLocation(position, yaw);
     subarea = FindMapRegionName(position);
     return stream;
@@ -540,7 +544,7 @@ const LoadTitleEntry *SearchLoadTitle(std::uint32_t name, std::int32_t entry, st
         else if (ParseEntryDigits(row.key) == entry)
             return &row;
     }
-    return nullptr;
+    return 0;
 }
 
 
@@ -564,11 +568,11 @@ const LoadTitleEntry *FindLoadTitle(std::uint32_t area, std::uint32_t subarea, s
     }
     if (const LoadTitleEntry *const row = SearchLoadTitle(area, entry, fallback))
         return row;
-    return fallback >= 0 ? &loadTitleEntries[static_cast<std::size_t>(fallback)] : nullptr;
+    return fallback >= 0 ? &loadTitleEntries[static_cast<std::size_t>(fallback)] : 0;
 }
 
 std::uint16_t TexnWidth(const void *texn) {
-    std::uint16_t width{};
+    std::uint16_t width= {};
     std::memcpy(&width, static_cast<const std::byte *>(texn) + 40, sizeof(width));
     return width;
 }
@@ -579,7 +583,7 @@ void LoadFloorTitle(std::uint32_t area, std::int32_t entry) {
     for (const FloorTitleEntry &floor : floorTitles) {
         if (!SameName(area, floor.area) || floor.entry != entry)
             continue;
-        void *allocation = nullptr;
+        void *allocation = 0;
         std::size_t size = 0;
         if (LoadLegacySprite("sprite", floor.sprite, SHEN_NAME(LDSB), allocation, size)) {
             loadTitle.floorTexture = static_cast<std::int32_t>(ReadTexnTexture(allocation));
@@ -619,7 +623,7 @@ void DrawFloorNumber(std::int32_t value, bool special) {
 
 
 void DrawLoadNumber(std::int32_t value, std::uint8_t mode, std::int32_t digits) {
-    constexpr std::array<std::int32_t, 4> powers{1, 10, 100, 1000};
+    const std::int32_t powers[4]= {1, 10, 100, 1000};
     const std::uint32_t colour = static_cast<std::uint32_t>(loadTitle.alpha) << 24U | 0xffffffU;
     bool started = (mode & 1U) != 0;
     for (std::int32_t index = digits - 1; index >= 0; --index) {
@@ -680,7 +684,7 @@ void ST_LoadTitleFadeIn_Callback(void *) {
         if (loadTitle.alpha > 255)
             loadTitle.alpha = 255;
     }
-    HLib::ExecuteCallbackNow(ST_LoadTitleFadeIn_Main, nullptr);
+    HLib::ExecuteCallbackNow(ST_LoadTitleFadeIn_Main, 0);
 }
 
 void ST_LoadTitleFadeOut_Callback(void *) {
@@ -694,8 +698,9 @@ void ST_LoadTitleFadeOut_Callback(void *) {
     if (alpha < 0)
         ReleaseLoadTitleFade();
     else
-        HLib::ExecuteCallbackNow(ST_LoadTitleFadeIn_Main, nullptr);
+        HLib::ExecuteCallbackNow(ST_LoadTitleFadeIn_Main, 0);
 }
+
 
 
 // @verified - p
@@ -745,7 +750,8 @@ void ST_FadeOutSubTitle_Callback(void *taskData) {
         return;
     }
     work.alpha = 0;
-    for (std::int32_t &texture : work.textures) {
+    for (std::uint32_t index = 0; index < 4; ++index) {
+        std::int32_t &texture = work.textures[index];
         if (texture != -1)
             ReleaseNamedTexture(texture);
         texture = -1;
@@ -811,14 +817,14 @@ void ReleaseLoadTitleFade() {
     loadTitle.fadeMode = 0;
     loadTitle.flags = 0;
     HLib::Task *const task = loadTitle.titleTask;
-    loadTitle.titleTask = nullptr;
+    loadTitle.titleTask = 0;
     loadTitle.fadeInActive = 0;
     if (task)
         HLib::DestroyTask(task);
 }
 
 void InitST_TitleFunc() {
-    loadTitle.titleTask = nullptr;
+    loadTitle.titleTask = 0;
     loadTitle.digitTextures.fill(-1);
     loadTitle.titleTexture = -1;
     loadTitle.floorTexture = -1;
@@ -827,7 +833,7 @@ void InitST_TitleFunc() {
 
 
 void DoLoadStuff(std::uint32_t author, bool nextStream) {
-    SetupLoadingScreen(shen_name{0xffffffffU}, shen_name{0xffffffffU}, DateTime{}, nullptr, 0, 0, 0, 0);
+    SetupLoadingScreen(shen_name(0xffffffffU), shen_name(0xffffffffU), DateTime{}, 0, 0, 0, 0, 0);
     loadTitle.author = author;
     std::uint32_t subarea = 0;
     const std::int32_t stream = nextStream ? static_cast<std::int32_t>(GetQronNextStream()) : ResolveLoadTitleStream(subarea);
@@ -845,7 +851,7 @@ void DoLoadStuff(std::uint32_t author, bool nextStream) {
     }
     if (addFloor)
         flags = (map == Tag("11AQ") ? loadTitle.flags | 0x10U : loadTitle.flags) | 8U;
-    loadTitle.titleTask = nullptr;
+    loadTitle.titleTask = 0;
     loadTitle.digitCount = 0;
     loadTitle.flags = (flags & 0xffffffd9U) | 0x20U;
     const MapInfoChunk *const mapInfo = CurrentMapInfo();
@@ -860,7 +866,7 @@ void DoLoadStuff(std::uint32_t author, bool nextStream) {
     } else {
         loadTitle.fadeMode = 0;
     }
-    DateTime now{};
+    DateTime now= {};
     shenGetCurrentDateTime(now);
     std::array<std::int8_t, 12> &date = loadTitle.date;
     date[YearTens] = static_cast<std::int8_t>(now.year / 10);
@@ -886,7 +892,7 @@ void DoLoadStuff(std::uint32_t author, bool nextStream) {
     date[MinuteUnits] = static_cast<std::int8_t>(now.minute % 10);
     const std::uint32_t area = author ? author : map;
     const std::uint32_t titleSubarea = !author && subarea ? subarea : Tag("9999");
-    const LoadTitleEntry *title = nullptr;
+    const LoadTitleEntry *title = 0;
     if (loadTitle.flags & 1U) {
         loadTitle.flags |= 4U;
         title = FindLoadTitle(Tag("ZZZZ"), Tag("9999"), 0);
@@ -906,12 +912,12 @@ void DoLoadStuff(std::uint32_t author, bool nextStream) {
         loadTitle.flags = (loadTitle.flags & 0xfffffff3U) | 4U;
     }
     LoadFloorTitle(area, g_entryPoint);
-    const char *label = nullptr;
+    const char *label = 0;
     if (title) {
         label = title->alias ? title->alias : title->key;
         std::array<char, 32> sprite{};
         std::snprintf(sprite.data(), sprite.size(), "L_%s.GZ", label);
-        void *allocation = nullptr;
+        void *allocation = 0;
         std::size_t size = 0;
         if (LoadLegacySprite("sprite", sprite.data(), SHEN_NAME(LDAR), allocation, size)) {
             loadTitle.titleTexture = static_cast<std::int32_t>(ReadTexnTexture(allocation));
@@ -919,19 +925,19 @@ void DoLoadStuff(std::uint32_t author, bool nextStream) {
             HLib::FreeTaskData(allocation);
         }
     }
-    void *allocation = nullptr;
+    void *allocation = 0;
     std::size_t size = 0;
     if (LoadLegacySprite("sprite", "LOADNUM.GZ", SHEN_NAME(LDTD), allocation, size)) {
         loadTitle.digitCount = static_cast<std::int32_t>(ReadTEXN_Recursive(allocation, loadTitle.digitTextures.data()));
         HLib::FreeTaskData(allocation);
     }
     DisableFilmBarAndUpdateFramePacing();
-    SetupLoadingScreen(shen_name{area}, shen_name{titleSubarea}, now, label, loadTitle.flags, loadTitle.stream, loadTitle.fadeMode, g_entryPoint);
+    SetupLoadingScreen(shen_name(area), shen_name(titleSubarea), now, label, loadTitle.flags, loadTitle.stream, loadTitle.fadeMode, g_entryPoint);
 }
 
 // @verified - p
 shen_name GetMapRegionName(const Vector3 &position) {
-    return shen_name{FindMapRegionName(position)};
+    return shen_name(FindMapRegionName(position));
 }
 
 // @verified - p
@@ -954,7 +960,7 @@ void ST_LoadTitleFadeIn() {
         temporaryAreaJumpAuthor = {};
     loadTitle.alpha = 0;
     do {
-        ST_LoadTitleFadeIn_Main(nullptr);
+        ST_LoadTitleFadeIn_Main(0);
         loadTitle.alpha = static_cast<std::int16_t>(loadTitle.alpha + 8);
     } while (loadTitle.alpha <= 255);
 }
@@ -966,14 +972,14 @@ void ST_LoadTitleFade() {
     if (!loadTitle.digitCount && loadTitle.fadeMode != 6 && loadTitle.fadeMode != 1)
         return;
     if (loadTitle.titleTask) {
-        WaitForNextRenderFrame(nullptr, 0);
+        WaitForNextRenderFrame(0, 0);
         SetD3TRenderSettings(1);
         HLib::AssignCallbackForTask(loadTitle.titleTask, ST_LoadTitleFadeOut_Callback);
         return;
     }
     HLib::TaskCallback callback = ST_LoadTitleFadeIn_Callback;
     if (!loadTitle.loadScene) {
-        WaitForNextRenderFrame(nullptr, 0);
+        WaitForNextRenderFrame(0, 0);
         SetD3TRenderSettings(1);
         callback = ST_LoadTitleFadeOut_Callback;
     }
@@ -1039,33 +1045,33 @@ void DrawLoadingModes() {
     const std::int32_t mode = loadTitle.loadingDrawMode;
     if (mode < 0 || mode > 3)
         return;
-    const auto &position = loadingSpritePositions[mode];
+    const std::array<std::int32_t, 2> &position = loadingSpritePositions[mode];
     if (mode == 2) {
         loadTitle.loadingSpin = static_cast<std::uint16_t>(loadTitle.loadingSpin + 63352U);
         DrawBorrowedLegacySprite(0x230000U, position[0], position[1], 0.81999999f, 0.81999999f, loadTitle.loadingSpin, static_cast<std::uint32_t>(-3618616));
-        LegacyIconSprite marker{.x = 84.0f,
-            .y = 448.0f,
-            .scaleX = 1.0f,
-            .scaleY = 3.0f,
-            .depth = 1.0f,
-            .flags = 0,
-            .reserved16 = 0,
-            .rotation = 0,
-            .icon = 0,
-            .width = 38,
-            .height = 38,
-            .alignment = 9,
-            .reserved23 = {}};
+        LegacyIconSprite marker= {SHEN_FIELD(x) 84.0f,
+            SHEN_FIELD(y) 448.0f,
+            SHEN_FIELD(scaleX) 1.0f,
+            SHEN_FIELD(scaleY) 3.0f,
+            SHEN_FIELD(depth) 1.0f,
+            SHEN_FIELD(flags) 0,
+            SHEN_FIELD(reserved16) 0,
+            SHEN_FIELD(rotation) 0,
+            SHEN_FIELD(icon) 0,
+            SHEN_FIELD(width) 38,
+            SHEN_FIELD(height) 38,
+            SHEN_FIELD(alignment) 9,
+            SHEN_FIELD(reserved23) {}};
         PrepareDrawWithMode(marker, ScreenMode::Centered);
         return;
     }
     if (GetDebugForceUIEnabled(UIElement::LoadingScreen))
         return;
     if (mode == 1)
-        ST_LoadTitleFadeIn_Main(nullptr);
+        ST_LoadTitleFadeIn_Main(0);
     else {
         if (mode == 3) {
-            LegacyColourQuad background{.quad = {.flags = 0x400U}, .colour = 0xff000000U, .alternateColours = {0, 0, 0}};
+            LegacyColourQuad background= {SHEN_FIELD(quad) {SHEN_FIELD(flags) 0x400U}, SHEN_FIELD(colour) 0xff000000U, SHEN_FIELD(alternateColours) {0, 0, 0}};
             TransformScreenSpace(background.quad, ScreenAlignment::HorizontalStretch, 320, 240, 640, 480, 1.0f, 1.0f, 0, ScreenMode::Centered);
             shenSubmitQuad(background, 1.0f);
         }
@@ -1078,4 +1084,5 @@ void DrawLoadingModes() {
         DrawBorrowedLegacySprite(0x230001U, position[0] + 6 * index, position[1], 1.25f, 1.3125f, 0, 0xffffffffU);
 }
 
-} // namespace shenmue::s2
+
+} } // namespace shenmue::s2

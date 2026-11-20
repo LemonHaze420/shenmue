@@ -1,6 +1,10 @@
 #pragma once
 
 #include "shenmue.h"
+
+
+
+#include "shenmue.h"
 #include "common/types.hpp"
 #include <array>
 #include <cstddef>
@@ -38,3 +42,4 @@ inline constexpr std::array<std::array<std::int16_t, 2>, 47> TITLE_WARNING_LOGOS
 inline constexpr std::array<std::int16_t, 4> TITLE_WARNING_LOGO_Y{240, 240, 400, 323};
 
 } // namespace shenmue::s2
+

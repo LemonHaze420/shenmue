@@ -2,11 +2,10 @@
 
 #include "common/types.hpp"
 
-#include <cstdint>
-#include <cstddef>
+#include <stddef.h>
 #include <span>
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
 inline constexpr shen_name TASK_UPDB{SHEN_NAME(UPDB)};
 
@@ -31,4 +30,4 @@ bool AssignScenarioEventStateOperand(std::uint8_t mode, std::uint16_t objectId, 
 
 extern std::int32_t g_storyStep;
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2

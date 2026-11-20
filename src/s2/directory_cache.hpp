@@ -1,13 +1,13 @@
 #pragma once
 
+#include "shenmue.h"
 #include "common/types.hpp"
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 
-namespace shenmue::s2 {
-
+namespace shenmue { namespace s2 {
 inline constexpr shen_name DIRECTORY_CACHE_MEMORY{SHEN_NAME(DIRE)};
 
 
@@ -22,7 +22,8 @@ static_assert(sizeof(DirectoryCacheEntry) == 0x38);
 static_assert(offsetof(DirectoryCacheEntry, path) == 0x08);
 static_assert(offsetof(DirectoryCacheEntry, retained) == 0x30);
 
+void NormalizeDirectoryPath(const char *path, char *normalized);
 void ResetDirectoryCache(std::int32_t all);
 void AllocateDIRE(const char *path, std::int32_t unused, std::int32_t entryCount);
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2

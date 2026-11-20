@@ -3,8 +3,9 @@
 #include "common/math.hpp"
 #include <cmath>
 #include <cstdint>
+#define SHENMUE_S2_ATAN std::atan
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
 std::uint16_t FloatToShort(float value);
 std::int32_t ComputeTriangleNormal(const Vector3 &first, const Vector3 &second, const Vector3 &third, Vector3 &normal);
@@ -38,6 +39,8 @@ std::int16_t InverseFixedAtan2(float first, float direction);
 std::int32_t Vector3_ToFixed16EulerAngles(const Vector3 &direction, Vector3s &angles);
 void ExtractMatrixEulerAnglesFixed(const Matrix4x4 *transform, Vector3i *rotation);
 
+#define SHENMUE_S2_ROUNDED_RATIO roundedRatio
+
 // atanf2_i16 uses quadrant-specific quotients and adds 0.5 before truncation.
 // std::atan2 followed by a fixed-angle conversion does not preserve that rule.
 // @verified - p
@@ -52,20 +55,20 @@ inline std::uint16_t FixedAtan2(float first, float direction) {
         if (direction < -first) {
             if (direction == 0.0f)
                 return 0x8000U;
-            return static_cast<std::uint16_t>(roundedRatio(first, direction) + 0x8000);
+            return static_cast<std::uint16_t>(SHENMUE_S2_ROUNDED_RATIO(first, direction) + 0x8000);
         }
         if (first == 0.0f)
             return 0x4000U;
-        return static_cast<std::uint16_t>(0x4000 - roundedRatio(direction, first));
+        return static_cast<std::uint16_t>(0x4000 - SHENMUE_S2_ROUNDED_RATIO(direction, first));
     }
     if (direction < -first) {
         if (first == 0.0f)
             return 0xc000U;
-        return static_cast<std::uint16_t>(-0x4000 - roundedRatio(direction, first));
+        return static_cast<std::uint16_t>(-0x4000 - SHENMUE_S2_ROUNDED_RATIO(direction, first));
     }
     if (direction == 0.0f)
         return 0;
-    return static_cast<std::uint16_t>(roundedRatio(first, direction));
+    return static_cast<std::uint16_t>(SHENMUE_S2_ROUNDED_RATIO(first, direction));
 }
 
 // abs16: magnitude of a wrapped 16-bit angle difference.
@@ -75,7 +78,10 @@ inline std::uint16_t Abs16(std::int32_t value) {
 }
 
 inline std::int16_t AtanToFixedAngle(float ratio) {
-    return static_cast<std::int16_t>(static_cast<std::int32_t>(std::atan(ratio) * 65536.0f / 6.2831855f + 0.5f));
+    return static_cast<std::int16_t>(static_cast<std::int32_t>(SHENMUE_S2_ATAN(ratio) * 65536.0f / 6.2831855f + 0.5f));
 }
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2
+
+#undef SHENMUE_S2_ATAN
+#undef SHENMUE_S2_ROUNDED_RATIO

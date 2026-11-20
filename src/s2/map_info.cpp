@@ -229,22 +229,10 @@ const MapInfoChunk *FindMapInfoChunk(const char name[4], const void *mapInfo) {
 }
 
 // @verified - p
-MapInfoChunk *FindNativeChunk(const char name[4], MapInfoChunk *first) {
-    std::uint32_t token;
-    std::memcpy(&token, name, sizeof(token));
-    for (;;) {
-        if (first->name.name == token)
-            return first;
-        if (!first->nextByteOffset)
-            return nullptr;
-        first = reinterpret_cast<MapInfoChunk *>(reinterpret_cast<std::byte *>(first) + first->nextByteOffset);
-    }
-}
+
 
 // @verified - p
-std::uint32_t *GetNativeChunkSizeField(const char name[4], MapInfoChunk *first) {
-    return reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::uintptr_t>(FindNativeChunk(name, first)) + sizeof(std::uint32_t));
-}
+
 
 void MAPINFORead(void *mapInfo) {
     MapInfoChunk *const end = FindMapInfoChunk("END\0", mapInfo);

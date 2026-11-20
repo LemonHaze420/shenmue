@@ -1,15 +1,21 @@
 #pragma once
 
 #include "common/types.hpp"
+#include "shenmue.h"
 
 #include <cstddef>
 #include <cstdint>
 
+#define SHENMUE_HLIB_CONSTANT inline constexpr
+#define SHENMUE_HLIB_LAYOUT(condition) static_assert(condition)
+
 // DC S2: HLib_Task : 0x40
 
-namespace shenmue::s2::HLib {
+namespace shenmue {
+namespace s2 {
+namespace HLib {
 
-inline constexpr std::size_t DYNAMIC_HEAP_SIZE = 0x1c42000;
+SHENMUE_HLIB_CONSTANT std::size_t DYNAMIC_HEAP_SIZE = 0x1c42000;
 
 struct TaskData {
     shen_name name;
@@ -78,23 +84,21 @@ struct Task {
     void *taskData;
 };
 
-#ifndef _DREAMCAST
-static_assert(sizeof(TaskData) == 0x40);
-static_assert(offsetof(TaskData, status) == 0x20);
-static_assert(sizeof(StaticStorageEntry) == 0x80);
-static_assert(offsetof(StaticStorageEntry, data) == 0x40);
-static_assert(sizeof(CompiledEventSchedule) == 8);
-static_assert(sizeof(LoopedTaskSchedule) == 8);
-static_assert(sizeof(TimedTaskSchedule) == 8);
-static_assert(sizeof(Task) == 0x70);
-static_assert(offsetof(Task, taskIndex) == 0x0c);
-static_assert(offsetof(Task, next) == 0x10);
-static_assert(offsetof(Task, userData) == 0x48);
-static_assert(offsetof(Task, loopInterval) == 0x50);
-static_assert(offsetof(Task, delayedCallback) == 0x58);
-static_assert(offsetof(Task, taskData) == 0x68);
+SHENMUE_HLIB_LAYOUT(sizeof(TaskData) == 0x40);
+SHENMUE_HLIB_LAYOUT(offsetof(TaskData, status) == 0x20);
+SHENMUE_HLIB_LAYOUT(sizeof(StaticStorageEntry) == 0x80);
+SHENMUE_HLIB_LAYOUT(offsetof(StaticStorageEntry, data) == 0x40);
+SHENMUE_HLIB_LAYOUT(sizeof(CompiledEventSchedule) == 8);
+SHENMUE_HLIB_LAYOUT(sizeof(LoopedTaskSchedule) == 8);
+SHENMUE_HLIB_LAYOUT(sizeof(TimedTaskSchedule) == 8);
+SHENMUE_HLIB_LAYOUT(sizeof(Task) == 0x70);
+SHENMUE_HLIB_LAYOUT(offsetof(Task, taskIndex) == 0x0c);
+SHENMUE_HLIB_LAYOUT(offsetof(Task, next) == 0x10);
+SHENMUE_HLIB_LAYOUT(offsetof(Task, userData) == 0x48);
+SHENMUE_HLIB_LAYOUT(offsetof(Task, loopInterval) == 0x50);
+SHENMUE_HLIB_LAYOUT(offsetof(Task, delayedCallback) == 0x58);
+SHENMUE_HLIB_LAYOUT(offsetof(Task, taskData) == 0x68);
 
-#endif
 
 extern Task *CurrentTask;
 extern Task *NextTask;
@@ -167,9 +171,9 @@ void ResolveDeferredCallback(Task *task);
 void SetScaledDeltaTick(float ticks);
 float GetScaledDeltaTick();
 
-} // namespace shenmue::s2::HLib
+} } } // namespace shenmue::s2::HLib
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
 
 
@@ -177,4 +181,6 @@ void *AllocateTASK(HLib::Task *task, std::uint64_t size);
 
 void FreeTASK(HLib::Task *task);
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2
+#undef SHENMUE_HLIB_CONSTANT
+#undef SHENMUE_HLIB_LAYOUT

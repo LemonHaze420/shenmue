@@ -1,4 +1,5 @@
 #include "s2/legacy_sprite.hpp"
+#include "s2/legacy_sprite_slot.hpp"
 
 #include "s2/d3t_renderer.hpp"
 #include "s2/title_warning.hpp"
@@ -33,7 +34,7 @@ std::int32_t legacySpriteSlotWidthOffset{}, legacySpriteSlotHeightOffset{}, lega
 const std::uint32_t *titleConfirmChoice{};
 std::array<TempTextureEntry *, 39> g_tempTextures{};
 namespace {
-std::array<BorrowedLegacySpriteSlot, 8> borrowedSpriteSlots{};
+
 
 TempTextureWork titleCommonTempWork{};
 LegacySpritePacket titleSpritePacket{};
@@ -674,43 +675,10 @@ void DrawLegacyIconSprite(const LegacyIconSprite &sprite, std::uint32_t colour, 
 
 
 // @verified - p
-bool RegisterBorrowedLegacySpriteSlot(std::int16_t texture, std::int32_t width, std::int32_t height, std::uint16_t slot, const std::uint16_t *rectangles) {
-    BorrowedLegacySpriteSlot *entry = nullptr;
-    for (BorrowedLegacySpriteSlot &candidate : borrowedSpriteSlots) {
-        if (candidate.rectangles && candidate.slot == slot) {
-            entry = &candidate;
-            break;
-        }
-    }
-    if (!entry) {
-        for (BorrowedLegacySpriteSlot &candidate : borrowedSpriteSlots) {
-            if (!candidate.rectangles) {
-                entry = &candidate;
-                break;
-            }
-        }
-    }
-    if (!entry)
-        return false;
-    entry->rectangles = rectangles;
-    entry->slot = slot;
-    entry->texture = texture;
-    entry->inverseWidth = 1.0f / static_cast<float>(width);
-    entry->inverseHeight = 1.0f / static_cast<float>(height);
-    return true;
-}
+
 
 // @verified - p
-void ReleaseBorrowedLegacySpriteSlot(std::uint16_t slot) {
-    for (BorrowedLegacySpriteSlot &entry : borrowedSpriteSlots) {
-        if (!entry.rectangles || entry.slot != slot)
-            continue;
-        entry.rectangles = nullptr;
-        entry.slot = 0;
-        entry.texture = -1;
-        return;
-    }
-}
+
 
 void DrawBorrowedLegacySprite(std::uint32_t icon, std::int32_t x, std::int32_t y, float scaleX, float scaleY, std::int32_t rotation, std::uint32_t colour) {
     for (const BorrowedLegacySpriteSlot &entry : borrowedSpriteSlots) {

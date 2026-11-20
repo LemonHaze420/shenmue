@@ -1,4 +1,8 @@
 #pragma once
+
+#include "shenmue.h"
+
+
 #include "shenmue.h"
 #include "s2/event_transform_flags.hpp"
 
@@ -56,3 +60,4 @@ std::byte *GetScenarioPersistentScratch();
 std::uint8_t *GetScenarioFlagBanks(std::uint8_t **banks);
 
 } // namespace shenmue::s2
+

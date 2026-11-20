@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
 
 
@@ -21,4 +21,4 @@ std::uint64_t GetLoadingBusyFlag();
 void RequestFightTelopPause();
 std::uint64_t RequestFightTelopResume();
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2

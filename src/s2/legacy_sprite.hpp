@@ -1,5 +1,7 @@
 #pragma once
 
+#include "s2/legacy_sprite_slot.hpp"
+
 #include "s2/ui.hpp"
 #include "s2/map_assets.hpp"
 #include <array>
@@ -185,15 +187,6 @@ void DrawLegacyWindowTiles(float x, float y, std::int32_t columns, std::int32_t 
 bool shenSubmitQuad(const LegacyColourQuad &packet, float depth);
 bool shenSubmitQuadsUI(float x, float y, std::uint32_t fill, std::uint32_t border, std::int32_t width, std::int32_t height, float depth);
 void LegacySpriteNullsub(const LegacySpritePacket &packet, std::uint32_t texture, float depth);
-struct BorrowedLegacySpriteSlot {
-    const std::uint16_t *rectangles;
-    std::uint16_t slot;
-    std::int16_t texture;
-    float inverseWidth;
-    float inverseHeight;
-    std::uint32_t reserved14;
-};
-static_assert(sizeof(BorrowedLegacySpriteSlot) == 0x18);
 bool RegisterBorrowedLegacySpriteSlot(std::int16_t texture, std::int32_t width, std::int32_t height, std::uint16_t slot, const std::uint16_t *rectangles);
 void ReleaseBorrowedLegacySpriteSlot(std::uint16_t slot);
 void DrawBorrowedLegacySprite(std::uint32_t icon, std::int32_t x, std::int32_t y, float scaleX, float scaleY, std::int32_t rotation, std::uint32_t colour);

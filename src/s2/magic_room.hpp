@@ -1,5 +1,9 @@
 #pragma once
 
+#include "shenmue.h"
+
+
+
 #include "common/math.hpp"
 #include "common/types.hpp"
 
@@ -7,6 +11,10 @@
 #include <cstdint>
 
 namespace shenmue::s2 {
+
+typedef std::int64_t MagicRoomInteger;
+typedef std::uint64_t MagicRoomUnsigned;
+typedef std::uint8_t MagicRoomLimitValue;
 
 struct MT7Model;
 inline constexpr shen_name TASK_MAGIC_ROOM{SHEN_NAME(ROOM)};
@@ -137,3 +145,4 @@ void SetMagicRoomActiveFlag(std::int32_t enabled);
 void QueueMagicRoom(const char *directory, const char *archive, const MagicRoomFloorGroup *groups, std::int32_t seed);
 
 } // namespace shenmue::s2
+

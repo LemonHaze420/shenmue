@@ -1,3 +1,6 @@
+#include "shenmue.h"
+
+
 #include "s2/character.hpp"
 
 #include "logging.hpp"
@@ -425,25 +428,14 @@ void SetCharacterShadowY(Character *character, float height) {
     if (character)
         character->shadowY = std::bit_cast<std::int32_t>(height);
 }
-void SetCharacterStoredShadowYEnabled(Character *character, std::int32_t enabled) {
-    if (character)
-        character->flags = enabled ? character->flags | CF_UseStoredShadowY : character->flags & ~CF_UseStoredShadowY;
-}
+
 std::int32_t GetEntityType(const Character *character) {
     return character ? character->type : -1;
 }
-bool charaCheckFlags(const Character *character) {
-    return character && (character->flags & CF_Unknown40) != 0;
-}
-bool charaIsDisplayCheckEnabled(const Character *character) {
-    return character && (character->flags & CF_DisplayCheckEnabled) != 0;
-}
-bool charaGetWasVisible(const Character *character) {
-    return character && (character->flags & CF_VisibleThisCheck) != 0;
-}
-bool charaForceVisibleCheck(const Character *character) {
-    return character && (character->flags & CF_ForceVisibleCheck) != 0;
-}
+
+
+
+
 std::uint32_t charaHasMirroredFlags(const Character *character) {
     return character ? character->flags & CF_DrawMirrored : 0;
 }
@@ -460,22 +452,13 @@ void ClearCharacterFacialModel(Character *character) {
     if (character)
         character->facialModel = nullptr;
 }
-void charaSetDisplayEnabledFlag(Character *character, std::int32_t enabled) {
-    if (character)
-        character->flags = enabled ? character->flags | CF_DisplayCheckEnabled : character->flags & ~CF_DisplayCheckEnabled;
-}
+
 void charaSetFlags(Character *character, std::int32_t enabled) {
     if (character)
         character->flags = enabled ? character->flags | CF_Active : character->flags & ~CF_Active;
 }
-void charaToggleFlag(Character *character, std::int32_t enabled) {
-    if (character)
-        character->flags = enabled ? character->flags | CF_Unknown40 : character->flags & ~CF_Unknown40;
-}
-void SetMirrored(Character *character, std::int32_t enabled) {
-    if (character)
-        character->flags = enabled ? character->flags | CF_DrawMirrored : character->flags & ~CF_DrawMirrored;
-}
+
+
 void charaSetFlagFor(Character *character, std::int32_t flag) {
     if (character)
         character->field94 = flag;
@@ -3264,27 +3247,7 @@ void ExchangeCharacterDrawVector(const Vector4 *colour, Vector4 *previous) {
 }
 
 // @verified - p
-HLib::Task *CharDraw_Human_Object_Enqueue(std::uint8_t nextFunctionIndex) {
-    characterDrawTask = HLib::EnqueueTaskWithParameter(CharDraw_Callback, nextFunctionIndex, 2, sizeof(CharacterDrawTaskParameters), CHARACTER_DRAW_TASK);
-    HLib::EnqueueTaskWithoutParameter(CharDrawHuman_Callback, nextFunctionIndex, 2, static_cast<std::int32_t>(HUMAN_DRAW_TASK.name));
-    HLib::EnqueueTaskWithoutParameter(CharDrawObject_Callback, nextFunctionIndex, 2, static_cast<std::int32_t>(OBJECT_DRAW_TASK.name));
-    npcBatchCountOverride = 49;
-    npcFillType = static_cast<NpcFillType>(0);
-    characterHumanDrawBudget = 10.0f;
-    npcUpdatedLastTick = 0;
-    npcPoolSizingModeOrOverride = -5;
-    if (auto *const parameters = static_cast<CharacterDrawTaskParameters *>(HLib::GetTaskParameter(characterDrawTask))) {
-        std::memset(parameters, 0, sizeof(*parameters));
-    }
 
-
-    constexpr std::array<std::uint32_t, 25> authorSpawnMaps{SHEN_NAME(WB01), SHEN_NAME(QRR0), SHEN_NAME(ARC0), SHEN_NAME(WKA0), SHEN_NAME(ARA0),
-        SHEN_NAME(WTA0), SHEN_NAME(WEG0), SHEN_NAME(ARM0), SHEN_NAME(AKS0), SHEN_NAME(WET0), SHEN_NAME(AKT0), SHEN_NAME(AKY0), SHEN_NAME(WSY0), SHEN_NAME(AKT2),
-        SHEN_NAME(AKS1), SHEN_NAME(WSG1), SHEN_NAME(WEM1), SHEN_NAME(WES1), SHEN_NAME(AKT1), SHEN_NAME(WRS2), SHEN_NAME(AKA3), SHEN_NAME(AKT3), SHEN_NAME(AKA4),
-        SHEN_NAME(QCAE), SHEN_NAME(WESM)};
-    mapAllowsAuthorSpawn = std::find(authorSpawnMaps.begin(), authorSpawnMaps.end(), g_currentMap.name) != authorSpawnMaps.end();
-    return characterDrawTask;
-}
 
 #if defined(_WIN32)
 CharacterDebugCallback g_characterDebugCallback{};
@@ -3357,3 +3320,78 @@ CharacterDebugCallback SetupCharacterDebug() {
 #endif
 
 } // namespace shenmue::s2
+
+namespace shenmue { namespace s2 {
+
+// @verified - pd
+HLib::Task *CharDraw_Human_Object_Enqueue(std::uint8_t nextFunctionIndex) {
+    characterDrawTask = HLib::EnqueueTaskWithParameter(CharDraw_Callback, nextFunctionIndex, 2, sizeof(CharacterDrawTaskParameters), CHARACTER_DRAW_TASK);
+    HLib::EnqueueTaskWithoutParameter(CharDrawHuman_Callback, nextFunctionIndex, 2, static_cast<std::int32_t>(SHEN_NAME(DRWH)));
+    HLib::EnqueueTaskWithoutParameter(CharDrawObject_Callback, nextFunctionIndex, 2, static_cast<std::int32_t>(SHEN_NAME(DRWO)));
+    npcBatchCountOverride = 49;
+    npcFillType = static_cast<NpcFillType>(0);
+    characterHumanDrawBudget = 10.0f;
+    npcUpdatedLastTick = 0;
+    npcPoolSizingModeOrOverride = -5;
+    if (auto *const parameters = static_cast<CharacterDrawTaskParameters *>(HLib::GetTaskParameter(characterDrawTask))) {
+        std::memset(parameters, 0, sizeof(*parameters));
+    }
+
+
+    constexpr std::array<std::uint32_t, 25> authorSpawnMaps{SHEN_NAME(WB01), SHEN_NAME(QRR0), SHEN_NAME(ARC0), SHEN_NAME(WKA0), SHEN_NAME(ARA0),
+        SHEN_NAME(WTA0), SHEN_NAME(WEG0), SHEN_NAME(ARM0), SHEN_NAME(AKS0), SHEN_NAME(WET0), SHEN_NAME(AKT0), SHEN_NAME(AKY0), SHEN_NAME(WSY0), SHEN_NAME(AKT2),
+        SHEN_NAME(AKS1), SHEN_NAME(WSG1), SHEN_NAME(WEM1), SHEN_NAME(WES1), SHEN_NAME(AKT1), SHEN_NAME(WRS2), SHEN_NAME(AKA3), SHEN_NAME(AKT3), SHEN_NAME(AKA4),
+        SHEN_NAME(QCAE), SHEN_NAME(WESM)};
+    mapAllowsAuthorSpawn = std::find(authorSpawnMaps.begin(), authorSpawnMaps.end(), g_currentMap.name) != authorSpawnMaps.end();
+    return characterDrawTask;
+}
+
+
+} }
+
+namespace shenmue { namespace s2 {
+// @verified - pd
+bool charaCheckFlags(const Character *character) {
+    return character && (character->flags & CF_Unknown40) != 0;
+}
+
+// @verified - pd
+bool charaIsDisplayCheckEnabled(const Character *character) {
+    return character && (character->flags & CF_DisplayCheckEnabled) != 0;
+}
+
+// @verified - pd
+bool charaGetWasVisible(const Character *character) {
+    return character && (character->flags & CF_VisibleThisCheck) != 0;
+}
+
+// @verified - pd
+bool charaForceVisibleCheck(const Character *character) {
+    return character && (character->flags & CF_ForceVisibleCheck) != 0;
+}
+
+// @verified - pd
+void charaSetDisplayEnabledFlag(Character *character, std::int32_t enabled) {
+    if (character)
+        character->flags = enabled ? character->flags | CF_DisplayCheckEnabled : character->flags & ~CF_DisplayCheckEnabled;
+}
+
+// @verified - pd
+void charaToggleFlag(Character *character, std::int32_t enabled) {
+    if (character)
+        character->flags = enabled ? character->flags | CF_Unknown40 : character->flags & ~CF_Unknown40;
+}
+
+// @verified - pd
+void SetMirrored(Character *character, std::int32_t enabled) {
+    if (character)
+        character->flags = enabled ? character->flags | CF_DrawMirrored : character->flags & ~CF_DrawMirrored;
+}
+
+// @verified - pd
+void SetCharacterStoredShadowYEnabled(Character *character, std::int32_t enabled) {
+    if (character)
+        character->flags = enabled ? character->flags | CF_UseStoredShadowY : character->flags & ~CF_UseStoredShadowY;
+}
+
+} } // namespace shenmue::s2

@@ -1227,6 +1227,7 @@ add_library(shenmue2_game STATIC
         src/s2/author.cpp
         src/s2/author_control.cpp
         src/s2/camera.cpp
+        src/s2/camera_parameters.cpp
         src/s2/character.cpp
         src/s2/conversation.cpp
         src/s2/door.cpp
@@ -1281,6 +1282,7 @@ add_library(shenmue2_game STATIC
         src/s2/legacy_collection.cpp
         src/s2/effect_fft.cpp
         src/s2/model_component.cpp
+        src/s2/string_utility.cpp
         src/s2/character_control.cpp
         src/s2/party_companion.cpp
         src/s2/cloth.cpp
@@ -1311,6 +1313,7 @@ add_library(shenmue2_game STATIC
   src/s2/player_placement.cpp
   src/s2/player_held.cpp
         src/s2/world_render.cpp
+        src/s2/shadow_range.cpp
   src/s2/audio_data.cpp
   src/s2/aica_middleware.cpp
   src/s2/sound_program.cpp
@@ -1350,12 +1353,15 @@ add_library(shenmue2_game STATIC
   src/s2/initialization.cpp
   src/s2/map_control.cpp
   src/s2/map_assets.cpp
+  src/s2/map_render_profile.cpp
   src/s2/maze.cpp
   src/s2/memo.cpp
   src/s2/map_info.cpp
+  src/s2/map_chunk.cpp
   src/s2/legacy_draw.cpp
   src/s2/legacy_projection.cpp
   src/s2/legacy_sprite.cpp
+  src/s2/legacy_sprite_slot.cpp
   src/s2/battle_qte.cpp
   src/s2/battle_qte_sprites.cpp
   src/s2/battle_qte_ui.cpp
@@ -1375,6 +1381,7 @@ add_library(shenmue2_game STATIC
   src/s2/mt7.cpp
   src/s2/model_clone.cpp
   src/s2/blur_figure_pose.cpp
+  src/s2/blur_figure_pose_core.cpp
   src/s2/navigation.cpp
   src/s2/navi.cpp
   src/s2/npc.cpp
@@ -1388,11 +1395,15 @@ add_library(shenmue2_game STATIC
   src/s2/pawn_shop.cpp
   src/s2/pause.cpp
   src/s2/pak.cpp
+  src/s2/texture_motion.cpp
   src/s2/renderer_initialization.cpp
   src/s2/scene_data.cpp
+  src/s2/scene_path.cpp
+  src/s2/scene_text_heap.cpp
   src/s2/save.cpp
   src/s2/search.cpp
   src/s2/screen_film.cpp
+  src/s2/screen_film_state.cpp
   src/s2/story_state.cpp
   src/s2/system_modules.cpp
   src/s2/title.cpp

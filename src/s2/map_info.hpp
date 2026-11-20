@@ -1,11 +1,13 @@
 #pragma once
 
 #include "common/types.hpp"
+#include "shenmue.h"
 
 #include <cstddef>
 #include <cstdint>
 
-namespace shenmue::s2 {
+
+namespace shenmue { namespace s2 {
 
 struct MapInfoChunk {
     shen_name name;
@@ -13,6 +15,7 @@ struct MapInfoChunk {
 };
 
 static_assert(sizeof(MapInfoChunk) == 8);
+
 
 void *SceneMapinfoReader(std::int32_t actNumber, shen_name areaName);
 MapInfoChunk *FindMapInfoChunk(const char name[4], void *mapInfo);
@@ -27,4 +30,4 @@ bool ResolveCurrentMapOperand(std::uint16_t index, std::int32_t &value);
 
 extern std::uint64_t g_mapInfoSize;
 
-} // namespace shenmue::s2
+} } // namespace shenmue::s2

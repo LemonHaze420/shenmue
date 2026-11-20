@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace shenmue::matrix_stack {
+namespace shenmue { namespace matrix_stack {
 
 enum class MatrixStackType : std::uint8_t {
     PreRender = 0,
@@ -53,7 +53,7 @@ void MatrixStack_InitStackTableEntries(MatrixStackEntry *entry, Matrix4x4 *memor
 void MatrixStack_InitTransformMatrixStack(Matrix4x4 *memory, std::int32_t size);
 void SetActiveStack(MatrixStackType type);
 void SetupStack();
-bool Matrix4x4_Push(const Matrix4x4 *transform = nullptr);
+bool Matrix4x4_Push(const Matrix4x4 *transform = 0);
 Vector3 *ComputeEulerAnglesFromVector(const Matrix4x4 *matrix, Vector3 *output);
 Vector4 *PerformPerspectiveProjectionTransform(const Matrix4x4 *matrix, Vector4 *output, const Vector3 *input);
 Matrix4x4 *createTransformedMatrix(const Matrix4x4 *source, Matrix4x4 *output);
@@ -64,4 +64,4 @@ Matrix4x4 *ComputeLookAtViewMatrix(Matrix4x4 *output, const Vector3 *eye, const 
 Vector4 *RotationMatrixToQuaternion(const Matrix4x4 *matrix, Vector4 *output);
 void CalcCameraTransform(const Vector4 &eye, const Vector4 &target, std::int16_t zAngle);
 
-} // namespace shenmue::matrix_stack
+} } // namespace shenmue::matrix_stack

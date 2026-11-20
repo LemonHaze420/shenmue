@@ -1,9 +1,11 @@
 #pragma once
+#include "shenmue.h"
 #include "common/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
 
+#define SHENMUE_MODULE_LAYOUT(condition) static_assert(condition)
 namespace shenmue::s2 {
 inline constexpr shen_name TASK_MODU{SHEN_NAME(MODU)};
 
@@ -39,9 +41,9 @@ struct SystemModuleTaskData {
     std::byte workStorage[0x100];
 };
 
-static_assert(sizeof(SystemModuleTaskData) == 0x118);
-static_assert(offsetof(SystemModuleTaskData, work) == 0x10);
-static_assert(offsetof(SystemModuleTaskData, workStorage) == 0x18);
+SHENMUE_MODULE_LAYOUT(sizeof(SystemModuleTaskData) == (SHENMUE_IS_DC ? 0x114 : 0x118));
+SHENMUE_MODULE_LAYOUT(offsetof(SystemModuleTaskData, work) == 0x10);
+SHENMUE_MODULE_LAYOUT(offsetof(SystemModuleTaskData, workStorage) == (SHENMUE_IS_DC ? 0x14 : 0x18));
 using FrontendTaskCallback = void (*)(void *);
 
 struct FrontendPlatformAdapters {
@@ -86,3 +88,4 @@ bool ReturnToTitleMenuHandoff();
 bool BeginNewGameModuleHandoff();
 
 } // namespace shenmue::s2
+#undef SHENMUE_MODULE_LAYOUT

@@ -1,3 +1,7 @@
+#include "shenmue.h"
+
+
+#include "s2/object_draw_task.hpp"
 #include "s2/world_render.hpp"
 #if defined(SHENMUE_ENHANCEMENT_S2_MAP_SEAMS) && SHENMUE_ENHANCEMENT_S2_MAP_SEAMS
 #include "s2/enhancements/map_seams.hpp"
@@ -713,28 +717,13 @@ void DrawScriptedModelTransformTree(const MT7Model &model, const MT7Node *firstN
 
 } // namespace
 // @verified - p
-float GetShadowRange() {
-    return g_shadowRange.x;
-}
+
 
 // @verified - p
-void SHRG_Reader(const void *chunk) {
-    if (chunk) {
-        float range;
-        std::memcpy(&range, static_cast<const std::byte *>(chunk) + sizeof(MapInfoChunk), sizeof(range));
-        g_shadowRange.x = std::fmax(0.1f, range);
-        g_shadowRange.y = 1.0f / g_shadowRange.x;
-    } else {
-        g_shadowRange.x = defaultShadowRange;
-        g_shadowRange.y = 1.0f / defaultShadowRange;
-    }
-}
+
 
 // @verified - p
-void EV_SetAlignedShadowRange(float range) {
-    g_shadowRange.x = std::fmax(0.1f, range);
-    g_shadowRange.y = 1.0f / g_shadowRange.x;
-}
+
 
 // @verified - p
 void SetGlobalShadowLightingEnabled(std::int32_t enabled) {
@@ -3066,14 +3055,7 @@ void OBJ_Object_Callback(void *taskData) {
 
 } // namespace
 
-HLib::Task *QueueObjectDrawTask(std::uint8_t nextFunctionIndex) {
-    HLib::Task *const task = HLib::EnqueueTaskWithParameter(OBJ_Object_Callback, nextFunctionIndex, 5, sizeof(ObjectDrawTaskParameters), SHEN_NAME(OBJE));
-    if (auto *const parameters = static_cast<ObjectDrawTaskParameters *>(HLib::GetTaskParameter(task))) {
-        parameters->submittedOpaque = 0;
-        parameters->submittedTransparent = 0;
-    }
-    return task;
-}
+
 std::uint32_t DrawAirWorldPass() {
     if (!airSkyEnabled || !airPresentation.geometryReady || !d3t::BindSceneFrameRenderTarget()) {
         return 0;
@@ -4492,3 +4474,17 @@ std::uint32_t DrawFixedShadowMesh(std::size_t index, float alpha) {
 }
 
 } // namespace shenmue::s2
+
+namespace shenmue { namespace s2 {
+
+HLib::Task *QueueObjectDrawTask(std::uint8_t nextFunctionIndex) {
+    HLib::Task *const task = HLib::EnqueueTaskWithParameter(OBJ_Object_Callback, nextFunctionIndex, 5, sizeof(ObjectDrawTaskParameters), OBJECT_DRAW_SCENE_TASK);
+    if (auto *const parameters = static_cast<ObjectDrawTaskParameters *>(HLib::GetTaskParameter(task))) {
+        parameters->submittedOpaque = 0;
+        parameters->submittedTransparent = 0;
+    }
+    return task;
+}
+
+
+} }

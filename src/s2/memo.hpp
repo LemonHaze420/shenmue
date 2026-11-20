@@ -1,4 +1,8 @@
 #pragma once
+
+#include "shenmue.h"
+
+
 #include "shenmue.h"
 #include "common/math.hpp"
 
@@ -133,3 +137,4 @@ void ResetMemoPageState() noexcept;
 
 void RequestMemoClose() noexcept;
 } // namespace shenmue::s2
+

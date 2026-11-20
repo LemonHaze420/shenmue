@@ -5084,27 +5084,17 @@ EulerRotation16 *camCtrlGetRot(EulerRotation16 *output) noexcept {
 }
 
 // @verified - p
-float camCtrlGetFarDistance() noexcept {
-    return g_cameraControl->farDistance;
-}
+
 
 // @verified - p
-float camCtrlGetNearDistance() noexcept {
-    return g_cameraControl->nearDistance;
-}
+
 
 // @verified - p
-float camCtrlGetNpcRadius() noexcept {
-    return g_cameraControl->npcRadius;
-}
 
-float camCtrlGetHalfVerticalFovTangent() noexcept {
-    return g_cameraControl->halfVerticalFovTangent;
-}
 
-float camCtrlGetPitchAngleTangent() noexcept {
-    return g_cameraControl->pitchAngleTangent;
-}
+
+
+
 
 void camCtrlSetFov(std::int16_t fieldOfView) noexcept {
     if (g_cameraControl)
@@ -5895,21 +5885,13 @@ void camCtrlResetClipDistances() {
 }
 
 // @verified - p
-float camCtrlSetFarDistance(float distance) {
-    const float previous = g_cameraControl->farDistance;
-    g_cameraControl->farDistance = distance;
-    return previous;
-}
+
 
 // @verified - p
-void camCtrlSetNearDistance(float distance) {
-    g_cameraControl->nearDistance = distance;
-}
+
 
 // @verified - p
-void camCtrlSetNpcRadius(float radius) {
-    g_cameraControl->npcRadius = radius;
-}
+
 
 // @verified - p
 bool camCtrlToggleSmoothing(std::int32_t enabled) noexcept {

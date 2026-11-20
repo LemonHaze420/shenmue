@@ -3,13 +3,17 @@
 #include "s2/flag.hpp"
 #include "s2/hlib.hpp"
 
-namespace shenmue::s2 {
+#define SHENMUE_DIRECTORY_NULL nullptr
+
+namespace shenmue { namespace s2 {
 namespace {
 
 std::array<DirectoryCacheEntry, 13> directoryCache{};
 
+} // namespace
 
-// @verified - p
+
+// @verified - pd
 void NormalizeDirectoryPath(const char *path, char *normalized) {
     *normalized = '/';
     if (!path || !*path) {
@@ -43,17 +47,16 @@ void NormalizeDirectoryPath(const char *path, char *normalized) {
     *out = '\0';
 }
 
-} // namespace
-
 // @verified - p
 void ResetDirectoryCache(std::int32_t all) {
     for (DirectoryCacheEntry &entry : directoryCache) {
         if (entry.retained != 0 && all == 0)
             continue;
-        entry.directory = nullptr;
+        entry.directory = SHENMUE_DIRECTORY_NULL;
         entry.path[0] = '\0';
     }
 }
+
 
 
 // @verified - p
@@ -85,4 +88,7 @@ void AllocateDIRE(const char *path, std::int32_t, std::int32_t entryCount) {
     nullsub();
 }
 
-} // namespace shenmue::s2
+
+} } // namespace shenmue::s2
+
+#undef SHENMUE_DIRECTORY_NULL

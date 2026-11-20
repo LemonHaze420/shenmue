@@ -4,6 +4,11 @@
 
 namespace shenmue::s2 {
 
+inline constexpr shen_name AREA_AB00{SHEN_NAME(AB00)}, AREA_AK00{SHEN_NAME(AK00)}, AREA_AR01{SHEN_NAME(AR01)};
+inline constexpr shen_name AREA_AR02{SHEN_NAME(AR02)}, AREA_AR03{SHEN_NAME(AR03)}, AREA_Q100{SHEN_NAME(Q100)};
+inline constexpr shen_name AREA_QR00{SHEN_NAME(QR00)}, AREA_WB00{SHEN_NAME(WB00)}, AREA_WK00{SHEN_NAME(WK00)};
+inline constexpr shen_name AREA_WN00{SHEN_NAME(WN00)}, AREA_WS00{SHEN_NAME(WS00)};
+
 inline constexpr shen_name AREA_0001{SHEN_NAME(0001)};
 inline constexpr shen_name AREA_0266{SHEN_NAME(0266)};
 inline constexpr shen_name AREA_0271{SHEN_NAME(0271)};

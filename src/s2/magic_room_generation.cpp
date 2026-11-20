@@ -1,26 +1,25 @@
 #include "s2/magic_room.hpp"
 
-#include <bit>
-#include <cmath>
+#include <math.h>
 #include <cstring>
 
-namespace shenmue::s2 {
-MagicRoomHeader *g_magicRoomDatabase{};
-MagicRoomGroup *g_magicRoomGroups{};
-MagicRoomModel *g_magicRoomModels{};
+namespace shenmue { namespace s2 {
+MagicRoomHeader *g_magicRoomDatabase = 0;
+MagicRoomGroup *g_magicRoomGroups = 0;
+MagicRoomModel *g_magicRoomModels = 0;
 namespace {
-std::uint8_t roomModes[9]{};
-std::uint8_t roomCapacity[45]{};
-std::uint8_t roomUsage[45]{};
-std::uint8_t roomModeSeed{};
-Vector3 roomDimensions{};
-MagicRoomCursorState roomCursor{};
-float roomBoundaryX{};
-std::uint32_t roomRngState{};
-std::int16_t roomCandidates[128]{};
-std::int32_t roomEntityCount{};
-std::int32_t roomEntityCapacity{};
-std::byte *roomEntityBuffer{};
+std::uint8_t roomModes[9] = {};
+MagicRoomLimitValue roomCapacity[45] = {};
+MagicRoomLimitValue roomUsage[45] = {};
+std::uint8_t roomModeSeed = 0;
+Vector3 roomDimensions = {};
+MagicRoomCursorState roomCursor = {};
+float roomBoundaryX = 0;
+std::uint32_t roomRngState = 0;
+std::int16_t roomCandidates[128] = {};
+std::int32_t roomEntityCount = 0;
+std::int32_t roomEntityCapacity = 0;
+std::byte *roomEntityBuffer = 0;
 
 void TransformMagicRoomPlacements(
     MagicRoomPlacement *placements, std::int32_t count, std::uint32_t outerYaw, float baseX, float baseZ, float scaleX, float scaleZ) {
@@ -35,25 +34,25 @@ void TransformMagicRoomPlacements(
         placement.position.x = x + baseX;
     }
 }
-std::int64_t ConstructMagicRoomSeatingPlacement(MagicRoomPlacement *placements, int modelIndex, int remaining, float *usedWidth, float *usedDepth);
+MagicRoomInteger ConstructMagicRoomSeatingPlacement(MagicRoomPlacement *placements, int modelIndex, int remaining, float *usedWidth, float *usedDepth);
 void ExpandMagicRoomDimensions(MagicRoomModel *model, Vector3 *outDim);
-std::int64_t FindMagicRoomCandidates(std::int64_t a1, int a2, float x, float z);
-std::int64_t PickMagicRoomBaseModel(int a1);
-std::int64_t FindMagicRoomBaseCandidates(int a1, float a2, float a3);
-std::int64_t ConstructMagicRoomSecondaryPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5);
+MagicRoomInteger FindMagicRoomCandidates(MagicRoomInteger a1, int a2, float x, float z);
+MagicRoomInteger PickMagicRoomBaseModel(int a1);
+MagicRoomInteger FindMagicRoomBaseCandidates(int a1, float a2, float a3);
+MagicRoomInteger ConstructMagicRoomSecondaryPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5);
 int ConstructMagicRoomFurniture(
     MagicRoomPlacement *out, std::uint16_t modelIndex, int remaining, float *usedWidth, float *usedDepth, std::uint16_t orientation);
-std::int64_t ConstructMagicRoomAxisPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5);
-std::int64_t ConstructMagicRoomBasicPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5);
-std::int64_t FillMagicRoomLowerWall(MagicRoomPlacement *a1, int a2);
-std::int64_t FillMagicRoomLowerRightCorner(MagicRoomPlacement *a1, int a2);
-std::int64_t FillMagicRoomRightWall(MagicRoomPlacement *a1, int a2);
-std::int64_t FillMagicRoomUpperRightCorner(MagicRoomPlacement *a1, int a2);
-std::int64_t FillMagicRoomLowerLeftCorner(MagicRoomPlacement *a1, int a2);
-std::int64_t FillMagicRoomLeftWall(MagicRoomPlacement *a1, int a2);
-std::int64_t FillMagicRoomUpperLeftCorner(MagicRoomPlacement *a1, int a2);
-std::int64_t ConstructMagicRoomSpecialPlacement(MagicRoomPlacement *a1, int a2);
-std::int64_t ConstructMagicRoomGroupedPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5);
+MagicRoomInteger ConstructMagicRoomAxisPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5);
+MagicRoomInteger ConstructMagicRoomBasicPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5);
+MagicRoomInteger FillMagicRoomLowerWall(MagicRoomPlacement *a1, int a2);
+MagicRoomInteger FillMagicRoomLowerRightCorner(MagicRoomPlacement *a1, int a2);
+MagicRoomInteger FillMagicRoomRightWall(MagicRoomPlacement *a1, int a2);
+MagicRoomInteger FillMagicRoomUpperRightCorner(MagicRoomPlacement *a1, int a2);
+MagicRoomInteger FillMagicRoomLowerLeftCorner(MagicRoomPlacement *a1, int a2);
+MagicRoomInteger FillMagicRoomLeftWall(MagicRoomPlacement *a1, int a2);
+MagicRoomInteger FillMagicRoomUpperLeftCorner(MagicRoomPlacement *a1, int a2);
+MagicRoomInteger ConstructMagicRoomSpecialPlacement(MagicRoomPlacement *a1, int a2);
+MagicRoomInteger ConstructMagicRoomGroupedPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5);
 int AddMagicRoomSurfaceDecoration(MagicRoomPlacement *outChild, const MagicRoomPlacement *parent, const MagicRoomModel *parentModel, int remaining);
 
 void ExpandMagicRoomDimensions(MagicRoomModel *model, Vector3 *outDim) {
@@ -116,12 +115,12 @@ void ExpandMagicRoomDimensions(MagicRoomModel *model, Vector3 *outDim) {
     }
 }
 
-std::int64_t FindMagicRoomCandidates(std::int64_t a1, int a2, float x, float z) {
+MagicRoomInteger FindMagicRoomCandidates(MagicRoomInteger a1, int a2, float x, float z) {
     unsigned int v4;
-    std::int64_t v8;
-    std::int64_t v9;
-    std::int64_t v10;
-    std::int64_t v11;
+    MagicRoomInteger v8;
+    MagicRoomInteger v9;
+    MagicRoomInteger v10;
+    MagicRoomInteger v11;
     std::int32_t start;
     std::int32_t v13;
     MagicRoomModel *v14;
@@ -205,10 +204,10 @@ std::int64_t FindMagicRoomCandidates(std::int64_t a1, int a2, float x, float z) 
     return v4;
 }
 
-std::int64_t PickMagicRoomBaseModel(int a1) {
+MagicRoomInteger PickMagicRoomBaseModel(int a1) {
     unsigned int v1;
-    std::int64_t result;
-    std::int64_t category;
+    MagicRoomInteger result;
+    MagicRoomInteger category;
 
     v1 = FindMagicRoomBaseCandidates(a1, roomDimensions.x * 2.0f, roomDimensions.y * 2.0f);
     if (v1 == 0)
@@ -221,8 +220,8 @@ std::int64_t PickMagicRoomBaseModel(int a1) {
     return result;
 }
 
-std::int64_t FindMagicRoomBaseCandidates(int a1, float a2, float a3) {
-    std::int64_t v3;
+MagicRoomInteger FindMagicRoomBaseCandidates(int a1, float a2, float a3) {
+    MagicRoomInteger v3;
     unsigned int v4;
     float v7;
     float v8;
@@ -230,7 +229,7 @@ std::int64_t FindMagicRoomBaseCandidates(int a1, float a2, float a3) {
     std::int32_t count;
     MagicRoomModel *v11;
     std::int16_t *v12;
-    std::int64_t v13;
+    MagicRoomInteger v13;
     float X;
     float Z;
 
@@ -251,7 +250,7 @@ std::int64_t FindMagicRoomBaseCandidates(int a1, float a2, float a3) {
                 if (X > a2 && v7 > X && Z > a3 && v8 > Z) {
                     *v12 = start;
                     ++v4;
-                    if ((std::int64_t)++v12 >= (std::int64_t)(roomCandidates + 128))
+                    if ((MagicRoomInteger)++v12 >= (MagicRoomInteger)(roomCandidates + 128))
                         break;
                 }
                 ++start;
@@ -261,7 +260,7 @@ std::int64_t FindMagicRoomBaseCandidates(int a1, float a2, float a3) {
     return v4;
 }
 
-std::int64_t ConstructMagicRoomSecondaryPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5) {
+MagicRoomInteger ConstructMagicRoomSecondaryPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5) {
     float v9;
     MagicRoomModel *v10;
     float v11;
@@ -273,7 +272,7 @@ std::int64_t ConstructMagicRoomSecondaryPlacement(MagicRoomPlacement *a1, int a2
     unsigned int v17;
     MagicRoomModel *v18;
     int v19;
-    std::int64_t category;
+    MagicRoomInteger category;
     float *p_X;
     float v22;
     float v23;
@@ -383,7 +382,7 @@ int ConstructMagicRoomFurniture(
         v11 = 2.2f - out->height;
         roomRngState = 0x41C64E6DU * roomRngState + 0x8707;
         out->position.y = v11 + (float)((float)((float)((roomRngState >> 16U) & 0x7FFF) / 32767.0f) * 0.30000001f);
-        out->kind = static_cast<std::int32_t>(MagicRoomPlacementKind::Clock);
+        out->kind = 3;
         break;
     default:
         result = ConstructMagicRoomAxisPlacement(out, modelIndex, remaining, usedWidth, v7);
@@ -392,11 +391,11 @@ int ConstructMagicRoomFurniture(
     return result;
 }
 
-std::int64_t ConstructMagicRoomAxisPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5) {
+MagicRoomInteger ConstructMagicRoomAxisPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5) {
     MagicRoomModel *model;
     int v10;
-    std::int64_t v11;
-    std::int64_t v12;
+    MagicRoomInteger v11;
+    MagicRoomInteger v12;
     float v13;
     float Z;
     Vector3 outDim;
@@ -432,7 +431,7 @@ std::int64_t ConstructMagicRoomAxisPlacement(MagicRoomPlacement *a1, int a2, int
     return (unsigned int)(v10 + 1);
 }
 
-std::int64_t ConstructMagicRoomBasicPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5) {
+MagicRoomInteger ConstructMagicRoomBasicPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5) {
     std::uint16_t v7;
     MagicRoomModel *v9;
     int v10;
@@ -475,14 +474,14 @@ std::int64_t ConstructMagicRoomBasicPlacement(MagicRoomPlacement *a1, int a2, in
     return (unsigned int)(v10 + 1);
 }
 
-std::int64_t FillMagicRoomLowerWall(MagicRoomPlacement *a1, int a2) {
+MagicRoomInteger FillMagicRoomLowerWall(MagicRoomPlacement *a1, int a2) {
     float X;
     float v5;
     float v6;
     int v7;
     unsigned int v8;
     std::uint16_t v9;
-    std::int64_t category;
+    MagicRoomInteger category;
     int v11;
     float usedWidth;
     float usedDepth;
@@ -511,7 +510,7 @@ std::int64_t FillMagicRoomLowerWall(MagicRoomPlacement *a1, int a2) {
     return (unsigned int)v7;
 }
 
-std::int64_t FillMagicRoomLowerRightCorner(MagicRoomPlacement *a1, int a2) {
+MagicRoomInteger FillMagicRoomLowerRightCorner(MagicRoomPlacement *a1, int a2) {
     unsigned int v2;
     int orientation;
     float v5;
@@ -520,8 +519,8 @@ std::int64_t FillMagicRoomLowerRightCorner(MagicRoomPlacement *a1, int a2) {
     float v9;
     unsigned int v10;
     std::uint16_t v11;
-    std::int64_t category;
-    std::int64_t result;
+    MagicRoomInteger category;
+    MagicRoomInteger result;
     float v14;
     float usedWidth;
     float usedDepth;
@@ -562,14 +561,14 @@ std::int64_t FillMagicRoomLowerRightCorner(MagicRoomPlacement *a1, int a2) {
     return result;
 }
 
-std::int64_t FillMagicRoomRightWall(MagicRoomPlacement *a1, int a2) {
+MagicRoomInteger FillMagicRoomRightWall(MagicRoomPlacement *a1, int a2) {
     float v2;
     float d2;
     float X;
     int v7;
     unsigned int v8;
     std::uint16_t v9;
-    std::int64_t category;
+    MagicRoomInteger category;
     int v11;
     float usedDepth;
     float usedWidth;
@@ -599,7 +598,7 @@ std::int64_t FillMagicRoomRightWall(MagicRoomPlacement *a1, int a2) {
     return (unsigned int)v7;
 }
 
-std::int64_t FillMagicRoomUpperRightCorner(MagicRoomPlacement *a1, int a2) {
+MagicRoomInteger FillMagicRoomUpperRightCorner(MagicRoomPlacement *a1, int a2) {
     unsigned int v2;
     int orientation;
     float v5;
@@ -608,7 +607,7 @@ std::int64_t FillMagicRoomUpperRightCorner(MagicRoomPlacement *a1, int a2) {
     float v9;
     unsigned int v10;
     std::uint16_t v11;
-    std::int64_t category;
+    MagicRoomInteger category;
     float usedWidth;
     float usedDepth;
 
@@ -645,7 +644,7 @@ std::int64_t FillMagicRoomUpperRightCorner(MagicRoomPlacement *a1, int a2) {
     return v2;
 }
 
-std::int64_t FillMagicRoomLowerLeftCorner(MagicRoomPlacement *a1, int a2) {
+MagicRoomInteger FillMagicRoomLowerLeftCorner(MagicRoomPlacement *a1, int a2) {
     unsigned int v2;
     int orientation;
     float v4;
@@ -655,14 +654,14 @@ std::int64_t FillMagicRoomLowerLeftCorner(MagicRoomPlacement *a1, int a2) {
     float v10;
     unsigned int v11;
     int v12;
-    std::int64_t category;
+    MagicRoomInteger category;
     float v14;
     float v15;
     unsigned int v16;
     int v17;
-    std::int64_t v18;
+    MagicRoomInteger v18;
     float v19;
-    std::int64_t result;
+    MagicRoomInteger result;
     float usedWidth;
     float usedDepth;
 
@@ -725,14 +724,14 @@ std::int64_t FillMagicRoomLowerLeftCorner(MagicRoomPlacement *a1, int a2) {
     return result;
 }
 
-std::int64_t FillMagicRoomLeftWall(MagicRoomPlacement *a1, int a2) {
+MagicRoomInteger FillMagicRoomLeftWall(MagicRoomPlacement *a1, int a2) {
     float x3;
     float Z;
     int v6;
     float v7;
     unsigned int v8;
     std::uint16_t v9;
-    std::int64_t category;
+    MagicRoomInteger category;
     int v11;
     float usedDepth;
     float usedWidth;
@@ -761,7 +760,7 @@ std::int64_t FillMagicRoomLeftWall(MagicRoomPlacement *a1, int a2) {
     return (unsigned int)v6;
 }
 
-std::int64_t FillMagicRoomUpperLeftCorner(MagicRoomPlacement *a1, int a2) {
+MagicRoomInteger FillMagicRoomUpperLeftCorner(MagicRoomPlacement *a1, int a2) {
     unsigned int v2;
     float v5;
     float v6;
@@ -770,7 +769,7 @@ std::int64_t FillMagicRoomUpperLeftCorner(MagicRoomPlacement *a1, int a2) {
     float v9;
     unsigned int v10;
     std::uint16_t v11;
-    std::int64_t category;
+    MagicRoomInteger category;
     float usedWidth;
     float usedDepth;
 
@@ -805,7 +804,7 @@ std::int64_t FillMagicRoomUpperLeftCorner(MagicRoomPlacement *a1, int a2) {
     return v2;
 }
 
-std::int64_t ConstructMagicRoomSpecialPlacement(MagicRoomPlacement *a1, int a2) {
+MagicRoomInteger ConstructMagicRoomSpecialPlacement(MagicRoomPlacement *a1, int a2) {
     unsigned int v3;
     float v5;
 
@@ -829,7 +828,7 @@ std::int64_t ConstructMagicRoomSpecialPlacement(MagicRoomPlacement *a1, int a2) 
     return 1;
 }
 
-std::int64_t ConstructMagicRoomGroupedPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5) {
+MagicRoomInteger ConstructMagicRoomGroupedPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5) {
     std::uint16_t v6;
     unsigned int v7;
     float v8;
@@ -839,10 +838,10 @@ std::int64_t ConstructMagicRoomGroupedPlacement(MagicRoomPlacement *a1, int a2, 
     unsigned int v14;
     MagicRoomModel *v15;
     int v16;
-    std::int64_t category;
+    MagicRoomInteger category;
     float *p_X;
     int v19;
-    std::int64_t v20;
+    MagicRoomInteger v20;
     float X;
     float v22;
     float v23;
@@ -1038,7 +1037,7 @@ int AddMagicRoomSurfaceDecoration(MagicRoomPlacement *outChild, const MagicRoomP
     int v8;
     MagicRoomModel *v9;
     int v10;
-    std::int64_t category;
+    MagicRoomInteger category;
     Vector3 *p_x;
     float v13;
     float v14;
@@ -1074,13 +1073,13 @@ int AddMagicRoomSurfaceDecoration(MagicRoomPlacement *outChild, const MagicRoomP
     return 1;
 }
 
-std::int64_t ConstructMagicRoomSeatingPlacement(MagicRoomPlacement *placements, int modelIndex, int remaining, float *usedWidth, float *usedDepth) {
+MagicRoomInteger ConstructMagicRoomSeatingPlacement(MagicRoomPlacement *placements, int modelIndex, int remaining, float *usedWidth, float *usedDepth) {
     if (remaining < 2)
         return 0;
     const float availableWidth = *usedWidth;
     const float availableDepth = *usedDepth;
     MagicRoomModel *const model = &g_magicRoomModels[modelIndex];
-    MagicRoomModel *secondary = nullptr;
+    MagicRoomModel *secondary = 0;
     std::uint32_t written = 1;
     MagicRoomPlacement &primary = placements[0];
     primary.position.y = 0.0f;
@@ -1166,22 +1165,24 @@ std::int64_t ConstructMagicRoomSeatingPlacement(MagicRoomPlacement *placements, 
 }
 } // namespace
 
-std::uint64_t ReadMagicRoomDatabase(MagicRoomHeader *database) {
+MagicRoomUnsigned ReadMagicRoomDatabase(MagicRoomHeader *database) {
     g_magicRoomDatabase = database;
     if (database->tag == TASK_MAGIC_ROOM.name && database->version == 1) {
         g_magicRoomGroups = reinterpret_cast<MagicRoomGroup *>(reinterpret_cast<std::byte *>(database) + database->groupOffset);
         g_magicRoomModels = reinterpret_cast<MagicRoomModel *>(reinterpret_cast<std::byte *>(database) + database->modelOffset);
         return 0;
     }
-    g_magicRoomDatabase = nullptr;
-    g_magicRoomGroups = nullptr;
-    g_magicRoomModels = nullptr;
+    g_magicRoomDatabase = 0;
+    g_magicRoomGroups = 0;
+    g_magicRoomModels = 0;
     return 0xffffffffU;
 }
 void InitializeMagicRoomGeneration() {
-    for (std::uint8_t &capacity : roomCapacity)
-        capacity = 50;
-    roomDimensions = {.x = 2.5f, .y = 3.4000001f, .z = 3.6f};
+    for (std::int32_t index = 0; index < 45; ++index)
+        roomCapacity[index] = 50;
+    roomDimensions.x = 2.5f;
+    roomDimensions.y = 3.4000001f;
+    roomDimensions.z = 3.6f;
     roomModeSeed = 1;
     roomCapacity[6] = 1;
     roomCapacity[7] = 1;
@@ -1197,7 +1198,7 @@ void InitializeMagicRoomGeneration() {
     roomCapacity[35] = 1;
     roomCapacity[41] = 1;
 }
-std::uint64_t FillMagicRoomCategorySeeds() {
+MagicRoomUnsigned FillMagicRoomCategorySeeds() {
     for (std::int32_t index = 0; index < 9; ++index)
         roomModes[index] = roomModeSeed == index;
     std::memset(roomUsage, 0, sizeof(roomUsage));
@@ -1218,24 +1219,24 @@ void SetMagicRoomEntityBuffer(void *buffer, std::int32_t capacity) {
     roomEntityCapacity = capacity;
     roomEntityBuffer = static_cast<std::byte *>(buffer);
 }
-std::uint64_t GetMagicRoomEntityCount() {
+MagicRoomUnsigned GetMagicRoomEntityCount() {
     return static_cast<std::uint32_t>(roomEntityCount);
 }
 MagicRoomEntityLight *GetMagicRoomEntityParameters(std::int32_t index) {
     if (index >= roomEntityCount)
-        return nullptr;
+        return 0;
     MagicRoomEntityLight *const light = reinterpret_cast<MagicRoomEntityLight *>(roomEntityBuffer + static_cast<std::ptrdiff_t>(index) * 64);
-    return light->enabled == 0 ? nullptr : light;
+    return light->enabled == 0 ? 0 : light;
 }
 void AddMagicRoomEntityMatrix(const Matrix4x4 *matrix) {
-    if (matrix == nullptr || roomEntityCount < roomEntityCapacity) {
+    if (matrix == 0 || roomEntityCount < roomEntityCapacity) {
         std::memcpy(roomEntityBuffer + static_cast<std::ptrdiff_t>(roomEntityCount) * 64, matrix, sizeof(*matrix));
         ++roomEntityCount;
     }
 }
-std::uint64_t GenerateMagicRoomPlacements(MagicRoomPlacement *placements, std::int32_t capacity, std::int32_t seed) {
+MagicRoomUnsigned GenerateMagicRoomPlacements(MagicRoomPlacement *placements, std::int32_t capacity, std::int32_t seed) {
     for (std::int32_t index = 0; index < capacity; ++index) {
-        placements[index].modelHandle = nullptr;
+        placements[index].modelHandle = 0;
         placements[index].extraRotationX = 0;
         placements[index].yaw = 0;
         placements[index].extraRotationZ = 0;
@@ -1258,7 +1259,7 @@ std::uint64_t GenerateMagicRoomPlacements(MagicRoomPlacement *placements, std::i
         if (model != -1) {
             MagicRoomPlacement &placement = placements[count++];
             placement.kind = 0;
-            placement.position = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
+            placement.position.x = placement.position.y = placement.position.z = 0.0f;
             placement.halfWidth = placement.height = placement.halfDepth = 0.0f;
             placement.yaw = 0;
             placement.modelIndex = static_cast<std::uint16_t>(model);
@@ -1269,7 +1270,8 @@ std::uint64_t GenerateMagicRoomPlacements(MagicRoomPlacement *placements, std::i
             if (ceiling != -1) {
                 MagicRoomPlacement &placement = placements[count++];
                 placement.kind = 0;
-                placement.position = {.x = 0.0f, .y = ceilingY, .z = 0.0f};
+                placement.position.x = placement.position.z = 0.0f;
+                placement.position.y = ceilingY;
                 placement.halfWidth = placement.height = placement.halfDepth = 0.0f;
                 placement.yaw = 0;
                 placement.modelIndex = static_cast<std::uint16_t>(ceiling);
@@ -1279,7 +1281,7 @@ std::uint64_t GenerateMagicRoomPlacements(MagicRoomPlacement *placements, std::i
                 if (base != -1) {
                     MagicRoomPlacement &placement = placements[count++];
                     placement.kind = 0;
-                    placement.position = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
+                    placement.position.x = placement.position.y = placement.position.z = 0.0f;
                     placement.halfWidth = placement.height = placement.halfDepth = 0.0f;
                     placement.yaw = 0;
                     placement.modelIndex = static_cast<std::uint16_t>(base);
@@ -1306,4 +1308,4 @@ std::uint64_t GenerateMagicRoomPlacements(MagicRoomPlacement *placements, std::i
         count += static_cast<std::int32_t>(FillMagicRoomLeftWall(placements + count, limit - count));
     return static_cast<std::uint32_t>(count);
 }
-} // namespace shenmue::s2
+} } // namespace shenmue::s2
