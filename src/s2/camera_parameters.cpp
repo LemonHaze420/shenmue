@@ -8,16 +8,6 @@
 
 namespace shenmue { namespace s2 {
 
-// @verified - d
-float camCtrlGetHalfVerticalFovTangent() SHENMUE_CAMERA_PARAMETER_NOEXCEPT {
-    return g_cameraControl->halfVerticalFovTangent;
-}
-
-// @verified - d
-float camCtrlGetPitchAngleTangent() SHENMUE_CAMERA_PARAMETER_NOEXCEPT {
-    return g_cameraControl->pitchAngleTangent;
-}
-
 // @verified - pd
 float camCtrlGetFarDistance() SHENMUE_CAMERA_PARAMETER_NOEXCEPT {
     return g_cameraControl->farDistance;

@@ -14,6 +14,7 @@ endif()
 
 project(shenmue_recovery LANGUAGES CXX)
 
+
 set(SHENMUE_S1_GAME "S1" CACHE STRING "S1 runtime game: S1 or WHATS")
 set_property(CACHE SHENMUE_S1_GAME PROPERTY STRINGS S1 WHATS)
 if(NOT SHENMUE_S1_GAME MATCHES "^(S1|WHATS)$")
@@ -1232,7 +1233,7 @@ add_library(shenmue2_game STATIC
         src/s2/author.cpp
         src/s2/author_control.cpp
         src/s2/camera.cpp
-        src/s2/camera_parameters.cpp
+        src/s2/camera_parameters.cpp src/s2/camera_fov.cpp
         src/s2/character.cpp
         src/s2/conversation.cpp
         src/s2/door.cpp

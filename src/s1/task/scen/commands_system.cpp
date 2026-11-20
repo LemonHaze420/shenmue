@@ -2052,10 +2052,12 @@ void Script_PrintDebugString(ScenarioContext *, void *rawParams) {
 #if defined(_WIN32)
     nativeArguments = reinterpret_cast<char *>(rawParams) + offsetof(DebugStringParameters, arguments);
 #else
-    nativeArguments[0].gp_offset = 48;
-    nativeArguments[0].fp_offset = 304;
-    nativeArguments[0].overflow_arg_area = reinterpret_cast<char *>(rawParams) + offsetof(DebugStringParameters, arguments);
-    nativeArguments[0].reg_save_area = nullptr;
+    const struct {
+        unsigned gpOffset, fpOffset;
+        void *overflow, *registers;
+    } arguments{48, 304, reinterpret_cast<char *>(rawParams) + offsetof(DebugStringParameters, arguments), nullptr};
+    static_assert(sizeof(arguments) == sizeof(nativeArguments));
+    std::memcpy(&nativeArguments, &arguments, sizeof(arguments));
 #endif
     char formatted[256];
     std::vsprintf(formatted, ScenarioPointer<const char>(params->formatOffset), nativeArguments);

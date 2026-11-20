@@ -10,6 +10,7 @@
 *.ipch
 *.VC.db
 compile_commands.json
+__pycache__/
 /*.zip
 /nul
 /decomp/*.i64
