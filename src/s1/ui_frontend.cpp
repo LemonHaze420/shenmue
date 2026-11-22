@@ -1,4 +1,5 @@
 #include "auto_test.hpp"
+#include "enhancements/misc_mods.hpp"
 #include "s1/ui_internal.hpp"
 #include "s1/archive_data.hpp"
 
@@ -1246,6 +1247,9 @@ void SetupUISplashWidget(const SplashScreenRuntime &screen, float fraction) {
 std::int64_t GetInput() {
     const auto &input = g_inputState.slots[0];
     const nk_mouse &mouse = GNuklearWindow.input.mouse;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_SKIP_SPLASH
+    g_skipSplash |= mods::Enabled(mods::Id::SkipSplash);
+#endif
     g_skipSplash = g_skipSplash || g_skipFrontendSplash || (input.pressedPriority & 0x400U) != 0 || mouse.buttons[NK_BUTTON_LEFT].clicked ||
         mouse.buttons[NK_BUTTON_MIDDLE].clicked || mouse.buttons[NK_BUTTON_RIGHT].clicked;
     return 0;
@@ -1947,6 +1951,34 @@ std::int32_t CheckAllKeysAreBound() {
 namespace shenmue::s1::ui_runtime_detail {
 
 
+#if SHENMUE_MODS_ENABLED
+#include "s1/enhancements/mods_menu.inl"
+#endif
+
+UIOption *Options_GraphicsTable() {
+#if SHENMUE_MODS_ENABLED
+    if (ModsTabSelected())
+        return g_modOptions;
+#endif
+    return g_optionsGraphicsTable.data();
+}
+
+std::int32_t Options_GraphicsCount() {
+#if SHENMUE_MODS_ENABLED
+    if (ModsTabSelected())
+        return static_cast<std::int32_t>(std::size(g_modOptions));
+#endif
+    return static_cast<std::int32_t>(g_optionsGraphicsTable.size());
+}
+
+std::int32_t Options_Child(std::int32_t tab) {
+#if SHENMUE_MODS_ENABLED
+    if (tab == ModsTabIndex())
+        return kUiSubMenuOptionsGraphics;
+#endif
+    return static_cast<std::uint32_t>(tab) < kOptionsChildren.size() ? kOptionsChildren[static_cast<std::size_t>(tab)] : -1;
+}
+
 void UI_ScriptNoOpCallback(float *, void *) {
 }
 
@@ -2045,16 +2077,26 @@ void AssignMultipleChoice() {
 
 bool Options_SettingsChanged() {
     const auto *const settings = reinterpret_cast<const std::byte *>(&g_applicationSettings) + kOptionsSettingsOffset;
-    return std::memcmp(g_tmpUserKeyMapping.data(), settings, kOptionsSettingsSize) != 0;
+    return std::memcmp(g_tmpUserKeyMapping.data(), settings, kOptionsSettingsSize) != 0
+#if SHENMUE_MODS_ENABLED
+        || mods::Changed()
+#endif
+        ;
 }
 
 
 void UpdateSettings() {
+#if SHENMUE_MODS_ENABLED
+    mods::Record();
+#endif
     std::memcpy(g_tmpUserKeyMapping.data(), reinterpret_cast<const std::byte *>(&g_applicationSettings) + kOptionsSettingsOffset, kOptionsSettingsSize);
 }
 
 
 void ReadConfig() {
+#if SHENMUE_MODS_ENABLED
+    mods::Revert();
+#endif
     std::memcpy(reinterpret_cast<std::byte *>(&g_applicationSettings) + kOptionsSettingsOffset, g_tmpUserKeyMapping.data(), kOptionsSettingsSize);
     ReadConfigFromSave();
 }
@@ -2230,6 +2272,9 @@ void Options_RevertSettings() {
     Options_ReadSettings(g_optionsControlsTable.data(), static_cast<std::int32_t>(g_optionsControlsTable.size()));
     Options_ReadSettings(g_optionsAudioTable.data(), static_cast<std::int32_t>(g_optionsAudioTable.size()));
     Options_ReadSettings(g_optionsGraphicsTable.data(), static_cast<std::int32_t>(g_optionsGraphicsTable.size()));
+#if SHENMUE_MODS_ENABLED
+    Options_ReadSettings(g_modOptions, static_cast<std::int32_t>(std::size(g_modOptions)));
+#endif
 }
 
 
@@ -2612,8 +2657,17 @@ void OptionsRow_DrawToggle(std::int32_t index, UIGrid *grid, std::int32_t elemen
     const float alpha = index == UIGrid_SelectedIndex(*grid) ? 1.0f : 0.6f;
     Options_QueueRowCallback(grid, element, option, 11, Options_SelectFirstChoice);
     Options_QueueRowCallback(grid, element, option, 10, Options_SelectSecondChoice);
-    if (d3t::UILabelWidget *const name = g_optionsLabels[0])
-        name->text = InitAndRetrieveStringFromID(option.name);
+    if (d3t::UILabelWidget *const name = g_optionsLabels[0]) {
+#if SHENMUE_MODS_ENABLED
+        name->text = IsModOption(option) ? option.name : InitAndRetrieveStringFromID(option.name);
+#else
+        name->text =
+#if SHENMUE_MODS_ENABLED
+            IsModOption(option) ? option.name :
+#endif
+            InitAndRetrieveStringFromID(option.name);
+#endif
+    }
     const char *const second = option.choice ? option.choice(1) : nullptr;
     d3t::UILabelWidget *const right = g_optionsLabels[1];
     if (right)
@@ -2651,7 +2705,11 @@ void OptionsRow_DrawList(std::int32_t index, UIGrid *grid, std::int32_t element,
     Options_QueueRowCallback(grid, element, option, 19, Options_SelectNextChoice);
     Options_QueueRowCallback(grid, element, option, 21, Options_SelectNextChoice);
     if (d3t::UILabelWidget *const name = g_optionsLabels[3])
-        name->text = InitAndRetrieveStringFromID(option.name);
+        name->text =
+#if SHENMUE_MODS_ENABLED
+            IsModOption(option) ? option.name :
+#endif
+            InitAndRetrieveStringFromID(option.name);
     if (d3t::UILabelWidget *const selected = g_optionsLabels[4]) {
         const char *text = option.choice ? option.choice(option.current) : nullptr;
         while (!text && option.current > 0) {
@@ -2710,7 +2768,11 @@ void OptionsRow_DrawSlider(std::int32_t index, UIGrid *grid, std::int32_t elemen
     option.dragX = mouseX;
     Options_QueueRowCallback(grid, element, option, 30, nullptr);
     if (d3t::UILabelWidget *const name = g_optionsLabels[5])
-        name->text = InitAndRetrieveStringFromID(option.name);
+        name->text =
+#if SHENMUE_MODS_ENABLED
+            IsModOption(option) ? option.name :
+#endif
+            InitAndRetrieveStringFromID(option.name);
     if (d3t::UILabelWidget *const percent = g_optionsLabels[6]) {
         const float maximum = static_cast<float>(option.choiceValue ? option.choiceValue(1) : 0);
         const float minimum = static_cast<float>(option.choiceValue ? option.choiceValue(0) : 0);
@@ -2728,7 +2790,11 @@ void OptionsRow_DrawKeyBinding(std::int32_t index, UIGrid *grid, std::int32_t el
     const float alpha = index == UIGrid_SelectedIndex(*grid) ? 1.0f : 0.6f;
     Options_QueueRowCallback(grid, element, option, 32, Options_BeginKeyBinding);
     if (d3t::UILabelWidget *const name = g_optionsLabels[7]) {
-        name->text = InitAndRetrieveStringFromID(option.name);
+        name->text =
+#if SHENMUE_MODS_ENABLED
+            IsModOption(option) ? option.name :
+#endif
+            InitAndRetrieveStringFromID(option.name);
         name->colour = key == -1 ? kOptionsKeyUnboundColour : kOptionsKeyBoundColour;
         Options_SetAlphaByte(name->colour, static_cast<std::uint32_t>(static_cast<std::int32_t>(alpha * 255.0f)));
     }
@@ -2776,7 +2842,11 @@ void OptionsRow_Draw(
         firstId = 40;
         endId = -1;
         if (d3t::UILabelWidget *const title = g_optionsLabels[8])
-            title->text = InitAndRetrieveStringFromID(option.name);
+            title->text =
+#if SHENMUE_MODS_ENABLED
+            IsModOption(option) ? option.name :
+#endif
+            InitAndRetrieveStringFromID(option.name);
         break;
     default:
         break;
@@ -3029,13 +3099,13 @@ std::int64_t OptionsGraphics_IsSelected() {
     const std::uint32_t slot = static_cast<std::uint32_t>(g_uiElements[kUiSubMenuOptionsGraphics].config.uiHandleIndex);
     g_optionsGraphicsPanel = UI_GetWindow(UI_FindViewWindow(slot, "SubMenu_Graphics::Panel_Root"));
     Options_SetUpChildGrid(
-        g_optionsGraphicsGrid, g_optionsGraphicsPanel, 11,
+        g_optionsGraphicsGrid, g_optionsGraphicsPanel, Options_GraphicsCount(),
         [](UIGrid *grid, nk_panel *panel, const UILayoutRect *holder, const UILayoutRect *cell, float spacing, std::int32_t element, void *,
             std::int32_t index) {
-            Options_DrawChildRow(grid, panel, holder, cell, spacing, element, index, g_optionsGraphicsTable.data(), 11, g_optionsGraphicsRowDraw);
+            Options_DrawChildRow(grid, panel, holder, cell, spacing, element, index, Options_GraphicsTable(), Options_GraphicsCount(), g_optionsGraphicsRowDraw);
         },
-        [](void *elements, std::int32_t index) -> void * { return elements ? Options_FindOption(index, g_optionsGraphicsTable.data(), 11) : nullptr; },
-        g_optionsGraphicsTable.data());
+        [](void *elements, std::int32_t index) -> void * { return elements ? Options_FindOption(index, Options_GraphicsTable(), Options_GraphicsCount()) : nullptr; },
+        Options_GraphicsTable());
     return 1;
 }
 
@@ -3045,7 +3115,12 @@ std::int64_t OptionsGraphics_Reset() {
 }
 
 std::int64_t OptionsGraphics_IsPressed() {
-    return Options_PressChild(g_optionsGraphicsGrid, g_optionsGraphicsTable.data(), 11, RevertSettings, false);
+    UIRetry70ManBattlePromptCallback reset = RevertSettings;
+#if SHENMUE_MODS_ENABLED
+    if (ModsTabSelected())
+        reset = ResetMods;
+#endif
+    return Options_PressChild(g_optionsGraphicsGrid, Options_GraphicsTable(), Options_GraphicsCount(), reset, false);
 }
 
 std::int64_t OptionsGraphics_Tick() {
@@ -3055,11 +3130,20 @@ std::int64_t OptionsGraphics_Tick() {
 
 
 void OptionsGraphics_Render() {
-    UIOption *const table = g_optionsGraphicsTable.data();
-    Options_AskAvailability(table, 11);
-    Options_ReadSettings(table, 11);
-    Options_RecordRows(table, 11, g_optionsGraphicsRecordedRows.data());
-    UIGrid_ResetRuntime(g_optionsGraphicsGrid);
+    UIOption *const table = Options_GraphicsTable();
+    const std::int32_t count = Options_GraphicsCount();
+    Options_AskAvailability(table, count);
+    Options_ReadSettings(table, count);
+    Options_RecordRows(table, count, g_optionsGraphicsRecordedRows.data());
+    UIGrid &grid = g_optionsGraphicsGrid;
+    grid.elements = table;
+    grid.elementCount = 0;
+    for (std::int32_t entry = 0; entry < count; ++entry) {
+        if (!table[entry].available || table[entry].available())
+            ++grid.elementCount;
+    }
+    grid.rows = grid.elementCount;
+    UIGrid_ResetRuntime(grid);
     Collection_ShowSelectedCell(g_optionsGraphicsGrid, kUiSubMenuOptionsGraphics, table[0].text(table[0].current));
 }
 } // namespace shenmue::s1
@@ -3071,7 +3155,7 @@ namespace shenmue::s1::ui_runtime_detail {
 
 void Options_SwitchTab() {
     UIFocusList &list = g_optionsTabList;
-    if (kOptionsChildren[static_cast<std::size_t>(list.selected)] == -1) {
+    if (Options_Child(list.selected) == -1) {
         list.selected = list.shownIndex;
         if (g_isInGame)
             d3t::MessageBox("UIQUITLAB2", false, 0, DoYouWantToQuit_UnsavedChangesLost,
@@ -3080,13 +3164,17 @@ void Options_SwitchTab() {
     }
     if (list.shownIndex == list.selected)
         return;
-    if (static_cast<std::uint32_t>(list.shownIndex) < 4U && !d3t::ResetElementByIdx(kOptionsChildren[static_cast<std::size_t>(list.shownIndex)]))
+    if (Options_Child(list.shownIndex) != -1 && !d3t::ResetElementByIdx(Options_Child(list.shownIndex)))
         return;
     list.shownIndex = list.selected;
-    if (static_cast<std::uint32_t>(list.selected) < 4U)
-        d3t::ActivateElementByIdx(kOptionsChildren[static_cast<std::size_t>(list.selected)]);
+    if (Options_Child(list.selected) != -1)
+        d3t::ActivateElementByIdx(Options_Child(list.selected));
     for (std::size_t tab = 0; tab < 4; ++tab) {
+#if SHENMUE_MODS_ENABLED
+        const bool shown = list.shownIndex == (tab == 3 ? 4 : static_cast<std::int32_t>(tab));
+#else
         const bool shown = list.shownIndex == static_cast<std::int32_t>(tab);
+#endif
         if (UIColourImageWidget *const icon = g_optionsColourImages[tab])
             Options_SetAlphaByte(icon->colour, static_cast<std::uint32_t>(static_cast<std::int32_t>((shown ? 1.0f : 0.6f) * 255.0f)));
         if (UIButtonWidget *const button = g_optionsButtons[15 + tab])
@@ -3215,6 +3303,9 @@ std::int64_t OptionsMenu_IsSelected() {
     rowTemplate.labelEnd = 9;
     for (const std::size_t index : {13U, 4U, 5U, 6U, 7U, 16U, 26U, 36U, 42U})
         g_frontendEmblemImages[static_cast<std::size_t>(g_frontendEmblemImageCount++)] = g_optionsColourImages[index];
+#if SHENMUE_MODS_ENABLED
+    SaveOptionsTabLayout();
+#endif
     return 1;
 }
 
@@ -3268,6 +3359,9 @@ std::int64_t OptionsMenu_GetContentPanel() {
             quit->alpha = inGame ? 1.0f : 0.0f;
     }
     g_optionsTabList.last = inGame ? 3 : 2;
+#if SHENMUE_MODS_ENABLED
+    ConfigureModsTabs();
+#endif
     return 0;
 }
 
@@ -3303,8 +3397,14 @@ std::int64_t OptionsMenu_Tick() {
     }
     const std::uint32_t slot = static_cast<std::uint32_t>(element.config.uiHandleIndex);
     g_currActiveUIIndex = element.index;
+#if SHENMUE_MODS_ENABLED
+    PositionExitTab();
+#endif
     if (slot <= 0x4bU)
         UI_InputHandler(GNuklearWindow, static_cast<std::int32_t>(slot), 0, g_uiViewSlots[slot].widgetCount);
+#if SHENMUE_MODS_ENABLED
+    DrawModsTab();
+#endif
     return 0;
 }
 
@@ -3326,6 +3426,10 @@ void OptionsMenu_Render() {
     g_uiGridInputEnabled = 1;
     UI_RestartCurrentGridSelection();
     list.shownIndex = -1;
+#if SHENMUE_MODS_ENABLED
+    if (Options_Child(list.selected) == -1)
+        list.selected = list.first;
+#endif
     Options_SwitchTab();
     UpdateSettings();
 }
@@ -3344,6 +3448,9 @@ std::int64_t OptionsMenu_IsPressed() {
         g_optionsClosePending = 0;
     }
     UIFocusList &list = g_optionsTabList;
+#if SHENMUE_MODS_ENABLED
+    HandleOptionsTabMouse();
+#endif
     UIFocusList_HandleInput(list);
     if (!g_isInGame && list.selected > list.last)
         list.selected = list.first;
@@ -3355,7 +3462,7 @@ std::int64_t OptionsMenu_IsPressed() {
 std::int64_t OptionsMenu_Destroy() {
     if (Options_SettingsChanged())
         d3t::WriteSettingsFile();
-    const bool closed = d3t::ResetElementByIdx(kOptionsChildren[static_cast<std::size_t>(g_optionsTabList.selected)]);
+    const bool closed = d3t::ResetElementByIdx(Options_Child(g_optionsTabList.selected));
     if (!closed)
         g_optionsClosePending = 1;
     return closed ? 1 : 0;

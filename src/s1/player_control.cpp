@@ -1,4 +1,5 @@
 #include "s1/player_control.hpp"
+#include "enhancements/misc_mods.hpp"
 
 #include "s1/date_time.hpp"
 #include "s1/boot.hpp"
@@ -2087,10 +2088,16 @@ bool cpctUpdateFacingFromNavAndYawDelta(PlayerControlWork &state, std::int32_t d
 
 bool ryoUpdateTatehizaStateAndControlLock(PlayerControlWork &control, const InputSlot *input) {
     MotionInformationWork *const motion = g_playerMotion;
-#if SHENMUE_IS_DEMO
+#if SHENMUE_IS_DEMO || (SHENMUE_IS_S1 && SHENMUE_IS_PC && SHENMUE_ENHANCEMENT_MISC_MODS_CROUCH)
     switch (control.tatehizaState) {
     case 0:
+#if SHENMUE_IS_DEMO
         if ((g_pControlPadController->flags & 0x0800U) != 0 || (input->pressedPriority & WS_CROUCH_INPUT) == 0)
+#else
+        if (!mods::Enabled(mods::Id::Crouch) || !ShouldRun())
+            return false;
+        if ((g_pControlPadController->flags & 0x0800U) != 0 || !ConsumeCrouchInput())
+#endif
             return false;
         SetLocalYawFromWorld(CurrentRyo(), motion->entityEuler.y);
         control.previousAutoRotateYawDelta = 0;
@@ -2128,14 +2135,19 @@ bool ryoUpdateTatehizaStateAndControlLock(PlayerControlWork &control, const Inpu
             control.tatehizaState = 3;
         }
         return true;
-    case 3:
-        if ((input->held & 0xf204U) != 0 || control.numActiveFrames != 0) {
+    case 3: {
+        bool stand = (input->held & 0xf204U) != 0 || control.numActiveFrames != 0;
+#if SHENMUE_IS_PC && SHENMUE_IS_S1 && !SHENMUE_IS_DEMO && SHENMUE_ENHANCEMENT_MISC_MODS_CROUCH
+        stand |= !mods::Enabled(mods::Id::Crouch) || ConsumeCrouchInput();
+#endif
+        if (stand) {
             motion->motionFlags &= ~(kMotionStuck | kMotionFrameBlendReady);
             motion->pendingAnimId = kAnimTatehizaExit;
             motion->playbackRate = 1.0F;
             control.tatehizaState = 4;
         }
         return true;
+    }
     case 4:
         if ((motion->motionFlags & kMotionStuck) == 0)
             return true;

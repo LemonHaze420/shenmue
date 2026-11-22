@@ -4,8 +4,11 @@
 #endif
 
 #include "s2/d3t_renderer.hpp"
+#include "enhancements/misc_mods.hpp"
 #include "s2/model_geometry.hpp"
 #include "s2/camera.hpp"
+#include "s2/player.hpp"
+#include "s2/author.hpp"
 
 #include "d3t/buffer.hpp"
 #include "d3t/dx11_renderer.hpp"
@@ -174,6 +177,9 @@ void ReadRendererUserSettings() {
     cJSON *const settings = cJSON_Parse(text.c_str());
     if (!settings)
         return;
+#if SHENMUE_MODS_ENABLED
+    mods::ReadCJson(cJSON_GetObjectItem(settings, "Mods"));
+#endif
     S2UserConfiguration280 &configuration = GetDraftUserConfiguration();
     cJSON *value = cJSON_GetObjectItem(settings, "Version");
     if (value)
@@ -352,6 +358,10 @@ bool ShouldScaleS2AspectRatio() noexcept {
 
 // @verified - p
 bool GetAspectRatioModeShouldScale() noexcept {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WIDESCREEN
+    if (mods::Enabled(mods::Id::Widescreen))
+        return false;
+#endif
     return renQteDoorMotionPending != 0 ||
         (g_aspectRatioRenderSuppressed == 0 && (GetRuntimeUserConfiguration().aspectRatio == 0 || g_cameraFilmBarsEnabled != 0));
 }
@@ -789,6 +799,10 @@ void PresentD3TFrame(std::int32_t renderMode) {
     d3t::ResetHashedModelCounts();
     ExecuteCurrentCommandList();
     UpdateMipMaps();
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+    if (mods::Get(mods::Id::FrameRate) > 30.0f && g_playerRuntime.model && shenGetIsPlayerInMenu() && !authGetLoaded())
+        renderMode = mods::Get(mods::Id::FrameRate) > 60.0f ? 3 : 2;
+#endif
     if (presentAt60Hz) {
         renderMode = 2;
         presentAt60Hz = false;

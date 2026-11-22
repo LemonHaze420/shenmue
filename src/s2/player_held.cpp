@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
 
@@ -84,6 +85,10 @@ void plymUpdateDuringSearchRequest(PlayerModelState &state) {
             return;
         }
     }
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_BEDTIME
+    if (mods::Enabled(mods::Id::NoBedtime))
+        return;
+#endif
     if (minute < state.holdWindowEndMinute) {
         if (minute >= state.holdWindowStartMinute) {
             if (minute >= state.holdWindowStartMinute + 10 || searchBusy) {

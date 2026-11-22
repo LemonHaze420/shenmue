@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s2/lighting.hpp"
 
 #include "s2/sd_light.hpp"
@@ -1000,6 +1001,10 @@ void shenLoadSetLensflare() {
 
 // @verified - p
 void UpdateSunForDateTime(const DateTime &date, float latitudeTilt, Vector3 &direction, float intensityScale) {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_SUN
+    if (mods::Enabled(mods::Id::SunLatitude))
+        latitudeTilt = 22.18f;
+#endif
     constexpr std::array<std::int32_t, 12> accumulatedDays{31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
     const float timeAngle =
         (((static_cast<float>(date.minute) / 60.0f + static_cast<float>(date.hour)) + static_cast<float>(date.second) / 3600.0f) - 12.0f) * -15.0f;

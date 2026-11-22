@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/cycle_man_internal.hpp"
 
 namespace shenmue::s1 {
@@ -1695,10 +1696,18 @@ void UpdateCharaCycles() {
     int32_t maxEntitiesToSimulate = g_MaxEntitiesPerType;
     if (MaxNearNPCs < g_MaxEntitiesPerType)
         maxEntitiesToSimulate = MaxNearNPCs;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_DRAW_DISTANCE
+    if (mods::Enabled(mods::Id::DrawDistance))
+        maxEntitiesToSimulate = 350;
+#endif
     if (g_prevCycleSeconds - 21600u > 46800u)
         maxEntitiesToSimulate = IsDBYO;
     g_tmp_cycle_v3 = g_CameraEyePos;
-    const float radiusSquared = NPCDisplayRadius * NPCDisplayRadius;
+    float radiusSquared = NPCDisplayRadius * NPCDisplayRadius;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_DRAW_DISTANCE
+    if (mods::Enabled(mods::Id::DrawDistance))
+        radiusSquared = 50000.0f * 50000.0f;
+#endif
     g_lastProximityGroup = -1;
 
     CycleManager::ResetPublishedSceneState();

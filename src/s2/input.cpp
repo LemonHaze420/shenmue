@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -726,6 +727,8 @@ void ResetInputHandler() {
 std::uint32_t GetLastReleasedWindowKey() noexcept {
     return lastReleasedKey;
 }
+bool IsWindowKeyPressed(std::uint32_t key) noexcept { return key < windowKeys.size() && windowKeys[key].pressed != 0; }
+
 bool HasWindowInputStateChanged() noexcept {
     return customInputHandler != 0 || currentKeyStateChanged != 0;
 }
@@ -1450,6 +1453,15 @@ void HandleInputs() {
 #else
     ResetProcessedInput(input);
     input.held = 0;
+#endif
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    if (mods::FreeCameraActive() && GetCurrentUIInputType() == 2) {
+        input.held &= 0x0800U;
+        input.pressedPriority &= 0x0800U;
+        input.newPresses &= 0x0800U;
+        input.analog0c = input.analog0d = 0;
+        input.analog0e = input.analog0f = input.analog10 = input.analog11 = 0x80U;
+    }
 #endif
     if (inputSelection.forceDisconnected != 0)
         input.connectionState = 0;

@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s2/camera.hpp"
 
 #include "d3t/dx11_renderer.hpp"
@@ -4147,8 +4148,40 @@ namespace {
 void CameraProjectionPostCallbackNullsub() {
 }
 
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+Vector3 modCameraNativePosition{}, modCameraNativeTarget{};
+EulerRotation16 modCameraNativeRotation{};
+CameraRuntime *modCameraOwner{};
+std::uint32_t modCameraArea{};
+void RestoreModCamera(CameraRuntime &camera) {
+    if (modCameraOwner == &camera && modCameraArea == g_currentMap.name &&
+        (camera.state == CameraState::Default || camera.state == CameraState::ChaseGoal || camera.state == CameraState::Init)) {
+        camera.nextPosition = modCameraNativePosition;
+        camera.nextTargetPosition = modCameraNativeTarget;
+        camera.nextRotation = modCameraNativeRotation;
+    }
+    modCameraOwner = nullptr;
+}
+#endif
 void camCtrlProjectCameraMatrices(void *) {
     CameraRuntime &camera = *g_cameraControl;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    modCameraNativePosition = camera.nextPosition;
+    modCameraNativeTarget = camera.nextTargetPosition;
+    modCameraNativeRotation = camera.nextRotation;
+    modCameraArea = g_currentMap.name;
+    Vector3 eye = camera.nextPosition, target = camera.nextTargetPosition;
+    const bool allowed = g_playerRuntime.model && shenGetIsPlayerInMenu() &&
+        (camera.state == CameraState::Default || camera.state == CameraState::ChaseGoal || camera.state == CameraState::Init);
+    if (mods::AdjustCamera(allowed, GetFrameTime(), g_currentMap.name, IsWindowKeyPressed, eye, target)) {
+        camera.nextPosition = eye;
+        camera.nextTargetPosition = target;
+        const Vector3 direction{target.x - eye.x, target.y - eye.y, target.z - eye.z};
+        camera.nextRotation.yaw = static_cast<std::int16_t>(RadiansToFixedAngle(std::atan2(direction.x, direction.z)) + 0x8000);
+        camera.nextRotation.pitch = static_cast<std::int16_t>(RadiansToFixedAngle(std::atan2(direction.y, std::sqrt(direction.x * direction.x + direction.z * direction.z))));
+        modCameraOwner = &camera;
+    }
+#endif
     camCtrlRecalcFov(camera);
     camCtrlCreatePerspectiveMatrix(camera);
     camCtrlSetup(camera);
@@ -4179,6 +4212,9 @@ void camCtrlSetCamSnapAngY(CameraRuntime &camera) {
 void camCtrlCallback(void *) {
     using enum CameraState;
     CameraRuntime &camera = *g_cameraControl;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    RestoreModCamera(camera);
+#endif
     camera.flags &= ~0x00000588U;
     camera.position = camera.nextPosition;
     camera.target = camera.targetPosition;
@@ -5763,7 +5799,14 @@ void camCtrlCreatePerspectiveMatrix(CameraRuntime &camera) {
     camCtrlCalculateFov(camera);
     const float width = static_cast<float>(d3t::g_originalScreenWidth);
     const float height = static_cast<float>(d3t::g_originalScreenHeight);
-    SetupProjection(camera.pitch, height != 0.0f ? width / height : 1.0f, nearClip, farClip);
+    float nearDistance = nearClip, farDistance = farClip;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_DRAW_DISTANCE
+    if (mods::Enabled(mods::Id::DrawDistance)) {
+        nearDistance = 0.001f;
+        farDistance = 500000.0f;
+    }
+#endif
+    SetupProjection(camera.pitch, height != 0.0f ? width / height : 1.0f, nearDistance, farDistance);
 
     SetActiveStack(MatrixStackType::DepthPrepass);
     Matrix4x4::SetPrePassToTempTransform();
@@ -5802,6 +5845,10 @@ void camCtrlCreatePerspectiveMatrix(CameraRuntime &camera) {
 }
 
 void camCtrlInitialize(CameraRuntime &camera) {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    modCameraOwner = nullptr;
+    mods::ResetCamera();
+#endif
     using enum CameraState;
     std::memset(static_cast<void *>(&camera), 0, sizeof(camera));
 

@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
 
@@ -685,6 +686,32 @@ void UpdateControllerState(std::uint32_t userIndex) {
     g_forceXInputAnalogProcessing = 0;
 }
 
+#if SHENMUE_IS_PC && SHENMUE_IS_S1 && !SHENMUE_IS_DEMO && SHENMUE_ENHANCEMENT_MISC_MODS_CROUCH
+namespace {
+bool crouchPressed{}, crouchHeld{};
+void UpdateCrouchInput(const ProcessedControllerState &input) {
+    bool keyboard = KeyPressed('V');
+    for (std::size_t action = 0; keyboard && action < 50; ++action)
+        keyboard = GetSavedInputMapping(g_applicationSettings.savedInput, action) != 'V';
+    // Keep crouch requests separate from notebook/menu input.
+    const bool held = (input.buttons & 0x00400000U) != 0 || keyboard;
+    crouchPressed = held && !crouchHeld;
+    crouchHeld = held;
+    if (GetCurrentInputType() != InputMode::Game || !mods::Enabled(mods::Id::Crouch))
+        crouchPressed = false;
+#if SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    if (mods::FreeCameraActive())
+        crouchPressed = false;
+#endif
+}
+}
+bool ConsumeCrouchInput() {
+    const bool pressed = crouchPressed;
+    crouchPressed = false;
+    return pressed;
+}
+#endif
+
 void UpdateInputsFromInputDevices() {
 #if defined(__EMSCRIPTEN__) || defined(SHENMUE_GFX_DXVK_NATIVE)
     host::PollInput(hostInput);
@@ -719,6 +746,9 @@ void UpdateInputsFromInputDevices() {
     }
 
     ProcessedControllerState *const processed = UpdatePreviousInputStatesForUser(userIndex);
+#if SHENMUE_IS_PC && SHENMUE_IS_S1 && !SHENMUE_IS_DEMO && SHENMUE_ENHANCEMENT_MISC_MODS_CROUCH
+    UpdateCrouchInput(*processed);
+#endif
 
     InputSlot &input = g_inputState.slots[0];
     const std::uint16_t previousHeld = input.held;
@@ -777,6 +807,15 @@ void UpdateInputsFromInputDevices() {
     RefreshTriggerInputs();
     if (g_xInputReservedOverride != 0)
         g_xinputReserved = 0;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    if (mods::FreeCameraActive() && GetCurrentInputType() == InputMode::Game) {
+        input.held &= 0x0800U;
+        input.pressedPriority &= 0x0800U;
+        input.triggers = 0;
+        input.rightStick = 0x8080U;
+        input.leftStick = 0x8080U;
+    }
+#endif
     input.xinputReserved = g_xinputReserved;
 }
 

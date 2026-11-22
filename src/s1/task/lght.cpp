@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/lght.hpp"
 #include "s1/d3t/d3t_shader_load.hpp"
 #include "s1/legacy_renderer.hpp"
@@ -306,6 +307,10 @@ std::int32_t BuildActiveSpotLightRenderParams(EffectLightRenderSlot *lights) {
 }
 
 Vector3 UpdateSunForDateTime(const LightDateTime &dateTime, float tiltAngle, std::int32_t clampAngle) {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_SUN
+    if (mods::Enabled(mods::Id::SunLatitude))
+        tiltAngle = 35.0f;
+#endif
     static constexpr std::array<std::int32_t, 12> accumulatedDays{31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
     const float timeOfDay = static_cast<float>(dateTime.minutes) / 60.0f + static_cast<float>(dateTime.hour) + static_cast<float>(dateTime.seconds) / 3600.0f;
     const float sunAngle = static_cast<float>((static_cast<double>(timeOfDay) - 12.0) * -15.0 * 3.14 / 180.0);

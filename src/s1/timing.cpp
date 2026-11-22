@@ -1,4 +1,5 @@
 #include "s1/timing.hpp"
+#include "enhancements/misc_mods.hpp"
 
 #include "platform/performance_counter.hpp"
 
@@ -52,6 +53,10 @@ std::int64_t FrameTimeUtil(TimeMode mode) {
 
 #if SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
 float GetNpcMovementFrameScale() {
+#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+    if (mods::Get(mods::Id::FrameRate) <= 30)
+        return 1.0f;
+#endif
     if (!g_bEnableFrameTimeSmoothing)
         return 1.0f;
     const float scale = fFrameTimeMs * 30.0f;

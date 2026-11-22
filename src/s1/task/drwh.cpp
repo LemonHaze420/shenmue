@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/drwh.hpp"
 
 #include "s1/task/char.hpp"
@@ -33,7 +34,12 @@ void InsertHuman(DRWP_t &renderTask, Character *character) {
     }
 
     const float renderDistance = character->viewPosition.z < 0.0f ? character->viewDistance : 1000.0f;
-    const std::int32_t maximum = std::clamp(g_MaxEntitiesPerType, 0, kMaximumVisibleHumans);
+    std::int32_t limit = g_MaxEntitiesPerType;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_DRAW_DISTANCE
+    if (mods::Enabled(mods::Id::DrawDistance))
+        limit = 350;
+#endif
+    const std::int32_t maximum = std::clamp(limit, 0, kMaximumVisibleHumans);
     const std::int32_t count = std::clamp(renderTask.entityCount, 0, maximum);
 
 
@@ -53,7 +59,12 @@ void InsertHuman(DRWP_t &renderTask, Character *character) {
 }
 
 void DispatchHumans(DRWP_t &renderTask, bool drawMode) {
-    const std::int32_t maximum = std::clamp(g_MaxEntitiesPerType, 0, kMaximumVisibleHumans);
+    std::int32_t limit = g_MaxEntitiesPerType;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_DRAW_DISTANCE
+    if (mods::Enabled(mods::Id::DrawDistance))
+        limit = 350;
+#endif
+    const std::int32_t maximum = std::clamp(limit, 0, kMaximumVisibleHumans);
     const std::int32_t count = std::clamp(renderTask.entityCount, 0, maximum);
 
     for (std::int32_t index = 0; index < count; ++index) {

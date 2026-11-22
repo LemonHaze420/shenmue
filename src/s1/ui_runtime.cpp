@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "auto_test.hpp"
 #include "s1/ui_internal.hpp"
 #if SHENMUE_IS_DEMO && defined(SHENMUE_DEBUG)
@@ -1563,6 +1564,10 @@ void UI_UpdateElementEnableStatus() {
             else if (g_uiDebugElementDispatch == 1 || element.field_ac)
                 enabled = element.isVisible || (element.unknown80 && element.unknown80());
         }
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_HUD
+        if (mods::Enabled(mods::Id::HideHud) && (element.index == kUiGameHud || element.index == kUiGameHudWatch))
+            enabled = 0;
+#endif
         element.config.isEnabled = enabled;
         std::int32_t status = 0;
         if (!loading && !(element.unknown80 && element.unknown80()) && !g_uiDebugSuspendElements && !element.isHandledExternally)

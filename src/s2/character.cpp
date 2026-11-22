@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
 
@@ -3042,6 +3043,10 @@ void charaHandlerDrawObjectInternal(void *parameter) {
 
 // @verified - p
 std::uint32_t charaHandlerDrawHuman(Character *character) {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    if (character == g_playerRuntime.character && mods::FirstPersonActive())
+        return 0;
+#endif
     if (!character)
         return 0;
     const std::uint32_t mask = character->renderFlags & CRF_All;
@@ -3194,6 +3199,10 @@ void CharDrawHuman_Callback(void *) {
         if (g_currentMap.name == SHEN_NAME(AR01))
             npcPoolTarget = npcPoolSizingModeOrOverride;
     }
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_DRAW_DISTANCE
+    if (mods::Enabled(mods::Id::DrawDistance))
+        batchCount = 49;
+#endif
     DrawHumanList(*parameters, batchCount);
     const std::uint32_t elapsed = startTime - GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta);
     characterHumanDrawBudget = static_cast<float>(elapsed) * 0.079999998f;

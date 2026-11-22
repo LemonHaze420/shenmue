@@ -140,6 +140,7 @@ void ResetInputHandler();
 bool UpdateAndGetMouseIsMoving();
 std::uint32_t GetLastReleasedWindowKey() noexcept;
 bool HasWindowInputStateChanged() noexcept;
+bool IsWindowKeyPressed(std::uint32_t key) noexcept;
 bool IsWindowKeyBindable(std::int32_t action, std::uint32_t key) noexcept;
 std::uintptr_t SetKeyPressed(std::uint32_t key);
 std::uint64_t SetKeyReleased(std::uint32_t key);

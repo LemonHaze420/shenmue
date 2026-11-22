@@ -1,4 +1,6 @@
 #include "s2/input_bindings.hpp"
+#include "enhancements/misc_mods.hpp"
+#include "s2/frame_pacing.hpp"
 #include "s2/display_configuration.hpp"
 #include "s2/save.hpp"
 #include "d3t/threads.hpp"
@@ -96,12 +98,19 @@ void AcknowledgeS2AudioOutput(std::int32_t device) {
 
 // @verified - p
 void SnapshotUserConfiguration() {
+#if SHENMUE_MODS_ENABLED
+    mods::Record();
+#endif
     std::memcpy(&savedUserConfiguration, &runtimeUserConfiguration, sizeof(savedUserConfiguration));
 }
 
 // @verified - p
 bool HasUserConfigurationChanges() {
-    return std::memcmp(&savedUserConfiguration, &draftUserConfiguration, sizeof(savedUserConfiguration)) != 0;
+    return std::memcmp(&savedUserConfiguration, &draftUserConfiguration, sizeof(savedUserConfiguration)) != 0
+#if SHENMUE_MODS_ENABLED
+        || mods::Changed()
+#endif
+        ;
 }
 
 // @verified - p
@@ -115,12 +124,18 @@ bool HasScalingSettingsModified() {
 }
 
 void ApplyDraftUserConfiguration() {
+#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+    g_stabilizeFps = mods::Get(mods::Id::FrameRate) > 30;
+#endif
     const S2UserConfiguration280 previous = runtimeUserConfiguration;
     std::memcpy(&runtimeUserConfiguration, &draftUserConfiguration, sizeof(runtimeUserConfiguration));
     ApplyS2UserConfigurationChanges(previous);
 }
 
 void PreviewDraftUserConfiguration() {
+#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+    g_stabilizeFps = mods::Get(mods::Id::FrameRate) > 30;
+#endif
     const S2UserConfiguration280 previous = runtimeUserConfiguration;
     runtimeUserConfiguration.swapTriggers = draftUserConfiguration.swapTriggers;
     runtimeUserConfiguration.invertLookY = draftUserConfiguration.invertLookY;
@@ -135,6 +150,9 @@ void PreviewDraftUserConfiguration() {
 }
 
 void RollbackUserConfiguration() {
+#if SHENMUE_MODS_ENABLED
+    mods::Revert();
+#endif
     std::memcpy(&draftUserConfiguration, &savedUserConfiguration, sizeof(draftUserConfiguration));
     ApplyDraftUserConfiguration();
 }
@@ -192,6 +210,9 @@ void ProcessUserSettingsConfig() {
     cJSON_AddNumberToObject(graphics, "Gamma", configuration.gamma);
     cJSON_AddNumberToObject(graphics, "Contrast", configuration.contrast);
     cJSON_AddNumberToObject(graphics, "UISafeArea", configuration.uiSafeArea);
+#if SHENMUE_MODS_ENABLED
+    cJSON_AddItemToObject(settings, "Mods", mods::WriteCJson());
+#endif
     char *const text = cJSON_Print(settings);
     cJSON_Delete(settings);
     if (!text)
@@ -244,6 +265,9 @@ void ResetDraftUserGraphics() {
 }
 
 void InitializeInputBindings() {
+#if SHENMUE_MODS_ENABLED
+    mods::Reset();
+#endif
     draftUserConfiguration = {};
     draftUserConfiguration.version = 1;
     ResetDraftUserControls();

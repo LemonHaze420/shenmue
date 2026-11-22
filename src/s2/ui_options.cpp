@@ -1,4 +1,5 @@
 #include "s2/ui.hpp"
+#include "enhancements/misc_mods.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
 #include "s2/magic_room.hpp"
@@ -120,7 +121,7 @@ std::array<UIButtonWidget *, 19> optionsButtons{};
 UIButtonIconWidget *optionsKeyBindingKey{};
 UIGridTemplate optionsRowTemplate{};
 UIGridTabSelector optionsTabSelector{};
-std::array<void *, 4> optionsTabButtons{}, optionsTabLabels{};
+std::array<void *, 5> optionsTabButtons{}, optionsTabLabels{};
 void EnterOptionsTab(float *, void *window) {
     EnterUIGridTab(optionsTabSelector, window);
 }
@@ -304,7 +305,93 @@ void NativeMessageBox(std::string_view text, bool useString, std::int32_t clearA
     ShowElementByIndex(UIElement::YesNoPrompt);
 }
 
+std::int32_t OptionChildIndex(std::int32_t index) { return index == 3 ? 2 : index; }
+
+#if SHENMUE_MODS_ENABLED
+constexpr std::int32_t kUiSubMenuOptions = 16;
+auto &g_optionsWindows = optionsWindows;
+auto &g_optionsLabels = optionsLabels;
+auto &g_optionsColourImages = optionsColourImages;
+auto &g_optionsButtons = optionsButtons;
+std::int32_t g_optionsTabBackgrounds = 4;
+bool ModsInGame() { return IsCameraIconHidden() != 0; }
+bool ModsInputBlocked() { return g_uiElements[16].isRenderable != 0; }
+nk_context &ModsUiContext() { return *GetNativeUiContext(); }
+std::int32_t ModsSelectedTab() { return options.current; }
+std::uint32_t ModsTabButtonColour(bool selected) {
+    const auto &c = ModsInGame() ? UI_OPTIONS_GAME_COLOURS : UI_OPTIONS_FRONT_COLOURS;
+    return selected ? c.tabButtonSelected : c.tabButton;
+}
+std::uint32_t ModsTabBackgroundColour(bool selected) {
+    const auto &c = ModsInGame() ? UI_OPTIONS_GAME_COLOURS : UI_OPTIONS_FRONT_COLOURS;
+    return selected ? c.tabBackgroundSelected : c.tabBackground;
+}
+void BindModsTabSelector(d3t::UIWindow **windows, d3t::UILabelWidget **labels, std::int32_t last) {
+    for (std::size_t index = 0; index < 5; ++index) {
+        optionsTabButtons[index] = windows[index];
+        optionsTabLabels[index] = labels[index];
+    }
+    optionsTabSelector.last = last;
+}
+#include "enhancements/mods_tab.inl"
+constexpr char NoModOptions[] = "No enhancements compiled";
+std::vector<OptionSpec> ModSpecs() {
+    std::vector<OptionSpec> result;
+    for (const auto &mod : mods::Options()) {
+        OptionSpec spec{};
+        spec.kind = mod.kind == mods::Kind::Toggle ? OptionKind::Toggle : mod.kind == mods::Kind::List ? OptionKind::List : OptionKind::Slider;
+        spec.token = mod.label;
+        spec.description = mod.description;
+        spec.choices = mod.kind == mods::Kind::Toggle ? OptionChoices::OffOn : OptionChoices::None;
+        spec.minimum = static_cast<std::int16_t>(mod.minimum);
+        spec.maximum = static_cast<std::int16_t>(mod.maximum);
+        spec.mod = mod.id;
+        result.push_back(spec);
+    }
+    if (result.empty())
+        result.push_back({OptionKind::Heading, NoModOptions, NoModOptions, 0});
+    return result;
+}
+const std::vector<OptionSpec> modOptions = ModSpecs();
+void HandleModsTabMouse() {
+    if (ModsInputBlocked())
+        return;
+    const auto &input = ModsUiContext().input;
+    const bool clicked = nk_input_is_mouse_pressed(&input, NK_BUTTON_LEFT) != 0;
+    if (!clicked && input.mouse.pos.x == input.mouse.prev.x && input.mouse.pos.y == input.mouse.prev.y)
+        return;
+    const auto slot = g_uiElements[16].config.uiHandleIndex;
+    for (std::int32_t tab = 0; tab <= optionsTabSelector.last; ++tab) {
+        auto *window = &g_modTabWindow;
+        if (tab != ModsTabIndex()) {
+            char id[64]{};
+            std::snprintf(id, sizeof(id), "SubMenu_Options::Tab%d", tab == 4 ? 4 : tab + 1);
+            window = UI_FindViewWindowPointer(slot, id);
+        }
+        if (!window)
+            continue;
+        UILayoutRect rect{};
+        UI_GetWindowRect(window, rect);
+        if (!nk_input_is_mouse_hovering_rect(&input, nk_rect(rect.x, rect.y, rect.width, rect.height)))
+            continue;
+        optionsTabSelector.hovered = tab;
+        if (clicked) {
+            optionsTabSelector.selected = tab;
+            optionsTabSelector.active = 0;
+            options.tabFocus = false;
+            AicaExecuteWrapper(2);
+        }
+        UpdateUIGridTabColours(optionsTabSelector);
+        return;
+    }
+}
+#endif
+
 std::span<const OptionSpec> OptionSpecs(std::int32_t child) {
+#if SHENMUE_MODS_ENABLED
+    if (child == 3 || (child == 2 && options.current == 3))
+        return modOptions;
+#endif
     if (child == 0)
         return controlsOptions;
     if (child == 1)
@@ -312,6 +399,9 @@ std::span<const OptionSpec> OptionSpecs(std::int32_t child) {
     return graphicsOptions;
 }
 std::int32_t ReadOptionInteger(const OptionSpec &spec) {
+#if SHENMUE_MODS_ENABLED
+    if (spec.mod != mods::Id::Count) return static_cast<std::int32_t>(mods::Get(spec.mod));
+#endif
     const auto *data = reinterpret_cast<const std::byte *>(&GetDraftUserConfiguration()) + spec.offset;
     if (spec.byte)
         return std::to_integer<std::uint8_t>(*data);
@@ -320,11 +410,17 @@ std::int32_t ReadOptionInteger(const OptionSpec &spec) {
     return value;
 }
 float ReadOptionFraction(const OptionSpec &spec) {
+#if SHENMUE_MODS_ENABLED
+    if (spec.mod != mods::Id::Count) { const auto &s = mods::Spec(spec.mod); return (mods::Get(spec.mod) - s.minimum) / (s.maximum - s.minimum); }
+#endif
     float value;
     std::memcpy(&value, reinterpret_cast<const std::byte *>(&GetDraftUserConfiguration()) + spec.offset, sizeof(value));
     return value;
 }
 void WriteOptionInteger(const OptionSpec &spec, std::int32_t value) {
+#if SHENMUE_MODS_ENABLED
+    if (spec.mod != mods::Id::Count) { mods::Set(spec.mod, static_cast<float>(value)); return; }
+#endif
     auto *data = reinterpret_cast<std::byte *>(&GetDraftUserConfiguration()) + spec.offset;
     if (spec.byte)
         *data = static_cast<std::byte>(value);
@@ -332,9 +428,19 @@ void WriteOptionInteger(const OptionSpec &spec, std::int32_t value) {
         std::memcpy(data, &value, sizeof(value));
 }
 void WriteOptionFraction(const OptionSpec &spec, float value) {
+#if SHENMUE_MODS_ENABLED
+    if (spec.mod != mods::Id::Count) { const auto &s = mods::Spec(spec.mod); mods::Set(spec.mod, value * (s.maximum - s.minimum) + s.minimum); return; }
+#endif
     std::memcpy(reinterpret_cast<std::byte *>(&GetDraftUserConfiguration()) + spec.offset, &value, sizeof(value));
 }
 std::string_view LocalizedOption(const char *token) {
+#if SHENMUE_MODS_ENABLED
+    if (token == NoModOptions)
+        return token;
+    for (const auto &option : mods::Options())
+        if (token == option.label || token == option.description)
+            return token;
+#endif
     return GetLocalizedSceneText(token);
 }
 void RefreshOptionsAudioOutputs() {
@@ -361,6 +467,13 @@ std::string_view GetOptionsAudioOutputDescription(std::int32_t index) {
     return name.empty() ? LocalizedOption(audioOptions[0].description) : name;
 }
 std::string_view OptionChoiceCaption(const OptionSpec &spec, std::int32_t index) {
+#if SHENMUE_MODS_ENABLED
+    if (spec.mod != mods::Id::Count) {
+        const char *label = mods::ChoiceLabel(spec.mod, index);
+        if (!label) return {};
+        return mods::Spec(spec.mod).kind == mods::Kind::Toggle ? LocalizedOption(label) : std::string_view{label};
+    }
+#endif
     static constexpr std::array<const char *, 2> offOn{
         "UIOTGLOFF0", "UIOTGLON00"}; // @text UIOTGLOFF0 EN: "Off" | JA: "いいえ" ; UIOTGLON00 EN: "On" | JA: "はい"
     static constexpr std::array<const char *, 2> languages{
@@ -410,12 +523,18 @@ std::string_view OptionChoiceCaption(const OptionSpec &spec, std::int32_t index)
     }
 }
 std::int32_t OptionChoiceValue(const OptionSpec &spec, std::int32_t index) {
+#if SHENMUE_MODS_ENABLED
+    if (spec.mod != mods::Id::Count) return mods::ChoiceValue(spec.mod, index);
+#endif
     if (spec.choices != OptionChoices::SubtitleLanguages)
         return index;
     const auto available = GetS2AvailableSubtitleLanguages();
     return index < static_cast<std::int32_t>(available.size()) ? available[index] : -1;
 }
 std::int32_t OptionChoiceCount(const OptionSpec &spec) {
+#if SHENMUE_MODS_ENABLED
+    if (spec.mod != mods::Id::Count) { std::int32_t count = 0; while (mods::ChoiceLabel(spec.mod, count)) ++count; return count; }
+#endif
     switch (spec.choices) {
     case OptionChoices::AudioOutputs:
         return optionsAudioOutputCount;
@@ -447,9 +566,9 @@ std::int32_t SelectedOptionChoice(const OptionSpec &spec) {
     return 0;
 }
 const OptionSpec *CurrentOption() {
-    if (options.current < 0 || options.current >= 3)
+    if (options.current < 0 || options.current >= 4)
         return nullptr;
-    const auto &child = optionChildren[options.current];
+    const auto &child = optionChildren[OptionChildIndex(options.current)];
     const auto ordinal = options.editing >= 0 ? options.editing : GetUIGridSelection(child.grid);
     if (ordinal < 0 || ordinal >= child.count)
         return nullptr;
@@ -506,7 +625,7 @@ void SelectOptionRow(float *rectangle, void *data) {
     Vector4 bounds{};
     if (rectangle)
         std::memcpy(&bounds, rectangle, sizeof(bounds));
-    if (options.current < 0 || options.current >= 3 || options.editing >= 0)
+    if (options.current < 0 || options.current >= 4 || options.editing >= 0)
         return;
     selectedOptionDescription = row ? &OptionSpecs(options.current)[*row] : nullptr;
     if (selectedOptionDescription)
@@ -524,7 +643,7 @@ void BeginOptionEdit() {
     const auto *spec = CurrentOption();
     if (!spec || spec->kind == OptionKind::Heading)
         return;
-    options.editing = GetUIGridSelection(optionChildren[options.current].grid);
+    options.editing = GetUIGridSelection(optionChildren[OptionChildIndex(options.current)].grid);
     if (spec->kind == OptionKind::Slider)
         options.savedFraction = ReadOptionFraction(*spec);
     else
@@ -647,11 +766,11 @@ void ChangeOptionChoice(const OptionSpec &spec, std::int32_t direction) {
 }
 
 std::int64_t OptionChildInput() {
-    if (options.current < 0 || options.current >= 3)
+    if (options.current < 0 || options.current >= 4)
         return 1;
     if (options.tabFocus)
         return 1;
-    auto &child = optionChildren[options.current];
+    auto &child = optionChildren[OptionChildIndex(options.current)];
     const auto *spec = CurrentOption();
     const auto pressed = g_inputBuffer[0].pressedPriority;
     if (!spec || spec->kind != OptionKind::Key || options.editing < 0) {
@@ -779,7 +898,7 @@ void DrawOptionsKeyIcon(const d3t::UITextureObjectDefinition &object, const d3t:
 
 void UpdateOptionRowInput(
     UIGrid *grid, void *, const Vector4 *outer, const Vector4 *bounds, std::int32_t, std::uint32_t, const std::int32_t *dictionary, std::int32_t ordinal) {
-    if (!dictionary || options.current < 0 || options.current >= 3 || options.root < 0 || options.rowRoot < 0)
+    if (!dictionary || options.current < 0 || options.current >= 4 || options.root < 0 || options.rowRoot < 0)
         return;
     const OptionSpec &spec = OptionSpecs(options.current)[dictionary[ordinal]];
     const std::int8_t kind = static_cast<std::int8_t>(spec.kind);
@@ -830,7 +949,7 @@ void UpdateOptionRowInput(
             }
             if (spec.kind == OptionKind::Slider && id == "SubMenu_Options::Option_ScrollBar_Button_#") {
                 const std::int32_t track = options.sliderTrack;
-                OptionsRuntime::SliderDrag &drag = options.sliderDrag[options.current][dictionary[ordinal]];
+                OptionsRuntime::SliderDrag &drag = options.sliderDrag[OptionChildIndex(options.current)][dictionary[ordinal]];
                 if (uiPointer.leftDown && (hover || drag.active) && track >= 0) {
                     options.editing = -1;
                     informationBar.current.hideTarget = 1;
@@ -1060,12 +1179,12 @@ std::int64_t DestroyOptionChild() {
     return 1;
 }
 std::int64_t RenderOptionChild() {
-    if (g_uiElements[16].isRenderable || options.current < 0 || options.current >= 3)
+    if (g_uiElements[16].isRenderable || options.current < 0 || options.current >= 4)
         return 0;
-    OptionChildRuntime &runtime = optionChildren[options.current];
+    OptionChildRuntime &runtime = optionChildren[OptionChildIndex(options.current)];
     if (!runtime.bound)
         return 0;
-    UIElementState &element = g_uiElements[static_cast<std::size_t>(optionChildElements[options.current])];
+    UIElementState &element = g_uiElements[static_cast<std::size_t>(optionChildElements[OptionChildIndex(options.current)])];
     DrawUIEntity(*GetNativeUiContext(), element.config.uiHandleIndex, element.index);
     RenderNativeUIGrid(runtime.grid, element.index, uiPointer);
     return 0;
@@ -1155,6 +1274,9 @@ std::int64_t BindOptions() {
         std::snprintf(id.data(), id.size(), "SubMenu_Options::Tab%uButton", static_cast<unsigned>(tab + 1));
         options.tabs[tab] = MenuPanelIndex(definition, id.data());
     }
+#if SHENMUE_MODS_ENABLED
+    SaveOptionsTabLayout();
+#endif
     return 1;
 }
 std::int64_t ResetOptions() {
@@ -1217,6 +1339,10 @@ void ConfirmOptionsReset(std::int32_t response) {
             ResetDraftUserAudio();
         else if (options.current == 2)
             ResetDraftUserGraphics();
+#if SHENMUE_MODS_ENABLED
+        else if (options.current == 3)
+            mods::Defaults();
+#endif
         ApplyDraftUserConfiguration();
         RefreshOptionChildren();
     }
@@ -1236,7 +1362,7 @@ void ConfirmOptionsQuit(std::int32_t response) {
 }
 void SelectOptionsTab(std::int32_t next) {
     options.requested = next;
-    if (next == 3) {
+    if (next == 4) {
         options.requested = options.current;
         optionsTabSelector.selected = options.current;
         if (IsCameraIconHidden())
@@ -1244,27 +1370,28 @@ void SelectOptionsTab(std::int32_t next) {
                 ConfirmOptionsQuit); // @text EN: "Are you sure you want to quit?\nAny unsaved progress will be lost." | JA: "タイトル画面に戻ります。よろしいですか？\n（記録されていないゲームデータは失われます）"
         return;
     }
-    if (next < 0 || next >= 3 || next == options.current)
+    if (next < 0 || next >= 4 || next == options.current)
         return;
-    if (options.current >= 0 && !DestroyElementByIndex(optionChildElements[options.current]))
+    if (options.current >= 0 && !DestroyElementByIndex(optionChildElements[OptionChildIndex(options.current)]))
         return;
     options.current = next;
     options.editing = -1;
-    ShowElementByIndex(optionChildElements[next]);
+    ShowElementByIndex(optionChildElements[OptionChildIndex(next)]);
     const bool game = IsCameraIconHidden() != 0;
     const UIOptionsColours &colours = game ? UI_OPTIONS_GAME_COLOURS : UI_OPTIONS_FRONT_COLOURS;
     optionsTabSelector.selected = next;
     for (std::int32_t tab = 0; tab < 4; ++tab) {
+        const bool selected = (tab == 3 ? 4 : tab) == next;
         if (optionsColourImages[tab]) {
-            const std::uint32_t alpha = static_cast<std::uint32_t>(static_cast<std::int32_t>((tab == next ? 1.0f : 0.60000002f) * 255.0f));
+            const std::uint32_t alpha = static_cast<std::uint32_t>(static_cast<std::int32_t>((selected ? 1.0f : 0.60000002f) * 255.0f));
             optionsColourImages[tab]->colour = (optionsColourImages[tab]->colour & 0xffffffU) |
                 (alpha
                     << 24); // @text EN: "Are you sure you want to quit?\nAny unsaved progress will be lost." | JA: "タイトル画面に戻ります。よろしいですか？\n（記録されていないゲームデータは失われます）"
         }
         if (optionsButtons[15 + tab])
-            optionsButtons[15 + tab]->colour = tab == next ? colours.tabButtonSelected : colours.tabButton;
+            optionsButtons[15 + tab]->colour = selected ? colours.tabButtonSelected : colours.tabButton;
         if (optionsColourImages[(game ? 8 : 4) + tab])
-            optionsColourImages[(game ? 8 : 4) + tab]->colour = tab == next ? colours.tabBackgroundSelected : colours.tabBackground;
+            optionsColourImages[(game ? 8 : 4) + tab]->colour = selected ? colours.tabBackgroundSelected : colours.tabBackground;
     }
     UpdateUIGridTabColours(optionsTabSelector);
 }
@@ -1286,13 +1413,15 @@ std::int64_t TickOptions() {
         camCtrlSetState(Event);
     }
     SnapshotUserConfiguration();
+    if (options.requested < 0 || options.requested > 3)
+        options.requested = 0;
     SelectOptionsTab(options.requested);
     return 0;
 }
 std::int64_t DestroyOptions() {
     if (HasUserConfigurationChanges())
         ProcessUserSettingsConfig();
-    const auto result = options.current >= 0 ? DestroyElementByIndex(optionChildElements[options.current]) : 1;
+    const auto result = options.current >= 0 ? DestroyElementByIndex(optionChildElements[OptionChildIndex(options.current)]) : 1;
     if (!result)
         options.closing = true;
     if (options.cameraRequested) {
@@ -1310,6 +1439,9 @@ std::int64_t OptionsMenuInput() {
     optionsTabSelector.active = options.tabFocus ? 1 : 0;
     if (options.tabFocus && !optionsTabSelector.previousActive)
         optionsTabSelector.hovered = options.hoveredTab;
+#if SHENMUE_MODS_ENABLED
+    HandleModsTabMouse();
+#endif
     ProcessUIGridTabInput(optionsTabSelector);
     options.tabFocus = optionsTabSelector.active != 0;
     options.hoveredTab = optionsTabSelector.hovered;
@@ -1349,7 +1481,13 @@ std::int64_t RenderOptions() {
         UI_ResetLabelScaleVariables(g_uiElements[16].config.uiHandleIndex);
         optionsShownLanguage = GetLoadingScreenTextType(g_sceneTextLanguage);
     }
+#if SHENMUE_MODS_ENABLED
+    PositionExitTab();
+#endif
     DrawUIEntity(*GetNativeUiContext(), g_uiElements[16].config.uiHandleIndex, g_uiElements[16].index);
+#if SHENMUE_MODS_ENABLED
+    DrawModsTab();
+#endif
     return 0;
 }
 std::int64_t SetOptionsTheme() {
@@ -1387,6 +1525,10 @@ std::int64_t SetOptionsTheme() {
     for (const std::int32_t index : {3, 6, 4, 5})
         if (optionsWindows[index])
             optionsWindows[index]->alpha = game ? 1.0f : 0.0f;
+#if SHENMUE_MODS_ENABLED
+    g_optionsTabBackgrounds = game ? 8 : 4;
+    ConfigureModsTabs();
+#endif
     return 0;
 }
 

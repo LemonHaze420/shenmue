@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/vf_internal.hpp"
 
 namespace shenmue::s1::vf_detail {
@@ -678,7 +679,11 @@ void vfmaUpdateNextReaction(VFActor &actor) {
             if (actor.slotIndex == static_cast<std::uint8_t>(game.playerSlot)) {
                 if (game.runningFrames < 0xfde8U)
                     ++game.runningFrames;
-                if (game.runningFrames > 300U) {
+                bool exhausted = game.runningFrames > 300U;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_FIGHT_STAMINA
+                exhausted &= !mods::Enabled(mods::Id::InfiniteStamina);
+#endif
+                if (exhausted) {
                     actor.followupState = 2;
                     game.runningFrames = 0;
                     game.runningCooldownFrames = 60;

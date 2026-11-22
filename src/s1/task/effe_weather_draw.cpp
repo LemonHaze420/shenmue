@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/effe_internal.hpp"
 
 namespace shenmue::s1::effe_detail {
@@ -72,7 +73,11 @@ std::uint32_t ConstructAndCommitVertsForDrawing_0(D3TDeviceContext *context, con
     EffeParticleVertex *output = MapEffeParticleVertices(context, static_cast<std::uint32_t>(group.count));
     if (!output)
         return 0;
-    const std::uint32_t colour = group.owner->rain.colour;
+    std::uint32_t colour = group.owner->rain.colour;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
+    const auto alpha = static_cast<std::uint32_t>(std::clamp(static_cast<float>(colour >> 24U) * mods::Get(mods::Id::RainOpacity) / 100.0f, 0.0f, 255.0f));
+    colour = (colour & 0x00ffffffU) | (alpha << 24U);
+#endif
     const std::int32_t angleX = group.owner->rain.angleX;
     const std::int32_t angleY = group.owner->rain.angleY;
     const std::int32_t angleZ = group.owner->rain.angleZ;

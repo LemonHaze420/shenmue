@@ -1,4 +1,8 @@
 #include "auto_test.hpp"
+#include "enhancements/misc_mods.hpp"
+#if SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
+#include "s1/player_control.hpp"
+#endif
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -24,7 +28,7 @@
 #include "s1/task/srch.hpp"
 #include "s1/task/wexe.hpp"
 #include "s1/ui_runtime.hpp"
-#if SHEN_AUTO_TEST_ENABLED && SHENMUE_IS_DEMO
+#if (SHEN_AUTO_TEST_ENABLED && SHENMUE_IS_DEMO) || SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
 #include "s1/task/scen/scen.hpp"
 #include "s1/task/ctrl.hpp"
 #endif
@@ -545,6 +549,12 @@ void HLib_mainModule(HLib::TaskData *) {
             auto_test::FinishFrame();
     if (captured)
         d3t_DumpFramePng(auto_test::CapturePath());
+#endif
+#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE && SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX
+    const bool gameplay60Fps = (mods::Get(mods::Id::FrameRate) > 30) && g_isInGame && g_playerCharacter &&
+        (Shenmue_nPauseState & 2) == 0 && (g_nAuthorState == 0 || g_nAuthorState == 17) && (!g_pSCNC || g_pSCNC->header.active != 1);
+    if (gameplay60Fps)
+        b60fps = 1;
 #endif
     PresentLatestFrame();
 #if SHEN_AUTO_TEST_ENABLED && defined(_WIN32)

@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/effe_internal.hpp"
 
 namespace shenmue::s1::effe_detail {
@@ -549,6 +550,9 @@ void Rain_UpdateBucket(WeatherNodeData *group, const Vector3 &previousTarget, co
         ResetRainGroupParticles(group, generator, group->bounds.dimensionY);
     }
     PublishWeatherRenderCount(group->rain.pool);
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
+    group->rain.pool.renderCount = static_cast<std::int32_t>(group->rain.pool.renderCount * mods::Get(mods::Id::RainDensity) / 100.0f);
+#endif
 }
 
 void UpdateWeatherGroupCullBox(WeatherNodeData *group, const Vector3 &direction) {

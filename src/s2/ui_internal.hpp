@@ -1,4 +1,5 @@
 #pragma once
+#include "enhancements/misc_mods.hpp"
 #include "s2/ui.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
@@ -979,6 +980,7 @@ struct OptionSpec {
     OptionChoices choices{};
     std::int16_t minimum{}, maximum{};
     bool byte{};
+    mods::Id mod{mods::Id::Count};
 };
 constexpr std::uint16_t AudioOptionOffset(std::size_t offset) {
     return static_cast<std::uint16_t>(offsetof(S2UserConfiguration280, audio) + offset);

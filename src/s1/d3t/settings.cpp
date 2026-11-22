@@ -1,4 +1,6 @@
 #include "auto_test.hpp"
+#include "enhancements/misc_mods.hpp"
+#include "s1/timing.hpp"
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -235,6 +237,9 @@ void SelectMonitorForDisplay(DisplaySettings *settings) {
 }
 
 void InitializeD3TSettings() {
+#if SHENMUE_MODS_ENABLED
+    mods::Reset();
+#endif
     g_applicationSettings.keyMapping = 1;
     SetDefaultSettings(&g_applicationSettings.savedInput);
     g_applicationSettings.savedAudioDevice = 1;
@@ -343,6 +348,9 @@ void InitialiseGraphicsConfig(const D3TSettings &previous) {
 
 
 void ReadConfigFromSave() {
+#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+    g_bEnableFrameTimeSmoothing = mods::Get(mods::Id::FrameRate) > 30;
+#endif
     const D3TSettings previous = g_currentSettings;
     std::memcpy(&g_currentSettings, &g_applicationSettings.keyMapping, sizeof(g_currentSettings));
     InitialiseGraphicsConfig(previous);
@@ -352,6 +360,9 @@ void ReadConfigFromSave() {
 
 
 void ReadSettingsFile() {
+#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+    g_bEnableFrameTimeSmoothing = mods::Get(mods::Id::FrameRate) > 30;
+#endif
     const D3TSettings previous = g_currentSettings;
     const std::uint16_t areaJump = g_currentSettings.input.areaJump;
     g_currentSettings.input = g_applicationSettings.savedInput;
@@ -426,6 +437,9 @@ void SettingsFileParser() {
         g_applicationSettings.savedMusicVolume = FloatOr(audio, "MusicVolume", g_applicationSettings.savedMusicVolume);
     }
 
+#if SHENMUE_MODS_ENABLED
+    mods::Read(root["Mods"]);
+#endif
     const Json::Value &graphics = root["Graphics"];
     if (graphics.isObject()) {
         DisplaySettings &display = g_applicationSettings.display;
@@ -507,6 +521,9 @@ bool WriteSettingsFile() {
     graphics["Contrast"] = display.contrast;
     graphics["UISafeArea"] = display.uiDisplayArea;
 
+#if SHENMUE_MODS_ENABLED
+    mods::Write(root["Mods"]);
+#endif
     Json::StreamWriterBuilder builder;
     builder["indentation"] = "";
 #if defined(SHENMUE_STEAM)

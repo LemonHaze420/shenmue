@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/time.hpp"
 #include "s1/task/ctrl.hpp"
 #include "s1/date_time.hpp"
@@ -582,6 +583,9 @@ void UpdateTime() {
         if (g_bEnableFrameTimeSmoothing) {
             increment = increment * 30.0f * fFrameTimeMs;
         }
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_TIME
+        increment *= mods::Enabled(mods::Id::FreezeTime) ? 0.0f : mods::Get(mods::Id::TimeSpeed) / 100.0f;
+#endif
         newTime += increment;
         g_newCycleTime = newTime;
     }

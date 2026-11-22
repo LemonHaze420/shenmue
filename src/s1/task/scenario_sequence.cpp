@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/scen/scen.hpp"
 #include "s1/task/conv.hpp"
 #include "logging.hpp"
@@ -585,10 +586,14 @@ void SEQ_UpdateSkipInput(ScenarioSequence *sequence) {
         return;
     }
 
+    bool autoSkip = g_automatedSequenceSkip;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_SKIP_CUTSCENES
+    autoSkip |= mods::Enabled(mods::Id::SkipCutscenes);
+#endif
     InputSlot &input = g_inputState.slots[0];
     constexpr std::uint16_t kSkipButton = 0x0200U;
     if (sequence->skipPromptTimer <= 0.0f || sequence->skipRequested) {
-        if (input.pressedPriority != 0 || g_automatedSequenceSkip) {
+        if (input.pressedPriority != 0 || autoSkip) {
             sequence->skipPromptTimer = 90.0f;
             input.pressedPriority &= static_cast<std::uint16_t>(~kSkipButton);
         }
@@ -597,7 +602,7 @@ void SEQ_UpdateSkipInput(ScenarioSequence *sequence) {
 
     g_cinemaBars[1].isActive = 1;
     sequence->skipPromptTimer -= g_bEnableFrameTimeSmoothing ? fFrameTimeMs * 30.0f : 1.0f;
-    if (((input.pressedPriority & kSkipButton) != 0 && (sequence->inputMask & kSkipButton) == 0) || g_automatedSequenceSkip) {
+    if (((input.pressedPriority & kSkipButton) != 0 && (sequence->inputMask & kSkipButton) == 0) || autoSkip) {
         sequence->skipRequested = 1;
     }
 }

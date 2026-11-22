@@ -26,7 +26,7 @@ inline constexpr Vector3i kContextBagRotation{0x28e3, 0x38e3, 0};
 inline constexpr Vector3i kContextLanternRotation{0x28e3, 0x38e3, 0};
 inline constexpr Vector3i kContextRaincoatRotation{0x360b, 0xb999, 0x9c71};
 inline constexpr Vector3i kContextRaincoatFoldedRotation{0x18e3, 0xc000, 0xa38e};
-#if SHENMUE_IS_DEMO
+#if SHENMUE_IS_DEMO || (SHENMUE_IS_S1 && SHENMUE_IS_PC && SHENMUE_ENHANCEMENT_MISC_MODS_CROUCH)
 inline constexpr std::uint16_t WS_CROUCH_INPUT = 0x0004U;
 inline constexpr std::uint16_t WS_CROUCH_ENTER_ANIMATION = 81;
 #endif

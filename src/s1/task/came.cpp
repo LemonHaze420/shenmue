@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/came.hpp"
 #include "s1/task/conv.hpp"
 #include "s1/task/char.hpp"
@@ -4097,7 +4098,24 @@ void TranslateCameraRelative(const Vector3 &relativePosition) {
     }
 }
 
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+namespace {
+Vector3 modCameraNativeEye{}, modCameraNativeTarget{};
+std::uint32_t modCameraArea{};
+bool modCameraApplied{};
+bool ModCameraKey(std::uint32_t key) { return key < std::size(g_windowInput.keyStates) && g_windowInput.keyStates[key].pressed != 0; }
+}
+#endif
 void CAME_Callback(HLib::TaskData *) {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    if (modCameraApplied && modCameraArea == g_areaId && g_nAuthorState == 0) {
+        g_CameraEyePos = modCameraNativeEye;
+        g_CameraTargetPos = modCameraNativeTarget;
+        shenApplyTranslationToAll(g_cameraEyeNode, g_CameraEyePos);
+        shenApplyTranslationToAll(g_cameraTargetNode, g_CameraTargetPos);
+    }
+    modCameraApplied = false;
+#endif
     if (!g_LookAroundViewMode && g_updateRenderFrameMode)
         UpdateLookAroundAnalogInput();
 
@@ -4209,6 +4227,17 @@ void CAME_Callback(HLib::TaskData *) {
         HandleCameraForAuthorState();
 
 
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    modCameraNativeEye = g_CameraEyePos;
+    modCameraNativeTarget = g_CameraTargetPos;
+    modCameraArea = g_areaId;
+    modCameraApplied = mods::AdjustCamera(ShouldRun() && g_nAuthorState == 0 && !g_VF_camera_active,
+        fFrameTimeMs, g_areaId, ModCameraKey, g_CameraEyePos, g_CameraTargetPos);
+    if (modCameraApplied) {
+        shenApplyTranslationToAll(g_cameraEyeNode, g_CameraEyePos);
+        shenApplyTranslationToAll(g_cameraTargetNode, g_CameraTargetPos);
+    }
+#endif
     if (!g_DisableCamStateUpdate) {
         HandleFreeCameraState();
     } else {
@@ -4223,6 +4252,11 @@ void CAME_Callback(HLib::TaskData *) {
     g_CurrLODDistance_0 = LOD_Distance_0;
     g_CurrLODDistance_1 = LOD_Distance_2;
     g_CurrLODDisplayRadius = NPCDisplayRadius;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_DRAW_DISTANCE
+    if (mods::Enabled(mods::Id::DrawDistance)) {
+        g_CurrLODDistance = g_CurrLODDistance_0 = g_CurrLODDistance_1 = g_CurrLODDisplayRadius = 50000.0f;
+    }
+#endif
     g_fCurrWorldToGridFactor = g_mapBlockScale;
     prevScreenSpaceToWorldScale = {
         screenSpaceToWorldScale.y,
@@ -4233,6 +4267,10 @@ void CAME_Callback(HLib::TaskData *) {
 }
 
 HLib::Task *CAME_Init() {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    modCameraApplied = false;
+    mods::ResetCamera();
+#endif
     bLockCamera = 0;
     g_tmp_interpolated_camrot = {};
     g_tmp_cam_rot_z_adj = 0;

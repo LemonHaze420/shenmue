@@ -1,4 +1,5 @@
 #include "s1/task/scrl.hpp"
+#include "enhancements/misc_mods.hpp"
 
 #include "s1/boot.hpp"
 #include "s1/initialization.hpp"
@@ -260,7 +261,7 @@ void Sky_BuildQuadsAndUVs() {
     constexpr float kVerticalProjection = 8523.0f;
     const float perspectiveScale = 10922.0f / static_cast<float>(currentPerspectiveFov);
 #if SHENMUE_ENHANCEMENT_S1_SKY_FIX
-    const float yawToPixels = g_skyFixEnabled ? kSkyYawToPixels : 0.058597326f;
+    const float yawToPixels = g_skyFixEnabled && mods::Enabled(mods::Id::SkyMovement) ? kSkyYawToPixels : 0.058597326f;
 #else
     constexpr float yawToPixels = 0.058597326f;
 #endif

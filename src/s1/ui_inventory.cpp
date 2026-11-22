@@ -1,4 +1,5 @@
 #include "s1/ui_internal.hpp"
+#include "enhancements/misc_mods.hpp"
 
 #include "common/keyboard.hpp"
 #include "s1/ui_collection.hpp"
@@ -27,6 +28,8 @@ void UpdatePortableCassette() {
     const bool escapeHeld = g_windowInput.keyStates[KeyEscape].pressed != 0;
     const bool stopPressed = escapeHeld && !g_cassetteStopKeyHeld;
     g_cassetteStopKeyHeld = escapeHeld;
+    if (!mods::Enabled(mods::Id::Cassettes))
+        StopPortableCassette();
     if (!g_portableCassettePlaying || g_cassetteCollectionUiState)
         return;
     if (!AccessBatteryLife(1, 1, 0) || (stopPressed && g_isPlayerGameStateActive == 7 && !g_uiElements[kUiGameMenu].isVisible))
@@ -2672,7 +2675,7 @@ void PlayCassette() {
     g_cassetteIndex = static_cast<std::int8_t>(tape.id);
     g_cassettePlaying = 1;
 #if SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
-    g_portableCassettePlaying = !g_cassettePlayFlag;
+    g_portableCassettePlaying = mods::Enabled(mods::Id::Cassettes) && !g_cassettePlayFlag;
 #endif
 }
 

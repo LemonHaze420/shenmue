@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/scen/scen.hpp"
 #include "s1/task/conv.hpp"
 #include "logging.hpp"
@@ -370,6 +371,10 @@ void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player) {
     if (hour < 8)
         hour += 24;
     const std::int32_t minutes = 60 * hour + g_currentDateTime.minutes;
+    bool bedtime = true;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_BEDTIME
+    bedtime = !mods::Enabled(mods::Id::NoBedtime);
+#endif
 
     if ((g_shouldSleep & kHomeStateActive) == 0) {
         if ((g_shouldSleep & kFadeActive) != 0) {
@@ -402,7 +407,7 @@ void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player) {
                 reinterpret_cast<const FilmColourInterpolation *>(reinterpret_cast<const std::byte *>(control->filmTask->task_data_ptr) + 4) :
                 nullptr;
             const bool promptWindow =
-                (g_shouldSleep & kPromptTriggered) == 0 && minutes >= g_sleepPromptWindowStartMinutes && minutes <= g_sleepPromptWindowEndMinutes;
+                bedtime && (g_shouldSleep & kPromptTriggered) == 0 && minutes >= g_sleepPromptWindowStartMinutes && minutes <= g_sleepPromptWindowEndMinutes;
             if (promptWindow && SCEN_HasSleepTransitionFinished(player, 0)) {
                 g_shouldSleep |= kPromptTriggered;
                 ryoRequestNewMode(1);
@@ -422,7 +427,7 @@ void SCEN_UpdatePlayerSleepScheduler(PlayerControlWork &player) {
                 ctrlSetCurrentFilmFade();
             } else {
                 const std::uint8_t state = g_shouldSleep;
-                if ((state & (kForcedSleepPending | kTmexPromptActive)) == 0 && minutes >= g_forcedSleepWindowStartMinutes &&
+                if (bedtime && (state & (kForcedSleepPending | kTmexPromptActive)) == 0 && minutes >= g_forcedSleepWindowStartMinutes &&
                     minutes <= g_forcedSleepWindowEndMinutes && (state & kRegularSleepRequested) == 0 && g_TMEX_CurrentMode == 0 && control &&
                     (control->flags & 1U) == 0) {
                     if (TMEXUtilities(static_cast<std::uint32_t>(TMEXUtilityMode::OpenSleep)) != 0) {

@@ -3,6 +3,7 @@
 #endif
 
 #include "s1/frame_pipeline.hpp"
+#include "enhancements/misc_mods.hpp"
 #include "s1/d3t/namespace.hpp"
 
 #include "platform/performance_counter.hpp"
@@ -780,7 +781,11 @@ void PresentLatestFrame() {
     UpdateMipMaps();
     std::int32_t renderMode = g_NumFramesProcessed == 0 ? 1 : 0;
     if (b60fps) {
+#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+        renderMode = mods::Get(mods::Id::FrameRate) > 60 ? 3 : 2;
+#else
         renderMode = 2;
+#endif
         b60fps = 0;
     }
 #if defined(_WIN32) || defined(SHENMUE_GFX_DXVK_NATIVE)

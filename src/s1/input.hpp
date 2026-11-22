@@ -189,6 +189,9 @@ InputMode GetCurrentInputType();
 bool ResolveCurrentInputForGame(std::int32_t inputContext);
 std::uint16_t ApplyCurrentInputForGameSwap(std::uint16_t value);
 std::uint16_t ReadInputSlotMode(std::uint32_t slot, std::uint32_t mode);
+#if SHENMUE_IS_PC && SHENMUE_IS_S1 && !SHENMUE_IS_DEMO && SHENMUE_ENHANCEMENT_MISC_MODS_CROUCH
+bool ConsumeCrouchInput();
+#endif
 
 #if defined(_WIN32)
 std::uint32_t ExtendedMapVirtualKey(std::uint32_t virtualKeyCode, void *inputLocale, void *outputLocale);

@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "auto_test.hpp"
 #include "s2/ui.hpp"
 #include "s2/easy_option.hpp"
@@ -216,6 +217,9 @@ std::int64_t SplashRender() {
 
 // @verified - p
 std::int64_t HandleSplashInput() {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_SKIP_SPLASH
+    splashSkipPressed |= mods::Enabled(mods::Id::SkipSplash);
+#endif
     if (g_inputBuffer[0].pressedPriority & PAD_BUTTON_X)
         splashSkipPressed = true;
     const nk_context &context = *GetNativeUiContext();

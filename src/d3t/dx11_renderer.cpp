@@ -1080,14 +1080,22 @@ void PresentFrame(std::int32_t renderMode) {
         }
     }
 
-    const UINT syncInterval = renderMode >= 1 && renderMode <= 2 ? 1U : 0U;
+    UINT syncInterval = renderMode != 0 ? 1U : 0U;
+#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+    if (renderMode == 3)
+        syncInterval = 0;
+#endif
     g_swapChain->Present(syncInterval, 0);
 
     if (g_presentFrameCount == 0) {
         g_previousPresentNanoseconds = PresentClockNanoseconds();
     }
     if (renderMode != 0 && g_presentFrameCount != 0) {
-        const std::int64_t frameDuration = renderMode == 1 ? 33333333LL : 16666666LL;
+        const std::int64_t frameDuration =
+#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+            renderMode == 3 ? 5000000LL :
+#endif
+            renderMode == 1 ? 33333333LL : 16666666LL;
         const std::int64_t target = g_previousPresentNanoseconds + frameDuration;
         const std::int64_t sleepTarget = g_previousPresentNanoseconds + frameDuration * 9 / 10;
         std::int64_t now = PresentClockNanoseconds();

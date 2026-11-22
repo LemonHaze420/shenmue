@@ -1,4 +1,5 @@
 #include "s1/enhancements/enemy_gauge.hpp"
+#include "enhancements/misc_mods.hpp"
 
 #if SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE && SHENMUE_IS_S1 && SHENMUE_IS_PC
 
@@ -54,6 +55,10 @@ void ResetEnemyGauge() {
 
 void UpdateEnemyGauge(VFMAData &game, float pulsePosition) {
     using namespace ui_runtime_detail;
+    if (!mods::Enabled(mods::Id::EnemyGauge)) {
+        HideEnemy();
+        return;
+    }
     if (g_enemyGauge.game != &game)
         g_enemyGauge = {.game = &game};
     const std::uint32_t playerSlot = static_cast<std::uint8_t>(game.playerSlot);

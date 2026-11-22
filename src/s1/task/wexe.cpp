@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/wexe.hpp"
 #if SHENMUE_IS_DEMO
 #include "s1/task/trial_weather_data.hpp"
@@ -548,18 +549,36 @@ void WEXE_ReadDataForDateTime(std::uint32_t year, std::uint32_t month, std::uint
 namespace {
 
 float weatherRealCloud() {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
+    if (mods::Enabled(mods::Id::DisableWeather))
+        return 0.0f;
+    if (mods::Enabled(mods::Id::WeatherOverride))
+        return mods::Get(mods::Id::CloudLevel) / 100.0f;
+#endif
     if ((g_activeWeatherOverrides & kWeatherOverrideCloud) != 0 && g_allowWeatherOverrideValues) {
         return g_overrideCloudIntensity;
     }
     return clampWeatherValue(g_weatherCloudValue);
 }
 float weatherRealRain() {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
+    if (mods::Enabled(mods::Id::DisableWeather))
+        return 0.0f;
+    if (mods::Enabled(mods::Id::WeatherOverride))
+        return mods::Get(mods::Id::RainLevel) / 100.0f;
+#endif
     if ((g_activeWeatherOverrides & kWeatherOverrideRain) != 0 && g_allowWeatherOverrideValues) {
         return g_overrideRainIntensity;
     }
     return clampWeatherValue(g_weatherRainValue);
 }
 float weatherRealSnow() {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
+    if (mods::Enabled(mods::Id::DisableWeather))
+        return 0.0f;
+    if (mods::Enabled(mods::Id::WeatherOverride))
+        return mods::Get(mods::Id::SnowLevel) / 100.0f;
+#endif
     return (g_activeWeatherOverrides & kWeatherOverrideSnow) != 0 && g_allowWeatherOverrideValues ? g_overrideSnowIntensity : g_weatherSnowValue;
 }
 float weatherRealFcas() {
@@ -1504,15 +1523,33 @@ void Weather_ApplyWeatherEntry(WeatherDataEntry *entry, float intensity, std::in
 }
 
 void WEXE_ApplyCloudGameData(float intensity, std::int32_t stepCount) {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
+    if (mods::Enabled(mods::Id::DisableWeather))
+        intensity = 0.0f;
+    else if (mods::Enabled(mods::Id::WeatherOverride))
+        intensity = mods::Get(mods::Id::CloudLevel) / 100.0f;
+#endif
     Weather_ApplyWeatherEntry(g_cloudGameData, intensity, stepCount);
 }
 
 void WEXE_ApplyRainGameData(float intensity, std::int32_t stepCount) {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
+    if (mods::Enabled(mods::Id::DisableWeather))
+        intensity = 0.0f;
+    else if (mods::Enabled(mods::Id::WeatherOverride))
+        intensity = mods::Get(mods::Id::RainLevel) / 100.0f;
+#endif
     EFFE_ApplyRainGameData(intensity, stepCount);
     Weather_ApplyWeatherEntry(g_activeRainEntry, intensity, stepCount);
 }
 
 void WEXE_ApplySnowGameData(float intensity, std::int32_t stepCount) {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
+    if (mods::Enabled(mods::Id::DisableWeather))
+        intensity = 0.0f;
+    else if (mods::Enabled(mods::Id::WeatherOverride))
+        intensity = mods::Get(mods::Id::SnowLevel) / 100.0f;
+#endif
     EFFE_ApplySnowGameData(intensity, stepCount);
     Weather_ApplyWeatherEntry(g_activeSnowEntry, intensity, stepCount);
 }
@@ -1689,6 +1726,15 @@ void Weather_Tick(HLib::TaskData *) {
         return;
     g_rainSpawnScale = 0.05f;
     g_rainVisualBlend = 1.0f;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
+    const std::array<float, 5> settings{mods::Get(mods::Id::DisableWeather), mods::Get(mods::Id::WeatherOverride),
+        mods::Get(mods::Id::CloudLevel), mods::Get(mods::Id::RainLevel), mods::Get(mods::Id::SnowLevel)};
+    static std::array<float, 5> previous{};
+    if (settings != previous) {
+        previous = settings;
+        setWeatherValues();
+    }
+#endif
 
     const std::uint8_t currDay = g_currentDateTime.day;
     const std::uint8_t currMonth = g_currentDateTime.month;

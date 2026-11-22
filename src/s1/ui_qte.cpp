@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/ui_internal.hpp"
 
 namespace shenmue::s1::ui_runtime_detail {
@@ -169,8 +170,16 @@ void HandleQteOverlayExactInput(std::uint16_t pressed) {
             break;
         }
     }
-    if (VFMA_IsPlayerGodmodeForced())
+    if (VFMA_IsPlayerGodmodeForced()
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_QTE
+        || mods::Enabled(mods::Id::QteSuccess)
+#endif
+    )
         inputMask = g_currentQteMask;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_QTE
+    if (mods::Enabled(mods::Id::QteSuccess))
+        faceButtonCount = 0;
+#endif
     if (inputMask) {
         g_qteOverlayResult[0] = static_cast<std::int16_t>(inputMask);
         bool success = false;
@@ -223,7 +232,11 @@ void HandleQteOverlaySubsetInput(std::uint16_t pressed) {
         if ((pressed & 0x2000U) != 0)
             inputMask = 0x010;
     }
-    if (VFMA_IsPlayerGodmodeForced())
+    if (VFMA_IsPlayerGodmodeForced()
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_QTE
+        || mods::Enabled(mods::Id::QteSuccess)
+#endif
+    )
         inputMask = g_currentQteMask;
     if ((g_currentQteMask & inputMask) != 0) {
         g_qteOverlayResult[0] = static_cast<std::int16_t>(inputMask | 0x2000U);

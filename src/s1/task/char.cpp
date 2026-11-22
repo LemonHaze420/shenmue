@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s1/task/char.hpp"
 #include "s1/task/char_components_internal.hpp"
 #include "s1/task/conv.hpp"
@@ -3040,6 +3041,10 @@ static bool CharacterNeedsAlphaMaskedDepthPass(Character *character) {
 }
 
 void Character_SubmitForDrawing(Character *character) {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
+    if (character == g_playerCharacter && mods::FirstPersonActive())
+        return;
+#endif
     if (!character || !character->model || !character->figurePoseCallback || (character->motionFlags & 0x3fU) != 0x3fU) {
         return;
     }
@@ -3403,7 +3408,12 @@ void CharacterHandler_ProcessShadow(Character *character) {
     Vector3i rotation = GetEulerAnglesForEntity(character->entity.node);
     void *shadowModel = character->model;
     float direction = -1.0f;
-    switch (character->shadowMode) {
+    auto shadowMode = character->shadowMode;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_SHADOWS
+    if (mods::Enabled(mods::Id::FullShadows))
+        shadowMode = 0;
+#endif
+    switch (shadowMode) {
     case 1:
         shadowModel = character->shadowModel == g_shadowMeshData ? character->model : character->shadowModel;
         direction = 1.0f;

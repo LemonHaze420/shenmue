@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "auto_test.hpp"
 #include "s2/ui_internal.hpp"
 #include "s2/ui_credits.hpp"
@@ -4677,6 +4678,10 @@ void InitializeUIElements() {
 
 // @verified - p
 std::int64_t RenderCinemaBars() {
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_WIDESCREEN
+    if (mods::Enabled(mods::Id::Widescreen))
+        return 0;
+#endif
     cinemaBarAmount = std::fmax(0.0f, std::fmin(1.0f, GetFrameTime() * cinemaBarDirection + cinemaBarAmount));
     const float ease = std::sin((cinemaBarAmount * 3.141592741f) * 0.5f);
     const std::int32_t opacity = static_cast<std::int32_t>(std::fmax(0.0f, std::fmin(1.0f, cinemaBarAmount * 10.0f)) * 255.0f);
@@ -6045,6 +6050,13 @@ void UpdateUI() {
             element.config.status = 1;
         else
             element.config.status = (g_debugImGuiRenderMode == 1 || element.fieldAc) && element.isVisible;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_HUD
+        if (mods::Enabled(mods::Id::HideHud) && (element.index == static_cast<std::uint32_t>(UIElement::GameHud) ||
+            element.index == static_cast<std::uint32_t>(UIElement::GameHudWatch))) {
+            element.config.status = 0;
+            element.config.enabled = 0;
+        }
+#endif
     }
 }
 

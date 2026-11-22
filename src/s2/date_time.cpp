@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
 
@@ -522,7 +523,11 @@ void UpdateGameTime(DateTime& dateTime) {
         accumulated += realTimeScale;
     } else {
         if (realTimeScale > 0.0f) realTimeScale = -1.0f;
-        if (!g_freezeGameTime) accumulated += shenGetScaledDeltaTickTime(g_gameTimeMultiplier * realSecondsToGameMinute);
+        float speed = g_gameTimeMultiplier;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_TIME
+        speed *= mods::Enabled(mods::Id::FreezeTime) ? 0.0f : mods::Get(mods::Id::TimeSpeed) / 100.0f;
+#endif
+        if (!g_freezeGameTime) accumulated += shenGetScaledDeltaTickTime(speed * realSecondsToGameMinute);
     }
     secondAccumulator = accumulated;
     while (accumulated >= 60.0f) {

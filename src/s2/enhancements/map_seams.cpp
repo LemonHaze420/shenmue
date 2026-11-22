@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "s2/enhancements/map_seams.hpp"
 
 #include "d3t/buffer.hpp"
@@ -344,6 +345,10 @@ void PrepareMapSeamResources(MT7Model &model) {
 }
 
 const LegacyDrawResources &GetCorrectedMapSeamResources(const MT7Model &model, const MT7Node &node, const LegacyDrawResources &source) {
+#if SHENMUE_MODS_ENABLED
+    if (!mods::Enabled(mods::Id::MapSeams))
+        return source;
+#endif
     MapSeamModelResources *const state = FindResources(model);
     if (!state || !RootUnchanged(model, *state) || source.waveVertexColours || !model.wbtrDeformers.empty() || !model.mdcVertexLinks.empty() ||
         !model.mdpVertexLinks.empty() || node.parent != 0 || node.runtimeParent != model.nodes.data() || !TranslationOnly(node))

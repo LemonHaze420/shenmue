@@ -1451,6 +1451,7 @@ void HideArbtDockProps(void)
 #endif
 #endif
 #else
+#include "enhancements/misc_mods.hpp"
 #include "s2/areas/area_arbt.hpp"
 #include "s2/author.hpp"
 #include "s2/battle_qte_ui.hpp"
@@ -1744,11 +1745,16 @@ void ArbtCarryQte(void *data) {
         return;
     }
     const std::uint32_t pressed = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_PRESSED));
-    if (carry.direction == 0x8000)
-        SetupBattleQteIcon(4, 0);
-    else if (carry.direction == 0x4000)
-        SetupBattleQteIcon(64, 0);
-    EnableElement(UIElement::GameQte);
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CRATE_ARROWS
+    if (!mods::Enabled(mods::Id::CrateArrows))
+#endif
+    {
+        if (carry.direction == 0x8000)
+            SetupBattleQteIcon(4, 0);
+        else if (carry.direction == 0x4000)
+            SetupBattleQteIcon(64, 0);
+        EnableElement(UIElement::GameQte);
+    }
     if (pressed == carry.direction || ((pressed & carry.direction) && carry.direction == 0x1000)) {
         if (carry.presses-- == 1) {
             Loop3DSoundEffect(0x900ab);
@@ -1780,8 +1786,13 @@ void ArbtCarryForwardQte(void *data) {
     }
     const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_HELD)),
                         pressed = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_PRESSED));
-    SetupBattleQteIcon(1, 0);
-    EnableElement(UIElement::GameQte);
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CRATE_ARROWS
+    if (!mods::Enabled(mods::Id::CrateArrows))
+#endif
+    {
+        SetupBattleQteIcon(1, 0);
+        EnableElement(UIElement::GameQte);
+    }
     if (held & carry.direction) {
         HLib::SetCurrentTaskTo(carry.phase);
         if (carry.idleCount || carry.frames <= 0)
@@ -1812,8 +1823,13 @@ void ArbtCarryPutQte(void *data) {
         }
     } else {
         const std::uint32_t held = static_cast<std::uint32_t>(GetCurrentControlInput(INPUT_HELD));
-        SetupBattleQteIcon(16, 0);
-        EnableElement(UIElement::GameQte);
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CRATE_ARROWS
+        if (!mods::Enabled(mods::Id::CrateArrows))
+#endif
+        {
+            SetupBattleQteIcon(16, 0);
+            EnableElement(UIElement::GameQte);
+        }
         if (held & carry.direction) {
             Loop3DSoundEffect(0x900ab);
             HLib::SetCurrentTaskTo(ArbtCarryPut);

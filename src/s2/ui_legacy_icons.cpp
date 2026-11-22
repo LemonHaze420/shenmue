@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
 
@@ -1947,7 +1948,11 @@ void UpdateQuickIconSplitDirections() {
         if ((pressed & 0x2000U) != 0)
             status = 16;
     }
-    if (g_forcePlayerGodmode != 0)
+    if (g_forcePlayerGodmode != 0
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_QTE
+        || mods::Enabled(mods::Id::QteSuccess)
+#endif
+    )
         status = quickIconRequiredStatus;
     if ((status & quickIconRequiredStatus) != 0) {
         quickIconCurrentStatus = static_cast<std::int16_t>(status | 0x2000U);
@@ -1997,11 +2002,22 @@ void UpdateQuickIconSingleButton() {
         else if (quickIconRequiredStatus == 4 && (pressed & 0x8000U) != 0)
             status = 4;
     }
-    if (g_forcePlayerGodmode != 0)
+    if (g_forcePlayerGodmode != 0
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_QTE
+        || mods::Enabled(mods::Id::QteSuccess)
+#endif
+    )
         status = quickIconRequiredStatus;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_QTE
+    if (mods::Enabled(mods::Id::QteSuccess))
+        faceButtonCount = 0;
+#endif
     if (status != 0) {
         quickIconCurrentStatus = static_cast<std::int16_t>(status);
-        const bool invalid = (quickIconFlags & 0x40U) != 0 || faceButtonCount >= 2 || ((status & 0x0f00U) != 0 && static_cast<std::uint8_t>(status) != 0);
+        bool invalid = (quickIconFlags & 0x40U) != 0 || faceButtonCount >= 2 || ((status & 0x0f00U) != 0 && static_cast<std::uint8_t>(status) != 0);
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_QTE
+        invalid &= !mods::Enabled(mods::Id::QteSuccess);
+#endif
         if (invalid) {
             PlayQuickIconResult((quickIconFlags & 8U) != 0);
             quickIconCurrentStatus = 0;

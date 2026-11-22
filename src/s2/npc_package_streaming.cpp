@@ -1,3 +1,4 @@
+#include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
 
@@ -424,9 +425,14 @@ bool IsInsideNpcNoSpawnRadius(const Vector3 &position, float radius) {
 }
 
 std::int32_t AdjustedNpcStreamTarget() {
-    if (npcPoolMinimum != -1 && npcPoolMinimum <= npcPoolTarget)
-        return std::max(npcPoolMinimum, npcPoolTarget - static_cast<std::int32_t>(static_cast<float>(npcPoolTarget) * npcCrowdDensityScale * 0.5f));
-    return npcPoolTarget;
+    std::int32_t target = npcPoolTarget;
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_DRAW_DISTANCE
+    if (mods::Enabled(mods::Id::DrawDistance))
+        target += 66;
+#endif
+    if (npcPoolMinimum != -1 && npcPoolMinimum <= target)
+        return std::max(npcPoolMinimum, target - static_cast<std::int32_t>(static_cast<float>(target) * npcCrowdDensityScale * 0.5f));
+    return target;
 }
 
 bool RequestNpcStreamLoad(NpcRouteLiveEntry &entry) {
