@@ -293,9 +293,6 @@ bool PrepareDoorTransitionCandidate(CycleManager::NpcRecord &npc, Vector3 &appro
 }
 
 bool StartDoorRequest(CycleManager::NpcRecord &npc) {
-    if (npc.cycle->actionTimerOrDoorHandle >= 0)
-        return true;
-
     // Door hand-off requires a live character/MOTN context; inactive cycles stay dormant.
     // The scenario door task resolves the request owner through CYCLE_CMD_HAS_CHARA.
 
