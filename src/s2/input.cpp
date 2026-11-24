@@ -1,4 +1,5 @@
 #include "enhancements/misc_mods.hpp"
+#include "s2/enhancements/tai_chi.hpp"
 #if defined(SHENMUE_STEAM)
 #include "d3t/steam.hpp"
 #endif
@@ -486,6 +487,10 @@ void HandleControllerInput(std::uint32_t controllerIndex) {
             key = GetGameKeyMapping(action < 4 ? action + 18 : action);
         else if (type == 2 || type == static_cast<std::int32_t>(InputType::Fight))
             key = GetGameKeyMapping(type == static_cast<std::int32_t>(InputType::Fight) && action < 4 ? action + 22 : action);
+#if SHENMUE_IS_PC && SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_TAI_CHI
+        if (key == 'Q' && TaiChiHintActive())
+            continue;
+#endif
         if (pressed || (key < windowKeys.size() && windowKeys[key].pressed))
             controller.buttons |= keyboardControllerButtonMasks[action];
     }

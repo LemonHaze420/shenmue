@@ -1,4 +1,5 @@
 #include "s2/player_internal.hpp"
+#include "s2/enhancements/tai_chi.hpp"
 
 namespace shenmue::s2 {
 
@@ -88,6 +89,9 @@ void PlayerModelUpdate(Character *character, void *payload) {
     if (++state.frameCount == 0)
         ++state.frameCount;
     SynchronizePlayerModelState(character, state);
+#if SHENMUE_IS_PC && SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_TAI_CHI
+    UpdateTaiChi(character);
+#endif
     UpdatePlayerDisplayAlpha(state);
     plymUpdateRyoBag(state);
     plymUpdateHeldState(state);
@@ -144,6 +148,9 @@ std::int64_t InitializePlayerRuntime() {
 }
 
 void plymSetDefaultFlags() {
+#if SHENMUE_IS_PC && SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_TAI_CHI
+    ResetTaiChi();
+#endif
     g_playerRuntime.flags &= ~0x00204003U;
     g_playerRuntime.model = nullptr;
 }

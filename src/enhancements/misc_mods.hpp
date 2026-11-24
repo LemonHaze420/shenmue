@@ -13,7 +13,7 @@ namespace shenmue::mods {
 enum class Id : std::uint8_t {
     FrameRate, SkyMovement, EnemyGauge, Cassettes, Crouch, DrawDistance, Widescreen, FirstPerson, PhotoMode,
     HideHud, FreezeTime, TimeSpeed, NoBedtime, DisableWeather, RainDensity, RainOpacity, CloudLevel, RainLevel, SnowLevel,
-    SkipSplash, SkipCutscenes, QteSuccess, InfiniteStamina, FullShadows, SunLatitude, CrateArrows, CameraDistance, MapSeams, WeatherOverride, Count
+    SkipSplash, SkipCutscenes, QteSuccess, InfiniteStamina, FullShadows, SunLatitude, CrateArrows, CameraDistance, MapSeams, WeatherOverride, TaiChi, Count
 };
 enum class Kind : std::uint8_t { Toggle, List, Slider };
 struct Option {

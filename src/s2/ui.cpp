@@ -1,4 +1,5 @@
 #include "enhancements/misc_mods.hpp"
+#include "s2/enhancements/tai_chi.hpp"
 #include "auto_test.hpp"
 #include "s2/ui_internal.hpp"
 #include "s2/ui_credits.hpp"
@@ -6053,6 +6054,13 @@ void UpdateUI() {
 #if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_HUD
         if (mods::Enabled(mods::Id::HideHud) && (element.index == static_cast<std::uint32_t>(UIElement::GameHud) ||
             element.index == static_cast<std::uint32_t>(UIElement::GameHudWatch))) {
+            element.config.status = 0;
+            element.config.enabled = 0;
+        }
+#endif
+#if SHENMUE_IS_PC && SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_TAI_CHI
+        if (IsPractisingTaiChi() && (element.index == static_cast<std::uint32_t>(UIElement::GameHud) ||
+            element.index == static_cast<std::uint32_t>(UIElement::ActionSelector))) {
             element.config.status = 0;
             element.config.enabled = 0;
         }

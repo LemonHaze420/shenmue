@@ -1,5 +1,6 @@
 #include "enhancements/misc_mods.hpp"
 #include "s2/camera.hpp"
+#include "s2/enhancements/tai_chi.hpp"
 
 #include "d3t/dx11_renderer.hpp"
 #include "s2/character.hpp"
@@ -4171,7 +4172,11 @@ void camCtrlProjectCameraMatrices(void *) {
     modCameraNativeRotation = camera.nextRotation;
     modCameraArea = g_currentMap.name;
     Vector3 eye = camera.nextPosition, target = camera.nextTargetPosition;
-    const bool allowed = g_playerRuntime.model && shenGetIsPlayerInMenu() &&
+    bool playerAvailable = g_playerRuntime.model && shenGetIsPlayerInMenu();
+#if SHENMUE_IS_PC && SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_TAI_CHI
+    playerAvailable = playerAvailable || IsPractisingTaiChi();
+#endif
+    const bool allowed = g_playerRuntime.model && playerAvailable &&
         (camera.state == CameraState::Default || camera.state == CameraState::ChaseGoal || camera.state == CameraState::Init);
     if (mods::AdjustCamera(allowed, GetFrameTime(), g_currentMap.name, IsWindowKeyPressed, eye, target)) {
         camera.nextPosition = eye;

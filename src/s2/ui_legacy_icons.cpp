@@ -1,4 +1,5 @@
 #include "enhancements/misc_mods.hpp"
+#include "s2/enhancements/tai_chi.hpp"
 #include "shenmue.h"
 
 
@@ -559,6 +560,13 @@ void PrepareNativeHudHelp() {
             helpIconDrawVisible |= HELP_BUTTON_MASKS[index];
         }
     }
+#if SHENMUE_IS_PC && SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_TAI_CHI
+    if (GetIsKeyboardActive() == 1 && TaiChiHintActive()) {
+        hints[2] = 4; // BTEV action hint, also used by FLAGS interactions.
+        helpIconDrawVisible |= HELP_BUTTON_MASKS[2];
+        helpIconDrawSelected &= ~HELP_BUTTON_MASKS[2];
+    }
+#endif
     if (helpIconHudDelay < 0 && searchable && !IsScenarioBusy() && !(GetSleepActionIconFlags() & 1U) && IsCtrlSpeakIconInactive()) {
         if (!(helpIconDrawVisible & 4U) && !srchCheckFlags(6) && IsWristwatchOpenable()) {
             helpIconDrawVisible |= 4U;

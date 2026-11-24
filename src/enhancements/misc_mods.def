@@ -67,3 +67,6 @@ SHEN_MOD(CrateArrows, Toggle, "CrateArrows", "Hide crate-job arrows", "Hide the 
 #if SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_MAP_SEAMS
 SHEN_MOD(MapSeams, Toggle, "MapSeams", "Map seam fix", "Expand map-tile edges to cover visible seams.", 1, 0, 1)
 #endif
+#if SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_TAI_CHI
+SHEN_MOD(TaiChi, Toggle, "TaiChi", "Tai Chi practice", "Press Q near the Tai Chi group in Wise Men's Quarter to practise. Press Q or move to stop.", 0, 0, 1)
+#endif
