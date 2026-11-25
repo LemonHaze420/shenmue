@@ -75,7 +75,7 @@ std::int32_t GetPakLoadBudget();
 std::uint32_t GetPakLoadFlags();
 void SetPakLoadFlags(std::uint32_t flags);
 
-bool RegisterLightData(const void *block, std::int32_t identifier, std::size_t);
+bool RegisterLightData(const void *block, std::int32_t identifier);
 std::int32_t FindMapModelSlot(const MT7Model *model);
 void FreeMapModelSlot(std::int32_t index);
 void *LoadPackageMapModel(PakGlobalData *package, void *data, std::int32_t visible);
@@ -951,7 +951,7 @@ static void *LoadPackageFieldData(void *data) {
 static void *LoadPackageLightData(void *data) {
     PakChunkHeader *chunk = reinterpret_cast<PakChunkHeader *>(static_cast<std::byte *>(data) + 8);
     while (chunk->size) {
-        RegisterLightData(chunk + 1, static_cast<std::int32_t>(chunk->name), chunk->size - 8);
+        RegisterLightData(chunk + 1, static_cast<std::int32_t>(chunk->name));
         chunk = reinterpret_cast<PakChunkHeader *>(reinterpret_cast<std::byte *>(chunk) + chunk->size);
     }
     return data;

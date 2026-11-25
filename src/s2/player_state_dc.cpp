@@ -28,12 +28,13 @@ std::uint32_t g_playerRuntimeResetWord6;
 #endif
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-void ResetPendingPlayerPersistentState(std::int32_t) {
+std::int32_t ResetPendingPlayerPersistentState(std::int32_t) {
     PlayerPersistentState *const pending = g_pendingPlayerPersistentStatePointer;
     pending->present = 0;
     pending->runtimeState = 0;
     *reinterpret_cast<std::uint32_t *>(&pending->playerStateFlags) = 0;
     pending->reserved = 0;
+    return 0;
 }
 #endif
 

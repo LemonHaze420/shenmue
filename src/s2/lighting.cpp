@@ -1936,7 +1936,7 @@ std::int64_t LightTask_Enqueue() {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-bool RegisterLightData(const void *block, std::int32_t identifier, std::size_t) {
+bool RegisterLightData(const void *block, std::int32_t identifier) {
     std::int32_t index;
     for (index = 0; index < 24; ++index) {
         if (!g_lightDefinitions[index].block)

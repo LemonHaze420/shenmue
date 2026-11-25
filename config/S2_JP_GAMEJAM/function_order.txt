@@ -1531,7 +1531,7 @@ before src/common/math.cpp
 .text.SetFixoInverseChildPlacement__Q27shenmue2s2PQ37shenmue2s29CharacterUs
 .text.SetFixoAlphaPropagation__Q27shenmue2s2PQ37shenmue2s29Characterl
 .text.EV_GetShenmueFlag__Q27shenmue2s2l
-.text.EV_stepSetFlags__Q27shenmue2s2Ucl
+.text.EV_stepSetFlags__Q27shenmue2s2ll
 .text.GetShenmueFlag__Q27shenmue2s2ll
 .text.shenGetMinutesUntilNextFrameMinute__Q27shenmue2s2v
 .text.ScenarioConversationResultNullsub__Q27shenmue2s2v
@@ -2253,7 +2253,7 @@ before src/common/math.cpp
 .text.GetGeometryLightColour__Q27shenmue2s2PQ27shenmue7Vector4
 .text.TranslateLightDefinition__Q27shenmue2s2UlRCQ27shenmuet8Vector3T1Zf
 .text.LGHT_Parser_Internal__Q27shenmue2s2Ul
-.text.RegisterLightData__Q27shenmue2s2PCvlUi
+.text.RegisterLightData__Q27shenmue2s2PCvl
 .text.UnregisterLightData__Q27shenmue2s2l
 .text.InitializeMapLighting__Q27shenmue2s2v
 .text.InitializeLightRuntimeTables__Q27shenmue2s2v

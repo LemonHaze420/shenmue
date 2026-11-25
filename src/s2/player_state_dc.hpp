@@ -48,7 +48,7 @@ bool plymIsSearchStartRequested();
 void InitializePlayerRuntimeStorage();
 void InitializePlayerSystem();
 void InitializePlayerRuntime();
-void ResetPendingPlayerPersistentState(std::int32_t unused);
+std::int32_t ResetPendingPlayerPersistentState(std::int32_t unused);
 std::int32_t plymImportPersistentState(const PlayerPersistentState *state);
 std::int32_t plymExportPersistentState(PlayerPersistentState *state);
 

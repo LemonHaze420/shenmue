@@ -122,7 +122,11 @@ void LGHT_Parser_Internal(std::uint64_t identifier);
 #endif
 // Native RegisterLightData: a package LGHT record takes the first free registry entry (of 24). The size bounds the
 // port's reads of the block.
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+bool RegisterLightData(const void *block, std::int32_t identifier);
+#else
 bool RegisterLightData(const void *block, std::int32_t identifier, std::size_t size);
+#endif
 // Native UnregisterLightData (PACK retirement): the first entry with the identifier is emptied.
 void UnregisterLightData(std::int32_t identifier);
 std::int32_t GetCurrentActiveLight();

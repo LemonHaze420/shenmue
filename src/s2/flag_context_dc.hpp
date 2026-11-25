@@ -65,7 +65,7 @@ SearchTarget *shenFindFlagTarget(shen_name name);
 std::int32_t shenUpdateFlagTargets(SearchTarget *targets);
 std::int32_t flagInitContext(ShenPlayerData &data, shen_name context);
 std::int32_t shenUpdatePlayerDataFlags(std::int32_t active);
-void EV_stepSetFlags(std::uint8_t mode, std::int32_t flag);
+void EV_stepSetFlags(std::int32_t flag, std::int32_t mode);
 std::int32_t shenGetMinutesUntilNextFrameMinute();
 
 std::uint32_t shenIsCurfewSceneChange();

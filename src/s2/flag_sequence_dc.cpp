@@ -220,7 +220,7 @@ std::int32_t EV_GetShenmueFlag(std::int32_t flag) {
 }
 
 // @verified - d
-void EV_stepSetFlags(std::uint8_t mode, std::int32_t flag) {
+void EV_stepSetFlags(std::int32_t flag, std::int32_t mode) {
     if (stepUpdateFlagUtil(flag, mode) & 1U)
         stepUpdateFlagUtil(200, 0);
     stepUpdateFlagUtil(500, 0);
@@ -1142,7 +1142,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
                 FlagBranch(&record, 0);
             break;
         case FlagOp::SetStepFlags:
-            EV_stepSetFlags(static_cast<std::uint8_t>(record->argument[1]), record->argument[0]);
+            EV_stepSetFlags(record->argument[0], record->argument[1]);
             FlagBranch(&record, 1);
             break;
         case FlagOp::SetLoadingPhaseBits:
@@ -2106,8 +2106,8 @@ extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_shenUpdatePlay
 }
 
 extern "C" {
-void __attribute__((renesas)) shenmue_s2_event_EV_stepSetFlags(std::int32_t flag, std::uint8_t mode) {
-    shenmue::s2::EV_stepSetFlags(mode, flag);
+void __attribute__((renesas)) shenmue_s2_event_EV_stepSetFlags(std::int32_t flag, std::int32_t mode) {
+    shenmue::s2::EV_stepSetFlags(flag, mode);
 }
 std::int32_t __attribute__((renesas)) shenmue_s2_event_shenGetMinutesUntilNextFrameMinute() {
     return shenmue::s2::shenGetMinutesUntilNextFrameMinute();

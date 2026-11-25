@@ -2151,7 +2151,7 @@ _SetFixoInversePositionRotation__Q27shenmue2s2PQ37shenmue2s29CharacterPCQ27shenm
 _SetFixoInverseChildPlacement__Q27shenmue2s2PQ37shenmue2s29CharacterUs = 0x0c0988c0; // type:func size:0xa0
 _SetFixoAlphaPropagation__Q27shenmue2s2PQ37shenmue2s29Characterl = 0x0c098960; // type:func size:0x40
 _EV_GetShenmueFlag__Q27shenmue2s2l = 0x0c0989a0; // type:func size:0x20
-_EV_stepSetFlags__Q27shenmue2s2Ucl = 0x0c0989c0; // type:func size:0x40
+_EV_stepSetFlags__Q27shenmue2s2ll = 0x0c0989c0; // type:func size:0x40
 _GetShenmueFlag__Q27shenmue2s2ll = 0x0c098a00; // type:func size:0x260
 _shenGetMinutesUntilNextFrameMinute__Q27shenmue2s2v = 0x0c098c60; // type:func size:0x60
 _ScenarioConversationResultNullsub__Q27shenmue2s2v = 0x0c098cc0; // type:func size:0x20
@@ -2873,7 +2873,7 @@ _BuildLightingChunk__Q27shenmue2s2PQ37shenmue2s227PackedLightDefinitionHeader = 
 _GetGeometryLightColour__Q27shenmue2s2PQ27shenmue7Vector4 = 0x0c0c1b60; // type:func size:0x60
 _TranslateLightDefinition__Q27shenmue2s2UlRCQ27shenmuet8Vector3T1Zf = 0x0c0c1bc0; // type:func size:0x100
 _LGHT_Parser_Internal__Q27shenmue2s2Ul = 0x0c0c1cc0; // type:func size:0x280
-_RegisterLightData__Q27shenmue2s2PCvlUi = 0x0c0c1f40; // type:func size:0x60
+_RegisterLightData__Q27shenmue2s2PCvl = 0x0c0c1f40; // type:func size:0x60
 _UnregisterLightData__Q27shenmue2s2l = 0x0c0c1fa0; // type:func size:0x60
 _InitializeMapLighting__Q27shenmue2s2v = 0x0c0c2000; // type:func size:0x140
 _InitializeLightRuntimeTables__Q27shenmue2s2v = 0x0c0c2140; // type:func size:0x60
