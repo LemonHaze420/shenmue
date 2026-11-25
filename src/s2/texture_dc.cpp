@@ -102,7 +102,7 @@ NamedTextureCell *FindNamedTexture(std::uint32_t nameLow, std::uint32_t nameHigh
 
 // @verified - d
 std::int32_t FindNamedTexture(std::uint32_t nameLow, std::uint32_t nameHigh, NamedTextureCell **previous, NamedTextureCell **found) {
-    NamedTextureCell *cell = g_namedTextureBanks[g_namedTextureBank != 0];
+    NamedTextureCell *cell = g_namedTextureBank ? *(g_namedTextureBanks + 1) : g_namedTextureBanks[0];
     *previous = TX_NULL;
     *found = TX_NULL;
     while (cell) {
@@ -126,7 +126,7 @@ std::int32_t FindNamedTextureIndex(std::uint32_t nameLow, std::uint32_t nameHigh
 
 // @verified - d
 std::int32_t FindNamedTextureByIndex(std::int32_t index, NamedTextureCell **previous, NamedTextureCell **found) {
-    NamedTextureCell *cell = g_namedTextureBanks[g_namedTextureBank != 0];
+    NamedTextureCell *cell = g_namedTextureBank ? *(g_namedTextureBanks + 1) : g_namedTextureBanks[0];
     *previous = TX_NULL;
     *found = TX_NULL;
     while (cell) {
